@@ -1,12 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Integricity", "Integricity\Integricity.vcxproj", "{6D185E2F-2BCB-4998-A69C-04D05691ADF8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntegricityApp", "IntegricityApp\IntegricityApp.vcxproj", "{89686A7A-7B22-43C5-9C8E-F5723325C1AE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntegricityAddIn", "IntegricityAddIn\IntegricityAddIn.vcxproj", "{6D185E2F-2BCB-4998-A69C-04D05691ADF8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{89686A7A-7B22-43C5-9C8E-F5723325C1AE} = {89686A7A-7B22-43C5-9C8E-F5723325C1AE}
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntegricityApp", "IntegricityApp\IntegricityApp.vcxproj", "{89686A7A-7B22-43C5-9C8E-F5723325C1AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,14 +14,14 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Debug|Win32.Build.0 = Debug|Win32
-		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Release|Win32.ActiveCfg = Release|Win32
-		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Release|Win32.Build.0 = Release|Win32
 		{89686A7A-7B22-43C5-9C8E-F5723325C1AE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{89686A7A-7B22-43C5-9C8E-F5723325C1AE}.Debug|Win32.Build.0 = Debug|Win32
 		{89686A7A-7B22-43C5-9C8E-F5723325C1AE}.Release|Win32.ActiveCfg = Release|Win32
 		{89686A7A-7B22-43C5-9C8E-F5723325C1AE}.Release|Win32.Build.0 = Release|Win32
+		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Debug|Win32.Build.0 = Debug|Win32
+		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Release|Win32.ActiveCfg = Release|Win32
+		{6D185E2F-2BCB-4998-A69C-04D05691ADF8}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

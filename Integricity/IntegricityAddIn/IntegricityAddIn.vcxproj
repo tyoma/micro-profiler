@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <TargetName>$(ProjectName)D</TargetName>
+    <TargetName>IntegricityAddIn</TargetName>
     <ProjectGUID>{6D185E2F-2BCB-4998-A69C-04D05691ADF8}</ProjectGUID>
     <Keyword>AtlProj</Keyword>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
@@ -20,7 +20,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <OutDir>$(SolutionDir)_bin\</OutDir>
+    <OutDir>$(SolutionDir)_bin\d\</OutDir>
     <IntDir>Debug\</IntDir>
     <UseOfATL>Static</UseOfATL>
     <CharacterSet>MultiByte</CharacterSet>
@@ -29,7 +29,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <OutDir>$(SolutionDir)_bin\</OutDir>
+    <OutDir>$(SolutionDir)_bin\r\</OutDir>
     <IntDir>Release\</IntDir>
     <UseOfATL>Static</UseOfATL>
     <CharacterSet>MultiByte</CharacterSet>
@@ -78,8 +78,8 @@
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>./../_lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>IntegricityAppD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./../_lib/d</AdditionalLibraryDirectories>
+      <AdditionalDependencies>IntegricityApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -125,7 +125,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>./../_lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>./../_lib/r</AdditionalLibraryDirectories>
       <AdditionalDependencies>IntegricityApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>

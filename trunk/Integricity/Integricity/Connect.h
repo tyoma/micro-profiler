@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basics.h"
+#include "./../IntegricityApp/application.h"
 #include "resource.h"
 
 #include <atlbase.h>
@@ -21,7 +21,7 @@ class __declspec(uuid("B848FC12-4371-476E-8ADF-3FCC508FE098")) ATL_NO_VTABLE CCo
 		public CComCoClass<CConnect, &__uuidof(CConnect)>,
 		public IDispatchImpl<_IDTExtensibility2, &IID__IDTExtensibility2, &LIBID_AddInDesignerObjects, 1, 0>
 {
-	std::auto_ptr<destructible> _application;
+	std::auto_ptr<application> _application;
 
 public:
 	DECLARE_REGISTRY_RESOURCEID(IDR_ADDIN)

@@ -1,7 +1,5 @@
 #include "Connect.h"
 
-#include "application.h"
-
 STDMETHODIMP CConnect::OnConnection(IDispatch *dte, ext_ConnectMode ConnectMode, IDispatch *pAddInInst, SAFEARRAY ** /*custom*/ )
 {
 	try

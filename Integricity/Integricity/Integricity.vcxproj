@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <TargetName>$(ProjectName)</TargetName>
+    <TargetName>$(ProjectName)D</TargetName>
     <ProjectGUID>{6D185E2F-2BCB-4998-A69C-04D05691ADF8}</ProjectGUID>
     <Keyword>AtlProj</Keyword>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
@@ -19,7 +19,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <OutDir>Debug\</OutDir>
+    <OutDir>$(SolutionDir)_bin\</OutDir>
     <IntDir>Debug\</IntDir>
     <UseOfATL>Static</UseOfATL>
     <CharacterSet>MultiByte</CharacterSet>
@@ -28,7 +28,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <OutDir>Release\</OutDir>
+    <OutDir>$(SolutionDir)_bin\</OutDir>
     <IntDir>Release\</IntDir>
     <UseOfATL>Static</UseOfATL>
     <CharacterSet>MultiByte</CharacterSet>
@@ -77,6 +77,8 @@
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>./../_lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>IntegricityAppD.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -122,6 +124,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <ImportLibrary>$(OutDir)$(ProjectName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>./../_lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>IntegricityApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -144,7 +148,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AddIn.cpp" />
-    <ClCompile Include="application.cpp" />
     <ClCompile Include="Connect.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -153,11 +156,7 @@
     <None Include="AddIn.rgs" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="application.h" />
-    <ClInclude Include="basics.h" />
     <ClInclude Include="Connect.h" />
-    <ClInclude Include="dispatch.h" />
-    <ClInclude Include="interface.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>

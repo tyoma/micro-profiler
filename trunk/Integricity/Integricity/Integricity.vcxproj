@@ -157,6 +157,7 @@
     <ClInclude Include="basics.h" />
     <ClInclude Include="Connect.h" />
     <ClInclude Include="dispatch.h" />
+    <ClInclude Include="interface.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>

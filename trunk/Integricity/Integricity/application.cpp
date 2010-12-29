@@ -1,5 +1,6 @@
 #include "application.h"
 
+#include "interface.h"
 #include "dispatch.h"
 
 using namespace std;

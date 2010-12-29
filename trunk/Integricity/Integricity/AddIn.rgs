@@ -70,6 +70,22 @@ HKCU
 						}
 					}
 				}
+				NoRemove '7.1'
+				{
+					NoRemove 'AddIns'
+					{
+						ForceRemove 'Integricity.Connect'
+						{
+							val LoadBehavior = d 0
+							val CommandLineSafe = d 0
+							val CommandPreload = d 0
+							val FriendlyName = s 'Integricity'
+							val Description = s 'Universal SourceControl Integration for VisualStudio'
+							val AboutBoxDetails = s 'For customer support, please email to: tyoma@yandex.ru\r\nCopyright (c) 2010 Artem Gevorkyan'
+							val AboutBoxIcon = s '%MODULE%,1'
+						}
+					}
+				}
 			}
 		}
 	}

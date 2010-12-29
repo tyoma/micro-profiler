@@ -15,6 +15,7 @@
     <ProjectGUID>{6D185E2F-2BCB-4998-A69C-04D05691ADF8}</ProjectGUID>
     <Keyword>AtlProj</Keyword>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <ProjectName>IntegricityAddIn</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

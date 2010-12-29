@@ -13,6 +13,7 @@
     <ClInclude Include="Resource.h">
       <Filter>resources</Filter>
     </ClInclude>
+    <ClInclude Include="interface.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AddIn.def" />

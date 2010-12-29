@@ -2,6 +2,8 @@
 
 #include "dispatch.h"
 
+using namespace std;
+
 namespace
 {
 	void f()
@@ -12,8 +14,8 @@ namespace
 application::application(EnvDTE::_DTEPtr dte)
 	: _dte(dte)
 {
-	_openedConnection = connection::connect(_dte->Events->SolutionEvents, __uuidof(EnvDTE::_dispSolutionEvents), 1, &f);
-	_closedConnection = connection::connect(_dte->Events->SolutionEvents, __uuidof(EnvDTE::_dispSolutionEvents), 1, &f);
+	_openedConnection = connection::make(_dte->Events->SolutionEvents, __uuidof(EnvDTE::_dispSolutionEvents), 1, &f);
+	_closedConnection = connection::make(_dte->Events->SolutionEvents, __uuidof(EnvDTE::_dispSolutionEvents), 1, &f);
 }
 
 

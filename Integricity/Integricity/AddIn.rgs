@@ -1,0 +1,76 @@
+HKCU
+{
+	NoRemove 'SOFTWARE'
+	{
+		NoRemove 'Classes'
+		{
+			Integricity.Connect.1 = s 'Connect Class'
+			{
+				CLSID = s '{B848FC12-4371-476E-8ADF-3FCC508FE098}'
+			}
+			Integricity.Connect = s 'Connect Class'
+			{
+				CLSID = s '{B848FC12-4371-476E-8ADF-3FCC508FE098}'
+				CurVer = s 'Integricity.Connect.1'
+			}
+			NoRemove CLSID
+			{
+				ForceRemove '{B848FC12-4371-476E-8ADF-3FCC508FE098}' = s 'Connect Class'
+				{
+					ProgID = s 'Integricity.Connect.1'
+					VersionIndependentProgID = s 'Integricity.Connect'
+					ForceRemove 'Programmable'
+					InprocServer32 = s '%MODULE%'
+					{
+						val ThreadingModel = s 'Apartment'
+					}
+				}
+			}
+		}
+	}
+}
+
+HKCU
+{
+	NoRemove 'SOFTWARE'
+	{
+		NoRemove 'Microsoft'
+		{
+			NoRemove 'VisualStudio'
+			{
+				NoRemove '10.0'
+				{
+					NoRemove 'AddIns'
+					{
+						ForceRemove 'Integricity.Connect'
+						{
+							val LoadBehavior = d 0
+							val CommandLineSafe = d 0
+							val CommandPreload = d 0
+							val FriendlyName = s 'Integricity'
+							val Description = s 'Universal SourceControl Integration for VisualStudio'
+							val AboutBoxDetails = s 'For customer support, please email to: tyoma@yandex.ru\r\nCopyright (c) 2010 Artem Gevorkyan'
+							val AboutBoxIcon = s '%MODULE%,1'
+						}
+					}
+				}
+				NoRemove '9.0'
+				{
+					NoRemove 'AddIns'
+					{
+						ForceRemove 'Integricity.Connect'
+						{
+							val LoadBehavior = d 0
+							val CommandLineSafe = d 0
+							val CommandPreload = d 0
+							val FriendlyName = s 'Integricity'
+							val Description = s 'Universal SourceControl Integration for VisualStudio'
+							val AboutBoxDetails = s 'For customer support, please email to: tyoma@yandex.ru\r\nCopyright (c) 2010 Artem Gevorkyan'
+							val AboutBoxIcon = s '%MODULE%,1'
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -18,6 +18,5 @@ struct source_control : destructible
 
 	virtual state get_filestate(const std::wstring &path) const = 0;
 
-	static std::shared_ptr<source_control> create_cvs_sc(listener &l);
+	static std::shared_ptr<source_control> create_cvs_sc(const std::wstring &root, listener &l);
 };
-

@@ -35,7 +35,7 @@ namespace AppTests
 				source_control::create_cvs_sc(L"", l);
 				Assert::Fail("Must throw an exception!");
 			}
-			catch (exception &)
+			catch (invalid_argument &)
 			{
 			}
 			catch (...)

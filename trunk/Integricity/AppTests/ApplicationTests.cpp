@@ -9,12 +9,5 @@ namespace AppTests
 	public ref class ApplicationTests
 	{
 	public: 
-		[TestMethod]
-		void Smoke()
-		{
-			//
-			// TODO: Add test logic here
-			//
-		};
 	};
 }

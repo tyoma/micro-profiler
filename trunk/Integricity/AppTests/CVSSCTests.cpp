@@ -1,4 +1,4 @@
-#include <interface.h>
+#include <repository.h>
 
 #include "TestHelpers.h"
 #include <exception>
@@ -39,6 +39,15 @@ namespace AppTests
 			m_location = testContext.TestDeploymentDir;
 		}
 
+		[TestCleanup]
+		void _Cleanup()
+		{
+			String ^path = Path::Combine(m_location, "sample");
+
+			if (Directory::Exists(path))
+				Directory::Delete(path, true);
+		}
+
 		[TestMethod]
 		void FailToCreateSCOnWrongPath()
 		{
@@ -70,15 +79,20 @@ namespace AppTests
 			// INIT
 			stub_listener l;
 			String ^dir(Path::Combine(m_location, L"sample"));
+			String ^dir2(Path::Combine(m_location, L"sample/inner"));
 
 			Directory::CreateDirectory(Path::Combine(dir, L"cvs"));
-			File::Create(Path::Combine(dir, L"cvs/entries"));
+			Directory::CreateDirectory(Path::Combine(dir2, L"cvs"));
+			File::Create(Path::Combine(dir, L"cvs/entries"))->Close();
+			File::Create(Path::Combine(dir2, L"cvs/entries"))->Close();
 
 			// ACT / ASSERT (must not throw)
-			shared_ptr<repository> r = repository::create_cvs_sc(make_native(dir), l);
+			shared_ptr<repository> r1 = repository::create_cvs_sc(make_native(dir), l);
+			shared_ptr<repository> r2 = repository::create_cvs_sc(make_native(dir2), l);
 
 			// ASSERT
-			Assert::IsTrue(r != 0);
+			Assert::IsTrue(r1 != 0);
+			Assert::IsTrue(r2 != 0);
 		}
 	};
 }

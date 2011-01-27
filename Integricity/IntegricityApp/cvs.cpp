@@ -16,7 +16,7 @@ public:
 
 	virtual state get_filestate(const std::wstring &path) const
 	{
-		throw 0;
+		return state_unversioned;
 	}
 };
 

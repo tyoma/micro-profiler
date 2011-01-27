@@ -23,6 +23,7 @@
     <ClInclude Include="basics.h" />
     <ClInclude Include="dispatch.h" />
     <ClInclude Include="interface.h" />
+    <ClInclude Include="utilities.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{89686A7A-7B22-43C5-9C8E-F5723325C1AE}</ProjectGuid>

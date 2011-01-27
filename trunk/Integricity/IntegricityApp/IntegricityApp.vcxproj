@@ -17,11 +17,13 @@
   <ItemGroup>
     <ClCompile Include="application.cpp" />
     <ClCompile Include="cvs.cpp" />
+    <ClCompile Include="fs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.h" />
     <ClInclude Include="basics.h" />
     <ClInclude Include="dispatch.h" />
+    <ClInclude Include="fs.h" />
     <ClInclude Include="interface.h" />
     <ClInclude Include="utilities.h" />
   </ItemGroup>

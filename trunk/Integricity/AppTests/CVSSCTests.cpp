@@ -94,5 +94,31 @@ namespace AppTests
 			Assert::IsTrue(r1 != 0);
 			Assert::IsTrue(r2 != 0);
 		}
+
+
+		[TestMethod]
+		void GetStateOfUnversionedFiles()
+		{
+			// INIT
+			stub_listener l;
+			String ^dir1(Path::Combine(m_location, L"sample"));
+			String ^dir2(Path::Combine(m_location, L"sample/inner"));
+
+			Directory::CreateDirectory(Path::Combine(dir1, L"cvs"));
+			Directory::CreateDirectory(Path::Combine(dir2, L"cvs"));
+			File::Create(Path::Combine(dir1, L"cvs/entries"))->Close();
+			File::Create(Path::Combine(dir2, L"cvs/entries"))->Close();
+
+			File::Create(Path::Combine(dir1, L"file1.cpp"))->Close();
+			File::Create(Path::Combine(dir2, L"file2.h"))->Close();
+			File::Create(Path::Combine(dir2, L"file2.cpp"))->Close();
+
+			shared_ptr<repository> r = repository::create_cvs_sc(make_native(dir1), l);
+
+			// ACT / ASSERT
+			Assert::IsTrue(repository::state_unversioned == r->get_filestate(make_native(Path::Combine(dir1, L"file1.cpp"))));
+			Assert::IsTrue(repository::state_unversioned == r->get_filestate(make_native(Path::Combine(dir2, L"file2.h"))));
+			Assert::IsTrue(repository::state_unversioned == r->get_filestate(make_native(Path::Combine(dir2, L"file2.cpp"))));
+		}
 	};
 }

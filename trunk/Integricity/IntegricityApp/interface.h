@@ -7,9 +7,9 @@
 #include <utility>
 #include <memory>
 
-struct source_control : destructible
+struct repository : destructible
 {
-	enum state { state_intact, state_modified, state_new, state_unversioned, state_removed };
+	enum state { state_intact, state_modified, state_new, state_unversioned, state_removed, state_missing };
 
 	struct listener
 	{
@@ -18,5 +18,5 @@ struct source_control : destructible
 
 	virtual state get_filestate(const std::wstring &path) const = 0;
 
-	static std::shared_ptr<source_control> create_cvs_sc(const std::wstring &root, listener &l);
+	static std::shared_ptr<repository> create_cvs_sc(const std::wstring &root, listener &l);
 };

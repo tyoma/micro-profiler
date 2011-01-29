@@ -6,7 +6,12 @@
 
 template <typename CharT>
 inline void trim_right(std::basic_string<CharT> &s, const std::basic_string<CharT> &trimmed)
-{	s.substr(0, s.find_last_not_of(trimmed));	}
+{
+	size_t pos = s.find_last_not_of(trimmed);
+
+	if (pos != std::basic_string<CharT>::npos)
+		s.erase(pos + 1);
+}
 
 template <typename CharT>
 inline void trim_right(std::basic_string<CharT> &s, const CharT *trimmed)
@@ -15,7 +20,7 @@ inline void trim_right(std::basic_string<CharT> &s, const CharT *trimmed)
 
 template <typename CharT>
 inline void trim_left(std::basic_string<CharT> &s, const std::basic_string<CharT> &trimmed)
-{	s.substr(s.find_first_not_of(trimmed));	}
+{	s.erase(0, s.find_first_not_of(trimmed));	}
 
 template <typename CharT>
 inline void trim_left(std::basic_string<CharT> &s, const CharT *trimmed)

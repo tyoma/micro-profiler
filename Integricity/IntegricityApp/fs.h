@@ -16,4 +16,14 @@ namespace fs
 	}
 
 	entry_type get_entry_type(const std::wstring &path);
+
+	inline std::wstring get_base_directory(const std::wstring &path)
+	{	return path.substr(0, path.find_last_of(L"/\\"));	}
+
+	inline std::wstring get_filename(std::wstring path)
+	{
+		path = path.substr(path.find_last_of(L"/\\"));
+		trim_left(path, L"/\\");
+		return path;
+	}
 }

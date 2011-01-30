@@ -35,4 +35,21 @@ namespace fs
 		}
 		return false;
 	}
+
+	filetime parse_ctime_to_filetime(const string &ctime)
+	{
+		static string months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", };
+		char dow_str[4] = { 0 };
+		char month_str[4] = { 0 };
+		int year, month, day, hour, minute, second;
+
+		sscanf(ctime.c_str(), "%3s %3s %2d %2d:%2d:%2d %4d", dow_str, month_str, &day, &hour, &minute, &second, &year);
+		month = 1 + distance(months, find(months, months + _countof(months), month_str));
+
+		filetime ft;
+		SYSTEMTIME time = { year, month, 0, day, hour, minute, second, 0 };
+
+		::SystemTimeToFileTime(&time, reinterpret_cast<FILETIME *>(&ft));
+		return ft;
+	}
 }

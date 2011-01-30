@@ -16,6 +16,7 @@ namespace fs
 	entry_type get_entry_type(const std::wstring &path);
 	bool get_filetimes(const std::wstring &path, filetime *created_at, filetime *modified_at, filetime *accessed_at);
 	std::shared_ptr<mt::waitable> create_change_notification(const std::wstring &path, bool recursive);
+	filetime parse_ctime_to_filetime(const std::string &ctime);
 
 
 	inline std::wstring operator /(std::wstring lhs, std::wstring rhs)

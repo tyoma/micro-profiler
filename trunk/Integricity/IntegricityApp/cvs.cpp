@@ -41,7 +41,8 @@ namespace
 
 
 	entry::entry(const vector< pair<string::const_iterator, string::const_iterator> > &entry_parts)
-		: filename(entry_parts[1].first, entry_parts[1].second)
+		: filename(entry_parts[1].first, entry_parts[1].second),
+			modstamp(parse_ctime_to_filetime(string(entry_parts[3].first, entry_parts[3].second)))
 	{	}
 
 

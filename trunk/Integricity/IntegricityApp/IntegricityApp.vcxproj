@@ -24,6 +24,7 @@
     <ClInclude Include="basics.h" />
     <ClInclude Include="dispatch.h" />
     <ClInclude Include="fs.h" />
+    <ClInclude Include="mt.h" />
     <ClInclude Include="repository.h" />
     <ClInclude Include="utilities.h" />
   </ItemGroup>

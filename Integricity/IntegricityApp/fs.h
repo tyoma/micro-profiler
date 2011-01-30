@@ -7,12 +7,14 @@
 
 namespace fs
 {
+	typedef unsigned __int64 filetime;
 	enum entry_type {	entry_none, entry_file, entry_directory	};
 
 	std::wstring operator /(std::wstring lhs, std::wstring rhs);
 	std::wstring get_base_directory(const std::wstring &path);
 	std::wstring get_filename(std::wstring path);
 	entry_type get_entry_type(const std::wstring &path);
+	bool get_filetimes(const std::wstring &path, filetime *created_at, filetime *modified_at, filetime *accessed_at);
 	std::shared_ptr<mt::waitable> create_change_notification(const std::wstring &path, bool recursive);
 
 
@@ -22,8 +24,6 @@ namespace fs
 		trim_left(rhs, L"/\\");
 		return lhs + L"\\" + rhs;
 	}
-
-	entry_type get_entry_type(const std::wstring &path);
 
 	inline std::wstring get_base_directory(const std::wstring &path)
 	{	return path.substr(0, path.find_last_of(L"/\\"));	}

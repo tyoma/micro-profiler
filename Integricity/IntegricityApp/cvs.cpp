@@ -16,6 +16,7 @@ namespace
 		entry(const vector< pair<string::const_iterator, string::const_iterator> > &entry_parts);
 
 		wstring filename;
+		filetime modstamp;
 	};
 
 	class entries
@@ -77,12 +78,14 @@ namespace
 
 	repository::state cvs_repository::get_filestate(const wstring &path) const
 	{
-		entry_type et(get_entry_type(path));
+		filetime modstamp;
 		entries es(get_base_directory(path) / L"cvs/entries");
 		shared_ptr<entry> e(es.find_entry(get_filename(path)));
 
-		return e == 0 ? state_unversioned :
-			et != entry_none ? state_intact : state_missing;
+		if (get_filetimes(path, 0, &modstamp, 0))
+			return e != 0 && modstamp > e->modstamp ? state_modified : e != 0 ? state_intact : state_unversioned;
+		else
+			return e != 0 ? state_missing : state_unversioned;
 	}
 }
 

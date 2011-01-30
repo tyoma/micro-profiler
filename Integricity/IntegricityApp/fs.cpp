@@ -4,6 +4,10 @@
 
 using namespace std;
 
+namespace
+{
+}
+
 namespace fs
 {
 	entry_type get_entry_type(const wstring &path)

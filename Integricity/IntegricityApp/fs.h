@@ -1,12 +1,20 @@
 #pragma once
 
+#include "mt.h"
 #include "utilities.h"
 
-#include <string>
+#include <memory>
 
 namespace fs
 {
 	enum entry_type {	entry_none, entry_file, entry_directory	};
+
+	std::wstring operator /(std::wstring lhs, std::wstring rhs);
+	std::wstring get_base_directory(const std::wstring &path);
+	std::wstring get_filename(std::wstring path);
+	entry_type get_entry_type(const std::wstring &path);
+	std::shared_ptr<mt::waitable> create_change_notification(const std::wstring &path, bool recursive);
+
 
 	inline std::wstring operator /(std::wstring lhs, std::wstring rhs)
 	{

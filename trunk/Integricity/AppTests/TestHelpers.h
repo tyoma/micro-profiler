@@ -6,6 +6,7 @@ namespace ut
 {
 	std::wstring make_native(System::String ^managed_string);
 	System::String ^make_managed(const std::wstring &native_string);
+	unsigned long long make_filetime(System::DateTime datetime);
 
 	struct temp_directory
 	{
@@ -13,6 +14,18 @@ namespace ut
 		~temp_directory();
 
 		const std::wstring path;
+	};
+
+	ref class entries_file
+	{
+		System::IO::FileStream ^_file;
+		System::IO::TextWriter ^_writer;
+
+	public:
+		entries_file(const std::wstring &path);
+		~entries_file();
+
+		void append(const std::wstring &filename, const std::wstring &revision, System::DateTime modstamp);
 	};
 }
 

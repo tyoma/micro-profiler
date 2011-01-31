@@ -1,7 +1,8 @@
 #include <repository.h>
 
-#include <fs.h>
 #include "TestHelpers.h"
+
+#include <fs.h>
 #include <exception>
 
 using namespace System;
@@ -65,9 +66,8 @@ namespace AppTests
 			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"inner");
 			temp_directory d_inner_cvs(d_inner.path / L"cvs");
-
-			File::Create(make_managed(d_cvs.path / L"entries"))->Close();
-			File::Create(make_managed(d_inner_cvs.path / L"entries"))->Close();
+			entries_file e1(d_cvs.path / L"entries");
+			entries_file e2(d_inner_cvs.path / L"entries");
 
 			// ACT / ASSERT (must not throw)
 			shared_ptr<repository> r1 = repository::create_cvs_sc(d.path, l);
@@ -88,9 +88,8 @@ namespace AppTests
 			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"inner");
 			temp_directory d_inner_cvs(d_inner.path / L"cvs");
-
-			File::Create(make_managed(d_cvs.path / L"entries"))->Close();
-			File::Create(make_managed(d_inner_cvs.path / L"entries"))->Close();
+			entries_file e1(d_cvs.path / L"entries");
+			entries_file e2(d_inner_cvs.path / L"entries");
 
 			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
 			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();
@@ -118,24 +117,19 @@ namespace AppTests
 			temp_directory d_inner(d.path / L"i");
 			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			FileStream ^entries1 = File::Create(make_managed(d_cvs.path / L"entries"));
-			TextWriter ^tw1 = gcnew StreamWriter(entries1);
-			FileStream ^entries2 = File::Create(make_managed(d_inner_cvs.path / L"entries"));
-			TextWriter ^tw2 = gcnew StreamWriter(entries2);
+			{
+				entries_file e1(d_cvs.path / L"entries");
+				entries_file e2(d_inner_cvs.path / L"entries");
 
-			tw1->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
-			tw1->WriteLine("/file1.cpp/1.5/Tue Jul  7 15:50:26 2009//");
-			tw1->WriteLine("/file123.cpp/1.5/Tue Jul  7 12:50:26 2008//");
+				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e1.append(L"file1.cpp", L"1.5", dt1);
+				e1.append(L"file123.cpp", L"1.5", DateTime(2008, 7, 7, 12, 50, 26));
 
-			tw2->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
-			tw2->WriteLine("/file2.h/1.5/Tue Mar 11 12:51:13 2008//");
-			tw2->WriteLine("/efile123.cpp/2.3/Tue Jul  7 12:50:26 2008//");
-			tw2->WriteLine("/file2.cpp/2.1/Mon Nov 29 17:17:04 2010//");
-
-			delete tw1;
-			delete tw2;
-			delete entries1;
-			delete entries2;
+				e2.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e2.append(L"file2.h", L"1.5", dt2);
+				e2.append(L"efile123.cpp", L"2.3", DateTime(2008, 7, 7, 12, 50, 26));
+				e2.append(L"file2.cpp", L"2.1", dt3);
+			}
 
 			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
 			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();
@@ -163,24 +157,19 @@ namespace AppTests
 			temp_directory d_inner(d.path / L"i");
 			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			FileStream ^entries1 = File::Create(make_managed(d_cvs.path / L"entries"));
-			TextWriter ^tw1 = gcnew StreamWriter(entries1);
-			FileStream ^entries2 = File::Create(make_managed(d_inner_cvs.path / L"entries"));
-			TextWriter ^tw2 = gcnew StreamWriter(entries2);
+			{
+				entries_file e1(d_cvs.path / L"entries");
+				entries_file e2(d_inner_cvs.path / L"entries");
 
-			tw1->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
-			tw1->WriteLine("/file6.cpp/1.5/Tue Jul  7 15:50:26 2009//");
-			tw1->WriteLine("/file123.cpp/1.5/Tue Jul  7 12:50:26 2008//");
+				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e1.append(L"file6.cpp", L"1.5", DateTime(2009, 7, 7, 15, 50, 26, DateTimeKind::Utc));
+				e1.append(L"file123.cpp", L"1.5", DateTime(2008, 7, 7, 12, 50, 26));
 
-			tw2->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
-			tw2->WriteLine("/file3.h/1.5/Tue Mar 11 12:51:13 2008//");
-			tw2->WriteLine("/efile123.cpp/2.3/Tue Jul  7 12:50:26 2008//");
-			tw2->WriteLine("/file3.cpp/2.1/Mon Nov 29 17:17:04 2010//");
-
-			delete tw1;
-			delete tw2;
-			delete entries1;
-			delete entries2;
+				e2.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e2.append(L"file3.h", L"1.5", DateTime(2008, 3, 11, 12, 51, 13, DateTimeKind::Utc));
+				e2.append(L"efile123.cpp", L"2.3", DateTime(2008, 7, 7, 12, 50, 26));
+				e2.append(L"file3.cpp", L"2.1", DateTime(2010, 11, 29, 17, 17, 4, DateTimeKind::Utc));
+			}
 
 			shared_ptr<repository> r = repository::create_cvs_sc(d.path, l);
 
@@ -204,24 +193,19 @@ namespace AppTests
 			temp_directory d_inner(d.path / L"t");
 			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			FileStream ^entries1 = File::Create(make_managed(d_cvs.path / L"entries"));
-			TextWriter ^tw1 = gcnew StreamWriter(entries1);
-			FileStream ^entries2 = File::Create(make_managed(d_inner_cvs.path / L"entries"));
-			TextWriter ^tw2 = gcnew StreamWriter(entries2);
+			{
+				entries_file e1(d_cvs.path / L"entries");
+				entries_file e2(d_inner_cvs.path / L"entries");
 
-			tw1->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
-			tw1->WriteLine("/file1.cpp/1.5/Tue Jul  7 15:50:26 2009//");
-			tw1->WriteLine("/file123.cpp/1.5/Tue Jul  7 12:50:26 2008//");
+				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e1.append(L"file1.cpp", L"1.5", dt1.AddYears(-1));
+				e1.append(L"file123.cpp", L"1.5", DateTime(2008, 7, 7, 12, 50, 26));
 
-			tw2->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
-			tw2->WriteLine("/file2.h/1.5/Tue Mar 11 12:51:13 2008//");
-			tw2->WriteLine("/efile123.cpp/2.3/Tue Jul  7 12:50:26 2008//");
-			tw2->WriteLine("/file2.cpp/2.1/Mon Nov 29 17:17:04 2010//");
-
-			delete tw1;
-			delete tw2;
-			delete entries1;
-			delete entries2;
+				e2.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e2.append(L"file2.h", L"1.5", dt2.AddMonths(-1));
+				e2.append(L"efile123.cpp", L"2.3", DateTime(2008, 7, 7, 12, 50, 26));
+				e2.append(L"file2.cpp", L"2.1", dt3.AddHours(-1));
+			}
 
 			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
 			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();

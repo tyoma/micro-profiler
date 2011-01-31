@@ -5,6 +5,7 @@
 using namespace std;
 using namespace System;
 using namespace System::IO;
+using namespace System::Globalization;
 
 namespace ut
 {
@@ -18,6 +19,11 @@ namespace ut
 	String ^make_managed(const wstring &native_string)
 	{	return gcnew String(native_string.c_str());	}
 
+	unsigned long long make_filetime(DateTime datetime)
+	{
+		datetime.AddYears(1600);
+		return datetime.Ticks;
+	}
 
 	temp_directory::temp_directory(const wstring &path_)
 		: path(path_)
@@ -28,5 +34,28 @@ namespace ut
 	temp_directory::~temp_directory()
 	{
 		Directory::Delete(make_managed(path), true);
+	}
+
+
+	entries_file::entries_file(const wstring &path)
+		: _file(File::Create(make_managed(path))), _writer(gcnew StreamWriter(_file))
+	{
+	}
+
+	entries_file::~entries_file()
+	{
+		delete _writer;
+		delete _file;
+	}
+
+	void entries_file::append(const wstring &filename, const wstring &revision, DateTime modstamp)
+	{
+		_writer->WriteLine(String::Format(CultureInfo::InvariantCulture, "{0}/{1}/{2}/{3:ddd MMM dd HH:mm:ss yyyy}/{4}/{5}",
+			"",
+			make_managed(filename),
+			make_managed(revision),
+			modstamp,
+			"",
+			""));
 	}
 }

@@ -1,8 +1,10 @@
 #include "TestHelpers.h"
 
+#include <fs.h>
 #include <vcclr.h>
 
 using namespace std;
+using namespace fs;
 using namespace System;
 using namespace System::IO;
 using namespace System::Globalization;
@@ -37,9 +39,11 @@ namespace ut
 	}
 
 
-	entries_file::entries_file(const wstring &path)
-		: _file(File::Create(make_managed(path))), _writer(gcnew StreamWriter(_file))
+	entries_file::entries_file(const wstring &repository_directory)
 	{
+		Directory::CreateDirectory(make_managed(repository_directory / L"cvs"));
+		_file = File::Create(make_managed(repository_directory / L"cvs/entries"));
+		_writer = gcnew StreamWriter(_file);
 	}
 
 	entries_file::~entries_file()

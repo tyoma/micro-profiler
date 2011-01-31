@@ -63,11 +63,9 @@ namespace AppTests
 			// INIT
 			stub_listener l;
 			temp_directory d(make_native(m_location) / L"sample");
-			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"inner");
-			temp_directory d_inner_cvs(d_inner.path / L"cvs");
-			entries_file e1(d_cvs.path / L"entries");
-			entries_file e2(d_inner_cvs.path / L"entries");
+			entries_file e1(d.path);
+			entries_file e2(d_inner.path);
 
 			// ACT / ASSERT (must not throw)
 			shared_ptr<repository> r1 = repository::create_cvs_sc(d.path, l);
@@ -85,11 +83,9 @@ namespace AppTests
 			// INIT
 			stub_listener l;
 			temp_directory d(make_native(m_location) / L"sample");
-			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"inner");
-			temp_directory d_inner_cvs(d_inner.path / L"cvs");
-			entries_file e1(d_cvs.path / L"entries");
-			entries_file e2(d_inner_cvs.path / L"entries");
+			entries_file e1(d.path);
+			entries_file e2(d_inner.path);
 
 			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
 			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();
@@ -113,13 +109,11 @@ namespace AppTests
 			DateTime dt2(2008, 3, 11, 12, 51, 13, DateTimeKind::Utc);
 			DateTime dt3(2010, 11, 29, 17, 17, 4, DateTimeKind::Utc);
 			temp_directory d(make_native(m_location) / L"sample");
-			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"i");
-			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
 			{
-				entries_file e1(d_cvs.path / L"entries");
-				entries_file e2(d_inner_cvs.path / L"entries");
+				entries_file e1(d.path);
+				entries_file e2(d_inner.path);
 
 				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
 				e1.append(L"file1.cpp", L"1.5", dt1);
@@ -153,13 +147,11 @@ namespace AppTests
 			// INIT
 			stub_listener l;
 			temp_directory d(make_native(m_location) / L"sample");
-			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"i");
-			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
 			{
-				entries_file e1(d_cvs.path / L"entries");
-				entries_file e2(d_inner_cvs.path / L"entries");
+				entries_file e1(d.path);
+				entries_file e2(d_inner.path);
 
 				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
 				e1.append(L"file6.cpp", L"1.5", DateTime(2009, 7, 7, 15, 50, 26, DateTimeKind::Utc));
@@ -189,13 +181,11 @@ namespace AppTests
 			DateTime dt2(2008, 3, 12, 12, 51, 13, DateTimeKind::Utc);
 			DateTime dt3(2010, 11, 29, 17, 18, 4, DateTimeKind::Utc);
 			temp_directory d(make_native(m_location) / L"sample");
-			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"t");
-			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
 			{
-				entries_file e1(d_cvs.path / L"entries");
-				entries_file e2(d_inner_cvs.path / L"entries");
+				entries_file e1(d.path);
+				entries_file e2(d_inner.path);
 
 				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
 				e1.append(L"file1.cpp", L"1.5", dt1.AddYears(-1));
@@ -229,13 +219,11 @@ namespace AppTests
 			// INIT
 			stub_listener l;
 			temp_directory d(make_native(m_location) / L"sample");
-			temp_directory d_cvs(d.path / L"cvs");
 			temp_directory d_inner(d.path / L"t");
-			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
 			{
-				entries_file e1(d_cvs.path / L"entries");
-				entries_file e2(d_inner_cvs.path / L"entries");
+				entries_file e1(d.path);
+				entries_file e2(d_inner.path);
 
 				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
 				e1.append_new(L"file1.cpp");

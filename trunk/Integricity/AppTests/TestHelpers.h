@@ -22,7 +22,7 @@ namespace ut
 		System::IO::TextWriter ^_writer;
 
 	public:
-		entries_file(const std::wstring &path);
+		entries_file(const std::wstring &repository_directory);
 		~entries_file();
 
 		void append(const std::wstring &filename, const std::wstring &revision, System::DateTime modstamp);

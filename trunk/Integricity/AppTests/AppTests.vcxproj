@@ -58,6 +58,8 @@
   <ItemGroup>
     <ClCompile Include="ApplicationTests.cpp" />
     <ClCompile Include="CVSSCTests.cpp" />
+    <ClCompile Include="FSTests.cpp" />
+    <ClCompile Include="TestHelpers.cpp" />
     <ClCompile Include="UtilitiesTests.cpp" />
   </ItemGroup>
   <ItemGroup>

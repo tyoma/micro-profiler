@@ -15,7 +15,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="application.cpp" />
+    <ClCompile Include="application.cpp">
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Testing|Win32'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
+    </ClCompile>
     <ClCompile Include="cvs.cpp" />
     <ClCompile Include="fs.cpp" />
   </ItemGroup>
@@ -82,6 +86,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>"$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv";"$(MSBuildExtensionsPath32)\..\Common Files\Designer";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -97,6 +102,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>"$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv";"$(MSBuildExtensionsPath32)\..\Common Files\Designer";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -113,6 +119,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <CompileAsManaged>false</CompileAsManaged>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

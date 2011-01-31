@@ -4,6 +4,8 @@
     <ClCompile Include="ApplicationTests.cpp" />
     <ClCompile Include="UtilitiesTests.cpp" />
     <ClCompile Include="CVSSCTests.cpp" />
+    <ClCompile Include="FSTests.cpp" />
+    <ClCompile Include="TestHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestHelpers.h" />

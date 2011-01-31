@@ -1,21 +1,21 @@
 #include <repository.h>
 
+#include <fs.h>
 #include "TestHelpers.h"
 #include <exception>
-#include <vcclr.h>
 
 using namespace System;
 using namespace System::IO;
-using namespace System::Text;
-using namespace System::Collections::Generic;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 using namespace std;
+using namespace fs;
+using namespace ut;
 
 namespace AppTests
 {
 	class stub_listener : public repository::listener
 	{
-		virtual void modified(const std::vector< std::pair<std::wstring, repository::state> > &modifications)
+		virtual void modified(const vector< pair<wstring, repository::state> > &modifications)
 		{
 		}
 	};
@@ -25,27 +25,11 @@ namespace AppTests
 	{
 		static String^ m_location;
 
-		static wstring make_native(String ^managed_string)
-		{
-			pin_ptr<const wchar_t> buffer(PtrToStringChars(managed_string));
-
-			return wstring(buffer);
-		}
-
 	public:
 		[AssemblyInitialize]
 		static void _Init(TestContext testContext)
 		{
 			m_location = testContext.TestDeploymentDir;
-		}
-
-		[TestCleanup]
-		void _Cleanup()
-		{
-			String ^path = Path::Combine(m_location, "sample");
-
-			if (Directory::Exists(path))
-				Directory::Delete(path, true);
 		}
 
 		[TestMethod]
@@ -64,12 +48,11 @@ namespace AppTests
 		{
 			// INIT
 			stub_listener l;
-			String ^dir(Path::Combine(m_location, L"sample"));
-
-			Directory::CreateDirectory(Path::Combine(dir, L"cvs"));
+			temp_directory d(make_native(m_location) / L"sample");
+			temp_directory d_cvs(d.path / L"cvs");
 
 			// ACT / ASSERT
-			ASSERT_THROWS(repository::create_cvs_sc(make_native(dir), l), invalid_argument);
+			ASSERT_THROWS(repository::create_cvs_sc(d.path, l), invalid_argument);
 		}
 
 
@@ -78,17 +61,17 @@ namespace AppTests
 		{
 			// INIT
 			stub_listener l;
-			String ^dir(Path::Combine(m_location, L"sample"));
-			String ^dir2(Path::Combine(m_location, L"sample/inner"));
+			temp_directory d(make_native(m_location) / L"sample");
+			temp_directory d_cvs(d.path / L"cvs");
+			temp_directory d_inner(d.path / L"inner");
+			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			Directory::CreateDirectory(Path::Combine(dir, L"cvs"));
-			Directory::CreateDirectory(Path::Combine(dir2, L"cvs"));
-			File::Create(Path::Combine(dir, L"cvs/entries"))->Close();
-			File::Create(Path::Combine(dir2, L"cvs/entries"))->Close();
+			File::Create(make_managed(d_cvs.path / L"entries"))->Close();
+			File::Create(make_managed(d_inner_cvs.path / L"entries"))->Close();
 
 			// ACT / ASSERT (must not throw)
-			shared_ptr<repository> r1 = repository::create_cvs_sc(make_native(dir), l);
-			shared_ptr<repository> r2 = repository::create_cvs_sc(make_native(dir2), l);
+			shared_ptr<repository> r1 = repository::create_cvs_sc(d.path, l);
+			shared_ptr<repository> r2 = repository::create_cvs_sc(d_inner.path, l);
 
 			// ASSERT
 			Assert::IsTrue(r1 != 0);
@@ -101,24 +84,24 @@ namespace AppTests
 		{
 			// INIT
 			stub_listener l;
-			String ^dir1(Path::Combine(m_location, L"sample"));
-			String ^dir2(Path::Combine(m_location, L"sample/inner"));
+			temp_directory d(make_native(m_location) / L"sample");
+			temp_directory d_cvs(d.path / L"cvs");
+			temp_directory d_inner(d.path / L"inner");
+			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			Directory::CreateDirectory(Path::Combine(dir1, L"cvs"));
-			Directory::CreateDirectory(Path::Combine(dir2, L"cvs"));
-			File::Create(Path::Combine(dir1, L"cvs/entries"))->Close();
-			File::Create(Path::Combine(dir2, L"cvs/entries"))->Close();
+			File::Create(make_managed(d_cvs.path / L"entries"))->Close();
+			File::Create(make_managed(d_inner_cvs.path / L"entries"))->Close();
 
-			File::Create(Path::Combine(dir1, L"file1.cpp"))->Close();
-			File::Create(Path::Combine(dir2, L"file2.h"))->Close();
-			File::Create(Path::Combine(dir2, L"file2.cpp"))->Close();
+			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.cpp"))->Close();
 
-			shared_ptr<repository> r = repository::create_cvs_sc(make_native(dir1), l);
+			shared_ptr<repository> r = repository::create_cvs_sc(d.path, l);
 
 			// ACT / ASSERT
-			Assert::IsTrue(repository::state_unversioned == r->get_filestate(make_native(Path::Combine(dir1, L"file1.cpp"))));
-			Assert::IsTrue(repository::state_unversioned == r->get_filestate(make_native(Path::Combine(dir2, L"file2.h"))));
-			Assert::IsTrue(repository::state_unversioned == r->get_filestate(make_native(Path::Combine(dir2, L"file2.cpp"))));
+			Assert::IsTrue(repository::state_unversioned == r->get_filestate(d.path / L"file1.cpp"));
+			Assert::IsTrue(repository::state_unversioned == r->get_filestate(d_inner.path / L"file2.h"));
+			Assert::IsTrue(repository::state_unversioned == r->get_filestate(d_inner.path / L"file2.cpp"));
 		}
 
 
@@ -130,14 +113,14 @@ namespace AppTests
 			DateTime dt1(2009, 7, 7, 15, 50, 26, DateTimeKind::Utc);
 			DateTime dt2(2008, 3, 11, 12, 51, 13, DateTimeKind::Utc);
 			DateTime dt3(2010, 11, 29, 17, 17, 4, DateTimeKind::Utc);
-			String ^dir1(Path::Combine(m_location, L"sample"));
-			String ^dir2(Path::Combine(m_location, L"sample/i"));
+			temp_directory d(make_native(m_location) / L"sample");
+			temp_directory d_cvs(d.path / L"cvs");
+			temp_directory d_inner(d.path / L"i");
+			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			Directory::CreateDirectory(Path::Combine(dir1, L"cvs"));
-			Directory::CreateDirectory(Path::Combine(dir2, L"cvs"));
-			FileStream ^entries1 = File::Create(Path::Combine(dir1, L"cvs/entries"));
+			FileStream ^entries1 = File::Create(make_managed(d_cvs.path / L"entries"));
 			TextWriter ^tw1 = gcnew StreamWriter(entries1);
-			FileStream ^entries2 = File::Create(Path::Combine(dir2, L"cvs/entries"));
+			FileStream ^entries2 = File::Create(make_managed(d_inner_cvs.path / L"entries"));
 			TextWriter ^tw2 = gcnew StreamWriter(entries2);
 
 			tw1->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
@@ -154,19 +137,19 @@ namespace AppTests
 			delete entries1;
 			delete entries2;
 
-			File::Create(Path::Combine(dir1, L"file1.cpp"))->Close();
-			File::Create(Path::Combine(dir2, L"file2.h"))->Close();
-			File::Create(Path::Combine(dir2, L"file2.cpp"))->Close();
-			File::SetLastWriteTimeUtc(Path::Combine(dir1, L"file1.cpp"), dt1);
-			File::SetLastWriteTimeUtc(Path::Combine(dir2, L"file2.h"), dt2);
-			File::SetLastWriteTimeUtc(Path::Combine(dir2, L"file2.cpp"), dt3);
+			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.cpp"))->Close();
+			File::SetLastWriteTimeUtc(make_managed(d.path / L"file1.cpp"), dt1);
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path / L"file2.h"), dt2);
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path / L"file2.cpp"), dt3);
 
-			shared_ptr<repository> r = repository::create_cvs_sc(make_native(dir1), l);
+			shared_ptr<repository> r = repository::create_cvs_sc(d.path, l);
 
 			// ACT / ASSERT
-			Assert::IsTrue(repository::state_intact == r->get_filestate(make_native(Path::Combine(dir1, L"file1.cpp"))));
-			Assert::IsTrue(repository::state_intact == r->get_filestate(make_native(Path::Combine(dir2, L"file2.h"))));
-			Assert::IsTrue(repository::state_intact == r->get_filestate(make_native(Path::Combine(dir2, L"file2.cpp"))));
+			Assert::IsTrue(repository::state_intact == r->get_filestate(d.path / L"file1.cpp"));
+			Assert::IsTrue(repository::state_intact == r->get_filestate(d_inner.path / L"file2.h"));
+			Assert::IsTrue(repository::state_intact == r->get_filestate(d_inner.path / L"file2.cpp"));
 		}
 
 
@@ -175,14 +158,14 @@ namespace AppTests
 		{
 			// INIT
 			stub_listener l;
-			String ^dir1(Path::Combine(m_location, L"sample"));
-			String ^dir2(Path::Combine(m_location, L"sample/i"));
+			temp_directory d(make_native(m_location) / L"sample");
+			temp_directory d_cvs(d.path / L"cvs");
+			temp_directory d_inner(d.path / L"i");
+			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			Directory::CreateDirectory(Path::Combine(dir1, L"cvs"));
-			Directory::CreateDirectory(Path::Combine(dir2, L"cvs"));
-			FileStream ^entries1 = File::Create(Path::Combine(dir1, L"cvs/entries"));
+			FileStream ^entries1 = File::Create(make_managed(d_cvs.path / L"entries"));
 			TextWriter ^tw1 = gcnew StreamWriter(entries1);
-			FileStream ^entries2 = File::Create(Path::Combine(dir2, L"cvs/entries"));
+			FileStream ^entries2 = File::Create(make_managed(d_inner_cvs.path / L"entries"));
 			TextWriter ^tw2 = gcnew StreamWriter(entries2);
 
 			tw1->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
@@ -199,12 +182,12 @@ namespace AppTests
 			delete entries1;
 			delete entries2;
 
-			shared_ptr<repository> r = repository::create_cvs_sc(make_native(dir1), l);
+			shared_ptr<repository> r = repository::create_cvs_sc(d.path, l);
 
 			// ACT / ASSERT
-			Assert::IsTrue(repository::state_missing == r->get_filestate(make_native(Path::Combine(dir1, L"file6.cpp"))));
-			Assert::IsTrue(repository::state_missing == r->get_filestate(make_native(Path::Combine(dir2, L"file3.h"))));
-			Assert::IsTrue(repository::state_missing == r->get_filestate(make_native(Path::Combine(dir2, L"file3.cpp"))));
+			Assert::IsTrue(repository::state_missing == r->get_filestate(d.path / L"file6.cpp"));
+			Assert::IsTrue(repository::state_missing == r->get_filestate(d_inner.path / L"file3.h"));
+			Assert::IsTrue(repository::state_missing == r->get_filestate(d_inner.path / L"file3.cpp"));
 		}
 
 
@@ -216,14 +199,14 @@ namespace AppTests
 			DateTime dt1(2010, 7, 7, 15, 50, 26, DateTimeKind::Utc);
 			DateTime dt2(2008, 3, 12, 12, 51, 13, DateTimeKind::Utc);
 			DateTime dt3(2010, 11, 29, 17, 18, 4, DateTimeKind::Utc);
-			String ^dir1(Path::Combine(m_location, L"sample"));
-			String ^dir2(Path::Combine(m_location, L"sample/t"));
+			temp_directory d(make_native(m_location) / L"sample");
+			temp_directory d_cvs(d.path / L"cvs");
+			temp_directory d_inner(d.path / L"t");
+			temp_directory d_inner_cvs(d_inner.path / L"cvs");
 
-			Directory::CreateDirectory(Path::Combine(dir1, L"cvs"));
-			Directory::CreateDirectory(Path::Combine(dir2, L"cvs"));
-			FileStream ^entries1 = File::Create(Path::Combine(dir1, L"cvs/entries"));
+			FileStream ^entries1 = File::Create(make_managed(d_cvs.path / L"entries"));
 			TextWriter ^tw1 = gcnew StreamWriter(entries1);
-			FileStream ^entries2 = File::Create(Path::Combine(dir2, L"cvs/entries"));
+			FileStream ^entries2 = File::Create(make_managed(d_inner_cvs.path / L"entries"));
 			TextWriter ^tw2 = gcnew StreamWriter(entries2);
 
 			tw1->WriteLine("/CustomerExperienceAgent.config/1.4/Tue Jul  7 15:50:26 2009//");
@@ -240,19 +223,19 @@ namespace AppTests
 			delete entries1;
 			delete entries2;
 
-			File::Create(Path::Combine(dir1, L"file1.cpp"))->Close();
-			File::Create(Path::Combine(dir2, L"file2.h"))->Close();
-			File::Create(Path::Combine(dir2, L"file2.cpp"))->Close();
-			File::SetLastWriteTimeUtc(Path::Combine(dir1, L"file1.cpp"), dt1);
-			File::SetLastWriteTimeUtc(Path::Combine(dir2, L"file2.h"), dt2);
-			File::SetLastWriteTimeUtc(Path::Combine(dir2, L"file2.cpp"), dt3);
+			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.cpp"))->Close();
+			File::SetLastWriteTimeUtc(make_managed(d.path / L"file1.cpp"), dt1);
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path / L"file2.h"), dt2);
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path / L"file2.cpp"), dt3);
 
-			shared_ptr<repository> r = repository::create_cvs_sc(make_native(dir1), l);
+			shared_ptr<repository> r = repository::create_cvs_sc(d.path, l);
 
 			// ACT / ASSERT
-			Assert::IsTrue(repository::state_modified == r->get_filestate(make_native(Path::Combine(dir1, L"file1.cpp"))));
-			Assert::IsTrue(repository::state_modified == r->get_filestate(make_native(Path::Combine(dir2, L"file2.h"))));
-			Assert::IsTrue(repository::state_modified == r->get_filestate(make_native(Path::Combine(dir2, L"file2.cpp"))));
+			Assert::IsTrue(repository::state_modified == r->get_filestate(d.path / L"file1.cpp"));
+			Assert::IsTrue(repository::state_modified == r->get_filestate(d_inner.path / L"file2.h"));
+			Assert::IsTrue(repository::state_modified == r->get_filestate(d_inner.path / L"file2.cpp"));
 		}
 	};
 }

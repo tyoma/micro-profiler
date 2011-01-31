@@ -44,6 +44,7 @@ namespace ut
 
 	entries_file::~entries_file()
 	{
+		_writer->WriteLine("D");
 		delete _writer;
 		delete _file;
 	}

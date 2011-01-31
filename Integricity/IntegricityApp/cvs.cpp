@@ -66,10 +66,12 @@ namespace
 		{
 			entry_parts.clear();
 			split(line.begin(), line.end(), '/', back_inserter(entry_parts));
+			if (entry_parts.size() == 6)
+			{
+				shared_ptr<entry> e(new entry(entry_parts));
 			
-			shared_ptr<entry> e(new entry(entry_parts));
-			
-			_entries_by_name.insert(make_pair(e->filename, e));
+				_entries_by_name.insert(make_pair(e->filename, e));
+			}
 		}
 	}
 

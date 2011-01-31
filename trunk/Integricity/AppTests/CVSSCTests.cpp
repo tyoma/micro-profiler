@@ -221,5 +221,42 @@ namespace AppTests
 			Assert::IsTrue(repository::state_modified == r->get_filestate(d_inner.path / L"file2.h"));
 			Assert::IsTrue(repository::state_modified == r->get_filestate(d_inner.path / L"file2.cpp"));
 		}
+
+
+		[TestMethod]
+		void GetStateOfNewVersionedFiles()
+		{
+			// INIT
+			stub_listener l;
+			temp_directory d(make_native(m_location) / L"sample");
+			temp_directory d_cvs(d.path / L"cvs");
+			temp_directory d_inner(d.path / L"t");
+			temp_directory d_inner_cvs(d_inner.path / L"cvs");
+
+			{
+				entries_file e1(d_cvs.path / L"entries");
+				entries_file e2(d_inner_cvs.path / L"entries");
+
+				e1.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e1.append_new(L"file1.cpp");
+				e1.append(L"file123.cpp", L"1.5", DateTime(2008, 7, 7, 12, 50, 26));
+
+				e2.append(L"CustomerExperienceAgent.config", L"1.4", DateTime(2009, 7, 7, 15, 50, 26));
+				e2.append_new(L"file2.h");
+				e2.append(L"efile123.cpp", L"2.3", DateTime(2008, 7, 7, 12, 50, 26));
+				e2.append_new(L"file2.cpp");
+			}
+
+			File::Create(make_managed(d.path / L"file1.cpp"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.h"))->Close();
+			File::Create(make_managed(d_inner.path / L"file2.cpp"))->Close();
+
+			shared_ptr<repository> r = repository::create_cvs_sc(d.path, l);
+
+			// ACT / ASSERT
+			Assert::IsTrue(repository::state_new == r->get_filestate(d.path / L"file1.cpp"));
+			Assert::IsTrue(repository::state_new == r->get_filestate(d_inner.path / L"file2.h"));
+			Assert::IsTrue(repository::state_new == r->get_filestate(d_inner.path / L"file2.cpp"));
+		}
 	};
 }

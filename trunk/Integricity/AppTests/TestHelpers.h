@@ -26,6 +26,7 @@ namespace ut
 		~entries_file();
 
 		void append(const std::wstring &filename, const std::wstring &revision, System::DateTime modstamp);
+		void append_new(const std::wstring &filename);
 	};
 }
 

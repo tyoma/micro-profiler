@@ -58,4 +58,15 @@ namespace ut
 			"",
 			""));
 	}
+
+	void entries_file::append_new(const wstring &filename)
+	{
+		_writer->WriteLine(String::Format(CultureInfo::InvariantCulture, "{0}/{1}/{2}/{3:}/{4}/{5}",
+			"",
+			make_managed(filename),
+			"0",
+			"dummy timestamp",
+			"",
+			""));
+	}
 }

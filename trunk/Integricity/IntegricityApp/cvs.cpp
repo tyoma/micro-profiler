@@ -10,8 +10,18 @@ using namespace fs;
 
 namespace
 {
-	struct entry
+	class entry
 	{
+		static filetime parse_filetime(string::const_iterator b, string::const_iterator e)
+		{
+			string modstamp_str(b, e);
+
+			return modstamp_str != "dummy timestamp" ? parse_ctime_to_filetime(modstamp_str) : dummy_modstamp;
+		}
+
+	public:
+		static const filetime dummy_modstamp = (filetime)-1;
+
 	public:
 		entry(const vector< pair<string::const_iterator, string::const_iterator> > &entry_parts);
 
@@ -42,7 +52,7 @@ namespace
 
 	entry::entry(const vector< pair<string::const_iterator, string::const_iterator> > &entry_parts)
 		: filename(entry_parts[1].first, entry_parts[1].second),
-			modstamp(parse_ctime_to_filetime(string(entry_parts[3].first, entry_parts[3].second)))
+			modstamp(parse_filetime(entry_parts[3].first, entry_parts[3].second))
 	{	}
 
 
@@ -82,11 +92,14 @@ namespace
 		filetime modstamp;
 		entries es(get_base_directory(path) / L"cvs/entries");
 		shared_ptr<entry> e(es.find_entry(get_filename(path)));
+		bool exists(get_filetimes(path, 0, &modstamp, 0));
 
-		if (get_filetimes(path, 0, &modstamp, 0))
-			return e != 0 && modstamp > e->modstamp ? state_modified : e != 0 ? state_intact : state_unversioned;
+		if (e && exists)
+			return e->modstamp == entry::dummy_modstamp ? state_new : modstamp > e->modstamp ? state_modified : state_intact;
+		else if (e)
+			return state_missing;
 		else
-			return e != 0 ? state_missing : state_unversioned;
+			return state_unversioned;
 	}
 }
 

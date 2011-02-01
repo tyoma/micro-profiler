@@ -6,6 +6,7 @@
     <ClCompile Include="CVSSCTests.cpp" />
     <ClCompile Include="FSTests.cpp" />
     <ClCompile Include="TestHelpers.cpp" />
+    <ClCompile Include="MTTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestHelpers.h" />

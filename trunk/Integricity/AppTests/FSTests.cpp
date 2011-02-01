@@ -15,6 +15,6 @@ namespace AppTests
 			//
 			// TODO: Add test logic here
 			//
-		};
+		}
 	};
 }

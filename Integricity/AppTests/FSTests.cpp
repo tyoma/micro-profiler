@@ -22,7 +22,7 @@ namespace AppTests
 		void ThrowOnInvalidPathForChangeWait()
 		{
 			// INIT / ACT / ASSERT
-			ASSERT_THROWS(create_change_notifier(L"abcdsdfsdgsd", false), runtime_error);
+			ASSERT_THROWS(create_directory_monitor(L"abcdsdfsdgsd", false), runtime_error);
 		}
 
 
@@ -33,7 +33,7 @@ namespace AppTests
 			temp_directory d(L"test");
 
 			// ACT
-			shared_ptr<mt::waitable> w = create_change_notifier(d.path(), false);
+			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
 
 			// ASSERT
 			Assert::IsTrue(w != 0);
@@ -45,7 +45,7 @@ namespace AppTests
 		{
 			// INIT
 			temp_directory d(L"test");
-			shared_ptr<mt::waitable> w = create_change_notifier(d.path(), false);
+			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
 
 			// ACT
 			waitable::wait_status s = w->wait(100);
@@ -60,7 +60,7 @@ namespace AppTests
 		{
 			// INIT
 			temp_directory d(L"test-2");
-			shared_ptr<mt::waitable> w = create_change_notifier(d.path(), false);
+			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
 
 			// ACT
 			File::Create(make_managed(d.path() / L"file1.cpp"))->Close();
@@ -76,7 +76,7 @@ namespace AppTests
 		{
 			// INIT
 			temp_directory d(L"test-2");
-			shared_ptr<mt::waitable> w = create_change_notifier(d.path(), false);
+			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
 
 			File::Create(make_managed(d.path() / L"file1.cpp"))->Close();
 			w->wait(waitable::infinite);

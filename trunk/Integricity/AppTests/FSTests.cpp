@@ -5,9 +5,11 @@
 #include <stdexcept>
 
 using namespace fs;
+using namespace mt;
 using namespace ut;
 using namespace std;
 using namespace System;
+using namespace System::IO;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace AppTests
@@ -35,6 +37,37 @@ namespace AppTests
 
 			// ASSERT
 			Assert::IsTrue(w != 0);
+		}
+
+
+		[TestMethod]
+		void WaitingWithoutChangesResultsInTimeout()
+		{
+			// INIT
+			temp_directory d(L"test");
+			shared_ptr<mt::waitable> w = create_change_notifier(d.path(), false);
+
+			// ACT
+			waitable::wait_status s = w->wait(100);
+
+			// ASSERT
+			Assert::IsTrue(waitable::timeout == s);
+		}
+
+
+		[TestMethod]
+		void WaitingWithChangesResultsInWaitSatisfiedSync()
+		{
+			// INIT
+			temp_directory d(L"test-2");
+			shared_ptr<mt::waitable> w = create_change_notifier(d.path(), false);
+
+			// ACT
+			File::Create(make_managed(d.path() / L"file1.cpp"))->Close();
+			waitable::wait_status s = w->wait(waitable::infinite);
+
+			// ASSERT
+			Assert::IsTrue(waitable::satisfied == s);
 		}
 	};
 }

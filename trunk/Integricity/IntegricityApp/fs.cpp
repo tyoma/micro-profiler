@@ -9,19 +9,19 @@ namespace fs
 {
 	namespace
 	{
-		class change_notifier : public waitable
+		class directory_monitor : public waitable
 		{
 			volatile HANDLE _change_notification;
 
 		public:
-			change_notifier(const wstring &path, bool recursive)
+			directory_monitor(const wstring &path, bool recursive)
 				: _change_notification(::FindFirstChangeNotificationW(path.c_str(), FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME))
 			{
 				if (INVALID_HANDLE_VALUE == _change_notification)
 					throw runtime_error("Cannot create change wait object on the path specified!");
 			}
 
-			~change_notifier() throw()
+			~directory_monitor() throw()
 			{	::FindCloseChangeNotification(_change_notification);	}
 
 			virtual wait_status wait(unsigned int timeout) volatile
@@ -65,8 +65,8 @@ namespace fs
 		return false;
 	}
 
-	shared_ptr<waitable> create_change_notifier(const wstring &path, bool recursive)
-	{	return shared_ptr<waitable>(new change_notifier(path, recursive));	}
+	shared_ptr<waitable> create_directory_monitor(const wstring &path, bool recursive)
+	{	return shared_ptr<waitable>(new directory_monitor(path, recursive));	}
 
 	filetime parse_ctime_to_filetime(const string &ctime)
 	{

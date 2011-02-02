@@ -3,13 +3,39 @@
 #include <windows.h>
 
 using namespace std;
-
-namespace
-{
-}
+using namespace mt;
 
 namespace fs
 {
+	namespace
+	{
+		class change_notifier : public waitable
+		{
+			volatile HANDLE _change_notification;
+
+		public:
+			change_notifier(const wstring &path, bool recursive)
+				: _change_notification(::FindFirstChangeNotificationW(path.c_str(), FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE))
+			{
+				if (INVALID_HANDLE_VALUE == _change_notification)
+					throw runtime_error("Cannot create change wait object on the path specified!");
+			}
+
+			~change_notifier() throw()
+			{	::FindCloseChangeNotification(_change_notification);	}
+
+			virtual wait_status wait(unsigned int timeout) volatile
+			{
+				throw 0;
+			}
+
+			virtual void close() volatile
+			{
+				throw 0;
+			}
+		};
+	}
+
 	entry_type get_entry_type(const wstring &path)
 	{
 		DWORD attributes = ::GetFileAttributesW(path.c_str());
@@ -35,6 +61,9 @@ namespace fs
 		}
 		return false;
 	}
+
+	shared_ptr<waitable> create_change_notifier(const wstring &path, bool recursive)
+	{	return shared_ptr<waitable>(new change_notifier(path, recursive));	}
 
 	filetime parse_ctime_to_filetime(const string &ctime)
 	{

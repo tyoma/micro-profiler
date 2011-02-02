@@ -8,6 +8,7 @@ using namespace fs;
 using namespace System;
 using namespace System::IO;
 using namespace System::Globalization;
+using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace ut
 {
@@ -27,16 +28,19 @@ namespace ut
 		return datetime.Ticks;
 	}
 
-	temp_directory::temp_directory(const wstring &path_)
-		: path(path_)
+	temp_directory::temp_directory(const wstring &name)
+		: _path(Path::IsPathRooted(make_managed(name)) ? make_managed(name) : make_managed(make_native(_temp_root) / name))
 	{
-		Directory::CreateDirectory(make_managed(path));
+		Directory::CreateDirectory(_path);
 	}
 
 	temp_directory::~temp_directory()
 	{
-		Directory::Delete(make_managed(path), true);
+		Directory::Delete(_path, true);
 	}
+
+	wstring temp_directory::path()
+	{	return make_native(_path);	}
 
 
 	entries_file::entries_file(const wstring &repository_directory)

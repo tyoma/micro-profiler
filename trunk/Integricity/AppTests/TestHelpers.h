@@ -8,12 +8,21 @@ namespace ut
 	System::String ^make_managed(const std::wstring &native_string);
 	unsigned long long make_filetime(System::DateTime datetime);
 
-	struct temp_directory
+	[Microsoft::VisualStudio::TestTools::UnitTesting::TestClass]
+	public ref class temp_directory
 	{
-		temp_directory(const std::wstring &path);
+		static System::String ^_temp_root;
+		System::String ^_path;
+
+	public:
+		temp_directory(const std::wstring &name);
 		~temp_directory();
 
-		const std::wstring path;
+		std::wstring path();
+
+		[Microsoft::VisualStudio::TestTools::UnitTesting::AssemblyInitialize]
+		static void initialize(Microsoft::VisualStudio::TestTools::UnitTesting::TestContext testContext)
+		{	_temp_root = testContext.TestDeploymentDir;	}
 	};
 
 	ref class entries_file

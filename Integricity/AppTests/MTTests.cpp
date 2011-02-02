@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <functional>
 
-
 using namespace std;
 using namespace System;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
@@ -51,7 +50,7 @@ namespace AppTests
 				mt::thread t(bind(&threadid_capture, &new_thread_id, 100));
 
 			// ASSERT
-			Assert::AreEqual(::GetCurrentThreadId(), new_thread_id);
+				Assert::AreEqual(::GetCurrentThreadId(), new_thread_id);
 
 			// ACT
 			}

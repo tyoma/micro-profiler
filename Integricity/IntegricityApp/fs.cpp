@@ -15,7 +15,7 @@ namespace fs
 
 		public:
 			change_notifier(const wstring &path, bool recursive)
-				: _change_notification(::FindFirstChangeNotificationW(path.c_str(), FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE))
+				: _change_notification(::FindFirstChangeNotificationW(path.c_str(), FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME))
 			{
 				if (INVALID_HANDLE_VALUE == _change_notification)
 					throw runtime_error("Cannot create change wait object on the path specified!");
@@ -26,7 +26,8 @@ namespace fs
 
 			virtual wait_status wait(unsigned int timeout) volatile
 			{
-				throw 0;
+				DWORD result = ::WaitForSingleObject(_change_notification, timeout);
+				return WAIT_OBJECT_0 == result ? satisfied : waitable::timeout;
 			}
 
 			virtual void close() volatile

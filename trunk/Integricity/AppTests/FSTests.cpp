@@ -69,5 +69,32 @@ namespace AppTests
 			// ASSERT
 			Assert::IsTrue(waitable::satisfied == s);
 		}
+
+
+		[TestMethod]
+		void WaitingWithSubsequentChangesResultsInWaitSatisfiedSync()
+		{
+			// INIT
+			temp_directory d(L"test-2");
+			shared_ptr<mt::waitable> w = create_change_notifier(d.path(), false);
+
+			File::Create(make_managed(d.path() / L"file1.cpp"))->Close();
+			w->wait(waitable::infinite);
+
+			// ACT
+			waitable::wait_status s = w->wait(100);
+
+			// ASSERT
+			Assert::IsTrue(waitable::timeout == s);
+
+			// INIT
+			File::Create(make_managed(d.path() / L"file2.h"))->Close();
+
+			// ACT
+			s = w->wait(waitable::infinite);
+
+			// ASSERT
+			Assert::IsTrue(waitable::satisfied == s);
+		}
 	};
 }

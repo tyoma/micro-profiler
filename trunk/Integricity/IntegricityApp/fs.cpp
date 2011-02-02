@@ -27,6 +27,8 @@ namespace fs
 			virtual wait_status wait(unsigned int timeout) volatile
 			{
 				DWORD result = ::WaitForSingleObject(_change_notification, timeout);
+
+				::FindNextChangeNotification(_change_notification);
 				return WAIT_OBJECT_0 == result ? satisfied : waitable::timeout;
 			}
 

@@ -14,6 +14,12 @@ using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace AppTests
 {
+	namespace
+	{
+		static void wait_for_change(shared_ptr<waitable> w, unsigned int timeout, waitable::wait_status *ws)
+		{ *ws = w->wait(timeout); }
+	}
+
 	[TestClass]
 	public ref class FSTests
 	{
@@ -33,7 +39,7 @@ namespace AppTests
 			temp_directory d(L"test");
 
 			// ACT
-			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
+			shared_ptr<waitable> w = create_directory_monitor(d.path(), false);
 
 			// ASSERT
 			Assert::IsTrue(w != 0);
@@ -45,7 +51,7 @@ namespace AppTests
 		{
 			// INIT
 			temp_directory d(L"test");
-			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
+			shared_ptr<waitable> w = create_directory_monitor(d.path(), false);
 
 			// ACT
 			waitable::wait_status s = w->wait(100);
@@ -60,7 +66,7 @@ namespace AppTests
 		{
 			// INIT
 			temp_directory d(L"test-2");
-			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
+			shared_ptr<waitable> w = create_directory_monitor(d.path(), false);
 
 			// ACT
 			File::Create(make_managed(d.path() / L"file1.cpp"))->Close();
@@ -72,11 +78,35 @@ namespace AppTests
 
 
 		[TestMethod]
+		void WaitingWithChangesResultsInWaitSatisfiedAsync()
+		{
+			// INIT
+			temp_directory d(L"test-2");
+			shared_ptr<waitable> w = create_directory_monitor(d.path(), false);
+			waitable::wait_status ws = waitable::timeout;
+
+			{
+			// ACT
+				thread t(bind(&wait_for_change, w, waitable::infinite, &ws));
+
+			// ASSERT
+				Assert::IsTrue(waitable::timeout == ws);
+
+			// ACT
+				File::Create(make_managed(d.path() / L"file1.cpp"))->Close();
+			}
+
+			// ASSERT
+			Assert::IsTrue(waitable::satisfied == ws);
+		}
+
+
+		[TestMethod]
 		void WaitingWithSubsequentChangesResultsInWaitSatisfiedSync()
 		{
 			// INIT
 			temp_directory d(L"test-2");
-			shared_ptr<mt::waitable> w = create_directory_monitor(d.path(), false);
+			shared_ptr<waitable> w = create_directory_monitor(d.path(), false);
 
 			File::Create(make_managed(d.path() / L"file1.cpp"))->Close();
 			w->wait(waitable::infinite);

@@ -13,7 +13,19 @@ namespace mt
 		static const unsigned int infinite = -1;
 
 		virtual wait_status wait(unsigned int timeout) volatile = 0;
-		virtual void close() volatile = 0;
+	};
+
+	class event_monitor : public waitable, noncopyable
+	{
+		void *_handle;
+
+	public:
+		explicit event_monitor(bool auto_reset);
+		~event_monitor();
+
+		void set();
+		void reset();
+		virtual wait_status wait(unsigned int timeout) volatile;
 	};
 
 	class thread : noncopyable

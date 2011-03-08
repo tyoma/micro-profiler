@@ -1,5 +1,6 @@
 #pragma once
 
+#include "basics.h"
 #include "mt.h"
 #include "utilities.h"
 
@@ -9,6 +10,27 @@ namespace fs
 {
 	typedef unsigned __int64 filetime;
 	enum entry_type {	entry_none, entry_file, entry_directory	};
+
+	struct directory_entry
+	{
+		entry_type type;
+		std::wstring name;
+		filetime created, modified, accessed;
+	};
+
+	class directory_iterator : noncopyable
+	{
+		void *_find_handle;
+		directory_entry _current;
+
+	public:
+		directory_iterator(const std::wstring &path);
+		~directory_iterator();
+
+		operator bool() const;
+		directory_iterator &operator ++();
+		const directory_entry &operator *() const;
+	};
 
 	std::wstring operator /(std::wstring lhs, std::wstring rhs);
 	std::wstring get_base_directory(const std::wstring &path);

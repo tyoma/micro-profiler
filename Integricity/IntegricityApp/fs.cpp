@@ -31,13 +31,53 @@ namespace fs
 				::FindNextChangeNotification(_change_notification);
 				return WAIT_OBJECT_0 == result ? satisfied : waitable::timeout;
 			}
-
-			virtual void close() volatile
-			{
-				throw 0;
-			}
 		};
+
+		void copy(const WIN32_FIND_DATAW &from, directory_entry &to)
+		{
+			to.type = (from.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? entry_directory : entry_file;
+			to.created = reinterpret_cast<const filetime &>(from.ftCreationTime);
+			to.modified = reinterpret_cast<const filetime &>(from.ftLastWriteTime);
+			to.accessed = reinterpret_cast<const filetime &>(from.ftLastAccessTime);
+			to.name = from.cFileName;
+		}
 	}
+
+	directory_iterator::directory_iterator(const wstring &path_)
+	{
+		wstring path = path_ / L"*";
+		WIN32_FIND_DATAW fd = { 0 };
+
+		_find_handle = ::FindFirstFileW(path.c_str(), &fd);
+		copy(fd, _current);
+		++++*this;
+	}
+
+	directory_iterator::~directory_iterator()
+	{
+		if (_find_handle)
+			::FindClose(reinterpret_cast<HANDLE>(_find_handle));
+	}
+
+	directory_iterator::operator bool() const
+	{	return _find_handle != 0;	}
+
+	directory_iterator &directory_iterator::operator ++()
+	{
+		WIN32_FIND_DATAW fd = { 0 };
+
+		if (!::FindNextFileW(reinterpret_cast<HANDLE>(_find_handle), &fd))
+		{
+			::FindClose(reinterpret_cast<HANDLE>(_find_handle));
+			_find_handle = 0;
+		}
+		copy(fd, _current);
+		return *this;
+	}
+
+	const directory_entry &directory_iterator::operator *() const
+	{	return _current;	}
+
 
 	entry_type get_entry_type(const wstring &path)
 	{

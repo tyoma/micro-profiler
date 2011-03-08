@@ -22,6 +22,24 @@ namespace mt
 		}
 	}
 
+
+	event_monitor::event_monitor(bool auto_reset)
+		: _handle(::CreateEvent(NULL, auto_reset ? TRUE : FALSE, FALSE, NULL))
+	{	}
+
+	event_monitor::~event_monitor()
+	{	::CloseHandle(reinterpret_cast<HANDLE>(_handle));	}
+
+	void event_monitor::set()
+	{	::SetEvent(reinterpret_cast<HANDLE>(_handle));	}
+
+	void event_monitor::reset()
+	{	::ResetEvent(reinterpret_cast<HANDLE>(_handle));	}
+
+	event_monitor::wait_status event_monitor::wait(unsigned int to) volatile
+	{	return WAIT_OBJECT_0 == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_handle), to) ? satisfied : timeout;	}
+
+
 	thread::thread(const function<void()> &job)
 	{
 		unsigned int threadid;

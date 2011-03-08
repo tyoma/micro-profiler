@@ -23,10 +23,7 @@ namespace ut
 	{	return gcnew String(native_string.c_str());	}
 
 	unsigned long long make_filetime(DateTime datetime)
-	{
-		datetime.AddYears(1600);
-		return datetime.Ticks;
-	}
+	{	return datetime.AddYears(-1600).Ticks;	}
 
 	temp_directory::temp_directory(const wstring &name)
 		: _path(Path::IsPathRooted(make_managed(name)) ? make_managed(name) : make_managed(make_native(_temp_root) / name))

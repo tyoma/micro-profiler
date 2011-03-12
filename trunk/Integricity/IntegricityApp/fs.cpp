@@ -15,7 +15,7 @@ namespace fs
 
 		public:
 			directory_monitor(const wstring &path, bool recursive)
-				: _change_notification(::FindFirstChangeNotificationW(path.c_str(), FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME))
+				: _change_notification(::FindFirstChangeNotificationW(path.c_str(), recursive ? TRUE : FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME))
 			{
 				if (INVALID_HANDLE_VALUE == _change_notification)
 					throw runtime_error("Cannot create change wait object on the path specified!");

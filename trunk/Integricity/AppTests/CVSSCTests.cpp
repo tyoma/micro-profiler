@@ -400,5 +400,68 @@ namespace AppTests
 			Assert::IsTrue(1 == l.modifications.size());
 			Assert::IsTrue(make_pair(wstring(L"process.h"), repository::state_unversioned) == l.modifications[0]);
 		}
+
+
+		[TestMethod]
+		void NotifyOnNestedFileUpdates()
+		{
+			// INIT
+			stub_listener l;
+			temp_directory d(L"test"), d_inner(d.path() / L"Inner");
+			DateTime dt1(2010, 7, 7, 15, 50, 26, DateTimeKind::Utc);
+			DateTime dt2(2008, 3, 12, 12, 51, 13, DateTimeKind::Utc);
+			DateTime dt3(2010, 11, 29, 17, 18, 4, DateTimeKind::Utc);
+			DateTime dt4(2011, 1, 29, 17, 18, 4, DateTimeKind::Utc);
+
+			{
+				entries_file e(d.path());
+				entries_file e_inner(d_inner.path());
+
+				e_inner.append(L"thread.cpp", L"1.4", dt1);
+				e_inner.append(L"thread.h", L"1.5", dt2);
+				e_inner.append(L"mutex.cpp", L"1.6", dt3);
+				e_inner.append(L"mutex.h", L"1.7", dt4);
+			}
+
+			File::Create(make_managed(d_inner.path() / L"thread.cpp"))->Close();
+			File::Create(make_managed(d_inner.path() / L"thread.h"))->Close();
+			File::Create(make_managed(d_inner.path() / L"mutex.cpp"))->Close();
+			File::Create(make_managed(d_inner.path() / L"mutex.h"))->Close();
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path() / L"thread.cpp"), dt1);
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path() / L"thread.h"), dt2);
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path() / L"mutex.cpp"), dt3);
+			File::SetLastWriteTimeUtc(make_managed(d_inner.path() / L"mutex.h"), dt4);
+
+			shared_ptr<repository> r = repository::create_cvs_sc(d.path(), l);
+
+			// ACT / ASSERT
+			{
+				StreamWriter ^s = File::AppendText(make_managed(d_inner.path() / L"thread.cpp"));
+
+				s->WriteLine("some new line");
+				delete s;
+			}
+			Assert::IsTrue(waitable::satisfied == l.notification_arrived.wait(waitable::infinite));
+
+			// ASSERT
+			Assert::IsTrue(1 == l.calls);
+			Assert::IsTrue(1 == l.modifications.size());
+			Assert::IsTrue(make_pair(wstring(L"Inner/thread.cpp"), repository::state_modified) == l.modifications[0]);
+
+			// INIT
+			l.modifications.clear();
+			l.calls = 0;
+			l.notification_arrived.reset();
+
+			// ACT / ASSERT
+			File::Create(make_managed(d_inner.path() / L"process.h"))->Close();
+			Assert::IsTrue(waitable::satisfied == l.notification_arrived.wait(waitable::infinite));
+
+			// ASSERT
+			Assert::IsTrue(1 == l.calls);
+			Assert::IsTrue(2 == l.modifications.size());
+			Assert::IsTrue(make_pair(wstring(L"Inner/process.h"), repository::state_unversioned) == l.modifications[0]);
+			Assert::IsTrue(make_pair(wstring(L"Inner/thread.cpp"), repository::state_modified) == l.modifications[1]);
+		}
 	};
 }

@@ -52,7 +52,7 @@ namespace
 		auto_ptr<thread> _tracker_thread;
 
 		void track_changes();
-		void evaluate_changes_and_notify(const wstring &directory, vector< pair<wstring, repository::state> > &collector);
+		void evaluate_changes_and_notify(const wstring &directory, const wstring &prefix, vector< pair<wstring, repository::state> > &collector);
 
 	public:
 		cvs_repository(const wstring &root, listener &l);
@@ -100,7 +100,7 @@ namespace
 	{
 		if (get_entry_type(_root / L"cvs/entries") != entry_file)
 			throw invalid_argument("");
-		_monitor = create_directory_monitor(_root, false);
+		_monitor = create_directory_monitor(_root, true);
 		_tracker_thread.reset(new thread([&] () { track_changes(); }));
 	}
 
@@ -118,13 +118,13 @@ namespace
 			{
 				vector< pair<wstring, repository::state> > collector;
 
-				evaluate_changes_and_notify(_root, collector);
+				evaluate_changes_and_notify(_root, L"", collector);
 				_listener.modified(collector);
 			}
 		}	while (!_exit_requested);
 	}
 
-	void cvs_repository::evaluate_changes_and_notify(const wstring &directory, vector< pair<wstring, repository::state> > &collector)
+	void cvs_repository::evaluate_changes_and_notify(const wstring &directory, const wstring &prefix, vector< pair<wstring, repository::state> > &collector)
 	{
 		entries es(directory / L"cvs/entries");
 
@@ -133,10 +133,15 @@ namespace
 			{
 				shared_ptr<entry> e(es.find_entry((*i).name));
 
-				if (!e)
-					collector.push_back(make_pair((*i).name, repository::state_unversioned));
-				else if ((*i).modified > e->modstamp)
-					collector.push_back(make_pair(e->filename, repository::state_modified));
+				if ((*i).type == fs::entry_file)
+				{
+					if (!e)
+						collector.push_back(make_pair(prefix + (*i).name, repository::state_unversioned));
+					else if ((*i).modified > e->modstamp)
+						collector.push_back(make_pair(prefix + e->filename, repository::state_modified));
+				}
+				else
+					evaluate_changes_and_notify(directory / (*i).name, prefix + (*i).name + L"/", collector);
 			}
 	}
 

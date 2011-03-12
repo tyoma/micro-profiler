@@ -1,12 +1,14 @@
 #include "repository.h"
 
 #include "fs.h"
+#include "mt.h"
 
 #include <fstream>
 #include <unordered_map>
 
 using namespace std;
 using namespace fs;
+using namespace mt;
 
 namespace
 {
@@ -43,8 +45,18 @@ namespace
 
 	class cvs_repository : public repository
 	{
+		const wstring _root;
+		bool _exit_requested;
+		listener &_listener;
+		shared_ptr<volatile waitable> _monitor;
+		auto_ptr<thread> _tracker_thread;
+
+		void track_changes();
+		void evaluate_changes_and_notify(const wstring &directory, vector< pair<wstring, repository::state> > &collector);
+
 	public:
 		cvs_repository(const wstring &root, listener &l);
+		~cvs_repository();
 
 		virtual state get_filestate(const wstring &path) const;
 	};
@@ -84,9 +96,48 @@ namespace
 
 
 	cvs_repository::cvs_repository(const wstring &root, listener &l)
+		: _root(root), _exit_requested(false), _listener(l)
 	{
-		if (get_entry_type(root / L"cvs/entries") != entry_file)
+		if (get_entry_type(_root / L"cvs/entries") != entry_file)
 			throw invalid_argument("");
+		_monitor = create_directory_monitor(_root, false);
+		_tracker_thread.reset(new thread([&] () { track_changes(); }));
+	}
+
+	cvs_repository::~cvs_repository()
+	{
+		_exit_requested = true;
+		_tracker_thread.reset();
+	}
+
+	void cvs_repository::track_changes()
+	{
+		do
+		{
+			if (waitable::satisfied == _monitor->wait(100))
+			{
+				vector< pair<wstring, repository::state> > collector;
+
+				evaluate_changes_and_notify(_root, collector);
+				_listener.modified(collector);
+			}
+		}	while (!_exit_requested);
+	}
+
+	void cvs_repository::evaluate_changes_and_notify(const wstring &directory, vector< pair<wstring, repository::state> > &collector)
+	{
+		entries es(directory / L"cvs/entries");
+
+		for (directory_iterator i(directory); i; ++i)
+			if ((*i).name != L"cvs")
+			{
+				shared_ptr<entry> e(es.find_entry((*i).name));
+
+				if (!e)
+					collector.push_back(make_pair((*i).name, repository::state_unversioned));
+				else if ((*i).modified > e->modstamp)
+					collector.push_back(make_pair(e->filename, repository::state_modified));
+			}
 	}
 
 	repository::state cvs_repository::get_filestate(const wstring &path) const

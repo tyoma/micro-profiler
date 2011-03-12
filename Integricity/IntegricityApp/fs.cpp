@@ -28,7 +28,8 @@ namespace fs
 			{
 				DWORD result = ::WaitForSingleObject(_change_notification, timeout);
 
-				::FindNextChangeNotification(_change_notification);
+				if (WAIT_OBJECT_0 == result)
+					::FindNextChangeNotification(_change_notification);
 				return WAIT_OBJECT_0 == result ? satisfied : waitable::timeout;
 			}
 		};

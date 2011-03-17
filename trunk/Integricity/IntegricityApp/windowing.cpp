@@ -19,27 +19,33 @@ window_wrapper::window_wrapper(HWND hwnd)
 
 LRESULT CALLBACK window_wrapper::windowproc_proxy(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	window_wrapper *this_ = reinterpret_cast<window_wrapper *>(::GetProp(hwnd, c_wrapper_ptr_name));
+	shared_ptr<window_wrapper> w(window_wrapper::extract(hwnd));
 
-	LRESULT result = this_->_previous(hwnd, message, wparam, lparam);
+	LRESULT result = w->_previous(hwnd, message, wparam, lparam);
 	if (message == WM_NCDESTROY)
-		this_->_this.reset();
+		w->_this.reset();
 	return result;
+}
+
+shared_ptr<window_wrapper> window_wrapper::extract(HWND hwnd)
+{
+	window_wrapper *attached = reinterpret_cast<window_wrapper *>(::GetProp(hwnd, c_wrapper_ptr_name));
+
+	return attached ? attached->shared_from_this() : 0;
 }
 
 shared_ptr<window_wrapper> window_wrapper::attach(HWND hwnd)
 {
 	if (::IsWindow(hwnd))
 	{
-		if (window_wrapper *stored = reinterpret_cast<window_wrapper *>(::GetProp(hwnd, c_wrapper_ptr_name)))
-			return stored->_this;
-		else
-		{
-			shared_ptr<window_wrapper> w(new window_wrapper(hwnd));
+		shared_ptr<window_wrapper> w(window_wrapper::extract(hwnd));
 
+		if (w == 0)
+		{
+			w.reset(new window_wrapper(hwnd));
 			w->_this = w;
-			return w;
 		}
+		return w;
 	}
 	else
 		throw invalid_argument("");

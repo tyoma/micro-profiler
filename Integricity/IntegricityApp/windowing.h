@@ -12,6 +12,7 @@ class window_wrapper : public std::enable_shared_from_this<window_wrapper>
 	window_wrapper(HWND hwnd);
 
 	static LRESULT CALLBACK windowproc_proxy(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static std::shared_ptr<window_wrapper> extract(HWND hwnd);
 
 public:
 	static std::shared_ptr<window_wrapper> attach(HWND hwnd);

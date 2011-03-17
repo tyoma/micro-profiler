@@ -63,6 +63,7 @@
     <ClCompile Include="MTTests.cpp" />
     <ClCompile Include="TestHelpers.cpp" />
     <ClCompile Include="UtilitiesTests.cpp" />
+    <ClCompile Include="WindowingTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestHelpers.h" />

@@ -23,6 +23,7 @@
     <ClCompile Include="cvs.cpp" />
     <ClCompile Include="fs.cpp" />
     <ClCompile Include="mt.cpp" />
+    <ClCompile Include="windowing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.h" />
@@ -32,6 +33,7 @@
     <ClInclude Include="mt.h" />
     <ClInclude Include="repository.h" />
     <ClInclude Include="utilities.h" />
+    <ClInclude Include="windowing.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{89686A7A-7B22-43C5-9C8E-F5723325C1AE}</ProjectGuid>
@@ -91,6 +93,9 @@
     </Link>
     <Lib />
     <Lib />
+    <Lib>
+      <AdditionalDependencies>user32.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -107,6 +112,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <Lib>
+      <AdditionalDependencies>user32.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Testing|Win32'">
     <ClCompile>
@@ -124,6 +132,9 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib />
+    <Lib>
+      <AdditionalDependencies>user32.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTests|Win32'">
     <ClCompile>

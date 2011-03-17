@@ -42,8 +42,8 @@ namespace ut
 
 	entries_file::entries_file(const wstring &repository_directory)
 	{
-		Directory::CreateDirectory(make_managed(repository_directory / L"cvs"));
-		_file = File::Create(make_managed(repository_directory / L"cvs/entries"));
+		Directory::CreateDirectory(make_managed(repository_directory / L"CVS"));
+		_file = File::Create(make_managed(repository_directory / L"CVS/entries"));
 		_writer = gcnew StreamWriter(_file);
 	}
 

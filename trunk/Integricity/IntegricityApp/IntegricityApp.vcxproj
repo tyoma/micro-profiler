@@ -87,6 +87,7 @@
       <AdditionalIncludeDirectories>"$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv";"$(MSBuildExtensionsPath32)\..\Common Files\Designer";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

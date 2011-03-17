@@ -54,7 +54,7 @@ namespace AppTests
 			// INIT
 			stub_listener l;
 			temp_directory d(L"sample");
-			temp_directory d_cvs(d.path() / L"cvs");
+			temp_directory d_cvs(d.path() / L"CVS");
 
 			// ACT / ASSERT
 			ASSERT_THROWS(repository::create_cvs_sc(d.path(), l), invalid_argument);

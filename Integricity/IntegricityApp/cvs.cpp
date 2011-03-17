@@ -98,7 +98,7 @@ namespace
 	cvs_repository::cvs_repository(const wstring &root, listener &l)
 		: _root(root), _exit_requested(false), _listener(l)
 	{
-		if (get_entry_type(_root / L"cvs/entries") != entry_file)
+		if (get_entry_type(_root / L"CVS/entries") != entry_file)
 			throw invalid_argument("");
 		_monitor = create_directory_monitor(_root, true);
 		_tracker_thread.reset(new thread([&] () { track_changes(); }));
@@ -126,10 +126,10 @@ namespace
 
 	void cvs_repository::evaluate_changes_and_notify(const wstring &directory, const wstring &prefix, vector< pair<wstring, repository::state> > &collector)
 	{
-		entries es(directory / L"cvs/entries");
+		entries es(directory / L"CVS/entries");
 
 		for (directory_iterator i(directory); i; ++i)
-			if ((*i).name != L"cvs")
+			if ((*i).name != L"CVS")
 			{
 				shared_ptr<entry> e(es.find_entry((*i).name));
 
@@ -148,7 +148,7 @@ namespace
 	repository::state cvs_repository::get_filestate(const wstring &path) const
 	{
 		filetime modstamp;
-		entries es(get_base_directory(path) / L"cvs/entries");
+		entries es(get_base_directory(path) / L"CVS/entries");
 		shared_ptr<entry> e(es.find_entry(get_filename(path)));
 		bool exists(get_filetimes(path, 0, &modstamp, 0));
 

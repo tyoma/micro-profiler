@@ -1,6 +1,7 @@
 #pragma once
 
 #include "basics.h"
+#include "windowing.h"
 
 #include <memory>
 
@@ -19,6 +20,7 @@ class application : public destructible
 	EnvDTE::_DTEPtr _dte;
 
 	std::shared_ptr<destructible> _openedConnection, _closedConnection;
+	std::shared_ptr<destructible> _interception;
 
 public:
 	application(EnvDTE::_DTEPtr dte);

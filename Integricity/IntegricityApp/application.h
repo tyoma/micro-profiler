@@ -21,6 +21,9 @@ class application : public destructible
 
 	std::shared_ptr<destructible> _openedConnection, _closedConnection;
 	std::shared_ptr<destructible> _interception;
+	HFONT _font;
+
+	LRESULT handle_solution_tree_event(HWND htree, UINT message, WPARAM wparam, LPARAM lparam, const window_wrapper::previous_handler_t &previous);
 
 public:
 	application(EnvDTE::_DTEPtr dte);

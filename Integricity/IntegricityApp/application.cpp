@@ -13,16 +13,6 @@ using namespace EnvDTE;
 
 namespace
 {
-	LRESULT f(HWND htree, UINT message, WPARAM wparam, LPARAM lparam, const function<LRESULT(UINT, WPARAM, LPARAM)> &previous)
-	{
-		if (message == WM_NOTIFY && ((NMHDR *)lparam)->code == NM_CUSTOMDRAW)
-		{
-			NMTVCUSTOMDRAW *s = (NMTVCUSTOMDRAW *)lparam;
-			int a = 0;
-		}
-		return previous(message, wparam, lparam);
-	}
-
 	void print_tree(HWND htree, HTREEITEM firstItem, int level = 0)
 	{
 		do
@@ -49,6 +39,8 @@ namespace
 application::application(_DTEPtr dte)
 	: _dte(dte)
 {
+	_font = CreateFont(13, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, _T("Impact"));
+
 	if (::AllocConsole())
 	{
 		freopen("CONOUT$", "w", stdout);
@@ -65,7 +57,7 @@ application::application(_DTEPtr dte)
 	HWND parent = hwnd = ::FindWindowEx(hwnd, NULL, _T("VsUIHierarchyBaseWin"), NULL);
 	hwnd = ::FindWindowEx(hwnd, NULL, _T("SysTreeView32"), NULL);
 
-	_interception = window_wrapper::attach(parent)->advise(bind(&f, hwnd, _1, _2, _3, _4));
+	_interception = window_wrapper::attach(parent)->advise(bind(&application::handle_solution_tree_event, this, hwnd, _1, _2, _3, _4));
 
 	print_tree(hwnd, TreeView_GetRoot(hwnd));
 }
@@ -74,4 +66,30 @@ application::application(_DTEPtr dte)
 application::~application()
 {
 	::FreeConsole();
+	::DeleteObject(_font);
+}
+
+LRESULT application::handle_solution_tree_event(HWND htree, UINT message, WPARAM wparam, LPARAM lparam, const window_wrapper::previous_handler_t &previous)
+{
+	NMTVCUSTOMDRAW *n = message == WM_NOTIFY && ((NMHDR *)(lparam))->code == NM_CUSTOMDRAW ? ((NMTVCUSTOMDRAW *)(lparam)) : 0;
+
+	LRESULT result = previous(message, wparam, lparam);
+
+	if (n)
+	{
+		switch (n->nmcd.dwDrawStage)
+		{
+			case CDDS_PREPAINT:
+				return CDRF_NOTIFYITEMDRAW;
+
+			case CDDS_ITEMPREPAINT:
+			case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
+				::SelectObject(n->nmcd.hdc, _font);
+				n->clrText = 0x00123456;
+				return CDRF_NEWFONT;
+			default:
+				break;
+		}
+	}
+	return result;
 }

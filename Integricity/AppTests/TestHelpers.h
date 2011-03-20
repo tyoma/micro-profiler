@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <tchar.h>
 
 namespace ut
 {
@@ -36,6 +38,24 @@ namespace ut
 
 		void append(const std::wstring &filename, const std::wstring &revision, System::DateTime modstamp);
 		void append_new(const std::wstring &filename);
+	};
+
+	[Microsoft::VisualStudio::TestTools::UnitTesting::TestClass]
+	public ref class WindowTestsBase
+	{
+		std::vector<void *> *_windows;
+
+	protected:
+		void *create_window();
+		void *create_window(const TCHAR *class_name);
+		void *create_tree();
+
+	public:
+		WindowTestsBase();
+		~WindowTestsBase();
+
+		[Microsoft::VisualStudio::TestTools::UnitTesting::TestCleanup]
+		void cleanup();
 	};
 }
 

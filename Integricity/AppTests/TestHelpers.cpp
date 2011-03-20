@@ -1,5 +1,6 @@
 #include "TestHelpers.h"
 
+#include <windows.h>
 #include <fs.h>
 #include <vcclr.h>
 
@@ -74,5 +75,41 @@ namespace ut
 			"dummy timestamp",
 			"",
 			""));
+	}
+
+
+	WindowTestsBase::WindowTestsBase()
+		: _windows(new vector<void *>())
+	{	}
+
+	WindowTestsBase::~WindowTestsBase()
+	{	delete _windows;	}
+
+	void *WindowTestsBase::create_window()
+	{	return create_window(_T("static"));	}
+
+	void *WindowTestsBase::create_window(const TCHAR *class_name)
+	{
+		HWND hwnd = ::CreateWindow(class_name, NULL, WS_POPUP, 0, 0, 1, 1, NULL, NULL, NULL, NULL);
+
+		_windows->push_back(hwnd);
+		return hwnd;
+	}
+
+	void *WindowTestsBase::create_tree()
+	{
+		HWND hparent = ::CreateWindow(_T("static"), NULL, WS_POPUP, 0, 0, 1, 1, NULL, NULL, NULL, NULL);
+		HWND htree = ::CreateWindow(_T("systreeview32"), NULL, WS_CHILD | WS_VISIBLE, 0, 0, 1, 1, hparent, NULL, NULL, NULL);
+
+		_windows->push_back(htree);
+		_windows->push_back(hparent);
+		return htree;
+	}
+
+	void WindowTestsBase::cleanup()
+	{
+		for (vector<void *>::const_iterator i = _windows->begin(); i != _windows->end(); ++i)
+			if (::IsWindow(reinterpret_cast<HWND>(*i)))
+				::DestroyWindow(reinterpret_cast<HWND>(*i));
 	}
 }

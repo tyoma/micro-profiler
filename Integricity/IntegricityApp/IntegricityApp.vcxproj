@@ -23,6 +23,7 @@
     <ClCompile Include="cvs.cpp" />
     <ClCompile Include="fs.cpp" />
     <ClCompile Include="mt.cpp" />
+    <ClCompile Include="treeview_handler.cpp" />
     <ClCompile Include="windowing.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +33,7 @@
     <ClInclude Include="fs.h" />
     <ClInclude Include="mt.h" />
     <ClInclude Include="repository.h" />
+    <ClInclude Include="treeview_handler.h" />
     <ClInclude Include="utilities.h" />
     <ClInclude Include="windowing.h" />
   </ItemGroup>

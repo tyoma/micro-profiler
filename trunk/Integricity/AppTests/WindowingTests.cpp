@@ -2,7 +2,6 @@
 
 #include "TestHelpers.h"
 #include <tchar.h>
-#include <vector>
 #include <functional>
 
 using namespace std;
@@ -43,36 +42,9 @@ namespace AppTests
 	}
 
 	[TestClass]
-	public ref class WindowingTests
+	public ref class WindowingTests : ut::WindowTestsBase
 	{
-		vector<HWND> *_tocleanup;
-
-		HWND create(const TCHAR *class_name)
-		{
-			HWND hwnd = ::CreateWindow(class_name, NULL, WS_POPUP, 0, 0, 1, 1, NULL, NULL, NULL, NULL);
-
-			_tocleanup->push_back(hwnd);
-			return hwnd;
-		}
-
-		HWND create()
-		{	return create(_T("static"));	}
-
 	public:
-		WindowingTests()
-			: _tocleanup(new vector<HWND>())
-		{	}
-		~WindowingTests()
-		{	delete _tocleanup;	}
-
-		[TestCleanup]
-		void CleanupCreatedWindows()
-		{
-			for (vector<HWND>::const_iterator i = _tocleanup->begin(); i != _tocleanup->end(); ++i)
-				if (::IsWindow(*i))
-					::DestroyWindow(*i);
-		}
-
 		[TestMethod]
 		void FailToWrapNonWindow()
 		{
@@ -85,7 +57,7 @@ namespace AppTests
 		void WrapWindowAndReturnWrapper()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 
 			// ACT (must not throw)
 			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
@@ -99,7 +71,7 @@ namespace AppTests
 		void WrappersForDifferentWindowsAreDifferent()
 		{
 			// INIT
-			HWND hwnd1 = create(), hwnd2 = create();
+			HWND hwnd1 = (HWND)create_window(), hwnd2 = (HWND)create_window();
 
 			// ACT
 			shared_ptr<window_wrapper> w1(window_wrapper::attach(hwnd1));
@@ -114,7 +86,7 @@ namespace AppTests
 		void WrapperHoldsHWND()
 		{
 			// INIT
-			HWND hwnd1 = create(), hwnd2 = create();
+			HWND hwnd1 = (HWND)create_window(), hwnd2 = (HWND)create_window();
 			shared_ptr<window_wrapper> w1(window_wrapper::attach(hwnd1));
 			shared_ptr<window_wrapper> w2(window_wrapper::attach(hwnd2));
 
@@ -128,7 +100,7 @@ namespace AppTests
 		void WrapperForTheSameWindowIsTheSame()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 
 			// ACT
 			shared_ptr<window_wrapper> w1(window_wrapper::attach(hwnd));
@@ -143,7 +115,7 @@ namespace AppTests
 		void SameWrapperForTheSameWindowIsReclaimed()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 
 			// ACT
 			window_wrapper * w1(window_wrapper::attach(hwnd).get());	// do not hold reference
@@ -158,7 +130,7 @@ namespace AppTests
 		void WrapperDestroyedOnDestroyWindow()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 
 			// ACT
 			weak_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
@@ -178,7 +150,7 @@ namespace AppTests
 		void MessagesAreDelegatedToOriginalWndProcIfNotIntercepted()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 			TCHAR buffer[256] = { 0 };
 			
 			window_wrapper::attach(hwnd);
@@ -203,7 +175,7 @@ namespace AppTests
 		void MessagesAreDelegatedToUserCBIfIntercepted()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 			handler h;
 			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
 			LPCTSTR s1 = _T("Text #1");
@@ -225,10 +197,8 @@ namespace AppTests
 			Assert::IsTrue(reinterpret_cast<LPCTSTR>(h.messages[1].lParam) == s2);
 			Assert::IsTrue(h.messages[2].message == WM_GETTEXT);
 			Assert::IsTrue(h.messages[2].wParam == 3);
-			Assert::IsTrue(reinterpret_cast<LPCTSTR>(h.messages[2].lParam) == buffer);
 			Assert::IsTrue(h.messages[3].message == WM_GETTEXT);
 			Assert::IsTrue(h.messages[3].wParam == 4);
-			Assert::IsTrue(reinterpret_cast<LPCTSTR>(h.messages[3].lParam) == buffer);
 		}
 
 
@@ -236,7 +206,7 @@ namespace AppTests
 		void ResultIsProvidedFromInterceptor()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 			handler h;
 			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
 
@@ -258,7 +228,7 @@ namespace AppTests
 		void MessageIsNotPassedToPreviousHandlerIfUserHandlerDoesNotCallIt()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 			handler h;
 			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
 
@@ -282,7 +252,7 @@ namespace AppTests
 		void InterceptionStopsIfConnectionDestroyed()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 			handler h;
 			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
 			shared_ptr<destructible> c(w->advise(bind(&handler::on_message, &h, _1, _2, _3, _4)));
@@ -310,13 +280,13 @@ namespace AppTests
 		void WrapperPtrPropertyIsRemovedInNCDestroy()
 		{
 			// INIT
-			HWND hwnd = create();
+			HWND hwnd = (HWND)create_window();
 			bool property_exists = true;
 			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
 			shared_ptr<destructible> c(w->advise(bind(&checker_handler, hwnd, &property_exists)));
 
 			// ACT / ASSERT
-			Assert::IsFalse(::GetProp(hwnd, _T("IntegricityWrapperPtr")) == 0);
+			Assert::IsTrue(::GetProp(hwnd, _T("IntegricityWrapperPtr")) != 0);
 
 			// ACT
 			::DestroyWindow(hwnd);

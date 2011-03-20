@@ -51,7 +51,6 @@ Global
 		{41862D68-4D74-4266-A78D-48685218CF08}.Release|Win32.ActiveCfg = Release|Win32
 		{41862D68-4D74-4266-A78D-48685218CF08}.Release|Win32.Build.0 = Release|Win32
 		{41862D68-4D74-4266-A78D-48685218CF08}.Testing|Win32.ActiveCfg = Release|Win32
-		{41862D68-4D74-4266-A78D-48685218CF08}.Testing|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

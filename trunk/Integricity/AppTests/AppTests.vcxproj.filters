@@ -8,6 +8,7 @@
     <ClCompile Include="TestHelpers.cpp" />
     <ClCompile Include="MTTests.cpp" />
     <ClCompile Include="WindowingTests.cpp" />
+    <ClCompile Include="TreeViewHandlerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestHelpers.h" />

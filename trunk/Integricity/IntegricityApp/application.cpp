@@ -20,7 +20,7 @@ namespace
 			TCHAR buffer[1000] = { 0 };
 			TVITEM ti = { 0 };
 
-			ti.mask = TVIF_HANDLE | TVIF_TEXT;
+			ti.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_PARAM;
 			ti.pszText = buffer;
 			ti.cchTextMax = 999;
 			ti.hItem = firstItem;
@@ -28,7 +28,7 @@ namespace
 
 			for (int i = 0; i < level; ++i)
 				cout << "  ";
-			wcout << ti.pszText << endl;
+			wcout << ti.pszText << L" (" << ti.lParam << L")" << endl;
 
 			if (HTREEITEM firstChild = TreeView_GetChild(htree, firstItem))
 				print_tree(htree, firstChild, level + 1);
@@ -51,6 +51,7 @@ application::application(_DTEPtr dte)
 	//_openedConnection = connection::make(_dte->Events->SolutionEvents, __uuidof(_dispSolutionEvents), 1, &f);
 	//_closedConnection = connection::make(_dte->Events->SolutionEvents, __uuidof(_dispSolutionEvents), 1, &f);
 
+	_SolutionPtr s = _dte->Solution;
 
 	HWND hwnd = ::FindWindow(NULL, _T("testmfc - Microsoft Visual Studio"));
 	hwnd = ::FindWindowEx(hwnd, NULL, _T("GenericPane"), _T("Solution Explorer"));

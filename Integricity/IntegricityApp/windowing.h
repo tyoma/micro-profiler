@@ -14,6 +14,7 @@ public:
 
 public:
 	static std::shared_ptr<window_wrapper> attach(HWND hwnd);
+	bool detach();
 
 	std::shared_ptr<destructible> advise(const user_handler_t &user_handler);
 	void unadvise() throw();

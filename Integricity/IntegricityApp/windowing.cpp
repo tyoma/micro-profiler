@@ -27,7 +27,7 @@ namespace
 window_wrapper::window_wrapper(HWND hwnd)
 	: _window(hwnd)
 {
-	_previous_handler = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(hwnd, GWL_WNDPROC, reinterpret_cast<LONG>(&window_wrapper::windowproc_proxy)));
+	_previous_handler = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG>(&window_wrapper::windowproc_proxy)));
 	::SetProp(hwnd, c_wrapper_ptr_name, reinterpret_cast<HANDLE>(this));
 }
 
@@ -38,7 +38,7 @@ LRESULT CALLBACK window_wrapper::windowproc_proxy(HWND hwnd, UINT message, WPARA
 	if (message == WM_NCDESTROY)
 		::RemoveProp(hwnd, c_wrapper_ptr_name);
 
-	LRESULT result = w->_user_handler != 0 ? (*w->_user_handler)(message, wparam, lparam, bind(w->_previous_handler, w->hwnd(), _1, _2, _3))
+	LRESULT result = w->_user_handler != 0 ? (*w->_user_handler)(message, wparam, lparam, bind(&::CallWindowProc, w->_previous_handler, w->hwnd(), _1, _2, _3))
 			: w->_previous_handler(hwnd, message, wparam, lparam);
 
 	if (message == WM_NCDESTROY)
@@ -68,6 +68,15 @@ shared_ptr<window_wrapper> window_wrapper::attach(HWND hwnd)
 	}
 	else
 		throw invalid_argument("");
+}
+
+bool window_wrapper::detach()
+{
+	if (&windowproc_proxy != reinterpret_cast<WNDPROC>(::GetWindowLongPtr(_window, GWLP_WNDPROC)))
+		return false;
+	::SetWindowLongPtr(_window, GWLP_WNDPROC, reinterpret_cast<LONG>(_previous_handler));
+	_this.reset();
+	return true;
 }
 
 shared_ptr<destructible> window_wrapper::advise(const user_handler_t &user_handler)

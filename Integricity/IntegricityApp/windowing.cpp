@@ -75,6 +75,7 @@ bool window_wrapper::detach() throw()
 	if (&windowproc_proxy != reinterpret_cast<WNDPROC>(::GetWindowLongPtr(_window, GWLP_WNDPROC)))
 		return false;
 	::SetWindowLongPtr(_window, GWLP_WNDPROC, reinterpret_cast<LONG>(_previous_handler));
+	::RemoveProp(_window, c_wrapper_ptr_name);
 	_this.reset();
 	return true;
 }

@@ -322,6 +322,21 @@ namespace AppTests
 
 
 		[TestMethod]
+		void PropIsRemovedOnDetachment()
+		{
+			// INIT
+			HWND hwnd = (HWND)create_window();
+			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
+
+			// ACT
+			w->detach();
+
+			// ASSERT
+			Assert::IsTrue(0 == ::GetProp(hwnd, _T("IntegricityWrapperPtr")));
+		}
+
+
+		[TestMethod]
 		void DetachReleasesWrapperFromWindow()
 		{
 			// INIT
@@ -353,6 +368,23 @@ namespace AppTests
 			// ASSERT
 			Assert::IsFalse(detach_result);
 			Assert::IsTrue(replacement_proc == (WNDPROC)::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
+		}
+
+
+		[TestMethod]
+		void PropIsNotRemovedIfSubclassedAfterAttachment()
+		{
+			// INIT
+			HWND hwnd = (HWND)create_window();
+			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
+			
+			::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)replacement_proc);
+
+			// ACT
+			w->detach();
+
+			// ASSERT
+			Assert::IsFalse(0 == ::GetProp(hwnd, _T("IntegricityWrapperPtr")));
 		}
 
 

@@ -23,6 +23,18 @@ namespace AppTests
 			path_dest.push_back(path);
 		}
 
+		void color_picker(const vector<wstring> &path, unsigned int &foreground_color, unsigned int &background_color, bool &emphasized)
+		{
+			if (path[0] == L"root #1")
+				foreground_color = 0x00ff00;
+			else if (path[0] == L"root #2")
+				foreground_color = 0x00ffff;
+			else if (path[0] == L"root #3")
+				background_color = 0xff0000;
+			else if (path[0] == L"root #4")
+				background_color = 0xff00ff;
+		}
+
 		void *add_item(void *htree, void *parent_item, const wstring &text)
 		{
 			TVITEMW ti = { TVIF_TEXT, 0, 0, 0, const_cast<wchar_t *>(text.c_str()), };
@@ -172,6 +184,63 @@ namespace AppTests
 			Assert::IsTrue(2 == paths[8].size());
 			Assert::IsTrue(L"root #2" == paths[8][0]);
 			Assert::IsTrue(L"subitem #2" == paths[8][1]);
+		}
+
+
+		[TestMethod]
+		void ColorsCanBeSpecifiedInNotification()
+		{
+			// INIT
+			void *htree = create_tree();
+			vector< vector<wstring> > path_dest;
+			NMTVCUSTOMDRAW n = { 0 };
+			vector< vector<wstring> > paths;
+			shared_ptr<destructible> tvh(handle_tv_notifications(htree, &color_picker));
+
+			void *r1 = add_item(htree, 0, L"root #1");
+			void *r2 = add_item(htree, 0, L"root #2");
+			void *r3 = add_item(htree, 0, L"root #3");
+			void *r4 = add_item(htree, 0, L"root #4");
+
+			n.nmcd.hdr.code = NM_CUSTOMDRAW;
+			n.nmcd.dwDrawStage = CDDS_ITEMPREPAINT;
+			n.clrTextBk = 0xffffff;
+			n.clrText = 0xffffff;
+
+			// ACT
+			n.nmcd.dwItemSpec = (DWORD)r1;
+			::SendMessage(::GetParent((HWND)htree), WM_NOTIFY, 0, (LPARAM)&n);
+
+			// ASSERT
+			Assert::IsTrue(0x00ff00 == n.clrText);
+			Assert::IsTrue(0xffffff == n.clrTextBk);
+
+			// ACT
+			n.nmcd.dwItemSpec = (DWORD)r2;
+			::SendMessage(::GetParent((HWND)htree), WM_NOTIFY, 0, (LPARAM)&n);
+
+			// ASSERT
+			Assert::IsTrue(0x00ffff == n.clrText);
+			Assert::IsTrue(0xffffff == n.clrTextBk);
+
+			// INIT
+			n.clrText = 0xffffff;
+
+			// ACT
+			n.nmcd.dwItemSpec = (DWORD)r3;
+			::SendMessage(::GetParent((HWND)htree), WM_NOTIFY, 0, (LPARAM)&n);
+
+			// ASSERT
+			Assert::IsTrue(0xffffff == n.clrText);
+			Assert::IsTrue(0xff0000 == n.clrTextBk);
+
+			// ACT
+			n.nmcd.dwItemSpec = (DWORD)r4;
+			::SendMessage(::GetParent((HWND)htree), WM_NOTIFY, 0, (LPARAM)&n);
+
+			// ASSERT
+			Assert::IsTrue(0xffffff == n.clrText);
+			Assert::IsTrue(0xff00ff == n.clrTextBk);
 		}
 	};
 }

@@ -11,34 +11,42 @@ using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace AppTests
 {
-	struct handler
+	namespace
 	{
-		vector<MSG> messages;
-		LRESULT myresult;
-
-		handler()
-			: myresult(0)
-		{	}
-
-		LRESULT on_message(UINT message, WPARAM wparam, LPARAM lparam, const function<LRESULT (UINT, WPARAM, LPARAM)> &previous)
+		struct handler
 		{
-			MSG m = { 0 };
+			vector<MSG> messages;
+			LRESULT myresult;
 
-			m.message = message;
-			m.wParam = wparam;
-			m.lParam = lparam;
+			handler()
+				: myresult(0)
+			{	}
 
-			messages.push_back(m);
-			if (message == WM_SETTEXT && _tcscmp((LPCTSTR)lparam, _T("disallowed")) == 0)
-				return 0;
-			return !myresult ? previous(message, wparam, lparam) : myresult;
+			LRESULT on_message(UINT message, WPARAM wparam, LPARAM lparam, const function<LRESULT (UINT, WPARAM, LPARAM)> &previous)
+			{
+				MSG m = { 0 };
+
+				m.message = message;
+				m.wParam = wparam;
+				m.lParam = lparam;
+
+				messages.push_back(m);
+				if (message == WM_SETTEXT && _tcscmp((LPCTSTR)lparam, _T("disallowed")) == 0)
+					return 0;
+				return !myresult ? previous(message, wparam, lparam) : myresult;
+			}
+		};
+
+		LRESULT checker_handler(HWND hwnd, bool *exists)
+		{
+			*exists = 0 != ::GetProp(hwnd, _T("IntegricityWrapperPtr"));
+			return 0;
 		}
-	};
 
-	LRESULT checker_handler(HWND hwnd, bool *exists)
-	{
-		*exists = 0 != ::GetProp(hwnd, _T("IntegricityWrapperPtr"));
-		return 0;
+		WNDPROC original = 0;
+
+		LRESULT CALLBACK replacement_proc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+		{	return ::CallWindowProc(original, hwnd, message, wparam, lparam);	}
 	}
 
 	[TestClass]
@@ -293,6 +301,77 @@ namespace AppTests
 
 			// ASSERT
 			Assert::IsFalse(property_exists);
+		}
+
+
+		[TestMethod]
+		void DetachRestoresOriginalWindowProc()
+		{
+			// INIT
+			HWND hwnd = (HWND)create_window();
+			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
+			WNDPROC replacement_wndproc = (WNDPROC)::GetWindowLongPtr(hwnd, GWLP_WNDPROC);
+
+			// ACT
+			bool detach_result = w->detach();
+
+			// ASSERT
+			Assert::IsTrue(detach_result);
+			Assert::IsFalse(replacement_wndproc == (WNDPROC)::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
+		}
+
+
+		[TestMethod]
+		void DetachReleasesWrapperFromWindow()
+		{
+			// INIT
+			HWND hwnd = (HWND)create_window();
+			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
+			weak_ptr<window_wrapper> w_weak(w);
+
+			// ACT
+			w->detach();
+			w.reset();
+
+			// ASSERT
+			Assert::IsTrue(w_weak.expired());
+		}
+
+
+		[TestMethod]
+		void DetachFailsIfSubclassedAfterAttachment()
+		{
+			// INIT
+			HWND hwnd = (HWND)create_window();
+			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
+			
+			::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)replacement_proc);
+
+			// ACT
+			bool detach_result = w->detach();
+
+			// ASSERT
+			Assert::IsFalse(detach_result);
+			Assert::IsTrue(replacement_proc == (WNDPROC)::GetWindowLongPtr(hwnd, GWLP_WNDPROC));
+		}
+
+
+		[TestMethod]
+		void DetachDoesNotReleasesWrapperFromOversubclassedWindow()
+		{
+			// INIT
+			HWND hwnd = (HWND)create_window();
+			shared_ptr<window_wrapper> w(window_wrapper::attach(hwnd));
+			weak_ptr<window_wrapper> w_weak(w);
+
+			::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)replacement_proc);
+
+			// ACT
+			w->detach();
+			w.reset();
+
+			// ASSERT
+			Assert::IsFalse(w_weak.expired());
 		}
 	};
 }

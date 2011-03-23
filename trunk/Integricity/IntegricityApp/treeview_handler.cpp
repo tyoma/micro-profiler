@@ -42,11 +42,10 @@ namespace
 
 			case CDDS_ITEMPREPAINT:
 			case CDDS_SUBITEM | CDDS_ITEMPREPAINT:
-				unsigned int a, b;
 				bool c;
 				_path_buffer.clear();
 				extract_path(reinterpret_cast<HTREEITEM>(n->nmcd.dwItemSpec), _path_buffer);
-				_prepaint_handler(_path_buffer, a, b, c);
+				_prepaint_handler(_path_buffer, reinterpret_cast<unsigned int &>(n->clrText), reinterpret_cast<unsigned int &>(n->clrTextBk), c);
 				break;				
 			}
 		return previous(message, wparam, lparam);

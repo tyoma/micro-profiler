@@ -70,7 +70,7 @@ shared_ptr<window_wrapper> window_wrapper::attach(HWND hwnd)
 		throw invalid_argument("");
 }
 
-bool window_wrapper::detach()
+bool window_wrapper::detach() throw()
 {
 	if (&windowproc_proxy != reinterpret_cast<WNDPROC>(::GetWindowLongPtr(_window, GWLP_WNDPROC)))
 		return false;

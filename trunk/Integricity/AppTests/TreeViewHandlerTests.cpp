@@ -1,6 +1,8 @@
 #include <treeview_handler.h>
 
 #include "TestHelpers.h"
+
+#include <windowing.h>
 #include <windows.h>
 #include <commctrl.h>
 
@@ -65,6 +67,29 @@ namespace AppTests
 
 			// ACT / ASSERT
 			Assert::IsTrue(7 == ::GetWindowTextLength(::GetParent((HWND)htree)));
+		}
+
+
+		[TestMethod]
+		void WindowWrappersAreDetachedOnHandlerDestruction()
+		{
+			// INIT
+			HWND dummy = (HWND)create_window();
+			HWND htree = (HWND)create_tree(), hparent = ::GetParent(htree);
+			shared_ptr<destructible> tvh(handle_tv_notifications(htree, &dummy_handler));
+
+			window_wrapper::attach(dummy);
+
+			LONG_PTR wrapper_proc(::GetWindowLongPtr(dummy, GWLP_WNDPROC));
+
+			// ACT / ASSERT
+			Assert::IsTrue(wrapper_proc == ::GetWindowLongPtr(hparent, GWLP_WNDPROC));
+
+			// ACT
+			tvh.reset();
+
+			// ASSERT
+			Assert::IsFalse(wrapper_proc == ::GetWindowLongPtr(hparent, GWLP_WNDPROC));
 		}
 
 

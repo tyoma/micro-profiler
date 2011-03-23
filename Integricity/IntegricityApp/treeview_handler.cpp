@@ -12,6 +12,7 @@ namespace
 	{
 		HWND _htree;
 		prepaint_handler_t _prepaint_handler;
+		shared_ptr<window_wrapper> _parent_wrapper;
 		std::shared_ptr<destructible> _interception;
 		vector<wstring> _path_buffer;
 
@@ -21,15 +22,15 @@ namespace
 
 	public:
 		treeview_handler(void *htree, const prepaint_handler_t &prepaint_handler);
+		~treeview_handler();
 	};
 
 	treeview_handler::treeview_handler(void *htree, const prepaint_handler_t &prepaint_handler)
-		: _htree(reinterpret_cast<HWND>(htree)), _prepaint_handler(prepaint_handler)
-	{
-		shared_ptr<window_wrapper> w(window_wrapper::attach(::GetParent(_htree)));
+		: _htree(reinterpret_cast<HWND>(htree)), _prepaint_handler(prepaint_handler), _parent_wrapper(window_wrapper::attach(::GetParent(_htree)))
+	{	_interception = _parent_wrapper->advise(bind(&treeview_handler::handle_parent_messages, this, _1, _2, _3, _4));	}
 
-		_interception = w->advise(bind(&treeview_handler::handle_parent_messages, this, _1, _2, _3, _4));
-	}
+	treeview_handler::~treeview_handler()
+	{	_parent_wrapper->detach();	}
 
 	LRESULT treeview_handler::handle_parent_messages(UINT message, WPARAM wparam, LPARAM lparam, const window_wrapper::previous_handler_t &previous)
 	{

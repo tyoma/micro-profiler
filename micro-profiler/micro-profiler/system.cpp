@@ -1,0 +1,38 @@
+#include "system.h"
+
+#include <windows.h>
+#include <memory>
+#include <intrin.h>
+#pragma intrinsic(__rdtsc)
+
+namespace micro_profiler
+{
+	unsigned __int64 timestamp()
+	{	return __rdtsc();	}
+
+	unsigned __int64 timestamp_precision()
+	{
+		unsigned __int64 start(__rdtsc());
+
+		::Sleep(1000);
+		return __rdtsc() - start;
+	}
+
+	unsigned int current_thread_id()
+	{	return ::GetCurrentThreadId();	}
+
+	mutex::mutex()
+		: _critical_section(new (_buffer) CRITICAL_SECTION)
+	{
+		::InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));
+	}
+
+	mutex::~mutex()
+	{	::DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));	}
+
+	void mutex::enter()
+	{	::EnterCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));	}
+
+	void mutex::leave()
+	{	::LeaveCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));	}
+}

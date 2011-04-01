@@ -1,15 +1,18 @@
-void x(int a )
+#include <windows.h>
+
+void y()
 {
-	throw 0;
+	::Sleep(20);
+}
+
+void x()
+{
+	::Sleep(100);
+	y();
 }
 
 int main()
 {
-	try
-	{
-		x(123);
-	}
-	catch (...)
-	{
-	}
+	x();
+	Sleep(100000);
 }

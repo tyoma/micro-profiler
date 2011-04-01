@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="micro-profiler-frontend"
 	ProjectGUID="{8AAA643B-32A2-41D2-92F2-B51FD513E6E8}"
 	RootNamespace="microprofiler"
@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\..\clientexe\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)_bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -87,7 +87,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\..\clientexe\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)_bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"

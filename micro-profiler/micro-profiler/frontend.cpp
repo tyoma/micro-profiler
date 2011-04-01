@@ -11,46 +11,47 @@ namespace micro_profiler
 {
 	const LPCTSTR c_mailslot_name = _T("\\\\.\\mailslot\\CQG\\ProfilerMailslot");
 
-	unsigned int __stdcall frontend::dispatch(frontend *pthis)
+	unsigned int __stdcall frontend::dispatch_proc(frontend *pthis)
 	{
 		::CoInitialize(NULL);
-
-		HANDLE mailslot = ::CreateMailslot(c_mailslot_name, 0, MAILSLOT_WAIT_FOREVER, NULL);
-		HANDLE wait_handles[2] = { pthis->_exit_event, mailslot };
-
-		while (WAIT_OBJECT_0 + 1 == ::WaitForMultipleObjects(2, wait_handles, FALSE, INFINITE))
+		try
 		{
-			char text[1024] = { 0 };
-			DWORD read = 0;
-
-			::ReadFile(mailslot, text, sizeof(text), &read, NULL);
-
-			CStringA command(text);
-
-			if (command == "CLEAR")
-				pthis->clear_statistics();
-			else if (command.Find("DUMP ") == 0)
-				pthis->dump(CString(command.Mid(5)));
+			pthis->dispatch();
 		}
-		::CloseHandle(mailslot);
+		catch(...)
+		{
+		}
 		::CoUninitialize();
 		return 0;
 	}
 
-	frontend::frontend()
+	void frontend::dispatch()
 	{
-		unsigned dummy;
+		DWORD read;
+		char command_text_buffer[1024] = { 0 };
 
-		_exit_event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-		_dispatcher_thread_handle = (HANDLE)_beginthreadex(0, 0, reinterpret_cast<unsigned int (__stdcall *)(void *)>(&frontend::dispatch), this, 0, &dummy);
+		while (::ReadFile(_commands_mailslot, command_text_buffer, sizeof(command_text_buffer), &read, NULL))
+		{
+			CString command(command_text_buffer);
+
+			if (command == _T("CLEAR"))
+				clear_statistics();
+			else if (command.Find(_T("DUMP ")) == 0)
+				dump(command.Mid(5));
+		}
 	}
+
+	frontend::frontend()
+		: _commands_mailslot(::CreateMailslot(c_mailslot_name, 0, MAILSLOT_WAIT_FOREVER, NULL)),
+			_dispatcher_thread_handle((HANDLE)_beginthreadex(0, 0, reinterpret_cast<unsigned int (__stdcall *)(void *)>(&frontend::dispatch_proc), this, 0, NULL))
+	{	}
 
 	frontend::~frontend()
 	{
-		::SetEvent(_exit_event);
+		// TODO: actually, this code does not terminate the thread, since CRT terminates it just before destroying global objects...
+		::CloseHandle(_commands_mailslot);
 		WaitForSingleObject(_dispatcher_thread_handle, INFINITE);
 		::CloseHandle(_dispatcher_thread_handle);
-		::CloseHandle(_exit_event);
 	}
 
 	void frontend::clear_statistics()
@@ -85,9 +86,6 @@ namespace micro_profiler
 			}
 		}
 	}
-
-	namespace
-	{
-		frontend g_frontend;
-	}
 }
+
+micro_profiler::frontend g_pfrontend;

@@ -135,7 +135,7 @@ namespace micro_profiler
 	{	instance().exit();	}
 }
 
-extern "C" __declspec(naked, dllexport) void _penter()
+extern "C" __declspec(naked, dllexport) void _penter2()
 {
 	_asm 
 	{
@@ -152,7 +152,7 @@ extern "C" __declspec(naked, dllexport) void _penter()
 	}
 }
 
-extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
+extern "C" void __declspec(naked, dllexport) _cdecl _pexit2()
 {
 	_asm 
 	{

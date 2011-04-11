@@ -1,6 +1,7 @@
 #pragma once
 
-#include <afx.h>
+//#include <afx.h>
+#include <windows.h>
 #include <atlstr.h>
 
 namespace micro_profiler

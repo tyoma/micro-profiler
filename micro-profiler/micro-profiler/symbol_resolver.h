@@ -1,7 +1,8 @@
 #pragma once
 
-#include <afx.h>
+//#include <afx.h>
 #include <atlbase.h>
+#include <atlstr.h>
 
 struct	IDiaSession;
 struct	IDiaDataSource;

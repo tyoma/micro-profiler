@@ -43,6 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="./../micro-profiler"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				ExceptionHandling="2"
 				RuntimeLibrary="3"
@@ -115,6 +116,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./../micro-profiler"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				ExceptionHandling="2"
 				RuntimeLibrary="2"
@@ -178,8 +180,52 @@
 		/>
 	</References>
 	<Files>
+		<Filter
+			Name="Profiling Samples"
+			>
+			<File
+				RelativePath=".\no_nesting_samples.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalOptions="/GH /Gh"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalOptions="/GH /Gh"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\AssemblyInfo.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\CallCollectorTests.cpp"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
@@ -205,26 +251,6 @@
 		<File
 			RelativePath=".\Helpers.h"
 			>
-		</File>
-		<File
-			RelativePath=".\UnitTest1.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>

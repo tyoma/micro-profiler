@@ -73,16 +73,16 @@ namespace micro_profiler
 
 			thread_filename.Format(_T("%s-%d.csv"), filename, i->thread_id);
 
-			CFile output(thread_filename, CFile::modeCreate | CFile::modeWrite);
+//			CFile output(thread_filename, CFile::modeCreate | CFile::modeWrite);
 			CStringA tmp("Function,Calls #,Exclusive Time,Inclusive Time\r\n");
 
-			output.Write((LPCSTR)tmp, tmp.GetLength());
+//			output.Write((LPCSTR)tmp, tmp.GetLength());
 
 			for (vector< pair<void * /*function*/, function_statistics> >::const_iterator j = i->statistics.begin();  j != i->statistics.end(); ++j)
 			{
 				CStringA name(sr.symbol_name_by_va(j->first));
 				tmp.Format("\"%s\",%d,%f,%f\r\n", (LPCSTR)name, j->second.calls, j->second.exclusive_time / precision, j->second.inclusive_time / precision);
-				output.Write((LPCSTR)tmp, tmp.GetLength());
+//				output.Write((LPCSTR)tmp, tmp.GetLength());
 			}
 		}
 	}

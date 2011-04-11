@@ -21,6 +21,8 @@ namespace micro_profiler
 
 			unsigned int id() const;
 			void resume();
+
+			static unsigned int current_thread_id();
 		};
 	}
 }

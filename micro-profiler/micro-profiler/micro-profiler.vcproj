@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
+			UseOfMFC="0"
 			CharacterSet="1"
 			>
 			<Tool
@@ -62,6 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="psapi.lib diaguids.lib"
+				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -91,7 +92,7 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
+			UseOfMFC="0"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -164,6 +165,18 @@
 	<References>
 	</References>
 	<Files>
+		<File
+			RelativePath=".\calls_collector.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\calls_collector.h"
+			>
+		</File>
+		<File
+			RelativePath=".\dll_entry.cpp"
+			>
+		</File>
 		<File
 			RelativePath=".\frontend.cpp"
 			>

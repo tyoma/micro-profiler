@@ -8,5 +8,10 @@ namespace micro_profiler
 		{
 			::Sleep(20);
 		}
+
+		void nesting1()
+		{
+			sleep_20();
+		}
 	}
 }

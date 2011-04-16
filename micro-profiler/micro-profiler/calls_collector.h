@@ -1,5 +1,10 @@
 #pragma once
 
+#include "pod_vector.h"
+#include "system.h"
+
+#include <map>
+
 namespace micro_profiler
 {
 #pragma pack(push, 4)
@@ -10,25 +15,42 @@ namespace micro_profiler
 	};
 #pragma pack(pop)
 
-	class __declspec(dllexport) calls_collector
+	class calls_collector
 	{
-		static calls_collector *_instance;
-
 	public:
 		struct acceptor
 		{
 			virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count) = 0;
 		};
 
+		class thread_trace_block
+		{
+			mutex _block_mtx;
+			pod_vector<call_record> _traces[2];
+			pod_vector<call_record> *_active_trace, *_inactive_trace;
+
+		public:
+			thread_trace_block();
+			thread_trace_block(const thread_trace_block &);
+			~thread_trace_block();
+
+			void track(const call_record &call);
+			void read_collected(unsigned int threadid, acceptor &a);
+		};
+
 	public:
 		calls_collector();
 		~calls_collector();
 
-		static calls_collector *instance();
+		static __declspec(dllexport) calls_collector *instance();
+		void __declspec(dllexport) read_collected(acceptor &a);
 
-		void read_collected(acceptor &a);
+		static void track(call_record call);
 
-		static void enter(call_record call);
-		static void exit(call_record call);
+	public:
+		static calls_collector *_instance;
+
+		mutex _thread_blocks_mtx;
+		std::map< unsigned int, thread_trace_block > _call_traces;
 	};
 }

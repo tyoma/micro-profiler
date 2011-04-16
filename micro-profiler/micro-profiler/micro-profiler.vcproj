@@ -21,8 +21,9 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="0"
+			UseOfMFC="1"
 			CharacterSet="1"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -45,6 +46,7 @@
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG"
 				MinimalRebuild="true"
+				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -92,7 +94,7 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="0"
+			UseOfMFC="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -119,8 +121,9 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				ExceptionHandling="0"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -178,30 +181,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\frontend.cpp"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					Optimization="0"
-					InlineFunctionExpansion="0"
-					EnableIntrinsicFunctions="false"
-					FavorSizeOrSpeed="0"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath=".\frontend.h"
-			>
-		</File>
-		<File
-			RelativePath=".\profiler.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\profiler.h"
+			RelativePath=".\pod_vector.h"
 			>
 		</File>
 		<File

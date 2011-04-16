@@ -180,30 +180,6 @@
 		/>
 	</References>
 	<Files>
-		<Filter
-			Name="Profiling Samples"
-			>
-			<File
-				RelativePath=".\no_nesting_samples.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalOptions="/GH /Gh"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalOptions="/GH /Gh"
-					/>
-				</FileConfiguration>
-			</File>
-		</Filter>
 		<File
 			RelativePath=".\AssemblyInfo.cpp"
 			>
@@ -247,10 +223,46 @@
 		<File
 			RelativePath=".\Helpers.cpp"
 			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\Helpers.h"
 			>
+		</File>
+		<File
+			RelativePath=".\samples.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalOptions="/GH /Gh"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalOptions="/GH /Gh"
+				/>
+			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>

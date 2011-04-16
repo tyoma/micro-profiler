@@ -50,6 +50,7 @@ namespace micro_profiler
 	public:
 		static calls_collector *_instance;
 
+		tls _trace_pointers_tls;
 		mutex _thread_blocks_mtx;
 		std::map< unsigned int, thread_trace_block > _call_traces;
 	};

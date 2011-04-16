@@ -67,6 +67,7 @@ namespace micro_profiler
 
 	void calls_collector::track(call_record call)
 	{
+#if defined(USE_STATIC_TLS)
 		if (!t_call_trace)
 		{
 			scoped_lock l(instance()->_thread_blocks_mtx);
@@ -74,6 +75,17 @@ namespace micro_profiler
 			t_call_trace = &instance()->_call_traces[current_thread_id()];
 		}
 		t_call_trace->track(call);
+#else	//	USE_STATIC_TLS
+		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(instance()->_trace_pointers_tls.get());
+
+		if (!trace)
+		{
+			scoped_lock l(instance()->_thread_blocks_mtx);
+
+			instance()->_trace_pointers_tls.set(trace = &instance()->_call_traces[current_thread_id()]);
+		}
+		trace->track(call);
+#endif
 	}
 }
 

@@ -21,6 +21,21 @@ namespace micro_profiler
 	unsigned int current_thread_id()
 	{	return ::GetCurrentThreadId();	}
 
+
+	tls::tls()
+		: _tls_index(::TlsAlloc())
+	{	}
+
+	tls::~tls()
+	{	::TlsFree(_tls_index);	}
+
+	void *tls::get() const
+	{	return ::TlsGetValue(_tls_index);	}
+
+	void tls::set(void *value)
+	{	::TlsSetValue(_tls_index, value); }
+
+
 	mutex::mutex()
 		: _critical_section(new (_buffer) CRITICAL_SECTION)
 	{

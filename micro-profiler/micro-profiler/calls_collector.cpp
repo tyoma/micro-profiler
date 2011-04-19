@@ -22,7 +22,7 @@ namespace micro_profiler
 	calls_collector::thread_trace_block::~thread_trace_block()
 	{	}
 
-	__forceinline void calls_collector::thread_trace_block::track(const call_record &call)
+	__forceinline void calls_collector::thread_trace_block::track(const call_record &call) throw()
 	{
 		scoped_lock l(_block_mtx);
 
@@ -54,7 +54,7 @@ namespace micro_profiler
 		_instance = 0;
 	}
 
-	calls_collector *calls_collector::instance()
+	calls_collector *calls_collector::instance() throw()
 	{	return _instance;	}
 
 	void calls_collector::read_collected(acceptor &a)
@@ -65,7 +65,7 @@ namespace micro_profiler
 			i->second.read_collected(i->first, a);
 	}
 
-	void calls_collector::track(call_record call)
+	void calls_collector::track(call_record call) throw()
 	{
 #if defined(USE_STATIC_TLS)
 		if (!t_call_trace)

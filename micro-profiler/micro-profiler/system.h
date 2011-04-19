@@ -41,16 +41,19 @@ namespace micro_profiler
 	{
 		mutex &_mutex;
 
+		scoped_lock(const scoped_lock &other);
+		const scoped_lock &operator =(const scoped_lock &rhs);
+
 	public:
-		scoped_lock(mutex &mtx);
-		~scoped_lock();
+		scoped_lock(mutex &mtx) throw();
+		~scoped_lock() throw();
 	};
 
 
-	inline scoped_lock::scoped_lock(mutex &mtx)
+	inline scoped_lock::scoped_lock(mutex &mtx) throw()
 		: _mutex(mtx)
 	{	_mutex.enter();	}
 
-	inline scoped_lock::~scoped_lock()
+	inline scoped_lock::~scoped_lock() throw()
 	{	_mutex.leave();	}
 }

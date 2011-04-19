@@ -6,14 +6,14 @@ namespace
 {
 	struct collection_acceptor : micro_profiler::calls_collector::acceptor
 	{
-		virtual void accept_calls(unsigned int threadid, const micro_profiler::call_record *calls, unsigned int count)
+		virtual void accept_calls(unsigned int /*threadid*/, const micro_profiler::call_record * /*calls*/, unsigned int /*count*/)
 		{
 		}
 	};
 
 	UINT_PTR g_timer;
 
-	void CALLBACK TimerProc(HWND hwnd, UINT message, UINT_PTR idEvent, DWORD dwTime)
+	void CALLBACK TimerProc(HWND /*hwnd*/, UINT /*message*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/)
 	{
 		collection_acceptor a;
 
@@ -21,7 +21,7 @@ namespace
 	}
 }
 
-BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID __reserved)
+BOOL WINAPI DllMain(HINSTANCE /*hinstance*/, DWORD reason, LPVOID /*__reserved*/)
 {
 	switch (reason)
 	{

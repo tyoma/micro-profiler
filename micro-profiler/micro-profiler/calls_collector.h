@@ -34,7 +34,7 @@ namespace micro_profiler
 			thread_trace_block(const thread_trace_block &);
 			~thread_trace_block();
 
-			void track(const call_record &call);
+			void track(const call_record &call) throw();
 			void read_collected(unsigned int threadid, acceptor &a);
 		};
 
@@ -42,10 +42,10 @@ namespace micro_profiler
 		calls_collector();
 		~calls_collector();
 
-		static __declspec(dllexport) calls_collector *instance();
+		static __declspec(dllexport) calls_collector *instance() throw();
 		void __declspec(dllexport) read_collected(acceptor &a);
 
-		static void track(call_record call);
+		static void track(call_record call) throw();
 
 	public:
 		static calls_collector *_instance;

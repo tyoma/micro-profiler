@@ -20,14 +20,14 @@ namespace micro_profiler
 	public:
 		pod_vector(unsigned int initial_capacity = 10000);
 		pod_vector(const pod_vector &other);
-		~pod_vector();
+		~pod_vector() throw();
 
-		void append(const T &element);
-		void clear();
+		void append(const T &element) throw();
+		void clear() throw();
 
-		const T *data() const;
-		unsigned int size() const;
-      unsigned int capacity() const;
+		const T *data() const throw();
+		unsigned int size() const throw();
+		unsigned int capacity() const throw();
 	};
 
 
@@ -42,39 +42,44 @@ namespace micro_profiler
 	{	memcpy(_buffer, other.data(), sizeof(T) * other.size());	}
 
 	template <typename T>
-	inline pod_vector<T>::~pod_vector()
+	inline pod_vector<T>::~pod_vector() throw()
 	{	delete []_buffer;	}
 
 	template <typename T>
-	__forceinline void pod_vector<T>::append(const T &element)
+	__forceinline void pod_vector<T>::append(const T &element) throw()
 	{
 		if (_next == _capacity_limit)
 		{
+			unsigned int size = this->size();
 			unsigned int new_capacity = capacity() + capacity() / 2;
-			T *buffer = new T[new_capacity];
 
-			memcpy(buffer, _buffer, sizeof(T) * size());
-         delete []_buffer;
-         _buffer = buffer;
-         _next = _buffer + size();
-			_capacity_limit = _buffer + new_capacity;
+			if (T *buffer = new(std::nothrow) T[new_capacity])
+			{
+				memcpy(buffer, _buffer, sizeof(T) * size);
+				delete []_buffer;
+				_buffer = buffer;
+				_next = _buffer + size;
+				_capacity_limit = _buffer + new_capacity;
+			}
+			else
+				return;
 		}
 		*_next++ = element;
 	}
 
 	template <typename T>
-	inline void pod_vector<T>::clear()
+	inline void pod_vector<T>::clear() throw()
 	{	_next = _buffer;	}
 
 	template <typename T>
-	inline const T *pod_vector<T>::data() const
+	inline const T *pod_vector<T>::data() const throw()
 	{	return _buffer;	}
 
 	template <typename T>
-	inline unsigned int pod_vector<T>::size() const
+	inline unsigned int pod_vector<T>::size() const throw()
 	{	return _next - _buffer;	}
 
 	template <typename T>
-	inline unsigned int pod_vector<T>::capacity() const
+	inline unsigned int pod_vector<T>::capacity() const throw()
 	{	return _capacity_limit - _buffer;	}
 }

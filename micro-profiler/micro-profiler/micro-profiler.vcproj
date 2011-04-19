@@ -46,10 +46,9 @@
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG"
 				MinimalRebuild="true"
-				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -121,11 +120,11 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				AssemblerOutput="2"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool

@@ -13,8 +13,7 @@ namespace micro_profiler
 			int __unused2;
 		};
 
-		unsigned int _size, _capacity;
-		T *_buffer;
+		T *_buffer, *_next, *_capacity_limit;
 
 		const pod_vector &operator =(const pod_vector &rhs);
 
@@ -28,18 +27,19 @@ namespace micro_profiler
 
 		const T *data() const;
 		unsigned int size() const;
+      unsigned int capacity() const;
 	};
 
 
 	template <typename T>
 	inline pod_vector<T>::pod_vector(unsigned int initial_capacity)
-		: _size(0), _capacity(initial_capacity), _buffer(new T[initial_capacity])
+		: _buffer(new T[initial_capacity]), _next(_buffer), _capacity_limit(_buffer + initial_capacity)
 	{	}
 
 	template <typename T>
 	inline pod_vector<T>::pod_vector(const pod_vector &other)
-		: _size(other._size), _capacity(other._capacity), _buffer(new T[other._capacity])
-	{	memcpy(_buffer, other._buffer, sizeof(T) * other._size);	}
+		: _buffer(new T[other.capacity()]), _next(_buffer + other.size()), _capacity_limit(_buffer + other.capacity())
+	{	memcpy(_buffer, other.data(), sizeof(T) * other.size());	}
 
 	template <typename T>
 	inline pod_vector<T>::~pod_vector()
@@ -48,20 +48,23 @@ namespace micro_profiler
 	template <typename T>
 	__forceinline void pod_vector<T>::append(const T &element)
 	{
-		if (_size == _capacity)
+		if (_next == _capacity_limit)
 		{
-			unsigned int capacity = _capacity + _capacity / 2;
-			T *buffer = new T[capacity];
+			unsigned int new_capacity = capacity() + capacity() / 2;
+			T *buffer = new T[new_capacity];
 
-			memcpy(buffer, _buffer, sizeof(T) * _size);
-			_capacity = capacity;
+			memcpy(buffer, _buffer, sizeof(T) * size());
+         delete []_buffer;
+         _buffer = buffer;
+         _next = _buffer + size();
+			_capacity_limit = _buffer + new_capacity;
 		}
-		_buffer[_size++] = element;
+		*_next++ = element;
 	}
 
 	template <typename T>
 	inline void pod_vector<T>::clear()
-	{	_size = 0;	}
+	{	_next = _buffer;	}
 
 	template <typename T>
 	inline const T *pod_vector<T>::data() const
@@ -69,5 +72,9 @@ namespace micro_profiler
 
 	template <typename T>
 	inline unsigned int pod_vector<T>::size() const
-	{	return _size;	}
+	{	return _next - _buffer;	}
+
+	template <typename T>
+	inline unsigned int pod_vector<T>::capacity() const
+	{	return _capacity_limit - _buffer;	}
 }

@@ -4,11 +4,6 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace
-	{
-		__declspec(thread) calls_collector::thread_trace_block *t_call_trace = 0;
-	}
-
 	calls_collector *calls_collector::_instance = 0;
 
 	calls_collector::thread_trace_block::thread_trace_block()
@@ -68,13 +63,15 @@ namespace micro_profiler
 	void calls_collector::track(call_record call) throw()
 	{
 #if defined(USE_STATIC_TLS)
-		if (!t_call_trace)
+		static __declspec(thread) thread_trace_block *st_call_trace = 0;
+
+		if (!st_call_trace)
 		{
 			scoped_lock l(instance()->_thread_blocks_mtx);
 
-			t_call_trace = &instance()->_call_traces[current_thread_id()];
+			st_call_trace = &instance()->_call_traces[current_thread_id()];
 		}
-		t_call_trace->track(call);
+		st_call_trace->track(call);
 #else	//	USE_STATIC_TLS
 		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(instance()->_trace_pointers_tls.get());
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory.h>
+#include <new>
 
 namespace micro_profiler
 {

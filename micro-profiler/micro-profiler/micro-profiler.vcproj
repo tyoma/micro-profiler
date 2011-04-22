@@ -171,6 +171,14 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\analyzer.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\analyzer.h"
+			>
+		</File>
+		<File
 			RelativePath=".\calls_collector.cpp"
 			>
 		</File>

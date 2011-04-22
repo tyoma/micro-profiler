@@ -43,7 +43,7 @@ namespace micro_profiler
 		~calls_collector();
 
 		static __declspec(dllexport) calls_collector *instance() throw();
-		void __declspec(dllexport) read_collected(acceptor &a);
+		__declspec(dllexport) void read_collected(acceptor &a);
 
 		static void track(call_record call) throw();
 

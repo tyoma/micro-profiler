@@ -154,5 +154,37 @@ namespace tests
 			Assert::IsTrue(val3 == *(v.data() + 2));
 			Assert::IsTrue(val4 == *(v.data() + 3));
 		}
+
+
+		[TestMethod]
+		void CopyingVectorCopiesElements()
+		{
+			// INIT
+			B val1 = {	1234, 1	}, val2 = {	2345, 11	}, val3 = {	34567, 13	};
+			micro_profiler::pod_vector<B> v1(3);
+			micro_profiler::pod_vector<int> v2(10);
+
+			v1.append(val1);
+			v1.append(val2);
+			v1.append(val3);
+			v2.append(13);
+
+			// ACT
+			micro_profiler::pod_vector<B> copied1(v1);
+			micro_profiler::pod_vector<int> copied2(v2);
+
+			// ACT / ASSERT
+			Assert::IsTrue(copied1.capacity() == 3);
+			Assert::IsTrue(copied1.size() == 3);
+			Assert::IsTrue(copied1.data() != v1.data());
+			Assert::IsTrue(val1 == *(copied1.data() + 0));
+			Assert::IsTrue(val2 == *(copied1.data() + 1));
+			Assert::IsTrue(val3 == *(copied1.data() + 2));
+
+			Assert::IsTrue(copied2.capacity() == 10);
+			Assert::IsTrue(copied2.size() == 1);
+			Assert::IsTrue(copied2.data() != v2.data());
+			Assert::IsTrue(13 == *(copied2.data() + 0));
+		}
 	};
 }

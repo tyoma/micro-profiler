@@ -8,6 +8,10 @@ namespace micro_profiler
 {
 	struct function_statistics
 	{
+		function_statistics()
+			: times_called(0), inclusive_time(0), exclusive_time(0)
+		{	}
+
 		unsigned __int64 times_called, inclusive_time, exclusive_time;
 	};
 

@@ -195,6 +195,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\shadow_stack.h"
+			>
+		</File>
+		<File
 			RelativePath=".\symbol_resolver.cpp"
 			>
 		</File>

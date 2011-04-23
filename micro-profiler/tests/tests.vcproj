@@ -47,6 +47,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				ExceptionHandling="2"
 				RuntimeLibrary="3"
+				AssemblerOutput="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -120,6 +121,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				ExceptionHandling="2"
 				RuntimeLibrary="2"
+				AssemblerOutput="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -301,6 +303,26 @@
 				<Tool
 					Name="VCCLCompilerTool"
 					AdditionalOptions="/GH /Gh"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\ShadowStackTests.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
 				/>
 			</FileConfiguration>
 		</File>

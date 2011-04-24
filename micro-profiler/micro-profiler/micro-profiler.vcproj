@@ -187,6 +187,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\data_structures.h"
+			>
+		</File>
+		<File
 			RelativePath=".\dll_entry.cpp"
 			>
 		</File>

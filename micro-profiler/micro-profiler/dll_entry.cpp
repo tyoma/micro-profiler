@@ -1,23 +1,15 @@
-#include "calls_collector.h"
+#include "analyzer.h"
 
 #include <windows.h>
 
 namespace
 {
-	struct collection_acceptor : micro_profiler::calls_collector::acceptor
-	{
-		virtual void accept_calls(unsigned int /*threadid*/, const micro_profiler::call_record * /*calls*/, unsigned int /*count*/)
-		{
-		}
-	};
-
 	UINT_PTR g_timer;
+	micro_profiler::analyzer g_analyzer;
 
 	void CALLBACK TimerProc(HWND /*hwnd*/, UINT /*message*/, UINT_PTR /*idEvent*/, DWORD /*dwTime*/)
 	{
-		collection_acceptor a;
-
-		micro_profiler::calls_collector::instance()->read_collected(a);
+		micro_profiler::calls_collector::instance()->read_collected(g_analyzer);
 	}
 }
 

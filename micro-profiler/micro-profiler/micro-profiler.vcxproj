@@ -112,6 +112,7 @@
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="calls_collector.h" />
+    <ClInclude Include="data_structures.h" />
     <ClInclude Include="pod_vector.h" />
     <ClInclude Include="shadow_stack.h" />
     <ClInclude Include="symbol_resolver.h" />

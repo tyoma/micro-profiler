@@ -1,5 +1,6 @@
 #pragma once
 
+#include "data_structures.h"
 #include "pod_vector.h"
 #include "system.h"
 
@@ -7,14 +8,6 @@
 
 namespace micro_profiler
 {
-#pragma pack(push, 4)
-	struct call_record
-	{
-		void *callee;	// call address + 5 bytes
-		unsigned __int64 timestamp;
-	};
-#pragma pack(pop)
-
 	class calls_collector
 	{
 	public:

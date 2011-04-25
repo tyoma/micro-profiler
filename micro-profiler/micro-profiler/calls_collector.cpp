@@ -10,13 +10,12 @@ extern "C" __declspec(naked, dllexport) void _penter()
 	_asm 
 	{
 		pushad
-		mov	ecx, dword ptr[esp + 32]
 		rdtsc
-		push edx
-		push eax
-		push ecx
-		call micro_profiler::calls_collector::track
-		add esp, 0x0c
+		push	edx
+		push	eax
+		push	dword ptr[esp + 40]
+		call	micro_profiler::calls_collector::track
+		add	esp, 0x0c
 		popad
 		ret
 	}
@@ -28,11 +27,11 @@ extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
 	{
 		pushad
 		rdtsc
-		push edx
-		push eax
-		push 0
-		call micro_profiler::calls_collector::track
-		add esp, 0x0c
+		push	edx
+		push	eax
+		push	0
+		call	micro_profiler::calls_collector::track
+		add	esp, 0x0c
 		popad
 		ret
 	}

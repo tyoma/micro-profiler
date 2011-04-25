@@ -154,4 +154,3 @@ namespace micro_profiler
 #endif
 	}
 }
-

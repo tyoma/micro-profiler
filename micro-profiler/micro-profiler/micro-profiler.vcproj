@@ -95,7 +95,7 @@
 			ConfigurationType="2"
 			UseOfMFC="1"
 			CharacterSet="1"
-			WholeProgramOptimization="1"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -181,6 +181,19 @@
 		<File
 			RelativePath=".\calls_collector.cpp"
 			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					Optimization="2"
+					InlineFunctionExpansion="2"
+					EnableIntrinsicFunctions="true"
+					FavorSizeOrSpeed="1"
+					OmitFramePointers="true"
+					EnableEnhancedInstructionSet="2"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\calls_collector.h"

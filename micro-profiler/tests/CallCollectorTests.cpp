@@ -8,7 +8,7 @@
 
 using namespace std;
 using namespace System;
-using namespace	Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
@@ -166,6 +166,18 @@ namespace micro_profiler
 				Assert::IsTrue(&sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[1].callee) - 5));
 				Assert::IsTrue(0 == a.collected[0].second[2].callee);
 				Assert::IsTrue(0 == a.collected[0].second[3].callee);
+			}
+
+
+			[TestMethod]
+			void ProfilerLatencyGreaterThanZero()
+			{
+				// INIT / ACT
+				unsigned __int64 profiler_latency = calls_collector::instance()->profiler_latency();
+
+				// ASSERT
+				Assert::IsTrue(profiler_latency > 0);
+				System::Diagnostics::Debug::WriteLine(profiler_latency);
 			}
 		};
 	}

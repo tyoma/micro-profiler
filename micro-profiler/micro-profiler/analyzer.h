@@ -10,9 +10,12 @@ namespace micro_profiler
 	{
 		struct call_record_ex;
 
+		unsigned __int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
 
 	public:
+		shadow_stack(unsigned __int64 profiler_latency = 0);
+
 		template <typename ForwardConstIterator, typename OutputMap>
 		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics);
 	};
@@ -43,6 +46,10 @@ namespace micro_profiler
 	};
 
 
+	inline shadow_stack::shadow_stack(unsigned __int64 profiler_latency)
+		: _profiler_latency(profiler_latency)
+	{	}
+
 	template <typename ForwardConstIterator, typename OutputMap>
 	inline void shadow_stack::update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics)
 	{
@@ -56,11 +63,11 @@ namespace micro_profiler
 				unsigned __int64 inclusive_time = trace_begin->timestamp - current.timestamp;
 
 				++f.times_called;
-				f.inclusive_time += inclusive_time;
-				f.exclusive_time += inclusive_time - current.child_time;
+				f.inclusive_time += inclusive_time - _profiler_latency;
+				f.exclusive_time += inclusive_time - current.child_time - _profiler_latency;
 				_stack.pop_back();
 				if (!_stack.empty())
-					_stack.back().child_time += inclusive_time;
+					_stack.back().child_time += inclusive_time + _profiler_latency;
 			}
 	}
 

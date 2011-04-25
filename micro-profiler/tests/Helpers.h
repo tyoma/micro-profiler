@@ -7,6 +7,7 @@ namespace micro_profiler
 			virtual void operator ()() = 0;
 		};
 
+
 		class thread
 		{
 			unsigned int _threadid;
@@ -24,5 +25,10 @@ namespace micro_profiler
 
 			static unsigned int current_thread_id();
 		};
+
+
+		template <typename T, size_t size>
+		inline T *end(T (&array_ptr)[size])
+		{	return array_ptr + size;	}
 	}
 }

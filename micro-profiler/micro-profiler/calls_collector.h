@@ -40,11 +40,18 @@ namespace micro_profiler
 
 		static void track(call_record call) throw();
 
+		unsigned __int64 profiler_latency() const;
+
 	public:
 		static calls_collector *_instance;
 
+		unsigned __int64 _profiler_latency;
 		tls _trace_pointers_tls;
 		mutex _thread_blocks_mtx;
 		std::map< unsigned int, thread_trace_block > _call_traces;
 	};
+
+
+	inline unsigned __int64 calls_collector::profiler_latency() const
+	{	return _profiler_latency;	}
 }

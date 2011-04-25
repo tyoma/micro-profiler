@@ -2,9 +2,67 @@
 
 using namespace std;
 
+#undef min
+#undef max
+
+extern "C" __declspec(naked, dllexport) void _penter()
+{
+	_asm 
+	{
+		pushad
+		mov	ecx, dword ptr[esp + 32]
+		rdtsc
+		push edx
+		push eax
+		push ecx
+		call micro_profiler::calls_collector::track
+		add esp, 0x0c
+		popad
+		ret
+	}
+}
+
+extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
+{
+	_asm 
+	{
+		pushad
+		rdtsc
+		push edx
+		push eax
+		push 0
+		call micro_profiler::calls_collector::track
+		add esp, 0x0c
+		popad
+		ret
+	}
+}
+
+
 namespace micro_profiler
 {
+	namespace
+	{
+		class delay_evaluator : public calls_collector::acceptor
+		{
+			virtual void accept_calls(unsigned int, const call_record *calls, unsigned int count)
+			{
+				count = 2 * (count >> 1);
+				for (const call_record *i = calls; i != calls + count; i += 2)
+					delay = min(delay, (i + 1)->timestamp - i->timestamp);
+			}
+
+		public:
+			delay_evaluator()
+				: delay(0xFFFFFFFF)
+			{	}
+
+			unsigned __int64 delay;
+		};
+	}
+
 	calls_collector *calls_collector::_instance = 0;
+
 
 	calls_collector::thread_trace_block::thread_trace_block()
 		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
@@ -39,9 +97,21 @@ namespace micro_profiler
 		}
 	}
 
+
 	calls_collector::calls_collector()
+		: _profiler_latency(0)
 	{
 		_instance = this;
+
+		const unsigned int check_times = 1000;
+		thread_trace_block &ttb = _call_traces[current_thread_id()];
+		delay_evaluator de;
+		
+		for (unsigned int i = 0; i < check_times; ++i)
+			_penter(), _pexit();
+
+		ttb.read_collected(0, de);
+		_profiler_latency = de.delay;
 	}
 
 	calls_collector::~calls_collector()
@@ -86,35 +156,3 @@ namespace micro_profiler
 	}
 }
 
-extern "C" __declspec(naked, dllexport) void _penter()
-{
-	_asm 
-	{
-		pushad
-		mov	ecx, dword ptr[esp + 32]
-		rdtsc
-		push edx
-		push eax
-		push ecx
-		call micro_profiler::calls_collector::track
-		add esp, 0x0c
-		popad
-		ret
-	}
-}
-
-extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
-{
-	_asm 
-	{
-		pushad
-		rdtsc
-		push edx
-		push eax
-		push 0
-		call micro_profiler::calls_collector::track
-		add esp, 0x0c
-		popad
-		ret
-	}
-}

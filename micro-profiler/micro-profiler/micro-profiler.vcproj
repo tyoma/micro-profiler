@@ -122,7 +122,6 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="2"
-				UsePrecompiledHeader="0"
 				AssemblerOutput="2"
 				WarningLevel="4"
 				DebugInformationFormat="3"

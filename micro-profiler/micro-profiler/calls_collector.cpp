@@ -131,26 +131,15 @@ namespace micro_profiler
 
 	void calls_collector::track(call_record call) throw()
 	{
-#if defined(USE_STATIC_TLS)
-		static __declspec(thread) thread_trace_block *st_call_trace = 0;
-
-		if (!st_call_trace)
-		{
-			scoped_lock l(instance()->_thread_blocks_mtx);
-
-			st_call_trace = &instance()->_call_traces[current_thread_id()];
-		}
-		st_call_trace->track(call);
-#else	//	USE_STATIC_TLS
-		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(instance()->_trace_pointers_tls.get());
+		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(_instance->_trace_pointers_tls.get());
 
 		if (!trace)
 		{
-			scoped_lock l(instance()->_thread_blocks_mtx);
+			scoped_lock l(_instance->_thread_blocks_mtx);
 
-			instance()->_trace_pointers_tls.set(trace = &instance()->_call_traces[current_thread_id()]);
+			trace = &_instance->_call_traces[current_thread_id()];
+			_instance->_trace_pointers_tls.set(trace);
 		}
 		trace->track(call);
-#endif
 	}
 }

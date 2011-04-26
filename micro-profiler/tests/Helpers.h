@@ -30,5 +30,9 @@ namespace micro_profiler
 		template <typename T, size_t size>
 		inline T *end(T (&array_ptr)[size])
 		{	return array_ptr + size;	}
+
+		template <typename T, size_t size>
+		inline size_t array_size(T (&)[size])
+		{	return size;	}
 	}
 }

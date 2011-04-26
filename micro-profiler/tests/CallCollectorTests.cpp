@@ -7,7 +7,6 @@
 #include <algorithm>
 
 using namespace std;
-using namespace System;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler

@@ -1,6 +1,5 @@
 #include <pod_vector.h>
 
-using namespace System;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler

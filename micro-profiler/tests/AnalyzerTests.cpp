@@ -1,27 +1,16 @@
-#include <analyzer.h>
+#include "Helpers.h"
 
-#include <pod_vector.h>
+#include <analyzer.h>
 
 #include <map>
 
 using namespace std;
-using namespace System;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			call_record _call_record(void *callee, unsigned __int64 timestamp)
-			{
-				call_record r = {	callee, timestamp	};
-
-				return r;
-			}
-		}
-
 		[TestClass]
 		public ref class AnalyzerTests
 		{
@@ -43,14 +32,14 @@ namespace micro_profiler
 				// INIT
 				analyzer a;
 				calls_collector::acceptor &as_acceptor(a);
-				pod_vector<call_record> trace;
-
-				trace.append(_call_record((void *)1234, 12300));
-				trace.append(_call_record((void *)2234, 12305));
+				call_record trace[] = {
+					{	(void *)1234, 12300	},
+					{	(void *)2234, 12305	},
+				};
 
 				// ACT
-				as_acceptor.accept_calls(1, trace.data(), trace.size());
-				as_acceptor.accept_calls(2, trace.data(), trace.size());
+				as_acceptor.accept_calls(1, trace, array_size(trace));
+				as_acceptor.accept_calls(2, trace, array_size(trace));
 
 				// ASSERT
 				Assert::IsTrue(a.begin() == a.end());
@@ -62,19 +51,19 @@ namespace micro_profiler
 			{
 				// INIT
 				analyzer a;
-				pod_vector<call_record> trace;
-
-				trace.append(_call_record((void *)1234, 12300));
-				trace.append(_call_record(0, 12305));
-				trace.append(_call_record((void *)2234, 12310));
-				trace.append(_call_record(0, 12317));
-				trace.append(_call_record((void *)2234, 12320));
-				trace.append(_call_record((void *)12234, 12322));
-				trace.append(_call_record(0, 12325));
-				trace.append(_call_record(0, 12327));
+				call_record trace[] = {
+					{	(void *)1234, 12300	},
+					{	(void *)0, 12305	},
+					{	(void *)2234, 12310	},
+					{	(void *)0, 12317	},
+					{	(void *)2234, 12320	},
+					{	(void *)12234, 12322	},
+					{	(void *)0, 12325	},
+					{	(void *)0, 12327	},
+				};
 
 				// ACT
-				a.accept_calls(1, trace.data(), trace.size());
+				a.accept_calls(1, trace, array_size(trace));
 
 				// ASSERT
 				map<void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
@@ -100,28 +89,70 @@ namespace micro_profiler
 
 
 			[TestMethod]
+			void ProfilerLatencyIsTakenIntoAccount()
+			{
+				// INIT
+				analyzer a(1);
+				call_record trace[] = {
+					{	(void *)1234, 12300	},
+					{	(void *)0, 12305	},
+					{	(void *)2234, 12310	},
+					{	(void *)0, 12317	},
+					{	(void *)2234, 12320	},
+					{	(void *)12234, 12322	},
+					{	(void *)0, 12325	},
+					{	(void *)0, 12327	},
+				};
+
+				// ACT
+				a.accept_calls(1, trace, array_size(trace));
+
+				// ASSERT
+				map<void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
+
+				Assert::IsTrue(3 == m.size());
+
+				map<void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
+
+				++i2, ++++i3;
+
+				Assert::IsTrue(1 == i1->second.times_called);
+				Assert::IsTrue(4 == i1->second.inclusive_time);
+				Assert::IsTrue(4 == i1->second.exclusive_time);
+
+				Assert::IsTrue(2 == i2->second.times_called);
+				Assert::IsTrue(12 == i2->second.inclusive_time);
+				Assert::IsTrue(8 == i2->second.exclusive_time);
+
+				Assert::IsTrue(1 == i3->second.times_called);
+				Assert::IsTrue(2 == i3->second.inclusive_time);
+				Assert::IsTrue(2 == i3->second.exclusive_time);
+			}
+
+
+			[TestMethod]
 			void DifferentShadowStacksAreMaintainedForEachThread()
 			{
 				// INIT
 				analyzer a;
-				pod_vector<call_record> trace1, trace2, trace3, trace4;
 				map<void *, function_statistics> m;
-
-				trace1.append(_call_record((void *)1234, 12300));
-				trace2.append(_call_record((void *)1234, 12313));
-				trace3.append(_call_record(0, 12307));
-				trace4.append(_call_record(0, 12319));
-				trace4.append(_call_record((void *)1234, 12323));
+				call_record trace1[] = {	{	(void *)1234, 12300	},	};
+				call_record trace2[] = {	{	(void *)1234, 12313	},	};
+				call_record trace3[] = {	{	(void *)0, 12307	},	};
+				call_record trace4[] = {
+					{	(void *)0, 12319	},
+					{	(void *)1234, 12323	},
+				};
 
 				// ACT
-				a.accept_calls(1, trace1.data(), trace1.size());
-				a.accept_calls(2, trace2.data(), trace2.size());
+				a.accept_calls(1, trace1, array_size(trace1));
+				a.accept_calls(2, trace2, array_size(trace2));
 
 				// ASSERT
 				Assert::IsTrue(a.begin() == a.end());
 
 				// ACT
-				a.accept_calls(1, trace3.data(), trace3.size());
+				a.accept_calls(1, trace3, array_size(trace3));
 
 				// ASSERT
 				Assert::IsTrue(1 == distance(a.begin(), a.end()));
@@ -131,7 +162,7 @@ namespace micro_profiler
 				Assert::IsTrue(7 == a.begin()->second.exclusive_time);
 
 				// ACT
-				a.accept_calls(2, trace4.data(), trace4.size());
+				a.accept_calls(2, trace4, array_size(trace4));
 
 				// ASSERT
 				Assert::IsTrue(1 == distance(a.begin(), a.end()));

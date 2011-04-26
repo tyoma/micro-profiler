@@ -35,10 +35,13 @@ namespace micro_profiler
 		typedef stdext::hash_map<void * /*function_ptr*/, function_statistics> statistics_container;
 		typedef stdext::hash_map<unsigned int /*threadid*/, shadow_stack> stacks_container;
 
+		unsigned __int64 _profiler_latency;
 		statistics_container _statistics;
 		stacks_container _stacks;
 
 	public:
+		analyzer(unsigned __int64 profiler_latency = 0);
+
 		statistics_container::const_iterator begin() const;
 		statistics_container::const_iterator end() const;
 
@@ -81,6 +84,10 @@ namespace micro_profiler
 	{	}
 
 
+	inline analyzer::analyzer(unsigned __int64 profiler_latency)
+		: _profiler_latency(profiler_latency)
+	{	}
+
 	inline analyzer::statistics_container::const_iterator analyzer::begin() const
 	{	return _statistics.begin();	}
 
@@ -88,5 +95,11 @@ namespace micro_profiler
 	{	return _statistics.end();	}
 
 	inline void analyzer::accept_calls(unsigned int threadid, const call_record *calls, unsigned int count)
-	{	_stacks[threadid].update(calls, calls + count, _statistics);	}
+	{
+		stacks_container::iterator i = _stacks.find(threadid);
+
+		if (i == _stacks.end())
+			i = _stacks.insert(std::make_pair(threadid, shadow_stack(_profiler_latency))).first;
+		i->second.update(calls, calls + count, _statistics);
+	}
 }

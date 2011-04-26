@@ -7,7 +7,6 @@
 
 using namespace std;
 using namespace stdext;
-using namespace System;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler

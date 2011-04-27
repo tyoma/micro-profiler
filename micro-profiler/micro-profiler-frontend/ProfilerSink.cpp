@@ -6,8 +6,7 @@ HRESULT ProfilerSink::FinalConstruct()
 void ProfilerSink::FinalRelease()
 {  }
 
-STDMETHODIMP ProfilerSink::test(long count, FunctionStatistics statistics[1])
+STDMETHODIMP ProfilerSink::StartAppProfiling(BSTR executable, IAppProfiler **app_profiler)
 {
-
-   return S_OK;
+	return E_NOTIMPL;
 }

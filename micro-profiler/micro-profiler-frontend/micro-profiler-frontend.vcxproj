@@ -68,7 +68,7 @@
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
@@ -106,7 +106,7 @@
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
@@ -136,14 +136,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
-    <ClCompile Include="_generated\microprofilerfrontend_i.c" />
     <ClCompile Include="ProfilerSink.cpp" />
+    <ClCompile Include="_generated\microprofilerfrontend_i.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProfilerMainDialog.h" />
-    <ClInclude Include="_generated\microprofilerfrontend_i.h" />
     <ClInclude Include="ProfilerSink.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="_generated\microprofilerfrontend_i.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />

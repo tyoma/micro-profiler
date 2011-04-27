@@ -24,10 +24,5 @@ END_MSG_MAP()
 //  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 //  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
-	LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-	{
-//		CDialogImpl<ProfilerMainDialog>::OnInitDialog(uMsg, wParam, lParam, bHandled);
-		bHandled = TRUE;
-		return 1;  // Let the system set the focus
-	}
+	LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL& handled);
 };

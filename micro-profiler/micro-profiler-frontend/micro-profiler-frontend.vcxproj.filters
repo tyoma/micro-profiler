@@ -7,7 +7,6 @@
     </Filter>
     <Filter Include="_generated">
       <UniqueIdentifier>{cc4d229d-3cf4-4667-899f-77ea51204c38}</UniqueIdentifier>
-      <SourceControlFiles>False</SourceControlFiles>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -21,20 +20,20 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="_generated\microprofilerfrontend_i.c">
-      <Filter>_generated</Filter>
-    </ClCompile>
     <ClCompile Include="ProfilerSink.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
+    <ClCompile Include="_generated\microprofilerfrontend_i.c">
+      <Filter>_generated</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="_generated\microprofilerfrontend_i.h">
-      <Filter>_generated</Filter>
-    </ClInclude>
     <ClInclude Include="ProfilerSink.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ProfilerMainDialog.h" />
+    <ClInclude Include="_generated\microprofilerfrontend_i.h">
+      <Filter>_generated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />

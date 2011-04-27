@@ -1,8 +1,8 @@
 import "oaidl.idl";
 import "ocidl.idl";
 
-typedef
-	[public] struct
+typedef [	public	]
+struct
 {
 	hyper FunctionOffset;
 	hyper TimesCalled;
@@ -10,13 +10,13 @@ typedef
 	hyper InclusiveTime;
 } FunctionStatistics;
 
-[	uuid(873A798B-8ECE-49CE-9551-5B457B69F7AD), oleautomation, nonextensible, pointer_default(unique)	]
+[	uuid(873A798B-8ECE-49CE-9551-5B457B69F7AD), nonextensible, pointer_default(unique)	]
 interface IAppProfiler : IUnknown
 {
-	HRESULT Update([in] long count, [in, length_is(count)] FunctionStatistics statistics[1]);
+	HRESULT Update([in] long count, [in, size_is(count)] FunctionStatistics *statistics);
 };
 
-[	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), oleautomation, nonextensible, pointer_default(unique)	]
+[	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), nonextensible, pointer_default(unique)	]
 interface IProfilerSink : IUnknown
 {
 	HRESULT StartAppProfiling([in] BSTR executable, [out] IAppProfiler **app_profiler);
@@ -27,9 +27,17 @@ library MicroProfilerFrontendLib
 {
 	importlib("stdole2.tlb");
 
+	struct FunctionStatistics;
+
 	[ uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3) ]
 	coclass ProfilerSink
 	{
 		[default] interface IProfilerSink;
+	};
+
+	[ uuid(13D3DC0B-C212-409E-94C8-21EEB99BB49F), noncreatable ]
+	coclass AppProfiler
+	{
+		[default] interface IAppProfiler;
 	};
 };

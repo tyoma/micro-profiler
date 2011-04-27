@@ -12,6 +12,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-frontend", "micro-profiler-frontend\micro-profiler-frontend.vcxproj", "{D58AD932-11C9-42EE-AE00-3120D27769C4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D58AD932-11C9-42EE-AE00-3120D27769C4} = {D58AD932-11C9-42EE-AE00-3120D27769C4}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-frontend.ps", "micro-profiler-frontend\micro-profiler-frontend.ps.vcxproj", "{B342C917-9C70-4859-B570-587CAFCE567D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D58AD932-11C9-42EE-AE00-3120D27769C4} = {D58AD932-11C9-42EE-AE00-3120D27769C4}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -30,6 +40,14 @@ Global
 		{D58AD932-11C9-42EE-AE00-3120D27769C4}.Debug|Win32.Build.0 = Debug|Win32
 		{D58AD932-11C9-42EE-AE00-3120D27769C4}.Release|Win32.ActiveCfg = Release|Win32
 		{D58AD932-11C9-42EE-AE00-3120D27769C4}.Release|Win32.Build.0 = Release|Win32
+		{3D930790-1E56-4749-9B09-731E22556CB1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3D930790-1E56-4749-9B09-731E22556CB1}.Debug|Win32.Build.0 = Debug|Win32
+		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.ActiveCfg = Release|Win32
+		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.Build.0 = Release|Win32
+		{B342C917-9C70-4859-B570-587CAFCE567D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B342C917-9C70-4859-B570-587CAFCE567D}.Debug|Win32.Build.0 = Debug|Win32
+		{B342C917-9C70-4859-B570-587CAFCE567D}.Release|Win32.ActiveCfg = Release|Win32
+		{B342C917-9C70-4859-B570-587CAFCE567D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

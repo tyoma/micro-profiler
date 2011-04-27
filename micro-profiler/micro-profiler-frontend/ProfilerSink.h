@@ -6,7 +6,22 @@
 #include <atlbase.h>
 #include <atlcom.h>
 
-class ATL_NO_VTABLE ProfilerSink : public IProfilerSink, public CComObjectRoot, public CComCoClass<ProfilerSink, &__uuidof(ProfilerSink)>
+class ATL_NO_VTABLE AppProfiler : public IAppProfiler, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerSink, &__uuidof(ProfilerSink)>
+{
+public:
+	BEGIN_COM_MAP(AppProfiler)
+		COM_INTERFACE_ENTRY(IAppProfiler)
+	END_COM_MAP()
+
+	DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+	HRESULT FinalConstruct();
+	void FinalRelease();
+
+	STDMETHODIMP Update(long count, FunctionStatistics *statistics);
+};
+
+class ATL_NO_VTABLE ProfilerSink : public IProfilerSink, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerSink, &__uuidof(ProfilerSink)>
 {
 public:
 	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="micro-profiler-frontend"
-	ProjectGUID="{D58AD932-11C9-42EE-AE00-3120D27769C4}"
-	RootNamespace="micro-profiler-frontend"
+	Name="micro-profiler-frontend.ps"
+	ProjectGUID="{12786F6A-00A6-4CFA-AB24-117A9FB348E2}"
+	RootNamespace="micro-profiler-frontend.ps"
 	Keyword="AtlProj"
 	TargetFrameworkVersion="196613"
 	>
@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -54,7 +54,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_ATL_APARTMENT_THREADED"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;REGISTER_PROXY_DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -75,9 +75,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
+				AdditionalDependencies="rpcrt4.lib oleaut32.lib"
 				LinkIncremental="2"
+				ModuleDefinitionFile="micro-profiler-frontend.ps.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -109,7 +111,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -145,7 +147,7 @@
 				Optimization="1"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_ATL_APARTMENT_THREADED"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;REGISTER_PROXY_DLL"
 				RuntimeLibrary="0"
 				WarningLevel="4"
 				DebugInformationFormat="3"
@@ -164,9 +166,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="true"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
+				AdditionalDependencies="rpcrt4.lib oleaut32.lib"
 				LinkIncremental="1"
+				ModuleDefinitionFile="micro-profiler-frontend.ps.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -200,54 +204,24 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-			<File
-				RelativePath=".\micro-profiler-frontend.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\micro-profiler-sink.rgs"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="_generated"
-			>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_i.h"
-				>
-			</File>
-		</Filter>
 		<File
-			RelativePath=".\main.cpp"
+			RelativePath=".\_generated\dlldata.c"
 			>
 		</File>
 		<File
-			RelativePath=".\microprofilerfrontend.idl"
+			RelativePath=".\micro-profiler-frontend.ps.def"
 			>
 		</File>
 		<File
-			RelativePath=".\ProfilerMainDialog.cpp"
+			RelativePath=".\_generated\microprofilerfrontend_i.c"
 			>
 		</File>
 		<File
-			RelativePath=".\ProfilerMainDialog.h"
+			RelativePath=".\_generated\microprofilerfrontend_i.h"
 			>
 		</File>
 		<File
-			RelativePath=".\ProfilerSink.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\ProfilerSink.h"
-			>
-		</File>
-		<File
-			RelativePath=".\Resource.h"
+			RelativePath=".\_generated\microprofilerfrontend_p.c"
 			>
 		</File>
 	</Files>

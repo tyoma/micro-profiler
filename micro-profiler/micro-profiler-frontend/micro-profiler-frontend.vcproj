@@ -102,8 +102,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Performing registration"
-				CommandLine="&quot;$(TargetPath)&quot; /RegServer"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -194,8 +193,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Performing registration"
-				CommandLine="&quot;$(TargetPath)&quot; /RegServer"
+				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>
@@ -219,10 +217,6 @@
 		<Filter
 			Name="_generated"
 			>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_i.c"
-				>
-			</File>
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_i.h"
 				>

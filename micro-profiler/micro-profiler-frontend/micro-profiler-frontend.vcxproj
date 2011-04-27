@@ -87,7 +87,7 @@
       <AdditionalDependencies>comctl32.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-   </PostBuildEvent>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -141,7 +141,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
     <ClCompile Include="ProfilerSink.cpp" />
-    <ClCompile Include="_generated\microprofilerfrontend_i.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProfilerMainDialog.h" />

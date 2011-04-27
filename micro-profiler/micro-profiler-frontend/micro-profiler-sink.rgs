@@ -1,16 +1,24 @@
-HKCR
+HKCU
 {
-	NoRemove CLSID
+	NoRemove 'SOFTWARE'
 	{
-		ForceRemove {ABC1A8AB-31D5-475F-B541-987141CD4DB3} = s 'ProfilerSink Class'
+		NoRemove 'Classes'
 		{
-			ForceRemove Programmable
-			LocalServer32 = s '%MODULE%'
 			{
-				val ServerExecutable = s '%MODULE_RAW%'
+				NoRemove CLSID
+				{
+					ForceRemove {ABC1A8AB-31D5-475F-B541-987141CD4DB3} = s 'ProfilerSink Class'
+					{
+						ForceRemove Programmable
+						LocalServer32 = s '%MODULE%'
+						{
+							val ServerExecutable = s '%MODULE_RAW%'
+						}
+						TypeLib = s '{425E45FE-FD05-49C0-A505-93E88651EC36}'
+						Version = s '1.0'
+					}
+				}
 			}
-			TypeLib = s '{425E45FE-FD05-49C0-A505-93E88651EC36}'
-			Version = s '1.0'
 		}
 	}
 }

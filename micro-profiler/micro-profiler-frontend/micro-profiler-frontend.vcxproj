@@ -87,9 +87,7 @@
       <AdditionalDependencies>comctl32.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Message>Performing registration</Message>
-      <Command>"$(TargetPath)" /RegServer</Command>
-    </PostBuildEvent>
+   </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -131,8 +129,6 @@
       <AdditionalDependencies>comctl32.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Message>Performing registration</Message>
-      <Command>"$(TargetPath)" /RegServer</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -7,7 +7,7 @@
 class CMicroProfilerFrontendModule : public CAtlExeModuleT<CMicroProfilerFrontendModule>
 {
 public :
-   DECLARE_LIBID(LIBID_MicroProfilerFrontendLib)
+//   DECLARE_LIBID(LIBID_MicroProfilerFrontendLib)
 } _AtlModule;
 
 extern "C" int WINAPI _tWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPTSTR /*lpCmdLine*/, int nShowCmd)

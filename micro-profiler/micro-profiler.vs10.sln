@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-pro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxproj", "{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-frontend", "micro-profiler-frontend\micro-profiler-frontend.vcxproj", "{D58AD932-11C9-42EE-AE00-3120D27769C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -24,6 +26,10 @@ Global
 		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.Build.0 = Debug|Win32
 		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.ActiveCfg = Release|Win32
 		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.Build.0 = Release|Win32
+		{D58AD932-11C9-42EE-AE00-3120D27769C4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D58AD932-11C9-42EE-AE00-3120D27769C4}.Debug|Win32.Build.0 = Debug|Win32
+		{D58AD932-11C9-42EE-AE00-3120D27769C4}.Release|Win32.ActiveCfg = Release|Win32
+		{D58AD932-11C9-42EE-AE00-3120D27769C4}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

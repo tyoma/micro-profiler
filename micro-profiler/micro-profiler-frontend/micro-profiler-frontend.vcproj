@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			UseOfATL="2"
+			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
@@ -110,7 +110,7 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			UseOfATL="2"
+			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>

@@ -17,15 +17,11 @@ public:
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-	HRESULT FinalConstruct()
-	{  return S_OK; }
+	HRESULT FinalConstruct();
+	void FinalRelease();
 
-	void FinalRelease()
-	{  }
+   STDMETHODIMP test(long count, FunctionStatistics statistics[1]);
 
-public:
-   ProfilerSink();
-   ~ProfilerSink();
 };
 
 OBJECT_ENTRY_AUTO(CLSID_ProfilerSink, ProfilerSink);

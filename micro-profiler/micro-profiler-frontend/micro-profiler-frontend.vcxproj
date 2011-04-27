@@ -80,6 +80,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>comctl32.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Message>Performing registration</Message>
@@ -119,6 +120,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>comctl32.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Message>Performing registration</Message>
@@ -133,10 +135,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ProfilerMainDialog.cpp" />
     <ClCompile Include="_generated\microprofilerfrontend_i.c" />
     <ClCompile Include="ProfilerSink.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ProfilerMainDialog.h" />
     <ClInclude Include="_generated\microprofilerfrontend_i.h" />
     <ClInclude Include="ProfilerSink.h" />
     <ClInclude Include="Resource.h" />

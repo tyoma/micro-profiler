@@ -1,9 +1,13 @@
 #include "ProfilerSink.h"
 
-ProfilerSink::ProfilerSink()
-{
-}
+HRESULT ProfilerSink::FinalConstruct()
+{  return S_OK; }
 
-ProfilerSink::~ProfilerSink()
+void ProfilerSink::FinalRelease()
+{  }
+
+STDMETHODIMP ProfilerSink::test(long count, FunctionStatistics statistics[1])
 {
+
+   return S_OK;
 }

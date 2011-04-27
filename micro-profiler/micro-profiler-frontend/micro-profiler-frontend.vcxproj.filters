@@ -26,6 +26,7 @@
     </ClCompile>
     <ClCompile Include="ProfilerSink.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ProfilerMainDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="_generated\microprofilerfrontend_i.h">
@@ -33,6 +34,7 @@
     </ClInclude>
     <ClInclude Include="ProfilerSink.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="ProfilerMainDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />

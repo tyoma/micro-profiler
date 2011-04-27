@@ -76,6 +76,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
+				AdditionalDependencies="comctl32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -142,7 +143,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
+				FavorSizeOrSpeed="2"
+				OmitFramePointers="true"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				RuntimeLibrary="0"
 				WarningLevel="3"
@@ -163,6 +166,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
+				AdditionalDependencies="comctl32.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -230,6 +234,14 @@
 		</File>
 		<File
 			RelativePath=".\microprofilerfrontend.idl"
+			>
+		</File>
+		<File
+			RelativePath=".\ProfilerMainDialog.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\ProfilerMainDialog.h"
 			>
 		</File>
 		<File

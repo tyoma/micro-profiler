@@ -1,5 +1,4 @@
 #include "_generated/microprofilerfrontend_i.h"
-#include "resource.h"
 
 #include <atlbase.h>
 #include <atlcom.h>

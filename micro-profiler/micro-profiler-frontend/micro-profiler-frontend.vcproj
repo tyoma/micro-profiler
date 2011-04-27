@@ -214,7 +214,6 @@
 		</Filter>
 		<Filter
 			Name="_generated"
-			SourceControlFiles="false"
 			>
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_i.c"
@@ -226,7 +225,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\micro-profiler-frontend.cpp"
+			RelativePath=".\main.cpp"
 			>
 		</File>
 		<File

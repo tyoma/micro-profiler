@@ -93,7 +93,6 @@
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalDependencies>rpcrt4.lib;oleaut32.lib</AdditionalDependencies>
       <ModuleDefinitionFile>micro-profiler-frontend.ps.def</ModuleDefinitionFile>
-      <RegisterOutput>true</RegisterOutput>
     </Link>
     <PostBuildEvent>
     </PostBuildEvent>
@@ -137,7 +136,6 @@
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalDependencies>rpcrt4.lib;oleaut32.lib</AdditionalDependencies>
       <ModuleDefinitionFile>micro-profiler-frontend.ps.def</ModuleDefinitionFile>
-      <RegisterOutput>true</RegisterOutput>
     </Link>
     <PostBuildEvent>
     </PostBuildEvent>

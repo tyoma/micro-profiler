@@ -44,9 +44,9 @@ namespace micro_profiler
 
 			CoInitialize(NULL);
 			{
-				CComPtr<IProfilerSink> sink;
+            CComPtr<IProfilerFrontend> fe;
 
-				_this->_factory(&sink);
+				_this->_factory(&fe);
 
 				while (WAIT_TIMEOUT == ::WaitForSingleObject(_this->_stop_event, 10))
 				{
@@ -58,8 +58,8 @@ namespace micro_profiler
 		}
 		
 
-		void create_standard_frontend(IProfilerSink **sink)
-		{	::CoCreateInstance(__uuidof(ProfilerSink), NULL, CLSCTX_ALL, __uuidof(IProfilerSink), (void **)sink);	}
+      void create_standard_frontend(IProfilerFrontend **frontend)
+		{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_ALL, __uuidof(IProfilerFrontend), (void **)frontend);	}
 	}
 
 

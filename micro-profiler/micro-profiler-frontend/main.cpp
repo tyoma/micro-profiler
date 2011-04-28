@@ -1,7 +1,6 @@
-#include "ProfilerMainDialog.h"
-
 #include <atlbase.h>
 #include <atlcom.h>
+#include <commctrl.h>
 
 class CMicroProfilerFrontendModule : public CAtlExeModuleT<CMicroProfilerFrontendModule>
 {
@@ -11,8 +10,5 @@ extern "C" int WINAPI _tWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstan
 {
 	InitCommonControls();
 
-	ProfilerMainDialog dlg;
-
-	dlg.ShowWindow(SW_SHOW);
    return _AtlModule.WinMain(nShowCmd);
 }

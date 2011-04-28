@@ -6,18 +6,17 @@ int main()
 {
 	CoInitialize(NULL);
 	{
-		CComPtr<IProfilerSink> sink;
-		CComPtr<IAppProfiler> profiler;
+		CComPtr<IProfilerFrontend> frontend;
 
-		HRESULT hr = sink.CoCreateInstance(__uuidof(ProfilerSink));
+		frontend.CoCreateInstance(__uuidof(ProfilerFrontend));
 
-		hr = sink->StartAppProfiling(NULL, &profiler);
+		frontend->Initialize(NULL);
 		
 		FunctionStatistics stat[100] = { 0 };
 
 		stat[1].ExclusiveTime = 12345;
 
-		profiler->Update(5, stat);
+		frontend->UpdateStatistics(5, stat);
 
 	}
 	CoUninitialize();

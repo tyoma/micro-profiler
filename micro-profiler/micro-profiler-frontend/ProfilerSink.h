@@ -6,38 +6,25 @@
 #include <atlbase.h>
 #include <atlcom.h>
 
-class ATL_NO_VTABLE AppProfiler : public IAppProfiler, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerSink, &__uuidof(ProfilerSink)>
+class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &__uuidof(ProfilerFrontend)>
 {
-public:
-	BEGIN_COM_MAP(AppProfiler)
-		COM_INTERFACE_ENTRY(IAppProfiler)
-	END_COM_MAP()
+   class ProfilerMainDialog *_dialog;
 
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-	HRESULT FinalConstruct();
-	void FinalRelease();
-
-	STDMETHODIMP Update(long count, FunctionStatistics *statistics);
-};
-
-class ATL_NO_VTABLE ProfilerSink : public IProfilerSink, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerSink, &__uuidof(ProfilerSink)>
-{
 public:
 	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
 
-	BEGIN_COM_MAP(ProfilerSink)
-		COM_INTERFACE_ENTRY(IProfilerSink)
+	BEGIN_COM_MAP(ProfilerFrontend)
+		COM_INTERFACE_ENTRY(IProfilerFrontend)
 	END_COM_MAP()
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
-	DECLARE_CLASSFACTORY_SINGLETON(ProfilerSink)
+	DECLARE_CLASSFACTORY_SINGLETON(ProfilerFrontend)
 
 	HRESULT FinalConstruct();
 	void FinalRelease();
 
-	STDMETHODIMP StartAppProfiling(BSTR executable, IAppProfiler **app_profiler);
-
+	STDMETHODIMP Initialize(BSTR executable);
+	STDMETHODIMP UpdateStatistics(long count, FunctionStatistics *statistics);
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(ProfilerSink), ProfilerSink);
+OBJECT_ENTRY_AUTO(__uuidof(ProfilerFrontend), ProfilerFrontend);

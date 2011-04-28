@@ -16,12 +16,12 @@ namespace tests
 		unsigned int threadid;
 		bool com_initialized;
 
-		void factory1(IProfilerSink **)
+		void factory1(IProfilerFrontend **)
 		{
 			threadid = ::GetCurrentThreadId();
 		}
 
-		void factory2(IProfilerSink **)
+		void factory2(IProfilerFrontend **)
 		{
 			CComPtr<IUnknown> test;
 

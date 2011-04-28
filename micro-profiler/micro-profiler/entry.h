@@ -2,7 +2,7 @@
 
 #include <memory>
 
-struct IProfilerSink;
+struct IProfilerFrontend;
 
 namespace micro_profiler
 {
@@ -11,7 +11,7 @@ namespace micro_profiler
 		virtual ~destructible()	{	}
 	};
 
-	typedef void (*frontend_factory)(IProfilerSink **sink);
+	typedef void (*frontend_factory)(IProfilerFrontend **frontend);
 
 	__declspec(dllexport) std::auto_ptr<destructible> initialize_frontend(frontend_factory factory = 0);
 }

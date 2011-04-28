@@ -10,16 +10,11 @@ struct
 	hyper InclusiveTime;
 } FunctionStatistics;
 
-[	uuid(873A798B-8ECE-49CE-9551-5B457B69F7AD), nonextensible, pointer_default(unique)	]
-interface IAppProfiler : IUnknown
-{
-	HRESULT Update([in] long count, [in, size_is(count)] FunctionStatistics *statistics);
-};
-
 [	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), nonextensible, pointer_default(unique)	]
-interface IProfilerSink : IUnknown
+interface IProfilerFrontend : IUnknown
 {
-	HRESULT StartAppProfiling([in] BSTR executable, [out] IAppProfiler **app_profiler);
+	HRESULT Initialize([in] BSTR executable);
+	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] FunctionStatistics *statistics);
 };
 
 [	uuid(425E45FE-FD05-49C0-A505-93E88651EC36), version(1.0), helpstring("MicroProfiler Frontend 1.0 Type Library")	]
@@ -30,14 +25,8 @@ library MicroProfilerFrontendLib
 	struct FunctionStatistics;
 
 	[ uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3) ]
-	coclass ProfilerSink
+	coclass ProfilerFrontend
 	{
-		[default] interface IProfilerSink;
-	};
-
-	[ uuid(13D3DC0B-C212-409E-94C8-21EEB99BB49F), noncreatable ]
-	coclass AppProfiler
-	{
-		[default] interface IAppProfiler;
+		[default] interface IProfilerFrontend;
 	};
 };

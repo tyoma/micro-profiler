@@ -203,6 +203,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\entry.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\entry.h"
+			>
+		</File>
+		<File
 			RelativePath=".\pod_vector.h"
 			>
 		</File>

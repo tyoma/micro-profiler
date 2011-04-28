@@ -109,6 +109,7 @@
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Speed</FavorSizeOrSpeed>
       <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</OmitFramePointers>
     </ClCompile>
+    <ClCompile Include="entry.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="system.cpp" />
   </ItemGroup>
@@ -116,6 +117,7 @@
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="calls_collector.h" />
     <ClInclude Include="data_structures.h" />
+    <ClInclude Include="entry.h" />
     <ClInclude Include="pod_vector.h" />
     <ClInclude Include="symbol_resolver.h" />
     <ClInclude Include="system.h" />

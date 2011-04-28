@@ -21,8 +21,8 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
-			CharacterSet="1"
+			UseOfMFC="0"
+			CharacterSet="0"
 			WholeProgramOptimization="0"
 			>
 			<Tool
@@ -93,8 +93,8 @@
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
-			CharacterSet="1"
+			UseOfMFC="0"
+			CharacterSet="0"
 			WholeProgramOptimization="0"
 			>
 			<Tool
@@ -200,10 +200,6 @@
 		</File>
 		<File
 			RelativePath=".\data_structures.h"
-			>
-		</File>
-		<File
-			RelativePath=".\dll_entry.cpp"
 			>
 		</File>
 		<File

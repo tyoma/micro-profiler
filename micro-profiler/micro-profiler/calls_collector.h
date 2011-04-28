@@ -32,7 +32,6 @@ namespace micro_profiler
 		};
 
 	public:
-		calls_collector();
 		~calls_collector();
 
 		static __declspec(dllexport) calls_collector *instance() throw();
@@ -42,8 +41,10 @@ namespace micro_profiler
 
 		unsigned __int64 profiler_latency() const;
 
-	public:
-		static calls_collector *_instance;
+	private:
+		calls_collector();
+
+		static calls_collector _instance;
 
 		unsigned __int64 _profiler_latency;
 		tls _trace_pointers_tls;

@@ -60,7 +60,7 @@ namespace micro_profiler
 		};
 	}
 
-	calls_collector *calls_collector::_instance = 0;
+	calls_collector calls_collector::_instance;
 
 
 	calls_collector::thread_trace_block::thread_trace_block()
@@ -100,8 +100,6 @@ namespace micro_profiler
 	calls_collector::calls_collector()
 		: _profiler_latency(0)
 	{
-		_instance = this;
-
 		const unsigned int check_times = 1000;
 		thread_trace_block &ttb = _call_traces[current_thread_id()];
 		delay_evaluator de;
@@ -115,11 +113,10 @@ namespace micro_profiler
 
 	calls_collector::~calls_collector()
 	{
-		_instance = 0;
 	}
 
 	calls_collector *calls_collector::instance() throw()
-	{	return _instance;	}
+	{	return &_instance;	}
 
 	void calls_collector::read_collected(acceptor &a)
 	{
@@ -131,14 +128,14 @@ namespace micro_profiler
 
 	void calls_collector::track(call_record call) throw()
 	{
-		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(_instance->_trace_pointers_tls.get());
+		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(instance()->_trace_pointers_tls.get());
 
 		if (!trace)
 		{
-			scoped_lock l(_instance->_thread_blocks_mtx);
+			scoped_lock l(instance()->_thread_blocks_mtx);
 
-			trace = &_instance->_call_traces[current_thread_id()];
-			_instance->_trace_pointers_tls.set(trace);
+			trace = &instance()->_call_traces[current_thread_id()];
+			instance()->_trace_pointers_tls.set(trace);
 		}
 		trace->track(call);
 	}

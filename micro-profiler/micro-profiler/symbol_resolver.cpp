@@ -13,7 +13,7 @@ namespace micro_profiler
 
 		::GetModuleFileNameEx(::GetCurrentProcess(), hmodule, path, sizeof(path) / sizeof( TCHAR));
 
-		_data_source->loadDataForExe(CString(path), NULL, NULL);
+		_data_source->loadDataForExe(CStringW(path), NULL, NULL);
 		_data_source->openSession(&_session);
 		_session->put_loadAddress((ULONGLONG)hmodule);
 	}

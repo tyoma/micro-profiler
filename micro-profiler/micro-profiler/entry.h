@@ -1,17 +1,23 @@
 #pragma once
 
-#include <memory>
-
 struct IProfilerFrontend;
 
 namespace micro_profiler
 {
-	struct destructible
-	{
-		virtual ~destructible()	{	}
-	};
-
 	typedef void (*frontend_factory)(IProfilerFrontend **frontend);
 
-	__declspec(dllexport) std::auto_ptr<destructible> initialize_frontend(frontend_factory factory = 0);
+	class profiler_frontend
+	{
+		frontend_factory _factory;
+		void *_stop_event, *_frontend_thread;
+
+		static unsigned int __stdcall profiler_frontend::frontend_proc(void *param);
+
+		profiler_frontend(const profiler_frontend &);
+		void operator =(const profiler_frontend &);
+
+	public:
+		__declspec(dllexport) profiler_frontend(frontend_factory factory = 0);
+		__declspec(dllexport) ~profiler_frontend();
+	};
 }

@@ -3,6 +3,7 @@
 #include "./../micro-profiler-frontend/_generated/microprofilerfrontend_i.h"
 
 #include <atlbase.h>
+#include <memory>
 
 using namespace micro_profiler;
 using namespace std;
@@ -40,7 +41,7 @@ namespace tests
 			unsigned int test_threadid = ::GetCurrentThreadId();
 			
 			// ACT
-			initialize_frontend(&factory1);
+			{	profiler_frontend fe(&factory1);	}
 
 			// ASSERT
 			Assert::IsTrue(0 != threadid);
@@ -53,7 +54,7 @@ namespace tests
 		{
 			// INIT / ACT
 			DWORD status1 = 0, status2 = 0;
-			auto_ptr<destructible> init(initialize_frontend(&factory1));
+			auto_ptr<profiler_frontend> init(new profiler_frontend(&factory1));
 			
 			::Sleep(100);
 
@@ -81,7 +82,7 @@ namespace tests
 			com_initialized = false;
 
 			// INIT / ACT
-			initialize_frontend(&factory2);
+			{	profiler_frontend fe(&factory2);	}
 
 			// ASSERT
 			Assert::IsTrue(com_initialized);

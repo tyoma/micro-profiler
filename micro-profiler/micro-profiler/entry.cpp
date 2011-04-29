@@ -9,64 +9,39 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace
+	void create_standard_frontend(IProfilerFrontend **frontend)
+	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_ALL, __uuidof(IProfilerFrontend), (void **)frontend);	}
+
+	profiler_frontend::profiler_frontend(frontend_factory factory)
+		: _factory(factory ? factory : &create_standard_frontend), _stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
+		_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &profiler_frontend::frontend_proc, this, 0, 0)))
 	{
-		class frontend : public destructible
-		{
-			frontend_factory _factory;
-			HANDLE _stop_event, _frontend_thread;
-
-			static unsigned int __stdcall frontend_proc(void *param);
-
-		public:
-			frontend(frontend_factory factory);
-			~frontend();
-		};
-
-
-		frontend::frontend(frontend_factory factory)
-			: _factory(factory), _stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
-				_frontend_thread(reinterpret_cast<HANDLE>(_beginthreadex(0, 0, &frontend_proc, this, 0, 0)))
-		{
-		}
-
-		frontend::~frontend()
-		{
-			::SetEvent(_stop_event);
-			::WaitForSingleObject(_frontend_thread, INFINITE);
-			::CloseHandle(_frontend_thread);
-			::CloseHandle(_stop_event);
-		}
-
-		unsigned int __stdcall frontend::frontend_proc(void *param)
-		{
-			frontend *_this = reinterpret_cast<frontend *>(param);
-
-			CoInitialize(NULL);
-			{
-            CComPtr<IProfilerFrontend> fe;
-
-				_this->_factory(&fe);
-
-				while (WAIT_TIMEOUT == ::WaitForSingleObject(_this->_stop_event, 10))
-				{
-				}
-			}
-			CoUninitialize();
-
-			return 0;
-		}
-		
-
-      void create_standard_frontend(IProfilerFrontend **frontend)
-		{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_ALL, __uuidof(IProfilerFrontend), (void **)frontend);	}
 	}
 
-
-	__declspec(dllexport) auto_ptr<destructible> initialize_frontend(frontend_factory factory)
+	profiler_frontend::~profiler_frontend()
 	{
-		if (!factory)
-			factory = &create_standard_frontend;
-		return auto_ptr<destructible>(new frontend(factory));
+		::SetEvent(reinterpret_cast<HANDLE>(_stop_event));
+		::WaitForSingleObject(reinterpret_cast<HANDLE>(_frontend_thread), INFINITE);
+		::CloseHandle(reinterpret_cast<HANDLE>(_frontend_thread));
+		::CloseHandle(reinterpret_cast<HANDLE>(_stop_event));
+	}
+
+	unsigned int __stdcall profiler_frontend::frontend_proc(void *param)
+	{
+		profiler_frontend *_this = reinterpret_cast<profiler_frontend *>(param);
+
+		CoInitialize(NULL);
+		{
+			CComPtr<IProfilerFrontend> fe;
+
+			_this->_factory(&fe);
+
+			while (WAIT_TIMEOUT == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_this->_stop_event), 10))
+			{
+			}
+		}
+		CoUninitialize();
+
+		return 0;
 	}
 }

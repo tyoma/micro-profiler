@@ -48,7 +48,7 @@ namespace micro_profiler
 			{
 				count = 2 * (count >> 1);
 				for (const call_record *i = calls; i != calls + count; i += 2)
-					delay = min(delay, (i + 1)->timestamp - i->timestamp);
+					delay = i != calls ? min(delay, (i + 1)->timestamp - i->timestamp) : (i + 1)->timestamp - i->timestamp;
 			}
 
 		public:

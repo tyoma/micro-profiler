@@ -14,8 +14,8 @@ extern "C" __declspec(naked, dllexport) void _penter()
 		push	edx
 		push	eax
 		push	dword ptr[esp + 40]
+		lea	ecx, [micro_profiler::calls_collector::_instance]
 		call	micro_profiler::calls_collector::track
-		add	esp, 0x0c
 		popad
 		ret
 	}
@@ -30,8 +30,8 @@ extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
 		push	edx
 		push	eax
 		push	0
+		lea	ecx, [micro_profiler::calls_collector::_instance]
 		call	micro_profiler::calls_collector::track
-		add	esp, 0x0c
 		popad
 		ret
 	}
@@ -128,14 +128,14 @@ namespace micro_profiler
 
 	void calls_collector::track(call_record call) throw()
 	{
-		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(instance()->_trace_pointers_tls.get());
+		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(_trace_pointers_tls.get());
 
 		if (!trace)
 		{
-			scoped_lock l(instance()->_thread_blocks_mtx);
+			scoped_lock l(_thread_blocks_mtx);
 
-			trace = &instance()->_call_traces[current_thread_id()];
-			instance()->_trace_pointers_tls.set(trace);
+			trace = &_call_traces[current_thread_id()];
+			_trace_pointers_tls.set(trace);
 		}
 		trace->track(call);
 	}

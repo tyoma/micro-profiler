@@ -18,12 +18,11 @@ public:
 	END_COM_MAP()
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
-	DECLARE_CLASSFACTORY_SINGLETON(ProfilerFrontend)
 
 	HRESULT FinalConstruct();
 	void FinalRelease();
 
-	STDMETHODIMP Initialize(BSTR executable);
+	STDMETHODIMP Initialize(BSTR executable, __int64 load_address);
 	STDMETHODIMP UpdateStatistics(long count, FunctionStatistics *statistics);
 };
 

@@ -76,7 +76,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
+				AdditionalDependencies="comctl32.lib diaguids.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -165,7 +165,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
+				AdditionalDependencies="comctl32.lib diaguids.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -248,6 +248,22 @@
 		</File>
 		<File
 			RelativePath=".\Resource.h"
+			>
+		</File>
+		<File
+			RelativePath=".\statistics.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\statistics.h"
+			>
+		</File>
+		<File
+			RelativePath=".\symbol_resolver.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\symbol_resolver.h"
 			>
 		</File>
 	</Files>

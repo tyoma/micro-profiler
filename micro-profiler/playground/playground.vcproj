@@ -75,7 +75,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
+				AdditionalDependencies="comctl32.lib diaguids.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -164,7 +164,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
+				AdditionalDependencies="comctl32.lib diaguids.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -197,6 +197,10 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
+			RelativePathToProject=".\micro-profiler\micro-profiler.vcproj"
+		/>
 	</References>
 	<Files>
 		<File

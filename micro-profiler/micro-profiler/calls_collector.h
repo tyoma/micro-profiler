@@ -37,7 +37,7 @@ namespace micro_profiler
 		static __declspec(dllexport) calls_collector *instance() throw();
 		__declspec(dllexport) void read_collected(acceptor &a);
 
-		static void track(call_record call) throw();
+		void __thiscall track(call_record call) throw();
 
 		unsigned __int64 profiler_latency() const;
 

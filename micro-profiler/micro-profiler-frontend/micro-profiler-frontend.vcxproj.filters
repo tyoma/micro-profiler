@@ -23,6 +23,8 @@
     <ClCompile Include="ProfilerSink.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
+    <ClCompile Include="statistics.cpp" />
+    <ClCompile Include="symbol_resolver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProfilerSink.h" />
@@ -31,6 +33,8 @@
     <ClInclude Include="_generated\microprofilerfrontend_i.h">
       <Filter>_generated</Filter>
     </ClInclude>
+    <ClInclude Include="statistics.h" />
+    <ClInclude Include="symbol_resolver.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />

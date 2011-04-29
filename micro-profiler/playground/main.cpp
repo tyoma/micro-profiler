@@ -1,24 +1,30 @@
 #include "../micro-profiler-frontend/_generated/microprofilerfrontend_i.h"
+#include "../micro-profiler/calls_collector.h"
 
 #include <atlbase.h>
+#include <iostream>
+
+using namespace std;
 
 int main()
 {
-	CoInitialize(NULL);
-	{
-		CComPtr<IProfilerFrontend> frontend;
+	cout << micro_profiler::calls_collector::instance()->profiler_latency();
 
-		frontend.CoCreateInstance(__uuidof(ProfilerFrontend));
+	//CoInitialize(NULL);
+	//{
+	//	CComPtr<IProfilerFrontend> frontend;
 
-		frontend->Initialize(NULL);
-		
-		FunctionStatistics stat[100] = { 0 };
+	//	frontend.CoCreateInstance(__uuidof(ProfilerFrontend));
 
-		stat[1].ExclusiveTime = 12345;
+	//	frontend->Initialize(NULL, 0);
+	//	
+	//	FunctionStatistics stat[100] = { 0 };
 
-		frontend->UpdateStatistics(5, stat);
+	//	stat[1].ExclusiveTime = 12345;
 
-	}
-	CoUninitialize();
+	//	frontend->UpdateStatistics(5, stat);
+
+	//}
+	//CoUninitialize();
 	return 0;
 }

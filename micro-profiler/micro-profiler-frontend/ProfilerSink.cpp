@@ -15,7 +15,7 @@ void ProfilerFrontend::FinalRelease()
    delete _dialog;
 }
 
-STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable)
+STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address)
 {
 	return S_OK;
 }

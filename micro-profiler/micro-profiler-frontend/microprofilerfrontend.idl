@@ -13,7 +13,7 @@ struct
 [	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), nonextensible, pointer_default(unique)	]
 interface IProfilerFrontend : IUnknown
 {
-	HRESULT Initialize([in] BSTR executable);
+	HRESULT Initialize([in] BSTR executable, [in] hyper load_address);
 	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] FunctionStatistics *statistics);
 };
 

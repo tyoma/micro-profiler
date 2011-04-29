@@ -84,7 +84,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>comctl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;diaguids.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
     </PostBuildEvent>
@@ -126,7 +126,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>comctl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;diaguids.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
     </PostBuildEvent>
@@ -141,11 +141,15 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
     <ClCompile Include="ProfilerSink.cpp" />
+    <ClCompile Include="statistics.cpp" />
+    <ClCompile Include="symbol_resolver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProfilerMainDialog.h" />
     <ClInclude Include="ProfilerSink.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="statistics.h" />
+    <ClInclude Include="symbol_resolver.h" />
     <ClInclude Include="_generated\microprofilerfrontend_i.h" />
   </ItemGroup>
   <ItemGroup>

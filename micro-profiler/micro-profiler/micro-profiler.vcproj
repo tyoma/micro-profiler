@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="psapi.lib diaguids.lib"
+				AdditionalDependencies="psapi.lib"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="psapi.lib diaguids.lib"
+				AdditionalDependencies="psapi.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
@@ -212,14 +212,6 @@
 		</File>
 		<File
 			RelativePath=".\pod_vector.h"
-			>
-		</File>
-		<File
-			RelativePath=".\symbol_resolver.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\symbol_resolver.h"
 			>
 		</File>
 		<File

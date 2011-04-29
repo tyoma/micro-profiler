@@ -5,8 +5,6 @@
 #include <atlbase.h>
 #include <process.h>
 
-using namespace std;
-
 namespace micro_profiler
 {
 	void create_standard_frontend(IProfilerFrontend **frontend)

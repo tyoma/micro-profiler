@@ -75,7 +75,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				RegisterOutput="true"
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="rpcrt4.lib oleaut32.lib"
 				LinkIncremental="2"
@@ -166,7 +165,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				RegisterOutput="true"
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="rpcrt4.lib oleaut32.lib"
 				LinkIncremental="1"

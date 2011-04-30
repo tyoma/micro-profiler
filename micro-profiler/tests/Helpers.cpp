@@ -34,5 +34,22 @@ namespace micro_profiler
 
 		unsigned int thread::current_thread_id()
 		{	return ::GetCurrentThreadId();	}
+
+
+		waitable::waitable()
+			: _event(::CreateEvent(NULL, FALSE, FALSE, NULL))
+		{	}
+
+		waitable::~waitable()
+		{	::CloseHandle(reinterpret_cast<HANDLE>(_event));	}
+
+		void waitable::wait()
+		{	::WaitForSingleObject(reinterpret_cast<HANDLE>(_event), INFINITE);	}
+
+		void waitable::set()
+		{	::SetEvent(reinterpret_cast<HANDLE>(_event));	}
+
+		void waitable::reset()
+		{	::ResetEvent(reinterpret_cast<HANDLE>(_event));	}
 	}
 }

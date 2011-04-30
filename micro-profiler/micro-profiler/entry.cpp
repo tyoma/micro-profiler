@@ -31,9 +31,12 @@ namespace micro_profiler
 		CoInitialize(NULL);
 		{
 			CComPtr<IProfilerFrontend> fe;
+			TCHAR image_path[MAX_PATH + 1] = { 0 };
 
 			_this->_factory(&fe);
-
+			::GetModuleFileName(NULL, image_path, MAX_PATH);
+			if (fe)
+				fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)));
 			while (WAIT_TIMEOUT == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_this->_stop_event), 10))
 			{
 			}

@@ -27,6 +27,23 @@ namespace micro_profiler
 		};
 
 
+		class waitable
+		{
+			void *_event;
+
+			waitable(const waitable &);
+			const waitable &operator =(const waitable &);
+
+		public:
+			waitable();
+			~waitable();
+
+			void wait();
+			void set();
+			void reset();
+		};
+
+
 		template <typename T, size_t size>
 		inline T *end(T (&array_ptr)[size])
 		{	return array_ptr + size;	}

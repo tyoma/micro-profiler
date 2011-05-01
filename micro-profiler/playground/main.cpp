@@ -1,30 +1,32 @@
-#include "../micro-profiler-frontend/_generated/microprofilerfrontend_i.h"
-#include "../micro-profiler/calls_collector.h"
+#define _CRT_RAND_S
+#include <stdlib.h>
 
-#include <atlbase.h>
-#include <iostream>
+#include "../micro-profiler/entry.h"
+
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
+namespace
+{
+	micro_profiler::profiler_frontend pf;
+
+	double random()
+	{
+		unsigned int value1, value2;
+
+		rand_s(&value1), rand_s(&value2);
+		return 1.0 * value1 / value2;
+	}
+}
+
 int main()
 {
-	cout << micro_profiler::calls_collector::instance()->profiler_latency();
+	vector<double> v(10000000);
 
-	//CoInitialize(NULL);
-	//{
-	//	CComPtr<IProfilerFrontend> frontend;
+	generate_n(v.begin(), v.size(), &random);
+	sort(v.begin(), v.end());
 
-	//	frontend.CoCreateInstance(__uuidof(ProfilerFrontend));
-
-	//	frontend->Initialize(NULL, 0);
-	//	
-	//	FunctionStatistics stat[100] = { 0 };
-
-	//	stat[1].ExclusiveTime = 12345;
-
-	//	frontend->UpdateStatistics(5, stat);
-
-	//}
-	//CoUninitialize();
 	return 0;
 }

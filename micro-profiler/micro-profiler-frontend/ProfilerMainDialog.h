@@ -4,14 +4,25 @@
 
 #include <atlbase.h>
 #include <atlwin.h>
+#include <string>
+
+class statistics;
+struct function_statistics;
+
+typedef std::basic_string<TCHAR> tstring;
+typedef tstring (*print_function)(const function_statistics &s);
 
 class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 {
+	print_function _printers[4];
+	statistics &_statistics;
    CWindow _statistics_view;
 
 public:
-	ProfilerMainDialog();
+	ProfilerMainDialog(statistics &s);
 	~ProfilerMainDialog();
+
+	void RefreshList(unsigned int new_count);
 
 	enum {	IDD = IDD_PROFILER_MAIN	};
 

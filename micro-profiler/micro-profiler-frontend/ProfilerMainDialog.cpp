@@ -1,7 +1,45 @@
 #include "ProfilerMainDialog.h"
 
-ProfilerMainDialog::ProfilerMainDialog()
+#include "statistics.h"
+
+namespace
 {
+	tstring print_name(const function_statistics &s)
+	{	return s.name;	}
+
+	tstring print_times_called(const function_statistics &s)
+	{
+		TCHAR buffer[30] = { 0 };
+
+		_stprintf(buffer, _T("%I64d"), s.times_called);
+		return buffer;
+	}
+
+	tstring print_exclusive_time(const function_statistics &s)
+	{
+		TCHAR buffer[30] = { 0 };
+
+		_stprintf(buffer, _T("%I64d"), s.exclusive_time);
+		return buffer;
+	}
+
+	tstring print_inclusive_time(const function_statistics &s)
+	{
+		TCHAR buffer[30] = { 0 };
+
+		_stprintf(buffer, _T("%I64d"), s.inclusive_time);
+		return buffer;
+	}
+}
+
+ProfilerMainDialog::ProfilerMainDialog(statistics &s)
+	: _statistics(s)
+{
+	_printers[0] = &print_name;
+	_printers[1] = &print_times_called;
+	_printers[2] = &print_exclusive_time;
+	_printers[3] = &print_inclusive_time;
+
 	Create(NULL, 0);
 	_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
 
@@ -17,13 +55,20 @@ ProfilerMainDialog::ProfilerMainDialog()
 	ListView_InsertColumn(_statistics_view, 2, &columns[2]);
 	ListView_InsertColumn(_statistics_view, 3, &columns[3]);
 	ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_statistics_view));
-	ListView_SetItemCountEx(_statistics_view, 10000, LVSICF_NOSCROLL);
 }
 
 ProfilerMainDialog::~ProfilerMainDialog()
 {
 	if (IsWindow())
 		DestroyWindow();
+}
+
+void ProfilerMainDialog::RefreshList(unsigned int new_count)
+{
+	if (new_count != static_cast<unsigned int>(ListView_GetItemCount(_statistics_view)))
+		ListView_SetItemCountEx(_statistics_view, new_count, LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
+	else
+		_statistics_view.Invalidate(FALSE);
 }
 
 LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL& handled)
@@ -39,7 +84,8 @@ LRESULT ProfilerMainDialog::OnGetDispInfo(int control_id, LPNMHDR pnmh, BOOL &ha
 
 	if (LVIF_TEXT & pdi->item.mask)
 	{
-		_tcsncpy(pdi->item.pszText, _T("abc"), pdi->item.cchTextMax - 1);
+		tstring item_text(_printers[pdi->item.iSubItem](_statistics.at(pdi->item.iItem)));
+		_tcsncpy(pdi->item.pszText, item_text.c_str(), pdi->item.cchTextMax - 1);
 		pdi->item.pszText[pdi->item.cchTextMax - 1] = _T('\0');
 		handled = TRUE;
 	}

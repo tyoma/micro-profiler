@@ -38,7 +38,7 @@ namespace micro_profiler
 		CoInitialize(NULL);
 		{
 			calls_collector *collector = calls_collector::instance();
-			analyzer a(collector->profiler_latency() * 90 / 100);
+			analyzer a(collector->profiler_latency() * 70 / 100);
 			vector<FunctionStatistics> buffer;
 			CComPtr<IProfilerFrontend> fe;
 			TCHAR image_path[MAX_PATH + 1] = { 0 };

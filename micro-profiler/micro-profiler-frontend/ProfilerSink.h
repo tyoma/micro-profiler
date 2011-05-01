@@ -5,10 +5,17 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <memory>
+
+class ProfilerMainDialog;
+class statistics;
+class symbol_resolver;
 
 class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &__uuidof(ProfilerFrontend)>
 {
-   class ProfilerMainDialog *_dialog;
+	std::auto_ptr<symbol_resolver> _symbol_resolver;
+	std::auto_ptr<statistics> _statistics;
+	std::auto_ptr<ProfilerMainDialog> _dialog;
 
 public:
 	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)

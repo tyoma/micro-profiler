@@ -1,14 +1,21 @@
 #include "entry.h"
 
+#include "analyzer.h"
 #include "./../micro-profiler-frontend/_generated/microprofilerfrontend_i.h"
 
 #include <atlbase.h>
 #include <process.h>
+#include <vector>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	void create_standard_frontend(IProfilerFrontend **frontend)
-	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_ALL, __uuidof(IProfilerFrontend), (void **)frontend);	}
+	namespace
+	{
+		void create_standard_frontend(IProfilerFrontend **frontend)
+		{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_ALL, __uuidof(IProfilerFrontend), (void **)frontend);	}
+	}
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _factory(factory ? factory : &create_standard_frontend), _stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
@@ -30,15 +37,31 @@ namespace micro_profiler
 
 		CoInitialize(NULL);
 		{
+			calls_collector *collector = calls_collector::instance();
+			analyzer a(collector->profiler_latency() * 90 / 100);
+			vector<FunctionStatistics> buffer;
 			CComPtr<IProfilerFrontend> fe;
 			TCHAR image_path[MAX_PATH + 1] = { 0 };
 
 			_this->_factory(&fe);
-			::GetModuleFileName(NULL, image_path, MAX_PATH);
 			if (fe)
-				fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)));
-			while (WAIT_TIMEOUT == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_this->_stop_event), 10))
 			{
+				::GetModuleFileName(NULL, image_path, MAX_PATH);
+				fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)));
+				while (WAIT_TIMEOUT == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_this->_stop_event), 10))
+				{
+					a.clear();
+					buffer.clear();
+					collector->read_collected(a);
+					for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
+					{
+						FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.exclusive_time, i->second.inclusive_time };
+
+						buffer.push_back(s);
+					}
+					if (!buffer.empty())
+						fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
+				}
 			}
 		}
 		CoUninitialize();

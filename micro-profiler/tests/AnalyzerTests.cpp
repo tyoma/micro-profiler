@@ -171,6 +171,36 @@ namespace micro_profiler
 				Assert::IsTrue(13 == a.begin()->second.inclusive_time);
 				Assert::IsTrue(13 == a.begin()->second.exclusive_time);
 			}
+
+
+			[TestMethod]
+			void ClearingRemovesPreviousStatButLeavesStackStates()
+			{
+				// INIT
+				analyzer a;
+				map<void *, function_statistics> m;
+				call_record trace1[] = {
+					{	(void *)1234, 12319	},
+					{	(void *)0, 12323	},
+					{	(void *)2234, 12324	},
+					{	(void *)0, 12326},
+					{	(void *)2234, 12330	},
+				};
+				call_record trace2[] = {	{	(void *)0, 12350	},	};
+
+				a.accept_calls(2, trace1, array_size(trace1));
+
+				// ACT
+				a.clear();
+				a.accept_calls(2, trace2, array_size(trace2));
+
+				// ASSERT
+				Assert::IsTrue(1 == distance(a.begin(), a.end()));
+				Assert::IsTrue((void *)2234 == a.begin()->first);
+				Assert::IsTrue(1 == a.begin()->second.times_called);
+				Assert::IsTrue(20 == a.begin()->second.inclusive_time);
+				Assert::IsTrue(20 == a.begin()->second.exclusive_time);
+			}
 		};
 	}
 }

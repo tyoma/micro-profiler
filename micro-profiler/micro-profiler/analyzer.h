@@ -40,10 +40,14 @@ namespace micro_profiler
 		stacks_container _stacks;
 
 	public:
+		typedef statistics_container::const_iterator const_iterator;
+
+	public:
 		analyzer(unsigned __int64 profiler_latency = 0);
 
-		statistics_container::const_iterator begin() const;
-		statistics_container::const_iterator end() const;
+		void clear();
+		const_iterator begin() const;
+		const_iterator end() const;
 
 		virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count);
 	};
@@ -88,10 +92,13 @@ namespace micro_profiler
 		: _profiler_latency(profiler_latency)
 	{	}
 
-	inline analyzer::statistics_container::const_iterator analyzer::begin() const
+	inline void analyzer::clear()
+	{	_statistics.clear();	}
+
+	inline analyzer::const_iterator analyzer::begin() const
 	{	return _statistics.begin();	}
 
-	inline analyzer::statistics_container::const_iterator analyzer::end() const
+	inline analyzer::const_iterator analyzer::end() const
 	{	return _statistics.end();	}
 
 	inline void analyzer::accept_calls(unsigned int threadid, const call_record *calls, unsigned int count)

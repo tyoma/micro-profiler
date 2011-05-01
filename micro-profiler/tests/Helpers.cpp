@@ -36,15 +36,15 @@ namespace micro_profiler
 		{	return ::GetCurrentThreadId();	}
 
 
-		waitable::waitable()
-			: _event(::CreateEvent(NULL, FALSE, FALSE, NULL))
+		waitable::waitable(bool manual_reset)
+			: _event(::CreateEvent(NULL, manual_reset ? TRUE : FALSE, FALSE, NULL))
 		{	}
 
 		waitable::~waitable()
 		{	::CloseHandle(reinterpret_cast<HANDLE>(_event));	}
 
-		void waitable::wait()
-		{	::WaitForSingleObject(reinterpret_cast<HANDLE>(_event), INFINITE);	}
+		bool waitable::wait(int timeout)
+		{	return WAIT_OBJECT_0 == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_event), timeout);	}
 
 		void waitable::set()
 		{	::SetEvent(reinterpret_cast<HANDLE>(_event));	}

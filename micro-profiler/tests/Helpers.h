@@ -35,10 +35,13 @@ namespace micro_profiler
 			const waitable &operator =(const waitable &);
 
 		public:
-			waitable();
+			static const int infinite = 0xFFFFFFFF;
+
+		public:
+			waitable(bool manual_reset = false);
 			~waitable();
 
-			void wait();
+			bool wait(int timeout = infinite);
 			void set();
 			void reset();
 		};

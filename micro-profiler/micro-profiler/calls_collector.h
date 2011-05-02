@@ -11,27 +11,11 @@ namespace micro_profiler
 	class calls_collector
 	{
 	public:
-		struct acceptor
-		{
-			virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count) = 0;
-		};
-
-		class thread_trace_block
-		{
-			mutex _block_mtx;
-			pod_vector<call_record> _traces[2];
-			pod_vector<call_record> *_active_trace, *_inactive_trace;
-
-		public:
-			thread_trace_block();
-			thread_trace_block(const thread_trace_block &);
-			~thread_trace_block();
-
-			void track(const call_record &call) throw();
-			void read_collected(unsigned int threadid, acceptor &a);
-		};
+		struct acceptor;
+		class thread_trace_block;
 
 	public:
+		calls_collector();
 		~calls_collector();
 
 		static __declspec(dllexport) calls_collector *instance() throw();
@@ -42,14 +26,34 @@ namespace micro_profiler
 		__int64 profiler_latency() const;
 
 	private:
-		calls_collector();
-
 		static calls_collector _instance;
 
 		__int64 _profiler_latency;
 		tls _trace_pointers_tls;
 		mutex _thread_blocks_mtx;
 		std::map< unsigned int, thread_trace_block > _call_traces;
+	};
+
+
+	struct calls_collector::acceptor
+	{
+		virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count) = 0;
+	};
+
+
+	class calls_collector::thread_trace_block
+	{
+		mutex _block_mtx;
+		pod_vector<call_record> _traces[2];
+		pod_vector<call_record> *_active_trace, *_inactive_trace;
+
+	public:
+		thread_trace_block();
+		thread_trace_block(const thread_trace_block &);
+		~thread_trace_block();
+
+		void track(const call_record &call) throw();
+		void read_collected(unsigned int threadid, calls_collector::acceptor &a);
 	};
 
 

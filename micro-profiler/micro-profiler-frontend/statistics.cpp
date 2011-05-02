@@ -6,7 +6,7 @@
 using namespace std;
 
 function_statistics::function_statistics(const FunctionStatistics &from, const symbol_resolver &resolver)
-	: name(resolver.symbol_name_by_va(from.FunctionOffset)), times_called(from.TimesCalled),
+	: name(resolver.symbol_name_by_va(from.FunctionAddress)), times_called(from.TimesCalled),
 		inclusive_time(from.InclusiveTime), exclusive_time(from.ExclusiveTime)
 {	}
 
@@ -46,11 +46,11 @@ bool statistics::update(const FunctionStatistics *data, unsigned int count)
 
 	for (; count; --count, ++data)
 	{
-		statistics_map::iterator match(_statistics.find(data->FunctionOffset));
+		statistics_map::iterator match(_statistics.find(data->FunctionAddress));
 
 		if (match == _statistics.end())
 		{
-			match = _statistics.insert(make_pair(data->FunctionOffset, function_statistics(*data, _symbol_resolver))).first;
+			match = _statistics.insert(make_pair(data->FunctionAddress, function_statistics(*data, _symbol_resolver))).first;
 			new_insertions = true;
 		}
 		else

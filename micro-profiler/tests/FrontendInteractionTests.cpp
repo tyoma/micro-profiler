@@ -243,7 +243,7 @@ namespace micro_profiler
 
 				sleep_20_call = *fe_update_statistics.begin();
 
-				Assert::IsTrue(sleep_20_call.FunctionOffset == reinterpret_cast<hyper>(&sleep_20));
+				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_20));
 				Assert::IsTrue(sleep_20_call.TimesCalled == 1);
 				Assert::IsTrue(sleep_20_call.InclusiveTime > 0);
 				Assert::IsTrue(sleep_20_call.ExclusiveTime == sleep_20_call.InclusiveTime);
@@ -260,7 +260,7 @@ namespace micro_profiler
 
 				sleep_n_call = *fe_update_statistics.begin();
 
-				Assert::IsTrue(sleep_n_call.FunctionOffset == reinterpret_cast<hyper>(&sleep_n));
+				Assert::IsTrue(sleep_n_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_n));
 				Assert::IsTrue(sleep_n_call.TimesCalled == 1);
 				Assert::IsTrue(sleep_n_call.InclusiveTime > sleep_20_call.InclusiveTime);
 				Assert::IsTrue(sleep_n_call.ExclusiveTime == sleep_n_call.InclusiveTime);
@@ -288,7 +288,7 @@ namespace micro_profiler
 
 				stat = *fe_update_statistics.begin();
 
-				Assert::IsTrue(stat.FunctionOffset == reinterpret_cast<hyper>(&empty_call));
+				Assert::IsTrue(stat.FunctionAddress == reinterpret_cast<hyper>(&empty_call));
 				Assert::IsTrue(stat.TimesCalled == check_amount);
 				Assert::IsTrue(stat.InclusiveTime > 0);
 				Assert::IsTrue(stat.InclusiveTime / check_amount < 50);

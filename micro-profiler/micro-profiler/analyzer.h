@@ -3,6 +3,7 @@
 #include "calls_collector.h"
 
 #include <hash_map>
+#include <vector>
 
 namespace micro_profiler
 {

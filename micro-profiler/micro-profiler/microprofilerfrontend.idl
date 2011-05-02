@@ -4,7 +4,7 @@ import "ocidl.idl";
 typedef [	public	]
 struct
 {
-	hyper FunctionOffset;
+	hyper FunctionAddress;
 	hyper TimesCalled;
 	hyper ExclusiveTime;
 	hyper InclusiveTime;

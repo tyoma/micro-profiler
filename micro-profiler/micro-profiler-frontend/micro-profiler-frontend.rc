@@ -118,21 +118,21 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904e4"
+        BLOCK "000004e4"
         BEGIN
-            VALUE "CompanyName", "TODO: <Company name>"
-            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
+            VALUE "FileDescription", "RealTime Frontend for MicroProfiler"
             VALUE "FileVersion", "1.0.0.1"
-            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
             VALUE "InternalName", "micro-profiler-frontend.exe"
+            VALUE "LegalCopyright", "© Copyright 2011 gevorkyan.org.  All rights reserved."
             VALUE "OriginalFilename", "micro-profiler-frontend.exe"
-            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "ProductName", "MicroProfiler"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1252
+        VALUE "Translation", 0x0, 1252
     END
 END
 

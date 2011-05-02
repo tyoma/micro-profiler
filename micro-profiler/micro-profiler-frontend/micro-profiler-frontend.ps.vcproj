@@ -203,7 +203,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\_generated\dlldata.c"
+			RelativePath="..\micro-profiler\_generated\dlldata.c"
 			>
 		</File>
 		<File
@@ -211,15 +211,15 @@
 			>
 		</File>
 		<File
-			RelativePath=".\_generated\microprofilerfrontend_i.c"
+			RelativePath="..\micro-profiler\_generated\microprofilerfrontend_i.c"
 			>
 		</File>
 		<File
-			RelativePath=".\_generated\microprofilerfrontend_i.h"
+			RelativePath="..\micro-profiler\_generated\microprofilerfrontend_i.h"
 			>
 		</File>
 		<File
-			RelativePath=".\_generated\microprofilerfrontend_p.c"
+			RelativePath="..\micro-profiler\_generated\microprofilerfrontend_p.c"
 			>
 		</File>
 	</Files>

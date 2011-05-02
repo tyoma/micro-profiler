@@ -70,6 +70,15 @@
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
     </Manifest>
+    <Midl>
+      <GenerateTypeLibrary>false</GenerateTypeLibrary>
+      <TypeLibraryName>
+      </TypeLibraryName>
+      <OutputDirectory>_generated</OutputDirectory>
+      <HeaderFileName>%(Filename)_i.h</HeaderFileName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -99,6 +108,15 @@
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
     </Manifest>
+    <Midl>
+      <GenerateTypeLibrary>false</GenerateTypeLibrary>
+      <TypeLibraryName>
+      </TypeLibraryName>
+      <OutputDirectory>_generated</OutputDirectory>
+      <HeaderFileName>%(Filename)_i.h</HeaderFileName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
@@ -111,6 +129,18 @@
     </ClCompile>
     <ClCompile Include="entry.cpp" />
     <ClCompile Include="system.cpp" />
+    <ClCompile Include="_generated\dlldata.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="_generated\microprofilerfrontend_i.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="_generated\microprofilerfrontend_p.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
@@ -119,6 +149,10 @@
     <ClInclude Include="entry.h" />
     <ClInclude Include="pod_vector.h" />
     <ClInclude Include="system.h" />
+    <ClInclude Include="_generated\microprofilerfrontend_i.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="microprofilerfrontend.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

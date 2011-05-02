@@ -11,15 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="_generated\dlldata.c" />
-    <ClCompile Include="_generated\microprofilerfrontend_i.c" />
-    <ClCompile Include="_generated\microprofilerfrontend_p.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="_generated\microprofilerfrontend_i.h" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="micro-profiler-frontend.ps.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\micro-profiler\_generated\dlldata.c" />
+    <ClCompile Include="..\micro-profiler\_generated\microprofilerfrontend_i.c" />
+    <ClCompile Include="..\micro-profiler\_generated\microprofilerfrontend_p.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\micro-profiler\_generated\microprofilerfrontend_i.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B342C917-9C70-4859-B570-587CAFCE567D}</ProjectGuid>

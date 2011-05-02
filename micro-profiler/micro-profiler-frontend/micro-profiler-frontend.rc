@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Russian resources
+// Russian (Russia) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
-#ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 #pragma code_page(1251)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -27,7 +25,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 //
 
 IDD_PROFILER_MAIN DIALOGEX 0, 0, 312, 165
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "MicroProfiler"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
@@ -41,7 +39,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_PROFILER_MAIN, DIALOG
     BEGIN
@@ -53,18 +51,16 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Russian resources
+#endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -80,12 +76,6 @@ END
 2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "1 TYPELIB ""_generated/microprofilerfrontend.tlb""\r\n"
     "\0"
 END
 
@@ -143,23 +133,10 @@ IDR_PROFILERSINK        REGISTRY                "micro-profiler-sink.rgs"
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PROJNAME            "micro-profiler-frontend"
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-1 TYPELIB "_generated/microprofilerfrontend.tlb"
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

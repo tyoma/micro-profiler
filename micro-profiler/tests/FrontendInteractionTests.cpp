@@ -2,7 +2,7 @@
 
 #include <entry.h>
 
-#include "./../micro-profiler-frontend/_generated/microprofilerfrontend_i.h"
+#include "./../micro-profiler/_generated/microprofilerfrontend_i.h"
 
 #include <atlbase.h>
 #include <memory>

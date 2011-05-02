@@ -5,9 +5,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="_generated">
-      <UniqueIdentifier>{cc4d229d-3cf4-4667-899f-77ea51204c38}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="micro-profiler-frontend.rc">
@@ -30,13 +27,7 @@
     <ClInclude Include="ProfilerSink.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ProfilerMainDialog.h" />
-    <ClInclude Include="_generated\microprofilerfrontend_i.h">
-      <Filter>_generated</Filter>
-    </ClInclude>
     <ClInclude Include="statistics.h" />
     <ClInclude Include="symbol_resolver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="microprofilerfrontend.idl" />
   </ItemGroup>
 </Project>

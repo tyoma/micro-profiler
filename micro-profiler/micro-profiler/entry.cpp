@@ -1,7 +1,7 @@
 #include "entry.h"
 
 #include "analyzer.h"
-#include "./../micro-profiler-frontend/_generated/microprofilerfrontend_i.h"
+#include "_generated/microprofilerfrontend_i.h"
 
 #include <atlbase.h>
 #include <process.h>

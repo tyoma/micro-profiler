@@ -1,12 +1,9 @@
 #include "statistics.h"
+
 #include "symbol_resolver.h"
-
-#include "_generated/microprofilerfrontend_i.h"
-
 #include <algorithm>
 
 using namespace std;
-
 
 function_statistics::function_statistics(const FunctionStatistics &from, const symbol_resolver &resolver)
 	: name(resolver.symbol_name_by_va(from.FunctionOffset)), times_called(from.TimesCalled),

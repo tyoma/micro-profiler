@@ -142,9 +142,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
-				FavorSizeOrSpeed="2"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
+				WholeProgramOptimization="true"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_ATL_APARTMENT_THREADED"
 				RuntimeLibrary="0"
 				WarningLevel="4"
@@ -214,20 +217,8 @@
 				>
 			</File>
 		</Filter>
-		<Filter
-			Name="_generated"
-			>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_i.h"
-				>
-			</File>
-		</Filter>
 		<File
 			RelativePath=".\main.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\microprofilerfrontend.idl"
 			>
 		</File>
 		<File

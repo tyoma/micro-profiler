@@ -105,7 +105,7 @@
       <ValidateAllParameters>true</ValidateAllParameters>
     </Midl>
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_ATL_APARTMENT_THREADED;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
@@ -114,6 +114,11 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -150,10 +155,6 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="statistics.h" />
     <ClInclude Include="symbol_resolver.h" />
-    <ClInclude Include="_generated\microprofilerfrontend_i.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="microprofilerfrontend.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

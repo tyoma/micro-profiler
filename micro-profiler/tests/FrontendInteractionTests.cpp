@@ -259,13 +259,15 @@ namespace micro_profiler
 				// INIT
 				profiler_frontend fe(&factory3);
 				FunctionStatistics stat;
+				int check_amount = 9000;
 
 				fe_raise_updated_limit = 1;
 				fe_update_statistics.clear();
 
 				// ACT
-				empty_call();
-				fe_stat_updated.wait(30);	// such a timeout MUST be sufficient enough
+				for (int i = 0; i < check_amount; ++i)
+					empty_call();
+				fe_stat_updated.wait();	// such a timeout MUST be sufficient enough
 
 				// ASERT
 				Assert::IsTrue(1 == fe_update_statistics.size());
@@ -273,9 +275,9 @@ namespace micro_profiler
 				stat = *fe_update_statistics.begin();
 
 				Assert::IsTrue(stat.FunctionOffset == reinterpret_cast<hyper>(&empty_call));
-				Assert::IsTrue(stat.TimesCalled == 1);
-				Assert::IsTrue(stat.InclusiveTime < 50);
+				Assert::IsTrue(stat.TimesCalled == check_amount);
 				Assert::IsTrue(stat.InclusiveTime > 0);
+				Assert::IsTrue(stat.InclusiveTime / check_amount < 50);
 				Assert::IsTrue(stat.ExclusiveTime == stat.InclusiveTime);
 			}
 		};

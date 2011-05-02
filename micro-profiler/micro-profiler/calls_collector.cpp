@@ -56,7 +56,7 @@ namespace micro_profiler
 				: delay(0xFFFFFFFF)
 			{	}
 
-			unsigned __int64 delay;
+			__int64 delay;
 		};
 	}
 
@@ -122,7 +122,7 @@ namespace micro_profiler
 	{
 		scoped_lock l(_thread_blocks_mtx);
 
-		for (map< unsigned int, thread_trace_block >::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
+		for (map<unsigned int, thread_trace_block>::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
 			i->second.read_collected(i->first, a);
 	}
 

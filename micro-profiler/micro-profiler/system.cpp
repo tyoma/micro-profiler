@@ -7,9 +7,6 @@
 
 namespace micro_profiler
 {
-	unsigned __int64 timestamp()
-	{	return __rdtsc();	}
-
 	unsigned __int64 timestamp_precision()
 	{
 		unsigned __int64 start(__rdtsc());

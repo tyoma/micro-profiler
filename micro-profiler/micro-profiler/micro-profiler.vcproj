@@ -50,7 +50,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Gy"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_LIB;_DEBUG"
+				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;REGISTER_PROXY_DLL"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
@@ -67,9 +67,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="psapi.lib"
+				AdditionalDependencies="psapi.lib rpcrt4.lib"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
+				ModuleDefinitionFile="micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -131,7 +132,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;REGISTER_PROXY_DLL"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="2"
 				AssemblerOutput="2"
@@ -149,8 +150,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="psapi.lib"
+				AdditionalDependencies="psapi.lib rpcrt4.lib"
 				LinkIncremental="1"
+				ModuleDefinitionFile="micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -187,42 +189,10 @@
 			<File
 				RelativePath=".\_generated\dlldata.c"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_i.c"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_i.h"
@@ -231,22 +201,6 @@
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_p.c"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<File
@@ -288,6 +242,10 @@
 		</File>
 		<File
 			RelativePath=".\entry.h"
+			>
+		</File>
+		<File
+			RelativePath=".\micro-profiler.ps.def"
 			>
 		</File>
 		<File

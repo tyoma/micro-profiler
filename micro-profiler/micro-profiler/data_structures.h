@@ -6,7 +6,7 @@ namespace micro_profiler
 	struct call_record
 	{
 		void *callee;	// call address + 5 bytes
-		unsigned __int64 timestamp;
+		__int64 timestamp;
 	};
 #pragma pack(pop)
 
@@ -15,8 +15,8 @@ namespace micro_profiler
 		function_statistics();
 
 		unsigned __int64 times_called;
-		unsigned __int64 inclusive_time;
-		unsigned __int64 exclusive_time;
+		__int64 inclusive_time;
+		__int64 exclusive_time;
 	};
 
 

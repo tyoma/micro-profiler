@@ -10,11 +10,11 @@ namespace micro_profiler
 	{
 		struct call_record_ex;
 
-		unsigned __int64 _profiler_latency;
+		__int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
 
 	public:
-		shadow_stack(unsigned __int64 profiler_latency = 0);
+		shadow_stack(__int64 profiler_latency = 0);
 
 		template <typename ForwardConstIterator, typename OutputMap>
 		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics);
@@ -26,7 +26,7 @@ namespace micro_profiler
 		call_record_ex(const call_record &from);
 		call_record_ex(const call_record_ex &other);
 
-		unsigned __int64 child_time;
+		__int64 child_time;
 	};
 
 
@@ -35,7 +35,7 @@ namespace micro_profiler
 		typedef stdext::hash_map<void * /*function_ptr*/, function_statistics> statistics_container;
 		typedef stdext::hash_map<unsigned int /*threadid*/, shadow_stack> stacks_container;
 
-		unsigned __int64 _profiler_latency;
+		__int64 _profiler_latency;
 		statistics_container _statistics;
 		stacks_container _stacks;
 
@@ -43,7 +43,7 @@ namespace micro_profiler
 		typedef statistics_container::const_iterator const_iterator;
 
 	public:
-		analyzer(unsigned __int64 profiler_latency = 0);
+		analyzer(__int64 profiler_latency = 0);
 
 		void clear();
 		const_iterator begin() const;
@@ -53,7 +53,7 @@ namespace micro_profiler
 	};
 
 
-	inline shadow_stack::shadow_stack(unsigned __int64 profiler_latency)
+	inline shadow_stack::shadow_stack(__int64 profiler_latency)
 		: _profiler_latency(profiler_latency)
 	{	}
 
@@ -67,7 +67,7 @@ namespace micro_profiler
 			{
 				call_record_ex &current = _stack.back();
 				function_statistics &f = statistics[current.callee];
-				unsigned __int64 inclusive_time = trace_begin->timestamp - current.timestamp;
+				__int64 inclusive_time = trace_begin->timestamp - current.timestamp;
 
 				++f.times_called;
 				f.inclusive_time += inclusive_time - _profiler_latency;
@@ -88,7 +88,7 @@ namespace micro_profiler
 	{	}
 
 
-	inline analyzer::analyzer(unsigned __int64 profiler_latency)
+	inline analyzer::analyzer(__int64 profiler_latency)
 		: _profiler_latency(profiler_latency)
 	{	}
 

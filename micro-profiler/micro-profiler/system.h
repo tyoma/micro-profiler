@@ -2,7 +2,6 @@
 
 namespace micro_profiler
 {
-	unsigned __int64 timestamp();
 	unsigned __int64 timestamp_precision();
 	unsigned int current_thread_id();
 

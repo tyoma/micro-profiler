@@ -124,7 +124,7 @@ void ProfilerMainDialog::RefreshList(unsigned int new_count)
 
 LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL& handled)
 {
-	//		CDialogImpl<ProfilerMainDialog>::OnInitDialog(uMsg, wParam, lParam, bHandled);
+	::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	handled = TRUE;
 	return 1;  // Let the system set the focus
 }
@@ -152,6 +152,14 @@ LRESULT ProfilerMainDialog::OnColumnSort(int /*control_id*/, LPNMHDR pnmh, BOOL 
 	_last_sort_column = pnmlv->iSubItem;
 	_statistics.sort(predicate, _sort_ascending);
 	_statistics_view.Invalidate(FALSE);
+	handled = TRUE;
+	return 0;
+}
+
+LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
+{
+	_statistics.clear();
+	ListView_SetItemCountEx(_statistics_view, 0, 0);
 	handled = TRUE;
 	return 0;
 }

@@ -30,4 +30,7 @@
     <ClInclude Include="statistics.h" />
     <ClInclude Include="symbol_resolver.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="xpstyle.manifest" />
+  </ItemGroup>
 </Project>

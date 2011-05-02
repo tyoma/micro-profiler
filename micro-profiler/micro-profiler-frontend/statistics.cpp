@@ -32,6 +32,12 @@ const function_statistics &statistics::at(unsigned int index) const
 unsigned int statistics::size() const
 {	return _sorted_statistics.size();	}
 
+void statistics::clear()
+{
+	_sorted_statistics.clear();
+	_statistics.clear();
+}
+
 void statistics::sort(sort_predicate predicate, bool ascending)
 {
 	auto_ptr<dereferencing_wrapper> p(new dereferencing_wrapper(predicate, ascending));

@@ -216,6 +216,10 @@
 				RelativePath=".\micro-profiler-sink.rgs"
 				>
 			</File>
+			<File
+				RelativePath=".\xpstyle.manifest"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"

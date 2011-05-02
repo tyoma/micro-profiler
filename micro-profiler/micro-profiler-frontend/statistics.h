@@ -46,6 +46,7 @@ public:
 	const function_statistics &at(unsigned int index) const;
 	unsigned int size() const;
 
+	void clear();
 	void sort(sort_predicate predicate, bool ascending);
 	bool update(const FunctionStatistics *data, unsigned int count);
 };

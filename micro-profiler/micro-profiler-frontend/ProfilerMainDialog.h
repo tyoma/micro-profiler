@@ -29,16 +29,11 @@ public:
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 		NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_FUNCTIONS_STATISTICS, LVN_GETDISPINFO, OnGetDispInfo)
 		NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_FUNCTIONS_STATISTICS, LVN_COLUMNCLICK, OnColumnSort);
-		//	COMMAND_HANDLER(IDOK, BN_CLICKED, OnClickedOK)
+		COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics)
 	END_MSG_MAP()
 
-	// Handler prototypes:
-	//  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	//  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-	//  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
-
 	LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-
 	LRESULT OnGetDispInfo(int control_id, LPNMHDR pnmh, BOOL &handled);
 	LRESULT OnColumnSort(int control_id, LPNMHDR pnmh, BOOL &handled);
+	LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
 };

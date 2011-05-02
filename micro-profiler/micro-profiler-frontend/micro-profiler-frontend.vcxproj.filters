@@ -31,6 +31,8 @@
     <ClInclude Include="symbol_resolver.h" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="xpstyle.manifest" />
+    <Manifest Include="xpstyle.manifest">
+      <Filter>Resource Files</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>

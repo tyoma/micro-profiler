@@ -22,9 +22,7 @@ namespace micro_profiler
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _factory(factory ? factory : &create_standard_frontend), _stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
 		_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &profiler_frontend::frontend_proc, this, 0, 0)))
-	{
-		::SetThreadPriority(reinterpret_cast<HANDLE>(_stop_event), THREAD_PRIORITY_TIME_CRITICAL);
-	}
+	{	}
 
 	profiler_frontend::~profiler_frontend()
 	{
@@ -38,6 +36,7 @@ namespace micro_profiler
 	{
 		profiler_frontend *_this = reinterpret_cast<profiler_frontend *>(param);
 
+		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
 		CoInitialize(NULL);
 		{
 			calls_collector *collector = calls_collector::instance();

@@ -27,6 +27,7 @@ namespace micro_profiler
 		{
 			unsigned int threadid;
 			bool com_initialized;
+			int fe_thread_priority;
 
 			bool fe_released;
 			CComBSTR fe_executable;
@@ -88,6 +89,7 @@ namespace micro_profiler
 			void factory1(IProfilerFrontend **)
 			{
 				threadid = ::GetCurrentThreadId();
+				fe_thread_priority = ::GetThreadPriority(::GetCurrentThread());
 			}
 
 			void factory2(IProfilerFrontend **)
@@ -127,6 +129,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(0 != threadid);
 				Assert::IsTrue(test_threadid != threadid);
+				Assert::IsTrue(THREAD_PRIORITY_TIME_CRITICAL == fe_thread_priority);
 			}
 
 

@@ -30,14 +30,12 @@ class statistics
 	statistics_map_ _statistics;
 	std::vector<statistics_map_::const_iterator> _sorted_statistics;
 
+	statistics(const statistics &);
 	void operator =(const statistics &);
 
 public:
 	typedef statistics_map_ statistics_map;
 	typedef bool (*sort_predicate)(const function_statistics &lhs, const function_statistics &rhs);
-
-	sort_predicate _current_predicate;
-	bool _ascending;
 
 public:
 	statistics(const symbol_resolver &resolver);

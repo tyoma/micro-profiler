@@ -136,8 +136,8 @@ LRESULT ProfilerMainDialog::OnGetDispInfo(int /*control_id*/, LPNMHDR pnmh, BOOL
 	if (LVIF_TEXT & pdi->item.mask)
 	{
 		tstring item_text(_printers[pdi->item.iSubItem](_statistics.at(pdi->item.iItem)));
-		_tcsncpy(pdi->item.pszText, item_text.c_str(), pdi->item.cchTextMax - 1);
-		pdi->item.pszText[pdi->item.cchTextMax - 1] = _T('\0');
+		
+		_tcsncpy_s(pdi->item.pszText, pdi->item.cchTextMax, item_text.c_str(), _TRUNCATE);
 		handled = TRUE;
 	}
 	return 0;

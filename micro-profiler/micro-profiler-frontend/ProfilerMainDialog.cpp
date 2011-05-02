@@ -1,44 +1,75 @@
 #include "ProfilerMainDialog.h"
 
-#include "statistics.h"
+#include <sstream>
+#include <math.h>
+
+using namespace std;
 
 namespace
 {
+	__int64 g_ticks_resolution(1);
+
+	template <typename T>
+	tstring to_string(const T &value)
+	{
+		basic_stringstream<TCHAR> s;
+
+		s.precision(3);
+		s << value;
+		return s.str();
+	}
+
+	tstring print_time(double value)
+	{
+		if (0.000001 > fabs(value))
+			return to_string(1000000000 * value) + _T("ns");
+		else if (0.001 > fabs(value))
+			return to_string(1000000 * value) + _T("us");
+		else if (1 > fabs(value))
+			return to_string(1000 * value) + _T("ms");
+		else
+			return to_string(value) + _T("s");
+	}
+
 	tstring print_name(const function_statistics &s)
 	{	return s.name;	}
 
 	tstring print_times_called(const function_statistics &s)
-	{
-		TCHAR buffer[30] = { 0 };
-
-		_stprintf(buffer, _T("%I64d"), s.times_called);
-		return buffer;
-	}
+	{	return to_string(s.times_called);	}
 
 	tstring print_exclusive_time(const function_statistics &s)
-	{
-		TCHAR buffer[30] = { 0 };
-
-		_stprintf(buffer, _T("%I64d"), s.exclusive_time);
-		return buffer;
-	}
+	{	return print_time(1.0 * s.exclusive_time / g_ticks_resolution);	}
 
 	tstring print_inclusive_time(const function_statistics &s)
-	{
-		TCHAR buffer[30] = { 0 };
+	{	return print_time(1.0 * s.inclusive_time / g_ticks_resolution);	}
 
-		_stprintf(buffer, _T("%I64d"), s.inclusive_time);
-		return buffer;
-	}
+	bool sort_by_name(const function_statistics &lhs, const function_statistics &rhs)
+	{	return lhs.name > rhs.name;	}
+
+	bool sort_by_times_called(const function_statistics &lhs, const function_statistics &rhs)
+	{	return lhs.times_called < rhs.times_called;	}
+
+	bool sort_by_exclusive_time(const function_statistics &lhs, const function_statistics &rhs)
+	{	return lhs.exclusive_time < rhs.exclusive_time;	}
+
+	bool sort_by_inclusive_time(const function_statistics &lhs, const function_statistics &rhs)
+	{	return lhs.inclusive_time < rhs.inclusive_time;	}
 }
 
-ProfilerMainDialog::ProfilerMainDialog(statistics &s)
-	: _statistics(s)
+ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
+	: _statistics(s), _last_sort_column(-1)
 {
+	g_ticks_resolution = ticks_resolution;
+
 	_printers[0] = &print_name;
 	_printers[1] = &print_times_called;
 	_printers[2] = &print_exclusive_time;
 	_printers[3] = &print_inclusive_time;
+
+	_sorters[0] = &sort_by_name;
+	_sorters[1] = &sort_by_times_called;
+	_sorters[2] = &sort_by_exclusive_time;
+	_sorters[3] = &sort_by_inclusive_time;
 
 	Create(NULL, 0);
 	_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
@@ -78,7 +109,7 @@ LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LP
 	return 1;  // Let the system set the focus
 }
 
-LRESULT ProfilerMainDialog::OnGetDispInfo(int control_id, LPNMHDR pnmh, BOOL &handled)
+LRESULT ProfilerMainDialog::OnGetDispInfo(int /*control_id*/, LPNMHDR pnmh, BOOL &handled)
 {
 	NMLVDISPINFO *pdi = (NMLVDISPINFO*)pnmh;
 
@@ -89,5 +120,18 @@ LRESULT ProfilerMainDialog::OnGetDispInfo(int control_id, LPNMHDR pnmh, BOOL &ha
 		pdi->item.pszText[pdi->item.cchTextMax - 1] = _T('\0');
 		handled = TRUE;
 	}
+	return 0;
+}
+
+LRESULT ProfilerMainDialog::OnColumnSort(int /*control_id*/, LPNMHDR pnmh, BOOL &handled)
+{
+	NMLISTVIEW *pnmlv = (NMLISTVIEW *)pnmh;
+
+	statistics::sort_predicate predicate = _sorters[pnmlv->iSubItem];
+	_sort_ascending = pnmlv->iSubItem != _last_sort_column ? false : !_sort_ascending;
+	_last_sort_column = pnmlv->iSubItem;
+	_statistics.sort(predicate, _sort_ascending);
+	_statistics_view.Invalidate(FALSE);
+	handled = TRUE;
 	return 0;
 }

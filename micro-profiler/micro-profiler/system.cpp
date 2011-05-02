@@ -11,8 +11,8 @@ namespace micro_profiler
 	{
 		unsigned __int64 start(__rdtsc());
 
-		::Sleep(1000);
-		return __rdtsc() - start;
+		::Sleep(500);
+		return 2 * (__rdtsc() - start);
 	}
 
 	unsigned int current_thread_id()

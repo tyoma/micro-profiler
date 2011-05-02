@@ -1,6 +1,7 @@
 #include "Helpers.h"
 
 #include <entry.h>
+#include <system.h>
 
 #include "./../micro-profiler/_generated/microprofilerfrontend_i.h"
 
@@ -20,6 +21,8 @@ namespace micro_profiler
 		void empty_call();
 		void sleep_n(int n);
 
+		void clear_collection_traces();
+
 		namespace
 		{
 			unsigned int threadid;
@@ -28,6 +31,7 @@ namespace micro_profiler
 			bool fe_released;
 			CComBSTR fe_executable;
 			hyper fe_load_address;
+			hyper fe_ticks_resolution;
 			waitable fe_initialized;
 			size_t fe_raise_updated_limit;
 			vector<FunctionStatistics> fe_update_statistics;
@@ -65,9 +69,9 @@ namespace micro_profiler
 					return 0;
 				}
 
-				STDMETHODIMP Initialize(BSTR executable, hyper load_address)
+				STDMETHODIMP Initialize(BSTR executable, hyper load_address, hyper  ticks_resolution)
 				{
-					fe_executable = executable, fe_load_address = load_address;
+					fe_executable = executable, fe_load_address = load_address, fe_ticks_resolution = ticks_resolution;
 					fe_initialized.set();
 					return S_OK;
 				}
@@ -103,7 +107,14 @@ namespace micro_profiler
 		[TestClass]
 		public ref class FrontendInteractionTests
 		{
-		public: 
+		public:
+			[TestInitialize]
+			void ClearTraces()
+			{
+				clear_collection_traces();
+			}
+
+
 			[TestMethod]
 			void FactoryIsCalledInASeparateThread()
 			{
@@ -189,9 +200,11 @@ namespace micro_profiler
 				// ASERT
 				::GetModuleFileName(NULL, path, MAX_PATH + 1);
 				void *exe_module = ::GetModuleHandle(NULL);
+				hyper real_resolution = timestamp_precision();
 
 				Assert::IsTrue(fe_executable == path);
 				Assert::IsTrue(reinterpret_cast<hyper>(exe_module) == fe_load_address);
+				Assert::IsTrue(90 * real_resolution / 100 < fe_ticks_resolution && fe_ticks_resolution < 110 * real_resolution / 100);
 			}
 
 
@@ -219,13 +232,14 @@ namespace micro_profiler
 
 				fe_raise_updated_limit = 1;
 				fe_update_statistics.clear();
+				fe_initialized.wait();
 
 				// ACT
 				sleep_20();
-				fe_stat_updated.wait(50);	// such a timeout MUST be sufficient enough
+				fe_stat_updated.wait();
 
 				// ASERT
-				Assert::IsTrue(1 == fe_update_statistics.size());
+				Assert::AreEqual(1u, fe_update_statistics.size());
 
 				sleep_20_call = *fe_update_statistics.begin();
 
@@ -239,7 +253,7 @@ namespace micro_profiler
 
 				// ACT
 				sleep_n(200);
-				fe_stat_updated.wait(50);
+				fe_stat_updated.wait(20);	// such a timeout MUST be sufficient enough
 
 				// ASERT
 				Assert::IsTrue(1 == fe_update_statistics.size());

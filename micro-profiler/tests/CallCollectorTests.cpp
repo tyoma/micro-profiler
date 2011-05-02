@@ -46,6 +46,13 @@ namespace micro_profiler
 			};
 		}
 
+		void clear_collection_traces()
+		{
+			collection_acceptor a;
+
+			calls_collector::instance()->read_collected(a);
+		}
+
 		[TestClass]
 		public ref class CallCollectorTests
 		{
@@ -55,6 +62,9 @@ namespace micro_profiler
 			{
 				// INIT
 				collection_acceptor a;
+
+				calls_collector::instance()->read_collected(a);
+				a.collected.clear();
 
 				// ACT
 				calls_collector::instance()->read_collected(a);

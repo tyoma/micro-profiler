@@ -2,7 +2,7 @@
 
 namespace micro_profiler
 {
-	unsigned __int64 timestamp_precision();
+	__declspec(dllexport) unsigned __int64 timestamp_precision();
 	unsigned int current_thread_id();
 
 	class tls

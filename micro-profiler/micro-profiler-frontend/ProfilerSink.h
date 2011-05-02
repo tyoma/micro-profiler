@@ -29,7 +29,7 @@ public:
 	HRESULT FinalConstruct();
 	void FinalRelease();
 
-	STDMETHODIMP Initialize(BSTR executable, __int64 load_address);
+	STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
 	STDMETHODIMP UpdateStatistics(long count, FunctionStatistics *statistics);
 };
 

@@ -26,6 +26,6 @@ tstring symbol_resolver::symbol_name_by_va(unsigned __int64 address) const
 	CComBSTR name;
 	CComPtr<IDiaSymbol> symbol;
 	if (SUCCEEDED(_session->findSymbolByVA((ULONGLONG)address, SymTagFunction, &symbol)) && symbol && SUCCEEDED(symbol->get_name(&name)))
-		return tstring(name);
+		return tstring(CString(name));
 	return _T("");
 }

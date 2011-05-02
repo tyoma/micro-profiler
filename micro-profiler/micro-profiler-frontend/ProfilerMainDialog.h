@@ -10,8 +10,8 @@ typedef tstring (*print_function)(const function_statistics &s);
 
 class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 {
-	print_function _printers[4];
-	statistics::sort_predicate _sorters[4];
+	print_function _printers[6];
+	statistics::sort_predicate _sorters[6];
 	statistics &_statistics;
 	CWindow _statistics_view;
 	int _last_sort_column;

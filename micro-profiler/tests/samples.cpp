@@ -22,11 +22,8 @@ namespace micro_profiler
 			sleep_20();
 		}
 
-		__declspec(naked) void empty_call()
+		void empty_call()
 		{
-			__asm call _penter
-			__asm call _pexit
-			__asm ret
 		}
 	}
 }

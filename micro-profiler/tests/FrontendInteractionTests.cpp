@@ -38,6 +38,7 @@ namespace micro_profiler
 			vector<FunctionStatistics> fe_update_statistics;
 			unsigned fe_update_call_times;
 			waitable fe_stat_updated;
+			hyper fe_stop_call;
 
 			class FrontendMockup : IProfilerFrontend
 			{
@@ -80,8 +81,11 @@ namespace micro_profiler
 				STDMETHODIMP UpdateStatistics(long count, FunctionStatistics *statistics)
 				{
 					fe_update_statistics.insert(fe_update_statistics.end(), statistics, statistics + count);
-					if (fe_update_statistics.size() >= fe_raise_updated_limit)
+					if (fe_raise_updated_limit && fe_update_statistics.size() >= fe_raise_updated_limit)
 						fe_stat_updated.set();
+					while (count--)
+						if (statistics++->FunctionAddress == fe_stop_call)
+							fe_stat_updated.set();
 					return S_OK;
 				}
 			};
@@ -111,8 +115,10 @@ namespace micro_profiler
 		{
 		public:
 			[TestInitialize]
-			void ClearTraces()
+			void Init()
 			{
+				fe_raise_updated_limit = 0;
+				fe_stop_call = 0;
 				clear_collection_traces();
 			}
 
@@ -270,31 +276,32 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod, Ignore]
+			[TestMethod]
 			void PerformanceDataTakesProfilerLatencyIntoAccount()
 			{
 				// INIT
-				profiler_frontend fe(&factory3);
-				FunctionStatistics stat;
-				int check_amount = 9000;
+				int check_amount = 90000;
 
 				fe_raise_updated_limit = 1;
 				fe_update_statistics.clear();
+				fe_stop_call = reinterpret_cast<hyper>(&sleep_20);
 
 				// ACT
 				for (int i = 0; i < check_amount; ++i)
 					empty_call();
+				sleep_20();
+				profiler_frontend fe(&factory3);
 				fe_stat_updated.wait();	// such a timeout MUST be sufficient enough
 
 				// ASERT
-				Assert::IsTrue(1 == fe_update_statistics.size());
+				Assert::IsTrue(2 == fe_update_statistics.size());
 
-				stat = *fe_update_statistics.begin();
+				FunctionStatistics stat = fe_update_statistics[0].FunctionAddress == reinterpret_cast<hyper>(&empty_call) ? fe_update_statistics[0] : fe_update_statistics[1];
 
 				Assert::IsTrue(stat.FunctionAddress == reinterpret_cast<hyper>(&empty_call));
 				Assert::IsTrue(stat.TimesCalled == check_amount);
 				Assert::IsTrue(stat.InclusiveTime > 0);
-				Assert::IsTrue(stat.InclusiveTime / check_amount < 50);
+				Assert::IsTrue(stat.InclusiveTime / stat.TimesCalled < 150);
 				Assert::IsTrue(stat.ExclusiveTime == stat.InclusiveTime);
 			}
 		};

@@ -15,7 +15,8 @@ symbol_resolver::symbol_resolver(const tstring &image_path, unsigned __int64 loa
 
 	_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
 	_data_source->openSession(&_session);
-	_session->put_loadAddress(load_address);
+   if (_session)
+	   _session->put_loadAddress(load_address);
 }
 
 symbol_resolver::~symbol_resolver()
@@ -23,9 +24,15 @@ symbol_resolver::~symbol_resolver()
 
 tstring symbol_resolver::symbol_name_by_va(unsigned __int64 address) const
 {
-	CComBSTR name;
-	CComPtr<IDiaSymbol> symbol;
-	if (SUCCEEDED(_session->findSymbolByVA((ULONGLONG)address, SymTagFunction, &symbol)) && symbol && SUCCEEDED(symbol->get_name(&name)))
-		return tstring(CString(name));
-	return _T("");
+   CString result;
+
+   if (_session)
+   {
+	   CComBSTR name;
+	   CComPtr<IDiaSymbol> symbol;
+	   if (SUCCEEDED(_session->findSymbolByVA((ULONGLONG)address, SymTagFunction, &symbol)) && symbol && SUCCEEDED(symbol->get_name(&name)))
+		   return tstring(CString(name));
+   }
+   result.Format(_T("Function @%08I64X"), address);
+   return tstring(result);
 }

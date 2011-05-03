@@ -1,5 +1,7 @@
 #define _CRT_RAND_S
 #include <stdlib.h>
+#include <time.h>
+#include <conio.h>
 
 #include "../micro-profiler/entry.h"
 
@@ -14,19 +16,26 @@ namespace
 
 	double random()
 	{
-		unsigned int value1, value2;
+		unsigned int value1(rand()), value2(rand());
 
-		rand_s(&value1), rand_s(&value2);
+//		rand_s(&value1), rand_s(&value2);
 		return 1.0 * value1 / value2;
 	}
 }
 
 int main()
 {
-	vector<double> v(10000000);
+   srand(time(0));
+
+	vector<double> v(2000000);
 
 	generate_n(v.begin(), v.size(), &random);
 	sort(v.begin(), v.end());
+	sort(v.rbegin(), v.rend());
+	sort(v.begin(), v.end());
+	sort(v.rbegin(), v.rend());
+
+   getch();
 
 	return 0;
 }

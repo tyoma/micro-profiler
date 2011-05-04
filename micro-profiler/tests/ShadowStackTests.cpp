@@ -410,6 +410,76 @@ namespace micro_profiler
 				Assert::IsTrue(i2_3->second.inclusive_time == 6);
 				Assert::IsTrue(i2_3->second.exclusive_time == 6);
 			}
+
+
+			[TestMethod]
+			void RecursionControlNoInterleave()
+			{
+				// INIT
+				shadow_stack ss;
+				map<void *, function_statistics> statistics;
+				call_record trace[] = {
+					{	(void *)0x01234560,123450001	},
+						{	(void *)0x01234560,123450005	},
+						{	(void *)0,123450013	},
+					{	(void *)0,123450017	},
+					{	(void *)0x11234560,123450023	},
+						{	(void *)0x11234560,123450029	},
+							{	(void *)0x11234560,123450029	},
+							{	(void *)0,123450030	},
+						{	(void *)0,123450031	},
+					{	(void *)0,123450037	},
+				};
+
+				// ACT
+				ss.update(trace, end(trace), statistics);
+
+				// ASSERT
+				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
+
+				++i2;
+
+				Assert::IsTrue(i1->second.inclusive_time == 16);
+				Assert::IsTrue(i1->second.exclusive_time == 16);
+
+				Assert::IsTrue(i2->second.inclusive_time == 14);
+				Assert::IsTrue(i2->second.exclusive_time == 14);
+			}
+
+
+			[TestMethod]
+			void RecursionControlInterleaved()
+			{
+				// INIT
+				shadow_stack ss;
+				map<void *, function_statistics> statistics;
+				call_record trace[] = {
+					{	(void *)0x01234560,123450001	},
+						{	(void *)0x01234565,123450005	},
+							{	(void *)0x01234560,123450007	},
+								{	(void *)0x01234565,123450011	},
+								{	(void *)0,123450013	},
+							{	(void *)0,123450017	},
+							{	(void *)0x01234560,123450019	},
+							{	(void *)0,123450023	},
+						{	(void *)0,123450029	},
+					{	(void *)0,123450031	},
+				};
+
+				// ACT
+				ss.update(trace, end(trace), statistics);
+
+				// ASSERT
+				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
+
+				++i2;
+
+				Assert::IsTrue(i1->second.inclusive_time == 30);
+				Assert::IsTrue(i1->second.exclusive_time == 18);
+
+				Assert::IsTrue(i2->second.inclusive_time == 24);
+				Assert::IsTrue(i2->second.exclusive_time == 12);
+			}
 		};
 	}
 }

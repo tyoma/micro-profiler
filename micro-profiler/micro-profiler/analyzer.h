@@ -13,6 +13,7 @@ namespace micro_profiler
 
 		__int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
+		stdext::hash_map<void *, int> _entry_counter;
 
 	public:
 		shadow_stack(__int64 profiler_latency = 0);
@@ -63,7 +64,10 @@ namespace micro_profiler
 	{
 		for (; trace_begin != trace_end; ++trace_begin)
 			if (trace_begin->callee)
+			{
 				_stack.push_back(*trace_begin);
+				++_entry_counter[trace_begin->callee];
+			}
 			else
 			{
 				call_record_ex &current = _stack.back();
@@ -71,7 +75,8 @@ namespace micro_profiler
 				__int64 inclusive_time = trace_begin->timestamp - current.timestamp;
 
 				++f.times_called;
-				f.inclusive_time += inclusive_time - _profiler_latency;
+				if (0 == --_entry_counter[current.callee])
+					f.inclusive_time += inclusive_time - _profiler_latency;
 				f.exclusive_time += inclusive_time - current.child_time - _profiler_latency;
 				_stack.pop_back();
 				if (!_stack.empty())

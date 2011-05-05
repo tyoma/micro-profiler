@@ -444,6 +444,8 @@ namespace micro_profiler
 
 				Assert::IsTrue(i2->second.inclusive_time == 14);
 				Assert::IsTrue(i2->second.exclusive_time == 14);
+
+				Assert::IsTrue(0 == ss.unique_entries());
 			}
 
 
@@ -479,6 +481,49 @@ namespace micro_profiler
 
 				Assert::IsTrue(i2->second.inclusive_time == 24);
 				Assert::IsTrue(i2->second.exclusive_time == 12);
+
+				Assert::IsTrue(0 == ss.unique_entries());
+			}
+
+
+			[TestMethod]
+			void CalculateUniqueEntries()
+			{
+				// INIT
+				shadow_stack ss1, ss2;
+				map<void *, function_statistics> statistics;
+				call_record trace1[] = {
+					{	(void *)0x01234560,123450001	},
+						{	(void *)0x01234565,123450005	},
+							{	(void *)0x01234560,123450007	},
+								{	(void *)0x01234565,123450011	},
+				};
+				call_record trace2[] = {
+					{	(void *)0x01234560,123450001	},
+						{	(void *)0x01234565,123450005	},
+							{	(void *)0x01234570,123450007	},
+								{	(void *)0x01234575,123450011	},
+				};
+				call_record trace2_end[] = {
+								{	(void *)0,1234500013	},
+							{	(void *)0,123450019	},
+						{	(void *)0,123450029	},
+					{	(void *)0,123450037	},
+				};
+
+				// ACT
+				ss1.update(trace1, end(trace1), statistics);
+				ss2.update(trace2, end(trace2), statistics);
+
+				// ASSERT
+				Assert::IsTrue(2 == ss1.unique_entries());
+				Assert::IsTrue(4 == ss2.unique_entries());
+
+				// ACT
+				ss2.update(trace2_end, end(trace2_end), statistics);
+
+				// ASSERT
+				Assert::IsTrue(0 == ss2.unique_entries());
 			}
 		};
 	}

@@ -10,13 +10,16 @@ namespace micro_profiler
 	class shadow_stack
 	{
 		struct call_record_ex;
+		typedef stdext::hash_map<void *, int> entry_counter_map;
 
 		__int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
-		stdext::hash_map<void *, int> _entry_counter;
+		entry_counter_map _entry_counter;
 
 	public:
 		shadow_stack(__int64 profiler_latency = 0);
+
+		size_t unique_entries() const;
 
 		template <typename ForwardConstIterator, typename OutputMap>
 		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics);
@@ -59,6 +62,9 @@ namespace micro_profiler
 		: _profiler_latency(profiler_latency)
 	{	}
 
+	inline size_t shadow_stack::unique_entries() const
+	{	return _entry_counter.size();	}
+
 	template <typename ForwardConstIterator, typename OutputMap>
 	inline void shadow_stack::update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics)
 	{
@@ -71,12 +77,16 @@ namespace micro_profiler
 			else
 			{
 				call_record_ex &current = _stack.back();
+				entry_counter_map::iterator counter = _entry_counter.find(current.callee);
 				function_statistics &f = statistics[current.callee];
 				__int64 inclusive_time = trace_begin->timestamp - current.timestamp;
 
 				++f.times_called;
-				if (0 == --_entry_counter[current.callee])
+				if (0 == --counter->second)
+				{
 					f.inclusive_time += inclusive_time - _profiler_latency;
+					_entry_counter.erase(counter);
+				}
 				f.exclusive_time += inclusive_time - current.child_time - _profiler_latency;
 				_stack.pop_back();
 				if (!_stack.empty())

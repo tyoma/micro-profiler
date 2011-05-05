@@ -52,6 +52,7 @@
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;REGISTER_PROXY_DLL"
 				RuntimeLibrary="1"
+				DisableLanguageExtensions="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				DebugInformationFormat="3"
@@ -135,6 +136,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;REGISTER_PROXY_DLL"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="2"
+				DisableLanguageExtensions="true"
 				AssemblerOutput="2"
 				WarningLevel="4"
 				DebugInformationFormat="3"
@@ -189,10 +191,42 @@
 			<File
 				RelativePath=".\_generated\dlldata.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_i.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_i.h"
@@ -201,6 +235,22 @@
 			<File
 				RelativePath=".\_generated\microprofilerfrontend_p.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<File
@@ -239,6 +289,22 @@
 		<File
 			RelativePath=".\entry.cpp"
 			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					DisableLanguageExtensions="false"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					DisableLanguageExtensions="false"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\entry.h"
@@ -259,6 +325,22 @@
 		<File
 			RelativePath=".\system.cpp"
 			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					DisableLanguageExtensions="false"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					DisableLanguageExtensions="false"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\system.h"

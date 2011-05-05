@@ -1,46 +1,35 @@
 #include "calls_collector.h"
 
+#include "data_structures.h"
+#include "pod_vector.h"
+
 using namespace std;
 
 #undef min
 #undef max
 
-extern "C" __declspec(naked, dllexport) void _penter()
-{
-	_asm 
-	{
-		pushad
-		rdtsc
-		push	edx
-		push	eax
-		push	dword ptr[esp + 40]
-		lea	ecx, [micro_profiler::calls_collector::_instance]
-		call	micro_profiler::calls_collector::track
-		popad
-		ret
-	}
-}
-
-extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
-{
-	_asm 
-	{
-		pushad
-		rdtsc
-		push	edx
-		push	eax
-		push	0
-		lea	ecx, [micro_profiler::calls_collector::_instance]
-		call	micro_profiler::calls_collector::track
-		popad
-		ret
-	}
-}
-
+extern "C" void _penter();
+extern "C" void _pexit();
 
 namespace micro_profiler
 {
 	calls_collector calls_collector::_instance;
+
+
+	class calls_collector::thread_trace_block
+	{
+		mutex _block_mtx;
+		pod_vector<call_record> _traces[2];
+		pod_vector<call_record> *_active_trace, *_inactive_trace;
+
+	public:
+		thread_trace_block();
+		thread_trace_block(const thread_trace_block &);
+		~thread_trace_block();
+
+		void track(const call_record &call) throw();
+		void read_collected(unsigned int threadid, calls_collector::acceptor &a);
+	};
 
 
 	calls_collector::thread_trace_block::thread_trace_block()

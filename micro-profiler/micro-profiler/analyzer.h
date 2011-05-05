@@ -1,6 +1,7 @@
 #pragma once
 
 #include "calls_collector.h"
+#include "data_structures.h"
 
 #include <hash_map>
 #include <vector>
@@ -10,11 +11,11 @@ namespace micro_profiler
 	class shadow_stack
 	{
 		struct call_record_ex;
-		typedef stdext::hash_map<void *, int> entry_counter_map;
+		typedef stdext::hash_map<void *, int> entrance_counter_map;
 
 		__int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
-		entry_counter_map _entry_counter;
+		entrance_counter_map _entrance_counter;
 
 	public:
 		shadow_stack(__int64 profiler_latency = 0);
@@ -63,29 +64,29 @@ namespace micro_profiler
 	{	}
 
 	inline size_t shadow_stack::unique_entries() const
-	{	return _entry_counter.size();	}
+	{	return _entrance_counter.size();	}
 
 	template <typename ForwardConstIterator, typename OutputMap>
-	inline void shadow_stack::update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics)
+	inline void shadow_stack::update(ForwardConstIterator i, ForwardConstIterator end, OutputMap &statistics)
 	{
-		for (; trace_begin != trace_end; ++trace_begin)
-			if (trace_begin->callee)
+		for (; i != end; ++i)
+			if (i->callee)
 			{
-				_stack.push_back(*trace_begin);
-				++_entry_counter[trace_begin->callee];
+				_stack.push_back(*i);
+				++_entrance_counter[i->callee];
 			}
 			else
 			{
 				call_record_ex &current = _stack.back();
-				entry_counter_map::iterator counter = _entry_counter.find(current.callee);
+				entrance_counter_map::iterator counter = _entrance_counter.find(current.callee);
 				function_statistics &f = statistics[current.callee];
-				__int64 inclusive_time = trace_begin->timestamp - current.timestamp;
+				__int64 inclusive_time = i->timestamp - current.timestamp;
 
 				++f.times_called;
 				if (0 == --counter->second)
 				{
 					f.inclusive_time += inclusive_time - _profiler_latency;
-					_entry_counter.erase(counter);
+					_entrance_counter.erase(counter);
 				}
 				f.exclusive_time += inclusive_time - current.child_time - _profiler_latency;
 				_stack.pop_back();

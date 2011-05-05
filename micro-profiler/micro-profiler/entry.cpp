@@ -9,6 +9,38 @@
 
 using namespace std;
 
+extern "C" __declspec(naked, dllexport) void _penter()
+{
+	_asm 
+	{
+		pushad
+		rdtsc
+		push	edx
+		push	eax
+		push	dword ptr[esp + 40]
+		lea	ecx, [micro_profiler::calls_collector::_instance]
+		call	micro_profiler::calls_collector::track
+		popad
+		ret
+	}
+}
+
+extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
+{
+	_asm 
+	{
+		pushad
+		rdtsc
+		push	edx
+		push	eax
+		push	0
+		lea	ecx, [micro_profiler::calls_collector::_instance]
+		call	micro_profiler::calls_collector::track
+		popad
+		ret
+	}
+}
+
 namespace micro_profiler
 {
 	namespace
@@ -40,7 +72,7 @@ namespace micro_profiler
 		CoInitialize(NULL);
 		{
 			calls_collector *collector = calls_collector::instance();
-			analyzer a(collector->profiler_latency() * 98 / 100);
+			analyzer a(collector->profiler_latency());
 			vector<FunctionStatistics> buffer;
 			CComPtr<IProfilerFrontend> fe;
 			TCHAR image_path[MAX_PATH + 1] = { 0 };

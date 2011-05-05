@@ -48,15 +48,3 @@ public:
 	void sort(sort_predicate predicate, bool ascending);
 	bool update(const FunctionStatistics *data, unsigned int count);
 };
-
-
-class statistics::dereferencing_wrapper
-{
-	statistics::sort_predicate _base;
-	bool _ascending;
-
-public:
-	dereferencing_wrapper(const statistics::sort_predicate &p, bool ascending);
-
-	bool operator ()(const statistics::statistics_map::const_iterator &lhs, const statistics::statistics_map::const_iterator &rhs) const;
-};

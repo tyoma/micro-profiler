@@ -5,6 +5,19 @@
 
 using namespace std;
 
+
+class statistics::dereferencing_wrapper
+{
+	statistics::sort_predicate _base;
+	bool _ascending;
+
+public:
+	dereferencing_wrapper(const statistics::sort_predicate &p, bool ascending);
+
+	bool operator ()(const statistics::statistics_map::const_iterator &lhs, const statistics::statistics_map::const_iterator &rhs) const;
+};
+
+
 function_statistics::function_statistics(const FunctionStatistics &from, const symbol_resolver &resolver)
 	: name(resolver.symbol_name_by_va(from.FunctionAddress)), times_called(from.TimesCalled),
 		inclusive_time(from.InclusiveTime), exclusive_time(from.ExclusiveTime)

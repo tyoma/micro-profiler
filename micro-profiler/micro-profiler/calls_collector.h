@@ -1,13 +1,13 @@
 #pragma once
 
-#include "data_structures.h"
-#include "pod_vector.h"
 #include "system.h"
 
 #include <map>
 
 namespace micro_profiler
 {
+	struct call_record;
+
 	class calls_collector
 	{
 	public:
@@ -38,22 +38,6 @@ namespace micro_profiler
 	struct calls_collector::acceptor
 	{
 		virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count) = 0;
-	};
-
-
-	class calls_collector::thread_trace_block
-	{
-		mutex _block_mtx;
-		pod_vector<call_record> _traces[2];
-		pod_vector<call_record> *_active_trace, *_inactive_trace;
-
-	public:
-		thread_trace_block();
-		thread_trace_block(const thread_trace_block &);
-		~thread_trace_block();
-
-		void track(const call_record &call) throw();
-		void read_collected(unsigned int threadid, calls_collector::acceptor &a);
 	};
 
 

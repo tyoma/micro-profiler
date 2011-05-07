@@ -83,6 +83,8 @@ namespace micro_profiler
 				__int64 inclusive_time = i->timestamp - current.timestamp;
 
 				++f.times_called;
+				if (counter->second > f.max_reentrance)
+					f.max_reentrance = counter->second;
 				if (0 == --counter->second)
 				{
 					f.inclusive_time += inclusive_time - _profiler_latency;

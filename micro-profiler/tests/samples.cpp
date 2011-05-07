@@ -25,5 +25,12 @@ namespace micro_profiler
 		void empty_call()
 		{
 		}
+
+		void controlled_recursion(unsigned int level)
+		{
+			if (--level)
+				controlled_recursion(level);
+			_asm nop
+		}
 	}
 }

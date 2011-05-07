@@ -525,6 +525,64 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(0 == ss2.unique_entries());
 			}
+
+
+			[TestMethod]
+			void CalculateMaxReentranceMetric()
+			{
+				// INIT
+				shadow_stack ss;
+				map<void *, function_statistics> statistics;
+				call_record trace[] = {
+					{	(void *)0x01234560, 123450001	},
+						{	(void *)0x01234565, 123450002	},
+							{	(void *)0x01234560, 123450003	},
+								{	(void *)0x01234565, 123450004	},
+									{	(void *)0x01234570, 123450005	},
+									{	(void *)0, 123450006	},
+									{	(void *)0x01234565, 123450007	},
+									{	(void *)0, 123450008	},
+								{	(void *)0, 123450009	},
+							{	(void *)0, 123450010	},
+						{	(void *)0, 123450011	},
+					{	(void *)0, 123450012	},
+					{	(void *)0x01234560, 123450013	},
+					{	(void *)0, 123450014	},
+				};
+				call_record trace2[] = {
+					{	(void *)0x01234560, 123450020	},
+						{	(void *)0x01234560, 123450021	},
+							{	(void *)0x01234560, 123450022	},
+								{	(void *)0x01234560, 123450023	},
+								{	(void *)0, 123450024	},
+							{	(void *)0, 123450025	},
+						{	(void *)0, 123450026	},
+					{	(void *)0, 123450027	},
+					{	(void *)0x01234565, 123450028	},
+					{	(void *)0, 123450029	},
+				};
+
+				// ACT
+				ss.update(trace, end(trace), statistics);
+
+				// ASSERT
+				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
+
+				++i2;
+				++++i3;
+
+				Assert::IsTrue(2 == i1->second.max_reentrance);
+				Assert::IsTrue(3 == i2->second.max_reentrance);
+				Assert::IsTrue(1 == i3->second.max_reentrance);
+
+				// ACT
+				ss.update(trace2, end(trace2), statistics);
+
+				// ASSERT
+				Assert::IsTrue(4 == i1->second.max_reentrance);
+				Assert::IsTrue(3 == i2->second.max_reentrance);
+				Assert::IsTrue(1 == i3->second.max_reentrance);
+			}
 		};
 	}
 }

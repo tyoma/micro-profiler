@@ -6,6 +6,7 @@ struct
 {
 	hyper FunctionAddress;
 	hyper TimesCalled;
+	hyper MaxReentrance;
 	hyper ExclusiveTime;
 	hyper InclusiveTime;
 } FunctionStatistics;

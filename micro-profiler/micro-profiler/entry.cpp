@@ -93,7 +93,7 @@ namespace micro_profiler
 				_collector.read_collected(a);
 				for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
 				{
-					FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.exclusive_time, i->second.inclusive_time };
+					FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.max_reentrance, i->second.exclusive_time, i->second.inclusive_time };
 
 					buffer.push_back(s);
 				}

@@ -69,26 +69,19 @@ namespace micro_profiler
 	calls_collector::calls_collector()
 		: _profiler_latency(0)
 	{
-		class delay_evaluator : public calls_collector::acceptor
+		struct delay_evaluator : calls_collector::acceptor
 		{
 			virtual void accept_calls(unsigned int, const call_record *calls, unsigned int count)
 			{
-				count = 2 * (count >> 1);
-				for (const call_record *i = calls; i != calls + count; i += 2)
+				for (const call_record *i = calls; i < calls + count; i += 2)
 					delay = i != calls ? min(delay, (i + 1)->timestamp - i->timestamp) : (i + 1)->timestamp - i->timestamp;
 			}
 
-		public:
-			delay_evaluator()
-				: delay(0xFFFFFFFF)
-			{	}
-
 			__int64 delay;
-		};
+		} de;
 
 		const unsigned int check_times = 1000;
 		thread_trace_block &ttb = _call_traces[current_thread_id()];
-		delay_evaluator de;
 		
 		for (unsigned int i = 0; i < check_times; ++i)
 			_penter(), _pexit();
@@ -108,7 +101,7 @@ namespace micro_profiler
 	{
 		scoped_lock l(_thread_blocks_mtx);
 
-		for (map<unsigned int, thread_trace_block>::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
+		for (thread_traces_map::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
 			i->second.read_collected(i->first, a);
 	}
 

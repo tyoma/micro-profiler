@@ -20,6 +20,7 @@ namespace micro_profiler
 		void sleep_20();
 		void empty_call();
 		void sleep_n(int n);
+		void controlled_recursion(unsigned int level);
 
 		void clear_collection_traces();
 
@@ -120,6 +121,7 @@ namespace micro_profiler
 				fe_raise_updated_limit = 0;
 				fe_stop_call = 0;
 				clear_collection_traces();
+				fe_update_statistics.clear();
 			}
 
 
@@ -254,6 +256,7 @@ namespace micro_profiler
 
 				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_20));
 				Assert::IsTrue(sleep_20_call.TimesCalled == 1);
+				Assert::IsTrue(sleep_20_call.MaxReentrance == 1);
 				Assert::IsTrue(sleep_20_call.InclusiveTime > 0);
 				Assert::IsTrue(sleep_20_call.ExclusiveTime == sleep_20_call.InclusiveTime);
 
@@ -271,10 +274,34 @@ namespace micro_profiler
 
 				Assert::IsTrue(sleep_n_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_n));
 				Assert::IsTrue(sleep_n_call.TimesCalled == 1);
+				Assert::IsTrue(sleep_n_call.MaxReentrance == 1);
 				Assert::IsTrue(sleep_n_call.InclusiveTime > sleep_20_call.InclusiveTime);
 				Assert::IsTrue(sleep_n_call.ExclusiveTime == sleep_n_call.InclusiveTime);
 			}
 
+
+			[TestMethod]
+			void PassReentranceCountToFrontend()
+			{
+				// INIT
+				fe_raise_updated_limit = 1;
+
+				// ACT
+				controlled_recursion(5);
+				controlled_recursion(7);
+				profiler_frontend fe(&factory3);
+				fe_stat_updated.wait(20);	// such a timeout MUST be sufficient enough
+
+				// ASERT
+				Assert::IsTrue(1 == fe_update_statistics.size());
+
+				FunctionStatistics recursive_call = *fe_update_statistics.begin();
+
+				Assert::IsTrue(recursive_call.FunctionAddress == reinterpret_cast<hyper>(&controlled_recursion));
+				Assert::IsTrue(recursive_call.TimesCalled == 12);
+				Assert::IsTrue(recursive_call.MaxReentrance == 7);
+			}
+			
 
 			[TestMethod]
 			void PerformanceDataTakesProfilerLatencyIntoAccount()
@@ -282,8 +309,6 @@ namespace micro_profiler
 				// INIT
 				int check_amount = 90000;
 
-				fe_raise_updated_limit = 1;
-				fe_update_statistics.clear();
 				fe_stop_call = reinterpret_cast<hyper>(&sleep_20);
 
 				// ACT

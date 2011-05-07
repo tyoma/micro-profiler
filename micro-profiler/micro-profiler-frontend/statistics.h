@@ -17,7 +17,7 @@ struct function_statistics
 	function_statistics(const FunctionStatistics &from, const symbol_resolver &resolver);
 
 	tstring name;
-	__int64 times_called, inclusive_time, exclusive_time;
+	__int64 times_called, max_reentrance, inclusive_time, exclusive_time;
 };
 
 class statistics

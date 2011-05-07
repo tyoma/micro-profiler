@@ -49,6 +49,9 @@ namespace
 	tstring print_avg_inclusive_call_time(const function_statistics &s)
 	{	return print_time(1.0 * s.inclusive_time / g_ticks_resolution / s.times_called);	}
 
+	tstring print_max_reentrance(const function_statistics &s)
+	{	return to_string(s.max_reentrance);	}
+
 	bool sort_by_name(const function_statistics &lhs, const function_statistics &rhs)
 	{	return lhs.name > rhs.name;	}
 
@@ -66,6 +69,9 @@ namespace
 
 	bool sort_by_avg_inclusive_call_time(const function_statistics &lhs, const function_statistics &rhs)
 	{	return lhs.inclusive_time / lhs.times_called < rhs.inclusive_time / rhs.times_called;	}
+
+	bool sort_by_max_reentrance(const function_statistics &lhs, const function_statistics &rhs)
+	{	return lhs.max_reentrance < rhs.max_reentrance;	}
 }
 
 ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
@@ -79,6 +85,7 @@ ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
 	_printers[3] = &print_inclusive_time;
 	_printers[4] = &print_avg_exclusive_call_time;
 	_printers[5] = &print_avg_inclusive_call_time;
+	_printers[6] = &print_max_reentrance;
 
 	_sorters[0] = &sort_by_name;
 	_sorters[1] = &sort_by_times_called;
@@ -86,6 +93,7 @@ ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
 	_sorters[3] = &sort_by_inclusive_time;
 	_sorters[4] = &sort_by_avg_exclusive_call_time;
 	_sorters[5] = &sort_by_avg_inclusive_call_time;
+	_sorters[6] = &sort_by_max_reentrance;
 
 	Create(NULL, 0);
 	_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
@@ -97,6 +105,7 @@ ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
 		{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Inclusive Time"), 0, 3, 0, 3,	},
 		{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Average Call Time (Exclusive)"), 0, 4, 0, 4,	},
 		{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Average Call Time (Inclusive)"), 0, 5, 0, 5,	},
+		{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Max Recursion"), 0, 6, 0, 6,	},
 	};
 
 	ListView_InsertColumn(_statistics_view, 0, &columns[0]);
@@ -105,6 +114,7 @@ ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
 	ListView_InsertColumn(_statistics_view, 3, &columns[3]);
 	ListView_InsertColumn(_statistics_view, 4, &columns[4]);
 	ListView_InsertColumn(_statistics_view, 5, &columns[5]);
+	ListView_InsertColumn(_statistics_view, 6, &columns[6]);
 	ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_statistics_view));
 }
 

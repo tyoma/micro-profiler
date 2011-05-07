@@ -20,7 +20,7 @@ public:
 
 function_statistics::function_statistics(const FunctionStatistics &from, const symbol_resolver &resolver)
 	: name(resolver.symbol_name_by_va(from.FunctionAddress)), times_called(from.TimesCalled),
-		inclusive_time(from.InclusiveTime), exclusive_time(from.ExclusiveTime)
+		max_reentrance(from.MaxReentrance), inclusive_time(from.InclusiveTime), exclusive_time(from.ExclusiveTime)
 {	}
 
 

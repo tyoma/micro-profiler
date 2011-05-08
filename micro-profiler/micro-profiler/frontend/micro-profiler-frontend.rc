@@ -121,11 +121,11 @@ BEGIN
         BLOCK "000004e4"
         BEGIN
             VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
-            VALUE "FileDescription", "RealTime Frontend for MicroProfiler"
+            VALUE "FileDescription", "Profiler with RealTime Frontend"
             VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "micro-profiler-frontend.exe"
+            VALUE "InternalName", "micro-profiler.dll"
             VALUE "LegalCopyright", "© Copyright 2011 gevorkyan.org.  All rights reserved."
-            VALUE "OriginalFilename", "micro-profiler-frontend.exe"
+            VALUE "OriginalFilename", "micro-profiler.dll"
             VALUE "ProductName", "MicroProfiler"
             VALUE "ProductVersion", "1.0.0.1"
         END

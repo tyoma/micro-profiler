@@ -70,6 +70,7 @@
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
+      <AdditionalManifestFiles>frontend/xpstyle.manifest</AdditionalManifestFiles>
     </Manifest>
     <Midl>
       <GenerateTypeLibrary>false</GenerateTypeLibrary>
@@ -110,6 +111,7 @@
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
+      <AdditionalManifestFiles>frontend/xpstyle.manifest</AdditionalManifestFiles>
     </Manifest>
     <Midl>
       <GenerateTypeLibrary>false</GenerateTypeLibrary>
@@ -205,7 +207,9 @@
     <ResourceCompile Include="frontend\micro-profiler-frontend.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="frontend\xpstyle.manifest" />
+    <Manifest Include="frontend\xpstyle.manifest">
+      <DeploymentContent>true</DeploymentContent>
+    </Manifest>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

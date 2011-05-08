@@ -14,6 +14,24 @@
     <ClCompile Include="_generated\dlldata.c">
       <Filter>_generated</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\symbol_resolver.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\ProfilerMainDialog.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\ProfilerSink.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\statistics.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\frontend-main.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\ProxyBridge.c">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
@@ -25,16 +43,53 @@
     <ClInclude Include="_generated\microprofilerfrontend_i.h">
       <Filter>_generated</Filter>
     </ClInclude>
+    <ClInclude Include="frontend\ProfilerMainDialog.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\ProfilerSink.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\resource.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\statistics.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\symbol_resolver.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\ProxyBridge.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="micro-profiler.ps.def" />
+    <None Include="frontend\micro-profiler-sink.rgs">
+      <Filter>frontend\resources</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">
       <UniqueIdentifier>{02ed0606-6a23-412b-9339-ebe48d1a28ac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="frontend">
+      <UniqueIdentifier>{079096d4-99d2-47bf-bd0d-82899bf2dc0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="frontend\resources">
+      <UniqueIdentifier>{725579a8-2095-48af-a456-90878bc353fc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="frontend\micro-profiler-frontend.rc">
+      <Filter>frontend\resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="frontend\xpstyle.manifest">
+      <Filter>frontend\resources</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>

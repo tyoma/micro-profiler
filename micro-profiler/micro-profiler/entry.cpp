@@ -48,7 +48,7 @@ namespace micro_profiler
 		const __int64 c_ticks_resolution(timestamp_precision());
 
 		void create_standard_frontend(IProfilerFrontend **frontend)
-		{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_ALL, __uuidof(IProfilerFrontend), (void **)frontend);	}
+		{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 	}
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)

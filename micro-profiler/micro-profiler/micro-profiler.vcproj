@@ -50,7 +50,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Gy"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;REGISTER_PROXY_DLL"
+				PreprocessorDefinitions="WIN32;_LIB;_DEBUG"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				UsePrecompiledHeader="0"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="rpcrt4.lib"
+				AdditionalDependencies="rpcrt4.lib diaguids.lib"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile="micro-profiler.ps.def"
@@ -133,7 +133,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;REGISTER_PROXY_DLL"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="2"
 				DisableLanguageExtensions="true"
@@ -152,7 +152,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="rpcrt4.lib"
+				AdditionalDependencies="rpcrt4.lib diaguids.lib"
 				LinkIncremental="1"
 				ModuleDefinitionFile="micro-profiler.ps.def"
 				GenerateDebugInformation="true"
@@ -193,18 +193,18 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
 					/>
 				</FileConfiguration>
 			</File>
@@ -237,6 +237,30 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="frontend"
+			>
+			<File
+				RelativePath=".\frontend\frontend-main.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -252,6 +276,146 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\frontend\ProfilerMainDialog.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\ProfilerMainDialog.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\ProfilerSink.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\ProfilerSink.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\ProxyBridge.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\ProxyBridge.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\statistics.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\statistics.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\symbol_resolver.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\symbol_resolver.h"
+				>
+			</File>
+			<Filter
+				Name="resources"
+				>
+				<File
+					RelativePath=".\frontend\micro-profiler-frontend.rc"
+					>
+				</File>
+				<File
+					RelativePath=".\frontend\micro-profiler-sink.rgs"
+					>
+				</File>
+				<File
+					RelativePath=".\frontend\xpstyle.manifest"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\analyzer.cpp"

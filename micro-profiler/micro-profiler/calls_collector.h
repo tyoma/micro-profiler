@@ -2,7 +2,7 @@
 
 #include "system.h"
 
-#include <hash_map>
+#include <map>
 
 namespace micro_profiler
 {
@@ -28,7 +28,7 @@ namespace micro_profiler
 	private:
 		static calls_collector _instance;
 
-		typedef stdext::hash_map< unsigned int, thread_trace_block > thread_traces_map;
+		typedef std::map<unsigned int, thread_trace_block> thread_traces_map;
 
 		__int64 _profiler_latency;
 		tls _trace_pointers_tls;

@@ -101,6 +101,7 @@
       </PrecompiledHeaderOutputFile>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>rpcrt4.lib;diaguids.lib;%(AdditionalDependencies)</AdditionalDependencies>

@@ -23,6 +23,7 @@ namespace micro_profiler
 			unsigned int id() const;
 			void resume();
 
+			static void sleep(unsigned int duration);
 			static unsigned int current_thread_id();
 		};
 

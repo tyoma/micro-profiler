@@ -18,6 +18,8 @@ namespace micro_profiler
 	unsigned int current_thread_id()
 	{	return ::GetCurrentThreadId();	}
 
+	void yield()
+	{	::Sleep(0);	}
 
 	tls::tls()
 		: _tls_index(::TlsAlloc())

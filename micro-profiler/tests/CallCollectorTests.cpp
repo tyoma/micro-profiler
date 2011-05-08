@@ -21,12 +21,18 @@ namespace micro_profiler
 		{
 			struct collection_acceptor : calls_collector::acceptor
 			{
+				collection_acceptor()
+					: total_entries(0)
+				{	}
+
 				virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count)
 				{
 					collected.push_back(make_pair(threadid, vector<call_record>()));
 					collected.back().second.assign(calls, calls + count);
+					total_entries += count;
 				}
 
+				unsigned int total_entries;
 				vector< pair< unsigned int, vector<call_record> > > collected;
 			};
 
@@ -44,6 +50,32 @@ namespace micro_profiler
 
 				virtual void operator ()()
 				{	_function();	}
+			};
+
+			class enterexit_emulator : public thread_function
+			{
+				calls_collector &_collector;
+				unsigned int _calls_number;
+
+				void operator =(const enterexit_emulator &);
+
+			public:
+				enterexit_emulator(calls_collector &collector, unsigned int calls_number)
+					: _collector(collector), _calls_number(calls_number)
+				{	}
+
+				virtual void operator ()()
+				{
+					__int64 timestamp(0);
+
+					for (unsigned int i = 0; i != _calls_number; ++i)
+					{
+						call_record c1 = {	(void *)0x00001000, timestamp++	}, c2 = {	(void *)0, timestamp++	};
+
+						_collector.track(c1);
+						_collector.track(c2);
+					}
+				}
 			};
 		}
 
@@ -188,6 +220,61 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(profiler_latency > 0);
 				System::Diagnostics::Debug::WriteLine(profiler_latency);
+			}
+
+
+			[TestMethod]
+			void MaxTraceLengthIsLimited()
+			{
+				// INIT
+				calls_collector c1(67), c2(123), c3(127);
+				enterexit_emulator e1(c1, 670), e2(c2, 1230), e3(c3, 635);
+				collection_acceptor a1, a2, a3;
+
+				// ACT
+				thread t1(e1), t2(e2), t3(e3);
+
+				while (a1.total_entries < 1340)
+				{
+					thread::sleep(20);
+					c1.read_collected(a1);
+				}
+				while (a2.total_entries < 2460)
+				{
+					thread::sleep(20);
+					c2.read_collected(a2);
+				}
+				while (a3.total_entries < 1270)
+				{
+					thread::sleep(20);
+					c3.read_collected(a3);
+				}
+
+				// ASSERT
+				Assert::IsTrue(a1.collected.size() == 20);
+				Assert::IsTrue(a2.collected.size() == 20);
+				Assert::IsTrue(a3.collected.size() == 10);
+			}
+
+
+			[TestMethod]
+			void ReplyMaxTraceLength()
+			{
+				// INIT
+				calls_collector c1(67), c2(123), c3(10050);
+
+				// ACT / ASSERT
+				Assert::IsTrue(67 == c1.trace_limit());
+				Assert::IsTrue(123 == c2.trace_limit());
+				Assert::IsTrue(10050 == c3.trace_limit());
+			}
+
+
+			[TestMethod]
+			void GlobalCollectorInstanceTraceLimitVerify()
+			{
+				// INIT / ACT / ASSERT
+				Assert::IsTrue(10000000 == calls_collector::instance()->trace_limit());
 			}
 		};
 	}

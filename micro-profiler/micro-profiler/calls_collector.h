@@ -15,14 +15,15 @@ namespace micro_profiler
 		class thread_trace_block;
 
 	public:
-		calls_collector();
-		~calls_collector();
+		__declspec(dllexport) calls_collector(size_t trace_limit);
+		__declspec(dllexport) ~calls_collector();
 
 		static __declspec(dllexport) calls_collector *instance() throw();
 		__declspec(dllexport) void read_collected(acceptor &a);
 
-		void __thiscall track(call_record call) throw();
+		__declspec(dllexport) void __thiscall track(call_record call) throw();
 
+		size_t trace_limit() const;
 		__int64 profiler_latency() const;
 
 	private:
@@ -30,6 +31,7 @@ namespace micro_profiler
 
 		typedef std::map<unsigned int, thread_trace_block> thread_traces_map;
 
+		const size_t _trace_limit;
 		__int64 _profiler_latency;
 		tls _trace_pointers_tls;
 		mutex _thread_blocks_mtx;
@@ -42,6 +44,8 @@ namespace micro_profiler
 		virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count) = 0;
 	};
 
+	inline size_t calls_collector::trace_limit() const
+	{	return _trace_limit;	}
 
 	inline __int64 calls_collector::profiler_latency() const
 	{	return _profiler_latency;	}

@@ -32,6 +32,9 @@ namespace micro_profiler
 		void thread::resume()
 		{	::ResumeThread(reinterpret_cast<HANDLE>(_thread));	}
 
+		void thread::sleep(unsigned int duration)
+		{	::Sleep(duration);	}
+
 		unsigned int thread::current_thread_id()
 		{	return ::GetCurrentThreadId();	}
 

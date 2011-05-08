@@ -20,8 +20,6 @@ namespace micro_profiler
 	public:
 		shadow_stack(__int64 profiler_latency = 0);
 
-		size_t unique_entries() const;
-
 		template <typename ForwardConstIterator, typename OutputMap>
 		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics);
 	};
@@ -63,9 +61,6 @@ namespace micro_profiler
 		: _profiler_latency(profiler_latency)
 	{	}
 
-	inline size_t shadow_stack::unique_entries() const
-	{	return _entrance_counter.size();	}
-
 	template <typename ForwardConstIterator, typename OutputMap>
 	inline void shadow_stack::update(ForwardConstIterator i, ForwardConstIterator end, OutputMap &statistics)
 	{
@@ -86,10 +81,7 @@ namespace micro_profiler
 				if (counter->second > f.max_reentrance)
 					f.max_reentrance = counter->second;
 				if (0 == --counter->second)
-				{
 					f.inclusive_time += inclusive_time - _profiler_latency;
-					_entrance_counter.erase(counter);
-				}
 				f.exclusive_time += inclusive_time - current.child_time - _profiler_latency;
 				_stack.pop_back();
 				if (!_stack.empty())

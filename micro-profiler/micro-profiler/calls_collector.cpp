@@ -13,17 +13,20 @@ extern "C" void _pexit();
 
 namespace micro_profiler
 {
-	calls_collector calls_collector::_instance;
+	calls_collector calls_collector::_instance(10000000);
 
 
 	class calls_collector::thread_trace_block
 	{
+		const size_t _trace_limit;
 		mutex _block_mtx;
 		pod_vector<call_record> _traces[2];
 		pod_vector<call_record> *_active_trace, *_inactive_trace;
 
+		void operator =(const thread_trace_block &);
+
 	public:
-		thread_trace_block();
+		explicit thread_trace_block(size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
 		~thread_trace_block();
 
@@ -32,12 +35,12 @@ namespace micro_profiler
 	};
 
 
-	calls_collector::thread_trace_block::thread_trace_block()
-		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
+	calls_collector::thread_trace_block::thread_trace_block(size_t trace_limit)
+		: _trace_limit(trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
 
-	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &)
-		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
+	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &other)
+		: _trace_limit(other._trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
 
 	calls_collector::thread_trace_block::~thread_trace_block()
@@ -45,12 +48,18 @@ namespace micro_profiler
 
 	__forceinline void calls_collector::thread_trace_block::track(const call_record &call) throw()
 	{
-		scoped_lock l(_block_mtx);
+		for (; ; yield())
+		{
+			scoped_lock l(_block_mtx);
 
-		_active_trace->append(call);
+			if (_active_trace->size() >= _trace_limit)
+				continue;
+			_active_trace->append(call);
+			break;
+		}
 	}
 
-	__forceinline void calls_collector::thread_trace_block::read_collected(unsigned int threadid, acceptor &a)
+	void calls_collector::thread_trace_block::read_collected(unsigned int threadid, acceptor &a)
 	{
 		{
 			scoped_lock l(_block_mtx);
@@ -66,8 +75,8 @@ namespace micro_profiler
 	}
 
 
-	calls_collector::calls_collector()
-		: _profiler_latency(0)
+	calls_collector::calls_collector(size_t trace_limit)
+		: _trace_limit(trace_limit), _profiler_latency(0)
 	{
 		struct delay_evaluator : calls_collector::acceptor
 		{
@@ -81,7 +90,7 @@ namespace micro_profiler
 		} de;
 
 		const unsigned int check_times = 1000;
-		thread_trace_block &ttb = _call_traces[current_thread_id()];
+		thread_trace_block &ttb = _call_traces.insert(make_pair(current_thread_id(), thread_trace_block(_trace_limit))).first->second;
 		
 		for (unsigned int i = 0; i < check_times; ++i)
 			_penter(), _pexit();
@@ -113,7 +122,7 @@ namespace micro_profiler
 		{
 			scoped_lock l(_thread_blocks_mtx);
 
-			trace = &_call_traces[current_thread_id()];
+			trace = &_call_traces.insert(make_pair(current_thread_id(), thread_trace_block(_trace_limit))).first->second;
 			_trace_pointers_tls.set(trace);
 		}
 		trace->track(call);

@@ -1,6 +1,6 @@
 #include "calls_collector.h"
 
-#include "data_structures.h"
+#include "primitives.h"
 #include "pod_vector.h"
 
 using namespace std;

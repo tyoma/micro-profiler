@@ -1,9 +1,10 @@
 #pragma once
 
 #include "calls_collector.h"
-#include "data_structures.h"
+#include "primitives.h"
 
 #include <hash_map>
+#include <map>
 #include <vector>
 
 namespace micro_profiler
@@ -11,7 +12,7 @@ namespace micro_profiler
 	class shadow_stack
 	{
 		struct call_record_ex;
-		typedef stdext::hash_map<void *, int> entrance_counter_map;
+		typedef stdext::hash_map<void *, int, address_compare> entrance_counter_map;
 
 		__int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
@@ -36,8 +37,8 @@ namespace micro_profiler
 
 	class analyzer : public calls_collector::acceptor
 	{
-		typedef stdext::hash_map<void * /*function_ptr*/, function_statistics> statistics_container;
-		typedef stdext::hash_map<unsigned int /*threadid*/, shadow_stack> stacks_container;
+		typedef stdext::hash_map<void *, function_statistics, address_compare> statistics_container;
+		typedef std::map<unsigned int /*threadid*/, shadow_stack> stacks_container;
 
 		__int64 _profiler_latency;
 		statistics_container _statistics;

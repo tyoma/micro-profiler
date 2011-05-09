@@ -187,7 +187,6 @@
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="calls_collector.h" />
-    <ClInclude Include="data_structures.h" />
     <ClInclude Include="entry.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />
@@ -196,6 +195,7 @@
     <ClInclude Include="frontend\statistics.h" />
     <ClInclude Include="frontend\symbol_resolver.h" />
     <ClInclude Include="pod_vector.h" />
+    <ClInclude Include="primitives.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="_generated\microprofilerfrontend_i.h" />
   </ItemGroup>

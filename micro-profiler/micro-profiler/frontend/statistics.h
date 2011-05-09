@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./../_generated/microprofilerfrontend_i.h"
-#include "./../data_structures.h"
+#include "./../primitives.h"
 
 #include <tchar.h>
 #include <hash_map>

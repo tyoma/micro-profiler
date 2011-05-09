@@ -36,7 +36,6 @@
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="calls_collector.h" />
-    <ClInclude Include="data_structures.h" />
     <ClInclude Include="entry.h" />
     <ClInclude Include="pod_vector.h" />
     <ClInclude Include="system.h" />
@@ -61,6 +60,7 @@
     <ClInclude Include="frontend\ProxyBridge.h">
       <Filter>frontend</Filter>
     </ClInclude>
+    <ClInclude Include="primitives.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />

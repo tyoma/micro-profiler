@@ -449,10 +449,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\data_structures.h"
-			>
-		</File>
-		<File
 			RelativePath=".\entry.cpp"
 			>
 			<FileConfiguration
@@ -486,6 +482,10 @@
 		</File>
 		<File
 			RelativePath=".\pod_vector.h"
+			>
+		</File>
+		<File
+			RelativePath=".\primitives.h"
 			>
 		</File>
 		<File

@@ -73,16 +73,10 @@ namespace micro_profiler
 			else
 			{
 				call_record_ex &current = _stack.back();
-				entrance_counter_map::iterator counter = _entrance_counter.find(current.callee);
-				function_statistics &f = statistics[current.callee];
 				__int64 inclusive_time = i->timestamp - current.timestamp;
 
-				++f.times_called;
-				if (counter->second > f.max_reentrance)
-					f.max_reentrance = counter->second;
-				if (0 == --counter->second)
-					f.inclusive_time += inclusive_time - _profiler_latency;
-				f.exclusive_time += inclusive_time - current.child_time - _profiler_latency;
+				statistics[current.callee]
+					.add(_entrance_counter[current.callee]--, inclusive_time - _profiler_latency, inclusive_time - current.child_time - _profiler_latency);
 				_stack.pop_back();
 				if (!_stack.empty())
 					_stack.back().child_time += inclusive_time + _profiler_latency;

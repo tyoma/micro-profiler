@@ -76,7 +76,10 @@ namespace micro_profiler
 				__int64 inclusive_time = i->timestamp - current.timestamp;
 
 				statistics[current.callee]
-					.add(_entrance_counter[current.callee]--, inclusive_time - _profiler_latency, inclusive_time - current.child_time - _profiler_latency);
+					.add_call(
+						--_entrance_counter[current.callee],
+						inclusive_time - _profiler_latency,
+						inclusive_time - current.child_time - _profiler_latency);
 				_stack.pop_back();
 				if (!_stack.empty())
 					_stack.back().child_time += inclusive_time + _profiler_latency;

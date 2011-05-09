@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./../_generated/microprofilerfrontend_i.h"
+#include "./../data_structures.h"
 
 #include <tchar.h>
 #include <hash_map>
@@ -12,17 +13,16 @@ class symbol_resolver;
 
 typedef std::basic_string<TCHAR> tstring;
 
-struct function_statistics
+struct function_statistics_ex : micro_profiler::function_statistics
 {
-	function_statistics(const FunctionStatistics &from, const symbol_resolver &resolver);
+	function_statistics_ex(const FunctionStatistics &from, const symbol_resolver &resolver);
 
 	tstring name;
-	__int64 times_called, max_reentrance, inclusive_time, exclusive_time;
 };
 
 class statistics
 {
-	typedef stdext::hash_map<__int64, function_statistics> statistics_map_;
+	typedef stdext::hash_map<__int64, function_statistics_ex> statistics_map_;
 	class dereferencing_wrapper;
 
 	const symbol_resolver &_symbol_resolver;
@@ -35,13 +35,13 @@ class statistics
 
 public:
 	typedef statistics_map_ statistics_map;
-	typedef bool (*sort_predicate)(const function_statistics &lhs, const function_statistics &rhs);
+	typedef bool (*sort_predicate)(const function_statistics_ex &lhs, const function_statistics_ex &rhs);
 
 public:
 	statistics(const symbol_resolver &resolver);
 	virtual ~statistics();
 
-	const function_statistics &at(unsigned int index) const;
+	const function_statistics_ex &at(unsigned int index) const;
 	unsigned int size() const;
 
 	void clear();

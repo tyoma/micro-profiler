@@ -526,17 +526,17 @@ namespace micro_profiler
 				++i2;
 				++++i3;
 
-				Assert::IsTrue(2 == i1->second.max_reentrance);
-				Assert::IsTrue(3 == i2->second.max_reentrance);
-				Assert::IsTrue(1 == i3->second.max_reentrance);
+				Assert::IsTrue(1 == i1->second.max_reentrance);
+				Assert::IsTrue(2 == i2->second.max_reentrance);
+				Assert::IsTrue(0 == i3->second.max_reentrance);
 
 				// ACT
 				ss.update(trace2, end(trace2), statistics);
 
 				// ASSERT
-				Assert::IsTrue(4 == i1->second.max_reentrance);
-				Assert::IsTrue(3 == i2->second.max_reentrance);
-				Assert::IsTrue(1 == i3->second.max_reentrance);
+				Assert::IsTrue(3 == i1->second.max_reentrance);
+				Assert::IsTrue(2 == i2->second.max_reentrance);
+				Assert::IsTrue(0 == i3->second.max_reentrance);
 			}
 		};
 	}

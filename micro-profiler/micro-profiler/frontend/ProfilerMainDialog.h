@@ -6,7 +6,7 @@
 #include <atlbase.h>
 #include <atlwin.h>
 
-typedef tstring (*print_function)(const function_statistics &s);
+typedef tstring (*print_function)(const function_statistics_ex &s);
 
 class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 {

@@ -18,9 +18,9 @@ public:
 };
 
 
-function_statistics::function_statistics(const FunctionStatistics &from, const symbol_resolver &resolver)
-	: name(resolver.symbol_name_by_va(from.FunctionAddress)), times_called(from.TimesCalled),
-		max_reentrance(from.MaxReentrance), inclusive_time(from.InclusiveTime), exclusive_time(from.ExclusiveTime)
+function_statistics_ex::function_statistics_ex(const FunctionStatistics &from, const symbol_resolver &resolver)
+	: function_statistics(from.TimesCalled, from.MaxReentrance, from.InclusiveTime, from.ExclusiveTime),
+		name(resolver.symbol_name_by_va(from.FunctionAddress))
 {	}
 
 
@@ -39,7 +39,7 @@ statistics::statistics(const symbol_resolver &resolver)
 statistics::~statistics()
 {	}
 
-const function_statistics &statistics::at(unsigned int index) const
+const function_statistics_ex &statistics::at(unsigned int index) const
 {	return _sorted_statistics.at(index)->second;	}
 
 unsigned int statistics::size() const
@@ -69,15 +69,11 @@ bool statistics::update(const FunctionStatistics *data, unsigned int count)
 
 		if (match == _statistics.end())
 		{
-			match = _statistics.insert(make_pair(data->FunctionAddress, function_statistics(*data, _symbol_resolver))).first;
+			match = _statistics.insert(make_pair(data->FunctionAddress, function_statistics_ex(*data, _symbol_resolver))).first;
 			new_insertions = true;
 		}
 		else
-		{
-			match->second.times_called += data->TimesCalled;
-			match->second.exclusive_time += data->ExclusiveTime;
-			match->second.inclusive_time += data->InclusiveTime;
-		}
+			match->second.add(data->TimesCalled, data->MaxReentrance, data->InclusiveTime, data->ExclusiveTime);
 	}
 
 	if (new_insertions)

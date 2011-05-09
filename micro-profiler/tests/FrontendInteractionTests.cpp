@@ -256,7 +256,7 @@ namespace micro_profiler
 
 				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_20));
 				Assert::IsTrue(sleep_20_call.TimesCalled == 1);
-				Assert::IsTrue(sleep_20_call.MaxReentrance == 1);
+				Assert::IsTrue(sleep_20_call.MaxReentrance == 0);
 				Assert::IsTrue(sleep_20_call.InclusiveTime > 0);
 				Assert::IsTrue(sleep_20_call.ExclusiveTime == sleep_20_call.InclusiveTime);
 
@@ -274,7 +274,7 @@ namespace micro_profiler
 
 				Assert::IsTrue(sleep_n_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_n));
 				Assert::IsTrue(sleep_n_call.TimesCalled == 1);
-				Assert::IsTrue(sleep_n_call.MaxReentrance == 1);
+				Assert::IsTrue(sleep_n_call.MaxReentrance == 0);
 				Assert::IsTrue(sleep_n_call.InclusiveTime > sleep_20_call.InclusiveTime);
 				Assert::IsTrue(sleep_n_call.ExclusiveTime == sleep_n_call.InclusiveTime);
 			}
@@ -299,7 +299,7 @@ namespace micro_profiler
 
 				Assert::IsTrue(recursive_call.FunctionAddress == reinterpret_cast<hyper>(&controlled_recursion));
 				Assert::IsTrue(recursive_call.TimesCalled == 12);
-				Assert::IsTrue(recursive_call.MaxReentrance == 7);
+				Assert::IsTrue(recursive_call.MaxReentrance == 6);
 			}
 			
 

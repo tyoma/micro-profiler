@@ -88,7 +88,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if exist app.config copy app.config &quot;$(OutDir)\app.config&quot;"
+				CommandLine="copy run-tests.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -163,7 +163,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="if exist app.config copy app.config &quot;$(OutDir)\app.config&quot;"
+				CommandLine="copy run-tests.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -307,6 +307,11 @@
 					CompileAsManaged="1"
 				/>
 			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\run-tests.cmd"
+			DeploymentContent="true"
+			>
 		</File>
 		<File
 			RelativePath=".\samples.cpp"

@@ -71,7 +71,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if exist app.config copy app.config "$(OutDir)app.config"</Command>
+      <Command>copy run-tests.cmd "$(OutDir)\run-tests.cmd"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -93,7 +94,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PostBuildEvent>
-      <Command>if exist app.config copy app.config "$(OutDir)app.config"</Command>
+      <Command>copy run-tests.cmd "$(OutDir)\run-tests.cmd"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -156,6 +158,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="run-tests.cmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

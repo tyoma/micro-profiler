@@ -67,7 +67,7 @@ namespace micro_profiler
 
 	unsigned int __stdcall profiler_frontend::frontend_worker_proxy(void *param)
 	{
-		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 		::CoInitialize(NULL);
 		reinterpret_cast<profiler_frontend *>(param)->frontend_worker();
 		::CoUninitialize();

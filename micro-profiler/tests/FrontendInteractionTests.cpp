@@ -137,7 +137,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(0 != threadid);
 				Assert::IsTrue(test_threadid != threadid);
-				Assert::IsTrue(THREAD_PRIORITY_TIME_CRITICAL == fe_thread_priority);
+				Assert::IsTrue(THREAD_PRIORITY_HIGHEST == fe_thread_priority);
 			}
 
 

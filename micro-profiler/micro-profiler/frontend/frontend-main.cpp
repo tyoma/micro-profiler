@@ -4,10 +4,13 @@
 #include <atlcom.h>
 #include <commctrl.h>
 
+HINSTANCE g_instance;
+
 class CProfilerFrontendModule : public CAtlDllModuleT<CProfilerFrontendModule> {	} _AtlModule;
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+	g_instance = dwReason == DLL_PROCESS_ATTACH ? hInstance : g_instance;
 	if (PrxDllMain(hInstance, dwReason, lpReserved))
 		return _AtlModule.DllMain(dwReason, lpReserved);
 	return FALSE;

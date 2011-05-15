@@ -3,6 +3,8 @@
 #include <sstream>
 #include <math.h>
 
+extern HINSTANCE g_instance;
+
 using namespace std;
 
 namespace
@@ -142,6 +144,8 @@ LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LP
 	RelocateControls(clientRect.Size());
 
 	::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+	SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), FALSE);
+	SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
 	handled = TRUE;
 	return 1;  // Let the system set the focus
 }

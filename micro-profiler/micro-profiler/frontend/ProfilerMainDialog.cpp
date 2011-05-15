@@ -96,7 +96,6 @@ ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
 	_sorters[6] = &sort_by_max_reentrance;
 
 	Create(NULL, 0);
-	_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
 
 	LVCOLUMN columns[] = {
 		{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 60, _T("Function"), 0, 0, 0, 0,	},
@@ -134,9 +133,24 @@ void ProfilerMainDialog::RefreshList(unsigned int new_count)
 
 LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL& handled)
 {
+	CRect clientRect;
+
+	_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
+	_clear_button = GetDlgItem(IDC_BTN_CLEAR);
+
+	GetClientRect(&clientRect);
+	RelocateControls(clientRect.Size());
+
 	::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	handled = TRUE;
 	return 1;  // Let the system set the focus
+}
+
+LRESULT ProfilerMainDialog::OnSize(UINT /*message*/, WPARAM /*wparam*/, LPARAM lparam, BOOL &handled)
+{
+	RelocateControls(CSize(LOWORD(lparam), HIWORD(lparam)));
+	handled = TRUE;
+	return 1;
 }
 
 LRESULT ProfilerMainDialog::OnGetDispInfo(int /*control_id*/, LPNMHDR pnmh, BOOL &handled)
@@ -172,4 +186,17 @@ LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/
 	ListView_SetItemCountEx(_statistics_view, 0, 0);
 	handled = TRUE;
 	return 0;
+}
+
+void ProfilerMainDialog::RelocateControls(const CSize &size)
+{
+	const int spacing = 5;
+	CRect rcButton, rc(CPoint(0, 0), size);
+
+	_clear_button.GetWindowRect(rcButton);
+	rc.DeflateRect(spacing, spacing, spacing, spacing + rcButton.Height());
+	rcButton.MoveToXY(rc.left, rc.bottom);
+	_clear_button.MoveWindow(rcButton);
+	rc.DeflateRect(0, 0, 0, spacing);
+	_statistics_view.MoveWindow(rc);
 }

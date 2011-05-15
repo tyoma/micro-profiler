@@ -408,6 +408,10 @@
 				Name="resources"
 				>
 				<File
+					RelativePath=".\frontend\appicon.ico"
+					>
+				</File>
+				<File
 					RelativePath=".\frontend\micro-profiler-frontend.rc"
 					>
 				</File>

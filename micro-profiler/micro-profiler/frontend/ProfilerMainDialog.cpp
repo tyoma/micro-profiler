@@ -1,6 +1,7 @@
 #include "ProfilerMainDialog.h"
 
 #include <sstream>
+#include <algorithm>
 #include <math.h>
 
 extern HINSTANCE g_instance;
@@ -223,7 +224,7 @@ LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /
 		{
 			TCHAR *gtext_memory = reinterpret_cast<TCHAR *>(::GlobalLock(gtext));
 
-			copy_n(result.c_str(), result.size() + 1, gtext_memory);
+			copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
 			::GlobalUnlock(gtext_memory);
 			::EmptyClipboard();
 			::SetClipboardData(CF_TEXT, gtext);

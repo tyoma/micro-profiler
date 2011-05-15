@@ -203,7 +203,6 @@
     <Midl Include="microprofilerfrontend.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="appicon.ico" />
     <None Include="frontend\appicon.ico" />
     <None Include="frontend\micro-profiler-sink.rgs" />
     <None Include="micro-profiler.ps.def" />

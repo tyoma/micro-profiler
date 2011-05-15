@@ -73,7 +73,6 @@
     <None Include="frontend\appicon.ico">
       <Filter>frontend\resources</Filter>
     </None>
-    <None Include="appicon.ico" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">

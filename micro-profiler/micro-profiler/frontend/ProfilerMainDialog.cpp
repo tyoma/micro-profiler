@@ -139,6 +139,7 @@ LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LP
 
 	_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
 	_clear_button = GetDlgItem(IDC_BTN_CLEAR);
+	_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
 
 	GetClientRect(&clientRect);
 	RelocateControls(clientRect.Size());
@@ -200,6 +201,40 @@ LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/
 	return 0;
 }
 
+LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
+{
+	basic_stringstream<TCHAR> s;
+
+	s << _T("Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion") << endl;
+	for (size_t i = 0, count = _statistics.size(); i != count; ++i)
+	{
+		const function_statistics_ex &f = _statistics.at(i);
+
+		s << f.name << _T("\t") << f.times_called << _T("\t") << 1.0 * f.exclusive_time / g_ticks_resolution << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution << _T("\t")
+			<< 1.0 * f.exclusive_time / g_ticks_resolution / f.times_called << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution / f.times_called << _T("\t") << f.max_reentrance
+			<< endl;
+	}
+
+	tstring result(s.str());
+
+	if (OpenClipboard())
+	{
+		if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(TCHAR)))
+		{
+			TCHAR *gtext_memory = reinterpret_cast<TCHAR *>(::GlobalLock(gtext));
+
+			copy_n(result.c_str(), result.size() + 1, gtext_memory);
+			::GlobalUnlock(gtext_memory);
+			::EmptyClipboard();
+			::SetClipboardData(CF_TEXT, gtext);
+		}
+		CloseClipboard();
+	}
+ 
+	handled = TRUE;
+	return 0;
+}
+
 void ProfilerMainDialog::RelocateControls(const CSize &size)
 {
 	const int spacing = 7;
@@ -209,6 +244,8 @@ void ProfilerMainDialog::RelocateControls(const CSize &size)
 	rc.DeflateRect(spacing, spacing, spacing, spacing + rcButton.Height());
 	rcButton.MoveToXY(rc.left, rc.bottom);
 	_clear_button.MoveWindow(rcButton);
+	rcButton.MoveToX(rcButton.Width() + spacing);
+	_copy_all_button.MoveWindow(rcButton);
 	rc.DeflateRect(0, 0, 0, spacing);
 	_statistics_view.MoveWindow(rc);
 }

@@ -41,8 +41,8 @@ public:
 	statistics(const symbol_resolver &resolver);
 	virtual ~statistics();
 
-	const function_statistics_ex &at(unsigned int index) const;
-	unsigned int size() const;
+	const function_statistics_ex &at(size_t index) const;
+	size_t size() const;
 
 	void clear();
 	void sort(sort_predicate predicate, bool ascending);

@@ -39,10 +39,10 @@ statistics::statistics(const symbol_resolver &resolver)
 statistics::~statistics()
 {	}
 
-const function_statistics_ex &statistics::at(unsigned int index) const
+const function_statistics_ex &statistics::at(size_t index) const
 {	return _sorted_statistics.at(index)->second;	}
 
-unsigned int statistics::size() const
+size_t statistics::size() const
 {	return _sorted_statistics.size();	}
 
 void statistics::clear()

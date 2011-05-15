@@ -11,6 +11,7 @@
 #define IDC_FUNCTIONS_STATISTICS        203
 #define IDC_BUTTON1                     204
 #define IDC_BTN_CLEAR                   204
+#define IDC_BTN_COPY_ALL                205
 
 // Next default values for new objects
 // 

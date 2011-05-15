@@ -12,7 +12,7 @@ typedef tstring (*print_function)(const function_statistics_ex &s);
 class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 {
 	print_function _printers[7];
-	statistics::sort_predicate _sorters[7];
+	std::pair<statistics::sort_predicate, bool /*default_ascending*/> _sorters[7];
 	statistics &_statistics;
 	CWindow _statistics_view, _clear_button;
 	int _last_sort_column;

@@ -55,7 +55,7 @@ namespace
 	{	return to_string(s.max_reentrance);	}
 
 	bool sort_by_name(const function_statistics_ex &lhs, const function_statistics_ex &rhs)
-	{	return lhs.name > rhs.name;	}
+	{	return lhs.name < rhs.name;	}
 
 	bool sort_by_times_called(const function_statistics_ex &lhs, const function_statistics_ex &rhs)
 	{	return lhs.times_called < rhs.times_called;	}
@@ -89,13 +89,13 @@ ProfilerMainDialog::ProfilerMainDialog(statistics &s, __int64 ticks_resolution)
 	_printers[5] = &print_avg_inclusive_call_time;
 	_printers[6] = &print_max_reentrance;
 
-	_sorters[0] = &sort_by_name;
-	_sorters[1] = &sort_by_times_called;
-	_sorters[2] = &sort_by_exclusive_time;
-	_sorters[3] = &sort_by_inclusive_time;
-	_sorters[4] = &sort_by_avg_exclusive_call_time;
-	_sorters[5] = &sort_by_avg_inclusive_call_time;
-	_sorters[6] = &sort_by_max_reentrance;
+	_sorters[0] = make_pair(&sort_by_name, true);
+	_sorters[1] = make_pair(&sort_by_times_called, false);
+	_sorters[2] = make_pair(&sort_by_exclusive_time, false);
+	_sorters[3] = make_pair(&sort_by_inclusive_time, false);
+	_sorters[4] = make_pair(&sort_by_avg_exclusive_call_time, false);
+	_sorters[5] = make_pair(&sort_by_avg_inclusive_call_time, false);
+	_sorters[6] = make_pair(&sort_by_max_reentrance, false);
 
 	Create(NULL, 0);
 
@@ -144,7 +144,6 @@ LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LP
 	RelocateControls(clientRect.Size());
 
 	::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-	SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), FALSE);
 	SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
 	handled = TRUE;
 	return 1;  // Let the system set the focus
@@ -174,10 +173,19 @@ LRESULT ProfilerMainDialog::OnGetDispInfo(int /*control_id*/, LPNMHDR pnmh, BOOL
 LRESULT ProfilerMainDialog::OnColumnSort(int /*control_id*/, LPNMHDR pnmh, BOOL &handled)
 {
 	NMLISTVIEW *pnmlv = (NMLISTVIEW *)pnmh;
+	HWND header = ListView_GetHeader(_statistics_view);
+	HDITEM header_item = { 0 };
 
-	statistics::sort_predicate predicate = _sorters[pnmlv->iSubItem];
-	_sort_ascending = pnmlv->iSubItem != _last_sort_column ? false : !_sort_ascending;
+	header_item.mask = HDI_FORMAT;
+	header_item.fmt = HDF_STRING;
+
+	statistics::sort_predicate predicate = _sorters[pnmlv->iSubItem].first;
+	_sort_ascending = pnmlv->iSubItem != _last_sort_column ? _sorters[pnmlv->iSubItem].second : !_sort_ascending;
+	if (pnmlv->iSubItem != _last_sort_column)
+		Header_SetItem(header, _last_sort_column, &header_item);
+	header_item.fmt = header_item.fmt | (_sort_ascending ? HDF_SORTUP : HDF_SORTDOWN);
 	_last_sort_column = pnmlv->iSubItem;
+	Header_SetItem(header, _last_sort_column, &header_item);
 	_statistics.sort(predicate, _sort_ascending);
 	_statistics_view.Invalidate(FALSE);
 	handled = TRUE;
@@ -194,7 +202,7 @@ LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/
 
 void ProfilerMainDialog::RelocateControls(const CSize &size)
 {
-	const int spacing = 5;
+	const int spacing = 7;
 	CRect rcButton, rc(CPoint(0, 0), size);
 
 	_clear_button.GetWindowRect(rcButton);

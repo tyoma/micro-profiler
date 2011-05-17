@@ -34,14 +34,14 @@ extern "C" __declspec(naked, dllexport) void _penter()
 	_asm 
 	{
 		pushad
-		rdtsc
-		push	edx
-		push	eax
-		push	dword ptr[esp + 40]
+			rdtsc
+			push	edx
+			push	eax
+			push	dword ptr[esp + 40]
 		lea	ecx, [micro_profiler::calls_collector::_instance]
 		call	micro_profiler::calls_collector::track
-		popad
-		ret
+			popad
+			ret
 	}
 }
 
@@ -50,14 +50,14 @@ extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
 	_asm 
 	{
 		pushad
-		rdtsc
-		push	edx
-		push	eax
-		push	0
-		lea	ecx, [micro_profiler::calls_collector::_instance]
+			rdtsc
+			push	edx
+			push	eax
+			push	0
+			lea	ecx, [micro_profiler::calls_collector::_instance]
 		call	micro_profiler::calls_collector::track
-		popad
-		ret
+			popad
+			ret
 	}
 }
 
@@ -66,15 +66,18 @@ namespace micro_profiler
 	namespace
 	{
 		const __int64 c_ticks_resolution(timestamp_precision());
-
-		void create_standard_frontend(IProfilerFrontend **frontend)
-		{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 	}
 
+	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
+	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
+
+	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
+	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_INPROC_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
+
 	profiler_frontend::profiler_frontend(frontend_factory factory)
-		: _collector(*calls_collector::instance()), _factory(factory ? factory : &create_standard_frontend),
-			_stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
-			_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &frontend_worker_proxy, this, 0, 0)))
+		: _collector(*calls_collector::instance()), _factory(factory),
+		_stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
+		_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &frontend_worker_proxy, this, 0, 0)))
 	{	}
 
 	profiler_frontend::~profiler_frontend()
@@ -104,22 +107,35 @@ namespace micro_profiler
 		_factory(&fe);
 		if (fe)
 		{
+			DWORD wait_result;
+
 			::GetModuleFileName(NULL, image_path, MAX_PATH);
 			fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)), c_ticks_resolution);
-			while (WAIT_TIMEOUT == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_stop_event), 10))
-			{
-				a.clear();
-				buffer.clear();
-				_collector.read_collected(a);
-				for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
+			while (wait_result = ::MsgWaitForMultipleObjects(1, &reinterpret_cast<HANDLE>(_stop_event), FALSE, 10, QS_ALLEVENTS), wait_result != WAIT_OBJECT_0)
+				if (wait_result == WAIT_OBJECT_0 + 1)
 				{
-					FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.max_reentrance, i->second.exclusive_time, i->second.inclusive_time };
+					MSG msg = { 0 };
 
-					buffer.push_back(s);
+					while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+					{
+						::TranslateMessage(&msg);
+						::DispatchMessage(&msg);
+					}
 				}
-				if (!buffer.empty())
-					fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
-			}
+				else
+				{
+					a.clear();
+					buffer.clear();
+					_collector.read_collected(a);
+					for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
+					{
+						FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.max_reentrance, i->second.exclusive_time, i->second.inclusive_time };
+
+						buffer.push_back(s);
+					}
+					if (!buffer.empty())
+						fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
+				}
 		}
 	}
 }

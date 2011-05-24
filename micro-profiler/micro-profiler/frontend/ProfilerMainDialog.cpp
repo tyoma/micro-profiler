@@ -24,8 +24,6 @@
 #include <algorithm>
 #include <math.h>
 
-#pragma warning(disable:4996)
-
 extern HINSTANCE g_instance;
 
 using namespace std;

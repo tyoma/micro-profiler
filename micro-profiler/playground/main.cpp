@@ -14,7 +14,7 @@ using namespace std;
 
 namespace
 {
-	micro_profiler::profiler_frontend pf;
+	micro_profiler::profiler_frontend pf(&micro_profiler::create_inproc_frontend);
 
 	double random()
 	{

@@ -71,9 +71,6 @@ namespace micro_profiler
 	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
 	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
-	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
-	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_INPROC_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
-
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _collector(*calls_collector::instance()), _factory(factory),
 		_stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),

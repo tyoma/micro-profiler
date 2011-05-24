@@ -23,8 +23,6 @@
 #include <algorithm>
 #include <new>
 
-#pragma warning(disable:4996)
-
 namespace micro_profiler
 {
 	template <typename T>
@@ -112,5 +110,3 @@ namespace micro_profiler
 		return true;
 	}
 }
-
-#pragma warning(default:4996)

@@ -25,6 +25,17 @@
 
 #include <atlstr.h>
 
+namespace micro_profiler
+{
+	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
+	{
+		CComObject<ProfilerFrontend> *instance;
+
+		CComObject<ProfilerFrontend>::CreateInstance(&instance);
+		instance->QueryInterface(frontend);
+	}
+}
+
 HRESULT ProfilerFrontend::FinalConstruct()
 {
    return S_OK;

@@ -32,6 +32,15 @@ namespace micro_profiler
 	};
 #pragma pack(pop)
 
+	struct address_compare
+	{
+		static const size_t bucket_size = 4;
+		static const size_t min_buckets = 8;
+
+		size_t operator ()(void *key) const;
+		bool operator ()(const void *lhs, const void *rhs) const;
+	};
+
 	struct function_statistics
 	{
 		function_statistics(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0);
@@ -45,16 +54,16 @@ namespace micro_profiler
 		void add(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time);
 	};
 
-	struct address_compare
-	{
-		static const size_t bucket_size = 4;
-		static const size_t min_buckets = 8;
 
-		size_t operator ()(void *key) const;
-		bool operator ()(const void *lhs, const void *rhs) const;
-	};
+	// address_compare - inline definitions
+	inline size_t address_compare::operator ()(void *key) const
+	{	return (reinterpret_cast<size_t>(key) >> 4) * 2654435761;	}
+
+	inline bool address_compare::operator ()(const void *lhs, const void *rhs) const
+	{	return lhs < rhs;	}
 
 
+	// function_statistics - inline definitions
 	inline function_statistics::function_statistics(unsigned __int64 times_called_, unsigned __int64 max_reentrance_, __int64 inclusive_time_, __int64 exclusive_time_)
 		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_)
 	{	}
@@ -77,11 +86,4 @@ namespace micro_profiler
 		this->inclusive_time += inclusive_time;
 		this->exclusive_time += exclusive_time;
 	}
-
-
-	inline size_t address_compare::operator ()(void *key) const
-	{	return (reinterpret_cast<size_t>(key) >> 4) * 2654435761;	}
-
-	inline bool address_compare::operator ()(const void *lhs, const void *rhs) const
-	{	return lhs < rhs;	}
 }

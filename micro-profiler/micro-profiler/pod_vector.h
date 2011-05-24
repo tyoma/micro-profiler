@@ -20,8 +20,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <new>
-#include <memory.h>
+
+#pragma warning(disable:4996)
 
 namespace micro_profiler
 {
@@ -34,73 +36,81 @@ namespace micro_profiler
 			int __unused2;
 		};
 
-		T *_buffer, *_next, *_capacity_limit;
+		T *_begin, *_end, *_limit;
 
 		const pod_vector &operator =(const pod_vector &rhs);
 
+		bool grow() throw();
+
 	public:
-		pod_vector(unsigned int initial_capacity = 10000);
+		explicit pod_vector(size_t initial_capacity = 10000);
 		pod_vector(const pod_vector &other);
 		~pod_vector() throw();
 
-		void append(const T &element) throw();
+		void push_back(const T &element) throw();
 		void clear() throw();
 
 		const T *data() const throw();
-		unsigned int size() const throw();
-		unsigned int capacity() const throw();
+		size_t size() const throw();
+		size_t capacity() const throw();
 	};
 
 
+	// pod_vector<T> - inline definitions
 	template <typename T>
 	inline pod_vector<T>::pod_vector(unsigned int initial_capacity)
-		: _buffer(new T[initial_capacity]), _next(_buffer), _capacity_limit(_buffer + initial_capacity)
+		: _begin(new T[initial_capacity]), _end(_begin), _limit(_begin + initial_capacity)
 	{	}
 
 	template <typename T>
 	inline pod_vector<T>::pod_vector(const pod_vector &other)
-		: _buffer(new T[other.capacity()]), _next(_buffer + other.size()), _capacity_limit(_buffer + other.capacity())
-	{	memcpy(_buffer, other.data(), sizeof(T) * other.size());	}
+		: _begin(new T[other.capacity()]), _end(_begin + other.size()), _limit(_begin + other.capacity())
+	{	std::copy(other.data(), other.data() + other.size(), _begin);	}
 
 	template <typename T>
 	inline pod_vector<T>::~pod_vector() throw()
-	{	delete []_buffer;	}
+	{	delete []_begin;	}
 
 	template <typename T>
-	__forceinline void pod_vector<T>::append(const T &element) throw()
+	inline void pod_vector<T>::push_back(const T &element) throw()
 	{
-		if (_next == _capacity_limit)
-		{
-			unsigned int size = this->size();
-			unsigned int new_capacity = capacity() + capacity() / 2;
-
-			if (T *buffer = new(std::nothrow) T[new_capacity])
-			{
-				memcpy(buffer, _buffer, sizeof(T) * size);
-				delete []_buffer;
-				_buffer = buffer;
-				_next = _buffer + size;
-				_capacity_limit = _buffer + new_capacity;
-			}
-			else
-				return;
-		}
-		*_next++ = element;
+		if (_end == _limit && !grow())
+			return;
+		*_end++ = element;
 	}
 
 	template <typename T>
 	inline void pod_vector<T>::clear() throw()
-	{	_next = _buffer;	}
+	{	_end = _begin;	}
 
 	template <typename T>
 	inline const T *pod_vector<T>::data() const throw()
-	{	return _buffer;	}
+	{	return _begin;	}
 
 	template <typename T>
-	inline unsigned int pod_vector<T>::size() const throw()
-	{	return _next - _buffer;	}
+	inline size_t pod_vector<T>::size() const throw()
+	{	return _end - _begin;	}
 
 	template <typename T>
-	inline unsigned int pod_vector<T>::capacity() const throw()
-	{	return _capacity_limit - _buffer;	}
+	inline size_t pod_vector<T>::capacity() const throw()
+	{	return _limit - _begin;	}
+
+	template <typename T>
+	inline bool pod_vector<T>::grow() throw()
+	{
+		unsigned int size = this->size();
+		unsigned int new_capacity = capacity() + capacity() / 2;
+		T *buffer = new(std::nothrow) T[new_capacity];
+
+		if (!buffer)
+			return false;
+		std::copy(_begin, _begin + size, buffer);
+		delete []_begin;
+		_begin = buffer;
+		_end = _begin + size;
+		_limit = _begin + new_capacity;
+		return true;
+	}
 }
+
+#pragma warning(default:4996)

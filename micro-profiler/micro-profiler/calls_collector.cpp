@@ -74,7 +74,7 @@ namespace micro_profiler
 
 			if (_active_trace->size() >= _trace_limit)
 				continue;
-			_active_trace->append(call);
+			_active_trace->push_back(call);
 			break;
 		}
 	}

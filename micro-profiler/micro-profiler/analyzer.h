@@ -78,6 +78,7 @@ namespace micro_profiler
 	};
 
 
+	// shadow_stack - inline definitions
 	inline shadow_stack::shadow_stack(__int64 profiler_latency)
 		: _profiler_latency(profiler_latency)
 	{	}
@@ -108,6 +109,7 @@ namespace micro_profiler
 	}
 
 
+	// shadow_stack::call_record_ex - inline definitions
 	inline shadow_stack::call_record_ex::call_record_ex(const call_record &from)
 		: call_record(from), child_time(0)
 	{	}
@@ -117,6 +119,7 @@ namespace micro_profiler
 	{	}
 
 
+	// analyzer - inline definitions
 	inline analyzer::analyzer(__int64 profiler_latency)
 		: _profiler_latency(profiler_latency)
 	{	}

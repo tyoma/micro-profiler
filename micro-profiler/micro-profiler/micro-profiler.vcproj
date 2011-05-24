@@ -137,6 +137,7 @@
 				OmitFramePointers="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
 				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"

@@ -104,6 +104,7 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <AdditionalDependencies>rpcrt4.lib;diaguids.lib;%(AdditionalDependencies)</AdditionalDependencies>

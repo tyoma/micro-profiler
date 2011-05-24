@@ -4,9 +4,11 @@
 #include <conio.h>
 
 #include "../micro-profiler/entry.h"
+#include "../micro-profiler/calls_collector.h"
 
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 
@@ -25,6 +27,8 @@ namespace
 
 int main()
 {
+	cout << micro_profiler::calls_collector::instance()->profiler_latency() << endl;
+
    srand(time(0));
 
 	vector<double> v(30000000);

@@ -64,14 +64,14 @@ namespace micro_profiler
 				pod_vector<A> v;
 
 				// ACT
-				v.append(somevalue);
+				v.push_back(somevalue);
 
 				// ASSERT
 				Assert::IsTrue(1 == v.size());
 
 				// ACT
-				v.append(somevalue);
-				v.append(somevalue);
+				v.push_back(somevalue);
+				v.push_back(somevalue);
 
 				// ASSERT
 				Assert::IsTrue(3 == v.size());
@@ -88,11 +88,11 @@ namespace micro_profiler
 				pod_vector<B> vB(4);
 
 				// ACT
-				vA.append(val1);
-				vA.append(val2);
-				vB.append(val3);
-				vB.append(val4);
-				vB.append(val5);
+				vA.push_back(val1);
+				vA.push_back(val2);
+				vB.push_back(val3);
+				vB.push_back(val4);
+				vB.push_back(val5);
 
 				// ACT / ASSERT
 				Assert::IsTrue(val1 == *(vA.data() + 0));
@@ -110,21 +110,21 @@ namespace micro_profiler
 				A somevalue;
 				pod_vector<A> v1(3), v2(4);
 
-				v1.append(somevalue);
-				v1.append(somevalue);
-				v1.append(somevalue);
-				v2.append(somevalue);
-				v2.append(somevalue);
-				v2.append(somevalue);
-				v2.append(somevalue);
+				v1.push_back(somevalue);
+				v1.push_back(somevalue);
+				v1.push_back(somevalue);
+				v2.push_back(somevalue);
+				v2.push_back(somevalue);
+				v2.push_back(somevalue);
+				v2.push_back(somevalue);
 
 				// ASSERT
 				Assert::IsTrue(3 == v1.capacity());
 				Assert::IsTrue(4 == v2.capacity());
 
 				// ACT
-				v1.append(somevalue);
-				v2.append(somevalue);
+				v1.push_back(somevalue);
+				v2.push_back(somevalue);
 
 				// ASSERT
 				Assert::IsTrue(4 == v1.capacity());
@@ -139,14 +139,14 @@ namespace micro_profiler
 				B val1 = {	1234, 1	}, val2 = {	2345, 11	}, val3 = {	34567, 13	}, val4 = {	134567, 17	};
 				pod_vector<B> v(3);
 
-				v.append(val1);
-				v.append(val2);
-				v.append(val3);
+				v.push_back(val1);
+				v.push_back(val2);
+				v.push_back(val3);
 
 				const B *previous_buffer = v.data();
 
 				// ACT
-				v.append(val4);
+				v.push_back(val4);
 
 				// ACT / ASSERT
 				Assert::IsTrue(previous_buffer != v.data());
@@ -165,10 +165,10 @@ namespace micro_profiler
 				pod_vector<B> v1(3);
 				pod_vector<int> v2(10);
 
-				v1.append(val1);
-				v1.append(val2);
-				v1.append(val3);
-				v2.append(13);
+				v1.push_back(val1);
+				v1.push_back(val2);
+				v1.push_back(val3);
+				v2.push_back(13);
 
 				// ACT
 				pod_vector<B> copied1(v1);

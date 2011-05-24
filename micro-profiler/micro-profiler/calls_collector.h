@@ -58,12 +58,13 @@ namespace micro_profiler
 		thread_traces_map _call_traces;
 	};
 
-
 	struct calls_collector::acceptor
 	{
 		virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count) = 0;
 	};
 
+
+	// calls_collector - inline definitions
 	inline size_t calls_collector::trace_limit() const
 	{	return _trace_limit;	}
 

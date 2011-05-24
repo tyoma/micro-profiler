@@ -24,7 +24,20 @@
 #include <algorithm>
 
 using namespace std;
+using namespace micro_profiler;
 
+namespace
+{
+	const function_statistics &operator +=(function_statistics &lhs, const function_statistics &rhs)
+	{
+		lhs.times_called += rhs.times_called;
+		if (rhs.max_reentrance > lhs.max_reentrance)
+			lhs.max_reentrance = rhs.max_reentrance;
+		lhs.inclusive_time += rhs.inclusive_time;
+		lhs.exclusive_time += rhs.exclusive_time;
+		return lhs;
+	}
+}
 
 class statistics::dereferencing_wrapper
 {
@@ -93,7 +106,7 @@ bool statistics::update(const FunctionStatistics *data, unsigned int count)
 			new_insertions = true;
 		}
 		else
-			match->second.add(data->TimesCalled, data->MaxReentrance, data->InclusiveTime, data->ExclusiveTime);
+			match->second += function_statistics(data->TimesCalled, data->MaxReentrance, data->InclusiveTime, data->ExclusiveTime);
 	}
 
 	if (new_insertions)

@@ -1,5 +1,6 @@
 #include <primitives.h>
 
+using namespace std;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
@@ -90,6 +91,53 @@ namespace micro_profiler
 				Assert::IsTrue(5 == s2.max_reentrance);
 				Assert::IsTrue(7 == s2.inclusive_time);
 				Assert::IsTrue(21 == s2.exclusive_time);
+			}
+
+
+			[TestMethod]
+			void DetailedStatisticsAddChildCallFollowsAddCallRules()
+			{
+				// INIT
+				function_statistics_detailed s1, s2;
+
+				// ACT
+				s1.add_child_call((void *)1, 0, 1, 3);
+				s1.add_child_call((void *)1, 0, 2, 5);
+				s1.add_child_call((void *)2, 2, 3, 7);
+				s1.add_child_call((void *)3, 3, 4, 2);
+				s1.add_child_call((void *)3, 0, 5, 11);
+				s2.add_child_call((void *)20, 1, 6, 13);
+				s2.add_child_call((void *)30, 2, 7, 17);
+
+				// ASSERT
+				Assert::IsTrue(3 == s1.children_statistics.size());
+
+				Assert::IsTrue(2 == s1.children_statistics[(void *)1].times_called);
+				Assert::IsTrue(0 == s1.children_statistics[(void *)1].max_reentrance);
+				Assert::IsTrue(3 == s1.children_statistics[(void *)1].inclusive_time);
+				Assert::IsTrue(8 == s1.children_statistics[(void *)1].exclusive_time);
+
+				Assert::IsTrue(1 == s1.children_statistics[(void *)2].times_called);
+				Assert::IsTrue(2 == s1.children_statistics[(void *)2].max_reentrance);
+				Assert::IsTrue(0 == s1.children_statistics[(void *)2].inclusive_time);
+				Assert::IsTrue(7 == s1.children_statistics[(void *)2].exclusive_time);
+
+				Assert::IsTrue(2 == s1.children_statistics[(void *)3].times_called);
+				Assert::IsTrue(3 == s1.children_statistics[(void *)3].max_reentrance);
+				Assert::IsTrue(5 == s1.children_statistics[(void *)3].inclusive_time);
+				Assert::IsTrue(13 == s1.children_statistics[(void *)3].exclusive_time);
+
+				Assert::IsTrue(2 == s2.children_statistics.size());
+
+				Assert::IsTrue(1 == s2.children_statistics[(void *)20].times_called);
+				Assert::IsTrue(1 == s2.children_statistics[(void *)20].max_reentrance);
+				Assert::IsTrue(0 == s2.children_statistics[(void *)20].inclusive_time);
+				Assert::IsTrue(13 == s2.children_statistics[(void *)20].exclusive_time);
+
+				Assert::IsTrue(1 == s2.children_statistics[(void *)30].times_called);
+				Assert::IsTrue(2 == s2.children_statistics[(void *)30].max_reentrance);
+				Assert::IsTrue(0 == s2.children_statistics[(void *)30].inclusive_time);
+				Assert::IsTrue(17 == s2.children_statistics[(void *)30].exclusive_time);
 			}
 		};
 	}

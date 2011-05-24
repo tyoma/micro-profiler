@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <crtdefs.h>
+#include <hash_map>
 
 namespace micro_profiler
 {
@@ -45,13 +45,20 @@ namespace micro_profiler
 	{
 		function_statistics(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0);
 
+		void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
+		void add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
+
 		unsigned __int64 times_called;
 		unsigned __int64 max_reentrance;
 		__int64 inclusive_time;
 		__int64 exclusive_time;
+	};
 
-		void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
-		void add(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time);
+	struct function_statistics_detailed : function_statistics
+	{
+		stdext::hash_map<void *, function_statistics> children_statistics;
+
+		void add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
 	};
 
 
@@ -78,12 +85,8 @@ namespace micro_profiler
 		this->exclusive_time += exclusive_time;
 	}
 
-	inline void function_statistics::add(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time)
-	{
-		this->times_called += times_called;
-		if (max_reentrance > this->max_reentrance)
-			this->max_reentrance = max_reentrance;
-		this->inclusive_time += inclusive_time;
-		this->exclusive_time += exclusive_time;
-	}
+
+	// function_statistics_detailed - inline definitions
+	inline void function_statistics_detailed::add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
+	{	children_statistics[function].add_call(level, inclusive_time, exclusive_time);	}
 }

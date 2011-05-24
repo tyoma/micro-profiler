@@ -34,9 +34,11 @@ namespace micro_profiler
 		struct call_record_ex;
 		typedef stdext::hash_map<void *, int, address_compare> entrance_counter_map;
 
-		__int64 _profiler_latency;
+		const __int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
 		entrance_counter_map _entrance_counter;
+
+		const shadow_stack &operator =(const shadow_stack &rhs);
 
 	public:
 		shadow_stack(__int64 profiler_latency = 0);
@@ -60,9 +62,11 @@ namespace micro_profiler
 		typedef stdext::hash_map<void *, function_statistics, address_compare> statistics_container;
 		typedef std::map<unsigned int /*threadid*/, shadow_stack> stacks_container;
 
-		__int64 _profiler_latency;
+		const __int64 _profiler_latency;
 		statistics_container _statistics;
 		stacks_container _stacks;
+
+		const analyzer &operator =(const analyzer &rhs);
 
 	public:
 		typedef statistics_container::const_iterator const_iterator;

@@ -34,14 +34,14 @@ extern "C" __declspec(naked, dllexport) void _penter()
 	_asm 
 	{
 		pushad
-			rdtsc
-			push	edx
-			push	eax
-			push	dword ptr[esp + 40]
+		rdtsc
+		push	edx
+		push	eax
+		push	dword ptr[esp + 40]
 		lea	ecx, [micro_profiler::calls_collector::_instance]
 		call	micro_profiler::calls_collector::track
-			popad
-			ret
+		popad
+		ret
 	}
 }
 
@@ -50,14 +50,14 @@ extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
 	_asm 
 	{
 		pushad
-			rdtsc
-			push	edx
-			push	eax
-			push	0
-			lea	ecx, [micro_profiler::calls_collector::_instance]
+		rdtsc
+		push	edx
+		push	eax
+		push	0
+		lea	ecx, [micro_profiler::calls_collector::_instance]
 		call	micro_profiler::calls_collector::track
-			popad
-			ret
+		popad
+		ret
 	}
 }
 

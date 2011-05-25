@@ -429,10 +429,6 @@
 			</Filter>
 		</Filter>
 		<File
-			RelativePath=".\analyzer.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\analyzer.h"
 			>
 		</File>

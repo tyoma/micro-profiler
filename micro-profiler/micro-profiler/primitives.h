@@ -56,7 +56,7 @@ namespace micro_profiler
 
 	struct function_statistics_detailed : function_statistics
 	{
-		stdext::hash_map<void *, function_statistics> children_statistics;
+		stdext::hash_map<void *, function_statistics, address_compare> children_statistics;
 
 		void add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
 	};
@@ -84,6 +84,9 @@ namespace micro_profiler
 			this->inclusive_time += inclusive_time;
 		this->exclusive_time += exclusive_time;
 	}
+
+	inline void function_statistics::add_child_call(void * /*function*/, unsigned __int64 /*level*/, __int64 /*inclusive_time*/, __int64 /*exclusive_time*/)
+	{	}
 
 
 	// function_statistics_detailed - inline definitions

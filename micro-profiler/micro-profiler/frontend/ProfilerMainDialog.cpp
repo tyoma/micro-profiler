@@ -67,10 +67,10 @@ namespace
 	{	return print_time(1.0 * s.inclusive_time / g_ticks_resolution);	}
 
 	tstring print_avg_exclusive_call_time(const function_statistics_ex &s)
-	{	return print_time(1.0 * s.exclusive_time / g_ticks_resolution / s.times_called);	}
+	{	return print_time(s.times_called ? 1.0 * s.exclusive_time / g_ticks_resolution / s.times_called : 0);	}
 
 	tstring print_avg_inclusive_call_time(const function_statistics_ex &s)
-	{	return print_time(1.0 * s.inclusive_time / g_ticks_resolution / s.times_called);	}
+	{	return print_time(s.times_called ? 1.0 * s.inclusive_time / g_ticks_resolution / s.times_called : 0);	}
 
 	tstring print_max_reentrance(const function_statistics_ex &s)
 	{	return to_string(s.max_reentrance);	}
@@ -88,10 +88,10 @@ namespace
 	{	return lhs.inclusive_time < rhs.inclusive_time;	}
 
 	bool sort_by_avg_exclusive_call_time(const function_statistics_ex &lhs, const function_statistics_ex &rhs)
-	{	return lhs.exclusive_time / lhs.times_called < rhs.exclusive_time / rhs.times_called;	}
+	{	return (lhs.times_called ? lhs.exclusive_time / lhs.times_called : 0) < (rhs.times_called ? rhs.exclusive_time / rhs.times_called : 0);	}
 
 	bool sort_by_avg_inclusive_call_time(const function_statistics_ex &lhs, const function_statistics_ex &rhs)
-	{	return lhs.inclusive_time / lhs.times_called < rhs.inclusive_time / rhs.times_called;	}
+	{	return (lhs.times_called ? lhs.inclusive_time / lhs.times_called : 0) < (rhs.times_called ? rhs.inclusive_time / rhs.times_called : 0);	}
 
 	bool sort_by_max_reentrance(const function_statistics_ex &lhs, const function_statistics_ex &rhs)
 	{	return lhs.max_reentrance < rhs.max_reentrance;	}

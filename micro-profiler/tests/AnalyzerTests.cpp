@@ -89,6 +89,40 @@ namespace micro_profiler
 
 
 			[TestMethod]
+			void AnalyzerCollectsDetailedStatistics()
+			{
+				// INIT
+				analyzer a;
+				call_record trace[] = {
+					{	(void *)1, 1	},
+						{	(void *)11, 2	},
+						{	(void *)0, 3	},
+					{	(void *)0, 4	},
+					{	(void *)2, 5	},
+						{	(void *)21, 10	},
+						{	(void *)0, 11	},
+						{	(void *)22, 13	},
+						{	(void *)0, 17	},
+					{	(void *)0, 23	},
+				};
+
+				// ACT
+				a.accept_calls(1, trace, array_size(trace));
+
+				// ASSERT
+				map<void *, function_statistics_detailed> m(a.begin(), a.end());	// use map to ensure proper sorting
+
+				Assert::IsTrue(5 == m.size());
+
+				Assert::IsTrue(1 == m[(void *)1].children_statistics.size());
+				Assert::IsTrue(2 == m[(void *)2].children_statistics.size());
+				Assert::IsTrue(0 == m[(void *)11].children_statistics.size());
+				Assert::IsTrue(0 == m[(void *)21].children_statistics.size());
+				Assert::IsTrue(0 == m[(void *)22].children_statistics.size());
+			}
+
+
+			[TestMethod]
 			void ProfilerLatencyIsTakenIntoAccount()
 			{
 				// INIT

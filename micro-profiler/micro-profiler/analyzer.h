@@ -58,7 +58,7 @@ namespace micro_profiler
 
 	class analyzer : public calls_collector::acceptor
 	{
-		typedef stdext::hash_map<void *, function_statistics, address_compare> statistics_container;
+		typedef stdext::hash_map<void *, function_statistics_detailed, address_compare> statistics_container;
 		typedef stdext::hash_map<unsigned int /*threadid*/, shadow_stack> stacks_container;
 
 		const __int64 _profiler_latency;

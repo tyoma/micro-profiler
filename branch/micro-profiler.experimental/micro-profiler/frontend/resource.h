@@ -9,9 +9,9 @@
 #define IDI_ICON1                       202
 #define IDI_APPMAIN                     202
 #define IDC_FUNCTIONS_STATISTICS        203
-#define IDC_BUTTON1                     204
-#define IDC_BTN_CLEAR                   204
-#define IDC_BTN_COPY_ALL                205
+#define IDC_CHILDREN_STATISTICS         204
+#define IDC_BTN_CLEAR                   205
+#define IDC_BTN_COPY_ALL                206
 
 // Next default values for new objects
 // 

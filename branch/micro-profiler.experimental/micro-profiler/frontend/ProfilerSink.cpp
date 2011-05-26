@@ -49,13 +49,13 @@ STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address,
 {
 	_symbol_resolver.reset(new symbol_resolver(tstring(CString(executable)), load_address));
 	_statistics.reset(new statistics(*_symbol_resolver));
-   _dialog.reset(new ProfilerMainDialog(*_statistics, ticks_resolution));
+   _dialog.reset(new ProfilerMainDialog(*_statistics, *_symbol_resolver, ticks_resolution));
 
    _dialog->ShowWindow(SW_SHOW);
 	return S_OK;
 }
 
-STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatistics *statistics)
+STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
 {
 	_statistics->update(statistics, count);
 	_dialog->RefreshList(_statistics->size());

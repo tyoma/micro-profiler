@@ -26,6 +26,7 @@
 #include <atlbase.h>
 #include <process.h>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -66,6 +67,12 @@ namespace micro_profiler
 	namespace
 	{
 		const __int64 c_ticks_resolution(timestamp_precision());
+		FunctionStatistics fs2FS(const pair<void *, function_statistics> &s)
+		{
+			FunctionStatistics result = { reinterpret_cast<hyper>(s.first) - 5, s.second.times_called, s.second.max_reentrance, s.second.exclusive_time, s.second.inclusive_time };
+
+			return result;
+		}
 	}
 
 	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
@@ -97,7 +104,8 @@ namespace micro_profiler
 	void profiler_frontend::frontend_worker()
 	{
 		analyzer a(_collector.profiler_latency());
-		vector<FunctionStatistics> buffer;
+		vector<FunctionStatisticsDetailed> buffer;
+		vector<FunctionStatistics> children_buffer;
 		CComPtr<IProfilerFrontend> fe;
 		TCHAR image_path[MAX_PATH + 1] = { 0 };
 
@@ -121,13 +129,20 @@ namespace micro_profiler
 				}
 				else
 				{
+					analyzer::const_iterator i;
+					size_t total_children_count = 0, j = 0;
+
 					a.clear();
 					buffer.clear();
 					_collector.read_collected(a);
-					for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
+					for (i = a.begin(); i != a.end(); ++i)
+						total_children_count += i->second.children_statistics.size();
+					children_buffer.resize(total_children_count);
+					for (i = a.begin(), j = 0; i != a.end(); j += i->second.children_statistics.size(), ++i)
 					{
-						FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.max_reentrance, i->second.exclusive_time, i->second.inclusive_time };
+						FunctionStatisticsDetailed s = { fs2FS(*i), i->second.children_statistics.size(), &children_buffer[0] + j };
 
+						transform(i->second.children_statistics.begin(), i->second.children_statistics.end(), s.ChildrenStatistics, fs2FS);
 						buffer.push_back(s);
 					}
 					if (!buffer.empty())

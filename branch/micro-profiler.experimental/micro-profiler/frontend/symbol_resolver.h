@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "./../primitives.h"
+
 #include <atlbase.h>
 #include <string>
 #include <tchar.h>
@@ -30,12 +32,15 @@ typedef std::basic_string<TCHAR> tstring;
 
 class symbol_resolver
 {
+	typedef stdext::hash_map<void *, tstring, micro_profiler::address_compare> names_cache;
+
 	CComPtr<IDiaDataSource> _data_source;
 	CComPtr<IDiaSession> _session;
+	mutable names_cache _cached_names;
 
 public:
 	symbol_resolver(const tstring &image_path, unsigned __int64 load_address);
 	~symbol_resolver();
 
-	tstring symbol_name_by_va(unsigned __int64 address) const;
+	tstring symbol_name_by_va(void *address) const;
 };

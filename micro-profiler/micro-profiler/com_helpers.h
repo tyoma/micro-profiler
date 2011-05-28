@@ -45,8 +45,7 @@ namespace micro_profiler
 		children_buffer.resize(i + from.second.children_statistics.size());
 		to.ChildrenCount = from.second.children_statistics.size();
 		to.ChildrenStatistics = to.ChildrenCount ? &children_buffer[i] : 0;
-		for (stdext::hash_map<void *, function_statistics, address_compare>::const_iterator j = from.second.children_statistics.begin();
-			i != children_buffer.size(); ++i, ++j)
+		for (statistics_map::const_iterator j = from.second.children_statistics.begin(); i != children_buffer.size(); ++i, ++j)
 			copy(*j, children_buffer[i]);
 		copy(from, to.Statistics);
 	}

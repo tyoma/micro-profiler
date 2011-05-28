@@ -23,7 +23,6 @@
 #include "calls_collector.h"
 #include "primitives.h"
 
-#include <hash_map>
 #include <vector>
 
 namespace micro_profiler
@@ -58,17 +57,16 @@ namespace micro_profiler
 
 	class analyzer : public calls_collector::acceptor
 	{
-		typedef stdext::hash_map<void *, function_statistics_detailed, address_compare> statistics_container;
 		typedef stdext::hash_map<unsigned int /*threadid*/, shadow_stack> stacks_container;
 
 		const __int64 _profiler_latency;
-		statistics_container _statistics;
+		detailed_statistics_map _statistics;
 		stacks_container _stacks;
 
 		const analyzer &operator =(const analyzer &rhs);
 
 	public:
-		typedef statistics_container::const_iterator const_iterator;
+		typedef detailed_statistics_map::const_iterator const_iterator;
 
 	public:
 		analyzer(__int64 profiler_latency = 0);

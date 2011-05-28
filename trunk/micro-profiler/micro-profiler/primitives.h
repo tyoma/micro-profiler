@@ -32,6 +32,13 @@ namespace micro_profiler
 	};
 #pragma pack(pop)
 
+	struct address_compare;
+	struct function_statistics;
+	struct function_statistics_detailed;
+
+	typedef stdext::hash_map<void * /*address*/, function_statistics, address_compare> statistics_map;
+	typedef stdext::hash_map<void * /*address*/, function_statistics_detailed, address_compare> detailed_statistics_map;
+
 	struct address_compare
 	{
 		static const size_t bucket_size = 4;
@@ -56,7 +63,7 @@ namespace micro_profiler
 
 	struct function_statistics_detailed : function_statistics
 	{
-		stdext::hash_map<void *, function_statistics, address_compare> children_statistics;
+		statistics_map children_statistics;
 
 		void add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
 	};

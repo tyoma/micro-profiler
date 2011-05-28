@@ -190,6 +190,7 @@
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
     <ClInclude Include="calls_collector.h" />
+    <ClInclude Include="com_helpers.h" />
     <ClInclude Include="entry.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />

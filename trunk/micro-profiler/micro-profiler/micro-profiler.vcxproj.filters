@@ -60,6 +60,7 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="primitives.h" />
+    <ClInclude Include="com_helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />

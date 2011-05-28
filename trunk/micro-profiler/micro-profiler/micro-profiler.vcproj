@@ -454,6 +454,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\com_helpers.h"
+			>
+		</File>
+		<File
 			RelativePath=".\entry.cpp"
 			>
 			<FileConfiguration

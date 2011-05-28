@@ -316,7 +316,7 @@ namespace micro_profiler
 					empty_call();
 				sleep_20();
 				profiler_frontend fe(&factory3);
-				fe_stat_updated.wait();	// such a timeout MUST be sufficient enough
+				fe_stat_updated.wait();
 
 				// ASERT
 				Assert::IsTrue(2 == fe_update_statistics.size());

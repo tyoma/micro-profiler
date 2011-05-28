@@ -18,11 +18,10 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-import "oaidl.idl";
 import "ocidl.idl";
 
 typedef [	public	]
-struct
+struct FunctionStatisticsTag
 {
 	hyper FunctionAddress;
 	hyper TimesCalled;
@@ -31,23 +30,23 @@ struct
 	hyper InclusiveTime;
 } FunctionStatistics;
 
-[	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), nonextensible, pointer_default(unique)	]
+typedef [	public	]
+struct FunctionStatisticsDetailedTag
+{
+	FunctionStatistics Statistics;
+	long ChildrenCount;
+	[size_is(ChildrenCount)] FunctionStatistics *ChildrenStatistics;
+} FunctionStatisticsDetailed;
+
+[	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), pointer_default(unique)	]
 interface IProfilerFrontend : IUnknown
 {
 	HRESULT Initialize([in] BSTR executable, [in] hyper load_address, [in] hyper ticks_resolution);
 	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] FunctionStatistics *statistics);
 };
 
-[	uuid(425E45FE-FD05-49C0-A505-93E88651EC36), version(1.0), helpstring("MicroProfiler Frontend 1.0 Type Library")	]
-library MicroProfilerFrontendLib
+[ uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3) ]
+coclass ProfilerFrontend
 {
-	importlib("stdole2.tlb");
-
-	struct FunctionStatistics;
-
-	[ uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3) ]
-	coclass ProfilerFrontend
-	{
-		[default] interface IProfilerFrontend;
-	};
+	[default] interface IProfilerFrontend;
 };

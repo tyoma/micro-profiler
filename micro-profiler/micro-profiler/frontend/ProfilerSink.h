@@ -31,7 +31,9 @@ class ProfilerMainDialog;
 class statistics;
 class symbol_resolver;
 
-class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &__uuidof(ProfilerFrontend)>
+extern "C" CLSID CLSID_ProfilerFrontend;
+
+class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
 {
 	std::auto_ptr<symbol_resolver> _symbol_resolver;
 	std::auto_ptr<statistics> _statistics;
@@ -53,4 +55,4 @@ public:
 	STDMETHODIMP UpdateStatistics(long count, FunctionStatistics *statistics);
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(ProfilerFrontend), ProfilerFrontend);
+OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, ProfilerFrontend);

@@ -61,6 +61,8 @@ extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
 	}
 }
 
+extern "C" CLSID CLSID_ProfilerFrontend;
+
 namespace micro_profiler
 {
 	namespace
@@ -69,7 +71,7 @@ namespace micro_profiler
 	}
 
 	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
-	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
+	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _collector(*calls_collector::instance()), _factory(factory),

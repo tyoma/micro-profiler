@@ -1,6 +1,7 @@
 #include <com_helpers.h>
 
 #include "Helpers.h"
+#include <algorithm>
 
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 using namespace std;
@@ -9,6 +10,12 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs)
+			{	return lhs.FunctionAddress < rhs.FunctionAddress; }
+		}
+
 		[TestClass]
 		public ref class COMHelpersTests
 		{
@@ -146,6 +153,7 @@ namespace micro_profiler
 
 				Assert::IsTrue(2 == ms2.ChildrenCount);
 				Assert::IsTrue(&children_buffer[0] == ms2.ChildrenStatistics);
+				sort(ms2.ChildrenStatistics, ms2.ChildrenStatistics + ms2.ChildrenCount, &less_fs);
 				Assert::IsTrue(123 == ms2.ChildrenStatistics[0].FunctionAddress);
 				Assert::IsTrue(10 == ms2.ChildrenStatistics[0].TimesCalled);
 				Assert::IsTrue(20 == ms2.ChildrenStatistics[0].MaxReentrance);
@@ -159,6 +167,7 @@ namespace micro_profiler
 
 				Assert::IsTrue(3 == ms3.ChildrenCount);
 				Assert::IsTrue(&children_buffer[2] == ms3.ChildrenStatistics);
+				sort(ms3.ChildrenStatistics, ms3.ChildrenStatistics + ms3.ChildrenCount, &less_fs);
 				Assert::IsTrue(345 == ms3.ChildrenStatistics[0].FunctionAddress);
 				Assert::IsTrue(10 == ms3.ChildrenStatistics[0].TimesCalled);
 				Assert::IsTrue(20 == ms3.ChildrenStatistics[0].MaxReentrance);

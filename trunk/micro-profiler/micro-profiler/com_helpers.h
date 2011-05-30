@@ -23,10 +23,18 @@
 #include "primitives.h"
 #include "_generated\microprofilerfrontend_i.h"
 
+#include <numeric>
+
 namespace micro_profiler
 {
-	template <typename T1, typename T2>
-	inline void copy(const std::pair<T1, T2> &from, FunctionStatistics &to) throw()
+	struct children_count_accumulator
+	{
+		size_t operator ()(size_t acc, const detailed_statistics_map::value_type &s) throw()
+		{	return acc + s.second.children_statistics.size();	}
+	};
+
+
+	inline void copy(const statistics_map::value_type &from, FunctionStatistics &to) throw()
 	{
 		to.FunctionAddress = reinterpret_cast<hyper>(from.first);
 		to.TimesCalled = from.second.times_called;
@@ -35,7 +43,7 @@ namespace micro_profiler
 		to.ExclusiveTime = from.second.exclusive_time;
 	}
 
-	inline void copy(const std::pair<const void *, function_statistics_detailed> &from, FunctionStatisticsDetailed &to,
+	inline void copy(const detailed_statistics_map::value_type &from, FunctionStatisticsDetailed &to,
 		std::vector<FunctionStatistics> &children_buffer)
 	{
 		size_t i = children_buffer.size();
@@ -49,4 +57,7 @@ namespace micro_profiler
 			copy(*j, children_buffer[i]);
 		copy(from, to.Statistics);
 	}
+
+	inline size_t total_children_count(const detailed_statistics_map &statistics) throw()
+	{	return std::accumulate(statistics.begin(), statistics.end(), static_cast<size_t>(0), children_count_accumulator());	}
 }

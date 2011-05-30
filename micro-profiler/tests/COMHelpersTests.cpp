@@ -34,9 +34,9 @@ namespace micro_profiler
 				s3.exclusive_time = 31;
 
 				// ACT
-				copy(make_pair((const void *)123, s1), ms1);
-				copy(make_pair((const void *)234, s2), ms2);
-				copy(make_pair((const void *)345, s3), ms3);
+				copy(make_pair((void *)123, s1), ms1);
+				copy(make_pair((void *)234, s2), ms2);
+				copy(make_pair((void *)345, s3), ms3);
 
 				// ASSERT
 				Assert::IsTrue(123 == ms1.FunctionAddress);
@@ -78,8 +78,8 @@ namespace micro_profiler
 				s2.exclusive_time = 7;
 
 				// ACT
-				copy(make_pair((const void *)1123, s1), ms1, dummy_children_buffer);
-				copy(make_pair((const void *)2234, s2), ms2, dummy_children_buffer);
+				copy(make_pair((void *)1123, s1), ms1, dummy_children_buffer);
+				copy(make_pair((void *)2234, s2), ms2, dummy_children_buffer);
 
 				// ASSERT
 				Assert::IsTrue(1123 == ms1.Statistics.FunctionAddress);
@@ -109,19 +109,19 @@ namespace micro_profiler
 				s2.children_statistics[(void *)345] = function_statistics(12, 22, 32, 42);
 
 				// ACT / ASSERT
-				ASSERT_THROWS(copy(make_pair((const void *)1123, s1), ms, children_buffer), invalid_argument);
+				ASSERT_THROWS(copy(make_pair((void *)1123, s1), ms, children_buffer), invalid_argument);
 
 				// INIT
 				children_buffer.reserve(1);
 
 				// ACT / ASSERT
-				ASSERT_THROWS(copy(make_pair((const void *)1123, s2), ms, children_buffer), invalid_argument);
+				ASSERT_THROWS(copy(make_pair((void *)1123, s2), ms, children_buffer), invalid_argument);
 
 				// INIT
 				children_buffer.resize(1);
 
 				// ACT / ASSERT
-				ASSERT_THROWS(copy(make_pair((const void *)1123, s1), ms, children_buffer), invalid_argument);
+				ASSERT_THROWS(copy(make_pair((void *)1123, s1), ms, children_buffer), invalid_argument);
 			}
 
 
@@ -141,9 +141,9 @@ namespace micro_profiler
 				s3.children_statistics[(void *)567] = function_statistics(12, 22, 32, 42);
 
 				// ACT
-				copy(make_pair((const void *)1123, s0), ms0, children_buffer);
-				copy(make_pair((const void *)2234, s2), ms2, children_buffer);
-				copy(make_pair((const void *)3345, s3), ms3, children_buffer);
+				copy(make_pair((void *)1123, s0), ms0, children_buffer);
+				copy(make_pair((void *)2234, s2), ms2, children_buffer);
+				copy(make_pair((void *)3345, s3), ms3, children_buffer);
 
 				// ASSERT
 				Assert::IsTrue(5 == children_buffer.size());
@@ -183,6 +183,36 @@ namespace micro_profiler
 				Assert::IsTrue(22 == ms3.ChildrenStatistics[2].MaxReentrance);
 				Assert::IsTrue(32 == ms3.ChildrenStatistics[2].InclusiveTime);
 				Assert::IsTrue(42 == ms3.ChildrenStatistics[2].ExclusiveTime);
+			}
+
+
+			[TestMethod]
+			void CalculateTotalChildrenStatisticsCount()
+			{
+				// INIT
+				detailed_statistics_map m0, m1, m2;
+
+				m0[(void *)1];
+
+				m1[(void *)1].children_statistics[(void *)123];
+				m1[(void *)1].children_statistics[(void *)234];
+
+				m2[(void *)1].children_statistics[(void *)123];
+				m2[(void *)1].children_statistics[(void *)234];
+				m2[(void *)2];
+				m2[(void *)3].children_statistics[(void *)123];
+				m2[(void *)3].children_statistics[(void *)234];
+				m2[(void *)3].children_statistics[(void *)345];
+
+				// ACT
+				size_t count0 = total_children_count(m0);
+				size_t count1 = total_children_count(m1);
+				size_t count2 = total_children_count(m2);
+
+				// ASSERT
+				Assert::IsTrue(0 == count0);
+				Assert::IsTrue(2 == count1);
+				Assert::IsTrue(5 == count2);
 			}
 		};
 	}

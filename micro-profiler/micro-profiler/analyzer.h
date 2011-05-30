@@ -30,7 +30,7 @@ namespace micro_profiler
 	class shadow_stack
 	{
 		struct call_record_ex;
-		typedef stdext::hash_map<void *, int, address_compare> entrance_counter_map;
+		typedef stdext::hash_map<const void *, int, address_compare> entrance_counter_map;
 
 		const __int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
@@ -96,7 +96,7 @@ namespace micro_profiler
 			else
 			{
 				const call_record_ex &current = _stack.back();
-				void *callee = current.callee;
+				const void *callee = current.callee;
 				unsigned __int64 level = --_entrance_counter[callee];
 				__int64 inclusive_time_observed = i->timestamp - current.timestamp;
 				__int64 inclusive_time = inclusive_time_observed - _profiler_latency;
@@ -109,7 +109,7 @@ namespace micro_profiler
 					call_record_ex &parent = _stack.back();
 
 					parent.child_time += inclusive_time_observed + _profiler_latency;
-					statistics[parent.callee].add_child_call(callee, 0, inclusive_time, exclusive_time);
+					add_child_statistics(statistics[parent.callee], callee, 0, inclusive_time, exclusive_time);
 				}
 			}
 	}

@@ -27,6 +27,8 @@
 
 namespace micro_profiler
 {
+	const hyper c_call_offset = 5;
+
 	struct children_count_accumulator
 	{
 		size_t operator ()(size_t acc, const detailed_statistics_map::value_type &s) throw()
@@ -34,9 +36,10 @@ namespace micro_profiler
 	};
 
 
-	inline void copy(const statistics_map::value_type &from, FunctionStatistics &to) throw()
+	template <typename AddrType, typename StatisticsType>
+	inline void copy(const std::pair<AddrType, StatisticsType> &from, FunctionStatistics &to) throw()
 	{
-		to.FunctionAddress = reinterpret_cast<hyper>(from.first);
+		to.FunctionAddress = reinterpret_cast<hyper>(from.first) - c_call_offset;
 		to.TimesCalled = from.second.times_called;
 		to.MaxReentrance = from.second.max_reentrance;
 		to.InclusiveTime = from.second.inclusive_time;

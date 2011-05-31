@@ -37,24 +37,24 @@ namespace micro_profiler
 				s3.exclusive_time = 31;
 
 				// ACT
-				copy(make_pair((void *)123, s1), ms1);
-				copy(make_pair((void *)234, s2), ms2);
-				copy(make_pair((void *)345, s3), ms3);
+				copy(make_pair((const void *)123, s1), ms1);
+				copy(make_pair((const void *)234, s2), ms2);
+				copy(make_pair((const void *)345, s3), ms3);
 
 				// ASSERT
-				Assert::IsTrue(123 == ms1.FunctionAddress);
+				Assert::IsTrue(118 == ms1.FunctionAddress);
 				Assert::IsTrue(1 == ms1.TimesCalled);
 				Assert::IsTrue(2 == ms1.MaxReentrance);
 				Assert::IsTrue(3 == ms1.InclusiveTime);
 				Assert::IsTrue(5 == ms1.ExclusiveTime);
 
-				Assert::IsTrue(234 == ms2.FunctionAddress);
+				Assert::IsTrue(229 == ms2.FunctionAddress);
 				Assert::IsTrue(7 == ms2.TimesCalled);
 				Assert::IsTrue(11 == ms2.MaxReentrance);
 				Assert::IsTrue(13 == ms2.InclusiveTime);
 				Assert::IsTrue(17 == ms2.ExclusiveTime);
 
-				Assert::IsTrue(345 == ms3.FunctionAddress);
+				Assert::IsTrue(340 == ms3.FunctionAddress);
 				Assert::IsTrue(19 == ms3.TimesCalled);
 				Assert::IsTrue(23 == ms3.MaxReentrance);
 				Assert::IsTrue(29 == ms3.InclusiveTime);
@@ -85,13 +85,13 @@ namespace micro_profiler
 				copy(make_pair((void *)2234, s2), ms2, dummy_children_buffer);
 
 				// ASSERT
-				Assert::IsTrue(1123 == ms1.Statistics.FunctionAddress);
+				Assert::IsTrue(1118 == ms1.Statistics.FunctionAddress);
 				Assert::IsTrue(19 == ms1.Statistics.TimesCalled);
 				Assert::IsTrue(23 == ms1.Statistics.MaxReentrance);
 				Assert::IsTrue(29 == ms1.Statistics.InclusiveTime);
 				Assert::IsTrue(31 == ms1.Statistics.ExclusiveTime);
 
-				Assert::IsTrue(2234 == ms2.Statistics.FunctionAddress);
+				Assert::IsTrue(2229 == ms2.Statistics.FunctionAddress);
 				Assert::IsTrue(1 == ms2.Statistics.TimesCalled);
 				Assert::IsTrue(3 == ms2.Statistics.MaxReentrance);
 				Assert::IsTrue(5 == ms2.Statistics.InclusiveTime);
@@ -157,12 +157,12 @@ namespace micro_profiler
 				Assert::IsTrue(2 == ms2.ChildrenCount);
 				Assert::IsTrue(&children_buffer[0] == ms2.ChildrenStatistics);
 				sort(ms2.ChildrenStatistics, ms2.ChildrenStatistics + ms2.ChildrenCount, &less_fs);
-				Assert::IsTrue(123 == ms2.ChildrenStatistics[0].FunctionAddress);
+				Assert::IsTrue(118 == ms2.ChildrenStatistics[0].FunctionAddress);
 				Assert::IsTrue(10 == ms2.ChildrenStatistics[0].TimesCalled);
 				Assert::IsTrue(20 == ms2.ChildrenStatistics[0].MaxReentrance);
 				Assert::IsTrue(30 == ms2.ChildrenStatistics[0].InclusiveTime);
 				Assert::IsTrue(40 == ms2.ChildrenStatistics[0].ExclusiveTime);
-				Assert::IsTrue(234 == ms2.ChildrenStatistics[1].FunctionAddress);
+				Assert::IsTrue(229 == ms2.ChildrenStatistics[1].FunctionAddress);
 				Assert::IsTrue(11 == ms2.ChildrenStatistics[1].TimesCalled);
 				Assert::IsTrue(21 == ms2.ChildrenStatistics[1].MaxReentrance);
 				Assert::IsTrue(31 == ms2.ChildrenStatistics[1].InclusiveTime);
@@ -171,17 +171,17 @@ namespace micro_profiler
 				Assert::IsTrue(3 == ms3.ChildrenCount);
 				Assert::IsTrue(&children_buffer[2] == ms3.ChildrenStatistics);
 				sort(ms3.ChildrenStatistics, ms3.ChildrenStatistics + ms3.ChildrenCount, &less_fs);
-				Assert::IsTrue(345 == ms3.ChildrenStatistics[0].FunctionAddress);
+				Assert::IsTrue(340 == ms3.ChildrenStatistics[0].FunctionAddress);
 				Assert::IsTrue(10 == ms3.ChildrenStatistics[0].TimesCalled);
 				Assert::IsTrue(20 == ms3.ChildrenStatistics[0].MaxReentrance);
 				Assert::IsTrue(30 == ms3.ChildrenStatistics[0].InclusiveTime);
 				Assert::IsTrue(40 == ms3.ChildrenStatistics[0].ExclusiveTime);
-				Assert::IsTrue(456 == ms3.ChildrenStatistics[1].FunctionAddress);
+				Assert::IsTrue(451 == ms3.ChildrenStatistics[1].FunctionAddress);
 				Assert::IsTrue(11 == ms3.ChildrenStatistics[1].TimesCalled);
 				Assert::IsTrue(21 == ms3.ChildrenStatistics[1].MaxReentrance);
 				Assert::IsTrue(31 == ms3.ChildrenStatistics[1].InclusiveTime);
 				Assert::IsTrue(41 == ms3.ChildrenStatistics[1].ExclusiveTime);
-				Assert::IsTrue(567 == ms3.ChildrenStatistics[2].FunctionAddress);
+				Assert::IsTrue(562 == ms3.ChildrenStatistics[2].FunctionAddress);
 				Assert::IsTrue(12 == ms3.ChildrenStatistics[2].TimesCalled);
 				Assert::IsTrue(22 == ms3.ChildrenStatistics[2].MaxReentrance);
 				Assert::IsTrue(32 == ms3.ChildrenStatistics[2].InclusiveTime);
@@ -247,27 +247,27 @@ namespace micro_profiler
 				vector<FunctionStatistics> children_buffer1, children_buffer2(2);
 				detailed_statistics_map m1, m2;
 
-				m1[(void *)1].times_called = 2;
-				m1[(void *)1].max_reentrance = 3;
-				m1[(void *)1].inclusive_time = 5;
-				m1[(void *)1].exclusive_time = 7;
-				m1[(void *)11].times_called = 13;
-				m1[(void *)11].max_reentrance = 17;
-				m1[(void *)11].inclusive_time = 19;
-				m1[(void *)11].exclusive_time = 23;
+				m1[(void *)6].times_called = 2;
+				m1[(void *)6].max_reentrance = 3;
+				m1[(void *)6].inclusive_time = 5;
+				m1[(void *)6].exclusive_time = 7;
+				m1[(void *)16].times_called = 13;
+				m1[(void *)16].max_reentrance = 17;
+				m1[(void *)16].inclusive_time = 19;
+				m1[(void *)16].exclusive_time = 23;
 
-				m2[(void *)29].times_called = 31;
-				m2[(void *)29].max_reentrance = 37;
-				m2[(void *)29].inclusive_time = 41;
-				m2[(void *)29].exclusive_time = 43;
-				m2[(void *)47].times_called = 48;
-				m2[(void *)47].max_reentrance = 49;
-				m2[(void *)47].inclusive_time = 50;
-				m2[(void *)47].exclusive_time = 51;
-				m2[(void *)52].times_called = 53;
-				m2[(void *)52].max_reentrance = 54;
-				m2[(void *)52].inclusive_time = 55;
-				m2[(void *)52].exclusive_time = 56;
+				m2[(void *)34].times_called = 31;
+				m2[(void *)34].max_reentrance = 37;
+				m2[(void *)34].inclusive_time = 41;
+				m2[(void *)34].exclusive_time = 43;
+				m2[(void *)52].times_called = 48;
+				m2[(void *)52].max_reentrance = 49;
+				m2[(void *)52].inclusive_time = 50;
+				m2[(void *)52].exclusive_time = 51;
+				m2[(void *)57].times_called = 53;
+				m2[(void *)57].max_reentrance = 54;
+				m2[(void *)57].inclusive_time = 55;
+				m2[(void *)57].exclusive_time = 56;
 
 				// ACT
 				copy(m1, buffer1, children_buffer1);

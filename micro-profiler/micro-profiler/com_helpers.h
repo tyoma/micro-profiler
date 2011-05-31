@@ -47,12 +47,13 @@ namespace micro_profiler
 		std::vector<FunctionStatistics> &children_buffer)
 	{
 		size_t i = children_buffer.size();
+		size_t children_count = from.second.children_statistics.size();
 
-		if (from.second.children_statistics.size() > children_buffer.capacity() - i)
+		if (children_buffer.capacity() < i + children_count)
 			throw std::invalid_argument("");
-		children_buffer.resize(i + from.second.children_statistics.size());
-		to.ChildrenCount = from.second.children_statistics.size();
-		to.ChildrenStatistics = to.ChildrenCount ? &children_buffer[i] : 0;
+		children_buffer.resize(i + children_count);
+		to.ChildrenCount = children_count;
+		to.ChildrenStatistics = children_count ? &children_buffer[i] : 0;
 		for (statistics_map::const_iterator j = from.second.children_statistics.begin(); i != children_buffer.size(); ++i, ++j)
 			copy(*j, children_buffer[i]);
 		copy(from, to.Statistics);
@@ -60,4 +61,17 @@ namespace micro_profiler
 
 	inline size_t total_children_count(const detailed_statistics_map &statistics) throw()
 	{	return std::accumulate(statistics.begin(), statistics.end(), static_cast<size_t>(0), children_count_accumulator());	}
+
+	inline void copy(const detailed_statistics_map &from, std::vector<FunctionStatisticsDetailed> &to,
+		std::vector<FunctionStatistics> &children_buffer)
+	{
+		detailed_statistics_map::const_iterator i;
+		long j;
+
+		to.resize(from.size());
+		children_buffer.clear();
+		children_buffer.reserve(total_children_count(from));
+		for (i = from.begin(), j = 0; i != from.end(); ++i, ++j)
+			copy(*i, to[j], children_buffer);
+	}
 }

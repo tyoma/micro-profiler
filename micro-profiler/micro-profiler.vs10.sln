@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler-stub\micro-profiler-stub.vcxproj", "{F90FDFD7-22AD-C6F4-F562-7A17BB5D69E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,6 +33,10 @@ Global
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Debug|Win32.Build.0 = Debug|Win32
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.ActiveCfg = Release|Win32
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.Build.0 = Release|Win32
+		{F90FDFD7-22AD-C6F4-F562-7A17BB5D69E3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F90FDFD7-22AD-C6F4-F562-7A17BB5D69E3}.Debug|Win32.Build.0 = Debug|Win32
+		{F90FDFD7-22AD-C6F4-F562-7A17BB5D69E3}.Release|Win32.ActiveCfg = Release|Win32
+		{F90FDFD7-22AD-C6F4-F562-7A17BB5D69E3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -92,21 +92,22 @@ void statistics::sort(sort_predicate predicate, bool ascending)
 	_predicate = p;
 }
 
-bool statistics::update(const FunctionStatistics *data, unsigned int count)
+bool statistics::update(const FunctionStatisticsDetailed *data, unsigned int count)
 {
 	bool new_insertions(false);
 
 	for (; count; --count, ++data)
 	{
-		statistics_map::iterator match(_statistics.find(data->FunctionAddress));
+		const FunctionStatistics &s = data->Statistics;
+		statistics_map::iterator match(_statistics.find(s.FunctionAddress));
 
 		if (match == _statistics.end())
 		{
-			match = _statistics.insert(make_pair(data->FunctionAddress, function_statistics_ex(*data, _symbol_resolver))).first;
+			match = _statistics.insert(make_pair(s.FunctionAddress, function_statistics_ex(s, _symbol_resolver))).first;
 			new_insertions = true;
 		}
 		else
-			match->second += function_statistics(data->TimesCalled, data->MaxReentrance, data->InclusiveTime, data->ExclusiveTime);
+			match->second += function_statistics(s.TimesCalled, s.MaxReentrance, s.InclusiveTime, s.ExclusiveTime);
 	}
 
 	if (new_insertions)

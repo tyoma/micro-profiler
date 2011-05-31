@@ -55,7 +55,7 @@ STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address,
 	return S_OK;
 }
 
-STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatistics *statistics)
+STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
 {
 	_statistics->update(statistics, count);
 	_dialog->RefreshList(_statistics->size());

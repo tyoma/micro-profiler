@@ -66,5 +66,5 @@ public:
 
 	void clear();
 	void sort(sort_predicate predicate, bool ascending);
-	bool update(const FunctionStatistics *data, unsigned int count);
+	bool update(const FunctionStatisticsDetailed *data, unsigned int count);
 };

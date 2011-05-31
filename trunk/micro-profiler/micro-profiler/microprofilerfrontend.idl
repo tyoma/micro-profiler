@@ -42,7 +42,7 @@ struct FunctionStatisticsDetailedTag
 interface IProfilerFrontend : IUnknown
 {
 	HRESULT Initialize([in] BSTR executable, [in] hyper load_address, [in] hyper ticks_resolution);
-	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] FunctionStatistics *statistics);
+	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] FunctionStatisticsDetailed *statistics);
 };
 
 [ uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3) ]

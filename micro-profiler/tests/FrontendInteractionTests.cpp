@@ -36,7 +36,7 @@ namespace micro_profiler
 			hyper fe_ticks_resolution;
 			waitable fe_initialized;
 			size_t fe_raise_updated_limit;
-			vector<FunctionStatistics> fe_update_statistics;
+			vector<FunctionStatisticsDetailed> fe_update_statistics;
 			unsigned fe_update_call_times;
 			waitable fe_stat_updated;
 			hyper fe_stop_call;
@@ -79,13 +79,13 @@ namespace micro_profiler
 					return S_OK;
 				}
 
-				STDMETHODIMP UpdateStatistics(long count, FunctionStatistics *statistics)
+				STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
 				{
 					fe_update_statistics.insert(fe_update_statistics.end(), statistics, statistics + count);
 					if (fe_raise_updated_limit && fe_update_statistics.size() >= fe_raise_updated_limit)
 						fe_stat_updated.set();
 					while (count--)
-						if (statistics++->FunctionAddress == fe_stop_call)
+						if (statistics++->Statistics.FunctionAddress == fe_stop_call)
 							fe_stat_updated.set();
 					return S_OK;
 				}
@@ -252,7 +252,7 @@ namespace micro_profiler
 				// ASERT
 				Assert::AreEqual(1u, fe_update_statistics.size());
 
-				sleep_20_call = *fe_update_statistics.begin();
+				sleep_20_call = fe_update_statistics[0].Statistics;
 
 				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_20));
 				Assert::IsTrue(sleep_20_call.TimesCalled == 1);
@@ -270,7 +270,7 @@ namespace micro_profiler
 				// ASERT
 				Assert::IsTrue(1 == fe_update_statistics.size());
 
-				sleep_n_call = *fe_update_statistics.begin();
+				sleep_n_call = fe_update_statistics[0].Statistics;
 
 				Assert::IsTrue(sleep_n_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_n));
 				Assert::IsTrue(sleep_n_call.TimesCalled == 1);
@@ -295,7 +295,7 @@ namespace micro_profiler
 				// ASERT
 				Assert::IsTrue(1 == fe_update_statistics.size());
 
-				FunctionStatistics recursive_call = *fe_update_statistics.begin();
+				FunctionStatistics recursive_call = fe_update_statistics[0].Statistics;
 
 				Assert::IsTrue(recursive_call.FunctionAddress == reinterpret_cast<hyper>(&controlled_recursion));
 				Assert::IsTrue(recursive_call.TimesCalled == 12);
@@ -321,7 +321,7 @@ namespace micro_profiler
 				// ASERT
 				Assert::IsTrue(2 == fe_update_statistics.size());
 
-				FunctionStatistics stat = fe_update_statistics[0].FunctionAddress == reinterpret_cast<hyper>(&empty_call) ? fe_update_statistics[0] : fe_update_statistics[1];
+				FunctionStatistics stat = fe_update_statistics[0].Statistics.FunctionAddress == reinterpret_cast<hyper>(&empty_call) ? fe_update_statistics[0].Statistics : fe_update_statistics[1].Statistics;
 
 				Assert::IsTrue(stat.FunctionAddress == reinterpret_cast<hyper>(&empty_call));
 				Assert::IsTrue(stat.TimesCalled == check_amount);

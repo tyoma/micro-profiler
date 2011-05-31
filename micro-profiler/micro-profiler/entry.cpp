@@ -99,7 +99,7 @@ namespace micro_profiler
 	void profiler_frontend::frontend_worker()
 	{
 		analyzer a(_collector.profiler_latency());
-		vector<FunctionStatistics> buffer;
+		vector<FunctionStatisticsDetailed> buffer;
 		CComPtr<IProfilerFrontend> fe;
 		TCHAR image_path[MAX_PATH + 1] = { 0 };
 
@@ -129,8 +129,9 @@ namespace micro_profiler
 					for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
 					{
 						FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.max_reentrance, i->second.exclusive_time, i->second.inclusive_time };
+						FunctionStatisticsDetailed sd = { s, 0, 0 };
 
-						buffer.push_back(s);
+						buffer.push_back(sd);
 					}
 					if (!buffer.empty())
 						fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);

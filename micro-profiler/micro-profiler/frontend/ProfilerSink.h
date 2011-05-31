@@ -52,7 +52,7 @@ public:
 	void FinalRelease();
 
 	STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
-	STDMETHODIMP UpdateStatistics(long count, FunctionStatistics *statistics);
+	STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
 };
 
 OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, ProfilerFrontend);

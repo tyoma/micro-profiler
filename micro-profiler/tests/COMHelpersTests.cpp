@@ -208,9 +208,9 @@ namespace micro_profiler
 				m2[(void *)3].children_statistics[(void *)345];
 
 				// ACT
-				size_t count0 = total_children_count(m0);
-				size_t count1 = total_children_count(m1);
-				size_t count2 = total_children_count(m2);
+				size_t count0 = total_children_count(m0.begin(), m0.end());
+				size_t count1 = total_children_count(m1.begin(), m1.end());
+				size_t count2 = total_children_count(m2.begin(), m2.end());
 
 				// ASSERT
 				Assert::IsTrue(0 == count0);
@@ -228,8 +228,8 @@ namespace micro_profiler
 				detailed_statistics_map m;
 
 				// ACT
-				copy(m, buffer1, children_buffer1);
-				copy(m, buffer2, children_buffer2);
+				copy(m.begin(), m.end(), buffer1, children_buffer1);
+				copy(m.begin(), m.end(), buffer2, children_buffer2);
 
 				// ASSERT
 				Assert::IsTrue(buffer1.empty());
@@ -270,8 +270,8 @@ namespace micro_profiler
 				m2[(void *)57].exclusive_time = 56;
 
 				// ACT
-				copy(m1, buffer1, children_buffer1);
-				copy(m2, buffer2, children_buffer2);
+				copy(m1.begin(), m1.end(), buffer1, children_buffer1);
+				copy(m2.begin(), m2.end(), buffer2, children_buffer2);
 
 				// ASSERT
 				Assert::IsTrue(2 == buffer1.size());
@@ -329,8 +329,8 @@ namespace micro_profiler
 				m2[(void *)3].children_statistics[(void *)123] = function_statistics(17, 18, 19, 20);
 
 				// ACT
-				copy(m1, buffer1, children_buffer1);
-				copy(m2, buffer2, children_buffer2);
+				copy(m1.begin(), m1.end(), buffer1, children_buffer1);
+				copy(m2.begin(), m2.end(), buffer2, children_buffer2);
 
 				// ASSERT
 				Assert::IsTrue(2 == children_buffer1.size());

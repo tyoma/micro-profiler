@@ -62,19 +62,21 @@ namespace micro_profiler
 		copy(from, to.Statistics);
 	}
 
-	inline size_t total_children_count(const detailed_statistics_map &statistics) throw()
-	{	return std::accumulate(statistics.begin(), statistics.end(), static_cast<size_t>(0), children_count_accumulator());	}
+	template <typename DetailedStatIterator>
+	inline size_t total_children_count(DetailedStatIterator b, DetailedStatIterator e) throw()
+	{	return std::accumulate(b, e, static_cast<size_t>(0), children_count_accumulator());	}
 
-	inline void copy(const detailed_statistics_map &from, std::vector<FunctionStatisticsDetailed> &to,
+	template <typename DetailedStatIterator>
+	inline void copy(DetailedStatIterator b, DetailedStatIterator e, std::vector<FunctionStatisticsDetailed> &to,
 		std::vector<FunctionStatistics> &children_buffer)
 	{
-		detailed_statistics_map::const_iterator i;
+		DetailedStatIterator i;
 		long j;
 
-		to.resize(from.size());
+		to.resize(std::distance(b, e));
 		children_buffer.clear();
-		children_buffer.reserve(total_children_count(from));
-		for (i = from.begin(), j = 0; i != from.end(); ++i, ++j)
+		children_buffer.reserve(total_children_count(b, e));
+		for (i = b, j = 0; i != e; ++i, ++j)
 			copy(*i, to[j], children_buffer);
 	}
 }

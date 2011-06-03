@@ -8,6 +8,8 @@
 #include <atlbase.h>
 #include <memory>
 #include <vector>
+#include <list>
+#include <algorithm>
 
 using namespace std;
 using namespace System;
@@ -21,6 +23,11 @@ namespace micro_profiler
 		void empty_call();
 		void sleep_n(int n);
 		void controlled_recursion(unsigned int level);
+		void call_aa();
+		void call_ab();
+		void call_a();
+		void call_ba();
+		void call_b();
 
 		void clear_collection_traces();
 
@@ -37,6 +44,7 @@ namespace micro_profiler
 			waitable fe_initialized;
 			size_t fe_raise_updated_limit;
 			vector<FunctionStatisticsDetailed> fe_update_statistics;
+			list< vector<FunctionStatistics> > fe_children_update_statistics;
 			unsigned fe_update_call_times;
 			waitable fe_stat_updated;
 			hyper fe_stop_call;
@@ -82,6 +90,16 @@ namespace micro_profiler
 				STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
 				{
 					fe_update_statistics.insert(fe_update_statistics.end(), statistics, statistics + count);
+					for (vector<FunctionStatisticsDetailed>::iterator i = fe_update_statistics.begin(); i != fe_update_statistics.begin(); ++i)
+						if (i->ChildrenCount > 0)
+						{
+							fe_children_update_statistics.push_back(vector<FunctionStatistics>());
+							
+							vector<FunctionStatistics> &v = fe_children_update_statistics.back();
+
+							v.assign(i->ChildrenStatistics, i->ChildrenStatistics + i->ChildrenCount);
+							i->ChildrenStatistics = &v[0];
+						}
 					if (fe_raise_updated_limit && fe_update_statistics.size() >= fe_raise_updated_limit)
 						fe_stat_updated.set();
 					while (count--)
@@ -109,6 +127,22 @@ namespace micro_profiler
 				threadid = ::GetCurrentThreadId();
 				(new FrontendMockup)->QueryInterface(__uuidof(IProfilerFrontend), (void **)pf);
 			}
+
+			class find_by_address
+			{
+				const void *_address;
+
+			public:
+				find_by_address(const void *address)
+					: _address(address)
+				{	}
+
+				bool operator ()(const FunctionStatistics &s) const
+				{	return reinterpret_cast<const void *>(s.FunctionAddress) == _address;	}
+
+				bool operator ()(const FunctionStatisticsDetailed &s) const
+				{	return reinterpret_cast<const void *>(s.Statistics.FunctionAddress) == _address;	}
+			};
 		}
 
 		[TestClass]
@@ -122,6 +156,7 @@ namespace micro_profiler
 				fe_stop_call = 0;
 				clear_collection_traces();
 				fe_update_statistics.clear();
+				fe_children_update_statistics.clear();
 			}
 
 
@@ -328,6 +363,50 @@ namespace micro_profiler
 				Assert::IsTrue(stat.InclusiveTime > 0);
 				Assert::IsTrue(stat.InclusiveTime / stat.TimesCalled < 150);
 				Assert::IsTrue(stat.ExclusiveTime == stat.InclusiveTime);
+			}
+
+
+			[TestMethod]
+			void ChildrenStatisticsIsPassedAlongWithTopLevels()
+			{
+				// INIT
+				profiler_frontend fe(&factory3);
+
+				fe_stop_call = reinterpret_cast<hyper>(&sleep_20);
+
+				// ACT
+				call_a();
+				call_b();
+				sleep_20();
+				fe_stat_updated.wait();
+
+				// ASSERT
+				typedef vector<FunctionStatisticsDetailed>::const_iterator iterator_detailed;
+				typedef const FunctionStatistics *iterator;
+				
+				iterator_detailed i1 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&call_a));
+				iterator_detailed i2 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&call_b));
+				iterator_detailed i3 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&sleep_20));
+
+				Assert::IsTrue(i1 != fe_update_statistics.end());
+				Assert::IsTrue(i2 != fe_update_statistics.end());
+				Assert::IsTrue(i3 != fe_update_statistics.end());
+
+				Assert::IsTrue(2 == i1->ChildrenCount);
+				Assert::IsTrue(1 == i2->ChildrenCount);
+				Assert::IsTrue(0 == i3->ChildrenCount);
+
+				iterator i11 = find_if(i1->ChildrenStatistics, i1->ChildrenStatistics + i1->ChildrenCount, find_by_address(&call_aa));
+				iterator i12 = find_if(i1->ChildrenStatistics, i1->ChildrenStatistics + i1->ChildrenCount, find_by_address(&call_ab));
+				iterator i21 = find_if(i2->ChildrenStatistics, i2->ChildrenStatistics + i2->ChildrenCount, find_by_address(&call_ba));
+
+				Assert::IsTrue(i11 != i1->ChildrenStatistics + i1->ChildrenCount);
+				Assert::IsTrue(i12 != i1->ChildrenStatistics + i1->ChildrenCount);
+				Assert::IsTrue(i21 != i2->ChildrenStatistics + i2->ChildrenCount);
+
+				Assert::IsTrue(2 == i11->TimesCalled);
+				Assert::IsTrue(1 == i12->TimesCalled);
+				Assert::IsTrue(1 == i21->TimesCalled);
 			}
 		};
 	}

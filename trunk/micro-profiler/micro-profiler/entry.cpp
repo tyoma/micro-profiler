@@ -21,6 +21,7 @@
 #include "entry.h"
 
 #include "analyzer.h"
+#include "com_helpers.h"
 #include "_generated/microprofilerfrontend_i.h"
 
 #include <atlbase.h>
@@ -100,6 +101,7 @@ namespace micro_profiler
 	{
 		analyzer a(_collector.profiler_latency());
 		vector<FunctionStatisticsDetailed> buffer;
+		vector<FunctionStatistics> children_buffer;
 		CComPtr<IProfilerFrontend> fe;
 		TCHAR image_path[MAX_PATH + 1] = { 0 };
 
@@ -124,15 +126,8 @@ namespace micro_profiler
 				else
 				{
 					a.clear();
-					buffer.clear();
 					_collector.read_collected(a);
-					for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
-					{
-						FunctionStatistics s = { reinterpret_cast<hyper>(i->first) - 5, i->second.times_called, i->second.max_reentrance, i->second.exclusive_time, i->second.inclusive_time };
-						FunctionStatisticsDetailed sd = { s, 0, 0 };
-
-						buffer.push_back(sd);
-					}
+					copy(a.begin(), a.end(), buffer, children_buffer);
 					if (!buffer.empty())
 						fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
 				}

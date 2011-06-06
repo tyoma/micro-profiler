@@ -79,26 +79,26 @@ namespace micro_profiler
 		tstring print_max_reentrance(const statistics::statistics_entry &s, const symbol_resolver &/*resolver*/)
 		{	return to_string(s.second.max_reentrance);	}
 
-		bool sort_by_name(const statistics::statistics_entry &lhs, const statistics::statistics_entry &rhs, const symbol_resolver &resolver)
-		{	return resolver.symbol_name_by_va(lhs.first) < resolver.symbol_name_by_va(rhs.first);	}
+		bool sort_by_name(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &, const symbol_resolver &resolver)
+		{	return resolver.symbol_name_by_va(lhs_addr) < resolver.symbol_name_by_va(rhs_addr);	}
 
-		bool sort_by_times_called(const statistics::statistics_entry &lhs, const statistics::statistics_entry &rhs, const symbol_resolver &/*resolver*/)
-		{	return lhs.second.times_called < rhs.second.times_called;	}
+		bool sort_by_times_called(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs, const symbol_resolver &/*resolver*/)
+		{	return lhs.times_called < rhs.times_called;	}
 
-		bool sort_by_exclusive_time(const statistics::statistics_entry &lhs, const statistics::statistics_entry &rhs, const symbol_resolver &/*resolver*/)
-		{	return lhs.second.exclusive_time < rhs.second.exclusive_time;	}
+		bool sort_by_exclusive_time(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs, const symbol_resolver &/*resolver*/)
+		{	return lhs.exclusive_time < rhs.exclusive_time;	}
 
-		bool sort_by_inclusive_time(const statistics::statistics_entry &lhs, const statistics::statistics_entry &rhs, const symbol_resolver &/*resolver*/)
-		{	return lhs.second.inclusive_time < rhs.second.inclusive_time;	}
+		bool sort_by_inclusive_time(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs, const symbol_resolver &/*resolver*/)
+		{	return lhs.inclusive_time < rhs.inclusive_time;	}
 
-		bool sort_by_avg_exclusive_call_time(const statistics::statistics_entry &lhs, const statistics::statistics_entry &rhs, const symbol_resolver &/*resolver*/)
-		{	return (lhs.second.times_called ? lhs.second.exclusive_time / lhs.second.times_called : 0) < (rhs.second.times_called ? rhs.second.exclusive_time / rhs.second.times_called : 0);	}
+		bool sort_by_avg_exclusive_call_time(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs, const symbol_resolver &/*resolver*/)
+		{	return (lhs.times_called ? lhs.exclusive_time / lhs.times_called : 0) < (rhs.times_called ? rhs.exclusive_time / rhs.times_called : 0);	}
 
-		bool sort_by_avg_inclusive_call_time(const statistics::statistics_entry &lhs, const statistics::statistics_entry &rhs, const symbol_resolver &/*resolver*/)
-		{	return (lhs.second.times_called ? lhs.second.inclusive_time / lhs.second.times_called : 0) < (rhs.second.times_called ? rhs.second.inclusive_time / rhs.second.times_called : 0);	}
+		bool sort_by_avg_inclusive_call_time(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs, const symbol_resolver &/*resolver*/)
+		{	return (lhs.times_called ? lhs.inclusive_time / lhs.times_called : 0) < (rhs.times_called ? rhs.inclusive_time / rhs.times_called : 0);	}
 
-		bool sort_by_max_reentrance(const statistics::statistics_entry &lhs, const statistics::statistics_entry &rhs, const symbol_resolver &/*resolver*/)
-		{	return lhs.second.max_reentrance < rhs.second.max_reentrance;	}
+		bool sort_by_max_reentrance(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs, const symbol_resolver &/*resolver*/)
+		{	return lhs.max_reentrance < rhs.max_reentrance;	}
 	}
 
 	ProfilerMainDialog::ProfilerMainDialog(statistics &s, const symbol_resolver &resolver, __int64 ticks_resolution)

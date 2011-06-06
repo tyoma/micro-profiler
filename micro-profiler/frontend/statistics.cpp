@@ -82,7 +82,7 @@ namespace micro_profiler
 	{	}
 
 	bool statistics::dereferencing_wrapper::operator ()(const detailed_statistics_map::const_iterator &lhs, const detailed_statistics_map::const_iterator &rhs) const
-	{	return _ascending ? _base(*lhs, *rhs, _resolver) : _base(*rhs, *lhs, _resolver);	}
+	{	return _ascending ? _base(lhs->first, lhs->second, rhs->first, rhs->second, _resolver) : _base(rhs->first, rhs->second, lhs->first, lhs->second, _resolver);	}
 
 
 	statistics::children_dereferencing_wrapper::children_dereferencing_wrapper(const statistics::sort_predicate &p, bool ascending, const symbol_resolver &resolver)
@@ -90,7 +90,7 @@ namespace micro_profiler
 	{	}
 
 	bool statistics::children_dereferencing_wrapper::operator ()(const statistics_map::const_iterator &lhs, const statistics_map::const_iterator &rhs) const
-	{	return _ascending ? _base(*lhs, *rhs, _resolver) : _base(*rhs, *lhs, _resolver);	}
+	{	return _ascending ? _base(lhs->first, lhs->second, rhs->first, rhs->second, _resolver) : _base(rhs->first, rhs->second, lhs->first, lhs->second, _resolver);	}
 
 
 	statistics::statistics(const symbol_resolver &resolver)

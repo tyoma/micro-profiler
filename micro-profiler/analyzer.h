@@ -23,7 +23,6 @@
 #include "calls_collector.h"
 #include "primitives.h"
 
-#include <hash_map>
 #include <vector>
 
 namespace micro_profiler
@@ -31,7 +30,7 @@ namespace micro_profiler
 	class shadow_stack
 	{
 		struct call_record_ex;
-		typedef stdext::hash_map<void *, int, address_compare> entrance_counter_map;
+		typedef stdext::hash_map<const void *, int, address_compare> entrance_counter_map;
 
 		const __int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
@@ -58,17 +57,16 @@ namespace micro_profiler
 
 	class analyzer : public calls_collector::acceptor
 	{
-		typedef stdext::hash_map<void *, function_statistics_detailed, address_compare> statistics_container;
 		typedef stdext::hash_map<unsigned int /*threadid*/, shadow_stack> stacks_container;
 
 		const __int64 _profiler_latency;
-		statistics_container _statistics;
+		detailed_statistics_map _statistics;
 		stacks_container _stacks;
 
 		const analyzer &operator =(const analyzer &rhs);
 
 	public:
-		typedef statistics_container::const_iterator const_iterator;
+		typedef detailed_statistics_map::const_iterator const_iterator;
 
 	public:
 		analyzer(__int64 profiler_latency = 0);
@@ -98,7 +96,7 @@ namespace micro_profiler
 			else
 			{
 				const call_record_ex &current = _stack.back();
-				void *callee = current.callee;
+				const void *callee = current.callee;
 				unsigned __int64 level = --_entrance_counter[callee];
 				__int64 inclusive_time_observed = i->timestamp - current.timestamp;
 				__int64 inclusive_time = inclusive_time_observed - _profiler_latency;
@@ -111,7 +109,7 @@ namespace micro_profiler
 					call_record_ex &parent = _stack.back();
 
 					parent.child_time += inclusive_time_observed + _profiler_latency;
-					statistics[parent.callee].add_child_call(callee, 0, inclusive_time, exclusive_time);
+					add_child_statistics(statistics[parent.callee], callee, 0, inclusive_time, exclusive_time);
 				}
 			}
 	}

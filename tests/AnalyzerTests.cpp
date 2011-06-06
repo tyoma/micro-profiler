@@ -66,11 +66,11 @@ namespace micro_profiler
 				a.accept_calls(1, trace, array_size(trace));
 
 				// ASSERT
-				map<void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
+				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
 
 				Assert::IsTrue(3 == m.size());
 
-				map<void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
+				map<const void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
 
 				++i2, ++++i3;
 
@@ -110,7 +110,7 @@ namespace micro_profiler
 				a.accept_calls(1, trace, array_size(trace));
 
 				// ASSERT
-				map<void *, function_statistics_detailed> m(a.begin(), a.end());	// use map to ensure proper sorting
+				map<const void *, function_statistics_detailed> m(a.begin(), a.end());	// use map to ensure proper sorting
 
 				Assert::IsTrue(5 == m.size());
 
@@ -142,11 +142,11 @@ namespace micro_profiler
 				a.accept_calls(1, trace, array_size(trace));
 
 				// ASSERT
-				map<void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
+				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
 
 				Assert::IsTrue(3 == m.size());
 
-				map<void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
+				map<const void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
 
 				++i2, ++++i3;
 
@@ -169,7 +169,7 @@ namespace micro_profiler
 			{
 				// INIT
 				analyzer a;
-				map<void *, function_statistics> m;
+				map<const void *, function_statistics> m;
 				call_record trace1[] = {	{	(void *)1234, 12300	},	};
 				call_record trace2[] = {	{	(void *)1234, 12313	},	};
 				call_record trace3[] = {	{	(void *)0, 12307	},	};
@@ -212,7 +212,7 @@ namespace micro_profiler
 			{
 				// INIT
 				analyzer a;
-				map<void *, function_statistics> m;
+				map<const void *, function_statistics> m;
 				call_record trace1[] = {
 					{	(void *)1234, 12319	},
 					{	(void *)0, 12323	},

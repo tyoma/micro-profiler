@@ -247,6 +247,26 @@
 			</FileConfiguration>
 		</File>
 		<File
+			RelativePath=".\COMHelpersTests.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
 			RelativePath=".\FrontendInteractionTests.cpp"
 			>
 			<FileConfiguration
@@ -344,6 +364,7 @@
 				<Tool
 					Name="VCCLCompilerTool"
 					AdditionalOptions="/GH /Gh"
+					Optimization="0"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -352,6 +373,7 @@
 				<Tool
 					Name="VCCLCompilerTool"
 					AdditionalOptions="/GH /Gh"
+					Optimization="0"
 				/>
 			</FileConfiguration>
 		</File>

@@ -27,48 +27,51 @@
 #include <atltypes.h>
 #include <atlwin.h>
 
-typedef std::basic_string<TCHAR> tstring;
-typedef tstring (*print_function)(const statistics::statistics_entry &s, const symbol_resolver &resolver);
-
-class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
+namespace micro_profiler
 {
-	print_function _printers[7];
-	std::pair<statistics::sort_predicate, bool /*default_ascending*/> _sorters[7];
-	statistics &_statistics;
-	const symbol_resolver &_resolver;
-	CWindow _statistics_view, _children_statistics_view, _clear_button, _copy_all_button;
-	int _last_sort_column, _last_children_sort_column;
-	bool _sort_ascending, _sort_children_ascending;
-	void *_last_selected;
+	typedef std::basic_string<TCHAR> tstring;
+	typedef tstring (*print_function)(const statistics::statistics_entry &s, const symbol_resolver &resolver);
 
-	void SelectByAddress(void *address);
-	void RelocateControls(const CSize &size);
+	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
+	{
+		print_function _printers[7];
+		std::pair<statistics::sort_predicate, bool /*default_ascending*/> _sorters[7];
+		statistics &_statistics;
+		const symbol_resolver &_resolver;
+		CWindow _statistics_view, _children_statistics_view, _clear_button, _copy_all_button;
+		int _last_sort_column, _last_children_sort_column;
+		bool _sort_ascending, _sort_children_ascending;
+		const void *_last_selected;
 
-public:
-	ProfilerMainDialog(statistics &s, const symbol_resolver &resolver, __int64 ticks_resolution);
-	~ProfilerMainDialog();
+		void SelectByAddress(const void *address);
+		void RelocateControls(const CSize &size);
 
-	void RefreshList(unsigned int new_count);
+	public:
+		ProfilerMainDialog(statistics &s, const symbol_resolver &resolver, __int64 ticks_resolution);
+		~ProfilerMainDialog();
 
-	enum {	IDD = IDD_PROFILER_MAIN	};
+		void RefreshList(unsigned int new_count);
 
-	BEGIN_MSG_MAP(ProfilerMainDialog)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog);
-		MESSAGE_HANDLER(WM_SIZE, OnSize);
-		NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_GETDISPINFO, OnGetDispInfo);
-		NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_COLUMNCLICK, OnColumnSort);
-		NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_FUNCTIONS_STATISTICS, LVN_ITEMCHANGED, OnFocusedFunctionChange);
-		NOTIFY_RANGE_CODE_HANDLER(IDC_CHILDREN_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_ITEMACTIVATE, OnDrillDown);
-		COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
-		COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
-	END_MSG_MAP()
+		enum {	IDD = IDD_PROFILER_MAIN	};
 
-	LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-	LRESULT OnSize(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-	LRESULT OnGetDispInfo(int control_id, LPNMHDR pnmh, BOOL &handled);
-	LRESULT OnColumnSort(int control_id, LPNMHDR pnmh, BOOL &handled);
-	LRESULT OnFocusedFunctionChange(int control_id, LPNMHDR pnmh, BOOL &handled);
-	LRESULT OnDrillDown(int control_id, LPNMHDR pnmh, BOOL &handled);
-	LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
-	LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);
-};
+		BEGIN_MSG_MAP(ProfilerMainDialog)
+			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog);
+			MESSAGE_HANDLER(WM_SIZE, OnSize);
+			NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_GETDISPINFO, OnGetDispInfo);
+			NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_COLUMNCLICK, OnColumnSort);
+			NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_FUNCTIONS_STATISTICS, LVN_ITEMCHANGED, OnFocusedFunctionChange);
+			NOTIFY_RANGE_CODE_HANDLER(IDC_CHILDREN_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_ITEMACTIVATE, OnDrillDown);
+			COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
+			COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
+		END_MSG_MAP()
+
+		LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
+		LRESULT OnSize(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
+		LRESULT OnGetDispInfo(int control_id, LPNMHDR pnmh, BOOL &handled);
+		LRESULT OnColumnSort(int control_id, LPNMHDR pnmh, BOOL &handled);
+		LRESULT OnFocusedFunctionChange(int control_id, LPNMHDR pnmh, BOOL &handled);
+		LRESULT OnDrillDown(int control_id, LPNMHDR pnmh, BOOL &handled);
+		LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
+		LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);
+	};
+}

@@ -52,7 +52,7 @@ namespace micro_profiler
 	public:
 		typedef statistics_map::value_type statistics_entry;
 		typedef detailed_statistics_map::value_type statistics_entry_detailed;
-		typedef bool (*sort_predicate)(const statistics_entry &lhs, const statistics_entry &rhs, const symbol_resolver &resolver);
+		typedef bool (*sort_predicate)(const void *lhs_addr, const function_statistics &lhs, const void *rhs_addr, const function_statistics &rhs, const symbol_resolver &resolver);
 
 	public:
 		statistics(const symbol_resolver &resolver);

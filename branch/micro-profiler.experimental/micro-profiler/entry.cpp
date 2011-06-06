@@ -21,6 +21,7 @@
 #include "entry.h"
 
 #include "analyzer.h"
+#include "com_helpers.h"
 #include "_generated/microprofilerfrontend_i.h"
 
 #include <atlbase.h>
@@ -62,6 +63,8 @@ extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
 	}
 }
 
+extern "C" CLSID CLSID_ProfilerFrontend;
+
 namespace micro_profiler
 {
 	namespace
@@ -76,20 +79,18 @@ namespace micro_profiler
 	}
 
 	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
-	{	::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
+	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _collector(*calls_collector::instance()), _factory(factory),
-		_stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
-		_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &frontend_worker_proxy, this, 0, 0)))
+			_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &frontend_worker_proxy, this, 0, &_frontend_threadid)))
 	{	}
 
 	profiler_frontend::~profiler_frontend()
 	{
-		::SetEvent(reinterpret_cast<HANDLE>(_stop_event));
+		::PostThreadMessage(_frontend_threadid, WM_QUIT, 0, 0);
 		::WaitForSingleObject(reinterpret_cast<HANDLE>(_frontend_thread), INFINITE);
 		::CloseHandle(reinterpret_cast<HANDLE>(_frontend_thread));
-		::CloseHandle(reinterpret_cast<HANDLE>(_stop_event));
 	}
 
 	unsigned int __stdcall profiler_frontend::frontend_worker_proxy(void *param)
@@ -108,46 +109,33 @@ namespace micro_profiler
 		vector<FunctionStatistics> children_buffer;
 		CComPtr<IProfilerFrontend> fe;
 		TCHAR image_path[MAX_PATH + 1] = { 0 };
+		UINT_PTR timerid = ::SetTimer(NULL, 0, 10, NULL);
 
 		_factory(&fe);
 		if (fe)
 		{
-			DWORD wait_result;
+			MSG msg;
 
 			::GetModuleFileName(NULL, image_path, MAX_PATH);
 			fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)), c_ticks_resolution);
-			while (wait_result = ::MsgWaitForMultipleObjects(1, &reinterpret_cast<HANDLE>(_stop_event), FALSE, 10, QS_ALLEVENTS), wait_result != WAIT_OBJECT_0)
-				if (wait_result == WAIT_OBJECT_0 + 1)
-				{
-					MSG msg = { 0 };
-
-					while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-					{
-						::TranslateMessage(&msg);
-						::DispatchMessage(&msg);
-					}
-				}
-				else
+			while (::GetMessage(&msg, NULL, 0, 0))
+			{
+				if (msg.message == WM_TIMER && msg.wParam == timerid)
 				{
 					analyzer::const_iterator i;
 					size_t total_children_count = 0, j = 0;
 
 					a.clear();
-					buffer.clear();
 					_collector.read_collected(a);
-					for (i = a.begin(); i != a.end(); ++i)
-						total_children_count += i->second.children_statistics.size();
-					children_buffer.resize(total_children_count);
-					for (i = a.begin(), j = 0; i != a.end(); j += i->second.children_statistics.size(), ++i)
-					{
-						FunctionStatisticsDetailed s = { fs2FS(*i), i->second.children_statistics.size(), &children_buffer[0] + j };
-
-						transform(i->second.children_statistics.begin(), i->second.children_statistics.end(), s.ChildrenStatistics, fs2FS);
-						buffer.push_back(s);
-					}
+					copy(a.begin(), a.end(), buffer, children_buffer);
 					if (!buffer.empty())
 						fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
 				}
+
+				::TranslateMessage(&msg);
+				::DispatchMessage(&msg);
+			}
 		}
+		::KillTimer(NULL, timerid);
 	}
 }

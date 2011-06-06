@@ -34,7 +34,8 @@ namespace micro_profiler
 	{
 		calls_collector &_collector;
 		frontend_factory _factory;
-		void *_stop_event, *_frontend_thread;
+		unsigned _frontend_threadid;
+		void *_frontend_thread;
 
 		static unsigned int __stdcall frontend_worker_proxy(void *param);
 		void frontend_worker();

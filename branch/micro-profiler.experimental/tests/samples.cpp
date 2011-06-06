@@ -32,5 +32,29 @@ namespace micro_profiler
 				controlled_recursion(level);
 			_asm nop
 		}
+
+		void call_aa()
+		{
+		}
+
+		void call_ab()
+		{
+		}
+
+		void call_a()
+		{
+			call_aa();
+			call_ab();
+			call_aa();
+		}
+
+		void call_ba()
+		{
+		}
+
+		void call_b()
+		{
+			call_ba();
+		}
 	}
 }

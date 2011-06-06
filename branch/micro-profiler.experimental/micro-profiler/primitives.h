@@ -27,18 +27,25 @@ namespace micro_profiler
 #pragma pack(push, 4)
 	struct call_record
 	{
-		void *callee;	// call address + 5 bytes
+		const void *callee;	// call address + 5 bytes
 		__int64 timestamp;
 	};
 #pragma pack(pop)
+
+	struct address_compare;
+	struct function_statistics;
+	struct function_statistics_detailed;
+
+	typedef stdext::hash_map<const void * /*address*/, function_statistics, address_compare> statistics_map;
+	typedef stdext::hash_map<const void * /*address*/, function_statistics_detailed, address_compare> detailed_statistics_map;
 
 	struct address_compare
 	{
 		static const size_t bucket_size = 4;
 		static const size_t min_buckets = 8;
 
-		size_t operator ()(void *key) const;
-		bool operator ()(const void *lhs, const void *rhs) const;
+		size_t operator ()(const void *key) const throw();
+		bool operator ()(const void *lhs, const void *rhs) const throw();
 	};
 
 	struct function_statistics
@@ -46,7 +53,6 @@ namespace micro_profiler
 		function_statistics(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0);
 
 		void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
-		void add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
 
 		unsigned __int64 times_called;
 		unsigned __int64 max_reentrance;
@@ -56,17 +62,15 @@ namespace micro_profiler
 
 	struct function_statistics_detailed : function_statistics
 	{
-		stdext::hash_map<void *, function_statistics, address_compare> children_statistics;
-
-		void add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
+		statistics_map children_statistics;
 	};
 
 
 	// address_compare - inline definitions
-	inline size_t address_compare::operator ()(void *key) const
+	inline size_t address_compare::operator ()(const void *key) const throw()
 	{	return (reinterpret_cast<size_t>(key) >> 4) * 2654435761;	}
 
-	inline bool address_compare::operator ()(const void *lhs, const void *rhs) const
+	inline bool address_compare::operator ()(const void *lhs, const void *rhs) const throw()
 	{	return lhs < rhs;	}
 
 
@@ -85,11 +89,11 @@ namespace micro_profiler
 		this->exclusive_time += exclusive_time;
 	}
 
-	inline void function_statistics::add_child_call(void * /*function*/, unsigned __int64 /*level*/, __int64 /*inclusive_time*/, __int64 /*exclusive_time*/)
+
+	// add_child_statistics - overloaded inline definitions
+	inline void add_child_statistics(function_statistics &/*s*/, const void * /*function*/, unsigned __int64 /*level*/, __int64 /*inclusive_time*/, __int64 /*exclusive_time*/)
 	{	}
 
-
-	// function_statistics_detailed - inline definitions
-	inline void function_statistics_detailed::add_child_call(void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
-	{	children_statistics[function].add_call(level, inclusive_time, exclusive_time);	}
+	inline void add_child_statistics(function_statistics_detailed &s, const void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
+	{	s.children_statistics[function].add_call(level, inclusive_time, exclusive_time);	}
 }

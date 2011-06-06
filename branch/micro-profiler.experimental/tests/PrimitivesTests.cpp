@@ -101,13 +101,13 @@ namespace micro_profiler
 				function_statistics_detailed s1, s2;
 
 				// ACT
-				s1.add_child_call((void *)1, 0, 1, 3);
-				s1.add_child_call((void *)1, 0, 2, 5);
-				s1.add_child_call((void *)2, 2, 3, 7);
-				s1.add_child_call((void *)3, 3, 4, 2);
-				s1.add_child_call((void *)3, 0, 5, 11);
-				s2.add_child_call((void *)20, 1, 6, 13);
-				s2.add_child_call((void *)30, 2, 7, 17);
+				add_child_statistics(s1, (void *)1, 0, 1, 3);
+				add_child_statistics(s1, (void *)1, 0, 2, 5);
+				add_child_statistics(s1, (void *)2, 2, 3, 7);
+				add_child_statistics(s1, (void *)3, 3, 4, 2);
+				add_child_statistics(s1, (void *)3, 0, 5, 11);
+				add_child_statistics(s2, (void *)20, 1, 6, 13);
+				add_child_statistics(s2, (void *)30, 2, 7, 17);
 
 				// ASSERT
 				Assert::IsTrue(3 == s1.children_statistics.size());

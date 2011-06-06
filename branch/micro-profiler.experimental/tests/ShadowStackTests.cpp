@@ -23,7 +23,7 @@ namespace micro_profiler
 				// INIT
 				shadow_stack ss;
 				vector<call_record> trace;
-				hash_map<void *, function_statistics> statistics;
+				hash_map<const void *, function_statistics> statistics;
 
 				// ACT
 				ss.update(trace.begin(), trace.end(), statistics);
@@ -38,7 +38,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace1[] = {
 					{	(void *)0x01234567, 123450000	},
 					{	0, 123450013	},
@@ -64,7 +64,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(2 == statistics.size());
 
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
@@ -85,7 +85,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace1[] = {	{	(void *)0x01234567, 123450000	},	};
 				call_record trace2[] = {	{	0, 123450013	},	};
 				call_record trace3[] = {	{	(void *)0x0bcdef12, 123450000	},	};
@@ -119,7 +119,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(2 == statistics.size());
 
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
@@ -140,7 +140,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss1, ss2;
-				hash_map<void *, function_statistics> statistics1, statistics2;
+				hash_map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace1[] = {
 					{	(void *)0x01234567, 123450000	},
 						{	(void *)0x01234568, 123450013	},
@@ -178,7 +178,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234567, 123450000	},
 						{	(void *)0x0bcdef12, 123450013	},
@@ -192,7 +192,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(2 == statistics.size());
 
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
@@ -211,7 +211,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234567, 123450000	},
 					{	0, 123450019	},
@@ -237,7 +237,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(3 == statistics.size());
 
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
 
 				++i2;
 				++++i3;
@@ -264,7 +264,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace1[] ={
 					{	(void *)0x00000010, 123440000	},
 						{	(void *)0x01234560, 123450000	},
@@ -287,7 +287,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(5 == statistics.size());
 
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin()), i4(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin()), i4(statistics.begin());
 
 				++i1, ++++i2, ++++++i3, ++++++++i4;
 
@@ -318,7 +318,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x00000010,123440000	},
 						{	(void *)0x01234560,123450003	},
@@ -337,7 +337,7 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(4 == statistics.size());
 
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
 
 				++i1, ++++i2, ++++++i3;
 
@@ -363,7 +363,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss1(1), ss2(2);
-				map<void *, function_statistics> statistics1, statistics2;
+				map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace[] = {
 					{	(void *)0x00000010,123440000	},
 						{	(void *)0x01234560,123450013	},
@@ -381,8 +381,8 @@ namespace micro_profiler
 				ss2.update(trace, end(trace), statistics2);
 
 				// ASSERT
-				map<void *, function_statistics>::const_iterator i1_1(statistics1.begin()), i1_2(statistics1.begin()), i1_3(statistics1.begin());
-				map<void *, function_statistics>::const_iterator i2_1(statistics2.begin()), i2_2(statistics2.begin()), i2_3(statistics2.begin());
+				map<const void *, function_statistics>::const_iterator i1_1(statistics1.begin()), i1_2(statistics1.begin()), i1_3(statistics1.begin());
+				map<const void *, function_statistics>::const_iterator i2_1(statistics2.begin()), i2_2(statistics2.begin()), i2_3(statistics2.begin());
 
 				++i1_1, ++++i1_2, ++++++i1_3;
 				++i2_1, ++++i2_2, ++++++i2_3;
@@ -417,7 +417,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234560,123450001	},
 						{	(void *)0x01234560,123450005	},
@@ -435,7 +435,7 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
@@ -452,7 +452,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234560,123450001	},
 						{	(void *)0x01234565,123450005	},
@@ -470,7 +470,7 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
@@ -487,7 +487,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics> statistics;
+				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234560, 123450001	},
 						{	(void *)0x01234565, 123450002	},
@@ -521,7 +521,7 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				map<void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
+				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
 
 				++i2;
 				++++i3;
@@ -545,7 +545,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss, ss_delayed(1);
-				map<void *, function_statistics_detailed> statistics, statistics_delayed;
+				map<const void *, function_statistics_detailed> statistics, statistics_delayed;
 				call_record trace[] = {
 					{	(void *)1, 1	},
 						{	(void *)101, 2	},
@@ -587,12 +587,12 @@ namespace micro_profiler
 				Assert::IsTrue(statistics_delayed[(void *)302].children_statistics.empty());
 				Assert::IsTrue(statistics_delayed[(void *)303].children_statistics.empty());
 				
-				hash_map<void *, function_statistics, address_compare> &cs1 = statistics[(void *)1].children_statistics;
-				hash_map<void *, function_statistics, address_compare> &cs2 = statistics[(void *)2].children_statistics;
-				hash_map<void *, function_statistics, address_compare> &cs3 = statistics[(void *)3].children_statistics;
-				hash_map<void *, function_statistics, address_compare> &cs1_d = statistics_delayed[(void *)1].children_statistics;
-				hash_map<void *, function_statistics, address_compare> &cs2_d = statistics_delayed[(void *)2].children_statistics;
-				hash_map<void *, function_statistics, address_compare> &cs3_d = statistics_delayed[(void *)3].children_statistics;
+				statistics_map &cs1 = statistics[(void *)1].children_statistics;
+				statistics_map &cs2 = statistics[(void *)2].children_statistics;
+				statistics_map &cs3 = statistics[(void *)3].children_statistics;
+				statistics_map &cs1_d = statistics_delayed[(void *)1].children_statistics;
+				statistics_map &cs2_d = statistics_delayed[(void *)2].children_statistics;
+				statistics_map &cs3_d = statistics_delayed[(void *)3].children_statistics;
 
 				Assert::IsTrue(1 == cs1.size());
 				Assert::IsTrue(1 == cs1[(void *)101].times_called);
@@ -661,7 +661,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack ss;
-				map<void *, function_statistics_detailed> statistics;
+				map<const void *, function_statistics_detailed> statistics;
 				call_record trace[] = {
 					{	(void *)1, 1	},
 						{	(void *)101, 2	},
@@ -689,7 +689,7 @@ namespace micro_profiler
 				Assert::IsTrue(0 == statistics[(void *)10202].children_statistics.size());
 
 
-				hash_map<void *, function_statistics, address_compare> &cs = statistics[(void *)1].children_statistics;
+				statistics_map &cs = statistics[(void *)1].children_statistics;
 
 				Assert::IsTrue(5 == cs[(void *)101].inclusive_time);
 				Assert::IsTrue(3 == cs[(void *)101].exclusive_time);

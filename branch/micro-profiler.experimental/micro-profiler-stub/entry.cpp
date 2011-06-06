@@ -18,33 +18,36 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include "./../micro-profiler/entry.h"
 
-#include "./../primitives.h"
+extern "C" __declspec(naked, dllexport) void _penter()
+{
+	_asm 
+	{
+		ret
+	}
+}
 
-#include <atlbase.h>
-#include <string>
-#include <tchar.h>
-
-struct IDiaSession;
-struct IDiaDataSource;
+extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
+{
+	_asm 
+	{
+		ret
+	}
+}
 
 namespace micro_profiler
 {
-	typedef std::basic_string<TCHAR> tstring;
+	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
+	{	*frontend = 0;	}
 
-	class symbol_resolver
-	{
-		typedef stdext::hash_map<const void *, tstring, address_compare> names_cache;
+	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
+	{	*frontend = 0;	}
 
-		CComPtr<IDiaDataSource> _data_source;
-		CComPtr<IDiaSession> _session;
-		mutable names_cache _cached_names;
+	profiler_frontend::profiler_frontend(frontend_factory /*factory*/)
+		: _collector(*reinterpret_cast<calls_collector *>(0))
+	{	}
 
-	public:
-		symbol_resolver(const tstring &image_path, unsigned __int64 load_address);
-		~symbol_resolver();
-
-		tstring symbol_name_by_va(const void *address) const;
-	};
+	profiler_frontend::~profiler_frontend()
+	{	}
 }

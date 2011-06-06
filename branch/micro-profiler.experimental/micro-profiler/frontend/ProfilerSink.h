@@ -27,30 +27,37 @@
 #include <atlcom.h>
 #include <memory>
 
-class ProfilerMainDialog;
-class statistics;
-class symbol_resolver;
+extern "C" CLSID CLSID_ProfilerFrontend;
 
-class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &__uuidof(ProfilerFrontend)>
+namespace micro_profiler
 {
-	std::auto_ptr<symbol_resolver> _symbol_resolver;
-	std::auto_ptr<statistics> _statistics;
-	std::auto_ptr<ProfilerMainDialog> _dialog;
+	class ProfilerMainDialog;
+	class statistics;
+	class symbol_resolver;
 
-public:
-	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
+	class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
+	{
+		std::auto_ptr<symbol_resolver> _symbol_resolver;
+		std::auto_ptr<statistics> _statistics;
+		std::auto_ptr<ProfilerMainDialog> _dialog;
 
-	BEGIN_COM_MAP(ProfilerFrontend)
-		COM_INTERFACE_ENTRY(IProfilerFrontend)
-	END_COM_MAP()
+	public:
+		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
 
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
+		BEGIN_COM_MAP(ProfilerFrontend)
+			COM_INTERFACE_ENTRY(IProfilerFrontend)
+		END_COM_MAP()
 
-	HRESULT FinalConstruct();
-	void FinalRelease();
+		DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-	STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
-	STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
-};
+		HRESULT FinalConstruct();
+		void FinalRelease();
 
-OBJECT_ENTRY_AUTO(__uuidof(ProfilerFrontend), ProfilerFrontend);
+		STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
+		STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
+	};
+}
+
+typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
+
+OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);

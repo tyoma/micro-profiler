@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="deployment"
+	ProjectGUID="{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}"
+	RootNamespace="deployment"
+	TargetFrameworkVersion="196613"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)\_deploy\"
+			IntermediateDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
+			ConfigurationType="10"
+			CharacterSet="2"
+			DeleteExtensionsOnClean=""
+			WholeProgramOptimization="1"
+			BuildLogFile=""
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="mkdir $(OutDir)&#x0D;&#x0A;del /q $(OutDir)\*&#x0D;&#x0A;copy $(IntDir)\*.cmd $(OutDir)&#x0D;&#x0A;copy $(IntDir)\*.dll $(OutDir)&#x0D;&#x0A;copy $(IntDir)\*.exe $(OutDir)&#x0D;&#x0A;copy $(IntDir)\micro-profiler.lib $(OutDir)&#x0D;&#x0A;copy $(IntDir)\playground.pdb $(OutDir)&#x0D;&#x0A;copy $(SolutionDir)\micro-profiler\entry.h $(OutDir)&#x0D;&#x0A;svn info $(SolutionDir) &gt; $(OutDir)version.txt&#x0D;&#x0A;"
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

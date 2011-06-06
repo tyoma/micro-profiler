@@ -364,6 +364,7 @@
 				<Tool
 					Name="VCCLCompilerTool"
 					AdditionalOptions="/GH /Gh"
+					Optimization="0"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -372,6 +373,7 @@
 				<Tool
 					Name="VCCLCompilerTool"
 					AdditionalOptions="/GH /Gh"
+					Optimization="0"
 				/>
 			</FileConfiguration>
 		</File>

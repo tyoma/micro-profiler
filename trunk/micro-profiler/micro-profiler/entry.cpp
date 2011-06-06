@@ -76,16 +76,14 @@ namespace micro_profiler
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _collector(*calls_collector::instance()), _factory(factory),
-		_stop_event(::CreateEvent(NULL, TRUE, FALSE, NULL)),
-		_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &frontend_worker_proxy, this, 0, 0)))
+			_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &frontend_worker_proxy, this, 0, &_frontend_threadid)))
 	{	}
 
 	profiler_frontend::~profiler_frontend()
 	{
-		::SetEvent(reinterpret_cast<HANDLE>(_stop_event));
+		::PostThreadMessage(_frontend_threadid, WM_QUIT, 0, 0);
 		::WaitForSingleObject(reinterpret_cast<HANDLE>(_frontend_thread), INFINITE);
 		::CloseHandle(reinterpret_cast<HANDLE>(_frontend_thread));
-		::CloseHandle(reinterpret_cast<HANDLE>(_stop_event));
 	}
 
 	unsigned int __stdcall profiler_frontend::frontend_worker_proxy(void *param)
@@ -104,26 +102,18 @@ namespace micro_profiler
 		vector<FunctionStatistics> children_buffer;
 		CComPtr<IProfilerFrontend> fe;
 		TCHAR image_path[MAX_PATH + 1] = { 0 };
+		UINT_PTR timerid = ::SetTimer(NULL, 0, 10, NULL);
 
 		_factory(&fe);
 		if (fe)
 		{
-			DWORD wait_result;
+			MSG msg;
 
 			::GetModuleFileName(NULL, image_path, MAX_PATH);
 			fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)), c_ticks_resolution);
-			while (wait_result = ::MsgWaitForMultipleObjects(1, &reinterpret_cast<HANDLE>(_stop_event), FALSE, 10, QS_ALLEVENTS), wait_result != WAIT_OBJECT_0)
-				if (wait_result == WAIT_OBJECT_0 + 1)
-				{
-					MSG msg = { 0 };
-
-					while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-					{
-						::TranslateMessage(&msg);
-						::DispatchMessage(&msg);
-					}
-				}
-				else
+			while (::GetMessage(&msg, NULL, 0, 0))
+			{
+				if (msg.message == WM_TIMER && msg.wParam == timerid)
 				{
 					a.clear();
 					_collector.read_collected(a);
@@ -131,6 +121,11 @@ namespace micro_profiler
 					if (!buffer.empty())
 						fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
 				}
+
+				::TranslateMessage(&msg);
+				::DispatchMessage(&msg);
+			}
 		}
+		::KillTimer(NULL, timerid);
 	}
 }

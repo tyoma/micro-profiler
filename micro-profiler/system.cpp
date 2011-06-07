@@ -29,10 +29,15 @@ namespace micro_profiler
 {
 	unsigned __int64 timestamp_precision()
 	{
-		unsigned __int64 start(__rdtsc());
+		unsigned __int64 pc_freq, pc_start, pc_end, tsc_start, tsc_end;
 
-		::Sleep(500);
-		return 2 * (__rdtsc() - start);
+		::QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER *>(&pc_freq));
+		::QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&pc_start));
+		tsc_start = __rdtsc();
+		::Sleep(50);
+		tsc_end = __rdtsc();
+		::QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&pc_end));
+		return pc_freq * (tsc_end - tsc_start) / (pc_end - pc_start);
 	}
 
 	unsigned int current_thread_id()

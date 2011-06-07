@@ -42,10 +42,11 @@ copy $(IntDir)micro-profiler.lib $(OutDir)
 copy $(IntDir)playground.pdb $(OutDir)
 copy $(SolutionDir)\micro-profiler\entry.h $(OutDir)
 svn info $(SolutionDir) &gt; $(OutDir)version.txt
-</Command>
+mkzip "$(OutDir)\*" "$(SolutionDir)\micro-profiler.deploy..zip"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="mkzip.cmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

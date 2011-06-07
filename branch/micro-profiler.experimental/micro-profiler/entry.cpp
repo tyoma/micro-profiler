@@ -122,9 +122,6 @@ namespace micro_profiler
 			{
 				if (msg.message == WM_TIMER && msg.wParam == timerid)
 				{
-					analyzer::const_iterator i;
-					size_t total_children_count = 0, j = 0;
-
 					a.clear();
 					_collector.read_collected(a);
 					copy(a.begin(), a.end(), buffer, children_buffer);

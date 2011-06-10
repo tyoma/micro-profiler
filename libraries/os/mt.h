@@ -4,10 +4,10 @@
 
 namespace std
 {
-   using tr1::function;
+	using tr1::function;
 }
 
-namespace mt
+namespace os
 {
 	struct waitable
 	{

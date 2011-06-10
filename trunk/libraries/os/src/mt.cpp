@@ -42,10 +42,9 @@ namespace os
 
 	thread::thread(const function<void()> &job)
 	{
-		unsigned int threadid;
 		auto_ptr< function<void()> > f(new function<void()>(job));
 
-		_thread = reinterpret_cast<void *>(_beginthreadex(0, 0, reinterpret_cast<thread_proxy_fun>(thread_proxy), f.get(), 0, &threadid));
+		_thread = reinterpret_cast<void *>(_beginthreadex(0, 0, reinterpret_cast<thread_proxy_fun>(thread_proxy), f.get(), 0, &_id));
 		if (_thread != reinterpret_cast<void *>(-1))
 			f.release();
 		else

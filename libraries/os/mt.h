@@ -18,6 +18,7 @@ namespace os
 		virtual wait_status wait(unsigned int timeout) volatile = 0;
 	};
 
+
 	class event_monitor : public waitable
 	{
 		void *_handle;
@@ -31,12 +32,21 @@ namespace os
 		virtual wait_status wait(unsigned int timeout) volatile;
 	};
 
+
 	class thread
 	{
+		unsigned int _id;
 		void *_thread;
 
 	public:
 		thread(const std::function<void()> &job);
 		virtual ~thread() throw();
+
+		unsigned int id() const throw();
 	};
+
+
+	// thread - inline definitions
+	inline unsigned int thread::id() const throw()
+	{	return _id;	}
 }

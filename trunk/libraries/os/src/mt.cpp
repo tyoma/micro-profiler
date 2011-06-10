@@ -1,4 +1,4 @@
-#include "mt.h"
+#include <mt.h>
 
 #include <process.h>
 #include <windows.h>
@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace mt
+namespace os
 {
 	namespace
 	{
@@ -44,7 +44,7 @@ namespace mt
 	{
 		unsigned int threadid;
 		auto_ptr< function<void()> > f(new function<void()>(job));
-		
+
 		_thread = reinterpret_cast<void *>(_beginthreadex(0, 0, reinterpret_cast<thread_proxy_fun>(thread_proxy), f.get(), 0, &threadid));
 		if (_thread != reinterpret_cast<void *>(-1))
 			f.release();

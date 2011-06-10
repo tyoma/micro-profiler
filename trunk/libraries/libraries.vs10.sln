@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib.tests", "os\tests\oslib.tests.vcxproj", "{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib", "os\src\oslib.vcxproj", "{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Debug|Win32.Build.0 = Debug|Win32
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.ActiveCfg = Release|Win32
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.Build.0 = Release|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Debug|Win32.Build.0 = Debug|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Release|Win32.ActiveCfg = Release|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

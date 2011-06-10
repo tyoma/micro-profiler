@@ -13,7 +13,7 @@ namespace os
 	{
 		enum wait_status { satisfied, timeout, abandoned };
 
-		static const unsigned int infinite = -1;
+		static const unsigned int infinite = static_cast<unsigned int>(-1);
 
 		virtual wait_status wait(unsigned int timeout) volatile = 0;
 	};

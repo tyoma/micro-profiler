@@ -19,7 +19,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib", "libraries\os\src\o
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib.tests", "libraries\os\tests\oslib.tests.vcproj", "{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "micro-profiler.tests\tests.vcproj", "{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.tests", "micro-profiler.tests\micro-profiler.tests.vcproj", "{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

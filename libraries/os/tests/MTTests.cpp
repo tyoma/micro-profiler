@@ -106,6 +106,122 @@ namespace os
 				Assert::IsTrue(t2.id() != t3.id());
 				Assert::IsTrue(t3.id() != t1.id());
 			}
+
+
+			[TestMethod]
+			void InitializedRunReturnsValidThreads()
+			{
+				// INIT / ACT
+				auto_ptr<thread> t1(thread::run(&do_nothing, &do_nothing));
+				auto_ptr<thread> t2(thread::run(&do_nothing, &do_nothing));
+
+				// ASSERT
+				Assert::IsTrue(t1.get() != 0);
+				Assert::IsTrue(t2.get() != 0);
+				Assert::IsTrue(t2->id() != t1->id());
+			}
+
+
+			[TestMethod]
+			void InitializedRunInitializerAndJobAreCalledFromNewThread()
+			{
+				// INIT
+				unsigned int id_initializer1, id_job1, id_initializer2, id_job2;
+
+				// ACT
+				auto_ptr<thread> t1(thread::run(bind(&threadid_capture, &id_initializer1, 0), bind(&threadid_capture, &id_job1, 0)));
+				auto_ptr<thread> t2(thread::run(bind(&threadid_capture, &id_initializer2, 0), bind(&threadid_capture, &id_job2, 0)));
+
+				::Sleep(100);
+
+				// ASSERT
+				Assert::IsTrue(t1->id() == id_initializer1);
+				Assert::IsTrue(t1->id() == id_job1);
+				Assert::IsTrue(t2->id() == id_initializer2);
+				Assert::IsTrue(t2->id() == id_job2);
+			}
+
+
+			[TestMethod]
+			void EventFlagCreateRaised()
+			{
+				// INIT
+				event_flag e(true, false);
+
+				// ACT / ASSERT
+				Assert::IsTrue(waitable::satisfied == e.wait(0));
+				Assert::IsTrue(waitable::satisfied == e.wait(10000));
+				Assert::IsTrue(waitable::satisfied == e.wait(waitable::infinite));
+			}
+
+
+			[TestMethod]
+			void EventFlagCreateLowered()
+			{
+				// INIT
+				event_flag e(false, false);
+
+				// ACT / ASSERT
+				Assert::IsTrue(waitable::timeout == e.wait(0));
+				Assert::IsTrue(waitable::timeout == e.wait(200));
+			}
+
+
+			[TestMethod]
+			void EventFlagCreateAutoResettable()
+			{
+				// INIT
+				event_flag e(true, true);
+
+				e.wait(100);
+
+				// ACT / ASSERT
+				Assert::IsTrue(waitable::timeout == e.wait(100));
+			}
+
+
+			[TestMethod]
+			void RaisingEventFlag()
+			{
+				// INIT
+				event_flag e(false, false);
+
+				// ACT
+				e.raise();
+
+				// ACT / ASSERT
+				Assert::IsTrue(waitable::satisfied == e.wait());
+			}
+
+
+			[TestMethod]
+			void LoweringEventFlag()
+			{
+				// INIT
+				event_flag e(true, false);
+
+				// ACT
+				e.lower();
+
+				// ACT / ASSERT
+				Assert::IsTrue(waitable::timeout == e.wait(0));
+			}
+
+
+			[TestMethod]
+			void ThreadInitializerIsCalledSynchronuously()
+			{
+				// INIT
+				unsigned int id_initializer1, id_initializer2;
+
+				// ACT
+				auto_ptr<thread> t1(thread::run(bind(&threadid_capture, &id_initializer1, 100), &do_nothing));
+				auto_ptr<thread> t2(thread::run(bind(&threadid_capture, &id_initializer2, 100), &do_nothing));
+
+				// ASSERT
+				Assert::IsTrue(t1->id() == id_initializer1);
+				Assert::IsTrue(t2->id() == id_initializer2);
+			}
 		};
 	}
 }

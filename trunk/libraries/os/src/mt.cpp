@@ -11,41 +11,60 @@ namespace os
 {
 	namespace
 	{
-		typedef unsigned int (__stdcall *thread_proxy_fun)(void *);
+		void * const invalid_handle_value = reinterpret_cast<void *>(-1);
 
-		unsigned int __stdcall thread_proxy(function<void()> *f_)
+		unsigned int __stdcall thread_proxy(void *f_)
 		{
-			auto_ptr< function<void()> > f(f_);
+			auto_ptr<thread::action> f(reinterpret_cast<thread::action *>(f_));
 
 			(*f)();
 			return 0;
 		}
+
+		class initialized_run
+		{
+			const thread::action *_initializer, *_job;
+			event_flag *_initialized_flag;
+
+		public:
+			initialized_run(const thread::action &initializer, const thread::action &job, event_flag &initialized_flag)
+				: _initializer(&initializer), _job(&job), _initialized_flag(&initialized_flag)
+			{	}
+
+			void operator ()() const
+			{
+				(*_initializer)();
+				thread::action job(*_job);
+				_initialized_flag->raise();
+				job();
+			}
+		};
 	}
 
 
-	event_monitor::event_monitor(bool auto_reset)
-		: _handle(::CreateEvent(NULL, auto_reset ? TRUE : FALSE, FALSE, NULL))
+	event_flag::event_flag(bool raised, bool auto_reset)
+		: _handle(::CreateEvent(NULL, auto_reset ? FALSE : TRUE, raised ? TRUE : FALSE, NULL))
 	{	}
 
-	event_monitor::~event_monitor()
+	event_flag::~event_flag()
 	{	::CloseHandle(reinterpret_cast<HANDLE>(_handle));	}
 
-	void event_monitor::set()
+	void event_flag::raise()
 	{	::SetEvent(reinterpret_cast<HANDLE>(_handle));	}
 
-	void event_monitor::reset()
+	void event_flag::lower()
 	{	::ResetEvent(reinterpret_cast<HANDLE>(_handle));	}
 
-	event_monitor::wait_status event_monitor::wait(unsigned int to) volatile
+	event_flag::wait_status event_flag::wait(unsigned int to) volatile
 	{	return WAIT_OBJECT_0 == ::WaitForSingleObject(reinterpret_cast<HANDLE>(_handle), to) ? satisfied : timeout;	}
 
 
-	thread::thread(const function<void()> &job)
+	thread::thread(const action &job)
 	{
-		auto_ptr< function<void()> > f(new function<void()>(job));
+		auto_ptr<action> f(new action(job));
 
-		_thread = reinterpret_cast<void *>(_beginthreadex(0, 0, reinterpret_cast<thread_proxy_fun>(thread_proxy), f.get(), 0, &_id));
-		if (_thread != reinterpret_cast<void *>(-1))
+		_thread = reinterpret_cast<void *>(_beginthreadex(0, 0, &thread_proxy, f.get(), 0, &_id));
+		if (invalid_handle_value != _thread)
 			f.release();
 		else
 			throw runtime_error("New thread cannot be started!");
@@ -55,5 +74,14 @@ namespace os
 	{
 		::WaitForSingleObject(reinterpret_cast<HANDLE>(_thread), INFINITE);
 		::CloseHandle(reinterpret_cast<HANDLE>(_thread));
+	}
+
+	auto_ptr<thread> thread::run(const action &initializer, const action &job)
+	{
+		event_flag initialized(false, false);
+		auto_ptr<thread> t(new thread(initialized_run(initializer, job, initialized)));
+
+		initialized.wait();
+		return t;
 	}
 }

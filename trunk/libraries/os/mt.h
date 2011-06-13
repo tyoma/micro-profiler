@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 namespace std
 {
@@ -15,21 +16,22 @@ namespace os
 
 		static const unsigned int infinite = static_cast<unsigned int>(-1);
 
-		virtual wait_status wait(unsigned int timeout) volatile = 0;
+		virtual wait_status wait(unsigned int timeout = infinite) volatile = 0;
 	};
 
 
-	class event_monitor : public waitable
+	class event_flag : waitable
 	{
 		void *_handle;
 
 	public:
-		explicit event_monitor(bool auto_reset);
-		~event_monitor();
+		explicit event_flag(bool raised, bool auto_reset);
+		~event_flag();
 
-		void set();
-		void reset();
-		virtual wait_status wait(unsigned int timeout) volatile;
+		void raise();
+		void lower();
+
+		virtual wait_status wait(unsigned int timeout = infinite) volatile;
 	};
 
 
@@ -39,8 +41,13 @@ namespace os
 		void *_thread;
 
 	public:
-		thread(const std::function<void()> &job);
+		typedef std::function<void()> action;
+
+	public:
+		explicit thread(const action &job);
 		virtual ~thread() throw();
+
+		static std::auto_ptr<thread> run(const action &initializer, const action &job);
 
 		unsigned int id() const throw();
 	};

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-profiler\micro-profiler.vcproj", "{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcproj", "{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcproj", "{0266546B-335D-4BDD-9BF0-15FCC31056BE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler-stub\micro-profiler-stub.vcproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
@@ -21,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib", "libraries\os\src\o
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib.tests", "libraries\os\tests\oslib.tests.vcproj", "{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "micro-profiler.tests\tests.vcproj", "{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -31,10 +31,6 @@ Global
 		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}.Debug|Win32.Build.0 = Debug|Win32
 		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}.Release|Win32.ActiveCfg = Release|Win32
 		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}.Release|Win32.Build.0 = Release|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.Build.0 = Debug|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.ActiveCfg = Release|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.Build.0 = Release|Win32
 		{0266546B-335D-4BDD-9BF0-15FCC31056BE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{0266546B-335D-4BDD-9BF0-15FCC31056BE}.Debug|Win32.Build.0 = Debug|Win32
 		{0266546B-335D-4BDD-9BF0-15FCC31056BE}.Release|Win32.ActiveCfg = Release|Win32
@@ -54,6 +50,10 @@ Global
 		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Debug|Win32.Build.0 = Debug|Win32
 		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.ActiveCfg = Release|Win32
 		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.Build.0 = Release|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.Build.0 = Debug|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.ActiveCfg = Release|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

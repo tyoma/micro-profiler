@@ -51,6 +51,7 @@
 				AdditionalOptions="/Gy"
 				Optimization="1"
 				FavorSizeOrSpeed="2"
+				AdditionalIncludeDirectories="$(SolutionDir)libraries"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="false"
@@ -134,6 +135,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
+				AdditionalIncludeDirectories="$(SolutionDir)libraries"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -185,6 +187,10 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
+			RelativePathToProject=".\libraries\os\src\oslib.vcproj"
+		/>
 	</References>
 	<Files>
 		<File

@@ -223,8 +223,6 @@ namespace micro_profiler
 				auto_ptr<profiler_frontend> fe(new profiler_frontend(&factory3));
 				fe_released = false;
 
-				::Sleep(100);
-
 				// ACT
 				fe.reset();
 

@@ -65,6 +65,7 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir)libraries;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>rpcrt4.lib;diaguids.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -108,6 +109,7 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir)libraries;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>rpcrt4.lib;diaguids.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -218,6 +220,11 @@
     <Manifest Include="frontend\xpstyle.manifest">
       <DeploymentContent>true</DeploymentContent>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libraries\os\src\oslib.vcxproj">
+      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

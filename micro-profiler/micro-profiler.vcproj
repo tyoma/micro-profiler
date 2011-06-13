@@ -50,6 +50,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Gy"
 				Optimization="0"
+				AdditionalIncludeDirectories="$(SolutionDir)libraries"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
@@ -136,6 +137,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
+				AdditionalIncludeDirectories="$(SolutionDir)libraries"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
@@ -190,6 +192,10 @@
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
+			RelativePathToProject=".\libraries\os\src\oslib.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

@@ -3,7 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3EEF26C9-61BD-4ED0-BD43-595E7D7114AB}"
 	ProjectSection(SolutionItems) = preProject
-		local.testrunconfig = local.testrunconfig
 		readme.html = readme.html
 	EndProjectSection
 EndProject
@@ -22,6 +21,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployment", "deployment\de
 		{3D930790-1E56-4749-9B09-731E22556CB1} = {3D930790-1E56-4749-9B09-731E22556CB1}
 		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF} = {6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib", "libraries\os\src\oslib.vcxproj", "{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib.tests", "libraries\os\tests\oslib.tests.vcxproj", "{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +51,14 @@ Global
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Debug|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.Build.0 = Release|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Debug|Win32.Build.0 = Debug|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Release|Win32.ActiveCfg = Release|Win32
+		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Release|Win32.Build.0 = Release|Win32
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Debug|Win32.Build.0 = Debug|Win32
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.ActiveCfg = Release|Win32
+		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

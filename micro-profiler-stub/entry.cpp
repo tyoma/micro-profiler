@@ -19,6 +19,7 @@
 //	THE SOFTWARE.
 
 #include "./../micro-profiler/entry.h"
+#include <os/mt.h>
 
 extern "C" __declspec(naked, dllexport) void _penter()
 {

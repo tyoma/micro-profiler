@@ -20,25 +20,6 @@ namespace os
 			(*f)();
 			return 0;
 		}
-
-		class initialized_run
-		{
-			const thread::action *_initializer, *_job;
-			event_flag *_initialized_flag;
-
-		public:
-			initialized_run(const thread::action &initializer, const thread::action &job, event_flag &initialized_flag)
-				: _initializer(&initializer), _job(&job), _initialized_flag(&initialized_flag)
-			{	}
-
-			void operator ()() const
-			{
-				(*_initializer)();
-				thread::action job(*_job);
-				_initialized_flag->raise();
-				job();
-			}
-		};
 	}
 
 
@@ -78,8 +59,23 @@ namespace os
 
 	auto_ptr<thread> thread::run(const action &initializer, const action &job)
 	{
+		struct initialized_run
+		{
+			const thread::action *initializer, *job;
+			event_flag *initialized_flag;
+
+			void operator ()() const
+			{
+				(*initializer)();
+				thread::action job(*this->job);
+				initialized_flag->raise();
+				job();
+			}
+		};
+
 		event_flag initialized(false, false);
-		auto_ptr<thread> t(new thread(initialized_run(initializer, job, initialized)));
+		initialized_run r = {	&initializer, &job, &initialized	};
+		auto_ptr<thread> t(new thread(r));
 
 		initialized.wait();
 		return t;

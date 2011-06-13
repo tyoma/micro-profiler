@@ -6,6 +6,7 @@
 namespace std
 {
 	using tr1::function;
+	using tr1::bind;
 }
 
 namespace os

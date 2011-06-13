@@ -20,7 +20,14 @@
 
 #pragma once
 
+#include <memory>
+
 struct IProfilerFrontend;
+
+namespace os
+{
+	class thread;
+}
 
 namespace micro_profiler
 {
@@ -34,10 +41,9 @@ namespace micro_profiler
 	{
 		calls_collector &_collector;
 		frontend_factory _factory;
-		unsigned _frontend_threadid;
-		void *_frontend_thread;
+		std::auto_ptr<os::thread> _frontend_thread;
 
-		static unsigned int __stdcall frontend_worker_proxy(void *param);
+		void frontend_initialize();
 		void frontend_worker();
 
 		profiler_frontend(const profiler_frontend &);

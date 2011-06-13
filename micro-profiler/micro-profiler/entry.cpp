@@ -24,10 +24,12 @@
 #include "com_helpers.h"
 #include "_generated/microprofilerfrontend_i.h"
 
+#include <os/mt.h>
 #include <atlbase.h>
 #include <process.h>
 #include <vector>
 
+using namespace os;
 using namespace std;
 
 extern "C" __declspec(naked, dllexport) void _penter()
@@ -76,56 +78,57 @@ namespace micro_profiler
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _collector(*calls_collector::instance()), _factory(factory),
-			_frontend_thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &frontend_worker_proxy, this, 0, &_frontend_threadid)))
+			_frontend_thread(thread::run(bind(&profiler_frontend::frontend_initialize, this), bind(&profiler_frontend::frontend_worker, this)))
 	{	}
 
 	profiler_frontend::~profiler_frontend()
 	{
-		::PostThreadMessage(_frontend_threadid, WM_QUIT, 0, 0);
-		::WaitForSingleObject(reinterpret_cast<HANDLE>(_frontend_thread), INFINITE);
-		::CloseHandle(reinterpret_cast<HANDLE>(_frontend_thread));
+		::PostThreadMessage(_frontend_thread->id(), WM_QUIT, 0, 0);
 	}
 
-	unsigned int __stdcall profiler_frontend::frontend_worker_proxy(void *param)
+	void profiler_frontend::frontend_initialize()
 	{
+		MSG msg = { 0 };
+
 		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-		::CoInitialize(NULL);
-		reinterpret_cast<profiler_frontend *>(param)->frontend_worker();
-		::CoUninitialize();
-		return 0;
+		::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 	}
 
 	void profiler_frontend::frontend_worker()
 	{
-		analyzer a(_collector.profiler_latency());
-		vector<FunctionStatisticsDetailed> buffer;
-		vector<FunctionStatistics> children_buffer;
-		CComPtr<IProfilerFrontend> fe;
-		TCHAR image_path[MAX_PATH + 1] = { 0 };
-		UINT_PTR timerid = ::SetTimer(NULL, 0, 10, NULL);
-
-		_factory(&fe);
-		if (fe)
+		::CoInitialize(NULL);
 		{
-			MSG msg;
+			analyzer a(_collector.profiler_latency());
+			vector<FunctionStatisticsDetailed> buffer;
+			vector<FunctionStatistics> children_buffer;
+			CComPtr<IProfilerFrontend> fe;
+			TCHAR image_path[MAX_PATH + 1] = { 0 };
+			UINT_PTR timerid = ::SetTimer(NULL, 0, 10, NULL);
 
-			::GetModuleFileName(NULL, image_path, MAX_PATH);
-			fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)), c_ticks_resolution);
-			while (::GetMessage(&msg, NULL, 0, 0))
+			_factory(&fe);
+			if (fe)
 			{
-				if (msg.message == WM_TIMER && msg.wParam == timerid)
-				{
-					a.clear();
-					_collector.read_collected(a);
-					copy(a.begin(), a.end(), buffer, children_buffer);
-					if (!buffer.empty())
-						fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
-				}
+				MSG msg;
 
-				::TranslateMessage(&msg);
-				::DispatchMessage(&msg);
+				::GetModuleFileName(NULL, image_path, MAX_PATH);
+				fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)), c_ticks_resolution);
+				while (::GetMessage(&msg, NULL, 0, 0))
+				{
+					if (msg.message == WM_TIMER && msg.wParam == timerid)
+					{
+						a.clear();
+						_collector.read_collected(a);
+						copy(a.begin(), a.end(), buffer, children_buffer);
+						if (!buffer.empty())
+							fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
+					}
+
+					::TranslateMessage(&msg);
+					::DispatchMessage(&msg);
+				}
 			}
+			::KillTimer(NULL, timerid);
 		}
-		::KillTimer(NULL, timerid);
+		::CoUninitialize();
 	}
 }

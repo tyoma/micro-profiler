@@ -51,7 +51,7 @@
 				AdditionalOptions="/Gy"
 				Optimization="1"
 				FavorSizeOrSpeed="2"
-				AdditionalIncludeDirectories="$(SolutionDir)libraries"
+				AdditionalIncludeDirectories="./../libraries"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="false"

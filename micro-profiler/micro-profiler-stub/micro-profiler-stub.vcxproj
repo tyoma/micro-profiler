@@ -75,7 +75,7 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(SolutionDir)libraries</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -120,7 +120,7 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(SolutionDir)libraries</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

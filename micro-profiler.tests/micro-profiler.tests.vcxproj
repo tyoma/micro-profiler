@@ -72,7 +72,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy run-tests.cmd "$(OutDir)\run-tests.cmd"
+      <Command>copy run-tests.vs10.cmd "$(OutDir)\run-tests.cmd"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -96,7 +96,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PostBuildEvent>
-      <Command>copy run-tests.cmd "$(OutDir)\run-tests.cmd"
+      <Command>copy run-tests.vs10.cmd "$(OutDir)\run-tests.cmd"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -170,7 +170,8 @@
     <ClInclude Include="Helpers.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="run-tests.cmd" />
+    <None Include="run-tests.vs10.cmd" />
+    <None Include="run-tests.vs9.cmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

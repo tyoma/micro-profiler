@@ -89,7 +89,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy run-tests.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
+				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -165,7 +165,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy run-tests.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
+				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -351,8 +351,11 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\run-tests.cmd"
-			DeploymentContent="true"
+			RelativePath=".\run-tests.vs10.cmd"
+			>
+		</File>
+		<File
+			RelativePath=".\run-tests.vs9.cmd"
 			>
 		</File>
 		<File

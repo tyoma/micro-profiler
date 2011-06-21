@@ -38,6 +38,7 @@ namespace micro_profiler
 
 	class calls_collector::thread_trace_block
 	{
+		const unsigned int _thread_id;
 		const size_t _trace_limit;
 		mutex _block_mtx;
 		pod_vector<call_record> _traces[2];
@@ -46,21 +47,21 @@ namespace micro_profiler
 		void operator =(const thread_trace_block &);
 
 	public:
-		explicit thread_trace_block(size_t trace_limit);
+		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
 		~thread_trace_block();
 
 		void track(const call_record &call) throw();
-		void read_collected(unsigned int threadid, calls_collector::acceptor &a);
+		void read_collected(calls_collector::acceptor &a);
 	};
 
 
-	calls_collector::thread_trace_block::thread_trace_block(size_t trace_limit)
-		: _trace_limit(trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
+	calls_collector::thread_trace_block::thread_trace_block(unsigned int thread_id, size_t trace_limit)
+		: _thread_id(thread_id), _trace_limit(trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
 
 	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &other)
-		: _trace_limit(other._trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
+		: _thread_id(other._thread_id), _trace_limit(other._trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
 
 	calls_collector::thread_trace_block::~thread_trace_block()
@@ -79,7 +80,7 @@ namespace micro_profiler
 		}
 	}
 
-	void calls_collector::thread_trace_block::read_collected(unsigned int threadid, acceptor &a)
+	void calls_collector::thread_trace_block::read_collected(acceptor &a)
 	{
 		{
 			scoped_lock l(_block_mtx);
@@ -89,7 +90,7 @@ namespace micro_profiler
 
 		if (_inactive_trace->size())
 		{
-			a.accept_calls(threadid, _inactive_trace->data(), _inactive_trace->size());
+			a.accept_calls(_thread_id, _inactive_trace->data(), _inactive_trace->size());
 			_inactive_trace->clear();
 		}
 	}
@@ -110,18 +111,17 @@ namespace micro_profiler
 		} de;
 
 		const unsigned int check_times = 1000;
-		thread_trace_block &ttb = _call_traces.insert(make_pair(current_thread_id(), thread_trace_block(_trace_limit))).first->second;
+		thread_trace_block &ttb = get_current_thread_trace();
 		
 		for (unsigned int i = 0; i < check_times; ++i)
 			_penter(), _pexit();
 
-		ttb.read_collected(0, de);
+		ttb.read_collected(de);
 		_profiler_latency = de.delay;
 	}
 
 	calls_collector::~calls_collector()
-	{
-	}
+	{	}
 
 	calls_collector *calls_collector::instance() throw()
 	{	return &_instance;	}
@@ -130,21 +130,27 @@ namespace micro_profiler
 	{
 		scoped_lock l(_thread_blocks_mtx);
 
-		for (thread_traces_map::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
-			i->second.read_collected(i->first, a);
+		for (list<thread_trace_block>::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
+			i->read_collected(a);
 	}
 
 	void calls_collector::track(call_record call) throw()
+	{	get_current_thread_trace().track(call);	}
+
+	calls_collector::thread_trace_block &calls_collector::get_current_thread_trace()
 	{
-		thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(_trace_pointers_tls.get());
+		if (thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(_trace_pointers_tls.get()))
+			return *trace;
+		else
+			return construct_thread_trace();
+	}
 
-		if (!trace)
-		{
-			scoped_lock l(_thread_blocks_mtx);
+	calls_collector::thread_trace_block &calls_collector::construct_thread_trace()
+	{
+		scoped_lock l(_thread_blocks_mtx);
 
-			trace = &_call_traces.insert(make_pair(current_thread_id(), thread_trace_block(_trace_limit))).first->second;
-			_trace_pointers_tls.set(trace);
-		}
-		trace->track(call);
+		calls_collector::thread_trace_block &trace = *_call_traces.insert(_call_traces.end(), thread_trace_block(current_thread_id(), _trace_limit));
+		_trace_pointers_tls.set(&trace);
+		return trace;
 	}
 }

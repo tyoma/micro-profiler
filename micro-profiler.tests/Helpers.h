@@ -28,26 +28,6 @@ namespace micro_profiler
 		};
 
 
-		class waitable
-		{
-			void *_event;
-
-			waitable(const waitable &);
-			const waitable &operator =(const waitable &);
-
-		public:
-			static const int infinite = 0xFFFFFFFF;
-
-		public:
-			waitable(bool manual_reset = false);
-			~waitable();
-
-			bool wait(int timeout = infinite);
-			void set();
-			void reset();
-		};
-
-
 		template <typename T, size_t size>
 		inline T *end(T (&array_ptr)[size])
 		{	return array_ptr + size;	}

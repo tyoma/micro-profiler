@@ -1,3 +1,4 @@
+#sidebar TableOfContents
  * r138 (experimental)
   * Statistics of child calls made from a function selected is now available. You now can drill-down by double-clicking in child statistics list.
 

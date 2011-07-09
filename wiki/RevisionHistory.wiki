@@ -1,0 +1,21 @@
+ * r138 (experimental)
+  * Statistics of child calls made from a function selected is now available. You now can drill-down by double-clicking in child statistics list.
+
+ * r102
+  * Ability to create frontend as in-process server (by specifying {{{micro_profiler::profiler_frontend pf(&micro_profiler::create_inproc_frontend)}}}).
+
+ * r98
+  * Windows XP+ visual styles supported;
+  * Resizing of the main window supported;
+  * Statistics list view headers now have sorting direction arrows;
+  * Ability to copy all the statistics to the clipboard as text;
+  * Window icon added.
+
+ * r89
+  * Collector and Frontend are merged into one dll. You have to register only one file - the dll. Frontend is run from a surrogate COM-process;
+  * Recursion control: inclusive times are collected only for top-level function calls, plus maximal recursion depth is displayed for a function;
+  * Significant speedup in analysis thread by using address-specific hash-functions for statistics and recursion level dictionaries;
+  * Test runner (run-tests.cmd) is included into deployment package to ensure platform compatibility. Requires VS2008 with unit-testing framework installed.
+
+ * r68
+  * Initial revision. Separate collector/frontend parts.

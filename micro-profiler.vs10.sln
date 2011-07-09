@@ -10,21 +10,21 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-pro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler-stub\micro-profiler-stub.vcxproj", "{51DB4089-965E-B2EE-4739-F8457095F69A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler-stub\micro-profiler-stub.vcxproj", "{90DA9C27-EC26-AE75-8F57-B6935179DA27}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployment", "deployment\deployment.vcxproj", "{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700} = {D5D49128-2510-4A14-9A0F-9F8F0ABAD700}
-		{51DB4089-965E-B2EE-4739-F8457095F69A} = {51DB4089-965E-B2EE-4739-F8457095F69A}
+		{90DA9C27-EC26-AE75-8F57-B6935179DA27} = {90DA9C27-EC26-AE75-8F57-B6935179DA27}
 		{3D930790-1E56-4749-9B09-731E22556CB1} = {3D930790-1E56-4749-9B09-731E22556CB1}
 		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF} = {6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib", "libraries\os\src\oslib.vcxproj", "{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oslib.tests", "libraries\os\tests\oslib.tests.vcxproj", "{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.tests", "micro-profiler.tests\micro-profiler.tests.vcxproj", "{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mt", "libraries\wpl\mt\src\mt.vcxproj", "{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mt.tests", "libraries\wpl\mt\tests\mt.tests.vcxproj", "{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,13 +40,17 @@ Global
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Debug|Win32.Build.0 = Debug|Win32
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.ActiveCfg = Release|Win32
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.Build.0 = Release|Win32
-		{51DB4089-965E-B2EE-4739-F8457095F69A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{51DB4089-965E-B2EE-4739-F8457095F69A}.Debug|Win32.Build.0 = Debug|Win32
-		{51DB4089-965E-B2EE-4739-F8457095F69A}.Release|Win32.ActiveCfg = Release|Win32
-		{51DB4089-965E-B2EE-4739-F8457095F69A}.Release|Win32.Build.0 = Release|Win32
+		{90DA9C27-EC26-AE75-8F57-B6935179DA27}.Debug|Win32.ActiveCfg = Debug|Win32
+		{90DA9C27-EC26-AE75-8F57-B6935179DA27}.Debug|Win32.Build.0 = Debug|Win32
+		{90DA9C27-EC26-AE75-8F57-B6935179DA27}.Release|Win32.ActiveCfg = Release|Win32
+		{90DA9C27-EC26-AE75-8F57-B6935179DA27}.Release|Win32.Build.0 = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Debug|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.Build.0 = Release|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.Build.0 = Debug|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.ActiveCfg = Release|Win32
+		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.Build.0 = Release|Win32
 		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Debug|Win32.Build.0 = Debug|Win32
 		{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}.Release|Win32.ActiveCfg = Release|Win32
@@ -55,10 +59,6 @@ Global
 		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Debug|Win32.Build.0 = Debug|Win32
 		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.ActiveCfg = Release|Win32
 		{CB422FF5-92D5-45BA-99DD-9B9D42CBA88F}.Release|Win32.Build.0 = Release|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Debug|Win32.Build.0 = Debug|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.ActiveCfg = Release|Win32
-		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,3 +1,4 @@
+#sidebar TableOfContents
  * Collection of child calls statistics. This will allow defining the most hot execution paths at a glance;
  * Redevelopment of a frontend using TDD - otherwise I cannot be sure it has production quality;
  * Performance improvement - there is a potential of up to x3 times {{{_penter}}}/{{{_pexit}}} speedup;

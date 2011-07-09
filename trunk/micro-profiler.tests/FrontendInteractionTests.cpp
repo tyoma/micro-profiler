@@ -5,6 +5,7 @@
 
 #include "./../micro-profiler/_generated/microprofilerfrontend_i.h"
 
+#include <wpl/mt/thread.h>
 #include <atlbase.h>
 #include <memory>
 #include <vector>
@@ -12,6 +13,7 @@
 #include <algorithm>
 
 using namespace std;
+using namespace wpl::mt;
 using namespace System;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
@@ -41,12 +43,12 @@ namespace micro_profiler
 			CComBSTR fe_executable;
 			hyper fe_load_address;
 			hyper fe_ticks_resolution;
-			waitable fe_initialized;
+			event_flag fe_initialized(false, true);
 			size_t fe_raise_updated_limit;
 			vector<FunctionStatisticsDetailed> fe_update_statistics;
 			list< vector<FunctionStatistics> > fe_children_update_statistics;
 			unsigned fe_update_call_times;
-			waitable fe_stat_updated;
+			event_flag fe_stat_updated(false, true);
 			hyper fe_stop_call;
 
 			class FrontendMockup : IProfilerFrontend
@@ -83,7 +85,7 @@ namespace micro_profiler
 				STDMETHODIMP Initialize(BSTR executable, hyper load_address, hyper  ticks_resolution)
 				{
 					fe_executable = executable, fe_load_address = load_address, fe_ticks_resolution = ticks_resolution;
-					fe_initialized.set();
+					fe_initialized.raise();
 					return S_OK;
 				}
 
@@ -101,10 +103,10 @@ namespace micro_profiler
 							i->ChildrenStatistics = &v[0];
 						}
 					if (fe_raise_updated_limit && fe_update_statistics.size() >= fe_raise_updated_limit)
-						fe_stat_updated.set();
+						fe_stat_updated.raise();
 					while (count--)
 						if (statistics++->Statistics.FunctionAddress == fe_stop_call)
-							fe_stat_updated.set();
+							fe_stat_updated.raise();
 					return S_OK;
 				}
 			};
@@ -262,7 +264,7 @@ namespace micro_profiler
 				profiler_frontend fe(&factory3);
 
 				// ACT / ASSERT
-				Assert::IsFalse(fe_stat_updated.wait(500));
+				Assert::IsTrue(waitable::timeout == fe_stat_updated.wait(500));
 
 				// ASSERT
 				Assert::IsTrue(fe_update_call_times == 0);

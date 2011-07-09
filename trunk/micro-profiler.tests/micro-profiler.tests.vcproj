@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./../micro-profiler"
+				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				ExceptionHandling="2"
 				RuntimeLibrary="3"
@@ -65,6 +65,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="$(NoInherit)"
 				LinkIncremental="2"
+				IgnoreDefaultLibraryNames="libcmtd.lib;libcpmtd.lib"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				TargetMachine="1"
@@ -118,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./../micro-profiler"
+				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
 				PreprocessorDefinitions="WIN32;NDEBUG"
 				ExceptionHandling="2"
 				RuntimeLibrary="2"
@@ -140,6 +141,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="$(NoInherit)"
 				LinkIncremental="1"
+				IgnoreDefaultLibraryNames="libcmt.lib;libcpmt.lib"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -183,6 +185,10 @@
 			RelativePath="Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll"
 			AssemblyName="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
+			RelativePathToProject=".\libraries\wpl\mt\src\mt.vcproj"
 		/>
 	</References>
 	<Files>

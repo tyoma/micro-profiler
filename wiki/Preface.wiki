@@ -1,3 +1,4 @@
+#sidebar TableOfContents
 Profilers are split into two major categories: sampling and instrumenting.
 
 Major advantage of sampling profilers is that they are very easy to run and require almost zero steps to prepare executable image for profiling. On the other hand, the shortcoming of using sampling profiler is that it provides only statistical information about functions in use. To be strict - sampling profiler provides only the number of hits into a function in series of stack snapshots, which renders it hard to fine-tune small or rarely called functions. For this tasks it may take too long time to collect enough samples to build reasonable statistics.

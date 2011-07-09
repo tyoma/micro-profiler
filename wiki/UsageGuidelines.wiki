@@ -1,3 +1,4 @@
+#sidebar TableOfContents
 There several steps to add profiling support to your VisualStudio project (look for required files in the attachment section):
  # Add construction/destruction of the profiler's frontend to your project:
   # If executable's source project is allowed for modification: add global instance of {{{micro_profiler::profiler_frontend}}} class declared in {{{entry.h}}} include file. The object won't be used by your application, so you may enclose it in an anonymous namespace and move to a separate .cpp-file;

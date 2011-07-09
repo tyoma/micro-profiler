@@ -24,13 +24,18 @@
 #include "com_helpers.h"
 #include "_generated/microprofilerfrontend_i.h"
 
-#include <os/mt.h>
+#include <wpl/mt/thread.h>
 #include <atlbase.h>
 #include <process.h>
 #include <vector>
 #include <algorithm>
 
-using namespace os;
+namespace std
+{
+	using tr1::bind;
+}
+
+using namespace wpl::mt;
 using namespace std;
 
 extern "C" __declspec(naked, dllexport) void _penter()

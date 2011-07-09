@@ -24,9 +24,12 @@
 
 struct IProfilerFrontend;
 
-namespace os
+namespace wpl
 {
-	class thread;
+	namespace mt
+	{
+		class thread;
+	}
 }
 
 namespace micro_profiler
@@ -41,7 +44,7 @@ namespace micro_profiler
 	{
 		calls_collector &_collector;
 		frontend_factory _factory;
-		std::auto_ptr<os::thread> _frontend_thread;
+		std::auto_ptr<wpl::mt::thread> _frontend_thread;
 
 		void frontend_initialize();
 		void frontend_worker();

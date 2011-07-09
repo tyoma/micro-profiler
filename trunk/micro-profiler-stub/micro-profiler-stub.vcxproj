@@ -17,7 +17,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libraries\os\src\oslib.vcxproj">
+    <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
       <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
     </ProjectReference>
   </ItemGroup>

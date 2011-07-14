@@ -22,6 +22,7 @@
 
 #include "system.h"
 
+#include <wpl/mt/thread.h>
 #include <list>
 
 namespace micro_profiler
@@ -36,7 +37,7 @@ namespace micro_profiler
 
 		const size_t _trace_limit;
 		__int64 _profiler_latency;
-		tls _trace_pointers_tls;
+		wpl::mt::tls<thread_trace_block> _trace_pointers_tls;
 		mutex _thread_blocks_mtx;
 		std::list<thread_trace_block> _call_traces;
 

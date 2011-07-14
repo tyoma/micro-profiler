@@ -6,6 +6,7 @@
 #include "./../micro-profiler/_generated/microprofilerfrontend_i.h"
 
 #include <wpl/mt/thread.h>
+#include <wpl/mt/synchronization.h>
 #include <atlbase.h>
 #include <memory>
 #include <vector>

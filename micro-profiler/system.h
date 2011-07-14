@@ -26,21 +26,6 @@ namespace micro_profiler
 	unsigned int current_thread_id();
 	void yield();
 
-	class tls
-	{
-		unsigned int _tls_index;
-
-		tls(const tls &other);
-		const tls &operator =(const tls &rhs);
-
-	public:
-		tls();
-		~tls();
-
-		void *get() const;
-		void set(void *value);
-	};
-
 	class mutex
 	{
 		char _buffer[1024];

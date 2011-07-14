@@ -139,7 +139,7 @@ namespace micro_profiler
 
 	calls_collector::thread_trace_block &calls_collector::get_current_thread_trace()
 	{
-		if (thread_trace_block *trace = reinterpret_cast<thread_trace_block *>(_trace_pointers_tls.get()))
+		if (thread_trace_block *trace = _trace_pointers_tls.get())
 			return *trace;
 		else
 			return construct_thread_trace();

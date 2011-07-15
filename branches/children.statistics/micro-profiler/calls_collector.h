@@ -22,7 +22,8 @@
 
 #include "system.h"
 
-#include <hash_map>
+#include <wpl/mt/thread.h>
+#include <list>
 
 namespace micro_profiler
 {
@@ -30,9 +31,21 @@ namespace micro_profiler
 
 	class calls_collector
 	{
+		class thread_trace_block;
+
+		static calls_collector _instance;
+
+		const size_t _trace_limit;
+		__int64 _profiler_latency;
+		wpl::mt::tls<thread_trace_block> _trace_pointers_tls;
+		mutex _thread_blocks_mtx;
+		std::list<thread_trace_block> _call_traces;
+
+		thread_trace_block &get_current_thread_trace();
+		thread_trace_block &construct_thread_trace();
+
 	public:
 		struct acceptor;
-		class thread_trace_block;
 
 	public:
 		__declspec(dllexport) calls_collector(size_t trace_limit);
@@ -45,17 +58,6 @@ namespace micro_profiler
 
 		size_t trace_limit() const;
 		__int64 profiler_latency() const;
-
-	private:
-		static calls_collector _instance;
-
-		typedef stdext::hash_map<unsigned int, thread_trace_block> thread_traces_map;
-
-		const size_t _trace_limit;
-		__int64 _profiler_latency;
-		tls _trace_pointers_tls;
-		mutex _thread_blocks_mtx;
-		thread_traces_map _call_traces;
 	};
 
 	struct calls_collector::acceptor

@@ -61,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="primitives.h" />
     <ClInclude Include="com_helpers.h" />
+    <ClInclude Include="frontend\ordered_view.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="microprofilerfrontend.idl" />

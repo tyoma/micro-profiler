@@ -2,6 +2,7 @@
 #include <frontend/ordered_view.h>
 
 #include <hash_map>
+#include <utility>
 
 namespace
 {
@@ -20,6 +21,11 @@ namespace
 
 	typedef stdext::hash_map<void *, POD> pod_map;
 	typedef ordered_view<pod_map> sorted_pods;
+
+	std::pair<void *const, POD> make_pod(const POD &pod)
+	{
+		return std::make_pair((void *)&pod, pod);
+	}
 
 	bool sort_by_a(const pod_map::const_iterator &left, const pod_map::const_iterator &right)
 	{
@@ -65,6 +71,30 @@ namespace micro_profiler
 			}
 
 			[TestMethod]
+			void CanUseEmptyOrderedView()
+			{
+				pod_map source;
+				
+				POD dummy = {1, 1, 1.0}; // just for find_by_key
+
+				sorted_pods s(source);
+
+				s.sort(&sort_by_a, true);
+				Assert::IsTrue(s.size() == 0);
+				Assert::IsTrue(s.find_by_key(&dummy) == sorted_pods::npos);
+				
+				s.sort(&sort_by_a, false);
+				Assert::IsTrue(s.size() == 0);
+				Assert::IsTrue(s.find_by_key(&dummy) == sorted_pods::npos);
+
+				s.sort(sort_by_b(), false);
+				Assert::IsTrue(s.size() == 0);
+				Assert::IsTrue(s.find_by_key(&dummy) == sorted_pods::npos);
+
+				Assert::IsTrue(source.size() == 0);
+			}
+
+			[TestMethod]
 			void OrderedViewPreserveSize()
 			{
 				pod_map source;
@@ -74,7 +104,6 @@ namespace micro_profiler
 
 				source[&pod1] = pod1;
 				source[&pod2] = pod2;
-
 
 				sorted_pods s(source);
 				Assert::IsTrue(s.size() == source.size());
@@ -105,7 +134,9 @@ namespace micro_profiler
 				int i = 0;
 				pod_map::const_iterator it = source.begin();
 				for (; it != source.end(); ++it, ++i)
-					Assert::IsTrue((*it).second == s.at(i));
+				{
+					Assert::IsTrue((*it) == s.at(i));
+				}
 
 			}
 
@@ -125,9 +156,9 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.sort(&sort_by_a, true);
 				
-				Assert::IsTrue(s.at(0) == biggestA);
-				Assert::IsTrue(s.at(1) == biggestC);
-				Assert::IsTrue(s.at(2) == biggestB);
+				Assert::IsTrue(s.at(0) == make_pod(biggestA));
+				Assert::IsTrue(s.at(1) == make_pod(biggestC));
+				Assert::IsTrue(s.at(2) == make_pod(biggestB));
 			}
 
 			[TestMethod]
@@ -146,9 +177,9 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.sort(&sort_by_a, false);
 
-				Assert::IsTrue(s.at(0) == biggestB);
-				Assert::IsTrue(s.at(1) == biggestC);
-				Assert::IsTrue(s.at(2) == biggestA);
+				Assert::IsTrue(s.at(0) == make_pod(biggestB));
+				Assert::IsTrue(s.at(1) == make_pod(biggestC));
+				Assert::IsTrue(s.at(2) == make_pod(biggestA));
 			}
 
 			[TestMethod]
@@ -167,13 +198,13 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.sort(&sort_by_a, true);
 
-				Assert::IsTrue(s.at(0) == biggestA);
+				Assert::IsTrue(s.at(0) == make_pod(biggestA));
 
 				s.sort(sort_by_b(), true);
-				Assert::IsTrue(s.at(0) == biggestB);
+				Assert::IsTrue(s.at(0) == make_pod(biggestB));
 
 				s.sort(&sort_by_c, true);
-				Assert::IsTrue(s.at(0) == biggestC);
+				Assert::IsTrue(s.at(0) == make_pod(biggestC));
 			}
 
 			[TestMethod]
@@ -192,18 +223,98 @@ namespace micro_profiler
 				sorted_pods s(source);
 
 				s.sort(&sort_by_a, true);
-				Assert::IsTrue(s.at(0) == biggestA);
+				Assert::IsTrue(s.at(0) == make_pod(biggestA));
 
 				s.sort(&sort_by_a, false);
-				Assert::IsTrue(s.at(s.size()-1) == biggestA);
+				Assert::IsTrue(s.at(s.size()-1) == make_pod(biggestA));
 
 				s.sort(sort_by_b(), true);
-				Assert::IsTrue(s.at(0) == biggestB);
+				Assert::IsTrue(s.at(0) == make_pod(biggestB));
 
 				s.sort(sort_by_b(), false);
-				Assert::IsTrue(s.at(s.size()-1) == biggestB);
+				Assert::IsTrue(s.at(s.size()-1) == make_pod(biggestB));
 			}
 
+			[TestMethod]
+			void OrderedViewCanFindByKeyWithoutAnyPredicateSet()
+			{
+				pod_map source;
+
+				POD one = {-11, 21, 0.6};
+				POD two = {1, -10, 0.5};
+				POD three = {114, 1, 1.6};
+
+				source[&one] = one;
+				source[&two] = two;
+
+				sorted_pods s(source);
+
+				Assert::IsTrue(s.find_by_key(&one) != sorted_pods::npos);
+				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
+				Assert::IsTrue(s.find_by_key(&three) == sorted_pods::npos);
+			}
+
+			[TestMethod]
+			void OrderedViewCanFindByKeyWithPredicateSet()
+			{
+				pod_map source;
+
+				POD one = {114, 21, 99.6};
+				POD two = {1, -10, 1.0};
+				POD three = {-11, 1, 0.006};
+				POD four = {64, 1, 1.6};
+
+				source[&one] = one;
+				source[&two] = two;
+				source[&three] = three;
+
+				sorted_pods s(source);
+
+				s.sort(&sort_by_c, true);
+
+				Assert::IsTrue(s.find_by_key(&one) == 0);
+				Assert::IsTrue(s.find_by_key(&two) == 1);
+				Assert::IsTrue(s.find_by_key(&three) == 2);
+				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+			}
+
+			[TestMethod]
+			void OrderedViewCanFindByKeyWhenOrderChanged()
+			{
+				pod_map source;
+
+				POD one = {114, -21, 99.6};
+				POD two = {1, 0, 1.0};
+				POD three = {-11, -10, 0.006};
+				POD four = {64, 1, 1.6};
+
+				source[&one] = one;
+				source[&two] = two;
+				source[&three] = three;
+
+				sorted_pods s(source);
+
+				s.sort(&sort_by_c, true);
+
+				Assert::IsTrue(s.find_by_key(&one) == 0);
+				Assert::IsTrue(s.find_by_key(&two) == 1);
+				Assert::IsTrue(s.find_by_key(&three) == 2);
+				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+
+				s.sort(&sort_by_c, false); // change direction
+
+				Assert::IsTrue(s.find_by_key(&one) == 2);
+				Assert::IsTrue(s.find_by_key(&two) == 1);
+				Assert::IsTrue(s.find_by_key(&three) == 0);
+				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+
+				s.sort(sort_by_b(), true);
+
+				Assert::IsTrue(s.find_by_key(&one) == 2);
+				Assert::IsTrue(s.find_by_key(&two) == 0);
+				Assert::IsTrue(s.find_by_key(&three) == 1);
+				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+			}
 
 		};
 

@@ -82,16 +82,21 @@ template <class Map>
 class ordered_view
 {
 public:
-	typedef typename Map::value_type::second_type value_type;
+	typedef typename Map::value_type value_type;
+	typedef typename Map::key_type key_type;
+	
+	static const size_t npos = (size_t)(-1);
 
 	ordered_view(const Map &map);
 
-	size_t size();
+	size_t size() const;
 
 	template <typename Predicate>
 	void sort(Predicate predicate, bool ascending);
 
-	const value_type &at(size_t index);
+	const value_type &at(size_t index) const;
+
+	size_t find_by_key(const key_type &key) const;
 
 private:
 	typedef Map map_type;
@@ -133,7 +138,7 @@ ordered_view<Map>::ordered_view(const Map &map)
 }
 
 template <class Map>
-size_t ordered_view<Map>::size()
+size_t ordered_view<Map>::size() const
 {
 	return _ordered_data.size();
 }
@@ -147,7 +152,18 @@ void ordered_view<Map>::sort( Predicate predicate, bool ascending )
 }
 
 template <class Map>
-const typename ordered_view<Map>::value_type &ordered_view<Map>::at( size_t index )
+const typename ordered_view<Map>::value_type &ordered_view<Map>::at( size_t index ) const
 {
-	return (*_ordered_data.at(index)).second;
+	return *_ordered_data.at(index);
+}
+
+template <class Map>
+size_t ordered_view<Map>::find_by_key(const key_type &key) const
+{
+	for(size_t i = 0; i < _ordered_data.size(); ++i)
+	{
+		if((*_ordered_data[i]).first == key)
+			return i;
+	}
+	return npos;
 }

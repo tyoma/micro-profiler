@@ -24,60 +24,6 @@
 #include <vector>
 #include <algorithm>
 
-
-
-template<typename Functor>
-struct DescFunctor
-{
-	DescFunctor(Functor& f) : _f(f) {}
-
-	template<typename Arg>
-	bool operator()(const Arg &left, const Arg &right)
-	{
-		return _f(right, left);
-	}
-
-private:
-	Functor _f;
-};
-
-template<typename Functor>
-DescFunctor<Functor> make_desc(Functor& f)
-{
-	return DescFunctor<Functor>(f);
-}
-
-template <typename Iter>
-class Sorter
-{
-public:
-	typedef Iter sorted_type;
-
-	virtual void sort(sorted_type begin, sorted_type end, bool asc) = 0;
-
-	virtual ~Sorter(){};
-};
-
-template<typename Functor, typename Iter>
-class SorterImpl : public Sorter<Iter>
-{
-public:
-	SorterImpl(Functor& functor) : _functor(functor) {}
-
-	virtual void sort(sorted_type b, sorted_type e, bool asc)
-	{
-		if (asc)
-			std::sort(b, e, _functor);
-		else
-			std::sort(b, e, make_desc(_functor));
-	}
-
-private:
-	Functor _functor;
-};
-
-//////////////////////////////////////////////////////////////////////////
-
 template <class Map>
 class ordered_view
 {
@@ -99,13 +45,57 @@ public:
 	size_t find_by_key(const key_type &key) const;
 
 private:
+
 	typedef Map map_type;
 	typedef typename Map::const_iterator stored_type;
 	
 	typedef std::vector<typename stored_type> ordered_storage;
 	typedef typename ordered_storage::iterator sorter_arg;
 
-	typedef Sorter<sorter_arg> sorter_type;
+	// Utility struct for swap binary function args.
+	template<typename Functor>
+	struct desc_functor
+	{
+		desc_functor(Functor& f) : _f(f) {}
+
+		template<typename Arg>
+		bool operator()(const Arg &left, const Arg &right)
+		{
+			return _f(right, left);
+		}
+
+	private:
+		Functor _f;
+	};
+	// Sorter interface.
+	// We need this to be able to switch sorter. Since concrete sorter type 
+	// depends on functor type, we can't switch it without interface.
+	template <typename Iter>
+	class sorter
+	{
+	public:
+		typedef Iter sorted_type;
+
+		virtual void sort(sorted_type begin, sorted_type end, bool asc) = 0;
+
+		virtual ~sorter(){};
+	};
+	// Sorter implementation.
+	// This stuff(i.e. desc_functor, sorter, sorter_impl) was introduced to let compiler inline functor.
+	// We sacrifice one virtual call, but get bunch of functor inlines.
+	template<typename Functor>
+	class sorter_impl : public sorter<sorter_arg>
+	{
+	public:
+		sorter_impl(Functor& functor) : _functor(functor) {}
+
+		virtual void sort(sorted_type b, sorted_type e, bool asc);
+
+	private:
+		desc_functor<Functor> make_desc(Functor& f);
+
+		Functor _functor;
+	};
 
 	ordered_view(const ordered_view &);
 	ordered_view &operator=(const ordered_view &);
@@ -113,16 +103,16 @@ private:
 	template <typename Functor>
 	void reset_sorter(Functor f)
 	{
-		_sorter.reset(new SorterImpl<Functor, sorter_arg>(f));
+		_sorter.reset(new sorter_impl<Functor>(f));
 	}
 
 	const map_type &_map;
 	ordered_storage _ordered_data;
 	
-	std::auto_ptr<sorter_type> _sorter;
+	std::auto_ptr< sorter<sorter_arg> > _sorter;
 };
 
-/// Implementation
+/// ordered_view implementation
 
 template <class Map>
 ordered_view<Map>::ordered_view(const Map &map)
@@ -166,4 +156,23 @@ size_t ordered_view<Map>::find_by_key(const key_type &key) const
 			return i;
 	}
 	return npos;
+}
+
+/// sorter_impl implementation
+
+template<class Map>
+template<typename Functor>
+void ordered_view<Map>::sorter_impl<Functor>::sort(typename sorter_impl<Functor>::sorted_type b, typename sorter_impl<Functor>::sorted_type e, bool asc)
+{
+	if (asc)
+		std::sort(b, e, _functor);
+	else
+		std::sort(b, e, make_desc(_functor));
+}
+
+template<class Map>
+template<typename Functor>
+typename ordered_view<Map>::desc_functor<Functor> ordered_view<Map>::sorter_impl<Functor>::make_desc(Functor& f)
+{
+	return ordered_view<Map>::desc_functor<Functor>(f);
 }

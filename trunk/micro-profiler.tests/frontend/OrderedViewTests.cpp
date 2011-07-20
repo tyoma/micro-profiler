@@ -34,7 +34,7 @@ namespace
 
 	struct sort_by_b
 	{
-		bool operator()(const pod_map::const_iterator &left, const pod_map::const_iterator &right)
+		bool operator()(const pod_map::const_iterator &left, const pod_map::const_iterator &right) const
 		{
 			return (*left).second.b > (*right).second.b;
 		}

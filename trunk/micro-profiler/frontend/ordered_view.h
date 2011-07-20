@@ -27,118 +27,99 @@
 template <class Map>
 class ordered_view
 {
-public:
-	typedef typename Map::value_type value_type;
-	typedef typename Map::key_type key_type;
-	
-	static const size_t npos = (size_t)(-1);
-
-	ordered_view(const Map &map);
-
-	size_t size() const;
-	// Set order for internal orderd storage, save it until new order is set.
-	template <typename Predicate>
-	void set_order(Predicate predicate, bool ascending);
-	// Repopulate internal ordered storage from source map with respect to predicate set.
-	void resort();
-
-	const value_type &at(size_t index) const;
-
-	size_t find_by_key(const key_type &key) const;
-
-private:
-
-	typedef Map map_type;
 	typedef typename Map::const_iterator stored_type;
-	
 	typedef std::vector<typename stored_type> ordered_storage;
-	typedef typename ordered_storage::iterator sorter_arg;
 
-	// Utility struct for swap binary function args.
-	template<typename Functor>
-	struct desc_functor
-	{
-		desc_functor(Functor& f) : _f(f) {}
+	struct sorter;
 
-		template<typename Arg>
-		bool operator()(const Arg &left, const Arg &right)
-		{
-			return _f(right, left);
-		}
+	template <typename Predicate>
+	class sorter_impl;
 
-	private:
-		Functor _f;
-	};
-	// Sorter interface.
-	// We need this to be able to switch sorter. Since concrete sorter type 
-	// depends on functor type, we can't switch it without interface.
-	class sorter
-	{
-	public:
-		virtual void sort(sorter_arg begin, sorter_arg end) = 0;
+	const Map &_map;
+	ordered_storage _ordered_data;
+	std::auto_ptr<sorter> _sorter;
 
-		virtual ~sorter(){};
-	};
-	// Sorter implementation.
-	// This stuff(i.e. desc_functor, sorter, sorter_impl) was introduced to let compiler inline functor.
-	// We sacrifice one virtual call, but get bunch of functor inlines.
-	template<typename Functor>
-	class sorter_impl : public sorter
-	{
-	public:
-		sorter_impl(Functor& functor, bool asc) : _functor(functor), _asc(asc) {}
-
-		virtual void sort(sorter_arg b, sorter_arg e);
-
-	private:
-		desc_functor<Functor> make_desc(Functor& f);
-
-		Functor _functor;
-		bool _asc;
-	};
-
-	ordered_view(const ordered_view &);
-	ordered_view &operator=(const ordered_view &);
-
-	template <typename Functor>
-	void reset_sorter(Functor f, bool asc)
-	{
-		_sorter.reset(new sorter_impl<Functor>(f, asc));
-	}
 	// Repopulate internal storage with data from source map, ignores any predicate set.
 	void fetch_data();
 
-	const map_type &_map;
-	ordered_storage _ordered_data;
-	
-	std::auto_ptr<sorter> _sorter;
+	const ordered_view &operator =(const ordered_view &);
+
+public:
+	typedef typename Map::value_type value_type;
+	typedef typename Map::key_type key_type;
+
+	static const size_t npos = static_cast<size_t>(-1);
+
+public:
+	ordered_view(const Map &map);
+
+	// Set order for internal orderd storage, save it until new order is set.
+	template <typename Predicate>
+	void set_order(Predicate predicate, bool ascending);
+
+	// Repopulate internal ordered storage from source map with respect to predicate set.
+	void resort();
+
+	size_t size() const;
+	const value_type &at(size_t index) const;
+	size_t find_by_key(const key_type &key) const;
+};
+
+// Sorter interface.
+// We need this to be able to switch sorter. Since concrete sorter type 
+// depends on functor type, we can't switch it without interface.
+template <class Map>
+struct ordered_view<Map>::sorter
+{
+	typedef typename std::vector<typename Map::const_iterator>::iterator target_iterator;
+
+	virtual ~sorter()	{	}
+
+	virtual void sort(target_iterator begin, target_iterator end) const = 0;
+};
+
+// Sorter implementation.
+// This stuff(i.e. desc_functor, sorter, sorter_impl) was introduced to let compiler inline functor.
+// We sacrifice one virtual call, but get bunch of functor inlines.
+template <class Map>
+template <typename Predicate>
+class ordered_view<Map>::sorter_impl : public ordered_view<Map>::sorter
+{
+	Predicate _predicate;
+	bool _ascending;
+
+public:
+	sorter_impl(Predicate predicate, bool ascending)
+		: _predicate(predicate), _ascending(ascending)
+	{	}
+
+	virtual void sort(typename sorter::target_iterator begin, typename sorter::target_iterator end) const
+	{	std::sort(begin, end, *this);	}
+
+	bool operator ()(const typename Map::const_iterator &lhs, const typename Map::const_iterator &rhs) const
+	{	return _ascending ? _predicate(lhs, rhs) : _predicate(rhs, lhs);	}
 };
 
 /// ordered_view implementation
+template <class Map>
+inline ordered_view<Map>::ordered_view(const Map &map)
+	: _map(map)
+{	fetch_data();	}
 
 template <class Map>
-ordered_view<Map>::ordered_view(const Map &map)
-:_map(map)
-{ 
-	fetch_data();
-}
-
-template <class Map>
-size_t ordered_view<Map>::size() const
-{
-	return _ordered_data.size();
-}
+inline size_t ordered_view<Map>::size() const
+{	return _ordered_data.size();	}
 
 template <class Map>
 template <typename Predicate>
-void ordered_view<Map>::set_order( Predicate predicate, bool ascending )
+inline void ordered_view<Map>::set_order(Predicate predicate, bool ascending)
 {
-	reset_sorter(predicate, ascending);
+	_sorter.reset(new sorter_impl<Predicate>(predicate, ascending));
 	_sorter->sort(_ordered_data.begin(), _ordered_data.end());
 }
 
 template <class Map>
-void ordered_view<Map>::resort()
+inline void ordered_view<Map>::resort()
 {
 	fetch_data();
 
@@ -147,7 +128,7 @@ void ordered_view<Map>::resort()
 }
 
 template <class Map>
-void ordered_view<Map>::fetch_data()
+inline void ordered_view<Map>::fetch_data()
 {
 	stored_type it = _map.begin();
 	const stored_type end = _map.end();
@@ -159,13 +140,11 @@ void ordered_view<Map>::fetch_data()
 }
 
 template <class Map>
-const typename ordered_view<Map>::value_type &ordered_view<Map>::at( size_t index ) const
-{
-	return *_ordered_data.at(index);
-}
+inline const typename ordered_view<Map>::value_type &ordered_view<Map>::at( size_t index ) const
+{	return *_ordered_data.at(index);	}
 
 template <class Map>
-size_t ordered_view<Map>::find_by_key(const key_type &key) const
+inline size_t ordered_view<Map>::find_by_key(const key_type &key) const
 {
 	for(size_t i = 0; i < _ordered_data.size(); ++i)
 	{
@@ -173,23 +152,4 @@ size_t ordered_view<Map>::find_by_key(const key_type &key) const
 			return i;
 	}
 	return npos;
-}
-
-/// sorter_impl implementation
-
-template<class Map>
-template<typename Functor>
-void ordered_view<Map>::sorter_impl<Functor>::sort(typename ordered_view<Map>::sorter_arg b, typename ordered_view<Map>::sorter_arg e)
-{
-	if (_asc)
-		std::sort(b, e, _functor);
-	else
-		std::sort(b, e, make_desc(_functor));
-}
-
-template<class Map>
-template<typename Functor>
-typename ordered_view<Map>::desc_functor<Functor> ordered_view<Map>::sorter_impl<Functor>::make_desc(Functor& f)
-{
-	return ordered_view<Map>::desc_functor<Functor>(f);
 }

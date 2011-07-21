@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="micro-profiler"
 	ProjectGUID="{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
 	RootNamespace="microprofiler"
@@ -194,7 +194,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
-			RelativePathToProject=".\libraries\os\src\oslib.vcproj"
+			RelativePathToProject=".\libraries\wpl\mt\src\mt.vcproj"
 		/>
 	</References>
 	<Files>
@@ -288,6 +288,10 @@
 						DisableLanguageExtensions="false"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\ordered_view.h"
+				>
 			</File>
 			<File
 				RelativePath=".\frontend\ProfilerMainDialog.cpp"

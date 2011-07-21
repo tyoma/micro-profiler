@@ -194,6 +194,7 @@
     <ClInclude Include="calls_collector.h" />
     <ClInclude Include="com_helpers.h" />
     <ClInclude Include="entry.h" />
+    <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="frontend\ProxyBridge.h" />

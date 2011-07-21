@@ -192,6 +192,30 @@
 		/>
 	</References>
 	<Files>
+		<Filter
+			Name="frontend"
+			>
+			<File
+				RelativePath=".\frontend\OrderedViewTests.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAsManaged="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAsManaged="1"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\AnalyzerTests.cpp"
 			>

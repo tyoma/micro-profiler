@@ -97,7 +97,7 @@ public:
 	{	std::sort(begin, end, *this);	}
 
 	bool operator ()(const typename Map::const_iterator &lhs, const typename Map::const_iterator &rhs) const
-	{	return _ascending ? _predicate(lhs, rhs) : _predicate(rhs, lhs);	}
+	{	return _ascending ? _predicate(lhs->first, lhs->second, rhs->first, rhs->second) : _predicate(rhs->first, rhs->second, lhs->first, lhs->second);	}
 };
 
 /// ordered_view implementation

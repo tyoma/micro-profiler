@@ -27,25 +27,23 @@ namespace
 		return std::make_pair((void *)&pod, pod);
 	}
 
-	bool sort_by_a(const pod_map::const_iterator &left, const pod_map::const_iterator &right)
+	bool sort_by_a(const void *const, const POD &left, const void *const, const POD &right)
 	{
-		return (*left).second.a > (*right).second.a;
+		return left.a > right.a;
 	}
 
 	struct sort_by_b
 	{
-		bool operator()(const pod_map::const_iterator &left, const pod_map::const_iterator &right) const
+		bool operator()(const void *const, const POD &left, const void *const, const POD &right) const
 		{
-			return (*left).second.b > (*right).second.b;
+			return left.b > right.b;
 		}
 	};
 
-	bool sort_by_c(const pod_map::const_iterator &left, const pod_map::const_iterator &right)
+	bool sort_by_c(const void *const, const POD &left, const void *const, const POD &right)
 	{
-		return (*left).second.c > (*right).second.c;
+		return left.c > right.c;
 	}
-
-
 }
 
 //using namespace std;

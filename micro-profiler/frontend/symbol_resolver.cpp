@@ -39,7 +39,7 @@ namespace micro_profiler
 	symbol_resolver::~symbol_resolver()
 	{	}
 
-	tstring symbol_resolver::symbol_name_by_va(const void *address) const
+	const tstring &symbol_resolver::symbol_name_by_va(const void *address) const
 	{
 		names_cache::const_iterator i = _cached_names.find(address);
 

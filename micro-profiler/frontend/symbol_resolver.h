@@ -45,6 +45,6 @@ namespace micro_profiler
 		symbol_resolver(const tstring &image_path, unsigned __int64 load_address);
 		~symbol_resolver();
 
-		tstring symbol_name_by_va(const void *address) const;
+		const tstring &symbol_name_by_va(const void *address) const;
 	};
 }

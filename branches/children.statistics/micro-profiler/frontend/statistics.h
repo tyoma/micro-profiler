@@ -20,57 +20,108 @@
 
 #pragma once
 
-#include "./../_generated/microprofilerfrontend_i.h"
 #include "./../primitives.h"
+#include "ordered_view.h"
 
-#include <tchar.h>
-#include <hash_map>
-#include <string>
-#include <vector>
-#include <memory>
+#include <functional>
+
+namespace std
+{
+	using tr1::function;
+}
+
+typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
 namespace micro_profiler
 {
-	class symbol_resolver;
-
 	class statistics
 	{
-		class dereferencing_wrapper;
-		class children_dereferencing_wrapper;
+		typedef std::function<bool (const void *lhs_addr, const function_statistics &lhs, const void *rhs_addr, const function_statistics &rhs)> _predicate_func_t;
 
-		const symbol_resolver &_symbol_resolver;
-		std::auto_ptr<dereferencing_wrapper> _predicate;
-		std::auto_ptr<children_dereferencing_wrapper> _children_predicate;
 		detailed_statistics_map _statistics;
-		const statistics_map *_children_statistics;
-		std::vector<detailed_statistics_map::const_iterator> _sorted_statistics;
-		std::vector<statistics_map::const_iterator> _sorted_children_statistics;
+		ordered_view<detailed_statistics_map> _main_view;
+		std::auto_ptr< ordered_view<statistics_map> > _focused_view;
+		_predicate_func_t _children_predicate;
+		bool _children_ascending;
 
 		statistics(const statistics &);
 		void operator =(const statistics &);
 
 	public:
-		typedef statistics_map::value_type statistics_entry;
-		typedef detailed_statistics_map::value_type statistics_entry_detailed;
-		typedef bool (*sort_predicate)(const void *lhs_addr, const function_statistics &lhs, const void *rhs_addr, const function_statistics &rhs, const symbol_resolver &resolver);
+		typedef _predicate_func_t predicate_func_t;
 
 	public:
-		statistics(const symbol_resolver &resolver);
-		virtual ~statistics();
+		statistics();
+		~statistics();
 
-		void sort(sort_predicate predicate, bool ascending);
-		const statistics_entry_detailed &at(size_t index) const;
+		void set_order(const predicate_func_t &predicate, bool ascending);
+		const detailed_statistics_map::value_type &at(size_t index) const;
 		size_t size() const;
-
-		size_t find_index(const void *address) const;
 
 		void set_focus(size_t index);
 		void remove_focus();
-		void sort_children(sort_predicate predicate, bool ascending);
-		const statistics_entry &at_children(size_t index) const;
+		size_t find_index(const void *address) const;
+
+		void set_children_order(const predicate_func_t &predicate, bool ascending);
+		const statistics_map::value_type &at_children(size_t index) const;
 		size_t size_children() const;
 
 		void clear();
-		bool update(const FunctionStatisticsDetailed *data, unsigned int count);
+		void update(const FunctionStatisticsDetailed *data, unsigned int count);
 	};
+
+
+	inline statistics::statistics()
+		: _main_view(_statistics)
+	{	}
+
+	inline statistics::~statistics()
+	{	}
+
+	inline void statistics::set_order(const predicate_func_t &predicate, bool ascending)
+	{	_main_view.set_order(predicate, ascending);	}
+
+	inline const detailed_statistics_map::value_type &statistics::at(size_t index) const
+	{	return _main_view.at(index);	}
+
+	inline size_t statistics::size() const
+	{	return _main_view.size();	}
+	
+	inline void statistics::set_focus(size_t index)
+	{
+		const detailed_statistics_map::value_type &item = at(index);
+
+		_focused_view.reset(new ordered_view<statistics_map>(item.second.children_statistics));
+		if (_children_predicate)
+			_focused_view->set_order(_children_predicate, _children_ascending);
+	}
+
+	inline void statistics::remove_focus()
+	{
+		_focused_view.reset();
+	}
+
+	inline size_t statistics::find_index(const void *address) const
+	{	return _main_view.find_by_key(address);	}
+
+	inline void statistics::set_children_order(const predicate_func_t &predicate, bool ascending)
+	{
+		_children_predicate = predicate;
+		_children_ascending = ascending;
+		if (_focused_view.get())
+			_focused_view->set_order(predicate, ascending);
+	}
+
+	inline const statistics_map::value_type &statistics::at_children(size_t index) const
+	{	return _focused_view->at(index);	}
+
+	inline size_t statistics::size_children() const
+	{	return _focused_view.get() ? _focused_view->size() : 0;	}
+
+	inline void statistics::clear()
+	{
+		_focused_view.reset();
+		_statistics.clear();
+		_main_view.resort();
+	}
 }

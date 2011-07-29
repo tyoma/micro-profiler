@@ -21,21 +21,32 @@
 #pragma once
 
 #include "resource.h"
-#include "statistics.h"
 
 #include <atlbase.h>
 #include <atltypes.h>
 #include <atlwin.h>
+#include <string>
+#include <functional>
+
+namespace std
+{
+	using tr1::function;
+}
 
 namespace micro_profiler
 {
+	struct function_statistics;
+	class statistics;
+	class symbol_resolver;
 	typedef std::basic_string<TCHAR> tstring;
-	typedef tstring (*print_function)(const statistics::statistics_entry &s, const symbol_resolver &resolver);
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	{
-		print_function _printers[7];
-		std::pair<statistics::sort_predicate, bool /*default_ascending*/> _sorters[7];
+		typedef std::function<tstring(const void *, const function_statistics &)> print_func_t;
+		typedef std::function<bool (const void *lhs_addr, const function_statistics &lhs, const void *rhs_addr, const function_statistics &rhs)> predicate_func_t;
+
+		print_func_t _printers[7];
+		std::pair<predicate_func_t, bool /*default_ascending*/> _sorters[7];
 		statistics &_statistics;
 		const symbol_resolver &_resolver;
 		CWindow _statistics_view, _children_statistics_view, _clear_button, _copy_all_button;

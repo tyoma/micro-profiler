@@ -268,7 +268,7 @@ namespace micro_profiler
 		header_item.mask = HDI_FORMAT;
 		header_item.fmt = HDF_STRING;
 
-		statistics::predicate_func_t predicate = _sorters[pnmlv->iSubItem].first;
+		predicate_func_t predicate = _sorters[pnmlv->iSubItem].first;
 		sort_ascending = pnmlv->iSubItem != last_sort_column ? _sorters[pnmlv->iSubItem].second : !sort_ascending;
 		if (pnmlv->iSubItem != last_sort_column)
 			Header_SetItem(header, last_sort_column, &header_item);

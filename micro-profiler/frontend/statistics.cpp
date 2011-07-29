@@ -54,9 +54,19 @@ namespace micro_profiler
 	void statistics::update(const FunctionStatisticsDetailed *data, unsigned int count)
 	{
 		for (; count; --count, ++data)
-			_statistics[reinterpret_cast<void *>(data->Statistics.FunctionAddress)] += *data;
+		{
+			const void *address = reinterpret_cast<void *>(data->Statistics.FunctionAddress);
+
+			_statistics[address] += *data;
+			for (int i = 0; i != data->ChildrenCount; ++i)
+			{
+				const FunctionStatistics &child = *(data->ChildrenStatistics + i);
+
+				_statistics[reinterpret_cast<void *>(child.FunctionAddress)].parent_statistics[address] += child.TimesCalled;
+			}
+		}
 		_main_view.resort();
-		if (_focused_view.get())
-			_focused_view->resort();
+		if (_children_view.get())
+			_children_view->resort();
 	}
 }

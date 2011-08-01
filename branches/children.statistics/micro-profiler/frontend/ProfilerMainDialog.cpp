@@ -73,6 +73,9 @@ namespace micro_profiler
 				tstring operator ()(const void *address, const function_statistics &) const
 				{	return _resolver.symbol_name_by_va(address);	}
 
+				tstring operator ()(const void *address, unsigned __int64) const
+				{	return _resolver.symbol_name_by_va(address);	}
+
 				bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
 				{	return _resolver.symbol_name_by_va(lhs_addr) < _resolver.symbol_name_by_va(rhs_addr);	}
 			};
@@ -82,8 +85,14 @@ namespace micro_profiler
 				tstring operator ()(const void *, const function_statistics &s) const
 				{	return to_string(s.times_called);	}
 
+				tstring operator ()(const void *, unsigned __int64 times_called) const
+				{	return to_string(times_called);	}
+
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.times_called < rhs.times_called;	}
+
+				bool operator ()(const void *, unsigned __int64 lhs, const void *, unsigned __int64 rhs) const
+				{	return lhs < rhs;	}
 			};
 
 			struct by_exclusive_time
@@ -146,6 +155,9 @@ namespace micro_profiler
 		_printers[5] = functors::by_avg_inclusive_call_time();
 		_printers[6] = functors::by_max_reentrance();
 
+		_parent_printers[0] = functors::by_name(resolver);
+		_parent_printers[1] = functors::by_times_called();
+
 		_sorters[0] = make_pair(functors::by_name(resolver), true);
 		_sorters[1] = make_pair(functors::by_times_called(), false);
 		_sorters[2] = make_pair(functors::by_exclusive_time(), false);
@@ -153,6 +165,8 @@ namespace micro_profiler
 		_sorters[4] = make_pair(functors::by_avg_exclusive_call_time(), false);
 		_sorters[5] = make_pair(functors::by_avg_inclusive_call_time(), false);
 		_sorters[6] = make_pair(functors::by_max_reentrance(), false);
+
+		_statistics.set_parents_order(functors::by_times_called(), false);
 
 		Create(NULL, 0);
 
@@ -183,6 +197,10 @@ namespace micro_profiler
 		ListView_InsertColumn(_children_statistics_view, 5, &columns[5]);
 		ListView_InsertColumn(_children_statistics_view, 6, &columns[6]);
 		ListView_SetExtendedListViewStyle(_children_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_children_statistics_view));
+
+		ListView_InsertColumn(_parents_statistics_view, 0, &columns[0]);
+		ListView_InsertColumn(_parents_statistics_view, 1, &columns[1]);
+		ListView_SetExtendedListViewStyle(_parents_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_parents_statistics_view));
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()
@@ -195,8 +213,10 @@ namespace micro_profiler
 	{
 		ListView_SetItemCountEx(_statistics_view, new_count, LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
 		ListView_SetItemCountEx(_children_statistics_view, _statistics.size_children(), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
+		ListView_SetItemCountEx(_parents_statistics_view, _statistics.size_parents(), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
 		_statistics_view.Invalidate(FALSE);
 		_children_statistics_view.Invalidate(FALSE);
+		_parents_statistics_view.Invalidate(FALSE);
 		SelectByAddress(_last_selected);
 	}
 
@@ -206,6 +226,7 @@ namespace micro_profiler
 
 		_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
 		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
+		_parents_statistics_view = GetDlgItem(IDC_PARENTS_STATISTICS);
 		_clear_button = GetDlgItem(IDC_BTN_CLEAR);
 		_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
 
@@ -231,25 +252,27 @@ namespace micro_profiler
 
 		if (LVIF_TEXT & pdi->item.mask)
 		{
-			const void *address = 0;
-			const function_statistics *s = 0;
+			tstring item_text;
 			
 			if (control_id == IDC_CHILDREN_STATISTICS)
 			{
 				const statistics_map::value_type &v = _statistics.at_children(pdi->item.iItem);
 
-				address = v.first;
-				s = &v.second;
+				item_text = _printers[pdi->item.iSubItem](v.first, v.second);
 			}
-			else
+			else if (control_id == IDC_FUNCTIONS_STATISTICS)
 			{
 				const detailed_statistics_map::value_type &v = _statistics.at(pdi->item.iItem);
 
-				address = v.first;
-				s = &v.second;
+				item_text = _printers[pdi->item.iSubItem](v.first, v.second);
 			}
-			tstring item_text(_printers[pdi->item.iSubItem](address, *s));
-		
+			else if (control_id == IDC_PARENTS_STATISTICS)
+			{
+				const parent_statistics_map::value_type &v = _statistics.at_parents(pdi->item.iItem);
+
+				item_text = _printers[pdi->item.iSubItem](v.first, v.second);
+			}
+
 			_tcsncpy_s(pdi->item.pszText, pdi->item.cchTextMax, item_text.c_str(), _TRUNCATE);
 			handled = TRUE;
 		}
@@ -296,14 +319,18 @@ namespace micro_profiler
 		else
 			return 0;
 		ListView_SetItemCountEx(_children_statistics_view, _statistics.size_children(), 0);
+		ListView_SetItemCountEx(_parents_statistics_view, _statistics.size_parents(), 0);
 		return 0;
 	}
 
-	LRESULT ProfilerMainDialog::OnDrillDown(int /*control_id*/, LPNMHDR pnmh, BOOL &handled)
+	LRESULT ProfilerMainDialog::OnDrillDown(int control_id, LPNMHDR pnmh, BOOL &handled)
 	{
 		const NMITEMACTIVATE *item = (const NMITEMACTIVATE *)pnmh;
 
-		SelectByAddress(_statistics.at_children(item->iItem).first);
+		if (IDC_PARENTS_STATISTICS == control_id)
+			SelectByAddress(_statistics.at_parents(item->iItem).first);
+		else if (IDC_CHILDREN_STATISTICS == control_id)
+			SelectByAddress(_statistics.at_children(item->iItem).first);
 		handled = TRUE;
 		return 0;
 	}
@@ -314,6 +341,7 @@ namespace micro_profiler
 		_statistics.clear();
 		ListView_SetItemCountEx(_statistics_view, 0, 0);
 		ListView_SetItemCountEx(_children_statistics_view, 0, 0);
+		ListView_SetItemCountEx(_parents_statistics_view, 0, 0);
 		handled = TRUE;
 		return 0;
 	}
@@ -362,20 +390,25 @@ namespace micro_profiler
 	void ProfilerMainDialog::RelocateControls(const CSize &size)
 	{
 		const int spacing = 7;
-		CRect rcButton, rc(CPoint(0, 0), size), rcChildren;
+		CRect rcButton, rc(CPoint(0, 0), size), rcChildren, rcParents;
 
 		_clear_button.GetWindowRect(&rcButton);
 		_children_statistics_view.GetWindowRect(&rcChildren);
+		_parents_statistics_view.GetWindowRect(&rcParents);
 		rc.DeflateRect(spacing, spacing, spacing, spacing + rcButton.Height());
 		rcButton.MoveToXY(rc.left, rc.bottom);
 		_clear_button.MoveWindow(rcButton);
-		rcButton.MoveToX(rcButton.Width() + spacing);
+		rcButton.MoveToX(rcButton.right + spacing);
 		_copy_all_button.MoveWindow(rcButton);
 		rc.DeflateRect(0, 0, 0, spacing);
+		rcParents.left = rc.left, rcParents.right = rc.right;
+		rcParents.MoveToY(rc.top);
+		rc.DeflateRect(0, rcParents.Height() + spacing, 0, 0);
 		rcChildren.left = rc.left, rcChildren.right = rc.right;
 		rcChildren.MoveToY(rc.bottom - rcChildren.Height());
 		rc.DeflateRect(0, 0, 0, spacing + rcChildren.Height());
 		_children_statistics_view.MoveWindow(rcChildren);
+		_parents_statistics_view.MoveWindow(rcParents);
 		_statistics_view.MoveWindow(rc);
 	}
 }

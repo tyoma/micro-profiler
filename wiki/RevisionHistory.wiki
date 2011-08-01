@@ -1,4 +1,7 @@
 #sidebar TableOfContents
+ * r265 (experimental)
+  * Statistics of parent callers is now visible for the focused function. Also it is possible to drill-up by double-clicking the caller function.
+
  * r138 (experimental)
   * Statistics of child calls made from a function selected is now available. You now can drill-down by double-clicking in child statistics list.
 

@@ -43,13 +43,15 @@ namespace micro_profiler
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	{
 		typedef std::function<tstring(const void *, const function_statistics &)> print_func_t;
+		typedef std::function<tstring(const void *, unsigned __int64)> print_parent_func_t;
 		typedef std::function<bool (const void *lhs_addr, const function_statistics &lhs, const void *rhs_addr, const function_statistics &rhs)> predicate_func_t;
 
 		print_func_t _printers[7];
+		print_parent_func_t _parent_printers[2];
 		std::pair<predicate_func_t, bool /*default_ascending*/> _sorters[7];
 		statistics &_statistics;
 		const symbol_resolver &_resolver;
-		CWindow _statistics_view, _children_statistics_view, _clear_button, _copy_all_button;
+		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
 		int _last_sort_column, _last_children_sort_column;
 		bool _sort_ascending, _sort_children_ascending;
 		const void *_last_selected;
@@ -68,10 +70,10 @@ namespace micro_profiler
 		BEGIN_MSG_MAP(ProfilerMainDialog)
 			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog);
 			MESSAGE_HANDLER(WM_SIZE, OnSize);
-			NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_GETDISPINFO, OnGetDispInfo);
+			NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_PARENTS_STATISTICS, LVN_GETDISPINFO, OnGetDispInfo);
 			NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_COLUMNCLICK, OnColumnSort);
 			NOTIFY_RANGE_CODE_HANDLER(IDC_FUNCTIONS_STATISTICS, IDC_FUNCTIONS_STATISTICS, LVN_ITEMCHANGED, OnFocusedFunctionChange);
-			NOTIFY_RANGE_CODE_HANDLER(IDC_CHILDREN_STATISTICS, IDC_CHILDREN_STATISTICS, LVN_ITEMACTIVATE, OnDrillDown);
+			NOTIFY_RANGE_CODE_HANDLER(IDC_CHILDREN_STATISTICS, IDC_PARENTS_STATISTICS, LVN_ITEMACTIVATE, OnDrillDown);
 			COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
 			COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
 		END_MSG_MAP()

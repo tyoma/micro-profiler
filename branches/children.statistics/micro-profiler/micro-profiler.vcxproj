@@ -148,6 +148,10 @@
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="frontend\listview_impl.cpp">
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="frontend\ProfilerMainDialog.cpp">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
@@ -194,6 +198,7 @@
     <ClInclude Include="calls_collector.h" />
     <ClInclude Include="com_helpers.h" />
     <ClInclude Include="entry.h" />
+    <ClInclude Include="frontend\listview_impl.h" />
     <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />
@@ -225,6 +230,9 @@
   <ItemGroup>
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
       <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libraries\wpl\ui\src\ui.vcxproj">
+      <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

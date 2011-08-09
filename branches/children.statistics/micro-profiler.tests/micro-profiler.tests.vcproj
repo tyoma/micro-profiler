@@ -7,7 +7,7 @@
 	ProjectGUID="{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
 	RootNamespace="tests"
 	Keyword="ManagedCProj"
-	TargetFrameworkVersion="0"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform

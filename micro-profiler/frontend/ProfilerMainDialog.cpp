@@ -20,6 +20,7 @@
 
 #include "ProfilerMainDialog.h"
 
+#include "listview_impl.h"
 #include "statistics.h"
 #include "symbol_resolver.h"
 
@@ -225,6 +226,7 @@ namespace micro_profiler
 		CRect clientRect;
 
 		_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
+		_statistics_lv = wrap_listview((HWND)_statistics_view);
 		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
 		_parents_statistics_view = GetDlgItem(IDC_PARENTS_STATISTICS);
 		_clear_button = GetDlgItem(IDC_BTN_CLEAR);

@@ -27,6 +27,7 @@
 #include <atlwin.h>
 #include <string>
 #include <functional>
+#include <wpl/ui/listview.h>
 
 namespace std
 {
@@ -52,6 +53,7 @@ namespace micro_profiler
 		statistics &_statistics;
 		const symbol_resolver &_resolver;
 		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
+		std::shared_ptr<wpl::ui::listview> _statistics_lv;
 		int _last_sort_column, _last_children_sort_column;
 		bool _sort_ascending, _sort_children_ascending;
 		const void *_last_selected;
@@ -76,6 +78,7 @@ namespace micro_profiler
 			NOTIFY_RANGE_CODE_HANDLER(IDC_CHILDREN_STATISTICS, IDC_PARENTS_STATISTICS, LVN_ITEMACTIVATE, OnDrillDown);
 			COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
 			COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
+			REFLECT_NOTIFICATIONS();
 		END_MSG_MAP()
 
 		LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);

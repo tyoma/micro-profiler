@@ -38,8 +38,8 @@ namespace
 		shared_ptr<window_wrapper> _window;
 		shared_ptr<destructible> _advisory, _invalidate_connection;
 		shared_ptr<datasource> _datasource;
-		vector<char> _default_sorts;
-		int _last_sort_column;
+		vector<sort_direction> _default_sorts;
+		int _sort_column;
 		bool _sort_ascending;
 
 		virtual void set_datasource(shared_ptr<datasource> ds)
@@ -49,14 +49,14 @@ namespace
 			ListView_SetItemCountEx(_window->hwnd(), ds->get_count(), LVSICF_NOSCROLL);
 		}
 
-		virtual void add_column(const wstring &caption, const bool *default_sort_ascending)
+		virtual void add_column(const wstring &caption, sort_direction default_sort_direction)
 		{
 			unsigned index(Header_GetItemCount(ListView_GetHeader(_window->hwnd())));
 			CString captionT(caption.c_str());
 			LVCOLUMN column = {	LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, -1, (LPTSTR)(LPCTSTR)captionT, 0, index, 0, index,	};
 
 			ListView_InsertColumn(_window->hwnd(), index, &column);
-			_default_sorts.push_back(default_sort_ascending ? *default_sort_ascending ? +1 : -1 : 0);
+			_default_sorts.push_back(default_sort_direction);
 		}
 
 		LRESULT window_proc(UINT message, WPARAM wparam, LPARAM lparam, const window_wrapper::original_handler_t &original_handler)
@@ -66,8 +66,15 @@ namespace
 				UINT code = reinterpret_cast<const NMHDR *>(lparam)->code;
 				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW *>(lparam);
 
+				if (LVN_ITEMACTIVATE == code)
+				{
+					const NMITEMACTIVATE *item = reinterpret_cast<const NMITEMACTIVATE *>(lparam);
 
-				if (_datasource)
+					item_activate(item->iItem);
+				}
+				else if (LVN_ITEMCHANGED == code && (pnmlv->uOldState & LVIS_SELECTED) != (pnmlv->uNewState & LVIS_SELECTED))
+					selection_changed(pnmlv->iItem, 0 != (pnmlv->uNewState & LVIS_SELECTED));
+				else if (_datasource)
 					if (LVN_GETDISPINFO == code)
 					{
 						const NMLVDISPINFO *pdi = reinterpret_cast<const NMLVDISPINFO *>(lparam);
@@ -81,35 +88,29 @@ namespace
 							_tcsncpy_s(pdi->item.pszText, pdi->item.cchTextMax, textT, _TRUNCATE);
 						}
 					}
-					else if (LVN_ITEMACTIVATE == code)
-					{
-						const NMITEMACTIVATE *item = reinterpret_cast<const NMITEMACTIVATE *>(lparam);
-
-						item_activate(item->iItem);
-					}
 					else if (LVN_COLUMNCLICK == code)
 					{
-						char default_order = _default_sorts[pnmlv->iSubItem];
+						int sort_column = pnmlv->iSubItem;
+						sort_direction default_sort = _default_sorts[sort_column];
 
-						if (default_order)
+						if (default_sort != dir_none)
 						{
-							HWND header = ListView_GetHeader(_window->hwnd());
-							HDITEM header_item = { 0 };
-							bool sort_ascending = pnmlv->iSubItem == _last_sort_column ? !_sort_ascending : default_order > 0;
+							HWND hheader = ListView_GetHeader(_window->hwnd());
+							bool sort_ascending = sort_column == _sort_column ? !_sort_ascending : default_sort == dir_ascending;
 
-							_datasource->set_order(pnmlv->iSubItem, sort_ascending);
-							header_item.mask = HDI_FORMAT;
-							header_item.fmt = HDF_STRING;
-							if (_last_sort_column != -1 && pnmlv->iSubItem != _last_sort_column)
-								Header_SetItem(header, _last_sort_column, &header_item);
-							header_item.fmt = header_item.fmt | (sort_ascending ? HDF_SORTUP : HDF_SORTDOWN);
-							Header_SetItem(header, pnmlv->iSubItem, &header_item);
+							_datasource->set_order(sort_column, sort_ascending);
+							set_column_direction(hheader, _sort_column, dir_none);
+							set_column_direction(hheader, sort_column, sort_ascending ? dir_ascending : dir_descending);
 							_sort_ascending = sort_ascending;
-							_last_sort_column = pnmlv->iSubItem;
+							_sort_column = sort_column;
 						}
 					}
-					else if (LVN_ITEMCHANGED == code && (pnmlv->uOldState & LVIS_SELECTED) != (pnmlv->uNewState & LVIS_SELECTED))
-						selection_changed(pnmlv->iItem, 0 != (pnmlv->uNewState & LVIS_SELECTED));
+					else if (LVN_ODCACHEHINT == code)
+					{
+						const NMLVCACHEHINT *lvch = reinterpret_cast<const NMLVCACHEHINT *>(lparam);
+
+						_datasource->precache(lvch->iFrom, lvch->iTo - lvch->iFrom + 1);
+					}
 				return 0;
 			}
 			else
@@ -121,9 +122,18 @@ namespace
 			ListView_SetItemCountEx(_window->hwnd(), new_count, LVSICF_NOSCROLL);
 		}
 
+		static void set_column_direction(HWND hheader, index_type column, sort_direction direction) throw()
+		{
+			HDITEM item = { 0 };
+
+			item.mask = HDI_FORMAT;
+			item.fmt = HDF_STRING | (direction == dir_ascending ? HDF_SORTUP : direction == dir_descending ? HDF_SORTDOWN : 0);
+			Header_SetItem(hheader, column, &item);
+		}
+
 	public:
 		listview_impl(HWND hwnd)
-			: _window(window_wrapper::attach(hwnd)), _last_sort_column(-1)
+			: _window(window_wrapper::attach(hwnd)), _sort_column(-1)
 		{
 			_advisory = _window->advise(bind(&listview_impl::window_proc, this, _1, _2, _3, _4));
 			ListView_SetExtendedListViewStyle(_window->hwnd(), LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_window->hwnd()));

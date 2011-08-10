@@ -18,6 +18,8 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
+#include <crtdbg.h>
+
 #include "ProxyBridge.h"
 
 #include <atlbase.h>
@@ -30,6 +32,8 @@ class CProfilerFrontendModule : public CAtlDllModuleT<CProfilerFrontendModule> {
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
+	if (DLL_PROCESS_ATTACH == dwReason)
+		_CrtSetDbgFlag(_CRTDBG_DELAY_FREE_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG));
 	g_instance = dwReason == DLL_PROCESS_ATTACH ? hInstance : g_instance;
 	if (PrxDllMain(hInstance, dwReason, lpReserved))
 		return _AtlModule.DllMain(dwReason, lpReserved);

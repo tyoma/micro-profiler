@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="micro-profiler"
 	ProjectGUID="{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
 	RootNamespace="microprofiler"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -196,6 +196,10 @@
 			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
 			RelativePathToProject=".\libraries\wpl\mt\src\mt.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{7F59DBD6-D111-41FE-B246-4D21AC5212CB}"
+			RelativePathToProject=".\libraries\wpl\ui\src\ui.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -288,6 +292,30 @@
 						DisableLanguageExtensions="false"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\listview_impl.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\listview_impl.h"
+				>
 			</File>
 			<File
 				RelativePath=".\frontend\ordered_view.h"

@@ -35,7 +35,7 @@ namespace
 {
 	class listview_impl : public listview
 	{
-		shared_ptr<window_wrapper> _window;
+		shared_ptr<window> _window;
 		shared_ptr<destructible> _advisory, _invalidate_connection;
 		shared_ptr<datasource> _datasource;
 		vector<sort_direction> _default_sorts;
@@ -59,7 +59,7 @@ namespace
 			_default_sorts.push_back(default_sort_direction);
 		}
 
-		LRESULT window_proc(UINT message, WPARAM wparam, LPARAM lparam, const window_wrapper::original_handler_t &original_handler)
+		LRESULT window_proc(UINT message, WPARAM wparam, LPARAM lparam, const window::original_handler_t &original_handler)
 		{
 			if (OCM_NOTIFY == message)
 			{
@@ -133,13 +133,13 @@ namespace
 
 	public:
 		listview_impl(HWND hwnd)
-			: _window(window_wrapper::attach(hwnd)), _sort_column(-1)
+			: _window(window::attach(hwnd)), _sort_column(-1)
 		{
 			_advisory = _window->advise(bind(&listview_impl::window_proc, this, _1, _2, _3, _4));
 			ListView_SetExtendedListViewStyle(_window->hwnd(), LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_window->hwnd()));
 		}
 
-		~listview_impl() throw()
+		virtual ~listview_impl()
 		{	_advisory.reset();	}
 	};
 }

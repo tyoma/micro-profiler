@@ -6,7 +6,7 @@
 	ProjectGUID="{3B1F8640-9F9A-4989-A074-73590A82A26C}"
 	RootNamespace="microprofiler"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform

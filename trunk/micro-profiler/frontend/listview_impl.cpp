@@ -37,16 +37,16 @@ namespace
 	{
 		shared_ptr<window> _window;
 		shared_ptr<destructible> _advisory, _invalidate_connection;
-		shared_ptr<datasource> _datasource;
+		shared_ptr<model> _model;
 		vector<sort_direction> _default_sorts;
 		int _sort_column;
 		bool _sort_ascending;
 
-		virtual void set_datasource(shared_ptr<datasource> ds)
+		virtual void set_model(shared_ptr<model> m)
 		{
-			_datasource = ds;
-			_invalidate_connection = _datasource->invalidated += bind(&listview_impl::on_datasource_invalidated, this, _1);
-			ListView_SetItemCountEx(_window->hwnd(), ds->get_count(), LVSICF_NOSCROLL);
+			_model = m;
+			_invalidate_connection = _model->invalidated += bind(&listview_impl::on_datasource_invalidated, this, _1);
+			ListView_SetItemCountEx(_window->hwnd(), m->get_count(), LVSICF_NOSCROLL);
 		}
 
 		virtual void add_column(const wstring &caption, sort_direction default_sort_direction)
@@ -74,7 +74,7 @@ namespace
 				}
 				else if (LVN_ITEMCHANGED == code && (pnmlv->uOldState & LVIS_SELECTED) != (pnmlv->uNewState & LVIS_SELECTED))
 					selection_changed(pnmlv->iItem, 0 != (pnmlv->uNewState & LVIS_SELECTED));
-				else if (_datasource)
+				else if (_model)
 					if (LVN_GETDISPINFO == code)
 					{
 						const NMLVDISPINFO *pdi = reinterpret_cast<const NMLVDISPINFO *>(lparam);
@@ -83,7 +83,7 @@ namespace
 						{
 							wstring text;
 
-							_datasource->get_text(pdi->item.iItem, pdi->item.iSubItem, text);
+							_model->get_text(pdi->item.iItem, pdi->item.iSubItem, text);
 							CString textT(text.c_str());
 							_tcsncpy_s(pdi->item.pszText, pdi->item.cchTextMax, textT, _TRUNCATE);
 						}
@@ -98,7 +98,7 @@ namespace
 							HWND hheader = ListView_GetHeader(_window->hwnd());
 							bool sort_ascending = sort_column == _sort_column ? !_sort_ascending : default_sort == dir_ascending;
 
-							_datasource->set_order(sort_column, sort_ascending);
+							_model->set_order(sort_column, sort_ascending);
 							set_column_direction(hheader, _sort_column, dir_none);
 							set_column_direction(hheader, sort_column, sort_ascending ? dir_ascending : dir_descending);
 							_sort_ascending = sort_ascending;
@@ -109,7 +109,7 @@ namespace
 					{
 						const NMLVCACHEHINT *lvch = reinterpret_cast<const NMLVCACHEHINT *>(lparam);
 
-						_datasource->precache(lvch->iFrom, lvch->iTo - lvch->iFrom + 1);
+						_model->precache(lvch->iFrom, lvch->iTo - lvch->iFrom + 1);
 					}
 				return 0;
 			}

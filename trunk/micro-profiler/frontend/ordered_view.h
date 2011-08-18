@@ -60,7 +60,7 @@ public:
 	// Repopulate internal ordered storage from source map with respect to predicate set.
 	void resort();
 
-	size_t size() const;
+	size_t size() const throw();
 	const value_type &at(size_t index) const;
 	size_t find_by_key(const key_type &key) const;
 };
@@ -88,6 +88,8 @@ class ordered_view<Map>::sorter_impl : public ordered_view<Map>::sorter
 	Predicate _predicate;
 	bool _ascending;
 
+	const sorter_impl &operator =(const sorter_impl &rhs);
+
 public:
 	sorter_impl(Predicate predicate, bool ascending)
 		: _predicate(predicate), _ascending(ascending)
@@ -107,7 +109,7 @@ inline ordered_view<Map>::ordered_view(const Map &map)
 {	fetch_data();	}
 
 template <class Map>
-inline size_t ordered_view<Map>::size() const
+inline size_t ordered_view<Map>::size() const throw()
 {	return _ordered_data.size();	}
 
 template <class Map>

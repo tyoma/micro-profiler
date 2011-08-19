@@ -26,6 +26,8 @@
 
 #include <atlstr.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
 	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
@@ -36,20 +38,15 @@ namespace micro_profiler
 		instance->QueryInterface(frontend);
 	}
 
-	HRESULT ProfilerFrontend::FinalConstruct()
-	{
-		return S_OK;
-	}
-
-	void ProfilerFrontend::FinalRelease()
-	{ 
-	}
+	ProfilerFrontend::~ProfilerFrontend()
+	{	}
 
 	STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
 	{
-		_symbol_resolver.reset(new symbol_resolver(tstring(CString(executable)), load_address));
-		_statistics.reset(new statistics);
-		_dialog.reset(new ProfilerMainDialog(*_statistics, *_symbol_resolver, ticks_resolution));
+		shared_ptr<symbol_resolver> r(new symbol_resolver(executable, load_address));
+		
+		_statistics.reset(new functions_list(r));
+		_dialog.reset(new ProfilerMainDialog(_statistics, ticks_resolution));
 
 		_dialog->ShowWindow(SW_SHOW);
 		return S_OK;
@@ -58,7 +55,6 @@ namespace micro_profiler
 	STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
 	{
 		_statistics->update(statistics, count);
-		_dialog->RefreshList(_statistics->size());
 		return S_OK;
 	}
 }

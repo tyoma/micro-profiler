@@ -24,27 +24,24 @@
 
 #include <atlbase.h>
 #include <string>
-#include <tchar.h>
 
 struct IDiaSession;
 struct IDiaDataSource;
 
 namespace micro_profiler
 {
-	typedef std::basic_string<TCHAR> tstring;
-
 	class symbol_resolver
 	{
-		typedef stdext::hash_map<const void *, tstring, address_compare> names_cache;
+		typedef stdext::hash_map<const void *, std::wstring, address_compare> names_cache;
 
 		CComPtr<IDiaDataSource> _data_source;
 		CComPtr<IDiaSession> _session;
 		mutable names_cache _cached_names;
 
 	public:
-		symbol_resolver(const tstring &image_path, unsigned __int64 load_address);
+		symbol_resolver(const std::wstring &image_path, unsigned __int64 load_address);
 		~symbol_resolver();
 
-		const tstring &symbol_name_by_va(const void *address) const;
+		const std::wstring &symbol_name_by_va(const void *address) const;
 	};
 }

@@ -25,9 +25,11 @@
 #include <dia2.h>
 #include <psapi.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
-	symbol_resolver::symbol_resolver(const tstring &image_path, unsigned __int64 load_address)
+	symbol_resolver::symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
 	{
 		_data_source.CoCreateInstance(CLSID_DiaSource);
 		_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
@@ -39,21 +41,21 @@ namespace micro_profiler
 	symbol_resolver::~symbol_resolver()
 	{	}
 
-	const tstring &symbol_resolver::symbol_name_by_va(const void *address) const
+	const wstring &symbol_resolver::symbol_name_by_va(const void *address) const
 	{
 		names_cache::const_iterator i = _cached_names.find(address);
 
 		if (i == _cached_names.end())
 		{
-			CString result;
+			CStringW result;
 			CComBSTR name;
 			CComPtr<IDiaSymbol> symbol;
 
 			if (_session && SUCCEEDED(_session->findSymbolByVA((ULONGLONG)address, SymTagFunction, &symbol)) && symbol && SUCCEEDED(symbol->get_name(&name)))
 				result = name;
 			else
-				result.Format(_T("Function @%08I64X"), (__int64)address);
-			i = _cached_names.insert(make_pair(address, tstring(result))).first;
+				result.Format(L"Function @%08I64X", (__int64)address);
+			i = _cached_names.insert(make_pair(address, result)).first;
 		}
 		return i->second;
 	}

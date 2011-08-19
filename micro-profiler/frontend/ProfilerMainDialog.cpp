@@ -20,7 +20,7 @@
 
 #include "ProfilerMainDialog.h"
 
-#include "listview_impl.h"
+#include <wpl/ui/win32/controls.h>
 #include "statistics.h"
 #include "symbol_resolver.h"
 
@@ -31,177 +31,46 @@
 extern HINSTANCE g_instance;
 
 using namespace std;
+using namespace tr1;
+using namespace tr1::placeholders;
+using namespace wpl;
+using namespace wpl::ui;
 
 namespace micro_profiler
 {
-	namespace
-	{
-		__int64 g_ticks_resolution(1);
+	__int64 g_ticks_resolution(1);
 
-		template <typename T>
-		tstring to_string(const T &value)
-		{
-			basic_stringstream<TCHAR> s;
-
-			s.precision(3);
-			s << value;
-			return s.str();
-		}
-
-		tstring print_time(double value)
-		{
-			if (0.000001 > fabs(value))
-				return to_string(1000000000 * value) + _T("ns");
-			else if (0.001 > fabs(value))
-				return to_string(1000000 * value) + _T("us");
-			else if (1 > fabs(value))
-				return to_string(1000 * value) + _T("ms");
-			else
-				return to_string(value) + _T("s");
-		}
-
-		namespace functors
-		{
-			class by_name
-			{
-				const symbol_resolver &_resolver;
-
-			public:
-				by_name(const symbol_resolver &resolver)
-					: _resolver(resolver)
-				{	}
-
-				tstring operator ()(const void *address, const function_statistics &) const
-				{	return _resolver.symbol_name_by_va(address);	}
-
-				tstring operator ()(const void *address, unsigned __int64) const
-				{	return _resolver.symbol_name_by_va(address);	}
-
-				bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
-				{	return _resolver.symbol_name_by_va(lhs_addr) < _resolver.symbol_name_by_va(rhs_addr);	}
-			};
-
-			struct by_times_called
-			{
-				tstring operator ()(const void *, const function_statistics &s) const
-				{	return to_string(s.times_called);	}
-
-				tstring operator ()(const void *, unsigned __int64 times_called) const
-				{	return to_string(times_called);	}
-
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return lhs.times_called < rhs.times_called;	}
-
-				bool operator ()(const void *, unsigned __int64 lhs, const void *, unsigned __int64 rhs) const
-				{	return lhs < rhs;	}
-			};
-
-			struct by_exclusive_time
-			{
-				tstring operator ()(const void *, const function_statistics &s) const
-				{	return print_time(1.0 * s.exclusive_time / g_ticks_resolution);	}
-
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return lhs.exclusive_time < rhs.exclusive_time;	}
-			};
-
-			struct by_inclusive_time
-			{
-				tstring operator ()(const void *, const function_statistics &s) const
-				{	return print_time(1.0 * s.inclusive_time / g_ticks_resolution);	}
-
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return lhs.inclusive_time < rhs.inclusive_time;	}
-			};
-
-			struct by_avg_exclusive_call_time
-			{
-				tstring operator ()(const void *, const function_statistics &s) const
-				{	return print_time(s.times_called ? 1.0 * s.exclusive_time / g_ticks_resolution / s.times_called : 0);	}
-
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return (lhs.times_called ? lhs.exclusive_time / lhs.times_called : 0) < (rhs.times_called ? rhs.exclusive_time / rhs.times_called : 0);	}
-			};
-
-			struct by_avg_inclusive_call_time
-			{
-				tstring operator ()(const void *, const function_statistics &s) const
-				{	return print_time(s.times_called ? 1.0 * s.inclusive_time / g_ticks_resolution / s.times_called : 0);	}
-
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return (lhs.times_called ? lhs.inclusive_time / lhs.times_called : 0) < (rhs.times_called ? rhs.inclusive_time / rhs.times_called : 0);	}
-			};
-
-			struct by_max_reentrance
-			{
-				tstring operator ()(const void *, const function_statistics &s) const
-				{	return to_string(s.max_reentrance);	}
-
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return lhs.max_reentrance < rhs.max_reentrance;	}
-			};
-		}
-	}
-
-	ProfilerMainDialog::ProfilerMainDialog(statistics &s, const symbol_resolver &resolver, __int64 ticks_resolution)
-		: _statistics(s), _resolver(resolver), _last_sort_column(-1), _last_children_sort_column(-1), _last_selected(0)
+	ProfilerMainDialog::ProfilerMainDialog(const shared_ptr<functions_list> &s, __int64 ticks_resolution)
+		: _statistics(s)
 	{
 		g_ticks_resolution = ticks_resolution;
 
-		_printers[0] = functors::by_name(resolver);
-		_printers[1] = functors::by_times_called();
-		_printers[2] = functors::by_exclusive_time();
-		_printers[3] = functors::by_inclusive_time();
-		_printers[4] = functors::by_avg_exclusive_call_time();
-		_printers[5] = functors::by_avg_inclusive_call_time();
-		_printers[6] = functors::by_max_reentrance();
-
-		_parent_printers[0] = functors::by_name(resolver);
-		_parent_printers[1] = functors::by_times_called();
-
-		_sorters[0] = make_pair(functors::by_name(resolver), true);
-		_sorters[1] = make_pair(functors::by_times_called(), false);
-		_sorters[2] = make_pair(functors::by_exclusive_time(), false);
-		_sorters[3] = make_pair(functors::by_inclusive_time(), false);
-		_sorters[4] = make_pair(functors::by_avg_exclusive_call_time(), false);
-		_sorters[5] = make_pair(functors::by_avg_inclusive_call_time(), false);
-		_sorters[6] = make_pair(functors::by_max_reentrance(), false);
-
-		_statistics.set_parents_order(functors::by_times_called(), false);
-
 		Create(NULL, 0);
 
-		LVCOLUMN columns[] = {
-			{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 60, _T("Function"), 0, 0, 0, 0,	},
-			{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Times Called"), 0, 1, 0, 1,	},
-			{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Exclusive Time"), 0, 2, 0, 2,	},
-			{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Inclusive Time"), 0, 3, 0, 3,	},
-			{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Average Call Time (Exclusive)"), 0, 4, 0, 4,	},
-			{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Average Call Time (Inclusive)"), 0, 5, 0, 5,	},
-			{ LVCF_TEXT | LVCF_SUBITEM | LVCF_ORDER | LVCF_WIDTH, 0, 70, _T("Max Recursion"), 0, 6, 0, 6,	},
-		};
+		_statistics_lv->add_column(L"Function", listview::dir_ascending);
+		_statistics_lv->add_column(L"Times Called", listview::dir_descending);
+		_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
+		_statistics_lv->add_column(L"Inclusive Time", listview::dir_descending);
+		_statistics_lv->add_column(L"Average Call Time (Exclusive)", listview::dir_descending);
+		_statistics_lv->add_column(L"Average Call Time (Inclusive)", listview::dir_descending);
+		_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
 
-		ListView_InsertColumn(_statistics_view, 0, &columns[0]);
-		ListView_InsertColumn(_statistics_view, 1, &columns[1]);
-		ListView_InsertColumn(_statistics_view, 2, &columns[2]);
-		ListView_InsertColumn(_statistics_view, 3, &columns[3]);
-		ListView_InsertColumn(_statistics_view, 4, &columns[4]);
-		ListView_InsertColumn(_statistics_view, 5, &columns[5]);
-		ListView_InsertColumn(_statistics_view, 6, &columns[6]);
-		ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_statistics_view));
+		_parents_statistics_lv->add_column(L"Function", listview::dir_ascending);
+		_parents_statistics_lv->add_column(L"Times Called", listview::dir_descending);
 
-		ListView_InsertColumn(_children_statistics_view, 0, &columns[0]);
-		ListView_InsertColumn(_children_statistics_view, 1, &columns[1]);
-		ListView_InsertColumn(_children_statistics_view, 2, &columns[2]);
-		ListView_InsertColumn(_children_statistics_view, 3, &columns[3]);
-		ListView_InsertColumn(_children_statistics_view, 4, &columns[4]);
-		ListView_InsertColumn(_children_statistics_view, 5, &columns[5]);
-		ListView_InsertColumn(_children_statistics_view, 6, &columns[6]);
-		ListView_SetExtendedListViewStyle(_children_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_children_statistics_view));
+		_children_statistics_lv->add_column(L"Function", listview::dir_ascending);
+		_children_statistics_lv->add_column(L"Times Called", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Inclusive Time", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Average Call Time (Exclusive)", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Average Call Time (Inclusive)", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
 
-		ListView_InsertColumn(_parents_statistics_view, 0, &columns[0]);
-		ListView_InsertColumn(_parents_statistics_view, 1, &columns[1]);
-		ListView_SetExtendedListViewStyle(_parents_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_parents_statistics_view));
+		_statistics_lv->set_model(_statistics);
+
+		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrillup, this, _1));
+		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
+		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _1));
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()
@@ -210,25 +79,16 @@ namespace micro_profiler
 			DestroyWindow();
 	}
 
-	void ProfilerMainDialog::RefreshList(unsigned int new_count)
-	{
-		ListView_SetItemCountEx(_statistics_view, new_count, LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
-		ListView_SetItemCountEx(_children_statistics_view, _statistics.size_children(), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
-		ListView_SetItemCountEx(_parents_statistics_view, _statistics.size_parents(), LVSICF_NOINVALIDATEALL | LVSICF_NOSCROLL);
-		_statistics_view.Invalidate(FALSE);
-		_children_statistics_view.Invalidate(FALSE);
-		_parents_statistics_view.Invalidate(FALSE);
-		SelectByAddress(_last_selected);
-	}
-
 	LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL& handled)
 	{
 		CRect clientRect;
 
 		_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
 		_statistics_lv = wrap_listview((HWND)_statistics_view);
-		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
 		_parents_statistics_view = GetDlgItem(IDC_PARENTS_STATISTICS);
+		_parents_statistics_lv = wrap_listview((HWND)_parents_statistics_view);
+		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
+		_children_statistics_lv = wrap_listview((HWND)_children_statistics_view);
 		_clear_button = GetDlgItem(IDC_BTN_CLEAR);
 		_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
 
@@ -248,145 +108,47 @@ namespace micro_profiler
 		return 1;
 	}
 
-	LRESULT ProfilerMainDialog::OnGetDispInfo(int control_id, LPNMHDR pnmh, BOOL &handled)
-	{
-		NMLVDISPINFO *pdi = (NMLVDISPINFO*)pnmh;
-
-		if (LVIF_TEXT & pdi->item.mask)
-		{
-			tstring item_text;
-			
-			if (control_id == IDC_CHILDREN_STATISTICS)
-			{
-				const statistics_map::value_type &v = _statistics.at_children(pdi->item.iItem);
-
-				item_text = _printers[pdi->item.iSubItem](v.first, v.second);
-			}
-			else if (control_id == IDC_FUNCTIONS_STATISTICS)
-			{
-				const detailed_statistics_map::value_type &v = _statistics.at(pdi->item.iItem);
-
-				item_text = _printers[pdi->item.iSubItem](v.first, v.second);
-			}
-			else if (control_id == IDC_PARENTS_STATISTICS)
-			{
-				const parent_statistics_map::value_type &v = _statistics.at_parents(pdi->item.iItem);
-
-				item_text = _printers[pdi->item.iSubItem](v.first, v.second);
-			}
-
-			_tcsncpy_s(pdi->item.pszText, pdi->item.cchTextMax, item_text.c_str(), _TRUNCATE);
-			handled = TRUE;
-		}
-		return 0;
-	}
-
-	LRESULT ProfilerMainDialog::OnColumnSort(int control_id, LPNMHDR pnmh, BOOL &handled)
-	{
-		CWindow &view = IDC_CHILDREN_STATISTICS == control_id ? _children_statistics_view : _statistics_view;
-		bool &sort_ascending = IDC_CHILDREN_STATISTICS == control_id ? _sort_children_ascending : _sort_ascending;
-		int &last_sort_column = IDC_CHILDREN_STATISTICS == control_id ? _last_children_sort_column : _last_sort_column;
-		NMLISTVIEW *pnmlv = (NMLISTVIEW *)pnmh;
-		HWND header = ListView_GetHeader(view);
-		HDITEM header_item = { 0 };
-
-		header_item.mask = HDI_FORMAT;
-		header_item.fmt = HDF_STRING;
-
-		predicate_func_t predicate = _sorters[pnmlv->iSubItem].first;
-		sort_ascending = pnmlv->iSubItem != last_sort_column ? _sorters[pnmlv->iSubItem].second : !sort_ascending;
-		if (pnmlv->iSubItem != last_sort_column)
-			Header_SetItem(header, last_sort_column, &header_item);
-		header_item.fmt = header_item.fmt | (sort_ascending ? HDF_SORTUP : HDF_SORTDOWN);
-		last_sort_column = pnmlv->iSubItem;
-		Header_SetItem(header, last_sort_column, &header_item);
-		if (IDC_CHILDREN_STATISTICS == control_id)
-			_statistics.set_children_order(predicate, sort_ascending);
-		else
-			_statistics.set_order(predicate, sort_ascending);
-		view.Invalidate(FALSE);
-		handled = TRUE;
-		return 0;
-	}
-
-	LRESULT ProfilerMainDialog::OnFocusedFunctionChange(int /*control_id*/, LPNMHDR pnmh, BOOL &handled)
-	{
-		const NMLISTVIEW *item = (const NMLISTVIEW *)pnmh;
-
-		handled = TRUE;
-		if (item->iItem == -1 || ((item->uOldState & LVIS_SELECTED) && !(item->uNewState & LVIS_SELECTED)))
-			_statistics.remove_focus(), _last_selected = 0;
-		else if (!(item->uOldState & LVIS_SELECTED) && (item->uNewState & LVIS_SELECTED))
-			_statistics.set_focus(item->iItem), _last_selected = _statistics.at(item->iItem).first;
-		else
-			return 0;
-		ListView_SetItemCountEx(_children_statistics_view, _statistics.size_children(), 0);
-		ListView_SetItemCountEx(_parents_statistics_view, _statistics.size_parents(), 0);
-		return 0;
-	}
-
-	LRESULT ProfilerMainDialog::OnDrillDown(int control_id, LPNMHDR pnmh, BOOL &handled)
-	{
-		const NMITEMACTIVATE *item = (const NMITEMACTIVATE *)pnmh;
-
-		if (IDC_PARENTS_STATISTICS == control_id)
-			SelectByAddress(_statistics.at_parents(item->iItem).first);
-		else if (IDC_CHILDREN_STATISTICS == control_id)
-			SelectByAddress(_statistics.at_children(item->iItem).first);
-		handled = TRUE;
-		return 0;
-	}
-
 	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
-		_last_selected = 0;
-		_statistics.clear();
-		ListView_SetItemCountEx(_statistics_view, 0, 0);
-		ListView_SetItemCountEx(_children_statistics_view, 0, 0);
-		ListView_SetItemCountEx(_parents_statistics_view, 0, 0);
+		_statistics->clear();
+		_parents_statistics_lv->set_model(_parents_statistics = 0);
+		_children_statistics_lv->set_model(_children_statistics = 0);
 		handled = TRUE;
 		return 0;
 	}
 
 	LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
-		basic_stringstream<TCHAR> s;
+		//basic_stringstream<TCHAR> s;
 
-		s << _T("Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion") << endl;
-		for (size_t i = 0, count = _statistics.size(); i != count; ++i)
-		{
-			const detailed_statistics_map::value_type &f = _statistics.at(i);
+		//s << _T("Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion") << endl;
+		//for (size_t i = 0, count = _statistics.size(); i != count; ++i)
+		//{
+		//	const detailed_statistics_map::value_type &f = _statistics.at(i);
 
-			s << _resolver.symbol_name_by_va(f.first) << _T("\t") << f.second.times_called << _T("\t") << 1.0 * f.second.exclusive_time / g_ticks_resolution << _T("\t") << 1.0 * f.second.inclusive_time / g_ticks_resolution << _T("\t")
-				<< 1.0 * f.second.exclusive_time / g_ticks_resolution / f.second.times_called << _T("\t") << 1.0 * f.second.inclusive_time / g_ticks_resolution / f.second.times_called << _T("\t") << f.second.max_reentrance
-				<< endl;
-		}
+		//	s << _resolver.symbol_name_by_va(f.first) << _T("\t") << f.second.times_called << _T("\t") << 1.0 * f.second.exclusive_time / g_ticks_resolution << _T("\t") << 1.0 * f.second.inclusive_time / g_ticks_resolution << _T("\t")
+		//		<< 1.0 * f.second.exclusive_time / g_ticks_resolution / f.second.times_called << _T("\t") << 1.0 * f.second.inclusive_time / g_ticks_resolution / f.second.times_called << _T("\t") << f.second.max_reentrance
+		//		<< endl;
+		//}
 
-		tstring result(s.str());
+		//tstring result(s.str());
 
-		if (OpenClipboard())
-		{
-			if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(TCHAR)))
-			{
-				TCHAR *gtext_memory = reinterpret_cast<TCHAR *>(::GlobalLock(gtext));
+		//if (OpenClipboard())
+		//{
+		//	if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(TCHAR)))
+		//	{
+		//		TCHAR *gtext_memory = reinterpret_cast<TCHAR *>(::GlobalLock(gtext));
 
-				copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
-				::GlobalUnlock(gtext_memory);
-				::EmptyClipboard();
-				::SetClipboardData(CF_TEXT, gtext);
-			}
-			CloseClipboard();
-		}
+		//		copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
+		//		::GlobalUnlock(gtext_memory);
+		//		::EmptyClipboard();
+		//		::SetClipboardData(CF_TEXT, gtext);
+		//	}
+		//	CloseClipboard();
+		//}
  
-		handled = TRUE;
+		//handled = TRUE;
 		return 0;
-	}
-
-	void ProfilerMainDialog::SelectByAddress(const void *address)
-	{
-		size_t index = _statistics.find_index(address);
-
-		ListView_SetItemState(_statistics_view, index, LVIS_SELECTED, LVIS_SELECTED);
 	}
 
 	void ProfilerMainDialog::RelocateControls(const CSize &size)
@@ -412,5 +174,23 @@ namespace micro_profiler
 		_children_statistics_view.MoveWindow(rcChildren);
 		_parents_statistics_view.MoveWindow(rcParents);
 		_statistics_view.MoveWindow(rc);
+	}
+
+	void ProfilerMainDialog::OnDrillup(listview::index_type index)
+	{	SetFocusedFunction(_statistics->get_index(_parents_statistics->get_address_at(index)), true);	}
+
+	void ProfilerMainDialog::OnFocusChange(listview::index_type index, bool selected)
+	{
+		if (selected)
+			SetFocusedFunction(index, true);
+	}
+
+	void ProfilerMainDialog::OnDrilldown(listview::index_type index)
+	{	SetFocusedFunction(_statistics->get_index(_children_statistics->get_address_at(index)), true);	}
+
+	void ProfilerMainDialog::SetFocusedFunction(listview::index_type index, bool select)
+	{
+		_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
+		_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
 	}
 }

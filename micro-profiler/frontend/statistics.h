@@ -23,6 +23,7 @@
 #include "./../primitives.h"
 #include "ordered_view.h"
 
+#include <wpl/ui/listview.h>
 #include <functional>
 
 namespace std
@@ -34,6 +35,8 @@ typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
 namespace micro_profiler
 {
+	class symbol_resolver;
+
 	typedef stdext::hash_map<const void *, unsigned __int64, address_compare> parent_statistics_map;
 
 	struct function_statistics_detailed2 : function_statistics_detailed
@@ -43,120 +46,82 @@ namespace micro_profiler
 
 	typedef stdext::hash_map<const void * /*address*/, function_statistics_detailed2, address_compare> detailed_statistics2_map;
 
-	class statistics
+	struct dependant_calls_list : public wpl::ui::listview::model
 	{
-		typedef std::function<bool (const void *lhs_addr, const function_statistics &lhs, const void *rhs_addr, const function_statistics &rhs)> _predicate_func_t;
-		typedef std::function<bool (const void *lhs_addr, unsigned __int64 lhs, const void *rhs_addr, unsigned __int64 rhs)> _parent_predicate_func_t;
+		virtual const void *get_address_at(index_type index) const throw() = 0;
+	};
 
+	class functions_list : public wpl::ui::listview::model, wpl::noncopyable
+	{
+		std::shared_ptr<symbol_resolver> _resolver;
 		detailed_statistics2_map _statistics;
-		ordered_view<detailed_statistics2_map> _main_view;
-		std::auto_ptr< ordered_view<statistics_map> > _children_view;
-		std::auto_ptr< ordered_view<parent_statistics_map> > _parents_view;
-		_predicate_func_t _children_predicate;
-		bool _children_ascending;
-		_parent_predicate_func_t _parents_predicate;
-		bool _parents_ascending;
-
-		statistics(const statistics &);
-		void operator =(const statistics &);
+		ordered_view<detailed_statistics2_map> _view;
+		std::shared_ptr<dependant_calls_list> _watched_parents, _watched_children;
 
 	public:
-		statistics();
-		~statistics();
-
-		void set_order(const _predicate_func_t &predicate, bool ascending);
-		const detailed_statistics2_map::value_type &at(size_t index) const;
-		size_t size() const;
-
-		void set_focus(size_t index);
-		void remove_focus();
-		size_t find_index(const void *address) const;
-
-		void set_children_order(const _predicate_func_t &predicate, bool ascending);
-		const statistics_map::value_type &at_children(size_t index) const;
-		size_t size_children() const;
-
-		void set_parents_order(const _parent_predicate_func_t &predicate, bool ascending);
-		const parent_statistics_map::value_type &at_parents(size_t index) const;
-		size_t size_parents() const;
+		functions_list(std::shared_ptr<symbol_resolver> resolver);
+		~functions_list();
 
 		void clear();
 		void update(const FunctionStatisticsDetailed *data, unsigned int count);
+
+		virtual index_type get_count() const throw();
+		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
+		virtual void set_order(index_type column, bool ascending);
+
+		index_type get_index(const void *address) const;
+
+		std::shared_ptr<dependant_calls_list> watch_parents(index_type index);
+		std::shared_ptr<dependant_calls_list> watch_children(index_type index);
+	};
+
+	class parent_calls_list : public dependant_calls_list, wpl::noncopyable
+	{
+		std::shared_ptr<symbol_resolver> _resolver;
+		ordered_view<parent_statistics_map> _view;
+
+	public:
+		parent_calls_list(std::shared_ptr<symbol_resolver> resolver, const parent_statistics_map &parents);
+
+		virtual index_type get_count() const throw();
+		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
+		virtual void set_order(index_type column, bool ascending);
+		virtual const void *get_address_at(index_type index) const throw();
+	};
+
+	class child_calls_list : public dependant_calls_list, wpl::noncopyable
+	{
+		std::shared_ptr<symbol_resolver> _resolver;
+		ordered_view<statistics_map> _view;
+
+	public:
+		child_calls_list(std::shared_ptr<symbol_resolver> resolver, const statistics_map &children);
+
+		virtual index_type get_count() const throw();
+		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
+		virtual void set_order(index_type column, bool ascending);
+		virtual const void *get_address_at(index_type index) const throw();
 	};
 
 
-	inline statistics::statistics()
-		: _main_view(_statistics)
+	inline functions_list::functions_list(std::shared_ptr<symbol_resolver> resolver)
+		: _resolver(resolver), _view(_statistics)
 	{	}
 
-	inline statistics::~statistics()
-	{	}
-
-	inline void statistics::set_order(const _predicate_func_t &predicate, bool ascending)
-	{	_main_view.set_order(predicate, ascending);	}
-
-	inline const detailed_statistics2_map::value_type &statistics::at(size_t index) const
-	{	return _main_view.at(index);	}
-
-	inline size_t statistics::size() const
-	{	return _main_view.size();	}
-	
-	inline void statistics::set_focus(size_t index)
-	{
-		const detailed_statistics2_map::value_type &item = at(index);
-
-		_children_view.reset(new ordered_view<statistics_map>(item.second.children_statistics));
-		_parents_view.reset(new ordered_view<parent_statistics_map>(item.second.parent_statistics));
-		if (_children_predicate)
-			_children_view->set_order(_children_predicate, _children_ascending);
-		if (_parents_predicate)
-			_parents_view->set_order(_parents_predicate, _parents_ascending);
-	}
-
-	inline void statistics::remove_focus()
-	{
-		_children_view.reset();
-	}
-
-	inline size_t statistics::find_index(const void *address) const
-	{	return _main_view.find_by_key(address);	}
+	inline wpl::ui::listview::index_type functions_list::get_count() const throw()
+	{	return _view.size();	}
 
 
-	inline void statistics::set_children_order(const _predicate_func_t &predicate, bool ascending)
-	{
-		_children_predicate = predicate;
-		_children_ascending = ascending;
-		if (_children_view.get())
-			_children_view->set_order(predicate, ascending);
-	}
+	inline wpl::ui::listview::index_type parent_calls_list::get_count() const throw()
+	{	return _view.size();	}
 
-	inline const statistics_map::value_type &statistics::at_children(size_t index) const
-	{	return _children_view->at(index);	}
-
-	inline size_t statistics::size_children() const
-	{	return _children_view.get() ? _children_view->size() : 0;	}
+	inline const void *parent_calls_list::get_address_at(index_type index) const throw()
+	{	return _view.at(index).first;	}
 
 
-	inline void statistics::set_parents_order(const _parent_predicate_func_t &predicate, bool ascending)
-	{
-		_parents_predicate = predicate;
-		_parents_ascending = ascending;
-		if (_parents_view.get())
-			_parents_view->set_order(predicate, ascending);
-	}
+	inline wpl::ui::listview::index_type child_calls_list::get_count() const throw()
+	{	return _view.size();	}
 
-	inline const parent_statistics_map::value_type &statistics::at_parents(size_t index) const
-	{	return _parents_view->at(index);	}
-
-	inline size_t statistics::size_parents() const
-	{	return _parents_view.get() ? _parents_view->size() : 0;	}
-
-
-	inline void statistics::clear()
-	{
-		_children_view.reset();
-		_parents_view.reset();
-		_statistics.clear();
-		_main_view.resort();
-	}
+	inline const void *child_calls_list::get_address_at(index_type index) const throw()
+	{	return _view.at(index).first;	}
 }

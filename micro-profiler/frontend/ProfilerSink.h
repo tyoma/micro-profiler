@@ -32,16 +32,16 @@ extern "C" CLSID CLSID_ProfilerFrontend;
 namespace micro_profiler
 {
 	class ProfilerMainDialog;
-	class statistics;
-	class symbol_resolver;
+	class functions_list;
 
 	class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
 	{
-		std::auto_ptr<symbol_resolver> _symbol_resolver;
-		std::auto_ptr<statistics> _statistics;
+		std::shared_ptr<functions_list> _statistics;
 		std::auto_ptr<ProfilerMainDialog> _dialog;
 
 	public:
+		~ProfilerFrontend();
+
 		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
 
 		BEGIN_COM_MAP(ProfilerFrontend)
@@ -49,9 +49,6 @@ namespace micro_profiler
 		END_COM_MAP()
 
 		DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-		HRESULT FinalConstruct();
-		void FinalRelease();
 
 		STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
 		STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);

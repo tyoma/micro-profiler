@@ -71,6 +71,10 @@ namespace micro_profiler
 		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrillup, this, _1));
 		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
 		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _1));
+
+		_statistics_lv->adjust_column_widths();
+		_parents_statistics_lv->adjust_column_widths();
+		_children_statistics_lv->adjust_column_widths();
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()

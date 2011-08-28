@@ -294,30 +294,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\frontend\listview_impl.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\frontend\listview_impl.h"
-				>
-			</File>
-			<File
 				RelativePath=".\frontend\ordered_view.h"
 				>
 			</File>

@@ -189,24 +189,25 @@ namespace micro_profiler
 		_view.resort();
 		invalidated(_view.size());
 		if (_watched_parents)
-			_watched_parents->invalidated(_watched_parents->get_count());
+			_watched_parents->update_view();
 		if (_watched_children)
-			_watched_children->invalidated(_watched_children->get_count());
+			_watched_children->update_view();
 	}
 
-	void functions_list::get_text(index_type item, index_type subitem, wstring &text) const
+	void functions_list::get_text(index_type row, index_type column, wstring &text) const
 	{
-		const detailed_statistics2_map::value_type &v = _view.at(item);
+		const detailed_statistics2_map::value_type &v = _view.at(row);
 
-		switch (subitem)
+		switch (column)
 		{
-		case 0:	text = functors::by_name(*_resolver)(v.first, v.second);	break;
-		case 1:	text = functors::by_times_called()(v.first, v.second);	break;
-		case 2:	text = functors::by_exclusive_time()(v.first, v.second);	break;
-		case 3:	text = functors::by_inclusive_time()(v.first, v.second);	break;
-		case 4:	text = functors::by_avg_exclusive_call_time()(v.first, v.second);	break;
-		case 5:	text = functors::by_avg_inclusive_call_time()(v.first, v.second);	break;
-		case 6:	text = functors::by_max_reentrance()(v.first, v.second);	break;
+		case 0:	text = to_string(row);	break;
+		case 1:	text = functors::by_name(*_resolver)(v.first, v.second);	break;
+		case 2:	text = functors::by_times_called()(v.first, v.second);	break;
+		case 3:	text = functors::by_exclusive_time()(v.first, v.second);	break;
+		case 4:	text = functors::by_inclusive_time()(v.first, v.second);	break;
+		case 5:	text = functors::by_avg_exclusive_call_time()(v.first, v.second);	break;
+		case 6:	text = functors::by_avg_inclusive_call_time()(v.first, v.second);	break;
+		case 7:	text = functors::by_max_reentrance()(v.first, v.second);	break;
 		}
 	}
 
@@ -214,13 +215,13 @@ namespace micro_profiler
 	{
 		switch (column)
 		{
-		case 0:	_view.set_order(functors::by_name(*_resolver), ascending);	break;
-		case 1:	_view.set_order(functors::by_times_called(), ascending);	break;
-		case 2:	_view.set_order(functors::by_exclusive_time(), ascending);	break;
-		case 3:	_view.set_order(functors::by_inclusive_time(), ascending);	break;
-		case 4:	_view.set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
-		case 5:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
-		case 6:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
+		case 1:	_view.set_order(functors::by_name(*_resolver), ascending);	break;
+		case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
+		case 3:	_view.set_order(functors::by_exclusive_time(), ascending);	break;
+		case 4:	_view.set_order(functors::by_inclusive_time(), ascending);	break;
+		case 5:	_view.set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
+		case 6:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
+		case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
 		}
 	}
 
@@ -244,11 +245,11 @@ namespace micro_profiler
 		: _resolver(resolver), _view(parents)
 	{	}
 
-	void parent_calls_list::get_text(index_type item, index_type subitem, wstring &text) const
+	void parent_calls_list::get_text(index_type row, index_type column, wstring &text) const
 	{
-		const parent_statistics_map::value_type &v = _view.at(item);
+		const parent_statistics_map::value_type &v = _view.at(row);
 
-		switch (subitem)
+		switch (column)
 		{
 		case 0:	text = functors::by_name(*_resolver)(v.first, v.second);	break;
 		case 1:	text = functors::by_times_called()(v.first, v.second);	break;
@@ -264,16 +265,22 @@ namespace micro_profiler
 		}
 	}
 
+	void parent_calls_list::update_view()
+	{
+		_view.resort();
+		invalidated(_view.size());
+	}
+
 
 	child_calls_list::child_calls_list(shared_ptr<symbol_resolver> resolver, const statistics_map &children)
 		: _resolver(resolver), _view(children)
 	{	}
 
-	void child_calls_list::get_text(index_type item, index_type subitem, wstring &text) const
+	void child_calls_list::get_text(index_type row, index_type column, wstring &text) const
 	{
-		const statistics_map::value_type &v = _view.at(item);
+		const statistics_map::value_type &v = _view.at(row);
 
-		switch (subitem)
+		switch (column)
 		{
 		case 0:	text = functors::by_name(*_resolver)(v.first, v.second);	break;
 		case 1:	text = functors::by_times_called()(v.first, v.second);	break;
@@ -297,5 +304,11 @@ namespace micro_profiler
 		case 5:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
 		case 6:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
 		}
+	}
+
+	void child_calls_list::update_view()
+	{
+		_view.resort();
+		invalidated(_view.size());
 	}
 }

@@ -49,6 +49,7 @@ namespace micro_profiler
 	struct dependant_calls_list : public wpl::ui::listview::model
 	{
 		virtual const void *get_address_at(index_type index) const throw() = 0;
+		virtual void update_view() = 0;
 	};
 
 	class functions_list : public wpl::ui::listview::model, wpl::noncopyable
@@ -66,10 +67,11 @@ namespace micro_profiler
 		void update(const FunctionStatisticsDetailed *data, unsigned int count);
 
 		virtual index_type get_count() const throw();
-		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
+		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
 
 		index_type get_index(const void *address) const;
+		const void *get_data_at(index_type index) const;
 
 		std::shared_ptr<dependant_calls_list> watch_parents(index_type index);
 		std::shared_ptr<dependant_calls_list> watch_children(index_type index);
@@ -84,9 +86,10 @@ namespace micro_profiler
 		parent_calls_list(std::shared_ptr<symbol_resolver> resolver, const parent_statistics_map &parents);
 
 		virtual index_type get_count() const throw();
-		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
+		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
 		virtual const void *get_address_at(index_type index) const throw();
+		virtual void update_view();
 	};
 
 	class child_calls_list : public dependant_calls_list, wpl::noncopyable
@@ -98,9 +101,10 @@ namespace micro_profiler
 		child_calls_list(std::shared_ptr<symbol_resolver> resolver, const statistics_map &children);
 
 		virtual index_type get_count() const throw();
-		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
+		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
 		virtual const void *get_address_at(index_type index) const throw();
+		virtual void update_view();
 	};
 
 
@@ -111,6 +115,9 @@ namespace micro_profiler
 	inline wpl::ui::listview::index_type functions_list::get_count() const throw()
 	{	return _view.size();	}
 
+	inline const void *functions_list::get_data_at(index_type index) const
+	{	return _view.at(index).first;	}
+	
 
 	inline wpl::ui::listview::index_type parent_calls_list::get_count() const throw()
 	{	return _view.size();	}

@@ -27,6 +27,7 @@
 #include <sstream>
 #include <algorithm>
 #include <math.h>
+#include <atlstr.h>
 
 extern HINSTANCE g_instance;
 
@@ -41,12 +42,13 @@ namespace micro_profiler
 	__int64 g_ticks_resolution(1);
 
 	ProfilerMainDialog::ProfilerMainDialog(const shared_ptr<functions_list> &s, __int64 ticks_resolution)
-		: _statistics(s)
+		: _statistics(s), _visible_sel_data(0), _ignore_notifications(false)
 	{
 		g_ticks_resolution = ticks_resolution;
 
 		Create(NULL, 0);
 
+		_statistics_lv->add_column(L"Order", listview::dir_none);
 		_statistics_lv->add_column(L"Function", listview::dir_ascending);
 		_statistics_lv->add_column(L"Times Called", listview::dir_descending);
 		_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
@@ -71,6 +73,7 @@ namespace micro_profiler
 		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrillup, this, _1));
 		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
 		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _1));
+		_connections.push_back(_statistics->invalidated += bind(&ProfilerMainDialog::OnInvalidate, this));
 
 		_statistics_lv->adjust_column_widths();
 		_parents_statistics_lv->adjust_column_widths();
@@ -89,10 +92,13 @@ namespace micro_profiler
 
 		_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
 		_statistics_lv = wrap_listview((HWND)_statistics_view);
+		ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_statistics_view));
 		_parents_statistics_view = GetDlgItem(IDC_PARENTS_STATISTICS);
 		_parents_statistics_lv = wrap_listview((HWND)_parents_statistics_view);
+		ListView_SetExtendedListViewStyle(_parents_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_parents_statistics_view));
 		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
 		_children_statistics_lv = wrap_listview((HWND)_children_statistics_view);
+		ListView_SetExtendedListViewStyle(_children_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_children_statistics_view));
 		_clear_button = GetDlgItem(IDC_BTN_CLEAR);
 		_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
 
@@ -123,35 +129,41 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
-		//basic_stringstream<TCHAR> s;
+		basic_stringstream<wchar_t> s;
+		wstring function, times, exclusive, inclusive, avg_exclusive, avg_inclusive, max_recursion;
 
-		//s << _T("Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion") << endl;
-		//for (size_t i = 0, count = _statistics.size(); i != count; ++i)
-		//{
-		//	const detailed_statistics_map::value_type &f = _statistics.at(i);
+		s << L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion" << endl;
+		for (size_t i = 0, count = _statistics->get_count(); i != count; ++i)
+		{
+			_statistics->get_text(i, 1, function);
+			_statistics->get_text(i, 2, times);
+			_statistics->get_text(i, 3, exclusive);
+			_statistics->get_text(i, 4, inclusive);
+			_statistics->get_text(i, 5, avg_exclusive);
+			_statistics->get_text(i, 6, avg_inclusive);
+			_statistics->get_text(i, 7, max_recursion);
 
-		//	s << _resolver.symbol_name_by_va(f.first) << _T("\t") << f.second.times_called << _T("\t") << 1.0 * f.second.exclusive_time / g_ticks_resolution << _T("\t") << 1.0 * f.second.inclusive_time / g_ticks_resolution << _T("\t")
-		//		<< 1.0 * f.second.exclusive_time / g_ticks_resolution / f.second.times_called << _T("\t") << 1.0 * f.second.inclusive_time / g_ticks_resolution / f.second.times_called << _T("\t") << f.second.max_reentrance
-		//		<< endl;
-		//}
+			s << function << L"\t" << times << L"\t" << exclusive << L"\t" << inclusive << L"\t" << avg_exclusive << L"\t"
+				<< avg_inclusive << L"\t" << max_recursion << endl;
+		}
 
-		//tstring result(s.str());
+		CString result(s.str().c_str());
 
-		//if (OpenClipboard())
-		//{
-		//	if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(TCHAR)))
-		//	{
-		//		TCHAR *gtext_memory = reinterpret_cast<TCHAR *>(::GlobalLock(gtext));
+		if (OpenClipboard())
+		{
+			if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.GetLength() + 1) * sizeof(TCHAR)))
+			{
+				TCHAR *gtext_memory = reinterpret_cast<TCHAR *>(::GlobalLock(gtext));
 
-		//		copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
-		//		::GlobalUnlock(gtext_memory);
-		//		::EmptyClipboard();
-		//		::SetClipboardData(CF_TEXT, gtext);
-		//	}
-		//	CloseClipboard();
-		//}
+				copy((LPCTSTR)result, (LPCTSTR)result + result.GetLength() + 1, gtext_memory);
+				::GlobalUnlock(gtext_memory);
+				::EmptyClipboard();
+				::SetClipboardData(CF_TEXT, gtext);
+			}
+			CloseClipboard();
+		}
  
-		//handled = TRUE;
+		handled = TRUE;
 		return 0;
 	}
 
@@ -185,7 +197,7 @@ namespace micro_profiler
 
 	void ProfilerMainDialog::OnFocusChange(listview::index_type index, bool selected)
 	{
-		if (selected)
+		if (selected && !_ignore_notifications)
 			SetFocusedFunction(index, true);
 	}
 
@@ -194,7 +206,30 @@ namespace micro_profiler
 
 	void ProfilerMainDialog::SetFocusedFunction(listview::index_type index, bool select)
 	{
-		_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
-		_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
+		if (select && index != -1)
+		{
+			_visible_sel_index = index;
+			_visible_sel_data = _statistics->get_data_at(_visible_sel_index);
+
+			_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
+			_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
+		}
+	}
+
+	void ProfilerMainDialog::OnInvalidate()
+	{
+		if (_visible_sel_data)
+		{
+			_ignore_notifications = true;
+			if (_visible_sel_data && _statistics_lv->is_visible(_visible_sel_index))
+			{
+				_visible_sel_index = _statistics->get_index(_visible_sel_data);
+				_statistics_lv->select(_visible_sel_index, true);
+				_statistics_lv->ensure_visible(_visible_sel_index);
+			}
+			else
+				_visible_sel_data = 0;
+			_ignore_notifications = false;
+		}
 	}
 }

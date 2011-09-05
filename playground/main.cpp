@@ -1,4 +1,5 @@
-#define _CRT_RAND_S
+#include <crtdbg.h>
+
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
@@ -25,7 +26,9 @@ namespace
 
 int main()
 {
-   srand(time(0));
+	_CrtSetDbgFlag(_CRTDBG_DELAY_FREE_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG));
+	
+	srand(time(0));
 
 	vector<double> v(30000000);
 
@@ -35,7 +38,7 @@ int main()
 	sort(v.begin(), v.end());
 	sort(v.rbegin(), v.rend());
 
-   getch();
+	getch();
 
 	return 0;
 }

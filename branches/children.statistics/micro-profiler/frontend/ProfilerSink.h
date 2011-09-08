@@ -27,6 +27,11 @@
 #include <atlcom.h>
 #include <memory>
 
+namespace std
+{
+	using tr1::shared_ptr;
+}
+
 extern "C" CLSID CLSID_ProfilerFrontend;
 
 namespace micro_profiler

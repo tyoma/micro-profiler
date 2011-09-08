@@ -23,6 +23,7 @@
 #include "symbol_resolver.h"
 #include "./../_generated/microprofilerfrontend_i.h"
 #include <sstream>
+#include <cmath>
 
 using namespace std;
 

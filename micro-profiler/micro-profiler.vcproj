@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="micro-profiler"
 	ProjectGUID="{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
 	RootNamespace="microprofiler"
@@ -275,26 +275,6 @@
 			>
 			<File
 				RelativePath=".\frontend\frontend-main.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\frontend\listview_impl.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

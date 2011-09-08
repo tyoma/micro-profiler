@@ -121,8 +121,8 @@ namespace micro_profiler
 	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
 		_statistics->clear();
-		_parents_statistics_lv->set_model(_parents_statistics = 0);
-		_children_statistics_lv->set_model(_children_statistics = 0);
+		_parents_statistics_lv->set_model(_parents_statistics = shared_ptr<dependant_calls_list>());
+		_children_statistics_lv->set_model(_children_statistics = shared_ptr<dependant_calls_list>());
 		handled = TRUE;
 		return 0;
 	}

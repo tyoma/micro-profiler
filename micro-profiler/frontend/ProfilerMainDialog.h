@@ -47,20 +47,12 @@ namespace micro_profiler
 		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
 		std::shared_ptr<wpl::ui::listview> _statistics_lv, _parents_statistics_lv, _children_statistics_lv;
 		std::vector<wpl::slot_connection> _connections;
-		bool _ignore_notifications;
-
-		wpl::ui::listview::index_type _visible_sel_index;
-		const void *_visible_sel_data;
 
 		void RelocateControls(const CSize &size);
 
 		void OnDrillup(wpl::ui::listview::index_type index);
 		void OnFocusChange(wpl::ui::listview::index_type index, bool selected);
 		void OnDrilldown(wpl::ui::listview::index_type index);
-
-		void SetFocusedFunction(wpl::ui::listview::index_type index, bool select);
-
-		void OnInvalidate();
 
 	public:
 		ProfilerMainDialog(const std::shared_ptr<functions_list> &s, __int64 ticks_resolution);

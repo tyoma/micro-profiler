@@ -69,6 +69,7 @@ namespace micro_profiler
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
+		virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
 
 		index_type get_index(const void *address) const;
 		const void *get_data_at(index_type index) const;

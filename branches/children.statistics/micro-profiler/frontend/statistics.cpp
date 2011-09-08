@@ -26,6 +26,7 @@
 #include <cmath>
 
 using namespace std;
+using namespace wpl::ui;
 
 namespace micro_profiler
 {
@@ -224,6 +225,25 @@ namespace micro_profiler
 		case 6:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
 		case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
 		}
+	}
+
+	shared_ptr<const listview::trackable> functions_list::track(index_type row) const
+	{
+		class trackable : public listview::trackable
+		{
+			const ordered_view<detailed_statistics2_map> &_view;
+			const void *_address;
+
+		public:
+			trackable(const ordered_view<detailed_statistics2_map> &view, const void *address)
+				: _view(view), _address(address)
+			{	}
+
+			virtual listview::index_type index() const
+			{	return _view.find_by_key(_address);	}
+		};
+
+		return shared_ptr<const listview::trackable>(new trackable(_view, _view.at(row).first));
 	}
 
 	functions_list::index_type functions_list::get_index(const void *address) const

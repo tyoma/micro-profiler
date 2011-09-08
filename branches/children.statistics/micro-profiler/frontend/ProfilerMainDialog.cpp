@@ -42,7 +42,7 @@ namespace micro_profiler
 	__int64 g_ticks_resolution(1);
 
 	ProfilerMainDialog::ProfilerMainDialog(const shared_ptr<functions_list> &s, __int64 ticks_resolution)
-		: _statistics(s), _visible_sel_data(0), _ignore_notifications(false)
+		: _statistics(s)
 	{
 		g_ticks_resolution = ticks_resolution;
 
@@ -73,7 +73,6 @@ namespace micro_profiler
 		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrillup, this, _1));
 		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
 		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _1));
-		_connections.push_back(_statistics->invalidated += bind(&ProfilerMainDialog::OnInvalidate, this));
 
 		_statistics_lv->adjust_column_widths();
 		_parents_statistics_lv->adjust_column_widths();
@@ -92,13 +91,13 @@ namespace micro_profiler
 
 		_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
 		_statistics_lv = wrap_listview((HWND)_statistics_view);
-		ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_statistics_view));
+		ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_statistics_view));
 		_parents_statistics_view = GetDlgItem(IDC_PARENTS_STATISTICS);
 		_parents_statistics_lv = wrap_listview((HWND)_parents_statistics_view);
-		ListView_SetExtendedListViewStyle(_parents_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_parents_statistics_view));
+		ListView_SetExtendedListViewStyle(_parents_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_parents_statistics_view));
 		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
 		_children_statistics_lv = wrap_listview((HWND)_children_statistics_view);
-		ListView_SetExtendedListViewStyle(_children_statistics_view, LVS_EX_FULLROWSELECT | ListView_GetExtendedListViewStyle(_children_statistics_view));
+		ListView_SetExtendedListViewStyle(_children_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_children_statistics_view));
 		_clear_button = GetDlgItem(IDC_BTN_CLEAR);
 		_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
 
@@ -193,43 +192,17 @@ namespace micro_profiler
 	}
 
 	void ProfilerMainDialog::OnDrillup(listview::index_type index)
-	{	SetFocusedFunction(_statistics->get_index(_parents_statistics->get_address_at(index)), true);	}
+	{	_statistics_lv->select(_statistics->get_index(_parents_statistics->get_address_at(index)), true);	}
 
 	void ProfilerMainDialog::OnFocusChange(listview::index_type index, bool selected)
 	{
-		if (selected && !_ignore_notifications)
-			SetFocusedFunction(index, true);
-	}
-
-	void ProfilerMainDialog::OnDrilldown(listview::index_type index)
-	{	SetFocusedFunction(_statistics->get_index(_children_statistics->get_address_at(index)), true);	}
-
-	void ProfilerMainDialog::SetFocusedFunction(listview::index_type index, bool select)
-	{
-		if (select && index != -1)
+		if (selected)
 		{
-			_visible_sel_index = index;
-			_visible_sel_data = _statistics->get_data_at(_visible_sel_index);
-
 			_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
 			_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
 		}
 	}
 
-	void ProfilerMainDialog::OnInvalidate()
-	{
-		if (_visible_sel_data)
-		{
-			_ignore_notifications = true;
-			if (_visible_sel_data && _statistics_lv->is_visible(_visible_sel_index))
-			{
-				_visible_sel_index = _statistics->get_index(_visible_sel_data);
-				_statistics_lv->select(_visible_sel_index, true);
-				_statistics_lv->ensure_visible(_visible_sel_index);
-			}
-			else
-				_visible_sel_data = 0;
-			_ignore_notifications = false;
-		}
-	}
+	void ProfilerMainDialog::OnDrilldown(listview::index_type index)
+	{	_statistics_lv->select(_statistics->get_index(_children_statistics->get_address_at(index)), true);	}
 }

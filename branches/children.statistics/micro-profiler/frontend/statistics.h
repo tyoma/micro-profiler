@@ -49,7 +49,7 @@ namespace micro_profiler
 	struct dependant_calls_list : public wpl::ui::listview::model
 	{
 		virtual const void *get_address_at(index_type index) const throw() = 0;
-		virtual void update_view() = 0;
+		virtual void update_view(bool notify) = 0;
 	};
 
 	class functions_list : public wpl::ui::listview::model, wpl::noncopyable
@@ -58,6 +58,7 @@ namespace micro_profiler
 		detailed_statistics2_map _statistics;
 		ordered_view<detailed_statistics2_map> _view;
 		std::shared_ptr<dependant_calls_list> _watched_parents, _watched_children;
+		unsigned int _cycle_counter;
 
 	public:
 		functions_list(std::shared_ptr<symbol_resolver> resolver);
@@ -90,7 +91,7 @@ namespace micro_profiler
 		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
 		virtual const void *get_address_at(index_type index) const throw();
-		virtual void update_view();
+		virtual void update_view(bool notify);
 	};
 
 	class child_calls_list : public dependant_calls_list, wpl::noncopyable
@@ -105,12 +106,12 @@ namespace micro_profiler
 		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
 		virtual const void *get_address_at(index_type index) const throw();
-		virtual void update_view();
+		virtual void update_view(bool notify);
 	};
 
 
 	inline functions_list::functions_list(std::shared_ptr<symbol_resolver> resolver)
-		: _resolver(resolver), _view(_statistics)
+		: _resolver(resolver), _view(_statistics), _cycle_counter(0)
 	{	}
 
 	inline wpl::ui::listview::index_type functions_list::get_count() const throw()

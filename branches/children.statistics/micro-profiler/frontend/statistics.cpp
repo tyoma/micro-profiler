@@ -176,6 +176,8 @@ namespace micro_profiler
 
 	void functions_list::update(const FunctionStatisticsDetailed *data, unsigned int count)
 	{
+		size_t old_size = _statistics.size();
+
 		for (; count; --count, ++data)
 		{
 			const void *address = reinterpret_cast<void *>(data->Statistics.FunctionAddress);
@@ -189,11 +191,13 @@ namespace micro_profiler
 			}
 		}
 		_view.resort();
-		invalidated(_view.size());
+		_cycle_counter = old_size != _view.size() || _cycle_counter >= 3 ? 0 : _cycle_counter + 1;
+		if (0 == _cycle_counter)
+			invalidated(_view.size());
 		if (_watched_parents)
-			_watched_parents->update_view();
+			_watched_parents->update_view(0 == _cycle_counter);
 		if (_watched_children)
-			_watched_children->update_view();
+			_watched_children->update_view(0 == _cycle_counter);
 	}
 
 	void functions_list::get_text(index_type row, index_type column, wstring &text) const
@@ -286,10 +290,11 @@ namespace micro_profiler
 		}
 	}
 
-	void parent_calls_list::update_view()
+	void parent_calls_list::update_view(bool notify)
 	{
 		_view.resort();
-		invalidated(_view.size());
+		if (notify)
+			invalidated(_view.size());
 	}
 
 
@@ -327,9 +332,10 @@ namespace micro_profiler
 		}
 	}
 
-	void child_calls_list::update_view()
+	void child_calls_list::update_view(bool notify)
 	{
 		_view.resort();
-		invalidated(_view.size());
+		if (notify)
+			invalidated(_view.size());
 	}
 }

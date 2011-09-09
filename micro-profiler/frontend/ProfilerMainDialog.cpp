@@ -41,14 +41,14 @@ namespace micro_profiler
 {
 	__int64 g_ticks_resolution(1);
 
-	ProfilerMainDialog::ProfilerMainDialog(const shared_ptr<functions_list> &s, __int64 ticks_resolution)
-		: _statistics(s)
+	ProfilerMainDialog::ProfilerMainDialog(const shared_ptr<symbol_resolver> &resolver, const shared_ptr<functions_list> &s, __int64 ticks_resolution)
+		: _resolver(resolver), _statistics(s)
 	{
 		g_ticks_resolution = ticks_resolution;
 
 		Create(NULL, 0);
 
-		_statistics_lv->add_column(L"Order", listview::dir_none);
+		_statistics_lv->add_column(L"#", listview::dir_none);
 		_statistics_lv->add_column(L"Function", listview::dir_ascending);
 		_statistics_lv->add_column(L"Times Called", listview::dir_descending);
 		_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
@@ -129,21 +129,20 @@ namespace micro_profiler
 	LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
 		basic_stringstream<wchar_t> s;
-		wstring function, times, exclusive, inclusive, avg_exclusive, avg_inclusive, max_recursion;
 
 		s << L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion" << endl;
 		for (size_t i = 0, count = _statistics->get_count(); i != count; ++i)
 		{
-			_statistics->get_text(i, 1, function);
-			_statistics->get_text(i, 2, times);
-			_statistics->get_text(i, 3, exclusive);
-			_statistics->get_text(i, 4, inclusive);
-			_statistics->get_text(i, 5, avg_exclusive);
-			_statistics->get_text(i, 6, avg_inclusive);
-			_statistics->get_text(i, 7, max_recursion);
+			const detailed_statistics2_map::value_type &f = _statistics->get_at(i);
 
-			s << function << L"\t" << times << L"\t" << exclusive << L"\t" << inclusive << L"\t" << avg_exclusive << L"\t"
-				<< avg_inclusive << L"\t" << max_recursion << endl;
+			s << _resolver->symbol_name_by_va(f.first)
+				<< L"\t" << f.second.times_called
+				<< L"\t" << 1.0 * f.second.exclusive_time / g_ticks_resolution
+				<< L"\t" << 1.0 * f.second.inclusive_time / g_ticks_resolution
+				<< L"\t" << 1.0 * (f.second.times_called ? f.second.exclusive_time / g_ticks_resolution / f.second.times_called : 0)
+				<< L"\t" << 1.0 * (f.second.times_called ? f.second.inclusive_time / g_ticks_resolution / f.second.times_called : 0)
+				<< L"\t" << f.second.max_reentrance
+				<< endl;
 		}
 
 		CString result(s.str().c_str());

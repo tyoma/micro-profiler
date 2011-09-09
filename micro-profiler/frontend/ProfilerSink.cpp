@@ -46,7 +46,7 @@ namespace micro_profiler
 		shared_ptr<symbol_resolver> r(new symbol_resolver(executable, load_address));
 		
 		_statistics.reset(new functions_list(r));
-		_dialog.reset(new ProfilerMainDialog(_statistics, ticks_resolution));
+		_dialog.reset(new ProfilerMainDialog(r, _statistics, ticks_resolution));
 
 		_dialog->ShowWindow(SW_SHOW);
 		return S_OK;

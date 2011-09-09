@@ -73,7 +73,7 @@ namespace micro_profiler
 		virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
 
 		index_type get_index(const void *address) const;
-		const void *get_data_at(index_type index) const;
+		const detailed_statistics2_map::value_type &get_at(index_type row) const;
 
 		std::shared_ptr<dependant_calls_list> watch_parents(index_type index);
 		std::shared_ptr<dependant_calls_list> watch_children(index_type index);
@@ -117,9 +117,8 @@ namespace micro_profiler
 	inline wpl::ui::listview::index_type functions_list::get_count() const throw()
 	{	return _view.size();	}
 
-	inline const void *functions_list::get_data_at(index_type index) const
-	{	return _view.at(index).first;	}
-	
+	inline const detailed_statistics2_map::value_type &functions_list::get_at(index_type row) const
+	{	return _view.at(row);	}
 
 	inline wpl::ui::listview::index_type parent_calls_list::get_count() const throw()
 	{	return _view.size();	}

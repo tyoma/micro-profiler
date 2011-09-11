@@ -199,6 +199,7 @@ namespace micro_profiler
 		{
 			_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
 			_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
+			_statistics_lv->ensure_visible(index);
 		}
 	}
 

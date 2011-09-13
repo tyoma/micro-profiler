@@ -57,6 +57,7 @@ namespace micro_profiler
 				Assert::IsTrue(statistics.begin()->second.times_called == 1);
 				Assert::IsTrue(statistics.begin()->second.inclusive_time == 13);
 				Assert::IsTrue(statistics.begin()->second.exclusive_time == 13);
+				Assert::IsTrue(statistics.begin()->second.max_call_time == 13);
 
 				// ACT
 				ss.update(trace2, end(trace2), statistics);
@@ -72,11 +73,13 @@ namespace micro_profiler
 				Assert::IsTrue(i1->second.times_called == 1);
 				Assert::IsTrue(i1->second.inclusive_time == 13);
 				Assert::IsTrue(i1->second.exclusive_time == 13);
+				Assert::IsTrue(i1->second.max_call_time == 13);
 
 				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
 				Assert::IsTrue(i2->second.times_called == 1);
 				Assert::IsTrue(i2->second.inclusive_time == 29);
 				Assert::IsTrue(i2->second.exclusive_time == 29);
+				Assert::IsTrue(i2->second.max_call_time == 29);
 			}
 
 
@@ -106,6 +109,7 @@ namespace micro_profiler
 				Assert::IsTrue(statistics.begin()->second.times_called == 1);
 				Assert::IsTrue(statistics.begin()->second.inclusive_time == 13);
 				Assert::IsTrue(statistics.begin()->second.exclusive_time == 13);
+				Assert::IsTrue(statistics.begin()->second.max_call_time == 13);
 
 				// ACT
 				ss.update(trace3, end(trace3), statistics);
@@ -127,11 +131,13 @@ namespace micro_profiler
 				Assert::IsTrue(i1->second.times_called == 1);
 				Assert::IsTrue(i1->second.inclusive_time == 13);
 				Assert::IsTrue(i1->second.exclusive_time == 13);
+				Assert::IsTrue(i1->second.max_call_time == 13);
 
 				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
 				Assert::IsTrue(i2->second.times_called == 1);
 				Assert::IsTrue(i2->second.inclusive_time == 29);
 				Assert::IsTrue(i2->second.exclusive_time == 29);
+				Assert::IsTrue(i2->second.max_call_time == 29);
 			}
 
 
@@ -161,15 +167,19 @@ namespace micro_profiler
 				Assert::IsTrue(2 == statistics1.size());
 				Assert::IsTrue(statistics1[(void *)0x01234567].times_called == 0);
 				Assert::IsTrue(statistics1[(void *)0x01234567].inclusive_time == 0);
+				Assert::IsTrue(statistics1[(void *)0x01234567].max_call_time == 0);
 				Assert::IsTrue(statistics1[(void *)0x01234568].times_called == 1);
 				Assert::IsTrue(statistics1[(void *)0x01234568].inclusive_time == 6);
+				Assert::IsTrue(statistics1[(void *)0x01234568].max_call_time == 6);
 
 				Assert::IsTrue(2 == statistics2.size());
 				Assert::IsTrue(statistics2.find((void *)0x0bcdef12) == statistics2.end());	// We didn't exited xxxx13 to update children of xxxx12
 				Assert::IsTrue(statistics2[(void *)0x0bcdef13].times_called == 0);
 				Assert::IsTrue(statistics2[(void *)0x0bcdef13].inclusive_time == 0);
+				Assert::IsTrue(statistics2[(void *)0x0bcdef13].max_call_time == 0);
 				Assert::IsTrue(statistics2[(void *)0x0bcdef14].times_called == 1);
 				Assert::IsTrue(statistics2[(void *)0x0bcdef14].inclusive_time == 4);
+				Assert::IsTrue(statistics2[(void *)0x0bcdef14].max_call_time == 4);
 			}
 
 
@@ -199,10 +209,12 @@ namespace micro_profiler
 				Assert::IsTrue(i1->first == (void *)0x01234567);
 				Assert::IsTrue(i1->second.times_called == 1);
 				Assert::IsTrue(i1->second.inclusive_time == 37);
+				Assert::IsTrue(i1->second.max_call_time == 37);
 
 				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
 				Assert::IsTrue(i2->second.times_called == 1);
 				Assert::IsTrue(i2->second.inclusive_time == 6);
+				Assert::IsTrue(i2->second.max_call_time == 6);
 			}
 
 
@@ -224,12 +236,15 @@ namespace micro_profiler
 				statistics[(void *)0xabcdef01].times_called = 7;
 				statistics[(void *)0xabcdef01].exclusive_time = 117;
 				statistics[(void *)0xabcdef01].inclusive_time = 1170;
+				statistics[(void *)0xabcdef01].max_call_time = 112;
 				statistics[(void *)0x01234567].times_called = 2;
 				statistics[(void *)0x01234567].exclusive_time = 1171;
 				statistics[(void *)0x01234567].inclusive_time = 1179;
+				statistics[(void *)0x01234567].max_call_time = 25;
 				statistics[(void *)0x0bcdef12].times_called = 3;
 				statistics[(void *)0x0bcdef12].exclusive_time = 1172;
 				statistics[(void *)0x0bcdef12].inclusive_time = 1185;
+				statistics[(void *)0x0bcdef12].max_call_time = 11;
 
 				// ACT
 				ss.update(trace, end(trace), statistics);
@@ -246,16 +261,19 @@ namespace micro_profiler
 				Assert::IsTrue(i1->second.times_called == 3);
 				Assert::IsTrue(i1->second.inclusive_time == 1198);
 				Assert::IsTrue(i1->second.exclusive_time == 1190);
+				Assert::IsTrue(i1->second.max_call_time == 25);
 
 				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
 				Assert::IsTrue(i2->second.times_called == 5);
 				Assert::IsTrue(i2->second.inclusive_time == 1205);
 				Assert::IsTrue(i2->second.exclusive_time == 1192);
+				Assert::IsTrue(i2->second.max_call_time == 14);
 
 				Assert::IsTrue(i3->first == (void *)0xabcdef01);
 				Assert::IsTrue(i3->second.times_called == 7);
 				Assert::IsTrue(i3->second.inclusive_time == 1170);
 				Assert::IsTrue(i3->second.exclusive_time == 117);
+				Assert::IsTrue(i3->second.max_call_time == 112);
 			}
 
 
@@ -295,21 +313,25 @@ namespace micro_profiler
 				Assert::IsTrue(i1->second.times_called == 1);
 				Assert::IsTrue(i1->second.inclusive_time == 37);
 				Assert::IsTrue(i1->second.exclusive_time == 31);
+				Assert::IsTrue(i1->second.max_call_time == 37);
 
 				Assert::IsTrue(i2->first == (void *)0x0bcdef10);
 				Assert::IsTrue(i2->second.times_called == 1);
 				Assert::IsTrue(i2->second.inclusive_time == 6);
 				Assert::IsTrue(i2->second.exclusive_time == 6);
+				Assert::IsTrue(i2->second.max_call_time == 6);
 
 				Assert::IsTrue(i3->first == (void *)0x11234560);
 				Assert::IsTrue(i3->second.times_called == 1);
 				Assert::IsTrue(i3->second.inclusive_time == 37);
 				Assert::IsTrue(i3->second.exclusive_time == 25);
+				Assert::IsTrue(i3->second.max_call_time == 37);
 
 				Assert::IsTrue(i4->first == (void *)0x1bcdef10);
 				Assert::IsTrue(i4->second.times_called == 1);
 				Assert::IsTrue(i4->second.inclusive_time == 12);
 				Assert::IsTrue(i4->second.exclusive_time == 12);
+				Assert::IsTrue(i4->second.max_call_time == 12);
 			}
 
 
@@ -345,16 +367,19 @@ namespace micro_profiler
 				Assert::IsTrue(i1->second.times_called == 1);
 				Assert::IsTrue(i1->second.inclusive_time == 26);
 				Assert::IsTrue(i1->second.exclusive_time == 16);
+				Assert::IsTrue(i1->second.max_call_time == 26);
 
 				Assert::IsTrue(i2->first == (void *)0x0bcdef10);
 				Assert::IsTrue(i2->second.times_called == 2);
 				Assert::IsTrue(i2->second.inclusive_time == 10);
 				Assert::IsTrue(i2->second.exclusive_time == 6);
+				Assert::IsTrue(i2->second.max_call_time == 8);
 
 				Assert::IsTrue(i3->first == (void *)0x0bcdef20);
 				Assert::IsTrue(i3->second.times_called == 1);
 				Assert::IsTrue(i3->second.inclusive_time == 4);
 				Assert::IsTrue(i3->second.exclusive_time == 4);
+				Assert::IsTrue(i3->second.max_call_time == 4);
 			}
 
 
@@ -394,21 +419,27 @@ namespace micro_profiler
 
 				Assert::IsTrue(i1_1->second.inclusive_time == 69);
 				Assert::IsTrue(i1_1->second.exclusive_time == 29);
+				Assert::IsTrue(i1_1->second.max_call_time == 69);
 
 				Assert::IsTrue(i1_2->second.inclusive_time == 36);
 				Assert::IsTrue(i1_2->second.exclusive_time == 27);
+				Assert::IsTrue(i1_2->second.max_call_time == 23);
 
 				Assert::IsTrue(i1_3->second.inclusive_time == 7);
 				Assert::IsTrue(i1_3->second.exclusive_time == 7);
+				Assert::IsTrue(i1_3->second.max_call_time == 7);
 
 				Assert::IsTrue(i2_1->second.inclusive_time == 68);
 				Assert::IsTrue(i2_1->second.exclusive_time == 26);
+				Assert::IsTrue(i2_1->second.max_call_time == 68);
 
 				Assert::IsTrue(i2_2->second.inclusive_time == 34);
 				Assert::IsTrue(i2_2->second.exclusive_time == 24);
+				Assert::IsTrue(i2_2->second.max_call_time == 22);
 
 				Assert::IsTrue(i2_3->second.inclusive_time == 6);
 				Assert::IsTrue(i2_3->second.exclusive_time == 6);
+				Assert::IsTrue(i2_3->second.max_call_time == 6);
 			}
 
 
@@ -441,9 +472,11 @@ namespace micro_profiler
 
 				Assert::IsTrue(i1->second.inclusive_time == 16);
 				Assert::IsTrue(i1->second.exclusive_time == 16);
+				Assert::IsTrue(i1->second.max_call_time == 16);
 
 				Assert::IsTrue(i2->second.inclusive_time == 14);
 				Assert::IsTrue(i2->second.exclusive_time == 14);
+				Assert::IsTrue(i2->second.max_call_time == 14);
 			}
 
 
@@ -476,9 +509,11 @@ namespace micro_profiler
 
 				Assert::IsTrue(i1->second.inclusive_time == 30);
 				Assert::IsTrue(i1->second.exclusive_time == 18);
+				Assert::IsTrue(i1->second.max_call_time == 30);
 
 				Assert::IsTrue(i2->second.inclusive_time == 24);
 				Assert::IsTrue(i2->second.exclusive_time == 12);
+				Assert::IsTrue(i2->second.max_call_time == 24);
 			}
 
 
@@ -599,60 +634,72 @@ namespace micro_profiler
 				Assert::IsTrue(0 == cs1[(void *)101].max_reentrance);
 				Assert::IsTrue(1 == cs1[(void *)101].exclusive_time);
 				Assert::IsTrue(1 == cs1[(void *)101].inclusive_time);
+				Assert::IsTrue(1 == cs1[(void *)101].max_call_time);
 
 				Assert::IsTrue(2 == cs2.size());
 				Assert::IsTrue(1 == cs2[(void *)201].times_called);
 				Assert::IsTrue(0 == cs2[(void *)201].max_reentrance);
 				Assert::IsTrue(2 == cs2[(void *)201].exclusive_time);
 				Assert::IsTrue(2 == cs2[(void *)201].inclusive_time);
+				Assert::IsTrue(2 == cs2[(void *)201].max_call_time);
 				Assert::IsTrue(1 == cs2[(void *)202].times_called);
 				Assert::IsTrue(0 == cs2[(void *)202].max_reentrance);
 				Assert::IsTrue(2 == cs2[(void *)202].exclusive_time);
 				Assert::IsTrue(2 == cs2[(void *)202].inclusive_time);
+				Assert::IsTrue(2 == cs2[(void *)202].max_call_time);
 
 				Assert::IsTrue(3 == cs3.size());
 				Assert::IsTrue(1 == cs3[(void *)301].times_called);
 				Assert::IsTrue(0 == cs3[(void *)301].max_reentrance);
 				Assert::IsTrue(6 == cs3[(void *)301].exclusive_time);
 				Assert::IsTrue(6 == cs3[(void *)301].inclusive_time);
+				Assert::IsTrue(6 == cs3[(void *)301].max_call_time);
 				Assert::IsTrue(1 == cs3[(void *)302].times_called);
 				Assert::IsTrue(0 == cs3[(void *)302].max_reentrance);
 				Assert::IsTrue(2 == cs3[(void *)302].exclusive_time);
 				Assert::IsTrue(2 == cs3[(void *)302].inclusive_time);
+				Assert::IsTrue(2 == cs3[(void *)302].max_call_time);
 				Assert::IsTrue(2 == cs3[(void *)303].times_called);
 				Assert::IsTrue(0 == cs3[(void *)303].max_reentrance);
 				Assert::IsTrue(8 == cs3[(void *)303].exclusive_time);
 				Assert::IsTrue(8 == cs3[(void *)303].inclusive_time);
+				Assert::IsTrue(6 == cs3[(void *)303].max_call_time);
 
 				Assert::IsTrue(1 == cs1_d.size());
 				Assert::IsTrue(1 == cs1_d[(void *)101].times_called);
 				Assert::IsTrue(0 == cs1_d[(void *)101].max_reentrance);
 				Assert::IsTrue(0 == cs1_d[(void *)101].exclusive_time);
 				Assert::IsTrue(0 == cs1_d[(void *)101].inclusive_time);
+				Assert::IsTrue(0 == cs1_d[(void *)101].max_call_time);
 
 				Assert::IsTrue(2 == cs2_d.size());
 				Assert::IsTrue(1 == cs2_d[(void *)201].times_called);
 				Assert::IsTrue(0 == cs2_d[(void *)201].max_reentrance);
 				Assert::IsTrue(1 == cs2_d[(void *)201].exclusive_time);
 				Assert::IsTrue(1 == cs2_d[(void *)201].inclusive_time);
+				Assert::IsTrue(1 == cs2_d[(void *)201].max_call_time);
 				Assert::IsTrue(1 == cs2_d[(void *)202].times_called);
 				Assert::IsTrue(0 == cs2_d[(void *)202].max_reentrance);
 				Assert::IsTrue(1 == cs2_d[(void *)202].exclusive_time);
 				Assert::IsTrue(1 == cs2_d[(void *)202].inclusive_time);
+				Assert::IsTrue(1 == cs2_d[(void *)202].max_call_time);
 
 				Assert::IsTrue(3 == cs3_d.size());
 				Assert::IsTrue(1 == cs3_d[(void *)301].times_called);
 				Assert::IsTrue(0 == cs3_d[(void *)301].max_reentrance);
 				Assert::IsTrue(5 == cs3_d[(void *)301].exclusive_time);
 				Assert::IsTrue(5 == cs3_d[(void *)301].inclusive_time);
+				Assert::IsTrue(5 == cs3_d[(void *)301].max_call_time);
 				Assert::IsTrue(1 == cs3_d[(void *)302].times_called);
 				Assert::IsTrue(0 == cs3_d[(void *)302].max_reentrance);
 				Assert::IsTrue(1 == cs3_d[(void *)302].exclusive_time);
 				Assert::IsTrue(1 == cs3_d[(void *)302].inclusive_time);
+				Assert::IsTrue(1 == cs3_d[(void *)302].max_call_time);
 				Assert::IsTrue(2 == cs3_d[(void *)303].times_called);
 				Assert::IsTrue(0 == cs3_d[(void *)303].max_reentrance);
 				Assert::IsTrue(6 == cs3_d[(void *)303].exclusive_time);
 				Assert::IsTrue(6 == cs3_d[(void *)303].inclusive_time);
+				Assert::IsTrue(5 == cs3_d[(void *)303].max_call_time);
 			}
 
 
@@ -693,8 +740,10 @@ namespace micro_profiler
 
 				Assert::IsTrue(5 == cs[(void *)101].inclusive_time);
 				Assert::IsTrue(3 == cs[(void *)101].exclusive_time);
+				Assert::IsTrue(5 == cs[(void *)101].max_call_time);
 				Assert::IsTrue(18 == cs[(void *)102].inclusive_time);
 				Assert::IsTrue(10 == cs[(void *)102].exclusive_time);
+				Assert::IsTrue(18 == cs[(void *)102].max_call_time);
 			}
 		};
 	}

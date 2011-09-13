@@ -28,6 +28,7 @@ struct FunctionStatisticsTag
 	hyper MaxReentrance;
 	hyper ExclusiveTime;
 	hyper InclusiveTime;
+	hyper MaxCallTime;
 } FunctionStatistics;
 
 typedef [	public	]

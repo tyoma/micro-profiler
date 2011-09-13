@@ -44,6 +44,7 @@ namespace micro_profiler
 		to.MaxReentrance = from.second.max_reentrance;
 		to.InclusiveTime = from.second.inclusive_time;
 		to.ExclusiveTime = from.second.exclusive_time;
+		to.MaxCallTime = from.second.max_call_time;
 	}
 
 	inline void copy(const detailed_statistics_map::value_type &from, FunctionStatisticsDetailed &to,

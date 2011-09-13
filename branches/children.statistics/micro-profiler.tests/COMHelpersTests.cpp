@@ -74,11 +74,13 @@ namespace micro_profiler
 				s1.max_reentrance = 23;
 				s1.inclusive_time = 29;
 				s1.exclusive_time = 31;
+				s1.max_call_time = 15;
 
 				s2.times_called = 1;
 				s2.max_reentrance = 3;
 				s2.inclusive_time = 5;
 				s2.exclusive_time = 7;
+				s2.max_call_time = 8;
 
 				// ACT
 				copy(make_pair((void *)1123, s1), ms1, dummy_children_buffer);
@@ -90,12 +92,14 @@ namespace micro_profiler
 				Assert::IsTrue(23 == ms1.Statistics.MaxReentrance);
 				Assert::IsTrue(29 == ms1.Statistics.InclusiveTime);
 				Assert::IsTrue(31 == ms1.Statistics.ExclusiveTime);
+				Assert::IsTrue(15 == ms1.Statistics.MaxCallTime);
 
 				Assert::IsTrue(2229 == ms2.Statistics.FunctionAddress);
 				Assert::IsTrue(1 == ms2.Statistics.TimesCalled);
 				Assert::IsTrue(3 == ms2.Statistics.MaxReentrance);
 				Assert::IsTrue(5 == ms2.Statistics.InclusiveTime);
 				Assert::IsTrue(7 == ms2.Statistics.ExclusiveTime);
+				Assert::IsTrue(8 == ms2.Statistics.MaxCallTime);
 			}
 
 
@@ -107,9 +111,9 @@ namespace micro_profiler
 				FunctionStatisticsDetailed ms;
 				vector<FunctionStatistics> children_buffer;
 
-				s1.children_statistics[(void *)123] = function_statistics(10, 20, 30, 40);
-				s2.children_statistics[(void *)234] = function_statistics(11, 21, 31, 41);
-				s2.children_statistics[(void *)345] = function_statistics(12, 22, 32, 42);
+				s1.children_statistics[(void *)123] = function_statistics(10, 20, 30, 40, 50);
+				s2.children_statistics[(void *)234] = function_statistics(11, 21, 31, 41, 51);
+				s2.children_statistics[(void *)345] = function_statistics(12, 22, 32, 42, 52);
 
 				// ACT / ASSERT
 				ASSERT_THROWS(copy(make_pair((void *)1123, s1), ms, children_buffer), invalid_argument);
@@ -137,11 +141,11 @@ namespace micro_profiler
 				vector<FunctionStatistics> children_buffer;
 
 				children_buffer.reserve(5);
-				s2.children_statistics[(void *)123] = function_statistics(10, 20, 30, 40);
-				s2.children_statistics[(void *)234] = function_statistics(11, 21, 31, 41);
-				s3.children_statistics[(void *)345] = function_statistics(10, 20, 30, 40);
-				s3.children_statistics[(void *)456] = function_statistics(11, 21, 31, 41);
-				s3.children_statistics[(void *)567] = function_statistics(12, 22, 32, 42);
+				s2.children_statistics[(void *)123] = function_statistics(10, 20, 30, 40, 50);
+				s2.children_statistics[(void *)234] = function_statistics(11, 21, 31, 41, 51);
+				s3.children_statistics[(void *)345] = function_statistics(10, 20, 30, 40, 50);
+				s3.children_statistics[(void *)456] = function_statistics(11, 21, 31, 41, 51);
+				s3.children_statistics[(void *)567] = function_statistics(12, 22, 32, 42, 52);
 
 				// ACT
 				copy(make_pair((void *)1123, s0), ms0, children_buffer);
@@ -162,11 +166,13 @@ namespace micro_profiler
 				Assert::IsTrue(20 == ms2.ChildrenStatistics[0].MaxReentrance);
 				Assert::IsTrue(30 == ms2.ChildrenStatistics[0].InclusiveTime);
 				Assert::IsTrue(40 == ms2.ChildrenStatistics[0].ExclusiveTime);
+				Assert::IsTrue(50 == ms2.ChildrenStatistics[0].MaxCallTime);
 				Assert::IsTrue(229 == ms2.ChildrenStatistics[1].FunctionAddress);
 				Assert::IsTrue(11 == ms2.ChildrenStatistics[1].TimesCalled);
 				Assert::IsTrue(21 == ms2.ChildrenStatistics[1].MaxReentrance);
 				Assert::IsTrue(31 == ms2.ChildrenStatistics[1].InclusiveTime);
 				Assert::IsTrue(41 == ms2.ChildrenStatistics[1].ExclusiveTime);
+				Assert::IsTrue(51 == ms2.ChildrenStatistics[1].MaxCallTime);
 
 				Assert::IsTrue(3 == ms3.ChildrenCount);
 				Assert::IsTrue(&children_buffer[2] == ms3.ChildrenStatistics);
@@ -176,16 +182,19 @@ namespace micro_profiler
 				Assert::IsTrue(20 == ms3.ChildrenStatistics[0].MaxReentrance);
 				Assert::IsTrue(30 == ms3.ChildrenStatistics[0].InclusiveTime);
 				Assert::IsTrue(40 == ms3.ChildrenStatistics[0].ExclusiveTime);
+				Assert::IsTrue(50 == ms3.ChildrenStatistics[0].MaxCallTime);
 				Assert::IsTrue(451 == ms3.ChildrenStatistics[1].FunctionAddress);
 				Assert::IsTrue(11 == ms3.ChildrenStatistics[1].TimesCalled);
 				Assert::IsTrue(21 == ms3.ChildrenStatistics[1].MaxReentrance);
 				Assert::IsTrue(31 == ms3.ChildrenStatistics[1].InclusiveTime);
 				Assert::IsTrue(41 == ms3.ChildrenStatistics[1].ExclusiveTime);
+				Assert::IsTrue(51 == ms3.ChildrenStatistics[1].MaxCallTime);
 				Assert::IsTrue(562 == ms3.ChildrenStatistics[2].FunctionAddress);
 				Assert::IsTrue(12 == ms3.ChildrenStatistics[2].TimesCalled);
 				Assert::IsTrue(22 == ms3.ChildrenStatistics[2].MaxReentrance);
 				Assert::IsTrue(32 == ms3.ChildrenStatistics[2].InclusiveTime);
 				Assert::IsTrue(42 == ms3.ChildrenStatistics[2].ExclusiveTime);
+				Assert::IsTrue(52 == ms3.ChildrenStatistics[2].MaxCallTime);
 			}
 
 
@@ -251,23 +260,28 @@ namespace micro_profiler
 				m1[(void *)6].max_reentrance = 3;
 				m1[(void *)6].inclusive_time = 5;
 				m1[(void *)6].exclusive_time = 7;
+				m1[(void *)6].max_call_time = 9;
 				m1[(void *)16].times_called = 13;
 				m1[(void *)16].max_reentrance = 17;
 				m1[(void *)16].inclusive_time = 19;
 				m1[(void *)16].exclusive_time = 23;
+				m1[(void *)16].max_call_time = 27;
 
 				m2[(void *)34].times_called = 31;
 				m2[(void *)34].max_reentrance = 37;
 				m2[(void *)34].inclusive_time = 41;
 				m2[(void *)34].exclusive_time = 43;
+				m2[(void *)34].max_call_time = 47;
 				m2[(void *)52].times_called = 48;
 				m2[(void *)52].max_reentrance = 49;
 				m2[(void *)52].inclusive_time = 50;
 				m2[(void *)52].exclusive_time = 51;
+				m2[(void *)52].max_call_time = 52;
 				m2[(void *)57].times_called = 53;
 				m2[(void *)57].max_reentrance = 54;
 				m2[(void *)57].inclusive_time = 55;
 				m2[(void *)57].exclusive_time = 56;
+				m2[(void *)57].max_call_time = 57;
 
 				// ACT
 				copy(m1.begin(), m1.end(), buffer1, children_buffer1);
@@ -281,12 +295,14 @@ namespace micro_profiler
 				Assert::IsTrue(3 == buffer1[0].Statistics.MaxReentrance);
 				Assert::IsTrue(5 == buffer1[0].Statistics.InclusiveTime);
 				Assert::IsTrue(7 == buffer1[0].Statistics.ExclusiveTime);
+				Assert::IsTrue(9 == buffer1[0].Statistics.MaxCallTime);
 				Assert::IsTrue(0 == buffer1[0].ChildrenCount);
 				Assert::IsTrue(11 == buffer1[1].Statistics.FunctionAddress);
 				Assert::IsTrue(13 == buffer1[1].Statistics.TimesCalled);
 				Assert::IsTrue(17 == buffer1[1].Statistics.MaxReentrance);
 				Assert::IsTrue(19 == buffer1[1].Statistics.InclusiveTime);
 				Assert::IsTrue(23 == buffer1[1].Statistics.ExclusiveTime);
+				Assert::IsTrue(27 == buffer1[1].Statistics.MaxCallTime);
 				Assert::IsTrue(0 == buffer1[1].ChildrenCount);
 
 				Assert::IsTrue(3 == buffer2.size());
@@ -296,18 +312,21 @@ namespace micro_profiler
 				Assert::IsTrue(37 == buffer2[0].Statistics.MaxReentrance);
 				Assert::IsTrue(41 == buffer2[0].Statistics.InclusiveTime);
 				Assert::IsTrue(43 == buffer2[0].Statistics.ExclusiveTime);
+				Assert::IsTrue(47 == buffer2[0].Statistics.MaxCallTime);
 				Assert::IsTrue(0 == buffer2[0].ChildrenCount);
 				Assert::IsTrue(47 == buffer2[1].Statistics.FunctionAddress);
 				Assert::IsTrue(48 == buffer2[1].Statistics.TimesCalled);
 				Assert::IsTrue(49 == buffer2[1].Statistics.MaxReentrance);
 				Assert::IsTrue(50 == buffer2[1].Statistics.InclusiveTime);
 				Assert::IsTrue(51 == buffer2[1].Statistics.ExclusiveTime);
+				Assert::IsTrue(52 == buffer2[1].Statistics.MaxCallTime);
 				Assert::IsTrue(0 == buffer2[1].ChildrenCount);
 				Assert::IsTrue(52 == buffer2[2].Statistics.FunctionAddress);
 				Assert::IsTrue(53 == buffer2[2].Statistics.TimesCalled);
 				Assert::IsTrue(54 == buffer2[2].Statistics.MaxReentrance);
 				Assert::IsTrue(55 == buffer2[2].Statistics.InclusiveTime);
 				Assert::IsTrue(56 == buffer2[2].Statistics.ExclusiveTime);
+				Assert::IsTrue(57 == buffer2[2].Statistics.MaxCallTime);
 				Assert::IsTrue(0 == buffer2[2].ChildrenCount);
 			}
 
@@ -320,13 +339,13 @@ namespace micro_profiler
 				vector<FunctionStatistics> children_buffer1, children_buffer2(9);
 				detailed_statistics_map m1, m2;
 
-				m1[(void *)1].children_statistics[(void *)123] = function_statistics(1, 2, 3, 4);
-				m1[(void *)1].children_statistics[(void *)234] = function_statistics(5, 6, 7, 8);
+				m1[(void *)1].children_statistics[(void *)123] = function_statistics(1, 2, 3, 4, 5);
+				m1[(void *)1].children_statistics[(void *)234] = function_statistics(5, 6, 7, 8, 9);
 
-				m2[(void *)1].children_statistics[(void *)123] = function_statistics(9, 10, 11, 12);
-				m2[(void *)1].children_statistics[(void *)234] = function_statistics(13, 14, 15, 16);
+				m2[(void *)1].children_statistics[(void *)123] = function_statistics(9, 10, 11, 12, 13);
+				m2[(void *)1].children_statistics[(void *)234] = function_statistics(13, 14, 15, 16, 17);
 				m2[(void *)2];
-				m2[(void *)3].children_statistics[(void *)123] = function_statistics(17, 18, 19, 20);
+				m2[(void *)3].children_statistics[(void *)123] = function_statistics(17, 18, 19, 20, 21);
 
 				// ACT
 				copy(m1.begin(), m1.end(), buffer1, children_buffer1);

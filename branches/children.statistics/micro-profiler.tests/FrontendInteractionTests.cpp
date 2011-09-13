@@ -297,6 +297,7 @@ namespace micro_profiler
 				Assert::IsTrue(sleep_20_call.MaxReentrance == 0);
 				Assert::IsTrue(sleep_20_call.InclusiveTime > 0);
 				Assert::IsTrue(sleep_20_call.ExclusiveTime == sleep_20_call.InclusiveTime);
+				Assert::IsTrue(sleep_20_call.MaxCallTime == sleep_20_call.InclusiveTime);
 
 				// INIT
 				fe_update_statistics.clear();
@@ -315,6 +316,7 @@ namespace micro_profiler
 				Assert::IsTrue(sleep_n_call.MaxReentrance == 0);
 				Assert::IsTrue(sleep_n_call.InclusiveTime > sleep_20_call.InclusiveTime);
 				Assert::IsTrue(sleep_n_call.ExclusiveTime == sleep_n_call.InclusiveTime);
+				Assert::IsTrue(sleep_n_call.MaxCallTime == sleep_n_call.InclusiveTime);
 			}
 
 
@@ -366,6 +368,8 @@ namespace micro_profiler
 				Assert::IsTrue(stat.InclusiveTime > 0);
 				Assert::IsTrue(stat.InclusiveTime / stat.TimesCalled < 150);
 				Assert::IsTrue(stat.ExclusiveTime == stat.InclusiveTime);
+				Assert::IsTrue(stat.MaxCallTime > stat.InclusiveTime / check_amount);
+				Assert::IsTrue(stat.MaxCallTime < stat.InclusiveTime);
 			}
 
 

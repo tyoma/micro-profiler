@@ -41,6 +41,8 @@ namespace micro_profiler
 				lhs.max_reentrance = rhs.MaxReentrance;
 			lhs.inclusive_time += rhs.InclusiveTime;
 			lhs.exclusive_time += rhs.ExclusiveTime;
+			if (rhs.MaxCallTime > lhs.max_call_time)
+				lhs.max_call_time = rhs.MaxCallTime;
 			return lhs;
 		}
 
@@ -159,6 +161,15 @@ namespace micro_profiler
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.max_reentrance < rhs.max_reentrance;	}
 			};
+
+			struct by_max_call_time
+			{
+				wstring operator ()(const void *, const function_statistics &s) const
+				{	return print_time(1.0 * s.max_call_time / g_ticks_resolution);	}
+
+				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				{	return lhs.max_call_time < rhs.max_call_time;	}
+			};
 		}
 	}
 
@@ -214,6 +225,7 @@ namespace micro_profiler
 		case 5:	text = functors::by_avg_exclusive_call_time()(v.first, v.second);	break;
 		case 6:	text = functors::by_avg_inclusive_call_time()(v.first, v.second);	break;
 		case 7:	text = functors::by_max_reentrance()(v.first, v.second);	break;
+		case 8:	text = functors::by_max_call_time()(v.first, v.second);	break;
 		}
 	}
 
@@ -228,6 +240,7 @@ namespace micro_profiler
 		case 5:	_view.set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
 		case 6:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
 		case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
+		case 8:	_view.set_order(functors::by_max_call_time(), ascending);	break;
 		}
 	}
 
@@ -315,6 +328,7 @@ namespace micro_profiler
 		case 4:	text = functors::by_avg_exclusive_call_time()(v.first, v.second);	break;
 		case 5:	text = functors::by_avg_inclusive_call_time()(v.first, v.second);	break;
 		case 6:	text = functors::by_max_reentrance()(v.first, v.second);	break;
+		case 7:	text = functors::by_max_call_time()(v.first, v.second);	break;
 		}
 	}
 
@@ -329,6 +343,7 @@ namespace micro_profiler
 		case 4:	_view.set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
 		case 5:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
 		case 6:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
+		case 7:	_view.set_order(functors::by_max_call_time(), ascending);	break;
 		}
 	}
 

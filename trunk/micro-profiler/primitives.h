@@ -50,7 +50,7 @@ namespace micro_profiler
 
 	struct function_statistics
 	{
-		function_statistics(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0);
+		function_statistics(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0, __int64 max_call_time = 0);
 
 		void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
 
@@ -58,6 +58,7 @@ namespace micro_profiler
 		unsigned __int64 max_reentrance;
 		__int64 inclusive_time;
 		__int64 exclusive_time;
+		__int64 max_call_time;
 	};
 
 	struct function_statistics_detailed : function_statistics
@@ -75,8 +76,8 @@ namespace micro_profiler
 
 
 	// function_statistics - inline definitions
-	inline function_statistics::function_statistics(unsigned __int64 times_called_, unsigned __int64 max_reentrance_, __int64 inclusive_time_, __int64 exclusive_time_)
-		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_)
+	inline function_statistics::function_statistics(unsigned __int64 times_called_, unsigned __int64 max_reentrance_, __int64 inclusive_time_, __int64 exclusive_time_, __int64 max_call_time_)
+		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_), max_call_time(max_call_time_)
 	{	}
 
 	inline void function_statistics::add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
@@ -87,6 +88,8 @@ namespace micro_profiler
 		if (!level)
 			this->inclusive_time += inclusive_time;
 		this->exclusive_time += exclusive_time;
+		if (inclusive_time > this->max_call_time)
+			this->max_call_time = inclusive_time;
 	}
 
 

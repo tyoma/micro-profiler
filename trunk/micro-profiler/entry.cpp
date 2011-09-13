@@ -26,7 +26,6 @@
 
 #include <wpl/mt/thread.h>
 #include <atlbase.h>
-#include <process.h>
 #include <vector>
 
 namespace std

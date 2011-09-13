@@ -79,7 +79,7 @@ namespace micro_profiler
 		const __int64 c_ticks_resolution(timestamp_precision());
 		FunctionStatistics fs2FS(const pair<void *, function_statistics> &s)
 		{
-			FunctionStatistics result = { reinterpret_cast<hyper>(s.first) - 5, s.second.times_called, s.second.max_reentrance, s.second.exclusive_time, s.second.inclusive_time };
+			FunctionStatistics result = { reinterpret_cast<hyper>(s.first) - 5, s.second.times_called, s.second.max_reentrance, s.second.exclusive_time, s.second.inclusive_time, s.second.max_call_time };
 
 			return result;
 		}

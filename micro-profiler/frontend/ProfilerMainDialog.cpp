@@ -56,6 +56,7 @@ namespace micro_profiler
 		_statistics_lv->add_column(L"Average Call Time (Exclusive)", listview::dir_descending);
 		_statistics_lv->add_column(L"Average Call Time (Inclusive)", listview::dir_descending);
 		_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
+		_statistics_lv->add_column(L"Max Call Time", listview::dir_descending);
 
 		_parents_statistics_lv->add_column(L"Function", listview::dir_ascending);
 		_parents_statistics_lv->add_column(L"Times Called", listview::dir_descending);
@@ -67,6 +68,7 @@ namespace micro_profiler
 		_children_statistics_lv->add_column(L"Average Call Time (Exclusive)", listview::dir_descending);
 		_children_statistics_lv->add_column(L"Average Call Time (Inclusive)", listview::dir_descending);
 		_children_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Max Call Time", listview::dir_descending);
 
 		_statistics_lv->set_model(_statistics);
 
@@ -130,7 +132,7 @@ namespace micro_profiler
 	{
 		basic_stringstream<wchar_t> s;
 
-		s << L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion" << endl;
+		s << L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time" << endl;
 		for (size_t i = 0, count = _statistics->get_count(); i != count; ++i)
 		{
 			const detailed_statistics2_map::value_type &f = _statistics->get_at(i);
@@ -142,6 +144,7 @@ namespace micro_profiler
 				<< L"\t" << 1.0 * (f.second.times_called ? f.second.exclusive_time / g_ticks_resolution / f.second.times_called : 0)
 				<< L"\t" << 1.0 * (f.second.times_called ? f.second.inclusive_time / g_ticks_resolution / f.second.times_called : 0)
 				<< L"\t" << f.second.max_reentrance
+				<< L"\t" << f.second.max_call_time
 				<< endl;
 		}
 

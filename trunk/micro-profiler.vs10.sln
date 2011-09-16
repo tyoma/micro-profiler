@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui.tests", "libraries\wpl\u
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui", "libraries\wpl\ui\src\ui.vcxproj", "{2423F23A-B689-F3F7-A864-A1729EC337C9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base.tests", "libraries\wpl\base\tests\base.tests.vcxproj", "{D5D8229B-9269-4165-BD5E-0DC5504E120B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -66,6 +68,10 @@ Global
 		{2423F23A-B689-F3F7-A864-A1729EC337C9}.Debug|Win32.Build.0 = Debug|Win32
 		{2423F23A-B689-F3F7-A864-A1729EC337C9}.Release|Win32.ActiveCfg = Release|Win32
 		{2423F23A-B689-F3F7-A864-A1729EC337C9}.Release|Win32.Build.0 = Release|Win32
+		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Debug|Win32.Build.0 = Debug|Win32
+		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Release|Win32.ActiveCfg = Release|Win32
+		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

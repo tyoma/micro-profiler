@@ -183,6 +183,7 @@ namespace micro_profiler
 			[TestMethod]
 			void FunctinoListCollectsUpdates()
 			{
+				//TODO: add 2 entries of same function in one burst
 				// INIT
 				function_statistics_detailed s1, s2, s3, s4;
 				FunctionStatisticsDetailed ms1, ms2, ms3, ms4;
@@ -239,7 +240,71 @@ namespace micro_profiler
 			//myhandler h;
 			//h.bind2(fl);
 
+			[TestMethod]
+			void FunctinoListTextFormatter()
+			{
+				// INIT
+				function_statistics_detailed s1, s2, s3, s4, s5, s6;
+				FunctionStatisticsDetailed ms1, ms2, ms3, ms4, ms5, ms6;
+				std::vector<FunctionStatistics> dummy_children_buffer;
+				// ns
+				s1.times_called = 1;
+				s1.max_reentrance = 0;
+				s1.inclusive_time = 31;
+				s1.exclusive_time = 29;
+				// us
+				s2.times_called = 1;
+				s2.max_reentrance = 0;
+				s2.inclusive_time = 45340;
+				s2.exclusive_time = 36666;
+				// ms
+				s3.times_called = 1;
+				s3.max_reentrance = 0;
+				s3.inclusive_time = 33450030;
+				s3.exclusive_time = 32333333;
+				// s
+				s4.times_called = 1;
+				s4.max_reentrance = 0;
+				s4.inclusive_time = 65450031030;
+				s4.exclusive_time = 23470030000;
+				// > 1000 s
+				s5.times_called = 1;
+				s5.max_reentrance = 0;
+				s5.inclusive_time = 65450031030567;
+				s5.exclusive_time = 23470030000987;
+				// > 10000 s
+				s6.times_called = 1;
+				s6.max_reentrance = 0;
+				s6.inclusive_time = 65450031030567000;
+				s6.exclusive_time = 23470030000987000;
+
+				copy(std::make_pair((void *)1123, s1), ms1, dummy_children_buffer);
+				copy(std::make_pair((void *)2234, s2), ms2, dummy_children_buffer);
+				copy(std::make_pair((void *)3123, s3), ms3, dummy_children_buffer);
+				copy(std::make_pair((void *)5555, s4), ms4, dummy_children_buffer);
+				copy(std::make_pair((void *)4555, s5), ms5, dummy_children_buffer);
+				copy(std::make_pair((void *)6666, s6), ms6, dummy_children_buffer);
+
+				FunctionStatisticsDetailed data1[] = {ms1, ms2, ms3, ms4, ms5, ms6};
+
+				sri resolver;
+				functions_list fl(10000000000, resolver); // 10 * billion for ticks resolution
+
+				// ACT & ASSERT
+				fl.update(data1, 6);
+				Assert::IsTrue(fl.get_count() == 6);
+		
+				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
+
+				assert_row(fl, 0, L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0");
+				assert_row(fl, 1, L"000008B5", L"1", L"4.53us", L"3.67us", L"4.53us", L"3.67us", L"0");
+				assert_row(fl, 2, L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0");
+				assert_row(fl, 3, L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0");
+				assert_row(fl, 4, L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0");
+				assert_row(fl, 5, L"00001A05", L"1", L"6.55e+006s", L"2.35e+006s", L"6.55e+006s", L"2.35e+006s", L"0");
+			}
 		};
+
 
 	} // namespace tests
 } // namespace micro_profiler

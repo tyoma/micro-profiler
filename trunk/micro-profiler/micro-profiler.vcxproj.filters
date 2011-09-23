@@ -31,6 +31,9 @@
     <ClCompile Include="frontend\ProxyBridge.c">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\function_list.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyzer.h" />
@@ -62,6 +65,9 @@
     <ClInclude Include="primitives.h" />
     <ClInclude Include="com_helpers.h" />
     <ClInclude Include="frontend\ordered_view.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\function_list.h">
       <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>

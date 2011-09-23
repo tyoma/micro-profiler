@@ -14,6 +14,12 @@
     <ClCompile Include="frontend\OrderedViewTests.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\FunctionListTests.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\micro-profiler\frontend\function_list.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

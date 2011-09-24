@@ -200,6 +200,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\micro-profiler\frontend\function_list.h" />
     <ClInclude Include="Helpers.h" />
   </ItemGroup>
   <ItemGroup>

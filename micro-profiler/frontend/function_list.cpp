@@ -20,6 +20,8 @@
 
 #include "function_list.h"
 
+#include "../_generated/microprofilerfrontend_i.h"
+
 #include <utility>
 #include <string>
 #include <sstream>

@@ -20,15 +20,12 @@
 
 #pragma once
 
-#include "../_generated/microprofilerfrontend_i.h"
 #include "../primitives.h"
-
 #include "ordered_view.h"
-
-#include <wpl/base/concepts.h>
-#include <wpl/ui/win32/controls.h>
-
+#include <wpl/ui/listview.h>
 #include <string>
+
+typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
 struct symbol_resolver_itf
 {
@@ -36,14 +33,13 @@ struct symbol_resolver_itf
 	virtual std::wstring symbol_name_by_va(const void *address) = 0;
 };
 
-
 class functions_list : public wpl::ui::listview::model, wpl::noncopyable
 {
 	micro_profiler::statistics_map _statistics;
 	ordered_view<micro_profiler::statistics_map> _view;
-
 	__int64 _ticks_resolution;
-	symbol_resolver_itf& _resolver;
+	symbol_resolver_itf &_resolver;
+
 public:
 	functions_list(__int64 ticks_resolution, symbol_resolver_itf& resolver);
 	~functions_list();
@@ -56,5 +52,4 @@ public:
 	virtual void set_order(index_type column, bool ascending);
 
 	index_type get_index(const void *address) const;
-
 };

@@ -179,6 +179,49 @@ namespace micro_profiler
 
 				Assert::IsTrue(fl.get_count() == 1);
 			}
+
+			[TestMethod]
+			void FunctinoListGetByAddress()
+			{
+				// INIT
+				function_statistics_detailed s1, s2, s3;
+				FunctionStatisticsDetailed ms1, ms2, ms3;
+				std::vector<FunctionStatistics> dummy_children_buffer;
+
+				s1.times_called = 19;
+				s1.max_reentrance = 0;
+				s1.inclusive_time = 31;
+				s1.exclusive_time = 29;
+
+				s2.times_called = 10;
+				s2.max_reentrance = 3;
+				s2.inclusive_time = 7;
+				s2.exclusive_time = 5;
+
+				s3.times_called = 5;
+				s3.max_reentrance = 0;
+				s3.inclusive_time = 10;
+				s3.exclusive_time = 7;
+
+				copy(std::make_pair((void *)1123, s1), ms1, dummy_children_buffer);
+				copy(std::make_pair((void *)2234, s2), ms2, dummy_children_buffer);
+				copy(std::make_pair((void *)5555, s3), ms3, dummy_children_buffer);
+
+				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3};
+
+				sri resolver;
+				functions_list fl(test_ticks_resolution, resolver);
+
+				// ACT & ASSERT
+				fl.update(data, 3);
+				Assert::IsTrue(fl.get_count() == 3);
+		
+				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
+				Assert::IsTrue(fl.get_index((void *)1118) == 0);
+				Assert::IsTrue(fl.get_index((void *)2229) == 1);
+				Assert::IsTrue(fl.get_index((void *)5550) == 2);
+
+			}
 			
 			[TestMethod]
 			void FunctinoListCollectsUpdates()
@@ -226,15 +269,15 @@ namespace micro_profiler
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
 
-				assert_row(fl, 0, L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0");
-				assert_row(fl, 1, L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
+				assert_row(fl, fl.get_index((void *)1118), L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0");
+				assert_row(fl, fl.get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
 
 				// ACT & ASSERT
 				fl.update(data2, 2);
 				Assert::IsTrue(fl.get_count() == 3);
-				assert_row(fl, 0, L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0");
-				assert_row(fl, 1, L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
-				assert_row(fl, 2, L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024");
+				assert_row(fl, fl.get_index((void *)1118), L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0");
+				assert_row(fl, fl.get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
+				assert_row(fl, fl.get_index((void *)5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024");
 			}
 
 			//myhandler h;
@@ -244,8 +287,8 @@ namespace micro_profiler
 			void FunctinoListTextFormatter()
 			{
 				// INIT
-				function_statistics_detailed s1, s2, s3, s4, s5, s6;
-				FunctionStatisticsDetailed ms1, ms2, ms3, ms4, ms5, ms6;
+				function_statistics_detailed s1, s2, s3, s4, s5, s6, s5b, s6b;
+				FunctionStatisticsDetailed ms1, ms2, ms3, ms4, ms5, ms6, ms5b, ms6b;
 				std::vector<FunctionStatistics> dummy_children_buffer;
 				// ns
 				s1.times_called = 1;
@@ -272,7 +315,17 @@ namespace micro_profiler
 				s5.max_reentrance = 0;
 				s5.inclusive_time = 65450031030567;
 				s5.exclusive_time = 23470030000987;
+
+				s5b.times_called = 1;
+				s5b.max_reentrance = 0;
+				s5b.inclusive_time = 99990031030567;
+				s5b.exclusive_time = 99990030000987;
 				// > 10000 s
+				s6b.times_called = 1;
+				s6b.max_reentrance = 0;
+				s6b.inclusive_time = 99999031030567;
+				s6b.exclusive_time = 99999030000987;
+
 				s6.times_called = 1;
 				s6.max_reentrance = 0;
 				s6.inclusive_time = 65450031030567000;
@@ -284,24 +337,29 @@ namespace micro_profiler
 				copy(std::make_pair((void *)5555, s4), ms4, dummy_children_buffer);
 				copy(std::make_pair((void *)4555, s5), ms5, dummy_children_buffer);
 				copy(std::make_pair((void *)6666, s6), ms6, dummy_children_buffer);
+				copy(std::make_pair((void *)7775, s5b), ms5b, dummy_children_buffer);
+				copy(std::make_pair((void *)8885, s6b), ms6b, dummy_children_buffer);
 
-				FunctionStatisticsDetailed data1[] = {ms1, ms2, ms3, ms4, ms5, ms6};
+				FunctionStatisticsDetailed data1[] = {ms1, ms2, ms3, ms4, ms5, ms6, ms5b, ms6b};
 
 				sri resolver;
 				functions_list fl(10000000000, resolver); // 10 * billion for ticks resolution
 
 				// ACT & ASSERT
-				fl.update(data1, 6);
-				Assert::IsTrue(fl.get_count() == 6);
+				fl.update(data1, 8);
+				Assert::IsTrue(fl.get_count() == 8);
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
 
-				assert_row(fl, 0, L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0");
-				assert_row(fl, 1, L"000008B5", L"1", L"4.53us", L"3.67us", L"4.53us", L"3.67us", L"0");
-				assert_row(fl, 2, L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0");
-				assert_row(fl, 3, L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0");
-				assert_row(fl, 4, L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0");
-				assert_row(fl, 5, L"00001A05", L"1", L"6.55e+006s", L"2.35e+006s", L"6.55e+006s", L"2.35e+006s", L"0");
+				assert_row(fl, fl.get_index((void *)1118), L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0");
+				assert_row(fl, fl.get_index((void *)2229), L"000008B5", L"1", L"4.53us", L"3.67us", L"4.53us", L"3.67us", L"0");
+				assert_row(fl, fl.get_index((void *)3118), L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0");
+				assert_row(fl, fl.get_index((void *)5550), L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0");
+				assert_row(fl, fl.get_index((void *)4550), L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0");
+				assert_row(fl, fl.get_index((void *)6661), L"00001A05", L"1", L"6.55e+006s", L"2.35e+006s", L"6.55e+006s", L"2.35e+006s", L"0");
+				//boundary
+				assert_row(fl, fl.get_index((void *)7770), L"00001E5A", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0");
+				assert_row(fl, fl.get_index((void *)8880), L"000022B0", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0");
 			}
 		};
 

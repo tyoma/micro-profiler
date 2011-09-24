@@ -220,3 +220,8 @@ void functions_list::clear()
 	_statistics.clear();
 	_view.resort();
 }
+
+functions_list::index_type functions_list::get_index(const void *address) const
+{
+	return _view.find_by_key(address);
+}

@@ -73,7 +73,7 @@ namespace
 
 	namespace functors
 	{
-		class by_name : public wpl::noncopyable
+		class by_name
 		{
 			symbol_resolver_itf &_resolver;
 		public:
@@ -207,7 +207,16 @@ void functions_list::get_text( index_type item, index_type subitem, std::wstring
 
 void functions_list::set_order( index_type column, bool ascending )
 {
-
+	switch (column)
+	{
+	case 1:	_view.set_order(functors::by_name(_resolver), ascending);	break;
+	case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
+	case 3:	_view.set_order(functors::by_exclusive_time(_ticks_resolution), ascending);	break;
+	case 4:	_view.set_order(functors::by_inclusive_time(_ticks_resolution), ascending);	break;
+	case 5:	_view.set_order(functors::by_avg_exclusive_call_time(_ticks_resolution), ascending);	break;
+	case 6:	_view.set_order(functors::by_avg_inclusive_call_time(_ticks_resolution), ascending);	break;
+	case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
+	}
 }
 
 void functions_list::update( const FunctionStatisticsDetailed *data, unsigned int count )

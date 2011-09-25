@@ -420,8 +420,157 @@ namespace micro_profiler
 				assert_row(fl, fl.get_index((void *)5990), L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0");
 				assert_row(fl, fl.get_index((void *)6000), L"00001770", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0");
 			}
-		};
 
+			[TestMethod]
+			void FunctinoListSorting()
+			{
+				// INIT
+				function_statistics_detailed s1, s2, s3, s4/*, s5, s6, s7*/;
+				FunctionStatisticsDetailed ms1, ms2, ms3, ms4/*, ms5, ms6, ms7*/;
+				std::vector<FunctionStatistics> dummy_children_buffer;
+
+				s1.times_called = 15;
+				s1.max_reentrance = 0;
+				s1.inclusive_time = 31;
+				s1.exclusive_time = 29;
+
+				s2.times_called = 35;
+				s2.max_reentrance = 1;
+				s2.inclusive_time = 453;
+				s2.exclusive_time = 366;
+
+				s3.times_called = 2;
+				s3.max_reentrance = 2;
+				s3.inclusive_time = 33450030;
+				s3.exclusive_time = 32333333;
+
+				s4.times_called = 15233;
+				s4.max_reentrance = 3;
+				s4.inclusive_time = 65450;
+				s4.exclusive_time = 13470;
+
+				//s5.times_called = 4;
+				//s5.max_reentrance = 4;
+				//s5.inclusive_time = 65450031030567;
+				//s5.exclusive_time = 23470030000987;
+
+				//s6.times_called = 5;
+				//s6.max_reentrance = 5;
+				//s6.inclusive_time = 65450031030567000;
+				//s6.exclusive_time = 23470030000987000;
+
+				//s7.times_called = 6;
+				//s7.max_reentrance = 6;
+				//s7.inclusive_time = 65450031030567000;
+				//s7.exclusive_time = 23470030000987000;
+
+				copy(std::make_pair((void *)1995, s1), ms1, dummy_children_buffer);
+				copy(std::make_pair((void *)2005, s2), ms2, dummy_children_buffer);
+				copy(std::make_pair((void *)2995, s3), ms3, dummy_children_buffer);
+				copy(std::make_pair((void *)3005, s4), ms4, dummy_children_buffer);
+				//copy(std::make_pair((void *)5555, s5), ms5, dummy_children_buffer);
+				//copy(std::make_pair((void *)6665, s6), ms6, dummy_children_buffer);
+				//copy(std::make_pair((void *)7775, s7), ms7, dummy_children_buffer);
+
+
+				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4/*, ms5, ms6, ms7*/};
+
+				sri resolver;
+				functions_list fl(1, resolver); 
+
+				// ACT & ASSERT
+				fl.update(data, sizeof(data)/sizeof(data[0]));
+				Assert::IsTrue(fl.get_count() == sizeof(data)/sizeof(data[0]));
+		
+				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
+				assert_row(fl, fl.get_index((void *)1990), L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, fl.get_index((void *)2000), L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, fl.get_index((void *)2990), L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, fl.get_index((void *)3000), L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				// rock-n-roll
+				// 1-name, 2-times called, 3-excl, 4-incl, 5-av_excl, 6-av-incl, 7-max_r
+				/*========== times called ============*/
+				fl.set_order(2, true);
+				assert_row(fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				fl.set_order(2, false);
+				assert_row(fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				/*========== name (after times called to see that sorting in asc direction works) ============*/
+				fl.set_order(1, true);
+				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				fl.set_order(1, false);
+				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				/*========== exclusive time ============*/
+				fl.set_order(3, true);
+				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				fl.set_order(3, false);
+				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				/*========== inclusive time ============*/
+				fl.set_order(4, true);
+				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				fl.set_order(4, false);
+				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				/*========== avg. exclusive time ============*/
+				fl.set_order(5, true);
+				assert_row(fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				fl.set_order(5, false);
+				assert_row(fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				/*========== avg. inclusive time ============*/
+				fl.set_order(6, true);
+				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				fl.set_order(6, false);
+				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				/*========== max reentrance ============*/
+				fl.set_order(7, true);
+				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				fl.set_order(7, false);
+				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
+				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
+				assert_row(fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
+				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+			}
+
+		};
 
 	} // namespace tests
 } // namespace micro_profiler

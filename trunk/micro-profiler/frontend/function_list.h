@@ -35,12 +35,16 @@ struct symbol_resolver_itf
 
 class functions_list : public wpl::ui::listview::model, wpl::noncopyable
 {
+	typedef ordered_view<micro_profiler::statistics_map> statistics_view;
+
 	micro_profiler::statistics_map _statistics;
-	ordered_view<micro_profiler::statistics_map> _view;
+	statistics_view _view;
 	__int64 _ticks_resolution;
 	symbol_resolver_itf &_resolver;
 
 public:
+	static const size_t npos = statistics_view::npos;
+
 	functions_list(__int64 ticks_resolution, symbol_resolver_itf& resolver);
 	~functions_list();
 

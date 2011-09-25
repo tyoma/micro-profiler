@@ -53,18 +53,22 @@ namespace
 
 	wstring print_time(double value)
 	{
-		if (0.000001 > fabs(value))
-			return to_string(1000000000 * value) + L"ns";
-		else if (0.001 > fabs(value))
-			return to_string(1000000 * value) + L"us";
-		else if (1 > fabs(value))
-			return to_string(1000 * value) + L"ms";
-		else if (1000 > fabs(value))
-			return to_string(value) + L"s";
-		else if (10000 > fabs(value))
-			return to_string(value, 4) + L"s";
+		const size_t buf_size = 24;
+		wchar_t buf[buf_size]; //X.XXe+XXXxs\0 -> 12
+	
+		if (999.5 > fabs(1000000000 * value))
+			::swprintf(buf, buf_size, L"%.3gns", 1000000000 * value);
+		else if (999.5 > fabs(1000000 * value))
+			::swprintf(buf, buf_size, L"%.3gus", 1000000 * value);
+		else if (999.5 > fabs(1000 * value))
+			::swprintf(buf, buf_size, L"%.3gms", 1000 * value);
+		else if (999.5 > fabs(value))
+			::swprintf(buf, buf_size, L"%.3gs", value);
+		else if (9999.5 > fabs(value))
+			::swprintf(buf, buf_size, L"%.4gs", value);
 		else 
-			return to_string(value) + L"s";
+			::swprintf(buf, buf_size, L"%.3gs", value);
+		return buf;
 	}
 
 	namespace functors

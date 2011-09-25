@@ -220,6 +220,8 @@ namespace micro_profiler
 				Assert::IsTrue(fl.get_index((void *)1118) == 0);
 				Assert::IsTrue(fl.get_index((void *)2229) == 1);
 				Assert::IsTrue(fl.get_index((void *)5550) == 2);
+				Assert::IsTrue(fl.get_index((void *)1234) == functions_list::npos);
+				Assert::IsTrue(fl.get_index((void *)2229) == 1); // Assert twice. Kind of regularity check.
 
 			}
 			
@@ -284,47 +286,87 @@ namespace micro_profiler
 			//h.bind2(fl);
 
 			[TestMethod]
-			void FunctinoListTextFormatter()
+			void FunctinoListTimeFormatter()
 			{
 				// INIT
-				function_statistics_detailed s1, s2, s3, s4, s5, s6, s5b, s6b;
-				FunctionStatisticsDetailed ms1, ms2, ms3, ms4, ms5, ms6, ms5b, ms6b;
+				function_statistics_detailed s1, s2, s3, s4, s5, s6, s1ub, s2lb, s2ub, s3lb, s3ub, s4lb, s4ub, s5lb, s5ub, s6lb;
+				FunctionStatisticsDetailed ms1, ms2, ms3, ms4, ms5, ms6, ms1ub, ms2lb, ms2ub, ms3lb, ms3ub, ms4lb, ms4ub, ms5lb, ms5ub, ms6lb;
 				std::vector<FunctionStatistics> dummy_children_buffer;
 				// ns
 				s1.times_called = 1;
 				s1.max_reentrance = 0;
 				s1.inclusive_time = 31;
 				s1.exclusive_time = 29;
+
+				s1ub.times_called = 1;
+				s1ub.max_reentrance = 0;
+				s1ub.inclusive_time = 9994;
+				s1ub.exclusive_time = 9994;
 				// us
+				s2lb.times_called = 1;
+				s2lb.max_reentrance = 0;
+				s2lb.inclusive_time = 9996;
+				s2lb.exclusive_time = 9996;
+
 				s2.times_called = 1;
 				s2.max_reentrance = 0;
 				s2.inclusive_time = 45340;
 				s2.exclusive_time = 36666;
+
+				s2ub.times_called = 1;
+				s2ub.max_reentrance = 0;
+				s2ub.inclusive_time = 9994000;
+				s2ub.exclusive_time = 9994000;
 				// ms
+				s3lb.times_called = 1;
+				s3lb.max_reentrance = 0;
+				s3lb.inclusive_time = 9996000;
+				s3lb.exclusive_time = 9996000;
+
 				s3.times_called = 1;
 				s3.max_reentrance = 0;
 				s3.inclusive_time = 33450030;
 				s3.exclusive_time = 32333333;
+
+				s3ub.times_called = 1;
+				s3ub.max_reentrance = 0;
+				s3ub.inclusive_time = 9994000000;
+				s3ub.exclusive_time = 9994000000;
 				// s
+				s4lb.times_called = 1;
+				s4lb.max_reentrance = 0;
+				s4lb.inclusive_time = 9996000000;
+				s4lb.exclusive_time = 9996000000;
+
 				s4.times_called = 1;
 				s4.max_reentrance = 0;
 				s4.inclusive_time = 65450031030;
 				s4.exclusive_time = 23470030000;
+
+				s4ub.times_called = 1;
+				s4ub.max_reentrance = 0;
+				s4ub.inclusive_time = 9994000000000;
+				s4ub.exclusive_time = 9994000000000;
 				// > 1000 s
+				s5lb.times_called = 1;
+				s5lb.max_reentrance = 0;
+				s5lb.inclusive_time = 9996000000000;
+				s5lb.exclusive_time = 9996000000000;
+
 				s5.times_called = 1;
 				s5.max_reentrance = 0;
 				s5.inclusive_time = 65450031030567;
 				s5.exclusive_time = 23470030000987;
 
-				s5b.times_called = 1;
-				s5b.max_reentrance = 0;
-				s5b.inclusive_time = 99990031030567;
-				s5b.exclusive_time = 99990030000987;
+				s5ub.times_called = 1;
+				s5ub.max_reentrance = 0;
+				s5ub.inclusive_time = 99990031030567;
+				s5ub.exclusive_time = 99990030000987;
 				// > 10000 s
-				s6b.times_called = 1;
-				s6b.max_reentrance = 0;
-				s6b.inclusive_time = 99999031030567;
-				s6b.exclusive_time = 99999030000987;
+				s6lb.times_called = 1;
+				s6lb.max_reentrance = 0;
+				s6lb.inclusive_time = 99999031030567;
+				s6lb.exclusive_time = 99999030000987;
 
 				s6.times_called = 1;
 				s6.max_reentrance = 0;
@@ -337,17 +379,26 @@ namespace micro_profiler
 				copy(std::make_pair((void *)5555, s4), ms4, dummy_children_buffer);
 				copy(std::make_pair((void *)4555, s5), ms5, dummy_children_buffer);
 				copy(std::make_pair((void *)6666, s6), ms6, dummy_children_buffer);
-				copy(std::make_pair((void *)7775, s5b), ms5b, dummy_children_buffer);
-				copy(std::make_pair((void *)8885, s6b), ms6b, dummy_children_buffer);
 
-				FunctionStatisticsDetailed data1[] = {ms1, ms2, ms3, ms4, ms5, ms6, ms5b, ms6b};
+				copy(std::make_pair((void *)1995, s1ub), ms1ub, dummy_children_buffer);
+				copy(std::make_pair((void *)2005, s2lb), ms2lb, dummy_children_buffer);
+				copy(std::make_pair((void *)2995, s2ub), ms2ub, dummy_children_buffer);
+				copy(std::make_pair((void *)3005, s3lb), ms3lb, dummy_children_buffer);
+				copy(std::make_pair((void *)3995, s3ub), ms3ub, dummy_children_buffer);
+				copy(std::make_pair((void *)4005, s4lb), ms4lb, dummy_children_buffer);
+				copy(std::make_pair((void *)4995, s4ub), ms4ub, dummy_children_buffer);
+				copy(std::make_pair((void *)5005, s5lb), ms5lb, dummy_children_buffer);
+				copy(std::make_pair((void *)5995, s5ub), ms5ub, dummy_children_buffer);
+				copy(std::make_pair((void *)6005, s6lb), ms6lb, dummy_children_buffer);
+
+				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4, ms5, ms6, ms1ub, ms2lb, ms2ub, ms3lb, ms3ub, ms4lb, ms4ub, ms5lb, ms5ub, ms6lb};
 
 				sri resolver;
 				functions_list fl(10000000000, resolver); // 10 * billion for ticks resolution
 
 				// ACT & ASSERT
-				fl.update(data1, 8);
-				Assert::IsTrue(fl.get_count() == 8);
+				fl.update(data, sizeof(data)/sizeof(data[0]));
+				Assert::IsTrue(fl.get_count() == sizeof(data)/sizeof(data[0]));
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
 
@@ -358,8 +409,16 @@ namespace micro_profiler
 				assert_row(fl, fl.get_index((void *)4550), L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0");
 				assert_row(fl, fl.get_index((void *)6661), L"00001A05", L"1", L"6.55e+006s", L"2.35e+006s", L"6.55e+006s", L"2.35e+006s", L"0");
 				//boundary
-				assert_row(fl, fl.get_index((void *)7770), L"00001E5A", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0");
-				assert_row(fl, fl.get_index((void *)8880), L"000022B0", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0");
+				assert_row(fl, fl.get_index((void *)1990), L"000007C6", L"1", L"999ns", L"999ns", L"999ns", L"999ns", L"0");
+				assert_row(fl, fl.get_index((void *)2000), L"000007D0", L"1", L"1us", L"1us", L"1us", L"1us", L"0");
+				assert_row(fl, fl.get_index((void *)2990), L"00000BAE", L"1", L"999us", L"999us", L"999us", L"999us", L"0");
+				assert_row(fl, fl.get_index((void *)3000), L"00000BB8", L"1", L"1ms", L"1ms", L"1ms", L"1ms", L"0");
+				assert_row(fl, fl.get_index((void *)3990), L"00000F96", L"1", L"999ms", L"999ms", L"999ms", L"999ms", L"0");
+				assert_row(fl, fl.get_index((void *)4000), L"00000FA0", L"1", L"1s", L"1s", L"1s", L"1s", L"0");
+				assert_row(fl, fl.get_index((void *)4990), L"0000137E", L"1", L"999s", L"999s", L"999s", L"999s", L"0");
+				assert_row(fl, fl.get_index((void *)5000), L"00001388", L"1", L"999.6s", L"999.6s", L"999.6s", L"999.6s", L"0");
+				assert_row(fl, fl.get_index((void *)5990), L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0");
+				assert_row(fl, fl.get_index((void *)6000), L"00001770", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0");
 			}
 		};
 

@@ -63,18 +63,21 @@ namespace
 		Assert::IsTrue(result == max_reentrance);
 	}
 
-	class myhandler
+	class i_handler
 	{
 	public:
 		typedef listview::model::index_type index_type;
 		typedef std::list<index_type> counter;
 
-		void bind2(listview::model &to) { _connection = to.invalidated += bind(&myhandler::handle, this, _1); }
+		void bind2(listview::model &to) { _connection = to.invalidated += bind(&i_handler::handle, this, _1); }
 
-		size_t times() const { _counter.size(); }
+		size_t times() const { return _counter.size(); }
 
 		counter::const_iterator begin() const { return _counter.begin(); }
 		counter::const_iterator end() const { return _counter.end(); }
+
+		counter::const_reverse_iterator rbegin() {return _counter.rbegin(); }
+		counter::const_reverse_iterator rend() {return _counter.rend(); }
 	private:
 		void handle(index_type count)
 		{
@@ -166,18 +169,26 @@ namespace micro_profiler
 				// ACT & ASSERT
 				sri resolver;
 				functions_list fl(test_ticks_resolution, resolver);
+				i_handler ih;
+				ih.bind2(fl);
 				fl.update(&ms1, 1);
 
 				Assert::IsTrue(fl.get_count() == 1);
+				Assert::IsTrue(ih.times() == 1);
+				Assert::IsTrue(*ih.rbegin() == 1); //check what's coming as event arg
 
 				// ACT & ASSERT
 				fl.clear();
 				Assert::IsTrue(fl.get_count() == 0);
+				Assert::IsTrue(ih.times() == 2);
+				Assert::IsTrue(*ih.rbegin() == 0); //check what's coming as event arg
 
 				// ACT & ASSERT
 				fl.update(&ms1, 1);
 
 				Assert::IsTrue(fl.get_count() == 1);
+				Assert::IsTrue(ih.times() == 3);
+				Assert::IsTrue(*ih.rbegin() == 1); //check what's coming as event arg
 			}
 
 			[TestMethod]
@@ -264,10 +275,13 @@ namespace micro_profiler
 
 				sri resolver;
 				functions_list fl(test_ticks_resolution, resolver);
-
+				i_handler ih;
+				ih.bind2(fl);
 				// ACT & ASSERT
 				fl.update(data1, 2);
 				Assert::IsTrue(fl.get_count() == 2);
+				Assert::IsTrue(ih.times() == 1);
+				Assert::IsTrue(*ih.rbegin() == 2); //check what's coming as event arg
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
 
@@ -277,6 +291,9 @@ namespace micro_profiler
 				// ACT & ASSERT
 				fl.update(data2, 2);
 				Assert::IsTrue(fl.get_count() == 3);
+				Assert::IsTrue(ih.times() == 2);
+				Assert::IsTrue(*ih.rbegin() == 3); //check what's coming as event arg
+
 				assert_row(fl, fl.get_index((void *)1118), L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0");
 				assert_row(fl, fl.get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
 				assert_row(fl, fl.get_index((void *)5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024");
@@ -425,8 +442,8 @@ namespace micro_profiler
 			void FunctinoListSorting()
 			{
 				// INIT
-				function_statistics_detailed s1, s2, s3, s4/*, s5, s6, s7*/;
-				FunctionStatisticsDetailed ms1, ms2, ms3, ms4/*, ms5, ms6, ms7*/;
+				function_statistics_detailed s1, s2, s3, s4;
+				FunctionStatisticsDetailed ms1, ms2, ms3, ms4;
 				std::vector<FunctionStatistics> dummy_children_buffer;
 
 				s1.times_called = 15;
@@ -449,38 +466,23 @@ namespace micro_profiler
 				s4.inclusive_time = 65450;
 				s4.exclusive_time = 13470;
 
-				//s5.times_called = 4;
-				//s5.max_reentrance = 4;
-				//s5.inclusive_time = 65450031030567;
-				//s5.exclusive_time = 23470030000987;
-
-				//s6.times_called = 5;
-				//s6.max_reentrance = 5;
-				//s6.inclusive_time = 65450031030567000;
-				//s6.exclusive_time = 23470030000987000;
-
-				//s7.times_called = 6;
-				//s7.max_reentrance = 6;
-				//s7.inclusive_time = 65450031030567000;
-				//s7.exclusive_time = 23470030000987000;
-
 				copy(std::make_pair((void *)1995, s1), ms1, dummy_children_buffer);
 				copy(std::make_pair((void *)2005, s2), ms2, dummy_children_buffer);
 				copy(std::make_pair((void *)2995, s3), ms3, dummy_children_buffer);
 				copy(std::make_pair((void *)3005, s4), ms4, dummy_children_buffer);
-				//copy(std::make_pair((void *)5555, s5), ms5, dummy_children_buffer);
-				//copy(std::make_pair((void *)6665, s6), ms6, dummy_children_buffer);
-				//copy(std::make_pair((void *)7775, s7), ms7, dummy_children_buffer);
-
 
 				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4/*, ms5, ms6, ms7*/};
 
 				sri resolver;
 				functions_list fl(1, resolver); 
-
+				i_handler ih;
+				ih.bind2(fl);
 				// ACT & ASSERT
-				fl.update(data, sizeof(data)/sizeof(data[0]));
-				Assert::IsTrue(fl.get_count() == sizeof(data)/sizeof(data[0]));
+				const size_t data_size = sizeof(data)/sizeof(data[0]);
+				fl.update(data, data_size);
+				Assert::IsTrue(fl.get_count() == data_size);
+				Assert::IsTrue(ih.times() == 1);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
 				assert_row(fl, fl.get_index((void *)1990), L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
@@ -492,82 +494,139 @@ namespace micro_profiler
 				// 1-name, 2-times called, 3-excl, 4-incl, 5-av_excl, 6-av-incl, 7-max_r
 				/*========== times called ============*/
 				fl.set_order(2, true);
+				
+				Assert::IsTrue(ih.times() == 2);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
 				fl.set_order(2, false);
+
+				Assert::IsTrue(ih.times() == 3);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				/*========== name (after times called to see that sorting in asc direction works) ============*/
 				fl.set_order(1, true);
+
+				Assert::IsTrue(ih.times() == 4);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+				
 				fl.set_order(1, false);
+				
+				Assert::IsTrue(ih.times() == 5);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				/*========== exclusive time ============*/
 				fl.set_order(3, true);
+				
+				Assert::IsTrue(ih.times() == 6);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				fl.set_order(3, false);
+				
+				Assert::IsTrue(ih.times() == 7);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				/*========== inclusive time ============*/
 				fl.set_order(4, true);
+				
+				Assert::IsTrue(ih.times() == 8);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				fl.set_order(4, false);
+				
+				Assert::IsTrue(ih.times() == 9);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				/*========== avg. exclusive time ============*/
 				fl.set_order(5, true);
+				
+				Assert::IsTrue(ih.times() == 10);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				fl.set_order(5, false);
+				
+				Assert::IsTrue(ih.times() == 11);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				/*========== avg. inclusive time ============*/
 				fl.set_order(6, true);
+				
+				Assert::IsTrue(ih.times() == 12);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				fl.set_order(6, false);
+				
+				Assert::IsTrue(ih.times() == 13);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				/*========== max reentrance ============*/
 				fl.set_order(7, true);
+				
+				Assert::IsTrue(ih.times() == 14);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				fl.set_order(7, false);
+				
+				Assert::IsTrue(ih.times() == 15);
+				Assert::IsTrue(*ih.rbegin() == data_size); //check what's coming as event arg
+
 				assert_row(fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0"); //s1
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
-
 			}
 
 		};

@@ -217,6 +217,7 @@ void functions_list::set_order( index_type column, bool ascending )
 	case 6:	_view.set_order(functors::by_avg_inclusive_call_time(_ticks_resolution), ascending);	break;
 	case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
 	}
+	invalidated(_view.size());
 }
 
 void functions_list::update( const FunctionStatisticsDetailed *data, unsigned int count )
@@ -228,12 +229,14 @@ void functions_list::update( const FunctionStatisticsDetailed *data, unsigned in
 		_statistics[address] += s;
 	}
 	_view.resort();
+	invalidated(_view.size());
 }
 
 void functions_list::clear()
 {
 	_statistics.clear();
 	_view.resort();
+	invalidated(_view.size());
 }
 
 functions_list::index_type functions_list::get_index(const void *address) const

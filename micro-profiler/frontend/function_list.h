@@ -54,6 +54,7 @@ public:
 	virtual index_type get_count() const throw();
 	virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
 	virtual void set_order(index_type column, bool ascending);
+	virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
 
 	index_type get_index(const void *address) const;
 };

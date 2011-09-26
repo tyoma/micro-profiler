@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <memory>
 
 namespace std 
 {
@@ -177,18 +178,24 @@ namespace micro_profiler
 				Assert::IsTrue(ih.times() == 1);
 				Assert::IsTrue(*ih.rbegin() == 1); //check what's coming as event arg
 
+				std::shared_ptr<const listview::trackable> first = fl.track(0); // 2229
+
+				Assert::IsTrue(first->index() == 0);
 				// ACT & ASSERT
 				fl.clear();
 				Assert::IsTrue(fl.get_count() == 0);
 				Assert::IsTrue(ih.times() == 2);
 				Assert::IsTrue(*ih.rbegin() == 0); //check what's coming as event arg
 
+				Assert::IsTrue(first->index() == functions_list::npos);
 				// ACT & ASSERT
 				fl.update(&ms1, 1);
 
 				Assert::IsTrue(fl.get_count() == 1);
 				Assert::IsTrue(ih.times() == 3);
 				Assert::IsTrue(*ih.rbegin() == 1); //check what's coming as event arg
+
+				Assert::IsTrue(first->index() == 0); // kind of side effect
 			}
 
 			[TestMethod]
@@ -240,6 +247,8 @@ namespace micro_profiler
 			void FunctinoListCollectsUpdates()
 			{
 				//TODO: add 2 entries of same function in one burst
+				//TODO: possibly trackable on update tests should see that it works with every sorting given.
+
 				// INIT
 				function_statistics_detailed s1, s2, s3, s4;
 				FunctionStatisticsDetailed ms1, ms2, ms3, ms4;
@@ -275,6 +284,8 @@ namespace micro_profiler
 
 				sri resolver;
 				functions_list fl(test_ticks_resolution, resolver);
+				fl.set_order(2, true); // by times called
+				
 				i_handler ih;
 				ih.bind2(fl);
 				// ACT & ASSERT
@@ -288,6 +299,11 @@ namespace micro_profiler
 				assert_row(fl, fl.get_index((void *)1118), L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0");
 				assert_row(fl, fl.get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
 
+				std::shared_ptr<const listview::trackable> first = fl.track(0); // 2229
+				std::shared_ptr<const listview::trackable> second = fl.track(1); // 1118
+				Assert::IsTrue(first->index() == 0);
+				Assert::IsTrue(second->index() == 1);
+
 				// ACT & ASSERT
 				fl.update(data2, 2);
 				Assert::IsTrue(fl.get_count() == 3);
@@ -297,6 +313,10 @@ namespace micro_profiler
 				assert_row(fl, fl.get_index((void *)1118), L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0");
 				assert_row(fl, fl.get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
 				assert_row(fl, fl.get_index((void *)5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024");
+
+				Assert::IsTrue(first->index() == 0);
+				Assert::IsTrue(second->index() == 2); // kind of moved down
+
 			}
 
 			//myhandler h;
@@ -490,6 +510,16 @@ namespace micro_profiler
 				assert_row(fl, fl.get_index((void *)2990), L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, fl.get_index((void *)3000), L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 
+				std::shared_ptr<const listview::trackable> pt0 = fl.track(fl.get_index((void *)1990));
+				std::shared_ptr<const listview::trackable> pt1 = fl.track(fl.get_index((void *)2000));
+				std::shared_ptr<const listview::trackable> pt2 = fl.track(fl.get_index((void *)2990));
+				std::shared_ptr<const listview::trackable> pt3 = fl.track(fl.get_index((void *)3000));
+				
+				const listview::trackable& t0 = *pt0;
+				const listview::trackable& t1 = *pt1;
+				const listview::trackable& t2 = *pt2;
+				const listview::trackable& t3 = *pt3;
+
 				// rock-n-roll
 				// 1-name, 2-times called, 3-excl, 4-incl, 5-av_excl, 6-av-incl, 7-max_r
 				/*========== times called ============*/
@@ -503,6 +533,11 @@ namespace micro_profiler
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 
+				Assert::IsTrue(t0.index() == 1);
+				Assert::IsTrue(t1.index() == 2);
+				Assert::IsTrue(t2.index() == 0);
+				Assert::IsTrue(t3.index() == 3);
+
 				fl.set_order(2, false);
 
 				Assert::IsTrue(ih.times() == 3);
@@ -512,6 +547,11 @@ namespace micro_profiler
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 2);
+				Assert::IsTrue(t1.index() == 1);
+				Assert::IsTrue(t2.index() == 3);
+				Assert::IsTrue(t3.index() == 0);
 				/*========== name (after times called to see that sorting in asc direction works) ============*/
 				fl.set_order(1, true);
 
@@ -523,6 +563,11 @@ namespace micro_profiler
 				assert_row(fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
 				
+				Assert::IsTrue(t0.index() == 0);
+				Assert::IsTrue(t1.index() == 1);
+				Assert::IsTrue(t2.index() == 2);
+				Assert::IsTrue(t3.index() == 3);
+
 				fl.set_order(1, false);
 				
 				Assert::IsTrue(ih.times() == 5);
@@ -532,6 +577,11 @@ namespace micro_profiler
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 3);
+				Assert::IsTrue(t1.index() == 2);
+				Assert::IsTrue(t2.index() == 1);
+				Assert::IsTrue(t3.index() == 0);
 				/*========== exclusive time ============*/
 				fl.set_order(3, true);
 				
@@ -542,6 +592,12 @@ namespace micro_profiler
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 0);
+				Assert::IsTrue(t1.index() == 1);
+				Assert::IsTrue(t2.index() == 3);
+				Assert::IsTrue(t3.index() == 2);
+
 				fl.set_order(3, false);
 				
 				Assert::IsTrue(ih.times() == 7);
@@ -551,6 +607,11 @@ namespace micro_profiler
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 3);
+				Assert::IsTrue(t1.index() == 2);
+				Assert::IsTrue(t2.index() == 0);
+				Assert::IsTrue(t3.index() == 1);
 				/*========== inclusive time ============*/
 				fl.set_order(4, true);
 				
@@ -561,6 +622,12 @@ namespace micro_profiler
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 0);
+				Assert::IsTrue(t1.index() == 1);
+				Assert::IsTrue(t2.index() == 3);
+				Assert::IsTrue(t3.index() == 2);
+
 				fl.set_order(4, false);
 				
 				Assert::IsTrue(ih.times() == 9);
@@ -570,6 +637,11 @@ namespace micro_profiler
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 3);
+				Assert::IsTrue(t1.index() == 2);
+				Assert::IsTrue(t2.index() == 0);
+				Assert::IsTrue(t3.index() == 1);
 				/*========== avg. exclusive time ============*/
 				fl.set_order(5, true);
 				
@@ -580,6 +652,12 @@ namespace micro_profiler
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 1);
+				Assert::IsTrue(t1.index() == 2);
+				Assert::IsTrue(t2.index() == 3);
+				Assert::IsTrue(t3.index() == 0);
+
 				fl.set_order(5, false);
 				
 				Assert::IsTrue(ih.times() == 11);
@@ -589,6 +667,11 @@ namespace micro_profiler
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 2);
+				Assert::IsTrue(t1.index() == 1);
+				Assert::IsTrue(t2.index() == 0);
+				Assert::IsTrue(t3.index() == 3);
 				/*========== avg. inclusive time ============*/
 				fl.set_order(6, true);
 				
@@ -599,6 +682,12 @@ namespace micro_profiler
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 0);
+				Assert::IsTrue(t1.index() == 2);
+				Assert::IsTrue(t2.index() == 3);
+				Assert::IsTrue(t3.index() == 1);
+
 				fl.set_order(6, false);
 				
 				Assert::IsTrue(ih.times() == 13);
@@ -608,6 +697,11 @@ namespace micro_profiler
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 3);
+				Assert::IsTrue(t1.index() == 1);
+				Assert::IsTrue(t2.index() == 0);
+				Assert::IsTrue(t3.index() == 2);
 				/*========== max reentrance ============*/
 				fl.set_order(7, true);
 				
@@ -618,6 +712,12 @@ namespace micro_profiler
 				assert_row(fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 0);
+				Assert::IsTrue(t1.index() == 1);
+				Assert::IsTrue(t2.index() == 2);
+				Assert::IsTrue(t3.index() == 3);
+
 				fl.set_order(7, false);
 				
 				Assert::IsTrue(ih.times() == 15);
@@ -627,6 +727,11 @@ namespace micro_profiler
 				assert_row(fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1"); // s2
 				assert_row(fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2"); // s3
 				assert_row(fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3"); // s4
+
+				Assert::IsTrue(t0.index() == 3);
+				Assert::IsTrue(t1.index() == 2);
+				Assert::IsTrue(t2.index() == 1);
+				Assert::IsTrue(t3.index() == 0);
 			}
 
 		};

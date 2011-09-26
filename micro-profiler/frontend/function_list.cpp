@@ -28,6 +28,7 @@
 #include <cmath>
 
 using namespace std;
+using namespace wpl::ui;
 
 namespace
 {
@@ -218,6 +219,25 @@ void functions_list::set_order( index_type column, bool ascending )
 	case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
 	}
 	invalidated(_view.size());
+}
+
+shared_ptr<const listview::trackable> functions_list::track(index_type row) const
+{
+	class trackable : public listview::trackable
+	{
+		const statistics_view &_view; //TODO: should store weak_ptr instead of reference
+		const void *_address;
+
+	public:
+		trackable(const statistics_view &view, const void *address)
+			: _view(view), _address(address)
+		{	}
+
+		virtual listview::index_type index() const
+		{	return _view.find_by_key(_address);	}
+	};
+
+	return shared_ptr<const listview::trackable>(new trackable(_view, _view.at(row).first));
 }
 
 void functions_list::update( const FunctionStatisticsDetailed *data, unsigned int count )

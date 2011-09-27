@@ -1,7 +1,14 @@
 #include <windows.h>
 
-extern "C" void _penter();
-extern "C" void _pexit();
+extern "C" void profile_enter();
+extern "C" void profile_exit();
+
+extern "C" __declspec(naked) void _penter()
+{	_asm jmp	profile_enter	}
+
+extern "C" __declspec(naked) void _pexit()
+{	_asm jmp	profile_exit	}
+
 
 namespace micro_profiler
 {

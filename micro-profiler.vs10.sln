@@ -5,12 +5,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-pro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler-stub\micro-profiler-stub.vcxproj", "{FF05D886-CCEA-BA0E-527B-DECCB7DF3B6A}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployment", "deployment\deployment.vcxproj", "{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700} = {D5D49128-2510-4A14-9A0F-9F8F0ABAD700}
-		{FF05D886-CCEA-BA0E-527B-DECCB7DF3B6A} = {FF05D886-CCEA-BA0E-527B-DECCB7DF3B6A}
 		{3D930790-1E56-4749-9B09-731E22556CB1} = {3D930790-1E56-4749-9B09-731E22556CB1}
 		{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF} = {6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}
 	EndProjectSection
@@ -27,6 +24,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui", "libraries\wpl\ui\src\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base.tests", "libraries\wpl\base\tests\base.tests.vcxproj", "{D5D8229B-9269-4165-BD5E-0DC5504E120B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro-profiler\micro-profiler.lib.vcxproj", "{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.stub", "micro-profiler\micro-profiler.stub.vcxproj", "{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -41,10 +42,6 @@ Global
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Debug|Win32.Build.0 = Debug|Win32
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.ActiveCfg = Release|Win32
 		{3D930790-1E56-4749-9B09-731E22556CB1}.Release|Win32.Build.0 = Release|Win32
-		{FF05D886-CCEA-BA0E-527B-DECCB7DF3B6A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{FF05D886-CCEA-BA0E-527B-DECCB7DF3B6A}.Debug|Win32.Build.0 = Debug|Win32
-		{FF05D886-CCEA-BA0E-527B-DECCB7DF3B6A}.Release|Win32.ActiveCfg = Release|Win32
-		{FF05D886-CCEA-BA0E-527B-DECCB7DF3B6A}.Release|Win32.Build.0 = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Debug|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.Build.0 = Release|Win32
@@ -72,6 +69,14 @@ Global
 		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Debug|Win32.Build.0 = Debug|Win32
 		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Release|Win32.ActiveCfg = Release|Win32
 		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Release|Win32.Build.0 = Release|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Debug|Win32.Build.0 = Debug|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Release|Win32.ActiveCfg = Release|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Release|Win32.Build.0 = Release|Win32
+		{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}.Debug|Win32.Build.0 = Debug|Win32
+		{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}.Release|Win32.ActiveCfg = Release|Win32
+		{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

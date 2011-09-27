@@ -36,7 +36,7 @@ namespace std
 using namespace wpl::mt;
 using namespace std;
 
-extern "C" __declspec(naked, dllexport) void _penter()
+extern "C" __declspec(naked) void profile_enter()
 {
 	_asm 
 	{
@@ -52,7 +52,7 @@ extern "C" __declspec(naked, dllexport) void _penter()
 	}
 }
 
-extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
+extern "C" __declspec(naked) void profile_exit()
 {
 	_asm 
 	{
@@ -77,7 +77,7 @@ namespace micro_profiler
 		const __int64 c_ticks_resolution(timestamp_precision());
 	}
 
-	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
+	void create_local_frontend(IProfilerFrontend **frontend)
 	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)

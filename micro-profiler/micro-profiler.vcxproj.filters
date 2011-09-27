@@ -1,107 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="calls_collector.cpp" />
-    <ClCompile Include="entry.cpp" />
-    <ClCompile Include="system.cpp" />
-    <ClCompile Include="_generated\microprofilerfrontend_i.c">
-      <Filter>_generated</Filter>
-    </ClCompile>
-    <ClCompile Include="_generated\microprofilerfrontend_p.c">
-      <Filter>_generated</Filter>
-    </ClCompile>
-    <ClCompile Include="_generated\dlldata.c">
-      <Filter>_generated</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\symbol_resolver.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\ProfilerMainDialog.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\ProfilerSink.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\statistics.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\frontend-main.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\ProxyBridge.c">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\function_list.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="analyzer.h" />
-    <ClInclude Include="calls_collector.h" />
-    <ClInclude Include="entry.h" />
-    <ClInclude Include="pod_vector.h" />
-    <ClInclude Include="system.h" />
-    <ClInclude Include="_generated\microprofilerfrontend_i.h">
-      <Filter>_generated</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\ProfilerMainDialog.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\ProfilerSink.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\resource.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\statistics.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\symbol_resolver.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\ProxyBridge.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="primitives.h" />
-    <ClInclude Include="com_helpers.h" />
-    <ClInclude Include="frontend\ordered_view.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\function_list.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="microprofilerfrontend.idl" />
+    <ClCompile Include="frontend\frontend-main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="micro-profiler.ps.def" />
-    <None Include="frontend\micro-profiler-sink.rgs">
-      <Filter>frontend\resources</Filter>
-    </None>
     <None Include="frontend\appicon.ico">
       <Filter>frontend\resources</Filter>
     </None>
+    <None Include="frontend\micro-profiler-sink.rgs">
+      <Filter>frontend\resources</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="_generated">
-      <UniqueIdentifier>{02ed0606-6a23-412b-9339-ebe48d1a28ac}</UniqueIdentifier>
-    </Filter>
     <Filter Include="frontend">
-      <UniqueIdentifier>{079096d4-99d2-47bf-bd0d-82899bf2dc0e}</UniqueIdentifier>
+      <UniqueIdentifier>{2eb2703f-0b40-44c6-8806-9ba363609cc8}</UniqueIdentifier>
     </Filter>
     <Filter Include="frontend\resources">
-      <UniqueIdentifier>{725579a8-2095-48af-a456-90878bc353fc}</UniqueIdentifier>
+      <UniqueIdentifier>{d9d64e11-21ee-4368-a3cb-481d4b3d1745}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="frontend\micro-profiler-frontend.rc">
-      <Filter>frontend\resources</Filter>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="frontend\xpstyle.manifest">
       <Filter>frontend\resources</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="frontend\micro-profiler-frontend.rc">
+      <Filter>frontend\resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

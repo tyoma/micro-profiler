@@ -18,10 +18,11 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "./../micro-profiler/entry.h"
+#include "entry.h"
 #include <wpl/mt/thread.h>
+#include <windows.h>
 
-extern "C" __declspec(naked, dllexport) void _penter()
+extern "C" __declspec(naked) void profile_enter()
 {
 	_asm 
 	{
@@ -29,7 +30,7 @@ extern "C" __declspec(naked, dllexport) void _penter()
 	}
 }
 
-extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
+extern "C" __declspec(naked) void profile_exit()
 {
 	_asm 
 	{
@@ -39,10 +40,10 @@ extern "C" void __declspec(naked, dllexport) _cdecl _pexit()
 
 namespace micro_profiler
 {
-	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend)
+	void create_local_frontend(IProfilerFrontend **frontend)
 	{	*frontend = 0;	}
 
-	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
+	void create_inproc_frontend(IProfilerFrontend **frontend)
 	{	*frontend = 0;	}
 
 	profiler_frontend::profiler_frontend(frontend_factory /*factory*/)
@@ -52,3 +53,15 @@ namespace micro_profiler
 	profiler_frontend::~profiler_frontend()
 	{	}
 }
+
+STDAPI DllCanUnloadNow()
+{	return S_OK;	}
+
+STDAPI DllGetClassObject(REFCLSID /*rclsid*/, REFIID /*riid*/, LPVOID * /*ppv*/)
+{	return S_OK;	}
+
+STDAPI DllRegisterServer()
+{	return S_OK;	}
+
+STDAPI DllUnregisterServer()
+{	return S_OK;	}

@@ -48,10 +48,11 @@ namespace micro_profiler
 
 	struct shadow_stack::call_record_ex : call_record
 	{
-		call_record_ex(const call_record &from);
+		call_record_ex(const call_record &from, int *level);
 		call_record_ex(const call_record_ex &other);
 
 		__int64 child_time;
+		int *level;
 	};
 
 
@@ -90,14 +91,14 @@ namespace micro_profiler
 		for (; i != end; ++i)
 			if (i->callee)
 			{
-				_stack.push_back(*i);
-				++_entrance_counter[i->callee];
+				_stack.push_back(call_record_ex(*i, &_entrance_counter[i->callee]));
+				++*_stack.back().level;
 			}
 			else
 			{
 				const call_record_ex &current = _stack.back();
 				const void *callee = current.callee;
-				unsigned __int64 level = --_entrance_counter[callee];
+				int level = --*current.level;
 				__int64 inclusive_time_observed = i->timestamp - current.timestamp;
 				__int64 inclusive_time = inclusive_time_observed - _profiler_latency;
 				__int64 exclusive_time = inclusive_time - current.child_time;
@@ -116,12 +117,12 @@ namespace micro_profiler
 
 
 	// shadow_stack::call_record_ex - inline definitions
-	inline shadow_stack::call_record_ex::call_record_ex(const call_record &from)
-		: call_record(from), child_time(0)
+	inline shadow_stack::call_record_ex::call_record_ex(const call_record &from, int *level_)
+		: call_record(from), child_time(0), level(level_)
 	{	}
 
 	inline shadow_stack::call_record_ex::call_record_ex(const call_record_ex &other)
-		: call_record(other), child_time(other.child_time)
+		: call_record(other), child_time(other.child_time), level(other.level)
 	{	}
 
 

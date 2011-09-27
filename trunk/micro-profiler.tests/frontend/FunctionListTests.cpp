@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <list>
+#include <set>
 #include <utility>
 #include <string>
 #include <sstream>
@@ -229,17 +230,38 @@ namespace micro_profiler
 				sri resolver;
 				functions_list fl(test_ticks_resolution, resolver);
 
+				std::set<functions_list::index_type> expected;
+				expected.insert(0);
+				expected.insert(1);
+				expected.insert(2);
+
 				// ACT & ASSERT
 				fl.update(data, 3);
 				Assert::IsTrue(fl.get_count() == 3);
-		
-				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
-				Assert::IsTrue(fl.get_index((void *)1118) == 0);
-				Assert::IsTrue(fl.get_index((void *)2229) == 1);
-				Assert::IsTrue(fl.get_index((void *)5550) == 2);
-				Assert::IsTrue(fl.get_index((void *)1234) == functions_list::npos);
-				Assert::IsTrue(fl.get_index((void *)2229) == 1); // Assert twice. Kind of regularity check.
 
+				functions_list::index_type idx1118 = fl.get_index((void *)1118);
+				functions_list::index_type idx2229 = fl.get_index((void *)2229);
+				functions_list::index_type idx5550 = fl.get_index((void *)5550);
+
+				Assert::IsTrue(expected.find(idx1118) != expected.end());
+				Assert::IsTrue(expected.find(idx2229) != expected.end());
+				Assert::IsTrue(expected.find(idx5550) != expected.end());
+
+				expected.erase(idx1118);
+				expected.erase(idx2229);
+				expected.erase(idx5550);
+
+				Assert::IsTrue(expected.empty());
+
+				Assert::IsTrue(idx1118 != functions_list::npos);
+				Assert::IsTrue(idx2229 != functions_list::npos);
+				Assert::IsTrue(idx5550 != functions_list::npos);
+				Assert::IsTrue(fl.get_index((void *)1234) == functions_list::npos);
+
+				//Check twice. Kind of regularity check.
+				Assert::IsTrue(fl.get_index((void *)1118) == idx1118);
+				Assert::IsTrue(fl.get_index((void *)2229) == idx2229);
+				Assert::IsTrue(fl.get_index((void *)5550) == idx5550);
 			}
 
 

@@ -23,8 +23,6 @@
 #include "../_generated/microprofilerfrontend_i.h"
 
 #include <utility>
-#include <string>
-#include <sstream>
 #include <cmath>
 
 using namespace std;
@@ -43,19 +41,19 @@ namespace
 		return lhs;
 	}
 
-	template <typename T>
-	wstring to_string(const T &value, std::streamsize precision = 3)
+	wstring to_string2(unsigned long long value)
 	{
-		wstringstream s;
-		s.precision(precision);
-		s << value;
-		return s.str();
+		const size_t buffer_size = 24;
+		wchar_t buffer[buffer_size] = { 0 };
+
+		::swprintf(buffer, buffer_size, L"%I64u", value);
+		return buffer;
 	}
 
 	wstring print_time(double value)
 	{
 		const size_t buf_size = 24;
-		wchar_t buf[buf_size]; //X.XXe+XXXxs\0 -> 12
+		wchar_t buf[buf_size] = { 0 }; //X.XXe+XXXxs\0 -> 12
 	
 		if (999.5 > fabs(1000000000 * value))
 			::swprintf(buf, buf_size, L"%.3gns", 1000000000 * value);
@@ -95,10 +93,10 @@ namespace
 		struct by_times_called
 		{
 			wstring operator ()(const void *, const function_statistics &s) const
-			{	return to_string(s.times_called);	}
+			{	return to_string2(s.times_called);	}
 
 			wstring operator ()(const void *, unsigned __int64 times_called) const
-			{	return to_string(times_called);	}
+			{	return to_string2(times_called);	}
 
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 			{	return lhs.times_called < rhs.times_called;	}
@@ -171,7 +169,7 @@ namespace
 		struct by_max_reentrance
 		{
 			wstring operator ()(const void *, const function_statistics &s) const
-			{	return to_string(s.max_reentrance);	}
+			{	return to_string2(s.max_reentrance);	}
 
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 			{	return lhs.max_reentrance < rhs.max_reentrance;	}
@@ -195,7 +193,7 @@ void functions_list::get_text( index_type item, index_type subitem, std::wstring
 	ordered_view<micro_profiler::statistics_map>::value_type row = _view.at(item);
 	switch (subitem)
 	{
-	case 0:	text = to_string(item);	break;
+	case 0:	text = to_string2(item);	break;
 	case 1:	text = functors::by_name(_resolver)(row.first, row.second);	break;
 	case 2:	text = functors::by_times_called()(row.first, row.second);	break;
 	case 3:	text = functors::by_exclusive_time(_ticks_resolution)(row.first, row.second);	break;

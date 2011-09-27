@@ -17,15 +17,9 @@
     <ClCompile Include="frontend\FunctionListTests.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="..\micro-profiler\frontend\function_list.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />
-    <ClInclude Include="..\micro-profiler\frontend\function_list.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="run-tests.vs10.cmd" />

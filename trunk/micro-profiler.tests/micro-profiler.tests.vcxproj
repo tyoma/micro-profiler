@@ -72,12 +72,12 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
       <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>libcmtd.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libcmtd.lib;libcpmtd.lib</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy run-tests.vs10.cmd "$(OutDir)\run-tests.cmd"
@@ -108,13 +108,13 @@
       <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib;libcpmt.lib</IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy run-tests.vs10.cmd "$(OutDir)\run-tests.cmd"
@@ -136,14 +136,11 @@
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
       <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\micro-profiler\micro-profiler.vcxproj">
-      <Project>{d5d49128-2510-4a14-9a0f-9f8f0abad700}</Project>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    <ProjectReference Include="..\micro-profiler\micro-profiler.lib.vcxproj">
+      <Project>{15ad9007-29b9-462f-b7be-a433b6e83ec9}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\micro-profiler\frontend\function_list.cpp" />
     <ClCompile Include="AnalyzerTests.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
@@ -200,7 +197,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\micro-profiler\frontend\function_list.h" />
     <ClInclude Include="Helpers.h" />
   </ItemGroup>
   <ItemGroup>

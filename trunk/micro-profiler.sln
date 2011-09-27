@@ -5,8 +5,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-pro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcproj", "{0266546B-335D-4BDD-9BF0-15FCC31056BE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler-stub\micro-profiler-stub.vcproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployment", "deployment\deployment.vcproj", "{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700} = {D5D49128-2510-4A14-9A0F-9F8F0ABAD700}
@@ -27,6 +25,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui.tests", "libraries\wpl\u
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base.tests", "libraries\wpl\base\tests\base.tests.vcproj", "{D5D8229B-9269-4165-BD5E-0DC5504E120B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler\micro-profiler.stub.vcproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro-profiler\micro-profiler.lib.vcproj", "{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -41,10 +43,6 @@ Global
 		{0266546B-335D-4BDD-9BF0-15FCC31056BE}.Debug|Win32.Build.0 = Debug|Win32
 		{0266546B-335D-4BDD-9BF0-15FCC31056BE}.Release|Win32.ActiveCfg = Release|Win32
 		{0266546B-335D-4BDD-9BF0-15FCC31056BE}.Release|Win32.Build.0 = Release|Win32
-		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Debug|Win32.Build.0 = Debug|Win32
-		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Release|Win32.ActiveCfg = Release|Win32
-		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Release|Win32.Build.0 = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Debug|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.ActiveCfg = Release|Win32
 		{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}.Release|Win32.Build.0 = Release|Win32
@@ -72,6 +70,14 @@ Global
 		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Debug|Win32.Build.0 = Debug|Win32
 		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Release|Win32.ActiveCfg = Release|Win32
 		{D5D8229B-9269-4165-BD5E-0DC5504E120B}.Release|Win32.Build.0 = Release|Win32
+		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Debug|Win32.Build.0 = Debug|Win32
+		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Release|Win32.ActiveCfg = Release|Win32
+		{3B1F8640-9F9A-4989-A074-73590A82A26C}.Release|Win32.Build.0 = Release|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Debug|Win32.Build.0 = Debug|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Release|Win32.ActiveCfg = Release|Win32
+		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

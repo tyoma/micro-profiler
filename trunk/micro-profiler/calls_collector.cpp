@@ -28,8 +28,8 @@ using namespace std;
 #undef min
 #undef max
 
-extern "C" void _penter();
-extern "C" void _pexit();
+extern "C" void profile_enter();
+extern "C" void profile_exit();
 
 namespace micro_profiler
 {
@@ -114,7 +114,7 @@ namespace micro_profiler
 		thread_trace_block &ttb = get_current_thread_trace();
 		
 		for (unsigned int i = 0; i < check_times; ++i)
-			_penter(), _pexit();
+			profile_enter(), profile_exit();
 
 		ttb.read_collected(de);
 		_profiler_latency = de.delay;

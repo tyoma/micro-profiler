@@ -18,9 +18,10 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
+#define _CRT_NON_CONFORMING_SWPRINTFS
+
 #include "ProfilerMainDialog.h"
 
-#include <sstream>
 #include <algorithm>
 #include <math.h>
 
@@ -32,33 +33,39 @@ namespace
 {
 	__int64 g_ticks_resolution(1);
 
-	template <typename T>
-	tstring to_string(const T &value)
+	tstring to_string2(unsigned long long value)
 	{
-		basic_stringstream<TCHAR> s;
+		TCHAR buffer[24] = { 0 };
 
-		s.precision(3);
-		s << value;
-		return s.str();
+		_stprintf(buffer, _T("%I64u"), value);
+		return buffer;
+	}
+
+	tstring to_string2(double value, unsigned precision = 3)
+	{
+		TCHAR buffer[24] = { 0 };
+
+		_stprintf(buffer, _T("%.*f"), precision, value);
+		return buffer;
 	}
 
 	tstring print_time(double value)
 	{
 		if (0.000001 > fabs(value))
-			return to_string(1000000000 * value) + _T("ns");
+			return to_string2(1000000000 * value) + _T("ns");
 		else if (0.001 > fabs(value))
-			return to_string(1000000 * value) + _T("us");
+			return to_string2(1000000 * value) + _T("us");
 		else if (1 > fabs(value))
-			return to_string(1000 * value) + _T("ms");
+			return to_string2(1000 * value) + _T("ms");
 		else
-			return to_string(value) + _T("s");
+			return to_string2(value) + _T("s");
 	}
 
 	tstring print_name(const function_statistics_ex &s)
 	{	return s.name;	}
 
 	tstring print_times_called(const function_statistics_ex &s)
-	{	return to_string(s.times_called);	}
+	{	return to_string2(s.times_called);	}
 
 	tstring print_exclusive_time(const function_statistics_ex &s)
 	{	return print_time(1.0 * s.exclusive_time / g_ticks_resolution);	}
@@ -73,7 +80,7 @@ namespace
 	{	return print_time(s.times_called ? 1.0 * s.inclusive_time / g_ticks_resolution / s.times_called : 0);	}
 
 	tstring print_max_reentrance(const function_statistics_ex &s)
-	{	return to_string(s.max_reentrance);	}
+	{	return to_string2(s.max_reentrance);	}
 
 	bool sort_by_name(const function_statistics_ex &lhs, const function_statistics_ex &rhs)
 	{	return lhs.name < rhs.name;	}
@@ -224,19 +231,19 @@ LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/
 
 LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 {
-	basic_stringstream<TCHAR> s;
+	//basic_stringstream<TCHAR> s;
 
-	s << _T("Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion") << endl;
-	for (size_t i = 0, count = _statistics.size(); i != count; ++i)
-	{
-		const function_statistics_ex &f = _statistics.at(i);
+	//s << _T("Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion") << endl;
+	//for (size_t i = 0, count = _statistics.size(); i != count; ++i)
+	//{
+	//	const function_statistics_ex &f = _statistics.at(i);
 
-		s << f.name << _T("\t") << f.times_called << _T("\t") << 1.0 * f.exclusive_time / g_ticks_resolution << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution << _T("\t")
-			<< 1.0 * f.exclusive_time / g_ticks_resolution / f.times_called << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution / f.times_called << _T("\t") << f.max_reentrance
-			<< endl;
-	}
+	//	s << f.name << _T("\t") << f.times_called << _T("\t") << 1.0 * f.exclusive_time / g_ticks_resolution << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution << _T("\t")
+	//		<< 1.0 * f.exclusive_time / g_ticks_resolution / f.times_called << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution / f.times_called << _T("\t") << f.max_reentrance
+	//		<< endl;
+	//}
 
-	tstring result(s.str());
+	tstring result;//(s.str());
 
 	if (OpenClipboard())
 	{

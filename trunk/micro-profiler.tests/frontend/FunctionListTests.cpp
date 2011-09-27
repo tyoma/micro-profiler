@@ -96,23 +96,19 @@ namespace
 		{
 			return to_string(address);
 		}
-
 	};
-
 }
-
 
 namespace micro_profiler
 {
 	namespace tests
 	{
 		[TestClass]
-		public ref class FunctinoListTests
+		public ref class FunctionListTests
 		{
 		public: 
-
 			[TestMethod]
-			void CanCreateEmptyFunctinoList()
+			void CanCreateEmptyFunctionList()
 			{
 				sri resolver;
 				functions_list fl(test_ticks_resolution, resolver);
@@ -120,8 +116,9 @@ namespace micro_profiler
 				Assert::IsTrue(fl.get_count() == 0);
 			}
 
+
 			[TestMethod]
-			void FunctinoListAcceptsUpdates()
+			void FunctionListAcceptsUpdates()
 			{
 				// INIT
 				function_statistics_detailed s1, s2;
@@ -152,8 +149,9 @@ namespace micro_profiler
 				Assert::IsTrue(fl.get_count() == 2);
 			}
 
+
 			[TestMethod]
-			void FunctinoListCanBeClearedAndUsedAgain()
+			void FunctionListCanBeClearedAndUsedAgain()
 			{
 				// INIT
 				function_statistics_detailed s1;
@@ -198,8 +196,9 @@ namespace micro_profiler
 				Assert::IsTrue(first->index() == 0); // kind of side effect
 			}
 
+
 			[TestMethod]
-			void FunctinoListGetByAddress()
+			void FunctionListGetByAddress()
 			{
 				// INIT
 				function_statistics_detailed s1, s2, s3;
@@ -242,9 +241,10 @@ namespace micro_profiler
 				Assert::IsTrue(fl.get_index((void *)2229) == 1); // Assert twice. Kind of regularity check.
 
 			}
-			
+
+
 			[TestMethod]
-			void FunctinoListCollectsUpdates()
+			void FunctionListCollectsUpdates()
 			{
 				//TODO: add 2 entries of same function in one burst
 				//TODO: possibly trackable on update tests should see that it works with every sorting given.
@@ -319,11 +319,9 @@ namespace micro_profiler
 
 			}
 
-			//myhandler h;
-			//h.bind2(fl);
 
 			[TestMethod]
-			void FunctinoListTimeFormatter()
+			void FunctionListTimeFormatter()
 			{
 				// INIT
 				function_statistics_detailed s1, s2, s3, s4, s5, s6, s1ub, s2lb, s2ub, s3lb, s3ub, s4lb, s4ub, s5lb, s5ub, s6lb;
@@ -458,8 +456,9 @@ namespace micro_profiler
 				assert_row(fl, fl.get_index((void *)6000), L"00001770", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0");
 			}
 
+
 			[TestMethod]
-			void FunctinoListSorting()
+			void FunctionListSorting()
 			{
 				// INIT
 				function_statistics_detailed s1, s2, s3, s4;
@@ -733,8 +732,6 @@ namespace micro_profiler
 				Assert::IsTrue(t2.index() == 1);
 				Assert::IsTrue(t3.index() == 0);
 			}
-
 		};
-
 	} // namespace tests
 } // namespace micro_profiler

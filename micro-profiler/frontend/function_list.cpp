@@ -75,6 +75,9 @@ namespace
 		class by_name
 		{
 			symbol_resolver_itf &_resolver;
+
+			const by_name &operator =(const by_name &rhs);
+
 		public:
 			by_name(symbol_resolver_itf &resolver)
 				: _resolver(resolver)
@@ -221,7 +224,7 @@ void functions_list::set_order( index_type column, bool ascending )
 
 shared_ptr<const listview::trackable> functions_list::track(index_type row) const
 {
-	class trackable : public listview::trackable
+	class trackable : public listview::trackable, noncopyable
 	{
 		const statistics_view &_view; //TODO: should store weak_ptr instead of reference
 		const void *_address;

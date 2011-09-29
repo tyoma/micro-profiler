@@ -53,7 +53,7 @@ public:
 
 function_statistics_ex::function_statistics_ex(const FunctionStatistics &from, const symbol_resolver &resolver)
 	: function_statistics(from.TimesCalled, from.MaxReentrance, from.InclusiveTime, from.ExclusiveTime),
-		name(resolver.symbol_name_by_va(from.FunctionAddress))
+		name(resolver.symbol_name_by_va(reinterpret_cast<const void *>(from.FunctionAddress)))
 {	}
 
 

@@ -22,16 +22,18 @@
 
 #include "../primitives.h"
 #include "ordered_view.h"
+
 #include <wpl/ui/listview.h>
 #include <string>
+#include <memory>
+
+namespace std 
+{
+	using std::tr1::shared_ptr;
+}
 
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-
-struct symbol_resolver_itf
-{
-	virtual ~symbol_resolver_itf() {}
-	virtual std::wstring symbol_name_by_va(const void *address) = 0;
-};
+class symbol_resolver;
 
 class functions_list : public wpl::ui::listview::model, wpl::noncopyable
 {
@@ -40,12 +42,12 @@ class functions_list : public wpl::ui::listview::model, wpl::noncopyable
 	micro_profiler::statistics_map _statistics;
 	statistics_view _view;
 	__int64 _ticks_resolution;
-	symbol_resolver_itf &_resolver;
+	std::shared_ptr<symbol_resolver> _resolver;
 
 public:
 	static const size_t npos = statistics_view::npos;
 
-	functions_list(__int64 ticks_resolution, symbol_resolver_itf& resolver);
+	functions_list(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 	~functions_list();
 
 	void clear();

@@ -24,6 +24,7 @@
 #include "symbol_resolver.h"
 
 #include <atlstr.h>
+#include <string>
 
 namespace micro_profiler
 {
@@ -47,7 +48,7 @@ void ProfilerFrontend::FinalRelease()
 
 STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
 {
-	_symbol_resolver.reset(new symbol_resolver(tstring(CString(executable)), load_address));
+	_symbol_resolver = symbol_resolver::create_dia_resolver(std::wstring(CStringW(executable)), load_address);
 	_statistics.reset(new statistics(*_symbol_resolver));
    _dialog.reset(new ProfilerMainDialog(*_statistics, ticks_resolution));
 

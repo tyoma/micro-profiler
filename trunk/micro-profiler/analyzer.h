@@ -29,7 +29,7 @@ namespace micro_profiler
 {
 	class shadow_stack
 	{
-		class call_record_ex;
+		struct call_record_ex;
 		typedef stdext::hash_map<const void *, int, address_compare> entrance_counter_map;
 
 		const __int64 _profiler_latency;
@@ -46,16 +46,13 @@ namespace micro_profiler
 	};
 
 
-	class shadow_stack::call_record_ex : public call_record
+	struct shadow_stack::call_record_ex : call_record
 	{
-		const call_record_ex &operator =(const call_record_ex &rhs);
-
-	public:
 		call_record_ex(const call_record &from, int &level);
 		call_record_ex(const call_record_ex &other);
 
 		__int64 child_time;
-		int &level;
+		int *level;
 	};
 
 
@@ -98,7 +95,7 @@ namespace micro_profiler
 			{
 				const call_record_ex &current = _stack.back();
 				const void *callee = current.callee;
-				int level = --current.level;
+				int level = --*current.level;
 				__int64 inclusive_time_observed = i->timestamp - current.timestamp;
 				__int64 inclusive_time = inclusive_time_observed - _profiler_latency;
 				__int64 exclusive_time = inclusive_time - current.child_time;
@@ -118,7 +115,7 @@ namespace micro_profiler
 
 	// shadow_stack::call_record_ex - inline definitions
 	inline shadow_stack::call_record_ex::call_record_ex(const call_record &from, int &level_)
-		: call_record(from), child_time(0), level(level_)
+		: call_record(from), child_time(0), level(&level_)
 	{	}
 
 	inline shadow_stack::call_record_ex::call_record_ex(const call_record_ex &other)

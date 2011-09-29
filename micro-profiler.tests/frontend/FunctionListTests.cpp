@@ -1,9 +1,9 @@
 #include <frontend/function_list.h>
+#include <frontend/symbol_resolver.h>
 #include <com_helpers.h>
 
 #include <functional>
 #include <list>
-#include <set>
 #include <utility>
 #include <string>
 #include <sstream>
@@ -90,10 +90,10 @@ namespace
 		counter _counter;
 	};
 
-	class sri : public symbol_resolver_itf
+	class sri : public symbol_resolver
 	{
 	public:
-		virtual std::wstring symbol_name_by_va(const void *address)
+		virtual std::wstring symbol_name_by_va(const void *address) const
 		{
 			return to_string(address);
 		}
@@ -111,7 +111,7 @@ namespace micro_profiler
 			[TestMethod]
 			void CanCreateEmptyFunctionList()
 			{
-				sri resolver;
+				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(test_ticks_resolution, resolver);
 
 				Assert::IsTrue(fl.get_count() == 0);
@@ -142,7 +142,7 @@ namespace micro_profiler
 				FunctionStatisticsDetailed data[] = {ms1, ms2};
 				
 				// ACT
-				sri resolver;
+				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(test_ticks_resolution, resolver);
 				fl.update(data, 2);
 
@@ -167,7 +167,7 @@ namespace micro_profiler
 				copy(std::make_pair((void *)1123, s1), ms1, dummy_children_buffer);
 
 				// ACT & ASSERT
-				sri resolver;
+				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(test_ticks_resolution, resolver);
 				i_handler ih;
 				ih.bind2(fl);
@@ -227,31 +227,28 @@ namespace micro_profiler
 
 				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3};
 
-				sri resolver;
+				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(test_ticks_resolution, resolver);
 
-				std::set<functions_list::index_type> expected;
-				expected.insert(0);
-				expected.insert(1);
-				expected.insert(2);
-
-				// ACT & ASSERT
+				std::vector<functions_list::index_type> expected;
+				
+				// ACT
 				fl.update(data, 3);
-				Assert::IsTrue(fl.get_count() == 3);
 
 				functions_list::index_type idx1118 = fl.get_index((void *)1118);
 				functions_list::index_type idx2229 = fl.get_index((void *)2229);
 				functions_list::index_type idx5550 = fl.get_index((void *)5550);
 
-				Assert::IsTrue(expected.find(idx1118) != expected.end());
-				Assert::IsTrue(expected.find(idx2229) != expected.end());
-				Assert::IsTrue(expected.find(idx5550) != expected.end());
+				expected.push_back(idx1118);
+				expected.push_back(idx2229);
+				expected.push_back(idx5550);
+				std::sort(expected.begin(), expected.end());
+				
+				// ASSERT
+				Assert::IsTrue(fl.get_count() == 3);
 
-				expected.erase(idx1118);
-				expected.erase(idx2229);
-				expected.erase(idx5550);
-
-				Assert::IsTrue(expected.empty());
+				for (size_t i = 0; i < expected.size(); ++i)
+					Assert::IsTrue(expected[i] == i);
 
 				Assert::IsTrue(idx1118 != functions_list::npos);
 				Assert::IsTrue(idx2229 != functions_list::npos);
@@ -304,30 +301,34 @@ namespace micro_profiler
 				FunctionStatisticsDetailed data1[] = {ms1, ms2};
 				FunctionStatisticsDetailed data2[] = {ms3, ms4};
 
-				sri resolver;
+				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(test_ticks_resolution, resolver);
 				fl.set_order(2, true); // by times called
 				
 				i_handler ih;
 				ih.bind2(fl);
-				// ACT & ASSERT
+
+				// ACT
 				fl.update(data1, 2);
+				std::shared_ptr<const listview::trackable> first = fl.track(0); // 2229
+				std::shared_ptr<const listview::trackable> second = fl.track(1); // 1118
+
+				// ASSERT
 				Assert::IsTrue(fl.get_count() == 2);
 				Assert::IsTrue(ih.times() == 1);
 				Assert::IsTrue(*ih.rbegin() == 2); //check what's coming as event arg
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
-
 				assert_row(fl, fl.get_index((void *)1118), L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0");
 				assert_row(fl, fl.get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3");
 
-				std::shared_ptr<const listview::trackable> first = fl.track(0); // 2229
-				std::shared_ptr<const listview::trackable> second = fl.track(1); // 1118
 				Assert::IsTrue(first->index() == 0);
 				Assert::IsTrue(second->index() == 1);
 
-				// ACT & ASSERT
+				// ACT
 				fl.update(data2, 2);
+				
+				// ASSERT
 				Assert::IsTrue(fl.get_count() == 3);
 				Assert::IsTrue(ih.times() == 2);
 				Assert::IsTrue(*ih.rbegin() == 3); //check what's coming as event arg
@@ -450,7 +451,7 @@ namespace micro_profiler
 
 				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4, ms5, ms6, ms1ub, ms2lb, ms2ub, ms3lb, ms3ub, ms4lb, ms4ub, ms5lb, ms5ub, ms6lb};
 
-				sri resolver;
+				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(10000000000, resolver); // 10 * billion for ticks resolution
 
 				// ACT & ASSERT
@@ -514,7 +515,7 @@ namespace micro_profiler
 
 				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4/*, ms5, ms6, ms7*/};
 
-				sri resolver;
+				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(1, resolver); 
 				i_handler ih;
 				ih.bind2(fl);

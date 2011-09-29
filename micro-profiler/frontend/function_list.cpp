@@ -21,6 +21,7 @@
 #include "function_list.h"
 
 #include "../_generated/microprofilerfrontend_i.h"
+#include "symbol_resolver.h"
 
 #include <utility>
 #include <cmath>
@@ -74,23 +75,23 @@ namespace
 	{
 		class by_name
 		{
-			symbol_resolver_itf &_resolver;
+			std::shared_ptr<symbol_resolver> _resolver;
 
 			const by_name &operator =(const by_name &rhs);
 
 		public:
-			by_name(symbol_resolver_itf &resolver)
+			by_name(std::shared_ptr<symbol_resolver> resolver)
 				: _resolver(resolver)
 			{	}
 
 			wstring operator ()(const void *address, const function_statistics &) const
-			{	return _resolver.symbol_name_by_va(address);	}
+			{	return _resolver->symbol_name_by_va(address);	}
 
 			wstring operator ()(const void *address, unsigned __int64) const
-			{	return _resolver.symbol_name_by_va(address);	}
+			{	return _resolver->symbol_name_by_va(address);	}
 
 			bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
-			{	return _resolver.symbol_name_by_va(lhs_addr) < _resolver.symbol_name_by_va(rhs_addr);	}
+			{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
 		};
 
 		struct by_times_called
@@ -181,7 +182,7 @@ namespace
 
 } // namespace
 
-functions_list::functions_list(__int64 ticks_resolution, symbol_resolver_itf &resolver) 
+functions_list::functions_list(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver) 
 	: _view(_statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
 {	}
 

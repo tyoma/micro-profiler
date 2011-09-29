@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="micro-profiler.tests"
 	ProjectTypes="{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}"
 	ProjectGUID="{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
@@ -187,6 +187,10 @@
 		<ProjectReference
 			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
 			RelativePathToProject=".\libraries\wpl\mt\src\mt.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{7F59DBD6-D111-41FE-B246-4D21AC5212CB}"
+			RelativePathToProject=".\libraries\wpl\ui\src\ui.vcproj"
 		/>
 	</References>
 	<Files>

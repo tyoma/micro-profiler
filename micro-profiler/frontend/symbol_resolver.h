@@ -20,22 +20,19 @@
 
 #pragma once
 
-#include <atlbase.h>
 #include <string>
-#include <tchar.h>
+#include <memory>
 
-struct IDiaSession;
-struct IDiaDataSource;
-typedef std::basic_string<TCHAR> tstring;
+namespace std 
+{
+	using std::tr1::shared_ptr;
+}
 
 class symbol_resolver
 {
-	CComPtr<IDiaDataSource> _data_source;
-	CComPtr<IDiaSession> _session;
-
 public:
-	symbol_resolver(const tstring &image_path, unsigned __int64 load_address);
-	~symbol_resolver();
+	static std::shared_ptr<symbol_resolver> create_dia_resolver(const std::wstring &image_path, unsigned __int64 load_address);
 
-	tstring symbol_name_by_va(unsigned __int64 address) const;
+	virtual ~symbol_resolver() {}
+	virtual std::wstring symbol_name_by_va(const void *address) const = 0;
 };

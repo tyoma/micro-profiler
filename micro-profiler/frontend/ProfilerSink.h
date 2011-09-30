@@ -33,15 +33,14 @@ namespace std
 }
 
 class ProfilerMainDialog;
-class statistics;
 class symbol_resolver;
-
+class functions_list;
 extern "C" CLSID CLSID_ProfilerFrontend;
 
 class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
 {
-	std::tr1::shared_ptr<symbol_resolver> _symbol_resolver;
-	std::auto_ptr<statistics> _statistics;
+	std::shared_ptr<symbol_resolver> _symbol_resolver;
+	std::shared_ptr<functions_list> _statistics;
 	std::auto_ptr<ProfilerMainDialog> _dialog;
 
 public:

@@ -22,6 +22,7 @@
 
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
+#include "function_list.h"
 
 #include <atlstr.h>
 #include <string>
@@ -49,16 +50,15 @@ void ProfilerFrontend::FinalRelease()
 STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
 {
 	_symbol_resolver = symbol_resolver::create_dia_resolver(std::wstring(CStringW(executable)), load_address);
-	_statistics.reset(new statistics(*_symbol_resolver));
-   _dialog.reset(new ProfilerMainDialog(*_statistics, ticks_resolution));
+	_statistics.reset(new functions_list(ticks_resolution, _symbol_resolver));
+	_dialog.reset(new ProfilerMainDialog(_statistics, ticks_resolution));
 
-   _dialog->ShowWindow(SW_SHOW);
+	_dialog->ShowWindow(SW_SHOW);
 	return S_OK;
 }
 
 STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
 {
 	_statistics->update(statistics, count);
-	_dialog->RefreshList(_statistics->size());
 	return S_OK;
 }

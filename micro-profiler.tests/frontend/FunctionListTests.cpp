@@ -513,7 +513,7 @@ namespace micro_profiler
 				copy(std::make_pair((void *)2995, s3), ms3, dummy_children_buffer);
 				copy(std::make_pair((void *)3005, s4), ms4, dummy_children_buffer);
 
-				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4/*, ms5, ms6, ms7*/};
+				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4};
 
 				std::shared_ptr<symbol_resolver> resolver(new sri);
 				functions_list fl(1, resolver); 
@@ -754,6 +754,73 @@ namespace micro_profiler
 				Assert::IsTrue(t1.index() == 2);
 				Assert::IsTrue(t2.index() == 1);
 				Assert::IsTrue(t3.index() == 0);
+			}
+
+			[TestMethod]
+			void FunctionListPrintItsContent()
+			{
+				// INIT
+				function_statistics_detailed s1, s2, s3;
+				FunctionStatisticsDetailed ms1, ms2, ms3;
+				std::vector<FunctionStatistics> dummy_children_buffer;
+
+				s1.times_called = 15;
+				s1.max_reentrance = 0;
+				s1.inclusive_time = 31;
+				s1.exclusive_time = 29;
+
+				s2.times_called = 35;
+				s2.max_reentrance = 1;
+				s2.inclusive_time = 453;
+				s2.exclusive_time = 366;
+
+				s3.times_called = 2;
+				s3.max_reentrance = 2;
+				s3.inclusive_time = 33450030;
+				s3.exclusive_time = 32333333;
+
+				copy(std::make_pair((void *)1995, s1), ms1, dummy_children_buffer);
+				copy(std::make_pair((void *)2005, s2), ms2, dummy_children_buffer);
+				copy(std::make_pair((void *)2995, s3), ms3, dummy_children_buffer);
+
+				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3};
+				const size_t data_size = sizeof(data)/sizeof(data[0]);
+
+				std::shared_ptr<symbol_resolver> resolver(new sri);
+				functions_list fl(1, resolver); 
+
+				wstring result;
+				// ACT
+				fl.print(result);
+
+				// ASSERT
+				Assert::IsTrue(fl.get_count() == 0);
+				Assert::IsTrue(result == L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+										 L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n");
+				// ACT
+				fl.update(data, data_size);
+				fl.set_order(2, true); // by times called
+				fl.print(result);
+
+				// ASSERT
+				Assert::IsTrue(fl.get_count() == data_size);
+				Assert::IsTrue(result == L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+										 L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n"
+										 L"00000BAE\t2\t3.23e+007s\t3.35e+007s\t1.62e+007s\t1.67e+007s\t2\r\n"
+										 L"000007C6\t15\t29s\t31s\t1.93s\t2.07s\t0\r\n"
+										 L"000007D0\t35\t366s\t453s\t10.5s\t12.9s\t1\r\n");
+
+				// ACT
+				fl.set_order(5, true); // avg. exclusive time
+				fl.print(result);
+
+				// ASSERT
+				Assert::IsTrue(fl.get_count() == data_size);
+				Assert::IsTrue(result == L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+					L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n"
+					L"000007C6\t15\t29s\t31s\t1.93s\t2.07s\t0\r\n"
+					L"000007D0\t35\t366s\t453s\t10.5s\t12.9s\t1\r\n"
+					L"00000BAE\t2\t3.23e+007s\t3.35e+007s\t1.62e+007s\t1.67e+007s\t2\r\n");
 			}
 		};
 	} // namespace tests

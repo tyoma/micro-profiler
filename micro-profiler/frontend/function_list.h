@@ -59,4 +59,5 @@ public:
 	virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
 
 	index_type get_index(const void *address) const;
+	void print(std::wstring &content) const;
 };

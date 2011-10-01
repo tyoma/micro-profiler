@@ -103,30 +103,18 @@ LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/
 
 LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 {
-	//basic_stringstream<TCHAR> s;
-
-	//s << _T("Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion") << endl;
-	//for (size_t i = 0, count = _statistics->->size(); i != count; ++i)
-	//{
-	//	const function_statistics->_ex &f = _statistics->->at(i);
-
-	//	s << f.name << _T("\t") << f.times_called << _T("\t") << 1.0 * f.exclusive_time / g_ticks_resolution << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution << _T("\t")
-	//		<< 1.0 * f.exclusive_time / g_ticks_resolution / f.times_called << _T("\t") << 1.0 * f.inclusive_time / g_ticks_resolution / f.times_called << _T("\t") << f.max_reentrance
-	//		<< endl;
-	//}
-
-	std::basic_string<TCHAR> result;//(s.str());
-
+	wstring result;
+	_statistics->print(result);
 	if (OpenClipboard())
 	{
-		if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(TCHAR)))
+		if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(wchar_t)))
 		{
-			TCHAR *gtext_memory = reinterpret_cast<TCHAR *>(::GlobalLock(gtext));
+			wchar_t *gtext_memory = reinterpret_cast<wchar_t *>(::GlobalLock(gtext));
 
 			copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
 			::GlobalUnlock(gtext_memory);
 			::EmptyClipboard();
-			::SetClipboardData(CF_TEXT, gtext);
+			::SetClipboardData(CF_UNICODETEXT, gtext);
 		}
 		CloseClipboard();
 	}

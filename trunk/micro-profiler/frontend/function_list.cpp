@@ -194,7 +194,7 @@ functions_list::index_type functions_list::get_count() const throw()
 
 void functions_list::get_text( index_type item, index_type subitem, std::wstring &text ) const
 {
-	ordered_view<micro_profiler::statistics_map>::value_type row = _view.at(item);
+	const statistics_view::value_type &row = _view.at(item);
 	switch (subitem)
 	{
 	case 0:	text = to_string2(item);	break;
@@ -264,4 +264,23 @@ void functions_list::clear()
 functions_list::index_type functions_list::get_index(const void *address) const
 {
 	return _view.find_by_key(address);
+}
+
+void functions_list::print(wstring &content) const
+{
+	content.clear();
+	content.reserve(256 * (_view.size() + 1)); // kind of magic number
+	content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n";
+	for (size_t i = 0; i != _view.size(); ++i)
+	{
+		const statistics_view::value_type &row = _view.at(i);
+
+		content += functors::by_name(_resolver)(row.first, row.second) + L"\t";
+		content += functors::by_times_called()(row.first, row.second) + L"\t";
+		content += functors::by_exclusive_time(_ticks_resolution)(row.first, row.second) + L"\t";
+		content += functors::by_inclusive_time(_ticks_resolution)(row.first, row.second) + L"\t";
+		content += functors::by_avg_exclusive_call_time(_ticks_resolution)(row.first, row.second) + L"\t";
+		content += functors::by_avg_inclusive_call_time(_ticks_resolution)(row.first, row.second) + L"\t";
+		content += functors::by_max_reentrance()(row.first, row.second) + L"\r\n";
+	}
 }

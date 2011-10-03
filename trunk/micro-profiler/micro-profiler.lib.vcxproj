@@ -53,7 +53,7 @@
     <ClCompile>
       <AdditionalOptions>/Gy %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_LIB;_DEBUG;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
@@ -65,7 +65,6 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -114,7 +113,6 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
       <FunctionLevelLinking>false</FunctionLevelLinking>
     </ClCompile>

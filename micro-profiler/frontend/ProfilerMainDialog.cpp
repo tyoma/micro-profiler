@@ -18,8 +18,6 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#define _CRT_NON_CONFORMING_SWPRINTFS
-
 #include "ProfilerMainDialog.h"
 
 #include "function_list.h"
@@ -35,16 +33,9 @@ using namespace std;
 using namespace wpl;
 using namespace wpl::ui;
 
-namespace
-{
-	__int64 g_ticks_resolution(1);
-}
-
-ProfilerMainDialog::ProfilerMainDialog(std::shared_ptr<functions_list> s, __int64 ticks_resolution)
+ProfilerMainDialog::ProfilerMainDialog(std::shared_ptr<functions_list> s)
 	: _statistics(s)
 {
-	g_ticks_resolution = ticks_resolution;
-
 	Create(NULL, 0);
 
 	_statistics_lv->add_column(L"#", listview::dir_none);
@@ -84,7 +75,7 @@ LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LP
 	::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
 	handled = TRUE;
-	return 1;  // Let the system set the focus
+	return 1;	// Let the system set the focus
 }
 
 LRESULT ProfilerMainDialog::OnSize(UINT /*message*/, WPARAM /*wparam*/, LPARAM lparam, BOOL &handled)
@@ -104,6 +95,7 @@ LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/
 LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 {
 	wstring result;
+
 	_statistics->print(result);
 	if (OpenClipboard())
 	{
@@ -118,7 +110,6 @@ LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /
 		}
 		CloseClipboard();
 	}
- 
 	handled = TRUE;
 	return 0;
 }

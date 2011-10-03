@@ -40,7 +40,7 @@ class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	void RelocateControls(const CSize &size);
 
 public:
-	ProfilerMainDialog(std::shared_ptr<functions_list> s, __int64 ticks_resolution);
+	ProfilerMainDialog(std::shared_ptr<functions_list> s);
 	~ProfilerMainDialog();
 
 	enum {	IDD = IDD_PROFILER_MAIN	};

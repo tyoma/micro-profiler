@@ -51,12 +51,14 @@ namespace
 		return buffer;
 	}
 
-	wstring print_time(double value)
+	wstring print_time(double value, bool use_default_formatter)
 	{
 		const size_t buf_size = 24;
 		wchar_t buf[buf_size] = { 0 }; //X.XXe+XXXxs\0 -> 12
 	
-		if (999.5 > fabs(1000000000 * value))
+		if (use_default_formatter)
+			::swprintf(buf, buf_size, L"%g", value);
+		else if (999.5 > fabs(1000000000 * value))
 			::swprintf(buf, buf_size, L"%.3gns", 1000000000 * value);
 		else if (999.5 > fabs(1000000 * value))
 			::swprintf(buf, buf_size, L"%.3gus", 1000000 * value);
@@ -70,6 +72,7 @@ namespace
 			::swprintf(buf, buf_size, L"%.3gs", value);
 		return buf;
 	}
+
 
 	namespace functors
 	{
@@ -112,13 +115,14 @@ namespace
 		class by_exclusive_time
 		{
 			__int64 _ticks_resolution;
+			bool _use_default_formatter;
 		public:
-			by_exclusive_time(__int64 ticks_resolution) 
-				: _ticks_resolution(ticks_resolution) 
+			by_exclusive_time(__int64 ticks_resolution, bool use_default_formatter = false) 
+				: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter) 
 			{	}
 
 			wstring operator ()(const void *, const function_statistics &s) const
-			{	return print_time(1.0 * s.exclusive_time / _ticks_resolution);	}
+			{	return print_time(1.0 * s.exclusive_time / _ticks_resolution, _use_default_formatter);	}
 
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 			{	return lhs.exclusive_time < rhs.exclusive_time;	}
@@ -127,13 +131,14 @@ namespace
 		struct by_inclusive_time
 		{
 			__int64 _ticks_resolution;
+			bool _use_default_formatter;
 		public:
-			by_inclusive_time(__int64 ticks_resolution) 
-				: _ticks_resolution(ticks_resolution) 
+			by_inclusive_time(__int64 ticks_resolution, bool use_default_formatter = false) 
+				: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter)
 			{	}
 
 			wstring operator ()(const void *, const function_statistics &s) const
-			{	return print_time(1.0 * s.inclusive_time / _ticks_resolution);	}
+			{	return print_time(1.0 * s.inclusive_time / _ticks_resolution, _use_default_formatter);	}
 
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 			{	return lhs.inclusive_time < rhs.inclusive_time;	}
@@ -142,13 +147,14 @@ namespace
 		struct by_avg_exclusive_call_time
 		{
 			__int64 _ticks_resolution;
+			bool _use_default_formatter;
 		public:
-			by_avg_exclusive_call_time(__int64 ticks_resolution) 
-				: _ticks_resolution(ticks_resolution) 
+			by_avg_exclusive_call_time(__int64 ticks_resolution, bool use_default_formatter = false) 
+				: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter)
 			{	}
 
 			wstring operator ()(const void *, const function_statistics &s) const
-			{	return print_time(s.times_called ? 1.0 * s.exclusive_time / _ticks_resolution / s.times_called : 0);	}
+			{	return print_time(s.times_called ? 1.0 * s.exclusive_time / _ticks_resolution / s.times_called : 0, _use_default_formatter);	}
 
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 			{	return ((lhs.times_called && rhs.times_called) ? (lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called) : lhs.times_called < rhs.times_called);	}
@@ -157,13 +163,14 @@ namespace
 		struct by_avg_inclusive_call_time
 		{
 			__int64 _ticks_resolution;
+			bool _use_default_formatter;
 		public:
-			by_avg_inclusive_call_time(__int64 ticks_resolution) 
-				: _ticks_resolution(ticks_resolution) 
+			by_avg_inclusive_call_time(__int64 ticks_resolution, bool use_default_formatter = false) 
+				: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter)
 			{	}
 
 			wstring operator ()(const void *, const function_statistics &s) const
-			{	return print_time(s.times_called ? 1.0 * s.inclusive_time / _ticks_resolution / s.times_called : 0);	}
+			{	return print_time(s.times_called ? 1.0 * s.inclusive_time / _ticks_resolution / s.times_called : 0, _use_default_formatter);	}
 
 
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
@@ -277,10 +284,10 @@ void functions_list::print(wstring &content) const
 
 		content += functors::by_name(_resolver)(row.first, row.second) + L"\t";
 		content += functors::by_times_called()(row.first, row.second) + L"\t";
-		content += functors::by_exclusive_time(_ticks_resolution)(row.first, row.second) + L"\t";
-		content += functors::by_inclusive_time(_ticks_resolution)(row.first, row.second) + L"\t";
-		content += functors::by_avg_exclusive_call_time(_ticks_resolution)(row.first, row.second) + L"\t";
-		content += functors::by_avg_inclusive_call_time(_ticks_resolution)(row.first, row.second) + L"\t";
+		content += functors::by_exclusive_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
+		content += functors::by_inclusive_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
+		content += functors::by_avg_exclusive_call_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
+		content += functors::by_avg_inclusive_call_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
 		content += functors::by_max_reentrance()(row.first, row.second) + L"\r\n";
 	}
 }

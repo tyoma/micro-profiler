@@ -806,9 +806,9 @@ namespace micro_profiler
 				Assert::IsTrue(fl.get_count() == data_size);
 				Assert::IsTrue(result == L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										 L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n"
-										 L"00000BAE\t2\t3.23e+007s\t3.35e+007s\t1.62e+007s\t1.67e+007s\t2\r\n"
-										 L"000007C6\t15\t29s\t31s\t1.93s\t2.07s\t0\r\n"
-										 L"000007D0\t35\t366s\t453s\t10.5s\t12.9s\t1\r\n");
+										 L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\r\n"
+										 L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\r\n"
+										 L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\r\n");
 
 				// ACT
 				fl.set_order(5, true); // avg. exclusive time
@@ -818,9 +818,9 @@ namespace micro_profiler
 				Assert::IsTrue(fl.get_count() == data_size);
 				Assert::IsTrue(result == L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 					L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n"
-					L"000007C6\t15\t29s\t31s\t1.93s\t2.07s\t0\r\n"
-					L"000007D0\t35\t366s\t453s\t10.5s\t12.9s\t1\r\n"
-					L"00000BAE\t2\t3.23e+007s\t3.35e+007s\t1.62e+007s\t1.67e+007s\t2\r\n");
+					L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\r\n"
+					L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\r\n"
+					L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\r\n");
 			}
 		};
 	} // namespace tests

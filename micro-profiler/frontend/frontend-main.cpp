@@ -63,7 +63,7 @@ STDAPI DllRegisterServer()
 	return PrxDllRegisterServer();
 }
 
-STDAPI DllUnregisterServer(void)
+STDAPI DllUnregisterServer()
 {
 	HRESULT hr = _AtlModule.DllUnregisterServer(FALSE);
 

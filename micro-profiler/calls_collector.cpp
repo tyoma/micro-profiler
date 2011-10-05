@@ -22,18 +22,20 @@
 
 #include "primitives.h"
 #include "pod_vector.h"
+#include <wpl/mt/synchronization.h>
 
 using namespace std;
+using namespace wpl::mt;
 
 #undef min
 #undef max
 
-extern "C" void _penter();
-extern "C" void _pexit();
+extern "C" void profile_enter();
+extern "C" void profile_exit();
 
 namespace micro_profiler
 {
-	calls_collector calls_collector::_instance(10000000);
+	calls_collector calls_collector::_instance(5000000);
 
 
 	class calls_collector::thread_trace_block
@@ -41,6 +43,7 @@ namespace micro_profiler
 		const unsigned int _thread_id;
 		const size_t _trace_limit;
 		mutex _block_mtx;
+		event_flag _proceed_collection;
 		pod_vector<call_record> _traces[2];
 		pod_vector<call_record> *_active_trace, *_inactive_trace;
 
@@ -57,11 +60,13 @@ namespace micro_profiler
 
 
 	calls_collector::thread_trace_block::thread_trace_block(unsigned int thread_id, size_t trace_limit)
-		: _thread_id(thread_id), _trace_limit(trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
+		: _thread_id(thread_id), _trace_limit(trace_limit), _proceed_collection(false, true), _active_trace(&_traces[0]),
+			_inactive_trace(&_traces[1])
 	{	}
 
 	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &other)
-		: _thread_id(other._thread_id), _trace_limit(other._trace_limit), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
+		: _thread_id(other._thread_id), _trace_limit(other._trace_limit), _proceed_collection(false, true),
+			_active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
 
 	calls_collector::thread_trace_block::~thread_trace_block()
@@ -69,14 +74,15 @@ namespace micro_profiler
 
 	__forceinline void calls_collector::thread_trace_block::track(const call_record &call) throw()
 	{
-		for (; ; yield())
+		for (; ; _proceed_collection.wait())
 		{
 			scoped_lock l(_block_mtx);
 
-			if (_active_trace->size() >= _trace_limit)
-				continue;
-			_active_trace->push_back(call);
-			break;
+			if (_active_trace->size() < _trace_limit)
+			{
+				_active_trace->push_back(call);
+				break;
+			}
 		}
 	}
 
@@ -85,14 +91,13 @@ namespace micro_profiler
 		{
 			scoped_lock l(_block_mtx);
 
+			if (_active_trace->size() == _trace_limit)
+				_proceed_collection.raise();
 			swap(_active_trace, _inactive_trace);
 		}
-
 		if (_inactive_trace->size())
-		{
 			a.accept_calls(_thread_id, _inactive_trace->data(), _inactive_trace->size());
-			_inactive_trace->clear();
-		}
+		_inactive_trace->clear();
 	}
 
 
@@ -114,7 +119,7 @@ namespace micro_profiler
 		thread_trace_block &ttb = get_current_thread_trace();
 		
 		for (unsigned int i = 0; i < check_times; ++i)
-			_penter(), _pexit();
+			profile_enter(), profile_exit();
 
 		ttb.read_collected(de);
 		_profiler_latency = de.delay;

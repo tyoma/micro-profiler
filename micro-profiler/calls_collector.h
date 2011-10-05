@@ -48,13 +48,13 @@ namespace micro_profiler
 		struct acceptor;
 
 	public:
-		__declspec(dllexport) calls_collector(size_t trace_limit);
-		__declspec(dllexport) ~calls_collector();
+		calls_collector(size_t trace_limit);
+		~calls_collector();
 
-		static __declspec(dllexport) calls_collector *instance() throw();
-		__declspec(dllexport) void read_collected(acceptor &a);
+		static calls_collector *instance() throw();
+		void read_collected(acceptor &a);
 
-		__declspec(dllexport) void __thiscall track(call_record call) throw();
+		void __thiscall track(call_record call) throw();
 
 		size_t trace_limit() const;
 		__int64 profiler_latency() const;

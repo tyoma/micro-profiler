@@ -1,4 +1,3 @@
-
 #include <frontend/ordered_view.h>
 
 #include <hash_map>

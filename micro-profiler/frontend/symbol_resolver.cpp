@@ -20,16 +20,35 @@
 
 #include "symbol_resolver.h"
 
-#include <atlstr.h>
+#include "../primitives.h"
 
+#include <atlstr.h>
 #include <dia2.h>
 #include <psapi.h>
+#include <utility>
+#include <hash_map>
 
 using namespace std;
 
-namespace micro_profiler
+namespace
 {
-	symbol_resolver::symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
+	class dia_symbol_resolver : public symbol_resolver
+	{
+		typedef stdext::hash_map<const void *, wstring, micro_profiler::address_compare> names_cache;
+
+		CComPtr<IDiaDataSource> _data_source;
+		CComPtr<IDiaSession> _session;
+		mutable names_cache _cached_names;
+
+	public:
+		dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address);
+		virtual ~dia_symbol_resolver();
+
+		virtual wstring symbol_name_by_va(const void *address) const;
+	};
+
+
+	dia_symbol_resolver::dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
 	{
 		_data_source.CoCreateInstance(CLSID_DiaSource);
 		_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
@@ -38,10 +57,10 @@ namespace micro_profiler
 			_session->put_loadAddress(load_address);
 	}
 
-	symbol_resolver::~symbol_resolver()
+	dia_symbol_resolver::~dia_symbol_resolver()
 	{	}
 
-	const wstring &symbol_resolver::symbol_name_by_va(const void *address) const
+	wstring dia_symbol_resolver::symbol_name_by_va(const void *address) const
 	{
 		names_cache::const_iterator i = _cached_names.find(address);
 
@@ -60,3 +79,6 @@ namespace micro_profiler
 		return i->second;
 	}
 }
+
+shared_ptr<symbol_resolver> symbol_resolver::create_dia_resolver(const wstring &image_path, unsigned __int64 load_address)
+{	return shared_ptr<symbol_resolver>(new dia_symbol_resolver(image_path, load_address));	}

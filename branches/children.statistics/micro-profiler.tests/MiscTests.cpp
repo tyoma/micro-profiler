@@ -1,6 +1,9 @@
 #include <pod_vector.h>
 
+#include <list>
+
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace std;
 
 namespace micro_profiler
 {
@@ -186,6 +189,165 @@ namespace micro_profiler
 				Assert::IsTrue(copied2.size() == 1);
 				Assert::IsTrue(copied2.data() != v2.data());
 				Assert::IsTrue(13 == *(copied2.data() + 0));
+			}
+
+
+			[TestMethod]
+			void AppendingEmptyVectorWithEmptySequenceLeavesItEmpty()
+			{
+				// INIT
+				pod_vector<B> v1(5);
+				pod_vector<double> v2(7);
+				B none;
+				list<double> empty_list;
+				
+				// ACT
+				v1.append(&none, &none);
+				v2.append(empty_list.begin(), empty_list.end());
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 0);
+				Assert::IsTrue(v2.size() == 0);
+				
+				// ACT
+				v1.append((const B *)0, (const B *)0);
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 0);
+			}
+
+
+			[TestMethod]
+			void AppendingEmptyVectorWithNonEmptySequenceNoGrow()
+			{
+				// INIT
+				pod_vector<int> v1(5);
+				pod_vector<double> v2(7);
+				int ext1[] = {	1, 2, 3, };
+				double ext2_init[] = {	2, 5, 7, 11,	};
+				list<double> ext2(ext2_init, ext2_init + 4);
+				
+				// ACT
+				v1.append(ext1, ext1 + 3);
+				v2.append(ext2.begin(), ext2.end());
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 3);
+				Assert::IsTrue(1 == *(v1.data() + 0));
+				Assert::IsTrue(2 == *(v1.data() + 1));
+				Assert::IsTrue(3 == *(v1.data() + 2));
+
+				Assert::IsTrue(v2.size() == 4);
+				Assert::IsTrue(2 == *(v2.data() + 0));
+				Assert::IsTrue(5 == *(v2.data() + 1));
+				Assert::IsTrue(7 == *(v2.data() + 2));
+				Assert::IsTrue(11 == *(v2.data() + 3));
+			}
+
+
+			[TestMethod]
+			void AppendingNonEmptyVectorWithNonEmptySequenceNoGrow()
+			{
+				// INIT
+				pod_vector<int> v1(6);
+				pod_vector<double> v2(7);
+				int ext1[] = {	1, 2, 3, };
+				int ext1b[] = {	23, 31, };
+				double ext2_init[] = {	2, 5, 7, 11,	};
+				list<double> ext2(ext2_init, ext2_init + 4);
+
+				v1.append(ext1, ext1 + 3);
+				v2.append(ext2.begin(), ext2.end());
+
+				// ACT
+				v1.append(ext1b, ext1b + 2);
+				v2.append(ext1, ext1 + 3);
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 5);
+				Assert::IsTrue(1 == *(v1.data() + 0));
+				Assert::IsTrue(2 == *(v1.data() + 1));
+				Assert::IsTrue(3 == *(v1.data() + 2));
+				Assert::IsTrue(23 == *(v1.data() + 3));
+				Assert::IsTrue(31 == *(v1.data() + 4));
+
+				Assert::IsTrue(v2.size() == 7);
+				Assert::IsTrue(2 == *(v2.data() + 0));
+				Assert::IsTrue(5 == *(v2.data() + 1));
+				Assert::IsTrue(7 == *(v2.data() + 2));
+				Assert::IsTrue(11 == *(v2.data() + 3));
+				Assert::IsTrue(1 == *(v2.data() + 4));
+				Assert::IsTrue(2 == *(v2.data() + 5));
+				Assert::IsTrue(3 == *(v2.data() + 6));
+			}
+
+
+			[TestMethod]
+			void AppendingEmptyVectorWithNonEmptySequenceWithGrow()
+			{
+				// INIT
+				pod_vector<int> v1(2);
+				pod_vector<double> v2(3);
+				int ext1[] = {	1, 2, 3, };
+				double ext2_init[] = {	2, 5, 7, 11,	};
+				list<double> ext2(ext2_init, ext2_init + 4);
+				
+				// ACT
+				v1.append(ext1, ext1 + 3);
+				v2.append(ext2.begin(), ext2.end());
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 3);
+				Assert::IsTrue(1 == *(v1.data() + 0));
+				Assert::IsTrue(2 == *(v1.data() + 1));
+				Assert::IsTrue(3 == *(v1.data() + 2));
+
+				Assert::IsTrue(v2.size() == 4);
+				Assert::IsTrue(2 == *(v2.data() + 0));
+				Assert::IsTrue(5 == *(v2.data() + 1));
+				Assert::IsTrue(7 == *(v2.data() + 2));
+				Assert::IsTrue(11 == *(v2.data() + 3));
+			}
+
+
+			[TestMethod]
+			void AppendingNonEmptyVectorWithNonEmptySequenceWithGrow()
+			{
+				// INIT
+				pod_vector<int> v1(4);
+				pod_vector<double> v2(4);
+				int ext1[] = {	1, 2, 3, };
+				int ext1b[] = {	23, 31, };
+				double ext2[] = {	2, 5, 7, 11,	};
+				double ext2b[] = {	212, 215, 217, 2111, 2112,	};
+
+				v1.append(ext1, ext1 + 3);
+				v2.append(ext2, ext2 + 4);
+
+				// ACT
+				v1.append(ext1b, ext1b + 2);
+				v2.append(ext2b, ext2b + 5);
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 5);
+				Assert::IsTrue(1 == *(v1.data() + 0));
+				Assert::IsTrue(2 == *(v1.data() + 1));
+				Assert::IsTrue(3 == *(v1.data() + 2));
+				Assert::IsTrue(23 == *(v1.data() + 3));
+				Assert::IsTrue(31 == *(v1.data() + 4));
+				Assert::IsTrue(v1.capacity() == 6);
+
+				Assert::IsTrue(v2.size() == 9);
+				Assert::IsTrue(2 == *(v2.data() + 0));
+				Assert::IsTrue(5 == *(v2.data() + 1));
+				Assert::IsTrue(7 == *(v2.data() + 2));
+				Assert::IsTrue(11 == *(v2.data() + 3));
+				Assert::IsTrue(212 == *(v2.data() + 4));
+				Assert::IsTrue(215 == *(v2.data() + 5));
+				Assert::IsTrue(217 == *(v2.data() + 6));
+				Assert::IsTrue(2111 == *(v2.data() + 7));
+				Assert::IsTrue(2112 == *(v2.data() + 8));
+				Assert::IsTrue(v2.capacity() == 9);
 			}
 		};
 	}

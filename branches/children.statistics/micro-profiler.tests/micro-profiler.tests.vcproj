@@ -44,13 +44,12 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
-				PreprocessorDefinitions="WIN32;_DEBUG"
+				PreprocessorDefinitions="WIN32;_DEBUG;_SCL_SECURE_NO_WARNINGS"
 				ExceptionHandling="2"
 				RuntimeLibrary="3"
 				AssemblerOutput="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -63,7 +62,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(NoInherit)"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmtd.lib;libcpmtd.lib"
 				GenerateDebugInformation="true"
@@ -120,13 +118,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
-				PreprocessorDefinitions="WIN32;NDEBUG"
+				PreprocessorDefinitions="WIN32;NDEBUG;_SCL_SECURE_NO_WARNINGS"
 				ExceptionHandling="2"
 				RuntimeLibrary="2"
 				AssemblerOutput="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -139,7 +136,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(NoInherit)"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt.lib;libcpmt.lib"
 				GenerateDebugInformation="true"
@@ -178,8 +174,8 @@
 			MinFrameworkVersion="131072"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
-			RelativePathToProject=".\micro-profiler\micro-profiler.vcproj"
+			ReferencedProjectIdentifier="{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
+			RelativePathToProject=".\micro-profiler\micro-profiler.lib.vcproj"
 		/>
 		<AssemblyReference
 			RelativePath="Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll"
@@ -190,11 +186,35 @@
 			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
 			RelativePathToProject=".\libraries\wpl\mt\src\mt.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{7F59DBD6-D111-41FE-B246-4D21AC5212CB}"
+			RelativePathToProject=".\libraries\wpl\ui\src\ui.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
 			Name="frontend"
 			>
+			<File
+				RelativePath=".\frontend\FunctionListTests.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAsManaged="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAsManaged="1"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath=".\frontend\OrderedViewTests.cpp"
 				>

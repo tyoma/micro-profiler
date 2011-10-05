@@ -37,8 +37,8 @@ namespace micro_profiler
 	typedef void (*frontend_factory)(IProfilerFrontend **frontend);
 	class calls_collector;
 
-	void __declspec(dllexport) create_local_frontend(IProfilerFrontend **frontend);
-	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend);
+	void create_local_frontend(IProfilerFrontend **frontend);
+	void create_inproc_frontend(IProfilerFrontend **frontend);
 
 	class profiler_frontend
 	{
@@ -53,7 +53,7 @@ namespace micro_profiler
 		void operator =(const profiler_frontend &);
 
 	public:
-		__declspec(dllexport) profiler_frontend(frontend_factory factory = &create_local_frontend);
-		__declspec(dllexport) ~profiler_frontend();
+		profiler_frontend(frontend_factory factory = &create_local_frontend);
+		~profiler_frontend();
 	};
 }

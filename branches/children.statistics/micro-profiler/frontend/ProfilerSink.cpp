@@ -43,7 +43,7 @@ namespace micro_profiler
 
 	STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
 	{
-		shared_ptr<symbol_resolver> r(new symbol_resolver(executable, load_address));
+		shared_ptr<symbol_resolver> r(symbol_resolver::create_dia_resolver(executable, load_address));
 		
 		_statistics.reset(new functions_list(r));
 		_dialog.reset(new ProfilerMainDialog(r, _statistics, ticks_resolution));

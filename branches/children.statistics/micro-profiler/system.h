@@ -22,9 +22,8 @@
 
 namespace micro_profiler
 {
-	__declspec(dllexport) unsigned __int64 timestamp_precision();
+	unsigned __int64 timestamp_precision();
 	unsigned int current_thread_id();
-	void yield();
 
 	class mutex
 	{

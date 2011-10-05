@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="micro-profiler-stub"
+	Name="micro-profiler.stub"
 	ProjectGUID="{3B1F8640-9F9A-4989-A074-73590A82A26C}"
 	RootNamespace="microprofiler"
 	Keyword="Win32Proj"
@@ -58,7 +58,6 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -73,7 +72,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile=""
+				ModuleDefinitionFile="micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -144,7 +143,6 @@
 				AssemblerOutput="2"
 				WarningLevel="4"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -158,7 +156,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				ModuleDefinitionFile=""
+				ModuleDefinitionFile="micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -189,12 +187,16 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
-			RelativePathToProject=".\libraries\os\src\oslib.vcproj"
+			RelativePathToProject=".\libraries\wpl\mt\src\mt.vcproj"
 		/>
 	</References>
 	<Files>
 		<File
-			RelativePath=".\entry.cpp"
+			RelativePath=".\entry-stub.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\micro-profiler.ps.def"
 			>
 		</File>
 	</Files>

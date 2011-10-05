@@ -31,12 +31,11 @@ namespace std
 	using tr1::function;
 }
 
+class symbol_resolver;
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
 namespace micro_profiler
 {
-	class symbol_resolver;
-
 	typedef stdext::hash_map<const void *, unsigned __int64, address_compare> parent_statistics_map;
 
 	struct function_statistics_detailed2 : function_statistics_detailed

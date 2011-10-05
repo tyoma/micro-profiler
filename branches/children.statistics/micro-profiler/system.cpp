@@ -43,9 +43,6 @@ namespace micro_profiler
 	unsigned int current_thread_id()
 	{	return ::GetCurrentThreadId();	}
 
-	void yield()
-	{	::Sleep(0);	}
-
 
 	mutex::mutex()
 		: _critical_section(new (_buffer) CRITICAL_SECTION)

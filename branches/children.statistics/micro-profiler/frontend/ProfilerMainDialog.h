@@ -34,11 +34,12 @@ namespace std
 	using tr1::function;
 }
 
+class symbol_resolver;
+
 namespace micro_profiler
 {
 	class functions_list;
 	struct dependant_calls_list;
-	class symbol_resolver;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	{

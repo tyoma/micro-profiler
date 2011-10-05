@@ -231,22 +231,22 @@ namespace micro_profiler
 				enterexit_emulator e1(c1, 670), e2(c2, 1230), e3(c3, 635);
 				collection_acceptor a1, a2, a3;
 
-				// ACT
+				// ACT (blockage during this test is equivalent to the failure)
 				thread t1(e1), t2(e2), t3(e3);
 
 				while (a1.total_entries < 1340)
 				{
-					thread::sleep(20);
+					thread::sleep(30);
 					c1.read_collected(a1);
 				}
 				while (a2.total_entries < 2460)
 				{
-					thread::sleep(20);
+					thread::sleep(30);
 					c2.read_collected(a2);
 				}
 				while (a3.total_entries < 1270)
 				{
-					thread::sleep(20);
+					thread::sleep(30);
 					c3.read_collected(a3);
 				}
 
@@ -274,7 +274,7 @@ namespace micro_profiler
 			void GlobalCollectorInstanceTraceLimitVerify()
 			{
 				// INIT / ACT / ASSERT
-				Assert::IsTrue(10000000 == calls_collector::instance()->trace_limit());
+				Assert::IsTrue(5000000 == calls_collector::instance()->trace_limit());
 			}
 		};
 	}

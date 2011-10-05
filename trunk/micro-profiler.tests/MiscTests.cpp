@@ -280,6 +280,75 @@ namespace micro_profiler
 				Assert::IsTrue(2 == *(v2.data() + 5));
 				Assert::IsTrue(3 == *(v2.data() + 6));
 			}
+
+
+			[TestMethod]
+			void AppendingEmptyVectorWithNonEmptySequenceWithGrow()
+			{
+				// INIT
+				pod_vector<int> v1(2);
+				pod_vector<double> v2(3);
+				int ext1[] = {	1, 2, 3, };
+				double ext2_init[] = {	2, 5, 7, 11,	};
+				list<double> ext2(ext2_init, ext2_init + 4);
+				
+				// ACT
+				v1.append(ext1, ext1 + 3);
+				v2.append(ext2.begin(), ext2.end());
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 3);
+				Assert::IsTrue(1 == *(v1.data() + 0));
+				Assert::IsTrue(2 == *(v1.data() + 1));
+				Assert::IsTrue(3 == *(v1.data() + 2));
+
+				Assert::IsTrue(v2.size() == 4);
+				Assert::IsTrue(2 == *(v2.data() + 0));
+				Assert::IsTrue(5 == *(v2.data() + 1));
+				Assert::IsTrue(7 == *(v2.data() + 2));
+				Assert::IsTrue(11 == *(v2.data() + 3));
+			}
+
+
+			[TestMethod]
+			void AppendingNonEmptyVectorWithNonEmptySequenceWithGrow()
+			{
+				// INIT
+				pod_vector<int> v1(4);
+				pod_vector<double> v2(4);
+				int ext1[] = {	1, 2, 3, };
+				int ext1b[] = {	23, 31, };
+				double ext2[] = {	2, 5, 7, 11,	};
+				double ext2b[] = {	212, 215, 217, 2111, 2112,	};
+
+				v1.append(ext1, ext1 + 3);
+				v2.append(ext2, ext2 + 4);
+
+				// ACT
+				v1.append(ext1b, ext1b + 2);
+				v2.append(ext2b, ext2b + 5);
+
+				// ASSERT
+				Assert::IsTrue(v1.size() == 5);
+				Assert::IsTrue(1 == *(v1.data() + 0));
+				Assert::IsTrue(2 == *(v1.data() + 1));
+				Assert::IsTrue(3 == *(v1.data() + 2));
+				Assert::IsTrue(23 == *(v1.data() + 3));
+				Assert::IsTrue(31 == *(v1.data() + 4));
+				Assert::IsTrue(v1.capacity() == 6);
+
+				Assert::IsTrue(v2.size() == 9);
+				Assert::IsTrue(2 == *(v2.data() + 0));
+				Assert::IsTrue(5 == *(v2.data() + 1));
+				Assert::IsTrue(7 == *(v2.data() + 2));
+				Assert::IsTrue(11 == *(v2.data() + 3));
+				Assert::IsTrue(212 == *(v2.data() + 4));
+				Assert::IsTrue(215 == *(v2.data() + 5));
+				Assert::IsTrue(217 == *(v2.data() + 6));
+				Assert::IsTrue(2111 == *(v2.data() + 7));
+				Assert::IsTrue(2112 == *(v2.data() + 8));
+				Assert::IsTrue(v2.capacity() == 9);
+			}
 		};
 	}
 }

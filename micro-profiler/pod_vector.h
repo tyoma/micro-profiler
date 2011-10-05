@@ -46,6 +46,8 @@ namespace micro_profiler
 		~pod_vector() throw();
 
 		void push_back(const T &element) throw();
+		template <typename InputIterator>
+		void append(InputIterator b, InputIterator e) throw();
 		void clear() throw();
 
 		const T *data() const throw();
@@ -75,6 +77,14 @@ namespace micro_profiler
 		if (_end == _limit && !grow())
 			return;
 		*_end++ = element;
+	}
+
+	template <typename T>
+	template <typename InputIterator>
+	inline void pod_vector<T>::append(InputIterator b, InputIterator e) throw()
+	{
+		for (; b != e; ++b, ++_end)
+			*_end = *b;
 	}
 
 	template <typename T>

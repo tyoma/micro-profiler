@@ -21,6 +21,7 @@
 #pragma once
 
 #include <algorithm>
+#include <iterator>
 #include <new>
 
 namespace micro_profiler
@@ -38,7 +39,7 @@ namespace micro_profiler
 
 		const pod_vector &operator =(const pod_vector &rhs);
 
-		bool grow() throw();
+		bool grow(size_t by = 0) throw();
 
 	public:
 		explicit pod_vector(size_t initial_capacity = 10000);
@@ -46,6 +47,8 @@ namespace micro_profiler
 		~pod_vector() throw();
 
 		void push_back(const T &element) throw();
+		template <typename InputIterator>
+		void append(InputIterator b, InputIterator e) throw();
 		void clear() throw();
 
 		const T *data() const throw();
@@ -78,6 +81,18 @@ namespace micro_profiler
 	}
 
 	template <typename T>
+	template <typename InputIterator>
+	inline void pod_vector<T>::append(InputIterator b, InputIterator e) throw()
+	{
+		size_t demanded = size() + std::distance(b, e);
+
+		if (demanded > capacity())
+			grow(demanded - capacity());
+		for (; b != e; ++b, ++_end)
+			*_end = *b;
+	}
+
+	template <typename T>
 	inline void pod_vector<T>::clear() throw()
 	{	_end = _begin;	}
 
@@ -94,10 +109,13 @@ namespace micro_profiler
 	{	return _limit - _begin;	}
 
 	template <typename T>
-	inline bool pod_vector<T>::grow() throw()
+	inline bool pod_vector<T>::grow(size_t by) throw()
 	{
 		unsigned int size = this->size();
-		unsigned int new_capacity = capacity() + capacity() / 2;
+		unsigned int new_capacity = capacity();
+
+		new_capacity += 2 * by > new_capacity ? by : new_capacity / 2;
+
 		T *buffer = new(std::nothrow) T[new_capacity];
 
 		if (!buffer)

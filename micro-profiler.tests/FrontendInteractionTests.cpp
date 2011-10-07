@@ -279,7 +279,7 @@ namespace micro_profiler
 				profiler_frontend fe(&factory3);
 				FunctionStatistics sleep_20_call, sleep_n_call;
 
-				fe_raise_updated_limit = 1;
+				fe_raise_updated_limit = 2;
 				fe_update_statistics.clear();
 				fe_initialized.wait();
 
@@ -288,9 +288,9 @@ namespace micro_profiler
 				fe_stat_updated.wait();
 
 				// ASERT
-				Assert::AreEqual(1u, fe_update_statistics.size());
+				Assert::AreEqual(2u, fe_update_statistics.size());
 
-				sleep_20_call = fe_update_statistics[0].Statistics;
+				sleep_20_call = fe_update_statistics[1].Statistics;
 
 				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_20));
 				Assert::IsTrue(sleep_20_call.TimesCalled == 1);
@@ -307,9 +307,9 @@ namespace micro_profiler
 				fe_stat_updated.wait(20);	// such a timeout MUST be sufficient enough
 
 				// ASERT
-				Assert::IsTrue(1 == fe_update_statistics.size());
+				Assert::IsTrue(2 == fe_update_statistics.size());
 
-				sleep_n_call = fe_update_statistics[0].Statistics;
+				sleep_n_call = fe_update_statistics[1].Statistics;
 
 				Assert::IsTrue(sleep_n_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_n));
 				Assert::IsTrue(sleep_n_call.TimesCalled == 1);

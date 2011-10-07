@@ -11,6 +11,17 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			bool has_empty_statistics(const analyzer &a)
+			{
+				for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
+					if (i->second.times_called || i->second.inclusive_time || i->second.exclusive_time || i->second.max_reentrance || i->second.max_call_time)
+						return false;
+				return true;
+			}
+		}
+
 		[TestClass]
 		public ref class AnalyzerTests
 		{
@@ -27,7 +38,7 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void EnteringNewFunctionDoesNotCreateARecord()
+			void EnteringOnlyToFunctionsLeavesOnlyEmptyStatTraces()
 			{
 				// INIT
 				analyzer a;
@@ -42,7 +53,8 @@ namespace micro_profiler
 				as_acceptor.accept_calls(2, trace, array_size(trace));
 
 				// ASSERT
-				Assert::IsTrue(a.begin() == a.end());
+				Assert::IsTrue(2 == distance(a.begin(), a.end()));
+				Assert::IsTrue(has_empty_statistics(a));
 			}
 
 
@@ -183,7 +195,7 @@ namespace micro_profiler
 				a.accept_calls(2, trace2, array_size(trace2));
 
 				// ASSERT
-				Assert::IsTrue(a.begin() == a.end());
+				Assert::IsTrue(has_empty_statistics(a));
 
 				// ACT
 				a.accept_calls(1, trace3, array_size(trace3));

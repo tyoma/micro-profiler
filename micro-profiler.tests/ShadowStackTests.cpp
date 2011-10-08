@@ -21,7 +21,7 @@ namespace micro_profiler
 			void UpdatingWithEmptyTraceProvidesNoStatUpdates()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< hash_map<const void *, function_statistics> > ss;
 				vector<call_record> trace;
 				hash_map<const void *, function_statistics> statistics;
 
@@ -37,7 +37,7 @@ namespace micro_profiler
 			void UpdatingWithSimpleEnterExitAtOnceStoresDuration()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] = {
 					{	(void *)0x01234567, 123450000	},
@@ -87,7 +87,7 @@ namespace micro_profiler
 			void UpdatingWithSimpleEnterExitAtSeparateTimesStoresDuration()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] = {	{	(void *)0x01234567, 123450000	},	};
 				call_record trace2[] = {	{	0, 123450013	},	};
@@ -97,8 +97,13 @@ namespace micro_profiler
 				// ACT
 				ss.update(trace1, end(trace1), statistics);
 
-				// ASSERT (trace with enter does not update stats)
-				Assert::IsTrue(statistics.empty());
+				// ASSERT
+				Assert::IsTrue(1 == statistics.size());
+				Assert::IsTrue(statistics.begin()->first == (void *)0x01234567);
+				Assert::IsTrue(statistics.begin()->second.times_called == 0);
+				Assert::IsTrue(statistics.begin()->second.inclusive_time == 0);
+				Assert::IsTrue(statistics.begin()->second.exclusive_time == 0);
+				Assert::IsTrue(statistics.begin()->second.max_call_time == 0);
 
 				// ACT
 				ss.update(trace2, end(trace2), statistics);
@@ -115,7 +120,7 @@ namespace micro_profiler
 				ss.update(trace3, end(trace3), statistics);
 
 				// ASSERT
-				Assert::IsTrue(1 == statistics.size());
+				Assert::IsTrue(2 == statistics.size());
 
 				// ACT
 				ss.update(trace4, end(trace4), statistics);
@@ -142,10 +147,10 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void UpdatingWithEnterExitSequenceStoresStatsOnlyAtExits()
+			void UpdatingWithEnterExitSequenceStoresStatsOnlyAtExitsMakesEmptyEntriesOnEnters()
 			{
 				// INIT
-				shadow_stack ss1, ss2;
+				shadow_stack< hash_map<const void *, function_statistics> > ss1, ss2;
 				hash_map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace1[] = {
 					{	(void *)0x01234567, 123450000	},
@@ -172,8 +177,10 @@ namespace micro_profiler
 				Assert::IsTrue(statistics1[(void *)0x01234568].inclusive_time == 6);
 				Assert::IsTrue(statistics1[(void *)0x01234568].max_call_time == 6);
 
-				Assert::IsTrue(2 == statistics2.size());
-				Assert::IsTrue(statistics2.find((void *)0x0bcdef12) == statistics2.end());	// We didn't exited xxxx13 to update children of xxxx12
+				Assert::IsTrue(3 == statistics2.size());
+				Assert::IsTrue(statistics2[(void *)0x0bcdef12].times_called == 0);
+				Assert::IsTrue(statistics2[(void *)0x0bcdef12].inclusive_time == 0);
+				Assert::IsTrue(statistics2[(void *)0x0bcdef12].max_call_time == 0);
 				Assert::IsTrue(statistics2[(void *)0x0bcdef13].times_called == 0);
 				Assert::IsTrue(statistics2[(void *)0x0bcdef13].inclusive_time == 0);
 				Assert::IsTrue(statistics2[(void *)0x0bcdef13].max_call_time == 0);
@@ -187,7 +194,7 @@ namespace micro_profiler
 			void UpdatingWithEnterExitSequenceStoresStatsForAllExits()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234567, 123450000	},
@@ -222,7 +229,7 @@ namespace micro_profiler
 			void TraceStatisticsIsAddedToExistingEntries()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234567, 123450000	},
@@ -281,7 +288,7 @@ namespace micro_profiler
 			void EvaluateExclusiveTimeForASingleChildCall()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] ={
 					{	(void *)0x00000010, 123440000	},
@@ -339,7 +346,7 @@ namespace micro_profiler
 			void EvaluateExclusiveTimeForSeveralChildCalls()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x00000010,123440000	},
@@ -387,7 +394,7 @@ namespace micro_profiler
 			void ApplyProfilerLatencyCorrection()
 			{
 				// INIT
-				shadow_stack ss1(1), ss2(2);
+				shadow_stack< map<const void *, function_statistics> > ss1(1), ss2(2);
 				map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace[] = {
 					{	(void *)0x00000010,123440000	},
@@ -447,7 +454,7 @@ namespace micro_profiler
 			void RecursionControlNoInterleave()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234560,123450001	},
@@ -484,7 +491,7 @@ namespace micro_profiler
 			void RecursionControlInterleaved()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234560,123450001	},
@@ -521,7 +528,7 @@ namespace micro_profiler
 			void CalculateMaxReentranceMetric()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	(void *)0x01234560, 123450001	},
@@ -579,7 +586,7 @@ namespace micro_profiler
 			void DirectChildrenStatisticsIsAddedToParentNoRecursion()
 			{
 				// INIT
-				shadow_stack ss, ss_delayed(1);
+				shadow_stack< map<const void *, function_statistics_detailed> > ss, ss_delayed(1);
 				map<const void *, function_statistics_detailed> statistics, statistics_delayed;
 				call_record trace[] = {
 					{	(void *)1, 1	},
@@ -707,7 +714,7 @@ namespace micro_profiler
 			void DirectChildrenStatisticsIsAddedToParentNoRecursionWithNesting()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics_detailed> > ss;
 				map<const void *, function_statistics_detailed> statistics;
 				call_record trace[] = {
 					{	(void *)1, 1	},
@@ -751,7 +758,7 @@ namespace micro_profiler
 			void PopulateChildrenStatisticsForSpecificParents()
 			{
 				// INIT
-				shadow_stack ss;
+				shadow_stack< map<const void *, function_statistics_detailed> > ss;
 				map<const void *, function_statistics_detailed> statistics;
 				call_record trace[] = {
 					{	(void *)0x1, 1	},
@@ -833,6 +840,74 @@ namespace micro_profiler
 				Assert::IsTrue(8 == cs4[(void *)0x3].inclusive_time);
 				Assert::IsTrue(8 == cs4[(void *)0x3].exclusive_time);
 				Assert::IsTrue(4 == cs4[(void *)0x3].max_call_time);
+			}
+
+
+			[TestMethod]
+			void RepeatedCollectionWithNonEmptyStoredStackRestoresStacksEntries()
+			{
+				// INIT
+				shadow_stack< map<const void *, function_statistics> > ss1, ss2;
+				map<const void *, function_statistics> statistics;
+				call_record trace1[] = {
+					{	(void *)0x1, 1	},
+						{	(void *)0x2, 2	},
+							{	(void *)0x3, 4	},
+								{	(void *)0x7, 4	},
+									{	(void *)0x2, 14	},
+				};
+				call_record trace2[] = {
+					{	(void *)0x1, 1	},
+						{	(void *)0x5, 2	},
+							{	(void *)0x11, 4	},
+				};
+
+				ss1.update(trace1, end(trace1), statistics);
+				ss2.update(trace2, end(trace2), statistics);
+				statistics.clear();
+
+				// ACT
+				ss1.update(end(trace1), end(trace1), statistics);	// trace is empty, but statistics must be restored anyway
+
+				// ASSERT
+				Assert::IsTrue(4 == statistics.size());
+				Assert::IsTrue(statistics[(void *)0x1].inclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x1].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x1].max_reentrance == 0);
+				Assert::IsTrue(statistics[(void *)0x1].max_call_time == 0);
+				Assert::IsTrue(statistics[(void *)0x2].inclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x2].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x2].max_reentrance == 0);
+				Assert::IsTrue(statistics[(void *)0x2].max_call_time == 0);
+				Assert::IsTrue(statistics[(void *)0x3].inclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x3].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x3].max_reentrance == 0);
+				Assert::IsTrue(statistics[(void *)0x3].max_call_time == 0);
+				Assert::IsTrue(statistics[(void *)0x7].inclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x7].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x7].max_reentrance == 0);
+				Assert::IsTrue(statistics[(void *)0x7].max_call_time == 0);
+
+				// INIT
+				statistics.clear();
+
+				// ACT
+				ss2.update(end(trace2), end(trace2), statistics);	// trace is empty, but statistics must be restored anyway
+
+				// ASSERT
+				Assert::IsTrue(3 == statistics.size());
+				Assert::IsTrue(statistics[(void *)0x1].inclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x1].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x1].max_reentrance == 0);
+				Assert::IsTrue(statistics[(void *)0x1].max_call_time == 0);
+				Assert::IsTrue(statistics[(void *)0x5].inclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x5].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x5].max_reentrance == 0);
+				Assert::IsTrue(statistics[(void *)0x5].max_call_time == 0);
+				Assert::IsTrue(statistics[(void *)0x11].inclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x11].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x11].max_reentrance == 0);
+				Assert::IsTrue(statistics[(void *)0x11].max_call_time == 0);
 			}
 		};
 	}

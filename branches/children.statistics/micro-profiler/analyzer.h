@@ -27,6 +27,7 @@
 
 namespace micro_profiler
 {
+	template <typename OutputMapType>
 	class shadow_stack
 	{
 		struct call_record_ex;
@@ -41,24 +42,26 @@ namespace micro_profiler
 	public:
 		shadow_stack(__int64 profiler_latency = 0);
 
-		template <typename ForwardConstIterator, typename OutputMap>
-		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMap &statistics);
+		template <typename ForwardConstIterator>
+		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMapType &statistics);
 	};
 
 
-	struct shadow_stack::call_record_ex : call_record
+	template <typename OutputMapType>
+	struct shadow_stack<OutputMapType>::call_record_ex : call_record
 	{
-		call_record_ex(const call_record &from, int &level);
+		call_record_ex(const call_record &from, int &level, typename OutputMapType::mapped_type *entry);
 		call_record_ex(const call_record_ex &other);
 
 		__int64 child_time;
 		int *level;
+		typename OutputMapType::mapped_type *entry;
 	};
 
 
 	class analyzer : public calls_collector::acceptor
 	{
-		typedef stdext::hash_map<unsigned int /*threadid*/, shadow_stack> stacks_container;
+		typedef stdext::hash_map< unsigned int /*threadid*/, shadow_stack<detailed_statistics_map> > stacks_container;
 
 		const __int64 _profiler_latency;
 		detailed_statistics_map _statistics;
@@ -81,16 +84,20 @@ namespace micro_profiler
 
 
 	// shadow_stack - inline definitions
-	inline shadow_stack::shadow_stack(__int64 profiler_latency)
+	template <typename OutputMapType>
+	inline shadow_stack<OutputMapType>::shadow_stack(__int64 profiler_latency)
 		: _profiler_latency(profiler_latency)
 	{	}
 
-	template <typename ForwardConstIterator, typename OutputMap>
-	inline void shadow_stack::update(ForwardConstIterator i, ForwardConstIterator end, OutputMap &statistics)
+	template <typename OutputMapType>
+	template <typename ForwardConstIterator>
+	inline void shadow_stack<OutputMapType>::update(ForwardConstIterator i, ForwardConstIterator end, OutputMapType &statistics)
 	{
+		for (std::vector<call_record_ex>::iterator j = _stack.begin(); j != _stack.end(); ++j)
+			j->entry = &statistics[j->callee];
 		for (; i != end; ++i)
 			if (i->callee)
-				_stack.push_back(call_record_ex(*i, ++_entrance_counter[i->callee]));
+				_stack.push_back(call_record_ex(*i, ++_entrance_counter[i->callee], &statistics[i->callee]));
 			else
 			{
 				const call_record_ex &current = _stack.back();
@@ -100,26 +107,29 @@ namespace micro_profiler
 				__int64 inclusive_time = inclusive_time_observed - _profiler_latency;
 				__int64 exclusive_time = inclusive_time - current.child_time;
 
-				statistics[callee].add_call(level, inclusive_time, exclusive_time);
+				current.entry->add_call(level, inclusive_time, exclusive_time);
 				_stack.pop_back();
 				if (!_stack.empty())
 				{
 					call_record_ex &parent = _stack.back();
 
 					parent.child_time += inclusive_time_observed + _profiler_latency;
-					add_child_statistics(statistics[parent.callee], callee, 0, inclusive_time, exclusive_time);
+					add_child_statistics(*parent.entry, callee, 0, inclusive_time, exclusive_time);
 				}
 			}
 	}
 
 
 	// shadow_stack::call_record_ex - inline definitions
-	inline shadow_stack::call_record_ex::call_record_ex(const call_record &from, int &level_)
-		: call_record(from), child_time(0), level(&level_)
+	template <typename OutputMapType>
+	inline shadow_stack<OutputMapType>::call_record_ex::call_record_ex(const call_record &from, int &level_,
+		typename OutputMapType::mapped_type *entry_)
+		: call_record(from), child_time(0), level(&level_), entry(entry_)
 	{	}
 
-	inline shadow_stack::call_record_ex::call_record_ex(const call_record_ex &other)
-		: call_record(other), child_time(other.child_time), level(other.level)
+	template <typename OutputMapType>
+	inline shadow_stack<OutputMapType>::call_record_ex::call_record_ex(const call_record_ex &other)
+		: call_record(other), child_time(other.child_time), level(other.level), entry(other.entry)
 	{	}
 
 
@@ -142,7 +152,7 @@ namespace micro_profiler
 		stacks_container::iterator i = _stacks.find(threadid);
 
 		if (i == _stacks.end())
-			i = _stacks.insert(std::make_pair(threadid, shadow_stack(_profiler_latency))).first;
+			i = _stacks.insert(std::make_pair(threadid, shadow_stack<detailed_statistics_map>(_profiler_latency))).first;
 		i->second.update(calls, calls + count, _statistics);
 	}
 }

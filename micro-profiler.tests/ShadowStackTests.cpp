@@ -13,6 +13,16 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		struct function_statistics_guarded : function_statistics
+		{
+			function_statistics_guarded(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0, __int64 max_call_time = 0)
+				: function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time)
+			{	}
+			
+			virtual void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
+			{	function_statistics::add_call(level, inclusive_time, exclusive_time);	}
+		};
+
 		[TestClass]
 		public ref class ShadowStackTests
 		{
@@ -847,67 +857,69 @@ namespace micro_profiler
 			void RepeatedCollectionWithNonEmptyStoredStackRestoresStacksEntries()
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss1, ss2;
-				map<const void *, function_statistics> statistics;
+				typedef hash_map<const void *, function_statistics_guarded> smap;
+				
+				shadow_stack<smap> ss1, ss2;
+				smap statistics;
 				call_record trace1[] = {
 					{	(void *)0x1, 1	},
 						{	(void *)0x2, 2	},
 							{	(void *)0x3, 4	},
-								{	(void *)0x7, 4	},
-									{	(void *)0x2, 14	},
+								{	(void *)0x2, 4	},
+									{	(void *)0x7, 14	},
+				};
+				call_record trace1_exits[] = {
+									{	(void *)0, 15	},
+								{	(void *)0, 16	},
+							{	(void *)0, 17	},
+						{	(void *)0, 18	},
+					{	(void *)0, 19	},
 				};
 				call_record trace2[] = {
-					{	(void *)0x1, 1	},
-						{	(void *)0x5, 2	},
-							{	(void *)0x11, 4	},
+					{	(void *)0x5, 2	},
+						{	(void *)0x11, 4	},
+							{	(void *)0x13, 5	},
+							{	(void *)0, 5	},
+							{	(void *)0x13, 5	},
+							{	(void *)0, 6	},
+							{	(void *)0x13, 6	},
+							{	(void *)0, 9	},
+				};
+				call_record trace2_exits[] = {
+						{	(void *)0, 9	},
+					{	(void *)0, 13	},
 				};
 
 				ss1.update(trace1, end(trace1), statistics);
 				ss2.update(trace2, end(trace2), statistics);
 				statistics.clear();
 
-				// ACT
-				ss1.update(end(trace1), end(trace1), statistics);	// trace is empty, but statistics must be restored anyway
+				// ACT / ASSERT (must not throw)
+				ss1.update(trace1_exits, end(trace1_exits), statistics);
 
-				// ASSERT
+				// ASSERT (lite assertion - only check call times/recursion)
 				Assert::IsTrue(4 == statistics.size());
-				Assert::IsTrue(statistics[(void *)0x1].inclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x1].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x1].times_called == 1);
 				Assert::IsTrue(statistics[(void *)0x1].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x1].max_call_time == 0);
-				Assert::IsTrue(statistics[(void *)0x2].inclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x2].exclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x2].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x2].max_call_time == 0);
-				Assert::IsTrue(statistics[(void *)0x3].inclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x3].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x2].times_called == 2);
+				Assert::IsTrue(statistics[(void *)0x2].max_reentrance == 1);
+				Assert::IsTrue(statistics[(void *)0x3].times_called == 1);
 				Assert::IsTrue(statistics[(void *)0x3].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x3].max_call_time == 0);
-				Assert::IsTrue(statistics[(void *)0x7].inclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x7].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x7].times_called == 1);
 				Assert::IsTrue(statistics[(void *)0x7].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x7].max_call_time == 0);
 
 				// INIT
 				statistics.clear();
 
 				// ACT
-				ss2.update(end(trace2), end(trace2), statistics);	// trace is empty, but statistics must be restored anyway
+				ss2.update(trace2_exits, end(trace2_exits), statistics);
 
 				// ASSERT
-				Assert::IsTrue(3 == statistics.size());
-				Assert::IsTrue(statistics[(void *)0x1].inclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x1].exclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x1].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x1].max_call_time == 0);
-				Assert::IsTrue(statistics[(void *)0x5].inclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x5].exclusive_time == 0);
+				Assert::IsTrue(2 == statistics.size());
+				Assert::IsTrue(statistics[(void *)0x5].times_called == 1);
 				Assert::IsTrue(statistics[(void *)0x5].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x5].max_call_time == 0);
-				Assert::IsTrue(statistics[(void *)0x11].inclusive_time == 0);
-				Assert::IsTrue(statistics[(void *)0x11].exclusive_time == 0);
+				Assert::IsTrue(statistics[(void *)0x11].times_called == 1);
 				Assert::IsTrue(statistics[(void *)0x11].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x11].max_call_time == 0);
 			}
 		};
 	}

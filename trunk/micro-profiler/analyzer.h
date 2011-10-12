@@ -39,6 +39,8 @@ namespace micro_profiler
 
 		const shadow_stack &operator =(const shadow_stack &rhs);
 
+		void restore_state(OutputMapType &statistics);
+
 	public:
 		shadow_stack(__int64 profiler_latency = 0);
 
@@ -90,11 +92,17 @@ namespace micro_profiler
 	{	}
 
 	template <typename OutputMapType>
+	inline void shadow_stack<OutputMapType>::restore_state(OutputMapType &statistics)
+	{
+		for (std::vector<call_record_ex>::iterator i = _stack.begin(); i != _stack.end(); ++i)
+			i->entry = &statistics[i->callee];
+	}
+
+	template <typename OutputMapType>
 	template <typename ForwardConstIterator>
 	inline void shadow_stack<OutputMapType>::update(ForwardConstIterator i, ForwardConstIterator end, OutputMapType &statistics)
 	{
-		for (std::vector<call_record_ex>::iterator j = _stack.begin(); j != _stack.end(); ++j)
-			j->entry = &statistics[j->callee];
+		restore_state(statistics);
 		for (; i != end; ++i)
 			if (i->callee)
 				_stack.push_back(call_record_ex(*i, ++_entrance_counter[i->callee], &statistics[i->callee]));

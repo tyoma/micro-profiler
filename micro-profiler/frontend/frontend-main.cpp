@@ -55,22 +55,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 }
 
 STDAPI DllRegisterServer()
-{
-	HRESULT hr = _AtlModule.DllRegisterServer(FALSE);
-
-	if (FAILED(hr))
-		return hr;
-	return PrxDllRegisterServer();
-}
+{	return _AtlModule.DllRegisterServer(FALSE);	}
 
 STDAPI DllUnregisterServer()
-{
-	HRESULT hr = _AtlModule.DllUnregisterServer(FALSE);
-
-	if (FAILED(hr))
-		return hr;
-	hr = PrxDllRegisterServer();
-	if (FAILED(hr))
-		return hr;
-	return PrxDllUnregisterServer();
-}
+{	return _AtlModule.DllUnregisterServer(FALSE);	}

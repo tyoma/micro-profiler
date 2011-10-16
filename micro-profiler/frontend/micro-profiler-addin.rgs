@@ -50,7 +50,7 @@ HKCU
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
 							val AboutBoxDetails = s 'For customer support, please email to: tyoma@yandex.ru\r\nCopyright (c) 2011 Artem Gevorkyan'
-							val AboutBoxIcon = s '%MODULE%,1'
+							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}
 				}
@@ -66,7 +66,7 @@ HKCU
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
 							val AboutBoxDetails = s 'For customer support, please email to: tyoma@yandex.ru\r\nCopyright (c) 2011 Artem Gevorkyan'
-							val AboutBoxIcon = s '%MODULE%,1'
+							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}
 				}
@@ -82,7 +82,7 @@ HKCU
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
 							val AboutBoxDetails = s 'For customer support, please email to: tyoma@yandex.ru\r\nCopyright (c) 2011 Artem Gevorkyan'
-							val AboutBoxIcon = s '%MODULE%,1'
+							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}
 				}

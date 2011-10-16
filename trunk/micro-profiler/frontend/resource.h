@@ -7,10 +7,8 @@
 #define IDR_PROFILERADDIN				103
 #define IDD_PROFILER_MAIN               201
 #define IDC_PROCESS_SELECTOR            201
-#define IDI_ICON1                       202
 #define IDI_APPMAIN                     202
 #define IDC_FUNCTIONS_STATISTICS        203
-#define IDC_BUTTON1                     204
 #define IDC_BTN_CLEAR                   204
 #define IDC_BTN_COPY_ALL                205
 

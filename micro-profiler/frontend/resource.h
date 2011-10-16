@@ -4,6 +4,7 @@
 //
 #define IDS_PROJNAME                    100
 #define IDR_PROFILERSINK                102
+#define IDR_PROFILERADDIN				103
 #define IDD_PROFILER_MAIN               201
 #define IDC_PROCESS_SELECTOR            201
 #define IDI_ICON1                       202

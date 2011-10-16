@@ -133,7 +133,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="frontend\frontend-main.cpp" />
-    <ClCompile Include="frontend\ProfilerAddin.cpp" />
+    <ClCompile Include="frontend\ProfilerAddin.cpp">
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
+      <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">

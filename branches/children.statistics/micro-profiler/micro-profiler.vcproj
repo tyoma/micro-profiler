@@ -50,10 +50,9 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Gy"
 				Optimization="0"
-				AdditionalIncludeDirectories="./../libraries"
+				AdditionalIncludeDirectories="./../libraries;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="1"
-				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
@@ -135,14 +134,12 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="./../libraries"
+				AdditionalIncludeDirectories="./../libraries;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
-				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"
-				AssemblerOutput="2"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
@@ -274,24 +271,16 @@
 			Name="frontend"
 			>
 			<File
+				RelativePath=".\frontend\Addin.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\ProfilerAddin.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\frontend\ProfilerMainDialog.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\frontend\ProfilerMainDialog.h"
@@ -300,22 +289,6 @@
 			<File
 				RelativePath=".\frontend\statistics.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\frontend\statistics.h"
@@ -326,6 +299,10 @@
 				>
 				<File
 					RelativePath=".\frontend\appicon.ico"
+					>
+				</File>
+				<File
+					RelativePath=".\frontend\micro-profiler-addin.rgs"
 					>
 				</File>
 				<File

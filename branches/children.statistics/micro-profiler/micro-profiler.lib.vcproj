@@ -132,7 +132,6 @@
 				EnableEnhancedInstructionSet="2"
 				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"
-				AssemblerOutput="2"
 				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>

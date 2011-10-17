@@ -154,7 +154,8 @@ END
 // REGISTRY
 //
 
-IDR_PROFILERSINK        REGISTRY                "micro-profiler-sink.rgs"
+IDR_PROFILERSINK			REGISTRY                "micro-profiler-sink.rgs"
+IDR_PROFILERADDIN		REGISTRY                "micro-profiler-addin.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //

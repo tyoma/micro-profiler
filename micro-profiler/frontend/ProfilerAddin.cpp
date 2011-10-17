@@ -1,29 +1,33 @@
-#include "ProfilerAddin.h"
+#include "Addin.h"
+#include "resource.h"
 
-STDMETHODIMP ProfilerAddin::OnConnection(IDispatch *dte, ext_ConnectMode ConnectMode, IDispatch *pAddInInst, SAFEARRAY ** /*custom*/ )
+#pragma warning(disable: 4278)
+#pragma warning(disable: 4146)
+	//The following #import imports DTE
+	#import <dte80a.olb> named_guids
+
+	//The following #import imports DTE80
+	#import <dte80.olb> named_guids
+#pragma warning(default: 4146)
+#pragma warning(default: 4278)
+
+class __declspec(uuid("B36A1712-EF9F-4960-9B33-838BFCC70683")) ProfilerAddin
 {
-	try
-	{
-//		_application.reset(new application(IDispatchPtr(dte, true)));
-		return S_OK;
-	}
-	catch (...)
-	{
-		return E_FAIL;
-	}
+	EnvDTE::_DTEPtr _dte;
+
+public:
+	ProfilerAddin(EnvDTE::_DTEPtr dte);
+	virtual ~ProfilerAddin();
+};
+
+typedef AddinImpl<ProfilerAddin, &__uuidof(ProfilerAddin), IDR_PROFILERADDIN> ProfilerAddinImpl;
+
+OBJECT_ENTRY_AUTO(__uuidof(ProfilerAddin), ProfilerAddinImpl)
+
+ProfilerAddin::ProfilerAddin(EnvDTE::_DTEPtr dte)
+{
 }
 
-STDMETHODIMP ProfilerAddin::OnDisconnection(ext_DisconnectMode /*RemoveMode*/, SAFEARRAY ** /*custom*/ )
+ProfilerAddin::~ProfilerAddin()
 {
-//	_application.reset();
-	return S_OK;
 }
-
-STDMETHODIMP ProfilerAddin::OnAddInsUpdate (SAFEARRAY ** /*custom*/ )
-{	return S_OK;	}
-
-STDMETHODIMP ProfilerAddin::OnStartupComplete (SAFEARRAY ** /*custom*/ )
-{	return S_OK;	}
-
-STDMETHODIMP ProfilerAddin::OnBeginShutdown (SAFEARRAY ** /*custom*/ )
-{	return S_OK;	}

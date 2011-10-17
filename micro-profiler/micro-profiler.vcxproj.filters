@@ -37,7 +37,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="frontend\ProfilerAddin.h">
+    <ClInclude Include="frontend\Addin.h">
       <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,6 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="frontend\frontend-main.cpp" />
+    <ClCompile Include="frontend\ProfilerAddin.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
     <ClCompile Include="frontend\ProfilerMainDialog.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
@@ -15,6 +18,9 @@
       <Filter>frontend\resources</Filter>
     </None>
     <None Include="frontend\micro-profiler-sink.rgs">
+      <Filter>frontend\resources</Filter>
+    </None>
+    <None Include="frontend\micro-profiler-addin.rgs">
       <Filter>frontend\resources</Filter>
     </None>
   </ItemGroup>
@@ -37,6 +43,9 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="frontend\Addin.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
     <ClInclude Include="frontend\ProfilerMainDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>

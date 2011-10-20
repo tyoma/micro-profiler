@@ -3,6 +3,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <memory>
+#include <string>
 
 #pragma warning(disable: 4278)
 #pragma warning(disable: 4146)
@@ -81,23 +82,27 @@ inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_O
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
 inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_QueryStatus(BSTR command, EnvDTE::vsCommandStatusTextWanted textNeeded, EnvDTE::vsCommandStatus *status, VARIANT *commandText)
 {
-	command;
-	textNeeded;
-	status;
-	commandText;
+	std::wstring text;
 
-	*status = (vsCommandStatus)(vsCommandStatusEnabled+vsCommandStatusSupported);
+	*status = _application->query_status(std::wstring(command), textNeeded == vsCommandStatusTextWantedName ? &text : 0, textNeeded == vsCommandStatusTextWantedStatus ? &text : 0);
+	if (textNeeded != vsCommandStatusTextWantedNone)
+		CComVariant(text.c_str()).Detach(commandText);
 	return S_OK;
+	*status = (vsCommandStatus)(vsCommandStatusEnabled+vsCommandStatusSupported);
 }
 
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
 inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_Exec(BSTR command, EnvDTE::vsCommandExecOption executeOption, VARIANT *input, VARIANT *output, VARIANT_BOOL *handled)
 {
-	command;
-	executeOption;
-	input;
-	output;
-	handled;
-
-	return S_OK;
+	try
+	{
+		_application->execute(std::wstring(command), input, output);
+		*handled = VARIANT_TRUE;
+		return S_OK;
+	}
+	catch (...)
+	{
+		*handled = VARIANT_FALSE;
+		return E_FAIL;
+	}
 }

@@ -12,6 +12,7 @@
 #pragma warning(default: 4278)
 
 using namespace EnvDTE;
+using namespace std;
 
 class __declspec(uuid("B36A1712-EF9F-4960-9B33-838BFCC70683")) ProfilerAddin
 {
@@ -20,6 +21,9 @@ class __declspec(uuid("B36A1712-EF9F-4960-9B33-838BFCC70683")) ProfilerAddin
 public:
 	ProfilerAddin(_DTEPtr dte);
 	virtual ~ProfilerAddin();
+
+	EnvDTE::vsCommandStatus query_status(const wstring &command, wstring *name, wstring *status) const;
+	void execute(const wstring &command, VARIANT *input, VARIANT *output);
 
 	static void initialize(_DTEPtr dte, AddInPtr addin);
 };
@@ -36,6 +40,16 @@ ProfilerAddin::ProfilerAddin(_DTEPtr dte)
 ProfilerAddin::~ProfilerAddin()
 {
 }
+
+EnvDTE::vsCommandStatus ProfilerAddin::query_status(const wstring &command, wstring *name, wstring *status) const
+{
+	return EnvDTE::vsCommandStatus(EnvDTE::vsCommandStatusSupported | EnvDTE::vsCommandStatusEnabled);
+}
+
+void ProfilerAddin::execute(const wstring &command, VARIANT *input, VARIANT *output)
+{
+}
+
 
 template <typename CommandBarPtrT, typename CommandBarButtonPtrT, typename CommandBarsPtrT, int commands_count>
 void setup_menu(CommandBarsPtrT commandbars, CommandPtr (&new_commands)[commands_count])

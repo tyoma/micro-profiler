@@ -6,7 +6,8 @@
 
 #pragma warning(disable: 4278)
 #pragma warning(disable: 4146)
-	#import <MSADDNDR.DLL> raw_interfaces_only named_guids	//The following #import imports the IDTExtensibility2 interface
+	#import <MSADDNDR.DLL>	//The following #import imports the IDTExtensibility2 interface
+	#import <dte80a.olb> no_implementation
 #pragma warning(default: 4146)
 #pragma warning(default: 4278)
 
@@ -14,7 +15,8 @@ template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
 class ATL_NO_VTABLE AddinImpl
 	: public CComObjectRootEx<CComSingleThreadModel>,
 		public CComCoClass<AddinImpl<AddinAppClass, ClassID, RegistryResourceID>, ClassID>,
-		public IDispatchImpl<AddInDesignerObjects::IDTExtensibility2, &AddInDesignerObjects::IID__IDTExtensibility2, &AddInDesignerObjects::LIBID_AddInDesignerObjects, 1, 0>
+		public IDispatchImpl<AddInDesignerObjects::IDTExtensibility2, &__uuidof(AddInDesignerObjects::IDTExtensibility2), &__uuidof(AddInDesignerObjects::__AddInDesignerObjects), 1, 0>,
+		public IDispatchImpl<EnvDTE::IDTCommandTarget, &__uuidof(EnvDTE::IDTCommandTarget), &__uuidof(EnvDTE::__EnvDTE), 7, 0>
 {
 	std::auto_ptr<AddinAppClass> _application;
 
@@ -23,25 +25,32 @@ public:
 	DECLARE_NOT_AGGREGATABLE(AddinImpl)
 
 	BEGIN_COM_MAP(AddinImpl)
-		COM_INTERFACE_ENTRY(IDispatch)
+		COM_INTERFACE_ENTRY2(IDispatch, AddInDesignerObjects::IDTExtensibility2)
 		COM_INTERFACE_ENTRY(AddInDesignerObjects::IDTExtensibility2)
+		COM_INTERFACE_ENTRY(EnvDTE::IDTCommandTarget)
 	END_COM_MAP()
 
 protected:
-	STDMETHODIMP OnConnection(IDispatch *host, AddInDesignerObjects::ext_ConnectMode connectMode, IDispatch *instance, SAFEARRAY **custom);
-	STDMETHODIMP OnDisconnection(AddInDesignerObjects::ext_DisconnectMode removeMode, SAFEARRAY **custom);
-	STDMETHODIMP OnAddInsUpdate(SAFEARRAY **custom);
-	STDMETHODIMP OnStartupComplete(SAFEARRAY **custom);
-	STDMETHODIMP OnBeginShutdown(SAFEARRAY **custom);
+	STDMETHODIMP raw_OnConnection(IDispatch *host, AddInDesignerObjects::ext_ConnectMode connectMode, IDispatch *instance, SAFEARRAY **custom);
+	STDMETHODIMP raw_OnDisconnection(AddInDesignerObjects::ext_DisconnectMode removeMode, SAFEARRAY **custom);
+	STDMETHODIMP raw_OnAddInsUpdate(SAFEARRAY **custom);
+	STDMETHODIMP raw_OnStartupComplete(SAFEARRAY **custom);
+	STDMETHODIMP raw_OnBeginShutdown(SAFEARRAY **custom);
+
+	STDMETHODIMP raw_QueryStatus(BSTR CmdName, EnvDTE::vsCommandStatusTextWanted NeededText, EnvDTE::vsCommandStatus *StatusOption, VARIANT *CommandText);
+	STDMETHODIMP raw_Exec(BSTR CmdName, EnvDTE::vsCommandExecOption ExecuteOption, VARIANT *VariantIn, VARIANT *VariantOut, VARIANT_BOOL *Handled);
 };
 
 
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
-inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::OnConnection(IDispatch *host, AddInDesignerObjects::ext_ConnectMode /*connectMode*/, IDispatch * /*instance*/, SAFEARRAY ** /*custom*/)
+inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_OnConnection(IDispatch *host, AddInDesignerObjects::ext_ConnectMode connectMode, IDispatch *addin, SAFEARRAY ** /*custom*/)
 {
 	try
 	{
-		_application.reset(new AddinAppClass(IDispatchPtr(host, true)));
+		if (5 /*ext_cm_UISetup*/ == connectMode)
+			AddinAppClass::initialize(IDispatchPtr(host, true), IDispatchPtr(addin, true));
+		else
+			_application.reset(new AddinAppClass(IDispatchPtr(host, true)));
 		return S_OK;
 	}
 	catch (...)
@@ -51,20 +60,44 @@ inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::OnCon
 }
 
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
-inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::OnDisconnection(AddInDesignerObjects::ext_DisconnectMode /*disconnectMode*/, SAFEARRAY ** /*custom*/)
+inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_OnDisconnection(AddInDesignerObjects::ext_DisconnectMode /*disconnectMode*/, SAFEARRAY ** /*custom*/)
 {
 	_application.reset();
 	return S_OK;
 }
 
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
-inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::OnAddInsUpdate (SAFEARRAY ** /*custom*/)
+inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_OnAddInsUpdate(SAFEARRAY ** /*custom*/)
 {	return S_OK;	}
 
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
-inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::OnStartupComplete (SAFEARRAY ** /*custom*/)
+inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_OnStartupComplete(SAFEARRAY ** /*custom*/)
 {	return S_OK;	}
 
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
-inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::OnBeginShutdown (SAFEARRAY ** /*custom*/)
+inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_OnBeginShutdown(SAFEARRAY ** /*custom*/)
 {	return S_OK;	}
+
+template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
+inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_QueryStatus(BSTR command, EnvDTE::vsCommandStatusTextWanted textNeeded, EnvDTE::vsCommandStatus *status, VARIANT *commandText)
+{
+	command;
+	textNeeded;
+	status;
+	commandText;
+
+	*status = (vsCommandStatus)(vsCommandStatusEnabled+vsCommandStatusSupported);
+	return S_OK;
+}
+
+template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
+inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_Exec(BSTR command, EnvDTE::vsCommandExecOption executeOption, VARIANT *input, VARIANT *output, VARIANT_BOOL *handled)
+{
+	command;
+	executeOption;
+	input;
+	output;
+	handled;
+
+	return S_OK;
+}

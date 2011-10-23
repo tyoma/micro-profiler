@@ -7,7 +7,7 @@
 
 #pragma warning(disable: 4278)
 #pragma warning(disable: 4146)
-	#import <MSADDNDR.DLL>	//The following #import imports the IDTExtensibility2 interface
+	#import <MSADDNDR.DLL> no_implementation
 	#import <dte80a.olb> no_implementation
 #pragma warning(default: 4146)
 #pragma warning(default: 4278)
@@ -50,8 +50,7 @@ inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_O
 	{
 		if (5 /*ext_cm_UISetup*/ == connectMode)
 			AddinAppClass::initialize(IDispatchPtr(host, true), IDispatchPtr(addin, true));
-		else
-			_application.reset(new AddinAppClass(IDispatchPtr(host, true)));
+		_application.reset(new AddinAppClass(IDispatchPtr(host, true)));
 		return S_OK;
 	}
 	catch (...)
@@ -85,10 +84,9 @@ inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_Q
 	std::wstring text;
 
 	*status = _application->query_status(std::wstring(command), textNeeded == vsCommandStatusTextWantedName ? &text : 0, textNeeded == vsCommandStatusTextWantedStatus ? &text : 0);
-	if (textNeeded != vsCommandStatusTextWantedNone)
+	if (textNeeded != vsCommandStatusTextWantedNone && !text.empty())
 		CComVariant(text.c_str()).Detach(commandText);
 	return S_OK;
-	*status = (vsCommandStatus)(vsCommandStatusEnabled+vsCommandStatusSupported);
 }
 
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>

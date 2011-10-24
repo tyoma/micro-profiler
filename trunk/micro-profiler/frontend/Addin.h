@@ -81,11 +81,14 @@ inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_O
 template <class AddinAppClass, const CLSID *ClassID, int RegistryResourceID>
 inline STDMETHODIMP AddinImpl<AddinAppClass, ClassID, RegistryResourceID>::raw_QueryStatus(BSTR command, EnvDTE::vsCommandStatusTextWanted textNeeded, EnvDTE::vsCommandStatus *status, VARIANT *commandText)
 {
-	std::wstring text;
+	if (_application.get())
+	{
+		std::wstring text;
 
-	*status = _application->query_status(std::wstring(command), textNeeded == vsCommandStatusTextWantedName ? &text : 0, textNeeded == vsCommandStatusTextWantedStatus ? &text : 0);
-	if (textNeeded != vsCommandStatusTextWantedNone && !text.empty())
-		CComVariant(text.c_str()).Detach(commandText);
+		*status = _application->query_status(std::wstring(command), textNeeded == vsCommandStatusTextWantedName ? &text : 0, textNeeded == vsCommandStatusTextWantedStatus ? &text : 0);
+		if (textNeeded != vsCommandStatusTextWantedNone && !text.empty())
+			CComVariant(text.c_str()).Detach(commandText);
+	}
 	return S_OK;
 }
 

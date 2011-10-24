@@ -48,7 +48,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Gy"
 				Optimization="0"
 				AdditionalIncludeDirectories="./../libraries"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"

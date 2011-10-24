@@ -48,7 +48,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Gy"
 				Optimization="0"
 				AdditionalIncludeDirectories="./../libraries;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"

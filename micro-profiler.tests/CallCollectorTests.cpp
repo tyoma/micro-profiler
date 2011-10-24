@@ -84,6 +84,7 @@ namespace micro_profiler
 			collection_acceptor a;
 
 			calls_collector::instance()->read_collected(a);
+			calls_collector::instance()->read_collected(a);
 		}
 
 		[TestClass]

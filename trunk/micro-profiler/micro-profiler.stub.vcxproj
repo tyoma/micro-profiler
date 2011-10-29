@@ -25,6 +25,7 @@
     <None Include="micro-profiler.ps.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <ProjectGuid>{3B1F8640-9F9A-4989-A074-73590A82A26C}</ProjectGuid>
     <RootNamespace>microprofiler</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>

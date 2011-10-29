@@ -28,6 +28,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.stub", "micro-profiler\micro-profiler.stub.vcxproj", "{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "easy-addin.tests", "libraries\easy-addin\tests\easy-addin.tests.vcxproj", "{DAEA48FC-5783-F42F-0E77-5ED96E873513}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -77,6 +79,10 @@ Global
 		{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}.Debug|Win32.Build.0 = Debug|Win32
 		{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}.Release|Win32.ActiveCfg = Release|Win32
 		{8AE2C9D1-17CC-A87D-1C28-AD7CF023F5EA}.Release|Win32.Build.0 = Release|Win32
+		{DAEA48FC-5783-F42F-0E77-5ED96E873513}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DAEA48FC-5783-F42F-0E77-5ED96E873513}.Debug|Win32.Build.0 = Debug|Win32
+		{DAEA48FC-5783-F42F-0E77-5ED96E873513}.Release|Win32.ActiveCfg = Release|Win32
+		{DAEA48FC-5783-F42F-0E77-5ED96E873513}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

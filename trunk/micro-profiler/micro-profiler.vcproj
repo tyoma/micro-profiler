@@ -270,10 +270,6 @@
 			Name="frontend"
 			>
 			<File
-				RelativePath=".\frontend\Addin.h"
-				>
-			</File>
-			<File
 				RelativePath=".\frontend\ProfilerAddin.cpp"
 				>
 			</File>

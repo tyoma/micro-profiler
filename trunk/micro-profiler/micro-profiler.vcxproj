@@ -160,9 +160,6 @@
   <ItemGroup>
     <ResourceCompile Include="frontend\micro-profiler-frontend.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="frontend\Addin.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

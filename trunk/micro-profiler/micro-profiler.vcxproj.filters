@@ -36,9 +36,4 @@
       <Filter>frontend\resources</Filter>
     </ResourceCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="frontend\Addin.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-  </ItemGroup>
 </Project>

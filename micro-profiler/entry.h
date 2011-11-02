@@ -22,6 +22,8 @@
 
 #include <memory>
 
+#pragma pack(push, 8)
+
 struct IProfilerFrontend;
 
 namespace wpl
@@ -57,3 +59,5 @@ namespace micro_profiler
 		~profiler_frontend();
 	};
 }
+
+#pragma pack(pop)

@@ -5,6 +5,7 @@
     <ClCompile Include="frontend\ProfilerAddin.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="micro-profiler.initializer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="micro-profiler.ps.def" />

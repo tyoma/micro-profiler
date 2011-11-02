@@ -19,7 +19,7 @@ using namespace std;
 
 extern HINSTANCE g_instance;
 
-const CString c_initializer_cpp = _T("microprofiler_initializer.cpp");
+const CString c_initializer_cpp = _T("micro-profiler.initializer.cpp");
 const CString c_profiler_library = _T("micro-profiler.lib");
 const CString c_GH_option = _T("/GH");
 const CString c_Gh_option = _T("/Gh");
@@ -162,8 +162,12 @@ namespace
 			: command_base(L"RemoveProfilingSupport", L"Remove Profiling Support", L"", false)
 		{	}
 
-		virtual void execute(EnvDTE::_DTEPtr /*dte*/, VARIANT * /*input*/, VARIANT * /*output*/) const
+		virtual void execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
 		{
+			EnvDTE::SelectedItemsPtr selection(dte->SelectedItems);
+
+			for (long i = 1, count = selection->Count; i <= count; ++i)
+				ProfilerAddin::remove_support(selection->Item(i)->Project);
 		}
 	};
 

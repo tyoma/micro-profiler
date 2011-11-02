@@ -19,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
 			ConfigurationType="1"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -109,7 +109,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
 			ConfigurationType="1"
 			UseOfATL="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"

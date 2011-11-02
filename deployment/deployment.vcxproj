@@ -28,10 +28,7 @@
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <BuildLog>
-      <Path>
-      </Path>
-    </BuildLog>
+    <BuildLog />
     <PostBuildEvent>
       <Command>mkdir $(OutDir)
 del /q $(OutDir)*
@@ -40,9 +37,11 @@ copy $(IntDir)*.dll $(OutDir)
 copy $(IntDir)*.exe $(OutDir)
 copy $(IntDir)micro-profiler.lib $(OutDir)
 copy $(IntDir)playground.pdb $(OutDir)
-copy $(SolutionDir)\micro-profiler\entry.h $(OutDir)
+copy $(IntDir)entry.h $(OutDir)
+copy $(IntDir)micro-profiler.initializer.cpp $(OutDir)
 svn info $(SolutionDir) &gt; $(OutDir)version.txt
-mkzip "$(OutDir)\*" "$(SolutionDir)\micro-profiler.deploy..zip"</Command>
+mkzip "$(OutDir)\*" "$(SolutionDir)\micro-profiler.deploy..zip"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

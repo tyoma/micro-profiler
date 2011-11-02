@@ -19,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			CharacterSet="0"
@@ -48,7 +48,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Gy"
 				Optimization="0"
 				AdditionalIncludeDirectories="./../libraries;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;"
 				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
@@ -95,12 +94,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ProjectName)\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			CharacterSet="0"
@@ -181,6 +181,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -271,10 +272,6 @@
 			Name="frontend"
 			>
 			<File
-				RelativePath=".\frontend\Addin.h"
-				>
-			</File>
-			<File
 				RelativePath=".\frontend\ProfilerAddin.cpp"
 				>
 			</File>
@@ -336,6 +333,26 @@
 				<Tool
 					Name="VCCLCompilerTool"
 					DisableLanguageExtensions="false"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\micro-profiler.initializer.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
 				/>
 			</FileConfiguration>
 		</File>

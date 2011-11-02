@@ -11,6 +11,7 @@
     <ClCompile Include="frontend\statistics.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="micro-profiler.initializer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="micro-profiler.ps.def" />
@@ -43,9 +44,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="frontend\Addin.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
     <ClInclude Include="frontend\ProfilerMainDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>

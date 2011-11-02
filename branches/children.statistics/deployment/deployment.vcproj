@@ -18,12 +18,12 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\_deploy\"
-			IntermediateDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)\_bin\$(ConfigurationName)\"
 			ConfigurationType="10"
 			CharacterSet="2"
 			DeleteExtensionsOnClean=""
 			WholeProgramOptimization="1"
-			BuildLogFile=""
+			BuildLogFile="$(IntDir)\$(ProjectName).log"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -36,13 +36,17 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir $(OutDir)&#x0D;&#x0A;del /q $(OutDir)\*&#x0D;&#x0A;copy $(IntDir)\*.cmd $(OutDir)&#x0D;&#x0A;copy $(IntDir)\*.dll $(OutDir)&#x0D;&#x0A;copy $(IntDir)\*.exe $(OutDir)&#x0D;&#x0A;copy $(IntDir)\micro-profiler.lib $(OutDir)&#x0D;&#x0A;copy $(IntDir)\playground.pdb $(OutDir)&#x0D;&#x0A;copy $(SolutionDir)\micro-profiler\entry.h $(OutDir)&#x0D;&#x0A;svn info $(SolutionDir) &gt; $(OutDir)version.txt&#x0D;&#x0A;mkzip &quot;$(OutDir)\*&quot; &quot;$(SolutionDir)\micro-profiler.deploy..zip&quot;&#x0D;&#x0A;"
+				CommandLine="mkdir $(OutDir)&#x0D;&#x0A;del /q $(OutDir)*&#x0D;&#x0A;copy $(IntDir)*.cmd $(OutDir)&#x0D;&#x0A;copy $(IntDir)*.dll $(OutDir)&#x0D;&#x0A;copy $(IntDir)*.exe $(OutDir)&#x0D;&#x0A;copy $(IntDir)micro-profiler.lib $(OutDir)&#x0D;&#x0A;copy $(IntDir)playground.pdb $(OutDir)&#x0D;&#x0A;copy $(IntDir)entry.h $(OutDir)&#x0D;&#x0A;copy $(IntDir)micro-profiler.initializer.cpp $(OutDir)&#x0D;&#x0A;svn info $(SolutionDir) &gt; $(OutDir)version.txt&#x0D;&#x0A;mkzip &quot;$(OutDir)\*&quot; &quot;$(SolutionDir)\micro-profiler.deploy..zip&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 	</References>
 	<Files>
+		<File
+			RelativePath=".\micro-profiler.initializer.cpp"
+			>
+		</File>
 		<File
 			RelativePath=".\mkzip.cmd"
 			>

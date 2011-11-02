@@ -25,9 +25,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui.tests", "libraries\wpl\u
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base.tests", "libraries\wpl\base\tests\base.tests.vcproj", "{D5D8229B-9269-4165-BD5E-0DC5504E120B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler-stub", "micro-profiler\micro-profiler.stub.vcproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.stub", "micro-profiler\micro-profiler.stub.vcproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro-profiler\micro-profiler.lib.vcproj", "{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "easy-addin.tests", "libraries\easy-addin\tests\easy-addin.tests.vcproj", "{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,6 +80,10 @@ Global
 		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Debug|Win32.Build.0 = Debug|Win32
 		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Release|Win32.ActiveCfg = Release|Win32
 		{15AD9007-29B9-462F-B7BE-A433B6E83EC9}.Release|Win32.Build.0 = Release|Win32
+		{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}.Debug|Win32.Build.0 = Debug|Win32
+		{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}.Release|Win32.ActiveCfg = Release|Win32
+		{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

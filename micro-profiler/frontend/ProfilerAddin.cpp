@@ -55,8 +55,13 @@ namespace
 	protected:
 		command_base(const wstring &id, const wstring &caption, const wstring &description, bool group_start);
 
+		static bool library_copied(EnvDTE::ProjectPtr project);
+		static void copy_library(EnvDTE::ProjectPtr project);
+		static void remove_library(EnvDTE::ProjectPtr project);
+
 		static EnvDTE::ProjectItemPtr find_initializer(EnvDTE::ProjectItemsPtr items);
 		static IDispatchPtr get_tool(EnvDTE::ProjectPtr project, const wchar_t *tool_name);
+		static void disable_pch(EnvDTE::ProjectItemPtr item);
 
 		static bool has_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
 		static void enable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
@@ -179,6 +184,34 @@ namespace
 			add_menu_item<Office::CommandBarPtr, Office::_CommandBarButtonPtr>(cb, cmd);
 	}
 
+	bool command_base::library_copied(EnvDTE::ProjectPtr project)
+	{
+		CPath library(project->FileName);
+
+		library.RemoveFileSpec();
+		library.Append(c_profiler_library);
+		return !!library.FileExists();
+	}
+
+	void command_base::copy_library(EnvDTE::ProjectPtr project)
+	{
+		CPath source(get_profiler_directory()), target(project->FileName);
+
+		source.Append(c_profiler_library);
+		target.RemoveFileSpec();
+		target.Append(c_profiler_library);
+		::CopyFile(source, target, FALSE);
+	}
+
+	void command_base::remove_library(EnvDTE::ProjectPtr project)
+	{
+		CPath library(project->FileName);
+
+		library.RemoveFileSpec();
+		library.Append(c_profiler_library);
+		::DeleteFile(library);
+	}
+
 	EnvDTE::ProjectItemPtr command_base::find_initializer(EnvDTE::ProjectItemsPtr items)
 	{
 		CPath initializer_path(get_initializer_path());
@@ -214,6 +247,16 @@ namespace
 		return tools->Item(tool_name);
 	}
 
+	void command_base::disable_pch(EnvDTE::ProjectItemPtr item)
+	{
+		using namespace VCProjectEngineLibrary;
+
+		IVCCollectionPtr configurations(VCFilePtr(item->Object)->FileConfigurations);
+
+		for (long i = 1, count = configurations->Count; i <= count; ++i)
+			VCCLCompilerToolPtr(VCFileConfigurationPtr(configurations->Item(i))->Tool)->UsePrecompiledHeader = pchNone;
+	}
+
 	bool command_base::has_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler)
 	{
 		CString additionalOptions((LPCTSTR)compiler->AdditionalOptions);
@@ -223,28 +266,36 @@ namespace
 
 	void command_base::enable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler)
 	{
+		bool changed = false;
 		CString additionalOptions((LPCTSTR)compiler->AdditionalOptions);
 
 		if (-1 == additionalOptions.Find(c_GH_option))
-			additionalOptions += _T(" ") + c_GH_option;
+			additionalOptions += _T(" ") + c_GH_option, changed = true;
 		if (-1 == additionalOptions.Find(c_Gh_option))
-			additionalOptions += _T(" ") + c_Gh_option;
-		additionalOptions.Trim();
-		compiler->AdditionalOptions = (LPCTSTR)additionalOptions;
+			additionalOptions += _T(" ") + c_Gh_option, changed = true;
+		if (changed)
+		{
+			additionalOptions.Trim();
+			compiler->AdditionalOptions = (LPCTSTR)additionalOptions;
+		}
 	}
 
 	void command_base::disable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler)
 	{
+		bool changed = false;
 		CString additionalOptions((LPCTSTR)compiler->AdditionalOptions);
 
-		additionalOptions.Replace(_T(" ") + c_GH_option, _T(""));
-		additionalOptions.Replace(c_GH_option + _T(" "), _T(""));
-		additionalOptions.Replace(c_GH_option, _T(""));
-		additionalOptions.Replace(_T(" ") + c_Gh_option, _T(""));
-		additionalOptions.Replace(c_Gh_option + _T(" "), _T(""));
-		additionalOptions.Replace(c_Gh_option, _T(""));
-		additionalOptions.Trim();
-		compiler->AdditionalOptions = (LPCTSTR)additionalOptions;
+		changed = additionalOptions.Replace(_T(" ") + c_GH_option, _T("")) || changed;
+		changed = additionalOptions.Replace(c_GH_option + _T(" "), _T("")) || changed;
+		changed = additionalOptions.Replace(c_GH_option, _T("")) || changed;
+		changed = additionalOptions.Replace(_T(" ") + c_Gh_option, _T("")) || changed;
+		changed = additionalOptions.Replace(c_Gh_option + _T(" "), _T("")) || changed;
+		changed = additionalOptions.Replace(c_Gh_option, _T("")) || changed;
+		if (changed)
+		{
+			additionalOptions.Trim();
+			compiler->AdditionalOptions = (LPCTSTR)additionalOptions;
+		}
 	}
 
 
@@ -257,8 +308,9 @@ namespace
 		EnvDTE::ProjectPtr project(dte->SelectedItems->Item(1)->Project);
 		IDispatchPtr compiler(get_tool(project, L"VCCLCompilerTool"));
 
+		copy_library(project);
 		if (!find_initializer(project->ProjectItems))
-			project->ProjectItems->AddFromFile((LPCTSTR)get_initializer_path());
+			disable_pch(project->ProjectItems->AddFromFile((LPCTSTR)get_initializer_path()));
 		if (has_instrumentation(compiler))
 			disable_instrumentation(compiler);
 		else
@@ -274,7 +326,9 @@ namespace
 		{
 			EnvDTE::ProjectPtr project(selection->Item(1)->Project);
 
-			checked = has_instrumentation(get_tool(project, L"VCCLCompilerTool")) && find_initializer(project->ProjectItems);
+			checked = has_instrumentation(get_tool(project, L"VCCLCompilerTool"))
+				&& find_initializer(project->ProjectItems)
+				&& library_copied(project);
 			return true;
 		}
 		checked = false;
@@ -306,6 +360,7 @@ namespace
 
 		disable_instrumentation(get_tool(project, L"VCCLCompilerTool"));
 		find_initializer(project->ProjectItems)->Remove();
+		remove_library(project);
 	}
 
 	bool remove_support_command::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const

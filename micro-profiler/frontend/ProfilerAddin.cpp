@@ -26,6 +26,86 @@ const CString c_Gh_option = _T("/Gh");
 
 namespace
 {
+	class __declspec(uuid("B36A1712-EF9F-4960-9B33-838BFCC70683")) ProfilerAddin : public ea::command_target
+	{
+	public:
+		ProfilerAddin(EnvDTE::_DTEPtr dte);
+
+		virtual void get_commands(vector<ea::command_ptr> &commands) const;
+	};
+
+	typedef ea::addin<ProfilerAddin, &__uuidof(ProfilerAddin), IDR_PROFILERADDIN> ProfilerAddinImpl;
+	OBJECT_ENTRY_AUTO(__uuidof(ProfilerAddin), ProfilerAddinImpl);
+	
+
+	class command_base : public ea::command
+	{
+		bool _group_start;
+		wstring _id, _caption, _description;
+
+		virtual wstring id() const;
+		virtual wstring caption() const;
+		virtual wstring description() const;
+
+		template <typename CommandBarPtrT, typename CommandBarButtonPtrT, typename CommandBarsPtrT>
+		void add_menu_item(CommandBarsPtrT commandbars, EnvDTE::CommandPtr cmd) const;
+
+		virtual void update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr command_bars) const;
+
+	protected:
+		command_base(const wstring &id, const wstring &caption, const wstring &description, bool group_start);
+
+		static EnvDTE::ProjectItemPtr find_initializer(EnvDTE::ProjectItemsPtr items);
+		static IDispatchPtr get_tool(EnvDTE::ProjectPtr project, const wchar_t *tool_name);
+
+		static bool has_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
+		static void enable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
+		static void disable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
+	};
+
+
+	class toggle_instrumentation_command : public command_base
+	{
+	public:
+		toggle_instrumentation_command();
+
+		virtual void execute(EnvDTE::_DTEPtr dte, VARIANT *input, VARIANT *output) const;
+		virtual bool query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring *caption, wstring *description) const;
+	};
+
+
+	class reset_instrumentation_command : public command_base
+	{
+	public:
+		reset_instrumentation_command();
+
+		virtual void execute(EnvDTE::_DTEPtr dte, VARIANT *input, VARIANT *output) const;
+		virtual bool query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring *caption, wstring *description) const;
+	};
+
+
+	class remove_support_command : public command_base
+	{
+	public:
+		remove_support_command();
+
+		virtual void execute(EnvDTE::_DTEPtr dte, VARIANT *input, VARIANT *output) const;
+		virtual bool query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring *caption, wstring *description) const;
+	};
+
+
+
+	ProfilerAddin::ProfilerAddin(EnvDTE::_DTEPtr /*dte*/)
+	{	}
+
+	void ProfilerAddin::get_commands(vector<ea::command_ptr> &commands) const
+	{
+		commands.push_back(ea::command_ptr(new toggle_instrumentation_command));
+		commands.push_back(ea::command_ptr(new reset_instrumentation_command));
+		commands.push_back(ea::command_ptr(new remove_support_command));
+	}
+
+
 	CPath get_profiler_directory()
 	{
 		TCHAR image_directory[MAX_PATH + 1] = { 0 };
@@ -66,151 +146,37 @@ namespace
 		return equal;
 	}
 
-	class command_base : public ea::command
-	{
-		bool _group_start;
-		wstring _id, _caption, _description;
 
-		virtual wstring id() const
-		{	return _id;	}
-
-		virtual wstring caption() const
-		{	return _caption;	}
-
-		virtual wstring description() const
-		{	return _description;	}
-
-		template <typename CommandBarPtrT, typename CommandBarButtonPtrT, typename CommandBarsPtrT>
-		void add_menu_item(CommandBarsPtrT commandbars, EnvDTE::CommandPtr cmd) const
-		{
-			CommandBarPtrT targetCommandBar(commandbars->Item[L"Project"]);
-			long position = targetCommandBar->Controls->Count + 1;
-			CommandBarButtonPtrT item(cmd->AddControl(targetCommandBar, position));
-
-			if (_group_start)
-				item->BeginGroup = true;
-		}
-
-		virtual void update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr command_bars) const
-		{
-			if (Microsoft_VisualStudio_CommandBars::_CommandBarsPtr cb = command_bars)
-				add_menu_item<Microsoft_VisualStudio_CommandBars::CommandBarPtr, Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr>(cb, cmd);
-			else if (Office::_CommandBarsPtr cb = command_bars)
-				add_menu_item<Office::CommandBarPtr, Office::_CommandBarButtonPtr>(cb, cmd);
-		}
-
-	protected:
-		command_base(const wstring &id, const wstring &caption, const wstring &description, bool group_start)
-			: _id(id), _caption(caption), _description(description), _group_start(group_start)
-		{	}
-
-		static EnvDTE::ProjectItemPtr find_initializer(EnvDTE::ProjectItemsPtr items);
-		static IDispatchPtr get_tool(EnvDTE::ProjectPtr project, const wchar_t *tool_name);
-
-		static bool has_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
-		static void enable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
-		static void disable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
-	};
-
-	class __declspec(uuid("B36A1712-EF9F-4960-9B33-838BFCC70683")) ProfilerAddin : public ea::command_target
-	{
-	public:
-		ProfilerAddin(EnvDTE::_DTEPtr dte);
-
-		virtual void get_commands(vector<ea::command_ptr> &commands) const;
-	};
-
-	typedef ea::addin<ProfilerAddin, &__uuidof(ProfilerAddin), IDR_PROFILERADDIN> ProfilerAddinImpl;
-
-	OBJECT_ENTRY_AUTO(__uuidof(ProfilerAddin), ProfilerAddinImpl)
-
-	ProfilerAddin::ProfilerAddin(EnvDTE::_DTEPtr /*dte*/)
+	command_base::command_base(const wstring &id, const wstring &caption, const wstring &description, bool group_start)
+		: _id(id), _caption(caption), _description(description), _group_start(group_start)
 	{	}
 
-	class toggle_instrumentation_command : public command_base
+	wstring command_base::id() const
+	{	return _id;	}
+
+	wstring command_base::caption() const
+	{	return _caption;	}
+
+	wstring command_base::description() const
+	{	return _description;	}
+
+	template <typename CommandBarPtrT, typename CommandBarButtonPtrT, typename CommandBarsPtrT>
+	void command_base::add_menu_item(CommandBarsPtrT commandbars, EnvDTE::CommandPtr cmd) const
 	{
-	public:
-		toggle_instrumentation_command()
-			: command_base(L"ToggleInstrumentation", L"Enable Profiling", L"MircoProfiler: Enables/Disables Instrumentation for Profiled Execution", true)
-		{	}
+		CommandBarPtrT targetCommandBar(commandbars->Item[L"Project"]);
+		long position = targetCommandBar->Controls->Count + 1;
+		CommandBarButtonPtrT item(cmd->AddControl(targetCommandBar, position));
 
-		virtual void execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
-		{
-			EnvDTE::ProjectPtr project(dte->SelectedItems->Item(1)->Project);
-			IDispatchPtr compiler(get_tool(project, L"VCCLCompilerTool"));
+		if (_group_start)
+			item->BeginGroup = true;
+	}
 
-			if (!find_initializer(project->ProjectItems))
-				project->ProjectItems->AddFromFile((LPCTSTR)get_initializer_path());
-			if (has_instrumentation(compiler))
-				disable_instrumentation(compiler);
-			else
-				enable_instrumentation(compiler);
-		}
-
-		virtual bool query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
-		{
-			EnvDTE::SelectedItemsPtr selection(dte->SelectedItems);
-			long count = selection->Count;
-
-			if (count == 1)
-			{
-				EnvDTE::ProjectPtr project(selection->Item(1)->Project);
-
-				checked = has_instrumentation(get_tool(project, L"VCCLCompilerTool")) && find_initializer(project->ProjectItems);
-				return true;
-			}
-			checked = false;
-			return false;
-		}
-	};
-
-	class reset_instrumentation_command : public command_base
+	void command_base::update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr command_bars) const
 	{
-	public:
-		reset_instrumentation_command()
-			: command_base(L"ResetInstrumentation", L"Reset Instrumentation", L"", false)
-		{	}
-
-		virtual void execute(EnvDTE::_DTEPtr /*dte*/, VARIANT * /*input*/, VARIANT * /*output*/) const
-		{	}
-
-		virtual bool query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
-		{
-			checked = false;
-			return false;
-		}
-	};
-
-	class remove_support_command : public command_base
-	{
-	public:
-		remove_support_command()
-			: command_base(L"RemoveProfilingSupport", L"Remove Profiling Support", L"", false)
-		{	}
-
-		virtual void execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
-		{
-			EnvDTE::ProjectPtr project(dte->SelectedItems->Item(1)->Project);
-
-			disable_instrumentation(get_tool(project, L"VCCLCompilerTool"));
-			find_initializer(project->ProjectItems)->Remove();
-		}
-
-		virtual bool query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
-		{
-			EnvDTE::SelectedItemsPtr selection(dte->SelectedItems);
-			long count = selection->Count;
-
-			checked = false;
-			return count == 1 && find_initializer(selection->Item(1)->Project->ProjectItems);
-		}
-	};
-
-	void ProfilerAddin::get_commands(vector<ea::command_ptr> &commands) const
-	{
-		commands.push_back(ea::command_ptr(new toggle_instrumentation_command));
-		commands.push_back(ea::command_ptr(new reset_instrumentation_command));
-		commands.push_back(ea::command_ptr(new remove_support_command));
+		if (Microsoft_VisualStudio_CommandBars::_CommandBarsPtr cb = command_bars)
+			add_menu_item<Microsoft_VisualStudio_CommandBars::CommandBarPtr, Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr>(cb, cmd);
+		else if (Office::_CommandBarsPtr cb = command_bars)
+			add_menu_item<Office::CommandBarPtr, Office::_CommandBarButtonPtr>(cb, cmd);
 	}
 
 	EnvDTE::ProjectItemPtr command_base::find_initializer(EnvDTE::ProjectItemsPtr items)
@@ -221,8 +187,15 @@ namespace
 		{
 			EnvDTE::ProjectItemPtr item(items->Item(i));
 
-			if (item->FileCount == 1 && paths_are_equal(item->FileNames[1], initializer_path))
-				return item;
+			if (item->FileCount == 1)
+			{
+				_bstr_t file(item->FileNames[1]);
+				CPath filename((LPCTSTR)file);
+
+				filename.StripPath();
+				if (c_initializer_cpp.CompareNoCase(filename) == 0 && paths_are_equal(file, initializer_path))
+					return item;
+			}
 			if (item = find_initializer(item->ProjectItems))
 				return item;
 		}
@@ -272,5 +245,75 @@ namespace
 		additionalOptions.Replace(c_Gh_option, _T(""));
 		additionalOptions.Trim();
 		compiler->AdditionalOptions = (LPCTSTR)additionalOptions;
+	}
+
+
+	toggle_instrumentation_command::toggle_instrumentation_command()
+		: command_base(L"ToggleInstrumentation", L"Enable Profiling", L"MircoProfiler: Enables/Disables Instrumentation for Profiled Execution", true)
+	{	}
+
+	void toggle_instrumentation_command::execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
+	{
+		EnvDTE::ProjectPtr project(dte->SelectedItems->Item(1)->Project);
+		IDispatchPtr compiler(get_tool(project, L"VCCLCompilerTool"));
+
+		if (!find_initializer(project->ProjectItems))
+			project->ProjectItems->AddFromFile((LPCTSTR)get_initializer_path());
+		if (has_instrumentation(compiler))
+			disable_instrumentation(compiler);
+		else
+			enable_instrumentation(compiler);
+	}
+
+	bool toggle_instrumentation_command::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
+	{
+		EnvDTE::SelectedItemsPtr selection(dte->SelectedItems);
+		long count = selection->Count;
+
+		if (count == 1)
+		{
+			EnvDTE::ProjectPtr project(selection->Item(1)->Project);
+
+			checked = has_instrumentation(get_tool(project, L"VCCLCompilerTool")) && find_initializer(project->ProjectItems);
+			return true;
+		}
+		checked = false;
+		return false;
+	}
+
+
+	reset_instrumentation_command::reset_instrumentation_command()
+		: command_base(L"ResetInstrumentation", L"Reset Instrumentation", L"", false)
+	{	}
+
+	void reset_instrumentation_command::execute(EnvDTE::_DTEPtr /*dte*/, VARIANT * /*input*/, VARIANT * /*output*/) const
+	{	}
+
+	bool reset_instrumentation_command::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
+	{
+		checked = false;
+		return false;
+	}
+
+
+	remove_support_command::remove_support_command()
+		: command_base(L"RemoveProfilingSupport", L"Remove Profiling Support", L"", false)
+	{	}
+
+	void remove_support_command::execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
+	{
+		EnvDTE::ProjectPtr project(dte->SelectedItems->Item(1)->Project);
+
+		disable_instrumentation(get_tool(project, L"VCCLCompilerTool"));
+		find_initializer(project->ProjectItems)->Remove();
+	}
+
+	bool remove_support_command::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
+	{
+		EnvDTE::SelectedItemsPtr selection(dte->SelectedItems);
+		long count = selection->Count;
+
+		checked = false;
+		return count == 1 && find_initializer(selection->Item(1)->Project->ProjectItems);
 	}
 }

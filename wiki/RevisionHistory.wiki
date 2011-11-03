@@ -1,4 +1,10 @@
 #sidebar TableOfContents
+ * r353 (experimental)
+  * VisualStudio 9.0 SP (2008) integration implemented. It allows:
+   * Enable profiling on a project in one click (using context menu in solution explorer);
+   * Easy removal of all profiler traces from the project;
+  * Performance improvements in analysis part.
+
  * r265 (experimental)
   * Statistics of parent callers is now visible for the focused function. Also it is possible to drill-up by double-clicking the caller function.
 

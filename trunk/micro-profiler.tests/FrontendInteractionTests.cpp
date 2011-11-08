@@ -377,14 +377,14 @@ namespace micro_profiler
 			void ChildrenStatisticsIsPassedAlongWithTopLevels()
 			{
 				// INIT
-				profiler_frontend fe(&factory3);
-
 				fe_stop_call = reinterpret_cast<hyper>(&sleep_20);
 
 				// ACT
 				call_a();
 				call_b();
 				sleep_20();
+
+				profiler_frontend fe(&factory3);
 				fe_stat_updated.wait();
 
 				// ASSERT

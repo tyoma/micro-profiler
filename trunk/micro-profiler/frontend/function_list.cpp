@@ -25,6 +25,7 @@
 
 #include <utility>
 #include <cmath>
+#include <clocale>
 
 using namespace std;
 using namespace wpl::ui;
@@ -275,6 +276,9 @@ functions_list::index_type functions_list::get_index(const void *address) const
 
 void functions_list::print(wstring &content) const
 {
+	const char* old_locale = ::setlocale(LC_NUMERIC, NULL);  
+	bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;  
+
 	content.clear();
 	content.reserve(256 * (_view.size() + 1)); // kind of magic number
 	content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n";
@@ -290,4 +294,7 @@ void functions_list::print(wstring &content) const
 		content += functors::by_avg_inclusive_call_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
 		content += functors::by_max_reentrance()(row.first, row.second) + L"\r\n";
 	}
+	
+	if (locale_ok) 
+		::setlocale(LC_NUMERIC, old_locale);
 }

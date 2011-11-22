@@ -40,6 +40,8 @@ namespace
 			lhs.max_reentrance = rhs.MaxReentrance;
 		lhs.inclusive_time += rhs.InclusiveTime;
 		lhs.exclusive_time += rhs.ExclusiveTime;
+		if (static_cast<long long>(rhs.MaxCallTime) > lhs.max_call_time)
+			lhs.max_call_time = rhs.MaxCallTime;
 		return lhs;
 	}
 
@@ -186,6 +188,23 @@ namespace
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 			{	return lhs.max_reentrance < rhs.max_reentrance;	}
 		};
+
+		class by_max_call_time
+		{
+			__int64 _ticks_resolution;
+			bool _use_default_formatter;
+		public:
+			by_max_call_time(__int64 ticks_resolution, bool use_default_formatter = false) 
+				: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter) 
+			{	}
+
+			wstring operator ()(const void *, const function_statistics &s) const
+			{	return print_time(1.0 * s.max_call_time / _ticks_resolution, _use_default_formatter);	}
+
+			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+			{	return lhs.max_call_time < rhs.max_call_time;	}
+		};
+
 	} // namespace functors
 
 } // namespace
@@ -213,6 +232,7 @@ void functions_list::get_text( index_type item, index_type subitem, std::wstring
 	case 5:	text = functors::by_avg_exclusive_call_time(_ticks_resolution)(row.first, row.second);	break;
 	case 6:	text = functors::by_avg_inclusive_call_time(_ticks_resolution)(row.first, row.second);	break;
 	case 7:	text = functors::by_max_reentrance()(row.first, row.second);	break;
+	case 8:	text = functors::by_max_call_time(_ticks_resolution)(row.first, row.second);	break;
 	}
 }
 
@@ -227,6 +247,7 @@ void functions_list::set_order( index_type column, bool ascending )
 	case 5:	_view.set_order(functors::by_avg_exclusive_call_time(_ticks_resolution), ascending);	break;
 	case 6:	_view.set_order(functors::by_avg_inclusive_call_time(_ticks_resolution), ascending);	break;
 	case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
+	case 8:	_view.set_order(functors::by_max_call_time(_ticks_resolution), ascending);	break;
 	}
 	invalidated(_view.size());
 }
@@ -281,7 +302,7 @@ void functions_list::print(wstring &content) const
 
 	content.clear();
 	content.reserve(256 * (_view.size() + 1)); // kind of magic number
-	content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\r\n";
+	content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
 	for (size_t i = 0; i != _view.size(); ++i)
 	{
 		const statistics_view::value_type &row = _view.at(i);
@@ -292,7 +313,8 @@ void functions_list::print(wstring &content) const
 		content += functors::by_inclusive_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
 		content += functors::by_avg_exclusive_call_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
 		content += functors::by_avg_inclusive_call_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
-		content += functors::by_max_reentrance()(row.first, row.second) + L"\r\n";
+		content += functors::by_max_reentrance()(row.first, row.second) + L"\t";
+      content += functors::by_max_call_time(_ticks_resolution, true)(row.first, row.second) + L"\r\n";
 	}
 	
 	if (locale_ok) 

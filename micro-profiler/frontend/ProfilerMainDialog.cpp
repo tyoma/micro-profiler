@@ -46,6 +46,7 @@ ProfilerMainDialog::ProfilerMainDialog(std::shared_ptr<functions_list> s)
 	_statistics_lv->add_column(L"Average Call Time (Exclusive:)", listview::dir_descending);
 	_statistics_lv->add_column(L"Average Call Time (Inclusive)", listview::dir_descending);
 	_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
+	_statistics_lv->add_column(L"Max Call Time", listview::dir_descending);
 
 	_statistics_lv->set_model(_statistics);
 

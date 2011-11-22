@@ -25,7 +25,7 @@ namespace
 
 int main()
 {
-   srand(time(0));
+	srand(time(0));
 
 	vector<double> v(30000000);
 
@@ -35,7 +35,7 @@ int main()
 	sort(v.begin(), v.end());
 	sort(v.rbegin(), v.rend());
 
-   getch();
+	getch();
 
 	return 0;
 }

@@ -44,10 +44,11 @@ class functions_list : public wpl::ui::listview::model, wpl::noncopyable
 	__int64 _ticks_resolution;
 	std::shared_ptr<symbol_resolver> _resolver;
 
+	functions_list(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 public:
 	static const size_t npos = statistics_view::npos;
 
-	functions_list(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
+	static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 	~functions_list();
 
 	void clear();

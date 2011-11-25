@@ -55,7 +55,7 @@ STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address,
 {
 	shared_ptr<symbol_resolver> r(symbol_resolver::create_dia_resolver(wstring(CStringW(executable)), load_address));
 	
-	_statistics.reset(new functions_list(ticks_resolution, r));
+	_statistics = functions_list::create(ticks_resolution, r);
 	_dialog.reset(new ProfilerMainDialog(_statistics));
 	_dialog->ShowWindow(SW_SHOW);
 	return S_OK;

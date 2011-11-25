@@ -209,6 +209,9 @@ namespace
 
 } // namespace
 
+std::shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver)
+{	return std::shared_ptr<functions_list>(new functions_list(ticks_resolution, resolver));	}
+
 functions_list::functions_list(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver) 
 	: _view(_statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
 {	}

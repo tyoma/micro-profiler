@@ -11,7 +11,12 @@
 	#import "libid:2DF8D04C-5BFA-101B-BDE5-00AA0044DE52" no_implementation // mso.dll
 	#import "libid:2DF8D04C-5BFA-101B-BDE5-00AA0044DE52" implementation_only
 	#import <dte80a.olb> implementation_only
-	#import "VCProjectEngine.dll"
+	#import "typelibs/VCProject_71.dll" no_implementation rename_namespace("VCProject71")
+	#import "typelibs/VCProject_71.dll" implementation_only rename_namespace("VCProject71")
+	#import "typelibs/VCProject_90.dll" no_implementation rename_namespace("VCProject90")
+	#import "typelibs/VCProject_90.dll" implementation_only rename_namespace("VCProject90")
+	#import "typelibs/VCProject_100.tlb" no_implementation rename_namespace("VCProject100")
+	#import "typelibs/VCProject_100.tlb" implementation_only rename_namespace("VCProject100")
 #pragma warning(default: 4146)
 #pragma warning(default: 4278)
 
@@ -28,6 +33,11 @@ namespace
 {
 	class __declspec(uuid("B36A1712-EF9F-4960-9B33-838BFCC70683")) ProfilerAddin : public ea::command_target
 	{
+		_bstr_t _version;
+
+		template <typename API>
+		static void get_commands_versioned(vector<ea::command_ptr> &commands);
+
 	public:
 		ProfilerAddin(EnvDTE::_DTEPtr dte);
 
@@ -37,7 +47,52 @@ namespace
 	typedef ea::addin<ProfilerAddin, &__uuidof(ProfilerAddin), IDR_PROFILERADDIN> ProfilerAddinImpl;
 	OBJECT_ENTRY_AUTO(__uuidof(ProfilerAddin), ProfilerAddinImpl);
 	
+	struct API_VS71
+	{
+		typedef Office::_CommandBarsPtr CommandBarsPtr;
+		typedef Office::CommandBarPtr CommandBarPtr;
+		typedef Office::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef VCProject71::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject71::VCProjectPtr VCProjectPtr;
+		typedef VCProject71::VCConfigurationPtr VCConfigurationPtr;
+		typedef VCProject71::IVCCollectionPtr IVCCollectionPtr;
+		typedef VCProject71::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject71::VCFilePtr VCFilePtr;
+		typedef VCProject71::VCFileConfigurationPtr VCFileConfigurationPtr;
+		typedef VCProject71::pchOption pchOption;
+	};
+	
+	struct API_VS90
+	{
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarsPtr CommandBarsPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPtr CommandBarPtr;
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef VCProject90::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject90::VCProjectPtr VCProjectPtr;
+		typedef VCProject90::VCConfigurationPtr VCConfigurationPtr;
+		typedef VCProject90::IVCCollectionPtr IVCCollectionPtr;
+		typedef VCProject90::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject90::VCFilePtr VCFilePtr;
+		typedef VCProject90::VCFileConfigurationPtr VCFileConfigurationPtr;
+		typedef VCProject90::pchOption pchOption;
+	};
+	
+	struct API_VS100
+	{
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarsPtr CommandBarsPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPtr CommandBarPtr;
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef VCProject100::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject100::VCProjectPtr VCProjectPtr;
+		typedef VCProject100::VCConfigurationPtr VCConfigurationPtr;
+		typedef VCProject100::IVCCollectionPtr IVCCollectionPtr;
+		typedef VCProject100::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject100::VCFilePtr VCFilePtr;
+		typedef VCProject100::VCFileConfigurationPtr VCFileConfigurationPtr;
+		typedef VCProject100::pchOption pchOption;
+	};
 
+	template <typename API>
 	class command_base : public ea::command
 	{
 		bool _group_start;
@@ -47,10 +102,20 @@ namespace
 		virtual wstring caption() const;
 		virtual wstring description() const;
 
-		template <typename CommandBarPtrT, typename CommandBarButtonPtrT, typename CommandBarsPtrT>
-		void add_menu_item(CommandBarsPtrT commandbars, EnvDTE::CommandPtr cmd) const;
-
 		virtual void update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr command_bars) const;
+
+	protected:
+		typedef typename API::CommandBarsPtr CommandBarsPtr;
+		typedef typename API::CommandBarPtr CommandBarPtr;
+		typedef typename API::CommandBarButtonPtr CommandBarButtonPtr;
+		typedef typename API::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef typename API::VCProjectPtr VCProjectPtr;
+		typedef typename API::VCConfigurationPtr VCConfigurationPtr;
+		typedef typename API::IVCCollectionPtr IVCCollectionPtr;
+		typedef typename API::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef typename API::VCFilePtr VCFilePtr;
+		typedef typename API::VCFileConfigurationPtr VCFileConfigurationPtr;
+		typedef typename API::pchOption pchOption;
 
 	protected:
 		command_base(const wstring &id, const wstring &caption, const wstring &description, bool group_start);
@@ -63,13 +128,14 @@ namespace
 		static IDispatchPtr get_tool(EnvDTE::ProjectPtr project, const wchar_t *tool_name);
 		static void disable_pch(EnvDTE::ProjectItemPtr item);
 
-		static bool has_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
-		static void enable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
-		static void disable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler);
+		static bool has_instrumentation(VCCLCompilerToolPtr compiler);
+		static void enable_instrumentation(VCCLCompilerToolPtr compiler);
+		static void disable_instrumentation(VCCLCompilerToolPtr compiler);
 	};
 
 
-	class toggle_instrumentation_command : public command_base
+	template <typename API>
+	class toggle_instrumentation_command : public command_base<API>
 	{
 	public:
 		toggle_instrumentation_command();
@@ -79,7 +145,8 @@ namespace
 	};
 
 
-	class reset_instrumentation_command : public command_base
+	template <typename API>
+	class reset_instrumentation_command : public command_base<API>
 	{
 	public:
 		reset_instrumentation_command();
@@ -89,7 +156,8 @@ namespace
 	};
 
 
-	class remove_support_command : public command_base
+	template <typename API>
+	class remove_support_command : public command_base<API>
 	{
 	public:
 		remove_support_command();
@@ -100,14 +168,26 @@ namespace
 
 
 
-	ProfilerAddin::ProfilerAddin(EnvDTE::_DTEPtr /*dte*/)
+	ProfilerAddin::ProfilerAddin(EnvDTE::_DTEPtr dte)
+		: _version(dte->Version)
 	{	}
+
+	template <typename API>
+	void ProfilerAddin::get_commands_versioned(vector<ea::command_ptr> &commands)
+	{
+		commands.push_back(ea::command_ptr(new toggle_instrumentation_command<API>()));
+		commands.push_back(ea::command_ptr(new reset_instrumentation_command<API>()));
+		commands.push_back(ea::command_ptr(new remove_support_command<API>()));
+	}
 
 	void ProfilerAddin::get_commands(vector<ea::command_ptr> &commands) const
 	{
-		commands.push_back(ea::command_ptr(new toggle_instrumentation_command));
-		commands.push_back(ea::command_ptr(new reset_instrumentation_command));
-		commands.push_back(ea::command_ptr(new remove_support_command));
+		if (_bstr_t(L"7.10") == _version)
+			get_commands_versioned<API_VS71>(commands);
+		else if (_bstr_t(L"9.0") == _version)
+			get_commands_versioned<API_VS90>(commands);
+		else if (_bstr_t(L"10.0") == _version)
+			get_commands_versioned<API_VS100>(commands);
 	}
 
 
@@ -152,39 +232,37 @@ namespace
 	}
 
 
-	command_base::command_base(const wstring &id, const wstring &caption, const wstring &description, bool group_start)
+	template <typename API>
+	command_base<API>::command_base(const wstring &id, const wstring &caption, const wstring &description, bool group_start)
 		: _id(id), _caption(caption), _description(description), _group_start(group_start)
 	{	}
 
-	wstring command_base::id() const
+	template <typename API>
+	wstring command_base<API>::id() const
 	{	return _id;	}
 
-	wstring command_base::caption() const
+	template <typename API>
+	wstring command_base<API>::caption() const
 	{	return _caption;	}
 
-	wstring command_base::description() const
+	template <typename API>
+	wstring command_base<API>::description() const
 	{	return _description;	}
 
-	template <typename CommandBarPtrT, typename CommandBarButtonPtrT, typename CommandBarsPtrT>
-	void command_base::add_menu_item(CommandBarsPtrT commandbars, EnvDTE::CommandPtr cmd) const
+	template <typename API>
+	void command_base<API>::update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr commandbars_) const
 	{
-		CommandBarPtrT targetCommandBar(commandbars->Item[L"Project"]);
+		CommandBarsPtr commandbars(commandbars_);
+		CommandBarPtr targetCommandBar(commandbars->Item[L"Project"]);
 		long position = targetCommandBar->Controls->Count + 1;
-		CommandBarButtonPtrT item(cmd->AddControl(targetCommandBar, position));
+		CommandBarButtonPtr item(cmd->AddControl(targetCommandBar, position));
 
 		if (_group_start)
 			item->BeginGroup = true;
 	}
 
-	void command_base::update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr command_bars) const
-	{
-		if (Microsoft_VisualStudio_CommandBars::_CommandBarsPtr cb = command_bars)
-			add_menu_item<Microsoft_VisualStudio_CommandBars::CommandBarPtr, Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr>(cb, cmd);
-		else if (Office::_CommandBarsPtr cb = command_bars)
-			add_menu_item<Office::CommandBarPtr, Office::_CommandBarButtonPtr>(cb, cmd);
-	}
-
-	bool command_base::library_copied(EnvDTE::ProjectPtr project)
+	template <typename API>
+	bool command_base<API>::library_copied(EnvDTE::ProjectPtr project)
 	{
 		CPath library(project->FileName);
 
@@ -193,7 +271,8 @@ namespace
 		return !!library.FileExists();
 	}
 
-	void command_base::copy_library(EnvDTE::ProjectPtr project)
+	template <typename API>
+	void command_base<API>::copy_library(EnvDTE::ProjectPtr project)
 	{
 		CPath source(get_profiler_directory()), target(project->FileName);
 
@@ -203,7 +282,8 @@ namespace
 		::CopyFile(source, target, FALSE);
 	}
 
-	void command_base::remove_library(EnvDTE::ProjectPtr project)
+	template <typename API>
+	void command_base<API>::remove_library(EnvDTE::ProjectPtr project)
 	{
 		CPath library(project->FileName);
 
@@ -212,7 +292,8 @@ namespace
 		::DeleteFile(library);
 	}
 
-	EnvDTE::ProjectItemPtr command_base::find_initializer(EnvDTE::ProjectItemsPtr items)
+	template <typename API>
+	EnvDTE::ProjectItemPtr command_base<API>::find_initializer(EnvDTE::ProjectItemsPtr items)
 	{
 		CPath initializer_path(get_initializer_path());
 
@@ -235,10 +316,9 @@ namespace
 		return 0;
 	}
 
-	IDispatchPtr command_base::get_tool(EnvDTE::ProjectPtr project, const wchar_t *tool_name)
+	template <typename API>
+	IDispatchPtr command_base<API>::get_tool(EnvDTE::ProjectPtr project, const wchar_t *tool_name)
 	{
-		using namespace VCProjectEngineLibrary;
-		
 		VCProjectPtr vcproject(project->Object);
 		_bstr_t activeConfigurationName(project->ConfigurationManager->ActiveConfiguration->ConfigurationName);
 		VCConfigurationPtr configuration(IVCCollectionPtr(vcproject->Configurations)->Item(activeConfigurationName));
@@ -247,24 +327,25 @@ namespace
 		return tools->Item(tool_name);
 	}
 
-	void command_base::disable_pch(EnvDTE::ProjectItemPtr item)
+	template <typename API>
+	void command_base<API>::disable_pch(EnvDTE::ProjectItemPtr item)
 	{
-		using namespace VCProjectEngineLibrary;
-
 		IVCCollectionPtr configurations(VCFilePtr(item->Object)->FileConfigurations);
 
 		for (long i = 1, count = configurations->Count; i <= count; ++i)
-			VCCLCompilerToolPtr(VCFileConfigurationPtr(configurations->Item(i))->Tool)->UsePrecompiledHeader = pchNone;
+			VCCLCompilerToolPtr(VCFileConfigurationPtr(configurations->Item(i))->Tool)->UsePrecompiledHeader = (pchOption)0 /*pchNone*/;
 	}
 
-	bool command_base::has_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler)
+	template <typename API>
+	bool command_base<API>::has_instrumentation(VCCLCompilerToolPtr compiler)
 	{
 		CString additionalOptions((LPCTSTR)compiler->AdditionalOptions);
 
 		return -1 != additionalOptions.Find(c_GH_option) && -1 != additionalOptions.Find(c_Gh_option);
 	}
 
-	void command_base::enable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler)
+	template <typename API>
+	void command_base<API>::enable_instrumentation(VCCLCompilerToolPtr compiler)
 	{
 		bool changed = false;
 		CString additionalOptions((LPCTSTR)compiler->AdditionalOptions);
@@ -280,7 +361,8 @@ namespace
 		}
 	}
 
-	void command_base::disable_instrumentation(VCProjectEngineLibrary::VCCLCompilerToolPtr compiler)
+	template <typename API>
+	void command_base<API>::disable_instrumentation(VCCLCompilerToolPtr compiler)
 	{
 		bool changed = false;
 		CString additionalOptions((LPCTSTR)compiler->AdditionalOptions);
@@ -294,16 +376,18 @@ namespace
 		if (changed)
 		{
 			additionalOptions.Trim();
-			compiler->AdditionalOptions = (LPCTSTR)additionalOptions;
+			compiler->AdditionalOptions = !additionalOptions.IsEmpty() ? _bstr_t(additionalOptions) : _bstr_t();
 		}
 	}
 
 
-	toggle_instrumentation_command::toggle_instrumentation_command()
+	template <typename API>
+	toggle_instrumentation_command<API>::toggle_instrumentation_command()
 		: command_base(L"ToggleInstrumentation", L"Enable Profiling", L"MircoProfiler: Enables/Disables Instrumentation for Profiled Execution", true)
 	{	}
 
-	void toggle_instrumentation_command::execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
+	template <typename API>
+	void toggle_instrumentation_command<API>::execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
 	{
 		EnvDTE::ProjectPtr project(dte->SelectedItems->Item(1)->Project);
 		IDispatchPtr compiler(get_tool(project, L"VCCLCompilerTool"));
@@ -317,7 +401,8 @@ namespace
 			enable_instrumentation(compiler);
 	}
 
-	bool toggle_instrumentation_command::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
+	template <typename API>
+	bool toggle_instrumentation_command<API>::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
 	{
 		EnvDTE::SelectedItemsPtr selection(dte->SelectedItems);
 		long count = selection->Count;
@@ -336,25 +421,30 @@ namespace
 	}
 
 
-	reset_instrumentation_command::reset_instrumentation_command()
+	template <typename API>
+	reset_instrumentation_command<API>::reset_instrumentation_command()
 		: command_base(L"ResetInstrumentation", L"Reset Instrumentation", L"", false)
 	{	}
 
-	void reset_instrumentation_command::execute(EnvDTE::_DTEPtr /*dte*/, VARIANT * /*input*/, VARIANT * /*output*/) const
+	template <typename API>
+	void reset_instrumentation_command<API>::execute(EnvDTE::_DTEPtr /*dte*/, VARIANT * /*input*/, VARIANT * /*output*/) const
 	{	}
 
-	bool reset_instrumentation_command::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
+	template <typename API>
+	bool reset_instrumentation_command<API>::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
 	{
 		checked = false;
 		return false;
 	}
 
 
-	remove_support_command::remove_support_command()
+	template <typename API>
+	remove_support_command<API>::remove_support_command()
 		: command_base(L"RemoveProfilingSupport", L"Remove Profiling Support", L"", false)
 	{	}
 
-	void remove_support_command::execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
+	template <typename API>
+	void remove_support_command<API>::execute(EnvDTE::_DTEPtr dte, VARIANT * /*input*/, VARIANT * /*output*/) const
 	{
 		EnvDTE::ProjectPtr project(dte->SelectedItems->Item(1)->Project);
 
@@ -363,7 +453,8 @@ namespace
 		remove_library(project);
 	}
 
-	bool remove_support_command::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
+	template <typename API>
+	bool remove_support_command<API>::query_status(EnvDTE::_DTEPtr dte, bool &checked, wstring * /*caption*/, wstring * /*description*/) const
 	{
 		EnvDTE::SelectedItemsPtr selection(dte->SelectedItems);
 		long count = selection->Count;

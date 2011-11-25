@@ -22,6 +22,7 @@
 
 #include "../_generated/microprofilerfrontend_i.h"
 #include "symbol_resolver.h"
+#include "ordered_view.h"
 
 #include <utility>
 #include <cmath>
@@ -209,20 +210,50 @@ namespace
 
 } // namespace
 
-std::shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver)
-{	return std::shared_ptr<functions_list>(new functions_list(ticks_resolution, resolver));	}
+typedef ordered_view<micro_profiler::statistics_map> statistics_view;
 
-functions_list::functions_list(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver) 
+const size_t functions_list::npos =  statistics_view::npos;
+
+class functions_list_impl : public functions_list, wpl::noncopyable
+{
+	micro_profiler::statistics_map _statistics;
+	statistics_view _view;
+	__int64 _ticks_resolution;
+	std::shared_ptr<symbol_resolver> _resolver;
+
+public:
+	functions_list_impl(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
+	virtual ~functions_list_impl();
+	// functinons_list impl
+	virtual void clear();
+	virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
+
+	virtual index_type get_index(const void *address) const;
+
+	virtual void print(std::wstring &content) const;
+	// listview::model impl
+	virtual index_type get_count() const throw();
+	virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
+	virtual void set_order(index_type column, bool ascending);
+	virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
+};
+
+
+
+std::shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver)
+{	return std::shared_ptr<functions_list>(new functions_list_impl(ticks_resolution, resolver));	}
+
+functions_list_impl::functions_list_impl(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver) 
 	: _view(_statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
 {	}
 
-functions_list::~functions_list() 
+functions_list_impl::~functions_list_impl() 
 {	}
 
-functions_list::index_type functions_list::get_count() const throw()
+functions_list_impl::index_type functions_list_impl::get_count() const throw()
 { return _statistics.size(); }
 
-void functions_list::get_text( index_type item, index_type subitem, std::wstring &text ) const
+void functions_list_impl::get_text( index_type item, index_type subitem, std::wstring &text ) const
 {
 	const statistics_view::value_type &row = _view.at(item);
 	switch (subitem)
@@ -239,7 +270,7 @@ void functions_list::get_text( index_type item, index_type subitem, std::wstring
 	}
 }
 
-void functions_list::set_order( index_type column, bool ascending )
+void functions_list_impl::set_order( index_type column, bool ascending )
 {
 	switch (column)
 	{
@@ -255,7 +286,7 @@ void functions_list::set_order( index_type column, bool ascending )
 	invalidated(_view.size());
 }
 
-shared_ptr<const listview::trackable> functions_list::track(index_type row) const
+shared_ptr<const listview::trackable> functions_list_impl::track(index_type row) const
 {
 	class trackable : public listview::trackable, noncopyable
 	{
@@ -274,7 +305,7 @@ shared_ptr<const listview::trackable> functions_list::track(index_type row) cons
 	return shared_ptr<const listview::trackable>(new trackable(_view, _view.at(row).first));
 }
 
-void functions_list::update( const FunctionStatisticsDetailed *data, unsigned int count )
+void functions_list_impl::update( const FunctionStatisticsDetailed *data, unsigned int count )
 {
 	for (; count; --count, ++data)
 	{
@@ -286,19 +317,19 @@ void functions_list::update( const FunctionStatisticsDetailed *data, unsigned in
 	invalidated(_view.size());
 }
 
-void functions_list::clear()
+void functions_list_impl::clear()
 {
 	_statistics.clear();
 	_view.resort();
 	invalidated(_view.size());
 }
 
-functions_list::index_type functions_list::get_index(const void *address) const
+functions_list_impl::index_type functions_list_impl::get_index(const void *address) const
 {
 	return _view.find_by_key(address);
 }
 
-void functions_list::print(wstring &content) const
+void functions_list_impl::print(wstring &content) const
 {
 	const char* old_locale = ::setlocale(LC_NUMERIC, NULL);  
 	bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;  

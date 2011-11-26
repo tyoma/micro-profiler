@@ -11,12 +11,14 @@
 	#import "libid:2DF8D04C-5BFA-101B-BDE5-00AA0044DE52" no_implementation // mso.dll
 	#import "libid:2DF8D04C-5BFA-101B-BDE5-00AA0044DE52" implementation_only
 	#import <dte80a.olb> implementation_only
-	#import "typelibs/VCProject_71.dll" no_implementation rename_namespace("VCProject71")
-	#import "typelibs/VCProject_71.dll" implementation_only rename_namespace("VCProject71")
-	#import "typelibs/VCProject_90.dll" no_implementation rename_namespace("VCProject90")
-	#import "typelibs/VCProject_90.dll" implementation_only rename_namespace("VCProject90")
+	#import "typelibs/VCProject_71.tlb" no_implementation rename_namespace("VCProject71")
+	#import "typelibs/VCProject_71.tlb" implementation_only rename_namespace("VCProject71")
+	#import "typelibs/VCProject_90.tlb" no_implementation rename_namespace("VCProject90")
+	#import "typelibs/VCProject_90.tlb" implementation_only rename_namespace("VCProject90")
 	#import "typelibs/VCProject_100.tlb" no_implementation rename_namespace("VCProject100")
 	#import "typelibs/VCProject_100.tlb" implementation_only rename_namespace("VCProject100")
+	#import "typelibs/VCProject_110.tlb" no_implementation rename_namespace("VCProject110")
+	#import "typelibs/VCProject_110.tlb" implementation_only rename_namespace("VCProject110")
 #pragma warning(default: 4146)
 #pragma warning(default: 4278)
 
@@ -90,6 +92,21 @@ namespace
 		typedef VCProject100::VCFilePtr VCFilePtr;
 		typedef VCProject100::VCFileConfigurationPtr VCFileConfigurationPtr;
 		typedef VCProject100::pchOption pchOption;
+	};
+	
+	struct API_VS110
+	{
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarsPtr CommandBarsPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPtr CommandBarPtr;
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef VCProject110::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject110::VCProjectPtr VCProjectPtr;
+		typedef VCProject110::VCConfigurationPtr VCConfigurationPtr;
+		typedef VCProject110::IVCCollectionPtr IVCCollectionPtr;
+		typedef VCProject110::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject110::VCFilePtr VCFilePtr;
+		typedef VCProject110::VCFileConfigurationPtr VCFileConfigurationPtr;
+		typedef VCProject110::pchOption pchOption;
 	};
 
 	template <typename API>
@@ -188,6 +205,8 @@ namespace
 			get_commands_versioned<API_VS90>(commands);
 		else if (_bstr_t(L"10.0") == _version)
 			get_commands_versioned<API_VS100>(commands);
+		else if (_bstr_t(L"11.0") == _version)
+			get_commands_versioned<API_VS110>(commands);
 	}
 
 

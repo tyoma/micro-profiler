@@ -21,7 +21,6 @@
 #pragma once
 
 #include "../primitives.h"
-#include "ordered_view.h"
 
 #include <wpl/ui/listview.h>
 #include <string>
@@ -35,29 +34,17 @@ namespace std
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 class symbol_resolver;
 
-class functions_list : public wpl::ui::listview::model, wpl::noncopyable
+class functions_list : public wpl::ui::listview::model
 {
-	typedef ordered_view<micro_profiler::statistics_map> statistics_view;
-
-	micro_profiler::statistics_map _statistics;
-	statistics_view _view;
-	__int64 _ticks_resolution;
-	std::shared_ptr<symbol_resolver> _resolver;
-
 public:
-	static const size_t npos = statistics_view::npos;
+	static const size_t npos;
 
-	functions_list(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
-	~functions_list();
+	static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 
-	void clear();
-	void update(const FunctionStatisticsDetailed *data, unsigned int count);
+	virtual ~functions_list() {};
 
-	virtual index_type get_count() const throw();
-	virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
-	virtual void set_order(index_type column, bool ascending);
-	virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
-
-	index_type get_index(const void *address) const;
-	void print(std::wstring &content) const;
+	virtual void clear() = 0;
+	virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;
+	virtual index_type get_index(const void *address) const = 0;
+	virtual void print(std::wstring &content) const = 0;
 };

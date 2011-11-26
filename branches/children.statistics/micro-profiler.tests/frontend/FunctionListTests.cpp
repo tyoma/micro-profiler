@@ -127,7 +127,8 @@ namespace micro_profiler
 			void CanCreateEmptyFunctionList()
 			{
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(test_ticks_resolution, resolver);
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(test_ticks_resolution, resolver);
+				functions_list& fl = *sp_fl;
 
 				Assert::IsTrue(fl.get_count() == 0);
 			}
@@ -158,7 +159,8 @@ namespace micro_profiler
 				
 				// ACT
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(test_ticks_resolution, resolver);
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(test_ticks_resolution, resolver);
+				functions_list& fl = *sp_fl;
 				fl.update(data, 2);
 
 				// ASSERT
@@ -183,7 +185,8 @@ namespace micro_profiler
 
 				// ACT & ASSERT
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(test_ticks_resolution, resolver);
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(test_ticks_resolution, resolver);
+				functions_list& fl = *sp_fl;
 				i_handler ih;
 				ih.bind2(fl);
 				fl.update(&ms1, 1);
@@ -243,7 +246,8 @@ namespace micro_profiler
 				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3};
 
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(test_ticks_resolution, resolver);
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(test_ticks_resolution, resolver);
+				functions_list& fl = *sp_fl;
 
 				std::vector<functions_list::index_type> expected;
 				
@@ -329,7 +333,8 @@ namespace micro_profiler
 				FunctionStatisticsDetailed data3[] = {ms5};
 
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(test_ticks_resolution, resolver);
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(test_ticks_resolution, resolver);
+				functions_list& fl = *sp_fl;
 				fl.set_order(2, true); // by times called
 				
 				i_handler ih;
@@ -509,7 +514,8 @@ namespace micro_profiler
 				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4, ms5, ms6, ms1ub, ms2lb, ms2ub, ms3lb, ms3ub, ms4lb, ms4ub, ms5lb, ms5ub, ms6lb};
 
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(10000000000, resolver); // 10 * billion for ticks resolution
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(10000000000, resolver); // 10 * billion for ticks resolution
+				functions_list& fl = *sp_fl; 
 
 				// ACT
 				fl.update(data, sizeof(data)/sizeof(data[0]));
@@ -579,7 +585,8 @@ namespace micro_profiler
 				FunctionStatisticsDetailed data[] = {ms1, ms2, ms3, ms4};
 
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(test_ticks_resolution, resolver); 
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(test_ticks_resolution, resolver);
+				functions_list& fl = *sp_fl; 
 				i_handler ih;
 				ih.bind2(fl);
 
@@ -905,7 +912,8 @@ namespace micro_profiler
 				const size_t data_size = sizeof(data)/sizeof(data[0]);
 
 				std::shared_ptr<symbol_resolver> resolver(new sri);
-				functions_list fl(test_ticks_resolution, resolver); 
+				std::shared_ptr<functions_list> sp_fl = functions_list::create(test_ticks_resolution, resolver);
+				functions_list& fl = *sp_fl; 
 
 				wstring result;
 				// ACT

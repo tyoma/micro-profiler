@@ -45,6 +45,7 @@ namespace micro_profiler
 		std::auto_ptr<ProfilerMainDialog> _dialog;
 
 	public:
+		ProfilerFrontend();
 		~ProfilerFrontend();
 
 		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)

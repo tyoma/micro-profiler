@@ -80,6 +80,9 @@ namespace micro_profiler
 	void create_local_frontend(IProfilerFrontend **frontend)
 	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
+	void create_inproc_frontend(IProfilerFrontend **frontend)
+	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_INPROC_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
+
 	profiler_frontend::profiler_frontend(frontend_factory factory)
 		: _collector(*calls_collector::instance()), _factory(factory),
 			_frontend_thread(thread::run(bind(&profiler_frontend::frontend_initialize, this), bind(&profiler_frontend::frontend_worker, this)))

@@ -271,6 +271,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\frontend\micro-profiler-sink.rgs"
+				>
+			</File>
+			<File
 				RelativePath=".\frontend\ordered_view.h"
 				>
 			</File>
@@ -320,10 +324,6 @@
 			</File>
 			<File
 				RelativePath=".\frontend\ProfilerSink.h"
-				>
-			</File>
-			<File
-				RelativePath=".\frontend\resource.h"
 				>
 			</File>
 			<File

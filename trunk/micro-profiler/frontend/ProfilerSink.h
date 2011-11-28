@@ -21,7 +21,7 @@
 #pragma once
 
 #include "./../_generated/microprofilerfrontend_i.h"
-#include "resource.h"
+#include "../resources/resource.h"
 
 #include <atlbase.h>
 #include <atlcom.h>

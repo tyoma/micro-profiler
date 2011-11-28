@@ -22,9 +22,6 @@
     <ClCompile Include="frontend\ProfilerSink.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\ProxyBridge.c">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="frontend\function_list.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
@@ -48,9 +45,6 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="frontend\symbol_resolver.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\ProxyBridge.h">
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="primitives.h" />

@@ -1,41 +1,59 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="frontend\frontend-main.cpp" />
-    <ClCompile Include="frontend\ProfilerAddin.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="micro-profiler.initializer.cpp" />
     <ClCompile Include="micro-profiler.initializer.mfc-static.cpp" />
+    <ClCompile Include="addin\ProfilerAddin.cpp">
+      <Filter>addin</Filter>
+    </ClCompile>
+    <ClCompile Include="module\frontend-main.cpp">
+      <Filter>module</Filter>
+    </ClCompile>
+    <ClCompile Include="module\ProxyBridge.c">
+      <Filter>module</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="micro-profiler.ps.def" />
     <None Include="frontend\appicon.ico">
-      <Filter>frontend\resources</Filter>
+      <Filter>resources</Filter>
     </None>
     <None Include="frontend\micro-profiler-sink.rgs">
-      <Filter>frontend\resources</Filter>
+      <Filter>resources</Filter>
     </None>
-    <None Include="frontend\micro-profiler-addin.rgs">
-      <Filter>frontend\resources</Filter>
+    <None Include="addin\micro-profiler-addin.rgs">
+      <Filter>addin</Filter>
+    </None>
+    <None Include="module\micro-profiler.ps.def">
+      <Filter>module</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="frontend">
       <UniqueIdentifier>{2eb2703f-0b40-44c6-8806-9ba363609cc8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="frontend\resources">
+    <Filter Include="addin">
+      <UniqueIdentifier>{81f3947d-15a1-4b7e-b8d4-b70ffcd7eae4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
       <UniqueIdentifier>{d9d64e11-21ee-4368-a3cb-481d4b3d1745}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module">
+      <UniqueIdentifier>{f88a34be-b244-4bea-81ac-ea7770913646}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="frontend\xpstyle.manifest">
-      <Filter>frontend\resources</Filter>
+      <Filter>resources</Filter>
     </Manifest>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="frontend\micro-profiler-frontend.rc">
-      <Filter>frontend\resources</Filter>
+      <Filter>resources</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="module\ProxyBridge.h">
+      <Filter>module</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

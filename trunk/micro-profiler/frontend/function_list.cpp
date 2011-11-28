@@ -82,12 +82,12 @@ namespace
 	{
 		class by_name
 		{
-			std::shared_ptr<symbol_resolver> _resolver;
+			shared_ptr<symbol_resolver> _resolver;
 
 			const by_name &operator =(const by_name &rhs);
 
 		public:
-			by_name(std::shared_ptr<symbol_resolver> resolver)
+			by_name(shared_ptr<symbol_resolver> resolver)
 				: _resolver(resolver)
 			{	}
 
@@ -194,6 +194,7 @@ namespace
 		{
 			__int64 _ticks_resolution;
 			bool _use_default_formatter;
+
 		public:
 			by_max_call_time(__int64 ticks_resolution, bool use_default_formatter = false) 
 				: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter) 
@@ -205,57 +206,74 @@ namespace
 			bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 			{	return lhs.max_call_time < rhs.max_call_time;	}
 		};
+	}
+}
 
-	} // namespace functors
-
-} // namespace
-
-typedef ordered_view<micro_profiler::statistics_map> statistics_view;
-
-const size_t functions_list::npos =  statistics_view::npos;
-
-class functions_list_impl : public functions_list, wpl::noncopyable
+template <typename BaseT, typename MapT>
+class statistics_model_impl : public BaseT
 {
-	micro_profiler::statistics_map _statistics;
-	statistics_view _view;
 	__int64 _ticks_resolution;
-	std::shared_ptr<symbol_resolver> _resolver;
+	shared_ptr<symbol_resolver> _resolver;
+
+protected:
+	ordered_view<MapT> _view;
 
 public:
-	functions_list_impl(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
-	virtual ~functions_list_impl();
-	// functinons_list impl
+	typedef typename BaseT::index_type index_type;
+	typedef ordered_view<MapT> view_type;
+
+public:
+	statistics_model_impl(const MapT &statistics, __int64 ticks_resolution, shared_ptr<symbol_resolver> resolver);
+
+	virtual typename index_type get_count() const throw();
+	virtual void get_text(index_type item, index_type subitem, wstring &text) const;
+	virtual void set_order(index_type column, bool ascending);
+	virtual shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
+};
+
+class functions_list_impl : public statistics_model_impl<functions_list, micro_profiler::statistics_map>
+{
+	shared_ptr<micro_profiler::statistics_map> _statistics;
+	__int64 _ticks_resolution;
+	shared_ptr<symbol_resolver> _resolver;
+
+public:
+	functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, __int64 ticks_resolution, shared_ptr<symbol_resolver> resolver);
+
 	virtual void clear();
 	virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
-
 	virtual index_type get_index(const void *address) const;
-
-	virtual void print(std::wstring &content) const;
-	// listview::model impl
-	virtual index_type get_count() const throw();
-	virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
-	virtual void set_order(index_type column, bool ascending);
-	virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
+	virtual void print(wstring &content) const;
 };
 
 
 
-std::shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver)
-{	return std::shared_ptr<functions_list>(new functions_list_impl(ticks_resolution, resolver));	}
-
-functions_list_impl::functions_list_impl(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver) 
-	: _view(_statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
-{	}
-
-functions_list_impl::~functions_list_impl() 
-{	}
-
-functions_list_impl::index_type functions_list_impl::get_count() const throw()
-{ return _statistics.size(); }
-
-void functions_list_impl::get_text( index_type item, index_type subitem, std::wstring &text ) const
+shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
 {
-	const statistics_view::value_type &row = _view.at(item);
+	return shared_ptr<functions_list>(new functions_list_impl(
+		shared_ptr<micro_profiler::statistics_map>(new micro_profiler::statistics_map), ticks_resolution, resolver));
+}
+
+functions_list_impl::functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, __int64 ticks_resolution,
+	shared_ptr<symbol_resolver> resolver) 
+	: statistics_model_impl<functions_list, micro_profiler::statistics_map>(*statistics, ticks_resolution, resolver),
+		_statistics(statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
+{	}
+
+
+template <typename BaseT, typename MapT>
+statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, __int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
+	: _view(statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
+{ }
+
+template <typename BaseT, typename MapT>
+typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_count() const throw()
+{ return _view.size(); }
+
+template <typename BaseT, typename MapT>
+void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
+{
+	const view_type::value_type &row = _view.at(item);
 	switch (subitem)
 	{
 	case 0:	text = to_string2(item);	break;
@@ -270,7 +288,8 @@ void functions_list_impl::get_text( index_type item, index_type subitem, std::ws
 	}
 }
 
-void functions_list_impl::set_order( index_type column, bool ascending )
+template <typename BaseT, typename MapT>
+void statistics_model_impl<BaseT, MapT>::set_order(index_type column, bool ascending)
 {
 	switch (column)
 	{
@@ -286,15 +305,16 @@ void functions_list_impl::set_order( index_type column, bool ascending )
 	invalidated(_view.size());
 }
 
-shared_ptr<const listview::trackable> functions_list_impl::track(index_type row) const
+template <typename BaseT, typename MapT>
+shared_ptr<const listview::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
 {
-	class trackable : public listview::trackable, noncopyable
+	class trackable : public listview::trackable, wpl::noncopyable
 	{
-		const statistics_view &_view; //TODO: should store weak_ptr instead of reference
+		const view_type &_view; //TODO: should store weak_ptr instead of reference
 		const void *_address;
 
 	public:
-		trackable(const statistics_view &view, const void *address)
+		trackable(const view_type &view, const void *address)
 			: _view(view), _address(address)
 		{	}
 
@@ -305,13 +325,14 @@ shared_ptr<const listview::trackable> functions_list_impl::track(index_type row)
 	return shared_ptr<const listview::trackable>(new trackable(_view, _view.at(row).first));
 }
 
+
 void functions_list_impl::update( const FunctionStatisticsDetailed *data, unsigned int count )
 {
 	for (; count; --count, ++data)
 	{
 		const FunctionStatistics &s = data->Statistics;
 		const void *address = reinterpret_cast<void *>(s.FunctionAddress);
-		_statistics[address] += s;
+		(*_statistics)[address] += s;
 	}
 	_view.resort();
 	invalidated(_view.size());
@@ -319,7 +340,7 @@ void functions_list_impl::update( const FunctionStatisticsDetailed *data, unsign
 
 void functions_list_impl::clear()
 {
-	_statistics.clear();
+	_statistics->clear();
 	_view.resort();
 	invalidated(_view.size());
 }
@@ -339,7 +360,7 @@ void functions_list_impl::print(wstring &content) const
 	content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
 	for (size_t i = 0; i != _view.size(); ++i)
 	{
-		const statistics_view::value_type &row = _view.at(i);
+		const view_type::value_type &row = _view.at(i);
 
 		content += functors::by_name(_resolver)(row.first, row.second) + L"\t";
 		content += functors::by_times_called()(row.first, row.second) + L"\t";
@@ -348,9 +369,9 @@ void functions_list_impl::print(wstring &content) const
 		content += functors::by_avg_exclusive_call_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
 		content += functors::by_avg_inclusive_call_time(_ticks_resolution, true)(row.first, row.second) + L"\t";
 		content += functors::by_max_reentrance()(row.first, row.second) + L"\t";
-      content += functors::by_max_call_time(_ticks_resolution, true)(row.first, row.second) + L"\r\n";
+		content += functors::by_max_call_time(_ticks_resolution, true)(row.first, row.second) + L"\r\n";
 	}
-	
+
 	if (locale_ok) 
 		::setlocale(LC_NUMERIC, old_locale);
 }

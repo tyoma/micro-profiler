@@ -68,7 +68,7 @@
       <AdditionalDependencies>
       </AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>micro-profiler.ps.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.ps.def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -118,7 +118,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <ModuleDefinitionFile>micro-profiler.ps.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.ps.def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -141,8 +141,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="frontend\frontend-main.cpp" />
-    <ClCompile Include="frontend\ProfilerAddin.cpp">
+    <ClCompile Include="addin\ProfilerAddin.cpp">
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
     </ClCompile>
@@ -162,6 +161,8 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="module\frontend-main.cpp" />
+    <ClCompile Include="module\ProxyBridge.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
@@ -175,10 +176,10 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="addin\micro-profiler-addin.rgs" />
     <None Include="frontend\appicon.ico" />
-    <None Include="frontend\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />
-    <None Include="micro-profiler.ps.def" />
+    <None Include="module\micro-profiler.ps.def" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="frontend\xpstyle.manifest" />
@@ -189,6 +190,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
   <ItemGroup>
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\statistics.h" />
+    <ClInclude Include="module\ProxyBridge.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -36,7 +36,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir $(OutDir)&#x0D;&#x0A;del /q $(OutDir)*&#x0D;&#x0A;copy $(IntDir)*.cmd $(OutDir)&#x0D;&#x0A;copy $(IntDir)*.dll $(OutDir)&#x0D;&#x0A;copy $(IntDir)*.exe $(OutDir)&#x0D;&#x0A;copy $(IntDir)micro-profiler.lib $(OutDir)&#x0D;&#x0A;copy $(IntDir)playground.pdb $(OutDir)&#x0D;&#x0A;copy $(IntDir)entry.h $(OutDir)&#x0D;&#x0A;copy $(IntDir)micro-profiler.initializer.cpp $(OutDir)&#x0D;&#x0A;svn info $(SolutionDir) &gt; $(OutDir)version.txt&#x0D;&#x0A;mkzip &quot;$(OutDir)\*&quot; &quot;$(SolutionDir)\micro-profiler.deploy..zip&quot;&#x0D;&#x0A;"
+				CommandLine="mkdir $(OutDir)&#x0D;&#x0A;del /q $(OutDir)*&#x0D;&#x0A;copy $(IntDir)*.cmd $(OutDir)&#x0D;&#x0A;copy $(IntDir)*.dll $(OutDir)&#x0D;&#x0A;copy $(IntDir)*.exe $(OutDir)&#x0D;&#x0A;copy $(IntDir)micro-profiler.lib $(OutDir)&#x0D;&#x0A;copy $(IntDir)playground.pdb $(OutDir)&#x0D;&#x0A;copy $(IntDir)entry.h $(OutDir)&#x0D;&#x0A;copy $(IntDir)micro-profiler.initializer.cpp $(OutDir)&#x0D;&#x0A;copy $(IntDir)micro-profiler.initializer.mfc-static.cpp $(OutDir)&#x0D;&#x0A;svn info $(SolutionDir) &gt; $(OutDir)version.txt&#x0D;&#x0A;mkzip &quot;$(OutDir)\*&quot; &quot;$(SolutionDir)\micro-profiler.deploy..zip&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

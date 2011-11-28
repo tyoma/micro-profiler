@@ -128,11 +128,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
-				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="1"
-				OmitFramePointers="true"
+				Optimization="1"
+				FavorSizeOrSpeed="2"
 				AdditionalIncludeDirectories="./../libraries;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
 				RuntimeLibrary="0"

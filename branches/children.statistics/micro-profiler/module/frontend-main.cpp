@@ -22,6 +22,8 @@
 
 #include "ProxyBridge.h"
 
+#include "../frontend/ProfilerSink.h"
+
 #include <atlbase.h>
 #include <atlcom.h>
 #include <commctrl.h>

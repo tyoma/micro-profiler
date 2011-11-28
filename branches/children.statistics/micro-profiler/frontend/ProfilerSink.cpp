@@ -30,13 +30,8 @@ using namespace std;
 
 namespace micro_profiler
 {
-	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
-	{
-		CComObject<ProfilerFrontend> *instance;
-
-		CComObject<ProfilerFrontend>::CreateInstance(&instance);
-		instance->QueryInterface(frontend);
-	}
+	ProfilerFrontend::ProfilerFrontend()
+	{	}
 
 	ProfilerFrontend::~ProfilerFrontend()
 	{	}

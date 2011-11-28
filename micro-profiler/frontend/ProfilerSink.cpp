@@ -29,21 +29,11 @@
 
 using namespace std;
 
-namespace micro_profiler
-{
-	void __declspec(dllexport) create_inproc_frontend(IProfilerFrontend **frontend)
-	{
-		CComObject<ProfilerFrontend> *instance;
+ProfilerFrontend::ProfilerFrontend()
+{	}
 
-		CComObject<ProfilerFrontend>::CreateInstance(&instance);
-		instance->QueryInterface(frontend);
-	}
-}
-
-HRESULT ProfilerFrontend::FinalConstruct()
-{
-	return S_OK;
-}
+ProfilerFrontend::~ProfilerFrontend()
+{	}
 
 void ProfilerFrontend::FinalRelease()
 {

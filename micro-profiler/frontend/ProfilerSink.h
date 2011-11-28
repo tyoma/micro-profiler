@@ -37,21 +37,22 @@ class symbol_resolver;
 class functions_list;
 extern "C" CLSID CLSID_ProfilerFrontend;
 
-class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>, public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
+class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>,
+	public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
 {
 	std::shared_ptr<functions_list> _statistics;
 	std::auto_ptr<ProfilerMainDialog> _dialog;
 
 public:
+	ProfilerFrontend();
+	~ProfilerFrontend();
+
 	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
 
 	BEGIN_COM_MAP(ProfilerFrontend)
 		COM_INTERFACE_ENTRY(IProfilerFrontend)
 	END_COM_MAP()
 
-	DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-	HRESULT FinalConstruct();
 	void FinalRelease();
 
 	STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);

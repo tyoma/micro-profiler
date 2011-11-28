@@ -1,6 +1,6 @@
 #include "Helpers.h"
 
-#include <analyzer.h>
+#include <collector/analyzer.h>
 
 #include <map>
 

@@ -20,17 +20,14 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="frontend\appicon.ico">
-      <Filter>resources</Filter>
-    </None>
-    <None Include="frontend\micro-profiler-sink.rgs">
-      <Filter>resources</Filter>
-    </None>
     <None Include="addin\micro-profiler-addin.rgs">
       <Filter>addin</Filter>
     </None>
     <None Include="module\micro-profiler.ps.def">
       <Filter>module</Filter>
+    </None>
+    <None Include="resources\appicon.ico">
+      <Filter>resources</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -48,24 +45,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="frontend\xpstyle.manifest">
+    <ClInclude Include="module\ProxyBridge.h">
+      <Filter>module</Filter>
+    </ClInclude>
+    <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
-    </Manifest>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="frontend\micro-profiler-frontend.rc">
+    <ResourceCompile Include="resources\micro-profiler-frontend.rc">
       <Filter>resources</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="frontend\ProfilerMainDialog.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\statistics.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="module\ProxyBridge.h">
-      <Filter>module</Filter>
-    </ClInclude>
+    <Manifest Include="resources\xpstyle.manifest">
+      <Filter>resources</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>

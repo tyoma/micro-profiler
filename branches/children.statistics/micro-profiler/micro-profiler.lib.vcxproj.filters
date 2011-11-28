@@ -31,7 +31,9 @@
     <ClCompile Include="collector\system.cpp">
       <Filter>collector</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\statistics.cpp" />
+    <ClCompile Include="frontend\statistics.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="_generated\microprofilerfrontend_i.h">
@@ -41,9 +43,6 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="frontend\ProfilerSink.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\resource.h">
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="frontend\symbol_resolver.h">
@@ -76,7 +75,9 @@
     <ClInclude Include="collector\system.h">
       <Filter>collector</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\statistics.h" />
+    <ClInclude Include="frontend\statistics.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">
@@ -93,5 +94,10 @@
     <Midl Include="collector\microprofilerfrontend.idl">
       <Filter>collector</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="frontend\micro-profiler-sink.rgs">
+      <Filter>frontend</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -78,7 +78,6 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				AdditionalManifestFiles="frontend\xpstyle.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -165,7 +164,6 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				AdditionalManifestFiles="frontend\xpstyle.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -256,19 +254,19 @@
 			Name="resources"
 			>
 			<File
-				RelativePath=".\frontend\appicon.ico"
+				RelativePath=".\resources\appicon.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\frontend\micro-profiler-frontend.rc"
+				RelativePath=".\resources\micro-profiler-frontend.rc"
 				>
 			</File>
 			<File
-				RelativePath=".\frontend\micro-profiler-sink.rgs"
+				RelativePath=".\resources\resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\frontend\xpstyle.manifest"
+				RelativePath=".\resources\xpstyle.manifest"
 				>
 			</File>
 		</Filter>

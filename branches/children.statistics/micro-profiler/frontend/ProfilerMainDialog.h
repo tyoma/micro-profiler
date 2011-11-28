@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "resource.h"
+#include "../resources/resource.h"
 
 #include <atlbase.h>
 #include <atltypes.h>

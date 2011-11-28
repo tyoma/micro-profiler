@@ -323,30 +323,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\frontend\ProxyBridge.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\frontend\ProxyBridge.h"
-				>
-			</File>
-			<File
 				RelativePath=".\frontend\resource.h"
 				>
 			</File>

@@ -94,7 +94,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -181,7 +181,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -322,6 +322,26 @@
 		</File>
 		<File
 			RelativePath=".\micro-profiler.initializer.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\micro-profiler.initializer.mfc-static.cpp"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"

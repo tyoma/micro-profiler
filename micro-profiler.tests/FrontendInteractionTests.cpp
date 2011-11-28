@@ -1,9 +1,9 @@
 #include "Helpers.h"
 
-#include <entry.h>
-#include <system.h>
+#include <collector/entry.h>
+#include <collector/system.h>
 
-#include "./../micro-profiler/_generated/microprofilerfrontend_i.h"
+#include <_generated/microprofilerfrontend_i.h>
 
 #include <wpl/mt/thread.h>
 #include <wpl/mt/synchronization.h>

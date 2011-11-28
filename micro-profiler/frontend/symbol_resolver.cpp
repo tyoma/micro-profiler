@@ -20,7 +20,7 @@
 
 #include "symbol_resolver.h"
 
-#include "../primitives.h"
+#include "../collector/primitives.h"
 
 #include <atlstr.h>
 #include <dia2.h>

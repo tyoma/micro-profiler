@@ -139,14 +139,18 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="calls_collector.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
+    <ClCompile Include="collector\calls_collector.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Full</Optimization>
       <InlineFunctionExpansion Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IntrinsicFunctions>
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Speed</FavorSizeOrSpeed>
       <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</OmitFramePointers>
     </ClCompile>
-    <ClCompile Include="entry.cpp">
+    <ClCompile Include="collector\entry.cpp">
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="collector\system.cpp">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
     </ClCompile>
@@ -174,10 +178,6 @@
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="system.cpp">
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
-    </ClCompile>
     <ClCompile Include="_generated\dlldata.c">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
@@ -196,10 +196,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="analyzer.h" />
-    <ClInclude Include="calls_collector.h" />
-    <ClInclude Include="com_helpers.h" />
-    <ClInclude Include="entry.h" />
+    <ClInclude Include="collector\analyzer.h" />
+    <ClInclude Include="collector\calls_collector.h" />
+    <ClInclude Include="collector\com_helpers.h" />
+    <ClInclude Include="collector\entry.h" />
+    <ClInclude Include="collector\pod_vector.h" />
+    <ClInclude Include="collector\primitives.h" />
+    <ClInclude Include="collector\system.h" />
     <ClInclude Include="frontend\function_list.h" />
     <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
@@ -207,13 +210,7 @@
     <ClInclude Include="frontend\resource.h" />
     <ClInclude Include="frontend\statistics.h" />
     <ClInclude Include="frontend\symbol_resolver.h" />
-    <ClInclude Include="pod_vector.h" />
-    <ClInclude Include="primitives.h" />
-    <ClInclude Include="system.h" />
     <ClInclude Include="_generated\microprofilerfrontend_i.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="microprofilerfrontend.idl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
@@ -222,6 +219,9 @@
     <ProjectReference Include="..\libraries\wpl\ui\src\ui.vcxproj">
       <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="collector\microprofilerfrontend.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

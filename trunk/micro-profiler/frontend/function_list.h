@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "../primitives.h"
+#include "../collector/primitives.h"
 
 #include <wpl/ui/listview.h>
 #include <string>

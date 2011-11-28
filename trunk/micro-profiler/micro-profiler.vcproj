@@ -201,96 +201,8 @@
 	</References>
 	<Files>
 		<Filter
-			Name="_generated"
-			>
-			<File
-				RelativePath=".\_generated\dlldata.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_i.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_i.h"
-				>
-			</File>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_p.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-		</Filter>
-		<Filter
 			Name="frontend"
 			>
-			<Filter
-				Name="resources"
-				>
-				<File
-					RelativePath=".\frontend\appicon.ico"
-					>
-				</File>
-				<File
-					RelativePath=".\frontend\micro-profiler-frontend.rc"
-					>
-				</File>
-				<File
-					RelativePath=".\frontend\micro-profiler-sink.rgs"
-					>
-				</File>
-				<File
-					RelativePath=".\frontend\xpstyle.manifest"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="module"
@@ -321,6 +233,26 @@
 			</File>
 			<File
 				RelativePath=".\addin\ProfilerAddin.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="resources"
+			>
+			<File
+				RelativePath=".\frontend\appicon.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\micro-profiler-frontend.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\micro-profiler-sink.rgs"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\xpstyle.manifest"
 				>
 			</File>
 		</Filter>

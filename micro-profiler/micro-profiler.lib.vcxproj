@@ -207,7 +207,6 @@
     <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />
-    <ClInclude Include="frontend\resource.h" />
     <ClInclude Include="frontend\statistics.h" />
     <ClInclude Include="frontend\symbol_resolver.h" />
     <ClInclude Include="_generated\microprofilerfrontend_i.h" />
@@ -222,6 +221,9 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="collector\microprofilerfrontend.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="frontend\micro-profiler-sink.rgs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

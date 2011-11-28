@@ -72,7 +72,6 @@
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
-      <AdditionalManifestFiles>frontend/xpstyle.manifest</AdditionalManifestFiles>
     </Manifest>
     <Midl>
       <GenerateTypeLibrary>false</GenerateTypeLibrary>
@@ -122,7 +121,6 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
-      <AdditionalManifestFiles>frontend/xpstyle.manifest</AdditionalManifestFiles>
     </Manifest>
     <Midl>
       <GenerateTypeLibrary>false</GenerateTypeLibrary>
@@ -177,20 +175,18 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
   </ItemGroup>
   <ItemGroup>
     <None Include="addin\micro-profiler-addin.rgs" />
-    <None Include="frontend\appicon.ico" />
-    <None Include="frontend\micro-profiler-sink.rgs" />
     <None Include="module\micro-profiler.ps.def" />
+    <None Include="resources\appicon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="frontend\xpstyle.manifest" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="frontend\micro-profiler-frontend.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="frontend\ProfilerMainDialog.h" />
-    <ClInclude Include="frontend\statistics.h" />
     <ClInclude Include="module\ProxyBridge.h" />
+    <ClInclude Include="resources\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\micro-profiler-frontend.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="resources\xpstyle.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

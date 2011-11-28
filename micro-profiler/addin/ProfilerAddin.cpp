@@ -1,6 +1,6 @@
 #include <easy-addin/addin.h>
 
-#include "../frontend/resource.h"
+#include "../resources/resource.h"
 
 #include <atlpath.h>
 #include <atlstr.h>

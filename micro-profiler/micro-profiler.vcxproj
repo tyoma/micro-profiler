@@ -87,6 +87,7 @@
     <PostBuildEvent>
       <Command>copy entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
+copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -137,6 +138,7 @@ copy micro-profiler.initializer.cpp "$(OutDir)"
     <PostBuildEvent>
       <Command>copy entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
+copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -147,6 +149,10 @@ copy micro-profiler.initializer.cpp "$(OutDir)"
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
     </ClCompile>
     <ClCompile Include="micro-profiler.initializer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="micro-profiler.initializer.mfc-static.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>

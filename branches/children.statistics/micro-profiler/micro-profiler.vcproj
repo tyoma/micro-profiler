@@ -70,7 +70,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile="micro-profiler.ps.def"
+				ModuleDefinitionFile="module/micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -155,7 +155,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				ModuleDefinitionFile="micro-profiler.ps.def"
+				ModuleDefinitionFile="module/micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -272,10 +272,6 @@
 			Name="frontend"
 			>
 			<File
-				RelativePath=".\frontend\ProfilerAddin.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\frontend\ProfilerMainDialog.cpp"
 				>
 			</File>
@@ -299,10 +295,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\frontend\micro-profiler-addin.rgs"
-					>
-				</File>
-				<File
 					RelativePath=".\frontend\micro-profiler-frontend.rc"
 					>
 				</File>
@@ -316,26 +308,38 @@
 				</File>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath=".\frontend\frontend-main.cpp"
+		<Filter
+			Name="module"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
+			<File
+				RelativePath=".\module\frontend-main.cpp"
 				>
-				<Tool
-					Name="VCCLCompilerTool"
-					DisableLanguageExtensions="false"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
+			</File>
+			<File
+				RelativePath=".\module\micro-profiler.ps.def"
 				>
-				<Tool
-					Name="VCCLCompilerTool"
-					DisableLanguageExtensions="false"
-				/>
-			</FileConfiguration>
-		</File>
+			</File>
+			<File
+				RelativePath=".\module\ProxyBridge.c"
+				>
+			</File>
+			<File
+				RelativePath=".\module\ProxyBridge.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="addin"
+			>
+			<File
+				RelativePath=".\addin\micro-profiler-addin.rgs"
+				>
+			</File>
+			<File
+				RelativePath=".\addin\ProfilerAddin.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\micro-profiler.initializer.cpp"
 			>
@@ -375,10 +379,6 @@
 					Name="VCCLCompilerTool"
 				/>
 			</FileConfiguration>
-		</File>
-		<File
-			RelativePath=".\micro-profiler.ps.def"
-			>
 		</File>
 	</Files>
 	<Globals>

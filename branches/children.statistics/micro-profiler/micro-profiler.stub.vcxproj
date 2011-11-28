@@ -82,7 +82,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>micro-profiler.ps.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.ps.def</ModuleDefinitionFile>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>
@@ -127,7 +127,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <ModuleDefinitionFile>micro-profiler.ps.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.ps.def</ModuleDefinitionFile>
       <AdditionalDependencies>
       </AdditionalDependencies>
     </Link>

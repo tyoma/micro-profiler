@@ -71,7 +71,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile="micro-profiler.ps.def"
+				ModuleDefinitionFile="module/micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -154,7 +154,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				ModuleDefinitionFile="micro-profiler.ps.def"
+				ModuleDefinitionFile="module/micro-profiler.ps.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

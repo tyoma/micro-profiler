@@ -22,7 +22,7 @@
 
 #include "analyzer.h"
 #include "com_helpers.h"
-#include "_generated/microprofilerfrontend_i.h"
+#include "../_generated/microprofilerfrontend_i.h"
 
 #include <wpl/mt/thread.h>
 #include <atlbase.h>

@@ -3,7 +3,7 @@
 #include <time.h>
 #include <conio.h>
 
-#include "../micro-profiler/entry.h"
+#include "../micro-profiler/collector/entry.h"
 
 #include <vector>
 #include <algorithm>

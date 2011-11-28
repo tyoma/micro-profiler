@@ -85,7 +85,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>copy entry.h "$(OutDir)"
+      <Command>copy collector\entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>
@@ -136,7 +136,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>copy entry.h "$(OutDir)"
+      <Command>copy collector\entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>

@@ -1,6 +1,6 @@
 #include <frontend/function_list.h>
 #include <frontend/symbol_resolver.h>
-#include <com_helpers.h>
+#include <collector/com_helpers.h>
 
 #include <functional>
 #include <list>

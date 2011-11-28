@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="calls_collector.cpp" />
-    <ClCompile Include="entry.cpp" />
-    <ClCompile Include="system.cpp" />
     <ClCompile Include="_generated\microprofilerfrontend_i.c">
       <Filter>_generated</Filter>
     </ClCompile>
@@ -25,13 +22,17 @@
     <ClCompile Include="frontend\function_list.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="collector\calls_collector.cpp">
+      <Filter>collector</Filter>
+    </ClCompile>
+    <ClCompile Include="collector\entry.cpp">
+      <Filter>collector</Filter>
+    </ClCompile>
+    <ClCompile Include="collector\system.cpp">
+      <Filter>collector</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="analyzer.h" />
-    <ClInclude Include="calls_collector.h" />
-    <ClInclude Include="entry.h" />
-    <ClInclude Include="pod_vector.h" />
-    <ClInclude Include="system.h" />
     <ClInclude Include="_generated\microprofilerfrontend_i.h">
       <Filter>_generated</Filter>
     </ClInclude>
@@ -47,17 +48,33 @@
     <ClInclude Include="frontend\symbol_resolver.h">
       <Filter>frontend</Filter>
     </ClInclude>
-    <ClInclude Include="primitives.h" />
-    <ClInclude Include="com_helpers.h" />
     <ClInclude Include="frontend\ordered_view.h">
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="frontend\function_list.h">
       <Filter>frontend</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="microprofilerfrontend.idl" />
+    <ClInclude Include="collector\analyzer.h">
+      <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\calls_collector.h">
+      <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\com_helpers.h">
+      <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\entry.h">
+      <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\pod_vector.h">
+      <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\primitives.h">
+      <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\system.h">
+      <Filter>collector</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">
@@ -66,5 +83,13 @@
     <Filter Include="frontend">
       <UniqueIdentifier>{079096d4-99d2-47bf-bd0d-82899bf2dc0e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="collector">
+      <UniqueIdentifier>{402cd3fa-9bdc-414c-b3d7-961e631116e0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="collector\microprofilerfrontend.idl">
+      <Filter>collector</Filter>
+    </Midl>
   </ItemGroup>
 </Project>

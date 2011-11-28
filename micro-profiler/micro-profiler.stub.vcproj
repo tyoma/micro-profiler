@@ -190,11 +190,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\entry-stub.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\micro-profiler.ps.def"
+			RelativePath=".\collector\entry-stub.cpp"
 			>
 		</File>
 	</Files>

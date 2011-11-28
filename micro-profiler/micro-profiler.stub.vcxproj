@@ -16,13 +16,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="entry-stub.cpp">
+    <ClCompile Include="collector\entry-stub.cpp">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="micro-profiler.ps.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3B1F8640-9F9A-4989-A074-73590A82A26C}</ProjectGuid>

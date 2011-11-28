@@ -39,6 +39,7 @@ copy $(IntDir)micro-profiler.lib $(OutDir)
 copy $(IntDir)playground.pdb $(OutDir)
 copy $(IntDir)entry.h $(OutDir)
 copy $(IntDir)micro-profiler.initializer.cpp $(OutDir)
+copy $(IntDir)micro-profiler.initializer.mfc-static.cpp $(OutDir)
 svn info $(SolutionDir) &gt; $(OutDir)version.txt
 mkzip "$(OutDir)\*" "$(SolutionDir)\micro-profiler.deploy..zip"
 </Command>

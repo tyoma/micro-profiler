@@ -12,6 +12,7 @@
       <Filter>frontend</Filter>
     </ClCompile>
     <ClCompile Include="micro-profiler.initializer.cpp" />
+    <ClCompile Include="micro-profiler.initializer.mfc-static.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="micro-profiler.ps.def" />

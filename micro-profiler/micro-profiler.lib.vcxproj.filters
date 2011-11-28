@@ -42,9 +42,6 @@
     <ClInclude Include="frontend\ProfilerSink.h">
       <Filter>frontend</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\resource.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
     <ClInclude Include="frontend\symbol_resolver.h">
       <Filter>frontend</Filter>
     </ClInclude>
@@ -91,5 +88,10 @@
     <Midl Include="collector\microprofilerfrontend.idl">
       <Filter>collector</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="frontend\micro-profiler-sink.rgs">
+      <Filter>frontend</Filter>
+    </None>
   </ItemGroup>
 </Project>

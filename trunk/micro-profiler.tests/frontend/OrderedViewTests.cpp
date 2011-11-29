@@ -3,60 +3,60 @@
 #include <hash_map>
 #include <utility>
 
-namespace
-{
-	struct POD
-	{
-		int a;
-		int b;
-		double c;
-	};
-
-	bool operator== (const POD &left, const POD &right)
-	{
-		return left.a == right.a && left.b == right.b && left.c == right.c;
-	}
-
-
-	typedef stdext::hash_map<void *, POD> pod_map;
-	typedef ordered_view<pod_map> sorted_pods;
-
-	std::pair<void *const, POD> make_pod(const POD &pod)
-	{
-		return std::make_pair((void *)&pod, pod);
-	}
-
-	bool sort_by_a(const void *const, const POD &left, const void *const, const POD &right)
-	{
-		return left.a > right.a;
-	}
-
-	struct sort_by_b
-	{
-		bool operator()(const void *const, const POD &left, const void *const, const POD &right) const
-		{
-			return left.b > right.b;
-		}
-	};
-
-	bool sort_by_c(const void *const, const POD &left, const void *const, const POD &right)
-	{
-		return left.c > right.c;
-	}
-}
-
-//using namespace std;
+using namespace std;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			struct POD
+			{
+				int a;
+				int b;
+				double c;
+			};
+
+			bool operator== (const POD &left, const POD &right)
+			{
+				return left.a == right.a && left.b == right.b && left.c == right.c;
+			}
+
+
+			typedef stdext::hash_map<void *, POD> pod_map;
+			typedef ordered_view<pod_map> sorted_pods;
+
+			pair<void *const, POD> make_pod(const POD &pod)
+			{
+				return make_pair((void *)&pod, pod);
+			}
+
+			bool sort_by_a(const void *const, const POD &left, const void *const, const POD &right)
+			{
+				return left.a > right.a;
+			}
+
+			struct sort_by_b
+			{
+				bool operator()(const void *const, const POD &left, const void *const, const POD &right) const
+				{
+					return left.b > right.b;
+				}
+			};
+
+			bool sort_by_c(const void *const, const POD &left, const void *const, const POD &right)
+			{
+				return left.c > right.c;
+			}
+		}
+
+
 		[TestClass]
 		public ref class OrderedViewTests
 		{
 		public: 
-
 			[TestMethod]
 			void CanCreateEmptyOrderedView()
 			{
@@ -66,6 +66,7 @@ namespace micro_profiler
 				Assert::IsTrue(source.size() == 0);
 				Assert::IsTrue(s.size() == 0);
 			}
+
 
 			[TestMethod]
 			void CanUseEmptyOrderedView()
@@ -91,6 +92,7 @@ namespace micro_profiler
 				Assert::IsTrue(source.size() == 0);
 			}
 
+
 			[TestMethod]
 			void OrderedViewPreserveSize()
 			{
@@ -109,6 +111,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.size() == source.size());
 
 			}
+
 
 			[TestMethod]
 			void OrderedViewPreserveMapOrderWithoutPredicate()
@@ -134,8 +137,8 @@ namespace micro_profiler
 				{
 					Assert::IsTrue((*it) == s.at(i));
 				}
-
 			}
+
 
 			[TestMethod]
 			void OrderedViewSortsCorrectlyAsc()
@@ -158,6 +161,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.at(2) == make_pod(biggestB));
 			}
 
+
 			[TestMethod]
 			void OrderedViewSortsCorrectlyDesc()
 			{
@@ -178,6 +182,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.at(1) == make_pod(biggestC));
 				Assert::IsTrue(s.at(2) == make_pod(biggestA));
 			}
+
 
 			[TestMethod]
 			void OrderedViewCanSwitchPredicate()
@@ -203,6 +208,7 @@ namespace micro_profiler
 				s.set_order(&sort_by_c, true);
 				Assert::IsTrue(s.at(0) == make_pod(biggestC));
 			}
+
 
 			[TestMethod]
 			void OrderedViewCanSwitchDirection()
@@ -232,6 +238,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.at(s.size()-1) == make_pod(biggestB));
 			}
 
+
 			[TestMethod]
 			void OrderedViewCanFindByKeyWithoutAnyPredicateSet()
 			{
@@ -250,6 +257,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
 				Assert::IsTrue(s.find_by_key(&three) == sorted_pods::npos);
 			}
+
 
 			[TestMethod]
 			void OrderedViewCanFindByKeyWithPredicateSet()
@@ -274,6 +282,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.find_by_key(&three) == 2);
 				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
 			}
+
 
 			[TestMethod]
 			void OrderedViewCanFindByKeyWhenOrderChanged()
@@ -313,6 +322,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
 			}
 
+
 			[TestMethod]
 			void OrderedViewCanFetchMapChanges()
 			{
@@ -337,6 +347,7 @@ namespace micro_profiler
 				Assert::IsTrue(initial_size + 1 == source.size());
 				Assert::IsTrue(s.size() == source.size());
 			}
+
 
 			[TestMethod]
 			void OrderedViewPreservesOrderAfterResort()
@@ -380,6 +391,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.find_by_key(&four) != sorted_pods::npos);
 			}
 
+
 			[TestMethod]
 			void OrderedViewCanResortAfterOrderCahnge()
 			{
@@ -416,6 +428,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.find_by_key(&four) != sorted_pods::npos);
 			}
 
+
 			[TestMethod]
 			void OrderedViewCanCahngeOrderAfterResort()
 			{
@@ -449,6 +462,7 @@ namespace micro_profiler
 				Assert::IsTrue(s.find_by_key(&four) != sorted_pods::npos);
 			}
 
+
 			[TestMethod]
 			void OrderedViewCanFetchChangesFromEmptyMap()
 			{
@@ -481,6 +495,7 @@ namespace micro_profiler
 
 			}
 
+
 			[TestMethod]
 			void OrderedViewThrowsOutOfRange()
 			{
@@ -502,13 +517,11 @@ namespace micro_profiler
 					s.at(2);
 					Assert::IsTrue(false); // unexpected to be here
 				}
-				catch(std::out_of_range&)
+				catch(out_of_range&)
 				{
 					Assert::IsTrue(true); // ok, we got an exception
 				}
-
 			}
-		}; // OrderedViewTests
-
-	} // namespace tests
+		};
+	}
 }

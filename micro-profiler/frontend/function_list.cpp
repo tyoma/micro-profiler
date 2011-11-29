@@ -218,17 +218,19 @@ class statistics_model_impl : public BaseT
 protected:
 	ordered_view<MapT> _view;
 
-public:
+protected:
 	typedef typename BaseT::index_type index_type;
 	typedef ordered_view<MapT> view_type;
 
-public:
+protected:
 	statistics_model_impl(const MapT &statistics, __int64 ticks_resolution, shared_ptr<symbol_resolver> resolver);
 
 	virtual typename index_type get_count() const throw();
 	virtual void get_text(index_type item, index_type subitem, wstring &text) const;
 	virtual void set_order(index_type column, bool ascending);
 	virtual shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
+
+	void updated();
 };
 
 class functions_list_impl : public statistics_model_impl<functions_list, micro_profiler::statistics_map>
@@ -325,6 +327,13 @@ shared_ptr<const listview::trackable> statistics_model_impl<BaseT, MapT>::track(
 	return shared_ptr<const listview::trackable>(new trackable(_view, _view.at(row).first));
 }
 
+template <typename BaseT, typename MapT>
+void statistics_model_impl<BaseT, MapT>::updated()
+{
+	_view.resort();
+	invalidated(_view.size());
+}
+
 
 void functions_list_impl::update( const FunctionStatisticsDetailed *data, unsigned int count )
 {
@@ -334,15 +343,13 @@ void functions_list_impl::update( const FunctionStatisticsDetailed *data, unsign
 		const void *address = reinterpret_cast<void *>(s.FunctionAddress);
 		(*_statistics)[address] += s;
 	}
-	_view.resort();
-	invalidated(_view.size());
+	updated();
 }
 
 void functions_list_impl::clear()
 {
 	_statistics->clear();
-	_view.resort();
-	invalidated(_view.size());
+	updated();
 }
 
 functions_list_impl::index_type functions_list_impl::get_index(const void *address) const
@@ -356,9 +363,9 @@ void functions_list_impl::print(wstring &content) const
 	bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;  
 
 	content.clear();
-	content.reserve(256 * (_view.size() + 1)); // kind of magic number
+	content.reserve(256 * (get_count() + 1)); // kind of magic number
 	content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
-	for (size_t i = 0; i != _view.size(); ++i)
+	for (size_t i = 0; i != get_count(); ++i)
 	{
 		const view_type::value_type &row = _view.at(i);
 

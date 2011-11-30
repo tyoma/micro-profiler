@@ -21,8 +21,8 @@
 #include "ProfilerSink.h"
 
 #include "ProfilerMainDialog.h"
-#include "statistics.h"
 #include "symbol_resolver.h"
+#include "statistics.h"
 
 #include <atlstr.h>
 
@@ -36,13 +36,18 @@ namespace micro_profiler
 	ProfilerFrontend::~ProfilerFrontend()
 	{	}
 
+	void ProfilerFrontend::FinalRelease()
+	{
+		_dialog.reset();
+		_statistics.reset();
+	}
+
 	STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
 	{
 		shared_ptr<symbol_resolver> r(symbol_resolver::create_dia_resolver(executable, load_address));
 		
 		_statistics.reset(new functions_list(r));
 		_dialog.reset(new ProfilerMainDialog(r, _statistics, ticks_resolution));
-
 		_dialog->ShowWindow(SW_SHOW);
 		return S_OK;
 	}

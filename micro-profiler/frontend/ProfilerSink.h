@@ -29,10 +29,9 @@
 
 namespace std 
 {
-	using std::tr1::shared_ptr;
+	using tr1::shared_ptr;
 }
 
-class symbol_resolver;
 extern "C" CLSID CLSID_ProfilerFrontend;
 
 namespace micro_profiler
@@ -61,6 +60,8 @@ namespace micro_profiler
 		STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
 		STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
 	};
-
-	OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, ProfilerFrontend);
 }
+
+typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
+
+OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);

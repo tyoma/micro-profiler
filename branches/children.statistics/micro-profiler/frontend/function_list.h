@@ -26,7 +26,7 @@
 #include <string>
 #include <memory>
 
-namespace std 
+namespace std
 {
 	using std::tr1::shared_ptr;
 }
@@ -34,17 +34,19 @@ namespace std
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 class symbol_resolver;
 
-class functions_list : public wpl::ui::listview::model
+namespace micro_profiler
 {
-public:
-	static const size_t npos;
+	class functions_list : public wpl::ui::listview::model
+	{
+	public:
+		static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 
-	static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
+		virtual void clear() = 0;
+		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;
+		virtual void print(std::wstring &content) const = 0;
 
-	virtual ~functions_list() {};
-
-	virtual void clear() = 0;
-	virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;
-	virtual index_type get_index(const void *address) const = 0;
-	virtual void print(std::wstring &content) const = 0;
-};
+		// TODO: must be removed - model does not have to have these members
+		static const index_type npos = static_cast<index_type>(-1);
+		virtual index_type get_index(const void *address) const = 0;
+	};
+}

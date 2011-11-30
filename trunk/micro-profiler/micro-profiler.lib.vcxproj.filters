@@ -31,6 +31,9 @@
     <ClCompile Include="collector\system.cpp">
       <Filter>collector</Filter>
     </ClCompile>
+    <ClCompile Include="common\formatting.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="_generated\microprofilerfrontend_i.h">
@@ -72,6 +75,9 @@
     <ClInclude Include="collector\system.h">
       <Filter>collector</Filter>
     </ClInclude>
+    <ClInclude Include="common\formatting.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">
@@ -82,6 +88,9 @@
     </Filter>
     <Filter Include="collector">
       <UniqueIdentifier>{402cd3fa-9bdc-414c-b3d7-961e631116e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{6be9edac-94ee-4755-82d2-c219e37ae903}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

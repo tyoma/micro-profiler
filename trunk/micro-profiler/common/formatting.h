@@ -1,4 +1,4 @@
-//	Copyright (C) 2011 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (C) 2011 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -18,43 +18,11 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "ProfilerSink.h"
+#pragma once
 
-#include "ProfilerMainDialog.h"
-#include "symbol_resolver.h"
-#include "function_list.h"
-
-#include <atlstr.h>
-
-using namespace std;
+#include <string>
 
 namespace micro_profiler
 {
-	ProfilerFrontend::ProfilerFrontend()
-	{	}
-
-	ProfilerFrontend::~ProfilerFrontend()
-	{	}
-
-	void ProfilerFrontend::FinalRelease()
-	{
-		_dialog.reset();
-		_statistics.reset();
-	}
-
-	STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
-	{
-		shared_ptr<symbol_resolver> r(symbol_resolver::create_dia_resolver(wstring(CStringW(executable)), load_address));
-	
-		_statistics = functions_list::create(ticks_resolution, r);
-		_dialog.reset(new ProfilerMainDialog(_statistics));
-		_dialog->ShowWindow(SW_SHOW);
-		return S_OK;
-	}
-
-	STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
-	{
-		_statistics->update(statistics, count);
-		return S_OK;
-	}
+	void format_interval(std::wstring &destination, double interval);
 }

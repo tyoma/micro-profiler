@@ -40,7 +40,7 @@ namespace micro_profiler
 		to.MaxCallTime = from.second.max_call_time;
 	}
 
-	inline const function_statistics &operator +=(function_statistics &lhs, const FunctionStatistics &rhs)
+	inline const function_statistics &operator +=(function_statistics &lhs, const FunctionStatistics &rhs) throw()
 	{
 		lhs.times_called += rhs.TimesCalled;
 		if (static_cast<unsigned long long>(rhs.MaxReentrance) > lhs.max_reentrance)

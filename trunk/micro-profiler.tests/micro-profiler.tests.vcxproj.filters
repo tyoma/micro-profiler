@@ -17,6 +17,7 @@
     <ClCompile Include="frontend\FunctionListTests.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="TextFormattingServicesTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

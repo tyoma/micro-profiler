@@ -29,30 +29,33 @@
 
 using namespace std;
 
-ProfilerFrontend::ProfilerFrontend()
-{	}
-
-ProfilerFrontend::~ProfilerFrontend()
-{	}
-
-void ProfilerFrontend::FinalRelease()
+namespace micro_profiler
 {
-	_dialog.reset();
-	_statistics.reset();
-}
+	ProfilerFrontend::ProfilerFrontend()
+	{	}
 
-STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
-{
-	shared_ptr<symbol_resolver> r(symbol_resolver::create_dia_resolver(wstring(CStringW(executable)), load_address));
+	ProfilerFrontend::~ProfilerFrontend()
+	{	}
+
+	void ProfilerFrontend::FinalRelease()
+	{
+		_dialog.reset();
+		_statistics.reset();
+	}
+
+	STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
+	{
+		shared_ptr<symbol_resolver> r(symbol_resolver::create_dia_resolver(wstring(CStringW(executable)), load_address));
 	
-	_statistics = functions_list::create(ticks_resolution, r);
-	_dialog.reset(new ProfilerMainDialog(_statistics));
-	_dialog->ShowWindow(SW_SHOW);
-	return S_OK;
-}
+		_statistics = functions_list::create(ticks_resolution, r);
+		_dialog.reset(new ProfilerMainDialog(_statistics));
+		_dialog->ShowWindow(SW_SHOW);
+		return S_OK;
+	}
 
-STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
-{
-	_statistics->update(statistics, count);
-	return S_OK;
+	STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
+	{
+		_statistics->update(statistics, count);
+		return S_OK;
+	}
 }

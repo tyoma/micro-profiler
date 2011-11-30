@@ -28,33 +28,36 @@
 #include <atltypes.h>
 #include <atlwin.h>
 
-class functions_list;
-
-class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
+namespace micro_profiler
 {
-	std::shared_ptr<functions_list> _statistics;
-	CWindow _statistics_view, _clear_button, _copy_all_button;
-	std::shared_ptr<wpl::ui::listview> _statistics_lv;
-	std::vector<wpl::slot_connection> _connections;
+	class functions_list;
 
-	void RelocateControls(const CSize &size);
+	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
+	{
+		std::shared_ptr<functions_list> _statistics;
+		CWindow _statistics_view, _clear_button, _copy_all_button;
+		std::shared_ptr<wpl::ui::listview> _statistics_lv;
+		std::vector<wpl::slot_connection> _connections;
 
-public:
-	ProfilerMainDialog(std::shared_ptr<functions_list> s);
-	~ProfilerMainDialog();
+		void RelocateControls(const CSize &size);
 
-	enum {	IDD = IDD_PROFILER_MAIN	};
+	public:
+		ProfilerMainDialog(std::shared_ptr<functions_list> s);
+		~ProfilerMainDialog();
 
-	BEGIN_MSG_MAP(ProfilerMainDialog)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog);
-		MESSAGE_HANDLER(WM_SIZE, OnSize);
-		COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
-		COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
-		REFLECT_NOTIFICATIONS();
-	END_MSG_MAP()
+		enum {	IDD = IDD_PROFILER_MAIN	};
 
-	LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-	LRESULT OnSize(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-	LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
-	LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);
-};
+		BEGIN_MSG_MAP(ProfilerMainDialog)
+			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog);
+			MESSAGE_HANDLER(WM_SIZE, OnSize);
+			COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
+			COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
+			REFLECT_NOTIFICATIONS();
+		END_MSG_MAP()
+
+		LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
+		LRESULT OnSize(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
+		LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
+		LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);
+	};
+}

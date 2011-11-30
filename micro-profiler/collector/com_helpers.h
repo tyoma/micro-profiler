@@ -29,13 +29,6 @@ namespace micro_profiler
 {
 	const hyper c_call_offset = 5;
 
-	struct children_count_accumulator
-	{
-		size_t operator ()(size_t acc, const detailed_statistics_map::value_type &s) throw()
-		{	return acc + s.second.children_statistics.size();	}
-	};
-
-
 	template <typename AddrType, typename StatisticsType>
 	inline void copy(const std::pair<AddrType, StatisticsType> &from, FunctionStatistics &to) throw()
 	{
@@ -45,6 +38,18 @@ namespace micro_profiler
 		to.InclusiveTime = from.second.inclusive_time;
 		to.ExclusiveTime = from.second.exclusive_time;
 		to.MaxCallTime = from.second.max_call_time;
+	}
+
+	inline const function_statistics &operator +=(function_statistics &lhs, const FunctionStatistics &rhs)
+	{
+		lhs.times_called += rhs.TimesCalled;
+		if (static_cast<unsigned long long>(rhs.MaxReentrance) > lhs.max_reentrance)
+			lhs.max_reentrance = rhs.MaxReentrance;
+		lhs.inclusive_time += rhs.InclusiveTime;
+		lhs.exclusive_time += rhs.ExclusiveTime;
+		if (rhs.MaxCallTime > lhs.max_call_time)
+			lhs.max_call_time = rhs.MaxCallTime;
+		return lhs;
 	}
 
 	inline void copy(const detailed_statistics_map::value_type &from, FunctionStatisticsDetailed &to,
@@ -65,7 +70,15 @@ namespace micro_profiler
 
 	template <typename DetailedStatIterator>
 	inline size_t total_children_count(DetailedStatIterator b, DetailedStatIterator e) throw()
-	{	return std::accumulate(b, e, static_cast<size_t>(0), children_count_accumulator());	}
+	{
+		struct children_count_accumulator
+		{
+			size_t operator ()(size_t acc, const detailed_statistics_map::value_type &s) throw()
+			{	return acc + s.second.children_statistics.size();	}
+		};
+
+		return std::accumulate(b, e, static_cast<size_t>(0), children_count_accumulator());
+	}
 
 	template <typename DetailedStatIterator>
 	inline void copy(DetailedStatIterator b, DetailedStatIterator e, std::vector<FunctionStatisticsDetailed> &to,

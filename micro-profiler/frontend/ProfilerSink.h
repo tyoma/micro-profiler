@@ -32,31 +32,35 @@ namespace std
 	using std::tr1::shared_ptr;
 }
 
-class ProfilerMainDialog;
 class symbol_resolver;
-class functions_list;
 extern "C" CLSID CLSID_ProfilerFrontend;
 
-class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>,
-	public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
+namespace micro_profiler
 {
-	std::shared_ptr<functions_list> _statistics;
-	std::auto_ptr<ProfilerMainDialog> _dialog;
+	class ProfilerMainDialog;
+	class functions_list;
 
-public:
-	ProfilerFrontend();
-	~ProfilerFrontend();
+	class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>,
+		public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
+	{
+		std::shared_ptr<functions_list> _statistics;
+		std::auto_ptr<ProfilerMainDialog> _dialog;
 
-	DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
+	public:
+		ProfilerFrontend();
+		~ProfilerFrontend();
 
-	BEGIN_COM_MAP(ProfilerFrontend)
-		COM_INTERFACE_ENTRY(IProfilerFrontend)
-	END_COM_MAP()
+		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
 
-	void FinalRelease();
+		BEGIN_COM_MAP(ProfilerFrontend)
+			COM_INTERFACE_ENTRY(IProfilerFrontend)
+		END_COM_MAP()
 
-	STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
-	STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
-};
+		void FinalRelease();
 
-OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, ProfilerFrontend);
+		STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
+		STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
+	};
+
+	OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, ProfilerFrontend);
+}

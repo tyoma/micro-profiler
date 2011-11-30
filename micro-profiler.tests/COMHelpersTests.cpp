@@ -17,6 +17,13 @@ namespace micro_profiler
 
 			bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs)
 			{	return lhs.Statistics.FunctionAddress < rhs.Statistics.FunctionAddress; }
+
+			bool operator ==(const function_statistics &lhs, const function_statistics &rhs)
+			{
+				return lhs.times_called == rhs.times_called && lhs.max_reentrance == rhs.max_reentrance
+					&& lhs.inclusive_time == rhs.inclusive_time && lhs.exclusive_time == rhs.exclusive_time
+					&& lhs.max_call_time == rhs.max_call_time;
+			}
 		}
 
 		[TestClass]
@@ -364,6 +371,85 @@ namespace micro_profiler
 				Assert::IsTrue(0 == buffer2[1].ChildrenStatistics);
 				Assert::IsTrue(1 == buffer2[2].ChildrenCount);
 				Assert::IsTrue(0 != buffer2[2].ChildrenStatistics);
+			}
+
+
+			[TestMethod]
+			void InplaceAdditionReturnsNonConstRefToLHS()
+			{
+				// INIT
+				function_statistics destination(13, 0, 50000700001, 13002, 0);
+				FunctionStatistics addendum = {	0, 19, 0, 23, 31, 0 };
+
+				// ACT
+				const function_statistics *result = &(destination += addendum);
+
+				// ASSERT
+				Assert::IsTrue(&destination == result);
+			}
+
+
+			[TestMethod]
+			void InplaceAddingStatisticsToInternalAddsTimesCalledAndInclusiveExclusiveTimes()
+			{
+				// INIT
+				function_statistics destination[] = {
+					function_statistics(0, 0, 0, 0, 0),
+					function_statistics(1, 0, 10001, 3002, 0),
+					function_statistics(13, 0, 50000700001, 13002, 0),
+					function_statistics(131, 0, 12345678, 345678, 0),
+				};
+				FunctionStatistics addendum[] = {
+					// address, times called, max reentrance, exclusive time, inclusive time, max call time
+					{	0, 3, 0, 5, 7, 0 },
+					{	0, 11, 0, 13, 17, 0 },
+					{	0, 19, 0, 23, 31, 0 },
+					{	0, 37, 0, 41, 47, 0 },
+				};
+
+				// ACT
+				destination[0] += addendum[0];
+				destination[1] += addendum[1];
+				destination[2] += addendum[2];
+				destination[3] += addendum[3];
+
+				// ASSERT
+				Assert::IsTrue(function_statistics(3, 0, 7, 5, 0) == destination[0]);
+				Assert::IsTrue(function_statistics(12, 0, 10018, 3015, 0) == destination[1]);
+				Assert::IsTrue(function_statistics(32, 0, 50000700032, 13025, 0) == destination[2]);
+				Assert::IsTrue(function_statistics(168, 0, 12345725, 345719, 0) == destination[3]);
+			}
+
+
+			[TestMethod]
+			void InplaceAddingStatisticsToInternalUpdatesMaximumValuesForReentranceAndMaxCallTime()
+			{
+				// INIT
+				function_statistics destination[] = {
+					function_statistics(0, 0, 0, 0, 100),
+					function_statistics(0, 4, 0, 0, 70),
+					function_statistics(0, 9, 0, 0, 5),
+					function_statistics(0, 13, 0, 0, 0),
+				};
+				FunctionStatistics addendum[] = {
+					// address, times called, max reentrance, exclusive time, inclusive time, max call time
+					{	0, 1, 3, 10, 21, 0 },
+					{	0, 2, 5, 11, 22, 70 },
+					{	0, 3, 9, 12, 23, 6 },
+					{	0, 4, 10, 13, 24, 9 },
+				};
+
+				// ACT
+				destination[0] += addendum[0];
+				destination[1] += addendum[1];
+				destination[2] += addendum[2];
+				destination[3] += addendum[3];
+
+				// ASSERT
+				Assert::IsTrue(function_statistics(1, 3, 21, 10, 100) == destination[0]);
+				Assert::IsTrue(function_statistics(2, 5, 22, 11, 70) == destination[1]);
+				Assert::IsTrue(function_statistics(3, 9, 23, 12, 6) == destination[2]);
+				Assert::IsTrue(function_statistics(4, 13, 24, 13, 9) == destination[3]);
 			}
 		};
 	}

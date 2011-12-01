@@ -21,7 +21,7 @@
 #pragma once
 
 #include "calls_collector.h"
-#include "primitives.h"
+#include "../common/primitives.h"
 
 #include <vector>
 

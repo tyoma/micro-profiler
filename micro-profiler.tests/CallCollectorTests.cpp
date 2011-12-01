@@ -1,7 +1,7 @@
 #include "Helpers.h"
 
 #include <collector/calls_collector.h>
-#include <collector/primitives.h>
+#include <common/primitives.h>
 
 #include <vector>
 #include <utility>

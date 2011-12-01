@@ -1,4 +1,4 @@
-#include <collector/primitives.h>
+#include <common/primitives.h>
 
 using namespace std;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;

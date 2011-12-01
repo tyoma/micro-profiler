@@ -45,20 +45,14 @@ namespace micro_profiler
 			return buffer;
 		}
 
-		void print_time(wstring &dest, double value, bool use_default_formatter)
+		wstring to_string2(double value)
 		{
-			if (use_default_formatter)
-			{
-				const size_t buffer_size = 24;
-				wchar_t buffer[buffer_size] = { 0 };
+			const size_t buffer_size = 24;
+			wchar_t buffer[buffer_size] = { 0 };
 
-				::swprintf(buffer, buffer_size, L"%g", value);
-				dest = buffer;
-			}
-			else
-				format_interval(dest, value);
+			::swprintf(buffer, buffer_size, L"%g", value);
+			return buffer;
 		}
-
 
 		namespace functors
 		{
@@ -73,24 +67,12 @@ namespace micro_profiler
 					: _resolver(resolver)
 				{	}
 
-				void operator ()(wstring &dest, const void *address, const function_statistics &) const
-				{	dest = _resolver->symbol_name_by_va(address);	}
-
-				void operator ()(wstring &dest, const void *address, unsigned __int64) const
-				{	dest = _resolver->symbol_name_by_va(address);	}
-
 				bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
 				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
 			};
 
 			struct by_times_called
 			{
-				void operator ()(wstring &dest, const void *, const function_statistics &s) const
-				{	dest = to_string2(s.times_called);	}
-
-				void operator ()(wstring &dest, const void *, unsigned __int64 times_called) const
-				{	dest = to_string2(times_called);	}
-
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.times_called < rhs.times_called;	}
 
@@ -98,93 +80,38 @@ namespace micro_profiler
 				{	return lhs < rhs;	}
 			};
 
-			class by_exclusive_time
+			struct by_exclusive_time
 			{
-				__int64 _ticks_resolution;
-				bool _use_default_formatter;
-			public:
-				by_exclusive_time(__int64 ticks_resolution, bool use_default_formatter = false) 
-					: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter) 
-				{	}
-
-				void operator ()(wstring &dest, const void *, const function_statistics &s) const
-				{	print_time(dest, 1.0 * s.exclusive_time / _ticks_resolution, _use_default_formatter);	}
-
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.exclusive_time < rhs.exclusive_time;	}
 			};
 
 			struct by_inclusive_time
 			{
-				__int64 _ticks_resolution;
-				bool _use_default_formatter;
-			public:
-				by_inclusive_time(__int64 ticks_resolution, bool use_default_formatter = false) 
-					: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter)
-				{	}
-
-				void operator ()(wstring &dest, const void *, const function_statistics &s) const
-				{	print_time(dest, 1.0 * s.inclusive_time / _ticks_resolution, _use_default_formatter);	}
-
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.inclusive_time < rhs.inclusive_time;	}
 			};
 
 			struct by_avg_exclusive_call_time
 			{
-				__int64 _ticks_resolution;
-				bool _use_default_formatter;
-			public:
-				by_avg_exclusive_call_time(__int64 ticks_resolution, bool use_default_formatter = false) 
-					: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter)
-				{	}
-
-				void operator ()(wstring &dest, const void *, const function_statistics &s) const
-				{	print_time(dest, s.times_called ? 1.0 * s.exclusive_time / _ticks_resolution / s.times_called : 0, _use_default_formatter);	}
-
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return ((lhs.times_called && rhs.times_called) ? (lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called) : lhs.times_called < rhs.times_called);	}
 			};
 
 			struct by_avg_inclusive_call_time
 			{
-				__int64 _ticks_resolution;
-				bool _use_default_formatter;
-			public:
-				by_avg_inclusive_call_time(__int64 ticks_resolution, bool use_default_formatter = false) 
-					: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter)
-				{	}
-
-				void operator ()(wstring &dest, const void *, const function_statistics &s) const
-				{	print_time(dest, s.times_called ? 1.0 * s.inclusive_time / _ticks_resolution / s.times_called : 0, _use_default_formatter);	}
-
-
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return ((lhs.times_called && rhs.times_called) ? (lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called) : lhs.times_called < rhs.times_called);	}
 			};
 
 			struct by_max_reentrance
 			{
-				void operator ()(wstring &dest, const void *, const function_statistics &s) const
-				{	dest = to_string2(s.max_reentrance);	}
-
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.max_reentrance < rhs.max_reentrance;	}
 			};
 
-			class by_max_call_time
+			struct by_max_call_time
 			{
-				__int64 _ticks_resolution;
-				bool _use_default_formatter;
-
-			public:
-				by_max_call_time(__int64 ticks_resolution, bool use_default_formatter = false) 
-					: _ticks_resolution(ticks_resolution), _use_default_formatter(use_default_formatter) 
-				{	}
-
-				void operator ()(wstring &dest, const void *, const function_statistics &s) const
-				{	print_time(dest, 1.0 * s.max_call_time / _ticks_resolution, _use_default_formatter);	}
-
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.max_call_time < rhs.max_call_time;	}
 			};
@@ -194,7 +121,7 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	class statistics_model_impl : public BaseT
 	{
-		__int64 _ticks_resolution;
+		double _tick_interval;
 		shared_ptr<symbol_resolver> _resolver;
 
 	protected:
@@ -205,7 +132,7 @@ namespace micro_profiler
 		typedef ordered_view<MapT> view_type;
 
 	protected:
-		statistics_model_impl(const MapT &statistics, __int64 ticks_resolution, shared_ptr<symbol_resolver> resolver);
+		statistics_model_impl(const MapT &statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual typename index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
@@ -218,11 +145,11 @@ namespace micro_profiler
 	class functions_list_impl : public statistics_model_impl<functions_list, micro_profiler::statistics_map>
 	{
 		shared_ptr<micro_profiler::statistics_map> _statistics;
-		__int64 _ticks_resolution;
+		double _tick_interval;
 		shared_ptr<symbol_resolver> _resolver;
 
 	public:
-		functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, __int64 ticks_resolution, shared_ptr<symbol_resolver> resolver);
+		functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual void clear();
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
@@ -235,19 +162,19 @@ namespace micro_profiler
 	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list_impl(
-			shared_ptr<micro_profiler::statistics_map>(new micro_profiler::statistics_map), ticks_resolution, resolver));
+			shared_ptr<micro_profiler::statistics_map>(new micro_profiler::statistics_map), 1.0 / ticks_resolution, resolver));
 	}
 
-	functions_list_impl::functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, __int64 ticks_resolution,
+	functions_list_impl::functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<functions_list, micro_profiler::statistics_map>(*statistics, ticks_resolution, resolver),
-			_statistics(statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
+		: statistics_model_impl<functions_list, micro_profiler::statistics_map>(*statistics, tick_interval, resolver),
+			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
 
 	template <typename BaseT, typename MapT>
-	statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, __int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
-		: _view(statistics), _ticks_resolution(ticks_resolution), _resolver(resolver)
+	statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval, shared_ptr<symbol_resolver> resolver)
+		: _view(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{ }
 
 	template <typename BaseT, typename MapT>
@@ -258,17 +185,18 @@ namespace micro_profiler
 	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
 	{
 		const view_type::value_type &row = _view.at(item);
+
 		switch (subitem)
 		{
-		case 0:	text = to_string2(item);	break;
-		case 1:	(functors::by_name(_resolver))(text, row.first, row.second);	break;
-		case 2:	functors::by_times_called()(text, row.first, row.second);	break;
-		case 3:	(functors::by_exclusive_time(_ticks_resolution))(text, row.first, row.second);	break;
-		case 4:	(functors::by_inclusive_time(_ticks_resolution))(text, row.first, row.second);	break;
-		case 5:	(functors::by_avg_exclusive_call_time(_ticks_resolution))(text, row.first, row.second);	break;
-		case 6:	(functors::by_avg_inclusive_call_time(_ticks_resolution))(text, row.first, row.second);	break;
-		case 7:	functors::by_max_reentrance()(text, row.first, row.second);	break;
-		case 8:	(functors::by_max_call_time(_ticks_resolution))(text, row.first, row.second);	break;
+		case 0:	text = to_string2((unsigned long long)item);	break;
+		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
+		case 2:	text = to_string2(row.second.times_called);	break;
+		case 3:	format_interval(text, _tick_interval * row.second.exclusive_time);	break;
+		case 4:	format_interval(text, _tick_interval * row.second.inclusive_time);	break;
+		case 5:	format_interval(text, row.second.times_called ? _tick_interval * row.second.exclusive_time / row.second.times_called : 0);	break;
+		case 6:	format_interval(text, row.second.times_called ? _tick_interval * row.second.inclusive_time / row.second.times_called : 0);	break;
+		case 7:	text = to_string2(row.second.max_reentrance);	break;
+		case 8:	format_interval(text, _tick_interval * row.second.max_call_time);	break;
 		}
 	}
 
@@ -279,12 +207,12 @@ namespace micro_profiler
 		{
 		case 1:	_view.set_order(functors::by_name(_resolver), ascending);	break;
 		case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
-		case 3:	_view.set_order(functors::by_exclusive_time(_ticks_resolution), ascending);	break;
-		case 4:	_view.set_order(functors::by_inclusive_time(_ticks_resolution), ascending);	break;
-		case 5:	_view.set_order(functors::by_avg_exclusive_call_time(_ticks_resolution), ascending);	break;
-		case 6:	_view.set_order(functors::by_avg_inclusive_call_time(_ticks_resolution), ascending);	break;
+		case 3:	_view.set_order(functors::by_exclusive_time(), ascending);	break;
+		case 4:	_view.set_order(functors::by_inclusive_time(), ascending);	break;
+		case 5:	_view.set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
+		case 6:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
 		case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
-		case 8:	_view.set_order(functors::by_max_call_time(_ticks_resolution), ascending);	break;
+		case 8:	_view.set_order(functors::by_max_call_time(), ascending);	break;
 		}
 		invalidated(_view.size());
 	}
@@ -352,14 +280,14 @@ namespace micro_profiler
 			wstring tmp;
 			const view_type::value_type &row = _view.at(i);
 
-			content += (functors::by_name(_resolver)(tmp, row.first, row.second), tmp) + L"\t";
-			content += (functors::by_times_called()(tmp, row.first, row.second), tmp) + L"\t";
-			content += (functors::by_exclusive_time(_ticks_resolution, true)(tmp, row.first, row.second), tmp) + L"\t";
-			content += (functors::by_inclusive_time(_ticks_resolution, true)(tmp, row.first, row.second), tmp) + L"\t";
-			content += (functors::by_avg_exclusive_call_time(_ticks_resolution, true)(tmp, row.first, row.second), tmp) + L"\t";
-			content += (functors::by_avg_inclusive_call_time(_ticks_resolution, true)(tmp, row.first, row.second), tmp) + L"\t";
-			content += (functors::by_max_reentrance()(tmp, row.first, row.second), tmp) + L"\t";
-			content += (functors::by_max_call_time(_ticks_resolution, true)(tmp, row.first, row.second), tmp) + L"\r\n";
+			content += _resolver->symbol_name_by_va(row.first) + L"\t";
+			content += to_string2(row.second.times_called) + L"\t";
+			content += to_string2(_tick_interval * row.second.exclusive_time) + L"\t";
+			content += to_string2(_tick_interval * row.second.inclusive_time) + L"\t";
+			content += to_string2(row.second.times_called ? _tick_interval * row.second.exclusive_time / row.second.times_called : 0) + L"\t";
+			content += to_string2(row.second.times_called ? _tick_interval * row.second.inclusive_time / row.second.times_called : 0) + L"\t";
+			content += to_string2(row.second.max_reentrance) + L"\t";
+			content += to_string2(_tick_interval * row.second.max_call_time) + L"\r\n";
 		}
 
 		if (locale_ok) 

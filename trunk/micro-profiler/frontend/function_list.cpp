@@ -20,10 +20,10 @@
 
 #include "function_list.h"
 
-#include "../collector/com_helpers.h"
+#include "../common/com_helpers.h"
 #include "../common/formatting.h"
+#include "../common/ordered_view.h"
 #include "symbol_resolver.h"
-#include "ordered_view.h"
 
 #include <utility>
 #include <cmath>

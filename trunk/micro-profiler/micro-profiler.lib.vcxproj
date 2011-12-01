@@ -191,14 +191,14 @@
   <ItemGroup>
     <ClInclude Include="collector\analyzer.h" />
     <ClInclude Include="collector\calls_collector.h" />
-    <ClInclude Include="collector\com_helpers.h" />
     <ClInclude Include="collector\entry.h" />
-    <ClInclude Include="collector\pod_vector.h" />
-    <ClInclude Include="collector\primitives.h" />
     <ClInclude Include="collector\system.h" />
+    <ClInclude Include="common\com_helpers.h" />
     <ClInclude Include="common\formatting.h" />
+    <ClInclude Include="common\ordered_view.h" />
+    <ClInclude Include="common\pod_vector.h" />
+    <ClInclude Include="common\primitives.h" />
     <ClInclude Include="frontend\function_list.h" />
-    <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="frontend\symbol_resolver.h" />

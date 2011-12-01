@@ -18,35 +18,34 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include "formatting.h"
 
-#include "../common/primitives.h"
+#include <cmath>
+#include <cwchar>
 
-#include <wpl/ui/listview.h>
-#include <string>
-#include <memory>
-
-namespace std
-{
-	using std::tr1::shared_ptr;
-}
-
-typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-class symbol_resolver;
+using namespace std;
 
 namespace micro_profiler
 {
-	class functions_list : public wpl::ui::listview::model
+	const double c_bias = 7.25e-5;
+	const size_t c_int_buffer_length = 24;
+	const wchar_t *c_time_units[] = {	L"s", L"ms", L"\x03bcs", L"ns",	};
+	const int c_time_units_count = sizeof(c_time_units) / sizeof(c_time_units[0]);
+	const wchar_t *c_formatting = L"%.3g%s";
+	const wchar_t *c_formatting_enhanced = L"%.4g%s";
+	
+	void format_interval(wstring &destination, double interval)
 	{
-	public:
-		static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
+		wchar_t buffer[c_int_buffer_length] = { 0 };
+		const double uinterval = interval < 0 ? -interval : interval;
+		const wchar_t *formatting = 999.5 <= uinterval && uinterval < 10000 ? c_formatting_enhanced : c_formatting;
+		int unit = interval != 0 ? -static_cast<int>(floor(c_bias + log10(uinterval) / 3)) : 0;
 
-		virtual void clear() = 0;
-		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;
-		virtual void print(std::wstring &content) const = 0;
-
-		// TODO: must be removed - model does not have to have these members
-		static const index_type npos = static_cast<index_type>(-1);
-		virtual index_type get_index(const void *address) const = 0;
-	};
+		unit = max(unit, 0);
+		if (unit >= c_time_units_count)
+			unit = 0, interval = 0;
+		interval *= pow(1000.0, unit);
+		swprintf(buffer, c_int_buffer_length, formatting, interval, c_time_units[unit]);
+		destination = buffer;
+	}
 }

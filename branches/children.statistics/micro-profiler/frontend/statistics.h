@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include "./../collector/primitives.h"
-#include "ordered_view.h"
+#include "../common/primitives.h"
+#include "../common/ordered_view.h"
 
 #include <wpl/ui/listview.h>
 #include <functional>

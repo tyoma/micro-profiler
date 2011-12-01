@@ -21,8 +21,7 @@
 #include "entry.h"
 
 #include "analyzer.h"
-#include "com_helpers.h"
-#include "../_generated/microprofilerfrontend_i.h"
+#include "../common/com_helpers.h"
 
 #include <wpl/mt/thread.h>
 #include <atlbase.h>

@@ -21,7 +21,7 @@
 #include "statistics.h"
 
 #include "symbol_resolver.h"
-#include "../collector/com_helpers.h"
+#include "../common/com_helpers.h"
 #include <sstream>
 #include <cmath>
 

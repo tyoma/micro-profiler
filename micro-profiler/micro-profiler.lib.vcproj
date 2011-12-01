@@ -275,10 +275,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\frontend\ordered_view.h"
-				>
-			</File>
-			<File
 				RelativePath=".\frontend\ProfilerMainDialog.cpp"
 				>
 				<FileConfiguration
@@ -407,10 +403,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\collector\com_helpers.h"
-				>
-			</File>
-			<File
 				RelativePath=".\collector\entry.cpp"
 				>
 				<FileConfiguration
@@ -439,14 +431,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\collector\pod_vector.h"
-				>
-			</File>
-			<File
-				RelativePath=".\collector\primitives.h"
-				>
-			</File>
-			<File
 				RelativePath=".\collector\system.cpp"
 				>
 				<FileConfiguration
@@ -468,6 +452,34 @@
 			</File>
 			<File
 				RelativePath=".\collector\system.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="common"
+			>
+			<File
+				RelativePath=".\common\com_helpers.h"
+				>
+			</File>
+			<File
+				RelativePath=".\common\formatting.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\common\formatting.h"
+				>
+			</File>
+			<File
+				RelativePath=".\common\ordered_view.h"
+				>
+			</File>
+			<File
+				RelativePath=".\common\pod_vector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\common\primitives.h"
 				>
 			</File>
 		</Filter>

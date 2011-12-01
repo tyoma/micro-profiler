@@ -1,4 +1,4 @@
-#include <collector/com_helpers.h>
+#include <common/com_helpers.h>
 
 #include "Helpers.h"
 #include <algorithm>

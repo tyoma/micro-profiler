@@ -95,13 +95,13 @@ namespace micro_profiler
 			struct by_avg_exclusive_call_time
 			{
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return ((lhs.times_called && rhs.times_called) ? (lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called) : lhs.times_called < rhs.times_called);	}
+				{	return lhs.times_called && rhs.times_called ? lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 			};
 
 			struct by_avg_inclusive_call_time
 			{
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return ((lhs.times_called && rhs.times_called) ? (lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called) : lhs.times_called < rhs.times_called);	}
+				{	return lhs.times_called && rhs.times_called ? lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 			};
 
 			struct by_max_reentrance
@@ -116,6 +116,21 @@ namespace micro_profiler
 				{	return lhs.max_call_time < rhs.max_call_time;	}
 			};
 		}
+
+		double exclusive_time(const function_statistics &s, double tick_interval)
+		{	return tick_interval * s.exclusive_time;	}
+
+		double inclusive_time(const function_statistics &s, double tick_interval)
+		{	return tick_interval * s.inclusive_time;	}
+
+		double max_call_time(const function_statistics &s, double tick_interval)
+		{	return tick_interval * s.max_call_time;	}
+
+		double exclusive_time_avg(const function_statistics &s, double tick_interval)
+		{	return s.times_called ? tick_interval * s.exclusive_time / s.times_called : 0;	}
+
+		double inclusive_time_avg(const function_statistics &s, double tick_interval)
+		{	return s.times_called ? tick_interval * s.inclusive_time / s.times_called : 0;	}
 	}
 
 	template <typename BaseT, typename MapT>
@@ -137,7 +152,7 @@ namespace micro_profiler
 		virtual typename index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
-		virtual shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
+		virtual shared_ptr<const listview::trackable> track(index_type row) const;
 
 		void updated();
 	};
@@ -155,6 +170,7 @@ namespace micro_profiler
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
 		virtual index_type get_index(const void *address) const;
 		virtual void print(wstring &content) const;
+		virtual shared_ptr<model> children_of(index_type item) const;
 	};
 
 
@@ -191,12 +207,12 @@ namespace micro_profiler
 		case 0:	text = to_string2((unsigned long long)item);	break;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
 		case 2:	text = to_string2(row.second.times_called);	break;
-		case 3:	format_interval(text, _tick_interval * row.second.exclusive_time);	break;
-		case 4:	format_interval(text, _tick_interval * row.second.inclusive_time);	break;
-		case 5:	format_interval(text, row.second.times_called ? _tick_interval * row.second.exclusive_time / row.second.times_called : 0);	break;
-		case 6:	format_interval(text, row.second.times_called ? _tick_interval * row.second.inclusive_time / row.second.times_called : 0);	break;
+		case 3:	format_interval(text, exclusive_time(row.second, _tick_interval));	break;
+		case 4:	format_interval(text, inclusive_time(row.second, _tick_interval));	break;
+		case 5:	format_interval(text, exclusive_time_avg(row.second, _tick_interval));	break;
+		case 6:	format_interval(text, inclusive_time_avg(row.second, _tick_interval));	break;
 		case 7:	text = to_string2(row.second.max_reentrance);	break;
-		case 8:	format_interval(text, _tick_interval * row.second.max_call_time);	break;
+		case 8:	format_interval(text, max_call_time(row.second, _tick_interval));	break;
 		}
 	}
 
@@ -282,15 +298,31 @@ namespace micro_profiler
 
 			content += _resolver->symbol_name_by_va(row.first) + L"\t";
 			content += to_string2(row.second.times_called) + L"\t";
-			content += to_string2(_tick_interval * row.second.exclusive_time) + L"\t";
-			content += to_string2(_tick_interval * row.second.inclusive_time) + L"\t";
-			content += to_string2(row.second.times_called ? _tick_interval * row.second.exclusive_time / row.second.times_called : 0) + L"\t";
-			content += to_string2(row.second.times_called ? _tick_interval * row.second.inclusive_time / row.second.times_called : 0) + L"\t";
+			content += to_string2(exclusive_time(row.second, _tick_interval)) + L"\t";
+			content += to_string2(inclusive_time(row.second, _tick_interval)) + L"\t";
+			content += to_string2(exclusive_time_avg(row.second, _tick_interval)) + L"\t";
+			content += to_string2(inclusive_time_avg(row.second, _tick_interval)) + L"\t";
 			content += to_string2(row.second.max_reentrance) + L"\t";
-			content += to_string2(_tick_interval * row.second.max_call_time) + L"\r\n";
+			content += to_string2(max_call_time(row.second, _tick_interval)) + L"\r\n";
 		}
 
 		if (locale_ok) 
 			::setlocale(LC_NUMERIC, old_locale);
+	}
+
+
+	struct dependent_statistics_model_impl : public listview::model
+	{
+		virtual index_type get_count() const throw()	{	return 0;	}
+		virtual void get_text(index_type /*item*/, index_type /*subitem*/, wstring &/*text*/) const	{	}
+		virtual void set_order(index_type /*column*/, bool /*ascending*/)	{	}
+		virtual shared_ptr<const listview::trackable> track(index_type /*row*/) const	{	return shared_ptr<const listview::trackable>();	}
+	};
+
+	shared_ptr<listview::model> functions_list_impl::children_of(index_type item) const
+	{
+		if (item >= get_count())
+			throw out_of_range("");
+		return shared_ptr<listview::model>(new dependent_statistics_model_impl());
 	}
 }

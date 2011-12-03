@@ -1,5 +1,7 @@
 #include <frontend/function_list.h>
 
+#include "../Helpers.h"
+
 #include <common/com_helpers.h>
 #include <frontend/symbol_resolver.h>
 
@@ -777,6 +779,73 @@ namespace micro_profiler
 										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
 										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
 										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"));
+			}
+
+
+			[TestMethod]
+			void FailOnGettingChildrenListFromEmptyRootList()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+
+				// ACT / ASSERT
+				ASSERT_THROWS(fl->children_of(0), out_of_range);
+			}
+
+
+			[TestMethod]
+			void FailOnGettingChildrenListFromNonEmptyRootList()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+
+				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
+				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
+				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
+				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
+				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+
+				fl1->update(data1, 2);
+				fl2->update(data2, 3);
+
+				// ACT / ASSERT
+				ASSERT_THROWS(fl1->children_of(2), out_of_range);
+				ASSERT_THROWS(fl1->children_of(20), out_of_range);
+				ASSERT_THROWS(fl1->children_of((size_t)-1), out_of_range);
+				ASSERT_THROWS(fl2->children_of(3), out_of_range);
+				ASSERT_THROWS(fl2->children_of(30), out_of_range);
+				ASSERT_THROWS(fl2->children_of((size_t)-1), out_of_range);
+			}
+
+
+			[TestMethod]
+			void ReturnChildrenModelForAValidRecord()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+
+				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
+				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
+				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
+				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
+				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+
+				fl1->update(data1, 2);
+				fl2->update(data2, 3);
+
+				// ACT / ASSERT
+				Assert::IsTrue(fl1->children_of(0) != 0);
+				Assert::IsTrue(fl1->children_of(1) != 0);
+				Assert::IsTrue(fl2->children_of(0) != 0);
+				Assert::IsTrue(fl2->children_of(1) != 0);
+				Assert::IsTrue(fl2->children_of(2) != 0);
 			}
 		};
 	}

@@ -847,6 +847,53 @@ namespace micro_profiler
 				Assert::IsTrue(fl2->children_of(1) != 0);
 				Assert::IsTrue(fl2->children_of(2) != 0);
 			}
+
+
+			[TestMethod]
+			void LinkedStatisticsObjectIsReturnedForChildren()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[2] = { 0 };
+
+				copy(make_pair((void *)1978, function_statistics()), data[0].Statistics);
+				copy(make_pair((void *)1995, function_statistics()), data[1].Statistics);
+				fl->update(data, 2);
+
+				// ACT
+				shared_ptr<linked_statistics> ls = fl->children_of(0);
+
+				// ASSERT
+				Assert::IsTrue(ls != 0);
+				Assert::IsTrue(0 == ls->get_count());
+			}
+
+
+			[TestMethod]
+			void ChildrenStatisticsForNonEmptyChildren1()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[2] = { 0 };
+				FunctionStatistics children_data[4] = { 0 };
+
+				copy(make_pair((void *)1978, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
+				copy(make_pair((void *)1995, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 3;
+				copy(make_pair((void *)2001, function_statistics()), children_data[0]);
+				copy(make_pair((void *)2004, function_statistics()), children_data[1]);
+				copy(make_pair((void *)2008, function_statistics()), children_data[2]);
+				copy(make_pair((void *)2011, function_statistics()), children_data[3]);
+
+				fl->update(data, 2);
+
+				// ACT
+
+				// ASSERT
+			}
 		};
 	}
 }

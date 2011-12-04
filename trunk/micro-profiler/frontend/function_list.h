@@ -36,6 +36,8 @@ class symbol_resolver;
 
 namespace micro_profiler
 {
+	typedef wpl::ui::listview::model linked_statistics;
+
 	class functions_list : public wpl::ui::listview::model
 	{
 	public:
@@ -45,7 +47,7 @@ namespace micro_profiler
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;
 		virtual void print(std::wstring &content) const = 0;
 
-		virtual std::shared_ptr<model> children_of(index_type item) const = 0;
+		virtual std::shared_ptr<linked_statistics> children_of(index_type item) const = 0;
 
 		// TODO: must be removed - model does not have to have these members
 		static const index_type npos = static_cast<index_type>(-1);

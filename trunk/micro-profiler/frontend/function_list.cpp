@@ -319,7 +319,7 @@ namespace micro_profiler
 		virtual shared_ptr<const listview::trackable> track(index_type /*row*/) const	{	return shared_ptr<const listview::trackable>();	}
 	};
 
-	shared_ptr<listview::model> functions_list_impl::children_of(index_type item) const
+	shared_ptr<linked_statistics> functions_list_impl::children_of(index_type item) const
 	{
 		if (item >= get_count())
 			throw out_of_range("");

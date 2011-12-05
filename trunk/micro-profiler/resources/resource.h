@@ -9,8 +9,10 @@
 #define IDC_PROCESS_SELECTOR            201
 #define IDI_APPMAIN                     202
 #define IDC_FUNCTIONS_STATISTICS        203
-#define IDC_BTN_CLEAR                   204
-#define IDC_BTN_COPY_ALL                205
+#define IDC_CHILDREN_STATISTICS         204
+#define IDC_PARENTS_STATISTICS          205
+#define IDC_BTN_CLEAR                   206
+#define IDC_BTN_COPY_ALL                207
 
 // Next default values for new objects
 // 

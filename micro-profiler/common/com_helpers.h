@@ -52,6 +52,14 @@ namespace micro_profiler
 		return lhs;
 	}
 
+	inline const function_statistics_detailed &operator +=(function_statistics_detailed &lhs, const FunctionStatisticsDetailed &rhs) throw()
+	{
+		lhs += rhs.Statistics;
+		for (const FunctionStatistics *i = rhs.ChildrenStatistics, *e = i + rhs.ChildrenCount; i != e; ++i)
+			lhs.children_statistics[reinterpret_cast<const void *>(i->FunctionAddress)] += *i;
+		return lhs;
+	}
+
 	inline void copy(const detailed_statistics_map::value_type &from, FunctionStatisticsDetailed &to,
 		std::vector<FunctionStatistics> &children_buffer)
 	{

@@ -24,6 +24,14 @@ namespace micro_profiler
 					&& lhs.inclusive_time == rhs.inclusive_time && lhs.exclusive_time == rhs.exclusive_time
 					&& lhs.max_call_time == rhs.max_call_time;
 			}
+
+			function_statistics_detailed function_statistics_ex(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time, __int64 max_call_time)
+			{
+				function_statistics_detailed r;
+
+				(function_statistics &)r = function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time);
+				return r;
+			}
 		}
 
 		[TestClass]
@@ -450,6 +458,108 @@ namespace micro_profiler
 				Assert::IsTrue(function_statistics(2, 5, 22, 11, 70) == destination[1]);
 				Assert::IsTrue(function_statistics(3, 9, 23, 12, 6) == destination[2]);
 				Assert::IsTrue(function_statistics(4, 13, 24, 13, 9) == destination[3]);
+			}
+
+
+			[TestMethod]
+			void InplaceAdditionDetailedReturnsNonConstRefToLHS()
+			{
+				// INIT
+				function_statistics_detailed destination;
+				FunctionStatisticsDetailed addendum = {	{	0, 19, 0, 23, 31, 0 }, 0, 0	};
+
+				// ACT
+				const function_statistics_detailed *result = &(destination += addendum);
+
+				// ASSERT
+				Assert::IsTrue(&destination == result);
+			}
+
+
+			[TestMethod]
+			void InplaceAddingDetailedStatisticsToInternalNoChildrenUpdates()
+			{
+				// INIT
+				function_statistics_detailed destination[] = {
+					function_statistics_ex(0, 0, 0, 0, 100),
+					function_statistics_ex(0, 4, 0, 0, 70),
+					function_statistics_ex(0, 9, 0, 0, 5),
+					function_statistics_ex(0, 13, 0, 0, 0),
+				};
+				FunctionStatisticsDetailed addendum[] = {
+					{	{	0, 1, 3, 10, 21, 0 }, 0, 0	},
+					{	{	0, 2, 5, 11, 22, 70 }, 0, 0	},
+					{	{	0, 3, 9, 12, 23, 6 }, 0, 0	},
+					{	{	0, 4, 10, 13, 24, 9 }, 0, 0	},
+				};
+
+				// ACT
+				destination[0] += addendum[0];
+				destination[1] += addendum[1];
+				destination[2] += addendum[2];
+				destination[3] += addendum[3];
+
+				// ASSERT
+				Assert::IsTrue(function_statistics(1, 3, 21, 10, 100) == destination[0]);
+				Assert::IsTrue(function_statistics(2, 5, 22, 11, 70) == destination[1]);
+				Assert::IsTrue(function_statistics(3, 9, 23, 12, 6) == destination[2]);
+				Assert::IsTrue(function_statistics(4, 13, 24, 13, 9) == destination[3]);
+			}
+
+
+			[TestMethod]
+			void InplaceAddingDetailedStatisticsToInternalWithChildrenUpdates1()
+			{
+				// INIT
+				function_statistics_detailed destination[2];
+				FunctionStatistics children[] = {
+					{	0x00001234, 1, 5, 9, 13, 0 },
+					{	0x00012340, 2, 6, 10, 14, 17 },
+					{	0x00123400, 3, 7, 11, 15, 18 },
+					{	0x01234000, 4, 8, 12, 16, 19 },
+				};
+				FunctionStatisticsDetailed addendum[] = {
+					{	{	0	}, 1, &children[0]	},
+					{	{	0	}, 3, &children[1]	},
+				};
+
+				// ACT
+				destination[0] += addendum[0];
+				destination[1] += addendum[1];
+
+				// ASSERT
+				Assert::IsTrue(1 == destination[0].children_statistics.size());
+				Assert::IsTrue(function_statistics(1, 5, 13, 9, 0) == destination[0].children_statistics[(void *)0x00001234]);
+
+				Assert::IsTrue(3 == destination[1].children_statistics.size());
+				Assert::IsTrue(function_statistics(2, 6, 14, 10, 17) == destination[1].children_statistics[(void *)0x00012340]);
+				Assert::IsTrue(function_statistics(3, 7, 15, 11, 18) == destination[1].children_statistics[(void *)0x00123400]);
+				Assert::IsTrue(function_statistics(4, 8, 16, 12, 19) == destination[1].children_statistics[(void *)0x01234000]);
+			}
+
+
+			[TestMethod]
+			void InplaceAddingDetailedStatisticsToInternalWithChildrenUpdates2()
+			{
+				// INIT
+				function_statistics_detailed destination;
+				FunctionStatistics children[] = {
+					{	0x00001234, 1, 5, 9, 13, 0 },
+					{	0x00012340, 2, 6, 10, 14, 29 },
+				};
+				FunctionStatisticsDetailed addendum = {	{	0	}, 2, &children[0]	};
+
+				destination.children_statistics[(void *)0x00012340] = function_statistics(3, 7, 15, 11, 18);
+				destination.children_statistics[(void *)0x00123400] = function_statistics(4, 8, 16, 12, 19);
+
+				// ACT
+				destination += addendum;
+
+				// ASSERT
+				Assert::IsTrue(3 == destination.children_statistics.size());
+				Assert::IsTrue(function_statistics(1, 5, 13, 9, 0) == destination.children_statistics[(void *)0x00001234]);
+				Assert::IsTrue(function_statistics(5, 7, 29, 21, 29) == destination.children_statistics[(void *)0x00012340]);
+				Assert::IsTrue(function_statistics(4, 8, 16, 12, 19) == destination.children_statistics[(void *)0x00123400]);
 			}
 		};
 	}

@@ -146,7 +146,7 @@ namespace micro_profiler
 		typedef typename BaseT::index_type index_type;
 		typedef ordered_view<MapT> view_type;
 
-	protected:
+	public:
 		statistics_model_impl(const MapT &statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual typename index_type get_count() const throw();
@@ -157,14 +157,14 @@ namespace micro_profiler
 		void updated();
 	};
 
-	class functions_list_impl : public statistics_model_impl<functions_list, micro_profiler::statistics_map>
+	class functions_list_impl : public statistics_model_impl<functions_list, micro_profiler::detailed_statistics_map>
 	{
-		shared_ptr<micro_profiler::statistics_map> _statistics;
+		shared_ptr<micro_profiler::detailed_statistics_map> _statistics;
 		double _tick_interval;
 		shared_ptr<symbol_resolver> _resolver;
 
 	public:
-		functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
+		functions_list_impl(shared_ptr<micro_profiler::detailed_statistics_map> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual void clear();
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
@@ -178,12 +178,12 @@ namespace micro_profiler
 	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list_impl(
-			shared_ptr<micro_profiler::statistics_map>(new micro_profiler::statistics_map), 1.0 / ticks_resolution, resolver));
+			shared_ptr<micro_profiler::detailed_statistics_map>(new micro_profiler::detailed_statistics_map), 1.0 / ticks_resolution, resolver));
 	}
 
-	functions_list_impl::functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, double tick_interval,
+	functions_list_impl::functions_list_impl(shared_ptr<micro_profiler::detailed_statistics_map> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<functions_list, micro_profiler::statistics_map>(*statistics, tick_interval, resolver),
+		: statistics_model_impl<functions_list, micro_profiler::detailed_statistics_map>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
@@ -261,14 +261,10 @@ namespace micro_profiler
 	}
 
 
-	void functions_list_impl::update( const FunctionStatisticsDetailed *data, unsigned int count )
+	void functions_list_impl::update(const FunctionStatisticsDetailed *data, unsigned int count)
 	{
 		for (; count; --count, ++data)
-		{
-			const FunctionStatistics &s = data->Statistics;
-			const void *address = reinterpret_cast<void *>(s.FunctionAddress);
-			(*_statistics)[address] += s;
-		}
+			(*_statistics)[reinterpret_cast<const void *>(data->Statistics.FunctionAddress)] += *data;
 		updated();
 	}
 
@@ -310,19 +306,12 @@ namespace micro_profiler
 			::setlocale(LC_NUMERIC, old_locale);
 	}
 
-
-	struct dependent_statistics_model_impl : public listview::model
-	{
-		virtual index_type get_count() const throw()	{	return 0;	}
-		virtual void get_text(index_type /*item*/, index_type /*subitem*/, wstring &/*text*/) const	{	}
-		virtual void set_order(index_type /*column*/, bool /*ascending*/)	{	}
-		virtual shared_ptr<const listview::trackable> track(index_type /*row*/) const	{	return shared_ptr<const listview::trackable>();	}
-	};
-
 	shared_ptr<linked_statistics> functions_list_impl::children_of(index_type item) const
 	{
+		typedef statistics_model_impl<listview::model, statistics_map> children_list_impl;
+
 		if (item >= get_count())
 			throw out_of_range("");
-		return shared_ptr<listview::model>(new dependent_statistics_model_impl());
+		return shared_ptr<linked_statistics>(new children_list_impl(_view.at(item).second.children_statistics, _tick_interval, _resolver));
 	}
 }

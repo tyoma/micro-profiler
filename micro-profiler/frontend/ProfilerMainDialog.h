@@ -22,24 +22,39 @@
 
 #include "../resources/resource.h"
 
-#include <wpl/ui/listview.h>
-
 #include <atlbase.h>
 #include <atltypes.h>
 #include <atlwin.h>
+#include <string>
+#include <functional>
+#include <wpl/ui/listview.h>
+
+namespace std
+{
+	using tr1::function;
+}
+
+class symbol_resolver;
 
 namespace micro_profiler
 {
 	struct functions_list;
+	typedef wpl::ui::listview::model linked_statistics;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	{
 		std::shared_ptr<functions_list> _statistics;
-		CWindow _statistics_view, _clear_button, _copy_all_button;
-		std::shared_ptr<wpl::ui::listview> _statistics_lv;
+		std::shared_ptr<symbol_resolver> _resolver;
+		std::shared_ptr<linked_statistics> _parents_statistics, _children_statistics;
+		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
+		std::shared_ptr<wpl::ui::listview> _statistics_lv, _parents_statistics_lv, _children_statistics_lv;
 		std::vector<wpl::slot_connection> _connections;
 
 		void RelocateControls(const CSize &size);
+
+		void OnDrillup(wpl::ui::listview::index_type index);
+		void OnFocusChange(wpl::ui::listview::index_type index, bool selected);
+		void OnDrilldown(wpl::ui::listview::index_type index);
 
 	public:
 		ProfilerMainDialog(std::shared_ptr<functions_list> s);

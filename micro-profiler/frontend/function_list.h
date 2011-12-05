@@ -30,10 +30,11 @@ namespace std
 }
 
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-class symbol_resolver;
 
 namespace micro_profiler
 {
+	struct symbol_resolver;
+
 	typedef wpl::ui::listview::model linked_statistics;
 
 	struct functions_list : public wpl::ui::listview::model

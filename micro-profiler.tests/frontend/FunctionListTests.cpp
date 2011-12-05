@@ -43,7 +43,7 @@ namespace micro_profiler
 			}
 
 			void assert_row(
-				const functions_list &fl, 
+				const listview::model &fl, 
 				size_t row, 
 				const wchar_t* name, 
 				const wchar_t* times_called, 
@@ -118,6 +118,16 @@ namespace micro_profiler
 				wstring result = input;
 				replace(result.begin(), result.end(), stub_char, decimal_point);
 				return result;
+			}
+
+			size_t find_row(const listview::model &m, const wstring &name)
+			{
+				wstring result;
+
+				for (listview::index_type i = 0, c = m.get_count(); i != c; ++i)
+					if (m.get_text(i, 1, result), result == name)
+						return i;
+				return (size_t)-1;
 			}
 		}
 
@@ -871,7 +881,7 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void ChildrenStatisticsForNonEmptyChildren1()
+			void ChildrenStatisticsForNonEmptyChildren()
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -879,20 +889,96 @@ namespace micro_profiler
 				FunctionStatisticsDetailed data[2] = { 0 };
 				FunctionStatistics children_data[4] = { 0 };
 
-				copy(make_pair((void *)1978, function_statistics()), data[0].Statistics);
+				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data[0].Statistics);
 				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)1995, function_statistics()), data[1].Statistics);
+				copy(make_pair((void *)(0x1995 + 5), function_statistics()), data[1].Statistics);
 				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 3;
-				copy(make_pair((void *)2001, function_statistics()), children_data[0]);
-				copy(make_pair((void *)2004, function_statistics()), children_data[1]);
-				copy(make_pair((void *)2008, function_statistics()), children_data[2]);
-				copy(make_pair((void *)2011, function_statistics()), children_data[3]);
+				copy(make_pair((void *)(0x2001 + 5), function_statistics()), children_data[0]);
+				copy(make_pair((void *)(0x2004 + 5), function_statistics()), children_data[1]);
+				copy(make_pair((void *)(0x2008 + 5), function_statistics()), children_data[2]);
+				copy(make_pair((void *)(0x2011 + 5), function_statistics()), children_data[3]);
 
 				fl->update(data, 2);
+				
+				// ACT
+				shared_ptr<linked_statistics> ls_0 = fl->children_of(find_row(*fl, L"00001978"));
+				shared_ptr<linked_statistics> ls_1 = fl->children_of(find_row(*fl, L"00001995"));
+
+				// ACT / ASSERT
+				Assert::IsTrue(1 == ls_0->get_count());
+				Assert::IsTrue((size_t)-1 != find_row(*ls_0, L"00002001"));
+				Assert::IsTrue(3 == ls_1->get_count());
+				Assert::IsTrue((size_t)-1 != find_row(*ls_1, L"00002004"));
+				Assert::IsTrue((size_t)-1 != find_row(*ls_1, L"00002008"));
+				Assert::IsTrue((size_t)-1 != find_row(*ls_1, L"00002011"));
+			}
+
+
+			[TestMethod]
+			void ChildrenStatisticsSorting()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data = { 0 }, data0 = { 0 };
+				FunctionStatistics children_data[4] = { 0 };
+
+				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data0.Statistics);
+				data0.ChildrenStatistics = &children_data[0], data0.ChildrenCount = 1;
+				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data.Statistics);
+				data.ChildrenStatistics = &children_data[0], data.ChildrenCount = 4;
+				copy(make_pair((void *)(0x2001 + 5), function_statistics(11)), children_data[0]);
+				copy(make_pair((void *)(0x2004 + 5), function_statistics(17)), children_data[1]);
+				copy(make_pair((void *)(0x2008 + 5), function_statistics(18)), children_data[2]);
+				copy(make_pair((void *)(0x2011 + 5), function_statistics(29)), children_data[3]);
+
+				fl->update(&data0, 1);
+				fl->update(&data, 1);
+
+				shared_ptr<linked_statistics> ls = fl->children_of(0);
 
 				// ACT
+				ls->set_order(1, false);
 
 				// ASSERT
+				assert_row(*ls, 0, L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				assert_row(*ls, 1, L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				assert_row(*ls, 2, L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				assert_row(*ls, 3, L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+
+				// ACT
+				ls->set_order(2, true);
+
+				// ASSERT
+				assert_row(*ls, 0, L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				assert_row(*ls, 1, L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				assert_row(*ls, 2, L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				assert_row(*ls, 3, L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+			}
+
+
+			[TestMethod]
+			void ChildrenStatisticsGetText()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(10, resolver));
+				FunctionStatisticsDetailed data = { 0 };
+				FunctionStatistics children_data[2] = { 0 };
+
+				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data.Statistics);
+				data.ChildrenStatistics = &children_data[0], data.ChildrenCount = 2;
+				copy(make_pair((void *)(0x2001 + 5), function_statistics(11, 0, 1, 7, 91)), children_data[0]);
+				copy(make_pair((void *)(0x2004 + 5), function_statistics(17, 5, 2, 8, 97)), children_data[1]);
+
+				fl->update(&data, 1);
+
+				shared_ptr<linked_statistics> ls = fl->children_of(0);
+				ls->set_order(1, true);
+
+				// ACT / ASSERT
+				assert_row(*ls, 0, L"00002001", L"11", L"100ms", L"700ms", L"9.09ms", L"63.6ms", L"0", L"9.1s");
+				assert_row(*ls, 1, L"00002004", L"17", L"200ms", L"800ms", L"11.8ms", L"47.1ms", L"5", L"9.7s");
 			}
 		};
 	}

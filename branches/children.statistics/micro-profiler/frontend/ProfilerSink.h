@@ -37,7 +37,7 @@ extern "C" CLSID CLSID_ProfilerFrontend;
 namespace micro_profiler
 {
 	class ProfilerMainDialog;
-	class functions_list;
+	struct functions_list;
 
 	class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>,
 		public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>

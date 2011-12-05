@@ -38,7 +38,7 @@ class symbol_resolver;
 
 namespace micro_profiler
 {
-	class functions_list;
+	struct functions_list;
 	struct dependant_calls_list;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>

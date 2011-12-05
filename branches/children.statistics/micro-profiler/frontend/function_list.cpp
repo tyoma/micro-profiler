@@ -29,7 +29,13 @@
 #include <cmath>
 #include <clocale>
 
+namespace std
+{
+	using namespace tr1::placeholders;
+}
+
 using namespace std;
+using namespace wpl;
 using namespace wpl::ui;
 
 namespace micro_profiler
@@ -95,13 +101,13 @@ namespace micro_profiler
 			struct by_avg_exclusive_call_time
 			{
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return ((lhs.times_called && rhs.times_called) ? (lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called) : lhs.times_called < rhs.times_called);	}
+				{	return lhs.times_called && rhs.times_called ? lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 			};
 
 			struct by_avg_inclusive_call_time
 			{
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
-				{	return ((lhs.times_called && rhs.times_called) ? (lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called) : lhs.times_called < rhs.times_called);	}
+				{	return lhs.times_called && rhs.times_called ? lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 			};
 
 			struct by_max_reentrance
@@ -116,6 +122,21 @@ namespace micro_profiler
 				{	return lhs.max_call_time < rhs.max_call_time;	}
 			};
 		}
+
+		double exclusive_time(const function_statistics &s, double tick_interval)
+		{	return tick_interval * s.exclusive_time;	}
+
+		double inclusive_time(const function_statistics &s, double tick_interval)
+		{	return tick_interval * s.inclusive_time;	}
+
+		double max_call_time(const function_statistics &s, double tick_interval)
+		{	return tick_interval * s.max_call_time;	}
+
+		double exclusive_time_avg(const function_statistics &s, double tick_interval)
+		{	return s.times_called ? tick_interval * s.exclusive_time / s.times_called : 0;	}
+
+		double inclusive_time_avg(const function_statistics &s, double tick_interval)
+		{	return s.times_called ? tick_interval * s.inclusive_time / s.times_called : 0;	}
 	}
 
 	template <typename BaseT, typename MapT>
@@ -123,53 +144,56 @@ namespace micro_profiler
 	{
 		double _tick_interval;
 		shared_ptr<symbol_resolver> _resolver;
-
-	protected:
 		ordered_view<MapT> _view;
 
 	protected:
 		typedef typename BaseT::index_type index_type;
 		typedef ordered_view<MapT> view_type;
 
-	protected:
+		const view_type &view() const;
+		void updated();
+
+	public:
 		statistics_model_impl(const MapT &statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual typename index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
-		virtual shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
-
-		void updated();
+		virtual shared_ptr<const listview::trackable> track(index_type row) const;
 	};
 
-	class functions_list_impl : public statistics_model_impl<functions_list, micro_profiler::statistics_map>
+
+	class children_statistics_model_impl : public statistics_model_impl<linked_statistics, statistics_map>
 	{
-		shared_ptr<micro_profiler::statistics_map> _statistics;
+		const void *_controlled_address;
+		slot_connection _updates_connection;
+
+		void on_updated(const void *address);
+
+	public:
+		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
+			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
+	};
+
+
+	class functions_list_impl : public statistics_model_impl<functions_list, detailed_statistics_map>
+	{
+		shared_ptr<detailed_statistics_map> _statistics;
 		double _tick_interval;
 		shared_ptr<symbol_resolver> _resolver;
 
+		mutable signal<void (const void *updated_function)> entry_updated;
+
 	public:
-		functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
+		functions_list_impl(shared_ptr<detailed_statistics_map> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual void clear();
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
 		virtual index_type get_index(const void *address) const;
 		virtual void print(wstring &content) const;
+		virtual shared_ptr<model> watch_children(index_type item) const;
 	};
-
-
-
-	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
-	{
-		return shared_ptr<functions_list>(new functions_list_impl(
-			shared_ptr<micro_profiler::statistics_map>(new micro_profiler::statistics_map), 1.0 / ticks_resolution, resolver));
-	}
-
-	functions_list_impl::functions_list_impl(shared_ptr<micro_profiler::statistics_map> statistics, double tick_interval,
-		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<functions_list, micro_profiler::statistics_map>(*statistics, tick_interval, resolver),
-			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
-	{	}
+	
 
 
 	template <typename BaseT, typename MapT>
@@ -191,12 +215,12 @@ namespace micro_profiler
 		case 0:	text = to_string2((unsigned long long)item);	break;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
 		case 2:	text = to_string2(row.second.times_called);	break;
-		case 3:	format_interval(text, _tick_interval * row.second.exclusive_time);	break;
-		case 4:	format_interval(text, _tick_interval * row.second.inclusive_time);	break;
-		case 5:	format_interval(text, row.second.times_called ? _tick_interval * row.second.exclusive_time / row.second.times_called : 0);	break;
-		case 6:	format_interval(text, row.second.times_called ? _tick_interval * row.second.inclusive_time / row.second.times_called : 0);	break;
+		case 3:	format_interval(text, exclusive_time(row.second, _tick_interval));	break;
+		case 4:	format_interval(text, inclusive_time(row.second, _tick_interval));	break;
+		case 5:	format_interval(text, exclusive_time_avg(row.second, _tick_interval));	break;
+		case 6:	format_interval(text, inclusive_time_avg(row.second, _tick_interval));	break;
 		case 7:	text = to_string2(row.second.max_reentrance);	break;
-		case 8:	format_interval(text, _tick_interval * row.second.max_call_time);	break;
+		case 8:	format_interval(text, max_call_time(row.second, _tick_interval));	break;
 		}
 	}
 
@@ -244,14 +268,43 @@ namespace micro_profiler
 		invalidated(_view.size());
 	}
 
+	template <typename BaseT, typename MapT>
+	const typename statistics_model_impl<BaseT, MapT>::view_type &statistics_model_impl<BaseT, MapT>::view() const
+	{	return _view;	}
 
-	void functions_list_impl::update( const FunctionStatisticsDetailed *data, unsigned int count )
+
+
+	children_statistics_model_impl::children_statistics_model_impl(const void *controlled_address,
+		const statistics_map &statistics, signal<void (const void *)> &entry_updated, double tick_interval,
+		shared_ptr<symbol_resolver> resolver)
+		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
+	{
+		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
+	}
+
+	void children_statistics_model_impl::on_updated(const void *address)
+	{
+		if (_controlled_address == address)
+			updated();
+	}
+
+
+
+	functions_list_impl::functions_list_impl(shared_ptr<detailed_statistics_map> statistics, double tick_interval,
+		shared_ptr<symbol_resolver> resolver) 
+		: statistics_model_impl<functions_list, detailed_statistics_map>(*statistics, tick_interval, resolver),
+			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
+	{	}
+
+	void functions_list_impl::update(const FunctionStatisticsDetailed *data, unsigned int count)
 	{
 		for (; count; --count, ++data)
 		{
-			const FunctionStatistics &s = data->Statistics;
-			const void *address = reinterpret_cast<void *>(s.FunctionAddress);
-			(*_statistics)[address] += s;
+			const void *address = reinterpret_cast<const void *>(data->Statistics.FunctionAddress);
+
+			(*_statistics)[address] += *data;
+			if (data->ChildrenCount)
+				entry_updated(address);
 		}
 		updated();
 	}
@@ -263,9 +316,7 @@ namespace micro_profiler
 	}
 
 	functions_list_impl::index_type functions_list_impl::get_index(const void *address) const
-	{
-		return _view.find_by_key(address);
-	}
+	{	return view().find_by_key(address);	}
 
 	void functions_list_impl::print(wstring &content) const
 	{
@@ -278,19 +329,38 @@ namespace micro_profiler
 		for (size_t i = 0; i != get_count(); ++i)
 		{
 			wstring tmp;
-			const view_type::value_type &row = _view.at(i);
+			const view_type::value_type &row = view().at(i);
 
 			content += _resolver->symbol_name_by_va(row.first) + L"\t";
 			content += to_string2(row.second.times_called) + L"\t";
-			content += to_string2(_tick_interval * row.second.exclusive_time) + L"\t";
-			content += to_string2(_tick_interval * row.second.inclusive_time) + L"\t";
-			content += to_string2(row.second.times_called ? _tick_interval * row.second.exclusive_time / row.second.times_called : 0) + L"\t";
-			content += to_string2(row.second.times_called ? _tick_interval * row.second.inclusive_time / row.second.times_called : 0) + L"\t";
+			content += to_string2(exclusive_time(row.second, _tick_interval)) + L"\t";
+			content += to_string2(inclusive_time(row.second, _tick_interval)) + L"\t";
+			content += to_string2(exclusive_time_avg(row.second, _tick_interval)) + L"\t";
+			content += to_string2(inclusive_time_avg(row.second, _tick_interval)) + L"\t";
 			content += to_string2(row.second.max_reentrance) + L"\t";
-			content += to_string2(_tick_interval * row.second.max_call_time) + L"\r\n";
+			content += to_string2(max_call_time(row.second, _tick_interval)) + L"\r\n";
 		}
 
 		if (locale_ok) 
 			::setlocale(LC_NUMERIC, old_locale);
+	}
+
+	shared_ptr<linked_statistics> functions_list_impl::watch_children(index_type item) const
+	{
+		if (item >= get_count())
+			throw out_of_range("");
+
+		const detailed_statistics_map::value_type &s = view().at(item);
+
+		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.children_statistics,
+			entry_updated, _tick_interval, _resolver));
+	}
+
+
+
+	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
+	{
+		return shared_ptr<functions_list>(new functions_list_impl(
+			shared_ptr<detailed_statistics_map>(new detailed_statistics_map), 1.0 / ticks_resolution, resolver));
 	}
 }

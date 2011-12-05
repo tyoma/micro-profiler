@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include "../common/primitives.h"
-
 #include <wpl/ui/listview.h>
 #include <string>
 #include <memory>
@@ -38,19 +36,14 @@ namespace micro_profiler
 {
 	typedef wpl::ui::listview::model linked_statistics;
 
-	class functions_list : public wpl::ui::listview::model
+	struct functions_list : public wpl::ui::listview::model
 	{
-	public:
-		static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
-
 		virtual void clear() = 0;
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;
 		virtual void print(std::wstring &content) const = 0;
-
-		virtual std::shared_ptr<linked_statistics> children_of(index_type item) const = 0;
-
-		// TODO: must be removed - model does not have to have these members
-		static const index_type npos = static_cast<index_type>(-1);
 		virtual index_type get_index(const void *address) const = 0;
+		virtual std::shared_ptr<linked_statistics> watch_children(index_type item) const = 0;
+
+		static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 	};
 }

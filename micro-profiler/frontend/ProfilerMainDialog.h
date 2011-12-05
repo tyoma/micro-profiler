@@ -30,7 +30,7 @@
 
 namespace micro_profiler
 {
-	class functions_list;
+	struct functions_list;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	{

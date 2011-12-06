@@ -183,6 +183,12 @@ namespace micro_profiler
 		}
 	}
 
-	void ProfilerMainDialog::OnDrilldown(listview::index_type /*index*/)
-	{	}
+	void ProfilerMainDialog::OnDrilldown(listview::index_type index)
+	{
+		const void *address = _children_statistics->get_address(index);
+		
+		index = _statistics->get_index(address);
+		_statistics_lv->select(index, true);
+		_statistics_lv->ensure_visible(index);
+	}
 }

@@ -39,7 +39,7 @@ class symbol_resolver;
 namespace micro_profiler
 {
 	struct functions_list;
-	typedef wpl::ui::listview::model linked_statistics;
+	struct linked_statistics;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	{

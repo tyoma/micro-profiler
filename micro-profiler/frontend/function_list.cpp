@@ -173,6 +173,8 @@ namespace micro_profiler
 	public:
 		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
 			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
+
+		virtual const void *get_address(index_type item) const;
 	};
 
 
@@ -191,7 +193,7 @@ namespace micro_profiler
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
 		virtual index_type get_index(const void *address) const;
 		virtual void print(wstring &content) const;
-		virtual shared_ptr<model> watch_children(index_type item) const;
+		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
 	};
 	
 
@@ -281,6 +283,9 @@ namespace micro_profiler
 	{
 		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
 	}
+
+	const void *children_statistics_model_impl::get_address(index_type item) const
+	{	return view().at(item).first;	}
 
 	void children_statistics_model_impl::on_updated(const void *address)
 	{

@@ -1092,6 +1092,30 @@ namespace micro_profiler
 				Assert::IsTrue((void *)0x2008 == ls->get_address(2));
 				Assert::IsTrue((void *)0x2011 == ls->get_address(3));
 			}
+
+			
+			[TestMethod]
+			void TrackableIsUsableOnReleasingModel()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[3] = { 0 };
+
+				copy(make_pair((void *)(0x2001 + 5), function_statistics(11)), data[0].Statistics);
+				copy(make_pair((void *)(0x2004 + 5), function_statistics(17)), data[1].Statistics);
+				copy(make_pair((void *)(0x2008 + 5), function_statistics(18)), data[2].Statistics);
+
+				fl->update(data, 3);
+
+				// ACT
+				std::shared_ptr<const listview::trackable> t(fl->track(1));
+			
+				fl = shared_ptr<functions_list>();
+
+				// ACT / ASSERT
+				Assert::IsTrue((listview::index_type)-1 == t->index());
+			}
 		};
 	}
 }

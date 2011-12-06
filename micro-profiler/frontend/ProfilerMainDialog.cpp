@@ -50,20 +50,22 @@ namespace micro_profiler
 		_statistics_lv->add_column(L"Times Called", listview::dir_descending);
 		_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
 		_statistics_lv->add_column(L"Inclusive Time", listview::dir_descending);
-		_statistics_lv->add_column(L"Average Call Time (Exclusive:)", listview::dir_descending);
-		_statistics_lv->add_column(L"Average Call Time (Inclusive)", listview::dir_descending);
+		_statistics_lv->add_column(L"Average Exclusive Call Time", listview::dir_descending);
+		_statistics_lv->add_column(L"Average Inclusive Call Time", listview::dir_descending);
 		_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
 		_statistics_lv->add_column(L"Max Call Time", listview::dir_descending);
 
+		_parents_statistics_lv->add_column(L"#", listview::dir_none);
 		_parents_statistics_lv->add_column(L"Function", listview::dir_ascending);
 		_parents_statistics_lv->add_column(L"Times Called", listview::dir_descending);
 
+		_children_statistics_lv->add_column(L"#", listview::dir_none);
 		_children_statistics_lv->add_column(L"Function", listview::dir_ascending);
 		_children_statistics_lv->add_column(L"Times Called", listview::dir_descending);
 		_children_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
 		_children_statistics_lv->add_column(L"Inclusive Time", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Average Call Time (Exclusive)", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Average Call Time (Inclusive)", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Average Exclusive Call Time", listview::dir_descending);
+		_children_statistics_lv->add_column(L"Average Inclusive Call Time", listview::dir_descending);
 		_children_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
 		_children_statistics_lv->add_column(L"Max Call Time", listview::dir_descending);
 

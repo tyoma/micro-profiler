@@ -31,6 +31,8 @@
 
 namespace std
 {
+   using tr1::enable_shared_from_this;
+   using tr1::weak_ptr;
 	using namespace tr1::placeholders;
 }
 

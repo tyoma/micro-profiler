@@ -31,7 +31,7 @@ namespace micro_profiler
 	class shadow_stack
 	{
 		struct call_record_ex;
-		typedef stdext::hash_map<const void *, int, address_compare> entrance_counter_map;
+		typedef std::unordered_map<const void *, int, address_compare> entrance_counter_map;
 
 		const __int64 _profiler_latency;
 		std::vector<call_record_ex> _stack;
@@ -63,7 +63,7 @@ namespace micro_profiler
 
 	class analyzer : public calls_collector::acceptor
 	{
-		typedef stdext::hash_map< unsigned int /*threadid*/, shadow_stack<detailed_statistics_map> > stacks_container;
+		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<detailed_statistics_map> > stacks_container;
 
 		const __int64 _profiler_latency;
 		detailed_statistics_map _statistics;

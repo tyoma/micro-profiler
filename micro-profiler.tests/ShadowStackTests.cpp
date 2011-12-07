@@ -3,10 +3,14 @@
 #include <collector/analyzer.h>
 
 #include <map>
-#include <hash_map>
+#include <unordered_map>
+
+namespace std
+{
+	using tr1::unordered_map;
+}
 
 using namespace std;
-using namespace stdext;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
@@ -31,9 +35,9 @@ namespace micro_profiler
 			void UpdatingWithEmptyTraceProvidesNoStatUpdates()
 			{
 				// INIT
-				shadow_stack< hash_map<const void *, function_statistics> > ss;
+				shadow_stack< unordered_map<const void *, function_statistics> > ss;
 				vector<call_record> trace;
-				hash_map<const void *, function_statistics> statistics;
+				unordered_map<const void *, function_statistics> statistics;
 
 				// ACT
 				ss.update(trace.begin(), trace.end(), statistics);
@@ -160,8 +164,8 @@ namespace micro_profiler
 			void UpdatingWithEnterExitSequenceStoresStatsOnlyAtExitsMakesEmptyEntriesOnEnters()
 			{
 				// INIT
-				shadow_stack< hash_map<const void *, function_statistics> > ss1, ss2;
-				hash_map<const void *, function_statistics> statistics1, statistics2;
+				shadow_stack< unordered_map<const void *, function_statistics> > ss1, ss2;
+				unordered_map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace1[] = {
 					{	(void *)0x01234567, 123450000	},
 						{	(void *)0x01234568, 123450013	},
@@ -857,7 +861,7 @@ namespace micro_profiler
 			void RepeatedCollectionWithNonEmptyStoredStackRestoresStacksEntries()
 			{
 				// INIT
-				typedef hash_map<const void *, function_statistics_guarded> smap;
+				typedef unordered_map<const void *, function_statistics_guarded> smap;
 				
 				shadow_stack<smap> ss1, ss2;
 				smap statistics;

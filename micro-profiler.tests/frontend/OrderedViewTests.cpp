@@ -1,7 +1,12 @@
 #include <common/ordered_view.h>
 
-#include <hash_map>
+#include <unordered_map>
 #include <utility>
+
+namespace std
+{
+	using tr1::unordered_map;
+}
 
 using namespace std;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
@@ -25,7 +30,7 @@ namespace micro_profiler
 			}
 
 
-			typedef stdext::hash_map<void *, POD> pod_map;
+			typedef unordered_map<void *, POD> pod_map;
 			typedef ordered_view<pod_map> sorted_pods;
 
 			pair<void *const, POD> make_pod(const POD &pod)

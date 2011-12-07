@@ -26,7 +26,7 @@
 #include <dia2.h>
 #include <psapi.h>
 #include <utility>
-#include <hash_map>
+#include <unordered_map>
 
 using namespace std;
 
@@ -36,7 +36,7 @@ namespace micro_profiler
 	{
 		class dia_symbol_resolver : public symbol_resolver
 		{
-			typedef stdext::hash_map<const void *, wstring, micro_profiler::address_compare> names_cache;
+			typedef std::unordered_map<const void *, wstring, micro_profiler::address_compare> names_cache;
 
 			CComPtr<IDiaDataSource> _data_source;
 			CComPtr<IDiaSession> _session;

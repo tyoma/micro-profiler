@@ -28,11 +28,13 @@ namespace std
 	using std::tr1::shared_ptr;
 }
 
-class symbol_resolver
+namespace micro_profiler
 {
-public:
-	static std::shared_ptr<symbol_resolver> create_dia_resolver(const std::wstring &image_path, unsigned __int64 load_address);
+	struct symbol_resolver
+	{
+		virtual ~symbol_resolver()	{	}
+		virtual std::wstring symbol_name_by_va(const void *address) const = 0;
 
-	virtual ~symbol_resolver()	{	}
-	virtual std::wstring symbol_name_by_va(const void *address) const = 0;
-};
+		static std::shared_ptr<symbol_resolver> create_dia_resolver(const std::wstring &image_path, unsigned __int64 load_address);
+	};
+}

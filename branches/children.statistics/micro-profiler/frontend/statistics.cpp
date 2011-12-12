@@ -34,19 +34,6 @@ namespace micro_profiler
 
 	namespace
 	{
-		const function_statistics_detailed &operator +=(function_statistics_detailed &lhs, const FunctionStatisticsDetailed &rhs)
-		{
-			lhs += rhs.Statistics;
-			for (int i = 0; i != rhs.ChildrenCount; ++i)
-			{
-				const FunctionStatistics &child = *(rhs.ChildrenStatistics + i);
-
-				lhs.children_statistics[reinterpret_cast<void *>(child.FunctionAddress)] += child;
-			}
-			return lhs;
-		}
-
-
 		template <typename T>
 		wstring to_string(const T &value)
 		{

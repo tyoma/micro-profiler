@@ -31,19 +31,19 @@ namespace std
 	using tr1::function;
 }
 
-class symbol_resolver;
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
 namespace micro_profiler
 {
-	typedef stdext::hash_map<const void *, unsigned __int64, address_compare> parent_statistics_map;
+	struct symbol_resolver;
+	typedef std::unordered_map<const void *, unsigned __int64, address_compare> parent_statistics_map;
 
 	struct function_statistics_detailed2 : function_statistics_detailed
 	{
 		parent_statistics_map parent_statistics;
 	};
 
-	typedef stdext::hash_map<const void * /*address*/, function_statistics_detailed2, address_compare> detailed_statistics2_map;
+	typedef std::unordered_map<const void * /*address*/, function_statistics_detailed2, address_compare> detailed_statistics2_map;
 
 	struct dependant_calls_list : public wpl::ui::listview::model
 	{

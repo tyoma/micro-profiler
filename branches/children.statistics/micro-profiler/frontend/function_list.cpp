@@ -31,6 +31,8 @@
 
 namespace std
 {
+	using tr1::enable_shared_from_this;
+	using tr1::weak_ptr;
 	using namespace tr1::placeholders;
 }
 
@@ -140,7 +142,7 @@ namespace micro_profiler
 	}
 
 	template <typename BaseT, typename MapT>
-	class statistics_model_impl : public BaseT
+	class statistics_model_impl : public BaseT, public enable_shared_from_this< statistics_model_impl<BaseT, MapT> >
 	{
 		double _tick_interval;
 		shared_ptr<symbol_resolver> _resolver;
@@ -160,6 +162,8 @@ namespace micro_profiler
 		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
 		virtual shared_ptr<const listview::trackable> track(index_type row) const;
+
+		virtual index_type get_index(const void *address) const;
 	};
 
 
@@ -173,6 +177,8 @@ namespace micro_profiler
 	public:
 		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
 			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
+
+		virtual const void *get_address(index_type item) const;
 	};
 
 
@@ -189,9 +195,8 @@ namespace micro_profiler
 
 		virtual void clear();
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
-		virtual index_type get_index(const void *address) const;
 		virtual void print(wstring &content) const;
-		virtual shared_ptr<model> watch_children(index_type item) const;
+		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
 	};
 	
 
@@ -244,22 +249,31 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	shared_ptr<const listview::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
 	{
-		class trackable : public listview::trackable, wpl::noncopyable
+		class trackable : public listview::trackable, noncopyable
 		{
-			const view_type &_view; //TODO: should store weak_ptr instead of reference
+			weak_ptr<const statistics_model_impl> _model; //TODO: should store weak_ptr instead of reference
 			const void *_address;
 
 		public:
-			trackable(const view_type &view, const void *address)
-				: _view(view), _address(address)
+			trackable(weak_ptr<const statistics_model_impl> model, const void *address)
+				: _model(model), _address(address)
 			{	}
 
 			virtual listview::index_type index() const
-			{	return _view.find_by_key(_address);	}
+			{
+				if (_model.expired())
+					return static_cast<listview::index_type>(-1);
+				else
+					return shared_ptr<const statistics_model_impl>(_model)->get_index(_address);
+			}
 		};
 
-		return shared_ptr<const listview::trackable>(new trackable(_view, _view.at(row).first));
+		return shared_ptr<const listview::trackable>(new trackable(shared_from_this(), _view.at(row).first));
 	}
+
+	template <typename BaseT, typename MapT>
+	typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(const void *address) const
+	{	return _view.find_by_key(address);	}
 
 	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::updated()
@@ -281,6 +295,9 @@ namespace micro_profiler
 	{
 		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
 	}
+
+	const void *children_statistics_model_impl::get_address(index_type item) const
+	{	return view().at(item).first;	}
 
 	void children_statistics_model_impl::on_updated(const void *address)
 	{
@@ -314,9 +331,6 @@ namespace micro_profiler
 		_statistics->clear();
 		updated();
 	}
-
-	functions_list_impl::index_type functions_list_impl::get_index(const void *address) const
-	{	return view().find_by_key(address);	}
 
 	void functions_list_impl::print(wstring &content) const
 	{

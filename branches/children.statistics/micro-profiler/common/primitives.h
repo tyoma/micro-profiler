@@ -20,7 +20,12 @@
 
 #pragma once
 
-#include <hash_map>
+#include <unordered_map>
+
+namespace std
+{
+	using tr1::unordered_map;
+}
 
 namespace micro_profiler
 {
@@ -36,16 +41,12 @@ namespace micro_profiler
 	struct function_statistics;
 	struct function_statistics_detailed;
 
-	typedef stdext::hash_map<const void * /*address*/, function_statistics, address_compare> statistics_map;
-	typedef stdext::hash_map<const void * /*address*/, function_statistics_detailed, address_compare> detailed_statistics_map;
+	typedef std::unordered_map<const void * /*address*/, function_statistics, address_compare> statistics_map;
+	typedef std::unordered_map<const void * /*address*/, function_statistics_detailed, address_compare> detailed_statistics_map;
 
 	struct address_compare
 	{
-		static const size_t bucket_size = 4;
-		static const size_t min_buckets = 8;
-
 		size_t operator ()(const void *key) const throw();
-		bool operator ()(const void *lhs, const void *rhs) const throw();
 	};
 
 	struct function_statistics
@@ -70,9 +71,6 @@ namespace micro_profiler
 	// address_compare - inline definitions
 	inline size_t address_compare::operator ()(const void *key) const throw()
 	{	return (reinterpret_cast<size_t>(key) >> 4) * 2654435761;	}
-
-	inline bool address_compare::operator ()(const void *lhs, const void *rhs) const throw()
-	{	return lhs < rhs;	}
 
 
 	// function_statistics - inline definitions

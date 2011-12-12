@@ -26,59 +26,62 @@
 #include <dia2.h>
 #include <psapi.h>
 #include <utility>
-#include <hash_map>
+#include <unordered_map>
 
 using namespace std;
 
-namespace
+namespace micro_profiler
 {
-	class dia_symbol_resolver : public symbol_resolver
+	namespace
 	{
-		typedef stdext::hash_map<const void *, wstring, micro_profiler::address_compare> names_cache;
-
-		CComPtr<IDiaDataSource> _data_source;
-		CComPtr<IDiaSession> _session;
-		mutable names_cache _cached_names;
-
-	public:
-		dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address);
-		virtual ~dia_symbol_resolver();
-
-		virtual wstring symbol_name_by_va(const void *address) const;
-	};
-
-
-	dia_symbol_resolver::dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
-	{
-		_data_source.CoCreateInstance(CLSID_DiaSource);
-		_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
-		_data_source->openSession(&_session);
-		if (_session)
-			_session->put_loadAddress(load_address);
-	}
-
-	dia_symbol_resolver::~dia_symbol_resolver()
-	{	}
-
-	wstring dia_symbol_resolver::symbol_name_by_va(const void *address) const
-	{
-		names_cache::const_iterator i = _cached_names.find(address);
-
-		if (i == _cached_names.end())
+		class dia_symbol_resolver : public symbol_resolver
 		{
-			CStringW result;
-			CComBSTR name;
-			CComPtr<IDiaSymbol> symbol;
+			typedef std::unordered_map<const void *, wstring, micro_profiler::address_compare> names_cache;
 
-			if (_session && SUCCEEDED(_session->findSymbolByVA((ULONGLONG)address, SymTagFunction, &symbol)) && symbol && SUCCEEDED(symbol->get_name(&name)))
-				result = name;
-			else
-				result.Format(L"Function @%08I64X", (__int64)address);
-			i = _cached_names.insert(make_pair(address, result)).first;
+			CComPtr<IDiaDataSource> _data_source;
+			CComPtr<IDiaSession> _session;
+			mutable names_cache _cached_names;
+
+		public:
+			dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address);
+			virtual ~dia_symbol_resolver();
+
+			virtual wstring symbol_name_by_va(const void *address) const;
+		};
+
+
+		dia_symbol_resolver::dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
+		{
+			_data_source.CoCreateInstance(CLSID_DiaSource);
+			_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
+			_data_source->openSession(&_session);
+			if (_session)
+				_session->put_loadAddress(load_address);
 		}
-		return i->second;
-	}
-}
 
-shared_ptr<symbol_resolver> symbol_resolver::create_dia_resolver(const wstring &image_path, unsigned __int64 load_address)
-{	return shared_ptr<symbol_resolver>(new dia_symbol_resolver(image_path, load_address));	}
+		dia_symbol_resolver::~dia_symbol_resolver()
+		{	}
+
+		wstring dia_symbol_resolver::symbol_name_by_va(const void *address) const
+		{
+			names_cache::const_iterator i = _cached_names.find(address);
+
+			if (i == _cached_names.end())
+			{
+				CStringW result;
+				CComBSTR name;
+				CComPtr<IDiaSymbol> symbol;
+
+				if (_session && SUCCEEDED(_session->findSymbolByVA((ULONGLONG)address, SymTagFunction, &symbol)) && symbol && SUCCEEDED(symbol->get_name(&name)))
+					result = name;
+				else
+					result.Format(L"Function @%08I64X", (__int64)address);
+				i = _cached_names.insert(make_pair(address, result)).first;
+			}
+			return i->second;
+		}
+	}
+
+	shared_ptr<symbol_resolver> symbol_resolver::create_dia_resolver(const wstring &image_path, unsigned __int64 load_address)
+	{	return shared_ptr<symbol_resolver>(new dia_symbol_resolver(image_path, load_address));	}
+}

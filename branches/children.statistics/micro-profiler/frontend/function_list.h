@@ -30,13 +30,17 @@ namespace std
 }
 
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-class symbol_resolver;
 
 namespace micro_profiler
 {
-	typedef wpl::ui::listview::model linked_statistics;
+	struct symbol_resolver;
 
-	struct functions_list : public wpl::ui::listview::model
+	struct linked_statistics : wpl::ui::listview::model
+	{
+		virtual const void *get_address(index_type item) const = 0;
+	};
+
+	struct functions_list : wpl::ui::listview::model
 	{
 		virtual void clear() = 0;
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;

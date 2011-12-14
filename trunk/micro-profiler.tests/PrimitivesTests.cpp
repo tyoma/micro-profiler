@@ -168,8 +168,8 @@ namespace micro_profiler
 				f2.callees[(void *)0x0027] = function_statistics(0x1000000000);
 
 				// ACT
-				add_parent_statistics(m1, (void *)0x7011, f1);
-				add_parent_statistics(m2, (void *)0x5011, f2);
+				update_parent_statistics(m1, (void *)0x7011, f1);
+				update_parent_statistics(m2, (void *)0x5011, f2);
 
 				// ASSERT
 				Assert::IsTrue(2 == m1.size());
@@ -189,7 +189,7 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void AddingParentCallsUpdatedsExistingStatisticsForParentFunctions()
+			void AddingParentCallsUpdatesExistingStatisticsForParentFunctions()
 			{
 				// INIT
 				statistics_map_detailed m;
@@ -205,17 +205,17 @@ namespace micro_profiler
 				f.callees[(void *)0x0027] = function_statistics(0x1000000000);
 
 				// ACT
-				add_parent_statistics(m, (void *)0x0191, f);
+				update_parent_statistics(m, (void *)0x0191, f);
 
 				// ASSERT
 				Assert::IsTrue(3 == m.size());
 				Assert::IsTrue(1 == m[(void *)0x0021].callers.size());
 				Assert::IsTrue(2 == m[(void *)0x0023].callers.size());
 				Assert::IsTrue(1 == m[(void *)0x0027].callers.size());
-				Assert::IsTrue(136 == m[(void *)0x0021].callers[(void *)0x0191]);
+				Assert::IsTrue(13 == m[(void *)0x0021].callers[(void *)0x0191]);
 				Assert::IsTrue(17 == m[(void *)0x0023].callers[(void *)0x0191]);
 				Assert::IsTrue(88 == m[(void *)0x0023].callers[(void *)0x0791]);
-				Assert::IsTrue(0x1000000231 == m[(void *)0x0027].callers[(void *)0x0191]);
+				Assert::IsTrue(0x1000000000 == m[(void *)0x0027].callers[(void *)0x0191]);
 
 				Assert::IsTrue(17 == m[(void *)0x0021].inclusive_time);
 				Assert::IsTrue(11 == m[(void *)0x0021].exclusive_time);

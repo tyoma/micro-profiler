@@ -100,9 +100,9 @@ namespace micro_profiler
 	inline void add_child_statistics(function_statistics_detailed &s, const void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
 	{	s.callees[function].add_call(level, inclusive_time, exclusive_time);	}
 
-	inline void add_parent_statistics(statistics_map_detailed &s, const void *address, const function_statistics_detailed &f)
+	inline void update_parent_statistics(statistics_map_detailed &s, const void *address, const function_statistics_detailed &f)
 	{
 		for (statistics_map::const_iterator i = f.callees.begin(); i != f.callees.end(); ++i)
-			s[i->first].callers[address] += i->second.times_called;
+			s[i->first].callers[address] = i->second.times_called;
 	}
 }

@@ -1,5 +1,13 @@
+#pragma once
+
+typedef struct FunctionStatisticsTag FunctionStatistics;
+typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
+
 namespace micro_profiler
 {
+	struct function_statistics;
+	struct function_statistics_detailed;
+
 	namespace tests
 	{
 		struct thread_function
@@ -26,6 +34,12 @@ namespace micro_profiler
 			static void sleep(unsigned int duration);
 			static unsigned int current_thread_id();
 		};
+
+
+		bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs);
+		bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs);
+		bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
+		function_statistics_detailed function_statistics_ex(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time, __int64 max_call_time);
 
 
 		template <typename T, size_t size>

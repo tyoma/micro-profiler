@@ -182,16 +182,16 @@ namespace micro_profiler
 	};
 
 
-	class functions_list_impl : public statistics_model_impl<functions_list, detailed_statistics_map>
+	class functions_list_impl : public statistics_model_impl<functions_list, statistics_map_detailed>
 	{
-		shared_ptr<detailed_statistics_map> _statistics;
+		shared_ptr<statistics_map_detailed> _statistics;
 		double _tick_interval;
 		shared_ptr<symbol_resolver> _resolver;
 
 		mutable signal<void (const void *updated_function)> entry_updated;
 
 	public:
-		functions_list_impl(shared_ptr<detailed_statistics_map> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
+		functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual void clear();
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
@@ -307,9 +307,9 @@ namespace micro_profiler
 
 
 
-	functions_list_impl::functions_list_impl(shared_ptr<detailed_statistics_map> statistics, double tick_interval,
+	functions_list_impl::functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<functions_list, detailed_statistics_map>(*statistics, tick_interval, resolver),
+		: statistics_model_impl<functions_list, statistics_map_detailed>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
@@ -364,9 +364,9 @@ namespace micro_profiler
 		if (item >= get_count())
 			throw out_of_range("");
 
-		const detailed_statistics_map::value_type &s = view().at(item);
+		const statistics_map_detailed::value_type &s = view().at(item);
 
-		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.children_statistics,
+		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.callees,
 			entry_updated, _tick_interval, _resolver));
 	}
 
@@ -375,6 +375,6 @@ namespace micro_profiler
 	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list_impl(
-			shared_ptr<detailed_statistics_map>(new detailed_statistics_map), 1.0 / ticks_resolution, resolver));
+			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_resolution, resolver));
 	}
 }

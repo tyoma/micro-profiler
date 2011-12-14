@@ -42,7 +42,8 @@ namespace micro_profiler
 	struct function_statistics_detailed;
 
 	typedef std::unordered_map<const void * /*address*/, function_statistics, address_compare> statistics_map;
-	typedef std::unordered_map<const void * /*address*/, function_statistics_detailed, address_compare> detailed_statistics_map;
+	typedef std::unordered_map<const void * /*address*/, unsigned __int64, address_compare> statistics_map_callers;
+	typedef std::unordered_map<const void * /*address*/, function_statistics_detailed, address_compare> statistics_map_detailed;
 
 	struct address_compare
 	{
@@ -64,7 +65,8 @@ namespace micro_profiler
 
 	struct function_statistics_detailed : function_statistics
 	{
-		statistics_map children_statistics;
+		statistics_map callees;
+		statistics_map_callers callers;
 	};
 
 
@@ -91,10 +93,16 @@ namespace micro_profiler
 	}
 
 
-	// add_child_statistics - overloaded inline definitions
+	// helper methods - inline definitions
 	inline void add_child_statistics(function_statistics &/*s*/, const void * /*function*/, unsigned __int64 /*level*/, __int64 /*inclusive_time*/, __int64 /*exclusive_time*/)
 	{	}
 
 	inline void add_child_statistics(function_statistics_detailed &s, const void *function, unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
-	{	s.children_statistics[function].add_call(level, inclusive_time, exclusive_time);	}
+	{	s.callees[function].add_call(level, inclusive_time, exclusive_time);	}
+
+	inline void add_parent_statistics(statistics_map_detailed &s, const void *address, const function_statistics_detailed &f)
+	{
+		for (statistics_map::const_iterator i = f.callees.begin(); i != f.callees.end(); ++i)
+			s[i->first].callers[address] += i->second.times_called;
+	}
 }

@@ -56,22 +56,22 @@ namespace micro_profiler
 	{
 		lhs += rhs.Statistics;
 		for (const FunctionStatistics *i = rhs.ChildrenStatistics, *e = i + rhs.ChildrenCount; i != e; ++i)
-			lhs.children_statistics[reinterpret_cast<const void *>(i->FunctionAddress)] += *i;
+			lhs.callees[reinterpret_cast<const void *>(i->FunctionAddress)] += *i;
 		return lhs;
 	}
 
-	inline void copy(const detailed_statistics_map::value_type &from, FunctionStatisticsDetailed &to,
+	inline void copy(const statistics_map_detailed::value_type &from, FunctionStatisticsDetailed &to,
 		std::vector<FunctionStatistics> &children_buffer)
 	{
 		size_t i = children_buffer.size();
-		size_t children_count = from.second.children_statistics.size();
+		size_t children_count = from.second.callees.size();
 
 		if (children_buffer.capacity() < i + children_count)
 			throw std::invalid_argument("");
 		children_buffer.resize(i + children_count);
 		to.ChildrenCount = children_count;
 		to.ChildrenStatistics = children_count ? &children_buffer[i] : 0;
-		for (statistics_map::const_iterator j = from.second.children_statistics.begin(); i != children_buffer.size(); ++i, ++j)
+		for (statistics_map::const_iterator j = from.second.callees.begin(); i != children_buffer.size(); ++i, ++j)
 			copy(*j, children_buffer[i]);
 		copy(from, to.Statistics);
 	}
@@ -81,8 +81,8 @@ namespace micro_profiler
 	{
 		struct children_count_accumulator
 		{
-			size_t operator ()(size_t acc, const detailed_statistics_map::value_type &s) throw()
-			{	return acc + s.second.children_statistics.size();	}
+			size_t operator ()(size_t acc, const statistics_map_detailed::value_type &s) throw()
+			{	return acc + s.second.callees.size();	}
 		};
 
 		return std::accumulate(b, e, static_cast<size_t>(0), children_count_accumulator());

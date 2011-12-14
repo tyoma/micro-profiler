@@ -63,16 +63,16 @@ namespace micro_profiler
 
 	class analyzer : public calls_collector::acceptor
 	{
-		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<detailed_statistics_map> > stacks_container;
+		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<statistics_map_detailed> > stacks_container;
 
 		const __int64 _profiler_latency;
-		detailed_statistics_map _statistics;
+		statistics_map_detailed _statistics;
 		stacks_container _stacks;
 
 		const analyzer &operator =(const analyzer &rhs);
 
 	public:
-		typedef detailed_statistics_map::const_iterator const_iterator;
+		typedef statistics_map_detailed::const_iterator const_iterator;
 
 	public:
 		analyzer(__int64 profiler_latency = 0);
@@ -160,7 +160,7 @@ namespace micro_profiler
 		stacks_container::iterator i = _stacks.find(threadid);
 
 		if (i == _stacks.end())
-			i = _stacks.insert(std::make_pair(threadid, shadow_stack<detailed_statistics_map>(_profiler_latency))).first;
+			i = _stacks.insert(std::make_pair(threadid, shadow_stack<statistics_map_detailed>(_profiler_latency))).first;
 		i->second.update(calls, calls + count, _statistics);
 	}
 }

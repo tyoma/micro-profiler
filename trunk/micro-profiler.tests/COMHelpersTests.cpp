@@ -10,30 +10,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs)
-			{	return lhs.FunctionAddress < rhs.FunctionAddress; }
-
-			bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs)
-			{	return lhs.Statistics.FunctionAddress < rhs.Statistics.FunctionAddress; }
-
-			bool operator ==(const function_statistics &lhs, const function_statistics &rhs)
-			{
-				return lhs.times_called == rhs.times_called && lhs.max_reentrance == rhs.max_reentrance
-					&& lhs.inclusive_time == rhs.inclusive_time && lhs.exclusive_time == rhs.exclusive_time
-					&& lhs.max_call_time == rhs.max_call_time;
-			}
-
-			function_statistics_detailed function_statistics_ex(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time, __int64 max_call_time)
-			{
-				function_statistics_detailed r;
-
-				(function_statistics &)r = function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time);
-				return r;
-			}
-		}
-
 		[TestClass]
 		public ref class COMHelpersTests
 		{
@@ -126,9 +102,9 @@ namespace micro_profiler
 				FunctionStatisticsDetailed ms;
 				vector<FunctionStatistics> children_buffer;
 
-				s1.children_statistics[(void *)123] = function_statistics(10, 20, 30, 40, 50);
-				s2.children_statistics[(void *)234] = function_statistics(11, 21, 31, 41, 51);
-				s2.children_statistics[(void *)345] = function_statistics(12, 22, 32, 42, 52);
+				s1.callees[(void *)123] = function_statistics(10, 20, 30, 40, 50);
+				s2.callees[(void *)234] = function_statistics(11, 21, 31, 41, 51);
+				s2.callees[(void *)345] = function_statistics(12, 22, 32, 42, 52);
 
 				// ACT / ASSERT
 				ASSERT_THROWS(copy(make_pair((void *)1123, s1), ms, children_buffer), invalid_argument);
@@ -156,11 +132,11 @@ namespace micro_profiler
 				vector<FunctionStatistics> children_buffer;
 
 				children_buffer.reserve(5);
-				s2.children_statistics[(void *)123] = function_statistics(10, 20, 30, 40, 50);
-				s2.children_statistics[(void *)234] = function_statistics(11, 21, 31, 41, 51);
-				s3.children_statistics[(void *)345] = function_statistics(10, 20, 30, 40, 50);
-				s3.children_statistics[(void *)456] = function_statistics(11, 21, 31, 41, 51);
-				s3.children_statistics[(void *)567] = function_statistics(12, 22, 32, 42, 52);
+				s2.callees[(void *)123] = function_statistics(10, 20, 30, 40, 50);
+				s2.callees[(void *)234] = function_statistics(11, 21, 31, 41, 51);
+				s3.callees[(void *)345] = function_statistics(10, 20, 30, 40, 50);
+				s3.callees[(void *)456] = function_statistics(11, 21, 31, 41, 51);
+				s3.callees[(void *)567] = function_statistics(12, 22, 32, 42, 52);
 
 				// ACT
 				copy(make_pair((void *)1123, s0), ms0, children_buffer);
@@ -217,19 +193,19 @@ namespace micro_profiler
 			void CalculateTotalChildrenStatisticsCount()
 			{
 				// INIT
-				detailed_statistics_map m0, m1, m2;
+				statistics_map_detailed m0, m1, m2;
 
 				m0[(void *)1];
 
-				m1[(void *)1].children_statistics[(void *)123];
-				m1[(void *)1].children_statistics[(void *)234];
+				m1[(void *)1].callees[(void *)123];
+				m1[(void *)1].callees[(void *)234];
 
-				m2[(void *)1].children_statistics[(void *)123];
-				m2[(void *)1].children_statistics[(void *)234];
+				m2[(void *)1].callees[(void *)123];
+				m2[(void *)1].callees[(void *)234];
 				m2[(void *)2];
-				m2[(void *)3].children_statistics[(void *)123];
-				m2[(void *)3].children_statistics[(void *)234];
-				m2[(void *)3].children_statistics[(void *)345];
+				m2[(void *)3].callees[(void *)123];
+				m2[(void *)3].callees[(void *)234];
+				m2[(void *)3].callees[(void *)345];
 
 				// ACT
 				size_t count0 = total_children_count(m0.begin(), m0.end());
@@ -249,7 +225,7 @@ namespace micro_profiler
 				// INIT
 				vector<FunctionStatisticsDetailed> buffer1, buffer2(3);
 				vector<FunctionStatistics> children_buffer1, children_buffer2(2);
-				detailed_statistics_map m;
+				statistics_map_detailed m;
 
 				// ACT
 				copy(m.begin(), m.end(), buffer1, children_buffer1);
@@ -269,7 +245,7 @@ namespace micro_profiler
 				// INIT
 				vector<FunctionStatisticsDetailed> buffer1, buffer2(3);
 				vector<FunctionStatistics> children_buffer1, children_buffer2(2);
-				detailed_statistics_map m1, m2;
+				statistics_map_detailed m1, m2;
 
 				m1[(void *)6].times_called = 2;
 				m1[(void *)6].max_reentrance = 3;
@@ -352,15 +328,15 @@ namespace micro_profiler
 				// INIT
 				vector<FunctionStatisticsDetailed> buffer1, buffer2(7);
 				vector<FunctionStatistics> children_buffer1, children_buffer2(9);
-				detailed_statistics_map m1, m2;
+				statistics_map_detailed m1, m2;
 
-				m1[(void *)1].children_statistics[(void *)123] = function_statistics(1, 2, 3, 4, 5);
-				m1[(void *)1].children_statistics[(void *)234] = function_statistics(5, 6, 7, 8, 9);
+				m1[(void *)1].callees[(void *)123] = function_statistics(1, 2, 3, 4, 5);
+				m1[(void *)1].callees[(void *)234] = function_statistics(5, 6, 7, 8, 9);
 
-				m2[(void *)1].children_statistics[(void *)123] = function_statistics(9, 10, 11, 12, 13);
-				m2[(void *)1].children_statistics[(void *)234] = function_statistics(13, 14, 15, 16, 17);
+				m2[(void *)1].callees[(void *)123] = function_statistics(9, 10, 11, 12, 13);
+				m2[(void *)1].callees[(void *)234] = function_statistics(13, 14, 15, 16, 17);
 				m2[(void *)2];
-				m2[(void *)3].children_statistics[(void *)123] = function_statistics(17, 18, 19, 20, 21);
+				m2[(void *)3].callees[(void *)123] = function_statistics(17, 18, 19, 20, 21);
 
 				// ACT
 				copy(m1.begin(), m1.end(), buffer1, children_buffer1);
@@ -528,13 +504,13 @@ namespace micro_profiler
 				destination[1] += addendum[1];
 
 				// ASSERT
-				Assert::IsTrue(1 == destination[0].children_statistics.size());
-				Assert::IsTrue(function_statistics(1, 5, 13, 9, 0) == destination[0].children_statistics[(void *)0x00001234]);
+				Assert::IsTrue(1 == destination[0].callees.size());
+				Assert::IsTrue(function_statistics(1, 5, 13, 9, 0) == destination[0].callees[(void *)0x00001234]);
 
-				Assert::IsTrue(3 == destination[1].children_statistics.size());
-				Assert::IsTrue(function_statistics(2, 6, 14, 10, 17) == destination[1].children_statistics[(void *)0x00012340]);
-				Assert::IsTrue(function_statistics(3, 7, 15, 11, 18) == destination[1].children_statistics[(void *)0x00123400]);
-				Assert::IsTrue(function_statistics(4, 8, 16, 12, 19) == destination[1].children_statistics[(void *)0x01234000]);
+				Assert::IsTrue(3 == destination[1].callees.size());
+				Assert::IsTrue(function_statistics(2, 6, 14, 10, 17) == destination[1].callees[(void *)0x00012340]);
+				Assert::IsTrue(function_statistics(3, 7, 15, 11, 18) == destination[1].callees[(void *)0x00123400]);
+				Assert::IsTrue(function_statistics(4, 8, 16, 12, 19) == destination[1].callees[(void *)0x01234000]);
 			}
 
 
@@ -549,17 +525,17 @@ namespace micro_profiler
 				};
 				FunctionStatisticsDetailed addendum = {	{	0	}, 2, &children[0]	};
 
-				destination.children_statistics[(void *)0x00012340] = function_statistics(3, 7, 15, 11, 18);
-				destination.children_statistics[(void *)0x00123400] = function_statistics(4, 8, 16, 12, 19);
+				destination.callees[(void *)0x00012340] = function_statistics(3, 7, 15, 11, 18);
+				destination.callees[(void *)0x00123400] = function_statistics(4, 8, 16, 12, 19);
 
 				// ACT
 				destination += addendum;
 
 				// ASSERT
-				Assert::IsTrue(3 == destination.children_statistics.size());
-				Assert::IsTrue(function_statistics(1, 5, 13, 9, 0) == destination.children_statistics[(void *)0x00001234]);
-				Assert::IsTrue(function_statistics(5, 7, 29, 21, 29) == destination.children_statistics[(void *)0x00012340]);
-				Assert::IsTrue(function_statistics(4, 8, 16, 12, 19) == destination.children_statistics[(void *)0x00123400]);
+				Assert::IsTrue(3 == destination.callees.size());
+				Assert::IsTrue(function_statistics(1, 5, 13, 9, 0) == destination.callees[(void *)0x00001234]);
+				Assert::IsTrue(function_statistics(5, 7, 29, 21, 29) == destination.callees[(void *)0x00012340]);
+				Assert::IsTrue(function_statistics(4, 8, 16, 12, 19) == destination.callees[(void *)0x00123400]);
 			}
 		};
 	}

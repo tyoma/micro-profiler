@@ -630,25 +630,25 @@ namespace micro_profiler
 				ss_delayed.update(trace, end(trace), statistics_delayed);
 
 				// ASSERT
-				Assert::IsTrue(statistics[(void *)101].children_statistics.empty());
-				Assert::IsTrue(statistics[(void *)201].children_statistics.empty());
-				Assert::IsTrue(statistics[(void *)202].children_statistics.empty());
-				Assert::IsTrue(statistics[(void *)301].children_statistics.empty());
-				Assert::IsTrue(statistics[(void *)302].children_statistics.empty());
-				Assert::IsTrue(statistics[(void *)303].children_statistics.empty());
-				Assert::IsTrue(statistics_delayed[(void *)101].children_statistics.empty());
-				Assert::IsTrue(statistics_delayed[(void *)201].children_statistics.empty());
-				Assert::IsTrue(statistics_delayed[(void *)202].children_statistics.empty());
-				Assert::IsTrue(statistics_delayed[(void *)301].children_statistics.empty());
-				Assert::IsTrue(statistics_delayed[(void *)302].children_statistics.empty());
-				Assert::IsTrue(statistics_delayed[(void *)303].children_statistics.empty());
+				Assert::IsTrue(statistics[(void *)101].callees.empty());
+				Assert::IsTrue(statistics[(void *)201].callees.empty());
+				Assert::IsTrue(statistics[(void *)202].callees.empty());
+				Assert::IsTrue(statistics[(void *)301].callees.empty());
+				Assert::IsTrue(statistics[(void *)302].callees.empty());
+				Assert::IsTrue(statistics[(void *)303].callees.empty());
+				Assert::IsTrue(statistics_delayed[(void *)101].callees.empty());
+				Assert::IsTrue(statistics_delayed[(void *)201].callees.empty());
+				Assert::IsTrue(statistics_delayed[(void *)202].callees.empty());
+				Assert::IsTrue(statistics_delayed[(void *)301].callees.empty());
+				Assert::IsTrue(statistics_delayed[(void *)302].callees.empty());
+				Assert::IsTrue(statistics_delayed[(void *)303].callees.empty());
 				
-				statistics_map &cs1 = statistics[(void *)1].children_statistics;
-				statistics_map &cs2 = statistics[(void *)2].children_statistics;
-				statistics_map &cs3 = statistics[(void *)3].children_statistics;
-				statistics_map &cs1_d = statistics_delayed[(void *)1].children_statistics;
-				statistics_map &cs2_d = statistics_delayed[(void *)2].children_statistics;
-				statistics_map &cs3_d = statistics_delayed[(void *)3].children_statistics;
+				statistics_map &cs1 = statistics[(void *)1].callees;
+				statistics_map &cs2 = statistics[(void *)2].callees;
+				statistics_map &cs3 = statistics[(void *)3].callees;
+				statistics_map &cs1_d = statistics_delayed[(void *)1].callees;
+				statistics_map &cs2_d = statistics_delayed[(void *)2].callees;
+				statistics_map &cs3_d = statistics_delayed[(void *)3].callees;
 
 				Assert::IsTrue(1 == cs1.size());
 				Assert::IsTrue(1 == cs1[(void *)101].times_called);
@@ -749,15 +749,15 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics[(void *)1].children_statistics.size());
-				Assert::IsTrue(1 == statistics[(void *)101].children_statistics.size());
-				Assert::IsTrue(0 == statistics[(void *)10101].children_statistics.size());
-				Assert::IsTrue(2 == statistics[(void *)102].children_statistics.size());
-				Assert::IsTrue(0 == statistics[(void *)10201].children_statistics.size());
-				Assert::IsTrue(0 == statistics[(void *)10202].children_statistics.size());
+				Assert::IsTrue(2 == statistics[(void *)1].callees.size());
+				Assert::IsTrue(1 == statistics[(void *)101].callees.size());
+				Assert::IsTrue(0 == statistics[(void *)10101].callees.size());
+				Assert::IsTrue(2 == statistics[(void *)102].callees.size());
+				Assert::IsTrue(0 == statistics[(void *)10201].callees.size());
+				Assert::IsTrue(0 == statistics[(void *)10202].callees.size());
 
 
-				statistics_map &cs = statistics[(void *)1].children_statistics;
+				statistics_map &cs = statistics[(void *)1].callees;
 
 				Assert::IsTrue(5 == cs[(void *)101].inclusive_time);
 				Assert::IsTrue(3 == cs[(void *)101].exclusive_time);
@@ -805,10 +805,10 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				statistics_map &cs1 = statistics[(void *)0x1].children_statistics;
-				statistics_map &cs2 = statistics[(void *)0x2].children_statistics;
-				statistics_map &cs3 = statistics[(void *)0x3].children_statistics;
-				statistics_map &cs4 = statistics[(void *)0x4].children_statistics;
+				statistics_map &cs1 = statistics[(void *)0x1].callees;
+				statistics_map &cs2 = statistics[(void *)0x2].callees;
+				statistics_map &cs3 = statistics[(void *)0x3].callees;
+				statistics_map &cs4 = statistics[(void *)0x4].callees;
 
 				Assert::IsTrue(3 == cs1.size());
 				Assert::IsTrue(2 == cs2.size());

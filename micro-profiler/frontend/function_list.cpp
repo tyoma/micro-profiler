@@ -167,21 +167,6 @@ namespace micro_profiler
 	};
 
 
-	class children_statistics_model_impl : public statistics_model_impl<linked_statistics, statistics_map>
-	{
-		const void *_controlled_address;
-		slot_connection _updates_connection;
-
-		void on_updated(const void *address);
-
-	public:
-		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
-			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
-
-		virtual const void *get_address(index_type item) const;
-	};
-
-
 	class functions_list_impl : public statistics_model_impl<functions_list, statistics_map_detailed>
 	{
 		shared_ptr<statistics_map_detailed> _statistics;
@@ -197,8 +182,36 @@ namespace micro_profiler
 		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
 		virtual void print(wstring &content) const;
 		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
+		virtual shared_ptr<linked_statistics> watch_parents(index_type item) const;
 	};
-	
+
+
+	class children_statistics_model_impl : public statistics_model_impl<linked_statistics, statistics_map>
+	{
+		const void *_controlled_address;
+		slot_connection _updates_connection;
+
+		void on_updated(const void *address);
+
+	public:
+		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
+			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
+
+		virtual const void *get_address(index_type item) const;
+	};
+
+
+	class parents_statistics : public linked_statistics
+	{
+	public:
+		virtual index_type get_count() const throw();
+		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
+		virtual void set_order(index_type column, bool ascending);
+		virtual shared_ptr<const listview::trackable> track(index_type row) const;
+
+		virtual const void *get_address(index_type item) const;
+	};
+
 
 
 	template <typename BaseT, typename MapT>
@@ -288,25 +301,6 @@ namespace micro_profiler
 
 
 
-	children_statistics_model_impl::children_statistics_model_impl(const void *controlled_address,
-		const statistics_map &statistics, signal<void (const void *)> &entry_updated, double tick_interval,
-		shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
-	{
-		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
-	}
-
-	const void *children_statistics_model_impl::get_address(index_type item) const
-	{	return view().at(item).first;	}
-
-	void children_statistics_model_impl::on_updated(const void *address)
-	{
-		if (_controlled_address == address)
-			updated();
-	}
-
-
-
 	functions_list_impl::functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
 		: statistics_model_impl<functions_list, statistics_map_detailed>(*statistics, tick_interval, resolver),
@@ -361,14 +355,54 @@ namespace micro_profiler
 
 	shared_ptr<linked_statistics> functions_list_impl::watch_children(index_type item) const
 	{
-		if (item >= get_count())
-			throw out_of_range("");
-
 		const statistics_map_detailed::value_type &s = view().at(item);
 
 		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.callees,
 			entry_updated, _tick_interval, _resolver));
 	}
+
+	shared_ptr<linked_statistics> functions_list_impl::watch_parents(index_type item) const
+	{
+		const statistics_map_detailed::value_type &s = view().at(item);
+
+		return shared_ptr<linked_statistics>(new parents_statistics);
+	}
+	
+
+
+	children_statistics_model_impl::children_statistics_model_impl(const void *controlled_address,
+		const statistics_map &statistics, signal<void (const void *)> &entry_updated, double tick_interval,
+		shared_ptr<symbol_resolver> resolver)
+		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
+	{
+		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
+	}
+
+	const void *children_statistics_model_impl::get_address(index_type item) const
+	{	return view().at(item).first;	}
+
+	void children_statistics_model_impl::on_updated(const void *address)
+	{
+		if (_controlled_address == address)
+			updated();
+	}
+
+
+
+	listview::model::index_type parents_statistics::get_count() const throw()
+	{	return 0;	}
+
+	void parents_statistics::get_text(index_type item, index_type subitem, wstring &text) const
+	{	throw 0;	}
+
+	void parents_statistics::set_order(index_type column, bool ascending)
+	{	throw 0;	}
+
+	shared_ptr<const listview::trackable> parents_statistics::track(index_type row) const
+	{	throw 0;	}
+
+	const void *parents_statistics::get_address(index_type item) const
+	{	throw 0;	}
 
 
 

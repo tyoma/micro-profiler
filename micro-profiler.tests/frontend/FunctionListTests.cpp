@@ -1116,6 +1116,61 @@ namespace micro_profiler
 				// ACT / ASSERT
 				Assert::IsTrue((listview::index_type)-1 == t->index());
 			}
+
+
+			[TestMethod]
+			void FailOnGettingParentsListFromNonEmptyRootList()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+
+				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
+				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
+				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
+				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
+				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+
+				fl1->update(data1, 2);
+				fl2->update(data2, 3);
+
+				// ACT / ASSERT
+				ASSERT_THROWS(fl1->watch_parents(2), out_of_range);
+				ASSERT_THROWS(fl1->watch_parents(20), out_of_range);
+				ASSERT_THROWS(fl1->watch_parents((size_t)-1), out_of_range);
+				ASSERT_THROWS(fl2->watch_parents(3), out_of_range);
+				ASSERT_THROWS(fl2->watch_parents(30), out_of_range);
+				ASSERT_THROWS(fl2->watch_parents((size_t)-1), out_of_range);
+			}
+
+
+			[TestMethod]
+			void ReturnParentsModelForAValidRecord()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+
+				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
+				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
+				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
+				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
+				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+
+				fl1->update(data1, 2);
+				fl2->update(data2, 3);
+
+				// ACT / ASSERT
+				Assert::IsTrue(fl1->watch_parents(0) != 0);
+				Assert::IsTrue(fl1->watch_parents(1) != 0);
+				Assert::IsTrue(fl2->watch_parents(0) != 0);
+				Assert::IsTrue(fl2->watch_parents(1) != 0);
+				Assert::IsTrue(fl2->watch_parents(2) != 0);
+			}
 		};
 	}
 }

@@ -52,7 +52,7 @@ namespace micro_profiler
 
 	struct function_statistics
 	{
-		function_statistics(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0, __int64 max_call_time = 0);
+		explicit function_statistics(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0, __int64 max_call_time = 0);
 
 		void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
 

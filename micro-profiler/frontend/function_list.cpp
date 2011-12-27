@@ -77,6 +77,9 @@ namespace micro_profiler
 
 				bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
 				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
+
+				bool operator ()(const void *lhs_addr, unsigned __int64, const void *rhs_addr, unsigned __int64) const
+				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
 			};
 
 			struct by_times_called
@@ -203,10 +206,17 @@ namespace micro_profiler
 
 	class parents_statistics : public linked_statistics, noncopyable
 	{
-		const statistics_map_callers &_statistics;
+		typedef ordered_view<statistics_map_callers> view_type;
+
+		view_type _view;
+		shared_ptr<symbol_resolver> _resolver;
+		slot_connection _updates_connection;
+
+		void on_updated(const void *address);
 
 	public:
-		parents_statistics(const statistics_map_callers &statistics);
+		parents_statistics(const statistics_map_callers &statistics, signal<void (const void *)> &entry_updated,
+			shared_ptr<symbol_resolver> resolver);
 
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
@@ -234,7 +244,7 @@ namespace micro_profiler
 
 		switch (subitem)
 		{
-		case 0:	text = to_string2((unsigned long long)item);	break;
+		case 0:	text = to_string2(static_cast<unsigned long long>(item + 1));	break;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
 		case 2:	text = to_string2(row.second.times_called);	break;
 		case 3:	format_interval(text, exclusive_time(row.second, _tick_interval));	break;
@@ -370,7 +380,7 @@ namespace micro_profiler
 	{
 		const statistics_map_detailed::value_type &s = view().at(item);
 
-		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers));
+		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, entry_updated, _resolver));
 	}
 	
 
@@ -393,24 +403,48 @@ namespace micro_profiler
 	}
 
 
-	parents_statistics::parents_statistics(const statistics_map_callers &statistics)
-		: _statistics(statistics)
-	{	}
+	parents_statistics::parents_statistics(const statistics_map_callers &statistics,
+		signal<void (const void *)> &entry_updated, shared_ptr<symbol_resolver> resolver)
+		: _view(statistics), _resolver(resolver)
+	{
+		_updates_connection = entry_updated += bind(&parents_statistics::on_updated, this, _1);
+	}
 
 	listview::model::index_type parents_statistics::get_count() const throw()
-	{	return _statistics.size();	}
+	{	return _view.size();	}
 
-	void parents_statistics::get_text(index_type /*item*/, index_type /*subitem*/, wstring &/*text*/) const
-	{	throw 0;	}
+	void parents_statistics::get_text(index_type item, index_type subitem, wstring &text) const
+	{
+		const statistics_map_callers::value_type &row = _view.at(item);
 
-	void parents_statistics::set_order(index_type /*column*/, bool /*ascending*/)
-	{	throw 0;	}
+		switch (subitem)
+		{
+		case 0:	text = to_string2(static_cast<unsigned long long>(item + 1));	break;
+		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
+		case 2:	text = to_string2(row.second);	break;
+		}
+	}
+
+	void parents_statistics::set_order(index_type column, bool ascending)
+	{
+		switch (column)
+		{
+		case 1:	_view.set_order(functors::by_name(_resolver), ascending);	break;
+		case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
+		}
+	}
 
 	shared_ptr<const listview::trackable> parents_statistics::track(index_type /*row*/) const
 	{	throw 0;	}
 
 	const void *parents_statistics::get_address(index_type /*item*/) const
 	{	throw 0;	}
+
+	void parents_statistics::on_updated(const void *address)
+	{
+		_view.resort();
+		invalidated(_view.size());
+	}
 
 
 

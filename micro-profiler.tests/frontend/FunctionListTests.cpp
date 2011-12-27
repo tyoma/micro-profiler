@@ -42,6 +42,18 @@ namespace micro_profiler
 				return s.str();
 			}
 
+			void assert_row(const listview::model &fl, size_t row, const wchar_t* name, const wchar_t* times_called)
+			{
+				wstring result;
+
+				fl.get_text(row, 0, result); // row number
+				Assert::IsTrue(result == to_string(row + 1));
+				fl.get_text(row, 1, result); // name
+				Assert::IsTrue(result == name);
+				fl.get_text(row, 2, result); // times called
+				Assert::IsTrue(result == times_called);
+			}
+
 			void assert_row(
 				const listview::model &fl, 
 				size_t row, 
@@ -55,13 +67,8 @@ namespace micro_profiler
 				const wchar_t* max_call_time = L"")
 			{
 				wstring result;
-				result.reserve(1000);
-				fl.get_text(row, 0, result); // row number
-				Assert::IsTrue(result == to_string(row));
-				fl.get_text(row, 1, result); // name
-				Assert::IsTrue(result == name);
-				fl.get_text(row, 2, result); // times called
-				Assert::IsTrue(result == times_called);
+
+				assert_row(fl, row, name, times_called);
 				fl.get_text(row, 3, result); // exclusive time
 				Assert::IsTrue(result == exclusive_time);
 				fl.get_text(row, 4, result); // inclusive time
@@ -1205,6 +1212,234 @@ namespace micro_profiler
 				Assert::IsTrue(p0->get_count() == 0);
 				Assert::IsTrue(p1->get_count() == 1);
 				Assert::IsTrue(p2->get_count() == 3);
+			}
+
+
+			[TestMethod]
+			void ParentStatisticsIsUpdatedOnGlobalUpdates1()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[4] = { 0 };
+				FunctionStatistics children_data = { 0 };
+
+				copy(make_pair((void *)2978, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data, data[0].ChildrenCount = 1;
+				copy(make_pair((void *)2995, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data, data[1].ChildrenCount = 1;
+				copy(make_pair((void *)3001, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &children_data, data[2].ChildrenCount = 1;
+				copy(make_pair((void *)3002, function_statistics()), data[3].Statistics);
+				data[3].ChildrenStatistics = &children_data, data[3].ChildrenCount = 1;
+
+				children_data = data[0].Statistics;
+
+				fl->set_order(1, true);
+
+				// ACT
+				fl->update(&data[0], 3);
+
+				shared_ptr<linked_statistics> p = fl->watch_parents(0);
+
+				// ASSERT
+				Assert::IsTrue(p->get_count() == 3);
+
+				// ACT
+				fl->update(&data[3], 1);
+
+				// ASSERT
+				Assert::IsTrue(p->get_count() == 4);
+			}
+
+
+			[TestMethod]
+			void ParentStatisticsValuesAreFormatted()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[3] = { 0 };
+				FunctionStatistics children_data[3] = { 0 };
+
+				copy(make_pair((void *)0x1234, function_statistics(1)), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
+				copy(make_pair((void *)0x2345, function_statistics(3)), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
+				copy(make_pair((void *)0x3456, function_statistics(5000000000)), data[2].Statistics);
+				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
+
+				children_data[0] = data[1].Statistics;
+				children_data[1] = data[2].Statistics;
+				children_data[2] = data[0].Statistics;
+
+				fl->update(&data[0], 3);
+
+				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
+				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
+				shared_ptr<linked_statistics> p2 = fl->watch_parents(2);
+
+				// ACT / ASSERT
+				assert_row(*p0, 0, L"00003451", L"1");
+				assert_row(*p1, 0, L"0000122F", L"3");
+				assert_row(*p2, 0, L"00002340", L"5000000000");
+			}
+
+
+			[TestMethod]
+			void ParentStatisticsSorting()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[3] = { 0 };
+				FunctionStatistics children_data[3] = { 0 };
+
+				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
+				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
+				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
+
+				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
+				children_data[0].TimesCalled = 3;
+				children_data[1].TimesCalled = 700;
+				children_data[2].TimesCalled = 30;
+
+				fl->set_order(1, true);
+
+				fl->update(&data[0], 3);
+
+				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+
+				// ACT
+				p->set_order(1, true);
+
+				// ASSERT
+				assert_row(*p, 0, L"00002978", L"3");
+				assert_row(*p, 1, L"00002995", L"700");
+				assert_row(*p, 2, L"00003001", L"30");
+
+				// ACT
+				p->set_order(1, false);
+
+				// ASSERT
+				assert_row(*p, 0, L"00003001", L"30");
+				assert_row(*p, 1, L"00002995", L"700");
+				assert_row(*p, 2, L"00002978", L"3");
+
+				// ACT
+				p->set_order(2, true);
+
+				// ASSERT
+				assert_row(*p, 0, L"00002978", L"3");
+				assert_row(*p, 1, L"00003001", L"30");
+				assert_row(*p, 2, L"00002995", L"700");
+
+				// ACT
+				p->set_order(2, false);
+
+				// ASSERT
+				assert_row(*p, 0, L"00002995", L"700");
+				assert_row(*p, 1, L"00003001", L"30");
+				assert_row(*p, 2, L"00002978", L"3");
+			}
+
+
+			[TestMethod]
+			void ParentStatisticsIsUpdatedOnGlobalUpdates2()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[3] = { 0 };
+				FunctionStatistics children_data[3] = { 0 };
+
+				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
+				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
+				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
+
+				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
+				children_data[0].TimesCalled = 3;
+				children_data[1].TimesCalled = 30;
+				children_data[2].TimesCalled = 50;
+
+				fl->set_order(1, true);
+
+				fl->update(&data[0], 3);
+
+				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+
+				p->set_order(2, true);
+
+				// pre-ASSERT
+				assert_row(*p, 0, L"00002978", L"3");
+				assert_row(*p, 1, L"00002995", L"30");
+				assert_row(*p, 2, L"00003001", L"50");
+
+				// ACT
+				fl->update(&data[0], 2);
+
+				// ASSERT
+				assert_row(*p, 0, L"00002978", L"6");
+				assert_row(*p, 1, L"00003001", L"50");
+				assert_row(*p, 2, L"00002995", L"60");
+			}
+
+
+			[TestMethod]
+			void ParentStatisticsInvalidationOnGlobalUpdates()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[5] = { 0 };
+				invalidation_tracer ih;
+
+				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &data[0].Statistics, data[0].ChildrenCount = 1;
+				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &data[0].Statistics, data[1].ChildrenCount = 1;
+				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &data[0].Statistics, data[2].ChildrenCount = 1;
+				copy(make_pair((void *)0x7275, function_statistics()), data[3].Statistics);
+				copy(make_pair((void *)0x8525, function_statistics()), data[4].Statistics);
+				data[4].ChildrenStatistics = &data[0].Statistics, data[4].ChildrenCount = 1;
+
+				fl->set_order(1, true);
+
+				fl->update(&data[0], 3);
+
+				shared_ptr<linked_statistics> p = fl->watch_parents(0);
+
+				ih.bind_to_model(*p);
+
+				// ACT
+				fl->update(&data[3], 1);
+
+				// ASSERT
+				Assert::IsTrue(ih.invalidations.empty());
+
+				// ACT
+				fl->update(&data[0], 1);
+
+				// ASSERT
+				Assert::IsTrue(ih.invalidations.size() == 1);
+				Assert::IsTrue(ih.invalidations[0] == 3);
+
+				// INIT
+				ih.invalidations.clear();
+
+				// ACT
+				fl->update(&data[4], 1);
+
+				// ASSERT
+				Assert::IsTrue(ih.invalidations.size() == 1);
+				Assert::IsTrue(ih.invalidations[0] == 4);
 			}
 		};
 	}

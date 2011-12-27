@@ -201,9 +201,13 @@ namespace micro_profiler
 	};
 
 
-	class parents_statistics : public linked_statistics
+	class parents_statistics : public linked_statistics, noncopyable
 	{
+		const statistics_map_callers &_statistics;
+
 	public:
+		parents_statistics(const statistics_map_callers &statistics);
+
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
@@ -312,8 +316,9 @@ namespace micro_profiler
 		for (; count; --count, ++data)
 		{
 			const void *address = reinterpret_cast<const void *>(data->Statistics.FunctionAddress);
+			const function_statistics_detailed &s = (*_statistics)[address] += *data;
 
-			(*_statistics)[address] += *data;
+			update_parent_statistics(*_statistics, address, s);
 			if (data->ChildrenCount)
 				entry_updated(address);
 		}
@@ -365,7 +370,7 @@ namespace micro_profiler
 	{
 		const statistics_map_detailed::value_type &s = view().at(item);
 
-		return shared_ptr<linked_statistics>(new parents_statistics);
+		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers));
 	}
 	
 
@@ -388,20 +393,23 @@ namespace micro_profiler
 	}
 
 
+	parents_statistics::parents_statistics(const statistics_map_callers &statistics)
+		: _statistics(statistics)
+	{	}
 
 	listview::model::index_type parents_statistics::get_count() const throw()
-	{	return 0;	}
+	{	return _statistics.size();	}
 
-	void parents_statistics::get_text(index_type item, index_type subitem, wstring &text) const
+	void parents_statistics::get_text(index_type /*item*/, index_type /*subitem*/, wstring &/*text*/) const
 	{	throw 0;	}
 
-	void parents_statistics::set_order(index_type column, bool ascending)
+	void parents_statistics::set_order(index_type /*column*/, bool /*ascending*/)
 	{	throw 0;	}
 
-	shared_ptr<const listview::trackable> parents_statistics::track(index_type row) const
+	shared_ptr<const listview::trackable> parents_statistics::track(index_type /*row*/) const
 	{	throw 0;	}
 
-	const void *parents_statistics::get_address(index_type item) const
+	const void *parents_statistics::get_address(index_type /*item*/) const
 	{	throw 0;	}
 
 

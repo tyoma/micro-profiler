@@ -1171,6 +1171,41 @@ namespace micro_profiler
 				Assert::IsTrue(fl2->watch_parents(1) != 0);
 				Assert::IsTrue(fl2->watch_parents(2) != 0);
 			}
+
+
+			[TestMethod]
+			void SizeOfParentsListIsReturnedFromParentsModel()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[3] = { 0 };
+				FunctionStatistics children_data[2] = { 0 };
+
+				copy(make_pair((void *)2978, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data[1], data[0].ChildrenCount = 1;
+				copy(make_pair((void *)2995, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
+				copy(make_pair((void *)3001, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &children_data[0], data[2].ChildrenCount = 2;
+
+				children_data[0] = data[1].Statistics;
+				children_data[1] = data[2].Statistics;
+
+				fl->set_order(1, true);
+
+				// ACT
+				fl->update(data, 3);
+
+				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
+				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
+				shared_ptr<linked_statistics> p2 = fl->watch_parents(2);
+
+				// ASSERT
+				Assert::IsTrue(p0->get_count() == 0);
+				Assert::IsTrue(p1->get_count() == 1);
+				Assert::IsTrue(p2->get_count() == 3);
+			}
 		};
 	}
 }

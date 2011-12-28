@@ -173,14 +173,20 @@ namespace micro_profiler
 		_statistics_view.MoveWindow(rc);
 	}
 
-	void ProfilerMainDialog::OnDrillup(listview::index_type /*index*/)
-	{	}
+	void ProfilerMainDialog::OnDrillup(listview::index_type index)
+	{
+		const void *address = _parents_statistics->get_address(index);
+		
+		index = _statistics->get_index(address);
+		_statistics_lv->select(index, true);
+	}
 
 	void ProfilerMainDialog::OnFocusChange(listview::index_type index, bool selected)
 	{
 		if (selected)
 		{
 			_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
+			_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
 			_statistics_lv->ensure_visible(index);
 		}
 	}
@@ -191,6 +197,5 @@ namespace micro_profiler
 		
 		index = _statistics->get_index(address);
 		_statistics_lv->select(index, true);
-		_statistics_lv->ensure_visible(index);
 	}
 }

@@ -954,6 +954,7 @@ namespace micro_profiler
 
 				fl->update(&data0, 1);
 				fl->update(&data, 1);
+				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 
@@ -992,6 +993,7 @@ namespace micro_profiler
 				copy(make_pair((void *)(0x2004 + 5), function_statistics(17, 5, 2, 8, 97)), children_data[1]);
 
 				fl->update(&data, 1);
+				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 				ls->set_order(1, true);
@@ -1061,6 +1063,7 @@ namespace micro_profiler
 				copy(make_pair((void *)(0x2007 + 5), function_statistics(17, 5, 2, 8, 97)), children_data[2]);
 
 				fl->update(&data_1, 1);
+				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 
@@ -1109,6 +1112,7 @@ namespace micro_profiler
 				copy(make_pair((void *)(0x2011 + 5), function_statistics(29)), children_data[3]);
 
 				fl->update(&data, 1);
+				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 

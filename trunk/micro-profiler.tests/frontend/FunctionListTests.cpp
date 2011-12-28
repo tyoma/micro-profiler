@@ -100,6 +100,27 @@ namespace micro_profiler
 				_invalidations_log_t invalidations;
 			};
 
+
+			class invalidation_at_sorting_check1
+			{
+				const listview::model &_model;
+
+				const invalidation_at_sorting_check1 &operator =(const invalidation_at_sorting_check1 &);
+
+			public:
+				invalidation_at_sorting_check1(listview::model &m)
+					: _model(m)
+				{	}
+
+				void operator ()(listview::model::index_type /*count*/) const
+				{
+					assert_row(_model, 0, L"00002995", L"700");
+					assert_row(_model, 1, L"00003001", L"30");
+					assert_row(_model, 2, L"00002978", L"3");
+				}
+			};
+
+
 			class sri : public symbol_resolver
 			{
 			public:
@@ -1344,6 +1365,86 @@ namespace micro_profiler
 				assert_row(*p, 0, L"00002995", L"700");
 				assert_row(*p, 1, L"00003001", L"30");
 				assert_row(*p, 2, L"00002978", L"3");
+			}
+
+
+			[TestMethod]
+			void ParentStatisticsResortingCausesInvalidation()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[4] = { 0 };
+				invalidation_tracer t;
+
+				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &data[2].Statistics, data[0].ChildrenCount = 1;
+				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &data[2].Statistics, data[1].ChildrenCount = 1;
+				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &data[2].Statistics, data[2].ChildrenCount = 1;
+				copy(make_pair((void *)0x3007, function_statistics()), data[3].Statistics);
+				data[3].ChildrenStatistics = &data[2].Statistics, data[3].ChildrenCount = 1;
+
+				fl->set_order(1, true);
+				fl->update(&data[0], 3);
+				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+
+				t.bind_to_model(*p);
+
+				// ACT
+				p->set_order(1, true);
+
+				// ASSERT
+				Assert::IsTrue(1 == t.invalidations.size());
+				Assert::IsTrue(3 == t.invalidations[0]);
+
+				// INIT
+				fl->update(&data[3], 1);
+				t.invalidations.clear();
+
+				// ACT
+				p->set_order(2, false);
+
+				// ASSERT
+				Assert::IsTrue(1 == t.invalidations.size());
+				Assert::IsTrue(4 == t.invalidations[0]);
+			}
+
+
+			[TestMethod]
+			void ParentStatisticsCausesInvalidationAfterTheSort()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[3] = { 0 };
+				FunctionStatistics children_data[3] = { 0 };
+
+				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
+				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
+				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
+
+				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
+				children_data[0].TimesCalled = 3;
+				children_data[1].TimesCalled = 700;
+				children_data[2].TimesCalled = 30;
+
+				fl->set_order(1, true);
+
+				fl->update(&data[0], 3);
+
+				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+
+				p->set_order(2, true);
+
+				wpl::slot_connection c = p->invalidated += invalidation_at_sorting_check1(*p);
+
+				// ACT / ASSERT
+				p->set_order(2, false);
 			}
 
 

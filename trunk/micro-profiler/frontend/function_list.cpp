@@ -432,6 +432,7 @@ namespace micro_profiler
 		case 1:	_view.set_order(functors::by_name(_resolver), ascending);	break;
 		case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
 		}
+		invalidated(_view.size());
 	}
 
 	shared_ptr<const listview::trackable> parents_statistics::track(index_type /*row*/) const
@@ -440,7 +441,7 @@ namespace micro_profiler
 	const void *parents_statistics::get_address(index_type /*item*/) const
 	{	throw 0;	}
 
-	void parents_statistics::on_updated(const void *address)
+	void parents_statistics::on_updated(const void * /*address*/)
 	{
 		_view.resort();
 		invalidated(_view.size());

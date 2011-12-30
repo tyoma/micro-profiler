@@ -120,8 +120,9 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
-		_statistics->clear();
+		_parents_statistics_lv->set_model(_parents_statistics = shared_ptr<linked_statistics>());
 		_children_statistics_lv->set_model(_children_statistics = shared_ptr<linked_statistics>());
+		_statistics->clear();
 		handled = TRUE;
 		return 0;
 	}

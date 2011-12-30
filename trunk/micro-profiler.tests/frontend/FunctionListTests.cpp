@@ -1546,6 +1546,42 @@ namespace micro_profiler
 				Assert::IsTrue(ih.invalidations.size() == 1);
 				Assert::IsTrue(ih.invalidations[0] == 4);
 			}
+
+
+			[TestMethod]
+			void GettingAddressOfParentStatisticsItem()
+			{
+				// INIT
+				shared_ptr<symbol_resolver> resolver(new sri);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				FunctionStatisticsDetailed data[3] = { 0 };
+				FunctionStatistics children_data[3] = { 0 };
+
+				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
+				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
+				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
+				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
+				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
+				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
+
+				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
+				children_data[0].TimesCalled = 3;
+				children_data[1].TimesCalled = 30;
+				children_data[2].TimesCalled = 50;
+
+				fl->set_order(1, true);
+
+				fl->update(&data[0], 3);
+
+				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+
+				p->set_order(2, true);
+
+				// ACT / ASSERT
+				Assert::IsTrue((void *)0x2978 == p->get_address(0));
+				Assert::IsTrue((void *)0x2995 == p->get_address(1));
+				Assert::IsTrue((void *)0x3001 == p->get_address(2));
+			}
 		};
 	}
 }

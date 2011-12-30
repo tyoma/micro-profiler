@@ -167,6 +167,8 @@ namespace micro_profiler
 		virtual shared_ptr<const listview::trackable> track(index_type row) const;
 
 		virtual index_type get_index(const void *address) const;
+
+		virtual const void *get_address(index_type item) const;
 	};
 
 
@@ -199,8 +201,6 @@ namespace micro_profiler
 	public:
 		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
 			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
-
-		virtual const void *get_address(index_type item) const;
 	};
 
 
@@ -213,8 +213,6 @@ namespace micro_profiler
 	public:
 		parents_statistics(const statistics_map_callers &statistics, signal<void (const void *)> &entry_updated,
 			shared_ptr<symbol_resolver> resolver);
-
-		virtual const void *get_address(index_type item) const;
 	};
 
 
@@ -292,6 +290,10 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(const void *address) const
 	{	return _view.find_by_key(address);	}
+
+	template <typename BaseT, typename MapT>
+	const void *statistics_model_impl<BaseT, MapT>::get_address(index_type item) const
+	{	return _view.at(item).first;	}
 
 	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::updated()
@@ -384,9 +386,6 @@ namespace micro_profiler
 		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
 	}
 
-	const void *children_statistics_model_impl::get_address(index_type item) const
-	{	return view().at(item).first;	}
-
 	void children_statistics_model_impl::on_updated(const void *address)
 	{
 		if (_controlled_address == address)
@@ -425,9 +424,6 @@ namespace micro_profiler
 		}
 		invalidated(_view.size());
 	}
-
-	const void *parents_statistics::get_address(index_type /*item*/) const
-	{	throw 0;	}
 
 	void parents_statistics::on_updated(const void * /*address*/)
 	{	updated();	}

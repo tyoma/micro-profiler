@@ -28,7 +28,7 @@ int main()
 {
 	srand(time(0));
 
-	vector<double> v(30000000);
+	vector<double> v(3000000);
 
 	generate_n(v.begin(), v.size(), &random);
 	sort(v.begin(), v.end());

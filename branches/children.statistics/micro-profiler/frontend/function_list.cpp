@@ -77,6 +77,9 @@ namespace micro_profiler
 
 				bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
 				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
+
+				bool operator ()(const void *lhs_addr, unsigned __int64, const void *rhs_addr, unsigned __int64) const
+				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
 			};
 
 			struct by_times_called
@@ -164,6 +167,27 @@ namespace micro_profiler
 		virtual shared_ptr<const listview::trackable> track(index_type row) const;
 
 		virtual index_type get_index(const void *address) const;
+
+		virtual const void *get_address(index_type item) const;
+	};
+
+
+	class functions_list_impl : public statistics_model_impl<functions_list, statistics_map_detailed>
+	{
+		shared_ptr<statistics_map_detailed> _statistics;
+		double _tick_interval;
+		shared_ptr<symbol_resolver> _resolver;
+
+		mutable signal<void (const void *updated_function)> entry_updated;
+
+	public:
+		functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
+
+		virtual void clear();
+		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
+		virtual void print(wstring &content) const;
+		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
+		virtual shared_ptr<linked_statistics> watch_parents(index_type item) const;
 	};
 
 
@@ -177,28 +201,20 @@ namespace micro_profiler
 	public:
 		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
 			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
-
-		virtual const void *get_address(index_type item) const;
 	};
 
 
-	class functions_list_impl : public statistics_model_impl<functions_list, detailed_statistics_map>
+	class parents_statistics : public statistics_model_impl<linked_statistics, statistics_map_callers>
 	{
-		shared_ptr<detailed_statistics_map> _statistics;
-		double _tick_interval;
-		shared_ptr<symbol_resolver> _resolver;
+		slot_connection _updates_connection;
 
-		mutable signal<void (const void *updated_function)> entry_updated;
+		void on_updated(const void *address);
 
 	public:
-		functions_list_impl(shared_ptr<detailed_statistics_map> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
-
-		virtual void clear();
-		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
-		virtual void print(wstring &content) const;
-		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
+		parents_statistics(const statistics_map_callers &statistics, signal<void (const void *)> &entry_updated,
+			shared_ptr<symbol_resolver> resolver);
 	};
-	
+
 
 
 	template <typename BaseT, typename MapT>
@@ -217,7 +233,7 @@ namespace micro_profiler
 
 		switch (subitem)
 		{
-		case 0:	text = to_string2((unsigned long long)item);	break;
+		case 0:	text = to_string2(static_cast<unsigned long long>(item + 1));	break;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
 		case 2:	text = to_string2(row.second.times_called);	break;
 		case 3:	format_interval(text, exclusive_time(row.second, _tick_interval));	break;
@@ -276,6 +292,10 @@ namespace micro_profiler
 	{	return _view.find_by_key(address);	}
 
 	template <typename BaseT, typename MapT>
+	const void *statistics_model_impl<BaseT, MapT>::get_address(index_type item) const
+	{	return _view.at(item).first;	}
+
+	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::updated()
 	{
 		_view.resort();
@@ -288,28 +308,9 @@ namespace micro_profiler
 
 
 
-	children_statistics_model_impl::children_statistics_model_impl(const void *controlled_address,
-		const statistics_map &statistics, signal<void (const void *)> &entry_updated, double tick_interval,
-		shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
-	{
-		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
-	}
-
-	const void *children_statistics_model_impl::get_address(index_type item) const
-	{	return view().at(item).first;	}
-
-	void children_statistics_model_impl::on_updated(const void *address)
-	{
-		if (_controlled_address == address)
-			updated();
-	}
-
-
-
-	functions_list_impl::functions_list_impl(shared_ptr<detailed_statistics_map> statistics, double tick_interval,
+	functions_list_impl::functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<functions_list, detailed_statistics_map>(*statistics, tick_interval, resolver),
+		: statistics_model_impl<functions_list, statistics_map_detailed>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
@@ -318,8 +319,9 @@ namespace micro_profiler
 		for (; count; --count, ++data)
 		{
 			const void *address = reinterpret_cast<const void *>(data->Statistics.FunctionAddress);
+			const function_statistics_detailed &s = (*_statistics)[address] += *data;
 
-			(*_statistics)[address] += *data;
+			update_parent_statistics(*_statistics, address, s);
 			if (data->ChildrenCount)
 				entry_updated(address);
 		}
@@ -361,20 +363,76 @@ namespace micro_profiler
 
 	shared_ptr<linked_statistics> functions_list_impl::watch_children(index_type item) const
 	{
-		if (item >= get_count())
-			throw out_of_range("");
+		const statistics_map_detailed::value_type &s = view().at(item);
 
-		const detailed_statistics_map::value_type &s = view().at(item);
-
-		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.children_statistics,
+		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.callees,
 			entry_updated, _tick_interval, _resolver));
 	}
+
+	shared_ptr<linked_statistics> functions_list_impl::watch_parents(index_type item) const
+	{
+		const statistics_map_detailed::value_type &s = view().at(item);
+
+		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, entry_updated, _resolver));
+	}
+	
+
+
+	children_statistics_model_impl::children_statistics_model_impl(const void *controlled_address,
+		const statistics_map &statistics, signal<void (const void *)> &entry_updated, double tick_interval,
+		shared_ptr<symbol_resolver> resolver)
+		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
+	{
+		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
+	}
+
+	void children_statistics_model_impl::on_updated(const void *address)
+	{
+		if (_controlled_address == address)
+			updated();
+	}
+
+
+	parents_statistics::parents_statistics(const statistics_map_callers &statistics,
+		signal<void (const void *)> &entry_updated, shared_ptr<symbol_resolver> resolver)
+		: statistics_model_impl<linked_statistics, statistics_map_callers>(statistics, 0, resolver)
+	{
+		_updates_connection = entry_updated += bind(&parents_statistics::on_updated, this, _1);
+	}
+
+	template <>
+	void statistics_model_impl<linked_statistics, statistics_map_callers>::get_text(index_type item, index_type subitem,
+		wstring &text) const
+	{
+		const statistics_map_callers::value_type &row = _view.at(item);
+
+		switch (subitem)
+		{
+		case 0:	text = to_string2(static_cast<unsigned long long>(item + 1));	break;
+		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
+		case 2:	text = to_string2(row.second);	break;
+		}
+	}
+
+	template <>
+	void statistics_model_impl<linked_statistics, statistics_map_callers>::set_order(index_type column, bool ascending)
+	{
+		switch (column)
+		{
+		case 1:	_view.set_order(functors::by_name(_resolver), ascending);	break;
+		case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
+		}
+		invalidated(_view.size());
+	}
+
+	void parents_statistics::on_updated(const void * /*address*/)
+	{	updated();	}
 
 
 
 	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list_impl(
-			shared_ptr<detailed_statistics_map>(new detailed_statistics_map), 1.0 / ticks_resolution, resolver));
+			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_resolution, resolver));
 	}
 }

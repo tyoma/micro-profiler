@@ -126,11 +126,11 @@ namespace micro_profiler
 
 				Assert::IsTrue(5 == m.size());
 
-				Assert::IsTrue(1 == m[(void *)1].children_statistics.size());
-				Assert::IsTrue(2 == m[(void *)2].children_statistics.size());
-				Assert::IsTrue(0 == m[(void *)11].children_statistics.size());
-				Assert::IsTrue(0 == m[(void *)21].children_statistics.size());
-				Assert::IsTrue(0 == m[(void *)22].children_statistics.size());
+				Assert::IsTrue(1 == m[(void *)1].callees.size());
+				Assert::IsTrue(2 == m[(void *)2].callees.size());
+				Assert::IsTrue(0 == m[(void *)11].callees.size());
+				Assert::IsTrue(0 == m[(void *)21].callees.size());
+				Assert::IsTrue(0 == m[(void *)22].callees.size());
 			}
 
 

@@ -47,6 +47,7 @@ namespace micro_profiler
 		virtual void print(std::wstring &content) const = 0;
 		virtual index_type get_index(const void *address) const = 0;
 		virtual std::shared_ptr<linked_statistics> watch_children(index_type item) const = 0;
+		virtual std::shared_ptr<linked_statistics> watch_parents(index_type item) const = 0;
 
 		static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 	};

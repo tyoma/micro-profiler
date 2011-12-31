@@ -67,13 +67,12 @@ namespace micro_profiler
 					: _resolver(resolver)
 				{	}
 
-				wstring operator ()(const void *address, const function_statistics &) const
+				template <typename AnyT>
+				wstring operator ()(const void *address, const AnyT &) const
 				{	return _resolver.symbol_name_by_va(address);	}
 
-				wstring operator ()(const void *address, unsigned __int64) const
-				{	return _resolver.symbol_name_by_va(address);	}
-
-				bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
+				template <typename AnyT>
+				bool operator ()(const void *lhs_addr, const AnyT &, const void *rhs_addr, const AnyT &) const
 				{	return _resolver.symbol_name_by_va(lhs_addr) < _resolver.symbol_name_by_va(rhs_addr);	}
 			};
 
@@ -249,7 +248,7 @@ namespace micro_profiler
 
 	shared_ptr<dependant_calls_list> functions_list::watch_children(index_type index)
 	{
-		_watched_children.reset(new child_calls_list(_resolver, _view.at(index).second.children_statistics));
+		_watched_children.reset(new child_calls_list(_resolver, _view.at(index).second.callees));
 		return _watched_children;
 	}
 

@@ -75,10 +75,8 @@ namespace micro_profiler
 					: _resolver(resolver)
 				{	}
 
-				bool operator ()(const void *lhs_addr, const function_statistics &, const void *rhs_addr, const function_statistics &) const
-				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
-
-				bool operator ()(const void *lhs_addr, unsigned __int64, const void *rhs_addr, unsigned __int64) const
+				template <typename AnyT>
+				bool operator ()(const void *lhs_addr, const AnyT &, const void *rhs_addr, const AnyT &) const
 				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
 			};
 

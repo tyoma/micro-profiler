@@ -144,12 +144,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GH /Gh"
-				Optimization="3"
-				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="2"
-				OmitFramePointers="true"
-				WholeProgramOptimization="true"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				RuntimeLibrary="0"
 				WarningLevel="4"

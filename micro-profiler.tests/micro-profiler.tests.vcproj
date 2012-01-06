@@ -380,6 +380,30 @@
 			</FileConfiguration>
 		</File>
 		<File
+			RelativePath=".\Mockups.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\Mockups.h"
+			>
+		</File>
+		<File
 			RelativePath=".\PrimitivesTests.cpp"
 			>
 			<FileConfiguration
@@ -431,6 +455,26 @@
 		</File>
 		<File
 			RelativePath=".\ShadowStackTests.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					CompileAsManaged="1"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\StatisticsBridgeTests.cpp"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"

@@ -351,6 +351,10 @@
 			Name="collector"
 			>
 			<File
+				RelativePath=".\collector\analyzer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\collector\analyzer.h"
 				>
 			</File>
@@ -400,6 +404,30 @@
 			</File>
 			<File
 				RelativePath=".\collector\microprofilerfrontend.idl"
+				>
+			</File>
+			<File
+				RelativePath=".\collector\statistics_bridge.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\collector\statistics_bridge.h"
 				>
 			</File>
 			<File

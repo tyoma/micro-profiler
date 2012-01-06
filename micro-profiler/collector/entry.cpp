@@ -20,8 +20,8 @@
 
 #include "entry.h"
 
-#include "analyzer.h"
-#include "../common/com_helpers.h"
+#include "statistics_bridge.h"
+#include "../_generated/microprofilerfrontend_i.h"
 
 #include <wpl/mt/thread.h>
 #include <atlbase.h>
@@ -104,34 +104,20 @@ namespace micro_profiler
 	{
 		::CoInitialize(NULL);
 		{
-			analyzer a(_collector.profiler_latency());
-			vector<FunctionStatisticsDetailed> buffer;
-			vector<FunctionStatistics> children_buffer;
-			CComPtr<IProfilerFrontend> fe;
-			TCHAR image_path[MAX_PATH + 1] = { 0 };
+			statistics_bridge b(_collector, _factory);
 			UINT_PTR timerid = ::SetTimer(NULL, 0, 10, NULL);
+			MSG msg;
 
-			_factory(&fe);
-			if (fe)
+			while (::GetMessage(&msg, NULL, 0, 0))
 			{
-				MSG msg;
-
-				::GetModuleFileName(NULL, image_path, MAX_PATH);
-				fe->Initialize(CComBSTR(image_path), reinterpret_cast<__int64>(::GetModuleHandle(NULL)), c_ticks_resolution);
-				while (::GetMessage(&msg, NULL, 0, 0))
+				if (msg.message == WM_TIMER && msg.wParam == timerid)
 				{
-					if (msg.message == WM_TIMER && msg.wParam == timerid)
-					{
-						a.clear();
-						_collector.read_collected(a);
-						copy(a.begin(), a.end(), buffer, children_buffer);
-						if (!buffer.empty())
-							fe->UpdateStatistics(static_cast<long>(buffer.size()), &buffer[0]);
-					}
-
-					::TranslateMessage(&msg);
-					::DispatchMessage(&msg);
+					b.analyze();
+					b.update_frontend();
 				}
+
+				::TranslateMessage(&msg);
+				::DispatchMessage(&msg);
 			}
 			::KillTimer(NULL, timerid);
 		}

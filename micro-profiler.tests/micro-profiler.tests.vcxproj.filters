@@ -18,9 +18,12 @@
       <Filter>frontend</Filter>
     </ClCompile>
     <ClCompile Include="TextFormattingServicesTests.cpp" />
+    <ClCompile Include="StatisticsBridgeTests.cpp" />
+    <ClCompile Include="Mockups.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />
+    <ClInclude Include="Mockups.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="run-tests.vs10.cmd" />

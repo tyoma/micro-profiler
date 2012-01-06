@@ -142,25 +142,9 @@ namespace micro_profiler
 
 
 	// analyzer - inline definitions
-	inline analyzer::analyzer(__int64 profiler_latency)
-		: _profiler_latency(profiler_latency)
-	{	}
-
-	inline void analyzer::clear()
-	{	_statistics.clear();	}
-
 	inline analyzer::const_iterator analyzer::begin() const
 	{	return _statistics.begin();	}
 
 	inline analyzer::const_iterator analyzer::end() const
 	{	return _statistics.end();	}
-
-	inline void analyzer::accept_calls(unsigned int threadid, const call_record *calls, unsigned int count)
-	{
-		stacks_container::iterator i = _stacks.find(threadid);
-
-		if (i == _stacks.end())
-			i = _stacks.insert(std::make_pair(threadid, shadow_stack<statistics_map_detailed>(_profiler_latency))).first;
-		i->second.update(calls, calls + count, _statistics);
-	}
 }

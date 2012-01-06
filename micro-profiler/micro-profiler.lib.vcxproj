@@ -139,6 +139,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="collector\analyzer.cpp" />
     <ClCompile Include="collector\calls_collector.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Full</Optimization>
       <InlineFunctionExpansion Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AnySuitable</InlineFunctionExpansion>
@@ -147,6 +148,10 @@
       <OmitFramePointers Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</OmitFramePointers>
     </ClCompile>
     <ClCompile Include="collector\entry.cpp">
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="collector\statistics_bridge.cpp">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
     </ClCompile>
@@ -192,6 +197,7 @@
     <ClInclude Include="collector\analyzer.h" />
     <ClInclude Include="collector\calls_collector.h" />
     <ClInclude Include="collector\entry.h" />
+    <ClInclude Include="collector\statistics_bridge.h" />
     <ClInclude Include="collector\system.h" />
     <ClInclude Include="common\com_helpers.h" />
     <ClInclude Include="common\formatting.h" />

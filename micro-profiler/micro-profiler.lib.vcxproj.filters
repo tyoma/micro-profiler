@@ -34,6 +34,12 @@
     <ClCompile Include="common\formatting.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="collector\analyzer.cpp">
+      <Filter>collector</Filter>
+    </ClCompile>
+    <ClCompile Include="collector\statistics_bridge.cpp">
+      <Filter>collector</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="_generated\microprofilerfrontend_i.h">
@@ -77,6 +83,9 @@
     </ClInclude>
     <ClInclude Include="common\primitives.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\statistics_bridge.h">
+      <Filter>collector</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

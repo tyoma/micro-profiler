@@ -1,5 +1,5 @@
 #sidebar TableOfContents
-There are a few simple steps to integrated micro-profiler into VisualStudio:
+There are a few simple steps to get micro-profiler integrated into VisualStudio:
  # Extract the contents of a deployment package to an empty directory on the target machine;
  # Make sure no VisualStudio instance is running;
  # Perform the registration: {{{regsvr32 micro-profiler.dll}}};

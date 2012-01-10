@@ -1,5 +1,6 @@
  * [Preface Preface]
- * [UsageGuidelines Usage Guidelines]
+ * [UsageGuidelinesAutomatic Usage Guidelines]
+ * [UsageGuidelines Usage Guidelines (Manual)]
  * [BuildingPrerequisites Building the Application]
  * [FutureDevelopment Development Roadmap]
  * [RevisionHistory Revision History]

@@ -1,5 +1,5 @@
 #sidebar TableOfContents
- * r422
+ * r427
   * Children/Parent statistics is now displayed. It has been moved from experimental to the main branch of development and backed by tests;
   * VisualStudio integration implemented (works with VS 7.1, 8.0, 9.0, 10.0, 11.0 (but require DIA for VS 10.0)). It allows:
    * Enable profiling on a project in one click (using context menu in solution explorer);

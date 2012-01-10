@@ -32,14 +32,13 @@
     <PostBuildEvent>
       <Command>mkdir $(OutDir)
 del /q $(OutDir)*
-copy $(IntDir)*.cmd $(OutDir)
-copy $(IntDir)*.dll $(OutDir)
-copy $(IntDir)*.exe $(OutDir)
+copy $(IntDir)micro-profiler.dll $(OutDir)
+copy $(IntDir)micro-profiler.stub.dll $(OutDir)
 copy $(IntDir)micro-profiler.lib $(OutDir)
+copy $(IntDir)playground.exe $(OutDir)
 copy $(IntDir)playground.pdb $(OutDir)
-copy $(IntDir)entry.h $(OutDir)
-copy $(IntDir)micro-profiler.initializer.cpp $(OutDir)
-copy $(IntDir)micro-profiler.initializer.mfc-static.cpp $(OutDir)
+copy $(IntDir)*.h $(OutDir)
+copy $(IntDir)*.cpp $(OutDir)
 svn info $(SolutionDir) &gt; $(OutDir)version.txt
 mkzip "$(OutDir)\*" "$(SolutionDir)\micro-profiler.deploy..zip"
 </Command>

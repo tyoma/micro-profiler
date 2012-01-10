@@ -153,6 +153,7 @@ namespace micro_profiler
 		{
 		public:
 			[TestInitialize]
+			[TestCleanup]
 			void Init()
 			{
 				fe_raise_updated_limit = 0;
@@ -279,7 +280,7 @@ namespace micro_profiler
 				profiler_frontend fe(&factory3);
 				FunctionStatistics sleep_20_call, sleep_n_call;
 
-				fe_raise_updated_limit = 2;
+				fe_raise_updated_limit = 1;	// the 20ms call will fit into one frontend update cycle
 				fe_update_statistics.clear();
 				fe_initialized.wait();
 
@@ -288,9 +289,9 @@ namespace micro_profiler
 				fe_stat_updated.wait();
 
 				// ASERT
-				Assert::AreEqual(2u, fe_update_statistics.size());
+				Assert::AreEqual(1u, fe_update_statistics.size());
 
-				sleep_20_call = fe_update_statistics[1].Statistics;
+				sleep_20_call = fe_update_statistics[0].Statistics;
 
 				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_20));
 				Assert::IsTrue(sleep_20_call.TimesCalled == 1);
@@ -301,10 +302,11 @@ namespace micro_profiler
 
 				// INIT
 				fe_update_statistics.clear();
+				fe_raise_updated_limit = 2;	// the 200ms call will fit into two frontend update cycles
 
 				// ACT
 				sleep_n(200);
-				fe_stat_updated.wait(20);	// such a timeout MUST be sufficient enough
+				fe_stat_updated.wait(110);
 
 				// ASERT
 				Assert::IsTrue(2 == fe_update_statistics.size());
@@ -330,7 +332,7 @@ namespace micro_profiler
 				controlled_recursion(5);
 				controlled_recursion(7);
 				profiler_frontend fe(&factory3);
-				fe_stat_updated.wait(20);	// such a timeout MUST be sufficient enough
+				fe_stat_updated.wait(110);	// such a timeout MUST be sufficient enough
 
 				// ASERT
 				Assert::IsTrue(1 == fe_update_statistics.size());

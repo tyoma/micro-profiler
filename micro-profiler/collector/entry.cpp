@@ -105,21 +105,21 @@ namespace micro_profiler
 		::CoInitialize(NULL);
 		{
 			statistics_bridge b(_collector, _factory);
-			UINT_PTR timerid = ::SetTimer(NULL, 0, 10, NULL);
+			UINT_PTR analyzer_timerid = ::SetTimer(NULL, 0, 10, NULL), updater_timerid = ::SetTimer(NULL, 0, 60, NULL);
 			MSG msg;
 
 			while (::GetMessage(&msg, NULL, 0, 0))
 			{
-				if (msg.message == WM_TIMER && msg.wParam == timerid)
-				{
+				if (msg.message == WM_TIMER && msg.wParam == analyzer_timerid)
 					b.analyze();
+				else if (msg.message == WM_TIMER && msg.wParam == updater_timerid)
 					b.update_frontend();
-				}
 
 				::TranslateMessage(&msg);
 				::DispatchMessage(&msg);
 			}
-			::KillTimer(NULL, timerid);
+			::KillTimer(NULL, updater_timerid);
+			::KillTimer(NULL, analyzer_timerid);
 		}
 		::CoUninitialize();
 	}

@@ -24,7 +24,6 @@
 
 #include <atlstr.h>
 #include <dia2.h>
-#include <psapi.h>
 #include <utility>
 #include <unordered_map>
 
@@ -34,6 +33,11 @@ namespace micro_profiler
 {
 	namespace
 	{
+		struct __declspec(uuid("e60afbee-502d-46ae-858f-8272a09bd707")) DiaSource71;
+		struct __declspec(uuid("bce36434-2c24-499e-bf49-8bd99b0eeb68")) DiaSource80;
+		struct __declspec(uuid("4C41678E-887B-4365-A09E-925D28DB33C2")) DiaSource90;
+		struct __declspec(uuid("B86AE24D-BF2F-4ac9-B5A2-34B14E4CE11D")) DiaSource100;
+
 		class dia_symbol_resolver : public symbol_resolver
 		{
 			typedef std::unordered_map<const void *, wstring, micro_profiler::address_compare> names_cache;
@@ -52,11 +56,16 @@ namespace micro_profiler
 
 		dia_symbol_resolver::dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
 		{
-			_data_source.CoCreateInstance(CLSID_DiaSource);
-			_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
-			_data_source->openSession(&_session);
-			if (_session)
-				_session->put_loadAddress(load_address);
+			if (S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource100))
+				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource90))
+				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource80))
+				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource71)))
+			{
+				_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
+				_data_source->openSession(&_session);
+				if (_session)
+					_session->put_loadAddress(load_address);
+			}
 		}
 
 		dia_symbol_resolver::~dia_symbol_resolver()

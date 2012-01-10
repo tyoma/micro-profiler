@@ -24,11 +24,49 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <atlstr.h>
 #include <commctrl.h>
 
 HINSTANCE g_instance;
 
-class CProfilerFrontendModule : public CAtlDllModuleT<CProfilerFrontendModule> {	} _AtlModule;
+namespace
+{
+	const LPCTSTR c_environment = _T("Environment");
+	const LPCTSTR c_path_var = _T("PATH");
+	const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIR");
+	const CString c_profilerdir_var_decorated = CString(_T("%")) + c_profilerdir_var + _T("%");
+	const LPCTSTR c_path_separator = _T(";");
+
+	class CProfilerFrontendModule : public CAtlDllModuleT<CProfilerFrontendModule>
+	{
+	};
+
+	bool GetStringValue(CRegKey &key, LPCTSTR name, CString &value)
+	{
+		DWORD type = 0, size = 0;
+
+		if (ERROR_SUCCESS == ::RegGetValue(key, NULL, name, RRF_RT_REG_EXPAND_SZ | RRF_RT_REG_SZ | RRF_NOEXPAND, &type, NULL,
+			&size))
+		{
+			::RegGetValue(key, NULL, name, RRF_RT_REG_EXPAND_SZ | RRF_RT_REG_SZ | RRF_NOEXPAND, &type, value.GetBuffer(size),
+				&size);
+			value.ReleaseBuffer();
+			return true;
+		}
+		return false;
+	}
+
+	CString GetModuleDirectory()
+	{
+		TCHAR path[MAX_PATH + 1] = { 0 };
+
+		::GetModuleFileName(g_instance, path, MAX_PATH + 1);
+		::PathRemoveFileSpec(path);
+		return path;
+	}
+}
+	
+CProfilerFrontendModule _AtlModule;
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
@@ -53,7 +91,39 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 }
 
 STDAPI DllRegisterServer()
-{	return _AtlModule.DllRegisterServer(FALSE);	}
+{
+	CString path;
+	CRegKey environment;
+
+	environment.Open(HKEY_CURRENT_USER, c_environment);
+	GetStringValue(environment, c_path_var, path);
+	if (-1 == path.Find(c_profilerdir_var_decorated))
+	{
+		if (!path.IsEmpty())
+			path += c_path_separator;
+		path += c_profilerdir_var_decorated;
+		environment.SetStringValue(c_path_var, path, REG_EXPAND_SZ);
+	}
+	environment.SetStringValue(c_profilerdir_var, GetModuleDirectory());
+	::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
+	return _AtlModule.DllRegisterServer(FALSE);
+}
 
 STDAPI DllUnregisterServer()
-{	return _AtlModule.DllUnregisterServer(FALSE);	}
+{
+	CString path;
+	CRegKey environment;
+
+	environment.Open(HKEY_CURRENT_USER, c_environment);
+	if (GetStringValue(environment, c_path_var, path))
+	{
+		path.Replace(c_path_separator + c_profilerdir_var_decorated + c_path_separator, c_path_separator);
+		path.Replace(c_profilerdir_var_decorated + c_path_separator, _T(""));
+		path.Replace(c_path_separator + c_profilerdir_var_decorated, _T(""));
+		path.Replace(c_profilerdir_var_decorated, _T(""));
+		environment.SetStringValue(c_path_var, path, REG_EXPAND_SZ);
+	}
+	environment.DeleteValue(c_profilerdir_var);
+	::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
+	return _AtlModule.DllUnregisterServer(FALSE);
+}

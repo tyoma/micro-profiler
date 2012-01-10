@@ -6,7 +6,7 @@ There are a few simple steps to integrated micro-profiler into VisualStudio:
  # Run VisualStudio and go to Tools/Addins... There you may load micro-profiler addin explicitely and/or specify whether to load it on IDE startup;
  # Start using micro-profiler!
 
- Note: if you are going to profile an application on the clean machine w/o VS installed, please, make sure that you have DIA library registered on that machine. It should be of at least the IDE version you used to build application you going to profile. You can get the DIA library for instance from here: {{{%VSINSTALLDIR%\Common7\Packages\Debugger\msdiaXXX.dll}}}.
+ *Note*: if you are going to profile an application on the clean machine w/o VS installed, please, make sure that you have DIA library registered on that machine. It should be of at least the IDE version you used to build application you going to profile. You can get the DIA library for instance from here: {{{%VSINSTALLDIR%\Common7\Packages\Debugger\msdiaXXX.dll}}}.
 
 To add profiling to your application right-click on the target application project in the solution tree and check 'Enable Profiling' checkmark in the context menu. For now only 'exe' project types are supported.
 

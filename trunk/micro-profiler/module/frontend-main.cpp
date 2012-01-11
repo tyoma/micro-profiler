@@ -43,13 +43,11 @@ namespace
 
 	bool GetStringValue(CRegKey &key, LPCTSTR name, CString &value)
 	{
-		DWORD type = 0, size = 0;
+		ULONG size = 0;
 
-		if (ERROR_SUCCESS == ::RegGetValue(key, NULL, name, RRF_RT_REG_EXPAND_SZ | RRF_RT_REG_SZ | RRF_NOEXPAND, &type, NULL,
-			&size))
+		if (ERROR_SUCCESS == key.QueryStringValue(name, NULL, &size))
 		{
-			::RegGetValue(key, NULL, name, RRF_RT_REG_EXPAND_SZ | RRF_RT_REG_SZ | RRF_NOEXPAND, &type, value.GetBuffer(size),
-				&size);
+			key.QueryStringValue(name, value.GetBuffer(size), &size);
 			value.ReleaseBuffer();
 			return true;
 		}

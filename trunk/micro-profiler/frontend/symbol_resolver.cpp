@@ -37,6 +37,7 @@ namespace micro_profiler
 		struct __declspec(uuid("bce36434-2c24-499e-bf49-8bd99b0eeb68")) DiaSource80;
 		struct __declspec(uuid("4C41678E-887B-4365-A09E-925D28DB33C2")) DiaSource90;
 		struct __declspec(uuid("B86AE24D-BF2F-4ac9-B5A2-34B14E4CE11D")) DiaSource100;
+		struct __declspec(uuid("761D3BCD-1304-41D5-94E8-EAC54E4AC172")) DiaSource110;
 
 		class dia_symbol_resolver : public symbol_resolver
 		{
@@ -56,7 +57,8 @@ namespace micro_profiler
 
 		dia_symbol_resolver::dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
 		{
-			if (S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource100))
+			if (S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource110))
+				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource100))
 				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource90))
 				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource80))
 				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource71)))

@@ -1,4 +1,7 @@
 #sidebar TableOfContents
+ * r440
+  * Windows XP compatibility fixed (RegGetValue is not available on this platform);
+
  * r436
   * Integration with VS 2005 (8.0) is now fully functional;
 

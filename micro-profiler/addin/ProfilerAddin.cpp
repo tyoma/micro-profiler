@@ -13,6 +13,8 @@
 	#import <dte80a.olb> implementation_only
 	#import "typelibs/VCProject_71.tlb" no_implementation rename_namespace("VCProject71")
 	#import "typelibs/VCProject_71.tlb" implementation_only rename_namespace("VCProject71")
+	#import "typelibs/VCProject_80.tlb" no_implementation rename_namespace("VCProject80")
+	#import "typelibs/VCProject_80.tlb" implementation_only rename_namespace("VCProject80")
 	#import "typelibs/VCProject_90.tlb" no_implementation rename_namespace("VCProject90")
 	#import "typelibs/VCProject_90.tlb" implementation_only rename_namespace("VCProject90")
 	#import "typelibs/VCProject_100.tlb" no_implementation rename_namespace("VCProject100")
@@ -54,6 +56,7 @@ namespace
 		typedef Office::_CommandBarsPtr CommandBarsPtr;
 		typedef Office::CommandBarPtr CommandBarPtr;
 		typedef Office::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef Office::CommandBarPopupPtr CommandBarPopupPtr;
 		typedef VCProject71::VCCLCompilerToolPtr VCCLCompilerToolPtr;
 		typedef VCProject71::VCProjectPtr VCProjectPtr;
 		typedef VCProject71::VCConfigurationPtr VCConfigurationPtr;
@@ -63,12 +66,29 @@ namespace
 		typedef VCProject71::VCFileConfigurationPtr VCFileConfigurationPtr;
 		typedef VCProject71::pchOption pchOption;
 	};
-	
+
+	struct API_VS80
+	{
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarsPtr CommandBarsPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPtr CommandBarPtr;
+		typedef Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPopupPtr CommandBarPopupPtr;
+		typedef VCProject80::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject80::VCProjectPtr VCProjectPtr;
+		typedef VCProject80::VCConfigurationPtr VCConfigurationPtr;
+		typedef VCProject80::IVCCollectionPtr IVCCollectionPtr;
+		typedef VCProject80::VCCLCompilerToolPtr VCCLCompilerToolPtr;
+		typedef VCProject80::VCFilePtr VCFilePtr;
+		typedef VCProject80::VCFileConfigurationPtr VCFileConfigurationPtr;
+		typedef VCProject80::pchOption pchOption;
+	};
+
 	struct API_VS90
 	{
 		typedef Microsoft_VisualStudio_CommandBars::_CommandBarsPtr CommandBarsPtr;
 		typedef Microsoft_VisualStudio_CommandBars::CommandBarPtr CommandBarPtr;
 		typedef Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPopupPtr CommandBarPopupPtr;
 		typedef VCProject90::VCCLCompilerToolPtr VCCLCompilerToolPtr;
 		typedef VCProject90::VCProjectPtr VCProjectPtr;
 		typedef VCProject90::VCConfigurationPtr VCConfigurationPtr;
@@ -84,6 +104,7 @@ namespace
 		typedef Microsoft_VisualStudio_CommandBars::_CommandBarsPtr CommandBarsPtr;
 		typedef Microsoft_VisualStudio_CommandBars::CommandBarPtr CommandBarPtr;
 		typedef Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPopupPtr CommandBarPopupPtr;
 		typedef VCProject100::VCCLCompilerToolPtr VCCLCompilerToolPtr;
 		typedef VCProject100::VCProjectPtr VCProjectPtr;
 		typedef VCProject100::VCConfigurationPtr VCConfigurationPtr;
@@ -99,6 +120,7 @@ namespace
 		typedef Microsoft_VisualStudio_CommandBars::_CommandBarsPtr CommandBarsPtr;
 		typedef Microsoft_VisualStudio_CommandBars::CommandBarPtr CommandBarPtr;
 		typedef Microsoft_VisualStudio_CommandBars::_CommandBarButtonPtr CommandBarButtonPtr;
+		typedef Microsoft_VisualStudio_CommandBars::CommandBarPopupPtr CommandBarPopupPtr;
 		typedef VCProject110::VCCLCompilerToolPtr VCCLCompilerToolPtr;
 		typedef VCProject110::VCProjectPtr VCProjectPtr;
 		typedef VCProject110::VCConfigurationPtr VCConfigurationPtr;
@@ -125,6 +147,7 @@ namespace
 		typedef typename API::CommandBarsPtr CommandBarsPtr;
 		typedef typename API::CommandBarPtr CommandBarPtr;
 		typedef typename API::CommandBarButtonPtr CommandBarButtonPtr;
+		typedef typename API::CommandBarPopupPtr CommandBarPopupPtr;
 		typedef typename API::VCCLCompilerToolPtr VCCLCompilerToolPtr;
 		typedef typename API::VCProjectPtr VCProjectPtr;
 		typedef typename API::VCConfigurationPtr VCConfigurationPtr;
@@ -201,6 +224,8 @@ namespace
 	{
 		if (_bstr_t(L"7.10") == _version)
 			get_commands_versioned<API_VS71>(commands);
+		else if (_bstr_t(L"8.0") == _version)
+			get_commands_versioned<API_VS80>(commands);
 		else if (_bstr_t(L"9.0") == _version)
 			get_commands_versioned<API_VS90>(commands);
 		else if (_bstr_t(L"10.0") == _version)
@@ -268,11 +293,28 @@ namespace
 	wstring command_base<API>::description() const
 	{	return _description;	}
 
+	template <>
+	void command_base<API_VS71>::update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr commandbars_) const
+	{
+		CommandBarsPtr commandbars(commandbars_);
+		CommandBarPtr targetCommandBar(commandbars->Item[L"Project"]);
+		long position = targetCommandBar->Controls->Count + 1;
+		CommandBarButtonPtr item(cmd->AddControl(targetCommandBar, position));
+
+		if (_group_start)
+			item->BeginGroup = true;
+	}
+
 	template <typename API>
 	void command_base<API>::update_ui(EnvDTE::CommandPtr cmd, IDispatchPtr commandbars_) const
 	{
 		CommandBarsPtr commandbars(commandbars_);
-		CommandBarPtr targetCommandBar(commandbars->Item[L"Project"]);
+		CommandBarPtr targetCommandBar(
+			CommandBarPopupPtr(
+				CommandBarPopupPtr(
+					commandbars->Item[L"Context Menus"]->Controls->Item[L"Project and Solution Context Menus"]
+				)->Controls->Item[L"Project"]
+			)->CommandBar);
 		long position = targetCommandBar->Controls->Count + 1;
 		CommandBarButtonPtr item(cmd->AddControl(targetCommandBar, position));
 

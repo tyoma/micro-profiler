@@ -69,7 +69,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="rpcrt4.lib diaguids.lib"
+				AdditionalDependencies="rpcrt4.lib dbghelp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="rpcrt4.lib diaguids.lib"
+				AdditionalDependencies="rpcrt4.lib dbghelp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

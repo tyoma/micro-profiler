@@ -23,9 +23,14 @@
 #include "../common/primitives.h"
 
 #include <atlstr.h>
-#include <dia2.h>
-#include <utility>
+#include <Windows.h>
+#include <dbghelp.h>
 #include <unordered_map>
+
+namespace std
+{
+	using std::tr1::unordered_map;
+}
 
 using namespace std;
 
@@ -33,66 +38,68 @@ namespace micro_profiler
 {
 	namespace
 	{
-		struct __declspec(uuid("e60afbee-502d-46ae-858f-8272a09bd707")) DiaSource71;
-		struct __declspec(uuid("bce36434-2c24-499e-bf49-8bd99b0eeb68")) DiaSource80;
-		struct __declspec(uuid("4C41678E-887B-4365-A09E-925D28DB33C2")) DiaSource90;
-		struct __declspec(uuid("B86AE24D-BF2F-4ac9-B5A2-34B14E4CE11D")) DiaSource100;
-		struct __declspec(uuid("761D3BCD-1304-41D5-94E8-EAC54E4AC172")) DiaSource110;
-
-		class dia_symbol_resolver : public symbol_resolver
+		class dbghelp_symbol_resolver : public symbol_resolver
 		{
-			typedef std::unordered_map<const void *, wstring, micro_profiler::address_compare> names_cache;
+			typedef unordered_map<const void *, wstring, address_compare> cached_names_map;
 
-			CComPtr<IDiaDataSource> _data_source;
-			CComPtr<IDiaSession> _session;
-			mutable names_cache _cached_names;
+			mutable cached_names_map _names;
+
+			HANDLE me() const;
 
 		public:
-			dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address);
-			virtual ~dia_symbol_resolver();
+			dbghelp_symbol_resolver();
+			virtual ~dbghelp_symbol_resolver();
 
-			virtual wstring symbol_name_by_va(const void *address) const;
+			void load(const wstring &module, const void *at);
+
+			virtual const wstring &symbol_name_by_va(const void *address) const;
 		};
 
 
-		dia_symbol_resolver::dia_symbol_resolver(const wstring &image_path, unsigned __int64 load_address)
+		dbghelp_symbol_resolver::dbghelp_symbol_resolver()
 		{
-			if (S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource110))
-				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource100))
-				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource90))
-				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource80))
-				|| S_OK == _data_source.CoCreateInstance(__uuidof(DiaSource71)))
-			{
-				_data_source->loadDataForExe(CStringW(image_path.c_str()), NULL, NULL);
-				_data_source->openSession(&_session);
-				if (_session)
-					_session->put_loadAddress(load_address);
-			}
+			if (!::SymInitialize(me(), NULL, FALSE))
+				throw 0;
 		}
 
-		dia_symbol_resolver::~dia_symbol_resolver()
-		{	}
+		dbghelp_symbol_resolver::~dbghelp_symbol_resolver()
+		{	::SymCleanup(me());	}
 
-		wstring dia_symbol_resolver::symbol_name_by_va(const void *address) const
+		HANDLE dbghelp_symbol_resolver::me() const
+		{	return reinterpret_cast<HANDLE>(const_cast<dbghelp_symbol_resolver *>(this));	}
+
+		void dbghelp_symbol_resolver::load(const wstring &module, const void *at)
 		{
-			names_cache::const_iterator i = _cached_names.find(address);
+			if (!::SymLoadModule64(me(), NULL, CStringA(module.c_str()), NULL, reinterpret_cast<DWORD64>(at), 0))
+				throw invalid_argument("");
+		}
 
-			if (i == _cached_names.end())
+		const wstring &dbghelp_symbol_resolver::symbol_name_by_va(const void *address) const
+		{
+			cached_names_map::iterator i = _names.find(address);
+
+			if (i == _names.end())
 			{
-				CStringW result;
-				CComBSTR name;
-				CComPtr<IDiaSymbol> symbol;
+				const size_t max_name_length = 300;
+				SYMBOL_INFO dummy;
+				char buffer[sizeof(SYMBOL_INFO) + max_name_length * sizeof(dummy.Name[0])] = { 0 };
+				SYMBOL_INFO &symbol = *reinterpret_cast<SYMBOL_INFO *>(buffer);
 
-				if (_session && SUCCEEDED(_session->findSymbolByVA((ULONGLONG)address, SymTagFunction, &symbol)) && symbol && SUCCEEDED(symbol->get_name(&name)))
-					result = name;
-				else
-					result.Format(L"Function @%08I64X", (__int64)address);
-				i = _cached_names.insert(make_pair(address, result)).first;
+				dummy;
+				symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
+				symbol.MaxNameLen = max_name_length;
+				::SymFromAddr(me(), reinterpret_cast<DWORD64>(address), 0, &symbol);
+				i = _names.insert(make_pair(address, (const wchar_t *)CStringW(symbol.Name))).first;
 			}
 			return i->second;
 		}
 	}
 
-	shared_ptr<symbol_resolver> symbol_resolver::create_dia_resolver(const wstring &image_path, unsigned __int64 load_address)
-	{	return shared_ptr<symbol_resolver>(new dia_symbol_resolver(image_path, load_address));	}
+	shared_ptr<symbol_resolver> symbol_resolver::create(const wstring &image_path, unsigned __int64 load_address)
+	{
+		shared_ptr<dbghelp_symbol_resolver> r(new dbghelp_symbol_resolver());
+		
+		r->load(image_path, reinterpret_cast<const void *>(load_address));
+		return r;
+	}
 }

@@ -9,4 +9,3 @@ There several steps to add profiling support to your VisualStudio project (look 
  # Link your project against {{{micro-profiler.lib}}}. Make sure your project is not referencing any other library that exports {{{_penter()}}} and/or {{{_pexit()}}} function(s);
  # Register micro-profiler.dll (this registers frontend and proxy/stub code for statistics IPC): {{{regsvr32 micro-profiler.dll}}}. Please note, that correct registration on Windows Vista/7 requires elevated privileges;
  # Ensure that micro-profiler.dll is placed to the same directory where your profiled image (exe/dll) resides;
- # Make sure you have Debug Information Acquisition DLL *installed and registered* on a target computer (you can copy DLL from here: {{{%VS90%\Common7\Packages\Debugger\msdia90.dll}}}).

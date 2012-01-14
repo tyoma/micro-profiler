@@ -1,4 +1,7 @@
 #sidebar TableOfContents
+ * r443
+  * MicroProfiler no longer require DIA to be installed on the target machine. It now uses Debug Helper library that comes with Windows;
+
  * r440
   * Windows XP compatibility fixed (RegGetValue is not available on this platform);
 

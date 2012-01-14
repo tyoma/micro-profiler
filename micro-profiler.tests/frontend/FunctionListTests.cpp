@@ -11,6 +11,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <map>
 #include <memory>
 #include <locale>
 #include <algorithm>
@@ -123,10 +124,12 @@ namespace micro_profiler
 
 			class sri : public symbol_resolver
 			{
+				mutable map<const void *, wstring> _names;
+
 			public:
-				virtual wstring symbol_name_by_va(const void *address) const
+				virtual const wstring &symbol_name_by_va(const void *address) const
 				{
-					return to_string(address);
+					return _names[address] = to_string(address);
 				}
 			};
 

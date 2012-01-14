@@ -24,7 +24,6 @@
 #include "../_generated/microprofilerfrontend_i.h"
 
 #include <wpl/mt/thread.h>
-#include <atlbase.h>
 #include <vector>
 
 namespace std
@@ -83,9 +82,10 @@ namespace micro_profiler
 	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_INPROC_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
 	profiler_frontend::profiler_frontend(frontend_factory factory)
-		: _collector(*calls_collector::instance()), _factory(factory),
-			_frontend_thread(thread::run(bind(&profiler_frontend::frontend_initialize, this), bind(&profiler_frontend::frontend_worker, this)))
-	{	}
+		: _collector(*calls_collector::instance()), _factory(factory)
+	{
+		_frontend_thread = thread::run(bind(&profiler_frontend::frontend_initialize, this), bind(&profiler_frontend::frontend_worker, this));
+	}
 
 	profiler_frontend::~profiler_frontend()
 	{

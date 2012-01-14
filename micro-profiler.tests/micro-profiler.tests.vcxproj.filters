@@ -20,6 +20,7 @@
     <ClCompile Include="TextFormattingServicesTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
     <ClCompile Include="Mockups.cpp" />
+    <ClCompile Include="SymbolResolverTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

@@ -7,5 +7,4 @@ There several steps to add profiling support to your VisualStudio project (look 
   # Apply */GH /Gh* command line options to compiler tool of your VS-project;
   # Or apply */GH /Gh* command line options to compiler tool of specific source (.cpp) file(s) you want to profile;
  # Link your project against {{{micro-profiler.lib}}}. Make sure your project is not referencing any other library that exports {{{_penter()}}} and/or {{{_pexit()}}} function(s);
- # Register micro-profiler.dll (this registers frontend and proxy/stub code for statistics IPC): {{{regsvr32 micro-profiler.dll}}}. Please note, that correct registration on Windows Vista/7 requires elevated privileges;
- # Ensure that micro-profiler.dll is placed to the same directory where your profiled image (exe/dll) resides;
+ # Register micro-profiler.dll (this registers frontend and proxy/stub code for statistics IPC): {{{regsvr32 micro-profiler.dll}}}. *Please note, that registration is performed for the current user only (to work on Windows Vista/7). This has a side-effect that no applications run as another user can be profiled*.

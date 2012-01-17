@@ -224,7 +224,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MicroProfiler"
         "ProductCode" = "8:{BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66}"
-        "PackageCode" = "8:{5976CD1D-7075-49E9-9F73-79B1C9AAA887}"
+        "PackageCode" = "8:{3B2E9767-E608-48F6-AF2B-3AB9FB6EA086}"
         "UpgradeCode" = "8:{32373928-E978-4133-B1A2-F08B690383AE}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -247,7 +247,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:"
+        "PostBuildEvent" = "8:cscript \"$(ProjectDir)updmsi.vbs\" \"$(BuiltOuputPath)\" \"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_mpdir', 'MICROPROFILERDIR','[TARGETDIR]','C__E3160BF5785BB76197159EBA32E19E2C')\" \"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path', 'Path','[~];%%MICROPROFILERDIR%%','C__E3160BF5785BB76197159EBA32E19E2C')\""
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"

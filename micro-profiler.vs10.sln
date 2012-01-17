@@ -51,6 +51,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbol_container_2", "micro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbol_container_3_nosymbols", "micro-profiler.tests\guineapigs\symbol_container_3_nosymbols.vcxproj", "{DB4F7DA2-1C0D-46F5-B20C-8801BD4A27F2}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "installer", "deployment\installer.vs10.vdproj", "{C82FC2A1-A0BE-4F02-96BB-42EE9C7ADD25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -116,6 +118,10 @@ Global
 		{DB4F7DA2-1C0D-46F5-B20C-8801BD4A27F2}.Debug|Win32.Build.0 = Debug|Win32
 		{DB4F7DA2-1C0D-46F5-B20C-8801BD4A27F2}.Release|Win32.ActiveCfg = Release|Win32
 		{DB4F7DA2-1C0D-46F5-B20C-8801BD4A27F2}.Release|Win32.Build.0 = Release|Win32
+		{C82FC2A1-A0BE-4F02-96BB-42EE9C7ADD25}.Debug|Win32.ActiveCfg = Release
+		{C82FC2A1-A0BE-4F02-96BB-42EE9C7ADD25}.Debug|Win32.Build.0 = Release
+		{C82FC2A1-A0BE-4F02-96BB-42EE9C7ADD25}.Release|Win32.ActiveCfg = Release
+		{C82FC2A1-A0BE-4F02-96BB-42EE9C7ADD25}.Release|Win32.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

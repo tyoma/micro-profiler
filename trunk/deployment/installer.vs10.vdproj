@@ -224,7 +224,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MicroProfiler"
         "ProductCode" = "8:{BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66}"
-        "PackageCode" = "8:{3B2E9767-E608-48F6-AF2B-3AB9FB6EA086}"
+        "PackageCode" = "8:{270BEBBD-24CA-440E-976C-2351B9CC8973}"
         "UpgradeCode" = "8:{32373928-E978-4133-B1A2-F08B690383AE}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -247,7 +247,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:cscript \"$(ProjectDir)updmsi.vbs\" \"$(BuiltOuputPath)\" \"INSERT INTO Component (Component, ComponentId, Directory_, Attributes, Condition) VALUES ('c_env_usr', '{EAD8E58C-BC04-4509-A46C-7CA9C9190672}', 'TARGETDIR', 0, 'NOT ALLUSERS')\" \"INSERT INTO Component (Component, ComponentId, Directory_, Attributes, Condition) VALUES ('c_env_sys', '{C28237F2-C691-4E29-911D-4AA87E32AA7B}', 'TARGETDIR', 0, 'ALLUSERS')\" \"INSERT INTO FeatureComponents (Feature_, Component_) VALUES ('DefaultFeature', 'c_env_usr')\" \"INSERT INTO FeatureComponents (Feature_, Component_) VALUES ('DefaultFeature', 'c_env_sys')\" \"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_mpdir_usr', 'MICROPROFILERDIR','[TARGETDIR]','c_env_usr')\" \"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path_usr', 'Path','[~];%%MICROPROFILERDIR%%','c_env_usr')\" \"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_mpdir_sys', '*MICROPROFILERDIR','[TARGETDIR]','c_env_sys')\" \"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path_sys', '*Path','[~];%%MICROPROFILERDIR%%','c_env_sys')\""
+        "PostBuildEvent" = "8:cscript \"$(ProjectDir)installer-postprocess.js \" \"$(BuiltOuputPath)\""
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"
@@ -1331,7 +1331,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                             "ShowProgress"
@@ -1381,7 +1381,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                             "ShowProgress"
@@ -1431,7 +1431,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                         }
@@ -1462,7 +1462,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                             "UpdateText"
@@ -1506,7 +1506,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                             "CopyrightWarning"
@@ -1554,7 +1554,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                         }
@@ -1576,7 +1576,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                         }
@@ -1607,7 +1607,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                         }
@@ -1629,7 +1629,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                             "CopyrightWarning"
@@ -1677,7 +1677,7 @@
                             "Type" = "3:8"
                             "ContextData" = "8:Bitmap"
                             "Attributes" = "3:4"
-                            "Setting" = "3:1"
+                            "Setting" = "3:0"
                             "UsePlugInResources" = "11:TRUE"
                             }
                             "InstallAllUsersVisible"

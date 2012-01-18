@@ -53,6 +53,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbol_container_3_nosymbol
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "installer", "deployment\installer.vs10.vdproj", "{C82FC2A1-A0BE-4F02-96BB-42EE9C7ADD25}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{229F9C5A-B067-499C-8EC7-789EA70984A1}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\mksvnheader.js = scripts\mksvnheader.js
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

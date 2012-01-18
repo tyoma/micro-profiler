@@ -9,7 +9,7 @@
 //
 #include "winres.h"
 
-#include "../_micro-profiler-version.h"
+#include "../_version-info.h"
 
 #define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,REPO_REVISION,0
 #define INFO_VERSION_STR INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." REPO_REVISION_STR ".0"
@@ -110,7 +110,7 @@ END
 BEGIN
 	"#include ""winres.h""\r\n\r\n"
 
-	"#include ""../_micro-profiler-version.h""\r\n"
+	"#include ""../_version-info.h""\r\n"
 
 	"#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,REPO_REVISION,0\r\n"
 	"#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR ""."" INFO_VERSION_MINOR_STR ""."" REPO_REVISION_STR "".0""\r\n"

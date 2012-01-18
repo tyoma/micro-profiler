@@ -89,11 +89,7 @@ copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>
     </PostBuildEvent>
-    <PreBuildEvent>
-      <Command>type "$(SolutionDir)version-info.txt" | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" INFO &gt; _micro-profiler-version.h
-svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" REPO &gt;&gt; _micro-profiler-version.h
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -141,11 +137,7 @@ copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>
     </PostBuildEvent>
-    <PreBuildEvent>
-      <Command>type "$(SolutionDir)version-info.txt" | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" INFO &gt; _micro-profiler-version.h
-svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" REPO &gt;&gt; _micro-profiler-version.h
-</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="addin\ProfilerAddin.cpp">
@@ -175,6 +167,18 @@ svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="..\version-info.txt">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" INFO &gt; _%(Filename).h
+svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" REPO &gt;&gt; _%(Filename).h
+</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" INFO &gt; _%(Filename).h
+svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" REPO &gt;&gt; _%(Filename).h
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_%(Filename).h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Preparing version-info header...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preparing version-info header...</Message>
+    </CustomBuild>
     <None Include="addin\micro-profiler-addin.rgs" />
     <None Include="module\micro-profiler.ps.def" />
     <None Include="resources\appicon.ico" />

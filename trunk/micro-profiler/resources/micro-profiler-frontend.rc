@@ -9,15 +9,10 @@
 //
 #include "winres.h"
 
-#define INFO_VERSION_MAJOR 1
-#define INFO_VERSION_MAJOR_STR "1"
-#define INFO_VERSION_MINOR 0
-#define INFO_VERSION_MINOR_STR "0"
-#define SVN_REVISION 100
-#define SVN_REVISION_STR "100"
+#include "../_micro-profiler-version.h"
 
-#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,SVN_REVISION,0
-#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." SVN_REVISION_STR ".0"
+#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,REPO_REVISION,0
+#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." REPO_REVISION_STR ".0"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -115,12 +110,10 @@ END
 BEGIN
 	"#include ""winres.h""\r\n\r\n"
 
-	"#define INFO_VERSION_MAJOR 1\r\n"
-	"#define INFO_VERSION_MAJOR_STR \"1\"\r\n"
-	"#define INFO_VERSION_MINOR 0\r\n"
-	"#define INFO_VERSION_MINOR_STR \"0\"\r\n"
-	"#define SVN_REVISION 100\r\n"
-	"#define SVN_REVISION_STR \"100\"\r\n"
+	"#include ""../_micro-profiler-version.h""\r\n"
+
+	"#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,REPO_REVISION,0\r\n"
+	"#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR ""."" INFO_VERSION_MINOR_STR ""."" REPO_REVISION_STR "".0""\r\n"
 	"\0"
 END
 

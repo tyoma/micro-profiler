@@ -27,7 +27,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="type &quot;$(SolutionDir)version-info.txt&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; INFO &gt; _micro-profiler-version.h&#x0D;&#x0A;svn info $(SolutionDir) | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; REPO &gt;&gt; _micro-profiler-version.h&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -108,7 +107,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="type &quot;$(SolutionDir)version-info.txt&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; INFO &gt; _micro-profiler-version.h&#x0D;&#x0A;svn info $(SolutionDir) | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; REPO &gt;&gt; _micro-profiler-version.h&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"

@@ -16,6 +16,9 @@
 #define SVN_REVISION 100
 #define SVN_REVISION_STR "100"
 
+#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,SVN_REVISION,0
+#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." SVN_REVISION_STR ".0"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -130,8 +133,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,SVN_REVISION,0
- PRODUCTVERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,SVN_REVISION,0
+ FILEVERSION INFO_VERSION
+ PRODUCTVERSION INFO_VERSION
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -148,12 +151,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
             VALUE "FileDescription", "Profiler with RealTime Frontend"
-            VALUE "FileVersion", INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." SVN_REVISION_STR ".0"
+            VALUE "FileVersion", INFO_VERSION_STR
             VALUE "InternalName", "micro-profiler.dll"
             VALUE "LegalCopyright", "© Copyright 2011-2012 gevorkyan.org. All rights reserved."
             VALUE "OriginalFilename", "micro-profiler.dll"
             VALUE "ProductName", "MicroProfiler"
-            VALUE "ProductVersion", INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." SVN_REVISION_STR ".0"
+            VALUE "ProductVersion", INFO_VERSION_STR
         END
     END
     BLOCK "VarFileInfo"

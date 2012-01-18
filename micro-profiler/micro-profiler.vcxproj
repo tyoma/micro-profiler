@@ -89,6 +89,11 @@ copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>type "$(SolutionDir)version-info.txt" | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" INFO &gt; _micro-profiler-version.h
+svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" REPO &gt;&gt; _micro-profiler-version.h
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -136,6 +141,11 @@ copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 </Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>type "$(SolutionDir)version-info.txt" | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" INFO &gt; _micro-profiler-version.h
+svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/mksvnheader.js" REPO &gt;&gt; _micro-profiler-version.h
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="addin\ProfilerAddin.cpp">

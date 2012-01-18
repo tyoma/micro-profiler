@@ -9,6 +9,13 @@
 //
 #include "winres.h"
 
+#define INFO_VERSION_MAJOR 1
+#define INFO_VERSION_MAJOR_STR "1"
+#define INFO_VERSION_MINOR 0
+#define INFO_VERSION_MINOR_STR "0"
+#define SVN_REVISION 100
+#define SVN_REVISION_STR "100"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -103,8 +110,15 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""winres.h""\r\n"
-    "\0"
+	"#include ""winres.h""\r\n\r\n"
+
+	"#define INFO_VERSION_MAJOR 1\r\n"
+	"#define INFO_VERSION_MAJOR_STR \"1\"\r\n"
+	"#define INFO_VERSION_MINOR 0\r\n"
+	"#define INFO_VERSION_MINOR_STR \"0\"\r\n"
+	"#define SVN_REVISION 100\r\n"
+	"#define SVN_REVISION_STR \"100\"\r\n"
+	"\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -116,8 +130,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,SVN_REVISION,0
+ PRODUCTVERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,SVN_REVISION,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -134,12 +148,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
             VALUE "FileDescription", "Profiler with RealTime Frontend"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." SVN_REVISION_STR ".0"
             VALUE "InternalName", "micro-profiler.dll"
             VALUE "LegalCopyright", "© Copyright 2011-2012 gevorkyan.org. All rights reserved."
             VALUE "OriginalFilename", "micro-profiler.dll"
             VALUE "ProductName", "MicroProfiler"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." SVN_REVISION_STR ".0"
         END
     END
     BLOCK "VarFileInfo"

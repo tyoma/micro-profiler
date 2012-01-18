@@ -293,6 +293,30 @@
 				/>
 			</FileConfiguration>
 		</File>
+		<File
+			RelativePath="..\version-info.txt"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Preparing version-info header..."
+					CommandLine="type &quot;$(InputPath)&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; INFO &gt; _$(InputName).h&#x0D;&#x0A;svn info $(SolutionDir) | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; REPO &gt;&gt; _$(InputName).h&#x0D;&#x0A;"
+					Outputs="_$(InputName).h"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Preparing version-info header..."
+					CommandLine="type &quot;$(InputPath)&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; INFO &gt; _$(InputName).h&#x0D;&#x0A;svn info $(SolutionDir) | cscript //Nologo &quot;$(SolutionDir)scripts/mksvnheader.js&quot; REPO &gt;&gt; _$(InputName).h&#x0D;&#x0A;"
+					Outputs="_$(InputName).h"
+				/>
+			</FileConfiguration>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

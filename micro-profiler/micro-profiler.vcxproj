@@ -172,7 +172,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; _%(Filename).h
 </Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/make-header.js" INFO &gt; _%(Filename).h
-svn info $(SolutionDir) | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; _%(Filename).h
+svn info "$(SolutionDir)." | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; _%(Filename).h
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_%(Filename).h</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_%(Filename).h</Outputs>

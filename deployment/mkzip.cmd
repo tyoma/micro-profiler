@@ -25,11 +25,11 @@ if exist "%ProgramW6432%\WinRar\rar.exe" (
 goto noarc
 
 :use7z
-%arcihver% a -tzip "%2" "%1"
+%arcihver% a -tzip %2 %1
 goto exit
 
 :userar
-%arcihver% a -ep1 "%2" "%1"
+%arcihver% a -ep1 %2 %1
 goto exit
 
 :noarc

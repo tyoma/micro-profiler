@@ -58,6 +58,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{9ACA
 	ProjectSection(SolutionItems) = preProject
 		scripts\make-header.js = scripts\make-header.js
 		scripts\msi-postprocess.js = scripts\msi-postprocess.js
+		scripts\substitute.js = scripts\substitute.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{DE1AE368-D62C-4A09-94C9-7DCC0E4280A9}"

@@ -30,16 +30,16 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog />
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)
-del /q $(OutDir)*
-copy $(IntDir)micro-profiler.dll $(OutDir)
-copy $(IntDir)micro-profiler.stub.dll $(OutDir)
-copy $(IntDir)micro-profiler.lib $(OutDir)
-copy $(IntDir)playground.exe $(OutDir)
-copy $(IntDir)playground.pdb $(OutDir)
-copy $(IntDir)*.h $(OutDir)
-copy $(IntDir)*.cpp $(OutDir)
-svn info $(SolutionDir) &gt; $(OutDir)version.txt
+      <Command>mkdir "$(OutDir)"
+del /q "$(OutDir)*"
+copy "$(IntDir)micro-profiler.dll" "$(OutDir)"
+copy "$(IntDir)micro-profiler.stub.dll" "$(OutDir)"
+copy "$(IntDir)micro-profiler.lib" "$(OutDir)"
+copy "$(IntDir)playground.exe" "$(OutDir)"
+copy "$(IntDir)playground.pdb" "$(OutDir)"
+copy "$(IntDir)*.h" "$(OutDir)"
+copy "$(IntDir)*.cpp" "$(OutDir)"
+svn info "$(SolutionDir)." &gt; "$(OutDir)version.txt"
 mkzip "$(OutDir)\*" "$(SolutionDir)\micro-profiler.deploy..zip"
 </Command>
     </PostBuildEvent>

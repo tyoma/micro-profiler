@@ -18,30 +18,21 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-var $updates = [
-	"INSERT INTO Component (Component, ComponentId, Directory_, Attributes, Condition) VALUES ('c_env_usr', '{EAD8E58C-BC04-4509-A46C-7CA9C9190672}', 'TARGETDIR', 0, 'NOT ALLUSERS')",
-	"INSERT INTO Component (Component, ComponentId, Directory_, Attributes, Condition) VALUES ('c_env_sys', '{C28237F2-C691-4E29-911D-4AA87E32AA7B}', 'TARGETDIR', 0, 'ALLUSERS')",
-	"INSERT INTO FeatureComponents (Feature_, Component_) VALUES ('DefaultFeature', 'c_env_usr')",
-	"INSERT INTO FeatureComponents (Feature_, Component_) VALUES ('DefaultFeature', 'c_env_sys')",
-	"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_mpdir_usr', 'MICROPROFILERDIR','[TARGETDIR]','c_env_usr')",
-	"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path_usr', 'Path','[~];%MICROPROFILERDIR%','c_env_usr')",
-	"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_mpdir_sys', '*MICROPROFILERDIR','[TARGETDIR]','c_env_sys')",
-	"INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path_sys', '*Path','[~];%MICROPROFILERDIR%','c_env_sys')",
-	"DELETE FROM Binary WHERE Name='DefBannerBitmap'"
-];
-
-
 var msiOpenDatabaseModeReadOnly = 0;
 var msiOpenDatabaseModeTransact = 1;
 var msiOpenDatabaseModeDirect = 2;
 
+var stdin = WScript.StdIn;
 var installer = WScript.CreateObject("WindowsInstaller.Installer")
 
 // Open database
 var database = installer.OpenDatabase(WScript.Arguments(0), msiOpenDatabaseModeTransact);
 
 // Process SQL statements
-for (var i = 0; i != $updates.length; ++i)
-	database.OpenView($updates[i]).Execute();
+while (!stdin.AtEndOfStream) {
+	var query = stdin.ReadLine();
+
+	database.OpenView(query).Execute();
+}
 
 database.Commit();

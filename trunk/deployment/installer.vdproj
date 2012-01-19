@@ -21,8 +21,26 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_24B6FF30A1D0746A990C9892732CFAF1"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_405F19536D377236CD9DD024D09673DB"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_5FF3CA52EF7242AE8B85D98247A1AE95"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_972991CEF53D0ADA71D9C2EECD02016E"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -33,8 +51,20 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_A0C35454E5EE8A2AA6A7E5B361880139"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_AA1B50A989BE4281BD80824FA1F4518D"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B4AF41D63843F544A8C411C78FF40F6C"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -45,8 +75,32 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_C51321BE290FE87F6E96CA377FE6FA40"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_CD9778E825EB47108D1F7C7AF9A48D74"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_DB804D50584472F017968DADFC3238A2"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FCCA8EEE45D1A77DBF697B5776FA9ED2"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FF6DD1659A62CDF0E990709D23726406"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -129,6 +183,86 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_24B6FF30A1D0746A990C9892732CFAF1"
+            {
+            "SourcePath" = "8:msaddndr.dll"
+            "TargetName" = "8:msaddndr.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:4"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_405F19536D377236CD9DD024D09673DB"
+            {
+            "SourcePath" = "8:vsmso.olb"
+            "TargetName" = "8:vsmso.olb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_972991CEF53D0ADA71D9C2EECD02016E"
+            {
+            "SourcePath" = "8:vcproject_90.tlb"
+            "TargetName" = "8:vcproject_90.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A0C35454E5EE8A2AA6A7E5B361880139"
+            {
+            "SourcePath" = "8:vcproject_110.tlb"
+            "TargetName" = "8:vcproject_110.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AA1B50A989BE4281BD80824FA1F4518D"
             {
             "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.lib"
@@ -147,6 +281,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B4AF41D63843F544A8C411C78FF40F6C"
+            {
+            "SourcePath" = "8:RPCRT4.dll"
+            "TargetName" = "8:RPCRT4.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BE1D71EBADE04BD1B35B66A45CDBA871"
@@ -169,6 +323,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C51321BE290FE87F6E96CA377FE6FA40"
+            {
+            "SourcePath" = "8:dte80a.olb"
+            "TargetName" = "8:dte80a.olb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CD9778E825EB47108D1F7C7AF9A48D74"
             {
             "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.initializer.cpp"
@@ -187,6 +361,66 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DB804D50584472F017968DADFC3238A2"
+            {
+            "SourcePath" = "8:vcproject_80.tlb"
+            "TargetName" = "8:vcproject_80.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FCCA8EEE45D1A77DBF697B5776FA9ED2"
+            {
+            "SourcePath" = "8:vcproject_71.tlb"
+            "TargetName" = "8:vcproject_71.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FF6DD1659A62CDF0E990709D23726406"
+            {
+            "SourcePath" = "8:vcproject_100.tlb"
+            "TargetName" = "8:vcproject_100.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
         }
@@ -224,7 +458,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MicroProfiler"
         "ProductCode" = "8:{BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66}"
-        "PackageCode" = "8:{3AF536C5-0A4F-4214-A52D-4E5EE9AF44A1}"
+        "PackageCode" = "8:{6530766C-7751-4F4D-B6D8-63EA1CAF573A}"
         "UpgradeCode" = "8:{32373928-E978-4133-B1A2-F08B690383AE}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
@@ -246,7 +480,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:type \"$(ProjectDir)msi-postprocess.txt\" | cscript \"$(ProjectDir)../scripts/msi-postprocess.js\" \"$(BuiltOuputPath)\"\r\n"
+        "PostBuildEvent" = "8:svn info \"$(ProjectDir)..\" > \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)..\\version-info.txt\" >> \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)msi-postprocess.txt\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" | cscript \"$(ProjectDir)../scripts/msi-postprocess.js\" \"$(BuiltOuputPath)\"\r\n"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"
@@ -1704,7 +1938,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_5FF3CA52EF7242AE8B85D98247A1AE95"
             {
-            "SourcePath" = "8:..\\_bin\\Debug\\micro-profiler.stub.dll"
+            "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.stub.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
@@ -1732,7 +1966,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9B0A80981BB5462F913FBD89E898B6F3"
             {
-            "SourcePath" = "8:..\\_bin\\Debug\\micro-profiler.dll"
+            "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"

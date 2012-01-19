@@ -7,3 +7,4 @@ INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path
 INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_mpdir_sys', '*MICROPROFILERDIR','[TARGETDIR]','c_env_sys')
 INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path_sys', '*Path','[~];%MICROPROFILERDIR%','c_env_sys')
 DELETE FROM Binary WHERE Name='DefBannerBitmap'
+UPDATE Property SET Value='<Version Major>.<Version Minor>.<Revision>' WHERE Property='ProductVersion'

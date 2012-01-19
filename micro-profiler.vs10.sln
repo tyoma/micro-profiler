@@ -55,7 +55,8 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "installer", "deployment\ins
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{229F9C5A-B067-499C-8EC7-789EA70984A1}"
 	ProjectSection(SolutionItems) = preProject
-		scripts\mksvnheader.js = scripts\mksvnheader.js
+		scripts\make-header.js = scripts\make-header.js
+		scripts\msi-postprocess.js = scripts\msi-postprocess.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{6F621512-D54A-4939-A912-BA5266FE8131}"

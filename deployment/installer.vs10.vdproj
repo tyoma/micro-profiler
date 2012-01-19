@@ -224,7 +224,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MicroProfiler"
         "ProductCode" = "8:{BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66}"
-        "PackageCode" = "8:{270BEBBD-24CA-440E-976C-2351B9CC8973}"
+        "PackageCode" = "8:{616738BB-CE55-4842-ADEE-31E5D70DCF33}"
         "UpgradeCode" = "8:{32373928-E978-4133-B1A2-F08B690383AE}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -247,7 +247,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:cscript \"$(ProjectDir)installer-postprocess.js \" \"$(BuiltOuputPath)\""
+        "PostBuildEvent" = "8:type \"$(ProjectDir)msi-postprocess.txt\" | cscript \"$(ProjectDir)../scripts/msi-postprocess.js\" \"$(BuiltOuputPath)\"\r\n"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"

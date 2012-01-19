@@ -54,6 +54,22 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbol_container_3_nosymbol
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "installer", "deployment\installer.vdproj", "{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{9ACA7795-639D-42E3-8ABA-017A016CD147}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\make-header.js = scripts\make-header.js
+		scripts\msi-postprocess.js = scripts\msi-postprocess.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{DE1AE368-D62C-4A09-94C9-7DCC0E4280A9}"
+	ProjectSection(SolutionItems) = preProject
+		version-info.txt = version-info.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4F40894C-E4F6-453F-BF71-0DD0C66D8418}"
+	ProjectSection(SolutionItems) = preProject
+		version-info.txt = version-info.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

@@ -480,7 +480,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:svn info \"$(ProjectDir)..\" > \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)..\\version-info.txt\" >> \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)msi-postprocess.txt\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" | cscript \"$(ProjectDir)../scripts/msi-postprocess.js\" \"$(BuiltOuputPath)\"\r\n"
+        "PostBuildEvent" = "8:svn info \"$(ProjectDir)..\" > \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)..\\version-info.txt\" >> \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)msi-postprocess.txt\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" | cscript \"$(ProjectDir)../scripts/msi-postprocess.js\" \"$(BuiltOuputPath)\"\r\ntype \"$(ProjectDir)versioned-rename-template.cmd\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" > \"$(ProjectDir)_versioned-rename.cmd\"\r\n\"$(ProjectDir)_versioned-rename.cmd\" \"$(BuiltOuputPath)\"\r\n"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"

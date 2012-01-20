@@ -13,20 +13,26 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath=".\file-tools.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\_deploy\"
-			IntermediateDirectory="$(SolutionDir)\_bin\$(ConfigurationName)\"
+			OutputDirectory="$(SolutionDir)_setup\"
+			IntermediateDirectory="$(SolutionDir)_deploy\"
 			ConfigurationType="10"
 			CharacterSet="2"
-			DeleteExtensionsOnClean=""
+			DeleteExtensionsOnClean="*.txt;*.cmd;*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;$(TargetPath)"
 			WholeProgramOptimization="1"
-			BuildLogFile="$(IntDir)\$(ProjectName).log"
+			BuildLogFile="$(OutDir)\$(ProjectName).htm"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="File Copy Tool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -36,7 +42,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir &quot;$(OutDir)&quot;&#x0D;&#x0A;del /q &quot;$(OutDir)*&quot;&#x0D;&#x0A;copy &quot;$(IntDir)micro-profiler.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(IntDir)micro-profiler.stub.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(IntDir)micro-profiler.lib&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(IntDir)playground.exe&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(IntDir)playground.pdb&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(IntDir)*.h&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(IntDir)*.cpp&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(OutDir)version.txt&quot;&#x0D;&#x0A;mkzip &quot;$(OutDir)\*&quot; &quot;$(SolutionDir)\micro-profiler.deploy..zip&quot;&#x0D;&#x0A;"
+				CommandLine="svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;call mkzip &quot;$(IntDir)\*&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;type &quot;$(SolutionDir)version-info.txt&quot; &gt;&gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;type &quot;versioned-rename-template.cmd&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/substitute.js&quot; &quot;$(IntDir)version.txt&quot; &gt; &quot;$(IntDir)_versioned-rename.cmd&quot;&#x0D;&#x0A;call &quot;$(IntDir)_versioned-rename.cmd&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;del &quot;$(IntDir)_versioned-rename.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -44,12 +50,96 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\micro-profiler.initializer.cpp"
+			RelativePath="..\_bin\Release\entry.h"
 			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\_bin\Release\micro-profiler.dll"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\_bin\Release\micro-profiler.initializer.cpp"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\_bin\Release\micro-profiler.initializer.mfc-static.cpp"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\_bin\Release\micro-profiler.lib"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\_bin\Release\micro-profiler.stub.dll"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\mkzip.cmd"
 			>
+		</File>
+		<File
+			RelativePath="..\_bin\Release\playground.exe"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\_bin\Release\playground.pdb"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="File Copy Tool"
+				/>
+			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>

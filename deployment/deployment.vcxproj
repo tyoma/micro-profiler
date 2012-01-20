@@ -23,29 +23,55 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\_deploy\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\_bin\$(Configuration)\</IntDir>
-    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)_setup\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)_deploy\</IntDir>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog />
     <PostBuildEvent>
-      <Command>mkdir "$(OutDir)"
-del /q "$(OutDir)*"
-copy "$(IntDir)micro-profiler.dll" "$(OutDir)"
-copy "$(IntDir)micro-profiler.stub.dll" "$(OutDir)"
-copy "$(IntDir)micro-profiler.lib" "$(OutDir)"
-copy "$(IntDir)playground.exe" "$(OutDir)"
-copy "$(IntDir)playground.pdb" "$(OutDir)"
-copy "$(IntDir)*.h" "$(OutDir)"
-copy "$(IntDir)*.cpp" "$(OutDir)"
-svn info "$(SolutionDir)." &gt; "$(OutDir)version.txt"
-mkzip "$(OutDir)\*" "$(SolutionDir)\micro-profiler.deploy..zip"
+      <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
+call mkzip "$(IntDir)\*" "$(OutDir)micro-profiler.deploy.zip"
+type "$(SolutionDir)version-info.txt" &gt;&gt; "$(IntDir)version.txt"
+type "versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(IntDir)version.txt" &gt; "$(IntDir)_versioned-rename.cmd"
+call "$(IntDir)_versioned-rename.cmd" "$(OutDir)micro-profiler.deploy.zip"
 </Command>
     </PostBuildEvent>
+    <BuildLog>
+      <Path>$(OutDir)\$(ProjectName).htm</Path>
+    </BuildLog>
+    <CustomBuild>
+      <Command>copy "%(FullPath)" "$(IntDir)%(Filename)%(Extension)"</Command>
+      <Message>Copying %(Filename)%(Extension)...</Message>
+      <Outputs>$(IntDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CustomBuild Include="..\_bin\Release\micro-profiler.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release\micro-profiler.stub.dll">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release\playground.exe">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release\playground.pdb">
+      <FileType>Document</FileType>
+    </CustomBuild>
     <None Include="mkzip.cmd" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\_bin\Release\entry.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\_bin\Release\micro-profiler.initializer.cpp" />
+    <CustomBuild Include="..\_bin\Release\micro-profiler.initializer.mfc-static.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\_bin\Release\micro-profiler.lib">
+      <FileType>Document</FileType>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

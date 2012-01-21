@@ -47,7 +47,6 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_SCL_SECURE_NO_WARNINGS"
 				ExceptionHandling="2"
 				RuntimeLibrary="3"
-				AssemblerOutput="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>

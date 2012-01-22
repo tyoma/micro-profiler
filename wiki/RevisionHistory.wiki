@@ -1,4 +1,7 @@
 #sidebar TableOfContents
+ * v1.0.471
+  * MicroProfiler is now coming as MSI installation package;
+
  * r443
   * MicroProfiler no longer require DIA to be installed on the target machine. It now uses Debug Helper library that comes with Windows;
 

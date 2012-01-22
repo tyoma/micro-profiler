@@ -44,10 +44,14 @@ namespace micro_profiler
 
 	STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
 	{
+		wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
+
+		_wsplitpath_s(executable, 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
+
 		shared_ptr<symbol_resolver> r(symbol_resolver::create(wstring(CStringW(executable)), load_address));
 	
 		_statistics = functions_list::create(ticks_resolution, r);
-		_dialog.reset(new ProfilerMainDialog(_statistics));
+		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
 		_dialog->ShowWindow(SW_SHOW);
 		return S_OK;
 	}

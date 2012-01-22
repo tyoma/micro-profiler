@@ -44,6 +44,7 @@ namespace micro_profiler
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
 	{
 		std::shared_ptr<functions_list> _statistics;
+		std::wstring _executable;
 		std::shared_ptr<symbol_resolver> _resolver;
 		std::shared_ptr<linked_statistics> _parents_statistics, _children_statistics;
 		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
@@ -57,7 +58,7 @@ namespace micro_profiler
 		void OnDrilldown(wpl::ui::listview::index_type index);
 
 	public:
-		ProfilerMainDialog(std::shared_ptr<functions_list> s);
+		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable);
 		~ProfilerMainDialog();
 
 		enum {	IDD = IDD_PROFILER_MAIN	};

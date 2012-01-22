@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <math.h>
+#include <atlstr.h>
 
 extern HINSTANCE g_instance;
 
@@ -40,8 +41,8 @@ using namespace wpl::ui;
 
 namespace micro_profiler
 {
-	ProfilerMainDialog::ProfilerMainDialog(std::shared_ptr<functions_list> s)
-		: _statistics(s)
+	ProfilerMainDialog::ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable)
+		: _statistics(s), _executable(executable)
 	{
 		Create(NULL, 0);
 
@@ -107,6 +108,16 @@ namespace micro_profiler
 
 		::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 		SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
+
+		CString caption;
+
+		GetWindowText(caption);
+
+		caption += L" - ";
+		caption += _executable.c_str();
+
+		SetWindowText(caption);
+
 		handled = TRUE;
 		return 1;	// Let the system set the focus
 	}

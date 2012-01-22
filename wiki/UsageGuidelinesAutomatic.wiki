@@ -11,3 +11,6 @@ To add profiling to your application right-click on the target application proje
 In order to remove any profiler support trace from your project settings, use 'Remove Profiling Support' context menu.
 
 The profiler' window will be opened automatically at the application startup when it is built with 'Enable Profiling' checkmark. It is comprised from three lists: the middle list displays all functions (with stats) that are being called, the top list displays functions that call the currently selected function (callers), and the bottom list displays functions that are being called from the currently selected function (callees). You may drill-down or drill-up by double-clicking in the callers/callees lists.
+
+Below is a typical layout of the profiler's window with some description of its lists:
+http://code.google.com/p/micro-profiler/wiki/img/overview.png 

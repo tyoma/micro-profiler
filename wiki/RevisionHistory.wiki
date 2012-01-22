@@ -1,6 +1,7 @@
 #sidebar TableOfContents
- * v1.0.471
+ * v1.0.473
   * MicroProfiler is now coming as MSI installation package;
+  * Executable' name of a profiled application is now displayed in the profiler's window caption.
 
  * r443
   * MicroProfiler no longer require DIA to be installed on the target machine. It now uses Debug Helper library that comes with Windows;

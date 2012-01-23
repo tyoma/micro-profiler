@@ -14,4 +14,11 @@ The profiler' window will be opened automatically at the application startup whe
 
 Below is a typical layout of the profiler's window with some description of its lists:
 
-http://micro-profiler.googlecode.com/svn/wiki/img/overview.png 
+http://micro-profiler.googlecode.com/svn/wiki/img/overview.png
+
+MicroProfiler UI parts on the picture above:
+ # *Callers statistics* - represent names of the callers that called the last selected function in the base statistics list and the times it was called from the respective caller. Activating (double-click or pressing 'Enter') the function in this list drills statistics down to that function (thus, that function will be selected in the base list);
+ # *Base statistics* - represent the statistics of all functions from the profiled scope that were called since the application was started or 'Clear Statistics' button was clicked. Note, that for a function to hit the profile scope, it must reside in a source file compiled with '/GH /Gh' compiler options ('Enable Profiling' context menu turns this options on/off for the project). In order to bookmark functions of the interest, you can select several functions here via 'ctrl' + 'mouse click'. The callers/callees stats will be displayed for the last selected function only;
+ # *Callees statistics* - represent the statistics of all profiled functions in the context of a function currently selected in the base list. Activating (double-click or pressing 'Enter') the function in this list drills statistics down to that function (thus, that function will be selected in the base list);
+ # Control panel - with these buttons you can clear the stats collected to moment as well as copy the base statistics to the clipboard. You can later paste this clipboard to a spreadsheet program for further analysis.
+ 

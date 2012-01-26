@@ -34,7 +34,8 @@ namespace micro_profiler
 		::QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER *>(&pc_freq));
 		::QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&pc_start));
 		tsc_start = __rdtsc();
-		::Sleep(50);
+		for (volatile int i = 0; i < 10000000; ++i)
+		{	}
 		tsc_end = __rdtsc();
 		::QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&pc_end));
 		return pc_freq * (tsc_end - tsc_start) / (pc_end - pc_start);

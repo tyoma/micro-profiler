@@ -1,6 +1,6 @@
 #sidebar TableOfContents
  * v1.0.480
-  * The was a bug leading to proportional increase in all timings. It was caused by that processor's ticks duration were incorrectly measured. Now the bug fixed;
+  * There was a bug leading to proportional increase in all timings. It was caused by that processor's ticks duration were incorrectly measured. Now the bug fixed;
 
  * v1.0.473
   * MicroProfiler is now coming as MSI installation package;

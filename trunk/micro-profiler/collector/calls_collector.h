@@ -62,7 +62,7 @@ namespace micro_profiler
 
 	struct calls_collector::acceptor
 	{
-		virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count) = 0;
+		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count) = 0;
 	};
 
 

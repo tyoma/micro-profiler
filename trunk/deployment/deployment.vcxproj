@@ -5,6 +5,10 @@
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}</ProjectGuid>
@@ -14,18 +18,27 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Utility</ConfigurationType>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)_setup\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)_setup\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)_deploy\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)_deploy\</IntDir>
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+    <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|x64'">*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog />
@@ -46,30 +59,49 @@ call "$(IntDir)_versioned-rename.cmd" "$(OutDir)micro-profiler.deploy.zip"
       <Outputs>$(IntDir)%(Filename)%(Extension)</Outputs>
     </CustomBuild>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <BuildLog />
+    <PostBuildEvent>
+      <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
+call mkzip "$(IntDir)\*" "$(OutDir)micro-profiler.deploy.zip"
+type "$(SolutionDir)version-info.txt" &gt;&gt; "$(IntDir)version.txt"
+type "versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(IntDir)version.txt" &gt; "$(IntDir)_versioned-rename.cmd"
+call "$(IntDir)_versioned-rename.cmd" "$(OutDir)micro-profiler.deploy.zip"
+</Command>
+    </PostBuildEvent>
+    <BuildLog>
+      <Path>$(OutDir)\$(ProjectName).htm</Path>
+    </BuildLog>
+    <CustomBuild>
+      <Command>copy "%(FullPath)" "$(IntDir)%(Filename)%(Extension)"</Command>
+      <Message>Copying %(Filename)%(Extension)...</Message>
+      <Outputs>$(IntDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="..\_bin\Release\micro-profiler.dll">
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.dll">
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Include="..\_bin\Release\micro-profiler.stub.dll">
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.stub.dll">
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Include="..\_bin\Release\playground.exe">
+    <CustomBuild Include="..\_bin\Release_Win32\playground.exe">
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Include="..\_bin\Release\playground.pdb">
+    <CustomBuild Include="..\_bin\Release_Win32\playground.pdb">
       <FileType>Document</FileType>
     </CustomBuild>
     <None Include="mkzip.cmd" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\_bin\Release\entry.h" />
+    <CustomBuild Include="..\_bin\Release_Win32\entry.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\_bin\Release\micro-profiler.initializer.cpp" />
-    <CustomBuild Include="..\_bin\Release\micro-profiler.initializer.mfc-static.cpp" />
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.initializer.cpp" />
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.initializer.mfc-static.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\_bin\Release\micro-profiler.lib">
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.lib">
       <FileType>Document</FileType>
     </CustomBuild>
   </ItemGroup>

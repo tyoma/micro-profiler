@@ -81,7 +81,7 @@ namespace micro_profiler
 		const_iterator begin() const;
 		const_iterator end() const;
 
-		virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count);
+		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count);
 	};
 
 

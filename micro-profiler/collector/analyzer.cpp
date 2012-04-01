@@ -29,7 +29,7 @@ namespace micro_profiler
 	void analyzer::clear()
 	{	_statistics.clear();	}
 
-	void analyzer::accept_calls(unsigned int threadid, const call_record *calls, unsigned int count)
+	void analyzer::accept_calls(unsigned int threadid, const call_record *calls, size_t count)
 	{
 		stacks_container::iterator i = _stacks.find(threadid);
 

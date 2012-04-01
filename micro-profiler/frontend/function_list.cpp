@@ -182,7 +182,7 @@ namespace micro_profiler
 		functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual void clear();
-		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count);
+		virtual void update(const FunctionStatisticsDetailed *data, size_t count);
 		virtual void print(wstring &content) const;
 		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
 		virtual shared_ptr<linked_statistics> watch_parents(index_type item) const;
@@ -312,7 +312,7 @@ namespace micro_profiler
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
-	void functions_list_impl::update(const FunctionStatisticsDetailed *data, unsigned int count)
+	void functions_list_impl::update(const FunctionStatisticsDetailed *data, size_t count)
 	{
 		for (; count; --count, ++data)
 		{

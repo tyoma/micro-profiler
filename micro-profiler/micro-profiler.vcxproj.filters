@@ -52,11 +52,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="resources\xpstyle.manifest">
-      <Filter>resources</Filter>
-    </Manifest>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="..\version-info.txt" />
   </ItemGroup>
 </Project>

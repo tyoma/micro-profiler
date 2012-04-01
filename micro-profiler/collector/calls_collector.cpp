@@ -106,7 +106,7 @@ namespace micro_profiler
 	{
 		struct delay_evaluator : calls_collector::acceptor
 		{
-			virtual void accept_calls(unsigned int, const call_record *calls, unsigned int count)
+			virtual void accept_calls(unsigned int, const call_record *calls, size_t count)
 			{
 				for (const call_record *i = calls; i < calls + count; i += 2)
 					delay = i != calls ? min(delay, (i + 1)->timestamp - i->timestamp) : (i + 1)->timestamp - i->timestamp;

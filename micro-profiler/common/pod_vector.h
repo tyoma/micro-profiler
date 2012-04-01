@@ -59,7 +59,7 @@ namespace micro_profiler
 
 	// pod_vector<T> - inline definitions
 	template <typename T>
-	inline pod_vector<T>::pod_vector(unsigned int initial_capacity)
+	inline pod_vector<T>::pod_vector(size_t initial_capacity)
 		: _begin(new T[initial_capacity]), _end(_begin), _limit(_begin + initial_capacity)
 	{	}
 
@@ -111,8 +111,7 @@ namespace micro_profiler
 	template <typename T>
 	inline bool pod_vector<T>::grow(size_t by) throw()
 	{
-		unsigned int size = this->size();
-		unsigned int new_capacity = capacity();
+		size_t size = this->size(), new_capacity = capacity();
 
 		new_capacity += 2 * by > new_capacity ? by : new_capacity / 2;
 

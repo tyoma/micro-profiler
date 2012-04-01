@@ -43,7 +43,7 @@ namespace micro_profiler
 	struct functions_list : wpl::ui::listview::model
 	{
 		virtual void clear() = 0;
-		virtual void update(const FunctionStatisticsDetailed *data, unsigned int count) = 0;
+		virtual void update(const FunctionStatisticsDetailed *data, size_t count) = 0;
 		virtual void print(std::wstring &content) const = 0;
 		virtual index_type get_index(const void *address) const = 0;
 		virtual std::shared_ptr<linked_statistics> watch_children(index_type item) const = 0;

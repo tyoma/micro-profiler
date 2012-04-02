@@ -1,4 +1,7 @@
 #sidebar TableOfContents
+ * v1.0.487
+  * x64 platform support implemented. A very alpha version, but it worth trying!
+
  * v1.0.480
   * There was a bug leading to proportional increase in all timings. It was caused by that processor's ticks duration were incorrectly measured. Now the bug fixed;
 

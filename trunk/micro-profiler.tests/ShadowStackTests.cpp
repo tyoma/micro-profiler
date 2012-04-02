@@ -54,12 +54,12 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] = {
-					{	(void *)0x01234567, 123450000	},
-					{	0, 123450013	},
+					{	123450000, (void *)0x01234567	},
+					{	123450013, (void *)0	},
 				};
 				call_record trace2[] = {
-					{	(void *)0x0bcdef12, 123450000	},
-					{	0, 123450029	},
+					{	123450000, (void *)0x0bcdef12	},
+					{	123450029, (void *)0	},
 				};
 
 				// ACT
@@ -103,10 +103,10 @@ namespace micro_profiler
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
-				call_record trace1[] = {	{	(void *)0x01234567, 123450000	},	};
-				call_record trace2[] = {	{	0, 123450013	},	};
-				call_record trace3[] = {	{	(void *)0x0bcdef12, 123450000	},	};
-				call_record trace4[] = {	{	0, 123450029	},	};
+				call_record trace1[] = {	{	123450000, (void *)0x01234567	},	};
+				call_record trace2[] = {	{	123450013, (void *)0	},	};
+				call_record trace3[] = {	{	123450000, (void *)0x0bcdef12	},	};
+				call_record trace4[] = {	{	123450029, (void *)0	},	};
 
 				// ACT
 				ss.update(trace1, end(trace1), statistics);
@@ -167,15 +167,15 @@ namespace micro_profiler
 				shadow_stack< unordered_map<const void *, function_statistics> > ss1, ss2;
 				unordered_map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace1[] = {
-					{	(void *)0x01234567, 123450000	},
-						{	(void *)0x01234568, 123450013	},
-						{	0, 123450019	},
+					{	123450000, (void *)0x01234567	},
+						{	123450013, (void *)0x01234568	},
+						{	123450019, (void *)0 },
 				};
 				call_record trace2[] = {
-					{	(void *)0x0bcdef12, 123450000	},
-						{	(void *)0x0bcdef13, 123450029	},
-							{	(void *)0x0bcdef14,	123450037	},
-							{	0, 123450041	},
+					{	123450000, (void *)0x0bcdef12	},
+						{	123450029, (void *)0x0bcdef13	},
+							{	123450037, (void *)0x0bcdef14	},
+							{	123450041, (void *)0	},
 				};
 
 				// ACT
@@ -211,10 +211,10 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
-					{	(void *)0x01234567, 123450000	},
-						{	(void *)0x0bcdef12, 123450013	},
-						{	0, 123450019	},
-					{	0, 123450037	},
+					{	123450000, (void *)0x01234567	},
+						{	123450013, (void *)0x0bcdef12	},
+						{	123450019, (void *)0	},
+					{	123450037, (void *)0 },
 				};
 
 				// ACT
@@ -246,12 +246,12 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
-					{	(void *)0x01234567, 123450000	},
-					{	0, 123450019	},
-					{	(void *)0x0bcdef12, 123450023	},
-					{	0, 123450037	},
-					{	(void *)0x0bcdef12, 123450041	},
-					{	0, 123450047	},
+					{	123450000, (void *)0x01234567	},
+					{	123450019, (void *)0	},
+					{	123450023, (void *)0x0bcdef12	},
+					{	123450037, (void *)0	},
+					{	123450041, (void *)0x0bcdef12	},
+					{	123450047, (void *)0	},
 				};
 
 				statistics[(void *)0xabcdef01].times_called = 7;
@@ -305,18 +305,18 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] ={
-					{	(void *)0x00000010, 123440000	},
-						{	(void *)0x01234560, 123450000	},
-							{	(void *)0x0bcdef10, 123450013	},
-							{	0, 123450019	},
-						{	0, 123450037	},
+					{	123440000, (void *)0x00000010	},
+						{	123450000, (void *)0x01234560	},
+							{	123450013, (void *)0x0bcdef10	},
+							{	123450019, (void *)0	},
+						{	123450037, (void *)0	},
 				};
 				call_record trace2[] ={
-					{	(void *)0x00000010, 223440000	},
-						{	(void *)0x11234560, 223450000	},
-							{	(void *)0x1bcdef10, 223450017	},
-							{	0, 223450029	},
-						{	0, 223450037	},
+					{	223440000, (void *)0x00000010	},
+						{	223450000, (void *)0x11234560	},
+							{	223450017, (void *)0x1bcdef10	},
+							{	223450029, (void *)0	},
+						{	223450037, (void *)0 	},
 				};
 
 				// ACT
@@ -363,15 +363,15 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
-					{	(void *)0x00000010,123440000	},
-						{	(void *)0x01234560,123450003	},
-							{	(void *)0x0bcdef10,123450005	},
-								{	(void *)0x0bcdef20,123450007	},
-								{	(void *)0,123450011	},
-							{	(void *)0,123450013	},
-							{	(void *)0x0bcdef10,123450017	},
-							{	(void *)0,123450019	},
-						{	(void *)0,123450029	},
+					{	123440000, (void *)0x00000010	},
+						{	123450003, (void *)0x01234560	},
+							{	123450005, (void *)0x0bcdef10	},
+								{	123450007, (void *)0x0bcdef20	},
+								{	123450011, (void *)0	},
+							{	123450013, (void *)0	},
+							{	123450017, (void *)0x0bcdef10	},
+							{	123450019, (void *)0	},
+						{	123450029, (void *)0	},
 				};
 
 				// ACT
@@ -411,15 +411,15 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss1(1), ss2(2);
 				map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace[] = {
-					{	(void *)0x00000010,123440000	},
-						{	(void *)0x01234560,123450013	},
-							{	(void *)0x0bcdef10,123450023	},
-								{	(void *)0x0bcdef20,123450029	},
-								{	(void *)0,123450037	},
-							{	(void *)0,123450047	},
-							{	(void *)0x0bcdef10,123450057	},
-							{	(void *)0,123450071	},
-						{	(void *)0,123450083	},
+					{	123440000, (void *)0x00000010	},
+						{	123450013, (void *)0x01234560	},
+							{	123450023, (void *)0x0bcdef10	},
+								{	123450029, (void *)0x0bcdef20	},
+								{	123450037, (void *)0	},
+							{	123450047, (void *)0	},
+							{	123450057, (void *)0x0bcdef10	},
+							{	123450071, (void *)0	},
+						{	123450083, (void *)0	},
 				};
 
 				// ACT
@@ -471,16 +471,16 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
-					{	(void *)0x01234560,123450001	},
-						{	(void *)0x01234560,123450005	},
-						{	(void *)0,123450013	},
-					{	(void *)0,123450017	},
-					{	(void *)0x11234560,123450023	},
-						{	(void *)0x11234560,123450029	},
-							{	(void *)0x11234560,123450029	},
-							{	(void *)0,123450030	},
-						{	(void *)0,123450031	},
-					{	(void *)0,123450037	},
+					{	123450001, (void *)0x01234560	},
+						{	123450005, (void *)0x01234560	},
+						{	123450013, (void *)0	},
+					{	123450017, (void *)0	},
+					{	123450023, (void *)0x11234560	},
+						{	123450029, (void *)0x11234560	},
+							{	123450029, (void *)0x11234560	},
+							{	123450030, (void *)0	},
+						{	123450031, (void *)0	},
+					{	123450037, (void *)0	},
 				};
 
 				// ACT
@@ -508,16 +508,16 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
-					{	(void *)0x01234560,123450001	},
-						{	(void *)0x01234565,123450005	},
-							{	(void *)0x01234560,123450007	},
-								{	(void *)0x01234565,123450011	},
-								{	(void *)0,123450013	},
-							{	(void *)0,123450017	},
-							{	(void *)0x01234560,123450019	},
-							{	(void *)0,123450023	},
-						{	(void *)0,123450029	},
-					{	(void *)0,123450031	},
+					{	123450001, (void *)0x01234560	},
+						{	123450005, (void *)0x01234565	},
+							{	123450007, (void *)0x01234560	},
+								{	123450011, (void *)0x01234565	},
+								{	123450013, (void *)0	},
+							{	123450017, (void *)0	},
+							{	123450019, (void *)0x01234560	},
+							{	123450023, (void *)0	},
+						{	123450029, (void *)0	},
+					{	123450031, (void *)0	},
 				};
 
 				// ACT
@@ -545,32 +545,32 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics> > ss;
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
-					{	(void *)0x01234560, 123450001	},
-						{	(void *)0x01234565, 123450002	},
-							{	(void *)0x01234560, 123450003	},
-								{	(void *)0x01234565, 123450004	},
-									{	(void *)0x01234570, 123450005	},
-									{	(void *)0, 123450006	},
-									{	(void *)0x01234565, 123450007	},
-									{	(void *)0, 123450008	},
-								{	(void *)0, 123450009	},
-							{	(void *)0, 123450010	},
-						{	(void *)0, 123450011	},
-					{	(void *)0, 123450012	},
-					{	(void *)0x01234560, 123450013	},
-					{	(void *)0, 123450014	},
+					{	123450001, (void *)0x01234560	},
+						{	123450002, (void *)0x01234565	},
+							{	123450003, (void *)0x01234560	},
+								{	123450004, (void *)0x01234565	},
+									{	123450005, (void *)0x01234570	},
+									{	123450006, (void *)0	},
+									{	123450007, (void *)0x01234565	},
+									{	123450008, (void *)0	},
+								{	123450009, (void *)0	},
+							{	123450010, (void *)0	},
+						{	123450011, (void *)0 },
+					{	123450012, (void *)0	},
+					{	123450013, (void *)0x01234560	},
+					{	123450014, (void *)0	},
 				};
 				call_record trace2[] = {
-					{	(void *)0x01234560, 123450020	},
-						{	(void *)0x01234560, 123450021	},
-							{	(void *)0x01234560, 123450022	},
-								{	(void *)0x01234560, 123450023	},
-								{	(void *)0, 123450024	},
-							{	(void *)0, 123450025	},
-						{	(void *)0, 123450026	},
-					{	(void *)0, 123450027	},
-					{	(void *)0x01234565, 123450028	},
-					{	(void *)0, 123450029	},
+					{	123450020, (void *)0x01234560	},
+						{	123450021, (void *)0x01234560	},
+							{	123450022, (void *)0x01234560	},
+								{	123450023, (void *)0x01234560	},
+								{	123450024, (void *)0	},
+							{	123450025, (void *)0	},
+						{	123450026, (void *)0	},
+					{	123450027, (void *)0	},
+					{	123450028, (void *)0x01234565	},
+					{	123450029, (void *)0	},
 				};
 
 				// ACT
@@ -603,26 +603,26 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics_detailed> > ss, ss_delayed(1);
 				map<const void *, function_statistics_detailed> statistics, statistics_delayed;
 				call_record trace[] = {
-					{	(void *)1, 1	},
-						{	(void *)101, 2	},
-						{	(void *)0, 3	},
-					{	(void *)0, 5	},
-					{	(void *)2, 7	},
-						{	(void *)201, 11	},
-						{	(void *)0, 13	},
-						{	(void *)202, 17	},
-						{	(void *)0, 19	},
-					{	(void *)0, 23	},
-					{	(void *)3, 29	},
-						{	(void *)301, 31	},
-						{	(void *)0, 37	},
-						{	(void *)302, 41	},
-						{	(void *)0, 43	},
-						{	(void *)303, 47	},
-						{	(void *)0, 53	},
-						{	(void *)303, 59	},
-						{	(void *)0, 61	},
-					{	(void *)0, 59	},
+					{	1, (void *)1	},
+						{	2, (void *)101	},
+						{	3, (void *)0	},
+					{	5, (void *)0	},
+					{	7, (void *)2	},
+						{	11, (void *)201	},
+						{	13, (void *)0	},
+						{	17, (void *)202	},
+						{	19, (void *)0	},
+					{	23, (void *)0	},
+					{	29, (void *)3	},
+						{	31, (void *)301	},
+						{	37, (void *)0	},
+						{	41, (void *)302	},
+						{	43, (void *)0	},
+						{	47, (void *)303	},
+						{	53, (void *)0	},
+						{	59, (void *)303	},
+						{	61, (void *)0	},
+					{	59, (void *)0	},
 				};
 
 				// ACT
@@ -731,18 +731,18 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics_detailed> > ss;
 				map<const void *, function_statistics_detailed> statistics;
 				call_record trace[] = {
-					{	(void *)1, 1	},
-						{	(void *)101, 2	},
-							{	(void *)10101, 3	},
-							{	(void *)0, 5	},
-						{	(void *)0, 7	},
-						{	(void *)102, 11	},
-							{	(void *)10201, 13	},
-							{	(void *)0, 17	},
-							{	(void *)10202, 19	},
-							{	(void *)0, 23	},
-						{	(void *)0, 29	},
-					{	(void *)0, 31	},
+					{	1, (void *)1	},
+						{	2, (void *)101	},
+							{	3, (void *)10101	},
+							{	5, (void *)0	},
+						{	7, (void *)0	},
+						{	11, (void *)102	},
+							{	13, (void *)10201	},
+							{	17, (void *)0	},
+							{	19, (void *)10202	},
+							{	23, (void *)0	},
+						{	29, (void *)0	},
+					{	31, (void *)0	},
 				};
 
 				// ACT
@@ -775,30 +775,30 @@ namespace micro_profiler
 				shadow_stack< map<const void *, function_statistics_detailed> > ss;
 				map<const void *, function_statistics_detailed> statistics;
 				call_record trace[] = {
-					{	(void *)0x1, 1	},
-						{	(void *)0x2, 2	},
-							{	(void *)0x3, 4	},
-							{	(void *)0, 7	},
-							{	(void *)0x4, 8	},
-							{	(void *)0, 11	},
-						{	(void *)0, 15	},
-						{	(void *)0x3, 15	},
-							{	(void *)0x2, 16	},
-							{	(void *)0, 19	},
-							{	(void *)0x4, 23	},
-							{	(void *)0, 30	},
-						{	(void *)0, 31	},
-						{	(void *)0x4, 32	},
-							{	(void *)0x2, 33	},
-							{	(void *)0, 37	},
-							{	(void *)0x3, 39	},
-							{	(void *)0, 43	},
-							{	(void *)0x3, 43	},
-							{	(void *)0, 44	},
-							{	(void *)0x3, 44	},
-							{	(void *)0, 47	},
-						{	(void *)0, 47	},
-					{	(void *)0, 51	},
+					{	1, (void *)0x1	},
+						{	2, (void *)0x2	},
+							{	4, (void *)0x3	},
+							{	7, (void *)0	},
+							{	8, (void *)0x4	},
+							{	11, (void *)0	},
+						{	15, (void *)0	},
+						{	15, (void *)0x3	},
+							{	16, (void *)0x2	},
+							{	19, (void *)0	},
+							{	23, (void *)0x4	},
+							{	30, (void *)0	},
+						{	31, (void *)0	},
+						{	32, (void *)0x4	},
+							{	33, (void *)0x2	},
+							{	37, (void *)0	},
+							{	39, (void *)0x3	},
+							{	43, (void *)0	},
+							{	43, (void *)0x3	},
+							{	44, (void *)0	},
+							{	44, (void *)0x3	},
+							{	47, (void *)0	},
+						{	47, (void *)0	},
+					{	51, (void *)0	},
 				};
 
 				// ACT
@@ -866,32 +866,32 @@ namespace micro_profiler
 				shadow_stack<smap> ss1, ss2;
 				smap statistics;
 				call_record trace1[] = {
-					{	(void *)0x1, 1	},
-						{	(void *)0x2, 2	},
-							{	(void *)0x3, 4	},
-								{	(void *)0x2, 4	},
-									{	(void *)0x7, 14	},
+					{	1, (void *)0x1	},
+						{	2, (void *)0x2	},
+							{	4, (void *)0x3	},
+								{	4, (void *)0x2	},
+									{	14, (void *)0x7	},
 				};
 				call_record trace1_exits[] = {
-									{	(void *)0, 15	},
-								{	(void *)0, 16	},
-							{	(void *)0, 17	},
-						{	(void *)0, 18	},
-					{	(void *)0, 19	},
+									{	15, (void *)0	},
+								{	16, (void *)0	},
+							{	17, (void *)0	},
+						{	18, (void *)0	},
+					{	19, (void *)0	},
 				};
 				call_record trace2[] = {
-					{	(void *)0x5, 2	},
-						{	(void *)0x11, 4	},
-							{	(void *)0x13, 5	},
-							{	(void *)0, 5	},
-							{	(void *)0x13, 5	},
-							{	(void *)0, 6	},
-							{	(void *)0x13, 6	},
-							{	(void *)0, 9	},
+					{	2, (void *)0x5	},
+						{	4, (void *)0x11	},
+							{	5, (void *)0x13	},
+							{	5, (void *)0	},
+							{	5, (void *)0x13	},
+							{	6, (void *)0	},
+							{	6, (void *)0x13	},
+							{	9, (void *)0	},
 				};
 				call_record trace2_exits[] = {
-						{	(void *)0, 9	},
-					{	(void *)0, 13	},
+						{	9, (void *)0	},
+					{	13, (void *)0	},
 				};
 
 				ss1.update(trace1, end(trace1), statistics);

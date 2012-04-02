@@ -1,0 +1,15 @@
+LIBRARY
+
+EXPORTS
+	_penter = profile_enter
+	_pexit = profile_exit
+
+	DllGetClassObject	PRIVATE
+	DllCanUnloadNow	PRIVATE
+	DllRegisterServer	PRIVATE
+	DllUnregisterServer	PRIVATE
+
+	??0profiler_frontend@micro_profiler@@QEAA@P6AXPEAPEAUIProfilerFrontend@@@Z@Z
+	?create_local_frontend@micro_profiler@@YAXPEAPEAUIProfilerFrontend@@@Z
+	?create_inproc_frontend@micro_profiler@@YAXPEAPEAUIProfilerFrontend@@@Z
+	??1profiler_frontend@micro_profiler@@QEAA@XZ

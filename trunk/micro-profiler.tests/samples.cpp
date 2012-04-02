@@ -3,11 +3,19 @@
 extern "C" void profile_enter();
 extern "C" void profile_exit();
 
-extern "C" __declspec(naked) void _penter()
-{	_asm jmp	profile_enter	}
+#ifdef _M_IX86
+	extern "C" __declspec(naked) void _penter()
+	{	__asm jmp profile_enter	}
 
-extern "C" __declspec(naked) void _pexit()
-{	_asm jmp	profile_exit	}
+	extern "C" __declspec(naked) void _pexit()
+	{	__asm jmp profile_exit	}
+#else
+	extern "C" void _penter()
+	{	profile_enter();	}
+
+	extern "C" void _pexit()
+	{	profile_exit();	}
+#endif
 
 
 namespace micro_profiler
@@ -33,11 +41,11 @@ namespace micro_profiler
 		{
 		}
 
-		void controlled_recursion(unsigned int level)
+		void __declspec(noinline) controlled_recursion(unsigned int level)
 		{
 			if (--level)
 				controlled_recursion(level);
-			_asm nop
+//			_asm nop
 		}
 
 		void call_aa()

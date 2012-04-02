@@ -69,7 +69,7 @@ namespace micro_profiler
 		if (children_buffer.capacity() < i + children_count)
 			throw std::invalid_argument("");
 		children_buffer.resize(i + children_count);
-		to.ChildrenCount = children_count;
+		to.ChildrenCount = static_cast<long>(children_count);
 		to.ChildrenStatistics = children_count ? &children_buffer[i] : 0;
 		for (statistics_map::const_iterator j = from.second.callees.begin(); i != children_buffer.size(); ++i, ++j)
 			copy(*j, children_buffer[i]);

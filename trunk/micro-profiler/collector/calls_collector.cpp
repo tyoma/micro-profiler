@@ -117,7 +117,7 @@ namespace micro_profiler
 
 		const unsigned int check_times = 1000;
 		thread_trace_block &ttb = get_current_thread_trace();
-		
+
 		for (unsigned int i = 0; i < check_times; ++i)
 			profile_enter(), profile_exit();
 
@@ -139,7 +139,7 @@ namespace micro_profiler
 			i->read_collected(a);
 	}
 
-	void calls_collector::track(call_record call) throw()
+	void calls_collector::track(const call_record &call) throw()
 	{	get_current_thread_trace().track(call);	}
 
 	calls_collector::thread_trace_block &calls_collector::get_current_thread_trace()

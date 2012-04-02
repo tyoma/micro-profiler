@@ -15,13 +15,25 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_11DF58FB12414D36921926F05FF03BB1"
-        "OwnerKey" = "8:_UNDEFINED"
+        "MsmKey" = "8:_07EB5520B76744C35553742481CFC662"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_1A3A396712506EAFF2786DF0D67436CC"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_24B6FF30A1D0746A990C9892732CFAF1"
+        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_27CD80C4EA3A403F262675C555F694D9"
         "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -39,25 +51,19 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_972991CEF53D0ADA71D9C2EECD02016E"
+        "MsmKey" = "8:_8DB80FD4D488C5B3CA12EFB278041DAD"
         "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmKey" = "8:_961D31D34E404CE3ADFE0A5B36BE76CE"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_A0C35454E5EE8A2AA6A7E5B361880139"
-        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_AA1B50A989BE4281BD80824FA1F4518D"
+        "MsmKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -69,37 +75,31 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_BE1D71EBADE04BD1B35B66A45CDBA871"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_C51321BE290FE87F6E96CA377FE6FA40"
         "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_CD9778E825EB47108D1F7C7AF9A48D74"
+        "MsmKey" = "8:_DC0C466EBF45433F9192C46CC2E4A987"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_DB804D50584472F017968DADFC3238A2"
-        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmKey" = "8:_F0DE4EE087AB4E1CA9895477C06794CD"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_FCCA8EEE45D1A77DBF697B5776FA9ED2"
-        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmKey" = "8:_F7DD9060E20F44088F9777EE1D5130BA"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_FF6DD1659A62CDF0E990709D23726406"
+        "MsmKey" = "8:_F9F36B38A300ADB2A10F9BFBEACAFBF6"
         "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -163,10 +163,10 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_11DF58FB12414D36921926F05FF03BB1"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_07EB5520B76744C35553742481CFC662"
             {
-            "SourcePath" = "8:..\\_bin\\Release\\entry.h"
-            "TargetName" = "8:entry.h"
+            "SourcePath" = "8:vcproject_90.tlb"
+            "TargetName" = "8:vcproject_90.tlb"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
             "Condition" = "8:"
@@ -178,9 +178,29 @@
             "Permanent" = "11:FALSE"
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
+            "Register" = "3:2"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1A3A396712506EAFF2786DF0D67436CC"
+            {
+            "SourcePath" = "8:vcproject_100.tlb"
+            "TargetName" = "8:vcproject_100.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_24B6FF30A1D0746A990C9892732CFAF1"
@@ -199,6 +219,26 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:4"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_27CD80C4EA3A403F262675C555F694D9"
+            {
+            "SourcePath" = "8:vcproject_71.tlb"
+            "TargetName" = "8:vcproject_71.tlb"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:2"
             "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
@@ -223,10 +263,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_972991CEF53D0ADA71D9C2EECD02016E"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8DB80FD4D488C5B3CA12EFB278041DAD"
             {
-            "SourcePath" = "8:vcproject_90.tlb"
-            "TargetName" = "8:vcproject_90.tlb"
+            "SourcePath" = "8:vcproject_80.tlb"
+            "TargetName" = "8:vcproject_80.tlb"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
             "Condition" = "8:"
@@ -243,30 +283,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A0C35454E5EE8A2AA6A7E5B361880139"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_961D31D34E404CE3ADFE0A5B36BE76CE"
             {
-            "SourcePath" = "8:vcproject_110.tlb"
-            "TargetName" = "8:vcproject_110.tlb"
-            "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:2"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AA1B50A989BE4281BD80824FA1F4518D"
-            {
-            "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.lib"
-            "TargetName" = "8:micro-profiler.lib"
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.initializer.mfc-static.cpp"
+            "TargetName" = "8:micro-profiler.initializer.mfc-static.cpp"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
             "Condition" = "8:"
@@ -303,26 +323,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BE1D71EBADE04BD1B35B66A45CDBA871"
-            {
-            "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.initializer.mfc-static.cpp"
-            "TargetName" = "8:micro-profiler.initializer.mfc-static.cpp"
-            "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C51321BE290FE87F6E96CA377FE6FA40"
             {
             "SourcePath" = "8:dte80a.olb"
@@ -343,9 +343,49 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CD9778E825EB47108D1F7C7AF9A48D74"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DC0C466EBF45433F9192C46CC2E4A987"
             {
-            "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.initializer.cpp"
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.lib"
+            "TargetName" = "8:micro-profiler.lib"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F0DE4EE087AB4E1CA9895477C06794CD"
+            {
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\entry.h"
+            "TargetName" = "8:entry.h"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F7DD9060E20F44088F9777EE1D5130BA"
+            {
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.initializer.cpp"
             "TargetName" = "8:micro-profiler.initializer.cpp"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
@@ -363,50 +403,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DB804D50584472F017968DADFC3238A2"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F9F36B38A300ADB2A10F9BFBEACAFBF6"
             {
-            "SourcePath" = "8:vcproject_80.tlb"
-            "TargetName" = "8:vcproject_80.tlb"
-            "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:2"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FCCA8EEE45D1A77DBF697B5776FA9ED2"
-            {
-            "SourcePath" = "8:vcproject_71.tlb"
-            "TargetName" = "8:vcproject_71.tlb"
-            "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:2"
-            "Exclude" = "11:TRUE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FF6DD1659A62CDF0E990709D23726406"
-            {
-            "SourcePath" = "8:vcproject_100.tlb"
-            "TargetName" = "8:vcproject_100.tlb"
+            "SourcePath" = "8:vcproject_110.tlb"
+            "TargetName" = "8:vcproject_110.tlb"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
             "Condition" = "8:"
@@ -1924,7 +1924,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_5FF3CA52EF7242AE8B85D98247A1AE95"
             {
-            "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.stub.dll"
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.stub.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
@@ -1952,7 +1952,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9B0A80981BB5462F913FBD89E898B6F3"
             {
-            "SourcePath" = "8:..\\_bin\\Release\\micro-profiler.dll"
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"

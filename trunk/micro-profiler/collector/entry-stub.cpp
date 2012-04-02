@@ -22,21 +22,20 @@
 #include <wpl/mt/thread.h>
 #include <windows.h>
 
+
+#ifdef _M_IX86
 extern "C" __declspec(naked) void profile_enter()
-{
-	_asm 
-	{
-		ret
-	}
-}
+{	__asm ret	}
 
 extern "C" __declspec(naked) void profile_exit()
-{
-	_asm 
-	{
-		ret
-	}
-}
+{	__asm ret	}
+#else
+extern "C" void profile_enter()
+{	}
+
+extern "C" void profile_exit()
+{	}
+#endif
 
 namespace micro_profiler
 {

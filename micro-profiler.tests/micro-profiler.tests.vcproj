@@ -13,17 +13,20 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
 			CharacterSet="1"
-			ManagedExtensions="0"
+			ManagedExtensions="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -91,12 +94,86 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
 			CharacterSet="1"
-			ManagedExtensions="0"
+			ManagedExtensions="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
+				PreprocessorDefinitions="WIN32;_DEBUG;_SCL_SECURE_NO_WARNINGS"
+				ExceptionHandling="2"
+				RuntimeLibrary="3"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="2"
+				IgnoreDefaultLibraryNames="libcmtd.lib;libcpmtd.lib"
+				GenerateDebugInformation="true"
+				AssemblyDebug="1"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			ConfigurationType="2"
+			CharacterSet="1"
+			ManagedExtensions="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -164,6 +241,81 @@
 				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			ConfigurationType="2"
+			CharacterSet="1"
+			ManagedExtensions="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
+				PreprocessorDefinitions="WIN32;NDEBUG;_SCL_SECURE_NO_WARNINGS"
+				ExceptionHandling="2"
+				RuntimeLibrary="2"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				IgnoreDefaultLibraryNames="libcmt.lib;libcpmt.lib"
+				GenerateDebugInformation="true"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 		<AssemblyReference
@@ -196,163 +348,35 @@
 			<File
 				RelativePath=".\frontend\FunctionListTests.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAsManaged="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAsManaged="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\frontend\OrderedViewTests.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAsManaged="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						CompileAsManaged="1"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<File
 			RelativePath=".\AnalyzerTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\AssemblyInfo.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\CallCollectorTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\COMHelpersTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\FrontendInteractionTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\Helpers.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\Helpers.h"
@@ -361,42 +385,10 @@
 		<File
 			RelativePath=".\MiscTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\Mockups.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\Mockups.h"
@@ -405,22 +397,6 @@
 		<File
 			RelativePath=".\PrimitivesTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\run-tests.vs10.cmd"
@@ -440,6 +416,19 @@
 					Name="VCCLCompilerTool"
 					AdditionalOptions="/GH /Gh"
 					Optimization="0"
+					WholeProgramOptimization="false"
+					CompileAsManaged="0"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalOptions="/GH /Gh"
+					Optimization="0"
+					WholeProgramOptimization="false"
+					CompileAsManaged="0"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -449,88 +438,37 @@
 					Name="VCCLCompilerTool"
 					AdditionalOptions="/GH /Gh"
 					Optimization="0"
+					WholeProgramOptimization="false"
+					CompileAsManaged="0"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					AdditionalOptions="/GH /Gh"
+					Optimization="0"
+					WholeProgramOptimization="false"
+					CompileAsManaged="0"
 				/>
 			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\ShadowStackTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\StatisticsBridgeTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\SymbolResolverTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\TextFormattingServicesTests.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					CompileAsManaged="1"
-				/>
-			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>

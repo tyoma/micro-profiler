@@ -12,14 +12,17 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			CharacterSet="0"
@@ -71,7 +74,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile="module/micro-profiler.ps.def"
+				ModuleDefinitionFile="module/micro-profiler.x86.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -98,8 +101,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			CharacterSet="0"
@@ -154,10 +157,179 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				ModuleDefinitionFile="module/micro-profiler.ps.def"
+				ModuleDefinitionFile="module/micro-profiler.x86.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			CharacterSet="0"
+			WholeProgramOptimization="0"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				GenerateTypeLibrary="false"
+				TypeLibraryName=""
+				OutputDirectory="_generated"
+				HeaderFileName="$(InputName)_i.h"
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="1"
+				FavorSizeOrSpeed="2"
+				AdditionalIncludeDirectories="./../libraries"
+				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
+				RuntimeLibrary="1"
+				RuntimeTypeInfo="false"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				IgnoreDefaultLibraryNames=""
+				ModuleDefinitionFile="module/micro-profiler.x64.def"
+				GenerateDebugInformation="true"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				GenerateTypeLibrary="false"
+				TypeLibraryName=""
+				OutputDirectory="_generated"
+				HeaderFileName="$(InputName)_i.h"
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="1"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="2"
+				OmitFramePointers="true"
+				AdditionalIncludeDirectories="$(SolutionDir)libraries"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				ModuleDefinitionFile="module/micro-profiler.x64.def"
+				GenerateDebugInformation="true"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

@@ -139,8 +139,8 @@ namespace micro_profiler
 				calls_collector cc(10000);
 				statistics_bridge b(cc, bind(&factory2, ref(state), _1));
 				call_record trace[] = {
-					{	(void *)(0x1223 + 5), 0	},
-					{	(void *)(0), 10 + cc.profiler_latency()	},
+					{	0, (void *)(0x1223 + 5)	},
+					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
 				cc.track(trace[0]);
@@ -162,8 +162,8 @@ namespace micro_profiler
 				calls_collector cc(10000);
 				statistics_bridge b(cc, bind(&factory2, ref(state), _1));
 				call_record trace[] = {
-					{	(void *)(0x1223 + 5), 0	},
-					{	(void *)(0), 10 + cc.profiler_latency()	},
+					{	0, (void *)(0x1223 + 5)	},
+					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
 				cc.track(trace[0]);
@@ -188,18 +188,18 @@ namespace micro_profiler
 				calls_collector cc1(10000), cc2(1000);
 				statistics_bridge b1(cc1, bind(&factory2, ref(state1), _1)), b2(cc2, bind(&factory2, ref(state2), _1));
 				call_record trace1[] = {
-					{	(void *)(0x1223 + 5), 0	},
-					{	(void *)(0), 10 + cc1.profiler_latency()	},
-					{	(void *)(0x1223 + 5), 1000	},
-					{	(void *)(0), 1029 + cc1.profiler_latency()	},
+					{	0, (void *)(0x1223 + 5)	},
+					{	10 + cc1.profiler_latency(), (void *)(0)	},
+					{	1000, (void *)(0x1223 + 5)	},
+					{	1029 + cc1.profiler_latency(), (void *)(0)	},
 				};
 				call_record trace2[] = {
-					{	(void *)(0x2223 + 5), 0	},
-					{	(void *)(0), 13 + cc2.profiler_latency()	},
-					{	(void *)(0x3223 + 5), 1000	},
-					{	(void *)(0), 1017 + cc2.profiler_latency()	},
-					{	(void *)(0x4223 + 5), 2000	},
-					{	(void *)(0), 2019 + cc2.profiler_latency()	},
+					{	0, (void *)(0x2223 + 5)	},
+					{	13 + cc2.profiler_latency(), (void *)(0)	},
+					{	1000, (void *)(0x3223 + 5)	},
+					{	1017 + cc2.profiler_latency(), (void *)(0)	},
+					{	2000, (void *)(0x4223 + 5)	},
+					{	2019 + cc2.profiler_latency(), (void *)(0)	},
 				};
 
 				cc1.track(trace1[0]);

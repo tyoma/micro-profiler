@@ -17,11 +17,14 @@
     <None Include="addin\micro-profiler-addin.rgs">
       <Filter>addin</Filter>
     </None>
-    <None Include="module\micro-profiler.ps.def">
-      <Filter>module</Filter>
-    </None>
     <None Include="resources\appicon.ico">
       <Filter>resources</Filter>
+    </None>
+    <None Include="module\micro-profiler.x64.def">
+      <Filter>module</Filter>
+    </None>
+    <None Include="module\micro-profiler.x86.def">
+      <Filter>module</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

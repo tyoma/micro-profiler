@@ -35,7 +35,7 @@ int main()
 	sort(v.begin(), v.end());
 	sort(v.rbegin(), v.rend());
 
-	getch();
+	_getch();
 
 	return 0;
 }

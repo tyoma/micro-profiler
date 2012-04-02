@@ -32,8 +32,8 @@ namespace micro_profiler
 #pragma pack(push, 4)
 	struct call_record
 	{
-		const void *callee;	// call address + 5 bytes
 		__int64 timestamp;
+		const void *callee;	// call address + sizeof(void *) + 1 bytes
 	};
 #pragma pack(pop)
 

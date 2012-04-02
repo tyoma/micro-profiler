@@ -12,14 +12,17 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			CharacterSet="0"
@@ -69,8 +72,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
+				AdditionalManifestDependencies="type=&apos;win32&apos; name=&apos;Microsoft.Windows.Common-Controls&apos; version=&apos;6.0.0.0&apos; processorArchitecture=&apos;x86&apos; publicKeyToken=&apos;6595b64144ccf1df&apos; language=&apos;*&apos;"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile="module/micro-profiler.ps.def"
+				ModuleDefinitionFile="module/micro-profiler.x86.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -98,8 +102,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\_bin\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)\_obj\$(ConfigurationName)\$(ProjectName)\"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			CharacterSet="0"
@@ -151,10 +155,180 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				ModuleDefinitionFile="module/micro-profiler.ps.def"
+				AdditionalManifestDependencies="type=&apos;win32&apos; name=&apos;Microsoft.Windows.Common-Controls&apos; version=&apos;6.0.0.0&apos; processorArchitecture=&apos;x86&apos; publicKeyToken=&apos;6595b64144ccf1df&apos; language=&apos;*&apos;"
+				ModuleDefinitionFile="module/micro-profiler.x86.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			CharacterSet="0"
+			WholeProgramOptimization="0"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				GenerateTypeLibrary="false"
+				TypeLibraryName=""
+				OutputDirectory="_generated"
+				HeaderFileName="$(InputName)_i.h"
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="./../libraries;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;"
+				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
+				RuntimeLibrary="1"
+				RuntimeTypeInfo="false"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				AdditionalManifestDependencies="type=&apos;win32&apos; name=&apos;Microsoft.Windows.Common-Controls&apos; version=&apos;6.0.0.0&apos; processorArchitecture=&apos;amd64&apos; publicKeyToken=&apos;6595b64144ccf1df&apos; language=&apos;*&apos;"
+				IgnoreDefaultLibraryNames=""
+				ModuleDefinitionFile="module/micro-profiler.x64.def"
+				GenerateDebugInformation="true"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				GenerateTypeLibrary="false"
+				TypeLibraryName=""
+				OutputDirectory="_generated"
+				HeaderFileName="$(InputName)_i.h"
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="1"
+				FavorSizeOrSpeed="2"
+				AdditionalIncludeDirectories="./../libraries;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				AdditionalManifestDependencies="type=&apos;win32&apos; name=&apos;Microsoft.Windows.Common-Controls&apos; version=&apos;6.0.0.0&apos; processorArchitecture=&apos;amd64&apos; publicKeyToken=&apos;6595b64144ccf1df&apos; language=&apos;*&apos;"
+				ModuleDefinitionFile="module/micro-profiler.x64.def"
+				GenerateDebugInformation="true"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -207,7 +381,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\module\micro-profiler.ps.def"
+				RelativePath=".\module\micro-profiler.x64.def"
+				>
+			</File>
+			<File
+				RelativePath=".\module\micro-profiler.x86.def"
 				>
 			</File>
 			<File
@@ -246,10 +424,6 @@
 				RelativePath=".\resources\resource.h"
 				>
 			</File>
-			<File
-				RelativePath=".\resources\xpstyle.manifest"
-				>
-			</File>
 		</Filter>
 		<File
 			RelativePath=".\micro-profiler.initializer.cpp"
@@ -264,6 +438,22 @@
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|Win32"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
 				ExcludedFromBuild="true"
 				>
 				<Tool
@@ -290,6 +480,22 @@
 					Name="VCCLCompilerTool"
 				/>
 			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				ExcludedFromBuild="true"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="..\version-info.txt"
@@ -306,6 +512,26 @@
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Preparing version-info header..."
+					CommandLine="type &quot;$(InputPath)&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; INFO &gt; _$(InputName).h&#x0D;&#x0A;svn info &quot;$(SolutionDir).&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; REPO &gt;&gt; _$(InputName).h&#x0D;&#x0A;"
+					Outputs="_$(InputName).h"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Preparing version-info header..."
+					CommandLine="type &quot;$(InputPath)&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; INFO &gt; _$(InputName).h&#x0D;&#x0A;svn info &quot;$(SolutionDir).&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; REPO &gt;&gt; _$(InputName).h&#x0D;&#x0A;"
+					Outputs="_$(InputName).h"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
 				>
 				<Tool
 					Name="VCCustomBuildTool"

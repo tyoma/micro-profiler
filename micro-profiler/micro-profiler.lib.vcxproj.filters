@@ -112,4 +112,12 @@
       <Filter>frontend</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="collector\hooks.x86.asm">
+      <Filter>collector</Filter>
+    </MASM>
+    <MASM Include="collector\hooks.x64.asm">
+      <Filter>collector</Filter>
+    </MASM>
+  </ItemGroup>
 </Project>

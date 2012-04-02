@@ -44,8 +44,8 @@ namespace micro_profiler
 				analyzer a;
 				calls_collector::acceptor &as_acceptor(a);
 				call_record trace[] = {
-					{	(void *)1234, 12300	},
-					{	(void *)2234, 12305	},
+					{	12300, (void *)1234	},
+					{	12305, (void *)2234	},
 				};
 
 				// ACT
@@ -64,14 +64,14 @@ namespace micro_profiler
 				// INIT
 				analyzer a;
 				call_record trace[] = {
-					{	(void *)1234, 12300	},
-					{	(void *)0, 12305	},
-					{	(void *)2234, 12310	},
-					{	(void *)0, 12317	},
-					{	(void *)2234, 12320	},
-					{	(void *)12234, 12322	},
-					{	(void *)0, 12325	},
-					{	(void *)0, 12327	},
+					{	12300, (void *)1234	},
+					{	12305, (void *)0	},
+					{	12310, (void *)2234	},
+					{	12317, (void *)0	},
+					{	12320, (void *)2234	},
+					{	12322, (void *)12234	},
+					{	12325, (void *)0	},
+					{	12327, (void *)0	},
 				};
 
 				// ACT
@@ -106,16 +106,16 @@ namespace micro_profiler
 				// INIT
 				analyzer a;
 				call_record trace[] = {
-					{	(void *)1, 1	},
-						{	(void *)11, 2	},
-						{	(void *)0, 3	},
-					{	(void *)0, 4	},
-					{	(void *)2, 5	},
-						{	(void *)21, 10	},
-						{	(void *)0, 11	},
-						{	(void *)22, 13	},
-						{	(void *)0, 17	},
-					{	(void *)0, 23	},
+					{	1, (void *)1	},
+						{	2, (void *)11	},
+						{	3, (void *)0	},
+					{	4, (void *)0	},
+					{	5, (void *)2	},
+						{	10, (void *)21	},
+						{	11, (void *)0	},
+						{	13, (void *)22	},
+						{	17, (void *)0	},
+					{	23, (void *)0	},
 				};
 
 				// ACT
@@ -140,14 +140,14 @@ namespace micro_profiler
 				// INIT
 				analyzer a(1);
 				call_record trace[] = {
-					{	(void *)1234, 12300	},
-					{	(void *)0, 12305	},
-					{	(void *)2234, 12310	},
-					{	(void *)0, 12317	},
-					{	(void *)2234, 12320	},
-					{	(void *)12234, 12322	},
-					{	(void *)0, 12325	},
-					{	(void *)0, 12327	},
+					{	12300, (void *)1234	},
+					{	12305, (void *)0	},
+					{	12310, (void *)2234	},
+					{	12317, (void *)0	},
+					{	12320, (void *)2234	},
+					{	12322, (void *)12234	},
+					{	12325, (void *)0	},
+					{	12327, (void *)0	},
 				};
 
 				// ACT
@@ -182,12 +182,12 @@ namespace micro_profiler
 				// INIT
 				analyzer a;
 				map<const void *, function_statistics> m;
-				call_record trace1[] = {	{	(void *)1234, 12300	},	};
-				call_record trace2[] = {	{	(void *)1234, 12313	},	};
-				call_record trace3[] = {	{	(void *)0, 12307	},	};
+				call_record trace1[] = {	{	12300, (void *)1234	},	};
+				call_record trace2[] = {	{	12313, (void *)1234	},	};
+				call_record trace3[] = {	{	12307, (void *)0	},	};
 				call_record trace4[] = {
-					{	(void *)0, 12319	},
-					{	(void *)1234, 12323	},
+					{	12319, (void *)0	},
+					{	12323, (void *)1234	},
 				};
 
 				// ACT
@@ -226,13 +226,13 @@ namespace micro_profiler
 				analyzer a;
 				map<const void *, function_statistics> m;
 				call_record trace1[] = {
-					{	(void *)1234, 12319	},
-					{	(void *)0, 12323	},
-					{	(void *)2234, 12324	},
-					{	(void *)0, 12326},
-					{	(void *)2234, 12330	},
+					{	12319, (void *)1234	},
+					{	12324, (void *)0	},
+					{	12324, (void *)2234	},
+					{	12326, (void *)0	},
+					{	12330, (void *)2234	},
 				};
-				call_record trace2[] = {	{	(void *)0, 12350	},	};
+				call_record trace2[] = {	{	12350, (void *)0	},	};
 
 				a.accept_calls(2, trace1, array_size(trace1));
 

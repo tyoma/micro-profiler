@@ -34,38 +34,6 @@ namespace std
 using namespace wpl::mt;
 using namespace std;
 
-extern "C" __declspec(naked) void profile_enter()
-{
-	_asm 
-	{
-		pushad
-		rdtsc
-		push	edx
-		push	eax
-		push	dword ptr[esp + 40]
-		lea	ecx, [micro_profiler::calls_collector::_instance]
-		call	micro_profiler::calls_collector::track
-		popad
-		ret
-	}
-}
-
-extern "C" __declspec(naked) void profile_exit()
-{
-	_asm 
-	{
-		pushad
-		rdtsc
-		push	edx
-		push	eax
-		push	0
-		lea	ecx, [micro_profiler::calls_collector::_instance]
-		call	micro_profiler::calls_collector::track
-		popad
-		ret
-	}
-}
-
 extern "C" CLSID CLSID_ProfilerFrontend;
 
 namespace micro_profiler

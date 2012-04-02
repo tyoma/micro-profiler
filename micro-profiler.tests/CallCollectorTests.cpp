@@ -25,14 +25,14 @@ namespace micro_profiler
 					: total_entries(0)
 				{	}
 
-				virtual void accept_calls(unsigned int threadid, const call_record *calls, unsigned int count)
+				virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count)
 				{
 					collected.push_back(make_pair(threadid, vector<call_record>()));
 					collected.back().second.assign(calls, calls + count);
 					total_entries += count;
 				}
 
-				unsigned int total_entries;
+				size_t total_entries;
 				vector< pair< unsigned int, vector<call_record> > > collected;
 			};
 
@@ -55,12 +55,12 @@ namespace micro_profiler
 			class enterexit_emulator : public thread_function
 			{
 				calls_collector &_collector;
-				unsigned int _calls_number;
+				size_t _calls_number;
 
 				void operator =(const enterexit_emulator &);
 
 			public:
-				enterexit_emulator(calls_collector &collector, unsigned int calls_number)
+				enterexit_emulator(calls_collector &collector, size_t calls_number)
 					: _collector(collector), _calls_number(calls_number)
 				{	}
 
@@ -70,7 +70,7 @@ namespace micro_profiler
 
 					for (unsigned int i = 0; i != _calls_number; ++i)
 					{
-						call_record c1 = {	(void *)0x00001000, timestamp++	}, c2 = {	(void *)0, timestamp++	};
+						call_record c1 = {	timestamp++, (void *)0x00001000	}, c2 = {	timestamp++, (void *)0	};
 
 						_collector.track(c1);
 						_collector.track(c2);

@@ -35,7 +35,7 @@ profile_enter	proc
 	add	rdx, 30h
 	mov	qword ptr [rdx], rax
 	sub	rsp, 20h
-	lea	rcx, ?_instance@calls_collector@micro_profiler@@0V12@A
+	mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
 	call	?track@calls_collector@micro_profiler@@QEAAXAEBUcall_record@2@@Z
 	add	rsp, 20h
 	POPREGS
@@ -50,7 +50,7 @@ profile_exit	proc
 	mov	qword ptr [rdx + 8h], 0
 	mov	qword ptr [rdx], rax
 	sub	rsp, 20h
-	lea	rcx, ?_instance@calls_collector@micro_profiler@@0V12@A
+	mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
 	call	?track@calls_collector@micro_profiler@@QEAAXAEBUcall_record@2@@Z
 	add	rsp, 20h
 	POPREGS

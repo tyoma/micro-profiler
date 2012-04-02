@@ -4,6 +4,6 @@
  * ~~Eliminate dependency from MS DIA library~~;
  * DLL profiling support;
  * Performance improvement - there is a potential of up to x3 times {{{_penter}}}/{{{_pexit}}} speedup;
- * X64 support - it just requires some more ASM-hacking :)
+ * ~~X64 support - it just requires some more ASM-hacking :)~~
  * Time-based profile - a chart with ability to snap statistics profile to a specific time range giving user an opportunity to see what was happening at that exact moment of time;
  * Calls/second summary metric. Beside all may ease an estimation the level of latency induced by the profiler.

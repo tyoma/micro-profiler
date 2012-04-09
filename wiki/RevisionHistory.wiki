@@ -1,4 +1,7 @@
 #sidebar TableOfContents
+ * v1.0.491
+  * Profiler's window is now not closed at the profiling application's finish and is held until explicitly closed by user;
+
  * v1.0.487
   * x64 platform support implemented. A very alpha version, but it worth trying!
 

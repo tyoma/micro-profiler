@@ -21,6 +21,7 @@
     <ClCompile Include="StatisticsBridgeTests.cpp" />
     <ClCompile Include="Mockups.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
+    <ClCompile Include="ObjectLockTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

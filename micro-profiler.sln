@@ -201,7 +201,6 @@ Global
 		{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}.Release|Win32.ActiveCfg = Release
 		{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}.Release|Win32.Build.0 = Release
 		{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}.Release|x64.ActiveCfg = Release
-		{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}.Release|x64.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

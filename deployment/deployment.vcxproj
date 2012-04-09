@@ -48,6 +48,7 @@ call mkzip "$(IntDir)\*" "$(OutDir)micro-profiler.deploy.zip"
 type "$(SolutionDir)version-info.txt" &gt;&gt; "$(IntDir)version.txt"
 type "versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(IntDir)version.txt" &gt; "$(IntDir)_versioned-rename.cmd"
 call "$(IntDir)_versioned-rename.cmd" "$(OutDir)micro-profiler.deploy.zip"
+del "$(IntDir)_versioned-rename.cmd"
 </Command>
     </PostBuildEvent>
     <BuildLog>
@@ -67,6 +68,7 @@ call mkzip "$(IntDir)\*" "$(OutDir)micro-profiler_x64.deploy.zip"
 type "$(SolutionDir)version-info.txt" &gt;&gt; "$(IntDir)version.txt"
 type "versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(IntDir)version.txt" &gt; "$(IntDir)_versioned-rename.cmd"
 call "$(IntDir)_versioned-rename.cmd" "$(OutDir)micro-profiler_x64.deploy.zip"
+del "$(IntDir)_versioned-rename.cmd"
 </Command>
     </PostBuildEvent>
     <BuildLog>

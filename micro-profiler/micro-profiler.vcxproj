@@ -274,6 +274,8 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</MultiProcessorCompilation>
     </ClCompile>
+    <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
+    <ClCompile Include="frontend\ProfilerSink.cpp" />
     <ClCompile Include="micro-profiler.initializer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -324,11 +326,14 @@ svn info "$(SolutionDir)." | cscript //Nologo "$(SolutionDir)scripts/make-header
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Preparing version-info header...</Message>
     </CustomBuild>
     <None Include="addin\micro-profiler-addin.rgs" />
+    <None Include="frontend\micro-profiler-sink.rgs" />
     <None Include="module\micro-profiler.x64.def" />
     <None Include="module\micro-profiler.x86.def" />
     <None Include="resources\appicon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="frontend\ProfilerMainDialog.h" />
+    <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="module\ProxyBridge.h" />
     <ClInclude Include="resources\resource.h" />
   </ItemGroup>

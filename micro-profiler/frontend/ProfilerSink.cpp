@@ -20,9 +20,10 @@
 
 #include "ProfilerSink.h"
 
+#include "function_list.h"
+#include "object_lock.h"
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
-#include "function_list.h"
 
 #include <atlstr.h>
 
@@ -38,6 +39,7 @@ namespace micro_profiler
 
 	void ProfilerFrontend::FinalRelease()
 	{
+		::EnableMenuItem(_dialog->GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND);
 		_dialog.reset();
 		_statistics.reset();
 	}
@@ -53,6 +55,8 @@ namespace micro_profiler
 		_statistics = functions_list::create(ticks_resolution, r);
 		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
 		_dialog->ShowWindow(SW_SHOW);
+
+		lock(_dialog);
 		return S_OK;
 	}
 

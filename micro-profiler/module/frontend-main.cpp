@@ -18,6 +18,8 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
+#include <crtdbg.h>
+
 #include "ProxyBridge.h"
 
 #include "../frontend/ProfilerSink.h"
@@ -66,12 +68,15 @@ namespace
 	
 CProfilerFrontendModule _AtlModule;
 
-extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 {
-	g_instance = dwReason == DLL_PROCESS_ATTACH ? hInstance : g_instance;
-	if (PrxDllMain(hInstance, dwReason, lpReserved))
-		return _AtlModule.DllMain(dwReason, lpReserved);
-	return FALSE;
+	g_instance = reason == DLL_PROCESS_ATTACH ? hinstance : g_instance;
+	
+	BOOL ok = PrxDllMain(hinstance, reason, reserved) && _AtlModule.DllMain(reason, reserved);
+
+	if (DLL_PROCESS_DETACH == reason)
+		_CrtDumpMemoryLeaks();
+	return ok;
 }
 
 STDAPI DllCanUnloadNow()

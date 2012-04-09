@@ -21,6 +21,7 @@
 #pragma once
 
 #include "../resources/resource.h"
+#include "object_lock.h"
 
 #include <atlbase.h>
 #include <atltypes.h>
@@ -41,7 +42,7 @@ namespace micro_profiler
 	struct functions_list;
 	struct linked_statistics;
 
-	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>
+	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public self_unlockable
 	{
 		std::shared_ptr<functions_list> _statistics;
 		std::wstring _executable;
@@ -57,6 +58,8 @@ namespace micro_profiler
 		void OnFocusChange(wpl::ui::listview::index_type index, bool selected);
 		void OnDrilldown(wpl::ui::listview::index_type index);
 
+		virtual void OnFinalMessage(HWND hwnd);
+
 	public:
 		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable);
 		~ProfilerMainDialog();
@@ -68,6 +71,7 @@ namespace micro_profiler
 			MESSAGE_HANDLER(WM_SIZE, OnSize);
 			COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
 			COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
+			MESSAGE_HANDLER(WM_CLOSE, OnClose);
 			REFLECT_NOTIFICATIONS();
 		END_MSG_MAP()
 
@@ -75,5 +79,6 @@ namespace micro_profiler
 		LRESULT OnSize(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
 		LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
 		LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);
+		LRESULT OnClose(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
 	};
 }

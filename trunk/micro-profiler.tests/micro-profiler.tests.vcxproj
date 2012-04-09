@@ -255,6 +255,7 @@
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="Mockups.cpp" />
+    <ClCompile Include="ObjectLockTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="samples.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/GH /Gh %(AdditionalOptions)</AdditionalOptions>

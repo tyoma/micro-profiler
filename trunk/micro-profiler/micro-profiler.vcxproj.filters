@@ -12,6 +12,12 @@
     <ClCompile Include="module\ProxyBridge.c">
       <Filter>module</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\ProfilerMainDialog.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\ProfilerSink.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="addin\micro-profiler-addin.rgs">
@@ -25,6 +31,9 @@
     </None>
     <None Include="module\micro-profiler.x86.def">
       <Filter>module</Filter>
+    </None>
+    <None Include="frontend\micro-profiler-sink.rgs">
+      <Filter>frontend</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -47,6 +56,12 @@
     </ClInclude>
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\ProfilerSink.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\ProfilerMainDialog.h">
+      <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

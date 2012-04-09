@@ -395,6 +395,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ObjectLockTests.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\PrimitivesTests.cpp"
 			>
 		</File>

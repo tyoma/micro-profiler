@@ -50,8 +50,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)_setup\"
+			IntermediateDirectory="$(SolutionDir)_deploy_x64\"
 			ConfigurationType="10"
 			CharacterSet="2"
 			DeleteExtensionsOnClean="*.txt;*.cmd;*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;$(TargetPath)"
@@ -73,160 +73,328 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;call mkzip &quot;$(IntDir)\*&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;type &quot;$(SolutionDir)version-info.txt&quot; &gt;&gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;type &quot;versioned-rename-template.cmd&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/substitute.js&quot; &quot;$(IntDir)version.txt&quot; &gt; &quot;$(IntDir)_versioned-rename.cmd&quot;&#x0D;&#x0A;call &quot;$(IntDir)_versioned-rename.cmd&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;del &quot;$(IntDir)_versioned-rename.cmd&quot;&#x0D;&#x0A;"
+				CommandLine="svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;call mkzip &quot;$(IntDir)\*&quot; &quot;$(OutDir)micro-profiler_x64.deploy.zip&quot;&#x0D;&#x0A;type &quot;$(SolutionDir)version-info.txt&quot; &gt;&gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;type &quot;versioned-rename-template.cmd&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/substitute.js&quot; &quot;$(IntDir)version.txt&quot; &gt; &quot;$(IntDir)_versioned-rename.cmd&quot;&#x0D;&#x0A;call &quot;$(IntDir)_versioned-rename.cmd&quot; &quot;$(OutDir)micro-profiler_x64.deploy.zip&quot;&#x0D;&#x0A;del &quot;$(IntDir)_versioned-rename.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
 	</References>
 	<Files>
-		<File
-			RelativePath="..\_bin\Release_Win32\entry.h"
+		<Filter
+			Name="x64"
 			>
-			<FileConfiguration
-				Name="Release|Win32"
+			<File
+				RelativePath="..\_bin\Release_x64\entry.h"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_x64\micro-profiler.dll"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_Win32\micro-profiler.dll"
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_x64\micro-profiler.initializer.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_x64\micro-profiler.initializer.mfc-static.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_x64\micro-profiler.lib"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_x64\micro-profiler.stub.dll"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_x64\playground.exe"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_x64\playground.pdb"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="x86"
 			>
-			<FileConfiguration
-				Name="Release|Win32"
+			<File
+				RelativePath="..\_bin\Release_Win32\entry.h"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_Win32\micro-profiler.dll"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_Win32\micro-profiler.initializer.cpp"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_Win32\micro-profiler.initializer.cpp"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_Win32\micro-profiler.initializer.mfc-static.cpp"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_Win32\micro-profiler.initializer.mfc-static.cpp"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_Win32\micro-profiler.lib"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_Win32\micro-profiler.stub.dll"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_Win32\micro-profiler.lib"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_Win32\playground.exe"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\_bin\Release_Win32\playground.pdb"
 				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_Win32\micro-profiler.stub.dll"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-		</File>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="File Copy Tool"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\mkzip.cmd"
 			>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_Win32\playground.exe"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_Win32\playground.pdb"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				>
-				<Tool
-					Name="File Copy Tool"
-				/>
-			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>

@@ -160,6 +160,14 @@ namespace micro_profiler
 		return 0;
 	}
 
+	LRESULT ProfilerMainDialog::OnClose(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL &handled)
+	{
+		if (!(MF_DISABLED & ::GetMenuState(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND)))
+			DestroyWindow();
+		handled = TRUE;
+		return 0;
+	}
+
 	void ProfilerMainDialog::RelocateControls(const CSize &size)
 	{
 		const int spacing = 7;
@@ -210,4 +218,7 @@ namespace micro_profiler
 		index = _statistics->get_index(address);
 		_statistics_lv->select(index, true);
 	}
+
+	void ProfilerMainDialog::OnFinalMessage(HWND /*hwnd*/)
+	{	unlock();	}
 }

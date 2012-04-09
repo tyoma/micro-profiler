@@ -20,48 +20,16 @@
 
 #pragma once
 
-#include "./../_generated/microprofilerfrontend_i.h"
-#include "../resources/resource.h"
-
-#include <atlbase.h>
-#include <atlcom.h>
-#include <memory>
-
-namespace std 
-{
-	using tr1::shared_ptr;
-}
-
-extern "C" CLSID CLSID_ProfilerFrontend;
+#include <functional>
+#include <wpl/base/signals.h>
 
 namespace micro_profiler
 {
-	class ProfilerMainDialog;
-	struct functions_list;
-
-	class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>,
-		public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
+	struct self_unlockable
 	{
-		std::shared_ptr<functions_list> _statistics;
-		std::shared_ptr<ProfilerMainDialog> _dialog;
-
-	public:
-		ProfilerFrontend();
-		~ProfilerFrontend();
-
-		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
-
-		BEGIN_COM_MAP(ProfilerFrontend)
-			COM_INTERFACE_ENTRY(IProfilerFrontend)
-		END_COM_MAP()
-
-		void FinalRelease();
-
-		STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
-		STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
+		virtual ~self_unlockable()	{	}
+		wpl::signal<void()> unlock;
 	};
+
+	void lock(const std::shared_ptr<self_unlockable> &object);
 }
-
-typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
-
-OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);

@@ -124,6 +124,7 @@
       <Command>copy collector\entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
+copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
 </Command>
     </PostBuildEvent>
     <PreBuildEvent />
@@ -169,6 +170,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
       <Command>copy collector\entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
+copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
 </Command>
     </PostBuildEvent>
     <PreBuildEvent />
@@ -218,6 +220,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
       <Command>copy collector\entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
+copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
 </Command>
     </PostBuildEvent>
     <PreBuildEvent />
@@ -267,6 +270,7 @@ copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
       <Command>copy collector\entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
+copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
 </Command>
     </PostBuildEvent>
     <PreBuildEvent />

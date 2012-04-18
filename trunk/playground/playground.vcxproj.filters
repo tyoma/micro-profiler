@@ -2,5 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\_bin\Debug_Win32\micro-profiler.initializer.cpp" />
+    <ClCompile Include="..\_bin\Debug_x64\micro-profiler.initializer.cpp" />
+    <ClCompile Include="..\_bin\Release_Win32\micro-profiler.initializer.cpp" />
+    <ClCompile Include="..\_bin\Release_x64\micro-profiler.initializer.cpp" />
   </ItemGroup>
 </Project>

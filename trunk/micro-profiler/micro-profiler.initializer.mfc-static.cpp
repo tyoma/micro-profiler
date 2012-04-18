@@ -14,7 +14,13 @@
 	#endif
 #endif
 
-#pragma comment(lib, "micro-profiler.lib")
+#ifdef _M_IX86
+	#pragma comment(lib, "micro-profiler.lib")
+#elif _M_X64
+	#pragma comment(lib, "micro-profiler_x64.lib")
+#else
+	#pragma comment(lib, "micro-profiler.lib")
+#endif
 
 namespace
 {

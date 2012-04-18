@@ -3,8 +3,6 @@
 #include <time.h>
 #include <conio.h>
 
-#include "../micro-profiler/collector/entry.h"
-
 #include <vector>
 #include <algorithm>
 
@@ -12,8 +10,6 @@ using namespace std;
 
 namespace
 {
-	micro_profiler::profiler_frontend pf;//(&micro_profiler::create_inproc_frontend);
-
 	double random()
 	{
 		unsigned int value1(rand()), value2(rand());

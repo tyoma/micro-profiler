@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -180,7 +180,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -264,7 +264,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -349,7 +349,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				CommandLine="copy collector\entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;"
 			/>
 		</Configuration>
 	</Configurations>

@@ -50,6 +50,7 @@ extern HINSTANCE g_instance;
 
 const CString c_initializer_cpp = _T("micro-profiler.initializer.cpp");
 const CString c_profiler_library = _T("micro-profiler.lib");
+const CString c_profiler_library_x64 = _T("micro-profiler_x64.lib");
 const CString c_GH_option = _T("/GH");
 const CString c_Gh_option = _T("/Gh");
 
@@ -345,11 +346,11 @@ namespace
 	template <typename API>
 	bool command_base<API>::library_copied(EnvDTE::ProjectPtr project)
 	{
-		CPath library(project->FileName);
+		CPath library(project->FileName), library_x64(project->FileName);
 
-		library.RemoveFileSpec();
-		library.Append(c_profiler_library);
-		return !!library.FileExists();
+		library.RemoveFileSpec(), library_x64.RemoveFileSpec();
+		library.Append(c_profiler_library), library_x64.Append(c_profiler_library_x64);
+		return !!library.FileExists() && !!library_x64.FileExists();
 	}
 
 	template <typename API>
@@ -361,6 +362,11 @@ namespace
 		target.RemoveFileSpec();
 		target.Append(c_profiler_library);
 		::CopyFile(source, target, FALSE);
+		source.RemoveFileSpec();
+		source.Append(c_profiler_library_x64);
+		target.RemoveFileSpec();
+		target.Append(c_profiler_library_x64);
+		::CopyFile(source, target, FALSE);
 	}
 
 	template <typename API>
@@ -370,6 +376,9 @@ namespace
 
 		library.RemoveFileSpec();
 		library.Append(c_profiler_library);
+		::DeleteFile(library);
+		library.RemoveFileSpec();
+		library.Append(c_profiler_library_x64);
 		::DeleteFile(library);
 	}
 
@@ -402,7 +411,8 @@ namespace
 	{
 		VCProjectPtr vcproject(project->Object);
 		_bstr_t activeConfigurationName(project->ConfigurationManager->ActiveConfiguration->ConfigurationName);
-		VCConfigurationPtr configuration(IVCCollectionPtr(vcproject->Configurations)->Item(activeConfigurationName));
+		_bstr_t activePlatformName(project->ConfigurationManager->ActiveConfiguration->PlatformName);
+		VCConfigurationPtr configuration(IVCCollectionPtr(vcproject->Configurations)->Item(activeConfigurationName + L"|" + activePlatformName));
 		IVCCollectionPtr tools(configuration->Tools);
 		
 		return tools->Item(tool_name);

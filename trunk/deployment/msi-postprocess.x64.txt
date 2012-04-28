@@ -1,0 +1,8 @@
+INSERT INTO Component (Component, ComponentId, Directory_, Attributes, Condition) VALUES ('c_env_usr', '{7EA8BA3A-A6F2-4468-8C94-A016AC198A3F}', 'TARGETDIR', 0, 'NOT ALLUSERS')
+INSERT INTO Component (Component, ComponentId, Directory_, Attributes, Condition) VALUES ('c_env_sys', '{52DE93FD-B13F-4153-8F5F-58EADD7B2D95}', 'TARGETDIR', 0, 'ALLUSERS')
+INSERT INTO FeatureComponents (Feature_, Component_) VALUES ('DefaultFeature', 'c_env_usr')
+INSERT INTO FeatureComponents (Feature_, Component_) VALUES ('DefaultFeature', 'c_env_sys')
+INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path_usr', 'Path','[~];[TARGETDIR];[TARGETDIR]x86','c_env_usr')
+INSERT INTO Environment (Environment, Name, Value, Component_) VALUES ('env_path_sys', '*Path','[~];[TARGETDIR];[TARGETDIR]x86','c_env_sys')
+DELETE FROM Binary WHERE Name='DefBannerBitmap'
+UPDATE Property SET Value='<Version Major>.<Version Minor>.<Revision>' WHERE Property='ProductVersion'

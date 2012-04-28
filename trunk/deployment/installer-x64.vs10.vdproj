@@ -21,7 +21,19 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_1D304499225D491092B9AA4598A94AE1"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_31A77F9BDFBA440793E9A1BA6040ECA5"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_36D30F8986654DD19E3468521F82250D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -33,25 +45,37 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_5FF3CA52EF7242AE8B85D98247A1AE95"
-        "OwnerKey" = "8:_UNDEFINED"
+        "MsmKey" = "8:_69F9B56F2C27F87328C2830C2BE00DC4"
+        "OwnerKey" = "8:_894D5B6CDE6F41469DA7A34C4540A2FF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_69F9B56F2C27F87328C2830C2BE00DC4"
-        "OwnerKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "OwnerKey" = "8:_B5F8EA61B1434A56B0518314B522C72A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_9B0A80981BB5462F913FBD89E898B6F3"
+        "MsmKey" = "8:_894D5B6CDE6F41469DA7A34C4540A2FF"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_D552F472E2124A6D9AED754CF0B52F05"
+        "MsmKey" = "8:_A81EF2AEFCCC4183AA8E9D1B6E627182"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B5F8EA61B1434A56B0518314B522C72A"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_BD281005E32147F1BE0799E3148E1A36"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -120,7 +144,27 @@
             "SourcePath" = "8:..\\_bin\\Release_x64\\micro-profiler.initializer.mfc-static.cpp"
             "TargetName" = "8:micro-profiler.initializer.mfc-static.cpp"
             "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Folder" = "8:_16B41F043A6341CFBA71C9E280EF9B87"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1D304499225D491092B9AA4598A94AE1"
+            {
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.lib"
+            "TargetName" = "8:micro-profiler.lib"
+            "Tag" = "8:"
+            "Folder" = "8:_16B41F043A6341CFBA71C9E280EF9B87"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -140,7 +184,27 @@
             "SourcePath" = "8:..\\_bin\\Release_x64\\entry.h"
             "TargetName" = "8:entry.h"
             "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Folder" = "8:_16B41F043A6341CFBA71C9E280EF9B87"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_36D30F8986654DD19E3468521F82250D"
+            {
+            "SourcePath" = "8:..\\_bin\\Release_x64\\micro-profiler_x64.lib"
+            "TargetName" = "8:micro-profiler_x64.lib"
+            "Tag" = "8:"
+            "Folder" = "8:_16B41F043A6341CFBA71C9E280EF9B87"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -160,7 +224,7 @@
             "SourcePath" = "8:..\\_bin\\Release_x64\\micro-profiler.initializer.cpp"
             "TargetName" = "8:micro-profiler.initializer.cpp"
             "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Folder" = "8:_16B41F043A6341CFBA71C9E280EF9B87"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -195,26 +259,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D552F472E2124A6D9AED754CF0B52F05"
-            {
-            "SourcePath" = "8:..\\_bin\\Release_x64\\micro-profiler.lib"
-            "TargetName" = "8:micro-profiler.lib"
-            "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
         }
         "FileType"
         {
@@ -231,6 +275,17 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_16B41F043A6341CFBA71C9E280EF9B87"
+                    {
+                    "Name" = "8:x86"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_9FBF608701B44F9F9BC1D68C638BF332"
+                        "Folders"
+                        {
+                        }
+                    }
                 }
             }
         }
@@ -250,7 +305,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MicroProfiler"
         "ProductCode" = "8:{95E9C627-59C0-42BC-903D-51DBFDDB5C62}"
-        "PackageCode" = "8:{47B31A17-525A-43AC-8CC7-B6D4E2E0470B}"
+        "PackageCode" = "8:{CF8158E4-13D9-47A3-B558-68FAFA9B330E}"
         "UpgradeCode" = "8:{32373928-E978-4133-B1A2-F08B690383AE}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -273,7 +328,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:1"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:svn info \"$(ProjectDir)..\" > \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)..\\version-info.txt\" >> \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)msi-postprocess.txt\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" | cscript \"$(ProjectDir)../scripts/msi-postprocess.js\" \"$(BuiltOuputPath)\"\r\ntype \"$(ProjectDir)versioned-rename-template.cmd\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" > \"$(ProjectDir)_versioned-rename.cmd\"\r\ncall \"$(ProjectDir)_versioned-rename.cmd\" \"$(BuiltOuputPath)\"\r\n"
+        "PostBuildEvent" = "8:svn info \"$(ProjectDir)..\" > \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)..\\version-info.txt\" >> \"$(ProjectDir)_info-macros.txt\"\r\ntype \"$(ProjectDir)msi-postprocess.x64.txt\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" | cscript \"$(ProjectDir)../scripts/msi-postprocess.js\" \"$(BuiltOuputPath)\"\r\ntype \"$(ProjectDir)versioned-rename-template.cmd\" | cscript //Nologo \"$(ProjectDir)../scripts/substitute.js\" \"$(ProjectDir)_info-macros.txt\" > \"$(ProjectDir)_versioned-rename.cmd\"\r\ncall \"$(ProjectDir)_versioned-rename.cmd\" \"$(BuiltOuputPath)\"\r\n"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"
@@ -863,6 +918,380 @@
                                     "ValueTypes" = "3:1"
                                     "Value" = "8:MicroProfiler Frontend Application"
                                     }
+                                }
+                            }
+                        }
+                        "Values"
+                        {
+                        }
+                    }
+                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_079EC4974DF544408331101AF9921231"
+                    {
+                    "Name" = "8:Wow6432Node"
+                    "Condition" = "8:"
+                    "AlwaysCreate" = "11:FALSE"
+                    "DeleteAtUninstall" = "11:FALSE"
+                    "Transitive" = "11:FALSE"
+                        "Keys"
+                        {
+                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_2E7EF9F2AB7C4FD5B221847B2791E56F"
+                            {
+                            "Name" = "8:CLSID"
+                            "Condition" = "8:"
+                            "AlwaysCreate" = "11:FALSE"
+                            "DeleteAtUninstall" = "11:FALSE"
+                            "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_59515AD714CA4918940EE2600648FE87"
+                                    {
+                                    "Name" = "8:{ABC1A8AB-31D5-475F-B541-987141CD4DB3}"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_55F95F1559E943E3A537806663A8D075"
+                                            {
+                                            "Name" = "8:InprocServer32"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_13C7513FDD5449C8A09EA66373A19D7C"
+                                                    {
+                                                    "Name" = "8:"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:[TARGETDIR]x86\\micro-profiler.dll"
+                                                    }
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1D86290DDB884FCDBEE2781CD9A522D4"
+                                                    {
+                                                    "Name" = "8:ThreadingModel"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:Apartment"
+                                                    }
+                                                }
+                                            }
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_E5FE7A409B714EEA863A273EDDAF58C3"
+                                            {
+                                            "Name" = "8:Version"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_DFD16EBCE78E4127A40D031CF6BC9B16"
+                                                    {
+                                                    "Name" = "8:"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:1.0"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1BD02CF6FCD843CCB10968CE0CEB3883"
+                                            {
+                                            "Name" = "8:AppID"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:{5772E3BD-4C40-450C-8F79-A5052A3CC346}"
+                                            }
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_819F922CEDEB4936A17764FB95D07537"
+                                            {
+                                            "Name" = "8:"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:ProfilerSink Class"
+                                            }
+                                        }
+                                    }
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_90B8C1B4BA9C4D6EB1933C155A5C3A97"
+                                    {
+                                    "Name" = "8:{2F5ECF23-E98B-4399-AB4F-3083264C481B}"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_E45A720B69E14D88896513349C21F184"
+                                            {
+                                            "Name" = "8:InprocServer32"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_ABF54389CC54414DA0AF6503704D35DC"
+                                                    {
+                                                    "Name" = "8:"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:[TARGETDIR]x86\\micro-profiler.dll"
+                                                    }
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_F83AC2F0206B43ACB411F6D9F3C1E63B"
+                                                    {
+                                                    "Name" = "8:ThreadingModel"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:Both"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_303A7C278CED4669AA7E0B3BF17B8253"
+                                            {
+                                            "Name" = "8:"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:IProfilerFrontend_PSFactory"
+                                            }
+                                        }
+                                    }
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_DE694FB7860E423CAEA1A3D443749F90"
+                                    {
+                                    "Name" = "8:{B36A1712-EF9F-4960-9B33-838BFCC70683}"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_6083B964D6B048C0A7818F480DB1C055"
+                                            {
+                                            "Name" = "8:InprocServer32"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_A15CB3191B3F42DF870089487CCC4DBD"
+                                                    {
+                                                    "Name" = "8:ThreadingModel"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:Apartment"
+                                                    }
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_D79366BE957B4CC8B146E6FEC5C49338"
+                                                    {
+                                                    "Name" = "8:"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:[TARGETDIR]x86\\micro-profiler.dll"
+                                                    }
+                                                }
+                                            }
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_7941101E08A04B599312224F21876D4A"
+                                            {
+                                            "Name" = "8:ProgID"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_8C57567498B64F6A96279FB3BC205280"
+                                                    {
+                                                    "Name" = "8:"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:MicroProfiler.Addin.1"
+                                                    }
+                                                }
+                                            }
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_BA527CA7AC3F48FE8955DC2215225FD3"
+                                            {
+                                            "Name" = "8:Programmable"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                }
+                                            }
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_EA2E7E9D9DB049AD9FEF140C19979688"
+                                            {
+                                            "Name" = "8:VersionIndependentProgID"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C460FB44CE78465D9068F22EE12EF46A"
+                                                    {
+                                                    "Name" = "8:"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:MicroProfiler.Addin"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_846D1ABF7BDC49D19A0017C98110E5CA"
+                                            {
+                                            "Name" = "8:"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:MicroProfiler Addin Class"
+                                            }
+                                        }
+                                    }
+                                }
+                                "Values"
+                                {
+                                }
+                            }
+                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_62E16090F79343D6AADFAD96A8F401E1"
+                            {
+                            "Name" = "8:AppID"
+                            "Condition" = "8:"
+                            "AlwaysCreate" = "11:FALSE"
+                            "DeleteAtUninstall" = "11:FALSE"
+                            "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_C135896C78AA4EF59394850CB542651D"
+                                    {
+                                    "Name" = "8:{5772E3BD-4C40-450C-8F79-A5052A3CC346}"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                        }
+                                        "Values"
+                                        {
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_6162CD8DA2524AEEAA78689D2C886A16"
+                                            {
+                                            "Name" = "8:DllSurrogate"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:"
+                                            }
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_DC9A9E7CB03C43F2A61ABCB659F21541"
+                                            {
+                                            "Name" = "8:"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:MicroProfiler Frontend Application"
+                                            }
+                                        }
+                                    }
+                                }
+                                "Values"
+                                {
+                                }
+                            }
+                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_DEABFABF05AD4FA481FB3539A3A47AE4"
+                            {
+                            "Name" = "8:Interface"
+                            "Condition" = "8:"
+                            "AlwaysCreate" = "11:FALSE"
+                            "DeleteAtUninstall" = "11:FALSE"
+                            "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_105FDE71958C4EA8A22E26D653E624DB"
+                                    {
+                                    "Name" = "8:{2F5ECF23-E98B-4399-AB4F-3083264C481B}"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_8B3D8CCC466843308954891296D286AA"
+                                            {
+                                            "Name" = "8:ProxyStubClsid32"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                }
+                                                "Values"
+                                                {
+                                                    "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_B407003AC2204B23A4DCA15EC1DF7CFF"
+                                                    {
+                                                    "Name" = "8:"
+                                                    "Condition" = "8:"
+                                                    "Transitive" = "11:FALSE"
+                                                    "ValueTypes" = "3:1"
+                                                    "Value" = "8:{2F5ECF23-E98B-4399-AB4F-3083264C481B}"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_3A393836ACFF4975A41CBE1680D76CDF"
+                                            {
+                                            "Name" = "8:"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:IProfilerFrontend"
+                                            }
+                                        }
+                                    }
+                                }
+                                "Values"
+                                {
                                 }
                             }
                         }
@@ -1715,35 +2144,7 @@
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_5FF3CA52EF7242AE8B85D98247A1AE95"
-            {
-            "SourcePath" = "8:..\\_bin\\Release_x64\\micro-profiler.stub.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:Built"
-            "OutputProjectGuid" = "8:{3B1F8640-9F9A-4989-A074-73590A82A26C}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_9B0A80981BB5462F913FBD89E898B6F3"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_894D5B6CDE6F41469DA7A34C4540A2FF"
             {
             "SourcePath" = "8:..\\_bin\\Release_x64\\micro-profiler.dll"
             "TargetName" = "8:"
@@ -1763,9 +2164,93 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
+            "OutputConfiguration" = "8:Release|x64"
             "OutputGroupCanonicalName" = "8:Built"
             "OutputProjectGuid" = "8:{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_A81EF2AEFCCC4183AA8E9D1B6E627182"
+            {
+            "SourcePath" = "8:..\\_bin\\Release_x64\\micro-profiler.stub.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:Release|x64"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{3B1F8640-9F9A-4989-A074-73590A82A26C}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B5F8EA61B1434A56B0518314B522C72A"
+            {
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_16B41F043A6341CFBA71C9E280EF9B87"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:Release|Win32"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_BD281005E32147F1BE0799E3148E1A36"
+            {
+            "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.stub.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_16B41F043A6341CFBA71C9E280EF9B87"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:Release|Win32"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{3B1F8640-9F9A-4989-A074-73590A82A26C}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {

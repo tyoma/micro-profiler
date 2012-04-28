@@ -52,7 +52,7 @@ del "$(IntDir)_versioned-rename.cmd"
 </Command>
     </PostBuildEvent>
     <BuildLog>
-      <Path>$(OutDir)\$(ProjectName).htm</Path>
+      <Path>$(OutDir)\$(ProjectName).log</Path>
     </BuildLog>
     <CustomBuild>
       <Command>copy "%(FullPath)" "$(IntDir)%(Filename)%(Extension)"</Command>
@@ -72,7 +72,7 @@ del "$(IntDir)_versioned-rename.cmd"
 </Command>
     </PostBuildEvent>
     <BuildLog>
-      <Path>$(OutDir)\$(ProjectName).htm</Path>
+      <Path>$(OutDir)\$(ProjectName).log</Path>
     </BuildLog>
     <CustomBuild>
       <Command>copy "%(FullPath)" "$(IntDir)%(Filename)%(Extension)"</Command>

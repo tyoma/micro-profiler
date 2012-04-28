@@ -24,4 +24,4 @@
 #define ENTRY_PREFIX	Prx
 
 #include "./../_generated/dlldata.c"
-#include "./../_generated/microprofilerfrontend_p.c"
+#include "./../_generated/frontend_p.c"

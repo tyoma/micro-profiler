@@ -1,7 +1,7 @@
 #include "Helpers.h"
 
 #include <common/primitives.h>
-#include <_generated/microprofilerfrontend_i.h>
+#include <_generated/frontend.h>
 
 #include <windows.h>
 #include <process.h>

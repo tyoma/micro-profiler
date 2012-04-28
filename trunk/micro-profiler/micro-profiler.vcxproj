@@ -311,28 +311,6 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\version-info.txt">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/make-header.js" INFO &gt; _%(Filename).h
-svn info "$(SolutionDir)." | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; _%(Filename).h
-</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/make-header.js" INFO &gt; _%(Filename).h
-svn info "$(SolutionDir)." | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; _%(Filename).h
-</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/make-header.js" INFO &gt; _%(Filename).h
-svn info "$(SolutionDir)." | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; _%(Filename).h
-</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/make-header.js" INFO &gt; _%(Filename).h
-svn info "$(SolutionDir)." | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; _%(Filename).h
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_%(Filename).h</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_%(Filename).h</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_%(Filename).h</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_%(Filename).h</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Preparing version-info header...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Preparing version-info header...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preparing version-info header...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Preparing version-info header...</Message>
-    </CustomBuild>
     <None Include="addin\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />
     <None Include="module\micro-profiler.x64.def" />

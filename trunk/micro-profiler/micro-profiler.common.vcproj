@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="micro-profiler.common"
+	ProjectGUID="{1EF72156-88C9-4ad7-BD68-0569B17EBC2B}"
+	RootNamespace="micro-profiler.common"
+	TargetFrameworkVersion="196613"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Common|Win32"
+			OutputDirectory="$(ProjectDir)_generated\"
+			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			ConfigurationType="10"
+			CharacterSet="2"
+			DeleteExtensionsOnClean="*.txt;*.cmd;*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;$(TargetPath)"
+			WholeProgramOptimization="1"
+			BuildLogFile="$(IntDir)\$(ProjectName).htm"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath=".\frontend.idl"
+			>
+			<FileConfiguration
+				Name="Common|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="midl /env win32 /out &quot;$(OutDir).&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;midl /env x64 /out &quot;$(IntDir).&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;type &quot;$(IntDir)\$(InputName)_p.c&quot; &gt;&gt; &quot;$(OutDir)\$(InputName)_p.c&quot;&#x0D;&#x0A;"
+					Outputs="$(OutDir)$(InputName).h;$(OutDir)$(InputName)_i.c;$(OutDir)$(InputName)_p.c;$(OutDir)dlldata.c"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\version-info.txt"
+			>
+			<FileConfiguration
+				Name="Common|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Preparing version-info header..."
+					CommandLine="type &quot;$(InputPath)&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; INFO &gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;svn info &quot;$(SolutionDir).&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; REPO &gt;&gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;"
+					Outputs="$(OutDir)$(InputName).h"
+				/>
+			</FileConfiguration>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

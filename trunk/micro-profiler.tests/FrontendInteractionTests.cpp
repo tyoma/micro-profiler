@@ -3,7 +3,7 @@
 #include <collector/entry.h>
 #include <collector/system.h>
 
-#include <_generated/microprofilerfrontend_i.h>
+#include <_generated/frontend.h>
 
 #include <wpl/mt/thread.h>
 #include <wpl/mt/synchronization.h>

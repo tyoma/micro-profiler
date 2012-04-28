@@ -21,7 +21,7 @@
 #include "entry.h"
 
 #include "statistics_bridge.h"
-#include "../_generated/microprofilerfrontend_i.h"
+#include "../_generated/frontend.h"
 
 #include <wpl/mt/thread.h>
 #include <vector>

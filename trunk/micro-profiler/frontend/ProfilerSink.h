@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "./../_generated/microprofilerfrontend_i.h"
+#include "./../_generated/frontend.h"
 #include "../resources/resource.h"
 
 #include <atlbase.h>

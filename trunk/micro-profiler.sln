@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-profiler\micro-profiler.vcproj", "{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcproj", "{0266546B-335D-4BDD-9BF0-15FCC31056BE}"
 EndProject
@@ -32,6 +35,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.stub", "micro-profiler\micro-profiler.stub.vcproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro-profiler\micro-profiler.lib.vcproj", "{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "easy-addin.tests", "libraries\easy-addin\tests\easy-addin.tests.vcproj", "{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}"
 EndProject
@@ -69,6 +75,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		version-info.txt = version-info.txt
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.common", "micro-profiler\micro-profiler.common.vcproj", "{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -201,6 +209,14 @@ Global
 		{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}.Release|Win32.ActiveCfg = Release
 		{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}.Release|Win32.Build.0 = Release
 		{798A3EEE-6ADC-495D-B3D5-C54F9CC724B1}.Release|x64.ActiveCfg = Release
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|Win32.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|Win32.Build.0 = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|x64.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|x64.Build.0 = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|Win32.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|Win32.Build.0 = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|x64.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|x64.Build.0 = Common|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

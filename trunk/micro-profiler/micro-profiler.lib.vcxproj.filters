@@ -1,15 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="_generated\microprofilerfrontend_i.c">
-      <Filter>_generated</Filter>
-    </ClCompile>
-    <ClCompile Include="_generated\microprofilerfrontend_p.c">
-      <Filter>_generated</Filter>
-    </ClCompile>
-    <ClCompile Include="_generated\dlldata.c">
-      <Filter>_generated</Filter>
-    </ClCompile>
     <ClCompile Include="frontend\symbol_resolver.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
@@ -37,11 +28,11 @@
     <ClCompile Include="frontend\object_lock.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="_generated\frontend_i.c">
+      <Filter>_generated</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="_generated\microprofilerfrontend_i.h">
-      <Filter>_generated</Filter>
-    </ClInclude>
     <ClInclude Include="frontend\symbol_resolver.h">
       <Filter>frontend</Filter>
     </ClInclude>
@@ -81,6 +72,9 @@
     <ClInclude Include="frontend\object_lock.h">
       <Filter>frontend</Filter>
     </ClInclude>
+    <ClInclude Include="_generated\frontend.h">
+      <Filter>_generated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">
@@ -95,11 +89,6 @@
     <Filter Include="common">
       <UniqueIdentifier>{6be9edac-94ee-4755-82d2-c219e37ae903}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="collector\microprofilerfrontend.idl">
-      <Filter>collector</Filter>
-    </Midl>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="collector\hooks.x86.asm">

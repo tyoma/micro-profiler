@@ -35,7 +35,11 @@ namespace
 {
 	const LPCTSTR c_environment = _T("Environment");
 	const LPCTSTR c_path_var = _T("PATH");
+#ifdef _M_IX86
 	const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIR");
+#elif _M_X64
+	const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIRX64");
+#endif
 	const CString c_profilerdir_var_decorated = CString(_T("%")) + c_profilerdir_var + _T("%");
 	const LPCTSTR c_path_separator = _T(";");
 

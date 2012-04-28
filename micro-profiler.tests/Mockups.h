@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/primitives.h>
-#include <_generated/microprofilerfrontend_i.h>
+#include <_generated/frontend.h>
 #include <string>
 #include <vector>
 

@@ -69,7 +69,4 @@
       <Filter>resources</Filter>
     </ResourceCompile>
   </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="..\version-info.txt" />
-  </ItemGroup>
 </Project>

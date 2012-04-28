@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-profiler\micro-profiler.vcxproj", "{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
 EndProject
@@ -30,8 +33,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base.tests", "libraries\wpl\base\tests\base.tests.vcxproj", "{D5D8229B-9269-4165-BD5E-0DC5504E120B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro-profiler\micro-profiler.lib.vcxproj", "{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.stub", "micro-profiler\micro-profiler.stub.vcxproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "easy-addin.tests", "libraries\easy-addin\tests\easy-addin.tests.vcxproj", "{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}"
 EndProject
@@ -66,6 +75,8 @@ EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "installer-x64", "deployment\installer-x64.vs10.vdproj", "{E8F34EE4-2A11-43B0-9348-9C842DEBE90A}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "installer", "deployment\installer-x86.vs10.vdproj", "{2A5FB570-40FC-4841-90D5-658EB8B89978}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.common", "micro-profiler\micro-profiler.common.vcxproj", "{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -203,6 +214,14 @@ Global
 		{2A5FB570-40FC-4841-90D5-658EB8B89978}.Release|Win32.ActiveCfg = Release
 		{2A5FB570-40FC-4841-90D5-658EB8B89978}.Release|Win32.Build.0 = Release
 		{2A5FB570-40FC-4841-90D5-658EB8B89978}.Release|x64.ActiveCfg = Release
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|Win32.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|Win32.Build.0 = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|x64.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|x64.Build.0 = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|Win32.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|Win32.Build.0 = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|x64.ActiveCfg = Common|Win32
+		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|x64.Build.0 = Common|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

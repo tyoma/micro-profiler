@@ -360,43 +360,11 @@
 			Name="_generated"
 			>
 			<File
-				RelativePath=".\_generated\dlldata.c"
+				RelativePath=".\_generated\frontend.h"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\_generated\microprofilerfrontend_i.c"
+				RelativePath=".\_generated\frontend_i.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -428,46 +396,6 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_i.h"
-				>
-			</File>
-			<File
-				RelativePath=".\_generated\microprofilerfrontend_p.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
 			</File>
@@ -707,13 +635,6 @@
 						Name="MASM_x64"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="MASM_x64"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\collector\hooks.x86.asm"
@@ -734,10 +655,6 @@
 						Name="MASM"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\collector\microprofilerfrontend.idl"
-				>
 			</File>
 			<File
 				RelativePath=".\collector\statistics_bridge.cpp"

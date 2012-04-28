@@ -21,7 +21,7 @@
 #pragma once
 
 #include "primitives.h"
-#include "../_generated/microprofilerfrontend_i.h"
+#include "../_generated/frontend.h"
 
 #include <numeric>
 

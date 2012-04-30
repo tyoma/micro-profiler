@@ -1,4 +1,8 @@
 #sidebar TableOfContents
+ * v1.0.500
+  * Crash at profiling application exiting fixed;
+  * x64 installer now installs VS-integration addin;
+
  * v1.0.493
   * Profiler's window is now not closed at the profiling application's finish and is held until explicitly closed by user;
 

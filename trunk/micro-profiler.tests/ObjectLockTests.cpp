@@ -10,12 +10,20 @@ using namespace std;
 
 namespace micro_profiler
 {
+	bool g_locked = false;
+
+	void LockModule()
+	{
+		g_locked = true;
+	}
+
+	void UnlockModule()
+	{
+		g_locked = false;
+	}
+
 	namespace tests
 	{
-		namespace
-		{
-		}
-
 		[TestClass]
 		public ref class ObjectLockTests
 		{
@@ -82,6 +90,30 @@ namespace micro_profiler
 				// ASSERT
 				Assert::IsTrue(su1_weak.expired());
 				Assert::IsTrue(su2_weak.expired());
+			}
+
+
+			[TestMethod]
+			void LockedUnlockedSetModuleLock()
+			{
+				// INIT / ACT
+				shared_ptr<self_unlockable> su(new self_unlockable);
+
+				// INIT / ASSERT
+				Assert::IsFalse(g_locked);
+				
+				// ACT 
+				lock(su);
+
+				// ASSERT
+				Assert::IsTrue(g_locked);
+
+				// ACT
+				su->unlock();
+
+
+				// ASSERT
+				Assert::IsFalse(g_locked);
 			}
 		};
 	}

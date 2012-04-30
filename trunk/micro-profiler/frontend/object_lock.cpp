@@ -32,6 +32,9 @@ using namespace wpl;
 
 namespace micro_profiler
 {
+	void LockModule();
+	void UnlockModule();
+
 	namespace
 	{
 		class ROTObjectLock : public IUnknown
@@ -45,6 +48,7 @@ namespace micro_profiler
 
 		public:
 			ROTObjectLock(const shared_ptr<self_unlockable> &object);
+			~ROTObjectLock();
 
 			void Register();
 
@@ -57,7 +61,15 @@ namespace micro_profiler
 
 		ROTObjectLock::ROTObjectLock(const shared_ptr<self_unlockable> &object)
 			: _references(0), _rotid(0), _object(object)
-		{	_slot = object->unlock += bind(&ROTObjectLock::Revoke, this);	}
+		{
+			_slot = object->unlock += bind(&ROTObjectLock::Revoke, this);
+			LockModule();
+		}
+
+		ROTObjectLock::~ROTObjectLock()
+		{
+			UnlockModule();
+		}
 
 		void ROTObjectLock::Register()
 		{

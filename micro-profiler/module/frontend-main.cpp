@@ -134,3 +134,12 @@ STDAPI DllUnregisterServer()
 	::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
 	return _AtlModule.DllUnregisterServer(FALSE);
 }
+
+namespace micro_profiler
+{
+	void LockModule()
+	{	_AtlModule.Lock();	}
+
+	void UnlockModule()
+	{	_AtlModule.Unlock();	}
+}

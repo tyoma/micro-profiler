@@ -246,7 +246,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
-    <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMHelpersTests.cpp" />
     <ClCompile Include="FrontendInteractionTests.cpp" />
@@ -255,6 +254,7 @@
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="Mockups.cpp" />
+    <ClCompile Include="ModulesListTests.cpp" />
     <ClCompile Include="ObjectLockTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="samples.cpp">

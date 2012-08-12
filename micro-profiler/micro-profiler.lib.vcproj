@@ -657,6 +657,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\collector\modules_list.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\collector\modules_list.h"
+				>
+			</File>
+			<File
 				RelativePath=".\collector\statistics_bridge.cpp"
 				>
 				<FileConfiguration

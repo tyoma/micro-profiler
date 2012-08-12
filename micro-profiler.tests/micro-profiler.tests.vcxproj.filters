@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
-    <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMHelpersTests.cpp" />
     <ClCompile Include="FrontendInteractionTests.cpp" />
@@ -22,6 +21,7 @@
     <ClCompile Include="Mockups.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
     <ClCompile Include="ObjectLockTests.cpp" />
+    <ClCompile Include="ModulesListTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

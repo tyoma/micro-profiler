@@ -285,6 +285,7 @@
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AssemblyCode</AssemblerOutput>
     </ClCompile>
+    <ClCompile Include="collector\modules_list.cpp" />
     <ClCompile Include="collector\statistics_bridge.cpp">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
@@ -327,6 +328,7 @@
     <ClInclude Include="collector\analyzer.h" />
     <ClInclude Include="collector\calls_collector.h" />
     <ClInclude Include="collector\entry.h" />
+    <ClInclude Include="collector\modules_list.h" />
     <ClInclude Include="collector\statistics_bridge.h" />
     <ClInclude Include="collector\system.h" />
     <ClInclude Include="common\com_helpers.h" />

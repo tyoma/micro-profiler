@@ -131,6 +131,10 @@ namespace micro_profiler
 				{
 					return _names[address] = to_string(address);
 				}
+
+				virtual void add_image(const wstring &/*image*/, const void * /*address*/)
+				{
+				}
 			};
 
 			// convert decimal point to current(default) locale

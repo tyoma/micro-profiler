@@ -46,9 +46,9 @@ namespace micro_profiler
 		};
 
 		[TestClass]
-      [DeploymentItem("symbol_container_1.dll"), DeploymentItem("symbol_container_1.pdb")]
-      [DeploymentItem("symbol_container_2.dll"), DeploymentItem("symbol_container_2.pdb")]
-      [DeploymentItem("symbol_container_3_nosymbols.dll")]
+		[DeploymentItem("symbol_container_1.dll"), DeploymentItem("symbol_container_1.pdb")]
+		[DeploymentItem("symbol_container_2.dll"), DeploymentItem("symbol_container_2.pdb")]
+		[DeploymentItem("symbol_container_3_nosymbols.dll")]
 		public ref class SymbolResolverTests
 		{
 		public: 
@@ -201,6 +201,35 @@ namespace micro_profiler
 				Assert::IsTrue(name1_1 == name1_2);
 				Assert::IsTrue(name2_1 == name2_2);
 				Assert::IsTrue(name3_1 == name3_2);
+			}
+
+
+			[TestMethod]
+			void LoadSymbolsForSecondModule()
+			{
+				// INIT
+				image img1(_T("symbol_container_1.dll")), img2(_T("symbol_container_2.dll"));
+				shared_ptr<symbol_resolver> r1(symbol_resolver::create(img1.absolute_path(), img1.load_address()));
+				shared_ptr<symbol_resolver> r2(symbol_resolver::create(img2.absolute_path(), img2.load_address()));
+				get_function_addresses_1_t getter_1 =
+					reinterpret_cast<get_function_addresses_1_t>(img1.get_address("get_function_addresses_1"));
+				get_function_addresses_2_t getter_2 =
+					reinterpret_cast<get_function_addresses_2_t>(img2.get_address("get_function_addresses_2"));
+				const void  *f1_1 = 0, *f2_1 = 0, *f1_2 = 0, *f2_2 = 0, *f3_2 = 0;
+
+				getter_1(f1_1, f2_1);
+				getter_2(f1_2, f2_2, f3_2);
+
+				// ACT
+				r1->add_image(img2.absolute_path(), reinterpret_cast<const void *>(img2.load_address()));
+				r2->add_image(img1.absolute_path(), reinterpret_cast<const void *>(img1.load_address()));
+
+				// ACT / ASSERT
+				Assert::IsTrue(r1->symbol_name_by_va(f1_2) == L"vale_of_mean_creatures::this_one_for_the_birds");
+				Assert::IsTrue(r1->symbol_name_by_va(f2_2) == L"vale_of_mean_creatures::this_one_for_the_whales");
+				Assert::IsTrue(r1->symbol_name_by_va(f3_2) == L"vale_of_mean_creatures::the_abyss::bubble_sort");
+				Assert::IsTrue(r2->symbol_name_by_va(f1_1) == L"very_simple_global_function");
+				Assert::IsTrue(r2->symbol_name_by_va(f2_1) == L"a_tiny_namespace::function_that_hides_under_a_namespace");
 			}
 		};
 	}

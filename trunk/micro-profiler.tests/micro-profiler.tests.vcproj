@@ -359,10 +359,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\AssemblyInfo.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\CallCollectorTests.cpp"
 			>
 		</File>
@@ -392,6 +388,10 @@
 		</File>
 		<File
 			RelativePath=".\Mockups.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ModulesListTests.cpp"
 			>
 		</File>
 		<File

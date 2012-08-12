@@ -18,24 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include "modules_list.h"
 
-#include <string>
-#include <memory>
-
-namespace std
-{
-	using std::tr1::shared_ptr;
-}
+using namespace std;
 
 namespace micro_profiler
 {
-	struct symbol_resolver
+	void enumerate_modules(void *process, vector<loaded_module> &modules)
 	{
-		virtual ~symbol_resolver()	{	}
-		virtual const std::wstring &symbol_name_by_va(const void *address) const = 0;
-		virtual void add_image(const std::wstring &image_path, const void *load_address) = 0;
-
-		static std::shared_ptr<symbol_resolver> create(const std::wstring &image_path, unsigned __int64 load_address);
-	};
+		modules.push_back(loaded_module());
+	}
 }

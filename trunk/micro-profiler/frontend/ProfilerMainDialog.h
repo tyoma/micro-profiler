@@ -54,9 +54,8 @@ namespace micro_profiler
 
 		void RelocateControls(const CSize &size);
 
-		void OnDrillup(wpl::ui::listview::index_type index);
 		void OnFocusChange(wpl::ui::listview::index_type index, bool selected);
-		void OnDrilldown(wpl::ui::listview::index_type index);
+		void OnDrilldown(std::shared_ptr<linked_statistics> view, wpl::ui::listview::index_type index);
 
 		virtual void OnFinalMessage(HWND hwnd);
 

@@ -61,7 +61,7 @@ namespace micro_profiler
 	{
 		copy(_analyzer.begin(), _analyzer.end(), _buffer, _children_buffer);
 		if (_frontend && !_buffer.empty())
-			_frontend->UpdateStatistics(_buffer.size(), &_buffer[0]);
+			_frontend->UpdateStatistics(static_cast<long>(_buffer.size()), &_buffer[0]);
 		_analyzer.clear();
 	}
 }

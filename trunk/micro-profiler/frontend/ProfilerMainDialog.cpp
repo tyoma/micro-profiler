@@ -72,9 +72,9 @@ namespace micro_profiler
 
 		_statistics_lv->set_model(_statistics);
 
-		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrillup, this, _1));
 		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
-		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _1));
+		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _parents_statistics, _1));
+		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _children_statistics, _1));
 
 		_statistics_lv->adjust_column_widths();
 		_parents_statistics_lv->adjust_column_widths();
@@ -193,14 +193,6 @@ namespace micro_profiler
 		_statistics_view.MoveWindow(rc);
 	}
 
-	void ProfilerMainDialog::OnDrillup(listview::index_type index)
-	{
-		const void *address = _parents_statistics->get_address(index);
-		
-		index = _statistics->get_index(address);
-		_statistics_lv->select(index, true);
-	}
-
 	void ProfilerMainDialog::OnFocusChange(listview::index_type index, bool selected)
 	{
 		if (selected)
@@ -211,9 +203,9 @@ namespace micro_profiler
 		}
 	}
 
-	void ProfilerMainDialog::OnDrilldown(listview::index_type index)
+	void ProfilerMainDialog::OnDrilldown(shared_ptr<linked_statistics> view, listview::index_type index)
 	{
-		const void *address = _children_statistics->get_address(index);
+		const void *address = view->get_address(index);
 		
 		index = _statistics->get_index(address);
 		_statistics_lv->select(index, true);

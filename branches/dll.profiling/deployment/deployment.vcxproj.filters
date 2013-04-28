@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="..\_bin\Release_Win32\entry.h">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.stub.dll">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.dll">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.initializer.cpp">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.initializer.mfc-static.cpp">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.lib">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\playground.exe">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\playground.pdb">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\playground.exe">
+      <Filter>x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\micro-profiler.stub.dll">
+      <Filter>x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\micro-profiler.lib">
+      <Filter>x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\micro-profiler.initializer.mfc-static.cpp">
+      <Filter>x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\micro-profiler.initializer.cpp">
+      <Filter>x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\micro-profiler.dll">
+      <Filter>x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\playground.pdb">
+      <Filter>x64</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\entry.h">
+      <Filter>x64</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mkzip.cmd" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="x86">
+      <UniqueIdentifier>{9aefb762-377c-40b2-862b-dcd2f84c8b21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64">
+      <UniqueIdentifier>{479a2acc-7b10-4269-8fd8-8d0d2ac32efd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

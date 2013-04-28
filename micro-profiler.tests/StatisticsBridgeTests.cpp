@@ -102,9 +102,9 @@ namespace micro_profiler
 				statistics_bridge b(cc, bind(&factory2, ref(state), _1));
 
 				// ASSERT
-				TCHAR path[MAX_PATH + 1] = { 0 };
+				wchar_t path[MAX_PATH + 1] = { 0 };
 
-				::GetModuleFileName(NULL, path, MAX_PATH + 1);
+				::GetModuleFileNameW(NULL, path, MAX_PATH + 1);
 				void *exe_module = ::GetModuleHandle(NULL);
 				hyper real_resolution = timestamp_precision();
 

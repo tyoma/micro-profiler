@@ -31,9 +31,6 @@
     <ClCompile Include="_generated\frontend_i.c">
       <Filter>_generated</Filter>
     </ClCompile>
-    <ClCompile Include="collector\modules_list.cpp">
-      <Filter>collector</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="frontend\symbol_resolver.h">
@@ -77,9 +74,6 @@
     </ClInclude>
     <ClInclude Include="_generated\frontend.h">
       <Filter>_generated</Filter>
-    </ClInclude>
-    <ClInclude Include="collector\modules_list.h">
-      <Filter>collector</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

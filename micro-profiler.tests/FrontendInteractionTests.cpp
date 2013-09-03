@@ -5,6 +5,8 @@
 
 #include <_generated/frontend.h>
 
+#include "TracedFunctions.h"
+
 #include <wpl/mt/thread.h>
 #include <wpl/mt/synchronization.h>
 #include <atlbase.h>
@@ -22,16 +24,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		void sleep_20();
-		void empty_call();
-		void sleep_n(int n);
-		void controlled_recursion(unsigned int level);
-		void call_aa();
-		void call_ab();
-		void call_a();
-		void call_ba();
-		void call_b();
-
 		void clear_collection_traces();
 
 		namespace
@@ -171,7 +163,7 @@ namespace micro_profiler
 				unsigned int test_threadid = ::GetCurrentThreadId();
 
 				// ACT
-				{	profiler_frontend fe(&factory1);	}
+				{	profiler_frontend fe(get_global_collector_instance(), &factory1);	}
 
 				// ASSERT
 				Assert::IsTrue(0 != threadid);
@@ -185,7 +177,7 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				DWORD status1 = 0, status2 = 0;
-				auto_ptr<profiler_frontend> init(new profiler_frontend(&factory3));
+				auto_ptr<profiler_frontend> init(new profiler_frontend(get_global_collector_instance(), &factory3));
 
 				::Sleep(100);
 
@@ -213,7 +205,7 @@ namespace micro_profiler
 				com_initialized = false;
 
 				// INIT / ACT
-				{	profiler_frontend fe(&factory2);	}
+				{	profiler_frontend fe(get_global_collector_instance(), &factory2);	}
 
 				// ASSERT
 				Assert::IsTrue(com_initialized);
@@ -224,7 +216,7 @@ namespace micro_profiler
 			void FrontendInterfaceReleasedAtPFDestroyed()
 			{
 				// INIT
-				auto_ptr<profiler_frontend> fe(new profiler_frontend(&factory3));
+				auto_ptr<profiler_frontend> fe(new profiler_frontend(get_global_collector_instance(), &factory3));
 				fe_released = false;
 
 				// ACT
@@ -244,7 +236,7 @@ namespace micro_profiler
 				TCHAR path[MAX_PATH + 1] = { 0 };
 
 				// ACT
-				auto_ptr<profiler_frontend> fe(new profiler_frontend(&factory3));
+				auto_ptr<profiler_frontend> fe(new profiler_frontend(get_global_collector_instance(), &factory3));
 				fe_initialized.wait();
 
 				// ASERT
@@ -263,7 +255,7 @@ namespace micro_profiler
 			{
 				// INIT
 				fe_update_call_times = 0;
-				profiler_frontend fe(&factory3);
+				profiler_frontend fe(get_global_collector_instance(), &factory3);
 
 				// ACT / ASSERT
 				Assert::IsTrue(waitable::timeout == fe_stat_updated.wait(500));
@@ -277,7 +269,7 @@ namespace micro_profiler
 			void MakeACallAndWaitForDataPost()
 			{
 				// INIT
-				profiler_frontend fe(&factory3);
+				profiler_frontend fe(get_global_collector_instance(), &factory3);
 				FunctionStatistics sleep_20_call, sleep_n_call;
 
 				fe_raise_updated_limit = 1;	// the 20ms call will fit into one frontend update cycle
@@ -285,7 +277,7 @@ namespace micro_profiler
 				fe_initialized.wait();
 
 				// ACT
-				sleep_20();
+				traced::sleep_20();
 				fe_stat_updated.wait();
 
 				// ASERT
@@ -293,7 +285,7 @@ namespace micro_profiler
 
 				sleep_20_call = fe_update_statistics[0].Statistics;
 
-				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_20));
+				Assert::IsTrue(sleep_20_call.FunctionAddress == reinterpret_cast<hyper>(&traced::sleep_20));
 				Assert::IsTrue(sleep_20_call.TimesCalled == 1);
 				Assert::IsTrue(sleep_20_call.MaxReentrance == 0);
 				Assert::IsTrue(sleep_20_call.InclusiveTime > 0);
@@ -305,7 +297,7 @@ namespace micro_profiler
 				fe_raise_updated_limit = 2;	// the 200ms call will fit into two frontend update cycles
 
 				// ACT
-				sleep_n(200);
+				traced::sleep_n(200);
 				fe_stat_updated.wait(110);
 
 				// ASERT
@@ -313,7 +305,7 @@ namespace micro_profiler
 
 				sleep_n_call = fe_update_statistics[1].Statistics;
 
-				Assert::IsTrue(sleep_n_call.FunctionAddress == reinterpret_cast<hyper>(&sleep_n));
+				Assert::IsTrue(sleep_n_call.FunctionAddress == reinterpret_cast<hyper>(&traced::sleep_n));
 				Assert::IsTrue(sleep_n_call.TimesCalled == 1);
 				Assert::IsTrue(sleep_n_call.MaxReentrance == 0);
 				Assert::IsTrue(sleep_n_call.InclusiveTime > sleep_20_call.InclusiveTime);
@@ -329,9 +321,9 @@ namespace micro_profiler
 				fe_raise_updated_limit = 1;
 
 				// ACT
-				controlled_recursion(5);
-				controlled_recursion(7);
-				profiler_frontend fe(&factory3);
+				traced::controlled_recursion(5);
+				traced::controlled_recursion(7);
+				profiler_frontend fe(get_global_collector_instance(), &factory3);
 				fe_stat_updated.wait(110);	// such a timeout MUST be sufficient enough
 
 				// ASERT
@@ -339,7 +331,7 @@ namespace micro_profiler
 
 				FunctionStatistics recursive_call = fe_update_statistics[0].Statistics;
 
-				Assert::IsTrue(recursive_call.FunctionAddress == reinterpret_cast<hyper>(&controlled_recursion));
+				Assert::IsTrue(recursive_call.FunctionAddress == reinterpret_cast<hyper>(&traced::controlled_recursion));
 				Assert::IsTrue(recursive_call.TimesCalled == 12);
 				Assert::IsTrue(recursive_call.MaxReentrance == 6);
 			}
@@ -351,21 +343,21 @@ namespace micro_profiler
 				// INIT
 				int check_amount = 90000;
 
-				fe_stop_call = reinterpret_cast<hyper>(&sleep_20);
+				fe_stop_call = reinterpret_cast<hyper>(&traced::sleep_20);
 
 				// ACT
 				for (int i = 0; i < check_amount; ++i)
-					empty_call();
-				sleep_20();
-				profiler_frontend fe(&factory3);
+					traced::empty_call();
+				traced::sleep_20();
+				profiler_frontend fe(get_global_collector_instance(), &factory3);
 				fe_stat_updated.wait();
 
 				// ASERT
 				Assert::IsTrue(2 == fe_update_statistics.size());
 
-				FunctionStatistics stat = fe_update_statistics[0].Statistics.FunctionAddress == reinterpret_cast<hyper>(&empty_call) ? fe_update_statistics[0].Statistics : fe_update_statistics[1].Statistics;
+				FunctionStatistics stat = fe_update_statistics[0].Statistics.FunctionAddress == reinterpret_cast<hyper>(&traced::empty_call) ? fe_update_statistics[0].Statistics : fe_update_statistics[1].Statistics;
 
-				Assert::IsTrue(stat.FunctionAddress == reinterpret_cast<hyper>(&empty_call));
+				Assert::IsTrue(stat.FunctionAddress == reinterpret_cast<hyper>(&traced::empty_call));
 				Assert::IsTrue(stat.TimesCalled == check_amount);
 				Assert::IsTrue(stat.InclusiveTime > 0);
 				Assert::IsTrue(stat.InclusiveTime / stat.TimesCalled < 150);
@@ -379,23 +371,23 @@ namespace micro_profiler
 			void ChildrenStatisticsIsPassedAlongWithTopLevels()
 			{
 				// INIT
-				fe_stop_call = reinterpret_cast<hyper>(&sleep_20);
+				fe_stop_call = reinterpret_cast<hyper>(&traced::sleep_20);
 
 				// ACT
-				call_a();
-				call_b();
-				sleep_20();
+				traced::call_a();
+				traced::call_b();
+				traced::sleep_20();
 
-				profiler_frontend fe(&factory3);
+				profiler_frontend fe(get_global_collector_instance(), &factory3);
 				fe_stat_updated.wait();
 
 				// ASSERT
 				typedef vector<FunctionStatisticsDetailed>::const_iterator iterator_detailed;
 				typedef const FunctionStatistics *iterator;
 				
-				iterator_detailed i1 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&call_a));
-				iterator_detailed i2 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&call_b));
-				iterator_detailed i3 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&sleep_20));
+				iterator_detailed i1 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&traced::call_a));
+				iterator_detailed i2 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&traced::call_b));
+				iterator_detailed i3 = find_if(fe_update_statistics.begin(), fe_update_statistics.end(), find_by_address(&traced::sleep_20));
 
 				Assert::IsTrue(i1 != fe_update_statistics.end());
 				Assert::IsTrue(i2 != fe_update_statistics.end());
@@ -405,9 +397,9 @@ namespace micro_profiler
 				Assert::IsTrue(1 == i2->ChildrenCount);
 				Assert::IsTrue(0 == i3->ChildrenCount);
 
-				iterator i11 = find_if(i1->ChildrenStatistics, i1->ChildrenStatistics + i1->ChildrenCount, find_by_address(&call_aa));
-				iterator i12 = find_if(i1->ChildrenStatistics, i1->ChildrenStatistics + i1->ChildrenCount, find_by_address(&call_ab));
-				iterator i21 = find_if(i2->ChildrenStatistics, i2->ChildrenStatistics + i2->ChildrenCount, find_by_address(&call_ba));
+				iterator i11 = find_if(i1->ChildrenStatistics, i1->ChildrenStatistics + i1->ChildrenCount, find_by_address(&traced::call_aa));
+				iterator i12 = find_if(i1->ChildrenStatistics, i1->ChildrenStatistics + i1->ChildrenCount, find_by_address(&traced::call_ab));
+				iterator i21 = find_if(i2->ChildrenStatistics, i2->ChildrenStatistics + i2->ChildrenCount, find_by_address(&traced::call_ba));
 
 				Assert::IsTrue(i11 != i1->ChildrenStatistics + i1->ChildrenCount);
 				Assert::IsTrue(i12 != i1->ChildrenStatistics + i1->ChildrenCount);

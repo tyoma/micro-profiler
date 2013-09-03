@@ -8,7 +8,6 @@
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
-    <ClCompile Include="samples.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="frontend\OrderedViewTests.cpp">
       <Filter>frontend</Filter>
@@ -21,10 +20,12 @@
     <ClCompile Include="Mockups.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
     <ClCompile Include="ObjectLockTests.cpp" />
+    <ClCompile Include="TracedFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Mockups.h" />
+    <ClInclude Include="TracedFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="run-tests.vs10.cmd" />

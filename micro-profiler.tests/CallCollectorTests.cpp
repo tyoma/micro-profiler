@@ -3,6 +3,8 @@
 #include <collector/calls_collector.h>
 #include <common/primitives.h>
 
+#include "TracedFunctions.h"
+
 #include <vector>
 #include <utility>
 #include <algorithm>
@@ -14,12 +16,9 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		void sleep_20();
-		void nesting1();
-
 		namespace
 		{
-			struct collection_acceptor : calls_collector::acceptor
+			struct collection_acceptor : calls_collector_i::acceptor
 			{
 				collection_acceptor()
 					: total_entries(0)
@@ -115,7 +114,7 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				sleep_20();
+				traced::sleep_20();
 				calls_collector::instance()->read_collected(a);
 
 				// ASSERT
@@ -123,7 +122,7 @@ namespace micro_profiler
 				Assert::IsTrue(thread::current_thread_id() == a.collected[0].first);
 				Assert::IsTrue(2 == a.collected[0].second.size());
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				Assert::IsTrue(&sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
 			}
 
 
@@ -133,7 +132,7 @@ namespace micro_profiler
 				// INIT
 				collection_acceptor a;
 
-				sleep_20();
+				traced::sleep_20();
 				calls_collector::instance()->read_collected(a);
 
 				a.collected.clear();
@@ -158,7 +157,7 @@ namespace micro_profiler
 
 				// ACT
 				{
-					executor e(sleep_20);
+					executor e(traced::sleep_20);
 					thread t1(e, true), t2(e, true);
 
 					threadid1 = t1.id();
@@ -179,12 +178,12 @@ namespace micro_profiler
 				Assert::IsTrue(threadid1 == a.collected[0].first);
 				Assert::IsTrue(2 == a.collected[0].second.size());
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				Assert::IsTrue(&sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
 
 				Assert::IsTrue(threadid2 == a.collected[1].first);
 				Assert::IsTrue(2 == a.collected[1].second.size());
 				Assert::IsTrue(a.collected[1].second[0].timestamp < a.collected[1].second[1].timestamp);
-				Assert::IsTrue(&sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[1].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[1].second[0].callee) - 5));
 			}
 
 
@@ -195,7 +194,7 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				nesting1();
+				traced::nesting1();
 				calls_collector::instance()->read_collected(a);
 
 				// ASSERT
@@ -205,8 +204,8 @@ namespace micro_profiler
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
 				Assert::IsTrue(a.collected[0].second[1].timestamp < a.collected[0].second[2].timestamp);
 				Assert::IsTrue(a.collected[0].second[2].timestamp < a.collected[0].second[3].timestamp);
-				Assert::IsTrue(&nesting1 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
-				Assert::IsTrue(&sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[1].callee) - 5));
+				Assert::IsTrue(&traced::nesting1 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[1].callee) - 5));
 				Assert::IsTrue(0 == a.collected[0].second[2].callee);
 				Assert::IsTrue(0 == a.collected[0].second[3].callee);
 			}

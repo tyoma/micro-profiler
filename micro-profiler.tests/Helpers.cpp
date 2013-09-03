@@ -16,7 +16,7 @@ namespace micro_profiler
 		{
 			unsigned int __stdcall thread_proxy(void *target)
 			{
-				(*reinterpret_cast<thread_function *>(target))();
+				(*static_cast<thread_function *>(target))();
 				return 0;
 			}
 		}
@@ -27,15 +27,15 @@ namespace micro_profiler
 
 		thread::~thread()
 		{
-			::WaitForSingleObject(reinterpret_cast<HANDLE>(_thread), INFINITE);
-			::CloseHandle(reinterpret_cast<HANDLE>(_thread));
+			::WaitForSingleObject(static_cast<HANDLE>(_thread), INFINITE);
+			::CloseHandle(static_cast<HANDLE>(_thread));
 		}
 
 		unsigned int thread::id() const
 		{	return _threadid;	}
 
 		void thread::resume()
-		{	::ResumeThread(reinterpret_cast<HANDLE>(_thread));	}
+		{	::ResumeThread(static_cast<HANDLE>(_thread));	}
 
 		void thread::sleep(unsigned int duration)
 		{	::Sleep(duration);	}

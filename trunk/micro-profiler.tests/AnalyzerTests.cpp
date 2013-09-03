@@ -42,7 +42,7 @@ namespace micro_profiler
 			{
 				// INIT
 				analyzer a;
-				calls_collector::acceptor &as_acceptor(a);
+				calls_collector_i::acceptor &as_acceptor(a);
 				call_record trace[] = {
 					{	12300, (void *)1234	},
 					{	12305, (void *)2234	},

@@ -9,7 +9,8 @@ EXPORTS
 	DllRegisterServer	PRIVATE
 	DllUnregisterServer	PRIVATE
 
-	??0profiler_frontend@micro_profiler@@QAE@P6AXPAPAUIProfilerFrontend@@@Z@Z
+	??0profiler_frontend@micro_profiler@@QAE@AAUcalls_collector_i@1@P6AXPAPAUIProfilerFrontend@@@Z@Z
+	?get_global_collector_instance@micro_profiler@@YAAAUcalls_collector_i@1@XZ
 	?create_local_frontend@micro_profiler@@YAXPAPAUIProfilerFrontend@@@Z
 	?create_inproc_frontend@micro_profiler@@YAXPAPAUIProfilerFrontend@@@Z
 	??1profiler_frontend@micro_profiler@@QAE@XZ

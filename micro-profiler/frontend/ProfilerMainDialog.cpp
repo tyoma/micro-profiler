@@ -147,7 +147,7 @@ namespace micro_profiler
 		{
 			if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(wchar_t)))
 			{
-				wchar_t *gtext_memory = reinterpret_cast<wchar_t *>(::GlobalLock(gtext));
+				wchar_t *gtext_memory = static_cast<wchar_t *>(::GlobalLock(gtext));
 
 				copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
 				::GlobalUnlock(gtext_memory);

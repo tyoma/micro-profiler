@@ -34,7 +34,7 @@ namespace micro_profiler
 		const __int64 c_ticks_resolution(timestamp_precision());
 	}
 
-	statistics_bridge::statistics_bridge(calls_collector &collector, const function<void (IProfilerFrontend **frontend)> &factory)
+	statistics_bridge::statistics_bridge(calls_collector_i &collector, const function<void (IProfilerFrontend **frontend)> &factory)
 		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(0)
 	{
 		factory(&_frontend);

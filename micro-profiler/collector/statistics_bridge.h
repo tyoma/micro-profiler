@@ -35,18 +35,18 @@ typedef struct FunctionStatisticsTag FunctionStatistics;
 
 namespace micro_profiler
 {
-	class calls_collector;
+	struct calls_collector_i;
 
 	class statistics_bridge
 	{
 		std::vector<FunctionStatisticsDetailed> _buffer;
 		std::vector<FunctionStatistics> _children_buffer;
 		analyzer _analyzer;
-		calls_collector &_collector;
+		calls_collector_i &_collector;
 		IProfilerFrontend *_frontend;
 
 	public:
-		statistics_bridge(calls_collector &collector, const std::function<void (IProfilerFrontend **frontend)> &factory);
+		statistics_bridge(calls_collector_i &collector, const std::function<void (IProfilerFrontend **frontend)> &factory);
 		~statistics_bridge();
 
 		void analyze();

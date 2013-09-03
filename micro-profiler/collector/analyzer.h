@@ -61,7 +61,7 @@ namespace micro_profiler
 	};
 
 
-	class analyzer : public calls_collector::acceptor
+	class analyzer : public calls_collector_i::acceptor
 	{
 		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<statistics_map_detailed> > stacks_container;
 
@@ -77,9 +77,9 @@ namespace micro_profiler
 	public:
 		analyzer(__int64 profiler_latency = 0);
 
-		void clear();
-		const_iterator begin() const;
-		const_iterator end() const;
+		void clear() throw();
+		const_iterator begin() const throw();
+		const_iterator end() const throw();
 
 		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count);
 	};
@@ -142,9 +142,9 @@ namespace micro_profiler
 
 
 	// analyzer - inline definitions
-	inline analyzer::const_iterator analyzer::begin() const
+	inline analyzer::const_iterator analyzer::begin() const throw()
 	{	return _statistics.begin();	}
 
-	inline analyzer::const_iterator analyzer::end() const
+	inline analyzer::const_iterator analyzer::end() const throw()
 	{	return _statistics.end();	}
 }

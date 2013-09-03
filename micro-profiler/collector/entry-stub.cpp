@@ -39,14 +39,17 @@ extern "C" void profile_exit()
 
 namespace micro_profiler
 {
+	calls_collector_i& get_global_collector_instance() throw()
+	{	return *static_cast<calls_collector_i *>(0);	}
+
 	void create_local_frontend(IProfilerFrontend **frontend)
 	{	*frontend = 0;	}
 
 	void create_inproc_frontend(IProfilerFrontend **frontend)
 	{	*frontend = 0;	}
 
-	profiler_frontend::profiler_frontend(frontend_factory /*factory*/)
-		: _collector(*reinterpret_cast<calls_collector *>(0))
+	profiler_frontend::profiler_frontend(calls_collector_i &collector, frontend_factory /*factory*/)
+		: _collector(collector)
 	{	}
 
 	profiler_frontend::~profiler_frontend()

@@ -26,7 +26,7 @@ namespace micro_profiler
 		: _profiler_latency(profiler_latency)
 	{	}
 
-	void analyzer::clear()
+	void analyzer::clear() throw()
 	{	_statistics.clear();	}
 
 	void analyzer::accept_calls(unsigned int threadid, const call_record *calls, size_t count)

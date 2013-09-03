@@ -46,17 +46,18 @@ namespace micro_profiler
 
 
 	mutex::mutex()
-		: _critical_section(new (_buffer) CRITICAL_SECTION)
 	{
-		::InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));
+		typedef char static_size_assertion[sizeof(CRITICAL_SECTION) <= sizeof(_mtx_buffer)];
+
+		::InitializeCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));
 	}
 
 	mutex::~mutex()
-	{	::DeleteCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));	}
+	{	::DeleteCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
 
 	void mutex::enter()
-	{	::EnterCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));	}
+	{	::EnterCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
 
 	void mutex::leave()
-	{	::LeaveCriticalSection(reinterpret_cast<CRITICAL_SECTION *>(_critical_section));	}
+	{	::LeaveCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
 }

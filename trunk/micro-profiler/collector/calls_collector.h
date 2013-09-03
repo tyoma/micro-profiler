@@ -29,7 +29,21 @@ namespace micro_profiler
 {
 	struct call_record;
 
-	class calls_collector
+	struct calls_collector_i
+	{
+		struct acceptor;
+
+		virtual ~calls_collector_i() throw()	{	}
+		virtual void read_collected(acceptor &a) = 0;
+		virtual __int64 profiler_latency() const throw() = 0;
+	};
+
+	struct calls_collector_i::acceptor
+	{
+		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count) = 0;
+	};
+
+	class calls_collector : public calls_collector_i
 	{
 		class thread_trace_block;
 
@@ -45,31 +59,15 @@ namespace micro_profiler
 		thread_trace_block &construct_thread_trace();
 
 	public:
-		struct acceptor;
-
-	public:
 		calls_collector(size_t trace_limit);
-		~calls_collector();
+		virtual ~calls_collector() throw();
 
 		static calls_collector *instance() throw();
-		void read_collected(acceptor &a);
+		virtual void read_collected(acceptor &a);
 
 		void __thiscall track(const call_record &call) throw();
 
-		size_t trace_limit() const;
-		__int64 profiler_latency() const;
+		size_t trace_limit() const throw();
+		virtual __int64 profiler_latency() const throw();
 	};
-
-	struct calls_collector::acceptor
-	{
-		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count) = 0;
-	};
-
-
-	// calls_collector - inline definitions
-	inline size_t calls_collector::trace_limit() const
-	{	return _trace_limit;	}
-
-	inline __int64 calls_collector::profiler_latency() const
-	{	return _profiler_latency;	}
 }

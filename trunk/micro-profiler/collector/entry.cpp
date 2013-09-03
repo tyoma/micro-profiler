@@ -43,14 +43,17 @@ namespace micro_profiler
 		const __int64 c_ticks_resolution(timestamp_precision());
 	}
 
+	calls_collector_i& get_global_collector_instance() throw()
+	{	return *calls_collector::instance();	}
+
 	void create_local_frontend(IProfilerFrontend **frontend)
 	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
 	void create_inproc_frontend(IProfilerFrontend **frontend)
 	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_INPROC_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
 
-	profiler_frontend::profiler_frontend(frontend_factory factory)
-		: _collector(*calls_collector::instance()), _factory(factory)
+	profiler_frontend::profiler_frontend(calls_collector_i &collector, frontend_factory factory)
+		: _collector(collector), _factory(factory)
 	{
 		_frontend_thread = thread::run(bind(&profiler_frontend::frontend_initialize, this), bind(&profiler_frontend::frontend_worker, this));
 	}

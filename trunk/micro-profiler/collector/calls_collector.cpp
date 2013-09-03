@@ -52,10 +52,9 @@ namespace micro_profiler
 	public:
 		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
-		~thread_trace_block();
 
 		void track(const call_record &call) throw();
-		void read_collected(calls_collector::acceptor &a);
+		void read_collected(acceptor &a);
 	};
 
 
@@ -67,9 +66,6 @@ namespace micro_profiler
 	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &other)
 		: _thread_id(other._thread_id), _trace_limit(other._trace_limit), _proceed_collection(false, true),
 			_active_trace(&_traces[0]), _inactive_trace(&_traces[1])
-	{	}
-
-	calls_collector::thread_trace_block::~thread_trace_block()
 	{	}
 
 	__forceinline void calls_collector::thread_trace_block::track(const call_record &call) throw()
@@ -104,7 +100,7 @@ namespace micro_profiler
 	calls_collector::calls_collector(size_t trace_limit)
 		: _trace_limit(trace_limit), _profiler_latency(0)
 	{
-		struct delay_evaluator : calls_collector::acceptor
+		struct delay_evaluator : acceptor
 		{
 			virtual void accept_calls(unsigned int, const call_record *calls, size_t count)
 			{
@@ -125,7 +121,7 @@ namespace micro_profiler
 		_profiler_latency = de.delay;
 	}
 
-	calls_collector::~calls_collector()
+	calls_collector::~calls_collector() throw()
 	{	}
 
 	calls_collector *calls_collector::instance() throw()
@@ -141,6 +137,12 @@ namespace micro_profiler
 
 	void calls_collector::track(const call_record &call) throw()
 	{	get_current_thread_trace().track(call);	}
+
+	size_t calls_collector::trace_limit() const throw()
+	{	return _trace_limit;	}
+
+	__int64 calls_collector::profiler_latency() const throw()
+	{	return _profiler_latency;	}
 
 	calls_collector::thread_trace_block &calls_collector::get_current_thread_trace()
 	{

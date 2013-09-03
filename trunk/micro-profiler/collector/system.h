@@ -27,8 +27,7 @@ namespace micro_profiler
 
 	class mutex
 	{
-		char _buffer[1024];
-		void *_critical_section;
+		char _mtx_buffer[6 * sizeof(void*)];
 
 		mutex(const mutex &);
 		mutex &operator =(const mutex &);

@@ -37,14 +37,15 @@ namespace wpl
 namespace micro_profiler
 {
 	typedef void (*frontend_factory)(IProfilerFrontend **frontend);
-	class calls_collector;
+	struct calls_collector_i;
 
+	calls_collector_i& get_global_collector_instance() throw();
 	void create_local_frontend(IProfilerFrontend **frontend);
 	void create_inproc_frontend(IProfilerFrontend **frontend);
 
 	class profiler_frontend
 	{
-		calls_collector &_collector;
+		calls_collector_i &_collector;
 		frontend_factory _factory;
 		std::auto_ptr<wpl::mt::thread> _frontend_thread;
 
@@ -55,7 +56,7 @@ namespace micro_profiler
 		void operator =(const profiler_frontend &);
 
 	public:
-		profiler_frontend(frontend_factory factory = &create_local_frontend);
+		profiler_frontend(calls_collector_i &collector = get_global_collector_instance(), frontend_factory factory = &create_local_frontend);
 		~profiler_frontend();
 	};
 }

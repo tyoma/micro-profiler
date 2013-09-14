@@ -1,19 +1,15 @@
 #include <collector/statistics_bridge.h>
-#include <collector/calls_collector.h>
 
 #include "Mockups.h"
 
-#include <functional>
-#include <vector>
-
 namespace std
 {
-	using namespace tr1;
+	using tr1::bind;
+	using namespace tr1::placeholders;
 }
 
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 using namespace std;
-using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -21,19 +17,11 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void factory1(vector<IProfilerFrontend *> &in_log, IProfilerFrontend **frontend)
+			void VoidCreationFactory(vector<IProfilerFrontend *> &in_log, IProfilerFrontend **frontend)
 			{
 				in_log.push_back(*frontend);
 				*frontend = 0;
 			}
-
-			void factory2(FrontendMockupState &state, IProfilerFrontend **frontend)
-			{
-				IProfilerFrontend *fe = new FrontendMockup(state);
-
-				fe->QueryInterface(frontend);
-			}
-
 		}
 
 		[TestClass]
@@ -44,11 +32,11 @@ namespace micro_profiler
 			void ConstructingBridgeInvokesFrontendFactory()
 			{
 				// INIT
-				calls_collector cc(10000);
+				mockups::Tracer cc(10000);
 				vector<IProfilerFrontend *> log;
 
 				// ACT
-				statistics_bridge b(cc, bind(&factory1, ref(log), _1));
+				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(log), _1));
 
 				// ASSERT
 				Assert::IsTrue(1 == log.size());
@@ -60,9 +48,9 @@ namespace micro_profiler
 			void BridgeHandlesNoncreatedFrontend()
 			{
 				// INIT
-				calls_collector cc(10000);
+				mockups::Tracer cc(10000);
 				vector<IProfilerFrontend *> log;
-				statistics_bridge b(cc, bind(&factory1, ref(log), _1));
+				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(log), _1));
 
 				// ACT / ASSERT (must not fail)
 				b.update_frontend();
@@ -73,12 +61,12 @@ namespace micro_profiler
 			void BridgeHoldsFrontendForALifetime()
 			{
 				// INIT
-				FrontendMockupState state;
-				calls_collector cc(10000);
+				mockups::Frontend::State state;
+				mockups::Tracer cc(10000);
 
 				// INIT / ACT
 				{
-					statistics_bridge b(cc, bind(&factory2, ref(state), _1));
+					statistics_bridge b(cc, mockups::Frontend::MakeFactory(state));
 
 				// ASSERT
 					Assert::IsFalse(state.released);
@@ -95,11 +83,11 @@ namespace micro_profiler
 			void FrontendIsInitializedAtBridgeConstruction()
 			{
 				// INIT
-				FrontendMockupState state;
-				calls_collector cc(10000);
+				mockups::Frontend::State state;
+				mockups::Tracer cc(10000);
 
 				// ACT
-				statistics_bridge b(cc, bind(&factory2, ref(state), _1));
+				statistics_bridge b(cc, mockups::Frontend::MakeFactory(state));
 
 				// ASSERT
 				wchar_t path[MAX_PATH + 1] = { 0 };
@@ -118,9 +106,9 @@ namespace micro_profiler
 			void FrontendUpdateIsNotCalledIfNoUpdates()
 			{
 				// INIT
-				FrontendMockupState state;
-				calls_collector cc(10000);
-				statistics_bridge b(cc, bind(&factory2, ref(state), _1));
+				mockups::Frontend::State state;
+				mockups::Tracer cc(10000);
+				statistics_bridge b(cc, mockups::Frontend::MakeFactory(state));
 
 				// ACT
 				b.analyze();
@@ -135,16 +123,15 @@ namespace micro_profiler
 			void FrontendUpdateIsNotCalledIfNoAnalysisInvoked()
 			{
 				// INIT
-				FrontendMockupState state;
-				calls_collector cc(10000);
-				statistics_bridge b(cc, bind(&factory2, ref(state), _1));
+				mockups::Frontend::State state;
+				mockups::Tracer cc(10000);
+				statistics_bridge b(cc, mockups::Frontend::MakeFactory(state));
 				call_record trace[] = {
 					{	0, (void *)(0x1223 + 5)	},
 					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
-				cc.track(trace[0]);
-				cc.track(trace[1]);
+				cc.Add(0, trace);
 
 				// ACT
 				b.update_frontend();
@@ -158,16 +145,15 @@ namespace micro_profiler
 			void FrontendUpdateClearsTheAnalyzer()
 			{
 				// INIT
-				FrontendMockupState state;
-				calls_collector cc(10000);
-				statistics_bridge b(cc, bind(&factory2, ref(state), _1));
+				mockups::Frontend::State state;
+				mockups::Tracer cc(10000);
+				statistics_bridge b(cc, mockups::Frontend::MakeFactory(state));
 				call_record trace[] = {
 					{	0, (void *)(0x1223 + 5)	},
 					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
-				cc.track(trace[0]);
-				cc.track(trace[1]);
+				cc.Add(0, trace);
 
 				b.analyze();
 				b.update_frontend();
@@ -184,9 +170,9 @@ namespace micro_profiler
 			void CollectedCallsArePassedToFrontend()
 			{
 				// INIT
-				FrontendMockupState state1, state2;
-				calls_collector cc1(10000), cc2(1000);
-				statistics_bridge b1(cc1, bind(&factory2, ref(state1), _1)), b2(cc2, bind(&factory2, ref(state2), _1));
+				mockups::Frontend::State state1, state2;
+				mockups::Tracer cc1(10000), cc2(1000);
+				statistics_bridge b1(cc1, mockups::Frontend::MakeFactory(state1)), b2(cc2, mockups::Frontend::MakeFactory(state2));
 				call_record trace1[] = {
 					{	0, (void *)(0x1223 + 5)	},
 					{	10 + cc1.profiler_latency(), (void *)(0)	},
@@ -202,16 +188,8 @@ namespace micro_profiler
 					{	2019 + cc2.profiler_latency(), (void *)(0)	},
 				};
 
-				cc1.track(trace1[0]);
-				cc1.track(trace1[1]);
-				cc1.track(trace1[2]);
-				cc1.track(trace1[3]);
-				cc2.track(trace2[0]);
-				cc2.track(trace2[1]);
-				cc2.track(trace2[2]);
-				cc2.track(trace2[3]);
-				cc2.track(trace2[4]);
-				cc2.track(trace2[5]);
+				cc1.Add(0, trace1);
+				cc2.Add(0, trace2);
 
 				// ACT
 				b1.analyze();

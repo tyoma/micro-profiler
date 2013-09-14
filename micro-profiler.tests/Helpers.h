@@ -18,21 +18,25 @@ namespace micro_profiler
 
 		class thread
 		{
-			unsigned int _threadid;
-			void *_thread;
-
-			thread(const thread &other);
-			const thread &operator =(const thread &rhs);
+		public:
+			typedef unsigned int id;
 
 		public:
 			explicit thread(thread_function &job, bool suspended = false);
 			~thread();
 
-			unsigned int id() const;
+			id get_id() const;
 			void resume();
 
 			static void sleep(unsigned int duration);
-			static unsigned int current_thread_id();
+			static id current_thread_id();
+
+		private:
+			thread(const thread &other);
+			const thread &operator =(const thread &rhs);
+
+			id _threadid;
+			void *_thread;
 		};
 
 

@@ -150,7 +150,7 @@ namespace micro_profiler
 			{
 				// INIT
 				collection_acceptor a;
-				unsigned threadid1, threadid2;
+				thread::id threadid1, threadid2;
 
 				calls_collector::instance()->read_collected(a);
 				a.collected.clear();
@@ -160,8 +160,8 @@ namespace micro_profiler
 					executor e(traced::sleep_20);
 					thread t1(e, true), t2(e, true);
 
-					threadid1 = t1.id();
-					threadid2 = t2.id();
+					threadid1 = t1.get_id();
+					threadid2 = t2.get_id();
 					t1.resume();
 					t2.resume();
 				}

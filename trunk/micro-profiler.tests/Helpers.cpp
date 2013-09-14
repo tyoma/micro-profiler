@@ -31,7 +31,7 @@ namespace micro_profiler
 			::CloseHandle(static_cast<HANDLE>(_thread));
 		}
 
-		unsigned int thread::id() const
+		thread::id thread::get_id() const
 		{	return _threadid;	}
 
 		void thread::resume()
@@ -40,7 +40,7 @@ namespace micro_profiler
 		void thread::sleep(unsigned int duration)
 		{	::Sleep(duration);	}
 
-		unsigned int thread::current_thread_id()
+		thread::id thread::current_thread_id()
 		{	return ::GetCurrentThreadId();	}
 
 

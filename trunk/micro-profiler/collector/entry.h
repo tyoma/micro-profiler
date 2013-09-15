@@ -20,45 +20,14 @@
 
 #pragma once
 
-#include <memory>
-
-#pragma pack(push, 8)
-
-struct IProfilerFrontend;
-
-namespace wpl
-{
-	namespace mt
-	{
-		class thread;
-	}
-}
-
 namespace micro_profiler
 {
-	typedef void (*frontend_factory)(IProfilerFrontend **frontend);
-	struct calls_collector_i;
-
-	calls_collector_i& get_global_collector_instance() throw();
-	void create_local_frontend(IProfilerFrontend **frontend);
-	void create_inproc_frontend(IProfilerFrontend **frontend);
-
-	class profiler_frontend
+#pragma pack(push, 8)
+	struct handle
 	{
-		calls_collector_i &_collector;
-		frontend_factory _factory;
-		std::auto_ptr<wpl::mt::thread> _frontend_thread;
-
-		void frontend_initialize();
-		void frontend_worker();
-
-		profiler_frontend(const profiler_frontend &);
-		void operator =(const profiler_frontend &);
-
-	public:
-		profiler_frontend(calls_collector_i &collector = get_global_collector_instance(), frontend_factory factory = &create_local_frontend);
-		~profiler_frontend();
+		virtual ~handle() throw() {	}
 	};
+#pragma pack(pop)
 }
 
-#pragma pack(pop)
+extern "C" micro_profiler::handle *micro_profiler_initialize(const void *image_load_address);

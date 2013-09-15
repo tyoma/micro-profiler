@@ -99,10 +99,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>module/micro-profiler.x86.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
     <Manifest>
@@ -144,10 +142,8 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>module/micro-profiler.x64.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
     <Manifest>
@@ -189,10 +185,8 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>module/micro-profiler.x86.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
     <Manifest>
@@ -236,10 +230,8 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>module/micro-profiler.x64.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
     <Manifest>
@@ -301,8 +293,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
   <ItemGroup>
     <None Include="addin\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />
-    <None Include="module\micro-profiler.x64.def" />
-    <None Include="module\micro-profiler.x86.def" />
+    <None Include="module\micro-profiler.def" />
     <None Include="resources\appicon.ico" />
   </ItemGroup>
   <ItemGroup>

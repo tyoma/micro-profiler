@@ -4,7 +4,6 @@
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMHelpersTests.cpp" />
-    <ClCompile Include="FrontendInteractionTests.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
@@ -21,6 +20,7 @@
     <ClCompile Include="SymbolResolverTests.cpp" />
     <ClCompile Include="ObjectLockTests.cpp" />
     <ClCompile Include="TracedFunctions.cpp" />
+    <ClCompile Include="FrontendControllerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

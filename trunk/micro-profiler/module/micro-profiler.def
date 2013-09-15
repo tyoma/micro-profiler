@@ -1,0 +1,12 @@
+LIBRARY
+
+EXPORTS
+	_penter = profile_enter
+	_pexit = profile_exit
+
+	micro_profiler_initialize
+
+	DllGetClassObject	PRIVATE
+	DllCanUnloadNow	PRIVATE
+	DllRegisterServer	PRIVATE
+	DllUnregisterServer	PRIVATE

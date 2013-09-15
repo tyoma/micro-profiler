@@ -74,7 +74,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile="module/micro-profiler.x86.def"
+				ModuleDefinitionFile="module/micro-profiler.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -155,7 +155,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames=""
-				ModuleDefinitionFile="module/micro-profiler.x64.def"
+				ModuleDefinitionFile="module/micro-profiler.def"
 				GenerateDebugInformation="true"
 				TargetMachine="17"
 			/>
@@ -239,7 +239,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				ModuleDefinitionFile="module/micro-profiler.x86.def"
+				ModuleDefinitionFile="module/micro-profiler.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -324,7 +324,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				ModuleDefinitionFile="module/micro-profiler.x64.def"
+				ModuleDefinitionFile="module/micro-profiler.def"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

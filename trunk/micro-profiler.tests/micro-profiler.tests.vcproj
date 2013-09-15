@@ -367,7 +367,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\FrontendInteractionTests.cpp"
+			RelativePath=".\FrontendControllerTests.cpp"
 			>
 		</File>
 		<File
@@ -391,10 +391,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\ModulesListTests.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\ObjectLockTests.cpp"
 			>
 		</File>
@@ -411,7 +407,23 @@
 			>
 		</File>
 		<File
-			RelativePath=".\samples.cpp"
+			RelativePath=".\ShadowStackTests.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\StatisticsBridgeTests.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\SymbolResolverTests.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\TextFormattingServicesTests.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\TracedFunctions.cpp"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
@@ -459,19 +471,7 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\ShadowStackTests.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\StatisticsBridgeTests.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\SymbolResolverTests.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\TextFormattingServicesTests.cpp"
+			RelativePath=".\TracedFunctions.h"
 			>
 		</File>
 	</Files>

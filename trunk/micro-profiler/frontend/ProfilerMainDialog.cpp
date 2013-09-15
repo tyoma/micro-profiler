@@ -32,6 +32,7 @@ extern HINSTANCE g_instance;
 
 namespace std
 {
+	using tr1::cref;
 	using namespace tr1::placeholders;
 }
 
@@ -73,8 +74,8 @@ namespace micro_profiler
 		_statistics_lv->set_model(_statistics);
 
 		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
-		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _parents_statistics, _1));
-		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, _children_statistics, _1));
+		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_parents_statistics), _1));
+		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_children_statistics), _1));
 
 		_statistics_lv->adjust_column_widths();
 		_parents_statistics_lv->adjust_column_widths();

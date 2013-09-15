@@ -33,6 +33,7 @@ namespace micro_profiler
 			void Frontend::Create(State& state, IProfilerFrontend **frontend)
 			{
 				state.creator_thread_id = thread::current_thread_id();
+				state.highest_thread_priority = ::GetThreadPriority(::GetCurrentThread()) == THREAD_PRIORITY_HIGHEST;
 				static_cast<IProfilerFrontend *>(new Frontend(state))->QueryInterface(frontend);
 			}
 
@@ -62,6 +63,7 @@ namespace micro_profiler
 					throw invalid_argument("'executable' argument is invalid!");
 				_state.load_address = load_address;
 				_state.ticks_resolution = ticks_resolution;
+				_state.initialized.raise();
 				return S_OK;
 			}
 
@@ -70,22 +72,17 @@ namespace micro_profiler
 				_state.update_log.push_back(statistics_map_detailed());
 
 				statistics_map_detailed &s = _state.update_log.back();
-				for (; count; --count, ++data)
-				{
-					State::TriggersMap::const_iterator i = _state.triggers.find(data->Statistics.FunctionAddress);
 
-					if (i != _state.triggers.end())
-					{
-						i->second();
-					}
+				for (; count; --count, ++data)
 					s[reinterpret_cast<const void *>(data->Statistics.FunctionAddress)] += *data;
-				}
+				_state.updated.raise();
 				return S_OK;
 			}
 
 
 			Frontend::State::State()
-				: creator_thread_id(0), released(false), load_address(0), ticks_resolution(0)
+				: initialized(false, true), updated(false, true), creator_thread_id(thread::id()), released(false),
+					load_address(0), ticks_resolution(0)
 			{	}
 
 
@@ -95,6 +92,8 @@ namespace micro_profiler
 
 			void Tracer::read_collected(acceptor &a)
 			{
+				scoped_lock l(_mutex);
+
 				for (TracesMap::const_iterator i = _traces.begin(); i != _traces.end(); ++i)
 				{
 					a.accept_calls(i->first, &i->second[0], i->second.size());

@@ -19,9 +19,8 @@
 //	THE SOFTWARE.
 
 #include "entry.h"
-#include <wpl/mt/thread.h>
-#include <windows.h>
 
+#include <windows.h>
 
 #ifdef _M_IX86
 extern "C" __declspec(naked) void profile_enter()
@@ -37,23 +36,9 @@ extern "C" void profile_exit()
 {	}
 #endif
 
-namespace micro_profiler
+extern "C" micro_profiler::handle *micro_profiler_initialize(const void * /*image_load_address*/)
 {
-	calls_collector_i& get_global_collector_instance() throw()
-	{	return *static_cast<calls_collector_i *>(0);	}
-
-	void create_local_frontend(IProfilerFrontend **frontend)
-	{	*frontend = 0;	}
-
-	void create_inproc_frontend(IProfilerFrontend **frontend)
-	{	*frontend = 0;	}
-
-	profiler_frontend::profiler_frontend(calls_collector_i &collector, frontend_factory /*factory*/)
-		: _collector(collector)
-	{	}
-
-	profiler_frontend::~profiler_frontend()
-	{	}
+	return 0;
 }
 
 STDAPI DllCanUnloadNow()

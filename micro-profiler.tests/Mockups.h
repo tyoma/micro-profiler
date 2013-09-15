@@ -3,11 +3,13 @@
 #include "Helpers.h"
 
 #include <collector/calls_collector.h>
+#include <collector/system.h>
 #include <common/primitives.h>
 #include <_generated/frontend.h>
 #include <functional>
 #include <string>
 #include <vector>
+#include <wpl/mt/synchronization.h>
 
 namespace std
 {
@@ -29,7 +31,7 @@ namespace micro_profiler
 				static std::function<void(IProfilerFrontend **)> MakeFactory(State& state);
 
 			private:
-				Frontend(State& state);
+				explicit Frontend(State& state);
 				~Frontend();
 
 				static void Create(State& state, IProfilerFrontend **frontend);
@@ -51,15 +53,14 @@ namespace micro_profiler
 
 			struct Frontend::State
 			{
-				typedef std::unordered_map<hyper /*triggering address*/, std::function<void()> /*trigger*/> TriggersMap;
-
 				State();
 
-				// Controlling data
-				TriggersMap triggers;
+				wpl::mt::event_flag initialized;
+				wpl::mt::event_flag updated;
 
 				// Collected data
 				thread::id creator_thread_id;
+				bool highest_thread_priority;
 
 				std::wstring executable;
 				hyper load_address;
@@ -74,7 +75,7 @@ namespace micro_profiler
 			class Tracer : public calls_collector_i
 			{
 			public:
-				Tracer(__int64 latency);
+				explicit Tracer(__int64 latency = 0);
 
 				template <size_t size>
 				void Add(thread::id threadid, call_record (&array_ptr)[size]);
@@ -87,6 +88,7 @@ namespace micro_profiler
 
 				__int64 _latency;
 				TracesMap _traces;
+				mutex _mutex;
 			};
 
 
@@ -94,6 +96,7 @@ namespace micro_profiler
 			template <size_t size>
 			inline void Tracer::Add(thread::id threadid, call_record (&trace_chunk)[size])
 			{
+				scoped_lock l(_mutex);
 				_traces[threadid].insert(_traces[threadid].end(), trace_chunk, trace_chunk + size);
 			}
 		}

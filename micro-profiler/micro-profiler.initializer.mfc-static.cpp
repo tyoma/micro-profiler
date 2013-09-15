@@ -1,5 +1,7 @@
 #include "entry.h"
 
+#include <memory>
+
 #ifndef _UNICODE
 	#ifdef _DEBUG
 		#pragma comment(lib, "nafxcwd.lib")
@@ -24,5 +26,6 @@
 
 namespace
 {
-	micro_profiler::profiler_frontend g_mp_initializer;
+	void *g_dummy_global = 0;
+	std::auto_ptr<micro_profiler::handle> g_mp_handle(micro_profiler_initialize(&g_dummy_global));
 }

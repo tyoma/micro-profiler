@@ -1,5 +1,7 @@
 #include "entry.h"
 
+#include <memory>
+
 #ifdef _M_IX86
 	#pragma comment(lib, "micro-profiler.lib")
 #elif _M_X64
@@ -10,5 +12,6 @@
 
 namespace
 {
-	micro_profiler::profiler_frontend g_mp_initializer;
+	void *g_dummy_global = 0;
+	std::auto_ptr<micro_profiler::handle> g_mp_handle(micro_profiler_initialize(&g_dummy_global));
 }

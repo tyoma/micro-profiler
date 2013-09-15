@@ -18,79 +18,61 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "entry.h"
+#include "frontend_controller.h"
 
 #include "statistics_bridge.h"
-#include "../_generated/frontend.h"
 
+#include <windows.h>
 #include <wpl/mt/thread.h>
-#include <vector>
 
 namespace std
 {
 	using tr1::bind;
+	using namespace tr1::placeholders;
 }
 
 using namespace wpl::mt;
 using namespace std;
 
-extern "C" CLSID CLSID_ProfilerFrontend;
-
 namespace micro_profiler
 {
 	namespace
 	{
-		const __int64 c_ticks_resolution(timestamp_precision());
+		shared_ptr<void> create_waitable_timer(int period, PTIMERAPCROUTINE routine, void *parameter)
+		{
+			LARGE_INTEGER li_period = {};
+			shared_ptr<void> htimer(::CreateWaitableTimer(NULL, FALSE, NULL), &::CloseHandle);
+
+			li_period.QuadPart = -period * 10000;
+			::SetWaitableTimer(static_cast<HANDLE>(htimer.get()), &li_period, period, routine, parameter, FALSE);
+			return htimer;
+		}
+
+		void __stdcall analyze(void *bridge, DWORD /*ignored*/, DWORD /*ignored*/)
+		{	static_cast<statistics_bridge *>(bridge)->analyze();	}
+
+		void __stdcall update(void *bridge, DWORD /*ignored*/, DWORD /*ignored*/)
+		{	static_cast<statistics_bridge *>(bridge)->update_frontend();	}
 	}
 
-	calls_collector_i& get_global_collector_instance() throw()
-	{	return *calls_collector::instance();	}
-
-	void create_local_frontend(IProfilerFrontend **frontend)
-	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
-
-	void create_inproc_frontend(IProfilerFrontend **frontend)
-	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_INPROC_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
-
-	profiler_frontend::profiler_frontend(calls_collector_i &collector, frontend_factory factory)
-		: _collector(collector), _factory(factory)
-	{
-		_frontend_thread = thread::run(bind(&profiler_frontend::frontend_initialize, this), bind(&profiler_frontend::frontend_worker, this));
-	}
+	profiler_frontend::profiler_frontend(calls_collector_i &collector, const frontend_factory& factory)
+		: _collector(collector), _factory(factory), _exit_event(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle)
+	{	_frontend_thread.reset(new thread(bind(&profiler_frontend::frontend_worker, this)));	}
 
 	profiler_frontend::~profiler_frontend()
-	{
-		::PostThreadMessage(_frontend_thread->id(), WM_QUIT, 0, 0);
-	}
-
-	void profiler_frontend::frontend_initialize()
-	{
-		MSG msg = { 0 };
-
-		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-		::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-	}
+	{	::SetEvent(static_cast<HANDLE>(_exit_event.get()));	}
 
 	void profiler_frontend::frontend_worker()
 	{
+		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 		::CoInitialize(NULL);
 		{
 			statistics_bridge b(_collector, _factory);
-			UINT_PTR analyzer_timerid = ::SetTimer(NULL, 0, 10, NULL), updater_timerid = ::SetTimer(NULL, 0, 60, NULL);
-			MSG msg;
+			shared_ptr<void> analyzer_timer(create_waitable_timer(10, &analyze, &b));
+			shared_ptr<void> sender_timer(create_waitable_timer(50, &update, &b));
 
-			while (::GetMessage(&msg, NULL, 0, 0))
-			{
-				if (msg.message == WM_TIMER && msg.wParam == analyzer_timerid)
-					b.analyze();
-				else if (msg.message == WM_TIMER && msg.wParam == updater_timerid)
-					b.update_frontend();
-
-				::TranslateMessage(&msg);
-				::DispatchMessage(&msg);
-			}
-			::KillTimer(NULL, updater_timerid);
-			::KillTimer(NULL, analyzer_timerid);
+			while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(static_cast<HANDLE>(_exit_event.get()), INFINITE, TRUE))
+			{	}
 		}
 		::CoUninitialize();
 	}

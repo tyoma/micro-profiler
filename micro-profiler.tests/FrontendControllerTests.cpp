@@ -4,6 +4,8 @@
 
 #include <atlbase.h>
 
+#pragma warning(disable:4965)
+
 namespace std
 {
 	using tr1::bind;

@@ -617,6 +617,46 @@
 				>
 			</File>
 			<File
+				RelativePath=".\collector\frontend_controller.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\collector\frontend_controller.h"
+				>
+			</File>
+			<File
 				RelativePath=".\collector\hooks.x64.asm"
 				>
 				<FileConfiguration
@@ -630,20 +670,6 @@
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="MASM_x64"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="MASM_x64"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
 					>
 					<Tool
 						Name="MASM_x64"
@@ -669,28 +695,6 @@
 						Name="MASM"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="MASM"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="MASM"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\collector\modules_list.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\collector\modules_list.h"
-				>
 			</File>
 			<File
 				RelativePath=".\collector\statistics_bridge.cpp"

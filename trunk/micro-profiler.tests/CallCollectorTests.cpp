@@ -8,6 +8,12 @@
 #include <utility>
 #include <algorithm>
 
+namespace std
+{
+   using tr1::bind;
+   using tr1::ref;
+}
+
 using wpl::mt::thread;
 using namespace std;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;

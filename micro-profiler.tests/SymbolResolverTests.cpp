@@ -2,8 +2,6 @@
 
 #include "Helpers.h"
 
-#include <assert.h>
-
 #include <tchar.h>
 #include <windows.h>
 

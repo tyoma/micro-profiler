@@ -1,5 +1,7 @@
 #include "Mockups.h"
 
+#include "Helpers.h"
+
 #include <common/com_helpers.h>
 #include <stdexcept>
 
@@ -10,6 +12,7 @@ namespace std
 	using namespace tr1::placeholders;
 }
 
+using wpl::mt::thread;
 using namespace std;
 
 namespace micro_profiler
@@ -32,7 +35,7 @@ namespace micro_profiler
 
 			void Frontend::Create(State& state, IProfilerFrontend **frontend)
 			{
-				state.creator_thread_id = thread::current_thread_id();
+				state.creator_thread_id = threadex::current_thread_id();
 				state.highest_thread_priority = ::GetThreadPriority(::GetCurrentThread()) == THREAD_PRIORITY_HIGHEST;
 				static_cast<IProfilerFrontend *>(new Frontend(state))->QueryInterface(frontend);
 			}

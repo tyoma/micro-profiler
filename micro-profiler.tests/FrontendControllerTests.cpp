@@ -1,5 +1,6 @@
 #include <collector/frontend_controller.h>
 
+#include "Helpers.h"
 #include "Mockups.h"
 
 #include <atlbase.h>
@@ -39,7 +40,7 @@ namespace micro_profiler
 			void FactoryIsCalledInASeparateThread()
 			{
 				// INIT
-				thread::id test_threadid = thread::current_thread_id();
+				thread::id test_threadid = threadex::current_thread_id();
 				mockups::Frontend::State state;
 				mockups::Tracer tracer;
 

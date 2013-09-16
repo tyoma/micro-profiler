@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Helpers.h"
-
 #include <collector/calls_collector.h>
 #include <collector/system.h>
 #include <common/primitives.h>
@@ -10,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <wpl/mt/synchronization.h>
+#include <wpl/mt/thread.h>
 
 namespace std
 {
@@ -59,7 +58,7 @@ namespace micro_profiler
 				wpl::mt::event_flag updated;
 
 				// Collected data
-				thread::id creator_thread_id;
+				wpl::mt::thread::id creator_thread_id;
 				bool highest_thread_priority;
 
 				std::wstring executable;
@@ -78,13 +77,13 @@ namespace micro_profiler
 				explicit Tracer(__int64 latency = 0);
 
 				template <size_t size>
-				void Add(thread::id threadid, call_record (&array_ptr)[size]);
+				void Add(wpl::mt::thread::id threadid, call_record (&array_ptr)[size]);
 
 				virtual void read_collected(acceptor &a);
 				virtual __int64 profiler_latency() const throw();
 
 			private:
-				typedef std::unordered_map< thread::id, std::vector<call_record> > TracesMap;
+				typedef std::unordered_map< wpl::mt::thread::id, std::vector<call_record> > TracesMap;
 
 				__int64 _latency;
 				TracesMap _traces;
@@ -94,7 +93,7 @@ namespace micro_profiler
 
 
 			template <size_t size>
-			inline void Tracer::Add(thread::id threadid, call_record (&trace_chunk)[size])
+			inline void Tracer::Add(wpl::mt::thread::id threadid, call_record (&trace_chunk)[size])
 			{
 				scoped_lock l(_mutex);
 				_traces[threadid].insert(_traces[threadid].end(), trace_chunk, trace_chunk + size);

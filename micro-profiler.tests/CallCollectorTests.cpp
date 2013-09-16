@@ -1,14 +1,14 @@
-#include "Helpers.h"
-
 #include <collector/calls_collector.h>
 #include <common/primitives.h>
 
+#include "Helpers.h"
 #include "TracedFunctions.h"
 
 #include <vector>
 #include <utility>
 #include <algorithm>
 
+using wpl::mt::thread;
 using namespace std;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
@@ -32,72 +32,45 @@ namespace micro_profiler
 				}
 
 				size_t total_entries;
-				vector< pair< unsigned int, vector<call_record> > > collected;
+				vector< pair< thread::id, vector<call_record> > > collected;
 			};
 
-			bool call_trace_less(const pair< unsigned int, vector<call_record> > &lhs, const pair< unsigned int, vector<call_record> > &rhs)
+			bool call_trace_less(const pair< thread::id, vector<call_record> > &lhs, const pair< thread::id, vector<call_record> > &rhs)
 			{	return lhs.first < rhs.first;	}
 
-			class executor : public thread_function
+			void emulate_n_calls(calls_collector &collector, size_t calls_number)
 			{
-				void (*_function)();
+				__int64 timestamp(0);
 
-			public:
-				explicit executor(void (*function)())
-					: _function(function)
-				{	}
-
-				virtual void operator ()()
-				{	_function();	}
-			};
-
-			class enterexit_emulator : public thread_function
-			{
-				calls_collector &_collector;
-				size_t _calls_number;
-
-				void operator =(const enterexit_emulator &);
-
-			public:
-				enterexit_emulator(calls_collector &collector, size_t calls_number)
-					: _collector(collector), _calls_number(calls_number)
-				{	}
-
-				virtual void operator ()()
+				for (size_t i = 0; i != calls_number; ++i)
 				{
-					__int64 timestamp(0);
+					call_record c1 = {	timestamp++, (void *)0x00001000	}, c2 = {	timestamp++, (void *)0	};
 
-					for (unsigned int i = 0; i != _calls_number; ++i)
-					{
-						call_record c1 = {	timestamp++, (void *)0x00001000	}, c2 = {	timestamp++, (void *)0	};
-
-						_collector.track(c1);
-						_collector.track(c2);
-					}
+					collector.track(c1);
+					collector.track(c2);
 				}
-			};
+			}
 		}
 
-		void clear_collection_traces()
-		{
-			collection_acceptor a;
-
-			calls_collector::instance()->read_collected(a);
-			calls_collector::instance()->read_collected(a);
-		}
 
 		[TestClass]
 		public ref class CallCollectorTests
 		{
 		public:
+			[TestInitialize]
+			void ClearCollectionTraces()
+			{
+				collection_acceptor a;
+
+				calls_collector::instance()->read_collected(a);
+				calls_collector::instance()->read_collected(a);
+			}
+
 			[TestMethod]
 			void CollectNothingOnNoCalls()
 			{
 				// INIT
 				collection_acceptor a;
-
-				calls_collector::instance()->read_collected(a);
-				a.collected.clear();
 
 				// ACT
 				calls_collector::instance()->read_collected(a);
@@ -119,10 +92,10 @@ namespace micro_profiler
 
 				// ASSERT
 				Assert::IsFalse(a.collected.empty());
-				Assert::IsTrue(thread::current_thread_id() == a.collected[0].first);
+				Assert::IsTrue(threadex::current_thread_id() == a.collected[0].first);
 				Assert::IsTrue(2 == a.collected[0].second.size());
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
 			}
 
 
@@ -157,13 +130,10 @@ namespace micro_profiler
 
 				// ACT
 				{
-					executor e(traced::sleep_20);
-					thread t1(e, true), t2(e, true);
+					thread t1(&traced::sleep_20), t2(&traced::sleep_20);
 
 					threadid1 = t1.get_id();
 					threadid2 = t2.get_id();
-					t1.resume();
-					t2.resume();
 				}
 
 				calls_collector::instance()->read_collected(a);
@@ -178,12 +148,12 @@ namespace micro_profiler
 				Assert::IsTrue(threadid1 == a.collected[0].first);
 				Assert::IsTrue(2 == a.collected[0].second.size());
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
 
 				Assert::IsTrue(threadid2 == a.collected[1].first);
 				Assert::IsTrue(2 == a.collected[1].second.size());
 				Assert::IsTrue(a.collected[1].second[0].timestamp < a.collected[1].second[1].timestamp);
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[1].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[1].second[0].callee) - 5));
 			}
 
 
@@ -199,13 +169,13 @@ namespace micro_profiler
 
 				// ASSERT
 				Assert::IsFalse(a.collected.empty());
-				Assert::IsTrue(thread::current_thread_id() == a.collected[0].first);
+				Assert::IsTrue(threadex::current_thread_id() == a.collected[0].first);
 				Assert::IsTrue(4 == a.collected[0].second.size());
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
 				Assert::IsTrue(a.collected[0].second[1].timestamp < a.collected[0].second[2].timestamp);
 				Assert::IsTrue(a.collected[0].second[2].timestamp < a.collected[0].second[3].timestamp);
-				Assert::IsTrue(&traced::nesting1 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[0].callee) - 5));
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned int>(a.collected[0].second[1].callee) - 5));
+				Assert::IsTrue(&traced::nesting1 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
+				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[1].callee) - 5));
 				Assert::IsTrue(0 == a.collected[0].second[2].callee);
 				Assert::IsTrue(0 == a.collected[0].second[3].callee);
 			}
@@ -228,25 +198,26 @@ namespace micro_profiler
 			{
 				// INIT
 				calls_collector c1(67), c2(123), c3(127);
-				enterexit_emulator e1(c1, 670), e2(c2, 1230), e3(c3, 635);
 				collection_acceptor a1, a2, a3;
 
 				// ACT (blockage during this test is equivalent to the failure)
-				thread t1(e1), t2(e2), t3(e3);
+				thread t1(bind(&emulate_n_calls, ref(c1), 670));
+				thread t2(bind(&emulate_n_calls, ref(c2), 1230));
+				thread t3(bind(&emulate_n_calls, ref(c3), 635));
 
 				while (a1.total_entries < 1340)
 				{
-					thread::sleep(30);
+					threadex::sleep(30);
 					c1.read_collected(a1);
 				}
 				while (a2.total_entries < 2460)
 				{
-					thread::sleep(30);
+					threadex::sleep(30);
 					c2.read_collected(a2);
 				}
 				while (a3.total_entries < 1270)
 				{
-					thread::sleep(30);
+					threadex::sleep(30);
 					c3.read_collected(a3);
 				}
 

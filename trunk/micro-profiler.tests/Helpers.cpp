@@ -4,44 +4,21 @@
 #include <_generated/frontend.h>
 
 #include <windows.h>
-#include <process.h>
 
-#undef _threadid
+using wpl::mt::thread;
 
 namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
+		namespace threadex
 		{
-			unsigned int __stdcall thread_proxy(void *target)
-			{
-				(*static_cast<thread_function *>(target))();
-				return 0;
-			}
+			void sleep(unsigned int duration)
+			{	::Sleep(duration);	}
+
+			thread::id current_thread_id()
+			{	return ::GetCurrentThreadId();	}
 		}
-
-		thread::thread(thread_function &job, bool suspended)
-			: _thread(reinterpret_cast<void *>(_beginthreadex(0, 0, &thread_proxy, &job, suspended ? CREATE_SUSPENDED : 0, &_threadid)))
-		{	}
-
-		thread::~thread()
-		{
-			::WaitForSingleObject(static_cast<HANDLE>(_thread), INFINITE);
-			::CloseHandle(static_cast<HANDLE>(_thread));
-		}
-
-		thread::id thread::get_id() const
-		{	return _threadid;	}
-
-		void thread::resume()
-		{	::ResumeThread(static_cast<HANDLE>(_thread));	}
-
-		void thread::sleep(unsigned int duration)
-		{	::Sleep(duration);	}
-
-		thread::id thread::current_thread_id()
-		{	return ::GetCurrentThreadId();	}
 
 
 		bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs)

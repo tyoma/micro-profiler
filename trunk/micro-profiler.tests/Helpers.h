@@ -1,5 +1,7 @@
 #pragma once
 
+#include <wpl/mt/thread.h>
+
 typedef struct FunctionStatisticsTag FunctionStatistics;
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
@@ -10,33 +12,10 @@ namespace micro_profiler
 
 	namespace tests
 	{
-		struct thread_function
+		namespace threadex
 		{
-			virtual void operator ()() = 0;
-		};
-
-
-		class thread
-		{
-		public:
-			typedef unsigned int id;
-
-		public:
-			explicit thread(thread_function &job, bool suspended = false);
-			~thread();
-
-			id get_id() const;
-			void resume();
-
-			static void sleep(unsigned int duration);
-			static id current_thread_id();
-
-		private:
-			thread(const thread &other);
-			const thread &operator =(const thread &rhs);
-
-			id _threadid;
-			void *_thread;
+			void sleep(unsigned int duration);
+			wpl::mt::thread::id current_thread_id();
 		};
 
 

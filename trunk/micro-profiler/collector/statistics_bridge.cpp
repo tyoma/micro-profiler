@@ -23,7 +23,7 @@
 #include "../common/com_helpers.h"
 #include "calls_collector.h"
 
-#include <atlbase.h>
+#include <atlstr.h>
 
 using namespace std;
 

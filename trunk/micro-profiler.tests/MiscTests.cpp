@@ -71,6 +71,7 @@ namespace micro_profiler
 
 				// ASSERT
 				Assert::IsTrue(1 == v.size());
+				Assert::IsTrue(sizeof(A) * 1 == v.byte_size());
 
 				// ACT
 				v.push_back(somevalue);
@@ -78,6 +79,32 @@ namespace micro_profiler
 
 				// ASSERT
 				Assert::IsTrue(3 == v.size());
+				Assert::IsTrue(sizeof(A) * 3 == v.byte_size());
+			}
+
+
+			[TestMethod]
+			void ByteSizeRespectsTypeSize()
+			{
+				// INIT
+				A a;
+				B b;
+				pod_vector<A> v1;
+				pod_vector<B> v2;
+
+				// ACT
+				v1.push_back(a);
+				v1.push_back(a);
+				v1.push_back(a);
+				v1.push_back(a);
+				v1.push_back(a);
+				v2.push_back(b);
+				v2.push_back(b);
+				v2.push_back(b);
+
+				// ASSERT
+				Assert::IsTrue(sizeof(A) * 5 == v1.byte_size());
+				Assert::IsTrue(sizeof(B) * 3 == v2.byte_size());
 			}
 
 

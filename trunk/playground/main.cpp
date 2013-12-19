@@ -23,7 +23,11 @@ int main()
 {
 	srand(static_cast<unsigned int>(time(0)));
 
+#if !defined(_DEBUG) && !defined(DEBUG)
 	vector<double> v(3000000);
+#else
+	vector<double> v(30000);
+#endif
 
 	generate_n(v.begin(), v.size(), &random);
 	sort(v.begin(), v.end());

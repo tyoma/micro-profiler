@@ -29,10 +29,10 @@ namespace micro_profiler
 	template <typename T>
 	class pod_vector
 	{
-		union
+		union pod_requirement
 		{
-			T __unused1;
-			int __unused2;
+			T _unused1;
+			int _unused2;
 		};
 
 		T *_begin, *_end, *_limit;
@@ -53,6 +53,7 @@ namespace micro_profiler
 
 		const T *data() const throw();
 		size_t size() const throw();
+		size_t byte_size() const throw();
 		size_t capacity() const throw();
 	};
 
@@ -103,6 +104,10 @@ namespace micro_profiler
 	template <typename T>
 	inline size_t pod_vector<T>::size() const throw()
 	{	return _end - _begin;	}
+
+	template <typename T>
+	inline size_t pod_vector<T>::byte_size() const throw()
+	{	return reinterpret_cast<uintptr_t>(_end) - reinterpret_cast<uintptr_t>(_begin);	}
 
 	template <typename T>
 	inline size_t pod_vector<T>::capacity() const throw()

@@ -52,11 +52,55 @@ namespace micro_profiler
 		~scoped_lock() throw();
 	};
 
-
+	
 	inline scoped_lock::scoped_lock(mutex &mtx) throw()
 		: _mutex(mtx)
 	{	_mutex.enter();	}
 
 	inline scoped_lock::~scoped_lock() throw()
 	{	_mutex.leave();	}
+
+	template <typename T, size_t ObjectSize>
+	struct atomic
+	{
+	};
+
+	template <typename T>
+	struct atomic<T, 4>
+	{
+		static T compare_exchange(volatile T &destination, T new_value, T comparand);
+	};
+
+	template <typename T>
+	struct atomic<T, 8>
+	{
+		static T compare_exchange(volatile T &destination, T new_value, T comparand);
+	};
+
+
+	template <typename T>
+	inline T atomic_compare_exchange(volatile T &destination, T new_value, T comparand)
+	{  return atomic<T, sizeof(T)>::compare_exchange(destination, new_value, comparand);   }
+
+	template <typename T>
+	inline void atomic_store(volatile T& destination, T value)
+	{  destination = value; }
+
+
+   long interlocked_compare_exchange(long volatile *destination, long exchange, long comperand);
+   long long interlocked_compare_exchange64(long long volatile *destination, long long exchange, long long comperand);
+
+	template <typename T>
+	inline T atomic<T, 4>::compare_exchange(volatile T &destination, T new_value, T comparand)
+	{
+		return reinterpret_cast<T>(interlocked_compare_exchange(reinterpret_cast<volatile long *>(&destination),
+			reinterpret_cast<long>(new_value), reinterpret_cast<long>(comparand)));
+	}
+
+	template <typename T>
+	inline T atomic<T, 8>::compare_exchange(volatile T &destination, T new_value, T comparand)
+	{
+		return reinterpret_cast<T>(interlocked_compare_exchange64(reinterpret_cast<volatile long long *>(&destination),
+			reinterpret_cast<long long>(new_value), reinterpret_cast<long long>(comparand)));
+	}
 }

@@ -37,15 +37,15 @@ namespace micro_profiler
 {
 	calls_collector calls_collector::_instance(5000000);
 
-
 	class calls_collector::thread_trace_block
 	{
+		typedef pod_vector<call_record> trace_t;
+
 		const unsigned int _thread_id;
 		const size_t _trace_limit;
-		mutex _block_mtx;
 		event_flag _proceed_collection;
-		pod_vector<call_record> _traces[2];
-		pod_vector<call_record> *_active_trace, *_inactive_trace;
+		trace_t _traces[2];
+		trace_t * volatile _active_trace, * volatile _inactive_trace;
 
 		void operator =(const thread_trace_block &);
 
@@ -54,13 +54,14 @@ namespace micro_profiler
 		thread_trace_block(const thread_trace_block &);
 
 		void track(const call_record &call) throw();
+		bool try_track(const call_record &call) throw();
 		void read_collected(acceptor &a);
 	};
 
 
 	calls_collector::thread_trace_block::thread_trace_block(unsigned int thread_id, size_t trace_limit)
-		: _thread_id(thread_id), _trace_limit(trace_limit), _proceed_collection(false, true), _active_trace(&_traces[0]),
-			_inactive_trace(&_traces[1])
+		: _thread_id(thread_id), _trace_limit(sizeof(call_record) * trace_limit), _proceed_collection(false, true),
+			_active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
 
 	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &other)
@@ -70,27 +71,42 @@ namespace micro_profiler
 
 	__forceinline void calls_collector::thread_trace_block::track(const call_record &call) throw()
 	{
-		for (; ; _proceed_collection.wait())
-		{
-			scoped_lock l(_block_mtx);
+		while (!try_track(call))
+			_proceed_collection.wait();
+	}
 
-			if (_active_trace->size() < _trace_limit)
-			{
-				_active_trace->push_back(call);
-				break;
-			}
-		}
+	__forceinline bool calls_collector::thread_trace_block::try_track(const call_record &call) throw()
+	{
+		trace_t * trace = 0;
+
+		do
+			trace = atomic_compare_exchange(_active_trace, trace, _active_trace);
+		while (!trace);
+
+		bool enough_space = trace->byte_size() < _trace_limit;
+
+		if (enough_space)
+			trace->push_back(call);
+
+		atomic_store(_active_trace, trace);
+
+		return enough_space;
 	}
 
 	void calls_collector::thread_trace_block::read_collected(acceptor &a)
 	{
-		{
-			scoped_lock l(_block_mtx);
+		trace_t *trace;
+		trace_t * const active_trace = &_traces[1] == _inactive_trace ? &_traces[0] : &_traces[1];
 
-			if (_active_trace->size() == _trace_limit)
-				_proceed_collection.raise();
-			swap(_active_trace, _inactive_trace);
-		}
+		do
+			trace = atomic_compare_exchange(_active_trace, _inactive_trace, active_trace);
+		while (trace != active_trace);
+
+		_inactive_trace = trace;
+
+		if (_inactive_trace->byte_size() >= _trace_limit)
+			_proceed_collection.raise();
+
 		if (_inactive_trace->size())
 			a.accept_calls(_thread_id, _inactive_trace->data(), _inactive_trace->size());
 		_inactive_trace->clear();
@@ -111,7 +127,7 @@ namespace micro_profiler
 			__int64 delay;
 		} de;
 
-		const unsigned int check_times = 1000;
+		const unsigned int check_times = 10000;
 		thread_trace_block &ttb = get_current_thread_trace();
 
 		for (unsigned int i = 0; i < check_times; ++i)

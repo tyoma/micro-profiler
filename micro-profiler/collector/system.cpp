@@ -60,4 +60,11 @@ namespace micro_profiler
 
 	void mutex::leave()
 	{	::LeaveCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
+
+
+   long interlocked_compare_exchange(long volatile *destination, long exchange, long comperand)
+   {  return _InterlockedCompareExchange(destination, exchange, comperand);  }
+
+   long long interlocked_compare_exchange64(long long volatile *destination, long long exchange, long long comperand)
+   {  return _InterlockedCompareExchange64(destination, exchange, comperand);  }
 }

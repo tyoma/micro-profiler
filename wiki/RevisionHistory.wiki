@@ -1,4 +1,7 @@
 #sidebar TableOfContents
+ * v1.0.520
+  * Two-fold increase in collection speed (two times less impact on the profiled program comparing to that using previous profiler versions);
+
  * v1.0.500
   * Crash at profiling application exiting fixed;
   * x64 installer now installs VS-integration addin;

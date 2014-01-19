@@ -12,6 +12,7 @@ namespace std
 {
 	using tr1::bind;
 	using tr1::ref;
+	using tr1::shared_ptr;
 }
 
 using namespace std;
@@ -56,9 +57,10 @@ namespace micro_profiler
 			void ControlInitialization(event_flag *proceed, vector< shared_ptr<void> > *log, volatile long *times,
 				event_flag *finished)
 			{
-				proceed->wait();
-				log->push_back(shared_ptr<void>(::OpenThread(THREAD_QUERY_INFORMATION, FALSE, ::GetCurrentThreadId()),
-					&::CloseHandle));
+				if (proceed)
+					proceed->wait();
+				log->push_back(shared_ptr<void>(::OpenThread(THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME, FALSE,
+					::GetCurrentThreadId()), &::CloseHandle));
 				RaiseAt(finished, times);
 			}
 
@@ -299,32 +301,27 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void FrontendThreadIsFinishedAfterDestroy()
+			void ProfilerHandleReleaseIsNonBlockingAndFrontendThreadIsFinishedEventually()
 			{
 				// INIT
 				mockups::Tracer tracer;
+				vector< shared_ptr<void> > log_hthread;
+				volatile long times = 1;
 				event_flag initialized(false, true);
-				mockups::Frontend::State state(bind(&event_flag::raise, &initialized));
-				DWORD status1 = 0, status2 = 0;
-
-				// ACT
-				auto_ptr<auto_frontend_controller> init(new auto_frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
+				mockups::Frontend::State state(bind(&ControlInitialization, static_cast<event_flag *>(0), &log_hthread,
+					&times, &initialized));
+				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				auto_ptr<handle> h(fc.profile(&RaiseAt));
 
 				initialized.wait();
 
-				// ASSERT (check postponed)
-				shared_ptr<void> hthread(::OpenThread(THREAD_QUERY_INFORMATION, FALSE, state.creator_thread_id),
-					&::CloseHandle);
-				::GetExitCodeThread(hthread.get(), &status1);
+				// ACT (must not hang)
+				::SuspendThread(log_hthread[0].get());
+				h.reset();
+				::ResumeThread(log_hthread[0].get());
 
-				// ACT
-				init.reset();
-
-				// ASSERT
-				::GetExitCodeThread(hthread.get(), &status2);
-
-				Assert::IsTrue(STILL_ACTIVE == status1);
-				Assert::IsTrue(0 == status2);
+				// ASSERT (must not hang)
+				::WaitForSingleObject(log_hthread[0].get(), INFINITE);
 			}
 
 

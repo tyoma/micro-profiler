@@ -182,6 +182,8 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 
 STDAPI DllRegisterServer()
 {
+	using namespace micro_profiler;
+
 	CString path;
 	CRegKey environment;
 
@@ -196,11 +198,13 @@ STDAPI DllRegisterServer()
 	}
 	environment.SetStringValue(c_profilerdir_var, GetModuleDirectory());
 	::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-	return micro_profiler::g_module.DllRegisterServer(FALSE);
+	return g_module.DllRegisterServer(FALSE);
 }
 
 STDAPI DllUnregisterServer()
 {
+	using namespace micro_profiler;
+
 	CString path;
 	CRegKey environment;
 
@@ -215,5 +219,5 @@ STDAPI DllUnregisterServer()
 	}
 	environment.DeleteValue(c_profilerdir_var);
 	::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-	return micro_profiler::g_module.DllUnregisterServer(FALSE);
+	return g_module.DllUnregisterServer(FALSE);
 }

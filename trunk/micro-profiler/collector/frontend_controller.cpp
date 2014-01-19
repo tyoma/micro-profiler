@@ -30,6 +30,7 @@ namespace std
 {
 	using tr1::bind;
 	using tr1::function;
+	using tr1::shared_ptr;
 	using namespace tr1::placeholders;
 }
 

@@ -38,9 +38,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.stub", "micro-profiler\micro-profiler.stub.vcxproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "easy-addin.tests", "libraries\easy-addin\tests\easy-addin.tests.vcxproj", "{549BC5EC-9E8F-4EEC-A1B0-739EA8D9C74A}"
 EndProject

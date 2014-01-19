@@ -28,8 +28,6 @@
 #include <math.h>
 #include <atlstr.h>
 
-extern HINSTANCE g_instance;
-
 namespace std
 {
 	using tr1::cref;
@@ -42,6 +40,8 @@ using namespace wpl::ui;
 
 namespace micro_profiler
 {
+	extern HINSTANCE g_instance;
+
 	ProfilerMainDialog::ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable)
 		: _statistics(s), _executable(executable)
 	{

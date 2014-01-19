@@ -18,21 +18,42 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "entry.h"
+#include "../entry.h"
 
-#include "calls_collector.h"
-#include "frontend_controller.h"
-#include "../_generated/frontend.h"
+#include <windows.h>
 
-extern "C" CLSID CLSID_ProfilerFrontend;
-
-namespace
+extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE /*hinstance*/, DWORD /*reason*/, LPVOID /*reserved*/)
 {
-	void create_local_frontend(IProfilerFrontend **frontend)
-	{	::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend), (void **)frontend);	}
+	return TRUE;
 }
+
+#ifdef _M_IX86
+extern "C" __declspec(naked) void profile_enter()
+{	__asm ret	}
+
+extern "C" __declspec(naked) void profile_exit()
+{	__asm ret	}
+#else
+extern "C" void profile_enter()
+{	}
+
+extern "C" void profile_exit()
+{	}
+#endif
 
 extern "C" micro_profiler::handle *micro_profiler_initialize(const void * /*image_load_address*/)
 {
-	return new micro_profiler::profiler_frontend(*micro_profiler::calls_collector::instance(), &create_local_frontend);
+	return 0;
 }
+
+STDAPI DllCanUnloadNow()
+{	return S_OK;	}
+
+STDAPI DllGetClassObject(REFCLSID /*rclsid*/, REFIID /*riid*/, LPVOID * /*ppv*/)
+{	return S_OK;	}
+
+STDAPI DllRegisterServer()
+{	return S_OK;	}
+
+STDAPI DllUnregisterServer()
+{	return S_OK;	}

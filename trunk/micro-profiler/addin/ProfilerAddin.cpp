@@ -46,16 +46,19 @@
 
 using namespace std;
 
-extern HINSTANCE g_instance;
-
-const CString c_initializer_cpp = _T("micro-profiler.initializer.cpp");
-const CString c_profiler_library = _T("micro-profiler.lib");
-const CString c_profiler_library_x64 = _T("micro-profiler_x64.lib");
-const CString c_GH_option = _T("/GH");
-const CString c_Gh_option = _T("/Gh");
+namespace micro_profiler
+{
+	extern HINSTANCE g_instance;
+}
 
 namespace
 {
+	const CString c_initializer_cpp = _T("micro-profiler.initializer.cpp");
+	const CString c_profiler_library = _T("micro-profiler.lib");
+	const CString c_profiler_library_x64 = _T("micro-profiler_x64.lib");
+	const CString c_GH_option = _T("/GH");
+	const CString c_Gh_option = _T("/Gh");
+
 	class __declspec(uuid("B36A1712-EF9F-4960-9B33-838BFCC70683")) ProfilerAddin : public ea::command_target
 	{
 		_bstr_t _version;
@@ -260,7 +263,7 @@ namespace
 	{
 		TCHAR image_directory[MAX_PATH + 1] = { 0 };
 
-		::GetModuleFileName(g_instance, image_directory, MAX_PATH);
+		::GetModuleFileName(micro_profiler::g_instance, image_directory, MAX_PATH);
 		CPath path(image_directory);
 
 		path.RemoveFileSpec();

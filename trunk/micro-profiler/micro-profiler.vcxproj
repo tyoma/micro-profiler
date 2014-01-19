@@ -116,7 +116,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>copy collector\entry.h "$(OutDir)"
+      <Command>copy entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
@@ -159,7 +159,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>copy collector\entry.h "$(OutDir)"
+      <Command>copy entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
@@ -202,7 +202,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>copy collector\entry.h "$(OutDir)"
+      <Command>copy entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
@@ -247,7 +247,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Command>copy collector\entry.h "$(OutDir)"
+      <Command>copy entry.h "$(OutDir)"
 copy micro-profiler.initializer.cpp "$(OutDir)"
 copy micro-profiler.initializer.mfc-static.cpp "$(OutDir)"
 copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
@@ -276,7 +276,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="module\frontend-main.cpp" />
+    <ClCompile Include="module\main.cpp" />
     <ClCompile Include="module\ProxyBridge.c" />
   </ItemGroup>
   <ItemGroup>
@@ -297,6 +297,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     <None Include="resources\appicon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="entry.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="module\ProxyBridge.h" />

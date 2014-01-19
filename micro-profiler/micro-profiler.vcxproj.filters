@@ -6,9 +6,6 @@
     <ClCompile Include="addin\ProfilerAddin.cpp">
       <Filter>addin</Filter>
     </ClCompile>
-    <ClCompile Include="module\frontend-main.cpp">
-      <Filter>module</Filter>
-    </ClCompile>
     <ClCompile Include="module\ProxyBridge.c">
       <Filter>module</Filter>
     </ClCompile>
@@ -17,6 +14,9 @@
     </ClCompile>
     <ClCompile Include="frontend\ProfilerSink.cpp">
       <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="module\main.cpp">
+      <Filter>module</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +60,7 @@
     <ClInclude Include="frontend\ProfilerMainDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>
+    <ClInclude Include="entry.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">

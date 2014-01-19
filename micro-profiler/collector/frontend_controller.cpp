@@ -20,6 +20,7 @@
 
 #include "frontend_controller.h"
 
+#include "../entry.h"
 #include "statistics_bridge.h"
 
 #include <windows.h>
@@ -28,6 +29,7 @@
 namespace std
 {
 	using tr1::bind;
+	using tr1::function;
 	using namespace tr1::placeholders;
 }
 
@@ -38,13 +40,26 @@ namespace micro_profiler
 {
 	namespace
 	{
+		class profiler_instance : public handle, wpl::noncopyable
+		{
+			const function<void()> _onrelease;
+
+		public:
+			profiler_instance(const function<void()> &onrelease)
+				: _onrelease(onrelease)
+			{	}
+
+			virtual ~profiler_instance()
+			{	_onrelease();	}
+		};
+
 		shared_ptr<void> create_waitable_timer(int period, PTIMERAPCROUTINE routine, void *parameter)
 		{
 			LARGE_INTEGER li_period = {};
 			shared_ptr<void> htimer(::CreateWaitableTimer(NULL, FALSE, NULL), &::CloseHandle);
 
 			li_period.QuadPart = -period * 10000;
-			::SetWaitableTimer(static_cast<HANDLE>(htimer.get()), &li_period, period, routine, parameter, FALSE);
+			::SetWaitableTimer(htimer.get(), &li_period, period, routine, parameter, FALSE);
 			return htimer;
 		}
 
@@ -55,15 +70,46 @@ namespace micro_profiler
 		{	static_cast<statistics_bridge *>(bridge)->update_frontend();	}
 	}
 
-	profiler_frontend::profiler_frontend(calls_collector_i &collector, const frontend_factory& factory)
-		: _collector(collector), _factory(factory), _exit_event(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle)
-	{	_frontend_thread.reset(new thread(bind(&profiler_frontend::frontend_worker, this)));	}
-
-	profiler_frontend::~profiler_frontend()
-	{	::SetEvent(static_cast<HANDLE>(_exit_event.get()));	}
-
-	void profiler_frontend::frontend_worker()
+	struct frontend_controller::flagged_thread
 	{
+		flagged_thread(const function<void(void * /*exit_event*/)>& thread_function)
+			: exit_event(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle),
+				worker(bind(thread_function, exit_event.get()))
+		{	}
+
+		shared_ptr<void> exit_event;
+		thread worker;
+	};
+
+	frontend_controller::frontend_controller(calls_collector_i &collector, const frontend_factory& factory)
+		: _collector(collector), _factory(factory), _worker_refcount(0)
+	{	}
+
+	frontend_controller::~frontend_controller()
+	{	}
+
+	handle *frontend_controller::profile(const void *image_address)
+	{
+		auto_ptr<profiler_instance> h(new profiler_instance(bind(&frontend_controller::profile_release, this,
+			image_address)));
+
+		if (1 == _InterlockedIncrement(&_worker_refcount))
+		{
+			auto_ptr<flagged_thread> previous_thread;
+
+			swap(previous_thread, _frontend_thread);
+			_frontend_thread.reset(new flagged_thread(bind(&frontend_controller::frontend_worker, this, _1,
+				previous_thread.get())));
+			previous_thread.release();
+		}
+
+		return h.release();
+	}
+
+	void frontend_controller::frontend_worker(void *exit_event, flagged_thread *previous_thread)
+	{
+		delete previous_thread;
+
 		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 		::CoInitialize(NULL);
 		{
@@ -71,9 +117,15 @@ namespace micro_profiler
 			shared_ptr<void> analyzer_timer(create_waitable_timer(10, &analyze, &b));
 			shared_ptr<void> sender_timer(create_waitable_timer(50, &update, &b));
 
-			while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(static_cast<HANDLE>(_exit_event.get()), INFINITE, TRUE))
+			while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(exit_event, INFINITE, TRUE))
 			{	}
 		}
 		::CoUninitialize();
+	}
+
+	void frontend_controller::profile_release(const void * /*image_address*/)
+	{
+		if (0 == _InterlockedDecrement(&_worker_refcount))
+			::SetEvent(_frontend_thread->exit_event.get());
 	}
 }

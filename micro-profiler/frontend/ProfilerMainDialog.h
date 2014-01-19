@@ -35,12 +35,11 @@ namespace std
 	using tr1::function;
 }
 
-class symbol_resolver;
-
 namespace micro_profiler
 {
 	struct functions_list;
 	struct linked_statistics;
+	struct symbol_resolver;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public self_unlockable
 	{

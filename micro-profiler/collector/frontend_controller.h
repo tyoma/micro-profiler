@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include "entry.h"
-
 #include <wpl/base/concepts.h>
 #include <functional>
 #include <memory>
@@ -31,33 +29,32 @@ struct IProfilerFrontend;
 namespace std
 {
 	using tr1::function;
-	using tr1::shared_ptr;
-}
-
-namespace wpl
-{
-	namespace mt
-	{
-		class thread;
-	}
 }
 
 namespace micro_profiler
 {
-	typedef std::function<void(IProfilerFrontend ** /*frontend*/)> frontend_factory;
 	struct calls_collector_i;
+	struct handle;
 
-	class profiler_frontend : public handle, wpl::noncopyable
+	typedef std::function<void(IProfilerFrontend ** /*frontend*/)> frontend_factory;
+
+	class frontend_controller : wpl::noncopyable
 	{
+		struct flagged_thread;
+
 		calls_collector_i &_collector;
 		frontend_factory _factory;
-		std::shared_ptr<void> _exit_event;
-		std::auto_ptr<wpl::mt::thread> _frontend_thread;
+		volatile long _worker_refcount;
+		std::auto_ptr<flagged_thread> _frontend_thread;
 
-		void frontend_worker();
+		void frontend_worker(void *exit_event, flagged_thread *previous_thread);
+
+		void profile_release(const void *image_address);
 
 	public:
-		profiler_frontend(calls_collector_i &collector, const frontend_factory& factory);
-		~profiler_frontend();
+		frontend_controller(calls_collector_i &collector, const frontend_factory& factory);
+		~frontend_controller();
+
+		handle *profile(const void *image_address);
 	};
 }

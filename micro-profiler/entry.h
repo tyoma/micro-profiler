@@ -18,37 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "entry.h"
+#pragma once
 
-#include <windows.h>
-
-#ifdef _M_IX86
-extern "C" __declspec(naked) void profile_enter()
-{	__asm ret	}
-
-extern "C" __declspec(naked) void profile_exit()
-{	__asm ret	}
-#else
-extern "C" void profile_enter()
-{	}
-
-extern "C" void profile_exit()
-{	}
-#endif
-
-extern "C" micro_profiler::handle *micro_profiler_initialize(const void * /*image_load_address*/)
+namespace micro_profiler
 {
-	return 0;
+	struct handle
+	{
+		virtual ~handle() throw() {	}
+	};
 }
 
-STDAPI DllCanUnloadNow()
-{	return S_OK;	}
-
-STDAPI DllGetClassObject(REFCLSID /*rclsid*/, REFIID /*riid*/, LPVOID * /*ppv*/)
-{	return S_OK;	}
-
-STDAPI DllRegisterServer()
-{	return S_OK;	}
-
-STDAPI DllUnregisterServer()
-{	return S_OK;	}
+extern "C" micro_profiler::handle *micro_profiler_initialize(const void *in_image_address);

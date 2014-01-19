@@ -1,4 +1,5 @@
 #include <collector/frontend_controller.h>
+#include <entry.h>
 
 #include "Helpers.h"
 #include "Mockups.h"
@@ -30,12 +31,237 @@ namespace micro_profiler
 
 				com_initialized = S_OK == test.CoCreateInstance(CComBSTR("JobObject")) && test;
 			}
+
+			void RaiseAt(event_flag *e, volatile long *times)
+			{
+				if (0 == _InterlockedDecrement(times))
+					e->raise();
+			}
+
+			void ValidateThread(shared_ptr<void> *hthread, event_flag *finished_event, bool *finished)
+			{
+				if (!*hthread)
+				{
+					hthread->reset(::OpenThread(THREAD_QUERY_INFORMATION, FALSE, ::GetCurrentThreadId()), &::CloseHandle);
+				}
+				else
+				{
+					DWORD status = STILL_ACTIVE;
+
+					*finished = ::GetExitCodeThread(hthread->get(), &status) && STILL_ACTIVE != status;
+					finished_event->raise();
+				}
+			}
+
+			void ControlInitialization(event_flag *proceed, vector< shared_ptr<void> > *log, volatile long *times,
+				event_flag *finished)
+			{
+				proceed->wait();
+				log->push_back(shared_ptr<void>(::OpenThread(THREAD_QUERY_INFORMATION, FALSE, ::GetCurrentThreadId()),
+					&::CloseHandle));
+				RaiseAt(finished, times);
+			}
+
+			class auto_frontend_controller : public frontend_controller
+			{
+				const auto_ptr<handle> _profiler_handle;
+
+			public:
+				auto_frontend_controller(calls_collector_i &collector, const frontend_factory& factory)
+					: frontend_controller(collector, factory), _profiler_handle(profile(&CheckCOMInitializedFactory))
+				{	}
+			};
 		}
 
 		[TestClass]
 		public ref class FrontendControllerTests
 		{
 		public:
+			[TestMethod]
+			void FactoryIsNotCalledIfCollectionHandleWasNotObtained()
+			{
+				// INIT
+				mockups::Frontend::State state;
+				mockups::Tracer tracer;
+
+				// ACT
+				{	frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));	}
+
+				// ASSERT
+				Assert::IsTrue(thread::id() == state.creator_thread_id);
+			}
+
+
+			[TestMethod]
+			void NonNullHandleObtained()
+			{
+				// INIT
+				mockups::Frontend::State state;
+				mockups::Tracer tracer;
+				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+
+				// ACT
+				auto_ptr<handle> h(fc.profile(&CheckCOMInitializedFactory));
+				
+				// ASSERT
+				Assert::IsTrue(NULL != h.get());
+			}
+
+
+			[TestMethod]
+			void FrontendIsCreatedIfProfilerHandleObtained()
+			{
+				// INIT
+				thread::id test_threadid = threadex::current_thread_id();
+				event_flag initialized(false, true);
+				mockups::Frontend::State state(bind(&event_flag::raise, &initialized));
+				mockups::Tracer tracer;
+				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+
+				// ACT
+				auto_ptr<handle> h(fc.profile(&CheckCOMInitializedFactory));
+
+				// ASSERT
+				initialized.wait();
+
+				Assert::IsTrue(thread::id() != state.creator_thread_id);
+				Assert::IsTrue(test_threadid != state.creator_thread_id);
+			}
+
+
+			[TestMethod]
+			void FrontendIsCreatedTwiceOnRepeatedHandleObtaining()
+			{
+				// INIT
+				event_flag initialized(false, true);
+				volatile long counter = 2;
+				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &counter));
+				mockups::Tracer tracer;
+				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				auto_ptr<handle> h;
+
+				// ACT
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset();
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+
+				// ASSERT
+				initialized.wait();
+
+				// INIT
+				counter = 3;
+
+				// ACT
+				h.reset();
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset();
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset();
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+
+				// ASSERT
+				initialized.wait();
+			}
+
+
+			[TestMethod]
+			void FrontendCreationIsRefCounted2()
+			{
+				// INIT
+				event_flag initialized(false, true);
+				volatile long counter = 1;
+				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &counter));
+				mockups::Tracer tracer;
+				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
+				auto_ptr<handle> h1(fc->profile(&CheckCOMInitializedFactory));
+				auto_ptr<handle> h2(fc->profile(&CheckCOMInitializedFactory));
+
+				initialized.wait();
+
+				// ACT
+				h1.reset();
+				h2.reset();
+				fc.reset();
+
+				// ASSERT
+				Assert::IsTrue(0 == counter);
+			}
+
+
+			[TestMethod]
+			void FrontendCreationIsRefCounted3()
+			{
+				// INIT
+				event_flag initialized(false, true);
+				volatile long counter = 1;
+				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &counter));
+				mockups::Tracer tracer;
+				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
+				auto_ptr<handle> h1(fc->profile(&CheckCOMInitializedFactory));
+				auto_ptr<handle> h2(fc->profile(&CheckCOMInitializedFactory));
+				auto_ptr<handle> h3(fc->profile(&CheckCOMInitializedFactory));
+
+				initialized.wait();
+
+				// ACT
+				h1.reset();
+				h2.reset();
+				h3.reset();
+				fc.reset();
+
+				// ASSERT
+				Assert::IsTrue(0 == counter);
+			}
+
+
+			[TestMethod]
+			void ByTheTimeOfSecondFrontendInitializationPreviousThreadIsDead()
+			{
+				// INIT
+				shared_ptr<void> hthread;
+				bool finished = false;
+				event_flag finished_event(false, true);
+				mockups::Frontend::State state(bind(&ValidateThread, &hthread, &finished_event, &finished));
+				mockups::Tracer tracer;
+				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				auto_ptr<handle> h;
+
+				// ACT
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset();
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				finished_event.wait();
+
+				// ASSERT
+				Assert::IsTrue(finished);
+			}
+
+
+			[TestMethod]
+			void AllWorkerThreadsMustExitOnHandlesClosure()
+			{
+				// INIT
+				volatile long times = 2;
+				event_flag proceed(false, false), finished(false, true);
+				vector< shared_ptr<void> > htread_log;
+				mockups::Frontend::State state(bind(&ControlInitialization, &proceed, &htread_log, &times, &finished));
+				mockups::Tracer tracer;
+				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				auto_ptr<handle> h;
+
+				// ACT
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset();
+				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset();
+				proceed.raise();
+				finished.wait();	// wait for the second thread to initialize the frontend
+
+				// ASSERT (must not hang)
+				::WaitForSingleObject(htread_log[1].get(), INFINITE);
+			}
+
+
 			[TestMethod]
 			void FactoryIsCalledInASeparateThread()
 			{
@@ -45,7 +271,7 @@ namespace micro_profiler
 				mockups::Tracer tracer;
 
 				// ACT
-				{	profiler_frontend fe(tracer, mockups::Frontend::MakeFactory(state));	}
+				{	auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));	}
 
 				// ASSERT
 				Assert::IsTrue(thread::id() != state.creator_thread_id);
@@ -63,8 +289,8 @@ namespace micro_profiler
 
 				// ACT
 				{
-					profiler_frontend fe1(tracer1, mockups::Frontend::MakeFactory(state1));
-					profiler_frontend fe2(tracer2, mockups::Frontend::MakeFactory(state2));
+					auto_frontend_controller fe1(tracer1, mockups::Frontend::MakeFactory(state1));
+					auto_frontend_controller fe2(tracer2, mockups::Frontend::MakeFactory(state2));
 				}
 
 				// ASSERT
@@ -77,24 +303,25 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer;
-				mockups::Frontend::State state;
+				event_flag initialized(false, true);
+				mockups::Frontend::State state(bind(&event_flag::raise, &initialized));
 				DWORD status1 = 0, status2 = 0;
 
 				// ACT
-				auto_ptr<profiler_frontend> init(new profiler_frontend(tracer, mockups::Frontend::MakeFactory(state)));
+				auto_ptr<auto_frontend_controller> init(new auto_frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
 
-				state.initialized.wait();
+				initialized.wait();
 
 				// ASSERT (check postponed)
 				shared_ptr<void> hthread(::OpenThread(THREAD_QUERY_INFORMATION, FALSE, state.creator_thread_id),
 					&::CloseHandle);
-				::GetExitCodeThread(static_cast<HANDLE>(hthread.get()), &status1);
+				::GetExitCodeThread(hthread.get(), &status1);
 
 				// ACT
 				init.reset();
 
 				// ASSERT
-				::GetExitCodeThread(static_cast<HANDLE>(hthread.get()), &status2);
+				::GetExitCodeThread(hthread.get(), &status2);
 
 				Assert::IsTrue(STILL_ACTIVE == status1);
 				Assert::IsTrue(0 == status2);
@@ -109,7 +336,7 @@ namespace micro_profiler
 				mockups::Tracer tracer;
 
 				// INIT / ACT
-				{	profiler_frontend fe(tracer, bind(&CheckCOMInitializedFactory, ref(com_initialized)));	}
+				{	auto_frontend_controller fc(tracer, bind(&CheckCOMInitializedFactory, ref(com_initialized)));	}
 
 				// ASSERT
 				Assert::IsTrue(com_initialized);
@@ -122,10 +349,10 @@ namespace micro_profiler
 				// INIT
 				mockups::Tracer tracer;
 				mockups::Frontend::State state;
-				auto_ptr<profiler_frontend> fe(new profiler_frontend(tracer, mockups::Frontend::MakeFactory(state)));
+				auto_ptr<auto_frontend_controller> fc(new auto_frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
 
 				// ACT
-				fe.reset();
+				fc.reset();
 
 				// ASERT
 				Assert::IsTrue(state.released);
@@ -137,12 +364,13 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer;
-				mockups::Frontend::State state;
+				event_flag initialized(false, true);
+				mockups::Frontend::State state(bind(&event_flag::raise, &initialized));
 				TCHAR path[MAX_PATH + 1] = { 0 };
 
 				// ACT
-				auto_ptr<profiler_frontend> fe(new profiler_frontend(tracer, mockups::Frontend::MakeFactory(state)));
-				state.initialized.wait();
+				auto_ptr<auto_frontend_controller> fc(new auto_frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
+				initialized.wait();
 
 				// ASERT
 				::GetModuleFileName(NULL, path, sizeof(path) / sizeof(TCHAR));
@@ -162,7 +390,7 @@ namespace micro_profiler
 				mockups::Tracer tracer;
 				mockups::Frontend::State state;
 
-				profiler_frontend fe(tracer, mockups::Frontend::MakeFactory(state));
+				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
 
 				// ACT / ASSERT
 				Assert::IsTrue(waitable::timeout == state.updated.wait(500));
@@ -176,7 +404,7 @@ namespace micro_profiler
 				mockups::Tracer tracer;
 				mockups::Frontend::State state;
 
-				profiler_frontend fe(tracer, mockups::Frontend::MakeFactory(state));
+				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
 
 				// ACT
 				call_record trace1[] = {
@@ -229,13 +457,46 @@ namespace micro_profiler
 
 
 			[TestMethod]
+			void SecondProfilerInstanceIsWorkable()
+			{
+				// INIT
+				mockups::Tracer tracer;
+				event_flag initialized(false, true);
+				volatile long times = 2;
+				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &times));
+				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				auto_ptr<handle> h(fc.profile(&RaiseAt));
+				call_record trace[] = {
+					{	10000, (void *)(0x31223 + 5)	},
+					{	14000, (void *)(0)	},
+				};
+
+				h.reset();
+				h.reset(fc.profile(&RaiseAt));
+				initialized.wait();
+
+				// ACT
+				tracer.Add(thread::id(), trace);
+
+				// ASSERT (must not hang)
+				state.updated.wait();
+
+				// ACT (duplicated intentionally - flush-at-exit events may count for the first wait)
+				tracer.Add(thread::id(), trace);
+
+				// ASSERT (must not hang)
+				state.updated.wait();
+			}
+
+
+			[TestMethod]
 			void PassReentranceCountToFrontend()
 			{
 				// INIT
 				mockups::Tracer tracer;
 				mockups::Frontend::State state;
 
-				profiler_frontend fe(tracer, mockups::Frontend::MakeFactory(state));
+				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
 
 				// ACT
 				call_record trace1[] = {
@@ -302,8 +563,8 @@ namespace micro_profiler
 				mockups::Tracer tracer1(13), tracer2(29);
 				mockups::Frontend::State state1, state2;
 
-				profiler_frontend fe1(tracer1, mockups::Frontend::MakeFactory(state1));
-				profiler_frontend fe2(tracer2, mockups::Frontend::MakeFactory(state2));
+				auto_frontend_controller fe1(tracer1, mockups::Frontend::MakeFactory(state1));
+				auto_frontend_controller fe2(tracer2, mockups::Frontend::MakeFactory(state2));
 
 				// ACT
 				call_record trace[] = {
@@ -330,7 +591,7 @@ namespace micro_profiler
 				mockups::Tracer tracer(11);
 				mockups::Frontend::State state;
 
-				profiler_frontend fe(tracer, mockups::Frontend::MakeFactory(state));
+				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
 
 				// ACT
 				call_record trace[] = {

@@ -20,6 +20,8 @@
 
 #pragma once
 
+#define COM_NO_WINDOWS_H
+
 #include "primitives.h"
 #include "../_generated/frontend.h"
 

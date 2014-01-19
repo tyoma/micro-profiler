@@ -26,7 +26,7 @@ int main()
 #if !defined(_DEBUG) && !defined(DEBUG)
 	vector<double> v(3000000);
 #else
-	vector<double> v(30000);
+	vector<double> v(500);
 #endif
 
 	generate_n(v.begin(), v.size(), &random);

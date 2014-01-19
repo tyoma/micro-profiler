@@ -66,7 +66,8 @@ namespace micro_profiler
 					throw invalid_argument("'executable' argument is invalid!");
 				_state.load_address = load_address;
 				_state.ticks_resolution = ticks_resolution;
-				_state.initialized.raise();
+				if (_state.oninitialized)
+					_state.oninitialized();
 				return S_OK;
 			}
 
@@ -83,8 +84,8 @@ namespace micro_profiler
 			}
 
 
-			Frontend::State::State()
-				: initialized(false, true), updated(false, true), creator_thread_id(thread::id()), released(false),
+			Frontend::State::State(const std::function<void()>& oninitialized_)
+				: oninitialized(oninitialized_), updated(false, true), creator_thread_id(thread::id()), released(false),
 					load_address(0), ticks_resolution(0)
 			{	}
 

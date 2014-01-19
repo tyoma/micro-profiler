@@ -52,9 +52,9 @@ namespace micro_profiler
 
 			struct Frontend::State
 			{
-				State();
+				explicit State(const std::function<void()>& oninitialized = std::function<void()>());
 
-				wpl::mt::event_flag initialized;
+				std::function<void()> oninitialized;
 				wpl::mt::event_flag updated;
 
 				// Collected data

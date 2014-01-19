@@ -10,9 +10,6 @@
     <ClCompile Include="collector\calls_collector.cpp">
       <Filter>collector</Filter>
     </ClCompile>
-    <ClCompile Include="collector\entry.cpp">
-      <Filter>collector</Filter>
-    </ClCompile>
     <ClCompile Include="collector\system.cpp">
       <Filter>collector</Filter>
     </ClCompile>
@@ -46,9 +43,6 @@
       <Filter>collector</Filter>
     </ClInclude>
     <ClInclude Include="collector\calls_collector.h">
-      <Filter>collector</Filter>
-    </ClInclude>
-    <ClInclude Include="collector\entry.h">
       <Filter>collector</Filter>
     </ClInclude>
     <ClInclude Include="collector\system.h">

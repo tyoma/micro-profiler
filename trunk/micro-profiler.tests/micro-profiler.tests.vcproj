@@ -383,6 +383,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ImageLoadQueueTests.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\MiscTests.cpp"
 			>
 		</File>

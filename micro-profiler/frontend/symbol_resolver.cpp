@@ -51,7 +51,7 @@ namespace micro_profiler
 			virtual ~dbghelp_symbol_resolver();
 
 			virtual const wstring &symbol_name_by_va(const void *address) const;
-			virtual void add_image(const std::wstring &image_path, const void *load_address);
+			virtual void add_image(const wchar_t *image, const void *base);
 		};
 
 
@@ -87,26 +87,21 @@ namespace micro_profiler
 			return i->second;
 		}
 
-		void dbghelp_symbol_resolver::add_image(const std::wstring &image_path, const void *load_address)
+		void dbghelp_symbol_resolver::add_image(const wchar_t *image, const void *base)
 		{
-			CStringA image_path_ansi(image_path.c_str());
+			CStringA image_path_ansi(image);
 
 			::SetLastError(0);
-			if (::SymLoadModule64(me(), NULL, image_path_ansi, NULL, reinterpret_cast<DWORD64>(load_address), 0))
+			if (::SymLoadModule64(me(), NULL, image_path_ansi, NULL, reinterpret_cast<DWORD64>(base), 0))
 			{
 				if (ERROR_SUCCESS == ::GetLastError() || INVALID_FILE_ATTRIBUTES != GetFileAttributesA(image_path_ansi))
 					return;
-				::SymUnloadModule64(me(), reinterpret_cast<DWORD64>(load_address));
+				::SymUnloadModule64(me(), reinterpret_cast<DWORD64>(base));
 			}
 			throw invalid_argument("");
 		}
 	}
 
-	shared_ptr<symbol_resolver> symbol_resolver::create(const wstring &image_path, unsigned __int64 load_address)
-	{
-		shared_ptr<dbghelp_symbol_resolver> r(new dbghelp_symbol_resolver());
-		
-		r->add_image(image_path, reinterpret_cast<const void *>(load_address));
-		return r;
-	}
+	shared_ptr<symbol_resolver> symbol_resolver::create()
+	{	return shared_ptr<dbghelp_symbol_resolver>(new dbghelp_symbol_resolver());	}
 }

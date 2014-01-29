@@ -41,18 +41,18 @@ namespace micro_profiler
 {
 	namespace
 	{
-		class profiler_instance : public handle, wpl::noncopyable
+		struct COMInitializer : wpl::noncopyable
 		{
-			const function<void()> _onrelease;
-
-		public:
-			profiler_instance(const function<void()> &onrelease)
-				: _onrelease(onrelease)
-			{	}
-
-			virtual ~profiler_instance()
-			{	_onrelease();	}
+			COMInitializer();
+			~COMInitializer();
 		};
+
+		
+		COMInitializer::COMInitializer()
+		{	::CoInitialize(NULL);	}
+
+		COMInitializer::~COMInitializer()
+		{	::CoUninitialize();	}
 
 		shared_ptr<void> create_waitable_timer(int period, PTIMERAPCROUTINE routine, void *parameter)
 		{
@@ -71,62 +71,90 @@ namespace micro_profiler
 		{	static_cast<statistics_bridge *>(bridge)->update_frontend();	}
 	}
 
-	struct frontend_controller::flagged_thread
+	class frontend_controller::profiler_instance : public handle, wpl::noncopyable
 	{
-		flagged_thread(const function<void(void * /*exit_event*/)>& thread_function)
-			: exit_event(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle),
-				worker(bind(thread_function, exit_event.get()))
-		{	}
+		const void *_in_image_address;
+		shared_ptr<image_load_queue> _image_load_queue;
+		shared_ptr<volatile long> _worker_refcount;
+		shared_ptr<void> _exit_event;
 
-		shared_ptr<void> exit_event;
-		thread worker;
+	public:
+		profiler_instance(const void *in_image_address, shared_ptr<image_load_queue> image_load_queue,
+			shared_ptr<volatile long> worker_refcount, shared_ptr<void> exit_event);
+		virtual ~profiler_instance();
 	};
 
+
+	frontend_controller::profiler_instance::profiler_instance(const void *in_image_address,
+			shared_ptr<image_load_queue> image_load_queue, shared_ptr<volatile long> worker_refcount,
+			shared_ptr<void> exit_event)
+		: _in_image_address(in_image_address), _image_load_queue(image_load_queue), _worker_refcount(worker_refcount),
+			_exit_event(exit_event)
+	{	_image_load_queue->load(in_image_address);	}
+
+	frontend_controller::profiler_instance::~profiler_instance()
+	{
+		_image_load_queue->unload(_in_image_address);
+		if (0 == _InterlockedDecrement(_worker_refcount.get()))
+			::SetEvent(_exit_event.get());
+	}
+
+
 	frontend_controller::frontend_controller(calls_collector_i &collector, const frontend_factory& factory)
-		: _collector(collector), _factory(factory), _worker_refcount(0)
+		: _collector(collector), _factory(factory), _image_load_queue(new image_load_queue),
+			_worker_refcount(new volatile long())			
 	{	}
 
 	frontend_controller::~frontend_controller()
-	{	}
-
-	handle *frontend_controller::profile(const void *image_address)
 	{
-		auto_ptr<profiler_instance> h(new profiler_instance(bind(&frontend_controller::profile_release, this,
-			image_address)));
-
-		if (1 == _InterlockedIncrement(&_worker_refcount))
-		{
-			auto_ptr<flagged_thread> previous_thread;
-
-			swap(previous_thread, _frontend_thread);
-			_frontend_thread.reset(new flagged_thread(bind(&frontend_controller::frontend_worker, this, _1,
-				previous_thread.get())));
-			previous_thread.release();
-		}
-
-		return h.release();
+		if (_frontend_thread.get())
+			_frontend_thread->detach();
 	}
 
-	void frontend_controller::frontend_worker(void *exit_event, flagged_thread *previous_thread)
+	handle *frontend_controller::profile(const void *in_image_address)
 	{
+		if (1 == _InterlockedIncrement(_worker_refcount.get()))
+		{
+			shared_ptr<void> exit_event(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
+			auto_ptr<thread> frontend_thread(new thread(bind(&frontend_controller::frontend_worker,
+				_frontend_thread.get(), _factory, &_collector, _image_load_queue, exit_event)));
+
+			_frontend_thread.release();
+
+			swap(_exit_event, exit_event);
+			swap(_frontend_thread, frontend_thread);
+		}
+
+		return new profiler_instance(in_image_address, _image_load_queue, _worker_refcount, _exit_event);
+	}
+
+	void frontend_controller::force_stop()
+	{
+		if (_exit_event && _frontend_thread.get())
+		{
+			::SetEvent(_exit_event.get());
+			_frontend_thread->join();
+		}
+	}
+
+	void frontend_controller::frontend_worker(thread *previous_thread, const frontend_factory &factory,
+		calls_collector_i *collector, const shared_ptr<image_load_queue> &image_load_queue,
+		const shared_ptr<void> &exit_event)
+	{
+		if (previous_thread)
+			previous_thread->join();
 		delete previous_thread;
 
 		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-		::CoInitialize(NULL);
-		{
-			statistics_bridge b(_collector, _factory);
-			shared_ptr<void> analyzer_timer(create_waitable_timer(10, &analyze, &b));
-			shared_ptr<void> sender_timer(create_waitable_timer(50, &update, &b));
 
-			while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(exit_event, INFINITE, TRUE))
-			{	}
-		}
-		::CoUninitialize();
-	}
+		COMInitializer com;
+		statistics_bridge b(*collector, factory, image_load_queue);
+		shared_ptr<void> analyzer_timer(create_waitable_timer(10, &analyze, &b));
+		shared_ptr<void> sender_timer(create_waitable_timer(50, &update, &b));
 
-	void frontend_controller::profile_release(const void * /*image_address*/)
-	{
-		if (0 == _InterlockedDecrement(&_worker_refcount))
-			::SetEvent(_frontend_thread->exit_event.get());
+		while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(exit_event.get(), INFINITE, TRUE))
+		{	}
+		b.analyze();
+		b.update_frontend();
 	}
 }

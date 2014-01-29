@@ -3,17 +3,19 @@
 #include <collector/calls_collector.h>
 #include <collector/system.h>
 #include <common/primitives.h>
-#include <_generated/frontend.h>
 #include <functional>
 #include <string>
 #include <vector>
 #include <wpl/mt/synchronization.h>
 #include <wpl/mt/thread.h>
+#include <wpl/base/concepts.h>
 
 namespace std
 {
 	using tr1::function;
 }
+
+struct IProfilerFrontend;
 
 namespace micro_profiler
 {
@@ -21,53 +23,36 @@ namespace micro_profiler
 	{
 		namespace mockups
 		{
-			class Frontend : public IProfilerFrontend
+			struct FrontendState : wpl::noncopyable
 			{
-			public:
-				struct State;
+				struct ReceivedEntry;
 
-			public:
-				static std::function<void(IProfilerFrontend **)> MakeFactory(State& state);
+				explicit FrontendState(const std::function<void()>& oninitialized = std::function<void()>());
 
-			private:
-				explicit Frontend(State& state);
-				~Frontend();
+				std::function<void(IProfilerFrontend **)> MakeFactory();
 
-				static void Create(State& state, IProfilerFrontend **frontend);
-
-				STDMETHODIMP QueryInterface(REFIID riid, void **ppv);
-				STDMETHODIMP_(ULONG) AddRef();
-				STDMETHODIMP_(ULONG) Release();
-
-				STDMETHODIMP Initialize(BSTR executable, hyper load_address, hyper ticks_resolution);
-				STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
-
-				const Frontend &operator =(const Frontend &rhs);
-
-			private:
-				unsigned int _refcount;
-				State &_state;
-			};
-
-
-			struct Frontend::State
-			{
-				explicit State(const std::function<void()>& oninitialized = std::function<void()>());
-
+				wpl::mt::event_flag update_lock;
 				std::function<void()> oninitialized;
-				wpl::mt::event_flag updated;
 
 				// Collected data
-				wpl::mt::thread::id creator_thread_id;
-				bool highest_thread_priority;
+				long process_id;
+				long long ticks_resolution;
 
-				std::wstring executable;
-				hyper load_address;
-				hyper ticks_resolution;
-
-				std::vector<statistics_map_detailed> update_log;
+				std::vector<ReceivedEntry> update_log;
+				wpl::mt::event_flag updated;
+				wpl::mt::event_flag modules_state_updated;
 
 				bool released;
+			};
+			
+
+			struct FrontendState::ReceivedEntry
+			{
+				typedef std::pair<uintptr_t /*image_address*/, std::wstring /*image_path*/> image_info;
+
+				std::vector<image_info> image_loads;
+				statistics_map_detailed update;
+				std::vector<uintptr_t> image_unloads;
 			};
 
 

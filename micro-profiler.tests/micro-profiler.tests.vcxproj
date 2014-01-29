@@ -230,6 +230,7 @@
     <ClCompile Include="frontend\FunctionListTests.cpp" />
     <ClCompile Include="frontend\OrderedViewTests.cpp" />
     <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="ImageLoadQueueTests.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="Mockups.cpp" />
     <ClCompile Include="ObjectLockTests.cpp" />

@@ -1,6 +1,9 @@
 #pragma once
 
 #include <wpl/mt/thread.h>
+#include <algorithm>
+#include <string>
+#include <tchar.h>
 
 typedef struct FunctionStatisticsTag FunctionStatistics;
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
@@ -12,10 +15,36 @@ namespace micro_profiler
 
 	namespace tests
 	{
-		namespace threadex
+		struct running_thread
 		{
-			void sleep(unsigned int duration);
-			wpl::mt::thread::id current_thread_id();
+			virtual ~running_thread() throw() { }
+			virtual void join() = 0;
+			virtual wpl::mt::thread::id get_id() const = 0;
+			virtual bool is_running() const = 0;
+			
+			virtual void suspend() = 0;
+			virtual void resume() = 0;
+		};
+
+		int get_current_process_id();
+
+		namespace this_thread
+		{
+			void sleep_for(unsigned int duration);
+			wpl::mt::thread::id get_id();
+			std::shared_ptr<running_thread> open();
+		};
+
+		class image : private std::shared_ptr<void>
+		{
+			std::wstring _fullpath;
+
+		public:
+			explicit image(const TCHAR *path);
+
+			const void *load_address() const;
+			const wchar_t *absolute_path() const;
+			const void *get_symbol_address(const char *name) const;
 		};
 
 
@@ -32,6 +61,9 @@ namespace micro_profiler
 		template <typename T, size_t size>
 		inline size_t array_size(T (&)[size])
 		{	return size;	}
+
+		inline void toupper(std::wstring &s)
+		{	std::transform(s.begin(), s.end(), s.begin(), &towupper);	}
 	}
 }
 

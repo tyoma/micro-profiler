@@ -102,6 +102,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
+      <AdditionalDependencies>psapi.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -145,6 +146,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
+      <AdditionalDependencies>psapi.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -188,6 +190,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
+      <AdditionalDependencies>psapi.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -233,6 +236,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
+      <AdditionalDependencies>psapi.lib</AdditionalDependencies>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>

@@ -98,7 +98,7 @@ namespace micro_profiler
 
 				// ASSERT
 				Assert::IsFalse(a.collected.empty());
-				Assert::IsTrue(threadex::current_thread_id() == a.collected[0].first);
+				Assert::IsTrue(this_thread::get_id() == a.collected[0].first);
 				Assert::IsTrue(2 == a.collected[0].second.size());
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
 				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
@@ -175,7 +175,7 @@ namespace micro_profiler
 
 				// ASSERT
 				Assert::IsFalse(a.collected.empty());
-				Assert::IsTrue(threadex::current_thread_id() == a.collected[0].first);
+				Assert::IsTrue(this_thread::get_id() == a.collected[0].first);
 				Assert::IsTrue(4 == a.collected[0].second.size());
 				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
 				Assert::IsTrue(a.collected[0].second[1].timestamp < a.collected[0].second[2].timestamp);
@@ -213,17 +213,17 @@ namespace micro_profiler
 
 				while (a1.total_entries < 1340)
 				{
-					threadex::sleep(30);
+					this_thread::sleep_for(30);
 					c1.read_collected(a1);
 				}
 				while (a2.total_entries < 2460)
 				{
-					threadex::sleep(30);
+					this_thread::sleep_for(30);
 					c2.read_collected(a2);
 				}
 				while (a3.total_entries < 1270)
 				{
-					threadex::sleep(30);
+					this_thread::sleep_for(30);
 					c3.read_collected(a3);
 				}
 

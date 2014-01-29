@@ -39,11 +39,20 @@ struct FunctionStatisticsDetailedTag
 	[size_is(ChildrenCount)] FunctionStatistics *ChildrenStatistics;
 } FunctionStatisticsDetailed;
 
+typedef [	public	]
+struct ImageLoadInfoTag
+{
+	hyper Address;
+	BSTR Path;
+} ImageLoadInfo;
+
 [	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), pointer_default(unique)	]
 interface IProfilerFrontend : IUnknown
 {
-	HRESULT Initialize([in] BSTR executable, [in] hyper load_address, [in] hyper ticks_resolution);
+	HRESULT Initialize([in] long process_id, [in] hyper ticks_resolution);
+	HRESULT LoadImages([in] long count, [in, size_is(count)] ImageLoadInfo *images);
 	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] FunctionStatisticsDetailed *statistics);
+	HRESULT UnloadImages([in] long count, [in, size_is(count)] hyper *images);
 };
 
 [ uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3) ]

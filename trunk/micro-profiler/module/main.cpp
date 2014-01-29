@@ -46,11 +46,11 @@ namespace micro_profiler
 	#ifdef _M_IX86
 		const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIR");
 		unsigned char g_exitprocess_patch[7] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
-		void **g_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 1);
+		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 1);
 	#elif _M_X64
 		const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIRX64");
 		unsigned char g_exitprocess_patch[12] = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
-		void **g_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 2);
+		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 2);
 	#endif
 		const CString c_profilerdir_var_decorated = CString(_T("%")) + c_profilerdir_var + _T("%");
 		const LPCTSTR c_path_separator = _T(";");
@@ -108,7 +108,7 @@ namespace micro_profiler
 		void WINAPI ExitProcessHooked(UINT exit_code)
 		{
 			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
-			g_frontend_controller.reset();
+			g_frontend_controller->force_stop();
 			::ExitProcess(exit_code);
 		}
 
@@ -117,7 +117,7 @@ namespace micro_profiler
 			shared_ptr<void> hkernel(::LoadLibrary(_T("kernel32.dll")), &::FreeLibrary);
 
 			g_exitprocess_address = ::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "ExitProcess");
-			*g_jmp_address = &ExitProcessHooked;
+			*g_exitprocess_patch_jmp_address = &ExitProcessHooked;
 			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
 		}
 	}

@@ -26,56 +26,92 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void CheckCOMInitializedFactory(bool &com_initialized)
+			void CheckCOMInitialized(event_flag *e, bool *com_initialized)
 			{
 				CComPtr<IUnknown> test;
 
-				com_initialized = S_OK == test.CoCreateInstance(CComBSTR("JobObject")) && test;
+				*com_initialized = S_OK == test.CoCreateInstance(CComBSTR("JobObject")) && test;
+				e->raise();
 			}
 
-			void RaiseAt(event_flag *e, volatile long *times)
+			void RaiseAt(event_flag *e, volatile long *times_to_event)
 			{
-				if (0 == _InterlockedDecrement(times))
+				if (0 == _InterlockedDecrement(times_to_event))
 					e->raise();
 			}
 
-			void ValidateThread(shared_ptr<void> *hthread, event_flag *finished_event, bool *finished)
+			void ValidateThread(shared_ptr<running_thread> *hthread, event_flag *second_initialized, bool *first_finished)
 			{
-				if (!*hthread)
+				if (*hthread)
 				{
-					hthread->reset(::OpenThread(THREAD_QUERY_INFORMATION, FALSE, ::GetCurrentThreadId()), &::CloseHandle);
+					*first_finished = !(*hthread)->is_running();
+					second_initialized->raise();
 				}
-				else
-				{
-					DWORD status = STILL_ACTIVE;
-
-					*finished = ::GetExitCodeThread(hthread->get(), &status) && STILL_ACTIVE != status;
-					finished_event->raise();
-				}
+				*hthread = this_thread::open();
 			}
 
-			void ControlInitialization(event_flag *proceed, vector< shared_ptr<void> > *log, volatile long *times,
-				event_flag *finished)
+			void LogThread1(shared_ptr<running_thread> *hthread, event_flag *initialized)
 			{
-				if (proceed)
-					proceed->wait();
-				log->push_back(shared_ptr<void>(::OpenThread(THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME, FALSE,
-					::GetCurrentThreadId()), &::CloseHandle));
-				RaiseAt(finished, times);
+				*hthread = this_thread::open();
+				initialized->raise();
 			}
 
-			class auto_frontend_controller : public frontend_controller
+			void LogThreadN(vector< shared_ptr<running_thread> > *log, volatile long *times_to_initialized,
+				event_flag *initialized)
 			{
+				log->push_back(this_thread::open());
+				RaiseAt(initialized, times_to_initialized);
+			}
+
+			void ControlInitialization(event_flag *proceed, vector< shared_ptr<running_thread> > *log,
+				volatile long *times_to_initialized, event_flag *initialized)
+			{
+				proceed->wait();
+				LogThreadN(log, times_to_initialized, initialized);
+			}
+
+			handle *profile_this(frontend_controller &fc)
+			{	return fc.profile(&RaiseAt);	}
+
+			class sync_stop_frontend_controller : public frontend_controller
+			{
+			public:
+				sync_stop_frontend_controller(calls_collector_i &collector, mockups::FrontendState &state)
+					: frontend_controller(collector, state.MakeFactory())
+				{	}
+
+				~sync_stop_frontend_controller()
+				{	force_stop();	}
+			};
+
+			class auto_frontend_controller : public sync_stop_frontend_controller
+			{
+			public:
+				auto_frontend_controller(calls_collector_i &collector, mockups::FrontendState &state)
+					: sync_stop_frontend_controller(collector, state), _profiler_handle(profile(&RaiseAt))
+				{	}
+
+			private:
 				const auto_ptr<handle> _profiler_handle;
+			};
+
+			class scoped_thread_join
+			{
+				shared_ptr<running_thread> &_thread;
 
 			public:
-				auto_frontend_controller(calls_collector_i &collector, const frontend_factory& factory)
-					: frontend_controller(collector, factory), _profiler_handle(profile(&CheckCOMInitializedFactory))
+				scoped_thread_join(shared_ptr<running_thread> &thread)
+					: _thread(thread)
 				{	}
+
+				~scoped_thread_join()
+				{	_thread->join();	}
 			};
 		}
 
 		[TestClass]
+		[DeploymentItem("symbol_container_1.dll")]
+		[DeploymentItem("symbol_container_2.dll")]
 		public ref class FrontendControllerTests
 		{
 		public:
@@ -83,14 +119,28 @@ namespace micro_profiler
 			void FactoryIsNotCalledIfCollectionHandleWasNotObtained()
 			{
 				// INIT
-				mockups::Frontend::State state;
 				mockups::Tracer tracer;
+				event_flag initialized(false, true);
+				mockups::FrontendState state(bind(&event_flag::raise, &initialized));
 
 				// ACT
-				{	frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));	}
+				{	frontend_controller fc(tracer, state.MakeFactory());	}
 
 				// ASSERT
-				Assert::IsTrue(thread::id() == state.creator_thread_id);
+				Assert::IsTrue(waitable::timeout == initialized.wait(0));
+			}
+
+
+			[TestMethod]
+			void ForcedStopIsAllowedOnStartedController()
+			{
+				// INIT
+				mockups::Tracer tracer;
+				mockups::FrontendState state;
+				frontend_controller fc(tracer, state.MakeFactory());
+
+				// ACT / ASSERT (must not throw)
+				fc.force_stop();
 			}
 
 
@@ -98,12 +148,12 @@ namespace micro_profiler
 			void NonNullHandleObtained()
 			{
 				// INIT
-				mockups::Frontend::State state;
 				mockups::Tracer tracer;
-				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				mockups::FrontendState state;
+				sync_stop_frontend_controller fc(tracer, state);
 
 				// ACT
-				auto_ptr<handle> h(fc.profile(&CheckCOMInitializedFactory));
+				auto_ptr<handle> h(profile_this(fc));
 				
 				// ASSERT
 				Assert::IsTrue(NULL != h.get());
@@ -111,41 +161,84 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void FrontendIsCreatedIfProfilerHandleObtained()
+			void FrontendIsCreatedInASeparateThreadWhenProfilerHandleObtained()
 			{
 				// INIT
-				thread::id test_threadid = threadex::current_thread_id();
-				event_flag initialized(false, true);
-				mockups::Frontend::State state(bind(&event_flag::raise, &initialized));
 				mockups::Tracer tracer;
-				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				shared_ptr<running_thread> hthread;
+				event_flag initialized(false, true);
+				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				scoped_thread_join stj(hthread);
+				frontend_controller fc(tracer, state.MakeFactory());
 
 				// ACT
-				auto_ptr<handle> h(fc.profile(&CheckCOMInitializedFactory));
+				auto_ptr<handle> h(profile_this(fc));
 
 				// ASSERT
 				initialized.wait();
 
-				Assert::IsTrue(thread::id() != state.creator_thread_id);
-				Assert::IsTrue(test_threadid != state.creator_thread_id);
+				Assert::IsTrue(!!hthread);
+				Assert::IsTrue(this_thread::get_id() != hthread->get_id());
 			}
 
 
 			[TestMethod]
-			void FrontendIsCreatedTwiceOnRepeatedHandleObtaining()
+			void TwoCoexistingFrontendsHasDifferentWorkerThreads()
 			{
 				// INIT
+				mockups::Tracer tracer1, tracer2;
+				shared_ptr<running_thread> hthread1, hthread2;
+				event_flag initialized1(false, true), initialized2(false, true);
+				mockups::FrontendState state1(bind(&LogThread1, &hthread1, &initialized1)),
+					state2(bind(&LogThread1, &hthread2, &initialized2));
+				auto_frontend_controller fc1(tracer1, state1);
+				auto_frontend_controller fc2(tracer2, state2);
+
+				// ACT
+				initialized1.wait();
+				initialized2.wait();
+
+				// ASSERT
+				Assert::IsTrue(hthread1->get_id() != hthread2->get_id());
+			}
+
+
+			[TestMethod]
+			void FrontendStopsImmediatelyAtForceStopRequest()
+			{
+				// INIT
+				mockups::Tracer tracer(11);
+				shared_ptr<running_thread> hthread;
+				event_flag initialized(false, true);
+				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				frontend_controller fc(tracer, state.MakeFactory());
+				auto_ptr<handle> h(profile_this(fc));
+
+				initialized.wait();
+
+				// ACT
+				fc.force_stop();
+
+				// ASSERT
+				Assert::IsFalse(hthread->is_running());
+			}
+
+
+			[TestMethod]
+			void FrontendIsRecreatedOnRepeatedHandleObtaining()
+			{
+				// INIT
+				mockups::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long counter = 2;
-				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &counter));
-				mockups::Tracer tracer;
-				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				mockups::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h;
 
 				// ACT
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 				h.reset();
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 
 				// ASSERT
 				initialized.wait();
@@ -155,11 +248,11 @@ namespace micro_profiler
 
 				// ACT
 				h.reset();
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 				h.reset();
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 				h.reset();
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 
 				// ASSERT
 				initialized.wait();
@@ -170,20 +263,21 @@ namespace micro_profiler
 			void FrontendCreationIsRefCounted2()
 			{
 				// INIT
+				mockups::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long counter = 1;
-				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &counter));
-				mockups::Tracer tracer;
-				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
-				auto_ptr<handle> h1(fc->profile(&CheckCOMInitializedFactory));
-				auto_ptr<handle> h2(fc->profile(&CheckCOMInitializedFactory));
+				mockups::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				frontend_controller fc(tracer, state.MakeFactory());
+
+				// ACT
+				auto_ptr<handle> h1(profile_this(fc));
+				auto_ptr<handle> h2(profile_this(fc));
 
 				initialized.wait();
 
-				// ACT
 				h1.reset();
 				h2.reset();
-				fc.reset();
+				fc.force_stop();
 
 				// ASSERT
 				Assert::IsTrue(0 == counter);
@@ -194,22 +288,23 @@ namespace micro_profiler
 			void FrontendCreationIsRefCounted3()
 			{
 				// INIT
+				mockups::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long counter = 1;
-				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &counter));
-				mockups::Tracer tracer;
-				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
-				auto_ptr<handle> h1(fc->profile(&CheckCOMInitializedFactory));
-				auto_ptr<handle> h2(fc->profile(&CheckCOMInitializedFactory));
-				auto_ptr<handle> h3(fc->profile(&CheckCOMInitializedFactory));
+				mockups::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				frontend_controller fc(tracer, state.MakeFactory());
+
+				// ACT
+				auto_ptr<handle> h1(profile_this(fc));
+				auto_ptr<handle> h2(profile_this(fc));
+				auto_ptr<handle> h3(profile_this(fc));
 
 				initialized.wait();
 
-				// ACT
-				h1.reset();
-				h2.reset();
 				h3.reset();
-				fc.reset();
+				h2.reset();
+				h1.reset();
+				fc.force_stop();
 
 				// ASSERT
 				Assert::IsTrue(0 == counter);
@@ -217,25 +312,26 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void ByTheTimeOfSecondFrontendInitializationPreviousThreadIsDead()
+			void FirstThreadIsDeadByTheTimeOfTheSecondInitialization()
 			{
 				// INIT
-				shared_ptr<void> hthread;
-				bool finished = false;
-				event_flag finished_event(false, true);
-				mockups::Frontend::State state(bind(&ValidateThread, &hthread, &finished_event, &finished));
 				mockups::Tracer tracer;
-				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				shared_ptr<running_thread> hthread;
+				event_flag second_initialized(false, true);
+				bool first_finished = false;
+				mockups::FrontendState state(bind(&ValidateThread, &hthread, &second_initialized, &first_finished));
+				scoped_thread_join stj(hthread);
+				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h;
 
 				// ACT
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 				h.reset();
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
-				finished_event.wait();
+				h.reset(profile_this(fc));
+				second_initialized.wait();
 
 				// ASSERT
-				Assert::IsTrue(finished);
+				Assert::IsTrue(first_finished);
 			}
 
 
@@ -243,60 +339,24 @@ namespace micro_profiler
 			void AllWorkerThreadsMustExitOnHandlesClosure()
 			{
 				// INIT
-				volatile long times = 2;
-				event_flag proceed(false, false), finished(false, true);
-				vector< shared_ptr<void> > htread_log;
-				mockups::Frontend::State state(bind(&ControlInitialization, &proceed, &htread_log, &times, &finished));
 				mockups::Tracer tracer;
-				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				event_flag proceed(false, false), finished(false, true);
+				vector< shared_ptr<running_thread> > htread_log;
+				volatile long times = 2;
+				mockups::FrontendState state(bind(&ControlInitialization, &proceed, &htread_log, &times, &finished));
+				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h;
 
 				// ACT
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 				h.reset();
-				h.reset(fc.profile(&CheckCOMInitializedFactory));
+				h.reset(profile_this(fc));
 				h.reset();
 				proceed.raise();
 				finished.wait();	// wait for the second thread to initialize the frontend
 
 				// ASSERT (must not hang)
-				::WaitForSingleObject(htread_log[1].get(), INFINITE);
-			}
-
-
-			[TestMethod]
-			void FactoryIsCalledInASeparateThread()
-			{
-				// INIT
-				thread::id test_threadid = threadex::current_thread_id();
-				mockups::Frontend::State state;
-				mockups::Tracer tracer;
-
-				// ACT
-				{	auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));	}
-
-				// ASSERT
-				Assert::IsTrue(thread::id() != state.creator_thread_id);
-				Assert::IsTrue(test_threadid != state.creator_thread_id);
-				Assert::IsTrue(state.highest_thread_priority);
-			}
-
-
-			[TestMethod]
-			void TwoCoexistingFrontendsHasDifferentWorkerThreads()
-			{
-				// INIT
-				mockups::Tracer tracer1, tracer2;
-				mockups::Frontend::State state1, state2;
-
-				// ACT
-				{
-					auto_frontend_controller fe1(tracer1, mockups::Frontend::MakeFactory(state1));
-					auto_frontend_controller fe2(tracer2, mockups::Frontend::MakeFactory(state2));
-				}
-
-				// ASSERT
-				Assert::IsTrue(state1.creator_thread_id != state2.creator_thread_id);
+				htread_log[1]->join();
 			}
 
 
@@ -305,23 +365,22 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer;
-				vector< shared_ptr<void> > log_hthread;
-				volatile long times = 1;
+				shared_ptr<running_thread> hthread;
 				event_flag initialized(false, true);
-				mockups::Frontend::State state(bind(&ControlInitialization, static_cast<event_flag *>(0), &log_hthread,
-					&times, &initialized));
-				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
-				auto_ptr<handle> h(fc.profile(&RaiseAt));
+				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				scoped_thread_join stj(hthread);
+				frontend_controller fc(tracer, state.MakeFactory());
+				auto_ptr<handle> h(profile_this(fc));
 
 				initialized.wait();
 
 				// ACT (must not hang)
-				::SuspendThread(log_hthread[0].get());
+				hthread->suspend();
 				h.reset();
-				::ResumeThread(log_hthread[0].get());
+				hthread->resume();
 
 				// ASSERT (must not hang)
-				::WaitForSingleObject(log_hthread[0].get(), INFINITE);
+				hthread->join();
 			}
 
 
@@ -329,11 +388,14 @@ namespace micro_profiler
 			void FrontendThreadHasCOMInitialized()	// Actually this will always pass when calling from managed, since COM already initialized
 			{
 				// INIT
-				bool com_initialized = false;
 				mockups::Tracer tracer;
+				event_flag initialized(false, true);
+				bool com_initialized = false;
+				mockups::FrontendState state(bind(&CheckCOMInitialized, &initialized, &com_initialized));
+				auto_frontend_controller fc(tracer, state);
 
 				// INIT / ACT
-				{	auto_frontend_controller fc(tracer, bind(&CheckCOMInitializedFactory, ref(com_initialized)));	}
+				initialized.wait();
 
 				// ASSERT
 				Assert::IsTrue(com_initialized);
@@ -345,11 +407,16 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer;
-				mockups::Frontend::State state;
-				auto_ptr<auto_frontend_controller> fc(new auto_frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
+				shared_ptr<running_thread> hthread;
+				event_flag initialized(false, true);
+				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				frontend_controller fc(tracer, state.MakeFactory());
+				auto_ptr<handle> h(profile_this(fc));
 
 				// ACT
-				fc.reset();
+				initialized.wait();
+				h.reset();
+				hthread->join();
 
 				// ASERT
 				Assert::IsTrue(state.released);
@@ -357,25 +424,21 @@ namespace micro_profiler
 
 
 			[TestMethod]
-			void FrontendInitialized()
+			void FrontendInitializedWithProcessIdAndTicksResolution()
 			{
 				// INIT
 				mockups::Tracer tracer;
 				event_flag initialized(false, true);
-				mockups::Frontend::State state(bind(&event_flag::raise, &initialized));
-				TCHAR path[MAX_PATH + 1] = { 0 };
+				mockups::FrontendState state(bind(&event_flag::raise, &initialized));
+				auto_frontend_controller fc(tracer, state);
 
 				// ACT
-				auto_ptr<auto_frontend_controller> fc(new auto_frontend_controller(tracer, mockups::Frontend::MakeFactory(state)));
 				initialized.wait();
 
 				// ASERT
-				::GetModuleFileName(NULL, path, sizeof(path) / sizeof(TCHAR));
-				void *exe_module = ::GetModuleHandle(NULL);
 				hyper real_resolution = timestamp_precision();
 
-				Assert::IsTrue(CComBSTR(state.executable.c_str()) == path);
-				Assert::IsTrue(reinterpret_cast<hyper>(exe_module) == state.load_address);
+				Assert::IsTrue(static_cast<long>(::GetCurrentProcessId()) == state.process_id);
 				Assert::IsTrue(90 * real_resolution / 100 < state.ticks_resolution && state.ticks_resolution < 110 * real_resolution / 100);
 			}
 
@@ -385,12 +448,111 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer;
-				mockups::Frontend::State state;
-
-				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				mockups::FrontendState state;
+				auto_frontend_controller fc(tracer, state);
 
 				// ACT / ASSERT
 				Assert::IsTrue(waitable::timeout == state.updated.wait(500));
+			}
+
+
+			[TestMethod]
+			void ImageLoadEventArrivesAtHandleObtaining()
+			{
+				// INIT
+				mockups::Tracer tracer;
+				mockups::FrontendState state;
+				image images[] = { image(_T("symbol_container_1.dll")), image(_T("symbol_container_2.dll")), };
+				sync_stop_frontend_controller fc(tracer, state);
+
+				// ACT
+				auto_ptr<handle> h1(fc.profile(images[0].get_symbol_address("get_function_addresses_1")));
+				state.modules_state_updated.wait();
+
+				// ASSERT
+				Assert::AreEqual(1u, state.update_log.size());
+				Assert::AreEqual(1u, state.update_log[0].image_loads.size());
+				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[0].load_address()),
+					state.update_log[0].image_loads[0].first);
+				Assert::AreNotEqual(wstring::npos, state.update_log[0].image_loads[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+
+				// ACT
+				auto_ptr<handle> h2(fc.profile(images[1].get_symbol_address("get_function_addresses_2")));
+				state.modules_state_updated.wait();
+
+				// ASSERT
+				Assert::AreEqual(2u, state.update_log.size());
+				Assert::AreEqual(1u, state.update_log[1].image_loads.size());
+				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[1].load_address()),
+					state.update_log[1].image_loads[0].first);
+				Assert::AreNotEqual(wstring::npos, state.update_log[1].image_loads[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
+			}
+
+
+			[TestMethod]
+			void ImageUnloadEventArrivesAtHandleRelease()
+			{
+				// INIT
+				mockups::Tracer tracer;
+				mockups::FrontendState state;
+				image images[] = { image(_T("symbol_container_1.dll")), image(_T("symbol_container_2.dll")), };
+				sync_stop_frontend_controller fc(tracer, state);
+
+				auto_ptr<handle> h1(fc.profile(images[0].get_symbol_address("get_function_addresses_1")));
+				state.modules_state_updated.wait();
+				auto_ptr<handle> h2(fc.profile(images[1].get_symbol_address("get_function_addresses_2")));
+				state.modules_state_updated.wait();
+
+				// ACT
+				h1.reset();
+				state.modules_state_updated.wait();
+
+				// ASSERT
+				Assert::AreEqual(3u, state.update_log.size());
+				Assert::AreEqual(1u, state.update_log[2].image_unloads.size());
+				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[0].load_address()),
+					state.update_log[2].image_unloads[0]);
+
+				// ACT
+				h2.reset();
+				state.modules_state_updated.wait();
+
+				// ASSERT
+				Assert::AreEqual(4u, state.update_log.size());
+				Assert::AreEqual(1u, state.update_log[3].image_unloads.size());
+				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[1].load_address()),
+					state.update_log[3].image_unloads[0]);
+			}
+
+
+			[TestMethod]
+			void LastBatchIsReportedToFrontend()
+			{
+				// INIT
+				mockups::Tracer tracer;
+				mockups::FrontendState state;
+				sync_stop_frontend_controller fc(tracer, state);
+				auto_ptr<handle> h(profile_this(fc));
+				call_record trace1[] = { { 0, (void *)(0x1223 + 5) }, { 1000, (void *)(0) }, };
+				call_record trace2[] = { { 0, (void *)(0x12230 + 5) }, { 1000, (void *)(0) }, };
+
+				state.modules_state_updated.wait();
+
+				// ACT
+				state.update_lock.lower();	// suspend on before exiting next update
+				tracer.Add(thread::id(), trace1);
+				state.updated.wait();
+				h.reset();
+				tracer.Add(thread::id(), trace2);
+				state.update_lock.raise();	// resume
+				state.modules_state_updated.wait();
+
+				// ASSERT
+				Assert::AreEqual(4u, state.update_log.size());
+				Assert::AreEqual(1u, state.update_log[0].image_loads.size());
+				Assert::IsTrue(state.update_log[1].update.end() != state.update_log[1].update.find((void *)0x1223));
+				Assert::IsTrue(state.update_log[2].update.end() != state.update_log[2].update.find((void *)0x12230));
+				Assert::AreEqual(1u, state.update_log[3].image_unloads.size());
 			}
 
 
@@ -399,9 +561,11 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer;
-				mockups::Frontend::State state;
+				mockups::FrontendState state;
+				auto_frontend_controller fc(tracer, state);
 
-				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				state.modules_state_updated.wait();
+				state.update_log.clear();
 
 				// ACT
 				call_record trace1[] = {
@@ -416,9 +580,9 @@ namespace micro_profiler
 				// ASERT
 				Assert::AreEqual(1u, state.update_log.size());
 
-				statistics_map_detailed::const_iterator callinfo_1 = state.update_log[0].find((void *)0x1223);
+				statistics_map_detailed::const_iterator callinfo_1 = state.update_log[0].update.find((void *)0x1223);
 
-				Assert::IsTrue(state.update_log[0].end() != callinfo_1);
+				Assert::IsTrue(state.update_log[0].update.end() != callinfo_1);
 
 				Assert::IsTrue(1 == callinfo_1->second.times_called);
 				Assert::IsTrue(0 == callinfo_1->second.max_reentrance);
@@ -439,11 +603,11 @@ namespace micro_profiler
 				// ASERT
 				Assert::AreEqual(2u, state.update_log.size());
 
-				Assert::AreEqual(1u, state.update_log[1].size());	// The new batch MUST NOT not contain previous function.
+				Assert::AreEqual(1u, state.update_log[1].update.size());	// The new batch MUST NOT not contain previous function.
 
-				statistics_map_detailed::const_iterator callinfo_2 = state.update_log[1].find((void *)0x31223);
+				statistics_map_detailed::const_iterator callinfo_2 = state.update_log[1].update.find((void *)0x31223);
 
-				Assert::IsTrue(state.update_log[1].end() != callinfo_2);
+				Assert::IsTrue(state.update_log[1].update.end() != callinfo_2);
 
 				Assert::IsTrue(1 == callinfo_2->second.times_called);
 				Assert::IsTrue(0 == callinfo_2->second.max_reentrance);
@@ -460,16 +624,16 @@ namespace micro_profiler
 				mockups::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long times = 2;
-				mockups::Frontend::State state(bind(&RaiseAt, &initialized, &times));
-				frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
-				auto_ptr<handle> h(fc.profile(&RaiseAt));
+				mockups::FrontendState state(bind(&RaiseAt, &initialized, &times));
+				sync_stop_frontend_controller fc(tracer, state);
+				auto_ptr<handle> h(profile_this(fc));
 				call_record trace[] = {
 					{	10000, (void *)(0x31223 + 5)	},
 					{	14000, (void *)(0)	},
 				};
 
 				h.reset();
-				h.reset(fc.profile(&RaiseAt));
+				h.reset(profile_this(fc));
 				initialized.wait();
 
 				// ACT
@@ -491,9 +655,11 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer;
-				mockups::Frontend::State state;
+				mockups::FrontendState state;
+				auto_frontend_controller fc(tracer, state);
 
-				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				state.modules_state_updated.wait();
+				state.update_log.clear();
 
 				// ACT
 				call_record trace1[] = {
@@ -520,7 +686,7 @@ namespace micro_profiler
 				// ASERT
 				Assert::AreEqual(1u, state.update_log.size());
 
-				const function_statistics_detailed callinfo_1 = state.update_log[0][(void *)0x31000];
+				const function_statistics_detailed callinfo_1 = state.update_log[0].update[(void *)0x31000];
 
 				Assert::IsTrue(7 == callinfo_1.times_called);
 				Assert::IsTrue(3 == callinfo_1.max_reentrance);
@@ -546,7 +712,7 @@ namespace micro_profiler
 				// ASERT
 				Assert::AreEqual(2u, state.update_log.size());
 
-				const function_statistics_detailed &callinfo_2 = state.update_log[1][(void *)0x31000];
+				const function_statistics_detailed &callinfo_2 = state.update_log[1].update[(void *)0x31000];
 
 				Assert::IsTrue(5 == callinfo_2.times_called);
 				Assert::IsTrue(4 == callinfo_2.max_reentrance);
@@ -558,10 +724,15 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer1(13), tracer2(29);
-				mockups::Frontend::State state1, state2;
+				mockups::FrontendState state1, state2;
 
-				auto_frontend_controller fe1(tracer1, mockups::Frontend::MakeFactory(state1));
-				auto_frontend_controller fe2(tracer2, mockups::Frontend::MakeFactory(state2));
+				auto_frontend_controller fe1(tracer1, state1);
+				auto_frontend_controller fe2(tracer2, state2);
+
+				state1.modules_state_updated.wait();
+				state1.update_log.clear();
+				state2.modules_state_updated.wait();
+				state2.update_log.clear();
 
 				// ACT
 				call_record trace[] = {
@@ -576,8 +747,8 @@ namespace micro_profiler
 				state2.updated.wait();
 
 				// ASSERT
-				Assert::IsTrue(4000 - 13 == state1.update_log[0][(void *)0x3171717].inclusive_time);
-				Assert::IsTrue(4000 - 29 == state2.update_log[0][(void *)0x3171717].inclusive_time);
+				Assert::IsTrue(4000 - 13 == state1.update_log[0].update[(void *)0x3171717].inclusive_time);
+				Assert::IsTrue(4000 - 29 == state2.update_log[0].update[(void *)0x3171717].inclusive_time);
 			}
 
 
@@ -586,9 +757,11 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer tracer(11);
-				mockups::Frontend::State state;
+				mockups::FrontendState state;
+				auto_frontend_controller fc(tracer, state);
 
-				auto_frontend_controller fc(tracer, mockups::Frontend::MakeFactory(state));
+				state.modules_state_updated.wait();
+				state.update_log.clear();
 
 				// ACT
 				call_record trace[] = {
@@ -613,9 +786,9 @@ namespace micro_profiler
 				state.updated.wait();
 
 				// ASSERT
-				const function_statistics_detailed &callinfo_parent1 = state.update_log[0][(void *)0x31000];
-				const function_statistics_detailed &callinfo_parent2 = state.update_log[0][(void *)0x11000];
-				const function_statistics_detailed &callinfo_parent3 = state.update_log[0][(void *)0x13000];
+				const function_statistics_detailed &callinfo_parent1 = state.update_log[0].update[(void *)0x31000];
+				const function_statistics_detailed &callinfo_parent2 = state.update_log[0].update[(void *)0x11000];
+				const function_statistics_detailed &callinfo_parent3 = state.update_log[0].update[(void *)0x13000];
 
 				Assert::AreEqual(2u, callinfo_parent1.callees.size());
 				Assert::IsTrue(108 == callinfo_parent1.inclusive_time);
@@ -630,8 +803,8 @@ namespace micro_profiler
 				Assert::IsTrue(138 == callinfo_parent3.exclusive_time);
 
 
-				const function_statistics &callinfo_child11 = state.update_log[0][(void *)0x31000].callees[(void *)0x37000];
-				const function_statistics &callinfo_child12 = state.update_log[0][(void *)0x31000].callees[(void *)0x41000];
+				const function_statistics &callinfo_child11 = state.update_log[0].update[(void *)0x31000].callees[(void *)0x37000];
+				const function_statistics &callinfo_child12 = state.update_log[0].update[(void *)0x31000].callees[(void *)0x41000];
 
 				Assert::IsTrue(2 == callinfo_child11.times_called);
 				Assert::IsTrue(26 == callinfo_child11.inclusive_time);
@@ -640,6 +813,42 @@ namespace micro_profiler
 				Assert::IsTrue(1 == callinfo_child12.times_called);
 				Assert::IsTrue(8 == callinfo_child12.inclusive_time);
 				Assert::IsTrue(8 == callinfo_child12.exclusive_time);
+			}
+
+
+			[TestMethod]
+			void FrontendContinuesAfterControllerDestructionUntilAfterHandleIsReleased()
+			{
+				// INIT
+				mockups::Tracer tracer(11);
+				shared_ptr<running_thread> hthread;
+				event_flag initialized(false, true);
+				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				scoped_thread_join stj(hthread);
+				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, state.MakeFactory()));
+				auto_ptr<handle> h(profile_this(*fc));
+				call_record trace[] = {
+					{	10000, (void *)(0x31223 + 5)	},
+					{	14000, (void *)(0)	},
+				};
+
+				tracer.Add(thread::id(), trace);
+				state.updated.wait();
+
+				// ACT / ASSERT (must not hang)
+				fc.reset();
+
+				// ACT
+				tracer.Add(thread::id(), trace);
+				
+				// ASSERT
+				state.updated.wait();
+
+				// ACT (duplicated intentionally - flush-at-exit events may count for the first wait)
+				tracer.Add(thread::id(), trace);
+
+				// ASSERT (must not hang)
+				state.updated.wait();
 			}
 		};
 	}

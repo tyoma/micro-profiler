@@ -29,32 +29,45 @@ struct IProfilerFrontend;
 namespace std
 {
 	using tr1::function;
+	using tr1::shared_ptr;
+}
+
+namespace wpl
+{
+	namespace mt
+	{
+		class thread;
+	}
 }
 
 namespace micro_profiler
 {
 	struct calls_collector_i;
 	struct handle;
+	class image_load_queue;
 
 	typedef std::function<void(IProfilerFrontend ** /*frontend*/)> frontend_factory;
 
 	class frontend_controller : wpl::noncopyable
 	{
-		struct flagged_thread;
+		class profiler_instance;
 
 		calls_collector_i &_collector;
 		frontend_factory _factory;
-		volatile long _worker_refcount;
-		std::auto_ptr<flagged_thread> _frontend_thread;
+		std::shared_ptr<image_load_queue> _image_load_queue;
+		std::shared_ptr<volatile long> _worker_refcount;
+		std::shared_ptr<void> _exit_event;
+		std::auto_ptr<wpl::mt::thread> _frontend_thread;
 
-		void frontend_worker(void *exit_event, flagged_thread *previous_thread);
-
-		void profile_release(const void *image_address);
+		static void frontend_worker(wpl::mt::thread *previous_thread, const frontend_factory &factory,
+			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &image_load_queue,
+			const std::shared_ptr<void> &exit_event);
 
 	public:
 		frontend_controller(calls_collector_i &collector, const frontend_factory& factory);
-		~frontend_controller();
+		virtual ~frontend_controller();
 
-		handle *profile(const void *image_address);
+		handle *profile(const void *in_image_address);
+		void force_stop();
 	};
 }

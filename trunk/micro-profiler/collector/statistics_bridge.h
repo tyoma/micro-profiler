@@ -22,11 +22,14 @@
 
 #include "analyzer.h"
 
+#include <deque>
 #include <functional>
+#include <memory>
 
 namespace std
 {
 	using tr1::function;
+	using tr1::shared_ptr;
 }
 
 struct IProfilerFrontend;
@@ -37,6 +40,25 @@ namespace micro_profiler
 {
 	struct calls_collector_i;
 
+	class image_load_queue
+	{
+	public:
+		typedef std::pair<const void * /*image_address*/, std::wstring /*image_path*/> image_info;
+
+	public:
+		void load(const void *in_image_address);
+		void unload(const void *in_image_address);
+		
+		void get_changes(std::vector<image_info> &loaded_modules, std::vector<image_info> &unloaded_modules);
+
+	private:
+		image_info get_module_info(const void *in_image_address);
+
+	private:
+		mutex _mtx;
+		std::deque<image_info> _lqueue, _uqueue;
+	};
+
 	class statistics_bridge
 	{
 		std::vector<FunctionStatisticsDetailed> _buffer;
@@ -44,9 +66,11 @@ namespace micro_profiler
 		analyzer _analyzer;
 		calls_collector_i &_collector;
 		IProfilerFrontend *_frontend;
+		std::shared_ptr<image_load_queue> _image_load_queue;
 
 	public:
-		statistics_bridge(calls_collector_i &collector, const std::function<void (IProfilerFrontend **frontend)> &factory);
+		statistics_bridge(calls_collector_i &collector, const std::function<void (IProfilerFrontend **frontend)> &factory,
+			const std::shared_ptr<image_load_queue> &image_load_queue);
 		~statistics_bridge();
 
 		void analyze();

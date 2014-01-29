@@ -42,7 +42,7 @@ namespace micro_profiler
 {
 	extern HINSTANCE g_instance;
 
-	ProfilerMainDialog::ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable)
+	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable)
 		: _statistics(s), _executable(executable)
 	{
 		Create(NULL, 0);

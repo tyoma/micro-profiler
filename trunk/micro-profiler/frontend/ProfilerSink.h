@@ -38,10 +38,12 @@ namespace micro_profiler
 {
 	class ProfilerMainDialog;
 	struct functions_list;
+	struct symbol_resolver;
 
 	class ATL_NO_VTABLE ProfilerFrontend : public IProfilerFrontend, public CComObjectRootEx<CComSingleThreadModel>,
 		public CComCoClass<ProfilerFrontend, &CLSID_ProfilerFrontend>
 	{
+		std::shared_ptr<symbol_resolver> _symbols;
 		std::shared_ptr<functions_list> _statistics;
 		std::shared_ptr<ProfilerMainDialog> _dialog;
 
@@ -57,8 +59,10 @@ namespace micro_profiler
 
 		void FinalRelease();
 
-		STDMETHODIMP Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution);
+		STDMETHODIMP Initialize(long process_id, long long ticks_resolution);
+		STDMETHODIMP LoadImages(long count, ImageLoadInfo *images);
 		STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
+		STDMETHODIMP UnloadImages(long count, long long *image_addresses);
 	};
 }
 

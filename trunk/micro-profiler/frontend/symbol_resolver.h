@@ -34,8 +34,8 @@ namespace micro_profiler
 	{
 		virtual ~symbol_resolver()	{	}
 		virtual const std::wstring &symbol_name_by_va(const void *address) const = 0;
-		virtual void add_image(const std::wstring &image_path, const void *load_address) = 0;
+		virtual void add_image(const wchar_t *image, const void *base) = 0;
 
-		static std::shared_ptr<symbol_resolver> create(const std::wstring &image_path, unsigned __int64 load_address);
+		static std::shared_ptr<symbol_resolver> create();
 	};
 }

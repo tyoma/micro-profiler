@@ -132,7 +132,7 @@ namespace micro_profiler
 					return _names[address] = to_string(address);
 				}
 
-				virtual void add_image(const wstring &/*image*/, const void * /*address*/)
+				virtual void add_image(const wchar_t * /*image*/, const void * /*base*/)
 				{
 				}
 			};
@@ -1148,7 +1148,7 @@ namespace micro_profiler
 				fl->update(data, 3);
 
 				// ACT
-				std::shared_ptr<const listview::trackable> t(fl->track(1));
+				shared_ptr<const listview::trackable> t(fl->track(1));
 			
 				fl = shared_ptr<functions_list>();
 

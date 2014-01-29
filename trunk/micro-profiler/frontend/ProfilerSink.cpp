@@ -26,6 +26,7 @@
 #include "symbol_resolver.h"
 
 #include <atlstr.h>
+#include <psapi.h>
 
 using namespace std;
 
@@ -42,17 +43,19 @@ namespace micro_profiler
 		::EnableMenuItem(_dialog->GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND);
 		_dialog.reset();
 		_statistics.reset();
+		_symbols.reset();
 	}
 
-	STDMETHODIMP ProfilerFrontend::Initialize(BSTR executable, __int64 load_address, __int64 ticks_resolution)
+	STDMETHODIMP ProfilerFrontend::Initialize(long process_id, long long ticks_resolution)
 	{
-		wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
+		wchar_t image_path[MAX_PATH] = { 0 }, filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
+		shared_ptr<void> h(::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, process_id), &::CloseHandle);
 
-		_wsplitpath_s(executable, 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
-
-		shared_ptr<symbol_resolver> r(symbol_resolver::create(wstring(CStringW(executable)), load_address));
+		::GetProcessImageFileName(h.get(), image_path, sizeof(image_path));
+		_wsplitpath_s(image_path, 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
 	
-		_statistics = functions_list::create(ticks_resolution, r);
+		_symbols = symbol_resolver::create();
+		_statistics = functions_list::create(ticks_resolution, _symbols);
 		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
 		_dialog->ShowWindow(SW_SHOW);
 
@@ -60,9 +63,23 @@ namespace micro_profiler
 		return S_OK;
 	}
 
+	STDMETHODIMP ProfilerFrontend::LoadImages(long count, ImageLoadInfo *images)
+	{
+		for (; count; --count, ++images)
+			_symbols->add_image(images->Path, reinterpret_cast<const void *>(images->Address));
+		return S_OK;
+	}
+
 	STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
 	{
 		_statistics->update(statistics, count);
+		return S_OK;
+	}
+
+	STDMETHODIMP ProfilerFrontend::UnloadImages(long count, long long *image_addresses)
+	{
+		for (; count; --count, ++image_addresses)
+		{	}
 		return S_OK;
 	}
 }

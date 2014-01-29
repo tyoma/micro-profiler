@@ -21,6 +21,7 @@
     <ClCompile Include="ObjectLockTests.cpp" />
     <ClCompile Include="TracedFunctions.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
+    <ClCompile Include="ImageLoadQueueTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

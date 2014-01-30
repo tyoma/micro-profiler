@@ -42,12 +42,14 @@ namespace micro_profiler
 
 			void ValidateThread(shared_ptr<running_thread> *hthread, event_flag *second_initialized, bool *first_finished)
 			{
-				if (*hthread)
+            shared_ptr<running_thread> previous_hthread = *hthread;
+
+            *hthread = this_thread::open();
+				if (previous_hthread)
 				{
-					*first_finished = !(*hthread)->is_running();
+					*first_finished = !previous_hthread->is_running();
 					second_initialized->raise();
 				}
-				*hthread = this_thread::open();
 			}
 
 			void LogThread1(shared_ptr<running_thread> *hthread, event_flag *initialized)

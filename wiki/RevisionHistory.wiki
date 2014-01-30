@@ -1,6 +1,7 @@
 #sidebar TableOfContents
  * [https://drive.google.com/folderview?id=0B2lZ03dFgtG7OVNVTU41alozUjg#list v1.0.527]
   * DLLs profiling is now supported;
+
  * v1.0.520
   * Two-fold increase in collection speed (two times less impact on the profiled program comparing to that of previous profiler versions);
 

@@ -49,7 +49,7 @@ HKCU
 							val CommandPreload = d 1
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
-							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2012 Artem Gevorkyan'
+							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan'
 							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}
@@ -65,7 +65,7 @@ HKCU
 							val CommandPreload = d 1
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
-							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2012 Artem Gevorkyan'
+							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan'
 							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}
@@ -81,7 +81,7 @@ HKCU
 							val CommandPreload = d 1
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
-							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2012 Artem Gevorkyan'
+							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan'
 							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}
@@ -97,7 +97,7 @@ HKCU
 							val CommandPreload = d 1
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
-							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2012 Artem Gevorkyan'
+							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan'
 							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}
@@ -113,7 +113,7 @@ HKCU
 							val CommandPreload = d 1
 							val FriendlyName = s 'MicroProfiler'
 							val Description = s 'Realtime Instrumenting Profiler for VisualStudio'
-							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2012 Artem Gevorkyan'
+							val AboutBoxDetails = s 'Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan'
 							val AboutBoxIcon = s '%MODULE%,202'
 						}
 					}

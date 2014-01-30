@@ -617,42 +617,38 @@
 				>
 			</File>
 			<File
-				RelativePath=".\collector\hooks.x64.asm"
+				RelativePath=".\collector\hooks.asm"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+						PreprocessorDefinitions="_M_IX86=1;_M_X64=0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="MASM_x64"
+						PreprocessorDefinitions="_M_IX86=0;_M_X64=1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="MASM_x64"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\collector\hooks.x86.asm"
-				>
-				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="MASM"
+						PreprocessorDefinitions="_M_IX86=0;_M_X64=1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|x64"
-					ExcludedFromBuild="true"
 					>
 					<Tool
-						Name="MASM"
+						Name="MASM_x64"
+						PreprocessorDefinitions="_M_IX86=0;_M_X64=1"
 					/>
 				</FileConfiguration>
 			</File>

@@ -146,7 +146,7 @@ BEGIN
             VALUE "FileDescription", "Profiler with RealTime Frontend"
             VALUE "FileVersion", INFO_VERSION_STR
             VALUE "InternalName", "micro-profiler.dll"
-            VALUE "LegalCopyright", "© Copyright 2011-2012 gevorkyan.org. All rights reserved."
+            VALUE "LegalCopyright", "© Copyright 2011-2014 gevorkyan.org. All rights reserved."
             VALUE "OriginalFilename", "micro-profiler.dll"
             VALUE "ProductName", "MicroProfiler"
             VALUE "ProductVersion", INFO_VERSION_STR

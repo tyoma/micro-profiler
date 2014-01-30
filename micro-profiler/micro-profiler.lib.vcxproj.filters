@@ -91,10 +91,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="collector\hooks.x86.asm">
-      <Filter>collector</Filter>
-    </MASM>
-    <MASM Include="collector\hooks.x64.asm">
+    <MASM Include="collector\hooks.asm">
       <Filter>collector</Filter>
     </MASM>
   </ItemGroup>

@@ -548,6 +548,7 @@
 						EnableIntrinsicFunctions="true"
 						FavorSizeOrSpeed="1"
 						OmitFramePointers="true"
+						EnableEnhancedInstructionSet="0"
 						AssemblerOutput="1"
 					/>
 				</FileConfiguration>
@@ -561,6 +562,7 @@
 						EnableIntrinsicFunctions="true"
 						FavorSizeOrSpeed="1"
 						OmitFramePointers="true"
+						EnableEnhancedInstructionSet="0"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -568,7 +570,16 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						EnableEnhancedInstructionSet="0"
 						AssemblerOutput="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						EnableEnhancedInstructionSet="0"
 					/>
 				</FileConfiguration>
 			</File>

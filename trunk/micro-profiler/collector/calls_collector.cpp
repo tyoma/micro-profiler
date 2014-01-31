@@ -18,6 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
+// Important! Compilation of this file implies NO SSE/SSE2 usage! (/arch:xxx for MSVC compiler)
+// Please, check Code Generation settings for this file!
+
 #include "calls_collector.h"
 
 #include "../common/primitives.h"

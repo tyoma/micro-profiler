@@ -115,6 +115,26 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0B4BDAEAE9C9AC00E2E1195BB2B5D22E"
+            {
+            "SourcePath" = "8:PSAPI.DLL"
+            "TargetName" = "8:PSAPI.DLL"
+            "Tag" = "8:"
+            "Folder" = "8:_2777EE37FD014DD7B6B7DD94BCAA7C12"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:TRUE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_39BDB08E51DA4E189A450C2A0CD1F943"
             {
             "SourcePath" = "8:..\\_bin\\Release_Win32\\micro-profiler.lib"
@@ -250,7 +270,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MicroProfiler"
         "ProductCode" = "8:{BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66}"
-        "PackageCode" = "8:{F3C21C0B-126F-4F75-93C8-F203EE308F00}"
+        "PackageCode" = "8:{9C8AC819-09E9-474E-A4F3-CA228C84A97D}"
         "UpgradeCode" = "8:{32373928-E978-4133-B1A2-F08B690383AE}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"

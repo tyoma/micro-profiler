@@ -65,7 +65,8 @@ namespace micro_profiler
 		static calls_collector *instance() throw();
 		virtual void read_collected(acceptor &a);
 
-		void __thiscall track(const call_record &call) throw();
+		void track(const call_record &call) throw();
+		void track(__int64 timestamp, const void *address) throw();
 
 		size_t trace_limit() const throw();
 		virtual __int64 profiler_latency() const throw();

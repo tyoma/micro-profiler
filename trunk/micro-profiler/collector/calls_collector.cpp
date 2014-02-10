@@ -157,6 +157,13 @@ namespace micro_profiler
 	void calls_collector::track(const call_record &call) throw()
 	{	get_current_thread_trace().track(call);	}
 
+	void calls_collector::track(__int64 timestamp, const void *address) throw()
+	{
+		call_record call = { timestamp, address };
+
+		get_current_thread_trace().track(call);
+	}
+
 	size_t calls_collector::trace_limit() const throw()
 	{	return _trace_limit;	}
 

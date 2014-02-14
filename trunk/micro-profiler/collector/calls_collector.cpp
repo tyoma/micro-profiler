@@ -27,6 +27,8 @@
 #include "../common/pod_vector.h"
 #include <wpl/mt/synchronization.h>
 
+#include <iostream>
+
 using namespace std;
 using namespace wpl::mt;
 
@@ -138,6 +140,8 @@ namespace micro_profiler
 
 		ttb.read_collected(de);
 		_profiler_latency = de.delay;
+
+		cout << "delay: " << de.delay << endl;
 	}
 
 	calls_collector::~calls_collector() throw()
@@ -154,7 +158,7 @@ namespace micro_profiler
 			i->read_collected(a);
 	}
 
-	void calls_collector::track(const call_record &call) throw()
+	void calls_collector::track(call_record call) throw()
 	{	get_current_thread_trace().track(call);	}
 
 	void calls_collector::track(__int64 timestamp, const void *address) throw()

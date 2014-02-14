@@ -19,6 +19,7 @@
 ;	THE SOFTWARE.
 
 IF _M_IX86
+
 	.586
 	.model flat
 	.code
@@ -49,8 +50,9 @@ IF _M_IX86
 	_profile_enter	proc
 		SAVEREGS
 		PUSHRDTSC
-		mov	dword ptr [esp - 14h], esp
-		sub	esp, 14h
+		mov	ecx, esp
+		sub	esp, 10h
+		push	ecx
 		mov	ecx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
 		call	?track@calls_collector@micro_profiler@@QAEXABUcall_record@2@@Z
 		LOADREGS
@@ -61,38 +63,35 @@ IF _M_IX86
 		SAVEREGS
 		push 0
 		PUSHRDTSC
-		mov	dword ptr [esp - 10h], esp
-		sub	esp, 10h
+		mov	ecx, esp
+		sub	esp, 0Ch
+		push	ecx
 		mov	ecx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
 		call	?track@calls_collector@micro_profiler@@QAEXABUcall_record@2@@Z
 		LOADREGS
 		ret
 	_profile_exit	endp
+
 ELSEIF _M_X64
+
 	.code
 
 	extrn ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z:near
 	extrn ?_instance@calls_collector@micro_profiler@@0V12@A:qword
 
-	PUSHREGS	macro		; slides stack pointer 38h bytes down
+	PUSHREGS	macro
 		push	rax
-		lahf
-		push	rax
-		sub	rsp, 08h
 		push	rcx
 		push	rdx
 		push	r8
 		push	r9
 	endm
 
-	POPREGS	macro		; slides stack pointer 38h bytes up
+	POPREGS	macro
 		pop	r9
 		pop	r8
 		pop	rdx
 		pop	rcx
-		add	rsp, 08h
-		pop	rax
-		sahf
 		pop	rax
 	endm
 
@@ -103,28 +102,39 @@ ELSEIF _M_X64
 	endm
 
 	profile_enter	proc
+		push	rax
+		lahf
 		PUSHREGS
+		sub	rsp, 28h
+
 		RDTSC64
 		mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
-		mov	r8, qword ptr [rsp + 38h]
-		sub	rsp, 20h
+		mov	r8, qword ptr [rsp + 58h]
 		call	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
-		add	rsp, 20h
+
+		add	rsp, 28h
 		POPREGS
+		sahf
+		pop	rax
 		ret
 	profile_enter	endp
 
 	profile_exit	proc
 		PUSHREGS
+		movdqu	[rsp - 10h], xmm0
+		sub	rsp, 30h
+
 		mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
 		xor	r8, r8
-		sub	rsp, 20h
 		RDTSC64
 		call	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
-		add	rsp, 20h
+
+		add	rsp, 30h
+		movdqu	xmm0, [rsp - 10h]
 		POPREGS
 		ret
 	profile_exit	endp
+
 ENDIF
 
 end

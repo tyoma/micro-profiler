@@ -20,6 +20,7 @@
 
 #include "formatting.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cwchar>
 
@@ -41,7 +42,7 @@ namespace micro_profiler
 		const wchar_t *formatting = 999.5 <= uinterval && uinterval < 10000 ? c_formatting_enhanced : c_formatting;
 		int unit = interval != 0 ? -static_cast<int>(floor(c_bias + log10(uinterval) / 3)) : 0;
 
-		unit = max(unit, 0);
+		unit = (max)(unit, 0);
 		if (unit >= c_time_units_count)
 			unit = 0, interval = 0;
 		interval *= pow(1000.0, unit);

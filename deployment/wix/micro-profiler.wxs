@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="1.0.0.0" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
+		<Package InstallerVersion="200" Compressed="yes" Platform="x86" InstallScope="perMachine"/>
+		<Media Id="1" Cabinet="micro_profiler.cab" EmbedCab="yes"/>
+		<Icon Id="icoInstaller" SourceFile="../../micro-profiler/resources/appicon.ico" />
+		<Property Id="ARPPRODUCTICON" Value="icoInstaller" />
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+		<Feature Id="featTracer" Title="Call Tracer Module">
+			<ComponentRef Id="compAllInOneDLL" />
+			<ComponentRef Id="compStubTracerDLL" />
+			<ComponentRef Id="compSystemEnvironmentSetup" />
+			<ComponentRef Id="compUserEnvironmentSetup" />
+		</Feature>
+		<Feature Id="featTracerSDK" Title="Call Tracer SDK">
+			<ComponentRef Id="compTracerSDK" />
+		</Feature>
+		<Feature Id="featFrontend" Title="Frontend UI">
+			<ComponentRef Id="compAllInOneDLL" />
+			<ComponentRef Id="compFrontendRegistration" />
+		</Feature>
+		<Feature Id="featVSIntegration" Title="VisualStudio Integration">
+			<ComponentRef Id="compAllInOneDLL" />
+			<ComponentRef Id="compAddinObjectRegistration" />
+			<ComponentRef Id="compAddinRegistration" />
+		</Feature>
+
+		<InstallUISequence>
+			<Custom Action="SetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
+		</InstallUISequence>
+
+		<InstallExecuteSequence>
+			<Custom Action="SetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
+		</InstallExecuteSequence>
+
+
+		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="../../_bin/Release_Win32">
+			<Component Id="compAllInOneDLL" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes">
+				<File Id="micro_profiler.dll" Name="micro-profiler.dll" Vital="yes" />
+			</Component>
+			<Component Id="compStubTracerDLL" Guid="7FB94FB2-6CB4-4920-BDC5-22662C58FFCF" KeyPath="yes">
+				<File Id="micro_profiler.stub.dll" Name="micro-profiler.stub.dll" Vital="yes" />
+			</Component>
+			<Component Id="compTracerSDK" Guid="FA5EE4E6-A12A-4697-88EB-FC1C5CE98D18" KeyPath="yes">
+				<File Id="micro_profiler.initializer.cpp" Name="micro-profiler.initializer.cpp" Vital="yes"/>
+				<File Id="micro_profiler.initializer.mfc_static.cpp" Name="micro-profiler.initializer.mfc-static.cpp" Vital="yes"/>
+				<File Id="entry.h" Name="entry.h" Vital="yes"/>
+				<File Id="micro_profiler.lib" Name="micro-profiler.lib" Vital="yes"/>
+			</Component>
+		</Directory>
+
+		<Component Id="compSystemEnvironmentSetup" Directory="TARGETDIR" Guid="52DE93FD-B13F-4153-8F5F-58EADD7B2D95">
+			<Condition><![CDATA[ALLUSERS]]></Condition>
+			<Environment Id="envMicroProfilerSystem" Name="MICROPROFILERDIR" Value="[TARGETDIR]" Action="set" System="yes"/>
+			<Environment Id="env_path_sys" Name="Path" Value="%MICROPROFILERDIR%" Part="last" Action="set" System="yes"/>
+		</Component>
+
+		<Component Id="compUserEnvironmentSetup" Directory="TARGETDIR" Guid="7EA8BA3A-A6F2-4468-8C94-A016AC198A3F">
+			<Condition><![CDATA[NOT ALLUSERS]]></Condition>
+			<Environment Id="envMicroProfilerUser" Name="MICROPROFILERDIR" Value="[TARGETDIR]" Action="set" System="no"/>
+			<Environment Id="env_path_usr" Name="Path" Value="%MICROPROFILERDIR%" Part="last" Action="set" System="no"/>
+		</Component>
+
+		<Component Id="compFrontendRegistration" Directory="TARGETDIR">
+			<RegistryKey Root="HKCR" Key="AppID\{5772E3BD-4C40-450C-8F79-A5052A3CC346}">
+				<RegistryValue Value="MicroProfiler Frontend Application" Type="string"/>
+				<RegistryValue Name="DllSurrogate" Value="" Type="string" />
+			</RegistryKey>
+			<RegistryKey Root="HKCR" Key="CLSID\{ABC1A8AB-31D5-475F-B541-987141CD4DB3}">
+				<RegistryValue Value="MicroProfiler Frontend Class" Type="string"/>
+				<RegistryValue Name="AppID" Value="{5772E3BD-4C40-450C-8F79-A5052A3CC346}" Type="string"/>
+				<RegistryKey Key="InprocServer32">
+					<RegistryValue Value="[TARGETDIR]micro-profiler.dll" Type="string"/>
+					<RegistryValue Name="ThreadingModel" Value="Apartment" Type="string"/>
+				</RegistryKey>
+				<RegistryKey Key="Version">
+					<RegistryValue Value="1.0" Type="string"/>
+				</RegistryKey>
+			</RegistryKey>
+			<RegistryKey Root="HKCR" Key="CLSID\{2F5ECF23-E98B-4399-AB4F-3083264C481B}">
+				<RegistryValue Value="IProfilerFrontend ProxyStub Class" Type="string"/>
+				<RegistryKey Key="InprocServer32">
+					<RegistryValue Value="[TARGETDIR]micro-profiler.dll" Type="string"/>
+					<RegistryValue Name="ThreadingModel" Value="Both" Type="string"/>
+				</RegistryKey>
+			</RegistryKey>
+			<RegistryKey Root="HKCR" Key="Interface\{2F5ECF23-E98B-4399-AB4F-3083264C481B}">
+				<RegistryValue Value="IProfilerFrontend" Type="string"/>
+				<RegistryKey Key="ProxyStubClsid32">
+					<RegistryValue Value="{2F5ECF23-E98B-4399-AB4F-3083264C481B}" Type="string"/>
+				</RegistryKey>
+			</RegistryKey>
+		</Component>
+
+		<Component Id="compAddinObjectRegistration" Directory="TARGETDIR">
+			<RegistryKey Root="HKCR" Key="CLSID\{B36A1712-EF9F-4960-9B33-838BFCC70683}">
+				<RegistryValue Value="MicroProfiler Addin Class" Type="string"/>
+				<RegistryKey Key="InprocServer32">
+					<RegistryValue Value="[TARGETDIR]micro-profiler.dll" Type="string"/>
+					<RegistryValue Name="ThreadingModel" Value="Apartment" Type="string"/>
+				</RegistryKey>
+				<RegistryKey Key="ProgID">
+					<RegistryValue Value="MicroProfiler.Addin.1" Type="string"/>
+				</RegistryKey>
+				<RegistryKey Key="Programmable" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes"/>
+				<RegistryKey Key="VersionIndependentProgID">
+					<RegistryValue Value="MicroProfiler.Addin" Type="string"/>
+				</RegistryKey>
+			</RegistryKey>
+			<RegistryKey Root="HKCR" Key="MicroProfiler.Addin">
+				<RegistryKey Key="CLSID">
+					<RegistryValue Value="{B36A1712-EF9F-4960-9B33-838BFCC70683}" Type="string"/>
+				</RegistryKey>
+				<RegistryKey Key="CurVer">
+					<RegistryValue Value="MicroProfiler.Addin.1" Type="string"/>
+				</RegistryKey>
+			</RegistryKey>
+			<RegistryKey Root="HKCR" Key="MicroProfiler.Addin.1">
+				<RegistryKey Key="CLSID">
+					<RegistryValue Value="{B36A1712-EF9F-4960-9B33-838BFCC70683}" Type="string"/>
+				</RegistryKey>
+			</RegistryKey>
+		</Component>
+
+		<Component Id="compAddinRegistration" Directory="TARGETDIR">
+			<RegistryKey Root="HKCU" Key="Software\Microsoft\VisualStudio">
+				<RegistryKey Key="7.1\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="8.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="9.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="10.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="11.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+			</RegistryKey>
+		</Component>
+		
+		<CustomAction Id="SetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+	</Product>
+</Wix>

@@ -27,8 +27,6 @@
 #include "../common/pod_vector.h"
 #include <wpl/mt/synchronization.h>
 
-#include <iostream>
-
 using namespace std;
 using namespace wpl::mt;
 
@@ -140,8 +138,6 @@ namespace micro_profiler
 
 		ttb.read_collected(de);
 		_profiler_latency = de.delay;
-
-		cout << "delay: " << de.delay << endl;
 	}
 
 	calls_collector::~calls_collector() throw()

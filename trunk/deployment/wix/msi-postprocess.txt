@@ -1,0 +1,1 @@
+UPDATE Property SET Value='<Version Major>.<Version Minor>.<Revision>' WHERE Property='ProductVersion'

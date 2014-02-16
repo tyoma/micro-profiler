@@ -79,9 +79,13 @@ ELSEIF _M_X64
 		push	rdx
 		push	r8
 		push	r9
+		push	r10
+		push	r11
 	endm
 
 	POPREGS	macro
+		pop	r11
+		pop	r10
 		pop	r9
 		pop	r8
 		pop	rdx
@@ -103,7 +107,7 @@ ELSEIF _M_X64
 
 		RDTSC64
 		mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
-		mov	r8, qword ptr [rsp + 58h]
+		mov	r8, qword ptr [rsp + 68h]
 		call	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
 		add	rsp, 28h

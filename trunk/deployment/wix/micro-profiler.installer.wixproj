@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.8</ProductVersion>
     <ProjectGuid>{ee4583a8-c1f3-4353-b504-4d739466ff63}</ProjectGuid>
@@ -15,8 +15,12 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>$(SolutionDir)\_setup\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants>SOURCEDIR=../../_bin/Release_Win32</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>$(SolutionDir)\_setup\</OutputPath>
+    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Platform)\</IntermediateOutputPath>
+    <DefineConstants>SOURCEDIR=../../_bin/Release_x64</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="micro-profiler.wxs" />
@@ -25,7 +29,6 @@
   <PropertyGroup>
     <PostBuildEvent>svn info "$(SolutionDir)." &gt; "$(ProjectDir)_info-macros.txt"
 type "$(SolutionDir)version-info.txt" &gt;&gt; "$(ProjectDir)_info-macros.txt"
-type "$(ProjectDir)msi-postprocess.txt" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(ProjectDir)_info-macros.txt" | cscript "$(SolutionDir)scripts/msi-postprocess.js" "$(TargetPath)"
 type "$(ProjectDir)versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(ProjectDir)_info-macros.txt" &gt; "$(ProjectDir)_versioned-rename.cmd"
 call "$(ProjectDir)_versioned-rename.cmd" "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>

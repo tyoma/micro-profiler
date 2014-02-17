@@ -1,2 +1,2 @@
 Version Major: 1
-Version Minor: 0
+Version Minor: 1

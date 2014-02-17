@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="!(bind.FileVersion.micro_profiler.dll)" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
+	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="!(bind.FileVersion.micro_profiler.dll_$(var.Platform))" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"/>
 		<Media Id="1" Cabinet="micro_profiler.cab" EmbedCab="yes"/>
 		<Icon Id="icoInstaller" SourceFile="../../micro-profiler/resources/appicon.ico" />
@@ -9,8 +9,8 @@
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
 		<Feature Id="featTracer" Title="Call Tracer Module">
-			<ComponentRef Id="compAllInOneDLL" />
-			<ComponentRef Id="compStubTracerDLL" />
+			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
+			<ComponentRef Id="compStubTracerDLL_$(var.Platform)" />
 			<ComponentRef Id="compSystemEnvironmentSetup" />
 			<ComponentRef Id="compUserEnvironmentSetup" />
 		</Feature>
@@ -18,14 +18,31 @@
 			<ComponentRef Id="compTracerSDK" />
 		</Feature>
 		<Feature Id="featFrontend" Title="Frontend UI">
-			<ComponentRef Id="compAllInOneDLL" />
-			<ComponentRef Id="compFrontendRegistration" />
+			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
+			<ComponentRef Id="compFrontendRegistration_$(var.Platform)" />
 		</Feature>
 		<Feature Id="featVSIntegration" Title="VisualStudio Integration">
-			<ComponentRef Id="compAllInOneDLL" />
-			<ComponentRef Id="compAddinObjectRegistration" />
+			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
+			<ComponentRef Id="compAddinObjectRegistration_$(var.Platform)" />
 			<ComponentRef Id="compAddinRegistration" />
 		</Feature>
+		<?if $(var.Platform) = "x64"?>
+			<Feature Id="featTracer_x86" Title="Call Tracer Module (x86)">
+				<ComponentRef Id="compAllInOneDLL_x86" />
+				<ComponentRef Id="compStubTracerDLL_x86" />
+				<ComponentRef Id="compSystemEnvironmentSetup" />
+				<ComponentRef Id="compUserEnvironmentSetup" />
+			</Feature>
+			<Feature Id="featFrontend_x86" Title="Frontend UI (x86)">
+				<ComponentRef Id="compAllInOneDLL_x86" />
+				<ComponentRef Id="compFrontendRegistration_x86" />
+			</Feature>
+			<Feature Id="featVSIntegration_x86" Title="VisualStudio Integration (x86)">
+				<ComponentRef Id="compAllInOneDLL_x86" />
+				<ComponentRef Id="compAddinObjectRegistration_x86" />
+				<ComponentRef Id="compAddinRegistration" />
+			</Feature>
+		<?endif?>
 
 		<InstallUISequence>
 			<Custom Action="caSetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
@@ -37,47 +54,66 @@
 
 
 		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="$(var.SOURCEDIR)">
-			<Component Id="compAllInOneDLL" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes">
-				<File Id="micro_profiler.dll" Name="micro-profiler.dll" Vital="yes" />
-			</Component>
-			<Component Id="compStubTracerDLL" Guid="7FB94FB2-6CB4-4920-BDC5-22662C58FFCF" KeyPath="yes">
-				<File Id="micro_profiler.stub.dll" Name="micro-profiler.stub.dll" Vital="yes" />
-			</Component>
-			<Component Id="compTracerSDK" Guid="FA5EE4E6-A12A-4697-88EB-FC1C5CE98D18" KeyPath="yes">
-				<File Id="micro_profiler.initializer.cpp" Name="micro-profiler.initializer.cpp" Vital="yes"/>
-				<File Id="micro_profiler.initializer.mfc_static.cpp" Name="micro-profiler.initializer.mfc-static.cpp" Vital="yes"/>
-				<File Id="entry.h" Name="entry.h" Vital="yes"/>
-				<File Id="micro_profiler.lib" Name="micro-profiler.lib" Vital="yes"/>
-			</Component>
+			<?if $(var.Platform) = "x64"?>
+				<Directory Id="x86" Name="x86">
+					<?include sdk.wxi ?>
+				</Directory>
+				<?else?>
+				<?include sdk.wxi ?>
+			<?endif?>
 		</Directory>
+
+		<?if $(var.Platform) = "x64"?>
+			<?define PATHAPPEND="[TARGETDIR];[x86]"?>
+		<?elseif $(var.Platform) = "x86"?>
+			<?define PATHAPPEND="[TARGETDIR]"?>
+		<?endif?>
 
 		<Component Id="compSystemEnvironmentSetup" Directory="TARGETDIR" Guid="52DE93FD-B13F-4153-8F5F-58EADD7B2D95">
 			<Condition><![CDATA[ALLUSERS]]></Condition>
-			<Environment Id="envMicroProfilerSystem" Name="MICROPROFILERDIR" Value="[TARGETDIR]" Action="set" System="yes"/>
-			<Environment Id="env_path_sys" Name="Path" Value="%MICROPROFILERDIR%" Part="last" Action="set" System="yes"/>
+			<Environment Id="env_path_sys" Name="Path" Value="$(var.PATHAPPEND)" Part="last" Action="set" System="yes"/>
 		</Component>
 
 		<Component Id="compUserEnvironmentSetup" Directory="TARGETDIR" Guid="7EA8BA3A-A6F2-4468-8C94-A016AC198A3F">
 			<Condition><![CDATA[NOT ALLUSERS]]></Condition>
-			<Environment Id="envMicroProfilerUser" Name="MICROPROFILERDIR" Value="[TARGETDIR]" Action="set" System="no"/>
-			<Environment Id="env_path_usr" Name="Path" Value="%MICROPROFILERDIR%" Part="last" Action="set" System="no"/>
+			<Environment Id="env_path_usr" Name="Path" Value="$(var.PATHAPPEND)" Part="last" Action="set" System="no"/>
 		</Component>
 
-		<Component Id="compFrontendRegistration" Guid="BC5669B7-BF54-40BB-A169-E20B16357D45" Directory="TARGETDIR">
-			<AppId Id="5772E3BD-4C40-450C-8F79-A5052A3CC346" DllSurrogate="" Description="MicroProfiler Frontend Application">
-				<Class Id="ABC1A8AB-31D5-475F-B541-987141CD4DB3" Description="MicroProfiler Frontend Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[TARGETDIR]micro-profiler.dll" Version="1.0"/>
-			</AppId>
-			<Class Id="2F5ECF23-E98B-4399-AB4F-3083264C481B" Description="IProfilerFrontend ProxyStub Class" Context="InprocServer32" ThreadingModel="both" ForeignServer="[TARGETDIR]micro-profiler.dll"/>
-			<Interface Id="2F5ECF23-E98B-4399-AB4F-3083264C481B" Name="IProfilerFrontend" ProxyStubClassId32="2F5ECF23-E98B-4399-AB4F-3083264C481B"/>
-		</Component>
+		<?define SOURCEDIRX=$(var.SOURCEDIR)?>
+		<?define TARGETDIRX="TARGETDIR"?>
 
-		<Component Id="compAddinObjectRegistration" Guid="57A2000C-A414-4F8F-A3A3-92DA925C6D11" Directory="TARGETDIR">
-			<Class Id="B36A1712-EF9F-4960-9B33-838BFCC70683" Description="MicroProfiler Addin Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[TARGETDIR]micro-profiler.dll" Programmable="yes">
-				<ProgId Id="MicroProfiler.Addin.1">
-					<ProgId Id="MicroProfiler.Addin" />
-				</ProgId>
-			</Class>
-		</Component>
+		<?if $(var.Platform) = "x64"?>
+			<?define ISX64="yes"?>
+			<?define PLATFORMSELECTOR="x64"?>
+			<?define ALLINONEDLLGUID="47674731-7CDF-4D96-ABE6-BC85BCA68161"?>
+			<?define STUBTRACERDLLGUID="7FB94FB2-6CB4-4920-BDC5-22662C58FFCF"?>
+			<?define FRONTENDREGISTRYGUID="BC5669B7-BF54-40BB-A169-E20B16357D45"?>
+			<?define ADDINOBJECTREGISTRYGUID="57A2000C-A414-4F8F-A3A3-92DA925C6D11"?>
+
+			<?include platform-dependent.wxi?>
+
+			<?undef ISX64 ?>
+			<?undef PLATFORMSELECTOR ?>
+			<?undef ALLINONEDLLGUID ?>
+			<?undef STUBTRACERDLLGUID ?>
+			<?undef FRONTENDREGISTRYGUID ?>
+			<?undef ADDINOBJECTREGISTRYGUID ?>
+
+			<?undef SOURCEDIRX ?>
+			<?define SOURCEDIRX=$(var.SOURCEDIRX86)?>
+			<?undef TARGETDIRX ?>
+			<?define TARGETDIRX="x86"?>
+		<?endif?>
+
+		<?define ISX64="no"?>
+		<?define PLATFORMSELECTOR="x86"?>
+
+		<?define ALLINONEDLLGUID="4EC2E786-D232-4EDF-940E-EC18DFFFADBB"?>
+		<?define STUBTRACERDLLGUID="416B55ED-11D2-435E-A41D-7FC3B37336BC"?>
+		<?define FRONTENDREGISTRYGUID="39183037-8F73-400F-BD82-14014B9E5710"?>
+		<?define ADDINOBJECTREGISTRYGUID="12338CB1-814B-4530-A81E-2A9D46436D3D"?>
+		
+		<?include platform-dependent.wxi?>
 
 		<Component Id="compAddinRegistration" Directory="TARGETDIR">
 			<RegistryKey Root="HKCU" Key="Software\Microsoft\VisualStudio">
@@ -128,7 +164,11 @@
 				</RegistryKey>
 			</RegistryKey>
 		</Component>
-		
-		<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+
+		<?if $(var.Platform) = "x64" ?>
+			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+		<?elseif $(var.Platform) = "x86" ?>
+			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+		<?endif?>
 	</Product>
 </Wix>

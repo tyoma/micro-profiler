@@ -39,12 +39,14 @@
 			/>
 			<Tool
 				Name="MASM"
+				PreprocessorDefinitions="_M_IX86=1"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
 				Name="MASM_x64"
+				PreprocessorDefinitions="_M_X64=1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -116,12 +118,14 @@
 			/>
 			<Tool
 				Name="MASM"
+				PreprocessorDefinitions="_M_IX86=1"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
 				Name="MASM_x64"
+				PreprocessorDefinitions="_M_X64=1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -194,12 +198,14 @@
 			/>
 			<Tool
 				Name="MASM"
+				PreprocessorDefinitions="_M_IX86=1"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
 				Name="MASM_x64"
+				PreprocessorDefinitions="_M_X64=1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -276,12 +282,14 @@
 			/>
 			<Tool
 				Name="MASM"
+				PreprocessorDefinitions="_M_IX86=1"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
 				Name="MASM_x64"
+				PreprocessorDefinitions="_M_X64=1"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"

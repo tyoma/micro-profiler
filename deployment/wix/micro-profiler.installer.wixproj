@@ -20,10 +20,14 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>$(SolutionDir)\_setup\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants>SOURCEDIR=../../_bin/Release_x64</DefineConstants>
+    <DefineConstants>SOURCEDIR=../../_bin/Release_x64;SOURCEDIRX86=../../_bin/Release_Win32</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="micro-profiler.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="platform-dependent.wxi" />
+    <Content Include="sdk.wxi" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>

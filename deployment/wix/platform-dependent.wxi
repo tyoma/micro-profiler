@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+	<Component Id="compAllInOneDLL_$(var.PLATFORMSELECTOR)" Guid="$(var.ALLINONEDLLGUID)" KeyPath="yes" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)">
+		<File Id="micro_profiler.dll_$(var.PLATFORMSELECTOR)" Source="$(var.SOURCEDIRX)/micro-profiler.dll" Vital="yes" />
+	</Component>
+	
+	<Component Id="compStubTracerDLL_$(var.PLATFORMSELECTOR)" Guid="$(var.STUBTRACERDLLGUID)" KeyPath="yes" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)">
+		<File Id="micro_profiler.stub.dll_$(var.PLATFORMSELECTOR)" Source="$(var.SOURCEDIRX)/micro-profiler.stub.dll" Vital="yes" />
+	</Component>
+
+	<Component Id="compFrontendRegistration_$(var.PLATFORMSELECTOR)" Guid="$(var.FRONTENDREGISTRYGUID)" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)" KeyPath="yes">
+		<AppId Id="5772E3BD-4C40-450C-8F79-A5052A3CC346" DllSurrogate="" Description="MicroProfiler Frontend Application">
+			<Class Id="ABC1A8AB-31D5-475F-B541-987141CD4DB3" Description="MicroProfiler Frontend Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll" Version="1.0"/>
+		</AppId>
+		<Class Id="2F5ECF23-E98B-4399-AB4F-3083264C481B" Description="IProfilerFrontend ProxyStub Class" Context="InprocServer32" ThreadingModel="both" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll"/>
+		<Interface Id="2F5ECF23-E98B-4399-AB4F-3083264C481B" Name="IProfilerFrontend" ProxyStubClassId32="2F5ECF23-E98B-4399-AB4F-3083264C481B"/>
+	</Component>
+
+	<Component Id="compAddinObjectRegistration_$(var.PLATFORMSELECTOR)" Guid="$(var.ADDINOBJECTREGISTRYGUID)" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)" KeyPath="yes">
+		<Class Id="B36A1712-EF9F-4960-9B33-838BFCC70683" Description="MicroProfiler Addin Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll" Programmable="yes">
+			<ProgId Id="MicroProfiler.Addin.1">
+				<ProgId Id="MicroProfiler.Addin" />
+			</ProgId>
+		</Class>
+	</Component>
+
+</Include>

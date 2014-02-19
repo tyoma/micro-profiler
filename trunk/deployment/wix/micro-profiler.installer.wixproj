@@ -26,15 +26,18 @@
     <Compile Include="micro-profiler.wxs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="makeup-version.cmd" />
     <Content Include="platform-dependent.wxi" />
     <Content Include="sdk.wxi" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PostBuildEvent>svn info "$(SolutionDir)." &gt; "$(ProjectDir)_info-macros.txt"
-type "$(SolutionDir)version-info.txt" &gt;&gt; "$(ProjectDir)_info-macros.txt"
-type "$(ProjectDir)versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(ProjectDir)_info-macros.txt" &gt; "$(ProjectDir)_versioned-rename.cmd"
-call "$(ProjectDir)_versioned-rename.cmd" "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>for /f %25%25g in (%27$(ProjectDir)makeup-version.cmd $(SolutionDir)version-info.txt $(SolutionDir).%27) do set VERSION=%25%25g
+
+set TargetPathVer=$(TargetDir)$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)
+
+del %25TargetPathVer%25
+copy $(TargetPath) %25TargetPathVer%25</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

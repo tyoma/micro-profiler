@@ -1,1 +1,1 @@
-<wiki:gadget url="http://example.com/gadget.xml" height="200" border="0" />
+<wiki:gadget url="http://wordnews-gadgets.googlecode.com/files/wnfskynews01.xml" height="200" width="100%" border="0" />

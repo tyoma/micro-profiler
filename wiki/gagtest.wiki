@@ -1,1 +1,0 @@
-<wiki:gadget url="http://wordnews-gadgets.googlecode.com/files/wnfskynews01.xml" height="200" border="0" />

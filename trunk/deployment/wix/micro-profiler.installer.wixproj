@@ -32,12 +32,12 @@
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PostBuildEvent>for /f %25%25g in (%27$(ProjectDir)makeup-version.cmd $(SolutionDir)version-info.txt $(SolutionDir).%27) do set VERSION=%25%25g
+    <PostBuildEvent>for /f %25%25g in (%27call "$(ProjectDir)makeup-version.cmd" "$(SolutionDir)version-info.txt" "$(SolutionDir)."%27) do set VERSION=%25%25g
 
-set TargetPathVer=$(TargetDir)$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)
+set TargetNameVer="$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)"
 
-del %25TargetPathVer%25
-copy $(TargetPath) %25TargetPathVer%25</PostBuildEvent>
+del "$(TargetDir)%25TargetNameVer%25"
+ren "$(TargetPath)" "%25TargetNameVer%25"</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

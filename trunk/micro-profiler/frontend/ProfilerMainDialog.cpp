@@ -42,34 +42,56 @@ namespace micro_profiler
 {
 	extern HINSTANCE g_instance;
 
+	namespace
+	{
+		class columns_model : public listview::columns_model
+		{
+			vector<column> _columns;
+
+		public:
+			template<size_t n>
+			columns_model(const column (&columns)[n])
+				: _columns(columns, columns + n)
+			{	}
+
+			virtual index_type get_count() const throw()
+			{	return _columns.size();	}
+
+			virtual void get_column(index_type index, column &column) const
+			{	column = _columns[index];	}
+		};
+
+		const listview::columns_model::column c_columns_statistics[] = {
+			listview::columns_model::column(L"#", listview::dir_none),
+			listview::columns_model::column(L"Function", listview::dir_ascending),
+			listview::columns_model::column(L"Times Called", listview::dir_descending),
+			listview::columns_model::column(L"Exclusive Time", listview::dir_descending),
+			listview::columns_model::column(L"Inclusive Time", listview::dir_descending),
+			listview::columns_model::column(L"Average Exclusive Call Time", listview::dir_descending),
+			listview::columns_model::column(L"Average Inclusive Call Time", listview::dir_descending),
+			listview::columns_model::column(L"Max Recursion", listview::dir_descending),
+			listview::columns_model::column(L"Max Call Time", listview::dir_descending),
+		};
+
+		const listview::columns_model::column c_columns_statistics_parents[] = {
+			listview::columns_model::column(L"#", listview::dir_none),
+			listview::columns_model::column(L"Function", listview::dir_ascending),
+			listview::columns_model::column(L"Times Called", listview::dir_descending),
+		};
+	}
+
 	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable)
 		: _statistics(s), _executable(executable)
 	{
 		Create(NULL, 0);
 
-		_statistics_lv->add_column(L"#", listview::dir_none);
-		_statistics_lv->add_column(L"Function", listview::dir_ascending);
-		_statistics_lv->add_column(L"Times Called", listview::dir_descending);
-		_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
-		_statistics_lv->add_column(L"Inclusive Time", listview::dir_descending);
-		_statistics_lv->add_column(L"Average Exclusive Call Time", listview::dir_descending);
-		_statistics_lv->add_column(L"Average Inclusive Call Time", listview::dir_descending);
-		_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
-		_statistics_lv->add_column(L"Max Call Time", listview::dir_descending);
+		shared_ptr<columns_model> columns_model_parents(new columns_model(c_columns_statistics_parents));
+		shared_ptr<columns_model> columns_model_main(new columns_model(c_columns_statistics));
+		shared_ptr<columns_model> columns_model_children(new columns_model(c_columns_statistics));
 
-		_parents_statistics_lv->add_column(L"#", listview::dir_none);
-		_parents_statistics_lv->add_column(L"Function", listview::dir_ascending);
-		_parents_statistics_lv->add_column(L"Times Called", listview::dir_descending);
-
-		_children_statistics_lv->add_column(L"#", listview::dir_none);
-		_children_statistics_lv->add_column(L"Function", listview::dir_ascending);
-		_children_statistics_lv->add_column(L"Times Called", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Exclusive Time", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Inclusive Time", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Average Exclusive Call Time", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Average Inclusive Call Time", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Max Recursion", listview::dir_descending);
-		_children_statistics_lv->add_column(L"Max Call Time", listview::dir_descending);
+		_parents_statistics_lv->set_columns_model(columns_model_parents);
+		_statistics_lv->set_columns_model(columns_model_main);
+		_children_statistics_lv->set_columns_model(columns_model_children);
 
 		_statistics_lv->set_model(_statistics);
 

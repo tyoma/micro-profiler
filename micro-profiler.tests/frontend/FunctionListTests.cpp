@@ -24,7 +24,6 @@ namespace std
 
 using namespace std;
 using namespace wpl::ui;
-using namespace micro_profiler;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler

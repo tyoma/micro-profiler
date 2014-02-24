@@ -22,6 +22,9 @@
     <ClCompile Include="TracedFunctions.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
+    <ClCompile Include="frontend\ColumnsModelTests.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

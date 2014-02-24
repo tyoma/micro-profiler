@@ -299,6 +299,7 @@
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="frontend\statistic_columns_model.cpp" />
     <ClCompile Include="frontend\symbol_resolver.cpp">
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
       <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
@@ -325,6 +326,7 @@
     <ClInclude Include="common\primitives.h" />
     <ClInclude Include="frontend\function_list.h" />
     <ClInclude Include="frontend\object_lock.h" />
+    <ClInclude Include="frontend\statistic_columns_model.h" />
     <ClInclude Include="frontend\symbol_resolver.h" />
     <ClInclude Include="_generated\frontend.h" />
   </ItemGroup>

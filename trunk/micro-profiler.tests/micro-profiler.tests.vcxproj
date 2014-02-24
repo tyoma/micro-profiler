@@ -227,6 +227,7 @@
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMHelpersTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
+    <ClCompile Include="frontend\ColumnsModelTests.cpp" />
     <ClCompile Include="frontend\FunctionListTests.cpp" />
     <ClCompile Include="frontend\OrderedViewTests.cpp" />
     <ClCompile Include="Helpers.cpp" />

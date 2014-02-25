@@ -24,7 +24,7 @@
 
 namespace micro_profiler
 {
-	class statistic_columns_model : public wpl::ui::listview::columns_model
+	class columns_model : public wpl::ui::listview::columns_model
 	{
 	public:
 		struct column;
@@ -32,11 +32,11 @@ namespace micro_profiler
 
 	public:
 		template <size_t N>
-		statistic_columns_model(const column (&columns)[N], index_type sort_column, bool sort_ascending);
+		columns_model(const column (&columns)[N], index_type sort_column, bool sort_ascending);
 
 	private:
 		virtual index_type get_count() const throw();
-		virtual void get_column(index_type index, columns_model::column &column) const;
+		virtual void get_column(index_type index, wpl::ui::listview::columns_model::column &column) const;
 //			virtual void update_column(index_type index, ...) = 0;
 		virtual std::pair<index_type, bool> get_sort_order() const throw();
 		virtual void activate_column(index_type column);
@@ -48,25 +48,25 @@ namespace micro_profiler
 	};
 
 
-	struct statistic_columns_model::column
+	struct columns_model::column
 	{
-		column(const std::wstring &caption, statistic_columns_model::sort_direction default_sort_direction);
+		column(const std::wstring &caption, columns_model::sort_direction default_sort_direction);
 
 		std::wstring caption;
-		statistic_columns_model::sort_direction default_sort_direction;
+		columns_model::sort_direction default_sort_direction;
 	};
 
 
 
 	template <size_t N>
-	inline statistic_columns_model::statistic_columns_model(const column (&columns)[N], index_type sort_column,
+	inline columns_model::columns_model(const column (&columns)[N], index_type sort_column,
 			bool sort_ascending)
 		: _columns(columns, columns + N), _sort_column(sort_column), _sort_ascending(sort_ascending)
 	{	}
 
 
-	inline statistic_columns_model::column::column(const std::wstring &caption_,
-			statistic_columns_model::sort_direction default_sort_direction_)
+	inline columns_model::column::column(const std::wstring &caption_,
+			columns_model::sort_direction default_sort_direction_)
 		: caption(caption_), default_sort_direction(default_sort_direction_)
 	{	}
 }

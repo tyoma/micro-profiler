@@ -1,4 +1,4 @@
-#include <frontend/statistic_columns_model.h>
+#include <frontend/columns_model.h>
 
 namespace std
 {
@@ -31,14 +31,14 @@ namespace micro_profiler
 			void ColumnsModelIsInitiallyOrderedAcordinglyToConstructionParam()
 			{
 				// INIT
-				statistic_columns_model::column columns[] = {
-					statistic_columns_model::column(L"", statistic_columns_model::dir_none),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_descending),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_descending),
+				columns_model::column columns[] = {
+					columns_model::column(L"", columns_model::dir_none),
+					columns_model::column(L"", columns_model::dir_descending),
+					columns_model::column(L"", columns_model::dir_descending),
 				};
 
 				// ACT
-				shared_ptr<listview::columns_model> cm1(new statistic_columns_model(columns, listview::columns_model::npos,
+				shared_ptr<listview::columns_model> cm1(new columns_model(columns, listview::columns_model::npos,
 					false));
 
 				// ACT / ASSERT
@@ -46,14 +46,14 @@ namespace micro_profiler
 				Assert::IsFalse(cm1->get_sort_order().second);
 
 				// ACT
-				shared_ptr<listview::columns_model> cm2(new statistic_columns_model(columns, 1, false));
+				shared_ptr<listview::columns_model> cm2(new columns_model(columns, 1, false));
 
 				// ACT / ASSERT
 				Assert::IsTrue(1 == cm2->get_sort_order().first);
 				Assert::IsFalse(cm2->get_sort_order().second);
 
 				// ACT
-				shared_ptr<listview::columns_model> cm3(new statistic_columns_model(columns, 2, true));
+				shared_ptr<listview::columns_model> cm3(new columns_model(columns, 2, true));
 
 				// ACT / ASSERT
 				Assert::IsTrue(2 == cm3->get_sort_order().first);
@@ -65,18 +65,18 @@ namespace micro_profiler
 			void FirstOrderingIsDoneAccordinglyToDefaults()
 			{
 				// INIT
-				statistic_columns_model::column columns[] = {
-					statistic_columns_model::column(L"", statistic_columns_model::dir_none),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_descending),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_ascending),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_descending),
+				columns_model::column columns[] = {
+					columns_model::column(L"", columns_model::dir_none),
+					columns_model::column(L"", columns_model::dir_descending),
+					columns_model::column(L"", columns_model::dir_ascending),
+					columns_model::column(L"", columns_model::dir_descending),
 				};
 				shared_ptr<listview::columns_model> cm;
 				log_t log;
 				shared_ptr<wpl::destructible> slot;
 
 				// ACT
-				cm.reset(new statistic_columns_model(columns, listview::columns_model::npos, false));
+				cm.reset(new columns_model(columns, listview::columns_model::npos, false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(0);
 
@@ -86,7 +86,7 @@ namespace micro_profiler
 				Assert::IsTrue(listview::columns_model::npos == cm->get_sort_order().first);
 
 				// ACT
-				cm.reset(new statistic_columns_model(columns, listview::columns_model::npos, false));
+				cm.reset(new columns_model(columns, listview::columns_model::npos, false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(3);
 
@@ -98,7 +98,7 @@ namespace micro_profiler
 				Assert::IsFalse(log[0].second);
 
 				// ACT
-				cm.reset(new statistic_columns_model(columns, listview::columns_model::npos, false));
+				cm.reset(new columns_model(columns, listview::columns_model::npos, false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(2);
 
@@ -115,15 +115,15 @@ namespace micro_profiler
 			void SubsequentOrderingReversesTheColumnsState()
 			{
 				// INIT
-				statistic_columns_model::column columns[] = {
-					statistic_columns_model::column(L"", statistic_columns_model::dir_none),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_descending),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_ascending),
-					statistic_columns_model::column(L"", statistic_columns_model::dir_descending),
+				columns_model::column columns[] = {
+					columns_model::column(L"", columns_model::dir_none),
+					columns_model::column(L"", columns_model::dir_descending),
+					columns_model::column(L"", columns_model::dir_ascending),
+					columns_model::column(L"", columns_model::dir_descending),
 				};
-				shared_ptr<listview::columns_model> cm1(new statistic_columns_model(columns, listview::columns_model::npos,
+				shared_ptr<listview::columns_model> cm1(new columns_model(columns, listview::columns_model::npos,
 					false));
-				shared_ptr<listview::columns_model> cm2(new statistic_columns_model(columns, 2, false));
+				shared_ptr<listview::columns_model> cm2(new columns_model(columns, 2, false));
 				log_t log;
 				shared_ptr<wpl::destructible> slot1, slot2;
 
@@ -157,18 +157,18 @@ namespace micro_profiler
 			void GettingColumnsCount()
 			{
 				// INIT
-				statistic_columns_model::column columns1[] = {
-					statistic_columns_model::column(L"first", statistic_columns_model::dir_none),
-					statistic_columns_model::column(L"second", statistic_columns_model::dir_descending),
-					statistic_columns_model::column(L"third", statistic_columns_model::dir_ascending),
-					statistic_columns_model::column(L"fourth", statistic_columns_model::dir_ascending),
+				columns_model::column columns1[] = {
+					columns_model::column(L"first", columns_model::dir_none),
+					columns_model::column(L"second", columns_model::dir_descending),
+					columns_model::column(L"third", columns_model::dir_ascending),
+					columns_model::column(L"fourth", columns_model::dir_ascending),
 				};
-				statistic_columns_model::column columns2[] = {
-					statistic_columns_model::column(L"a first column", statistic_columns_model::dir_none),
-					statistic_columns_model::column(L"a second column", statistic_columns_model::dir_ascending),
+				columns_model::column columns2[] = {
+					columns_model::column(L"a first column", columns_model::dir_none),
+					columns_model::column(L"a second column", columns_model::dir_ascending),
 				};
-				shared_ptr<listview::columns_model> cm1(new statistic_columns_model(columns1, 0, false));
-				shared_ptr<listview::columns_model> cm2(new statistic_columns_model(columns2, 0, false));
+				shared_ptr<listview::columns_model> cm1(new columns_model(columns1, 0, false));
+				shared_ptr<listview::columns_model> cm2(new columns_model(columns2, 0, false));
 				listview::columns_model::column c;
 
 				// ACT / ASSERT
@@ -181,17 +181,17 @@ namespace micro_profiler
 			void GetColumnItem()
 			{
 				// INIT
-				statistic_columns_model::column columns1[] = {
-					statistic_columns_model::column(L"first", statistic_columns_model::dir_none),
-					statistic_columns_model::column(L"second", statistic_columns_model::dir_descending),
-					statistic_columns_model::column(L"third", statistic_columns_model::dir_ascending),
+				columns_model::column columns1[] = {
+					columns_model::column(L"first", columns_model::dir_none),
+					columns_model::column(L"second", columns_model::dir_descending),
+					columns_model::column(L"third", columns_model::dir_ascending),
 				};
-				statistic_columns_model::column columns2[] = {
-					statistic_columns_model::column(L"a first column", statistic_columns_model::dir_none),
-					statistic_columns_model::column(L"a second column", statistic_columns_model::dir_ascending),
+				columns_model::column columns2[] = {
+					columns_model::column(L"a first column", columns_model::dir_none),
+					columns_model::column(L"a second column", columns_model::dir_ascending),
 				};
-				shared_ptr<listview::columns_model> cm1(new statistic_columns_model(columns1, 0, false));
-				shared_ptr<listview::columns_model> cm2(new statistic_columns_model(columns2, 0, false));
+				shared_ptr<listview::columns_model> cm1(new columns_model(columns1, 0, false));
+				shared_ptr<listview::columns_model> cm2(new columns_model(columns2, 0, false));
 				listview::columns_model::column c;
 
 				// ACT

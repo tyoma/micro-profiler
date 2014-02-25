@@ -350,6 +350,10 @@
 			Name="frontend"
 			>
 			<File
+				RelativePath=".\frontend\ColumnsModelTests.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\frontend\FunctionListTests.cpp"
 				>
 			</File>

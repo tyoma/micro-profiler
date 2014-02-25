@@ -412,6 +412,14 @@
 			Name="frontend"
 			>
 			<File
+				RelativePath=".\frontend\columns_model.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\columns_model.h"
+				>
+			</File>
+			<File
 				RelativePath=".\frontend\function_list.cpp"
 				>
 				<FileConfiguration

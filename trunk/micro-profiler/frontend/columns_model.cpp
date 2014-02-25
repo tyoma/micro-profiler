@@ -18,22 +18,22 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "statistic_columns_model.h"
+#include "columns_model.h"
 
 using namespace std;
 
 namespace micro_profiler
 {
-	statistic_columns_model::index_type statistic_columns_model::get_count() const throw()
+	columns_model::index_type columns_model::get_count() const throw()
 	{	return static_cast<index_type>(_columns.size());	}
 
-	void statistic_columns_model::get_column(index_type index, columns_model::column &column) const
+	void columns_model::get_column(index_type index, wpl::ui::listview::columns_model::column &column) const
 	{	column = _columns[index].caption;	}
 
-	pair<statistic_columns_model::index_type, bool> statistic_columns_model::get_sort_order() const throw()
+	pair<columns_model::index_type, bool> columns_model::get_sort_order() const throw()
 	{	return make_pair(_sort_column, _sort_ascending);	}
 
-	void statistic_columns_model::activate_column(index_type column_)
+	void columns_model::activate_column(index_type column_)
 	{
 		const column &activated = _columns[column_];
 

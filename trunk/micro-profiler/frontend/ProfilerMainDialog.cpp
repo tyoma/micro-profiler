@@ -21,7 +21,7 @@
 #include "ProfilerMainDialog.h"
 
 #include "function_list.h"
-#include "statistic_columns_model.h"
+#include "columns_model.h"
 
 #include <wpl/ui/win32/controls.h>
 
@@ -45,22 +45,22 @@ namespace micro_profiler
 
 	namespace
 	{
-		const statistic_columns_model::column c_columns_statistics[] = {
-			statistic_columns_model::column(L"#", statistic_columns_model::dir_none),
-			statistic_columns_model::column(L"Function", statistic_columns_model::dir_ascending),
-			statistic_columns_model::column(L"Times Called", statistic_columns_model::dir_descending),
-			statistic_columns_model::column(L"Exclusive Time", statistic_columns_model::dir_descending),
-			statistic_columns_model::column(L"Inclusive Time", statistic_columns_model::dir_descending),
-			statistic_columns_model::column(L"Average Exclusive Call Time", statistic_columns_model::dir_descending),
-			statistic_columns_model::column(L"Average Inclusive Call Time", statistic_columns_model::dir_descending),
-			statistic_columns_model::column(L"Max Recursion", statistic_columns_model::dir_descending),
-			statistic_columns_model::column(L"Max Call Time", statistic_columns_model::dir_descending),
+		const columns_model::column c_columns_statistics[] = {
+			columns_model::column(L"#", columns_model::dir_none),
+			columns_model::column(L"Function", columns_model::dir_ascending),
+			columns_model::column(L"Times Called", columns_model::dir_descending),
+			columns_model::column(L"Exclusive Time", columns_model::dir_descending),
+			columns_model::column(L"Inclusive Time", columns_model::dir_descending),
+			columns_model::column(L"Average Exclusive Call Time", columns_model::dir_descending),
+			columns_model::column(L"Average Inclusive Call Time", columns_model::dir_descending),
+			columns_model::column(L"Max Recursion", columns_model::dir_descending),
+			columns_model::column(L"Max Call Time", columns_model::dir_descending),
 		};
 
-		const statistic_columns_model::column c_columns_statistics_parents[] = {
-			statistic_columns_model::column(L"#", statistic_columns_model::dir_none),
-			statistic_columns_model::column(L"Function", statistic_columns_model::dir_ascending),
-			statistic_columns_model::column(L"Times Called", statistic_columns_model::dir_descending),
+		const columns_model::column c_columns_statistics_parents[] = {
+			columns_model::column(L"#", columns_model::dir_none),
+			columns_model::column(L"Function", columns_model::dir_ascending),
+			columns_model::column(L"Times Called", columns_model::dir_descending),
 		};
 	}
 
@@ -69,9 +69,9 @@ namespace micro_profiler
 	{
 		Create(NULL, 0);
 
-		shared_ptr<listview::columns_model> columns_model_parents(new statistic_columns_model(c_columns_statistics_parents, 2, false));
-		shared_ptr<listview::columns_model> columns_model_main(new statistic_columns_model(c_columns_statistics, 3, false));
-		shared_ptr<listview::columns_model> columns_model_children(new statistic_columns_model(c_columns_statistics, 4, false));
+		shared_ptr<listview::columns_model> columns_model_parents(new columns_model(c_columns_statistics_parents, 2, false));
+		shared_ptr<listview::columns_model> columns_model_main(new columns_model(c_columns_statistics, 3, false));
+		shared_ptr<listview::columns_model> columns_model_children(new columns_model(c_columns_statistics, 4, false));
 
 		_parents_statistics_lv->set_columns_model(columns_model_parents);
 		_statistics_lv->set_columns_model(columns_model_main);

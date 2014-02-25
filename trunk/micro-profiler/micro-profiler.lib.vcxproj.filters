@@ -31,7 +31,7 @@
     <ClCompile Include="collector\frontend_controller.cpp">
       <Filter>collector</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\statistic_columns_model.cpp">
+    <ClCompile Include="frontend\columns_model.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
   </ItemGroup>
@@ -78,7 +78,7 @@
     <ClInclude Include="collector\frontend_controller.h">
       <Filter>collector</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\statistic_columns_model.h">
+    <ClInclude Include="frontend\columns_model.h">
       <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>

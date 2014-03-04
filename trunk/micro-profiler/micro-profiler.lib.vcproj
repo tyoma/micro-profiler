@@ -768,6 +768,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\common\configuration.h"
+				>
+			</File>
+			<File
 				RelativePath=".\common\formatting.cpp"
 				>
 			</File>

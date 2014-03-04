@@ -81,6 +81,9 @@
     <ClInclude Include="frontend\columns_model.h">
       <Filter>frontend</Filter>
     </ClInclude>
+    <ClInclude Include="common\configuration.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">

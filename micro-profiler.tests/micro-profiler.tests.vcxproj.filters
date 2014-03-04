@@ -30,6 +30,7 @@
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Mockups.h" />
     <ClInclude Include="TracedFunctions.h" />
+    <ClInclude Include="assert.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="run-tests.vs10.cmd" />

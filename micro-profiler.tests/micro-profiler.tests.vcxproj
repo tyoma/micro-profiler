@@ -272,6 +272,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="assert.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Mockups.h" />
     <ClInclude Include="TracedFunctions.h" />

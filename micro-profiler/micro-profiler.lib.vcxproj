@@ -320,6 +320,7 @@
     <ClInclude Include="collector\statistics_bridge.h" />
     <ClInclude Include="collector\system.h" />
     <ClInclude Include="common\com_helpers.h" />
+    <ClInclude Include="common\configuration.h" />
     <ClInclude Include="common\formatting.h" />
     <ClInclude Include="common\ordered_view.h" />
     <ClInclude Include="common\pod_vector.h" />

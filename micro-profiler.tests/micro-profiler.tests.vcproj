@@ -367,6 +367,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\assert.h"
+			>
+		</File>
+		<File
 			RelativePath=".\CallCollectorTests.cpp"
 			>
 		</File>

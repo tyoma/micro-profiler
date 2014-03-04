@@ -46,21 +46,21 @@ namespace micro_profiler
 	namespace
 	{
 		const columns_model::column c_columns_statistics[] = {
-			columns_model::column(L"#", columns_model::dir_none),
-			columns_model::column(L"Function", columns_model::dir_ascending),
-			columns_model::column(L"Times Called", columns_model::dir_descending),
-			columns_model::column(L"Exclusive Time", columns_model::dir_descending),
-			columns_model::column(L"Inclusive Time", columns_model::dir_descending),
-			columns_model::column(L"Average Exclusive Call Time", columns_model::dir_descending),
-			columns_model::column(L"Average Inclusive Call Time", columns_model::dir_descending),
-			columns_model::column(L"Max Recursion", columns_model::dir_descending),
-			columns_model::column(L"Max Call Time", columns_model::dir_descending),
+			columns_model::column("Index", L"#", columns_model::dir_none),
+			columns_model::column("Function", L"Function", columns_model::dir_ascending),
+			columns_model::column("TimesCalled", L"Times Called", columns_model::dir_descending),
+			columns_model::column("ExclusiveTime", L"Exclusive Time", columns_model::dir_descending),
+			columns_model::column("InclusiveTime", L"Inclusive Time", columns_model::dir_descending),
+			columns_model::column("AvgExclusiveTime", L"Average Exclusive Call Time", columns_model::dir_descending),
+			columns_model::column("AvgInclusiveTime", L"Average Inclusive Call Time", columns_model::dir_descending),
+			columns_model::column("MaxRecursion", L"Max Recursion", columns_model::dir_descending),
+			columns_model::column("MaxCallTime", L"Max Call Time", columns_model::dir_descending),
 		};
 
 		const columns_model::column c_columns_statistics_parents[] = {
-			columns_model::column(L"#", columns_model::dir_none),
-			columns_model::column(L"Function", columns_model::dir_ascending),
-			columns_model::column(L"Times Called", columns_model::dir_descending),
+			columns_model::column("Index", L"#", columns_model::dir_none),
+			columns_model::column("Function", L"Function", columns_model::dir_ascending),
+			columns_model::column("TimesCalled", L"Times Called", columns_model::dir_descending),
 		};
 	}
 

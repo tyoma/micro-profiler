@@ -20,10 +20,24 @@
 
 #include "columns_model.h"
 
+#include "../common/configuration.h"
+
 using namespace std;
 
 namespace micro_profiler
 {
+	void columns_model::store(hive &configuration) const
+	{
+		configuration.store("OrderBy", _sort_column != npos ? _sort_column : -1);
+		configuration.store("OrderDirection", _sort_ascending ? 1 : 0);
+		for (vector<column>::const_iterator i = _columns.begin(); i != _columns.end(); ++i)
+		{
+			shared_ptr<hive> cc = configuration.create(i->id.c_str());
+
+			cc->store("Caption", i->caption.c_str());
+		}
+	}
+
 	columns_model::index_type columns_model::get_count() const throw()
 	{	return static_cast<index_type>(_columns.size());	}
 

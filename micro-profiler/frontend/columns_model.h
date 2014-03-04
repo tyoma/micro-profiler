@@ -24,6 +24,8 @@
 
 namespace micro_profiler
 {
+	struct hive;
+
 	class columns_model : public wpl::ui::listview::columns_model
 	{
 	public:
@@ -33,6 +35,8 @@ namespace micro_profiler
 	public:
 		template <size_t N>
 		columns_model(const column (&columns)[N], index_type sort_column, bool sort_ascending);
+
+		void store(hive &configuration) const;
 
 	private:
 		virtual index_type get_count() const throw();
@@ -50,8 +54,9 @@ namespace micro_profiler
 
 	struct columns_model::column
 	{
-		column(const std::wstring &caption, columns_model::sort_direction default_sort_direction);
+		column(const std::string &id, const std::wstring &caption, columns_model::sort_direction default_sort_direction);
 
+		std::string id;
 		std::wstring caption;
 		columns_model::sort_direction default_sort_direction;
 	};
@@ -65,8 +70,8 @@ namespace micro_profiler
 	{	}
 
 
-	inline columns_model::column::column(const std::wstring &caption_,
+	inline columns_model::column::column(const std::string &id_, const std::wstring &caption_,
 			columns_model::sort_direction default_sort_direction_)
-		: caption(caption_), default_sort_direction(default_sort_direction_)
+		: id(id_), caption(caption_), default_sort_direction(default_sort_direction_)
 	{	}
 }

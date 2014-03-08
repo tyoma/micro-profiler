@@ -37,8 +37,8 @@ namespace micro_profiler
 		columns_model(const column (&columns)[N], index_type sort_column, bool sort_ascending);
 
 		void store(hive &configuration) const;
+		void update(const hive &configuration);
 
-	private:
 		virtual index_type get_count() const throw();
 		virtual void get_column(index_type index, wpl::ui::listview::columns_model::column &column) const;
 //			virtual void update_column(index_type index, ...) = 0;

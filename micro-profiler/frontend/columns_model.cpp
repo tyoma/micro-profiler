@@ -26,18 +26,52 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		const char c_order_by[] = "OrderBy";
+		const char c_order_direction[] = "OrderDirection";
+		const char c_caption[] = "Caption";
+
+		template <typename T>
+		bool load_int(const hive &configuration, const char *name, T &value)
+		{
+			int stored;
+
+			return configuration.load(name, stored) ? value = static_cast<T>(stored), true : false;
+		}
+
+		bool load_int(const hive &configuration, const char *name, bool &value)
+		{
+			int stored;
+
+			return configuration.load(name, stored) ? value = !!stored, true : false;
+		}
+	}
+
 	void columns_model::store(hive &configuration) const
 	{
-		configuration.store("OrderBy", _sort_column != npos ? _sort_column : -1);
-		configuration.store("OrderDirection", _sort_ascending ? 1 : 0);
+		configuration.store(c_order_by, _sort_column != npos ? _sort_column : -1);
+		configuration.store(c_order_direction, _sort_ascending ? 1 : 0);
 		for (vector<column>::const_iterator i = _columns.begin(); i != _columns.end(); ++i)
 		{
 			shared_ptr<hive> cc = configuration.create(i->id.c_str());
 
-			cc->store("Caption", i->caption.c_str());
+			cc->store(c_caption, i->caption.c_str());
 		}
 	}
 
+	void columns_model::update(const hive &configuration)
+	{
+		load_int(configuration, c_order_by, _sort_column);
+		_sort_column = _sort_column < static_cast<index_type>(_columns.size()) ? _sort_column : npos;
+		load_int(configuration, c_order_direction, _sort_ascending);
+		for (vector<column>::iterator i = _columns.begin(); i != _columns.end(); ++i)
+			if (shared_ptr<hive> cc = configuration.open(i->id.c_str()))
+			{
+				cc->load(c_caption, i->caption);
+			}
+	}
+	
 	columns_model::index_type columns_model::get_count() const throw()
 	{	return static_cast<index_type>(_columns.size());	}
 

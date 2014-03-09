@@ -1,6 +1,6 @@
 #sidebar TableOfContents
 There several steps to add profiling support to your VisualStudio project (look for required files in the attachment section):
- # Add construction/destruction of the profiler's frontend to the project that corresponds to the module (EXE or DLL) you want to profile. You may do this by adding {{{micro-profiler.initializer.cpp}}} to your project (with precompiled headers disabled for this file). The file is located in the install location or the directory where you unpacked the deployment zip. _In case you are using statically linked MFC with your project, be sure you add {{{micro-profiler.initializer.mfc-static.cpp}}} instead_;
+ # Add construction/destruction of the profiler's frontend to the project that corresponds to the module (EXE or DLL) you want to profile. You may do this by adding {{{micro-profiler.initializer.cpp}}} to your project (with precompiled headers disabled for this file). The file is located in the install location or the directory where you unpacked the deployment zip. In case you are using _statically linked MFC_ with your project, be sure you add {{{micro-profiler.initializer.mfc-static.cpp}}} instead;
  # Specify the scope to be profiled:
   # Apply */GH /Gh* command line options to compiler tool of your VS-project;
   # Or apply */GH /Gh* command line options to compiler tool of specific source (.cpp) file(s) you want to profile;

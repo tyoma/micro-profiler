@@ -1,45 +1,39 @@
-HKCU
+HKCR
 {
-	NoRemove 'SOFTWARE'
+	NoRemove CLSID
 	{
-		NoRemove 'Classes'
+		ForceRemove {ABC1A8AB-31D5-475F-B541-987141CD4DB3} = s 'ProfilerSink Class'
 		{
-			NoRemove CLSID
+			val AppID = s '{5772E3BD-4C40-450C-8F79-A5052A3CC346}'
+			InprocServer32 = s '%MODULE%'
 			{
-				ForceRemove {ABC1A8AB-31D5-475F-B541-987141CD4DB3} = s 'ProfilerSink Class'
-				{
-					val AppID = s '{5772E3BD-4C40-450C-8F79-A5052A3CC346}'
-					InprocServer32 = s '%MODULE%'
-					{
-						val ThreadingModel = s 'Apartment'
-					}
-					Version = s '1.0'
-				}
-
-				ForceRemove {2F5ECF23-E98B-4399-AB4F-3083264C481B} = s 'IProfilerFrontend_PSFactory'
-				{
-					InprocServer32 = s '%MODULE%'
-					{
-						val ThreadingModel = s 'Both'
-					}
-				}
+				val ThreadingModel = s 'Apartment'
 			}
+			Version = s '1.0'
+		}
 
-			NoRemove AppID
+		ForceRemove {2F5ECF23-E98B-4399-AB4F-3083264C481B} = s 'IProfilerFrontend_PSFactory'
+		{
+			InprocServer32 = s '%MODULE%'
 			{
-				ForceRemove {5772E3BD-4C40-450C-8F79-A5052A3CC346} = s 'MicroProfiler Frontend Application'
-				{
-					val DllSurrogate = s ''
-				}
+				val ThreadingModel = s 'Both'
 			}
+		}
+	}
 
-			NoRemove Interface
-			{
-				ForceRemove {2F5ECF23-E98B-4399-AB4F-3083264C481B} = s 'IProfilerFrontend'
-				{
-					ProxyStubClsid32 = s '{2F5ECF23-E98B-4399-AB4F-3083264C481B}'
-				}
-			}
+	NoRemove AppID
+	{
+		ForceRemove {5772E3BD-4C40-450C-8F79-A5052A3CC346} = s 'MicroProfiler Frontend Application'
+		{
+			val DllSurrogate = s ''
+		}
+	}
+
+	NoRemove Interface
+	{
+		ForceRemove {2F5ECF23-E98B-4399-AB4F-3083264C481B} = s 'IProfilerFrontend'
+		{
+			ProxyStubClsid32 = s '{2F5ECF23-E98B-4399-AB4F-3083264C481B}'
 		}
 	}
 }

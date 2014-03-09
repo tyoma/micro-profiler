@@ -37,19 +37,20 @@ namespace std
 
 namespace micro_profiler
 {
+	class columns_model;
 	struct functions_list;
 	struct linked_statistics;
-	struct symbol_resolver;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public self_unlockable
 	{
-		std::shared_ptr<functions_list> _statistics;
-		std::wstring _executable;
-		std::shared_ptr<symbol_resolver> _resolver;
+		const std::shared_ptr<functions_list> _statistics;
+		const std::wstring _executable;
 		std::shared_ptr<linked_statistics> _parents_statistics, _children_statistics;
+		const std::shared_ptr<columns_model> _columns_parents, _columns_main, _columns_children;
 		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
 		std::shared_ptr<wpl::ui::listview> _statistics_lv, _parents_statistics_lv, _children_statistics_lv;
 		std::vector<wpl::slot_connection> _connections;
+		CRect _placement;
 
 		void RelocateControls(const CSize &size);
 
@@ -66,7 +67,7 @@ namespace micro_profiler
 
 		BEGIN_MSG_MAP(ProfilerMainDialog)
 			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog);
-			MESSAGE_HANDLER(WM_SIZE, OnSize);
+			MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged);
 			COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
 			COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
 			MESSAGE_HANDLER(WM_CLOSE, OnClose);
@@ -74,7 +75,7 @@ namespace micro_profiler
 		END_MSG_MAP()
 
 		LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-		LRESULT OnSize(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
+		LRESULT OnWindowPosChanged(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
 		LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
 		LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);
 		LRESULT OnClose(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);

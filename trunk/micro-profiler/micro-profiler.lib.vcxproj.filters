@@ -34,6 +34,9 @@
     <ClCompile Include="frontend\columns_model.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="common\registry_configuration.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="frontend\symbol_resolver.h">

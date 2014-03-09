@@ -60,8 +60,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{9ACA7795-639D-42E3-8ABA-017A016CD147}"
 	ProjectSection(SolutionItems) = preProject
 		scripts\make-header.js = scripts\make-header.js
-		scripts\msi-postprocess.js = scripts\msi-postprocess.js
-		scripts\substitute.js = scripts\substitute.js
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{DE1AE368-D62C-4A09-94C9-7DCC0E4280A9}"
@@ -219,6 +217,7 @@ Global
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Debug|Win32.ActiveCfg = Debug|x64
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Debug|x64.ActiveCfg = Debug|x64
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Release|Win32.ActiveCfg = Release|x86
+		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Release|Win32.Build.0 = Release|x86
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Release|x64.ActiveCfg = Release|x64
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection

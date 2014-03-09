@@ -20,6 +20,7 @@
 
 #include "ProfilerMainDialog.h"
 
+#include "../common/configuration.h"
 #include "function_list.h"
 #include "columns_model.h"
 
@@ -46,46 +47,73 @@ namespace micro_profiler
 	namespace
 	{
 		const columns_model::column c_columns_statistics[] = {
-			columns_model::column("Index", L"#", columns_model::dir_none),
-			columns_model::column("Function", L"Function", columns_model::dir_ascending),
-			columns_model::column("TimesCalled", L"Times Called", columns_model::dir_descending),
-			columns_model::column("ExclusiveTime", L"Exclusive Time", columns_model::dir_descending),
-			columns_model::column("InclusiveTime", L"Inclusive Time", columns_model::dir_descending),
-			columns_model::column("AvgExclusiveTime", L"Average Exclusive Call Time", columns_model::dir_descending),
-			columns_model::column("AvgInclusiveTime", L"Average Inclusive Call Time", columns_model::dir_descending),
-			columns_model::column("MaxRecursion", L"Max Recursion", columns_model::dir_descending),
-			columns_model::column("MaxCallTime", L"Max Call Time", columns_model::dir_descending),
+			columns_model::column("Index", L"#", 28, columns_model::dir_none),
+			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
+			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
+			columns_model::column("ExclusiveTime", L"Exclusive Time", 48, columns_model::dir_descending),
+			columns_model::column("InclusiveTime", L"Inclusive Time", 48, columns_model::dir_descending),
+			columns_model::column("AvgExclusiveTime", L"Average Exclusive Call Time", 48, columns_model::dir_descending),
+			columns_model::column("AvgInclusiveTime", L"Average Inclusive Call Time", 48, columns_model::dir_descending),
+			columns_model::column("MaxRecursion", L"Max Recursion", 25, columns_model::dir_descending),
+			columns_model::column("MaxCallTime", L"Max Call Time", 121, columns_model::dir_descending),
 		};
 
 		const columns_model::column c_columns_statistics_parents[] = {
-			columns_model::column("Index", L"#", columns_model::dir_none),
-			columns_model::column("Function", L"Function", columns_model::dir_ascending),
-			columns_model::column("TimesCalled", L"Times Called", columns_model::dir_descending),
+			columns_model::column("Index", L"#", 28, columns_model::dir_none),
+			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
+			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
 		};
+
+		shared_ptr<hive> open_configuration()
+		{	return hive::user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}
+
+		void store(hive &configuration, const string &name, const RECT &r)
+		{
+			configuration.store((name + 'L').c_str(), r.left);
+			configuration.store((name + 'T').c_str(), r.top);
+			configuration.store((name + 'R').c_str(), r.right);
+			configuration.store((name + 'B').c_str(), r.bottom);
+		}
+
+		bool load(const hive &configuration, const string &name, RECT &r)
+		{
+			bool ok = true;
+			int value = 0;
+
+			ok = ok && configuration.load((name + 'L').c_str(), value), r.left = value;
+			ok = ok && configuration.load((name + 'T').c_str(), value), r.top = value;
+			ok = ok && configuration.load((name + 'R').c_str(), value), r.right = value;
+			ok = ok && configuration.load((name + 'B').c_str(), value), r.bottom = value;
+			return ok;
+		}
 	}
 
 	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable)
-		: _statistics(s), _executable(executable)
+		: _statistics(s), _executable(executable),
+			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
+			_columns_main(new columns_model(c_columns_statistics, 3, false)),
+			_columns_children(new columns_model(c_columns_statistics, 4, false))
 	{
+		shared_ptr<hive> c(open_configuration());
+
 		Create(NULL, 0);
 
-		shared_ptr<listview::columns_model> columns_model_parents(new columns_model(c_columns_statistics_parents, 2, false));
-		shared_ptr<listview::columns_model> columns_model_main(new columns_model(c_columns_statistics, 3, false));
-		shared_ptr<listview::columns_model> columns_model_children(new columns_model(c_columns_statistics, 4, false));
+		if (load(*c, "Placement", _placement))
+			MoveWindow(_placement.left, _placement.top, _placement.Width(), _placement.Height());
 
-		_parents_statistics_lv->set_columns_model(columns_model_parents);
-		_statistics_lv->set_columns_model(columns_model_main);
-		_children_statistics_lv->set_columns_model(columns_model_children);
+		_columns_parents->update(*c->create("ParentsColumns"));
+		_columns_main->update(*c->create("MainColumns"));
+		_columns_children->update(*c->create("ChildrenColumns"));
+
+		_parents_statistics_lv->set_columns_model(_columns_parents);
+		_statistics_lv->set_columns_model(_columns_main);
+		_children_statistics_lv->set_columns_model(_columns_children);
 
 		_statistics_lv->set_model(_statistics);
 
 		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
 		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_parents_statistics), _1));
 		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_children_statistics), _1));
-
-		_statistics_lv->adjust_column_widths();
-		_parents_statistics_lv->adjust_column_widths();
-		_children_statistics_lv->adjust_column_widths();
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()
@@ -96,22 +124,17 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL& handled)
 	{
-		CRect clientRect;
-
 		_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
-		_statistics_lv = wrap_listview((HWND)_statistics_view);
+		_statistics_lv = wrap_listview(_statistics_view);
 		ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_statistics_view));
 		_parents_statistics_view = GetDlgItem(IDC_PARENTS_STATISTICS);
-		_parents_statistics_lv = wrap_listview((HWND)_parents_statistics_view);
+		_parents_statistics_lv = wrap_listview(_parents_statistics_view);
 		ListView_SetExtendedListViewStyle(_parents_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_parents_statistics_view));
 		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
-		_children_statistics_lv = wrap_listview((HWND)_children_statistics_view);
+		_children_statistics_lv = wrap_listview(_children_statistics_view);
 		ListView_SetExtendedListViewStyle(_children_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_children_statistics_view));
 		_clear_button = GetDlgItem(IDC_BTN_CLEAR);
 		_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
-
-		GetClientRect(&clientRect);
-		RelocateControls(clientRect.Size());
 
 		::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 		SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
@@ -129,11 +152,21 @@ namespace micro_profiler
 		return 1;	// Let the system set the focus
 	}
 
-	LRESULT ProfilerMainDialog::OnSize(UINT /*message*/, WPARAM /*wparam*/, LPARAM lparam, BOOL &handled)
+	LRESULT ProfilerMainDialog::OnWindowPosChanged(UINT /*message*/, WPARAM /*wparam*/, LPARAM lparam, BOOL &handled)
 	{
-		RelocateControls(CSize(LOWORD(lparam), HIWORD(lparam)));
+		const WINDOWPOS *wndpos = reinterpret_cast<const WINDOWPOS *>(lparam);
+
+		if (0 == (wndpos->flags & SWP_NOSIZE))
+		{
+			CRect client;
+
+			GetClientRect(&client);
+			RelocateControls(client.Size());
+		}
+		if (0 == (wndpos->flags & SWP_NOSIZE) || 0 == (wndpos->flags & SWP_NOMOVE))
+			_placement.SetRect(wndpos->x, wndpos->y, wndpos->x + wndpos->cx, wndpos->y + wndpos->cy);
 		handled = TRUE;
-		return 1;
+		return 0;
 	}
 
 	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
@@ -219,5 +252,14 @@ namespace micro_profiler
 	}
 
 	void ProfilerMainDialog::OnFinalMessage(HWND /*hwnd*/)
-	{	unlock();	}
+	{
+		shared_ptr<hive> c(open_configuration());
+
+		if (!_placement.IsRectEmpty())
+			store(*c, "Placement", _placement);
+		_columns_parents->store(*c->create("ParentsColumns"));
+		_columns_main->store(*c->create("MainColumns"));
+		_columns_children->store(*c->create("ChildrenColumns"));
+		unlock();
+	}
 }

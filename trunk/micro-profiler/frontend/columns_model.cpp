@@ -30,6 +30,7 @@ namespace micro_profiler
 	{
 		const char c_order_by[] = "OrderBy";
 		const char c_order_direction[] = "OrderDirection";
+		const char c_width[] = "Width";
 		const char c_caption[] = "Caption";
 
 		template <typename T>
@@ -56,6 +57,7 @@ namespace micro_profiler
 		{
 			shared_ptr<hive> cc = configuration.create(i->id.c_str());
 
+			cc->store(c_width, i->width);
 			cc->store(c_caption, i->caption.c_str());
 		}
 	}
@@ -66,8 +68,9 @@ namespace micro_profiler
 		_sort_column = _sort_column < static_cast<index_type>(_columns.size()) ? _sort_column : npos;
 		load_int(configuration, c_order_direction, _sort_ascending);
 		for (vector<column>::iterator i = _columns.begin(); i != _columns.end(); ++i)
-			if (shared_ptr<hive> cc = configuration.open(i->id.c_str()))
+			if (shared_ptr<const hive> cc = configuration.open(i->id.c_str()))
 			{
+				load_int(*cc, c_width, i->width);
 				cc->load(c_caption, i->caption);
 			}
 	}
@@ -76,7 +79,10 @@ namespace micro_profiler
 	{	return static_cast<index_type>(_columns.size());	}
 
 	void columns_model::get_column(index_type index, wpl::ui::listview::columns_model::column &column) const
-	{	column = _columns[index].caption;	}
+	{	column = _columns[index];	}
+
+	void columns_model::update_column(index_type index, short int width)
+	{	_columns[index].width = width;	}
 
 	pair<columns_model::index_type, bool> columns_model::get_sort_order() const throw()
 	{	return make_pair(_sort_column, _sort_ascending);	}

@@ -1,4 +1,10 @@
 #sidebar TableOfContents
+ * v1.1.552
+  * The first version placed in VisualStudio Gallery;
+  * Profiler window placement is now restored on next start;
+  * Statistic lists now preserve widths of columns and sorting order;
+  * Build is now almost entirely relies on shell scripts instead of cscript.
+
  * [https://drive.google.com/folderview?id=0B2lZ03dFgtG7OVFObVJKSE51cGM&tid=0B2lZ03dFgtG7ZHJDMHZvR3FGVjA#list v1.0.530]
   * Double return values, passed via XMM0 register were corrupted - fixed;
 

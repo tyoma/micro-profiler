@@ -52,7 +52,7 @@ namespace micro_profiler
 			virtual void store(const char *name, const wchar_t *value)
 			{
 				::RegSetValueExW(*this, x2w(name), 0, REG_SZ, reinterpret_cast<BYTE *>(const_cast<wchar_t *>(value)),
-					2 * (wcslen(value) + 1));
+					static_cast<DWORD>(2 * (wcslen(value) + 1)));
 			}
 
 			virtual bool load(const char *name, int &value) const

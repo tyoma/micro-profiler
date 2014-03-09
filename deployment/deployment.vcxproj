@@ -35,20 +35,27 @@
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)_setup\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)_setup\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)_deploy\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)_deploy_x64\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)_obj\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)_obj\$(Configuration)_$(PlatformName)\$(ProjectName)\</IntDir>
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
     <ExtensionsToDeleteOnClean Condition="'$(Configuration)|$(Platform)'=='Release|x64'">*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">micro-profiler.deploy</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.zip</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">micro-profiler.deploy</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.zip</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog />
     <PostBuildEvent>
       <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
-call mkzip "$(IntDir)\*" "$(OutDir)micro-profiler.deploy.zip"
-type "$(SolutionDir)version-info.txt" &gt;&gt; "$(IntDir)version.txt"
-type "versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(IntDir)version.txt" &gt; "$(IntDir)_versioned-rename.cmd"
-call "$(IntDir)_versioned-rename.cmd" "$(OutDir)micro-profiler.deploy.zip"
-del "$(IntDir)_versioned-rename.cmd"
+call mkzip "$(IntDir)*" "$(TargetPath)"
+
+for /f %%g in ('call "$(ProjectDir)wix\makeup-version.cmd" "$(SolutionDir)version-info.txt" "$(SolutionDir)."') do set VERSION=%%g
+
+set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
+
+del "$(TargetDir)%TargetNameVer%"
+ren "$(TargetPath)" "%TargetNameVer%"
 </Command>
     </PostBuildEvent>
     <BuildLog>
@@ -64,11 +71,14 @@ del "$(IntDir)_versioned-rename.cmd"
     <BuildLog />
     <PostBuildEvent>
       <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
-call mkzip "$(IntDir)\*" "$(OutDir)micro-profiler_x64.deploy.zip"
-type "$(SolutionDir)version-info.txt" &gt;&gt; "$(IntDir)version.txt"
-type "versioned-rename-template.cmd" | cscript //Nologo "$(SolutionDir)scripts/substitute.js" "$(IntDir)version.txt" &gt; "$(IntDir)_versioned-rename.cmd"
-call "$(IntDir)_versioned-rename.cmd" "$(OutDir)micro-profiler_x64.deploy.zip"
-del "$(IntDir)_versioned-rename.cmd"
+call mkzip "$(IntDir)*" "$(TargetPath)"
+
+for /f %%g in ('call "$(ProjectDir)wix\makeup-version.cmd" "$(SolutionDir)version-info.txt" "$(SolutionDir)."') do set VERSION=%%g
+
+set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
+
+del "$(TargetDir)%TargetNameVer%"
+ren "$(TargetPath)" "%TargetNameVer%"
 </Command>
     </PostBuildEvent>
     <BuildLog>

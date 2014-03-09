@@ -41,7 +41,7 @@ namespace micro_profiler
 
 		virtual index_type get_count() const throw();
 		virtual void get_column(index_type index, wpl::ui::listview::columns_model::column &column) const;
-//			virtual void update_column(index_type index, ...) = 0;
+		virtual void update_column(index_type index, short int width);
 		virtual std::pair<index_type, bool> get_sort_order() const throw();
 		virtual void activate_column(index_type column);
 
@@ -52,12 +52,12 @@ namespace micro_profiler
 	};
 
 
-	struct columns_model::column
+	struct columns_model::column : wpl::ui::listview::columns_model::column
 	{
-		column(const std::string &id, const std::wstring &caption, columns_model::sort_direction default_sort_direction);
+		column(const std::string &id, const std::wstring &caption, short int width,
+			columns_model::sort_direction default_sort_direction);
 
 		std::string id;
-		std::wstring caption;
 		columns_model::sort_direction default_sort_direction;
 	};
 
@@ -70,8 +70,9 @@ namespace micro_profiler
 	{	}
 
 
-	inline columns_model::column::column(const std::string &id_, const std::wstring &caption_,
+	inline columns_model::column::column(const std::string &id_, const std::wstring &caption, short int width,
 			columns_model::sort_direction default_sort_direction_)
-		: id(id_), caption(caption_), default_sort_direction(default_sort_direction_)
+		: wpl::ui::listview::columns_model::column(caption, width), id(id_),
+			default_sort_direction(default_sort_direction_)
 	{	}
 }

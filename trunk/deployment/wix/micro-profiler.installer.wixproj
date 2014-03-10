@@ -26,13 +26,12 @@
     <Compile Include="micro-profiler.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="makeup-version.cmd" />
     <Content Include="platform-dependent.wxi" />
     <Content Include="sdk.wxi" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PostBuildEvent>for /f %25%25g in (%27call "$(ProjectDir)makeup-version.cmd" "$(SolutionDir)version-info.txt" "$(SolutionDir)."%27) do set VERSION=%25%25g
+    <PostBuildEvent>call "$(SolutionDir)scripts\makeup-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
 
 set TargetNameVer="$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)"
 

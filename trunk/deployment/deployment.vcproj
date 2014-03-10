@@ -45,7 +45,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;call mkzip &quot;$(IntDir)*&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;for /f %%g in (&apos;call &quot;$(ProjectDir)wix\makeup-version.cmd&quot; &quot;$(SolutionDir)version-info.txt&quot; &quot;$(SolutionDir).&quot;&apos;) do set VERSION=%%g&#x0D;&#x0A;&#x0D;&#x0A;set TargetNameVer=&quot;micro-profiler.deploy_$(PlatformName).v%VERSION%.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;del &quot;$(OutDir)%TargetNameVer%&quot;&#x0D;&#x0A;ren &quot;$(OutDir)micro-profiler.deploy.zip&quot; &quot;%TargetNameVer%&quot;&#x0D;&#x0A;"
+				CommandLine="svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;call mkzip &quot;$(IntDir)*&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;call &quot;$(SolutionDir)scripts\makeup-version.cmd&quot; VERSION &quot;$(SolutionDir)version-info.txt&quot; &quot;$(SolutionDir).&quot;&#x0D;&#x0A;&#x0D;&#x0A;set TargetNameVer=&quot;micro-profiler.deploy_$(PlatformName).v%VERSION%.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;del &quot;$(OutDir)%TargetNameVer%&quot;&#x0D;&#x0A;ren &quot;$(OutDir)micro-profiler.deploy.zip&quot; &quot;%TargetNameVer%&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -73,7 +73,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;call mkzip &quot;$(IntDir)*&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;for /f %%g in (&apos;call &quot;$(ProjectDir)wix\makeup-version.cmd&quot; &quot;$(SolutionDir)version-info.txt&quot; &quot;$(SolutionDir).&quot;&apos;) do set VERSION=%%g&#x0D;&#x0A;&#x0D;&#x0A;set TargetNameVer=&quot;micro-profiler.deploy_$(PlatformName).v%VERSION%.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;del &quot;$(OutDir)%TargetNameVer%&quot;&#x0D;&#x0A;ren &quot;$(OutDir)micro-profiler.deploy.zip&quot; &quot;%TargetNameVer%&quot;&#x0D;&#x0A;"
+				CommandLine="svn info &quot;$(SolutionDir).&quot; &gt; &quot;$(IntDir)version.txt&quot;&#x0D;&#x0A;call mkzip &quot;$(IntDir)*&quot; &quot;$(OutDir)micro-profiler.deploy.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;call &quot;$(SolutionDir)scripts\makeup-version.cmd&quot; VERSION &quot;$(SolutionDir)version-info.txt&quot; &quot;$(SolutionDir).&quot;&#x0D;&#x0A;&#x0D;&#x0A;set TargetNameVer=&quot;micro-profiler.deploy_$(PlatformName).v%VERSION%.zip&quot;&#x0D;&#x0A;&#x0D;&#x0A;del &quot;$(OutDir)%TargetNameVer%&quot;&#x0D;&#x0A;ren &quot;$(OutDir)micro-profiler.deploy.zip&quot; &quot;%TargetNameVer%&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

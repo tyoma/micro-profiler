@@ -65,7 +65,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Preparing version-info header..."
-					CommandLine="type &quot;$(InputPath)&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; INFO &gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;svn info &quot;$(SolutionDir).&quot; | cscript //Nologo &quot;$(SolutionDir)scripts/make-header.js&quot; REPO &gt;&gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;"
+					CommandLine="call &quot;$(SolutionDir)scripts/make-header&quot; REPO svn info &gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;call &quot;$(SolutionDir)scripts/make-header&quot; INFO type &quot;$(InputPath)&quot; &gt;&gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;"
 					Outputs="$(OutDir)$(InputName).h"
 				/>
 			</FileConfiguration>

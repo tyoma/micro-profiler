@@ -8,8 +8,8 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\version-info.txt">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Common|Win32'">type "%(FullPath)" | cscript //Nologo "$(SolutionDir)scripts/make-header.js" INFO &gt; "$(OutDir)%(Filename).h"
-svn info "$(SolutionDir)." | cscript //Nologo "$(SolutionDir)scripts/make-header.js" REPO &gt;&gt; "$(OutDir)%(Filename).h"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Common|Win32'">call "$(SolutionDir)scripts/make-header" REPO svn info &gt; "$(OutDir)%(Filename).h"
+call "$(SolutionDir)scripts/make-header" INFO type "%(FullPath)" &gt;&gt; "$(OutDir)%(Filename).h"
 </Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Common|Win32'">Preparing version-info header...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Common|Win32'">$(OutDir)%(Filename).h</Outputs>

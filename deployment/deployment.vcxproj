@@ -50,7 +50,7 @@
       <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
 call mkzip "$(IntDir)*" "$(TargetPath)"
 
-for /f %%g in ('call "$(ProjectDir)wix\makeup-version.cmd" "$(SolutionDir)version-info.txt" "$(SolutionDir)."') do set VERSION=%%g
+call "$(SolutionDir)scripts\makeup-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
 
 set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
 
@@ -73,7 +73,7 @@ ren "$(TargetPath)" "%TargetNameVer%"
       <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
 call mkzip "$(IntDir)*" "$(TargetPath)"
 
-for /f %%g in ('call "$(ProjectDir)wix\makeup-version.cmd" "$(SolutionDir)version-info.txt" "$(SolutionDir)."') do set VERSION=%%g
+call "$(SolutionDir)scripts\makeup-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
 
 set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
 

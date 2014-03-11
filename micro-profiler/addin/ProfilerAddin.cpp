@@ -278,25 +278,17 @@ namespace
 		return path;
 	}
 
-	bool paths_are_equal(LPCTSTR lhs, LPCTSTR rhs)
+	bool paths_are_equal(LPCTSTR lhs_, LPCTSTR rhs_)
 	{
-		bool equal = false;
 		BY_HANDLE_FILE_INFORMATION bhfi1 = { 0 }, bhfi2 = { 0 };
-		HANDLE lhs_file(::CreateFile(lhs, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0));
+		shared_ptr<void> lhs(::CreateFile(lhs_, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, 0,
+			OPEN_EXISTING, 0, 0), &::CloseHandle);
+		shared_ptr<void> rhs(::CreateFile(rhs_, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, 0,
+			OPEN_EXISTING, 0, 0), &::CloseHandle);
 
-		if (INVALID_HANDLE_VALUE != lhs_file)
-		{
-			HANDLE rhs_file(::CreateFile(rhs, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0));
-
-			if (INVALID_HANDLE_VALUE != rhs_file)
-			{
-				equal = ::GetFileInformationByHandle(lhs_file, &bhfi1) && ::GetFileInformationByHandle(rhs_file, &bhfi2)
-					&& bhfi1.nFileIndexLow == bhfi2.nFileIndexLow && bhfi1.nFileIndexHigh == bhfi2.nFileIndexHigh;
-				CloseHandle(rhs_file);
-			}
-			CloseHandle(lhs_file);
-		}
-		return equal;
+		return INVALID_HANDLE_VALUE != lhs.get() && INVALID_HANDLE_VALUE != rhs.get()
+			&& ::GetFileInformationByHandle(lhs.get(), &bhfi1) && ::GetFileInformationByHandle(rhs.get(), &bhfi2)
+			&& bhfi1.nFileIndexLow == bhfi2.nFileIndexLow && bhfi1.nFileIndexHigh == bhfi2.nFileIndexHigh;
 	}
 
 
@@ -349,11 +341,13 @@ namespace
 	template <typename API>
 	bool command_base<API>::library_copied(EnvDTE::ProjectPtr project)
 	{
-		CPath library(project->FileName), library_x64(project->FileName);
+		// TODO: the presence of only a x86 library is checked (since we always try to copy both). A better approach is
+		//	required.
+		CPath library(project->FileName);
 
-		library.RemoveFileSpec(), library_x64.RemoveFileSpec();
-		library.Append(c_profiler_library), library_x64.Append(c_profiler_library_x64);
-		return !!library.FileExists() && !!library_x64.FileExists();
+		library.RemoveFileSpec();
+		library.Append(c_profiler_library);
+		return !!library.FileExists();
 	}
 
 	template <typename API>

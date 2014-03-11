@@ -28,4 +28,12 @@ namespace micro_profiler
 	};
 }
 
-extern "C" micro_profiler::handle *micro_profiler_initialize(const void *in_image_address);
+#ifdef _M_IX86
+	#define MPCDECL _cdecl
+#elif _M_X64
+	#define MPCDECL
+#else
+	#define MPCDECL
+#endif
+
+extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void *in_image_address);

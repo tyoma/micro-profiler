@@ -8,20 +8,24 @@
 		<Property Id="ARPPRODUCTICON" Value="icoInstaller" />
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
-		<Feature Id="featTracer" Title="Call Tracer Module">
+		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+		<Property Id="WIXUI_INSTALLDIR" Value="TARGETDIR" />
+		<UIRef Id="WixUI_InstallDir" />
+
+		<Feature Id="featTracer" Title="Call Tracer Module" Description="Enables collection and analysis of the calls an application makes.">
 			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
 			<ComponentRef Id="compStubTracerDLL_$(var.Platform)" />
 			<ComponentRef Id="compSystemEnvironmentSetup" />
 			<ComponentRef Id="compUserEnvironmentSetup" />
 		</Feature>
-		<Feature Id="featTracerSDK" Title="Call Tracer SDK">
+		<Feature Id="featTracerSDK" Title="Call Tracer SDK" Description="Provides simplistic tools to add profiling support to a VisualStudio project.">
 			<ComponentRef Id="compTracerSDK" />
 		</Feature>
-		<Feature Id="featFrontend" Title="Frontend UI">
+		<Feature Id="featFrontend" Title="Frontend UI" Description="Installs and registers the Frontend UI that displays realtime performance statistics.">
 			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
 			<ComponentRef Id="compFrontendRegistration_$(var.Platform)" />
 		</Feature>
-		<Feature Id="featVSIntegration" Title="VisualStudio Integration">
+		<Feature Id="featVSIntegration" Title="VisualStudio Integration" Description="Integrates 'Enable Profiling' / 'Remove Profiling Support' menus to the Project Context Menu. Intergation is installed for versions 7.1 to 11.0.">
 			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
 			<ComponentRef Id="compAddinObjectRegistration_$(var.Platform)" />
 			<ComponentRef Id="compAddinRegistration" />

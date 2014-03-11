@@ -26,8 +26,15 @@
     <Compile Include="micro-profiler.wxs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="license.rtf" />
     <Content Include="platform-dependent.wxi" />
     <Content Include="sdk.wxi" />
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>

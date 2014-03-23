@@ -1,4 +1,10 @@
 #sidebar TableOfContents
+ * v1.1.567
+  * The integration is now fixed for all VisualStudio versions prior VS 12.0 (2013).
+
+ * v1.1.565
+  * The installer is no longer silent - it displays basic pages.
+
  * v1.1.552
   * The first version placed in VisualStudio Gallery;
   * Profiler window placement is now restored on next start;

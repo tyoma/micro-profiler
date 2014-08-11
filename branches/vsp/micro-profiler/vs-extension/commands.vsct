@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<Extern href="command-ids.h"/>
+	<Extern href="guids.h"/>
+
+	<Extern href="stdidcmd.h"/>
+	<Extern href="vsshlids.h"/>
+	<Commands package="guidMicroProfilerPkg">
+		<Groups>
+			<Group guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" priority="0x0600">
+				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
+			</Group>
+		</Groups>
+
+		<Buttons>
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidEnableProfiling" priority="0x0100" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<CommandName>Enable Profiling</CommandName>
+					<ButtonText>Enable Profiling</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidDisableProfiling" priority="0x0100" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<CommandName>Disable Profiling</CommandName>
+					<ButtonText>Disable Profiling</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidResetInstrumentation" priority="0x0101" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<CommandName>Reset Instrumentation</CommandName>
+					<ButtonText>Reset Instrumentation</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0102" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<CommandName>Remove Profiling Support</CommandName>
+					<ButtonText>Remove Profiling Support</ButtonText>
+				</Strings>
+			</Button>
+		</Buttons>
+	</Commands>
+</CommandTable>

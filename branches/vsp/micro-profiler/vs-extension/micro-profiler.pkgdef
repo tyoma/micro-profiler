@@ -1,0 +1,18 @@
+[$RootKey$\Packages\{43a50861-7e04-4169-b47e-d4cffe1b3db8}]
+@="MicroProfiler Integration Package"
+"InprocServer32"="$PackageFolder$\micro-profiler.dll"
+"CompanyName"="gevorkyan.org"
+"ProductName"="MicroProfiler Integration"
+"ProductVersion"="1.0"
+"MinEdition"="Standard"
+"ID"=dword:00000001
+
+[$RootKey$\Menus]
+"{43a50861-7e04-4169-b47e-d4cffe1b3db8}"="$PackageFolder$\micro-profiler.dll, 1000, 1"
+
+[$RootKey$\InstalledProducts\MicroProfiler]
+@="Realtime Instrumenting Profiler for VisualStudio"
+"Package"="{43a50861-7e04-4169-b47e-d4cffe1b3db8}"
+"ProductDetails"="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan"
+"PID"="Unknown Product ID"
+"UseInterface"=dword:00000001

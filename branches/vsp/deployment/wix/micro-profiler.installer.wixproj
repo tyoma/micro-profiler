@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.8</ProductVersion>
+    <ProjectGuid>{ee4583a8-c1f3-4353-b504-4d739466ff63}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>micro-profiler</OutputName>
+    <OutputType>Package</OutputType>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+    <Name>micro-profiler.installer</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>$(SolutionDir)\_setup\</OutputPath>
+    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Platform)\</IntermediateOutputPath>
+    <DefineConstants>SOURCEDIR=../../_bin/Release_Win32</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>$(SolutionDir)\_setup\</OutputPath>
+    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Platform)\</IntermediateOutputPath>
+    <DefineConstants>SOURCEDIR=../../_bin/Release_x64;SOURCEDIRX86=../../_bin/Release_Win32</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="micro-profiler.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="license.rtf" />
+    <Content Include="platform-dependent.wxi" />
+    <Content Include="sdk.wxi" />
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUIExtension">
+      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <PropertyGroup>
+    <PostBuildEvent>call "$(SolutionDir)scripts\makeup-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
+
+set TargetNameVer="$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)"
+
+del "$(TargetDir)%25TargetNameVer%25"
+ren "$(TargetPath)" "%25TargetNameVer%25"</PostBuildEvent>
+  </PropertyGroup>
+  <!--
+	To modify your build process, add your task inside one of the targets below and uncomment it.
+	Other similar extension points exist, see Wix.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

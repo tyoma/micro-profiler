@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="!(bind.FileVersion.micro_profiler.dll_$(var.Platform))" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"/>
+		<Media Id="1" Cabinet="micro_profiler.cab" EmbedCab="yes"/>
+		<Icon Id="icoInstaller" SourceFile="../../micro-profiler/resources/appicon.ico" />
+		<Property Id="ARPPRODUCTICON" Value="icoInstaller" />
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+		<Property Id="WIXUI_INSTALLDIR" Value="TARGETDIR" />
+		<UIRef Id="WixUI_InstallDir" />
+
+		<Feature Id="featTracer" Title="Call Tracer Module" Description="Enables collection and analysis of the calls an application makes.">
+			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
+			<ComponentRef Id="compStubTracerDLL_$(var.Platform)" />
+			<ComponentRef Id="compSystemEnvironmentSetup" />
+			<ComponentRef Id="compUserEnvironmentSetup" />
+		</Feature>
+		<Feature Id="featTracerSDK" Title="Call Tracer SDK" Description="Provides simplistic tools to add profiling support to a VisualStudio project.">
+			<ComponentRef Id="compTracerSDK" />
+		</Feature>
+		<Feature Id="featFrontend" Title="Frontend UI" Description="Installs and registers the Frontend UI that displays realtime performance statistics.">
+			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
+			<ComponentRef Id="compFrontendRegistration_$(var.Platform)" />
+		</Feature>
+		<Feature Id="featVSIntegration" Title="VisualStudio Integration" Description="Integrates 'Enable Profiling' / 'Remove Profiling Support' menus to the Project Context Menu. Intergation is installed for versions 7.1 to 11.0.">
+			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
+			<ComponentRef Id="compAddinObjectRegistration_$(var.Platform)" />
+			<ComponentRef Id="compAddinRegistration" />
+		</Feature>
+		<?if $(var.Platform) = "x64"?>
+			<Feature Id="featTracer_x86" Title="Call Tracer Module (x86)">
+				<ComponentRef Id="compAllInOneDLL_x86" />
+				<ComponentRef Id="compStubTracerDLL_x86" />
+				<ComponentRef Id="compSystemEnvironmentSetup" />
+				<ComponentRef Id="compUserEnvironmentSetup" />
+			</Feature>
+			<Feature Id="featFrontend_x86" Title="Frontend UI (x86)">
+				<ComponentRef Id="compAllInOneDLL_x86" />
+				<ComponentRef Id="compFrontendRegistration_x86" />
+			</Feature>
+			<Feature Id="featVSIntegration_x86" Title="VisualStudio Integration (x86)">
+				<ComponentRef Id="compAllInOneDLL_x86" />
+				<ComponentRef Id="compAddinObjectRegistration_x86" />
+				<ComponentRef Id="compAddinRegistration" />
+			</Feature>
+		<?endif?>
+
+		<InstallUISequence>
+			<Custom Action="caSetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
+		</InstallUISequence>
+
+		<InstallExecuteSequence>
+			<Custom Action="caSetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
+		</InstallExecuteSequence>
+
+
+		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="$(var.SOURCEDIR)">
+			<?if $(var.Platform) = "x64"?>
+				<Directory Id="x86" Name="x86">
+					<?include sdk.wxi ?>
+				</Directory>
+				<?else?>
+				<?include sdk.wxi ?>
+			<?endif?>
+		</Directory>
+
+		<?if $(var.Platform) = "x64"?>
+			<?define PATHAPPEND="[TARGETDIR];[x86]"?>
+		<?elseif $(var.Platform) = "x86"?>
+			<?define PATHAPPEND="[TARGETDIR]"?>
+		<?endif?>
+
+		<Component Id="compSystemEnvironmentSetup" Directory="TARGETDIR" Guid="52DE93FD-B13F-4153-8F5F-58EADD7B2D95">
+			<Condition><![CDATA[ALLUSERS]]></Condition>
+			<Environment Id="env_path_sys" Name="Path" Value="$(var.PATHAPPEND)" Part="last" Action="set" System="yes"/>
+		</Component>
+
+		<Component Id="compUserEnvironmentSetup" Directory="TARGETDIR" Guid="7EA8BA3A-A6F2-4468-8C94-A016AC198A3F">
+			<Condition><![CDATA[NOT ALLUSERS]]></Condition>
+			<Environment Id="env_path_usr" Name="Path" Value="$(var.PATHAPPEND)" Part="last" Action="set" System="no"/>
+		</Component>
+
+		<?define SOURCEDIRX=$(var.SOURCEDIR)?>
+		<?define TARGETDIRX="TARGETDIR"?>
+
+		<?if $(var.Platform) = "x64"?>
+			<?define ISX64="yes"?>
+			<?define PLATFORMSELECTOR="x64"?>
+			<?define ALLINONEDLLGUID="47674731-7CDF-4D96-ABE6-BC85BCA68161"?>
+			<?define STUBTRACERDLLGUID="7FB94FB2-6CB4-4920-BDC5-22662C58FFCF"?>
+			<?define FRONTENDREGISTRYGUID="BC5669B7-BF54-40BB-A169-E20B16357D45"?>
+			<?define ADDINOBJECTREGISTRYGUID="57A2000C-A414-4F8F-A3A3-92DA925C6D11"?>
+
+			<?include platform-dependent.wxi?>
+
+			<?undef ISX64 ?>
+			<?undef PLATFORMSELECTOR ?>
+			<?undef ALLINONEDLLGUID ?>
+			<?undef STUBTRACERDLLGUID ?>
+			<?undef FRONTENDREGISTRYGUID ?>
+			<?undef ADDINOBJECTREGISTRYGUID ?>
+
+			<?undef SOURCEDIRX ?>
+			<?define SOURCEDIRX=$(var.SOURCEDIRX86)?>
+			<?undef TARGETDIRX ?>
+			<?define TARGETDIRX="x86"?>
+		<?endif?>
+
+		<?define ISX64="no"?>
+		<?define PLATFORMSELECTOR="x86"?>
+
+		<?define ALLINONEDLLGUID="4EC2E786-D232-4EDF-940E-EC18DFFFADBB"?>
+		<?define STUBTRACERDLLGUID="416B55ED-11D2-435E-A41D-7FC3B37336BC"?>
+		<?define FRONTENDREGISTRYGUID="39183037-8F73-400F-BD82-14014B9E5710"?>
+		<?define ADDINOBJECTREGISTRYGUID="12338CB1-814B-4530-A81E-2A9D46436D3D"?>
+		
+		<?include platform-dependent.wxi?>
+
+		<Component Id="compAddinRegistration" Directory="TARGETDIR">
+			<RegistryKey Root="HKCU" Key="Software\Microsoft\VisualStudio">
+				<RegistryKey Key="7.1\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="8.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="9.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="10.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+				<RegistryKey Key="11.0\AddIns\MicroProfiler.Addin">
+					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
+					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
+					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
+					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
+					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
+					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
+					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
+				</RegistryKey>
+			</RegistryKey>
+		</Component>
+
+		<?if $(var.Platform) = "x64" ?>
+			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+		<?elseif $(var.Platform) = "x86" ?>
+			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+		<?endif?>
+	</Product>
+</Wix>

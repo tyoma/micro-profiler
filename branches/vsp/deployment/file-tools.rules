@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="File Management Tools"
+	Version="8.00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="File Copy Tool"
+			DisplayName="File Copy"
+			CommandLine="copy &quot;$(InputPath)&quot; &quot;$(IntDir)$(InputFileName)&quot;"
+			Outputs="&quot;$(IntDir)$(InputFileName)&quot;"
+			FileExtensions="*."
+			ExecutionDescription="Copying $(InputFileName)..."
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>

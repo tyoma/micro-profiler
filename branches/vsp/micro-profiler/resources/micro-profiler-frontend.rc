@@ -1,0 +1,206 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+#include "../_generated/version-info.h"
+
+#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,REPO_REVISION,0
+#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." REPO_REVISION_STR ".0"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian (Russia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROFILER_MAIN DIALOGEX 0, 0, 414, 356
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "MicroProfiler"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_FUNCTIONS_STATISTICS,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_OWNERDATA | WS_BORDER | WS_TABSTOP,7,114,399,106
+    PUSHBUTTON      "Clear Statistics",IDC_BTN_CLEAR,7,334,60,14
+    PUSHBUTTON      "Copy All",IDC_BTN_COPY_ALL,73,334,60,14
+    CONTROL         "",IDC_CHILDREN_STATISTICS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_OWNERDATA | WS_BORDER | WS_TABSTOP,7,228,399,100
+    CONTROL         "",IDC_PARENTS_STATISTICS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_OWNERDATA | WS_BORDER | WS_TABSTOP,7,7,399,100
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PROFILER_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 406
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 348
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_APPMAIN             ICON                    "appicon.ico"
+#endif    // Russian (Russia) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+	"#include ""winres.h""\r\n\r\n"
+
+	"#include ""../_generated/version-info.h""\r\n"
+
+	"#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,REPO_REVISION,0\r\n"
+	"#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR ""."" INFO_VERSION_MINOR_STR ""."" REPO_REVISION_STR "".0""\r\n"
+	"\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "1000 CTMENU ""../_generated/commands.cto""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION INFO_VERSION
+ PRODUCTVERSION INFO_VERSION
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004e4"
+        BEGIN
+            VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
+            VALUE "FileDescription", "Profiler with RealTime Frontend"
+            VALUE "FileVersion", INFO_VERSION_STR
+            VALUE "InternalName", "micro-profiler.dll"
+            VALUE "LegalCopyright", "© Copyright 2011-2014 gevorkyan.org. All rights reserved."
+            VALUE "OriginalFilename", "micro-profiler.dll"
+            VALUE "ProductName", "MicroProfiler"
+            VALUE "ProductVersion", INFO_VERSION_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_PROFILERSINK			REGISTRY	"../frontend/micro-profiler-sink.rgs"
+IDR_PROFILERADDIN			REGISTRY	"../addin/micro-profiler-addin.rgs"
+IDR_PROFILEREXT			REGISTRY	"../vs-extension/vs-extension.rgs"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PROJNAME            "micro-profiler-frontend"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PACKAGE_LOAD_KEY    "ZCC0IPQMHCQZQDCEDMPIACP0ZQC2DPAJCEKIZRCZKZQMJQEADJH3E9H0ZIJTEDPCZMRHIQRIACJEA3QRMAR0J9C3P2K0J2JKQJDEHHI0ZIK9D2H1JPQ3ECJ3Q8AEDRH3"
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1000	CTMENU "../_generated/commands.cto"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

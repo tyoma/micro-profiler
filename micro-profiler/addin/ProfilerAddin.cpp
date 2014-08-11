@@ -162,7 +162,7 @@ namespace
 
 
 	typedef ea::addin<ProfilerAddin, &__uuidof(ProfilerAddin), IDR_PROFILERADDIN> ProfilerAddinImpl;
-	OBJECT_ENTRY_AUTO(__uuidof(ProfilerAddin), ProfilerAddinImpl);
+//	OBJECT_ENTRY_AUTO(__uuidof(ProfilerAddin), ProfilerAddinImpl);
 	
 	class command_base : public ea::command
 	{

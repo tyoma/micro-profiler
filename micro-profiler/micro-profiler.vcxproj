@@ -264,7 +264,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="addin\ProfilerAddin.cpp">
+    <ClCompile Include="visualstudio\addin\ProfilerAddin.cpp">
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
@@ -273,20 +273,14 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\ProfilerSink.cpp" />
     <ClCompile Include="micro-profiler.initializer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="micro-profiler.initializer.mfc-static.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="module\ProxyBridge.c" />
-    <ClCompile Include="vs-extension\vs-package.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\vs-package.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
@@ -300,28 +294,19 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="addin\micro-profiler-addin.rgs" />
+    <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />
     <None Include="module\micro-profiler.def" />
     <None Include="resources\appicon.ico" />
-    <CustomBuild Include="vs-extension\commands.vsct">
+    <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(ProgramFiles)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"C:\Program Files (x86)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Common\Inc"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(ProgramFiles)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"C:\Program Files (x86)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Common\Inc"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(ProgramFiles)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"C:\Program Files (x86)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Common\Inc"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(ProgramFiles)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"C:\Program Files (x86)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Common\Inc"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_generated/%(Filename).cto</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_generated/%(Filename).cto</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_generated/%(Filename).cto</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_generated/%(Filename).cto</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling Commands Table: %(Filename)%(Extension)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling Commands Table: %(Filename)%(Extension)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling Commands Table: %(Filename)%(Extension)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling Commands Table: %(Filename)%(Extension)</Message>
+      <Command>"$(ProgramFiles)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"C:\Program Files (x86)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Common\Inc"</Command>
+      <Outputs>_generated/%(Filename).cto</Outputs>
+      <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
       <SubType>Designer</SubType>
     </CustomBuild>
-    <None Include="vs-extension\micro-profiler.pkgdef" />
-    <None Include="vs-extension\vs-extension.rgs" />
+    <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
+    <None Include="visualstudio\vs-extension\vs-extension.rgs" />
     <None Include="_generated\commands.cto" />
   </ItemGroup>
   <ItemGroup>
@@ -330,8 +315,8 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="module\ProxyBridge.h" />
     <ClInclude Include="resources\resource.h" />
-    <ClInclude Include="vs-extension\command-ids.h" />
-    <ClInclude Include="vs-extension\guids.h" />
+    <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
+    <ClInclude Include="visualstudio\vs-extension\guids.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc" />

@@ -6,7 +6,7 @@ HKLM
 		{
 			NoRemove 'VisualStudio'
 			{
-				NoRemove '8.0'
+				NoRemove '10.0'
 				{
 					NoRemove 'Packages'
 					{

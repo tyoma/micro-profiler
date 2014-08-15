@@ -1,4 +1,4 @@
-#include "../resources/resource.h"
+#include "../../resources/resource.h"
 #include "command-ids.h"
 
 #include <atlbase.h>
@@ -293,20 +293,13 @@ namespace
 
 	int enable_profiling::query_status(IVsHierarchy &hierarchy) const
 	{
-		CComQIPtr<IVsProject3> project(&hierarchy);
-		CComQIPtr<IVsCfgProvider2> cfg_provider(project);
-		CComPtr<IVsCfg> cfg;
+		_variant_t vdte_project;
 
-		cfg_provider->GetCfgs(1, &cfg, NULL, NULL);
-		IDispatchPtr dcfg(cfg.p);
-		
-		
+		hierarchy.GetProperty(VSITEMID_ROOT, VSHPROPID_ExtObject, &vdte_project);
 
-		dispatch ddcfg(dcfg);
+		dispatch dte_project((IDispatchPtr)vdte_project);
 
-		ddcfg.get(L"Tools");
-		
-		
+		dispatch vcproject(dte_project.get(L"Object"));
 
 		return OLECMDF_SUPPORTED | OLECMDF_ENABLED;
 	}

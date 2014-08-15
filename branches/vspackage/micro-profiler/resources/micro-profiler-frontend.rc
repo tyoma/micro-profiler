@@ -171,8 +171,8 @@ END
 //
 
 IDR_PROFILERSINK			REGISTRY	"../frontend/micro-profiler-sink.rgs"
-IDR_PROFILERADDIN			REGISTRY	"../addin/micro-profiler-addin.rgs"
-IDR_PROFILEREXT			REGISTRY	"../vs-extension/vs-extension.rgs"
+IDR_PROFILERADDIN			REGISTRY	"../visualstudio/addin/micro-profiler-addin.rgs"
+IDR_PROFILEREXT			REGISTRY	"../visualstudio/vs-extension/vs-extension.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //

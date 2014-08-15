@@ -20,7 +20,7 @@
 
 #include <easy-addin/addin.h>
 
-#include "../resources/resource.h"
+#include "../../resources/resource.h"
 
 #include <atlpath.h>
 #include <atlstr.h>

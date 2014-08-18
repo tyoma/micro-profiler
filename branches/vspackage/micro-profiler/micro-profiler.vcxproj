@@ -280,6 +280,8 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     </ClCompile>
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="module\ProxyBridge.c" />
+    <ClCompile Include="visualstudio\commands.cpp" />
+    <ClCompile Include="visualstudio\dispatch.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -315,6 +317,8 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="module\ProxyBridge.h" />
     <ClInclude Include="resources\resource.h" />
+    <ClInclude Include="visualstudio\commands.h" />
+    <ClInclude Include="visualstudio\dispatch.h" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
     <ClInclude Include="visualstudio\vs-extension\guids.h" />
   </ItemGroup>

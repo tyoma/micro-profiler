@@ -14,13 +14,23 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>$(SolutionDir)\_setup\</OutputPath>
-    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Platform)\</IntermediateOutputPath>
+    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
     <DefineConstants>SOURCEDIR=../../_bin/Release_Win32</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>$(SolutionDir)\_setup\</OutputPath>
-    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Platform)\</IntermediateOutputPath>
+    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
     <DefineConstants>SOURCEDIR=../../_bin/Release_x64;SOURCEDIRX86=../../_bin/Release_Win32</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DefineConstants>SOURCEDIR=../../_bin/Debug_Win32</DefineConstants>
+    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
+    <OutputPath>$(SolutionDir)\_setup\debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DefineConstants>SOURCEDIR=../../_bin/Debug_x64;SOURCEDIRX86=../../_bin/Debug_Win32</DefineConstants>
+    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
+    <OutputPath>$(SolutionDir)\_setup\debug\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="micro-profiler.wxs" />
@@ -29,6 +39,7 @@
     <Content Include="license.rtf" />
     <Content Include="platform-dependent.wxi" />
     <Content Include="sdk.wxi" />
+    <Content Include="vspackage.wxi" />
   </ItemGroup>
   <ItemGroup>
     <WixExtension Include="WixUIExtension">

@@ -21,6 +21,12 @@
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
+    <ClCompile Include="visualstudio\dispatch.cpp">
+      <Filter>visualstudio</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\commands.cpp">
+      <Filter>visualstudio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualstudio\addin\micro-profiler-addin.rgs">
@@ -87,6 +93,12 @@
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\guids.h">
       <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\dispatch.h">
+      <Filter>visualstudio</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\commands.h">
+      <Filter>visualstudio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

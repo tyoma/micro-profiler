@@ -1,4 +1,4 @@
-HKLM
+HKCU
 {
 	NoRemove 'SOFTWARE'
 	{
@@ -6,7 +6,7 @@ HKLM
 		{
 			NoRemove 'VisualStudio'
 			{
-				NoRemove '10.0'
+				NoRemove '12.0'
 				{
 					NoRemove 'Packages'
 					{

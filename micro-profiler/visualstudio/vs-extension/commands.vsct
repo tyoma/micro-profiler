@@ -13,31 +13,13 @@
 		</Groups>
 
 		<Buttons>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidEnableProfiling" priority="0x0100" type="Button">
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidToggleProfiling" priority="0x0100" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<CommandName>Enable Profiling</CommandName>
 					<ButtonText>Enable Profiling</ButtonText>
-				</Strings>
-			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidDisableProfiling" priority="0x0100" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
-				<CommandFlag>TextOnly</CommandFlag>
-				<CommandFlag>DontCache</CommandFlag>
-				<Strings>
-					<CommandName>Disable Profiling</CommandName>
-					<ButtonText>Disable Profiling</ButtonText>
-				</Strings>
-			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidResetInstrumentation" priority="0x0101" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
-				<CommandFlag>TextOnly</CommandFlag>
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<CommandName>Reset Instrumentation</CommandName>
-					<ButtonText>Reset Instrumentation</ButtonText>
 				</Strings>
 			</Button>
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0102" type="Button">

@@ -10,9 +10,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Command IDs
-#define cmdidEnableProfiling 0x101
-#define cmdidDisableProfiling 0x102
-#define cmdidResetInstrumentation 0x103
+#define cmdidToggleProfiling 0x101
 #define cmdidRemoveProfilingSupport 0x104
 
 #endif // __COMMANDIDS_H_

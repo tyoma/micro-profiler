@@ -27,8 +27,8 @@
 		</Feature>
 		<Feature Id="featVSIntegration" Title="VisualStudio Integration" Description="Integrates 'Enable Profiling' / 'Remove Profiling Support' menus to the Project Context Menu. Intergation is installed for versions 7.1 to 11.0.">
 			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
-			<ComponentRef Id="compAddinObjectRegistration_$(var.Platform)" />
-			<ComponentRef Id="compAddinRegistration" />
+			<ComponentRef Id="compVSPackageRegistration_10.0" />
+			<ComponentRef Id="compVSPackageRegistration_12.0" />
 		</Feature>
 		<?if $(var.Platform) = "x64"?>
 			<Feature Id="featTracer_x86" Title="Call Tracer Module (x86)">
@@ -119,55 +119,13 @@
 		
 		<?include platform-dependent.wxi?>
 
-		<Component Id="compAddinRegistration" Directory="TARGETDIR">
-			<RegistryKey Root="HKCU" Key="Software\Microsoft\VisualStudio">
-				<RegistryKey Key="7.1\AddIns\MicroProfiler.Addin">
-					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
-					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
-					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
-					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
-					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
-					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
-					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
-				</RegistryKey>
-				<RegistryKey Key="8.0\AddIns\MicroProfiler.Addin">
-					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
-					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
-					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
-					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
-					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
-					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
-					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
-				</RegistryKey>
-				<RegistryKey Key="9.0\AddIns\MicroProfiler.Addin">
-					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
-					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
-					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
-					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
-					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
-					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
-					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
-				</RegistryKey>
-				<RegistryKey Key="10.0\AddIns\MicroProfiler.Addin">
-					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
-					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
-					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
-					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
-					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
-					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
-					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
-				</RegistryKey>
-				<RegistryKey Key="11.0\AddIns\MicroProfiler.Addin">
-					<RegistryValue Name="AboutBoxDetails" Value="Realtime Instrumenting Profiler\r\n\r\nPlease, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan" Type="string"/>
-					<RegistryValue Name="AboutBoxIcon" Value="[TARGETDIR]micro-profiler.dll,202" Type="string"/>
-					<RegistryValue Name="CommandLineSafe" Value="0" Type="integer"/>
-					<RegistryValue Name="CommandPreload" Value="1" Type="integer"/>
-					<RegistryValue Name="Description" Value="Realtime Instrumenting Profiler for VisualStudio" Type="string"/>
-					<RegistryValue Name="FriendlyName" Value="MicroProfiler" Type="string"/>
-					<RegistryValue Name="LoadBehavior" Value="3" Type="integer"/>
-				</RegistryKey>
-			</RegistryKey>
-		</Component>
+		<?define VSVERSION="10.0"?>
+		<?include vspackage.wxi?>
+		<?undef VSVERSION ?>
+
+		<?define VSVERSION="12.0"?>
+		<?include vspackage.wxi?>
+		<?undef VSVERSION ?>
 
 		<?if $(var.Platform) = "x64" ?>
 			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />

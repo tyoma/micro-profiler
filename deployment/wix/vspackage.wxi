@@ -9,6 +9,9 @@
 					<RegistryValue Name="InprocServer32" Value="[#micro_profiler.dll_$(var.PLATFORMSELECTOR)]" Type="string"/>
 					<RegistryValue Name="ID" Value="1" Type="integer" />
 					<RegistryValue Name="ProductVersion" Value="1.1" Type="string" />
+					<RegistryValue Name="ProductName" Value="MicroProfiler Integration for VisualStudio" Type="string" />
+					<RegistryValue Name="MinEdition" Value="standard" Type="string" />
+					<RegistryValue Name="CompanyName" Value="gevorkyan.org" Type="string" />
 				</RegistryKey>
 			</RegistryKey>
 			<RegistryKey Key="Menus">

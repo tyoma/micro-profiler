@@ -7,7 +7,7 @@
 	<Extern href="vsshlids.h"/>
 	<Commands package="guidMicroProfilerPkg">
 		<Groups>
-			<Group guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" priority="0x0600">
+			<Group guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" priority="0x0800">
 				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
 			</Group>
 		</Groups>
@@ -22,7 +22,7 @@
 					<ButtonText>Enable Profiling</ButtonText>
 				</Strings>
 			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0102" type="Button">
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0110" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>

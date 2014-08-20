@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <Include>
-	<Component Id="compVSPackageRegistration_$(var.VSVERSION)" Directory="TARGETDIR" Win64="$(var.ISX64)">
+	<Component Id="compVSPackageRegistration_$(var.VSVERSION)" Directory="TARGETDIR" Win64="no">
 		<RegistryKey Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSVERSION)">
 			<RegistryKey Key="Packages">
 				<RegistryKey Key="{43a50861-7e04-4169-b47e-d4cffe1b3db8}">
 					<RegistryValue Value="MicroProfiler Integration Package" Type="string"/>
-					<RegistryValue Name="InprocServer32" Value="[#micro_profiler.dll_$(var.PLATFORMSELECTOR)]" Type="string"/>
+					<RegistryValue Name="InprocServer32" Value="[#micro_profiler.dll_x86]" Type="string"/>
 					<RegistryValue Name="ID" Value="1" Type="integer" />
 					<RegistryValue Name="ProductVersion" Value="1.1" Type="string" />
 					<RegistryValue Name="ProductName" Value="MicroProfiler Integration for VisualStudio" Type="string" />
@@ -15,7 +15,7 @@
 				</RegistryKey>
 			</RegistryKey>
 			<RegistryKey Key="Menus">
-				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="[#micro_profiler.dll_$(var.PLATFORMSELECTOR)], 1000, 1" Type="string" />
+				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="[#micro_profiler.dll_x86], 1000, 1" Type="string" />
 			</RegistryKey>
 			<RegistryKey Key="AutoLoadPackages\{F1536EF8-92EC-443C-9ED7-FDADF150DA82}">
 				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="1" Type="integer" />
@@ -25,7 +25,7 @@
 					<RegistryValue Value="MicroProfiler" Type="string" />
 					<RegistryValue Name="ProductDetails" Value="Realtime Instrumenting Profiler&#x0D;&#x0A;&#x0D;&#x0A;Please, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list&#x0D;&#x0A;Copyright (c) 2011-2014 Artem Gevorkyan" Type="string" />
 					<RegistryValue Name="UseInterface" Value="0" Type="integer" />
-					<RegistryValue Name="PID" Value="!(bind.FileVersion.micro_profiler.dll_$(var.PLATFORMSELECTOR))" Type="string" />
+					<RegistryValue Name="PID" Value="!(bind.FileVersion.micro_profiler.dll_x86)" Type="string" />
 				</RegistryKey>
 			</RegistryKey>
 		</RegistryKey>

@@ -2,16 +2,34 @@
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="!(bind.FileVersion.micro_profiler.dll_$(var.Platform))" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"/>
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" />
 		<Media Id="1" Cabinet="micro_profiler.cab" EmbedCab="yes"/>
 		<Icon Id="icoInstaller" SourceFile="../../micro-profiler/resources/appicon.ico" />
 		<Property Id="ARPPRODUCTICON" Value="icoInstaller" />
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
-		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+		<!-- Properties -->
 		<Property Id="WIXUI_INSTALLDIR" Value="TARGETDIR" />
-		<UIRef Id="WixUI_InstallDir" />
+		<Property Id="DEVENV_EXE_7.1">
+			<RegistrySearch Id="regsearchDevenv2003" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\7.1\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
+		</Property>
+		<Property Id="DEVENV_EXE_8.0">
+			<RegistrySearch Id="regsearchDevenv2005" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\8.0\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
+		</Property>
+		<Property Id="DEVENV_EXE_9.0">
+			<RegistrySearch Id="regsearchDevenv2008" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\9.0\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
+		</Property>
+		<Property Id="DEVENV_EXE_10.0">
+			<RegistrySearch Id="regsearchDevenv2010" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
+		</Property>
+		<Property Id="DEVENV_EXE_11.0">
+			<RegistrySearch Id="regsearchDevenv2012" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\11.0\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
+		</Property>
+		<Property Id="DEVENV_EXE_12.0">
+			<RegistrySearch Id="regsearchDevenv2013" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\12.0\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
+		</Property>
 
+		<!-- Features -->
 		<Feature Id="featTracer" Title="Call Tracer Module" Description="Enables collection and analysis of the calls an application makes.">
 			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
 			<ComponentRef Id="compStubTracerDLL_$(var.Platform)" />
@@ -25,11 +43,6 @@
 			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
 			<ComponentRef Id="compFrontendRegistration_$(var.Platform)" />
 		</Feature>
-		<Feature Id="featVSIntegration" Title="VisualStudio Integration" Description="Integrates 'Enable Profiling' / 'Remove Profiling Support' menus to the Project Context Menu. Intergation is installed for versions 7.1 to 11.0.">
-			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
-			<ComponentRef Id="compVSPackageRegistration_10.0" />
-			<ComponentRef Id="compVSPackageRegistration_12.0" />
-		</Feature>
 		<?if $(var.Platform) = "x64"?>
 			<Feature Id="featTracer_x86" Title="Call Tracer Module (x86)">
 				<ComponentRef Id="compAllInOneDLL_x86" />
@@ -41,21 +54,44 @@
 				<ComponentRef Id="compAllInOneDLL_x86" />
 				<ComponentRef Id="compFrontendRegistration_x86" />
 			</Feature>
-			<Feature Id="featVSIntegration_x86" Title="VisualStudio Integration (x86)">
-				<ComponentRef Id="compAllInOneDLL_x86" />
-				<ComponentRef Id="compAddinObjectRegistration_x86" />
-				<ComponentRef Id="compAddinRegistration" />
-			</Feature>
 		<?endif?>
+		<Feature Id="featVSIntegration" Title="VisualStudio Integration" Description="Integrates 'Enable Profiling' / 'Remove Profiling Support' menus to the Project Context Menu. Intergation is installed for versions 7.1 to 11.0.">
+			<ComponentRef Id="compAllInOneDLL_x86" />
+			<ComponentRef Id="compVSPackageRegistration_7.1" />
+			<ComponentRef Id="compVSPackageRegistration_8.0" />
+			<ComponentRef Id="compVSPackageRegistration_9.0" />
+			<ComponentRef Id="compVSPackageRegistration_10.0" />
+			<ComponentRef Id="compVSPackageRegistration_11.0" />
+			<ComponentRef Id="compVSPackageRegistration_12.0" />
+		</Feature>
 
+		
 		<InstallUISequence>
 			<Custom Action="caSetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
 		</InstallUISequence>
 
 		<InstallExecuteSequence>
 			<Custom Action="caSetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
+			<Custom Action="caSetupPackagesVS2003" Before="InstallFinalize">DEVENV_EXE_7.1</Custom>
+			<Custom Action="caSetupPackagesVS2005" Before="InstallFinalize">DEVENV_EXE_8.0</Custom>
+			<Custom Action="caSetupPackagesVS2008" Before="InstallFinalize">DEVENV_EXE_9.0</Custom>
+			<Custom Action="caSetupPackagesVS2010" Before="InstallFinalize">DEVENV_EXE_10.0</Custom>
+			<Custom Action="caSetupPackagesVS2012" Before="InstallFinalize">DEVENV_EXE_11.0</Custom>
+			<Custom Action="caSetupPackagesVS2013" Before="InstallFinalize">DEVENV_EXE_12.0</Custom>
 		</InstallExecuteSequence>
 
+		<!-- CustomActions -->
+		<?if $(var.Platform) = "x64" ?>
+		<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+		<?elseif $(var.Platform) = "x86" ?>
+		<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+		<?endif?>
+		<CustomAction Id="caSetupPackagesVS2003" Property="DEVENV_EXE_7.1" ExeCommand="/setup" Impersonate="no" Execute="deferred" />
+		<CustomAction Id="caSetupPackagesVS2005" Property="DEVENV_EXE_8.0" ExeCommand="/setup" Impersonate="no" Execute="deferred" />
+		<CustomAction Id="caSetupPackagesVS2008" Property="DEVENV_EXE_9.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
+		<CustomAction Id="caSetupPackagesVS2010" Property="DEVENV_EXE_10.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
+		<CustomAction Id="caSetupPackagesVS2012" Property="DEVENV_EXE_11.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
+		<CustomAction Id="caSetupPackagesVS2013" Property="DEVENV_EXE_12.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
 
 		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="$(var.SOURCEDIR)">
 			<?if $(var.Platform) = "x64"?>
@@ -73,6 +109,7 @@
 			<?define PATHAPPEND="[TARGETDIR]"?>
 		<?endif?>
 
+		<!-- Components -->
 		<Component Id="compSystemEnvironmentSetup" Directory="TARGETDIR" Guid="52DE93FD-B13F-4153-8F5F-58EADD7B2D95">
 			<Condition><![CDATA[ALLUSERS]]></Condition>
 			<Environment Id="env_path_sys" Name="Path" Value="$(var.PATHAPPEND)" Part="last" Action="set" System="yes"/>
@@ -119,7 +156,23 @@
 		
 		<?include platform-dependent.wxi?>
 
+		<?define VSVERSION="7.1"?>
+		<?include vspackage.wxi?>
+		<?undef VSVERSION ?>
+
+		<?define VSVERSION="8.0"?>
+		<?include vspackage.wxi?>
+		<?undef VSVERSION ?>
+
+		<?define VSVERSION="9.0"?>
+		<?include vspackage.wxi?>
+		<?undef VSVERSION ?>
+
 		<?define VSVERSION="10.0"?>
+		<?include vspackage.wxi?>
+		<?undef VSVERSION ?>
+		
+		<?define VSVERSION="11.0"?>
 		<?include vspackage.wxi?>
 		<?undef VSVERSION ?>
 
@@ -127,10 +180,17 @@
 		<?include vspackage.wxi?>
 		<?undef VSVERSION ?>
 
-		<?if $(var.Platform) = "x64" ?>
-			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />
-		<?elseif $(var.Platform) = "x86" ?>
-			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
-		<?endif?>
+		<!-- UI -->
+		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+		<UIRef Id="WixUI_InstallDir" />
+		<UI>
+			<ProgressText Action="caSetupPackagesVS2003">Configuring Visual Studio .NET 2003... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="caSetupPackagesVS2005">Configuring Visual Studio 2005... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="caSetupPackagesVS2008">Configuring Visual Studio 2008... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="caSetupPackagesVS2010">Configuring Visual Studio 2010... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="caSetupPackagesVS2012">Configuring Visual Studio 2012... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="caSetupPackagesVS2013">Configuring Visual Studio 2013... (this may take a few minutes)</ProgressText>
+		</UI>
+		
 	</Product>
 </Wix>

@@ -28,6 +28,9 @@
 		<Property Id="DEVENV_EXE_12.0">
 			<RegistrySearch Id="regsearchDevenv2013" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\12.0\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
 		</Property>
+		<Property Id="DEVENV_EXE_14.0">
+			<RegistrySearch Id="regsearchDevenv2014" Root="HKLM" Key="SOFTWARE\Microsoft\VisualStudio\14.0\Setup\VS" Name="EnvironmentPath" Type="raw" Win64="no" />
+		</Property>
 
 		<!-- Features -->
 		<Feature Id="featTracer" Title="Call Tracer Module" Description="Enables collection and analysis of the calls an application makes.">
@@ -63,6 +66,7 @@
 			<ComponentRef Id="compVSPackageRegistration_10.0" />
 			<ComponentRef Id="compVSPackageRegistration_11.0" />
 			<ComponentRef Id="compVSPackageRegistration_12.0" />
+			<ComponentRef Id="compVSPackageRegistration_14.0" />
 		</Feature>
 
 		
@@ -78,6 +82,7 @@
 			<Custom Action="caSetupPackagesVS2010" Before="InstallFinalize">DEVENV_EXE_10.0</Custom>
 			<Custom Action="caSetupPackagesVS2012" Before="InstallFinalize">DEVENV_EXE_11.0</Custom>
 			<Custom Action="caSetupPackagesVS2013" Before="InstallFinalize">DEVENV_EXE_12.0</Custom>
+			<Custom Action="caSetupPackagesVS2014" Before="InstallFinalize">DEVENV_EXE_14.0</Custom>
 		</InstallExecuteSequence>
 
 		<!-- CustomActions -->
@@ -92,6 +97,7 @@
 		<CustomAction Id="caSetupPackagesVS2010" Property="DEVENV_EXE_10.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
 		<CustomAction Id="caSetupPackagesVS2012" Property="DEVENV_EXE_11.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
 		<CustomAction Id="caSetupPackagesVS2013" Property="DEVENV_EXE_12.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
+		<CustomAction Id="caSetupPackagesVS2014" Property="DEVENV_EXE_14.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
 
 		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="$(var.SOURCEDIR)">
 			<?if $(var.Platform) = "x64"?>
@@ -180,6 +186,10 @@
 		<?include vspackage.wxi?>
 		<?undef VSVERSION ?>
 
+		<?define VSVERSION="14.0"?>
+		<?include vspackage.wxi?>
+		<?undef VSVERSION ?>
+
 		<!-- UI -->
 		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 		<UIRef Id="WixUI_InstallDir" />
@@ -190,6 +200,7 @@
 			<ProgressText Action="caSetupPackagesVS2010">Configuring Visual Studio 2010... (this may take a few minutes)</ProgressText>
 			<ProgressText Action="caSetupPackagesVS2012">Configuring Visual Studio 2012... (this may take a few minutes)</ProgressText>
 			<ProgressText Action="caSetupPackagesVS2013">Configuring Visual Studio 2013... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="caSetupPackagesVS2014">Configuring Visual Studio 2014... (this may take a few minutes)</ProgressText>
 		</UI>
 		
 	</Product>

@@ -84,11 +84,19 @@ namespace micro_profiler
 			{	return E_NOTIMPL;	}
 
 
-			STDMETHODIMP QueryStatus(const GUID *group, ULONG count, OLECMD commands[], OLECMDTEXT * /*pCmdText*/)
+			STDMETHODIMP QueryStatus(const GUID *group, ULONG count, OLECMD commands[], OLECMDTEXT * /*command_text*/)
 			{
 				if (CLSID_MicroProfilerCmdSet == *group)
 				{
-					while (count--)
+					BOOL vcproject_context_active = FALSE;
+					VSCOOKIE cookie;
+					CComPtr<IVsMonitorSelection> selection_monitor;
+				
+					_service_provider->QueryService(SID_SVsShellMonitorSelection, &selection_monitor);
+					selection_monitor->GetCmdUIContextCookie(UICONTEXT_VCProject, &cookie);
+					selection_monitor->IsCmdUIContextActive(cookie, &vcproject_context_active);
+
+					while (vcproject_context_active && count--)
 					{
 						const commands::const_iterator c = _commands.find(commands[count].cmdID);
 						const int state = c != _commands.end() ? c->second->query_state(get_project(*_service_provider)) : 0;
@@ -100,7 +108,7 @@ namespace micro_profiler
 					}
 					return S_OK;
 				}
-				return E_INVALIDARG;
+				return E_UNEXPECTED;
 			}
 
 			STDMETHODIMP Exec(const GUID *group, DWORD command, DWORD /*nCmdexecopt*/, VARIANT * /*pvaIn*/, VARIANT * /*pvaOut*/)

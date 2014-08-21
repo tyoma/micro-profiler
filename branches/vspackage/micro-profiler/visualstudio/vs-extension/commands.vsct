@@ -17,6 +17,8 @@
 				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
 					<CommandName>Enable Profiling</CommandName>
 					<ButtonText>Enable Profiling</ButtonText>
@@ -26,6 +28,8 @@
 				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
 					<CommandName>Remove Profiling Support</CommandName>
 					<ButtonText>Remove Profiling Support</ButtonText>

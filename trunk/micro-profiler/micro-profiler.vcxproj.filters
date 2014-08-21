@@ -3,8 +3,8 @@
   <ItemGroup>
     <ClCompile Include="micro-profiler.initializer.cpp" />
     <ClCompile Include="micro-profiler.initializer.mfc-static.cpp" />
-    <ClCompile Include="addin\ProfilerAddin.cpp">
-      <Filter>addin</Filter>
+    <ClCompile Include="visualstudio\addin\ProfilerAddin.cpp">
+      <Filter>visualstudio\addin</Filter>
     </ClCompile>
     <ClCompile Include="module\ProxyBridge.c">
       <Filter>module</Filter>
@@ -18,10 +18,19 @@
     <ClCompile Include="module\main.cpp">
       <Filter>module</Filter>
     </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\vs-package.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\dispatch.cpp">
+      <Filter>visualstudio</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\commands.cpp">
+      <Filter>visualstudio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="addin\micro-profiler-addin.rgs">
-      <Filter>addin</Filter>
+    <None Include="visualstudio\addin\micro-profiler-addin.rgs">
+      <Filter>visualstudio\addin</Filter>
     </None>
     <None Include="resources\appicon.ico">
       <Filter>resources</Filter>
@@ -32,19 +41,37 @@
     <None Include="module\micro-profiler.def">
       <Filter>module</Filter>
     </None>
+    <None Include="_generated\commands.cto">
+      <Filter>resources\_generated</Filter>
+    </None>
+    <None Include="visualstudio\vs-extension\vs-extension.rgs">
+      <Filter>visualstudio\vs-extension</Filter>
+    </None>
+    <None Include="visualstudio\vs-extension\micro-profiler.pkgdef">
+      <Filter>visualstudio\vs-extension</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="frontend">
       <UniqueIdentifier>{2eb2703f-0b40-44c6-8806-9ba363609cc8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="addin">
-      <UniqueIdentifier>{81f3947d-15a1-4b7e-b8d4-b70ffcd7eae4}</UniqueIdentifier>
     </Filter>
     <Filter Include="resources">
       <UniqueIdentifier>{d9d64e11-21ee-4368-a3cb-481d4b3d1745}</UniqueIdentifier>
     </Filter>
     <Filter Include="module">
       <UniqueIdentifier>{f88a34be-b244-4bea-81ac-ea7770913646}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\_generated">
+      <UniqueIdentifier>{f16a83e6-0e4b-4933-b449-06573e3e5223}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="visualstudio">
+      <UniqueIdentifier>{bc286dd0-993f-4c39-a835-e7597517fc81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="visualstudio\addin">
+      <UniqueIdentifier>{81f3947d-15a1-4b7e-b8d4-b70ffcd7eae4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="visualstudio\vs-extension">
+      <UniqueIdentifier>{2ee15634-a50b-4c83-b725-65307972b039}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -61,10 +88,27 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="entry.h" />
+    <ClInclude Include="visualstudio\vs-extension\command-ids.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\guids.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\dispatch.h">
+      <Filter>visualstudio</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\commands.h">
+      <Filter>visualstudio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">
       <Filter>resources</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
+      <Filter>visualstudio\vs-extension</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

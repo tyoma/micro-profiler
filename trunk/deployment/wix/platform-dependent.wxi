@@ -17,12 +17,4 @@
 		<Interface Id="2F5ECF23-E98B-4399-AB4F-3083264C481B" Name="IProfilerFrontend" ProxyStubClassId32="2F5ECF23-E98B-4399-AB4F-3083264C481B"/>
 	</Component>
 
-	<Component Id="compAddinObjectRegistration_$(var.PLATFORMSELECTOR)" Guid="$(var.ADDINOBJECTREGISTRYGUID)" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)" KeyPath="yes">
-		<Class Id="B36A1712-EF9F-4960-9B33-838BFCC70683" Description="MicroProfiler Addin Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll" Programmable="yes">
-			<ProgId Id="MicroProfiler.Addin.1">
-				<ProgId Id="MicroProfiler.Addin" />
-			</ProgId>
-		</Class>
-	</Component>
-
 </Include>

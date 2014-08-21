@@ -251,11 +251,11 @@ namespace micro_profiler
 		_statistics_lv->select(index, true);
 	}
 
-	void ProfilerMainDialog::OnFinalMessage(HWND /*hwnd*/)
+	void ProfilerMainDialog::OnFinalMessage(HWND hwnd)
 	{
 		shared_ptr<hive> c(open_configuration());
 
-		if (!_placement.IsRectEmpty())
+		if (!_placement.IsRectEmpty() && !::IsIconic(hwnd))
 			store(*c, "Placement", _placement);
 		_columns_parents->store(*c->create("ParentsColumns"));
 		_columns_main->store(*c->create("MainColumns"));

@@ -94,7 +94,7 @@
       </PrecompiledHeaderOutputFile>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>./../libraries;"$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv";"$(MSBuildExtensionsPath32)\..\Common Files\Designer"</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -102,7 +102,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
-      <AdditionalDependencies>psapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>psapi.lib;vsguids.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VSSDK100Install)VisualStudioIntegration\Common\lib\x86</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -138,7 +139,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       </PrecompiledHeaderOutputFile>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>./../libraries;"$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv";"$(MSBuildExtensionsPath32)\..\Common Files\Designer"</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -181,7 +182,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>./../libraries;"$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv";"$(MSBuildExtensionsPath32)\..\Common Files\Designer"</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <Optimization>MinSpace</Optimization>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
@@ -190,7 +191,8 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
-      <AdditionalDependencies>psapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>psapi.lib;vsguids.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VSSDK100Install)VisualStudioIntegration\Common\lib\x86</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <VerboseOutput>false</VerboseOutput>
@@ -227,7 +229,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>./../libraries;"$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv";"$(MSBuildExtensionsPath32)\..\Common Files\Designer"</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <Optimization>MinSpace</Optimization>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
@@ -260,28 +262,35 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="addin\ProfilerAddin.cpp">
+    <ClCompile Include="visualstudio\addin\ProfilerAddin.cpp">
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MultiProcessorCompilation>
       <MultiProcessorCompilation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</MultiProcessorCompilation>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\ProfilerSink.cpp" />
     <ClCompile Include="micro-profiler.initializer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="micro-profiler.initializer.mfc-static.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="module\ProxyBridge.c" />
+    <ClCompile Include="visualstudio\commands.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="visualstudio\dispatch.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\vs-package.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
@@ -295,10 +304,20 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="addin\micro-profiler-addin.rgs" />
+    <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />
     <None Include="module\micro-profiler.def" />
     <None Include="resources\appicon.ico" />
+    <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
+      <FileType>Document</FileType>
+      <Command>"$(ProgramFiles)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"C:\Program Files (x86)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Common\Inc"</Command>
+      <Outputs>_generated/%(Filename).cto</Outputs>
+      <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
+      <SubType>Designer</SubType>
+    </CustomBuild>
+    <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
+    <None Include="visualstudio\vs-extension\vs-extension.rgs" />
+    <None Include="_generated\commands.cto" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="entry.h" />
@@ -306,6 +325,10 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
     <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="module\ProxyBridge.h" />
     <ClInclude Include="resources\resource.h" />
+    <ClInclude Include="visualstudio\commands.h" />
+    <ClInclude Include="visualstudio\dispatch.h" />
+    <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
+    <ClInclude Include="visualstudio\vs-extension\guids.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc" />

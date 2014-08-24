@@ -1,4 +1,10 @@
 #sidebar TableOfContents
+ * v1.1.581
+  * VisualStudio Integration redone: MicroProfiler is now a VSPackage. This made it possible to integrate with VisualStudio 2013 and 2014;
+  * Menu items visibility changed: now there is only 'Enable Profiling' menu item is visible for a non-profiled project;
+  * The bug that prevented MicroProfiler window from popping up (after closing it, while minimized) is now fixed;
+  * One may want to remove ghost menu items from previous versions. This can be done by issuing a command for a corresponding development environment: 'devenv /ResetAddin MicroProfiler.Addin.MicroProfiler'
+
  * v1.1.567
   * The integration is now fixed for all VisualStudio versions prior VS 12.0 (2013).
 

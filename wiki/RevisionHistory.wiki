@@ -1,5 +1,5 @@
 #sidebar TableOfContents
- * v1.1.581
+ * [https://drive.google.com/folderview?id=0B3C94qNXgdQBaFN3ejZVa2l1SGs&usp=drive_web v1.1.581]
   * VisualStudio Integration redone: MicroProfiler is now a VSPackage. This made it possible to integrate with VisualStudio 2013 and 2014;
   * Menu items visibility changed: now there is only 'Enable Profiling' menu item is visible for a non-profiled project;
   * The bug that prevented MicroProfiler window from popping up (after closing it, while minimized) is now fixed;

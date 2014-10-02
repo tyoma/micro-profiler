@@ -50,7 +50,7 @@ namespace micro_profiler
 
 			if (S_OK == this_object()->GetIDsOfNames(IID_NULL, names, 1, LOCALE_USER_DEFAULT, &id))
 				return id;
-			throw runtime_error(_bstr_t(L"The name '") + name + L"' was not found for the object!");
+			throw runtime_error(static_cast<const char *>(_bstr_t(L"The name '") + name + L"' was not found for the object!"));
 		}
 
 		HRESULT dispatch::invoke(const wchar_t *name, WORD wFlags, DISPPARAMS &parameters, _variant_t &result) const

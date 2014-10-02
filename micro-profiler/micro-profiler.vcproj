@@ -419,14 +419,6 @@
 		<Filter
 			Name="addin"
 			>
-			<File
-				RelativePath=".\addin\micro-profiler-addin.rgs"
-				>
-			</File>
-			<File
-				RelativePath=".\addin\ProfilerAddin.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="resources"
@@ -443,6 +435,98 @@
 				RelativePath=".\resources\resource.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="visualstudio"
+			>
+			<File
+				RelativePath=".\visualstudio\commands.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\visualstudio\commands.h"
+				>
+			</File>
+			<File
+				RelativePath=".\visualstudio\dispatch.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\visualstudio\dispatch.h"
+				>
+			</File>
+			<Filter
+				Name="addin"
+				>
+				<File
+					RelativePath=".\visualstudio\addin\micro-profiler-addin.rgs"
+					>
+				</File>
+				<File
+					RelativePath=".\visualstudio\addin\ProfilerAddin.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="vs-extension"
+				>
+				<File
+					RelativePath=".\visualstudio\vs-extension\command-ids.h"
+					>
+				</File>
+				<File
+					RelativePath=".\visualstudio\vs-extension\commands.vsct"
+					>
+				</File>
+				<File
+					RelativePath=".\visualstudio\vs-extension\guids.h"
+					>
+				</File>
+				<File
+					RelativePath=".\visualstudio\vs-extension\micro-profiler.pkgdef"
+					>
+				</File>
+				<File
+					RelativePath=".\visualstudio\vs-extension\vs-extension.rgs"
+					>
+				</File>
+				<File
+					RelativePath=".\visualstudio\vs-extension\vs-package.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\micro-profiler.initializer.cpp"

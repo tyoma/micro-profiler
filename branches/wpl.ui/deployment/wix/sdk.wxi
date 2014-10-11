@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Component Id="compTracerSDK" Guid="FA5EE4E6-A12A-4697-88EB-FC1C5CE98D18" KeyPath="yes">
+		<File Id="micro_profiler.initializer.cpp" Source="$(var.SOURCEDIR)/micro-profiler.initializer.cpp" Vital="yes"/>
+		<File Id="micro_profiler.initializer.mfc_static.cpp" Source="$(var.SOURCEDIR)/micro-profiler.initializer.mfc-static.cpp" Vital="yes"/>
+		<File Id="entry.h" Source="$(var.SOURCEDIR)/entry.h" Vital="yes"/>
+		<?if $(var.Platform) = "x64"?>
+			<File Id="micro_profiler.lib" Source="$(var.SOURCEDIRX86)/micro-profiler.lib" Vital="yes"/>
+			<File Id="micro_profiler.lib_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.lib" Vital="yes"/>
+		<?else?>
+			<File Id="micro_profiler.lib" Source="$(var.SOURCEDIR)/micro-profiler.lib" Vital="yes"/>
+		<?endif?>
+	</Component>
+</Include>

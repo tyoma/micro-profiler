@@ -1,0 +1,32 @@
+HKCU
+{
+	NoRemove 'SOFTWARE'
+	{
+		NoRemove 'Microsoft'
+		{
+			NoRemove 'VisualStudio'
+			{
+				NoRemove '12.0'
+				{
+					NoRemove 'Packages'
+					{
+						'{43a50861-7e04-4169-b47e-d4cffe1b3db8}' = s 'MicroProfiler Integration for VisualStudio'
+						{
+							val InprocServer32 = s '%MODULE%'
+							val CompanyName = s 'gevorkyan.org'
+							val ProductName = s 'MicroProfiler Integration for VisualStudio'
+							val ProductVersion = s '1.1'
+							val MinEdition = s 'Standard'
+							val ID = d '1'
+						}
+					}
+					
+					NoRemove 'Menus'
+					{
+						val '{43a50861-7e04-4169-b47e-d4cffe1b3db8}' = s '%MODULE_RAW%,1000,1'
+					}
+				}
+			}
+		}
+	}
+}

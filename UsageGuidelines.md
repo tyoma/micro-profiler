@@ -1,0 +1,7 @@
+There several steps to add profiling support to your VisualStudio project (look for required files in the attachment section):
+  1. Add construction/destruction of the profiler's frontend to the project that corresponds to the module (EXE or DLL) you want to profile. You may do this by adding `micro-profiler.initializer.cpp` to your project (with precompiled headers disabled for this file). The file is located in the install location or the directory where you unpacked the deployment zip. In case you are using _statically linked MFC_ with your project, be sure you add `micro-profiler.initializer.mfc-static.cpp` instead;
+  1. Specify the scope to be profiled:
+    1. Apply **/GH /Gh** command line options to compiler tool of your VS-project;
+    1. Or apply **/GH /Gh** command line options to compiler tool of specific source (.cpp) file(s) you want to profile;
+  1. Link your project against `micro-profiler.lib` or `micro-profiler_x64.lib`. Make sure your project is not referencing any other library that exports `_penter()` and/or `_pexit()` function(s);
+  1. Register micro-profiler.dll (this registers frontend and proxy/stub code for statistics IPC): `regsvr32 micro-profiler.dll`. **Please note, that self-registration requires you to have administrative rights.**

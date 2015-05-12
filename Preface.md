@@ -1,0 +1,13 @@
+Profilers are split into two major categories: sampling and instrumenting.
+
+Major advantage of sampling profilers is that they are very easy to run and require almost zero steps to prepare executable image for profiling. On the other hand, the shortcoming of using sampling profiler is that it provides only statistical information about functions in use. To be strict - sampling profiler provides only the number of hits into a function in series of stack snapshots, which renders it hard to fine-tune small or rarely called functions. For this tasks it may take too long time to collect enough samples to build reasonable statistics.
+
+Instrumenting profiling is another way of building application performance profile - it collects times and numbers of calls to each function in the scope being profiled. This can be done by either patching the image (via injecting JMPs to profiling points) or via compiler support enabling user-defined functions to be called at the begin/end of each profiled function. This approach allows precise collection of call metrics by the price of observable application's performance degradation. Hopefully, this degradation (induced by a huge amount of function entry/exit collections) can be cancelled in profiling results.
+
+VisualStudio Team System Suite includes both types profiler, but:
+  1. VSTS costs money. A lot of them, actually;
+  1. It is buggy and sometimes just fails (with complex solutions with lots of projects) for unknown or hardly recognized reason.
+
+So, I decided to implement an instrumenting profiler of my own. It is consisted of two major parts: collection library and frontend/postprocessing server. Both parts are interacting via COM-based IPC with custom marshaled data.
+  * **The Collector** (micro-profiler.dll) is linked to the profiled application and exports `_penter` / `_pexit` functions that are called by prolog/epilog function parts of the instrumented scope. It collects entry/exit times + addresses to call trace buffers which are regularly inspected to build shadow stacks and capture # calls / exclusive/inclusive time statistics. Captured statistics is passed over the RPC to the Frontend;
+  * **The Frontend** is an out-of-process COM server (also built-in to micro-profiler.dll), being invoked by Collector's instance. It aggregates incoming statistics, allowing user to sort it by different aspects. User may also clear previously collected statistics.

@@ -1,0 +1,3 @@
+[submodule "libraries/wpl"]
+	path = libraries/wpl
+	url = https://github.com/tyoma/wpl.git

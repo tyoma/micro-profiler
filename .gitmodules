@@ -1,3 +1,6 @@
 [submodule "libraries/wpl"]
 	path = libraries/wpl
 	url = https://github.com/tyoma/wpl.git
+[submodule "libraries/easy-addin"]
+	path = libraries/easy-addin
+	url = https://github.com/tyoma/easy-addin.git

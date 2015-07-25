@@ -1,0 +1,6 @@
+*.user
+*/_*/*
+_*
+*.suo
+*.sdf
+*.opensdf

@@ -47,10 +47,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog />
     <PostBuildEvent>
-      <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
-call mkzip "$(IntDir)*" "$(TargetPath)"
+      <Command>call mkzip "$(IntDir)*" "$(TargetPath)"
 
-call "$(SolutionDir)scripts\makeup-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
+call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
 
 set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
 
@@ -70,10 +69,9 @@ ren "$(TargetPath)" "%TargetNameVer%"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <BuildLog />
     <PostBuildEvent>
-      <Command>svn info "$(SolutionDir)." &gt; "$(IntDir)version.txt"
-call mkzip "$(IntDir)*" "$(TargetPath)"
+      <Command>call mkzip "$(IntDir)*" "$(TargetPath)"
 
-call "$(SolutionDir)scripts\makeup-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
+call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
 
 set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
 

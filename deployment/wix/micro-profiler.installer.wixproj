@@ -49,7 +49,7 @@
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PostBuildEvent>call "$(SolutionDir)scripts\makeup-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
+    <PostBuildEvent>call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version-info.txt"
 
 set TargetNameVer="$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)"
 

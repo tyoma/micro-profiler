@@ -12,6 +12,7 @@ git diff --exit-code
 if %errorlevel% neq 0 goto :errornonstaged
 git diff --cached --exit-code
 if %errorlevel% neq 0 goto :errornoncommitted
+git checkout head
 
 rem 2. Increment build number...
 call :incrementfield version-info.txt "Build"
@@ -21,6 +22,7 @@ git add version-info.txt
 for /f "tokens=2 delims=[] " %%g in ('git commit -m "New build number..." ^| findstr /i "\[.*\].*"') do set commithash=%%g
 
 rem 4. Push the updated version...
+for /f "tokens=2 delims=[] " %%g in ('git push ^| findstr /i "\[rejected\].*"') do goto :pushrejected
 
 rem 5. Checkout a build revision (one before 'commithash')...
 git checkout %commithash%~1
@@ -42,6 +44,10 @@ exit /b 0
 	if %1==%3 set /a value=value+1
 	echo %~1: %value%
 exit /b 0
+
+:pushrejected
+echo Remote repository was updated while incrementing the build version...
+goto :end
 
 :errornonstaged
 echo Local repository contains unstaged changes...

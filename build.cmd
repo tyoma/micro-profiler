@@ -1,7 +1,12 @@
-rem 6. tag
-rem 7. build
-
 @echo off
+
+setlocal
+
+set tools32=%SystemRoot%\System32
+if exist "%SystemRoot%\SysWOW64" set tools32=%SystemRoot%\SysWOW64
+
+call :setmsbuildpath
+if %errorlevel% neq 0 goto :novisualstudio
 
 echo 1. Preparing repository...
 git pull
@@ -20,20 +25,25 @@ for /f "tokens=2 delims=[] " %%g in ('git commit -m "New build number..." ^| fin
 echo 4. Pushing the updated version...
 for /f %%g in ('git push 2^>^&1 ^| findstr /i "\[rejected\]"') do goto :pushrejected
 
-echo 5. Checking out a build revision (one before 'commithash')...
+echo 5. Resetting to a build revision (one before 'commithash')...
 git reset --hard %commithash%~1
 
 rem 6. Tagging...
 
 echo 7. Starting the build...
+"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=Win32 /t:Clean
+"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=x64 /t:Clean
+"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=Win32 /t:Build
+"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=x64 /t:Build
+
+echo Build complete!
 
 goto :end
 
 :incrementfield
-	set tmp="%~1.tmp"
-	del /q %tmp%
-	for /f "tokens=1,2 delims=:" %%i in (%1) do call :incrementfieldline "%%i" %%j %2 >> %tmp%
-	move /y %tmp% %1
+	del /q "%~1.tmp"
+	for /f "tokens=1,2 delims=:" %%i in (%1) do call :incrementfieldline "%%i" %%j %2 >> "%~1.tmp"
+	move /y "%~1.tmp" %1
 	exit /b 0
 
 :incrementfieldline
@@ -41,6 +51,20 @@ goto :end
 	@if %1==%3 set /a value=value+1
 	@echo %~1: %value%
 	@exit /b 0
+
+:setmsbuildpath
+	call :getvsregvalue 4.0 MSBuildToolsPath msbuildpath
+	set msbuildpath="%msbuildpath%msbuild.exe"
+	if exist %msbuildpath% exit /b 0
+	exit /b 1
+
+:getvsregvalue
+	for /f "tokens=2*" %%i in ('%tools32%\reg query "HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\%1" /v %2') do set %3=%%j
+	exit /b 0
+
+:novisualstudio
+	echo Visual Studio not found...
+	goto :end
 
 :pushrejected
 	echo Remote repository was updated while incrementing the build version...

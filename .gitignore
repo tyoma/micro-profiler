@@ -6,3 +6,4 @@ _*
 *.opensdf
 TestResults/*
 *.lib
+*.ncb

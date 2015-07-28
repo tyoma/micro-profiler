@@ -1,6 +1,8 @@
 @echo off
 
-for /f "tokens=3" %%g in ('type %2 ^| findstr /L "Version Major: .*"') do set VerMajor=%%g
-for /f "tokens=3" %%g in ('type %2 ^| findstr /L "Version Minor: .*"') do set VerMinor=%%g
-for /f "tokens=2" %%g in ('type %2 ^| findstr /L "Build: .*"') do set VerBuild=%%g
-set "%1=%VerMajor%.%VerMinor%.%VerBuild%"
+for /f "tokens=3" %%g in ('type %2 ^| findstr "MP_VERSION_MAJOR.*[0-9][0-9]*"') do set v=%%g
+for /f "tokens=3" %%g in ('type %2 ^| findstr "MP_VERSION_MINOR.*[0-9][0-9]*"') do set v=%v%.%%g
+for /f "tokens=3" %%g in ('type %2 ^| findstr "MP_BUILD.*[0-9][0-9]*"') do set v=%v%.%%g
+for /f "tokens=3" %%g in ('type %2 ^| findstr "MP_BRANCH.*[0-9][0-9]*"') do set v=%v%.%%g
+
+set "%1=%v%"

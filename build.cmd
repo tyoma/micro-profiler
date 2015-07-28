@@ -16,10 +16,10 @@ git diff --cached --exit-code
 if %errorlevel% neq 0 goto :errornoncommitted
 
 echo 2. Incrementing build number...
-call :incrementfield version-info.txt "Build"
+call :incrementfield version.h MP_BUILD
 
 echo 3. Committing updated build version and store its hash...
-git add version-info.txt
+git add version.h
 for /f "tokens=2 delims=[] " %%g in ('git commit -m "New build number..." ^| findstr /i "\[.*\].*"') do set commithash=%%g
 
 echo 4. Pushing the updated version...
@@ -42,14 +42,14 @@ goto :end
 
 :incrementfield
 	del /q "%~1.tmp"
-	for /f "tokens=1,2 delims=:" %%i in (%1) do call :incrementfieldline "%%i" %%j %2 >> "%~1.tmp"
+	for /f "tokens=1,2,3*" %%i in (%1) do call :incrementfieldline %2 "%%i" "%%j" "%%k" "%%l" >> "%~1.tmp"
 	move /y "%~1.tmp" %1
 	exit /b 0
 
 :incrementfieldline
-	@set /a value=%2
-	@if %1==%3 set /a value=value+1
-	@echo %~1: %value%
+	@set value=%~4
+	@if %~1==%~3 set /a value+=1
+	@echo %~2 %~3 %value% %~5
 	@exit /b 0
 
 :setmsbuildpath

@@ -49,7 +49,7 @@
     <PostBuildEvent>
       <Command>call mkzip "$(IntDir)*" "$(TargetPath)"
 
-call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
+call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version.h"
 
 set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
 
@@ -71,7 +71,7 @@ ren "$(TargetPath)" "%TargetNameVer%"
     <PostBuildEvent>
       <Command>call mkzip "$(IntDir)*" "$(TargetPath)"
 
-call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version-info.txt" "$(SolutionDir)."
+call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version.h"
 
 set TargetNameVer="$(TargetName)_$(PlatformShortName).v%VERSION%$(TargetExt)"
 

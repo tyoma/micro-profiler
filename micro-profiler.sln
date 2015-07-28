@@ -59,18 +59,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "symbol_container_3_nosymbol
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{9ACA7795-639D-42E3-8ABA-017A016CD147}"
 	ProjectSection(SolutionItems) = preProject
-		scripts\make-header.cmd = scripts\make-header.cmd
 		scripts\make-version.cmd = scripts\make-version.cmd
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{DE1AE368-D62C-4A09-94C9-7DCC0E4280A9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build-info", "build-info", "{DE1AE368-D62C-4A09-94C9-7DCC0E4280A9}"
 	ProjectSection(SolutionItems) = preProject
-		version-info.txt = version-info.txt
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4F40894C-E4F6-453F-BF71-0DD0C66D8418}"
-	ProjectSection(SolutionItems) = preProject
-		version-info.txt = version-info.txt
+		version.h = version.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.common", "micro-profiler\micro-profiler.common.vcproj", "{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}"

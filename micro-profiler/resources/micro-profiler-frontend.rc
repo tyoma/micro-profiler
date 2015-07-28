@@ -9,10 +9,9 @@
 //
 #include "winres.h"
 
-#include "../_generated/version-info.h"
+#include "../../version.h"
 
-#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,INFO_BUILD,0
-#define INFO_VERSION_STR INFO_VERSION_MAJOR_STR "." INFO_VERSION_MINOR_STR "." INFO_BUILD_STR ".0"
+#define MP_VERSION_RES MP_VERSION_MAJOR,MP_VERSION_MINOR,MP_BUILD,MP_BRANCH
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -132,8 +131,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION INFO_VERSION
- PRODUCTVERSION INFO_VERSION
+ FILEVERSION MP_VERSION_RES
+ PRODUCTVERSION MP_VERSION_RES
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -150,12 +149,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
             VALUE "FileDescription", "Profiler with RealTime Frontend"
-            VALUE "FileVersion", INFO_VERSION_STR
+            VALUE "FileVersion", MP_VERSION_STR
             VALUE "InternalName", "micro-profiler.dll"
             VALUE "LegalCopyright", "© Copyright 2011-2014 gevorkyan.org. All rights reserved."
             VALUE "OriginalFilename", "micro-profiler.dll"
             VALUE "ProductName", "MicroProfiler"
-            VALUE "ProductVersion", INFO_VERSION_STR
+            VALUE "ProductVersion", MP_VERSION_STR
         END
     END
     BLOCK "VarFileInfo"

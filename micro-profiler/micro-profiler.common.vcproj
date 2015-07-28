@@ -56,20 +56,6 @@
 				/>
 			</FileConfiguration>
 		</File>
-		<File
-			RelativePath="..\version-info.txt"
-			>
-			<FileConfiguration
-				Name="Common|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Preparing version-info header..."
-					CommandLine="call &quot;$(SolutionDir)scripts/make-header&quot; REPO svn info &gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;call &quot;$(SolutionDir)scripts/make-header&quot; INFO type &quot;$(InputPath)&quot; &gt;&gt; &quot;$(OutDir)$(InputName).h&quot;&#x0D;&#x0A;"
-					Outputs="$(OutDir)$(InputName).h"
-				/>
-			</FileConfiguration>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

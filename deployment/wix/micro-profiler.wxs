@@ -200,7 +200,7 @@
 			<ProgressText Action="caSetupPackagesVS2010">Configuring Visual Studio 2010... (this may take a few minutes)</ProgressText>
 			<ProgressText Action="caSetupPackagesVS2012">Configuring Visual Studio 2012... (this may take a few minutes)</ProgressText>
 			<ProgressText Action="caSetupPackagesVS2013">Configuring Visual Studio 2013... (this may take a few minutes)</ProgressText>
-			<ProgressText Action="caSetupPackagesVS2014">Configuring Visual Studio 2014... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="caSetupPackagesVS2014">Configuring Visual Studio 2015... (this may take a few minutes)</ProgressText>
 		</UI>
 		
 	</Product>

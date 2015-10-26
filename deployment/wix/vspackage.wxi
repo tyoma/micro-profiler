@@ -17,8 +17,11 @@
 			<RegistryKey Key="Menus">
 				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="[#micro_profiler.dll_x86], 1000, 1" Type="string" />
 			</RegistryKey>
+			<RegistryKey Key="AutoLoadPackages\{10534154-102D-46E2-ABA8-A6BFA25BA0BE}">
+				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="0" Type="integer" />
+			</RegistryKey>
 			<RegistryKey Key="AutoLoadPackages\{F1536EF8-92EC-443C-9ED7-FDADF150DA82}">
-				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="1" Type="integer" />
+				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="0" Type="integer" />
 			</RegistryKey>
 			<RegistryKey Key="InstalledProducts">
 				<RegistryKey Key="MicroProfiler">

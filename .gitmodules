@@ -6,4 +6,8 @@
 	path = libraries/easy-addin
 	url = https://github.com/tyoma/easy-addin.git
 	branch = master
+[submodule "libraries/agge"]
+	path = libraries/agge
+	url = https://github.com/tyoma/agge.git
+	branch = master
 

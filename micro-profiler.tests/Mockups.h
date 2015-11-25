@@ -35,7 +35,7 @@ namespace micro_profiler
 				std::function<void()> oninitialized;
 
 				// Collected data
-				long process_id;
+				std::wstring process_executable;
 				long long ticks_resolution;
 
 				std::vector<ReceivedEntry> update_log;

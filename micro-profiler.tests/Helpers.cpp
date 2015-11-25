@@ -5,7 +5,7 @@
 #include <common/primitives.h>
 #include <_generated/frontend.h>
 
-#include <windows.h>
+#include <atlbase.h>
 
 using wpl::mt::thread;
 using namespace std;
@@ -24,8 +24,20 @@ namespace micro_profiler
 			} g_module;
 		}
 
-		int get_current_process_id()
-		{	return ::GetCurrentProcessId();	}
+		wstring get_current_process_executable()
+		{
+			wchar_t fullpath[MAX_PATH + 1] = { 0 };
+
+			::GetModuleFileNameW(NULL, fullpath, MAX_PATH);
+			return fullpath;
+		}
+
+		bool is_com_initialized()
+		{
+			CComPtr<IUnknown> test;
+
+			return S_OK == test.CoCreateInstance(CComBSTR("JobObject")) && test;
+		}
 
 		namespace this_thread
 		{

@@ -35,10 +35,10 @@ namespace micro_profiler
 				STDMETHODIMP_(ULONG) AddRef();
 				STDMETHODIMP_(ULONG) Release();
 
-				STDMETHODIMP Initialize(long process_id, hyper ticks_resolution);
-				STDMETHODIMP LoadImages(long count, ImageLoadInfo *images);
-				STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
-				STDMETHODIMP UnloadImages(long count, hyper *image_addresses);
+				STDMETHODIMP Initialize(const ProcessInitializationData *process);
+				STDMETHODIMP LoadImages(long count, const ImageLoadInfo *images);
+				STDMETHODIMP UpdateStatistics(long count, const FunctionStatisticsDetailed *statistics);
+				STDMETHODIMP UnloadImages(long count, const hyper *image_addresses);
 
 				const Frontend &operator =(const Frontend &rhs);
 
@@ -79,16 +79,16 @@ namespace micro_profiler
 				return 0;
 			}
 
-			STDMETHODIMP Frontend::Initialize(long process_id, hyper ticks_resolution)
+			STDMETHODIMP Frontend::Initialize(const ProcessInitializationData *process)
 			{
-				_state.process_id = process_id;
-				_state.ticks_resolution = ticks_resolution;
+				_state.process_executable = process->ExecutablePath;
+				_state.ticks_resolution = process->TicksResolution;
 				if (_state.oninitialized)
 					_state.oninitialized();
 				return S_OK;
 			}
 
-			STDMETHODIMP Frontend::LoadImages(long count, ImageLoadInfo *images)
+			STDMETHODIMP Frontend::LoadImages(long count, const ImageLoadInfo *images)
 			{
 				_state.update_log.resize(_state.update_log.size() + 1);
 				FrontendState::ReceivedEntry &e = _state.update_log.back();
@@ -96,18 +96,13 @@ namespace micro_profiler
 				for (; count; ++images, --count)
 				{
 					e.image_loads.push_back(make_pair(static_cast<uintptr_t>(images->Address), images->Path));
-
-					wstring &path = e.image_loads.back().second;
-
-					toupper(path);
-					if (::SysStringLen(images->Path) != path.size())
-						path.clear();
+					toupper(e.image_loads.back().second);
 				}
 				_state.modules_state_updated.raise();
 				return S_OK;
 			}
 
-			STDMETHODIMP Frontend::UpdateStatistics(long count, FunctionStatisticsDetailed *data)
+			STDMETHODIMP Frontend::UpdateStatistics(long count, const FunctionStatisticsDetailed *data)
 			{
 				_state.update_log.resize(_state.update_log.size() + 1);
 				FrontendState::ReceivedEntry &e = _state.update_log.back();
@@ -119,7 +114,7 @@ namespace micro_profiler
 				return S_OK;
 			}
 
-			STDMETHODIMP Frontend::UnloadImages(long count, hyper *image_addresses)
+			STDMETHODIMP Frontend::UnloadImages(long count, const hyper *image_addresses)
 			{
 				_state.update_log.resize(_state.update_log.size() + 1);
 				FrontendState::ReceivedEntry &e = _state.update_log.back();
@@ -132,7 +127,7 @@ namespace micro_profiler
 
 
 			FrontendState::FrontendState(const function<void()>& oninitialized_)
-				: update_lock(true, false), oninitialized(oninitialized_), process_id(0), ticks_resolution(0),
+				: update_lock(true, false), oninitialized(oninitialized_), ticks_resolution(0),
 					updated(false, true), modules_state_updated(false, true), released(false)
 			{	}
 

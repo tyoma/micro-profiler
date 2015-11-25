@@ -26,7 +26,9 @@ namespace micro_profiler
 			virtual void resume() = 0;
 		};
 
-		int get_current_process_id();
+		std::wstring get_current_process_executable();
+
+		bool is_com_initialized();
 
 		namespace this_thread
 		{

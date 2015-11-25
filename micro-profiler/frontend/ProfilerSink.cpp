@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2014 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (c) 2011-2015 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +25,17 @@
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
-#include <atlstr.h>
-#include <psapi.h>
-
 using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
+
+		OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);
+	}
+
 	ProfilerFrontend::ProfilerFrontend()
 	{	}
 
@@ -46,16 +50,14 @@ namespace micro_profiler
 		_symbols.reset();
 	}
 
-	STDMETHODIMP ProfilerFrontend::Initialize(long process_id, long long ticks_resolution)
+	STDMETHODIMP ProfilerFrontend::Initialize(const ProcessInitializationData *process)
 	{
-		wchar_t image_path[MAX_PATH] = { 0 }, filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
-		shared_ptr<void> h(::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, process_id), &::CloseHandle);
+		wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
 
-		::GetProcessImageFileName(h.get(), image_path, sizeof(image_path));
-		_wsplitpath_s(image_path, 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
+		_wsplitpath_s(process->ExecutablePath, 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
 	
 		_symbols = symbol_resolver::create();
-		_statistics = functions_list::create(ticks_resolution, _symbols);
+		_statistics = functions_list::create(process->TicksResolution, _symbols);
 		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
 		_dialog->ShowWindow(SW_SHOW);
 
@@ -63,20 +65,20 @@ namespace micro_profiler
 		return S_OK;
 	}
 
-	STDMETHODIMP ProfilerFrontend::LoadImages(long count, ImageLoadInfo *images)
+	STDMETHODIMP ProfilerFrontend::LoadImages(long count, const ImageLoadInfo *images)
 	{
 		for (; count; --count, ++images)
 			_symbols->add_image(images->Path, reinterpret_cast<const void *>(images->Address));
 		return S_OK;
 	}
 
-	STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, FunctionStatisticsDetailed *statistics)
+	STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, const FunctionStatisticsDetailed *statistics)
 	{
 		_statistics->update(statistics, count);
 		return S_OK;
 	}
 
-	STDMETHODIMP ProfilerFrontend::UnloadImages(long count, long long *image_addresses)
+	STDMETHODIMP ProfilerFrontend::UnloadImages(long count, const long long *image_addresses)
 	{
 		for (; count; --count, ++image_addresses)
 		{	}

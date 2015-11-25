@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2014 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (c) 2011-2015 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@
 #include "../common/com_helpers.h"
 #include "calls_collector.h"
 
-#include <atlstr.h>
 #include <algorithm>
 #include <iterator>
 
@@ -34,6 +33,16 @@ namespace micro_profiler
 	namespace
 	{
 		const __int64 c_ticks_resolution(timestamp_precision());
+
+		wchar_t *allocate_string(const wchar_t *source)
+		{
+			size_t l = wcslen(source);
+			wchar_t *s = new wchar_t[l + 1];
+		
+			std::copy(source, source + l, s);
+			s[l] = L'\0';
+			return s;
+		}
 
 		class ImageLoadInfo : public ::ImageLoadInfo
 		{
@@ -50,21 +59,25 @@ namespace micro_profiler
 		ImageLoadInfo::ImageLoadInfo(const image_load_queue::image_info &from)
 		{
 			Address = reinterpret_cast<hyper>(from.first);
-			Path = ::SysAllocString(from.second.c_str());
+			Path = allocate_string(from.second.c_str());
 		}
 
 		ImageLoadInfo::ImageLoadInfo(const ImageLoadInfo &other)
-		{	*this = other;	}
+		{
+			Path = NULL;
+			*this = other;
+		}
 
 		ImageLoadInfo::~ImageLoadInfo()
-		{	::SysFreeString(Path);	}
+		{	delete []Path;	}
 
 		const ImageLoadInfo &ImageLoadInfo::operator =(const ImageLoadInfo &rhs)
 		{
 			if (&rhs != this)
 			{
 				Address = rhs.Address;
-				Path = ::SysAllocString(rhs.Path);
+				delete []Path;
+				Path = allocate_string(rhs.Path);
 			}
 			return *this;
 		}
@@ -118,7 +131,15 @@ namespace micro_profiler
 	{
 		factory(&_frontend);
 		if (_frontend)
-			_frontend->Initialize(::GetCurrentProcessId(), c_ticks_resolution);
+		{
+			wstring path = image_load_queue::get_module_info(0).second;
+			ProcessInitializationData process = {
+				c_ticks_resolution,
+				path.c_str()
+			};
+
+			_frontend->Initialize(&process);
+		}
 	}
 
 	statistics_bridge::~statistics_bridge()

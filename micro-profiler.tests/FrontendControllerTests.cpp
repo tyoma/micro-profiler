@@ -4,8 +4,6 @@
 #include "Helpers.h"
 #include "Mockups.h"
 
-#include <atlbase.h>
-
 #pragma warning(disable:4965)
 
 namespace std
@@ -28,9 +26,7 @@ namespace micro_profiler
 		{
 			void CheckCOMInitialized(event_flag *e, bool *com_initialized)
 			{
-				CComPtr<IUnknown> test;
-
-				*com_initialized = S_OK == test.CoCreateInstance(CComBSTR("JobObject")) && test;
+				*com_initialized = is_com_initialized();
 				e->raise();
 			}
 
@@ -42,9 +38,9 @@ namespace micro_profiler
 
 			void ValidateThread(shared_ptr<running_thread> *hthread, event_flag *second_initialized, bool *first_finished)
 			{
-            shared_ptr<running_thread> previous_hthread = *hthread;
+				shared_ptr<running_thread> previous_hthread = *hthread;
 
-            *hthread = this_thread::open();
+				*hthread = this_thread::open();
 				if (previous_hthread)
 				{
 					*first_finished = !previous_hthread->is_running();
@@ -75,6 +71,7 @@ namespace micro_profiler
 			handle *profile_this(frontend_controller &fc)
 			{	return fc.profile(&RaiseAt);	}
 
+
 			class sync_stop_frontend_controller : public frontend_controller
 			{
 			public:
@@ -85,6 +82,7 @@ namespace micro_profiler
 				~sync_stop_frontend_controller()
 				{	force_stop();	}
 			};
+
 
 			class auto_frontend_controller : public sync_stop_frontend_controller
 			{
@@ -97,10 +95,9 @@ namespace micro_profiler
 				const auto_ptr<handle> _profiler_handle;
 			};
 
-			class scoped_thread_join
-			{
-				shared_ptr<running_thread> &_thread;
 
+			class scoped_thread_join : wpl::noncopyable
+			{
 			public:
 				scoped_thread_join(shared_ptr<running_thread> &thread)
 					: _thread(thread)
@@ -108,6 +105,9 @@ namespace micro_profiler
 
 				~scoped_thread_join()
 				{	_thread->join();	}
+
+			private:
+				shared_ptr<running_thread> &_thread;
 			};
 		}
 
@@ -438,9 +438,9 @@ namespace micro_profiler
 				initialized.wait();
 
 				// ASERT
-				hyper real_resolution = timestamp_precision();
+				long long real_resolution = timestamp_precision();
 
-				Assert::IsTrue(static_cast<long>(::GetCurrentProcessId()) == state.process_id);
+				Assert::IsTrue(get_current_process_executable() == state.process_executable);
 				Assert::IsTrue(90 * real_resolution / 100 < state.ticks_resolution && state.ticks_resolution < 110 * real_resolution / 100);
 			}
 

@@ -130,7 +130,7 @@ namespace micro_profiler
 				// ASSERT
 				long long real_resolution = timestamp_precision();
 
-				Assert::IsTrue(get_current_process_id() == _state->process_id);
+				Assert::IsTrue(get_current_process_executable() == _state->process_executable);
 				Assert::IsTrue(90 * real_resolution / 100 < _state->ticks_resolution && _state->ticks_resolution < 110 * real_resolution / 100);
 			}
 

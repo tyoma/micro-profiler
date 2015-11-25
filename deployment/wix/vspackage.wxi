@@ -26,7 +26,7 @@
 			<RegistryKey Key="InstalledProducts">
 				<RegistryKey Key="MicroProfiler">
 					<RegistryValue Value="MicroProfiler" Type="string" />
-					<RegistryValue Name="ProductDetails" Value="Realtime Instrumenting Profiler&#x0D;&#x0A;&#x0D;&#x0A;Please, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list&#x0D;&#x0A;Copyright (c) 2011-2014 Artem Gevorkyan" Type="string" />
+					<RegistryValue Name="ProductDetails" Value="Realtime Instrumenting Profiler&#x0D;&#x0A;&#x0D;&#x0A;Please, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list&#x0D;&#x0A;Copyright (c) 2011-2015 Artem Gevorkyan" Type="string" />
 					<RegistryValue Name="UseInterface" Value="0" Type="integer" />
 					<RegistryValue Name="PID" Value="!(bind.FileVersion.micro_profiler.dll_x86)" Type="string" />
 				</RegistryKey>

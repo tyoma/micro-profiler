@@ -6,13 +6,13 @@
 
 using namespace std;
 
-typedef ATL::CString x2t;
-typedef ATL::CStringW x2w;
-
 namespace micro_profiler
 {
 	namespace
 	{
+		typedef ATL::CString x2t;
+		typedef ATL::CStringW x2w;
+
 		class registry_hive : public hive
 		{
 		public:

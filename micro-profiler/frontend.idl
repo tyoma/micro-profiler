@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2014 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (c) 2011-2015 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -18,9 +18,16 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-import "ocidl.idl";
+import "unknwn.idl";
 
-typedef [	public	]
+typedef [public]
+struct ProcessInitializationDataTag
+{
+	hyper TicksResolution;
+	[string] const wchar_t *ExecutablePath;
+} ProcessInitializationData;
+
+typedef [public]
 struct FunctionStatisticsTag
 {
 	hyper FunctionAddress;
@@ -31,7 +38,7 @@ struct FunctionStatisticsTag
 	hyper MaxCallTime;
 } FunctionStatistics;
 
-typedef [	public	]
+typedef [public]
 struct FunctionStatisticsDetailedTag
 {
 	FunctionStatistics Statistics;
@@ -39,23 +46,23 @@ struct FunctionStatisticsDetailedTag
 	[size_is(ChildrenCount)] FunctionStatistics *ChildrenStatistics;
 } FunctionStatisticsDetailed;
 
-typedef [	public	]
+typedef [public]
 struct ImageLoadInfoTag
 {
 	hyper Address;
-	BSTR Path;
+	[string] const wchar_t *Path;
 } ImageLoadInfo;
 
-[	object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), pointer_default(unique)	]
+[object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), pointer_default(unique)]
 interface IProfilerFrontend : IUnknown
 {
-	HRESULT Initialize([in] long process_id, [in] hyper ticks_resolution);
-	HRESULT LoadImages([in] long count, [in, size_is(count)] ImageLoadInfo *images);
-	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] FunctionStatisticsDetailed *statistics);
-	HRESULT UnloadImages([in] long count, [in, size_is(count)] hyper *images);
+	HRESULT Initialize([in] const ProcessInitializationData *process);
+	HRESULT LoadImages([in] long count, [in, size_is(count)] const ImageLoadInfo *images);
+	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] const FunctionStatisticsDetailed *statistics);
+	HRESULT UnloadImages([in] long count, [in, size_is(count)] const hyper *images);
 };
 
-[ uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3) ]
+[uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3)]
 coclass ProfilerFrontend
 {
 	[default] interface IProfilerFrontend;

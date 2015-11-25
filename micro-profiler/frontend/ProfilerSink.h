@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2014 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (c) 2011-2015 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -59,13 +59,9 @@ namespace micro_profiler
 
 		void FinalRelease();
 
-		STDMETHODIMP Initialize(long process_id, long long ticks_resolution);
-		STDMETHODIMP LoadImages(long count, ImageLoadInfo *images);
-		STDMETHODIMP UpdateStatistics(long count, FunctionStatisticsDetailed *statistics);
-		STDMETHODIMP UnloadImages(long count, long long *image_addresses);
+		STDMETHODIMP Initialize(const ProcessInitializationData *process);
+		STDMETHODIMP LoadImages(long count, const ImageLoadInfo *images);
+		STDMETHODIMP UpdateStatistics(long count, const FunctionStatisticsDetailed *statistics);
+		STDMETHODIMP UnloadImages(long count, const long long *image_addresses);
 	};
 }
-
-typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
-
-OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);

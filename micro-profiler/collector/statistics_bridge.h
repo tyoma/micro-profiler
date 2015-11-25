@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2014 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (c) 2011-2015 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -51,8 +51,7 @@ namespace micro_profiler
 		
 		void get_changes(std::vector<image_info> &loaded_modules, std::vector<image_info> &unloaded_modules);
 
-	private:
-		image_info get_module_info(const void *in_image_address);
+		static image_info get_module_info(const void *in_image_address);
 
 	private:
 		mutex _mtx;

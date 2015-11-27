@@ -30,7 +30,6 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlstr.h>
-#include <commctrl.h>
 #include <vector>
 
 using namespace std;

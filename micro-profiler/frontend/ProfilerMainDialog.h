@@ -63,6 +63,8 @@ namespace micro_profiler
 		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable);
 		~ProfilerMainDialog();
 
+		wpl::signal<void()> Closed;
+
 		enum {	IDD = IDD_PROFILER_MAIN	};
 
 		BEGIN_MSG_MAP(ProfilerMainDialog)

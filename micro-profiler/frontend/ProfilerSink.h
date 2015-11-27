@@ -26,6 +26,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <memory>
+#include <wpl/base/signals.h>
 
 namespace std 
 {
@@ -46,6 +47,7 @@ namespace micro_profiler
 		std::shared_ptr<symbol_resolver> _symbols;
 		std::shared_ptr<functions_list> _statistics;
 		std::shared_ptr<ProfilerMainDialog> _dialog;
+		wpl::slot_connection _closed_connected;
 
 	public:
 		ProfilerFrontend();

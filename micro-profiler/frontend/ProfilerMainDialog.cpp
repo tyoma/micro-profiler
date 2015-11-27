@@ -136,7 +136,6 @@ namespace micro_profiler
 		_clear_button = GetDlgItem(IDC_BTN_CLEAR);
 		_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
 
-		::EnableMenuItem(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 		SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
 
 		CString caption;
@@ -202,8 +201,7 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnClose(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL &handled)
 	{
-		if (!(MF_DISABLED & ::GetMenuState(GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND)))
-			DestroyWindow();
+		DestroyWindow();
 		handled = TRUE;
 		return 0;
 	}
@@ -260,6 +258,8 @@ namespace micro_profiler
 		_columns_parents->store(*c->create("ParentsColumns"));
 		_columns_main->store(*c->create("MainColumns"));
 		_columns_children->store(*c->create("ChildrenColumns"));
+
+		Closed();
 		unlock();
 	}
 }

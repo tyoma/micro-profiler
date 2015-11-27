@@ -99,6 +99,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>copy "$(OutDir)micro-profiler.lib" "$(ProjectDir)micro-profiler.lib"
@@ -126,6 +128,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>copy "$(OutDir)micro-profiler.lib" "$(ProjectDir)micro-profiler_x64.lib"
@@ -151,6 +155,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>copy "$(OutDir)micro-profiler.lib" "$(ProjectDir)micro-profiler.lib"
@@ -177,6 +183,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>copy "$(OutDir)micro-profiler.lib" "$(ProjectDir)micro-profiler_x64.lib"

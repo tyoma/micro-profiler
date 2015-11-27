@@ -25,6 +25,11 @@
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
+namespace std
+{
+	using tr1::bind;
+}
+
 using namespace std;
 
 namespace micro_profiler
@@ -34,6 +39,9 @@ namespace micro_profiler
 		typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
 
 		OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);
+
+		void disconnect(IUnknown *object)
+		{	::CoDisconnectObject(object, 0);	}
 	}
 
 	ProfilerFrontend::ProfilerFrontend()
@@ -44,7 +52,6 @@ namespace micro_profiler
 
 	void ProfilerFrontend::FinalRelease()
 	{
-		::EnableMenuItem(_dialog->GetSystemMenu(FALSE), SC_CLOSE, MF_BYCOMMAND);
 		_dialog.reset();
 		_statistics.reset();
 		_symbols.reset();
@@ -60,6 +67,7 @@ namespace micro_profiler
 		_statistics = functions_list::create(process->TicksResolution, _symbols);
 		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
 		_dialog->ShowWindow(SW_SHOW);
+		_closed_connected = _dialog->Closed += std::bind(&disconnect, this);
 
 		lock(_dialog);
 		return S_OK;

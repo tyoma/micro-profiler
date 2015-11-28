@@ -121,6 +121,14 @@ ren "$(TargetPath)" "%TargetNameVer%"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.pdb">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\micro-profiler.pdb">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
     <None Include="mkzip.cmd" />
   </ItemGroup>
   <ItemGroup>

@@ -49,6 +49,12 @@
     <CustomBuild Include="..\_bin\Release_x64\entry.h">
       <Filter>x64</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_Win32\micro-profiler.pdb">
+      <Filter>x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\_bin\Release_x64\micro-profiler.pdb">
+      <Filter>x64</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <None Include="mkzip.cmd" />

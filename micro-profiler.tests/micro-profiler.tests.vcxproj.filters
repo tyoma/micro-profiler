@@ -25,6 +25,7 @@
     <ClCompile Include="frontend\ColumnsModelTests.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="IPCClientServerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

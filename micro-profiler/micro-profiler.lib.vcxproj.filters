@@ -37,6 +37,12 @@
     <ClCompile Include="common\registry_configuration.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="ipc\windows\ipc_client.cpp">
+      <Filter>ipc\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="ipc\windows\ipc_server.cpp">
+      <Filter>ipc\windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="frontend\symbol_resolver.h">
@@ -87,6 +93,15 @@
     <ClInclude Include="common\configuration.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="ipc\client.h">
+      <Filter>ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc\server.h">
+      <Filter>ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc\windows\common.h">
+      <Filter>ipc\windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">
@@ -100,6 +115,12 @@
     </Filter>
     <Filter Include="common">
       <UniqueIdentifier>{6be9edac-94ee-4755-82d2-c219e37ae903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ipc">
+      <UniqueIdentifier>{271f7b61-4950-4cbb-9f20-19c8d75240ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ipc\windows">
+      <UniqueIdentifier>{ca90774e-8443-479d-a722-953359937670}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

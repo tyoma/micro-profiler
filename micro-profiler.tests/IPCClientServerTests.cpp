@@ -1,9 +1,15 @@
 #include <ipc/client.h>
 #include <ipc/server.h>
 
+#include "assert.h"
+
+#include <collector/system.h>
+#include <deque>
+#include <wpl/base/concepts.h>
+#include <wpl/mt/synchronization.h>
 #include <wpl/mt/thread.h>
 
-#include "assert.h"
+#pragma warning(disable:4355)
 
 namespace std
 {
@@ -11,8 +17,9 @@ namespace std
 	using namespace tr1::placeholders;
 }
 
-using namespace std;
 using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+using namespace std;
+using namespace wpl::mt;
 
 namespace micro_profiler
 {
@@ -22,21 +29,111 @@ namespace micro_profiler
 		{
 			namespace
 			{
-				typedef vector< vector<byte> > buffers;
+				class server;
+
+				class mock_session : public ipc::server::session, wpl::noncopyable
+				{
+				public:
+					mock_session(server &host);
+					~mock_session();
+
+					virtual void on_message(const vector<byte> &/*input*/, vector<byte> &output);
+
+				private:
+					server &_server;
+				};
+
+
+				class server : public ipc::server
+				{
+				public:
+					server(const char *name)
+						: ipc::server(name), _thread(bind(&server::run, this)), _event(false, false), _session_count(0)
+					{	}
+
+					~server()
+					{
+						stop();
+						_thread.join();
+					}
+
+					void wait_for_session(int expected_count)
+					{
+						for (;;)
+						{
+							_event.wait();
+
+							scoped_lock l(server_mutex);
+
+							if (_session_count == expected_count)
+								return;
+						}
+					}
+
+					void session_destroyed()
+					{
+						scoped_lock l(server_mutex);
+						
+						--_session_count;
+						_event.raise();
+					}
+
+					void add_output(const vector<byte> &data)
+					{
+						scoped_lock l(server_mutex);
+
+						outputs.push_back(data);
+					}
+
+					deque< vector<byte> > get_inputs()
+					{
+						scoped_lock l(server_mutex);
+
+						return inputs;
+					}
+
+					mutex server_mutex;
+					deque< vector<byte> > inputs;
+					deque< vector<byte> > outputs;
+
+				private:
+					virtual session *create_session()
+					{
+						scoped_lock l(server_mutex);
+						
+						++_session_count;
+						_event.raise();
+						return new mock_session(*this);
+					}
+
+				private:
+					thread _thread;
+					event_flag _event;
+					long _session_count;
+				};
+
+
+
+				mock_session::mock_session(server &host)
+					: _server(host)
+				{	}
+
+				mock_session::~mock_session()
+				{	_server.session_destroyed();	}
+
+				void mock_session::on_message(const vector<byte> &input, vector<byte> &output)
+				{
+					scoped_lock l(_server.server_mutex);
+
+					_server.inputs.push_back(input);
+					output = _server.outputs.front();
+					_server.outputs.pop_front();
+				}
+
 
 				template <typename T, size_t size>
 				vector<T> mkvector(T (&array_ptr)[size])
 				{	return vector<T>(array_ptr, array_ptr + size);	}
-
-				void dummy(const vector<byte> &/*input*/, vector<byte> &/*output*/)
-				{	}
-
-				void process_message(const vector<byte> &input, vector<byte> &output, buffers &inputs, buffers &outputs)
-				{
-					inputs.push_back(input);
-					output = outputs.back();
-					outputs.pop_back();
-				}
 			}
 
 			[TestClass]
@@ -64,7 +161,7 @@ namespace micro_profiler
 					vector<string> servers;
 
 					// ACT
-					server s1("foo", &dummy);
+					server s1("foo");
 					client::enumerate_servers(servers);
 
 					// ASSERT
@@ -73,7 +170,7 @@ namespace micro_profiler
 					assert::sequences_equivalent(reference1, servers);
 
 					// ACT
-					server s2("Foe X", &dummy);
+					server s2("Foe X");
 					client::enumerate_servers(servers);
 
 					// ASSERT
@@ -82,7 +179,7 @@ namespace micro_profiler
 					assert::sequences_equivalent(reference2, servers);
 
 					// ACT
-					server s3("Bar Z", &dummy), s4("hope.this.will.be.visible", &dummy);
+					server s3("Bar Z"), s4("hope.this.will.be.visible");
 					client::enumerate_servers(servers);
 
 					// ASSERT
@@ -97,7 +194,7 @@ namespace micro_profiler
 				{
 					// INIT
 					vector<string> servers;
-					auto_ptr<server> s1(new server("foo2", &dummy)), s2(new server("bar", &dummy)), s3(new server("bzzz. . .p", &dummy));
+					auto_ptr<server> s1(new server("foo2")), s2(new server("bar")), s3(new server("bzzz. . .p"));
 
 					// ACT
 					s2.reset();
@@ -120,20 +217,64 @@ namespace micro_profiler
 
 
 				[TestMethod]
+				void ClientCreationLeadsToSessionCreation()
+				{
+					// INIT
+					server s("test");
+
+					// ACT / ASSERT (must not hang)
+					client c1("test");
+					s.wait_for_session(1);
+				}
+
+
+				[TestMethod]
+				void MultipleConnectionsCreateMultipleSessions()
+				{
+					// INIT
+					server s("test2");
+
+					// ACT / ASSERT (must not hang)
+					client c1("test2"), c2("test2"), c3("test2");
+					s.wait_for_session(3);
+
+					// ACT / ASSERT (must not hang)
+					client c4("test2"), c5("test2");
+					s.wait_for_session(5);
+				}
+
+
+				[TestMethod]
+				void ClosingClientConnectionDropsSessions()
+				{
+					// INIT
+					server s("test");
+					auto_ptr<client> c1(new client("test")), c2(new client("test")), c3(new client("test"));
+
+					// ACT / ASSERT (must not hang)
+					c2.reset();
+					s.wait_for_session(2);
+
+					c1.reset();
+					c3.reset();
+					s.wait_for_session(0);
+				}
+
+
+				[TestMethod]
 				void ClientReadsServersOutputs()
 				{
 					// INIT
-					buffers inputs, outputs;
+					server s("test-1");
 
 					byte m1[] = "hello!";
 					byte m2[] = "how are you?";
 					byte m3[] = "bye!";
 
-					outputs.push_back(mkvector(m3));
-					outputs.push_back(mkvector(m2));
-					outputs.push_back(mkvector(m1));
+					s.add_output(mkvector(m1));
+					s.add_output(mkvector(m2));
+					s.add_output(mkvector(m3));
 
-					server s("test-1", bind(&process_message, _1, _2, ref(inputs), ref(outputs)));
 					client c("test-1");
 					vector<byte> i, o;
 
@@ -161,21 +302,26 @@ namespace micro_profiler
 				void ServerReadsClientsInputs()
 				{
 					// INIT
-					buffers inputs, outputs(10);
+					server s("test-2");
 
 					byte m1[] = "hello!";
 					byte m2[] = "how are you?";
 					byte m3[] = "bye!";
 
-					server s("test-2", bind(&process_message, _1, _2, ref(inputs), ref(outputs)));
+					s.outputs.resize(3);
+
 					client c("test-2");
 					vector<byte> o;
+					deque< vector<byte> > inputs;
+
 
 					// ACT
 					c.call(mkvector(m1), o);
 					c.call(mkvector(m3), o);
 
 					// ASSERT
+					inputs = s.get_inputs();
+
 					Assert::AreEqual(2u, inputs.size());
 					assert::sequences_equivalent(m1, inputs[0]);
 					assert::sequences_equivalent(m3, inputs[1]);
@@ -184,18 +330,20 @@ namespace micro_profiler
 					c.call(mkvector(m2), o);
 
 					// ASSERT
+					inputs = s.get_inputs();
+
 					Assert::AreEqual(3u, inputs.size());
 					assert::sequences_equivalent(m2, inputs[2]);
 				}
 
 
 				[TestMethod]
-				void ServerCanReadsLongMessagesFromClients()
+				void ServerCanReadLongMessagesFromClients()
 				{
 					// INIT
-					buffers inputs, outputs(10);
-
-					server s("test-3", bind(&process_message, _1, _2, ref(inputs), ref(outputs)));
+					server s("test-3");
+					s.outputs.resize(3);
+					deque< vector<byte> > inputs;
 					client c("test-3");
 					vector<byte> i, o;
 
@@ -208,6 +356,7 @@ namespace micro_profiler
 					c.call(i, o);
 
 					// ASSERT
+					inputs = s.get_inputs();
 					Assert::AreEqual(1u, inputs.size());
 					assert::sequences_equivalent(i, inputs[0]);
 
@@ -221,6 +370,7 @@ namespace micro_profiler
 					c.call(i, o);
 
 					// ASSERT
+					inputs = s.get_inputs();
 					Assert::AreEqual(2u, inputs.size());
 					assert::sequences_equivalent(i, inputs[1]);
 				}
@@ -230,17 +380,15 @@ namespace micro_profiler
 				void ClientCanReadLongServerReplies()
 				{
 					// INIT
-					buffers inputs, outputs(10);
-
-					server s("test-3", bind(&process_message, _1, _2, ref(inputs), ref(outputs)));
-					client c("test-3");
 					vector<byte> i, o, tmp;
+					server s("test-3");
+					client c("test-3");
 
 					tmp.resize(122133);
 					tmp[3] = 79;
 					tmp[3011] = 90;
 					tmp[122121] = 171;
-					outputs.push_back(tmp);
+					s.add_output(tmp);
 
 					// ACT
 					c.call(i, o);
@@ -252,7 +400,7 @@ namespace micro_profiler
 					tmp.resize(7356);
 					tmp[3] = 89;
 					tmp[7100] = 191;
-					outputs.push_back(tmp);
+					s.add_output(tmp);
 
 					// ACT
 					c.call(i, o);

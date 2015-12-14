@@ -14,10 +14,18 @@ namespace micro_profiler
 		{
 		public:
 			impl(const char *server_name)
-				: _pipe(::CreateFileA((c_pipe_ns + c_prefix + server_name).c_str(), GENERIC_WRITE | GENERIC_READ, 0, NULL,
-						OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL), &::CloseHandle),
-					_completion(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle)
-			{	}
+				: _server_name(c_pipe_ns + c_prefix + server_name), _completion(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle)
+			{
+				HANDLE pipe = INVALID_HANDLE_VALUE;
+
+				do
+				{
+					if (::WaitNamedPipeA(_server_name.c_str(), NMPWAIT_WAIT_FOREVER))
+						pipe = ::CreateFileA(_server_name.c_str(), GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+				} while (pipe == INVALID_HANDLE_VALUE);
+
+				_pipe.reset(pipe, &::CloseHandle);
+			}
 
 			void call(const vector<byte> &input, vector<byte> &output)
 			{
@@ -39,6 +47,9 @@ namespace micro_profiler
 			}
 
 		private:
+
+		private:
+			string _server_name;
 			shared_ptr<void> _pipe, _completion;
 		};
 

@@ -31,16 +31,30 @@ namespace micro_profiler
 			{
 				class server;
 
+				struct server_data
+				{
+					server_data()
+						: session_count(0), changed_event(false, true)
+					{	}
+
+					int session_count;
+					deque< vector<byte> > inputs;
+					deque< vector<byte> > outputs;
+					event_flag changed_event;
+					mutex server_mutex;
+				};
+
+
 				class mock_session : public ipc::server::session, wpl::noncopyable
 				{
 				public:
-					mock_session(server &host);
+					mock_session(const shared_ptr<server_data> &data);
 					~mock_session();
 
 					virtual void on_message(const vector<byte> &/*input*/, vector<byte> &output);
 
 				private:
-					server &_server;
+					const shared_ptr<server_data> _data;
 				};
 
 
@@ -48,7 +62,7 @@ namespace micro_profiler
 				{
 				public:
 					server(const char *name)
-						: ipc::server(name), _thread(bind(&server::run, this)), _event(false, false), _session_count(0)
+						: ipc::server(name), data(new server_data), _thread(bind(&server::run, this))
 					{	}
 
 					~server()
@@ -59,75 +73,65 @@ namespace micro_profiler
 
 					void wait_for_session(int expected_count)
 					{
-						for (;;)
+						for (;; data->changed_event.wait())
 						{
-							_event.wait();
+							scoped_lock l(data->server_mutex);
 
-							scoped_lock l(server_mutex);
-
-							if (_session_count == expected_count)
+							if (data->session_count == expected_count)
 								return;
 						}
 					}
 
-					void session_destroyed()
-					{
-						scoped_lock l(server_mutex);
-						
-						--_session_count;
-						_event.raise();
-					}
-
 					void add_output(const vector<byte> &data)
 					{
-						scoped_lock l(server_mutex);
+						scoped_lock l(this->data->server_mutex);
 
-						outputs.push_back(data);
+						this->data->outputs.push_back(data);
 					}
 
 					deque< vector<byte> > get_inputs()
 					{
-						scoped_lock l(server_mutex);
+						scoped_lock l(data->server_mutex);
 
-						return inputs;
+						return data->inputs;
 					}
 
-					mutex server_mutex;
-					deque< vector<byte> > inputs;
-					deque< vector<byte> > outputs;
+					shared_ptr<server_data> data;
 
 				private:
 					virtual session *create_session()
-					{
-						scoped_lock l(server_mutex);
-						
-						++_session_count;
-						_event.raise();
-						return new mock_session(*this);
-					}
+					{	return new mock_session(data);	}
 
 				private:
 					thread _thread;
-					event_flag _event;
-					long _session_count;
 				};
 
 
 
-				mock_session::mock_session(server &host)
-					: _server(host)
-				{	}
+				mock_session::mock_session(const shared_ptr<server_data> &data)
+					: _data(data)
+				{
+					scoped_lock l(_data->server_mutex);
+						
+					++_data->session_count;
+					data->changed_event.raise();
+				}
 
 				mock_session::~mock_session()
-				{	_server.session_destroyed();	}
+				{
+					scoped_lock l(_data->server_mutex);
+						
+					--_data->session_count;
+					_data->changed_event.raise();
+				}
 
 				void mock_session::on_message(const vector<byte> &input, vector<byte> &output)
 				{
-					scoped_lock l(_server.server_mutex);
+					scoped_lock l(_data->server_mutex);
 
-					_server.inputs.push_back(input);
-					output = _server.outputs.front();
-					_server.outputs.pop_front();
+					_data->inputs.push_back(input);
+					output = _data->outputs.front();
+					_data->outputs.pop_front();
 				}
 
 
@@ -251,6 +255,8 @@ namespace micro_profiler
 					server s("test");
 					auto_ptr<client> c1(new client("test")), c2(new client("test")), c3(new client("test"));
 
+					s.wait_for_session(3);
+
 					// ACT / ASSERT (must not hang)
 					c2.reset();
 					s.wait_for_session(2);
@@ -308,7 +314,7 @@ namespace micro_profiler
 					byte m2[] = "how are you?";
 					byte m3[] = "bye!";
 
-					s.outputs.resize(3);
+					s.data->outputs.resize(3);
 
 					client c("test-2");
 					vector<byte> o;
@@ -342,7 +348,7 @@ namespace micro_profiler
 				{
 					// INIT
 					server s("test-3");
-					s.outputs.resize(3);
+					s.data->outputs.resize(3);
 					deque< vector<byte> > inputs;
 					client c("test-3");
 					vector<byte> i, o;

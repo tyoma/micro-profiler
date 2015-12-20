@@ -27,7 +27,7 @@ namespace micro_profiler
 
 		private:
 			shared_ptr<void> create_pipe(bool first);
-			void on_connect();
+			void on_connected();
 
 		private:
 			server *_server;
@@ -41,52 +41,12 @@ namespace micro_profiler
 		class server::outer_session : OVERLAPPED, wpl::noncopyable, public enable_shared_from_this<server::outer_session>
 		{
 		public:
-			outer_session(server::impl &server, const shared_ptr<void> &pipe)
-				: _server(server), _pipe(pipe), _inner(server.create_session())
-			{	read();	}
+			outer_session(server::impl &server, const shared_ptr<void> &pipe);
+			~outer_session();
 
 		private:
-			void read()
-			{
-				*static_cast<OVERLAPPED*>(this) = zero_init();
-				::ReadFileEx(_pipe.get(), _buffer, sizeof(_buffer), this, &on_read);
-			}
-
-			void chunk_ready(DWORD /*error_code*/, DWORD bytes_transferred)
-			{
-				DWORD dummy;
-
-				_input.insert(_input.end(), _buffer, _buffer + bytes_transferred);
-				if (::GetOverlappedResult(_pipe.get(), this, &dummy, TRUE))
-				{
-					_inner->on_message(_input, _output);
-					_input.clear();
-					*static_cast<OVERLAPPED*>(this) = zero_init();
-					::WriteFileEx(_pipe.get(), !_output.empty() ? &_output[0] : 0, static_cast<DWORD>(_output.size()), this, &on_write);
-				}
-				else /*if (ERROR_MORE_DATA == ::GetLastError())*/
-				{
-					read();
-				}
-			}
-
-			static void __stdcall on_read(DWORD error_code, DWORD bytes_transferred, OVERLAPPED *overlapped)
-			{
-				outer_session *self = static_cast<outer_session *>(overlapped);
-
-				switch (error_code)
-				{
-				case ERROR_SUCCESS:
-					self->chunk_ready(error_code, bytes_transferred);
-					break;
-
-				default:
-					self->_server.on_session_closed(self->shared_from_this());
-				}
-			}
-
-			static void __stdcall on_write(DWORD /*error_code*/, DWORD /*bytes_transferred*/, OVERLAPPED *overlapped)
-			{	static_cast<outer_session *>(overlapped)->read();	}
+			void read();
+			void on_chunk_ready(DWORD /*error_code*/, DWORD bytes_transferred);
 
 		private:
 			server::impl &_server;
@@ -95,6 +55,7 @@ namespace micro_profiler
 			vector<byte> _input, _output;
 			byte _buffer[1000];
 		};
+
 
 
 		server::impl::impl(const char *server_name, server *server_)
@@ -124,7 +85,7 @@ namespace micro_profiler
 					DWORD dummy;
 
 					::GetOverlappedResult(_pipe.get(), this, &dummy, TRUE);
-					on_connect();
+					on_connected();
 				}
 		}
 
@@ -146,17 +107,86 @@ namespace micro_profiler
 
 			*static_cast<OVERLAPPED*>(this) = zero_init();
 			hEvent = _completion.get();
-			::ConnectNamedPipe(pipe.get(), this);
+			::ResetEvent(hEvent);
+			switch (::ConnectNamedPipe(pipe.get(), this), ::GetLastError())
+			{
+			case ERROR_PIPE_CONNECTED:
+				::SetEvent(hEvent); // A client managed to sneak into the interval between Create* and Connect*.
+
+			case ERROR_IO_PENDING:
+				break;
+
+			default:
+				// Error handling goes here...
+				break;
+			}
+
 			return pipe;
 		}
 
-		void server::impl::on_connect()
+		void server::impl::on_connected()
 		{
 			shared_ptr<void> replacement = create_pipe(false);
-			shared_ptr<server::outer_session> s(make_shared<server::outer_session>(*this, _pipe));
 
+			_sessions.push_back(make_shared<server::outer_session>(*this, _pipe));
 			_pipe = replacement;
-			_sessions.push_back(s);
+		}
+
+
+		server::outer_session::outer_session(server::impl &server, const shared_ptr<void> &pipe)
+			: _server(server), _pipe(pipe), _inner(server.create_session())
+		{	read();	}
+
+		server::outer_session::~outer_session()
+		{	}
+
+		void server::outer_session::read()
+		{
+			struct read_completion
+			{
+				static void __stdcall routine(DWORD error_code, DWORD bytes_transferred, OVERLAPPED *overlapped)
+				{
+					outer_session *self = static_cast<outer_session *>(overlapped);
+
+					switch (error_code)
+					{
+					case ERROR_SUCCESS:
+						self->on_chunk_ready(error_code, bytes_transferred);
+						break;
+
+					default:
+						self->_server.on_session_closed(self->shared_from_this());
+					}
+				}
+			};
+
+			*static_cast<OVERLAPPED*>(this) = zero_init();
+			::ReadFileEx(_pipe.get(), _buffer, sizeof(_buffer), this, &read_completion::routine);
+		}
+
+		void server::outer_session::on_chunk_ready(DWORD /*error_code*/, DWORD bytes_transferred)
+		{
+			struct write_completion
+			{
+				static void __stdcall routine(DWORD /*error_code*/, DWORD /*bytes_transferred*/, OVERLAPPED *overlapped)
+				{	static_cast<outer_session *>(overlapped)->read();	}
+			};
+
+			DWORD dummy;
+
+			_input.insert(_input.end(), _buffer, _buffer + bytes_transferred);
+			if (::GetOverlappedResult(_pipe.get(), this, &dummy, TRUE))
+			{
+				_inner->on_message(_input, _output);
+				_input.clear();
+				*static_cast<OVERLAPPED*>(this) = zero_init();
+				::WriteFileEx(_pipe.get(), !_output.empty() ? &_output[0] : 0, static_cast<DWORD>(_output.size()), this,
+					&write_completion::routine);
+			}
+			else /*if (ERROR_MORE_DATA == ::GetLastError())*/
+			{
+				read();
+			}
 		}
 
 

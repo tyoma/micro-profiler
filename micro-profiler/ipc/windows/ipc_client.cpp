@@ -10,34 +10,26 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		class client::impl : OVERLAPPED
+		class client::impl
 		{
 		public:
 			impl(const char *server_name)
-				: _server_name(c_pipe_ns + c_prefix + server_name), _completion(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle)
+				: _server_name(c_pipe_ns + c_prefix + server_name)
 			{
 				HANDLE pipe = INVALID_HANDLE_VALUE;
 
 				do
-				{
-					if (::WaitNamedPipeA(_server_name.c_str(), NMPWAIT_WAIT_FOREVER))
-						pipe = ::CreateFileA(_server_name.c_str(), GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-				} while (pipe == INVALID_HANDLE_VALUE);
+					pipe = ::CreateFileA(_server_name.c_str(), GENERIC_WRITE | GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+				while (pipe == INVALID_HANDLE_VALUE && (::SleepEx(10, TRUE), true));
 
 				_pipe.reset(pipe, &::CloseHandle);
 			}
 
 			void call(const vector<byte> &input, vector<byte> &output)
 			{
-				*static_cast<OVERLAPPED*>(this) = zero_init();
-				hEvent = _completion.get();
-				::ResetEvent(_completion.get());
-				::WriteFile(_pipe.get(), input.empty() ? NULL : &input[0], static_cast<DWORD>(input.size()), NULL, this);
-				while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(_completion.get(), INFINITE, TRUE))
-				{	}
-
 				DWORD dummy, message_length;
 
+				::WriteFile(_pipe.get(), input.empty() ? NULL : &input[0], static_cast<DWORD>(input.size()), &dummy, NULL);
 				::ReadFile(_pipe.get(), NULL, 0, &dummy, NULL);
 				::PeekNamedPipe(_pipe.get(), NULL, 0, &dummy, &dummy, &message_length);
 
@@ -50,7 +42,7 @@ namespace micro_profiler
 
 		private:
 			string _server_name;
-			shared_ptr<void> _pipe, _completion;
+			shared_ptr<void> _pipe;
 		};
 
 		client::client(const char *server_name)

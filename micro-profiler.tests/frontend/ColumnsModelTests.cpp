@@ -164,7 +164,7 @@ namespace micro_profiler
 				};
 				shared_ptr<listview::columns_model> cm;
 				log_t log;
-				shared_ptr<wpl::destructible> slot;
+				wpl::slot_connection slot;
 
 				// ACT
 				cm.reset(new columns_model(columns, listview::columns_model::npos, false));
@@ -216,7 +216,7 @@ namespace micro_profiler
 					false));
 				shared_ptr<listview::columns_model> cm2(new columns_model(columns, 2, false));
 				log_t log;
-				shared_ptr<wpl::destructible> slot1, slot2;
+				wpl::slot_connection slot1, slot2;
 
 				slot1 = cm1->sort_order_changed += bind(&append_log, &log, _1, _2);
 				slot2 = cm2->sort_order_changed += bind(&append_log, &log, _1, _2);

@@ -102,6 +102,9 @@
     <ClInclude Include="ipc\windows\common.h">
       <Filter>ipc\windows</Filter>
     </ClInclude>
+    <ClInclude Include="frontend\function_history.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">

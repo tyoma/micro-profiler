@@ -100,7 +100,6 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -140,7 +139,6 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -180,7 +178,6 @@
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
       <FunctionLevelLinking>false</FunctionLevelLinking>
     </ClCompile>
     <Link>
@@ -222,7 +219,6 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>./../libraries</AdditionalIncludeDirectories>
       <FunctionLevelLinking>false</FunctionLevelLinking>
     </ClCompile>
     <Link>
@@ -347,6 +343,7 @@
     <ClInclude Include="common\ordered_view.h" />
     <ClInclude Include="common\pod_vector.h" />
     <ClInclude Include="common\primitives.h" />
+    <ClInclude Include="frontend\function_history.h" />
     <ClInclude Include="frontend\function_list.h" />
     <ClInclude Include="frontend\object_lock.h" />
     <ClInclude Include="frontend\columns_model.h" />

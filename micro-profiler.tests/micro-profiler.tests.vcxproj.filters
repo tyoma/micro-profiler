@@ -4,42 +4,48 @@
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMHelpersTests.cpp" />
+    <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="ImageLoadQueueTests.cpp" />
+    <ClCompile Include="IPCClientServerTests.cpp" />
     <ClCompile Include="MiscTests.cpp" />
+    <ClCompile Include="Mockups.cpp" />
+    <ClCompile Include="ObjectLockTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
-    <ClCompile Include="frontend\OrderedViewTests.cpp">
-      <Filter>frontend</Filter>
+    <ClCompile Include="StatisticsBridgeTests.cpp" />
+    <ClCompile Include="SymbolResolverTests.cpp" />
+    <ClCompile Include="TextFormattingServicesTests.cpp" />
+    <ClCompile Include="TracedFunctions.cpp" />
+    <ClCompile Include="frontend\ColumnsModelTests.cpp">
+      <Filter>Frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\FunctionHistoryTests.cpp">
+      <Filter>Frontend</Filter>
     </ClCompile>
     <ClCompile Include="frontend\FunctionListTests.cpp">
-      <Filter>frontend</Filter>
+      <Filter>Frontend</Filter>
     </ClCompile>
-    <ClCompile Include="TextFormattingServicesTests.cpp" />
-    <ClCompile Include="StatisticsBridgeTests.cpp" />
-    <ClCompile Include="Mockups.cpp" />
-    <ClCompile Include="SymbolResolverTests.cpp" />
-    <ClCompile Include="ObjectLockTests.cpp" />
-    <ClCompile Include="TracedFunctions.cpp" />
-    <ClCompile Include="FrontendControllerTests.cpp" />
-    <ClCompile Include="ImageLoadQueueTests.cpp" />
-    <ClCompile Include="frontend\ColumnsModelTests.cpp">
-      <Filter>frontend</Filter>
+    <ClCompile Include="frontend\OrderedViewTests.cpp">
+      <Filter>Frontend</Filter>
     </ClCompile>
-    <ClCompile Include="IPCClientServerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="assert.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Mockups.h" />
     <ClInclude Include="TracedFunctions.h" />
-    <ClInclude Include="assert.h" />
+    <ClInclude Include="frontend\Mockups.h">
+      <Filter>Frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="run-tests.vs10.cmd" />
     <None Include="run-tests.vs9.cmd" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="frontend">
-      <UniqueIdentifier>{dfa672e2-bbd6-4731-a1f7-726e100f9a55}</UniqueIdentifier>
+    <Filter Include="Frontend">
+      <UniqueIdentifier>{56a87683-e058-4f4a-b189-6e9331a5421c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

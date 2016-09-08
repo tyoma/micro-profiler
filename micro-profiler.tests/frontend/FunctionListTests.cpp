@@ -1,15 +1,13 @@
 #include <frontend/function_list.h>
 
-#include "../Helpers.h"
+#include "Mockups.h"
 
 #include <common/com_helpers.h>
-#include <frontend/symbol_resolver.h>
 
 #include <functional>
 #include <list>
 #include <utility>
 #include <string>
-#include <sstream>
 #include <cmath>
 #include <map>
 #include <memory>
@@ -33,14 +31,6 @@ namespace micro_profiler
 		namespace 
 		{
 			__int64 test_ticks_resolution = 1;
-
-			template <typename T>
-			wstring to_string(const T &value)
-			{
-				wstringstream s;
-				s << value;
-				return s.str();
-			}
 
 			void assert_row(const listview::model &fl, size_t row, const wchar_t* name, const wchar_t* times_called)
 			{
@@ -120,22 +110,6 @@ namespace micro_profiler
 				}
 			};
 
-
-			class sri : public symbol_resolver
-			{
-				mutable map<const void *, wstring> _names;
-
-			public:
-				virtual const wstring &symbol_name_by_va(const void *address) const
-				{
-					return _names[address] = to_string(address);
-				}
-
-				virtual void add_image(const wchar_t * /*image*/, const void * /*base*/)
-				{
-				}
-			};
-
 			// convert decimal point to current(default) locale
 			wstring dp2cl(const wchar_t *input, wchar_t stub_char = L'.')
 			{
@@ -161,13 +135,27 @@ namespace micro_profiler
 		[TestClass]
 		public ref class FunctionListTests
 		{
-		public: 
+			shared_ptr<symbol_resolver>* resolver;
+
+		public:
+			[TestInitialize]
+			void CreateResolver()
+			{
+				resolver = new shared_ptr<symbol_resolver>(new mocks::sri);
+			}
+
+			[TestCleanup]
+			void DestroyResolver()
+			{
+				delete resolver;
+			}
+
+
 			[TestMethod]
 			void CanCreateEmptyFunctionList()
 			{
 				// INIT / ACT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_resolution, *resolver));
 				functions_list &fl = *sp_fl;
 
 				// ACT / ASSERT
@@ -184,13 +172,12 @@ namespace micro_profiler
 					function_statistics(10, 3, 7, 5),
 				};
 				FunctionStatisticsDetailed data[2] = { 0 };
-				shared_ptr<symbol_resolver> resolver(new sri);
 
 				copy(make_pair((void *)1123, s[0]), data[0].Statistics);
 				copy(make_pair((void *)2234, s[1]), data[1].Statistics);
 				
 				// ACT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				fl->update(data, 2);
 
 				// ASSERT
@@ -204,8 +191,7 @@ namespace micro_profiler
 				// INIT
 				function_statistics s1(19, 0, 31, 29);
 				FunctionStatisticsDetailed ms1 = { 0 };
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 
 				copy(make_pair((void *)1123, s1), ms1.Statistics);
 
@@ -255,8 +241,7 @@ namespace micro_profiler
 					function_statistics(5, 0, 10, 7),
 				};
 				FunctionStatisticsDetailed data[3] = { 0 };
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				vector<functions_list::index_type> expected;
 
 				copy(make_pair((void *)1123, s[0]), data[0].Statistics);
@@ -317,8 +302,7 @@ namespace micro_profiler
 				copy(make_pair((void *)5555, s[3]), data2[1].Statistics);
 				copy(make_pair((void *)1123, s[4]), data3[0].Statistics);
 
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				fl->set_order(2, true); // by times called
 				
 				invalidation_tracer ih;
@@ -406,8 +390,7 @@ namespace micro_profiler
 				function_statistics s6(1, 0, 65450031030567000, 23470030000987000, 23470030000987000);
 
 				FunctionStatisticsDetailed data[16] = { 0 };
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver)); // 10 * billion for ticks resolution
+				shared_ptr<functions_list> fl(functions_list::create(10000000000, *resolver)); // 10 * billion for ticks resolution
 
 				copy(make_pair((void *)1123, s1), data[0].Statistics);
 				copy(make_pair((void *)2234, s2), data[1].Statistics);
@@ -466,8 +449,7 @@ namespace micro_profiler
 					function_statistics(15233, 3, 65450, 13470, 6),
 				};
 				FunctionStatisticsDetailed data[4] = { 0 };
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				invalidation_tracer ih;
 
 				copy(make_pair((void *)1995, s[0]), data[0].Statistics);
@@ -775,8 +757,7 @@ namespace micro_profiler
 				};
 				FunctionStatisticsDetailed data[3] = { 0 };
 				const size_t data_size = sizeof(data)/sizeof(data[0]);
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				wstring result;
 
 				copy(make_pair((void *)1995, s[0]), data[0].Statistics);
@@ -822,8 +803,7 @@ namespace micro_profiler
 			void FailOnGettingChildrenListFromEmptyRootList()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 
 				// ACT / ASSERT
 				ASSERT_THROWS(fl->watch_children(0), out_of_range);
@@ -834,9 +814,8 @@ namespace micro_profiler
 			void FailOnGettingChildrenListFromNonEmptyRootList()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, *resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
 
 				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
@@ -862,9 +841,8 @@ namespace micro_profiler
 			void ReturnChildrenModelForAValidRecord()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, *resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
 
 				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
@@ -889,8 +867,7 @@ namespace micro_profiler
 			void LinkedStatisticsObjectIsReturnedForChildren()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[2] = { 0 };
 
 				copy(make_pair((void *)1978, function_statistics()), data[0].Statistics);
@@ -910,8 +887,7 @@ namespace micro_profiler
 			void ChildrenStatisticsForNonEmptyChildren()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[2] = { 0 };
 				FunctionStatistics children_data[4] = { 0 };
 
@@ -944,8 +920,7 @@ namespace micro_profiler
 			void ChildrenStatisticsSorting()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data = { 0 }, data0 = { 0 };
 				FunctionStatistics children_data[4] = { 0 };
 
@@ -988,8 +963,7 @@ namespace micro_profiler
 			void ChildrenStatisticsGetText()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(10, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(10, *resolver));
 				FunctionStatisticsDetailed data = { 0 };
 				FunctionStatistics children_data[2] = { 0 };
 
@@ -1014,8 +988,7 @@ namespace micro_profiler
 			void IncomingDetailStatisticsUpdateNoChildrenStatisticsUpdatesScenarios()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(1, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(1, *resolver));
 				FunctionStatisticsDetailed data_1 = { 0 }, data_2 = { 0 };
 				FunctionStatistics children_data[2] = { 0 };
 				invalidation_tracer t;
@@ -1054,8 +1027,7 @@ namespace micro_profiler
 			void IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(1, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(1, *resolver));
 				FunctionStatisticsDetailed data_1 = { 0 }, data_2 = { 0 };
 				FunctionStatistics children_data[3] = { 0 };
 				invalidation_tracer t;
@@ -1105,8 +1077,7 @@ namespace micro_profiler
 			void GetFunctionAddressFromLinkedChildrenStatistics()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data = { 0 };
 				FunctionStatistics children_data[4] = { 0 };
 
@@ -1136,8 +1107,7 @@ namespace micro_profiler
 			void TrackableIsUsableOnReleasingModel()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[3] = { 0 };
 
 				copy(make_pair((void *)(0x2001 + 5), function_statistics(11)), data[0].Statistics);
@@ -1160,9 +1130,8 @@ namespace micro_profiler
 			void FailOnGettingParentsListFromNonEmptyRootList()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, *resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
 
 				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
@@ -1188,9 +1157,8 @@ namespace micro_profiler
 			void ReturnParentsModelForAValidRecord()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, *resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
 
 				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
@@ -1215,8 +1183,7 @@ namespace micro_profiler
 			void SizeOfParentsListIsReturnedFromParentsModel()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[3] = { 0 };
 				FunctionStatistics children_data[2] = { 0 };
 
@@ -1250,8 +1217,7 @@ namespace micro_profiler
 			void ParentStatisticsIsUpdatedOnGlobalUpdates1()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[4] = { 0 };
 				FunctionStatistics children_data = { 0 };
 
@@ -1288,8 +1254,7 @@ namespace micro_profiler
 			void ParentStatisticsValuesAreFormatted()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[3] = { 0 };
 				FunctionStatistics children_data[3] = { 0 };
 
@@ -1321,8 +1286,7 @@ namespace micro_profiler
 			void ParentStatisticsSorting()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[3] = { 0 };
 				FunctionStatistics children_data[3] = { 0 };
 
@@ -1382,8 +1346,7 @@ namespace micro_profiler
 			void ParentStatisticsResortingCausesInvalidation()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[4] = { 0 };
 				invalidation_tracer t;
 
@@ -1426,8 +1389,7 @@ namespace micro_profiler
 			void ParentStatisticsCausesInvalidationAfterTheSort()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[3] = { 0 };
 				FunctionStatistics children_data[3] = { 0 };
 
@@ -1462,8 +1424,7 @@ namespace micro_profiler
 			void ParentStatisticsIsUpdatedOnGlobalUpdates2()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[3] = { 0 };
 				FunctionStatistics children_data[3] = { 0 };
 
@@ -1506,8 +1467,7 @@ namespace micro_profiler
 			void ParentStatisticsInvalidationOnGlobalUpdates()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[5] = { 0 };
 				invalidation_tracer ih;
 
@@ -1558,8 +1518,7 @@ namespace micro_profiler
 			void GettingAddressOfParentStatisticsItem()
 			{
 				// INIT
-				shared_ptr<symbol_resolver> resolver(new sri);
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, *resolver));
 				FunctionStatisticsDetailed data[3] = { 0 };
 				FunctionStatistics children_data[3] = { 0 };
 

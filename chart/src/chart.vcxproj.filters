@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{8c746e76-8334-427f-863c-07c30b12a042}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\win32">
+      <UniqueIdentifier>{a9a4127d-330b-453f-898d-ade952509332}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win32">
+      <UniqueIdentifier>{aab1f1a2-282f-4507-8b80-6178a63f7584}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="win32\display.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="line.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\charting\win32\display.h">
+      <Filter>win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\charting\display.h" />
+    <ClInclude Include="..\charting\line.h" />
+    <ClInclude Include="..\charting\models.h" />
+    <ClInclude Include="..\charting\types.h" />
+    <ClInclude Include="helpers.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

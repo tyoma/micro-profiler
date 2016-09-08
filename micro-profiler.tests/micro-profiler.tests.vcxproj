@@ -91,7 +91,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>./../micro-profiler;./../libraries</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../micro-profiler;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -121,7 +121,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>./../micro-profiler;./../libraries</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../micro-profiler;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -149,7 +149,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>./../micro-profiler;./../libraries</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../micro-profiler;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -175,7 +175,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>./../micro-profiler;./../libraries</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./../micro-profiler;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -228,6 +228,7 @@
     <ClCompile Include="COMHelpersTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="frontend\ColumnsModelTests.cpp" />
+    <ClCompile Include="frontend\FunctionHistoryTests.cpp" />
     <ClCompile Include="frontend\FunctionListTests.cpp" />
     <ClCompile Include="frontend\OrderedViewTests.cpp" />
     <ClCompile Include="Helpers.cpp" />
@@ -274,6 +275,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assert.h" />
+    <ClInclude Include="frontend\Mockups.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Mockups.h" />
     <ClInclude Include="TracedFunctions.h" />

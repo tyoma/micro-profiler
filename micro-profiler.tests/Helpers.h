@@ -2,6 +2,7 @@
 
 #include <wpl/mt/thread.h>
 #include <algorithm>
+#include <sstream>
 #include <string>
 #include <tchar.h>
 
@@ -66,6 +67,14 @@ namespace micro_profiler
 
 		inline void toupper(std::wstring &s)
 		{	std::transform(s.begin(), s.end(), s.begin(), &towupper);	}
+
+		template <typename T>
+		inline std::wstring to_string(const T &value)
+		{
+			std::wstringstream s;
+			s << value;
+			return s.str();
+		}
 	}
 }
 

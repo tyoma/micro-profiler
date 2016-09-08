@@ -33,6 +33,7 @@ typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
 namespace micro_profiler
 {
+	struct function_history;
 	struct symbol_resolver;
 
 	struct linked_statistics : wpl::ui::listview::model
@@ -48,6 +49,7 @@ namespace micro_profiler
 		virtual index_type get_index(const void *address) const = 0;
 		virtual std::shared_ptr<linked_statistics> watch_children(index_type item) const = 0;
 		virtual std::shared_ptr<linked_statistics> watch_parents(index_type item) const = 0;
+		virtual std::shared_ptr<function_history> get_history(index_type item) const = 0;
 
 		static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 	};

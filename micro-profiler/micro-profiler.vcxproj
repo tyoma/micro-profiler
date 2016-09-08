@@ -94,7 +94,7 @@
       </PrecompiledHeaderOutputFile>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -140,7 +140,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       </PrecompiledHeaderOutputFile>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -184,7 +184,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <Optimization>MinSpace</Optimization>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
@@ -232,7 +232,7 @@ copy "$(OutDir)$(ProjectName).lib" "$(OutDir)$(ProjectName)_$(PlatformName).lib"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>./../libraries;$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <Optimization>MinSpace</Optimization>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>

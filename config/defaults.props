@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)libraries</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>

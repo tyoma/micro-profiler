@@ -186,6 +186,7 @@ namespace micro_profiler
 		virtual void print(wstring &content) const;
 		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
 		virtual shared_ptr<linked_statistics> watch_parents(index_type item) const;
+		virtual shared_ptr<function_history> get_history(index_type item) const;
 	};
 
 
@@ -372,6 +373,11 @@ namespace micro_profiler
 		const statistics_map_detailed::value_type &s = view().at(item);
 
 		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, entry_updated, _resolver));
+	}
+
+	shared_ptr<function_history> functions_list_impl::get_history(index_type /*item*/) const
+	{
+		throw 0;
 	}
 	
 

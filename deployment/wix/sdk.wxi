@@ -7,7 +7,7 @@
 		<File Id="entry.h" Source="$(var.SOURCEDIR)/entry.h" Vital="yes"/>
 		<?if $(var.Platform) = "x64"?>
 			<File Id="micro_profiler.lib" Source="$(var.SOURCEDIRX86)/micro-profiler.lib" Vital="yes"/>
-			<File Id="micro_profiler.lib_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.lib" Vital="yes"/>
+			<File Id="micro_profiler.lib_x64" Source="$(var.SOURCEDIR)/micro-profiler.lib" Name="micro-profiler_x64.lib" Vital="yes"/>
 		<?else?>
 			<File Id="micro_profiler.lib" Source="$(var.SOURCEDIR)/micro-profiler.lib" Vital="yes"/>
 		<?endif?>

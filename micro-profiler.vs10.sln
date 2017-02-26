@@ -78,18 +78,15 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "micro-profiler.installer", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui.samples", "libraries\wpl\ui\samples\ui.samples.vcxproj", "{28031D00-3D0B-EC08-E699-80B31EE58488}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agge", "libraries\agge\src\agge.vcxproj", "{F849E92C-248A-46B2-9EAB-F86578A21316}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agge", "libraries\agge\src\agge\agge.vcxproj", "{F849E92C-248A-46B2-9EAB-F86578A21316}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utee", "libraries\agge\misc\libraries\utee\make\utee.v11.vcxproj", "{4DB73ACE-2D47-4A6C-8213-2BE191DD921F}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agge.tests", "libraries\agge\tests\agge.tests.vcxproj", "{A180777F-1EE0-4E11-90CA-D81B01D45ED3}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394} = {AD0BA725-9F6F-474E-ADB0-1F506B1CD394}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utee", "libraries\utee\make\utee.vcxproj", "{4DB73ACE-2D47-4A6C-8213-2BE191DD921F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{D6AE81FB-2D24-47BD-B23A-6AF09C99B918}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utee-runner", "libraries\agge\misc\libraries\utee\make\utee-runner.v11.vcxproj", "{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utee-runner", "libraries\utee\make\utee-runner.vcxproj", "{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agge.tests", "libraries\agge\tests\agge\agge.tests.vcxproj", "{A180777F-1EE0-4E11-90CA-D81B01D45ED3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -255,6 +252,13 @@ Global
 		{4DB73ACE-2D47-4A6C-8213-2BE191DD921F}.Release|Win32.Build.0 = Release|Win32
 		{4DB73ACE-2D47-4A6C-8213-2BE191DD921F}.Release|x64.ActiveCfg = Release|x64
 		{4DB73ACE-2D47-4A6C-8213-2BE191DD921F}.Release|x64.Build.0 = Release|x64
+		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Debug|Win32.ActiveCfg = Release|Win32
+		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Debug|x64.ActiveCfg = Release|x64
+		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Debug|x64.Build.0 = Release|x64
+		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|Win32.ActiveCfg = Release|Win32
+		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|Win32.Build.0 = Release|Win32
+		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|x64.ActiveCfg = Release|x64
+		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|x64.Build.0 = Release|x64
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Debug|Win32.ActiveCfg = Debug|Win32
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Debug|Win32.Build.0 = Debug|Win32
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Debug|x64.ActiveCfg = Debug|x64
@@ -263,14 +267,6 @@ Global
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Release|Win32.Build.0 = Release|Win32
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Release|x64.ActiveCfg = Release|x64
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Release|x64.Build.0 = Release|x64
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Debug|Win32.ActiveCfg = Release|Win32
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Debug|Win32.Build.0 = Release|Win32
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Debug|x64.ActiveCfg = Release|x64
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Debug|x64.Build.0 = Release|x64
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|Win32.ActiveCfg = Release|Win32
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|Win32.Build.0 = Release|Win32
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|x64.ActiveCfg = Release|x64
-		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

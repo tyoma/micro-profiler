@@ -18,20 +18,6 @@ using namespace wpl::ui;
 
 namespace ut
 {
-	template <typename T, size_t n>
-	static void are_equal(const T (&lhs)[n], const basic_string<T> &rhs, const ut::LocationInfo &location)
-	{
-		if (!(lhs == rhs))
-			throw FailedAssertion("Values are not equal!", location);
-	}
-
-	template <typename T1, size_t n, typename T2, typename T3>
-	inline void are_equal(T1 (&i_lhs)[n], const map<T2, T3> &i_rhs, const LocationInfo &location)
-	{
-		are_equal(std::vector<T1>(i_lhs, i_lhs + n),
-			std::vector<T1>(i_rhs.begin(), i_rhs.end()), location);
-	}
-
 	static bool operator ==(const wpl::ui::listview::columns_model::column &lhs,
 		const wpl::ui::listview::columns_model::column &rhs)
 	{	return lhs.caption == rhs.caption && lhs.width == rhs.width;	}
@@ -373,7 +359,7 @@ namespace micro_profiler
 				cm1->store(*h);
 
 				// ASSERT
-				pair</*const*/ string, int> rints1[] = {
+				pair<const string, int> rints1[] = {
 					make_pair("OrderBy", 0),
 					make_pair("OrderDirection", 0),
 					make_pair("fourth/Width", 4),
@@ -381,7 +367,7 @@ namespace micro_profiler
 					make_pair("id2/Width", 2),
 					make_pair("id3/Width", 3),
 				};
-				pair</*const*/ string, wstring> rstrings1[] = {
+				pair<const string, wstring> rstrings1[] = {
 					make_pair("fourth/Caption", L"Inclusive Time"),
 					make_pair("id1/Caption", L"Index"),
 					make_pair("id2/Caption", L"Function"),
@@ -399,13 +385,13 @@ namespace micro_profiler
 				cm2->store(*h);
 
 				// ASSERT
-				pair</*const*/ string, int> rints2[] = {
+				pair<const string, int> rints2[] = {
 					make_pair("OrderBy", -1),
 					make_pair("OrderDirection", 0),
 					make_pair("id1/Width", 191),
 					make_pair("id2/Width", 171),
 				};
-				pair</*const*/ string, wstring> rstrings2[] = {
+				pair<const string, wstring> rstrings2[] = {
 					make_pair("id1/Caption", L"a first column"),
 					make_pair("id2/Caption", L"a second column"),
 				};
@@ -421,7 +407,7 @@ namespace micro_profiler
 				cm3->store(*h);
 
 				// ASSERT
-				pair</*const*/ string, int> rints3[] = {
+				pair<const string, int> rints3[] = {
 					make_pair("OrderBy", 1),
 					make_pair("OrderDirection", 1),
 					make_pair("id1/Width", 191),

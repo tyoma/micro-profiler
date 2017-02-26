@@ -34,12 +34,11 @@
     <ClInclude Include="TracedFunctions.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="run-tests.vs10.cmd" />
-    <None Include="run-tests.vs9.cmd" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="frontend">
       <UniqueIdentifier>{dfa672e2-bbd6-4731-a1f7-726e100f9a55}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="entry.asm" />
   </ItemGroup>
 </Project>

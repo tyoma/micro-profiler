@@ -10,3 +10,7 @@
 	path = libraries/agge
 	url = git@github.com:tyoma/agge.git
 	branch = master
+[submodule "libraries/utee"]
+	path = libraries/utee
+	url = git@github.com:tyoma/utee.git
+	branch = master

@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="micro-profiler.initializer.cpp" />
-    <ClCompile Include="micro-profiler.initializer.mfc-static.cpp" />
     <ClCompile Include="visualstudio\addin\ProfilerAddin.cpp">
       <Filter>visualstudio\addin</Filter>
     </ClCompile>
@@ -87,7 +85,6 @@
     <ClInclude Include="frontend\ProfilerMainDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>
-    <ClInclude Include="entry.h" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
@@ -110,5 +107,8 @@
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <Filter>visualstudio\vs-extension</Filter>
     </CustomBuild>
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
   </ItemGroup>
 </Project>

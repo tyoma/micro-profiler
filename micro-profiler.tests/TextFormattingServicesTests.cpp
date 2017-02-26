@@ -6,16 +6,6 @@
 
 using namespace std;
 
-namespace ut
-{
-	template <typename T, size_t n>
-	static void are_equal(const T (&lhs)[n], const basic_string<T> &rhs, const ut::LocationInfo &location)
-	{
-		if (!(lhs == rhs))
-			throw FailedAssertion("Values are not equal!", location);
-	}
-}
-
 namespace micro_profiler
 {
 	namespace tests

@@ -7,6 +7,8 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 namespace std
 {
@@ -16,7 +18,6 @@ namespace std
 
 using wpl::mt::thread;
 using namespace std;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
@@ -59,12 +60,8 @@ namespace micro_profiler
 		}
 
 
-		[TestClass]
-		public ref class CallCollectorTests
-		{
-		public:
-			[TestInitialize]
-			void ClearCollectionTraces()
+		begin_test_suite( CallCollectorTests )
+			init( ClearCollectionTraces )
 			{
 				collection_acceptor a;
 
@@ -72,8 +69,7 @@ namespace micro_profiler
 				calls_collector::instance()->read_collected(a);
 			}
 
-			[TestMethod]
-			void CollectNothingOnNoCalls()
+			test( CollectNothingOnNoCalls )
 			{
 				// INIT
 				collection_acceptor a;
@@ -82,12 +78,11 @@ namespace micro_profiler
 				calls_collector::instance()->read_collected(a);
 
 				// ASSERT
-				Assert::IsTrue(a.collected.empty());
+				assert_is_empty(a.collected);
 			}
 
 
-			[TestMethod]
-			void CollectEntryExitOnSimpleExternalFunction()
+			test( CollectEntryExitOnSimpleExternalFunction )
 			{
 				// INIT
 				collection_acceptor a;
@@ -97,16 +92,15 @@ namespace micro_profiler
 				calls_collector::instance()->read_collected(a);
 
 				// ASSERT
-				Assert::IsFalse(a.collected.empty());
-				Assert::IsTrue(this_thread::get_id() == a.collected[0].first);
-				Assert::IsTrue(2 == a.collected[0].second.size());
-				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
+				assert_is_false(a.collected.empty());
+				assert_equal(this_thread::get_id(), a.collected[0].first);
+				assert_equal(2u, a.collected[0].second.size());
+				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
 			}
 
 
-			[TestMethod]
-			void ReadNothingAfterPreviousReadingAndNoCalls()
+			test( ReadNothingAfterPreviousReadingAndNoCalls )
 			{
 				// INIT
 				collection_acceptor a;
@@ -120,12 +114,11 @@ namespace micro_profiler
 				calls_collector::instance()->read_collected(a);
 
 				// ASSERT
-				Assert::IsTrue(a.collected.empty());
+				assert_is_empty(a.collected);
 			}
 
 
-			[TestMethod]
-			void ReadCollectedFromOtherThreads()
+			test( ReadCollectedFromOtherThreads )
 			{
 				// INIT
 				collection_acceptor a;
@@ -149,22 +142,21 @@ namespace micro_profiler
 				if (threadid1 > threadid2)
 					swap(threadid1, threadid2);
 
-				Assert::IsTrue(2 == a.collected.size());
+				assert_equal(2u, a.collected.size());
 
-				Assert::IsTrue(threadid1 == a.collected[0].first);
-				Assert::IsTrue(2 == a.collected[0].second.size());
-				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
+				assert_equal(threadid1, a.collected[0].first);
+				assert_equal(2u, a.collected[0].second.size());
+				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
 
-				Assert::IsTrue(threadid2 == a.collected[1].first);
-				Assert::IsTrue(2 == a.collected[1].second.size());
-				Assert::IsTrue(a.collected[1].second[0].timestamp < a.collected[1].second[1].timestamp);
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[1].second[0].callee) - 5));
+				assert_equal(threadid2, a.collected[1].first);
+				assert_equal(2u, a.collected[1].second.size());
+				assert_is_true(a.collected[1].second[0].timestamp < a.collected[1].second[1].timestamp);
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<unsigned __int64>(a.collected[1].second[0].callee) - 5));
 			}
 
 
-			[TestMethod]
-			void CollectEntryExitOnNestingFunction()
+			test( CollectEntryExitOnNestingFunction )
 			{
 				// INIT
 				collection_acceptor a;
@@ -174,33 +166,30 @@ namespace micro_profiler
 				calls_collector::instance()->read_collected(a);
 
 				// ASSERT
-				Assert::IsFalse(a.collected.empty());
-				Assert::IsTrue(this_thread::get_id() == a.collected[0].first);
-				Assert::IsTrue(4 == a.collected[0].second.size());
-				Assert::IsTrue(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				Assert::IsTrue(a.collected[0].second[1].timestamp < a.collected[0].second[2].timestamp);
-				Assert::IsTrue(a.collected[0].second[2].timestamp < a.collected[0].second[3].timestamp);
-				Assert::IsTrue(&traced::nesting1 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
-				Assert::IsTrue(&traced::sleep_20 == (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[1].callee) - 5));
-				Assert::IsTrue(0 == a.collected[0].second[2].callee);
-				Assert::IsTrue(0 == a.collected[0].second[3].callee);
+				assert_is_false(a.collected.empty());
+				assert_equal(this_thread::get_id(), a.collected[0].first);
+				assert_equal(4u, a.collected[0].second.size());
+				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
+				assert_is_true(a.collected[0].second[1].timestamp < a.collected[0].second[2].timestamp);
+				assert_is_true(a.collected[0].second[2].timestamp < a.collected[0].second[3].timestamp);
+				assert_equal(&traced::nesting1, (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[0].callee) - 5));
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<unsigned __int64>(a.collected[0].second[1].callee) - 5));
+				assert_null(a.collected[0].second[2].callee);
+				assert_null(a.collected[0].second[3].callee);
 			}
 
 
-			[TestMethod]
-			void ProfilerLatencyGreaterThanZero()
+			test( ProfilerLatencyGreaterThanZero )
 			{
 				// INIT / ACT
 				unsigned __int64 profiler_latency = calls_collector::instance()->profiler_latency();
 
 				// ASSERT
-				Assert::IsTrue(profiler_latency > 0);
-				System::Diagnostics::Debug::WriteLine(profiler_latency);
+				assert_is_true(profiler_latency > 0);
 			}
 
 
-			[TestMethod]
-			void MaxTraceLengthIsLimited()
+			test( MaxTraceLengthIsLimited )
 			{
 				// INIT
 				calls_collector c1(67), c2(123), c3(127);
@@ -228,31 +217,29 @@ namespace micro_profiler
 				}
 
 				// ASSERT
-				Assert::IsTrue(a1.collected.size() == 20);
-				Assert::IsTrue(a2.collected.size() == 20);
-				Assert::IsTrue(a3.collected.size() == 10);
+				assert_equal(20u, a1.collected.size());
+				assert_equal(20u, a2.collected.size());
+				assert_equal(10u, a3.collected.size());
 			}
 
 
-			[TestMethod]
-			void ReplyMaxTraceLength()
+			test( ReplyMaxTraceLength )
 			{
 				// INIT
 				calls_collector c1(67), c2(123), c3(10050);
 
 				// ACT / ASSERT
-				Assert::IsTrue(67 == c1.trace_limit());
-				Assert::IsTrue(123 == c2.trace_limit());
-				Assert::IsTrue(10050 == c3.trace_limit());
+				assert_equal(67u, c1.trace_limit());
+				assert_equal(123u, c2.trace_limit());
+				assert_equal(10050u, c3.trace_limit());
 			}
 
 
-			[TestMethod]
-			void GlobalCollectorInstanceTraceLimitVerify()
+			test( GlobalCollectorInstanceTraceLimitVerify )
 			{
 				// INIT / ACT / ASSERT
-				Assert::IsTrue(5000000 == calls_collector::instance()->trace_limit());
+				assert_equal(5000000u, calls_collector::instance()->trace_limit());
 			}
-		};
+		end_test_suite
 	}
 }

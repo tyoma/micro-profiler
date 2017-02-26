@@ -3,9 +3,10 @@
 #include "Helpers.h"
 
 #include <map>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 using namespace std;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
@@ -22,23 +23,18 @@ namespace micro_profiler
 			}
 		}
 
-		[TestClass]
-		public ref class AnalyzerTests
-		{
-		public: 
-			[TestMethod]
-			void NewAnalyzerHasNoFunctionRecords()
+		begin_test_suite( AnalyzerTests )
+			test( NewAnalyzerHasNoFunctionRecords )
 			{
 				// INIT / ACT
 				analyzer a;
 
 				// ACT / ASSERT
-				Assert::IsTrue(a.begin() == a.end());
+				assert_equal(a.begin(), a.end());
 			}
 
 
-			[TestMethod]
-			void EnteringOnlyToFunctionsLeavesOnlyEmptyStatTraces()
+			test( EnteringOnlyToFunctionsLeavesOnlyEmptyStatTraces )
 			{
 				// INIT
 				analyzer a;
@@ -53,13 +49,12 @@ namespace micro_profiler
 				as_acceptor.accept_calls(2, trace, array_size(trace));
 
 				// ASSERT
-				Assert::IsTrue(2 == distance(a.begin(), a.end()));
-				Assert::IsTrue(has_empty_statistics(a));
+				assert_equal(2, distance(a.begin(), a.end()));
+				assert_is_true(has_empty_statistics(a));
 			}
 
 
-			[TestMethod]
-			void EvaluateSeveralFunctionDurations()
+			test( EvaluateSeveralFunctionDurations )
 			{
 				// INIT
 				analyzer a;
@@ -80,28 +75,27 @@ namespace micro_profiler
 				// ASSERT
 				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
 
-				Assert::IsTrue(3 == m.size());
+				assert_equal(3u, m.size());
 
 				map<const void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
 
 				++i2, ++++i3;
 
-				Assert::IsTrue(1 == i1->second.times_called);
-				Assert::IsTrue(5 == i1->second.inclusive_time);
-				Assert::IsTrue(5 == i1->second.exclusive_time);
+				assert_equal(1u, i1->second.times_called);
+				assert_equal(5, i1->second.inclusive_time);
+				assert_equal(5, i1->second.exclusive_time);
 
-				Assert::IsTrue(2 == i2->second.times_called);
-				Assert::IsTrue(14 == i2->second.inclusive_time);
-				Assert::IsTrue(11 == i2->second.exclusive_time);
+				assert_equal(2u, i2->second.times_called);
+				assert_equal(14, i2->second.inclusive_time);
+				assert_equal(11, i2->second.exclusive_time);
 
-				Assert::IsTrue(1 == i3->second.times_called);
-				Assert::IsTrue(3 == i3->second.inclusive_time);
-				Assert::IsTrue(3 == i3->second.exclusive_time);
+				assert_equal(1u, i3->second.times_called);
+				assert_equal(3, i3->second.inclusive_time);
+				assert_equal(3, i3->second.exclusive_time);
 			}
 
 
-			[TestMethod]
-			void AnalyzerCollectsDetailedStatistics()
+			test( AnalyzerCollectsDetailedStatistics )
 			{
 				// INIT
 				analyzer a;
@@ -124,18 +118,17 @@ namespace micro_profiler
 				// ASSERT
 				map<const void *, function_statistics_detailed> m(a.begin(), a.end());	// use map to ensure proper sorting
 
-				Assert::IsTrue(5 == m.size());
+				assert_equal(5u, m.size());
 
-				Assert::IsTrue(1 == m[(void *)1].callees.size());
-				Assert::IsTrue(2 == m[(void *)2].callees.size());
-				Assert::IsTrue(0 == m[(void *)11].callees.size());
-				Assert::IsTrue(0 == m[(void *)21].callees.size());
-				Assert::IsTrue(0 == m[(void *)22].callees.size());
+				assert_equal(1u, m[(void *)1].callees.size());
+				assert_equal(2u, m[(void *)2].callees.size());
+				assert_equal(0u, m[(void *)11].callees.size());
+				assert_equal(0u, m[(void *)21].callees.size());
+				assert_equal(0u, m[(void *)22].callees.size());
 			}
 
 
-			[TestMethod]
-			void ProfilerLatencyIsTakenIntoAccount()
+			test( ProfilerLatencyIsTakenIntoAccount )
 			{
 				// INIT
 				analyzer a(1);
@@ -156,28 +149,27 @@ namespace micro_profiler
 				// ASSERT
 				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
 
-				Assert::IsTrue(3 == m.size());
+				assert_equal(3u, m.size());
 
 				map<const void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
 
 				++i2, ++++i3;
 
-				Assert::IsTrue(1 == i1->second.times_called);
-				Assert::IsTrue(4 == i1->second.inclusive_time);
-				Assert::IsTrue(4 == i1->second.exclusive_time);
+				assert_equal(1u, i1->second.times_called);
+				assert_equal(4, i1->second.inclusive_time);
+				assert_equal(4, i1->second.exclusive_time);
 
-				Assert::IsTrue(2 == i2->second.times_called);
-				Assert::IsTrue(12 == i2->second.inclusive_time);
-				Assert::IsTrue(8 == i2->second.exclusive_time);
+				assert_equal(2u, i2->second.times_called);
+				assert_equal(12, i2->second.inclusive_time);
+				assert_equal(8, i2->second.exclusive_time);
 
-				Assert::IsTrue(1 == i3->second.times_called);
-				Assert::IsTrue(2 == i3->second.inclusive_time);
-				Assert::IsTrue(2 == i3->second.exclusive_time);
+				assert_equal(1u, i3->second.times_called);
+				assert_equal(2, i3->second.inclusive_time);
+				assert_equal(2, i3->second.exclusive_time);
 			}
 
 
-			[TestMethod]
-			void DifferentShadowStacksAreMaintainedForEachThread()
+			test( DifferentShadowStacksAreMaintainedForEachThread )
 			{
 				// INIT
 				analyzer a;
@@ -195,32 +187,31 @@ namespace micro_profiler
 				a.accept_calls(2, trace2, array_size(trace2));
 
 				// ASSERT
-				Assert::IsTrue(has_empty_statistics(a));
+				assert_is_true(has_empty_statistics(a));
 
 				// ACT
 				a.accept_calls(1, trace3, array_size(trace3));
 
 				// ASSERT
-				Assert::IsTrue(1 == distance(a.begin(), a.end()));
-				Assert::IsTrue((void *)1234 == a.begin()->first);
-				Assert::IsTrue(1 == a.begin()->second.times_called);
-				Assert::IsTrue(7 == a.begin()->second.inclusive_time);
-				Assert::IsTrue(7 == a.begin()->second.exclusive_time);
+				assert_equal(1, distance(a.begin(), a.end()));
+				assert_equal((void *)1234, a.begin()->first);
+				assert_equal(1u, a.begin()->second.times_called);
+				assert_equal(7, a.begin()->second.inclusive_time);
+				assert_equal(7, a.begin()->second.exclusive_time);
 
 				// ACT
 				a.accept_calls(2, trace4, array_size(trace4));
 
 				// ASSERT
-				Assert::IsTrue(1 == distance(a.begin(), a.end()));
-				Assert::IsTrue((void *)1234 == a.begin()->first);
-				Assert::IsTrue(2 == a.begin()->second.times_called);
-				Assert::IsTrue(13 == a.begin()->second.inclusive_time);
-				Assert::IsTrue(13 == a.begin()->second.exclusive_time);
+				assert_equal(1, distance(a.begin(), a.end()));
+				assert_equal((void *)1234, a.begin()->first);
+				assert_equal(2u, a.begin()->second.times_called);
+				assert_equal(13, a.begin()->second.inclusive_time);
+				assert_equal(13, a.begin()->second.exclusive_time);
 			}
 
 
-			[TestMethod]
-			void ClearingRemovesPreviousStatButLeavesStackStates()
+			test( ClearingRemovesPreviousStatButLeavesStackStates )
 			{
 				// INIT
 				analyzer a;
@@ -241,12 +232,12 @@ namespace micro_profiler
 				a.accept_calls(2, trace2, array_size(trace2));
 
 				// ASSERT
-				Assert::IsTrue(1 == distance(a.begin(), a.end()));
-				Assert::IsTrue((void *)2234 == a.begin()->first);
-				Assert::IsTrue(1 == a.begin()->second.times_called);
-				Assert::IsTrue(20 == a.begin()->second.inclusive_time);
-				Assert::IsTrue(20 == a.begin()->second.exclusive_time);
+				assert_equal(1, distance(a.begin(), a.end()));
+				assert_equal((void *)2234, a.begin()->first);
+				assert_equal(1u, a.begin()->second.times_called);
+				assert_equal(20, a.begin()->second.inclusive_time);
+				assert_equal(20, a.begin()->second.exclusive_time);
 			}
-		};
+		end_test_suite
 	}
 }

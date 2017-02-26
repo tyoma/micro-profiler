@@ -5,25 +5,19 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 using namespace std;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
 	namespace tests
 	{
-		[TestClass]
-		[DeploymentItem("symbol_container_1.dll")]
-		[DeploymentItem("symbol_container_2.dll")]
-		[DeploymentItem("symbol_container_3_nosymbols.dll")]
-		public ref class ImageLoadQueueTests
-		{
+		begin_test_suite( ImageLoadQueueTests )
 			const vector<image> *_images;
 
-		public:
-			[TestInitialize]
-			void LoadImages()
+			init( LoadImages )
 			{
 				image images[] = {
 					image(_T("symbol_container_1.dll")),
@@ -34,16 +28,14 @@ namespace micro_profiler
 				_images = new vector<image>(images, images + _countof(images));
 			}
 
-			[TestCleanup]
-			void FreeImages()
+			teardown( FreeImages )
 			{
 				delete _images;
 				_images = 0;
 			}
 
 
-			[TestMethod]
-			void NoChangesIfNoLoadsUnloadsOccured()
+			test( NoChangesIfNoLoadsUnloadsOccured )
 			{
 				// INIT
 				image_load_queue q;
@@ -53,13 +45,12 @@ namespace micro_profiler
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
-				Assert::IsTrue(loaded_images.empty());
-				Assert::IsTrue(unloaded_images.empty());
+				assert_is_empty(loaded_images);
+				assert_is_empty(unloaded_images);
 			}
 
 
-			[TestMethod]
-			void LoadEventAddressIsTranslatedToPathAndBaseAddressInTheResult()
+			test( LoadEventAddressIsTranslatedToPathAndBaseAddressInTheResult )
 			{
 				// INIT
 				image_load_queue q;
@@ -70,13 +61,13 @@ namespace micro_profiler
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
-				Assert::IsTrue(1u == loaded_images.size());
-				Assert::IsTrue(unloaded_images.empty());
+				assert_equal(1u, loaded_images.size());
+				assert_is_empty(unloaded_images);
 
 				toupper(loaded_images[0].second);
 
-				Assert::IsTrue(loaded_images[0].first == _images->at(0).load_address());
-				Assert::IsTrue(wstring::npos != loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+				assert_equal(loaded_images[0].first, _images->at(0).load_address());
+				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
 				q.load(_images->at(1).get_symbol_address("get_function_addresses_2"));
@@ -84,21 +75,20 @@ namespace micro_profiler
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
-				Assert::IsTrue(2u == loaded_images.size());
-				Assert::IsTrue(unloaded_images.empty());
+				assert_equal(2u, loaded_images.size());
+				assert_is_empty(unloaded_images);
 
 				toupper(loaded_images[0].second);
 				toupper(loaded_images[1].second);
 
-				Assert::IsTrue(loaded_images[0].first == _images->at(1).load_address());
-				Assert::IsTrue(wstring::npos != loaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				Assert::IsTrue(loaded_images[1].first == _images->at(2).load_address());
-				Assert::IsTrue(wstring::npos != loaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
+				assert_equal(loaded_images[0].first, _images->at(1).load_address());
+				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
+				assert_equal(loaded_images[1].first, _images->at(2).load_address());
+				assert_not_equal(wstring::npos, loaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
 
 
-			[TestMethod]
-			void UnloadEventAddressIsTranslaredToPathAndBaseAddressInTheResult()
+			test( UnloadEventAddressIsTranslaredToPathAndBaseAddressInTheResult )
 			{
 				// INIT
 				image_load_queue q;
@@ -109,13 +99,13 @@ namespace micro_profiler
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
-				Assert::IsTrue(loaded_images.empty());
-				Assert::IsTrue(1u == unloaded_images.size());
+				assert_is_empty(loaded_images);
+				assert_equal(1u, unloaded_images.size());
 
 				toupper(unloaded_images[0].second);
 
-				Assert::IsTrue(unloaded_images[0].first == _images->at(0).load_address());
-				Assert::IsTrue(wstring::npos != unloaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+				assert_equal(unloaded_images[0].first, _images->at(0).load_address());
+				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
 				q.unload(_images->at(1).get_symbol_address("get_function_addresses_2"));
@@ -123,21 +113,20 @@ namespace micro_profiler
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
-				Assert::IsTrue(loaded_images.empty());
-				Assert::IsTrue(2u == unloaded_images.size());
+				assert_is_empty(loaded_images);
+				assert_equal(2u, unloaded_images.size());
 
 				toupper(unloaded_images[0].second);
 				toupper(unloaded_images[1].second);
 
-				Assert::IsTrue(unloaded_images[0].first == _images->at(1).load_address());
-				Assert::IsTrue(wstring::npos != unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				Assert::IsTrue(unloaded_images[1].first == _images->at(2).load_address());
-				Assert::IsTrue(wstring::npos != unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
+				assert_equal(unloaded_images[0].first, _images->at(1).load_address());
+				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
+				assert_equal(unloaded_images[1].first, _images->at(2).load_address());
+				assert_not_equal(wstring::npos, unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
 
 
-			[TestMethod]
-			void MixedEventsAreTranslatedToImageInfoResultPathAndBaseAddressInTheResult()
+			test( MixedEventsAreTranslatedToImageInfoResultPathAndBaseAddressInTheResult )
 			{
 				// INIT
 				image_load_queue q;
@@ -150,20 +139,20 @@ namespace micro_profiler
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
-				Assert::IsTrue(1u == loaded_images.size());
-				Assert::IsTrue(2u == unloaded_images.size());
+				assert_equal(1u, loaded_images.size());
+				assert_equal(2u, unloaded_images.size());
 
 				toupper(loaded_images[0].second);
 				toupper(unloaded_images[0].second);
 				toupper(unloaded_images[1].second);
 
-				Assert::IsTrue(loaded_images[0].first == _images->at(0).load_address());
-				Assert::IsTrue(wstring::npos != loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
-				Assert::IsTrue(unloaded_images[0].first == _images->at(1).load_address());
-				Assert::IsTrue(wstring::npos != unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				Assert::IsTrue(unloaded_images[1].first == _images->at(2).load_address());
-				Assert::IsTrue(wstring::npos != unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
+				assert_equal(loaded_images[0].first, _images->at(0).load_address());
+				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+				assert_equal(unloaded_images[0].first, _images->at(1).load_address());
+				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
+				assert_equal(unloaded_images[1].first, _images->at(2).load_address());
+				assert_not_equal(wstring::npos, unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
-		};
+		end_test_suite
 	}
 }

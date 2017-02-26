@@ -4,6 +4,8 @@
 
 #include <map>
 #include <unordered_map>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 namespace std
 {
@@ -11,7 +13,6 @@ namespace std
 }
 
 using namespace std;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
@@ -27,12 +28,8 @@ namespace micro_profiler
 			{	function_statistics::add_call(level, inclusive_time, exclusive_time);	}
 		};
 
-		[TestClass]
-		public ref class ShadowStackTests
-		{
-		public: 
-			[TestMethod]
-			void UpdatingWithEmptyTraceProvidesNoStatUpdates()
+		begin_test_suite( ShadowStackTests )
+			test( UpdatingWithEmptyTraceProvidesNoStatUpdates )
 			{
 				// INIT
 				shadow_stack< unordered_map<const void *, function_statistics> > ss;
@@ -43,12 +40,11 @@ namespace micro_profiler
 				ss.update(trace.begin(), trace.end(), statistics);
 
 				// ASSERT
-				Assert::IsTrue(statistics.empty());
+				assert_is_empty(statistics);
 			}
 
 
-			[TestMethod]
-			void UpdatingWithSimpleEnterExitAtOnceStoresDuration()
+			test( UpdatingWithSimpleEnterExitAtOnceStoresDuration )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -66,39 +62,38 @@ namespace micro_profiler
 				ss.update(trace1, end(trace1), statistics);
 
 				// ASSERT
-				Assert::IsTrue(1 == statistics.size());
-				Assert::IsTrue(statistics.begin()->first == (void *)0x01234567);
-				Assert::IsTrue(statistics.begin()->second.times_called == 1);
-				Assert::IsTrue(statistics.begin()->second.inclusive_time == 13);
-				Assert::IsTrue(statistics.begin()->second.exclusive_time == 13);
-				Assert::IsTrue(statistics.begin()->second.max_call_time == 13);
+				assert_equal(1u, statistics.size());
+				assert_equal(statistics.begin()->first, (void *)0x01234567);
+				assert_equal(1u, statistics.begin()->second.times_called);
+				assert_equal(13, statistics.begin()->second.inclusive_time);
+				assert_equal(13, statistics.begin()->second.exclusive_time);
+				assert_equal(13, statistics.begin()->second.max_call_time);
 
 				// ACT
 				ss.update(trace2, end(trace2), statistics);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics.size());
+				assert_equal(2u, statistics.size());
 
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
-				Assert::IsTrue(i1->first == (void *)0x01234567);
-				Assert::IsTrue(i1->second.times_called == 1);
-				Assert::IsTrue(i1->second.inclusive_time == 13);
-				Assert::IsTrue(i1->second.exclusive_time == 13);
-				Assert::IsTrue(i1->second.max_call_time == 13);
+				assert_equal(i1->first, (void *)0x01234567);
+				assert_equal(1u, i1->second.times_called);
+				assert_equal(13, i1->second.inclusive_time);
+				assert_equal(13, i1->second.exclusive_time);
+				assert_equal(13, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
-				Assert::IsTrue(i2->second.times_called == 1);
-				Assert::IsTrue(i2->second.inclusive_time == 29);
-				Assert::IsTrue(i2->second.exclusive_time == 29);
-				Assert::IsTrue(i2->second.max_call_time == 29);
+				assert_equal(i2->first, (void *)0x0bcdef12);
+				assert_equal(1u, i2->second.times_called);
+				assert_equal(29, i2->second.inclusive_time);
+				assert_equal(29, i2->second.exclusive_time);
+				assert_equal(29, i2->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void UpdatingWithSimpleEnterExitAtSeparateTimesStoresDuration()
+			test( UpdatingWithSimpleEnterExitAtSeparateTimesStoresDuration )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -112,56 +107,55 @@ namespace micro_profiler
 				ss.update(trace1, end(trace1), statistics);
 
 				// ASSERT
-				Assert::IsTrue(1 == statistics.size());
-				Assert::IsTrue(statistics.begin()->first == (void *)0x01234567);
-				Assert::IsTrue(statistics.begin()->second.times_called == 0);
-				Assert::IsTrue(statistics.begin()->second.inclusive_time == 0);
-				Assert::IsTrue(statistics.begin()->second.exclusive_time == 0);
-				Assert::IsTrue(statistics.begin()->second.max_call_time == 0);
+				assert_equal(1u, statistics.size());
+				assert_equal(statistics.begin()->first, (void *)0x01234567);
+				assert_equal(0u, statistics.begin()->second.times_called);
+				assert_equal(0, statistics.begin()->second.inclusive_time);
+				assert_equal(0, statistics.begin()->second.exclusive_time);
+				assert_equal(0, statistics.begin()->second.max_call_time);
 
 				// ACT
 				ss.update(trace2, end(trace2), statistics);
 
 				// ASSERT
-				Assert::IsTrue(1 == statistics.size());
-				Assert::IsTrue(statistics.begin()->first == (void *)0x01234567);
-				Assert::IsTrue(statistics.begin()->second.times_called == 1);
-				Assert::IsTrue(statistics.begin()->second.inclusive_time == 13);
-				Assert::IsTrue(statistics.begin()->second.exclusive_time == 13);
-				Assert::IsTrue(statistics.begin()->second.max_call_time == 13);
+				assert_equal(1u, statistics.size());
+				assert_equal(statistics.begin()->first, (void *)0x01234567);
+				assert_equal(1u, statistics.begin()->second.times_called);
+				assert_equal(13, statistics.begin()->second.inclusive_time);
+				assert_equal(13, statistics.begin()->second.exclusive_time);
+				assert_equal(13, statistics.begin()->second.max_call_time);
 
 				// ACT
 				ss.update(trace3, end(trace3), statistics);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics.size());
+				assert_equal(2u, statistics.size());
 
 				// ACT
 				ss.update(trace4, end(trace4), statistics);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics.size());
+				assert_equal(2u, statistics.size());
 
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
-				Assert::IsTrue(i1->first == (void *)0x01234567);
-				Assert::IsTrue(i1->second.times_called == 1);
-				Assert::IsTrue(i1->second.inclusive_time == 13);
-				Assert::IsTrue(i1->second.exclusive_time == 13);
-				Assert::IsTrue(i1->second.max_call_time == 13);
+				assert_equal(i1->first, (void *)0x01234567);
+				assert_equal(1u, i1->second.times_called);
+				assert_equal(13, i1->second.inclusive_time);
+				assert_equal(13, i1->second.exclusive_time);
+				assert_equal(13, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
-				Assert::IsTrue(i2->second.times_called == 1);
-				Assert::IsTrue(i2->second.inclusive_time == 29);
-				Assert::IsTrue(i2->second.exclusive_time == 29);
-				Assert::IsTrue(i2->second.max_call_time == 29);
+				assert_equal(i2->first, (void *)0x0bcdef12);
+				assert_equal(1u, i2->second.times_called);
+				assert_equal(29, i2->second.inclusive_time);
+				assert_equal(29, i2->second.exclusive_time);
+				assert_equal(29, i2->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void UpdatingWithEnterExitSequenceStoresStatsOnlyAtExitsMakesEmptyEntriesOnEnters()
+			test( UpdatingWithEnterExitSequenceStoresStatsOnlyAtExitsMakesEmptyEntriesOnEnters )
 			{
 				// INIT
 				shadow_stack< unordered_map<const void *, function_statistics> > ss1, ss2;
@@ -183,29 +177,28 @@ namespace micro_profiler
 				ss2.update(trace2, end(trace2), statistics2);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics1.size());
-				Assert::IsTrue(statistics1[(void *)0x01234567].times_called == 0);
-				Assert::IsTrue(statistics1[(void *)0x01234567].inclusive_time == 0);
-				Assert::IsTrue(statistics1[(void *)0x01234567].max_call_time == 0);
-				Assert::IsTrue(statistics1[(void *)0x01234568].times_called == 1);
-				Assert::IsTrue(statistics1[(void *)0x01234568].inclusive_time == 6);
-				Assert::IsTrue(statistics1[(void *)0x01234568].max_call_time == 6);
+				assert_equal(2u, statistics1.size());
+				assert_equal(0u, statistics1[(void *)0x01234567].times_called);
+				assert_equal(0, statistics1[(void *)0x01234567].inclusive_time);
+				assert_equal(0, statistics1[(void *)0x01234567].max_call_time);
+				assert_equal(1u, statistics1[(void *)0x01234568].times_called);
+				assert_equal(6, statistics1[(void *)0x01234568].inclusive_time);
+				assert_equal(6, statistics1[(void *)0x01234568].max_call_time);
 
-				Assert::IsTrue(3 == statistics2.size());
-				Assert::IsTrue(statistics2[(void *)0x0bcdef12].times_called == 0);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef12].inclusive_time == 0);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef12].max_call_time == 0);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef13].times_called == 0);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef13].inclusive_time == 0);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef13].max_call_time == 0);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef14].times_called == 1);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef14].inclusive_time == 4);
-				Assert::IsTrue(statistics2[(void *)0x0bcdef14].max_call_time == 4);
+				assert_equal(3u, statistics2.size());
+				assert_equal(0u, statistics2[(void *)0x0bcdef12].times_called);
+				assert_equal(0, statistics2[(void *)0x0bcdef12].inclusive_time);
+				assert_equal(0, statistics2[(void *)0x0bcdef12].max_call_time);
+				assert_equal(0u, statistics2[(void *)0x0bcdef13].times_called);
+				assert_equal(0, statistics2[(void *)0x0bcdef13].inclusive_time);
+				assert_equal(0, statistics2[(void *)0x0bcdef13].max_call_time);
+				assert_equal(1u, statistics2[(void *)0x0bcdef14].times_called);
+				assert_equal(4, statistics2[(void *)0x0bcdef14].inclusive_time);
+				assert_equal(4, statistics2[(void *)0x0bcdef14].max_call_time);
 			}
 
 
-			[TestMethod]
-			void UpdatingWithEnterExitSequenceStoresStatsForAllExits()
+			test( UpdatingWithEnterExitSequenceStoresStatsForAllExits )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -221,26 +214,25 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics.size());
+				assert_equal(2u, statistics.size());
 
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
 
 				++i2;
 
-				Assert::IsTrue(i1->first == (void *)0x01234567);
-				Assert::IsTrue(i1->second.times_called == 1);
-				Assert::IsTrue(i1->second.inclusive_time == 37);
-				Assert::IsTrue(i1->second.max_call_time == 37);
+				assert_equal(i1->first, (void *)0x01234567);
+				assert_equal(1u, i1->second.times_called);
+				assert_equal(37, i1->second.inclusive_time);
+				assert_equal(37, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
-				Assert::IsTrue(i2->second.times_called == 1);
-				Assert::IsTrue(i2->second.inclusive_time == 6);
-				Assert::IsTrue(i2->second.max_call_time == 6);
+				assert_equal(i2->first, (void *)0x0bcdef12);
+				assert_equal(1u, i2->second.times_called);
+				assert_equal(6, i2->second.inclusive_time);
+				assert_equal(6, i2->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void TraceStatisticsIsAddedToExistingEntries()
+			test( TraceStatisticsIsAddedToExistingEntries )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -271,35 +263,34 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				Assert::IsTrue(3 == statistics.size());
+				assert_equal(3u, statistics.size());
 
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
 
 				++i2;
 				++++i3;
 
-				Assert::IsTrue(i1->first == (void *)0x01234567);
-				Assert::IsTrue(i1->second.times_called == 3);
-				Assert::IsTrue(i1->second.inclusive_time == 1198);
-				Assert::IsTrue(i1->second.exclusive_time == 1190);
-				Assert::IsTrue(i1->second.max_call_time == 25);
+				assert_equal(i1->first, (void *)0x01234567);
+				assert_equal(3u, i1->second.times_called);
+				assert_equal(1198, i1->second.inclusive_time);
+				assert_equal(1190, i1->second.exclusive_time);
+				assert_equal(25, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->first == (void *)0x0bcdef12);
-				Assert::IsTrue(i2->second.times_called == 5);
-				Assert::IsTrue(i2->second.inclusive_time == 1205);
-				Assert::IsTrue(i2->second.exclusive_time == 1192);
-				Assert::IsTrue(i2->second.max_call_time == 14);
+				assert_equal(i2->first, (void *)0x0bcdef12);
+				assert_equal(5u, i2->second.times_called);
+				assert_equal(1205, i2->second.inclusive_time);
+				assert_equal(1192, i2->second.exclusive_time);
+				assert_equal(14, i2->second.max_call_time);
 
-				Assert::IsTrue(i3->first == (void *)0xabcdef01);
-				Assert::IsTrue(i3->second.times_called == 7);
-				Assert::IsTrue(i3->second.inclusive_time == 1170);
-				Assert::IsTrue(i3->second.exclusive_time == 117);
-				Assert::IsTrue(i3->second.max_call_time == 112);
+				assert_equal(i3->first, (void *)0xabcdef01);
+				assert_equal(7u, i3->second.times_called);
+				assert_equal(1170, i3->second.inclusive_time);
+				assert_equal(117, i3->second.exclusive_time);
+				assert_equal(112, i3->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void EvaluateExclusiveTimeForASingleChildCall()
+			test( EvaluateExclusiveTimeForASingleChildCall )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -324,40 +315,39 @@ namespace micro_profiler
 				ss.update(trace2, end(trace2), statistics);
 
 				// ASSERT
-				Assert::IsTrue(5 == statistics.size());
+				assert_equal(5u, statistics.size());
 
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin()), i4(statistics.begin());
 
 				++i1, ++++i2, ++++++i3, ++++++++i4;
 
-				Assert::IsTrue(i1->first == (void *)0x01234560);
-				Assert::IsTrue(i1->second.times_called == 1);
-				Assert::IsTrue(i1->second.inclusive_time == 37);
-				Assert::IsTrue(i1->second.exclusive_time == 31);
-				Assert::IsTrue(i1->second.max_call_time == 37);
+				assert_equal(i1->first, (void *)0x01234560);
+				assert_equal(1u, i1->second.times_called);
+				assert_equal(37, i1->second.inclusive_time);
+				assert_equal(31, i1->second.exclusive_time);
+				assert_equal(37, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->first == (void *)0x0bcdef10);
-				Assert::IsTrue(i2->second.times_called == 1);
-				Assert::IsTrue(i2->second.inclusive_time == 6);
-				Assert::IsTrue(i2->second.exclusive_time == 6);
-				Assert::IsTrue(i2->second.max_call_time == 6);
+				assert_equal(i2->first, (void *)0x0bcdef10);
+				assert_equal(1u, i2->second.times_called);
+				assert_equal(6, i2->second.inclusive_time);
+				assert_equal(6, i2->second.exclusive_time);
+				assert_equal(6, i2->second.max_call_time);
 
-				Assert::IsTrue(i3->first == (void *)0x11234560);
-				Assert::IsTrue(i3->second.times_called == 1);
-				Assert::IsTrue(i3->second.inclusive_time == 37);
-				Assert::IsTrue(i3->second.exclusive_time == 25);
-				Assert::IsTrue(i3->second.max_call_time == 37);
+				assert_equal(i3->first, (void *)0x11234560);
+				assert_equal(1u, i3->second.times_called);
+				assert_equal(37, i3->second.inclusive_time);
+				assert_equal(25, i3->second.exclusive_time);
+				assert_equal(37, i3->second.max_call_time);
 
-				Assert::IsTrue(i4->first == (void *)0x1bcdef10);
-				Assert::IsTrue(i4->second.times_called == 1);
-				Assert::IsTrue(i4->second.inclusive_time == 12);
-				Assert::IsTrue(i4->second.exclusive_time == 12);
-				Assert::IsTrue(i4->second.max_call_time == 12);
+				assert_equal(i4->first, (void *)0x1bcdef10);
+				assert_equal(1u, i4->second.times_called);
+				assert_equal(12, i4->second.inclusive_time);
+				assert_equal(12, i4->second.exclusive_time);
+				assert_equal(12, i4->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void EvaluateExclusiveTimeForSeveralChildCalls()
+			test( EvaluateExclusiveTimeForSeveralChildCalls )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -378,34 +368,33 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				Assert::IsTrue(4 == statistics.size());
+				assert_equal(4u, statistics.size());
 
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
 
 				++i1, ++++i2, ++++++i3;
 
-				Assert::IsTrue(i1->first == (void *)0x01234560);
-				Assert::IsTrue(i1->second.times_called == 1);
-				Assert::IsTrue(i1->second.inclusive_time == 26);
-				Assert::IsTrue(i1->second.exclusive_time == 16);
-				Assert::IsTrue(i1->second.max_call_time == 26);
+				assert_equal(i1->first, (void *)0x01234560);
+				assert_equal(1u, i1->second.times_called);
+				assert_equal(26, i1->second.inclusive_time);
+				assert_equal(16, i1->second.exclusive_time);
+				assert_equal(26, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->first == (void *)0x0bcdef10);
-				Assert::IsTrue(i2->second.times_called == 2);
-				Assert::IsTrue(i2->second.inclusive_time == 10);
-				Assert::IsTrue(i2->second.exclusive_time == 6);
-				Assert::IsTrue(i2->second.max_call_time == 8);
+				assert_equal(i2->first, (void *)0x0bcdef10);
+				assert_equal(2u, i2->second.times_called);
+				assert_equal(10, i2->second.inclusive_time);
+				assert_equal(6, i2->second.exclusive_time);
+				assert_equal(8, i2->second.max_call_time);
 
-				Assert::IsTrue(i3->first == (void *)0x0bcdef20);
-				Assert::IsTrue(i3->second.times_called == 1);
-				Assert::IsTrue(i3->second.inclusive_time == 4);
-				Assert::IsTrue(i3->second.exclusive_time == 4);
-				Assert::IsTrue(i3->second.max_call_time == 4);
+				assert_equal(i3->first, (void *)0x0bcdef20);
+				assert_equal(1u, i3->second.times_called);
+				assert_equal(4, i3->second.inclusive_time);
+				assert_equal(4, i3->second.exclusive_time);
+				assert_equal(4, i3->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void ApplyProfilerLatencyCorrection()
+			test( ApplyProfilerLatencyCorrection )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss1(1), ss2(2);
@@ -438,34 +427,33 @@ namespace micro_profiler
 				// 0x0bcdef10 -	2,	38,	30
 				// 0x0bcdef20 -	1,	8,		8
 
-				Assert::IsTrue(i1_1->second.inclusive_time == 69);
-				Assert::IsTrue(i1_1->second.exclusive_time == 29);
-				Assert::IsTrue(i1_1->second.max_call_time == 69);
+				assert_equal(69, i1_1->second.inclusive_time);
+				assert_equal(29, i1_1->second.exclusive_time);
+				assert_equal(69, i1_1->second.max_call_time);
 
-				Assert::IsTrue(i1_2->second.inclusive_time == 36);
-				Assert::IsTrue(i1_2->second.exclusive_time == 27);
-				Assert::IsTrue(i1_2->second.max_call_time == 23);
+				assert_equal(36, i1_2->second.inclusive_time);
+				assert_equal(27, i1_2->second.exclusive_time);
+				assert_equal(23, i1_2->second.max_call_time);
 
-				Assert::IsTrue(i1_3->second.inclusive_time == 7);
-				Assert::IsTrue(i1_3->second.exclusive_time == 7);
-				Assert::IsTrue(i1_3->second.max_call_time == 7);
+				assert_equal(7, i1_3->second.inclusive_time);
+				assert_equal(7, i1_3->second.exclusive_time);
+				assert_equal(7, i1_3->second.max_call_time);
 
-				Assert::IsTrue(i2_1->second.inclusive_time == 68);
-				Assert::IsTrue(i2_1->second.exclusive_time == 26);
-				Assert::IsTrue(i2_1->second.max_call_time == 68);
+				assert_equal(68, i2_1->second.inclusive_time);
+				assert_equal(26, i2_1->second.exclusive_time);
+				assert_equal(68, i2_1->second.max_call_time);
 
-				Assert::IsTrue(i2_2->second.inclusive_time == 34);
-				Assert::IsTrue(i2_2->second.exclusive_time == 24);
-				Assert::IsTrue(i2_2->second.max_call_time == 22);
+				assert_equal(34, i2_2->second.inclusive_time);
+				assert_equal(24, i2_2->second.exclusive_time);
+				assert_equal(22, i2_2->second.max_call_time);
 
-				Assert::IsTrue(i2_3->second.inclusive_time == 6);
-				Assert::IsTrue(i2_3->second.exclusive_time == 6);
-				Assert::IsTrue(i2_3->second.max_call_time == 6);
+				assert_equal(6, i2_3->second.inclusive_time);
+				assert_equal(6, i2_3->second.exclusive_time);
+				assert_equal(6, i2_3->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void RecursionControlNoInterleave()
+			test( RecursionControlNoInterleave )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -491,18 +479,17 @@ namespace micro_profiler
 
 				++i2;
 
-				Assert::IsTrue(i1->second.inclusive_time == 16);
-				Assert::IsTrue(i1->second.exclusive_time == 16);
-				Assert::IsTrue(i1->second.max_call_time == 16);
+				assert_equal(16, i1->second.inclusive_time);
+				assert_equal(16, i1->second.exclusive_time);
+				assert_equal(16, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->second.inclusive_time == 14);
-				Assert::IsTrue(i2->second.exclusive_time == 14);
-				Assert::IsTrue(i2->second.max_call_time == 14);
+				assert_equal(14, i2->second.inclusive_time);
+				assert_equal(14, i2->second.exclusive_time);
+				assert_equal(14, i2->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void RecursionControlInterleaved()
+			test( RecursionControlInterleaved )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -528,18 +515,17 @@ namespace micro_profiler
 
 				++i2;
 
-				Assert::IsTrue(i1->second.inclusive_time == 30);
-				Assert::IsTrue(i1->second.exclusive_time == 18);
-				Assert::IsTrue(i1->second.max_call_time == 30);
+				assert_equal(30, i1->second.inclusive_time);
+				assert_equal(18, i1->second.exclusive_time);
+				assert_equal(30, i1->second.max_call_time);
 
-				Assert::IsTrue(i2->second.inclusive_time == 24);
-				Assert::IsTrue(i2->second.exclusive_time == 12);
-				Assert::IsTrue(i2->second.max_call_time == 24);
+				assert_equal(24, i2->second.inclusive_time);
+				assert_equal(12, i2->second.exclusive_time);
+				assert_equal(24, i2->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void CalculateMaxReentranceMetric()
+			test( CalculateMaxReentranceMetric )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics> > ss;
@@ -582,22 +568,21 @@ namespace micro_profiler
 				++i2;
 				++++i3;
 
-				Assert::IsTrue(1 == i1->second.max_reentrance);
-				Assert::IsTrue(2 == i2->second.max_reentrance);
-				Assert::IsTrue(0 == i3->second.max_reentrance);
+				assert_equal(1u, i1->second.max_reentrance);
+				assert_equal(2u, i2->second.max_reentrance);
+				assert_equal(0u, i3->second.max_reentrance);
 
 				// ACT
 				ss.update(trace2, end(trace2), statistics);
 
 				// ASSERT
-				Assert::IsTrue(3 == i1->second.max_reentrance);
-				Assert::IsTrue(2 == i2->second.max_reentrance);
-				Assert::IsTrue(0 == i3->second.max_reentrance);
+				assert_equal(3u, i1->second.max_reentrance);
+				assert_equal(2u, i2->second.max_reentrance);
+				assert_equal(0u, i3->second.max_reentrance);
 			}
 
 
-			[TestMethod]
-			void DirectChildrenStatisticsIsAddedToParentNoRecursion()
+			test( DirectChildrenStatisticsIsAddedToParentNoRecursion )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics_detailed> > ss, ss_delayed(1);
@@ -630,18 +615,18 @@ namespace micro_profiler
 				ss_delayed.update(trace, end(trace), statistics_delayed);
 
 				// ASSERT
-				Assert::IsTrue(statistics[(void *)101].callees.empty());
-				Assert::IsTrue(statistics[(void *)201].callees.empty());
-				Assert::IsTrue(statistics[(void *)202].callees.empty());
-				Assert::IsTrue(statistics[(void *)301].callees.empty());
-				Assert::IsTrue(statistics[(void *)302].callees.empty());
-				Assert::IsTrue(statistics[(void *)303].callees.empty());
-				Assert::IsTrue(statistics_delayed[(void *)101].callees.empty());
-				Assert::IsTrue(statistics_delayed[(void *)201].callees.empty());
-				Assert::IsTrue(statistics_delayed[(void *)202].callees.empty());
-				Assert::IsTrue(statistics_delayed[(void *)301].callees.empty());
-				Assert::IsTrue(statistics_delayed[(void *)302].callees.empty());
-				Assert::IsTrue(statistics_delayed[(void *)303].callees.empty());
+				assert_is_empty(statistics[(void *)101].callees);
+				assert_is_empty(statistics[(void *)201].callees);
+				assert_is_empty(statistics[(void *)202].callees);
+				assert_is_empty(statistics[(void *)301].callees);
+				assert_is_empty(statistics[(void *)302].callees);
+				assert_is_empty(statistics[(void *)303].callees);
+				assert_is_empty(statistics_delayed[(void *)101].callees);
+				assert_is_empty(statistics_delayed[(void *)201].callees);
+				assert_is_empty(statistics_delayed[(void *)202].callees);
+				assert_is_empty(statistics_delayed[(void *)301].callees);
+				assert_is_empty(statistics_delayed[(void *)302].callees);
+				assert_is_empty(statistics_delayed[(void *)303].callees);
 				
 				statistics_map &cs1 = statistics[(void *)1].callees;
 				statistics_map &cs2 = statistics[(void *)2].callees;
@@ -650,82 +635,81 @@ namespace micro_profiler
 				statistics_map &cs2_d = statistics_delayed[(void *)2].callees;
 				statistics_map &cs3_d = statistics_delayed[(void *)3].callees;
 
-				Assert::IsTrue(1 == cs1.size());
-				Assert::IsTrue(1 == cs1[(void *)101].times_called);
-				Assert::IsTrue(0 == cs1[(void *)101].max_reentrance);
-				Assert::IsTrue(1 == cs1[(void *)101].exclusive_time);
-				Assert::IsTrue(1 == cs1[(void *)101].inclusive_time);
-				Assert::IsTrue(1 == cs1[(void *)101].max_call_time);
+				assert_equal(1u, cs1.size());
+				assert_equal(1u, cs1[(void *)101].times_called);
+				assert_equal(0u, cs1[(void *)101].max_reentrance);
+				assert_equal(1, cs1[(void *)101].exclusive_time);
+				assert_equal(1, cs1[(void *)101].inclusive_time);
+				assert_equal(1, cs1[(void *)101].max_call_time);
 
-				Assert::IsTrue(2 == cs2.size());
-				Assert::IsTrue(1 == cs2[(void *)201].times_called);
-				Assert::IsTrue(0 == cs2[(void *)201].max_reentrance);
-				Assert::IsTrue(2 == cs2[(void *)201].exclusive_time);
-				Assert::IsTrue(2 == cs2[(void *)201].inclusive_time);
-				Assert::IsTrue(2 == cs2[(void *)201].max_call_time);
-				Assert::IsTrue(1 == cs2[(void *)202].times_called);
-				Assert::IsTrue(0 == cs2[(void *)202].max_reentrance);
-				Assert::IsTrue(2 == cs2[(void *)202].exclusive_time);
-				Assert::IsTrue(2 == cs2[(void *)202].inclusive_time);
-				Assert::IsTrue(2 == cs2[(void *)202].max_call_time);
+				assert_equal(2u, cs2.size());
+				assert_equal(1u, cs2[(void *)201].times_called);
+				assert_equal(0u, cs2[(void *)201].max_reentrance);
+				assert_equal(2, cs2[(void *)201].exclusive_time);
+				assert_equal(2, cs2[(void *)201].inclusive_time);
+				assert_equal(2, cs2[(void *)201].max_call_time);
+				assert_equal(1u, cs2[(void *)202].times_called);
+				assert_equal(0u, cs2[(void *)202].max_reentrance);
+				assert_equal(2, cs2[(void *)202].exclusive_time);
+				assert_equal(2, cs2[(void *)202].inclusive_time);
+				assert_equal(2, cs2[(void *)202].max_call_time);
 
-				Assert::IsTrue(3 == cs3.size());
-				Assert::IsTrue(1 == cs3[(void *)301].times_called);
-				Assert::IsTrue(0 == cs3[(void *)301].max_reentrance);
-				Assert::IsTrue(6 == cs3[(void *)301].exclusive_time);
-				Assert::IsTrue(6 == cs3[(void *)301].inclusive_time);
-				Assert::IsTrue(6 == cs3[(void *)301].max_call_time);
-				Assert::IsTrue(1 == cs3[(void *)302].times_called);
-				Assert::IsTrue(0 == cs3[(void *)302].max_reentrance);
-				Assert::IsTrue(2 == cs3[(void *)302].exclusive_time);
-				Assert::IsTrue(2 == cs3[(void *)302].inclusive_time);
-				Assert::IsTrue(2 == cs3[(void *)302].max_call_time);
-				Assert::IsTrue(2 == cs3[(void *)303].times_called);
-				Assert::IsTrue(0 == cs3[(void *)303].max_reentrance);
-				Assert::IsTrue(8 == cs3[(void *)303].exclusive_time);
-				Assert::IsTrue(8 == cs3[(void *)303].inclusive_time);
-				Assert::IsTrue(6 == cs3[(void *)303].max_call_time);
+				assert_equal(3u, cs3.size());
+				assert_equal(1u, cs3[(void *)301].times_called);
+				assert_equal(0u, cs3[(void *)301].max_reentrance);
+				assert_equal(6, cs3[(void *)301].exclusive_time);
+				assert_equal(6, cs3[(void *)301].inclusive_time);
+				assert_equal(6, cs3[(void *)301].max_call_time);
+				assert_equal(1u, cs3[(void *)302].times_called);
+				assert_equal(0u, cs3[(void *)302].max_reentrance);
+				assert_equal(2, cs3[(void *)302].exclusive_time);
+				assert_equal(2, cs3[(void *)302].inclusive_time);
+				assert_equal(2, cs3[(void *)302].max_call_time);
+				assert_equal(2u, cs3[(void *)303].times_called);
+				assert_equal(0u, cs3[(void *)303].max_reentrance);
+				assert_equal(8, cs3[(void *)303].exclusive_time);
+				assert_equal(8, cs3[(void *)303].inclusive_time);
+				assert_equal(6, cs3[(void *)303].max_call_time);
 
-				Assert::IsTrue(1 == cs1_d.size());
-				Assert::IsTrue(1 == cs1_d[(void *)101].times_called);
-				Assert::IsTrue(0 == cs1_d[(void *)101].max_reentrance);
-				Assert::IsTrue(0 == cs1_d[(void *)101].exclusive_time);
-				Assert::IsTrue(0 == cs1_d[(void *)101].inclusive_time);
-				Assert::IsTrue(0 == cs1_d[(void *)101].max_call_time);
+				assert_equal(1u, cs1_d.size());
+				assert_equal(1u, cs1_d[(void *)101].times_called);
+				assert_equal(0u, cs1_d[(void *)101].max_reentrance);
+				assert_equal(0, cs1_d[(void *)101].exclusive_time);
+				assert_equal(0, cs1_d[(void *)101].inclusive_time);
+				assert_equal(0, cs1_d[(void *)101].max_call_time);
 
-				Assert::IsTrue(2 == cs2_d.size());
-				Assert::IsTrue(1 == cs2_d[(void *)201].times_called);
-				Assert::IsTrue(0 == cs2_d[(void *)201].max_reentrance);
-				Assert::IsTrue(1 == cs2_d[(void *)201].exclusive_time);
-				Assert::IsTrue(1 == cs2_d[(void *)201].inclusive_time);
-				Assert::IsTrue(1 == cs2_d[(void *)201].max_call_time);
-				Assert::IsTrue(1 == cs2_d[(void *)202].times_called);
-				Assert::IsTrue(0 == cs2_d[(void *)202].max_reentrance);
-				Assert::IsTrue(1 == cs2_d[(void *)202].exclusive_time);
-				Assert::IsTrue(1 == cs2_d[(void *)202].inclusive_time);
-				Assert::IsTrue(1 == cs2_d[(void *)202].max_call_time);
+				assert_equal(2u, cs2_d.size());
+				assert_equal(1u, cs2_d[(void *)201].times_called);
+				assert_equal(0u, cs2_d[(void *)201].max_reentrance);
+				assert_equal(1, cs2_d[(void *)201].exclusive_time);
+				assert_equal(1, cs2_d[(void *)201].inclusive_time);
+				assert_equal(1, cs2_d[(void *)201].max_call_time);
+				assert_equal(1u, cs2_d[(void *)202].times_called);
+				assert_equal(0u, cs2_d[(void *)202].max_reentrance);
+				assert_equal(1, cs2_d[(void *)202].exclusive_time);
+				assert_equal(1, cs2_d[(void *)202].inclusive_time);
+				assert_equal(1, cs2_d[(void *)202].max_call_time);
 
-				Assert::IsTrue(3 == cs3_d.size());
-				Assert::IsTrue(1 == cs3_d[(void *)301].times_called);
-				Assert::IsTrue(0 == cs3_d[(void *)301].max_reentrance);
-				Assert::IsTrue(5 == cs3_d[(void *)301].exclusive_time);
-				Assert::IsTrue(5 == cs3_d[(void *)301].inclusive_time);
-				Assert::IsTrue(5 == cs3_d[(void *)301].max_call_time);
-				Assert::IsTrue(1 == cs3_d[(void *)302].times_called);
-				Assert::IsTrue(0 == cs3_d[(void *)302].max_reentrance);
-				Assert::IsTrue(1 == cs3_d[(void *)302].exclusive_time);
-				Assert::IsTrue(1 == cs3_d[(void *)302].inclusive_time);
-				Assert::IsTrue(1 == cs3_d[(void *)302].max_call_time);
-				Assert::IsTrue(2 == cs3_d[(void *)303].times_called);
-				Assert::IsTrue(0 == cs3_d[(void *)303].max_reentrance);
-				Assert::IsTrue(6 == cs3_d[(void *)303].exclusive_time);
-				Assert::IsTrue(6 == cs3_d[(void *)303].inclusive_time);
-				Assert::IsTrue(5 == cs3_d[(void *)303].max_call_time);
+				assert_equal(3u, cs3_d.size());
+				assert_equal(1u, cs3_d[(void *)301].times_called);
+				assert_equal(0u, cs3_d[(void *)301].max_reentrance);
+				assert_equal(5, cs3_d[(void *)301].exclusive_time);
+				assert_equal(5, cs3_d[(void *)301].inclusive_time);
+				assert_equal(5, cs3_d[(void *)301].max_call_time);
+				assert_equal(1u, cs3_d[(void *)302].times_called);
+				assert_equal(0u, cs3_d[(void *)302].max_reentrance);
+				assert_equal(1, cs3_d[(void *)302].exclusive_time);
+				assert_equal(1, cs3_d[(void *)302].inclusive_time);
+				assert_equal(1, cs3_d[(void *)302].max_call_time);
+				assert_equal(2u, cs3_d[(void *)303].times_called);
+				assert_equal(0u, cs3_d[(void *)303].max_reentrance);
+				assert_equal(6, cs3_d[(void *)303].exclusive_time);
+				assert_equal(6, cs3_d[(void *)303].inclusive_time);
+				assert_equal(5, cs3_d[(void *)303].max_call_time);
 			}
 
 
-			[TestMethod]
-			void DirectChildrenStatisticsIsAddedToParentNoRecursionWithNesting()
+			test( DirectChildrenStatisticsIsAddedToParentNoRecursionWithNesting )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics_detailed> > ss;
@@ -749,27 +733,26 @@ namespace micro_profiler
 				ss.update(trace, end(trace), statistics);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics[(void *)1].callees.size());
-				Assert::IsTrue(1 == statistics[(void *)101].callees.size());
-				Assert::IsTrue(0 == statistics[(void *)10101].callees.size());
-				Assert::IsTrue(2 == statistics[(void *)102].callees.size());
-				Assert::IsTrue(0 == statistics[(void *)10201].callees.size());
-				Assert::IsTrue(0 == statistics[(void *)10202].callees.size());
+				assert_equal(2u, statistics[(void *)1].callees.size());
+				assert_equal(1u, statistics[(void *)101].callees.size());
+				assert_equal(0u, statistics[(void *)10101].callees.size());
+				assert_equal(2u, statistics[(void *)102].callees.size());
+				assert_equal(0u, statistics[(void *)10201].callees.size());
+				assert_equal(0u, statistics[(void *)10202].callees.size());
 
 
 				statistics_map &cs = statistics[(void *)1].callees;
 
-				Assert::IsTrue(5 == cs[(void *)101].inclusive_time);
-				Assert::IsTrue(3 == cs[(void *)101].exclusive_time);
-				Assert::IsTrue(5 == cs[(void *)101].max_call_time);
-				Assert::IsTrue(18 == cs[(void *)102].inclusive_time);
-				Assert::IsTrue(10 == cs[(void *)102].exclusive_time);
-				Assert::IsTrue(18 == cs[(void *)102].max_call_time);
+				assert_equal(5, cs[(void *)101].inclusive_time);
+				assert_equal(3, cs[(void *)101].exclusive_time);
+				assert_equal(5, cs[(void *)101].max_call_time);
+				assert_equal(18, cs[(void *)102].inclusive_time);
+				assert_equal(10, cs[(void *)102].exclusive_time);
+				assert_equal(18, cs[(void *)102].max_call_time);
 			}
 
 
-			[TestMethod]
-			void PopulateChildrenStatisticsForSpecificParents()
+			test( PopulateChildrenStatisticsForSpecificParents )
 			{
 				// INIT
 				shadow_stack< map<const void *, function_statistics_detailed> > ss;
@@ -810,55 +793,54 @@ namespace micro_profiler
 				statistics_map &cs3 = statistics[(void *)0x3].callees;
 				statistics_map &cs4 = statistics[(void *)0x4].callees;
 
-				Assert::IsTrue(3 == cs1.size());
-				Assert::IsTrue(2 == cs2.size());
-				Assert::IsTrue(2 == cs3.size());
-				Assert::IsTrue(2 == cs4.size());
+				assert_equal(3u, cs1.size());
+				assert_equal(2u, cs2.size());
+				assert_equal(2u, cs3.size());
+				assert_equal(2u, cs4.size());
 
-				Assert::IsTrue(1 == cs1[(void *)0x2].times_called);
-				Assert::IsTrue(13 == cs1[(void *)0x2].inclusive_time);
-				Assert::IsTrue(7 == cs1[(void *)0x2].exclusive_time);
-				Assert::IsTrue(13 == cs1[(void *)0x2].max_call_time);
-				Assert::IsTrue(1 == cs1[(void *)0x3].times_called);
-				Assert::IsTrue(16 == cs1[(void *)0x3].inclusive_time);
-				Assert::IsTrue(6 == cs1[(void *)0x3].exclusive_time);
-				Assert::IsTrue(16 == cs1[(void *)0x3].max_call_time);
-				Assert::IsTrue(1 == cs1[(void *)0x4].times_called);
-				Assert::IsTrue(15 == cs1[(void *)0x4].inclusive_time);
-				Assert::IsTrue(3 == cs1[(void *)0x4].exclusive_time);
-				Assert::IsTrue(15 == cs1[(void *)0x4].max_call_time);
+				assert_equal(1u, cs1[(void *)0x2].times_called);
+				assert_equal(13, cs1[(void *)0x2].inclusive_time);
+				assert_equal(7, cs1[(void *)0x2].exclusive_time);
+				assert_equal(13, cs1[(void *)0x2].max_call_time);
+				assert_equal(1u, cs1[(void *)0x3].times_called);
+				assert_equal(16, cs1[(void *)0x3].inclusive_time);
+				assert_equal(6, cs1[(void *)0x3].exclusive_time);
+				assert_equal(16, cs1[(void *)0x3].max_call_time);
+				assert_equal(1u, cs1[(void *)0x4].times_called);
+				assert_equal(15, cs1[(void *)0x4].inclusive_time);
+				assert_equal(3, cs1[(void *)0x4].exclusive_time);
+				assert_equal(15, cs1[(void *)0x4].max_call_time);
 
-				Assert::IsTrue(1 == cs2[(void *)0x3].times_called);
-				Assert::IsTrue(3 == cs2[(void *)0x3].inclusive_time);
-				Assert::IsTrue(3 == cs2[(void *)0x3].exclusive_time);
-				Assert::IsTrue(3 == cs2[(void *)0x3].max_call_time);
-				Assert::IsTrue(1 == cs2[(void *)0x4].times_called);
-				Assert::IsTrue(3 == cs2[(void *)0x4].inclusive_time);
-				Assert::IsTrue(3 == cs2[(void *)0x4].exclusive_time);
-				Assert::IsTrue(3 == cs2[(void *)0x4].max_call_time);
+				assert_equal(1u, cs2[(void *)0x3].times_called);
+				assert_equal(3, cs2[(void *)0x3].inclusive_time);
+				assert_equal(3, cs2[(void *)0x3].exclusive_time);
+				assert_equal(3, cs2[(void *)0x3].max_call_time);
+				assert_equal(1u, cs2[(void *)0x4].times_called);
+				assert_equal(3, cs2[(void *)0x4].inclusive_time);
+				assert_equal(3, cs2[(void *)0x4].exclusive_time);
+				assert_equal(3, cs2[(void *)0x4].max_call_time);
 
-				Assert::IsTrue(1 == cs3[(void *)0x2].times_called);
-				Assert::IsTrue(3 == cs3[(void *)0x2].inclusive_time);
-				Assert::IsTrue(3 == cs3[(void *)0x2].exclusive_time);
-				Assert::IsTrue(3 == cs3[(void *)0x2].max_call_time);
-				Assert::IsTrue(1 == cs3[(void *)0x4].times_called);
-				Assert::IsTrue(7 == cs3[(void *)0x4].inclusive_time);
-				Assert::IsTrue(7 == cs3[(void *)0x4].exclusive_time);
-				Assert::IsTrue(7 == cs3[(void *)0x4].max_call_time);
+				assert_equal(1u, cs3[(void *)0x2].times_called);
+				assert_equal(3, cs3[(void *)0x2].inclusive_time);
+				assert_equal(3, cs3[(void *)0x2].exclusive_time);
+				assert_equal(3, cs3[(void *)0x2].max_call_time);
+				assert_equal(1u, cs3[(void *)0x4].times_called);
+				assert_equal(7, cs3[(void *)0x4].inclusive_time);
+				assert_equal(7, cs3[(void *)0x4].exclusive_time);
+				assert_equal(7, cs3[(void *)0x4].max_call_time);
 
-				Assert::IsTrue(1 == cs4[(void *)0x2].times_called);
-				Assert::IsTrue(4 == cs4[(void *)0x2].inclusive_time);
-				Assert::IsTrue(4 == cs4[(void *)0x2].exclusive_time);
-				Assert::IsTrue(4 == cs4[(void *)0x2].max_call_time);
-				Assert::IsTrue(3 == cs4[(void *)0x3].times_called);
-				Assert::IsTrue(8 == cs4[(void *)0x3].inclusive_time);
-				Assert::IsTrue(8 == cs4[(void *)0x3].exclusive_time);
-				Assert::IsTrue(4 == cs4[(void *)0x3].max_call_time);
+				assert_equal(1u, cs4[(void *)0x2].times_called);
+				assert_equal(4, cs4[(void *)0x2].inclusive_time);
+				assert_equal(4, cs4[(void *)0x2].exclusive_time);
+				assert_equal(4, cs4[(void *)0x2].max_call_time);
+				assert_equal(3u, cs4[(void *)0x3].times_called);
+				assert_equal(8, cs4[(void *)0x3].inclusive_time);
+				assert_equal(8, cs4[(void *)0x3].exclusive_time);
+				assert_equal(4, cs4[(void *)0x3].max_call_time);
 			}
 
 
-			[TestMethod]
-			void RepeatedCollectionWithNonEmptyStoredStackRestoresStacksEntries()
+			test( RepeatedCollectionWithNonEmptyStoredStackRestoresStacksEntries )
 			{
 				// INIT
 				typedef unordered_map<const void *, function_statistics_guarded> smap;
@@ -902,15 +884,15 @@ namespace micro_profiler
 				ss1.update(trace1_exits, end(trace1_exits), statistics);
 
 				// ASSERT (lite assertion - only check call times/recursion)
-				Assert::IsTrue(4 == statistics.size());
-				Assert::IsTrue(statistics[(void *)0x1].times_called == 1);
-				Assert::IsTrue(statistics[(void *)0x1].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x2].times_called == 2);
-				Assert::IsTrue(statistics[(void *)0x2].max_reentrance == 1);
-				Assert::IsTrue(statistics[(void *)0x3].times_called == 1);
-				Assert::IsTrue(statistics[(void *)0x3].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x7].times_called == 1);
-				Assert::IsTrue(statistics[(void *)0x7].max_reentrance == 0);
+				assert_equal(4u, statistics.size());
+				assert_equal(1u, statistics[(void *)0x1].times_called);
+				assert_equal(0u, statistics[(void *)0x1].max_reentrance);
+				assert_equal(2u, statistics[(void *)0x2].times_called);
+				assert_equal(1u, statistics[(void *)0x2].max_reentrance);
+				assert_equal(1u, statistics[(void *)0x3].times_called);
+				assert_equal(0u, statistics[(void *)0x3].max_reentrance);
+				assert_equal(1u, statistics[(void *)0x7].times_called);
+				assert_equal(0u, statistics[(void *)0x7].max_reentrance);
 
 				// INIT
 				statistics.clear();
@@ -919,12 +901,12 @@ namespace micro_profiler
 				ss2.update(trace2_exits, end(trace2_exits), statistics);
 
 				// ASSERT
-				Assert::IsTrue(2 == statistics.size());
-				Assert::IsTrue(statistics[(void *)0x5].times_called == 1);
-				Assert::IsTrue(statistics[(void *)0x5].max_reentrance == 0);
-				Assert::IsTrue(statistics[(void *)0x11].times_called == 1);
-				Assert::IsTrue(statistics[(void *)0x11].max_reentrance == 0);
+				assert_equal(2u, statistics.size());
+				assert_equal(1u, statistics[(void *)0x5].times_called);
+				assert_equal(0u, statistics[(void *)0x5].max_reentrance);
+				assert_equal(1u, statistics[(void *)0x11].times_called);
+				assert_equal(0u, statistics[(void *)0x11].max_reentrance);
 			}
-		};
+		end_test_suite
 	}
 }

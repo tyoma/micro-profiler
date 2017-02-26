@@ -1,9 +1,9 @@
 #include <frontend/columns_model.h>
 
-#include "../assert.h"
-
 #include <common/configuration.h>
 #include <map>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 namespace std
 {
@@ -15,7 +15,27 @@ namespace std
 
 using namespace std;
 using namespace wpl::ui;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+
+namespace ut
+{
+	template <typename T, size_t n>
+	static void are_equal(const T (&lhs)[n], const basic_string<T> &rhs, const ut::LocationInfo &location)
+	{
+		if (!(lhs == rhs))
+			throw FailedAssertion("Values are not equal!", location);
+	}
+
+	template <typename T1, size_t n, typename T2, typename T3>
+	inline void are_equal(T1 (&i_lhs)[n], const map<T2, T3> &i_rhs, const LocationInfo &location)
+	{
+		are_equal(std::vector<T1>(i_lhs, i_lhs + n),
+			std::vector<T1>(i_rhs.begin(), i_rhs.end()), location);
+	}
+
+	static bool operator ==(const wpl::ui::listview::columns_model::column &lhs,
+		const wpl::ui::listview::columns_model::column &rhs)
+	{	return lhs.caption == rhs.caption && lhs.width == rhs.width;	}
+}
 
 namespace micro_profiler
 {
@@ -27,10 +47,6 @@ namespace micro_profiler
 
 			void append_log(log_t *log, listview::columns_model::index_type sort_column, bool sort_ascending)
 			{	log->push_back(make_pair(sort_column, sort_ascending));	}
-
-			bool operator ==(const wpl::ui::listview::columns_model::column &lhs,
-				const wpl::ui::listview::columns_model::column &rhs)
-			{	return lhs.caption == rhs.caption && lhs.width == rhs.width;	}
 
 			wpl::ui::listview::columns_model::column get_column(const wpl::ui::listview::columns_model &cm,
 				columns_model::index_type index)
@@ -114,12 +130,8 @@ namespace micro_profiler
 			}
 		}
 
-		[TestClass]
-		public ref class ColumnsModelTests
-		{
-		public:
-			[TestMethod]
-			void ColumnsModelIsInitiallyOrderedAcordinglyToConstructionParam()
+		begin_test_suite( ColumnsModelTests )
+			test( ColumnsModelIsInitiallyOrderedAcordinglyToConstructionParam )
 			{
 				// INIT
 				columns_model::column columns[] = {
@@ -133,27 +145,26 @@ namespace micro_profiler
 					false));
 
 				// ACT / ASSERT
-				Assert::IsTrue(listview::columns_model::npos == cm1->get_sort_order().first);
-				Assert::IsFalse(cm1->get_sort_order().second);
+				assert_equal(listview::columns_model::npos, cm1->get_sort_order().first);
+				assert_is_false(cm1->get_sort_order().second);
 
 				// ACT
 				shared_ptr<listview::columns_model> cm2(new columns_model(columns, 1, false));
 
 				// ACT / ASSERT
-				Assert::IsTrue(1 == cm2->get_sort_order().first);
-				Assert::IsFalse(cm2->get_sort_order().second);
+				assert_equal(1, cm2->get_sort_order().first);
+				assert_is_false(cm2->get_sort_order().second);
 
 				// ACT
 				shared_ptr<listview::columns_model> cm3(new columns_model(columns, 2, true));
 
 				// ACT / ASSERT
-				Assert::IsTrue(2 == cm3->get_sort_order().first);
-				Assert::IsTrue(cm3->get_sort_order().second);
+				assert_equal(2, cm3->get_sort_order().first);
+				assert_is_true(cm3->get_sort_order().second);
 			}
 
 
-			[TestMethod]
-			void FirstOrderingIsDoneAccordinglyToDefaults()
+			test( FirstOrderingIsDoneAccordinglyToDefaults )
 			{
 				// INIT
 				columns_model::column columns[] = {
@@ -172,9 +183,9 @@ namespace micro_profiler
 				cm->activate_column(0);
 
 				// ACT / ASSERT
-				Assert::IsTrue(log.empty());
-				Assert::IsFalse(cm->get_sort_order().second);
-				Assert::IsTrue(listview::columns_model::npos == cm->get_sort_order().first);
+				assert_is_empty(log);
+				assert_is_false(cm->get_sort_order().second);
+				assert_equal(listview::columns_model::npos, cm->get_sort_order().first);
 
 				// ACT
 				cm.reset(new columns_model(columns, listview::columns_model::npos, false));
@@ -182,11 +193,11 @@ namespace micro_profiler
 				cm->activate_column(3);
 
 				// ACT / ASSERT
-				Assert::IsTrue(3 == cm->get_sort_order().first);
-				Assert::IsFalse(cm->get_sort_order().second);
-				Assert::IsTrue(1 == log.size());
-				Assert::IsTrue(3 == log[0].first);
-				Assert::IsFalse(log[0].second);
+				assert_equal(3, cm->get_sort_order().first);
+				assert_is_false(cm->get_sort_order().second);
+				assert_equal(1u, log.size());
+				assert_equal(3, log[0].first);
+				assert_is_false(log[0].second);
 
 				// ACT
 				cm.reset(new columns_model(columns, listview::columns_model::npos, false));
@@ -194,16 +205,15 @@ namespace micro_profiler
 				cm->activate_column(2);
 
 				// ACT / ASSERT
-				Assert::IsTrue(2 == cm->get_sort_order().first);
-				Assert::IsTrue(cm->get_sort_order().second);
-				Assert::IsTrue(2 == log.size());
-				Assert::IsTrue(2 == log[1].first);
-				Assert::IsTrue(log[1].second);
+				assert_equal(2, cm->get_sort_order().first);
+				assert_is_true(cm->get_sort_order().second);
+				assert_equal(2u, log.size());
+				assert_equal(2, log[1].first);
+				assert_is_true(log[1].second);
 			}
 
 
-			[TestMethod]
-			void SubsequentOrderingReversesTheColumnsState()
+			test( SubsequentOrderingReversesTheColumnsState )
 			{
 				// INIT
 				columns_model::column columns[] = {
@@ -226,26 +236,25 @@ namespace micro_profiler
 				cm1->activate_column(1);	// ascending
 
 				// ACT / ASSERT
-				Assert::IsTrue(1 == cm1->get_sort_order().first);
-				Assert::IsTrue(cm1->get_sort_order().second);
-				Assert::IsTrue(2 == log.size());
-				Assert::IsTrue(1 == log[1].first);
-				Assert::IsTrue(log[1].second);
+				assert_equal(1, cm1->get_sort_order().first);
+				assert_is_true(cm1->get_sort_order().second);
+				assert_equal(2u, log.size());
+				assert_equal(1, log[1].first);
+				assert_is_true(log[1].second);
 
 				// ACT
 				cm2->activate_column(2);	// ascending
 
 				// ACT / ASSERT
-				Assert::IsTrue(2 == cm2->get_sort_order().first);
-				Assert::IsTrue(cm2->get_sort_order().second);
-				Assert::IsTrue(3 == log.size());
-				Assert::IsTrue(2 == log[2].first);
-				Assert::IsTrue(log[1].second);
+				assert_equal(2, cm2->get_sort_order().first);
+				assert_is_true(cm2->get_sort_order().second);
+				assert_equal(3u, log.size());
+				assert_equal(2, log[2].first);
+				assert_is_true(log[1].second);
 			}
 
 
-			[TestMethod]
-			void GettingColumnsCount()
+			test( GettingColumnsCount )
 			{
 				// INIT
 				columns_model::column columns1[] = {
@@ -263,13 +272,12 @@ namespace micro_profiler
 				listview::columns_model::column c;
 
 				// ACT / ASSERT
-				Assert::IsTrue(4 == cm1->get_count());
-				Assert::IsTrue(2 == cm2->get_count());
+				assert_equal(4, cm1->get_count());
+				assert_equal(2, cm2->get_count());
 			}
 
 
-			[TestMethod]
-			void GetColumnItem()
+			test( GetColumnItem )
 			{
 				// INIT
 				columns_model::column columns1[] = {
@@ -289,30 +297,29 @@ namespace micro_profiler
 				cm1->get_column(0, c);
 
 				// ASSERT
-				Assert::IsTrue(L"first" == c.caption);
+				assert_equal(L"first", c.caption);
 
 				// ACT
 				cm1->get_column(2, c);
 
 				// ASSERT
-				Assert::IsTrue(L"third" == c.caption);
+				assert_equal(L"third", c.caption);
 
 				// ACT
 				cm2->get_column(0, c);
 
 				// ASSERT
-				Assert::IsTrue(L"a first column" == c.caption);
+				assert_equal(L"a first column", c.caption);
 
 				// ACT
 				cm2->get_column(1, c);
 
 				// ASSERT
-				Assert::IsTrue(L"a second column" == c.caption);
+				assert_equal(L"a second column", c.caption);
 			}
 
 
-			[TestMethod]
-			void ModelUpdateDoesChangeColumnsWidth()
+			test( ModelUpdateDoesChangeColumnsWidth )
 			{
 				// INIT
 				columns_model::column columns[] = {
@@ -327,22 +334,21 @@ namespace micro_profiler
 				cm->update_column(0, 13);
 
 				// ASSERT
-				Assert::IsTrue(13 == get_column(*cm, 0).width);
-				Assert::IsTrue(0 == get_column(*cm, 1).width);
-				Assert::IsTrue(0 == get_column(*cm, 2).width);
+				assert_equal(13, get_column(*cm, 0).width);
+				assert_equal(0, get_column(*cm, 1).width);
+				assert_equal(0, get_column(*cm, 2).width);
 
 				// ACT
 				cm->update_column(1, 17);
 
 				// ASSERT
-				Assert::IsTrue(13 == get_column(*cm, 0).width);
-				Assert::IsTrue(17 == get_column(*cm, 1).width);
-				Assert::IsTrue(0 == get_column(*cm, 2).width);
+				assert_equal(13, get_column(*cm, 0).width);
+				assert_equal(17, get_column(*cm, 1).width);
+				assert_equal(0, get_column(*cm, 2).width);
 			}
 
 
-			[TestMethod]
-			void UnchangedModelIsStoredAsProvidedAtConstruction()
+			test( UnchangedModelIsStoredAsProvidedAtConstruction )
 			{
 				// INIT
 				columns_model::column columns1[] = {
@@ -367,7 +373,7 @@ namespace micro_profiler
 				cm1->store(*h);
 
 				// ASSERT
-				pair<const string, int> rints1[] = {
+				pair</*const*/ string, int> rints1[] = {
 					make_pair("OrderBy", 0),
 					make_pair("OrderDirection", 0),
 					make_pair("fourth/Width", 4),
@@ -375,15 +381,15 @@ namespace micro_profiler
 					make_pair("id2/Width", 2),
 					make_pair("id3/Width", 3),
 				};
-				pair<const string, wstring> rstrings1[] = {
+				pair</*const*/ string, wstring> rstrings1[] = {
 					make_pair("fourth/Caption", L"Inclusive Time"),
 					make_pair("id1/Caption", L"Index"),
 					make_pair("id2/Caption", L"Function"),
 					make_pair("id3/Caption", L"Exclusive Time"),
 				};
 
-				assert::sequences_equal(rints1, int_values);
-				assert::sequences_equal(rstrings1, str_values);
+				assert_equal(rints1, int_values);
+				assert_equal(rstrings1, str_values);
 
 				// INIT
 				int_values.clear();
@@ -393,19 +399,19 @@ namespace micro_profiler
 				cm2->store(*h);
 
 				// ASSERT
-				pair<const string, int> rints2[] = {
+				pair</*const*/ string, int> rints2[] = {
 					make_pair("OrderBy", -1),
 					make_pair("OrderDirection", 0),
 					make_pair("id1/Width", 191),
 					make_pair("id2/Width", 171),
 				};
-				pair<const string, wstring> rstrings2[] = {
+				pair</*const*/ string, wstring> rstrings2[] = {
 					make_pair("id1/Caption", L"a first column"),
 					make_pair("id2/Caption", L"a second column"),
 				};
 
-				assert::sequences_equal(rints2, int_values);
-				assert::sequences_equal(rstrings2, str_values);
+				assert_equal(rints2, int_values);
+				assert_equal(rstrings2, str_values);
 
 				// INIT
 				int_values.clear();
@@ -415,20 +421,19 @@ namespace micro_profiler
 				cm3->store(*h);
 
 				// ASSERT
-				pair<const string, int> rints3[] = {
+				pair</*const*/ string, int> rints3[] = {
 					make_pair("OrderBy", 1),
 					make_pair("OrderDirection", 1),
 					make_pair("id1/Width", 191),
 					make_pair("id2/Width", 171),
 				};
 
-				assert::sequences_equal(rints3, int_values);
-				assert::sequences_equal(rstrings2, str_values);
+				assert_equal(rints3, int_values);
+				assert_equal(rstrings2, str_values);
 			}
 
 
-			[TestMethod]
-			void ModelStateIsUpdatedOnLoad()
+			test( ModelStateIsUpdatedOnLoad )
 			{
 				// INIT
 				columns_model::column columns1[] = {
@@ -458,9 +463,9 @@ namespace micro_profiler
 				cm1->update(*h);
 
 				// ASSERT
-				Assert::IsTrue(make_pair(static_cast<short>(1), true) == cm1->get_sort_order());
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"Contract", 20) == get_column(*cm1, 0));
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"Price", 31) == get_column(*cm1, 1));
+				assert_equal(make_pair(static_cast<short>(1), true), cm1->get_sort_order());
+				assert_equal(wpl::ui::listview::columns_model::column(L"Contract", 20), get_column(*cm1, 0));
+				assert_equal(wpl::ui::listview::columns_model::column(L"Price", 31), get_column(*cm1, 1));
 
 				// INIT
 				int_values["OrderBy"] = 2;
@@ -476,15 +481,14 @@ namespace micro_profiler
 				cm2->update(*h);
 
 				// ASSERT
-				Assert::IsTrue(make_pair(static_cast<short>(2), false) == cm2->get_sort_order());
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"Contract", 20) == get_column(*cm2, 0));
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"Kind", 20) == get_column(*cm2, 1));
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"Price", 53) == get_column(*cm2, 2));
+				assert_equal(make_pair(static_cast<short>(2), false), cm2->get_sort_order());
+				assert_equal(wpl::ui::listview::columns_model::column(L"Contract", 20), get_column(*cm2, 0));
+				assert_equal(wpl::ui::listview::columns_model::column(L"Kind", 20), get_column(*cm2, 1));
+				assert_equal(wpl::ui::listview::columns_model::column(L"Price", 53), get_column(*cm2, 2));
 			}
 
 
-			[TestMethod]
-			void MissingColumnsAreNotUpdatedAndInvalidOrderColumnIsFixedOnModelStateLoad()
+			test( MissingColumnsAreNotUpdatedAndInvalidOrderColumnIsFixedOnModelStateLoad )
 			{
 				// INIT
 				columns_model::column columns[] = {
@@ -508,11 +512,11 @@ namespace micro_profiler
 				cm->update(*h);
 
 				// ASSERT
-				Assert::IsTrue(make_pair(columns_model::npos, false) == cm->get_sort_order());
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"Contract", 233) == get_column(*cm, 0));
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"", 17) == get_column(*cm, 1));
-				Assert::IsTrue(wpl::ui::listview::columns_model::column(L"Price", 31) == get_column(*cm, 2));
+				assert_equal(make_pair(columns_model::npos, false), cm->get_sort_order());
+				assert_equal(wpl::ui::listview::columns_model::column(L"Contract", 233), get_column(*cm, 0));
+				assert_equal(wpl::ui::listview::columns_model::column(L"", 17), get_column(*cm, 1));
+				assert_equal(wpl::ui::listview::columns_model::column(L"Price", 31), get_column(*cm, 2));
 			}
-		};
+		end_test_suite
 	}
 }

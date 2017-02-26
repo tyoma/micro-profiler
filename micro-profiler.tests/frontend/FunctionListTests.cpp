@@ -15,6 +15,8 @@
 #include <memory>
 #include <locale>
 #include <algorithm>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 namespace std 
 {
@@ -24,7 +26,16 @@ namespace std
 
 using namespace std;
 using namespace wpl::ui;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
+
+namespace ut
+{
+	template <typename T, size_t n>
+	static void are_equal(const T (&lhs)[n], const basic_string<T> &rhs, const ut::LocationInfo &location)
+	{
+		if (!(lhs == rhs))
+			throw FailedAssertion("Values are not equal!", location);
+	}
+}
 
 namespace micro_profiler
 {
@@ -47,11 +58,11 @@ namespace micro_profiler
 				wstring result;
 
 				fl.get_text(row, 0, result); // row number
-				Assert::IsTrue(result == to_string(row + 1));
+				assert_equal(result, to_string(row + 1));
 				fl.get_text(row, 1, result); // name
-				Assert::IsTrue(result == name);
+				assert_equal(result, name);
 				fl.get_text(row, 2, result); // times called
-				Assert::IsTrue(result == times_called);
+				assert_equal(result, times_called);
 			}
 
 			void assert_row(
@@ -70,17 +81,17 @@ namespace micro_profiler
 
 				assert_row(fl, row, name, times_called);
 				fl.get_text(row, 3, result); // exclusive time
-				Assert::IsTrue(result == exclusive_time);
+				assert_equal(result, exclusive_time);
 				fl.get_text(row, 4, result); // inclusive time
-				Assert::IsTrue(result == inclusive_time);
+				assert_equal(result, inclusive_time);
 				fl.get_text(row, 5, result); // avg. exclusive time
-				Assert::IsTrue(result == avg_exclusive_time);
+				assert_equal(result, avg_exclusive_time);
 				fl.get_text(row, 6, result); // avg. inclusive time
-				Assert::IsTrue(result == avg_inclusive_time);
+				assert_equal(result, avg_inclusive_time);
 				fl.get_text(row, 7, result); // max reentrance
-				Assert::IsTrue(result == max_reentrance);
+				assert_equal(result, max_reentrance);
 				fl.get_text(row, 8, result); // max reentrance
-				Assert::IsTrue(result == max_call_time);
+				assert_equal(result, max_call_time);
 			}
 
 			class invalidation_tracer
@@ -158,12 +169,8 @@ namespace micro_profiler
 		}
 
 
-		[TestClass]
-		public ref class FunctionListTests
-		{
-		public: 
-			[TestMethod]
-			void CanCreateEmptyFunctionList()
+		begin_test_suite( FunctionListTests )
+			test( CanCreateEmptyFunctionList )
 			{
 				// INIT / ACT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -171,12 +178,11 @@ namespace micro_profiler
 				functions_list &fl = *sp_fl;
 
 				// ACT / ASSERT
-				Assert::IsTrue(fl.get_count() == 0);
+				assert_equal(0u, fl.get_count());
 			}
 
 
-			[TestMethod]
-			void FunctionListAcceptsUpdates()
+			test( FunctionListAcceptsUpdates )
 			{
 				// INIT
 				function_statistics s[] = {
@@ -194,12 +200,11 @@ namespace micro_profiler
 				fl->update(data, 2);
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 2);
+				assert_equal(2u, fl->get_count());
 			}
 
 
-			[TestMethod]
-			void FunctionListCanBeClearedAndUsedAgain()
+			test( FunctionListCanBeClearedAndUsedAgain )
 			{
 				// INIT
 				function_statistics s1(19, 0, 31, 29);
@@ -215,38 +220,37 @@ namespace micro_profiler
 				fl->update(&ms1, 1);
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 1);
-				Assert::IsTrue(ih.invalidations.size() == 1);
-				Assert::IsTrue(ih.invalidations.back() == 1); //check what's coming as event arg
+				assert_equal(1u, fl->get_count());
+				assert_equal(1u, ih.invalidations.size());
+				assert_equal(1u, ih.invalidations.back()); //check what's coming as event arg
 
 				// ACT
 				shared_ptr<const listview::trackable> first = fl->track(0); // 2229
 
 				// ASSERT
-				Assert::IsTrue(first->index() == 0);
+				assert_equal(0u, first->index());
 
 				// ACT
 				fl->clear();
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 0);
-				Assert::IsTrue(ih.invalidations.size() == 2);
-				Assert::IsTrue(ih.invalidations.back() == 0); //check what's coming as event arg
-				Assert::IsTrue(first->index() == listview::npos);
+				assert_equal(0u, fl->get_count());
+				assert_equal(2u, ih.invalidations.size());
+				assert_equal(0u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(listview::npos, first->index());
 
 				// ACT
 				fl->update(&ms1, 1);
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 1);
-				Assert::IsTrue(ih.invalidations.size() == 3);
-				Assert::IsTrue(ih.invalidations.back() == 1); //check what's coming as event arg
-				Assert::IsTrue(first->index() == 0); // kind of side effect
+				assert_equal(1u, fl->get_count());
+				assert_equal(3u, ih.invalidations.size());
+				assert_equal(1u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(0u, first->index()); // kind of side effect
 			}
 
 
-			[TestMethod]
-			void FunctionListGetByAddress()
+			test( FunctionListGetByAddress )
 			{
 				// INIT
 				function_statistics s[] = {
@@ -276,25 +280,24 @@ namespace micro_profiler
 				sort(expected.begin(), expected.end());
 				
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 3);
+				assert_equal(3u, fl->get_count());
 
 				for (size_t i = 0; i < expected.size(); ++i)
-					Assert::IsTrue(expected[i] == i);
+					assert_equal(expected[i], i);
 
-				Assert::IsTrue(idx1118 != listview::npos);
-				Assert::IsTrue(idx2229 != listview::npos);
-				Assert::IsTrue(idx5550 != listview::npos);
-				Assert::IsTrue(fl->get_index((void *)1234) == listview::npos);
+				assert_not_equal(listview::npos, idx1118);
+				assert_not_equal(listview::npos, idx2229);
+				assert_not_equal(listview::npos, idx5550);
+				assert_equal(listview::npos, fl->get_index((void *)1234));
 
 				//Check twice. Kind of regularity check.
-				Assert::IsTrue(fl->get_index((void *)1118) == idx1118);
-				Assert::IsTrue(fl->get_index((void *)2229) == idx2229);
-				Assert::IsTrue(fl->get_index((void *)5550) == idx5550);
+				assert_equal(fl->get_index((void *)1118), idx1118);
+				assert_equal(fl->get_index((void *)2229), idx2229);
+				assert_equal(fl->get_index((void *)5550), idx5550);
 			}
 
 
-			[TestMethod]
-			void FunctionListCollectsUpdates()
+			test( FunctionListCollectsUpdates )
 			{
 				//TODO: add 2 entries of same function in one burst
 				//TODO: possibly trackable on update tests should see that it works with every sorting given.
@@ -330,51 +333,50 @@ namespace micro_profiler
 				shared_ptr<const listview::trackable> second = fl->track(1); // 1118
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 2);
-				Assert::IsTrue(ih.invalidations.size() == 1);
-				Assert::IsTrue(ih.invalidations.back() == 2); //check what's coming as event arg
+				assert_equal(2u, fl->get_count());
+				assert_equal(1u, ih.invalidations.size());
+				assert_equal(2u, ih.invalidations.back()); //check what's coming as event arg
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
 				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0", L"3s");
 				assert_row(*fl, fl->get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
 
-				Assert::IsTrue(first->index() == 0);
-				Assert::IsTrue(second->index() == 1);
+				assert_equal(0u, first->index());
+				assert_equal(1u, second->index());
 
 				// ACT
 				fl->update(data2, 2);
 				
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 3);
-				Assert::IsTrue(ih.invalidations.size() == 2);
-				Assert::IsTrue(ih.invalidations.back() == 3); //check what's coming as event arg
+				assert_equal(3u, fl->get_count());
+				assert_equal(2u, ih.invalidations.size());
+				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0", L"6s");
 				assert_row(*fl, fl->get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
 				assert_row(*fl, fl->get_index((void *)5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
 
-				Assert::IsTrue(first->index() == 0);
-				Assert::IsTrue(second->index() == 2); // kind of moved down
+				assert_equal(0u, first->index());
+				assert_equal(2u, second->index()); // kind of moved down
 
 				// ACT
 				fl->update(data3, 1);
 				
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 3);
-				Assert::IsTrue(ih.invalidations.size() == 3);
-				Assert::IsTrue(ih.invalidations.back() == 3); //check what's coming as event arg
+				assert_equal(3u, fl->get_count());
+				assert_equal(3u, ih.invalidations.size());
+				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"25", L"45s", L"40s", L"1.8s", L"1.6s", L"0", L"6s");
 				assert_row(*fl, fl->get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
 				assert_row(*fl, fl->get_index((void *)5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
 
-				Assert::IsTrue(first->index() == 0);
-				Assert::IsTrue(second->index() == 2); // stand still
+				assert_equal(0u, first->index());
+				assert_equal(2u, second->index()); // stand still
 			}
 
 
-			[TestMethod]
-			void FunctionListTimeFormatter()
+			test( FunctionListTimeFormatter )
 			{
 				// INIT
 				// ~ ns
@@ -431,7 +433,7 @@ namespace micro_profiler
 				fl->update(data, sizeof(data) / sizeof(data[0]));
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == sizeof(data) / sizeof(data[0]));
+				assert_equal(fl->get_count(), sizeof(data) / sizeof(data[0]));
 		
 				// columns: name, times called, inclusive time, exclusive time, avg. inclusive time, avg. exclusive time, max reentrance, max call time
 				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0", L"2.9ns");
@@ -455,8 +457,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void FunctionListSorting()
+			test( FunctionListSorting )
 			{
 				// INIT
 				function_statistics s[] = {
@@ -495,277 +496,276 @@ namespace micro_profiler
 				fl->set_order(2, true);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 2);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(2u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); // s2
 				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); // s3
 				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); // s4
 
-				Assert::IsTrue(t0.index() == 1);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 0);
-				Assert::IsTrue(t3.index() == 3);
+				assert_equal(1u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(0u, t2.index());
+				assert_equal(3u, t3.index());
 
 				// ACT (times called, descending)
 				fl->set_order(2, false);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 3);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(3u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 2);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 3);
-				Assert::IsTrue(t3.index() == 0);
+				assert_equal(2u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(3u, t2.index());
+				assert_equal(0u, t3.index());
 
 				// ACT (name, ascending; after times called to see that sorting in asc direction works)
 				fl->set_order(1, true);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 4);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(4u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 				
-				Assert::IsTrue(t0.index() == 0);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 2);
-				Assert::IsTrue(t3.index() == 3);
+				assert_equal(0u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(2u, t2.index());
+				assert_equal(3u, t3.index());
 
 				// ACT (name, descending)
 				fl->set_order(1, false);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 5);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(5u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 3);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 1);
-				Assert::IsTrue(t3.index() == 0);
+				assert_equal(3u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(1u, t2.index());
+				assert_equal(0u, t3.index());
 
 				// ACT (exclusive time, ascending)
 				fl->set_order(3, true);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 6);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(6u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 0);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 3);
-				Assert::IsTrue(t3.index() == 2);
+				assert_equal(0u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(3u, t2.index());
+				assert_equal(2u, t3.index());
 
 				// ACT (exclusive time, descending)
 				fl->set_order(3, false);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 7);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(7u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 3);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 0);
-				Assert::IsTrue(t3.index() == 1);
+				assert_equal(3u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(0u, t2.index());
+				assert_equal(1u, t3.index());
 
 				// ACT (inclusive time, ascending)
 				fl->set_order(4, true);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 8);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(8u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 0);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 3);
-				Assert::IsTrue(t3.index() == 2);
+				assert_equal(0u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(3u, t2.index());
+				assert_equal(2u, t3.index());
 
 				// ACT (inclusive time, descending)
 				fl->set_order(4, false);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 9);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(9u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 3);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 0);
-				Assert::IsTrue(t3.index() == 1);
+				assert_equal(3u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(0u, t2.index());
+				assert_equal(1u, t3.index());
 				
 				// ACT (avg. exclusive time, ascending)
 				fl->set_order(5, true);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 10);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(10u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 1);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 3);
-				Assert::IsTrue(t3.index() == 0);
+				assert_equal(1u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(3u, t2.index());
+				assert_equal(0u, t3.index());
 
 				// ACT (avg. exclusive time, descending)
 				fl->set_order(5, false);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 11);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(11u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 2);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 0);
-				Assert::IsTrue(t3.index() == 3);
+				assert_equal(2u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(0u, t2.index());
+				assert_equal(3u, t3.index());
 
 				// ACT (avg. inclusive time, ascending)
 				fl->set_order(6, true);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 12);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(12u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 0);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 3);
-				Assert::IsTrue(t3.index() == 1);
+				assert_equal(0u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(3u, t2.index());
+				assert_equal(1u, t3.index());
 
 				// ACT (avg. inclusive time, descending)
 				fl->set_order(6, false);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 13);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(13u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 3);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 0);
-				Assert::IsTrue(t3.index() == 2);
+				assert_equal(3u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(0u, t2.index());
+				assert_equal(2u, t3.index());
 
 				// ACT (max reentrance, ascending)
 				fl->set_order(7, true);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 14);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(14u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 0);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 2);
-				Assert::IsTrue(t3.index() == 3);
+				assert_equal(0u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(2u, t2.index());
+				assert_equal(3u, t3.index());
 
 				// ACT (max reentrance, descending)
 				fl->set_order(7, false);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 15);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(15u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 3);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 1);
-				Assert::IsTrue(t3.index() == 0);
+				assert_equal(3u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(1u, t2.index());
+				assert_equal(0u, t3.index());
 
 				// ACT (max call time, ascending)
 				fl->set_order(8, true);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 16);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(16u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 0);
-				Assert::IsTrue(t1.index() == 1);
-				Assert::IsTrue(t2.index() == 2);
-				Assert::IsTrue(t3.index() == 3);
+				assert_equal(0u, t0.index());
+				assert_equal(1u, t1.index());
+				assert_equal(2u, t2.index());
+				assert_equal(3u, t3.index());
 
 				// ACT (max call time, descending)
 				fl->set_order(8, false);
 				
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 17);
-				Assert::IsTrue(ih.invalidations.back() == data_size); //check what's coming as event arg
+				assert_equal(17u, ih.invalidations.size());
+				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
 				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
 				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
-				Assert::IsTrue(t0.index() == 3);
-				Assert::IsTrue(t1.index() == 2);
-				Assert::IsTrue(t2.index() == 1);
-				Assert::IsTrue(t3.index() == 0);
+				assert_equal(3u, t0.index());
+				assert_equal(2u, t1.index());
+				assert_equal(1u, t2.index());
+				assert_equal(0u, t3.index());
 			}
 
-			[TestMethod]
-			void FunctionListPrintItsContent()
+			test( FunctionListPrintItsContent )
 			{
 				// INIT
 				function_statistics s[] = {
@@ -787,9 +787,9 @@ namespace micro_profiler
 				fl->print(result);
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == 0);
-				Assert::IsTrue(result == L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
-										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n");
+				assert_equal(0u, fl->get_count());
+				assert_equal(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+					L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
 
 				// ACT
 				fl->update(data, data_size);
@@ -797,41 +797,39 @@ namespace micro_profiler
 				fl->print(result);
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == data_size);
-				Assert::IsTrue(result == dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+				assert_equal(data_size, fl->get_count());
+				assert_equal(dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
 										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"
 										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
-										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"));
+										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
 
 				// ACT
 				fl->set_order(5, true); // avg. exclusive time
 				fl->print(result);
 
 				// ASSERT
-				Assert::IsTrue(fl->get_count() == data_size);
-				Assert::IsTrue(result == dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+				assert_equal(data_size, fl->get_count());
+				assert_equal(dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
 										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
 										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
-										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"));
+										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"), result);
 			}
 
 
-			[TestMethod]
-			void FailOnGettingChildrenListFromEmptyRootList()
+			test( FailOnGettingChildrenListFromEmptyRootList )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 
 				// ACT / ASSERT
-				ASSERT_THROWS(fl->watch_children(0), out_of_range);
+				assert_throws(fl->watch_children(0), out_of_range);
 			}
 
 
-			[TestMethod]
-			void FailOnGettingChildrenListFromNonEmptyRootList()
+			test( FailOnGettingChildrenListFromNonEmptyRootList )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -849,17 +847,16 @@ namespace micro_profiler
 				fl2->update(data2, 3);
 
 				// ACT / ASSERT
-				ASSERT_THROWS(fl1->watch_children(2), out_of_range);
-				ASSERT_THROWS(fl1->watch_children(20), out_of_range);
-				ASSERT_THROWS(fl1->watch_children((size_t)-1), out_of_range);
-				ASSERT_THROWS(fl2->watch_children(3), out_of_range);
-				ASSERT_THROWS(fl2->watch_children(30), out_of_range);
-				ASSERT_THROWS(fl2->watch_children((size_t)-1), out_of_range);
+				assert_throws(fl1->watch_children(2), out_of_range);
+				assert_throws(fl1->watch_children(20), out_of_range);
+				assert_throws(fl1->watch_children((size_t)-1), out_of_range);
+				assert_throws(fl2->watch_children(3), out_of_range);
+				assert_throws(fl2->watch_children(30), out_of_range);
+				assert_throws(fl2->watch_children((size_t)-1), out_of_range);
 			}
 
 
-			[TestMethod]
-			void ReturnChildrenModelForAValidRecord()
+			test( ReturnChildrenModelForAValidRecord )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -877,16 +874,15 @@ namespace micro_profiler
 				fl2->update(data2, 3);
 
 				// ACT / ASSERT
-				Assert::IsTrue(fl1->watch_children(0) != 0);
-				Assert::IsTrue(fl1->watch_children(1) != 0);
-				Assert::IsTrue(fl2->watch_children(0) != 0);
-				Assert::IsTrue(fl2->watch_children(1) != 0);
-				Assert::IsTrue(fl2->watch_children(2) != 0);
+				assert_not_null(fl1->watch_children(0));
+				assert_not_null(fl1->watch_children(1));
+				assert_not_null(fl2->watch_children(0));
+				assert_not_null(fl2->watch_children(1));
+				assert_not_null(fl2->watch_children(2));
 			}
 
 
-			[TestMethod]
-			void LinkedStatisticsObjectIsReturnedForChildren()
+			test( LinkedStatisticsObjectIsReturnedForChildren )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -901,13 +897,12 @@ namespace micro_profiler
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 
 				// ASSERT
-				Assert::IsTrue(ls != 0);
-				Assert::IsTrue(0 == ls->get_count());
+				assert_not_null(ls);
+				assert_equal(0u, ls->get_count());
 			}
 
 
-			[TestMethod]
-			void ChildrenStatisticsForNonEmptyChildren()
+			test( ChildrenStatisticsForNonEmptyChildren )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -931,17 +926,16 @@ namespace micro_profiler
 				shared_ptr<linked_statistics> ls_1 = fl->watch_children(find_row(*fl, L"00001995"));
 
 				// ACT / ASSERT
-				Assert::IsTrue(1 == ls_0->get_count());
-				Assert::IsTrue((size_t)-1 != find_row(*ls_0, L"00002001"));
-				Assert::IsTrue(3 == ls_1->get_count());
-				Assert::IsTrue((size_t)-1 != find_row(*ls_1, L"00002004"));
-				Assert::IsTrue((size_t)-1 != find_row(*ls_1, L"00002008"));
-				Assert::IsTrue((size_t)-1 != find_row(*ls_1, L"00002011"));
+				assert_equal(1u, ls_0->get_count());
+				assert_not_equal((size_t)-1, find_row(*ls_0, L"00002001"));
+				assert_equal(3u, ls_1->get_count());
+				assert_not_equal((size_t)-1, find_row(*ls_1, L"00002004"));
+				assert_not_equal((size_t)-1, find_row(*ls_1, L"00002008"));
+				assert_not_equal((size_t)-1, find_row(*ls_1, L"00002011"));
 			}
 
 
-			[TestMethod]
-			void ChildrenStatisticsSorting()
+			test( ChildrenStatisticsSorting )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -984,8 +978,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void ChildrenStatisticsGetText()
+			test( ChildrenStatisticsGetText )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1010,8 +1003,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void IncomingDetailStatisticsUpdateNoChildrenStatisticsUpdatesScenarios()
+			test( IncomingDetailStatisticsUpdateNoChildrenStatisticsUpdatesScenarios )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1036,7 +1028,7 @@ namespace micro_profiler
 				fl->update(&data_2, 1);
 
 				// ASSERT
-				Assert::IsTrue(0 == t.invalidations.size());
+				assert_is_empty(t.invalidations);
 
 				// INIT
 				data_2.Statistics.FunctionAddress = 0x2978;
@@ -1046,12 +1038,11 @@ namespace micro_profiler
 				fl->update(&data_2, 1);
 
 				// ASSERT
-				Assert::IsTrue(0 == t.invalidations.size());
+				assert_is_empty(t.invalidations);
 			}
 
 
-			[TestMethod]
-			void IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios()
+			test( IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1079,15 +1070,15 @@ namespace micro_profiler
 				fl->update(&data_1, 1);
 
 				// ASSERT
-				Assert::IsTrue(1 == t.invalidations.size());
-				Assert::IsTrue(2 == t.invalidations.back());
+				assert_equal(1u, t.invalidations.size());
+				assert_equal(2u, t.invalidations.back());
 
 				// ACT
 				fl->update(&data_2, 1);
 
 				// ASSERT
-				Assert::IsTrue(2 == t.invalidations.size());
-				Assert::IsTrue(3 == t.invalidations.back());
+				assert_equal(2u, t.invalidations.size());
+				assert_equal(3u, t.invalidations.back());
 
 				// INIT
 				data_1.ChildrenCount = 1;
@@ -1096,13 +1087,12 @@ namespace micro_profiler
 				fl->update(&data_1, 1);
 
 				// ASSERT
-				Assert::IsTrue(3 == t.invalidations.size());
-				Assert::IsTrue(3 == t.invalidations.back());
+				assert_equal(3u, t.invalidations.size());
+				assert_equal(3u, t.invalidations.back());
 			}
 
 
-			[TestMethod]
-			void GetFunctionAddressFromLinkedChildrenStatistics()
+			test( GetFunctionAddressFromLinkedChildrenStatistics )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1125,15 +1115,14 @@ namespace micro_profiler
 				ls->set_order(1, true);
 
 				// ACT / ASSERT
-				Assert::IsTrue((void *)0x2001 == ls->get_address(0));
-				Assert::IsTrue((void *)0x2004 == ls->get_address(1));
-				Assert::IsTrue((void *)0x2008 == ls->get_address(2));
-				Assert::IsTrue((void *)0x2011 == ls->get_address(3));
+				assert_equal((void *)0x2001, ls->get_address(0));
+				assert_equal((void *)0x2004, ls->get_address(1));
+				assert_equal((void *)0x2008, ls->get_address(2));
+				assert_equal((void *)0x2011, ls->get_address(3));
 			}
 
 			
-			[TestMethod]
-			void TrackableIsUsableOnReleasingModel()
+			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1152,12 +1141,11 @@ namespace micro_profiler
 				fl = shared_ptr<functions_list>();
 
 				// ACT / ASSERT
-				Assert::IsTrue((listview::index_type)-1 == t->index());
+				assert_equal((listview::index_type)-1, t->index());
 			}
 
 
-			[TestMethod]
-			void FailOnGettingParentsListFromNonEmptyRootList()
+			test( FailOnGettingParentsListFromNonEmptyRootList )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1175,17 +1163,16 @@ namespace micro_profiler
 				fl2->update(data2, 3);
 
 				// ACT / ASSERT
-				ASSERT_THROWS(fl1->watch_parents(2), out_of_range);
-				ASSERT_THROWS(fl1->watch_parents(20), out_of_range);
-				ASSERT_THROWS(fl1->watch_parents((size_t)-1), out_of_range);
-				ASSERT_THROWS(fl2->watch_parents(3), out_of_range);
-				ASSERT_THROWS(fl2->watch_parents(30), out_of_range);
-				ASSERT_THROWS(fl2->watch_parents((size_t)-1), out_of_range);
+				assert_throws(fl1->watch_parents(2), out_of_range);
+				assert_throws(fl1->watch_parents(20), out_of_range);
+				assert_throws(fl1->watch_parents((size_t)-1), out_of_range);
+				assert_throws(fl2->watch_parents(3), out_of_range);
+				assert_throws(fl2->watch_parents(30), out_of_range);
+				assert_throws(fl2->watch_parents((size_t)-1), out_of_range);
 			}
 
 
-			[TestMethod]
-			void ReturnParentsModelForAValidRecord()
+			test( ReturnParentsModelForAValidRecord )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1203,16 +1190,15 @@ namespace micro_profiler
 				fl2->update(data2, 3);
 
 				// ACT / ASSERT
-				Assert::IsTrue(fl1->watch_parents(0) != 0);
-				Assert::IsTrue(fl1->watch_parents(1) != 0);
-				Assert::IsTrue(fl2->watch_parents(0) != 0);
-				Assert::IsTrue(fl2->watch_parents(1) != 0);
-				Assert::IsTrue(fl2->watch_parents(2) != 0);
+				assert_not_null(fl1->watch_parents(0));
+				assert_not_null(fl1->watch_parents(1));
+				assert_not_null(fl2->watch_parents(0));
+				assert_not_null(fl2->watch_parents(1));
+				assert_not_null(fl2->watch_parents(2));
 			}
 
 
-			[TestMethod]
-			void SizeOfParentsListIsReturnedFromParentsModel()
+			test( SizeOfParentsListIsReturnedFromParentsModel )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1240,14 +1226,13 @@ namespace micro_profiler
 				shared_ptr<linked_statistics> p2 = fl->watch_parents(2);
 
 				// ASSERT
-				Assert::IsTrue(p0->get_count() == 0);
-				Assert::IsTrue(p1->get_count() == 1);
-				Assert::IsTrue(p2->get_count() == 3);
+				assert_equal(0u, p0->get_count());
+				assert_equal(1u, p1->get_count());
+				assert_equal(3u, p2->get_count());
 			}
 
 
-			[TestMethod]
-			void ParentStatisticsIsUpdatedOnGlobalUpdates1()
+			test( ParentStatisticsIsUpdatedOnGlobalUpdates1 )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1274,18 +1259,17 @@ namespace micro_profiler
 				shared_ptr<linked_statistics> p = fl->watch_parents(0);
 
 				// ASSERT
-				Assert::IsTrue(p->get_count() == 3);
+				assert_equal(3u, p->get_count());
 
 				// ACT
 				fl->update(&data[3], 1);
 
 				// ASSERT
-				Assert::IsTrue(p->get_count() == 4);
+				assert_equal(4u, p->get_count());
 			}
 
 
-			[TestMethod]
-			void ParentStatisticsValuesAreFormatted()
+			test( ParentStatisticsValuesAreFormatted )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1317,8 +1301,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void ParentStatisticsSorting()
+			test( ParentStatisticsSorting )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1378,8 +1361,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void ParentStatisticsResortingCausesInvalidation()
+			test( ParentStatisticsResortingCausesInvalidation )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1406,8 +1388,8 @@ namespace micro_profiler
 				p->set_order(1, true);
 
 				// ASSERT
-				Assert::IsTrue(1 == t.invalidations.size());
-				Assert::IsTrue(3 == t.invalidations[0]);
+				assert_equal(1u, t.invalidations.size());
+				assert_equal(3u, t.invalidations[0]);
 
 				// INIT
 				fl->update(&data[3], 1);
@@ -1417,13 +1399,12 @@ namespace micro_profiler
 				p->set_order(2, false);
 
 				// ASSERT
-				Assert::IsTrue(1 == t.invalidations.size());
-				Assert::IsTrue(4 == t.invalidations[0]);
+				assert_equal(1u, t.invalidations.size());
+				assert_equal(4u, t.invalidations[0]);
 			}
 
 
-			[TestMethod]
-			void ParentStatisticsCausesInvalidationAfterTheSort()
+			test( ParentStatisticsCausesInvalidationAfterTheSort )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1458,8 +1439,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void ParentStatisticsIsUpdatedOnGlobalUpdates2()
+			test( ParentStatisticsIsUpdatedOnGlobalUpdates2 )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1502,8 +1482,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void ParentStatisticsInvalidationOnGlobalUpdates()
+			test( ParentStatisticsInvalidationOnGlobalUpdates )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1533,14 +1512,14 @@ namespace micro_profiler
 				fl->update(&data[3], 1);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.empty());
+				assert_is_empty(ih.invalidations);
 
 				// ACT
 				fl->update(&data[0], 1);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 1);
-				Assert::IsTrue(ih.invalidations[0] == 3);
+				assert_equal(1u, ih.invalidations.size());
+				assert_equal(3u, ih.invalidations[0]);
 
 				// INIT
 				ih.invalidations.clear();
@@ -1549,13 +1528,12 @@ namespace micro_profiler
 				fl->update(&data[4], 1);
 
 				// ASSERT
-				Assert::IsTrue(ih.invalidations.size() == 1);
-				Assert::IsTrue(ih.invalidations[0] == 4);
+				assert_equal(1u, ih.invalidations.size());
+				assert_equal(4u, ih.invalidations[0]);
 			}
 
 
-			[TestMethod]
-			void GettingAddressOfParentStatisticsItem()
+			test( GettingAddressOfParentStatisticsItem )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
@@ -1584,10 +1562,10 @@ namespace micro_profiler
 				p->set_order(2, true);
 
 				// ACT / ASSERT
-				Assert::IsTrue((void *)0x2978 == p->get_address(0));
-				Assert::IsTrue((void *)0x2995 == p->get_address(1));
-				Assert::IsTrue((void *)0x3001 == p->get_address(2));
+				assert_equal((void *)0x2978, p->get_address(0));
+				assert_equal((void *)0x2995, p->get_address(1));
+				assert_equal((void *)0x3001, p->get_address(2));
 			}
-		};
+		end_test_suite
 	}
 }

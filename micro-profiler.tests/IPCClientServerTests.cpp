@@ -1,13 +1,13 @@
 #include <ipc/client.h>
 #include <ipc/server.h>
 
-#include "assert.h"
-
 #include <collector/system.h>
 #include <deque>
 #include <wpl/base/concepts.h>
 #include <wpl/mt/synchronization.h>
 #include <wpl/mt/thread.h>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 #pragma warning(disable:4355)
 
@@ -17,7 +17,6 @@ namespace std
 	using namespace tr1::placeholders;
 }
 
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 using namespace std;
 using namespace wpl::mt;
 
@@ -140,12 +139,8 @@ namespace micro_profiler
 				{	return vector<T>(array_ptr, array_ptr + size);	}
 			}
 
-			[TestClass]
-			public ref class IPCClientServerTests
-			{
-			public: 
-				[TestMethod]
-				void NoServersAreListedIfNoneIsRunning()
+			begin_test_suite( IPCClientServerTests )
+				test( NoServersAreListedIfNoneIsRunning )
 				{
 					// INIT
 					vector<string> servers;
@@ -154,12 +149,11 @@ namespace micro_profiler
 					client::enumerate_servers(servers);
 
 					// ASSERT
-					Assert::IsTrue(servers.empty());
+					assert_is_empty(servers);
 				}
 
 
-				[TestMethod]
-				void CreatedServersAreListed()
+				test( CreatedServersAreListed )
 				{
 					// INIT
 					vector<string> servers;
@@ -171,7 +165,7 @@ namespace micro_profiler
 					// ASSERT
 					const string reference1[] = { "foo", };
 
-					assert::sequences_equivalent(reference1, servers);
+					assert_equivalent(reference1, servers);
 
 					// ACT
 					server s2("Foe X");
@@ -180,7 +174,7 @@ namespace micro_profiler
 					// ASSERT
 					const string reference2[] = { "foo", "Foe X", };
 
-					assert::sequences_equivalent(reference2, servers);
+					assert_equivalent(reference2, servers);
 
 					// ACT
 					server s3("Bar Z"), s4("hope.this.will.be.visible");
@@ -189,12 +183,11 @@ namespace micro_profiler
 					// ASSERT
 					const string reference3[] = { "foo", "Foe X", "Bar Z", "hope.this.will.be.visible", };
 
-					assert::sequences_equivalent(reference3, servers);
+					assert_equivalent(reference3, servers);
 				}
 
 
-				[TestMethod]
-				void DeletedServersAreRemovedFromList()
+				test( DeletedServersAreRemovedFromList )
 				{
 					// INIT
 					vector<string> servers;
@@ -207,7 +200,7 @@ namespace micro_profiler
 					// ASSERT
 					const string reference1[] = { "foo2", "bzzz. . .p", };
 
-					assert::sequences_equivalent(reference1, servers);
+					assert_equivalent(reference1, servers);
 
 					// ACT
 					s1.reset();
@@ -216,12 +209,11 @@ namespace micro_profiler
 					// ASSERT
 					const string reference2[] = { "bzzz. . .p", };
 
-					assert::sequences_equivalent(reference2, servers);
+					assert_equivalent(reference2, servers);
 				}
 
 
-				[TestMethod]
-				void ClientCreationLeadsToSessionCreation()
+				test( ClientCreationLeadsToSessionCreation )
 				{
 					// INIT
 					server s("test");
@@ -232,8 +224,7 @@ namespace micro_profiler
 				}
 
 
-				[TestMethod]
-				void MultipleConnectionsCreateMultipleSessions()
+				test( MultipleConnectionsCreateMultipleSessions )
 				{
 					// INIT
 					server s("test2");
@@ -248,8 +239,7 @@ namespace micro_profiler
 				}
 
 
-				[TestMethod]
-				void ClosingClientConnectionDropsSessions()
+				test( ClosingClientConnectionDropsSessions )
 				{
 					// INIT
 					server s("test");
@@ -267,8 +257,7 @@ namespace micro_profiler
 				}
 
 
-				[TestMethod]
-				void ClientReadsServersOutputs()
+				test( ClientReadsServersOutputs )
 				{
 					// INIT
 					server s("test-1");
@@ -288,24 +277,23 @@ namespace micro_profiler
 					c.call(i, o);
 
 					// ASSERT
-					assert::sequences_equivalent(m1, o);
+					assert_equivalent(m1, o);
 
 					// ACT
 					c.call(i, o);
 
 					// ASSERT
-					assert::sequences_equivalent(m2, o);
+					assert_equivalent(m2, o);
 
 					// ACT
 					c.call(i, o);
 
 					// ASSERT
-					assert::sequences_equivalent(m3, o);
+					assert_equivalent(m3, o);
 				}
 
 
-				[TestMethod]
-				void ServerReadsClientsInputs()
+				test( ServerReadsClientsInputs )
 				{
 					// INIT
 					server s("test-2");
@@ -328,9 +316,9 @@ namespace micro_profiler
 					// ASSERT
 					inputs = s.get_inputs();
 
-					Assert::AreEqual(2u, inputs.size());
-					assert::sequences_equivalent(m1, inputs[0]);
-					assert::sequences_equivalent(m3, inputs[1]);
+					assert_equal(2u, inputs.size());
+					assert_equivalent(m1, inputs[0]);
+					assert_equivalent(m3, inputs[1]);
 
 					// ACT
 					c.call(mkvector(m2), o);
@@ -338,13 +326,12 @@ namespace micro_profiler
 					// ASSERT
 					inputs = s.get_inputs();
 
-					Assert::AreEqual(3u, inputs.size());
-					assert::sequences_equivalent(m2, inputs[2]);
+					assert_equal(3u, inputs.size());
+					assert_equivalent(m2, inputs[2]);
 				}
 
 
-				[TestMethod]
-				void ServerCanReadLongMessagesFromClients()
+				test( ServerCanReadLongMessagesFromClients )
 				{
 					// INIT
 					server s("test-3");
@@ -363,8 +350,8 @@ namespace micro_profiler
 
 					// ASSERT
 					inputs = s.get_inputs();
-					Assert::AreEqual(1u, inputs.size());
-					assert::sequences_equivalent(i, inputs[0]);
+					assert_equal(1u, inputs.size());
+					assert_equivalent(i, inputs[0]);
 
 					// INIT
 					i.resize(13739);
@@ -377,13 +364,12 @@ namespace micro_profiler
 
 					// ASSERT
 					inputs = s.get_inputs();
-					Assert::AreEqual(2u, inputs.size());
-					assert::sequences_equivalent(i, inputs[1]);
+					assert_equal(2u, inputs.size());
+					assert_equivalent(i, inputs[1]);
 				}
 
 
-				[TestMethod]
-				void ClientCanReadLongServerReplies()
+				test( ClientCanReadLongServerReplies )
 				{
 					// INIT
 					vector<byte> i, o, tmp;
@@ -400,7 +386,7 @@ namespace micro_profiler
 					c.call(i, o);
 
 					// ASSERT
-					assert::sequences_equivalent(tmp, o);
+					assert_equivalent(tmp, o);
 
 					// INIT
 					tmp.resize(7356);
@@ -412,9 +398,9 @@ namespace micro_profiler
 					c.call(i, o);
 
 					// ASSERT
-					assert::sequences_equivalent(tmp, o);
+					assert_equivalent(tmp, o);
 				}
-			};
+			end_test_suite
 		}
 	}
 }

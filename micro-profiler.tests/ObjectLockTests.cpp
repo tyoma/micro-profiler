@@ -1,11 +1,13 @@
 #include <frontend/object_lock.h>
 
+#include <ut/assert.h>
+#include <ut/test.h>
+
 namespace std
 {
 	using namespace tr1;
 }
 
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 using namespace std;
 
 namespace micro_profiler
@@ -24,12 +26,8 @@ namespace micro_profiler
 
 	namespace tests
 	{
-		[TestClass]
-		public ref class ObjectLockTests
-		{
-		public:
-			[TestMethod]
-			void ObjectIsHeldByObjectLock()
+		begin_test_suite( ObjectLockTests )
+			test( ObjectIsHeldByObjectLock )
 			{
 				// INIT
 				shared_ptr<self_unlockable> su(new self_unlockable);
@@ -40,12 +38,11 @@ namespace micro_profiler
 				su = shared_ptr<self_unlockable>();
 
 				// ASSERT
-				Assert::IsFalse(su_weak.expired());
+				assert_is_false(su_weak.expired());
 			}
 
 
-			[TestMethod]
-			void ObjectIsReleasedOnDemand()
+			test( ObjectIsReleasedOnDemand )
 			{
 				// INIT
 				shared_ptr<self_unlockable> su(new self_unlockable);
@@ -59,12 +56,11 @@ namespace micro_profiler
 				p->unlock();
 
 				// ASSERT
-				Assert::IsTrue(su_weak.expired());
+				assert_is_true(su_weak.expired());
 			}
 
 
-			[TestMethod]
-			void OnlyOneObjectIsReleaseWhenSeveralAreLocked()
+			test( OnlyOneObjectIsReleaseWhenSeveralAreLocked )
 			{
 				// INIT
 				shared_ptr<self_unlockable> su1(new self_unlockable), su2(new self_unlockable);
@@ -81,40 +77,39 @@ namespace micro_profiler
 				p2->unlock();
 
 				// ASSERT
-				Assert::IsFalse(su1_weak.expired());
-				Assert::IsTrue(su2_weak.expired());
+				assert_is_false(su1_weak.expired());
+				assert_is_true(su2_weak.expired());
 
 				// ACT
 				p1->unlock();
 
 				// ASSERT
-				Assert::IsTrue(su1_weak.expired());
-				Assert::IsTrue(su2_weak.expired());
+				assert_is_true(su1_weak.expired());
+				assert_is_true(su2_weak.expired());
 			}
 
 
-			[TestMethod]
-			void LockedUnlockedSetModuleLock()
+			test( LockedUnlockedSetModuleLock )
 			{
 				// INIT / ACT
 				shared_ptr<self_unlockable> su(new self_unlockable);
 
 				// INIT / ASSERT
-				Assert::IsFalse(g_locked);
+				assert_is_false(g_locked);
 				
 				// ACT 
 				lock(su);
 
 				// ASSERT
-				Assert::IsTrue(g_locked);
+				assert_is_true(g_locked);
 
 				// ACT
 				su->unlock();
 
 
 				// ASSERT
-				Assert::IsFalse(g_locked);
+				assert_is_false(g_locked);
 			}
-		};
+		end_test_suite
 	}
 }

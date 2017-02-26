@@ -1,8 +1,9 @@
 #include <common/pod_vector.h>
 
 #include <list>
+#include <ut/assert.h>
+#include <ut/test.h>
 
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 using namespace std;
 
 namespace micro_profiler
@@ -15,7 +16,7 @@ namespace micro_profiler
 			{
 				int a;
 
-				bool operator ==(const A &rhs)
+				bool operator ==(const A &rhs) const
 				{	return a == rhs.a;	}
 			};
 
@@ -24,43 +25,37 @@ namespace micro_profiler
 				int abc;
 				char def;
 
-				bool operator ==(const B &rhs)
+				bool operator ==(const B &rhs) const
 				{	return abc == rhs.abc && def == rhs.def;	}
 			};
 		}
 
-		[TestClass]
-		public ref class MiscTests
-		{
-		public: 
-			[TestMethod]
-			void NewPodVectorHasZeroSize()
+		begin_test_suite( MiscTests )
+			test( NewPodVectorHasZeroSize )
 			{
 				// INIT / ACT
 				pod_vector<A> As;
 				pod_vector<B> Bs;
 
 				// ACT / ASSERT
-				Assert::IsTrue(0 == As.size());
-				Assert::IsTrue(0 == Bs.size());
+				assert_equal(0u, As.size());
+				assert_equal(0u, Bs.size());
 			}
 
 
-			[TestMethod]
-			void NewPodVectorHasSpecifiedCapacity()
+			test( NewPodVectorHasSpecifiedCapacity )
 			{
 				// INIT / ACT
 				pod_vector<A> As(11);
 				pod_vector<B> Bs(13);
 
 				// ACT / ASSERT
-				Assert::IsTrue(11 == As.capacity());
-				Assert::IsTrue(13 == Bs.capacity());
+				assert_equal(11u, As.capacity());
+				assert_equal(13u, Bs.capacity());
 			}
 
 
-			[TestMethod]
-			void AppendingIncreasesSize()
+			test( AppendingIncreasesSize )
 			{
 				// INIT
 				A somevalue;
@@ -70,21 +65,20 @@ namespace micro_profiler
 				v.push_back(somevalue);
 
 				// ASSERT
-				Assert::IsTrue(1 == v.size());
-				Assert::IsTrue(sizeof(A) * 1 == v.byte_size());
+				assert_equal(1u, v.size());
+				assert_equal(sizeof(A) * 1, v.byte_size());
 
 				// ACT
 				v.push_back(somevalue);
 				v.push_back(somevalue);
 
 				// ASSERT
-				Assert::IsTrue(3 == v.size());
-				Assert::IsTrue(sizeof(A) * 3 == v.byte_size());
+				assert_equal(3u, v.size());
+				assert_equal(sizeof(A) * 3, v.byte_size());
 			}
 
 
-			[TestMethod]
-			void ByteSizeRespectsTypeSize()
+			test( ByteSizeRespectsTypeSize )
 			{
 				// INIT
 				A a;
@@ -103,13 +97,12 @@ namespace micro_profiler
 				v2.push_back(b);
 
 				// ASSERT
-				Assert::IsTrue(sizeof(A) * 5 == v1.byte_size());
-				Assert::IsTrue(sizeof(B) * 3 == v2.byte_size());
+				assert_equal(sizeof(A) * 5, v1.byte_size());
+				assert_equal(sizeof(B) * 3, v2.byte_size());
 			}
 
 
-			[TestMethod]
-			void AppendedValuesAreCopied()
+			test( AppendedValuesAreCopied )
 			{
 				// INIT
 				A val1 = {	3	}, val2 = {	5	};
@@ -125,16 +118,15 @@ namespace micro_profiler
 				vB.push_back(val5);
 
 				// ACT / ASSERT
-				Assert::IsTrue(val1 == *(vA.data() + 0));
-				Assert::IsTrue(val2 == *(vA.data() + 1));
-				Assert::IsTrue(val3 == *(vB.data() + 0));
-				Assert::IsTrue(val4 == *(vB.data() + 1));
-				Assert::IsTrue(val5 == *(vB.data() + 2));
+				assert_equal(val1, *(vA.data() + 0));
+				assert_equal(val2, *(vA.data() + 1));
+				assert_equal(val3, *(vB.data() + 0));
+				assert_equal(val4, *(vB.data() + 1));
+				assert_equal(val5, *(vB.data() + 2));
 			}
 
 
-			[TestMethod]
-			void AppendingOverCapacityIncresesCapacityByHalfOfCurrent()
+			test( AppendingOverCapacityIncresesCapacityByHalfOfCurrent )
 			{
 				// INIT
 				A somevalue;
@@ -149,21 +141,20 @@ namespace micro_profiler
 				v2.push_back(somevalue);
 
 				// ASSERT
-				Assert::IsTrue(3 == v1.capacity());
-				Assert::IsTrue(4 == v2.capacity());
+				assert_equal(3u, v1.capacity());
+				assert_equal(4u, v2.capacity());
 
 				// ACT
 				v1.push_back(somevalue);
 				v2.push_back(somevalue);
 
 				// ASSERT
-				Assert::IsTrue(4 == v1.capacity());
-				Assert::IsTrue(6 == v2.capacity());
+				assert_equal(4u, v1.capacity());
+				assert_equal(6u, v2.capacity());
 			}
 
 
-			[TestMethod]
-			void IncresingCapacityPreservesOldValuesAndPushesNew()
+			test( IncresingCapacityPreservesOldValuesAndPushesNew )
 			{
 				// INIT
 				B val1 = {	1234, 1	}, val2 = {	2345, 11	}, val3 = {	34567, 13	}, val4 = {	134567, 17	};
@@ -179,16 +170,15 @@ namespace micro_profiler
 				v.push_back(val4);
 
 				// ACT / ASSERT
-				Assert::IsTrue(previous_buffer != v.data());
-				Assert::IsTrue(val1 == *(v.data() + 0));
-				Assert::IsTrue(val2 == *(v.data() + 1));
-				Assert::IsTrue(val3 == *(v.data() + 2));
-				Assert::IsTrue(val4 == *(v.data() + 3));
+				assert_not_equal(previous_buffer, v.data());
+				assert_equal(val1, *(v.data() + 0));
+				assert_equal(val2, *(v.data() + 1));
+				assert_equal(val3, *(v.data() + 2));
+				assert_equal(val4, *(v.data() + 3));
 			}
 
 
-			[TestMethod]
-			void CopyingVectorCopiesElements()
+			test( CopyingVectorCopiesElements )
 			{
 				// INIT
 				B val1 = {	1234, 1	}, val2 = {	2345, 11	}, val3 = {	34567, 13	};
@@ -205,22 +195,21 @@ namespace micro_profiler
 				pod_vector<int> copied2(v2);
 
 				// ACT / ASSERT
-				Assert::IsTrue(copied1.capacity() == 3);
-				Assert::IsTrue(copied1.size() == 3);
-				Assert::IsTrue(copied1.data() != v1.data());
-				Assert::IsTrue(val1 == *(copied1.data() + 0));
-				Assert::IsTrue(val2 == *(copied1.data() + 1));
-				Assert::IsTrue(val3 == *(copied1.data() + 2));
+				assert_equal(3u, copied1.capacity());
+				assert_equal(3u, copied1.size());
+				assert_not_equal(copied1.data(), v1.data());
+				assert_equal(val1, *(copied1.data() + 0));
+				assert_equal(val2, *(copied1.data() + 1));
+				assert_equal(val3, *(copied1.data() + 2));
 
-				Assert::IsTrue(copied2.capacity() == 10);
-				Assert::IsTrue(copied2.size() == 1);
-				Assert::IsTrue(copied2.data() != v2.data());
-				Assert::IsTrue(13 == *(copied2.data() + 0));
+				assert_equal(10u, copied2.capacity());
+				assert_equal(1u, copied2.size());
+				assert_not_equal(copied2.data(), v2.data());
+				assert_equal(13, *(copied2.data() + 0));
 			}
 
 
-			[TestMethod]
-			void AppendingEmptyVectorWithEmptySequenceLeavesItEmpty()
+			test( AppendingEmptyVectorWithEmptySequenceLeavesItEmpty )
 			{
 				// INIT
 				pod_vector<B> v1(5);
@@ -233,19 +222,18 @@ namespace micro_profiler
 				v2.append(empty_list.begin(), empty_list.end());
 
 				// ASSERT
-				Assert::IsTrue(v1.size() == 0);
-				Assert::IsTrue(v2.size() == 0);
+				assert_equal(0u, v1.size());
+				assert_equal(0u, v2.size());
 				
 				// ACT
 				v1.append((const B *)0, (const B *)0);
 
 				// ASSERT
-				Assert::IsTrue(v1.size() == 0);
+				assert_equal(0u, v1.size());
 			}
 
 
-			[TestMethod]
-			void AppendingEmptyVectorWithNonEmptySequenceNoGrow()
+			test( AppendingEmptyVectorWithNonEmptySequenceNoGrow )
 			{
 				// INIT
 				pod_vector<int> v1(5);
@@ -259,21 +247,20 @@ namespace micro_profiler
 				v2.append(ext2.begin(), ext2.end());
 
 				// ASSERT
-				Assert::IsTrue(v1.size() == 3);
-				Assert::IsTrue(1 == *(v1.data() + 0));
-				Assert::IsTrue(2 == *(v1.data() + 1));
-				Assert::IsTrue(3 == *(v1.data() + 2));
+				assert_equal(3u, v1.size());
+				assert_equal(1, *(v1.data() + 0));
+				assert_equal(2, *(v1.data() + 1));
+				assert_equal(3, *(v1.data() + 2));
 
-				Assert::IsTrue(v2.size() == 4);
-				Assert::IsTrue(2 == *(v2.data() + 0));
-				Assert::IsTrue(5 == *(v2.data() + 1));
-				Assert::IsTrue(7 == *(v2.data() + 2));
-				Assert::IsTrue(11 == *(v2.data() + 3));
+				assert_equal(4u, v2.size());
+				assert_equal(2, *(v2.data() + 0));
+				assert_equal(5, *(v2.data() + 1));
+				assert_equal(7, *(v2.data() + 2));
+				assert_equal(11, *(v2.data() + 3));
 			}
 
 
-			[TestMethod]
-			void AppendingNonEmptyVectorWithNonEmptySequenceNoGrow()
+			test( AppendingNonEmptyVectorWithNonEmptySequenceNoGrow )
 			{
 				// INIT
 				pod_vector<int> v1(6);
@@ -291,26 +278,25 @@ namespace micro_profiler
 				v2.append(ext1, ext1 + 3);
 
 				// ASSERT
-				Assert::IsTrue(v1.size() == 5);
-				Assert::IsTrue(1 == *(v1.data() + 0));
-				Assert::IsTrue(2 == *(v1.data() + 1));
-				Assert::IsTrue(3 == *(v1.data() + 2));
-				Assert::IsTrue(23 == *(v1.data() + 3));
-				Assert::IsTrue(31 == *(v1.data() + 4));
+				assert_equal(5u, v1.size());
+				assert_equal(1, *(v1.data() + 0));
+				assert_equal(2, *(v1.data() + 1));
+				assert_equal(3, *(v1.data() + 2));
+				assert_equal(23, *(v1.data() + 3));
+				assert_equal(31, *(v1.data() + 4));
 
-				Assert::IsTrue(v2.size() == 7);
-				Assert::IsTrue(2 == *(v2.data() + 0));
-				Assert::IsTrue(5 == *(v2.data() + 1));
-				Assert::IsTrue(7 == *(v2.data() + 2));
-				Assert::IsTrue(11 == *(v2.data() + 3));
-				Assert::IsTrue(1 == *(v2.data() + 4));
-				Assert::IsTrue(2 == *(v2.data() + 5));
-				Assert::IsTrue(3 == *(v2.data() + 6));
+				assert_equal(7u, v2.size());
+				assert_equal(2, *(v2.data() + 0));
+				assert_equal(5, *(v2.data() + 1));
+				assert_equal(7, *(v2.data() + 2));
+				assert_equal(11, *(v2.data() + 3));
+				assert_equal(1, *(v2.data() + 4));
+				assert_equal(2, *(v2.data() + 5));
+				assert_equal(3, *(v2.data() + 6));
 			}
 
 
-			[TestMethod]
-			void AppendingEmptyVectorWithNonEmptySequenceWithGrow()
+			test( AppendingEmptyVectorWithNonEmptySequenceWithGrow )
 			{
 				// INIT
 				pod_vector<int> v1(2);
@@ -324,21 +310,20 @@ namespace micro_profiler
 				v2.append(ext2.begin(), ext2.end());
 
 				// ASSERT
-				Assert::IsTrue(v1.size() == 3);
-				Assert::IsTrue(1 == *(v1.data() + 0));
-				Assert::IsTrue(2 == *(v1.data() + 1));
-				Assert::IsTrue(3 == *(v1.data() + 2));
+				assert_equal(3u, v1.size());
+				assert_equal(1, *(v1.data() + 0));
+				assert_equal(2, *(v1.data() + 1));
+				assert_equal(3, *(v1.data() + 2));
 
-				Assert::IsTrue(v2.size() == 4);
-				Assert::IsTrue(2 == *(v2.data() + 0));
-				Assert::IsTrue(5 == *(v2.data() + 1));
-				Assert::IsTrue(7 == *(v2.data() + 2));
-				Assert::IsTrue(11 == *(v2.data() + 3));
+				assert_equal(4u, v2.size());
+				assert_equal(2, *(v2.data() + 0));
+				assert_equal(5, *(v2.data() + 1));
+				assert_equal(7, *(v2.data() + 2));
+				assert_equal(11, *(v2.data() + 3));
 			}
 
 
-			[TestMethod]
-			void AppendingNonEmptyVectorWithNonEmptySequenceWithGrow()
+			test( AppendingNonEmptyVectorWithNonEmptySequenceWithGrow )
 			{
 				// INIT
 				pod_vector<int> v1(4);
@@ -356,26 +341,26 @@ namespace micro_profiler
 				v2.append(ext2b, ext2b + 5);
 
 				// ASSERT
-				Assert::IsTrue(v1.size() == 5);
-				Assert::IsTrue(1 == *(v1.data() + 0));
-				Assert::IsTrue(2 == *(v1.data() + 1));
-				Assert::IsTrue(3 == *(v1.data() + 2));
-				Assert::IsTrue(23 == *(v1.data() + 3));
-				Assert::IsTrue(31 == *(v1.data() + 4));
-				Assert::IsTrue(v1.capacity() == 6);
+				assert_equal(5u, v1.size());
+				assert_equal(1, *(v1.data() + 0));
+				assert_equal(2, *(v1.data() + 1));
+				assert_equal(3, *(v1.data() + 2));
+				assert_equal(23, *(v1.data() + 3));
+				assert_equal(31, *(v1.data() + 4));
+				assert_equal(6u, v1.capacity());
 
-				Assert::IsTrue(v2.size() == 9);
-				Assert::IsTrue(2 == *(v2.data() + 0));
-				Assert::IsTrue(5 == *(v2.data() + 1));
-				Assert::IsTrue(7 == *(v2.data() + 2));
-				Assert::IsTrue(11 == *(v2.data() + 3));
-				Assert::IsTrue(212 == *(v2.data() + 4));
-				Assert::IsTrue(215 == *(v2.data() + 5));
-				Assert::IsTrue(217 == *(v2.data() + 6));
-				Assert::IsTrue(2111 == *(v2.data() + 7));
-				Assert::IsTrue(2112 == *(v2.data() + 8));
-				Assert::IsTrue(v2.capacity() == 9);
+				assert_equal(9u, v2.size());
+				assert_equal(2, *(v2.data() + 0));
+				assert_equal(5, *(v2.data() + 1));
+				assert_equal(7, *(v2.data() + 2));
+				assert_equal(11, *(v2.data() + 3));
+				assert_equal(212, *(v2.data() + 4));
+				assert_equal(215, *(v2.data() + 5));
+				assert_equal(217, *(v2.data() + 6));
+				assert_equal(2111, *(v2.data() + 7));
+				assert_equal(2112, *(v2.data() + 8));
+				assert_equal(9u, v2.capacity());
 			}
-		};
+		end_test_suite
 	}
 }

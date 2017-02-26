@@ -4,6 +4,9 @@
 #include "Helpers.h"
 #include "Mockups.h"
 
+#include <ut/assert.h>
+#include <ut/test.h>
+
 #pragma warning(disable:4965)
 
 namespace std
@@ -15,8 +18,6 @@ namespace std
 
 using namespace std;
 using namespace wpl::mt;
-using namespace System;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
@@ -111,14 +112,8 @@ namespace micro_profiler
 			};
 		}
 
-		[TestClass]
-		[DeploymentItem("symbol_container_1.dll")]
-		[DeploymentItem("symbol_container_2.dll")]
-		public ref class FrontendControllerTests
-		{
-		public:
-			[TestMethod]
-			void FactoryIsNotCalledIfCollectionHandleWasNotObtained()
+		begin_test_suite( FrontendControllerTests )
+			test( FactoryIsNotCalledIfCollectionHandleWasNotObtained )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -129,12 +124,11 @@ namespace micro_profiler
 				{	frontend_controller fc(tracer, state.MakeFactory());	}
 
 				// ASSERT
-				Assert::IsTrue(waitable::timeout == initialized.wait(0));
+				assert_equal(waitable::timeout, initialized.wait(0));
 			}
 
 
-			[TestMethod]
-			void ForcedStopIsAllowedOnStartedController()
+			test( ForcedStopIsAllowedOnStartedController )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -146,8 +140,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void NonNullHandleObtained()
+			test( NonNullHandleObtained )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -158,12 +151,11 @@ namespace micro_profiler
 				auto_ptr<handle> h(profile_this(fc));
 				
 				// ASSERT
-				Assert::IsTrue(NULL != h.get());
+				assert_not_null(h.get());
 			}
 
 
-			[TestMethod]
-			void FrontendIsCreatedInASeparateThreadWhenProfilerHandleObtained()
+			test( FrontendIsCreatedInASeparateThreadWhenProfilerHandleObtained )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -179,13 +171,12 @@ namespace micro_profiler
 				// ASSERT
 				initialized.wait();
 
-				Assert::IsTrue(!!hthread);
-				Assert::IsTrue(this_thread::get_id() != hthread->get_id());
+				assert_not_null(hthread);
+				assert_not_equal(this_thread::get_id(), hthread->get_id());
 			}
 
 
-			[TestMethod]
-			void TwoCoexistingFrontendsHasDifferentWorkerThreads()
+			test( TwoCoexistingFrontendsHasDifferentWorkerThreads )
 			{
 				// INIT
 				mockups::Tracer tracer1, tracer2;
@@ -201,12 +192,11 @@ namespace micro_profiler
 				initialized2.wait();
 
 				// ASSERT
-				Assert::IsTrue(hthread1->get_id() != hthread2->get_id());
+				assert_not_equal(hthread1->get_id(), hthread2->get_id());
 			}
 
 
-			[TestMethod]
-			void FrontendStopsImmediatelyAtForceStopRequest()
+			test( FrontendStopsImmediatelyAtForceStopRequest )
 			{
 				// INIT
 				mockups::Tracer tracer(11);
@@ -222,12 +212,11 @@ namespace micro_profiler
 				fc.force_stop();
 
 				// ASSERT
-				Assert::IsFalse(hthread->is_running());
+				assert_is_false(hthread->is_running());
 			}
 
 
-			[TestMethod]
-			void FrontendIsRecreatedOnRepeatedHandleObtaining()
+			test( FrontendIsRecreatedOnRepeatedHandleObtaining )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -261,8 +250,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void FrontendCreationIsRefCounted2()
+			test( FrontendCreationIsRefCounted2 )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -282,12 +270,11 @@ namespace micro_profiler
 				fc.force_stop();
 
 				// ASSERT
-				Assert::IsTrue(0 == counter);
+				assert_equal(0, counter);
 			}
 
 
-			[TestMethod]
-			void FrontendCreationIsRefCounted3()
+			test( FrontendCreationIsRefCounted3 )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -309,12 +296,11 @@ namespace micro_profiler
 				fc.force_stop();
 
 				// ASSERT
-				Assert::IsTrue(0 == counter);
+				assert_equal(0, counter);
 			}
 
 
-			[TestMethod]
-			void FirstThreadIsDeadByTheTimeOfTheSecondInitialization()
+			test( FirstThreadIsDeadByTheTimeOfTheSecondInitialization )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -333,12 +319,11 @@ namespace micro_profiler
 				second_initialized.wait();
 
 				// ASSERT
-				Assert::IsTrue(first_finished);
+				assert_is_true(first_finished);
 			}
 
 
-			[TestMethod]
-			void AllWorkerThreadsMustExitOnHandlesClosure()
+			test( AllWorkerThreadsMustExitOnHandlesClosure )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -362,8 +347,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void ProfilerHandleReleaseIsNonBlockingAndFrontendThreadIsFinishedEventually()
+			test( ProfilerHandleReleaseIsNonBlockingAndFrontendThreadIsFinishedEventually )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -386,8 +370,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void FrontendThreadHasCOMInitialized()	// Actually this will always pass when calling from managed, since COM already initialized
+			test( FrontendThreadHasCOMInitialized )	// Actually this will always pass when calling from managed, since COM already initialized
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -400,12 +383,11 @@ namespace micro_profiler
 				initialized.wait();
 
 				// ASSERT
-				Assert::IsTrue(com_initialized);
+				assert_is_true(com_initialized);
 			}
 
 
-			[TestMethod]
-			void FrontendInterfaceReleasedAtPFDestroyed()
+			test( FrontendInterfaceReleasedAtPFDestroyed )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -421,12 +403,11 @@ namespace micro_profiler
 				hthread->join();
 
 				// ASERT
-				Assert::IsTrue(state.released);
+				assert_is_true(state.released);
 			}
 
 
-			[TestMethod]
-			void FrontendInitializedWithProcessIdAndTicksResolution()
+			test( FrontendInitializedWithProcessIdAndTicksResolution )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -440,13 +421,12 @@ namespace micro_profiler
 				// ASERT
 				long long real_resolution = timestamp_precision();
 
-				Assert::IsTrue(get_current_process_executable() == state.process_executable);
-				Assert::IsTrue(90 * real_resolution / 100 < state.ticks_resolution && state.ticks_resolution < 110 * real_resolution / 100);
+				assert_equal(get_current_process_executable(), state.process_executable);
+				assert_is_true(90 * real_resolution / 100 < state.ticks_resolution && state.ticks_resolution < 110 * real_resolution / 100);
 			}
 
 
-			[TestMethod]
-			void FrontendIsNotBotheredWithEmptyDataUpdates()
+			test( FrontendIsNotBotheredWithEmptyDataUpdates )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -454,12 +434,11 @@ namespace micro_profiler
 				auto_frontend_controller fc(tracer, state);
 
 				// ACT / ASSERT
-				Assert::IsTrue(waitable::timeout == state.updated.wait(500));
+				assert_equal(waitable::timeout, state.updated.wait(500));
 			}
 
 
-			[TestMethod]
-			void ImageLoadEventArrivesAtHandleObtaining()
+			test( ImageLoadEventArrivesAtHandleObtaining )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -472,27 +451,26 @@ namespace micro_profiler
 				state.modules_state_updated.wait();
 
 				// ASSERT
-				Assert::AreEqual(1u, state.update_log.size());
-				Assert::AreEqual(1u, state.update_log[0].image_loads.size());
-				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[0].load_address()),
+				assert_equal(1u, state.update_log.size());
+				assert_equal(1u, state.update_log[0].image_loads.size());
+				assert_equal(reinterpret_cast<uintptr_t>(images[0].load_address()),
 					state.update_log[0].image_loads[0].first);
-				Assert::AreNotEqual(wstring::npos, state.update_log[0].image_loads[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+				assert_not_equal(wstring::npos, state.update_log[0].image_loads[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
 				auto_ptr<handle> h2(fc.profile(images[1].get_symbol_address("get_function_addresses_2")));
 				state.modules_state_updated.wait();
 
 				// ASSERT
-				Assert::AreEqual(2u, state.update_log.size());
-				Assert::AreEqual(1u, state.update_log[1].image_loads.size());
-				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[1].load_address()),
+				assert_equal(2u, state.update_log.size());
+				assert_equal(1u, state.update_log[1].image_loads.size());
+				assert_equal(reinterpret_cast<uintptr_t>(images[1].load_address()),
 					state.update_log[1].image_loads[0].first);
-				Assert::AreNotEqual(wstring::npos, state.update_log[1].image_loads[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
+				assert_not_equal(wstring::npos, state.update_log[1].image_loads[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
 			}
 
 
-			[TestMethod]
-			void ImageUnloadEventArrivesAtHandleRelease()
+			test( ImageUnloadEventArrivesAtHandleRelease )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -510,9 +488,9 @@ namespace micro_profiler
 				state.modules_state_updated.wait();
 
 				// ASSERT
-				Assert::AreEqual(3u, state.update_log.size());
-				Assert::AreEqual(1u, state.update_log[2].image_unloads.size());
-				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[0].load_address()),
+				assert_equal(3u, state.update_log.size());
+				assert_equal(1u, state.update_log[2].image_unloads.size());
+				assert_equal(reinterpret_cast<uintptr_t>(images[0].load_address()),
 					state.update_log[2].image_unloads[0]);
 
 				// ACT
@@ -520,15 +498,14 @@ namespace micro_profiler
 				state.modules_state_updated.wait();
 
 				// ASSERT
-				Assert::AreEqual(4u, state.update_log.size());
-				Assert::AreEqual(1u, state.update_log[3].image_unloads.size());
-				Assert::AreEqual(reinterpret_cast<uintptr_t>(images[1].load_address()),
+				assert_equal(4u, state.update_log.size());
+				assert_equal(1u, state.update_log[3].image_unloads.size());
+				assert_equal(reinterpret_cast<uintptr_t>(images[1].load_address()),
 					state.update_log[3].image_unloads[0]);
 			}
 
 
-			[TestMethod]
-			void LastBatchIsReportedToFrontend()
+			test( LastBatchIsReportedToFrontend )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -550,16 +527,15 @@ namespace micro_profiler
 				state.modules_state_updated.wait();
 
 				// ASSERT
-				Assert::AreEqual(4u, state.update_log.size());
-				Assert::AreEqual(1u, state.update_log[0].image_loads.size());
-				Assert::IsTrue(state.update_log[1].update.end() != state.update_log[1].update.find((void *)0x1223));
-				Assert::IsTrue(state.update_log[2].update.end() != state.update_log[2].update.find((void *)0x12230));
-				Assert::AreEqual(1u, state.update_log[3].image_unloads.size());
+				assert_equal(4u, state.update_log.size());
+				assert_equal(1u, state.update_log[0].image_loads.size());
+				assert_not_equal(state.update_log[1].update.end(), state.update_log[1].update.find((void *)0x1223));
+				assert_not_equal(state.update_log[2].update.end(), state.update_log[2].update.find((void *)0x12230));
+				assert_equal(1u, state.update_log[3].image_unloads.size());
 			}
 
 
-			[TestMethod]
-			void MakeACallAndWaitForDataPost()
+			test( MakeACallAndWaitForDataPost )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -580,17 +556,17 @@ namespace micro_profiler
 				state.updated.wait();
 
 				// ASERT
-				Assert::AreEqual(1u, state.update_log.size());
+				assert_equal(1u, state.update_log.size());
 
 				statistics_map_detailed::const_iterator callinfo_1 = state.update_log[0].update.find((void *)0x1223);
 
-				Assert::IsTrue(state.update_log[0].update.end() != callinfo_1);
+				assert_not_equal(state.update_log[0].update.end(), callinfo_1);
 
-				Assert::IsTrue(1 == callinfo_1->second.times_called);
-				Assert::IsTrue(0 == callinfo_1->second.max_reentrance);
-				Assert::IsTrue(1000 == callinfo_1->second.inclusive_time);
-				Assert::IsTrue(callinfo_1->second.inclusive_time == callinfo_1->second.exclusive_time);
-				Assert::IsTrue(callinfo_1->second.inclusive_time == callinfo_1->second.max_call_time);
+				assert_equal(1u, callinfo_1->second.times_called);
+				assert_equal(0u, callinfo_1->second.max_reentrance);
+				assert_equal(1000, callinfo_1->second.inclusive_time);
+				assert_equal(callinfo_1->second.inclusive_time, callinfo_1->second.exclusive_time);
+				assert_equal(callinfo_1->second.inclusive_time, callinfo_1->second.max_call_time);
 
 				// ACT
 				call_record trace2[] = {
@@ -603,24 +579,23 @@ namespace micro_profiler
 				state.updated.wait();
 
 				// ASERT
-				Assert::AreEqual(2u, state.update_log.size());
+				assert_equal(2u, state.update_log.size());
 
-				Assert::AreEqual(1u, state.update_log[1].update.size());	// The new batch MUST NOT not contain previous function.
+				assert_equal(1u, state.update_log[1].update.size());	// The new batch MUST NOT not contain previous function.
 
 				statistics_map_detailed::const_iterator callinfo_2 = state.update_log[1].update.find((void *)0x31223);
 
-				Assert::IsTrue(state.update_log[1].update.end() != callinfo_2);
+				assert_not_equal(state.update_log[1].update.end(), callinfo_2);
 
-				Assert::IsTrue(1 == callinfo_2->second.times_called);
-				Assert::IsTrue(0 == callinfo_2->second.max_reentrance);
-				Assert::IsTrue(4000 == callinfo_2->second.inclusive_time);
-				Assert::IsTrue(callinfo_2->second.inclusive_time == callinfo_2->second.exclusive_time);
-				Assert::IsTrue(callinfo_2->second.inclusive_time == callinfo_2->second.max_call_time);
+				assert_equal(1u, callinfo_2->second.times_called);
+				assert_equal(0u, callinfo_2->second.max_reentrance);
+				assert_equal(4000, callinfo_2->second.inclusive_time);
+				assert_equal(callinfo_2->second.inclusive_time, callinfo_2->second.exclusive_time);
+				assert_equal(callinfo_2->second.inclusive_time, callinfo_2->second.max_call_time);
 			}
 
 
-			[TestMethod]
-			void SecondProfilerInstanceIsWorkable()
+			test( SecondProfilerInstanceIsWorkable )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -652,8 +627,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void PassReentranceCountToFrontend()
+			test( PassReentranceCountToFrontend )
 			{
 				// INIT
 				mockups::Tracer tracer;
@@ -686,12 +660,12 @@ namespace micro_profiler
 				state.updated.wait();
 
 				// ASERT
-				Assert::AreEqual(1u, state.update_log.size());
+				assert_equal(1u, state.update_log.size());
 
 				const function_statistics_detailed callinfo_1 = state.update_log[0].update[(void *)0x31000];
 
-				Assert::IsTrue(7 == callinfo_1.times_called);
-				Assert::IsTrue(3 == callinfo_1.max_reentrance);
+				assert_equal(7u, callinfo_1.times_called);
+				assert_equal(3u, callinfo_1.max_reentrance);
 
 				// ACT
 				call_record trace2[] = {
@@ -712,17 +686,16 @@ namespace micro_profiler
 				state.updated.wait();
 
 				// ASERT
-				Assert::AreEqual(2u, state.update_log.size());
+				assert_equal(2u, state.update_log.size());
 
 				const function_statistics_detailed &callinfo_2 = state.update_log[1].update[(void *)0x31000];
 
-				Assert::IsTrue(5 == callinfo_2.times_called);
-				Assert::IsTrue(4 == callinfo_2.max_reentrance);
+				assert_equal(5u, callinfo_2.times_called);
+				assert_equal(4u, callinfo_2.max_reentrance);
 			}
 			
 
-			[TestMethod]
-			void PerformanceDataTakesProfilerLatencyIntoAccount()
+			test( PerformanceDataTakesProfilerLatencyIntoAccount )
 			{
 				// INIT
 				mockups::Tracer tracer1(13), tracer2(29);
@@ -749,13 +722,12 @@ namespace micro_profiler
 				state2.updated.wait();
 
 				// ASSERT
-				Assert::IsTrue(4000 - 13 == state1.update_log[0].update[(void *)0x3171717].inclusive_time);
-				Assert::IsTrue(4000 - 29 == state2.update_log[0].update[(void *)0x3171717].inclusive_time);
+				assert_equal(4000 - 13, state1.update_log[0].update[(void *)0x3171717].inclusive_time);
+				assert_equal(4000 - 29, state2.update_log[0].update[(void *)0x3171717].inclusive_time);
 			}
 
 
-			[TestMethod]
-			void ChildrenStatisticsIsPassedAlongWithTopLevels()
+			test( ChildrenStatisticsIsPassedAlongWithTopLevels )
 			{
 				// INIT
 				mockups::Tracer tracer(11);
@@ -792,34 +764,33 @@ namespace micro_profiler
 				const function_statistics_detailed &callinfo_parent2 = state.update_log[0].update[(void *)0x11000];
 				const function_statistics_detailed &callinfo_parent3 = state.update_log[0].update[(void *)0x13000];
 
-				Assert::AreEqual(2u, callinfo_parent1.callees.size());
-				Assert::IsTrue(108 == callinfo_parent1.inclusive_time);
-				Assert::IsTrue(8 == callinfo_parent1.exclusive_time);
+				assert_equal(2u, callinfo_parent1.callees.size());
+				assert_equal(108, callinfo_parent1.inclusive_time);
+				assert_equal(8, callinfo_parent1.exclusive_time);
 				
-				Assert::AreEqual(1u, callinfo_parent2.callees.size());
-				Assert::IsTrue(389 == callinfo_parent2.inclusive_time);
-				Assert::IsTrue(288 == callinfo_parent2.exclusive_time);
+				assert_equal(1u, callinfo_parent2.callees.size());
+				assert_equal(389, callinfo_parent2.inclusive_time);
+				assert_equal(288, callinfo_parent2.exclusive_time);
 
-				Assert::AreEqual(0u, callinfo_parent3.callees.size());
-				Assert::IsTrue(138 == callinfo_parent3.inclusive_time);
-				Assert::IsTrue(138 == callinfo_parent3.exclusive_time);
+				assert_equal(0u, callinfo_parent3.callees.size());
+				assert_equal(138, callinfo_parent3.inclusive_time);
+				assert_equal(138, callinfo_parent3.exclusive_time);
 
 
 				const function_statistics &callinfo_child11 = state.update_log[0].update[(void *)0x31000].callees[(void *)0x37000];
 				const function_statistics &callinfo_child12 = state.update_log[0].update[(void *)0x31000].callees[(void *)0x41000];
 
-				Assert::IsTrue(2 == callinfo_child11.times_called);
-				Assert::IsTrue(26 == callinfo_child11.inclusive_time);
-				Assert::IsTrue(26 == callinfo_child11.exclusive_time);
+				assert_equal(2u, callinfo_child11.times_called);
+				assert_equal(26, callinfo_child11.inclusive_time);
+				assert_equal(26, callinfo_child11.exclusive_time);
 
-				Assert::IsTrue(1 == callinfo_child12.times_called);
-				Assert::IsTrue(8 == callinfo_child12.inclusive_time);
-				Assert::IsTrue(8 == callinfo_child12.exclusive_time);
+				assert_equal(1u, callinfo_child12.times_called);
+				assert_equal(8, callinfo_child12.inclusive_time);
+				assert_equal(8, callinfo_child12.exclusive_time);
 			}
 
 
-			[TestMethod]
-			void FrontendContinuesAfterControllerDestructionUntilAfterHandleIsReleased()
+			test( FrontendContinuesAfterControllerDestructionUntilAfterHandleIsReleased )
 			{
 				// INIT
 				mockups::Tracer tracer(11);
@@ -852,6 +823,6 @@ namespace micro_profiler
 				// ASSERT (must not hang)
 				state.updated.wait();
 			}
-		};
+		end_test_suite
 	}
 }

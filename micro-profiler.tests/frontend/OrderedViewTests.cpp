@@ -2,6 +2,8 @@
 
 #include <unordered_map>
 #include <utility>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 namespace std
 {
@@ -9,7 +11,6 @@ namespace std
 }
 
 using namespace std;
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 
 namespace micro_profiler
 {
@@ -58,23 +59,18 @@ namespace micro_profiler
 		}
 
 
-		[TestClass]
-		public ref class OrderedViewTests
-		{
-		public: 
-			[TestMethod]
-			void CanCreateEmptyOrderedView()
+		begin_test_suite( OrderedViewTests )
+			test( CanCreateEmptyOrderedView )
 			{
 				pod_map source;
 
 				sorted_pods s(source);
-				Assert::IsTrue(source.size() == 0);
-				Assert::IsTrue(s.size() == 0);
+				assert_equal(0u, source.size());
+				assert_equal(0u, s.size());
 			}
 
 
-			[TestMethod]
-			void CanUseEmptyOrderedView()
+			test( CanUseEmptyOrderedView )
 			{
 				pod_map source;
 				
@@ -83,23 +79,22 @@ namespace micro_profiler
 				sorted_pods s(source);
 
 				s.set_order(&sort_by_a, true);
-				Assert::IsTrue(s.size() == 0);
-				Assert::IsTrue(s.find_by_key(&dummy) == sorted_pods::npos);
+				assert_equal(0u, s.size());
+				assert_equal(sorted_pods::npos, s.find_by_key(&dummy));
 				
 				s.set_order(&sort_by_a, false);
-				Assert::IsTrue(s.size() == 0);
-				Assert::IsTrue(s.find_by_key(&dummy) == sorted_pods::npos);
+				assert_equal(0u, s.size());
+				assert_equal(sorted_pods::npos, s.find_by_key(&dummy));
 
 				s.set_order(sort_by_b(), false);
-				Assert::IsTrue(s.size() == 0);
-				Assert::IsTrue(s.find_by_key(&dummy) == sorted_pods::npos);
+				assert_equal(0u, s.size());
+				assert_equal(sorted_pods::npos, s.find_by_key(&dummy));
 
-				Assert::IsTrue(source.size() == 0);
+				assert_equal(0u, source.size());
 			}
 
 
-			[TestMethod]
-			void OrderedViewPreserveSize()
+			test( OrderedViewPreserveSize )
 			{
 				pod_map source;
 
@@ -110,16 +105,15 @@ namespace micro_profiler
 				source[&pod2] = pod2;
 
 				sorted_pods s(source);
-				Assert::IsTrue(s.size() == source.size());
+				assert_equal(source.size(), s.size());
 
 				s.set_order(&sort_by_a, true);
-				Assert::IsTrue(s.size() == source.size());
+				assert_equal(source.size(), s.size());
 
 			}
 
 
-			[TestMethod]
-			void OrderedViewPreserveMapOrderWithoutPredicate()
+			test( OrderedViewPreserveMapOrderWithoutPredicate )
 			{
 				pod_map source;
 
@@ -135,18 +129,17 @@ namespace micro_profiler
 
 
 				sorted_pods s(source);
-				Assert::IsTrue(s.size() == source.size());
+				assert_equal(source.size(), s.size());
 				int i = 0;
 				pod_map::const_iterator it = source.begin();
 				for (; it != source.end(); ++it, ++i)
 				{
-					Assert::IsTrue((*it) == s.at(i));
+					assert_equal(s.at(i), (*it));
 				}
 			}
 
 
-			[TestMethod]
-			void OrderedViewSortsCorrectlyAsc()
+			test( OrderedViewSortsCorrectlyAsc )
 			{
 				pod_map source;
 
@@ -161,14 +154,13 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				
-				Assert::IsTrue(s.at(0) == make_pod(biggestA));
-				Assert::IsTrue(s.at(1) == make_pod(biggestC));
-				Assert::IsTrue(s.at(2) == make_pod(biggestB));
+				assert_equal(make_pod(biggestA), s.at(0));
+				assert_equal(make_pod(biggestC), s.at(1));
+				assert_equal(make_pod(biggestB), s.at(2));
 			}
 
 
-			[TestMethod]
-			void OrderedViewSortsCorrectlyDesc()
+			test( OrderedViewSortsCorrectlyDesc )
 			{
 				pod_map source;
 
@@ -183,14 +175,13 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, false);
 
-				Assert::IsTrue(s.at(0) == make_pod(biggestB));
-				Assert::IsTrue(s.at(1) == make_pod(biggestC));
-				Assert::IsTrue(s.at(2) == make_pod(biggestA));
+				assert_equal(make_pod(biggestB), s.at(0));
+				assert_equal(make_pod(biggestC), s.at(1));
+				assert_equal(make_pod(biggestA), s.at(2));
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanSwitchPredicate()
+			test( OrderedViewCanSwitchPredicate )
 			{
 				pod_map source;
 
@@ -205,18 +196,17 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 
-				Assert::IsTrue(s.at(0) == make_pod(biggestA));
+				assert_equal(make_pod(biggestA), s.at(0));
 
 				s.set_order(sort_by_b(), true);
-				Assert::IsTrue(s.at(0) == make_pod(biggestB));
+				assert_equal(make_pod(biggestB), s.at(0));
 
 				s.set_order(&sort_by_c, true);
-				Assert::IsTrue(s.at(0) == make_pod(biggestC));
+				assert_equal(make_pod(biggestC), s.at(0));
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanSwitchDirection()
+			test( OrderedViewCanSwitchDirection )
 			{
 				pod_map source;
 
@@ -231,21 +221,20 @@ namespace micro_profiler
 				sorted_pods s(source);
 
 				s.set_order(&sort_by_a, true);
-				Assert::IsTrue(s.at(0) == make_pod(biggestA));
+				assert_equal(make_pod(biggestA), s.at(0));
 
 				s.set_order(&sort_by_a, false);
-				Assert::IsTrue(s.at(s.size()-1) == make_pod(biggestA));
+				assert_equal(make_pod(biggestA), s.at(s.size()-1));
 
 				s.set_order(sort_by_b(), true);
-				Assert::IsTrue(s.at(0) == make_pod(biggestB));
+				assert_equal(make_pod(biggestB), s.at(0));
 
 				s.set_order(sort_by_b(), false);
-				Assert::IsTrue(s.at(s.size()-1) == make_pod(biggestB));
+				assert_equal(make_pod(biggestB), s.at(s.size()-1));
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanFindByKeyWithoutAnyPredicateSet()
+			test( OrderedViewCanFindByKeyWithoutAnyPredicateSet )
 			{
 				pod_map source;
 
@@ -258,14 +247,13 @@ namespace micro_profiler
 
 				sorted_pods s(source);
 
-				Assert::IsTrue(s.find_by_key(&one) != sorted_pods::npos);
-				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
-				Assert::IsTrue(s.find_by_key(&three) == sorted_pods::npos);
+				assert_not_equal(s.find_by_key(&one), sorted_pods::npos);
+				assert_not_equal(s.find_by_key(&two), sorted_pods::npos);
+				assert_equal(sorted_pods::npos, s.find_by_key(&three));
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanFindByKeyWithPredicateSet()
+			test( OrderedViewCanFindByKeyWithPredicateSet )
 			{
 				pod_map source;
 
@@ -282,15 +270,14 @@ namespace micro_profiler
 
 				s.set_order(&sort_by_c, true);
 
-				Assert::IsTrue(s.find_by_key(&one) == 0);
-				Assert::IsTrue(s.find_by_key(&two) == 1);
-				Assert::IsTrue(s.find_by_key(&three) == 2);
-				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+				assert_equal(0u, s.find_by_key(&one));
+				assert_equal(1u, s.find_by_key(&two));
+				assert_equal(2u, s.find_by_key(&three));
+				assert_equal(sorted_pods::npos, s.find_by_key(&four));
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanFindByKeyWhenOrderChanged()
+			test( OrderedViewCanFindByKeyWhenOrderChanged )
 			{
 				pod_map source;
 
@@ -307,29 +294,28 @@ namespace micro_profiler
 
 				s.set_order(&sort_by_c, true);
 
-				Assert::IsTrue(s.find_by_key(&one) == 0);
-				Assert::IsTrue(s.find_by_key(&two) == 1);
-				Assert::IsTrue(s.find_by_key(&three) == 2);
-				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+				assert_equal(0u, s.find_by_key(&one));
+				assert_equal(1u, s.find_by_key(&two));
+				assert_equal(2u, s.find_by_key(&three));
+				assert_equal(sorted_pods::npos, s.find_by_key(&four));
 
 				s.set_order(&sort_by_c, false); // change direction
 
-				Assert::IsTrue(s.find_by_key(&one) == 2);
-				Assert::IsTrue(s.find_by_key(&two) == 1);
-				Assert::IsTrue(s.find_by_key(&three) == 0);
-				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+				assert_equal(2u, s.find_by_key(&one));
+				assert_equal(1u, s.find_by_key(&two));
+				assert_equal(0u, s.find_by_key(&three));
+				assert_equal(sorted_pods::npos, s.find_by_key(&four));
 
 				s.set_order(sort_by_b(), true);
 
-				Assert::IsTrue(s.find_by_key(&one) == 2);
-				Assert::IsTrue(s.find_by_key(&two) == 0);
-				Assert::IsTrue(s.find_by_key(&three) == 1);
-				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+				assert_equal(2u, s.find_by_key(&one));
+				assert_equal(0u, s.find_by_key(&two));
+				assert_equal(1u, s.find_by_key(&three));
+				assert_equal(sorted_pods::npos, s.find_by_key(&four));
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanFetchMapChanges()
+			test( OrderedViewCanFetchMapChanges )
 			{
 				pod_map source;
 
@@ -344,18 +330,17 @@ namespace micro_profiler
 
 				size_t initial_size = source.size();
 				sorted_pods s(source);
-				Assert::IsTrue(s.size() == source.size());
+				assert_equal(source.size(), s.size());
 				// Alter source map
 				source[&four] = four;
 				s.resort();
-				Assert::IsTrue(s.find_by_key(&four) != sorted_pods::npos);
-				Assert::IsTrue(initial_size + 1 == source.size());
-				Assert::IsTrue(s.size() == source.size());
+				assert_not_equal(s.find_by_key(&four), sorted_pods::npos);
+				assert_equal(source.size(), initial_size + 1);
+				assert_equal(source.size(), s.size());
 			}
 
 
-			[TestMethod]
-			void OrderedViewPreservesOrderAfterResort()
+			test( OrderedViewPreservesOrderAfterResort )
 			{
 				pod_map source;
 
@@ -371,34 +356,33 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				// Check if order is valid
-				Assert::IsTrue(s.at(0) == make_pod(one));
-				Assert::IsTrue(s.at(1) == make_pod(two));
-				Assert::IsTrue(s.at(2) == make_pod(three));
-				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
-				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+				assert_equal(make_pod(one), s.at(0));
+				assert_equal(make_pod(two), s.at(1));
+				assert_equal(make_pod(three), s.at(2));
+				assert_not_equal(s.find_by_key(&two), sorted_pods::npos);
+				assert_equal(sorted_pods::npos, s.find_by_key(&four));
 				// Resort(aka repopulate)
 				s.resort();
 				// Check if order is still valid
-				Assert::IsTrue(s.at(0) == make_pod(one));
-				Assert::IsTrue(s.at(1) == make_pod(two));
-				Assert::IsTrue(s.at(2) == make_pod(three));
-				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
-				Assert::IsTrue(s.find_by_key(&four) == sorted_pods::npos);
+				assert_equal(make_pod(one), s.at(0));
+				assert_equal(make_pod(two), s.at(1));
+				assert_equal(make_pod(three), s.at(2));
+				assert_not_equal(s.find_by_key(&two), sorted_pods::npos);
+				assert_equal(sorted_pods::npos, s.find_by_key(&four));
 				// Alter source map and resort
 				source[&four] = four;
 				s.resort();
 				// Check if order is valid and new item there
-				Assert::IsTrue(s.at(0) == make_pod(one));
-				Assert::IsTrue(s.at(1) == make_pod(four));
-				Assert::IsTrue(s.at(2) == make_pod(two));
-				Assert::IsTrue(s.at(3) == make_pod(three));
-				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
-				Assert::IsTrue(s.find_by_key(&four) != sorted_pods::npos);
+				assert_equal(make_pod(one), s.at(0));
+				assert_equal(make_pod(four), s.at(1));
+				assert_equal(make_pod(two), s.at(2));
+				assert_equal(make_pod(three), s.at(3));
+				assert_not_equal(s.find_by_key(&two), sorted_pods::npos);
+				assert_not_equal(s.find_by_key(&four), sorted_pods::npos);
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanResortAfterOrderCahnge()
+			test( OrderedViewCanResortAfterOrderCahnge )
 			{
 				pod_map source;
 
@@ -413,29 +397,28 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				// Check if order is valid
-				Assert::IsTrue(s.at(0) == make_pod(one));
-				Assert::IsTrue(s.at(1) == make_pod(two));
+				assert_equal(make_pod(one), s.at(0));
+				assert_equal(make_pod(two), s.at(1));
 				// Change order
 				s.set_order(&sort_by_c, false);
 				// Check if order is changed
-				Assert::IsTrue(s.at(0) == make_pod(two));
-				Assert::IsTrue(s.at(1) == make_pod(one));
+				assert_equal(make_pod(two), s.at(0));
+				assert_equal(make_pod(one), s.at(1));
 				// Alter source map and resort
 				source[&three] = three;
 				source[&four] = four;
 				s.resort();
 				// Check if order is valid and new item there
-				Assert::IsTrue(s.at(0) == make_pod(three));
-				Assert::IsTrue(s.at(1) == make_pod(two));
-				Assert::IsTrue(s.at(2) == make_pod(four));
-				Assert::IsTrue(s.at(3) == make_pod(one));
-				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
-				Assert::IsTrue(s.find_by_key(&four) != sorted_pods::npos);
+				assert_equal(make_pod(three), s.at(0));
+				assert_equal(make_pod(two), s.at(1));
+				assert_equal(make_pod(four), s.at(2));
+				assert_equal(make_pod(one), s.at(3));
+				assert_not_equal(s.find_by_key(&two), sorted_pods::npos);
+				assert_not_equal(s.find_by_key(&four), sorted_pods::npos);
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanCahngeOrderAfterResort()
+			test( OrderedViewCanCahngeOrderAfterResort )
 			{
 				pod_map source;
 
@@ -450,8 +433,8 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				// Check if order is valid
-				Assert::IsTrue(s.at(0) == make_pod(one));
-				Assert::IsTrue(s.at(1) == make_pod(two));
+				assert_equal(make_pod(one), s.at(0));
+				assert_equal(make_pod(two), s.at(1));
 				// Alter source map and resort
 				source[&three] = three;
 				source[&four] = four;
@@ -459,23 +442,22 @@ namespace micro_profiler
 				// Set another order
 				s.set_order(&sort_by_c, false);
 				// Check if order is valid and new item there
-				Assert::IsTrue(s.at(0) == make_pod(three));
-				Assert::IsTrue(s.at(1) == make_pod(two));
-				Assert::IsTrue(s.at(2) == make_pod(four));
-				Assert::IsTrue(s.at(3) == make_pod(one));
-				Assert::IsTrue(s.find_by_key(&two) != sorted_pods::npos);
-				Assert::IsTrue(s.find_by_key(&four) != sorted_pods::npos);
+				assert_equal(make_pod(three), s.at(0));
+				assert_equal(make_pod(two), s.at(1));
+				assert_equal(make_pod(four), s.at(2));
+				assert_equal(make_pod(one), s.at(3));
+				assert_not_equal(s.find_by_key(&two), sorted_pods::npos);
+				assert_not_equal(s.find_by_key(&four), sorted_pods::npos);
 			}
 
 
-			[TestMethod]
-			void OrderedViewCanFetchChangesFromEmptyMap()
+			test( OrderedViewCanFetchChangesFromEmptyMap )
 			{
 				pod_map source;
 				sorted_pods s(source);
 				s.set_order(sort_by_b(), false);
 
-				Assert::IsTrue(s.size() == 0);
+				assert_equal(0u, s.size());
 
 				POD one = {114, 21, 99.6};
 				POD two = {1, 0, 11.0};
@@ -485,24 +467,23 @@ namespace micro_profiler
 				source[&one] = one;
 				source[&two] = two;
 				s.resort();
-				Assert::IsTrue(s.size() == source.size());
-				Assert::IsTrue(s.at(0) == make_pod(two));
-				Assert::IsTrue(s.at(1) == make_pod(one));
+				assert_equal(source.size(), s.size());
+				assert_equal(make_pod(two), s.at(0));
+				assert_equal(make_pod(one), s.at(1));
 				// Add another couple and check they ALL are in rigth places
 				source[&three] = three;
 				source[&four] = four;
 				s.resort();
-				Assert::IsTrue(s.size() == source.size());
-				Assert::IsTrue(s.at(0) == make_pod(four));
-				Assert::IsTrue(s.at(1) == make_pod(three));
-				Assert::IsTrue(s.at(2) == make_pod(two));
-				Assert::IsTrue(s.at(3) == make_pod(one));
+				assert_equal(source.size(), s.size());
+				assert_equal(make_pod(four), s.at(0));
+				assert_equal(make_pod(three), s.at(1));
+				assert_equal(make_pod(two), s.at(2));
+				assert_equal(make_pod(one), s.at(3));
 
 			}
 
 
-			[TestMethod]
-			void OrderedViewThrowsOutOfRange()
+			test( OrderedViewThrowsOutOfRange )
 			{
 				pod_map source;
 
@@ -515,18 +496,10 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(sort_by_b(), false);
 
-				Assert::IsTrue(s.at(0) == make_pod(two));
-				Assert::IsTrue(s.at(1) == make_pod(one));
-				try
-				{
-					s.at(2);
-					Assert::IsTrue(false); // unexpected to be here
-				}
-				catch(out_of_range&)
-				{
-					Assert::IsTrue(true); // ok, we got an exception
-				}
+				assert_equal(make_pod(two), s.at(0));
+				assert_equal(make_pod(one), s.at(1));
+				assert_throws(s.at(2), out_of_range);
 			}
-		};
+		end_test_suite
 	}
 }

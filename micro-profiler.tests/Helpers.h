@@ -52,7 +52,6 @@ namespace micro_profiler
 
 		bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs);
 		bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs);
-		bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
 		function_statistics_detailed function_statistics_ex(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time, __int64 max_call_time);
 
 
@@ -67,6 +66,6 @@ namespace micro_profiler
 		inline void toupper(std::wstring &s)
 		{	std::transform(s.begin(), s.end(), s.begin(), &towupper);	}
 	}
-}
 
-#define ASSERT_THROWS(fragment, expected_exception) try { fragment; Assert::Fail("Expected exception was not thrown!"); } catch (const expected_exception &) { } catch (AssertFailedException ^) { throw; } catch (...) { Assert::Fail("Exception of unexpected type was thrown!"); }
+	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
+}

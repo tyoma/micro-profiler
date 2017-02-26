@@ -5,6 +5,8 @@
 
 #include <tchar.h>
 #include <algorithm>
+#include <ut/assert.h>
+#include <ut/test.h>
 
 namespace std
 {
@@ -13,7 +15,6 @@ namespace std
 	using namespace tr1::placeholders;
 }
 
-using namespace Microsoft::VisualStudio::TestTools::UnitTesting;
 using namespace std;
 
 namespace micro_profiler
@@ -29,19 +30,12 @@ namespace micro_profiler
 			}
 		}
 
-		[TestClass]
-		[DeploymentItem("symbol_container_1.dll")]
-		[DeploymentItem("symbol_container_2.dll")]
-		[DeploymentItem("symbol_container_3_nosymbols.dll")]
-		public ref class StatisticsBridgeTests
-		{
+		begin_test_suite( StatisticsBridgeTests )
 			const vector<image> *_images;
 			mockups::FrontendState *_state;
 			shared_ptr<image_load_queue> *_queue;
 
-		public:
-			[TestInitialize]
-			void CreateQueue()
+			init( CreateQueue )
 			{
 				shared_ptr<image_load_queue> q(new image_load_queue);
 				image images[] = {
@@ -56,8 +50,7 @@ namespace micro_profiler
 			}
 
 
-			[TestCleanup]
-			void DeleteQueue()
+			teardown( DeleteQueue )
 			{
 				delete _queue;
 				_queue = 0;
@@ -68,8 +61,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void ConstructingBridgeInvokesFrontendFactory()
+			test( ConstructingBridgeInvokesFrontendFactory )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -79,13 +71,12 @@ namespace micro_profiler
 				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(log), _1), *_queue);
 
 				// ASSERT
-				Assert::IsTrue(1 == log.size());
-				Assert::IsTrue(log[0] == 0);
+				assert_equal(1u, log.size());
+				assert_null(log[0]);
 			}
 
 
-			[TestMethod]
-			void BridgeHandlesNoncreatedFrontend()
+			test( BridgeHandlesNoncreatedFrontend )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -97,8 +88,7 @@ namespace micro_profiler
 			}
 
 
-			[TestMethod]
-			void BridgeHoldsFrontendForALifetime()
+			test( BridgeHoldsFrontendForALifetime )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -108,18 +98,17 @@ namespace micro_profiler
 					statistics_bridge b(cc, _state->MakeFactory(), *_queue);
 
 				// ASSERT
-					Assert::IsFalse(_state->released);
+					assert_is_false(_state->released);
 
 				// ACT (dtor)
 				}
 
 				// ASSERT
-				Assert::IsTrue(_state->released);
+				assert_is_true(_state->released);
 			}
 
 
-			[TestMethod]
-			void FrontendIsInitializedAtBridgeConstruction()
+			test( FrontendIsInitializedAtBridgeConstruction )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -130,13 +119,12 @@ namespace micro_profiler
 				// ASSERT
 				long long real_resolution = timestamp_precision();
 
-				Assert::IsTrue(get_current_process_executable() == _state->process_executable);
-				Assert::IsTrue(90 * real_resolution / 100 < _state->ticks_resolution && _state->ticks_resolution < 110 * real_resolution / 100);
+				assert_equal(get_current_process_executable(), _state->process_executable);
+				assert_is_true(90 * real_resolution / 100 < _state->ticks_resolution && _state->ticks_resolution < 110 * real_resolution / 100);
 			}
 
 
-			[TestMethod]
-			void FrontendUpdateIsNotCalledIfNoUpdates()
+			test( FrontendUpdateIsNotCalledIfNoUpdates )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -147,12 +135,11 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(0 == _state->update_log.size());
+				assert_is_empty(_state->update_log);
 			}
 
 
-			[TestMethod]
-			void FrontendUpdateIsNotCalledIfNoAnalysisInvoked()
+			test( FrontendUpdateIsNotCalledIfNoAnalysisInvoked )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -168,12 +155,11 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(0 == _state->update_log.size());
+				assert_is_empty(_state->update_log);
 			}
 
 
-			[TestMethod]
-			void FrontendUpdateClearsTheAnalyzer()
+			test( FrontendUpdateClearsTheAnalyzer )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -192,12 +178,11 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(1 == _state->update_log.size());
+				assert_equal(1u, _state->update_log.size());
 			}
 
 
-			[TestMethod]
-			void CollectedCallsArePassedToFrontend()
+			test( CollectedCallsArePassedToFrontend )
 			{
 				// INIT
 				mockups::FrontendState state2;
@@ -229,28 +214,27 @@ namespace micro_profiler
 				b2.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(1 == _state->update_log.size());
-				Assert::IsTrue(1 == _state->update_log[0].update.size());
-				Assert::IsTrue(2 == _state->update_log[0].update[(void*)0x1223].times_called);
-				Assert::IsTrue(39 == _state->update_log[0].update[(void*)0x1223].exclusive_time);
-				Assert::IsTrue(39 == _state->update_log[0].update[(void*)0x1223].inclusive_time);
+				assert_equal(1u, _state->update_log.size());
+				assert_equal(1u, _state->update_log[0].update.size());
+				assert_equal(2u, _state->update_log[0].update[(void*)0x1223].times_called);
+				assert_equal(39, _state->update_log[0].update[(void*)0x1223].exclusive_time);
+				assert_equal(39, _state->update_log[0].update[(void*)0x1223].inclusive_time);
 
-				Assert::IsTrue(1 == state2.update_log.size());
-				Assert::IsTrue(3 == state2.update_log[0].update.size());
-				Assert::IsTrue(1 == state2.update_log[0].update[(void*)0x2223].times_called);
-				Assert::IsTrue(13 == state2.update_log[0].update[(void*)0x2223].exclusive_time);
-				Assert::IsTrue(13 == state2.update_log[0].update[(void*)0x2223].inclusive_time);
-				Assert::IsTrue(1 == state2.update_log[0].update[(void*)0x3223].times_called);
-				Assert::IsTrue(17 == state2.update_log[0].update[(void*)0x3223].exclusive_time);
-				Assert::IsTrue(17 == state2.update_log[0].update[(void*)0x3223].inclusive_time);
-				Assert::IsTrue(1 == state2.update_log[0].update[(void*)0x4223].times_called);
-				Assert::IsTrue(19 == state2.update_log[0].update[(void*)0x4223].exclusive_time);
-				Assert::IsTrue(19 == state2.update_log[0].update[(void*)0x4223].inclusive_time);
+				assert_equal(1u, state2.update_log.size());
+				assert_equal(3u, state2.update_log[0].update.size());
+				assert_equal(1u, state2.update_log[0].update[(void*)0x2223].times_called);
+				assert_equal(13, state2.update_log[0].update[(void*)0x2223].exclusive_time);
+				assert_equal(13, state2.update_log[0].update[(void*)0x2223].inclusive_time);
+				assert_equal(1u, state2.update_log[0].update[(void*)0x3223].times_called);
+				assert_equal(17, state2.update_log[0].update[(void*)0x3223].exclusive_time);
+				assert_equal(17, state2.update_log[0].update[(void*)0x3223].inclusive_time);
+				assert_equal(1u, state2.update_log[0].update[(void*)0x4223].times_called);
+				assert_equal(19, state2.update_log[0].update[(void*)0x4223].exclusive_time);
+				assert_equal(19, state2.update_log[0].update[(void*)0x4223].inclusive_time);
 			}
 
 
-			[TestMethod]
-			void LoadedModulesAreReportedOnUpdate()
+			test( LoadedModulesAreReportedOnUpdate )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -261,12 +245,12 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(1u == _state->update_log.size());
-				Assert::IsTrue(1u == _state->update_log[0].image_loads.size());
+				assert_equal(1u, _state->update_log.size());
+				assert_equal(1u, _state->update_log[0].image_loads.size());
 
-				Assert::IsTrue(reinterpret_cast<uintptr_t>(_images->at(0).load_address())
-					== _state->update_log[0].image_loads[0].first);
-				Assert::IsTrue(wstring::npos != _state->update_log[0].image_loads[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+				assert_equal(reinterpret_cast<uintptr_t>(_images->at(0).load_address()),
+					_state->update_log[0].image_loads[0].first);
+				assert_not_equal(wstring::npos, _state->update_log[0].image_loads[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
 				(*_queue)->load(_images->at(1).get_symbol_address("get_function_addresses_2"));
@@ -274,20 +258,19 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(2u == _state->update_log.size());
-				Assert::IsTrue(2u == _state->update_log[1].image_loads.size());
+				assert_equal(2u, _state->update_log.size());
+				assert_equal(2u, _state->update_log[1].image_loads.size());
 
-				Assert::IsTrue(reinterpret_cast<uintptr_t>(_images->at(1).load_address())
-					== _state->update_log[1].image_loads[0].first);
-				Assert::IsTrue(wstring::npos != _state->update_log[1].image_loads[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				Assert::IsTrue(reinterpret_cast<uintptr_t>(_images->at(2).load_address())
-					== _state->update_log[1].image_loads[1].first);
-				Assert::IsTrue(wstring::npos != _state->update_log[1].image_loads[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
+				assert_equal(reinterpret_cast<uintptr_t>(_images->at(1).load_address()),
+					_state->update_log[1].image_loads[0].first);
+				assert_not_equal(wstring::npos, _state->update_log[1].image_loads[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
+				assert_equal(reinterpret_cast<uintptr_t>(_images->at(2).load_address()),
+					_state->update_log[1].image_loads[1].first);
+				assert_not_equal(wstring::npos, _state->update_log[1].image_loads[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
 
 
-			[TestMethod]
-			void UnloadedModulesAreReportedOnUpdate()
+			test( UnloadedModulesAreReportedOnUpdate )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -298,11 +281,11 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(1u == _state->update_log.size());
-				Assert::IsTrue(1u == _state->update_log[0].image_unloads.size());
+				assert_equal(1u, _state->update_log.size());
+				assert_equal(1u, _state->update_log[0].image_unloads.size());
 
-				Assert::IsTrue(reinterpret_cast<uintptr_t>(_images->at(0).load_address())
-					== _state->update_log[0].image_unloads[0]);
+				assert_equal(reinterpret_cast<uintptr_t>(_images->at(0).load_address()),
+					_state->update_log[0].image_unloads[0]);
 
 				// ACT
 				(*_queue)->unload(_images->at(1).get_symbol_address("get_function_addresses_2"));
@@ -310,18 +293,17 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(2u == _state->update_log.size());
-				Assert::IsTrue(2u == _state->update_log[1].image_unloads.size());
+				assert_equal(2u, _state->update_log.size());
+				assert_equal(2u, _state->update_log[1].image_unloads.size());
 
-				Assert::IsTrue(reinterpret_cast<uintptr_t>(_images->at(1).load_address())
-					== _state->update_log[1].image_unloads[0]);
-				Assert::IsTrue(reinterpret_cast<uintptr_t>(_images->at(2).load_address())
-					== _state->update_log[1].image_unloads[1]);
+				assert_equal(reinterpret_cast<uintptr_t>(_images->at(1).load_address()),
+					_state->update_log[1].image_unloads[0]);
+				assert_equal(reinterpret_cast<uintptr_t>(_images->at(2).load_address()),
+					_state->update_log[1].image_unloads[1]);
 			}
 
 
-			[TestMethod]
-			void EventsAreReportedInLoadsUpdatesUnloadsOrder()
+			test( EventsAreReportedInLoadsUpdatesUnloadsOrder )
 			{
 				// INIT
 				mockups::Tracer cc(10000);
@@ -340,20 +322,20 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				Assert::IsTrue(3u == _state->update_log.size());
+				assert_equal(3u, _state->update_log.size());
 				
-				Assert::IsTrue(1u == _state->update_log[0].image_loads.size());
-				Assert::IsTrue(_state->update_log[0].update.empty());
-				Assert::IsTrue(_state->update_log[0].image_unloads.empty());
+				assert_equal(1u, _state->update_log[0].image_loads.size());
+				assert_is_empty(_state->update_log[0].update);
+				assert_is_empty(_state->update_log[0].image_unloads);
 				
-				Assert::IsTrue(_state->update_log[1].image_loads.empty());
-				Assert::IsTrue(1u == _state->update_log[1].update.size());
-				Assert::IsTrue(_state->update_log[1].image_unloads.empty());
+				assert_is_empty(_state->update_log[1].image_loads);
+				assert_equal(1u, _state->update_log[1].update.size());
+				assert_is_empty(_state->update_log[1].image_unloads);
 				
-				Assert::IsTrue(_state->update_log[2].image_loads.empty());
-				Assert::IsTrue(_state->update_log[2].update.empty());
-				Assert::IsTrue(1u == _state->update_log[2].image_unloads.size());
+				assert_is_empty(_state->update_log[2].image_loads);
+				assert_is_empty(_state->update_log[2].update);
+				assert_equal(1u, _state->update_log[2].image_unloads.size());
 			}
-		};
+		end_test_suite
 	}
 }

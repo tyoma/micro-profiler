@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <wpl/base/concepts.h>
 #include <windows.h>
 

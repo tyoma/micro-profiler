@@ -39,6 +39,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="entry.asm" />
+    <MASM Include="entry.asm" />
   </ItemGroup>
 </Project>

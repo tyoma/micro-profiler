@@ -35,7 +35,7 @@ namespace micro_profiler
 				std::function<void()> oninitialized;
 
 				// Collected data
-				std::wstring process_executable;
+				std::string process_executable;
 				long long ticks_resolution;
 
 				std::vector<ReceivedEntry> update_log;
@@ -48,7 +48,7 @@ namespace micro_profiler
 
 			struct FrontendState::ReceivedEntry
 			{
-				typedef std::pair<uintptr_t /*image_address*/, std::wstring /*image_path*/> image_info;
+				typedef std::pair<uintptr_t /*image_address*/, std::string /*image_path*/> image_info;
 
 				std::vector<image_info> image_loads;
 				statistics_map_detailed update;

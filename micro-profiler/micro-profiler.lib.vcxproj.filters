@@ -63,9 +63,6 @@
     <ClInclude Include="common\formatting.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="common\com_helpers.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="common\ordered_view.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -101,6 +98,9 @@
     </ClInclude>
     <ClInclude Include="ipc\windows\common.h">
       <Filter>ipc\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="common\fb_helpers.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

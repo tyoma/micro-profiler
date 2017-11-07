@@ -14,3 +14,6 @@
 	path = libraries/utee
 	url = git@github.com:tyoma/utee.git
 	branch = master
+[submodule "libraries/flatbuffers"]
+	path = libraries/flatbuffers
+	url = git@github.com:google/flatbuffers.git

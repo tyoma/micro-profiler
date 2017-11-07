@@ -50,9 +50,6 @@ namespace micro_profiler
 		wpl::slot_connection _closed_connected;
 
 	public:
-		ProfilerFrontend();
-		~ProfilerFrontend();
-
 		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
 
 		BEGIN_COM_MAP(ProfilerFrontend)

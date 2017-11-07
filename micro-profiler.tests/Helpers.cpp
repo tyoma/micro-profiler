@@ -3,7 +3,6 @@
 #include "Helpers.h"
 
 #include <common/primitives.h>
-#include <_generated/frontend.h>
 
 #include <atlbase.h>
 
@@ -24,11 +23,11 @@ namespace micro_profiler
 			} g_module;
 		}
 
-		wstring get_current_process_executable()
+		string get_current_process_executable()
 		{
-			wchar_t fullpath[MAX_PATH + 1] = { 0 };
+			char fullpath[MAX_PATH + 1] = { 0 };
 
-			::GetModuleFileNameW(NULL, fullpath, MAX_PATH);
+			::GetModuleFileNameA(NULL, fullpath, MAX_PATH);
 			return fullpath;
 		}
 
@@ -113,12 +112,6 @@ namespace micro_profiler
 		}
 
 
-		bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs)
-		{	return lhs.FunctionAddress < rhs.FunctionAddress; }
-
-		bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs)
-		{	return lhs.Statistics.FunctionAddress < rhs.Statistics.FunctionAddress; }
-
 		function_statistics_detailed function_statistics_ex(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time, __int64 max_call_time)
 		{
 			function_statistics_detailed r;
@@ -127,6 +120,11 @@ namespace micro_profiler
 			return r;
 		}
 	}
+
+	void add_child(unsigned __int64 address, unsigned __int64 times_called, unsigned __int64 max_reentrance,
+		__int64 inclusive_time, __int64 exclusive_time, __int64 max_call_time);
+
+	const FunctionStatisticsDetailed &get();
 
 	bool operator ==(const function_statistics &lhs, const function_statistics &rhs)
 	{

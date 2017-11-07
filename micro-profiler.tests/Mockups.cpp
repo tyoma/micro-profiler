@@ -2,9 +2,12 @@
 
 #include "Helpers.h"
 
+#include <common/fb_helpers.h>
 #include <_generated/frontend.h>
-#include <common/com_helpers.h>
+#include <_generated/frontend_generated.h>
 #include <stdexcept>
+
+#undef GetMessage
 
 namespace std
 {
@@ -14,6 +17,7 @@ namespace std
 }
 
 using wpl::mt::thread;
+using namespace flatbuffers;
 using namespace std;
 
 namespace micro_profiler
@@ -35,10 +39,7 @@ namespace micro_profiler
 				STDMETHODIMP_(ULONG) AddRef();
 				STDMETHODIMP_(ULONG) Release();
 
-				STDMETHODIMP Initialize(const ProcessInitializationData *process);
-				STDMETHODIMP LoadImages(long count, const ImageLoadInfo *images);
-				STDMETHODIMP UpdateStatistics(long count, const FunctionStatisticsDetailed *statistics);
-				STDMETHODIMP UnloadImages(long count, const hyper *image_addresses);
+				STDMETHODIMP Dispatch(SAFEARRAY *message);
 
 				const Frontend &operator =(const Frontend &rhs);
 
@@ -79,49 +80,64 @@ namespace micro_profiler
 				return 0;
 			}
 
-			STDMETHODIMP Frontend::Initialize(const ProcessInitializationData *process)
+			STDMETHODIMP Frontend::Dispatch(SAFEARRAY *message_)
 			{
-				_state.process_executable = process->ExecutablePath;
-				_state.ticks_resolution = process->TicksResolution;
-				if (_state.oninitialized)
-					_state.oninitialized();
-				return S_OK;
-			}
+				const Message *message = GetMessage(message_->pvData);
 
-			STDMETHODIMP Frontend::LoadImages(long count, const ImageLoadInfo *images)
-			{
-				_state.update_log.resize(_state.update_log.size() + 1);
-				FrontendState::ReceivedEntry &e = _state.update_log.back();
-				
-				for (; count; ++images, --count)
+				switch (message->payload_type())
 				{
-					e.image_loads.push_back(make_pair(static_cast<uintptr_t>(images->Address), images->Path));
-					toupper(e.image_loads.back().second);
+				case Payload_ProcessInitializationPayload:
+					_state.ticks_resolution = message->payload_as<ProcessInitializationPayload>()->resolution();
+					_state.process_executable = message->payload_as<ProcessInitializationPayload>()->executable_path()->c_str();
+					if (_state.oninitialized)
+						_state.oninitialized();
+					break;
+
+				case Payload_LoadImagesPayload:
+			//STDMETHODIMP Frontend::LoadImages(long count, const ImageLoadInfo *images)
+			//{
+			//	_state.update_log.resize(_state.update_log.size() + 1);
+			//	FrontendState::ReceivedEntry &e = _state.update_log.back();
+			//	
+			//	for (; count; ++images, --count)
+			//	{
+			//		e.image_loads.push_back(make_pair(static_cast<uintptr_t>(images->Address), images->Path));
+			//		toupper(e.image_loads.back().second);
+			//	}
+			//	_state.modules_state_updated.raise();
+			//	return S_OK;
+			//}
+					break;
+
+				case Payload_UpdateStatisticsPayload:
+				{
+					_state.update_log.resize(_state.update_log.size() + 1);
+					FrontendState::ReceivedEntry &e = _state.update_log.back();
+					const Vector< Offset<FunctionStatisticsDetailed> > *updates = message->payload_as<UpdateStatisticsPayload>()->statistics();
+
+					for (size_t i = 0; i != updates->size(); ++i)
+					{
+						const FunctionStatisticsDetailed *update = updates->Get(i);
+						e.update[reinterpret_cast<const void *>(update->statistics()->address())] += *update;
+					}
+					_state.updated.raise();
+					_state.update_lock.wait();
+					break;
 				}
-				_state.modules_state_updated.raise();
-				return S_OK;
-			}
 
-			STDMETHODIMP Frontend::UpdateStatistics(long count, const FunctionStatisticsDetailed *data)
-			{
-				_state.update_log.resize(_state.update_log.size() + 1);
-				FrontendState::ReceivedEntry &e = _state.update_log.back();
+				case Payload_UnloadImagesPayload:
+			//STDMETHODIMP Frontend::UnloadImages(long count, const hyper *image_addresses)
+			//{
+			//	_state.update_log.resize(_state.update_log.size() + 1);
+			//	FrontendState::ReceivedEntry &e = _state.update_log.back();
 
-				for (; count; --count, ++data)
-					e.update[reinterpret_cast<const void *>(data->Statistics.FunctionAddress)] += *data;
-				_state.updated.raise();
-				_state.update_lock.wait();
-				return S_OK;
-			}
-
-			STDMETHODIMP Frontend::UnloadImages(long count, const hyper *image_addresses)
-			{
-				_state.update_log.resize(_state.update_log.size() + 1);
-				FrontendState::ReceivedEntry &e = _state.update_log.back();
-
-				for (; count; ++image_addresses, --count)
-					e.image_unloads.push_back(static_cast<uintptr_t>(*image_addresses));
-				_state.modules_state_updated.raise();
+			//	for (; count; ++image_addresses, --count)
+			//		e.image_unloads.push_back(static_cast<uintptr_t>(*image_addresses));
+			//	_state.modules_state_updated.raise();
+			//	return S_OK;
+			//}
+					break;
+				}
 				return S_OK;
 			}
 

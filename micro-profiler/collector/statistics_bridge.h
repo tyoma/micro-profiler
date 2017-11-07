@@ -20,21 +20,16 @@
 
 #pragma once
 
+#include "../_generated/frontend_generated.h"
 #include "analyzer.h"
 
 #include <deque>
 #include <functional>
 #include <memory>
 
-namespace std
-{
-	using tr1::function;
-	using tr1::shared_ptr;
-}
+namespace std { namespace tr1 {}; using namespace tr1; };
 
 struct IProfilerFrontend;
-typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-typedef struct FunctionStatisticsTag FunctionStatistics;
 
 namespace micro_profiler
 {
@@ -60,8 +55,7 @@ namespace micro_profiler
 
 	class statistics_bridge
 	{
-		std::vector<FunctionStatisticsDetailed> _buffer;
-		std::vector<FunctionStatistics> _children_buffer;
+		flatbuffers::FlatBufferBuilder _fbuilder;
 		analyzer _analyzer;
 		calls_collector_i &_collector;
 		IProfilerFrontend *_frontend;
@@ -74,5 +68,9 @@ namespace micro_profiler
 
 		void analyze();
 		void update_frontend();
+
+	private:
+		template <typename T>
+		void dispatch(flatbuffers::Offset<T> payload);
 	};
 }

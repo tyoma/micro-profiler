@@ -20,67 +20,65 @@
 
 #include "statistics_bridge.h"
 
-#include "../common/com_helpers.h"
+#include "../_generated/frontend.h"
 #include "calls_collector.h"
 
 #include <algorithm>
 #include <iterator>
+#include <windows.h>
 
+using namespace flatbuffers;
 using namespace std;
 
 namespace micro_profiler
 {
 	namespace
 	{
+		const uint64_t c_call_offset = 5;
 		const __int64 c_ticks_resolution(timestamp_precision());
 
-		wchar_t *allocate_string(const wchar_t *source)
+		string utf8(const wstring &from)
 		{
-			size_t l = wcslen(source);
-			wchar_t *s = new wchar_t[l + 1];
-		
-			std::copy(source, source + l, s);
-			s[l] = L'\0';
-			return s;
+			return string(from.begin(), from.end());
 		}
 
-		class ImageLoadInfo : public ::ImageLoadInfo
-		{
-		public:
-			ImageLoadInfo(const image_load_queue::image_info &from);
-			ImageLoadInfo(const ImageLoadInfo &other);
-			~ImageLoadInfo();
+		//class ImageLoadInfo : public ::ImageLoadInfo
+		//{
+		//public:
+		//	ImageLoadInfo(const image_load_queue::image_info &from);
+		//	ImageLoadInfo(const ImageLoadInfo &other);
+		//	~ImageLoadInfo();
 
-			const ImageLoadInfo &operator =(const ImageLoadInfo &rhs);
-		};
+		//	const ImageLoadInfo &operator =(const ImageLoadInfo &rhs);
+		//};
 
-		typedef char static_assertion[sizeof(ImageLoadInfo) == sizeof(::ImageLoadInfo) ? 1 : -1];
+		//typedef char static_assertion[sizeof(ImageLoadInfo) == sizeof(::ImageLoadInfo) ? 1 : -1];
 
-		ImageLoadInfo::ImageLoadInfo(const image_load_queue::image_info &from)
-		{
-			Address = reinterpret_cast<hyper>(from.first);
-			Path = allocate_string(from.second.c_str());
-		}
+		//ImageLoadInfo::ImageLoadInfo(const image_load_queue::image_info &from)
+		//{
+		//	Address = reinterpret_cast<hyper>(from.first);
+		//	Path = allocate_string(from.second.c_str());
+		//}
 
-		ImageLoadInfo::ImageLoadInfo(const ImageLoadInfo &other)
-		{
-			Path = NULL;
-			*this = other;
-		}
+		//ImageLoadInfo::ImageLoadInfo(const ImageLoadInfo &other)
+		//{
+		//	Path = NULL;
+		//	*this = other;
+		//}
 
-		ImageLoadInfo::~ImageLoadInfo()
-		{	delete []Path;	}
+		//ImageLoadInfo::~ImageLoadInfo()
+		//{	delete []Path;	}
 
-		const ImageLoadInfo &ImageLoadInfo::operator =(const ImageLoadInfo &rhs)
-		{
-			if (&rhs != this)
-			{
-				Address = rhs.Address;
-				delete []Path;
-				Path = allocate_string(rhs.Path);
-			}
-			return *this;
-		}
+		//const ImageLoadInfo &ImageLoadInfo::operator =(const ImageLoadInfo &rhs)
+		//{
+		//	if (&rhs != this)
+		//	{
+		//		Address = rhs.Address;
+		//		delete []Path;
+		//		Path = allocate_string(rhs.Path);
+		//	}
+		//	return *this;
+		//}
 	}
 
 	void image_load_queue::load(const void *in_image_address)
@@ -117,7 +115,7 @@ namespace micro_profiler
 
 		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
 			reinterpret_cast<LPCTSTR>(in_image_address), &image_address);
-		::GetModuleFileName(image_address, image_path, sizeof(image_path));
+		::GetModuleFileNameW(image_address, image_path, sizeof(image_path));
 
 		return make_pair(image_address, image_path);
 	}
@@ -125,20 +123,15 @@ namespace micro_profiler
 
 	statistics_bridge::statistics_bridge(calls_collector_i &collector,
 			const function<void (IProfilerFrontend **frontend)> &factory,
-			const std::shared_ptr<image_load_queue> &image_load_queue)
+			const shared_ptr<image_load_queue> &image_load_queue)
 		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(0),
 			_image_load_queue(image_load_queue)
 	{
 		factory(&_frontend);
 		if (_frontend)
 		{
-			wstring path = image_load_queue::get_module_info(0).second;
-			ProcessInitializationData process = {
-				c_ticks_resolution,
-				path.c_str()
-			};
-
-			_frontend->Initialize(&process);
+			dispatch(CreateProcessInitializationPayload(_fbuilder, c_ticks_resolution,
+				_fbuilder.CreateString(utf8(image_load_queue::get_module_info(0).second))));
 		}
 	}
 
@@ -153,31 +146,43 @@ namespace micro_profiler
 
 	void statistics_bridge::update_frontend()
 	{
-		struct xform
-		{
-			hyper operator ()(const image_load_queue::image_info &from) const
-			{	return reinterpret_cast<hyper>(from.first);	}
-		};
-
 		vector<image_load_queue::image_info> loaded, unloaded;
 		
 		_image_load_queue->get_changes(loaded, unloaded);
-		copy(_analyzer.begin(), _analyzer.end(), _buffer, _children_buffer);
 		if (_frontend)
 		{
-			vector<ImageLoadInfo> loaded2(loaded.begin(), loaded.end());
-			vector<hyper> unloaded2;
+		//	vector<ImageLoadInfo> loaded2(loaded.begin(), loaded.end());
+		//	vector<hyper> unloaded2;
 
-			if (!loaded2.empty())
-				_frontend->LoadImages(static_cast<long>(loaded2.size()), &loaded2[0]);
+		//	if (!loaded2.empty())
+		//		_frontend->LoadImages(static_cast<long>(loaded2.size()), &loaded2[0]);
 
-			if (!_buffer.empty())
-				_frontend->UpdateStatistics(static_cast<long>(_buffer.size()), &_buffer[0]);
+			vector< Offset<FunctionStatisticsDetailed> > offsets;
 
-			transform(unloaded.begin(), unloaded.end(), back_inserter(unloaded2), xform());
-			if (!unloaded2.empty())
-				_frontend->UnloadImages(static_cast<long>(unloaded2.size()), &unloaded2[0]);
+			for (analyzer::const_iterator i = _analyzer.begin(); i != _analyzer.end(); ++i)
+			{
+				FunctionStatistics statistics(reinterpret_cast<uint64_t>(i->first) - c_call_offset, i->second.times_called,
+					i->second.max_reentrance, i->second.inclusive_time, i->second.exclusive_time, i->second.max_call_time);
+
+				offsets.push_back(CreateFunctionStatisticsDetailed(_fbuilder, &statistics));
+			}
+			if (_analyzer.begin() != _analyzer.end())
+				dispatch(CreateUpdateStatisticsPayload(_fbuilder, _fbuilder.CreateVector(offsets)));
+
+		//	transform(unloaded.begin(), unloaded.end(), back_inserter(unloaded2), xform());
+		//	if (!unloaded2.empty())
+		//		_frontend->UnloadImages(static_cast<long>(unloaded2.size()), &unloaded2[0]);
 		}
 		_analyzer.clear();
+	}
+
+	template <typename T>
+	void statistics_bridge::dispatch(Offset<T> payload)
+	{
+		SAFEARRAY message = { 0 };
+
+		_fbuilder.Finish(CreateMessage(_fbuilder, PayloadTraits<T>::enum_value, payload.Union()));
+		message.pvData = _fbuilder.GetBufferPointer();
+		_frontend->Dispatch(&message);
 	}
 }

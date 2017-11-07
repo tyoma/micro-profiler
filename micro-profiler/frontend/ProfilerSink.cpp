@@ -36,19 +36,11 @@ namespace micro_profiler
 {
 	namespace
 	{
-		typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
-
-		OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);
+		OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, ProfilerFrontend);
 
 		void disconnect(IUnknown *object)
 		{	::CoDisconnectObject(object, 0);	}
 	}
-
-	ProfilerFrontend::ProfilerFrontend()
-	{	}
-
-	ProfilerFrontend::~ProfilerFrontend()
-	{	}
 
 	void ProfilerFrontend::FinalRelease()
 	{

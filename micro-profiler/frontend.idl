@@ -18,51 +18,15 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-import "unknwn.idl";
+import "oaidl.idl";
 
-typedef [public]
-struct ProcessInitializationDataTag
-{
-	hyper TicksResolution;
-	[string] const wchar_t *ExecutablePath;
-} ProcessInitializationData;
-
-typedef [public]
-struct FunctionStatisticsTag
-{
-	hyper FunctionAddress;
-	hyper TimesCalled;
-	hyper MaxReentrance;
-	hyper ExclusiveTime;
-	hyper InclusiveTime;
-	hyper MaxCallTime;
-} FunctionStatistics;
-
-typedef [public]
-struct FunctionStatisticsDetailedTag
-{
-	FunctionStatistics Statistics;
-	long ChildrenCount;
-	[size_is(ChildrenCount)] FunctionStatistics *ChildrenStatistics;
-} FunctionStatisticsDetailed;
-
-typedef [public]
-struct ImageLoadInfoTag
-{
-	hyper Address;
-	[string] const wchar_t *Path;
-} ImageLoadInfo;
-
-[object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), pointer_default(unique)]
+[object, uuid(D0ACDE68-D06B-412B-8E9F-4752D8B2FAB6)]
 interface IProfilerFrontend : IUnknown
 {
-	HRESULT Initialize([in] const ProcessInitializationData *process);
-	HRESULT LoadImages([in] long count, [in, size_is(count)] const ImageLoadInfo *images);
-	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] const FunctionStatisticsDetailed *statistics);
-	HRESULT UnloadImages([in] long count, [in, size_is(count)] const hyper *images);
+	HRESULT Dispatch([in] SAFEARRAY(byte) message);
 };
 
-[uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3)]
+[uuid(62BBC9ED-B804-4245-B59B-CE5685020B51)]
 coclass ProfilerFrontend
 {
 	[default] interface IProfilerFrontend;

@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="frontend.idl" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="_generated">
       <UniqueIdentifier>{22b66fb4-38e4-4eec-885d-d0527ee5edfe}</UniqueIdentifier>
     </Filter>
@@ -23,5 +20,11 @@
     <ClInclude Include="_generated\frontend.h">
       <Filter>_generated</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="frontend.fbs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="frontend.idl" />
   </ItemGroup>
 </Project>

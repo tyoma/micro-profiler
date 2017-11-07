@@ -29,11 +29,10 @@ namespace std
 	using std::tr1::shared_ptr;
 }
 
-typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-
 namespace micro_profiler
 {
 	struct symbol_resolver;
+	struct UpdateStatisticsPayload;
 
 	struct linked_statistics : wpl::ui::listview::model
 	{
@@ -43,7 +42,7 @@ namespace micro_profiler
 	struct functions_list : wpl::ui::listview::model
 	{
 		virtual void clear() = 0;
-		virtual void update(const FunctionStatisticsDetailed *data, size_t count) = 0;
+		virtual void update(const UpdateStatisticsPayload &data) = 0;
 		virtual void print(std::wstring &content) const = 0;
 		virtual index_type get_index(const void *address) const = 0;
 		virtual std::shared_ptr<linked_statistics> watch_children(index_type item) const = 0;

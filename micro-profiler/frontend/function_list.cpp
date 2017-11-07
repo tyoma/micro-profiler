@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2015 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
+﻿//	Copyright (c) 2011-2015 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 
 #include "function_list.h"
 
-#include "../common/com_helpers.h"
+#include "../common/fb_helpers.h"
 #include "../common/formatting.h"
 #include "../common/ordered_view.h"
 #include "symbol_resolver.h"
@@ -182,7 +182,7 @@ namespace micro_profiler
 		functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
 
 		virtual void clear();
-		virtual void update(const FunctionStatisticsDetailed *data, size_t count);
+		virtual void update(const UpdateStatisticsPayload &data);
 		virtual void print(wstring &content) const;
 		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
 		virtual shared_ptr<linked_statistics> watch_parents(index_type item) const;
@@ -312,15 +312,18 @@ namespace micro_profiler
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
-	void functions_list_impl::update(const FunctionStatisticsDetailed *data, size_t count)
+	void functions_list_impl::update(const UpdateStatisticsPayload &data)
 	{
-		for (; count; --count, ++data)
+		const /*flatbuffers::Vector<const FunctionStatisticsDetailed *>*/auto &statistics = *data.statistics();
+
+		for (size_t i = 0, size = statistics.size(); i != size; ++i)
 		{
-			const void *address = reinterpret_cast<const void *>(data->Statistics.FunctionAddress);
-			const function_statistics_detailed &s = (*_statistics)[address] += *data;
+			const FunctionStatisticsDetailed &entry = *statistics.Get(i);
+			const void *address = reinterpret_cast<const void *>(entry.statistics()->address());
+			const function_statistics_detailed &s = (*_statistics)[address] += entry;
 
 			update_parent_statistics(*_statistics, address, s);
-			if (data->ChildrenCount)
+			if (entry.children_statistics() && entry.children_statistics()->size())
 				entry_updated(address);
 		}
 		updated();

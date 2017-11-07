@@ -15,7 +15,7 @@ namespace micro_profiler
 	namespace tests
 	{
 		begin_test_suite( ImageLoadQueueTests )
-			const vector<image> *_images;
+			vector<image> _images;
 
 			init( LoadImages )
 			{
@@ -25,13 +25,7 @@ namespace micro_profiler
 					image(_T("symbol_container_3_nosymbols.dll")),
 				};
 
-				_images = new vector<image>(images, images + _countof(images));
-			}
-
-			teardown( FreeImages )
-			{
-				delete _images;
-				_images = 0;
+				_images = mkvector(images);
 			}
 
 
@@ -57,7 +51,7 @@ namespace micro_profiler
 				vector<image_load_queue::image_info> loaded_images, unloaded_images;
 
 				// ACT
-				q.load(_images->at(0).get_symbol_address("get_function_addresses_1"));
+				q.load(_images.at(0).get_symbol_address("get_function_addresses_1"));
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
@@ -66,12 +60,12 @@ namespace micro_profiler
 
 				toupper(loaded_images[0].second);
 
-				assert_equal(loaded_images[0].first, _images->at(0).load_address());
+				assert_equal(loaded_images[0].first, _images.at(0).load_address());
 				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
-				q.load(_images->at(1).get_symbol_address("get_function_addresses_2"));
-				q.load(_images->at(2).get_symbol_address("get_function_addresses_3"));
+				q.load(_images.at(1).get_symbol_address("get_function_addresses_2"));
+				q.load(_images.at(2).get_symbol_address("get_function_addresses_3"));
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
@@ -81,9 +75,9 @@ namespace micro_profiler
 				toupper(loaded_images[0].second);
 				toupper(loaded_images[1].second);
 
-				assert_equal(loaded_images[0].first, _images->at(1).load_address());
+				assert_equal(loaded_images[0].first, _images.at(1).load_address());
 				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				assert_equal(loaded_images[1].first, _images->at(2).load_address());
+				assert_equal(loaded_images[1].first, _images.at(2).load_address());
 				assert_not_equal(wstring::npos, loaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
 
@@ -95,7 +89,7 @@ namespace micro_profiler
 				vector<image_load_queue::image_info> loaded_images, unloaded_images;
 
 				// ACT
-				q.unload(_images->at(0).get_symbol_address("get_function_addresses_1"));
+				q.unload(_images.at(0).get_symbol_address("get_function_addresses_1"));
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
@@ -104,12 +98,12 @@ namespace micro_profiler
 
 				toupper(unloaded_images[0].second);
 
-				assert_equal(unloaded_images[0].first, _images->at(0).load_address());
+				assert_equal(unloaded_images[0].first, _images.at(0).load_address());
 				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
-				q.unload(_images->at(1).get_symbol_address("get_function_addresses_2"));
-				q.unload(_images->at(2).get_symbol_address("get_function_addresses_3"));
+				q.unload(_images.at(1).get_symbol_address("get_function_addresses_2"));
+				q.unload(_images.at(2).get_symbol_address("get_function_addresses_3"));
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
@@ -119,9 +113,9 @@ namespace micro_profiler
 				toupper(unloaded_images[0].second);
 				toupper(unloaded_images[1].second);
 
-				assert_equal(unloaded_images[0].first, _images->at(1).load_address());
+				assert_equal(unloaded_images[0].first, _images.at(1).load_address());
 				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				assert_equal(unloaded_images[1].first, _images->at(2).load_address());
+				assert_equal(unloaded_images[1].first, _images.at(2).load_address());
 				assert_not_equal(wstring::npos, unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
 
@@ -133,9 +127,9 @@ namespace micro_profiler
 				vector<image_load_queue::image_info> loaded_images, unloaded_images;
 
 				// ACT
-				q.load(_images->at(0).get_symbol_address("get_function_addresses_1"));
-				q.unload(_images->at(1).get_symbol_address("get_function_addresses_2"));
-				q.unload(_images->at(2).get_symbol_address("get_function_addresses_3"));
+				q.load(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				q.unload(_images.at(1).get_symbol_address("get_function_addresses_2"));
+				q.unload(_images.at(2).get_symbol_address("get_function_addresses_3"));
 				q.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
@@ -146,11 +140,11 @@ namespace micro_profiler
 				toupper(unloaded_images[0].second);
 				toupper(unloaded_images[1].second);
 
-				assert_equal(loaded_images[0].first, _images->at(0).load_address());
+				assert_equal(loaded_images[0].first, _images.at(0).load_address());
 				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
-				assert_equal(unloaded_images[0].first, _images->at(1).load_address());
+				assert_equal(unloaded_images[0].first, _images.at(1).load_address());
 				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				assert_equal(unloaded_images[1].first, _images->at(2).load_address());
+				assert_equal(unloaded_images[1].first, _images.at(2).load_address());
 				assert_not_equal(wstring::npos, unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
 		end_test_suite

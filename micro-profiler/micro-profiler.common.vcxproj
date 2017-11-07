@@ -18,16 +18,15 @@
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
-  
   <ItemGroup>
-    <CustomBuild Include="frontend.idl">
-      <Command>midl /env win32 /out "$(OutDir)." "%(Fullpath)"
-midl /env x64 /out "$(IntDir)." "%(Fullpath)"
-type "$(IntDir)\%(Filename)_p.c" &gt;&gt; "$(OutDir)\%(Filename)_p.c"
-</Command>
+    <CustomBuild Include="frontend.fbs">
+      <Command>flatc --cpp -o _generated %(Fullpath)</Command>
       <Outputs>$(OutDir)%(Filename).h;$(OutDir)%(Filename)_i.c;$(OutDir)%(Filename)_p.c;$(OutDir)dlldata.c</Outputs>
     </CustomBuild>
+    <Midl Include="frontend.idl">
+      <OutputDirectory Condition="'$(Configuration)|$(Platform)'=='Common|Win32'">_generated</OutputDirectory>
+      <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Common|Win32'">%(Filename).h</HeaderFileName>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_generated\dlldata.c" />
@@ -40,6 +39,9 @@ type "$(IntDir)\%(Filename)_p.c" &gt;&gt; "$(OutDir)\%(Filename)_p.c"
   <PropertyGroup>
     <ExtensionsToDeleteOnClean>*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
     <OutDir>$(ProjectDir)_generated\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ExecutablePath>$(VC_ExecutablePath_x86);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\SysWow64;$(FxCopDir);$(PATH);$(SolutionDir)_cmake\release</ExecutablePath>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

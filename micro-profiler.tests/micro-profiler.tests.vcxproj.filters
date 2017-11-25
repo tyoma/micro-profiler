@@ -27,6 +27,7 @@
     </ClCompile>
     <ClCompile Include="IPCClientServerTests.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SerializationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />

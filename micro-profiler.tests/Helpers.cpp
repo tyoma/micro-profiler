@@ -2,7 +2,6 @@
 
 #include "Helpers.h"
 
-#include <common/primitives.h>
 #include <_generated/frontend.h>
 
 #include <atlbase.h>
@@ -128,10 +127,15 @@ namespace micro_profiler
 		}
 	}
 
-	bool operator ==(const function_statistics &lhs, const function_statistics &rhs)
+	bool operator <(const function_statistics &lhs, const function_statistics &rhs)
 	{
-		return lhs.times_called == rhs.times_called && lhs.max_reentrance == rhs.max_reentrance
-			&& lhs.inclusive_time == rhs.inclusive_time && lhs.exclusive_time == rhs.exclusive_time
-			&& lhs.max_call_time == rhs.max_call_time;
+		return lhs.times_called < rhs.times_called ? true : lhs.times_called > rhs.times_called ? false :
+			lhs.max_reentrance < rhs.max_reentrance ? true : lhs.max_reentrance > rhs.max_reentrance ? false :
+			lhs.inclusive_time < rhs.inclusive_time ? true : lhs.inclusive_time > rhs.inclusive_time ? false :
+			lhs.exclusive_time < rhs.exclusive_time ? true : lhs.exclusive_time > rhs.exclusive_time ? false :
+			lhs.max_call_time < rhs.max_call_time;
 	}
+
+	bool operator ==(const function_statistics &lhs, const function_statistics &rhs)
+	{	return !(lhs < rhs) && !(rhs < lhs);	}
 }

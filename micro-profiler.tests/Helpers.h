@@ -1,18 +1,18 @@
 #pragma once
 
+#include <common/primitives.h>
+
 #include <wpl/mt/thread.h>
 #include <algorithm>
 #include <string>
 #include <tchar.h>
+#include <vector>
 
 typedef struct FunctionStatisticsTag FunctionStatistics;
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
 namespace micro_profiler
 {
-	struct function_statistics;
-	struct function_statistics_detailed;
-
 	namespace tests
 	{
 		struct running_thread
@@ -65,7 +65,12 @@ namespace micro_profiler
 
 		inline void toupper(std::wstring &s)
 		{	std::transform(s.begin(), s.end(), s.begin(), &towupper);	}
+
+		template <typename KeyT, typename ValueT, typename CompT>
+		inline std::vector< std::pair<KeyT, ValueT> > mkvector(const std::unordered_map<KeyT, ValueT, CompT> &from)
+		{	return std::vector< std::pair<KeyT, ValueT> >(from.begin(), from.end());	}
 	}
 
+	bool operator <(const function_statistics &lhs, const function_statistics &rhs);
 	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
 }

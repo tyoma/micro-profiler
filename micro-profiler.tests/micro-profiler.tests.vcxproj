@@ -73,6 +73,7 @@
     <ClCompile Include="Mockups.cpp" />
     <ClCompile Include="ObjectLockTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
+    <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />

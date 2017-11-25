@@ -31,8 +31,6 @@
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
-  
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
@@ -100,6 +98,7 @@
     <ClInclude Include="common\ordered_view.h" />
     <ClInclude Include="common\pod_vector.h" />
     <ClInclude Include="common\primitives.h" />
+    <ClInclude Include="common\serialization.h" />
     <ClInclude Include="frontend\function_list.h" />
     <ClInclude Include="frontend\object_lock.h" />
     <ClInclude Include="frontend\columns_model.h" />

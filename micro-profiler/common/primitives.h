@@ -56,6 +56,8 @@ namespace micro_profiler
 
 		void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time);
 
+		void operator +=(const function_statistics &rhs);
+
 		unsigned __int64 times_called;
 		unsigned __int64 max_reentrance;
 		__int64 inclusive_time;
@@ -90,6 +92,17 @@ namespace micro_profiler
 		this->exclusive_time += exclusive_time;
 		if (inclusive_time > this->max_call_time)
 			this->max_call_time = inclusive_time;
+	}
+
+	inline void function_statistics::operator +=(const function_statistics &rhs)
+	{
+		times_called += rhs.times_called;
+		if (rhs.max_reentrance > max_reentrance)
+			max_reentrance = rhs.max_reentrance;
+		inclusive_time += rhs.inclusive_time;
+		exclusive_time += rhs.exclusive_time;
+		if (rhs.max_call_time > max_call_time)
+			max_call_time = rhs.max_call_time;
 	}
 
 

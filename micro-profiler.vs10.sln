@@ -88,6 +88,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "utee-runner", "libraries\ut
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agge.tests", "libraries\agge\tests\agge\agge.tests.vcxproj", "{A180777F-1EE0-4E11-90CA-D81B01D45ED3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "strmd.tests", "libraries\strmd\tests\strmd.tests.vcxproj", "{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -268,6 +270,14 @@ Global
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Release|Win32.Build.0 = Release|Win32
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Release|x64.ActiveCfg = Release|x64
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3}.Release|x64.Build.0 = Release|x64
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Debug|Win32.Build.0 = Debug|Win32
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Debug|x64.ActiveCfg = Debug|x64
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Debug|x64.Build.0 = Debug|x64
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Release|Win32.ActiveCfg = Release|Win32
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Release|Win32.Build.0 = Release|Win32
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Release|x64.ActiveCfg = Release|x64
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -291,5 +301,6 @@ Global
 		{4DB73ACE-2D47-4A6C-8213-2BE191DD921F} = {FA650D5D-355E-46E0-9D03-5DA8E3AA6C80}
 		{AD0BA725-9F6F-474E-ADB0-1F506B1CD394} = {D6AE81FB-2D24-47BD-B23A-6AF09C99B918}
 		{A180777F-1EE0-4E11-90CA-D81B01D45ED3} = {EC366B0C-68AA-4C2D-A15F-5CF9F4156B01}
+		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA} = {EC366B0C-68AA-4C2D-A15F-5CF9F4156B01}
 	EndGlobalSection
 EndGlobal

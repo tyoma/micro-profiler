@@ -102,6 +102,9 @@
     <ClInclude Include="ipc\windows\common.h">
       <Filter>ipc\windows</Filter>
     </ClInclude>
+    <ClInclude Include="common\serialization.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">

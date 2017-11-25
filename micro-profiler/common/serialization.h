@@ -24,7 +24,13 @@
 
 #include <strmd/strmd/deserializer.h>
 
+namespace micro_profiler
+{
+	class analyzer;
+}
+
 template <> struct strmd::is_arithmetic<const void *> { static const bool value = true; };
+template <> struct strmd::is_container<micro_profiler::analyzer> { static const bool value = true; };
 
 template <> struct strmd::container_reader<micro_profiler::statistics_map>
 {

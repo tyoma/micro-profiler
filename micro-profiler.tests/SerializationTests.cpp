@@ -1,4 +1,5 @@
 #include <common/serialization.h>
+#include <collector/analyzer.h>
 
 #include "Helpers.h"
 
@@ -286,6 +287,43 @@ namespace micro_profiler
 				reference[(void *)12211] = 723;
 
 				assert_equivalent(mkvector(reference), mkvector(ss[(void *)1221].callers));
+			}
+
+
+
+			test( AnalyzerDataIsSerializable )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter> s(buffer);
+				analyzer a;
+				map<const void *, function_statistics> m;
+				call_record trace[] = {
+					{	12319, (void *)1234	},
+					{	12324, (void *)2234	},
+					{	12326, (void *)0	},
+					{	12330, (void *)0	},
+				};
+
+				a.accept_calls(2, trace, array_size(trace));
+
+				// ACT
+				s(a);
+
+				// INIT
+				strmd::deserializer<vector_adapter> ds(buffer);
+				statistics_map_detailed ss;
+
+				// ACT
+				ds(ss);
+
+				// ASSERT
+				statistics_map_detailed reference;
+
+				static_cast<function_statistics &>(reference[(void *)1234]) = function_statistics(1, 0, 11, 9, 11);
+				static_cast<function_statistics &>(reference[(void *)2234]) = function_statistics(1, 0, 2, 2, 2);
+
+				assert_equivalent(mkvector(reference), mkvector(ss));
 			}
 
 		end_test_suite

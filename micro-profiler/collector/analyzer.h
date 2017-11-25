@@ -78,6 +78,7 @@ namespace micro_profiler
 		analyzer(__int64 profiler_latency = 0);
 
 		void clear() throw();
+		size_t size() const throw();
 		const_iterator begin() const throw();
 		const_iterator end() const throw();
 
@@ -139,12 +140,4 @@ namespace micro_profiler
 	inline shadow_stack<OutputMapType>::call_record_ex::call_record_ex(const call_record_ex &other)
 		: call_record(other), child_time(other.child_time), level(other.level), entry(other.entry)
 	{	}
-
-
-	// analyzer - inline definitions
-	inline analyzer::const_iterator analyzer::begin() const throw()
-	{	return _statistics.begin();	}
-
-	inline analyzer::const_iterator analyzer::end() const throw()
-	{	return _statistics.end();	}
 }

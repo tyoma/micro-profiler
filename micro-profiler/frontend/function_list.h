@@ -20,14 +20,12 @@
 
 #pragma once
 
+#include "statistics_model.h"
+#include "../common/primitives.h"
+
 #include <wpl/ui/listview.h>
 #include <string>
 #include <memory>
-
-namespace std
-{
-	using std::tr1::shared_ptr;
-}
 
 typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
 
@@ -40,15 +38,25 @@ namespace micro_profiler
 		virtual const void *get_address(index_type item) const = 0;
 	};
 
-	struct functions_list : wpl::ui::listview::model
+	class functions_list : public statistics_model_impl<wpl::ui::listview::model, statistics_map_detailed>
 	{
-		virtual void clear() = 0;
-		virtual void update(const FunctionStatisticsDetailed *data, size_t count) = 0;
-		virtual void print(std::wstring &content) const = 0;
-		virtual index_type get_index(const void *address) const = 0;
-		virtual std::shared_ptr<linked_statistics> watch_children(index_type item) const = 0;
-		virtual std::shared_ptr<linked_statistics> watch_parents(index_type item) const = 0;
+	public:
+		void clear();
+		void update(const FunctionStatisticsDetailed *data, size_t count);
+		void print(std::wstring &content) const;
+		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
+		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
 
 		static std::shared_ptr<functions_list> create(__int64 ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
+
+	private:
+		functions_list(std::shared_ptr<statistics_map_detailed> statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);
+
+	private:
+		std::shared_ptr<statistics_map_detailed> _statistics;
+		double _tick_interval;
+		std::shared_ptr<symbol_resolver> _resolver;
+
+		mutable wpl::signal<void (const void *updated_function)> entry_updated;
 	};
 }

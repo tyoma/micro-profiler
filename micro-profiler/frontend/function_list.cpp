@@ -138,25 +138,6 @@ namespace micro_profiler
 
 
 
-	class functions_list_impl : public statistics_model_impl<functions_list, statistics_map_detailed>
-	{
-		shared_ptr<statistics_map_detailed> _statistics;
-		double _tick_interval;
-		shared_ptr<symbol_resolver> _resolver;
-
-		mutable signal<void (const void *updated_function)> entry_updated;
-
-	public:
-		functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
-
-		virtual void clear();
-		virtual void update(const FunctionStatisticsDetailed *data, size_t count);
-		virtual void print(wstring &content) const;
-		virtual shared_ptr<linked_statistics> watch_children(index_type item) const;
-		virtual shared_ptr<linked_statistics> watch_parents(index_type item) const;
-	};
-
-
 	class children_statistics_model_impl : public statistics_model_impl<linked_statistics, statistics_map>
 	{
 		const void *_controlled_address;
@@ -221,13 +202,19 @@ namespace micro_profiler
 
 
 
-	functions_list_impl::functions_list_impl(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
+	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<functions_list, statistics_map_detailed>(*statistics, tick_interval, resolver),
+		: statistics_model_impl<listview::model, statistics_map_detailed>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
-	void functions_list_impl::update(const FunctionStatisticsDetailed *data, size_t count)
+	void functions_list::clear()
+	{
+		_statistics->clear();
+		updated();
+	}
+
+	void functions_list::update(const FunctionStatisticsDetailed *data, size_t count)
 	{
 		for (; count; --count, ++data)
 		{
@@ -241,13 +228,7 @@ namespace micro_profiler
 		updated();
 	}
 
-	void functions_list_impl::clear()
-	{
-		_statistics->clear();
-		updated();
-	}
-
-	void functions_list_impl::print(wstring &content) const
+	void functions_list::print(wstring &content) const
 	{
 		const char* old_locale = ::setlocale(LC_NUMERIC, NULL);  
 		bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;  
@@ -274,7 +255,7 @@ namespace micro_profiler
 			::setlocale(LC_NUMERIC, old_locale);
 	}
 
-	shared_ptr<linked_statistics> functions_list_impl::watch_children(index_type item) const
+	shared_ptr<linked_statistics> functions_list::watch_children(index_type item) const
 	{
 		const statistics_map_detailed::value_type &s = view().at(item);
 
@@ -282,7 +263,7 @@ namespace micro_profiler
 			entry_updated, _tick_interval, _resolver));
 	}
 
-	shared_ptr<linked_statistics> functions_list_impl::watch_parents(index_type item) const
+	shared_ptr<linked_statistics> functions_list::watch_parents(index_type item) const
 	{
 		const statistics_map_detailed::value_type &s = view().at(item);
 
@@ -345,7 +326,7 @@ namespace micro_profiler
 
 	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
-		return shared_ptr<functions_list>(new functions_list_impl(
+		return shared_ptr<functions_list>(new functions_list(
 			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_resolution, resolver));
 	}
 }

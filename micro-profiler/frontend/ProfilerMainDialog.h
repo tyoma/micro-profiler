@@ -38,7 +38,7 @@ namespace std
 namespace micro_profiler
 {
 	class columns_model;
-	struct functions_list;
+	class functions_list;
 	struct linked_statistics;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public self_unlockable

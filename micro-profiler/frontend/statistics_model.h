@@ -8,6 +8,8 @@ namespace std { namespace tr1 { } using namespace tr1; }
 
 namespace micro_profiler
 {
+	struct symbol_resolver;
+
 	template <typename BaseT, typename MapT>
 	class statistics_model_impl : public BaseT, public std::enable_shared_from_this< statistics_model_impl<BaseT, MapT> >
 	{
@@ -55,7 +57,7 @@ namespace micro_profiler
 	{
 		using namespace wpl::ui;
 
-		class trackable : public listview::trackable, noncopyable
+		class trackable : public listview::trackable
 		{
 			std::weak_ptr<const statistics_model_impl> _model;
 			const void *_address;

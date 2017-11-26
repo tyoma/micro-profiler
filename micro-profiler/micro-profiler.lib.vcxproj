@@ -95,13 +95,14 @@
     <ClInclude Include="common\com_helpers.h" />
     <ClInclude Include="common\configuration.h" />
     <ClInclude Include="common\formatting.h" />
-    <ClInclude Include="common\ordered_view.h" />
+    <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="common\pod_vector.h" />
     <ClInclude Include="common\primitives.h" />
     <ClInclude Include="common\serialization.h" />
     <ClInclude Include="frontend\function_list.h" />
     <ClInclude Include="frontend\object_lock.h" />
     <ClInclude Include="frontend\columns_model.h" />
+    <ClInclude Include="frontend\statistics_model.h" />
     <ClInclude Include="frontend\symbol_resolver.h" />
     <ClInclude Include="ipc\client.h" />
     <ClInclude Include="ipc\windows\common.h" />

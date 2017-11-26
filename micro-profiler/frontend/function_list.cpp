@@ -19,24 +19,18 @@
 //	THE SOFTWARE.
 
 #include "function_list.h"
+#include "statistics_model.h"
 
 #include "../common/com_helpers.h"
 #include "../common/formatting.h"
-#include "../common/ordered_view.h"
 #include "symbol_resolver.h"
 
 #include <utility>
 #include <cmath>
 #include <clocale>
 
-namespace std
-{
-	using tr1::enable_shared_from_this;
-	using tr1::weak_ptr;
-	using namespace tr1::placeholders;
-}
-
 using namespace std;
+using namespace std::placeholders;
 using namespace wpl;
 using namespace wpl::ui;
 
@@ -142,32 +136,6 @@ namespace micro_profiler
 		{	return s.times_called ? tick_interval * s.inclusive_time / s.times_called : 0;	}
 	}
 
-	template <typename BaseT, typename MapT>
-	class statistics_model_impl : public BaseT, public enable_shared_from_this< statistics_model_impl<BaseT, MapT> >
-	{
-		double _tick_interval;
-		shared_ptr<symbol_resolver> _resolver;
-		ordered_view<MapT> _view;
-
-	protected:
-		typedef typename BaseT::index_type index_type;
-		typedef ordered_view<MapT> view_type;
-
-		const view_type &view() const;
-		void updated();
-
-	public:
-		statistics_model_impl(const MapT &statistics, double tick_interval, shared_ptr<symbol_resolver> resolver);
-
-		virtual typename index_type get_count() const throw();
-		virtual void get_text(index_type item, index_type subitem, wstring &text) const;
-		virtual void set_order(index_type column, bool ascending);
-		virtual shared_ptr<const listview::trackable> track(index_type row) const;
-
-		virtual index_type get_index(const void *address) const;
-
-		virtual const void *get_address(index_type item) const;
-	};
 
 
 	class functions_list_impl : public statistics_model_impl<functions_list, statistics_map_detailed>
@@ -216,15 +184,6 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename MapT>
-	statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval, shared_ptr<symbol_resolver> resolver)
-		: _view(statistics), _tick_interval(tick_interval), _resolver(resolver)
-	{ }
-
-	template <typename BaseT, typename MapT>
-	typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_count() const throw()
-	{ return _view.size(); }
-
-	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
 	{
 		const view_type::value_type &row = _view.at(item);
@@ -259,50 +218,6 @@ namespace micro_profiler
 		}
 		invalidated(_view.size());
 	}
-
-	template <typename BaseT, typename MapT>
-	shared_ptr<const listview::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
-	{
-		class trackable : public listview::trackable, noncopyable
-		{
-			weak_ptr<const statistics_model_impl> _model; //TODO: should store weak_ptr instead of reference
-			const void *_address;
-
-		public:
-			trackable(weak_ptr<const statistics_model_impl> model, const void *address)
-				: _model(model), _address(address)
-			{	}
-
-			virtual listview::index_type index() const
-			{
-				if (_model.expired())
-					return static_cast<listview::index_type>(-1);
-				else
-					return shared_ptr<const statistics_model_impl>(_model)->get_index(_address);
-			}
-		};
-
-		return shared_ptr<const listview::trackable>(new trackable(shared_from_this(), _view.at(row).first));
-	}
-
-	template <typename BaseT, typename MapT>
-	typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(const void *address) const
-	{	return _view.find_by_key(address);	}
-
-	template <typename BaseT, typename MapT>
-	const void *statistics_model_impl<BaseT, MapT>::get_address(index_type item) const
-	{	return _view.at(item).first;	}
-
-	template <typename BaseT, typename MapT>
-	void statistics_model_impl<BaseT, MapT>::updated()
-	{
-		_view.resort();
-		invalidated(_view.size());
-	}
-
-	template <typename BaseT, typename MapT>
-	const typename statistics_model_impl<BaseT, MapT>::view_type &statistics_model_impl<BaseT, MapT>::view() const
-	{	return _view;	}
 
 
 

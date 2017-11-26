@@ -488,6 +488,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\frontend\ordered_view.h"
+				>
+			</File>
+			<File
 				RelativePath=".\frontend\symbol_resolver.cpp"
 				>
 				<FileConfiguration
@@ -765,10 +769,6 @@
 			</File>
 			<File
 				RelativePath=".\common\formatting.h"
-				>
-			</File>
-			<File
-				RelativePath=".\common\ordered_view.h"
 				>
 			</File>
 			<File

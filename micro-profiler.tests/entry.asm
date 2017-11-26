@@ -1,4 +1,5 @@
 IF _M_IX86
+	.586
 	.model flat
 	.code
 

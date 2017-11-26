@@ -2,14 +2,22 @@
 <VisualStudioPropertySheet
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="test"
+	Name="MicroProfiler Build Configuration"
 	OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
 	IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		PreprocessorDefinitions="_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS"
+		AdditionalIncludeDirectories="$(SolutionDir)libraries;$(SolutionDir)micro-profiler;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;;&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;"
+		PreprocessorDefinitions="_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"
 		WarningLevel="4"
 		WarnAsError="true"
+		DebugInformationFormat="3"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalLibraryDirectories="&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Lib\x86&quot;"
+		GenerateDebugInformation="true"
+		SubSystem="2"
 	/>
 </VisualStudioPropertySheet>

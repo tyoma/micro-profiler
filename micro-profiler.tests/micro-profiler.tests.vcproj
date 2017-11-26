@@ -3,10 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="micro-profiler.tests"
-	ProjectTypes="{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}"
 	ProjectGUID="{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
-	RootNamespace="tests"
-	Keyword="ManagedCProj"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -18,21 +15,30 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<DefaultToolFile
+			FileName="masm.rules"
+		/>
+		<ToolFile
+			RelativePath=".\masm64.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
-			CharacterSet="1"
-			ManagedExtensions="1"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.tests.vsprops"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM_x64"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -46,13 +52,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
-				PreprocessorDefinitions="WIN32;_DEBUG;_SCL_SECURE_NO_WARNINGS"
-				ExceptionHandling="2"
-				RuntimeLibrary="3"
-				WarningLevel="4"
-				WarnAsError="true"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_DEBUG"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -66,9 +68,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				IgnoreDefaultLibraryNames="libcmtd.lib;libcpmtd.lib"
 				GenerateDebugInformation="true"
-				AssemblyDebug="1"
+				SubSystem="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -91,22 +92,24 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
-			CharacterSet="1"
-			ManagedExtensions="1"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.tests.vsprops"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM_x64"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -116,18 +119,13 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
-				PreprocessorDefinitions="WIN32;_DEBUG;_SCL_SECURE_NO_WARNINGS"
-				ExceptionHandling="2"
-				RuntimeLibrary="3"
-				WarningLevel="4"
-				WarnAsError="true"
-				DebugInformationFormat="3"
+				PreprocessorDefinitions="_DEBUG"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -141,9 +139,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				IgnoreDefaultLibraryNames="libcmtd.lib;libcpmtd.lib"
 				GenerateDebugInformation="true"
-				AssemblyDebug="1"
+				SubSystem="2"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -166,23 +163,24 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
-			CharacterSet="1"
-			ManagedExtensions="1"
-			WholeProgramOptimization="1"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.tests.vsprops"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM_x64"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -195,13 +193,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
-				PreprocessorDefinitions="WIN32;NDEBUG;_SCL_SECURE_NO_WARNINGS"
-				ExceptionHandling="2"
-				RuntimeLibrary="2"
-				WarningLevel="4"
-				WarnAsError="true"
-				DebugInformationFormat="3"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				PreprocessorDefinitions="NDEBUG"
+				EnableFunctionLevelLinking="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -215,8 +213,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				IgnoreDefaultLibraryNames="libcmt.lib;libcpmt.lib"
 				GenerateDebugInformation="true"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -241,23 +239,24 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="2"
-			CharacterSet="1"
-			ManagedExtensions="1"
-			WholeProgramOptimization="1"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.tests.vsprops"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM_x64"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -267,17 +266,17 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="./../micro-profiler;./../libraries"
-				PreprocessorDefinitions="WIN32;NDEBUG;_SCL_SECURE_NO_WARNINGS"
-				ExceptionHandling="2"
-				RuntimeLibrary="2"
-				WarningLevel="4"
-				WarnAsError="true"
-				DebugInformationFormat="3"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				PreprocessorDefinitions="NDEBUG"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -291,8 +290,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="1"
-				IgnoreDefaultLibraryNames="libcmt.lib;libcpmt.lib"
 				GenerateDebugInformation="true"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="17"
@@ -317,24 +316,17 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy run-tests.vs9.cmd &quot;$(OutDir)\run-tests.cmd&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
 	<References>
-		<AssemblyReference
-			RelativePath="System.dll"
-			AssemblyName="System, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
-			MinFrameworkVersion="131072"
+		<ProjectReference
+			ReferencedProjectIdentifier="{4DB73ACE-2D47-4A6C-8213-2BE191DD921F}"
+			RelativePathToProject=".\libraries\utee\make\utee.v90.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
 			RelativePathToProject=".\micro-profiler\micro-profiler.lib.vcproj"
-		/>
-		<AssemblyReference
-			RelativePath="Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll"
-			AssemblyName="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-			MinFrameworkVersion="131072"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4DB355C8-12F1-4BBD-842C-F8D085B52F8C}"
@@ -367,16 +359,48 @@
 			>
 		</File>
 		<File
-			RelativePath=".\assert.h"
-			>
-		</File>
-		<File
 			RelativePath=".\CallCollectorTests.cpp"
 			>
 		</File>
 		<File
 			RelativePath=".\COMHelpersTests.cpp"
 			>
+		</File>
+		<File
+			RelativePath=".\entry.asm"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="MASM"
+					PreprocessorDefinitions="_M_IX86=1;_M_X64=0"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool
+					Name="MASM_x64"
+					PreprocessorDefinitions="_M_IX86=0;_M_X64=1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="MASM"
+					PreprocessorDefinitions="_M_IX86=1;_M_X64=0"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="MASM_x64"
+					PreprocessorDefinitions="_M_IX86=0;_M_X64=1"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\FrontendControllerTests.cpp"
@@ -392,6 +416,14 @@
 		</File>
 		<File
 			RelativePath=".\ImageLoadQueueTests.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\IPCClientServerTests.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\main.cpp"
 			>
 		</File>
 		<File
@@ -415,11 +447,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\run-tests.vs10.cmd"
-			>
-		</File>
-		<File
-			RelativePath=".\run-tests.vs9.cmd"
+			RelativePath=".\SerializationTests.cpp"
 			>
 		</File>
 		<File

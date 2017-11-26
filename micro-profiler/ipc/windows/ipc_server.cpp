@@ -8,6 +8,8 @@
 #include <wpl/base/concepts.h>
 #include <windows.h>
 
+namespace std { namespace tr1 { } using namespace tr1; }
+
 using namespace std;
 
 namespace micro_profiler
@@ -128,8 +130,9 @@ namespace micro_profiler
 		void server::impl::on_connected()
 		{
 			shared_ptr<void> replacement = create_pipe(false);
+			shared_ptr<server::outer_session> outer(new server::outer_session(*this, _pipe));
 
-			_sessions.push_back(make_shared<server::outer_session>(*this, _pipe));
+			_sessions.push_back(outer);
 			_pipe = replacement;
 		}
 

@@ -27,10 +27,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)_lib\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="4"
-			UseOfMFC="0"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="0"
 			>
@@ -66,8 +64,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./../libraries"
-				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="_DEBUG"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"
@@ -106,10 +103,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)_lib\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="4"
-			UseOfMFC="0"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="0"
 			>
@@ -146,8 +141,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="./../libraries"
-				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="_DEBUG"
 				RuntimeLibrary="1"
 				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"
@@ -186,10 +180,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)_lib\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="4"
-			UseOfMFC="0"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -229,8 +221,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="./../libraries"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="NDEBUG"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -270,10 +261,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)_lib\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
 			ConfigurationType="4"
-			UseOfMFC="0"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -314,8 +303,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="./../libraries"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="NDEBUG"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				DisableLanguageExtensions="true"
@@ -827,6 +815,98 @@
 					/>
 				</FileConfiguration>
 			</File>
+		</Filter>
+		<Filter
+			Name="ipc"
+			>
+			<File
+				RelativePath=".\ipc\client.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ipc\server.h"
+				>
+			</File>
+			<Filter
+				Name="windows"
+				>
+				<File
+					RelativePath=".\ipc\windows\common.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ipc\windows\ipc_client.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\ipc\windows\ipc_server.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							DisableLanguageExtensions="false"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

@@ -21,10 +21,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			ConfigurationType="2"
-			UseOfMFC="0"
 			CharacterSet="0"
 			WholeProgramOptimization="0"
 			>
@@ -53,8 +51,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				FavorSizeOrSpeed="2"
-				AdditionalIncludeDirectories="./../libraries"
-				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="_DEBUG"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
@@ -102,10 +99,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			ConfigurationType="2"
-			UseOfMFC="0"
 			CharacterSet="0"
 			WholeProgramOptimization="0"
 			>
@@ -135,8 +130,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				FavorSizeOrSpeed="2"
-				AdditionalIncludeDirectories="./../libraries"
-				PreprocessorDefinitions="WIN32;_LIB;_DEBUG;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="_DEBUG"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
@@ -185,10 +179,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			ConfigurationType="2"
-			UseOfMFC="0"
 			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
@@ -220,8 +212,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="$(SolutionDir)libraries"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="NDEBUG"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="2"
@@ -271,10 +262,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)_bin\$(ConfigurationName)_$(PlatformName)\"
-			IntermediateDirectory="$(SolutionDir)_obj\$(ConfigurationName)_$(PlatformName)\$(ProjectName)\"
+			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			ConfigurationType="2"
-			UseOfMFC="0"
 			CharacterSet="0"
 			WholeProgramOptimization="1"
 			>
@@ -307,8 +296,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="$(SolutionDir)libraries"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;ISOLATION_AWARE_ENABLED=1"
+				PreprocessorDefinitions="NDEBUG"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				RuntimeTypeInfo="false"

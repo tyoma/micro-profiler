@@ -22,10 +22,7 @@
 
 #include <unordered_map>
 
-namespace std
-{
-	using tr1::unordered_map;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 namespace micro_profiler
 {

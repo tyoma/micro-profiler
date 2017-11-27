@@ -10,12 +10,6 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
-namespace std
-{
-   using tr1::bind;
-   using tr1::ref;
-}
-
 using wpl::mt::thread;
 using namespace std;
 

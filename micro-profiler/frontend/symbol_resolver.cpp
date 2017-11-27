@@ -27,11 +27,6 @@
 #include <dbghelp.h>
 #include <unordered_map>
 
-namespace std
-{
-	using std::tr1::unordered_map;
-}
-
 using namespace std;
 
 namespace micro_profiler

@@ -8,14 +8,8 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
-namespace std
-{
-	using tr1::bind;
-	using tr1::ref;
-	using namespace tr1::placeholders;
-}
-
 using namespace std;
+using namespace std::placeholders;
 
 namespace micro_profiler
 {

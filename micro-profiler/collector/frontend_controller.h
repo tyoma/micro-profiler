@@ -26,11 +26,7 @@
 
 struct IProfilerFrontend;
 
-namespace std
-{
-	using tr1::function;
-	using tr1::shared_ptr;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 namespace wpl
 {

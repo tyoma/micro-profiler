@@ -25,11 +25,6 @@
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
-namespace std
-{
-	using tr1::bind;
-}
-
 using namespace std;
 
 namespace micro_profiler

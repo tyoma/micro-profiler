@@ -9,13 +9,6 @@
 
 #pragma warning(disable:4965)
 
-namespace std
-{
-	using tr1::bind;
-	using tr1::ref;
-	using tr1::shared_ptr;
-}
-
 using namespace std;
 using namespace wpl::mt;
 

@@ -28,10 +28,7 @@
 #include <memory>
 #include <wpl/base/signals.h>
 
-namespace std 
-{
-	using tr1::shared_ptr;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 extern "C" CLSID CLSID_ProfilerFrontend;
 

@@ -23,10 +23,7 @@
 #include <string>
 #include <memory>
 
-namespace std
-{
-	using std::tr1::shared_ptr;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 namespace micro_profiler
 {

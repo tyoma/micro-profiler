@@ -30,10 +30,7 @@
 #include <functional>
 #include <wpl/ui/listview.h>
 
-namespace std
-{
-	using tr1::function;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 namespace micro_profiler
 {

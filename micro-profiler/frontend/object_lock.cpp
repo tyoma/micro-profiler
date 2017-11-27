@@ -22,10 +22,7 @@
 
 #include <windows.h>
 
-namespace std
-{
-	using tr1::bind;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 using namespace std;
 using namespace wpl;

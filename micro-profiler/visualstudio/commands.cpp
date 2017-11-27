@@ -6,10 +6,7 @@
 #include <atlstr.h>
 #include <memory>
 
-namespace std
-{
-	using tr1::shared_ptr;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 using namespace std;
 

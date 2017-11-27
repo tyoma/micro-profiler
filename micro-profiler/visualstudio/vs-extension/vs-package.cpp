@@ -14,11 +14,7 @@
 #include <InitGuid.h>
 #include "guids.h"
 
-namespace std
-{
-	using tr1::shared_ptr;
-	using tr1::unordered_map;
-}
+namespace std { namespace tr1 { } using namespace tr1; }
 
 using namespace std;
 

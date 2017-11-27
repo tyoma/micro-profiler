@@ -30,13 +30,8 @@
 #include <math.h>
 #include <atlstr.h>
 
-namespace std
-{
-	using tr1::cref;
-	using namespace tr1::placeholders;
-}
-
 using namespace std;
+using namespace std::placeholders;
 using namespace wpl;
 using namespace wpl::ui;
 

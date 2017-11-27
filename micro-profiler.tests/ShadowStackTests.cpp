@@ -7,11 +7,6 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
-namespace std
-{
-	using tr1::unordered_map;
-}
-
 using namespace std;
 
 namespace micro_profiler

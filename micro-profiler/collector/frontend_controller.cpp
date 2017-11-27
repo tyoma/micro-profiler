@@ -26,16 +26,10 @@
 #include <windows.h>
 #include <wpl/mt/thread.h>
 
-namespace std
-{
-	using tr1::bind;
-	using tr1::function;
-	using tr1::shared_ptr;
-	using namespace tr1::placeholders;
-}
 
 using namespace wpl::mt;
 using namespace std;
+using namespace std::placeholders;
 
 namespace micro_profiler
 {

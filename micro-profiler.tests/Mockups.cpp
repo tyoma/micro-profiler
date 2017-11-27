@@ -6,15 +6,9 @@
 #include <common/com_helpers.h>
 #include <stdexcept>
 
-namespace std
-{
-	using tr1::bind;
-	using tr1::ref;
-	using namespace tr1::placeholders;
-}
-
 using wpl::mt::thread;
 using namespace std;
+using namespace std::placeholders;
 
 namespace micro_profiler
 {

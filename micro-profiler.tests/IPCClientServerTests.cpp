@@ -11,12 +11,6 @@
 
 #pragma warning(disable:4355)
 
-namespace std
-{
-	using tr1::bind;
-	using namespace tr1::placeholders;
-}
-
 using namespace std;
 using namespace wpl::mt;
 

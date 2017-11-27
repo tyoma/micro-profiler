@@ -10,11 +10,6 @@
 #include <wpl/mt/thread.h>
 #include <wpl/base/concepts.h>
 
-namespace std
-{
-	using tr1::function;
-}
-
 struct IProfilerFrontend;
 
 namespace micro_profiler

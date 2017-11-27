@@ -5,15 +5,8 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
-namespace std
-{
-	using tr1::shared_ptr;
-	using tr1::enable_shared_from_this;
-	using tr1::bind;
-   using namespace tr1::placeholders;
-}
-
 using namespace std;
+using namespace std::placeholders;
 using namespace wpl::ui;
 
 namespace ut

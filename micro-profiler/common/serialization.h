@@ -48,21 +48,6 @@ template <> struct strmd::container_reader<micro_profiler::statistics_map>
 	}
 };
 
-template <> struct strmd::container_reader<micro_profiler::statistics_map_callers>
-{
-	template <typename ArchiveT>
-	void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map_callers &data)
-	{
-		std::pair<const void *, micro_profiler::count_t> value;
-
-		while (count--)
-		{
-			archive(value);
-			data[value.first] += value.second;
-		}
-	}
-};
-
 template <> struct strmd::container_reader<micro_profiler::statistics_map_detailed_2>
 {
 	template <typename ArchiveT>
@@ -76,7 +61,8 @@ template <> struct strmd::container_reader<micro_profiler::statistics_map_detail
 			micro_profiler::function_statistics_detailed &entry = data[value.first];
 			entry += value.second;
 			archive(entry.callees);
-			archive(entry.callers);
+			micro_profiler::update_parent_statistics(data, value.first, entry);
+			data.entry_updated(value.first);
 		}
 	}
 };
@@ -98,6 +84,5 @@ namespace micro_profiler
 	{
 		archive(static_cast<function_statistics &>(data));
 		archive(data.callees);
-		archive(data.callers);
 	}
 }

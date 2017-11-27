@@ -1,15 +1,16 @@
 #include <common/serialization.h>
 #include <collector/analyzer.h>
-#include <frontend/function_list.h>
 
 #include "Helpers.h"
 
+#include <functional>
 #include <strmd/strmd/serializer.h>
 #include <strmd/strmd/deserializer.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
 using namespace std;
+using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -44,7 +45,7 @@ namespace micro_profiler
 			};
 		}
 
-		begin_test_suite( SerializationHelpersTests )
+		begin_test_suite( SerializationTests )
 			test( SerializedStatisticsAreDeserialized )
 			{
 				// INIT
@@ -173,19 +174,13 @@ namespace micro_profiler
 				ds(ds1);
 
 				// ASSERT
-				pair<const void *, function_statistics> reference_callees[] = {
+				pair<const void *, function_statistics> reference[] = {
 					make_pair((void *)7741, function_statistics(1117, 212, 1231123, 3213, 112213)),
 					make_pair((void *)141, function_statistics(17, 12012, 11293123, 132123, 12213)),
 				};
-				pair<const void *, count_t> reference_callers[] = {
-					make_pair((void *)14100, 1232),
-					make_pair((void *)14101, 12322),
-					make_pair((void *)141000, 123221),
-				};
 
 				assert_equal(s1, ds1);
-				assert_equivalent(reference_callees, mkvector(ds1.callees));
-				assert_equivalent(reference_callers, mkvector(ds1.callers));
+				assert_equivalent(reference, mkvector(ds1.callees));
 			}
 
 
@@ -267,44 +262,94 @@ namespace micro_profiler
 			}
 
 
-			test( CallersInDetailedStatisticsMapAppendedWithNewStatistics )
+			test( CallersInDetailedStatisticsMapUpdatedOnDeserialization )
 			{
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter> s(buffer);
-				statistics_map_detailed ss, addition;
-
-				ss[(void *)1221].callers[(void *)1221] = 12332;
-				ss[(void *)1221].callers[(void *)1231] = 311232;
-				ss[(void *)1221].callers[(void *)1241] = 9182746;
-
-				addition[(void *)1221].callers[(void *)1231] = 12;
-				addition[(void *)1221].callers[(void *)1241] = 191;
-				addition[(void *)1221].callers[(void *)12211] = 723;
-
-				s(addition);
-
-				strmd::deserializer<vector_adapter> ds(buffer);
-
-				// INIT
+				statistics_map_detailed ss;
 				statistics_map_detailed_2 dss;
 
-				static_cast<statistics_map_detailed &>(dss) = ss;
+				ss[(void *)1221].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
+				ss[(void *)1221].callees[(void *)1231] = function_statistics(18, 0, 0, 0, 0);
+				ss[(void *)1221].callees[(void *)1241] = function_statistics(19, 0, 0, 0, 0);
+				ss[(void *)1222].callees[(void *)1221] = function_statistics(8, 0, 0, 0, 0);
+				ss[(void *)1222].callees[(void *)1251] = function_statistics(9, 0, 0, 0, 0);
+
+				s(ss);
+
+				strmd::deserializer<vector_adapter> ds(buffer);
 
 				// ACT
 				ds(dss);
 
 				// ASSERT
-				statistics_map_callers reference;
+				pair<const void *, count_t> reference_1221[] = {
+					make_pair((void *)1221, 17),
+					make_pair((void *)1222, 8),
+				};
+				pair<const void *, count_t> reference_1231[] = {
+					make_pair((void *)1221, 18),
+				};
+				pair<const void *, count_t> reference_1241[] = {
+					make_pair((void *)1221, 19),
+				};
+				pair<const void *, count_t> reference_1251[] = {
+					make_pair((void *)1222, 9),
+				};
 
-				reference[(void *)1221] = 12332;
-				reference[(void *)1231] = 311232 + 12;
-				reference[(void *)1241] = 9182746 + 191;
-				reference[(void *)12211] = 723;
-
-				assert_equivalent(mkvector(reference), mkvector(dss[(void *)1221].callers));
+				assert_equivalent(reference_1221, mkvector(dss[(void *)1221].callers));
+				assert_equivalent(reference_1231, mkvector(dss[(void *)1231].callers));
+				assert_equivalent(reference_1241, mkvector(dss[(void *)1241].callers));
+				assert_equivalent(reference_1251, mkvector(dss[(void *)1251].callers));
 			}
 
+
+			vector<const void *> updated_entries;
+
+			void entry_updated(const void *updated_function)
+			{	updated_entries.push_back(updated_function);	}
+
+			test( UpdatedEntriesNotifiedAbout )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter> s(buffer);
+				statistics_map_detailed ss1, ss2;
+				statistics_map_detailed_2 dss;
+				wpl::slot_connection c = dss.entry_updated += bind(&SerializationTests::entry_updated, this, _1);
+
+				ss1[(void *)1221].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
+				ss1[(void *)1222].callees[(void *)1221] = function_statistics(8, 0, 0, 0, 0);
+				ss1[(void *)1222].callees[(void *)1251] = function_statistics(9, 0, 0, 0, 0);
+				ss2[(void *)1220].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
+				ss2[(void *)1222].callees[(void *)1221] = function_statistics(8, 0, 0, 0, 0);
+				ss2[(void *)1223].callees[(void *)1251] = function_statistics(9, 0, 0, 0, 0);
+
+				s(ss1);
+				s(ss2);
+
+				strmd::deserializer<vector_adapter> ds(buffer);
+
+				// ACT
+				ds(dss);
+
+				// ASSERT
+				const void *reference1[] = { (void *)1221, (void *)1222, };
+
+				assert_equivalent(reference1, updated_entries);
+
+				// INIT
+				updated_entries.clear();
+
+				// ACT
+				ds(dss);
+
+				// ASSERT
+				const void *reference2[] = { (void *)1220, (void *)1222, (void *)1223, };
+
+				assert_equivalent(reference2, updated_entries);
+			}
 
 
 			test( AnalyzerDataIsSerializable )

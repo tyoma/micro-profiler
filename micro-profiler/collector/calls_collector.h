@@ -35,7 +35,7 @@ namespace micro_profiler
 
 		virtual ~calls_collector_i() throw()	{	}
 		virtual void read_collected(acceptor &a) = 0;
-		virtual __int64 profiler_latency() const throw() = 0;
+		virtual timestamp_t profiler_latency() const throw() = 0;
 	};
 
 	struct calls_collector_i::acceptor
@@ -50,7 +50,7 @@ namespace micro_profiler
 		static calls_collector _instance;
 
 		const size_t _trace_limit;
-		__int64 _profiler_latency;
+		timestamp_t _profiler_latency;
 		wpl::mt::tls<thread_trace_block> _trace_pointers_tls;
 		mutex _thread_blocks_mtx;
 		std::list<thread_trace_block> _call_traces;
@@ -66,9 +66,9 @@ namespace micro_profiler
 		virtual void read_collected(acceptor &a);
 
 		void track(call_record call) throw();
-		void track(__int64 timestamp, const void *address) throw();
+		void track(timestamp_t timestamp, const void *address) throw();
 
 		size_t trace_limit() const throw();
-		virtual __int64 profiler_latency() const throw();
+		virtual timestamp_t profiler_latency() const throw();
 	};
 }

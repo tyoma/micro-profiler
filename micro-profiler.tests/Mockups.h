@@ -36,7 +36,7 @@ namespace micro_profiler
 
 				// Collected data
 				std::wstring process_executable;
-				long long ticks_resolution;
+				timestamp_t ticks_resolution;
 
 				std::vector<ReceivedEntry> update_log;
 				wpl::mt::event_flag updated;
@@ -59,18 +59,18 @@ namespace micro_profiler
 			class Tracer : public calls_collector_i
 			{
 			public:
-				explicit Tracer(__int64 latency = 0);
+				explicit Tracer(timestamp_t latency = 0);
 
 				template <size_t size>
 				void Add(wpl::mt::thread::id threadid, call_record (&array_ptr)[size]);
 
 				virtual void read_collected(acceptor &a);
-				virtual __int64 profiler_latency() const throw();
+				virtual timestamp_t profiler_latency() const throw();
 
 			private:
 				typedef std::unordered_map< wpl::mt::thread::id, std::vector<call_record> > TracesMap;
 
-				__int64 _latency;
+				timestamp_t _latency;
 				TracesMap _traces;
 				mutex _mutex;
 			};

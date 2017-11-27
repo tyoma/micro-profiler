@@ -20,9 +20,11 @@
 
 #pragma once
 
+#include "../common/primitives.h"
+
 namespace micro_profiler
 {
-	unsigned __int64 timestamp_precision();
+	timestamp_t timestamp_precision();
 	unsigned int current_thread_id();
 
 	class mutex

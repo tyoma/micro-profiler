@@ -118,7 +118,7 @@ namespace micro_profiler
 		bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs)
 		{	return lhs.Statistics.FunctionAddress < rhs.Statistics.FunctionAddress; }
 
-		function_statistics_detailed function_statistics_ex(unsigned __int64 times_called, unsigned __int64 max_reentrance, __int64 inclusive_time, __int64 exclusive_time, __int64 max_call_time)
+		function_statistics_detailed function_statistics_ex(count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time, timestamp_t max_call_time)
 		{
 			function_statistics_detailed r;
 

@@ -32,7 +32,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const __int64 c_ticks_resolution(timestamp_precision());
+		const timestamp_t c_ticks_resolution(timestamp_precision());
 
 		wchar_t *allocate_string(const wchar_t *source)
 		{

@@ -27,18 +27,19 @@
 
 namespace micro_profiler
 {
-	unsigned __int64 timestamp_precision()
+	timestamp_t timestamp_precision()
 	{
-		unsigned __int64 pc_freq, pc_start, pc_end, tsc_start, tsc_end;
+		LARGE_INTEGER pc_freq, pc_start, pc_end;
+		timestamp_t tsc_start, tsc_end;
 
-		::QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER *>(&pc_freq));
-		::QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&pc_start));
+		::QueryPerformanceFrequency(&pc_freq);
+		::QueryPerformanceCounter(&pc_start);
 		tsc_start = __rdtsc();
 		for (volatile int i = 0; i < 10000000; ++i)
 		{	}
 		tsc_end = __rdtsc();
-		::QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&pc_end));
-		return pc_freq * (tsc_end - tsc_start) / (pc_end - pc_start);
+		::QueryPerformanceCounter(&pc_end);
+		return pc_freq.QuadPart * (tsc_end - tsc_start) / (pc_end.QuadPart - pc_start.QuadPart);
 	}
 
 	unsigned int current_thread_id()

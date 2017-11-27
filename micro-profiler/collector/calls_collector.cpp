@@ -127,7 +127,7 @@ namespace micro_profiler
 					delay = i != calls ? min(delay, (i + 1)->timestamp - i->timestamp) : (i + 1)->timestamp - i->timestamp;
 			}
 
-			__int64 delay;
+			timestamp_t delay;
 		} de;
 
 		const unsigned int check_times = 10000;
@@ -157,7 +157,7 @@ namespace micro_profiler
 	void calls_collector::track(call_record call) throw()
 	{	get_current_thread_trace().track(call);	}
 
-	void calls_collector::track(__int64 timestamp, const void *address) throw()
+	void calls_collector::track(timestamp_t timestamp, const void *address) throw()
 	{
 		call_record call = { timestamp, address };
 
@@ -167,7 +167,7 @@ namespace micro_profiler
 	size_t calls_collector::trace_limit() const throw()
 	{	return _trace_limit;	}
 
-	__int64 calls_collector::profiler_latency() const throw()
+	timestamp_t calls_collector::profiler_latency() const throw()
 	{	return _profiler_latency;	}
 
 	calls_collector::thread_trace_block &calls_collector::get_current_thread_trace()

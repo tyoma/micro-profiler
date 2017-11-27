@@ -20,11 +20,11 @@ namespace micro_profiler
 	{
 		struct function_statistics_guarded : function_statistics
 		{
-			function_statistics_guarded(unsigned __int64 times_called = 0, unsigned __int64 max_reentrance = 0, __int64 inclusive_time = 0, __int64 exclusive_time = 0, __int64 max_call_time = 0)
+			function_statistics_guarded(count_t times_called = 0, unsigned int max_reentrance = 0, timestamp_t inclusive_time = 0, timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0)
 				: function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time)
 			{	}
 			
-			virtual void add_call(unsigned __int64 level, __int64 inclusive_time, __int64 exclusive_time)
+			virtual void add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
 			{	function_statistics::add_call(level, inclusive_time, exclusive_time);	}
 		};
 

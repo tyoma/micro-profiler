@@ -33,7 +33,7 @@ namespace micro_profiler
 	{
 		namespace 
 		{
-			__int64 test_ticks_resolution = 1;
+			timestamp_t test_ticks_resolution = 1;
 
 			template <typename T>
 			wstring to_string(const T &value)

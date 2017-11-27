@@ -45,8 +45,8 @@ namespace micro_profiler
 	inline const function_statistics &operator +=(function_statistics &lhs, const FunctionStatistics &rhs) throw()
 	{
 		lhs.times_called += rhs.TimesCalled;
-		if (static_cast<unsigned long long>(rhs.MaxReentrance) > lhs.max_reentrance)
-			lhs.max_reentrance = rhs.MaxReentrance;
+		if (static_cast<unsigned int>(rhs.MaxReentrance) > lhs.max_reentrance)
+			lhs.max_reentrance = static_cast<unsigned int>(rhs.MaxReentrance);
 		lhs.inclusive_time += rhs.InclusiveTime;
 		lhs.exclusive_time += rhs.ExclusiveTime;
 		if (rhs.MaxCallTime > lhs.max_call_time)

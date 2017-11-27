@@ -38,12 +38,21 @@ namespace micro_profiler
 {
 	namespace
 	{
-		wstring to_string2(unsigned long long value)
+		wstring to_string2(count_t value)
 		{
 			const size_t buffer_size = 24;
 			wchar_t buffer[buffer_size] = { 0 };
 
 			::swprintf(buffer, buffer_size, L"%I64u", value);
+			return buffer;
+		}
+
+		wstring to_string2(unsigned int value)
+		{
+			const size_t buffer_size = 24;
+			wchar_t buffer[buffer_size] = { 0 };
+
+			::swprintf(buffer, buffer_size, L"%u", value);
 			return buffer;
 		}
 
@@ -79,7 +88,7 @@ namespace micro_profiler
 				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
 				{	return lhs.times_called < rhs.times_called;	}
 
-				bool operator ()(const void *, unsigned __int64 lhs, const void *, unsigned __int64 rhs) const
+				bool operator ()(const void *, count_t lhs, const void *, count_t rhs) const
 				{	return lhs < rhs;	}
 			};
 
@@ -171,7 +180,7 @@ namespace micro_profiler
 
 		switch (subitem)
 		{
-		case 0:	text = to_string2(static_cast<unsigned long long>(item + 1));	break;
+		case 0:	text = to_string2(item + 1);	break;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
 		case 2:	text = to_string2(row.second.times_called);	break;
 		case 3:	format_interval(text, exclusive_time(row.second, _tick_interval));	break;
@@ -302,7 +311,7 @@ namespace micro_profiler
 
 		switch (subitem)
 		{
-		case 0:	text = to_string2(static_cast<unsigned long long>(item + 1));	break;
+		case 0:	text = to_string2(item + 1);	break;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
 		case 2:	text = to_string2(row.second);	break;
 		}
@@ -324,7 +333,7 @@ namespace micro_profiler
 
 
 
-	shared_ptr<functions_list> functions_list::create(__int64 ticks_resolution, shared_ptr<symbol_resolver> resolver)
+	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list(
 			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_resolution, resolver));

@@ -52,7 +52,7 @@ template <> struct strmd::container_reader<micro_profiler::statistics_map_caller
 	template <typename ArchiveT>
 	void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map_callers &data)
 	{
-		std::pair<const void *, unsigned long long> value;
+		std::pair<const void *, micro_profiler::count_t> value;
 
 		while (count--)
 		{

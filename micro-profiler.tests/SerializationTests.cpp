@@ -166,7 +166,7 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter> ds(buffer);
 				function_statistics_detailed ds1;
 				vector< pair<const void *, function_statistics> > callees;
-				vector< pair<const void *, unsigned long long> > callers;
+				vector< pair<const void *, count_t> > callers;
 
 				// ACT
 				ds(ds1);
@@ -176,7 +176,7 @@ namespace micro_profiler
 					make_pair((void *)7741, function_statistics(1117, 212, 1231123, 3213, 112213)),
 					make_pair((void *)141, function_statistics(17, 12012, 11293123, 132123, 12213)),
 				};
-				pair<const void *, unsigned long long> reference_callers[] = {
+				pair<const void *, count_t> reference_callers[] = {
 					make_pair((void *)14100, 1232),
 					make_pair((void *)14101, 12322),
 					make_pair((void *)141000, 123221),

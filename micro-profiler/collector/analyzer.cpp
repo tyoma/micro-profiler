@@ -22,7 +22,7 @@
 
 namespace micro_profiler
 {
-	analyzer::analyzer(__int64 profiler_latency)
+	analyzer::analyzer(timestamp_t profiler_latency)
 		: _profiler_latency(profiler_latency)
 	{	}
 

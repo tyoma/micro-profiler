@@ -132,7 +132,7 @@ namespace micro_profiler
 			{	}
 
 
-			Tracer::Tracer(__int64 latency)
+			Tracer::Tracer(timestamp_t latency)
 				: _latency(latency)
 			{	}
 
@@ -147,7 +147,7 @@ namespace micro_profiler
 				_traces.clear();
 			}
 
-			__int64 Tracer::profiler_latency() const throw()
+			timestamp_t Tracer::profiler_latency() const throw()
 			{	return _latency;	}
 		}
 	}

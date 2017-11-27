@@ -31,9 +31,9 @@ namespace micro_profiler
 	class shadow_stack
 	{
 		struct call_record_ex;
-		typedef std::unordered_map<const void *, int, address_compare> entrance_counter_map;
+		typedef std::unordered_map<const void *, unsigned int, address_compare> entrance_counter_map;
 
-		const __int64 _profiler_latency;
+		const timestamp_t _profiler_latency;
 		std::vector<call_record_ex> _stack;
 		entrance_counter_map _entrance_counter;
 
@@ -42,7 +42,7 @@ namespace micro_profiler
 		void restore_state(OutputMapType &statistics);
 
 	public:
-		shadow_stack(__int64 profiler_latency = 0);
+		shadow_stack(timestamp_t profiler_latency = 0);
 
 		template <typename ForwardConstIterator>
 		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMapType &statistics);
@@ -52,11 +52,11 @@ namespace micro_profiler
 	template <typename OutputMapType>
 	struct shadow_stack<OutputMapType>::call_record_ex : call_record
 	{
-		call_record_ex(const call_record &from, int &level, typename OutputMapType::mapped_type *entry);
+		call_record_ex(const call_record &from, unsigned int &level, typename OutputMapType::mapped_type *entry);
 		call_record_ex(const call_record_ex &other);
 
-		__int64 child_time;
-		int *level;
+		timestamp_t child_time;
+		unsigned int *level;
 		typename OutputMapType::mapped_type *entry;
 	};
 
@@ -65,7 +65,7 @@ namespace micro_profiler
 	{
 		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<statistics_map_detailed> > stacks_container;
 
-		const __int64 _profiler_latency;
+		const timestamp_t _profiler_latency;
 		statistics_map_detailed _statistics;
 		stacks_container _stacks;
 
@@ -75,7 +75,7 @@ namespace micro_profiler
 		typedef statistics_map_detailed::const_iterator const_iterator;
 
 	public:
-		analyzer(__int64 profiler_latency = 0);
+		analyzer(timestamp_t profiler_latency = 0);
 
 		void clear() throw();
 		size_t size() const throw();
@@ -88,7 +88,7 @@ namespace micro_profiler
 
 	// shadow_stack - inline definitions
 	template <typename OutputMapType>
-	inline shadow_stack<OutputMapType>::shadow_stack(__int64 profiler_latency)
+	inline shadow_stack<OutputMapType>::shadow_stack(timestamp_t profiler_latency)
 		: _profiler_latency(profiler_latency)
 	{	}
 
@@ -111,10 +111,10 @@ namespace micro_profiler
 			{
 				const call_record_ex &current = _stack.back();
 				const void *callee = current.callee;
-				int level = --*current.level;
-				__int64 inclusive_time_observed = i->timestamp - current.timestamp;
-				__int64 inclusive_time = inclusive_time_observed - _profiler_latency;
-				__int64 exclusive_time = inclusive_time - current.child_time;
+				unsigned int level = --*current.level;
+				timestamp_t inclusive_time_observed = i->timestamp - current.timestamp;
+				timestamp_t inclusive_time = inclusive_time_observed - _profiler_latency;
+				timestamp_t exclusive_time = inclusive_time - current.child_time;
 
 				current.entry->add_call(level, inclusive_time, exclusive_time);
 				_stack.pop_back();
@@ -131,7 +131,7 @@ namespace micro_profiler
 
 	// shadow_stack::call_record_ex - inline definitions
 	template <typename OutputMapType>
-	inline shadow_stack<OutputMapType>::call_record_ex::call_record_ex(const call_record &from, int &level_,
+	inline shadow_stack<OutputMapType>::call_record_ex::call_record_ex(const call_record &from, unsigned int &level_,
 		typename OutputMapType::mapped_type *entry_)
 		: call_record(from), child_time(0), level(&level_), entry(entry_)
 	{	}

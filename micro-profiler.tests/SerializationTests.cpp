@@ -1,5 +1,6 @@
 #include <common/serialization.h>
 #include <collector/analyzer.h>
+#include <frontend/function_list.h>
 
 #include "Helpers.h"
 
@@ -207,8 +208,13 @@ namespace micro_profiler
 
 				strmd::deserializer<vector_adapter> ds(buffer);
 
+				// INIT
+				statistics_map_detailed_2 dss;
+
+				static_cast<statistics_map_detailed &>(dss) = ss;
+
 				// ACT
-				ds(ss);
+				ds(dss);
 
 				// ASSERT
 				statistics_map_detailed reference;
@@ -218,7 +224,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(reference[(void *)1241]) = function_statistics(19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209);
 				static_cast<function_statistics &>(reference[(void *)12211]) = function_statistics(97, 2012, 123123123, 32124, 2213);
 
-				assert_equivalent(mkvector(reference), mkvector(ss));
+				assert_equivalent(mkvector(reference), mkvector(dss));
 			}
 
 
@@ -241,8 +247,13 @@ namespace micro_profiler
 
 				strmd::deserializer<vector_adapter> ds(buffer);
 
+				// INIT
+				statistics_map_detailed_2 dss;
+
+				static_cast<statistics_map_detailed &>(dss) = ss;
+
 				// ACT
-				ds(ss);
+				ds(dss);
 
 				// ASSERT
 				statistics_map reference;
@@ -252,7 +263,7 @@ namespace micro_profiler
 				reference[(void *)1241] = function_statistics(19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209);
 				reference[(void *)12211] = function_statistics(97, 2012, 123123123, 32124, 2213);
 
-				assert_equivalent(mkvector(reference), mkvector(ss[(void *)1221].callees));
+				assert_equivalent(mkvector(reference), mkvector(dss[(void *)1221].callees));
 			}
 
 
@@ -275,8 +286,13 @@ namespace micro_profiler
 
 				strmd::deserializer<vector_adapter> ds(buffer);
 
+				// INIT
+				statistics_map_detailed_2 dss;
+
+				static_cast<statistics_map_detailed &>(dss) = ss;
+
 				// ACT
-				ds(ss);
+				ds(dss);
 
 				// ASSERT
 				statistics_map_callers reference;
@@ -286,7 +302,7 @@ namespace micro_profiler
 				reference[(void *)1241] = 9182746 + 191;
 				reference[(void *)12211] = 723;
 
-				assert_equivalent(mkvector(reference), mkvector(ss[(void *)1221].callers));
+				assert_equivalent(mkvector(reference), mkvector(dss[(void *)1221].callers));
 			}
 
 
@@ -312,7 +328,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter> ds(buffer);
-				statistics_map_detailed ss;
+				statistics_map_detailed_2 ss;
 
 				// ACT
 				ds(ss);

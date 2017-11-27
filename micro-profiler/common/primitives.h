@@ -21,6 +21,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <wpl/base/signals.h>
 
 namespace std { namespace tr1 { } using namespace tr1; }
 
@@ -36,14 +37,6 @@ namespace micro_profiler
 		const void *callee;	// call address + sizeof(void *) + 1 bytes
 	};
 #pragma pack(pop)
-
-	struct address_compare;
-	struct function_statistics;
-	struct function_statistics_detailed;
-
-	typedef std::unordered_map<const void * /*address*/, function_statistics, address_compare> statistics_map;
-	typedef std::unordered_map<const void * /*address*/, count_t, address_compare> statistics_map_callers;
-	typedef std::unordered_map<const void * /*address*/, function_statistics_detailed, address_compare> statistics_map_detailed;
 
 	struct address_compare
 	{
@@ -65,11 +58,22 @@ namespace micro_profiler
 		timestamp_t max_call_time;
 	};
 
+	typedef std::unordered_map<const void * /*address*/, function_statistics, address_compare> statistics_map;
+	typedef std::unordered_map<const void * /*address*/, count_t, address_compare> statistics_map_callers;
+
 	struct function_statistics_detailed : function_statistics
 	{
 		statistics_map callees;
 		statistics_map_callers callers;
 	};
+
+	typedef std::unordered_map<const void * /*address*/, function_statistics_detailed, address_compare> statistics_map_detailed;
+
+	struct statistics_map_detailed_2 : statistics_map_detailed
+	{
+		wpl::signal<void (const void *updated_function)> entry_updated;
+	};
+
 
 
 	// address_compare - inline definitions

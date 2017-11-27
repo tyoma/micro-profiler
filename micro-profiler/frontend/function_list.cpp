@@ -211,9 +211,9 @@ namespace micro_profiler
 
 
 
-	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
+	functions_list::functions_list(shared_ptr<statistics_map_detailed_2> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<listview::model, statistics_map_detailed>(*statistics, tick_interval, resolver),
+		: statistics_model_impl<listview::model, statistics_map_detailed_2>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
@@ -232,7 +232,7 @@ namespace micro_profiler
 
 			update_parent_statistics(*_statistics, address, s);
 			if (data->ChildrenCount)
-				entry_updated(address);
+				_statistics->entry_updated(address);
 		}
 		updated();
 	}
@@ -269,14 +269,15 @@ namespace micro_profiler
 		const statistics_map_detailed::value_type &s = view().at(item);
 
 		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.callees,
-			entry_updated, _tick_interval, _resolver));
+			_statistics->entry_updated, _tick_interval, _resolver));
 	}
 
 	shared_ptr<linked_statistics> functions_list::watch_parents(index_type item) const
 	{
 		const statistics_map_detailed::value_type &s = view().at(item);
 
-		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, entry_updated, _resolver));
+		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, _statistics->entry_updated,
+			_resolver));
 	}
 	
 
@@ -336,6 +337,6 @@ namespace micro_profiler
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list(
-			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_resolution, resolver));
+			shared_ptr<statistics_map_detailed_2>(new statistics_map_detailed_2), 1.0 / ticks_resolution, resolver));
 	}
 }

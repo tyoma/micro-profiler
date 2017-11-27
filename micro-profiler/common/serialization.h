@@ -31,6 +31,7 @@ namespace micro_profiler
 
 template <> struct strmd::is_arithmetic<const void *> { static const bool value = true; };
 template <> struct strmd::is_container<micro_profiler::analyzer> { static const bool value = true; };
+template <> struct strmd::is_container<micro_profiler::statistics_map_detailed_2> { static const bool value = true; };
 
 template <> struct strmd::container_reader<micro_profiler::statistics_map>
 {
@@ -62,10 +63,10 @@ template <> struct strmd::container_reader<micro_profiler::statistics_map_caller
 	}
 };
 
-template <> struct strmd::container_reader<micro_profiler::statistics_map_detailed>
+template <> struct strmd::container_reader<micro_profiler::statistics_map_detailed_2>
 {
 	template <typename ArchiveT>
-	void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map_detailed &data)
+	void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map_detailed_2 &data)
 	{
 		std::pair<const void *, micro_profiler::function_statistics> value;
 

@@ -38,7 +38,7 @@ namespace micro_profiler
 		virtual const void *get_address(index_type item) const = 0;
 	};
 
-	class functions_list : public statistics_model_impl<wpl::ui::listview::model, statistics_map_detailed>
+	class functions_list : public statistics_model_impl<wpl::ui::listview::model, statistics_map_detailed_2>
 	{
 	public:
 		void clear();
@@ -50,13 +50,11 @@ namespace micro_profiler
 		static std::shared_ptr<functions_list> create(timestamp_t ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
 
 	private:
-		functions_list(std::shared_ptr<statistics_map_detailed> statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);
+		functions_list(std::shared_ptr<statistics_map_detailed_2> statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);
 
 	private:
-		std::shared_ptr<statistics_map_detailed> _statistics;
+		std::shared_ptr<statistics_map_detailed_2> _statistics;
 		double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;
-
-		mutable wpl::signal<void (const void *updated_function)> entry_updated;
 	};
 }

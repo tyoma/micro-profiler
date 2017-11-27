@@ -88,14 +88,14 @@ namespace micro_profiler
 
 	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
 	{
-		++this->times_called;
-		if (level > this->max_reentrance)
-			this->max_reentrance = level;
+		++times_called;
+		if (level > max_reentrance)
+			max_reentrance = level;
 		if (!level)
 			this->inclusive_time += inclusive_time;
 		this->exclusive_time += exclusive_time;
-		if (inclusive_time > this->max_call_time)
-			this->max_call_time = inclusive_time;
+		if (inclusive_time > max_call_time)
+			max_call_time = inclusive_time;
 	}
 
 	inline void function_statistics::operator +=(const function_statistics &rhs)

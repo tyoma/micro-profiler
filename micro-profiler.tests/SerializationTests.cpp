@@ -352,6 +352,35 @@ namespace micro_profiler
 			}
 
 
+			test( UpdatesAreSentOnlyForEntriesWithChildren )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter> s(buffer);
+				statistics_map_detailed ss;
+				statistics_map_detailed_2 dss;
+				wpl::slot_connection c = dss.entry_updated += bind(&SerializationTests::entry_updated, this, _1);
+
+				ss[(void *)1221].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
+				ss[(void *)1222];
+				ss[(void *)1223].callees[(void *)1221] = function_statistics(9, 0, 0, 0, 0);
+				ss[(void *)1224].callees[(void *)1222] = function_statistics(17, 0, 0, 0, 0);
+				ss[(void *)1225];
+
+				s(ss);
+
+				strmd::deserializer<vector_adapter> ds(buffer);
+
+				// ACT
+				ds(dss);
+
+				// ASSERT
+				const void *reference[] = { (void *)1221, (void *)1223, (void *)1224, };
+
+				assert_equivalent(reference, updated_entries);
+			}
+
+
 			test( AnalyzerDataIsSerializable )
 			{
 				// INIT

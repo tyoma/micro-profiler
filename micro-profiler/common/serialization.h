@@ -60,9 +60,11 @@ template <> struct strmd::container_reader<micro_profiler::statistics_map_detail
 			archive(value);
 			micro_profiler::function_statistics_detailed &entry = data[value.first];
 			entry += value.second;
-			archive(entry.callees);
-			micro_profiler::update_parent_statistics(data, value.first, entry);
-			data.entry_updated(value.first);
+			if (archive.process_container(entry.callees))
+			{
+				micro_profiler::update_parent_statistics(data, value.first, entry);
+				data.entry_updated(value.first);
+			}
 		}
 	}
 };

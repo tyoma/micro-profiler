@@ -2,9 +2,8 @@
 
 #include "Helpers.h"
 
-#include <_generated/frontend.h>
-
 #include <atlbase.h>
+#include <ut/assert.h>
 
 using wpl::mt::thread;
 using namespace std;
@@ -112,11 +111,30 @@ namespace micro_profiler
 		}
 
 
-		bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs)
-		{	return lhs.FunctionAddress < rhs.FunctionAddress; }
+		vector_adapter::vector_adapter()
+			: _ptr(0)
+		{	}
 
-		bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs)
-		{	return lhs.Statistics.FunctionAddress < rhs.Statistics.FunctionAddress; }
+		void vector_adapter::write(const void *buffer, size_t size)
+		{
+			const unsigned char *b = reinterpret_cast<const unsigned char *>(buffer);
+
+			_buffer.insert(_buffer.end(), b, b + size);
+		}
+
+		void vector_adapter::read(void *buffer, size_t size)
+		{
+			assert_is_true(size <= _buffer.size() - _ptr);
+			memcpy(buffer, &_buffer[_ptr], size);
+			_ptr += size;
+		}
+
+		void vector_adapter::rewind(size_t pos)
+		{	_ptr = pos;	}
+
+		size_t vector_adapter::end_position() const
+		{	return _buffer.size();	}
+
 
 		function_statistics_detailed function_statistics_ex(count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time, timestamp_t max_call_time)
 		{

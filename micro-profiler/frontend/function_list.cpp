@@ -223,7 +223,7 @@ namespace micro_profiler
 		updated();
 	}
 
-	void functions_list::update(const FunctionStatisticsDetailed *data, size_t count)
+	void functions_list::update_(const FunctionStatisticsDetailed *data, size_t count)
 	{
 		for (; count; --count, ++data)
 		{

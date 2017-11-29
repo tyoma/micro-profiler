@@ -2,29 +2,17 @@
 
 #include "../Helpers.h"
 
-#include <common/com_helpers.h>
+#include <common/serialization.h>
 #include <frontend/symbol_resolver.h>
 
-#include <functional>
-#include <list>
-#include <utility>
-#include <string>
+#include <strmd/strmd/serializer.h>
+#include <strmd/strmd/deserializer.h>
 #include <sstream>
-#include <cmath>
-#include <map>
-#include <memory>
-#include <locale>
-#include <algorithm>
 #include <ut/assert.h>
 #include <ut/test.h>
 
-namespace std 
-{
-	using namespace tr1;
-	using namespace tr1::placeholders;
-}
-
 using namespace std;
+using namespace std::placeholders;
 using namespace wpl::ui;
 
 namespace micro_profiler
@@ -160,6 +148,15 @@ namespace micro_profiler
 
 
 		begin_test_suite( FunctionListTests )
+
+			vector_adapter _buffer;
+			strmd::serializer<vector_adapter> ser;
+			strmd::deserializer<vector_adapter> dser;
+
+			FunctionListTests()
+				: ser(_buffer), dser(_buffer)
+			{	}
+
 			test( CanCreateEmptyFunctionList )
 			{
 				// INIT / ACT
@@ -175,19 +172,16 @@ namespace micro_profiler
 			test( FunctionListAcceptsUpdates )
 			{
 				// INIT
-				function_statistics s[] = {
-					function_statistics(19, 0, 31, 29),
-					function_statistics(10, 3, 7, 5),
-				};
-				FunctionStatisticsDetailed data[2] = { 0 };
+				statistics_map_detailed s;
 				shared_ptr<symbol_resolver> resolver(new sri);
 
-				copy(make_pair((void *)1123, s[0]), data[0].Statistics);
-				copy(make_pair((void *)2234, s[1]), data[1].Statistics);
+				static_cast<function_statistics &>(s[(void *)1123]) = function_statistics(19, 0, 31, 29);
+				static_cast<function_statistics &>(s[(void *)2234]) = function_statistics(10, 3, 7, 5);
+				ser(s);
 				
 				// ACT
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				fl->update(data, 2);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(2u, fl->get_count());
@@ -197,17 +191,17 @@ namespace micro_profiler
 			test( FunctionListCanBeClearedAndUsedAgain )
 			{
 				// INIT
-				function_statistics s1(19, 0, 31, 29);
-				FunctionStatisticsDetailed ms1 = { 0 };
+				statistics_map_detailed s;
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 
-				copy(make_pair((void *)1123, s1), ms1.Statistics);
+				static_cast<function_statistics &>(s[(void *)1123]) = function_statistics(19, 0, 31, 29);
+				ser(s);
 
 				// ACT
 				invalidation_tracer ih;
 				ih.bind_to_model(*fl);
-				fl->update(&ms1, 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
@@ -229,8 +223,11 @@ namespace micro_profiler
 				assert_equal(0u, ih.invalidations.back()); //check what's coming as event arg
 				assert_equal(listview::npos, first->index());
 
+				// INIT
+				_buffer.rewind();
+
 				// ACT
-				fl->update(&ms1, 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
@@ -243,22 +240,18 @@ namespace micro_profiler
 			test( FunctionListGetByAddress )
 			{
 				// INIT
-				function_statistics s[] = {
-					function_statistics(19, 0, 31, 29),
-					function_statistics(10, 3, 7, 5),
-					function_statistics(5, 0, 10, 7),
-				};
-				FunctionStatisticsDetailed data[3] = { 0 };
+				statistics_map_detailed s;
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				vector<functions_list::index_type> expected;
 
-				copy(make_pair((void *)1123, s[0]), data[0].Statistics);
-				copy(make_pair((void *)2234, s[1]), data[1].Statistics);
-				copy(make_pair((void *)5555, s[2]), data[2].Statistics);
+				static_cast<function_statistics &>(s[(void *)1118]) = function_statistics(19, 0, 31, 29);
+				static_cast<function_statistics &>(s[(void *)2229]) = function_statistics(10, 3, 7, 5);
+				static_cast<function_statistics &>(s[(void *)5550]) = function_statistics(5, 0, 10, 7);
+				ser(s);
 				
 				// ACT
-				fl->update(data, 3);
+				dser(*fl);
 
 				functions_list::index_type idx1118 = fl->get_index((void *)1118);
 				functions_list::index_type idx2229 = fl->get_index((void *)2229);
@@ -293,22 +286,13 @@ namespace micro_profiler
 				//TODO: possibly trackable on update tests should see that it works with every sorting given.
 
 				// INIT
-				function_statistics s[] = {
-					function_statistics(19, 0, 31, 29, 3),
-					function_statistics(10, 3, 7, 5, 4),
-					function_statistics(5, 0, 10, 7, 6),
-					function_statistics(15, 1024, 1011, 723, 215),
-					function_statistics(1, 0, 4, 4, 4),
-				};
-				FunctionStatisticsDetailed data1[2] = { 0 };
-				FunctionStatisticsDetailed data2[2] = { 0 };
-				FunctionStatisticsDetailed data3[1] = { 0 };
+				statistics_map_detailed s1, s2, s3;
 
-				copy(make_pair((void *)1123, s[0]), data1[0].Statistics);
-				copy(make_pair((void *)2234, s[1]), data1[1].Statistics);
-				copy(make_pair((void *)1123, s[2]), data2[0].Statistics);
-				copy(make_pair((void *)5555, s[3]), data2[1].Statistics);
-				copy(make_pair((void *)1123, s[4]), data3[0].Statistics);
+				static_cast<function_statistics &>(s1[(void *)1118]) = function_statistics(19, 0, 31, 29, 3);
+				static_cast<function_statistics &>(s1[(void *)2229]) = function_statistics(10, 3, 7, 5, 4);
+				static_cast<function_statistics &>(s2[(void *)1118]) = function_statistics(5, 0, 10, 7, 6);
+				static_cast<function_statistics &>(s2[(void *)5550]) = function_statistics(15, 1024, 1011, 723, 215);
+				static_cast<function_statistics &>(s3[(void *)1118]) = function_statistics(1, 0, 4, 4, 4);
 
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
@@ -317,8 +301,12 @@ namespace micro_profiler
 				invalidation_tracer ih;
 				ih.bind_to_model(*fl);
 
+				ser(s1);
+				ser(s2);
+				ser(s3);
+
 				// ACT
-				fl->update(data1, 2);
+				dser(*fl);
 				shared_ptr<const listview::trackable> first = fl->track(0); // 2229
 				shared_ptr<const listview::trackable> second = fl->track(1); // 1118
 
@@ -335,7 +323,7 @@ namespace micro_profiler
 				assert_equal(1u, second->index());
 
 				// ACT
-				fl->update(data2, 2);
+				dser(*fl);
 				
 				// ASSERT
 				assert_equal(3u, fl->get_count());
@@ -350,7 +338,7 @@ namespace micro_profiler
 				assert_equal(2u, second->index()); // kind of moved down
 
 				// ACT
-				fl->update(data3, 1);
+				dser(*fl);
 				
 				// ASSERT
 				assert_equal(3u, fl->get_count());
@@ -397,33 +385,34 @@ namespace micro_profiler
 				function_statistics s6lb(1, 0, 99999031030567, 99999030000987, 99999030000987);
 				function_statistics s6(1, 0, 65450031030567000, 23470030000987000, 23470030000987000);
 
-				FunctionStatisticsDetailed data[16] = { 0 };
+				statistics_map_detailed s;
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver)); // 10 * billion for ticks resolution
 
-				copy(make_pair((void *)1123, s1), data[0].Statistics);
-				copy(make_pair((void *)2234, s2), data[1].Statistics);
-				copy(make_pair((void *)3123, s3), data[2].Statistics);
-				copy(make_pair((void *)5555, s4), data[3].Statistics);
-				copy(make_pair((void *)4555, s5), data[4].Statistics);
-				copy(make_pair((void *)6666, s6), data[5].Statistics);
+				static_cast<function_statistics &>(s[(void *)1118]) = s1;
+				static_cast<function_statistics &>(s[(void *)2229]) = s2;
+				static_cast<function_statistics &>(s[(void *)3118]) = s3;
+				static_cast<function_statistics &>(s[(void *)5550]) = s4;
+				static_cast<function_statistics &>(s[(void *)4550]) = s5;
+				static_cast<function_statistics &>(s[(void *)6661]) = s6;
 
-				copy(make_pair((void *)1995, s1ub), data[6].Statistics);
-				copy(make_pair((void *)2005, s2lb), data[7].Statistics);
-				copy(make_pair((void *)2995, s2ub), data[8].Statistics);
-				copy(make_pair((void *)3005, s3lb), data[9].Statistics);
-				copy(make_pair((void *)3995, s3ub), data[10].Statistics);
-				copy(make_pair((void *)4005, s4lb), data[11].Statistics);
-				copy(make_pair((void *)4995, s4ub), data[12].Statistics);
-				copy(make_pair((void *)5005, s5lb), data[13].Statistics);
-				copy(make_pair((void *)5995, s5ub), data[14].Statistics);
-				copy(make_pair((void *)6005, s6lb), data[15].Statistics);
-				
+				static_cast<function_statistics &>(s[(void *)1990]) = s1ub;
+				static_cast<function_statistics &>(s[(void *)2000]) = s2lb;
+				static_cast<function_statistics &>(s[(void *)2990]) = s2ub;
+				static_cast<function_statistics &>(s[(void *)3000]) = s3lb;
+				static_cast<function_statistics &>(s[(void *)3990]) = s3ub;
+				static_cast<function_statistics &>(s[(void *)4000]) = s4lb;
+				static_cast<function_statistics &>(s[(void *)4990]) = s4ub;
+				static_cast<function_statistics &>(s[(void *)5000]) = s5lb;
+				static_cast<function_statistics &>(s[(void *)5990]) = s5ub;
+				static_cast<function_statistics &>(s[(void *)6000]) = s6lb;
+				ser(s);
+
 				// ACT
-				fl->update(data, sizeof(data) / sizeof(data[0]));
+				dser(*fl);
 
 				// ASSERT
-				assert_equal(fl->get_count(), sizeof(data) / sizeof(data[0]));
+				assert_equal(fl->get_count(), s.size());
 		
 				// columns: name, times called, inclusive time, exclusive time, avg. inclusive time, avg. exclusive time, max reentrance, max call time
 				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0", L"2.9ns");
@@ -450,27 +439,22 @@ namespace micro_profiler
 			test( FunctionListSorting )
 			{
 				// INIT
-				function_statistics s[] = {
-					function_statistics(15, 0, 31, 29, 3),
-					function_statistics(35, 1, 453, 366, 4),
-					function_statistics(2, 2, 33450030, 32333333, 5),
-					function_statistics(15233, 3, 65450, 13470, 6),
-				};
-				FunctionStatisticsDetailed data[4] = { 0 };
+				statistics_map_detailed s;
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				invalidation_tracer ih;
 
-				copy(make_pair((void *)1995, s[0]), data[0].Statistics);
-				copy(make_pair((void *)2005, s[1]), data[1].Statistics);
-				copy(make_pair((void *)2995, s[2]), data[2].Statistics);
-				copy(make_pair((void *)3005, s[3]), data[3].Statistics);
+				static_cast<function_statistics &>(s[(void *)1990]) = function_statistics(15, 0, 31, 29, 3);
+				static_cast<function_statistics &>(s[(void *)2000]) = function_statistics(35, 1, 453, 366, 4);
+				static_cast<function_statistics &>(s[(void *)2990]) = function_statistics(2, 2, 33450030, 32333333, 5);
+				static_cast<function_statistics &>(s[(void *)3000]) = function_statistics(15233, 3, 65450, 13470, 6);
+				ser(s);
 
 				ih.bind_to_model(*fl);
 
-				const size_t data_size = sizeof(data)/sizeof(data[0]);
+				const size_t data_size = s.size();
 
-				fl->update(data, data_size);
+				dser(*fl);
 
 				shared_ptr<const listview::trackable> pt0 = fl->track(fl->get_index((void *)1990));
 				shared_ptr<const listview::trackable> pt1 = fl->track(fl->get_index((void *)2000));
@@ -755,23 +739,19 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 			}
 
+
 			test( FunctionListPrintItsContent )
 			{
 				// INIT
-				function_statistics s[] = {
-					function_statistics(15, 0, 31, 29, 2),
-					function_statistics(35, 1, 453, 366, 3),
-					function_statistics(2, 2, 33450030, 32333333, 4),
-				};
-				FunctionStatisticsDetailed data[3] = { 0 };
-				const size_t data_size = sizeof(data)/sizeof(data[0]);
+				statistics_map_detailed s;
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				wstring result;
 
-				copy(make_pair((void *)1995, s[0]), data[0].Statistics);
-				copy(make_pair((void *)2005, s[1]), data[1].Statistics);
-				copy(make_pair((void *)2995, s[2]), data[2].Statistics);
+				static_cast<function_statistics &>(s[(void *)1990]) = function_statistics(15, 0, 31, 29, 2);
+				static_cast<function_statistics &>(s[(void *)2000]) = function_statistics(35, 1, 453, 366, 3);
+				static_cast<function_statistics &>(s[(void *)2990]) = function_statistics(2, 2, 33450030, 32333333, 4);
+				ser(s);
 
 				// ACT
 				fl->print(result);
@@ -782,12 +762,12 @@ namespace micro_profiler
 					L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
 
 				// ACT
-				fl->update(data, data_size);
+				dser(*fl);
 				fl->set_order(2, true); // by times called
 				fl->print(result);
 
 				// ASSERT
-				assert_equal(data_size, fl->get_count());
+				assert_equal(s.size(), fl->get_count());
 				assert_equal(dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
 										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"
@@ -799,7 +779,7 @@ namespace micro_profiler
 				fl->print(result);
 
 				// ASSERT
-				assert_equal(data_size, fl->get_count());
+				assert_equal(s.size(), fl->get_count());
 				assert_equal(dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
 										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
@@ -825,16 +805,18 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
-				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
-				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
-				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
-				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+				s1[(void *)1978];
+				s1[(void *)1995];
+				s2[(void *)2001];
+				s2[(void *)2004];
+				s2[(void *)2011];
+				ser(s1);
+				ser(s2);
 
-				fl1->update(data1, 2);
-				fl2->update(data2, 3);
+				dser(*fl1);
+				dser(*fl2);
 
 				// ACT / ASSERT
 				assert_throws(fl1->watch_children(2), out_of_range);
@@ -852,16 +834,18 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
-				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
-				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
-				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
-				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+				s1[(void *)1978];
+				s1[(void *)1995];
+				s2[(void *)2001];
+				s2[(void *)2004];
+				s2[(void *)2011];
+				ser(s1);
+				ser(s2);
 
-				fl1->update(data1, 2);
-				fl2->update(data2, 3);
+				dser(*fl1);
+				dser(*fl2);
 
 				// ACT / ASSERT
 				assert_not_null(fl1->watch_children(0));
@@ -877,11 +861,13 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[2] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)1978, function_statistics()), data[0].Statistics);
-				copy(make_pair((void *)1995, function_statistics()), data[1].Statistics);
-				fl->update(data, 2);
+				s[(void *)1973];
+				s[(void *)1990];
+				ser(s);
+
+				dser(*fl);
 
 				// ACT
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -897,19 +883,15 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[2] = { 0 };
-				FunctionStatistics children_data[4] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)(0x1995 + 5), function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 3;
-				copy(make_pair((void *)(0x2001 + 5), function_statistics()), children_data[0]);
-				copy(make_pair((void *)(0x2004 + 5), function_statistics()), children_data[1]);
-				copy(make_pair((void *)(0x2008 + 5), function_statistics()), children_data[2]);
-				copy(make_pair((void *)(0x2011 + 5), function_statistics()), children_data[3]);
+				s[(void *)0x1978].callees[(void *)0x2001];
+				s[(void *)0x1995].callees[(void *)0x2004];
+				s[(void *)0x1995].callees[(void *)0x2008];
+				s[(void *)0x1995].callees[(void *)0x2011];
+				ser(s);
 
-				fl->update(data, 2);
+				dser(*fl);
 				
 				// ACT
 				shared_ptr<linked_statistics> ls_0 = fl->watch_children(find_row(*fl, L"00001978"));
@@ -930,20 +912,18 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data = { 0 }, data0 = { 0 };
-				FunctionStatistics children_data[4] = { 0 };
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data0.Statistics);
-				data0.ChildrenStatistics = &children_data[0], data0.ChildrenCount = 1;
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data.Statistics);
-				data.ChildrenStatistics = &children_data[0], data.ChildrenCount = 4;
-				copy(make_pair((void *)(0x2001 + 5), function_statistics(11)), children_data[0]);
-				copy(make_pair((void *)(0x2004 + 5), function_statistics(17)), children_data[1]);
-				copy(make_pair((void *)(0x2008 + 5), function_statistics(18)), children_data[2]);
-				copy(make_pair((void *)(0x2011 + 5), function_statistics(29)), children_data[3]);
+				s1[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11);
+				s2[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11);
+				s2[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17);
+				s2[(void *)0x1978].callees[(void *)0x2008] = function_statistics(18);
+				s2[(void *)0x1978].callees[(void *)0x2011] = function_statistics(29);
+				ser(s1);
+				ser(s2);
 
-				fl->update(&data0, 1);
-				fl->update(&data, 1);
+				dser(*fl);
+				dser(*fl);
 				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -973,15 +953,13 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(10, resolver));
-				FunctionStatisticsDetailed data = { 0 };
-				FunctionStatistics children_data[2] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data.Statistics);
-				data.ChildrenStatistics = &children_data[0], data.ChildrenCount = 2;
-				copy(make_pair((void *)(0x2001 + 5), function_statistics(11, 0, 1, 7, 91)), children_data[0]);
-				copy(make_pair((void *)(0x2004 + 5), function_statistics(17, 5, 2, 8, 97)), children_data[1]);
+				s[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
+				ser(s);
 
-				fl->update(&data, 1);
+				dser(*fl);
 				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -998,34 +976,35 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(1, resolver));
-				FunctionStatisticsDetailed data_1 = { 0 }, data_2 = { 0 };
-				FunctionStatistics children_data[2] = { 0 };
 				invalidation_tracer t;
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data_1.Statistics);
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data_2.Statistics);
-				data_1.ChildrenStatistics = &children_data[0], data_1.ChildrenCount = 2;
-				copy(make_pair((void *)(0x2001 + 5), function_statistics(11, 0, 1, 7, 91)), children_data[0]);
-				copy(make_pair((void *)(0x2004 + 5), function_statistics(17, 5, 2, 8, 97)), children_data[1]);
+				s[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
+				ser(s);
+				s[(void *)0x1978].callees.clear();
+				ser(s);
 
-				fl->update(&data_1, 1);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 
 				t.bind_to_model(*ls);
 
 				// ACT (update with no children)
-				fl->update(&data_2, 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_is_empty(t.invalidations);
 
 				// INIT
-				data_2.Statistics.FunctionAddress = 0x2978;
-				data_2.ChildrenStatistics = &children_data[0], data_2.ChildrenCount = 2;
+				s.clear();
+				s[(void *)0x2978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s[(void *)0x2978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
+				ser(s);
 
 				// ACT (update with children, but another entry)
-				fl->update(&data_2, 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_is_empty(t.invalidations);
@@ -1037,19 +1016,18 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(1, resolver));
-				FunctionStatisticsDetailed data_1 = { 0 }, data_2 = { 0 };
-				FunctionStatistics children_data[3] = { 0 };
 				invalidation_tracer t;
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data_1.Statistics);
-				data_1.ChildrenStatistics = &children_data[0], data_1.ChildrenCount = 2;
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data_2.Statistics);
-				data_2.ChildrenStatistics = &children_data[1], data_2.ChildrenCount = 2;
-				copy(make_pair((void *)(0x2001 + 5), function_statistics(11, 0, 1, 7, 91)), children_data[0]);
-				copy(make_pair((void *)(0x2004 + 5), function_statistics(17, 5, 2, 8, 97)), children_data[1]);
-				copy(make_pair((void *)(0x2007 + 5), function_statistics(17, 5, 2, 8, 97)), children_data[2]);
+				s1[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s1[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
+				s2[(void *)0x1978].callees[(void *)0x2004] = function_statistics(11, 0, 1, 7, 91);
+				s2[(void *)0x1978].callees[(void *)0x2007] = function_statistics(17, 5, 2, 8, 97);
+				ser(s1);
+				ser(s2);
 
-				fl->update(&data_1, 1);
+				dser(*fl);
+				_buffer.rewind();
 				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -1057,24 +1035,27 @@ namespace micro_profiler
 				t.bind_to_model(*ls);
 
 				// ACT
-				fl->update(&data_1, 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(1u, t.invalidations.size());
 				assert_equal(2u, t.invalidations.back());
 
 				// ACT
-				fl->update(&data_2, 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(2u, t.invalidations.size());
 				assert_equal(3u, t.invalidations.back());
 
 				// INIT
-				data_1.ChildrenCount = 1;
+				statistics_map_detailed s3;
+
+				s3[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
+				ser(s3);
 
 				// ACT
-				fl->update(&data_1, 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(3u, t.invalidations.size());
@@ -1087,17 +1068,15 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data = { 0 };
-				FunctionStatistics children_data[4] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)(0x1978 + 5), function_statistics()), data.Statistics);
-				data.ChildrenStatistics = &children_data[0], data.ChildrenCount = 4;
-				copy(make_pair((void *)(0x2001 + 5), function_statistics(11)), children_data[0]);
-				copy(make_pair((void *)(0x2004 + 5), function_statistics(17)), children_data[1]);
-				copy(make_pair((void *)(0x2008 + 5), function_statistics(18)), children_data[2]);
-				copy(make_pair((void *)(0x2011 + 5), function_statistics(29)), children_data[3]);
+				s[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11);
+				s[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17);
+				s[(void *)0x1978].callees[(void *)0x2008] = function_statistics(18);
+				s[(void *)0x1978].callees[(void *)0x2011] = function_statistics(29);
+				ser(s);
 
-				fl->update(&data, 1);
+				dser(*fl);
 				fl->set_order(1, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -1111,23 +1090,24 @@ namespace micro_profiler
 				assert_equal((void *)0x2011, ls->get_address(3));
 			}
 
-			
+
 			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[3] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)(0x2001 + 5), function_statistics(11)), data[0].Statistics);
-				copy(make_pair((void *)(0x2004 + 5), function_statistics(17)), data[1].Statistics);
-				copy(make_pair((void *)(0x2008 + 5), function_statistics(18)), data[2].Statistics);
+				static_cast<function_statistics &>(s[(void *)0x2001]) = function_statistics(11);
+				static_cast<function_statistics &>(s[(void *)0x2004]) = function_statistics(17);
+				static_cast<function_statistics &>(s[(void *)0x2008]) = function_statistics(18);
+				ser(s);
 
-				fl->update(data, 3);
+				dser(*fl);
 
 				// ACT
 				shared_ptr<const listview::trackable> t(fl->track(1));
-			
+
 				fl = shared_ptr<functions_list>();
 
 				// ACT / ASSERT
@@ -1141,16 +1121,18 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
-				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
-				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
-				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
-				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+				s1[(void *)0x1978];
+				s1[(void *)0x1995];
+				ser(s1);
+				s2[(void *)0x2001];
+				s2[(void *)0x2004];
+				s2[(void *)0x2008];
+				ser(s2);
 
-				fl1->update(data1, 2);
-				fl2->update(data2, 3);
+				dser(*fl1);
+				dser(*fl2);
 
 				// ACT / ASSERT
 				assert_throws(fl1->watch_parents(2), out_of_range);
@@ -1168,16 +1150,18 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data1[2] = { 0 }, data2[3] = { 0 };
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)1978, function_statistics()), data1[0].Statistics);
-				copy(make_pair((void *)1995, function_statistics()), data1[1].Statistics);
-				copy(make_pair((void *)2001, function_statistics()), data2[0].Statistics);
-				copy(make_pair((void *)2004, function_statistics()), data2[1].Statistics);
-				copy(make_pair((void *)2011, function_statistics()), data2[2].Statistics);
+				s1[(void *)0x1978];
+				s1[(void *)0x1995];
+				ser(s1);
+				s2[(void *)0x2001];
+				s2[(void *)0x2004];
+				s2[(void *)0x2008];
+				ser(s2);
 
-				fl1->update(data1, 2);
-				fl2->update(data2, 3);
+				dser(*fl1);
+				dser(*fl2);
 
 				// ACT / ASSERT
 				assert_not_null(fl1->watch_parents(0));
@@ -1193,23 +1177,18 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[3] = { 0 };
-				FunctionStatistics children_data[2] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)2978, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data[1], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)2995, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
-				copy(make_pair((void *)3001, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &children_data[0], data[2].ChildrenCount = 2;
-
-				children_data[0] = data[1].Statistics;
-				children_data[1] = data[2].Statistics;
+				s[(void *)2978].callees[(void *)3001];
+				s[(void *)2995].callees[(void *)3001];
+				s[(void *)3001].callees[(void *)2995];
+				s[(void *)3001].callees[(void *)3001];
+				ser(s);
 
 				fl->set_order(1, true);
 
 				// ACT
-				fl->update(data, 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
 				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
@@ -1227,24 +1206,19 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[4] = { 0 };
-				FunctionStatistics children_data = { 0 };
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)2978, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data, data[0].ChildrenCount = 1;
-				copy(make_pair((void *)2995, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data, data[1].ChildrenCount = 1;
-				copy(make_pair((void *)3001, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &children_data, data[2].ChildrenCount = 1;
-				copy(make_pair((void *)3002, function_statistics()), data[3].Statistics);
-				data[3].ChildrenStatistics = &children_data, data[3].ChildrenCount = 1;
-
-				children_data = data[0].Statistics;
+				s1[(void *)2978].callees[(void *)2978];
+				s1[(void *)2995].callees[(void *)2978];
+				s1[(void *)3001].callees[(void *)2978];
+				s2[(void *)3002].callees[(void *)2978];
+				ser(s1);
+				ser(s2);
 
 				fl->set_order(1, true);
 
 				// ACT
-				fl->update(&data[0], 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(0);
 
@@ -1252,7 +1226,7 @@ namespace micro_profiler
 				assert_equal(3u, p->get_count());
 
 				// ACT
-				fl->update(&data[3], 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(4u, p->get_count());
@@ -1264,21 +1238,17 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[3] = { 0 };
-				FunctionStatistics children_data[3] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)0x1234, function_statistics(1)), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)0x2345, function_statistics(3)), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
-				copy(make_pair((void *)0x3456, function_statistics(5000000000)), data[2].Statistics);
-				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
+				static_cast<function_statistics &>(s[(void *)0x122F]) = function_statistics(1);
+				s[(void *)0x122F].callees[(void *)0x2340] = function_statistics(3);
+				static_cast<function_statistics &>(s[(void *)0x2340]) = function_statistics(3);
+				s[(void *)0x2340].callees[(void *)0x3451] = function_statistics(5000000000);
+				static_cast<function_statistics &>(s[(void *)0x3451]) = function_statistics(5000000000);
+				s[(void *)0x3451].callees[(void *)0x122F] = function_statistics(1);
+				ser(s);
 
-				children_data[0] = data[1].Statistics;
-				children_data[1] = data[2].Statistics;
-				children_data[2] = data[0].Statistics;
-
-				fl->update(&data[0], 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
 				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
@@ -1296,24 +1266,16 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[3] = { 0 };
-				FunctionStatistics children_data[3] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
-				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
-
-				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
-				children_data[0].TimesCalled = 3;
-				children_data[1].TimesCalled = 700;
-				children_data[2].TimesCalled = 30;
+				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
+				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(700);
+				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(30);
+				ser(s);
 
 				fl->set_order(1, true);
 
-				fl->update(&data[0], 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
@@ -1356,20 +1318,18 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[4] = { 0 };
 				invalidation_tracer t;
+				statistics_map_detailed s1, s2;
 
-				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &data[2].Statistics, data[0].ChildrenCount = 1;
-				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &data[2].Statistics, data[1].ChildrenCount = 1;
-				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &data[2].Statistics, data[2].ChildrenCount = 1;
-				copy(make_pair((void *)0x3007, function_statistics()), data[3].Statistics);
-				data[3].ChildrenStatistics = &data[2].Statistics, data[3].ChildrenCount = 1;
+				s1[(void *)0x2978].callees[(void *)0x3001];
+				s1[(void *)0x2995].callees[(void *)0x3001];
+				s1[(void *)0x3001].callees[(void *)0x3001];
+				ser(s1);
+				s2[(void *)0x3002].callees[(void *)0x3001];
+				ser(s2);
 
 				fl->set_order(1, true);
-				fl->update(&data[0], 3);
+				dser(*fl);
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
 				t.bind_to_model(*p);
@@ -1382,7 +1342,7 @@ namespace micro_profiler
 				assert_equal(3u, t.invalidations[0]);
 
 				// INIT
-				fl->update(&data[3], 1);
+				dser(*fl);
 				t.invalidations.clear();
 
 				// ACT
@@ -1399,24 +1359,16 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[3] = { 0 };
-				FunctionStatistics children_data[3] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
-				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
-
-				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
-				children_data[0].TimesCalled = 3;
-				children_data[1].TimesCalled = 700;
-				children_data[2].TimesCalled = 30;
+				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
+				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(700);
+				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(30);
+				ser(s);
 
 				fl->set_order(1, true);
 
-				fl->update(&data[0], 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
@@ -1434,24 +1386,18 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[3] = { 0 };
-				FunctionStatistics children_data[3] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
-				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
-
-				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
-				children_data[0].TimesCalled = 3;
-				children_data[1].TimesCalled = 30;
-				children_data[2].TimesCalled = 50;
+				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
+				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(30);
+				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(50);
+				ser(s);
+				s.erase((void *)0x3001);
+				ser(s);
 
 				fl->set_order(1, true);
 
-				fl->update(&data[0], 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
@@ -1463,7 +1409,7 @@ namespace micro_profiler
 				assert_row(*p, 2, L"00003001", L"50");
 
 				// ACT
-				fl->update(&data[0], 2);
+				dser(*fl);
 
 				// ASSERT
 				assert_row(*p, 0, L"00002978", L"6");
@@ -1477,35 +1423,36 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[5] = { 0 };
+				statistics_map_detailed s1, s2, s3, s4;
 				invalidation_tracer ih;
 
-				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &data[0].Statistics, data[0].ChildrenCount = 1;
-				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &data[0].Statistics, data[1].ChildrenCount = 1;
-				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &data[0].Statistics, data[2].ChildrenCount = 1;
-				copy(make_pair((void *)0x7275, function_statistics()), data[3].Statistics);
-				copy(make_pair((void *)0x8525, function_statistics()), data[4].Statistics);
-				data[4].ChildrenStatistics = &data[0].Statistics, data[4].ChildrenCount = 1;
+				s1[(void *)0x297D].callees[(void *)0x297D];
+				s1[(void *)0x299A].callees[(void *)0x297D];
+				s1[(void *)0x3006].callees[(void *)0x297D];
+				ser(s1);
+				s2[(void *)0x7275];
+				ser(s2);
+				s3[(void *)0x297D].callees[(void *)0x297D];
+				ser(s3);
+				s4[(void *)0x8525].callees[(void *)0x297D];
+				ser(s4);
 
 				fl->set_order(1, true);
 
-				fl->update(&data[0], 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(0);
 
 				ih.bind_to_model(*p);
 
 				// ACT
-				fl->update(&data[3], 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_is_empty(ih.invalidations);
 
 				// ACT
-				fl->update(&data[0], 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(1u, ih.invalidations.size());
@@ -1515,7 +1462,7 @@ namespace micro_profiler
 				ih.invalidations.clear();
 
 				// ACT
-				fl->update(&data[4], 1);
+				dser(*fl);
 
 				// ASSERT
 				assert_equal(1u, ih.invalidations.size());
@@ -1528,24 +1475,16 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> resolver(new sri);
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
-				FunctionStatisticsDetailed data[3] = { 0 };
-				FunctionStatistics children_data[3] = { 0 };
+				statistics_map_detailed s;
 
-				copy(make_pair((void *)0x297D, function_statistics()), data[0].Statistics);
-				data[0].ChildrenStatistics = &children_data[0], data[0].ChildrenCount = 1;
-				copy(make_pair((void *)0x299A, function_statistics()), data[1].Statistics);
-				data[1].ChildrenStatistics = &children_data[1], data[1].ChildrenCount = 1;
-				copy(make_pair((void *)0x3006, function_statistics()), data[2].Statistics);
-				data[2].ChildrenStatistics = &children_data[2], data[2].ChildrenCount = 1;
-
-				children_data[0] = children_data[1] = children_data[2] = data[2].Statistics;
-				children_data[0].TimesCalled = 3;
-				children_data[1].TimesCalled = 30;
-				children_data[2].TimesCalled = 50;
+				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
+				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(30);
+				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(50);
+				ser(s);
 
 				fl->set_order(1, true);
 
-				fl->update(&data[0], 3);
+				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 

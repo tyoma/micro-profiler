@@ -16,35 +16,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			class vector_adapter
-			{
-			public:
-				vector_adapter()
-					: _ptr(0)
-				{	}
-
-				void write(const void *buffer, size_t size)
-				{
-					const unsigned char *b = reinterpret_cast<const unsigned char *>(buffer);
-
-					_buffer.insert(_buffer.end(), b, b + size);
-				}
-
-				void read(void *buffer, size_t size)
-				{
-					assert_is_true(size <= _buffer.size() - _ptr);
-					memcpy(buffer, &_buffer[_ptr], size);
-					_ptr += size;
-				}
-
-			private:
-				size_t _ptr;
-				vector<unsigned char> _buffer;
-			};
-		}
-
 		begin_test_suite( SerializationTests )
 			test( SerializedStatisticsAreDeserialized )
 			{

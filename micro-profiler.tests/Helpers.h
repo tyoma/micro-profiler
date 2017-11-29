@@ -8,9 +8,6 @@
 #include <tchar.h>
 #include <vector>
 
-typedef struct FunctionStatisticsTag FunctionStatistics;
-typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-
 namespace micro_profiler
 {
 	namespace tests
@@ -49,9 +46,22 @@ namespace micro_profiler
 			const void *get_symbol_address(const char *name) const;
 		};
 
+		class vector_adapter
+		{
+		public:
+			vector_adapter();
 
-		bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs);
-		bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs);
+			void write(const void *buffer, size_t size);
+			void read(void *buffer, size_t size);
+			void rewind(size_t pos = 0);
+			size_t end_position() const;
+
+		private:
+			size_t _ptr;
+			std::vector<unsigned char> _buffer;
+		};
+
+
 		function_statistics_detailed function_statistics_ex(count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time, timestamp_t max_call_time);
 
 

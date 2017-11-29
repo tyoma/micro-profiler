@@ -815,6 +815,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\common\serialization.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ipc"

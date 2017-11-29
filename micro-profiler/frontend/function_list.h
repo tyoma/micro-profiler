@@ -42,7 +42,7 @@ namespace micro_profiler
 	{
 	public:
 		void clear();
-		void update(const FunctionStatisticsDetailed *data, size_t count);
+		void update_(const FunctionStatisticsDetailed *data, size_t count);
 		void print(std::wstring &content) const;
 		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
@@ -56,5 +56,16 @@ namespace micro_profiler
 		std::shared_ptr<statistics_map_detailed_2> _statistics;
 		double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;
+
+	private:
+		template <typename ArchiveT>
+		friend void serialize(ArchiveT &archive, functions_list &data);
 	};
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, functions_list &data)
+	{
+		archive(*data._statistics);
+		data.updated();
+	}
 }

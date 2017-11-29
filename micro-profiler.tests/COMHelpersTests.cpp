@@ -12,6 +12,15 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			bool less_fs(const FunctionStatistics &lhs, const FunctionStatistics &rhs)
+			{	return lhs.FunctionAddress < rhs.FunctionAddress; }
+
+			bool less_fsd(const FunctionStatisticsDetailed &lhs, const FunctionStatisticsDetailed &rhs)
+			{	return lhs.Statistics.FunctionAddress < rhs.Statistics.FunctionAddress; }
+		}
+
 		begin_test_suite( COMHelpersTests )
 			test( InplaceCopyInternalStatisticsToMarshalledStatistics )
 			{

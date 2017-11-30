@@ -46,7 +46,7 @@ namespace micro_profiler
 				typedef std::pair<uintptr_t /*image_address*/, std::wstring /*image_path*/> image_info;
 
 				std::vector<image_info> image_loads;
-				statistics_map_detailed update;
+				statistics_map_detailed_2 update;
 				std::vector<uintptr_t> image_unloads;
 			};
 

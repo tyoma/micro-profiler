@@ -756,10 +756,6 @@
 			Name="common"
 			>
 			<File
-				RelativePath=".\common\com_helpers.h"
-				>
-			</File>
-			<File
 				RelativePath=".\common\configuration.h"
 				>
 			</File>

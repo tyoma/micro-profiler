@@ -11,10 +11,10 @@
 
 	<Component Id="compFrontendRegistration_$(var.PLATFORMSELECTOR)" Guid="$(var.FRONTENDREGISTRYGUID)" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)" KeyPath="yes">
 		<AppId Id="5772E3BD-4C40-450C-8F79-A5052A3CC346" DllSurrogate="" Description="MicroProfiler Frontend Application">
-			<Class Id="ABC1A8AB-31D5-475F-B541-987141CD4DB3" Description="MicroProfiler Frontend Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll" Version="1.0"/>
+			<Class Id="0ED7654C-DE8A-4964-9661-0B0C391BE15E" Description="MicroProfiler Frontend Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll" Version="1.0"/>
 		</AppId>
-		<Class Id="2F5ECF23-E98B-4399-AB4F-3083264C481B" Description="IProfilerFrontend ProxyStub Class" Context="InprocServer32" ThreadingModel="both" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll"/>
-		<Interface Id="2F5ECF23-E98B-4399-AB4F-3083264C481B" Name="IProfilerFrontend" ProxyStubClassId32="2F5ECF23-E98B-4399-AB4F-3083264C481B"/>
+		<Class Id="F58F0F95-B107-485F-9AAD-BB13AF34C04C" Description="IProfilerFrontend ProxyStub Class" Context="InprocServer32" ThreadingModel="both" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll"/>
+		<Interface Id="F58F0F95-B107-485F-9AAD-BB13AF34C04C" Name="IProfilerFrontend" ProxyStubClassId32="F58F0F95-B107-485F-9AAD-BB13AF34C04C"/>
 	</Component>
 
 </Include>

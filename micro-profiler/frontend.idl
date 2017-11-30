@@ -28,41 +28,22 @@ struct ProcessInitializationDataTag
 } ProcessInitializationData;
 
 typedef [public]
-struct FunctionStatisticsTag
-{
-	hyper FunctionAddress;
-	hyper TimesCalled;
-	hyper MaxReentrance;
-	hyper ExclusiveTime;
-	hyper InclusiveTime;
-	hyper MaxCallTime;
-} FunctionStatistics;
-
-typedef [public]
-struct FunctionStatisticsDetailedTag
-{
-	FunctionStatistics Statistics;
-	long ChildrenCount;
-	[size_is(ChildrenCount)] FunctionStatistics *ChildrenStatistics;
-} FunctionStatisticsDetailed;
-
-typedef [public]
 struct ImageLoadInfoTag
 {
 	hyper Address;
 	[string] const wchar_t *Path;
 } ImageLoadInfo;
 
-[object, uuid(2F5ECF23-E98B-4399-AB4F-3083264C481B), pointer_default(unique)]
+[object, uuid(F58F0F95-B107-485F-9AAD-BB13AF34C04C), pointer_default(unique)]
 interface IProfilerFrontend : IUnknown
 {
 	HRESULT Initialize([in] const ProcessInitializationData *process);
 	HRESULT LoadImages([in] long count, [in, size_is(count)] const ImageLoadInfo *images);
-	HRESULT UpdateStatistics([in] long count, [in, size_is(count)] const FunctionStatisticsDetailed *statistics);
+	HRESULT UpdateStatistics([in, size_is(statistics_size)] const byte *statistics, [in] long statistics_size);
 	HRESULT UnloadImages([in] long count, [in, size_is(count)] const hyper *images);
 };
 
-[uuid(ABC1A8AB-31D5-475F-B541-987141CD4DB3)]
+[uuid(0ED7654C-DE8A-4964-9661-0B0C391BE15E)]
 coclass ProfilerFrontend
 {
 	[default] interface IProfilerFrontend;

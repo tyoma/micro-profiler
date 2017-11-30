@@ -139,7 +139,7 @@ namespace micro_profiler
 				mockups::Tracer cc(10000);
 				statistics_bridge b(cc, _state->MakeFactory(), *_queue);
 				call_record trace[] = {
-					{	0, (void *)(0x1223 + 5)	},
+					{	0, (void *)0x1223	},
 					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
@@ -159,7 +159,7 @@ namespace micro_profiler
 				mockups::Tracer cc(10000);
 				statistics_bridge b(cc, _state->MakeFactory(), *_queue);
 				call_record trace[] = {
-					{	0, (void *)(0x1223 + 5)	},
+					{	0, (void *)0x1223	},
 					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
@@ -184,17 +184,17 @@ namespace micro_profiler
 				statistics_bridge b1(cc1, _state->MakeFactory(), *_queue),
 					b2(cc2, state2.MakeFactory(), *_queue);
 				call_record trace1[] = {
-					{	0, (void *)(0x1223 + 5)	},
+					{	0, (void *)0x1223	},
 					{	10 + cc1.profiler_latency(), (void *)(0)	},
-					{	1000, (void *)(0x1223 + 5)	},
+					{	1000, (void *)0x1223	},
 					{	1029 + cc1.profiler_latency(), (void *)(0)	},
 				};
 				call_record trace2[] = {
-					{	0, (void *)(0x2223 + 5)	},
+					{	0, (void *)0x2223	},
 					{	13 + cc2.profiler_latency(), (void *)(0)	},
-					{	1000, (void *)(0x3223 + 5)	},
+					{	1000, (void *)0x3223	},
 					{	1017 + cc2.profiler_latency(), (void *)(0)	},
-					{	2000, (void *)(0x4223 + 5)	},
+					{	2000, (void *)0x4223	},
 					{	2019 + cc2.profiler_latency(), (void *)(0)	},
 				};
 
@@ -303,8 +303,8 @@ namespace micro_profiler
 				mockups::Tracer cc(10000);
 				statistics_bridge b(cc, _state->MakeFactory(), *_queue);
 				call_record trace[] = {
-					{	0, (void *)(0x2223 + 5)	},
-					{	2019, (void *)(0)	},
+					{	0, (void *)0x2223	},
+					{	2019, (void *)0	},
 				};
 
 				cc.Add(0, trace);

@@ -2,9 +2,12 @@
 
 #include "Helpers.h"
 
+#include <common/serialization.h>
+
 #include <_generated/frontend.h>
-#include <common/com_helpers.h>
 #include <stdexcept>
+#include <strmd/strmd/deserializer.h>
+#include <ut/assert.h>
 
 using wpl::mt::thread;
 using namespace std;
@@ -16,6 +19,29 @@ namespace micro_profiler
 	{
 		namespace mockups
 		{
+			namespace
+			{
+				class buffer_reader
+				{
+				public:
+					buffer_reader(const byte *data, size_t size)
+						: _ptr(data), _remaining(size)
+					{	}
+
+					void read(void *data, size_t size)
+					{
+						assert_is_true(size <= _remaining);
+						memcpy(data, _ptr, size);
+						_ptr += size;
+						_remaining -= size;
+					}
+
+				private:
+					const byte *_ptr;
+					size_t _remaining;
+				};
+			}
+
 			class Frontend : public IProfilerFrontend
 			{
 			public:
@@ -31,7 +57,7 @@ namespace micro_profiler
 
 				STDMETHODIMP Initialize(const ProcessInitializationData *process);
 				STDMETHODIMP LoadImages(long count, const ImageLoadInfo *images);
-				STDMETHODIMP UpdateStatistics(long count, const FunctionStatisticsDetailed *statistics);
+				STDMETHODIMP UpdateStatistics(const byte *statistics, long statistics_size);
 				STDMETHODIMP UnloadImages(long count, const hyper *image_addresses);
 
 				const Frontend &operator =(const Frontend &rhs);
@@ -96,13 +122,13 @@ namespace micro_profiler
 				return S_OK;
 			}
 
-			STDMETHODIMP Frontend::UpdateStatistics(long count, const FunctionStatisticsDetailed *data)
+			STDMETHODIMP Frontend::UpdateStatistics(const byte *statistics, long statistics_size)
 			{
-				_state.update_log.resize(_state.update_log.size() + 1);
-				FrontendState::ReceivedEntry &e = _state.update_log.back();
+				buffer_reader reader(statistics, statistics_size);
+				strmd::deserializer<buffer_reader> a(reader);
 
-				for (; count; --count, ++data)
-					e.update[reinterpret_cast<const void *>(data->Statistics.FunctionAddress)] += *data;
+				_state.update_log.resize(_state.update_log.size() + 1);
+				a(_state.update_log.back().update);
 				_state.updated.raise();
 				_state.update_lock.wait();
 				return S_OK;

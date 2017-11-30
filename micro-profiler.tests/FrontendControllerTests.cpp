@@ -505,8 +505,8 @@ namespace micro_profiler
 				mockups::FrontendState state;
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h(profile_this(fc));
-				call_record trace1[] = { { 0, (void *)(0x1223 + 5) }, { 1000, (void *)(0) }, };
-				call_record trace2[] = { { 0, (void *)(0x12230 + 5) }, { 1000, (void *)(0) }, };
+				call_record trace1[] = { { 0, (void *)0x1223 }, { 1000, (void *)0 }, };
+				call_record trace2[] = { { 0, (void *)0x12230 }, { 1000, (void *)0 }, };
 
 				state.modules_state_updated.wait();
 
@@ -540,8 +540,8 @@ namespace micro_profiler
 
 				// ACT
 				call_record trace1[] = {
-					{	0, (void *)(0x1223 + 5)	},
-					{	1000, (void *)(0)	},
+					{	0, (void *)0x1223	},
+					{	1000, (void *)0	},
 				};
 
 				tracer.Add(thread::id(), trace1);
@@ -563,8 +563,8 @@ namespace micro_profiler
 
 				// ACT
 				call_record trace2[] = {
-					{	10000, (void *)(0x31223 + 5)	},
-					{	14000, (void *)(0)	},
+					{	10000, (void *)0x31223	},
+					{	14000, (void *)0	},
 				};
 
 				tracer.Add(thread::id(), trace2);
@@ -598,8 +598,8 @@ namespace micro_profiler
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h(profile_this(fc));
 				call_record trace[] = {
-					{	10000, (void *)(0x31223 + 5)	},
-					{	14000, (void *)(0)	},
+					{	10000, (void *)0x31223	},
+					{	14000, (void *)0	},
 				};
 
 				h.reset();
@@ -632,20 +632,20 @@ namespace micro_profiler
 
 				// ACT
 				call_record trace1[] = {
-					{	1, (void *)(0x31000 + 5)	},
-						{	2, (void *)(0x31000 + 5)	},
-							{	3, (void *)(0x31000 + 5)	},
-								{	4, (void *)(0x31000 + 5)	},
-								{	5, (void *)(0)	},
-							{	6, (void *)(0)	},
-						{	7, (void *)(0)	},
-					{	8, (void *)(0)	},
-					{	9, (void *)(0x31000 + 5)	},
-						{	10, (void *)(0x31000 + 5)	},
-							{	11, (void *)(0x31000 + 5)	},
-							{	12, (void *)(0)	},
-						{	13, (void *)(0)	},
-					{	14, (void *)(0)	},
+					{	1, (void *)0x31000	},
+						{	2, (void *)0x31000	},
+							{	3, (void *)0x31000	},
+								{	4, (void *)0x31000	},
+								{	5, (void *)0	},
+							{	6, (void *)0	},
+						{	7, (void *)0	},
+					{	8, (void *)0	},
+					{	9, (void *)0x31000	},
+						{	10, (void *)0x31000	},
+							{	11, (void *)0x31000	},
+							{	12, (void *)0	},
+						{	13, (void *)0	},
+					{	14, (void *)0	},
 				};
 
 				tracer.Add(thread::id(), trace1);
@@ -662,16 +662,16 @@ namespace micro_profiler
 
 				// ACT
 				call_record trace2[] = {
-					{	1, (void *)(0x31000 + 5)	},
-						{	2, (void *)(0x31000 + 5)	},
-							{	3, (void *)(0x31000 + 5)	},
-								{	4, (void *)(0x31000 + 5)	},
-									{	5, (void *)(0x31000 + 5)	},
-									{	6, (void *)(0)	},
-								{	7, (void *)(0)	},
-							{	8, (void *)(0)	},
-						{	9, (void *)(0)	},
-					{	10, (void *)(0)	},
+					{	1, (void *)0x31000	},
+						{	2, (void *)0x31000	},
+							{	3, (void *)0x31000	},
+								{	4, (void *)0x31000	},
+									{	5, (void *)0x31000	},
+									{	6, (void *)0	},
+								{	7, (void *)0	},
+							{	8, (void *)0	},
+						{	9, (void *)0	},
+					{	10, (void *)0	},
 				};
 
 				tracer.Add(thread::id(), trace2);
@@ -704,8 +704,8 @@ namespace micro_profiler
 
 				// ACT
 				call_record trace[] = {
-					{	10000, (void *)(0x3171717 + 5)	},
-					{	14000, (void *)(0)	},
+					{	10000, (void *)0x3171717	},
+					{	14000, (void *)0	},
 				};
 
 				tracer1.Add(thread::id(), trace);
@@ -732,20 +732,20 @@ namespace micro_profiler
 
 				// ACT
 				call_record trace[] = {
-					{	1, (void *)(0x31000 + 5)	},
-						{	20, (void *)(0x37000 + 5)	},
-						{	50, (void *)(0)	},
-						{	51, (void *)(0x41000 + 5)	},
-						{	70, (void *)(0)	},
-						{	72, (void *)(0x37000 + 5)	},
-						{	90, (void *)(0)	},
-					{	120, (void *)(0)	},
-					{	1000, (void *)(0x11000 + 5)	},
-						{	1010, (void *)(0x13000 + 5)	},
-						{	1100, (void *)(0)	},
-					{	1400, (void *)(0)	},
-					{	1420, (void *)(0x13000 + 5)	},
-					{	1490, (void *)(0)	},
+					{	1, (void *)0x31000	},
+						{	20, (void *)0x37000	},
+						{	50, (void *)0	},
+						{	51, (void *)0x41000	},
+						{	70, (void *)0	},
+						{	72, (void *)0x37000	},
+						{	90, (void *)0	},
+					{	120, (void *)0	},
+					{	1000, (void *)0x11000	},
+						{	1010, (void *)0x13000	},
+						{	1100, (void *)0	},
+					{	1400, (void *)0	},
+					{	1420, (void *)0x13000	},
+					{	1490, (void *)0	},
 				};
 
 				tracer.Add(thread::id(), trace);
@@ -794,8 +794,8 @@ namespace micro_profiler
 				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, state.MakeFactory()));
 				auto_ptr<handle> h(profile_this(*fc));
 				call_record trace[] = {
-					{	10000, (void *)(0x31223 + 5)	},
-					{	14000, (void *)(0)	},
+					{	10000, (void *)0x31223	},
+					{	14000, (void *)0	},
 				};
 
 				tracer.Add(thread::id(), trace);

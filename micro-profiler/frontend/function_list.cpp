@@ -21,7 +21,6 @@
 #include "function_list.h"
 #include "statistics_model.h"
 
-#include "../common/com_helpers.h"
 #include "../common/formatting.h"
 #include "symbol_resolver.h"
 
@@ -220,20 +219,6 @@ namespace micro_profiler
 	void functions_list::clear()
 	{
 		_statistics->clear();
-		updated();
-	}
-
-	void functions_list::update_(const FunctionStatisticsDetailed *data, size_t count)
-	{
-		for (; count; --count, ++data)
-		{
-			const void *address = reinterpret_cast<const void *>(data->Statistics.FunctionAddress);
-			const function_statistics_detailed &s = (*_statistics)[address] += *data;
-
-			update_parent_statistics(*_statistics, address, s);
-			if (data->ChildrenCount)
-				_statistics->entry_updated(address);
-		}
 		updated();
 	}
 

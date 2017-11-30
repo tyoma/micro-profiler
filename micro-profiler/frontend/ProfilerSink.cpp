@@ -25,12 +25,34 @@
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
+#include "../common/serialization.h"
+#include <strmd/strmd/deserializer.h>
+
 using namespace std;
 
 namespace micro_profiler
 {
 	namespace
 	{
+		class buffer_reader
+		{
+		public:
+			buffer_reader(const byte *data, size_t size)
+				: _ptr(data), _remaining(size)
+			{	}
+
+			void read(void *data, size_t size)
+			{
+				memcpy(data, _ptr, size);
+				_ptr += size;
+				_remaining -= size;
+			}
+
+		private:
+			const byte *_ptr;
+			size_t _remaining;
+		};
+
 		typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
 
 		OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);
@@ -75,9 +97,12 @@ namespace micro_profiler
 		return S_OK;
 	}
 
-	STDMETHODIMP ProfilerFrontend::UpdateStatistics(long count, const FunctionStatisticsDetailed *statistics)
+	STDMETHODIMP ProfilerFrontend::UpdateStatistics(const byte *statistics, long size)
 	{
-		_statistics->update(statistics, count);
+		buffer_reader reader(statistics, size);
+		strmd::deserializer<buffer_reader> archive(reader);
+
+		archive(*_statistics);
 		return S_OK;
 	}
 

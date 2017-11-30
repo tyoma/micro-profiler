@@ -63,9 +63,6 @@
     <ClInclude Include="common\formatting.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="common\com_helpers.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="common\pod_vector.h">
       <Filter>common</Filter>
     </ClInclude>

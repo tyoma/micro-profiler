@@ -27,8 +27,6 @@
 #include <memory>
 
 struct IProfilerFrontend;
-typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-typedef struct FunctionStatisticsTag FunctionStatistics;
 
 namespace micro_profiler
 {
@@ -54,8 +52,7 @@ namespace micro_profiler
 
 	class statistics_bridge
 	{
-		std::vector<FunctionStatisticsDetailed> _buffer;
-		std::vector<FunctionStatistics> _children_buffer;
+		std::vector<unsigned char> _buffer;
 		analyzer _analyzer;
 		calls_collector_i &_collector;
 		IProfilerFrontend *_frontend;

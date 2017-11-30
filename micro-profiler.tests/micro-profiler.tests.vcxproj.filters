@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
-    <ClCompile Include="COMHelpersTests.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />

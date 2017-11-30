@@ -27,8 +27,6 @@
 #include <string>
 #include <memory>
 
-typedef struct FunctionStatisticsDetailedTag FunctionStatisticsDetailed;
-
 namespace micro_profiler
 {
 	struct symbol_resolver;
@@ -42,7 +40,6 @@ namespace micro_profiler
 	{
 	public:
 		void clear();
-		void update_(const FunctionStatisticsDetailed *data, size_t count);
 		void print(std::wstring &content) const;
 		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;

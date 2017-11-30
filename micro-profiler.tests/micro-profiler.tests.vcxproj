@@ -60,7 +60,6 @@
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
-    <ClCompile Include="COMHelpersTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="frontend\ColumnsModelTests.cpp" />
     <ClCompile Include="frontend\FunctionListTests.cpp" />

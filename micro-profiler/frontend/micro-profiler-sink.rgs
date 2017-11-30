@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {ABC1A8AB-31D5-475F-B541-987141CD4DB3} = s 'ProfilerSink Class'
+		ForceRemove {0ED7654C-DE8A-4964-9661-0B0C391BE15E} = s 'ProfilerSink Class'
 		{
 			val AppID = s '{5772E3BD-4C40-450C-8F79-A5052A3CC346}'
 			InprocServer32 = s '%MODULE%'
@@ -12,7 +12,7 @@ HKCR
 			Version = s '1.0'
 		}
 
-		ForceRemove {2F5ECF23-E98B-4399-AB4F-3083264C481B} = s 'IProfilerFrontend_PSFactory'
+		ForceRemove {F58F0F95-B107-485F-9AAD-BB13AF34C04C} = s 'IProfilerFrontend_PSFactory'
 		{
 			InprocServer32 = s '%MODULE%'
 			{
@@ -31,9 +31,9 @@ HKCR
 
 	NoRemove Interface
 	{
-		ForceRemove {2F5ECF23-E98B-4399-AB4F-3083264C481B} = s 'IProfilerFrontend'
+		ForceRemove {F58F0F95-B107-485F-9AAD-BB13AF34C04C} = s 'IProfilerFrontend'
 		{
-			ProxyStubClsid32 = s '{2F5ECF23-E98B-4399-AB4F-3083264C481B}'
+			ProxyStubClsid32 = s '{F58F0F95-B107-485F-9AAD-BB13AF34C04C}'
 		}
 	}
 }

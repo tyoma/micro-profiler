@@ -20,11 +20,13 @@
 
 #include "statistics_bridge.h"
 
-#include "../common/com_helpers.h"
+#include "../_generated/frontend.h"
+#include "../common/serialization.h"
 #include "calls_collector.h"
 
 #include <algorithm>
 #include <iterator>
+#include <strmd/strmd/serializer.h>
 
 using namespace std;
 
@@ -33,6 +35,23 @@ namespace micro_profiler
 	namespace
 	{
 		const timestamp_t c_ticks_resolution(timestamp_precision());
+
+		class vector_writer
+		{
+		public:
+			vector_writer(vector<byte> &buffer)
+				: _buffer(buffer)
+			{	_buffer.clear();	}
+
+			void write(const void *data, size_t size)
+			{	_buffer.insert(_buffer.end(), static_cast<const byte *>(data), static_cast<const byte *>(data) + size);	}
+
+		private:
+			void operator =(const vector_writer &other);
+
+		private:
+			vector<byte> &_buffer;
+		};
 
 		wchar_t *allocate_string(const wchar_t *source)
 		{
@@ -162,7 +181,6 @@ namespace micro_profiler
 		vector<image_load_queue::image_info> loaded, unloaded;
 		
 		_image_load_queue->get_changes(loaded, unloaded);
-		copy(_analyzer.begin(), _analyzer.end(), _buffer, _children_buffer);
 		if (_frontend)
 		{
 			vector<ImageLoadInfo> loaded2(loaded.begin(), loaded.end());
@@ -171,8 +189,14 @@ namespace micro_profiler
 			if (!loaded2.empty())
 				_frontend->LoadImages(static_cast<long>(loaded2.size()), &loaded2[0]);
 
-			if (!_buffer.empty())
-				_frontend->UpdateStatistics(static_cast<long>(_buffer.size()), &_buffer[0]);
+			if (_analyzer.size())
+			{
+				vector_writer writer(_buffer);
+				strmd::serializer<vector_writer> a(writer);
+
+				a(_analyzer);
+				_frontend->UpdateStatistics(&_buffer[0], static_cast<long>(_buffer.size()));
+			}
 
 			transform(unloaded.begin(), unloaded.end(), back_inserter(unloaded2), xform());
 			if (!unloaded2.empty())

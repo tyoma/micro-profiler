@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="micro-profiler.tests"
 	ProjectGUID="{6E34F1C3-EC9C-4580-BDEE-83CE58CAA1BF}"
+	RootNamespace="micro-profiler.tests"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -360,10 +361,6 @@
 		</File>
 		<File
 			RelativePath=".\CallCollectorTests.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\COMHelpersTests.cpp"
 			>
 		</File>
 		<File

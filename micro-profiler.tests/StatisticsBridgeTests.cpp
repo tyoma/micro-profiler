@@ -113,8 +113,10 @@ namespace micro_profiler
 				// ASSERT
 				timestamp_t real_resolution = timestamp_precision();
 
-				assert_equal(get_current_process_executable(), _state->process_executable);
-				assert_is_true(90 * real_resolution / 100 < _state->ticks_resolution && _state->ticks_resolution < 110 * real_resolution / 100);
+				assert_equal(get_current_process_executable(), _state->process_init.first);
+				assert_is_true(90 * real_resolution / 100
+					< _state->process_init.second && _state->process_init.second
+					< 110 * real_resolution / 100);
 			}
 
 

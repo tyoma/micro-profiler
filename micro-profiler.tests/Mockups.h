@@ -1,11 +1,10 @@
 #pragma once
 
+#include <common/protocol.h>
+
 #include <collector/calls_collector.h>
 #include <collector/system.h>
-#include <common/primitives.h>
 #include <functional>
-#include <string>
-#include <vector>
 #include <wpl/mt/synchronization.h>
 #include <wpl/mt/thread.h>
 #include <wpl/base/concepts.h>
@@ -30,8 +29,7 @@ namespace micro_profiler
 				std::function<void()> oninitialized;
 
 				// Collected data
-				std::wstring process_executable;
-				timestamp_t ticks_resolution;
+				initializaion_data process_init;
 
 				std::vector<ReceivedEntry> update_log;
 				wpl::mt::event_flag updated;
@@ -43,11 +41,9 @@ namespace micro_profiler
 
 			struct FrontendState::ReceivedEntry
 			{
-				typedef std::pair<uintptr_t /*image_address*/, std::wstring /*image_path*/> image_info;
-
-				std::vector<image_info> image_loads;
+				loaded_modules image_loads;
 				statistics_map_detailed_2 update;
-				std::vector<unsigned long long> image_unloads;
+				unloaded_modules image_unloads;
 			};
 
 

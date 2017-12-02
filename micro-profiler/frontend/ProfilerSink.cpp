@@ -25,6 +25,7 @@
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
+#include "../common/protocol.h"
 #include "../common/serialization.h"
 #include <strmd/strmd/deserializer.h>
 
@@ -74,14 +75,20 @@ namespace micro_profiler
 		_symbols.reset();
 	}
 
-	STDMETHODIMP ProfilerFrontend::Initialize(const ProcessInitializationData *process)
+	STDMETHODIMP ProfilerFrontend::Initialize(const byte *init, long init_size)
 	{
+		buffer_reader reader(init, init_size);
+		strmd::deserializer<buffer_reader> archive(reader);
+		initializaion_data process;
+
+		archive(process);
+
 		wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
 
-		_wsplitpath_s(process->ExecutablePath, 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
+		_wsplitpath_s(process.first.c_str(), 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
 	
 		_symbols = symbol_resolver::create();
-		_statistics = functions_list::create(process->TicksResolution, _symbols);
+		_statistics = functions_list::create(process.second, _symbols);
 		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
 		_dialog->ShowWindow(SW_SHOW);
 		_closed_connected = _dialog->Closed += bind(&disconnect, this);
@@ -92,14 +99,12 @@ namespace micro_profiler
 
 	STDMETHODIMP ProfilerFrontend::LoadImages(const byte *images, long images_size)
 	{
-		typedef vector< pair<unsigned long long, wstring> > images_container;
-
 		buffer_reader reader(images, images_size);
 		strmd::deserializer<buffer_reader> archive(reader);
-		images_container loaded_images;
+		loaded_modules limages;
 
-		archive(loaded_images);
-		for (images_container::const_iterator i = loaded_images.begin(); i != loaded_images.end(); ++i)
+		archive(limages);
+		for (loaded_modules::const_iterator i = limages.begin(); i != limages.end(); ++i)
 			_symbols->add_image(i->second.c_str(), reinterpret_cast<void*>(i->first));
 		return S_OK;
 	}

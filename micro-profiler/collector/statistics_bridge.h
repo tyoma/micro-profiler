@@ -21,6 +21,7 @@
 #pragma once
 
 #include "analyzer.h"
+#include "../common/protocol.h"
 
 #include <deque>
 #include <functional>
@@ -35,19 +36,17 @@ namespace micro_profiler
 	class image_load_queue
 	{
 	public:
-		typedef std::pair<const void * /*image_address*/, std::wstring /*image_path*/> image_info;
-
-	public:
 		void load(const void *in_image_address);
 		void unload(const void *in_image_address);
 		
-		void get_changes(std::vector<image_info> &loaded_modules, std::vector<image_info> &unloaded_modules);
+		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
-		static image_info get_module_info(const void *in_image_address);
+		static module_info get_module_info(const void *in_image_address);
 
 	private:
 		mutex _mtx;
-		std::deque<image_info> _lqueue, _uqueue;
+		std::deque<module_info> _lqueue;
+		std::deque<address_t> _uqueue;
 	};
 
 	class statistics_bridge

@@ -414,8 +414,10 @@ namespace micro_profiler
 				// ASERT
 				timestamp_t real_resolution = timestamp_precision();
 
-				assert_equal(get_current_process_executable(), state.process_executable);
-				assert_is_true(90 * real_resolution / 100 < state.ticks_resolution && state.ticks_resolution < 110 * real_resolution / 100);
+				assert_equal(get_current_process_executable(), state.process_init.first);
+				assert_is_true(90 * real_resolution / 100
+					< state.process_init.second && state.process_init.second
+					< 110 * real_resolution / 100);
 			}
 
 
@@ -446,8 +448,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, state.update_log.size());
 				assert_equal(1u, state.update_log[0].image_loads.size());
-				assert_equal(reinterpret_cast<uintptr_t>(images[0].load_address()),
-					state.update_log[0].image_loads[0].first);
+				assert_equal(images[0].load_address(),
+					reinterpret_cast<const void *>(state.update_log[0].image_loads[0].first));
 				assert_not_equal(wstring::npos, state.update_log[0].image_loads[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
@@ -457,8 +459,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, state.update_log.size());
 				assert_equal(1u, state.update_log[1].image_loads.size());
-				assert_equal(reinterpret_cast<uintptr_t>(images[1].load_address()),
-					state.update_log[1].image_loads[0].first);
+				assert_equal(images[1].load_address(),
+					reinterpret_cast<const void *>(state.update_log[1].image_loads[0].first));
 				assert_not_equal(wstring::npos, state.update_log[1].image_loads[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
 			}
 
@@ -483,8 +485,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(3u, state.update_log.size());
 				assert_equal(1u, state.update_log[2].image_unloads.size());
-				assert_equal(reinterpret_cast<uintptr_t>(images[0].load_address()),
-					state.update_log[2].image_unloads[0]);
+				assert_equal(images[0].load_address(),
+					reinterpret_cast<const void *>(state.update_log[2].image_unloads[0]));
 
 				// ACT
 				h2.reset();
@@ -493,8 +495,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(4u, state.update_log.size());
 				assert_equal(1u, state.update_log[3].image_unloads.size());
-				assert_equal(reinterpret_cast<uintptr_t>(images[1].load_address()),
-					state.update_log[3].image_unloads[0]);
+				assert_equal(images[1].load_address(),
+					reinterpret_cast<const void *>(state.update_log[3].image_unloads[0]));
 			}
 
 

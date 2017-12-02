@@ -19,8 +19,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef unsigned long long address_t;
-
 			struct collection_acceptor : calls_collector_i::acceptor
 			{
 				collection_acceptor()

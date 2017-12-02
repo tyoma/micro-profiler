@@ -39,7 +39,8 @@ namespace micro_profiler
 			{
 				// INIT
 				image_load_queue q;
-				vector<image_load_queue::image_info> loaded_images(1), unloaded_images(2);
+				loaded_modules loaded_images(1);
+				unloaded_modules unloaded_images(2);
 
 				// ACT
 				q.get_changes(loaded_images, unloaded_images);
@@ -54,7 +55,8 @@ namespace micro_profiler
 			{
 				// INIT
 				image_load_queue q;
-				vector<image_load_queue::image_info> loaded_images, unloaded_images;
+				loaded_modules loaded_images;
+				unloaded_modules unloaded_images;
 
 				// ACT
 				q.load(_images->at(0).get_symbol_address("get_function_addresses_1"));
@@ -66,7 +68,7 @@ namespace micro_profiler
 
 				toupper(loaded_images[0].second);
 
-				assert_equal(loaded_images[0].first, _images->at(0).load_address());
+				assert_equal(reinterpret_cast<const void *>(loaded_images[0].first), _images->at(0).load_address());
 				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
 
 				// ACT
@@ -81,9 +83,9 @@ namespace micro_profiler
 				toupper(loaded_images[0].second);
 				toupper(loaded_images[1].second);
 
-				assert_equal(loaded_images[0].first, _images->at(1).load_address());
+				assert_equal(reinterpret_cast<const void *>(loaded_images[0].first), _images->at(1).load_address());
 				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				assert_equal(loaded_images[1].first, _images->at(2).load_address());
+				assert_equal(reinterpret_cast<const void *>(loaded_images[1].first), _images->at(2).load_address());
 				assert_not_equal(wstring::npos, loaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
 			}
 
@@ -92,7 +94,8 @@ namespace micro_profiler
 			{
 				// INIT
 				image_load_queue q;
-				vector<image_load_queue::image_info> loaded_images, unloaded_images;
+				loaded_modules loaded_images;
+				unloaded_modules unloaded_images;
 
 				// ACT
 				q.unload(_images->at(0).get_symbol_address("get_function_addresses_1"));
@@ -102,10 +105,7 @@ namespace micro_profiler
 				assert_is_empty(loaded_images);
 				assert_equal(1u, unloaded_images.size());
 
-				toupper(unloaded_images[0].second);
-
-				assert_equal(unloaded_images[0].first, _images->at(0).load_address());
-				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+				assert_equal(reinterpret_cast<const void *>(unloaded_images[0]), _images->at(0).load_address());
 
 				// ACT
 				q.unload(_images->at(1).get_symbol_address("get_function_addresses_2"));
@@ -116,13 +116,8 @@ namespace micro_profiler
 				assert_is_empty(loaded_images);
 				assert_equal(2u, unloaded_images.size());
 
-				toupper(unloaded_images[0].second);
-				toupper(unloaded_images[1].second);
-
-				assert_equal(unloaded_images[0].first, _images->at(1).load_address());
-				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				assert_equal(unloaded_images[1].first, _images->at(2).load_address());
-				assert_not_equal(wstring::npos, unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
+				assert_equal(reinterpret_cast<const void *>(unloaded_images[0]), _images->at(1).load_address());
+				assert_equal(reinterpret_cast<const void *>(unloaded_images[1]), _images->at(2).load_address());
 			}
 
 
@@ -130,7 +125,8 @@ namespace micro_profiler
 			{
 				// INIT
 				image_load_queue q;
-				vector<image_load_queue::image_info> loaded_images, unloaded_images;
+				loaded_modules loaded_images;
+				unloaded_modules unloaded_images;
 
 				// ACT
 				q.load(_images->at(0).get_symbol_address("get_function_addresses_1"));
@@ -143,15 +139,11 @@ namespace micro_profiler
 				assert_equal(2u, unloaded_images.size());
 
 				toupper(loaded_images[0].second);
-				toupper(unloaded_images[0].second);
-				toupper(unloaded_images[1].second);
 
-				assert_equal(loaded_images[0].first, _images->at(0).load_address());
+				assert_equal(reinterpret_cast<const void *>(loaded_images[0].first), _images->at(0).load_address());
 				assert_not_equal(wstring::npos, loaded_images[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
-				assert_equal(unloaded_images[0].first, _images->at(1).load_address());
-				assert_not_equal(wstring::npos, unloaded_images[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
-				assert_equal(unloaded_images[1].first, _images->at(2).load_address());
-				assert_not_equal(wstring::npos, unloaded_images[1].second.find(L"SYMBOL_CONTAINER_3_NOSYMBOLS.DLL"));
+				assert_equal(reinterpret_cast<const void *>(unloaded_images[0]), _images->at(1).load_address());
+				assert_equal(reinterpret_cast<const void *>(unloaded_images[1]), _images->at(2).load_address());
 			}
 		end_test_suite
 	}

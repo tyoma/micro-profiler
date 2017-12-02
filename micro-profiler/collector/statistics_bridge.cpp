@@ -21,6 +21,7 @@
 #include "statistics_bridge.h"
 
 #include "../_generated/frontend.h"
+#include "../common/protocol.h"
 #include "../common/serialization.h"
 #include "calls_collector.h"
 
@@ -53,14 +54,13 @@ namespace micro_profiler
 			vector<byte> &_buffer;
 		};
 
-		wchar_t *allocate_string(const wchar_t *source)
+		template <typename T>
+		void serialize(vector<byte> &buffer, const T &data)
 		{
-			size_t l = wcslen(source);
-			wchar_t *s = new wchar_t[l + 1];
-		
-			std::copy(source, source + l, s);
-			s[l] = L'\0';
-			return s;
+			vector_writer writer(buffer);
+			strmd::serializer<vector_writer> archive(writer);
+
+			archive(data);
 		}
 	}
 
@@ -75,23 +75,23 @@ namespace micro_profiler
 	{
 		scoped_lock l(_mtx);
 
-		_uqueue.push_back(get_module_info(in_image_address));
+		_uqueue.push_back(get_module_info(in_image_address).first);
 	}
 
-	void image_load_queue::get_changes(vector<image_info> &loaded_modules, vector<image_info> &unloaded_modules)
+	void image_load_queue::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
 	{
-		loaded_modules.clear();
-		unloaded_modules.clear();
+		loaded_modules_.clear();
+		unloaded_modules_.clear();
 
 		scoped_lock l(_mtx);
 
-		loaded_modules.insert(loaded_modules.end(), _lqueue.begin(), _lqueue.end());
-		unloaded_modules.insert(unloaded_modules.end(), _uqueue.begin(), _uqueue.end());
+		loaded_modules_.insert(loaded_modules_.end(), _lqueue.begin(), _lqueue.end());
+		unloaded_modules_.insert(unloaded_modules_.end(), _uqueue.begin(), _uqueue.end());
 		_lqueue.clear();
 		_uqueue.clear();
 	}
 
-	image_load_queue::image_info image_load_queue::get_module_info(const void *in_image_address)
+	module_info image_load_queue::get_module_info(const void *in_image_address)
 	{
 		HMODULE image_address = 0;
 		wchar_t image_path[MAX_PATH + 1] = { 0 };
@@ -100,7 +100,7 @@ namespace micro_profiler
 			reinterpret_cast<LPCTSTR>(in_image_address), &image_address);
 		::GetModuleFileName(image_address, image_path, sizeof(image_path));
 
-		return make_pair(image_address, image_path);
+		return make_pair(reinterpret_cast<address_t>(image_address), image_path);
 	}
 
 
@@ -113,13 +113,11 @@ namespace micro_profiler
 		factory(&_frontend);
 		if (_frontend)
 		{
-			wstring path = image_load_queue::get_module_info(0).second;
-			ProcessInitializationData process = {
-				c_ticks_resolution,
-				path.c_str()
-			};
+			vector_writer writer(_buffer);
+			strmd::serializer<vector_writer> a(writer);
 
-			_frontend->Initialize(&process);
+			a(initializaion_data(image_load_queue::get_module_info(0).second, c_ticks_resolution));
+			_frontend->Initialize(&_buffer[0], static_cast<long>(_buffer.size()));
 		}
 	}
 
@@ -134,44 +132,27 @@ namespace micro_profiler
 
 	void statistics_bridge::update_frontend()
 	{
-		struct xform
-		{
-			hyper operator ()(const image_load_queue::image_info &from) const
-			{	return reinterpret_cast<hyper>(from.first);	}
-		};
-
-		vector<image_load_queue::image_info> loaded, unloaded;
+		loaded_modules loaded;
+		unloaded_modules unloaded;
 		
 		_image_load_queue->get_changes(loaded, unloaded);
 		if (_frontend)
 		{
-			vector<hyper> unloaded2;
-
 			if (!loaded.empty())
 			{
-				vector_writer writer(_buffer);
-				strmd::serializer<vector_writer> a(writer);
-
-				a(loaded);
+				serialize(_buffer, loaded);
 				_frontend->LoadImages(&_buffer[0], static_cast<long>(_buffer.size()));
 			}
 
 			if (_analyzer.size())
 			{
-				vector_writer writer(_buffer);
-				strmd::serializer<vector_writer> a(writer);
-
-				a(_analyzer);
+				serialize(_buffer, _analyzer);
 				_frontend->UpdateStatistics(&_buffer[0], static_cast<long>(_buffer.size()));
 			}
 
-			transform(unloaded.begin(), unloaded.end(), back_inserter(unloaded2), xform());
 			if (!unloaded.empty())
 			{
-				vector_writer writer(_buffer);
-				strmd::serializer<vector_writer> a(writer);
-
-				a(unloaded2);
+				serialize(_buffer, unloaded);
 				_frontend->UnloadImages(&_buffer[0], static_cast<long>(_buffer.size()));
 			}
 		}

@@ -29,6 +29,7 @@ namespace micro_profiler
 {
 	typedef unsigned long long count_t;
 	typedef long long timestamp_t;
+	typedef unsigned long long address_t;
 
 #pragma pack(push, 4)
 	struct call_record

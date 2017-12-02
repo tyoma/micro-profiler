@@ -55,7 +55,7 @@ namespace micro_profiler
 				STDMETHODIMP_(ULONG) AddRef();
 				STDMETHODIMP_(ULONG) Release();
 
-				STDMETHODIMP Initialize(const ProcessInitializationData *process);
+				STDMETHODIMP Initialize(const byte *init, long init_size);
 				STDMETHODIMP LoadImages(const byte *images, long images_size);
 				STDMETHODIMP UpdateStatistics(const byte *statistics, long statistics_size);
 				STDMETHODIMP UnloadImages(const byte *images, long images_size);
@@ -99,10 +99,12 @@ namespace micro_profiler
 				return 0;
 			}
 
-			STDMETHODIMP Frontend::Initialize(const ProcessInitializationData *process)
+			STDMETHODIMP Frontend::Initialize(const byte *init, long init_size)
 			{
-				_state.process_executable = process->ExecutablePath;
-				_state.ticks_resolution = process->TicksResolution;
+				buffer_reader reader(init, init_size);
+				strmd::deserializer<buffer_reader> a(reader);
+
+				a(_state.process_init);
 				if (_state.oninitialized)
 					_state.oninitialized();
 				return S_OK;
@@ -115,8 +117,8 @@ namespace micro_profiler
 
 				_state.update_log.resize(_state.update_log.size() + 1);
 				a(_state.update_log.back().image_loads);
-				vector<FrontendState::ReceivedEntry::image_info> &image_loads = _state.update_log.back().image_loads;
-				for (vector<FrontendState::ReceivedEntry::image_info>::iterator i = image_loads.begin(); i != image_loads.end(); ++i)
+				loaded_modules &image_loads = _state.update_log.back().image_loads;
+				for (loaded_modules::iterator i = image_loads.begin(); i != image_loads.end(); ++i)
 					toupper(i->second);
 				
 				_state.modules_state_updated.raise();
@@ -150,8 +152,8 @@ namespace micro_profiler
 
 
 			FrontendState::FrontendState(const function<void()>& oninitialized_)
-				: update_lock(true, false), oninitialized(oninitialized_), ticks_resolution(0),
-					updated(false, true), modules_state_updated(false, true), released(false)
+				: update_lock(true, false), oninitialized(oninitialized_), updated(false, true),
+					modules_state_updated(false, true), released(false)
 			{	}
 
 

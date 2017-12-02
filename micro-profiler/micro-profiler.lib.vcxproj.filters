@@ -105,6 +105,9 @@
     <ClInclude Include="frontend\ordered_view.h">
       <Filter>frontend</Filter>
     </ClInclude>
+    <ClInclude Include="common\protocol.h">
+      <Filter>common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="_generated">

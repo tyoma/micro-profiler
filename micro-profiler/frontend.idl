@@ -27,20 +27,13 @@ struct ProcessInitializationDataTag
 	[string] const wchar_t *ExecutablePath;
 } ProcessInitializationData;
 
-typedef [public]
-struct ImageLoadInfoTag
-{
-	hyper Address;
-	[string] const wchar_t *Path;
-} ImageLoadInfo;
-
 [object, uuid(F58F0F95-B107-485F-9AAD-BB13AF34C04C), pointer_default(unique)]
 interface IProfilerFrontend : IUnknown
 {
 	HRESULT Initialize([in] const ProcessInitializationData *process);
-	HRESULT LoadImages([in] long count, [in, size_is(count)] const ImageLoadInfo *images);
+	HRESULT LoadImages([in, size_is(images_size)] const byte *images, [in] long images_size);
 	HRESULT UpdateStatistics([in, size_is(statistics_size)] const byte *statistics, [in] long statistics_size);
-	HRESULT UnloadImages([in] long count, [in, size_is(count)] const hyper *images);
+	HRESULT UnloadImages([in, size_is(images_size)] const byte *images, [in] long images_size);
 };
 
 [uuid(0ED7654C-DE8A-4964-9661-0B0C391BE15E)]

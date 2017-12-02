@@ -47,7 +47,7 @@ namespace micro_profiler
 
 				std::vector<image_info> image_loads;
 				statistics_map_detailed_2 update;
-				std::vector<uintptr_t> image_unloads;
+				std::vector<unsigned long long> image_unloads;
 			};
 
 

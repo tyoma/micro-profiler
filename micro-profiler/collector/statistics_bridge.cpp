@@ -62,44 +62,6 @@ namespace micro_profiler
 			s[l] = L'\0';
 			return s;
 		}
-
-		class ImageLoadInfo : public ::ImageLoadInfo
-		{
-		public:
-			ImageLoadInfo(const image_load_queue::image_info &from);
-			ImageLoadInfo(const ImageLoadInfo &other);
-			~ImageLoadInfo();
-
-			const ImageLoadInfo &operator =(const ImageLoadInfo &rhs);
-		};
-
-		typedef char static_assertion[sizeof(ImageLoadInfo) == sizeof(::ImageLoadInfo) ? 1 : -1];
-
-		ImageLoadInfo::ImageLoadInfo(const image_load_queue::image_info &from)
-		{
-			Address = reinterpret_cast<hyper>(from.first);
-			Path = allocate_string(from.second.c_str());
-		}
-
-		ImageLoadInfo::ImageLoadInfo(const ImageLoadInfo &other)
-		{
-			Path = NULL;
-			*this = other;
-		}
-
-		ImageLoadInfo::~ImageLoadInfo()
-		{	delete []Path;	}
-
-		const ImageLoadInfo &ImageLoadInfo::operator =(const ImageLoadInfo &rhs)
-		{
-			if (&rhs != this)
-			{
-				Address = rhs.Address;
-				delete []Path;
-				Path = allocate_string(rhs.Path);
-			}
-			return *this;
-		}
 	}
 
 	void image_load_queue::load(const void *in_image_address)
@@ -183,11 +145,16 @@ namespace micro_profiler
 		_image_load_queue->get_changes(loaded, unloaded);
 		if (_frontend)
 		{
-			vector<ImageLoadInfo> loaded2(loaded.begin(), loaded.end());
 			vector<hyper> unloaded2;
 
-			if (!loaded2.empty())
-				_frontend->LoadImages(static_cast<long>(loaded2.size()), &loaded2[0]);
+			if (!loaded.empty())
+			{
+				vector_writer writer(_buffer);
+				strmd::serializer<vector_writer> a(writer);
+
+				a(loaded);
+				_frontend->LoadImages(&_buffer[0], static_cast<long>(_buffer.size()));
+			}
 
 			if (_analyzer.size())
 			{
@@ -199,8 +166,14 @@ namespace micro_profiler
 			}
 
 			transform(unloaded.begin(), unloaded.end(), back_inserter(unloaded2), xform());
-			if (!unloaded2.empty())
-				_frontend->UnloadImages(static_cast<long>(unloaded2.size()), &unloaded2[0]);
+			if (!unloaded.empty())
+			{
+				vector_writer writer(_buffer);
+				strmd::serializer<vector_writer> a(writer);
+
+				a(unloaded2);
+				_frontend->UnloadImages(&_buffer[0], static_cast<long>(_buffer.size()));
+			}
 		}
 		_analyzer.clear();
 	}

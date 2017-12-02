@@ -59,8 +59,8 @@ namespace micro_profiler
 		void FinalRelease();
 
 		STDMETHODIMP Initialize(const ProcessInitializationData *process);
-		STDMETHODIMP LoadImages(long count, const ImageLoadInfo *images);
-		STDMETHODIMP UpdateStatistics(const byte *statistics, long size);
-		STDMETHODIMP UnloadImages(long count, const long long *image_addresses);
+		STDMETHODIMP LoadImages(const byte *images, long images_size);
+		STDMETHODIMP UpdateStatistics(const byte *statistics, long statistics_size);
+		STDMETHODIMP UnloadImages(const byte *images, long images_size);
 	};
 }

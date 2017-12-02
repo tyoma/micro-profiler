@@ -56,9 +56,9 @@ namespace micro_profiler
 				STDMETHODIMP_(ULONG) Release();
 
 				STDMETHODIMP Initialize(const ProcessInitializationData *process);
-				STDMETHODIMP LoadImages(long count, const ImageLoadInfo *images);
+				STDMETHODIMP LoadImages(const byte *images, long images_size);
 				STDMETHODIMP UpdateStatistics(const byte *statistics, long statistics_size);
-				STDMETHODIMP UnloadImages(long count, const hyper *image_addresses);
+				STDMETHODIMP UnloadImages(const byte *images, long images_size);
 
 				const Frontend &operator =(const Frontend &rhs);
 
@@ -108,16 +108,17 @@ namespace micro_profiler
 				return S_OK;
 			}
 
-			STDMETHODIMP Frontend::LoadImages(long count, const ImageLoadInfo *images)
+			STDMETHODIMP Frontend::LoadImages(const byte *images, long images_size)
 			{
+				buffer_reader reader(images, images_size);
+				strmd::deserializer<buffer_reader> a(reader);
+
 				_state.update_log.resize(_state.update_log.size() + 1);
-				FrontendState::ReceivedEntry &e = _state.update_log.back();
+				a(_state.update_log.back().image_loads);
+				vector<FrontendState::ReceivedEntry::image_info> &image_loads = _state.update_log.back().image_loads;
+				for (vector<FrontendState::ReceivedEntry::image_info>::iterator i = image_loads.begin(); i != image_loads.end(); ++i)
+					toupper(i->second);
 				
-				for (; count; ++images, --count)
-				{
-					e.image_loads.push_back(make_pair(static_cast<uintptr_t>(images->Address), images->Path));
-					toupper(e.image_loads.back().second);
-				}
 				_state.modules_state_updated.raise();
 				return S_OK;
 			}
@@ -129,18 +130,20 @@ namespace micro_profiler
 
 				_state.update_log.resize(_state.update_log.size() + 1);
 				a(_state.update_log.back().update);
+
 				_state.updated.raise();
 				_state.update_lock.wait();
 				return S_OK;
 			}
 
-			STDMETHODIMP Frontend::UnloadImages(long count, const hyper *image_addresses)
+			STDMETHODIMP Frontend::UnloadImages(const byte *images, long images_size)
 			{
 				_state.update_log.resize(_state.update_log.size() + 1);
 				FrontendState::ReceivedEntry &e = _state.update_log.back();
+				buffer_reader reader(images, images_size);
+				strmd::deserializer<buffer_reader> a(reader);
 
-				for (; count; ++image_addresses, --count)
-					e.image_unloads.push_back(static_cast<uintptr_t>(*image_addresses));
+				a(e.image_unloads);
 				_state.modules_state_updated.raise();
 				return S_OK;
 			}

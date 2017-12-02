@@ -84,16 +84,23 @@ namespace micro_profiler
 		_statistics = functions_list::create(process->TicksResolution, _symbols);
 		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
 		_dialog->ShowWindow(SW_SHOW);
-		_closed_connected = _dialog->Closed += std::bind(&disconnect, this);
+		_closed_connected = _dialog->Closed += bind(&disconnect, this);
 
 		lock(_dialog);
 		return S_OK;
 	}
 
-	STDMETHODIMP ProfilerFrontend::LoadImages(long count, const ImageLoadInfo *images)
+	STDMETHODIMP ProfilerFrontend::LoadImages(const byte *images, long images_size)
 	{
-		for (; count; --count, ++images)
-			_symbols->add_image(images->Path, reinterpret_cast<const void *>(images->Address));
+		typedef vector< pair<unsigned long long, wstring> > images_container;
+
+		buffer_reader reader(images, images_size);
+		strmd::deserializer<buffer_reader> archive(reader);
+		images_container loaded_images;
+
+		archive(loaded_images);
+		for (images_container::const_iterator i = loaded_images.begin(); i != loaded_images.end(); ++i)
+			_symbols->add_image(i->second.c_str(), reinterpret_cast<void*>(i->first));
 		return S_OK;
 	}
 
@@ -106,10 +113,11 @@ namespace micro_profiler
 		return S_OK;
 	}
 
-	STDMETHODIMP ProfilerFrontend::UnloadImages(long count, const long long *image_addresses)
+	STDMETHODIMP ProfilerFrontend::UnloadImages(const byte *images, long images_size)
 	{
-		for (; count; --count, ++image_addresses)
-		{	}
+		buffer_reader reader(images, images_size);
+		strmd::deserializer<buffer_reader> archive(reader);
+
 		return S_OK;
 	}
 }

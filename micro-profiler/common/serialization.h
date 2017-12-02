@@ -29,6 +29,7 @@ namespace micro_profiler
 	class analyzer;
 }
 
+template <> struct strmd::is_arithmetic<wchar_t> { static const bool value = true; };
 template <> struct strmd::is_arithmetic<const void *> { static const bool value = true; };
 template <> struct strmd::is_container<micro_profiler::analyzer> { static const bool value = true; };
 template <> struct strmd::is_container<micro_profiler::statistics_map_detailed_2> { static const bool value = true; };

@@ -75,54 +75,52 @@ namespace micro_profiler
 		_symbols.reset();
 	}
 
-	STDMETHODIMP ProfilerFrontend::Initialize(const byte *init, long init_size)
+	STDMETHODIMP ProfilerFrontend::Dispatch(const byte *message, long size)
 	{
-		buffer_reader reader(init, init_size);
+		buffer_reader reader(message, size);
 		strmd::deserializer<buffer_reader> archive(reader);
-		initializaion_data process;
+		commands c;
 
-		archive(process);
+		archive(c);
+		switch (c)
+		{
+		case init:
+		{
+			initializaion_data process;
 
-		wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
+			archive(process);
 
-		_wsplitpath_s(process.first.c_str(), 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
+			wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
+
+			_wsplitpath_s(process.first.c_str(), 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
 	
-		_symbols = symbol_resolver::create();
-		_statistics = functions_list::create(process.second, _symbols);
-		_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
-		_dialog->ShowWindow(SW_SHOW);
-		_closed_connected = _dialog->Closed += bind(&disconnect, this);
+			_symbols = symbol_resolver::create();
+			_statistics = functions_list::create(process.second, _symbols);
+			_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
+			_dialog->ShowWindow(SW_SHOW);
+			_closed_connected = _dialog->Closed += bind(&disconnect, this);
 
-		lock(_dialog);
-		return S_OK;
-	}
+			lock(_dialog);
+			break;
+		}
 
-	STDMETHODIMP ProfilerFrontend::LoadImages(const byte *images, long images_size)
-	{
-		buffer_reader reader(images, images_size);
-		strmd::deserializer<buffer_reader> archive(reader);
-		loaded_modules limages;
+		case modules_loaded:
+		{
+			loaded_modules limages;
 
-		archive(limages);
-		for (loaded_modules::const_iterator i = limages.begin(); i != limages.end(); ++i)
-			_symbols->add_image(i->second.c_str(), reinterpret_cast<void*>(i->first));
-		return S_OK;
-	}
+			archive(limages);
+			for (loaded_modules::const_iterator i = limages.begin(); i != limages.end(); ++i)
+				_symbols->add_image(i->second.c_str(), reinterpret_cast<void*>(i->first));
+			break;
+		}
 
-	STDMETHODIMP ProfilerFrontend::UpdateStatistics(const byte *statistics, long size)
-	{
-		buffer_reader reader(statistics, size);
-		strmd::deserializer<buffer_reader> archive(reader);
+		case update_statistics:
+			archive(*_statistics);
+			break;
 
-		archive(*_statistics);
-		return S_OK;
-	}
-
-	STDMETHODIMP ProfilerFrontend::UnloadImages(const byte *images, long images_size)
-	{
-		buffer_reader reader(images, images_size);
-		strmd::deserializer<buffer_reader> archive(reader);
-
+		case modules_unloaded:
+			break;
+		}
 		return S_OK;
 	}
 }

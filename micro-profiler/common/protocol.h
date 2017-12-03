@@ -7,7 +7,14 @@
 
 namespace micro_profiler
 {
-	typedef std::pair<std::wstring /* executable */, timestamp_t /* tick_resolution */> initializaion_data;	
+	enum commands {
+		init,
+		modules_loaded,
+		update_statistics,
+		modules_unloaded
+	};
+
+	typedef std::pair<std::wstring /* executable */, timestamp_t /* tick_resolution */> initializaion_data;
 
 	typedef std::pair<address_t /* module_address */, std::wstring /* module_path */> module_info;
 	typedef std::vector<module_info> loaded_modules;

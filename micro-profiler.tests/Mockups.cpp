@@ -55,10 +55,7 @@ namespace micro_profiler
 				STDMETHODIMP_(ULONG) AddRef();
 				STDMETHODIMP_(ULONG) Release();
 
-				STDMETHODIMP Initialize(const byte *init, long init_size);
-				STDMETHODIMP LoadImages(const byte *images, long images_size);
-				STDMETHODIMP UpdateStatistics(const byte *statistics, long statistics_size);
-				STDMETHODIMP UnloadImages(const byte *images, long images_size);
+				STDMETHODIMP Dispatch(const byte *message, long size);
 
 				const Frontend &operator =(const Frontend &rhs);
 
@@ -99,54 +96,48 @@ namespace micro_profiler
 				return 0;
 			}
 
-			STDMETHODIMP Frontend::Initialize(const byte *init, long init_size)
+			template <typename ArchiveT>
+			void serialize(ArchiveT &a, FrontendState &state)
 			{
-				buffer_reader reader(init, init_size);
-				strmd::deserializer<buffer_reader> a(reader);
+				commands c;
 
-				a(_state.process_init);
-				if (_state.oninitialized)
-					_state.oninitialized();
-				return S_OK;
+				a(c);
+				state.update_log.push_back(FrontendState::ReceivedEntry());
+				FrontendState::ReceivedEntry &e = state.update_log.back();
+				switch (c)
+				{
+				case init:
+					state.update_log.pop_back();
+					a(state.process_init);
+					if (state.oninitialized)
+						state.oninitialized();
+					break;
+
+				case modules_loaded:
+					a(e.image_loads);
+					for (loaded_modules::iterator i = e.image_loads.begin(); i != e.image_loads.end(); ++i)
+						toupper(i->second);				
+					state.modules_state_updated.raise();
+					break;
+
+				case update_statistics:
+					a(e.update);
+					state.updated.raise();
+					state.update_lock.wait();
+					break;
+
+				case modules_unloaded:
+					a(e.image_unloads);
+					state.modules_state_updated.raise();
+				}
 			}
 
-			STDMETHODIMP Frontend::LoadImages(const byte *images, long images_size)
+			STDMETHODIMP Frontend::Dispatch(const byte *message, long size)
 			{
-				buffer_reader reader(images, images_size);
+				buffer_reader reader(message, size);
 				strmd::deserializer<buffer_reader> a(reader);
 
-				_state.update_log.resize(_state.update_log.size() + 1);
-				a(_state.update_log.back().image_loads);
-				loaded_modules &image_loads = _state.update_log.back().image_loads;
-				for (loaded_modules::iterator i = image_loads.begin(); i != image_loads.end(); ++i)
-					toupper(i->second);
-				
-				_state.modules_state_updated.raise();
-				return S_OK;
-			}
-
-			STDMETHODIMP Frontend::UpdateStatistics(const byte *statistics, long statistics_size)
-			{
-				buffer_reader reader(statistics, statistics_size);
-				strmd::deserializer<buffer_reader> a(reader);
-
-				_state.update_log.resize(_state.update_log.size() + 1);
-				a(_state.update_log.back().update);
-
-				_state.updated.raise();
-				_state.update_lock.wait();
-				return S_OK;
-			}
-
-			STDMETHODIMP Frontend::UnloadImages(const byte *images, long images_size)
-			{
-				_state.update_log.resize(_state.update_log.size() + 1);
-				FrontendState::ReceivedEntry &e = _state.update_log.back();
-				buffer_reader reader(images, images_size);
-				strmd::deserializer<buffer_reader> a(reader);
-
-				a(e.image_unloads);
-				_state.modules_state_updated.raise();
+				a(_state);
 				return S_OK;
 			}
 

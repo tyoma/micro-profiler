@@ -53,15 +53,6 @@ namespace micro_profiler
 		private:
 			vector<byte> &_buffer;
 		};
-
-		template <typename T>
-		void serialize(vector<byte> &buffer, const T &data)
-		{
-			vector_writer writer(buffer);
-			strmd::serializer<vector_writer> archive(writer);
-
-			archive(data);
-		}
 	}
 
 	void image_load_queue::load(const void *in_image_address)
@@ -111,14 +102,7 @@ namespace micro_profiler
 			_image_load_queue(image_load_queue)
 	{
 		factory(&_frontend);
-		if (_frontend)
-		{
-			vector_writer writer(_buffer);
-			strmd::serializer<vector_writer> a(writer);
-
-			a(initializaion_data(image_load_queue::get_module_info(0).second, c_ticks_resolution));
-			_frontend->Initialize(&_buffer[0], static_cast<long>(_buffer.size()));
-		}
+		send(init, initializaion_data(image_load_queue::get_module_info(0).second, c_ticks_resolution));
 	}
 
 	statistics_bridge::~statistics_bridge()
@@ -136,26 +120,26 @@ namespace micro_profiler
 		unloaded_modules unloaded;
 		
 		_image_load_queue->get_changes(loaded, unloaded);
+		if (!loaded.empty())
+			send(modules_loaded, loaded);
+		if (_analyzer.size())
+			send(update_statistics, _analyzer);
+		if (!unloaded.empty())
+			send(modules_unloaded, unloaded);
+		_analyzer.clear();
+	}
+
+	template <typename DataT>
+	void statistics_bridge::send(commands command, const DataT &data)
+	{
 		if (_frontend)
 		{
-			if (!loaded.empty())
-			{
-				serialize(_buffer, loaded);
-				_frontend->LoadImages(&_buffer[0], static_cast<long>(_buffer.size()));
-			}
+			vector_writer writer(_buffer);
+			strmd::serializer<vector_writer> archive(writer);
 
-			if (_analyzer.size())
-			{
-				serialize(_buffer, _analyzer);
-				_frontend->UpdateStatistics(&_buffer[0], static_cast<long>(_buffer.size()));
-			}
-
-			if (!unloaded.empty())
-			{
-				serialize(_buffer, unloaded);
-				_frontend->UnloadImages(&_buffer[0], static_cast<long>(_buffer.size()));
-			}
+			archive(command);
+			archive(data);
+			_frontend->Dispatch(&_buffer[0], static_cast<long>(_buffer.size()));
 		}
-		_analyzer.clear();
 	}
 }

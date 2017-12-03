@@ -23,10 +23,7 @@ import "unknwn.idl";
 [object, uuid(F58F0F95-B107-485F-9AAD-BB13AF34C04C), pointer_default(unique)]
 interface IProfilerFrontend : IUnknown
 {
-	HRESULT Initialize([in, size_is(init_size)] const byte *init, [in] long init_size);
-	HRESULT LoadImages([in, size_is(images_size)] const byte *images, [in] long images_size);
-	HRESULT UpdateStatistics([in, size_is(statistics_size)] const byte *statistics, [in] long statistics_size);
-	HRESULT UnloadImages([in, size_is(images_size)] const byte *images, [in] long images_size);
+	HRESULT Dispatch([in, size_is(size)] const byte *message, [in] long size);
 };
 
 [uuid(0ED7654C-DE8A-4964-9661-0B0C391BE15E)]

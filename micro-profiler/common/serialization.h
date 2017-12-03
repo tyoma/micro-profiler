@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "primitives.h"
+#include "protocol.h"
 
 #include <strmd/strmd/deserializer.h>
 
@@ -29,6 +29,7 @@ namespace micro_profiler
 	class analyzer;
 }
 
+template <> struct strmd::is_arithmetic<micro_profiler::commands> { static const bool value = true; };
 template <> struct strmd::is_arithmetic<wchar_t> { static const bool value = true; };
 template <> struct strmd::is_arithmetic<const void *> { static const bool value = true; };
 template <> struct strmd::is_container<micro_profiler::analyzer> { static const bool value = true; };

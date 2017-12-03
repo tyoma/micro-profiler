@@ -64,5 +64,9 @@ namespace micro_profiler
 
 		void analyze();
 		void update_frontend();
+
+	private:
+		template <typename DataT>
+		void send(commands command, const DataT &data);
 	};
 }

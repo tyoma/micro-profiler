@@ -4,7 +4,7 @@
 
 #include <common/serialization.h>
 
-#include <_generated/frontend.h>
+#include <ObjIdl.h>
 #include <stdexcept>
 #include <strmd/strmd/deserializer.h>
 #include <ut/assert.h>
@@ -24,8 +24,8 @@ namespace micro_profiler
 				class buffer_reader
 				{
 				public:
-					buffer_reader(const byte *data, size_t size)
-						: _ptr(data), _remaining(size)
+					buffer_reader(const void *message, size_t size)
+						: _ptr(static_cast<const byte *>(message)), _remaining(size)
 					{	}
 
 					void read(void *data, size_t size)
@@ -37,15 +37,16 @@ namespace micro_profiler
 					}
 
 				private:
+					SAFEARRAY *_sa;
 					const byte *_ptr;
 					size_t _remaining;
 				};
 			}
 
-			class Frontend : public IProfilerFrontend
+			class Frontend : public ISequentialStream
 			{
 			public:
-				static void Create(FrontendState& state, IProfilerFrontend **frontend);
+				static void Create(FrontendState& state, ISequentialStream **frontend);
 
 			private:
 				explicit Frontend(FrontendState& state);
@@ -55,7 +56,8 @@ namespace micro_profiler
 				STDMETHODIMP_(ULONG) AddRef();
 				STDMETHODIMP_(ULONG) Release();
 
-				STDMETHODIMP Dispatch(const byte *message, long size);
+				STDMETHODIMP Read(void *pv, ULONG cb, ULONG *pcbRead);
+				STDMETHODIMP Write(const void *pv, ULONG cb, ULONG *pcbWritten);
 
 				const Frontend &operator =(const Frontend &rhs);
 
@@ -64,7 +66,7 @@ namespace micro_profiler
 				FrontendState &_state;
 			};
 
-			function<void(IProfilerFrontend **)> FrontendState::MakeFactory()
+			function<void(ISequentialStream **)> FrontendState::MakeFactory()
 			{	return bind(&Frontend::Create, ref(*this), _1);	}
 
 			Frontend::Frontend(FrontendState &state)
@@ -74,12 +76,12 @@ namespace micro_profiler
 			Frontend::~Frontend()
 			{	_state.released = true;	}
 
-			void Frontend::Create(FrontendState& state, IProfilerFrontend **frontend)
-			{	static_cast<IProfilerFrontend *>(new Frontend(state))->QueryInterface(frontend);	}
+			void Frontend::Create(FrontendState& state, ISequentialStream **frontend)
+			{	static_cast<ISequentialStream *>(new Frontend(state))->QueryInterface(frontend);	}
 
 			STDMETHODIMP Frontend::QueryInterface(REFIID riid, void **ppv)
 			{
-				if (riid != IID_IUnknown && riid != __uuidof(IProfilerFrontend))
+				if (riid != IID_IUnknown && riid != __uuidof(ISequentialStream))
 					return E_NOINTERFACE;
 				*reinterpret_cast<IUnknown **>(ppv) = this;
 				AddRef();
@@ -132,12 +134,16 @@ namespace micro_profiler
 				}
 			}
 
-			STDMETHODIMP Frontend::Dispatch(const byte *message, long size)
+			STDMETHODIMP Frontend::Read(void *, ULONG, ULONG *)
+			{	return E_NOTIMPL;	}
+
+			STDMETHODIMP Frontend::Write(const void *message, ULONG size, ULONG *written)
 			{
 				buffer_reader reader(message, size);
 				strmd::deserializer<buffer_reader> a(reader);
 
 				a(_state);
+				*written = size;
 				return S_OK;
 			}
 

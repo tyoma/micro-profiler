@@ -56,7 +56,7 @@ namespace micro_profiler
 
 		typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
 
-		OBJECT_ENTRY_AUTO(CLSID_ProfilerFrontend, _ProfilerFrontend);
+		OBJECT_ENTRY_AUTO(__uuidof(ProfilerFrontend), _ProfilerFrontend);
 
 		void disconnect(IUnknown *object)
 		{	::CoDisconnectObject(object, 0);	}
@@ -75,9 +75,12 @@ namespace micro_profiler
 		_symbols.reset();
 	}
 
-	STDMETHODIMP ProfilerFrontend::Dispatch(const byte *message, long size)
+	STDMETHODIMP ProfilerFrontend::Read(void *, ULONG, ULONG *)
+	{	return E_NOTIMPL;	}
+
+	STDMETHODIMP ProfilerFrontend::Write(const void *message, ULONG size, ULONG *written)
 	{
-		buffer_reader reader(message, size);
+		buffer_reader reader(static_cast<const byte *>(message), size);
 		strmd::deserializer<buffer_reader> archive(reader);
 		commands c;
 
@@ -121,6 +124,7 @@ namespace micro_profiler
 		case modules_unloaded:
 			break;
 		}
+		*written = size;
 		return S_OK;
 	}
 }

@@ -2,9 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-profiler\micro-profiler.vcxproj", "{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
 EndProject
@@ -33,9 +30,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base.tests", "libraries\wpl\base\tests\base.tests.vcxproj", "{D5D8229B-9269-4165-BD5E-0DC5504E120B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.lib", "micro-profiler\micro-profiler.lib.vcxproj", "{15AD9007-29B9-462F-B7BE-A433B6E83EC9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B} = {1EF72156-88C9-4AD7-BD68-0569B17EBC2B}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.stub", "micro-profiler\micro-profiler.stub.vcxproj", "{3B1F8640-9F9A-4989-A074-73590A82A26C}"
 EndProject
@@ -67,8 +61,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build-info", "build-info", 
 	ProjectSection(SolutionItems) = preProject
 		version.h = version.h
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.common", "micro-profiler\micro-profiler.common.vcxproj", "{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "micro-profiler.installer", "deployment\wix\micro-profiler.installer.wixproj", "{EE4583A8-C1F3-4353-B504-4D739466FF63}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -216,14 +208,6 @@ Global
 		{DB4F7DA2-1C0D-46F5-B20C-8801BD4A27F2}.Release|Win32.Build.0 = Release|Win32
 		{DB4F7DA2-1C0D-46F5-B20C-8801BD4A27F2}.Release|x64.ActiveCfg = Release|x64
 		{DB4F7DA2-1C0D-46F5-B20C-8801BD4A27F2}.Release|x64.Build.0 = Release|x64
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|Win32.ActiveCfg = Common|Win32
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|Win32.Build.0 = Common|Win32
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|x64.ActiveCfg = Common|Win32
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Debug|x64.Build.0 = Common|Win32
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|Win32.ActiveCfg = Common|Win32
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|Win32.Build.0 = Common|Win32
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|x64.ActiveCfg = Common|Win32
-		{1EF72156-88C9-4AD7-BD68-0569B17EBC2B}.Release|x64.Build.0 = Common|Win32
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Debug|Win32.ActiveCfg = Debug|x86
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Debug|x64.ActiveCfg = Debug|x64
 		{EE4583A8-C1F3-4353-B504-4D739466FF63}.Release|Win32.ActiveCfg = Release|x86

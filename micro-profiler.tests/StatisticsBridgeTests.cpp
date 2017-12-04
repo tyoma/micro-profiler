@@ -17,7 +17,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void VoidCreationFactory(vector<IProfilerFrontend *> &in_log, IProfilerFrontend **frontend)
+			void VoidCreationFactory(vector<ISequentialStream *> &in_log, ISequentialStream **frontend)
 			{
 				in_log.push_back(*frontend);
 				*frontend = 0;
@@ -59,7 +59,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer cc(10000);
-				vector<IProfilerFrontend *> log;
+				vector<ISequentialStream *> log;
 
 				// ACT
 				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(log), _1), *_queue);
@@ -74,7 +74,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer cc(10000);
-				vector<IProfilerFrontend *> log;
+				vector<ISequentialStream *> log;
 				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(log), _1), *_queue);
 
 				// ACT / ASSERT (must not fail)

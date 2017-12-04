@@ -5,6 +5,7 @@
 #include <common/serialization.h>
 #include <frontend/symbol_resolver.h>
 
+#include <iomanip>
 #include <strmd/strmd/serializer.h>
 #include <strmd/strmd/deserializer.h>
 #include <sstream>
@@ -28,6 +29,14 @@ namespace micro_profiler
 			{
 				wstringstream s;
 				s << value;
+				return s.str();
+			}
+
+			template <typename T>
+			wstring to_string(T *value)
+			{
+				wstringstream s;
+				s << uppercase << hex << setw(8) << setfill(L'0') << reinterpret_cast<address_t>(value);
 				return s.str();
 			}
 

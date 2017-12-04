@@ -4,9 +4,6 @@
     <ClCompile Include="visualstudio\addin\ProfilerAddin.cpp">
       <Filter>visualstudio\addin</Filter>
     </ClCompile>
-    <ClCompile Include="module\ProxyBridge.c">
-      <Filter>module</Filter>
-    </ClCompile>
     <ClCompile Include="frontend\ProfilerMainDialog.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
@@ -73,9 +70,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="module\ProxyBridge.h">
-      <Filter>module</Filter>
-    </ClInclude>
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
     </ClInclude>
@@ -107,6 +101,8 @@
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <Filter>visualstudio\vs-extension</Filter>
     </CustomBuild>
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />

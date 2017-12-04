@@ -20,8 +20,6 @@
 
 #include <crtdbg.h>
 
-#include "ProxyBridge.h"
-
 #include "../collector/calls_collector.h"
 #include "../collector/frontend_controller.h"
 #include "../entry.h"
@@ -42,15 +40,15 @@ namespace micro_profiler
 	{
 		const LPCTSTR c_environment = _T("Environment");
 		const LPCTSTR c_path_var = _T("PATH");
-	#ifdef _M_IX86
+#ifdef _M_IX86
 		const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIR");
 		unsigned char g_exitprocess_patch[7] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
 		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 1);
-	#elif _M_X64
+#elif _M_X64
 		const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIRX64");
 		unsigned char g_exitprocess_patch[12] = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
 		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 2);
-	#endif
+#endif
 		const CString c_profilerdir_var_decorated = CString(_T("%")) + c_profilerdir_var + _T("%");
 		const LPCTSTR c_path_separator = _T(";");
 		auto_ptr<frontend_controller> g_frontend_controller;
@@ -83,9 +81,9 @@ namespace micro_profiler
 			return path;
 		}
 
-		void CreateLocalFrontend(IProfilerFrontend **frontend)
+		void CreateLocalFrontend(ISequentialStream **frontend)
 		{
-			::CoCreateInstance(CLSID_ProfilerFrontend, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IProfilerFrontend),
+			::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(ISequentialStream),
 				(void **)frontend);
 		}
 
@@ -132,7 +130,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 {
 	using namespace micro_profiler;
 
-	BOOL ok = PrxDllMain(hinstance, reason, reserved) && g_module.DllMain(reason, reserved);
+	BOOL ok = g_module.DllMain(reason, reserved);
 
 	switch (reason)
 	{
@@ -166,18 +164,10 @@ extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void
 }
 
 STDAPI DllCanUnloadNow()
-{
-	HRESULT hr = PrxDllCanUnloadNow();
-
-	return hr == S_OK ? micro_profiler::g_module.DllCanUnloadNow() : hr;
-}
+{	return micro_profiler::g_module.DllCanUnloadNow();	}
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
-{
-	HRESULT hr = PrxDllGetClassObject(rclsid, riid, ppv);
-
-	return hr != S_OK ? micro_profiler::g_module.DllGetClassObject(rclsid, riid, ppv) : S_OK;
-}
+{	return micro_profiler::g_module.DllGetClassObject(rclsid, riid, ppv);	}
 
 STDAPI DllRegisterServer()
 {

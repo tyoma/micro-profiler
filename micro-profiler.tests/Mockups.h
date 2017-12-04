@@ -9,7 +9,7 @@
 #include <wpl/mt/thread.h>
 #include <wpl/base/concepts.h>
 
-struct IProfilerFrontend;
+struct ISequentialStream;
 
 namespace micro_profiler
 {
@@ -23,7 +23,7 @@ namespace micro_profiler
 
 				explicit FrontendState(const std::function<void()>& oninitialized = std::function<void()>());
 
-				std::function<void(IProfilerFrontend **)> MakeFactory();
+				std::function<void(ISequentialStream **)> MakeFactory();
 
 				wpl::mt::event_flag update_lock;
 				std::function<void()> oninitialized;

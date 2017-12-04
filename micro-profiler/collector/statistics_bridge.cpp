@@ -20,13 +20,13 @@
 
 #include "statistics_bridge.h"
 
-#include "../_generated/frontend.h"
 #include "../common/protocol.h"
 #include "../common/serialization.h"
 #include "calls_collector.h"
 
 #include <algorithm>
 #include <iterator>
+#include <ObjIdl.h>
 #include <strmd/strmd/serializer.h>
 
 using namespace std;
@@ -96,7 +96,7 @@ namespace micro_profiler
 
 
 	statistics_bridge::statistics_bridge(calls_collector_i &collector,
-			const function<void (IProfilerFrontend **frontend)> &factory,
+			const function<void (ISequentialStream **frontend)> &factory,
 			const std::shared_ptr<image_load_queue> &image_load_queue)
 		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(0),
 			_image_load_queue(image_load_queue)
@@ -136,10 +136,11 @@ namespace micro_profiler
 		{
 			vector_writer writer(_buffer);
 			strmd::serializer<vector_writer> archive(writer);
+			ULONG written;
 
 			archive(command);
 			archive(data);
-			_frontend->Dispatch(&_buffer[0], static_cast<long>(_buffer.size()));
+			_frontend->Write(&_buffer[0], static_cast<long>(_buffer.size()), &written);
 		}
 	}
 }

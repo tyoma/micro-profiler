@@ -24,7 +24,7 @@
 #include <functional>
 #include <memory>
 
-struct IProfilerFrontend;
+struct ISequentialStream;
 
 namespace std { namespace tr1 { } using namespace tr1; }
 
@@ -42,7 +42,7 @@ namespace micro_profiler
 	struct handle;
 	class image_load_queue;
 
-	typedef std::function<void(IProfilerFrontend ** /*frontend*/)> frontend_factory;
+	typedef std::function<void(ISequentialStream ** /*frontend*/)> frontend_factory;
 
 	class frontend_controller : wpl::noncopyable
 	{

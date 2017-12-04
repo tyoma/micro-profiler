@@ -51,7 +51,6 @@
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\ProfilerSink.cpp" />
     <ClCompile Include="module\main.cpp" />
-    <ClCompile Include="module\ProxyBridge.c" />
     <ClCompile Include="visualstudio\commands.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -97,7 +96,6 @@
     </CustomBuild>
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\ProfilerSink.h" />
-    <ClInclude Include="module\ProxyBridge.h" />
     <ClInclude Include="resources\resource.h" />
     <ClInclude Include="visualstudio\commands.h" />
     <ClInclude Include="visualstudio\dispatch.h" />

@@ -82,9 +82,6 @@
     <ClCompile Include="ipc\windows\ipc_server.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="_generated\frontend_i.c">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="collector\analyzer.h" />
@@ -107,7 +104,6 @@
     <ClInclude Include="ipc\client.h" />
     <ClInclude Include="ipc\windows\common.h" />
     <ClInclude Include="ipc\server.h" />
-    <ClInclude Include="_generated\frontend.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">

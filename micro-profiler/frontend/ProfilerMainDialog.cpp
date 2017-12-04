@@ -20,15 +20,14 @@
 
 #include "ProfilerMainDialog.h"
 
-#include "../common/configuration.h"
 #include "function_list.h"
 #include "columns_model.h"
 
-#include <wpl/ui/win32/controls.h>
+#include <common/configuration.h>
 
 #include <algorithm>
-#include <math.h>
 #include <atlstr.h>
+#include <wpl/ui/win32/controls.h>
 
 using namespace std;
 using namespace std::placeholders;

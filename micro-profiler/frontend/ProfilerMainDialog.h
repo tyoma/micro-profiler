@@ -20,14 +20,15 @@
 
 #pragma once
 
-#include "../resources/resource.h"
 #include "object_lock.h"
+
+#include <resources/resource.h>
 
 #include <atlbase.h>
 #include <atltypes.h>
 #include <atlwin.h>
-#include <string>
 #include <functional>
+#include <string>
 #include <wpl/ui/listview.h>
 
 namespace std { namespace tr1 { } using namespace tr1; }

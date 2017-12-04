@@ -7,18 +7,17 @@
     <OutDir>$(SolutionDir)_bin\$(Configuration)_$(PlatformName)\</OutDir>
     <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+  
+  <ItemDefinitionGroup>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>_SECURE_SCL=0;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1;WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>_SECURE_SCL=0;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(SolutionDir)libraries;$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)micro-profiler;$(SolutionDir)libraries;$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -28,6 +27,14 @@
       <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
   </ItemDefinitionGroup>
+  
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <Optimization>Full</Optimization>
@@ -36,26 +43,12 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-
-      <WarningLevel>Level4</WarningLevel>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>_SECURE_SCL=0;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1;WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <FunctionLevelLinking>false</FunctionLevelLinking>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(SolutionDir)libraries;$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
     </Link>
   </ItemDefinitionGroup>
 </Project>

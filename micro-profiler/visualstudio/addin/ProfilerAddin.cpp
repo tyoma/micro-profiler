@@ -18,14 +18,13 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <easy-addin/addin.h>
-
-#include "../commands.h"
-#include "../dispatch.h"
-#include "../../resources/resource.h"
+#include <resources/resource.h>
+#include <visualstudio/commands.h>
+#include <visualstudio/dispatch.h>
 
 #include <atlpath.h>
 #include <atlstr.h>
+#include <easy-addin/addin.h>
 
 #pragma warning(disable: 4278)
 #pragma warning(disable: 4146)

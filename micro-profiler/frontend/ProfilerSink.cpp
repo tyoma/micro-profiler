@@ -25,8 +25,9 @@
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
-#include "../common/protocol.h"
-#include "../common/serialization.h"
+#include <common/protocol.h>
+#include <common/serialization.h>
+
 #include <strmd/strmd/deserializer.h>
 
 using namespace std;

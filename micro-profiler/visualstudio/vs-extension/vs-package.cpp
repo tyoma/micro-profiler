@@ -1,7 +1,9 @@
-#include "../commands.h"
-#include "../dispatch.h"
-#include "../../resources/resource.h"
 #include "command-ids.h"
+
+#include <frontend/ProfilerSink.h>
+#include <visualstudio/commands.h>
+#include <visualstudio/dispatch.h>
+#include <resources/resource.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
@@ -17,6 +19,8 @@
 namespace std { namespace tr1 { } using namespace tr1; }
 
 using namespace std;
+
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv);
 
 namespace micro_profiler
 {
@@ -37,10 +41,8 @@ namespace micro_profiler
 		{
 		public:
 			profiler_package()
-				: _commands(g_commands, g_commands + _countof(g_commands))
-			{
-
-			}
+				: _commands(g_commands, g_commands + _countof(g_commands)), _cookie(0)
+			{	}
 
 		public:
 			DECLARE_REGISTRY_RESOURCEID(IDR_PROFILEREXT)
@@ -57,6 +59,10 @@ namespace micro_profiler
 		private:
 			STDMETHODIMP SetSite(IServiceProvider *sp)
 			{
+				IUnknown *factory = NULL;
+				
+				DllGetClassObject(__uuidof(ProfilerFrontend), __uuidof(IUnknown), (void **)&factory);
+				::CoRegisterClassObject(__uuidof(ProfilerFrontend), factory, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &_cookie);
 				_service_provider = sp;
 				return S_OK;
 			}
@@ -65,7 +71,10 @@ namespace micro_profiler
 			{	return S_OK;	}
 
 			STDMETHODIMP Close()
-			{	return S_OK;	}
+			{
+				::CoRevokeClassObject(_cookie);
+				return S_OK;
+			}
 
 			STDMETHODIMP GetAutomationObject(LPCOLESTR /*pszPropName*/, IDispatch ** /*ppDisp*/)
 			{	return E_NOTIMPL;	}
@@ -151,6 +160,7 @@ namespace micro_profiler
 		private:
 			CComPtr<IServiceProvider> _service_provider;
 			commands _commands;
+			DWORD _cookie;
 		};
 
 		OBJECT_ENTRY_AUTO(CLSID_MicroProfilerPackage, profiler_package);

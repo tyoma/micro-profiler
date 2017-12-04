@@ -42,9 +42,6 @@
     <None Include="visualstudio\vs-extension\vs-extension.rgs">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
-    <None Include="visualstudio\vs-extension\micro-profiler.pkgdef">
-      <Filter>visualstudio\vs-extension</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="frontend">
@@ -108,5 +105,17 @@
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="visualstudio\vs-extension\extension.vsixmanifest">
+      <Filter>visualstudio\vs-extension</Filter>
+    </CustomBuild>
+    <CustomBuild Include="visualstudio\vs-extension\micro-profiler.pkgdef">
+      <Filter>visualstudio\vs-extension</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

@@ -20,10 +20,10 @@
 
 #include <crtdbg.h>
 
-#include "../collector/calls_collector.h"
-#include "../collector/frontend_controller.h"
-#include "../entry.h"
-#include "../frontend/ProfilerSink.h"
+#include <collector/calls_collector.h>
+#include <collector/frontend_controller.h>
+#include <entry.h>
+#include <frontend/ProfilerSink.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
@@ -92,7 +92,9 @@ namespace micro_profiler
 				void operator()(const void *buffer, size_t size)
 				{
 					ULONG written;
-					_frontend->Write(buffer, static_cast<ULONG>(size), &written);
+
+					if (_frontend)
+						_frontend->Write(buffer, static_cast<ULONG>(size), &written);
 				}
 
 			private:

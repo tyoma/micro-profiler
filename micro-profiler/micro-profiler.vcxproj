@@ -84,7 +84,16 @@
       <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
       <SubType>Designer</SubType>
     </CustomBuild>
-    <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
+    <CustomBuild Include="visualstudio\vs-extension\extension.vsixmanifest">
+      <Command>copy "%(FullPath)" "$(TargetDir)"</Command>
+      <Message>Copying %(Filename)%(Extension)...</Message>
+      <Outputs>$(TargetDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="visualstudio\vs-extension\micro-profiler.pkgdef">
+      <Command>copy "%(FullPath)" "$(TargetDir)"</Command>
+      <Message>Copying %(Filename)%(Extension)...</Message>
+      <Outputs>$(TargetDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
     <None Include="visualstudio\vs-extension\vs-extension.rgs" />
     <None Include="_generated\commands.cto" />
   </ItemGroup>

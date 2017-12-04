@@ -20,12 +20,11 @@
 
 #pragma once
 
-#include "../resources/resource.h"
+#include <resources/resource.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
 #include <memory>
-#include <ObjIdl.h>
 #include <wpl/base/signals.h>
 
 namespace std { namespace tr1 { } using namespace tr1; }

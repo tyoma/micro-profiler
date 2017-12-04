@@ -27,10 +27,10 @@
 #include <functional>
 #include <memory>
 
-struct ISequentialStream;
-
 namespace micro_profiler
 {
+	typedef std::function<void(const void *buffer, size_t size)> channel_t;
+
 	struct calls_collector_i;
 
 	class image_load_queue
@@ -54,13 +54,12 @@ namespace micro_profiler
 		std::vector<unsigned char> _buffer;
 		analyzer _analyzer;
 		calls_collector_i &_collector;
-		ISequentialStream *_frontend;
+		channel_t _frontend;
 		std::shared_ptr<image_load_queue> _image_load_queue;
 
 	public:
-		statistics_bridge(calls_collector_i &collector, const std::function<void (ISequentialStream **frontend)> &factory,
+		statistics_bridge(calls_collector_i &collector, const std::function<channel_t ()> &factory,
 			const std::shared_ptr<image_load_queue> &image_load_queue);
-		~statistics_bridge();
 
 		void analyze();
 		void update_frontend();

@@ -17,10 +17,13 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void VoidCreationFactory(vector<ISequentialStream *> &in_log, ISequentialStream **frontend)
+			void dummy(const void *, size_t)
+			{	}
+
+			channel_t VoidCreationFactory(bool &created)
 			{
-				in_log.push_back(*frontend);
-				*frontend = 0;
+				created = true;
+				return &dummy;
 			}
 		}
 
@@ -59,26 +62,13 @@ namespace micro_profiler
 			{
 				// INIT
 				mockups::Tracer cc(10000);
-				vector<ISequentialStream *> log;
+				bool created = false;
 
 				// ACT
-				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(log), _1), *_queue);
+				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(created)), *_queue);
 
 				// ASSERT
-				assert_equal(1u, log.size());
-				assert_null(log[0]);
-			}
-
-
-			test( BridgeHandlesNoncreatedFrontend )
-			{
-				// INIT
-				mockups::Tracer cc(10000);
-				vector<ISequentialStream *> log;
-				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(log), _1), *_queue);
-
-				// ACT / ASSERT (must not fail)
-				b.update_frontend();
+				assert_is_true(created);
 			}
 
 
@@ -92,13 +82,13 @@ namespace micro_profiler
 					statistics_bridge b(cc, _state->MakeFactory(), *_queue);
 
 				// ASSERT
-					assert_is_false(_state->released);
+					assert_equal(1u, _state->ref_count);
 
 				// ACT (dtor)
 				}
 
 				// ASSERT
-				assert_is_true(_state->released);
+				assert_equal(0u, _state->ref_count);
 			}
 
 

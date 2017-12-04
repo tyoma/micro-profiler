@@ -396,7 +396,7 @@ namespace micro_profiler
 				hthread->join();
 
 				// ASERT
-				assert_is_true(state.released);
+				assert_equal(0u, state.ref_count);
 			}
 
 

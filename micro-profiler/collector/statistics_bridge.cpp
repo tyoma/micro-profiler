@@ -26,8 +26,8 @@
 
 #include <algorithm>
 #include <iterator>
-#include <ObjIdl.h>
 #include <strmd/strmd/serializer.h>
+#include <windows.h>
 
 using namespace std;
 
@@ -96,19 +96,12 @@ namespace micro_profiler
 
 
 	statistics_bridge::statistics_bridge(calls_collector_i &collector,
-			const function<void (ISequentialStream **frontend)> &factory,
+			const function<channel_t ()> &factory,
 			const std::shared_ptr<image_load_queue> &image_load_queue)
-		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(0),
+		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(factory()),
 			_image_load_queue(image_load_queue)
 	{
-		factory(&_frontend);
 		send(init, initializaion_data(image_load_queue::get_module_info(0).second, c_ticks_resolution));
-	}
-
-	statistics_bridge::~statistics_bridge()
-	{
-		if (_frontend)
-			_frontend->Release();
 	}
 
 	void statistics_bridge::analyze()
@@ -136,11 +129,10 @@ namespace micro_profiler
 		{
 			vector_writer writer(_buffer);
 			strmd::serializer<vector_writer> archive(writer);
-			ULONG written;
 
 			archive(command);
 			archive(data);
-			_frontend->Write(&_buffer[0], static_cast<long>(_buffer.size()), &written);
+			_frontend(&_buffer[0], static_cast<long>(_buffer.size()));
 		}
 	}
 }

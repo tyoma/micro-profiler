@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "statistics_bridge.h"
+
 #include <wpl/base/concepts.h>
 #include <functional>
 #include <memory>
@@ -42,7 +44,7 @@ namespace micro_profiler
 	struct handle;
 	class image_load_queue;
 
-	typedef std::function<void(ISequentialStream ** /*frontend*/)> frontend_factory;
+	typedef std::function<channel_t ()> frontend_factory;
 
 	class frontend_controller : wpl::noncopyable
 	{

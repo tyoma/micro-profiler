@@ -81,10 +81,24 @@ namespace micro_profiler
 			return path;
 		}
 
-		void CreateLocalFrontend(ISequentialStream **frontend)
+		channel_t CreateLocalFrontend()
 		{
-			::CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER, __uuidof(ISequentialStream),
-				(void **)frontend);
+			class frontend_stream
+			{
+			public:
+				frontend_stream()
+				{	_frontend.CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER);	}
+
+				void operator()(const void *buffer, size_t size)
+				{
+					ULONG written;
+					_frontend->Write(buffer, static_cast<ULONG>(size), &written);
+				}
+
+			private:
+				CComPtr<ISequentialStream> _frontend;
+			};
+			return frontend_stream();
 		}
 
 		void Patch(void *address, void *patch, size_t size)

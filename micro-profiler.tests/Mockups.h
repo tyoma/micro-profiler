@@ -1,15 +1,15 @@
 #pragma once
 
 #include <common/protocol.h>
-
 #include <collector/calls_collector.h>
+#include <collector/frontend_controller.h>
+#include <collector/statistics_bridge.h>
 #include <collector/system.h>
+
 #include <functional>
 #include <wpl/mt/synchronization.h>
 #include <wpl/mt/thread.h>
 #include <wpl/base/concepts.h>
-
-struct ISequentialStream;
 
 namespace micro_profiler
 {
@@ -23,7 +23,7 @@ namespace micro_profiler
 
 				explicit FrontendState(const std::function<void()>& oninitialized = std::function<void()>());
 
-				std::function<void(ISequentialStream **)> MakeFactory();
+				frontend_factory MakeFactory();
 
 				wpl::mt::event_flag update_lock;
 				std::function<void()> oninitialized;
@@ -35,7 +35,7 @@ namespace micro_profiler
 				wpl::mt::event_flag updated;
 				wpl::mt::event_flag modules_state_updated;
 
-				bool released;
+				size_t ref_count;
 			};
 			
 

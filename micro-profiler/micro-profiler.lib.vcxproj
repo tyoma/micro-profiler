@@ -55,9 +55,7 @@
     <ClCompile Include="collector\frontend_controller.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="collector\statistics_bridge.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <ClCompile Include="collector\statistics_bridge.cpp"/>
     <ClCompile Include="collector\system.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -65,9 +63,7 @@
     <ClCompile Include="common\registry_configuration.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="frontend\function_list.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <ClCompile Include="frontend\function_list.cpp"/>
     <ClCompile Include="frontend\object_lock.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>

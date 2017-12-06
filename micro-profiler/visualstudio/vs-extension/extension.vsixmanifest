@@ -8,11 +8,11 @@
 Please, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list\r\nCopyright (c) 2011-2014 Artem Gevorkyan</Description>
     <Locale>1033</Locale>
     <SupportedProducts>
-      <VisualStudio Version="10.0"><Edition>Standard</Edition></VisualStudio>
-      <VisualStudio Version="11.0"><Edition>Standard</Edition></VisualStudio>
-      <VisualStudio Version="12.0"><Edition>Standard</Edition></VisualStudio>
-      <VisualStudio Version="14.0"><Edition>Standard</Edition></VisualStudio>
-      <VisualStudio Version="15.0"><Edition>Standard</Edition></VisualStudio>
+      <VisualStudio Version="10.0"><Edition>Pro</Edition><Edition>Express_All</Edition></VisualStudio>
+      <VisualStudio Version="11.0"><Edition>Pro</Edition><Edition>Express_All</Edition></VisualStudio>
+      <VisualStudio Version="12.0"><Edition>Pro</Edition><Edition>Express_All</Edition></VisualStudio>
+      <VisualStudio Version="14.0"><Edition>Pro</Edition><Edition>Express_All</Edition></VisualStudio>
+      <VisualStudio Version="15.0"><Edition>Pro</Edition><Edition>Express_All</Edition></VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
   </Identifier>

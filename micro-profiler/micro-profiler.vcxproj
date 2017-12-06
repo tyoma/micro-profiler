@@ -29,16 +29,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
+    <Import Project="$(SolutionDir)build.props\vssdk.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemDefinitionGroup>
-    <ClCompile>
-      <AdditionalIncludeDirectories>$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDK100Install)VisualStudioIntegration\Common\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
     <Link>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalDependencies>delayimp.lib;vsguids.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VSSDK100Install)VisualStudioIntegration\Common\lib\x86</AdditionalLibraryDirectories>
       <DelayLoadDLLs>dbghelp.dll</DelayLoadDLLs>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
@@ -79,7 +76,7 @@
     <None Include="resources\appicon.ico" />
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <FileType>Document</FileType>
-      <Command>"$(ProgramFiles)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"C:\Program Files (x86)\Microsoft Visual Studio 2010 SDK SP1\VisualStudioIntegration\Common\Inc"</Command>
+      <Command>"$(VSSDKRoot)VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"$(VSSDKRoot)VisualStudioIntegration\Common\Inc"</Command>
       <Outputs>_generated/%(Filename).cto</Outputs>
       <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
       <SubType>Designer</SubType>

@@ -17,7 +17,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(SolutionDir)micro-profiler;$(SolutionDir)libraries;$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)micro-profiler;$(SolutionDir)libraries;$(SolutionDir)libraries/utee;$(SolutionDir)libraries/strmd;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>

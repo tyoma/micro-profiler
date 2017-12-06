@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <VSSDKRoot Condition="exists('$(VSSDK90Install)')">$(VSSDK90Install)</VSSDKRoot>
+    <VSSDKRoot Condition="exists('$(VSSDK100Install)')">$(VSSDK100Install)</VSSDKRoot>
+    <VSSDKRoot Condition="exists('$(VSSDK110Install)')">$(VSSDK110Install)</VSSDKRoot>
+    <VSSDKRoot Condition="exists('$(VSSDK120Install)')">$(VSSDK120Install)</VSSDKRoot>
+    <VSSDKRoot Condition="exists('$(VSSDK140Install)')">$(VSSDK140Install)</VSSDKRoot>
+    <VSSDKRoot Condition="exists('$(VSSDK150Install)')">$(VSSDK150Install)</VSSDKRoot>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildExtensionsPath32)\..\Common Files\Microsoft Shared\MSEnv;$(MSBuildExtensionsPath32)\..\Common Files\Designer;$(VSSDKRoot)VisualStudioIntegration\Common\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(VSSDKRoot)VisualStudioIntegration\Common\lib\x86</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

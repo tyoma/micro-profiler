@@ -20,13 +20,14 @@
 
 #include "statistics_bridge.h"
 
-#include "../common/protocol.h"
-#include "../common/serialization.h"
 #include "calls_collector.h"
+
+#include <common/protocol.h>
+#include <common/serialization.h>
 
 #include <algorithm>
 #include <iterator>
-#include <strmd/strmd/serializer.h>
+#include <strmd/serializer.h>
 #include <windows.h>
 
 using namespace std;
@@ -40,18 +41,23 @@ namespace micro_profiler
 		class vector_writer
 		{
 		public:
-			vector_writer(vector<byte> &buffer)
+			vector_writer(pod_vector<byte> &buffer)
 				: _buffer(buffer)
 			{	_buffer.clear();	}
 
 			void write(const void *data, size_t size)
-			{	_buffer.insert(_buffer.end(), static_cast<const byte *>(data), static_cast<const byte *>(data) + size);	}
+			{
+				if (size == 1)
+					_buffer.push_back(*static_cast<const byte *>(data));
+				else
+					_buffer.append(static_cast<const byte *>(data), static_cast<const byte *>(data) + size);
+			}
 
 		private:
 			void operator =(const vector_writer &other);
 
 		private:
-			vector<byte> &_buffer;
+			pod_vector<byte> &_buffer;
 		};
 	}
 
@@ -132,7 +138,7 @@ namespace micro_profiler
 
 			archive(command);
 			archive(data);
-			_frontend(&_buffer[0], static_cast<long>(_buffer.size()));
+			_frontend(_buffer.data(), static_cast<long>(_buffer.size()));
 		}
 	}
 }

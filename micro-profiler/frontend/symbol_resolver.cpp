@@ -20,7 +20,7 @@
 
 #include "symbol_resolver.h"
 
-#include "../common/primitives.h"
+#include <common/primitives.h>
 
 #include <atlstr.h>
 #include <Windows.h>

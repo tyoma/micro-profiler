@@ -21,7 +21,8 @@
 #pragma once
 
 #include "statistics_model.h"
-#include "../common/primitives.h"
+
+#include <common/primitives.h>
 
 #include <wpl/ui/listview.h>
 #include <string>

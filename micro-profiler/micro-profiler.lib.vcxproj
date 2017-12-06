@@ -34,9 +34,6 @@
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
-  <PropertyGroup>
-    <OutDir>$(SolutionDir)_lib\$(Configuration)_$(PlatformName)\</OutDir>
-  </PropertyGroup>
   <ItemDefinitionGroup>
     <Lib>
       <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>

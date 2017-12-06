@@ -20,7 +20,7 @@
 
 #include "columns_model.h"
 
-#include "../common/configuration.h"
+#include <common/configuration.h>
 
 using namespace std;
 

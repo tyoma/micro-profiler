@@ -1,4 +1,4 @@
-#include "../client.h"
+#include <ipc/client.h>
 
 #include "common.h"
 

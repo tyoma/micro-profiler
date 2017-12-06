@@ -22,7 +22,7 @@
 
 #include "protocol.h"
 
-#include <strmd/strmd/deserializer.h>
+#include <strmd/deserializer.h>
 
 namespace micro_profiler
 {

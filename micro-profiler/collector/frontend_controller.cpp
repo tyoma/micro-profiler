@@ -20,12 +20,12 @@
 
 #include "frontend_controller.h"
 
-#include "../entry.h"
 #include "statistics_bridge.h"
+
+#include <entry.h>
 
 #include <windows.h>
 #include <wpl/mt/thread.h>
-
 
 using namespace wpl::mt;
 using namespace std;

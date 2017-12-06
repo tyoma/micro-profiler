@@ -28,7 +28,7 @@
 #include <common/protocol.h>
 #include <common/serialization.h>
 
-#include <strmd/strmd/deserializer.h>
+#include <strmd/deserializer.h>
 
 using namespace std;
 

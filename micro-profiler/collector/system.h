@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "../common/primitives.h"
+#include <common/primitives.h>
 
 namespace micro_profiler
 {

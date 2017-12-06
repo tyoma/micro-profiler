@@ -1,4 +1,4 @@
-#include "../server.h"
+#include <ipc/server.h>
 
 #include "common.h"
 

@@ -19,10 +19,11 @@
 //	THE SOFTWARE.
 
 #include "function_list.h"
-#include "statistics_model.h"
 
-#include "../common/formatting.h"
+#include "statistics_model.h"
 #include "symbol_resolver.h"
+
+#include <common/formatting.h>
 
 #include <utility>
 #include <cmath>

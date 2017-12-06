@@ -6,8 +6,8 @@
 #include <frontend/symbol_resolver.h>
 
 #include <iomanip>
-#include <strmd/strmd/serializer.h>
-#include <strmd/strmd/deserializer.h>
+#include <strmd/serializer.h>
+#include <strmd/deserializer.h>
 #include <sstream>
 #include <ut/assert.h>
 #include <ut/test.h>

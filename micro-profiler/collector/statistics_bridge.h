@@ -21,7 +21,9 @@
 #pragma once
 
 #include "analyzer.h"
-#include "../common/protocol.h"
+
+#include <common/pod_vector.h>
+#include <common/protocol.h>
 
 #include <deque>
 #include <functional>
@@ -51,7 +53,7 @@ namespace micro_profiler
 
 	class statistics_bridge
 	{
-		std::vector<unsigned char> _buffer;
+		pod_vector<unsigned char> _buffer;
 		analyzer _analyzer;
 		calls_collector_i &_collector;
 		channel_t _frontend;

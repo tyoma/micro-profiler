@@ -115,7 +115,7 @@ namespace micro_profiler
 			void Frontend::operator ()(const void *message, size_t size)
 			{
 				buffer_reader reader(message, size);
-				strmd::deserializer<buffer_reader> a(reader);
+				strmd::deserializer<buffer_reader, packer> a(reader);
 
 				a(_state);
 			}

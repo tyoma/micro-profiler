@@ -21,7 +21,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				function_statistics s1(17, 2012, 123123123, 32123, 2213), s2(1117, 212, 1231123, 3213, 112213);
 				function_statistics ds1, ds2;
 
@@ -30,7 +30,7 @@ namespace micro_profiler
 				s(s2);
 
 				// INIT
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// ACT (deserialization)
 				ds(ds1);
@@ -46,7 +46,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map s1, s2;
 				statistics_map ds1, ds2;
 
@@ -61,7 +61,7 @@ namespace micro_profiler
 				s(s2);
 
 				// INIT
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// ACT (deserialization)
 				ds(ds1);
@@ -77,7 +77,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map s1, s2;
 
 				s1[(void *)123441] = function_statistics(17, 2012, 123123123, 32123, 2213);
@@ -88,7 +88,7 @@ namespace micro_profiler
 				s(s1);
 				s(s2);
 
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// ACT
 				ds(s2);
@@ -122,7 +122,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				function_statistics_detailed s1;
 
 				static_cast<function_statistics &>(s1) = function_statistics(17, 2012, 123123123, 32123, 2213);
@@ -136,7 +136,7 @@ namespace micro_profiler
 				s(s1);
 
 				// INIT
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 				function_statistics_detailed ds1;
 				vector< pair<const void *, function_statistics> > callees;
 				vector< pair<const void *, count_t> > callers;
@@ -159,7 +159,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss, addition;
 
 				static_cast<function_statistics &>(ss[(void *)1221]) = function_statistics(17, 2012, 123123123, 32124, 2213);
@@ -172,7 +172,7 @@ namespace micro_profiler
 
 				s(addition);
 
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// INIT
 				statistics_map_detailed_2 dss;
@@ -198,7 +198,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss, addition;
 
 				ss[(void *)1221].callees[(void *)1221] = function_statistics(17, 2012, 123123123, 32124, 2213);
@@ -211,7 +211,7 @@ namespace micro_profiler
 
 				s(addition);
 
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// INIT
 				statistics_map_detailed_2 dss;
@@ -237,7 +237,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss;
 				statistics_map_detailed_2 dss;
 
@@ -249,7 +249,7 @@ namespace micro_profiler
 
 				s(ss);
 
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// ACT
 				ds(dss);
@@ -285,7 +285,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss1, ss2;
 				statistics_map_detailed_2 dss;
 				wpl::slot_connection c = dss.entry_updated += bind(&SerializationTests::entry_updated, this, _1);
@@ -300,7 +300,7 @@ namespace micro_profiler
 				s(ss1);
 				s(ss2);
 
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// ACT
 				ds(dss);
@@ -327,7 +327,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss;
 				statistics_map_detailed_2 dss;
 				wpl::slot_connection c = dss.entry_updated += bind(&SerializationTests::entry_updated, this, _1);
@@ -340,7 +340,7 @@ namespace micro_profiler
 
 				s(ss);
 
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// ACT
 				ds(dss);
@@ -356,7 +356,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter> s(buffer);
+				strmd::serializer<vector_adapter, packer> s(buffer);
 				analyzer a;
 				map<const void *, function_statistics> m;
 				call_record trace[] = {
@@ -372,7 +372,7 @@ namespace micro_profiler
 				s(a);
 
 				// INIT
-				strmd::deserializer<vector_adapter> ds(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
 				statistics_map_detailed_2 ss;
 
 				// ACT

@@ -128,7 +128,7 @@ namespace micro_profiler
 		if (_frontend)
 		{
 			vector_writer writer(_buffer);
-			strmd::serializer<vector_writer> archive(writer);
+			strmd::serializer<vector_writer, packer> archive(writer);
 
 			archive(command);
 			archive(data);

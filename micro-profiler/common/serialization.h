@@ -29,50 +29,57 @@ namespace micro_profiler
 	class analyzer;
 }
 
-template <> struct strmd::is_arithmetic<micro_profiler::commands> { static const bool value = true; };
-template <> struct strmd::is_arithmetic<wchar_t> { static const bool value = true; };
-template <> struct strmd::is_arithmetic<const void *> { static const bool value = true; };
-template <> struct strmd::is_container<micro_profiler::analyzer> { static const bool value = true; };
-template <> struct strmd::is_container<micro_profiler::statistics_map_detailed_2> { static const bool value = true; };
-
-template <> struct strmd::container_reader<micro_profiler::statistics_map>
+namespace strmd
 {
-	template <typename ArchiveT>
-	void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map &data)
+	template <> struct is_arithmetic<wchar_t> { static const bool value = true; };
+	template <> struct is_container<micro_profiler::analyzer> { static const bool value = true; };
+	template <> struct is_container<micro_profiler::statistics_map_detailed_2> { static const bool value = true; };
+
+	template <> struct container_reader<micro_profiler::statistics_map>
 	{
-		std::pair<const void *, micro_profiler::function_statistics> value;
-
-		while (count--)
+		template <typename ArchiveT>
+		void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map &data)
 		{
-			archive(value);
-			data[value.first] += value.second;
-		}
-	}
-};
+			std::pair<const void *, micro_profiler::function_statistics> value;
 
-template <> struct strmd::container_reader<micro_profiler::statistics_map_detailed_2>
-{
-	template <typename ArchiveT>
-	void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map_detailed_2 &data)
-	{
-		std::pair<const void *, micro_profiler::function_statistics> value;
-
-		while (count--)
-		{
-			archive(value);
-			micro_profiler::function_statistics_detailed &entry = data[value.first];
-			entry += value.second;
-			if (archive.process_container(entry.callees))
+			while (count--)
 			{
-				micro_profiler::update_parent_statistics(data, value.first, entry);
-				data.entry_updated(value.first);
+				archive(value);
+				data[value.first] += value.second;
 			}
 		}
-	}
-};
+	};
+
+	template <> struct container_reader<micro_profiler::statistics_map_detailed_2>
+	{
+		template <typename ArchiveT>
+		void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map_detailed_2 &data)
+		{
+			std::pair<const void *, micro_profiler::function_statistics> value;
+
+			while (count--)
+			{
+				archive(value);
+				micro_profiler::function_statistics_detailed &entry = data[value.first];
+				entry += value.second;
+				if (archive.process_container(entry.callees))
+				{
+					micro_profiler::update_parent_statistics(data, value.first, entry);
+					data.entry_updated(value.first);
+				}
+			}
+		}
+	};
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, const void *&data)
+	{	archive(reinterpret_cast<uintptr_t &>(data));	}
+}
 
 namespace micro_profiler
 {
+	typedef strmd::varint packer;
+
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, function_statistics &data)
 	{
@@ -89,4 +96,8 @@ namespace micro_profiler
 		archive(static_cast<function_statistics &>(data));
 		archive(data.callees);
 	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, commands &data)
+	{	archive(reinterpret_cast<int &>(data));	}
 }

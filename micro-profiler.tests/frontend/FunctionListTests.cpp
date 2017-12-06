@@ -159,8 +159,8 @@ namespace micro_profiler
 		begin_test_suite( FunctionListTests )
 
 			vector_adapter _buffer;
-			strmd::serializer<vector_adapter> ser;
-			strmd::deserializer<vector_adapter> dser;
+			strmd::serializer<vector_adapter, packer> ser;
+			strmd::deserializer<vector_adapter, packer> dser;
 
 			FunctionListTests()
 				: ser(_buffer), dser(_buffer)

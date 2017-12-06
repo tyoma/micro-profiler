@@ -82,7 +82,7 @@ namespace micro_profiler
 	STDMETHODIMP ProfilerFrontend::Write(const void *message, ULONG size, ULONG *written)
 	{
 		buffer_reader reader(static_cast<const byte *>(message), size);
-		strmd::deserializer<buffer_reader> archive(reader);
+		strmd::deserializer<buffer_reader, packer> archive(reader);
 		commands c;
 
 		archive(c);

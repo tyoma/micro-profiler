@@ -32,6 +32,9 @@
     <Import Project="$(SolutionDir)build.props\vssdk.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <PropertyGroup>
+    <TargetName>$(ProjectName)_$(PlatformShortName)</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>

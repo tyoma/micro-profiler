@@ -117,5 +117,9 @@
     <CustomBuild Include="visualstudio\vs-extension\micro-profiler.pkgdef">
       <Filter>visualstudio\vs-extension</Filter>
     </CustomBuild>
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
   </ItemGroup>
 </Project>

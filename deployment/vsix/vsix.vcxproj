@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup Label="ProjectConfigurations" Condition="'$(VisualStudioVersion)'=='10.0'">
+		<ProjectConfiguration Include="Release|Win32">
+			<Configuration>Release</Configuration>
+			<Platform>Win32</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Release|x64">
+			<Configuration>Release</Configuration>
+			<Platform>x64</Platform>
+		</ProjectConfiguration>
+	</ItemGroup>
+	<PropertyGroup Label="Globals">
+		<ProjectGuid>{569EEA47-BC7D-4447-A26B-50CFD48B1F81}</ProjectGuid>
+	</PropertyGroup>
+	<Import Project="$(SolutionDir)build.props\platform.props" />
+	<PropertyGroup Label="Configuration">
+		<ConfigurationType>Utility</ConfigurationType>
+	</PropertyGroup>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+	<ImportGroup Label="PropertySheets">
+		<Import Project="$(SolutionDir)build.props\config.props" />
+	</ImportGroup>
+	<PropertyGroup>
+		<OutDir>$(SetupDir)</OutDir>
+		<ExtensionsToDeleteOnClean>*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+		<TargetName>micro-profiler</TargetName>
+		<TargetExt>.vsix</TargetExt>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
+		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.lib" />
+		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
+		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
+		<None Include="*.json;*.xml" />
+		<None Include="$(BinDir)*.cpp;$(BinDir)*.h;$(BinDir)*.pkgdef;$(BinDir)*.vsixmanifest"/>
+
+		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
+		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.lib" />
+		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
+		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
+		<PackReplace Include="*.json;*.xml"/>
+		<Pack Include="&quot;$(BinDir)*.cpp&quot;;&quot;$(BinDir)*.h&quot;;&quot;$(BinDir)*.pkgdef&quot;;&quot;$(BinDir)*.vsixmanifest&quot;"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="$(SolutionDir)micro-profiler\micro-profiler.vcxproj">
+			<Project>{d5d49128-2510-4a14-9a0f-9f8f0abad700}</Project>
+		</ProjectReference>
+	</ItemGroup>
+	<Target Name="Compress" AfterTargets="Midl">
+		<Exec Command="mkzip &quot;%(Pack.Identity)&quot; &quot;$(IntDir)$(TargetName).zip&quot;"/>
+	</Target>
+	<Target Name="CompressAndReplace" AfterTargets="Compress">
+		<Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;
+			call sha256 hashmpx86 &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll&quot;
+			call sha256 hashmpx86lib &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_x86.lib&quot;
+			call sha256 hashmpx64 &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll&quot;
+			call sha256 hashmpx64lib &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib&quot;
+
+			call sha256 hashmanifest &quot;$(BinDir)extension.vsixmanifest&quot;
+			call sha256 hashpkgdef &quot;$(BinDir)micro-profiler.pkgdef&quot;
+
+			call sha256 hashentry &quot;$(BinDir)entry.h&quot;
+			call sha256 hashinit &quot;$(BinDir)micro-profiler.initializer.cpp&quot;
+			call sha256 hashinitmfc &quot;$(BinDir)micro-profiler.initializer.mfc-static.cpp&quot;
+
+			call replace &quot;%(PackReplace.Identity)&quot; &gt; &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot;
+			call mkzip &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot; &quot;$(IntDir)$(TargetName).zip&quot;"/>
+	</Target>
+	<Target Name="RenameTarget" AfterTargets="CompressAndReplace">
+		<Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;
+			set VERSIONED_PATH=&quot;$(OutDir)$(TargetName).v%VERSION%$(TargetExt)&quot;
+			del %VERSIONED_PATH%
+			copy &quot;$(IntDir)$(TargetName).zip&quot; %VERSIONED_PATH%"/>
+	</Target>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

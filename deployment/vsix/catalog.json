@@ -1,0 +1,30 @@
+{
+	"manifestVersion":"1.1",
+	"info": {
+		"id":"1A9C8A85-52FE-48AE-82AF-76003114E230,version=!version!",
+		"manifestType":"Extension"
+	},
+	"packages":[
+		{
+			"id":"Component.1A9C8A85-52FE-48AE-82AF-76003114E230",
+			"version":"!version!",
+			"type":"Component",
+			"extension":true,
+			"localizedResources":[
+				{
+					"language":"en-US",
+					"title":"MicroProfiler",
+					"description":"A low-overhead instrumenting profiler with realtime statistics display for native applications."
+				}
+			]
+		},
+		{
+			"id":"1A9C8A85-52FE-48AE-82AF-76003114E230",
+			"version":"!version!",
+			"type":"Vsix",
+			"payloads":[ {"fileName":"micro-profiler.v!version!.vsix"} ],
+			"vsixId":"1A9C8A85-52FE-48AE-82AF-76003114E230",
+			"extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\micro-profiler",
+		}
+	]
+}

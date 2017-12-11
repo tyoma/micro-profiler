@@ -2,7 +2,7 @@
 <Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
 	<Component Id="compAllInOneDLL_$(var.PLATFORMSELECTOR)" Guid="$(var.ALLINONEDLLGUID)" KeyPath="yes" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)">
-		<File Id="micro_profiler.dll_$(var.PLATFORMSELECTOR)" Source="$(var.SOURCEDIRX)/micro-profiler.dll" Vital="yes" />
+		<File Id="micro_profiler.dll_$(var.PLATFORMSELECTOR)" Source="$(var.SOURCEDIRX)/micro-profiler_$(var.PLATFORMSELECTOR).dll" Vital="yes" />
 	</Component>
 	
 	<Component Id="compStubTracerDLL_$(var.PLATFORMSELECTOR)" Guid="$(var.STUBTRACERDLLGUID)" KeyPath="yes" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)">
@@ -11,7 +11,7 @@
 
 	<Component Id="compFrontendRegistration_$(var.PLATFORMSELECTOR)" Guid="$(var.FRONTENDREGISTRYGUID)" Directory="$(var.TARGETDIRX)" Win64="$(var.ISX64)" KeyPath="yes">
 		<AppId Id="5772E3BD-4C40-450C-8F79-A5052A3CC346" DllSurrogate="" Description="MicroProfiler Frontend Application">
-			<Class Id="0ED7654C-DE8A-4964-9661-0B0C391BE15E" Description="MicroProfiler Frontend Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[$(var.TARGETDIRX)]micro-profiler.dll" Version="1.0"/>
+			<Class Id="0ED7654C-DE8A-4964-9661-0B0C391BE15E" Description="MicroProfiler Frontend Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[$(var.TARGETDIRX)]micro-profiler_$(var.PLATFORMSELECTOR).dll" Version="1.0"/>
 		</AppId>
 	</Component>
 

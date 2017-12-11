@@ -4,6 +4,7 @@
 #include <visualstudio/commands.h>
 #include <visualstudio/dispatch.h>
 #include <resources/resource.h>
+#include <setup/environment.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
@@ -60,7 +61,8 @@ namespace micro_profiler
 			STDMETHODIMP SetSite(IServiceProvider *sp)
 			{
 				IUnknown *factory = NULL;
-				
+
+				register_path(false);
 				DllGetClassObject(__uuidof(ProfilerFrontend), __uuidof(IUnknown), (void **)&factory);
 				::CoRegisterClassObject(__uuidof(ProfilerFrontend), factory, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &_cookie);
 				_service_provider = sp;

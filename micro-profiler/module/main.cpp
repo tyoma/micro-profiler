@@ -24,10 +24,9 @@
 #include <collector/frontend_controller.h>
 #include <entry.h>
 #include <frontend/ProfilerSink.h>
+#include <setup/environment.h>
 
 #include <atlbase.h>
-#include <atlcom.h>
-#include <atlstr.h>
 #include <vector>
 
 using namespace std;
@@ -38,19 +37,14 @@ namespace micro_profiler
 
 	namespace
 	{
-		const LPCTSTR c_environment = _T("Environment");
-		const LPCTSTR c_path_var = _T("PATH");
 #ifdef _M_IX86
-		const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIR");
-		unsigned char g_exitprocess_patch[7] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
+		unsigned char g_exitprocess_patch[] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
 		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 1);
 #elif _M_X64
 		const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIRX64");
-		unsigned char g_exitprocess_patch[12] = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
+		unsigned char g_exitprocess_patch[] = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
 		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 2);
 #endif
-		const CString c_profilerdir_var_decorated = CString(_T("%")) + c_profilerdir_var + _T("%");
-		const LPCTSTR c_path_separator = _T(";");
 		auto_ptr<frontend_controller> g_frontend_controller;
 		void *g_exitprocess_address = 0;
 		volatile long g_patch_lockcount = 0;
@@ -58,28 +52,6 @@ namespace micro_profiler
 		class CProfilerFrontendModule : public CAtlDllModuleT<CProfilerFrontendModule>
 		{
 		} g_module;
-
-		bool GetStringValue(CRegKey &key, LPCTSTR name, CString &value)
-		{
-			ULONG size = 0;
-
-			if (ERROR_SUCCESS == key.QueryStringValue(name, NULL, &size))
-			{
-				key.QueryStringValue(name, value.GetBuffer(size), &size);
-				value.ReleaseBuffer();
-				return true;
-			}
-			return false;
-		}
-
-		CString GetModuleDirectory()
-		{
-			TCHAR path[MAX_PATH + 1] = { 0 };
-
-			::GetModuleFileName(g_instance, path, MAX_PATH + 1);
-			::PathRemoveFileSpec(path);
-			return path;
-		}
 
 		channel_t CreateLocalFrontend()
 		{
@@ -172,6 +144,7 @@ extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void
 	{
 		HMODULE dummy;
 
+		// Make unloadable...
 		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
 			reinterpret_cast<LPCTSTR>(&DllMain), &dummy);
 		PatchExitProcess();
@@ -182,47 +155,17 @@ extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void
 STDAPI DllCanUnloadNow()
 {	return micro_profiler::g_module.DllCanUnloadNow();	}
 
-STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {	return micro_profiler::g_module.DllGetClassObject(rclsid, riid, ppv);	}
 
 STDAPI DllRegisterServer()
 {
-	using namespace micro_profiler;
-
-	CString path;
-	CRegKey environment;
-
-	environment.Open(HKEY_CURRENT_USER, c_environment);
-	GetStringValue(environment, c_path_var, path);
-	if (-1 == path.Find(c_profilerdir_var_decorated))
-	{
-		if (!path.IsEmpty())
-			path += c_path_separator;
-		path += c_profilerdir_var_decorated;
-		environment.SetStringValue(c_path_var, path, REG_EXPAND_SZ);
-	}
-	environment.SetStringValue(c_profilerdir_var, GetModuleDirectory());
-	::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-	return g_module.DllRegisterServer(FALSE);
+	micro_profiler::register_path(false);
+	return micro_profiler::g_module.DllRegisterServer(FALSE);
 }
 
 STDAPI DllUnregisterServer()
 {
-	using namespace micro_profiler;
-
-	CString path;
-	CRegKey environment;
-
-	environment.Open(HKEY_CURRENT_USER, c_environment);
-	if (GetStringValue(environment, c_path_var, path))
-	{
-		path.Replace(c_path_separator + c_profilerdir_var_decorated + c_path_separator, c_path_separator);
-		path.Replace(c_profilerdir_var_decorated + c_path_separator, _T(""));
-		path.Replace(c_path_separator + c_profilerdir_var_decorated, _T(""));
-		path.Replace(c_profilerdir_var_decorated, _T(""));
-		environment.SetStringValue(c_path_var, path, REG_EXPAND_SZ);
-	}
-	environment.DeleteValue(c_profilerdir_var);
-	::SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-	return g_module.DllUnregisterServer(FALSE);
+	micro_profiler::unregister_path(false);
+	return micro_profiler::g_module.DllUnregisterServer(FALSE);
 }

@@ -1,0 +1,19 @@
+{
+	"id":"1A9C8A85-52FE-48AE-82AF-76003114E230",
+	"version":"!version!",
+	"type":"Vsix",
+	"vsixId":"1A9C8A85-52FE-48AE-82AF-76003114E230",
+	"extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\micro-profiler",
+	"files": [
+		{"fileName":"/extension.vsixmanifest","sha256":"!hashmanifest!"},
+		{"fileName":"/micro-profiler_x86.dll","sha256":"!hashmpx86!"},
+		{"fileName":"/micro-profiler_x64.dll","sha256":"!hashmpx64!"},
+		{"fileName":"/micro-profiler.pkgdef","sha256":"!hashpkgdef!"},
+		{"fileName":"/entry.h","sha256":"!hashentry!"},
+		{"fileName":"/micro-profiler.initializer.cpp","sha256":"!hashinit!"},
+		{"fileName":"/micro-profiler.initializer.mfc-static.cpp","sha256":"!hashinitmfc!"},
+		{"fileName":"/micro-profiler_x86.lib","sha256":"!hashmpx86lib!"},
+		{"fileName":"/micro-profiler_x64.lib","sha256":"!hashmpx64lib!"}
+	],
+	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,15.0]"}
+}

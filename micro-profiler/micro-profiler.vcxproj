@@ -33,7 +33,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup>
-    <TargetName>$(ProjectName)_$(PlatformShortName)</TargetName>
+    <TargetName>$(ProjectName)_$(Platform2)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
@@ -44,19 +44,51 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
+    <ClCompile Include="frontend\ProfilerSink.cpp" />
+    <ClCompile Include="module\main.cpp" />
+    <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
+    <None Include="frontend\micro-profiler-sink.rgs" />
+    <None Include="module\micro-profiler.def" />
+    <None Include="resources\appicon.ico" />
+    <None Include="visualstudio\vs-extension\extension.vsixmanifest" />
+    <Fix Include="visualstudio\vs-extension\extension.vsixmanifest" />
+    <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
+    <Fix Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
+    <None Include="visualstudio\vs-extension\vs-extension.rgs" />
+    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <Content Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>true</Visible>
+    </Content>
+    <ClInclude Include="frontend\ProfilerMainDialog.h" />
+    <ClInclude Include="frontend\ProfilerSink.h" />
+    <ClInclude Include="resources\resource.h" />
+    <ResourceCompile Include="resources\micro-profiler-frontend.rc" />
+    <ClCompile Include="setup\environment.cpp" />
     <ClCompile Include="visualstudio\addin\ProfilerAddin.cpp">
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
-    <ClCompile Include="frontend\ProfilerSink.cpp" />
-    <ClCompile Include="module\main.cpp" />
-    <ClCompile Include="visualstudio\commands.cpp">
+    <ClInclude Include="setup\environment.h" />
+    <ClInclude Include="visualstudio\commands.h" />
+    <ClInclude Include="visualstudio\dispatch.h" />
+    <ClCompile Include="visualstudio\commands.cpp;">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="visualstudio\dispatch.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
+      <FileType>Document</FileType>
+      <Command>"$(VSSDKRoot)VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"$(VSSDKRoot)VisualStudioIntegration\Common\Inc"</Command>
+      <Outputs>_generated/%(Filename).cto</Outputs>
+      <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
+      <SubType>Designer</SubType>
+    </CustomBuild>
+    <None Include="_generated\commands.cto" />
+    <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
+    <ClInclude Include="visualstudio\vs-extension\guids.h" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -72,47 +104,8 @@
       <Project>{15ad9007-29b9-462f-b7be-a433b6e83ec9}</Project>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
-    <None Include="frontend\micro-profiler-sink.rgs" />
-    <None Include="module\micro-profiler.def" />
-    <None Include="resources\appicon.ico" />
-    <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
-      <FileType>Document</FileType>
-      <Command>"$(VSSDKRoot)VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"$(VSSDKRoot)VisualStudioIntegration\Common\Inc"</Command>
-      <Outputs>_generated/%(Filename).cto</Outputs>
-      <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
-      <SubType>Designer</SubType>
-    </CustomBuild>
-    <CustomBuild Include="visualstudio\vs-extension\extension.vsixmanifest">
-      <Command>copy "%(FullPath)" "$(TargetDir)"</Command>
-      <Message>Copying %(Filename)%(Extension)...</Message>
-      <Outputs>$(TargetDir)%(Filename)%(Extension)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="visualstudio\vs-extension\micro-profiler.pkgdef">
-      <Command>copy "%(FullPath)" "$(TargetDir)"</Command>
-      <Message>Copying %(Filename)%(Extension)...</Message>
-      <Outputs>$(TargetDir)%(Filename)%(Extension)</Outputs>
-    </CustomBuild>
-    <None Include="visualstudio\vs-extension\vs-extension.rgs" />
-    <None Include="_generated\commands.cto" />
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp">
-      <Command>copy "%(FullPath)" "$(OutDir)"</Command>
-      <Message>Copying %(FullPath)</Message>
-      <Outputs>$(OutDir)%(Filename)%(Extension)</Outputs>
-    </CustomBuild>
-    <ClInclude Include="frontend\ProfilerMainDialog.h" />
-    <ClInclude Include="frontend\ProfilerSink.h" />
-    <ClInclude Include="resources\resource.h" />
-    <ClInclude Include="visualstudio\commands.h" />
-    <ClInclude Include="visualstudio\dispatch.h" />
-    <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
-    <ClInclude Include="visualstudio\vs-extension\guids.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="resources\micro-profiler-frontend.rc" />
-  </ItemGroup>
+  <Target Name="CopyFixed" AfterTargets="Midl">
+    <Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;&#xD;&#xA;		 replace &quot;%(Fix.Identity)&quot; &gt; &quot;$(OutDir)%(Fix.Filename)%(Fix.Extension)&quot;" />
+  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -39,24 +39,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
     </Link>
-    <PreBuildEvent>
-      <Command Condition="'$(Platform)'=='Win32'">copy "$(OutDir)micro-profiler.lib" "$(ProjectDir)micro-profiler.lib"</Command>
-      <Command Condition="'$(Platform)'=='x64'">copy "$(OutDir)micro-profiler.lib" "$(ProjectDir)micro-profiler_x64.lib"</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\_bin\Debug_Win32\micro-profiler.initializer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'!='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\_bin\Debug_x64\micro-profiler.initializer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'!='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\_bin\Release_Win32\micro-profiler.initializer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'!='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\_bin\Release_x64\micro-profiler.initializer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'!='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="$(OutDir)micro-profiler.initializer.cpp"/>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>

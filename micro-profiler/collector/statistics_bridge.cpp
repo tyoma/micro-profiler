@@ -91,7 +91,7 @@ namespace micro_profiler
 	module_info image_load_queue::get_module_info(const void *in_image_address)
 	{
 		HMODULE image_address = 0;
-		wchar_t image_path[MAX_PATH + 1] = { 0 };
+		TCHAR image_path[MAX_PATH + 1] = { 0 };
 
 		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
 			reinterpret_cast<LPCTSTR>(in_image_address), &image_address);

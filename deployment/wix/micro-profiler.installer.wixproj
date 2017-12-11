@@ -15,20 +15,20 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>$(SolutionDir)\_setup\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants>SOURCEDIR=../../_bin/Release_Win32</DefineConstants>
+    <DefineConstants>SOURCEDIR=../../_bin/Release_x86</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>$(SolutionDir)\_setup\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants>SOURCEDIR=../../_bin/Release_x64;SOURCEDIRX86=../../_bin/Release_Win32</DefineConstants>
+    <DefineConstants>SOURCEDIR=../../_bin/Release_x64;SOURCEDIRX86=../../_bin/Release_x86</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DefineConstants>SOURCEDIR=../../_bin/Debug_Win32</DefineConstants>
+    <DefineConstants>SOURCEDIR=../../_bin/Debug_x86</DefineConstants>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
     <OutputPath>$(SolutionDir)\_setup\debug\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>SOURCEDIR=../../_bin/Debug_x64;SOURCEDIRX86=../../_bin/Debug_Win32</DefineConstants>
+    <DefineConstants>SOURCEDIR=../../_bin/Debug_x64;SOURCEDIRX86=../../_bin/Debug_x86</DefineConstants>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
     <OutputPath>$(SolutionDir)\_setup\debug\</OutputPath>
   </PropertyGroup>

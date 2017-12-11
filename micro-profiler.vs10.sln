@@ -57,6 +57,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{229F
 	ProjectSection(SolutionItems) = preProject
 		build.cmd = build.cmd
 		scripts\make-version.cmd = scripts\make-version.cmd
+		scripts\mkzip.cmd = scripts\mkzip.cmd
+		scripts\replace.cmd = scripts\replace.cmd
+		scripts\sha256.cmd = scripts\sha256.cmd
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build-info", "build-info", "{6F621512-D54A-4939-A912-BA5266FE8131}"
@@ -84,7 +87,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "agge.tests", "libraries\agg
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "strmd.tests", "libraries\strmd\tests\strmd.tests.vcxproj", "{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsix", "deployment\vsix.vcxproj", "{569EEA47-BC7D-4447-A26B-50CFD48B1F81}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsix", "deployment\vsix\vsix.vcxproj", "{569EEA47-BC7D-4447-A26B-50CFD48B1F81}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -267,13 +270,9 @@ Global
 		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Release|x64.ActiveCfg = Release|x64
 		{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}.Release|x64.Build.0 = Release|x64
 		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Debug|Win32.ActiveCfg = Release|Win32
-		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Debug|Win32.Build.0 = Release|Win32
 		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Debug|x64.ActiveCfg = Release|x64
-		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Debug|x64.Build.0 = Release|x64
 		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Release|Win32.ActiveCfg = Release|Win32
-		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Release|Win32.Build.0 = Release|Win32
 		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Release|x64.ActiveCfg = Release|x64
-		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

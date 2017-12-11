@@ -19,7 +19,7 @@ namespace micro_profiler
 		namespace
 		{
 			const CString c_initializer_cpp = _T("micro-profiler.initializer.cpp");
-			const CString c_profiler_library = _T("micro-profiler.lib");
+			const CString c_profiler_library = _T("micro-profiler_x86.lib");
 			const CString c_profiler_library_x64 = _T("micro-profiler_x64.lib");
 			const CString c_GH_option = _T("/GH");
 			const CString c_Gh_option = _T("/Gh");

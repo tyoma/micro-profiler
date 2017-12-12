@@ -2,6 +2,10 @@
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 	<Default Extension="vsixmanifest" ContentType="text/xml" />
 	<Default Extension="dll" ContentType="application/octet-stream" />
+	<Default Extension="lib" ContentType="application/octet-stream" />
+	<Default Extension="ico" ContentType="application/octet-stream" />
 	<Default Extension="pkgdef" ContentType="text/plain" />
 	<Default Extension="json" ContentType="application/json" />
+	<Default Extension="cpp" ContentType="text/plain" />
+	<Default Extension="h" ContentType="text/plain" />
 </Types>

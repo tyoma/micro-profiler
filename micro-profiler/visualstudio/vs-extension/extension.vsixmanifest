@@ -4,6 +4,7 @@
 		<Identity Id="1A9C8A85-52FE-48AE-82AF-76003114E230" Version="!version!" Language="en-US" Publisher="Artem Gevorkyan" />
 		<DisplayName>MicroProfiler</DisplayName>
 		<Description>A low-overhead instrumenting profiler with realtime statistics display for native applications.</Description>
+		<Icon>logo.ico</Icon>
 	</Metadata>
 	<Installation InstalledByMsi="false" AllUsers="false" SystemComponent="false" Scope="ProductExtension">
 		<InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[11.0, 15.0]" />

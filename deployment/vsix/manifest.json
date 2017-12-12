@@ -13,7 +13,8 @@
 		{"fileName":"/micro-profiler.initializer.cpp","sha256":"!hashinit!"},
 		{"fileName":"/micro-profiler.initializer.mfc-static.cpp","sha256":"!hashinitmfc!"},
 		{"fileName":"/micro-profiler_x86.lib","sha256":"!hashmpx86lib!"},
-		{"fileName":"/micro-profiler_x64.lib","sha256":"!hashmpx64lib!"}
+		{"fileName":"/micro-profiler_x64.lib","sha256":"!hashmpx64lib!"},
+		{"fileName":"/logo.ico","sha256":"!hashappicon!"}
 	],
 	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,15.0]"}
 }

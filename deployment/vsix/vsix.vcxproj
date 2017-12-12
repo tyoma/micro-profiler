@@ -33,14 +33,14 @@
 		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
 		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
 		<None Include="*.json;*.xml" />
-		<None Include="$(BinDir)*.cpp;$(BinDir)*.h;$(BinDir)*.pkgdef;$(BinDir)*.vsixmanifest"/>
+		<None Include="$(BinDir)*.cpp;$(BinDir)*.h;$(BinDir)*.pkgdef;$(BinDir)*.vsixmanifest;$(BinDir)logo.ico"/>
 
 		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
 		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.lib" />
 		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
 		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
 		<PackReplace Include="*.json;*.xml"/>
-		<Pack Include="&quot;$(BinDir)*.cpp&quot;;&quot;$(BinDir)*.h&quot;;&quot;$(BinDir)*.pkgdef&quot;;&quot;$(BinDir)*.vsixmanifest&quot;"/>
+		<Pack Include="&quot;$(BinDir)*.cpp&quot;;&quot;$(BinDir)*.h&quot;;&quot;$(BinDir)*.pkgdef&quot;;&quot;$(BinDir)*.vsixmanifest&quot;;&quot;$(BinDir)logo.ico&quot;"/>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -59,6 +59,7 @@
 			call sha256 hashmpx64lib &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib&quot;
 
 			call sha256 hashmanifest &quot;$(BinDir)extension.vsixmanifest&quot;
+			call sha256 hashappicon &quot;$(BinDir)logo.ico&quot;
 			call sha256 hashpkgdef &quot;$(BinDir)micro-profiler.pkgdef&quot;
 
 			call sha256 hashentry &quot;$(BinDir)entry.h&quot;

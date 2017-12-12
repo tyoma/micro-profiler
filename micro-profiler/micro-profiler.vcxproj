@@ -47,6 +47,7 @@
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\ProfilerSink.cpp" />
     <ClCompile Include="module\main.cpp" />
+    <None Include="logo.ico" />
     <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />
     <None Include="module\micro-profiler.def" />
@@ -57,7 +58,7 @@
     <Fix Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
     <None Include="visualstudio\vs-extension\vs-extension.rgs" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <Content Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp">
+    <Content Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp;logo.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>true</Visible>
     </Content>

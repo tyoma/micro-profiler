@@ -49,9 +49,7 @@ namespace micro_profiler
 		void *g_exitprocess_address = 0;
 		volatile long g_patch_lockcount = 0;
 
-		class CProfilerFrontendModule : public CAtlDllModuleT<CProfilerFrontendModule>
-		{
-		} g_module;
+		class Module : public CAtlDllModuleT<Module> { } g_module;
 
 		channel_t CreateLocalFrontend()
 		{

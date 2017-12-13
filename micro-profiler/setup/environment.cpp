@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+namespace std { namespace tr1 { } using namespace tr1; }
+
 using namespace std;
 using namespace std::placeholders;
 
@@ -47,6 +49,9 @@ namespace micro_profiler
 			}
 		}
 
+		void SetEnvironment(const wchar_t *name, const wchar_t *value)
+		{	::SetEnvironmentVariable(name, value);	}
+
 		wstring GetModuleDirectory()
 		{
 			wstring path = image_load_queue::get_module_info(&c_environment).second;
@@ -75,7 +80,7 @@ namespace micro_profiler
 			get(c_path_var, path);
 			if (path.find(c_profilerdir_var_decorated) == wstring::npos)
 			{
-				if (!path.empty() && path.back() != c_path_separator_char)
+				if (!path.empty() && path[path.size() - 1] != c_path_separator_char)
 					path += c_path_separator;
 				path += c_profilerdir_var_decorated;
 				set(c_path_var, path.c_str(), REG_EXPAND_SZ);
@@ -112,7 +117,7 @@ namespace micro_profiler
 		e.Open(global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, c_environment);
 		if (register_path(bind(&GetStringValue, ref(e), _1, _2), bind(&CRegKey::SetStringValue, ref(e), _1, _2, _3)))
 			::SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-		register_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironmentVariable, _1, _2));
+		register_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2));
 	}
 
 	void unregister_path(bool global)
@@ -122,6 +127,6 @@ namespace micro_profiler
 		e.Open(global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, c_environment);
 		if (unregister_path(bind(&GetStringValue, ref(e), _1, _2), bind(&CRegKey::SetStringValue, ref(e), _1, _2, _3), bind(&CRegKey::DeleteValue, ref(e), _1)))
 			::SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-		unregister_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironmentVariable, _1, _2), bind(&SetEnvironmentVariable, _1, LPCTSTR()));
+		unregister_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2), bind(&SetEnvironment, _1, LPCTSTR()));
 	}
 }

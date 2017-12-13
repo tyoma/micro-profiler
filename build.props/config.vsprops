@@ -9,7 +9,7 @@
 	<Tool
 		Name="VCCLCompilerTool"
 		AdditionalOptions="/MP"
-		AdditionalIncludeDirectories="$(SolutionDir)libraries;$(SolutionDir)micro-profiler;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;;&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;"
+		AdditionalIncludeDirectories="$(SolutionDir)libraries;$(SolutionDir)libraries\strmd;$(SolutionDir)micro-profiler;&quot;$(VSInstallDir)..\Common Files\Microsoft Shared\MSEnv&quot;;&quot;$(VSInstallDir)..\Common Files\Designer&quot;;&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;"
 		PreprocessorDefinitions="_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"
 		WarningLevel="4"
 		WarnAsError="true"

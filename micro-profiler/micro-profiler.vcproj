@@ -364,6 +364,14 @@
 			Name="frontend"
 			>
 			<File
+				RelativePath=".\frontend\constants.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\constants.h"
+				>
+			</File>
+			<File
 				RelativePath=".\frontend\micro-profiler-sink.rgs"
 				>
 			</File>
@@ -395,18 +403,18 @@
 				RelativePath=".\module\micro-profiler.def"
 				>
 			</File>
-			<File
-				RelativePath=".\module\ProxyBridge.c"
-				>
-			</File>
-			<File
-				RelativePath=".\module\ProxyBridge.h"
-				>
-			</File>
 		</Filter>
 		<Filter
-			Name="addin"
+			Name="setup"
 			>
+			<File
+				RelativePath=".\setup\environment.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\setup\environment.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="resources"
@@ -503,7 +511,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>
@@ -513,7 +521,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>
@@ -523,7 +531,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>
@@ -533,7 +541,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>

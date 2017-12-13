@@ -20,17 +20,23 @@
 
 #include "ProfilerSink.h"
 
+#include "constants.h"
 #include "function_list.h"
 #include "object_lock.h"
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
-#include <common/protocol.h>
 #include <common/serialization.h>
+#include <resources/resource.h>
 
-#include <strmd/deserializer.h>
+#include <atlbase.h>
+#include <atlcom.h>
+#include <memory>
+#include <wpl/base/signals.h>
 
 using namespace std;
+using namespace std::placeholders;
+using namespace wpl;
 
 namespace micro_profiler
 {
@@ -55,77 +61,130 @@ namespace micro_profiler
 			size_t _remaining;
 		};
 
-		typedef micro_profiler::ProfilerFrontend _ProfilerFrontend;
-
-		OBJECT_ENTRY_AUTO(__uuidof(ProfilerFrontend), _ProfilerFrontend);
-
 		void disconnect(IUnknown *object)
 		{	::CoDisconnectObject(object, 0);	}
 	}
 
-	ProfilerFrontend::ProfilerFrontend()
-	{	}
-
-	ProfilerFrontend::~ProfilerFrontend()
-	{	}
-
-	void ProfilerFrontend::FinalRelease()
+	class ATL_NO_VTABLE ProfilerFrontend
+		: public ISequentialStream, public CComObjectRootEx<CComSingleThreadModel>,
+			public CComCoClass<ProfilerFrontend, &c_frontendClassID>
 	{
-		_dialog.reset();
-		_statistics.reset();
-		_symbols.reset();
-	}
+	public:
+		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILERSINK)
 
-	STDMETHODIMP ProfilerFrontend::Read(void *, ULONG, ULONG *)
-	{	return E_NOTIMPL;	}
+		BEGIN_COM_MAP(ProfilerFrontend)
+			COM_INTERFACE_ENTRY(ISequentialStream)
+		END_COM_MAP()
 
-	STDMETHODIMP ProfilerFrontend::Write(const void *message, ULONG size, ULONG *written)
-	{
-		buffer_reader reader(static_cast<const byte *>(message), size);
-		strmd::deserializer<buffer_reader, packer> archive(reader);
-		commands c;
-
-		archive(c);
-		switch (c)
+	public:
+		void FinalRelease()
 		{
-		case init:
+			_dialog.reset();
+			_statistics.reset();
+			_symbols.reset();
+		}
+
+		void JoinTermination(signal<void()> &termination)
+		{	_host_terminated = termination += bind(&disconnect, this);	}
+
+		STDMETHODIMP Read(void *, ULONG, ULONG *)
+		{	return E_NOTIMPL;	}
+
+		STDMETHODIMP Write(const void *message, ULONG size, ULONG *written)
 		{
-			initializaion_data process;
+			buffer_reader reader(static_cast<const byte *>(message), size);
+			strmd::deserializer<buffer_reader, packer> archive(reader);
+			commands c;
 
-			archive(process);
+			archive(c);
+			switch (c)
+			{
+			case init:
+			{
+				initializaion_data process;
 
-			wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
+				archive(process);
 
-			_wsplitpath_s(process.first.c_str(), 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
+				wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
+
+				_wsplitpath_s(process.first.c_str(), 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
 	
-			_symbols = symbol_resolver::create();
-			_statistics = functions_list::create(process.second, _symbols);
-			_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
-			_dialog->ShowWindow(SW_SHOW);
-			_closed_connected = _dialog->Closed += bind(&disconnect, this);
+				_symbols = symbol_resolver::create();
+				_statistics = functions_list::create(process.second, _symbols);
+				_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
+				_dialog->ShowWindow(SW_SHOW);
+				_closed_connected = _dialog->Closed += bind(&disconnect, this);
 
-			lock(_dialog);
-			break;
+				if (!_host_terminated)
+					lock(_dialog);
+				break;
+			}
+
+			case modules_loaded:
+			{
+				loaded_modules limages;
+
+				archive(limages);
+				for (loaded_modules::const_iterator i = limages.begin(); i != limages.end(); ++i)
+					_symbols->add_image(i->second.c_str(), reinterpret_cast<void*>(i->first));
+				break;
+			}
+
+			case update_statistics:
+				archive(*_statistics);
+				break;
+
+			case modules_unloaded:
+				break;
+			}
+			*written = size;
+			return S_OK;
 		}
 
-		case modules_loaded:
+	private:
+		shared_ptr<symbol_resolver> _symbols;
+		shared_ptr<functions_list> _statistics;
+		shared_ptr<ProfilerMainDialog> _dialog;
+		slot_connection _closed_connected;
+		slot_connection _host_terminated;
+	};
+
+	OBJECT_ENTRY_AUTO(c_frontendClassID, ProfilerFrontend);
+
+	shared_ptr<void> open_frontend()
+	{
+		class Factory : public CComClassFactory
 		{
-			loaded_modules limages;
+		public:
+			static void Terminate(Factory *self, DWORD cookie)
+			{
+				self->_terminate();
+				::CoRevokeClassObject(cookie);
+			}
 
-			archive(limages);
-			for (loaded_modules::const_iterator i = limages.begin(); i != limages.end(); ++i)
-				_symbols->add_image(i->second.c_str(), reinterpret_cast<void*>(i->first));
-			break;
-		}
+			STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object)
+			{
+				CComObject<ProfilerFrontend> *p = NULL;
 
-		case update_statistics:
-			archive(*_statistics);
-			break;
+				if (outer)
+					return CLASS_E_NOAGGREGATION;
+				CComObject<ProfilerFrontend>::CreateInstance(&p);
+				CComPtr<IUnknown> guard(p);
+				p->JoinTermination(_terminate);
+				return p->QueryInterface(riid, object);
+			}
 
-		case modules_unloaded:
-			break;
-		}
-		*written = size;
-		return S_OK;
+		private:
+			signal<void()> _terminate;
+		};
+
+		CComObject<Factory> *factory = NULL;
+		DWORD cookie = 0;
+
+		CComObject<Factory>::CreateInstance(&factory);
+		CComPtr<IUnknown> guard(factory);
+		if (S_OK == ::CoRegisterClassObject(c_frontendClassID, factory, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
+			return shared_ptr<void>(factory, bind(&Factory::Terminate, _1, cookie));
+		return shared_ptr<void>();
 	}
 }

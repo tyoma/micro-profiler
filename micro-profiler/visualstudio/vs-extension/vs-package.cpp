@@ -21,8 +21,6 @@ namespace std { namespace tr1 { } using namespace tr1; }
 
 using namespace std;
 
-STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv);
-
 namespace micro_profiler
 {
 	namespace integration
@@ -42,7 +40,7 @@ namespace micro_profiler
 		{
 		public:
 			profiler_package()
-				: _commands(g_commands, g_commands + _countof(g_commands)), _cookie(0)
+				: _commands(g_commands, g_commands + _countof(g_commands))
 			{	}
 
 		public:
@@ -60,11 +58,8 @@ namespace micro_profiler
 		private:
 			STDMETHODIMP SetSite(IServiceProvider *sp)
 			{
-				IUnknown *factory = NULL;
-
 				register_path(false);
-				DllGetClassObject(__uuidof(ProfilerFrontend), __uuidof(IUnknown), (void **)&factory);
-				::CoRegisterClassObject(__uuidof(ProfilerFrontend), factory, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &_cookie);
+				_factory = open_frontend();
 				_service_provider = sp;
 				return S_OK;
 			}
@@ -74,7 +69,7 @@ namespace micro_profiler
 
 			STDMETHODIMP Close()
 			{
-				::CoRevokeClassObject(_cookie);
+				_factory.reset();
 				return S_OK;
 			}
 
@@ -162,7 +157,7 @@ namespace micro_profiler
 		private:
 			CComPtr<IServiceProvider> _service_provider;
 			commands _commands;
-			DWORD _cookie;
+			shared_ptr<void> _factory;
 		};
 
 		OBJECT_ENTRY_AUTO(CLSID_MicroProfilerPackage, profiler_package);

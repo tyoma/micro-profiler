@@ -23,7 +23,7 @@
 #include <collector/calls_collector.h>
 #include <collector/frontend_controller.h>
 #include <entry.h>
-#include <frontend/ProfilerSink.h>
+#include <frontend/constants.h>
 #include <setup/environment.h>
 
 #include <atlbase.h>
@@ -57,7 +57,7 @@ namespace micro_profiler
 			{
 			public:
 				frontend_stream()
-				{	_frontend.CoCreateInstance(__uuidof(ProfilerFrontend), NULL, CLSCTX_LOCAL_SERVER);	}
+				{	_frontend.CoCreateInstance(c_frontendClassID, NULL, CLSCTX_LOCAL_SERVER);	}
 
 				void operator()(const void *buffer, size_t size)
 				{

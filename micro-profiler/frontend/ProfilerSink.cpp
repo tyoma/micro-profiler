@@ -126,7 +126,7 @@ namespace micro_profiler
 
 				archive(limages);
 				for (loaded_modules::const_iterator i = limages.begin(); i != limages.end(); ++i)
-					_symbols->add_image(i->second.c_str(), reinterpret_cast<void*>(i->first));
+					_symbols->add_image(i->path.c_str(), i->load_address);
 				break;
 			}
 

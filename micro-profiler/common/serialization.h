@@ -100,4 +100,11 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, commands &data)
 	{	archive(reinterpret_cast<int &>(data));	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, module_info &data)
+	{
+		archive(data.load_address);
+		archive(data.path);
+	}
 }

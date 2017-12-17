@@ -46,7 +46,7 @@ namespace micro_profiler
 			virtual ~dbghelp_symbol_resolver();
 
 			virtual const wstring &symbol_name_by_va(const void *address) const;
-			virtual void add_image(const wchar_t *image, const void *base);
+			virtual void add_image(const wchar_t *image, address_t load_address);
 		};
 
 
@@ -82,16 +82,16 @@ namespace micro_profiler
 			return i->second;
 		}
 
-		void dbghelp_symbol_resolver::add_image(const wchar_t *image, const void *base)
+		void dbghelp_symbol_resolver::add_image(const wchar_t *image, address_t load_address)
 		{
 			CStringA image_path_ansi(image);
 
 			::SetLastError(0);
-			if (::SymLoadModule64(me(), NULL, image_path_ansi, NULL, reinterpret_cast<DWORD64>(base), 0))
+			if (::SymLoadModule64(me(), NULL, image_path_ansi, NULL, load_address, 0))
 			{
 				if (ERROR_SUCCESS == ::GetLastError() || INVALID_FILE_ATTRIBUTES != GetFileAttributesA(image_path_ansi))
 					return;
-				::SymUnloadModule64(me(), reinterpret_cast<DWORD64>(base));
+				::SymUnloadModule64(me(), load_address);
 			}
 			throw invalid_argument("");
 		}

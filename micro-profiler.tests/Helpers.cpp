@@ -97,8 +97,8 @@ namespace micro_profiler
 			_fullpath = fullpath;
 		}
 
-		const void *image::load_address() const
-		{	return get();	}
+		address_t image::load_address() const
+		{	return reinterpret_cast<address_t>(get());	}
 
 		const wchar_t *image::absolute_path() const
 		{	return _fullpath.c_str();	}

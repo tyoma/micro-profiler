@@ -40,6 +40,9 @@
     <ClCompile Include="ipc\windows\ipc_server.cpp">
       <Filter>ipc\windows</Filter>
     </ClCompile>
+    <ClCompile Include="common\module.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="frontend\symbol_resolver.h">
@@ -100,6 +103,12 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="common\protocol.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\module.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\path.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

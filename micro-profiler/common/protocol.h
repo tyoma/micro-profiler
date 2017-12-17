@@ -16,7 +16,11 @@ namespace micro_profiler
 
 	typedef std::pair<std::wstring /* executable */, timestamp_t /* tick_resolution */> initializaion_data;
 
-	typedef std::pair<address_t /* module_address */, std::wstring /* module_path */> module_info;
+	struct module_info
+	{
+		address_t load_address;
+		std::wstring path;
+	};
 	typedef std::vector<module_info> loaded_modules;
 
 	typedef std::vector<address_t> unloaded_modules;

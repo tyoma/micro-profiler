@@ -27,6 +27,7 @@ namespace std { namespace tr1 { } using namespace tr1; }
 
 namespace micro_profiler
 {
+	typedef unsigned char byte;
 	typedef unsigned long long count_t;
 	typedef long long timestamp_t;
 	typedef unsigned long long address_t;

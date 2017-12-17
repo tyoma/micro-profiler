@@ -29,8 +29,8 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 
 				// ACT / ASSERT
-				assert_throws(r->add_image(L"", reinterpret_cast<const void *>(0x12345)), invalid_argument);
-				assert_throws(r->add_image(L"missingABCDEFG.dll", reinterpret_cast<const void *>(0x23451)), invalid_argument);
+				assert_throws(r->add_image(L"", 0x12345), invalid_argument);
+				assert_throws(r->add_image(L"missingABCDEFG.dll", 0x23451), invalid_argument);
 			}
 
 
@@ -43,8 +43,7 @@ namespace micro_profiler
 
 				// ACT / ASSERT (must not throw)
 				r->add_image(img1.absolute_path(), img1.load_address());
-				r->add_image(img1.absolute_path(),
-					reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(img1.load_address()) + 0x100000));
+				r->add_image(img1.absolute_path(), img1.load_address() + 0x100000);
 				r->add_image(img2.absolute_path(), img2.load_address());
 			}
 
@@ -104,8 +103,7 @@ namespace micro_profiler
 					reinterpret_cast<get_function_addresses_2_t>(img.get_symbol_address("get_function_addresses_2"));
 				const void *f1 = 0, *f2 = 0, *f3 = 0;
 
-				r->add_image(img.absolute_path(),
-					reinterpret_cast<const void *>(reinterpret_cast<uintptr_t>(img.load_address()) + 113));
+				r->add_image(img.absolute_path(), img.load_address() + 113);
 				getter_2(f1, f2, f3);
 
 				*reinterpret_cast<const char **>(&f1) += 113;

@@ -43,8 +43,6 @@ namespace micro_profiler
 		
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
-		static module_info get_module_info(const void *in_image_address);
-
 	private:
 		mutex _mtx;
 		std::deque<module_info> _lqueue;

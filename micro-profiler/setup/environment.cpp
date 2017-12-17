@@ -1,6 +1,7 @@
 #include "environment.h"
 
-#include <collector/statistics_bridge.h>
+#include <common/module.h>
+#include <common/path.h>
 
 #include <atlbase.h>
 #include <functional>
@@ -53,16 +54,7 @@ namespace micro_profiler
 		{	::SetEnvironmentVariable(name, value);	}
 
 		wstring GetModuleDirectory()
-		{
-			wstring path = image_load_queue::get_module_info(&c_environment).second;
-			size_t pos = path.rfind(L'/');
-
-			if (pos == wstring::npos)
-				pos = path.rfind(L'\\');
-			if (pos != wstring::npos)
-				path = path.substr(0, pos);
-			return path;
-		}
+		{	return ~get_module_info(&c_environment).path;	}
 
 		void replace(wstring &text, const wstring &what, const wstring &replacement)
 		{

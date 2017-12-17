@@ -41,7 +41,7 @@ namespace micro_profiler
 		public:
 			explicit image(const TCHAR *path);
 
-			const void *load_address() const;
+			address_t load_address() const;
 			const wchar_t *absolute_path() const;
 			const void *get_symbol_address(const char *name) const;
 		};
@@ -72,9 +72,6 @@ namespace micro_profiler
 		template <typename T, size_t size>
 		inline size_t array_size(T (&)[size])
 		{	return size;	}
-
-		inline void toupper(std::wstring &s)
-		{	std::transform(s.begin(), s.end(), s.begin(), &towupper);	}
 
 		template <typename KeyT, typename ValueT, typename CompT>
 		inline std::vector< std::pair<KeyT, ValueT> > mkvector(const std::unordered_map<KeyT, ValueT, CompT> &from)

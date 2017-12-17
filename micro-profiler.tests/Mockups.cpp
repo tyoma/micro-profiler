@@ -95,8 +95,6 @@ namespace micro_profiler
 
 				case modules_loaded:
 					a(e.image_loads);
-					for (loaded_modules::iterator i = e.image_loads.begin(); i != e.image_loads.end(); ++i)
-						toupper(i->second);				
 					state.modules_state_updated.raise();
 					break;
 

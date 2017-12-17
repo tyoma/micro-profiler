@@ -1,4 +1,8 @@
+#include <common/path.h>
+#include <common/module.h>
 #include <common/pod_vector.h>
+
+#include "Helpers.h"
 
 #include <list>
 #include <ut/assert.h>
@@ -30,7 +34,7 @@ namespace micro_profiler
 			};
 		}
 
-		begin_test_suite( MiscTests )
+		begin_test_suite( PodVectorTests )
 			test( NewPodVectorHasZeroSize )
 			{
 				// INIT / ACT
@@ -360,6 +364,98 @@ namespace micro_profiler
 				assert_equal(2111, *(v2.data() + 7));
 				assert_equal(2112, *(v2.data() + 8));
 				assert_equal(9u, v2.capacity());
+			}
+		end_test_suite
+
+
+		begin_test_suite( ImageUtilitiesTests )
+
+			vector<image> _images;
+
+			init( LoadImages )
+			{
+				image images[] = {
+					image(L"symbol_container_1.dll"),
+					image(L"symbol_container_2.dll"),
+					image(L"symbol_container_3_nosymbols.dll"),
+				};
+
+				_images.assign(images, end(images));
+			}
+
+			test( ImageInfoIsEvaluatedByImageLoadAddress )
+			{
+				// ACT
+				module_info info1 = get_module_info(reinterpret_cast<const void *>(_images[0].load_address()));
+				module_info info2 = get_module_info(reinterpret_cast<const void *>(_images[1].load_address()));
+				module_info info3 = get_module_info(reinterpret_cast<const void *>(_images[2].load_address()));
+
+				// ASSERT
+				assert_equal(info1.path.size() - wstring(L"symbol_container_1.dll").size(),
+					info1.path.find(L"symbol_container_1.dll"));
+				assert_equal(_images[0].load_address(), info1.load_address);
+				assert_equal(info2.path.size() - wstring(L"symbol_container_2.dll").size(),
+					info2.path.find(L"symbol_container_2.dll"));
+				assert_equal(_images[1].load_address(), info2.load_address);
+				assert_equal(info3.path.size() - wstring(L"symbol_container_3_nosymbols.dll").size(),
+					info3.path.find(L"symbol_container_3_nosymbols.dll"));
+				assert_equal(_images[2].load_address(), info3.load_address);
+			}
+
+
+			test( ImageInfoIsEvaluatedByInImageAddress )
+			{
+				// ACT
+				module_info info1 = get_module_info(reinterpret_cast<const void *>(_images[0].get_symbol_address("get_function_addresses_1")));
+				module_info info2 = get_module_info(reinterpret_cast<const void *>(_images[1].get_symbol_address("get_function_addresses_2")));
+				module_info info3 = get_module_info(reinterpret_cast<const void *>(_images[2].get_symbol_address("get_function_addresses_3")));
+
+				// ASSERT
+				assert_equal(info1.path.size() - wstring(L"symbol_container_1.dll").size(),
+					info1.path.find(L"symbol_container_1.dll"));
+				assert_equal(_images[0].load_address(), info1.load_address);
+				assert_equal(info2.path.size() - wstring(L"symbol_container_2.dll").size(),
+					info2.path.find(L"symbol_container_2.dll"));
+				assert_equal(_images[1].load_address(), info2.load_address);
+				assert_equal(info3.path.size() - wstring(L"symbol_container_3_nosymbols.dll").size(),
+					info3.path.find(L"symbol_container_3_nosymbols.dll"));
+				assert_equal(_images[1].load_address(), info2.load_address);
+			}
+
+		end_test_suite
+
+
+		begin_test_suite( FilesystemUtilitiesTests )
+			test( PathAppendConcantenatesStringsWithSlash )
+			{
+				// ACT / ASSERT
+				assert_equal(L"/test/mymodule.so", wstring(L"/test") & L"mymodule.so");
+				assert_equal(L"c:\\another/mymodule2.dll", wstring(L"c:\\another") & L"mymodule2.dll");
+			}
+
+		
+			test( AppendingToEmptyDirectoryDoesNotPrependSlash )
+			{
+				// ACT / ASSERT
+				assert_equal(L"mymodule.so", wstring(L"") & L"mymodule.so");
+				assert_equal(L"test.dll", wstring(L"") & L"test.dll");
+			}
+
+		
+			test( AppendingToDirectoryEndingWithSlashDoesNotAddSlash )
+			{
+				// ACT / ASSERT
+				assert_equal(L"/test/mymodule.so", wstring(L"/test/") & L"mymodule.so");
+				assert_equal(L"c:\\another\\mymodule2.dll", wstring(L"c:\\another\\") & L"mymodule2.dll");
+			}
+
+
+			test( TildeRemovesFilespec )
+			{
+				// ACT / ASSERT
+				assert_equal(L"/test", ~wstring(L"/test/somemodule.so"));
+				assert_equal(L"c:\\anotherdir", ~wstring(L"c:\\anotherdir\\testmodule.dll"));
+				assert_equal(L"", ~wstring(L"testmodule.dll"));
 			}
 		end_test_suite
 	}

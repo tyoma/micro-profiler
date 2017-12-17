@@ -58,8 +58,9 @@ namespace micro_profiler
 			template <typename Arg1, typename Arg2>
 			dispatch operator()(const wchar_t *name, const Arg1 &arg1, const Arg2 &arg2);
 
-			template <typename R>
-			operator R() const;
+			operator std::wstring() const;
+			operator long() const;
+			operator IDispatchPtr() const;
 		};
 
 
@@ -93,9 +94,5 @@ namespace micro_profiler
 
 			return dispatch(invoke(name, DISPATCH_METHOD, dispparams));
 		}
-
-		template <typename R>
-		inline dispatch::operator R() const
-		{	return _underlying;	}
 	}
 }

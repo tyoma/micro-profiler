@@ -448,9 +448,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, state.update_log.size());
 				assert_equal(1u, state.update_log[0].image_loads.size());
-				assert_equal(images[0].load_address(),
-					reinterpret_cast<const void *>(state.update_log[0].image_loads[0].first));
-				assert_not_equal(wstring::npos, state.update_log[0].image_loads[0].second.find(L"SYMBOL_CONTAINER_1.DLL"));
+				assert_equal(images[0].load_address(), state.update_log[0].image_loads[0].load_address);
+				assert_not_equal(wstring::npos, state.update_log[0].image_loads[0].path.find(L"symbol_container_1.dll"));
 
 				// ACT
 				auto_ptr<handle> h2(fc.profile(images[1].get_symbol_address("get_function_addresses_2")));
@@ -459,9 +458,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, state.update_log.size());
 				assert_equal(1u, state.update_log[1].image_loads.size());
-				assert_equal(images[1].load_address(),
-					reinterpret_cast<const void *>(state.update_log[1].image_loads[0].first));
-				assert_not_equal(wstring::npos, state.update_log[1].image_loads[0].second.find(L"SYMBOL_CONTAINER_2.DLL"));
+				assert_equal(images[1].load_address(), state.update_log[1].image_loads[0].load_address);
+				assert_not_equal(wstring::npos, state.update_log[1].image_loads[0].path.find(L"symbol_container_2.dll"));
 			}
 
 
@@ -485,8 +483,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(3u, state.update_log.size());
 				assert_equal(1u, state.update_log[2].image_unloads.size());
-				assert_equal(images[0].load_address(),
-					reinterpret_cast<const void *>(state.update_log[2].image_unloads[0]));
+				assert_equal(images[0].load_address(), state.update_log[2].image_unloads[0]);
 
 				// ACT
 				h2.reset();
@@ -495,8 +492,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(4u, state.update_log.size());
 				assert_equal(1u, state.update_log[3].image_unloads.size());
-				assert_equal(images[1].load_address(),
-					reinterpret_cast<const void *>(state.update_log[3].image_unloads[0]));
+				assert_equal(images[1].load_address(), state.update_log[3].image_unloads[0]);
 			}
 
 

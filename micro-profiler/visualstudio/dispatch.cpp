@@ -91,5 +91,17 @@ namespace micro_profiler
 
 			return dispatch(invoke(name, DISPATCH_METHOD, dispparams));
 		}
+
+		dispatch::operator wstring() const
+		{
+			_bstr_t str = _underlying;
+			return str.GetBSTR() ? str.GetBSTR() : wstring();
+		}
+
+		dispatch::operator long() const
+		{	return _underlying;	}
+
+		dispatch::operator IDispatchPtr() const
+		{	return _underlying;	}
 	}
 }

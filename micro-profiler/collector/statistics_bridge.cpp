@@ -22,13 +22,13 @@
 
 #include "calls_collector.h"
 
+#include <common/module.h>
 #include <common/protocol.h>
 #include <common/serialization.h>
 
 #include <algorithm>
 #include <iterator>
 #include <strmd/serializer.h>
-#include <windows.h>
 
 using namespace std;
 
@@ -72,7 +72,7 @@ namespace micro_profiler
 	{
 		scoped_lock l(_mtx);
 
-		_uqueue.push_back(get_module_info(in_image_address).first);
+		_uqueue.push_back(get_module_info(in_image_address).load_address);
 	}
 
 	void image_load_queue::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
@@ -88,18 +88,6 @@ namespace micro_profiler
 		_uqueue.clear();
 	}
 
-	module_info image_load_queue::get_module_info(const void *in_image_address)
-	{
-		HMODULE image_address = 0;
-		TCHAR image_path[MAX_PATH + 1] = { 0 };
-
-		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-			reinterpret_cast<LPCTSTR>(in_image_address), &image_address);
-		::GetModuleFileName(image_address, image_path, sizeof(image_path));
-
-		return make_pair(reinterpret_cast<address_t>(image_address), image_path);
-	}
-
 
 	statistics_bridge::statistics_bridge(calls_collector_i &collector,
 			const function<channel_t ()> &factory,
@@ -107,7 +95,7 @@ namespace micro_profiler
 		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(factory()),
 			_image_load_queue(image_load_queue)
 	{
-		send(init, initializaion_data(image_load_queue::get_module_info(0).second, c_ticks_resolution));
+		send(init, initializaion_data(get_module_info(0).path, c_ticks_resolution));
 	}
 
 	void statistics_bridge::analyze()

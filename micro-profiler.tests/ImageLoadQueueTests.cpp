@@ -20,12 +20,12 @@ namespace micro_profiler
 			init( LoadImages )
 			{
 				image images[] = {
-					image(_T("symbol_container_1.dll")),
-					image(_T("symbol_container_2.dll")),
-					image(_T("symbol_container_3_nosymbols.dll")),
+					image(L"symbol_container_1.dll"),
+					image(L"symbol_container_2.dll"),
+					image(L"symbol_container_3_nosymbols.dll"),
 				};
 
-				_images.assign(images, end(images));
+				_images.assign(images, array_end(images));
 			}
 
 

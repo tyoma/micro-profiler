@@ -39,7 +39,7 @@ namespace micro_profiler
 			std::wstring _fullpath;
 
 		public:
-			explicit image(const TCHAR *path);
+			explicit image(const wchar_t *path);
 
 			address_t load_address() const;
 			const wchar_t *absolute_path() const;
@@ -66,7 +66,7 @@ namespace micro_profiler
 
 
 		template <typename T, size_t size>
-		inline T *end(T (&array_ptr)[size])
+		inline T *array_end(T (&array_ptr)[size])
 		{	return array_ptr + size;	}
 
 		template <typename T, size_t size>

@@ -380,7 +380,7 @@ namespace micro_profiler
 					image(L"symbol_container_3_nosymbols.dll"),
 				};
 
-				_images.assign(images, end(images));
+				_images.assign(images, array_end(images));
 			}
 
 			test( ImageInfoIsEvaluatedByImageLoadAddress )
@@ -456,6 +456,15 @@ namespace micro_profiler
 				assert_equal(L"/test", ~wstring(L"/test/somemodule.so"));
 				assert_equal(L"c:\\anotherdir", ~wstring(L"c:\\anotherdir\\testmodule.dll"));
 				assert_equal(L"", ~wstring(L"testmodule.dll"));
+			}
+
+
+			test( StarLeavesOnlyFilespec )
+			{
+				// ACT / ASSERT
+				assert_equal(L"somemodule.so", *wstring(L"/test/somemodule.so"));
+				assert_equal(L"testmodule.dll", *wstring(L"c:\\anotherdir\\testmodule.dll"));
+				assert_equal(L"testmodule.dll", *wstring(L"testmodule.dll"));
 			}
 		end_test_suite
 	}

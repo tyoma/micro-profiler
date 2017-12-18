@@ -85,8 +85,8 @@ namespace micro_profiler
 		}
 
 
-		image::image(const TCHAR *path)
-			: shared_ptr<void>(::LoadLibrary(path), &::FreeLibrary)
+		image::image(const wchar_t *path)
+			: shared_ptr<void>(::LoadLibraryW(path), &::FreeLibrary)
 		{
 			if (!get())
 				throw runtime_error("Cannot load module specified!");

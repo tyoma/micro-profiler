@@ -5,6 +5,7 @@
 
 #include <atlbase.h>
 #include <functional>
+#include <io.h>
 #include <string>
 #include <vector>
 
@@ -67,19 +68,25 @@ namespace micro_profiler
 		template <typename GetF, typename SetF>
 		bool register_path(GetF get, SetF set)
 		{
+			bool changed = false;
 			wstring path;
 
-			get(c_path_var, path);
-			if (path.find(c_profilerdir_var_decorated) == wstring::npos)
+			if (get(c_path_var, path),
+				path.find(c_profilerdir_var_decorated) == wstring::npos)
 			{
 				if (!path.empty() && path[path.size() - 1] != c_path_separator_char)
 					path += c_path_separator;
 				path += c_profilerdir_var_decorated;
 				set(c_path_var, path.c_str(), REG_EXPAND_SZ);
-				set(c_profilerdir_var, GetModuleDirectory().c_str(), REG_SZ);
-				return true;
+				changed = true;
 			}
-			return false;
+			if (get(c_profilerdir_var, path),
+				_waccess((path & *get_module_info(&c_environment).path).c_str(), 04))
+			{
+				set(c_profilerdir_var, GetModuleDirectory().c_str(), REG_SZ);
+				changed = true;
+			}
+			return changed;
 		}
 
 		template <typename GetF, typename SetF, typename RemoveF>

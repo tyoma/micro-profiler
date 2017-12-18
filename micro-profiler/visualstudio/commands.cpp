@@ -30,15 +30,6 @@ namespace micro_profiler
 			wstring get_initializer_path()
 			{	return get_profiler_directory() & c_initializer_cpp;	}
 
-			wstring operator *(const wstring &value)
-			{
-				const size_t pos = value.find_last_of(L"\\/");
-
-				if (pos != wstring::npos)
-					return value.substr(pos + 1);
-				return value;
-			}
-
 			bool replace(wstring &text, const wstring &what, const wstring &replacement)
 			{
 				size_t pos = text.find(what);

@@ -37,8 +37,8 @@ namespace micro_profiler
 			test( CreateResolverForValidImage )
 			{
 				// INIT
-				image img1(_T("micro-profiler.tests.dll"));
-				image img2(_T("symbol_container_1.dll"));
+				image img1(L"micro-profiler.tests.dll");
+				image img2(L"symbol_container_1.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 
 				// ACT / ASSERT (must not throw)
@@ -51,7 +51,7 @@ namespace micro_profiler
 			test( ReturnNamesOfLocalFunctions1 )
 			{
 				// INIT
-				image img(_T("symbol_container_1.dll"));
+				image img(L"symbol_container_1.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t getter_1 =
 					reinterpret_cast<get_function_addresses_1_t>(img.get_symbol_address("get_function_addresses_1"));
@@ -73,7 +73,7 @@ namespace micro_profiler
 			test( ReturnNamesOfLocalFunctions2 )
 			{
 				// INIT
-				image img(_T("symbol_container_2.dll"));
+				image img(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t getter_2 =
 					reinterpret_cast<get_function_addresses_2_t>(img.get_symbol_address("get_function_addresses_2"));
@@ -97,7 +97,7 @@ namespace micro_profiler
 			test( RespectLoadAddress )
 			{
 				// INIT
-				image img(_T("symbol_container_2.dll"));
+				image img(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t getter_2 =
 					reinterpret_cast<get_function_addresses_2_t>(img.get_symbol_address("get_function_addresses_2"));
@@ -125,7 +125,7 @@ namespace micro_profiler
 			test( LoadModuleWithNoSymbols )
 			{
 				// INIT
-				image img(_T("symbol_container_3_nosymbols.dll"));
+				image img(L"symbol_container_3_nosymbols.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_3_t getter_3 =
 					reinterpret_cast<get_function_addresses_3_t>(img.get_symbol_address("get_function_addresses_3"));
@@ -147,7 +147,7 @@ namespace micro_profiler
 			test( ConstantReferenceFromResolverIsTheSame )
 			{
 				// INIT
-				image img(_T("symbol_container_2.dll"));
+				image img(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t getter_2 =
 					reinterpret_cast<get_function_addresses_2_t>(img.get_symbol_address("get_function_addresses_2"));
@@ -175,7 +175,7 @@ namespace micro_profiler
 			test( LoadSymbolsForSecondModule )
 			{
 				// INIT
-				image img1(_T("symbol_container_1.dll")), img2(_T("symbol_container_2.dll"));
+				image img1(L"symbol_container_1.dll"), img2(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t getter_1 =
 					reinterpret_cast<get_function_addresses_1_t>(img1.get_symbol_address("get_function_addresses_1"));

@@ -41,7 +41,6 @@ namespace micro_profiler
 		unsigned char g_exitprocess_patch[] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
 		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 1);
 #elif _M_X64
-		const LPCTSTR c_profilerdir_var = _T("MICROPROFILERDIRX64");
 		unsigned char g_exitprocess_patch[] = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
 		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 2);
 #endif
@@ -97,7 +96,7 @@ namespace micro_profiler
 
 		void PatchExitProcess()
 		{
-			shared_ptr<void> hkernel(::LoadLibrary(_T("kernel32.dll")), &::FreeLibrary);
+			shared_ptr<void> hkernel(::LoadLibraryW(L"kernel32.dll"), &::FreeLibrary);
 
 			g_exitprocess_address = ::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "ExitProcess");
 			*g_exitprocess_patch_jmp_address = &ExitProcessHooked;

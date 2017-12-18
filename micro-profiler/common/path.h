@@ -21,4 +21,13 @@ namespace micro_profiler
 			return value.substr(0, pos);
 		return std::wstring();
 	}
+
+	inline std::wstring operator *(const std::wstring &value)
+	{
+		const size_t pos = value.find_last_of(L"\\/");
+
+		if (pos != std::wstring::npos)
+			return value.substr(pos + 1);
+		return value;
+	}
 }

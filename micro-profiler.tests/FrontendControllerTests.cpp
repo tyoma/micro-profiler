@@ -438,7 +438,7 @@ namespace micro_profiler
 				// INIT
 				mockups::Tracer tracer;
 				mockups::FrontendState state;
-				image images[] = { image(_T("symbol_container_1.dll")), image(_T("symbol_container_2.dll")), };
+				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
 				sync_stop_frontend_controller fc(tracer, state);
 
 				// ACT
@@ -468,7 +468,7 @@ namespace micro_profiler
 				// INIT
 				mockups::Tracer tracer;
 				mockups::FrontendState state;
-				image images[] = { image(_T("symbol_container_1.dll")), image(_T("symbol_container_2.dll")), };
+				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
 				sync_stop_frontend_controller fc(tracer, state);
 
 				auto_ptr<handle> h1(fc.profile(images[0].get_symbol_address("get_function_addresses_1")));

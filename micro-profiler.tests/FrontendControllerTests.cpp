@@ -520,8 +520,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(4u, state.update_log.size());
 				assert_equal(1u, state.update_log[0].image_loads.size());
-				assert_not_equal(state.update_log[1].update.end(), state.update_log[1].update.find((void *)0x1223));
-				assert_not_equal(state.update_log[2].update.end(), state.update_log[2].update.find((void *)0x12230));
+				assert_not_equal(state.update_log[1].update.end(), state.update_log[1].update.find(0x1223));
+				assert_not_equal(state.update_log[2].update.end(), state.update_log[2].update.find(0x12230));
 				assert_equal(1u, state.update_log[3].image_unloads.size());
 			}
 
@@ -549,7 +549,7 @@ namespace micro_profiler
 				// ASERT
 				assert_equal(1u, state.update_log.size());
 
-				statistics_map_detailed::const_iterator callinfo_1 = state.update_log[0].update.find((void *)0x1223);
+				mockups::statistics_map_detailed::const_iterator callinfo_1 = state.update_log[0].update.find(0x1223);
 
 				assert_not_equal(state.update_log[0].update.end(), callinfo_1);
 
@@ -574,7 +574,7 @@ namespace micro_profiler
 
 				assert_equal(1u, state.update_log[1].update.size());	// The new batch MUST NOT not contain previous function.
 
-				statistics_map_detailed::const_iterator callinfo_2 = state.update_log[1].update.find((void *)0x31223);
+				mockups::statistics_map_detailed::const_iterator callinfo_2 = state.update_log[1].update.find(0x31223);
 
 				assert_not_equal(state.update_log[1].update.end(), callinfo_2);
 
@@ -653,7 +653,7 @@ namespace micro_profiler
 				// ASERT
 				assert_equal(1u, state.update_log.size());
 
-				const function_statistics_detailed callinfo_1 = state.update_log[0].update[(void *)0x31000];
+				const mockups::function_statistics_detailed callinfo_1 = state.update_log[0].update[0x31000];
 
 				assert_equal(7u, callinfo_1.times_called);
 				assert_equal(3u, callinfo_1.max_reentrance);
@@ -679,7 +679,7 @@ namespace micro_profiler
 				// ASERT
 				assert_equal(2u, state.update_log.size());
 
-				const function_statistics_detailed &callinfo_2 = state.update_log[1].update[(void *)0x31000];
+				const mockups::function_statistics_detailed &callinfo_2 = state.update_log[1].update[0x31000];
 
 				assert_equal(5u, callinfo_2.times_called);
 				assert_equal(4u, callinfo_2.max_reentrance);
@@ -713,8 +713,8 @@ namespace micro_profiler
 				state2.updated.wait();
 
 				// ASSERT
-				assert_equal(4000 - 13, state1.update_log[0].update[(void *)0x3171717].inclusive_time);
-				assert_equal(4000 - 29, state2.update_log[0].update[(void *)0x3171717].inclusive_time);
+				assert_equal(4000 - 13, state1.update_log[0].update[0x3171717].inclusive_time);
+				assert_equal(4000 - 29, state2.update_log[0].update[0x3171717].inclusive_time);
 			}
 
 
@@ -751,9 +751,9 @@ namespace micro_profiler
 				state.updated.wait();
 
 				// ASSERT
-				const function_statistics_detailed &callinfo_parent1 = state.update_log[0].update[(void *)0x31000];
-				const function_statistics_detailed &callinfo_parent2 = state.update_log[0].update[(void *)0x11000];
-				const function_statistics_detailed &callinfo_parent3 = state.update_log[0].update[(void *)0x13000];
+				const mockups::function_statistics_detailed &callinfo_parent1 = state.update_log[0].update[0x31000];
+				const mockups::function_statistics_detailed &callinfo_parent2 = state.update_log[0].update[0x11000];
+				const mockups::function_statistics_detailed &callinfo_parent3 = state.update_log[0].update[0x13000];
 
 				assert_equal(2u, callinfo_parent1.callees.size());
 				assert_equal(108, callinfo_parent1.inclusive_time);
@@ -768,8 +768,8 @@ namespace micro_profiler
 				assert_equal(138, callinfo_parent3.exclusive_time);
 
 
-				const function_statistics &callinfo_child11 = state.update_log[0].update[(void *)0x31000].callees[(void *)0x37000];
-				const function_statistics &callinfo_child12 = state.update_log[0].update[(void *)0x31000].callees[(void *)0x41000];
+				const function_statistics &callinfo_child11 = state.update_log[0].update[0x31000].callees[0x37000];
+				const function_statistics &callinfo_child12 = state.update_log[0].update[0x31000].callees[0x41000];
 
 				assert_equal(2u, callinfo_child11.times_called);
 				assert_equal(26, callinfo_child11.inclusive_time);

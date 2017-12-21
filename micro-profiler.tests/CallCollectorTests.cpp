@@ -90,7 +90,7 @@ namespace micro_profiler
 				assert_equal(this_thread::get_id(), a.collected[0].first);
 				assert_equal(2u, a.collected[0].second.size());
 				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<address_t>(a.collected[0].second[0].callee) - 5));
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<uintptr_t>(a.collected[0].second[0].callee) - 5));
 			}
 
 
@@ -141,12 +141,12 @@ namespace micro_profiler
 				assert_equal(threadid1, a.collected[0].first);
 				assert_equal(2u, a.collected[0].second.size());
 				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
-				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<address_t>(a.collected[0].second[0].callee) - 5));
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<uintptr_t>(a.collected[0].second[0].callee) - 5));
 
 				assert_equal(threadid2, a.collected[1].first);
 				assert_equal(2u, a.collected[1].second.size());
 				assert_is_true(a.collected[1].second[0].timestamp < a.collected[1].second[1].timestamp);
-				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<address_t>(a.collected[1].second[0].callee) - 5));
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<uintptr_t>(a.collected[1].second[0].callee) - 5));
 			}
 
 
@@ -166,8 +166,8 @@ namespace micro_profiler
 				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
 				assert_is_true(a.collected[0].second[1].timestamp < a.collected[0].second[2].timestamp);
 				assert_is_true(a.collected[0].second[2].timestamp < a.collected[0].second[3].timestamp);
-				assert_equal(&traced::nesting1, (void*)(reinterpret_cast<address_t>(a.collected[0].second[0].callee) - 5));
-				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<address_t>(a.collected[0].second[1].callee) - 5));
+				assert_equal(&traced::nesting1, (void*)(reinterpret_cast<uintptr_t>(a.collected[0].second[0].callee) - 5));
+				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<uintptr_t>(a.collected[0].second[1].callee) - 5));
 				assert_null(a.collected[0].second[2].callee);
 				assert_null(a.collected[0].second[3].callee);
 			}

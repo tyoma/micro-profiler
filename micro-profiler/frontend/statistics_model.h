@@ -2,6 +2,8 @@
 
 #include "ordered_view.h"
 
+#include "primitives.h"
+
 #include <wpl/ui/listview.h>
 
 namespace std { namespace tr1 { } using namespace tr1; }
@@ -24,9 +26,9 @@ namespace micro_profiler
 		virtual void set_order(index_type column, bool ascending);
 		virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
 
-		virtual index_type get_index(const void *address) const;
+		virtual index_type get_index(address_t address) const;
 
-		virtual const void *get_address(index_type item) const;
+		virtual address_t get_address(index_type item) const;
 
 	protected:
 		typedef ordered_view<MapT> view_type;
@@ -60,10 +62,10 @@ namespace micro_profiler
 		class trackable : public listview::trackable
 		{
 			std::weak_ptr<const statistics_model_impl> _model;
-			const void *_address;
+			address_t _address;
 
 		public:
-			trackable(std::weak_ptr<const statistics_model_impl> model, const void *address)
+			trackable(std::weak_ptr<const statistics_model_impl> model, address_t address)
 				: _model(model), _address(address)
 			{	}
 
@@ -79,11 +81,11 @@ namespace micro_profiler
 	}
 
 	template <typename BaseT, typename MapT>
-	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(const void *address) const
+	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(address_t address) const
 	{	return _view.find_by_key(address);	}
 
 	template <typename BaseT, typename MapT>
-	inline const void *statistics_model_impl<BaseT, MapT>::get_address(index_type item) const
+	inline address_t statistics_model_impl<BaseT, MapT>::get_address(index_type item) const
 	{	return _view.at(item).first;	}
 
 	template <typename BaseT, typename MapT>

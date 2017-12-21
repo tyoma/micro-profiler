@@ -46,7 +46,7 @@ namespace micro_profiler
 	private:
 		mutex _mtx;
 		std::deque<module_info> _lqueue;
-		std::deque<address_t> _uqueue;
+		std::deque<long_address_t> _uqueue;
 	};
 
 	class statistics_bridge

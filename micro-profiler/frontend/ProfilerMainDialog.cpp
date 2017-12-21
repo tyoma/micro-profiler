@@ -237,9 +237,7 @@ namespace micro_profiler
 
 	void ProfilerMainDialog::OnDrilldown(shared_ptr<linked_statistics> view, listview::index_type index)
 	{
-		const void *address = view->get_address(index);
-		
-		index = _statistics->get_index(address);
+		index = _statistics->get_index(view->get_address(index));
 		_statistics_lv->select(index, true);
 	}
 

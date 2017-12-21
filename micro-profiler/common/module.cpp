@@ -14,7 +14,7 @@ namespace micro_profiler
 		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &load_address);
 		::GetModuleFileNameW(load_address, path, sizeof(path));
 		::FreeLibrary(load_address);
-		module_info info = { reinterpret_cast<address_t>(load_address), path };
+		module_info info = { reinterpret_cast<size_t>(load_address), path };
 		return info;
 	}
 }

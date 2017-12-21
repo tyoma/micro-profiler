@@ -31,16 +31,21 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <> struct is_arithmetic<wchar_t> { static const bool value = true; };
-	template <> struct is_container<micro_profiler::analyzer> { static const bool value = true; };
-	template <> struct is_container<micro_profiler::statistics_map_detailed_2> { static const bool value = true; };
+	using namespace micro_profiler;
+	using namespace std;
 
-	template <> struct container_reader<micro_profiler::statistics_map>
+	template <> struct is_arithmetic<wchar_t> { static const bool value = true; };
+	template <> struct is_container<analyzer> { static const bool value = true; };
+	template <typename AddressT> struct is_container< statistics_map_detailed_t<AddressT> > { static const bool value = true; };
+
+	template <typename AddressT> struct container_reader< unordered_map<AddressT, function_statistics, address_compare> >
 	{
+		typedef unordered_map<AddressT, function_statistics, address_compare> data_t;
+
 		template <typename ArchiveT>
-		void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map &data)
+		void operator()(ArchiveT &archive, size_t count, data_t &data)
 		{
-			std::pair<const void *, micro_profiler::function_statistics> value;
+			pair<typename data_t::key_type, typename data_t::mapped_type> value;
 
 			while (count--)
 			{
@@ -50,21 +55,23 @@ namespace strmd
 		}
 	};
 
-	template <> struct container_reader<micro_profiler::statistics_map_detailed_2>
+	template <typename AddressT> struct container_reader< statistics_map_detailed_t<AddressT> >
 	{
+		typedef statistics_map_detailed_t<AddressT> data_t;
+
 		template <typename ArchiveT>
-		void operator()(ArchiveT &archive, size_t count, micro_profiler::statistics_map_detailed_2 &data)
+		void operator()(ArchiveT &archive, size_t count, data_t &data)
 		{
-			std::pair<const void *, micro_profiler::function_statistics> value;
+			pair<typename data_t::key_type, function_statistics> value;
 
 			while (count--)
 			{
 				archive(value);
-				micro_profiler::function_statistics_detailed &entry = data[value.first];
+				typename data_t::mapped_type &entry = data[value.first];
 				entry += value.second;
 				if (archive.process_container(entry.callees))
 				{
-					micro_profiler::update_parent_statistics(data, value.first, entry);
+					update_parent_statistics(data, value.first, entry);
 					data.entry_updated(value.first);
 				}
 			}
@@ -90,8 +97,8 @@ namespace micro_profiler
 		archive(data.max_call_time);
 	}
 
-	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_statistics_detailed &data)
+	template <typename ArchiveT, typename AddressT>
+	void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data)
 	{
 		archive(static_cast<function_statistics &>(data));
 		archive(data.callees);

@@ -189,21 +189,21 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, _state.update_log.size());
 				assert_equal(1u, _state.update_log[0].update.size());
-				assert_equal(2u, _state.update_log[0].update[(void*)0x1223].times_called);
-				assert_equal(39, _state.update_log[0].update[(void*)0x1223].exclusive_time);
-				assert_equal(39, _state.update_log[0].update[(void*)0x1223].inclusive_time);
+				assert_equal(2u, _state.update_log[0].update[0x1223].times_called);
+				assert_equal(39, _state.update_log[0].update[0x1223].exclusive_time);
+				assert_equal(39, _state.update_log[0].update[0x1223].inclusive_time);
 
 				assert_equal(1u, state2.update_log.size());
 				assert_equal(3u, state2.update_log[0].update.size());
-				assert_equal(1u, state2.update_log[0].update[(void*)0x2223].times_called);
-				assert_equal(13, state2.update_log[0].update[(void*)0x2223].exclusive_time);
-				assert_equal(13, state2.update_log[0].update[(void*)0x2223].inclusive_time);
-				assert_equal(1u, state2.update_log[0].update[(void*)0x3223].times_called);
-				assert_equal(17, state2.update_log[0].update[(void*)0x3223].exclusive_time);
-				assert_equal(17, state2.update_log[0].update[(void*)0x3223].inclusive_time);
-				assert_equal(1u, state2.update_log[0].update[(void*)0x4223].times_called);
-				assert_equal(19, state2.update_log[0].update[(void*)0x4223].exclusive_time);
-				assert_equal(19, state2.update_log[0].update[(void*)0x4223].inclusive_time);
+				assert_equal(1u, state2.update_log[0].update[0x2223].times_called);
+				assert_equal(13, state2.update_log[0].update[0x2223].exclusive_time);
+				assert_equal(13, state2.update_log[0].update[0x2223].inclusive_time);
+				assert_equal(1u, state2.update_log[0].update[0x3223].times_called);
+				assert_equal(17, state2.update_log[0].update[0x3223].exclusive_time);
+				assert_equal(17, state2.update_log[0].update[0x3223].inclusive_time);
+				assert_equal(1u, state2.update_log[0].update[0x4223].times_called);
+				assert_equal(19, state2.update_log[0].update[0x4223].exclusive_time);
+				assert_equal(19, state2.update_log[0].update[0x4223].inclusive_time);
 			}
 
 

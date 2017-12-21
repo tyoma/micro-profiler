@@ -14,6 +14,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
+
 			bool has_empty_statistics(const analyzer &a)
 			{
 				for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)

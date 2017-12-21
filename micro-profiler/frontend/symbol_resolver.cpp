@@ -20,8 +20,6 @@
 
 #include "symbol_resolver.h"
 
-#include <common/primitives.h>
-
 #include <atlstr.h>
 #include <Windows.h>
 #include <dbghelp.h>
@@ -35,7 +33,7 @@ namespace micro_profiler
 	{
 		class dbghelp_symbol_resolver : public symbol_resolver
 		{
-			typedef unordered_map<const void *, wstring, address_compare> cached_names_map;
+			typedef unordered_map<address_t, wstring, address_compare> cached_names_map;
 
 			mutable cached_names_map _names;
 
@@ -45,7 +43,7 @@ namespace micro_profiler
 			dbghelp_symbol_resolver();
 			virtual ~dbghelp_symbol_resolver();
 
-			virtual const wstring &symbol_name_by_va(const void *address) const;
+			virtual const wstring &symbol_name_by_va(address_t address) const;
 			virtual void add_image(const wchar_t *image, address_t load_address);
 		};
 
@@ -62,7 +60,7 @@ namespace micro_profiler
 		HANDLE dbghelp_symbol_resolver::me() const
 		{	return reinterpret_cast<HANDLE>(const_cast<dbghelp_symbol_resolver *>(this));	}
 
-		const wstring &dbghelp_symbol_resolver::symbol_name_by_va(const void *address) const
+		const wstring &dbghelp_symbol_resolver::symbol_name_by_va(address_t address) const
 		{
 			cached_names_map::iterator i = _names.find(address);
 
@@ -76,7 +74,7 @@ namespace micro_profiler
 				dummy;
 				symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
 				symbol.MaxNameLen = max_name_length;
-				::SymFromAddr(me(), reinterpret_cast<DWORD64>(address), 0, &symbol);
+				::SymFromAddr(me(), address, 0, &symbol);
 				i = _names.insert(make_pair(address, (const wchar_t *)CStringW(symbol.Name))).first;
 			}
 			return i->second;

@@ -41,7 +41,7 @@ namespace micro_profiler
 		public:
 			explicit image(const wchar_t *path);
 
-			address_t load_address() const;
+			long_address_t load_address() const;
 			const wchar_t *absolute_path() const;
 			const void *get_symbol_address(const char *name) const;
 		};
@@ -61,8 +61,6 @@ namespace micro_profiler
 			std::vector<unsigned char> _buffer;
 		};
 
-
-		function_statistics_detailed function_statistics_ex(count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time, timestamp_t max_call_time);
 
 
 		template <typename T, size_t size>

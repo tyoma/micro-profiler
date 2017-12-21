@@ -32,11 +32,10 @@ namespace micro_profiler
 				return s.str();
 			}
 
-			template <typename T>
-			wstring to_string(T *value)
+			wstring to_string_address(long_address_t value)
 			{
 				wstringstream s;
-				s << uppercase << hex << setw(8) << setfill(L'0') << reinterpret_cast<address_t>(value);
+				s << uppercase << hex << setw(8) << setfill(L'0') << value;
 				return s.str();
 			}
 
@@ -121,15 +120,15 @@ namespace micro_profiler
 
 			class sri : public symbol_resolver
 			{
-				mutable map<const void *, wstring> _names;
+				mutable map<long_address_t, wstring> _names;
 
 			public:
-				virtual const wstring &symbol_name_by_va(const void *address) const
+				virtual const wstring &symbol_name_by_va(long_address_t address) const
 				{
-					return _names[address] = to_string(address);
+					return _names[address] = to_string_address(address);
 				}
 
-				virtual void add_image(const wchar_t * /*image*/, address_t /*base*/)
+				virtual void add_image(const wchar_t * /*image*/, long_address_t /*base*/)
 				{
 				}
 			};
@@ -189,8 +188,8 @@ namespace micro_profiler
 				// INIT
 				statistics_map_detailed s;
 
-				static_cast<function_statistics &>(s[(void *)1123]) = function_statistics(19, 0, 31, 29);
-				static_cast<function_statistics &>(s[(void *)2234]) = function_statistics(10, 3, 7, 5);
+				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
+				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
 				ser(s);
 				
 				// ACT
@@ -208,7 +207,7 @@ namespace micro_profiler
 				statistics_map_detailed s;
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 
-				static_cast<function_statistics &>(s[(void *)1123]) = function_statistics(19, 0, 31, 29);
+				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				ser(s);
 
 				// ACT
@@ -257,17 +256,17 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				vector<functions_list::index_type> expected;
 
-				static_cast<function_statistics &>(s[(void *)1118]) = function_statistics(19, 0, 31, 29);
-				static_cast<function_statistics &>(s[(void *)2229]) = function_statistics(10, 3, 7, 5);
-				static_cast<function_statistics &>(s[(void *)5550]) = function_statistics(5, 0, 10, 7);
+				static_cast<function_statistics &>(s[1118]) = function_statistics(19, 0, 31, 29);
+				static_cast<function_statistics &>(s[2229]) = function_statistics(10, 3, 7, 5);
+				static_cast<function_statistics &>(s[5550]) = function_statistics(5, 0, 10, 7);
 				ser(s);
 				
 				// ACT
 				dser(*fl);
 
-				functions_list::index_type idx1118 = fl->get_index((void *)1118);
-				functions_list::index_type idx2229 = fl->get_index((void *)2229);
-				functions_list::index_type idx5550 = fl->get_index((void *)5550);
+				functions_list::index_type idx1118 = fl->get_index(1118);
+				functions_list::index_type idx2229 = fl->get_index(2229);
+				functions_list::index_type idx5550 = fl->get_index(5550);
 
 				expected.push_back(idx1118);
 				expected.push_back(idx2229);
@@ -283,12 +282,12 @@ namespace micro_profiler
 				assert_not_equal(listview::npos, idx1118);
 				assert_not_equal(listview::npos, idx2229);
 				assert_not_equal(listview::npos, idx5550);
-				assert_equal(listview::npos, fl->get_index((void *)1234));
+				assert_equal(listview::npos, fl->get_index(1234));
 
 				//Check twice. Kind of regularity check.
-				assert_equal(fl->get_index((void *)1118), idx1118);
-				assert_equal(fl->get_index((void *)2229), idx2229);
-				assert_equal(fl->get_index((void *)5550), idx5550);
+				assert_equal(fl->get_index(1118), idx1118);
+				assert_equal(fl->get_index(2229), idx2229);
+				assert_equal(fl->get_index(5550), idx5550);
 			}
 
 
@@ -300,11 +299,11 @@ namespace micro_profiler
 				// INIT
 				statistics_map_detailed s1, s2, s3;
 
-				static_cast<function_statistics &>(s1[(void *)1118]) = function_statistics(19, 0, 31, 29, 3);
-				static_cast<function_statistics &>(s1[(void *)2229]) = function_statistics(10, 3, 7, 5, 4);
-				static_cast<function_statistics &>(s2[(void *)1118]) = function_statistics(5, 0, 10, 7, 6);
-				static_cast<function_statistics &>(s2[(void *)5550]) = function_statistics(15, 1024, 1011, 723, 215);
-				static_cast<function_statistics &>(s3[(void *)1118]) = function_statistics(1, 0, 4, 4, 4);
+				static_cast<function_statistics &>(s1[1118]) = function_statistics(19, 0, 31, 29, 3);
+				static_cast<function_statistics &>(s1[2229]) = function_statistics(10, 3, 7, 5, 4);
+				static_cast<function_statistics &>(s2[1118]) = function_statistics(5, 0, 10, 7, 6);
+				static_cast<function_statistics &>(s2[5550]) = function_statistics(15, 1024, 1011, 723, 215);
+				static_cast<function_statistics &>(s3[1118]) = function_statistics(1, 0, 4, 4, 4);
 
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				fl->set_order(2, true); // by times called
@@ -327,8 +326,8 @@ namespace micro_profiler
 				assert_equal(2u, ih.invalidations.back()); //check what's coming as event arg
 		
 				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
-				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0", L"3s");
-				assert_row(*fl, fl->get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
+				assert_row(*fl, fl->get_index(1118), L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0", L"3s");
+				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
 
 				assert_equal(0u, first->index());
 				assert_equal(1u, second->index());
@@ -341,9 +340,9 @@ namespace micro_profiler
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0", L"6s");
-				assert_row(*fl, fl->get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
-				assert_row(*fl, fl->get_index((void *)5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
+				assert_row(*fl, fl->get_index(1118), L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0", L"6s");
+				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
+				assert_row(*fl, fl->get_index(5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
 
 				assert_equal(0u, first->index());
 				assert_equal(2u, second->index()); // kind of moved down
@@ -356,9 +355,9 @@ namespace micro_profiler
 				assert_equal(3u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"25", L"45s", L"40s", L"1.8s", L"1.6s", L"0", L"6s");
-				assert_row(*fl, fl->get_index((void *)2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
-				assert_row(*fl, fl->get_index((void *)5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
+				assert_row(*fl, fl->get_index(1118), L"0000045E", L"25", L"45s", L"40s", L"1.8s", L"1.6s", L"0", L"6s");
+				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
+				assert_row(*fl, fl->get_index(5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
 
 				assert_equal(0u, first->index());
 				assert_equal(2u, second->index()); // stand still
@@ -399,23 +398,23 @@ namespace micro_profiler
 				statistics_map_detailed s;
 				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver)); // 10 * billion for ticks resolution
 
-				static_cast<function_statistics &>(s[(void *)1118]) = s1;
-				static_cast<function_statistics &>(s[(void *)2229]) = s2;
-				static_cast<function_statistics &>(s[(void *)3118]) = s3;
-				static_cast<function_statistics &>(s[(void *)5550]) = s4;
-				static_cast<function_statistics &>(s[(void *)4550]) = s5;
-				static_cast<function_statistics &>(s[(void *)6661]) = s6;
+				static_cast<function_statistics &>(s[1118]) = s1;
+				static_cast<function_statistics &>(s[2229]) = s2;
+				static_cast<function_statistics &>(s[3118]) = s3;
+				static_cast<function_statistics &>(s[5550]) = s4;
+				static_cast<function_statistics &>(s[4550]) = s5;
+				static_cast<function_statistics &>(s[6661]) = s6;
 
-				static_cast<function_statistics &>(s[(void *)1990]) = s1ub;
-				static_cast<function_statistics &>(s[(void *)2000]) = s2lb;
-				static_cast<function_statistics &>(s[(void *)2990]) = s2ub;
-				static_cast<function_statistics &>(s[(void *)3000]) = s3lb;
-				static_cast<function_statistics &>(s[(void *)3990]) = s3ub;
-				static_cast<function_statistics &>(s[(void *)4000]) = s4lb;
-				static_cast<function_statistics &>(s[(void *)4990]) = s4ub;
-				static_cast<function_statistics &>(s[(void *)5000]) = s5lb;
-				static_cast<function_statistics &>(s[(void *)5990]) = s5ub;
-				static_cast<function_statistics &>(s[(void *)6000]) = s6lb;
+				static_cast<function_statistics &>(s[1990]) = s1ub;
+				static_cast<function_statistics &>(s[2000]) = s2lb;
+				static_cast<function_statistics &>(s[2990]) = s2ub;
+				static_cast<function_statistics &>(s[3000]) = s3lb;
+				static_cast<function_statistics &>(s[3990]) = s3ub;
+				static_cast<function_statistics &>(s[4000]) = s4lb;
+				static_cast<function_statistics &>(s[4990]) = s4ub;
+				static_cast<function_statistics &>(s[5000]) = s5lb;
+				static_cast<function_statistics &>(s[5990]) = s5ub;
+				static_cast<function_statistics &>(s[6000]) = s6lb;
 				ser(s);
 
 				// ACT
@@ -425,24 +424,24 @@ namespace micro_profiler
 				assert_equal(fl->get_count(), s.size());
 		
 				// columns: name, times called, inclusive time, exclusive time, avg. inclusive time, avg. exclusive time, max reentrance, max call time
-				assert_row(*fl, fl->get_index((void *)1118), L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0", L"2.9ns");
-				assert_row(*fl, fl->get_index((void *)2229), L"000008B5", L"1", L"4.53\x03bcs", L"3.67\x03bcs", L"4.53\x03bcs", L"3.67\x03bcs", L"0", L"3.67\x03bcs");
-				assert_row(*fl, fl->get_index((void *)3118), L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0", L"3.23ms");
-				assert_row(*fl, fl->get_index((void *)5550), L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0", L"2.35s");
-				assert_row(*fl, fl->get_index((void *)4550), L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0", L"2347s");
-				assert_row(*fl, fl->get_index((void *)6661), L"00001A05", L"1", L"6.55e+006s", L"2.35e+006s", L"6.55e+006s", L"2.35e+006s", L"0", L"2.35e+006s");
+				assert_row(*fl, fl->get_index(1118), L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0", L"2.9ns");
+				assert_row(*fl, fl->get_index(2229), L"000008B5", L"1", L"4.53\x03bcs", L"3.67\x03bcs", L"4.53\x03bcs", L"3.67\x03bcs", L"0", L"3.67\x03bcs");
+				assert_row(*fl, fl->get_index(3118), L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0", L"3.23ms");
+				assert_row(*fl, fl->get_index(5550), L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0", L"2.35s");
+				assert_row(*fl, fl->get_index(4550), L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0", L"2347s");
+				assert_row(*fl, fl->get_index(6661), L"00001A05", L"1", L"6.55e+006s", L"2.35e+006s", L"6.55e+006s", L"2.35e+006s", L"0", L"2.35e+006s");
 				
 				// ASSERT (boundary cases)
-				assert_row(*fl, fl->get_index((void *)1990), L"000007C6", L"1", L"999ns", L"999ns", L"999ns", L"999ns", L"0", L"999ns");
-				assert_row(*fl, fl->get_index((void *)2000), L"000007D0", L"1", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"0", L"1\x03bcs");
-				assert_row(*fl, fl->get_index((void *)2990), L"00000BAE", L"1", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"0", L"999\x03bcs");
-				assert_row(*fl, fl->get_index((void *)3000), L"00000BB8", L"1", L"1ms", L"1ms", L"1ms", L"1ms", L"0", L"1ms");
-				assert_row(*fl, fl->get_index((void *)3990), L"00000F96", L"1", L"999ms", L"999ms", L"999ms", L"999ms", L"0", L"999ms");
-				assert_row(*fl, fl->get_index((void *)4000), L"00000FA0", L"1", L"1s", L"1s", L"1s", L"1s", L"0", L"1s");
-				assert_row(*fl, fl->get_index((void *)4990), L"0000137E", L"1", L"999s", L"999s", L"999s", L"999s", L"0", L"999s");
-				assert_row(*fl, fl->get_index((void *)5000), L"00001388", L"1", L"999.6s", L"999.6s", L"999.6s", L"999.6s", L"0", L"999.6s");
-				assert_row(*fl, fl->get_index((void *)5990), L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0", L"9999s");
-				assert_row(*fl, fl->get_index((void *)6000), L"00001770", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0", L"1e+004s");
+				assert_row(*fl, fl->get_index(1990), L"000007C6", L"1", L"999ns", L"999ns", L"999ns", L"999ns", L"0", L"999ns");
+				assert_row(*fl, fl->get_index(2000), L"000007D0", L"1", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"0", L"1\x03bcs");
+				assert_row(*fl, fl->get_index(2990), L"00000BAE", L"1", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"0", L"999\x03bcs");
+				assert_row(*fl, fl->get_index(3000), L"00000BB8", L"1", L"1ms", L"1ms", L"1ms", L"1ms", L"0", L"1ms");
+				assert_row(*fl, fl->get_index(3990), L"00000F96", L"1", L"999ms", L"999ms", L"999ms", L"999ms", L"0", L"999ms");
+				assert_row(*fl, fl->get_index(4000), L"00000FA0", L"1", L"1s", L"1s", L"1s", L"1s", L"0", L"1s");
+				assert_row(*fl, fl->get_index(4990), L"0000137E", L"1", L"999s", L"999s", L"999s", L"999s", L"0", L"999s");
+				assert_row(*fl, fl->get_index(5000), L"00001388", L"1", L"999.6s", L"999.6s", L"999.6s", L"999.6s", L"0", L"999.6s");
+				assert_row(*fl, fl->get_index(5990), L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0", L"9999s");
+				assert_row(*fl, fl->get_index(6000), L"00001770", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0", L"1e+004s");
 			}
 
 
@@ -453,10 +452,10 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				invalidation_tracer ih;
 
-				static_cast<function_statistics &>(s[(void *)1990]) = function_statistics(15, 0, 31, 29, 3);
-				static_cast<function_statistics &>(s[(void *)2000]) = function_statistics(35, 1, 453, 366, 4);
-				static_cast<function_statistics &>(s[(void *)2990]) = function_statistics(2, 2, 33450030, 32333333, 5);
-				static_cast<function_statistics &>(s[(void *)3000]) = function_statistics(15233, 3, 65450, 13470, 6);
+				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 3);
+				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 4);
+				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 5);
+				static_cast<function_statistics &>(s[3000]) = function_statistics(15233, 3, 65450, 13470, 6);
 				ser(s);
 
 				ih.bind_to_model(*fl);
@@ -465,10 +464,10 @@ namespace micro_profiler
 
 				dser(*fl);
 
-				shared_ptr<const listview::trackable> pt0 = fl->track(fl->get_index((void *)1990));
-				shared_ptr<const listview::trackable> pt1 = fl->track(fl->get_index((void *)2000));
-				shared_ptr<const listview::trackable> pt2 = fl->track(fl->get_index((void *)2990));
-				shared_ptr<const listview::trackable> pt3 = fl->track(fl->get_index((void *)3000));
+				shared_ptr<const listview::trackable> pt0 = fl->track(fl->get_index(1990));
+				shared_ptr<const listview::trackable> pt1 = fl->track(fl->get_index(2000));
+				shared_ptr<const listview::trackable> pt2 = fl->track(fl->get_index(2990));
+				shared_ptr<const listview::trackable> pt3 = fl->track(fl->get_index(3000));
 				
 				const listview::trackable &t0 = *pt0;
 				const listview::trackable &t1 = *pt1;
@@ -756,9 +755,9 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				wstring result;
 
-				static_cast<function_statistics &>(s[(void *)1990]) = function_statistics(15, 0, 31, 29, 2);
-				static_cast<function_statistics &>(s[(void *)2000]) = function_statistics(35, 1, 453, 366, 3);
-				static_cast<function_statistics &>(s[(void *)2990]) = function_statistics(2, 2, 33450030, 32333333, 4);
+				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 2);
+				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 3);
+				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 4);
 				ser(s);
 
 				// ACT
@@ -813,11 +812,11 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)1978];
-				s1[(void *)1995];
-				s2[(void *)2001];
-				s2[(void *)2004];
-				s2[(void *)2011];
+				s1[1978];
+				s1[1995];
+				s2[2001];
+				s2[2004];
+				s2[2011];
 				ser(s1);
 				ser(s2);
 
@@ -841,11 +840,11 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)1978];
-				s1[(void *)1995];
-				s2[(void *)2001];
-				s2[(void *)2004];
-				s2[(void *)2011];
+				s1[1978];
+				s1[1995];
+				s2[2001];
+				s2[2004];
+				s2[2011];
 				ser(s1);
 				ser(s2);
 
@@ -867,8 +866,8 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)1973];
-				s[(void *)1990];
+				s[1973];
+				s[1990];
 				ser(s);
 
 				dser(*fl);
@@ -888,10 +887,10 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)0x1978].callees[(void *)0x2001];
-				s[(void *)0x1995].callees[(void *)0x2004];
-				s[(void *)0x1995].callees[(void *)0x2008];
-				s[(void *)0x1995].callees[(void *)0x2011];
+				s[0x1978].callees[0x2001];
+				s[0x1995].callees[0x2004];
+				s[0x1995].callees[0x2008];
+				s[0x1995].callees[0x2011];
 				ser(s);
 
 				dser(*fl);
@@ -916,11 +915,11 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11);
-				s2[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11);
-				s2[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17);
-				s2[(void *)0x1978].callees[(void *)0x2008] = function_statistics(18);
-				s2[(void *)0x1978].callees[(void *)0x2011] = function_statistics(29);
+				s1[0x1978].callees[0x2001] = function_statistics(11);
+				s2[0x1978].callees[0x2001] = function_statistics(11);
+				s2[0x1978].callees[0x2004] = function_statistics(17);
+				s2[0x1978].callees[0x2008] = function_statistics(18);
+				s2[0x1978].callees[0x2011] = function_statistics(29);
 				ser(s1);
 				ser(s2);
 
@@ -956,8 +955,8 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(10, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
+				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
 				ser(s);
 
 				dser(*fl);
@@ -979,10 +978,10 @@ namespace micro_profiler
 				invalidation_tracer t;
 				statistics_map_detailed s;
 
-				s[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
+				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
 				ser(s);
-				s[(void *)0x1978].callees.clear();
+				s[0x1978].callees.clear();
 				ser(s);
 
 				dser(*fl);
@@ -999,8 +998,8 @@ namespace micro_profiler
 
 				// INIT
 				s.clear();
-				s[(void *)0x2978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s[(void *)0x2978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
+				s[0x2978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s[0x2978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
 				ser(s);
 
 				// ACT (update with children, but another entry)
@@ -1018,10 +1017,10 @@ namespace micro_profiler
 				invalidation_tracer t;
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s1[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17, 5, 2, 8, 97);
-				s2[(void *)0x1978].callees[(void *)0x2004] = function_statistics(11, 0, 1, 7, 91);
-				s2[(void *)0x1978].callees[(void *)0x2007] = function_statistics(17, 5, 2, 8, 97);
+				s1[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s1[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
+				s2[0x1978].callees[0x2004] = function_statistics(11, 0, 1, 7, 91);
+				s2[0x1978].callees[0x2007] = function_statistics(17, 5, 2, 8, 97);
 				ser(s1);
 				ser(s2);
 
@@ -1050,7 +1049,7 @@ namespace micro_profiler
 				// INIT
 				statistics_map_detailed s3;
 
-				s3[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s3[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
 				ser(s3);
 
 				// ACT
@@ -1068,10 +1067,10 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)0x1978].callees[(void *)0x2001] = function_statistics(11);
-				s[(void *)0x1978].callees[(void *)0x2004] = function_statistics(17);
-				s[(void *)0x1978].callees[(void *)0x2008] = function_statistics(18);
-				s[(void *)0x1978].callees[(void *)0x2011] = function_statistics(29);
+				s[0x1978].callees[0x2001] = function_statistics(11);
+				s[0x1978].callees[0x2004] = function_statistics(17);
+				s[0x1978].callees[0x2008] = function_statistics(18);
+				s[0x1978].callees[0x2011] = function_statistics(29);
 				ser(s);
 
 				dser(*fl);
@@ -1082,10 +1081,10 @@ namespace micro_profiler
 				ls->set_order(1, true);
 
 				// ACT / ASSERT
-				assert_equal((void *)0x2001, ls->get_address(0));
-				assert_equal((void *)0x2004, ls->get_address(1));
-				assert_equal((void *)0x2008, ls->get_address(2));
-				assert_equal((void *)0x2011, ls->get_address(3));
+				assert_equal(0x2001, ls->get_address(0));
+				assert_equal(0x2004, ls->get_address(1));
+				assert_equal(0x2008, ls->get_address(2));
+				assert_equal(0x2011, ls->get_address(3));
 			}
 
 
@@ -1095,9 +1094,9 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				static_cast<function_statistics &>(s[(void *)0x2001]) = function_statistics(11);
-				static_cast<function_statistics &>(s[(void *)0x2004]) = function_statistics(17);
-				static_cast<function_statistics &>(s[(void *)0x2008]) = function_statistics(18);
+				static_cast<function_statistics &>(s[0x2001]) = function_statistics(11);
+				static_cast<function_statistics &>(s[0x2004]) = function_statistics(17);
+				static_cast<function_statistics &>(s[0x2008]) = function_statistics(18);
 				ser(s);
 
 				dser(*fl);
@@ -1119,12 +1118,12 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)0x1978];
-				s1[(void *)0x1995];
+				s1[0x1978];
+				s1[0x1995];
 				ser(s1);
-				s2[(void *)0x2001];
-				s2[(void *)0x2004];
-				s2[(void *)0x2008];
+				s2[0x2001];
+				s2[0x2004];
+				s2[0x2008];
 				ser(s2);
 
 				dser(*fl1);
@@ -1147,12 +1146,12 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)0x1978];
-				s1[(void *)0x1995];
+				s1[0x1978];
+				s1[0x1995];
 				ser(s1);
-				s2[(void *)0x2001];
-				s2[(void *)0x2004];
-				s2[(void *)0x2008];
+				s2[0x2001];
+				s2[0x2004];
+				s2[0x2008];
 				ser(s2);
 
 				dser(*fl1);
@@ -1173,10 +1172,10 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)2978].callees[(void *)3001];
-				s[(void *)2995].callees[(void *)3001];
-				s[(void *)3001].callees[(void *)2995];
-				s[(void *)3001].callees[(void *)3001];
+				s[2978].callees[3001];
+				s[2995].callees[3001];
+				s[3001].callees[2995];
+				s[3001].callees[3001];
 				ser(s);
 
 				fl->set_order(1, true);
@@ -1201,10 +1200,10 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)2978].callees[(void *)2978];
-				s1[(void *)2995].callees[(void *)2978];
-				s1[(void *)3001].callees[(void *)2978];
-				s2[(void *)3002].callees[(void *)2978];
+				s1[2978].callees[2978];
+				s1[2995].callees[2978];
+				s1[3001].callees[2978];
+				s2[3002].callees[2978];
 				ser(s1);
 				ser(s2);
 
@@ -1232,12 +1231,12 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				static_cast<function_statistics &>(s[(void *)0x122F]) = function_statistics(1);
-				s[(void *)0x122F].callees[(void *)0x2340] = function_statistics(3);
-				static_cast<function_statistics &>(s[(void *)0x2340]) = function_statistics(3);
-				s[(void *)0x2340].callees[(void *)0x3451] = function_statistics(5000000000);
-				static_cast<function_statistics &>(s[(void *)0x3451]) = function_statistics(5000000000);
-				s[(void *)0x3451].callees[(void *)0x122F] = function_statistics(1);
+				static_cast<function_statistics &>(s[0x122F]) = function_statistics(1);
+				s[0x122F].callees[0x2340] = function_statistics(3);
+				static_cast<function_statistics &>(s[0x2340]) = function_statistics(3);
+				s[0x2340].callees[0x3451] = function_statistics(5000000000);
+				static_cast<function_statistics &>(s[0x3451]) = function_statistics(5000000000);
+				s[0x3451].callees[0x122F] = function_statistics(1);
 				ser(s);
 
 				dser(*fl);
@@ -1259,9 +1258,9 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
-				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(700);
-				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(30);
+				s[0x2978].callees[0x3001] = function_statistics(3);
+				s[0x2995].callees[0x3001] = function_statistics(700);
+				s[0x3001].callees[0x3001] = function_statistics(30);
 				ser(s);
 
 				fl->set_order(1, true);
@@ -1311,11 +1310,11 @@ namespace micro_profiler
 				invalidation_tracer t;
 				statistics_map_detailed s1, s2;
 
-				s1[(void *)0x2978].callees[(void *)0x3001];
-				s1[(void *)0x2995].callees[(void *)0x3001];
-				s1[(void *)0x3001].callees[(void *)0x3001];
+				s1[0x2978].callees[0x3001];
+				s1[0x2995].callees[0x3001];
+				s1[0x3001].callees[0x3001];
 				ser(s1);
-				s2[(void *)0x3002].callees[(void *)0x3001];
+				s2[0x3002].callees[0x3001];
 				ser(s2);
 
 				fl->set_order(1, true);
@@ -1350,9 +1349,9 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
-				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(700);
-				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(30);
+				s[0x2978].callees[0x3001] = function_statistics(3);
+				s[0x2995].callees[0x3001] = function_statistics(700);
+				s[0x3001].callees[0x3001] = function_statistics(30);
 				ser(s);
 
 				fl->set_order(1, true);
@@ -1376,11 +1375,11 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
-				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(30);
-				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(50);
+				s[0x2978].callees[0x3001] = function_statistics(3);
+				s[0x2995].callees[0x3001] = function_statistics(30);
+				s[0x3001].callees[0x3001] = function_statistics(50);
 				ser(s);
-				s.erase((void *)0x3001);
+				s.erase(0x3001);
 				ser(s);
 
 				fl->set_order(1, true);
@@ -1413,15 +1412,15 @@ namespace micro_profiler
 				statistics_map_detailed s1, s2, s3, s4;
 				invalidation_tracer ih;
 
-				s1[(void *)0x297D].callees[(void *)0x297D];
-				s1[(void *)0x299A].callees[(void *)0x297D];
-				s1[(void *)0x3006].callees[(void *)0x297D];
+				s1[0x297D].callees[0x297D];
+				s1[0x299A].callees[0x297D];
+				s1[0x3006].callees[0x297D];
 				ser(s1);
-				s2[(void *)0x7275];
+				s2[0x7275];
 				ser(s2);
-				s3[(void *)0x297D].callees[(void *)0x297D];
+				s3[0x297D].callees[0x297D];
 				ser(s3);
-				s4[(void *)0x8525].callees[(void *)0x297D];
+				s4[0x8525].callees[0x297D];
 				ser(s4);
 
 				fl->set_order(1, true);
@@ -1463,9 +1462,9 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
 				statistics_map_detailed s;
 
-				s[(void *)0x2978].callees[(void *)0x3001] = function_statistics(3);
-				s[(void *)0x2995].callees[(void *)0x3001] = function_statistics(30);
-				s[(void *)0x3001].callees[(void *)0x3001] = function_statistics(50);
+				s[0x2978].callees[0x3001] = function_statistics(3);
+				s[0x2995].callees[0x3001] = function_statistics(30);
+				s[0x3001].callees[0x3001] = function_statistics(50);
 				ser(s);
 
 				fl->set_order(1, true);
@@ -1477,9 +1476,9 @@ namespace micro_profiler
 				p->set_order(2, true);
 
 				// ACT / ASSERT
-				assert_equal((void *)0x2978, p->get_address(0));
-				assert_equal((void *)0x2995, p->get_address(1));
-				assert_equal((void *)0x3001, p->get_address(2));
+				assert_equal(0x2978, p->get_address(0));
+				assert_equal(0x2995, p->get_address(1));
+				assert_equal(0x3001, p->get_address(2));
 			}
 		end_test_suite
 	}

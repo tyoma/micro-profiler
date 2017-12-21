@@ -23,7 +23,8 @@
 
 #include "calls_collector.h"
 
-#include <common/primitives.h>
+#include "primitives.h"
+
 #include <common/pod_vector.h>
 
 #include <wpl/mt/synchronization.h>

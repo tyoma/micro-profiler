@@ -11,17 +11,27 @@ using namespace std;
 
 namespace micro_profiler
 {
+	template <typename AnyT, typename AddressT>
+	inline void add_child_statistics(AnyT &, AddressT, unsigned int, timestamp_t, timestamp_t)
+	{	}
+
 	namespace tests
 	{
-		struct function_statistics_guarded : function_statistics
+		namespace
 		{
-			function_statistics_guarded(count_t times_called = 0, unsigned int max_reentrance = 0, timestamp_t inclusive_time = 0, timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0)
-				: function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time)
-			{	}
+			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
+			typedef function_statistics_detailed::callees_map statistics_map;
+
+			struct function_statistics_guarded : function_statistics
+			{
+				function_statistics_guarded(count_t times_called = 0, unsigned int max_reentrance = 0, timestamp_t inclusive_time = 0, timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0)
+					: function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time)
+				{	}
 			
-			virtual void add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
-			{	function_statistics::add_call(level, inclusive_time, exclusive_time);	}
-		};
+				virtual void add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
+				{	function_statistics::add_call(level, inclusive_time, exclusive_time);	}
+			};
+		}
 
 		begin_test_suite( ShadowStackTests )
 			test( UpdatingWithEmptyTraceProvidesNoStatUpdates )

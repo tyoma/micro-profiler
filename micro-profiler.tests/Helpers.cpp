@@ -97,8 +97,8 @@ namespace micro_profiler
 			_fullpath = fullpath;
 		}
 
-		address_t image::load_address() const
-		{	return reinterpret_cast<address_t>(get());	}
+		long_address_t image::load_address() const
+		{	return reinterpret_cast<size_t>(get());	}
 
 		const wchar_t *image::absolute_path() const
 		{	return _fullpath.c_str();	}
@@ -134,15 +134,6 @@ namespace micro_profiler
 
 		size_t vector_adapter::end_position() const
 		{	return _buffer.size();	}
-
-
-		function_statistics_detailed function_statistics_ex(count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time, timestamp_t max_call_time)
-		{
-			function_statistics_detailed r;
-
-			(function_statistics &)r = function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time);
-			return r;
-		}
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs)

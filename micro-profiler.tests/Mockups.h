@@ -2,13 +2,8 @@
 
 #include <common/protocol.h>
 #include <collector/calls_collector.h>
-#include <collector/frontend_controller.h>
-#include <collector/statistics_bridge.h>
-#include <collector/system.h>
 
-#include <functional>
 #include <wpl/mt/synchronization.h>
-#include <wpl/mt/thread.h>
 #include <wpl/base/concepts.h>
 
 namespace micro_profiler
@@ -17,6 +12,11 @@ namespace micro_profiler
 	{
 		namespace mockups
 		{
+			typedef std::function<void(const void *buffer, size_t size)> channel_t;
+			typedef std::function<channel_t ()> frontend_factory;
+			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
+			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
+
 			struct FrontendState : wpl::noncopyable
 			{
 				struct ReceivedEntry;
@@ -42,7 +42,7 @@ namespace micro_profiler
 			struct FrontendState::ReceivedEntry
 			{
 				loaded_modules image_loads;
-				statistics_map_detailed_2 update;
+				statistics_map_detailed update;
 				unloaded_modules image_unloads;
 			};
 

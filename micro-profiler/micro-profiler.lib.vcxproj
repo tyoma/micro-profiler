@@ -81,6 +81,7 @@
     <ClInclude Include="collector\analyzer.h" />
     <ClInclude Include="collector\calls_collector.h" />
     <ClInclude Include="collector\frontend_controller.h" />
+    <ClInclude Include="collector\primitives.h" />
     <ClInclude Include="collector\statistics_bridge.h" />
     <ClInclude Include="collector\system.h" />
     <ClInclude Include="common\configuration.h" />
@@ -95,6 +96,7 @@
     <ClInclude Include="frontend\function_list.h" />
     <ClInclude Include="frontend\object_lock.h" />
     <ClInclude Include="frontend\columns_model.h" />
+    <ClInclude Include="frontend\primitives.h" />
     <ClInclude Include="frontend\statistics_model.h" />
     <ClInclude Include="frontend\symbol_resolver.h" />
     <ClInclude Include="ipc\client.h" />

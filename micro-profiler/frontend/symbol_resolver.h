@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <common/primitives.h>
+#include "primitives.h"
 
 #include <string>
 #include <memory>
@@ -32,7 +32,7 @@ namespace micro_profiler
 	struct symbol_resolver
 	{
 		virtual ~symbol_resolver()	{	}
-		virtual const std::wstring &symbol_name_by_va(const void *address) const = 0;
+		virtual const std::wstring &symbol_name_by_va(address_t address) const = 0;
 		virtual void add_image(const wchar_t *image, address_t load_address) = 0;
 
 		static std::shared_ptr<symbol_resolver> create();

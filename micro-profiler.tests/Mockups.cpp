@@ -5,7 +5,6 @@
 #include <common/serialization.h>
 
 #include <stdexcept>
-#include <strmd/deserializer.h>
 #include <ut/assert.h>
 
 using wpl::mt::thread;

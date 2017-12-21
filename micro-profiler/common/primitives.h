@@ -28,9 +28,9 @@ namespace std { namespace tr1 { } using namespace tr1; }
 namespace micro_profiler
 {
 	typedef unsigned char byte;
-	typedef unsigned long long count_t;
+	typedef unsigned long long int count_t;
 	typedef long long timestamp_t;
-	typedef unsigned long long address_t;
+	typedef unsigned long long int long_address_t;
 
 #pragma pack(push, 4)
 	struct call_record
@@ -42,6 +42,8 @@ namespace micro_profiler
 
 	struct address_compare
 	{
+		size_t operator ()(unsigned int key) const throw();
+		size_t operator ()(unsigned long long int key) const throw();
 		size_t operator ()(const void *key) const throw();
 	};
 
@@ -60,27 +62,33 @@ namespace micro_profiler
 		timestamp_t max_call_time;
 	};
 
-	typedef std::unordered_map<const void * /*address*/, function_statistics, address_compare> statistics_map;
-	typedef std::unordered_map<const void * /*address*/, count_t, address_compare> statistics_map_callers;
-
-	struct function_statistics_detailed : function_statistics
+	template <typename AddressT>
+	struct function_statistics_detailed_t : function_statistics
 	{
-		statistics_map callees;
-		statistics_map_callers callers;
+		typedef std::unordered_map<AddressT, function_statistics, address_compare> callees_map;
+		typedef std::unordered_map<AddressT, count_t, address_compare> callers_map;
+
+		callees_map callees;
+		callers_map callers;
 	};
 
-	typedef std::unordered_map<const void * /*address*/, function_statistics_detailed, address_compare> statistics_map_detailed;
-
-	struct statistics_map_detailed_2 : statistics_map_detailed
+	template <typename AddressT>
+	struct statistics_map_detailed_t : std::unordered_map<AddressT, function_statistics_detailed_t<AddressT>, address_compare>
 	{
-		wpl::signal<void (const void *updated_function)> entry_updated;
+		wpl::signal<void (AddressT updated_function)> entry_updated;
 	};
 
 
 
 	// address_compare - inline definitions
+	inline size_t address_compare::operator ()(unsigned int key) const throw()
+	{	return (key >> 4) * 2654435761;	}
+
+	inline size_t address_compare::operator ()(unsigned long long int key) const throw()
+	{	return static_cast<size_t>((key >> 4) * 0x7FFFFFFFFFFFFFFF);	}
+
 	inline size_t address_compare::operator ()(const void *key) const throw()
-	{	return (reinterpret_cast<size_t>(key) >> 4) * 2654435761;	}
+	{	return (*this)(reinterpret_cast<size_t>(key));	}
 
 
 	// function_statistics - inline definitions
@@ -113,15 +121,14 @@ namespace micro_profiler
 
 
 	// helper methods - inline definitions
-	inline void add_child_statistics(function_statistics &/*s*/, const void * /*function*/, unsigned int /*level*/, timestamp_t /*inclusive_time*/, timestamp_t /*exclusive_time*/)
-	{	}
-
-	inline void add_child_statistics(function_statistics_detailed &s, const void *function, unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
+	template <typename AddressT>
+	inline void add_child_statistics(function_statistics_detailed_t<AddressT> &s, AddressT function, unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
 	{	s.callees[function].add_call(level, inclusive_time, exclusive_time);	}
 
-	inline void update_parent_statistics(statistics_map_detailed &s, const void *address, const function_statistics_detailed &f)
+	template <typename AddressT, typename AddressCompareT>
+	inline void update_parent_statistics(std::unordered_map<AddressT, function_statistics_detailed_t<AddressT>, AddressCompareT> &s, AddressT address, const function_statistics_detailed_t<AddressT> &f)
 	{
-		for (statistics_map::const_iterator i = f.callees.begin(); i != f.callees.end(); ++i)
+		for (typename function_statistics_detailed_t<AddressT>::callees_map::const_iterator i = f.callees.begin(); i != f.callees.end(); ++i)
 			s[i->first].callers[address] = i->second.times_called;
 	}
 }

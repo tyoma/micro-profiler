@@ -22,7 +22,7 @@
 
 #include "calls_collector.h"
 
-#include <common/primitives.h>
+#include "primitives.h"
 
 #include <vector>
 

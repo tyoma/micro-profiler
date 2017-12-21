@@ -52,7 +52,7 @@ namespace micro_profiler
 		}
 
 		void SetEnvironment(const wchar_t *name, const wchar_t *value)
-		{	::SetEnvironmentVariable(name, value);	}
+		{	::SetEnvironmentVariableW(name, value);	}
 
 		wstring GetModuleDirectory()
 		{	return ~get_module_info(&c_environment).path;	}

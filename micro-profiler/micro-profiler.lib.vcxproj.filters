@@ -111,6 +111,12 @@
     <ClInclude Include="common\path.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="frontend\primitives.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\primitives.h">
+      <Filter>collector</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="frontend">

@@ -3,6 +3,9 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="config.props" />
   </ImportGroup>
+  <PropertyGroup Label="Configuration">
+    <OutDir>$(OutDir)ut\</OutDir>
+  </PropertyGroup>
 
   <ItemDefinitionGroup>
     <ClCompile>

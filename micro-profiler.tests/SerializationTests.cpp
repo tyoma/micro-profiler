@@ -16,6 +16,12 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
+			typedef function_statistics_detailed_t<const void *>::callees_map statistics_map;
+		}
+
 		begin_test_suite( SerializationTests )
 			test( SerializedStatisticsAreDeserialized )
 			{
@@ -175,7 +181,7 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// INIT
-				statistics_map_detailed_2 dss;
+				statistics_map_detailed dss;
 
 				static_cast<statistics_map_detailed &>(dss) = ss;
 
@@ -214,7 +220,7 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// INIT
-				statistics_map_detailed_2 dss;
+				statistics_map_detailed dss;
 
 				static_cast<statistics_map_detailed &>(dss) = ss;
 
@@ -239,7 +245,7 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss;
-				statistics_map_detailed_2 dss;
+				statistics_map_detailed dss;
 
 				ss[(void *)1221].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
 				ss[(void *)1221].callees[(void *)1231] = function_statistics(18, 0, 0, 0, 0);
@@ -287,7 +293,7 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss1, ss2;
-				statistics_map_detailed_2 dss;
+				statistics_map_detailed dss;
 				wpl::slot_connection c = dss.entry_updated += bind(&SerializationTests::entry_updated, this, _1);
 
 				ss1[(void *)1221].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
@@ -329,7 +335,7 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistics_map_detailed ss;
-				statistics_map_detailed_2 dss;
+				statistics_map_detailed dss;
 				wpl::slot_connection c = dss.entry_updated += bind(&SerializationTests::entry_updated, this, _1);
 
 				ss[(void *)1221].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
@@ -373,7 +379,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				statistics_map_detailed_2 ss;
+				statistics_map_detailed ss;
 
 				// ACT
 				ds(ss);

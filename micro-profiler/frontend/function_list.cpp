@@ -79,52 +79,52 @@ namespace micro_profiler
 				{	}
 
 				template <typename AnyT>
-				bool operator ()(const void *lhs_addr, const AnyT &, const void *rhs_addr, const AnyT &) const
+				bool operator ()(address_t lhs_addr, const AnyT &, address_t rhs_addr, const AnyT &) const
 				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
 			};
 
 			struct by_times_called
 			{
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.times_called < rhs.times_called;	}
 
-				bool operator ()(const void *, count_t lhs, const void *, count_t rhs) const
+				bool operator ()(address_t, count_t lhs, address_t, count_t rhs) const
 				{	return lhs < rhs;	}
 			};
 
 			struct by_exclusive_time
 			{
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.exclusive_time < rhs.exclusive_time;	}
 			};
 
 			struct by_inclusive_time
 			{
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.inclusive_time < rhs.inclusive_time;	}
 			};
 
 			struct by_avg_exclusive_call_time
 			{
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.times_called && rhs.times_called ? lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 			};
 
 			struct by_avg_inclusive_call_time
 			{
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.times_called && rhs.times_called ? lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 			};
 
 			struct by_max_reentrance
 			{
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.max_reentrance < rhs.max_reentrance;	}
 			};
 
 			struct by_max_call_time
 			{
-				bool operator ()(const void *, const function_statistics &lhs, const void *, const function_statistics &rhs) const
+				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.max_call_time < rhs.max_call_time;	}
 			};
 		}
@@ -149,14 +149,14 @@ namespace micro_profiler
 
 	class children_statistics_model_impl : public statistics_model_impl<linked_statistics, statistics_map>
 	{
-		const void *_controlled_address;
+		address_t _controlled_address;
 		slot_connection _updates_connection;
 
-		void on_updated(const void *address);
+		void on_updated(address_t address);
 
 	public:
-		children_statistics_model_impl(const void *controlled_address, const statistics_map &statistics,
-			signal<void (const void *)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
+		children_statistics_model_impl(address_t controlled_address, const statistics_map &statistics,
+			signal<void (address_t)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
 	};
 
 
@@ -164,10 +164,10 @@ namespace micro_profiler
 	{
 		slot_connection _updates_connection;
 
-		void on_updated(const void *address);
+		void on_updated(address_t address);
 
 	public:
-		parents_statistics(const statistics_map_callers &statistics, signal<void (const void *)> &entry_updated,
+		parents_statistics(const statistics_map_callers &statistics, signal<void (address_t)> &entry_updated,
 			shared_ptr<symbol_resolver> resolver);
 	};
 
@@ -211,9 +211,9 @@ namespace micro_profiler
 
 
 
-	functions_list::functions_list(shared_ptr<statistics_map_detailed_2> statistics, double tick_interval,
+	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 		shared_ptr<symbol_resolver> resolver) 
-		: statistics_model_impl<listview::model, statistics_map_detailed_2>(*statistics, tick_interval, resolver),
+		: statistics_model_impl<listview::model, statistics_map_detailed>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
@@ -268,15 +268,15 @@ namespace micro_profiler
 	
 
 
-	children_statistics_model_impl::children_statistics_model_impl(const void *controlled_address,
-		const statistics_map &statistics, signal<void (const void *)> &entry_updated, double tick_interval,
+	children_statistics_model_impl::children_statistics_model_impl(address_t controlled_address,
+		const statistics_map &statistics, signal<void (address_t)> &entry_updated, double tick_interval,
 		shared_ptr<symbol_resolver> resolver)
 		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
 	{
 		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
 	}
 
-	void children_statistics_model_impl::on_updated(const void *address)
+	void children_statistics_model_impl::on_updated(address_t address)
 	{
 		if (_controlled_address == address)
 			updated();
@@ -284,7 +284,7 @@ namespace micro_profiler
 
 
 	parents_statistics::parents_statistics(const statistics_map_callers &statistics,
-		signal<void (const void *)> &entry_updated, shared_ptr<symbol_resolver> resolver)
+		signal<void (address_t)> &entry_updated, shared_ptr<symbol_resolver> resolver)
 		: statistics_model_impl<linked_statistics, statistics_map_callers>(statistics, 0, resolver)
 	{
 		_updates_connection = entry_updated += bind(&parents_statistics::on_updated, this, _1);
@@ -315,7 +315,7 @@ namespace micro_profiler
 		invalidated(_view.size());
 	}
 
-	void parents_statistics::on_updated(const void * /*address*/)
+	void parents_statistics::on_updated(address_t /*address*/)
 	{	updated();	}
 
 
@@ -323,6 +323,6 @@ namespace micro_profiler
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_resolution, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list(
-			shared_ptr<statistics_map_detailed_2>(new statistics_map_detailed_2), 1.0 / ticks_resolution, resolver));
+			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_resolution, resolver));
 	}
 }

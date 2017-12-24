@@ -22,10 +22,10 @@
 
 #include "constants.h"
 #include "function_list.h"
-#include "object_lock.h"
 #include "ProfilerMainDialog.h"
 #include "symbol_resolver.h"
 
+#include <common/path.h>
 #include <common/serialization.h>
 #include <resources/resource.h>
 
@@ -63,6 +63,16 @@ namespace micro_profiler
 
 		void disconnect(IUnknown *object)
 		{	::CoDisconnectObject(object, 0);	}
+
+		template <typename T>
+		shared_ptr<T> com_create()
+		{
+			CComObject<T> *p = 0;
+
+			CComObject<T>::CreateInstance(&p);
+			p->AddRef();
+			return shared_ptr<T>(p, bind(&IUnknown::Release, _1));
+		}
 	}
 
 	class ATL_NO_VTABLE ProfilerFrontend
@@ -77,15 +87,11 @@ namespace micro_profiler
 		END_COM_MAP()
 
 	public:
-		void FinalRelease()
+		void SetOwnership(signal<void()> &termination, const get_root_window_t &root_window_cb)
 		{
-			_dialog.reset();
-			_statistics.reset();
-			_symbols.reset();
+			_connections.push_back(termination += bind(&disconnect, this));
+			_root_window_cb = root_window_cb;
 		}
-
-		void JoinTermination(signal<void()> &termination)
-		{	_host_terminated = termination += bind(&disconnect, this);	}
 
 		STDMETHODIMP Read(void *, ULONG, ULONG *)
 		{	return E_NOTIMPL;	}
@@ -104,19 +110,15 @@ namespace micro_profiler
 				initializaion_data process;
 
 				archive(process);
-
-				wchar_t filename[MAX_PATH] = { 0 }, extension[MAX_PATH] = { 0 };
-
-				_wsplitpath_s(process.first.c_str(), 0, 0, 0, 0, filename, MAX_PATH, extension, MAX_PATH);
-	
 				_symbols = symbol_resolver::create();
 				_statistics = functions_list::create(process.second, _symbols);
-				_dialog.reset(new ProfilerMainDialog(_statistics, wstring(filename) + extension));
-				_dialog->ShowWindow(SW_SHOW);
-				_closed_connected = _dialog->Closed += bind(&disconnect, this);
 
-				if (!_host_terminated)
-					lock(_dialog);
+				const HWND parent = _root_window_cb ? _root_window_cb() : HWND_DESKTOP;
+				shared_ptr<ProfilerMainDialog> d(new ProfilerMainDialog(_statistics, *process.first, parent));
+
+				d->ShowWindow(SW_SHOW);
+				_connections.push_back(d->Closed += bind(&disconnect, this));
+				lock(d);
 				break;
 			}
 
@@ -144,47 +146,52 @@ namespace micro_profiler
 	private:
 		shared_ptr<symbol_resolver> _symbols;
 		shared_ptr<functions_list> _statistics;
-		shared_ptr<ProfilerMainDialog> _dialog;
-		slot_connection _closed_connected;
-		slot_connection _host_terminated;
+		vector<slot_connection> _connections;
+		get_root_window_t _root_window_cb;
 	};
 
 	OBJECT_ENTRY_AUTO(c_frontendClassID, ProfilerFrontend);
 
-	shared_ptr<void> open_frontend()
+	shared_ptr<void> open_frontend_factory(const get_root_window_t &root_window_cb)
 	{
 		class Factory : public CComClassFactory
 		{
 		public:
-			static void Terminate(Factory *self, DWORD cookie)
+			static shared_ptr<void> Init(const get_root_window_t &root_window_cb)
 			{
-				self->_terminate();
-				::CoRevokeClassObject(cookie);
+				shared_ptr<Factory> f = com_create<Factory>();
+
+				f->_root_window_cb = root_window_cb;
+				if (S_OK == ::CoRegisterClassObject(c_frontendClassID, f.get(), CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &f->_cookie))
+					return shared_ptr<void>(f.get(), bind(&Factory::Terminate, f.get()));
+				return shared_ptr<void>();
+			}
+
+		private:
+			void Terminate()
+			{
+				_terminate();
+				::CoRevokeClassObject(_cookie);
 			}
 
 			STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object)
 			{
-				CComObject<ProfilerFrontend> *p = NULL;
+				if (!outer)
+				{
+					shared_ptr<ProfilerFrontend> p = com_create<ProfilerFrontend>();
 
-				if (outer)
-					return CLASS_E_NOAGGREGATION;
-				CComObject<ProfilerFrontend>::CreateInstance(&p);
-				CComPtr<IUnknown> guard(p);
-				p->JoinTermination(_terminate);
-				return p->QueryInterface(riid, object);
+					p->SetOwnership(_terminate, _root_window_cb);
+					return p->QueryInterface(riid, object);
+				}
+				return CLASS_E_NOAGGREGATION;
 			}
 
 		private:
+			DWORD _cookie;
 			signal<void()> _terminate;
+			get_root_window_t _root_window_cb;
 		};
 
-		CComObject<Factory> *factory = NULL;
-		DWORD cookie = 0;
-
-		CComObject<Factory>::CreateInstance(&factory);
-		CComPtr<IUnknown> guard(factory);
-		if (S_OK == ::CoRegisterClassObject(c_frontendClassID, factory, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
-			return shared_ptr<void>(factory, bind(&Factory::Terminate, _1, cookie));
-		return shared_ptr<void>();
+		return Factory::Init(root_window_cb);
 	}
 }

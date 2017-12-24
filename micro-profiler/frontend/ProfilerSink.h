@@ -20,11 +20,16 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 
 namespace std { namespace tr1 { } using namespace tr1; }
 
+typedef struct HWND__ *HWND;
+
 namespace micro_profiler
 {
-	std::shared_ptr<void> open_frontend();
+	typedef std::function<HWND()> get_root_window_t;
+
+	std::shared_ptr<void> open_frontend_factory(const get_root_window_t &root_window_cb);
 }

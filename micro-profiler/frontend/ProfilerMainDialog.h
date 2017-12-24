@@ -58,7 +58,7 @@ namespace micro_profiler
 		virtual void OnFinalMessage(HWND hwnd);
 
 	public:
-		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable);
+		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable, HWND parent);
 		~ProfilerMainDialog();
 
 		wpl::signal<void()> Closed;

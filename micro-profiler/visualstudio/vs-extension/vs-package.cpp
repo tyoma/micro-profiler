@@ -25,12 +25,23 @@ namespace micro_profiler
 {
 	namespace integration
 	{
-		typedef shared_ptr<project_command> command_ptr;
+		namespace
+		{
+			typedef shared_ptr<project_command> command_ptr;
 
-		pair<int /*command_id*/, command_ptr> g_commands[] = {
-			make_pair(cmdidToggleProfiling, command_ptr(new toggle_profiling)),
-			make_pair(cmdidRemoveProfilingSupport, command_ptr(new remove_profiling_support)),
-		};
+			pair<int /*command_id*/, command_ptr> g_commands[] = {
+				make_pair(cmdidToggleProfiling, command_ptr(new toggle_profiling)),
+				make_pair(cmdidRemoveProfilingSupport, command_ptr(new remove_profiling_support)),
+			};
+
+			HWND GetRootWindow(const CComPtr<IVsUIShell> &shell)
+			{
+				HWND hwnd = NULL;
+
+				shell->GetDialogOwnerHwnd(&hwnd);
+				return hwnd;
+			}
+		}
 
 
 		class profiler_package : public CComObjectRootEx<CComSingleThreadModel>,
@@ -58,8 +69,11 @@ namespace micro_profiler
 		private:
 			STDMETHODIMP SetSite(IServiceProvider *sp)
 			{
+				CComPtr<IVsUIShell> shell;
+
+				sp->QueryService(__uuidof(IVsUIShell), &shell);
 				register_path(false);
-				_factory = open_frontend();
+				_factory = open_frontend_factory(bind(&GetRootWindow, shell));
 				_service_provider = sp;
 				return S_OK;
 			}

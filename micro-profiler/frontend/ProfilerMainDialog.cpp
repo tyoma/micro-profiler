@@ -82,7 +82,7 @@ namespace micro_profiler
 		}
 	}
 
-	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable)
+	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable, HWND parent)
 		: _statistics(s), _executable(executable),
 			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_columns_main(new columns_model(c_columns_statistics, 3, false)),
@@ -90,7 +90,7 @@ namespace micro_profiler
 	{
 		shared_ptr<hive> c(open_configuration());
 
-		Create(NULL, 0);
+		Create(parent, 0);
 
 		if (load(*c, "Placement", _placement))
 			MoveWindow(_placement.left, _placement.top, _placement.Width(), _placement.Height());

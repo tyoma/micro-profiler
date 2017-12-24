@@ -64,6 +64,9 @@ namespace micro_profiler
 		void disconnect(IUnknown *object)
 		{	::CoDisconnectObject(object, 0);	}
 
+		void release(IUnknown *object)
+		{	object->Release();	}
+
 		template <typename T>
 		shared_ptr<T> com_create()
 		{
@@ -71,7 +74,7 @@ namespace micro_profiler
 
 			CComObject<T>::CreateInstance(&p);
 			p->AddRef();
-			return shared_ptr<T>(p, bind(&IUnknown::Release, _1));
+			return shared_ptr<T>(p, bind(&release, _1));
 		}
 	}
 

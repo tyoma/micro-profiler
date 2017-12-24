@@ -1239,6 +1239,8 @@ namespace micro_profiler
 				s[0x3451].callees[0x122F] = function_statistics(1);
 				ser(s);
 
+				fl->set_order(1, true);
+
 				dser(*fl);
 
 				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);

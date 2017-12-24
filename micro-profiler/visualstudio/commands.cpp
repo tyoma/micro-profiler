@@ -8,6 +8,8 @@
 #include <io.h>
 #include <memory>
 
+#pragma warning(disable:4996)
+
 namespace std { namespace tr1 { } using namespace tr1; }
 
 using namespace std;

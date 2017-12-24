@@ -75,11 +75,11 @@ namespace micro_profiler
 						}
 					}
 
-					void add_output(const vector<byte> &data)
+					void add_output(const vector<byte> &data_)
 					{
-						scoped_lock l(this->data->server_mutex);
+						scoped_lock l(data->server_mutex);
 
-						this->data->outputs.push_back(data);
+						data->outputs.push_back(data_);
 					}
 
 					deque< vector<byte> > get_inputs()
@@ -157,7 +157,7 @@ namespace micro_profiler
 					client::enumerate_servers(servers);
 
 					// ASSERT
-					const string reference1[] = { "foo", };
+					string reference1[] = { "foo", };
 
 					assert_equivalent(reference1, servers);
 
@@ -166,7 +166,7 @@ namespace micro_profiler
 					client::enumerate_servers(servers);
 
 					// ASSERT
-					const string reference2[] = { "foo", "Foe X", };
+					string reference2[] = { "foo", "Foe X", };
 
 					assert_equivalent(reference2, servers);
 
@@ -175,7 +175,7 @@ namespace micro_profiler
 					client::enumerate_servers(servers);
 
 					// ASSERT
-					const string reference3[] = { "foo", "Foe X", "Bar Z", "hope.this.will.be.visible", };
+					string reference3[] = { "foo", "Foe X", "Bar Z", "hope.this.will.be.visible", };
 
 					assert_equivalent(reference3, servers);
 				}
@@ -192,7 +192,7 @@ namespace micro_profiler
 					client::enumerate_servers(servers);
 
 					// ASSERT
-					const string reference1[] = { "foo2", "bzzz. . .p", };
+					string reference1[] = { "foo2", "bzzz. . .p", };
 
 					assert_equivalent(reference1, servers);
 
@@ -201,7 +201,7 @@ namespace micro_profiler
 					client::enumerate_servers(servers);
 
 					// ASSERT
-					const string reference2[] = { "bzzz. . .p", };
+					string reference2[] = { "bzzz. . .p", };
 
 					assert_equivalent(reference2, servers);
 				}

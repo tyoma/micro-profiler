@@ -96,16 +96,16 @@ namespace micro_profiler
 		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_), max_call_time(max_call_time_)
 	{	}
 
-	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
+	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time_, timestamp_t exclusive_time_)
 	{
 		++times_called;
 		if (level > max_reentrance)
 			max_reentrance = level;
 		if (!level)
-			this->inclusive_time += inclusive_time;
-		this->exclusive_time += exclusive_time;
-		if (inclusive_time > max_call_time)
-			max_call_time = inclusive_time;
+			inclusive_time += inclusive_time_;
+		exclusive_time += exclusive_time_;
+		if (inclusive_time_ > max_call_time)
+			max_call_time = inclusive_time_;
 	}
 
 	inline void function_statistics::operator +=(const function_statistics &rhs)

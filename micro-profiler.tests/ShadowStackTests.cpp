@@ -28,8 +28,8 @@ namespace micro_profiler
 					: function_statistics(times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time)
 				{	}
 			
-				virtual void add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
-				{	function_statistics::add_call(level, inclusive_time, exclusive_time);	}
+				virtual void add_call(unsigned int level, timestamp_t inclusive_time_, timestamp_t exclusive_time_)
+				{	function_statistics::add_call(level, inclusive_time_, exclusive_time_);	}
 			};
 		}
 
@@ -64,7 +64,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace1, end(trace1), statistics);
+				ss.update(trace1, array_end(trace1), statistics);
 
 				// ASSERT
 				assert_equal(1u, statistics.size());
@@ -75,7 +75,7 @@ namespace micro_profiler
 				assert_equal(13, statistics.begin()->second.max_call_time);
 
 				// ACT
-				ss.update(trace2, end(trace2), statistics);
+				ss.update(trace2, array_end(trace2), statistics);
 
 				// ASSERT
 				assert_equal(2u, statistics.size());
@@ -109,7 +109,7 @@ namespace micro_profiler
 				call_record trace4[] = {	{	123450029, (void *)0	},	};
 
 				// ACT
-				ss.update(trace1, end(trace1), statistics);
+				ss.update(trace1, array_end(trace1), statistics);
 
 				// ASSERT
 				assert_equal(1u, statistics.size());
@@ -120,7 +120,7 @@ namespace micro_profiler
 				assert_equal(0, statistics.begin()->second.max_call_time);
 
 				// ACT
-				ss.update(trace2, end(trace2), statistics);
+				ss.update(trace2, array_end(trace2), statistics);
 
 				// ASSERT
 				assert_equal(1u, statistics.size());
@@ -131,13 +131,13 @@ namespace micro_profiler
 				assert_equal(13, statistics.begin()->second.max_call_time);
 
 				// ACT
-				ss.update(trace3, end(trace3), statistics);
+				ss.update(trace3, array_end(trace3), statistics);
 
 				// ASSERT
 				assert_equal(2u, statistics.size());
 
 				// ACT
-				ss.update(trace4, end(trace4), statistics);
+				ss.update(trace4, array_end(trace4), statistics);
 
 				// ASSERT
 				assert_equal(2u, statistics.size());
@@ -178,8 +178,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss1.update(trace1, end(trace1), statistics1);
-				ss2.update(trace2, end(trace2), statistics2);
+				ss1.update(trace1, array_end(trace1), statistics1);
+				ss2.update(trace2, array_end(trace2), statistics2);
 
 				// ASSERT
 				assert_equal(2u, statistics1.size());
@@ -216,7 +216,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				assert_equal(2u, statistics.size());
@@ -265,7 +265,7 @@ namespace micro_profiler
 				statistics[(void *)0x0bcdef12].max_call_time = 11;
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				assert_equal(3u, statistics.size());
@@ -316,8 +316,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace1, end(trace1), statistics);
-				ss.update(trace2, end(trace2), statistics);
+				ss.update(trace1, array_end(trace1), statistics);
+				ss.update(trace2, array_end(trace2), statistics);
 
 				// ASSERT
 				assert_equal(5u, statistics.size());
@@ -370,7 +370,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				assert_equal(4u, statistics.size());
@@ -417,8 +417,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss1.update(trace, end(trace), statistics1);
-				ss2.update(trace, end(trace), statistics2);
+				ss1.update(trace, array_end(trace), statistics1);
+				ss2.update(trace, array_end(trace), statistics2);
 
 				// ASSERT
 				map<const void *, function_statistics>::const_iterator i1_1(statistics1.begin()), i1_2(statistics1.begin()), i1_3(statistics1.begin());
@@ -477,7 +477,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
@@ -513,7 +513,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin());
@@ -565,7 +565,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				map<const void *, function_statistics>::const_iterator i1(statistics.begin()), i2(statistics.begin()), i3(statistics.begin());
@@ -578,7 +578,7 @@ namespace micro_profiler
 				assert_equal(0u, i3->second.max_reentrance);
 
 				// ACT
-				ss.update(trace2, end(trace2), statistics);
+				ss.update(trace2, array_end(trace2), statistics);
 
 				// ASSERT
 				assert_equal(3u, i1->second.max_reentrance);
@@ -616,8 +616,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
-				ss_delayed.update(trace, end(trace), statistics_delayed);
+				ss.update(trace, array_end(trace), statistics);
+				ss_delayed.update(trace, array_end(trace), statistics_delayed);
 
 				// ASSERT
 				assert_is_empty(statistics[(void *)101].callees);
@@ -735,7 +735,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				assert_equal(2u, statistics[(void *)1].callees.size());
@@ -790,7 +790,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(trace, end(trace), statistics);
+				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
 				statistics_map &cs1 = statistics[(void *)0x1].callees;
@@ -881,12 +881,12 @@ namespace micro_profiler
 					{	13, (void *)0	},
 				};
 
-				ss1.update(trace1, end(trace1), statistics);
-				ss2.update(trace2, end(trace2), statistics);
+				ss1.update(trace1, array_end(trace1), statistics);
+				ss2.update(trace2, array_end(trace2), statistics);
 				statistics.clear();
 
 				// ACT / ASSERT (must not throw)
-				ss1.update(trace1_exits, end(trace1_exits), statistics);
+				ss1.update(trace1_exits, array_end(trace1_exits), statistics);
 
 				// ASSERT (lite assertion - only check call times/recursion)
 				assert_equal(4u, statistics.size());
@@ -903,7 +903,7 @@ namespace micro_profiler
 				statistics.clear();
 
 				// ACT
-				ss2.update(trace2_exits, end(trace2_exits), statistics);
+				ss2.update(trace2_exits, array_end(trace2_exits), statistics);
 
 				// ASSERT
 				assert_equal(2u, statistics.size());

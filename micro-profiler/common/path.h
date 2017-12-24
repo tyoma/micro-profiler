@@ -8,7 +8,7 @@ namespace micro_profiler
 	{
 		if (lhs.empty())
 			return rhs;
-		if (lhs.back() == L'\\' || lhs.back() == L'/')
+		if (*lhs.rbegin() == L'\\' || *lhs.rbegin() == L'/')
 			return lhs + rhs;
 		return lhs + L"/" + rhs;
 	}

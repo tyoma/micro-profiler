@@ -72,7 +72,7 @@ namespace micro_profiler
 
 		dispatch dispatch::get(const wchar_t *name, const _variant_t &index) const
 		{
-			DISPPARAMS dispparams = { const_cast<_variant_t *>(&index), NULL, index != vtMissing ? 1 : 0, 0 };
+			DISPPARAMS dispparams = { const_cast<_variant_t *>(&index), NULL, index != vtMissing ? 1u : 0u, 0u };
 
 			return dispatch(invoke(name, DISPATCH_PROPERTYGET, dispparams));
 		}
@@ -80,7 +80,7 @@ namespace micro_profiler
 		void dispatch::put(const wchar_t *name, const _variant_t &value) const
 		{
 			DISPID propputnamed = DISPID_PROPERTYPUT;
-			DISPPARAMS dispparams = { const_cast<_variant_t *>(&value), &propputnamed, 1, 1 };
+			DISPPARAMS dispparams = { const_cast<_variant_t *>(&value), &propputnamed, 1u, 1u };
 
 			invoke(name, DISPATCH_PROPERTYPUT, dispparams);
 		}

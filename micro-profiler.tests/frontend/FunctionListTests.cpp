@@ -32,7 +32,7 @@ namespace micro_profiler
 				return s.str();
 			}
 
-			wstring to_string_address(long_address_t value)
+			wstring to_string_address(address_t value)
 			{
 				wstringstream s;
 				s << uppercase << hex << setw(8) << setfill(L'0') << value;
@@ -120,15 +120,15 @@ namespace micro_profiler
 
 			class sri : public symbol_resolver
 			{
-				mutable map<long_address_t, wstring> _names;
+				mutable map<address_t, wstring> _names;
 
 			public:
-				virtual const wstring &symbol_name_by_va(long_address_t address) const
+				virtual const wstring &symbol_name_by_va(address_t address) const
 				{
 					return _names[address] = to_string_address(address);
 				}
 
-				virtual void add_image(const wchar_t * /*image*/, long_address_t /*base*/)
+				virtual void add_image(const wchar_t * /*image*/, address_t /*base*/)
 				{
 				}
 			};

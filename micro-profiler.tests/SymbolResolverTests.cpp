@@ -61,8 +61,8 @@ namespace micro_profiler
 				getter_1(f1, f2);
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)f1);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f2);
+				wstring name1 = r->symbol_name_by_va((address_t)f1);
+				wstring name2 = r->symbol_name_by_va((address_t)f2);
 
 				// ASSERT
 				assert_equal(name1, L"very_simple_global_function");
@@ -83,9 +83,9 @@ namespace micro_profiler
 				getter_2(f1, f2, f3);
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)f1);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f2);
-				wstring name3 = r->symbol_name_by_va((long_address_t)f3);
+				wstring name1 = r->symbol_name_by_va((address_t)f1);
+				wstring name2 = r->symbol_name_by_va((address_t)f2);
+				wstring name3 = r->symbol_name_by_va((address_t)f3);
 
 				// ASSERT
 				assert_equal(name1, L"vale_of_mean_creatures::this_one_for_the_birds");
@@ -111,9 +111,9 @@ namespace micro_profiler
 				*reinterpret_cast<const char **>(&f3) += 113;
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)f1);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f2);
-				wstring name3 = r->symbol_name_by_va((long_address_t)f3);
+				wstring name1 = r->symbol_name_by_va((address_t)f1);
+				wstring name2 = r->symbol_name_by_va((address_t)f2);
+				wstring name3 = r->symbol_name_by_va((address_t)f3);
 
 				// ASSERT
 				assert_equal(name1, L"vale_of_mean_creatures::this_one_for_the_birds");
@@ -135,8 +135,8 @@ namespace micro_profiler
 				getter_3(f);
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)getter_3);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f);
+				wstring name1 = r->symbol_name_by_va((address_t)getter_3);
+				wstring name2 = r->symbol_name_by_va((address_t)f);
 
 				// ASSERT
 				assert_equal(name1, L"get_function_addresses_3"); // exported function will have a name
@@ -157,13 +157,13 @@ namespace micro_profiler
 				getter_2(f1, f2, f3);
 
 				// ACT
-				const wstring *name1_1 = &r->symbol_name_by_va((long_address_t)f1);
-				const wstring *name2_1 = &r->symbol_name_by_va((long_address_t)f2);
-				const wstring *name3_1 = &r->symbol_name_by_va((long_address_t)f3);
+				const wstring *name1_1 = &r->symbol_name_by_va((address_t)f1);
+				const wstring *name2_1 = &r->symbol_name_by_va((address_t)f2);
+				const wstring *name3_1 = &r->symbol_name_by_va((address_t)f3);
 
-				const wstring *name2_2 = &r->symbol_name_by_va((long_address_t)f2);
-				const wstring *name1_2 = &r->symbol_name_by_va((long_address_t)f1);
-				const wstring *name3_2 = &r->symbol_name_by_va((long_address_t)f3);
+				const wstring *name2_2 = &r->symbol_name_by_va((address_t)f2);
+				const wstring *name1_2 = &r->symbol_name_by_va((address_t)f1);
+				const wstring *name3_2 = &r->symbol_name_by_va((address_t)f3);
 
 				// ASSERT
 				assert_equal(name1_1, name1_2);
@@ -191,11 +191,11 @@ namespace micro_profiler
 				r->add_image(img2.absolute_path(), img2.load_address());
 
 				// ACT / ASSERT
-				assert_equal(r->symbol_name_by_va((long_address_t)f1_2), L"vale_of_mean_creatures::this_one_for_the_birds");
-				assert_equal(r->symbol_name_by_va((long_address_t)f2_2), L"vale_of_mean_creatures::this_one_for_the_whales");
-				assert_equal(r->symbol_name_by_va((long_address_t)f3_2), L"vale_of_mean_creatures::the_abyss::bubble_sort");
-				assert_equal(r->symbol_name_by_va((long_address_t)f1_1), L"very_simple_global_function");
-				assert_equal(r->symbol_name_by_va((long_address_t)f2_1), L"a_tiny_namespace::function_that_hides_under_a_namespace");
+				assert_equal(r->symbol_name_by_va((address_t)f1_2), L"vale_of_mean_creatures::this_one_for_the_birds");
+				assert_equal(r->symbol_name_by_va((address_t)f2_2), L"vale_of_mean_creatures::this_one_for_the_whales");
+				assert_equal(r->symbol_name_by_va((address_t)f3_2), L"vale_of_mean_creatures::the_abyss::bubble_sort");
+				assert_equal(r->symbol_name_by_va((address_t)f1_1), L"very_simple_global_function");
+				assert_equal(r->symbol_name_by_va((address_t)f2_1), L"a_tiny_namespace::function_that_hides_under_a_namespace");
 			}
 		end_test_suite
 	}

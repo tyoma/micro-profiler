@@ -1,8 +1,8 @@
 {
-	"id":"1A9C8A85-52FE-48AE-82AF-76003114E230",
+	"id":"BE031F34-5332-461B-8C48-ED5143BD20DA",
 	"version":"!version!",
 	"type":"Vsix",
-	"vsixId":"1A9C8A85-52FE-48AE-82AF-76003114E230",
+	"vsixId":"BE031F34-5332-461B-8C48-ED5143BD20DA",
 	"extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\micro-profiler",
 	"files": [
 		{"fileName":"/extension.vsixmanifest","sha256":"!hashmanifest!"},

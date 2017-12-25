@@ -29,7 +29,7 @@ namespace micro_profiler
 }
 
 #ifdef _M_IX86
-	#define MPCDECL _cdecl
+	#define MPCDECL __cdecl
 #elif _M_X64
 	#define MPCDECL
 #else

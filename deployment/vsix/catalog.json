@@ -1,12 +1,12 @@
 {
 	"manifestVersion":"1.1",
 	"info": {
-		"id":"BE031F34-5332-461B-8C48-ED5143BD20DA,version=!version!",
+		"id":"A42F6081-855F-41CB-8C89-9488AA847290,version=!version!",
 		"manifestType":"Extension"
 	},
 	"packages":[
 		{
-			"id":"Component.BE031F34-5332-461B-8C48-ED5143BD20DA",
+			"id":"Component.A42F6081-855F-41CB-8C89-9488AA847290",
 			"version":"!version!",
 			"type":"Component",
 			"extension":true,
@@ -19,11 +19,11 @@
 			]
 		},
 		{
-			"id":"BE031F34-5332-461B-8C48-ED5143BD20DA",
+			"id":"A42F6081-855F-41CB-8C89-9488AA847290",
 			"version":"!version!",
 			"type":"Vsix",
 			"payloads":[ {"fileName":"micro-profiler.v!version!.vsix"} ],
-			"vsixId":"BE031F34-5332-461B-8C48-ED5143BD20DA",
+			"vsixId":"A42F6081-855F-41CB-8C89-9488AA847290",
 			"extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\micro-profiler",
 		}
 	]

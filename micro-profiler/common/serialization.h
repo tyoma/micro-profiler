@@ -34,7 +34,6 @@ namespace strmd
 	using namespace micro_profiler;
 	using namespace std;
 
-	template <> struct is_arithmetic<wchar_t> { static const bool value = true; };
 	template <> struct is_container<analyzer> { static const bool value = true; };
 	template <typename AddressT> struct is_container< statistics_map_detailed_t<AddressT> > { static const bool value = true; };
 

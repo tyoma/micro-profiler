@@ -3,6 +3,10 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="config.props" />
   </ImportGroup>
+  <PropertyGroup Label="UserMacros">
+    <TestRunnerExe>$(OutDir)utee-runner.exe</TestRunnerExe>
+  </PropertyGroup>
+
   <PropertyGroup Label="Configuration">
     <OutDir>$(OutDir)ut\</OutDir>
   </PropertyGroup>

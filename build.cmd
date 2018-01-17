@@ -31,10 +31,10 @@ git reset --hard %commithash%~1
 rem 6. Tagging...
 
 echo 7. Starting the build...
-"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=Win32 /t:Clean
-"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=x64 /t:Clean
-"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=Win32 /t:Build
-"%msbuildpath%" micro-profiler.vs10.sln /p:Configuration=Release /p:Platform=x64 /t:Build
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Clean
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=x64 /t:Clean
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Build
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=x64 /t:Build
 
 echo Build complete!
 

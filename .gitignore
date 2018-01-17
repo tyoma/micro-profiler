@@ -7,3 +7,4 @@ _*
 TestResults/*
 *.lib
 *.ncb
+ipch

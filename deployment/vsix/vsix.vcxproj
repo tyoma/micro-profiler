@@ -29,14 +29,14 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
-		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.lib" />
+		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib" />
 		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
 		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
 		<None Include="*.json;*.xml" />
 		<None Include="$(BinDir)*.cpp;$(BinDir)*.h;$(BinDir)*.pkgdef;$(BinDir)*.vsixmanifest;$(BinDir)logo.ico"/>
 
 		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
-		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.lib" />
+		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib" />
 		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
 		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
 		<PackReplace Include="*.json;*.xml"/>
@@ -54,7 +54,7 @@
 	<Target Name="CompressAndReplace" AfterTargets="Compress">
 		<Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;
 			call sha256 hashmpx86 &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll&quot;
-			call sha256 hashmpx86lib &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_x86.lib&quot;
+			call sha256 hashmpx86lib &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib&quot;
 			call sha256 hashmpx64 &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll&quot;
 			call sha256 hashmpx64lib &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib&quot;
 
@@ -64,7 +64,6 @@
 
 			call sha256 hashentry &quot;$(BinDir)entry.h&quot;
 			call sha256 hashinit &quot;$(BinDir)micro-profiler.initializer.cpp&quot;
-			call sha256 hashinitmfc &quot;$(BinDir)micro-profiler.initializer.mfc-static.cpp&quot;
 
 			call replace &quot;%(PackReplace.Identity)&quot; &gt; &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot;
 			call mkzip &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot; &quot;$(IntDir)$(TargetName).zip&quot;"/>

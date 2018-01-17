@@ -41,6 +41,7 @@
       <AdditionalDependencies>delayimp.lib;vsguids.lib</AdditionalDependencies>
       <DelayLoadDLLs>dbghelp.dll</DelayLoadDLLs>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <ImportLibrary>$(OutDir)$(ProjectName)_$(PlatformName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -58,8 +59,9 @@
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
     <Fix Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
     <None Include="visualstudio\vs-extension\vs-extension.rgs" />
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <Content Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp;logo.ico">
+    <None Include="entry.h" />
+    <None Include="micro-profiler.initializer.cpp" />
+    <Content Include="entry.h;micro-profiler.initializer.cpp;logo.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>true</Visible>
     </Content>

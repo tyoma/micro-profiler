@@ -20,18 +20,18 @@
 
 #include "entry.h"
 
-#include <memory>
-
-#ifdef _M_IX86
-	#pragma comment(lib, "micro-profiler_x86.lib")
-#elif _M_X64
-	#pragma comment(lib, "micro-profiler_x64.lib")
-#else
-	#pragma comment(lib, "micro-profiler_x86.lib")
-#endif
-
 namespace
 {
-	void *g_dummy_global = 0;
-	std::auto_ptr<micro_profiler::handle> g_mp_handle(micro_profiler_initialize(&g_dummy_global));
+	class initializer
+	{
+	public:
+		initializer();
+		~initializer();
+
+	private:
+		micro_profiler::handle *_profiler;
+	} g_initializer;
+
+	initializer::initializer() : _profiler(micro_profiler_initialize(&g_initializer)) {	}
+	initializer::~initializer() {	delete _profiler;	}
 }

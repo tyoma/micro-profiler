@@ -21,16 +21,12 @@ namespace micro_profiler
 		namespace
 		{
 			const wstring c_initializer_cpp = L"micro-profiler.initializer.cpp";
-			const wstring c_profiler_library = L"micro-profiler_x86.lib";
-			const wstring c_profiler_library_x64 = L"micro-profiler_x64.lib";
+			const wstring c_profiler_library = L"micro-profiler_$(PlatformName).lib";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
 
 			wstring get_profiler_directory()
 			{	return ~get_module_info(&c_initializer_cpp).path;	}
-
-			wstring get_initializer_path()
-			{	return get_profiler_directory() & c_initializer_cpp;	}
 
 			bool replace(wstring &text, const wstring &what, const wstring &replacement)
 			{
@@ -48,59 +44,38 @@ namespace micro_profiler
 			{
 				BY_HANDLE_FILE_INFORMATION bhfi1 = { 0 }, bhfi2 = { 0 };
 				shared_ptr<void> lhs(::CreateFileW(lhs_.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
-					0, OPEN_EXISTING, 0, 0), &::CloseHandle);
+					0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0), &::CloseHandle);
 				shared_ptr<void> rhs(::CreateFileW(rhs_.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
-					0, OPEN_EXISTING, 0, 0), &::CloseHandle);
+					0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0), &::CloseHandle);
 
 				return INVALID_HANDLE_VALUE != lhs.get() && INVALID_HANDLE_VALUE != rhs.get()
 					&& ::GetFileInformationByHandle(lhs.get(), &bhfi1) && ::GetFileInformationByHandle(rhs.get(), &bhfi2)
 					&& bhfi1.nFileIndexLow == bhfi2.nFileIndexLow && bhfi1.nFileIndexHigh == bhfi2.nFileIndexHigh;
 			}
 
-			bool library_copied(const dispatch &project)
+			dispatch find_item_by_path(dispatch project, const wstring &directory, const wstring &name)
 			{
-				// TODO: the presence of only a x86 library is checked (since we always try to copy both). A better approach is
-				//	required.
-				return !_waccess((~(wstring)project.get(L"FileName") & c_profiler_library).c_str(), 04);
-			}
+				dispatch files = project.get(L"Object").get(L"Files");
 
-			void copy_library(const dispatch &project)
-			{
-				wstring source = get_profiler_directory();
-				wstring target = ~(wstring)project.get(L"FileName");
-
-				::CopyFileW((source & c_profiler_library).c_str(), (target & c_profiler_library).c_str(), FALSE);
-				::CopyFileW((source & c_profiler_library_x64).c_str(), (target & c_profiler_library_x64).c_str(), FALSE);
-			}
-
-			void remove_library(const dispatch &project)
-			{
-				wstring location = ~(wstring)project.get(L"FileName");
-
-				::DeleteFileW((location & c_profiler_library).c_str());
-				::DeleteFileW((location & c_profiler_library_x64).c_str());
-			}
-
-			dispatch find_initializer(const dispatch &items)
-			{
-				wstring initializer_path(get_initializer_path());
-
-				for (long i = 1, count = items.get(L"Count"); i <= count; ++i)
+				for (long i = 1, count = files.get(L"Count"); i <= count; ++i)
 				{
-					dispatch item(items[i]);
+					dispatch file = files[i];
+					const wstring item_directory = ~wstring(file.get(L"FullPath"));
+					const wstring item_name = *(file.get(L"UnexpandedRelativePath"));
 
-					if (long(item.get(L"FileCount")) == 1)
-					{
-						wstring file = item.get(L"FileNames", 1);
-
-						if (wcsicmp((*file).c_str(), c_initializer_cpp.c_str()) == 0 && paths_are_equal(file, initializer_path))
-							return item;
-					}
-					item = find_initializer(item.get(L"ProjectItems"));
-					if (IDispatchPtr(item))
-						return item;
+					if (wcsicmp(item_name.c_str(), name.c_str()) == 0 && paths_are_equal(item_directory, directory))
+						return file.get(L"Object");
 				}
 				return dispatch(IDispatchPtr());
+			}
+
+			template <typename FuncT>
+			void for_each_configuration_tool(const dispatch &project, const wchar_t *tool_name, FuncT action)
+			{
+				dispatch configurations(project.get(L"Object").get(L"Configurations"));
+
+				for (long i = 1, count = configurations.get(L"Count"); i <= count; ++i)
+					action(configurations[i].get(L"Tools")[tool_name]);
 			}
 
 			dispatch get_tool(const dispatch &project, const wchar_t *tool_name)
@@ -166,26 +141,30 @@ namespace micro_profiler
 
 		int toggle_profiling::query_state(const dispatch &dte_project) const
 		{
+			const wstring dir = get_profiler_directory();
+
 			if (IDispatchPtr tool = get_tool(dte_project, L"VCCLCompilerTool"))
 				return supported | enabled | visible | (has_instrumentation(dispatch(tool))
-					&& IDispatchPtr(find_initializer(dte_project.get(L"ProjectItems")))
-					&& library_copied(dte_project)
+					&& IDispatchPtr(find_item_by_path(dte_project, dir, c_initializer_cpp))
+					&& IDispatchPtr(find_item_by_path(dte_project, dir, c_profiler_library))
 					? checked : 0);
 			return 0;
 		}
 
 		void toggle_profiling::exec(const dispatch &dte_project) const
 		{
+			const wstring dir = get_profiler_directory();
 			dispatch compiler(get_tool(dte_project, L"VCCLCompilerTool"));
-			const bool has_profiling = has_instrumentation(dispatch(compiler))
-					&& IDispatchPtr(find_initializer(dte_project.get(L"ProjectItems")))
-					&& library_copied(dte_project);
+			IDispatchPtr initializer_item = find_item_by_path(dte_project, dir, c_initializer_cpp);
+			IDispatchPtr library_item = find_item_by_path(dte_project, dir, c_profiler_library);
+			const bool has_profiling = has_instrumentation(compiler) && initializer_item && library_item;
 
 			if (!has_profiling)
 			{
-				copy_library(dte_project);
-				if (!IDispatchPtr(find_initializer(dte_project.get(L"ProjectItems"))))
-					disable_pch(dte_project.get(L"ProjectItems")(L"AddFromFile", get_initializer_path().c_str()));
+				if (!initializer_item)
+					disable_pch(dte_project.get(L"ProjectItems")(L"AddFromFile", (dir & c_initializer_cpp).c_str()));
+				if (!library_item)
+					dte_project.get(L"ProjectItems")(L"AddFromFile", (dir & c_profiler_library).c_str());
 				enable_instrumentation(compiler);
 			}
 			else
@@ -196,15 +175,21 @@ namespace micro_profiler
 		int remove_profiling_support::query_state(const dispatch &dte_project) const
 		{
 			if (IDispatchPtr tool = get_tool(dte_project, L"VCCLCompilerTool"))
-				return supported | (IDispatchPtr(find_initializer(dte_project.get(L"ProjectItems"))) ? enabled | visible : 0);
+				return supported | (IDispatchPtr(find_item_by_path(dte_project, get_profiler_directory(), c_initializer_cpp)) ? enabled | visible : 0);
 			return 0;
 		}
 
 		void remove_profiling_support::exec(const dispatch &dte_project) const
 		{
-			disable_instrumentation(get_tool(dte_project, L"VCCLCompilerTool"));
-			find_initializer(dte_project.get(L"ProjectItems"))(L"Remove");
-			remove_library(dte_project);
+			const wstring dir = get_profiler_directory();
+			dispatch initializer = find_item_by_path(dte_project, dir, c_initializer_cpp);
+			dispatch library = find_item_by_path(dte_project, dir, c_profiler_library);
+
+			for_each_configuration_tool(dte_project, L"VCCLCompilerTool", &disable_instrumentation);
+			if (IDispatchPtr(initializer))
+				initializer(L"Remove");
+			if (IDispatchPtr(library))
+				library(L"Remove");
 		}
 	}
 }

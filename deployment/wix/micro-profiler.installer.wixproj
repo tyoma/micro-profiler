@@ -12,25 +12,10 @@
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <Name>micro-profiler.installer</Name>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+  <PropertyGroup>
     <OutputPath>$(SolutionDir)\_setup\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants>SOURCEDIR=../../_bin/Release_x86</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>$(SolutionDir)\_setup\</OutputPath>
-    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants>SOURCEDIR=../../_bin/Release_x64;SOURCEDIRX86=../../_bin/Release_x86</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DefineConstants>SOURCEDIR=../../_bin/Debug_x86</DefineConstants>
-    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <OutputPath>$(SolutionDir)\_setup\debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DefineConstants>SOURCEDIR=../../_bin/Debug_x64;SOURCEDIRX86=../../_bin/Debug_x86</DefineConstants>
-    <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <OutputPath>$(SolutionDir)\_setup\debug\</OutputPath>
+    <DefineConstants>SOURCEDIR=../../_bin/$(Configuration)_$(Platform);SOURCEDIRX86=../../_bin/$(Configuration)_x86</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="micro-profiler.wxs" />
@@ -56,12 +41,4 @@ set TargetNameVer="$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)"
 del "$(TargetDir)%25TargetNameVer%25"
 ren "$(TargetPath)" "%25TargetNameVer%25"</PostBuildEvent>
   </PropertyGroup>
-  <!--
-	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
-	<Target Name="BeforeBuild">
-	</Target>
-	<Target Name="AfterBuild">
-	</Target>
-	-->
 </Project>

@@ -115,12 +115,19 @@ namespace micro_profiler
 					while (vcproject_context_active && count--)
 					{
 						const commands::const_iterator c = _commands.find(commands[count].cmdID);
-						const int state = c != _commands.end() ? c->second->query_state(get_project(*_service_provider)) : 0;
+						try
+						{
+							const int state = c != _commands.end() ? c->second->query_state(get_project(*_service_provider)) : 0;
 
-						commands[count].cmdf = ((state & project_command::supported) ? OLECMDF_SUPPORTED : 0)
-							| ((state & project_command::enabled) ? OLECMDF_ENABLED : 0)
-							| ((state & project_command::checked) ? OLECMDF_LATCHED : 0)
-							| ((state & project_command::visible) ? 0 : OLECMDF_DEFHIDEONCTXTMENU);
+							commands[count].cmdf = ((state & project_command::supported) ? OLECMDF_SUPPORTED : 0)
+								| ((state & project_command::enabled) ? OLECMDF_ENABLED : 0)
+								| ((state & project_command::checked) ? OLECMDF_LATCHED : 0)
+								| ((state & project_command::visible) ? 0 : OLECMDF_DEFHIDEONCTXTMENU);
+						}
+						catch (...)
+						{
+							commands[count].cmdf = OLECMDF_SUPPORTED;
+						}
 					}
 					return S_OK;
 				}

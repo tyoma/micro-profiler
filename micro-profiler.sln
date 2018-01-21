@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-profiler\micro-profiler.vcproj", "{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcproj", "{0266546B-335D-4BDD-9BF0-15FCC31056BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700} = {D5D49128-2510-4A14-9A0F-9F8F0ABAD700}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployment", "deployment\deployment.vcproj", "{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}"
 	ProjectSection(ProjectDependencies) = postProject

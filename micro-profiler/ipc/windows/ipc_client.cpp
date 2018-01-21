@@ -4,8 +4,6 @@
 
 #include <windows.h>
 
-namespace std { namespace tr1 { } using namespace tr1; }
-
 using namespace std;
 
 namespace micro_profiler

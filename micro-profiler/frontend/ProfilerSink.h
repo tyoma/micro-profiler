@@ -23,8 +23,6 @@
 #include <functional>
 #include <memory>
 
-namespace std { namespace tr1 { } using namespace tr1; }
-
 typedef struct HWND__ *HWND;
 
 namespace micro_profiler

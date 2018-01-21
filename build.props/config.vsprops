@@ -13,6 +13,7 @@
 		PreprocessorDefinitions="_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1"
 		WarningLevel="4"
 		WarnAsError="true"
+		ForcedIncludeFiles="$(SolutionDir)build.props\emit-tr1-to-std.h"
 		DebugInformationFormat="3"
 	/>
 	<Tool

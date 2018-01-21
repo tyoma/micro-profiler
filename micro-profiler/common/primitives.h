@@ -23,8 +23,6 @@
 #include <unordered_map>
 #include <wpl/base/signals.h>
 
-namespace std { namespace tr1 { } using namespace tr1; }
-
 namespace micro_profiler
 {
 	typedef unsigned char byte;

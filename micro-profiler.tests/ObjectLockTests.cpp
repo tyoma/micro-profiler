@@ -3,11 +3,6 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
-namespace std
-{
-	using namespace tr1;
-}
-
 using namespace std;
 
 namespace micro_profiler

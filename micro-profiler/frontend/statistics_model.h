@@ -6,8 +6,6 @@
 
 #include <wpl/ui/listview.h>
 
-namespace std { namespace tr1 { } using namespace tr1; }
-
 namespace micro_profiler
 {
 	struct symbol_resolver;

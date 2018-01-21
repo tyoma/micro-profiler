@@ -28,8 +28,6 @@
 
 struct ISequentialStream;
 
-namespace std { namespace tr1 { } using namespace tr1; }
-
 namespace wpl
 {
 	namespace mt

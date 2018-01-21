@@ -25,8 +25,6 @@
 #include <string>
 #include <memory>
 
-namespace std { namespace tr1 { } using namespace tr1; }
-
 namespace micro_profiler
 {
 	struct symbol_resolver

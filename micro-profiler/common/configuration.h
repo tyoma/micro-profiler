@@ -3,8 +3,6 @@
 #include <memory>
 #include <string>
 
-namespace std { namespace tr1 { } using namespace tr1; }
-
 namespace micro_profiler
 {
 	struct hive

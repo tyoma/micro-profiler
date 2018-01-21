@@ -25,10 +25,6 @@
 			ConfigurationType="1"
 			>
 			<Tool
-				Name="VCPreBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)micro-profiler.lib&quot; &quot;$(ProjectDir)micro-profiler.lib&quot;"
-			/>
-			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GH /Gh"
 				Optimization="0"
@@ -39,22 +35,9 @@
 				DebugInformationFormat="4"
 			/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
-			/>
-			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
-				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
-				TargetMachine="1"
 			/>
 		</Configuration>
 		<Configuration
@@ -62,10 +45,6 @@
 			InheritedPropertySheets="$(SolutionDir)build.props\config.vsprops"
 			ConfigurationType="1"
 			>
-			<Tool
-				Name="VCPreBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)micro-profiler.lib&quot; &quot;$(ProjectDir)micro-profiler_x64.lib&quot;"
-			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GH /Gh"
@@ -78,12 +57,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
-				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
-				TargetMachine="17"
 			/>
 		</Configuration>
 		<Configuration
@@ -92,10 +67,6 @@
 			ConfigurationType="1"
 			>
 			<Tool
-				Name="VCPreBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)micro-profiler.lib&quot; &quot;$(ProjectDir)micro-profiler.lib&quot;"
-			/>
-			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GH /Gh"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
@@ -105,14 +76,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
-				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 		</Configuration>
 		<Configuration
@@ -121,10 +86,6 @@
 			ConfigurationType="1"
 			>
 			<Tool
-				Name="VCPreBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)micro-profiler.lib&quot; &quot;$(ProjectDir)micro-profiler_x64.lib&quot;"
-			/>
-			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/GH /Gh"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
@@ -134,169 +95,23 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="true"
-				AdditionalDependencies="comctl32.lib"
-				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="17"
 			/>
 		</Configuration>
 	</Configurations>
-	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
-			RelativePathToProject=".\micro-profiler\micro-profiler.vcproj"
-		/>
-	</References>
 	<Files>
 		<File
 			RelativePath=".\main.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\_bin\Debug_x64\micro-profiler.initializer.cpp"
+			RelativePath="..\_bin\$(ConfigurationName)_$(PlatformName)\micro-profiler.initializer.cpp"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|x64"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
-			RelativePath="..\_bin\Release_Win32\micro-profiler.initializer.cpp"
+			RelativePath="..\_bin\$(ConfigurationName)_$(PlatformName)\micro-profiler_$(PlatformName).lib"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Release_x64\micro-profiler.initializer.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\_bin\Debug_Win32\micro-profiler.initializer.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-				/>
-			</FileConfiguration>
 		</File>
 	</Files>
-	<Globals>
-	</Globals>
 </VisualStudioProject>

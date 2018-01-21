@@ -30,7 +30,6 @@
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
@@ -41,15 +40,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(OutDir)micro-profiler.initializer.cpp"/>
+    <ClCompile Include="$(OutDir)micro-profiler.initializer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\micro-profiler\micro-profiler.vcxproj">
-      <Project>{d5d49128-2510-4a14-9a0f-9f8f0abad700}</Project>
-    </ProjectReference>
+    <Library Include="$(OutDir)micro-profiler_$(PlatformName).lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
 </Project>

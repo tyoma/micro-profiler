@@ -74,6 +74,7 @@
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile="module/micro-profiler.def"
 				GenerateDebugInformation="true"
+				ImportLibrary="$(TargetDir)$(TargetName)_$(PlatformName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -95,7 +96,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -154,6 +154,7 @@
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile="module/micro-profiler.def"
 				GenerateDebugInformation="true"
+				ImportLibrary="$(TargetDir)$(TargetName)_$(PlatformName).lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -176,7 +177,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -237,6 +237,7 @@
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				ImportLibrary="$(TargetDir)$(TargetName)_$(PlatformName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -258,7 +259,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -319,6 +319,7 @@
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				ImportLibrary="$(TargetDir)$(TargetName)_$(PlatformName).lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -341,7 +342,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy entry.h &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy micro-profiler.initializer.mfc-static.cpp &quot;$(OutDir)&quot;&#x0D;&#x0A;copy &quot;$(OutDir)$(ProjectName).lib&quot; &quot;$(OutDir)$(ProjectName)_$(PlatformName).lib&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -585,70 +585,86 @@
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Debug|x64"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|Win32"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|x64"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\micro-profiler.initializer.mfc-static.cpp"
+			RelativePath=".\entry.h"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Debug|x64"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|Win32"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
 				Name="Release|x64"
-				ExcludedFromBuild="true"
 				>
 				<Tool
-					Name="VCCLCompilerTool"
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)"
+					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
 		</File>

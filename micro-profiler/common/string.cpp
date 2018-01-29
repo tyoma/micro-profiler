@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2018 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (c) 2011-2018 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -18,23 +18,28 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "module.h"
+#include "string.h"
 
-#include <windows.h>
+#include <cstdlib>
+#include <vector>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	module_info get_module_info(const void *address)
+	string unicode(const wstring &value)
 	{
-		HMODULE load_address = 0;
-		wchar_t path[MAX_PATH + 1] = { };
+		vector<char> buffer(wcstombs(0, value.c_str(), 0) + 1u);
+		
+		wcstombs(&buffer[0], value.c_str(), buffer.size());
+		return &buffer[0];
+	}
 
-		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &load_address);
-		::GetModuleFileNameW(load_address, path, sizeof(path));
-		::FreeLibrary(load_address);
-		module_info info = { reinterpret_cast<size_t>(load_address), path };
-		return info;
+	wstring unicode(const string &value)
+	{
+		vector<wchar_t> buffer(mbstowcs(0, value.c_str(), 0) + 1u);
+		
+		mbstowcs(&buffer[0], value.c_str(), buffer.size());
+		return &buffer[0];
 	}
 }

@@ -61,6 +61,7 @@
     <ClCompile Include="common\registry_configuration.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="common\string.cpp" />
     <ClCompile Include="frontend\function_list.cpp" />
     <ClCompile Include="frontend\object_lock.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -89,6 +90,7 @@
     <ClInclude Include="common\formatting.h" />
     <ClInclude Include="common\module.h" />
     <ClInclude Include="common\protocol.h" />
+    <ClInclude Include="common\string.h" />
     <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="common\pod_vector.h" />
     <ClInclude Include="common\primitives.h" />

@@ -24,7 +24,7 @@ namespace micro_profiler
 
 		wstring get_current_process_executable()
 		{
-			wchar_t fullpath[MAX_PATH + 1] = { 0 };
+			wchar_t fullpath[MAX_PATH + 1] = { };
 
 			::GetModuleFileNameW(NULL, fullpath, MAX_PATH);
 			return fullpath;
@@ -91,7 +91,7 @@ namespace micro_profiler
 			if (!get())
 				throw runtime_error("Cannot load module specified!");
 
-			wchar_t fullpath[MAX_PATH + 1] = { 0 };
+			wchar_t fullpath[MAX_PATH + 1] = { };
 
 			::GetModuleFileNameW(static_cast<HMODULE>(get()), fullpath, MAX_PATH);
 			_fullpath = fullpath;

@@ -87,7 +87,7 @@ namespace micro_profiler
 
 		dispatch dispatch::operator()(const wchar_t *name)
 		{
-			DISPPARAMS dispparams = { 0 };
+			DISPPARAMS dispparams = { };
 
 			return dispatch(invoke(name, DISPATCH_METHOD, dispparams));
 		}

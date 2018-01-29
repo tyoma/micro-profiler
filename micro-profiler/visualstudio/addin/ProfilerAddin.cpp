@@ -136,7 +136,7 @@ namespace micro_profiler
 
 			CPath get_profiler_directory()
 			{
-				TCHAR image_directory[MAX_PATH + 1] = { 0 };
+				TCHAR image_directory[MAX_PATH + 1] = { };
 
 				::GetModuleFileName(micro_profiler::g_instance, image_directory, MAX_PATH);
 				CPath path(image_directory);
@@ -155,7 +155,7 @@ namespace micro_profiler
 
 			bool paths_are_equal(LPCTSTR lhs_, LPCTSTR rhs_)
 			{
-				BY_HANDLE_FILE_INFORMATION bhfi1 = { 0 }, bhfi2 = { 0 };
+				BY_HANDLE_FILE_INFORMATION bhfi1 = { }, bhfi2 = { };
 				shared_ptr<void> lhs(::CreateFile(lhs_, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, 0,
 					OPEN_EXISTING, 0, 0), &::CloseHandle);
 				shared_ptr<void> rhs(::CreateFile(rhs_, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, 0,

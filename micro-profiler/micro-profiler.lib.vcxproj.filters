@@ -43,6 +43,9 @@
     <ClCompile Include="common\module.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="common\string.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="frontend\symbol_resolver.h">
@@ -116,6 +119,9 @@
     </ClInclude>
     <ClInclude Include="collector\primitives.h">
       <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="common\string.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

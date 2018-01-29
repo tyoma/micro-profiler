@@ -41,7 +41,7 @@ namespace micro_profiler
 		wstring to_string2(count_t value)
 		{
 			const size_t buffer_size = 24;
-			wchar_t buffer[buffer_size] = { 0 };
+			wchar_t buffer[buffer_size] = { };
 
 			::swprintf(buffer, buffer_size, L"%I64u", value);
 			return buffer;
@@ -50,7 +50,7 @@ namespace micro_profiler
 		wstring to_string2(unsigned int value)
 		{
 			const size_t buffer_size = 24;
-			wchar_t buffer[buffer_size] = { 0 };
+			wchar_t buffer[buffer_size] = { };
 
 			::swprintf(buffer, buffer_size, L"%u", value);
 			return buffer;
@@ -59,7 +59,7 @@ namespace micro_profiler
 		wstring to_string2(double value)
 		{
 			const size_t buffer_size = 24;
-			wchar_t buffer[buffer_size] = { 0 };
+			wchar_t buffer[buffer_size] = { };
 
 			::swprintf(buffer, buffer_size, L"%g", value);
 			return buffer;

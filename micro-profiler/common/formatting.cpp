@@ -37,7 +37,7 @@ namespace micro_profiler
 	
 	void format_interval(wstring &destination, double interval)
 	{
-		wchar_t buffer[c_int_buffer_length] = { 0 };
+		wchar_t buffer[c_int_buffer_length] = { };
 		const double uinterval = interval < 0 ? -interval : interval;
 		const wchar_t *formatting = 999.5 <= uinterval && uinterval < 10000 ? c_formatting_enhanced : c_formatting;
 		int unit = interval != 0 ? -static_cast<int>(floor(c_bias + log10(uinterval) / 3)) : 0;

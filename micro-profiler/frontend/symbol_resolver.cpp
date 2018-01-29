@@ -20,8 +20,9 @@
 
 #include "symbol_resolver.h"
 
-#include <atlstr.h>
-#include <Windows.h>
+#include <common/string.h>
+
+#include <windows.h>
 #include <dbghelp.h>
 #include <unordered_map>
 
@@ -66,28 +67,31 @@ namespace micro_profiler
 
 			if (i == _names.end())
 			{
-				const size_t max_name_length = 300;
-				SYMBOL_INFO dummy;
-				char buffer[sizeof(SYMBOL_INFO) + max_name_length * sizeof(dummy.Name[0])] = { 0 };
-				SYMBOL_INFO &symbol = *reinterpret_cast<SYMBOL_INFO *>(buffer);
+				SYMBOL_INFO symbol = { };
+				shared_ptr<SYMBOL_INFO> symbol2;
 
-				dummy;
 				symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
-				symbol.MaxNameLen = max_name_length;
-				::SymFromAddr(me(), address, 0, &symbol);
-				i = _names.insert(make_pair(address, (const wchar_t *)CStringW(symbol.Name))).first;
+				symbol.MaxNameLen = 5;
+				do
+				{
+					symbol2.reset(static_cast<SYMBOL_INFO *>(malloc(sizeof(SYMBOL_INFO) + symbol.MaxNameLen)), &free);
+					*symbol2 = symbol;
+					symbol.MaxNameLen <<= 1;
+					::SymFromAddr(me(), address, 0, symbol2.get());
+				} while (symbol2->MaxNameLen == symbol2->NameLen);
+				i = _names.insert(make_pair(address, unicode(symbol2->Name))).first;
 			}
 			return i->second;
 		}
 
 		void dbghelp_symbol_resolver::add_image(const wchar_t *image, address_t load_address)
 		{
-			CStringA image_path_ansi(image);
+			string image_path_ansi = unicode(image);
 
 			::SetLastError(0);
-			if (::SymLoadModule64(me(), NULL, image_path_ansi, NULL, load_address, 0))
+			if (::SymLoadModule64(me(), NULL, image_path_ansi.c_str(), NULL, load_address, 0))
 			{
-				if (ERROR_SUCCESS == ::GetLastError() || INVALID_FILE_ATTRIBUTES != GetFileAttributesA(image_path_ansi))
+				if (ERROR_SUCCESS == ::GetLastError() || INVALID_FILE_ATTRIBUTES != GetFileAttributesA(image_path_ansi.c_str()))
 					return;
 				::SymUnloadModule64(me(), load_address);
 			}

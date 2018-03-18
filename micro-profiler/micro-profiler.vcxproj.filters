@@ -42,13 +42,11 @@
     <None Include="module\micro-profiler.def">
       <Filter>module</Filter>
     </None>
-    <None Include="_generated\commands.cto">
-      <Filter>resources\_generated</Filter>
-    </None>
     <None Include="visualstudio\vs-extension\vs-extension.rgs">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.mfc-static.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="visualstudio\vs-extension\extension.vsixmanifest">
@@ -70,9 +68,9 @@
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <None Include="micro-profiler.initializer.mfc-static.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <None Include="entry.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="frontend">
@@ -83,9 +81,6 @@
     </Filter>
     <Filter Include="module">
       <UniqueIdentifier>{f88a34be-b244-4bea-81ac-ea7770913646}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="resources\_generated">
-      <UniqueIdentifier>{f16a83e6-0e4b-4933-b449-06573e3e5223}</UniqueIdentifier>
     </Filter>
     <Filter Include="visualstudio">
       <UniqueIdentifier>{bc286dd0-993f-4c39-a835-e7597517fc81}</UniqueIdentifier>
@@ -140,7 +135,6 @@
     </CustomBuild>
     <CustomBuild Include="micro-profiler.initializer.mfc-static.cpp" />
     <CustomBuild Include="micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />

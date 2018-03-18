@@ -12,4 +12,9 @@
 "{43a50861-7e04-4169-b47e-d4cffe1b3db8}"=dword:0
 
 [$RootKey$\Menus]
-"{43a50861-7e04-4169-b47e-d4cffe1b3db8}"="$PackageFolder$\micro-profiler_x86.dll, 1000, 1"
+"{43a50861-7e04-4169-b47e-d4cffe1b3db8}"=", 1000, 1"
+
+[$RootKey$\Packages\{43a50861-7e04-4169-b47e-d4cffe1b3db8}\SatelliteDll]
+"DllName"="micro-profiler.ui.dll"
+"Path"="$PackageFolder$"
+

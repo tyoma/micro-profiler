@@ -17,11 +17,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Russian (Russia) resources
+// English (United States) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -72,9 +72,6 @@ BEGIN
     "\0"
 END
 
-#endif    // APSTUDIO_INVOKED
-
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
@@ -83,18 +80,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_APPMAIN             ICON                    "appicon.ico"
-#endif    // Russian (Russia) resources
-/////////////////////////////////////////////////////////////////////////////
 
-
-/////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
-
-#ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
 // TEXTINCLUDE
@@ -107,8 +93,8 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-	"#include ""winres.h""\r\n\r\n"
-
+    "#include ""winres.h""\r\n"
+    "\r\n"
 	"#include ""../_generated/version-info.h""\r\n"
 
 	"#define INFO_VERSION INFO_VERSION_MAJOR,INFO_VERSION_MINOR,REPO_REVISION,0\r\n"
@@ -118,7 +104,7 @@ END
 
 3 TEXTINCLUDE
 BEGIN
-    "1000 CTMENU ""../_generated/commands.cto""\r\n"
+    "1000 CTMENU ""commands.cto""\r\n"
     "\0"
 END
 
@@ -198,7 +184,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-1000	CTMENU "../_generated/commands.cto"
+1000	CTMENU "commands.cto"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

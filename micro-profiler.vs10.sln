@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-profiler\micro-profiler.vcxproj", "{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A} = {C6F0D31E-3D60-476A-A427-5919AFF52E8A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -89,6 +92,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "strmd.tests", "libraries\strmd\tests\strmd.tests.vcxproj", "{CC4F834A-FA9B-40AD-BA2C-5BDFDF95BDFA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vsix", "deployment\vsix\vsix.vcxproj", "{569EEA47-BC7D-4447-A26B-50CFD48B1F81}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.ui", "micro-profiler\micro-profiler.ui.vcxproj", "{C6F0D31E-3D60-476A-A427-5919AFF52E8A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -275,6 +280,14 @@ Global
 		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Release|Win32.ActiveCfg = Release|Win32
 		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Release|x64.ActiveCfg = Release|x64
 		{569EEA47-BC7D-4447-A26B-50CFD48B1F81}.Release|x64.Build.0 = Release|x64
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Debug|Win32.Build.0 = Debug|Win32
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Debug|x64.ActiveCfg = Debug|x64
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Debug|x64.Build.0 = Debug|x64
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Release|Win32.ActiveCfg = Release|Win32
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Release|Win32.Build.0 = Release|Win32
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Release|x64.ActiveCfg = Release|x64
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

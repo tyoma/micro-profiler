@@ -41,6 +41,15 @@
 		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
 		<PackReplace Include="*.json;*.xml"/>
 		<Pack Include="&quot;$(BinDir)*.cpp&quot;;&quot;$(BinDir)*.h&quot;;&quot;$(BinDir)*.pkgdef&quot;;&quot;$(BinDir)*.vsixmanifest&quot;;&quot;$(BinDir)logo.ico&quot;"/>
+
+		<CustomBuild Include="$(SolutionDir)_bin\Release_x86\1033\micro-profiler.ui.dll">
+			<FileType>Document</FileType>
+			<Command>cd "$(SolutionDir)_bin\Release_x86"
+mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
+			<Outputs>$(IntDir)%(Filename).cto</Outputs>
+			<Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
+			<SubType>Designer</SubType>
+		</CustomBuild>		
 	</ItemGroup>
 
 	<ItemGroup>
@@ -57,6 +66,7 @@
 			call sha256 hashmpx86lib &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib&quot;
 			call sha256 hashmpx64 &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll&quot;
 			call sha256 hashmpx64lib &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib&quot;
+			call sha256 hashmpui &quot;$(SolutionDir)_bin\Release_x86\1033\micro-profiler.ui.dll&quot;
 
 			call sha256 hashmanifest &quot;$(BinDir)extension.vsixmanifest&quot;
 			call sha256 hashappicon &quot;$(BinDir)logo.ico&quot;

@@ -43,6 +43,9 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <ImportLibrary>$(OutDir)$(ProjectName)_$(PlatformName).lib</ImportLibrary>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(IntDir)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="frontend\constants.cpp" />
@@ -86,12 +89,11 @@
     </ClCompile>
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <FileType>Document</FileType>
-      <Command>"$(VSSDKRoot)VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" _generated/%(Filename).cto -I"$(VSSDKRoot)VisualStudioIntegration\Common\Inc"</Command>
-      <Outputs>_generated/%(Filename).cto</Outputs>
+      <Command>"$(VSSDKRoot)VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" "$(IntDir)%(Filename).cto" -I"$(VSSDKRoot)VisualStudioIntegration\Common\Inc"</Command>
+      <Outputs>$(IntDir)%(Filename).cto</Outputs>
       <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
       <SubType>Designer</SubType>
     </CustomBuild>
-    <None Include="_generated\commands.cto" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
     <ClInclude Include="visualstudio\vs-extension\guids.h" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp">

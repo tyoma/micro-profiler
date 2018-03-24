@@ -38,10 +38,9 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""winres.h""\r\n"
-    "\r\n"
+	"#include ""winres.h""\r\n"
 	"#include ""../../version.h""\r\n"
-
+	"\r\n"
 	"#define MP_VERSION_RES MP_VERSION_MAJOR,MP_VERSION_MINOR,MP_BUILD,MP_BRANCH,0\r\n"
 	"\0"
 END

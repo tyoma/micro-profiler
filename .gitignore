@@ -8,3 +8,4 @@ TestResults/*
 *.lib
 *.ncb
 ipch
+*.aps

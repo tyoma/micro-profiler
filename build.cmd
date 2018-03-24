@@ -28,13 +28,19 @@ for /f %%g in ('git push 2^>^&1 ^| findstr /i "\[rejected\]"') do goto :pushreje
 echo 5. Resetting to a build revision (one before 'commithash')...
 git reset --hard %commithash%~1
 
-rem 6. Tagging...
+echo 6. Starting the build...
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Clean > _setup\build.log
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=x64 /t:Clean >> _setup\build.log
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Build >> _setup\build.log
+"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=x64 /t:Build >> _setup\build.log
 
-echo 7. Starting the build...
-"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Clean
-"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=x64 /t:Clean
-"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Build
-"%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=x64 /t:Build
+echo 7. Tagging...
+call scripts\make-version VERSION_TAG version.h
+git tag -a -m "" v%VERSION_TAG% HEAD
+git push origin v%VERSION_TAG%
+
+echo 8. Resetting to origin/master...
+git reset --hard origin/master
 
 echo Build complete!
 

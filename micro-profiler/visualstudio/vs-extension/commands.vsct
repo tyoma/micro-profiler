@@ -2,37 +2,55 @@
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<Extern href="command-ids.h"/>
 	<Extern href="guids.h"/>
-
 	<Extern href="stdidcmd.h"/>
 	<Extern href="vsshlids.h"/>
+
 	<Commands package="guidMicroProfilerPkg">
+		<Menus>
+			<Menu guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" priority="0x700" type="Menu">
+				<Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS" />
+				<Strings>
+					<ButtonText>MicroProfiler</ButtonText>
+				</Strings>
+			</Menu>
+		</Menus>
+
 		<Groups>
-			<Group guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" priority="0x0800">
+			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" priority="0x0800">
 				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
+			</Group>
+			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" priority="0x0800">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" />
 			</Group>
 		</Groups>
 
 		<Buttons>
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidToggleProfiling" priority="0x0100" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
-				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
-					<CommandName>Enable Profiling</CommandName>
 					<ButtonText>Enable Profiling</ButtonText>
 				</Strings>
 			</Button>
+
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0110" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="MicroProfilerMenuGroup" />
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
-				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
-					<CommandName>Remove Profiling Support</CommandName>
 					<ButtonText>Remove Profiling Support</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidSaveStatistics" priority="0x0110" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Save Statistics...</ButtonText>
 				</Strings>
 			</Button>
 		</Buttons>

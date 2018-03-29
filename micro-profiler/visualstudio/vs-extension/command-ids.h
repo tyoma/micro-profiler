@@ -26,11 +26,15 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Menu Group IDs
-#define MicroProfilerMenuGroup   0x1020
+#define IDG_MP_PROJECT_SETUP   0x1020
+#define IDM_MP_MM_MICROPROFILER 0x1030
+#define IDG_MP_MAIN   0x1031
 
 ///////////////////////////////////////////////////////////////////////////////
 // Command IDs
 #define cmdidToggleProfiling 0x101
 #define cmdidRemoveProfilingSupport 0x104
+#define cmdidSaveStatistics 0x110
+#define cmdidLoadStatistics 0x111
 
 #endif // __COMMANDIDS_H_

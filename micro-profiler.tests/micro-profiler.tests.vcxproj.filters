@@ -27,6 +27,9 @@
     <ClCompile Include="IPCClientServerTests.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
+    <ClCompile Include="integration\CommandTargetTests.cpp">
+      <Filter>integration</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />
@@ -36,6 +39,9 @@
   <ItemGroup>
     <Filter Include="frontend">
       <UniqueIdentifier>{dfa672e2-bbd6-4731-a1f7-726e100f9a55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="integration">
+      <UniqueIdentifier>{682f0f09-71b3-4a76-ba1b-ce858eff8c94}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

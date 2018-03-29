@@ -79,10 +79,13 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClInclude Include="setup\environment.h" />
-    <ClInclude Include="visualstudio\commands.h" />
+    <ClInclude Include="visualstudio\command-target.h" />
+    <ClInclude Include="visualstudio\command.h" />
+    <ClInclude Include="visualstudio\vs-extension\commands.h" />
     <ClInclude Include="visualstudio\dispatch.h" />
-    <ClCompile Include="visualstudio\commands.cpp;">
-      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
+    <ClCompile Include="visualstudio\vs-extension\commands.cpp">
+		<ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild> 
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="visualstudio\dispatch.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>

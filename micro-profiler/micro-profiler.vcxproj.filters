@@ -19,14 +19,14 @@
     <ClCompile Include="visualstudio\dispatch.cpp">
       <Filter>visualstudio</Filter>
     </ClCompile>
-    <ClCompile Include="visualstudio\commands.cpp;">
-      <Filter>visualstudio</Filter>
-    </ClCompile>
     <ClCompile Include="setup\environment.cpp">
       <Filter>setup</Filter>
     </ClCompile>
     <ClCompile Include="frontend\constants.cpp">
       <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\commands.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -45,19 +45,19 @@
     <None Include="visualstudio\vs-extension\vs-extension.rgs">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
-    <None Include="micro-profiler.initializer.mfc-static.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
     <None Include="visualstudio\vs-extension\extension.vsixmanifest">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.mfc-static.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
@@ -114,14 +114,20 @@
     <ClInclude Include="visualstudio\dispatch.h">
       <Filter>visualstudio</Filter>
     </ClInclude>
-    <ClInclude Include="visualstudio\commands.h">
-      <Filter>visualstudio</Filter>
-    </ClInclude>
     <ClInclude Include="setup\environment.h">
       <Filter>setup</Filter>
     </ClInclude>
     <ClInclude Include="frontend\constants.h">
       <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\command-target.h">
+      <Filter>visualstudio</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\command.h">
+      <Filter>visualstudio</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\commands.h">
+      <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -135,11 +141,6 @@
     </CustomBuild>
     <CustomBuild Include="micro-profiler.initializer.mfc-static.cpp" />
     <CustomBuild Include="micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />

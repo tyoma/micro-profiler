@@ -28,8 +28,9 @@ namespace micro_profiler
 	namespace integration
 	{
 		class dispatch;
+		typedef command<dispatch> integration_command;
 
-		struct toggle_profiling : command<dispatch>
+		struct toggle_profiling : integration_command
 		{
 			toggle_profiling();
 
@@ -37,7 +38,7 @@ namespace micro_profiler
 			virtual void exec(dispatch &dte_project, unsigned item);
 		};
 
-		struct remove_profiling_support : command<dispatch>
+		struct remove_profiling_support : integration_command
 		{
 			remove_profiling_support();
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/protocol.h>
+#include <common/types.h>
 #include <collector/calls_collector.h>
 
 #include <wpl/mt/synchronization.h>
@@ -12,8 +13,6 @@ namespace micro_profiler
 	{
 		namespace mockups
 		{
-			typedef std::function<void(const void *buffer, size_t size)> channel_t;
-			typedef std::function<channel_t ()> frontend_factory;
 			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
 			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
 
@@ -29,7 +28,7 @@ namespace micro_profiler
 				std::function<void()> oninitialized;
 
 				// Collected data
-				initializaion_data process_init;
+				initialization_data process_init;
 
 				std::vector<ReceivedEntry> update_log;
 				wpl::mt::event_flag updated;

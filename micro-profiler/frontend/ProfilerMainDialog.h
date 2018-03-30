@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "object_lock.h"
+#include "frontend_manager.h"
 
 #include <resources/resource.h>
 
@@ -37,29 +37,11 @@ namespace micro_profiler
 	class functions_list;
 	struct linked_statistics;
 
-	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public self_unlockable
+	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public frontend_ui
 	{
-		const std::shared_ptr<functions_list> _statistics;
-		const std::wstring _executable;
-		std::shared_ptr<linked_statistics> _parents_statistics, _children_statistics;
-		const std::shared_ptr<columns_model> _columns_parents, _columns_main, _columns_children;
-		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
-		std::shared_ptr<wpl::ui::listview> _statistics_lv, _parents_statistics_lv, _children_statistics_lv;
-		std::vector<wpl::slot_connection> _connections;
-		CRect _placement;
-
-		void RelocateControls(const CSize &size);
-
-		void OnFocusChange(wpl::ui::listview::index_type index, bool selected);
-		void OnDrilldown(std::shared_ptr<linked_statistics> view, wpl::ui::listview::index_type index);
-
-		virtual void OnFinalMessage(HWND hwnd);
-
 	public:
 		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable, HWND parent);
 		~ProfilerMainDialog();
-
-		wpl::signal<void()> Closed;
 
 		enum {	IDD = IDD_PROFILER_MAIN	};
 
@@ -77,5 +59,25 @@ namespace micro_profiler
 		LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
 		LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);
 		LRESULT OnClose(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
+
+	private:
+		void RelocateControls(const CSize &size);
+
+		void OnFocusChange(wpl::ui::listview::index_type index, bool selected);
+		void OnDrilldown(std::shared_ptr<linked_statistics> view, wpl::ui::listview::index_type index);
+
+		virtual void OnFinalMessage(HWND hwnd);
+
+		virtual void activate();
+
+	private:
+		const std::shared_ptr<functions_list> _statistics;
+		const std::wstring _executable;
+		std::shared_ptr<linked_statistics> _parents_statistics, _children_statistics;
+		const std::shared_ptr<columns_model> _columns_parents, _columns_main, _columns_children;
+		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
+		std::shared_ptr<wpl::ui::listview> _statistics_lv, _parents_statistics_lv, _children_statistics_lv;
+		std::vector<wpl::slot_connection> _connections;
+		CRect _placement;
 	};
 }

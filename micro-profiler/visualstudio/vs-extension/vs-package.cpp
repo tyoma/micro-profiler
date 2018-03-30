@@ -20,7 +20,9 @@
 
 #include "commands.h"
 
-#include <frontend/ProfilerSink.h>
+#include <frontend/constants.h>
+#include <frontend/frontend_manager.h>
+#include <frontend/ProfilerMainDialog.h>
 #include <visualstudio/command-target.h>
 #include <resources/resource.h>
 #include <setup/environment.h>
@@ -35,6 +37,7 @@
 #include "guids.h"
 
 using namespace std;
+using namespace placeholders;
 
 namespace micro_profiler
 {
@@ -42,20 +45,10 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef shared_ptr< command<dispatch> > command_ptr;
-
-			command_ptr g_commands[] = {
-				command_ptr(new toggle_profiling),
-				command_ptr(new remove_profiling_support),
+			integration_command::ptr g_commands[] = {
+				integration_command::ptr(new toggle_profiling),
+				integration_command::ptr(new remove_profiling_support),
 			};
-
-			HWND GetRootWindow(const CComPtr<IVsUIShell> &shell)
-			{
-				HWND hwnd = NULL;
-
-				shell->GetDialogOwnerHwnd(&hwnd);
-				return hwnd;
-			}
 		}
 
 
@@ -85,7 +78,8 @@ namespace micro_profiler
 
 				sp->QueryService(__uuidof(IVsUIShell), &shell);
 				register_path(false);
-				_factory = open_frontend_factory(bind(&GetRootWindow, shell));
+				_frontend_manager = frontend_manager::create(reinterpret_cast<const guid_t &>(c_frontendClassID),
+					bind(&profiler_package::create_ui, this, _1, _2));
 				_service_provider = sp;
 				return S_OK;
 			}
@@ -95,7 +89,7 @@ namespace micro_profiler
 
 			STDMETHODIMP Close()
 			{
-				_factory.reset();
+				_frontend_manager.reset();
 				return S_OK;
 			}
 
@@ -137,9 +131,19 @@ namespace micro_profiler
 				return dispatch(IDispatchPtr());
 			}
 
+			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const wstring &executable)
+			{
+				HWND hwnd = HWND_DESKTOP;
+				CComPtr<IVsUIShell> shell;
+
+				if (S_OK == _service_provider->QueryService(__uuidof(IVsUIShell), &shell))
+					shell->GetDialogOwnerHwnd(&hwnd);
+				return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable, hwnd));
+			}
+
 		private:
 			CComPtr<IServiceProvider> _service_provider;
-			shared_ptr<void> _factory;
+			shared_ptr<frontend_manager> _frontend_manager;
 		};
 
 		OBJECT_ENTRY_AUTO(CLSID_MicroProfilerPackage, profiler_package);

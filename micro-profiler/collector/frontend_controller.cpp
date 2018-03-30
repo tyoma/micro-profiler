@@ -35,19 +35,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		struct COMInitializer : wpl::noncopyable
-		{
-			COMInitializer();
-			~COMInitializer();
-		};
-
-		
-		COMInitializer::COMInitializer()
-		{	::CoInitialize(NULL);	}
-
-		COMInitializer::~COMInitializer()
-		{	::CoUninitialize();	}
-
 		shared_ptr<void> create_waitable_timer(int period, PTIMERAPCROUTINE routine, void *parameter)
 		{
 			LARGE_INTEGER li_period = {};
@@ -141,7 +128,6 @@ namespace micro_profiler
 
 		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
-		COMInitializer com;
 		statistics_bridge b(*collector, factory, image_load_queue);
 		shared_ptr<void> analyzer_timer(create_waitable_timer(10, &analyze, &b));
 		shared_ptr<void> sender_timer(create_waitable_timer(50, &update, &b));

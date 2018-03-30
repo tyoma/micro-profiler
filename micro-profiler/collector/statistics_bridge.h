@@ -24,6 +24,7 @@
 
 #include <common/pod_vector.h>
 #include <common/protocol.h>
+#include <common/types.h>
 
 #include <deque>
 #include <functional>
@@ -31,8 +32,6 @@
 
 namespace micro_profiler
 {
-	typedef std::function<void(const void *buffer, size_t size)> channel_t;
-
 	struct calls_collector_i;
 
 	class image_load_queue

@@ -42,8 +42,6 @@ namespace micro_profiler
 	struct handle;
 	class image_load_queue;
 
-	typedef std::function<channel_t ()> frontend_factory;
-
 	class frontend_controller : wpl::noncopyable
 	{
 		class profiler_instance;

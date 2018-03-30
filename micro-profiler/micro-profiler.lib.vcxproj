@@ -49,6 +49,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="collector\channel_client.cpp" />
     <ClCompile Include="collector\frontend_controller.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -62,10 +63,9 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="common\string.cpp" />
+    <ClCompile Include="frontend\frontend.cpp" />
+    <ClCompile Include="frontend\frontend_manager_impl.cpp" />
     <ClCompile Include="frontend\function_list.cpp" />
-    <ClCompile Include="frontend\object_lock.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
     <ClCompile Include="frontend\columns_model.cpp" />
     <ClCompile Include="frontend\symbol_resolver.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -81,6 +81,7 @@
   <ItemGroup>
     <ClInclude Include="collector\analyzer.h" />
     <ClInclude Include="collector\calls_collector.h" />
+    <ClInclude Include="collector\channel_client.h" />
     <ClInclude Include="collector\frontend_controller.h" />
     <ClInclude Include="collector\primitives.h" />
     <ClInclude Include="collector\statistics_bridge.h" />
@@ -91,12 +92,15 @@
     <ClInclude Include="common\module.h" />
     <ClInclude Include="common\protocol.h" />
     <ClInclude Include="common\string.h" />
+    <ClInclude Include="common\types.h" />
+    <ClInclude Include="frontend\frontend.h" />
+    <ClInclude Include="frontend\frontend_manager.h" />
+    <ClInclude Include="frontend\frontend_manager_impl.h" />
     <ClInclude Include="frontend\ordered_view.h" />
     <ClInclude Include="common\pod_vector.h" />
     <ClInclude Include="common\primitives.h" />
     <ClInclude Include="common\serialization.h" />
     <ClInclude Include="frontend\function_list.h" />
-    <ClInclude Include="frontend\object_lock.h" />
     <ClInclude Include="frontend\columns_model.h" />
     <ClInclude Include="frontend\primitives.h" />
     <ClInclude Include="frontend\statistics_model.h" />

@@ -108,6 +108,7 @@ namespace micro_profiler
 		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
 		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_parents_statistics), _1));
 		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_children_statistics), _1));
+		ShowWindow(SW_SHOW);
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()
@@ -251,7 +252,10 @@ namespace micro_profiler
 		_columns_main->store(*c->create("MainColumns"));
 		_columns_children->store(*c->create("ChildrenColumns"));
 
-		Closed();
-		unlock();
+		closed();
+	}
+
+	void ProfilerMainDialog::activate()
+	{
 	}
 }

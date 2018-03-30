@@ -158,7 +158,7 @@ namespace micro_profiler
 
 
 		toggle_profiling::toggle_profiling()
-			: command<dispatch>(cmdidToggleProfiling)
+			: integration_command(cmdidToggleProfiling)
 		{	}
 
 		bool toggle_profiling::query_state(const dispatch &dte_project, unsigned /*item*/, unsigned &state) const
@@ -198,7 +198,7 @@ namespace micro_profiler
 
 
 		remove_profiling_support::remove_profiling_support()
-			: command<dispatch>(cmdidRemoveProfilingSupport)
+			: integration_command(cmdidRemoveProfilingSupport)
 		{	}
 
 		bool remove_profiling_support::query_state(const dispatch &dte_project, unsigned /*item*/, unsigned &state) const

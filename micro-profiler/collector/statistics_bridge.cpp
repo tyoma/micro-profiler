@@ -95,7 +95,7 @@ namespace micro_profiler
 		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(factory()),
 			_image_load_queue(image_load_queue)
 	{
-		send(init, initializaion_data(get_module_info(0).path, c_ticks_resolution));
+		send(init, initialization_data(get_module_info(0).path, c_ticks_resolution));
 	}
 
 	void statistics_bridge::analyze()

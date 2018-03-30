@@ -22,9 +22,6 @@
     <ClCompile Include="collector\statistics_bridge.cpp">
       <Filter>collector</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\object_lock.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="collector\frontend_controller.cpp">
       <Filter>collector</Filter>
     </ClCompile>
@@ -45,6 +42,15 @@
     </ClCompile>
     <ClCompile Include="common\string.cpp">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\frontend_manager_impl.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="collector\channel_client.cpp">
+      <Filter>collector</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\frontend.cpp">
+      <Filter>frontend</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -74,9 +80,6 @@
     </ClInclude>
     <ClInclude Include="collector\statistics_bridge.h">
       <Filter>collector</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\object_lock.h">
-      <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="collector\frontend_controller.h">
       <Filter>collector</Filter>
@@ -121,6 +124,21 @@
       <Filter>collector</Filter>
     </ClInclude>
     <ClInclude Include="common\string.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\frontend_manager.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\frontend_manager_impl.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="collector\channel_client.h">
+      <Filter>collector</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\frontend.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="common\types.h">
       <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,8 @@
 #include <ipc/client.h>
 #include <ipc/server.h>
 
+#include "Helpers.h"
+
 #include <collector/system.h>
 #include <deque>
 #include <wpl/base/concepts.h>
@@ -126,11 +128,6 @@ namespace micro_profiler
 					output = _data->outputs.front();
 					_data->outputs.pop_front();
 				}
-
-
-				template <typename T, size_t size>
-				vector<T> mkvector(T (&array_ptr)[size])
-				{	return vector<T>(array_ptr, array_ptr + size);	}
 			}
 
 			begin_test_suite( IPCClientServerTests )
@@ -260,9 +257,9 @@ namespace micro_profiler
 					byte m2[] = "how are you?";
 					byte m3[] = "bye!";
 
-					s.add_output(mkvector(m1));
-					s.add_output(mkvector(m2));
-					s.add_output(mkvector(m3));
+					s.add_output(micro_profiler::tests::mkvector(m1));
+					s.add_output(micro_profiler::tests::mkvector(m2));
+					s.add_output(micro_profiler::tests::mkvector(m3));
 
 					client c("test-1");
 					vector<byte> i, o;
@@ -304,8 +301,8 @@ namespace micro_profiler
 
 
 					// ACT
-					c.call(mkvector(m1), o);
-					c.call(mkvector(m3), o);
+					c.call(micro_profiler::tests::mkvector(m1), o);
+					c.call(micro_profiler::tests::mkvector(m3), o);
 
 					// ASSERT
 					inputs = s.get_inputs();
@@ -315,7 +312,7 @@ namespace micro_profiler
 					assert_equivalent(m3, inputs[1]);
 
 					// ACT
-					c.call(mkvector(m2), o);
+					c.call(micro_profiler::tests::mkvector(m2), o);
 
 					// ASSERT
 					inputs = s.get_inputs();

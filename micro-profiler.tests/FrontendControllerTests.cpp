@@ -1,3 +1,4 @@
+#include <collector/channel_client.h>
 #include <collector/frontend_controller.h>
 #include <entry.h>
 
@@ -18,12 +19,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void CheckCOMInitialized(event_flag *e, bool *com_initialized)
-			{
-				*com_initialized = is_com_initialized();
-				e->raise();
-			}
-
 			void RaiseAt(event_flag *e, volatile long *times_to_event)
 			{
 				if (0 == _InterlockedDecrement(times_to_event))
@@ -363,20 +358,33 @@ namespace micro_profiler
 			}
 
 
-			test( FrontendThreadHasCOMInitialized )	// Actually this will always pass when calling from managed, since COM already initialized
+			bool com_initialized;
+			bool com_deinitialized;
+
+			void try_open_channel()
+			{
+				channel_t c = open_channel(guid_t());
+
+				com_initialized = is_com_initialized();
+				c = channel_t();
+				com_deinitialized = !is_com_initialized();
+			}
+
+			// Actually this will always pass when calling from managed, since COM already initialized
+			test( ChannelConstructionInitializesCOM )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				event_flag initialized(false, true);
-				bool com_initialized = false;
-				mockups::FrontendState state(bind(&CheckCOMInitialized, &initialized, &com_initialized));
-				auto_frontend_controller fc(tracer, state);
+				com_initialized = false;
+				com_deinitialized = false;
 
-				// INIT / ACT
-				initialized.wait();
+				wpl::mt::thread t(bind(&FrontendControllerTests::try_open_channel, this));
+
+				// ACT
+				t.join();
 
 				// ASSERT
 				assert_is_true(com_initialized);
+				assert_is_true(com_deinitialized);
 			}
 
 

@@ -47,7 +47,7 @@ namespace micro_profiler
 				Frontend(const Frontend &other);
 				~Frontend();
 
-				void operator ()(const void *buffer, size_t size);
+				bool operator ()(const void *buffer, size_t size);
 
 				static Frontend Create(FrontendState& state);
 
@@ -109,12 +109,13 @@ namespace micro_profiler
 				}
 			}
 
-			void Frontend::operator ()(const void *message, size_t size)
+			bool Frontend::operator ()(const void *message, size_t size)
 			{
 				buffer_reader reader(message, size);
 				strmd::deserializer<buffer_reader, packer> a(reader);
 
 				a(_state);
+				return true;
 			}
 
 

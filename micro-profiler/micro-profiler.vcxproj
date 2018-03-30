@@ -50,7 +50,6 @@
   <ItemGroup>
     <ClCompile Include="frontend\constants.cpp" />
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
-    <ClCompile Include="frontend\ProfilerSink.cpp" />
     <ClCompile Include="module\main.cpp" />
     <None Include="logo.ico" />
     <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
@@ -70,7 +69,6 @@
     </Content>
     <ClInclude Include="frontend\constants.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
-    <ClInclude Include="frontend\ProfilerSink.h" />
     <ClInclude Include="resources\resource.h" />
     <ResourceCompile Include="resources\micro-profiler-frontend.rc" />
     <ClCompile Include="setup\environment.cpp" />
@@ -84,7 +82,7 @@
     <ClInclude Include="visualstudio\vs-extension\commands.h" />
     <ClInclude Include="visualstudio\dispatch.h" />
     <ClCompile Include="visualstudio\vs-extension\commands.cpp">
-		<ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild> 
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="visualstudio\dispatch.cpp">

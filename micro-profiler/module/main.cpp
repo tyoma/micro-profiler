@@ -21,9 +21,13 @@
 #include <crtdbg.h>
 
 #include <collector/calls_collector.h>
+#include <collector/channel_client.h>
 #include <collector/frontend_controller.h>
 #include <entry.h>
 #include <frontend/constants.h>
+#include <frontend/frontend.h>
+#include <frontend/frontend_manager_impl.h>
+#include <frontend/ProfilerMainDialog.h>
 #include <setup/environment.h>
 
 #include <atlbase.h>
@@ -49,28 +53,6 @@ namespace micro_profiler
 		volatile long g_patch_lockcount = 0;
 
 		class Module : public CAtlDllModuleT<Module> { } g_module;
-
-		channel_t CreateLocalFrontend()
-		{
-			class frontend_stream
-			{
-			public:
-				frontend_stream()
-				{	_frontend.CoCreateInstance(c_frontendClassID, NULL, CLSCTX_LOCAL_SERVER);	}
-
-				void operator()(const void *buffer, size_t size)
-				{
-					ULONG written;
-
-					if (_frontend)
-						_frontend->Write(buffer, static_cast<ULONG>(size), &written);
-				}
-
-			private:
-				CComPtr<ISequentialStream> _frontend;
-			};
-			return frontend_stream();
-		}
 
 		void Patch(void *address, void *patch, size_t size)
 		{
@@ -102,13 +84,13 @@ namespace micro_profiler
 			*g_exitprocess_patch_jmp_address = &ExitProcessHooked;
 			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
 		}
+
+		OBJECT_ENTRY_AUTO(c_frontendClassID, Frontend);
 	}
 
-	void LockModule()
-	{	g_module.Lock();	}
-
-	void UnlockModule()
-	{	g_module.Unlock();	}
+	shared_ptr<frontend_ui> frontend_manager_impl::default_ui_factory(const shared_ptr<functions_list> &model,
+		const wstring &executable)
+	{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable, HWND_DESKTOP));	}
 }
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
@@ -123,7 +105,8 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 		g_instance = hinstance;
-		g_frontend_controller.reset(new frontend_controller(*calls_collector::instance(), &CreateLocalFrontend));
+		g_frontend_controller.reset(new frontend_controller(*calls_collector::instance(),
+			bind(&open_channel, reinterpret_cast<const guid_t &>(c_frontendClassID))));
 		break;
 
 	case DLL_PROCESS_DETACH:

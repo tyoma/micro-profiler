@@ -17,8 +17,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void dummy(const void *, size_t)
-			{	}
+			bool dummy(const void *, size_t)
+			{	return false;	}
 
 			channel_t VoidCreationFactory(bool &created)
 			{

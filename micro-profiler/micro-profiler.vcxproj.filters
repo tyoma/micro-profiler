@@ -7,9 +7,6 @@
     <ClCompile Include="frontend\ProfilerMainDialog.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\ProfilerSink.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="module\main.cpp">
       <Filter>module</Filter>
     </ClCompile>
@@ -56,9 +53,9 @@
     </None>
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.mfc-static.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="logo.ico">
@@ -99,9 +96,6 @@
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\ProfilerSink.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
     <ClInclude Include="frontend\ProfilerMainDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>
@@ -141,7 +135,6 @@
     </CustomBuild>
     <CustomBuild Include="micro-profiler.initializer.mfc-static.cpp" />
     <CustomBuild Include="micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />

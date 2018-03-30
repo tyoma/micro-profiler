@@ -62,6 +62,7 @@
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="frontend\ColumnsModelTests.cpp" />
+    <ClCompile Include="frontend\FrontendManagerTests.cpp" />
     <ClCompile Include="frontend\FunctionListTests.cpp" />
     <ClCompile Include="frontend\OrderedViewTests.cpp" />
     <ClCompile Include="Helpers.cpp" />
@@ -71,7 +72,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="Mockups.cpp" />
-    <ClCompile Include="ObjectLockTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />

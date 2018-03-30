@@ -12,6 +12,18 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		class com_event
+		{
+		public:
+			com_event();
+
+			void signal();
+			void wait();
+
+		private:
+			std::shared_ptr<void> _handle;
+		};
+
 		struct running_thread
 		{
 			virtual ~running_thread() throw() { }
@@ -56,9 +68,9 @@ namespace micro_profiler
 			void rewind(size_t pos = 0);
 			size_t end_position() const;
 
-		private:
-			size_t _ptr;
-			std::vector<unsigned char> _buffer;
+		public:
+			size_t ptr;
+			std::vector<unsigned char> buffer;
 		};
 
 
@@ -74,6 +86,10 @@ namespace micro_profiler
 		template <typename KeyT, typename ValueT, typename CompT>
 		inline std::vector< std::pair<KeyT, ValueT> > mkvector(const std::unordered_map<KeyT, ValueT, CompT> &from)
 		{	return std::vector< std::pair<KeyT, ValueT> >(from.begin(), from.end());	}
+
+		template <typename T, size_t size>
+		inline std::vector<T> mkvector(T (&array_ptr)[size])
+		{	return std::vector<T>(array_ptr, array_ptr + size);	}
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);

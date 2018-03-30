@@ -1,5 +1,3 @@
-#include <crtdbg.h>
-
 #include "Helpers.h"
 
 #include <atlbase.h>
@@ -12,14 +10,23 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
+		com_event::com_event()
+			: _handle(::CreateEvent(NULL, FALSE, FALSE, NULL), &CloseHandle)
+		{	}
+
+		void com_event::signal()
+		{	::SetEvent(_handle.get());	}
+
+		void com_event::wait()
 		{
-			class Module
+			for (HANDLE h = _handle.get();
+				WAIT_OBJECT_0 + 1 == ::MsgWaitForMultipleObjects(1, &h, FALSE, INFINITE, QS_ALLINPUT); )
 			{
-			public:
-				Module()
-				{	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);	}
-			} g_module;
+				MSG msg;
+
+				while (::PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+					::DispatchMessage(&msg);
+			}
 		}
 
 		wstring get_current_process_executable()
@@ -112,28 +119,28 @@ namespace micro_profiler
 
 
 		vector_adapter::vector_adapter()
-			: _ptr(0)
+			: ptr(0)
 		{	}
 
-		void vector_adapter::write(const void *buffer, size_t size)
+		void vector_adapter::write(const void *buffer_, size_t size)
 		{
-			const unsigned char *b = reinterpret_cast<const unsigned char *>(buffer);
+			const unsigned char *b = reinterpret_cast<const unsigned char *>(buffer_);
 
-			_buffer.insert(_buffer.end(), b, b + size);
+			buffer.insert(buffer.end(), b, b + size);
 		}
 
-		void vector_adapter::read(void *buffer, size_t size)
+		void vector_adapter::read(void *buffer_, size_t size)
 		{
-			assert_is_true(size <= _buffer.size() - _ptr);
-			memcpy(buffer, &_buffer[_ptr], size);
-			_ptr += size;
+			assert_is_true(size <= buffer.size() - ptr);
+			memcpy(buffer_, &buffer[ptr], size);
+			ptr += size;
 		}
 
 		void vector_adapter::rewind(size_t pos)
-		{	_ptr = pos;	}
+		{	ptr = pos;	}
 
 		size_t vector_adapter::end_position() const
-		{	return _buffer.size();	}
+		{	return buffer.size();	}
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs)

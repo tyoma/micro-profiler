@@ -41,11 +41,14 @@ namespace micro_profiler
 			struct mock_command : command<int>
 			{
 				mock_command(int id, unsigned count = 1)
-					: command<int>(id, count > 1), state(0), group_count(count), executed(false)
+					: command<int>(id, count > 1 || count == 0), state(0), group_count(count), executed(false)
 				{	}
 
 				virtual bool query_state(const int &, unsigned item, unsigned &flags) const
 				{ return flags = state, item < group_count; }
+
+				virtual bool get_name(const int &, unsigned item, wstring &name) const
+				{	return item < names.size() ? name = names[item], true : false;	}
 
 				virtual void exec(int &, unsigned item)
 				{	executed = true, item_index = item;	}
@@ -54,6 +57,7 @@ namespace micro_profiler
 				unsigned group_count;
 				bool executed;
 				unsigned item_index;
+				vector<wstring> names;
 			};
 
 			template <typename T>
@@ -65,6 +69,9 @@ namespace micro_profiler
 
 				virtual bool query_state(const T &context_, unsigned /*item*/, unsigned &/*flags*/) const
 				{ return context = context_, true; }
+
+				virtual bool get_name(const T &context_, unsigned /*item*/, wstring &/*name*/) const
+				{	return context = context_, false;	}
 
 				virtual void exec(T &context_, unsigned /*item*/)
 				{	context = context_;	}
@@ -80,6 +87,9 @@ namespace micro_profiler
 
 				virtual bool query_state(const int &/*context*/, unsigned /*item*/, unsigned &/*flags*/) const
 				{	throw 0;	}
+
+				virtual bool get_name(const int &, unsigned /*item*/, wstring &/*name*/) const
+				{	return false;	}
 
 				virtual void exec(int &, unsigned /*item*/)
 				{	throw 0;	}
@@ -236,6 +246,23 @@ namespace micro_profiler
 				assert_equal(OLECMDF_SUPPORTED, getSingleCommandState(ct, c_guid1, 130));
 				assert_equal(OLECMDF_SUPPORTED, getSingleCommandState(ct, c_guid1, 131));
 				assert_equal(OLECMDERR_E_NOTSUPPORTED, ct.QueryStatus(&c_guid1, 1, &cmd, NULL));
+			}
+
+
+			test( EmptyGroupIsRespondedAsOKButDisabledAndInvisible )
+			{
+				// INIT
+				const shared_ptr<mock_command> c[] = {
+					shared_ptr<mock_command>(new mock_command(10)),
+					shared_ptr<mock_command>(new mock_command(31, 0)),
+					shared_ptr<mock_command>(new mock_command(130, 2)),
+				};
+				CommandTargetFinal<int, &c_guid1> ct(c, c + _countof(c));
+
+				c[1]->state = command<int>::supported | command<int>::enabled | command<int>::visible;
+
+				// ACT / ASSERT
+				assert_equal(OLECMDF_SUPPORTED | OLECMDF_INVISIBLE | OLECMDF_DEFHIDEONCTXTMENU, getSingleCommandState(ct, c_guid1, 31));
 			}
 
 
@@ -432,6 +459,137 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, c[2]->item_index);
+			}
+
+
+			test( GetingTheCaptionFillsTheBufferProvidedWithZeroTermination )
+			{
+				// INIT
+				const shared_ptr<mock_command> c[] = {
+					shared_ptr<mock_command>(new mock_command(10)),
+					shared_ptr<mock_command>(new mock_command(31, 2)),
+				};
+				CommandTargetFinal<int, &c_guid1> ct(c, c + _countof(c));
+				const size_t buffer_size = 50;
+				wchar_t buffer[sizeof(OLECMDTEXT) + (buffer_size - 1) * sizeof(wchar_t)] = { 0 };
+				OLECMDTEXT *cmdtext = reinterpret_cast<OLECMDTEXT *>(buffer);
+				OLECMD cmd = { };
+
+				cmdtext->cmdtextf = OLECMDTEXTF_NAME;
+				cmdtext->cwBuf = 20;
+				c[0]->names.push_back(L"a short name");
+				c[1]->names.push_back(L"Lorem ipsum dolor sit amet, consectetur adipiscing elit");
+				c[1]->names.push_back(L"medium-sized strings are good for your health");
+
+				// ACT
+				cmd.cmdID = 10;
+				ct.QueryStatus(&c_guid1, 1, &cmd, cmdtext);
+
+				// ASSERT
+				assert_equal(L"a short name", wstring(cmdtext->rgwz));
+				assert_equal(static_cast<ULONG>(c[0]->names[0].size() + 1), cmdtext->cwActual);
+
+				// ACT
+				cmd.cmdID = 31;
+				ct.QueryStatus(&c_guid1, 1, &cmd, cmdtext);
+
+				// ASSERT
+				assert_equal(L"Lorem ipsum dolor s", wstring(cmdtext->rgwz));
+				assert_equal(static_cast<ULONG>(c[1]->names[0].size() + 1), cmdtext->cwActual);
+
+				// ACT
+				cmdtext->cwBuf = 22;
+				ct.QueryStatus(&c_guid1, 1, &cmd, cmdtext);
+
+				// ASSERT
+				assert_equal(L"Lorem ipsum dolor sit", wstring(cmdtext->rgwz));
+				assert_equal(static_cast<ULONG>(c[1]->names[0].size() + 1), cmdtext->cwActual);
+
+				// ACT
+				cmdtext->cwBuf = 46;
+				cmd.cmdID = 32;
+				ct.QueryStatus(&c_guid1, 1, &cmd, cmdtext);
+
+				// ASSERT
+				assert_equal(L"medium-sized strings are good for your health", wstring(cmdtext->rgwz));
+				assert_equal(static_cast<ULONG>(c[1]->names[1].size() + 1), cmdtext->cwActual);
+			}
+
+
+			test( OnlyTheTextForTheFirstCommandIsReturned )
+			{
+				// INIT
+				const shared_ptr<mock_command> c[] = {
+					shared_ptr<mock_command>(new mock_command(10)),
+					shared_ptr<mock_command>(new mock_command(31)),
+				};
+				CommandTargetFinal<int, &c_guid1> ct(c, c + _countof(c));
+				const size_t buffer_size = 50;
+				wchar_t buffer[sizeof(OLECMDTEXT) + (buffer_size - 1) * sizeof(wchar_t)] = { 0 };
+				OLECMDTEXT *cmdtext = reinterpret_cast<OLECMDTEXT *>(buffer);
+				OLECMD cmd[] = { { 31, }, { 10, }, };
+
+				cmdtext->cmdtextf = OLECMDTEXTF_NAME;
+				c[0]->names.push_back(L"a short name");
+				c[1]->names.push_back(L"Lorem ipsum dolor sit amet, consectetur adipiscing elit");
+
+				// ACT
+				cmdtext->cwBuf = 23;
+				ct.QueryStatus(&c_guid1, _countof(cmd), cmd, cmdtext);
+
+				// ASSERT
+				assert_equal(L"Lorem ipsum dolor sit ", wstring(cmdtext->rgwz));
+			}
+
+
+			test( MissingDynamicTextSetsNameStringToZero )
+			{
+				// INIT
+				const shared_ptr<mock_command> c[] = {
+					shared_ptr<mock_command>(new mock_command(10)),
+					shared_ptr<mock_command>(new mock_command(31)),
+				};
+				CommandTargetFinal<int, &c_guid1> ct(c, c + _countof(c));
+				const size_t buffer_size = 50;
+				wchar_t buffer[sizeof(OLECMDTEXT) + (buffer_size - 1) * sizeof(wchar_t)] = { 0 };
+				OLECMDTEXT *cmdtext = reinterpret_cast<OLECMDTEXT *>(buffer);
+				OLECMD cmd[] = { { 31, }, { 10, }, };
+
+				cmdtext->cmdtextf = OLECMDTEXTF_NAME;
+
+				// ACT
+				cmdtext->cwBuf = 23;
+				cmdtext->cwActual = 1542231;
+				ct.QueryStatus(&c_guid1, _countof(cmd), cmd, cmdtext);
+
+				// ASSERT
+				assert_equal(0u, cmdtext->cwActual);
+			}
+
+
+			test( ContextIsPassedWhenQueryingName )
+			{
+				// INIT
+				shared_ptr< mock_command_t<string> > c = shared_ptr< mock_command_t<string> >(new mock_command_t<string>(12));
+				CommandTargetFinal<string, &c_guid1> ct(&c, &c + 1);
+				const size_t buffer_size = 50;
+				wchar_t buffer[sizeof(OLECMDTEXT) + (buffer_size - 1) * sizeof(wchar_t)] = { 0 };
+				OLECMDTEXT *cmdtext = reinterpret_cast<OLECMDTEXT *>(buffer);
+				OLECMD cmd = { 12, };
+
+				// ACT
+				ct.context = "sdsdf";
+				ct.QueryStatus(&c_guid1, 1, &cmd, cmdtext);
+
+				// ASSERT
+				assert_equal("sdsdf", c->context);
+
+				// ACT
+				ct.context = "something else";
+				ct.QueryStatus(&c_guid1, 1, &cmd, cmdtext);
+
+				// ASSERT
+				assert_equal("something else", c->context);
 			}
 		end_test_suite
 	}

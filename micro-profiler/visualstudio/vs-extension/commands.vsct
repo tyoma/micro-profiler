@@ -22,6 +22,9 @@
 			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" priority="0x0800">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" />
 			</Group>
+			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" priority="0x0900">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" />
+			</Group>
 		</Groups>
 
 		<Buttons>
@@ -53,6 +56,19 @@
 					<ButtonText>Save Statistics...</ButtonText>
 				</Strings>
 			</Button>
+
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidWindowActivateDynamic" priority="0x0300" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DynamicItemStart</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<Strings>
+					<ButtonText>---window---</ButtonText>
+				</Strings>
+			</Button>
+
 		</Buttons>
 	</Commands>
 </CommandTable>

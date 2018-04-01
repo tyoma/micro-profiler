@@ -50,6 +50,7 @@ namespace micro_profiler
 
 	private:
 		std::vector<typename command<ContextT>::ptr> _commands;
+		std::wstring _cache;
 	};
 
 	template <typename ContextT, const GUID *CommandSetID>
@@ -86,15 +87,12 @@ namespace micro_profiler
 
 	template <typename ContextT, const GUID *CommandSetID>
 	inline STDMETHODIMP CommandTarget<ContextT, CommandSetID>::QueryStatus(const GUID *group, ULONG count,
-		OLECMD commands[], OLECMDTEXT * /*command_text*/)
+		OLECMD commands[], OLECMDTEXT *command_text)
 	try
 	{
 		if (*group != *CommandSetID)
 			return OLECMDERR_E_UNKNOWNGROUP;
-
-		ContextT context = get_context();
-
-		while (count--)
+		for (ContextT context = get_context(); count--; )
 		{
 			unsigned item;
 			OLECMD &cmd = commands[count];
@@ -105,8 +103,25 @@ namespace micro_profiler
 				unsigned state;
 
 				if (!c->query_state(context, item, state))
-					return OLECMDERR_E_NOTSUPPORTED;
+				{
+					if (item)
+						return OLECMDERR_E_NOTSUPPORTED;
+					state = command<ContextT>::supported;
+				}
 				cmd.cmdf = convert_state(state);
+				if (command_text)
+				{
+					if (c->get_name(context, item, _cache))
+					{
+						wcsncpy(command_text->rgwz, _cache.c_str(), command_text->cwBuf - 1);
+						command_text->rgwz[command_text->cwBuf - 1] = L'\0';
+						command_text->cwActual = static_cast<ULONG>(_cache.size() + 1);
+					}
+					else
+					{
+						command_text->cwActual = 0;
+					}
+				}
 			}
 			else
 			{

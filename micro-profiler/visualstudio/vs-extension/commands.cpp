@@ -23,6 +23,7 @@
 
 #include <common/module.h>
 #include <common/path.h>
+#include <frontend/frontend_manager.h>
 #include <visualstudio/dispatch.h>
 
 #include <io.h>
@@ -161,35 +162,35 @@ namespace micro_profiler
 			: integration_command(cmdidToggleProfiling)
 		{	}
 
-		bool toggle_profiling::query_state(const dispatch &dte_project, unsigned /*item*/, unsigned &state) const
+		bool toggle_profiling::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			const wstring dir = get_profiler_directory();
 
 			state = 0;
-			if (IDispatchPtr tool = get_tool(dte_project, L"VCCLCompilerTool"))
+			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
 			{
 				state = supported | enabled | visible | (tool && has_instrumentation(dispatch(tool))
-					&& IDispatchPtr(find_item_by_path(dte_project, dir, c_initializer_cpp))
-					&& IDispatchPtr(find_item_by_path(dte_project, dir, c_profiler_library))
+					&& IDispatchPtr(find_item_by_path(ctx.project, dir, c_initializer_cpp))
+					&& IDispatchPtr(find_item_by_path(ctx.project, dir, c_profiler_library))
 					? checked : 0);
 			}
 			return true;
 		}
 
-		void toggle_profiling::exec(dispatch &dte_project, unsigned /*item*/)
+		void toggle_profiling::exec(context &ctx, unsigned /*item*/)
 		{
 			const wstring dir = get_profiler_directory();
-			dispatch compiler(get_tool(dte_project, L"VCCLCompilerTool"));
-			IDispatchPtr initializer_item = find_item_by_path(dte_project, dir, c_initializer_cpp);
-			IDispatchPtr library_item = find_item_by_path(dte_project, dir, c_profiler_library);
+			dispatch compiler(get_tool(ctx.project, L"VCCLCompilerTool"));
+			IDispatchPtr initializer_item = find_item_by_path(ctx.project, dir, c_initializer_cpp);
+			IDispatchPtr library_item = find_item_by_path(ctx.project, dir, c_profiler_library);
 			const bool has_profiling = has_instrumentation(compiler) && initializer_item && library_item;
 
 			if (!has_profiling)
 			{
 				if (!initializer_item)
-					disable_pch(dte_project.get(L"ProjectItems")(L"AddFromFile", (dir & c_initializer_cpp).c_str()));
+					disable_pch(ctx.project.get(L"ProjectItems")(L"AddFromFile", (dir & c_initializer_cpp).c_str()));
 				if (!library_item)
-					dte_project.get(L"ProjectItems")(L"AddFromFile", (dir & c_profiler_library).c_str());
+					ctx.project.get(L"ProjectItems")(L"AddFromFile", (dir & c_profiler_library).c_str());
 				enable_instrumentation(compiler);
 			}
 			else
@@ -201,25 +202,46 @@ namespace micro_profiler
 			: integration_command(cmdidRemoveProfilingSupport)
 		{	}
 
-		bool remove_profiling_support::query_state(const dispatch &dte_project, unsigned /*item*/, unsigned &state) const
+		bool remove_profiling_support::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			state = 0;
-			if (IDispatchPtr tool = get_tool(dte_project, L"VCCLCompilerTool"))
-				state = supported | (IDispatchPtr(find_item_by_path(dte_project, get_profiler_directory(), c_initializer_cpp)) ? enabled | visible : 0);
+			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
+				state = supported | (IDispatchPtr(find_item_by_path(ctx.project, get_profiler_directory(), c_initializer_cpp)) ? enabled | visible : 0);
 			return true;
 		}
 
-		void remove_profiling_support::exec(dispatch &dte_project, unsigned /*item*/)
+		void remove_profiling_support::exec(context &ctx, unsigned /*item*/)
 		{
 			const wstring dir = get_profiler_directory();
-			dispatch initializer = find_item_by_path(dte_project, dir, c_initializer_cpp);
-			dispatch library = find_item_by_path(dte_project, dir, c_profiler_library);
+			dispatch initializer = find_item_by_path(ctx.project, dir, c_initializer_cpp);
+			dispatch library = find_item_by_path(ctx.project, dir, c_profiler_library);
 
-			for_each_configuration_tool(dte_project, L"VCCLCompilerTool", &disable_instrumentation);
+			for_each_configuration_tool(ctx.project, L"VCCLCompilerTool", &disable_instrumentation);
 			if (IDispatchPtr(initializer))
 				initializer(L"Remove");
 			if (IDispatchPtr(library))
 				library(L"Remove");
+		}
+
+
+		window_activate::window_activate()
+			: integration_command(cmdidWindowActivateDynamic, true)
+		{	}
+
+		bool window_activate::query_state(const context &ctx, unsigned item, unsigned &state) const
+		{
+			state = item < ctx.frontend->instances_count() ? enabled | visible | supported : supported;
+			return item < ctx.frontend->instances_count();
+		}
+
+		bool window_activate::get_name(const context &/*context*/, unsigned /*item*/, std::wstring &name) const
+		{
+			name = L"text";
+			return true;
+		}
+
+		void window_activate::exec(context &/*ctx*/, unsigned /*item*/)
+		{
 		}
 	}
 }

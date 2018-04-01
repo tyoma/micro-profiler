@@ -48,6 +48,7 @@ namespace micro_profiler
 			integration_command::ptr g_commands[] = {
 				integration_command::ptr(new toggle_profiling),
 				integration_command::ptr(new remove_profiling_support),
+				integration_command::ptr(new window_activate),
 			};
 		}
 
@@ -55,11 +56,11 @@ namespace micro_profiler
 		class profiler_package : public CComObjectRootEx<CComSingleThreadModel>,
 			public CComCoClass<profiler_package, &CLSID_MicroProfilerPackage>,
 			public IVsPackage,
-			public CommandTarget<dispatch, &CLSID_MicroProfilerCmdSet>
+			public CommandTarget<context, &CLSID_MicroProfilerCmdSet>
 		{
 		public:
 			profiler_package()
-				: CommandTarget<dispatch, &CLSID_MicroProfilerCmdSet>(g_commands, g_commands + _countof(g_commands))
+				: CommandTarget<context, &CLSID_MicroProfilerCmdSet>(g_commands, g_commands + _countof(g_commands))
 			{	}
 
 		public:
@@ -118,7 +119,7 @@ namespace micro_profiler
 				return !!vcproject_context_active;
 			}
 
-			virtual dispatch get_context()
+			virtual context get_context()
 			{
 				struct __declspec(uuid("04a72314-32e9-48e2-9b87-a63603454f3e")) _DTE;
 				IDispatchPtr dte;
@@ -127,8 +128,8 @@ namespace micro_profiler
 				if (dte)
 					if (IDispatchPtr selection = dispatch(dte).get(L"SelectedItems"))
 						if (dispatch(selection).get(L"Count") == 1)
-							return dispatch(selection)[1].get(L"Project");
-				return dispatch(IDispatchPtr());
+							return context(dispatch(selection)[1].get(L"Project"), _frontend_manager);
+				return context(dispatch(IDispatchPtr()), _frontend_manager);
 			}
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const wstring &executable)

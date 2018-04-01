@@ -25,25 +25,49 @@
 
 namespace micro_profiler
 {
+	struct frontend_manager;
+
 	namespace integration
 	{
-		class dispatch;
-		typedef command<dispatch> integration_command;
+		struct context
+		{
+			context(const dispatch &project, const std::shared_ptr<frontend_manager> &frontend);
+
+			dispatch project;
+			std::shared_ptr<frontend_manager> frontend;
+		};
+
+		typedef command<context> integration_command;
 
 		struct toggle_profiling : integration_command
 		{
 			toggle_profiling();
 
-			virtual bool query_state(const dispatch &dte_project, unsigned item, unsigned &state) const;
-			virtual void exec(dispatch &dte_project, unsigned item);
+			virtual bool query_state(const context &dte_project, unsigned item, unsigned &state) const;
+			virtual void exec(context &dte_project, unsigned item);
 		};
 
 		struct remove_profiling_support : integration_command
 		{
 			remove_profiling_support();
 
-			virtual bool query_state(const dispatch &dte_project, unsigned item, unsigned &state) const;
-			virtual void exec(dispatch &dte_project, unsigned item);
+			virtual bool query_state(const context &dte_project, unsigned item, unsigned &state) const;
+			virtual void exec(context &dte_project, unsigned item);
 		};
+
+		struct window_activate : integration_command
+		{
+			window_activate();
+
+			virtual bool query_state(const context &dte_project, unsigned item, unsigned &state) const;
+			virtual bool get_name(const context &context, unsigned item, std::wstring &name) const;
+			virtual void exec(context &dte_project, unsigned item);
+		};
+
+
+
+		inline context::context(const dispatch &project_, const std::shared_ptr<frontend_manager> &frontend_)
+			: project(project_), frontend(frontend_)
+		{	}
 	}
 }

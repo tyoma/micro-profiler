@@ -52,7 +52,6 @@ namespace micro_profiler
 		struct instance_impl : instance
 		{
 			Frontend *frontend;
-			std::shared_ptr<frontend_ui> ui;
 			wpl::slot_connection ui_closed_connection;
 		};
 

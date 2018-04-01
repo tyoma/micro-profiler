@@ -29,10 +29,16 @@ namespace micro_profiler
 {
 	namespace
 	{
-		void terminate(frontend_manager_impl *p, DWORD cookie)
+		void terminate_factory(frontend_manager_impl *p, DWORD cookie)
 		{
 			p->terminate();
 			::CoRevokeClassObject(cookie);
+		}
+
+		void terminate_regular(frontend_manager_impl *p)
+		{
+			p->terminate();
+			p->Release();
 		}
 	}
 
@@ -75,21 +81,31 @@ namespace micro_profiler
 	{	throw 0;	}
 
 	STDMETHODIMP frontend_manager_impl::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
+	try
 	{
 		CComObject<Frontend> *p = 0;
 		CComObject<Frontend>::CreateInstance(&p);
 		CComPtr<ISequentialStream> sp(p);		
-		instance_impl inst;
+		instance_container::iterator i = _instances.insert(_instances.end(), instance_impl());
 
-		inst.frontend = p;
-
-		instance_container::iterator i = _instances.insert(_instances.end(), inst);
-
-		p->initialized = bind(&frontend_manager_impl::on_ready_for_ui, this, i, _1, _2);
-		p->released = bind(&frontend_manager_impl::on_frontend_released, this, i);
+		i->frontend = p;
+		try
+		{
+			// Untested: guarantee that any exception thrown after the instance is in the list would remove the entry.
+			p->initialized = bind(&frontend_manager_impl::on_ready_for_ui, this, i, _1, _2);
+			p->released = bind(&frontend_manager_impl::on_frontend_released, this, i); // Must go the last.
+		}
+		catch (...)
+		{
+			_instances.erase(i);
+			throw;
+		}
 		AddRef();
-
 		return sp->QueryInterface(riid, object);
+	}
+	catch (const bad_alloc &)
+	{
+		return E_OUTOFMEMORY;
 	}
 
 	void frontend_manager_impl::on_frontend_released(instance_container::iterator i)
@@ -153,14 +169,16 @@ namespace micro_profiler
 		const CLSID &clsid = reinterpret_cast<const CLSID &>(id);
 		CComObject<frontend_manager_impl> *p = 0;
 		CComObject<frontend_manager_impl>::CreateInstance(&p);
-		CComPtr<IClassFactory> lock(p), existed;
+		CComPtr<IClassFactory> lock(p);
 		DWORD cookie;
 
 		p->set_ui_factory(ui_factory);
-		if (S_OK == ::CoGetClassObject(clsid, CLSCTX_LOCAL_SERVER, 0, IID_IClassFactory, (void **)&existed))
-			throw runtime_error("");
 		if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
-			return shared_ptr<frontend_manager>(p, bind(&terminate, _1, cookie));
-		throw runtime_error("");
+			return shared_ptr<frontend_manager>(p, bind(&terminate_factory, _1, cookie));
+
+		// Untested: if factory creation fails for some reason, let's retreat into non-COM frontend_manager - for loading
+		//	purposes.
+		p->AddRef();
+		return shared_ptr<frontend_manager>(p, &terminate_regular);
 	}
 }

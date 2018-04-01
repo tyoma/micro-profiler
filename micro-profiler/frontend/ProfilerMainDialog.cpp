@@ -257,5 +257,7 @@ namespace micro_profiler
 
 	void ProfilerMainDialog::activate()
 	{
+		ShowWindow(SW_RESTORE);
+		BringWindowToTop();
 	}
 }

@@ -5,7 +5,6 @@
 #include <wpl/mt/thread.h>
 #include <algorithm>
 #include <string>
-#include <tchar.h>
 #include <vector>
 
 namespace micro_profiler

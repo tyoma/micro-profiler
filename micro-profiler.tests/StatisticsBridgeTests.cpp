@@ -3,7 +3,6 @@
 #include "Helpers.h"
 #include "Mockups.h"
 
-#include <tchar.h>
 #include <algorithm>
 #include <ut/assert.h>
 #include <ut/test.h>

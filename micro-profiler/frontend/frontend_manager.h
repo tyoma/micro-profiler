@@ -47,6 +47,7 @@ namespace micro_profiler
 		{
 			std::wstring executable;
 			std::shared_ptr<functions_list> model;
+			std::shared_ptr<frontend_ui> ui;
 		};
 
 		typedef std::function<frontend_ui::ptr(const std::shared_ptr<functions_list> &model,

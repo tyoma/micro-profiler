@@ -240,8 +240,10 @@ namespace micro_profiler
 			return i ? name = *i->executable, true : false;
 		}
 
-		void window_activate::exec(context &/*ctx*/, unsigned /*item*/)
+		void window_activate::exec(context &ctx, unsigned item)
 		{
+			if (const frontend_manager::instance *i = ctx.frontend->get_instance(item))
+				i->ui->activate();
 		}
 	}
 }

@@ -111,16 +111,6 @@ namespace micro_profiler
 			}
 
 
-			test( CreationOfSecondManagerAtTheSameIDFails )
-			{
-				// INIT
-				frontend_manager::ptr m1 = frontend_manager::create(id, &dummy_ui_factory);
-
-				// ACT / ASSERT
-				assert_throws(frontend_manager::create(id, &dummy_ui_factory), runtime_error);
-			}
-
-
 			test( CanCreateSecondManagerAtTheSameIDAfterFirstIsDestroyed )
 			{
 				// INIT
@@ -166,6 +156,20 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equal(1u, m->instances_count());
+			}
+
+
+			test( SecondInstanceOfAManagerCanBeCreatedButOnlyOneIsInactive )
+			{
+				// INIT / ACT / ASSERT (no exceptions)
+				frontend_manager::ptr m1 = frontend_manager::create(id, &dummy_ui_factory);
+				frontend_manager::ptr m2 = frontend_manager::create(id, &dummy_ui_factory);
+
+				// ACT
+				channel_t c = open_channel(id);
+
+				// ASSERT
+				assert_not_equal(m2->instances_count(), m1->instances_count());
 			}
 
 
@@ -682,7 +686,7 @@ namespace micro_profiler
 			}
 
 
-			test( InstanceContainsExecutableNameAndModelAfterInitialization )
+			test( InstanceContainsExecutableNameModelAndUIAfterInitialization )
 			{
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
@@ -696,6 +700,7 @@ namespace micro_profiler
 				assert_not_null(m->get_instance(0));
 				assert_equal(L"c:\\dev\\micro-profiler.dll", m->get_instance(0)->executable);
 				assert_equal(_ui_creation_log[0]->model, m->get_instance(0)->model);
+				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
 			}
 		end_test_suite
 	}

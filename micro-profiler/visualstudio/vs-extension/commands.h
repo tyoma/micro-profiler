@@ -43,16 +43,16 @@ namespace micro_profiler
 		{
 			toggle_profiling();
 
-			virtual bool query_state(const context &dte_project, unsigned item, unsigned &state) const;
-			virtual void exec(context &dte_project, unsigned item);
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context &ctx, unsigned item);
 		};
 
 		struct remove_profiling_support : integration_command
 		{
 			remove_profiling_support();
 
-			virtual bool query_state(const context &dte_project, unsigned item, unsigned &state) const;
-			virtual void exec(context &dte_project, unsigned item);
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context &ctx, unsigned item);
 		};
 
 		struct window_activate : integration_command
@@ -60,7 +60,7 @@ namespace micro_profiler
 			window_activate();
 
 			virtual bool query_state(const context &dte_project, unsigned item, unsigned &state) const;
-			virtual bool get_name(const context &context, unsigned item, std::wstring &name) const;
+			virtual bool get_name(const context &ctx, unsigned item, std::wstring &name) const;
 			virtual void exec(context &dte_project, unsigned item);
 		};
 

@@ -75,13 +75,10 @@ namespace micro_profiler
 		private:
 			STDMETHODIMP SetSite(IServiceProvider *sp)
 			{
-				CComPtr<IVsUIShell> shell;
-
-				sp->QueryService(__uuidof(IVsUIShell), &shell);
+				_service_provider = sp;
 				register_path(false);
 				_frontend_manager = frontend_manager::create(reinterpret_cast<const guid_t &>(c_frontendClassID),
 					bind(&profiler_package::create_ui, this, _1, _2));
-				_service_provider = sp;
 				return S_OK;
 			}
 

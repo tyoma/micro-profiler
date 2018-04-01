@@ -43,13 +43,14 @@ namespace micro_profiler
 
 	private:
 		struct command_less;
+		typedef std::vector<typename command<ContextT>::ptr> commands_t;
 
 	private:
 		static unsigned convert_state(unsigned state);
 		typename command<ContextT>::ptr get_command(int id, unsigned &item) const;
 
 	private:
-		std::vector<typename command<ContextT>::ptr> _commands;
+		commands_t _commands;
 		std::wstring _cache;
 	};
 
@@ -166,7 +167,7 @@ namespace micro_profiler
 	template <typename ContextT, const GUID *CommandSetID>
 	inline typename command<ContextT>::ptr CommandTarget<ContextT, CommandSetID>::get_command(int id, unsigned &item) const
 	{
-		auto i = std::upper_bound(_commands.begin(), _commands.end(), id, command_less());
+		commands_t::const_iterator i = std::upper_bound(_commands.begin(), _commands.end(), id, command_less());
 
 		return i != _commands.begin() && ((*--i)->is_group || (*i)->id == id) ? item = id - (*i)->id, *i
 			: typename command<ContextT>::ptr();

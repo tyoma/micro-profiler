@@ -364,7 +364,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\frontend\constants.cpp"
+				RelativePath=".\frontend\frontend.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -400,7 +400,51 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\frontend\constants.h"
+				RelativePath=".\frontend\frontend.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\frontend_manager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\frontend\frontend_manager_impl.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\frontend\frontend_manager_impl.h"
 				>
 			</File>
 			<File
@@ -441,46 +485,6 @@
 			</File>
 			<File
 				RelativePath=".\frontend\function_list.h"
-				>
-			</File>
-			<File
-				RelativePath=".\frontend\object_lock.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						DisableLanguageExtensions="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\frontend\object_lock.h"
 				>
 			</File>
 			<File
@@ -597,6 +601,46 @@
 			</File>
 			<File
 				RelativePath=".\collector\calls_collector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\collector\channel_client.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\collector\channel_client.h"
 				>
 			</File>
 			<File
@@ -869,6 +913,18 @@
 			</File>
 			<File
 				RelativePath=".\common\serialization.h"
+				>
+			</File>
+			<File
+				RelativePath=".\common\string.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\common\string.h"
+				>
+			</File>
+			<File
+				RelativePath=".\common\types.h"
 				>
 			</File>
 		</Filter>

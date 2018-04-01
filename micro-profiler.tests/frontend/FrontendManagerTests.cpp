@@ -32,7 +32,7 @@ namespace micro_profiler
 
 				archive(c);
 				archive(data);
-				assert_is_true(channel(b.buffer.data(), static_cast<long>(b.buffer.size())));
+				assert_is_true(channel(&b.buffer[0], static_cast<long>(b.buffer.size())));
 			}
 
 			namespace mocks
@@ -389,6 +389,7 @@ namespace micro_profiler
 			{
 				vector<channel_t> channels;
 
+				channels.reserve(n);
 				while (n--)
 				{
 					channels.push_back(open_channel(id));

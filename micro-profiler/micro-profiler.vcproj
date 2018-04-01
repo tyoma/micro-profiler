@@ -62,6 +62,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -142,6 +143,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -224,6 +226,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -306,6 +309,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -383,14 +387,6 @@
 				RelativePath=".\frontend\ProfilerMainDialog.h"
 				>
 			</File>
-			<File
-				RelativePath=".\frontend\ProfilerSink.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\frontend\ProfilerSink.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="module"
@@ -436,11 +432,11 @@
 			Name="visualstudio"
 			>
 			<File
-				RelativePath=".\visualstudio\commands.cpp"
+				RelativePath=".\visualstudio\command-target.h"
 				>
 			</File>
 			<File
-				RelativePath=".\visualstudio\commands.h"
+				RelativePath=".\visualstudio\command.h"
 				>
 			</File>
 			<File
@@ -503,6 +499,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\visualstudio\vs-extension\commands.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\visualstudio\vs-extension\commands.h"
+					>
+				</File>
+				<File
 					RelativePath=".\visualstudio\vs-extension\commands.vsct"
 					>
 					<FileConfiguration
@@ -511,7 +515,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; &quot;$(intDir)$(InputName).cto&quot; -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>
@@ -521,7 +525,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; &quot;$(intDir)$(InputName).cto&quot; -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>
@@ -531,7 +535,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; &quot;$(intDir)$(InputName).cto&quot; -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>
@@ -541,7 +545,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Compiling Commands Table: $(InputFileName)"
-							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; _generated/$(InputName).cto -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
+							CommandLine="&quot;$(VSSDK90Install)VisualStudioIntegration\Tools\Bin\vsct.exe&quot; &quot;$(InputPath)&quot; &quot;$(intDir)$(InputName).cto&quot; -I&quot;$(VSSDK90Install)VisualStudioIntegration\Common\Inc&quot;&#x0D;&#x0A;"
 							Outputs="_generated/$(InputName).cto"
 						/>
 					</FileConfiguration>
@@ -581,50 +585,6 @@
 			</Filter>
 		</Filter>
 		<File
-			RelativePath=".\micro-profiler.initializer.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
-					Outputs="$(OutDir)$(InputFileName)"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|x64"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
-					Outputs="$(OutDir)$(InputFileName)"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
-					Outputs="$(OutDir)$(InputFileName)"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
-					Outputs="$(OutDir)$(InputFileName)"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
 			RelativePath=".\entry.h"
 			>
 			<FileConfiguration
@@ -633,7 +593,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
 					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
@@ -643,7 +603,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
 					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
@@ -653,7 +613,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
 					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>
@@ -663,7 +623,51 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Copying $(InputFileName)..."
-					CommandLine="copy $(InputPath) $(OutDir)"
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
+					Outputs="$(OutDir)$(InputFileName)"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\micro-profiler.initializer.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
+					Outputs="$(OutDir)$(InputFileName)"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
+					Outputs="$(OutDir)$(InputFileName)"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
+					Outputs="$(OutDir)$(InputFileName)"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Copying $(InputFileName)..."
+					CommandLine="copy $(InputPath) $(OutDir)&#x0D;&#x0A;"
 					Outputs="$(OutDir)$(InputFileName)"
 				/>
 			</FileConfiguration>

@@ -54,7 +54,6 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="_DEBUG"
-				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 			/>
 			<Tool
@@ -125,7 +124,6 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="_DEBUG"
-				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 			/>
 			<Tool
@@ -347,11 +345,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\frontend\FrontendManagerTests.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\frontend\FunctionListTests.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\frontend\OrderedViewTests.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="integration"
+			>
+			<File
+				RelativePath=".\integration\CommandTargetTests.cpp"
 				>
 			</File>
 		</Filter>
@@ -433,10 +443,6 @@
 		</File>
 		<File
 			RelativePath=".\Mockups.h"
-			>
-		</File>
-		<File
-			RelativePath=".\ObjectLockTests.cpp"
 			>
 		</File>
 		<File

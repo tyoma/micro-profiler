@@ -30,10 +30,11 @@ namespace micro_profiler
 	{
 		for (instance_container::iterator i = _instances.begin(); i != _instances.end(); )
 		{
+			shared_ptr<frontend_ui> to_destroy;
 			instance_container::iterator ii = i++;
 
 			if (ii->ui)
-				ii->ui.reset();
+				swap(to_destroy, ii->ui); // ->ui must be empty when closed is fired to avoid double shared_ptr destruction.
 			else
 				ii->frontend->Disconnect();
 		}

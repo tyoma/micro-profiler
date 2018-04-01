@@ -702,6 +702,32 @@ namespace micro_profiler
 				assert_equal(_ui_creation_log[0]->model, m->get_instance(0)->model);
 				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
 			}
+
+
+			test( ClosingAllInstancesDisconnectsAllFrontendsAndDestroysAllUI )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation_w, this,
+					_1, _2));
+				wpl::mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
+
+				clients_ready.wait();
+
+				// ACT
+				m->close_all();
+				server_ready.signal();
+				clients_ready.wait();
+				t.join();
+
+				// ASSERT
+				size_t reference[] = { 0, 1, 2, };
+
+				assert_equivalent(reference, failed_sends);
+				assert_is_true(_ui_creation_log_w[0].expired());
+				assert_is_true(_ui_creation_log_w[1].expired());
+				assert_is_true(_ui_creation_log_w[2].expired());
+				assert_equal(0u, m->instances_count());
+			}
 		end_test_suite
 	}
 }

@@ -68,6 +68,14 @@
 					<ButtonText>---window---</ButtonText>
 				</Strings>
 			</Button>
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidCloseAll" priority="0x0310" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Close All</ButtonText>
+				</Strings>
+			</Button>
 
 		</Buttons>
 	</Commands>

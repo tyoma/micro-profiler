@@ -245,5 +245,19 @@ namespace micro_profiler
 			if (const frontend_manager::instance *i = ctx.frontend->get_instance(item))
 				i->ui->activate();
 		}
+
+
+		close_all::close_all()
+			: integration_command(cmdidCloseAll)
+		{	}
+
+		bool close_all::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
+		{
+			state = (ctx.frontend->instances_count() ? enabled : 0 ) | visible | supported;
+			return true;
+		}
+
+		void close_all::exec(context &ctx, unsigned /*item*/)
+		{	ctx.frontend->close_all();	}
 	}
 }

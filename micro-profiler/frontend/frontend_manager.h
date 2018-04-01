@@ -57,9 +57,11 @@ namespace micro_profiler
 	public:
 		static std::shared_ptr<frontend_manager> create(const guid_t &id, const frontend_ui_factory &ui_factory);
 
-		virtual size_t instances_count() const = 0;
-		virtual const instance *get_instance(unsigned index) const = 0;
-		virtual void load_instance(const instance &data) = 0; 
+		virtual void close_all() throw() = 0;
+
+		virtual size_t instances_count() const throw() = 0;
+		virtual const instance *get_instance(unsigned index) const throw() = 0;
+		virtual void load_instance(const instance &data) = 0;
 
 	protected:
 		frontend_manager() { }

@@ -36,14 +36,13 @@ namespace micro_profiler
 	{
 	public:
 		frontend_manager_impl();
-		~frontend_manager_impl();
 
 		void set_ui_factory(const frontend_ui_factory &ui_factory);
 
-		void terminate();
+		void close_all() throw();
 
-		virtual size_t instances_count() const;
-		virtual const instance *get_instance(unsigned index) const;
+		virtual size_t instances_count() const throw();
+		virtual const instance *get_instance(unsigned index) const throw();
 		virtual void load_instance(const instance &data);
 
 		STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);

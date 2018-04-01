@@ -48,7 +48,7 @@ namespace micro_profiler
 	public:
 		Frontend();
 
-		void Disconnect();
+		void Disconnect() throw();
 
 		void FinalRelease();
 

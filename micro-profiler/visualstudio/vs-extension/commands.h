@@ -59,9 +59,17 @@ namespace micro_profiler
 		{
 			window_activate();
 
-			virtual bool query_state(const context &dte_project, unsigned item, unsigned &state) const;
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
 			virtual bool get_name(const context &ctx, unsigned item, std::wstring &name) const;
-			virtual void exec(context &dte_project, unsigned item);
+			virtual void exec(context &ctx, unsigned item);
+		};
+
+		struct close_all : integration_command
+		{
+			close_all();
+
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context &ctx, unsigned item);
 		};
 
 

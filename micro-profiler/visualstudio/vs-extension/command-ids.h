@@ -38,6 +38,8 @@
 #define cmdidRemoveProfilingSupport 0x104
 #define cmdidSaveStatistics 0x110
 #define cmdidLoadStatistics 0x111
-#define cmdidWindowActivateDynamic 0x200
+#define cmdidCloseAll 0x300
+
+#define cmdidWindowActivateDynamic 0x2000
 
 #endif // __COMMANDIDS_H_

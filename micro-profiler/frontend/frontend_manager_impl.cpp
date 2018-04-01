@@ -31,13 +31,13 @@ namespace micro_profiler
 	{
 		void terminate_factory(frontend_manager_impl *p, DWORD cookie)
 		{
-			p->terminate();
+			p->close_all();
 			::CoRevokeClassObject(cookie);
 		}
 
 		void terminate_regular(frontend_manager_impl *p)
 		{
-			p->terminate();
+			p->close_all();
 			p->Release();
 		}
 	}
@@ -46,13 +46,10 @@ namespace micro_profiler
 		: _ui_factory(&default_ui_factory), _external_references(0), _external_lock_id(0)
 	{	}
 
-	frontend_manager_impl::~frontend_manager_impl()
-	{	}
-
 	void frontend_manager_impl::set_ui_factory(const frontend_ui_factory &ui_factory)
 	{	_ui_factory = ui_factory;	}
 
-	void frontend_manager_impl::terminate()
+	void frontend_manager_impl::close_all() throw()
 	{
 		for (instance_container::iterator i = _instances.begin(); i != _instances.end(); )
 		{
@@ -65,10 +62,10 @@ namespace micro_profiler
 		}
 	}
 
-	size_t frontend_manager_impl::instances_count() const
+	size_t frontend_manager_impl::instances_count() const throw()
 	{	return _instances.size();	}
 
-	const frontend_manager::instance *frontend_manager_impl::get_instance(unsigned index) const
+	const frontend_manager::instance *frontend_manager_impl::get_instance(unsigned index) const throw()
 	{
 		instance_container::const_iterator i = _instances.begin();
 

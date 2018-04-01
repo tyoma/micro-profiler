@@ -27,7 +27,7 @@
 
 namespace micro_profiler
 {
-	timestamp_t timestamp_precision()
+	timestamp_t ticks_per_second()
 	{
 		LARGE_INTEGER pc_freq, pc_start, pc_end;
 		timestamp_t tsc_start, tsc_end;

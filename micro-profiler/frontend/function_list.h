@@ -45,7 +45,7 @@ namespace micro_profiler
 		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
 
-		static std::shared_ptr<functions_list> create(timestamp_t ticks_resolution, std::shared_ptr<symbol_resolver> resolver);
+		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second, std::shared_ptr<symbol_resolver> resolver);
 
 	private:
 		functions_list(std::shared_ptr<statistics_map_detailed> statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);

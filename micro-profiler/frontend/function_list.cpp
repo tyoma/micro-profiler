@@ -320,9 +320,9 @@ namespace micro_profiler
 
 
 
-	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_resolution, shared_ptr<symbol_resolver> resolver)
+	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list(
-			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_resolution, resolver));
+			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_per_second, resolver));
 	}
 }

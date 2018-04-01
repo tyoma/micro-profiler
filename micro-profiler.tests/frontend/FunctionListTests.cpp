@@ -22,7 +22,7 @@ namespace micro_profiler
 	{
 		namespace 
 		{
-			timestamp_t test_ticks_resolution = 1;
+			timestamp_t test_ticks_per_second = 1;
 
 			template <typename T>
 			wstring to_string(const T &value)
@@ -175,7 +175,7 @@ namespace micro_profiler
 			test( CanCreateEmptyFunctionList )
 			{
 				// INIT / ACT
-				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_per_second, resolver));
 				functions_list &fl = *sp_fl;
 
 				// ACT / ASSERT
@@ -193,7 +193,7 @@ namespace micro_profiler
 				ser(s);
 				
 				// ACT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				dser(*fl);
 
 				// ASSERT
@@ -205,7 +205,7 @@ namespace micro_profiler
 			{
 				// INIT
 				statistics_map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				ser(s);
@@ -253,7 +253,7 @@ namespace micro_profiler
 			{
 				// INIT
 				statistics_map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				vector<functions_list::index_type> expected;
 
 				static_cast<function_statistics &>(s[1118]) = function_statistics(19, 0, 31, 29);
@@ -305,7 +305,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s2[5550]) = function_statistics(15, 1024, 1011, 723, 215);
 				static_cast<function_statistics &>(s3[1118]) = function_statistics(1, 0, 4, 4, 4);
 
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				fl->set_order(2, true); // by times called
 				
 				invalidation_tracer ih;
@@ -396,7 +396,7 @@ namespace micro_profiler
 				function_statistics s6(1, 0, 65450031030567000, 23470030000987000, 23470030000987000);
 
 				statistics_map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver)); // 10 * billion for ticks resolution
+				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver)); // 10 * billion ticks per second
 
 				static_cast<function_statistics &>(s[1118]) = s1;
 				static_cast<function_statistics &>(s[2229]) = s2;
@@ -449,7 +449,7 @@ namespace micro_profiler
 			{
 				// INIT
 				statistics_map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				invalidation_tracer ih;
 
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 3);
@@ -752,7 +752,7 @@ namespace micro_profiler
 			{
 				// INIT
 				statistics_map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				wstring result;
 
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 2);
@@ -798,7 +798,7 @@ namespace micro_profiler
 			test( FailOnGettingChildrenListFromEmptyRootList )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 
 				// ACT / ASSERT
 				assert_throws(fl->watch_children(0), out_of_range);
@@ -808,8 +808,8 @@ namespace micro_profiler
 			test( FailOnGettingChildrenListFromNonEmptyRootList )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s1, s2;
 
 				s1[1978];
@@ -836,8 +836,8 @@ namespace micro_profiler
 			test( ReturnChildrenModelForAValidRecord )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s1, s2;
 
 				s1[1978];
@@ -863,7 +863,7 @@ namespace micro_profiler
 			test( LinkedStatisticsObjectIsReturnedForChildren )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[1973];
@@ -884,7 +884,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsForNonEmptyChildren )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[0x1978].callees[0x2001];
@@ -912,7 +912,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s1, s2;
 
 				s1[0x1978].callees[0x2001] = function_statistics(11);
@@ -1064,7 +1064,7 @@ namespace micro_profiler
 			test( GetFunctionAddressFromLinkedChildrenStatistics )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[0x1978].callees[0x2001] = function_statistics(11);
@@ -1091,7 +1091,7 @@ namespace micro_profiler
 			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				static_cast<function_statistics &>(s[0x2001]) = function_statistics(11);
@@ -1114,8 +1114,8 @@ namespace micro_profiler
 			test( FailOnGettingParentsListFromNonEmptyRootList )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s1, s2;
 
 				s1[0x1978];
@@ -1142,8 +1142,8 @@ namespace micro_profiler
 			test( ReturnParentsModelForAValidRecord )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_resolution, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s1, s2;
 
 				s1[0x1978];
@@ -1169,7 +1169,7 @@ namespace micro_profiler
 			test( SizeOfParentsListIsReturnedFromParentsModel )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[2978].callees[3001];
@@ -1197,7 +1197,7 @@ namespace micro_profiler
 			test( ParentStatisticsIsUpdatedOnGlobalUpdates1 )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s1, s2;
 
 				s1[2978].callees[2978];
@@ -1228,7 +1228,7 @@ namespace micro_profiler
 			test( ParentStatisticsValuesAreFormatted )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				static_cast<function_statistics &>(s[0x122F]) = function_statistics(1);
@@ -1257,7 +1257,7 @@ namespace micro_profiler
 			test( ParentStatisticsSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1308,7 +1308,7 @@ namespace micro_profiler
 			test( ParentStatisticsResortingCausesInvalidation )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				invalidation_tracer t;
 				statistics_map_detailed s1, s2;
 
@@ -1348,7 +1348,7 @@ namespace micro_profiler
 			test( ParentStatisticsCausesInvalidationAfterTheSort )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1374,7 +1374,7 @@ namespace micro_profiler
 			test( ParentStatisticsIsUpdatedOnGlobalUpdates2 )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1410,7 +1410,7 @@ namespace micro_profiler
 			test( ParentStatisticsInvalidationOnGlobalUpdates )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s1, s2, s3, s4;
 				invalidation_tracer ih;
 
@@ -1461,7 +1461,7 @@ namespace micro_profiler
 			test( GettingAddressOfParentStatisticsItem )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_resolution, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				statistics_map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);

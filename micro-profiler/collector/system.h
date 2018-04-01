@@ -24,7 +24,7 @@
 
 namespace micro_profiler
 {
-	timestamp_t timestamp_precision();
+	timestamp_t ticks_per_second();
 	unsigned int current_thread_id();
 
 	class mutex

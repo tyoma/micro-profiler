@@ -88,12 +88,12 @@ namespace micro_profiler
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 
 				// ASSERT
-				timestamp_t real_resolution = timestamp_precision();
+				timestamp_t real_ticks_per_second = ticks_per_second();
 
-				assert_equal(get_current_process_executable(), _state.process_init.first);
-				assert_is_true(90 * real_resolution / 100
-					< _state.process_init.second && _state.process_init.second
-					< 110 * real_resolution / 100);
+				assert_equal(get_current_process_executable(), _state.process_init.executable);
+				assert_is_true(90 * real_ticks_per_second / 100
+					< _state.process_init.ticks_per_second && _state.process_init.ticks_per_second
+					< 110 * real_ticks_per_second / 100);
 			}
 
 

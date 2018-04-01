@@ -34,7 +34,11 @@ namespace micro_profiler
 		modules_unloaded
 	};
 
-	typedef std::pair<std::wstring /* executable */, timestamp_t /* tick_resolution */> initialization_data;
+	struct initialization_data
+	{
+		std::wstring executable;
+		timestamp_t ticks_per_second;
+	};
 
 	struct module_info
 	{

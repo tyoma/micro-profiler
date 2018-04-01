@@ -36,7 +36,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const timestamp_t c_ticks_resolution(timestamp_precision());
+		const timestamp_t c_ticks_per_second(ticks_per_second());
 
 		class vector_writer
 		{
@@ -95,7 +95,11 @@ namespace micro_profiler
 		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(factory()),
 			_image_load_queue(image_load_queue)
 	{
-		send(init, initialization_data(get_module_info(0).path, c_ticks_resolution));
+		initialization_data idata = {
+			get_module_info(0).path,
+			c_ticks_per_second
+		};
+		send(init, idata);
 	}
 
 	void statistics_bridge::analyze()

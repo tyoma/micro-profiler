@@ -35,6 +35,12 @@ namespace micro_profiler
 				assert_is_true(channel(&b.buffer[0], static_cast<long>(b.buffer.size())));
 			}
 
+			initialization_data make_initialization_data(const wstring &executable, timestamp_t ticks_per_second)
+			{
+				initialization_data idata = {	executable, ticks_per_second };
+				return idata;
+			}
+
 			namespace mocks
 			{
 				class frontend_ui : public micro_profiler::frontend_ui
@@ -182,7 +188,7 @@ namespace micro_profiler
 				channel_t c2 = open_channel(id);
 
 				// ACT
-				write(c1, init, initialization_data(L"c:\\test\\some.exe", 12332));
+				write(c1, init, make_initialization_data(L"c:\\test\\some.exe", 12332));
 
 				// ASSERT
 				assert_equal(1u, _ui_creation_log.size());
@@ -191,7 +197,7 @@ namespace micro_profiler
 				assert_equal(L"c:\\test\\some.exe", _ui_creation_log[0]->process_name);
 
 				// ACT
-				write(c2, init, initialization_data(L"kernel.exe", 12332));
+				write(c2, init, make_initialization_data(L"kernel.exe", 12332));
 
 				// ASSERT
 				assert_equal(2u, _ui_creation_log.size());
@@ -216,7 +222,7 @@ namespace micro_profiler
 					make_pair(13, function_statistics_detailed_t<unsigned>()),
 				};
 
-				write(c, init, initialization_data(L"", 11));
+				write(c, init, make_initialization_data(L"", 11));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
@@ -284,8 +290,8 @@ namespace micro_profiler
 
 				data[0].second.inclusive_time = 150;
 
-				write(c1, init, initialization_data(L"", 10));
-				write(c2, init, initialization_data(L"", 15));
+				write(c1, init, make_initialization_data(L"", 10));
+				write(c2, init, make_initialization_data(L"", 15));
 
 				shared_ptr<functions_list> model1 = _ui_creation_log[0]->model;
 				shared_ptr<functions_list> model2 = _ui_creation_log[1]->model;
@@ -320,7 +326,7 @@ namespace micro_profiler
 						function_statistics_detailed_t<const void *>()),
 				};
 
-				write(c, init, initialization_data(L"", 10));
+				write(c, init, make_initialization_data(L"", 10));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
@@ -364,7 +370,7 @@ namespace micro_profiler
 						function_statistics_detailed_t<const void *>()),
 				};
 
-				write(c, init, initialization_data(L"", 10));
+				write(c, init, make_initialization_data(L"", 10));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
@@ -393,7 +399,7 @@ namespace micro_profiler
 				while (n--)
 				{
 					channels.push_back(open_channel(id));
-					write(channels.back(), init, initialization_data(L"", 1));
+					write(channels.back(), init, make_initialization_data(L"", 1));
 				}
  				clients_ready.signal();
 				server_ready.wait();

@@ -87,6 +87,13 @@ namespace micro_profiler
 	typedef strmd::varint packer;
 
 	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, initialization_data &data)
+	{
+		archive(data.executable);
+		archive(data.ticks_per_second);
+	}	
+
+	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, function_statistics &data)
 	{
 		archive(data.times_called);

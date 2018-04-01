@@ -45,17 +45,19 @@ namespace micro_profiler
 	public:
 		struct instance
 		{
+			std::wstring executable;
+			std::shared_ptr<functions_list> model;
 		};
 
 		typedef std::function<frontend_ui::ptr(const std::shared_ptr<functions_list> &model,
-			const std::wstring &process_name)> frontend_ui_factory;
+			const std::wstring &executable)> frontend_ui_factory;
 		typedef std::shared_ptr<frontend_manager> ptr;
 
 	public:
 		static std::shared_ptr<frontend_manager> create(const guid_t &id, const frontend_ui_factory &ui_factory);
 
 		virtual size_t instances_count() const = 0;
-		virtual std::shared_ptr<const instance> get_instance(unsigned index) const = 0;
+		virtual const instance *get_instance(unsigned index) const = 0;
 		virtual void load_instance(const instance &data) = 0; 
 
 	protected:

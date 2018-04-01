@@ -650,6 +650,53 @@ namespace micro_profiler
 				_ui_creation_log[2]->emulate_close();
 			}
 
+
+			test( NoInstanceIsReturnedForEmptyManager )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, &dummy_ui_factory);
+
+				// ACT / ASSERT
+				assert_null(m->get_instance(0));
+				assert_null(m->get_instance(10));
+			}
+
+
+			test( InstancesAreReturned )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, &dummy_ui_factory);
+
+				// ACT
+				channel_t c1 = open_channel(id);
+				channel_t c2 = open_channel(id);
+				channel_t c3 = open_channel(id);
+
+				// ACT / ASSERT
+				assert_not_null(m->get_instance(0));
+				assert_is_empty(m->get_instance(0)->executable);
+				assert_null(m->get_instance(0)->model);
+				assert_not_null(m->get_instance(1));
+				assert_not_null(m->get_instance(2));
+				assert_null(m->get_instance(3));
+			}
+
+
+			test( InstanceContainsExecutableNameAndModelAfterInitialization )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				channel_t c = open_channel(id);
+
+				// ACT
+				write(c, init, make_initialization_data(L"c:\\dev\\micro-profiler.dll", 1));
+
+				// ACT / ASSERT
+				assert_not_null(m->get_instance(0));
+				assert_equal(L"c:\\dev\\micro-profiler.dll", m->get_instance(0)->executable);
+				assert_equal(_ui_creation_log[0]->model, m->get_instance(0)->model);
+			}
 		end_test_suite
 	}
 }

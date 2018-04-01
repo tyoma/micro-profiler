@@ -50,12 +50,11 @@ namespace micro_profiler
 	{
 		for (instance_container::iterator i = _instances.begin(); i != _instances.end(); )
 		{
-			shared_ptr<frontend_ui> to_destroy;
+			shared_ptr<frontend_ui> ui;
 			instance_container::iterator ii = i++;
 
-			if (ii->ui)
-				swap(to_destroy, ii->ui); // ->ui must be empty when closed is fired to avoid double shared_ptr destruction.
-			else
+			swap(ui, ii->ui); // ->ui must be empty when closed is fired to avoid double shared_ptr destruction.
+			if (!ui)
 				ii->frontend->Disconnect();
 		}
 	}
@@ -63,8 +62,14 @@ namespace micro_profiler
 	size_t frontend_manager_impl::instances_count() const
 	{	return _instances.size();	}
 
-	shared_ptr<const frontend_manager::instance> frontend_manager_impl::get_instance(unsigned /*index*/) const
-	{	throw 0;	}
+	const frontend_manager::instance *frontend_manager_impl::get_instance(unsigned index) const
+	{
+		instance_container::const_iterator i = _instances.begin();
+
+		if (index >= _instances.size())
+			return 0;
+		return advance(i, index), &*i;
+	}
 
 	void frontend_manager_impl::load_instance(const instance &/*data*/)
 	{	throw 0;	}
@@ -73,8 +78,11 @@ namespace micro_profiler
 	{
 		CComObject<Frontend> *p = 0;
 		CComObject<Frontend>::CreateInstance(&p);
-		CComPtr<ISequentialStream> sp(p);
-		instance_data inst = { p, };
+		CComPtr<ISequentialStream> sp(p);		
+		instance_impl inst;
+
+		inst.frontend = p;
+
 		instance_container::iterator i = _instances.insert(_instances.end(), inst);
 
 		p->initialized = bind(&frontend_manager_impl::on_ready_for_ui, this, i, _1, _2);
@@ -92,10 +100,12 @@ namespace micro_profiler
 		Release();
 	}
 
-	void frontend_manager_impl::on_ready_for_ui(instance_container::iterator i, const wstring &process_name,
+	void frontend_manager_impl::on_ready_for_ui(instance_container::iterator i, const wstring &executable,
 		const shared_ptr<functions_list> &model)
 	{
-		if (shared_ptr<frontend_ui> ui = _ui_factory(model, process_name))
+		i->executable = executable;
+		i->model = model;
+		if (shared_ptr<frontend_ui> ui = _ui_factory(model, executable))
 		{
 			i->ui_closed_connection = ui->closed += bind(&frontend_manager_impl::on_ui_closed, this, i);
 			i->ui = ui;

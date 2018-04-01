@@ -234,10 +234,10 @@ namespace micro_profiler
 			return item < ctx.frontend->instances_count();
 		}
 
-		bool window_activate::get_name(const context &/*context*/, unsigned /*item*/, std::wstring &name) const
+		bool window_activate::get_name(const context &ctx, unsigned item, std::wstring &name) const
 		{
-			name = L"text";
-			return true;
+			const frontend_manager::instance *i = ctx.frontend->get_instance(item);
+			return i ? name = *i->executable, true : false;
 		}
 
 		void window_activate::exec(context &/*ctx*/, unsigned /*item*/)

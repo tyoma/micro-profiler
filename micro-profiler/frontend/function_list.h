@@ -30,8 +30,6 @@
 
 namespace micro_profiler
 {
-	struct symbol_resolver;
-
 	struct linked_statistics : wpl::ui::listview::model
 	{
 		virtual address_t get_address(index_type item) const = 0;
@@ -45,10 +43,21 @@ namespace micro_profiler
 		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
 
-		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second, std::shared_ptr<symbol_resolver> resolver);
+		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
+			std::shared_ptr<symbol_resolver> resolver);
+
+		template <typename ArchiveT>
+		void save(ArchiveT &archive) const;
+
+		template <typename ArchiveT>
+		static std::shared_ptr<functions_list> load(ArchiveT &archive);
 
 	private:
-		functions_list(std::shared_ptr<statistics_map_detailed> statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);
+		struct static_resolver;
+
+	private:
+		functions_list(std::shared_ptr<statistics_map_detailed> statistics, double tick_interval,
+			std::shared_ptr<symbol_resolver> resolver);
 
 	private:
 		std::shared_ptr<statistics_map_detailed> _statistics;
@@ -59,6 +68,38 @@ namespace micro_profiler
 		template <typename ArchiveT>
 		friend void serialize(ArchiveT &archive, functions_list &data);
 	};
+
+	struct functions_list::static_resolver : public symbol_resolver
+	{
+		virtual const std::wstring &symbol_name_by_va(address_t address) const;
+		virtual void add_image(const wchar_t *image, address_t load_address);
+
+		mutable std::unordered_map<address_t, std::wstring> symbols;
+	};
+
+
+
+	template <typename ArchiveT>
+	inline void functions_list::save(ArchiveT &archive) const
+	{
+		archive(_statistics->size());
+		for (statistics_map_detailed::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
+			archive(make_pair(i->first, _resolver->symbol_name_by_va(i->first)));
+		archive(*_statistics);
+	}
+
+	template <typename ArchiveT>
+	inline std::shared_ptr<functions_list> functions_list::load(ArchiveT &archive)
+	{
+		std::shared_ptr<static_resolver> resolver(new static_resolver);
+		std::shared_ptr<functions_list> fl(create(1, resolver));
+
+		archive(resolver->symbols);
+		archive(*fl->_statistics);
+		fl->updated();
+		return fl;
+	}
+
 
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, functions_list &data)

@@ -47,6 +47,7 @@ namespace micro_profiler
 
 		BEGIN_MSG_MAP(ProfilerMainDialog)
 			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog);
+			MESSAGE_HANDLER(WM_ACTIVATE, OnActivated);
 			MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged);
 			COMMAND_HANDLER(IDC_BTN_CLEAR, BN_CLICKED, OnClearStatistics);
 			COMMAND_HANDLER(IDC_BTN_COPY_ALL, BN_CLICKED, OnCopyAll);
@@ -55,6 +56,7 @@ namespace micro_profiler
 		END_MSG_MAP()
 
 		LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
+		LRESULT OnActivated(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
 		LRESULT OnWindowPosChanged(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
 		LRESULT OnClearStatistics(WORD code, WORD control_id, HWND control, BOOL &handled);
 		LRESULT OnCopyAll(WORD code, WORD control_id, HWND control, BOOL &handled);

@@ -55,6 +55,16 @@ namespace micro_profiler
 			virtual void exec(context &ctx, unsigned item);
 		};
 
+
+		struct save_statistics : integration_command
+		{
+			save_statistics();
+
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
+			virtual bool get_name(const context &ctx, unsigned item, std::wstring &name) const;
+			virtual void exec(context &ctx, unsigned item);
+		};
+
 		struct window_activate : integration_command
 		{
 			window_activate();

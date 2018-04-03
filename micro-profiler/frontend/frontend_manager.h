@@ -37,7 +37,9 @@ namespace micro_profiler
 		virtual ~frontend_ui() { }
 
 		virtual void activate() = 0;
+
 		wpl::signal<void()> closed;
+		wpl::signal<void()> activated;
 	};
 
 	struct frontend_manager
@@ -61,6 +63,7 @@ namespace micro_profiler
 
 		virtual size_t instances_count() const throw() = 0;
 		virtual const instance *get_instance(unsigned index) const throw() = 0;
+		virtual const instance *get_active() const throw() = 0;
 		virtual void load_instance(const instance &data) = 0;
 
 	protected:

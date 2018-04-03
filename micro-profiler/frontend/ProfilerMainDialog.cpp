@@ -146,6 +146,14 @@ namespace micro_profiler
 		return 1;	// Let the system set the focus
 	}
 
+	LRESULT ProfilerMainDialog::OnActivated(UINT /*message*/, WPARAM wparam, LPARAM /*lparam*/, BOOL &handled)
+	{
+		if (WA_INACTIVE != wparam)
+			activated();
+		handled = FALSE;
+		return 0;
+	}
+
 	LRESULT ProfilerMainDialog::OnWindowPosChanged(UINT /*message*/, WPARAM /*wparam*/, LPARAM lparam, BOOL &handled)
 	{
 		const WINDOWPOS *wndpos = reinterpret_cast<const WINDOWPOS *>(lparam);

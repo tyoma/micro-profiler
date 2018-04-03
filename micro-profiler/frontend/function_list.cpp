@@ -20,9 +20,6 @@
 
 #include "function_list.h"
 
-#include "statistics_model.h"
-#include "symbol_resolver.h"
-
 #include <common/formatting.h>
 
 #include <utility>
@@ -30,7 +27,7 @@
 #include <clocale>
 
 using namespace std;
-using namespace std::placeholders;
+using namespace placeholders;
 using namespace wpl;
 using namespace wpl::ui;
 
@@ -212,7 +209,7 @@ namespace micro_profiler
 
 
 	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
-		shared_ptr<symbol_resolver> resolver) 
+			shared_ptr<symbol_resolver> resolver)
 		: statistics_model_impl<listview::model, statistics_map_detailed>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
@@ -269,12 +266,10 @@ namespace micro_profiler
 
 
 	children_statistics_model_impl::children_statistics_model_impl(address_t controlled_address,
-		const statistics_map &statistics, signal<void (address_t)> &entry_updated, double tick_interval,
-		shared_ptr<symbol_resolver> resolver)
+			const statistics_map &statistics, signal<void (address_t)> &entry_updated, double tick_interval,
+			shared_ptr<symbol_resolver> resolver)
 		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
-	{
-		_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);
-	}
+	{	_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);	}
 
 	void children_statistics_model_impl::on_updated(address_t address)
 	{
@@ -284,11 +279,9 @@ namespace micro_profiler
 
 
 	parents_statistics::parents_statistics(const statistics_map_callers &statistics,
-		signal<void (address_t)> &entry_updated, shared_ptr<symbol_resolver> resolver)
+			signal<void (address_t)> &entry_updated, shared_ptr<symbol_resolver> resolver)
 		: statistics_model_impl<linked_statistics, statistics_map_callers>(statistics, 0, resolver)
-	{
-		_updates_connection = entry_updated += bind(&parents_statistics::on_updated, this, _1);
-	}
+	{	_updates_connection = entry_updated += bind(&parents_statistics::on_updated, this, _1);	}
 
 	template <>
 	void statistics_model_impl<linked_statistics, statistics_map_callers>::get_text(index_type item, index_type subitem,
@@ -325,4 +318,11 @@ namespace micro_profiler
 		return shared_ptr<functions_list>(new functions_list(
 			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_per_second, resolver));
 	}
+
+
+	const wstring &functions_list::static_resolver::symbol_name_by_va(address_t address) const
+	{	return symbols[address];	}
+
+	void functions_list::static_resolver::add_image(const wchar_t * /*image*/, address_t /*load_address*/)
+	{	}
 }

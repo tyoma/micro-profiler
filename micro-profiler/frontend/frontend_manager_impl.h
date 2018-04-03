@@ -43,6 +43,7 @@ namespace micro_profiler
 
 		virtual size_t instances_count() const throw();
 		virtual const instance *get_instance(unsigned index) const throw();
+		virtual const instance *get_active() const throw();
 		virtual void load_instance(const instance &data);
 
 		STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);
@@ -51,25 +52,31 @@ namespace micro_profiler
 		struct instance_impl : instance
 		{
 			Frontend *frontend;
+			wpl::slot_connection ui_activated_connection;
 			wpl::slot_connection ui_closed_connection;
 		};
 
 		typedef std::list<instance_impl> instance_container;
 
 	private:
-		void on_frontend_released(instance_container::iterator i);
-		void on_ready_for_ui(instance_container::iterator i, const std::wstring &executable, const std::shared_ptr<functions_list> &model);
-		void on_ui_closed(instance_container::iterator i);
+		void on_frontend_released(instance_container::iterator i) throw();
+		void on_ready_for_ui(instance_container::iterator i, const std::wstring &executable,
+			const std::shared_ptr<functions_list> &model);
 
-		void add_external_reference();
-		void release_external_reference();
+		void on_ui_activated(instance_container::iterator i);
+		void on_ui_closed(instance_container::iterator i) throw();
+
+		void add_external_reference() throw();
+		void release_external_reference() throw();
 
 		static std::shared_ptr<frontend_ui> default_ui_factory(const std::shared_ptr<functions_list> &model,
 			const std::wstring &process_name);
 
 	private:
-		instance_container _instances;
 		frontend_ui_factory _ui_factory;
+		instance_container _instances;
+		const instance_impl *_active_instance;
+
 		unsigned _external_references;
 		DWORD _external_lock_id;
 	};

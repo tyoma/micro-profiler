@@ -39,6 +39,13 @@ namespace micro_profiler
 				return s.str();
 			}
 
+			wstring get_text(const functions_list &fl, unsigned row, unsigned column)
+			{
+				wstring text;
+
+				return fl.get_text(row, column, text), text;
+			}
+
 			void assert_row(const listview::model &fl, size_t row, const wchar_t* name, const wchar_t* times_called)
 			{
 				wstring result;
@@ -120,17 +127,30 @@ namespace micro_profiler
 
 			class sri : public symbol_resolver
 			{
-				mutable map<address_t, wstring> _names;
-
 			public:
+				sri()
+				{	}
+
+				template <typename T, size_t n>
+				explicit sri(T (&symbols)[n])
+					: names(symbols, symbols + n)
+				{	}
+
 				virtual const wstring &symbol_name_by_va(address_t address) const
 				{
-					return _names[address] = to_string_address(address);
+					map<address_t, wstring>::const_iterator i = names.find(address);
+
+					if (i == names.end())
+						i = names.insert(make_pair(address, to_string_address(address))).first;
+					return i->second;
 				}
 
 				virtual void add_image(const wchar_t * /*image*/, address_t /*base*/)
 				{
 				}
+
+			public:
+				mutable map<address_t, wstring> names;
 			};
 
 			// convert decimal point to current(default) locale
@@ -974,7 +994,7 @@ namespace micro_profiler
 			test( IncomingDetailStatisticsUpdateNoChildrenStatisticsUpdatesScenarios )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(1, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				invalidation_tracer t;
 				statistics_map_detailed s;
 
@@ -1013,7 +1033,7 @@ namespace micro_profiler
 			test( IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(1, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				invalidation_tracer t;
 				statistics_map_detailed s1, s2;
 
@@ -1481,6 +1501,109 @@ namespace micro_profiler
 				assert_equal(0x2978, p->get_address(0));
 				assert_equal(0x2995, p->get_address(1));
 				assert_equal(0x3001, p->get_address(2));
+			}
+
+
+			test( SymbolsRequiredAreSerializedForFile )
+			{
+				// INIT
+				pair<address_t, wstring> symbols1[] = {
+					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				};
+				shared_ptr<functions_list> fl1(functions_list::create(1, shared_ptr<sri>(new sri(symbols1))));
+				pair<address_t, wstring> symbols2[] = {
+					make_pair(7, L"A"), make_pair(11, L"B"), make_pair(19, L"C"), make_pair(131, L"D"), make_pair(113, L"E"),
+				};
+				shared_ptr<functions_list> fl2(functions_list::create(1, shared_ptr<sri>(new sri(symbols2))));
+				statistics_map_detailed s;
+
+				s[1], s[17];
+				ser(s);
+				dser(*fl1);
+
+				s.clear();
+				s[7], s[11], s[131], s[113];
+				ser(s);
+				dser(*fl2);
+
+				// ACT
+				fl1->save(ser);
+
+				// ASSERT
+				vector< pair<address_t, wstring> > data;
+				pair<address_t, wstring> reference1[] = { make_pair(1, L"Lorem"), make_pair(17, L"Amet"), };
+
+				dser(data);
+				dser(s);
+				assert_equivalent(reference1, data);
+
+				// ACT
+				fl2->save(ser);
+
+				// ASSERT
+				pair<address_t, wstring> reference2[] = {
+					make_pair(7, L"A"), make_pair(11, L"B"), make_pair(131, L"D"), make_pair(113, L"E"),
+				};
+
+				data.clear();
+				dser(data);
+				dser(s);
+				assert_equivalent(reference2, data);
+			}
+
+
+			test( StatisticsFollowsTheSymbolsInFileSerialization )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = {
+					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				};
+				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
+				statistics_map_detailed s;
+
+				s[1], s[17], s[13];
+				ser(s);
+				dser(*fl);
+
+				// ACT
+				fl->save(ser);
+
+				// ASSERT
+				vector< pair<address_t, wstring> > symbols_read;
+				statistics_map_detailed stats_read;
+
+				dser(symbols_read);
+				dser(stats_read);
+
+				assert_equal(3u, stats_read.size());
+			}
+
+
+			test( FunctionListIsComletelyRestoredWithSymbols )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = {
+					make_pair(5, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				};
+				statistics_map_detailed s;
+
+				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
+				ser(mkvector(symbols));
+				ser(s);
+
+				// ACT
+				shared_ptr<functions_list> fl = functions_list::load(dser);
+				fl->set_order(1, true);
+
+				// ASSERT
+				assert_equal(L"Amet", get_text(*fl, 0, 1));
+				assert_equal(L"127", get_text(*fl, 0, 2));
+				assert_equal(L"Ipsum", get_text(*fl, 1, 1));
+				assert_equal(L"12", get_text(*fl, 1, 2));
+				assert_equal(L"Lorem", get_text(*fl, 2, 1));
+				assert_equal(L"123", get_text(*fl, 2, 2));
+				assert_equal(L"dolor", get_text(*fl, 3, 1));
+				assert_equal(L"12000", get_text(*fl, 3, 2));
 			}
 		end_test_suite
 	}

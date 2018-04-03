@@ -48,12 +48,22 @@
 				</Strings>
 			</Button>
 
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidSaveStatistics" priority="0x0110" type="Button">
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidLoadStatistics" priority="0x0110" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
-					<ButtonText>Save Statistics...</ButtonText>
+					<ButtonText>Open Statistics...</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidSaveStatistics" priority="0x0120" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Save Selected Statistics As...</ButtonText>
 				</Strings>
 			</Button>
 
@@ -68,6 +78,7 @@
 					<ButtonText>---window---</ButtonText>
 				</Strings>
 			</Button>
+
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidCloseAll" priority="0x0310" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" />
 				<CommandFlag>TextOnly</CommandFlag>

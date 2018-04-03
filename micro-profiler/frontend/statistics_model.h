@@ -21,15 +21,13 @@
 #pragma once
 
 #include "ordered_view.h"
-
 #include "primitives.h"
+#include "symbol_resolver.h"
 
 #include <wpl/ui/listview.h>
 
 namespace micro_profiler
 {
-	struct symbol_resolver;
-
 	template <typename BaseT, typename MapT>
 	class statistics_model_impl : public BaseT, public std::enable_shared_from_this< statistics_model_impl<BaseT, MapT> >
 	{

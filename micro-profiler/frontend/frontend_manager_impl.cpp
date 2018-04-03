@@ -43,7 +43,7 @@ namespace micro_profiler
 	}
 
 	frontend_manager_impl::frontend_manager_impl()
-		: _ui_factory(&default_ui_factory), _external_references(0), _external_lock_id(0)
+		: _ui_factory(&default_ui_factory), _active_instance(0),	_external_references(0), _external_lock_id(0)
 	{	}
 
 	void frontend_manager_impl::set_ui_factory(const frontend_ui_factory &ui_factory)
@@ -53,10 +53,10 @@ namespace micro_profiler
 	{
 		for (instance_container::iterator i = _instances.begin(); i != _instances.end(); )
 		{
-			shared_ptr<frontend_ui> ui;
 			instance_container::iterator ii = i++;
+			shared_ptr<frontend_ui> ui = ii->ui;
 
-			swap(ui, ii->ui); // ->ui must be empty when closed is fired to avoid double shared_ptr destruction.
+			ii->ui.reset();
 			if (!ui)
 				ii->frontend->Disconnect();
 		}
@@ -73,6 +73,9 @@ namespace micro_profiler
 			return 0;
 		return advance(i, index), &*i;
 	}
+
+	const frontend_manager::instance *frontend_manager_impl::get_active() const throw()
+	{	return _active_instance;	}
 
 	void frontend_manager_impl::load_instance(const instance &/*data*/)
 	{	throw 0;	}
@@ -105,7 +108,7 @@ namespace micro_profiler
 		return E_OUTOFMEMORY;
 	}
 
-	void frontend_manager_impl::on_frontend_released(instance_container::iterator i)
+	void frontend_manager_impl::on_frontend_released(instance_container::iterator i) throw()
 	{
 		i->frontend = 0;
 		if (!i->ui)
@@ -120,14 +123,24 @@ namespace micro_profiler
 		i->model = model;
 		if (shared_ptr<frontend_ui> ui = _ui_factory(model, executable))
 		{
+			i->ui_activated_connection = ui->activated += bind(&frontend_manager_impl::on_ui_activated, this, i);
 			i->ui_closed_connection = ui->closed += bind(&frontend_manager_impl::on_ui_closed, this, i);
 			i->ui = ui;
+			_active_instance = &*i;
 			add_external_reference();
 		}
 	}
 
-	void frontend_manager_impl::on_ui_closed(instance_container::iterator i)
+	void frontend_manager_impl::on_ui_activated(instance_container::iterator i)
+	{	_active_instance = &*i;	}
+
+	void frontend_manager_impl::on_ui_closed(instance_container::iterator i) throw()
 	{
+		shared_ptr<frontend_ui> ui = i->ui;
+
+		if (_active_instance == &*i)
+			_active_instance = 0;
+		i->ui_closed_connection.reset();
 		i->ui.reset();
 		if (i->frontend)
 			i->frontend->Disconnect();
@@ -136,25 +149,21 @@ namespace micro_profiler
 		release_external_reference();
 	}
 
-	void frontend_manager_impl::add_external_reference()
+	void frontend_manager_impl::add_external_reference() throw()
 	{
 		CComPtr<IRunningObjectTable> rot;
 		CComPtr<IMoniker> m;
 
-		if (_external_references++)
-			return;
 		AddRef();
-		if (S_OK == ::GetRunningObjectTable(0, &rot) && S_OK == ::CreateItemMoniker(OLESTR("!"), OLESTR("olock"), &m))
+		if (!_external_references++ && S_OK == ::GetRunningObjectTable(0, &rot) && S_OK == ::CreateItemMoniker(OLESTR("!"), OLESTR("olock"), &m))
 			rot->Register(ROTFLAGS_REGISTRATIONKEEPSALIVE, this, m, &_external_lock_id);
 	}
 
-	void frontend_manager_impl::release_external_reference()
+	void frontend_manager_impl::release_external_reference() throw()
 	{
 		CComPtr<IRunningObjectTable> rot;
 
-		if (--_external_references)
-			return;
-		if (S_OK == ::GetRunningObjectTable(0, &rot))
+		if (!--_external_references && S_OK == ::GetRunningObjectTable(0, &rot))
 			rot->Revoke(_external_lock_id);
 		Release();
 	}

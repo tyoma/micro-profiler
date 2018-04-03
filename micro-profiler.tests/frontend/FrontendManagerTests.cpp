@@ -47,20 +47,14 @@ namespace micro_profiler
 				{		
 				public:
 					frontend_ui(const shared_ptr<functions_list> &model_, const wstring &process_name_)
-						: model(model_), process_name(process_name_), _notified(false)
+						: model(model_), process_name(process_name_)
 					{	}
 
 					~frontend_ui()
-					{
-						if (!_notified)
-							closed();
-					}
+					{	closed();	}
 
 					void emulate_close()
-					{
-						_notified = true;
-						closed();
-					}
+					{	closed();	}
 
 				public:
 					shared_ptr<functions_list> model;
@@ -68,9 +62,6 @@ namespace micro_profiler
 
 				private:
 					virtual void activate() {	}
-
-				private:
-					bool _notified;
 				};
 			}
 		}
@@ -557,6 +548,24 @@ namespace micro_profiler
 			}
 
 
+			test( InstanceLingersWhenUIIsClosedButFrontendIsStillReferencedNoExternalUIReference )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation_w, this,
+					_1, _2));
+				channel_t c = open_channel(id);
+
+				write(c, init, initialization_data());
+
+				// ACT (must not crash - make sure doubled closed even doesn't blow things up)
+				m->get_instance(0)->ui->closed();
+
+				// ASSERT
+				assert_is_true(_ui_creation_log_w[0].expired());
+				assert_equal(1u, m->instances_count());
+			}
+
+
 			test( UIIsDestroyedOnManagerDestructionWhenFrontendIsHeld )
 			{
 				// INIT
@@ -727,6 +736,142 @@ namespace micro_profiler
 				assert_is_true(_ui_creation_log_w[1].expired());
 				assert_is_true(_ui_creation_log_w[2].expired());
 				assert_equal(0u, m->instances_count());
+			}
+
+
+			test( NoActiveInstanceInEmptyManager )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+
+				// ACT / ASSERT
+				assert_null(m->get_active());
+			}
+
+
+			test( NoInstanceConsideredActiveIfNoUICreated )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, &dummy_ui_factory);
+				channel_t c[] = { open_channel(id), open_channel(id), open_channel(id), };
+
+				// ACT
+				write(c[0], init, initialization_data());
+
+				// ASSERT
+				assert_null(m->get_active());
+			}
+
+
+			test( LastInitializedInstanceConsideredActive )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				channel_t c[] = { open_channel(id), open_channel(id), open_channel(id), };
+
+				// ACT
+				write(c[0], init, initialization_data());
+
+				// ASSERT
+				assert_not_null(m->get_active());
+				assert_equal(m->get_instance(0), m->get_active());
+
+				// ACT
+				write(c[1], init, initialization_data());
+
+				// ASSERT
+				assert_equal(m->get_instance(1), m->get_active());
+			}
+
+
+			test( UIActivationSwitchesActiveInstanceInManager )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				channel_t c[] = { open_channel(id), open_channel(id), open_channel(id), };
+
+				write(c[0], init, initialization_data());
+				write(c[1], init, initialization_data());
+				write(c[2], init, initialization_data());
+
+				// ACT
+				_ui_creation_log[1]->activated();
+
+				// ASSERT
+				assert_not_null(m->get_active());
+				assert_equal(m->get_instance(1), m->get_active());
+
+				// ACT
+				_ui_creation_log[0]->activated();
+
+				// ASSERT
+				assert_equal(m->get_instance(0), m->get_active());
+
+				// ACT
+				_ui_creation_log[2]->activated();
+
+				// ASSERT
+				assert_equal(m->get_instance(2), m->get_active());
+			}
+
+
+			test( NoInstanceIsActiveAfterCloseAll )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation_w, this,
+					_1, _2));
+				channel_t c[] = { open_channel(id), open_channel(id), open_channel(id), };
+
+				write(c[0], init, initialization_data());
+				write(c[1], init, initialization_data());
+				_ui_creation_log_w[0].lock()->activated();
+
+				// ACT
+				m->close_all();
+
+				// ACT / ASSERT
+				assert_null(m->get_active());
+			}
+
+
+			test( NoInstanceIsActiveAfterActiveInstanceIsClosed )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				channel_t c[] = { open_channel(id), open_channel(id), open_channel(id), };
+
+				write(c[0], init, initialization_data());
+				write(c[1], init, initialization_data());
+				_ui_creation_log[0]->activated();
+
+				// ACT
+				_ui_creation_log[0]->emulate_close();
+
+				// ACT / ASSERT
+				assert_null(m->get_active());
+			}
+
+
+			test( ActiveInstancetIsIntactAfterInactiveInstanceIsClosed )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				channel_t c[] = { open_channel(id), open_channel(id), open_channel(id), };
+
+				write(c[0], init, initialization_data());
+				write(c[1], init, initialization_data());
+				_ui_creation_log[0]->activated();
+
+				// ACT
+				_ui_creation_log[1]->emulate_close();
+
+				// ACT / ASSERT
+				assert_equal(m->get_instance(0), m->get_active());
 			}
 		end_test_suite
 	}

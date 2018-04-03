@@ -224,14 +224,38 @@ namespace micro_profiler
 		}
 
 
+		save_statistics::save_statistics()
+			: integration_command(cmdidSaveStatistics)
+		{	}
+
+		bool save_statistics::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
+		{
+			state = visible | supported | (ctx.frontend->get_active() ? enabled : 0);
+			return true;
+		}
+
+		bool save_statistics::get_name(const context &ctx, unsigned /*item*/, std::wstring &name) const
+		{
+			if (const frontend_manager::instance * i = ctx.frontend->get_active())
+				return name = L"Save " + *i->executable + L" Statistics As...", true;
+			return false;
+		}
+
+		void save_statistics::exec(context &/*ctx*/, unsigned /*item*/)
+		{	}
+
+
 		window_activate::window_activate()
 			: integration_command(cmdidWindowActivateDynamic, true)
 		{	}
 
 		bool window_activate::query_state(const context &ctx, unsigned item, unsigned &state) const
 		{
-			state = item < ctx.frontend->instances_count() ? enabled | visible | supported : supported;
-			return item < ctx.frontend->instances_count();
+			if (item >= ctx.frontend->instances_count())
+				return false;
+			if (const frontend_manager::instance *i = ctx.frontend->get_instance(item))
+				state = i->ui ? enabled | visible | supported | (ctx.frontend->get_active() == i ? checked : 0): 0;
+			return true;
 		}
 
 		bool window_activate::get_name(const context &ctx, unsigned item, std::wstring &name) const

@@ -55,7 +55,7 @@ namespace micro_profiler
 		: _resolver(symbol_resolver::create())
 	{	}
 
-	void Frontend::Disconnect() throw()
+	void Frontend::disconnect() throw()
 	{	::CoDisconnectObject(this, 0);	}
 
 	void Frontend::FinalRelease()

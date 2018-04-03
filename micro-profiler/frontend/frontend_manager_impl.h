@@ -24,59 +24,23 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
-#include <unordered_map>
-#include <wpl/base/signals.h>
 
 namespace micro_profiler
 {
-	class Frontend;
-	class functions_list;
-
 	class frontend_manager_impl : public frontend_manager, public CComClassFactory
 	{
 	public:
 		frontend_manager_impl();
 
-		void set_ui_factory(const frontend_ui_factory &ui_factory);
-
-		void close_all() throw();
-
-		virtual size_t instances_count() const throw();
-		virtual const instance *get_instance(unsigned index) const throw();
-		virtual const instance *get_active() const throw();
-		virtual void load_instance(const instance &data);
-
 		STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);
 
-	private:
-		struct instance_impl : instance
-		{
-			Frontend *frontend;
-			wpl::slot_connection ui_activated_connection;
-			wpl::slot_connection ui_closed_connection;
-		};
+		virtual void lock() throw();
+		virtual void unlock() throw();
 
-		typedef std::list<instance_impl> instance_container;
-
-	private:
-		void on_frontend_released(instance_container::iterator i) throw();
-		void on_ready_for_ui(instance_container::iterator i, const std::wstring &executable,
-			const std::shared_ptr<functions_list> &model);
-
-		void on_ui_activated(instance_container::iterator i);
-		void on_ui_closed(instance_container::iterator i) throw();
-
-		void add_external_reference() throw();
-		void release_external_reference() throw();
-
-		static std::shared_ptr<frontend_ui> default_ui_factory(const std::shared_ptr<functions_list> &model,
+		static frontend_ui::ptr default_ui_factory(const std::shared_ptr<functions_list> &model,
 			const std::wstring &process_name);
 
 	private:
-		frontend_ui_factory _ui_factory;
-		instance_container _instances;
-		const instance_impl *_active_instance;
-
 		unsigned _external_references;
 		DWORD _external_lock_id;
 	};

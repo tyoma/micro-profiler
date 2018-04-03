@@ -52,6 +52,9 @@
     <ClCompile Include="frontend\frontend.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\frontend_manager.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="frontend\symbol_resolver.h">

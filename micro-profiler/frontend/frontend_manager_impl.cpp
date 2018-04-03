@@ -20,7 +20,7 @@
 
 #include "frontend_manager_impl.h"
 
-#include "Frontend.h"
+#include "frontend.h"
 
 using namespace std;
 using namespace placeholders;
@@ -43,64 +43,17 @@ namespace micro_profiler
 	}
 
 	frontend_manager_impl::frontend_manager_impl()
-		: _ui_factory(&default_ui_factory), _active_instance(0),	_external_references(0), _external_lock_id(0)
-	{	}
-
-	void frontend_manager_impl::set_ui_factory(const frontend_ui_factory &ui_factory)
-	{	_ui_factory = ui_factory;	}
-
-	void frontend_manager_impl::close_all() throw()
-	{
-		for (instance_container::iterator i = _instances.begin(); i != _instances.end(); )
-		{
-			instance_container::iterator ii = i++;
-			shared_ptr<frontend_ui> ui = ii->ui;
-
-			ii->ui.reset();
-			if (!ui)
-				ii->frontend->Disconnect();
-		}
-	}
-
-	size_t frontend_manager_impl::instances_count() const throw()
-	{	return _instances.size();	}
-
-	const frontend_manager::instance *frontend_manager_impl::get_instance(unsigned index) const throw()
-	{
-		instance_container::const_iterator i = _instances.begin();
-
-		if (index >= _instances.size())
-			return 0;
-		return advance(i, index), &*i;
-	}
-
-	const frontend_manager::instance *frontend_manager_impl::get_active() const throw()
-	{	return _active_instance;	}
-
-	void frontend_manager_impl::load_instance(const instance &/*data*/)
-	{	throw 0;	}
+		: _external_references(0), _external_lock_id(0)
+	{	_ui_factory = &default_ui_factory;	}
 
 	STDMETHODIMP frontend_manager_impl::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
 	try
 	{
 		CComObject<Frontend> *p = 0;
 		CComObject<Frontend>::CreateInstance(&p);
-		CComPtr<ISequentialStream> sp(p);		
-		instance_container::iterator i = _instances.insert(_instances.end(), instance_impl());
+		CComPtr<ISequentialStream> sp(p);
 
-		i->frontend = p;
-		try
-		{
-			// Untested: guarantee that any exception thrown after the instance is in the list would remove the entry.
-			p->initialized = bind(&frontend_manager_impl::on_ready_for_ui, this, i, _1, _2);
-			p->released = bind(&frontend_manager_impl::on_frontend_released, this, i); // Must go the last.
-		}
-		catch (...)
-		{
-			_instances.erase(i);
-			throw;
-		}
-		AddRef();
+		register_frontend(*p);
 		return sp->QueryInterface(riid, object);
 	}
 	catch (const bad_alloc &)
@@ -108,48 +61,7 @@ namespace micro_profiler
 		return E_OUTOFMEMORY;
 	}
 
-	void frontend_manager_impl::on_frontend_released(instance_container::iterator i) throw()
-	{
-		i->frontend = 0;
-		if (!i->ui)
-			_instances.erase(i);
-		Release();
-	}
-
-	void frontend_manager_impl::on_ready_for_ui(instance_container::iterator i, const wstring &executable,
-		const shared_ptr<functions_list> &model)
-	{
-		i->executable = executable;
-		i->model = model;
-		if (shared_ptr<frontend_ui> ui = _ui_factory(model, executable))
-		{
-			i->ui_activated_connection = ui->activated += bind(&frontend_manager_impl::on_ui_activated, this, i);
-			i->ui_closed_connection = ui->closed += bind(&frontend_manager_impl::on_ui_closed, this, i);
-			i->ui = ui;
-			_active_instance = &*i;
-			add_external_reference();
-		}
-	}
-
-	void frontend_manager_impl::on_ui_activated(instance_container::iterator i)
-	{	_active_instance = &*i;	}
-
-	void frontend_manager_impl::on_ui_closed(instance_container::iterator i) throw()
-	{
-		shared_ptr<frontend_ui> ui = i->ui;
-
-		if (_active_instance == &*i)
-			_active_instance = 0;
-		i->ui_closed_connection.reset();
-		i->ui.reset();
-		if (i->frontend)
-			i->frontend->Disconnect();
-		else
-			_instances.erase(i);
-		release_external_reference();
-	}
-
-	void frontend_manager_impl::add_external_reference() throw()
+	void frontend_manager_impl::lock() throw()
 	{
 		CComPtr<IRunningObjectTable> rot;
 		CComPtr<IMoniker> m;
@@ -159,7 +71,7 @@ namespace micro_profiler
 			rot->Register(ROTFLAGS_REGISTRATIONKEEPSALIVE, this, m, &_external_lock_id);
 	}
 
-	void frontend_manager_impl::release_external_reference() throw()
+	void frontend_manager_impl::unlock() throw()
 	{
 		CComPtr<IRunningObjectTable> rot;
 
@@ -178,7 +90,7 @@ namespace micro_profiler
 		CComPtr<IClassFactory> lock(p);
 		DWORD cookie;
 
-		p->set_ui_factory(ui_factory);
+		p->_ui_factory = ui_factory;
 		if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
 			return shared_ptr<frontend_manager>(p, bind(&terminate_factory, _1, cookie));
 

@@ -25,7 +25,7 @@
 
 namespace micro_profiler
 {
-	struct frontend_manager;
+	class frontend_manager;
 
 	namespace integration
 	{

@@ -23,6 +23,7 @@
 #include <common/types.h>
 
 #include <memory>
+#include <list>
 #include <string>
 #include <wpl/base/signals.h>
 
@@ -30,26 +31,32 @@ namespace micro_profiler
 {
 	class functions_list;
 
+	struct frontend
+	{
+		virtual void disconnect() = 0;
+
+		std::function<void(const std::wstring &process_name, const std::shared_ptr<functions_list> &model)> initialized;
+		std::function<void()> released;
+	};
+
 	struct frontend_ui
 	{
 		typedef std::shared_ptr<frontend_ui> ptr;
 
-		virtual ~frontend_ui() { }
-
 		virtual void activate() = 0;
 
-		wpl::signal<void()> closed;
 		wpl::signal<void()> activated;
+		wpl::signal<void()> closed;
 	};
 
-	struct frontend_manager
+	class frontend_manager
 	{
 	public:
 		struct instance
 		{
 			std::wstring executable;
 			std::shared_ptr<functions_list> model;
-			std::shared_ptr<frontend_ui> ui;
+			frontend_ui::ptr ui;
 		};
 
 		typedef std::function<frontend_ui::ptr(const std::shared_ptr<functions_list> &model,
@@ -59,16 +66,45 @@ namespace micro_profiler
 	public:
 		static std::shared_ptr<frontend_manager> create(const guid_t &id, const frontend_ui_factory &ui_factory);
 
-		virtual void close_all() throw() = 0;
+		void close_all() throw();
 
-		virtual size_t instances_count() const throw() = 0;
-		virtual const instance *get_instance(unsigned index) const throw() = 0;
-		virtual const instance *get_active() const throw() = 0;
-		virtual void load_instance(const instance &data) = 0;
+		size_t instances_count() const throw();
+		const instance *get_instance(unsigned index) const throw();
+		const instance *get_active() const throw();
+		void load_instance(const instance &data);
 
 	protected:
-		frontend_manager() { }
-		~frontend_manager() { }
-	};
+		frontend_manager();
+		~frontend_manager();
 
+		void register_frontend(frontend &new_frontend);
+
+	protected:
+		frontend_ui_factory _ui_factory;
+
+	private:
+		struct instance_impl : instance
+		{
+			frontend *frontend;
+			wpl::slot_connection ui_activated_connection;
+			wpl::slot_connection ui_closed_connection;
+		};
+
+		typedef std::list<instance_impl> instance_container;
+
+	private:
+		void on_frontend_released(instance_container::iterator i) throw();
+		void on_ready_for_ui(instance_container::iterator i, const std::wstring &executable,
+			const std::shared_ptr<functions_list> &model);
+
+		void on_ui_activated(instance_container::iterator i);
+		void on_ui_closed(instance_container::iterator i) throw();
+
+		virtual void lock() throw() = 0;
+		virtual void unlock() throw() = 0;
+
+	private:
+		instance_container _instances;
+		const instance_impl *_active_instance;
+	};
 }

@@ -64,6 +64,7 @@
     </ClCompile>
     <ClCompile Include="common\string.cpp" />
     <ClCompile Include="frontend\frontend.cpp" />
+    <ClCompile Include="frontend\frontend_manager.cpp" />
     <ClCompile Include="frontend\frontend_manager_impl.cpp" />
     <ClCompile Include="frontend\function_list.cpp" />
     <ClCompile Include="frontend\columns_model.cpp" />

@@ -43,8 +43,8 @@ namespace micro_profiler
 	}
 
 	frontend_manager_impl::frontend_manager_impl()
-		: _external_references(0), _external_lock_id(0)
-	{	_ui_factory = &default_ui_factory;	}
+		: frontend_manager(&default_ui_factory), _external_references(0), _external_lock_id(0)
+	{	}
 
 	STDMETHODIMP frontend_manager_impl::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
 	try
@@ -90,7 +90,7 @@ namespace micro_profiler
 		CComPtr<IClassFactory> lock(p);
 		DWORD cookie;
 
-		p->_ui_factory = ui_factory;
+		p->set_ui_factory(ui_factory);
 		if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
 			return shared_ptr<frontend_manager>(p, bind(&terminate_factory, _1, cookie));
 

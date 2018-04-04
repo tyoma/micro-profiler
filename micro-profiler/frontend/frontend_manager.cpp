@@ -25,11 +25,12 @@ using namespace placeholders;
 
 namespace micro_profiler
 {
-	frontend_manager::frontend_manager()
-		: _active_instance(0)
+	frontend_manager::instance_impl::instance_impl(micro_profiler::frontend *frontend_)
+		: frontend(frontend_)
 	{	}
 
-	frontend_manager::~frontend_manager()
+	frontend_manager::frontend_manager(const frontend_ui_factory &ui_factory)
+		: _ui_factory(ui_factory), _active_instance(0)
 	{	}
 
 	void frontend_manager::close_all() throw()
@@ -60,14 +61,16 @@ namespace micro_profiler
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
 	{	return _active_instance;	}
 
-	void frontend_manager::load_instance(const instance &/*data*/)
-	{	throw 0;	}
+	void frontend_manager::create_instance(const wstring &executable, const shared_ptr<functions_list> &model)
+	{	on_ready_for_ui(_instances.insert(_instances.end(), instance_impl(0)), executable, model);	}
+
+	void frontend_manager::set_ui_factory(const frontend_ui_factory &ui_factory)
+	{	_ui_factory = ui_factory;	}
 
 	void frontend_manager::register_frontend(frontend &new_frontend)
 	{
-		instance_container::iterator i = _instances.insert(_instances.end(), instance_impl());
+		instance_container::iterator i = _instances.insert(_instances.end(), instance_impl(&new_frontend));
 
-		i->frontend = &new_frontend;
 		try
 		{
 			// Untested: guarantee that any exception thrown after the instance is in the list would remove the entry.

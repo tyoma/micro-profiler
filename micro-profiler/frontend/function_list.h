@@ -82,6 +82,7 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline void functions_list::save(ArchiveT &archive) const
 	{
+		archive(static_cast<timestamp_t>(1 / _tick_interval));
 		archive(_statistics->size());
 		for (statistics_map_detailed::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
 			archive(make_pair(i->first, _resolver->symbol_name_by_va(i->first)));
@@ -91,10 +92,14 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline std::shared_ptr<functions_list> functions_list::load(ArchiveT &archive)
 	{
+		timestamp_t ticks_per_second;
 		std::shared_ptr<static_resolver> resolver(new static_resolver);
-		std::shared_ptr<functions_list> fl(create(1, resolver));
 
+		archive(ticks_per_second);
 		archive(resolver->symbols);
+
+		std::shared_ptr<functions_list> fl(create(ticks_per_second, resolver));
+
 		archive(*fl->_statistics);
 		fl->updated();
 		return fl;

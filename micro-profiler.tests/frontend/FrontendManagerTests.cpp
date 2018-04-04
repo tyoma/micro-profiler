@@ -3,6 +3,7 @@
 #include <collector/channel_client.h>
 #include <common/serialization.h>
 #include <frontend/function_list.h>
+#include <frontend/symbol_resolver.h>
 
 #include "../Helpers.h"
 
@@ -12,8 +13,8 @@
 #include <ut/test.h>
 #include <wpl/mt/synchronization.h>
 
-using namespace std::placeholders;
 using namespace std;
+using namespace placeholders;
 
 namespace micro_profiler
 {
@@ -872,6 +873,34 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equal(m->get_instance(0), m->get_active());
+			}
+
+
+			test( CreatingInstanceFromModelAddsNewInstanceToTheListAndConstructsUI )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				shared_ptr<symbol_resolver> sr = symbol_resolver::create();
+				shared_ptr<functions_list> fl1 = functions_list::create(123, sr), fl2 = functions_list::create(123, sr);
+
+				// ACT
+				m->create_instance(L"somefile.exe", fl1);
+
+				// ASSERT
+				assert_equal(1u, m->instances_count());
+				assert_equal(L"somefile.exe", m->get_instance(0)->executable);
+				assert_equal(fl1, m->get_instance(0)->model);
+				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
+
+				// ACT
+				m->create_instance(L"jump.exe", fl2);
+
+				// ASSERT
+				assert_equal(2u, m->instances_count());
+				assert_equal(L"jump.exe", m->get_instance(1)->executable);
+				assert_equal(fl2, m->get_instance(1)->model);
+				assert_equal(_ui_creation_log[1], m->get_instance(1)->ui);
 			}
 		end_test_suite
 	}

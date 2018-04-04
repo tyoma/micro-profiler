@@ -13,7 +13,7 @@
 #include <ut/test.h>
 
 using namespace std;
-using namespace std::placeholders;
+using namespace placeholders;
 using namespace wpl::ui;
 
 namespace micro_profiler
@@ -1504,18 +1504,19 @@ namespace micro_profiler
 			}
 
 
-			test( SymbolsRequiredAreSerializedForFile )
+			test( SymbolsRequiredAndTicksPerSecondAreSerializedForFile )
 			{
 				// INIT
 				pair<address_t, wstring> symbols1[] = {
 					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
 				};
-				shared_ptr<functions_list> fl1(functions_list::create(1, shared_ptr<sri>(new sri(symbols1))));
+				shared_ptr<functions_list> fl1(functions_list::create(16, shared_ptr<sri>(new sri(symbols1))));
 				pair<address_t, wstring> symbols2[] = {
 					make_pair(7, L"A"), make_pair(11, L"B"), make_pair(19, L"C"), make_pair(131, L"D"), make_pair(113, L"E"),
 				};
-				shared_ptr<functions_list> fl2(functions_list::create(1, shared_ptr<sri>(new sri(symbols2))));
+				shared_ptr<functions_list> fl2(functions_list::create(25000000000, shared_ptr<sri>(new sri(symbols2))));
 				statistics_map_detailed s;
+				timestamp_t ticks_per_second;
 
 				s[1], s[17];
 				ser(s);
@@ -1533,8 +1534,11 @@ namespace micro_profiler
 				vector< pair<address_t, wstring> > data;
 				pair<address_t, wstring> reference1[] = { make_pair(1, L"Lorem"), make_pair(17, L"Amet"), };
 
+				dser(ticks_per_second);
 				dser(data);
 				dser(s);
+
+				assert_equal(16, ticks_per_second);
 				assert_equivalent(reference1, data);
 
 				// ACT
@@ -1546,8 +1550,11 @@ namespace micro_profiler
 				};
 
 				data.clear();
+				dser(ticks_per_second);
 				dser(data);
 				dser(s);
+
+				assert_equal(25000000000, ticks_per_second);
 				assert_equivalent(reference2, data);
 			}
 
@@ -1560,6 +1567,7 @@ namespace micro_profiler
 				};
 				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
 				statistics_map_detailed s;
+				timestamp_t ticks_per_second;
 
 				s[1], s[17], s[13];
 				ser(s);
@@ -1572,6 +1580,7 @@ namespace micro_profiler
 				vector< pair<address_t, wstring> > symbols_read;
 				statistics_map_detailed stats_read;
 
+				dser(ticks_per_second);
 				dser(symbols_read);
 				dser(stats_read);
 
@@ -1588,6 +1597,9 @@ namespace micro_profiler
 				statistics_map_detailed s;
 
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
+				s[5].inclusive_time = 1000, s[123].inclusive_time = 250;
+
+				ser(500);
 				ser(mkvector(symbols));
 				ser(s);
 
@@ -1602,8 +1614,10 @@ namespace micro_profiler
 				assert_equal(L"12", get_text(*fl, 1, 2));
 				assert_equal(L"Lorem", get_text(*fl, 2, 1));
 				assert_equal(L"123", get_text(*fl, 2, 2));
+				assert_equal(L"2s", get_text(*fl, 2, 4));
 				assert_equal(L"dolor", get_text(*fl, 3, 1));
 				assert_equal(L"12000", get_text(*fl, 3, 2));
+				assert_equal(L"500ms", get_text(*fl, 3, 4));
 			}
 		end_test_suite
 	}

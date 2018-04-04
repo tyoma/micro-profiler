@@ -71,21 +71,20 @@ namespace micro_profiler
 		size_t instances_count() const throw();
 		const instance *get_instance(unsigned index) const throw();
 		const instance *get_active() const throw();
-		void load_instance(const instance &data);
+		void create_instance(const std::wstring &executable, const std::shared_ptr<functions_list> &model);
 
 	protected:
-		frontend_manager();
-		~frontend_manager();
+		frontend_manager(const frontend_ui_factory &ui_factory);
 
+		void set_ui_factory(const frontend_ui_factory &ui_factory);
 		void register_frontend(frontend &new_frontend);
-
-	protected:
-		frontend_ui_factory _ui_factory;
 
 	private:
 		struct instance_impl : instance
 		{
-			frontend *frontend;
+			instance_impl(micro_profiler::frontend *frontend_);
+
+			micro_profiler::frontend *frontend;
 			wpl::slot_connection ui_activated_connection;
 			wpl::slot_connection ui_closed_connection;
 		};
@@ -104,6 +103,7 @@ namespace micro_profiler
 		virtual void unlock() throw() = 0;
 
 	private:
+		frontend_ui_factory _ui_factory;
 		instance_container _instances;
 		const instance_impl *_active_instance;
 	};

@@ -56,6 +56,15 @@ namespace micro_profiler
 		};
 
 
+		struct open_statistics : integration_command
+		{
+			open_statistics();
+
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context &ctx, unsigned item);
+		};
+
+
 		struct save_statistics : integration_command
 		{
 			save_statistics();

@@ -23,7 +23,12 @@
 
 #include <common/module.h>
 #include <common/path.h>
+#include <common/serialization.h>
+#include <frontend/file.h>
 #include <frontend/frontend_manager.h>
+#include <frontend/function_list.h>
+#include <strmd/deserializer.h>
+#include <strmd/serializer.h>
 #include <visualstudio/dispatch.h>
 
 #include <io.h>
@@ -224,6 +229,30 @@ namespace micro_profiler
 		}
 
 
+		open_statistics::open_statistics()
+			: integration_command(cmdidLoadStatistics)
+		{	}
+
+		bool open_statistics::query_state(const context &/*ctx*/, unsigned /*item*/, unsigned &state) const
+		{
+			state = enabled | visible | supported;
+			return true;
+		}
+
+		void open_statistics::exec(context &ctx, unsigned /*item*/)
+		{
+			wstring path;
+			auto_ptr<read_stream> s = open_file(path);
+
+			if (!s.get())
+				return;
+
+			strmd::deserializer<read_stream, packer> dser(*s);
+			shared_ptr<functions_list> model = functions_list::load(dser);
+
+			ctx.frontend->create_instance(*path, model);
+		}
+
 		save_statistics::save_statistics()
 			: integration_command(cmdidSaveStatistics)
 		{	}
@@ -236,13 +265,25 @@ namespace micro_profiler
 
 		bool save_statistics::get_name(const context &ctx, unsigned /*item*/, std::wstring &name) const
 		{
-			if (const frontend_manager::instance * i = ctx.frontend->get_active())
+			if (const frontend_manager::instance *i = ctx.frontend->get_active())
 				return name = L"Save " + *i->executable + L" Statistics As...", true;
 			return false;
 		}
 
-		void save_statistics::exec(context &/*ctx*/, unsigned /*item*/)
-		{	}
+		void save_statistics::exec(context &ctx, unsigned /*item*/)
+		{
+			if (const frontend_manager::instance *i = ctx.frontend->get_active())
+			{
+				shared_ptr<functions_list> model = i->model;
+				auto_ptr<write_stream> s = create_file(i->executable);
+
+				if (s.get())
+				{
+					strmd::serializer<write_stream, packer> ser(*s);
+					model->save(ser);
+				}
+			}
+		}
 
 
 		window_activate::window_activate()

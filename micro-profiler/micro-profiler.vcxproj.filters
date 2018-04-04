@@ -25,6 +25,9 @@
     <ClCompile Include="visualstudio\vs-extension\commands.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\file.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualstudio\addin\micro-profiler-addin.rgs">
@@ -54,9 +57,9 @@
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
+    <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.mfc-static.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
-    <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <None Include="logo.ico">
       <Filter>resources</Filter>
@@ -123,6 +126,9 @@
     <ClInclude Include="visualstudio\vs-extension\commands.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
+    <ClInclude Include="frontend\file.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">
@@ -135,7 +141,6 @@
     </CustomBuild>
     <CustomBuild Include="micro-profiler.initializer.mfc-static.cpp" />
     <CustomBuild Include="micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />

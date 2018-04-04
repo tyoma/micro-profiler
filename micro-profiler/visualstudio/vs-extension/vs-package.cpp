@@ -48,6 +48,7 @@ namespace micro_profiler
 			integration_command::ptr g_commands[] = {
 				integration_command::ptr(new toggle_profiling),
 				integration_command::ptr(new remove_profiling_support),
+				integration_command::ptr(new open_statistics),
 				integration_command::ptr(new save_statistics),
 				integration_command::ptr(new window_activate),
 				integration_command::ptr(new close_all),

@@ -23,6 +23,9 @@
 #include <visualstudio/command.h>
 #include <visualstudio/dispatch.h>
 
+#include <atlbase.h>
+#include <vsshell.h>
+
 namespace micro_profiler
 {
 	class frontend_manager;
@@ -31,10 +34,13 @@ namespace micro_profiler
 	{
 		struct context
 		{
-			context(const dispatch &project, const std::shared_ptr<frontend_manager> &frontend);
+			context(const dispatch &project, const std::shared_ptr<frontend_manager> &frontend,
+				const CComPtr<IVsUIShell> &shell);
 
 			dispatch project;
+			
 			std::shared_ptr<frontend_manager> frontend;
+			CComPtr<IVsUIShell> shell;
 		};
 
 		typedef command<context> integration_command;
@@ -93,8 +99,9 @@ namespace micro_profiler
 
 
 
-		inline context::context(const dispatch &project_, const std::shared_ptr<frontend_manager> &frontend_)
-			: project(project_), frontend(frontend_)
+		inline context::context(const dispatch &project_, const std::shared_ptr<frontend_manager> &frontend_,
+				const CComPtr<IVsUIShell> &shell_)
+			: project(project_), frontend(frontend_), shell(shell_)
 		{	}
 	}
 }

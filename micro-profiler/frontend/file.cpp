@@ -9,24 +9,7 @@ namespace micro_profiler
 	const wchar_t c_microProfilerFileExtension[] = L"mpstats";
 	const wchar_t c_microProfilerFiles[] = L"MicroProfiler Statistics\0*.mpstats\0\0";
 
-	write_stream::write_stream(const wstring &path)
-		: _file(_wfopen(path.c_str(), L"wb+"), &::fclose)
-	{	}
-
-	void write_stream::write(const byte *buffer, size_t size)
-	{	fwrite(buffer, 1, size, _file.get());	}
-
-	read_stream::read_stream(const wstring &path)
-		: _file(_wfopen(path.c_str(), L"rb"), &::fclose)
-	{	}
-
-	void read_stream::read(byte *buffer, size_t size)
-	{
-		if (size != fread(buffer, 1, size, _file.get()))
-			throw runtime_error("Reading past end the file!");
-	}
-
-	auto_ptr<write_stream> create_file(const wstring &default_name)
+	auto_ptr<write_stream> create_file(HWND hparent, const wstring &default_name)
 	{
 		auto_ptr<write_stream> r;
 		OPENFILENAMEW ofn = {};
@@ -37,6 +20,7 @@ namespace micro_profiler
 
 		copy(default_name2.begin(), default_name2.end(), buffer);
 		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = hparent;
 		ofn.lpstrFilter = c_microProfilerFiles;
 		ofn.lpstrFile = buffer;
 		ofn.nMaxFile = _countof(buffer);
@@ -46,13 +30,14 @@ namespace micro_profiler
 		return r;
 	}
 
-	auto_ptr<read_stream> open_file(wstring& path)
+	auto_ptr<read_stream> open_file(HWND hparent, wstring& path)
 	{
 		auto_ptr<read_stream> r;
 		OPENFILENAMEW ofn = {};
 		wchar_t buffer[1000] = { 0 };
 
 		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = hparent;
 		ofn.lpstrFilter = c_microProfilerFiles;
 		ofn.lpstrFile = buffer;
 		ofn.nMaxFile = _countof(buffer);

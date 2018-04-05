@@ -20,6 +20,7 @@
 
 #include "commands.h"
 #include "command-ids.h"
+#include "helpers.h"
 
 #include <common/module.h>
 #include <common/path.h>
@@ -242,15 +243,15 @@ namespace micro_profiler
 		void open_statistics::exec(context &ctx, unsigned /*item*/)
 		{
 			wstring path;
-			auto_ptr<read_stream> s = open_file(path);
+			auto_ptr<read_stream> s = open_file(get_frame_hwnd(ctx.shell), path);
 
-			if (!s.get())
-				return;
+			if (s.get())
+			{
+				strmd::deserializer<read_stream, packer> dser(*s);
+				shared_ptr<functions_list> model = functions_list::load(dser);
 
-			strmd::deserializer<read_stream, packer> dser(*s);
-			shared_ptr<functions_list> model = functions_list::load(dser);
-
-			ctx.frontend->create_instance(*path, model);
+				ctx.frontend->create_instance(*path, model);
+			}
 		}
 
 		save_statistics::save_statistics()
@@ -275,7 +276,7 @@ namespace micro_profiler
 			if (const frontend_manager::instance *i = ctx.frontend->get_active())
 			{
 				shared_ptr<functions_list> model = i->model;
-				auto_ptr<write_stream> s = create_file(i->executable);
+				auto_ptr<write_stream> s = create_file(get_frame_hwnd(ctx.shell), i->executable);
 
 				if (s.get())
 				{

@@ -19,6 +19,7 @@
 //	THE SOFTWARE.
 
 #include "commands.h"
+#include "helpers.h"
 
 #include <frontend/constants.h>
 #include <frontend/frontend_manager.h>
@@ -79,6 +80,7 @@ namespace micro_profiler
 			STDMETHODIMP SetSite(IServiceProvider *sp)
 			{
 				_service_provider = sp;
+				_service_provider->QueryService(__uuidof(IVsUIShell), &_shell);
 				register_path(false);
 				_frontend_manager = frontend_manager::create(reinterpret_cast<const guid_t &>(c_frontendClassID),
 					bind(&profiler_package::create_ui, this, _1, _2));
@@ -128,22 +130,20 @@ namespace micro_profiler
 				if (dte)
 					if (IDispatchPtr selection = dispatch(dte).get(L"SelectedItems"))
 						if (dispatch(selection).get(L"Count") == 1)
-							return context(dispatch(selection)[1].get(L"Project"), _frontend_manager);
-				return context(dispatch(IDispatchPtr()), _frontend_manager);
+							return context(dispatch(selection)[1].get(L"Project"), _frontend_manager, _shell);
+				return context(dispatch(IDispatchPtr()), _frontend_manager, _shell);
 			}
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const wstring &executable)
 			{
-				HWND hwnd = HWND_DESKTOP;
-				CComPtr<IVsUIShell> shell;
+				shared_ptr<ProfilerMainDialog> ui(new ProfilerMainDialog(model, executable, get_frame_hwnd(_shell)));
 
-				if (S_OK == _service_provider->QueryService(__uuidof(IVsUIShell), &shell))
-					shell->GetDialogOwnerHwnd(&hwnd);
-				return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable, hwnd));
+				return ui;
 			}
 
 		private:
 			CComPtr<IServiceProvider> _service_provider;
+			CComPtr<IVsUIShell> _shell;
 			shared_ptr<frontend_manager> _frontend_manager;
 		};
 

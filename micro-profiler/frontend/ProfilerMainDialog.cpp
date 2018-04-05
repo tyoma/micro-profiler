@@ -22,6 +22,7 @@
 
 #include "function_list.h"
 #include "columns_model.h"
+#include "SupportDevDialog.h"
 
 #include <common/configuration.h>
 
@@ -142,16 +143,14 @@ namespace micro_profiler
 
 		SetWindowText(caption);
 
-		handled = TRUE;
-		return 1;	// Let the system set the focus
+		return handled = TRUE, 1;	// Let the system set the focus
 	}
 
 	LRESULT ProfilerMainDialog::OnActivated(UINT /*message*/, WPARAM wparam, LPARAM /*lparam*/, BOOL &handled)
 	{
 		if (WA_INACTIVE != wparam)
 			activated();
-		handled = FALSE;
-		return 0;
+		return handled = TRUE, 0;
 	}
 
 	LRESULT ProfilerMainDialog::OnWindowPosChanged(UINT /*message*/, WPARAM /*wparam*/, LPARAM lparam, BOOL &handled)
@@ -167,8 +166,7 @@ namespace micro_profiler
 		}
 		if (0 == (wndpos->flags & SWP_NOSIZE) || 0 == (wndpos->flags & SWP_NOMOVE))
 			_placement.SetRect(wndpos->x, wndpos->y, wndpos->x + wndpos->cx, wndpos->y + wndpos->cy);
-		handled = TRUE;
-		return 0;
+		return handled = TRUE, 0;
 	}
 
 	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
@@ -176,8 +174,7 @@ namespace micro_profiler
 		_parents_statistics_lv->set_model(_parents_statistics = shared_ptr<linked_statistics>());
 		_children_statistics_lv->set_model(_children_statistics = shared_ptr<linked_statistics>());
 		_statistics->clear();
-		handled = TRUE;
-		return 0;
+		return handled = TRUE, 0;
 	}
 
 	LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
@@ -198,26 +195,40 @@ namespace micro_profiler
 			}
 			CloseClipboard();
 		}
-		handled = TRUE;
-		return 0;
+		return handled = TRUE, 0;
 	}
 
 	LRESULT ProfilerMainDialog::OnClose(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL &handled)
 	{
 		DestroyWindow();
-		handled = TRUE;
-		return 0;
+		return handled = TRUE, 0;
+	}
+
+	LRESULT ProfilerMainDialog::OnSupportLinkClicked(int /*id*/, NMHDR * /*nmhdr*/, BOOL &handled)
+	{
+		auto_ptr<destructible> lock;
+		SupportDevDialog dlg;
+
+		GetParent().EnableWindow(FALSE);
+		dlg.DoModal(*this);
+		GetParent().EnableWindow(TRUE);
+		return handled = TRUE, 0;
 	}
 
 	void ProfilerMainDialog::RelocateControls(const CSize &size)
 	{
 		const int spacing = 7;
-		CRect rcButton, rc(CPoint(0, 0), size), rcChildren, rcParents;
+		CRect rcButton, rc(CPoint(0, 0), size), rcChildren, rcParents, rcLink;
+
+		rc.DeflateRect(spacing, spacing, spacing, spacing);
+		GetDlgItem(IDC_SUPPORT_DEV).GetWindowRect(&rcLink);
+		rcLink.MoveToXY(rc.right - rcLink.Width(), rc.bottom - rcLink.Height());
+		GetDlgItem(IDC_SUPPORT_DEV).MoveWindow(&rcLink);
 
 		_clear_button.GetWindowRect(&rcButton);
+		rc.DeflateRect(0, 0, 0, rcButton.Height());
 		_children_statistics_view.GetWindowRect(&rcChildren);
 		_parents_statistics_view.GetWindowRect(&rcParents);
-		rc.DeflateRect(spacing, spacing, spacing, spacing + rcButton.Height());
 		rcButton.MoveToXY(rc.left, rc.bottom);
 		_clear_button.MoveWindow(rcButton);
 		rcButton.MoveToX(rcButton.right + spacing);

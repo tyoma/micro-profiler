@@ -37,6 +37,22 @@ BEGIN
     CONTROL         "",IDC_CHILDREN_STATISTICS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_OWNERDATA | WS_BORDER | WS_TABSTOP,7,228,399,100
     PUSHBUTTON      "Copy All",IDC_BTN_COPY_ALL,73,334,60,14
     PUSHBUTTON      "Clear Statistics",IDC_BTN_CLEAR,7,334,60,14
+    CONTROL         "<a>Support Developer...</a>",IDC_SUPPORT_DEV,"SysLink",0x20 | WS_TABSTOP,310,337,96,11
+END
+
+IDD_SUPPORT_DEV DIALOGEX 0, 0, 215, 96
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "MicroProfiler - Support Developer"
+FONT 10, "Segoe UI", 400, 0, 0x0
+BEGIN
+    CONTROL         "1. Leave a review on <a href=""https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details"">Visual Studio Marketplace</a>",IDC_WAYS_TO_SUPPORT,
+                    "SysLink",WS_TABSTOP,17,27,191,10
+    CONTROL         "2. Write an <a href=""https://github.com/tyoma/micro-profiler/issues"">issue or a suggestion</a>",IDC_WAYS_TO_SUPPORT,
+                    "SysLink",WS_TABSTOP,17,42,191,10
+    CONTROL         "3. Star MicroProfiler on <a href=""https://github.com/tyoma/micro-profiler"">github.com</a>",IDC_WAYS_TO_SUPPORT,
+                    "SysLink",WS_TABSTOP,17,57,191,10
+    DEFPUSHBUTTON   "Thank You!",IDOK,7,75,201,14
+    LTEXT           "Please, take any of these steps to support development of MicroProfiler:",IDC_STATIC,7,7,201,18
 END
 
 
@@ -54,6 +70,15 @@ BEGIN
         RIGHTMARGIN, 406
         TOPMARGIN, 7
         BOTTOMMARGIN, 348
+    END
+
+    IDD_SUPPORT_DEV, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 208
+        VERTGUIDE, 17
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 89
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -79,7 +104,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "1000 CTMENU ""commands.cto""\r\n"
     "\0"

@@ -39,7 +39,7 @@
     <Link>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalDependencies>delayimp.lib;vsguids.lib</AdditionalDependencies>
-      <DelayLoadDLLs>dbghelp.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>dbghelp.dll;shell32.dll</DelayLoadDLLs>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <ImportLibrary>$(OutDir)$(ProjectName)_$(PlatformName).lib</ImportLibrary>
     </Link>
@@ -51,7 +51,10 @@
     <ClCompile Include="frontend\constants.cpp" />
     <ClCompile Include="frontend\file.cpp" />
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
+    <ClCompile Include="frontend\stream.cpp" />
+    <ClCompile Include="frontend\SupportDevDialog.cpp" />
     <ClCompile Include="module\main.cpp" />
+    <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <None Include="logo.ico" />
     <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />
@@ -71,6 +74,8 @@
     <ClInclude Include="frontend\constants.h" />
     <ClInclude Include="frontend\file.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
+    <ClInclude Include="frontend\stream.h" />
+    <ClInclude Include="frontend\SupportDevDialog.h" />
     <ClInclude Include="resources\resource.h" />
     <ResourceCompile Include="resources\micro-profiler-frontend.rc" />
     <ClCompile Include="setup\environment.cpp" />

@@ -54,15 +54,16 @@ namespace micro_profiler
 
 	class frontend_controller::profiler_instance : public handle, wpl::noncopyable
 	{
-		const void *_in_image_address;
-		shared_ptr<image_load_queue> _image_load_queue;
-		shared_ptr<volatile long> _worker_refcount;
-		shared_ptr<void> _exit_event;
-
 	public:
 		profiler_instance(const void *in_image_address, shared_ptr<image_load_queue> image_load_queue,
 			shared_ptr<volatile long> worker_refcount, shared_ptr<void> exit_event);
 		virtual ~profiler_instance();
+
+	private:
+		const void *_in_image_address;
+		shared_ptr<image_load_queue> _image_load_queue;
+		shared_ptr<volatile long> _worker_refcount;
+		shared_ptr<void> _exit_event;
 	};
 
 

@@ -29,23 +29,6 @@ namespace micro_profiler
 	template <class Map>
 	class ordered_view
 	{
-		typedef typename Map::const_iterator stored_type;
-		typedef std::vector<typename stored_type> ordered_storage;
-
-		struct sorter;
-
-		template <typename Predicate>
-		class sorter_impl;
-
-		const Map &_map;
-		ordered_storage _ordered_data;
-		std::auto_ptr<sorter> _sorter;
-
-		// Repopulate internal storage with data from source map, ignores any predicate set.
-		void fetch_data();
-
-		const ordered_view &operator =(const ordered_view &);
-
 	public:
 		typedef typename Map::value_type value_type;
 		typedef typename Map::key_type key_type;
@@ -65,6 +48,26 @@ namespace micro_profiler
 		size_t size() const throw();
 		const value_type &at(size_t index) const;
 		size_t find_by_key(const key_type &key) const;
+
+	private:
+		typedef typename Map::const_iterator stored_type;
+		typedef std::vector<typename stored_type> ordered_storage;
+
+		struct sorter;
+
+		template <typename Predicate>
+		class sorter_impl;
+
+	private:
+		// Repopulate internal storage with data from source map, ignores any predicate set.
+		void fetch_data();
+
+		const ordered_view &operator =(const ordered_view &);
+
+	private:
+		const Map &_map;
+		ordered_storage _ordered_data;
+		std::auto_ptr<sorter> _sorter;
 	};
 
 	// Sorter interface.

@@ -34,18 +34,21 @@ namespace micro_profiler
 	{
 		class dbghelp_symbol_resolver : public symbol_resolver
 		{
-			typedef unordered_map<address_t, wstring, address_compare> cached_names_map;
-
-			mutable cached_names_map _names;
-
-			HANDLE me() const;
-
 		public:
 			dbghelp_symbol_resolver();
 			virtual ~dbghelp_symbol_resolver();
 
 			virtual const wstring &symbol_name_by_va(address_t address) const;
 			virtual void add_image(const wchar_t *image, address_t load_address);
+
+		private:
+			typedef unordered_map<address_t, wstring, address_compare> cached_names_map;
+
+		private:
+			HANDLE me() const;
+
+		private:
+			mutable cached_names_map _names;
 		};
 
 

@@ -45,19 +45,6 @@ namespace micro_profiler
 
 	class calls_collector : public calls_collector_i
 	{
-		class thread_trace_block;
-
-		static calls_collector _instance;
-
-		const size_t _trace_limit;
-		timestamp_t _profiler_latency;
-		wpl::mt::tls<thread_trace_block> _trace_pointers_tls;
-		mutex _thread_blocks_mtx;
-		std::list<thread_trace_block> _call_traces;
-
-		thread_trace_block &get_current_thread_trace();
-		thread_trace_block &construct_thread_trace();
-
 	public:
 		calls_collector(size_t trace_limit);
 		virtual ~calls_collector() throw();
@@ -70,5 +57,21 @@ namespace micro_profiler
 
 		size_t trace_limit() const throw();
 		virtual timestamp_t profiler_latency() const throw();
+
+	private:
+		class thread_trace_block;
+
+		static calls_collector _instance;
+
+	private:
+		thread_trace_block &get_current_thread_trace();
+		thread_trace_block &construct_thread_trace();
+
+	private:
+		const size_t _trace_limit;
+		timestamp_t _profiler_latency;
+		wpl::mt::tls<thread_trace_block> _trace_pointers_tls;
+		mutex _thread_blocks_mtx;
+		std::list<thread_trace_block> _call_traces;
 	};
 }

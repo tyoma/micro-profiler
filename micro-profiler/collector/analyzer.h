@@ -31,22 +31,25 @@ namespace micro_profiler
 	template <typename OutputMapType>
 	class shadow_stack
 	{
-		struct call_record_ex;
-		typedef std::unordered_map<const void *, unsigned int, address_compare> entrance_counter_map;
-
-		const timestamp_t _profiler_latency;
-		std::vector<call_record_ex> _stack;
-		entrance_counter_map _entrance_counter;
-
-		const shadow_stack &operator =(const shadow_stack &rhs);
-
-		void restore_state(OutputMapType &statistics);
-
 	public:
 		shadow_stack(timestamp_t profiler_latency = 0);
 
 		template <typename ForwardConstIterator>
 		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMapType &statistics);
+
+	private:
+		struct call_record_ex;
+		typedef std::unordered_map<const void *, unsigned int, address_compare> entrance_counter_map;
+
+	private:
+		const shadow_stack &operator =(const shadow_stack &rhs);
+
+		void restore_state(OutputMapType &statistics);
+
+	private:
+		const timestamp_t _profiler_latency;
+		std::vector<call_record_ex> _stack;
+		entrance_counter_map _entrance_counter;
 	};
 
 
@@ -64,14 +67,6 @@ namespace micro_profiler
 
 	class analyzer : public calls_collector_i::acceptor
 	{
-		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<statistics_map_detailed> > stacks_container;
-
-		const timestamp_t _profiler_latency;
-		statistics_map_detailed _statistics;
-		stacks_container _stacks;
-
-		const analyzer &operator =(const analyzer &rhs);
-
 	public:
 		typedef statistics_map_detailed::const_iterator const_iterator;
 
@@ -84,6 +79,17 @@ namespace micro_profiler
 		const_iterator end() const throw();
 
 		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count);
+
+	private:
+		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<statistics_map_detailed> > stacks_container;
+
+	private:
+		const analyzer &operator =(const analyzer &rhs);
+
+	private:
+		const timestamp_t _profiler_latency;
+		statistics_map_detailed _statistics;
+		stacks_container _stacks;
 	};
 
 

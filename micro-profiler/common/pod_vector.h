@@ -29,18 +29,6 @@ namespace micro_profiler
 	template <typename T>
 	class pod_vector
 	{
-		union pod_requirement
-		{
-			T _unused1;
-			int _unused2;
-		};
-
-		T *_begin, *_end, *_limit;
-
-		const pod_vector &operator =(const pod_vector &rhs);
-
-		bool grow(size_t by = 0) throw();
-
 	public:
 		explicit pod_vector(size_t initial_capacity = 10000);
 		pod_vector(const pod_vector &other);
@@ -55,6 +43,21 @@ namespace micro_profiler
 		size_t size() const throw();
 		size_t byte_size() const throw();
 		size_t capacity() const throw();
+
+	private:
+		union pod_requirement
+		{
+			T _unused1;
+			int _unused2;
+		};
+
+	private:
+		const pod_vector &operator =(const pod_vector &rhs);
+
+		bool grow(size_t by = 0) throw();
+
+	private:
+		T *_begin, *_end, *_limit;
 	};
 
 

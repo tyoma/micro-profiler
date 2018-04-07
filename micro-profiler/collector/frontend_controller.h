@@ -26,8 +26,6 @@
 #include <functional>
 #include <memory>
 
-struct ISequentialStream;
-
 namespace wpl
 {
 	namespace mt
@@ -44,24 +42,27 @@ namespace micro_profiler
 
 	class frontend_controller : wpl::noncopyable
 	{
-		class profiler_instance;
-
-		calls_collector_i &_collector;
-		frontend_factory _factory;
-		std::shared_ptr<image_load_queue> _image_load_queue;
-		std::shared_ptr<volatile long> _worker_refcount;
-		std::shared_ptr<void> _exit_event;
-		std::auto_ptr<wpl::mt::thread> _frontend_thread;
-
-		static void frontend_worker(wpl::mt::thread *previous_thread, const frontend_factory &factory,
-			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &image_load_queue,
-			const std::shared_ptr<void> &exit_event);
-
 	public:
 		frontend_controller(calls_collector_i &collector, const frontend_factory& factory);
 		virtual ~frontend_controller();
 
 		handle *profile(const void *in_image_address);
 		void force_stop();
+
+	private:
+		class profiler_instance;
+
+	private:
+		static void frontend_worker(wpl::mt::thread *previous_thread, const frontend_factory &factory,
+			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &image_load_queue,
+			const std::shared_ptr<void> &exit_event);
+
+	private:
+		calls_collector_i &_collector;
+		frontend_factory _factory;
+		std::shared_ptr<image_load_queue> _image_load_queue;
+		std::shared_ptr<volatile long> _worker_refcount;
+		std::shared_ptr<void> _exit_event;
+		std::auto_ptr<wpl::mt::thread> _frontend_thread;
 	};
 }

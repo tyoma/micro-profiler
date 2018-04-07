@@ -44,16 +44,6 @@ namespace micro_profiler
 
 	class calls_collector::thread_trace_block
 	{
-		typedef pod_vector<call_record> trace_t;
-
-		const unsigned int _thread_id;
-		const size_t _trace_limit;
-		event_flag _proceed_collection;
-		trace_t _traces[2];
-		trace_t * volatile _active_trace, * volatile _inactive_trace;
-
-		void operator =(const thread_trace_block &);
-
 	public:
 		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
@@ -61,6 +51,19 @@ namespace micro_profiler
 		void track(const call_record &call) throw();
 		bool try_track(const call_record &call) throw();
 		void read_collected(acceptor &a);
+
+	private:
+		typedef pod_vector<call_record> trace_t;
+
+	private:
+		void operator =(const thread_trace_block &);
+
+	private:
+		const unsigned int _thread_id;
+		const size_t _trace_limit;
+		event_flag _proceed_collection;
+		trace_t _traces[2];
+		trace_t * volatile _active_trace, * volatile _inactive_trace;
 	};
 
 

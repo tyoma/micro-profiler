@@ -28,7 +28,8 @@ for /f %%g in ('git push 2^>^&1 ^| findstr /i "\[rejected\]"') do goto :pushreje
 echo 5. Resetting to a build revision (one before 'commithash')...
 git reset --hard %commithash%~1
 
-echo 6. Starting the build...
+echo 6. Building micro-profiler...
+mkdir _setup
 "%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Clean > _setup\build.log
 "%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=x64 /t:Clean >> _setup\build.log
 "%msbuildpath%" micro-profiler.vs10.sln /m /p:Configuration=Release /p:Platform=Win32 /t:Build >> _setup\build.log

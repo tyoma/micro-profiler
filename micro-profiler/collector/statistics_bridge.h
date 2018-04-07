@@ -50,12 +50,6 @@ namespace micro_profiler
 
 	class statistics_bridge
 	{
-		pod_vector<unsigned char> _buffer;
-		analyzer _analyzer;
-		calls_collector_i &_collector;
-		channel_t _frontend;
-		std::shared_ptr<image_load_queue> _image_load_queue;
-
 	public:
 		statistics_bridge(calls_collector_i &collector, const std::function<channel_t ()> &factory,
 			const std::shared_ptr<image_load_queue> &image_load_queue);
@@ -66,5 +60,12 @@ namespace micro_profiler
 	private:
 		template <typename DataT>
 		void send(commands command, const DataT &data);
+
+	public:
+		pod_vector<unsigned char> _buffer;
+		analyzer _analyzer;
+		calls_collector_i &_collector;
+		channel_t _frontend;
+		std::shared_ptr<image_load_queue> _image_load_queue;
 	};
 }

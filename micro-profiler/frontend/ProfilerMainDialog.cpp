@@ -21,19 +21,16 @@
 #include "ProfilerMainDialog.h"
 
 #include "function_list.h"
-#include "columns_model.h"
 #include "SupportDevDialog.h"
+#include "tables_ui.h"
 
 #include <common/configuration.h>
 
 #include <algorithm>
 #include <atlstr.h>
-#include <wpl/ui/win32/controls.h>
 
 using namespace std;
 using namespace std::placeholders;
-using namespace wpl;
-using namespace wpl::ui;
 
 namespace micro_profiler
 {
@@ -41,24 +38,6 @@ namespace micro_profiler
 
 	namespace
 	{
-		const columns_model::column c_columns_statistics[] = {
-			columns_model::column("Index", L"#", 28, columns_model::dir_none),
-			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
-			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
-			columns_model::column("ExclusiveTime", L"Exclusive Time", 48, columns_model::dir_descending),
-			columns_model::column("InclusiveTime", L"Inclusive Time", 48, columns_model::dir_descending),
-			columns_model::column("AvgExclusiveTime", L"Average Exclusive Call Time", 48, columns_model::dir_descending),
-			columns_model::column("AvgInclusiveTime", L"Average Inclusive Call Time", 48, columns_model::dir_descending),
-			columns_model::column("MaxRecursion", L"Max Recursion", 25, columns_model::dir_descending),
-			columns_model::column("MaxCallTime", L"Max Call Time", 121, columns_model::dir_descending),
-		};
-
-		const columns_model::column c_columns_statistics_parents[] = {
-			columns_model::column("Index", L"#", 28, columns_model::dir_none),
-			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
-			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
-		};
-
 		shared_ptr<hive> open_configuration()
 		{	return hive::user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}
 
@@ -84,31 +63,16 @@ namespace micro_profiler
 	}
 
 	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable, HWND parent)
-		: _statistics(s), _executable(executable),
-			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
-			_columns_main(new columns_model(c_columns_statistics, 3, false)),
-			_columns_children(new columns_model(c_columns_statistics, 4, false))
+		: _statistics(s), _executable(executable)
 	{
 		shared_ptr<hive> c(open_configuration());
+
+		_statistics_display.reset(new tables_ui(s, *c));
 
 		Create(parent, 0);
 
 		if (load(*c, "Placement", _placement))
-			MoveWindow(_placement.left, _placement.top, _placement.Width(), _placement.Height());
-
-		_columns_parents->update(*c->create("ParentsColumns"));
-		_columns_main->update(*c->create("MainColumns"));
-		_columns_children->update(*c->create("ChildrenColumns"));
-
-		_parents_statistics_lv->set_columns_model(_columns_parents);
-		_statistics_lv->set_columns_model(_columns_main);
-		_children_statistics_lv->set_columns_model(_columns_children);
-
-		_statistics_lv->set_model(_statistics);
-
-		_connections.push_back(_statistics_lv->selection_changed += bind(&ProfilerMainDialog::OnFocusChange, this, _1, _2));
-		_connections.push_back(_parents_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_parents_statistics), _1));
-		_connections.push_back(_children_statistics_lv->item_activate += bind(&ProfilerMainDialog::OnDrilldown, this, cref(_children_statistics), _1));
+			MoveWindow(&_placement);
 		ShowWindow(SW_SHOW);
 	}
 
@@ -120,17 +84,7 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL& handled)
 	{
-		_statistics_view = GetDlgItem(IDC_FUNCTIONS_STATISTICS);
-		_statistics_lv = wrap_listview(_statistics_view);
-		ListView_SetExtendedListViewStyle(_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_statistics_view));
-		_parents_statistics_view = GetDlgItem(IDC_PARENTS_STATISTICS);
-		_parents_statistics_lv = wrap_listview(_parents_statistics_view);
-		ListView_SetExtendedListViewStyle(_parents_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_parents_statistics_view));
-		_children_statistics_view = GetDlgItem(IDC_CHILDREN_STATISTICS);
-		_children_statistics_lv = wrap_listview(_children_statistics_view);
-		ListView_SetExtendedListViewStyle(_children_statistics_view, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | ListView_GetExtendedListViewStyle(_children_statistics_view));
-		_clear_button = GetDlgItem(IDC_BTN_CLEAR);
-		_copy_all_button = GetDlgItem(IDC_BTN_COPY_ALL);
+		_statistics_display->create(*this);
 
 		SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
 
@@ -171,8 +125,7 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
-		_parents_statistics_lv->set_model(_parents_statistics = shared_ptr<linked_statistics>());
-		_children_statistics_lv->set_model(_children_statistics = shared_ptr<linked_statistics>());
+		_statistics_display->reset_dependants();
 		_statistics->clear();
 		return handled = TRUE, 0;
 	}
@@ -206,7 +159,6 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnSupportLinkClicked(int /*id*/, NMHDR * /*nmhdr*/, BOOL &handled)
 	{
-		auto_ptr<destructible> lock;
 		SupportDevDialog dlg;
 
 		GetParent().EnableWindow(FALSE);
@@ -217,48 +169,22 @@ namespace micro_profiler
 
 	void ProfilerMainDialog::RelocateControls(const CSize &size)
 	{
-		const int spacing = 7;
-		CRect rcButton, rc(CPoint(0, 0), size), rcChildren, rcParents, rcLink;
+		enum { spacing = 7 };
+		CRect rcButton, rc(CPoint(0, 0), size), rcLink;
 
 		rc.DeflateRect(spacing, spacing, spacing, spacing);
 		GetDlgItem(IDC_SUPPORT_DEV).GetWindowRect(&rcLink);
 		rcLink.MoveToXY(rc.right - rcLink.Width(), rc.bottom - rcLink.Height());
 		GetDlgItem(IDC_SUPPORT_DEV).MoveWindow(&rcLink);
 
-		_clear_button.GetWindowRect(&rcButton);
+		GetDlgItem(IDC_BTN_CLEAR).GetWindowRect(&rcButton);
 		rc.DeflateRect(0, 0, 0, rcButton.Height());
-		_children_statistics_view.GetWindowRect(&rcChildren);
-		_parents_statistics_view.GetWindowRect(&rcParents);
 		rcButton.MoveToXY(rc.left, rc.bottom);
-		_clear_button.MoveWindow(rcButton);
+		GetDlgItem(IDC_BTN_CLEAR).MoveWindow(rcButton);
 		rcButton.MoveToX(rcButton.right + spacing);
-		_copy_all_button.MoveWindow(rcButton);
+		GetDlgItem(IDC_BTN_COPY_ALL).MoveWindow(rcButton);
 		rc.DeflateRect(0, 0, 0, spacing);
-		rcParents.left = rc.left, rcParents.right = rc.right;
-		rcParents.MoveToY(rc.top);
-		rc.DeflateRect(0, rcParents.Height() + spacing, 0, 0);
-		rcChildren.left = rc.left, rcChildren.right = rc.right;
-		rcChildren.MoveToY(rc.bottom - rcChildren.Height());
-		rc.DeflateRect(0, 0, 0, spacing + rcChildren.Height());
-		_children_statistics_view.MoveWindow(rcChildren);
-		_parents_statistics_view.MoveWindow(rcParents);
-		_statistics_view.MoveWindow(rc);
-	}
-
-	void ProfilerMainDialog::OnFocusChange(listview::index_type index, bool selected)
-	{
-		if (selected)
-		{
-			_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
-			_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
-			_statistics_lv->ensure_visible(index);
-		}
-	}
-
-	void ProfilerMainDialog::OnDrilldown(shared_ptr<linked_statistics> view, listview::index_type index)
-	{
-		index = _statistics->get_index(view->get_address(index));
-		_statistics_lv->select(index, true);
+		_statistics_display->resize(rc.left, rc.top, rc.Width(), rc.Height());
 	}
 
 	void ProfilerMainDialog::OnFinalMessage(HWND hwnd)
@@ -267,10 +193,7 @@ namespace micro_profiler
 
 		if (!_placement.IsRectEmpty() && !::IsIconic(hwnd))
 			store(*c, "Placement", _placement);
-		_columns_parents->store(*c->create("ParentsColumns"));
-		_columns_main->store(*c->create("MainColumns"));
-		_columns_children->store(*c->create("ChildrenColumns"));
-
+		_statistics_display->save(*c);
 		closed();
 	}
 

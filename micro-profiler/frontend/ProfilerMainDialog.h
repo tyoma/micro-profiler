@@ -29,13 +29,11 @@
 #include <atlwin.h>
 #include <functional>
 #include <string>
-#include <wpl/ui/listview.h>
 
 namespace micro_profiler
 {
-	class columns_model;
 	class functions_list;
-	struct linked_statistics;
+	class tables_ui;
 
 	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public frontend_ui
 	{
@@ -69,9 +67,6 @@ namespace micro_profiler
 	private:
 		void RelocateControls(const CSize &size);
 
-		void OnFocusChange(wpl::ui::listview::index_type index, bool selected);
-		void OnDrilldown(std::shared_ptr<linked_statistics> view, wpl::ui::listview::index_type index);
-
 		virtual void OnFinalMessage(HWND hwnd);
 
 		virtual void activate();
@@ -79,11 +74,7 @@ namespace micro_profiler
 	private:
 		const std::shared_ptr<functions_list> _statistics;
 		const std::wstring _executable;
-		std::shared_ptr<linked_statistics> _parents_statistics, _children_statistics;
-		const std::shared_ptr<columns_model> _columns_parents, _columns_main, _columns_children;
-		CWindow _statistics_view, _children_statistics_view, _parents_statistics_view, _clear_button, _copy_all_button;
-		std::shared_ptr<wpl::ui::listview> _statistics_lv, _parents_statistics_lv, _children_statistics_lv;
-		std::vector<wpl::slot_connection> _connections;
+		std::auto_ptr<tables_ui> _statistics_display;
 		CRect _placement;
 	};
 }

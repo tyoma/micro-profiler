@@ -53,7 +53,9 @@
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\stream.cpp" />
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
+    <ClCompile Include="frontend\tables_ui.cpp" />
     <ClCompile Include="module\main.cpp" />
+    <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <None Include="logo.ico" />
     <None Include="visualstudio\addin\micro-profiler-addin.rgs" />

@@ -20,6 +20,7 @@
 
 #include "commands.h"
 #include "helpers.h"
+#include "vs-pane.h"
 
 #include <frontend/constants.h>
 #include <frontend/frontend_manager.h>
@@ -49,10 +50,14 @@ namespace micro_profiler
 			integration_command::ptr g_commands[] = {
 				integration_command::ptr(new toggle_profiling),
 				integration_command::ptr(new remove_profiling_support),
+
 				integration_command::ptr(new open_statistics),
 				integration_command::ptr(new save_statistics),
 				integration_command::ptr(new window_activate),
 				integration_command::ptr(new close_all),
+
+				integration_command::ptr(new clear_instance),
+				integration_command::ptr(new copy_instance),
 			};
 		}
 
@@ -64,7 +69,8 @@ namespace micro_profiler
 		{
 		public:
 			profiler_package()
-				: CommandTarget<context, &CLSID_MicroProfilerCmdSet>(g_commands, g_commands + _countof(g_commands))
+				: CommandTarget<context, &CLSID_MicroProfilerCmdSet>(g_commands, g_commands + _countof(g_commands)),
+					_next_tool_id(0)
 			{	}
 
 		public:
@@ -109,18 +115,6 @@ namespace micro_profiler
 			{	return E_NOTIMPL;	}
 
 		private:
-			virtual bool global_enabled() const
-			{
-				BOOL vcproject_context_active = FALSE;
-				VSCOOKIE cookie;
-				CComPtr<IVsMonitorSelection> selection_monitor;
-				
-				_service_provider->QueryService(__uuidof(IVsMonitorSelection), &selection_monitor);
-				selection_monitor->GetCmdUIContextCookie(UICONTEXT_VCProject, &cookie);
-				selection_monitor->IsCmdUIContextActive(cookie, &vcproject_context_active);
-				return !!vcproject_context_active;
-			}
-
 			virtual context get_context()
 			{
 				struct __declspec(uuid("04a72314-32e9-48e2-9b87-a63603454f3e")) _DTE;
@@ -135,16 +129,13 @@ namespace micro_profiler
 			}
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const wstring &executable)
-			{
-				shared_ptr<ProfilerMainDialog> ui(new ProfilerMainDialog(model, executable, get_frame_hwnd(_shell)));
-
-				return ui;
-			}
+			{	return micro_profiler::create_ui(*_shell, _next_tool_id++, model, executable);	}
 
 		private:
 			CComPtr<IServiceProvider> _service_provider;
 			CComPtr<IVsUIShell> _shell;
 			shared_ptr<frontend_manager> _frontend_manager;
+			unsigned _next_tool_id;
 		};
 
 		OBJECT_ENTRY_AUTO(CLSID_MicroProfilerPackage, profiler_package);

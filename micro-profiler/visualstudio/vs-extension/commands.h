@@ -97,6 +97,22 @@ namespace micro_profiler
 			virtual void exec(context &ctx, unsigned item);
 		};
 
+		struct clear_instance : integration_command
+		{
+			clear_instance();
+
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context &ctx, unsigned item);
+		};
+
+		struct copy_instance : integration_command
+		{
+			copy_instance();
+
+			virtual bool query_state(const context &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context &ctx, unsigned item);
+		};
+
 
 
 		inline context::context(const dispatch &project_, const std::shared_ptr<frontend_manager> &frontend_,

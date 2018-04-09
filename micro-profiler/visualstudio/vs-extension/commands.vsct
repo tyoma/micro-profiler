@@ -13,6 +13,11 @@
 					<ButtonText>MicroProfiler</ButtonText>
 				</Strings>
 			</Menu>
+			<Menu guid="guidMicroProfilerCmdSet" id="IDM_MP_PANE_TOOLBAR" type="ToolWindowToolbar">
+				<Strings>
+					<ButtonText>MicroProfiler Instance Commands</ButtonText>
+				</Strings>
+			</Menu>
 		</Menus>
 
 		<Groups>
@@ -24,6 +29,9 @@
 			</Group>
 			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" priority="0x0900">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" />
+			</Group>
+			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" priority="0x0000">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_PANE_TOOLBAR" />
 			</Group>
 		</Groups>
 
@@ -87,6 +95,22 @@
 					<ButtonText>Close All</ButtonText>
 				</Strings>
 			</Button>
+			
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidClearStatistics" priority="0x0010" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<Strings>
+					<ButtonText>Clear</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidCopyStatistics" priority="0x0110" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<Strings>
+					<ButtonText>Copy</ButtonText>
+				</Strings>
+			</Button>
+
 
 		</Buttons>
 	</Commands>

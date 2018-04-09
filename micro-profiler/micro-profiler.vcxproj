@@ -55,8 +55,10 @@
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
     <ClCompile Include="frontend\tables_ui.cpp" />
     <ClCompile Include="module\main.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp" />
     <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
+    <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
     <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
     <None Include="frontend\micro-profiler-sink.rgs" />

@@ -325,5 +325,51 @@ namespace micro_profiler
 
 		void close_all::exec(context &ctx, unsigned /*item*/)
 		{	ctx.frontend->close_all();	}
+
+
+		clear_instance::clear_instance()
+			: integration_command(cmdidClearStatistics)
+		{	}
+
+		bool clear_instance::query_state(const context &/*ctx*/, unsigned /*item*/, unsigned &state) const
+		{	return state = enabled | visible | supported, true;	}
+
+		void clear_instance::exec(context &ctx, unsigned /*item*/)
+		{
+			if (const frontend_manager::instance *i = ctx.frontend->get_active())
+				i->model->clear();
+		}
+
+
+		copy_instance::copy_instance()
+			: integration_command(cmdidCopyStatistics)
+		{	}
+
+		bool copy_instance::query_state(const context &/*ctx*/, unsigned /*item*/, unsigned &state) const
+		{	return state = enabled | visible | supported, true;	}
+
+		void copy_instance::exec(context &ctx, unsigned /*item*/)
+		{
+			if (const frontend_manager::instance *i = ctx.frontend->get_active())
+			{
+				wstring result;
+
+				i->model->print(result);
+				if (::OpenClipboard(NULL))
+				{
+					if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(wchar_t)))
+					{
+						wchar_t *gtext_memory = static_cast<wchar_t *>(::GlobalLock(gtext));
+
+						copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
+						::GlobalUnlock(gtext_memory);
+						::EmptyClipboard();
+						::SetClipboardData(CF_UNICODETEXT, gtext);
+					}
+					::CloseClipboard();
+				}
+			}
+		}
+
 	}
 }

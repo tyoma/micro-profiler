@@ -30,6 +30,8 @@
 #define IDM_MP_MM_MICROPROFILER	0x1030
 #define IDG_MP_MAIN	0x1031
 #define IDG_MP_WINDOWS	0x1032
+#define IDM_MP_PANE_TOOLBAR	0x1033
+#define IDG_MP_INSTANCE_COMMANDS 0x1034
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,6 +41,8 @@
 #define cmdidSaveStatistics 0x110
 #define cmdidLoadStatistics 0x111
 #define cmdidCloseAll 0x300
+#define cmdidClearStatistics 0x400
+#define cmdidCopyStatistics 0x401
 
 #define cmdidWindowActivateDynamic 0x2000
 

@@ -38,6 +38,9 @@ namespace micro_profiler
 	public:
 		ordered_view(const Map &map);
 
+		// Paermanently detaches from the underlying map. Postcondition: size() becomes zero.
+		void detach() throw();
+
 		// Set order for internal orderd storage, save it until new order is set.
 		template <typename Predicate>
 		void set_order(Predicate predicate, bool ascending);
@@ -65,10 +68,11 @@ namespace micro_profiler
 		const ordered_view &operator =(const ordered_view &);
 
 	private:
-		const Map &_map;
+		const Map *_map;
 		ordered_storage _ordered_data;
 		std::auto_ptr<sorter> _sorter;
 	};
+
 
 	// Sorter interface.
 	// We need this to be able to switch sorter. Since concrete sorter type 
@@ -83,6 +87,7 @@ namespace micro_profiler
 		virtual void sort(target_iterator begin, target_iterator end) const = 0;
 	};
 
+
 	// Sorter implementation.
 	// This stuff(i.e. desc_functor, sorter, sorter_impl) was introduced to let compiler inline functor.
 	// We sacrifice one virtual call, but get bunch of functor inlines.
@@ -90,11 +95,6 @@ namespace micro_profiler
 	template <typename Predicate>
 	class ordered_view<Map>::sorter_impl : public ordered_view<Map>::sorter
 	{
-		Predicate _predicate;
-		bool _ascending;
-
-		const sorter_impl &operator =(const sorter_impl &rhs);
-
 	public:
 		sorter_impl(Predicate predicate, bool ascending)
 			: _predicate(predicate), _ascending(ascending)
@@ -105,13 +105,26 @@ namespace micro_profiler
 
 		bool operator ()(const typename Map::const_iterator &lhs, const typename Map::const_iterator &rhs) const
 		{	return _ascending ? _predicate(lhs->first, lhs->second, rhs->first, rhs->second) : _predicate(rhs->first, rhs->second, lhs->first, lhs->second);	}
+
+	private:
+		Predicate _predicate;
+		bool _ascending;
 	};
+
+
 
 	/// ordered_view implementation
 	template <class Map>
 	inline ordered_view<Map>::ordered_view(const Map &map)
-		: _map(map)
+		: _map(&map)
 	{	fetch_data();	}
+
+	template <class Map>
+	inline void ordered_view<Map>::detach() throw()
+	{
+		_map = 0;
+		_ordered_data.clear();
+	}
 
 	template <class Map>
 	inline size_t ordered_view<Map>::size() const throw()
@@ -137,13 +150,12 @@ namespace micro_profiler
 	template <class Map>
 	inline void ordered_view<Map>::fetch_data()
 	{
-		stored_type it = _map.begin();
-		const stored_type end = _map.end();
-
+		if (!_map)
+			return;
 		_ordered_data.clear();
-		_ordered_data.reserve(_map.size());
-		for(; it != end; ++it)
-			_ordered_data.push_back(it);
+		_ordered_data.reserve(_map->size());
+		for(stored_type i = _map->begin(), end = _map->end(); i != end; ++i)
+			_ordered_data.push_back(i);
 	}
 
 	template <class Map>
@@ -153,9 +165,9 @@ namespace micro_profiler
 	template <class Map>
 	inline size_t ordered_view<Map>::find_by_key(const key_type &key) const
 	{
-		for(size_t i = 0; i < _ordered_data.size(); ++i)
+		for (size_t i = 0; i < _ordered_data.size(); ++i)
 		{
-			if((*_ordered_data[i]).first == key)
+			if (_ordered_data[i]->first == key)
 				return i;
 		}
 		return npos;

@@ -81,12 +81,6 @@ namespace micro_profiler
 		::MoveWindow(_children_statistics_view, x, y + cy - dependant_height, cx, dependant_height, TRUE);
 	}
 
-	void tables_ui::reset_dependants()
-	{
-		_parents_statistics_lv->set_model(_parents_statistics = shared_ptr<linked_statistics>());
-		_children_statistics_lv->set_model(_children_statistics = shared_ptr<linked_statistics>());
-	}
-
 	void tables_ui::save(hive &configuration)
 	{
 		_columns_parents->store(*configuration.create("ParentsColumns"));

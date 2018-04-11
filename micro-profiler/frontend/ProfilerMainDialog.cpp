@@ -125,7 +125,6 @@ namespace micro_profiler
 
 	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
 	{
-		_statistics_display->reset_dependants();
 		_statistics->clear();
 		return handled = TRUE, 0;
 	}

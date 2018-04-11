@@ -35,6 +35,8 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const address_t c_invalid_address = numeric_limits<address_t>::max();
+
 		wstring to_string2(count_t value)
 		{
 			const size_t buffer_size = 24;
@@ -66,10 +68,6 @@ namespace micro_profiler
 		{
 			class by_name
 			{
-				shared_ptr<symbol_resolver> _resolver;
-
-				const by_name &operator =(const by_name &rhs);
-
 			public:
 				by_name(shared_ptr<symbol_resolver> resolver)
 					: _resolver(resolver)
@@ -78,6 +76,9 @@ namespace micro_profiler
 				template <typename AnyT>
 				bool operator ()(address_t lhs_addr, const AnyT &, address_t rhs_addr, const AnyT &) const
 				{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
+
+			private:
+				shared_ptr<symbol_resolver> _resolver;
 			};
 
 			struct by_times_called
@@ -143,37 +144,44 @@ namespace micro_profiler
 	}
 
 
-
-	class children_statistics_model_impl : public statistics_model_impl<linked_statistics, statistics_map>
+	template <typename MapT>
+	class linked_statistics_model_impl : public statistics_model_impl<linked_statistics, MapT>
 	{
-		address_t _controlled_address;
+	public:
+		linked_statistics_model_impl(const MapT &statistics, signal<void (address_t entry)> &entry_updated,
+			signal<void ()> &master_cleared, double tick_interval, shared_ptr<symbol_resolver> resolver);
+
+	private:
+		virtual void on_updated(address_t address);
+
+	private:
 		slot_connection _updates_connection;
+		slot_connection _cleared_connection;
+	};
 
-		void on_updated(address_t address);
 
+	class children_statistics_model_impl : public linked_statistics_model_impl<statistics_map>
+	{
 	public:
 		children_statistics_model_impl(address_t controlled_address, const statistics_map &statistics,
-			signal<void (address_t)> &entry_updated, double tick_interval, shared_ptr<symbol_resolver> resolver);
-	};
-
-
-	class parents_statistics : public statistics_model_impl<linked_statistics, statistics_map_callers>
-	{
-		slot_connection _updates_connection;
-
-		void on_updated(address_t address);
-
-	public:
-		parents_statistics(const statistics_map_callers &statistics, signal<void (address_t)> &entry_updated,
+			signal<void (address_t)> &entry_updated, signal<void ()> &master_cleared, double tick_interval,
 			shared_ptr<symbol_resolver> resolver);
+
+	private:
+		virtual void on_updated(address_t address);
+
+	private:
+		address_t _controlled_address;
 	};
+
+	typedef linked_statistics_model_impl<statistics_map_callers> parents_statistics;
 
 
 
 	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
 	{
-		const view_type::value_type &row = _view.at(item);
+		const view_type::value_type &row = get_entry(item);
 
 		switch (subitem)
 		{
@@ -194,18 +202,17 @@ namespace micro_profiler
 	{
 		switch (column)
 		{
-		case 1:	_view.set_order(functors::by_name(_resolver), ascending);	break;
-		case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
-		case 3:	_view.set_order(functors::by_exclusive_time(), ascending);	break;
-		case 4:	_view.set_order(functors::by_inclusive_time(), ascending);	break;
-		case 5:	_view.set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
-		case 6:	_view.set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
-		case 7:	_view.set_order(functors::by_max_reentrance(), ascending);	break;
-		case 8:	_view.set_order(functors::by_max_call_time(), ascending);	break;
+		case 1:	_view->set_order(functors::by_name(_resolver), ascending);	break;
+		case 2:	_view->set_order(functors::by_times_called(), ascending);	break;
+		case 3:	_view->set_order(functors::by_exclusive_time(), ascending);	break;
+		case 4:	_view->set_order(functors::by_inclusive_time(), ascending);	break;
+		case 5:	_view->set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
+		case 6:	_view->set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
+		case 7:	_view->set_order(functors::by_max_reentrance(), ascending);	break;
+		case 8:	_view->set_order(functors::by_max_call_time(), ascending);	break;
 		}
-		invalidated(_view.size());
+		invalidated(_view->size());
 	}
-
 
 
 	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
@@ -216,6 +223,7 @@ namespace micro_profiler
 
 	void functions_list::clear()
 	{
+		_cleared();
 		_statistics->clear();
 		updated();
 	}
@@ -231,7 +239,7 @@ namespace micro_profiler
 		for (size_t i = 0; i != get_count(); ++i)
 		{
 			wstring tmp;
-			const view_type::value_type &row = view().at(i);
+			const view_type::value_type &row = get_entry(i);
 
 			content += _resolver->symbol_name_by_va(row.first) + L"\t";
 			content += to_string2(row.second.times_called) + L"\t";
@@ -243,33 +251,48 @@ namespace micro_profiler
 			content += to_string2(max_call_time(row.second, _tick_interval)) + L"\r\n";
 		}
 
-		if (locale_ok) 
+		if (locale_ok)
 			::setlocale(LC_NUMERIC, old_locale);
 	}
 
 	shared_ptr<linked_statistics> functions_list::watch_children(index_type item) const
 	{
-		const statistics_map_detailed::value_type &s = view().at(item);
+		const statistics_map_detailed::value_type &s = get_entry(item);
 
 		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.callees,
-			_statistics->entry_updated, _tick_interval, _resolver));
+			_statistics->entry_updated, _cleared, _tick_interval, _resolver));
 	}
 
 	shared_ptr<linked_statistics> functions_list::watch_parents(index_type item) const
 	{
-		const statistics_map_detailed::value_type &s = view().at(item);
+		const statistics_map_detailed::value_type &s = get_entry(item);
 
 		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, _statistics->entry_updated,
-			_resolver));
+			_cleared, _tick_interval, _resolver));
 	}
 	
 
+	template <typename MapT>
+	linked_statistics_model_impl<MapT>::linked_statistics_model_impl(const MapT &statistics,
+			signal<void (address_t)> &entry_updated, signal<void ()> &master_cleared, double tick_interval,
+			shared_ptr<symbol_resolver> resolver)
+		: statistics_model_impl(statistics, tick_interval, resolver)
+	{
+		_updates_connection = entry_updated += bind(&linked_statistics_model_impl::on_updated, this, _1);
+		_cleared_connection = master_cleared += bind(&linked_statistics_model_impl::detach, this);
+	}
+
+	template <typename MapT>
+	void linked_statistics_model_impl<MapT>::on_updated(address_t /*address*/)
+	{	updated();	}
+
 
 	children_statistics_model_impl::children_statistics_model_impl(address_t controlled_address,
-			const statistics_map &statistics, signal<void (address_t)> &entry_updated, double tick_interval,
-			shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl(statistics, tick_interval, resolver), _controlled_address(controlled_address)
-	{	_updates_connection = entry_updated += bind(&children_statistics_model_impl::on_updated, this, _1);	}
+			const statistics_map &statistics, signal<void (address_t)> &entry_updated,
+			signal<void ()> &cleared, double tick_interval, shared_ptr<symbol_resolver> resolver)
+		: linked_statistics_model_impl<statistics_map>(statistics, entry_updated, cleared, tick_interval, resolver),
+			_controlled_address(controlled_address)
+	{	}
 
 	void children_statistics_model_impl::on_updated(address_t address)
 	{
@@ -278,16 +301,11 @@ namespace micro_profiler
 	}
 
 
-	parents_statistics::parents_statistics(const statistics_map_callers &statistics,
-			signal<void (address_t)> &entry_updated, shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl<linked_statistics, statistics_map_callers>(statistics, 0, resolver)
-	{	_updates_connection = entry_updated += bind(&parents_statistics::on_updated, this, _1);	}
-
 	template <>
 	void statistics_model_impl<linked_statistics, statistics_map_callers>::get_text(index_type item, index_type subitem,
 		wstring &text) const
 	{
-		const statistics_map_callers::value_type &row = _view.at(item);
+		const statistics_map_callers::value_type &row = get_entry(item);
 
 		switch (subitem)
 		{
@@ -302,15 +320,11 @@ namespace micro_profiler
 	{
 		switch (column)
 		{
-		case 1:	_view.set_order(functors::by_name(_resolver), ascending);	break;
-		case 2:	_view.set_order(functors::by_times_called(), ascending);	break;
+		case 1:	_view->set_order(functors::by_name(_resolver), ascending);	break;
+		case 2:	_view->set_order(functors::by_times_called(), ascending);	break;
 		}
-		invalidated(_view.size());
+		invalidated(_view->size());
 	}
-
-	void parents_statistics::on_updated(address_t /*address*/)
-	{	updated();	}
-
 
 
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver)

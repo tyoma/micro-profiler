@@ -269,6 +269,72 @@ namespace micro_profiler
 			}
 
 
+			test( ClearingTheListResetsWatchedChildren )
+			{
+				// INIT
+				statistics_map_detailed s;
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				invalidation_tracer it1, it2;
+
+				s[1123].callees[11000];
+				s[1123].callees[11001];
+				s[1124].callees[11100];
+				ser(s);
+				dser(*fl);
+
+				fl->set_order(1, true);
+
+				shared_ptr<linked_statistics> children[] = {	fl->watch_children(0), fl->watch_children(1),	};
+
+				it1.bind_to_model(*children[0]);
+				it2.bind_to_model(*children[1]);
+
+				// ACT
+				fl->clear();
+
+				// ASSERT
+				listview::model::index_type reference[] = { 0, };
+
+				assert_equal(0u, children[0]->get_count());
+				assert_equal(reference, it1.invalidations);
+				assert_equal(0u, children[1]->get_count());
+				assert_equal(reference, it2.invalidations);
+			}
+
+
+			test( ClearingTheListResetsWatchedParents )
+			{
+				// INIT
+				statistics_map_detailed s;
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				invalidation_tracer it1, it2;
+
+				s[1123].callees[11000];
+				s[1123].callees[11001];
+				s[1124].callees[11000];
+				ser(s);
+				dser(*fl);
+
+				fl->set_order(1, true);
+
+				shared_ptr<linked_statistics> parents[] = {	fl->watch_parents(2), fl->watch_parents(2),	};
+
+				it1.bind_to_model(*parents[0]);
+				it2.bind_to_model(*parents[1]);
+
+				// ACT
+				fl->clear();
+
+				// ASSERT
+				listview::model::index_type reference[] = { 0, };
+
+				assert_equal(0u, parents[0]->get_count());
+				assert_equal(reference, it1.invalidations);
+				assert_equal(0u, parents[1]->get_count());
+				assert_equal(reference, it2.invalidations);
+			}
+
+
 			test( FunctionListGetByAddress )
 			{
 				// INIT

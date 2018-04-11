@@ -495,6 +495,47 @@ namespace micro_profiler
 				assert_equal(make_pod(one), s.at(1));
 				assert_throws(s.at(2), out_of_range);
 			}
+
+
+			test( DetachingOrderedViewSetsSizeToZero )
+			{
+				// INIT
+				pod_map source;
+				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}	};
+
+				source[pods + 0] = pods[0];
+				source[pods + 1] = pods[1];
+
+				sorted_pods s(source);
+
+				// ACT
+				s.detach();
+
+				// ASSERT
+				assert_equal(0u, s.size());
+			}
+
+
+			test( ResortingDetachedOrderedViewKeepsSizeAtZero )
+			{
+				// INIT
+				pod_map source;
+				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}	};
+
+				source[pods + 0] = pods[0];
+				source[pods + 1] = pods[1];
+
+				sorted_pods s(source);
+
+				s.set_order(sort_by_b(), false);
+				s.detach();
+
+				// ACT
+				s.resort();
+
+				// ASSERT
+				assert_equal(0u, s.size());
+			}
 		end_test_suite
 	}
 }

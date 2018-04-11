@@ -20,7 +20,6 @@ namespace micro_profiler
 
 		void create(HWND hparent);
 		void resize(unsigned x, unsigned y, unsigned cx, unsigned cy);
-		void reset_dependants();
 		void save(hive &configuration);
 
 	private:

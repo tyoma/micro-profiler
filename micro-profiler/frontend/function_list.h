@@ -63,6 +63,7 @@ namespace micro_profiler
 		std::shared_ptr<statistics_map_detailed> _statistics;
 		double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;
+		mutable wpl::signal<void()> _cleared;
 
 	private:
 		template <typename ArchiveT>

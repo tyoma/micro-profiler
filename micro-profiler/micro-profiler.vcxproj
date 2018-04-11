@@ -55,7 +55,9 @@
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
     <ClCompile Include="frontend\tables_ui.cpp" />
     <ClCompile Include="module\main.cpp" />
-    <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />

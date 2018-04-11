@@ -9,7 +9,6 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
-#include <vsshell80.h>
 #include <wpl/ui/win32/window.h>
 
 using namespace std;
@@ -27,24 +26,25 @@ namespace micro_profiler
 		const GUID c_settingsSlot = { 0xbed6ea71, 0xbee3, 0x4e71, { 0xaf, 0xed, 0xcf, 0xfb, 0xa5, 0x21, 0xcf, 0x46 } };
 	}
 
-	class vs_pane : public CComObjectRoot, public IVsWindowPane, public frontend_ui, IVsWindowFrameNotify
+	class vs_pane : public CComObjectRoot, public IVsWindowPane, public frontend_ui
 	{
 	public:
-		vs_pane()
-			: _frame(0)
+		~vs_pane()
 		{	}
 
 		void close()
-		{	_frame->CloseFrame(FRAMECLOSE_NoSave);	}
+		{
+			_frame->CloseFrame(FRAMECLOSE_NoSave);
+			_frame.Release();
+		}
 
 		void set_model(const std::shared_ptr<functions_list> &model)
 		{	_ui.reset(new tables_ui(model, *open_configuration()));	}
 
-		void set_frame(IVsWindowFrame &frame)
+		void set_frame(const CComPtr<IVsWindowFrame> &frame)
 		{
-			_frame = &frame;
-			if (CComQIPtr<IVsWindowFrame2> frame2 = _frame)
-				frame2->Advise(this, &_frame_advise);
+			_frame = frame;
+			_frame->SetFramePos(SFP_fSize, GUID_NULL, 0, 0, 600, 500);
 			_frame->Show();
 		}
 
@@ -54,7 +54,6 @@ namespace micro_profiler
 	private:
 		BEGIN_COM_MAP(vs_pane)
 			COM_INTERFACE_ENTRY(IVsWindowPane)
-			COM_INTERFACE_ENTRY(IVsWindowFrameNotify)
 		END_COM_MAP()
 
 		// IVsWindowPane methods
@@ -75,6 +74,7 @@ namespace micro_profiler
 		virtual STDMETHODIMP ClosePane()
 		{
 			closed();
+			_ui.reset();
 			return S_OK;
 		}
 
@@ -87,22 +87,6 @@ namespace micro_profiler
 		virtual STDMETHODIMP TranslateAccelerator(MSG * /*msg*/)
 		{	return E_NOTIMPL;	}
 
-		// IVsWindowFrameNotify methods
-		virtual STDMETHODIMP OnShow(FRAMESHOW /*fshow*/)
-		{
-			activated();
-			return S_OK;
-		}
-
-		virtual STDMETHODIMP OnMove()
-		{	return E_NOTIMPL;	}
-
-		virtual STDMETHODIMP OnSize()
-		{	return E_NOTIMPL;	}
-
-		virtual STDMETHODIMP OnDockableChange(BOOL /*dockable*/)
-		{	return S_OK;	}
-
 
 		LRESULT handle_parent_message(UINT message, WPARAM wparam, LPARAM lparam,
 			const window::original_handler_t &handler)
@@ -114,6 +98,11 @@ namespace micro_profiler
 
 			case WM_SIZE:
 				_ui->resize(0, 0, LOWORD(lparam), HIWORD(lparam));
+				break;
+
+			case WM_SETFOCUS:
+				activated();
+				break;
 			}
 			return handler(message, wparam, lparam);
 		}
@@ -122,8 +111,7 @@ namespace micro_profiler
 		std::auto_ptr<tables_ui> _ui;
 		std::shared_ptr<functions_list> _model;
 		std::shared_ptr<void> _advise;
-		VSCOOKIE _frame_advise;
-		IVsWindowFrame *_frame;
+		CComPtr<IVsWindowFrame> _frame;
 	};
 
 
@@ -137,7 +125,7 @@ namespace micro_profiler
 		CComPtr<IVsWindowFrame> frame;
 
 		p->set_model(model);
-		if (S_OK == shell.CreateToolWindow(CTW_fInitNew | CTW_fForceCreate | CTW_fHasBorder | CTW_fMultiInstance | CTW_fToolbarHost, id, sp,
+		if (S_OK == shell.CreateToolWindow(CTW_fInitNew | CTW_fMultiInstance | CTW_fToolbarHost, id, sp,
 			GUID_NULL, c_settingsSlot, GUID_NULL, NULL, (L"MicroProfiler - " + executable).c_str(), NULL, &frame) && frame)
 		{
 			CComVariant vtbhost;
@@ -147,7 +135,7 @@ namespace micro_profiler
 				if (CComQIPtr<IVsToolWindowToolbarHost> tbhost = vtbhost.punkVal)
 					tbhost->AddToolbar(VSTWT_TOP, &CLSID_MicroProfilerCmdSet, IDM_MP_PANE_TOOLBAR);
 			}
-			p->set_frame(*frame);
+			p->set_frame(frame);
 			return shared_ptr<vs_pane>(p, bind(&vs_pane::close, _1));
 		}
 		return shared_ptr<frontend_ui>();

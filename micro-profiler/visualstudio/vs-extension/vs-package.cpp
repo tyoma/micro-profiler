@@ -19,20 +19,16 @@
 //	THE SOFTWARE.
 
 #include "commands.h"
-#include "helpers.h"
 #include "vs-pane.h"
 
 #include <frontend/constants.h>
 #include <frontend/frontend_manager.h>
-#include <frontend/ProfilerMainDialog.h>
 #include <visualstudio/command-target.h>
 #include <resources/resource.h>
 #include <setup/environment.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
-#include <comdef.h>
-#include <utility>
 #include <vsshell.h>
 
 #include <InitGuid.h>

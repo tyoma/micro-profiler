@@ -80,7 +80,6 @@
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
-    <None Include="micro-profiler.initializer.mfc-static.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="entry.h" />
   </ItemGroup>
@@ -156,6 +155,9 @@
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\icon-ids.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">
@@ -168,7 +170,6 @@
     </CustomBuild>
     <CustomBuild Include="micro-profiler.initializer.mfc-static.cpp" />
     <CustomBuild Include="micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
     <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<Extern href="command-ids.h"/>
+	<Extern href="icon-ids.h"/>
 	<Extern href="guids.h"/>
+
 	<Extern href="stdidcmd.h"/>
 	<Extern href="vsshlids.h"/>
 
@@ -36,19 +38,18 @@
 		</Groups>
 
 		<Buttons>
+			<!-- Project Context Menu Items -->
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidToggleProfiling" priority="0x0100" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" />
-				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<Strings>
 					<ButtonText>Enable Profiling</ButtonText>
 				</Strings>
 			</Button>
-
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0110" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" />
-				<CommandFlag>TextOnly</CommandFlag>
+				<Icon guid="guidIconSet" id="iconidDelete"/>
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<Strings>
@@ -56,25 +57,24 @@
 				</Strings>
 			</Button>
 
+			<!-- Main Menu Items -->
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidLoadStatistics" priority="0x0110" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" />
-				<CommandFlag>TextOnly</CommandFlag>
+				<Icon guid="guidIconSet" id="iconidOpen"/>
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<ButtonText>Open Statistics...</ButtonText>
 				</Strings>
 			</Button>
-
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidSaveStatistics" priority="0x0120" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" />
-				<CommandFlag>TextOnly</CommandFlag>
+				<Icon guid="guidIconSet" id="iconidSave"/>
 				<CommandFlag>TextChanges</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<ButtonText>Save Selected Statistics As...</ButtonText>
 				</Strings>
 			</Button>
-
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidWindowActivateDynamic" priority="0x0300" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" />
 				<CommandFlag>TextOnly</CommandFlag>
@@ -86,32 +86,39 @@
 					<ButtonText>---window---</ButtonText>
 				</Strings>
 			</Button>
-
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidCloseAll" priority="0x0310" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" />
-				<CommandFlag>TextOnly</CommandFlag>
+				<Icon guid="guidIconSet" id="iconidCloseAll"/>
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<ButtonText>Close All</ButtonText>
 				</Strings>
 			</Button>
-			
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidClearStatistics" priority="0x0010" type="Button">
+
+			<!-- Tool Window Toolbar Items -->
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidSaveStatistics" priority="0x0010" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
-				<CommandFlag>TextOnly</CommandFlag>
+				<Icon guid="guidIconSet" id="iconidSave"/>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
-					<ButtonText>Clear</ButtonText>
+					<ButtonText>Save Selected Statistics As...</ButtonText>
 				</Strings>
 			</Button>
 			<Button guid="guidMicroProfilerCmdSet" id="cmdidCopyStatistics" priority="0x0110" type="Button">
 				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
-				<CommandFlag>TextOnly</CommandFlag>
+				<Icon guid="guidIconSet" id="iconidCopy"/>
 				<Strings>
-					<ButtonText>Copy</ButtonText>
+					<ButtonText>Copy Statistics as CSV</ButtonText>
 				</Strings>
 			</Button>
-
-
+			<Button guid="guidMicroProfilerCmdSet" id="cmdidClearStatistics" priority="0x0210" type="Button">
+				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+				<Icon guid="guidIconSet" id="iconidClear"/>
+				<Strings>
+					<ButtonText>Clear Statistics</ButtonText>
+				</Strings>
+			</Button>
 		</Buttons>
 	</Commands>
 </CommandTable>

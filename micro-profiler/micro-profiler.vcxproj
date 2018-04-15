@@ -60,6 +60,7 @@
     </ClCompile>
     <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
+    <ClInclude Include="visualstudio\vs-extension\icon-ids.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
     <None Include="visualstudio\addin\micro-profiler-addin.rgs" />

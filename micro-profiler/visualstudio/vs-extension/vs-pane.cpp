@@ -62,7 +62,7 @@ namespace micro_profiler
 
 		virtual STDMETHODIMP CreatePaneWindow(HWND hparent, int x, int y, int cx, int cy, HWND * /*hwnd*/)
 		{
-			_advise = window::attach(hparent)->advise(bind(&vs_pane::handle_parent_message, this, _1, _2, _3, _4));
+			_advise = window::attach(hparent, bind(&vs_pane::handle_parent_message, this, _1, _2, _3, _4));
 			_ui->create(hparent);
 			_ui->resize(x, y, cx, cy);
 			return S_OK;

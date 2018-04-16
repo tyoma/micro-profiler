@@ -2,7 +2,7 @@
 
 #include <vsshlids.h>
 
-#if defined(guidVsShellIcons)
+#if defined(1 /*guidVsShellIcons*/)
    #define guidIconSet { 0x9cd93c42, 0xceef, 0x45ab, { 0xb1, 0xb5, 0x60, 0x40, 0x88, 0xc, 0x95, 0x43 } }
 
    #define iconidDelete 0x001B

@@ -22,9 +22,6 @@
     <ClCompile Include="frontend\constants.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="visualstudio\vs-extension\commands.cpp">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClCompile>
     <ClCompile Include="frontend\file.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
@@ -38,6 +35,12 @@
       <Filter>frontend</Filter>
     </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\commands-global.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,9 +119,6 @@
     <ClInclude Include="visualstudio\vs-extension\command-ids.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\guids.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
     <ClInclude Include="visualstudio\dispatch.h">
       <Filter>visualstudio</Filter>
     </ClInclude>
@@ -133,9 +133,6 @@
     </ClInclude>
     <ClInclude Include="visualstudio\command.h">
       <Filter>visualstudio</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\commands.h">
-      <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="frontend\file.h">
       <Filter>frontend</Filter>
@@ -158,6 +155,12 @@
     <ClInclude Include="visualstudio\vs-extension\icon-ids.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\commands-global.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\commands-instance.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">
@@ -168,8 +171,5 @@
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <Filter>visualstudio\vs-extension</Filter>
     </CustomBuild>
-    <CustomBuild Include="micro-profiler.initializer.mfc-static.cpp" />
-    <CustomBuild Include="micro-profiler.initializer.cpp" />
-    <CustomBuild Include="entry.h;micro-profiler.initializer.mfc-static.cpp;micro-profiler.initializer.cpp" />
   </ItemGroup>
 </Project>

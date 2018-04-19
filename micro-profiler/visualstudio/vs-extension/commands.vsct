@@ -2,20 +2,19 @@
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<Extern href="command-ids.h"/>
 	<Extern href="icon-ids.h"/>
-	<Extern href="guids.h"/>
 
 	<Extern href="stdidcmd.h"/>
 	<Extern href="vsshlids.h"/>
 
 	<Commands package="guidMicroProfilerPkg">
 		<Menus>
-			<Menu guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" priority="0x700" type="Menu">
+			<Menu guid="guidGlobalCmdSet" id="IDM_MP_MM_MICROPROFILER" priority="0x700" type="Menu">
 				<Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS" />
 				<Strings>
 					<ButtonText>MicroProfiler</ButtonText>
 				</Strings>
 			</Menu>
-			<Menu guid="guidMicroProfilerCmdSet" id="IDM_MP_PANE_TOOLBAR" type="ToolWindowToolbar">
+			<Menu guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" type="ToolWindowToolbar">
 				<Strings>
 					<ButtonText>MicroProfiler Instance Commands</ButtonText>
 				</Strings>
@@ -23,32 +22,35 @@
 		</Menus>
 
 		<Groups>
-			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" priority="0x0800">
+			<Group guid="guidGlobalCmdSet" id="IDG_MP_PROJECT_SETUP" priority="0x0800">
 				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
 			</Group>
-			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" priority="0x0800">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" />
+			<Group guid="guidGlobalCmdSet" id="IDG_MP_MAIN" priority="0x0800">
+				<Parent guid="guidGlobalCmdSet" id="IDM_MP_MM_MICROPROFILER" />
 			</Group>
-			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" priority="0x0900">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_MM_MICROPROFILER" />
+			<Group guid="guidGlobalCmdSet" id="IDG_MP_WINDOWS" priority="0x0900">
+				<Parent guid="guidGlobalCmdSet" id="IDM_MP_MM_MICROPROFILER" />
 			</Group>
-			<Group guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" priority="0x0000">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDM_MP_PANE_TOOLBAR" />
+			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" priority="0x0000">
+				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
+			</Group>
+			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_MISC_COMMANDS" priority="0x0100">
+				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
 			</Group>
 		</Groups>
 
 		<Buttons>
 			<!-- Project Context Menu Items -->
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidToggleProfiling" priority="0x0100" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" />
+			<Button guid="guidGlobalCmdSet" id="cmdidToggleProfiling" priority="0x0100" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_PROJECT_SETUP" />
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<Strings>
 					<ButtonText>Enable Profiling</ButtonText>
 				</Strings>
 			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0110" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_PROJECT_SETUP" />
+			<Button guid="guidGlobalCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0110" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_PROJECT_SETUP" />
 				<Icon guid="guidIconSet" id="iconidDelete"/>
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
@@ -58,16 +60,16 @@
 			</Button>
 
 			<!-- Main Menu Items -->
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidLoadStatistics" priority="0x0110" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" />
+			<Button guid="guidGlobalCmdSet" id="cmdidLoadStatistics" priority="0x0110" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_MAIN" />
 				<Icon guid="guidIconSet" id="iconidOpen"/>
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<ButtonText>Open Statistics...</ButtonText>
 				</Strings>
 			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidSaveStatistics" priority="0x0120" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_MAIN" />
+			<Button guid="guidGlobalCmdSet" id="cmdidSaveStatistics" priority="0x0120" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_MAIN" />
 				<Icon guid="guidIconSet" id="iconidSave"/>
 				<CommandFlag>TextChanges</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
@@ -75,8 +77,8 @@
 					<ButtonText>Save Selected Statistics As...</ButtonText>
 				</Strings>
 			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidWindowActivateDynamic" priority="0x0300" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" />
+			<Button guid="guidGlobalCmdSet" id="cmdidWindowActivateDynamic" priority="0x0300" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_WINDOWS" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<CommandFlag>TextChanges</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
@@ -86,8 +88,8 @@
 					<ButtonText>---window---</ButtonText>
 				</Strings>
 			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidCloseAll" priority="0x0310" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_WINDOWS" />
+			<Button guid="guidGlobalCmdSet" id="cmdidCloseAll" priority="0x0310" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_WINDOWS" />
 				<Icon guid="guidIconSet" id="iconidCloseAll"/>
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
@@ -96,27 +98,32 @@
 			</Button>
 
 			<!-- Tool Window Toolbar Items -->
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidSaveStatistics" priority="0x0010" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+			<Button guid="guidInstanceCmdSet" id="cmdidSaveStatistics" priority="0x0010" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
 				<Icon guid="guidIconSet" id="iconidSave"/>
-				<CommandFlag>TextChanges</CommandFlag>
-				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
-					<ButtonText>Save Selected Statistics As...</ButtonText>
+					<ButtonText>Save As...</ButtonText>
 				</Strings>
 			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidCopyStatistics" priority="0x0110" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+			<Button guid="guidInstanceCmdSet" id="cmdidCopyStatistics" priority="0x0110" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
 				<Icon guid="guidIconSet" id="iconidCopy"/>
 				<Strings>
-					<ButtonText>Copy Statistics as CSV</ButtonText>
+					<ButtonText>Copy as CSV</ButtonText>
 				</Strings>
 			</Button>
-			<Button guid="guidMicroProfilerCmdSet" id="cmdidClearStatistics" priority="0x0210" type="Button">
-				<Parent guid="guidMicroProfilerCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+			<Button guid="guidInstanceCmdSet" id="cmdidClearStatistics" priority="0x0210" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
 				<Icon guid="guidIconSet" id="iconidClear"/>
 				<Strings>
-					<ButtonText>Clear Statistics</ButtonText>
+					<ButtonText>Clear</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidGlobalCmdSet" id="cmdidSupportDeveloper" priority="0x0010" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_MISC_COMMANDS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<Strings>
+					<ButtonText>Support Developer...</ButtonText>
 				</Strings>
 			</Button>
 		</Buttons>

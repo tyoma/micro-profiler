@@ -18,7 +18,8 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "commands.h"
+#include "commands-global.h"
+
 #include "command-ids.h"
 #include "helpers.h"
 
@@ -28,6 +29,7 @@
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
+#include <frontend/SupportDevDialog.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <visualstudio/dispatch.h>
@@ -165,10 +167,10 @@ namespace micro_profiler
 
 
 		toggle_profiling::toggle_profiling()
-			: integration_command(cmdidToggleProfiling)
+			: global_command(cmdidToggleProfiling)
 		{	}
 
-		bool toggle_profiling::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
+		bool toggle_profiling::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			const wstring dir = get_profiler_directory();
 
@@ -183,7 +185,7 @@ namespace micro_profiler
 			return true;
 		}
 
-		void toggle_profiling::exec(context &ctx, unsigned /*item*/)
+		void toggle_profiling::exec(context_type &ctx, unsigned /*item*/)
 		{
 			const wstring dir = get_profiler_directory();
 			dispatch compiler(get_tool(ctx.project, L"VCCLCompilerTool"));
@@ -205,10 +207,10 @@ namespace micro_profiler
 
 
 		remove_profiling_support::remove_profiling_support()
-			: integration_command(cmdidRemoveProfilingSupport)
+			: global_command(cmdidRemoveProfilingSupport)
 		{	}
 
-		bool remove_profiling_support::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
+		bool remove_profiling_support::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			state = 0;
 			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
@@ -216,7 +218,7 @@ namespace micro_profiler
 			return true;
 		}
 
-		void remove_profiling_support::exec(context &ctx, unsigned /*item*/)
+		void remove_profiling_support::exec(context_type &ctx, unsigned /*item*/)
 		{
 			const wstring dir = get_profiler_directory();
 			dispatch initializer = find_item_by_path(ctx.project, dir, c_initializer_cpp);
@@ -231,16 +233,16 @@ namespace micro_profiler
 
 
 		open_statistics::open_statistics()
-			: integration_command(cmdidLoadStatistics)
+			: global_command(cmdidLoadStatistics)
 		{	}
 
-		bool open_statistics::query_state(const context &/*ctx*/, unsigned /*item*/, unsigned &state) const
+		bool open_statistics::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{
 			state = enabled | visible | supported;
 			return true;
 		}
 
-		void open_statistics::exec(context &ctx, unsigned /*item*/)
+		void open_statistics::exec(context_type &ctx, unsigned /*item*/)
 		{
 			wstring path;
 			auto_ptr<read_stream> s = open_file(get_frame_hwnd(ctx.shell), path);
@@ -255,23 +257,23 @@ namespace micro_profiler
 		}
 
 		save_statistics::save_statistics()
-			: integration_command(cmdidSaveStatistics)
+			: global_command(cmdidSaveStatistics)
 		{	}
 
-		bool save_statistics::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
+		bool save_statistics::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			state = visible | supported | (ctx.frontend->get_active() ? enabled : 0);
 			return true;
 		}
 
-		bool save_statistics::get_name(const context &ctx, unsigned /*item*/, std::wstring &name) const
+		bool save_statistics::get_name(const context_type &ctx, unsigned /*item*/, std::wstring &name) const
 		{
 			if (const frontend_manager::instance *i = ctx.frontend->get_active())
 				return name = L"Save " + *i->executable + L" Statistics As...", true;
 			return false;
 		}
 
-		void save_statistics::exec(context &ctx, unsigned /*item*/)
+		void save_statistics::exec(context_type &ctx, unsigned /*item*/)
 		{
 			if (const frontend_manager::instance *i = ctx.frontend->get_active())
 			{
@@ -288,10 +290,10 @@ namespace micro_profiler
 
 
 		window_activate::window_activate()
-			: integration_command(cmdidWindowActivateDynamic, true)
+			: global_command(cmdidWindowActivateDynamic, true)
 		{	}
 
-		bool window_activate::query_state(const context &ctx, unsigned item, unsigned &state) const
+		bool window_activate::query_state(const context_type &ctx, unsigned item, unsigned &state) const
 		{
 			if (item >= ctx.frontend->instances_count())
 				return false;
@@ -300,13 +302,13 @@ namespace micro_profiler
 			return true;
 		}
 
-		bool window_activate::get_name(const context &ctx, unsigned item, std::wstring &name) const
+		bool window_activate::get_name(const context_type &ctx, unsigned item, std::wstring &name) const
 		{
 			const frontend_manager::instance *i = ctx.frontend->get_instance(item);
 			return i ? name = *i->executable, true : false;
 		}
 
-		void window_activate::exec(context &ctx, unsigned item)
+		void window_activate::exec(context_type &ctx, unsigned item)
 		{
 			if (const frontend_manager::instance *i = ctx.frontend->get_instance(item))
 				i->ui->activate();
@@ -314,62 +316,31 @@ namespace micro_profiler
 
 
 		close_all::close_all()
-			: integration_command(cmdidCloseAll)
+			: global_command(cmdidCloseAll)
 		{	}
 
-		bool close_all::query_state(const context &ctx, unsigned /*item*/, unsigned &state) const
+		bool close_all::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			state = (ctx.frontend->instances_count() ? enabled : 0 ) | visible | supported;
 			return true;
 		}
 
-		void close_all::exec(context &ctx, unsigned /*item*/)
+		void close_all::exec(context_type &ctx, unsigned /*item*/)
 		{	ctx.frontend->close_all();	}
 
 
-		clear_instance::clear_instance()
-			: integration_command(cmdidClearStatistics)
+		support_developer::support_developer()
+			: global_command(cmdidSupportDeveloper)
 		{	}
 
-		bool clear_instance::query_state(const context &/*ctx*/, unsigned /*item*/, unsigned &state) const
+		bool support_developer::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{	return state = enabled | visible | supported, true;	}
 
-		void clear_instance::exec(context &ctx, unsigned /*item*/)
+		void support_developer::exec(context_type &ctx, unsigned /*item*/)
 		{
-			if (const frontend_manager::instance *i = ctx.frontend->get_active())
-				i->model->clear();
+			SupportDevDialog dlg;
+
+			dlg.DoModal(get_frame_hwnd(ctx.shell));
 		}
-
-
-		copy_instance::copy_instance()
-			: integration_command(cmdidCopyStatistics)
-		{	}
-
-		bool copy_instance::query_state(const context &/*ctx*/, unsigned /*item*/, unsigned &state) const
-		{	return state = enabled | visible | supported, true;	}
-
-		void copy_instance::exec(context &ctx, unsigned /*item*/)
-		{
-			if (const frontend_manager::instance *i = ctx.frontend->get_active())
-			{
-				wstring result;
-
-				i->model->print(result);
-				if (::OpenClipboard(NULL))
-				{
-					if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(wchar_t)))
-					{
-						wchar_t *gtext_memory = static_cast<wchar_t *>(::GlobalLock(gtext));
-
-						copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
-						::GlobalUnlock(gtext_memory);
-						::EmptyClipboard();
-						::SetClipboardData(CF_UNICODETEXT, gtext);
-					}
-					::CloseClipboard();
-				}
-			}
-		}
-
 	}
 }

@@ -131,7 +131,7 @@ namespace micro_profiler
 
 		statistics_bridge b(*collector, factory, image_load_queue);
 		shared_ptr<void> analyzer_timer(create_waitable_timer(10, &analyze, &b));
-		shared_ptr<void> sender_timer(create_waitable_timer(50, &update, &b));
+		shared_ptr<void> sender_timer(create_waitable_timer(67, &update, &b));
 
 		while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(exit_event.get(), INFINITE, TRUE))
 		{	}

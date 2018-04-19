@@ -32,6 +32,7 @@ namespace micro_profiler
 	public:
 		enum { supported = 0x01, enabled = 0x02, visible = 0x04, checked = 0x08 };
 		typedef std::shared_ptr<command> ptr;
+		typedef ContextT context_type;
 
 	public:
 		command(int id, bool is_group = false);

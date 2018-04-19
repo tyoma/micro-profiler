@@ -55,12 +55,14 @@
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
     <ClCompile Include="frontend\tables_ui.cpp" />
     <ClCompile Include="module\main.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\icon-ids.h" />
+    <ClInclude Include="visualstudio\vs-extension\commands-instance.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
     <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
@@ -93,9 +95,9 @@
     <ClInclude Include="setup\environment.h" />
     <ClInclude Include="visualstudio\command-target.h" />
     <ClInclude Include="visualstudio\command.h" />
-    <ClInclude Include="visualstudio\vs-extension\commands.h" />
+    <ClInclude Include="visualstudio\vs-extension\commands-global.h" />
     <ClInclude Include="visualstudio\dispatch.h" />
-    <ClCompile Include="visualstudio\vs-extension\commands.cpp">
+    <ClCompile Include="visualstudio\vs-extension\commands-global.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -110,7 +112,6 @@
       <SubType>Designer</SubType>
     </CustomBuild>
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
-    <ClInclude Include="visualstudio\vs-extension\guids.h" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>

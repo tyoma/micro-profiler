@@ -18,7 +18,8 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "commands.h"
+#include "commands-global.h"
+#include "command-ids.h"
 #include "vs-pane.h"
 
 #include <frontend/constants.h>
@@ -29,10 +30,8 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <dte.h>
 #include <vsshell.h>
-
-#include <InitGuid.h>
-#include "guids.h"
 
 using namespace std;
 using namespace placeholders;
@@ -43,30 +42,32 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			integration_command::ptr g_commands[] = {
-				integration_command::ptr(new toggle_profiling),
-				integration_command::ptr(new remove_profiling_support),
+			extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
+			extern const GUID c_guidGlobalCmdSet = guidGlobalCmdSet;
+			extern const GUID UICONTEXT_VCProject = { 0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 } };
 
-				integration_command::ptr(new open_statistics),
-				integration_command::ptr(new save_statistics),
-				integration_command::ptr(new window_activate),
-				integration_command::ptr(new close_all),
+			global_command::ptr g_commands[] = {
+				global_command::ptr(new toggle_profiling),
+				global_command::ptr(new remove_profiling_support),
 
-				integration_command::ptr(new clear_instance),
-				integration_command::ptr(new copy_instance),
+				global_command::ptr(new open_statistics),
+				global_command::ptr(new save_statistics),
+				global_command::ptr(new window_activate),
+				global_command::ptr(new close_all),
+
+				global_command::ptr(new support_developer),
 			};
 		}
 
 
 		class profiler_package : public CComObjectRootEx<CComSingleThreadModel>,
-			public CComCoClass<profiler_package, &CLSID_MicroProfilerPackage>,
+			public CComCoClass<profiler_package, &c_guidMicroProfilerPkg>,
 			public IVsPackage,
-			public CommandTarget<context, &CLSID_MicroProfilerCmdSet>
+			public CommandTarget<global_context, &c_guidGlobalCmdSet>
 		{
 		public:
 			profiler_package()
-				: CommandTarget<context, &CLSID_MicroProfilerCmdSet>(g_commands, g_commands + _countof(g_commands)),
-					_next_tool_id(0)
+				: command_target_type(g_commands, g_commands + _countof(g_commands)), _next_tool_id(0)
 			{	}
 
 		public:
@@ -111,21 +112,20 @@ namespace micro_profiler
 			{	return E_NOTIMPL;	}
 
 		private:
-			virtual context get_context()
+			virtual global_context get_context()
 			{
-				struct __declspec(uuid("04a72314-32e9-48e2-9b87-a63603454f3e")) _DTE;
 				IDispatchPtr dte;
 
 				_service_provider->QueryService(__uuidof(_DTE), &dte);
 				if (dte)
 					if (IDispatchPtr selection = dispatch(dte).get(L"SelectedItems"))
 						if (dispatch(selection).get(L"Count") == 1)
-							return context(dispatch(selection)[1].get(L"Project"), _frontend_manager, _shell);
-				return context(dispatch(IDispatchPtr()), _frontend_manager, _shell);
+							return global_context(dispatch(selection)[1].get(L"Project"), _frontend_manager, _shell);
+				return global_context(dispatch(IDispatchPtr()), _frontend_manager, _shell);
 			}
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const wstring &executable)
-			{	return micro_profiler::create_ui(*_shell, _next_tool_id++, model, executable);	}
+			{	return integration::create_ui(*_shell, _next_tool_id++, model, executable);	}
 
 		private:
 			CComPtr<IServiceProvider> _service_provider;
@@ -134,6 +134,6 @@ namespace micro_profiler
 			unsigned _next_tool_id;
 		};
 
-		OBJECT_ENTRY_AUTO(CLSID_MicroProfilerPackage, profiler_package);
+		OBJECT_ENTRY_AUTO(c_guidMicroProfilerPkg, profiler_package);
 	}
 }

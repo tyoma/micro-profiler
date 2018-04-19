@@ -32,6 +32,9 @@ namespace micro_profiler
 	class CommandTarget : public IOleCommandTarget
 	{
 	protected:
+		typedef CommandTarget<ContextT, CommandSetID> command_target_type;
+
+	protected:
 		template <typename IteratorT>
 		CommandTarget(IteratorT begin, IteratorT end);
 

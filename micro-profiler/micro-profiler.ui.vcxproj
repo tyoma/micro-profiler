@@ -51,9 +51,7 @@
       <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
       <SubType>Designer</SubType>
     </CustomBuild>
-    <None Include="_generated\commands.cto" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
-    <ClInclude Include="visualstudio\vs-extension\guids.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

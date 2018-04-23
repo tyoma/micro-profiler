@@ -1,6 +1,6 @@
 #include <frontend/symbol_resolver.h>
 
-#include "Helpers.h"
+#include <test-helpers/helpers.h>
 
 #include <ut/assert.h>
 #include <ut/test.h>

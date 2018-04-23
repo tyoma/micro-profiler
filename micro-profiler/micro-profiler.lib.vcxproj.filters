@@ -13,9 +13,6 @@
     <ClCompile Include="collector\system.cpp">
       <Filter>collector</Filter>
     </ClCompile>
-    <ClCompile Include="common\formatting.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
     <ClCompile Include="collector\analyzer.cpp">
       <Filter>collector</Filter>
     </ClCompile>
@@ -28,20 +25,11 @@
     <ClCompile Include="frontend\columns_model.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="common\registry_configuration.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
     <ClCompile Include="ipc\windows\ipc_client.cpp">
       <Filter>ipc\windows</Filter>
     </ClCompile>
     <ClCompile Include="ipc\windows\ipc_server.cpp">
       <Filter>ipc\windows</Filter>
-    </ClCompile>
-    <ClCompile Include="common\module.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\string.cpp">
-      <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="frontend\frontend_manager_impl.cpp">
       <Filter>frontend</Filter>
@@ -72,15 +60,6 @@
     <ClInclude Include="collector\system.h">
       <Filter>collector</Filter>
     </ClInclude>
-    <ClInclude Include="common\formatting.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\pod_vector.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\primitives.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="collector\statistics_bridge.h">
       <Filter>collector</Filter>
     </ClInclude>
@@ -89,9 +68,6 @@
     </ClInclude>
     <ClInclude Include="frontend\columns_model.h">
       <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="common\configuration.h">
-      <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="ipc\client.h">
       <Filter>ipc</Filter>
@@ -102,32 +78,17 @@
     <ClInclude Include="ipc\windows\common.h">
       <Filter>ipc\windows</Filter>
     </ClInclude>
-    <ClInclude Include="common\serialization.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="frontend\statistics_model.h">
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="frontend\ordered_view.h">
       <Filter>frontend</Filter>
     </ClInclude>
-    <ClInclude Include="common\protocol.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\module.h">
-      <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="common\path.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="frontend\primitives.h">
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="collector\primitives.h">
       <Filter>collector</Filter>
-    </ClInclude>
-    <ClInclude Include="common\string.h">
-      <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="frontend\frontend_manager.h">
       <Filter>frontend</Filter>
@@ -141,9 +102,6 @@
     <ClInclude Include="frontend\frontend.h">
       <Filter>frontend</Filter>
     </ClInclude>
-    <ClInclude Include="common\types.h">
-      <Filter>common</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="frontend">
@@ -151,9 +109,6 @@
     </Filter>
     <Filter Include="collector">
       <UniqueIdentifier>{402cd3fa-9bdc-414c-b3d7-961e631116e0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="common">
-      <UniqueIdentifier>{6be9edac-94ee-4755-82d2-c219e37ae903}</UniqueIdentifier>
     </Filter>
     <Filter Include="ipc">
       <UniqueIdentifier>{271f7b61-4950-4cbb-9f20-19c8d75240ba}</UniqueIdentifier>

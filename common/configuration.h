@@ -18,23 +18,26 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "module.h"
+#pragma once
 
-#include <windows.h>
-
-using namespace std;
+#include <memory>
+#include <string>
 
 namespace micro_profiler
 {
-	module_info get_module_info(const void *address)
+	struct hive
 	{
-		HMODULE load_address = 0;
-		wchar_t path[MAX_PATH + 1] = { };
+		virtual ~hive() { }
 
-		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &load_address);
-		::GetModuleFileNameW(load_address, path, sizeof(path));
-		::FreeLibrary(load_address);
-		module_info info = { reinterpret_cast<size_t>(load_address), path };
-		return info;
-	}
+		virtual std::shared_ptr<hive> create(const char *name) = 0;
+		virtual std::shared_ptr<const hive> open(const char *name) const = 0;
+
+		virtual void store(const char *name, int value) = 0;
+		virtual void store(const char *name, const wchar_t *value) = 0;
+
+		virtual bool load(const char *name, int &value) const = 0;
+		virtual bool load(const char *name, std::wstring &value) const = 0;
+
+		static std::shared_ptr<hive> user_settings(const char *path);
+	};
 }

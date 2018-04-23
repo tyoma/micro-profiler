@@ -5,7 +5,7 @@
 #include <frontend/function_list.h>
 #include <frontend/symbol_resolver.h>
 
-#include "../Helpers.h"
+#include <test-helpers/helpers.h>
 
 #include <algorithm>
 #include <strmd/serializer.h>

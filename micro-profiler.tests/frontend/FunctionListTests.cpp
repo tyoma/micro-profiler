@@ -1,6 +1,6 @@
 #include <frontend/function_list.h>
 
-#include "../Helpers.h"
+#include <test-helpers/helpers.h>
 
 #include <common/serialization.h>
 #include <frontend/symbol_resolver.h>

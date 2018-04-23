@@ -3,8 +3,6 @@
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
-    <ClCompile Include="Helpers.cpp" />
-    <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="frontend\OrderedViewTests.cpp">
@@ -13,7 +11,6 @@
     <ClCompile Include="frontend\FunctionListTests.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="TextFormattingServicesTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
     <ClCompile Include="Mockups.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
@@ -25,16 +22,15 @@
     </ClCompile>
     <ClCompile Include="IPCClientServerTests.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="integration\CommandTargetTests.cpp">
       <Filter>integration</Filter>
     </ClCompile>
     <ClCompile Include="frontend\FrontendManagerTests.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="SerializationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Helpers.h" />
     <ClInclude Include="Mockups.h" />
     <ClInclude Include="TracedFunctions.h" />
   </ItemGroup>

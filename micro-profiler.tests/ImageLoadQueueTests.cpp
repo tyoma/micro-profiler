@@ -1,6 +1,6 @@
 #include <collector/statistics_bridge.h>
 
-#include "Helpers.h"
+#include <test-helpers/helpers.h>
 
 #include <algorithm>
 #include <memory>

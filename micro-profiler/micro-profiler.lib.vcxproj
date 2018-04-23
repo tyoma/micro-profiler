@@ -38,6 +38,18 @@
     <Lib>
       <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
     </Lib>
+    <ProjectReference>
+      <LinkLibraryDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkLibraryDependencies>
+    </ProjectReference>
+    <ProjectReference>
+      <LinkLibraryDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</LinkLibraryDependencies>
+    </ProjectReference>
+    <ProjectReference>
+      <LinkLibraryDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkLibraryDependencies>
+    </ProjectReference>
+    <ProjectReference>
+      <LinkLibraryDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="collector\analyzer.cpp" />
@@ -57,12 +69,6 @@
     <ClCompile Include="collector\system.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="common\formatting.cpp" />
-    <ClCompile Include="common\module.cpp" />
-    <ClCompile Include="common\registry_configuration.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
-    <ClCompile Include="common\string.cpp" />
     <ClCompile Include="frontend\frontend.cpp" />
     <ClCompile Include="frontend\frontend_manager.cpp" />
     <ClCompile Include="frontend\frontend_manager_impl.cpp" />
@@ -87,20 +93,10 @@
     <ClInclude Include="collector\primitives.h" />
     <ClInclude Include="collector\statistics_bridge.h" />
     <ClInclude Include="collector\system.h" />
-    <ClInclude Include="common\configuration.h" />
-    <ClInclude Include="common\path.h" />
-    <ClInclude Include="common\formatting.h" />
-    <ClInclude Include="common\module.h" />
-    <ClInclude Include="common\protocol.h" />
-    <ClInclude Include="common\string.h" />
-    <ClInclude Include="common\types.h" />
     <ClInclude Include="frontend\frontend.h" />
     <ClInclude Include="frontend\frontend_manager.h" />
     <ClInclude Include="frontend\frontend_manager_impl.h" />
     <ClInclude Include="frontend\ordered_view.h" />
-    <ClInclude Include="common\pod_vector.h" />
-    <ClInclude Include="common\primitives.h" />
-    <ClInclude Include="common\serialization.h" />
     <ClInclude Include="frontend\function_list.h" />
     <ClInclude Include="frontend\columns_model.h" />
     <ClInclude Include="frontend\primitives.h" />
@@ -111,8 +107,8 @@
     <ClInclude Include="ipc\server.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
-      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
+    <ProjectReference Include="..\common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libraries\wpl\ui\src\ui.vcxproj">
       <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>

@@ -1,7 +1,7 @@
 #include <ipc/client.h>
 #include <ipc/server.h>
 
-#include "Helpers.h"
+#include <test-helpers/helpers.h>
 
 #include <collector/system.h>
 #include <deque>

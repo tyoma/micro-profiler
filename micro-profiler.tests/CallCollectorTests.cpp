@@ -1,7 +1,7 @@
 #include <collector/calls_collector.h>
 #include <common/primitives.h>
 
-#include "Helpers.h"
+#include <test-helpers/helpers.h>
 #include "TracedFunctions.h"
 
 #include <vector>
@@ -87,7 +87,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_false(a.collected.empty());
-				assert_equal(this_thread::get_id(), a.collected[0].first);
+				assert_equal(this_thread::open()->get_id(), a.collected[0].first);
 				assert_equal(2u, a.collected[0].second.size());
 				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
 				assert_equal(&traced::sleep_20, (void*)(reinterpret_cast<uintptr_t>(a.collected[0].second[0].callee) - 5));
@@ -161,7 +161,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_false(a.collected.empty());
-				assert_equal(this_thread::get_id(), a.collected[0].first);
+				assert_equal(this_thread::open()->get_id(), a.collected[0].first);
 				assert_equal(4u, a.collected[0].second.size());
 				assert_is_true(a.collected[0].second[0].timestamp < a.collected[0].second[1].timestamp);
 				assert_is_true(a.collected[0].second[1].timestamp < a.collected[0].second[2].timestamp);

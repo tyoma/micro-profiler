@@ -1,6 +1,6 @@
 #include <collector/analyzer.h>
 
-#include "Helpers.h"
+#include <test-helpers/helpers.h>
 
 #include <map>
 #include <ut/assert.h>

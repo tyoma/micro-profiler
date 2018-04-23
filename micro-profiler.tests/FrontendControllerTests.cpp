@@ -2,7 +2,7 @@
 #include <collector/frontend_controller.h>
 #include <entry.h>
 
-#include "Helpers.h"
+#include <test-helpers/helpers.h>
 #include "Mockups.h"
 
 #include <ut/assert.h>
@@ -160,7 +160,7 @@ namespace micro_profiler
 				initialized.wait();
 
 				assert_not_null(hthread);
-				assert_not_equal(this_thread::get_id(), hthread->get_id());
+				assert_not_equal(this_thread::open()->get_id(), hthread->get_id());
 			}
 
 

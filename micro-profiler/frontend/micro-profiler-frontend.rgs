@@ -1,0 +1,23 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {0ED7654C-DE8A-4964-9661-0B0C391BE15E} = s 'ProfilerSink Class'
+		{
+			val AppID = s '{5772E3BD-4C40-450C-8F79-A5052A3CC346}'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			Version = s '1.0'
+		}
+	}
+
+	NoRemove AppID
+	{
+		ForceRemove {5772E3BD-4C40-450C-8F79-A5052A3CC346} = s 'MicroProfiler Frontend Application'
+		{
+			val DllSurrogate = s ''
+		}
+	}
+}

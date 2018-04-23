@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations" Condition="'$(VisualStudioVersion)'=='10.0'">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{15AD9007-29B9-462F-B7BE-A433B6E83EC9}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)build.props\platform.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(SolutionDir)build.props\config.props" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ItemDefinitionGroup>
+    <Lib>
+      <AdditionalDependencies>dbghelp.lib</AdditionalDependencies>
+    </Lib>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="frontend.cpp" />
+    <ClCompile Include="frontend_manager.cpp" />
+    <ClCompile Include="frontend_manager_impl.cpp" />
+    <ClCompile Include="function_list.cpp" />
+    <ClCompile Include="columns_model.cpp" />
+    <ClCompile Include="symbol_resolver.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <DisableSpecificWarnings>4091</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\frontend.h" />
+    <ClInclude Include="..\frontend_manager.h" />
+    <ClInclude Include="..\frontend_manager_impl.h" />
+    <ClInclude Include="..\ordered_view.h" />
+    <ClInclude Include="..\function_list.h" />
+    <ClInclude Include="..\columns_model.h" />
+    <ClInclude Include="..\primitives.h" />
+    <ClInclude Include="..\statistics_model.h" />
+    <ClInclude Include="..\symbol_resolver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

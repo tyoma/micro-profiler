@@ -13,6 +13,9 @@
     <ClCompile Include="registry_configuration.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="constants.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -30,5 +33,6 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />
+    <ClInclude Include="..\constants.h" />
   </ItemGroup>
 </Project>

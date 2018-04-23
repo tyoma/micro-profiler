@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "frontend_manager.h"
+#include <frontend/frontend_manager.h>
 
 #include <resources/resource.h>
 

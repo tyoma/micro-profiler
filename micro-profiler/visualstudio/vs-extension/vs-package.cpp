@@ -22,7 +22,7 @@
 #include "command-ids.h"
 #include "vs-pane.h"
 
-#include <frontend/constants.h>
+#include <common/constants.h>
 #include <frontend/frontend_manager.h>
 #include <visualstudio/command-target.h>
 #include <resources/resource.h>
@@ -71,7 +71,7 @@ namespace micro_profiler
 			{	}
 
 		public:
-			DECLARE_REGISTRY_RESOURCEID(IDR_PROFILEREXT)
+			DECLARE_NO_REGISTRY()
 			DECLARE_NOT_AGGREGATABLE(profiler_package)
 
 			BEGIN_COM_MAP(profiler_package)

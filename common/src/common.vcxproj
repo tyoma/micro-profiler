@@ -34,7 +34,13 @@
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="constants.cpp" />
     <ClCompile Include="formatting.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="registry_configuration.cpp" />
@@ -47,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\configuration.h" />
+    <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\formatting.h" />
     <ClInclude Include="..\module.h" />
     <ClInclude Include="..\path.h" />

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="analyzer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="calls_collector.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="channel_client.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend_controller.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="statistics_bridge.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="system.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{5b266d6a-4d52-49ec-a6e7-6fcd2ba6732e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="hooks.asm">
+      <Filter>src</Filter>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\analyzer.h" />
+    <ClInclude Include="..\calls_collector.h" />
+    <ClInclude Include="..\channel_client.h" />
+    <ClInclude Include="..\frontend_controller.h" />
+    <ClInclude Include="..\primitives.h" />
+    <ClInclude Include="..\statistics_bridge.h" />
+    <ClInclude Include="..\system.h" />
+  </ItemGroup>
+</Project>

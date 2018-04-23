@@ -22,8 +22,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="license.rtf" />
-    <Content Include="platform-dependent.wxi" />
-    <Content Include="sdk.wxi" />
     <Content Include="vspackage.wxi" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="columns_model.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend_manager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend_manager_impl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="function_list.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol_resolver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\frontend.h" />
+    <ClInclude Include="..\frontend_manager.h" />
+    <ClInclude Include="..\frontend_manager_impl.h" />
+    <ClInclude Include="..\ordered_view.h" />
+    <ClInclude Include="..\function_list.h" />
+    <ClInclude Include="..\columns_model.h" />
+    <ClInclude Include="..\primitives.h" />
+    <ClInclude Include="..\statistics_model.h" />
+    <ClInclude Include="..\symbol_resolver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{363e13f7-9874-4068-beb4-1bc14f8253c2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

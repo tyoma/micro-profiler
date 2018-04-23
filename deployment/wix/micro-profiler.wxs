@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="!(bind.FileVersion.micro_profiler.dll_$(var.Platform))" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
+	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="!(bind.FileVersion.fileCollectorDLL_x86)" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" />
 		<Media Id="1" Cabinet="micro_profiler.cab" EmbedCab="yes"/>
 		<Icon Id="icoInstaller" SourceFile="../../micro-profiler/resources/appicon.ico" />
@@ -33,33 +33,26 @@
 		</Property>
 
 		<!-- Features -->
-		<Feature Id="featTracer" Title="Call Tracer Module" Description="Enables collection and analysis of the calls an application makes.">
-			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
-			<ComponentRef Id="compStubTracerDLL_$(var.Platform)" />
+		<Feature Id="featCollector_x86" Title="Call Tracer Module (x86)" Description="Enables collection and analysis of the calls an application makes.">
+			<ComponentRef Id="compCollectorDLL_x86" />
 			<ComponentRef Id="compSystemEnvironmentSetup" />
 			<ComponentRef Id="compUserEnvironmentSetup" />
 		</Feature>
-		<Feature Id="featTracerSDK" Title="Call Tracer SDK" Description="Provides simplistic tools to add profiling support to a VisualStudio project.">
-			<ComponentRef Id="compTracerSDK" />
+		<Feature Id="featCollectorSDK" Title="Call Tracer SDK" Description="Provides simplistic tools to add profiling support to a VisualStudio project.">
+			<ComponentRef Id="compCollectorSDK" />
 		</Feature>
 		<Feature Id="featFrontend" Title="Frontend UI" Description="Installs and registers the Frontend UI that displays realtime performance statistics.">
-			<ComponentRef Id="compAllInOneDLL_$(var.Platform)" />
-			<ComponentRef Id="compFrontendRegistration_$(var.Platform)" />
+			<ComponentRef Id="compFrontend" />
 		</Feature>
 		<?if $(var.Platform) = "x64"?>
-			<Feature Id="featTracer_x86" Title="Call Tracer Module (x86)">
-				<ComponentRef Id="compAllInOneDLL_x86" />
-				<ComponentRef Id="compStubTracerDLL_x86" />
+			<Feature Id="featCollector_x64" Title="Call Tracer Module (x64)">
+				<ComponentRef Id="compCollectorDLL_x64" />
 				<ComponentRef Id="compSystemEnvironmentSetup" />
 				<ComponentRef Id="compUserEnvironmentSetup" />
 			</Feature>
-			<Feature Id="featFrontend_x86" Title="Frontend UI (x86)">
-				<ComponentRef Id="compAllInOneDLL_x86" />
-				<ComponentRef Id="compFrontendRegistration_x86" />
-			</Feature>
 		<?endif?>
 		<Feature Id="featVSIntegration" Title="VisualStudio Integration" Description="Integrates 'Enable Profiling' / 'Remove Profiling Support' menus to the Project Context Menu. Intergation is installed for versions 7.1 to 11.0.">
-			<ComponentRef Id="compAllInOneDLL_x86" />
+			<ComponentRef Id="compVSPackage" />
 			<ComponentRef Id="compVSPackageRegistration_7.1" />
 			<ComponentRef Id="compVSPackageRegistration_8.0" />
 			<ComponentRef Id="compVSPackageRegistration_9.0" />
@@ -87,9 +80,9 @@
 
 		<!-- CustomActions -->
 		<?if $(var.Platform) = "x64" ?>
-		<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />
 		<?elseif $(var.Platform) = "x86" ?>
-		<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
+			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
 		<?endif?>
 		<CustomAction Id="caSetupPackagesVS2003" Property="DEVENV_EXE_7.1" ExeCommand="/setup" Impersonate="no" Execute="deferred" />
 		<CustomAction Id="caSetupPackagesVS2005" Property="DEVENV_EXE_8.0" ExeCommand="/setup" Impersonate="no" Execute="deferred" />
@@ -99,68 +92,51 @@
 		<CustomAction Id="caSetupPackagesVS2013" Property="DEVENV_EXE_12.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
 		<CustomAction Id="caSetupPackagesVS2014" Property="DEVENV_EXE_14.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
 
-		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="$(var.SOURCEDIR)">
-			<?if $(var.Platform) = "x64"?>
-				<Directory Id="x86" Name="x86">
-					<?include sdk.wxi ?>
-				</Directory>
-				<?else?>
-				<?include sdk.wxi ?>
-			<?endif?>
-		</Directory>
+		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="$(var.SOURCEDIR)"/>
 
-		<?if $(var.Platform) = "x64"?>
-			<?define PATHAPPEND="[TARGETDIR];[x86]"?>
-		<?elseif $(var.Platform) = "x86"?>
-			<?define PATHAPPEND="[TARGETDIR]"?>
-		<?endif?>
+		<Component Id="compCollectorSDK" Guid="FA5EE4E6-A12A-4697-88EB-FC1C5CE98D18" Directory="TARGETDIR" KeyPath="yes">
+			<File Id="fileInitializerCPP" Source="$(var.SOURCEDIR)/micro-profiler.initializer.cpp" Vital="yes"/>
+			<File Id="fileEntryH" Source="$(var.SOURCEDIR)/entry.h" Vital="yes"/>
+			<File Id="fileImpLib_x86" Source="$(var.SOURCEDIRX86)/micro-profiler_Win32.lib" Vital="yes"/>
+			<?if $(var.Platform) = "x64"?>
+				<File Id="fileImpLib_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.lib" Vital="yes"/>
+			<?endif?>
+		</Component>
+
 
 		<!-- Components -->
 		<Component Id="compSystemEnvironmentSetup" Directory="TARGETDIR" Guid="52DE93FD-B13F-4153-8F5F-58EADD7B2D95">
 			<Condition><![CDATA[ALLUSERS]]></Condition>
-			<Environment Id="env_path_sys" Name="Path" Value="$(var.PATHAPPEND)" Part="last" Action="set" System="yes"/>
+			<Environment Id="env_path_sys" Name="Path" Value="TARGETDIR" Part="last" Action="set" System="yes"/>
 		</Component>
 
 		<Component Id="compUserEnvironmentSetup" Directory="TARGETDIR" Guid="7EA8BA3A-A6F2-4468-8C94-A016AC198A3F">
 			<Condition><![CDATA[NOT ALLUSERS]]></Condition>
-			<Environment Id="env_path_usr" Name="Path" Value="$(var.PATHAPPEND)" Part="last" Action="set" System="no"/>
+			<Environment Id="env_path_usr" Name="Path" Value="TARGETDIR" Part="last" Action="set" System="no"/>
 		</Component>
 
-		<?define SOURCEDIRX=$(var.SOURCEDIR)?>
-		<?define TARGETDIRX="TARGETDIR"?>
+		<Component Id="compFrontend" Directory="TARGETDIR" Guid="BC5669B7-BF54-40BB-A169-E20B16357D45" KeyPath="yes">
+			<File Id="fileFrontendDLL" Source="$(var.SOURCEDIR)/micro-profiler_frontend.dll" Vital="yes" />
+			<AppId Id="5772E3BD-4C40-450C-8F79-A5052A3CC346" DllSurrogate="" Description="MicroProfiler Frontend Application">
+				<Class Id="0ED7654C-DE8A-4964-9661-0B0C391BE15E" Description="MicroProfiler Frontend Class" Context="InprocServer32" ThreadingModel="apartment" ForeignServer="[#fileFrontendDLL]" Version="1.0"/>
+			</AppId>
+		</Component>
+
+		<Component Id="compVSPackage" Directory="TARGETDIR" Guid="57A2000C-A414-4F8F-A3A3-92DA925C6D11" KeyPath="yes">
+			<File Id="fileVSPackage" Source="$(var.SOURCEDIRX86)/micro-profiler_frontend.dll" Name="micro-profiler_vspackage.dll" Vital="yes" />
+		</Component>
 
 		<?if $(var.Platform) = "x64"?>
-			<?define ISX64="yes"?>
-			<?define PLATFORMSELECTOR="x64"?>
-			<?define ALLINONEDLLGUID="47674731-7CDF-4D96-ABE6-BC85BCA68161"?>
-			<?define STUBTRACERDLLGUID="7FB94FB2-6CB4-4920-BDC5-22662C58FFCF"?>
-			<?define FRONTENDREGISTRYGUID="BC5669B7-BF54-40BB-A169-E20B16357D45"?>
-			<?define ADDINOBJECTREGISTRYGUID="57A2000C-A414-4F8F-A3A3-92DA925C6D11"?>
-
-			<?include platform-dependent.wxi?>
-
-			<?undef ISX64 ?>
-			<?undef PLATFORMSELECTOR ?>
-			<?undef ALLINONEDLLGUID ?>
-			<?undef STUBTRACERDLLGUID ?>
-			<?undef FRONTENDREGISTRYGUID ?>
-			<?undef ADDINOBJECTREGISTRYGUID ?>
-
-			<?undef SOURCEDIRX ?>
-			<?define SOURCEDIRX=$(var.SOURCEDIRX86)?>
-			<?undef TARGETDIRX ?>
-			<?define TARGETDIRX="x86"?>
+			<Component Id="compCollectorDLL_x64" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes" Directory="TARGETDIR" Win64="yes">
+				<File Id="fileCollectorDLL_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.dll" Vital="yes" />
+				<File Id="fileCollectorStubDLL_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.stub.dll" Vital="yes" />
+			</Component>
 		<?endif?>
 
-		<?define ISX64="no"?>
-		<?define PLATFORMSELECTOR="x86"?>
-
-		<?define ALLINONEDLLGUID="4EC2E786-D232-4EDF-940E-EC18DFFFADBB"?>
-		<?define STUBTRACERDLLGUID="416B55ED-11D2-435E-A41D-7FC3B37336BC"?>
-		<?define FRONTENDREGISTRYGUID="39183037-8F73-400F-BD82-14014B9E5710"?>
-		<?define ADDINOBJECTREGISTRYGUID="12338CB1-814B-4530-A81E-2A9D46436D3D"?>
-		
-		<?include platform-dependent.wxi?>
+		<Component Id="compCollectorDLL_x86" Guid="4EC2E786-D232-4EDF-940E-EC18DFFFADBB" KeyPath="yes" Directory="TARGETDIR" Win64="no">
+			<File Id="fileCollectorDLL_x86" Source="$(var.SOURCEDIRX86)/micro-profiler_x86.dll" Vital="yes" />
+			<File Id="fileCollectorStubDLL_x86" Source="$(var.SOURCEDIRX86)/micro-profiler_x86.stub.dll" Vital="yes" />
+		</Component>
 
 		<?define VSVERSION="7.1"?>
 		<?include vspackage.wxi?>

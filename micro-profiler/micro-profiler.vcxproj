@@ -33,22 +33,19 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup>
-    <TargetName>$(ProjectName)_$(Platform2)</TargetName>
+    <TargetName>micro-profiler_frontend</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
-      <AdditionalDependencies>delayimp.lib;vsguids.lib</AdditionalDependencies>
-      <DelayLoadDLLs>dbghelp.dll;shell32.dll</DelayLoadDLLs>
+      <AdditionalDependencies>vsguids.lib</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <ImportLibrary>$(OutDir)$(ProjectName)_$(PlatformName).lib</ImportLibrary>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(IntDir)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="frontend\constants.cpp" />
     <ClCompile Include="frontend\file.cpp" />
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\stream.cpp" />
@@ -65,22 +62,17 @@
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
-    <None Include="visualstudio\addin\micro-profiler-addin.rgs" />
-    <None Include="frontend\micro-profiler-sink.rgs" />
+    <None Include="frontend\micro-profiler-frontend.rgs" />
     <None Include="module\micro-profiler.def" />
     <None Include="resources\appicon.ico" />
     <None Include="visualstudio\vs-extension\extension.vsixmanifest" />
     <Fix Include="visualstudio\vs-extension\extension.vsixmanifest" />
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
     <Fix Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
-    <None Include="visualstudio\vs-extension\vs-extension.rgs" />
-    <None Include="entry.h" />
-    <None Include="micro-profiler.initializer.cpp" />
-    <Content Include="entry.h;micro-profiler.initializer.cpp;logo.ico">
+    <Content Include="logo.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>true</Visible>
     </Content>
-    <ClInclude Include="frontend\constants.h" />
     <ClInclude Include="frontend\file.h" />
     <ClInclude Include="frontend\ProfilerMainDialog.h" />
     <ClInclude Include="frontend\stream.h" />
@@ -88,10 +80,6 @@
     <ClInclude Include="resources\resource.h" />
     <ResourceCompile Include="resources\micro-profiler-frontend.rc" />
     <ClCompile Include="setup\environment.cpp" />
-    <ClCompile Include="visualstudio\addin\ProfilerAddin.cpp">
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
     <ClInclude Include="setup\environment.h" />
     <ClInclude Include="visualstudio\command-target.h" />
     <ClInclude Include="visualstudio\command.h" />
@@ -117,14 +105,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libraries\wpl\mt\src\mt.vcxproj">
-      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
+    <ProjectReference Include="..\frontend\src\frontend.lib.vcxproj">
+      <Project>{15ad9007-29b9-462f-b7be-a433b6e83ec9}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libraries\wpl\ui\src\ui.vcxproj">
       <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>
-    </ProjectReference>
-    <ProjectReference Include="micro-profiler.lib.vcxproj">
-      <Project>{15ad9007-29b9-462f-b7be-a433b6e83ec9}</Project>
     </ProjectReference>
   </ItemGroup>
   <Target Name="CopyFixed" AfterTargets="Midl">

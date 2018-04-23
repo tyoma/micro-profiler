@@ -6,18 +6,18 @@
 			<RegistryKey Key="Packages">
 				<RegistryKey Key="{43a50861-7e04-4169-b47e-d4cffe1b3db8}">
 					<RegistryValue Value="MicroProfiler Integration Package" Type="string"/>
-					<RegistryValue Name="InprocServer32" Value="[#micro_profiler.dll_x86]" Type="string"/>
+					<RegistryValue Name="InprocServer32" Value="[#fileVSPackage]" Type="string"/>
 					<RegistryValue Name="ID" Value="1" Type="integer" />
-					<RegistryValue Name="ProductVersion" Value="1.1" Type="string" />
+					<RegistryValue Name="ProductVersion" Value="!(bind.FileVersion.fileVSPackage)" Type="string" />
 					<RegistryValue Name="ProductName" Value="MicroProfiler Integration for VisualStudio" Type="string" />
 					<RegistryValue Name="MinEdition" Value="standard" Type="string" />
 					<RegistryValue Name="CompanyName" Value="gevorkyan.org" Type="string" />
 				</RegistryKey>
 			</RegistryKey>
 			<RegistryKey Key="Menus">
-				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="[#micro_profiler.dll_x86], 1000, 1" Type="string" />
+				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="[#fileVSPackage], 1000, 1" Type="string" />
 			</RegistryKey>
-			<RegistryKey Key="AutoLoadPackages\{10534154-102D-46E2-ABA8-A6BFA25BA0BE}">
+			<RegistryKey Key="AutoLoadPackages\{ADFC4E64-0397-11D1-9F4E-00A0C911004F}">
 				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="0" Type="integer" />
 			</RegistryKey>
 			<RegistryKey Key="AutoLoadPackages\{F1536EF8-92EC-443C-9ED7-FDADF150DA82}">
@@ -26,9 +26,9 @@
 			<RegistryKey Key="InstalledProducts">
 				<RegistryKey Key="MicroProfiler">
 					<RegistryValue Value="MicroProfiler" Type="string" />
-					<RegistryValue Name="ProductDetails" Value="Realtime Instrumenting Profiler&#x0D;&#x0A;&#x0D;&#x0A;Please, submit your questions, issues and suggestions to http://code.google.com/p/micro-profiler/issues/list&#x0D;&#x0A;Copyright (c) 2011-2015 Artem Gevorkyan" Type="string" />
+					<RegistryValue Name="ProductDetails" Value="Realtime Instrumenting Profiler for Visual Studio&#x0D;&#x0A;&#x0D;&#x0A;Please, submit your questions, issues and suggestions to https://github.com/tyoma/micro-profiler/issues&#x0D;&#x0A;Copyright (c) 2011-2018 Artem Gevorkyan" Type="string" />
 					<RegistryValue Name="UseInterface" Value="0" Type="integer" />
-					<RegistryValue Name="PID" Value="!(bind.FileVersion.micro_profiler.dll_x86)" Type="string" />
+					<RegistryValue Name="PID" Value="!(bind.FileVersion.fileVSPackage)" Type="string" />
 				</RegistryKey>
 			</RegistryKey>
 		</RegistryKey>

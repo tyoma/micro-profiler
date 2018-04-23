@@ -51,6 +51,7 @@
       <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
       <SubType>Designer</SubType>
     </CustomBuild>
+    <ClInclude Include="resources\resource.h" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

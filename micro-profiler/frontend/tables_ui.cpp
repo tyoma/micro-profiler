@@ -1,9 +1,8 @@
 #include "tables_ui.h"
 
-#include "columns_model.h"
-#include "function_list.h"
-
 #include <common/configuration.h>
+#include <frontend/columns_model.h>
+#include <frontend/function_list.h>
 #include <windows.h>
 #include <wpl/ui/win32/controls.h>
 #include <commctrl.h>

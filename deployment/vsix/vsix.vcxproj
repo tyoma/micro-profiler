@@ -28,13 +28,14 @@
 		<TargetExt>.vsix</TargetExt>
 	</PropertyGroup>
 	<ItemGroup>
+		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_frontend.dll" />
 		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
 		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib" />
 		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
 		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
 		<None Include="*.json;*.xml" />
 		<None Include="$(BinDir)*.cpp;$(BinDir)*.h;$(BinDir)*.pkgdef;$(BinDir)*.vsixmanifest;$(BinDir)logo.ico"/>
-
+		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_frontend.dll" />
 		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
 		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib" />
 		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
@@ -56,12 +57,16 @@ mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
 		<ProjectReference Include="$(SolutionDir)micro-profiler\micro-profiler.vcxproj">
 			<Project>{d5d49128-2510-4a14-9a0f-9f8f0abad700}</Project>
 		</ProjectReference>
+		<ProjectReference Include="..\..\collector\src\collector.vcxproj">
+			<Project>{5edce420-14e9-46e6-b19e-e4ac3240fc94}</Project>
+		</ProjectReference>
 	</ItemGroup>
 	<Target Name="Compress" AfterTargets="Midl">
 		<Exec Command="mkzip &quot;%(Pack.Identity)&quot; &quot;$(IntDir)$(TargetName).zip&quot;"/>
 	</Target>
 	<Target Name="CompressAndReplace" AfterTargets="Compress">
 		<Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;
+			call sha256 hashmpxfrontend &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_frontend.dll&quot;
 			call sha256 hashmpx86 &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll&quot;
 			call sha256 hashmpx86lib &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib&quot;
 			call sha256 hashmpx64 &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll&quot;

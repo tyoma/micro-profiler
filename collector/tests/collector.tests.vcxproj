@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations" Condition="'$(VisualStudioVersion)'=='10.0'">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{EA61B516-201C-4AB0-93C4-D43248712764}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)build.props\platform.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
+  <PropertyGroup>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\test-helpers\test-helpers.vcxproj">
+      <Project>{3b56b4a3-f4f6-44ec-a7f5-e9045a3c3394}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\src\collector.lib.vcxproj">
+      <Project>{ed61e2d0-f586-4b4e-9ce6-bae8f03dbbc7}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AnalyzerTests.cpp" />
+    <ClCompile Include="CallCollectorTests.cpp" />
+    <ClCompile Include="FrontendControllerTests.cpp" />
+    <ClCompile Include="ImageLoadQueueTests.cpp" />
+    <ClCompile Include="Mockups.cpp" />
+    <ClCompile Include="SerializationTests.cpp" />
+    <ClCompile Include="ShadowStackTests.cpp" />
+    <ClCompile Include="StatisticsBridgeTests.cpp" />
+    <ClCompile Include="TracedFunctions.cpp">
+      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="entry.asm">
+      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Mockups.h" />
+    <ClInclude Include="TracedFunctions.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
+</Project>

@@ -20,11 +20,11 @@
 
 #include "ProfilerMainDialog.h"
 
-#include "function_list.h"
 #include "SupportDevDialog.h"
 #include "tables_ui.h"
 
 #include <common/configuration.h>
+#include <frontend/function_list.h>
 
 #include <algorithm>
 #include <atlstr.h>

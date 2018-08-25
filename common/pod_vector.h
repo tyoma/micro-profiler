@@ -30,16 +30,27 @@ namespace micro_profiler
 	class pod_vector
 	{
 	public:
+		typedef T *iterator;
+
+	public:
 		explicit pod_vector(size_t initial_capacity = 10000);
 		pod_vector(const pod_vector &other);
 		~pod_vector() throw();
 
 		void push_back(const T &element) throw();
+		void pop_back() throw();
+
 		template <typename InputIterator>
 		void append(InputIterator b, InputIterator e) throw();
 		void clear() throw();
 
+		iterator begin() throw();
+		iterator end() throw();
+
 		const T *data() const throw();
+		T &back() throw();
+
+		bool empty() const throw();
 		size_t size() const throw();
 		size_t byte_size() const throw();
 		size_t capacity() const throw();
@@ -85,6 +96,10 @@ namespace micro_profiler
 	}
 
 	template <typename T>
+	inline void pod_vector<T>::pop_back() throw()
+	{	--_end;	}
+
+	template <typename T>
 	template <typename InputIterator>
 	inline void pod_vector<T>::append(InputIterator b, InputIterator e) throw()
 	{
@@ -101,8 +116,24 @@ namespace micro_profiler
 	{	_end = _begin;	}
 
 	template <typename T>
+	inline typename pod_vector<T>::iterator pod_vector<T>::begin() throw()
+	{	return _begin;	}
+
+	template <typename T>
+	inline typename pod_vector<T>::iterator pod_vector<T>::end() throw()
+	{	return _end;	}
+
+	template <typename T>
 	inline const T *pod_vector<T>::data() const throw()
 	{	return _begin;	}
+
+	template <typename T>
+	inline T &pod_vector<T>::back() throw()
+	{	return *(_end - 1);	}
+
+	template <typename T>
+	inline bool pod_vector<T>::empty() const throw()
+	{	return _end == _begin;	}
 
 	template <typename T>
 	inline size_t pod_vector<T>::size() const throw()

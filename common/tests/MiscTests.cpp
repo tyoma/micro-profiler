@@ -46,6 +46,18 @@ namespace micro_profiler
 				assert_equal(0u, Bs.size());
 			}
 
+		
+			test( NewPodVectorIsEmpty )
+			{
+				// INIT / ACT
+				pod_vector<A> As;
+				pod_vector<B> Bs;
+
+				// ACT / ASSERT
+				assert_is_true(As.empty());
+				assert_is_true(Bs.empty());
+			}
+
 
 			test( NewPodVectorHasSpecifiedCapacity )
 			{
@@ -56,6 +68,18 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_equal(11u, As.capacity());
 				assert_equal(13u, Bs.capacity());
+			}
+
+
+			test( AppendedVectorIsNotEmpty )
+			{
+				// INIT / ACT
+				pod_vector<int> v;
+
+				v.push_back(1);
+
+				// ACT / ASSERT
+				assert_is_false(v.empty());
 			}
 
 
@@ -365,6 +389,130 @@ namespace micro_profiler
 				assert_equal(2112, *(v2.data() + 8));
 				assert_equal(9u, v2.capacity());
 			}
+
+
+			test( BackReturnsTheLastElementPushed )
+			{
+				// INIT
+				pod_vector<int> v1(2);
+				pod_vector<double> v2(3);
+
+				// ACT
+				v1.push_back(13);
+				v2.push_back(3.1);
+
+				// ACT / ASSERT
+				assert_equal(13, v1.back());
+				assert_equal(3.1, v2.back());
+
+				// ACT
+				v1.push_back(17);
+				v1.push_back(19);
+				v2.push_back(3);
+				v2.push_back(3.14);
+				v2.push_back(3.141);
+
+				// ACT / ASSERT
+				assert_equal(19, v1.back());
+				assert_equal(3.141, v2.back());
+			}
+
+
+			test( ElementsAreReadInReverseOrderWhenPopping )
+			{
+				// INIT
+				pod_vector<int> v(2);
+
+				v.push_back(13);
+				v.push_back(17);
+				v.push_back(19);
+
+				// ACT
+				v.pop_back();
+
+				// ASSERT
+				assert_equal(17, v.back());
+
+				// ACT
+				v.pop_back();
+
+				// ASSERT
+				assert_equal(13, v.back());
+
+				// ACT
+				v.pop_back();
+
+				// ASSERT
+				assert_is_true(v.empty());
+			}
+
+
+			test( ElementsCanBeAccessedUsingIterators )
+			{
+				// INIT
+				pod_vector<int> v1;
+				pod_vector<double> v2;
+
+				v1.push_back(13);
+				v1.push_back(17);
+
+				// INIT / ACT
+				pod_vector<int>::iterator i1 = v1.begin();
+
+				// ACT / ASSERT
+				assert_not_equal(v1.end(), i1);
+				assert_equal(13, *i1);
+				*i1 = 31;
+				assert_equal(31, *i1);
+
+				// ACT
+				++i1;
+
+				// ASSERT
+				assert_not_equal(v1.end(), i1);
+				assert_equal(17, *i1);
+
+				// ACT
+				++i1;
+
+				// ASSERT
+				assert_equal(v1.end(), i1);
+
+				// INIT
+				v2.push_back(1.0);
+				v2.push_back(1.01);
+				v2.push_back(11.011);
+
+				// INIT / ACT
+				pod_vector<double>::iterator i2 = v2.begin();
+
+				// ACT / ASSERT
+				assert_not_equal(v2.end(), i2);
+				assert_equal(1.0, *i2);
+
+				// ACT
+				++i2;
+
+				// ASSERT
+				assert_not_equal(v2.end(), i2);
+				assert_equal(1.01, *i2);
+
+				// ACT
+				++i2;
+
+				// ASSERT
+				assert_not_equal(v2.end(), i2);
+				assert_equal(11.011, *i2);
+				*i2 = 13.24;
+				assert_equal(13.24, *i2);
+
+				// ACT
+				++i2;
+
+				// ASSERT
+				assert_equal(v2.end(), i2);
+			}
+
 		end_test_suite
 
 

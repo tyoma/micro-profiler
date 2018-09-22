@@ -2,10 +2,6 @@
 	path = libraries/wpl
 	url = git@github.com:tyoma/wpl.git
 	branch = master
-[submodule "libraries/easy-addin"]
-	path = libraries/easy-addin
-	url = git@github.com:tyoma/easy-addin.git
-	branch = master
 [submodule "libraries/agge"]
 	path = libraries/agge
 	url = git@github.com:tyoma/agge.git

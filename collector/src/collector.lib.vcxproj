@@ -67,11 +67,6 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
-      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\channel_client.h" />

@@ -60,10 +60,5 @@
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\symbol_resolver.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
-      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

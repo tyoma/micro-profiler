@@ -55,6 +55,9 @@
     <ProjectReference Include="collector.lib.vcxproj">
       <Project>{ED61E2D0-F586-4B4E-9CE6-BAE8F03DBBC7}</Project>
     </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="collector.rc" />

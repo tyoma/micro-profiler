@@ -37,11 +37,11 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\test-helpers\test-helpers.vcxproj">
-      <Project>{3b56b4a3-f4f6-44ec-a7f5-e9045a3c3394}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\src\collector.lib.vcxproj">
       <Project>{ed61e2d0-f586-4b4e-9ce6-bae8f03dbbc7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

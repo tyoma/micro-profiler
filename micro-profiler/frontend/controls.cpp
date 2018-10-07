@@ -77,10 +77,8 @@ namespace micro_profiler
 				return previous(message, wparam, lparam);
 			}
 
-		protected:
-			HWND _hwnd;
-
 		private:
+			HWND _hwnd;
 			shared_ptr<window> _controller;
 		};
 
@@ -108,7 +106,7 @@ namespace micro_profiler
 		{
 		public:
 			link(const wchar_t *text, const function<void(const wstring &url)> &onclick)
-				: control(L"SysLink", text, 0x20), _onclick(onclick)
+				: control(L"SysLink", text, LWS_RIGHT), _onclick(onclick)
 			{	}
 
 		private:

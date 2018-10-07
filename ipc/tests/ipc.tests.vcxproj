@@ -32,11 +32,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)test-helpers\test-helpers.vcxproj">
-      <Project>{3b56b4a3-f4f6-44ec-a7f5-e9045a3c3394}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)libraries\wpl\src\wpl.mt\wpl.mt.vcxproj">
+      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

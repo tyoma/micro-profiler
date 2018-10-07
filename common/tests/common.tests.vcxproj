@@ -31,9 +31,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\test-helpers\test-helpers.vcxproj">
-      <Project>{3b56b4a3-f4f6-44ec-a7f5-e9045a3c3394}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\src\common.vcxproj">
       <Project>{69508827-452F-479E-A28F-AF300C5C1633}</Project>
     </ProjectReference>

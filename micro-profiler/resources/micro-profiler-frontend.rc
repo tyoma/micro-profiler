@@ -28,13 +28,10 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 IDD_PROFILER_MAIN DIALOGEX 0, 0, 414, 356
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "MicroProfiler"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Copy All",IDC_BTN_COPY_ALL,73,334,60,14
-    PUSHBUTTON      "Clear Statistics",IDC_BTN_CLEAR,7,334,60,14
-    CONTROL         "<a>Support Developer...</a>",IDC_SUPPORT_DEV,"SysLink",0x20 | WS_TABSTOP,310,337,96,11
 END
 
 IDD_SUPPORT_DEV DIALOGEX 0, 0, 215, 96
@@ -163,7 +160,7 @@ END
 // REGISTRY
 //
 
-IDR_PROFILER_FRONTEND        REGISTRY                "../frontend/micro-profiler-frontend.rgs"
+IDR_PROFILER_FRONTEND   REGISTRY                "../frontend/micro-profiler-frontend.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //

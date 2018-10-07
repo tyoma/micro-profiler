@@ -10,7 +10,8 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
-#include <wpl/ui/win32/window.h>
+#include <wpl/ui/win32/controls.h>
+#include <wpl/ui/view_host.h>
 
 using namespace std;
 using namespace placeholders;
@@ -53,9 +54,10 @@ namespace micro_profiler
 
 			void set_model(const shared_ptr<functions_list> &model, const wstring &executable)
 			{
-				_model = model;
+				shared_ptr<tables_ui> ui(new tables_ui(model, *open_configuration()));
+
 				_executable = executable;
-				_ui.reset(new tables_ui(model, *open_configuration()));
+				_host->set_view(ui);
 			}
 
 			void set_frame(const CComPtr<IVsWindowFrame> &frame)
@@ -81,11 +83,9 @@ namespace micro_profiler
 				return S_OK;
 			}
 
-			virtual STDMETHODIMP CreatePaneWindow(HWND hparent, int x, int y, int cx, int cy, HWND * /*hwnd*/)
+			virtual STDMETHODIMP CreatePaneWindow(HWND hparent, int /*x*/, int /*y*/, int /*cx*/, int /*cy*/, HWND * /*hwnd*/)
 			{
-				_window = window::attach(hparent, bind(&vs_pane::handle_parent_message, this, _1, _2, _3, _4));
-				_ui->create(hparent);
-				_ui->resize(x, y, cx, cy);
+				_host = wpl::ui::wrap_view_host(hparent);
 				return S_OK;
 			}
 
@@ -96,7 +96,7 @@ namespace micro_profiler
 			{
 				_service_provider.Release();
 				closed();
-				_ui.reset();
+				_host->set_view(shared_ptr<tables_ui>());
 				return S_OK;
 			}
 
@@ -108,26 +108,6 @@ namespace micro_profiler
 
 			virtual STDMETHODIMP TranslateAccelerator(MSG * /*msg*/)
 			{	return E_NOTIMPL;	}
-
-
-			LRESULT handle_parent_message(UINT message, WPARAM wparam, LPARAM lparam,
-				const window::original_handler_t &handler)
-			{
-				switch (message)
-				{
-				case WM_NOTIFY:
-					return SendMessage(reinterpret_cast<const NMHDR*>(lparam)->hwndFrom, OCM_NOTIFY, wparam, lparam);
-
-				case WM_SIZE:
-					_ui->resize(0, 0, LOWORD(lparam), HIWORD(lparam));
-					break;
-
-				case WM_SETFOCUS:
-					activated();
-					break;
-				}
-				return handler(message, wparam, lparam);
-			}
 
 			virtual instance_context get_context()
 			{
@@ -141,8 +121,7 @@ namespace micro_profiler
 		private:
 			shared_ptr<functions_list> _model;
 			wstring _executable;
-			auto_ptr<tables_ui> _ui;
-			shared_ptr<window> _window;
+			shared_ptr<wpl::ui::view_host> _host;
 			CComPtr<IVsWindowFrame> _frame;
 			CComPtr<IServiceProvider> _service_provider;
 		};
@@ -157,7 +136,6 @@ namespace micro_profiler
 			CComPtr<IVsWindowPane> sp(p);
 			CComPtr<IVsWindowFrame> frame;
 
-			p->set_model(model, executable);
 			if (S_OK == shell.CreateToolWindow(CTW_fMultiInstance | CTW_fToolbarHost, id, sp, GUID_NULL, c_settingsSlot,
 				GUID_NULL, NULL, (L"MicroProfiler - " + executable).c_str(), NULL, &frame) && frame)
 			{
@@ -169,6 +147,7 @@ namespace micro_profiler
 						tbhost->AddToolbar(VSTWT_TOP, &c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR);
 				}
 				p->set_frame(frame);
+				p->set_model(model, executable);
 				return shared_ptr<vs_pane>(p, bind(&vs_pane::close, _1));
 			}
 			return shared_ptr<frontend_ui>();

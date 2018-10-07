@@ -46,16 +46,19 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="frontend\controls.cpp" />
     <ClCompile Include="frontend\file.cpp" />
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\stream.cpp" />
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
     <ClCompile Include="frontend\tables_ui.cpp" />
+    <ClCompile Include="frontend\tables_ui_win32.cpp" />
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClInclude Include="frontend\controls.h" />
     <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\icon-ids.h" />

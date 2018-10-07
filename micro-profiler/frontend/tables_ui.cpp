@@ -3,9 +3,7 @@
 #include <common/configuration.h>
 #include <frontend/columns_model.h>
 #include <frontend/function_list.h>
-#include <windows.h>
-#include <wpl/ui/win32/controls.h>
-#include <commctrl.h>
+#include <wpl/ui/layout.h>
 
 using namespace std;
 using namespace placeholders;
@@ -37,29 +35,13 @@ namespace micro_profiler
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
 		: _statistics(model), _columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_columns_main(new columns_model(c_columns_statistics, 3, false)),
-			_columns_children(new columns_model(c_columns_statistics, 4, false))
+			_columns_children(new columns_model(c_columns_statistics, 4, false)),
+			_statistics_lv(create_listview()), _parents_statistics_lv(create_listview()),
+			_children_statistics_lv(create_listview())
 	{
 		_columns_parents->update(*configuration.create("ParentsColumns"));
 		_columns_main->update(*configuration.create("MainColumns"));
 		_columns_children->update(*configuration.create("ChildrenColumns"));
-	}
-
-	void tables_ui::create(HWND hparent)
-	{
-		enum {
-			lvstyle = LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | LVS_OWNERDATA | WS_BORDER | WS_TABSTOP | WS_CHILD | WS_VISIBLE,
-			lvstyleex = LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER,
-		};
-
-		_statistics_view = ::CreateWindow(WC_LISTVIEW, NULL, lvstyle, 0, 0, 1, 1, hparent, NULL, NULL, NULL);
-		_statistics_lv = wrap_listview(_statistics_view);
-		ListView_SetExtendedListViewStyle(_statistics_view, lvstyleex | ListView_GetExtendedListViewStyle(_statistics_view));
-		_parents_statistics_view = ::CreateWindow(WC_LISTVIEW, NULL, lvstyle, 0, 0, 1, 1, hparent, NULL, NULL, NULL);
-		_parents_statistics_lv = wrap_listview(_parents_statistics_view);
-		ListView_SetExtendedListViewStyle(_parents_statistics_view, lvstyleex | ListView_GetExtendedListViewStyle(_parents_statistics_view));
-		_children_statistics_view = ::CreateWindow(WC_LISTVIEW, NULL, lvstyle, 0, 0, 1, 1, hparent, NULL, NULL, NULL);
-		_children_statistics_lv = wrap_listview(_children_statistics_view);
-		ListView_SetExtendedListViewStyle(_children_statistics_view, lvstyleex | ListView_GetExtendedListViewStyle(_children_statistics_view));
 
 		_parents_statistics_lv->set_columns_model(_columns_parents);
 		_statistics_lv->set_model(_statistics);
@@ -67,17 +49,20 @@ namespace micro_profiler
 		_children_statistics_lv->set_columns_model(_columns_children);
 
 		_connections.push_back(_statistics_lv->selection_changed += bind(&tables_ui::on_focus_change, this, _1, _2));
-		_connections.push_back(_parents_statistics_lv->item_activate += bind(&tables_ui::on_drilldown, this, cref(_parents_statistics), _1));
-		_connections.push_back(_children_statistics_lv->item_activate += bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
-	}
+		_connections.push_back(_parents_statistics_lv->item_activate += bind(&tables_ui::on_drilldown, this,
+			cref(_parents_statistics), _1));
+		_connections.push_back(_children_statistics_lv->item_activate += bind(&tables_ui::on_drilldown, this,
+			cref(_children_statistics), _1));
 
-	void tables_ui::resize(unsigned x, unsigned y, unsigned cx, unsigned cy)
-	{
-		enum { spacing = 5, dependant_height = 150 };
+		shared_ptr<stack> layout(new stack(5, false));
 
-		::MoveWindow(_parents_statistics_view, x, y, cx, dependant_height, TRUE);
-		::MoveWindow(_statistics_view, x, y + dependant_height + spacing, cx, cy - 2 * (dependant_height + spacing), TRUE);
-		::MoveWindow(_children_statistics_view, x, y + cy - dependant_height, cx, dependant_height, TRUE);
+		set_layout(layout);
+		layout->add(150);
+		add_view(_parents_statistics_lv);
+		layout->add(-100);
+		add_view(_statistics_lv);
+		layout->add(150);
+		add_view(_children_statistics_lv);
 	}
 
 	void tables_ui::save(hive &configuration)

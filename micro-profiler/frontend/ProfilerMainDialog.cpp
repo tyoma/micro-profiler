@@ -20,17 +20,21 @@
 
 #include "ProfilerMainDialog.h"
 
+#include "controls.h"
 #include "SupportDevDialog.h"
 #include "tables_ui.h"
 
 #include <common/configuration.h>
 #include <frontend/function_list.h>
+#include <wpl/ui/layout.h>
+#include <wpl/ui/win32/controls.h>
 
 #include <algorithm>
 #include <atlstr.h>
 
 using namespace std;
 using namespace std::placeholders;
+using namespace wpl::ui;
 
 namespace micro_profiler
 {
@@ -60,17 +64,68 @@ namespace micro_profiler
 			ok = ok && configuration.load((name + 'B').c_str(), value), r.bottom = value;
 			return ok;
 		}
+
+		class spacer_layout : public layout_manager
+		{
+		public:
+			spacer_layout(int spacing)
+				: _spacing(spacing)
+			{	}
+
+			virtual void layout(unsigned width, unsigned height, container::positioned_view *views, size_t count) const
+			{
+				for (; count--; ++views)
+				{
+					views->location.left = _spacing, views->location.top = _spacing;
+					views->location.width = width - 2 * _spacing, views->location.height = height - 2 * _spacing;
+				}
+			}
+
+		private:
+			int _spacing;
+		};
 	}
 
 	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable, HWND parent)
 		: _statistics(s), _executable(executable)
 	{
+		CString caption;
 		shared_ptr<hive> c(open_configuration());
+		shared_ptr<container> root(new container), vstack(new container), toolbar(new container);
+		shared_ptr<layout_manager> lm_root(new spacer_layout(5));
+		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
+		shared_ptr<view> clear_statistics(create_button(L"Clear Statistics", bind(&functions_list::clear, _statistics)));
+		shared_ptr<view> copy_all(create_button(L"Copy All", bind(&ProfilerMainDialog::OnCopyAll, this)));
+		shared_ptr<view> support(create_link(L"<a>Support Developer...</a>", bind(&ProfilerMainDialog::OnSupport, this)));
+
+		Create(parent, 0);
+		SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);		
+		GetWindowText(caption);
+		caption += (L" - " + _executable).c_str();
+		SetWindowText(caption);
 
 		_statistics_display.reset(new tables_ui(s, *c));
 
-		Create(parent, 0);
+		toolbar->set_layout(lm_toolbar);
+		lm_toolbar->add(120);
+		toolbar->add_view(clear_statistics);
+		lm_toolbar->add(100);
+		toolbar->add_view(copy_all);
+		lm_toolbar->add(-100);
+		toolbar->add_view(shared_ptr<view>(new view));
+		lm_toolbar->add(200);
+		toolbar->add_view(support);
 
+		vstack->set_layout(lm_vstack);
+		lm_vstack->add(-100);
+		vstack->add_view(_statistics_display);
+		lm_vstack->add(24);
+		vstack->add_view(toolbar);
+
+		root->set_layout(lm_root);
+		root->add_view(vstack);
+		_host = wrap_view_host(*this);
+		_host->set_view(root);
 		if (load(*c, "Placement", _placement))
 			MoveWindow(&_placement);
 		ShowWindow(SW_SHOW);
@@ -80,24 +135,6 @@ namespace micro_profiler
 	{
 		if (IsWindow())
 			DestroyWindow();
-	}
-
-	LRESULT ProfilerMainDialog::OnInitDialog(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL& handled)
-	{
-		_statistics_display->create(*this);
-
-		SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);
-
-		CString caption;
-
-		GetWindowText(caption);
-
-		caption += L" - ";
-		caption += _executable.c_str();
-
-		SetWindowText(caption);
-
-		return handled = TRUE, 1;	// Let the system set the focus
 	}
 
 	LRESULT ProfilerMainDialog::OnActivated(UINT /*message*/, WPARAM wparam, LPARAM /*lparam*/, BOOL &handled)
@@ -111,25 +148,12 @@ namespace micro_profiler
 	{
 		const WINDOWPOS *wndpos = reinterpret_cast<const WINDOWPOS *>(lparam);
 
-		if (0 == (wndpos->flags & SWP_NOSIZE))
-		{
-			CRect client;
-
-			GetClientRect(&client);
-			RelocateControls(client.Size());
-		}
 		if (0 == (wndpos->flags & SWP_NOSIZE) || 0 == (wndpos->flags & SWP_NOMOVE))
 			_placement.SetRect(wndpos->x, wndpos->y, wndpos->x + wndpos->cx, wndpos->y + wndpos->cy);
-		return handled = TRUE, 0;
+		return handled = FALSE, 0;
 	}
 
-	LRESULT ProfilerMainDialog::OnClearStatistics(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
-	{
-		_statistics->clear();
-		return handled = TRUE, 0;
-	}
-
-	LRESULT ProfilerMainDialog::OnCopyAll(WORD /*code*/, WORD /*control_id*/, HWND /*control*/, BOOL &handled)
+	void ProfilerMainDialog::OnCopyAll()
 	{
 		wstring result;
 
@@ -147,7 +171,6 @@ namespace micro_profiler
 			}
 			CloseClipboard();
 		}
-		return handled = TRUE, 0;
 	}
 
 	LRESULT ProfilerMainDialog::OnClose(UINT /*message*/, WPARAM /*wparam*/, LPARAM /*lparam*/, BOOL &handled)
@@ -156,34 +179,13 @@ namespace micro_profiler
 		return handled = TRUE, 0;
 	}
 
-	LRESULT ProfilerMainDialog::OnSupportLinkClicked(int /*id*/, NMHDR * /*nmhdr*/, BOOL &handled)
+	void ProfilerMainDialog::OnSupport()
 	{
 		SupportDevDialog dlg;
 
-		GetParent().EnableWindow(FALSE);
+		EnableWindow(FALSE);
 		dlg.DoModal(*this);
-		GetParent().EnableWindow(TRUE);
-		return handled = TRUE, 0;
-	}
-
-	void ProfilerMainDialog::RelocateControls(const CSize &size)
-	{
-		enum { spacing = 7 };
-		CRect rcButton, rc(CPoint(0, 0), size), rcLink;
-
-		rc.DeflateRect(spacing, spacing, spacing, spacing);
-		GetDlgItem(IDC_SUPPORT_DEV).GetWindowRect(&rcLink);
-		rcLink.MoveToXY(rc.right - rcLink.Width(), rc.bottom - rcLink.Height());
-		GetDlgItem(IDC_SUPPORT_DEV).MoveWindow(&rcLink);
-
-		GetDlgItem(IDC_BTN_CLEAR).GetWindowRect(&rcButton);
-		rc.DeflateRect(0, 0, 0, rcButton.Height());
-		rcButton.MoveToXY(rc.left, rc.bottom);
-		GetDlgItem(IDC_BTN_CLEAR).MoveWindow(rcButton);
-		rcButton.MoveToX(rcButton.right + spacing);
-		GetDlgItem(IDC_BTN_COPY_ALL).MoveWindow(rcButton);
-		rc.DeflateRect(0, 0, 0, spacing);
-		_statistics_display->resize(rc.left, rc.top, rc.Width(), rc.Height());
+		EnableWindow(TRUE);
 	}
 
 	void ProfilerMainDialog::OnFinalMessage(HWND hwnd)

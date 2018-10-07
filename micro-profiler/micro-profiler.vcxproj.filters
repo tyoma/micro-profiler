@@ -37,6 +37,12 @@
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\tables_ui_win32.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\controls.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -51,8 +57,6 @@
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
-    <None Include="micro-profiler.initializer.cpp" />
-    <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
@@ -138,6 +142,9 @@
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h">
       <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\controls.h">
+      <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

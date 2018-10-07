@@ -10,9 +10,6 @@
 #define IDC_PROCESS_SELECTOR            201
 #define IDD_SUPPORT_DEV                 202
 #define IDI_APPMAIN                     202
-#define IDC_BTN_CLEAR                   206
-#define IDC_BTN_COPY_ALL                207
-#define IDC_SUPPORT_DEV                 208
 #define IDC_WAYS_TO_SUPPORT             209
 
 // Next default values for new objects

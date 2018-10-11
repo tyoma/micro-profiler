@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include "piechart.h"
+
+#include <functional>
 #include <memory>
 #include <vector>
 #include <algorithm>
@@ -27,7 +30,7 @@
 namespace micro_profiler
 {
 	template <class Map>
-	class ordered_view
+	class ordered_view : public piechart_model
 	{
 	public:
 		typedef typename Map::value_type value_type;
@@ -45,17 +48,22 @@ namespace micro_profiler
 		template <typename Predicate>
 		void set_order(Predicate predicate, bool ascending);
 
+		template <typename ExtractorT>
+		void project_value(const ExtractorT &extractor);
+
 		// Repopulate internal ordered storage from source map with respect to predicate set.
 		void resort();
 
-		size_t size() const throw();
+		virtual size_t size() const throw();
 		const value_type &at(size_t index) const;
+		virtual float get_value(size_t index) const;
 		size_t find_by_key(const key_type &key) const;
 
 	private:
 		typedef typename Map::const_iterator stored_type;
 		typedef std::vector<typename stored_type> ordered_storage;
 
+		struct extractor;
 		struct sorter;
 
 		template <typename Predicate>
@@ -71,6 +79,8 @@ namespace micro_profiler
 		const Map *_map;
 		ordered_storage _ordered_data;
 		std::auto_ptr<sorter> _sorter;
+		std::function<float(const typename Map::mapped_type &entry)> _extractor;
+		bool _ascending;
 	};
 
 
@@ -135,8 +145,14 @@ namespace micro_profiler
 	inline void ordered_view<Map>::set_order(Predicate predicate, bool ascending)
 	{
 		_sorter.reset(new sorter_impl<Predicate>(predicate, ascending));
+		_ascending = ascending;
 		_sorter->sort(_ordered_data.begin(), _ordered_data.end());
 	}
+
+	template <class Map>
+	template <typename ExtractorT>
+	inline void ordered_view<Map>::project_value(const ExtractorT &extractor)
+	{	_extractor = extractor;	}
 
 	template <class Map>
 	inline void ordered_view<Map>::resort()
@@ -161,6 +177,10 @@ namespace micro_profiler
 	template <class Map>
 	inline const typename ordered_view<Map>::value_type &ordered_view<Map>::at(size_t index) const
 	{	return *_ordered_data.at(index);	}
+
+	template <class Map>
+	inline float ordered_view<Map>::get_value(size_t index) const
+	{	return _extractor(at(_ascending ? _ordered_data.size() - index - 1 : index).second);	}
 
 	template <class Map>
 	inline size_t ordered_view<Map>::find_by_key(const key_type &key) const

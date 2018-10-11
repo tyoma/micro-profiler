@@ -1,4 +1,5 @@
 #include <frontend/ordered_view.h>
+#include <frontend/piechart.h>
 
 #include <unordered_map>
 #include <utility>
@@ -25,6 +26,9 @@ namespace micro_profiler
 				return left.a == right.a && left.b == right.b && left.c == right.c;
 			}
 
+			float project_a(const POD &entry) { return static_cast<float>(entry.a); }
+			float project_b(const POD &entry) { return static_cast<float>(entry.b); }
+			float project_c(const POD &entry) { return static_cast<float>(entry.c); }
 
 			typedef unordered_map<void *, POD> pod_map;
 			typedef ordered_view<pod_map> sorted_pods;
@@ -39,6 +43,11 @@ namespace micro_profiler
 				return left.a > right.a;
 			}
 
+			bool sort_by_a_less(const void *const, const POD &left, const void *const, const POD &right)
+			{
+				return left.a < right.a;
+			}
+
 			struct sort_by_b
 			{
 				bool operator()(const void *const, const POD &left, const void *const, const POD &right) const
@@ -51,6 +60,12 @@ namespace micro_profiler
 			{
 				return left.c > right.c;
 			}
+
+			bool sort_by_c_less(const void *const, const POD &left, const void *const, const POD &right)
+			{
+				return left.c < right.c;
+			}
+
 		}
 
 
@@ -535,6 +550,107 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0u, s.size());
+			}
+
+
+			test( OrderedViewIsAPiechartModel )
+			{
+				// INIT
+				pod_map source;
+
+				shared_ptr<sorted_pods> s(new sorted_pods(source));
+
+				// INIT / ACT
+				shared_ptr<piechart_model> tv = s;
+
+				// ASSERT
+				assert_equal(0u, tv->size());
+			}
+
+
+			test( OrderedViewProvidesDescendantValuesForDescendingOrdering )
+			{
+				// INIT
+				pod_map source;
+				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}	};
+				shared_ptr<sorted_pods> s(new sorted_pods(source));
+				shared_ptr<piechart_model> tv = s;
+
+				source[pods + 0] = pods[0], source[pods + 1] = pods[1], source[pods + 2] = pods[2];
+
+				s->set_order(&sort_by_a_less, false);
+				s->resort();
+
+				// INIT / ACT
+				s->project_value(&project_a);
+
+				// ACT / ASSERT
+				assert_equal(3u, tv->size());
+				assert_equal(114.0f, tv->get_value(0));
+				assert_equal(10.0f, tv->get_value(1));
+				assert_equal(1.0f, tv->get_value(2));
+
+				// INIT / ACT
+				s->project_value(&project_b);
+
+				// ACT / ASSERT
+				assert_equal(21.0f, tv->get_value(0));
+				assert_equal(30.0f, tv->get_value(1));
+				assert_equal(0.0f, tv->get_value(2));
+
+				// INIT / ACT
+				s->set_order(&sort_by_c_less, false);
+
+				// ACT / ASSERT
+				assert_equal(21.0f, tv->get_value(0));
+				assert_equal(0.0f, tv->get_value(1));
+				assert_equal(30.0f, tv->get_value(2));
+			}
+
+
+			test( OrderedViewProvidesDescendantValuesForAscendingOrdering )
+			{
+				// INIT
+				pod_map source;
+				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}, {2, 30, 12.0},	};
+				shared_ptr<sorted_pods> s(new sorted_pods(source));
+				shared_ptr<piechart_model> tv = s;
+
+				source[pods + 0] = pods[0];
+				source[pods + 1] = pods[1];
+				source[pods + 2] = pods[2];
+				source[pods + 3] = pods[3];
+
+				s->set_order(&sort_by_a_less, true);
+				s->resort();
+
+				// INIT / ACT
+				s->project_value(&project_a);
+
+				// ACT / ASSERT
+				assert_equal(4u, tv->size());
+				assert_equal(114.0f, tv->get_value(0));
+				assert_equal(10.0f, tv->get_value(1));
+				assert_equal(2.0f, tv->get_value(2));
+				assert_equal(1.0f, tv->get_value(3));
+
+				// INIT / ACT
+				s->project_value(&project_b);
+
+				// ACT / ASSERT
+				assert_equal(21.0f, tv->get_value(0));
+				assert_equal(30.0f, tv->get_value(1));
+				assert_equal(30.0f, tv->get_value(2));
+				assert_equal(0.0f, tv->get_value(3));
+
+				// INIT / ACT
+				s->set_order(&sort_by_c_less, true);
+
+				// ACT / ASSERT
+				assert_equal(21.0f, tv->get_value(0));
+				assert_equal(30.0f, tv->get_value(1));
+				assert_equal(0.0f, tv->get_value(2));
+				assert_equal(30.0f, tv->get_value(3));
 			}
 		end_test_suite
 	}

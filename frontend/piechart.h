@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <cstddef>
+#include <wpl/base/signals.h>
 
 namespace micro_profiler
 {
@@ -28,7 +28,9 @@ namespace micro_profiler
 	{
 		virtual ~piechart_model() {	}
 		virtual size_t size() const throw() = 0;
-		virtual float get_value(size_t index) const throw() = 0;
+		virtual double get_value(size_t index) const throw() = 0;
+
+		wpl::signal<void()> invalidated;
 	};
 }
 

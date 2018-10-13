@@ -493,25 +493,6 @@ namespace micro_profiler
 			}
 
 
-			test( OrderedViewThrowsOutOfRange )
-			{
-				pod_map source;
-
-				POD one = {114, 21, 99.6};
-				POD two = {1, 0, 11.0};
-
-				source[&one] = one;
-				source[&two] = two;
-
-				sorted_pods s(source);
-				s.set_order(sort_by_b(), false);
-
-				assert_equal(make_pod(two), s.at(0));
-				assert_equal(make_pod(one), s.at(1));
-				assert_throws(s.at(2), out_of_range);
-			}
-
-
 			test( DetachingOrderedViewSetsSizeToZero )
 			{
 				// INIT
@@ -651,6 +632,41 @@ namespace micro_profiler
 				assert_equal(30.0f, tv->get_value(1));
 				assert_equal(0.0f, tv->get_value(2));
 				assert_equal(30.0f, tv->get_value(3));
+			}
+
+
+			test( OrderedViewReturnsZeroesWhenNoGetterIsSet )
+			{
+				// INIT
+				pod_map source;
+				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}, {2, 30, 12.0},	};
+				shared_ptr<sorted_pods> s(new sorted_pods(source));
+				shared_ptr<piechart_model> tv = s;
+
+				source[pods + 0] = pods[0];
+				source[pods + 1] = pods[1];
+				source[pods + 2] = pods[2];
+				source[pods + 3] = pods[3];
+
+				s->set_order(&sort_by_a_less, true);
+				s->resort();
+
+				// ACT / ASSERT
+				assert_equal(0.0, s->get_value(0));
+				assert_equal(0.0, s->get_value(1));
+				assert_equal(0.0, s->get_value(2));
+				assert_equal(0.0, s->get_value(3));
+
+				// ACT
+				s->set_order(&sort_by_a_less, true);
+				s->project_value(&project_a);
+				s->disable_projection();
+
+				// ACT / ASSERT
+				assert_equal(0.0, s->get_value(0));
+				assert_equal(0.0, s->get_value(1));
+				assert_equal(0.0, s->get_value(2));
+				assert_equal(0.0, s->get_value(3));
 			}
 		end_test_suite
 	}

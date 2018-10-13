@@ -125,6 +125,78 @@ namespace micro_profiler
 				bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
 				{	return lhs.max_call_time < rhs.max_call_time;	}
 			};
+
+			struct get_times_called
+			{
+				template <typename T>
+				double operator ()(const T &value) const
+				{	return static_cast<double>(value.times_called);	}
+			};
+
+			struct get_exclusive_time
+			{
+				get_exclusive_time(double inv_tick_count)
+					: _inv_tick_count(inv_tick_count)
+				{	}
+
+				template <typename T>
+				double operator ()(const T &value) const
+				{	return _inv_tick_count * value.exclusive_time;	}
+
+				double _inv_tick_count;
+			};
+
+			struct get_inclusive_time
+			{
+				get_inclusive_time(double inv_tick_count)
+					: _inv_tick_count(inv_tick_count)
+				{	}
+
+				template <typename T>
+				double operator ()(const T &value) const
+				{	return _inv_tick_count * value.inclusive_time;	}
+
+				double _inv_tick_count;
+			};
+
+			struct get_avg_exclusive_time
+			{
+				get_avg_exclusive_time(double inv_tick_count)
+					: _inv_tick_count(inv_tick_count)
+				{	}
+
+				template <typename T>
+				double operator ()(const T &value) const
+				{	return _inv_tick_count * value.exclusive_time / value.times_called;	}
+
+				double _inv_tick_count;
+			};
+
+			struct get_avg_inclusive_time
+			{
+				get_avg_inclusive_time(double inv_tick_count)
+					: _inv_tick_count(inv_tick_count)
+				{	}
+
+				template <typename T>
+				double operator ()(const T &value) const
+				{	return _inv_tick_count * value.inclusive_time / value.times_called;	}
+
+				double _inv_tick_count;
+			};
+
+			struct get_max_call_time
+			{
+				get_max_call_time(double inv_tick_count)
+					: _inv_tick_count(inv_tick_count)
+				{	}
+
+				template <typename T>
+				double operator ()(const T &value) const
+				{	return _inv_tick_count * value.max_call_time;	}
+
+				double _inv_tick_count;
+			};
 		}
 
 		double exclusive_time(const function_statistics &s, double tick_interval)
@@ -150,6 +222,9 @@ namespace micro_profiler
 	public:
 		linked_statistics_model_impl(const MapT &statistics, signal<void (address_t entry)> &entry_updated,
 			signal<void ()> &master_cleared, double tick_interval, shared_ptr<symbol_resolver> resolver);
+
+	protected:
+		typedef statistics_model_impl<linked_statistics, MapT> base;
 
 	private:
 		virtual void on_updated(address_t address);
@@ -202,16 +277,51 @@ namespace micro_profiler
 	{
 		switch (column)
 		{
-		case 1:	_view->set_order(functors::by_name(_resolver), ascending);	break;
-		case 2:	_view->set_order(functors::by_times_called(), ascending);	break;
-		case 3:	_view->set_order(functors::by_exclusive_time(), ascending);	break;
-		case 4:	_view->set_order(functors::by_inclusive_time(), ascending);	break;
-		case 5:	_view->set_order(functors::by_avg_exclusive_call_time(), ascending);	break;
-		case 6:	_view->set_order(functors::by_avg_inclusive_call_time(), ascending);	break;
-		case 7:	_view->set_order(functors::by_max_reentrance(), ascending);	break;
-		case 8:	_view->set_order(functors::by_max_call_time(), ascending);	break;
+		case 0:
+			_view->disable_projection();
+			break;
+
+		case 1:
+			_view->set_order(functors::by_name(_resolver), ascending);
+			_view->disable_projection();
+			break;
+
+		case 2:
+			_view->set_order(functors::by_times_called(), ascending);
+			_view->project_value(functors::get_times_called());
+			break;
+
+		case 3:
+			_view->set_order(functors::by_exclusive_time(), ascending);
+			_view->project_value(functors::get_exclusive_time(_tick_interval));
+			break;
+
+		case 4:
+			_view->set_order(functors::by_inclusive_time(), ascending);
+			_view->project_value(functors::get_inclusive_time(_tick_interval));
+			break;
+
+		case 5:
+			_view->set_order(functors::by_avg_exclusive_call_time(), ascending);
+			_view->project_value(functors::get_avg_exclusive_time(_tick_interval));
+			break;
+
+		case 6:
+			_view->set_order(functors::by_avg_inclusive_call_time(), ascending);
+			_view->project_value(functors::get_avg_inclusive_time(_tick_interval));
+			break;
+
+		case 7:
+			_view->set_order(functors::by_max_reentrance(), ascending);
+			_view->disable_projection();
+			break;
+
+		case 8:
+			_view->set_order(functors::by_max_call_time(), ascending);
+			_view->project_value(functors::get_max_call_time(_tick_interval));
+			break;
 		}
-		invalidated(_view->size());
+		on_updated();
 	}
 
 
@@ -225,7 +335,7 @@ namespace micro_profiler
 	{
 		_cleared();
 		_statistics->clear();
-		updated();
+		on_updated();
 	}
 
 	void functions_list::print(wstring &content) const
@@ -257,6 +367,9 @@ namespace micro_profiler
 
 	shared_ptr<linked_statistics> functions_list::watch_children(index_type item) const
 	{
+		if (item >= get_count())
+			throw out_of_range("");
+
 		const statistics_map_detailed::value_type &s = get_entry(item);
 
 		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.callees,
@@ -265,13 +378,16 @@ namespace micro_profiler
 
 	shared_ptr<linked_statistics> functions_list::watch_parents(index_type item) const
 	{
+		if (item >= get_count())
+			throw out_of_range("");
+
 		const statistics_map_detailed::value_type &s = get_entry(item);
 
 		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, _statistics->entry_updated,
 			_cleared, _tick_interval, _resolver));
 	}
-	
 
+	
 	template <typename MapT>
 	linked_statistics_model_impl<MapT>::linked_statistics_model_impl(const MapT &statistics,
 			signal<void (address_t)> &entry_updated, signal<void ()> &master_cleared, double tick_interval,
@@ -284,7 +400,7 @@ namespace micro_profiler
 
 	template <typename MapT>
 	void linked_statistics_model_impl<MapT>::on_updated(address_t /*address*/)
-	{	updated();	}
+	{	base::on_updated();	}
 
 
 	children_statistics_model_impl::children_statistics_model_impl(address_t controlled_address,
@@ -297,7 +413,7 @@ namespace micro_profiler
 	void children_statistics_model_impl::on_updated(address_t address)
 	{
 		if (_controlled_address == address)
-			updated();
+			base::on_updated();
 	}
 
 

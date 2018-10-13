@@ -1,4 +1,5 @@
 #include <frontend/function_list.h>
+#include <frontend/piechart.h>
 
 #include <test-helpers/helpers.h>
 
@@ -14,6 +15,7 @@
 
 using namespace std;
 using namespace placeholders;
+using namespace wpl;
 using namespace wpl::ui;
 
 namespace micro_profiler
@@ -86,6 +88,9 @@ namespace micro_profiler
 				fl.get_text(row, 8, result); // max reentrance
 				assert_equal(result, max_call_time);
 			}
+
+			void increment(int *value)
+			{	++*value;	}
 
 			class invalidation_tracer
 			{
@@ -878,16 +883,6 @@ namespace micro_profiler
 										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
 										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
 										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"), result);
-			}
-
-
-			test( FailOnGettingChildrenListFromEmptyRootList )
-			{
-				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
-
-				// ACT / ASSERT
-				assert_throws(fl->watch_children(0), out_of_range);
 			}
 
 
@@ -1684,6 +1679,260 @@ namespace micro_profiler
 				assert_equal(L"dolor", get_text(*fl, 3, 1));
 				assert_equal(L"12000", get_text(*fl, 3, 2));
 				assert_equal(L"500ms", get_text(*fl, 3, 4));
+			}
+
+
+			test( NonNullPiechartModelIsReturnedFromFunctionsList )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = {
+					make_pair(5, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				};
+				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
+
+				// ACT
+				shared_ptr<piechart_model> m = fl->get_column_slice();
+
+				// ASSERT
+				assert_equal(0u, m->size());
+			}
+
+
+			test( PiechartModelReturnsConvertedValuesForTimesCalled )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = {
+					make_pair(5, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				};
+				statistics_map_detailed s;
+
+				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
+
+				ser(500);
+				ser(mkvector(symbols));
+				ser(s);
+
+				shared_ptr<functions_list> fl = functions_list::load(dser);
+				shared_ptr<piechart_model> m = fl->get_column_slice();
+
+				// ACT
+				fl->set_order(2, false);
+
+				// ASSERT
+				assert_equal(4u, m->size());
+				assert_equal(12000.0, m->get_value(0));
+				assert_equal(127.0, m->get_value(1));
+				assert_equal(123.0, m->get_value(2));
+				assert_equal(12.0, m->get_value(3));
+
+				// ACT
+				fl->set_order(2, true);
+
+				// ASSERT
+				assert_equal(4u, m->size());
+				assert_equal(12000.0, m->get_value(0));
+				assert_equal(127.0, m->get_value(1));
+				assert_equal(123.0, m->get_value(2));
+				assert_equal(12.0, m->get_value(3));
+			}
+
+
+			test( FunctionListUpdateLeadsToPiechartModelUpdateAndSignal )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				statistics_map_detailed s;
+				int invalidated_count = 0;
+
+				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
+
+				ser(500);
+				ser(mkvector(symbols));
+				ser(s);
+				s.clear();
+
+				shared_ptr<functions_list> fl = functions_list::load(dser);
+				shared_ptr<piechart_model> m = fl->get_column_slice();
+
+				fl->set_order(2, false);
+
+				s[120].times_called = 11001;
+				ser(s);
+
+				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
+
+				// ACT
+				dser(*fl);
+
+				// ASSERT
+				assert_equal(1, invalidated_count);
+				assert_equal(5u, m->size());
+				assert_equal(11001.0, m->get_value(1));
+				assert_equal(127.0, m->get_value(2));
+				assert_equal(123.0, m->get_value(3));
+				assert_equal(12.0, m->get_value(4));
+			}
+
+
+			test( PiechartModelReturnsConvertedValuesForExclusiveTime )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				statistics_map_detailed s;
+
+				s[5].exclusive_time = 13, s[17].exclusive_time = 127, s[13].exclusive_time = 12;
+
+				ser(500), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl1 = functions_list::load(dser);
+				shared_ptr<piechart_model> m1 = fl1->get_column_slice();
+				
+				s[123].exclusive_time = 12000;
+				ser(100), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl2 = functions_list::load(dser);
+				shared_ptr<piechart_model> m2 = fl2->get_column_slice();
+
+				// ACT
+				fl1->set_order(3, false);
+				fl2->set_order(3, false);
+
+				// ASSERT
+				assert_equal(3u, m1->size());
+				assert_equal(0.254, m1->get_value(0));
+				assert_equal(0.026, m1->get_value(1));
+				assert_equal(0.024, m1->get_value(2));
+				assert_equal(4u, m2->size());
+				assert_equal(120.0, m2->get_value(0));
+				assert_equal(1.27, m2->get_value(1));
+				assert_equal(0.13, m2->get_value(2));
+				assert_equal(0.12, m2->get_value(3));
+			}
+
+
+			test( PiechartModelReturnsConvertedValuesForTheRestOfTheFields )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				statistics_map_detailed s;
+
+				s[5].times_called = 100, s[17].times_called = 1000;
+				s[5].exclusive_time = 16, s[17].exclusive_time = 130;
+				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
+				s[5].max_call_time = 14, s[17].max_call_time = 128;
+
+				ser(500), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl1 = functions_list::load(dser);
+				shared_ptr<piechart_model> m1 = fl1->get_column_slice();
+				
+				ser(1000), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl2 = functions_list::load(dser);
+				shared_ptr<piechart_model> m2 = fl2->get_column_slice();
+
+				// ACT
+				fl1->set_order(4, false);
+				fl2->set_order(4, true);
+
+				// ASSERT
+				assert_equal(0.240, m1->get_value(0));
+				assert_equal(0.030, m1->get_value(1));
+				assert_equal(0.120, m2->get_value(0));
+				assert_equal(0.015, m2->get_value(1));
+
+				// ACT
+				fl1->set_order(5, false);
+				fl2->set_order(5, true);
+
+				// ASSERT
+				assert_equal(0.00032, m1->get_value(0));
+				assert_equal(0.00026, m1->get_value(1));
+				assert_equal(0.00016, m2->get_value(0));
+				assert_equal(0.00013, m2->get_value(1));
+
+				// ACT
+				fl1->set_order(6, false);
+				fl2->set_order(6, true);
+
+				// ASSERT
+				assert_equal(0.00030, m1->get_value(0));
+				assert_equal(0.00024, m1->get_value(1));
+				assert_equal(0.00015, m2->get_value(0));
+				assert_equal(0.00012, m2->get_value(1));
+
+				// ACT
+				fl1->set_order(8, false);
+				fl2->set_order(8, true);
+
+				// ASSERT
+				assert_equal(0.256, m1->get_value(0));
+				assert_equal(0.028, m1->get_value(1));
+				assert_equal(0.128, m2->get_value(0));
+				assert_equal(0.014, m2->get_value(1));
+			}
+
+
+			test( SwitchingSortOrderLeadsToPiechartModelUpdate )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				statistics_map_detailed s;
+				int invalidated_count = 0;
+
+				s[5].times_called = 100, s[17].times_called = 1000;
+				s[5].exclusive_time = 16, s[17].exclusive_time = 130;
+				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
+				s[5].max_call_time = 14, s[17].max_call_time = 128;
+
+				ser(500), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl = functions_list::load(dser);
+				shared_ptr<piechart_model> m = fl->get_column_slice();
+				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
+
+				// ACT
+				fl->set_order(2, false);
+
+				// ASSERT
+				assert_equal(1, invalidated_count);
+
+				// ACT
+				fl->set_order(2, true);
+				fl->set_order(3, false);
+				fl->set_order(4, false);
+				fl->set_order(5, false);
+				fl->set_order(6, false);
+				fl->set_order(8, false);
+
+				// ASSERT
+				assert_equal(7, invalidated_count);
+			}
+
+
+			test( PiechartForUnsupportedColumnsIsSimplyZero )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				statistics_map_detailed s;
+
+				s[5].times_called = 100, s[17].times_called = 1000;
+				s[5].exclusive_time = 16, s[17].exclusive_time = 130;
+				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
+				s[5].max_call_time = 14, s[17].max_call_time = 128;
+
+				ser(500), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl = functions_list::load(dser);
+				shared_ptr<piechart_model> m = fl->get_column_slice();
+
+				// ACT / ASSERT
+				fl->set_order(2, true);
+				fl->set_order(0, true);
+				assert_equal(0.0, m->get_value(0));
+				assert_equal(0.0, m->get_value(3));
+				fl->set_order(2, true);
+				fl->set_order(1, false);
+				assert_equal(0.0, m->get_value(0));
+				assert_equal(0.0, m->get_value(3));
+				fl->set_order(2, true);
+				fl->set_order(7, true);
+				assert_equal(0.0, m->get_value(0));
+				assert_equal(0.0, m->get_value(3));
 			}
 		end_test_suite
 	}

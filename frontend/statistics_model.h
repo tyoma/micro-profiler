@@ -38,6 +38,8 @@ namespace micro_profiler
 		statistics_model_impl(const MapT &statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);
 		~statistics_model_impl();
 
+		std::shared_ptr<piechart_model> get_column_slice() const;
+
 		void detach() throw();
 
 		virtual index_type get_count() const throw();
@@ -54,7 +56,7 @@ namespace micro_profiler
 
 	protected:
 		typename const MapT::value_type &get_entry(index_type row) const;
-		void updated();
+		void on_updated();
 
 	private:
 		double _tick_interval;
@@ -73,6 +75,10 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	inline statistics_model_impl<BaseT, MapT>::~statistics_model_impl()
 	{	_view->detach();	}
+
+	template <typename BaseT, typename MapT>
+	std::shared_ptr<piechart_model> statistics_model_impl<BaseT, MapT>::get_column_slice() const
+	{	return _view;	}
 
 	template <typename BaseT, typename MapT>
 	inline void statistics_model_impl<BaseT, MapT>::detach() throw()
@@ -121,7 +127,7 @@ namespace micro_profiler
 	{	return _view->at(row);	}
 
 	template <typename BaseT, typename MapT>
-	inline void statistics_model_impl<BaseT, MapT>::updated()
+	inline void statistics_model_impl<BaseT, MapT>::on_updated()
 	{
 		_view->resort();
 		invalidated(_view->size());

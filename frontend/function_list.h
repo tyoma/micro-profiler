@@ -102,7 +102,7 @@ namespace micro_profiler
 		std::shared_ptr<functions_list> fl(create(ticks_per_second, resolver));
 
 		archive(*fl->_statistics);
-		fl->updated();
+		fl->on_updated();
 		return fl;
 	}
 
@@ -111,6 +111,6 @@ namespace micro_profiler
 	void serialize(ArchiveT &archive, functions_list &data)
 	{
 		archive(*data._statistics);
-		data.updated();
+		data.on_updated();
 	}
 }

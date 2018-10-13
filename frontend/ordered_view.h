@@ -51,12 +51,14 @@ namespace micro_profiler
 		template <typename ExtractorT>
 		void project_value(const ExtractorT &extractor);
 
+		void disable_projection();
+
 		// Repopulate internal ordered storage from source map with respect to predicate set.
 		void resort();
 
 		virtual size_t size() const throw();
 		const value_type &at(size_t index) const;
-		virtual float get_value(size_t index) const;
+		virtual double get_value(size_t index) const;
 		size_t find_by_key(const key_type &key) const;
 
 	private:
@@ -80,7 +82,7 @@ namespace micro_profiler
 		const Map *_map;
 		ordered_container _ordered_data;
 		std::function<void()> _sorter;
-		std::function<float(const typename Map::mapped_type &entry)> _extractor;
+		std::function<double(const typename Map::mapped_type &entry)> _extractor;
 		bool _ascending;
 	};
 
@@ -155,12 +157,17 @@ namespace micro_profiler
 	{	_extractor = extractor;	}
 
 	template <class Map>
+	inline void ordered_view<Map>::disable_projection()
+	{	_extractor = std::function<double(const typename Map::mapped_type &entry)>();	}
+
+	template <class Map>
 	inline void ordered_view<Map>::resort()
 	{
 		fetch_data();
 
 		if (_sorter)
 			_sorter();
+		invalidated();
 	}
 
 	template <class Map>
@@ -181,11 +188,11 @@ namespace micro_profiler
 
 	template <class Map>
 	inline const typename ordered_view<Map>::value_type &ordered_view<Map>::at(size_t index) const
-	{	return *_ordered_data.at(index);	}
+	{	return *_ordered_data[index];	}
 
 	template <class Map>
-	inline float ordered_view<Map>::get_value(size_t index) const
-	{	return _extractor(at(_ascending ? _ordered_data.size() - index - 1 : index).second);	}
+	inline double ordered_view<Map>::get_value(size_t index) const
+	{	return _extractor ? _extractor(at(_ascending ? _ordered_data.size() - index - 1 : index).second) : double();	}
 
 	template <class Map>
 	inline size_t ordered_view<Map>::find_by_key(const key_type &key) const

@@ -2,10 +2,11 @@
 
 #include <common/primitives.h>
 
-#include <wpl/mt/thread.h>
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <wpl/mt/thread.h>
+#include <ut/assert.h>
 
 namespace micro_profiler
 {
@@ -92,4 +93,16 @@ namespace micro_profiler
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);
 	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
+}
+
+namespace ut
+{
+	inline void are_equal(double lhs, double rhs, const LocationInfo &i_location)
+	{
+		const double tolerance = 0.0000001;
+		double d = lhs - rhs, s = 0.5 * (lhs + rhs);
+
+		if (s && (d /= s, d < -tolerance || tolerance < d))
+			throw FailedAssertion("Values are equal!", i_location);
+	}
 }

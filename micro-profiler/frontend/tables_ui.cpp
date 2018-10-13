@@ -4,6 +4,7 @@
 #include <frontend/columns_model.h>
 #include <frontend/function_list.h>
 #include <wpl/ui/layout.h>
+#include <wpl/ui/win32/controls.h>
 
 using namespace std;
 using namespace placeholders;

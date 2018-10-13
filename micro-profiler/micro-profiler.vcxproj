@@ -53,7 +53,6 @@
     <ClCompile Include="frontend\stream.cpp" />
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
     <ClCompile Include="frontend\tables_ui.cpp" />
-    <ClCompile Include="frontend\tables_ui_win32.cpp" />
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">

@@ -56,6 +56,7 @@ namespace micro_profiler
 			{
 				shared_ptr<tables_ui> ui(new tables_ui(model, *open_configuration()));
 
+				_model = model;
 				_executable = executable;
 				_host->set_view(ui);
 			}

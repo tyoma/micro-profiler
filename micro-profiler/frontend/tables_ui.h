@@ -23,8 +23,6 @@ namespace micro_profiler
 		void on_focus_change(wpl::ui::listview::index_type index, bool selected);
 		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::ui::listview::index_type index);
 
-		static std::shared_ptr<wpl::ui::listview> create_listview();
-
 	private:
 		const std::shared_ptr<functions_list> _statistics;
 		std::shared_ptr<linked_statistics> _parents_statistics, _children_statistics;

@@ -33,6 +33,7 @@ namespace micro_profiler
 	struct linked_statistics : wpl::ui::listview::model
 	{
 		virtual address_t get_address(index_type item) const = 0;
+		virtual std::shared_ptr< series<double> > get_column_series() const = 0;
 	};
 
 	class functions_list : public statistics_model_impl<wpl::ui::listview::model, statistics_map_detailed>

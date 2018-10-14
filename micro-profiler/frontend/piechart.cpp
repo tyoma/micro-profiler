@@ -72,6 +72,9 @@ namespace micro_profiler
 
 	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer) const
 	{
+		if (!_model)
+			return;
+
 		double inverted_sum;
 
 		_segments.clear();

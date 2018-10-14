@@ -75,15 +75,15 @@ namespace micro_profiler
 		layout->add(-100);
 		add_view(split);
 
-			//split.reset(new container);
-			//layout_split.reset(new stack(5, true));
-			//split->set_layout(layout_split);
-			//layout_split->add(150);
-			//split->add_view(_children_piechart);
-			//layout_split->add(-100);
-			//split->add_view(_children_statistics_lv);
+			split.reset(new container);
+			layout_split.reset(new stack(5, true));
+			split->set_layout(layout_split);
+			layout_split->add(150);
+			split->add_view(_children_piechart);
+			layout_split->add(-100);
+			split->add_view(_children_statistics_lv);
 		layout->add(150);
-		add_view(_children_statistics_lv);
+		add_view(split);
 
 		_piechart->set_model(_statistics->get_column_series());
 	}
@@ -100,6 +100,7 @@ namespace micro_profiler
 		if (selected)
 		{
 			_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
+			_children_piechart->set_model(_children_statistics->get_column_series());
 			_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
 			_statistics_lv->ensure_visible(index);
 		}

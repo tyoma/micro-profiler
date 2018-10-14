@@ -1966,6 +1966,50 @@ namespace micro_profiler
 				assert_equal(0.0, m->get_value(0));
 				assert_equal(0.0, m->get_value(3));
 			}
+
+
+			test( ChildrenStatisticsProvideColumnSeries )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				statistics_map_detailed s;
+				shared_ptr< series<double> > m;
+
+				s[5].times_called = 2000;
+				s[5].callees[11].times_called = 29, s[5].callees[13].times_called = 31;
+				s[5].callees[11].exclusive_time = 16, s[5].callees[13].exclusive_time = 10;
+
+				s[17].times_called = 1999;
+				s[17].callees[11].times_called = 101, s[17].callees[19].times_called = 103, s[17].callees[23].times_called = 1100;
+				s[17].callees[11].exclusive_time = 3, s[17].callees[19].exclusive_time = 112, s[17].callees[23].exclusive_time = 9;
+
+				ser(100), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl = functions_list::load(dser);
+				shared_ptr<linked_statistics> ls;
+
+				fl->set_order(2, false);
+
+				// ACT
+				ls = fl->watch_children(0);
+				ls->set_order(2, true);
+				m = ls->get_column_series();
+
+				// ASSERT
+				assert_equal(2u, m->size());
+				assert_equal(31.0, m->get_value(0));
+				assert_equal(29.0, m->get_value(1));
+
+				// ACT
+				ls = fl->watch_children(1);
+				m = ls->get_column_series();
+				ls->set_order(3, false);
+
+				// ASSERT
+				assert_equal(3u, m->size());
+				assert_equal(1.12, m->get_value(0));
+				assert_equal(0.09, m->get_value(1));
+				assert_equal(0.03, m->get_value(2));
+			}
 		end_test_suite
 	}
 }

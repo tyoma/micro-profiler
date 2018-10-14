@@ -20,6 +20,7 @@
 
 #include "ProfilerMainDialog.h"
 
+#include "containers.h"
 #include "controls.h"
 #include "SupportDevDialog.h"
 #include "tables_ui.h"
@@ -64,26 +65,6 @@ namespace micro_profiler
 			ok = ok && configuration.load((name + 'B').c_str(), value), r.bottom = value;
 			return ok;
 		}
-
-		class spacer_layout : public layout_manager
-		{
-		public:
-			spacer_layout(int spacing)
-				: _spacing(spacing)
-			{	}
-
-			virtual void layout(unsigned width, unsigned height, container::positioned_view *views, size_t count) const
-			{
-				for (; count--; ++views)
-				{
-					views->location.left = _spacing, views->location.top = _spacing;
-					views->location.width = width - 2 * _spacing, views->location.height = height - 2 * _spacing;
-				}
-			}
-
-		private:
-			int _spacing;
-		};
 	}
 
 	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable, HWND parent)
@@ -91,7 +72,8 @@ namespace micro_profiler
 	{
 		CString caption;
 		shared_ptr<hive> c(open_configuration());
-		shared_ptr<container> root(new container), vstack(new container), toolbar(new container);
+		shared_ptr<container_with_background> root(new container_with_background);
+		shared_ptr<container> vstack(new container), toolbar(new container);
 		shared_ptr<layout_manager> lm_root(new spacer_layout(5));
 		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
 		shared_ptr<view> clear_statistics(create_button(L"Clear Statistics", bind(&functions_list::clear, _statistics)));
@@ -129,6 +111,8 @@ namespace micro_profiler
 		if (load(*c, "Placement", _placement))
 			MoveWindow(&_placement);
 		ShowWindow(SW_SHOW);
+
+		root->set_background_color(color::make(24, 32, 48, 255));
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()

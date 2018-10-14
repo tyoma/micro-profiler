@@ -1691,7 +1691,7 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
 
 				// ACT
-				shared_ptr<piechart_model> m = fl->get_column_slice();
+				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ASSERT
 				assert_equal(0u, m->size());
@@ -1713,7 +1713,7 @@ namespace micro_profiler
 				ser(s);
 
 				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr<piechart_model> m = fl->get_column_slice();
+				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT
 				fl->set_order(2, false);
@@ -1752,7 +1752,7 @@ namespace micro_profiler
 				s.clear();
 
 				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr<piechart_model> m = fl->get_column_slice();
+				shared_ptr< series<double> > m = fl->get_column_series();
 
 				fl->set_order(2, false);
 
@@ -1784,12 +1784,12 @@ namespace micro_profiler
 
 				ser(500), ser(mkvector(symbols)), ser(s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
-				shared_ptr<piechart_model> m1 = fl1->get_column_slice();
+				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
 				s[123].exclusive_time = 12000;
 				ser(100), ser(mkvector(symbols)), ser(s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
-				shared_ptr<piechart_model> m2 = fl2->get_column_slice();
+				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
 				// ACT
 				fl1->set_order(3, false);
@@ -1821,11 +1821,11 @@ namespace micro_profiler
 
 				ser(500), ser(mkvector(symbols)), ser(s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
-				shared_ptr<piechart_model> m1 = fl1->get_column_slice();
+				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
 				ser(1000), ser(mkvector(symbols)), ser(s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
-				shared_ptr<piechart_model> m2 = fl2->get_column_slice();
+				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
 				// ACT
 				fl1->set_order(4, false);
@@ -1869,6 +1869,38 @@ namespace micro_profiler
 			}
 
 
+
+
+			test( PiechartModelReturnsZeroesAverageValuesForUncalledFunctions )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				statistics_map_detailed s;
+
+				s[5].times_called = 0, s[17].times_called = 0;
+				s[5].exclusive_time = 16, s[17].exclusive_time = 0;
+				s[5].inclusive_time = 15, s[17].inclusive_time = 0;
+
+				ser(500), ser(mkvector(symbols)), ser(s);
+				shared_ptr<functions_list> fl = functions_list::load(dser);
+				shared_ptr< series<double> > m = fl->get_column_series();
+
+				// ACT
+				fl->set_order(5, false);
+
+				// ASSERT
+				assert_equal(0.0, m->get_value(0));
+				assert_equal(0.0, m->get_value(1));
+
+				// ACT
+				fl->set_order(6, false);
+
+				// ASSERT
+				assert_equal(0.0, m->get_value(0));
+				assert_equal(0.0, m->get_value(1));
+			}
+
+
 			test( SwitchingSortOrderLeadsToPiechartModelUpdate )
 			{
 				// INIT
@@ -1883,7 +1915,7 @@ namespace micro_profiler
 
 				ser(500), ser(mkvector(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr<piechart_model> m = fl->get_column_slice();
+				shared_ptr< series<double> > m = fl->get_column_series();
 				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
 
 				// ACT
@@ -1918,7 +1950,7 @@ namespace micro_profiler
 
 				ser(500), ser(mkvector(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr<piechart_model> m = fl->get_column_slice();
+				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT / ASSERT
 				fl->set_order(2, true);

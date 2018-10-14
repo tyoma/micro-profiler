@@ -1,5 +1,7 @@
 #include "tables_ui.h"
 
+#include "piechart.h"
+
 #include <common/configuration.h>
 #include <frontend/columns_model.h>
 #include <frontend/function_list.h>
@@ -38,7 +40,7 @@ namespace micro_profiler
 			_columns_main(new columns_model(c_columns_statistics, 3, false)),
 			_columns_children(new columns_model(c_columns_statistics, 4, false)),
 			_statistics_lv(create_listview()), _parents_statistics_lv(create_listview()),
-			_children_statistics_lv(create_listview())
+			_children_statistics_lv(create_listview()), _piechart(new piechart), _children_piechart(new piechart)
 	{
 		_columns_parents->update(*configuration.create("ParentsColumns"));
 		_columns_main->update(*configuration.create("MainColumns"));
@@ -55,15 +57,35 @@ namespace micro_profiler
 		_connections.push_back(_children_statistics_lv->item_activate += bind(&tables_ui::on_drilldown, this,
 			cref(_children_statistics), _1));
 
-		shared_ptr<stack> layout(new stack(5, false));
+		shared_ptr<container> split;
+		shared_ptr<stack> layout(new stack(5, false)), layout_split;
 
 		set_layout(layout);
+
 		layout->add(150);
 		add_view(_parents_statistics_lv);
+
+			split.reset(new container);
+			layout_split.reset(new stack(5, true));
+			split->set_layout(layout_split);
+			layout_split->add(150);
+			split->add_view(_piechart);
+			layout_split->add(-100);
+			split->add_view(_statistics_lv);
 		layout->add(-100);
-		add_view(_statistics_lv);
+		add_view(split);
+
+			//split.reset(new container);
+			//layout_split.reset(new stack(5, true));
+			//split->set_layout(layout_split);
+			//layout_split->add(150);
+			//split->add_view(_children_piechart);
+			//layout_split->add(-100);
+			//split->add_view(_children_statistics_lv);
 		layout->add(150);
 		add_view(_children_statistics_lv);
+
+		_piechart->set_model(_statistics->get_column_series());
 	}
 
 	void tables_ui::save(hive &configuration)

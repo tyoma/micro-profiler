@@ -24,11 +24,12 @@
 
 namespace micro_profiler
 {
-	struct piechart_model
+	template <typename T>
+	struct series
 	{
-		virtual ~piechart_model() {	}
+		virtual ~series() {	}
 		virtual size_t size() const throw() = 0;
-		virtual double get_value(size_t index) const throw() = 0;
+		virtual T get_value(size_t index) const throw() = 0;
 
 		wpl::signal<void()> invalidated;
 	};

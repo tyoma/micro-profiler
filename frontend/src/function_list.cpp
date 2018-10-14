@@ -167,7 +167,7 @@ namespace micro_profiler
 
 				template <typename T>
 				double operator ()(const T &value) const
-				{	return _inv_tick_count * value.exclusive_time / value.times_called;	}
+				{	return value.times_called ? _inv_tick_count * value.exclusive_time / value.times_called : 0.0;	}
 
 				double _inv_tick_count;
 			};
@@ -180,7 +180,7 @@ namespace micro_profiler
 
 				template <typename T>
 				double operator ()(const T &value) const
-				{	return _inv_tick_count * value.inclusive_time / value.times_called;	}
+				{	return value.times_called ? _inv_tick_count * value.inclusive_time / value.times_called : 0.0;	}
 
 				double _inv_tick_count;
 			};

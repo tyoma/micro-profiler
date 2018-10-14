@@ -40,6 +40,15 @@
     <ClCompile Include="frontend\controls.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\piechart.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\containers.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\graphics.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -54,7 +63,6 @@
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
-    <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="logo.ico">
@@ -140,6 +148,15 @@
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="frontend\controls.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\piechart.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\containers.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\graphics.h">
       <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>

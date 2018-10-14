@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "piechart.h"
+#include "series.h"
 
 #include <functional>
 #include <memory>
@@ -30,7 +30,7 @@
 namespace micro_profiler
 {
 	template <class Map>
-	class ordered_view : public piechart_model
+	class ordered_view : public series<double>
 	{
 	public:
 		typedef typename Map::value_type value_type;

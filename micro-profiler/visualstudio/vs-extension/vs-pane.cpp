@@ -59,6 +59,7 @@ namespace micro_profiler
 				_model = model;
 				_executable = executable;
 				_host->set_view(ui);
+				ui->set_background_color(color::make(24, 32, 48, 255));
 			}
 
 			void set_frame(const CComPtr<IVsWindowFrame> &frame)

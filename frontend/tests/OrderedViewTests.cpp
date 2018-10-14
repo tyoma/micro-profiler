@@ -542,7 +542,7 @@ namespace micro_profiler
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
 
 				// INIT / ACT
-				shared_ptr<piechart_model> tv = s;
+				shared_ptr< series<double> > tv = s;
 
 				// ASSERT
 				assert_equal(0u, tv->size());
@@ -555,7 +555,7 @@ namespace micro_profiler
 				pod_map source;
 				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}	};
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
-				shared_ptr<piechart_model> tv = s;
+				shared_ptr< series<double> > tv = s;
 
 				source[pods + 0] = pods[0], source[pods + 1] = pods[1], source[pods + 2] = pods[2];
 
@@ -595,7 +595,7 @@ namespace micro_profiler
 				pod_map source;
 				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}, {2, 30, 12.0},	};
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
-				shared_ptr<piechart_model> tv = s;
+				shared_ptr< series<double> > tv = s;
 
 				source[pods + 0] = pods[0];
 				source[pods + 1] = pods[1];
@@ -641,7 +641,7 @@ namespace micro_profiler
 				pod_map source;
 				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}, {2, 30, 12.0},	};
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
-				shared_ptr<piechart_model> tv = s;
+				shared_ptr< series<double> > tv = s;
 
 				source[pods + 0] = pods[0];
 				source[pods + 1] = pods[1];

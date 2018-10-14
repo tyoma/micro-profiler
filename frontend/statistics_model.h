@@ -38,7 +38,7 @@ namespace micro_profiler
 		statistics_model_impl(const MapT &statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);
 		~statistics_model_impl();
 
-		std::shared_ptr<piechart_model> get_column_slice() const;
+		std::shared_ptr< series<double> > get_column_series() const;
 
 		void detach() throw();
 
@@ -77,7 +77,7 @@ namespace micro_profiler
 	{	_view->detach();	}
 
 	template <typename BaseT, typename MapT>
-	std::shared_ptr<piechart_model> statistics_model_impl<BaseT, MapT>::get_column_slice() const
+	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const
 	{	return _view;	}
 
 	template <typename BaseT, typename MapT>

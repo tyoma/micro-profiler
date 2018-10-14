@@ -47,8 +47,11 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="frontend\containers.cpp" />
     <ClCompile Include="frontend\controls.cpp" />
     <ClCompile Include="frontend\file.cpp" />
+    <ClCompile Include="frontend\graphics.cpp" />
+    <ClCompile Include="frontend\piechart.cpp" />
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\stream.cpp" />
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
@@ -58,7 +61,10 @@
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClInclude Include="frontend\containers.h" />
     <ClInclude Include="frontend\controls.h" />
+    <ClInclude Include="frontend\graphics.h" />
+    <ClInclude Include="frontend\piechart.h" />
     <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\icon-ids.h" />

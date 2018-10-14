@@ -30,7 +30,7 @@
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\symbol_resolver.h" />
-    <ClInclude Include="..\piechart.h" />
+    <ClInclude Include="..\series.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

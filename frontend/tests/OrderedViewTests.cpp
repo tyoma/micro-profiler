@@ -7,6 +7,7 @@
 #include <ut/test.h>
 
 using namespace std;
+using namespace placeholders;
 
 namespace micro_profiler
 {
@@ -22,49 +23,31 @@ namespace micro_profiler
 			};
 
 			bool operator== (const POD &left, const POD &right)
-			{
-				return left.a == right.a && left.b == right.b && left.c == right.c;
-			}
-
-			float project_a(const POD &entry) { return static_cast<float>(entry.a); }
-			float project_b(const POD &entry) { return static_cast<float>(entry.b); }
-			float project_c(const POD &entry) { return static_cast<float>(entry.c); }
+			{	return left.a == right.a && left.b == right.b && left.c == right.c;	}
 
 			typedef unordered_map<void *, POD> pod_map;
 			typedef ordered_view<pod_map> sorted_pods;
 
 			pair<void *const, POD> make_pod(const POD &pod)
-			{
-				return make_pair((void *)&pod, pod);
-			}
+			{	return make_pair((void *)&pod, pod);	}
 
 			bool sort_by_a(const void *const, const POD &left, const void *const, const POD &right)
-			{
-				return left.a > right.a;
-			}
+			{	return left.a > right.a;	}
 
 			bool sort_by_a_less(const void *const, const POD &left, const void *const, const POD &right)
-			{
-				return left.a < right.a;
-			}
+			{	return left.a < right.a;	}
 
 			struct sort_by_b
 			{
 				bool operator()(const void *const, const POD &left, const void *const, const POD &right) const
-				{
-					return left.b > right.b;
-				}
+				{	return left.b > right.b;	}
 			};
 
 			bool sort_by_c(const void *const, const POD &left, const void *const, const POD &right)
-			{
-				return left.c > right.c;
-			}
+			{	return left.c > right.c;	}
 
 			bool sort_by_c_less(const void *const, const POD &left, const void *const, const POD &right)
-			{
-				return left.c < right.c;
-			}
+			{	return left.c < right.c;	}
 
 		}
 
@@ -563,7 +546,7 @@ namespace micro_profiler
 				s->resort();
 
 				// INIT / ACT
-				s->project_value(&project_a);
+				s->project_value(bind(&POD::a, _1));
 
 				// ACT / ASSERT
 				assert_equal(3u, tv->size());
@@ -572,7 +555,7 @@ namespace micro_profiler
 				assert_equal(1.0f, tv->get_value(2));
 
 				// INIT / ACT
-				s->project_value(&project_b);
+				s->project_value(bind(&POD::b, _1));
 
 				// ACT / ASSERT
 				assert_equal(21.0f, tv->get_value(0));
@@ -606,7 +589,7 @@ namespace micro_profiler
 				s->resort();
 
 				// INIT / ACT
-				s->project_value(&project_a);
+				s->project_value(bind(&POD::a, _1));
 
 				// ACT / ASSERT
 				assert_equal(4u, tv->size());
@@ -616,7 +599,7 @@ namespace micro_profiler
 				assert_equal(1.0f, tv->get_value(3));
 
 				// INIT / ACT
-				s->project_value(&project_b);
+				s->project_value(bind(&POD::b, _1));
 
 				// ACT / ASSERT
 				assert_equal(21.0f, tv->get_value(0));
@@ -659,7 +642,7 @@ namespace micro_profiler
 
 				// ACT
 				s->set_order(&sort_by_a_less, true);
-				s->project_value(&project_a);
+				s->project_value(bind(&POD::a, _1));
 				s->disable_projection();
 
 				// ACT / ASSERT

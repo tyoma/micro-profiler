@@ -29,17 +29,18 @@
 
 namespace micro_profiler
 {
-	template <class Map>
+	template <class ContainerT>
 	class ordered_view : public series<double>
 	{
 	public:
-		typedef typename Map::value_type value_type;
-		typedef typename Map::key_type key_type;
+		typedef typename ContainerT::value_type value_type;
+		typedef typename value_type::first_type key_type;
+		typedef typename value_type::second_type mapped_type;
 
 		static const size_t npos = static_cast<size_t>(-1);
 
 	public:
-		ordered_view(const Map &map);
+		ordered_view(const ContainerT &map);
 
 		// Paermanently detaches from the underlying map. Postcondition: size() becomes zero.
 		void detach() throw();
@@ -79,16 +80,16 @@ namespace micro_profiler
 		const ordered_view &operator =(const ordered_view &);
 
 	private:
-		const Map *_map;
+		const ContainerT *_underlying;
 		ordered_container _ordered_data;
 		std::function<void()> _sorter;
-		std::function<double(const typename Map::mapped_type &entry)> _extractor;
+		std::function<double(const mapped_type &entry)> _extractor;
 		bool _ascending;
 	};
 
-	template <typename Map>
+	template <typename ContainerT>
 	template <typename PredicateT>
-	class ordered_view<Map>::predicate_wrap_a
+	class ordered_view<ContainerT>::predicate_wrap_a
 	{
 	public:
 		predicate_wrap_a(const PredicateT &predicate)
@@ -103,9 +104,9 @@ namespace micro_profiler
 		PredicateT _predicate;
 	};
 
-	template <typename Map>
+	template <typename ContainerT>
 	template <typename PredicateT>
-	class ordered_view<Map>::predicate_wrap_d
+	class ordered_view<ContainerT>::predicate_wrap_d
 	{
 	public:
 		predicate_wrap_d(const PredicateT &predicate)
@@ -123,45 +124,47 @@ namespace micro_profiler
 
 
 	/// ordered_view implementation
-	template <class Map>
-	inline ordered_view<Map>::ordered_view(const Map &map)
-		: _map(&map)
+	template <class ContainerT>
+	inline ordered_view<ContainerT>::ordered_view(const ContainerT &underlying)
+		: _underlying(&underlying)
 	{	fetch_data();	}
 
-	template <class Map>
-	inline void ordered_view<Map>::detach() throw()
+	template <class ContainerT>
+	inline void ordered_view<ContainerT>::detach() throw()
 	{
-		_map = 0;
+		_underlying = 0;
 		_ordered_data.clear();
 	}
 
-	template <class Map>
-	inline size_t ordered_view<Map>::size() const throw()
+	template <class ContainerT>
+	inline size_t ordered_view<ContainerT>::size() const throw()
 	{	return _ordered_data.size();	}
 
-	template <class Map>
+	template <class ContainerT>
 	template <typename PredicateT>
-	inline void ordered_view<Map>::set_order(PredicateT predicate, bool ascending)
+	inline void ordered_view<ContainerT>::set_order(PredicateT predicate, bool ascending)
 	{
 		if (ascending)
-			_sorter = std::bind(&ordered_view::sort< predicate_wrap_a<PredicateT> >, this, predicate_wrap_a<PredicateT>(predicate));
+			_sorter = std::bind(&ordered_view::sort< predicate_wrap_a<PredicateT> >, this,
+				predicate_wrap_a<PredicateT>(predicate));
 		else
-			_sorter = std::bind(&ordered_view::sort< predicate_wrap_d<PredicateT> >, this, predicate_wrap_d<PredicateT>(predicate));
+			_sorter = std::bind(&ordered_view::sort< predicate_wrap_d<PredicateT> >, this,
+				predicate_wrap_d<PredicateT>(predicate));
 		_ascending = ascending;
 		_sorter();
 	}
 
-	template <class Map>
+	template <class ContainerT>
 	template <typename ExtractorT>
-	inline void ordered_view<Map>::project_value(const ExtractorT &extractor)
+	inline void ordered_view<ContainerT>::project_value(const ExtractorT &extractor)
 	{	_extractor = extractor;	}
 
-	template <class Map>
-	inline void ordered_view<Map>::disable_projection()
-	{	_extractor = std::function<double(const typename Map::mapped_type &entry)>();	}
+	template <class ContainerT>
+	inline void ordered_view<ContainerT>::disable_projection()
+	{	_extractor = std::function<double(const typename ContainerT::mapped_type &entry)>();	}
 
-	template <class Map>
-	inline void ordered_view<Map>::resort()
+	template <class ContainerT>
+	inline void ordered_view<ContainerT>::resort()
 	{
 		fetch_data();
 
@@ -170,32 +173,32 @@ namespace micro_profiler
 		invalidated();
 	}
 
-	template <class Map>
-	inline void ordered_view<Map>::fetch_data()
+	template <class ContainerT>
+	inline void ordered_view<ContainerT>::fetch_data()
 	{
-		if (!_map)
+		if (!_underlying)
 			return;
 		_ordered_data.clear();
-		_ordered_data.reserve(_map->size());
-		for (typename Map::const_iterator i = _map->begin(), end = _map->end(); i != end; ++i)
+		_ordered_data.reserve(_underlying->size());
+		for (typename ContainerT::const_iterator i = _underlying->begin(), end = _underlying->end(); i != end; ++i)
 			_ordered_data.push_back(&*i);
 	}
 
-	template <typename Map>
+	template <typename ContainerT>
 	template <typename PredicateT>
-	inline void ordered_view<Map>::sort(const PredicateT &predicate)
+	inline void ordered_view<ContainerT>::sort(const PredicateT &predicate)
 	{	std::sort(_ordered_data.begin(), _ordered_data.end(), predicate);	}
 
-	template <class Map>
-	inline const typename ordered_view<Map>::value_type &ordered_view<Map>::at(size_t index) const
+	template <class ContainerT>
+	inline const typename ordered_view<ContainerT>::value_type &ordered_view<ContainerT>::at(size_t index) const
 	{	return *_ordered_data[index];	}
 
-	template <class Map>
-	inline double ordered_view<Map>::get_value(size_t index) const
+	template <class ContainerT>
+	inline double ordered_view<ContainerT>::get_value(size_t index) const
 	{	return _extractor ? _extractor(at(_ascending ? _ordered_data.size() - index - 1 : index).second) : double();	}
 
-	template <class Map>
-	inline size_t ordered_view<Map>::find_by_key(const key_type &key) const
+	template <class ContainerT>
+	inline size_t ordered_view<ContainerT>::find_by_key(const key_type &key) const
 	{
 		for (size_t i = 0; i < _ordered_data.size(); ++i)
 		{

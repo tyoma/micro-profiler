@@ -38,6 +38,7 @@ namespace micro_profiler
 
 	public:
 		wpl::signal<void(index_type item)> selection_changed;
+		wpl::signal<void(index_type item)> item_activate;
 
 	private:
 		struct segment

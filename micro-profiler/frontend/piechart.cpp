@@ -124,8 +124,12 @@ namespace micro_profiler
 		selection_changed(idx);
 	}
 
-	void piechart::mouse_double_click(mouse_buttons /*button*/, int /*depressed*/, int /*x*/, int /*y*/)
+	void piechart::mouse_double_click(mouse_buttons /*button*/, int /*depressed*/, int x, int y)
 	{
+		index_type idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
+
+		if (npos != idx)
+			item_activate(idx);
 	}
 
 	void piechart::on_invalidated()

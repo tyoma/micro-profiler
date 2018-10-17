@@ -63,6 +63,8 @@ namespace micro_profiler
 			+= bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
 		_connections.push_back(_children_statistics_lv->selection_changed
 			+= bind(&tables_ui::on_children_selection_change, this, _1, _2));
+		_connections.push_back(_children_piechart->item_activate
+			+= bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
 		_connections.push_back(_children_piechart->selection_changed
 			+= bind(&tables_ui::on_children_piechart_selection_change, this, _1));
 

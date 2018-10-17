@@ -24,7 +24,7 @@
 #include "primitives.h"
 #include "symbol_resolver.h"
 
-#include <wpl/ui/listview.h>
+#include <wpl/ui/models.h>
 
 namespace micro_profiler
 {
@@ -45,7 +45,7 @@ namespace micro_profiler
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
-		virtual std::shared_ptr<const wpl::ui::listview::trackable> track(index_type row) const;
+		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type row) const;
 
 		virtual index_type get_index(address_t address) const;
 
@@ -92,27 +92,8 @@ namespace micro_profiler
 	{ return _view->size(); }
 
 	template <typename BaseT, typename MapT>
-	inline std::shared_ptr<const wpl::ui::listview::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
-	{
-		using namespace wpl::ui;
-
-		class trackable : public listview::trackable
-		{
-		public:
-			trackable(std::shared_ptr< const ordered_view<MapT> > view, address_t address)
-				: _view(view), _address(address)
-			{	}
-
-			virtual listview::index_type index() const
-			{	return _view->find_by_key(_address);	}
-
-		private:
-			std::shared_ptr< const ordered_view<MapT> > _view;
-			address_t _address;
-		};
-
-		return std::shared_ptr<const listview::trackable>(new trackable(_view, get_address(row)));
-	}
+	inline std::shared_ptr<const wpl::ui::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
+	{	return _view->track(row);	}
 
 	template <typename BaseT, typename MapT>
 	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(address_t address) const

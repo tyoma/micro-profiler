@@ -51,11 +51,20 @@ namespace micro_profiler
 		_statistics_lv->set_columns_model(_columns_main);
 		_children_statistics_lv->set_columns_model(_columns_children);
 
-		_connections.push_back(_statistics_lv->selection_changed += bind(&tables_ui::on_focus_change, this, _1, _2));
-		_connections.push_back(_parents_statistics_lv->item_activate += bind(&tables_ui::on_drilldown, this,
-			cref(_parents_statistics), _1));
-		_connections.push_back(_children_statistics_lv->item_activate += bind(&tables_ui::on_drilldown, this,
-			cref(_children_statistics), _1));
+		_connections.push_back(_statistics_lv->selection_changed
+			+= bind(&tables_ui::on_selection_change, this, _1, _2));
+		_connections.push_back(_piechart->selection_changed
+			+= bind(&tables_ui::on_piechart_selection_change, this, _1));
+
+		_connections.push_back(_parents_statistics_lv->item_activate
+			+= bind(&tables_ui::on_drilldown, this, cref(_parents_statistics), _1));
+
+		_connections.push_back(_children_statistics_lv->item_activate
+			+= bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
+		_connections.push_back(_children_statistics_lv->selection_changed
+			+= bind(&tables_ui::on_children_selection_change, this, _1, _2));
+		_connections.push_back(_children_piechart->selection_changed
+			+= bind(&tables_ui::on_children_piechart_selection_change, this, _1));
 
 		shared_ptr<container> split;
 		shared_ptr<stack> layout(new stack(5, false)), layout_split;
@@ -95,20 +104,41 @@ namespace micro_profiler
 		_columns_children->store(*configuration.create("ChildrenColumns"));
 	}
 
-	void tables_ui::on_focus_change(listview::index_type index, bool selected)
+	void tables_ui::on_selection_change(listview::index_type index, bool selected)
 	{
-		if (selected)
-		{
-			_children_statistics_lv->set_model(_children_statistics = _statistics->watch_children(index));
-			_children_piechart->set_model(_children_statistics->get_column_series());
-			_parents_statistics_lv->set_model(_parents_statistics = _statistics->watch_parents(index));
-			_statistics_lv->ensure_visible(index);
-		}
+		index = selected ? index : listview::npos;
+		switch_linked(index);
+		_piechart->select(index);
+	}
+
+	void tables_ui::on_piechart_selection_change(piechart::index_type index)
+	{
+		switch_linked(index);
+		_statistics_lv->select(index, true);
 	}
 
 	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, listview::index_type index)
 	{
 		index = _statistics->get_index(view->get_address(index));
 		_statistics_lv->select(index, true);
+		_statistics_lv->ensure_visible(index);
+	}
+
+	void tables_ui::on_children_selection_change(wpl::ui::listview::index_type index, bool selected)
+	{	_children_piechart->select(selected ? index : listview::npos);	}
+
+	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
+	{	_children_statistics_lv->select(index, true);	}
+
+	void tables_ui::switch_linked(wpl::ui::table_model::index_type index)
+	{
+		_children_statistics = index != wpl::ui::table_model::npos ? _statistics->watch_children(index)
+			: shared_ptr<linked_statistics>();
+		_parents_statistics = index != wpl::ui::table_model::npos ? _statistics->watch_parents(index)
+			: shared_ptr<linked_statistics>();
+		_children_statistics_lv->set_model(_children_statistics);
+		_children_piechart->set_model(_children_statistics ? _children_statistics->get_column_series()
+			: shared_ptr< series<double> >());
+		_parents_statistics_lv->set_model(_parents_statistics);
 	}
 }

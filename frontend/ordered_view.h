@@ -22,10 +22,12 @@
 
 #include "series.h"
 
+#include <algorithm>
 #include <functional>
+#include <list>
 #include <memory>
 #include <vector>
-#include <algorithm>
+#include <wpl/ui/models.h>
 
 namespace micro_profiler
 {
@@ -37,10 +39,9 @@ namespace micro_profiler
 		typedef typename value_type::first_type key_type;
 		typedef typename value_type::second_type mapped_type;
 
-		static const size_t npos = static_cast<size_t>(-1);
-
 	public:
 		ordered_view(const ContainerT &map);
+		~ordered_view();
 
 		// Paermanently detaches from the underlying map. Postcondition: size() becomes zero.
 		void detach() throw();
@@ -57,10 +58,11 @@ namespace micro_profiler
 		// Repopulate internal ordered storage from source map with respect to predicate set.
 		void resort();
 
-		virtual size_t size() const throw();
-		const value_type &at(size_t index) const;
-		virtual double get_value(size_t index) const;
-		size_t find_by_key(const key_type &key) const;
+		virtual index_type size() const throw();
+		const value_type &at(index_type index) const;
+		virtual double get_value(index_type index) const;
+		index_type find_by_key(const key_type &key) const;
+		std::shared_ptr<const wpl::ui::trackable> track(index_type index) const;
 
 	private:
 		typedef std::vector<const value_type *> ordered_container;
@@ -70,9 +72,27 @@ namespace micro_profiler
 		template <typename PredicateT>
 		class predicate_wrap_d;
 
+		class trackable : public wpl::ui::trackable
+		{
+		public:
+			trackable(key_type key_, index_type current_index_) : key(key_), current_index(current_index_) {	}
+			virtual index_type index() const { return current_index; }
+
+		public:
+			key_type key;
+			index_type current_index;
+
+		private:
+			const trackable &operator =(const trackable &rhs);
+		};
+
+		typedef std::list<trackable> trackables_t;
+
 	private:
 		// Repopulate internal storage with data from source map, ignores any predicate set.
 		void fetch_data();
+
+		void update_trackables();
 
 		template <typename PredicateT>
 		void sort(const PredicateT &predicate);
@@ -84,8 +104,9 @@ namespace micro_profiler
 		ordered_container _ordered_data;
 		std::function<void()> _sorter;
 		std::function<double(const mapped_type &entry)> _extractor;
-		bool _ascending;
+		std::shared_ptr<trackables_t> _trackables;
 	};
+
 
 	template <typename ContainerT>
 	template <typename PredicateT>
@@ -103,6 +124,7 @@ namespace micro_profiler
 	private:
 		PredicateT _predicate;
 	};
+
 
 	template <typename ContainerT>
 	template <typename PredicateT>
@@ -123,11 +145,17 @@ namespace micro_profiler
 
 
 
-	/// ordered_view implementation
 	template <class ContainerT>
 	inline ordered_view<ContainerT>::ordered_view(const ContainerT &underlying)
-		: _underlying(&underlying)
+		: _underlying(&underlying), _trackables(new trackables_t)
 	{	fetch_data();	}
+
+	template <class ContainerT>
+	inline ordered_view<ContainerT>::~ordered_view()
+	{
+		_ordered_data.clear();
+		update_trackables();
+	}
 
 	template <class ContainerT>
 	inline void ordered_view<ContainerT>::detach() throw()
@@ -137,8 +165,8 @@ namespace micro_profiler
 	}
 
 	template <class ContainerT>
-	inline size_t ordered_view<ContainerT>::size() const throw()
-	{	return _ordered_data.size();	}
+	inline typename ordered_view<ContainerT>::index_type ordered_view<ContainerT>::size() const throw()
+	{	return static_cast<index_type>(_ordered_data.size());	}
 
 	template <class ContainerT>
 	template <typename PredicateT>
@@ -150,8 +178,8 @@ namespace micro_profiler
 		else
 			_sorter = std::bind(&ordered_view::sort< predicate_wrap_d<PredicateT> >, this,
 				predicate_wrap_d<PredicateT>(predicate));
-		_ascending = ascending;
 		_sorter();
+		update_trackables();
 	}
 
 	template <class ContainerT>
@@ -171,6 +199,7 @@ namespace micro_profiler
 		if (_sorter)
 			_sorter();
 		invalidated();
+		update_trackables();
 	}
 
 	template <class ContainerT>
@@ -185,26 +214,56 @@ namespace micro_profiler
 	}
 
 	template <typename ContainerT>
+	inline void ordered_view<ContainerT>::update_trackables()
+	{
+		const trackables_t::iterator b = _trackables->begin(), e = _trackables->end();
+
+		for (trackables_t::iterator j = b; j != e; ++j)
+			j->current_index = trackable::npos;
+		for (index_type i = 0, count = size(); i != count; ++i)
+		{
+			const value_type &entry = at(i);
+
+			for (trackables_t::iterator j = b; j != e; ++j)
+				if (j->key == entry.first)
+					j->current_index = i;
+		}
+	}
+
+	template <typename ContainerT>
 	template <typename PredicateT>
 	inline void ordered_view<ContainerT>::sort(const PredicateT &predicate)
 	{	std::sort(_ordered_data.begin(), _ordered_data.end(), predicate);	}
 
 	template <class ContainerT>
-	inline const typename ordered_view<ContainerT>::value_type &ordered_view<ContainerT>::at(size_t index) const
+	inline const typename ordered_view<ContainerT>::value_type &ordered_view<ContainerT>::at(index_type index) const
 	{	return *_ordered_data[index];	}
 
 	template <class ContainerT>
-	inline double ordered_view<ContainerT>::get_value(size_t index) const
-	{	return _extractor ? _extractor(at(_ascending ? _ordered_data.size() - index - 1 : index).second) : double();	}
+	inline double ordered_view<ContainerT>::get_value(index_type index) const
+	{	return _extractor ? _extractor(at(index).second) : double();	}
 
 	template <class ContainerT>
-	inline size_t ordered_view<ContainerT>::find_by_key(const key_type &key) const
+	inline typename ordered_view<ContainerT>::index_type ordered_view<ContainerT>::find_by_key(const key_type &key) const
 	{
-		for (size_t i = 0; i < _ordered_data.size(); ++i)
+		for (index_type i = 0, count = size(); i < count; ++i)
 		{
-			if (_ordered_data[i]->first == key)
+			if (at(i).first == key)
 				return i;
 		}
 		return npos;
+	}
+
+	template <class ContainerT>
+	inline std::shared_ptr<const wpl::ui::trackable> ordered_view<ContainerT>::track(index_type index) const
+	{
+		using namespace std;
+
+		struct deleter
+		{	static void erase(const shared_ptr<trackables_t> &c, typename trackables_t::iterator i) { c->erase(i); } };
+
+		trackables_t::iterator i = _trackables->insert(_trackables->end(), trackable(at(index).first, index));
+
+		return shared_ptr<trackable>(&*i, bind(&deleter::erase, _trackables, i));
 	}
 }

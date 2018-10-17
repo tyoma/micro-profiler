@@ -63,6 +63,10 @@ namespace micro_profiler
 		{	return join(arc(cx, cy, outer_r, start, end), arc(cx, cy, inner_r, end, start));	}
 	}
 
+	piechart::piechart()
+		: _reciprocal_sum(0), _selection_emphasis_k(0.1f)
+	{	}
+
 	void piechart::set_model(const std::shared_ptr<model_t> &m)
 	{
 		_model = m;
@@ -70,36 +74,31 @@ namespace micro_profiler
 		on_invalidated();
 	}
 
+	void piechart::select(index_type item)
+	{
+		_selection = item != npos && _model ? _model->track(item) : shared_ptr<trackable>();
+		invalidate(0);
+	}
+
 	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer) const
 	{
 		if (!_model)
 			return;
 
-		double inverted_sum;
-
-		_segments.clear();
-		inverted_sum = 0.0f;
-		for (size_t i = 0, count = _model->size(); i != count; ++i)
-		{
-			segment s = { _model->get_value(i) };
-
-			_segments.push_back(s);
-			inverted_sum += s.value;
-		}
-		inverted_sum = inverted_sum != 0.0f ? 1.0f / inverted_sum : 0.0f;
-
 		real_t start = -pi * 0.5f;
 		segments_t::const_iterator i;
 		const blender *j;
+		const ptrdiff_t selection = _selection ? _selection->index() : npos;
 
 		for (i = _segments.begin(), j = begin(c_palette); i != _segments.end() && j != end(c_palette); ++i, ++j)
 		{
-			real_t share = static_cast<real_t>(i->value * inverted_sum);
+			real_t share = static_cast<real_t>(i->value * _reciprocal_sum);
 			real_t end = start + 2.0f * pi * share;
+			real_t outer_r = _outer_r * (selection == i - _segments.begin() ? _selection_emphasis_k + 1.0f : 1.0f);
 
 			if (share > 0.01)
 			{
-				add_path(*rasterizer, pie_segment(_center.x, _center.y, _outer_r, _inner_r, start, end));
+				add_path(*rasterizer, pie_segment(_center.x, _center.y, outer_r, _inner_r, start, end));
 				rasterizer->close_polygon();
 				ctx(rasterizer, *j, winding<>());
 			}
@@ -110,11 +109,65 @@ namespace micro_profiler
 	void piechart::resize(unsigned cx, unsigned cy, positioned_native_views &/*nviews*/)
 	{
 		_outer_r = 0.5f * real_t((min)(cx, cy));
-		_inner_r = 0.5f * _outer_r;
 		_center.x = _outer_r, _center.y = _outer_r;
+		_outer_r /= (1.0f + _selection_emphasis_k);
+		_inner_r = 0.5f * _outer_r;
 		invalidate(0);
 	}
 
+	void piechart::mouse_down(mouse_buttons /*button*/, int /*depressed*/, int x, int y)
+	{
+		index_type idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
+
+		_selection = _model && idx != npos ? _model->track(idx) : shared_ptr<const trackable>();
+		invalidate(0);
+		selection_changed(idx);
+	}
+
+	void piechart::mouse_double_click(mouse_buttons /*button*/, int /*depressed*/, int /*x*/, int /*y*/)
+	{
+	}
+
 	void piechart::on_invalidated()
-	{	invalidate(0);	}
+	{
+		_segments.clear();
+		_reciprocal_sum = 0.0f;
+		if (_model)
+		{
+			for (series<double>::index_type i = 0, count = _model->size(); i != count; ++i)
+			{
+				segment s = { static_cast<real_t>(_model->get_value(i)) };
+
+				_segments.push_back(s);
+				_reciprocal_sum += s.value;
+			}
+			_reciprocal_sum = _reciprocal_sum ? 1.0f / _reciprocal_sum : 0.0f;
+		}
+		invalidate(0);
+	}
+
+	piechart::index_type piechart::find_sector(real_t x, real_t y)
+	{
+		x -= _center.x, y -= _center.y;
+		real_t r = distance(0.0f, 0.0f, x, y), a = 0.5f * pi - atan2(x, y);
+
+		if (r < _inner_r)
+			return npos;
+
+		real_t start = -pi * 0.5f;
+
+		for (index_type i = 0, count = _segments.size(); i != count; ++i)
+		{
+			real_t share = static_cast<real_t>(_segments[i].value * _reciprocal_sum);
+			real_t end = start + 2.0f * pi * share;
+
+			if (((start <= a) & (a < end))
+				&& r < _outer_r * (_selection && _selection->index() == i ? (_selection_emphasis_k + 1.0f) : 1.0f))
+			{
+					return i;
+			}
+			start = end;
+		}
+		return npos;
+	}
 }

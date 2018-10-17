@@ -48,7 +48,7 @@ namespace micro_profiler
 				return fl.get_text(row, column, text), text;
 			}
 
-			void assert_row(const listview::model &fl, size_t row, const wchar_t* name, const wchar_t* times_called)
+			void assert_row(const table_model &fl, table_model::index_type row, const wchar_t* name, const wchar_t* times_called)
 			{
 				wstring result;
 
@@ -61,8 +61,8 @@ namespace micro_profiler
 			}
 
 			void assert_row(
-				const listview::model &fl, 
-				size_t row, 
+				const table_model &fl, 
+				table_model::index_type row, 
 				const wchar_t* name, 
 				const wchar_t* times_called, 
 				const wchar_t* inclusive_time, 
@@ -96,14 +96,14 @@ namespace micro_profiler
 			{
 				wpl::slot_connection _connection;
 
-				void on_invalidate(listview::model::index_type count)
+				void on_invalidate(table_model::index_type count)
 				{	invalidations.push_back(count);	}
 
 			public:
-				typedef vector<listview::model::index_type> _invalidations_log_t;
+				typedef vector<table_model::index_type> _invalidations_log_t;
 
 			public:
-				void bind_to_model(listview::model &to)
+				void bind_to_model(table_model &to)
 				{	_connection = to.invalidated += bind(&invalidation_tracer::on_invalidate, this, _1);	}
 
 				_invalidations_log_t invalidations;
@@ -112,16 +112,16 @@ namespace micro_profiler
 
 			class invalidation_at_sorting_check1
 			{
-				const listview::model &_model;
+				const table_model &_model;
 
 				const invalidation_at_sorting_check1 &operator =(const invalidation_at_sorting_check1 &);
 
 			public:
-				invalidation_at_sorting_check1(listview::model &m)
+				invalidation_at_sorting_check1(table_model &m)
 					: _model(m)
 				{	}
 
-				void operator ()(listview::model::index_type /*count*/) const
+				void operator ()(table_model::index_type /*count*/) const
 				{
 					assert_row(_model, 0, L"00002995", L"700");
 					assert_row(_model, 1, L"00003001", L"30");
@@ -168,14 +168,14 @@ namespace micro_profiler
 				return result;
 			}
 
-			size_t find_row(const listview::model &m, const wstring &name)
+			table_model::index_type find_row(const table_model &m, const wstring &name)
 			{
 				wstring result;
 
-				for (listview::index_type i = 0, c = m.get_count(); i != c; ++i)
+				for (table_model::index_type i = 0, c = m.get_count(); i != c; ++i)
 					if (m.get_text(i, 1, result), result == name)
 						return i;
-				return (size_t)-1;
+				return table_model::npos;
 			}
 		}
 
@@ -246,7 +246,7 @@ namespace micro_profiler
 				assert_equal(1u, ih.invalidations.back()); //check what's coming as event arg
 
 				// ACT
-				shared_ptr<const listview::trackable> first = fl->track(0); // 2229
+				shared_ptr<const trackable> first = fl->track(0); // 2229
 
 				// ASSERT
 				assert_equal(0u, first->index());
@@ -258,7 +258,7 @@ namespace micro_profiler
 				assert_equal(0u, fl->get_count());
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(0u, ih.invalidations.back()); //check what's coming as event arg
-				assert_equal(listview::npos, first->index());
+				assert_equal(table_model::npos, first->index());
 
 				// INIT
 				_buffer.rewind();
@@ -298,7 +298,7 @@ namespace micro_profiler
 				fl->clear();
 
 				// ASSERT
-				listview::model::index_type reference[] = { 0, };
+				table_model::index_type reference[] = { 0, };
 
 				assert_equal(0u, children[0]->get_count());
 				assert_equal(reference, it1.invalidations);
@@ -331,7 +331,7 @@ namespace micro_profiler
 				fl->clear();
 
 				// ASSERT
-				listview::model::index_type reference[] = { 0, };
+				table_model::index_type reference[] = { 0, };
 
 				assert_equal(0u, parents[0]->get_count());
 				assert_equal(reference, it1.invalidations);
@@ -367,13 +367,13 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(3u, fl->get_count());
 
-				for (size_t i = 0; i < expected.size(); ++i)
+				for (table_model::index_type i = 0; i < expected.size(); ++i)
 					assert_equal(expected[i], i);
 
-				assert_not_equal(listview::npos, idx1118);
-				assert_not_equal(listview::npos, idx2229);
-				assert_not_equal(listview::npos, idx5550);
-				assert_equal(listview::npos, fl->get_index(1234));
+				assert_not_equal(table_model::npos, idx1118);
+				assert_not_equal(table_model::npos, idx2229);
+				assert_not_equal(table_model::npos, idx5550);
+				assert_equal(table_model::npos, fl->get_index(1234));
 
 				//Check twice. Kind of regularity check.
 				assert_equal(fl->get_index(1118), idx1118);
@@ -408,8 +408,8 @@ namespace micro_profiler
 
 				// ACT
 				dser(*fl);
-				shared_ptr<const listview::trackable> first = fl->track(0); // 2229
-				shared_ptr<const listview::trackable> second = fl->track(1); // 1118
+				shared_ptr<const trackable> first = fl->track(0); // 2229
+				shared_ptr<const trackable> second = fl->track(1); // 1118
 
 				// ASSERT
 				assert_equal(2u, fl->get_count());
@@ -555,15 +555,15 @@ namespace micro_profiler
 
 				dser(*fl);
 
-				shared_ptr<const listview::trackable> pt0 = fl->track(fl->get_index(1990));
-				shared_ptr<const listview::trackable> pt1 = fl->track(fl->get_index(2000));
-				shared_ptr<const listview::trackable> pt2 = fl->track(fl->get_index(2990));
-				shared_ptr<const listview::trackable> pt3 = fl->track(fl->get_index(3000));
+				shared_ptr<const trackable> pt0 = fl->track(fl->get_index(1990));
+				shared_ptr<const trackable> pt1 = fl->track(fl->get_index(2000));
+				shared_ptr<const trackable> pt2 = fl->track(fl->get_index(2990));
+				shared_ptr<const trackable> pt3 = fl->track(fl->get_index(3000));
 				
-				const listview::trackable &t0 = *pt0;
-				const listview::trackable &t1 = *pt1;
-				const listview::trackable &t2 = *pt2;
-				const listview::trackable &t3 = *pt3;
+				const trackable &t0 = *pt0;
+				const trackable &t1 = *pt1;
+				const trackable &t2 = *pt2;
+				const trackable &t3 = *pt3;
 
 				// ACT (times called, ascending)
 				fl->set_order(2, true);
@@ -907,10 +907,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_children(2), out_of_range);
 				assert_throws(fl1->watch_children(20), out_of_range);
-				assert_throws(fl1->watch_children((size_t)-1), out_of_range);
+				assert_throws(fl1->watch_children(table_model::npos), out_of_range);
 				assert_throws(fl2->watch_children(3), out_of_range);
 				assert_throws(fl2->watch_children(30), out_of_range);
-				assert_throws(fl2->watch_children((size_t)-1), out_of_range);
+				assert_throws(fl2->watch_children(table_model::npos), out_of_range);
 			}
 
 
@@ -982,11 +982,11 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equal(1u, ls_0->get_count());
-				assert_not_equal((size_t)-1, find_row(*ls_0, L"00002001"));
+				assert_not_equal(table_model::npos, find_row(*ls_0, L"00002001"));
 				assert_equal(3u, ls_1->get_count());
-				assert_not_equal((size_t)-1, find_row(*ls_1, L"00002004"));
-				assert_not_equal((size_t)-1, find_row(*ls_1, L"00002008"));
-				assert_not_equal((size_t)-1, find_row(*ls_1, L"00002011"));
+				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002004"));
+				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002008"));
+				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002011"));
 			}
 
 
@@ -1183,12 +1183,12 @@ namespace micro_profiler
 				dser(*fl);
 
 				// ACT
-				shared_ptr<const listview::trackable> t(fl->track(1));
+				shared_ptr<const trackable> t(fl->track(1));
 
 				fl = shared_ptr<functions_list>();
 
 				// ACT / ASSERT
-				assert_equal((listview::index_type)-1, t->index());
+				assert_equal(trackable::npos, t->index());
 			}
 
 
@@ -1213,10 +1213,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_parents(2), out_of_range);
 				assert_throws(fl1->watch_parents(20), out_of_range);
-				assert_throws(fl1->watch_parents((size_t)-1), out_of_range);
+				assert_throws(fl1->watch_parents(table_model::npos), out_of_range);
 				assert_throws(fl2->watch_parents(3), out_of_range);
 				assert_throws(fl2->watch_parents(30), out_of_range);
-				assert_throws(fl2->watch_parents((size_t)-1), out_of_range);
+				assert_throws(fl2->watch_parents(table_model::npos), out_of_range);
 			}
 
 
@@ -1730,10 +1730,10 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(4u, m->size());
-				assert_equal(12000.0, m->get_value(0));
-				assert_equal(127.0, m->get_value(1));
-				assert_equal(123.0, m->get_value(2));
-				assert_equal(12.0, m->get_value(3));
+				assert_equal(12000.0, m->get_value(3));
+				assert_equal(127.0, m->get_value(2));
+				assert_equal(123.0, m->get_value(1));
+				assert_equal(12.0, m->get_value(0));
 			}
 
 
@@ -1834,8 +1834,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0.240, m1->get_value(0));
 				assert_equal(0.030, m1->get_value(1));
-				assert_equal(0.120, m2->get_value(0));
-				assert_equal(0.015, m2->get_value(1));
+				assert_equal(0.015, m2->get_value(0));
+				assert_equal(0.120, m2->get_value(1));
 
 				// ACT
 				fl1->set_order(5, false);
@@ -1844,8 +1844,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0.00032, m1->get_value(0));
 				assert_equal(0.00026, m1->get_value(1));
-				assert_equal(0.00016, m2->get_value(0));
-				assert_equal(0.00013, m2->get_value(1));
+				assert_equal(0.00013, m2->get_value(0));
+				assert_equal(0.00016, m2->get_value(1));
 
 				// ACT
 				fl1->set_order(6, false);
@@ -1854,8 +1854,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0.00030, m1->get_value(0));
 				assert_equal(0.00024, m1->get_value(1));
-				assert_equal(0.00015, m2->get_value(0));
-				assert_equal(0.00012, m2->get_value(1));
+				assert_equal(0.00012, m2->get_value(0));
+				assert_equal(0.00015, m2->get_value(1));
 
 				// ACT
 				fl1->set_order(8, false);
@@ -1864,8 +1864,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0.256, m1->get_value(0));
 				assert_equal(0.028, m1->get_value(1));
-				assert_equal(0.128, m2->get_value(0));
-				assert_equal(0.014, m2->get_value(1));
+				assert_equal(0.014, m2->get_value(0));
+				assert_equal(0.128, m2->get_value(1));
 			}
 
 
@@ -1996,8 +1996,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, m->size());
-				assert_equal(31.0, m->get_value(0));
-				assert_equal(29.0, m->get_value(1));
+				assert_equal(29.0, m->get_value(0));
+				assert_equal(31.0, m->get_value(1));
 
 				// ACT
 				ls = fl->watch_children(1);

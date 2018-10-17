@@ -20,16 +20,16 @@
 
 #pragma once
 
-#include <wpl/base/signals.h>
+#include <wpl/ui/models.h>
 
 namespace micro_profiler
 {
 	template <typename T>
-	struct series
+	struct series : wpl::destructible, wpl::ui::index_traits
 	{
-		virtual ~series() {	}
-		virtual size_t size() const throw() = 0;
-		virtual T get_value(size_t index) const throw() = 0;
+		virtual index_type size() const throw() = 0;
+		virtual T get_value(index_type index) const throw() = 0;
+		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type item) const = 0;
 
 		wpl::signal<void()> invalidated;
 	};

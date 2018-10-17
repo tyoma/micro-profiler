@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace placeholders;
+using namespace wpl::ui;
 
 namespace micro_profiler
 {
@@ -217,13 +218,13 @@ namespace micro_profiler
 				assert_equal(make_pod(biggestA), s.at(0));
 
 				s.set_order(&sort_by_a, false);
-				assert_equal(make_pod(biggestA), s.at(s.size()-1));
+				assert_equal(make_pod(biggestA), s.at(s.size() - 1));
 
 				s.set_order(sort_by_b(), true);
 				assert_equal(make_pod(biggestB), s.at(0));
 
 				s.set_order(sort_by_b(), false);
-				assert_equal(make_pod(biggestB), s.at(s.size()-1));
+				assert_equal(make_pod(biggestB), s.at(s.size() - 1));
 			}
 
 
@@ -572,7 +573,7 @@ namespace micro_profiler
 			}
 
 
-			test( OrderedViewProvidesDescendantValuesForAscendingOrdering )
+			test( OrderedViewProvidesAscendingValuesForAscendingOrdering )
 			{
 				// INIT
 				pod_map source;
@@ -593,28 +594,28 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equal(4u, tv->size());
-				assert_equal(114.0f, tv->get_value(0));
-				assert_equal(10.0f, tv->get_value(1));
-				assert_equal(2.0f, tv->get_value(2));
-				assert_equal(1.0f, tv->get_value(3));
+				assert_equal(1.0f, tv->get_value(0));
+				assert_equal(2.0f, tv->get_value(1));
+				assert_equal(10.0f, tv->get_value(2));
+				assert_equal(114.0f, tv->get_value(3));
 
 				// INIT / ACT
 				s->project_value(bind(&POD::b, _1));
 
 				// ACT / ASSERT
-				assert_equal(21.0f, tv->get_value(0));
+				assert_equal(0.0f, tv->get_value(0));
 				assert_equal(30.0f, tv->get_value(1));
 				assert_equal(30.0f, tv->get_value(2));
-				assert_equal(0.0f, tv->get_value(3));
+				assert_equal(21.0f, tv->get_value(3));
 
 				// INIT / ACT
 				s->set_order(&sort_by_c_less, true);
 
 				// ACT / ASSERT
-				assert_equal(21.0f, tv->get_value(0));
-				assert_equal(30.0f, tv->get_value(1));
-				assert_equal(0.0f, tv->get_value(2));
-				assert_equal(30.0f, tv->get_value(3));
+				assert_equal(30.0f, tv->get_value(0));
+				assert_equal(0.0f, tv->get_value(1));
+				assert_equal(30.0f, tv->get_value(2));
+				assert_equal(21.0f, tv->get_value(3));
 			}
 
 
@@ -651,6 +652,200 @@ namespace micro_profiler
 				assert_equal(0.0, s->get_value(2));
 				assert_equal(0.0, s->get_value(3));
 			}
+
+
+			test( OrderedViewProvidesTracking )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+
+				underlying.push_back(make_pair(17, "lorem"));
+				underlying.push_back(make_pair(17230, "dolor"));
+				underlying.push_back(make_pair(172311, "ipsum"));
+				underlying.push_back(make_pair(17231, "amet"));
+				ov->resort();
+				ov->set_order(bind(less<string>(), _2, _4), true);
+
+				// ACT
+				shared_ptr<const trackable> t1 = ov->track(0);
+				shared_ptr<const trackable> t2 = ov->track(2);
+
+				// ASSERT
+				assert_not_null(t1);
+				assert_equal(0u, t1->index());
+				assert_not_null(t2);
+				assert_equal(2u, t2->index());
+			}
+
+
+			test( ChangingSortOrderKeepsTrackablesAtProperIndex )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+
+				underlying.push_back(make_pair(17, "lorem"));
+				underlying.push_back(make_pair(17230, "dolor"));
+				underlying.push_back(make_pair(172311, "ipsum")); // t2
+				underlying.push_back(make_pair(17231, "amet")); // t1
+				ov->resort();
+				ov->set_order(bind(less<string>(), _2, _4), true);
+				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(2);
+
+				// ACT
+				ov->set_order(bind(less<string>(), _2, _4), false);
+
+				// ASSERT
+				assert_not_null(t1);
+				assert_equal(3u, t1->index());
+				assert_not_null(t2);
+				assert_equal(1u, t2->index());
+
+				// ACT
+				ov->set_order(bind(less<int>(), _1, _3), true);
+
+				// ASSERT
+				assert_not_null(t1);
+				assert_equal(2u, t1->index());
+				assert_not_null(t2);
+				assert_equal(3u, t2->index());
+			}
+
+
+			test( UpdatingUnderlyingContainerKeepsTrackablesAtProperIndex )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+
+				underlying.push_back(make_pair(17, "lorem"));
+				underlying.push_back(make_pair(17230, "dolor"));
+				underlying.push_back(make_pair(172311, "ipsum")); // t2
+				underlying.push_back(make_pair(17231, "amet")); // t1
+				ov->resort();
+				ov->set_order(bind(less<string>(), _2, _4), true);
+
+				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(2);
+
+				// ACT
+				underlying.push_back(make_pair(17232, "bass"));
+				ov->resort();
+
+				// ASSERT
+				assert_not_null(t1);
+				assert_equal(0u, t1->index());
+				assert_not_null(t2);
+				assert_equal(3u, t2->index());
+
+				// ACT
+				underlying.push_back(make_pair(17233, "a"));
+				ov->resort();
+
+				// ASSERT
+				assert_not_null(t1);
+				assert_equal(1u, t1->index());
+				assert_not_null(t2);
+				assert_equal(4u, t2->index());
+			}
+
+
+			test( RemovalOfTrackedItemKeepsTrackablesAtProperIndex )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+
+				underlying.insert(underlying.end(), make_pair(17, "lorem"));
+				underlying.insert(underlying.end(), make_pair(17230, "dolor"));
+				underlying.insert(underlying.end(), make_pair(17230, "a"));
+				underlying.insert(underlying.end(), make_pair(172311, "ipsum")); // t2
+				underlying_t::iterator i = underlying.insert(underlying.end(), make_pair(17231, "amet")); // t1
+				ov->resort();
+				ov->set_order(bind(less<string>(), _2, _4), true);
+
+				shared_ptr<const trackable> t1 = ov->track(1), t2 = ov->track(3);
+
+				// ACT
+				underlying.erase(i);
+				ov->resort();
+
+				// ASSERT
+				assert_not_null(t1);
+				assert_equal(trackable::npos, t1->index());
+				assert_not_null(t2);
+				assert_equal(2u, t2->index());
+			}
+
+
+			test( ResettingTrackableDestroysIt )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+
+				underlying.push_back(make_pair(17, "lorem"));
+				underlying.push_back(make_pair(17230, "dolor"));
+				underlying.push_back(make_pair(172311, "ipsum")); // t2
+				underlying.push_back(make_pair(17231, "amet")); // t1
+				ov->resort();
+				ov->set_order(bind(less<string>(), _2, _4), true);
+
+				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(2);
+				weak_ptr<const void> wt1 = t1;
+
+				// ACT
+				t1.reset();
+
+				// ASSERT
+				assert_is_true(wt1.expired());
+
+				// ACT
+				underlying.push_back(make_pair(17233, "a"));
+				ov->resort();
+
+				// ASSERT
+				assert_not_null(t2);
+				assert_equal(3u, t2->index());
+			}
+
+
+			test( DestructionOfOrderedViewResetsTrackablesToNPos )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+
+				underlying.push_back(make_pair(17, "lorem"));
+				underlying.push_back(make_pair(17230, "dolor"));
+				underlying.push_back(make_pair(172311, "ipsum"));
+				underlying.push_back(make_pair(17231, "amet"));
+				ov->resort();
+				ov->set_order(bind(less<string>(), _2, _4), true);
+
+				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(1), t3 = ov->track(2);
+
+				// ACT
+				ov.reset();
+
+				// ACT / ASSERT
+				assert_equal(trackable::npos, t1->index());
+				assert_equal(trackable::npos, t2->index());
+				assert_equal(trackable::npos, t3->index());
+			}
+
 		end_test_suite
 	}
 }

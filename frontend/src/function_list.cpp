@@ -303,7 +303,7 @@ namespace micro_profiler
 
 	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl<listview::model, statistics_map_detailed>(*statistics, tick_interval, resolver),
+		: statistics_model_impl<table_model, statistics_map_detailed>(*statistics, tick_interval, resolver),
 			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
 	{	}
 
@@ -322,7 +322,7 @@ namespace micro_profiler
 		content.clear();
 		content.reserve(256 * (get_count() + 1)); // kind of magic number
 		content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
-		for (size_t i = 0; i != get_count(); ++i)
+		for (index_type i = 0; i != get_count(); ++i)
 		{
 			const view_type::value_type &row = get_entry(i);
 

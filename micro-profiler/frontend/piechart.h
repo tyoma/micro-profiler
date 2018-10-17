@@ -25,18 +25,24 @@
 
 namespace micro_profiler
 {
-	class piechart : public wpl::ui::view
+	class piechart : public wpl::ui::view, public wpl::ui::index_traits
 	{
 	public:
 		typedef series<double> model_t;
 
 	public:
+		piechart();
+
 		void set_model(const std::shared_ptr<model_t> &m);
+		void select(index_type item);
+
+	public:
+		wpl::signal<void(index_type item)> selection_changed;
 
 	private:
 		struct segment
 		{
-			double value;
+			agge::real_t value;
 		};
 			
 		typedef std::vector<segment> segments_t;
@@ -45,13 +51,19 @@ namespace micro_profiler
 		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer) const;
 		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &nviews);
 
+		virtual void mouse_down(mouse_buttons button, int depressed, int x, int y);
+		virtual void mouse_double_click(mouse_buttons button, int depressed, int x, int y);
+
 		void on_invalidated();
+		index_type find_sector(agge::real_t x, agge::real_t y);
 
 	private:
-		mutable segments_t _segments;
+		segments_t _segments;
+		agge::real_t _reciprocal_sum;
 		agge::point_r _center;
-		agge::real_t _outer_r, _inner_r;
+		agge::real_t _outer_r, _inner_r, _selection_emphasis_k;
 		wpl::slot_connection _invalidate_connection;
 		std::shared_ptr<model_t> _model;
+		std::shared_ptr<const wpl::ui::trackable> _selection;
 	};
 }

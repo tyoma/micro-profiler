@@ -1,6 +1,7 @@
 #pragma once
 
 #include "containers.h"
+#include "piechart.h"
 
 #include <memory>
 #include <vector>
@@ -13,7 +14,6 @@ namespace micro_profiler
 	class functions_list;
 	struct hive;
 	struct linked_statistics;
-	class piechart;
 
 	class tables_ui : wpl::noncopyable, public container_with_background
 	{
@@ -23,8 +23,14 @@ namespace micro_profiler
 		void save(hive &configuration);
 
 	private:
-		void on_focus_change(wpl::ui::listview::index_type index, bool selected);
+		void on_selection_change(wpl::ui::listview::index_type index, bool selected);
+		void on_piechart_selection_change(piechart::index_type index);
+
 		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::ui::listview::index_type index);
+		void on_children_selection_change(wpl::ui::listview::index_type index, bool selected);
+		void on_children_piechart_selection_change(piechart::index_type index);
+
+		void switch_linked(wpl::ui::table_model::index_type index);
 
 	private:
 		const std::shared_ptr<functions_list> _statistics;

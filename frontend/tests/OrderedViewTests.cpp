@@ -50,6 +50,8 @@ namespace micro_profiler
 			bool sort_by_c_less(const void *const, const POD &left, const void *const, const POD &right)
 			{	return left.c < right.c;	}
 
+			void increment(int *value)
+			{	++*value;	}
 		}
 
 
@@ -844,6 +846,54 @@ namespace micro_profiler
 				assert_equal(trackable::npos, t1->index());
 				assert_equal(trackable::npos, t2->index());
 				assert_equal(trackable::npos, t3->index());
+			}
+
+
+			test( TrackablesAreInvalidatedOnDetach )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+
+				underlying.push_back(make_pair(17, "lorem"));
+				underlying.push_back(make_pair(17230, "dolor"));
+				underlying.push_back(make_pair(172311, "ipsum"));
+				underlying.push_back(make_pair(17231, "amet"));
+				ov->resort();
+				ov->set_order(bind(less<string>(), _2, _4), true);
+
+				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(1), t3 = ov->track(2);
+
+				// ACT
+				ov->detach();
+
+				// ACT / ASSERT
+				assert_equal(trackable::npos, t1->index());
+				assert_equal(trackable::npos, t2->index());
+				assert_equal(trackable::npos, t3->index());
+			}
+
+
+			test( OrderedViewNotifiesOfInvalidationOnDetach )
+			{
+				typedef list< pair<int, string> > underlying_t;
+
+				// INIT
+				underlying_t underlying;
+				int invalidated_times = 0;
+				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
+				wpl::slot_connection conn = ov->invalidated += bind(&increment, &invalidated_times);
+
+				underlying.push_back(make_pair(17, "lorem"));
+				ov->set_order(bind(less<string>(), _2, _4), true);
+
+				// ACT
+				ov->detach();
+
+				// ASSERT
+				assert_equal(1, invalidated_times);
 			}
 
 		end_test_suite

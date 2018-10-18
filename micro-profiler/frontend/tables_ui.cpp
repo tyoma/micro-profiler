@@ -16,6 +16,26 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const color c_palette[] = {
+			color::make(230, 85, 13, 255),
+			color::make(253, 141, 60, 255),
+			color::make(253, 174, 107, 255),
+
+			color::make(49, 163, 84, 255),
+			color::make(116, 196, 118, 255),
+			color::make(161, 217, 155, 255),
+
+			color::make(107, 174, 214, 255),
+			color::make(158, 202, 225, 255),
+			color::make(198, 219, 239, 255),
+
+			color::make(117, 107, 177, 255),
+			color::make(158, 154, 200, 255),
+			color::make(188, 189, 220, 255),
+		};
+
+		const color c_rest = color::make(128, 128, 128, 255);
+
 		const columns_model::column c_columns_statistics[] = {
 			columns_model::column("Index", L"#", 28, columns_model::dir_none),
 			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
@@ -36,36 +56,36 @@ namespace micro_profiler
 	}
 
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
-		: _statistics(model), _columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
-			_columns_main(new columns_model(c_columns_statistics, 3, false)),
-			_columns_children(new columns_model(c_columns_statistics, 4, false)),
-			_statistics_lv(create_listview()), _parents_statistics_lv(create_listview()),
-			_children_statistics_lv(create_listview()), _piechart(new piechart), _children_piechart(new piechart)
+		: _columns_main(new columns_model(c_columns_statistics, 3, false)), _statistics(model), 
+			_statistics_lv(create_listview()), _statistics_pc(new piechart(begin(c_palette), end(c_palette), c_rest)),
+			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)), _parents_lv(create_listview()),
+			_columns_children(new columns_model(c_columns_statistics, 4, false)), _children_lv(create_listview()),
+			_children_pc(new piechart(begin(c_palette), end(c_palette), c_rest))
 	{
 		_columns_parents->update(*configuration.create("ParentsColumns"));
 		_columns_main->update(*configuration.create("MainColumns"));
 		_columns_children->update(*configuration.create("ChildrenColumns"));
 
-		_parents_statistics_lv->set_columns_model(_columns_parents);
+		_parents_lv->set_columns_model(_columns_parents);
 		_statistics_lv->set_model(_statistics);
 		_statistics_lv->set_columns_model(_columns_main);
-		_children_statistics_lv->set_columns_model(_columns_children);
+		_children_lv->set_columns_model(_columns_children);
 
 		_connections.push_back(_statistics_lv->selection_changed
 			+= bind(&tables_ui::on_selection_change, this, _1, _2));
-		_connections.push_back(_piechart->selection_changed
+		_connections.push_back(_statistics_pc->selection_changed
 			+= bind(&tables_ui::on_piechart_selection_change, this, _1));
 
-		_connections.push_back(_parents_statistics_lv->item_activate
+		_connections.push_back(_parents_lv->item_activate
 			+= bind(&tables_ui::on_drilldown, this, cref(_parents_statistics), _1));
 
-		_connections.push_back(_children_statistics_lv->item_activate
+		_connections.push_back(_children_lv->item_activate
 			+= bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
-		_connections.push_back(_children_statistics_lv->selection_changed
+		_connections.push_back(_children_lv->selection_changed
 			+= bind(&tables_ui::on_children_selection_change, this, _1, _2));
-		_connections.push_back(_children_piechart->item_activate
+		_connections.push_back(_children_pc->item_activate
 			+= bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
-		_connections.push_back(_children_piechart->selection_changed
+		_connections.push_back(_children_pc->selection_changed
 			+= bind(&tables_ui::on_children_piechart_selection_change, this, _1));
 
 		shared_ptr<container> split;
@@ -74,13 +94,13 @@ namespace micro_profiler
 		set_layout(layout);
 
 		layout->add(150);
-		add_view(_parents_statistics_lv);
+		add_view(_parents_lv);
 
 			split.reset(new container);
 			layout_split.reset(new stack(5, true));
 			split->set_layout(layout_split);
 			layout_split->add(150);
-			split->add_view(_piechart);
+			split->add_view(_statistics_pc);
 			layout_split->add(-100);
 			split->add_view(_statistics_lv);
 		layout->add(-100);
@@ -90,13 +110,13 @@ namespace micro_profiler
 			layout_split.reset(new stack(5, true));
 			split->set_layout(layout_split);
 			layout_split->add(150);
-			split->add_view(_children_piechart);
+			split->add_view(_children_pc);
 			layout_split->add(-100);
-			split->add_view(_children_statistics_lv);
+			split->add_view(_children_lv);
 		layout->add(150);
 		add_view(split);
 
-		_piechart->set_model(_statistics->get_column_series());
+		_statistics_pc->set_model(_statistics->get_column_series());
 	}
 
 	void tables_ui::save(hive &configuration)
@@ -110,13 +130,15 @@ namespace micro_profiler
 	{
 		index = selected ? index : listview::npos;
 		switch_linked(index);
-		_piechart->select(index);
+		_statistics_pc->select(index);
 	}
 
 	void tables_ui::on_piechart_selection_change(piechart::index_type index)
 	{
 		switch_linked(index);
 		_statistics_lv->select(index, true);
+		if (piechart::npos != index)
+			_statistics_lv->ensure_visible(index);
 	}
 
 	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, listview::index_type index)
@@ -127,10 +149,14 @@ namespace micro_profiler
 	}
 
 	void tables_ui::on_children_selection_change(wpl::ui::listview::index_type index, bool selected)
-	{	_children_piechart->select(selected ? index : listview::npos);	}
+	{	_children_pc->select(selected ? index : listview::npos);	}
 
 	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
-	{	_children_statistics_lv->select(index, true);	}
+	{
+		_children_lv->select(index, true);
+		if (piechart::npos != index)
+			_children_lv->ensure_visible(index);
+	}
 
 	void tables_ui::switch_linked(wpl::ui::table_model::index_type index)
 	{
@@ -138,9 +164,9 @@ namespace micro_profiler
 			: shared_ptr<linked_statistics>();
 		_parents_statistics = index != wpl::ui::table_model::npos ? _statistics->watch_parents(index)
 			: shared_ptr<linked_statistics>();
-		_children_statistics_lv->set_model(_children_statistics);
-		_children_piechart->set_model(_children_statistics ? _children_statistics->get_column_series()
+		_children_lv->set_model(_children_statistics);
+		_children_pc->set_model(_children_statistics ? _children_statistics->get_column_series()
 			: shared_ptr< series<double> >());
-		_parents_statistics_lv->set_model(_parents_statistics);
+		_parents_lv->set_model(_parents_statistics);
 	}
 }

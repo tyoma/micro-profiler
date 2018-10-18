@@ -92,6 +92,7 @@ namespace micro_profiler
 		// Repopulate internal storage with data from source map, ignores any predicate set.
 		void fetch_data();
 
+		void invalidate_trackables();
 		void update_trackables();
 
 		template <typename PredicateT>
@@ -162,6 +163,8 @@ namespace micro_profiler
 	{
 		_underlying = 0;
 		_ordered_data.clear();
+		invalidate_trackables();
+		invalidated();
 	}
 
 	template <class ContainerT>
@@ -214,12 +217,18 @@ namespace micro_profiler
 	}
 
 	template <typename ContainerT>
+	inline void ordered_view<ContainerT>::invalidate_trackables()
+	{
+		for (trackables_t::iterator j = _trackables->begin(); j != _trackables->end(); ++j)
+			j->current_index = trackable::npos;
+	}
+
+	template <typename ContainerT>
 	inline void ordered_view<ContainerT>::update_trackables()
 	{
 		const trackables_t::iterator b = _trackables->begin(), e = _trackables->end();
 
-		for (trackables_t::iterator j = b; j != e; ++j)
-			j->current_index = trackable::npos;
+		invalidate_trackables();
 		for (index_type i = 0, count = size(); i != count; ++i)
 		{
 			const value_type &entry = at(i);

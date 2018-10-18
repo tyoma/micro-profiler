@@ -34,4 +34,3 @@ namespace micro_profiler
 		wpl::signal<void()> invalidated;
 	};
 }
-

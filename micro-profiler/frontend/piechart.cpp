@@ -36,36 +36,9 @@ namespace micro_profiler
 {
 	namespace
 	{
-		typedef blender_solid_color<simd::blender_solid_color, order_bgra> blender;
-
-		const blender c_palette[] = {
-			blender(230, 85, 13),
-			blender(253, 141, 60),
-			blender(253, 174, 107),
-			blender(253, 208, 162),
-
-			blender(49, 163, 84),
-			blender(116, 196, 118),
-			blender(161, 217, 155),
-			blender(199, 233, 192),
-
-			blender(107, 174, 214),
-			blender(158, 202, 225),
-			blender(198, 219, 239),
-
-			blender(117, 107, 177),
-			blender(158, 154, 200),
-			blender(188, 189, 220),
-			blender(218, 218, 235),
-		};
-
 		joined_path<arc, arc> pie_segment(real_t cx, real_t cy, real_t outer_r, real_t inner_r, real_t start, real_t end)
 		{	return join(arc(cx, cy, outer_r, start, end), arc(cx, cy, inner_r, end, start));	}
 	}
-
-	piechart::piechart()
-		: _reciprocal_sum(0), _selection_emphasis_k(0.1f)
-	{	}
 
 	void piechart::set_model(const std::shared_ptr<model_t> &m)
 	{
@@ -82,25 +55,21 @@ namespace micro_profiler
 
 	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer) const
 	{
-		if (!_model)
-			return;
+		typedef blender_solid_color<simd::blender_solid_color, order_bgra> blender;
 
 		real_t start = -pi * 0.5f;
-		segments_t::const_iterator i;
-		const blender *j;
-		const ptrdiff_t selection = _selection ? _selection->index() : npos;
+		const index_type selection = _selection ? _selection->index() : npos;
 
-		for (i = _segments.begin(), j = begin(c_palette); i != _segments.end() && j != end(c_palette); ++i, ++j)
+		for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
 		{
-			real_t share = static_cast<real_t>(i->value * _reciprocal_sum);
-			real_t end = start + 2.0f * pi * share;
-			real_t outer_r = _outer_r * (selection == i - _segments.begin() ? _selection_emphasis_k + 1.0f : 1.0f);
+			real_t end = start + i->share_angle;
+			real_t outer_r = _outer_r * ((selection != npos) & (selection == i->index) ? _selection_emphasis_k + 1.0f : 1.0f);
 
-			if (share > 0.01)
+			if (i->share_angle > 0.005)
 			{
 				add_path(*rasterizer, pie_segment(_center.x, _center.y, outer_r, _inner_r, start, end));
 				rasterizer->close_polygon();
-				ctx(rasterizer, *j, winding<>());
+				ctx(rasterizer, blender(i->segment_color.r, i->segment_color.g, i->segment_color.b), winding<>());
 			}
 			start = end;
 		}
@@ -134,19 +103,35 @@ namespace micro_profiler
 
 	void piechart::on_invalidated()
 	{
-		_segments.clear();
-		_reciprocal_sum = 0.0f;
-		if (_model)
-		{
-			for (series<double>::index_type i = 0, count = _model->size(); i != count; ++i)
-			{
-				segment s = { static_cast<real_t>(_model->get_value(i)) };
+		segment rest = { npos, 0.0f, 2.0f * pi, _color_rest };
+		real_t reciprocal_sum = 0.0f;
+		index_type i, count;
+		vector<color>::const_iterator j;
 
+		_segments.clear();
+		if (_selection && _selection->index() == npos)
+			_selection.reset();
+		for (i = 0, j = _palette.begin(), count = _model ? _model->size() : 0; i != count; ++i)
+		{
+			segment s = { i, static_cast<real_t>(_model->get_value(i)), 0.0f, };
+
+			if (j != _palette.end())
+			{
+				s.segment_color = *j++;
 				_segments.push_back(s);
-				_reciprocal_sum += s.value;
 			}
-			_reciprocal_sum = _reciprocal_sum ? 1.0f / _reciprocal_sum : 0.0f;
+			reciprocal_sum += s.value;
 		}
+		rest.value = reciprocal_sum;
+		reciprocal_sum = reciprocal_sum ? 1.0f / reciprocal_sum : 0.0f;
+		for (segments_t::iterator i = _segments.begin(), end = _segments.end(); i != end; ++i)
+		{
+			const real_t share_angle = 2.0f * pi * i->value * reciprocal_sum;
+
+			i->share_angle = share_angle;
+			rest.share_angle -= share_angle;
+		}
+		_segments.push_back(rest);
 		invalidate(0);
 	}
 
@@ -155,22 +140,22 @@ namespace micro_profiler
 		x -= _center.x, y -= _center.y;
 		real_t r = distance(0.0f, 0.0f, x, y), a = 0.5f * pi - atan2(x, y);
 
-		if (r < _inner_r)
-			return npos;
-
-		real_t start = -pi * 0.5f;
-
-		for (index_type i = 0, count = _segments.size(); i != count; ++i)
+		if (r >= _inner_r)
 		{
-			real_t share = static_cast<real_t>(_segments[i].value * _reciprocal_sum);
-			real_t end = start + 2.0f * pi * share;
+			real_t start = -pi * 0.5f;
+			const index_type selection = _selection ? _selection->index() : npos;
 
-			if (((start <= a) & (a < end))
-				&& r < _outer_r * (_selection && _selection->index() == i ? (_selection_emphasis_k + 1.0f) : 1.0f))
+			for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
 			{
-					return i;
+				real_t end = start + i->share_angle;
+
+				if (((start <= a) & (a < end))
+					&& r < _outer_r * ((selection != npos) & (selection == i->index) ? (_selection_emphasis_k + 1.0f) : 1.0f))
+				{
+					return i->index;
+				}
+				start = end;
 			}
-			start = end;
 		}
 		return npos;
 	}

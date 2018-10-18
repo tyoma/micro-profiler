@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "graphics.h"
+
 #include <frontend/series.h>
 #include <wpl/ui/view.h>
 
@@ -31,7 +33,8 @@ namespace micro_profiler
 		typedef series<double> model_t;
 
 	public:
-		piechart();
+		template <typename PaletteIteratorT>
+		piechart(PaletteIteratorT palette_begin, PaletteIteratorT palette_end, color color_rest);
 
 		void set_model(const std::shared_ptr<model_t> &m);
 		void select(index_type item);
@@ -43,7 +46,9 @@ namespace micro_profiler
 	private:
 		struct segment
 		{
-			agge::real_t value;
+			model_t::index_type index;
+			agge::real_t value, share_angle;
+			color segment_color;
 		};
 			
 		typedef std::vector<segment> segments_t;
@@ -60,11 +65,19 @@ namespace micro_profiler
 
 	private:
 		segments_t _segments;
-		agge::real_t _reciprocal_sum;
 		agge::point_r _center;
 		agge::real_t _outer_r, _inner_r, _selection_emphasis_k;
 		wpl::slot_connection _invalidate_connection;
 		std::shared_ptr<model_t> _model;
 		std::shared_ptr<const wpl::ui::trackable> _selection;
+		std::vector<color> _palette;
+		color _color_rest;
 	};
+
+
+
+	template <typename PaletteIteratorT>
+	inline piechart::piechart(PaletteIteratorT begin, PaletteIteratorT end, color color_rest)
+		: _selection_emphasis_k(0.1f), _palette(begin, end), _color_rest(color_rest)
+	{	}
 }

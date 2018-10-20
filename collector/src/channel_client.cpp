@@ -40,7 +40,10 @@ namespace micro_profiler
 			{	::CoInitialize(0);	}
 
 			~frontend_stream()
-			{	::CoUninitialize();	}
+			{
+				_frontend.Release();
+				::CoUninitialize();
+			}
 
 			bool operator()(const void *buffer, size_t size)
 			{

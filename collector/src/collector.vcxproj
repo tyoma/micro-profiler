@@ -39,6 +39,9 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <ImportLibrary>$(OutDir)micro-profiler_$(PlatformName).lib</ImportLibrary>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>com.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -61,6 +64,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="collector.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="com.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

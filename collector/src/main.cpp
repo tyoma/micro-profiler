@@ -75,9 +75,39 @@ namespace micro_profiler
 			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
 		}
 	}
+
+	class isolation_aware_channel_factory
+	{
+	public:
+		explicit isolation_aware_channel_factory(HINSTANCE hinstance)
+		{
+			ACTCTX ctx = { sizeof(ACTCTX), };
+
+			ctx.hModule = hinstance;
+			ctx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
+			ctx.dwFlags = ACTCTX_FLAG_HMODULE_VALID | ACTCTX_FLAG_RESOURCE_NAME_VALID;
+			_activation_context.reset(::CreateActCtx(&ctx), ::ReleaseActCtx);
+		}
+
+		channel_t operator ()() const
+		{
+			ULONG_PTR cookie;
+
+			::ActivateActCtx(_activation_context.get(), &cookie);
+			shared_ptr<void> activation_lock(reinterpret_cast<void*>(cookie), &deactivate_context);
+			return open_channel(reinterpret_cast<const guid_t &>(c_frontendClassID));
+		}
+
+	private:
+		static void deactivate_context(void *cookie)
+		{	::DeactivateActCtx(0, reinterpret_cast<ULONG_PTR>(cookie));	}
+
+	private:
+		shared_ptr<void> _activation_context;
+	};
 }
 
-extern "C" BOOL WINAPI DllMain(HINSTANCE /*hinstance*/, DWORD reason, LPVOID /*reserved*/)
+extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reserved*/)
 {
 	using namespace micro_profiler;
 
@@ -87,7 +117,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE /*hinstance*/, DWORD reason, LPVOID /*r
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 		g_frontend_controller.reset(new frontend_controller(*calls_collector::instance(),
-			bind(&open_channel, reinterpret_cast<const guid_t &>(c_frontendClassID))));
+			isolation_aware_channel_factory(hinstance)));
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -105,7 +135,7 @@ extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void
 	{
 		HMODULE dummy;
 
-		// Make unloadable...
+		// Prohibit unloading...
 		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
 			reinterpret_cast<LPCTSTR>(&DllMain), &dummy);
 		PatchExitProcess();

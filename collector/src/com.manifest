@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+	<assemblyIdentity version="0.0.0.0" name="_._._" type="win32" />
+
+	<comInterfaceExternalProxyStub
+		name="ISequentialStream"
+		iid="{0c733a30-2a1c-11ce-ade5-00aa0044773d}"
+		proxyStubClsid32	="{00000320-0000-0000-C000-000000000046}"
+	/>
+</assembly>

@@ -51,7 +51,9 @@
       <OmitFramePointers>true</OmitFramePointers>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="channel_client.cpp" />
+    <ClCompile Include="channel_client.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="frontend_controller.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>

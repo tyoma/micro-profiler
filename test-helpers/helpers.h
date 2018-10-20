@@ -37,8 +37,6 @@ namespace micro_profiler
 
 		std::wstring get_current_process_executable();
 
-		bool is_com_initialized();
-
 		namespace this_thread
 		{
 			void sleep_for(unsigned int duration);
@@ -55,6 +53,8 @@ namespace micro_profiler
 			long_address_t load_address() const;
 			const wchar_t *absolute_path() const;
 			const void *get_symbol_address(const char *name) const;
+			template <typename T>
+			T *get_symbol(const char *name) const;
 		};
 
 		class vector_adapter
@@ -72,6 +72,11 @@ namespace micro_profiler
 			std::vector<unsigned char> buffer;
 		};
 
+
+
+		template <typename T>
+		inline T *image::get_symbol(const char *name) const
+		{	return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(get_symbol_address(name)));	}
 
 
 		template <typename T, size_t size>

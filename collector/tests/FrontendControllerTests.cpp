@@ -3,7 +3,7 @@
 #include <collector/entry.h>
 
 #include <test-helpers/helpers.h>
-#include "Mockups.h"
+#include "mocks.h"
 
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -19,6 +19,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			const int dummy = 0;
+
 			void RaiseAt(event_flag *e, volatile long *times_to_event)
 			{
 				if (0 == _InterlockedDecrement(times_to_event))
@@ -58,13 +60,13 @@ namespace micro_profiler
 			}
 
 			handle *profile_this(frontend_controller &fc)
-			{	return fc.profile(&RaiseAt);	}
+			{	return fc.profile(&dummy);	}
 
 
 			class sync_stop_frontend_controller : public frontend_controller
 			{
 			public:
-				sync_stop_frontend_controller(calls_collector_i &collector, mockups::FrontendState &state)
+				sync_stop_frontend_controller(calls_collector_i &collector, mocks::FrontendState &state)
 					: frontend_controller(collector, state.MakeFactory())
 				{	}
 
@@ -76,8 +78,8 @@ namespace micro_profiler
 			class auto_frontend_controller : public sync_stop_frontend_controller
 			{
 			public:
-				auto_frontend_controller(calls_collector_i &collector, mockups::FrontendState &state)
-					: sync_stop_frontend_controller(collector, state), _profiler_handle(profile(&RaiseAt))
+				auto_frontend_controller(calls_collector_i &collector, mocks::FrontendState &state)
+					: sync_stop_frontend_controller(collector, state), _profiler_handle(profile(&dummy))
 				{	}
 
 			private:
@@ -88,8 +90,8 @@ namespace micro_profiler
 			class scoped_thread_join : wpl::noncopyable
 			{
 			public:
-				scoped_thread_join(shared_ptr<running_thread> &thread)
-					: _thread(thread)
+				scoped_thread_join(shared_ptr<running_thread> &thread_)
+					: _thread(thread_)
 				{	}
 
 				~scoped_thread_join()
@@ -104,9 +106,9 @@ namespace micro_profiler
 			test( FactoryIsNotCalledIfCollectionHandleWasNotObtained )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				event_flag initialized(false, true);
-				mockups::FrontendState state(bind(&event_flag::raise, &initialized));
+				mocks::FrontendState state(bind(&event_flag::raise, &initialized));
 
 				// ACT
 				{	frontend_controller fc(tracer, state.MakeFactory());	}
@@ -119,8 +121,8 @@ namespace micro_profiler
 			test( ForcedStopIsAllowedOnStartedController )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				frontend_controller fc(tracer, state.MakeFactory());
 
 				// ACT / ASSERT (must not throw)
@@ -131,8 +133,8 @@ namespace micro_profiler
 			test( NonNullHandleObtained )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				sync_stop_frontend_controller fc(tracer, state);
 
 				// ACT
@@ -146,10 +148,10 @@ namespace micro_profiler
 			test( FrontendIsCreatedInASeparateThreadWhenProfilerHandleObtained )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
 				event_flag initialized(false, true);
-				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				scoped_thread_join stj(hthread);
 				frontend_controller fc(tracer, state.MakeFactory());
 
@@ -167,10 +169,10 @@ namespace micro_profiler
 			test( TwoCoexistingFrontendsHasDifferentWorkerThreads )
 			{
 				// INIT
-				mockups::Tracer tracer1, tracer2;
+				mocks::Tracer tracer1, tracer2;
 				shared_ptr<running_thread> hthread1, hthread2;
 				event_flag initialized1(false, true), initialized2(false, true);
-				mockups::FrontendState state1(bind(&LogThread1, &hthread1, &initialized1)),
+				mocks::FrontendState state1(bind(&LogThread1, &hthread1, &initialized1)),
 					state2(bind(&LogThread1, &hthread2, &initialized2));
 				auto_frontend_controller fc1(tracer1, state1);
 				auto_frontend_controller fc2(tracer2, state2);
@@ -187,10 +189,10 @@ namespace micro_profiler
 			test( FrontendStopsImmediatelyAtForceStopRequest )
 			{
 				// INIT
-				mockups::Tracer tracer(11);
+				mocks::Tracer tracer(11);
 				shared_ptr<running_thread> hthread;
 				event_flag initialized(false, true);
-				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h(profile_this(fc));
 
@@ -207,10 +209,10 @@ namespace micro_profiler
 			test( FrontendIsRecreatedOnRepeatedHandleObtaining )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long counter = 2;
-				mockups::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				mocks::FrontendState state(bind(&RaiseAt, &initialized, &counter));
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h;
 
@@ -241,10 +243,10 @@ namespace micro_profiler
 			test( FrontendCreationIsRefCounted2 )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long counter = 1;
-				mockups::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				mocks::FrontendState state(bind(&RaiseAt, &initialized, &counter));
 				frontend_controller fc(tracer, state.MakeFactory());
 
 				// ACT
@@ -265,10 +267,10 @@ namespace micro_profiler
 			test( FrontendCreationIsRefCounted3 )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long counter = 1;
-				mockups::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				mocks::FrontendState state(bind(&RaiseAt, &initialized, &counter));
 				frontend_controller fc(tracer, state.MakeFactory());
 
 				// ACT
@@ -291,11 +293,11 @@ namespace micro_profiler
 			test( FirstThreadIsDeadByTheTimeOfTheSecondInitialization )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
 				event_flag second_initialized(false, true);
 				bool first_finished = false;
-				mockups::FrontendState state(bind(&ValidateThread, &hthread, &second_initialized, &first_finished));
+				mocks::FrontendState state(bind(&ValidateThread, &hthread, &second_initialized, &first_finished));
 				scoped_thread_join stj(hthread);
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h;
@@ -314,11 +316,11 @@ namespace micro_profiler
 			test( AllWorkerThreadsMustExitOnHandlesClosure )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				event_flag proceed(false, false), finished(false, true);
 				vector< shared_ptr<running_thread> > htread_log;
 				volatile long times = 2;
-				mockups::FrontendState state(bind(&ControlInitialization, &proceed, &htread_log, &times, &finished));
+				mocks::FrontendState state(bind(&ControlInitialization, &proceed, &htread_log, &times, &finished));
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h;
 
@@ -338,10 +340,10 @@ namespace micro_profiler
 			test( ProfilerHandleReleaseIsNonBlockingAndFrontendThreadIsFinishedEventually )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
 				event_flag initialized(false, true);
-				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				scoped_thread_join stj(hthread);
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h(profile_this(fc));
@@ -358,43 +360,13 @@ namespace micro_profiler
 			}
 
 
-			bool com_initialized;
-			bool com_deinitialized;
-
-			void try_open_channel()
-			{
-				channel_t c = open_channel(guid_t());
-
-				com_initialized = is_com_initialized();
-				c = channel_t();
-				com_deinitialized = !is_com_initialized();
-			}
-
-			// Actually this will always pass when calling from managed, since COM already initialized
-			test( ChannelConstructionInitializesCOM )
-			{
-				// INIT
-				com_initialized = false;
-				com_deinitialized = false;
-
-				wpl::mt::thread t(bind(&FrontendControllerTests::try_open_channel, this));
-
-				// ACT
-				t.join();
-
-				// ASSERT
-				assert_is_true(com_initialized);
-				assert_is_true(com_deinitialized);
-			}
-
-
 			test( FrontendInterfaceReleasedAtPFDestroyed )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
 				event_flag initialized(false, true);
-				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h(profile_this(fc));
 
@@ -411,9 +383,9 @@ namespace micro_profiler
 			test( FrontendInitializedWithProcessIdAndTicksResolution )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				event_flag initialized(false, true);
-				mockups::FrontendState state(bind(&event_flag::raise, &initialized));
+				mocks::FrontendState state(bind(&event_flag::raise, &initialized));
 				auto_frontend_controller fc(tracer, state);
 
 				// ACT
@@ -432,8 +404,8 @@ namespace micro_profiler
 			test( FrontendIsNotBotheredWithEmptyDataUpdates )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				auto_frontend_controller fc(tracer, state);
 
 				// ACT / ASSERT
@@ -444,8 +416,8 @@ namespace micro_profiler
 			test( ImageLoadEventArrivesAtHandleObtaining )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
 				sync_stop_frontend_controller fc(tracer, state);
 
@@ -474,8 +446,8 @@ namespace micro_profiler
 			test( ImageUnloadEventArrivesAtHandleRelease )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
 				sync_stop_frontend_controller fc(tracer, state);
 
@@ -507,8 +479,8 @@ namespace micro_profiler
 			test( LastBatchIsReportedToFrontend )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h(profile_this(fc));
 				call_record trace1[] = { { 0, (void *)0x1223 }, { 1000, (void *)0 }, };
@@ -537,8 +509,8 @@ namespace micro_profiler
 			test( MakeACallAndWaitForDataPost )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				auto_frontend_controller fc(tracer, state);
 
 				state.modules_state_updated.wait();
@@ -557,7 +529,7 @@ namespace micro_profiler
 				// ASERT
 				assert_equal(1u, state.update_log.size());
 
-				mockups::statistics_map_detailed::const_iterator callinfo_1 = state.update_log[0].update.find(0x1223);
+				mocks::statistics_map_detailed::const_iterator callinfo_1 = state.update_log[0].update.find(0x1223);
 
 				assert_not_equal(state.update_log[0].update.end(), callinfo_1);
 
@@ -582,7 +554,7 @@ namespace micro_profiler
 
 				assert_equal(1u, state.update_log[1].update.size());	// The new batch MUST NOT not contain previous function.
 
-				mockups::statistics_map_detailed::const_iterator callinfo_2 = state.update_log[1].update.find(0x31223);
+				mocks::statistics_map_detailed::const_iterator callinfo_2 = state.update_log[1].update.find(0x31223);
 
 				assert_not_equal(state.update_log[1].update.end(), callinfo_2);
 
@@ -597,10 +569,10 @@ namespace micro_profiler
 			test( SecondProfilerInstanceIsWorkable )
 			{
 				// INIT
-				mockups::Tracer tracer;
+				mocks::Tracer tracer;
 				event_flag initialized(false, true);
 				volatile long times = 2;
-				mockups::FrontendState state(bind(&RaiseAt, &initialized, &times));
+				mocks::FrontendState state(bind(&RaiseAt, &initialized, &times));
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h(profile_this(fc));
 				call_record trace[] = {
@@ -629,8 +601,8 @@ namespace micro_profiler
 			test( PassReentranceCountToFrontend )
 			{
 				// INIT
-				mockups::Tracer tracer;
-				mockups::FrontendState state;
+				mocks::Tracer tracer;
+				mocks::FrontendState state;
 				auto_frontend_controller fc(tracer, state);
 
 				state.modules_state_updated.wait();
@@ -661,7 +633,7 @@ namespace micro_profiler
 				// ASERT
 				assert_equal(1u, state.update_log.size());
 
-				const mockups::function_statistics_detailed callinfo_1 = state.update_log[0].update[0x31000];
+				const mocks::function_statistics_detailed callinfo_1 = state.update_log[0].update[0x31000];
 
 				assert_equal(7u, callinfo_1.times_called);
 				assert_equal(3u, callinfo_1.max_reentrance);
@@ -687,7 +659,7 @@ namespace micro_profiler
 				// ASERT
 				assert_equal(2u, state.update_log.size());
 
-				const mockups::function_statistics_detailed &callinfo_2 = state.update_log[1].update[0x31000];
+				const mocks::function_statistics_detailed &callinfo_2 = state.update_log[1].update[0x31000];
 
 				assert_equal(5u, callinfo_2.times_called);
 				assert_equal(4u, callinfo_2.max_reentrance);
@@ -697,8 +669,8 @@ namespace micro_profiler
 			test( PerformanceDataTakesProfilerLatencyIntoAccount )
 			{
 				// INIT
-				mockups::Tracer tracer1(13), tracer2(29);
-				mockups::FrontendState state1, state2;
+				mocks::Tracer tracer1(13), tracer2(29);
+				mocks::FrontendState state1, state2;
 
 				auto_frontend_controller fe1(tracer1, state1);
 				auto_frontend_controller fe2(tracer2, state2);
@@ -729,8 +701,8 @@ namespace micro_profiler
 			test( ChildrenStatisticsIsPassedAlongWithTopLevels )
 			{
 				// INIT
-				mockups::Tracer tracer(11);
-				mockups::FrontendState state;
+				mocks::Tracer tracer(11);
+				mocks::FrontendState state;
 				auto_frontend_controller fc(tracer, state);
 
 				state.modules_state_updated.wait();
@@ -759,9 +731,9 @@ namespace micro_profiler
 				state.updated.wait();
 
 				// ASSERT
-				const mockups::function_statistics_detailed &callinfo_parent1 = state.update_log[0].update[0x31000];
-				const mockups::function_statistics_detailed &callinfo_parent2 = state.update_log[0].update[0x11000];
-				const mockups::function_statistics_detailed &callinfo_parent3 = state.update_log[0].update[0x13000];
+				const mocks::function_statistics_detailed &callinfo_parent1 = state.update_log[0].update[0x31000];
+				const mocks::function_statistics_detailed &callinfo_parent2 = state.update_log[0].update[0x11000];
+				const mocks::function_statistics_detailed &callinfo_parent3 = state.update_log[0].update[0x13000];
 
 				assert_equal(2u, callinfo_parent1.callees.size());
 				assert_equal(108, callinfo_parent1.inclusive_time);
@@ -792,10 +764,10 @@ namespace micro_profiler
 			test( FrontendContinuesAfterControllerDestructionUntilAfterHandleIsReleased )
 			{
 				// INIT
-				mockups::Tracer tracer(11);
+				mocks::Tracer tracer(11);
 				shared_ptr<running_thread> hthread;
 				event_flag initialized(false, true);
-				mockups::FrontendState state(bind(&LogThread1, &hthread, &initialized));
+				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				scoped_thread_join stj(hthread);
 				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, state.MakeFactory()));
 				auto_ptr<handle> h(profile_this(*fc));

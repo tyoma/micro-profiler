@@ -47,9 +47,13 @@
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
+    <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
-    <ClCompile Include="Mockups.cpp" />
+    <ClCompile Include="mocks.cpp" />
+    <ClCompile Include="mocks_com.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
@@ -57,6 +61,7 @@
       <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -66,7 +71,8 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Mockups.h" />
+    <ClInclude Include="mocks.h" />
+    <ClInclude Include="mocks_com.h" />
     <ClInclude Include="TracedFunctions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

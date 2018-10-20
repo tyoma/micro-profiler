@@ -63,8 +63,6 @@
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef">
       <Filter>visualstudio\vs-extension</Filter>
     </None>
-    <None Include="micro-profiler.initializer.cpp" />
-    <None Include="micro-profiler.initializer.cpp" />
     <None Include="logo.ico">
       <Filter>resources</Filter>
     </None>
@@ -159,6 +157,7 @@
     <ClInclude Include="frontend\graphics.h">
       <Filter>frontend</Filter>
     </ClInclude>
+    <ClInclude Include="constants.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">

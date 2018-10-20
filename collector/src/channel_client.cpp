@@ -20,42 +20,59 @@
 
 #include <collector/channel_client.h>
 
-#include <atlbase.h>
+#include <windows.h>
 
 namespace micro_profiler
 {
-	channel_t open_channel(const guid_t &id)
+	namespace
 	{
-		class frontend_stream
+		class com_initializer
 		{
 		public:
-			frontend_stream(const CLSID &id)
-			{
-				::CoInitialize(0);
-				_frontend.CoCreateInstance(id, NULL, CLSCTX_LOCAL_SERVER);
-			}
-
-			frontend_stream(const frontend_stream &other)
-				: _frontend(other._frontend)
+			com_initializer()
 			{	::CoInitialize(0);	}
 
-			~frontend_stream()
+			com_initializer(const com_initializer &)
+			{	::CoInitialize(0);	}
+
+			~com_initializer()
+			{	::CoUninitialize();	}
+		};
+
+		class sequential_stream : com_initializer
+		{
+		public:
+			sequential_stream(const CLSID &id)
+				: _frontend(0)
 			{
-				_frontend.Release();
-				::CoUninitialize();
+				::CoCreateInstance(id, NULL, CLSCTX_LOCAL_SERVER, IID_ISequentialStream, (void **)&_frontend);
+				if (!_frontend)
+					throw channel_creation_exception("");
 			}
+
+			sequential_stream(const sequential_stream &other)
+				: _frontend(other._frontend)
+			{	_frontend->AddRef();	}
+
+			~sequential_stream()
+			{	_frontend->Release();	}
 
 			bool operator()(const void *buffer, size_t size)
 			{
 				ULONG written;
 
-				return _frontend && S_OK == _frontend->Write(buffer, static_cast<ULONG>(size), &written);
+				return S_OK == _frontend->Write(buffer, static_cast<ULONG>(size), &written);
 			}
 
 		private:
-			CComPtr<ISequentialStream> _frontend;
+			ISequentialStream *_frontend;
 		};
-
-		return frontend_stream(reinterpret_cast<const CLSID &>(id));
 	}
+
+	channel_creation_exception::channel_creation_exception(const char *message)
+		: runtime_error(message)
+	{	}
+
+	channel_t open_channel(const guid_t &id)
+	{	return sequential_stream(reinterpret_cast<const CLSID &>(id));	}
 }

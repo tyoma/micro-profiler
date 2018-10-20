@@ -11,7 +11,7 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace mockups
+		namespace mocks
 		{
 			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
 			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
@@ -22,7 +22,7 @@ namespace micro_profiler
 
 				explicit FrontendState(const std::function<void()>& oninitialized = std::function<void()>());
 
-				frontend_factory MakeFactory();
+				frontend_factory_t MakeFactory();
 
 				wpl::mt::event_flag update_lock;
 				std::function<void()> oninitialized;
@@ -50,6 +50,7 @@ namespace micro_profiler
 			{
 			public:
 				explicit Tracer(timestamp_t latency = 0);
+				virtual ~Tracer() throw();
 
 				template <size_t size>
 				void Add(wpl::mt::thread::id threadid, call_record (&array_ptr)[size]);

@@ -1,4 +1,4 @@
-#include "Mockups.h"
+#include "mocks.h"
 
 #include <test-helpers/helpers.h>
 
@@ -15,7 +15,7 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace mockups
+		namespace mocks
 		{
 			namespace
 			{
@@ -58,7 +58,7 @@ namespace micro_profiler
 				FrontendState &_state;
 			};
 
-			frontend_factory FrontendState::MakeFactory()
+			frontend_factory_t FrontendState::MakeFactory()
 			{	return bind(&Frontend::Create, ref(*this));	}
 
 			Frontend::Frontend(FrontendState &state)
@@ -127,6 +127,9 @@ namespace micro_profiler
 
 			Tracer::Tracer(timestamp_t latency)
 				: _latency(latency)
+			{	}
+
+			Tracer::~Tracer() throw()
 			{	}
 
 			void Tracer::read_collected(acceptor &a)

@@ -39,9 +39,13 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="frontend.cpp" />
+    <ClCompile Include="frontend.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="frontend_manager.cpp" />
-    <ClCompile Include="frontend_manager_impl.cpp" />
+    <ClCompile Include="frontend_manager_impl.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="columns_model.cpp" />
     <ClCompile Include="symbol_resolver.cpp">

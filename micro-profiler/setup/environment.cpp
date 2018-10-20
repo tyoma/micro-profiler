@@ -20,6 +20,7 @@
 
 #include "environment.h"
 
+#include <constants.h>
 #include <common/module.h>
 #include <common/path.h>
 
@@ -37,9 +38,8 @@ namespace micro_profiler
 	namespace
 	{
 		const wchar_t *c_environment = L"Environment";
-		const wchar_t *c_path_var = L"PATH";
-		const wchar_t *c_profilerdir_var = L"MICROPROFILERDIR";
-		const wstring c_profilerdir_var_decorated = wstring(L"%") + c_profilerdir_var + L"%";
+		const wchar_t *c_path_evar = L"PATH";
+		const wstring c_profilerdir_evar_decorated = L"%" + c_profilerdir_evar + L"%";
 		const wchar_t c_path_separator_char = L';';
 		const wchar_t *c_path_separator = L";";
 
@@ -89,19 +89,19 @@ namespace micro_profiler
 			bool changed = false;
 			wstring path;
 
-			if (get(c_path_var, path),
-				path.find(c_profilerdir_var_decorated) == wstring::npos)
+			if (get(c_path_evar, path),
+				path.find(c_profilerdir_evar_decorated) == wstring::npos)
 			{
 				if (!path.empty() && path[path.size() - 1] != c_path_separator_char)
 					path += c_path_separator;
-				path += c_profilerdir_var_decorated;
-				set(c_path_var, path.c_str(), REG_EXPAND_SZ);
+				path += c_profilerdir_evar_decorated;
+				set(c_path_evar, path.c_str(), REG_EXPAND_SZ);
 				changed = true;
 			}
-			if (get(c_profilerdir_var, path),
+			if (get(c_profilerdir_evar.c_str(), path),
 				_waccess((path & *get_module_info(&c_environment).path).c_str(), 04))
 			{
-				set(c_profilerdir_var, GetModuleDirectory().c_str(), REG_SZ);
+				set(c_profilerdir_evar.c_str(), GetModuleDirectory().c_str(), REG_SZ);
 				changed = true;
 			}
 			return changed;
@@ -112,15 +112,15 @@ namespace micro_profiler
 		{
 			wstring path;
 
-			get(c_path_var, path);
-			if (path.find(c_profilerdir_var_decorated) != wstring::npos)
+			get(c_path_evar, path);
+			if (path.find(c_profilerdir_evar_decorated) != wstring::npos)
 			{
-				replace(path, c_path_separator + c_profilerdir_var_decorated + c_path_separator, c_path_separator);
-				replace(path, c_profilerdir_var_decorated + c_path_separator, wstring());
-				replace(path, c_path_separator + c_profilerdir_var_decorated, wstring());
-				replace(path, c_profilerdir_var_decorated, wstring());
-				set(c_path_var, path.c_str(), REG_EXPAND_SZ);
-				remove(c_profilerdir_var);
+				replace(path, c_path_separator + c_profilerdir_evar_decorated + c_path_separator, c_path_separator);
+				replace(path, c_profilerdir_evar_decorated + c_path_separator, wstring());
+				replace(path, c_path_separator + c_profilerdir_evar_decorated, wstring());
+				replace(path, c_profilerdir_evar_decorated, wstring());
+				set(c_path_evar, path.c_str(), REG_EXPAND_SZ);
+				remove(c_profilerdir_evar.c_str());
 				return true;
 			}
 			return false;

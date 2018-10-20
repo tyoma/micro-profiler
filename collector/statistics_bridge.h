@@ -52,7 +52,7 @@ namespace micro_profiler
 	{
 	public:
 		statistics_bridge(calls_collector_i &collector, const std::function<channel_t ()> &factory,
-			const std::shared_ptr<image_load_queue> &image_load_queue);
+			const std::shared_ptr<image_load_queue> &image_load_queue_);
 
 		void analyze();
 		void update_frontend();

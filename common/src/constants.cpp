@@ -20,11 +20,15 @@
 
 #include <common/constants.h>
 
-#include <windows.h>
-
 namespace micro_profiler
 {
-	namespace { class __declspec(uuid("0ED7654C-DE8A-4964-9661-0B0C391BE15E")) _ProfilerFrontend { }; }
+	// {0ED7654C-DE8A-4964-9661-0B0C391BE15E}
+	const guid_t c_standalone_frontend_id = {
+		{ 0x4c, 0x65, 0xd7, 0x0e, 0x8a, 0xde, 0x64, 0x49, 0x96, 0x61, 0x0b, 0x0c, 0x39, 0x1b, 0xe1, 0x5e, }
+	};
 
-	extern const GUID c_frontendClassID = __uuidof(_ProfilerFrontend);
+	// {91C0CE12-C677-4A50-A522-C86040AC5052}
+	const guid_t c_integrated_frontend_id = {
+		{ 0x12, 0xce, 0xc0, 0x91, 0x77, 0xc6, 0x50, 0x4a, 0xa5, 0x22, 0xc8, 0x60, 0x40, 0xac, 0x50, 0x52, }
+	};
 }

@@ -107,12 +107,14 @@
 		<!-- Components -->
 		<Component Id="compSystemEnvironmentSetup" Directory="TARGETDIR" Guid="52DE93FD-B13F-4153-8F5F-58EADD7B2D95">
 			<Condition><![CDATA[ALLUSERS]]></Condition>
-			<Environment Id="env_path_sys" Name="Path" Value="[TARGETDIR]" Part="last" Action="set" System="yes"/>
+			<Environment Id="env_mpdir_sys" Name="MICROPROFILERDIR" Value="[TARGETDIR]" Part="all" Action="set" System="yes"/>
+			<Environment Id="env_path_sys" Name="Path" Value="%MICROPROFILERDIR%" Part="last" Action="set" System="yes"/>
 		</Component>
 
 		<Component Id="compUserEnvironmentSetup" Directory="TARGETDIR" Guid="7EA8BA3A-A6F2-4468-8C94-A016AC198A3F">
 			<Condition><![CDATA[NOT ALLUSERS]]></Condition>
-			<Environment Id="env_path_usr" Name="Path" Value="[TARGETDIR]" Part="last" Action="set" System="no"/>
+			<Environment Id="env_mpdir_usr" Name="MICROPROFILERDIR" Value="[TARGETDIR]" Part="all" Action="set" System="no"/>
+			<Environment Id="env_path_usr" Name="Path" Value="%MICROPROFILERDIR%" Part="last" Action="set" System="no"/>
 		</Component>
 
 		<Component Id="compFrontend" Directory="TARGETDIR" Guid="BC5669B7-BF54-40BB-A169-E20B16357D45" KeyPath="yes">

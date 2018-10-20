@@ -11,9 +11,10 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		typedef void (*get_function_addresses_1_t)(const void *&f1, const void *&f2);
-		typedef void (*get_function_addresses_2_t)(const void *&f1, const void *&f2, const void *&f3);
-		typedef void (*get_function_addresses_3_t)(const void *&f);
+		typedef void (*void_f_t)();
+		typedef void (get_function_addresses_1_t)(void_f_t &f1, void_f_t &f2);
+		typedef void (get_function_addresses_2_t)(void_f_t &f1, void_f_t &f2, void_f_t &f3);
+		typedef void (get_function_addresses_3_t)(void_f_t &f);
 
 		begin_test_suite( SymbolResolverTests )
 			test( ResolverCreationReturnsNonNullObject )
@@ -53,9 +54,8 @@ namespace micro_profiler
 				// INIT
 				image img(L"symbol_container_1.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
-				get_function_addresses_1_t getter_1 =
-					reinterpret_cast<get_function_addresses_1_t>(img.get_symbol_address("get_function_addresses_1"));
-				const void *f1 = 0, *f2 = 0;
+				get_function_addresses_1_t *getter_1 = img.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
+				void_f_t f1 = 0, f2 = 0;
 
 				r->add_image(img.absolute_path(), img.load_address());
 				getter_1(f1, f2);
@@ -75,9 +75,9 @@ namespace micro_profiler
 				// INIT
 				image img(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
-				get_function_addresses_2_t getter_2 =
-					reinterpret_cast<get_function_addresses_2_t>(img.get_symbol_address("get_function_addresses_2"));
-				const void *f1 = 0, *f2 = 0, *f3 = 0;
+				get_function_addresses_2_t *getter_2 =
+					img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
+				void_f_t f1 = 0, f2 = 0, f3 = 0;
 
 				r->add_image(img.absolute_path(), img.load_address());
 				getter_2(f1, f2, f3);
@@ -99,9 +99,9 @@ namespace micro_profiler
 				// INIT
 				image img(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
-				get_function_addresses_2_t getter_2 =
-					reinterpret_cast<get_function_addresses_2_t>(img.get_symbol_address("get_function_addresses_2"));
-				const void *f1 = 0, *f2 = 0, *f3 = 0;
+				get_function_addresses_2_t *getter_2 =
+					img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
+				void_f_t f1 = 0, f2 = 0, f3 = 0;
 
 				r->add_image(img.absolute_path(), img.load_address() + 113);
 				getter_2(f1, f2, f3);
@@ -127,9 +127,8 @@ namespace micro_profiler
 				// INIT
 				image img(L"symbol_container_3_nosymbols.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
-				get_function_addresses_3_t getter_3 =
-					reinterpret_cast<get_function_addresses_3_t>(img.get_symbol_address("get_function_addresses_3"));
-				const void *f = 0;
+				get_function_addresses_3_t *getter_3 = img.get_symbol<get_function_addresses_3_t>("get_function_addresses_3");
+				void_f_t f = 0;
 
 				r->add_image(img.absolute_path(), img.load_address());
 				getter_3(f);
@@ -149,9 +148,8 @@ namespace micro_profiler
 				// INIT
 				image img(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
-				get_function_addresses_2_t getter_2 =
-					reinterpret_cast<get_function_addresses_2_t>(img.get_symbol_address("get_function_addresses_2"));
-				const void *f1 = 0, *f2 = 0, *f3 = 0;
+				get_function_addresses_2_t *getter_2 = img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
+				void_f_t f1 = 0, f2 = 0, f3 = 0;
 
 				r->add_image(img.absolute_path(), img.load_address());
 				getter_2(f1, f2, f3);
@@ -177,11 +175,9 @@ namespace micro_profiler
 				// INIT
 				image img1(L"symbol_container_1.dll"), img2(L"symbol_container_2.dll");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
-				get_function_addresses_1_t getter_1 =
-					reinterpret_cast<get_function_addresses_1_t>(img1.get_symbol_address("get_function_addresses_1"));
-				get_function_addresses_2_t getter_2 =
-					reinterpret_cast<get_function_addresses_2_t>(img2.get_symbol_address("get_function_addresses_2"));
-				const void  *f1_1 = 0, *f2_1 = 0, *f1_2 = 0, *f2_2 = 0, *f3_2 = 0;
+				get_function_addresses_1_t *getter_1 = img1.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
+				get_function_addresses_2_t *getter_2 = img2.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
+				void_f_t f1_1 = 0, f2_1 = 0, f1_2 = 0, f2_2 = 0, f3_2 = 0;
 
 				getter_1(f1_1, f2_1);
 				getter_2(f1_2, f2_2, f3_2);

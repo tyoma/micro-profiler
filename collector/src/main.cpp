@@ -91,16 +91,39 @@ namespace micro_profiler
 
 		channel_t operator ()() const
 		{
-			ULONG_PTR cookie;
+			shared_ptr<void> lock = lock_context();
 
-			::ActivateActCtx(_activation_context.get(), &cookie);
-			shared_ptr<void> activation_lock(reinterpret_cast<void*>(cookie), &deactivate_context);
-			return open_channel(reinterpret_cast<const guid_t &>(c_frontendClassID));
+			try
+			{
+				return open_channel(c_integrated_frontend_id);
+			}
+			catch (const channel_creation_exception &)
+			{
+				try
+				{
+					return open_channel(c_standalone_frontend_id);
+				}
+				catch (const channel_creation_exception &)
+				{
+				}
+			}
+			return &null;
 		}
 
 	private:
 		static void deactivate_context(void *cookie)
 		{	::DeactivateActCtx(0, reinterpret_cast<ULONG_PTR>(cookie));	}
+
+		shared_ptr<void> lock_context() const
+		{
+			ULONG_PTR cookie;
+
+			::ActivateActCtx(_activation_context.get(), &cookie);
+			return shared_ptr<void>(reinterpret_cast<void*>(cookie), &deactivate_context);
+		}
+
+		static bool null(const void * /*buffer*/, size_t /*size*/)
+		{	return true;	}
 
 	private:
 		shared_ptr<void> _activation_context;

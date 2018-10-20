@@ -31,6 +31,8 @@ using namespace placeholders;
 using namespace wpl;
 using namespace wpl::ui;
 
+#pragma warning(disable: 4775)
+
 namespace micro_profiler
 {
 	namespace
@@ -367,7 +369,7 @@ namespace micro_profiler
 	linked_statistics_model_impl<MapT>::linked_statistics_model_impl(const MapT &statistics,
 			signal<void (address_t)> &entry_updated, signal<void ()> &master_cleared, double tick_interval,
 			shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl(statistics, tick_interval, resolver)
+		: statistics_model_impl<linked_statistics, MapT>(statistics, tick_interval, resolver)
 	{
 		_updates_connection = entry_updated += bind(&linked_statistics_model_impl::on_updated, this, _1);
 		_cleared_connection = master_cleared += bind(&linked_statistics_model_impl::detach, this);
@@ -414,7 +416,7 @@ namespace micro_profiler
 		case 1:	_view->set_order(by_name(_resolver), ascending);	break;
 		case 2:	_view->set_order(by_times_called(), ascending);	break;
 		}
-		invalidated(_view->size());
+		this->invalidated(_view->size());
 	}
 
 

@@ -65,7 +65,7 @@ namespace micro_profiler
 
 			virtual void resize(unsigned cx, unsigned cy, positioned_native_views &nviews)
 			{
-				view_location l = { 0, 0, cx, cy };
+				view_location l = { 0, 0, static_cast<int>(cx), static_cast<int>(cy) };
 				nviews.push_back(positioned_native_view(*this, l));
 			}
 

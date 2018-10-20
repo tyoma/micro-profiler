@@ -18,51 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
-#include "statistics_bridge.h"
-
-#include <wpl/base/concepts.h>
-#include <functional>
-#include <memory>
-
-namespace wpl
-{
-	namespace mt
-	{
-		class thread;
-	}
-}
+#include <string>
 
 namespace micro_profiler
 {
-	struct calls_collector_i;
-	struct handle;
-	class image_load_queue;
-
-	class frontend_controller : wpl::noncopyable
-	{
-	public:
-		frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory);
-		virtual ~frontend_controller();
-
-		handle *profile(const void *in_image_address);
-		void force_stop();
-
-	private:
-		class profiler_instance;
-
-	private:
-		static void frontend_worker(wpl::mt::thread *previous_thread, const frontend_factory_t &factory,
-			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &image_load_queue_,
-			const std::shared_ptr<void> &exit_event);
-
-	private:
-		calls_collector_i &_collector;
-		frontend_factory_t _factory;
-		std::shared_ptr<image_load_queue> _image_load_queue;
-		std::shared_ptr<volatile long> _worker_refcount;
-		std::shared_ptr<void> _exit_event;
-		std::auto_ptr<wpl::mt::thread> _frontend_thread;
-	};
+	const std::wstring c_profilerdir_evar = L"MICROPROFILERDIR";
 }

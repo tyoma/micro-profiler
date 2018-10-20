@@ -1,7 +1,7 @@
 #include <collector/statistics_bridge.h>
 
 #include <test-helpers/helpers.h>
-#include "Mockups.h"
+#include "mocks.h"
 
 #include <algorithm>
 #include <ut/assert.h>
@@ -17,7 +17,7 @@ namespace micro_profiler
 		namespace
 		{
 			bool dummy(const void *, size_t)
-			{	return false;	}
+			{	return true;	}
 
 			channel_t VoidCreationFactory(bool &created)
 			{
@@ -28,7 +28,7 @@ namespace micro_profiler
 
 		begin_test_suite( StatisticsBridgeTests )
 			vector<image> _images;
-			mockups::FrontendState _state;
+			mocks::FrontendState _state;
 			shared_ptr<image_load_queue> _queue;
 
 			init( CreateQueue )
@@ -47,7 +47,7 @@ namespace micro_profiler
 			test( ConstructingBridgeInvokesFrontendFactory )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 				bool created = false;
 
 				// ACT
@@ -61,7 +61,7 @@ namespace micro_profiler
 			test( BridgeHoldsFrontendForALifetime )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 
 				// INIT / ACT
 				{
@@ -81,7 +81,7 @@ namespace micro_profiler
 			test( FrontendIsInitializedAtBridgeConstruction )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 
 				// ACT
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
@@ -99,7 +99,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoUpdates )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 
 				// ACT
@@ -114,7 +114,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoAnalysisInvoked )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
@@ -134,7 +134,7 @@ namespace micro_profiler
 			test( FrontendUpdateClearsTheAnalyzer )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
@@ -157,8 +157,8 @@ namespace micro_profiler
 			test( CollectedCallsArePassedToFrontend )
 			{
 				// INIT
-				mockups::FrontendState state2;
-				mockups::Tracer cc1(10000), cc2(1000);
+				mocks::FrontendState state2;
+				mocks::Tracer cc1(10000), cc2(1000);
 				statistics_bridge b1(cc1, _state.MakeFactory(), _queue),
 					b2(cc2, state2.MakeFactory(), _queue);
 				call_record trace1[] = {
@@ -209,7 +209,7 @@ namespace micro_profiler
 			test( LoadedModulesAreReportedOnUpdate )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 
 				// ACT
@@ -242,7 +242,7 @@ namespace micro_profiler
 			test( UnloadedModulesAreReportedOnUpdate )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 
 				// ACT
@@ -272,7 +272,7 @@ namespace micro_profiler
 			test( EventsAreReportedInLoadsUpdatesUnloadsOrder )
 			{
 				// INIT
-				mockups::Tracer cc(10000);
+				mocks::Tracer cc(10000);
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 				call_record trace[] = {
 					{	0, (void *)0x2223	},

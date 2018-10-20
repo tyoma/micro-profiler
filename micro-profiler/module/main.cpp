@@ -39,7 +39,7 @@ namespace micro_profiler
 	{
 		class Module : public CAtlDllModuleT<Module> { } g_module;
 
-		OBJECT_ENTRY_AUTO(c_frontendClassID, Frontend);
+		OBJECT_ENTRY_AUTO(reinterpret_cast<const GUID &>(c_standalone_frontend_id), Frontend);
 	}
 
 	shared_ptr<frontend_ui> frontend_manager_impl::default_ui_factory(const shared_ptr<functions_list> &model,

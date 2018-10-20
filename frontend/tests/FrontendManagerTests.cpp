@@ -73,11 +73,14 @@ namespace micro_profiler
 			com_event clients_ready;
 			com_event server_ready;
 
+			static unsigned char rand_uc()
+			{	return static_cast<unsigned char>(rand());	}
+
 			static guid_t generate_id()
 			{
 				guid_t id;
 
-				generate_n(id.values, sizeof(id.values), rand);
+				generate_n(id.values, sizeof(id.values), &rand_uc);
 				return id;
 			}
 

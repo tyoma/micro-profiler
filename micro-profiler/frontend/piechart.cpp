@@ -25,6 +25,7 @@
 #include <agge/filling_rules.h>
 #include <agge/path.h>
 #include <agge/blenders_simd.h>
+#include <algorithm>
 
 using namespace agge;
 using namespace std;
@@ -124,11 +125,11 @@ namespace micro_profiler
 		}
 		rest.value = reciprocal_sum;
 		reciprocal_sum = reciprocal_sum ? 1.0f / reciprocal_sum : 0.0f;
-		for (segments_t::iterator i = _segments.begin(), end = _segments.end(); i != end; ++i)
+		for (segments_t::iterator k = _segments.begin(), end = _segments.end(); k != end; ++k)
 		{
-			const real_t share_angle = 2.0f * pi * i->value * reciprocal_sum;
+			const real_t share_angle = 2.0f * pi * k->value * reciprocal_sum;
 
-			i->share_angle = share_angle;
+			k->share_angle = share_angle;
 			rest.share_angle -= share_angle;
 		}
 		_segments.push_back(rest);

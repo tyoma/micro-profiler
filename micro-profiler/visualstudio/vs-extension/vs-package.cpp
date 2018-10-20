@@ -85,7 +85,7 @@ namespace micro_profiler
 				_service_provider = sp;
 				_service_provider->QueryService(__uuidof(IVsUIShell), &_shell);
 				register_path(false);
-				_frontend_manager = frontend_manager::create(reinterpret_cast<const guid_t &>(c_frontendClassID),
+				_frontend_manager = frontend_manager::create(c_integrated_frontend_id,
 					bind(&profiler_package::create_ui, this, _1, _2));
 				return S_OK;
 			}

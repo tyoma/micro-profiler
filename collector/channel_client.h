@@ -21,8 +21,14 @@
 #pragma once
 
 #include <common/types.h>
+#include <stdexcept>
 
 namespace micro_profiler
 {
+	struct channel_creation_exception : std::runtime_error
+	{
+		channel_creation_exception(const char *message);
+	};
+
 	channel_t open_channel(const guid_t &id);
 }

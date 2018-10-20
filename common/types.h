@@ -32,5 +32,5 @@ namespace micro_profiler
 #pragma pack(pop)
 
 	typedef std::function<bool(const void *buffer, size_t size)> channel_t;
-	typedef std::function<channel_t ()> frontend_factory;
+	typedef std::function<channel_t ()> frontend_factory_t;
 }

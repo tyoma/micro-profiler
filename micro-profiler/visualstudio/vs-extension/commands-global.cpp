@@ -23,6 +23,8 @@
 #include "command-ids.h"
 #include "helpers.h"
 
+#include <constants.h>
+
 #include <common/module.h>
 #include <common/path.h>
 #include <common/serialization.h>
@@ -47,13 +49,11 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const wstring c_initializer_cpp = L"micro-profiler.initializer.cpp";
-			const wstring c_profiler_library = L"micro-profiler_$(PlatformName).lib";
+			const wstring c_profilerdir_macro = L"$(" + c_profilerdir_evar + L")";
+			const wstring c_initializer_cpp = c_profilerdir_macro + L"\\micro-profiler.initializer.cpp";
+			const wstring c_profiler_library = c_profilerdir_macro + L"\\micro-profiler_$(PlatformName).lib";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
-
-			wstring get_profiler_directory()
-			{	return ~get_module_info(&c_initializer_cpp).path;	}
 
 			bool replace(wstring &text, const wstring &what, const wstring &replacement)
 			{
@@ -67,30 +67,16 @@ namespace micro_profiler
 				return false;
 			}
 
-			bool paths_are_equal(const wstring &lhs_, const wstring &rhs_)
-			{
-				BY_HANDLE_FILE_INFORMATION bhfi1 = { }, bhfi2 = { };
-				shared_ptr<void> lhs(::CreateFileW(lhs_.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
-					0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0), &::CloseHandle);
-				shared_ptr<void> rhs(::CreateFileW(rhs_.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
-					0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0), &::CloseHandle);
-
-				return INVALID_HANDLE_VALUE != lhs.get() && INVALID_HANDLE_VALUE != rhs.get()
-					&& ::GetFileInformationByHandle(lhs.get(), &bhfi1) && ::GetFileInformationByHandle(rhs.get(), &bhfi2)
-					&& bhfi1.nFileIndexLow == bhfi2.nFileIndexLow && bhfi1.nFileIndexHigh == bhfi2.nFileIndexHigh;
-			}
-
-			dispatch find_item_by_path(dispatch project, const wstring &directory, const wstring &name)
+			dispatch find_item_by_relpath(dispatch project, const wstring &relative_unexpanded_path)
 			{
 				dispatch files = project.get(L"Object").get(L"Files");
 
 				for (long i = 1, count = files.get(L"Count"); i <= count; ++i)
 				{
 					dispatch file = files[i];
-					const wstring item_directory = ~wstring(file.get(L"FullPath"));
-					const wstring item_name = *(file.get(L"UnexpandedRelativePath"));
+					const wstring path = file.get(L"UnexpandedRelativePath");
 
-					if (wcsicmp(item_name.c_str(), name.c_str()) == 0 && paths_are_equal(item_directory, directory))
+					if (wcsicmp(path.c_str(), relative_unexpanded_path.c_str()) == 0)
 						return file.get(L"Object");
 				}
 				return dispatch(IDispatchPtr());
@@ -172,14 +158,12 @@ namespace micro_profiler
 
 		bool toggle_profiling::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
-			const wstring dir = get_profiler_directory();
-
 			state = 0;
 			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
 			{
 				state = supported | enabled | visible | (tool && has_instrumentation(dispatch(tool))
-					&& IDispatchPtr(find_item_by_path(ctx.project, dir, c_initializer_cpp))
-					&& IDispatchPtr(find_item_by_path(ctx.project, dir, c_profiler_library))
+					&& IDispatchPtr(find_item_by_relpath(ctx.project, c_initializer_cpp))
+					&& IDispatchPtr(find_item_by_relpath(ctx.project, c_profiler_library))
 					? checked : 0);
 			}
 			return true;
@@ -187,18 +171,17 @@ namespace micro_profiler
 
 		void toggle_profiling::exec(context_type &ctx, unsigned /*item*/)
 		{
-			const wstring dir = get_profiler_directory();
 			dispatch compiler(get_tool(ctx.project, L"VCCLCompilerTool"));
-			IDispatchPtr initializer_item = find_item_by_path(ctx.project, dir, c_initializer_cpp);
-			IDispatchPtr library_item = find_item_by_path(ctx.project, dir, c_profiler_library);
+			IDispatchPtr initializer_item = find_item_by_relpath(ctx.project, c_initializer_cpp);
+			IDispatchPtr library_item = find_item_by_relpath(ctx.project, c_profiler_library);
 			const bool has_profiling = has_instrumentation(compiler) && initializer_item && library_item;
 
 			if (!has_profiling)
 			{
 				if (!initializer_item)
-					disable_pch(ctx.project.get(L"ProjectItems")(L"AddFromFile", (dir & c_initializer_cpp).c_str()));
+					disable_pch(ctx.project.get(L"ProjectItems")(L"AddFromFile", c_initializer_cpp.c_str()));
 				if (!library_item)
-					ctx.project.get(L"ProjectItems")(L"AddFromFile", (dir & c_profiler_library).c_str());
+					ctx.project.get(L"ProjectItems")(L"AddFromFile", c_profiler_library.c_str());
 				enable_instrumentation(compiler);
 			}
 			else
@@ -214,15 +197,14 @@ namespace micro_profiler
 		{
 			state = 0;
 			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
-				state = supported | (IDispatchPtr(find_item_by_path(ctx.project, get_profiler_directory(), c_initializer_cpp)) ? enabled | visible : 0);
+				state = supported | (IDispatchPtr(find_item_by_relpath(ctx.project, c_initializer_cpp)) ? enabled | visible : 0);
 			return true;
 		}
 
 		void remove_profiling_support::exec(context_type &ctx, unsigned /*item*/)
 		{
-			const wstring dir = get_profiler_directory();
-			dispatch initializer = find_item_by_path(ctx.project, dir, c_initializer_cpp);
-			dispatch library = find_item_by_path(ctx.project, dir, c_profiler_library);
+			dispatch initializer = find_item_by_relpath(ctx.project, c_initializer_cpp);
+			dispatch library = find_item_by_relpath(ctx.project, c_profiler_library);
 
 			for_each_configuration_tool(ctx.project, L"VCCLCompilerTool", &disable_instrumentation);
 			if (IDispatchPtr(initializer))

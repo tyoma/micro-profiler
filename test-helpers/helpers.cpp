@@ -37,13 +37,6 @@ namespace micro_profiler
 			return fullpath;
 		}
 
-		bool is_com_initialized()
-		{
-			CComPtr<IUnknown> test;
-
-			return S_OK == test.CoCreateInstance(CComBSTR("JobObject")) && test;
-		}
-
 		namespace this_thread
 		{
 			void sleep_for(unsigned int duration)

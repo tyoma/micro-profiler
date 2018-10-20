@@ -40,7 +40,7 @@ namespace micro_profiler
 		typedef typename value_type::second_type mapped_type;
 
 	public:
-		ordered_view(const ContainerT &map);
+		ordered_view(const ContainerT &underlying);
 		~ordered_view();
 
 		// Paermanently detaches from the underlying map. Postcondition: size() becomes zero.
@@ -60,7 +60,7 @@ namespace micro_profiler
 
 		virtual index_type size() const throw();
 		const value_type &at(index_type index) const;
-		virtual double get_value(index_type index) const;
+		virtual double get_value(index_type index) const throw();
 		index_type find_by_key(const key_type &key) const;
 		std::shared_ptr<const wpl::ui::trackable> track(index_type index) const;
 
@@ -249,7 +249,7 @@ namespace micro_profiler
 	{	return *_ordered_data[index];	}
 
 	template <class ContainerT>
-	inline double ordered_view<ContainerT>::get_value(index_type index) const
+	inline double ordered_view<ContainerT>::get_value(index_type index) const throw()
 	{	return _extractor ? _extractor(at(index).second) : double();	}
 
 	template <class ContainerT>

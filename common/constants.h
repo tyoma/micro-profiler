@@ -20,9 +20,10 @@
 
 #pragma once
 
-typedef struct _GUID GUID;
+#include "types.h"
 
 namespace micro_profiler
 {
-	extern const GUID c_frontendClassID;
+	extern const guid_t c_standalone_frontend_id;
+	extern const guid_t c_integrated_frontend_id;
 }

@@ -554,9 +554,9 @@ namespace micro_profiler
 			test( ImageInfoIsEvaluatedByInImageAddress )
 			{
 				// ACT
-				module_info info1 = get_module_info(reinterpret_cast<const void *>(_images[0].get_symbol_address("get_function_addresses_1")));
-				module_info info2 = get_module_info(reinterpret_cast<const void *>(_images[1].get_symbol_address("get_function_addresses_2")));
-				module_info info3 = get_module_info(reinterpret_cast<const void *>(_images[2].get_symbol_address("get_function_addresses_3")));
+				module_info info1 = get_module_info(_images[0].get_symbol_address("get_function_addresses_1"));
+				module_info info2 = get_module_info(_images[1].get_symbol_address("get_function_addresses_2"));
+				module_info info3 = get_module_info(_images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
 				assert_equal(info1.path.size() - wstring(L"symbol_container_1.dll").size(),

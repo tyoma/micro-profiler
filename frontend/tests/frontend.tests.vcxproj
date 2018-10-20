@@ -31,14 +31,12 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ItemDefinitionGroup>
-    <Link>
-      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\collector\src\collector.lib.vcxproj">
       <Project>{ed61e2d0-f586-4b4e-9ce6-bae8f03dbbc7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libraries\wpl\src\wpl.ui\wpl.ui.vcxproj">
+      <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>
     </ProjectReference>
     <ProjectReference Include="..\src\frontend.lib.vcxproj">
       <Project>{15AD9007-29B9-462F-B7BE-A433B6E83EC9}</Project>
@@ -49,11 +47,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ColumnsModelTests.cpp" />
-    <ClCompile Include="CommandTargetTests.cpp" />
+    <ClCompile Include="CommandTargetTests.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="SymbolResolverTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

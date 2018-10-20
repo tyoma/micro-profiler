@@ -42,8 +42,12 @@
   <ItemGroup>
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="formatting.cpp" />
-    <ClCompile Include="module.cpp" />
-    <ClCompile Include="registry_configuration.cpp" />
+    <ClCompile Include="module.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="registry_configuration.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="string.cpp" />
   </ItemGroup>
   <ItemGroup>

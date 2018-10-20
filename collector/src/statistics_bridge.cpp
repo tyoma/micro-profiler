@@ -91,9 +91,9 @@ namespace micro_profiler
 
 	statistics_bridge::statistics_bridge(calls_collector_i &collector,
 			const function<channel_t ()> &factory,
-			const std::shared_ptr<image_load_queue> &image_load_queue)
+			const std::shared_ptr<image_load_queue> &image_load_queue_)
 		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(factory()),
-			_image_load_queue(image_load_queue)
+			_image_load_queue(image_load_queue_)
 	{
 		initialization_data idata = {
 			get_module_info(0).path,
@@ -123,14 +123,11 @@ namespace micro_profiler
 	template <typename DataT>
 	void statistics_bridge::send(commands command, const DataT &data)
 	{
-		if (_frontend)
-		{
-			vector_writer writer(_buffer);
-			strmd::serializer<vector_writer, packer> archive(writer);
+		vector_writer writer(_buffer);
+		strmd::serializer<vector_writer, packer> archive(writer);
 
-			archive(command);
-			archive(data);
-			_frontend(_buffer.data(), static_cast<long>(_buffer.size()));
-		}
+		archive(command);
+		archive(data);
+		_frontend(_buffer.data(), _buffer.size());
 	}
 }

@@ -67,9 +67,9 @@ namespace micro_profiler
 
 
 	frontend_controller::profiler_instance::profiler_instance(const void *in_image_address,
-			shared_ptr<image_load_queue> image_load_queue, shared_ptr<volatile long> worker_refcount,
+			shared_ptr<image_load_queue> image_load_queue_, shared_ptr<volatile long> worker_refcount,
 			shared_ptr<void> exit_event)
-		: _in_image_address(in_image_address), _image_load_queue(image_load_queue), _worker_refcount(worker_refcount),
+		: _in_image_address(in_image_address), _image_load_queue(image_load_queue_), _worker_refcount(worker_refcount),
 			_exit_event(exit_event)
 	{	_image_load_queue->load(in_image_address);	}
 
@@ -81,7 +81,7 @@ namespace micro_profiler
 	}
 
 
-	frontend_controller::frontend_controller(calls_collector_i &collector, const frontend_factory& factory)
+	frontend_controller::frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory)
 		: _collector(collector), _factory(factory), _image_load_queue(new image_load_queue),
 			_worker_refcount(new volatile long())			
 	{	}
@@ -118,7 +118,7 @@ namespace micro_profiler
 		}
 	}
 
-	void frontend_controller::frontend_worker(thread *previous_thread, const frontend_factory &factory,
+	void frontend_controller::frontend_worker(thread *previous_thread, const frontend_factory_t &factory,
 		calls_collector_i *collector, const shared_ptr<image_load_queue> &image_load_queue,
 		const shared_ptr<void> &exit_event)
 	{

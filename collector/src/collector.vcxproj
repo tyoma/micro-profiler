@@ -34,9 +34,11 @@
     <TargetName>micro-profiler_$(Platform2)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
+	  <ClCompile>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      </ClCompile>
     <Link>
       <ModuleDefinitionFile>collector.def</ModuleDefinitionFile>
-      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <ImportLibrary>$(OutDir)micro-profiler_$(PlatformName).lib</ImportLibrary>
     </Link>
     <Manifest>
@@ -44,9 +46,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <ClCompile Include="main.cpp" />
     <None Include="..\entry.h" />
     <None Include="micro-profiler.initializer.cpp" />
     <Content Include="..\entry.h;micro-profiler.initializer.cpp">

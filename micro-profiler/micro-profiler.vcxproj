@@ -60,7 +60,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="frontend\containers.cpp" />
-    <ClCompile Include="frontend\controls.cpp" />
     <ClCompile Include="frontend\file.cpp" />
     <ClCompile Include="frontend\graphics.cpp" />
     <ClCompile Include="frontend\piechart.cpp" />
@@ -75,7 +74,6 @@
     </ClCompile>
     <ClInclude Include="constants.h" />
     <ClInclude Include="frontend\containers.h" />
-    <ClInclude Include="frontend\controls.h" />
     <ClInclude Include="frontend\graphics.h" />
     <ClInclude Include="frontend\piechart.h" />
     <ClInclude Include="frontend\tables_ui.h" />

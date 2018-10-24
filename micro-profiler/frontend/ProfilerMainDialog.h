@@ -29,6 +29,7 @@
 #include <atlwin.h>
 #include <functional>
 #include <string>
+#include <wpl/base/signals.h>
 #include <wpl/ui/view_host.h>
 
 namespace micro_profiler
@@ -71,5 +72,6 @@ namespace micro_profiler
 		CRect _placement;
 		std::shared_ptr<wpl::ui::view_host> _host;
 		std::shared_ptr<tables_ui> _statistics_display;
+		std::vector<wpl::slot_connection> _connections;
 	};
 }

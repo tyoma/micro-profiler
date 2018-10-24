@@ -21,12 +21,12 @@
 #include "ProfilerMainDialog.h"
 
 #include "containers.h"
-#include "controls.h"
 #include "SupportDevDialog.h"
 #include "tables_ui.h"
 
 #include <common/configuration.h>
 #include <frontend/function_list.h>
+#include <wpl/ui/controls.h>
 #include <wpl/ui/layout.h>
 #include <wpl/ui/win32/controls.h>
 
@@ -76,9 +76,8 @@ namespace micro_profiler
 		shared_ptr<container> vstack(new container), toolbar(new container);
 		shared_ptr<layout_manager> lm_root(new spacer_layout(5));
 		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
-		shared_ptr<view> clear_statistics(create_button(L"Clear Statistics", bind(&functions_list::clear, _statistics)));
-		shared_ptr<view> copy_all(create_button(L"Copy All", bind(&ProfilerMainDialog::OnCopyAll, this)));
-		shared_ptr<view> support(create_link(L"<a>Support Developer...</a>", bind(&ProfilerMainDialog::OnSupport, this)));
+		shared_ptr<button> btn;
+		shared_ptr<link> lnk;
 
 		Create(parent, 0);
 		SetIcon(::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN)), TRUE);		
@@ -89,14 +88,23 @@ namespace micro_profiler
 		_statistics_display.reset(new tables_ui(s, *c));
 
 		toolbar->set_layout(lm_toolbar);
+		btn = create_button();
+		btn->set_text(L"Clear Statistics");
+		_connections.push_back(btn->clicked += bind(&functions_list::clear, _statistics));
 		lm_toolbar->add(120);
-		toolbar->add_view(clear_statistics);
+		toolbar->add_view(btn);
+		btn = create_button();
+		btn->set_text(L"Copy All");
+		_connections.push_back(btn->clicked += bind(&ProfilerMainDialog::OnCopyAll, this));
 		lm_toolbar->add(100);
-		toolbar->add_view(copy_all);
+		toolbar->add_view(btn);
 		lm_toolbar->add(-100);
 		toolbar->add_view(shared_ptr<view>(new view));
+		lnk = create_link();
+		lnk->set_text(L"<a>Support Developer...</a>");
+		_connections.push_back(lnk->clicked += bind(&ProfilerMainDialog::OnSupport, this));
 		lm_toolbar->add(200);
-		toolbar->add_view(support);
+		toolbar->add_view(lnk);
 
 		vstack->set_layout(lm_vstack);
 		lm_vstack->add(-100);

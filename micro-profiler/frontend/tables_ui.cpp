@@ -73,8 +73,12 @@ namespace micro_profiler
 
 		_connections.push_back(_statistics_lv->selection_changed
 			+= bind(&tables_ui::on_selection_change, this, _1, _2));
+		_connections.push_back(_statistics_lv->item_activate
+			+= bind(&tables_ui::on_activate, this, _1));
 		_connections.push_back(_statistics_pc->selection_changed
 			+= bind(&tables_ui::on_piechart_selection_change, this, _1));
+		_connections.push_back(_statistics_pc->item_activate
+			+= bind(&tables_ui::on_activate, this, _1));
 
 		_connections.push_back(_parents_lv->item_activate
 			+= bind(&tables_ui::on_drilldown, this, cref(_parents_statistics), _1));
@@ -139,6 +143,14 @@ namespace micro_profiler
 		_statistics_lv->select(index, true);
 		if (piechart::npos != index)
 			_statistics_lv->ensure_visible(index);
+	}
+
+	void tables_ui::on_activate(wpl::ui::index_traits::index_type index)
+	{
+		const address_t address = _statistics->get_address(index);
+		const pair<wstring, unsigned> fileline = _statistics->get_resolver()->symbol_fileline_by_va(address);
+
+		open_source(fileline.first, fileline.second);
 	}
 
 	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, listview::index_type index)

@@ -1,5 +1,6 @@
 #include <frontend/symbol_resolver.h>
 
+#include <common/path.h>
 #include <test-helpers/helpers.h>
 
 #include <ut/assert.h>
@@ -192,6 +193,46 @@ namespace micro_profiler
 				assert_equal(r->symbol_name_by_va((address_t)f3_2), L"vale_of_mean_creatures::the_abyss::bubble_sort");
 				assert_equal(r->symbol_name_by_va((address_t)f1_1), L"very_simple_global_function");
 				assert_equal(r->symbol_name_by_va((address_t)f2_1), L"a_tiny_namespace::function_that_hides_under_a_namespace");
+			}
+
+
+			test( FileLineInformationIsReturnedBySymbolProvider )
+			{
+				// INIT
+				image img1(L"symbol_container_1.dll"), img2(L"symbol_container_2.dll");
+				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				get_function_addresses_1_t *getter_1 = img1.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
+				get_function_addresses_2_t *getter_2 = img2.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
+				void_f_t f1_1 = 0, f2_1 = 0, f1_2 = 0, f2_2 = 0, f3_2 = 0;
+
+				getter_1(f1_1, f2_1);
+				getter_2(f1_2, f2_2, f3_2);
+				r->add_image(img1.absolute_path(), img1.load_address());
+				r->add_image(img2.absolute_path(), img2.load_address());
+
+				// ACT
+				pair<wstring, unsigned> filelines[] = {
+					r->symbol_fileline_by_va((address_t)f1_1),
+					r->symbol_fileline_by_va((address_t)f2_1),
+					r->symbol_fileline_by_va((address_t)f1_2),
+					r->symbol_fileline_by_va((address_t)f2_2),
+					r->symbol_fileline_by_va((address_t)f3_2),
+				};
+
+				// ASSERT
+				for (pair<wstring, unsigned> *i = begin(filelines); i != end(filelines); ++i)
+					i->first = *i->first;
+
+				pair<wstring, unsigned> reference[] = {
+					make_pair(L"symbol_container_1.cpp", 1),
+					make_pair(L"symbol_container_1.cpp", 7),
+					make_pair(L"symbol_container_2.cpp", 3),
+					make_pair(L"symbol_container_2.cpp", 7),
+					make_pair(L"symbol_container_2.cpp", 13),
+				};
+
+
+				assert_equal(reference, filelines);
 			}
 		end_test_suite
 	}

@@ -39,6 +39,7 @@ namespace micro_profiler
 			virtual ~dbghelp_symbol_resolver();
 
 			virtual const wstring &symbol_name_by_va(address_t address) const;
+			virtual pair<wstring, unsigned> symbol_fileline_by_va(address_t address) const;
 			virtual void add_image(const wchar_t *image, address_t load_address);
 
 		private:
@@ -85,6 +86,15 @@ namespace micro_profiler
 				i = _names.insert(make_pair(address, unicode(symbol2->Name))).first;
 			}
 			return i->second;
+		}
+
+		pair<wstring, unsigned> dbghelp_symbol_resolver::symbol_fileline_by_va(address_t address) const
+		{
+			DWORD dummy;
+			IMAGEHLP_LINEW64 info = { sizeof(IMAGEHLP_LINEW64), };
+
+			::SymGetLineFromAddrW64(me(), address, &dummy, &info);
+			return make_pair(info.FileName, info.LineNumber);
 		}
 
 		void dbghelp_symbol_resolver::add_image(const wchar_t *image, address_t load_address)

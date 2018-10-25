@@ -1,12 +1,10 @@
-void very_simple_global_function()
-{
-}
+void very_simple_global_function() {	}
+
+
 
 namespace a_tiny_namespace
 {
-	void function_that_hides_under_a_namespace()
-	{
-	}
+	void function_that_hides_under_a_namespace() {	}
 }
 
 extern "C" __declspec(dllexport) void get_function_addresses_1(void (*&f1)(), void (*&f2)())

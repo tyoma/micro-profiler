@@ -364,6 +364,9 @@ namespace micro_profiler
 			_cleared, _tick_interval, _resolver));
 	}
 
+	std::shared_ptr<symbol_resolver> functions_list::get_resolver() const
+	{	return _resolver;	}
+
 	
 	template <typename MapT>
 	linked_statistics_model_impl<MapT>::linked_statistics_model_impl(const MapT &statistics,
@@ -429,6 +432,9 @@ namespace micro_profiler
 
 	const wstring &functions_list::static_resolver::symbol_name_by_va(address_t address) const
 	{	return symbols[address];	}
+
+	pair<wstring, unsigned> functions_list::static_resolver::symbol_fileline_by_va(address_t /*address*/) const
+	{	return make_pair(L"", 0);	}
 
 	void functions_list::static_resolver::add_image(const wchar_t * /*image*/, address_t /*load_address*/)
 	{	}

@@ -150,6 +150,11 @@ namespace micro_profiler
 					return i->second;
 				}
 
+				virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(address_t /*address*/) const
+				{
+					throw 0;
+				}
+
 				virtual void add_image(const wchar_t * /*image*/, address_t /*base*/)
 				{
 				}
@@ -201,10 +206,11 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_per_second, resolver));
-				functions_list &fl = *sp_fl;
+				const functions_list &fl = *sp_fl;
 
 				// ACT / ASSERT
 				assert_equal(0u, fl.get_count());
+				assert_equal(resolver, fl.get_resolver());
 			}
 
 

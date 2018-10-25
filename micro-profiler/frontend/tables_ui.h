@@ -22,9 +22,13 @@ namespace micro_profiler
 
 		void save(hive &configuration);
 
+	public:
+		wpl::signal<void(const std::wstring &file, unsigned line)> open_source;
+
 	private:
 		void on_selection_change(wpl::ui::listview::index_type index, bool selected);
 		void on_piechart_selection_change(piechart::index_type index);
+		void on_activate(wpl::ui::index_traits::index_type index);
 
 		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::ui::listview::index_type index);
 		void on_children_selection_change(wpl::ui::listview::index_type index, bool selected);

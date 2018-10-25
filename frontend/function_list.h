@@ -43,6 +43,7 @@ namespace micro_profiler
 		void print(std::wstring &content) const;
 		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
+		std::shared_ptr<symbol_resolver> get_resolver() const;
 
 		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
 			std::shared_ptr<symbol_resolver> resolver);
@@ -74,6 +75,7 @@ namespace micro_profiler
 	struct functions_list::static_resolver : public symbol_resolver
 	{
 		virtual const std::wstring &symbol_name_by_va(address_t address) const;
+		virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(address_t address) const;
 		virtual void add_image(const wchar_t *image, address_t load_address);
 
 		mutable std::unordered_map<address_t, std::wstring> symbols;

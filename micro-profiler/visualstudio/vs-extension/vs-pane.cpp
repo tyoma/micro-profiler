@@ -59,6 +59,7 @@ namespace micro_profiler
 				_model = model;
 				_executable = executable;
 				_host->set_view(ui);
+				_open_source_connection = ui->open_source += bind(&vs_pane::on_open_source, this, _1, _2);
 				ui->set_background_color(color::make(24, 32, 48, 255));
 			}
 
@@ -120,12 +121,44 @@ namespace micro_profiler
 				return ctx;
 			}
 
+			void on_open_source(const wstring &file, unsigned line)
+			{
+				CComPtr<IVsUIShellOpenDocument> od;
+
+				if (_service_provider->QueryService(__uuidof(IVsUIShellOpenDocument), &od), od)
+				{
+					CComPtr<IServiceProvider> sp;
+					CComPtr<IVsUIHierarchy> hierarchy;
+					VSITEMID itemid;
+					CComPtr<IVsWindowFrame> frame;
+
+					if (od->OpenDocumentViaProject(file.c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), frame)
+					{
+						CComPtr<IVsCodeWindow> window;
+
+						if (frame->QueryViewInterface(__uuidof(IVsCodeWindow), (void**)&window), window)
+						{
+							CComPtr<IVsTextView> tv;
+
+							if (window->GetPrimaryView(&tv), tv)
+							{
+								tv->SetCaretPos(line, 0);
+								tv->SetScrollPosition(SB_HORZ, 0);
+								frame->Show();
+								tv->CenterLines(line, 1);
+							}
+						}
+					}
+				}
+			}
+
 		private:
 			shared_ptr<functions_list> _model;
 			wstring _executable;
 			shared_ptr<wpl::ui::view_host> _host;
 			CComPtr<IVsWindowFrame> _frame;
 			CComPtr<IServiceProvider> _service_provider;
+			wpl::slot_connection _open_source_connection;
 		};
 
 

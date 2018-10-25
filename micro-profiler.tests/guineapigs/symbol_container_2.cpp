@@ -1,18 +1,16 @@
 namespace vale_of_mean_creatures
 {
-	void this_one_for_the_birds()
-	{
-	}
+	void this_one_for_the_birds() {	}
 
-	void this_one_for_the_whales()
-	{
-	}
+
+
+	void this_one_for_the_whales() {	}
+
+
 
 	namespace the_abyss
 	{
-		void bubble_sort()
-		{
-		}
+		void bubble_sort() {	}
 	}
 }
 

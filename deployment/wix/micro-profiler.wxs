@@ -3,7 +3,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Product Id="BA2993FF-3AAF-41A5-B3CC-4BF6E3052F66" Name="MicroProfiler" Language="1033" Version="!(bind.FileVersion.fileCollectorDLL_x86)" Manufacturer="gevorkyan.org" UpgradeCode="32373928-E978-4133-B1A2-F08B690383AE">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" />
-		<Media Id="1" Cabinet="micro_profiler.cab" EmbedCab="yes"/>
+		<Media Id="1" Cabinet="micro_profiler.cab" EmbedCab="yes" CompressionLevel="high"/>
 		<Icon Id="icoInstaller" SourceFile="../../micro-profiler/resources/appicon.ico" />
 		<Property Id="ARPPRODUCTICON" Value="icoInstaller" />
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />

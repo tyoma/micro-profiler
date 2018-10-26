@@ -88,7 +88,8 @@ namespace micro_profiler
 			break;
 
 		case update_statistics:
-			archive(*_model);
+			if (_model)
+				archive(*_model);
 			break;
 		}
 		return S_OK;

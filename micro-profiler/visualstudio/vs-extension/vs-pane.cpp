@@ -100,6 +100,7 @@ namespace micro_profiler
 				_service_provider.Release();
 				closed();
 				_host->set_view(shared_ptr<tables_ui>());
+				_model.reset();
 				return S_OK;
 			}
 

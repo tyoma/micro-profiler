@@ -85,6 +85,7 @@
     <None Include="frontend\micro-profiler-frontend.rgs" />
     <None Include="module\micro-profiler.def" />
     <None Include="resources\appicon.ico" />
+    <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest" />
     <None Include="visualstudio\vs-extension\extension.vsixmanifest" />
     <Fix Include="visualstudio\vs-extension\extension.vsixmanifest" />
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />

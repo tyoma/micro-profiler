@@ -19,7 +19,6 @@
 ;	THE SOFTWARE.
 
 IF _M_IX86
-
 	.586
 	.model flat
 	.code
@@ -65,15 +64,15 @@ IF _M_IX86
 		POPREGS
 		ret
 	_profile_exit	endp
-
 ELSEIF _M_X64
-
 	.code
 
 	extrn ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z:near
 	extrn ?_instance@calls_collector@micro_profiler@@0V12@A:qword
 
 	PUSHREGS	macro
+		push	rax
+		lahf
 		push	rax
 		push	rcx
 		push	rdx
@@ -91,6 +90,8 @@ ELSEIF _M_X64
 		pop	rdx
 		pop	rcx
 		pop	rax
+		sahf
+		pop	rax
 	endm
 
 	RDTSC64	macro
@@ -100,20 +101,16 @@ ELSEIF _M_X64
 	endm
 
 	profile_enter	proc
-		push	rax
-		lahf
 		PUSHREGS
-		sub	rsp, 28h
+		lea	rsp, [rsp - 20h]
 
 		RDTSC64
 		mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
-		mov	r8, qword ptr [rsp + 68h]
+		mov	r8, qword ptr [rsp + 60h]
 		call	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
-		add	rsp, 28h
+		lea	rsp, [rsp + 20h]
 		POPREGS
-		sahf
-		pop	rax
 		ret
 	profile_enter	endp
 
@@ -132,7 +129,6 @@ ELSEIF _M_X64
 		POPREGS
 		ret
 	profile_exit	endp
-
 ENDIF
 
 end

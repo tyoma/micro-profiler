@@ -879,6 +879,22 @@ namespace micro_profiler
 			}
 
 
+			test( UpdateModelDoesNothingIfFrontendWasNotInitialized )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				channel_t c = open_channel(id);
+				pair< unsigned, function_statistics_detailed_t<unsigned> > data[] = {
+					make_pair(1321222, function_statistics_detailed_t<unsigned>()),
+					make_pair(1321221, function_statistics_detailed_t<unsigned>()),
+				};
+
+				// ACT / ASSERT (must not crash)
+				write(c, update_statistics, mkvector(data));
+			}
+
+
 			test( CreatingInstanceFromModelAddsNewInstanceToTheListAndConstructsUI )
 			{
 				// INIT

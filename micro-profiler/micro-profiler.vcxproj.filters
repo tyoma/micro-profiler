@@ -67,9 +67,11 @@
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
-    <None Include="micro-profiler.initializer.cpp" />
     <None Include="frontend\micro-profiler-frontend.rgs">
       <Filter>frontend</Filter>
+    </None>
+    <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest">
+      <Filter>visualstudio\vs-extension</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -20,28 +20,21 @@
 
 #include "containers.h"
 
+#include <agge/blenders.h>
+#include <agge/blenders_simd.h>
+#include <agge/figures.h>
+#include <agge/filling_rules.h>
+#include <agge/path.h>
+
+using namespace agge;
+
 namespace micro_profiler
 {
-	spacer_layout::spacer_layout(int spacing)
-		: _spacing(spacing)
-	{	}
-
-	void spacer_layout::layout(unsigned width, unsigned height, wpl::ui::container::positioned_view *views,
-		size_t count) const
-	{
-		for (; count--; ++views)
-		{
-			views->location.left = _spacing, views->location.top = _spacing;
-			views->location.width = width - 2 * _spacing, views->location.height = height - 2 * _spacing;
-		}
-	}
-
-
 	container_with_background::container_with_background()
 		: _enable_background(false)
 	{	}
 
-	void container_with_background::set_background_color(agge::color c)
+	void container_with_background::set_background_color(color c)
 	{
 		_back_color = c;
 		_enable_background = true;
@@ -51,7 +44,13 @@ namespace micro_profiler
 	void container_with_background::draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &ras) const
 	{
 		if (_enable_background)
-			fill(ctx, ras, _back_color);
+		{
+			rect_i rc = ctx.update_area();
+
+			ras->reset();
+			add_path(*ras, rectangle((real_t)rc.x1, (real_t)rc.y1, (real_t)rc.x2, (real_t)rc.y2));
+			ctx(ras, blender_solid_color<simd::blender_solid_color, order_bgra>(_back_color), winding<>());
+		}
 		container::draw(ctx, ras);
 	}
 }

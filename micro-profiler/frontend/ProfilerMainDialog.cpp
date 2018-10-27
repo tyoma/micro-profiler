@@ -74,7 +74,7 @@ namespace micro_profiler
 		shared_ptr<hive> c(open_configuration());
 		shared_ptr<container_with_background> root(new container_with_background);
 		shared_ptr<container> vstack(new container), toolbar(new container);
-		shared_ptr<layout_manager> lm_root(new spacer_layout(5));
+		shared_ptr<layout_manager> lm_root(new spacer(5, 5));
 		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;

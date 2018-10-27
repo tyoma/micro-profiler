@@ -20,25 +20,12 @@
 
 #pragma once
 
-#include "graphics.h"
-
+#include <agge/color.h>
 #include <wpl/ui/container.h>
 #include <wpl/ui/layout.h>
 
 namespace micro_profiler
 {
-	class spacer_layout : public wpl::ui::layout_manager
-	{
-	public:
-		spacer_layout(int spacing);
-
-		virtual void layout(unsigned width, unsigned height, wpl::ui::container::positioned_view *views, size_t n) const;
-
-	private:
-		int _spacing;
-	};
-
-
 	class container_with_background : public wpl::ui::container
 	{
 	public:

@@ -43,9 +43,6 @@
     <ClCompile Include="frontend\containers.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\graphics.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -63,7 +60,6 @@
     <None Include="logo.ico">
       <Filter>resources</Filter>
     </None>
-    <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
     <None Include="micro-profiler.initializer.cpp" />
@@ -147,9 +143,6 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="frontend\containers.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\graphics.h">
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="constants.h" />

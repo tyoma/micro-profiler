@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include "graphics.h"
-
 #include <agge/color.h>
 #include <frontend/series.h>
 #include <wpl/ui/view.h>

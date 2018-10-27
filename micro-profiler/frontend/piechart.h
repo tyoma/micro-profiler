@@ -22,6 +22,7 @@
 
 #include "graphics.h"
 
+#include <agge/color.h>
 #include <frontend/series.h>
 #include <wpl/ui/view.h>
 
@@ -34,7 +35,7 @@ namespace micro_profiler
 
 	public:
 		template <typename PaletteIteratorT>
-		piechart(PaletteIteratorT palette_begin, PaletteIteratorT palette_end, color color_rest);
+		piechart(PaletteIteratorT palette_begin, PaletteIteratorT palette_end, agge::color color_rest);
 
 		void set_model(const std::shared_ptr<model_t> &m);
 		void select(index_type item);
@@ -48,7 +49,7 @@ namespace micro_profiler
 		{
 			model_t::index_type index;
 			agge::real_t value, share_angle;
-			color segment_color;
+			agge::color segment_color;
 		};
 			
 		typedef std::vector<segment> segments_t;
@@ -70,14 +71,14 @@ namespace micro_profiler
 		wpl::slot_connection _invalidate_connection;
 		std::shared_ptr<model_t> _model;
 		std::shared_ptr<const wpl::ui::trackable> _selection;
-		std::vector<color> _palette;
-		color _color_rest;
+		std::vector<agge::color> _palette;
+		agge::color _color_rest;
 	};
 
 
 
 	template <typename PaletteIteratorT>
-	inline piechart::piechart(PaletteIteratorT begin, PaletteIteratorT end, color color_rest)
+	inline piechart::piechart(PaletteIteratorT begin, PaletteIteratorT end, agge::color color_rest)
 		: _selection_emphasis_k(0.1f), _palette(begin, end), _color_rest(color_rest)
 	{	}
 }

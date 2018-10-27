@@ -16,25 +16,25 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const color c_palette[] = {
-			color::make(230, 85, 13, 255),
-			color::make(253, 141, 60, 255),
-			color::make(253, 174, 107, 255),
+		const agge::color c_palette[] = {
+			agge::color::make(230, 85, 13),
+			agge::color::make(253, 141, 60),
+			agge::color::make(253, 174, 107),
 
-			color::make(49, 163, 84, 255),
-			color::make(116, 196, 118, 255),
-			color::make(161, 217, 155, 255),
+			agge::color::make(49, 163, 84),
+			agge::color::make(116, 196, 118),
+			agge::color::make(161, 217, 155),
 
-			color::make(107, 174, 214, 255),
-			color::make(158, 202, 225, 255),
-			color::make(198, 219, 239, 255),
+			agge::color::make(107, 174, 214),
+			agge::color::make(158, 202, 225),
+			agge::color::make(198, 219, 239),
 
-			color::make(117, 107, 177, 255),
-			color::make(158, 154, 200, 255),
-			color::make(188, 189, 220, 255),
+			agge::color::make(117, 107, 177),
+			agge::color::make(158, 154, 200),
+			agge::color::make(188, 189, 220),
 		};
 
-		const color c_rest = color::make(128, 128, 128, 255);
+		const agge::color c_rest = agge::color::make(128, 128, 128, 255);
 
 		const columns_model::column c_columns_statistics[] = {
 			columns_model::column("Index", L"#", 28, columns_model::dir_none),

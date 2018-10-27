@@ -44,13 +44,13 @@ namespace micro_profiler
 	public:
 		container_with_background();
 
-		void set_background_color(color c);
+		void set_background_color(agge::color c);
 
 	private:
 		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &ras) const;
 
 	private:
-		color _back_color;
+		agge::color _back_color;
 		bool _enable_background;
 	};
 }

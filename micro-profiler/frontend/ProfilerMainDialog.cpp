@@ -120,7 +120,7 @@ namespace micro_profiler
 			MoveWindow(&_placement);
 		ShowWindow(SW_SHOW);
 
-		root->set_background_color(color::make(24, 32, 48, 255));
+		root->set_background_color(agge::color::make(24, 32, 48));
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()

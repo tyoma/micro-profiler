@@ -20,16 +20,10 @@
 
 #pragma once
 
+#include <agge/color.h>
 #include <wpl/ui/visual.h>
 
 namespace micro_profiler
 {
-	struct color
-	{
-		static color make(agge::uint8_t r, agge::uint8_t g, agge::uint8_t b, agge::uint8_t a);
-
-		agge::uint8_t r, g, b, a;
-	};
-
-	void fill(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer, color c);
+	void fill(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer, agge::color c);
 }

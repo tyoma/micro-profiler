@@ -20,7 +20,6 @@
 
 #include "containers.h"
 
-
 namespace micro_profiler
 {
 	spacer_layout::spacer_layout(int spacing)
@@ -42,7 +41,7 @@ namespace micro_profiler
 		: _enable_background(false)
 	{	}
 
-	void container_with_background::set_background_color(color c)
+	void container_with_background::set_background_color(agge::color c)
 	{
 		_back_color = c;
 		_enable_background = true;

@@ -70,7 +70,7 @@ namespace micro_profiler
 			{
 				add_path(*rasterizer, pie_segment(_center.x, _center.y, outer_r, _inner_r, start, end));
 				rasterizer->close_polygon();
-				ctx(rasterizer, blender(i->segment_color.r, i->segment_color.g, i->segment_color.b), winding<>());
+				ctx(rasterizer, blender(i->segment_color), winding<>());
 			}
 			start = end;
 		}

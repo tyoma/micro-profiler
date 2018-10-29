@@ -22,54 +22,40 @@
 
 #include <frontend/frontend_manager.h>
 
-#include <resources/resource.h>
-
-#include <atlbase.h>
-#include <atltypes.h>
-#include <atlwin.h>
 #include <functional>
 #include <string>
+#include <wpl/base/concepts.h>
 #include <wpl/base/signals.h>
 #include <wpl/ui/view_host.h>
+#include <wpl/ui/win32/window.h>
 
 namespace micro_profiler
 {
 	class functions_list;
+	struct hive;
 	class tables_ui;
 
-	class ProfilerMainDialog : public ATL::CDialogImpl<ProfilerMainDialog>, public frontend_ui
+	class ProfilerMainDialog : public frontend_ui, wpl::noncopyable
 	{
 	public:
-		enum {	IDD = IDD_PROFILER_MAIN	};
-
-	public:
-		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable, HWND parent);
+		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable);
 		~ProfilerMainDialog();
 
 	private:
-		BEGIN_MSG_MAP(ProfilerMainDialog)
-			MESSAGE_HANDLER(WM_ACTIVATE, OnActivated)
-			MESSAGE_HANDLER(WM_WINDOWPOSCHANGED, OnWindowPosChanged)
-			MESSAGE_HANDLER(WM_CLOSE, OnClose)
-			REFLECT_NOTIFICATIONS()
-		END_MSG_MAP()
-
-		LRESULT OnActivated(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-		LRESULT OnWindowPosChanged(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-		LRESULT OnClose(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-
 		void OnCopyAll();
 		void OnSupport();
 
 	private:
-		virtual void OnFinalMessage(HWND hwnd);
+		LRESULT on_message(UINT message, WPARAM wparam, LPARAM lparam, const wpl::ui::window::original_handler_t &handler);
 
 		virtual void activate();
 
 	private:
+		HWND _hwnd;
+		const std::shared_ptr<hive> _configuration;
 		const std::shared_ptr<functions_list> _statistics;
 		const std::wstring _executable;
-		CRect _placement;
+		agge::rect_i _placement;
 		std::shared_ptr<wpl::ui::view_host> _host;
 		std::shared_ptr<tables_ui> _statistics_display;
 		std::vector<wpl::slot_connection> _connections;

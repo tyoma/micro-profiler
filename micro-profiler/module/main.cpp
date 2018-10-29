@@ -26,10 +26,10 @@
 #include <frontend/ProfilerMainDialog.h>
 #include <setup/environment.h>
 
-#include <atlbase.h>
 #include <vector>
 
 using namespace std;
+using namespace micro_profiler;
 
 namespace micro_profiler
 {
@@ -44,13 +44,11 @@ namespace micro_profiler
 
 	shared_ptr<frontend_ui> frontend_manager_impl::default_ui_factory(const shared_ptr<functions_list> &model,
 		const wstring &executable)
-	{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable, HWND_DESKTOP));	}
+	{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable));	}
 }
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 {
-	using namespace micro_profiler;
-
 	if (DLL_PROCESS_ATTACH == reason)
 	{
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -61,19 +59,13 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 }
 
 STDAPI DllCanUnloadNow()
-{	return micro_profiler::g_module.DllCanUnloadNow();	}
+{	return g_module.DllCanUnloadNow();	}
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-{	return micro_profiler::g_module.DllGetClassObject(rclsid, riid, ppv);	}
+{	return g_module.DllGetClassObject(rclsid, riid, ppv);	}
 
 STDAPI DllRegisterServer()
-{
-	micro_profiler::register_path(false);
-	return micro_profiler::g_module.DllRegisterServer(FALSE);
-}
+{	return register_path(false), g_module.DllRegisterServer(FALSE);	}
 
 STDAPI DllUnregisterServer()
-{
-	micro_profiler::unregister_path(false);
-	return micro_profiler::g_module.DllUnregisterServer(FALSE);
-}
+{	return unregister_path(false), g_module.DllUnregisterServer(FALSE);	}

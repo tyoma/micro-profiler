@@ -40,9 +40,6 @@
     <ClCompile Include="frontend\piechart.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\containers.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -140,9 +137,6 @@
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="frontend\piechart.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\containers.h">
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="constants.h" />

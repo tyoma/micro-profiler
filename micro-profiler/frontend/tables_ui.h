@@ -1,6 +1,5 @@
 #pragma once
 
-#include "containers.h"
 #include "piechart.h"
 
 #include <memory>
@@ -15,7 +14,7 @@ namespace micro_profiler
 	struct hive;
 	struct linked_statistics;
 
-	class tables_ui : wpl::noncopyable, public container_with_background
+	class tables_ui : wpl::noncopyable, public wpl::ui::container
 	{
 	public:
 		tables_ui(const std::shared_ptr<functions_list> &model, hive &configuration);

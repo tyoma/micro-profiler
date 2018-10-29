@@ -20,12 +20,12 @@
 
 #include "ProfilerMainDialog.h"
 
-#include "containers.h"
 #include "SupportDevDialog.h"
 #include "tables_ui.h"
 
 #include <common/configuration.h>
 #include <frontend/function_list.h>
+#include <wpl/ui/container.h>
 #include <wpl/ui/controls.h>
 #include <wpl/ui/layout.h>
 #include <wpl/ui/win32/controls.h>
@@ -72,7 +72,7 @@ namespace micro_profiler
 	{
 		CString caption;
 		shared_ptr<hive> c(open_configuration());
-		shared_ptr<container_with_background> root(new container_with_background);
+		shared_ptr<container> root(new container);
 		shared_ptr<container> vstack(new container), toolbar(new container);
 		shared_ptr<layout_manager> lm_root(new spacer(5, 5));
 		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
@@ -120,7 +120,7 @@ namespace micro_profiler
 			MoveWindow(&_placement);
 		ShowWindow(SW_SHOW);
 
-		root->set_background_color(agge::color::make(24, 32, 48));
+		_host->set_background_color(agge::color::make(24, 32, 48));
 	}
 
 	ProfilerMainDialog::~ProfilerMainDialog()

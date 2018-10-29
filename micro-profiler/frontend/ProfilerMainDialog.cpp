@@ -170,7 +170,7 @@ namespace micro_profiler
 
 		case WM_CLOSE:
 			DestroyWindow(_hwnd);
-			break;
+			return 0;
 
 		case WM_NCDESTROY:
 			if (!is_rect_empty(_placement) && !::IsIconic(_hwnd))

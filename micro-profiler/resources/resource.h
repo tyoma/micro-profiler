@@ -3,11 +3,8 @@
 // Used by micro-profiler-package.rc
 //
 #define IDS_PACKAGE_LOAD_KEY            1
-#define IDS_ABOUT                       2
 #define IDS_PROJNAME                    100
 #define IDR_PROFILER_FRONTEND           102
-#define IDD_PROFILER_MAIN               201
-#define IDC_PROCESS_SELECTOR            201
 #define IDD_SUPPORT_DEV                 202
 #define IDI_APPMAIN                     202
 #define IDC_WAYS_TO_SUPPORT             209

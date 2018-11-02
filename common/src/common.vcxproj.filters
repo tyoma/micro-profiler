@@ -16,6 +16,9 @@
     <ClCompile Include="constants.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="symbol_resolver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -34,5 +37,6 @@
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="..\constants.h" />
+    <ClInclude Include="..\symbol_resolver.h" />
   </ItemGroup>
 </Project>

@@ -2,8 +2,8 @@
 
 #include <collector/channel_client.h>
 #include <common/serialization.h>
+#include <common/symbol_resolver.h>
 #include <frontend/function_list.h>
-#include <frontend/symbol_resolver.h>
 
 #include <test-helpers/helpers.h>
 

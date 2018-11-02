@@ -21,8 +21,8 @@
 #include <frontend/frontend.h>
 
 #include <frontend/function_list.h>
-#include <frontend/symbol_resolver.h>
 
+#include <common/symbol_resolver.h>
 #include <common/serialization.h>
 
 using namespace std;

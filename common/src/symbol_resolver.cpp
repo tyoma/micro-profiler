@@ -18,7 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <frontend/symbol_resolver.h>
+#include <common/symbol_resolver.h>
 
 #include <common/string.h>
 
@@ -38,12 +38,12 @@ namespace micro_profiler
 			dbghelp_symbol_resolver();
 			virtual ~dbghelp_symbol_resolver();
 
-			virtual const wstring &symbol_name_by_va(address_t address) const;
-			virtual pair<wstring, unsigned> symbol_fileline_by_va(address_t address) const;
-			virtual void add_image(const wchar_t *image, address_t load_address);
+			virtual const wstring &symbol_name_by_va(long_address_t address) const;
+			virtual pair<wstring, unsigned> symbol_fileline_by_va(long_address_t address) const;
+			virtual void add_image(const wchar_t *image, long_address_t load_address);
 
 		private:
-			typedef unordered_map<address_t, wstring, address_compare> cached_names_map;
+			typedef unordered_map<long_address_t, wstring, address_compare> cached_names_map;
 
 		private:
 			HANDLE me() const;
@@ -65,7 +65,7 @@ namespace micro_profiler
 		HANDLE dbghelp_symbol_resolver::me() const
 		{	return reinterpret_cast<HANDLE>(const_cast<dbghelp_symbol_resolver *>(this));	}
 
-		const wstring &dbghelp_symbol_resolver::symbol_name_by_va(address_t address) const
+		const wstring &dbghelp_symbol_resolver::symbol_name_by_va(long_address_t address) const
 		{
 			cached_names_map::iterator i = _names.find(address);
 
@@ -88,7 +88,7 @@ namespace micro_profiler
 			return i->second;
 		}
 
-		pair<wstring, unsigned> dbghelp_symbol_resolver::symbol_fileline_by_va(address_t address) const
+		pair<wstring, unsigned> dbghelp_symbol_resolver::symbol_fileline_by_va(long_address_t address) const
 		{
 			DWORD dummy;
 			IMAGEHLP_LINEW64 info = { sizeof(IMAGEHLP_LINEW64), };
@@ -97,7 +97,7 @@ namespace micro_profiler
 			return make_pair(info.FileName, info.LineNumber);
 		}
 
-		void dbghelp_symbol_resolver::add_image(const wchar_t *image, address_t load_address)
+		void dbghelp_symbol_resolver::add_image(const wchar_t *image, long_address_t load_address)
 		{
 			string image_path_ansi = unicode(image);
 

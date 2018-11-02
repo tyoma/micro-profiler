@@ -4,7 +4,7 @@
 #include <test-helpers/helpers.h>
 
 #include <common/serialization.h>
-#include <frontend/symbol_resolver.h>
+#include <common/symbol_resolver.h>
 
 #include <iomanip>
 #include <strmd/serializer.h>

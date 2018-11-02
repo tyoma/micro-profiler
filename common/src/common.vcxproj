@@ -49,6 +49,9 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="string.cpp" />
+    <ClCompile Include="symbol_resolver.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)libraries\wpl\src\wpl.mt\wpl.mt.vcxproj">
@@ -66,6 +69,7 @@
     <ClInclude Include="..\protocol.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\string.h" />
+    <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

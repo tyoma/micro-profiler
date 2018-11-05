@@ -100,7 +100,7 @@ namespace micro_profiler
 		const wchar_t *image::absolute_path() const
 		{	return _fullpath.c_str();	}
 
-		const void *image::get_symbol_address(const char *name) const
+		void *image::get_symbol_address(const char *name) const
 		{
 			if (void *symbol = ::GetProcAddress(static_cast<HMODULE>(get()), name))
 				return symbol;

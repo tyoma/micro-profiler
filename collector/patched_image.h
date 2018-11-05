@@ -18,30 +18,23 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/entry.h>
+#pragma once
 
-#include <windows.h>
+#include <memory>
+#include <vector>
+#include <wpl/base/concepts.h>
 
-extern "C" BOOL WINAPI _DllMainCRTStartup(HANDLE /*hinstance*/, DWORD /*reason*/, LPVOID /*reserved*/)
+namespace micro_profiler
 {
-	return TRUE;
-}
+	class patched_image : wpl::noncopyable
+	{
+	public:
+		void patch_image(void *in_image_address);
 
-#ifdef _M_IX86
-extern "C" __declspec(naked) void profile_enter()
-{	__asm ret	}
+	private:
+		class patch;
 
-extern "C" __declspec(naked) void profile_exit()
-{	__asm ret	}
-#else
-extern "C" void profile_enter()
-{	}
-
-extern "C" void profile_exit()
-{	}
-#endif
-
-extern "C" micro_profiler::handle *micro_profiler_initialize(void * /*image_load_address*/)
-{
-	return 0;
+	private:
+		std::vector< std::shared_ptr<patch> > _patches;
+	};
 }

@@ -19,10 +19,25 @@
     <ClCompile Include="system.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="patched_image.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libraries\lend\ld32.c">
+      <Filter>libraries\lend</Filter>
+    </ClCompile>
+    <ClCompile Include="profiler_patch_x86.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{5b266d6a-4d52-49ec-a6e7-6fcd2ba6732e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries">
+      <UniqueIdentifier>{9983a6e1-5dc6-4efe-9830-b03abafd520c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries\lend">
+      <UniqueIdentifier>{893d1a12-02c7-4ad0-a3c9-8b0ec22d3e61}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -38,5 +53,12 @@
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\system.h" />
+    <ClInclude Include="..\patched_image.h" />
+    <ClInclude Include="..\..\libraries\lend\ld32.h">
+      <Filter>libraries\lend</Filter>
+    </ClInclude>
+    <ClInclude Include="profiler_patch_x86.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

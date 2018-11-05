@@ -34,6 +34,10 @@
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>false</TreatWarningAsError>
+    </ClCompile>
     <Lib>
       <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
     </Lib>
@@ -42,21 +46,19 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\libraries\lend\ld32.c" />
     <ClCompile Include="analyzer.cpp" />
-    <ClCompile Include="calls_collector.cpp">
-      <Optimization>Full</Optimization>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OmitFramePointers>true</OmitFramePointers>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile Include="calls_collector.cpp" />
     <ClCompile Include="channel_client.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="frontend_controller.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="patched_image.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="profiler_patch_x86.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
     <ClCompile Include="system.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -69,13 +71,16 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\libraries\lend\ld32.h" />
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\frontend_controller.h" />
+    <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\system.h" />
+    <ClInclude Include="profiler_patch_x86.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

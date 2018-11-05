@@ -150,7 +150,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reser
 	return TRUE;
 }
 
-extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void *image_address)
+extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(void *image_address)
 {
 	using namespace micro_profiler;
 

@@ -19,7 +19,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const int dummy = 0;
+			int dummy = 0;
 
 			void RaiseAt(event_flag *e, volatile long *times_to_event)
 			{

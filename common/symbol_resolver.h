@@ -22,17 +22,26 @@
 
 #include "primitives.h"
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace micro_profiler
 {
+	struct symbol_info
+	{
+		const char *name;
+		void *location;
+		unsigned size;
+	};
+
 	struct symbol_resolver
 	{
 		virtual ~symbol_resolver()	{	}
 		virtual const std::wstring &symbol_name_by_va(long_address_t address) const = 0;
 		virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(long_address_t address) const = 0;
 		virtual void add_image(const wchar_t *image, long_address_t load_address) = 0;
+		virtual void enumerate_symbols(long_address_t image_address,
+			const std::function<void(const symbol_info &symbol)> &symbol_callback);
 
 		static std::shared_ptr<symbol_resolver> create();
 	};

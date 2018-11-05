@@ -36,4 +36,4 @@ namespace micro_profiler
 	#define MPCDECL
 #endif
 
-extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void *in_image_address);
+extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(void *in_image_address);

@@ -13,3 +13,7 @@
 [submodule "libraries/strmd"]
 	path = libraries/strmd
 	url = git@github.com:tyoma/strmd.git
+[submodule "libraries/lend"]
+	path = libraries/lend
+	url = git@github.com:tyoma/lend.git
+	branch = origin/master

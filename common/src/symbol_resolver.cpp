@@ -41,6 +41,8 @@ namespace micro_profiler
 			virtual const wstring &symbol_name_by_va(long_address_t address) const;
 			virtual pair<wstring, unsigned> symbol_fileline_by_va(long_address_t address) const;
 			virtual void add_image(const wchar_t *image, long_address_t load_address);
+			virtual void enumerate_symbols(long_address_t image_address,
+				const function<void(const symbol_info &symbol)> &symbol_callback);
 
 		private:
 			typedef unordered_map<long_address_t, wstring, address_compare> cached_names_map;
@@ -110,7 +112,34 @@ namespace micro_profiler
 			}
 			throw invalid_argument("");
 		}
+
+		void dbghelp_symbol_resolver::enumerate_symbols(long_address_t image_address,
+			const function<void(const symbol_info &symbol)> &symbol_callback)
+		{
+			struct local
+			{
+				static BOOL CALLBACK callback(SYMBOL_INFO *symbol, ULONG size, void *context)
+				{
+					symbol_info si = { };
+					if (5 /*SymTagFunction*/ == symbol->Tag)
+					{
+						si.name = symbol->Name;
+						si.location = reinterpret_cast<void *>(static_cast<size_t>(symbol->Address));
+						si.size = size;
+
+						(*static_cast<const function<void(const symbol_info &symbol)> *>(context))(si);
+					}
+					return TRUE;
+				}
+			};
+
+			::SymEnumSymbols(me(), image_address, NULL, &local::callback, const_cast<void *>((const void *)&symbol_callback));
+		}
 	}
+
+	void symbol_resolver::enumerate_symbols(long_address_t /*image_address*/,
+		const function<void(const symbol_info &symbol)> &/*symbol_callback*/)
+	{	}
 
 	shared_ptr<symbol_resolver> symbol_resolver::create()
 	{	return shared_ptr<dbghelp_symbol_resolver>(new dbghelp_symbol_resolver());	}

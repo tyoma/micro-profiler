@@ -39,6 +39,7 @@ namespace micro_profiler
 	struct calls_collector_i;
 	struct handle;
 	class image_load_queue;
+	class patched_image;
 
 	class frontend_controller : wpl::noncopyable
 	{
@@ -46,7 +47,7 @@ namespace micro_profiler
 		frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory);
 		virtual ~frontend_controller();
 
-		handle *profile(const void *in_image_address);
+		handle *profile(void *in_image_address);
 		void force_stop();
 
 	private:
@@ -64,5 +65,6 @@ namespace micro_profiler
 		std::shared_ptr<volatile long> _worker_refcount;
 		std::shared_ptr<void> _exit_event;
 		std::auto_ptr<wpl::mt::thread> _frontend_thread;
+		std::auto_ptr<patched_image> _patched_image;
 	};
 }

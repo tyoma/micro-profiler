@@ -20,8 +20,9 @@
 
 #include <collector/frontend_controller.h>
 
-#include <collector/statistics_bridge.h>
 #include <collector/entry.h>
+#include <collector/patched_image.h>
+#include <collector/statistics_bridge.h>
 
 #include <windows.h>
 #include <wpl/mt/thread.h>
@@ -54,7 +55,7 @@ namespace micro_profiler
 	class frontend_controller::profiler_instance : public handle, wpl::noncopyable
 	{
 	public:
-		profiler_instance(const void *in_image_address, shared_ptr<image_load_queue> image_load_queue,
+		profiler_instance(patched_image &pi, void *in_image_address, shared_ptr<image_load_queue> image_load_queue,
 			shared_ptr<volatile long> worker_refcount, shared_ptr<void> exit_event);
 		virtual ~profiler_instance();
 
@@ -63,15 +64,19 @@ namespace micro_profiler
 		shared_ptr<image_load_queue> _image_load_queue;
 		shared_ptr<volatile long> _worker_refcount;
 		shared_ptr<void> _exit_event;
+		calls_collector *_collector;
 	};
 
 
-	frontend_controller::profiler_instance::profiler_instance(const void *in_image_address,
+	frontend_controller::profiler_instance::profiler_instance(patched_image &pi, void *in_image_address,
 			shared_ptr<image_load_queue> image_load_queue_, shared_ptr<volatile long> worker_refcount,
 			shared_ptr<void> exit_event)
 		: _in_image_address(in_image_address), _image_load_queue(image_load_queue_), _worker_refcount(worker_refcount),
-			_exit_event(exit_event)
-	{	_image_load_queue->load(in_image_address);	}
+			_exit_event(exit_event), _collector(calls_collector::instance())
+	{
+		pi.patch_image(in_image_address);
+		_image_load_queue->load(in_image_address);
+	}
 
 	frontend_controller::profiler_instance::~profiler_instance()
 	{
@@ -83,7 +88,7 @@ namespace micro_profiler
 
 	frontend_controller::frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory)
 		: _collector(collector), _factory(factory), _image_load_queue(new image_load_queue),
-			_worker_refcount(new volatile long())			
+			_worker_refcount(new volatile long()), _patched_image(new patched_image)
 	{	}
 
 	frontend_controller::~frontend_controller()
@@ -92,7 +97,7 @@ namespace micro_profiler
 			_frontend_thread->detach();
 	}
 
-	handle *frontend_controller::profile(const void *in_image_address)
+	handle *frontend_controller::profile(void *in_image_address)
 	{
 		if (1 == _InterlockedIncrement(_worker_refcount.get()))
 		{
@@ -106,7 +111,7 @@ namespace micro_profiler
 			swap(_frontend_thread, frontend_thread);
 		}
 
-		return new profiler_instance(in_image_address, _image_load_queue, _worker_refcount, _exit_event);
+		return new profiler_instance(*_patched_image, in_image_address, _image_load_queue, _worker_refcount, _exit_event);
 	}
 
 	void frontend_controller::force_stop()

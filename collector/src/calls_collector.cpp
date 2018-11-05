@@ -42,13 +42,21 @@ namespace micro_profiler
 {
 	calls_collector calls_collector::_instance(5000000);
 
+	struct return_entry
+	{
+		void *address;
+		const void *control;
+	};
+
 	class calls_collector::thread_trace_block
 	{
 	public:
 		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
 
+		void track_enter(timestamp_t timestamp, void *address, void *ret_address) throw();
 		void track(const call_record &call) throw();
+		void *track_exit(timestamp_t timestamp) throw();
 		bool try_track(const call_record &call) throw();
 		void read_collected(acceptor &a);
 
@@ -62,6 +70,7 @@ namespace micro_profiler
 		const unsigned int _thread_id;
 		const size_t _trace_limit;
 		event_flag _proceed_collection;
+		pod_vector<return_entry> _ret_stack;
 		trace_t _traces[2];
 		trace_t * volatile _active_trace, * volatile _inactive_trace;
 	};
@@ -70,17 +79,48 @@ namespace micro_profiler
 	calls_collector::thread_trace_block::thread_trace_block(unsigned int thread_id, size_t trace_limit)
 		: _thread_id(thread_id), _trace_limit(sizeof(call_record) * trace_limit), _proceed_collection(false, true),
 			_active_trace(&_traces[0]), _inactive_trace(&_traces[1])
-	{	}
+	{
+		return_entry re = {};
+		_ret_stack.push_back(re);
+	}
 
 	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &other)
 		: _thread_id(other._thread_id), _trace_limit(other._trace_limit), _proceed_collection(false, true),
-			_active_trace(&_traces[0]), _inactive_trace(&_traces[1])
+			_ret_stack(other._ret_stack), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
+
+	__forceinline void calls_collector::thread_trace_block::track_enter(timestamp_t timestamp, void *address, void *ret_address) throw()
+	{
+		call_record call = { timestamp, };
+
+		if (&call != _ret_stack.back().control)
+		{
+			return_entry re = { ret_address, &call };
+			_ret_stack.push_back(re);
+		}
+		else
+		{
+			call.callee = 0;
+			track(call);
+		}
+		call.callee = address;
+		track(call);
+	}
 
 	__forceinline void calls_collector::thread_trace_block::track(const call_record &call) throw()
 	{
 		while (!try_track(call))
 			_proceed_collection.wait();
+	}
+
+	__forceinline void *calls_collector::thread_trace_block::track_exit(timestamp_t timestamp) throw()
+	{
+		call_record call = { timestamp, 0 };
+		void *ret_address = _ret_stack.back().address;
+
+		_ret_stack.pop_back();
+		track(call);
+		return ret_address;
 	}
 
 	__forceinline bool calls_collector::thread_trace_block::try_track(const call_record &call) throw()
@@ -139,7 +179,7 @@ namespace micro_profiler
 		thread_trace_block &ttb = get_current_thread_trace();
 
 		for (unsigned int i = 0; i < check_times; ++i)
-			profile_enter(), profile_exit();
+			::profile_enter(), ::profile_exit();
 
 		ttb.read_collected(de);
 		_profiler_latency = de.delay;
@@ -168,6 +208,12 @@ namespace micro_profiler
 
 		get_current_thread_trace().track(call);
 	}
+
+	void calls_collector::profile_enter(timestamp_t timestamp, void *address, void *ret_address) throw()
+	{	get_current_thread_trace().track_enter(timestamp, address, ret_address);	}
+
+	void *calls_collector::profile_exit(timestamp_t timestamp) throw()
+	{	return get_current_thread_trace().track_exit(timestamp);	}
 
 	size_t calls_collector::trace_limit() const throw()
 	{	return _trace_limit;	}

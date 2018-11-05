@@ -55,6 +55,9 @@ namespace micro_profiler
 		void track(call_record call) throw();
 		void track(timestamp_t timestamp, const void *address) throw();
 
+		void profile_enter(timestamp_t timestamp, void *address, void *ret_address) throw();
+		void *profile_exit(timestamp_t timestamp) throw();
+
 		size_t trace_limit() const throw();
 		virtual timestamp_t profiler_latency() const throw();
 

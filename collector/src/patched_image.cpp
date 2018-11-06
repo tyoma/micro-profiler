@@ -137,6 +137,9 @@ namespace micro_profiler
 			x86::jmp_rel_imm32 &jmp_original = *(x86::jmp_rel_imm32 *)(location);
 
 			jmp_original.init(&d);
+
+			::FlushInstructionCache(::GetCurrentProcess(), location, sizeof(x86::jmp_rel_imm32));
+			::FlushInstructionCache(::GetCurrentProcess(), _thunk, thunk_length);
 		}
 
 		~patch()
@@ -147,45 +150,40 @@ namespace micro_profiler
 		}
 
 	private:
-		void relocate_calls(byte *location, byte * const original, int size)
+		void relocate_calls(byte * const location0, byte * const original0, const int size0)
 		{
-			byte * const location0 = location;
-			const int size0 = size;
-			x86::dword d = original - location;
+			x86::dword d = original0 - location0;
+			int opcode_size, size = size0;
 
-			while (size > 0)
+			for (byte *opcode_src = original0, *opcode_dest = location0; size > 0;
+				size -= opcode_size, opcode_src += opcode_size, opcode_dest += opcode_size)
 			{
-				if (*location == 0xCC)
+				opcode_size = length_disasm(opcode_dest);
+				
+				if (opcode_size > size)
 				{
-					throw runtime_error("Cannot patch function!");
+					throw runtime_error("Cannot patch function (instruction crosses function boundary)!");
 				}
-				else if (*location == 0xE8)
+				if (*opcode_dest == 0xCC)
 				{
-					byte *target_address = original + 5 + *(x86::dword *)(location + 1);
+					throw runtime_error("Cannot patch function (read as 0xCC)!");
+				}
+				else if (*opcode_dest == 0xE8 /* call */ )
+				{
+					byte *target_address = opcode_src + 5 + *(x86::dword *)(opcode_src + 1);
 
 					if (::IsBadReadPtr(target_address, 4))
-						throw runtime_error("Cannot patch function!");
-					*(x86::dword *)(location + 1) += d;
-					size -= 5;
-					location += 5;
+						throw runtime_error("Cannot patch function (call to invalid address)!");
+					*(x86::dword *)(opcode_dest + 1) += d;
 				}
-				else if (*location == 0xE9)
+				else if (*opcode_dest == 0xE9 /* jmp */)
 				{
-					// check for tail optimized calls
-					byte *target_address = original + 5 + *(x86::dword *)(location + 1);
+					byte *target_address = opcode_src + 5 + *(x86::dword *)(opcode_src + 1);
 
 					if (::IsBadReadPtr(target_address, 4))
-						throw runtime_error("Cannot patch function!");
-					if (target_address < location0 || target_address > location0 + size0)
-						*(x86::dword *)(location + 1) += d;
-					size -= 5;
-					location += 5;
-				}
-				else
-				{
-					int l = length_disasm(location);
-					size -= l;
-					location += l;
+						throw runtime_error("Cannot patch function (jmp to invalid address)!");
+					if (target_address < original0 || target_address > original0 + size0)
+						*(x86::dword *)(opcode_dest + 1) += d;
 				}
 			}
 		}
@@ -202,14 +200,14 @@ namespace micro_profiler
 		shared_ptr<symbol_resolver> r = symbol_resolver::create();
 		module_info mi = get_module_info(in_image_address);
 		shared_ptr<executable_memory> em;
-		int n = 0;
+
 
 		r->add_image(mi.path.c_str(), mi.load_address);
-		r->enumerate_symbols(mi.load_address, [this, &em, &n] (const symbol_info &si) {
-			++n;
+		r->enumerate_symbols(mi.load_address, [this, &em] (const symbol_info &si) {
 			try
 			{
-				if (20 <= si.size && si.name[0] != '_')
+
+				if (si.size > 10 /*&& si.name[0] != '_'*/)
 					_patches.push_back(make_shared<patch>(em, si.location, si.size));
 			}
 			catch (const exception &e)

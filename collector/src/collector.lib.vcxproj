@@ -47,18 +47,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\libraries\lend\ld32.c" />
+    <ClCompile Include="allocator.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="analyzer.cpp" />
+    <ClCompile Include="assembler_intel.cpp" />
+    <ClCompile Include="binary_image.cpp" />
+    <ClCompile Include="binary_translation_x86.cpp" />
     <ClCompile Include="calls_collector.cpp" />
     <ClCompile Include="channel_client.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="dynamic_hooking_x86.cpp" />
     <ClCompile Include="frontend_controller.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="patched_image.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="profiler_patch_x86.cpp" />
+    <ClCompile Include="profiler_patch_x86.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="statistics_bridge.cpp" />
     <ClCompile Include="system.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -73,13 +82,18 @@
   <ItemGroup>
     <ClInclude Include="..\..\libraries\lend\ld32.h" />
     <ClInclude Include="..\analyzer.h" />
+    <ClInclude Include="..\binary_translation.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\channel_client.h" />
+    <ClInclude Include="..\allocator.h" />
+    <ClInclude Include="..\dynamic_hooking.h" />
     <ClInclude Include="..\frontend_controller.h" />
+    <ClInclude Include="..\binary_image.h" />
     <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\system.h" />
+    <ClInclude Include="assembler_intel.h" />
     <ClInclude Include="profiler_patch_x86.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

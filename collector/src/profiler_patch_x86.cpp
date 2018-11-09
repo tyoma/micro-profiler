@@ -7,13 +7,13 @@ namespace micro_profiler
 		void jmp_rel_imm32::init(void *address)
 		{
 			opcode = 0xE9;
-			address_offset = (dword)address - (dword)(this + 1);
+			displacement = (dword)address - (dword)(this + 1);
 		}
 
 		void call_rel_imm32::init(void *address)
 		{
 			opcode = 0xE8;
-			address_offset = (dword)address - (dword)(this + 1);
+			displacement = (dword)address - (dword)(this + 1);
 		}
 
 		void push_im_offset8::init(char offset)
@@ -145,7 +145,7 @@ namespace micro_profiler
 
 			i81.init();
 
-			name.init(callee);
+//			name.init(callee);
 		}
 	}
 }

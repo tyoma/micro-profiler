@@ -418,7 +418,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				mocks::FrontendState state;
-				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
+				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
 				sync_stop_frontend_controller fc(tracer, state);
 
 				// ACT
@@ -429,7 +429,7 @@ namespace micro_profiler
 				assert_equal(1u, state.update_log.size());
 				assert_equal(1u, state.update_log[0].image_loads.size());
 				assert_equal(images[0].load_address(), state.update_log[0].image_loads[0].load_address);
-				assert_not_equal(wstring::npos, state.update_log[0].image_loads[0].path.find(L"symbol_container_1.dll"));
+				assert_not_equal(wstring::npos, state.update_log[0].image_loads[0].path.find(L"symbol_container_1"));
 
 				// ACT
 				auto_ptr<handle> h2(fc.profile(images[1].get_symbol_address("get_function_addresses_2")));
@@ -439,7 +439,7 @@ namespace micro_profiler
 				assert_equal(2u, state.update_log.size());
 				assert_equal(1u, state.update_log[1].image_loads.size());
 				assert_equal(images[1].load_address(), state.update_log[1].image_loads[0].load_address);
-				assert_not_equal(wstring::npos, state.update_log[1].image_loads[0].path.find(L"symbol_container_2.dll"));
+				assert_not_equal(wstring::npos, state.update_log[1].image_loads[0].path.find(L"symbol_container_2"));
 			}
 
 
@@ -448,7 +448,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				mocks::FrontendState state;
-				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
+				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
 				sync_stop_frontend_controller fc(tracer, state);
 
 				auto_ptr<handle> h1(fc.profile(images[0].get_symbol_address("get_function_addresses_1")));

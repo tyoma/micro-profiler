@@ -20,3 +20,10 @@ extern "C" __declspec(dllexport) void get_function_addresses_2(void (*&f1)(), vo
 	f2 = &vale_of_mean_creatures::this_one_for_the_whales;
 	f3 = &vale_of_mean_creatures::the_abyss::bubble_sort;
 }
+
+void bubble_sort(int * volatile begin, int * volatile end);
+
+extern "C" __declspec(dllexport) void function_with_a_nested_call_2()
+{
+	bubble_sort(0, 0);
+}

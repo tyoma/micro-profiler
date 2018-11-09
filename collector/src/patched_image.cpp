@@ -115,31 +115,36 @@ namespace micro_profiler
 			: _location(static_cast<byte *>(location)), _size(size)
 		{
 			scoped_unprotect su(location, size);
-			const unsigned thunk_length = sizeof(x86::decorator_msvc) + _size;
+			const unsigned cl = cutoff_length((byte*)location, size, sizeof(x86::jmp_rel_imm32));
 
-			if (::IsBadReadPtr(location, size))
+			if (!cl)
+				throw runtime_error("Unable to identify required length of the cutoff piece!");
+
+			_size = sizeof(x86::decorator_msvc) + cl + sizeof(x86::jmp_rel_imm32);
+
+			if (::IsBadReadPtr(location, cl))
 				throw runtime_error("Cannot patch function!");;
 
-			_thunk = executable_memory::allocate(em, thunk_length);
+			_thunk = executable_memory::allocate(em, _size);
 			_em = em;
 
 			// initialize thunk
 			x86::decorator_msvc &d = *(x86::decorator_msvc *)(_thunk);
-			byte *displaced_body = (byte *)(&d + 1);
+			byte *cutoff = (byte *)(&d + 1);
+			x86::jmp_rel_imm32 &jmp_back_to_proc = *(x86::jmp_rel_imm32*)(cutoff + cl);
 
 			d.init(_location, micro_profiler::calls_collector::instance(),
 				address_cast_hack(&micro_profiler::calls_collector::profile_enter),
 				address_cast_hack(&micro_profiler::calls_collector::profile_exit));
-			memcpy(displaced_body, _location, _size);
-			relocate_calls(displaced_body, _location, _size);
+			memcpy(cutoff, _location, cl);
+			relocate_calls(cutoff, _location, cl);
+			jmp_back_to_proc.init(_location + cl);
 
 			// place hooking jump to original body
 			x86::jmp_rel_imm32 &jmp_original = *(x86::jmp_rel_imm32 *)(location);
-
+			
 			jmp_original.init(&d);
-
-			::FlushInstructionCache(::GetCurrentProcess(), location, sizeof(x86::jmp_rel_imm32));
-			::FlushInstructionCache(::GetCurrentProcess(), _thunk, thunk_length);
+			memset(&jmp_original + 1, 0xCC, cl - sizeof(x86::jmp_rel_imm32));
 		}
 
 		~patch()
@@ -150,6 +155,28 @@ namespace micro_profiler
 		}
 
 	private:
+		static unsigned cutoff_length(byte * const location0, int size, int required_size)
+		{
+			byte *location = location0;
+
+			while (required_size > 0 && size > 0)
+			{
+				if (*location == 0xCC)
+					throw runtime_error("Cannot patch function (int 3 met)!");
+				else if (*location == 0xEB)
+					throw runtime_error("Cannot patch function (jmp rel8 met)!");
+
+				unsigned l = length_disasm(location);
+
+				required_size -= l;
+				size -= l;
+				location += l;
+			}
+			if (required_size > 0 && size <= 0)
+				throw runtime_error("Cannot patch function (the function is too short)!");
+			return location - location0;
+		}
+
 		void relocate_calls(byte * const location0, byte * const original0, const int size0)
 		{
 			x86::dword d = original0 - location0;
@@ -191,7 +218,7 @@ namespace micro_profiler
 	private:
 		shared_ptr<executable_memory> _em;
 		byte * const _location;
-		const unsigned _size;
+		unsigned _size;
 		byte *_thunk;
 	};
 
@@ -206,8 +233,7 @@ namespace micro_profiler
 		r->enumerate_symbols(mi.load_address, [this, &em] (const symbol_info &si) {
 			try
 			{
-
-				if (si.size > 10 /*&& si.name[0] != '_'*/)
+//				if (si.size > 10 /*&& si.name[0] != '_'*/)
 					_patches.push_back(make_shared<patch>(em, si.location, si.size));
 			}
 			catch (const exception &e)

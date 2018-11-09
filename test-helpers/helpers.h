@@ -12,6 +12,17 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		template <typename U, typename V>
+		U address_cast_hack(V v)
+		{
+			union {
+				U u;
+				V v2;
+			};
+			v2 = v;
+			return u;
+		}
+
 		class com_event
 		{
 		public:
@@ -98,6 +109,7 @@ namespace micro_profiler
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);
 	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
+	bool operator ==(const call_record &lhs, const call_record &rhs);
 }
 
 namespace ut

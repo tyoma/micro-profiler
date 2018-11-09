@@ -38,7 +38,7 @@ namespace micro_profiler
 			void init(void *address);
 
 			byte opcode;
-			dword address_offset;
+			dword displacement;
 		};
 
 		struct call_rel_imm32
@@ -46,7 +46,7 @@ namespace micro_profiler
 			void init(void *address);
 
 			byte opcode;
-			dword address_offset;
+			dword displacement;
 		};
 
 		struct push_im_offset8
@@ -175,7 +175,7 @@ namespace micro_profiler
 
 			ret i81; // ret
 
-			jmp_rel_imm32 name; // header: jmp [callee]
+//			jmp_rel_imm32 name; // header: jmp [callee]
 		};
 	}
 }

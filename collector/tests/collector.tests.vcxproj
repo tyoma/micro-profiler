@@ -46,8 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
+    <ClCompile Include="BinaryImageTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMChannelTests.cpp" />
+    <ClCompile Include="DynamicHookingTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
     <ClCompile Include="mocks.cpp" />
@@ -63,6 +65,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="X86BinaryImageTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="entry.asm">

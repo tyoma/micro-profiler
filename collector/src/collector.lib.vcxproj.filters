@@ -28,6 +28,21 @@
     <ClCompile Include="profiler_patch_x86.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="binary_image.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="allocator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="binary_translation_x86.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamic_hooking_x86.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="assembler_intel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -58,6 +73,13 @@
       <Filter>libraries\lend</Filter>
     </ClInclude>
     <ClInclude Include="profiler_patch_x86.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\binary_image.h" />
+    <ClInclude Include="..\allocator.h" />
+    <ClInclude Include="..\binary_translation.h" />
+    <ClInclude Include="..\dynamic_hooking.h" />
+    <ClInclude Include="assembler_intel.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

@@ -65,9 +65,6 @@
     <ClCompile Include="patched_image.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="profiler_patch_x86.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="statistics_bridge.cpp" />
     <ClCompile Include="system.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -90,11 +87,11 @@
     <ClInclude Include="..\frontend_controller.h" />
     <ClInclude Include="..\binary_image.h" />
     <ClInclude Include="..\patched_image.h" />
+    <ClInclude Include="..\platform.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\system.h" />
     <ClInclude Include="assembler_intel.h" />
-    <ClInclude Include="profiler_patch_x86.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -75,9 +75,10 @@ namespace micro_profiler
 		{
 			switch (reg)
 			{
-//			case eax_: opcode = 0x58; break;
+			case eax_: opcode = 0xB8; break;
+			case ebx_: opcode = 0xBB; break;
 			case ecx_: opcode = 0xB9; break;
-//			case edx_: opcode = 0x5A; break;
+			case edx_: opcode = 0xBA; break;
 			default: throw 0;
 			}
 			operand = value;

@@ -36,15 +36,14 @@ namespace micro_profiler
 			push i12; // push ecx
 			push i13; // push edx
 
-			lea_reg_esp_offset8 i21; // lea eax, [esp + 0x0C]
-			push i22; // push eax
-			push_imm32 i23; // push [callee]
+			mov_imm32 i21; // mov ecx, [instance] ; 1st
+			lea_reg_esp_offset8 i22; // lea eax, [esp + 0x0C]
+			push i23; // push eax ; 4th
 			rdtsc i24;
-			push i25; // push edx
-			push i26; // push eax
-			push_imm32 i27; // push [instance]
+			push i25; // push edx ; 3rd
+			push i26; // push eax ; 3rd
+			mov_imm32 i27; // mov edx, [callee] ; 2nd
 			call_rel_imm32 i28; // call [on_enter]
-			add_esp_imm8 i29; // add esp, 14h
 
 			pop i31; // pop edx
 			pop i32; // pop ecx
@@ -56,19 +55,18 @@ namespace micro_profiler
 
 			push i51;	// push eax
 
-			rdtsc i61;
-			push i62; // push edx
-			push i63; // push eax
-			push_imm32 i64; // push [instance]
+			mov_imm32 i61; // mov ecx, [instance] ; 1st
+			rdtsc i62;
+			push i63; // push edx ; 2nd
+			push i64; // push eax ; 2nd
 			call_rel_imm32 i65; // call [on_exit]
-			add_esp_imm8 i66; // add esp, 0Ch
-			mov_im_offset8_reg i67; // mov [esp + 0x04], eax
+			mov_im_offset8_reg i66; // mov [esp + 0x04], eax
 
 			pop i71; // pop eax
 
 			ret i91; // ret
 
-			byte padding[7];
+			byte padding[13];
 		};
 
 
@@ -79,12 +77,11 @@ namespace micro_profiler
 			i12.init(ecx_);
 			i13.init(edx_);
 
-			i21.init(eax_, 0x0C), i22.init(eax_); // 4. return_address_ptr
-			i23.init((dword)callee); // 3. callee
-			i24.init(), i25.init(edx_), i26.init(eax_); // 2. timestamp
-			i27.init((dword)instance); // 1. instance
+			i21.init(ecx_, (dword)instance); // 1. instance
+			i22.init(eax_, 0x0C), i23.init(eax_); // 4. return_address_ptr
+			i24.init(), i25.init(edx_), i26.init(eax_); // 3. timestamp
+			i27.init(edx_, (dword)callee); // 2. callee
 			i28.init((const void *)(size_t)on_enter);
-			i29.init(0x14);
 
 			i31.init(edx_);
 			i32.init(ecx_);
@@ -96,11 +93,10 @@ namespace micro_profiler
 
 			i51.init(eax_);
 
-			i61.init(), i62.init(edx_), i63.init(eax_); // 2. timestamp
-			i64.init((dword)instance); // 1. instance
+			i61.init(ecx_, (dword)instance); // 1. instance
+			i62.init(), i63.init(edx_), i64.init(eax_); // 2. timestamp
 			i65.init((const void *)(size_t)on_exit);
-			i66.init(0x0C);
-			i67.init(0x04, eax_);
+			i66.init(0x04, eax_);
 
 			i71.init(eax_);
 

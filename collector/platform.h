@@ -20,17 +20,13 @@
 
 #pragma once
 
-#include "platform.h"
-#include "primitives.h"
-
-namespace micro_profiler
-{
-	typedef void (CC_(fastcall) enter_hook_t)(void *instance, const void *callee, timestamp_t timestamp,
-		void **return_address_ptr) _CC(fastcall);
-	typedef void *(CC_(fastcall) exit_hook_t)(void *instance, timestamp_t timestamp) _CC(fastcall);
-
-	extern const size_t c_thunk_size;
-
-	void initialize_hooks(void *thunk_location, const void *target_function, void *instance,
-		enter_hook_t *on_enter, exit_hook_t *on_exit);
-}
+#if defined(_MSC_VER) && defined(_M_IX86)
+	#define CC_(cc) __ ## cc
+	#define _CC(cc)
+#elif defined(__GNUC__) && defined(__i386)
+	#define CC_(cc)
+	#define _CC(cc) __attribute__((cc))
+#else
+	#define CC_(cc)
+	#define _CC(cc)
+#endif

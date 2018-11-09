@@ -20,8 +20,9 @@
 
 #include <collector/patched_image.h>
 #include <collector/calls_collector.h>
+#include <collector/dynamic_hooking.h>
 
-#include "profiler_patch_x86.h"
+#include "assembler_intel.h"
 
 #include <common/module.h>
 #include <common/symbol_resolver.h>
@@ -35,6 +36,15 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		void CC_(fastcall) profile_enter(void *instance, const void *callee, timestamp_t timestamp, void **return_address_ptr) _CC(fastcall)
+		{	static_cast<calls_collector *>(instance)->profile_enter(callee, timestamp, return_address_ptr);	}
+
+		void *CC_(fastcall) profile_exit(void *instance, timestamp_t timestamp) _CC(fastcall)
+		{	return static_cast<calls_collector *>(instance)->profile_exit(timestamp);	}
+	}
+
 	class executable_memory : wpl::noncopyable
 	{
 	public:
@@ -115,12 +125,12 @@ namespace micro_profiler
 			: _location(static_cast<byte *>(location)), _size(size)
 		{
 			scoped_unprotect su(location, size);
-			const unsigned cl = cutoff_length((byte*)location, size, sizeof(x86::jmp_rel_imm32));
+			const unsigned cl = cutoff_length((byte*)location, size, sizeof(intel::jmp_rel_imm32));
 
 			if (!cl)
 				throw runtime_error("Unable to identify required length of the cutoff piece!");
 
-			_size = sizeof(x86::decorator_msvc) + cl + sizeof(x86::jmp_rel_imm32);
+			_size = c_thunk_size + cl + sizeof(intel::jmp_rel_imm32);
 
 			if (::IsBadReadPtr(location, cl))
 				throw runtime_error("Cannot patch function!");;
@@ -129,29 +139,27 @@ namespace micro_profiler
 			_em = em;
 
 			// initialize thunk
-			x86::decorator_msvc &d = *(x86::decorator_msvc *)(_thunk);
-			byte *cutoff = (byte *)(&d + 1);
-			x86::jmp_rel_imm32 &jmp_back_to_proc = *(x86::jmp_rel_imm32*)(cutoff + cl);
+			byte *cutoff = (byte *)(_thunk + c_thunk_size);
+			intel::jmp_rel_imm32 &jmp_back_to_proc = *(intel::jmp_rel_imm32*)(cutoff + cl);
 
-			d.init(_location, micro_profiler::calls_collector::instance(),
-				address_cast_hack(&micro_profiler::calls_collector::profile_enter),
-				address_cast_hack(&micro_profiler::calls_collector::profile_exit));
+			initialize_hooks(_thunk, cutoff, micro_profiler::calls_collector::instance(),
+				&profile_enter, &profile_exit);
 			memcpy(cutoff, _location, cl);
 			relocate_calls(cutoff, _location, cl);
 			jmp_back_to_proc.init(_location + cl);
 
 			// place hooking jump to original body
-			x86::jmp_rel_imm32 &jmp_original = *(x86::jmp_rel_imm32 *)(location);
+			intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(location);
 			
-			jmp_original.init(&d);
-			memset(&jmp_original + 1, 0xCC, cl - sizeof(x86::jmp_rel_imm32));
+			jmp_original.init(_thunk);
+			memset(&jmp_original + 1, 0xCC, cl - sizeof(intel::jmp_rel_imm32));
 		}
 
 		~patch()
 		{
-			scoped_unprotect su(_location, sizeof(x86::jmp_rel_imm32));
+			scoped_unprotect su(_location, sizeof(intel::jmp_rel_imm32));
 
-			memcpy(_location, _thunk + sizeof(x86::decorator_msvc), sizeof(x86::jmp_rel_imm32));
+			memcpy(_location, _thunk + c_thunk_size, sizeof(intel::jmp_rel_imm32));
 		}
 
 	private:
@@ -179,7 +187,7 @@ namespace micro_profiler
 
 		void relocate_calls(byte * const location0, byte * const original0, const int size0)
 		{
-			x86::dword d = original0 - location0;
+			intel::dword d = original0 - location0;
 			int opcode_size, size = size0;
 
 			for (byte *opcode_src = original0, *opcode_dest = location0; size > 0;
@@ -197,20 +205,20 @@ namespace micro_profiler
 				}
 				else if (*opcode_dest == 0xE8 /* call */ )
 				{
-					byte *target_address = opcode_src + 5 + *(x86::dword *)(opcode_src + 1);
+					byte *target_address = opcode_src + 5 + *(intel::dword *)(opcode_src + 1);
 
 					if (::IsBadReadPtr(target_address, 4))
 						throw runtime_error("Cannot patch function (call to invalid address)!");
-					*(x86::dword *)(opcode_dest + 1) += d;
+					*(intel::dword *)(opcode_dest + 1) += d;
 				}
 				else if (*opcode_dest == 0xE9 /* jmp */)
 				{
-					byte *target_address = opcode_src + 5 + *(x86::dword *)(opcode_src + 1);
+					byte *target_address = opcode_src + 5 + *(intel::dword *)(opcode_src + 1);
 
 					if (::IsBadReadPtr(target_address, 4))
 						throw runtime_error("Cannot patch function (jmp to invalid address)!");
 					if (target_address < original0 || target_address > original0 + size0)
-						*(x86::dword *)(opcode_dest + 1) += d;
+						*(intel::dword *)(opcode_dest + 1) += d;
 				}
 			}
 		}

@@ -46,7 +46,8 @@ namespace micro_profiler
 				assert_equal(0u, 0xF & c_thunk_size);
 			}
 
-			static void on_enter(void *instance, timestamp_t timestamp, const void *callee, void **return_address_ptr)
+			static void CC_(fastcall) on_enter(void *instance, const void *callee, timestamp_t timestamp,
+				void **return_address_ptr) _CC(fastcall)
 			{
 				DynamicHookingTests *self = static_cast<DynamicHookingTests *>(instance);
 				call_record call = { timestamp, callee };
@@ -55,7 +56,7 @@ namespace micro_profiler
 				self->call_log.push_back(call);
 			}
 
-			static void *on_exit(void *instance, timestamp_t timestamp)
+			static void * CC_(fastcall) on_exit(void *instance, timestamp_t timestamp) _CC(fastcall)
 			{
 				DynamicHookingTests *self = static_cast<DynamicHookingTests *>(instance);
 				call_record call = { timestamp, 0 };

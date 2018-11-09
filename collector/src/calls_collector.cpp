@@ -54,7 +54,7 @@ namespace micro_profiler
 		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
 
-		void track_enter(timestamp_t timestamp, void *address, void *ret_address) throw();
+		void track_enter(const void *callee, timestamp_t timestamp, void **return_address_ptr) throw();
 		void track(const call_record &call) throw();
 		void *track_exit(timestamp_t timestamp) throw();
 		bool try_track(const call_record &call) throw();
@@ -89,13 +89,13 @@ namespace micro_profiler
 			_ret_stack(other._ret_stack), _active_trace(&_traces[0]), _inactive_trace(&_traces[1])
 	{	}
 
-	__forceinline void calls_collector::thread_trace_block::track_enter(timestamp_t timestamp, void *address, void *ret_address) throw()
+	__forceinline void calls_collector::thread_trace_block::track_enter(const void *callee, timestamp_t timestamp, void **return_address_ptr) throw()
 	{
 		call_record call = { timestamp, };
 
-		if (&call != _ret_stack.back().control)
+		if (return_address_ptr != _ret_stack.back().control)
 		{
-			return_entry re = { ret_address, &call };
+			return_entry re = { *return_address_ptr, return_address_ptr };
 			_ret_stack.push_back(re);
 		}
 		else
@@ -103,7 +103,7 @@ namespace micro_profiler
 			call.callee = 0;
 			track(call);
 		}
-		call.callee = address;
+		call.callee = callee;
 		track(call);
 	}
 
@@ -209,8 +209,8 @@ namespace micro_profiler
 		get_current_thread_trace().track(call);
 	}
 
-	void calls_collector::profile_enter(timestamp_t timestamp, void *address, void *ret_address) throw()
-	{	get_current_thread_trace().track_enter(timestamp, address, ret_address);	}
+	void calls_collector::profile_enter(const void *callee, timestamp_t timestamp, void **return_address_ptr) throw()
+	{	get_current_thread_trace().track_enter(callee, timestamp, return_address_ptr);	}
 
 	void *calls_collector::profile_exit(timestamp_t timestamp) throw()
 	{	return get_current_thread_trace().track_exit(timestamp);	}

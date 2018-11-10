@@ -30,7 +30,7 @@ namespace micro_profiler
 
 		struct thunk
 		{
-			void init(const void *target_function, void *instance, enter_hook_t *on_enter, exit_hook_t *on_exit);
+			void init(const void *target_function, const void *id, void *instance, enter_hook_t *on_enter, exit_hook_t *on_exit);
 
 			push i11; // push eax
 			push i12; // push ecx
@@ -71,7 +71,7 @@ namespace micro_profiler
 
 
 
-		void thunk::init(const void *callee, void *instance, enter_hook_t *on_enter, exit_hook_t *on_exit)
+		void thunk::init(const void *callee, const void *id, void *instance, enter_hook_t *on_enter, exit_hook_t *on_exit)
 		{
 			i11.init(eax_);
 			i12.init(ecx_);
@@ -80,7 +80,7 @@ namespace micro_profiler
 			i21.init(ecx_, (dword)instance); // 1. instance
 			i22.init(eax_, 0x0C), i23.init(eax_); // 4. return_address_ptr
 			i24.init(), i25.init(edx_), i26.init(eax_); // 3. timestamp
-			i27.init(edx_, (dword)callee); // 2. callee
+			i27.init(edx_, (dword)id); // 2. callee
 			i28.init((const void *)(size_t)on_enter);
 
 			i31.init(edx_);
@@ -106,7 +106,7 @@ namespace micro_profiler
 
 	extern const size_t c_thunk_size = sizeof(thunk);
 
-	void initialize_hooks(void *thunk_location, const void *target_function, void *instance,
+	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *instance,
 		enter_hook_t *on_enter, exit_hook_t *on_exit)
-	{	static_cast<thunk *>(thunk_location)->init(target_function, instance, on_enter, on_exit);	}
+	{	static_cast<thunk *>(thunk_location)->init(target_function, id, instance, on_enter, on_exit);	}
 }

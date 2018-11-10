@@ -74,7 +74,7 @@ namespace micro_profiler
 		: _in_image_address(in_image_address), _image_load_queue(image_load_queue_), _worker_refcount(worker_refcount),
 			_exit_event(exit_event), _collector(calls_collector::instance())
 	{
-		pi.patch_image(in_image_address);
+//		pi.patch_image(in_image_address);
 		_image_load_queue->load(in_image_address);
 	}
 

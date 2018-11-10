@@ -142,7 +142,7 @@ namespace micro_profiler
 			byte *cutoff = (byte *)(_thunk + c_thunk_size);
 			intel::jmp_rel_imm32 &jmp_back_to_proc = *(intel::jmp_rel_imm32*)(cutoff + cl);
 
-			initialize_hooks(_thunk, cutoff, micro_profiler::calls_collector::instance(),
+			initialize_hooks(_thunk, cutoff, _location, micro_profiler::calls_collector::instance(),
 				&profile_enter, &profile_exit);
 			memcpy(cutoff, _location, cl);
 			relocate_calls(cutoff, _location, cl);
@@ -241,7 +241,7 @@ namespace micro_profiler
 		r->enumerate_symbols(mi.load_address, [this, &em] (const symbol_info &si) {
 			try
 			{
-//				if (si.size > 10 /*&& si.name[0] != '_'*/)
+				if (si.size > 40 /*&& si.name[0] != '_'*/)
 					_patches.push_back(make_shared<patch>(em, si.location, si.size));
 			}
 			catch (const exception &e)

@@ -72,7 +72,7 @@ namespace micro_profiler
 				typedef int (fn_t)(int *value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&increment), this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&increment), 0, this, &on_enter, &on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
 				int value = 123;
 
@@ -98,7 +98,7 @@ namespace micro_profiler
 				typedef string (fn_t)(const string &value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_1), this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_1), 0, this, &on_enter, &on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
 
 				// ACT / ASSERT
@@ -112,7 +112,7 @@ namespace micro_profiler
 				typedef string (fn_t)(string value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), 0, this, &on_enter, &on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
 
 				// ACT / ASSERT
@@ -126,7 +126,8 @@ namespace micro_profiler
 				typedef string (fn_t)(string value);
 
 				// INIT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2),
+					address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
 
 				// ACT
@@ -162,8 +163,10 @@ namespace micro_profiler
 				// INIT
 				ememory_allocator allocator2;
 				void *thunk_memory2 = allocator2.allocate(c_thunk_size);
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
-				initialize_hooks(thunk_memory2, address_cast_hack<const void *>(&outer_function<fn1_t*>), this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2),
+					address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory2, address_cast_hack<const void *>(&outer_function<fn1_t*>),
+					address_cast_hack<const void *>(&outer_function<fn1_t*>), this, &on_enter, &on_exit);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory);
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2);
 
@@ -182,6 +185,45 @@ namespace micro_profiler
 						{ 0, 0 },
 					{ 0, address_cast_hack<const void *>(&outer_function<fn1_t *>) },
 						{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
+						{ 0, 0 },
+				};
+
+				assert_equal(reference, call_log);
+			}
+
+
+			test( FunctionsAreReportedCorrespondinglyToThunksSetup )
+			{
+				typedef string (fn1_t)(string value);
+				typedef string (fn2_t)(fn1_t *f, const string &value);
+
+				// INIT
+				const char *text1 = "reverse_string_2";
+				const char *text2 = "outer_function<fn1_t*>";
+				ememory_allocator allocator2;
+				void *thunk_memory2 = allocator2.allocate(c_thunk_size);
+				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), text1, this,
+					&on_enter, &on_exit);
+				initialize_hooks(thunk_memory2, address_cast_hack<const void *>(&outer_function<fn1_t*>), text2, this,
+					&on_enter, &on_exit);
+				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory);
+				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2);
+
+				// ACT
+				f1("test #1");
+
+				// ACT / ASSERT
+				assert_equal("alalal", f2(f1, "lalala"));
+				assert_equal("namaremac", f2(f1, "cameraman"));
+
+				// ASSERT
+				call_record reference[] = {
+					{ 0, text1 }, { 0, 0 },
+					{ 0, text2 },
+						{ 0, text1 }, { 0, 0 },
+						{ 0, 0 },
+					{ 0, text2 },
+						{ 0, text1 }, { 0, 0 },
 						{ 0, 0 },
 				};
 

@@ -24,5 +24,5 @@
 
 namespace micro_profiler
 {
-	void move_function(byte *destination, const byte *source, size_t size);
+	void move_function(byte *destination, const byte *source_base, const byte *source, size_t source_size);
 }

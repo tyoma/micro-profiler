@@ -27,3 +27,8 @@ extern "C" __declspec(dllexport) void function_with_a_nested_call_2()
 {
 	bubble_sort(0, 0);
 }
+
+extern "C" __declspec(dllexport) void bubble_sort2(int * volatile begin, int * volatile end)
+{
+	bubble_sort(begin, end);
+}

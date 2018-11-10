@@ -19,6 +19,7 @@
 //	THE SOFTWARE.
 
 #include <collector/binary_image.h>
+#include <collector/binary_translation.h>
 
 #include <common/module.h>
 #include <common/symbol_resolver.h>
@@ -31,54 +32,61 @@ namespace micro_profiler
 	class function_body_x86 : public function_body
 	{
 	public:
-		function_body_x86(const vector<byte> &image, size_t base, const symbol_info &symbol);
+		function_body_x86(const vector<byte> &image, void *effective_base, const symbol_info &symbol);
 
 	private:
 		virtual string name() const;
+		virtual void *effective_address() const;
 		virtual size_t size() const;
 		virtual void copy_relocate_to(void *location) const;
 
 	private:
 		const vector<byte> &_image;
 		string _name;
-		size_t _size, _offset;
+		byte *_effective_address;
+		size_t _size, _image_offset;
 	};
 
 	class binary_image_x86 : public binary_image
 	{
 	public:
-		binary_image_x86(const wchar_t *image_path, const void *base);
+		binary_image_x86(const wchar_t *image_path, void *effective_base);
 
 	private:
 		virtual void enumerate_functions(const function_callback &cb) const;
 
 		void invoke_callback(const function_callback &callback, const symbol_info &symbol) const
-		{	callback(function_body_x86(_image, _base, symbol));	}
+		{	callback(function_body_x86(_image, _effective_base, symbol));	}
 
 	private:
 		shared_ptr<symbol_resolver> _resolver;
-		size_t _base;
+		void *_effective_base;
 		vector<byte> _image;
 	};
 
 
 
-	function_body_x86::function_body_x86(const vector<byte> &image, size_t base, const symbol_info &symbol)
+	function_body_x86::function_body_x86(const vector<byte> &image, void *effective_base,
+			const symbol_info &symbol)
 		: _image(image), _name(symbol.name), _size(symbol.size),
-			_offset((long_address_t)symbol.location - base + 0x400 - 0x1000)
+			_effective_address(static_cast<byte *>(symbol.location)),
+			_image_offset(_effective_address - static_cast<const byte *>(effective_base) + 0x400 - 0x1000)
 	{	}
 
 	string function_body_x86::name() const
 	{	return _name;	}
 
+	void *function_body_x86::effective_address() const
+	{	return _effective_address;	}
+
 	size_t function_body_x86::size() const
 	{	return _size;	}
 
 	void function_body_x86::copy_relocate_to(void *location) const
-	{	memcpy(location, &_image[_offset], size());	}
+	{	move_function(static_cast<byte *>(location), _effective_address, &_image[_image_offset], size());	}
 
-	binary_image_x86::binary_image_x86(const wchar_t *image_path, const void *base)
-		: _resolver(symbol_resolver::create()), _base((long_address_t)base)
+	binary_image_x86::binary_image_x86(const wchar_t *image_path, void *effective_base)
+		: _resolver(symbol_resolver::create()), _effective_base(effective_base)
 	{
 		shared_ptr<FILE> file(_wfopen(image_path, L"rb"), &fclose);
 		byte buffer[4096];
@@ -89,14 +97,14 @@ namespace micro_profiler
 			read = fread(buffer, 1, sizeof(buffer), file.get());
 			_image.insert(_image.end(), buffer, buffer + read);
 		} while (read == sizeof(buffer));
-		_resolver->add_image(image_path, _base);
+		_resolver->add_image(image_path, (size_t)_effective_base);
 	}
 
 	void binary_image_x86::enumerate_functions(const function_callback &callback) const
-	{	_resolver->enumerate_symbols(_base, bind(&binary_image_x86::invoke_callback, this, callback, _1));	}
+	{	_resolver->enumerate_symbols((size_t)_effective_base, bind(&binary_image_x86::invoke_callback, this, callback, _1));	}
 
 
-	shared_ptr<binary_image> load_image_at(const void *base)
+	shared_ptr<binary_image> load_image_at(void *base)
 	{
 		module_info mi = get_module_info(base);
 

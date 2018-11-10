@@ -24,7 +24,7 @@
 
 namespace micro_profiler
 {
-	class ememory_allocator
+	class executable_memory_allocator
 	{
 	public:
 		void *allocate(size_t size);

@@ -21,15 +21,13 @@
 #include <collector/patched_image.h>
 #include <collector/calls_collector.h>
 #include <collector/dynamic_hooking.h>
+#include <collector/binary_image.h>
 
 #include "assembler_intel.h"
 
 #include <common/module.h>
 #include <common/symbol_resolver.h>
 #include <iostream>
-extern "C" {
-	#include <ld32.h>
-}
 #include <windows.h>
 
 using namespace std;
@@ -107,120 +105,40 @@ namespace micro_profiler
 		DWORD _access;
 	};
 
-	template <typename T>
-	void *address_cast_hack(T p)
-	{
-		union {
-			T pp;
-			void *value;
-		};
-		pp = p;
-		return value;
-	}
-
 	class patched_image::patch : wpl::noncopyable
 	{
 	public:
-		patch(shared_ptr<executable_memory> &em, void *location, unsigned size)
-			: _location(static_cast<byte *>(location)), _size(size)
+		patch(shared_ptr<executable_memory> &em, const function_body &fn)
+			: _location(static_cast<byte *>(fn.effective_address()))
 		{
-			scoped_unprotect su(location, size);
-			const unsigned cl = cutoff_length((byte*)location, size, sizeof(intel::jmp_rel_imm32));
+			scoped_unprotect su(_location, fn.size());
 
-			if (!cl)
-				throw runtime_error("Unable to identify required length of the cutoff piece!");
+			_size = c_thunk_size + fn.size();
 
-			_size = c_thunk_size + cl + sizeof(intel::jmp_rel_imm32);
-
-			if (::IsBadReadPtr(location, cl))
-				throw runtime_error("Cannot patch function!");;
+			if (_size & 0x0F)
+				_size &= ~0xF, _size += 0x10;
 
 			_thunk = executable_memory::allocate(em, _size);
 			_em = em;
 
 			// initialize thunk
-			byte *cutoff = (byte *)(_thunk + c_thunk_size);
-			intel::jmp_rel_imm32 &jmp_back_to_proc = *(intel::jmp_rel_imm32*)(cutoff + cl);
-
-			initialize_hooks(_thunk, cutoff, _location, micro_profiler::calls_collector::instance(),
+			initialize_hooks(_thunk, _thunk + c_thunk_size, _location, micro_profiler::calls_collector::instance(),
 				&profile_enter, &profile_exit);
-			memcpy(cutoff, _location, cl);
-			relocate_calls(cutoff, _location, cl);
-			jmp_back_to_proc.init(_location + cl);
+			fn.copy_relocate_to(_thunk + c_thunk_size);
 
 			// place hooking jump to original body
-			intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(location);
+			intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(_location);
 			
+			memcpy(_saved, _location, sizeof(_saved));
 			jmp_original.init(_thunk);
-			memset(&jmp_original + 1, 0xCC, cl - sizeof(intel::jmp_rel_imm32));
+			::FlushInstructionCache(::GetCurrentProcess(), _location, fn.size());
 		}
 
 		~patch()
 		{
-			scoped_unprotect su(_location, sizeof(intel::jmp_rel_imm32));
+			scoped_unprotect su(_location, sizeof(_saved));
 
-			memcpy(_location, _thunk + c_thunk_size, sizeof(intel::jmp_rel_imm32));
-		}
-
-	private:
-		static unsigned cutoff_length(byte * const location0, int size, int required_size)
-		{
-			byte *location = location0;
-
-			while (required_size > 0 && size > 0)
-			{
-				if (*location == 0xCC)
-					throw runtime_error("Cannot patch function (int 3 met)!");
-				else if (*location == 0xEB)
-					throw runtime_error("Cannot patch function (jmp rel8 met)!");
-
-				unsigned l = length_disasm(location);
-
-				required_size -= l;
-				size -= l;
-				location += l;
-			}
-			if (required_size > 0 && size <= 0)
-				throw runtime_error("Cannot patch function (the function is too short)!");
-			return location - location0;
-		}
-
-		void relocate_calls(byte * const location0, byte * const original0, const int size0)
-		{
-			intel::dword d = original0 - location0;
-			int opcode_size, size = size0;
-
-			for (byte *opcode_src = original0, *opcode_dest = location0; size > 0;
-				size -= opcode_size, opcode_src += opcode_size, opcode_dest += opcode_size)
-			{
-				opcode_size = length_disasm(opcode_dest);
-				
-				if (opcode_size > size)
-				{
-					throw runtime_error("Cannot patch function (instruction crosses function boundary)!");
-				}
-				if (*opcode_dest == 0xCC)
-				{
-					throw runtime_error("Cannot patch function (read as 0xCC)!");
-				}
-				else if (*opcode_dest == 0xE8 /* call */ )
-				{
-					byte *target_address = opcode_src + 5 + *(intel::dword *)(opcode_src + 1);
-
-					if (::IsBadReadPtr(target_address, 4))
-						throw runtime_error("Cannot patch function (call to invalid address)!");
-					*(intel::dword *)(opcode_dest + 1) += d;
-				}
-				else if (*opcode_dest == 0xE9 /* jmp */)
-				{
-					byte *target_address = opcode_src + 5 + *(intel::dword *)(opcode_src + 1);
-
-					if (::IsBadReadPtr(target_address, 4))
-						throw runtime_error("Cannot patch function (jmp to invalid address)!");
-					if (target_address < original0 || target_address > original0 + size0)
-						*(intel::dword *)(opcode_dest + 1) += d;
-				}
-			}
+			memcpy(_location, _saved, sizeof(_saved));
 		}
 
 	private:
@@ -228,25 +146,31 @@ namespace micro_profiler
 		byte * const _location;
 		unsigned _size;
 		byte *_thunk;
+		byte _saved[sizeof(intel::jmp_rel_imm32)];
 	};
 
 	void patched_image::patch_image(void *in_image_address)
 	{
-		shared_ptr<symbol_resolver> r = symbol_resolver::create();
-		module_info mi = get_module_info(in_image_address);
+		std::shared_ptr<binary_image> image = load_image_at((void *)get_module_info(in_image_address).load_address);
 		shared_ptr<executable_memory> em;
+		int n = 0;
 
-
-		r->add_image(mi.path.c_str(), mi.load_address);
-		r->enumerate_symbols(mi.load_address, [this, &em] (const symbol_info &si) {
+		image->enumerate_functions([this, &em, &n] (const function_body &fn) {
 			try
 			{
-				if (si.size > 40 /*&& si.name[0] != '_'*/)
-					_patches.push_back(make_shared<patch>(em, si.location, si.size));
+				if (fn.size() >= 5)
+				{
+					_patches.push_back(make_shared<patch>(em, fn));
+					++n;
+				}
+				else
+				{
+					cout << fn.name() << " - the function is too short!" << endl;
+				}
 			}
 			catch (const exception &e)
 			{
-				cout << si.name << " - " << e.what() << endl;
+				cout << fn.name() << " - " << e.what() << endl;
 			}
 		});
 	}

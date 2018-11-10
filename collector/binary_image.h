@@ -29,6 +29,7 @@ namespace micro_profiler
 	struct function_body : wpl::noncopyable
 	{
 		virtual std::string name() const = 0;
+		virtual void *effective_address() const = 0;
 		virtual size_t size() const = 0;
 		virtual void copy_relocate_to(void *location) const = 0;
 	};
@@ -40,5 +41,5 @@ namespace micro_profiler
 		virtual void enumerate_functions(const function_callback &callback) const = 0;
 	};
 
-	std::shared_ptr<binary_image> load_image_at(const void *base_address);
+	std::shared_ptr<binary_image> load_image_at(void *base_address);
 }

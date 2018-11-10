@@ -30,7 +30,7 @@ namespace micro_profiler
 
 		begin_test_suite( DynamicHookingTests )
 
-			ememory_allocator allocator;
+			executable_memory_allocator allocator;
 			void *thunk_memory;
 			vector< pair<void *, void **> > return_stack;
 			vector<call_record> call_log;
@@ -161,7 +161,7 @@ namespace micro_profiler
 				typedef string (fn2_t)(fn1_t *f, const string &value);
 
 				// INIT
-				ememory_allocator allocator2;
+				executable_memory_allocator allocator2;
 				void *thunk_memory2 = allocator2.allocate(c_thunk_size);
 				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2),
 					address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
@@ -200,7 +200,7 @@ namespace micro_profiler
 				// INIT
 				const char *text1 = "reverse_string_2";
 				const char *text2 = "outer_function<fn1_t*>";
-				ememory_allocator allocator2;
+				executable_memory_allocator allocator2;
 				void *thunk_memory2 = allocator2.allocate(c_thunk_size);
 				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), text1, this,
 					&on_enter, &on_exit);

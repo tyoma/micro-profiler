@@ -64,7 +64,7 @@ namespace micro_profiler
 
 			pop i71; // pop eax
 
-			ret i91; // ret
+			ret i81; // ret
 
 			byte padding[13];
 		};
@@ -100,11 +100,13 @@ namespace micro_profiler
 
 			i71.init(eax_);
 
-			i91.init();
+			i81.init();
+
+			memset(padding, 0xCC, sizeof(padding));
 		}
 	}
 
-	extern const size_t c_thunk_size = sizeof(thunk);
+	const size_t c_thunk_size = sizeof(thunk);
 
 	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *instance,
 		enter_hook_t *on_enter, exit_hook_t *on_exit)

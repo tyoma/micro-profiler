@@ -32,7 +32,7 @@ namespace micro_profiler
 		{	::VirtualFree(p, 0, MEM_RELEASE);	}
 	}
 
-	void *ememory_allocator::allocate(size_t size)
+	void *executable_memory_allocator::allocate(size_t size)
 	{
 		_block.reset(::VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE), &virtual_free);
 		return _block.get();

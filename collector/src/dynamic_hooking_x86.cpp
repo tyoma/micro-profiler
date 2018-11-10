@@ -22,6 +22,8 @@
 
 #include "assembler_intel.h"
 
+#pragma pack(1)
+
 namespace micro_profiler
 {
 	namespace
@@ -36,37 +38,37 @@ namespace micro_profiler
 			push i12; // push ecx
 			push i13; // push edx
 
-			mov_imm32 i21; // mov ecx, [instance] ; 1st
+			mov_imm32 i21; // mov ecx, instance ; 1st
 			lea_reg_esp_offset8 i22; // lea eax, [esp + 0x0C]
 			push i23; // push eax ; 4th
 			rdtsc i24;
 			push i25; // push edx ; 3rd
 			push i26; // push eax ; 3rd
-			mov_imm32 i27; // mov edx, [callee] ; 2nd
-			call_rel_imm32 i28; // call [on_enter]
+			mov_imm32 i27; // mov edx, callee_id ; 2nd
+			call_rel_imm32 i28; // call on_enter
 
 			pop i31; // pop edx
 			pop i32; // pop ecx
 			pop i33; // pop eax
 
-			mov_im_offset8_imm32 i41; // mov [esp], offset i51
-			jmp_rel_imm32 i42; // jmp [callee]
-			sub_esp_imm8 i43; // sub esp, 4
+			add_esp_imm8 i41; // add esp, 4
+			call_rel_imm32 i42; // call callee
 
 			push i51;	// push eax
 
-			mov_imm32 i61; // mov ecx, [instance] ; 1st
+			mov_imm32 i61; // mov ecx, instance ; 1st
 			rdtsc i62;
 			push i63; // push edx ; 2nd
 			push i64; // push eax ; 2nd
-			call_rel_imm32 i65; // call [on_exit]
-			mov_im_offset8_reg i66; // mov [esp + 0x04], eax
+			call_rel_imm32 i65; // call on_exit
+			mov_reg_reg i66; // mov ecx, eax
 
 			pop i71; // pop eax
 
-			ret i81; // ret
+			push i81; // push ecx
+			ret i82; // ret
 
-			byte padding[13];
+			byte padding[6];
 		};
 
 
@@ -87,20 +89,20 @@ namespace micro_profiler
 			i32.init(ecx_);
 			i33.init(eax_);
 			
-			i41.init(0x00, (dword)&i43);
+			i41.init(0x04);
 			i42.init(callee);
-			i43.init(0x04);
 
 			i51.init(eax_);
 
 			i61.init(ecx_, (dword)instance); // 1. instance
 			i62.init(), i63.init(edx_), i64.init(eax_); // 2. timestamp
 			i65.init((const void *)(size_t)on_exit);
-			i66.init(0x04, eax_);
+			i66.init(ecx_, eax_);
 
 			i71.init(eax_);
 
-			i81.init();
+			i81.init(ecx_);
+			i82.init();
 
 			memset(padding, 0xCC, sizeof(padding));
 		}

@@ -20,6 +20,8 @@
 
 #include "assembler_intel.h"
 
+#define regreg(r1, r2) (((r1) << 4) + (r2))
+
 namespace micro_profiler
 {
 	namespace intel
@@ -89,6 +91,31 @@ namespace micro_profiler
 			switch (reg)
 			{
 			case ebx_: opcode[0] = 0x8B, opcode[1] = 0x5C, opcode[2] = 0x24, opcode[3] = offset; break;
+			default: throw 0;
+			}
+		}
+
+		void mov_reg_reg::init(register_32 reg_dest, register_32 reg_src)
+		{
+			opcode[0] = 0x8B;
+			switch (regreg(reg_dest, reg_src))
+			{
+			case regreg(eax_, ebx_): opcode[1] = 0xC3; break;
+			case regreg(eax_, ecx_): opcode[1] = 0xC1; break;
+			case regreg(eax_, edx_): opcode[1] = 0xC2; break;
+
+			case regreg(ebx_, eax_): opcode[1] = 0xD8; break;
+			case regreg(ebx_, ecx_): opcode[1] = 0xD9; break;
+			case regreg(ebx_, edx_): opcode[1] = 0xDA; break;
+
+			case regreg(ecx_, eax_): opcode[1] = 0xC8; break;
+			case regreg(ecx_, ebx_): opcode[1] = 0xCB; break;
+			case regreg(ecx_, edx_): opcode[1] = 0xCA; break;
+
+			case regreg(edx_, eax_): opcode[1] = 0xD0; break;
+			case regreg(edx_, ebx_): opcode[1] = 0xD3; break;
+			case regreg(edx_, ecx_): opcode[1] = 0xD1; break;
+
 			default: throw 0;
 			}
 		}

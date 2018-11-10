@@ -95,6 +95,13 @@ namespace micro_profiler
 			byte opcode[4];
 		};
 
+		struct mov_reg_reg
+		{
+			void init(register_32 reg_dest, register_32 reg_src);
+
+			byte opcode[2];
+		};
+
 		struct pop
 		{
 			void init(register_32 reg);

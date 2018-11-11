@@ -26,7 +26,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions1 + 1, instructions1 + 48, instructions1 + 48, 10);
+				move_function(instructions1 + 1, instructions1 + 48, const_byte_range(instructions1 + 48, 10));
 
 				// ASSERT
 				byte reference1[] = {
@@ -36,7 +36,7 @@ namespace micro_profiler
 				assert_is_true(equal(reference1, array_end(reference1), instructions1 + 1));
 
 				// ACT
-				move_function(instructions1 + 17, instructions1 + 48, instructions1 + 48, 10);
+				move_function(instructions1 + 17, instructions1 + 48, const_byte_range(instructions1 + 48, 10));
 
 				// ASSERT
 				byte reference2[] = {
@@ -51,7 +51,7 @@ namespace micro_profiler
 				};
 		
 				// ACT
-				move_function(instructions2 + 0x0F12, instructions2, instructions2, 15);
+				move_function(instructions2 + 0x0F12, instructions2, const_byte_range(instructions2, 15));
 
 				// ASSERT
 				byte reference3[] = {
@@ -76,7 +76,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions1 + 1, instructions1 + 48, instructions1 + 48, 15);
+				move_function(instructions1 + 1, instructions1 + 48, const_byte_range(instructions1 + 48, 15));
 
 				// ASSERT
 				byte reference1[] = {
@@ -86,7 +86,7 @@ namespace micro_profiler
 				assert_is_true(equal(reference1, array_end(reference1), instructions1 + 1));
 
 				// ACT
-				move_function(instructions1 + 17, instructions1 + 48, instructions1 + 48, 15);
+				move_function(instructions1 + 17, instructions1 + 48, const_byte_range(instructions1 + 48, 15));
 
 				// ASSERT
 				byte reference2[] = {
@@ -102,7 +102,7 @@ namespace micro_profiler
 				};
 		
 				// ACT
-				move_function(instructions2 + 0x0F11, instructions2, instructions2, 20);
+				move_function(instructions2 + 0x0F11, instructions2, const_byte_range(instructions2, 20));
 
 				// ASSERT
 				byte reference3[] = {
@@ -127,8 +127,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions, instructions + 0xE1, instructions + 0x20, 20);
-				move_function(instructions + 0x40, instructions + 0x23, instructions + 0x20, 20);
+				move_function(instructions, instructions + 0xE1, const_byte_range(instructions + 0x20, 20));
+				move_function(instructions + 0x40, instructions + 0x23, const_byte_range(instructions + 0x20, 20));
 
 				// ASSERT
 				byte reference[] = {
@@ -154,8 +154,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions, instructions + 0x01, instructions + 0x20, 20);
-				move_function(instructions + 0x40, instructions + 0x23, instructions + 0x20, 20);
+				move_function(instructions, instructions + 0x01, const_byte_range(instructions + 0x20, 20));
+				move_function(instructions + 0x40, instructions + 0x23, const_byte_range(instructions + 0x20, 20));
 
 				// ASSERT
 				byte reference[] = {
@@ -186,7 +186,7 @@ namespace micro_profiler
 				byte *translated = instructions + 0x0123;
 
 				// ACT
-				move_function(translated, instructions, instructions, 0x0025);
+				move_function(translated, instructions, const_byte_range(instructions, 0x0025));
 
 				// ASSERT
 				byte reference1[] = {
@@ -205,7 +205,7 @@ namespace micro_profiler
 				assert_is_true(equal(reference1, array_end(reference1), translated));
 
 				// ACT
-				move_function(translated, instructions + 7, instructions, 0x0025);
+				move_function(translated, instructions + 7, const_byte_range(instructions, 0x0025));
 
 				// ASSERT
 				byte reference2[] = {
@@ -222,6 +222,56 @@ namespace micro_profiler
 				};
 
 				assert_is_true(equal(reference2, array_end(reference2), translated));
+			}
+
+
+			test( CalculateLengthReturnsSameLengthOnEvenInstructionBoundaries )
+			{
+				// INIT
+				byte instructions[] = {
+					0xE8, 0xD4, 0x54, 0x02, 0x00,			// call memset
+					0x83, 0xC4, 0x0C,							// add esp, 0Ch
+					0x6A, 0x0F,									// push 0Fh
+					0x8D, 0x8D, 0xB4, 0xEF, 0xFF, 0xFF,	// lea ecx, [instructions2]
+					0x51,											// push ecx
+					0x8D, 0x95, 0xC5, 0xFE, 0xFF, 0xFF,	// lea edx, [ebp-13Bh]
+					0x52,											// push edx
+					0xE8, 0x8C, 0x98, 0x01, 0x00,			// call micro_profiler::move_function
+					0x83, 0xC4, 0x0C,							// add esp, 0Ch
+					0xE9, 0x12, 0x34, 0x56, 0x78,			// jmp somewhere...
+				};
+
+				// ACT / ASSERT
+				assert_equal(5u, calculate_function_length(mkrange(instructions), 5));
+				assert_equal(3u, calculate_function_length(const_byte_range(instructions + 5, 3), 3));
+				assert_equal(2u, calculate_function_length(const_byte_range(instructions + 8, 2), 2));
+				assert_equal(8u, calculate_function_length(mkrange(instructions), 8));
+				assert_equal(11u, calculate_function_length(const_byte_range(instructions + 5, sizeof(instructions) - 5), 11));
+			}
+
+
+			test( CalculateLengthReturnsCorrectLengthOnUnevenInstructionBoundaries )
+			{
+				// INIT
+				byte instructions[] = {
+					0xE8, 0xD4, 0x54, 0x02, 0x00,			// call memset
+					0x83, 0xC4, 0x0C,							// add esp, 0Ch
+					0x6A, 0x0F,									// push 0Fh
+					0x8D, 0x8D, 0xB4, 0xEF, 0xFF, 0xFF,	// lea ecx, [instructions2]
+					0x51,											// push ecx
+					0x8D, 0x95, 0xC5, 0xFE, 0xFF, 0xFF,	// lea edx, [ebp-13Bh]
+					0x52,											// push edx
+					0xE8, 0x8C, 0x98, 0x01, 0x00,			// call micro_profiler::move_function
+					0x83, 0xC4, 0x0C,							// add esp, 0Ch
+					0xE9, 0x12, 0x34, 0x56, 0x78,			// jmp somewhere...
+				};
+
+				// ACT / ASSERT
+				assert_equal(5u, calculate_function_length(mkrange(instructions), 2));
+				assert_equal(3u, calculate_function_length(const_byte_range(instructions + 5, 3), 1));
+				assert_equal(8u, calculate_function_length(const_byte_range(instructions + 8, 8), 3));
+				assert_equal(8u, calculate_function_length(mkrange(instructions), 8));
+				assert_equal(7u, calculate_function_length(const_byte_range(instructions + 16, sizeof(instructions) - 16), 4));
 			}
 
 		end_test_suite

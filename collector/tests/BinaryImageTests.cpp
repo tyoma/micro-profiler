@@ -1,4 +1,5 @@
 #include <collector/binary_image.h>
+#include <collector/binary_translation.h>
 #include <collector/allocator.h>
 
 #include <test-helpers/helpers.h>
@@ -21,7 +22,17 @@ namespace micro_profiler
 
 			void insert_name_address(map<string, void *> &container, const function_body &fn)
 			{	container.insert(make_pair(fn.name(), fn.effective_address()));	}
+
+			shared_ptr<void> copy(const_byte_range original, const void *base)
+			{
+				shared_ptr<executable_memory_allocator> a(new executable_memory_allocator);
+				byte *ptr = static_cast<byte *>(a->allocate(original.length()));
+
+				move_function(ptr, static_cast<const byte *>(base), original);
+				return shared_ptr<void>(ptr, [a] (...) { });
+			}
 		}
+
 
 		begin_test_suite( BinaryImageTests )
 			test( LoadingImageReturnsNonNullPointer )
@@ -100,13 +111,10 @@ namespace micro_profiler
 			}
 
 
-			static void copy_specific(const function_body &fn, const char *name, executable_memory_allocator &a, void *&clone)
+			static void copy_specific(const function_body &fn, const char *name, shared_ptr<void> &clone)
 			{
 				if (fn.name() == name)
-				{
-					clone = a.allocate(fn.size());
-					fn.copy_relocate_to(clone);
-				}
+					clone = copy(fn.body(), fn.effective_address());
 			}
 
 			test( IndependentFreeFunctionCanBeCopiedAndCalled )
@@ -114,13 +122,12 @@ namespace micro_profiler
 				typedef void (fn_t)(int * volatile begin, int * volatile end);
 
 				// INIT
-				executable_memory_allocator a;
 				image img(L"symbol_container_2");
 				shared_ptr<binary_image> limg = load_image_at((void *)img.load_address());
-				void *clone = 0;
+				shared_ptr<void> clone;
 
 				// ACT
-				limg->enumerate_functions(bind(&copy_specific, _1, "bubble_sort", ref(a), ref(clone)));
+				limg->enumerate_functions(bind(&copy_specific, _1, "bubble_sort", ref(clone)));
 
 				// ASSERT
 				assert_not_null(clone);
@@ -128,7 +135,7 @@ namespace micro_profiler
 				// INIT
 				int arr1[] = { 1, 10, 3, 90, 5, };
 				int arr2[] = { 1, 5, 4, 3, 5, -10 };
-				fn_t *f = address_cast_hack<fn_t *>(clone);
+				fn_t *f = address_cast_hack<fn_t *>(clone.get());
 
 				// ACT
 				f(arr1, array_end(arr1));
@@ -149,16 +156,15 @@ namespace micro_profiler
 				typedef void (fn_t)(ret_fn_t *&f1, ret_fn_t *&f2, ret_fn_t *&f3);
 
 				// INIT
-				executable_memory_allocator a;
 				image img(L"symbol_container_2");
 				shared_ptr<binary_image> limg = load_image_at((void *)img.load_address());
-				void *clone = 0;
+				shared_ptr<void> clone;
 				fn_t *original = img.get_symbol<fn_t>("get_function_addresses_2");
 				ret_fn_t *values[3];
 
 				// ACT
-				limg->enumerate_functions(bind(&copy_specific, _1, "get_function_addresses_2", ref(a), ref(clone)));
-				fn_t *f = address_cast_hack<fn_t *>(clone);
+				limg->enumerate_functions(bind(&copy_specific, _1, "get_function_addresses_2", ref(clone)));
+				fn_t *f = address_cast_hack<fn_t *>(clone.get());
 				f(values[0], values[1], values[2]);
 
 				// ASSERT
@@ -174,13 +180,12 @@ namespace micro_profiler
 				typedef void (fn_t)(int * volatile begin, int * volatile end);
 
 				// INIT
-				executable_memory_allocator a;
 				image img(L"symbol_container_2");
 				shared_ptr<binary_image> limg = load_image_at((void *)img.load_address());
-				void *clone = 0;
+				shared_ptr<void> clone;
 
 				// ACT
-				limg->enumerate_functions(bind(&copy_specific, _1, "bubble_sort2", ref(a), ref(clone)));
+				limg->enumerate_functions(bind(&copy_specific, _1, "bubble_sort2", ref(clone)));
 
 				// ASSERT
 				assert_not_null(clone);
@@ -188,7 +193,7 @@ namespace micro_profiler
 				// INIT
 				int arr1[] = { 1, 10, 3, 90, 5, 11, };
 				int arr2[] = { 1, 5, 4, 3, 5, -10, 20, };
-				fn_t *f = address_cast_hack<fn_t *>(clone);
+				fn_t *f = address_cast_hack<fn_t *>(clone.get());
 
 				// ACT
 				f(arr1, array_end(arr1));

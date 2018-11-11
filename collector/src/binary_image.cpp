@@ -19,7 +19,6 @@
 //	THE SOFTWARE.
 
 #include <collector/binary_image.h>
-#include <collector/binary_translation.h>
 
 #include <common/module.h>
 #include <common/symbol_resolver.h>
@@ -38,13 +37,12 @@ namespace micro_profiler
 		virtual string name() const;
 		virtual void *effective_address() const;
 		virtual size_t size() const;
-		virtual void copy_relocate_to(void *location) const;
+		virtual const_byte_range body() const;
 
 	private:
-		const vector<byte> &_image;
 		string _name;
 		byte *_effective_address;
-		size_t _size, _image_offset;
+		const_byte_range _body;
 	};
 
 	class binary_image_x86 : public binary_image
@@ -68,9 +66,8 @@ namespace micro_profiler
 
 	function_body_x86::function_body_x86(const vector<byte> &image, void *effective_base,
 			const symbol_info &symbol)
-		: _image(image), _name(symbol.name), _size(symbol.size),
-			_effective_address(static_cast<byte *>(symbol.location)),
-			_image_offset(_effective_address - static_cast<const byte *>(effective_base) + 0x400 - 0x1000)
+		: _name(symbol.name), _effective_address(static_cast<byte *>(symbol.location)),
+			_body(&image[_effective_address - static_cast<const byte *>(effective_base) + 0x400 - 0x1000], symbol.size)
 	{	}
 
 	string function_body_x86::name() const
@@ -80,10 +77,10 @@ namespace micro_profiler
 	{	return _effective_address;	}
 
 	size_t function_body_x86::size() const
-	{	return _size;	}
+	{	return _body.length();	}
 
-	void function_body_x86::copy_relocate_to(void *location) const
-	{	move_function(static_cast<byte *>(location), _effective_address, &_image[_image_offset], size());	}
+	const_byte_range function_body_x86::body() const
+	{	return _body;	}
 
 	binary_image_x86::binary_image_x86(const wchar_t *image_path, void *effective_base)
 		: _resolver(symbol_resolver::create()), _effective_base(effective_base)

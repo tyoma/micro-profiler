@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "primitives.h"
+
 #include <functional>
 #include <memory>
 #include <wpl/base/concepts.h>
@@ -31,7 +33,7 @@ namespace micro_profiler
 		virtual std::string name() const = 0;
 		virtual void *effective_address() const = 0;
 		virtual size_t size() const = 0;
-		virtual void copy_relocate_to(void *location) const = 0;
+		virtual const_byte_range body() const = 0;
 	};
 
 	struct binary_image : wpl::noncopyable

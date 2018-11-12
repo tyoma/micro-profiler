@@ -40,6 +40,9 @@
     <ClCompile Include="assembler_intel.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="function_patch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -77,5 +80,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\platform.h" />
+    <ClInclude Include="..\function_patch.h" />
   </ItemGroup>
 </Project>

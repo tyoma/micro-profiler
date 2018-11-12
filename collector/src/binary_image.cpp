@@ -36,7 +36,6 @@ namespace micro_profiler
 	private:
 		virtual string name() const;
 		virtual void *effective_address() const;
-		virtual size_t size() const;
 		virtual const_byte_range body() const;
 
 	private:
@@ -75,9 +74,6 @@ namespace micro_profiler
 
 	void *function_body_x86::effective_address() const
 	{	return _effective_address;	}
-
-	size_t function_body_x86::size() const
-	{	return _body.length();	}
 
 	const_byte_range function_body_x86::body() const
 	{	return _body;	}

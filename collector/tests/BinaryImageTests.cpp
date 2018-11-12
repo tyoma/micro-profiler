@@ -18,7 +18,7 @@ namespace micro_profiler
 		namespace
 		{
 			void insert_name_size(map<string, size_t> &container, const function_body &fn)
-			{	container.insert(make_pair(fn.name(), fn.size()));	}
+			{	container.insert(make_pair(fn.name(), fn.body().length()));	}
 
 			void insert_name_address(map<string, void *> &container, const function_body &fn)
 			{	container.insert(make_pair(fn.name(), fn.effective_address()));	}

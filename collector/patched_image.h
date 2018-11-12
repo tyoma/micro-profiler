@@ -26,15 +26,14 @@
 
 namespace micro_profiler
 {
+	class function_patch;
+
 	class patched_image : wpl::noncopyable
 	{
 	public:
 		void patch_image(void *in_image_address);
 
 	private:
-		class patch;
-
-	private:
-		std::vector< std::shared_ptr<patch> > _patches;
+		std::vector< std::shared_ptr<function_patch> > _patches;
 	};
 }

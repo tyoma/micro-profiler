@@ -22,12 +22,14 @@
 
 #include "primitives.h"
 
+#include <wpl/base/concepts.h>
+
 namespace micro_profiler
 {
 	timestamp_t ticks_per_second();
 	unsigned int current_thread_id();
 
-	class mutex
+	class mutex : wpl::noncopyable
 	{
 		char _mtx_buffer[6 * sizeof(void*)];
 
@@ -40,6 +42,18 @@ namespace micro_profiler
 
 		void enter();
 		void leave();
+	};
+
+	class scoped_unprotect : wpl::noncopyable
+	{
+	public:
+		scoped_unprotect(range<byte> region);
+		~scoped_unprotect();
+
+	private:
+		void *_address;
+		unsigned _size;
+		unsigned _previous_access;
 	};
 
 	class scoped_lock

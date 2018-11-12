@@ -3,6 +3,7 @@
 #include <common/protocol.h>
 #include <common/types.h>
 #include <collector/calls_collector.h>
+#include <collector/platform.h>
 
 #include <wpl/mt/synchronization.h>
 #include <wpl/base/concepts.h>
@@ -15,6 +16,13 @@ namespace micro_profiler
 		{
 			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
 			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
+
+			struct logged_hook_events
+			{
+				std::vector<call_record> call_log;
+				std::vector< std::pair<void *, void **> > return_stack;
+			};
+
 
 			struct FrontendState : wpl::noncopyable
 			{
@@ -65,6 +73,11 @@ namespace micro_profiler
 				TracesMap _traces;
 				mutex _mutex;
 			};
+
+
+			void CC_(fastcall) on_enter(void /*logged_hook_events*/ *instance, const void *callee,
+				timestamp_t timestamp, void **return_address_ptr) _CC(fastcall);
+			void *CC_(fastcall) on_exit(void /*logged_hook_events*/ *instance, timestamp_t timestamp) _CC(fastcall);
 
 
 

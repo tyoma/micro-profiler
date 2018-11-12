@@ -26,6 +26,8 @@
 
 #pragma intrinsic(__rdtsc)
 
+using namespace std;
+
 namespace micro_profiler
 {
 	timestamp_t ticks_per_second()
@@ -62,6 +64,24 @@ namespace micro_profiler
 
 	void mutex::leave()
 	{	::LeaveCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
+
+
+	scoped_unprotect::scoped_unprotect(range<byte> region)
+		: _address(region.begin()), _size(region.length())
+	{
+		DWORD previous_access;
+
+		if (!::VirtualProtect(_address, _size, PAGE_EXECUTE_WRITECOPY, &previous_access))
+			throw runtime_error("Cannot change protection mode!");
+		_previous_access = previous_access;
+	}
+
+	scoped_unprotect::~scoped_unprotect()
+	{
+		DWORD dummy;
+		::VirtualProtect(_address, _size, _previous_access, &dummy);
+		::FlushInstructionCache(::GetCurrentProcess(), _address, _size);
+	}
 
 
    long interlocked_compare_exchange(long volatile *destination, long exchange, long comperand)

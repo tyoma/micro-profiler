@@ -20,27 +20,23 @@
 
 #pragma once
 
-#include "primitives.h"
-
-#include <functional>
-#include <memory>
-#include <wpl/base/concepts.h>
+#include "binary_image.h"
+#include "dynamic_hooking.h"
+#include "allocator.h"
 
 namespace micro_profiler
 {
-	struct function_body : wpl::noncopyable
+	class function_patch : wpl::noncopyable
 	{
-		virtual std::string name() const = 0;
-		virtual void *effective_address() const = 0;
-		virtual const_byte_range body() const = 0;
+	public:
+		function_patch(executable_memory_allocator &allocator, const function_body &body, void *instance,
+			enter_hook_t *on_enter, exit_hook_t *on_exit);
+		~function_patch();
+
+	private:
+		std::shared_ptr<void> _memory;
+		byte * const _target_function;
+		size_t _chunk_length;
+		byte _saved[40];
 	};
-
-	struct binary_image : wpl::noncopyable
-	{
-		typedef std::function<void (const function_body &function)> function_callback;
-
-		virtual void enumerate_functions(const function_callback &callback) const = 0;
-	};
-
-	std::shared_ptr<binary_image> load_image_at(void *base_address);
 }

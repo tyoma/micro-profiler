@@ -1,6 +1,8 @@
 #include <collector/dynamic_hooking.h>
 
-#include <collector/allocator.h	>
+#include "mocks.h"
+
+#include <collector/allocator.h>
 
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
@@ -26,14 +28,28 @@ namespace micro_profiler
 			template <typename T>
 			string outer_function(T f, const string &value)
 			{	return f(value); }
+
+			void bubble_sort(int *begin, int *end)
+			{
+				for (int *i = begin; i != end; ++i)
+					for (int *j = begin; j != end - 1; ++j)
+					{
+						if (*j > *(j + 1))
+						{
+							int tmp = *j;
+
+							*j = *(j + 1);
+							*(j + 1) = tmp;
+						}
+					}
+			}
 		}
 
 		begin_test_suite( DynamicHookingTests )
 
 			executable_memory_allocator allocator;
 			shared_ptr<void> thunk_memory;
-			vector< pair<void *, void **> > return_stack;
-			vector<call_record> call_log;
+			mocks::logged_hook_events trace;
 
 			init( AllocateMemory )
 			{
@@ -46,33 +62,13 @@ namespace micro_profiler
 				assert_equal(0u, 0xF & c_thunk_size);
 			}
 
-			static void CC_(fastcall) on_enter(void *instance, const void *callee, timestamp_t timestamp,
-				void **return_address_ptr) _CC(fastcall)
-			{
-				DynamicHookingTests *self = static_cast<DynamicHookingTests *>(instance);
-				call_record call = { timestamp, callee };
-
-				self->return_stack.push_back(make_pair(*return_address_ptr, return_address_ptr));
-				self->call_log.push_back(call);
-			}
-
-			static void * CC_(fastcall) on_exit(void *instance, timestamp_t timestamp) _CC(fastcall)
-			{
-				DynamicHookingTests *self = static_cast<DynamicHookingTests *>(instance);
-				call_record call = { timestamp, 0 };
-				void *return_address = self->return_stack.back().first;
-
-				self->return_stack.pop_back();
-				self->call_log.push_back(call);
-				return return_address;
-			}
-
 			test( CalleeIsInvokedOnCallingThunk1 )
 			{
 				typedef int (fn_t)(int *value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&increment), 0, this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&increment), 0, &trace,
+					&mocks::on_enter, &mocks::on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 				int value = 123;
 
@@ -98,7 +94,8 @@ namespace micro_profiler
 				typedef string (fn_t)(const string &value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_1), 0, this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_1), 0, &trace,
+					&mocks::on_enter, &mocks::on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT / ASSERT
@@ -112,7 +109,8 @@ namespace micro_profiler
 				typedef string (fn_t)(string value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), 0, this, &on_enter, &on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), 0, &trace,
+					&mocks::on_enter, &mocks::on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT / ASSERT
@@ -127,7 +125,8 @@ namespace micro_profiler
 
 				// INIT
 				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
-					address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
+					address_cast_hack<const void *>(&reverse_string_2), &trace,
+					&mocks::on_enter, &mocks::on_exit);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT
@@ -138,7 +137,7 @@ namespace micro_profiler
 					{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
 				};
 
-				assert_equal(reference1, call_log);
+				assert_equal(reference1, trace.call_log);
 
 				// ACT
 				f("test #2");
@@ -151,7 +150,7 @@ namespace micro_profiler
 					{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
 				};
 
-				assert_equal(reference2, call_log);
+				assert_equal(reference2, trace.call_log);
 			}
 
 
@@ -163,9 +162,11 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<void> thunk_memory2 = allocator.allocate(c_thunk_size);
 				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
-					address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
+					address_cast_hack<const void *>(&reverse_string_2), &trace,
+					&mocks::on_enter, &mocks::on_exit);
 				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>),
-					address_cast_hack<const void *>(&outer_function<fn1_t*>), this, &on_enter, &on_exit);
+					address_cast_hack<const void *>(&outer_function<fn1_t*>), &trace,
+					&mocks::on_enter, &mocks::on_exit);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
 
@@ -187,7 +188,7 @@ namespace micro_profiler
 						{ 0, 0 },
 				};
 
-				assert_equal(reference, call_log);
+				assert_equal(reference, trace.call_log);
 			}
 
 
@@ -200,10 +201,10 @@ namespace micro_profiler
 				const char *text1 = "reverse_string_2";
 				const char *text2 = "outer_function<fn1_t*>";
 				shared_ptr<void> thunk_memory2 = allocator.allocate(c_thunk_size);
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, this,
-					&on_enter, &on_exit);
-				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2, this,
-					&on_enter, &on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, &trace,
+					&mocks::on_enter, &mocks::on_exit);
+				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2, &trace,
+					&mocks::on_enter, &mocks::on_exit);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
 
@@ -225,7 +226,41 @@ namespace micro_profiler
 						{ 0, 0 },
 				};
 
-				assert_equal(reference, call_log);
+				assert_equal(reference, trace.call_log);
+			}
+
+
+			test( FunctionDurationIsAdequateToTheReality )
+			{
+				typedef void (fn_t)(int *begin, int *end);
+
+				// INIT
+				vector<int> buffer1(1000), buffer2(10000);
+				vector<int> buffer3(3000), buffer4(21000);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&bubble_sort), "test", &trace,
+					&mocks::on_enter, &mocks::on_exit);
+				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
+
+				// ACT
+				f(&buffer1[0], &buffer1[0] + buffer1.size());
+				f(&buffer2[0], &buffer2[0] + buffer2.size());
+				f(&buffer3[0], &buffer3[0] + buffer3.size());
+				f(&buffer4[0], &buffer4[0] + buffer4.size());
+
+				// ASSERT
+				assert_equal(8u, trace.call_log.size());
+
+				double d1 = static_cast<double>(trace.call_log[1].timestamp - trace.call_log[0].timestamp);
+				double d2 = static_cast<double>(trace.call_log[3].timestamp - trace.call_log[2].timestamp);
+				double d3 = static_cast<double>(trace.call_log[5].timestamp - trace.call_log[4].timestamp);
+				double d4 = static_cast<double>(trace.call_log[7].timestamp - trace.call_log[6].timestamp);
+
+				assert_is_true(70 < d2 / d1);
+				assert_is_true(130 > d2 / d1);
+				assert_is_true(39 < d4 / d3);
+				assert_is_true(59 > d4 / d3);
+				assert_is_true(401 < d4 / d1);
+				assert_is_true(481 > d4 / d1);
 			}
 
 		end_test_suite

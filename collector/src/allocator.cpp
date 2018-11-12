@@ -26,15 +26,59 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace
+	class executable_memory_allocator::block : wpl::noncopyable
 	{
-		void virtual_free(void *p)
-		{	::VirtualFree(p, 0, MEM_RELEASE);	}
+	public:
+		block(size_t block_size);
+		~block();
+
+		void *allocate(size_t size);
+
+	private:
+		byte * const _region;
+		const size_t _block_size;
+		size_t _occupied;
+	};
+
+
+
+	executable_memory_allocator::block::block(size_t block_size)
+		: _region(static_cast<byte *>(::VirtualAlloc(0, block_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE))),
+			_block_size(block_size), _occupied(0)
+	{	}
+
+	executable_memory_allocator::block::~block()
+	{	::VirtualFree(_region, 0, MEM_RELEASE);	}
+
+	void *executable_memory_allocator::block::allocate(size_t size)
+	{
+		if (size <= _block_size - _occupied)
+		{
+			void *ptr = _region + _occupied;
+
+			_occupied += size;
+			return ptr;
+		}
+		return 0;
 	}
 
-	void *executable_memory_allocator::allocate(size_t size)
+
+	executable_memory_allocator::executable_memory_allocator()
+		: _block(new block(block_size))
+	{	}
+
+	shared_ptr<void> executable_memory_allocator::allocate(size_t size)
 	{
-		_block.reset(::VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE), &virtual_free);
-		return _block.get();
+		if (size > block_size)
+			throw bad_alloc();
+
+		void *ptr = _block->allocate(size);
+
+		if (!ptr)
+			_block.reset(new block(block_size)), ptr = _block->allocate(size);
+
+		shared_ptr<block> b = _block;
+
+		return shared_ptr<void>(ptr, [b] (...) { });
 	}
 }

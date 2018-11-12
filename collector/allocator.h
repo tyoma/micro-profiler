@@ -21,15 +21,24 @@
 #pragma once
 
 #include <memory>
+#include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
-	class executable_memory_allocator
+	class executable_memory_allocator : wpl::noncopyable
 	{
 	public:
-		void *allocate(size_t size);
+		enum { block_size = 0x10000 };
+
+	public:
+		executable_memory_allocator();
+
+		std::shared_ptr<void> allocate(size_t size);
 
 	private:
-		std::shared_ptr<void> _block;
+		class block;
+
+	private:
+		std::shared_ptr<block> _block;
 	};
 }

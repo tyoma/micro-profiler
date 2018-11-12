@@ -20,6 +20,7 @@
 
 #include <collector/patched_image.h>
 
+#include <collector/allocator.h>
 #include <collector/binary_translation.h>
 #include <collector/calls_collector.h>
 #include <collector/dynamic_hooking.h>
@@ -44,47 +45,6 @@ namespace micro_profiler
 		void *CC_(fastcall) profile_exit(void *instance, timestamp_t timestamp) _CC(fastcall)
 		{	return static_cast<calls_collector *>(instance)->profile_exit(timestamp);	}
 	}
-
-	class executable_memory : wpl::noncopyable
-	{
-	public:
-		~executable_memory()
-		{	::VirtualFree(_start, 0, MEM_RELEASE); }
-
-		static byte *allocate(shared_ptr<executable_memory> &em, unsigned size)
-		{
-			byte *block = 0;
-
-			if (!em || !(block = em->allocate(size)))
-				em.reset(new executable_memory);
-			if (!block)
-				block = em->allocate(size);
-			return block;
-		}
-
-	private:
-		executable_memory(unsigned max_size = 0x00010000)
-			: _start((byte *)::VirtualAlloc(0, max_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)),
-				_next(_start), _end(_start + max_size)
-		{
-			if (!_start)
-				throw bad_alloc();
-		}
-
-		byte *allocate(unsigned size)
-		{
-			if (size <= _end - _next)
-			{
-				byte *block = (byte *)_next;
-				_next += size;
-				return block;
-			}
-			return 0;
-		}
-
-	private:
-		byte * const _start, *_next, * const _end;
-	};
 
 	class scoped_unprotect : wpl::noncopyable
 	{
@@ -113,7 +73,7 @@ namespace micro_profiler
 			enum { jmp_size = sizeof(intel::jmp_rel_imm32) };
 
 	public:
-		patch(shared_ptr<executable_memory> &em, const function_body &fn)
+		patch(executable_memory_allocator &a, const function_body &fn)
 			: _target_function(static_cast<byte *>(fn.effective_address())),
 				_chunk_length(calculate_function_length(fn.body(), jmp_size))
 		{
@@ -124,22 +84,23 @@ namespace micro_profiler
 			if (size & 0x0F)
 				size &= ~0xF, size += 0x10;
 
-			_thunk = executable_memory::allocate(em, size);
-			_em = em;
+			_memory = a.allocate(size);
+
+			byte *thunk = static_cast<byte *>(_memory.get());
 
 			// initialize thunk
-			initialize_hooks(_thunk, _thunk + c_thunk_size, _target_function, micro_profiler::calls_collector::instance(),
+			initialize_hooks(thunk, thunk + c_thunk_size, _target_function, micro_profiler::calls_collector::instance(),
 				&profile_enter, &profile_exit);
-			move_function(_thunk + c_thunk_size, _target_function,
+			move_function(thunk + c_thunk_size, _target_function,
 				const_byte_range(fn.body().begin(), _chunk_length));
-			reinterpret_cast<intel::jmp_rel_imm32 *>(_thunk + c_thunk_size + _chunk_length)
+			reinterpret_cast<intel::jmp_rel_imm32 *>(thunk + c_thunk_size + _chunk_length)
 				->init(_target_function + _chunk_length);
 
 			// place hooking jump to original body
 			intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(_target_function);
 			
 			memcpy(_saved, _target_function, _chunk_length);
-			jmp_original.init(_thunk);
+			jmp_original.init(thunk);
 			memset(_target_function + jmp_size, 0xCC, _chunk_length - jmp_size);
 			::FlushInstructionCache(::GetCurrentProcess(), _target_function, fn.size());
 		}
@@ -152,23 +113,22 @@ namespace micro_profiler
 		}
 
 	private:
-		shared_ptr<executable_memory> _em;
+		shared_ptr<void> _memory;
 		byte * const _target_function;
 		const unsigned _chunk_length;
-		byte *_thunk;
 		byte _saved[40];
 	};
 
 	void patched_image::patch_image(void *in_image_address)
 	{
 		std::shared_ptr<binary_image> image = load_image_at((void *)get_module_info(in_image_address).load_address);
-		shared_ptr<executable_memory> em;
+		executable_memory_allocator em;
 		int n = 0;
 
 		image->enumerate_functions([this, &em, &n] (const function_body &fn) {
 			try
 			{
-				if (fn.size() >= 100)
+				if (fn.size() >= 20)
 				{
 					_patches.push_back(make_shared<patch>(em, fn));
 					++n;

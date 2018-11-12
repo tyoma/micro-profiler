@@ -25,11 +25,11 @@ namespace micro_profiler
 
 			shared_ptr<void> copy(const_byte_range original, const void *base)
 			{
-				shared_ptr<executable_memory_allocator> a(new executable_memory_allocator);
-				byte *ptr = static_cast<byte *>(a->allocate(original.length()));
+				executable_memory_allocator em;
+				shared_ptr<void> ptr = em.allocate(original.length());
 
-				move_function(ptr, static_cast<const byte *>(base), original);
-				return shared_ptr<void>(ptr, [a] (...) { });
+				move_function(static_cast<byte *>(ptr.get()), static_cast<const byte *>(base), original);
+				return ptr;
 			}
 		}
 

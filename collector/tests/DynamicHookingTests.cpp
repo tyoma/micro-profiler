@@ -31,7 +31,7 @@ namespace micro_profiler
 		begin_test_suite( DynamicHookingTests )
 
 			executable_memory_allocator allocator;
-			void *thunk_memory;
+			shared_ptr<void> thunk_memory;
 			vector< pair<void *, void **> > return_stack;
 			vector<call_record> call_log;
 
@@ -72,8 +72,8 @@ namespace micro_profiler
 				typedef int (fn_t)(int *value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&increment), 0, this, &on_enter, &on_exit);
-				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&increment), 0, this, &on_enter, &on_exit);
+				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 				int value = 123;
 
 				// ACT / ASSERT
@@ -98,8 +98,8 @@ namespace micro_profiler
 				typedef string (fn_t)(const string &value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_1), 0, this, &on_enter, &on_exit);
-				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_1), 0, this, &on_enter, &on_exit);
+				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT / ASSERT
 				assert_equal("lorem ipsum", f("muspi merol"));
@@ -112,8 +112,8 @@ namespace micro_profiler
 				typedef string (fn_t)(string value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), 0, this, &on_enter, &on_exit);
-				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), 0, this, &on_enter, &on_exit);
+				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT / ASSERT
 				assert_equal("lorem ipsum", f("muspi merol"));
@@ -126,9 +126,9 @@ namespace micro_profiler
 				typedef string (fn_t)(string value);
 
 				// INIT
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2),
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
 					address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
-				fn_t *f = address_cast_hack<fn_t *>(thunk_memory);
+				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT
 				f("test #1");
@@ -161,14 +161,13 @@ namespace micro_profiler
 				typedef string (fn2_t)(fn1_t *f, const string &value);
 
 				// INIT
-				executable_memory_allocator allocator2;
-				void *thunk_memory2 = allocator2.allocate(c_thunk_size);
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2),
+				shared_ptr<void> thunk_memory2 = allocator.allocate(c_thunk_size);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
 					address_cast_hack<const void *>(&reverse_string_2), this, &on_enter, &on_exit);
-				initialize_hooks(thunk_memory2, address_cast_hack<const void *>(&outer_function<fn1_t*>),
+				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>),
 					address_cast_hack<const void *>(&outer_function<fn1_t*>), this, &on_enter, &on_exit);
-				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory);
-				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2);
+				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
+				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
 
 				// ACT
 				f1("test #1");
@@ -200,14 +199,13 @@ namespace micro_profiler
 				// INIT
 				const char *text1 = "reverse_string_2";
 				const char *text2 = "outer_function<fn1_t*>";
-				executable_memory_allocator allocator2;
-				void *thunk_memory2 = allocator2.allocate(c_thunk_size);
-				initialize_hooks(thunk_memory, address_cast_hack<const void *>(&reverse_string_2), text1, this,
+				shared_ptr<void> thunk_memory2 = allocator.allocate(c_thunk_size);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, this,
 					&on_enter, &on_exit);
-				initialize_hooks(thunk_memory2, address_cast_hack<const void *>(&outer_function<fn1_t*>), text2, this,
+				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2, this,
 					&on_enter, &on_exit);
-				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory);
-				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2);
+				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
+				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
 
 				// ACT
 				f1("test #1");

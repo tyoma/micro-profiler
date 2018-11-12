@@ -11,6 +11,13 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			template <typename T, size_t size>
+			inline micro_profiler::range<T> mkrange(T (&array_ptr)[size])
+			{	return micro_profiler::range<T>(array_ptr, size);	}
+		}
+
 		begin_test_suite( X86BinaryImageTests )
 			test( RelativeOutsideJumpsAreTranslatedBasedOnTheirTargetAddress )
 			{

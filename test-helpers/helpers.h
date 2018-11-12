@@ -1,7 +1,6 @@
 #pragma once
 
 #include <common/primitives.h>
-#include <collector/primitives.h>
 
 #include <algorithm>
 #include <string>
@@ -106,10 +105,6 @@ namespace micro_profiler
 		template <typename T, size_t size>
 		inline std::vector<T> mkvector(T (&array_ptr)[size])
 		{	return std::vector<T>(array_ptr, array_ptr + size);	}
-
-		template <typename T, size_t size>
-		inline micro_profiler::range<T> mkrange(T (&array_ptr)[size])
-		{	return micro_profiler::range<T>(array_ptr, size);	}
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);

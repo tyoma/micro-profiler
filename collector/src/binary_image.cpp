@@ -31,7 +31,7 @@ namespace micro_profiler
 	class function_body_x86 : public function_body
 	{
 	public:
-		function_body_x86(const vector<byte> &image, void *effective_base, const symbol_info &symbol);
+		function_body_x86(void *effective_base, const symbol_info &symbol);
 
 	private:
 		virtual string name() const;
@@ -53,20 +53,18 @@ namespace micro_profiler
 		virtual void enumerate_functions(const function_callback &cb) const;
 
 		void invoke_callback(const function_callback &callback, const symbol_info &symbol) const
-		{	callback(function_body_x86(_image, _effective_base, symbol));	}
+		{	callback(function_body_x86(_effective_base, symbol));	}
 
 	private:
 		shared_ptr<symbol_resolver> _resolver;
 		void *_effective_base;
-		vector<byte> _image;
 	};
 
 
 
-	function_body_x86::function_body_x86(const vector<byte> &image, void *effective_base,
-			const symbol_info &symbol)
+	function_body_x86::function_body_x86(void *effective_base, const symbol_info &symbol)
 		: _name(symbol.name), _effective_address(static_cast<byte *>(symbol.location)),
-			_body(&image[_effective_address - static_cast<const byte *>(effective_base) + 0x400 - 0x1000], symbol.size)
+			_body(_effective_address, symbol.size)
 	{	}
 
 	string function_body_x86::name() const
@@ -81,15 +79,6 @@ namespace micro_profiler
 	binary_image_x86::binary_image_x86(const wchar_t *image_path, void *effective_base)
 		: _resolver(symbol_resolver::create()), _effective_base(effective_base)
 	{
-		shared_ptr<FILE> file(_wfopen(image_path, L"rb"), &fclose);
-		byte buffer[4096];
-		unsigned read;
-
-		do
-		{
-			read = fread(buffer, 1, sizeof(buffer), file.get());
-			_image.insert(_image.end(), buffer, buffer + read);
-		} while (read == sizeof(buffer));
 		_resolver->add_image(image_path, (size_t)_effective_base);
 	}
 

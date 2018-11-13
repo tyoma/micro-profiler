@@ -10,12 +10,22 @@ namespace micro_profiler
 	{
 		typedef unsigned int dword;
 
+		bool is_target_address_8_outside(const byte *relative, const_byte_range source)
+		{
+			relative += 1 + static_cast<char>(*relative);
+			return (relative < source.begin()) | (relative >= source.end());
+		}
+
 		bool is_target_address_32_outside(const byte *relative, const_byte_range source)
 		{
 			relative += 4 + *reinterpret_cast<const dword *>(relative);
 			return (relative < source.begin()) | (relative >= source.end());
 		}
 	}
+
+	inconsistent_function_range_exception::inconsistent_function_range_exception()
+		: runtime_error("")
+	{	}
 
 	size_t calculate_function_length(const_byte_range source, size_t min_length)
 	{
@@ -37,23 +47,24 @@ namespace micro_profiler
 		{
 			switch (*source)
 			{
-			case 0xE9:
-				*destination = *source;
-				*reinterpret_cast<dword *>(destination + 1) = *reinterpret_cast<const dword *>(source + 1)
-					+ (is_target_address_32_outside(source + 1, source_) ? delta : 0);
-				l = 5;
+			default:
+				l = length_disasm(const_cast<byte *>(source));
+				memcpy(destination, source, l);
 				break;
 
+			case 0xEB:
+				if (is_target_address_8_outside(source + 1, source_))
+					throw inconsistent_function_range_exception();
+				*destination = *source, *(destination + 1) = *(source + 1);
+				l = 2;
+				break;
+
+			case 0xE9:
 			case 0xE8:
 				*destination = *source;
 				*reinterpret_cast<dword *>(destination + 1) = *reinterpret_cast<const dword *>(source + 1)
 					+ (is_target_address_32_outside(source + 1, source_) ? delta : 0);
 				l = 5;
-				break;
-
-			default:
-				l = length_disasm(const_cast<byte *>(source));
-				memcpy(destination, source, l);
 				break;
 			}
 		}

@@ -1,5 +1,7 @@
 #include <collector/binary_translation.h>
 
+#include "helpers.h"
+
 #include <test-helpers/helpers.h>
 
 #include <ut/assert.h>
@@ -11,14 +13,7 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			template <typename T, size_t size>
-			inline micro_profiler::range<T> mkrange(T (&array_ptr)[size])
-			{	return micro_profiler::range<T>(array_ptr, size);	}
-		}
-
-		begin_test_suite( X86BinaryImageTests )
+		begin_test_suite( BinaryTranslationTestsX86 )
 			test( RelativeOutsideJumpsAreTranslatedBasedOnTheirTargetAddress )
 			{
 				// INIT
@@ -279,6 +274,45 @@ namespace micro_profiler
 				assert_equal(8u, calculate_function_length(const_byte_range(instructions + 8, 8), 3));
 				assert_equal(8u, calculate_function_length(mkrange(instructions), 8));
 				assert_equal(7u, calculate_function_length(const_byte_range(instructions + 16, sizeof(instructions) - 16), 4));
+			}
+
+
+			test( ImagesWithOutsideShortJumpsCannotBeMoved )
+			{
+				// INIT
+				byte instructions[0x0400] = {
+					0xEB, 0x02,
+					0xEB, 0x00,
+					0xEB, 0xF9,
+					0xEB, 0xF5,
+				};
+
+				// ACT / ASSERT
+				assert_throws(move_function(instructions + 0x30, instructions, const_byte_range(instructions, 2)),
+					inconsistent_function_range_exception);
+			}
+
+
+			test( ImagesWithInsideShortJumpsCanBeMoved )
+			{
+				// INIT
+				byte instructions[0x0400] = {
+					0xEB, 0x02,
+					0xEB, 0x00,
+					0xEB, 0xFA,
+				};
+
+				// ACT
+				move_function(instructions + 0x30, instructions, const_byte_range(instructions, 6));
+
+				// ASSERT
+				assert_equal(const_byte_range(instructions, 6), const_byte_range(instructions, 6));
+			}
+
+
+			test( ShortJumpsToFragmentMakeCalculateLengthThrowingInconsistencyExceptions )
+			{
+				throw 0;
 			}
 
 		end_test_suite

@@ -16,7 +16,7 @@ namespace micro_profiler
 		};
 	}
 
-	function_patch::function_patch(executable_memory_allocator &allocator, const function_body &fb, void *instance,
+	function_patch::function_patch(executable_memory_allocator &allocator_, const function_body &fb, void *instance,
 			enter_hook_t *on_enter, exit_hook_t *on_exit)
 		: _target_function(static_cast<byte *>(fb.effective_address())),
 			_chunk_length(calculate_function_length(fb.body(), jmp_size))
@@ -28,7 +28,7 @@ namespace micro_profiler
 		if (size & 0x0F)
 			size &= ~0xF, size += 0x10;
 
-		_memory = allocator.allocate(size);
+		_memory = allocator_.allocate(size);
 
 		byte *thunk = static_cast<byte *>(_memory.get());
 

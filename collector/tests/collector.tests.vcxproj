@@ -68,7 +68,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="X86BinaryImageTests.cpp" />
+    <ClCompile Include="BinaryTranslationTestsX86.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="entry.asm">
@@ -77,6 +77,7 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="helpers.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mocks_com.h" />
     <ClInclude Include="TracedFunctions.h" />

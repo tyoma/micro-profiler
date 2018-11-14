@@ -310,6 +310,27 @@ namespace micro_profiler
 			}
 
 
+			test( SSEInstructionsAreProperlyRead )
+			{
+				// INIT
+				byte is1[] = { 0x66, 0x0F, 0x6C, 0xC0, 0xCC, };
+				byte is2[] = { 0x66, 0x0F, 0x7F, 0x44, 0x24, 0x3C, 0xCC, 0xCC, };
+				byte is3[] = { 0xF2, 0x0F, 0x70, 0x3C, 0x69, 0x05, }; // pshuflw	xmm7,xmmword ptr [ecx+ebp*2],5
+				byte is4[] = { 0x66, 0x0F, 0x71, 0xD0, 0x05, };
+				byte is5[] = { 0x0F, 0xC7, 0x09, }; //	cmpxchg8b	qword ptr [ecx]
+				byte is6[] = { 0x0F, 0xC7, 0x8C, 0xA9, 0x00, 0x00, 0x10, 0x00, };	//	cmpxchg8b	qword ptr [ecx+ebp*4+100000h]  
+
+
+				// ACT / ASSERT
+				assert_equal(4u, calculate_function_length(mkrange(is1), 1));
+				assert_equal(6u, calculate_function_length(mkrange(is2), 1));
+				assert_equal(6u, calculate_function_length(mkrange(is3), 1));
+				assert_equal(5u, calculate_function_length(mkrange(is4), 1));
+				assert_equal(3u, calculate_function_length(mkrange(is5), 1));
+				assert_equal(8u, calculate_function_length(mkrange(is6), 1));
+			}
+
+
 			test( ShortJumpsToFragmentMakeCalculateLengthThrowingInconsistencyExceptions )
 			{
 				throw 0;

@@ -234,6 +234,19 @@ namespace micro_profiler
 
 				assert_equal(reference, filelines);
 			}
+
+
+			test( NoFileLineInformationIsReturnedForInvalidAddress )
+			{
+				// INIT
+				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+
+				// ACT
+				pair<wstring, unsigned> fileline = r->symbol_fileline_by_va(0);
+
+				// ASSERT
+				assert_equal(make_pair(wstring(), 0u), fileline);
+			}
 		end_test_suite
 	}
 }

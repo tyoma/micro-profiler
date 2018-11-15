@@ -90,11 +90,11 @@ namespace micro_profiler
 
 		pair<wstring, unsigned> dbghelp_symbol_resolver::symbol_fileline_by_va(address_t address) const
 		{
-			DWORD dummy;
+			DWORD displacement;
 			IMAGEHLP_LINEW64 info = { sizeof(IMAGEHLP_LINEW64), };
 
-			::SymGetLineFromAddrW64(me(), address, &dummy, &info);
-			return make_pair(info.FileName, info.LineNumber);
+			return ::SymGetLineFromAddrW64(me(), address, &displacement, &info)
+				? pair<wstring, unsigned>(info.FileName, info.LineNumber) : pair<wstring, unsigned>();
 		}
 
 		void dbghelp_symbol_resolver::add_image(const wchar_t *image, address_t load_address)

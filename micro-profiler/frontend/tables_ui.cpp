@@ -150,7 +150,8 @@ namespace micro_profiler
 		const address_t address = _statistics->get_address(index);
 		const pair<wstring, unsigned> fileline = _statistics->get_resolver()->symbol_fileline_by_va(address);
 
-		open_source(fileline.first, fileline.second);
+		if (!fileline.first.empty())
+			open_source(fileline.first, fileline.second);
 	}
 
 	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, listview::index_type index)

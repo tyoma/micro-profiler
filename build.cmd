@@ -10,6 +10,7 @@ if %errorlevel% neq 0 goto :novisualstudio
 
 echo 1. Preparing repository...
 git pull
+git submodule update --init
 git diff --exit-code
 if %errorlevel% neq 0 goto :errornonstaged
 git diff --cached --exit-code

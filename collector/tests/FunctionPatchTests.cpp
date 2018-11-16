@@ -1,4 +1,4 @@
-#include <collector/function_patch.h>
+#include <collector/image_patch.h>
 #include <collector/binary_image.h>
 
 #include "mocks.h"

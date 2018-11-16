@@ -1,4 +1,4 @@
-#include <collector/function_patch.h>
+#include <collector/image_patch.h>
 
 #include "assembler_intel.h"
 
@@ -23,10 +23,8 @@ namespace micro_profiler
 	{
 		const_byte_range source_chunk(fb.body().begin(), _chunk_length);
 		scoped_unprotect su(range<byte>(_target_function, _chunk_length));
-		size_t size = c_thunk_size + _chunk_length + jmp_size;
-
-		if (size & 0x0F)
-			size &= ~0xF, size += 0x10;
+		const size_t size0 = c_thunk_size + _chunk_length + jmp_size;
+		const size_t size = (size0 + 0x0F) & ~0x0F;
 
 		_memory = allocator_.allocate(size);
 
@@ -37,6 +35,7 @@ namespace micro_profiler
 		move_function(thunk + c_thunk_size, _target_function, source_chunk);
 		reinterpret_cast<intel::jmp_rel_imm32 *>(thunk + c_thunk_size + _chunk_length)
 			->init(_target_function + _chunk_length);
+		memset(thunk + size0, 0xCC, size - size0);
 
 		// place hooking jump to original body
 		intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(_target_function);

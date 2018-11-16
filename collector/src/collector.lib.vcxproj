@@ -36,7 +36,6 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
@@ -62,7 +61,7 @@
     <ClCompile Include="frontend_controller.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="function_patch.cpp" />
+    <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="patched_image.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -87,7 +86,7 @@
     <ClInclude Include="..\dynamic_hooking.h" />
     <ClInclude Include="..\frontend_controller.h" />
     <ClInclude Include="..\binary_image.h" />
-    <ClInclude Include="..\function_patch.h" />
+    <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\platform.h" />
     <ClInclude Include="..\primitives.h" />

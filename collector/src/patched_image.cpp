@@ -23,7 +23,7 @@
 #include <collector/allocator.h>
 #include <collector/binary_image.h>
 #include <collector/calls_collector.h>
-#include <collector/function_patch.h>
+#include <collector/image_patch.h>
 #include <collector/platform.h>
 
 #include <common/module.h>

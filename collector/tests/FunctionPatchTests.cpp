@@ -94,11 +94,42 @@ namespace micro_profiler
 			}
 
 
+			test( VarargFunctionsCanBeCalledWhilePatched )
+			{
+				typedef int (fn_t)(char *buffer, size_t count, const char *format, ...);
+
+				// INIT
+				executable_memory_allocator a;
+				image img(L"symbol_container_2");
+				shared_ptr<binary_image> limg = load_image_at((void *)img.load_address());
+				fn_t *f = img.get_symbol<fn_t>("guinea_snprintf");
+				char buffer[1000] = { 0 };
+				const mocks::function_body fb(get_function_body(f));
+
+				// INIT / ACT
+				function_patch patch(a, fb, &trace, &mocks::on_enter, &mocks::on_exit);
+
+				// ACT
+				f(buffer, 10, "%X", 132214);
+				
+				// ASSERT
+				assert_equal("20476", string(buffer));
+
+				// ACT
+				f(buffer, sizeof(buffer) - 1, "%d - %s", 132214, "some random value...");
+
+				// ASSERT
+				assert_equal("132214 - some random value...", string(buffer));
+			}
+
+
 			test( DestructionOfPatchCancelsHooking )
 			{
 				// INIT
-				mocks::function_body fb(get_function_body(&recursive_factorial));
-				auto_ptr<function_patch> patch(new function_patch(allocator, fb,  &trace, &mocks::on_enter, &mocks::on_exit));
+				executable_memory_allocator allocator;
+				const mocks::function_body fb(get_function_body(recursive_factorial));
+				auto_ptr<function_patch> patch(new function_patch(allocator, fb,
+					&trace, &mocks::on_enter, &mocks::on_exit));
 
 				// ACT / ASSERT
 				patch.reset();

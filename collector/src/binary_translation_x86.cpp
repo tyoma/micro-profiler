@@ -11,21 +11,16 @@ namespace micro_profiler
 		typedef unsigned int dword;
 
 		bool is_target_address_8_outside(const byte *relative, const_byte_range source)
-		{
-			relative += 1 + static_cast<char>(*relative);
-			return (relative < source.begin()) | (relative >= source.end());
-		}
+		{	return !source.inside(relative + 1 + static_cast<char>(*relative));	}
 
 		bool is_target_address_32_outside(const byte *relative, const_byte_range source)
-		{
-			relative += 4 + *reinterpret_cast<const dword *>(relative);
-			return (relative < source.begin()) | (relative >= source.end());
-		}
+		{	return !source.inside(relative + 4 + *reinterpret_cast<const dword *>(relative));	}
 	}
 
-	inconsistent_function_range_exception::inconsistent_function_range_exception()
-		: runtime_error("")
+	inconsistent_function_range_exception::inconsistent_function_range_exception(const char *message)
+		: runtime_error(message)
 	{	}
+
 
 	size_t calculate_function_length(const_byte_range source, size_t min_length)
 	{
@@ -52,9 +47,28 @@ namespace micro_profiler
 				memcpy(destination, source, l);
 				break;
 
+			// TODO: untested
+			case 0x70:
+			case 0x71:
+			case 0x72:
+			case 0x73:
+			case 0x74:
+			case 0x75:
+			case 0x76:
+			case 0x77:
+			case 0x78:
+			case 0x79:
+			case 0x7a:
+			case 0x7b:
+			case 0x7c:
+			case 0x7d:
+			case 0x7e:
+			case 0x7f:
+
+
 			case 0xEB:
 				if (is_target_address_8_outside(source + 1, source_))
-					throw inconsistent_function_range_exception();
+					throw inconsistent_function_range_exception("Short relative jump outside the copied range is met!");
 				*destination = *source, *(destination + 1) = *(source + 1);
 				l = 2;
 				break;

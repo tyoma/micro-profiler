@@ -37,3 +37,17 @@ extern "C" __declspec(dllexport) void bubble_sort_expose(void (*&f)(int * volati
 {
 	f = &bubble_sort;
 }
+
+#include <stdio.h>
+#include <stdarg.h>
+
+extern "C" __declspec(dllexport) int guinea_snprintf(char *buffer, size_t count, const char *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	int n = vsnprintf(buffer, count, format, args);
+	va_end(args);
+
+	return n;
+}

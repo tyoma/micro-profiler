@@ -40,6 +40,7 @@ namespace micro_profiler
 		T *begin() const;
 		T *end() const;
 		size_t length() const;
+		bool inside(const T *ptr) const;
 
 	private:
 		T *_start;
@@ -73,4 +74,8 @@ namespace micro_profiler
 	template <typename T>
 	size_t range<T>::length() const
 	{	return _length;	}
+
+	template <typename T>
+	bool range<T>::inside(const T *ptr) const
+	{	return (begin() <= ptr) & (ptr < end());	}
 }

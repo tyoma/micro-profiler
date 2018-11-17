@@ -51,7 +51,10 @@ namespace micro_profiler
 		image->enumerate_functions([this, &em, &n] (const function_body &fn) {
 			try
 			{
-				if (fn.body().length() >= 5)
+				if (fn.name() == "_VEC_memcpy")
+				{
+				}
+				else if (fn.body().length() >= 5)
 				{
 					shared_ptr<function_patch> patch(new function_patch(em, fn, calls_collector::instance(), &profile_enter, &profile_exit));
 

@@ -12,11 +12,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
-    <Link>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)libraries\utee\make\utee.vcxproj">

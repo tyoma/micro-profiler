@@ -20,17 +20,15 @@
 
 #pragma once
 
-#include "platform.h"
-#include "primitives.h"
+#include <common/primitives.h>
 
 namespace micro_profiler
 {
-	typedef void (CC_(fastcall) enter_hook_t)(void *instance, const void *callee, timestamp_t timestamp,
-		void **return_address_ptr) _CC(fastcall);
-	typedef void *(CC_(fastcall) exit_hook_t)(void *instance, timestamp_t timestamp) _CC(fastcall);
+	struct inconsistent_function_range_exception : std::runtime_error
+	{
+		inconsistent_function_range_exception(const char *message);
+	};
 
-	extern const size_t c_thunk_size;
-
-	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *instance,
-		enter_hook_t *on_enter, exit_hook_t *on_exit);
+	size_t calculate_function_length(const_byte_range source, size_t min_length);
+	void move_function(byte *destination, const byte *source_base, const_byte_range source);
 }

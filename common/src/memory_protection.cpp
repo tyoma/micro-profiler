@@ -18,32 +18,27 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/memory_protection.h>
 
-#include "binary_image.h"
-
-#include <common/allocator.h>
-#include <patcher/function_patch.h>
+#include <stdexcept>
+#include <windows.h>
 
 namespace micro_profiler
 {
-	class image_patch : wpl::noncopyable
+	scoped_unprotect::scoped_unprotect(range<byte> region)
+		: _address(region.begin()), _size(region.length())
 	{
-	public:
-		typedef std::function<bool (const function_body &body)> filter_t;
+		DWORD previous_access;
 
-	public:
-		image_patch(const std::shared_ptr<binary_image> &image, void *instance,
-			enter_hook_t *on_enter, exit_hook_t *on_exit);
+		if (!::VirtualProtect(_address, _size, PAGE_EXECUTE_WRITECOPY, &previous_access))
+			throw std::runtime_error("Cannot change protection mode!");
+		_previous_access = previous_access;
+	}
 
-		void apply_for(const filter_t &function_filter);
-
-	private:
-		const std::shared_ptr<binary_image> _image;
-		void * const _instance;
-		enter_hook_t * const _on_enter;
-		exit_hook_t * const _on_exit;
-		std::vector< std::shared_ptr<function_patch> > _patches;
-		executable_memory_allocator _allocator;
-	};
+	scoped_unprotect::~scoped_unprotect()
+	{
+		DWORD dummy;
+		::VirtualProtect(_address, _size, _previous_access, &dummy);
+		::FlushInstructionCache(::GetCurrentProcess(), _address, _size);
+	}
 }

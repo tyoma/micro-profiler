@@ -20,30 +20,18 @@
 
 #pragma once
 
-#include "binary_image.h"
+#include "platform.h"
 
-#include <common/allocator.h>
-#include <patcher/function_patch.h>
+#include <common/types.h>
 
 namespace micro_profiler
 {
-	class image_patch : wpl::noncopyable
-	{
-	public:
-		typedef std::function<bool (const function_body &body)> filter_t;
+	typedef void (CC_(fastcall) enter_hook_t)(void *instance, const void *callee, timestamp_t timestamp,
+		void **return_address_ptr) _CC(fastcall);
+	typedef void *(CC_(fastcall) exit_hook_t)(void *instance, timestamp_t timestamp) _CC(fastcall);
 
-	public:
-		image_patch(const std::shared_ptr<binary_image> &image, void *instance,
-			enter_hook_t *on_enter, exit_hook_t *on_exit);
+	extern const size_t c_thunk_size;
 
-		void apply_for(const filter_t &function_filter);
-
-	private:
-		const std::shared_ptr<binary_image> _image;
-		void * const _instance;
-		enter_hook_t * const _on_enter;
-		exit_hook_t * const _on_exit;
-		std::vector< std::shared_ptr<function_patch> > _patches;
-		executable_memory_allocator _allocator;
-	};
+	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *instance,
+		enter_hook_t *on_enter, exit_hook_t *on_exit);
 }

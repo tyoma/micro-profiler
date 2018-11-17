@@ -1,4 +1,4 @@
-#include <collector/image_patch.h>
+#include <patcher/function_patch.h>
 
 #include "helpers.h"
 #include "mocks.h"
@@ -15,25 +15,6 @@ namespace micro_profiler
 	{
 		int recursive_factorial(int v);
 
-		namespace mocks
-		{
-			class function_body : public micro_profiler::function_body
-			{
-			public:
-				function_body(byte_range r)
-					: _body(r)
-				{	}
-
-			private:
-				virtual std::string name() const {	throw 0; }
-				virtual void *effective_address() const {	return _body.begin();	}
-				virtual const_byte_range body() const {	return _body;	}
-
-			private:
-				byte_range _body;
-			};
-		}
-
 		begin_test_suite( FunctionPatchTests )
 			executable_memory_allocator allocator;
 			mocks::logged_hook_events trace;
@@ -41,10 +22,10 @@ namespace micro_profiler
 			test( PatchedFunctionCallsHookCallbacks )
 			{
 				// INIT
-				mocks::function_body fb(get_function_body(&recursive_factorial));
+				byte_range b = get_function_body(&recursive_factorial);
 
 				// INIT / ACT
-				function_patch patch(allocator, fb,  &trace, &mocks::on_enter, &mocks::on_exit);
+				function_patch patch(allocator, b.begin(), b, &trace, &mocks::on_enter, &mocks::on_exit);
 
 				// ACT
 				assert_equal(6, recursive_factorial(3));
@@ -99,15 +80,13 @@ namespace micro_profiler
 				typedef int (fn_t)(char *buffer, size_t count, const char *format, ...);
 
 				// INIT
-				executable_memory_allocator a;
 				image img(L"symbol_container_2");
-				shared_ptr<binary_image> limg = load_image_at((void *)img.load_address());
 				fn_t *f = img.get_symbol<fn_t>("guinea_snprintf");
 				char buffer[1000] = { 0 };
-				const mocks::function_body fb(get_function_body(f));
+				byte_range b = get_function_body(f);
 
 				// INIT / ACT
-				function_patch patch(a, fb, &trace, &mocks::on_enter, &mocks::on_exit);
+				function_patch patch(allocator, b.begin(), b, &trace, &mocks::on_enter, &mocks::on_exit);
 
 				// ACT
 				f(buffer, 10, "%X", 132214);
@@ -126,16 +105,15 @@ namespace micro_profiler
 			test( DestructionOfPatchCancelsHooking )
 			{
 				// INIT
-				executable_memory_allocator allocator;
-				const mocks::function_body fb(get_function_body(recursive_factorial));
-				auto_ptr<function_patch> patch(new function_patch(allocator, fb,
+				byte_range b = get_function_body(&recursive_factorial);
+				auto_ptr<function_patch> patch(new function_patch(allocator, b.begin(), b,
 					&trace, &mocks::on_enter, &mocks::on_exit));
 
 				// ACT / ASSERT
 				patch.reset();
 
 				// ACT / ASSERT
-				recursive_factorial(7);
+				assert_equal(5040, recursive_factorial(7));
 
 				// ASSERT
 				assert_is_empty(trace.call_log);

@@ -18,7 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/dynamic_hooking.h>
+#include <patcher/dynamic_hooking.h>
 
 #include "assembler_intel.h"
 

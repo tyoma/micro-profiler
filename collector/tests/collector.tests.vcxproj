@@ -37,6 +37,9 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\patcher\src.x86\patcher.lib.vcxproj">
+      <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\src\collector.lib.vcxproj">
       <Project>{ed61e2d0-f586-4b4e-9ce6-bae8f03dbbc7}</Project>
     </ProjectReference>
@@ -45,16 +48,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AllocatorTests.cpp" />
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="BinaryImageTests.cpp" />
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMChannelTests.cpp" />
-    <ClCompile Include="DynamicHookingTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
-    <ClCompile Include="FunctionPatchTests.cpp" />
-    <ClCompile Include="guineapigs.cpp" />
-    <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
     <ClCompile Include="ImagePatchTests.cpp" />
     <ClCompile Include="mocks.cpp" />
@@ -70,7 +68,6 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="BinaryTranslationTestsX86.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="entry.asm">
@@ -79,7 +76,6 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="helpers.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mocks_com.h" />
     <ClInclude Include="TracedFunctions.h" />

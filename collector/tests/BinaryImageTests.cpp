@@ -1,10 +1,9 @@
 #include <collector/binary_image.h>
-#include <collector/binary_translation.h>
-#include <collector/allocator.h>
 
-#include <test-helpers/helpers.h>
-
+#include <common/allocator.h>
 #include <map>
+#include <patcher/binary_translation.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 

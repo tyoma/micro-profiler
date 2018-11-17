@@ -1,7 +1,7 @@
 #include <collector/image_patch.h>
 #include <collector/binary_image.h>
 
-#include "mocks.h"
+#include <patcher/tests/mocks.h>
 
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>

@@ -20,15 +20,18 @@
 
 #pragma once
 
+#include "types.h"
+
 #include <unordered_map>
 #include <wpl/base/signals.h>
 
 namespace micro_profiler
 {
-	typedef unsigned char byte;
-	typedef unsigned long long int count_t;
-	typedef long long timestamp_t;
-	typedef unsigned long long int long_address_t;
+	template <typename T>
+	class range;
+
+	typedef range<const byte> const_byte_range;
+	typedef range<byte> byte_range;
 
 #pragma pack(push, 4)
 	struct call_record
@@ -76,6 +79,27 @@ namespace micro_profiler
 		wpl::signal<void (AddressT updated_function)> entry_updated;
 	};
 
+	template <typename T>
+	class range
+	{
+	private:
+		typedef T value_type;
+
+	public:
+		template <typename U>
+		range(const range<U> &u);
+		range(T *start, size_t length);
+
+		T *begin() const;
+		T *end() const;
+		size_t length() const;
+		bool inside(const T *ptr) const;
+
+	private:
+		T *_start;
+		size_t _length;
+	};
+	
 
 
 	// address_compare - inline definitions
@@ -117,6 +141,34 @@ namespace micro_profiler
 			max_call_time = rhs.max_call_time;
 	}
 
+	
+	template <typename T>
+	template <typename U>
+	inline range<T>::range(const range<U> &u)
+		: _start(u.begin()), _length(u.length())
+	{	}
+
+	template <typename T>
+	inline range<T>::range(T *start, size_t length)
+		: _start(start), _length(length)
+	{	}
+
+	template <typename T>
+	inline T *range<T>::begin() const
+	{	return _start;	}
+
+	template <typename T>
+	inline T *range<T>::end() const
+	{	return _start + _length;	}
+
+	template <typename T>
+	inline size_t range<T>::length() const
+	{	return _length;	}
+
+	template <typename T>
+	inline bool range<T>::inside(const T *ptr) const
+	{	return (begin() <= ptr) & (ptr < end());	}
+	
 
 	// helper methods - inline definitions
 	template <typename AddressT>

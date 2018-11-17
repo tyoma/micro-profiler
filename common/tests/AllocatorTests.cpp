@@ -1,6 +1,6 @@
-#include <collector/allocator.h>
+#include <common/allocator.h>
 
-#include <collector/primitives.h>
+#include <common/primitives.h>
 
 #include <ut/assert.h>
 #include <ut/test.h>

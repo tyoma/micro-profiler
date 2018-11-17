@@ -1,9 +1,8 @@
-#include <collector/dynamic_hooking.h>
+#include <patcher/dynamic_hooking.h>
 
 #include "mocks.h"
 
-#include <collector/allocator.h>
-
+#include <common/allocator.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -119,7 +118,7 @@ namespace micro_profiler
 			}
 
 
-			test( HooksAreInvokedWhenCalleeIsCalledPlanar )
+			test( HooksAreInvokedWhenCalleeIsCalledFlat )
 			{
 				typedef string (fn_t)(string value);
 
@@ -154,7 +153,7 @@ namespace micro_profiler
 			}
 
 
-			test( HooksAreInvokedWhenCalleeIsCalledNesting )
+			test( HooksAreInvokedWhenCalleeIsCalledNested )
 			{
 				typedef string (fn1_t)(string value);
 				typedef string (fn2_t)(fn1_t *f, const string &value);

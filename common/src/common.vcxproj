@@ -24,15 +24,11 @@
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -40,8 +36,14 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="allocator.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="formatting.cpp" />
+    <ClCompile Include="memory_protection.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="module.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -59,9 +61,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\configuration.h" />
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\formatting.h" />
+    <ClInclude Include="..\memory_protection.h" />
     <ClInclude Include="..\module.h" />
     <ClInclude Include="..\path.h" />
     <ClInclude Include="..\pod_vector.h" />
@@ -73,7 +77,4 @@
     <ClInclude Include="..\types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
-  </ImportGroup>
 </Project>

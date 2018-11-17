@@ -1,4 +1,4 @@
-#include <collector/binary_translation.h>
+#include <patcher/binary_translation.h>
 
 extern "C" {
 	#include <ld32.h>

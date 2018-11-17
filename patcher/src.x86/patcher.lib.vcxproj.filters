@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="assembler_intel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="binary_translation_x86.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamic_hooking_x86.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="function_patch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libraries\lend\ld32.c">
+      <Filter>libraries\lend</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\binary_translation.h" />
+    <ClInclude Include="..\dynamic_hooking.h" />
+    <ClInclude Include="..\function_patch.h" />
+    <ClInclude Include="..\platform.h" />
+    <ClInclude Include="assembler_intel.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libraries\lend\ld32.h">
+      <Filter>libraries\lend</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{66e32c89-4487-46f2-ab26-cc9348c5bef4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries">
+      <UniqueIdentifier>{ab5c2bbe-d124-4cd6-bf54-b057d96a319d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libraries\lend">
+      <UniqueIdentifier>{63f44d78-a7a9-4bf1-bf28-95a8f553a4d4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

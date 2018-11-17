@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0FCF8B72-B1A4-48E8-A938-8631174ACFC7}</ProjectGuid>
+    <ProjectGuid>{C051C262-E929-4A27-B8A6-1BC5345747B6}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
@@ -30,18 +30,38 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\common.vcxproj">
-      <Project>{69508827-452F-479E-A28F-AF300C5C1633}</Project>
+    <ProjectReference Include="..\src.x86\patcher.lib.vcxproj">
+      <Project>{84891947-5BFB-45F2-B495-20B93AAB1B44}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AllocatorTests.cpp" />
-    <ClCompile Include="MiscTests.cpp" />
-    <ClCompile Include="PrimitivesTests.cpp" />
-    <ClCompile Include="SerializationTests.cpp" />
-    <ClCompile Include="SymbolResolverTests.cpp" />
-    <ClCompile Include="TextFormattingServicesTests.cpp" />
+    <ClCompile Include="BinaryTranslationTestsX86.cpp" />
+    <ClCompile Include="DynamicHookingTests.cpp" />
+    <ClCompile Include="FunctionPatchTests.cpp" />
+    <ClCompile Include="guineapigs.cpp">
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+    </ClCompile>
+    <ClCompile Include="helpers.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="helpers.h" />
+    <ClInclude Include="mocks.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

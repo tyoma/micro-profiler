@@ -1,8 +1,6 @@
-#include <collector/binary_translation.h>
+#include <patcher/binary_translation.h>
 
 #include "helpers.h"
-
-#include <test-helpers/helpers.h>
 
 #include <ut/assert.h>
 #include <ut/test.h>

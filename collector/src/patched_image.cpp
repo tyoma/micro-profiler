@@ -20,11 +20,10 @@
 
 #include <collector/patched_image.h>
 
-#include <collector/allocator.h>
 #include <collector/binary_image.h>
 #include <collector/calls_collector.h>
 #include <collector/image_patch.h>
-#include <collector/platform.h>
+#include <common/allocator.h>
 
 #include <common/module.h>
 #include <iostream>
@@ -56,7 +55,8 @@ namespace micro_profiler
 				}
 				else if (fn.body().length() >= 5)
 				{
-					shared_ptr<function_patch> patch(new function_patch(em, fn, calls_collector::instance(), &profile_enter, &profile_exit));
+					shared_ptr<function_patch> patch(new function_patch(em, fn.effective_address(), fn.body(),
+						calls_collector::instance(), &profile_enter, &profile_exit));
 
 					_patches.push_back(patch);
 					++n;

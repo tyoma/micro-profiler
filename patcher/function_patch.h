@@ -20,15 +20,24 @@
 
 #pragma once
 
-#include "primitives.h"
+#include "dynamic_hooking.h"
+
+#include <common/allocator.h>
+#include <common/primitives.h>
 
 namespace micro_profiler
 {
-	struct inconsistent_function_range_exception : std::runtime_error
+	class function_patch : wpl::noncopyable
 	{
-		inconsistent_function_range_exception(const char *message);
-	};
+	public:
+		function_patch(executable_memory_allocator &allocator, void *fn_address, const_byte_range fn_body, void *instance,
+			enter_hook_t *on_enter, exit_hook_t *on_exit);
+		~function_patch();
 
-	size_t calculate_function_length(const_byte_range source, size_t min_length);
-	void move_function(byte *destination, const byte *source_base, const_byte_range source);
+	private:
+		std::shared_ptr<void> _memory;
+		byte * const _target_function;
+		size_t _chunk_length;
+		byte _saved[40];
+	};
 }

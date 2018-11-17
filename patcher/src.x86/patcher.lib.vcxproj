@@ -19,29 +19,42 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0FCF8B72-B1A4-48E8-A938-8631174ACFC7}</ProjectGuid>
+    <ProjectGuid>{84891947-5BFB-45F2-B495-20B93AAB1B44}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\src\common.vcxproj">
-      <Project>{69508827-452F-479E-A28F-AF300C5C1633}</Project>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
+    </Lib>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\libraries\lend\ld32.c" />
+    <ClCompile Include="assembler_intel.cpp" />
+    <ClCompile Include="binary_translation_x86.cpp" />
+    <ClCompile Include="dynamic_hooking_x86.cpp" />
+    <ClCompile Include="function_patch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AllocatorTests.cpp" />
-    <ClCompile Include="MiscTests.cpp" />
-    <ClCompile Include="PrimitivesTests.cpp" />
-    <ClCompile Include="SerializationTests.cpp" />
-    <ClCompile Include="SymbolResolverTests.cpp" />
-    <ClCompile Include="TextFormattingServicesTests.cpp" />
+    <ClInclude Include="..\..\libraries\lend\ld32.h" />
+    <ClInclude Include="..\binary_translation.h" />
+    <ClInclude Include="..\dynamic_hooking.h" />
+    <ClInclude Include="..\function_patch.h" />
+    <ClInclude Include="..\platform.h" />
+    <ClInclude Include="assembler_intel.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

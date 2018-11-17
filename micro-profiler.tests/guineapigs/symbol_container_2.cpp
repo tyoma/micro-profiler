@@ -32,3 +32,8 @@ extern "C" __declspec(dllexport) void bubble_sort2(int * volatile begin, int * v
 {
 	bubble_sort(begin, end);
 }
+
+extern "C" __declspec(dllexport) void bubble_sort_expose(void (*&f)(int * volatile begin, int * volatile end))
+{
+	f = &bubble_sort;
+}

@@ -2,14 +2,8 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		__declspec(noinline) void hash_ints(int *values, size_t n)
-		{
-			while (n--)
-			{
-				int v = *values * 2654435761;
-				*values++ = v;
-			}
-		}
+		int recursive_factorial(int v)
+		{	return v * (v > 1 ? recursive_factorial(v - 1) : 1); }
 		
 	}
 }

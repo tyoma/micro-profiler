@@ -47,6 +47,7 @@ namespace micro_profiler
 	};
 
 	typedef range<const byte> const_byte_range;
+	typedef range<byte> byte_range;
 
 
 

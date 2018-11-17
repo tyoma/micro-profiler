@@ -39,4 +39,24 @@ namespace micro_profiler
 		size_t _chunk_length;
 		byte _saved[40];
 	};
+
+	class image_patch : wpl::noncopyable
+	{
+	public:
+		typedef std::function<bool (const function_body &body)> filter_t;
+
+	public:
+		image_patch(const std::shared_ptr<binary_image> &image, void *instance,
+			enter_hook_t *on_enter, exit_hook_t *on_exit);
+
+		void apply_for(const filter_t &function_filter);
+
+	private:
+		const std::shared_ptr<binary_image> _image;
+		void * const _instance;
+		enter_hook_t * const _on_enter;
+		exit_hook_t * const _on_exit;
+		std::vector< std::shared_ptr<function_patch> > _patches;
+		executable_memory_allocator _allocator;
+	};
 }

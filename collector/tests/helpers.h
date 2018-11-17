@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <collector/primitives.h>
+#include <test-helpers/helpers.h>
 
 namespace micro_profiler
 {
@@ -11,7 +12,11 @@ namespace micro_profiler
 		inline range<T> mkrange(T (&array_ptr)[size])
 		{	return range<T>(array_ptr, size);	}
 
+		byte_range get_function_body(void *f);
 
+		template <typename T>
+		byte_range get_function_body(T *f)
+		{	return get_function_body(address_cast_hack<void *>(f));	}
 	}
 
 	template <typename T>

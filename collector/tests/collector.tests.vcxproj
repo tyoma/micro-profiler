@@ -54,7 +54,9 @@
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="FunctionPatchTests.cpp" />
     <ClCompile Include="guineapigs.cpp" />
+    <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
+    <ClCompile Include="ImagePatchTests.cpp" />
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="mocks_com.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>

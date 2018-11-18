@@ -26,12 +26,27 @@
 
 namespace micro_profiler
 {
-	typedef void (CC_(fastcall) enter_hook_t)(void *instance, const void *callee, timestamp_t timestamp,
-		void **return_address_ptr) _CC(fastcall);
-	typedef void *(CC_(fastcall) exit_hook_t)(void *instance, timestamp_t timestamp) _CC(fastcall);
+	template <typename InterceptorT>
+	struct hooks
+	{
+		typedef void (CC_(fastcall) on_enter_t)(InterceptorT *interceptor, const void *callee, timestamp_t timestamp,
+			void **return_address_ptr) _CC(fastcall);
+		typedef void *(CC_(fastcall) on_exit_t)(InterceptorT *interceptor, timestamp_t timestamp) _CC(fastcall);
+
+		static hooks<void>::on_enter_t *on_enter()
+		{	return reinterpret_cast<hooks<void>::on_enter_t *>(static_cast<on_enter_t *>(&InterceptorT::on_enter));	}
+
+		static hooks<void>::on_exit_t *on_exit()
+		{	return reinterpret_cast<hooks<void>::on_exit_t *>(static_cast<on_exit_t *>(&InterceptorT::on_exit));	}
+	};
 
 	extern const size_t c_thunk_size;
 
+
 	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *instance,
-		enter_hook_t *on_enter, exit_hook_t *on_exit);
+		hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
+
+	template <typename T>
+	inline void initialize_hooks(void *thunk_location, const void *target_function, const void *id, T *interceptor)
+	{	initialize_hooks(thunk_location, target_function, id, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
 }

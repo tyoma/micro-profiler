@@ -20,7 +20,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( ImagePatchTests )
-			mocks::logged_hook_events trace[2];
+			mocks::trace_events trace[2];
 			auto_ptr<image> images[2];
 			void (*f11)();
 			void (*f12)();
@@ -52,10 +52,8 @@ namespace micro_profiler
 				void (*ff12)();
 
 				// INIT / ACT
-				image_patch ip1(load_image_at(reinterpret_cast<void *>(images[0]->load_address())), &trace[0],
-					&mocks::on_enter, &mocks::on_exit);
-				image_patch ip2(load_image_at(reinterpret_cast<void *>(images[1]->load_address())), &trace[1],
-					&mocks::on_enter, &mocks::on_exit);
+				image_patch ip1(load_image_at(reinterpret_cast<void *>(images[0]->load_address())), &trace[0]);
+				image_patch ip2(load_image_at(reinterpret_cast<void *>(images[1]->load_address())), &trace[1]);
 				int data[1234];
 				char buffer[1000] = { 0 };
 
@@ -105,10 +103,8 @@ namespace micro_profiler
 				void (*ff3)();
 
 				// INIT / ACT
-				image_patch ip1(load_image_at(reinterpret_cast<void *>(images[0]->load_address())), &trace[0],
-					&mocks::on_enter, &mocks::on_exit);
-				image_patch ip2(load_image_at(reinterpret_cast<void *>(images[1]->load_address())), &trace[1],
-					&mocks::on_enter, &mocks::on_exit);
+				image_patch ip1(load_image_at(reinterpret_cast<void *>(images[0]->load_address())), &trace[0]);
+				image_patch ip2(load_image_at(reinterpret_cast<void *>(images[1]->load_address())), &trace[1]);
 				char buffer[1000] = { 0 };
 				int data[10];
 

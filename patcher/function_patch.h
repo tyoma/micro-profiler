@@ -30,14 +30,28 @@ namespace micro_profiler
 	class function_patch : wpl::noncopyable
 	{
 	public:
+		template <typename T>
+		function_patch(executable_memory_allocator &allocator, void *fn_address, const_byte_range fn_body,
+			T *interceptor);
 		function_patch(executable_memory_allocator &allocator, void *fn_address, const_byte_range fn_body, void *instance,
-			enter_hook_t *on_enter, exit_hook_t *on_exit);
+			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 		~function_patch();
 
 	private:
+		void init(executable_memory_allocator &allocator, void *fn_address, const_byte_range fn_body, void *instance,
+			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
+
+	private:
 		std::shared_ptr<void> _memory;
-		byte * const _target_function;
+		byte *_target_function;
 		size_t _chunk_length;
 		byte _saved[40];
 	};
+
+
+
+	template <typename T>
+	inline function_patch::function_patch(executable_memory_allocator &allocator, void *fn_address,
+		const_byte_range fn_body, T *interceptor)
+	{	init(allocator, fn_address, fn_body, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
 }

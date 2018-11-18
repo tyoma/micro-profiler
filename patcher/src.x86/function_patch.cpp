@@ -17,10 +17,15 @@ namespace micro_profiler
 	}
 
 	function_patch::function_patch(executable_memory_allocator &allocator_, void *fn_address, const_byte_range fn_body,
-			void *instance, enter_hook_t *on_enter, exit_hook_t *on_exit)
-		: _target_function(static_cast<byte *>(fn_address)),
-			_chunk_length(calculate_function_length(fn_body, jmp_size))
+		void *instance, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
+	{	init(allocator_, fn_address, fn_body, instance, on_enter, on_exit);	}
+
+	void function_patch::init(executable_memory_allocator &allocator_, void *fn_address, const_byte_range fn_body,
+		void *instance, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
+		_target_function = static_cast<byte *>(fn_address);
+		_chunk_length = calculate_function_length(fn_body, jmp_size);
+
 		const_byte_range source_chunk(fn_body.begin(), _chunk_length);
 		scoped_unprotect su(range<byte>(_target_function, _chunk_length));
 		const size_t size0 = c_thunk_size + _chunk_length + jmp_size;

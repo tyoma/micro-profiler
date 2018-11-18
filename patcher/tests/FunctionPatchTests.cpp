@@ -17,7 +17,7 @@ namespace micro_profiler
 
 		begin_test_suite( FunctionPatchTests )
 			executable_memory_allocator allocator;
-			mocks::logged_hook_events trace;
+			mocks::trace_events trace;
 
 			test( PatchedFunctionCallsHookCallbacks )
 			{
@@ -25,7 +25,7 @@ namespace micro_profiler
 				byte_range b = get_function_body(&recursive_factorial);
 
 				// INIT / ACT
-				function_patch patch(allocator, b.begin(), b, &trace, &mocks::on_enter, &mocks::on_exit);
+				function_patch patch(allocator, b.begin(), b, &trace);
 
 				// ACT
 				assert_equal(6, recursive_factorial(3));
@@ -86,7 +86,7 @@ namespace micro_profiler
 				byte_range b = get_function_body(f);
 
 				// INIT / ACT
-				function_patch patch(allocator, b.begin(), b, &trace, &mocks::on_enter, &mocks::on_exit);
+				function_patch patch(allocator, b.begin(), b, &trace);
 
 				// ACT
 				f(buffer, 10, "%X", 132214);
@@ -106,8 +106,7 @@ namespace micro_profiler
 			{
 				// INIT
 				byte_range b = get_function_body(&recursive_factorial);
-				auto_ptr<function_patch> patch(new function_patch(allocator, b.begin(), b,
-					&trace, &mocks::on_enter, &mocks::on_exit));
+				auto_ptr<function_patch> patch(new function_patch(allocator, b.begin(), b, &trace));
 
 				// ACT / ASSERT
 				patch.reset();

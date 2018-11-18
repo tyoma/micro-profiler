@@ -48,7 +48,7 @@ namespace micro_profiler
 
 			executable_memory_allocator allocator;
 			shared_ptr<void> thunk_memory;
-			mocks::logged_hook_events trace;
+			mocks::trace_events trace;
 
 			init( AllocateMemory )
 			{
@@ -66,8 +66,7 @@ namespace micro_profiler
 				typedef int (fn_t)(int *value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&increment), 0, &trace,
-					&mocks::on_enter, &mocks::on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&increment), 0, &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 				int value = 123;
 
@@ -93,8 +92,7 @@ namespace micro_profiler
 				typedef string (fn_t)(const string &value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_1), 0, &trace,
-					&mocks::on_enter, &mocks::on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_1), 0, &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT / ASSERT
@@ -108,8 +106,7 @@ namespace micro_profiler
 				typedef string (fn_t)(string value);
 
 				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), 0, &trace,
-					&mocks::on_enter, &mocks::on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), 0, &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT / ASSERT
@@ -124,8 +121,7 @@ namespace micro_profiler
 
 				// INIT
 				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
-					address_cast_hack<const void *>(&reverse_string_2), &trace,
-					&mocks::on_enter, &mocks::on_exit);
+					address_cast_hack<const void *>(&reverse_string_2), &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT
@@ -161,11 +157,9 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<void> thunk_memory2 = allocator.allocate(c_thunk_size);
 				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
-					address_cast_hack<const void *>(&reverse_string_2), &trace,
-					&mocks::on_enter, &mocks::on_exit);
+					address_cast_hack<const void *>(&reverse_string_2), &trace);
 				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>),
-					address_cast_hack<const void *>(&outer_function<fn1_t*>), &trace,
-					&mocks::on_enter, &mocks::on_exit);
+					address_cast_hack<const void *>(&outer_function<fn1_t*>), &trace);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
 
@@ -200,10 +194,9 @@ namespace micro_profiler
 				const char *text1 = "reverse_string_2";
 				const char *text2 = "outer_function<fn1_t*>";
 				shared_ptr<void> thunk_memory2 = allocator.allocate(c_thunk_size);
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, &trace,
-					&mocks::on_enter, &mocks::on_exit);
-				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2, &trace,
-					&mocks::on_enter, &mocks::on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, &trace);
+				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2,
+					&trace);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
 
@@ -236,8 +229,7 @@ namespace micro_profiler
 				// INIT
 				vector<int> buffer1(1000), buffer2(10000);
 				vector<int> buffer3(3000), buffer4(21000);
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&bubble_sort), "test", &trace,
-					&mocks::on_enter, &mocks::on_exit);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&bubble_sort), "test", &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT

@@ -33,17 +33,25 @@ namespace micro_profiler
 		typedef std::function<bool (const function_body &body)> filter_t;
 
 	public:
-		image_patch(const std::shared_ptr<binary_image> &image, void *instance,
-			enter_hook_t *on_enter, exit_hook_t *on_exit);
+		template <typename InterceptorT>
+		image_patch(const std::shared_ptr<binary_image> &image, InterceptorT *interceptor);
 
 		void apply_for(const filter_t &function_filter);
 
 	private:
 		const std::shared_ptr<binary_image> _image;
-		void * const _instance;
-		enter_hook_t * const _on_enter;
-		exit_hook_t * const _on_exit;
+		void * const _interceptor;
+		hooks<void>::on_enter_t * const _on_enter;
+		hooks<void>::on_exit_t * const _on_exit;
 		std::vector< std::shared_ptr<function_patch> > _patches;
 		executable_memory_allocator _allocator;
 	};
+
+	
+	
+	template <typename InterceptorT>
+	inline image_patch::image_patch(const std::shared_ptr<binary_image> &image, InterceptorT *interceptor)
+		: _image(image), _interceptor(interceptor),
+			_on_enter(hooks<InterceptorT>::on_enter()), _on_exit(hooks<InterceptorT>::on_exit())
+	{	}
 }

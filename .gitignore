@@ -5,7 +5,10 @@ _*
 *.sdf
 *.opensdf
 TestResults/*
+UpgradeLog.htm*
 *.lib
 *.ncb
 ipch
 *.aps
+.vs
+!*.tests.vcxproj.user

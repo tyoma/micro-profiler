@@ -25,6 +25,9 @@
     <ClCompile Include="memory_protection.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="stopwatch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -46,5 +49,6 @@
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\memory_protection.h" />
+    <ClInclude Include="..\stopwatch.h" />
   </ItemGroup>
 </Project>

@@ -20,13 +20,10 @@
 
 #pragma once
 
-#include "primitives.h"
-
 #include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
-	timestamp_t ticks_per_second();
 	unsigned int current_thread_id();
 
 	class mutex : wpl::noncopyable

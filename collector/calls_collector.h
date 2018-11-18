@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "primitives.h"
 #include "system.h"
 
 #include <wpl/mt/thread.h>

@@ -3,6 +3,7 @@
 #include "mocks.h"
 
 #include <common/allocator.h>
+#include <common/stopwatch.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -227,16 +228,22 @@ namespace micro_profiler
 				typedef void (fn_t)(int *begin, int *end);
 
 				// INIT
-				vector<int> buffer1(1000), buffer2(10000);
-				vector<int> buffer3(3000), buffer4(21000);
+				vector<int> buffer1(500), buffer2(1500);
+				vector<int> buffer3(3000), buffer4(4000);
 				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&bubble_sort), "test", &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
+				counter_t c;
 
 				// ACT
+				stopwatch(c);
 				f(&buffer1[0], &buffer1[0] + buffer1.size());
+				const double rd1 = stopwatch(c);
 				f(&buffer2[0], &buffer2[0] + buffer2.size());
+				const double rd2 = stopwatch(c);
 				f(&buffer3[0], &buffer3[0] + buffer3.size());
+				const double rd3 = stopwatch(c);
 				f(&buffer4[0], &buffer4[0] + buffer4.size());
+				const double rd4 = stopwatch(c);
 
 				// ASSERT
 				assert_equal(8u, trace.call_log.size());
@@ -246,12 +253,9 @@ namespace micro_profiler
 				double d3 = static_cast<double>(trace.call_log[5].timestamp - trace.call_log[4].timestamp);
 				double d4 = static_cast<double>(trace.call_log[7].timestamp - trace.call_log[6].timestamp);
 
-				assert_is_true(70 < d2 / d1);
-				assert_is_true(130 > d2 / d1);
-				assert_is_true(39 < d4 / d3);
-				assert_is_true(59 > d4 / d3);
-				assert_is_true(401 < d4 / d1);
-				assert_is_true(481 > d4 / d1);
+				assert_approx_equal(rd2 / rd1, d2 / d1, 0.05);
+				assert_approx_equal(rd3 / rd2, d3 / d2, 0.05);
+				assert_approx_equal(rd4 / rd3, d4 / d3, 0.05);
 			}
 
 		end_test_suite

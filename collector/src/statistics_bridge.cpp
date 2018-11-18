@@ -25,6 +25,7 @@
 #include <common/module.h>
 #include <common/protocol.h>
 #include <common/serialization.h>
+#include <common/stopwatch.h>
 
 #include <algorithm>
 #include <iterator>
@@ -36,8 +37,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const timestamp_t c_ticks_per_second(ticks_per_second());
-
 		class vector_writer
 		{
 		public:

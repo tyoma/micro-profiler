@@ -18,40 +18,50 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/system.h>
+#include <common/stopwatch.h>
 
-#include <intrin.h>
-#include <memory>
 #include <windows.h>
 
-using namespace std;
+#pragma intrinsic(__rdtsc)
 
 namespace micro_profiler
 {
-	unsigned int current_thread_id()
-	{	return ::GetCurrentThreadId();	}
-
-
-	mutex::mutex()
+	namespace
 	{
-		typedef char static_size_assertion[sizeof(CRITICAL_SECTION) <= sizeof(_mtx_buffer)];
+		double get_pq_period()
+		{
+			LARGE_INTEGER frequency;
 
-		::InitializeCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));
+			::QueryPerformanceFrequency(&frequency);
+			return 1.0 / frequency.QuadPart;
+		}
+
+		timestamp_t ticks_per_second()
+		{
+			timestamp_t tsc_start, tsc_end;
+			counter_t c;
+
+			stopwatch(c);
+			tsc_start = __rdtsc();
+			for (volatile int i = 0; i < 1000000; ++i)
+			{	}
+			tsc_end = __rdtsc();
+			return static_cast<timestamp_t>((tsc_end - tsc_start) / stopwatch(c));
+		}
+
+		const double c_pq_period = get_pq_period();
 	}
 
-	mutex::~mutex()
-	{	::DeleteCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
+	const timestamp_t c_ticks_per_second = ticks_per_second();
 
-	void mutex::enter()
-	{	::EnterCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
+	double stopwatch(counter_t &counter)
+	{
+		LARGE_INTEGER c;
+		double period;
 
-	void mutex::leave()
-	{	::LeaveCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
-
-
-   long interlocked_compare_exchange(long volatile *destination, long exchange, long comperand)
-   {  return _InterlockedCompareExchange(destination, exchange, comperand);  }
-
-   long long interlocked_compare_exchange64(long long volatile *destination, long long exchange, long long comperand)
-   {  return _InterlockedCompareExchange64(destination, exchange, comperand);  }
+		::QueryPerformanceCounter(&c);
+		period = c_pq_period * (c.QuadPart - counter);
+		counter = c.QuadPart;
+		return period;
+	}
 }

@@ -1,9 +1,10 @@
 #include <collector/statistics_bridge.h>
 
-#include <test-helpers/helpers.h>
 #include "mocks.h"
 
 #include <algorithm>
+#include <common/stopwatch.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -87,12 +88,8 @@ namespace micro_profiler
 				statistics_bridge b(cc, _state.MakeFactory(), _queue);
 
 				// ASSERT
-				timestamp_t real_ticks_per_second = ticks_per_second();
-
 				assert_equal(get_current_process_executable(), _state.process_init.executable);
-				assert_is_true(90 * real_ticks_per_second / 100
-					< _state.process_init.ticks_per_second && _state.process_init.ticks_per_second
-					< 110 * real_ticks_per_second / 100);
+				assert_equal(c_ticks_per_second, _state.process_init.ticks_per_second);
 			}
 
 

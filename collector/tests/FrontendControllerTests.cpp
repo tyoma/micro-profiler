@@ -2,8 +2,10 @@
 #include <collector/frontend_controller.h>
 #include <collector/entry.h>
 
-#include <test-helpers/helpers.h>
 #include "mocks.h"
+
+#include <common/stopwatch.h>
+#include <test-helpers/helpers.h>
 
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -392,12 +394,8 @@ namespace micro_profiler
 				initialized.wait();
 
 				// ASERT
-				timestamp_t real_ticks_per_second = ticks_per_second();
-
 				assert_equal(get_current_process_executable(), state.process_init.executable);
-				assert_is_true(90 * real_ticks_per_second / 100
-					< state.process_init.ticks_per_second && state.process_init.ticks_per_second
-					< 110 * real_ticks_per_second / 100);
+				assert_equal(c_ticks_per_second, state.process_init.ticks_per_second);
 			}
 
 

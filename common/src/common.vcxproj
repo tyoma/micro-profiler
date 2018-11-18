@@ -50,6 +50,12 @@
     <ClCompile Include="registry_configuration.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="stopwatch.cpp">
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="string.cpp" />
     <ClCompile Include="symbol_resolver.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -72,6 +78,7 @@
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\protocol.h" />
     <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\stopwatch.h" />
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\types.h" />

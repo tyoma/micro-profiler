@@ -151,6 +151,62 @@ namespace micro_profiler
 				assert_equal(4u, trace[1].call_log.size());
 			}
 
+
+			test( FunctionIsNotHookedIfAnExceptionThrownWhileFiltering )
+			{
+				// INIT
+				void (*ff1)();
+				void (*ff2)();
+				void (*ff3)();
+				void (*ff4)(int * volatile begin, int * volatile end);
+
+				// INIT / ACT
+				auto_ptr<image_patch> ip(new image_patch(load_image_at(reinterpret_cast<void *>(images[1]->load_address())),
+					&trace[0]));
+				int data[10];
+
+				f2F(ff4);
+
+				ip->apply_for([] (const function_body &fb) -> bool {
+					if (fb.name() != "get_function_addresses_2")
+						return true;
+					throw runtime_error("");
+				});
+
+				// ACT
+				f23(ff1, ff2, ff3);
+				ff4(data, array_end(data));
+
+				// ASSERT
+				call_record reference1[] = {
+					{ 0, address_cast_hack<const void *>(ff4) },
+					{ 0, 0 },
+				};
+
+				assert_equal(reference1, trace[0].call_log);
+
+				// INIT
+				ip.reset(new image_patch(load_image_at(reinterpret_cast<void *>(images[1]->load_address())),
+					&trace[1]));
+
+				ip->apply_for([] (const function_body &fb) -> bool {
+					if (fb.name() != "bubble_sort")
+						return true;
+					throw runtime_error("");
+				});
+
+				// ACT
+				f23(ff1, ff2, ff3);
+				ff4(data, array_end(data));
+
+				// ASSERT
+				call_record reference2[] = {
+					{ 0, address_cast_hack<const void *>(f23) },
+					{ 0, 0 },
+				};
+
+				assert_equal(reference2, trace[1].call_log);
+			}
 		end_test_suite
 	}
 }

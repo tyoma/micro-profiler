@@ -291,6 +291,50 @@ namespace micro_profiler
 			}
 
 
+			test( ImagesWithOutsideShortConditionalJumpsCannotBeMoved )
+			{
+				// INIT
+				byte instructions[0x0400] = {
+					0x70, 0x1E, 0x71, 0x1C, 0x72, 0x1A, 0x73, 0x18, 0x74, 0x16, 0x75, 0x14, 0x76, 0x12, 0x77, 0x10,
+					0x78, 0x0E, 0x79, 0x0C, 0x7A, 0x0A, 0x7B, 0x08, 0x7C, 0x06, 0x7D, 0x04, 0x7E, 0x02, 0x7F, 0x00,
+				};
+
+				// ACT / ASSERT
+				assert_throws(move_function(instructions + 0x30, instructions, const_byte_range(instructions, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 2, const_byte_range(instructions + 2, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 4, const_byte_range(instructions + 4, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 6, const_byte_range(instructions + 6, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 8, const_byte_range(instructions + 8, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 10, const_byte_range(instructions + 10, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 12, const_byte_range(instructions + 12, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 14, const_byte_range(instructions + 14, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 16, const_byte_range(instructions + 16, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 18, const_byte_range(instructions + 18, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 20, const_byte_range(instructions + 20, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 22, const_byte_range(instructions + 22, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 24, const_byte_range(instructions + 24, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 26, const_byte_range(instructions + 26, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 28, const_byte_range(instructions + 28, 2)),
+					inconsistent_function_range_exception);
+				assert_throws(move_function(instructions + 0x30, instructions + 30, const_byte_range(instructions + 30, 2)),
+					inconsistent_function_range_exception);
+			}
+
+
 			test( ImagesWithInsideShortJumpsCanBeMoved )
 			{
 				// INIT
@@ -305,6 +349,23 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(const_byte_range(instructions, 6), const_byte_range(instructions, 6));
+			}
+
+
+			test( ImagesWithInsideShortConditionalJumpsCanBeMoved )
+			{
+				// INIT
+				byte instructions[0x0400] = {
+					0x70, 0x1E, 0x71, 0x1C, 0x72, 0x1A, 0x73, 0x18, 0x74, 0x16, 0x75, 0x14, 0x76, 0x12, 0x77, 0x10,
+					0x78, 0x0E, 0x79, 0x0C, 0x7A, 0x0A, 0x7B, 0x08, 0x7C, 0x06, 0x7D, 0x04, 0x7E, 0x02, 0x7F, 0x00,
+					0x90,
+				};
+
+				// ACT
+				move_function(instructions + 0x30, instructions, const_byte_range(instructions, 0x21));
+
+				// ASSERT
+				assert_equal(const_byte_range(instructions, 0x21), const_byte_range(instructions + 0x30, 0x21));
 			}
 
 
@@ -326,12 +387,6 @@ namespace micro_profiler
 				assert_equal(5u, calculate_function_length(mkrange(is4), 1));
 				assert_equal(3u, calculate_function_length(mkrange(is5), 1));
 				assert_equal(8u, calculate_function_length(mkrange(is6), 1));
-			}
-
-
-			test( ShortJumpsToFragmentMakeCalculateLengthThrowingInconsistencyExceptions )
-			{
-				throw 0;
 			}
 
 		end_test_suite

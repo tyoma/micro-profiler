@@ -47,7 +47,6 @@ namespace micro_profiler
 				memcpy(destination, source, l);
 				break;
 
-			// TODO: untested
 			case 0x70:
 			case 0x71:
 			case 0x72:
@@ -64,8 +63,6 @@ namespace micro_profiler
 			case 0x7d:
 			case 0x7e:
 			case 0x7f:
-
-
 			case 0xEB:
 				if (is_target_address_8_outside(source + 1, source_))
 					throw inconsistent_function_range_exception("Short relative jump outside the copied range is met!");

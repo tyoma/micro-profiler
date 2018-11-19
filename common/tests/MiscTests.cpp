@@ -513,6 +513,59 @@ namespace micro_profiler
 				assert_equal(v2.end(), i2);
 			}
 
+
+			test( EmptyPushReservesNewObject )
+			{
+				// INIT
+				pod_vector<int> v1(10);
+				pod_vector<double> v2(10);
+				pod_vector<int>::iterator i1 = v1.begin();
+				pod_vector<double>::iterator i2 = v2.begin();
+
+				// ACT
+				v1.push_back();
+				v2.push_back();
+
+				// ASSERT
+				assert_equal(1, v1.end() - i1);
+				assert_equal(1u, v1.size());
+				assert_equal(1, v2.end() - i2);
+				assert_equal(1u, v2.size());
+
+				// ACT
+				v1.push_back();
+				v1.push_back();
+				v2.push_back();
+
+				// ASSERT
+				assert_equal(3, v1.end() - i1);
+				assert_equal(3u, v1.size());
+				assert_equal(2, v2.end() - i2);
+				assert_equal(2u, v2.size());
+			}
+
+
+			test( EmptyPushCausesSpaceGrowWhenLimitIsHit )
+			{
+				// INIT
+				pod_vector<int> v(5);
+
+				v.push_back(3);
+				v.push_back(13);
+				v.push_back(3221);
+				v.push_back(332221);
+				v.push_back(17);
+
+				pod_vector<int>::iterator b = v.begin();
+
+				// ACT
+				v.push_back();
+
+				// ASSERT
+				assert_not_equal(b, v.begin());
+				assert_equal(6u, v.size());
+			}
+
 		end_test_suite
 
 

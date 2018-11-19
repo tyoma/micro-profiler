@@ -47,7 +47,9 @@
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="binary_image.cpp" />
-    <ClCompile Include="calls_collector.cpp" />
+    <ClCompile Include="calls_collector.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="channel_client.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>

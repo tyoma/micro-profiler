@@ -46,9 +46,8 @@ namespace micro_profiler
 		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
 
-		void CC_(fastcall) on_enter(const void *callee, timestamp_t timestamp,
-			const void **return_address_ptr) _CC(fastcall);
-		const void *CC_(fastcall) on_exit(timestamp_t timestamp) _CC(fastcall);
+		void on_enter(const void *callee, timestamp_t timestamp, const void **return_address_ptr);
+		const void *on_exit(timestamp_t timestamp);
 
 		void read_collected(acceptor &a);
 
@@ -95,20 +94,22 @@ namespace micro_profiler
 		_return_stack.push_back(re);
 	}
 
-	void CC_(fastcall) calls_collector::thread_trace_block::on_enter(const void *callee, timestamp_t timestamp,
-		const void **return_address_ptr) _CC(fastcall)
+	__forceinline void calls_collector::thread_trace_block::on_enter(const void *callee, timestamp_t timestamp,
+		const void **return_address_ptr)
 	{
-		//if (_return_stack.back().return_address_ptr == return_address_ptr)
-		//	__asm int 3
 		if (_return_stack.back().return_address_ptr != return_address_ptr)
 		{
-			return_entry re = { return_address_ptr, *return_address_ptr };
-			_return_stack.push_back(re);
+			_return_stack.push_back();
+
+			return_entry &e = _return_stack.back();
+
+			e.return_address_ptr = return_address_ptr;
+			e.return_address = *return_address_ptr;
 		}
 		track(callee, timestamp);
 	}
 
-	const void *CC_(fastcall) calls_collector::thread_trace_block::on_exit(timestamp_t timestamp) _CC(fastcall)
+	__forceinline const void *calls_collector::thread_trace_block::on_exit(timestamp_t timestamp)
 	{
 		const void *return_address = _return_stack.back().return_address;
 
@@ -129,8 +130,13 @@ namespace micro_profiler
 
 			if (trace->byte_size() < _trace_limit)
 			{
-				call_record call = { timestamp, callee };
-				trace->push_back(call);
+				trace->push_back();
+
+				call_record &e = trace->back();
+
+				e.callee = callee;
+				e.timestamp = timestamp;
+
 				atomic_store(_active_trace, trace);
 				break;
 			}

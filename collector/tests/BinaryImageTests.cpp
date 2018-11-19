@@ -34,6 +34,11 @@ namespace micro_profiler
 
 
 		begin_test_suite( BinaryImageTests )
+			init( FailX64 )
+			{
+				assert_equal(4u, sizeof(void*));
+			}
+
 			test( LoadingImageReturnsNonNullPointer )
 			{
 				// INIT / ACT

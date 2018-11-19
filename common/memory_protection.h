@@ -14,7 +14,7 @@ namespace micro_profiler
 
 	private:
 		void *_address;
-		unsigned _size;
+		size_t _size;
 		unsigned _previous_access;
 	};
 }

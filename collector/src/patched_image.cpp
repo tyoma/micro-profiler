@@ -30,17 +30,10 @@
 
 using namespace std;
 
+extern "C" micro_profiler::calls_collector *g_collector_ptr;
+
 namespace micro_profiler
 {
-	namespace
-	{
-		void CC_(fastcall) profile_enter(void *instance, const void *callee, timestamp_t timestamp, void **return_address_ptr) _CC(fastcall)
-		{	static_cast<calls_collector *>(instance)->profile_enter(callee, timestamp, return_address_ptr);	}
-
-		void *CC_(fastcall) profile_exit(void *instance, timestamp_t timestamp) _CC(fastcall)
-		{	return static_cast<calls_collector *>(instance)->profile_exit(timestamp);	}
-	}
-
 	void patched_image::patch_image(void *in_image_address)
 	{
 		std::shared_ptr<binary_image> image = load_image_at((void *)get_module_info(in_image_address).load_address);
@@ -56,7 +49,7 @@ namespace micro_profiler
 				else if (fn.body().length() >= 5)
 				{
 					shared_ptr<function_patch> patch(new function_patch(em, fn.effective_address(), fn.body(),
-						calls_collector::instance(), &profile_enter, &profile_exit));
+						g_collector_ptr));
 
 					_patches.push_back(patch);
 					++n;

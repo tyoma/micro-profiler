@@ -64,7 +64,6 @@ namespace micro_profiler
 		shared_ptr<image_load_queue> _image_load_queue;
 		shared_ptr<volatile long> _worker_refcount;
 		shared_ptr<void> _exit_event;
-		calls_collector *_collector;
 	};
 
 
@@ -72,7 +71,7 @@ namespace micro_profiler
 			shared_ptr<image_load_queue> image_load_queue_, shared_ptr<volatile long> worker_refcount,
 			shared_ptr<void> exit_event)
 		: _in_image_address(in_image_address), _image_load_queue(image_load_queue_), _worker_refcount(worker_refcount),
-			_exit_event(exit_event), _collector(calls_collector::instance())
+			_exit_event(exit_event)
 	{
 		pi;
 //		pi.patch_image(in_image_address);

@@ -20,9 +20,10 @@
 
 #pragma once
 
-#include "primitives.h"
 #include "system.h"
 
+#include <common/types.h>
+#include <patcher/platform.h>
 #include <wpl/mt/thread.h>
 #include <list>
 
@@ -50,25 +51,20 @@ namespace micro_profiler
 		calls_collector(size_t trace_limit);
 		virtual ~calls_collector() throw();
 
-		static calls_collector *instance() throw();
 		virtual void read_collected(acceptor &a);
 
-		void track(call_record call) throw();
-		void track(timestamp_t timestamp, const void *address) throw();
+		static void CC_(fastcall) on_enter(calls_collector *instance, const void *callee, timestamp_t timestamp,
+			void **return_address_ptr) _CC(fastcall);
+		static void *CC_(fastcall) on_exit(calls_collector *instance, timestamp_t timestamp) _CC(fastcall);
 
-		void profile_enter(const void *callee, timestamp_t timestamp, void **return_address_ptr) throw();
-		void *profile_exit(timestamp_t timestamp) throw();
-
-		size_t trace_limit() const throw();
 		virtual timestamp_t profiler_latency() const throw();
 
 	private:
 		class thread_trace_block;
 
-		static calls_collector _instance;
-
 	private:
 		thread_trace_block &get_current_thread_trace();
+		thread_trace_block &get_current_thread_trace_guaranteed();
 		thread_trace_block &construct_thread_trace();
 
 	private:

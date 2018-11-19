@@ -17,7 +17,7 @@ namespace micro_profiler
 
 				_patches.push_back(p);
 			}
-			catch (exception &e)
+			catch (exception &/*e*/)
 			{
 			}
 		});

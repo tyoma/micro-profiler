@@ -73,8 +73,8 @@ namespace micro_profiler
 			case 0xE9:
 			case 0xE8:
 				*destination = *source;
-				*reinterpret_cast<dword *>(destination + 1) = *reinterpret_cast<const dword *>(source + 1)
-					+ (is_target_address_32_outside(source + 1, source_) ? delta : 0);
+				*reinterpret_cast<dword *>(destination + 1) = static_cast<dword>(*reinterpret_cast<const dword *>(source + 1)
+					+ (is_target_address_32_outside(source + 1, source_) ? delta : 0));
 				l = 5;
 				break;
 			}

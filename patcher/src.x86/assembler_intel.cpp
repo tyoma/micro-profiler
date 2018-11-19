@@ -35,13 +35,13 @@ namespace micro_profiler
 		void call_rel_imm32::init(const void *address)
 		{
 			opcode = 0xE8;
-			displacement = reinterpret_cast<size_t>(address) - reinterpret_cast<size_t>(this + 1);
+			displacement = static_cast<dword>(reinterpret_cast<size_t>(address) - reinterpret_cast<size_t>(this + 1));
 		}
 
 		void jmp_rel_imm32::init(const void *address)
 		{
 			opcode = 0xE9;
-			displacement = reinterpret_cast<size_t>(address) - reinterpret_cast<size_t>(this + 1);
+			displacement = static_cast<dword>(reinterpret_cast<size_t>(address) - reinterpret_cast<size_t>(this + 1));
 		}
 
 		void lea_reg_esp_offset8::init(register_32 reg, char operand_)

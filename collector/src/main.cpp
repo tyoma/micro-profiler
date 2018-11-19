@@ -24,6 +24,8 @@
 #include <collector/frontend_controller.h>
 #include <collector/entry.h>
 #include <common/constants.h>
+#include <common/memory_protection.h>
+#include <patcher/src.x86/assembler_intel.h>
 
 #include <windows.h>
 
@@ -33,35 +35,30 @@ namespace micro_profiler
 {
 	namespace
 	{
-#ifdef _M_IX86
-		unsigned char g_exitprocess_patch[] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
-		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 1);
-#elif _M_X64
-		unsigned char g_exitprocess_patch[] = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
-		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 2);
-#endif
+		typedef intel::jmp_rel_imm32 jmp;
+
+		calls_collector g_collector(5000000);
 		auto_ptr<frontend_controller> g_frontend_controller;
 		void *g_exitprocess_address = 0;
+		byte g_backup[sizeof(jmp)];
 		volatile long g_patch_lockcount = 0;
 
-		void Patch(void *address, void *patch, size_t size)
+		void detour(void *target_function, void *where, byte (&backup)[sizeof(jmp)])
 		{
-			DWORD old_mode;
-			vector<unsigned char> buffer(size);
+			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
+			memcpy(backup, target_function, sizeof(jmp));
+			static_cast<jmp *>(target_function)->init(where);
+		}
 
-			if (::VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &old_mode))
-			{
-				memcpy(&buffer[0], address, size);
-				memcpy(address, patch, size);
-				memcpy(patch, &buffer[0], size);
-				::FlushInstructionCache(::GetCurrentProcess(), address, size);
-				::VirtualProtect(address, size, old_mode, &old_mode);
-			}
+		void restore(void *target_function, byte (&backup)[sizeof(jmp)])
+		{
+			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
+			memcpy(target_function, backup, sizeof(jmp));
 		}
 
 		void WINAPI ExitProcessHooked(UINT exit_code)
 		{
-			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
+			restore(g_exitprocess_address, g_backup);
 			g_frontend_controller->force_stop();
 			::ExitProcess(exit_code);
 		}
@@ -69,10 +66,8 @@ namespace micro_profiler
 		void PatchExitProcess()
 		{
 			shared_ptr<void> hkernel(::LoadLibraryW(L"kernel32.dll"), &::FreeLibrary);
-
 			g_exitprocess_address = ::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "ExitProcess");
-			*g_exitprocess_patch_jmp_address = &ExitProcessHooked;
-			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
+			detour(g_exitprocess_address, &ExitProcessHooked, g_backup);
 		}
 	}
 
@@ -130,6 +125,8 @@ namespace micro_profiler
 	};
 }
 
+extern "C" micro_profiler::calls_collector *g_collector_ptr = &micro_profiler::g_collector;
+
 extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reserved*/)
 {
 	using namespace micro_profiler;
@@ -139,8 +136,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reser
 	case DLL_PROCESS_ATTACH:
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-		g_frontend_controller.reset(new frontend_controller(*calls_collector::instance(),
-			isolation_aware_channel_factory(hinstance)));
+		g_frontend_controller.reset(new frontend_controller(g_collector, isolation_aware_channel_factory(hinstance)));
 		break;
 
 	case DLL_PROCESS_DETACH:

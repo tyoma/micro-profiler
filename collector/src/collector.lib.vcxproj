@@ -45,7 +45,6 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\libraries\lend\ld32.c" />
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="binary_image.cpp" />
     <ClCompile Include="calls_collector.cpp" />
@@ -71,7 +70,6 @@
     </MASM>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libraries\lend\ld32.h" />
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\channel_client.h" />

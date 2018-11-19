@@ -83,10 +83,10 @@ namespace micro_profiler
 			i12.init(ecx_);
 			i13.init(edx_);
 
-			i21.init(ecx_, (dword)instance); // 1. instance
+			i21.init(ecx_, (dword)(size_t)instance); // 1. instance
 			i22.init(eax_, 0x0C), i23.init(eax_); // 4. return_address_ptr
 			i24.init(), i25.init(edx_), i26.init(eax_); // 3. timestamp
-			i27.init(edx_, (dword)id); // 2. callee
+			i27.init(edx_, (dword)(size_t)id); // 2. callee
 			i28.init((const void *)(size_t)on_enter);
 
 			i31.init(edx_);
@@ -99,7 +99,7 @@ namespace micro_profiler
 			i51.init(eax_);
 			i52.init(edx_);
 
-			i61.init(ecx_, (dword)instance); // 1. instance
+			i61.init(ecx_, (dword)(size_t)instance); // 1. instance
 			i62.init(), i63.init(edx_), i64.init(eax_); // 2. timestamp
 			i65.init((const void *)(size_t)on_exit);
 			i66.init(ecx_, eax_);

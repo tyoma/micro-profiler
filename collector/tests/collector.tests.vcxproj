@@ -53,6 +53,7 @@
     <ClCompile Include="CallCollectorTests.cpp" />
     <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
+    <ClCompile Include="globals.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
     <ClCompile Include="ImagePatchTests.cpp" />
     <ClCompile Include="mocks.cpp" />
@@ -62,23 +63,11 @@
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
-    <ClCompile Include="TracedFunctions.cpp">
-      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
-      <Optimization>Disabled</Optimization>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="entry.asm">
-      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
-    </MASM>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="globals.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mocks_com.h" />
-    <ClInclude Include="TracedFunctions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

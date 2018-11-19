@@ -31,6 +31,11 @@ namespace micro_profiler
 			void (*f23)(void (*&f1)(), void (*&f2)(), void (*&f3)());
 			void (*f2F)(void (*&f)(int * volatile begin, int * volatile end));
 
+			init( FailX64 )
+			{
+				assert_equal(4u, sizeof(void*));
+			}
+
 			init( LoadGuineas )
 			{
 				images[0].reset(new image(L"symbol_container_1"));

@@ -99,12 +99,18 @@ namespace micro_profiler
 	{
 		if (_return_stack.back().return_address_ptr != return_address_ptr)
 		{
+			// Regular nesting...
 			_return_stack.push_back();
 
 			return_entry &e = _return_stack.back();
 
 			e.return_address_ptr = return_address_ptr;
 			e.return_address = *return_address_ptr;
+		}
+		else
+		{
+			// Tail-call optimization...
+			track(0, timestamp);
 		}
 		track(callee, timestamp);
 	}

@@ -54,24 +54,26 @@ namespace micro_profiler
 
 			add_esp_imm8 i41;	// add esp, 4
 			call_rel_imm32 i42;	// call callee
+			sub_esp_imm8 i43;	// sub esp, 4
 
 			push i51;	// push eax
-			push i52;	// push edx
+			push i52;	// push ecx
+			push i53;	// push edx
 
 			mov_imm32 i61;	// mov ecx, instance ; 1st
 			rdtsc i62;
 			push i63;	// push edx ; 2nd
 			push i64;	// push eax ; 2nd
 			call_rel_imm32 i65;	// call on_exit
-			mov_reg_reg i66;	// mov ecx, eax
+			mov_im_offset8_reg i66;	// mov [esp + 0x0C], eax
 
 			pop i71;	// pop edx
-			pop i72;	// pop eax
+			pop i72;	// pop ecx
+			pop i73;	// pop eax
 
-			push i81;	// push ecx
-			ret i82;	// ret
+			ret i81;	// ret
 
-			byte padding[4];
+			byte padding[14];
 		};
 
 
@@ -95,20 +97,22 @@ namespace micro_profiler
 			
 			i41.init(0x04);
 			i42.init(callee);
+			i43.init(0x04);
 
 			i51.init(eax_);
-			i52.init(edx_);
+			i52.init(ecx_);
+			i53.init(edx_);
 
 			i61.init(ecx_, (dword)(size_t)instance); // 1. instance
 			i62.init(), i63.init(edx_), i64.init(eax_); // 2. timestamp
 			i65.init((const void *)(size_t)on_exit);
-			i66.init(ecx_, eax_);
+			i66.init(0x0C, eax_);
 
 			i71.init(edx_);
-			i72.init(eax_);
+			i72.init(ecx_);
+			i73.init(eax_);
 
-			i81.init(ecx_);
-			i82.init();
+			i81.init();
 
 			memset(padding, 0xCC, sizeof(padding));
 		}

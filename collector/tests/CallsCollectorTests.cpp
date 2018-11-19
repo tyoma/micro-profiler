@@ -169,13 +169,14 @@ namespace micro_profiler
 			test( CollectEntryExitOnNestingFunction )
 			{
 				// INIT
+				const void *pseudo_stack[2];
 				collection_acceptor a;
 
 				// ACT
-				calls_collector::on_enter(collector.get(), (void *)0x12345678, 100, &dummy);
-					calls_collector::on_enter(collector.get(), (void *)0xABAB00, 110, &dummy);
+				calls_collector::on_enter(collector.get(), (void *)0x12345678, 100, pseudo_stack + 0);
+					calls_collector::on_enter(collector.get(), (void *)0xABAB00, 110, pseudo_stack + 1);
 					calls_collector::on_exit(collector.get(), 10010);
-					calls_collector::on_enter(collector.get(), (void *)0x12345678, 10011, &dummy);
+					calls_collector::on_enter(collector.get(), (void *)0x12345678, 10011, pseudo_stack + 1);
 					calls_collector::on_exit(collector.get(), 100100);
 				calls_collector::on_exit(collector.get(), 100105);
 				collector->read_collected(a);
@@ -333,6 +334,51 @@ namespace micro_profiler
 				assert_equal((const void *)0x222211, calls_collector::on_exit(collector.get(), 0));
 				assert_equal((const void *)0xFF00FF00, calls_collector::on_exit(collector.get(), 0));
 				assert_equal(return_address[0], calls_collector::on_exit(collector.get(), 0));
+			}
+
+		
+			test( FunctionExitIsRecordedOnTailCallOptimization )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+				};
+				collection_acceptor a;
+
+				// ACT
+				calls_collector::on_enter(collector.get(), (void *)1, 0, return_address + 0);
+				calls_collector::on_enter(collector.get(), (void *)2, 11, return_address + 1);
+				return_address[1] = (const void *)0x12345;
+				calls_collector::on_enter(collector.get(), (void *)3, 120, return_address + 1);
+
+				// ASSERT
+				collector->read_collected(a);
+
+				call_record reference1[] = {
+					{ 0, (void *)1 },
+						{ 11, (void *)2 }, { 120, 0 },
+						{ 120, (void *)3 },
+				};
+
+				assert_equal(reference1, a.collected[0].second);
+
+				// ACT
+				calls_collector::on_enter(collector.get(), (void *)4, 140, return_address + 2);
+				calls_collector::on_enter(collector.get(), (void *)5, 150, return_address + 3);
+				return_address[3] = (const void *)0x777;
+				calls_collector::on_enter(collector.get(), (void *)6, 1000, return_address + 3);
+
+				// ASSERT
+				collector->read_collected(a);
+
+				call_record reference2[] = {
+							{ 140, (void *)4 },
+								{ 150, (void *)5 }, { 1000, 0 },
+								{ 1000, (void *)6 },
+				};
+
+				assert_equal(reference2, a.collected[1].second);
 			}
 		end_test_suite
 	}

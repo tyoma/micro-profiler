@@ -23,10 +23,11 @@
 #include <collector/binary_image.h>
 #include <collector/calls_collector.h>
 #include <collector/image_patch.h>
-#include <common/allocator.h>
 
+#include <common/allocator.h>
 #include <common/module.h>
 #include <iostream>
+#include <set>
 
 using namespace std;
 
@@ -36,14 +37,20 @@ namespace micro_profiler
 {
 	void patched_image::patch_image(void *in_image_address)
 	{
+		set<const void *> patched;
+
 		std::shared_ptr<binary_image> image = load_image_at((void *)get_module_info(in_image_address).load_address);
 		executable_memory_allocator em;
 		int n = 0;
 
-		image->enumerate_functions([this, &em, &n] (const function_body &fn) {
+		image->enumerate_functions([&] (const function_body &fn) {
 			try
 			{
-				if (fn.name() == "_VEC_memcpy")
+				if (!patched.insert(fn.body().begin()).second)
+				{
+					cout << fn.name() << " - the function has already been patched!" << endl;
+				}
+				else if (fn.name() == "_VEC_memcpy")
 				{
 				}
 				else if (fn.body().length() >= 5)

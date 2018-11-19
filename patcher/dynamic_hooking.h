@@ -30,8 +30,8 @@ namespace micro_profiler
 	struct hooks
 	{
 		typedef void (CC_(fastcall) on_enter_t)(InterceptorT *interceptor, const void *callee, timestamp_t timestamp,
-			void **return_address_ptr) _CC(fastcall);
-		typedef void *(CC_(fastcall) on_exit_t)(InterceptorT *interceptor, timestamp_t timestamp) _CC(fastcall);
+			const void **return_address_ptr) _CC(fastcall);
+		typedef const void *(CC_(fastcall) on_exit_t)(InterceptorT *interceptor, timestamp_t timestamp) _CC(fastcall);
 
 		static hooks<void>::on_enter_t *on_enter()
 		{	return reinterpret_cast<hooks<void>::on_enter_t *>(static_cast<on_enter_t *>(&InterceptorT::on_enter));	}

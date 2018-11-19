@@ -23,8 +23,8 @@ IF _M_IX86
 	.model flat
 	.code
 
-	extern ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PBX_JPAPAX@Z:near
-	extern ?on_exit@calls_collector@micro_profiler@@SIPAXPAV12@_J@Z:near
+	extern ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PBX_JPAPBX@Z:near
+	extern ?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@_J@Z:near
 	extern _g_collector_ptr:dword
 
 	PUSHREGS	macro
@@ -47,29 +47,33 @@ IF _M_IX86
 
 	_profile_enter	proc
 		PUSHREGS
+
 		mov	ecx, [_g_collector_ptr]
 		lea	eax, [esp + 0Ch]
 		push	eax
 		PUSHRDTSC
 		mov	edx, [esp + 18h]
-		call	?on_enter@calls_collector@micro_profiler@@SIXPAV12@PBX_JPAPAX@Z
+		call	?on_enter@calls_collector@micro_profiler@@SIXPAV12@PBX_JPAPBX@Z
+
 		POPREGS
 		ret
 	_profile_enter	endp
 
 	_profile_exit	proc
 		PUSHREGS
+
 		mov	ecx, [_g_collector_ptr]
 		PUSHRDTSC
-		call	?on_exit@calls_collector@micro_profiler@@SIPAXPAV12@_J@Z
+		call	?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@_J@Z
+
 		POPREGS
 		ret
 	_profile_exit	endp
 ELSEIF _M_X64
 	.code
 
-	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEBX_JPEAPEAX@Z:near
-	extrn ?on_exit@calls_collector@micro_profiler@@SAPEAXPEAV12@_J@Z:near
+	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEBX_JPEAPEBX@Z:near
+	extrn ?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@_J@Z:near
 	extern g_collector_ptr:qword
 
 	PUSHREGS	macro
@@ -111,8 +115,7 @@ ELSEIF _M_X64
 		RDTSC64
 		mov	r8, rdx
 		mov rdx, [r9]
-
-		call	?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEBX_JPEAPEAX@Z
+		call ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEBX_JPEAPEBX@Z
 
 		add	rsp, 20h
 		POPREGS
@@ -126,7 +129,7 @@ ELSEIF _M_X64
 
 		mov	rcx, [g_collector_ptr]
 		RDTSC64
-		call	?on_exit@calls_collector@micro_profiler@@SAPEAXPEAV12@_J@Z
+		call	?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@_J@Z
 
 		add	rsp, 30h
 		movdqu	xmm0, [rsp - 10h]

@@ -18,7 +18,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void *dummy = 0;
+			const void *dummy = 0;
 
 			struct collection_acceptor : calls_collector_i::acceptor
 			{
@@ -56,7 +56,7 @@ namespace micro_profiler
 		}
 
 
-		begin_test_suite( CallCollectorTests )
+		begin_test_suite( CallsCollectorTests )
 
 			auto_ptr<calls_collector> collector;
 
@@ -251,6 +251,88 @@ namespace micro_profiler
 				assert_is_empty(a1.collected);
 				assert_is_empty(a2.collected);
 				assert_is_empty(a3.collected);
+			}
+
+
+			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
+			{
+				// INIT
+				calls_collector c1(1000), c2(1000);
+				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
+
+				// ACT
+				calls_collector::on_enter(&c1, 0, 0, return_address + 0);
+				calls_collector::on_enter(&c2, 0, 0, return_address + 1);
+
+				// ACT / ASSERT
+				assert_equal(return_address[0], calls_collector::on_exit(&c1, 0));
+				assert_equal(return_address[1], calls_collector::on_exit(&c2, 0));
+			}
+
+
+			test( ReturnAddressesAreStoredByValue )
+			{
+				// INIT
+				calls_collector c1(1000), c2(1000);
+				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
+
+				calls_collector::on_enter(&c1, 0, 0, return_address + 0);
+				calls_collector::on_enter(&c2, 0, 0, return_address + 1);
+
+				// ACT
+				return_address[0] = 0, return_address[1] = 0;
+
+				// ACT / ASSERT
+				assert_equal((const void *)0x122211, calls_collector::on_exit(&c1, 0));
+				assert_equal((const void *)0xFF00FF00, calls_collector::on_exit(&c2, 0));
+			}
+
+
+			test( ReturnAddressesAreReturnedInLIFOOrderForNestedCalls )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+				};
+
+				// ACT
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 0);
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 1);
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 3);
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
+
+				// ACT / ASSERT
+				assert_equal(return_address[2], calls_collector::on_exit(collector.get(), 0));
+				assert_equal(return_address[3], calls_collector::on_exit(collector.get(), 0));
+				assert_equal(return_address[2], calls_collector::on_exit(collector.get(), 0));
+				assert_equal(return_address[1], calls_collector::on_exit(collector.get(), 0));
+				assert_equal(return_address[0], calls_collector::on_exit(collector.get(), 0));
+			}
+
+
+			test( ReturnAddressIsPreservedForTailCallOptimization )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+				};
+
+				// ACT
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 0);
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 1);
+				return_address[1] = (const void *)0x12345;
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 1);
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
+				return_address[2] = (const void *)0x52345;
+				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
+
+				// ACT / ASSERT
+				assert_equal((const void *)0x222211, calls_collector::on_exit(collector.get(), 0));
+				assert_equal((const void *)0xFF00FF00, calls_collector::on_exit(collector.get(), 0));
+				assert_equal(return_address[0], calls_collector::on_exit(collector.get(), 0));
 			}
 		end_test_suite
 	}

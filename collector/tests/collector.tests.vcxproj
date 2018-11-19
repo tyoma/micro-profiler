@@ -50,7 +50,7 @@
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="BinaryImageTests.cpp" />
-    <ClCompile Include="CallCollectorTests.cpp" />
+    <ClCompile Include="CallsCollectorTests.cpp" />
     <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="globals.cpp" />

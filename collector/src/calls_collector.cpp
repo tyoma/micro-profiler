@@ -46,14 +46,21 @@ namespace micro_profiler
 		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
 
-		void track(const void *callee, timestamp_t timestamp) throw();
-		bool try_track(const void *callee, timestamp_t timestamp) throw();
+		void CC_(fastcall) on_enter(const void *callee, timestamp_t timestamp,
+			const void **return_address_ptr) _CC(fastcall);
+		const void *CC_(fastcall) on_exit(timestamp_t timestamp) _CC(fastcall);
+
 		void read_collected(acceptor &a);
 
 	private:
+		struct return_entry;
+
 		typedef pod_vector<call_record> trace_t;
+		typedef pod_vector<return_entry> return_stack_t;
 
 	private:
+		void track(const void *callee, timestamp_t timestamp) throw();
+
 		void operator =(const thread_trace_block &);
 
 	private:
@@ -62,44 +69,77 @@ namespace micro_profiler
 		event_flag _proceed_collection;
 		trace_t _traces[2];
 		trace_t * volatile _active_trace, * volatile _inactive_trace;
+		return_stack_t _return_stack;
+	};
+
+	struct calls_collector::thread_trace_block::return_entry
+	{
+		const void **return_address_ptr;
+		const void *return_address;
 	};
 
 
 	calls_collector::thread_trace_block::thread_trace_block(unsigned int thread_id, size_t trace_limit)
 		: _thread_id(thread_id), _trace_limit(sizeof(call_record) * trace_limit), _proceed_collection(false, true),
 			_active_trace(&_traces[0]), _inactive_trace(&_traces[1])
-	{	}
+	{
+		return_entry re = { };
+		_return_stack.push_back(re);
+	}
 
 	calls_collector::thread_trace_block::thread_trace_block(const thread_trace_block &other)
 		: _thread_id(other._thread_id), _trace_limit(other._trace_limit), _proceed_collection(false, true),
 			_active_trace(&_traces[0]), _inactive_trace(&_traces[1])
-	{	}
+	{
+		return_entry re = { };
+		_return_stack.push_back(re);
+	}
+
+	void CC_(fastcall) calls_collector::thread_trace_block::on_enter(const void *callee, timestamp_t timestamp,
+		const void **return_address_ptr) _CC(fastcall)
+	{
+		//if (_return_stack.back().return_address_ptr == return_address_ptr)
+		//	__asm int 3
+		if (_return_stack.back().return_address_ptr != return_address_ptr)
+		{
+			return_entry re = { return_address_ptr, *return_address_ptr };
+			_return_stack.push_back(re);
+		}
+		track(callee, timestamp);
+	}
+
+	const void *CC_(fastcall) calls_collector::thread_trace_block::on_exit(timestamp_t timestamp) _CC(fastcall)
+	{
+		const void *return_address = _return_stack.back().return_address;
+
+		_return_stack.pop_back();
+		track(0, timestamp);
+		return return_address;
+	}
 
 	__forceinline void calls_collector::thread_trace_block::track(const void *callee, timestamp_t timestamp) throw()
 	{
-		while (!try_track(callee, timestamp))
-			_proceed_collection.wait();
-	}
-
-	__forceinline bool calls_collector::thread_trace_block::try_track(const void *callee, timestamp_t timestamp) throw()
-	{
-		trace_t * trace = 0;
-
-		do
-			trace = atomic_compare_exchange(_active_trace, trace, _active_trace);
-		while (!trace);
-
-		bool enough_space = trace->byte_size() < _trace_limit;
-
-		if (enough_space)
+		for (;;)
 		{
-			call_record call = { timestamp, callee };
-			trace->push_back(call);
+			trace_t * trace = 0;
+
+			do
+				trace = atomic_compare_exchange(_active_trace, trace, _active_trace);
+			while (!trace);
+
+			if (trace->byte_size() < _trace_limit)
+			{
+				call_record call = { timestamp, callee };
+				trace->push_back(call);
+				atomic_store(_active_trace, trace);
+				break;
+			}
+			else
+			{
+				atomic_store(_active_trace, trace);
+				_proceed_collection.wait();
+			}
 		}
-
-		atomic_store(_active_trace, trace);
-
-		return enough_space;
 	}
 
 	void calls_collector::thread_trace_block::read_collected(acceptor &a)
@@ -158,16 +198,16 @@ namespace micro_profiler
 	}
 
 	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void *callee, timestamp_t timestamp,
-		void **return_address_ptr) _CC(fastcall)
+		const void **return_address_ptr) _CC(fastcall)
 	{
-		return_address_ptr;
-		instance->get_current_thread_trace().track(callee, timestamp);
+		instance->get_current_thread_trace()
+			.on_enter(callee, timestamp, return_address_ptr);
 	}
 
-	void *CC_(fastcall) calls_collector::on_exit(calls_collector *instance, timestamp_t timestamp) _CC(fastcall)
+	const void *CC_(fastcall) calls_collector::on_exit(calls_collector *instance, timestamp_t timestamp) _CC(fastcall)
 	{
-		instance->get_current_thread_trace_guaranteed().track(0, timestamp);
-		return 0;
+		return instance->get_current_thread_trace_guaranteed()
+			.on_exit(timestamp);
 	}
 
 	timestamp_t calls_collector::profiler_latency() const throw()

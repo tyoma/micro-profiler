@@ -68,20 +68,23 @@ namespace micro_profiler
 		bool grow(size_t by = 0) throw();
 
 	private:
-		T *_begin, *_end, *_limit;
+		T *_end, *_begin, *_limit;
 	};
 
 
 	// pod_vector<T> - inline definitions
 	template <typename T>
 	inline pod_vector<T>::pod_vector(size_t initial_capacity)
-		: _begin(new T[initial_capacity]), _end(_begin), _limit(_begin + initial_capacity)
-	{	}
+		: _begin(new T[initial_capacity]), _limit(_begin + initial_capacity)
+	{	_end = _begin;	}
 
 	template <typename T>
 	inline pod_vector<T>::pod_vector(const pod_vector &other)
-		: _begin(new T[other.capacity()]), _end(_begin + other.size()), _limit(_begin + other.capacity())
-	{	std::copy(other.data(), other.data() + other.size(), _begin);	}
+		: _begin(new T[other.capacity()]), _limit(_begin + other.capacity())
+	{
+		_end = _begin + other.size();
+		std::copy(other.data(), other.data() + other.size(), _begin);
+	}
 
 	template <typename T>
 	inline pod_vector<T>::~pod_vector() throw()

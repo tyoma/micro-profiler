@@ -64,6 +64,7 @@
     <ClInclude Include="..\pod_vector.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\protocol.h" />
+    <ClInclude Include="..\queue.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />

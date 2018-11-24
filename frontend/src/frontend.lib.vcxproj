@@ -39,6 +39,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="async_symbol_resolver.cpp" />
     <ClCompile Include="frontend.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -54,6 +55,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\async_symbol_resolver.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\frontend_manager_impl.h" />

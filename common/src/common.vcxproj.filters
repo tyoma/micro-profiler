@@ -34,5 +34,6 @@
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="..\constants.h" />
+    <ClInclude Include="..\queue.h" />
   </ItemGroup>
 </Project>

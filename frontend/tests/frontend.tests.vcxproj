@@ -46,6 +46,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AsyncSymbolResolverTests.cpp" />
     <ClCompile Include="ColumnsModelTests.cpp" />
     <ClCompile Include="CommandTargetTests.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -57,6 +58,9 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="SymbolResolverTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mocks.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

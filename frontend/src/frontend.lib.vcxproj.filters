@@ -19,6 +19,9 @@
     <ClCompile Include="symbol_resolver.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="async_symbol_resolver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend.h" />
@@ -31,6 +34,7 @@
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\series.h" />
+    <ClInclude Include="..\async_symbol_resolver.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

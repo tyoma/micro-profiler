@@ -153,7 +153,7 @@ namespace micro_profiler
 
 	void calls_collector::read_collected(acceptor &a)
 	{
-		scoped_lock l(_thread_blocks_mtx);
+		lock_guard<mutex> l(_thread_blocks_mtx);
 
 		for (list<thread_trace_block>::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
 			i->read_collected(a);
@@ -185,7 +185,7 @@ namespace micro_profiler
 
 	calls_collector::thread_trace_block &calls_collector::construct_thread_trace()
 	{
-		scoped_lock l(_thread_blocks_mtx);
+		lock_guard<mutex> l(_thread_blocks_mtx);
 
 		calls_collector::thread_trace_block &trace = *_call_traces.insert(_call_traces.end(), thread_trace_block(current_thread_id(), _trace_limit));
 		_trace_pointers_tls.set(&trace);

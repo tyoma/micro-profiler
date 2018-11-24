@@ -70,7 +70,7 @@ namespace micro_profiler
 					{
 						for (;; data->changed_event.wait())
 						{
-							scoped_lock l(data->server_mutex);
+							lock_guard<mutex> l(data->server_mutex);
 
 							if (data->session_count == expected_count)
 								return;
@@ -79,14 +79,14 @@ namespace micro_profiler
 
 					void add_output(const vector<byte> &data_)
 					{
-						scoped_lock l(data->server_mutex);
+						lock_guard<mutex> l(data->server_mutex);
 
 						data->outputs.push_back(data_);
 					}
 
 					deque< vector<byte> > get_inputs()
 					{
-						scoped_lock l(data->server_mutex);
+						lock_guard<mutex> l(data->server_mutex);
 
 						return data->inputs;
 					}
@@ -106,7 +106,7 @@ namespace micro_profiler
 				mock_session::mock_session(const shared_ptr<server_data> &data)
 					: _data(data)
 				{
-					scoped_lock l(_data->server_mutex);
+					lock_guard<mutex> l(_data->server_mutex);
 						
 					++_data->session_count;
 					data->changed_event.raise();
@@ -114,7 +114,7 @@ namespace micro_profiler
 
 				mock_session::~mock_session()
 				{
-					scoped_lock l(_data->server_mutex);
+					lock_guard<mutex> l(_data->server_mutex);
 						
 					--_data->session_count;
 					_data->changed_event.raise();
@@ -122,7 +122,7 @@ namespace micro_profiler
 
 				void mock_session::on_message(const vector<byte> &input, vector<byte> &output)
 				{
-					scoped_lock l(_data->server_mutex);
+					lock_guard<mutex> l(_data->server_mutex);
 
 					_data->inputs.push_back(input);
 					output = _data->outputs.front();

@@ -134,7 +134,7 @@ namespace micro_profiler
 
 			void Tracer::read_collected(acceptor &a)
 			{
-				scoped_lock l(_mutex);
+				lock_guard<mutex> l(_mutex);
 
 				for (TracesMap::const_iterator i = _traces.begin(); i != _traces.end(); ++i)
 				{

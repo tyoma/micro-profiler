@@ -71,7 +71,7 @@ namespace micro_profiler
 			template <size_t size>
 			inline void Tracer::Add(wpl::mt::thread::id threadid, call_record (&trace_chunk)[size])
 			{
-				scoped_lock l(_mutex);
+				lock_guard<mutex> l(_mutex);
 				_traces[threadid].insert(_traces[threadid].end(), trace_chunk, trace_chunk + size);
 			}
 		}

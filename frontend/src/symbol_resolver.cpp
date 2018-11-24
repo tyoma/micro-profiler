@@ -38,18 +38,11 @@ namespace micro_profiler
 			dbghelp_symbol_resolver();
 			virtual ~dbghelp_symbol_resolver();
 
-			virtual const wstring &symbol_name_by_va(address_t address) const;
-			virtual pair<wstring, unsigned> symbol_fileline_by_va(address_t address) const;
-			virtual void add_image(const wchar_t *image, address_t load_address);
-
-		private:
-			typedef unordered_map<address_t, wstring, address_compare> cached_names_map;
+			virtual bool get_symbol(address_t address, symbol_t &symbol) const;
+			virtual void add_image(const wstring &image, address_t base_address);
 
 		private:
 			HANDLE me() const;
-
-		private:
-			mutable cached_names_map _names;
 		};
 
 
@@ -65,48 +58,41 @@ namespace micro_profiler
 		HANDLE dbghelp_symbol_resolver::me() const
 		{	return reinterpret_cast<HANDLE>(const_cast<dbghelp_symbol_resolver *>(this));	}
 
-		const wstring &dbghelp_symbol_resolver::symbol_name_by_va(address_t address) const
+		bool dbghelp_symbol_resolver::get_symbol(address_t address, symbol_t &symbol_) const
 		{
-			cached_names_map::iterator i = _names.find(address);
-
-			if (i == _names.end())
-			{
-				SYMBOL_INFO symbol = { };
-				shared_ptr<SYMBOL_INFO> symbol2;
-
-				symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
-				symbol.MaxNameLen = 5;
-				do
-				{
-					symbol2.reset(static_cast<SYMBOL_INFO *>(malloc(sizeof(SYMBOL_INFO) + symbol.MaxNameLen)), &free);
-					*symbol2 = symbol;
-					symbol.MaxNameLen <<= 1;
-					::SymFromAddr(me(), address, 0, symbol2.get());
-				} while (symbol2->MaxNameLen == symbol2->NameLen);
-				i = _names.insert(make_pair(address, unicode(symbol2->Name))).first;
-			}
-			return i->second;
-		}
-
-		pair<wstring, unsigned> dbghelp_symbol_resolver::symbol_fileline_by_va(address_t address) const
-		{
+			SYMBOL_INFO symbol = { };
+			shared_ptr<SYMBOL_INFO> symbol2;
 			DWORD displacement;
 			IMAGEHLP_LINEW64 info = { sizeof(IMAGEHLP_LINEW64), };
 
-			return ::SymGetLineFromAddrW64(me(), address, &displacement, &info)
-				? pair<wstring, unsigned>(info.FileName, info.LineNumber) : pair<wstring, unsigned>();
+			symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
+			symbol.MaxNameLen = 5;
+			do
+			{
+				symbol2.reset(static_cast<SYMBOL_INFO *>(malloc(sizeof(SYMBOL_INFO) + symbol.MaxNameLen)), &free);
+				*symbol2 = symbol;
+				symbol.MaxNameLen <<= 1;
+				if (!::SymFromAddr(me(), address, 0, symbol2.get()))
+					return false;
+			} while (symbol2->MaxNameLen == symbol2->NameLen);
+			symbol_.name = unicode(symbol2->Name);
+			if (::SymGetLineFromAddrW64(me(), address, &displacement, &info))
+				symbol_.file = info.FileName, symbol_.line = info.LineNumber;
+			else
+				symbol_.file.clear(), symbol_.line = 0;
+			return true;
 		}
 
-		void dbghelp_symbol_resolver::add_image(const wchar_t *image, address_t load_address)
+		void dbghelp_symbol_resolver::add_image(const wstring &image, address_t base_address)
 		{
 			string image_path_ansi = unicode(image);
 
 			::SetLastError(0);
-			if (::SymLoadModule64(me(), NULL, image_path_ansi.c_str(), NULL, load_address, 0))
+			if (::SymLoadModule64(me(), NULL, image_path_ansi.c_str(), NULL, base_address, 0))
 			{
 				if (ERROR_SUCCESS == ::GetLastError() || INVALID_FILE_ATTRIBUTES != GetFileAttributesA(image_path_ansi.c_str()))
 					return;
-				::SymUnloadModule64(me(), load_address);
+				::SymUnloadModule64(me(), base_address);
 			}
 			throw invalid_argument("");
 		}

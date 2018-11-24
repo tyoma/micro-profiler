@@ -74,9 +74,8 @@ namespace micro_profiler
 
 	struct functions_list::static_resolver : public symbol_resolver
 	{
-		virtual const std::wstring &symbol_name_by_va(address_t address) const;
-		virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(address_t address) const;
-		virtual void add_image(const wchar_t *image, address_t load_address);
+		virtual bool get_symbol(address_t address, symbol_t &symbol) const;
+		virtual void add_image(const std::wstring &image, address_t base_address);
 
 		mutable std::unordered_map<address_t, std::wstring> symbols;
 	};
@@ -86,10 +85,12 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline void functions_list::save(ArchiveT &archive) const
 	{
+		symbol_resolver::symbol_t symbol;
+
 		archive(static_cast<timestamp_t>(1 / _tick_interval));
 		archive(_statistics->size());
 		for (statistics_map_detailed::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
-			archive(make_pair(i->first, _resolver->symbol_name_by_va(i->first)));
+			archive(make_pair(i->first, (_resolver->get_symbol(i->first, symbol), symbol.name)));
 		archive(*_statistics);
 	}
 

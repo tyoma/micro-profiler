@@ -147,11 +147,10 @@ namespace micro_profiler
 
 	void tables_ui::on_activate(wpl::ui::index_traits::index_type index)
 	{
-		const address_t address = _statistics->get_address(index);
-		const pair<wstring, unsigned> fileline = _statistics->get_resolver()->symbol_fileline_by_va(address);
+		symbol_resolver::symbol_t symbol;
 
-		if (!fileline.first.empty())
-			open_source(fileline.first, fileline.second);
+		if (_statistics->get_resolver()->get_symbol(_statistics->get_address(index), symbol) && !symbol.file.empty())
+			open_source(symbol.file, symbol.line);
 	}
 
 	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, listview::index_type index)

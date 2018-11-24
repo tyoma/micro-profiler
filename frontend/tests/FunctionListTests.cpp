@@ -141,21 +141,17 @@ namespace micro_profiler
 					: names(symbols, symbols + n)
 				{	}
 
-				virtual const wstring &symbol_name_by_va(address_t address) const
+				virtual bool get_symbol(address_t address, symbol_t &symbol) const
 				{
 					map<address_t, wstring>::const_iterator i = names.find(address);
 
 					if (i == names.end())
 						i = names.insert(make_pair(address, to_string_address(address))).first;
-					return i->second;
+					symbol.name = i->second;
+					return true;
 				}
 
-				virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(address_t /*address*/) const
-				{
-					throw 0;
-				}
-
-				virtual void add_image(const wchar_t * /*image*/, address_t /*base*/)
+				virtual void add_image(const wstring &/*image*/, address_t /*base*/)
 				{
 				}
 

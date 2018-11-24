@@ -75,7 +75,12 @@ namespace micro_profiler
 
 			template <typename AnyT>
 			bool operator ()(address_t lhs_addr, const AnyT &, address_t rhs_addr, const AnyT &) const
-			{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
+			{
+				symbol_resolver::symbol_t symbol_lhs, symbol_rhs;
+
+				_resolver->get_symbol(lhs_addr, symbol_lhs), _resolver->get_symbol(rhs_addr, symbol_rhs);
+				return symbol_lhs.name < symbol_rhs.name;
+			}
 
 		private:
 			shared_ptr<symbol_resolver> _resolver;
@@ -234,12 +239,13 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
 	{
+		symbol_resolver::symbol_t symbol;
 		const view_type::value_type &row = get_entry(item);
 
 		switch (subitem)
 		{
 		case 0:	text = to_string2(item + 1);	break;
-		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
+		case 1:	_resolver->get_symbol(row.first, symbol), text = symbol.name;	break;
 		case 2:	text = to_string2(row.second.times_called);	break;
 		case 3:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
 		case 4:	format_interval(text, inclusive_time(_tick_interval)(row.second));	break;
@@ -326,9 +332,11 @@ namespace micro_profiler
 		content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
 		for (index_type i = 0; i != get_count(); ++i)
 		{
+			symbol_resolver::symbol_t symbol;
 			const view_type::value_type &row = get_entry(i);
 
-			content += _resolver->symbol_name_by_va(row.first) + L"\t";
+			_resolver->get_symbol(row.first, symbol);
+			content += symbol.name + L"\t";
 			content += to_string2(row.second.times_called) + L"\t";
 			content += to_string2(exclusive_time(_tick_interval)(row.second)) + L"\t";
 			content += to_string2(inclusive_time(_tick_interval)(row.second)) + L"\t";
@@ -402,11 +410,12 @@ namespace micro_profiler
 		wstring &text) const
 	{
 		const statistics_map_callers::value_type &row = get_entry(item);
+		symbol_resolver::symbol_t symbol;
 
 		switch (subitem)
 		{
 		case 0:	text = to_string2(item + 1);	break;
-		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
+		case 1:	_resolver->get_symbol(row.first, symbol), text = symbol.name;	break;
 		case 2:	text = to_string2(row.second);	break;
 		}
 	}
@@ -430,12 +439,12 @@ namespace micro_profiler
 	}
 
 
-	const wstring &functions_list::static_resolver::symbol_name_by_va(address_t address) const
-	{	return symbols[address];	}
+	bool functions_list::static_resolver::get_symbol(address_t address, symbol_t &symbol) const
+	{
+		symbol.name = symbols[address];
+		return true;
+	}
 
-	pair<wstring, unsigned> functions_list::static_resolver::symbol_fileline_by_va(address_t /*address*/) const
-	{	return make_pair(L"", 0);	}
-
-	void functions_list::static_resolver::add_image(const wchar_t * /*image*/, address_t /*load_address*/)
+	void functions_list::static_resolver::add_image(const wstring &/*image*/, address_t /*base_address*/)
 	{	}
 }

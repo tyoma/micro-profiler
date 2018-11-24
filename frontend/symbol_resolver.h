@@ -29,11 +29,19 @@ namespace micro_profiler
 {
 	struct symbol_resolver
 	{
+		struct symbol_t;
+
 		virtual ~symbol_resolver()	{	}
-		virtual const std::wstring &symbol_name_by_va(address_t address) const = 0;
-		virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(address_t address) const = 0;
-		virtual void add_image(const wchar_t *image, address_t load_address) = 0;
+		virtual bool get_symbol(address_t address, symbol_t &symbol) const = 0;
+		virtual void add_image(const std::wstring &path, address_t base_address) = 0;
 
 		static std::shared_ptr<symbol_resolver> create();
+	};
+
+	struct symbol_resolver::symbol_t
+	{
+		std::wstring name;
+		std::wstring file;
+		unsigned int line;
 	};
 }

@@ -57,10 +57,10 @@ namespace micro_profiler
 	mutex::~mutex()
 	{	::DeleteCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
 
-	void mutex::enter()
+	void mutex::lock()
 	{	::EnterCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
 
-	void mutex::leave()
+	void mutex::unlock()
 	{	::LeaveCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
 
 

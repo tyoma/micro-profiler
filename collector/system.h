@@ -29,38 +29,47 @@ namespace micro_profiler
 
 	class mutex
 	{
-		char _mtx_buffer[6 * sizeof(void*)];
-
-		mutex(const mutex &);
-		mutex &operator =(const mutex &);
-
 	public:
 		mutex();
 		~mutex();
 
-		void enter();
-		void leave();
+		void lock();
+		void unlock();
+
+	private:
+		mutex(const mutex &);
+		mutex &operator =(const mutex &);
+
+	private:
+		char _mtx_buffer[6 * sizeof(void*)];
 	};
 
-	class scoped_lock
+	template <typename MutexT>
+	class lock_guard
 	{
-		mutex &_mutex;
-
-		scoped_lock(const scoped_lock &other);
-		const scoped_lock &operator =(const scoped_lock &rhs);
-
 	public:
-		scoped_lock(mutex &mtx) throw();
-		~scoped_lock() throw();
+		explicit lock_guard(MutexT &mtx) throw();
+		~lock_guard() throw();
+
+	private:
+		lock_guard(const lock_guard &other);
+		const lock_guard &operator =(const lock_guard &rhs);
+
+	private:
+		MutexT &_mutex;
 	};
 
-	
-	inline scoped_lock::scoped_lock(mutex &mtx) throw()
-		: _mutex(mtx)
-	{	_mutex.enter();	}
 
-	inline scoped_lock::~scoped_lock() throw()
-	{	_mutex.leave();	}
+
+	template <typename MutexT>
+	inline lock_guard<MutexT>::lock_guard(MutexT &mtx) throw()
+		: _mutex(mtx)
+	{	_mutex.lock();	}
+
+	template <typename MutexT>
+	inline lock_guard<MutexT>::~lock_guard() throw()
+	{	_mutex.unlock();	}
+
 
 	template <typename T, size_t ObjectSize>
 	struct atomic

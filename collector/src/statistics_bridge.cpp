@@ -63,14 +63,14 @@ namespace micro_profiler
 
 	void image_load_queue::load(const void *in_image_address)
 	{
-		scoped_lock l(_mtx);
+		lock_guard<mutex> l(_mtx);
 
 		_lqueue.push_back(get_module_info(in_image_address));
 	}
 
 	void image_load_queue::unload(const void *in_image_address)
 	{
-		scoped_lock l(_mtx);
+		lock_guard<mutex> l(_mtx);
 
 		_uqueue.push_back(get_module_info(in_image_address).load_address);
 	}
@@ -80,7 +80,7 @@ namespace micro_profiler
 		loaded_modules_.clear();
 		unloaded_modules_.clear();
 
-		scoped_lock l(_mtx);
+		lock_guard<mutex> l(_mtx);
 
 		loaded_modules_.insert(loaded_modules_.end(), _lqueue.begin(), _lqueue.end());
 		unloaded_modules_.insert(unloaded_modules_.end(), _uqueue.begin(), _uqueue.end());

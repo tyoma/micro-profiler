@@ -59,7 +59,11 @@ namespace micro_profiler
 	{	::CoDisconnectObject(this, 0);	}
 
 	void Frontend::FinalRelease()
-	{	released();	}
+	{
+		if (_model)
+			_model->release_resolver();
+		released();
+	}
 
 	STDMETHODIMP Frontend::Read(void *, ULONG, ULONG *)
 	{	return E_NOTIMPL;	}

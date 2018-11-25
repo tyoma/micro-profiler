@@ -36,12 +36,13 @@ namespace micro_profiler
 		typedef typename BaseT::index_type index_type;
 
 	public:
-		statistics_model_impl(const MapT &statistics, double tick_interval, std::shared_ptr<symbol_resolver> resolver);
-		~statistics_model_impl();
+		statistics_model_impl(const MapT &statistics, double tick_interval);
+
+		void set_resolver(const std::shared_ptr<symbol_resolver> &resolver);
 
 		std::shared_ptr< series<double> > get_column_series() const;
 
-		void detach() throw();
+		virtual void detach() throw();
 
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
@@ -57,7 +58,7 @@ namespace micro_profiler
 
 	protected:
 		typename const MapT::value_type &get_entry(index_type row) const;
-		void on_updated();
+		virtual void on_updated();
 
 	private:
 		double _tick_interval;
@@ -68,14 +69,13 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename MapT>
-	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval,
-			std::shared_ptr<symbol_resolver> resolver)
-		: _tick_interval(tick_interval), _resolver(resolver), _view(new ordered_view<MapT>(statistics))
+	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval)
+		: _tick_interval(tick_interval), _view(new ordered_view<MapT>(statistics))
 	{ }
 
 	template <typename BaseT, typename MapT>
-	inline statistics_model_impl<BaseT, MapT>::~statistics_model_impl()
-	{	_view->detach();	}
+	inline void statistics_model_impl<BaseT, MapT>::set_resolver(const std::shared_ptr<symbol_resolver> &resolver)
+	{	_resolver = resolver;	}
 
 	template <typename BaseT, typename MapT>
 	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const
@@ -84,13 +84,13 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	inline void statistics_model_impl<BaseT, MapT>::detach() throw()
 	{
-		_view->detach();
+		_view.reset();
 		this->invalidated(0);
 	}
 
 	template <typename BaseT, typename MapT>
 	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_count() const throw()
-	{ return _view->size(); }
+	{ return _view ? _view->size() : 0u; }
 
 	template <typename BaseT, typename MapT>
 	inline std::shared_ptr<const wpl::ui::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
@@ -111,6 +111,8 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	inline void statistics_model_impl<BaseT, MapT>::on_updated()
 	{
+		if (!_view)
+			return;
 		_view->resort();
 		this->invalidated(_view->size());
 	}

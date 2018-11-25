@@ -41,7 +41,7 @@ namespace micro_profiler
 				return s.str();
 			}
 
-			wstring get_text(const functions_list &fl, unsigned row, unsigned column)
+			wstring get_text(const table_model &fl, unsigned row, unsigned column)
 			{
 				wstring text;
 
@@ -1058,11 +1058,11 @@ namespace micro_profiler
 			}
 
 
-			test( IncomingDetailStatisticsUpdateNoChildrenStatisticsUpdatesScenarios )
+			test( IncomingDetailStatisticsUpdateNoLinkedStatisticsAfterClear )
 			{
 				// INIT
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
-				invalidation_tracer t;
+				invalidation_tracer t1, t2;
 				statistics_map_detailed s;
 
 				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
@@ -1073,27 +1073,49 @@ namespace micro_profiler
 
 				dser(*fl);
 
-				shared_ptr<linked_statistics> ls = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls1 = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls2 = fl->watch_parents(0);
 
-				t.bind_to_model(*ls);
+				fl->clear();
+				t1.bind_to_model(*ls1);
+				t2.bind_to_model(*ls2);
 
-				// ACT (update with no children)
+				// ACT (linked statistics are detached)
 				dser(*fl);
 
 				// ASSERT
-				assert_is_empty(t.invalidations);
+				assert_is_empty(t1.invalidations);
+				assert_is_empty(t2.invalidations);
+			}
 
+
+			test( LinkedStatisticsInvalidatedToEmptyOnMasterDestruction )
+			{
 				// INIT
-				s.clear();
-				s[0x2978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s[0x2978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				invalidation_tracer t1, t2;
+				statistics_map_detailed s;
+
+				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
+				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
 				ser(s);
 
-				// ACT (update with children, but another entry)
 				dser(*fl);
 
+				shared_ptr<linked_statistics> ls1 = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls2 = fl->watch_parents(0);
+
+				t1.bind_to_model(*ls1);
+				t2.bind_to_model(*ls2);
+
+				// ACT
+				fl.reset();
+
 				// ASSERT
-				assert_is_empty(t.invalidations);
+				table_model::index_type reference[] = { 0u, };
+
+				assert_equal(reference, t1.invalidations);
+				assert_equal(reference, t2.invalidations);
 			}
 
 
@@ -1416,19 +1438,18 @@ namespace micro_profiler
 				p->set_order(1, true);
 
 				// ASSERT
-				assert_equal(1u, t.invalidations.size());
-				assert_equal(3u, t.invalidations[0]);
+				table_model::index_type reference1[] = { 3u, };
 
-				// INIT
-				dser(*fl);
-				t.invalidations.clear();
+				assert_equal(reference1, t.invalidations);
 
 				// ACT
+				dser(*fl);
 				p->set_order(2, false);
 
 				// ASSERT
-				assert_equal(1u, t.invalidations.size());
-				assert_equal(4u, t.invalidations[0]);
+				table_model::index_type reference2[] = { 3u, 4u, 4u, };
+
+				assert_equal(reference2, t.invalidations);
 			}
 
 
@@ -1491,57 +1512,6 @@ namespace micro_profiler
 				assert_row(*p, 0, L"00002978", L"6");
 				assert_row(*p, 1, L"00003001", L"50");
 				assert_row(*p, 2, L"00002995", L"60");
-			}
-
-
-			test( ParentStatisticsInvalidationOnGlobalUpdates )
-			{
-				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
-				statistics_map_detailed s1, s2, s3, s4;
-				invalidation_tracer ih;
-
-				s1[0x297D].callees[0x297D];
-				s1[0x299A].callees[0x297D];
-				s1[0x3006].callees[0x297D];
-				ser(s1);
-				s2[0x7275];
-				ser(s2);
-				s3[0x297D].callees[0x297D];
-				ser(s3);
-				s4[0x8525].callees[0x297D];
-				ser(s4);
-
-				fl->set_order(1, true);
-
-				dser(*fl);
-
-				shared_ptr<linked_statistics> p = fl->watch_parents(0);
-
-				ih.bind_to_model(*p);
-
-				// ACT
-				dser(*fl);
-
-				// ASSERT
-				assert_is_empty(ih.invalidations);
-
-				// ACT
-				dser(*fl);
-
-				// ASSERT
-				assert_equal(1u, ih.invalidations.size());
-				assert_equal(3u, ih.invalidations[0]);
-
-				// INIT
-				ih.invalidations.clear();
-
-				// ACT
-				dser(*fl);
-
-				// ASSERT
-				assert_equal(1u, ih.invalidations.size());
-				assert_equal(4u, ih.invalidations[0]);
 			}
 
 
@@ -2015,6 +1985,89 @@ namespace micro_profiler
 				assert_equal(1.12, m->get_value(0));
 				assert_equal(0.09, m->get_value(1));
 				assert_equal(0.03, m->get_value(2));
+			}
+
+
+			test( AllSymbolsAreLoadedOnRequestAndResolverIsReleased )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = {
+					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				};
+				shared_ptr<sri> sr(new sri(symbols));
+				shared_ptr<functions_list> fl(functions_list::create(16, sr));
+				statistics_map_detailed s;
+
+				s[1].times_called = 11;
+				s[13].times_called = 117;
+				s[17].times_called = 1187;
+				s[123].times_called = 187;
+
+				ser(s);
+				dser(*fl);
+
+				// ACT
+				fl->release_resolver();
+
+				// ACT / ASSERT
+				assert_is_true(sr.unique());
+
+				// INIT
+				fl->set_order(1, true);
+
+				// ACT
+				assert_equal(L"Amet", get_text(*fl, 0, 1));
+				assert_equal(L"Ipsum", get_text(*fl, 1, 1));
+				assert_equal(L"Lorem", get_text(*fl, 2, 1));
+				assert_equal(L"dolor", get_text(*fl, 3, 1));
+			}
+
+
+			test( AllSymbolsAreLoadedOnRequestAndResolverIsReleasedByLinkedStatistics )
+			{
+				// INIT
+				pair<address_t, wstring> symbols[] = {
+					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				};
+				shared_ptr<sri> sr(new sri(symbols));
+				shared_ptr<functions_list> fl(functions_list::create(16, sr));
+				statistics_map_detailed s;
+
+				s[1].times_called = 11; // Lorem
+				s[1].callees[17].times_called = 2; // Lorem [2] -> Amet
+				s[13].times_called = 117; // Ipsum
+				s[13].callees[123].times_called = 17; // Ipsum [1] -> dolor
+				s[13].callees[1].times_called = 5; // Ipsum[1] -> Lorem
+				s[17].times_called = 1187; // Amet
+				s[123].times_called = 187; // dolor
+
+				ser(s);
+				dser(*fl);
+				fl->set_order(1, true);
+				shared_ptr<linked_statistics> children[] = {
+					fl->watch_children(0), fl->watch_children(1), fl->watch_children(2), fl->watch_children(2),
+				};
+				shared_ptr<linked_statistics> parents[] = {
+					fl->watch_parents(0), fl->watch_parents(1), fl->watch_parents(2), fl->watch_parents(2),
+				};
+				parents;
+
+				// ACT
+				fl->release_resolver();
+
+				// ASSERT
+				assert_is_true(sr.unique());
+
+				assert_equal(2u, children[1]->get_count());
+				children[1]->set_order(1, true);
+				assert_equal(L"Lorem", get_text(*children[1], 0, 1));
+				assert_equal(L"dolor", get_text(*children[1], 1, 1));
+
+				assert_equal(1u, children[2]->get_count());
+				assert_equal(L"Amet", get_text(*children[2], 0, 1));
+
+				assert_equal(1u, parents[2]->get_count());
+				assert_equal(L"Ipsum", get_text(*parents[2], 0, 1));
 			}
 		end_test_suite
 	}

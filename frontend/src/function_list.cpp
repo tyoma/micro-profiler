@@ -37,48 +37,37 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const address_t c_invalid_address = numeric_limits<address_t>::max();
+		template <typename T> const wchar_t *fmt();
+		template <> const wchar_t *fmt<count_t>() {	return L"%I64u";	}
+		template <> const wchar_t *fmt<unsigned int>() {	return L"%u";	}
+		template <> const wchar_t *fmt<double>() {	return L"%g";	}
 
-		wstring to_string2(count_t value)
+		template <typename T>
+		wstring to_string2(T value)
 		{
 			const size_t buffer_size = 24;
 			wchar_t buffer[buffer_size] = { };
 
-			::swprintf(buffer, buffer_size, L"%I64u", value);
-			return buffer;
-		}
-
-		wstring to_string2(unsigned int value)
-		{
-			const size_t buffer_size = 24;
-			wchar_t buffer[buffer_size] = { };
-
-			::swprintf(buffer, buffer_size, L"%u", value);
-			return buffer;
-		}
-
-		wstring to_string2(double value)
-		{
-			const size_t buffer_size = 24;
-			wchar_t buffer[buffer_size] = { };
-
-			::swprintf(buffer, buffer_size, L"%g", value);
+			::swprintf(buffer, buffer_size, fmt<T>(), value);
 			return buffer;
 		}
 
 		class by_name
 		{
 		public:
-			by_name(shared_ptr<symbol_resolver> resolver)
-				: _resolver(resolver)
+			by_name(const function<shared_ptr<symbol_resolver> ()> &resolver_accessor)
+				: _resolver_accessor(resolver_accessor)
 			{	}
 
 			template <typename AnyT>
 			bool operator ()(address_t lhs_addr, const AnyT &, address_t rhs_addr, const AnyT &) const
-			{	return _resolver->symbol_name_by_va(lhs_addr) < _resolver->symbol_name_by_va(rhs_addr);	}
+			{
+				shared_ptr<symbol_resolver> r = _resolver_accessor();
+				return r->symbol_name_by_va(lhs_addr) < r->symbol_name_by_va(rhs_addr);
+			}
 
 		private:
-			shared_ptr<symbol_resolver> _resolver;
+			function<shared_ptr<symbol_resolver> ()> _resolver_accessor;
 		};
 
 		struct by_times_called
@@ -191,43 +180,18 @@ namespace micro_profiler
 
 			double _inv_tick_count;
 		};
+
+		template <typename T>
+		void erase_entry(linked_statistics_ex *p, const shared_ptr<T> &container, typename T::iterator i)
+		{
+			container->erase(i);
+			delete p;
+		}
 	}
 
 
-	template <typename MapT>
-	class linked_statistics_model_impl : public statistics_model_impl<linked_statistics, MapT>
-	{
-	public:
-		linked_statistics_model_impl(const MapT &statistics, signal<void (address_t entry)> &entry_updated,
-			signal<void ()> &master_cleared, double tick_interval, shared_ptr<symbol_resolver> resolver);
-
-	protected:
-		typedef statistics_model_impl<linked_statistics, MapT> base;
-
-	private:
-		virtual void on_updated(address_t address);
-
-	private:
-		slot_connection _updates_connection;
-		slot_connection _cleared_connection;
-	};
-
-
-	class children_statistics_model_impl : public linked_statistics_model_impl<statistics_map>
-	{
-	public:
-		children_statistics_model_impl(address_t controlled_address, const statistics_map &statistics,
-			signal<void (address_t)> &entry_updated, signal<void ()> &master_cleared, double tick_interval,
-			shared_ptr<symbol_resolver> resolver);
-
-	private:
-		virtual void on_updated(address_t address);
-
-	private:
-		address_t _controlled_address;
-	};
-
-	typedef linked_statistics_model_impl<statistics_map_callers> parents_statistics;
+	typedef statistics_model_impl<linked_statistics_ex, statistics_map> children_statistics;
+	typedef statistics_model_impl<linked_statistics_ex, statistics_map_callers> parents_statistics;
 
 
 
@@ -260,7 +224,7 @@ namespace micro_profiler
 			break;
 
 		case 1:
-			_view->set_order(by_name(_resolver), ascending);
+			_view->set_order(by_name(bind(&statistics_model_impl::_resolver, this)), ascending);
 			_view->disable_projection();
 			break;
 
@@ -303,17 +267,50 @@ namespace micro_profiler
 	}
 
 
+	template <>
+	void statistics_model_impl<linked_statistics_ex, statistics_map_callers>::get_text(index_type item, index_type subitem,
+		wstring &text) const
+	{
+		const statistics_map_callers::value_type &row = get_entry(item);
+
+		switch (subitem)
+		{
+		case 0:	text = to_string2(item + 1);	break;
+		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
+		case 2:	text = to_string2(row.second);	break;
+		}
+	}
+
+	template <>
+	void statistics_model_impl<linked_statistics_ex, statistics_map_callers>::set_order(index_type column, bool ascending)
+	{
+		switch (column)
+		{
+		case 1:	_view->set_order(by_name(bind(&statistics_model_impl::_resolver, this)), ascending);	break;
+		case 2:	_view->set_order(by_times_called(), ascending);	break;
+		}
+		this->invalidated(_view->size());
+	}
+
+
 	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl<table_model, statistics_map_detailed>(*statistics, tick_interval, resolver),
-			_statistics(statistics), _tick_interval(tick_interval), _resolver(resolver)
-	{	}
+		: base(*statistics, tick_interval), _statistics(statistics), _linked(new linked_statistics_list_t),
+			_tick_interval(tick_interval), _resolver(resolver)
+	{	set_resolver(resolver);	}
+
+	functions_list::~functions_list()
+	{
+		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
+			(*i)->detach();
+	}
 
 	void functions_list::clear()
 	{
-		_cleared();
+		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
+			(*i)->detach();
 		_statistics->clear();
-		on_updated();
+		base::on_updated();
 	}
 
 	void functions_list::print(wstring &content) const
@@ -348,9 +345,13 @@ namespace micro_profiler
 			throw out_of_range("");
 
 		const statistics_map_detailed::value_type &s = get_entry(item);
+		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
+		shared_ptr<children_statistics> children(new children_statistics(s.second.callees,
+			_tick_interval), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
-		return shared_ptr<linked_statistics>(new children_statistics_model_impl(s.first, s.second.callees,
-			_statistics->entry_updated, _cleared, _tick_interval, _resolver));
+		*i = children.get();
+		children->set_resolver(_resolver);
+		return children;
 	}
 
 	shared_ptr<linked_statistics> functions_list::watch_parents(index_type item) const
@@ -359,74 +360,41 @@ namespace micro_profiler
 			throw out_of_range("");
 
 		const statistics_map_detailed::value_type &s = get_entry(item);
+		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
+		shared_ptr<parents_statistics> parents(new parents_statistics(s.second.callers,
+			_tick_interval), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
-		return shared_ptr<linked_statistics>(new parents_statistics(s.second.callers, _statistics->entry_updated,
-			_cleared, _tick_interval, _resolver));
+		*i = parents.get();
+		parents->set_resolver(_resolver);
+		return parents;
 	}
 
 	std::shared_ptr<symbol_resolver> functions_list::get_resolver() const
 	{	return _resolver;	}
 
-	
-	template <typename MapT>
-	linked_statistics_model_impl<MapT>::linked_statistics_model_impl(const MapT &statistics,
-			signal<void (address_t)> &entry_updated, signal<void ()> &master_cleared, double tick_interval,
-			shared_ptr<symbol_resolver> resolver)
-		: statistics_model_impl<linked_statistics, MapT>(statistics, tick_interval, resolver)
+	void functions_list::release_resolver()
 	{
-		_updates_connection = entry_updated += bind(&linked_statistics_model_impl::on_updated, this, _1);
-		_cleared_connection = master_cleared += bind(&linked_statistics_model_impl::detach, this);
+		shared_ptr<static_resolver> resolver(new static_resolver);
+
+		for (statistics_map_detailed::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
+			resolver->symbols.insert(make_pair(i->first, _resolver->symbol_name_by_va(i->first)));
+		set_resolver(resolver);
+		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
+			(*i)->set_resolver(resolver);
+		_resolver = resolver;
 	}
-
-	template <typename MapT>
-	void linked_statistics_model_impl<MapT>::on_updated(address_t /*address*/)
-	{	base::on_updated();	}
-
-
-	children_statistics_model_impl::children_statistics_model_impl(address_t controlled_address,
-			const statistics_map &statistics, signal<void (address_t)> &entry_updated,
-			signal<void ()> &cleared, double tick_interval, shared_ptr<symbol_resolver> resolver)
-		: linked_statistics_model_impl<statistics_map>(statistics, entry_updated, cleared, tick_interval, resolver),
-			_controlled_address(controlled_address)
-	{	}
-
-	void children_statistics_model_impl::on_updated(address_t address)
-	{
-		if (_controlled_address == address)
-			base::on_updated();
-	}
-
-
-	template <>
-	void statistics_model_impl<linked_statistics, statistics_map_callers>::get_text(index_type item, index_type subitem,
-		wstring &text) const
-	{
-		const statistics_map_callers::value_type &row = get_entry(item);
-
-		switch (subitem)
-		{
-		case 0:	text = to_string2(item + 1);	break;
-		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
-		case 2:	text = to_string2(row.second);	break;
-		}
-	}
-
-	template <>
-	void statistics_model_impl<linked_statistics, statistics_map_callers>::set_order(index_type column, bool ascending)
-	{
-		switch (column)
-		{
-		case 1:	_view->set_order(by_name(_resolver), ascending);	break;
-		case 2:	_view->set_order(by_times_called(), ascending);	break;
-		}
-		this->invalidated(_view->size());
-	}
-
 
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list(
 			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_per_second, resolver));
+	}
+
+	void functions_list::on_updated()
+	{
+		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
+			(*i)->on_updated();
+		base::on_updated();
 	}
 
 

@@ -69,10 +69,7 @@ namespace strmd
 				typename data_t::mapped_type &entry = data[value.first];
 				entry += value.second;
 				if (archive.process_container(entry.callees))
-				{
 					update_parent_statistics(data, value.first, entry);
-					data.entry_updated(value.first);
-				}
 			}
 		}
 	};

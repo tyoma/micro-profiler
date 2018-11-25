@@ -21,7 +21,6 @@
 #pragma once
 
 #include <unordered_map>
-#include <wpl/base/signals.h>
 
 namespace micro_profiler
 {
@@ -73,7 +72,6 @@ namespace micro_profiler
 	template <typename AddressT>
 	struct statistics_map_detailed_t : std::unordered_map<AddressT, function_statistics_detailed_t<AddressT>, address_compare>
 	{
-		wpl::signal<void (AddressT updated_function)> entry_updated;
 	};
 
 

@@ -388,6 +388,25 @@ namespace micro_profiler
 			}
 
 
+			test( ReleasingFrontendReleasesSymbolResolver )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				channel_t c = open_channel(id);
+
+				write(c, init, make_initialization_data(L"", 10));
+
+				shared_ptr<symbol_resolver> sr = _ui_creation_log[0]->model->get_resolver();
+
+				// ACT
+				c = channel_t();
+
+				// ASSERT
+				assert_is_true(sr.unique());
+			}
+
+
 			vector<size_t> failed_sends;
 
 			void try_send(unsigned n)
@@ -921,6 +940,7 @@ namespace micro_profiler
 				assert_equal(fl2, m->get_instance(1)->model);
 				assert_equal(_ui_creation_log[1], m->get_instance(1)->ui);
 			}
+
 		end_test_suite
 	}
 }

@@ -479,47 +479,6 @@ namespace micro_profiler
 			}
 
 
-			test( DetachingOrderedViewSetsSizeToZero )
-			{
-				// INIT
-				pod_map source;
-				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}	};
-
-				source[pods + 0] = pods[0];
-				source[pods + 1] = pods[1];
-
-				sorted_pods s(source);
-
-				// ACT
-				s.detach();
-
-				// ASSERT
-				assert_equal(0u, s.size());
-			}
-
-
-			test( ResortingDetachedOrderedViewKeepsSizeAtZero )
-			{
-				// INIT
-				pod_map source;
-				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}	};
-
-				source[pods + 0] = pods[0];
-				source[pods + 1] = pods[1];
-
-				sorted_pods s(source);
-
-				s.set_order(sort_by_b(), false);
-				s.detach();
-
-				// ACT
-				s.resort();
-
-				// ASSERT
-				assert_equal(0u, s.size());
-			}
-
-
 			test( OrderedViewIsAPiechartModel )
 			{
 				// INIT
@@ -846,54 +805,6 @@ namespace micro_profiler
 				assert_equal(trackable::npos, t1->index());
 				assert_equal(trackable::npos, t2->index());
 				assert_equal(trackable::npos, t3->index());
-			}
-
-
-			test( TrackablesAreInvalidatedOnDetach )
-			{
-				typedef list< pair<int, string> > underlying_t;
-
-				// INIT
-				underlying_t underlying;
-				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
-
-				underlying.push_back(make_pair(17, "lorem"));
-				underlying.push_back(make_pair(17230, "dolor"));
-				underlying.push_back(make_pair(172311, "ipsum"));
-				underlying.push_back(make_pair(17231, "amet"));
-				ov->resort();
-				ov->set_order(bind(less<string>(), _2, _4), true);
-
-				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(1), t3 = ov->track(2);
-
-				// ACT
-				ov->detach();
-
-				// ACT / ASSERT
-				assert_equal(trackable::npos, t1->index());
-				assert_equal(trackable::npos, t2->index());
-				assert_equal(trackable::npos, t3->index());
-			}
-
-
-			test( OrderedViewNotifiesOfInvalidationOnDetach )
-			{
-				typedef list< pair<int, string> > underlying_t;
-
-				// INIT
-				underlying_t underlying;
-				int invalidated_times = 0;
-				shared_ptr< ordered_view<underlying_t> > ov(new ordered_view<underlying_t>(underlying));
-				wpl::slot_connection conn = ov->invalidated += bind(&increment, &invalidated_times);
-
-				underlying.push_back(make_pair(17, "lorem"));
-				ov->set_order(bind(less<string>(), _2, _4), true);
-
-				// ACT
-				ov->detach();
-
-				// ASSERT
-				assert_equal(1, invalidated_times);
 			}
 
 		end_test_suite

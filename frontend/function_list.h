@@ -36,14 +36,25 @@ namespace micro_profiler
 		virtual std::shared_ptr< series<double> > get_column_series() const = 0;
 	};
 
+	struct linked_statistics_ex : linked_statistics
+	{
+		virtual void on_updated() = 0;
+		virtual void detach() = 0;
+		virtual void set_resolver(const std::shared_ptr<symbol_resolver> &resolver) = 0;
+	};
+
 	class functions_list : public statistics_model_impl<wpl::ui::table_model, statistics_map_detailed>
 	{
 	public:
+		virtual ~functions_list();
+
 		void clear();
 		void print(std::wstring &content) const;
 		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
 		std::shared_ptr<symbol_resolver> get_resolver() const;
+
+		void release_resolver();
 
 		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
 			std::shared_ptr<symbol_resolver> resolver);
@@ -55,17 +66,21 @@ namespace micro_profiler
 		static std::shared_ptr<functions_list> load(ArchiveT &archive);
 
 	private:
+		typedef statistics_model_impl<wpl::ui::table_model, statistics_map_detailed> base;
 		struct static_resolver;
+		typedef std::list<linked_statistics_ex *> linked_statistics_list_t;
 
 	private:
 		functions_list(std::shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 			std::shared_ptr<symbol_resolver> resolver);
 
+		void on_updated();
+
 	private:
 		std::shared_ptr<statistics_map_detailed> _statistics;
+		std::shared_ptr<linked_statistics_list_t> _linked;
 		double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;
-		mutable wpl::signal<void()> _cleared;
 
 	private:
 		template <typename ArchiveT>

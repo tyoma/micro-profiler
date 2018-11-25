@@ -43,9 +43,6 @@ namespace micro_profiler
 		ordered_view(const ContainerT &underlying);
 		~ordered_view();
 
-		// Paermanently detaches from the underlying map. Postcondition: size() becomes zero.
-		void detach() throw();
-
 		// Set order for internal orderd storage, save it until new order is set.
 		template <typename PredicateT>
 		void set_order(PredicateT predicate, bool ascending);
@@ -101,7 +98,7 @@ namespace micro_profiler
 		const ordered_view &operator =(const ordered_view &);
 
 	private:
-		const ContainerT *_underlying;
+		const ContainerT &_underlying;
 		ordered_container _ordered_data;
 		std::function<void()> _sorter;
 		std::function<double(const mapped_type &entry)> _extractor;
@@ -148,24 +145,12 @@ namespace micro_profiler
 
 	template <class ContainerT>
 	inline ordered_view<ContainerT>::ordered_view(const ContainerT &underlying)
-		: _underlying(&underlying), _trackables(new trackables_t)
+		: _underlying(underlying), _trackables(new trackables_t)
 	{	fetch_data();	}
 
 	template <class ContainerT>
 	inline ordered_view<ContainerT>::~ordered_view()
-	{
-		_ordered_data.clear();
-		update_trackables();
-	}
-
-	template <class ContainerT>
-	inline void ordered_view<ContainerT>::detach() throw()
-	{
-		_underlying = 0;
-		_ordered_data.clear();
-		invalidate_trackables();
-		invalidated();
-	}
+	{	invalidate_trackables();	}
 
 	template <class ContainerT>
 	inline typename ordered_view<ContainerT>::index_type ordered_view<ContainerT>::size() const throw()
@@ -208,11 +193,9 @@ namespace micro_profiler
 	template <class ContainerT>
 	inline void ordered_view<ContainerT>::fetch_data()
 	{
-		if (!_underlying)
-			return;
 		_ordered_data.clear();
-		_ordered_data.reserve(_underlying->size());
-		for (typename ContainerT::const_iterator i = _underlying->begin(), end = _underlying->end(); i != end; ++i)
+		_ordered_data.reserve(_underlying.size());
+		for (typename ContainerT::const_iterator i = _underlying.begin(), end = _underlying.end(); i != end; ++i)
 			_ordered_data.push_back(&*i);
 	}
 

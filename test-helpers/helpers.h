@@ -20,7 +20,8 @@ namespace micro_profiler
 				V v2;
 			};
 			v2 = v;
-			return u;
+			U assertion[sizeof(u) == sizeof(v) ? 1 : 0] = { u };
+			return assertion[0];
 		}
 
 		class com_event

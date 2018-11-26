@@ -46,7 +46,7 @@ namespace micro_profiler
 		explicit thread_trace_block(unsigned int thread_id, size_t trace_limit);
 		thread_trace_block(const thread_trace_block &);
 
-		void on_enter(const void *callee, timestamp_t timestamp, const void **return_address_ptr);
+		void on_enter(const void *callee, timestamp_t timestamp, const void **stack_ptr);
 		const void *on_exit(timestamp_t timestamp);
 
 		void read_collected(acceptor &a);
@@ -73,7 +73,7 @@ namespace micro_profiler
 
 	struct calls_collector::thread_trace_block::return_entry
 	{
-		const void **return_address_ptr;
+		const void **stack_ptr;
 		const void *return_address;
 	};
 
@@ -95,17 +95,17 @@ namespace micro_profiler
 	}
 
 	__forceinline void calls_collector::thread_trace_block::on_enter(const void *callee, timestamp_t timestamp,
-		const void **return_address_ptr)
+		const void **stack_ptr)
 	{
-		if (_return_stack.back().return_address_ptr != return_address_ptr)
+		if (_return_stack.back().stack_ptr != stack_ptr)
 		{
 			// Regular nesting...
 			_return_stack.push_back();
 
 			return_entry &e = _return_stack.back();
 
-			e.return_address_ptr = return_address_ptr;
-			e.return_address = *return_address_ptr;
+			e.stack_ptr = stack_ptr;
+			e.return_address = *stack_ptr;
 		}
 		else
 		{
@@ -126,31 +126,24 @@ namespace micro_profiler
 
 	__forceinline void calls_collector::thread_trace_block::track(const void *callee, timestamp_t timestamp) throw()
 	{
-		for (;;)
+		for (trace_t * trace = 0; ; atomic_store(_active_trace, trace), _proceed_collection.wait())
 		{
-			trace_t * trace = 0;
-
 			do
 				trace = atomic_compare_exchange(_active_trace, trace, _active_trace);
 			while (!trace);
 
-			if (trace->byte_size() < _trace_limit)
-			{
-				trace->push_back();
+			if (trace->byte_size() >= _trace_limit)
+				continue;
 
-				call_record &e = trace->back();
+			trace->push_back();
 
-				e.callee = callee;
-				e.timestamp = timestamp;
+			call_record &e = trace->back();
 
-				atomic_store(_active_trace, trace);
-				break;
-			}
-			else
-			{
-				atomic_store(_active_trace, trace);
-				_proceed_collection.wait();
-			}
+			e.callee = callee;
+			e.timestamp = timestamp;
+
+			atomic_store(_active_trace, trace);
+			break;
 		}
 	}
 
@@ -209,14 +202,15 @@ namespace micro_profiler
 			i->read_collected(a);
 	}
 
-	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void *callee, timestamp_t timestamp,
-		const void **return_address_ptr) _CC(fastcall)
+	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void **stack_ptr,
+		timestamp_t timestamp, const void *callee) _CC(fastcall)
 	{
 		instance->get_current_thread_trace()
-			.on_enter(callee, timestamp, return_address_ptr);
+			.on_enter(callee, timestamp, stack_ptr);
 	}
 
-	const void *CC_(fastcall) calls_collector::on_exit(calls_collector *instance, timestamp_t timestamp) _CC(fastcall)
+	const void *CC_(fastcall) calls_collector::on_exit(calls_collector *instance, const void ** /*stack_ptr*/,
+		timestamp_t timestamp) _CC(fastcall)
 	{
 		return instance->get_current_thread_trace_guaranteed()
 			.on_exit(timestamp);

@@ -53,9 +53,10 @@ namespace micro_profiler
 
 		virtual void read_collected(acceptor &a);
 
-		static void CC_(fastcall) on_enter(calls_collector *instance, const void *callee, timestamp_t timestamp,
-			const void **return_address_ptr) _CC(fastcall);
-		static const void *CC_(fastcall) on_exit(calls_collector *instance, timestamp_t timestamp) _CC(fastcall);
+		static void CC_(fastcall) on_enter(calls_collector *instance, const void **stack_ptr,
+			timestamp_t timestamp, const void *callee) _CC(fastcall);
+		static const void *CC_(fastcall) on_exit(calls_collector *instance, const void **stack_ptr,
+			timestamp_t timestamp) _CC(fastcall);
 
 		virtual timestamp_t profiler_latency() const throw();
 

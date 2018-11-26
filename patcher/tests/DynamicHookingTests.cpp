@@ -16,6 +16,16 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			template <size_t n>
+			struct bytes
+			{
+				byte data[n];
+
+				bool operator ==(const bytes &rhs) const
+				{	return 0 == memcmp(data, rhs.data, n);	}
+			};
+
+
 			int increment(int *value)
 			{	return ++*value;	}
 
@@ -28,6 +38,61 @@ namespace micro_profiler
 			template <typename T>
 			string outer_function(T f, const string &value)
 			{	return f(value); }
+
+			string CC_(stdcall) reverse_string_3(string value) _CC(stdcall)
+			{	return string(value.rbegin(),value.rend());	}
+
+			string CC_(fastcall) reverse_string_4(string value) _CC(fastcall)
+			{	return string(value.rbegin(),value.rend());	}
+
+			template <typename T>
+			T identity_1(const T &input)
+			{	return input;	}
+
+			template <typename T>
+			T identity_11(T input)
+			{	return input;	}
+
+			template <typename T>
+			T CC_(stdcall) identity_2(const T &input) _CC(stdcall)
+			{	return input;	}
+
+			template <typename T>
+			T CC_(stdcall) identity_21(T input) _CC(stdcall)
+			{	return input;	}
+
+			template <typename T>
+			T CC_(fastcall) identity_3(const T &input) _CC(fastcall)
+			{	return input;	}
+
+			template <typename T>
+			T CC_(fastcall) identity_31(T input) _CC(fastcall)
+			{	return input;	}
+
+			void throwing_function()
+			{	throw 1;	}
+
+			template <typename F, typename T>
+			T calling_a_thrower_1(F *throwing, T input)
+			{
+				try
+				{
+					throwing();
+				}
+				catch (...)
+				{
+				}
+				return input;
+			}
+
+			template <typename F1, typename F2, typename T>
+			T nesting_3(F1 *f1, F2 *f2, T input)
+			{	return f1(f2, input);	}
+
+			template <typename F1, typename T>
+			T nesting_2(F1 *f1, T input)
+			{	return f1(input);	}
+
 
 			void bubble_sort(int *begin, int *end)
 			{
@@ -43,6 +108,33 @@ namespace micro_profiler
 						}
 					}
 			}
+
+			struct exception_call_tracer
+			{
+				exception_call_tracer()
+					: return_address(0)
+				{	}
+
+				static void CC_(fastcall) on_enter(exception_call_tracer *self, const void **stack_ptr,
+					timestamp_t /*timestamp*/, const void * /*callee*/) _CC(fastcall)
+				{
+					if (!self->return_address)
+						self->return_address = *stack_ptr;
+				}
+
+				static const void *CC_(fastcall) on_exit(exception_call_tracer *self, const void ** /*stack_ptr*/,
+					timestamp_t /*timestamp*/) _CC(fastcall)
+				{
+					const void *r = self->return_address;
+
+					assert_not_null(r); // Will crash the tests, if failed.
+					self->return_address = 0;
+					return r;
+				}
+
+				const void *return_address;
+				std::vector<const void **> entry_queue, exit_queue;
+			};
 		}
 
 		begin_test_suite( DynamicHookingTests )
@@ -56,11 +148,13 @@ namespace micro_profiler
 				thunk_memory = allocator.allocate(c_thunk_size);
 			}
 
+
 			test( ThunkSizeIsMultipleOf10h )
 			{
 				// ASSERT
 				assert_equal(0u, 0xF & c_thunk_size);
 			}
+
 
 			test( CalleeIsInvokedOnCallingThunk1 )
 			{
@@ -88,41 +182,155 @@ namespace micro_profiler
 			}
 
 
-			test( CalleeIsInvokedOnCallingThunk2 )
+			template <typename FunctionT, typename T>
+			void CheckReturnValueIdentity(FunctionT *original, const T &input)
 			{
-				typedef string (fn_t)(const string &value);
-
 				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_1), 0, &trace);
-				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(original), 0, &trace);
+				FunctionT *f = address_cast_hack<FunctionT *>(thunk_memory.get());
 
 				// ACT / ASSERT
-				assert_equal("lorem ipsum", f("muspi merol"));
-				assert_equal("Transylvania", f("ainavlysnarT"));
+				assert_equal(original(input), f(input));
+			}
+
+			test( CheckFunctionsOfAvailableConventionsAreCallable )
+			{
+				CheckReturnValueIdentity(&reverse_string_1, "lorem ipsum");
+				CheckReturnValueIdentity(&reverse_string_1, "Transylvania");
+				CheckReturnValueIdentity(&reverse_string_2, "lorem ipsum");
+				CheckReturnValueIdentity(&reverse_string_2, "Transylvania");
+				CheckReturnValueIdentity(&reverse_string_3, "lorem ipsum");
+				CheckReturnValueIdentity(&reverse_string_3, "Transylvania");
+				CheckReturnValueIdentity(&reverse_string_4, "lorem ipsum");
+				CheckReturnValueIdentity(&reverse_string_4, "Transylvania");
 			}
 
 
-			test( CalleeIsInvokedOnCallingThunk3 )
+			test( CheckPODIOIdentity )
 			{
-				typedef string (fn_t)(string value);
-
-				// INIT / ACT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), 0, &trace);
-				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
+				// INIT
+				bytes<4> values1[] = {
+					{ 'e', 'X', 'z', 'T' },
+					{ 'N', 'e', 'x', 't' },
+				};
+				bytes<100> values2[] = {
+					{ "qqqqqqqqqqjjjjjjjjjjjjjjDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDwwwwwwwwwwwwwIIIIIIIIIIId123456783222229" },
+					{ "iiifjsjwjwebrdksdkjhwerkjhwerbmsdfmaskljfhasdfkljhhrhrhrhrhrbxnmkwuw383urjrjwjwwwsnxxxkkkvvviiiidds" },
+				};
 
 				// ACT / ASSERT
-				assert_equal("lorem ipsum", f("muspi merol"));
-				assert_equal("Transylvania", f("ainavlysnarT"));
+				CheckReturnValueIdentity(&identity_1< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity(&identity_1< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity(&identity_1< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity(&identity_1< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity(&identity_11< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity(&identity_11< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity(&identity_11< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity(&identity_11< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity(&identity_2< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity(&identity_2< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity(&identity_2< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity(&identity_2< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity(&identity_21< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity(&identity_21< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity(&identity_21< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity(&identity_21< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity(&identity_3< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity(&identity_3< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity(&identity_3< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity(&identity_3< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity(&identity_31< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity(&identity_31< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity(&identity_31< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity(&identity_31< bytes<100> >, values2[1]);
 			}
 
+
+			test( ReturnAddressIsRestoredWhenExceptionIsThrown )
+			{
+				typedef void (throwing_fn_t)();
+				typedef string (fn_t)(throwing_fn_t *f, string input);
+
+				// INIT
+				shared_ptr<void> thunk2 = allocator.allocate(c_thunk_size);
+				exception_call_tracer trace;
+
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&throwing_function),
+					"thrower", &trace);
+				initialize_hooks(thunk2.get(), address_cast_hack<const void *>(&calling_a_thrower_1<throwing_fn_t, string>),
+					"caller", &trace);
+				throwing_fn_t *thrower = address_cast_hack<throwing_fn_t *>(thunk_memory.get());
+				fn_t *caller = address_cast_hack<fn_t *>(thunk2.get());
+
+				// ACT / ASSERT (must return)
+				calling_a_thrower_1(&throwing_function, "");
+				assert_equal("zabazu", caller(thrower, "zabazu"));
+			}
+
+
+			test( StackAddressesAreDecreasingOnEnteringAndIncreasingOnExiting )
+			{
+				typedef string (fn1_t)(string input);
+				typedef string (fn2_t)(fn1_t *f1, string input);
+				typedef string (fn3_t)(fn2_t *f2, fn1_t *f1, string input);
+
+				// INIT
+				shared_ptr<void> thunks[3] = {
+					allocator.allocate(c_thunk_size), allocator.allocate(c_thunk_size), allocator.allocate(c_thunk_size),
+				};
+				initialize_hooks(thunks[0].get(), address_cast_hack<const void *>(&nesting_3<fn2_t, fn1_t, string>),
+					"f3", &trace);
+				initialize_hooks(thunks[1].get(), address_cast_hack<const void *>(&nesting_2<fn1_t, string>),
+					"f2", &trace);
+				initialize_hooks(thunks[2].get(), address_cast_hack<const void *>(&identity_11<string>),
+					"f1", &trace);
+				fn3_t *f3 = address_cast_hack<fn3_t *>(thunks[0].get());
+				fn2_t *f2 = address_cast_hack<fn2_t *>(thunks[1].get());
+				fn1_t *f1 = address_cast_hack<fn1_t *>(thunks[2].get());
+
+				// ACT / ASSERT
+				assert_equal("Missouri", f3(f2, f1, "Missouri"));
+
+				// ASSERT
+				assert_equal(3u, trace.enter_stack_addresses.size());
+				assert_equal(3u, trace.exit_stack_addresses.size());
+				assert_is_true(trace.enter_stack_addresses[2] < trace.enter_stack_addresses[1]);
+				assert_is_true(trace.enter_stack_addresses[1] < trace.enter_stack_addresses[0]);
+				assert_is_true(trace.exit_stack_addresses[0] < trace.exit_stack_addresses[1]);
+				assert_is_true(trace.exit_stack_addresses[1] < trace.exit_stack_addresses[2]);
+
+				assert_is_true(trace.exit_stack_addresses[0] >= trace.enter_stack_addresses[2]);
+				assert_is_true(trace.exit_stack_addresses[0] < trace.enter_stack_addresses[1]);
+				assert_is_true(trace.exit_stack_addresses[1] >= trace.enter_stack_addresses[1]);
+				assert_is_true(trace.exit_stack_addresses[1] < trace.enter_stack_addresses[0]);
+				assert_is_true(trace.exit_stack_addresses[2] >= trace.enter_stack_addresses[0]);
+
+				// INIT
+				trace.enter_stack_addresses.clear();
+				trace.exit_stack_addresses.clear();
+
+				// ACT / ASSERT
+				assert_equal("Washington", f2(f1, "Washington"));
+
+				// ASSERT
+				assert_equal(2u, trace.enter_stack_addresses.size());
+				assert_equal(2u, trace.exit_stack_addresses.size());
+				assert_is_true(trace.enter_stack_addresses[1] < trace.enter_stack_addresses[0]);
+				assert_is_true(trace.exit_stack_addresses[0] < trace.exit_stack_addresses[1]);
+
+				assert_is_true(trace.exit_stack_addresses[0] >= trace.enter_stack_addresses[1]);
+				assert_is_true(trace.exit_stack_addresses[0] < trace.enter_stack_addresses[0]);
+				assert_is_true(trace.exit_stack_addresses[1] >= trace.enter_stack_addresses[0]);
+			}
+			
 
 			test( HooksAreInvokedWhenCalleeIsCalledFlat )
 			{
 				typedef string (fn_t)(string value);
 
 				// INIT
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
-					address_cast_hack<const void *>(&reverse_string_2), &trace);
+				void * const id = reinterpret_cast<void *>(size_t() - 123);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), id, &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT
@@ -130,7 +338,7 @@ namespace micro_profiler
 
 				// ASSERT
 				call_record reference1[] = {
-					{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
+					{ 0, id }, { 0, 0 },
 				};
 
 				assert_equal(reference1, trace.call_log);
@@ -141,9 +349,9 @@ namespace micro_profiler
 
 				// ASSERT
 				call_record reference2[] = {
-					{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
-					{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
-					{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
+					{ 0, id }, { 0, 0 },
+					{ 0, id }, { 0, 0 },
+					{ 0, id }, { 0, 0 },
 				};
 
 				assert_equal(reference2, trace.call_log);
@@ -156,11 +364,12 @@ namespace micro_profiler
 				typedef string (fn2_t)(fn1_t *f, const string &value);
 
 				// INIT
+				void * const id1 = reinterpret_cast<void *>(size_t() - 1234);
+				void * const id2 = reinterpret_cast<void *>(size_t() - 12323);
 				shared_ptr<void> thunk_memory2 = allocator.allocate(c_thunk_size);
-				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2),
-					address_cast_hack<const void *>(&reverse_string_2), &trace);
-				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>),
-					address_cast_hack<const void *>(&outer_function<fn1_t*>), &trace);
+				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), id1, &trace);
+				initialize_hooks(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), id2,
+					&trace);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
 
@@ -173,12 +382,12 @@ namespace micro_profiler
 
 				// ASSERT
 				call_record reference[] = {
-					{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
-					{ 0, address_cast_hack<const void *>(&outer_function<fn1_t *>) },
-						{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
+					{ 0, id1 }, { 0, 0 },
+					{ 0, id2 },
+						{ 0, id1 }, { 0, 0 },
 						{ 0, 0 },
-					{ 0, address_cast_hack<const void *>(&outer_function<fn1_t *>) },
-						{ 0, address_cast_hack<const void *>(&reverse_string_2) }, { 0, 0 },
+					{ 0, id2 },
+						{ 0, id1 }, { 0, 0 },
 						{ 0, 0 },
 				};
 
@@ -186,7 +395,7 @@ namespace micro_profiler
 			}
 
 
-			test( FunctionsAreReportedCorrespondinglyToThunksSetup )
+			test( UsingDifferentTypeOfIDsWorks )
 			{
 				typedef string (fn1_t)(string value);
 				typedef string (fn2_t)(fn1_t *f, const string &value);

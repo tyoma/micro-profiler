@@ -49,8 +49,8 @@ namespace micro_profiler
 
 				for (size_t i = 0; i != calls_number; ++i)
 				{
-					calls_collector::on_enter(&collector, callee, timestamp++, &dummy);
-					calls_collector::on_exit(&collector, timestamp++);
+					calls_collector::on_enter(&collector, &dummy, timestamp++, callee);
+					calls_collector::on_exit(&collector, &dummy, timestamp++);
 				}
 			}
 		}
@@ -89,8 +89,8 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				calls_collector::on_enter(collector.get(), (void *)0x12345678, 100, &dummy);
-				calls_collector::on_exit(collector.get(), 10010);
+				calls_collector::on_enter(collector.get(), &dummy, 100, (void *)0x12345678);
+				calls_collector::on_exit(collector.get(), &dummy, 10010);
 				collector->read_collected(a);
 
 				// ASSERT
@@ -109,8 +109,8 @@ namespace micro_profiler
 				// INIT
 				collection_acceptor a;
 
-				calls_collector::on_enter(collector.get(), (void *)0x12345678, 100, &dummy);
-				calls_collector::on_exit(collector.get(), 10010);
+				calls_collector::on_enter(collector.get(), &dummy, 100, (void *)0x12345678);
+				calls_collector::on_exit(collector.get(), &dummy, 10010);
 				collector->read_collected(a);
 
 				// ACT
@@ -173,12 +173,12 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				calls_collector::on_enter(collector.get(), (void *)0x12345678, 100, pseudo_stack + 0);
-					calls_collector::on_enter(collector.get(), (void *)0xABAB00, 110, pseudo_stack + 1);
-					calls_collector::on_exit(collector.get(), 10010);
-					calls_collector::on_enter(collector.get(), (void *)0x12345678, 10011, pseudo_stack + 1);
-					calls_collector::on_exit(collector.get(), 100100);
-				calls_collector::on_exit(collector.get(), 100105);
+				calls_collector::on_enter(collector.get(), pseudo_stack + 0, 100, (void *)0x12345678);
+					calls_collector::on_enter(collector.get(), pseudo_stack + 1, 110, (void *)0xABAB00);
+					calls_collector::on_exit(collector.get(), &dummy, 10010);
+					calls_collector::on_enter(collector.get(), pseudo_stack + 1, 10011, (void *)0x12345678);
+					calls_collector::on_exit(collector.get(), &dummy, 100100);
+				calls_collector::on_exit(collector.get(), &dummy, 100105);
 				collector->read_collected(a);
 
 				// ASSERT
@@ -262,12 +262,12 @@ namespace micro_profiler
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT
-				calls_collector::on_enter(&c1, 0, 0, return_address + 0);
-				calls_collector::on_enter(&c2, 0, 0, return_address + 1);
+				calls_collector::on_enter(&c1, return_address + 0, 0, 0);
+				calls_collector::on_enter(&c2, return_address + 1, 0, 0);
 
 				// ACT / ASSERT
-				assert_equal(return_address[0], calls_collector::on_exit(&c1, 0));
-				assert_equal(return_address[1], calls_collector::on_exit(&c2, 0));
+				assert_equal(return_address[0], calls_collector::on_exit(&c1, &dummy, 0));
+				assert_equal(return_address[1], calls_collector::on_exit(&c2, &dummy, 0));
 			}
 
 
@@ -277,15 +277,15 @@ namespace micro_profiler
 				calls_collector c1(1000), c2(1000);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
-				calls_collector::on_enter(&c1, 0, 0, return_address + 0);
-				calls_collector::on_enter(&c2, 0, 0, return_address + 1);
+				calls_collector::on_enter(&c1, return_address + 0, 0, 0);
+				calls_collector::on_enter(&c2, return_address + 1, 0, 0);
 
 				// ACT
 				return_address[0] = 0, return_address[1] = 0;
 
 				// ACT / ASSERT
-				assert_equal((const void *)0x122211, calls_collector::on_exit(&c1, 0));
-				assert_equal((const void *)0xFF00FF00, calls_collector::on_exit(&c2, 0));
+				assert_equal((const void *)0x122211, calls_collector::on_exit(&c1, &dummy, 0));
+				assert_equal((const void *)0xFF00FF00, calls_collector::on_exit(&c2, &dummy, 0));
 			}
 
 
@@ -298,18 +298,18 @@ namespace micro_profiler
 				};
 
 				// ACT
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 0);
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 1);
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 3);
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
+				calls_collector::on_enter(collector.get(), return_address + 0, 0, 0);
+				calls_collector::on_enter(collector.get(), return_address + 1, 0, 0);
+				calls_collector::on_enter(collector.get(), return_address + 2, 0, 0);
+				calls_collector::on_enter(collector.get(), return_address + 3, 0, 0);
+				calls_collector::on_enter(collector.get(), return_address + 2, 0, 0);
 
 				// ACT / ASSERT
-				assert_equal(return_address[2], calls_collector::on_exit(collector.get(), 0));
-				assert_equal(return_address[3], calls_collector::on_exit(collector.get(), 0));
-				assert_equal(return_address[2], calls_collector::on_exit(collector.get(), 0));
-				assert_equal(return_address[1], calls_collector::on_exit(collector.get(), 0));
-				assert_equal(return_address[0], calls_collector::on_exit(collector.get(), 0));
+				assert_equal(return_address[2], calls_collector::on_exit(collector.get(), &dummy, 0));
+				assert_equal(return_address[3], calls_collector::on_exit(collector.get(), &dummy, 0));
+				assert_equal(return_address[2], calls_collector::on_exit(collector.get(), &dummy, 0));
+				assert_equal(return_address[1], calls_collector::on_exit(collector.get(), &dummy, 0));
+				assert_equal(return_address[0], calls_collector::on_exit(collector.get(), &dummy, 0));
 			}
 
 
@@ -322,18 +322,18 @@ namespace micro_profiler
 				};
 
 				// ACT
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 0);
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 1);
+				calls_collector::on_enter(collector.get(), return_address + 0, 0, 0);
+				calls_collector::on_enter(collector.get(), return_address + 1, 0, 0);
 				return_address[1] = (const void *)0x12345;
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 1);
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
+				calls_collector::on_enter(collector.get(), return_address + 1, 0, 0);
+				calls_collector::on_enter(collector.get(), return_address + 2, 0, 0);
 				return_address[2] = (const void *)0x52345;
-				calls_collector::on_enter(collector.get(), 0, 0, return_address + 2);
+				calls_collector::on_enter(collector.get(), return_address + 2, 0, 0);
 
 				// ACT / ASSERT
-				assert_equal((const void *)0x222211, calls_collector::on_exit(collector.get(), 0));
-				assert_equal((const void *)0xFF00FF00, calls_collector::on_exit(collector.get(), 0));
-				assert_equal(return_address[0], calls_collector::on_exit(collector.get(), 0));
+				assert_equal((const void *)0x222211, calls_collector::on_exit(collector.get(), &dummy, 0));
+				assert_equal((const void *)0xFF00FF00, calls_collector::on_exit(collector.get(), &dummy, 0));
+				assert_equal(return_address[0], calls_collector::on_exit(collector.get(), &dummy, 0));
 			}
 
 		
@@ -347,10 +347,10 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				calls_collector::on_enter(collector.get(), (void *)1, 0, return_address + 0);
-				calls_collector::on_enter(collector.get(), (void *)2, 11, return_address + 1);
+				calls_collector::on_enter(collector.get(), return_address + 0, 0, (void *)1);
+				calls_collector::on_enter(collector.get(), return_address + 1, 11, (void *)2);
 				return_address[1] = (const void *)0x12345;
-				calls_collector::on_enter(collector.get(), (void *)3, 120, return_address + 1);
+				calls_collector::on_enter(collector.get(), return_address + 1, 120, (void *)3);
 
 				// ASSERT
 				collector->read_collected(a);
@@ -364,10 +364,10 @@ namespace micro_profiler
 				assert_equal(reference1, a.collected[0].second);
 
 				// ACT
-				calls_collector::on_enter(collector.get(), (void *)4, 140, return_address + 2);
-				calls_collector::on_enter(collector.get(), (void *)5, 150, return_address + 3);
+				calls_collector::on_enter(collector.get(), return_address + 2, 140, (void *)4);
+				calls_collector::on_enter(collector.get(), return_address + 3, 150, (void *)5);
 				return_address[3] = (const void *)0x777;
-				calls_collector::on_enter(collector.get(), (void *)6, 1000, return_address + 3);
+				calls_collector::on_enter(collector.get(), return_address + 3, 1000, (void *)6);
 
 				// ASSERT
 				collector->read_collected(a);

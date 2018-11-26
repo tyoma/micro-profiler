@@ -23,8 +23,8 @@ IF _M_IX86
 	.model flat
 	.code
 
-	extern ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PBX_JPAPBX@Z:near
-	extern ?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@_J@Z:near
+	extern ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z:near
+	extern ?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z:near
 	extern _g_collector_ptr:dword
 
 	PUSHREGS	macro
@@ -49,11 +49,10 @@ IF _M_IX86
 		PUSHREGS
 
 		mov	ecx, [_g_collector_ptr]
-		lea	eax, [esp + 0Ch]
-		push	eax
+		push	[esp + 0Ch]
 		PUSHRDTSC
-		mov	edx, [esp + 18h]
-		call	?on_enter@calls_collector@micro_profiler@@SIXPAV12@PBX_JPAPBX@Z
+		lea	edx, [esp + 18h]
+		call	?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z
 
 		POPREGS
 		ret
@@ -64,7 +63,8 @@ IF _M_IX86
 
 		mov	ecx, [_g_collector_ptr]
 		PUSHRDTSC
-		call	?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@_J@Z
+		lea	edx, [esp + 14h]
+		call	?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z
 
 		POPREGS
 		ret
@@ -72,8 +72,8 @@ IF _M_IX86
 ELSEIF _M_X64
 	.code
 
-	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEBX_JPEAPEBX@Z:near
-	extrn ?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@_J@Z:near
+	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z:near
+	extrn ?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@PEAPEBX_J@Z:near
 	extern g_collector_ptr:qword
 
 	PUSHREGS	macro
@@ -111,11 +111,11 @@ ELSEIF _M_X64
 		sub	rsp, 20h
 
 		mov	rcx, [g_collector_ptr]
-		lea	r9, qword ptr [rsp + 60h]
 		RDTSC64
 		mov	r8, rdx
-		mov rdx, [r9]
-		call ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEBX_JPEAPEBX@Z
+		lea	rdx, qword ptr [rsp + 60h]
+		mov r9, [rdx]
+		call ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z
 
 		add	rsp, 20h
 		POPREGS
@@ -129,7 +129,9 @@ ELSEIF _M_X64
 
 		mov	rcx, [g_collector_ptr]
 		RDTSC64
-		call	?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@_J@Z
+		mov	r8, rdx
+		lea	rdx, qword ptr [rsp + 60h]
+		call	?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@PEAPEBX_J@Z
 
 		add	rsp, 30h
 		movdqu	xmm0, [rsp - 10h]

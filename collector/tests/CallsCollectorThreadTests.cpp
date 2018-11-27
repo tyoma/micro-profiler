@@ -1,5 +1,7 @@
 #include <collector/calls_collector_thread.h>
 
+#include "helpers.h"
+
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -11,15 +13,10 @@ using wpl::mt::thread;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const call_record &lhs, const call_record &rhs)
-	{	return lhs.timestamp == rhs.timestamp && lhs.callee == rhs.callee;	}
-
 	namespace tests
 	{
 		namespace
 		{
-			const void *dummy = 0;
-
 			struct collection_acceptor
 			{
 				collection_acceptor()
@@ -39,20 +36,22 @@ namespace micro_profiler
 				vector< vector<call_record> > collected;
 			};
 
-			void on_enter(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp, const void *callee)
-			{	collector.on_enter(callee, timestamp, stack_ptr);	}
+			void on_enter(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp,
+				const void *callee)
+			{	collector.on_enter(stack_ptr, timestamp, callee);	}
 
-			const void *on_exit(calls_collector_thread &collector, const void ** /*stack_ptr*/, timestamp_t timestamp)
-			{	return collector.on_exit(timestamp);	}
+			const void *on_exit(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp)
+			{	return collector.on_exit(stack_ptr, timestamp);	}
 
 			void emulate_n_calls(calls_collector_thread &collector, size_t calls_number, void *callee)
 			{
+				virtual_stack vstack;
 				timestamp_t timestamp = timestamp_t();
 
 				for (size_t i = 0; i != calls_number; ++i)
 				{
-					on_enter(collector, &dummy, timestamp++, callee);
-					on_exit(collector, &dummy, timestamp++);
+					vstack.on_enter(collector, timestamp++, callee);
+					vstack.on_exit(collector, timestamp++);
 				}
 			}
 		}
@@ -60,6 +59,7 @@ namespace micro_profiler
 
 		begin_test_suite( CallsCollectorThreadTests )
 
+			virtual_stack vstack;
 			auto_ptr<calls_collector_thread> collector;
 
 			init( ConstructCollector )
@@ -86,8 +86,8 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				on_enter(*collector, &dummy, 100, (void *)0x12345678);
-				on_exit(*collector, &dummy, 10010);
+				vstack.on_enter(*collector, 100, (void *)0x12345678);
+				vstack.on_exit(*collector, 10010);
 				collector->read_collected(a.get_reader());
 
 				// ASSERT
@@ -105,8 +105,8 @@ namespace micro_profiler
 				// INIT
 				collection_acceptor a;
 
-				on_enter(*collector, &dummy, 100, (void *)0x12345678);
-				on_exit(*collector, &dummy, 10010);
+				vstack.on_enter(*collector, 100, (void *)0x12345678);
+				vstack.on_exit(*collector, 10010);
 				collector->read_collected(a.get_reader());
 
 				// ACT
@@ -121,16 +121,15 @@ namespace micro_profiler
 			test( CollectEntryExitOnNestingFunction )
 			{
 				// INIT
-				const void *pseudo_stack[2];
 				collection_acceptor a;
 
 				// ACT
-				on_enter(*collector, pseudo_stack + 0, 100, (void *)0x12345678);
-					on_enter(*collector, pseudo_stack + 1, 110, (void *)0xABAB00);
-					on_exit(*collector, &dummy, 10010);
-					on_enter(*collector, pseudo_stack + 1, 10011, (void *)0x12345678);
-					on_exit(*collector, &dummy, 100100);
-				on_exit(*collector, &dummy, 100105);
+				vstack.on_enter(*collector, 100, (void *)0x12345678);
+					vstack.on_enter(*collector, 110, (void *)0xABAB00);
+					vstack.on_exit(*collector, 10010);
+					vstack.on_enter(*collector, 10011, (void *)0x12345678);
+					vstack.on_exit(*collector, 100100);
+				vstack.on_exit(*collector, 100105);
 				collector->read_collected(a.get_reader());
 
 				// ASSERT
@@ -208,8 +207,8 @@ namespace micro_profiler
 				on_enter(c2, return_address + 1, 0, 0);
 
 				// ACT / ASSERT
-				assert_equal(return_address[0], on_exit(c1, &dummy, 0));
-				assert_equal(return_address[1], on_exit(c2, &dummy, 0));
+				assert_equal(return_address[0], on_exit(c1, return_address + 0, 0));
+				assert_equal(return_address[1], on_exit(c2, return_address + 1, 0));
 			}
 
 
@@ -226,8 +225,8 @@ namespace micro_profiler
 				return_address[0] = 0, return_address[1] = 0;
 
 				// ACT / ASSERT
-				assert_equal((const void *)0x122211, on_exit(c1, &dummy, 0));
-				assert_equal((const void *)0xFF00FF00, on_exit(c2, &dummy, 0));
+				assert_equal((const void *)0x122211, on_exit(c1, return_address + 0, 0));
+				assert_equal((const void *)0xFF00FF00, on_exit(c2, return_address + 1, 0));
 			}
 
 
@@ -237,21 +236,22 @@ namespace micro_profiler
 				const void *return_address[] = {
 					(const void *)0x122211, (const void *)0xFF00FF00,
 					(const void *)0x222211, (const void *)0x5F00FF00,
+					(const void *)0x5F00FF00, (const void *)0x5F00FF00,
 				};
 
 				// ACT
-				on_enter(*collector, return_address + 0, 0, 0);
-				on_enter(*collector, return_address + 1, 0, 0);
-				on_enter(*collector, return_address + 2, 0, 0);
+				on_enter(*collector, return_address + 5, 0, 0);
 				on_enter(*collector, return_address + 3, 0, 0);
 				on_enter(*collector, return_address + 2, 0, 0);
+				on_enter(*collector, return_address + 1, 0, 0);
+				on_enter(*collector, return_address + 0, 0, 0);
 
 				// ACT / ASSERT
-				assert_equal(return_address[2], on_exit(*collector, &dummy, 0));
-				assert_equal(return_address[3], on_exit(*collector, &dummy, 0));
-				assert_equal(return_address[2], on_exit(*collector, &dummy, 0));
-				assert_equal(return_address[1], on_exit(*collector, &dummy, 0));
-				assert_equal(return_address[0], on_exit(*collector, &dummy, 0));
+				assert_equal(return_address[0], on_exit(*collector, return_address + 0, 0));
+				assert_equal(return_address[1], on_exit(*collector, return_address + 1, 0));
+				assert_equal(return_address[2], on_exit(*collector, return_address + 2, 0));
+				assert_equal(return_address[3], on_exit(*collector, return_address + 3, 0));
+				assert_equal(return_address[5], on_exit(*collector, return_address + 5, 0));
 			}
 
 
@@ -264,18 +264,18 @@ namespace micro_profiler
 				};
 
 				// ACT
-				on_enter(*collector, return_address + 0, 0, 0);
+				on_enter(*collector, return_address + 2, 0, 0);
 				on_enter(*collector, return_address + 1, 0, 0);
 				return_address[1] = (const void *)0x12345;
 				on_enter(*collector, return_address + 1, 0, 0);
-				on_enter(*collector, return_address + 2, 0, 0);
+				on_enter(*collector, return_address + 0, 0, 0);
 				return_address[2] = (const void *)0x52345;
-				on_enter(*collector, return_address + 2, 0, 0);
+				on_enter(*collector, return_address + 0, 0, 0);
 
 				// ACT / ASSERT
-				assert_equal((const void *)0x222211, on_exit(*collector, &dummy, 0));
-				assert_equal((const void *)0xFF00FF00, on_exit(*collector, &dummy, 0));
-				assert_equal(return_address[0], on_exit(*collector, &dummy, 0));
+				assert_equal((const void *)0x122211, on_exit(*collector, return_address + 0, 0));
+				assert_equal((const void *)0xFF00FF00, on_exit(*collector, return_address + 1, 0));
+				assert_equal((const void *)0x222211, on_exit(*collector, return_address + 2, 0));
 			}
 
 		
@@ -318,6 +318,56 @@ namespace micro_profiler
 							{ 140, (void *)4 },
 								{ 150, (void *)5 }, { 1000, 0 },
 								{ 1000, (void *)6 },
+				};
+
+				assert_equal(reference2, a.collected[1]);
+			}
+
+
+			test( StackGetsUnwoundOnSkippedFunctionExitsAccordinglyToTheStackPointer )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+					(const void *)0x5F9FF11, (const void *)0x0,
+				};
+				collection_acceptor a;
+
+				on_enter(*collector, return_address + 4, 0, (void *)1);
+				on_enter(*collector, return_address + 3, 11, (void *)1);
+				on_enter(*collector, return_address + 2, 19191911, (void *)1);
+				on_enter(*collector, return_address + 1, 19192911, (void *)1);
+				on_enter(*collector, return_address + 0, 19193911, (void *)1);
+
+				// ACT / ASSERT (two entries at once)
+				assert_equal((void *)0xFF00FF00, on_exit(*collector, return_address + 1, 19195911));
+
+				// ASSERT
+				collector->read_collected(a.get_reader());
+
+				call_record reference1[] = {
+					{ 0, (void *)1 },
+						{ 11, (void *)1 },
+							{ 19191911, (void *)1 },
+								{ 19192911, (void *)1 },
+									{ 19193911, (void *)1 },
+									{ 19195911, 0 },
+								{ 19195911, 0 },
+				};
+
+				assert_equal(reference1, a.collected[0]);
+
+				// ACT / ASSERT (three entries, we go above the tracked stack - this happen with callee-emptied conventions)
+				assert_equal((void *)0x5F9FF11, on_exit(*collector, return_address + 5, 29195911));
+
+				// ASSERT
+				collector->read_collected(a.get_reader());
+
+				call_record reference2[] = {
+							{ 29195911, 0 },
+						{ 29195911, 0 },
+					{ 29195911, 0 },
 				};
 
 				assert_equal(reference2, a.collected[1]);

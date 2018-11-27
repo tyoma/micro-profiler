@@ -31,11 +31,11 @@ namespace micro_profiler
 		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1]), _trace_limit(sizeof(call_record) * trace_limit),
 			_proceed_collection(false, true)			
 	{
-		return_entry re = { };
+		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
 		_return_stack.push_back(re);
 	}
 
-	void calls_collector_thread::on_enter(const void *callee, timestamp_t timestamp, const void **stack_ptr) throw()
+	void calls_collector_thread::on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw()
 	{
 		if (_return_stack.back().stack_ptr != stack_ptr)
 		{
@@ -55,12 +55,17 @@ namespace micro_profiler
 		track(callee, timestamp);
 	}
 
-	const void *calls_collector_thread::on_exit(timestamp_t timestamp) throw()
+	const void *calls_collector_thread::on_exit(const void ** stack_ptr, timestamp_t timestamp) throw()
 	{
-		const void *return_address = _return_stack.back().return_address;
+		const void *return_address;
+		
+		do
+		{
+			return_address = _return_stack.back().return_address;
 
-		_return_stack.pop_back();
-		track(0, timestamp);
+			_return_stack.pop_back();
+			track(0, timestamp);
+		} while (_return_stack.back().stack_ptr <= stack_ptr);
 		return return_address;
 	}
 

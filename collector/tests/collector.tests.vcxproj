@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="globals.h" />
+    <ClInclude Include="helpers.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mocks_com.h" />
   </ItemGroup>

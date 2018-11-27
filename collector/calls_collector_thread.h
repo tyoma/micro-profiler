@@ -50,8 +50,8 @@ namespace micro_profiler
 	public:
 		explicit calls_collector_thread(size_t trace_limit);
 
-		void on_enter(const void *callee, timestamp_t timestamp, const void **stack_ptr) throw();
-		const void *on_exit(timestamp_t timestamp) throw();
+		void on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw();
+		const void *on_exit(const void **stack_ptr, timestamp_t timestamp) throw();
 
 		void read_collected(const reader_t &reader);
 

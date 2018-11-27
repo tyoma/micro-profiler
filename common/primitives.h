@@ -32,14 +32,6 @@ namespace micro_profiler
 	typedef range<const byte> const_byte_range;
 	typedef range<byte> byte_range;
 
-#pragma pack(push, 4)
-	struct call_record
-	{
-		timestamp_t timestamp;
-		const void *callee;	// call address + sizeof(void *) + 1 bytes
-	};
-#pragma pack(pop)
-
 	struct address_compare
 	{
 		size_t operator ()(unsigned int key) const throw();

@@ -28,6 +28,9 @@
     <ClCompile Include="image_patch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="calls_collector_thread.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -50,5 +53,6 @@
     <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\binary_image.h" />
     <ClInclude Include="..\image_patch.h" />
+    <ClInclude Include="..\calls_collector_thread.h" />
   </ItemGroup>
 </Project>

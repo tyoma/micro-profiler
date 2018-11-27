@@ -110,7 +110,6 @@ namespace micro_profiler
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);
 	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
-	bool operator ==(const call_record &lhs, const call_record &rhs);
 }
 
 namespace ut

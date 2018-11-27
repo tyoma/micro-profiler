@@ -31,7 +31,7 @@ namespace micro_profiler
 				assert_equal(6, recursive_factorial(3));
 
 				// ASSERT
-				call_record reference1[] = {
+				mocks::call_record reference1[] = {
 					{ 0, address_cast_hack<const void *>(&recursive_factorial) },
 						{ 0, address_cast_hack<const void *>(&recursive_factorial) },
 							{ 0, address_cast_hack<const void *>(&recursive_factorial) },
@@ -50,7 +50,7 @@ namespace micro_profiler
 				assert_equal(24, recursive_factorial(4));
 
 				// ASSERT
-				call_record reference2[] = {
+				mocks::call_record reference2[] = {
 					{ 0, address_cast_hack<const void *>(&recursive_factorial) },
 						{ 0, address_cast_hack<const void *>(&recursive_factorial) },
 							{ 0, address_cast_hack<const void *>(&recursive_factorial) },

@@ -51,6 +51,7 @@
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="BinaryImageTests.cpp" />
     <ClCompile Include="CallsCollectorTests.cpp" />
+    <ClCompile Include="CallsCollectorThreadTests.cpp" />
     <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="globals.cpp" />

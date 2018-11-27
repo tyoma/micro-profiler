@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/primitives.h>
+#include <common/types.h>
 #include <patcher/platform.h>
 #include <vector>
 
@@ -10,6 +10,14 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
+			struct call_record
+			{
+				timestamp_t timestamp;
+				const void *callee;
+
+				bool operator ==(const call_record &rhs) const;
+			};
+
 			struct trace_events
 			{
 				static void CC_(fastcall) on_enter(trace_events *self, const void **stack_ptr,
@@ -24,6 +32,10 @@ namespace micro_profiler
 				std::vector<const void **> exit_stack_addresses;
 			};
 
+
+
+			inline bool call_record::operator ==(const call_record &rhs) const
+			{	return callee == rhs.callee;	}
 
 
 			inline void CC_(fastcall) trace_events::on_enter(trace_events *self, const void **stack_ptr,

@@ -1,16 +1,13 @@
-#include <collector/calls_collector.h>
+#include <collector/calls_collector_thread.h>
 
-#include "globals.h"
-
-#include <algorithm>
 #include <test-helpers/helpers.h>
-#include <vector>
-#include <utility>
 #include <ut/assert.h>
 #include <ut/test.h>
+#include <wpl/mt/thread.h>
 
-using wpl::mt::thread;
 using namespace std;
+using namespace std::placeholders;
+using wpl::mt::thread;
 
 namespace micro_profiler
 {
@@ -23,36 +20,32 @@ namespace micro_profiler
 		{
 			const void *dummy = 0;
 
-			struct collection_acceptor : calls_collector_i::acceptor
+			struct collection_acceptor
 			{
 				collection_acceptor()
 					: total_entries(0)
 				{	}
 
-				virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count)
+				void accept_calls(const call_record *calls, size_t count)
 				{
-					collected.push_back(make_pair(threadid, vector<call_record>()));
-					collected.back().second.assign(calls, calls + count);
+					collected.push_back(vector<call_record>(calls, calls + count));
 					total_entries += count;
 				}
 
+				calls_collector_thread::reader_t get_reader()
+				{	return bind(&collection_acceptor::accept_calls, this, _1, _2);	}
+
 				size_t total_entries;
-				vector< pair< thread::id, vector<call_record> > > collected;
+				vector< vector<call_record> > collected;
 			};
 
-			bool call_trace_less(const pair< thread::id, vector<call_record> > &lhs, const pair< thread::id, vector<call_record> > &rhs)
-			{	return lhs.first < rhs.first;	}
+			void on_enter(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp, const void *callee)
+			{	collector.on_enter(callee, timestamp, stack_ptr);	}
 
-			bool call_record_eq(const call_record &lhs, const call_record &rhs)
-			{	return lhs.callee == rhs.callee && lhs.timestamp == rhs.timestamp;	}
+			const void *on_exit(calls_collector_thread &collector, const void ** /*stack_ptr*/, timestamp_t timestamp)
+			{	return collector.on_exit(timestamp);	}
 
-			void on_enter(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp, const void *callee)
-			{	calls_collector::on_enter(&collector, stack_ptr, timestamp, callee);	}
-
-			const void *on_exit(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp)
-			{	return calls_collector::on_exit(&collector, stack_ptr, timestamp);	}
-
-			void emulate_n_calls(calls_collector &collector, size_t calls_number, void *callee)
+			void emulate_n_calls(calls_collector_thread &collector, size_t calls_number, void *callee)
 			{
 				timestamp_t timestamp = timestamp_t();
 
@@ -65,18 +58,13 @@ namespace micro_profiler
 		}
 
 
-		begin_test_suite( CallsCollectorTests )
+		begin_test_suite( CallsCollectorThreadTests )
 
-			auto_ptr<calls_collector> collector;
+			auto_ptr<calls_collector_thread> collector;
 
 			init( ConstructCollector )
 			{
-				collection_acceptor a;
-
-				g_collector_ptr->read_collected(a);
-				g_collector_ptr->read_collected(a);
-
-				collector.reset(new calls_collector(1000));
+				collector.reset(new calls_collector_thread(1000));
 			}
 
 			test( CollectNothingOnNoCalls )
@@ -85,7 +73,7 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				collector->read_collected(a);
+				collector->read_collected(a.get_reader());
 
 				// ASSERT
 				assert_is_empty(a.collected);
@@ -100,7 +88,7 @@ namespace micro_profiler
 				// ACT
 				on_enter(*collector, &dummy, 100, (void *)0x12345678);
 				on_exit(*collector, &dummy, 10010);
-				collector->read_collected(a);
+				collector->read_collected(a.get_reader());
 
 				// ASSERT
 				call_record reference[] = {
@@ -108,8 +96,7 @@ namespace micro_profiler
 				};
 
 				assert_equal(1u, a.collected.size());
-				assert_equal(this_thread::open()->get_id(), a.collected[0].first);
-				assert_equal_pred(reference, a.collected[0].second, &call_record_eq);
+				assert_equal(reference, a.collected[0]);
 			}
 
 
@@ -120,58 +107,14 @@ namespace micro_profiler
 
 				on_enter(*collector, &dummy, 100, (void *)0x12345678);
 				on_exit(*collector, &dummy, 10010);
-				collector->read_collected(a);
+				collector->read_collected(a.get_reader());
 
 				// ACT
-				collector->read_collected(a);
-				collector->read_collected(a);
+				collector->read_collected(a.get_reader());
+				collector->read_collected(a.get_reader());
 
 				// ASSERT
 				assert_equal(1u, a.collected.size());
-			}
-
-
-			test( ReadCollectedFromOtherThreads )
-			{
-				// INIT
-				collection_acceptor a;
-				thread::id threadid1, threadid2;
-
-				// ACT
-				{
-					thread t1(bind(&emulate_n_calls, ref(*collector), 2, (void *)0x12FF00)),
-						t2(bind(&emulate_n_calls, ref(*collector), 3, (void *)0xE1FF0));
-
-					threadid1 = t1.get_id();
-					threadid2 = t2.get_id();
-				}
-
-				collector->read_collected(a);
-
-				// ASSERT
-				assert_equal(2u, a.collected.size());
-
-				const vector<call_record> *trace1 = &a.collected[0].second;
-				const vector<call_record> *trace2 = &a.collected[1].second;
-				sort(a.collected.begin(), a.collected.end(), &call_trace_less);
-				if (threadid1 > threadid2)
-					swap(threadid1, threadid2), swap(trace1, trace2);
-
-				call_record reference1[] = {
-					{ 0, (void *)0x12FF00 }, { 1, 0 },
-					{ 2, (void *)0x12FF00 }, { 3, 0 },
-				};
-				call_record reference2[] = {
-					{ 0, (void *)0xE1FF0 }, { 1, 0 },
-					{ 2, (void *)0xE1FF0 }, { 3, 0 },
-					{ 4, (void *)0xE1FF0 }, { 5, 0 },
-				};
-
-				assert_equal(threadid1, a.collected[0].first);
-				assert_equal_pred(reference1, *trace1, &call_record_eq);
-
-				assert_equal(threadid2, a.collected[1].first);
-				assert_equal_pred(reference2, *trace2, &call_record_eq);
 			}
 
 
@@ -188,7 +131,7 @@ namespace micro_profiler
 					on_enter(*collector, pseudo_stack + 1, 10011, (void *)0x12345678);
 					on_exit(*collector, &dummy, 100100);
 				on_exit(*collector, &dummy, 100105);
-				collector->read_collected(a);
+				collector->read_collected(a.get_reader());
 
 				// ASSERT
 				call_record reference[] = {
@@ -198,24 +141,14 @@ namespace micro_profiler
 					{ 100105, 0 },
 				};
 
-				assert_equal_pred(reference, a.collected[0].second, &call_record_eq);
-			}
-
-
-			test( ProfilerLatencyGreaterThanZero )
-			{
-				// INIT / ACT
-				timestamp_t profiler_latency = collector->profiler_latency();
-
-				// ASSERT
-				assert_is_true(profiler_latency > 0);
+				assert_equal(reference, a.collected[0]);
 			}
 
 
 			test( MaxTraceLengthIsLimited )
 			{
 				// INIT
-				calls_collector c1(67), c2(123), c3(127);
+				calls_collector_thread c1(67), c2(123), c3(127);
 				collection_acceptor a1, a2, a3;
 
 				// ACT (blockage during this test is equivalent to the failure)
@@ -226,17 +159,17 @@ namespace micro_profiler
 				while (a1.total_entries < 1340)
 				{
 					this_thread::sleep_for(30);
-					c1.read_collected(a1);
+					c1.read_collected(a1.get_reader());
 				}
 				while (a2.total_entries < 2460)
 				{
 					this_thread::sleep_for(30);
-					c2.read_collected(a2);
+					c2.read_collected(a2.get_reader());
 				}
 				while (a3.total_entries < 1270)
 				{
 					this_thread::sleep_for(30);
-					c3.read_collected(a3);
+					c3.read_collected(a3.get_reader());
 				}
 
 				// ASSERT
@@ -253,9 +186,9 @@ namespace micro_profiler
 				t1.join();
 				t2.join();
 				t3.join();
-				c1.read_collected(a1);
-				c2.read_collected(a2);
-				c3.read_collected(a3);
+				c1.read_collected(a1.get_reader());
+				c2.read_collected(a2.get_reader());
+				c3.read_collected(a3.get_reader());
 
 				// ASSERT (no more calls were recorded)
 				assert_is_empty(a1.collected);
@@ -267,7 +200,7 @@ namespace micro_profiler
 			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
 			{
 				// INIT
-				calls_collector c1(1000), c2(1000);
+				calls_collector_thread c1(1000), c2(1000);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT
@@ -283,7 +216,7 @@ namespace micro_profiler
 			test( ReturnAddressesAreStoredByValue )
 			{
 				// INIT
-				calls_collector c1(1000), c2(1000);
+				calls_collector_thread c1(1000), c2(1000);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				on_enter(c1, return_address + 0, 0, 0);
@@ -362,7 +295,7 @@ namespace micro_profiler
 				on_enter(*collector, return_address + 1, 120, (void *)3);
 
 				// ASSERT
-				collector->read_collected(a);
+				collector->read_collected(a.get_reader());
 
 				call_record reference1[] = {
 					{ 0, (void *)1 },
@@ -370,7 +303,7 @@ namespace micro_profiler
 						{ 120, (void *)3 },
 				};
 
-				assert_equal(reference1, a.collected[0].second);
+				assert_equal(reference1, a.collected[0]);
 
 				// ACT
 				on_enter(*collector, return_address + 2, 140, (void *)4);
@@ -379,7 +312,7 @@ namespace micro_profiler
 				on_enter(*collector, return_address + 3, 1000, (void *)6);
 
 				// ASSERT
-				collector->read_collected(a);
+				collector->read_collected(a.get_reader());
 
 				call_record reference2[] = {
 							{ 140, (void *)4 },
@@ -387,7 +320,7 @@ namespace micro_profiler
 								{ 1000, (void *)6 },
 				};
 
-				assert_equal(reference2, a.collected[1].second);
+				assert_equal(reference2, a.collected[1]);
 			}
 		end_test_suite
 	}

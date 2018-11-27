@@ -50,6 +50,9 @@
     <ClCompile Include="calls_collector.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="calls_collector_thread.cpp">
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+    </ClCompile>
     <ClCompile Include="channel_client.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -74,6 +77,7 @@
   <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
+    <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\frontend_controller.h" />
     <ClInclude Include="..\binary_image.h" />

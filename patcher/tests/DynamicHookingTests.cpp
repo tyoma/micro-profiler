@@ -337,7 +337,7 @@ namespace micro_profiler
 				f("test #1");
 
 				// ASSERT
-				call_record reference1[] = {
+				mocks::call_record reference1[] = {
 					{ 0, id }, { 0, 0 },
 				};
 
@@ -348,7 +348,7 @@ namespace micro_profiler
 				f("test #3");
 
 				// ASSERT
-				call_record reference2[] = {
+				mocks::call_record reference2[] = {
 					{ 0, id }, { 0, 0 },
 					{ 0, id }, { 0, 0 },
 					{ 0, id }, { 0, 0 },
@@ -381,7 +381,7 @@ namespace micro_profiler
 				assert_equal("namaremac", f2(f1, "cameraman"));
 
 				// ASSERT
-				call_record reference[] = {
+				mocks::call_record reference[] = {
 					{ 0, id1 }, { 0, 0 },
 					{ 0, id2 },
 						{ 0, id1 }, { 0, 0 },
@@ -418,7 +418,7 @@ namespace micro_profiler
 				assert_equal("namaremac", f2(f1, "cameraman"));
 
 				// ASSERT
-				call_record reference[] = {
+				mocks::call_record reference[] = {
 					{ 0, text1 }, { 0, 0 },
 					{ 0, text2 },
 						{ 0, text1 }, { 0, 0 },

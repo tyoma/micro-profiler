@@ -72,7 +72,7 @@ namespace micro_profiler
 				assert_equal(f11, ff11);
 				assert_equal(f12, ff12);
 
-				call_record reference1[] = {
+				mocks::call_record reference1[] = {
 					{ 0, address_cast_hack<const void *>(f1F) },
 					{ 0, 0 },
 				};
@@ -84,7 +84,7 @@ namespace micro_profiler
 				f21(data, array_end(data));
 
 				// ASSERT
-				call_record reference2[] = {
+				mocks::call_record reference2[] = {
 					{ 0, address_cast_hack<const void *>(f21) },
 					{ 0, 0 },
 				};
@@ -183,7 +183,7 @@ namespace micro_profiler
 				ff4(data, array_end(data));
 
 				// ASSERT
-				call_record reference1[] = {
+				mocks::call_record reference1[] = {
 					{ 0, address_cast_hack<const void *>(ff4) },
 					{ 0, 0 },
 				};
@@ -205,7 +205,7 @@ namespace micro_profiler
 				ff4(data, array_end(data));
 
 				// ASSERT
-				call_record reference2[] = {
+				mocks::call_record reference2[] = {
 					{ 0, address_cast_hack<const void *>(f23) },
 					{ 0, 0 },
 				};

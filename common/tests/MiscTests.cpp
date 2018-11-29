@@ -576,9 +576,9 @@ namespace micro_profiler
 			init( LoadImages )
 			{
 				image images[] = {
-					image(L"symbol_container_1.dll"),
-					image(L"symbol_container_2.dll"),
-					image(L"symbol_container_3_nosymbols.dll"),
+					image(L"symbol_container_1"),
+					image(L"symbol_container_2"),
+					image(L"symbol_container_3_nosymbols"),
 				};
 
 				_images.assign(images, array_end(images));
@@ -592,14 +592,11 @@ namespace micro_profiler
 				module_info info3 = get_module_info(reinterpret_cast<const void *>(_images[2].load_address()));
 
 				// ASSERT
-				assert_equal(info1.path.size() - wstring(L"symbol_container_1.dll").size(),
-					info1.path.find(L"symbol_container_1.dll"));
+				assert_not_equal(wstring::npos, info1.path.find(L"symbol_container_1"));
 				assert_equal(_images[0].load_address(), info1.load_address);
-				assert_equal(info2.path.size() - wstring(L"symbol_container_2.dll").size(),
-					info2.path.find(L"symbol_container_2.dll"));
+				assert_not_equal(wstring::npos, info2.path.find(L"symbol_container_2"));
 				assert_equal(_images[1].load_address(), info2.load_address);
-				assert_equal(info3.path.size() - wstring(L"symbol_container_3_nosymbols.dll").size(),
-					info3.path.find(L"symbol_container_3_nosymbols.dll"));
+				assert_not_equal(wstring::npos, info3.path.find(L"symbol_container_3_nosymbols"));
 				assert_equal(_images[2].load_address(), info3.load_address);
 			}
 
@@ -612,14 +609,11 @@ namespace micro_profiler
 				module_info info3 = get_module_info(_images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
-				assert_equal(info1.path.size() - wstring(L"symbol_container_1.dll").size(),
-					info1.path.find(L"symbol_container_1.dll"));
+				assert_not_equal(wstring::npos, info1.path.find(L"symbol_container_1"));
 				assert_equal(_images[0].load_address(), info1.load_address);
-				assert_equal(info2.path.size() - wstring(L"symbol_container_2.dll").size(),
-					info2.path.find(L"symbol_container_2.dll"));
+				assert_not_equal(wstring::npos, info2.path.find(L"symbol_container_2"));
 				assert_equal(_images[1].load_address(), info2.load_address);
-				assert_equal(info3.path.size() - wstring(L"symbol_container_3_nosymbols.dll").size(),
-					info3.path.find(L"symbol_container_3_nosymbols.dll"));
+				assert_not_equal(wstring::npos, info3.path.find(L"symbol_container_3_nosymbols"));
 				assert_equal(_images[1].load_address(), info2.load_address);
 			}
 

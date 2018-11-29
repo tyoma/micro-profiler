@@ -1,5 +1,6 @@
 #include <common/symbol_resolver.h>
 
+#include <common/module.h>
 #include <common/path.h>
 #include <test-helpers/helpers.h>
 
@@ -12,10 +13,15 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		typedef void (*void_f_t)();
-		typedef void (get_function_addresses_1_t)(void_f_t &f1, void_f_t &f2);
-		typedef void (get_function_addresses_2_t)(void_f_t &f1, void_f_t &f2, void_f_t &f3);
-		typedef void (get_function_addresses_3_t)(void_f_t &f);
+		namespace
+		{
+			int g_dummy;
+
+			typedef void (*void_f_t)();
+			typedef void (get_function_addresses_1_t)(void_f_t &f1, void_f_t &f2);
+			typedef void (get_function_addresses_2_t)(void_f_t &f1, void_f_t &f2, void_f_t &f3);
+			typedef void (get_function_addresses_3_t)(void_f_t &f);
+		}
 
 		begin_test_suite( SymbolResolverTests )
 			test( ResolverCreationReturnsNonNullObject )
@@ -32,15 +38,15 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_throws(r->add_image(L"", 0x12345), invalid_argument);
-				assert_throws(r->add_image(L"missingABCDEFG.dll", 0x23451), invalid_argument);
+				assert_throws(r->add_image(L"missingABCDEFG", 0x23451), invalid_argument);
 			}
 
 
 			test( CreateResolverForValidImage )
 			{
 				// INIT
-				image img1(L"common.tests.dll");
-				image img2(L"symbol_container_1.dll");
+				image img1(get_module_info(&g_dummy).path.c_str());
+				image img2(L"symbol_container_1");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 
 				// ACT / ASSERT (must not throw)
@@ -53,7 +59,7 @@ namespace micro_profiler
 			test( ReturnNamesOfLocalFunctions1 )
 			{
 				// INIT
-				image img(L"symbol_container_1.dll");
+				image img(L"symbol_container_1");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t *getter_1 = img.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
 				void_f_t f1 = 0, f2 = 0;
@@ -74,7 +80,7 @@ namespace micro_profiler
 			test( ReturnNamesOfLocalFunctions2 )
 			{
 				// INIT
-				image img(L"symbol_container_2.dll");
+				image img(L"symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t *getter_2 =
 					img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
@@ -98,7 +104,7 @@ namespace micro_profiler
 			test( RespectLoadAddress )
 			{
 				// INIT
-				image img(L"symbol_container_2.dll");
+				image img(L"symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t *getter_2 =
 					img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
@@ -126,7 +132,7 @@ namespace micro_profiler
 			test( LoadModuleWithNoSymbols )
 			{
 				// INIT
-				image img(L"symbol_container_3_nosymbols.dll");
+				image img(L"symbol_container_3_nosymbols");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_3_t *getter_3 = img.get_symbol<get_function_addresses_3_t>("get_function_addresses_3");
 				void_f_t f = 0;
@@ -147,7 +153,7 @@ namespace micro_profiler
 			test( ConstantReferenceFromResolverIsTheSame )
 			{
 				// INIT
-				image img(L"symbol_container_2.dll");
+				image img(L"symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t *getter_2 = img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
 				void_f_t f1 = 0, f2 = 0, f3 = 0;
@@ -174,7 +180,7 @@ namespace micro_profiler
 			test( LoadSymbolsForSecondModule )
 			{
 				// INIT
-				image img1(L"symbol_container_1.dll"), img2(L"symbol_container_2.dll");
+				image img1(L"symbol_container_1"), img2(L"symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t *getter_1 = img1.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
 				get_function_addresses_2_t *getter_2 = img2.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
@@ -199,7 +205,7 @@ namespace micro_profiler
 			test( FileLineInformationIsReturnedBySymbolProvider )
 			{
 				// INIT
-				image img1(L"symbol_container_1.dll"), img2(L"symbol_container_2.dll");
+				image img1(L"symbol_container_1"), img2(L"symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t *getter_1 = img1.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
 				get_function_addresses_2_t *getter_2 = img2.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");

@@ -65,7 +65,7 @@ namespace micro_profiler
 
 		void PatchExitProcess()
 		{
-			shared_ptr<void> hkernel(::LoadLibraryW(L"kernel32.dll"), &::FreeLibrary);
+			shared_ptr<void> hkernel(::LoadLibraryW(L"kernel32"), &::FreeLibrary);
 			g_exitprocess_address = ::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "ExitProcess");
 			detour(g_exitprocess_address, &ExitProcessHooked, g_backup);
 		}

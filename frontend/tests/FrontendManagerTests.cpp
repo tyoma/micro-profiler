@@ -313,7 +313,7 @@ namespace micro_profiler
 				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				channel_t c = open_channel(id);
-				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
+				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
 				module_info mi[] = {
 					{ images[0].load_address(), images[0].absolute_path() },
 					{ images[1].load_address(), images[1].absolute_path() },
@@ -351,9 +351,9 @@ namespace micro_profiler
 					_1, _2));
 				channel_t c = open_channel(id);
 				image images[] = {
-					image(L"symbol_container_1.dll"),
-					image(L"symbol_container_2.dll"),
-					image(L"symbol_container_3_nosymbols.dll"),
+					image(L"symbol_container_1"),
+					image(L"symbol_container_2"),
+					image(L"symbol_container_3_nosymbols"),
 				};
 				module_info mi[] = {
 					{ images[0].load_address(), images[0].absolute_path() },
@@ -726,11 +726,11 @@ namespace micro_profiler
 				channel_t c = open_channel(id);
 
 				// ACT
-				write(c, init, make_initialization_data(L"c:\\dev\\micro-profiler.dll", 1));
+				write(c, init, make_initialization_data(L"c:\\dev\\micro-profiler", 1));
 
 				// ACT / ASSERT
 				assert_not_null(m->get_instance(0));
-				assert_equal(L"c:\\dev\\micro-profiler.dll", m->get_instance(0)->executable);
+				assert_equal(L"c:\\dev\\micro-profiler", m->get_instance(0)->executable);
 				assert_equal(_ui_creation_log[0]->model, m->get_instance(0)->model);
 				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
 			}

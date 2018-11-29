@@ -1,19 +1,20 @@
 [submodule "libraries/wpl"]
 	path = libraries/wpl
-	url = git@github.com:tyoma/wpl.git
+	url = ../wpl.git
 	branch = master
 [submodule "libraries/agge"]
 	path = libraries/agge
-	url = git@github.com:tyoma/agge.git
+	url = ../agge.git
 	branch = master
 [submodule "libraries/utee"]
 	path = libraries/utee
-	url = git@github.com:tyoma/utee.git
+	url = ../utee.git
 	branch = master
 [submodule "libraries/strmd"]
 	path = libraries/strmd
-	url = git@github.com:tyoma/strmd.git
+	url = ../strmd.git
+	branch = origin/master
 [submodule "libraries/lend"]
 	path = libraries/lend
-	url = git@github.com:tyoma/lend.git
+	url = ../lend.git
 	branch = origin/master

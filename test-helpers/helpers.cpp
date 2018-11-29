@@ -1,5 +1,7 @@
 #include <test-helpers/helpers.h>
 
+#include <string.h>
+
 using namespace std;
 
 namespace micro_profiler

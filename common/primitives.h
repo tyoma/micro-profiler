@@ -35,7 +35,7 @@ namespace micro_profiler
 	struct address_compare
 	{
 		size_t operator ()(unsigned int key) const throw();
-		size_t operator ()(unsigned long long int key) const throw();
+		size_t operator ()(long_address_t key) const throw();
 		size_t operator ()(const void *key) const throw();
 	};
 
@@ -96,11 +96,19 @@ namespace micro_profiler
 	inline size_t address_compare::operator ()(unsigned int key) const throw()
 	{	return (key >> 4) * 2654435761;	}
 
-	inline size_t address_compare::operator ()(unsigned long long int key) const throw()
+	inline size_t address_compare::operator ()(long_address_t key) const throw()
 	{	return static_cast<size_t>((key >> 4) * 0x7FFFFFFFFFFFFFFF);	}
 
 	inline size_t address_compare::operator ()(const void *key) const throw()
-	{	return (*this)(reinterpret_cast<size_t>(key));	}
+	{
+#pragma warning(push)
+#pragma warning(disable:4127)
+		if (sizeof(key) == 8)
+			return (*this)(static_cast<long_address_t>(reinterpret_cast<size_t>(key)));
+		else
+			return (*this)(static_cast<unsigned int>(reinterpret_cast<size_t>(key)));
+#pragma warning(pop)
+	}
 
 
 	// function_statistics - inline definitions

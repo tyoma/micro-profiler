@@ -27,7 +27,7 @@
 #include <common/allocator.h>
 #include <common/module.h>
 #include <iostream>
-#include <set>
+#include <map>
 
 using namespace std;
 
@@ -37,33 +37,32 @@ namespace micro_profiler
 {
 	void patched_image::patch_image(void *in_image_address)
 	{
-		set<const void *> patched;
+		map<const void *, string> patched;
 
 		std::shared_ptr<binary_image> image = load_image_at((void *)get_module_info(in_image_address).load_address);
 		executable_memory_allocator em;
-		int n = 0;
 
 		image->enumerate_functions([&] (const function_body &fn) {
 			try
 			{
-				if (!patched.insert(fn.body().begin()).second)
+				const auto e = patched.insert(make_pair(fn.body().begin(), fn.name()));
+
+				if (!e.second)
 				{
-					cout << fn.name() << " - the function has already been patched!" << endl;
+					cout << fn.name() << " - the function has already been patched as " << e.first->second << endl;
 				}
 				else if (fn.name() == "_VEC_memcpy")
 				{
 				}
-				else if (fn.body().length() >= 5)
+				else if (fn.body().length() < 5)
 				{
-					shared_ptr<function_patch> patch(new function_patch(em, fn.effective_address(), fn.body(),
-						g_collector_ptr));
-
-					_patches.push_back(patch);
-					++n;
+					cout << fn.name() << " - the function is too short!" << endl;
 				}
 				else
 				{
-					cout << fn.name() << " - the function is too short!" << endl;
+					shared_ptr<function_patch> patch(new function_patch(em, fn.body(), g_collector_ptr));
+
+					_patches.push_back(patch);
 				}
 			}
 			catch (const exception &e)

@@ -32,14 +32,14 @@ namespace micro_profiler
 
 		struct thunk
 		{
-			void init(const void *target_function, const void *id, void *instance,
-				hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
+			void init(const void *target_function, const void *id,
+				void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 
 			push i11;	// push eax
 			push i12;	// push ecx
 			push i13;	// push edx
 
-			mov_imm32 i21;	// mov ecx, instance ; 1st
+			mov_imm32 i21;	// mov ecx, interceptor ; 1st
 			push_imm32 i22;	// push calee ; 4th
 			rdtsc i23;
 			push i24;	// push edx ; 3rd
@@ -59,7 +59,7 @@ namespace micro_profiler
 			push i52;	// push ecx
 			push i53;	// push edx
 
-			mov_imm32 i61;	// mov ecx, instance ; 1st
+			mov_imm32 i61;	// mov ecx, interceptor ; 1st
 			rdtsc i62;
 			push i63;	// push edx ; 3rd
 			push i64;	// push eax ; 3rd
@@ -78,14 +78,14 @@ namespace micro_profiler
 
 
 
-		void thunk::init(const void *callee, const void *id, void *instance,
-			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
+		void thunk::init(const void *callee, const void *id,
+			void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 		{
 			i11.init(eax_);
 			i12.init(ecx_);
 			i13.init(edx_);
 
-			i21.init(ecx_, (dword)(size_t)instance); // 1. instance
+			i21.init(ecx_, (dword)(size_t)interceptor); // 1. interceptor
 			i22.init((dword)(size_t)id); // 4. calee
 			i23.init(), i24.init(edx_), i25.init(eax_); // 3. timestamp
 			i26.init(edx_, 0x18); // 2. stack_ptr
@@ -103,7 +103,7 @@ namespace micro_profiler
 			i52.init(ecx_);
 			i53.init(edx_);
 
-			i61.init(ecx_, (dword)(size_t)instance); // 1. instance
+			i61.init(ecx_, (dword)(size_t)interceptor); // 1. interceptor
 			i62.init(), i63.init(edx_), i64.init(eax_); // 3. timestamp
 			i65.init(edx_, 0x14); // 2. stack_ptr
 			i66.init((const void *)(size_t)on_exit);
@@ -121,7 +121,7 @@ namespace micro_profiler
 
 	const size_t c_thunk_size = sizeof(thunk);
 
-	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *instance,
-		hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
-	{	static_cast<thunk *>(thunk_location)->init(target_function, id, instance, on_enter, on_exit);	}
+	void initialize_hooks(void *thunk_location, const void *target_function, const void *id,
+		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
+	{	static_cast<thunk *>(thunk_location)->init(target_function, id, interceptor, on_enter, on_exit);	}
 }

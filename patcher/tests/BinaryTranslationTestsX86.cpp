@@ -12,7 +12,14 @@ namespace micro_profiler
 	namespace tests
 	{
 		begin_test_suite( BinaryTranslationTestsX86 )
-			test( RelativeOutsideJumpsAreTranslatedBasedOnTheirTargetAddress )
+
+			// Terminology:
+			//		- 'inner' jump/call is made within the bounds of a isolated function piece;
+			//		- 'external' jump/call goes beyond the bounds of a isolated piece;
+			//		- 'short' jump/call is a rel8 (Intel) instruction;
+			//		- 'near' jump/call is a rel32 (Intel) instruction;
+
+			test( RelativeExternalJumpsAreTranslatedBasedOnTheirTargetAddress )
 			{
 				// INIT
 				byte instructions1[] = {
@@ -26,7 +33,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions1 + 1, instructions1 + 48, const_byte_range(instructions1 + 48, 10));
+				move_function(instructions1 + 1, const_byte_range(instructions1 + 48, 10));
 
 				// ASSERT
 				byte reference1[] = {
@@ -36,7 +43,7 @@ namespace micro_profiler
 				assert_is_true(equal(reference1, array_end(reference1), instructions1 + 1));
 
 				// ACT
-				move_function(instructions1 + 17, instructions1 + 48, const_byte_range(instructions1 + 48, 10));
+				move_function(instructions1 + 17, const_byte_range(instructions1 + 48, 10));
 
 				// ASSERT
 				byte reference2[] = {
@@ -51,7 +58,7 @@ namespace micro_profiler
 				};
 		
 				// ACT
-				move_function(instructions2 + 0x0F12, instructions2, const_byte_range(instructions2, 15));
+				move_function(instructions2 + 0x0F12, const_byte_range(instructions2, 15));
 
 				// ASSERT
 				byte reference3[] = {
@@ -62,7 +69,7 @@ namespace micro_profiler
 			}
 
 
-			test( RelativeOutsideCallsAreTranslatedBasedOnTheirTargetAddress )
+			test( RelativeExternalCallsAreTranslatedBasedOnTheirTargetAddress )
 			{
 				// INIT
 				byte instructions1[] = {
@@ -76,7 +83,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions1 + 1, instructions1 + 48, const_byte_range(instructions1 + 48, 15));
+				move_function(instructions1 + 1, const_byte_range(instructions1 + 48, 15));
 
 				// ASSERT
 				byte reference1[] = {
@@ -86,7 +93,7 @@ namespace micro_profiler
 				assert_is_true(equal(reference1, array_end(reference1), instructions1 + 1));
 
 				// ACT
-				move_function(instructions1 + 17, instructions1 + 48, const_byte_range(instructions1 + 48, 15));
+				move_function(instructions1 + 17, const_byte_range(instructions1 + 48, 15));
 
 				// ASSERT
 				byte reference2[] = {
@@ -102,7 +109,7 @@ namespace micro_profiler
 				};
 		
 				// ACT
-				move_function(instructions2 + 0x0F11, instructions2, const_byte_range(instructions2, 20));
+				move_function(instructions2 + 0x0F11, const_byte_range(instructions2, 20));
 
 				// ASSERT
 				byte reference3[] = {
@@ -127,8 +134,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions, instructions + 0xE1, const_byte_range(instructions + 0x20, 20));
-				move_function(instructions + 0x40, instructions + 0x23, const_byte_range(instructions + 0x20, 20));
+				move_function(instructions, const_byte_range(instructions + 0x20, 20));
+				move_function(instructions + 0x40, const_byte_range(instructions + 0x20, 20));
 
 				// ASSERT
 				byte reference[] = {
@@ -154,8 +161,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions, instructions + 0x01, const_byte_range(instructions + 0x20, 20));
-				move_function(instructions + 0x40, instructions + 0x23, const_byte_range(instructions + 0x20, 20));
+				move_function(instructions, const_byte_range(instructions + 0x20, 20));
+				move_function(instructions + 0x40, const_byte_range(instructions + 0x20, 20));
 
 				// ASSERT
 				byte reference[] = {
@@ -186,7 +193,7 @@ namespace micro_profiler
 				byte *translated = instructions + 0x0123;
 
 				// ACT
-				move_function(translated, instructions, const_byte_range(instructions, 0x0025));
+				move_function(translated, const_byte_range(instructions, 0x0025));
 
 				// ASSERT
 				byte reference1[] = {
@@ -203,25 +210,6 @@ namespace micro_profiler
 				};
 
 				assert_is_true(equal(reference1, array_end(reference1), translated));
-
-				// ACT
-				move_function(translated, instructions + 7, const_byte_range(instructions, 0x0025));
-
-				// ASSERT
-				byte reference2[] = {
-					0xE8, 0xB8, 0x53, 0x02, 0x00,
-					0x83, 0xC4, 0x0C,
-					0x6A, 0x0F,
-					0x8D, 0x8D, 0xB4, 0xEF, 0xFF, 0xFF,
-					0x51,
-					0x8D, 0x95, 0xC5, 0xFE, 0xFF, 0xFF,
-					0x52,
-					0xE8, 0x70, 0x97, 0x01, 0x00,
-					0x83, 0xC4, 0x0C,
-					0xE9, 0xF6, 0x32, 0x56, 0x78,
-				};
-
-				assert_is_true(equal(reference2, array_end(reference2), translated));
 			}
 
 
@@ -275,7 +263,7 @@ namespace micro_profiler
 			}
 
 
-			test( ImagesWithOutsideShortJumpsCannotBeMoved )
+			test( ImagesWithExternalShortJumpsCannotBeMoved )
 			{
 				// INIT
 				byte instructions[0x0400] = {
@@ -286,12 +274,12 @@ namespace micro_profiler
 				};
 
 				// ACT / ASSERT
-				assert_throws(move_function(instructions + 0x30, instructions, const_byte_range(instructions, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions, 2)),
 					inconsistent_function_range_exception);
 			}
 
 
-			test( ImagesWithOutsideShortConditionalJumpsCannotBeMoved )
+			test( ImagesWithExternalShortConditionalJumpsCannotBeMoved )
 			{
 				// INIT
 				byte instructions[0x0400] = {
@@ -300,42 +288,42 @@ namespace micro_profiler
 				};
 
 				// ACT / ASSERT
-				assert_throws(move_function(instructions + 0x30, instructions, const_byte_range(instructions, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 2, const_byte_range(instructions + 2, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 2, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 4, const_byte_range(instructions + 4, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 4, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 6, const_byte_range(instructions + 6, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 6, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 8, const_byte_range(instructions + 8, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 8, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 10, const_byte_range(instructions + 10, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 10, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 12, const_byte_range(instructions + 12, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 12, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 14, const_byte_range(instructions + 14, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 14, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 16, const_byte_range(instructions + 16, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 16, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 18, const_byte_range(instructions + 18, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 18, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 20, const_byte_range(instructions + 20, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 20, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 22, const_byte_range(instructions + 22, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 22, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 24, const_byte_range(instructions + 24, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 24, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 26, const_byte_range(instructions + 26, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 26, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 28, const_byte_range(instructions + 28, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 28, 2)),
 					inconsistent_function_range_exception);
-				assert_throws(move_function(instructions + 0x30, instructions + 30, const_byte_range(instructions + 30, 2)),
+				assert_throws(move_function(instructions + 0x30, const_byte_range(instructions + 30, 2)),
 					inconsistent_function_range_exception);
 			}
 
 
-			test( ImagesWithInsideShortJumpsCanBeMoved )
+			test( ImagesWithInnerShortJumpsCanBeMoved )
 			{
 				// INIT
 				byte instructions[0x0400] = {
@@ -345,14 +333,14 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions + 0x30, instructions, const_byte_range(instructions, 6));
+				move_function(instructions + 0x30, const_byte_range(instructions, 6));
 
 				// ASSERT
-				assert_equal(const_byte_range(instructions, 6), const_byte_range(instructions, 6));
+				assert_equal(const_byte_range(instructions, 6), const_byte_range(instructions + 0x30, 6));
 			}
 
 
-			test( ImagesWithInsideShortConditionalJumpsCanBeMoved )
+			test( ImagesWithInnerShortConditionalJumpsCanBeMoved )
 			{
 				// INIT
 				byte instructions[0x0400] = {
@@ -362,7 +350,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				move_function(instructions + 0x30, instructions, const_byte_range(instructions, 0x21));
+				move_function(instructions + 0x30, const_byte_range(instructions, 0x21));
 
 				// ASSERT
 				assert_equal(const_byte_range(instructions, 0x21), const_byte_range(instructions + 0x30, 0x21));
@@ -377,8 +365,7 @@ namespace micro_profiler
 				byte is3[] = { 0xF2, 0x0F, 0x70, 0x3C, 0x69, 0x05, }; // pshuflw	xmm7,xmmword ptr [ecx+ebp*2],5
 				byte is4[] = { 0x66, 0x0F, 0x71, 0xD0, 0x05, };
 				byte is5[] = { 0x0F, 0xC7, 0x09, }; //	cmpxchg8b	qword ptr [ecx]
-				byte is6[] = { 0x0F, 0xC7, 0x8C, 0xA9, 0x00, 0x00, 0x10, 0x00, };	//	cmpxchg8b	qword ptr [ecx+ebp*4+100000h]  
-
+				byte is6[] = { 0x0F, 0xC7, 0x8C, 0xA9, 0x00, 0x00, 0x10, 0x00, };	//	cmpxchg8b	qword ptr [ecx+ebp*4+100000h]
 
 				// ACT / ASSERT
 				assert_equal(4u, calculate_function_length(mkrange(is1), 1));
@@ -387,6 +374,100 @@ namespace micro_profiler
 				assert_equal(5u, calculate_function_length(mkrange(is4), 1));
 				assert_equal(3u, calculate_function_length(mkrange(is5), 1));
 				assert_equal(8u, calculate_function_length(mkrange(is6), 1));
+			}
+
+
+			test( RelativeNearExternalConditionalJumpsAreTranslatedBasedOnTheirTargetAddress )
+			{
+				// INIT
+				byte is1[0x400] = {
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0xEB, 0x00, 0x0F, 0Xff, 0x13, 0x45, 0x00, 0x10, 0xEB, 0x00, 0xEB, 0xFC,
+				};
+				byte is2[0x400] = {
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0xEB, 0x00, 0xEB, 0x00, 0x0F, 0Xff, 0x13, 0x45, 0x00, 0xF0, 0xEB, 0x00, 0xEB, 0xFC,
+				};
+
+				for (byte i = 0x80; i != 0x90; ++i)
+				{
+					is1[0x43] = i;
+					is2[0x35] = i;
+
+				// ACT
+					move_function(is1 + 0x1F0, const_byte_range(is1 + 0x40, 0x0C));
+					move_function(is1 + 0x01, const_byte_range(is1 + 0x40, 0x0C));
+					move_function(is2 + 0x2E7, const_byte_range(is2 + 0x30, 0x0E));
+					move_function(is2 + 0x03, const_byte_range(is2 + 0x30, 0x0E));
+
+				// ASSERT
+					byte reference1[] = { 0xEB, 0x00, 0x0F, i, 0x63, 0x43, 0x00, 0x10, 0xEB, 0x00, 0xEB, 0xFC, };
+					byte reference2[] = { 0xEB, 0x00, 0x0F, i, 0x52, 0x45, 0x00, 0x10, 0xEB, 0x00, 0xEB, 0xFC, };
+					byte reference3[] = { 0xEB, 0x00, 0xEB, 0x00, 0x0F, i, 0x5C, 0x42, 0x00, 0xF0, 0xEB, 0x00, 0xEB, 0xFC, };
+					byte reference4[] = { 0xEB, 0x00, 0xEB, 0x00, 0x0F, i, 0x40, 0x45, 0x00, 0xF0, 0xEB, 0x00, 0xEB, 0xFC, };
+
+					assert_equal(reference1, const_byte_range(is1 + 0x1F0, 0x0C));
+					assert_equal(reference2, const_byte_range(is1 + 0x01, 0x0C));
+					assert_equal(reference3, const_byte_range(is2 + 0x2E7, 0x0E));
+					assert_equal(reference4, const_byte_range(is2 + 0x03, 0x0E));
+				}
+			}
+
+
+			test( RelativeNearInnerConditionalJumpsAreNotTranslated )
+			{
+				// INIT
+				byte is1[0x400] = {
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0xEB, 0x00, 0x0F, 0Xff, 0x02, 0x00, 0x00, 0x00, 0xEB, 0x00, 0xEB, 0xFC,
+				};
+				byte is2[0x400] = {
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+					0xEB, 0x00, 0xEB, 0x00, 0x0F, 0Xff, 0xF6, 0xFF, 0xFF, 0xFF, 0xEB, 0x00, 0xEB, 0xFC,
+				};
+
+				for (byte i = 0x80; i != 0x90; ++i)
+				{
+					is1[0x43] = i;
+					is2[0x35] = i;
+
+				// ACT
+					move_function(is1 + 0x1F0, const_byte_range(is1 + 0x40, 0x0C));
+					move_function(is1 + 0x01, const_byte_range(is1 + 0x40, 0x0C));
+					move_function(is2 + 0x2E7, const_byte_range(is2 + 0x30, 0x0E));
+					move_function(is2 + 0x03, const_byte_range(is2 + 0x30, 0x0E));
+
+				// ASSERT
+					byte reference1[] = { 0xEB, 0x00, 0x0F, i, 0x02, 0x00, 0x00, 0x00, 0xEB, 0x00, 0xEB, 0xFC, };
+					byte reference2[] = { 0xEB, 0x00, 0xEB, 0x00, 0x0F, i, 0xF6, 0xFF, 0xFF, 0xFF, 0xEB, 0x00, 0xEB, 0xFC, };
+
+					assert_equal(reference1, const_byte_range(is1 + 0x1F0, 0x0C));
+					assert_equal(reference1, const_byte_range(is1 + 0x01, 0x0C));
+					assert_equal(reference2, const_byte_range(is2 + 0x2E7, 0x0E));
+					assert_equal(reference2, const_byte_range(is2 + 0x03, 0x0E));
+				}
+			}
+
+
+			test( InstructionStreamWithInterruptsCannotBeMoved )
+			{
+				// INIT
+				byte is1[0x100] = { 0xCC, 0xEB, 0x00, 0xEB, 0xFC, };
+				byte is2[0x100] = { 0xEB, 0x00, 0xCC, 0xEB, 0xFB, };
+
+				// ACT / ASSERT
+				assert_throws(move_function(is1 + 0x51, const_byte_range(is1, 5)), inconsistent_function_range_exception);
+				assert_throws(move_function(is2 + 0x50, const_byte_range(is2, 5)), inconsistent_function_range_exception);
 			}
 
 		end_test_suite

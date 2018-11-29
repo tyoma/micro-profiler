@@ -31,14 +31,13 @@ namespace micro_profiler
 	{
 	public:
 		template <typename T>
-		function_patch(executable_memory_allocator &allocator, void *fn_address, const_byte_range fn_body,
-			T *interceptor);
-		function_patch(executable_memory_allocator &allocator, void *fn_address, const_byte_range fn_body, void *instance,
+		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
+		function_patch(executable_memory_allocator &allocator, byte_range body, void *interceptor,
 			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 		~function_patch();
 
 	private:
-		void init(executable_memory_allocator &allocator, void *fn_address, const_byte_range fn_body, void *instance,
+		void init(executable_memory_allocator &allocator, byte_range body, void *interceptor,
 			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 
 	private:
@@ -51,7 +50,6 @@ namespace micro_profiler
 
 
 	template <typename T>
-	inline function_patch::function_patch(executable_memory_allocator &allocator, void *fn_address,
-		const_byte_range fn_body, T *interceptor)
-	{	init(allocator, fn_address, fn_body, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
+	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
+	{	init(allocator, body, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
 }

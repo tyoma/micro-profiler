@@ -16,18 +16,17 @@ namespace micro_profiler
 		};
 	}
 
-	function_patch::function_patch(executable_memory_allocator &allocator_, void *fn_address, const_byte_range fn_body,
-		void *instance, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
-	{	init(allocator_, fn_address, fn_body, instance, on_enter, on_exit);	}
+	function_patch::function_patch(executable_memory_allocator &allocator_, byte_range body,
+		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
+	{	init(allocator_, body, interceptor, on_enter, on_exit);	}
 
-	void function_patch::init(executable_memory_allocator &allocator_, void *fn_address, const_byte_range fn_body,
-		void *instance, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
+	void function_patch::init(executable_memory_allocator &allocator_, byte_range body,
+		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
-		_target_function = static_cast<byte *>(fn_address);
-		_chunk_length = calculate_function_length(fn_body, jmp_size);
+		_target_function = body.begin();
+		_chunk_length = calculate_function_length(body, jmp_size);
 
-		const_byte_range source_chunk(fn_body.begin(), _chunk_length);
-		scoped_unprotect su(range<byte>(_target_function, _chunk_length));
+		byte_range source_chunk(_target_function, _chunk_length);
 		const size_t size0 = c_thunk_size + _chunk_length + jmp_size;
 		const size_t size = (size0 + 0x0F) & ~0x0F;
 
@@ -36,8 +35,8 @@ namespace micro_profiler
 		byte *thunk = static_cast<byte *>(_memory.get());
 
 		// initialize thunk
-		initialize_hooks(thunk, thunk + c_thunk_size, _target_function, instance, on_enter, on_exit);
-		move_function(thunk + c_thunk_size, _target_function, source_chunk);
+		initialize_hooks(thunk, thunk + c_thunk_size, _target_function, interceptor, on_enter, on_exit);
+		move_function(thunk + c_thunk_size, source_chunk);
 		reinterpret_cast<intel::jmp_rel_imm32 *>(thunk + c_thunk_size + _chunk_length)
 			->init(_target_function + _chunk_length);
 		memset(thunk + size0, 0xCC, size - size0);
@@ -46,6 +45,8 @@ namespace micro_profiler
 		intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(_target_function);
 			
 		memcpy(_saved, source_chunk.begin(), source_chunk.length());
+
+		scoped_unprotect su(source_chunk);
 		jmp_original.init(thunk);
 		memset(_target_function + jmp_size, 0xCC, _chunk_length - jmp_size);
 	}

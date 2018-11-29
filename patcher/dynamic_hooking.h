@@ -44,7 +44,7 @@ namespace micro_profiler
 	extern const size_t c_thunk_size;
 
 
-	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *instance,
+	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *interceptor,
 		hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 
 	template <typename T>

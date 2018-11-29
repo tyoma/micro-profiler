@@ -35,13 +35,12 @@ namespace micro_profiler
 
 	private:
 		virtual string name() const;
-		virtual void *effective_address() const;
-		virtual const_byte_range body() const;
+		virtual byte_range body() const;
 
 	private:
 		string _name;
 		byte *_effective_address;
-		const_byte_range _body;
+		byte_range _body;
 	};
 
 	class binary_image_impl : public binary_image
@@ -62,17 +61,13 @@ namespace micro_profiler
 
 
 	function_body_impl::function_body_impl(void * /*effective_base*/, const symbol_info &symbol)
-		: _name(symbol.name), _effective_address(static_cast<byte *>(symbol.location)),
-			_body(_effective_address, symbol.size)
+		: _name(symbol.name), _body(static_cast<byte *>(symbol.location), symbol.size)
 	{	}
 
 	string function_body_impl::name() const
 	{	return _name;	}
 
-	void *function_body_impl::effective_address() const
-	{	return _effective_address;	}
-
-	const_byte_range function_body_impl::body() const
+	byte_range function_body_impl::body() const
 	{	return _body;	}
 
 

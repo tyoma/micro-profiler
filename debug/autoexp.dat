@@ -1,0 +1,26 @@
+[Visualizer]
+micro_profiler::pod_vector<*>{
+	preview (
+		#(
+			"[",
+			$e._end - $e._begin,
+			"](",
+			#array(
+				expr: $e._begin[$i],
+				size: $e._end - $e._begin
+			),
+			")"
+		)
+	)
+
+	children (
+		#(
+			#([size] : $e._end - $e._begin),
+			#([capacity] : $e._limit - $e._begin),
+			#array(
+				expr: $e._begin[$i],
+				size: $e._end - $e._begin
+			)
+		)
+	)
+}

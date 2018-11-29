@@ -20,16 +20,7 @@ namespace micro_profiler
 			{	container.insert(make_pair(fn.name(), fn.body().length()));	}
 
 			void insert_name_address(map<string, void *> &container, const function_body &fn)
-			{	container.insert(make_pair(fn.name(), fn.effective_address()));	}
-
-			shared_ptr<void> copy(const_byte_range original, const void *base)
-			{
-				executable_memory_allocator em;
-				shared_ptr<void> ptr = em.allocate(original.length());
-
-				move_function(static_cast<byte *>(ptr.get()), static_cast<const byte *>(base), original);
-				return ptr;
-			}
+			{	container.insert(make_pair(fn.name(), fn.body().begin()));	}
 		}
 
 
@@ -118,7 +109,13 @@ namespace micro_profiler
 			static void copy_specific(const function_body &fn, const char *name, shared_ptr<void> &clone)
 			{
 				if (fn.name() == name)
-					clone = copy(fn.body(), fn.effective_address());
+				{
+					executable_memory_allocator em;
+					shared_ptr<void> ptr = em.allocate(fn.body().length());
+
+					move_function(static_cast<byte *>(ptr.get()), fn.body());
+					clone = ptr;
+				}
 			}
 
 			test( IndependentFreeFunctionCanBeCopiedAndCalled )

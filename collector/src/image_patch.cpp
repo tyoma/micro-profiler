@@ -12,7 +12,7 @@ namespace micro_profiler
 				if (body.body().length() < 5 || !function_filter(body))
 					return;
 
-				shared_ptr<function_patch> p(new function_patch(_allocator, body.effective_address(), body.body(),
+				shared_ptr<function_patch> p(new function_patch(_allocator, body.body(),
 					_interceptor, _on_enter, _on_exit));
 
 				_patches.push_back(p);

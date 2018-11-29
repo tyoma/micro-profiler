@@ -31,8 +31,7 @@ namespace micro_profiler
 	struct function_body : wpl::noncopyable
 	{
 		virtual std::string name() const = 0;
-		virtual void *effective_address() const = 0;
-		virtual const_byte_range body() const = 0;
+		virtual byte_range body() const = 0;
 	};
 
 	struct binary_image : wpl::noncopyable

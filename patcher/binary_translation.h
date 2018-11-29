@@ -30,5 +30,5 @@ namespace micro_profiler
 	};
 
 	size_t calculate_function_length(const_byte_range source, size_t min_length);
-	void move_function(byte *destination, const byte *source_base, const_byte_range source);
+	void move_function(byte *destination, const_byte_range source);
 }

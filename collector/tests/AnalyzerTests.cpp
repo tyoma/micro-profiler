@@ -26,6 +26,24 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( AnalyzerTests )
+			auto_ptr<mt::thread> threads[2];
+			mt::thread::id tids[2];
+
+			static void nul()
+			{	}
+
+			init( CreateDummyThreads )
+			{
+				threads[0].reset(new mt::thread(&nul));
+				tids[0] = threads[0]->get_id();
+				threads[1].reset(new mt::thread(&nul));
+				tids[1] = threads[1]->get_id();
+			}
+
+			teardown( JoinDummyThreads )
+			{	threads[0]->join(), threads[1]->join();	}
+			
+
 			test( NewAnalyzerHasNoFunctionRecords )
 			{
 				// INIT / ACT
@@ -47,8 +65,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				as_acceptor.accept_calls(1, trace, array_size(trace));
-				as_acceptor.accept_calls(2, trace, array_size(trace));
+				as_acceptor.accept_calls(tids[0], trace, array_size(trace));
+				as_acceptor.accept_calls(tids[1], trace, array_size(trace));
 
 				// ASSERT
 				assert_equal(2, distance(a.begin(), a.end()));
@@ -72,7 +90,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				a.accept_calls(1, trace, array_size(trace));
+				a.accept_calls(tids[0], trace, array_size(trace));
 
 				// ASSERT
 				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
@@ -115,7 +133,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				a.accept_calls(1, trace, array_size(trace));
+				a.accept_calls(tids[0], trace, array_size(trace));
 
 				// ASSERT
 				map<const void *, function_statistics_detailed> m(a.begin(), a.end());	// use map to ensure proper sorting
@@ -146,7 +164,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				a.accept_calls(1, trace, array_size(trace));
+				a.accept_calls(tids[0], trace, array_size(trace));
 
 				// ASSERT
 				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
@@ -185,14 +203,14 @@ namespace micro_profiler
 				};
 
 				// ACT
-				a.accept_calls(1, trace1, array_size(trace1));
-				a.accept_calls(2, trace2, array_size(trace2));
+				a.accept_calls(tids[0], trace1, array_size(trace1));
+				a.accept_calls(tids[1], trace2, array_size(trace2));
 
 				// ASSERT
 				assert_is_true(has_empty_statistics(a));
 
 				// ACT
-				a.accept_calls(1, trace3, array_size(trace3));
+				a.accept_calls(tids[0], trace3, array_size(trace3));
 
 				// ASSERT
 				assert_equal(1, distance(a.begin(), a.end()));
@@ -202,7 +220,7 @@ namespace micro_profiler
 				assert_equal(7, a.begin()->second.exclusive_time);
 
 				// ACT
-				a.accept_calls(2, trace4, array_size(trace4));
+				a.accept_calls(tids[1], trace4, array_size(trace4));
 
 				// ASSERT
 				assert_equal(1, distance(a.begin(), a.end()));
@@ -227,11 +245,11 @@ namespace micro_profiler
 				};
 				call_record trace2[] = {	{	12350, (void *)0	},	};
 
-				a.accept_calls(2, trace1, array_size(trace1));
+				a.accept_calls(tids[1], trace1, array_size(trace1));
 
 				// ACT
 				a.clear();
-				a.accept_calls(2, trace2, array_size(trace2));
+				a.accept_calls(tids[1], trace2, array_size(trace2));
 
 				// ASSERT
 				assert_equal(1, distance(a.begin(), a.end()));

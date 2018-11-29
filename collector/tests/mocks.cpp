@@ -7,7 +7,6 @@
 #include <stdexcept>
 #include <ut/assert.h>
 
-using wpl::mt::thread;
 using namespace std;
 using namespace std::placeholders;
 
@@ -94,18 +93,18 @@ namespace micro_profiler
 
 				case modules_loaded:
 					a(e.image_loads);
-					state.modules_state_updated.raise();
+					state.modules_state_updated.set();
 					break;
 
 				case update_statistics:
 					a(e.update);
-					state.updated.raise();
+					state.updated.set();
 					state.update_lock.wait();
 					break;
 
 				case modules_unloaded:
 					a(e.image_unloads);
-					state.modules_state_updated.raise();
+					state.modules_state_updated.set();
 				}
 			}
 
@@ -120,8 +119,7 @@ namespace micro_profiler
 
 
 			FrontendState::FrontendState(const function<void()>& oninitialized_)
-				: update_lock(true, false), oninitialized(oninitialized_), updated(false, true),
-					modules_state_updated(false, true), ref_count(0)
+				: update_lock(true, false), oninitialized(oninitialized_), ref_count(0)
 			{	}
 
 
@@ -134,7 +132,7 @@ namespace micro_profiler
 
 			void Tracer::read_collected(acceptor &a)
 			{
-				scoped_lock l(_mutex);
+				mt::lock_guard<mt::mutex> l(_mutex);
 
 				for (TracesMap::const_iterator i = _traces.begin(); i != _traces.end(); ++i)
 				{

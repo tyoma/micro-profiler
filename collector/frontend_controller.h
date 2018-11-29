@@ -26,12 +26,9 @@
 #include <functional>
 #include <memory>
 
-namespace wpl
+namespace mt
 {
-	namespace mt
-	{
-		class thread;
-	}
+	class thread;
 }
 
 namespace micro_profiler
@@ -54,7 +51,7 @@ namespace micro_profiler
 		class profiler_instance;
 
 	private:
-		static void frontend_worker(wpl::mt::thread *previous_thread, const frontend_factory_t &factory,
+		static void frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
 			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &image_load_queue_,
 			const std::shared_ptr<void> &exit_event);
 
@@ -64,7 +61,7 @@ namespace micro_profiler
 		std::shared_ptr<image_load_queue> _image_load_queue;
 		std::shared_ptr<volatile long> _worker_refcount;
 		std::shared_ptr<void> _exit_event;
-		std::auto_ptr<wpl::mt::thread> _frontend_thread;
+		std::auto_ptr<mt::thread> _frontend_thread;
 		std::auto_ptr<patched_image> _patched_image;
 	};
 }

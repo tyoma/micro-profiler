@@ -18,40 +18,27 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/system.h>
+#pragma once
 
-#include <intrin.h>
 #include <memory>
-#include <windows.h>
+#include <wpl/base/concepts.h>
 
-using namespace std;
-
-namespace micro_profiler
+namespace mt
 {
-	unsigned int current_thread_id()
-	{	return ::GetCurrentThreadId();	}
-
-
-	mutex::mutex()
+	class event : wpl::noncopyable
 	{
-		typedef char static_size_assertion[sizeof(CRITICAL_SECTION) <= sizeof(_mtx_buffer)];
+	public:
+		event(bool initial = false, bool auto_reset = true);
+		~event();
 
-		::InitializeCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));
-	}
+		bool wait(unsigned int milliseconds = -1);
+		void set();
+		void reset();
 
-	mutex::~mutex()
-	{	::DeleteCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
+	private:
+		class impl;
 
-	void mutex::enter()
-	{	::EnterCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
-
-	void mutex::leave()
-	{	::LeaveCriticalSection(static_cast<CRITICAL_SECTION *>(static_cast<void*>(_mtx_buffer)));	}
-
-
-   long interlocked_compare_exchange(long volatile *destination, long exchange, long comperand)
-   {  return _InterlockedCompareExchange(destination, exchange, comperand);  }
-
-   long long interlocked_compare_exchange64(long long volatile *destination, long long exchange, long long comperand)
-   {  return _InterlockedCompareExchange64(destination, exchange, comperand);  }
+	private:
+		std::auto_ptr<impl> _impl;
+	};
 }

@@ -51,10 +51,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="stopwatch.cpp">
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="string.cpp" />
     <ClCompile Include="symbol_resolver.cpp">
@@ -62,8 +59,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)libraries\wpl\src\wpl.mt\wpl.mt.vcxproj">
-      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
+    <ProjectReference Include="..\..\mt\src\mt.vcxproj">
+      <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

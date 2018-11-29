@@ -60,13 +60,8 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="image_patch.cpp" />
-    <ClCompile Include="patched_image.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <ClCompile Include="patched_image.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
-    <ClCompile Include="system.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="hooks.asm">
@@ -85,7 +80,6 @@
     <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
-    <ClInclude Include="..\system.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

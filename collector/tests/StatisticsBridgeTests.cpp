@@ -118,7 +118,7 @@ namespace micro_profiler
 					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
-				cc.Add(0, trace);
+				cc.Add(mt::thread::id(), trace);
 
 				// ACT
 				b.update_frontend();
@@ -138,7 +138,7 @@ namespace micro_profiler
 					{	10 + cc.profiler_latency(), (void *)(0)	},
 				};
 
-				cc.Add(0, trace);
+				cc.Add(mt::thread::id(), trace);
 
 				b.analyze();
 				b.update_frontend();
@@ -173,8 +173,8 @@ namespace micro_profiler
 					{	2019 + cc2.profiler_latency(), (void *)(0)	},
 				};
 
-				cc1.Add(0, trace1);
-				cc2.Add(0, trace2);
+				cc1.Add(mt::thread::id(), trace1);
+				cc2.Add(mt::thread::id(), trace2);
 
 				// ACT
 				b1.analyze();
@@ -276,7 +276,7 @@ namespace micro_profiler
 					{	2019, (void *)0	},
 				};
 
-				cc.Add(0, trace);
+				cc.Add(mt::thread::id(), trace);
 				b.analyze();
 
 				// ACT

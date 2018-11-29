@@ -11,7 +11,6 @@
 #include <strmd/serializer.h>
 #include <ut/assert.h>
 #include <ut/test.h>
-#include <wpl/mt/synchronization.h>
 
 using namespace std;
 using namespace placeholders;
@@ -435,7 +434,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(id, &dummy_ui_factory);
-				wpl::mt::thread t(bind(&FrontendManagerTests::try_send, this, 2));
+				mt::thread t(bind(&FrontendManagerTests::try_send, this, 2));
 
 				clients_ready.wait();
 
@@ -457,7 +456,7 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
-				wpl::mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
+				mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
 
 				clients_ready.wait();
 
@@ -741,7 +740,7 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation_w, this,
 					_1, _2));
-				wpl::mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
+				mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
 
 				clients_ready.wait();
 

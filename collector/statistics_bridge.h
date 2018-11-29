@@ -43,7 +43,7 @@ namespace micro_profiler
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
 	private:
-		mutex _mtx;
+		mt::mutex _mtx;
 		std::deque<module_info> _lqueue;
 		std::deque<long_address_t> _uqueue;
 	};

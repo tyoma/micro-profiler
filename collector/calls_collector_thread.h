@@ -23,7 +23,8 @@
 #include <common/pod_vector.h>
 #include <common/types.h>
 #include <functional>
-#include <wpl/mt/synchronization.h>
+#include <mt/atomic.h>
+#include <mt/event.h>
 
 namespace micro_profiler
 {
@@ -66,10 +67,11 @@ namespace micro_profiler
 		const calls_collector_thread &operator =(const calls_collector_thread &rhs);
 
 	private:
-		trace_t * volatile _active_trace, * volatile _inactive_trace;
 		return_stack_t _return_stack;
+		volatile mt::atomic<trace_t *> _active_trace;
+		trace_t *_inactive_trace;
 		const size_t _trace_limit;
-		wpl::mt::event_flag _proceed_collection;
+		mt::event _continue;
 		trace_t _traces[2];
 	};
 }

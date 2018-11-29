@@ -3,8 +3,7 @@
 #include <common/protocol.h>
 #include <common/types.h>
 #include <collector/calls_collector.h>
-
-#include <wpl/mt/synchronization.h>
+#include <mt/mutex.h>
 #include <wpl/base/concepts.h>
 
 namespace micro_profiler
@@ -25,15 +24,15 @@ namespace micro_profiler
 
 				frontend_factory_t MakeFactory();
 
-				wpl::mt::event_flag update_lock;
+				mt::event update_lock;
 				std::function<void()> oninitialized;
 
 				// Collected data
 				initialization_data process_init;
 
 				std::vector<ReceivedEntry> update_log;
-				wpl::mt::event_flag updated;
-				wpl::mt::event_flag modules_state_updated;
+				mt::event updated;
+				mt::event modules_state_updated;
 
 				size_t ref_count;
 			};
@@ -54,25 +53,25 @@ namespace micro_profiler
 				virtual ~Tracer() throw();
 
 				template <size_t size>
-				void Add(wpl::mt::thread::id threadid, call_record (&array_ptr)[size]);
+				void Add(mt::thread::id threadid, call_record (&array_ptr)[size]);
 
 				virtual void read_collected(acceptor &a);
 				virtual timestamp_t profiler_latency() const throw();
 
 			private:
-				typedef std::unordered_map< wpl::mt::thread::id, std::vector<call_record> > TracesMap;
+				typedef std::unordered_map< mt::thread::id, std::vector<call_record> > TracesMap;
 
 				timestamp_t _latency;
 				TracesMap _traces;
-				mutex _mutex;
+				mt::mutex _mutex;
 			};
 
 
 
 			template <size_t size>
-			inline void Tracer::Add(wpl::mt::thread::id threadid, call_record (&trace_chunk)[size])
+			inline void Tracer::Add(mt::thread::id threadid, call_record (&trace_chunk)[size])
 			{
-				scoped_lock l(_mutex);
+				mt::lock_guard<mt::mutex> l(_mutex);
 				_traces[threadid].insert(_traces[threadid].end(), trace_chunk, trace_chunk + size);
 			}
 		}

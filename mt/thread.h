@@ -1,0 +1,27 @@
+#pragma once
+
+#if defined(MP_MT_GENERIC)
+	#include <thread>
+
+	namespace mt
+	{
+		using std::thread;
+
+		namespace this_thread
+		{
+			using namespace std::this_thread;
+		}
+	}
+#else
+	#include <wpl/mt/thread.h>
+
+	namespace mt
+	{
+		using wpl::mt::thread;
+
+		namespace this_thread
+		{
+			thread::id get_id();
+		}
+	}
+#endif

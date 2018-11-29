@@ -36,7 +36,8 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="helpers.cpp">
+    <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="helpers_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemGroup>

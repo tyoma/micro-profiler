@@ -7,7 +7,6 @@
 #include <ut/test.h>
 
 using namespace std;
-using namespace wpl::mt;
 
 namespace micro_profiler
 {
@@ -49,7 +48,7 @@ namespace micro_profiler
 				shared_ptr<void> factory = mocks::create_frontend_factory(c_frontend_1_id, references);
 
 				// ACT
-				thread t(bind(&COMChannelTests::try_open_channel, this, c_frontend_1_id, ref(ok), ref(done)));
+				mt::thread t(bind(&COMChannelTests::try_open_channel, this, c_frontend_1_id, ref(ok), ref(done)));
 				done.wait();
 				t.join();
 
@@ -73,7 +72,7 @@ namespace micro_profiler
 				shared_ptr<void> factory = mocks::create_frontend_factory(c_frontend_1_id, references);
 
 				// ACT
-				thread t(bind(&COMChannelTests::try_open_channel, this, c_frontend_2_id, ref(ok), ref(done)));
+				mt::thread t(bind(&COMChannelTests::try_open_channel, this, c_frontend_2_id, ref(ok), ref(done)));
 				done.wait();
 				t.join();
 

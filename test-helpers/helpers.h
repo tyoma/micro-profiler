@@ -3,9 +3,9 @@
 #include <common/primitives.h>
 
 #include <algorithm>
+#include <mt/thread.h>
 #include <string>
 #include <vector>
-#include <wpl/mt/thread.h>
 #include <ut/assert.h>
 
 namespace micro_profiler
@@ -40,7 +40,7 @@ namespace micro_profiler
 		{
 			virtual ~running_thread() throw() { }
 			virtual void join() = 0;
-			virtual wpl::mt::thread::id get_id() const = 0;
+			virtual mt::thread::id get_id() const = 0;
 			virtual bool is_running() const = 0;
 			
 			virtual void suspend() = 0;

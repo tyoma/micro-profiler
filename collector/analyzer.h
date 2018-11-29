@@ -79,10 +79,10 @@ namespace micro_profiler
 		const_iterator begin() const throw();
 		const_iterator end() const throw();
 
-		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count);
+		virtual void accept_calls(mt::thread::id threadid, const call_record *calls, size_t count);
 
 	private:
-		typedef std::unordered_map< unsigned int /*threadid*/, shadow_stack<statistics_map_detailed> > stacks_container;
+		typedef std::unordered_map< mt::thread::id, shadow_stack<statistics_map_detailed> > stacks_container;
 
 	private:
 		const analyzer &operator =(const analyzer &rhs);

@@ -23,13 +23,12 @@
 
 #include <collector/calls_collector_thread.h>
 
-#include <collector/system.h>
+using namespace std;
 
 namespace micro_profiler
 {
 	calls_collector_thread::calls_collector_thread(size_t trace_limit)
-		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1]), _trace_limit(sizeof(call_record) * trace_limit),
-			_proceed_collection(false, true)			
+		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1]), _trace_limit(sizeof(call_record) * trace_limit)
 	{
 		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
 		_return_stack.push_back(re);
@@ -71,18 +70,18 @@ namespace micro_profiler
 
 	void calls_collector_thread::track(const void *callee, timestamp_t timestamp) throw()
 	{
-		for (trace_t *trace = 0; ; atomic_store(_active_trace, trace), _proceed_collection.wait())
+		for (trace_t *trace; ; _active_trace.store(trace, mt::memory_order_release), _continue.wait())
 		{
 			do
-				trace = atomic_compare_exchange(_active_trace, trace, _active_trace);
-			while (!trace);
+				trace = _active_trace.load(mt::memory_order_relaxed);
+			while (!_active_trace.compare_exchange_strong(trace, 0, mt::memory_order_acquire));
 
 			if (trace->byte_size() < _trace_limit)
 			{
 				const call_record record = { timestamp, callee };
 
 				trace->push_back(record);
-				atomic_store(_active_trace, trace);
+				_active_trace.store(trace, mt::memory_order_release);
 				break;
 			}
 		}
@@ -91,16 +90,16 @@ namespace micro_profiler
 	void calls_collector_thread::read_collected(const reader_t &reader)
 	{
 		trace_t *trace;
-		trace_t * const active_trace = &_traces[1] == _inactive_trace ? &_traces[0] : &_traces[1];
+		trace_t *const deduced_active_trace = &_traces[1] == _inactive_trace ? &_traces[0] : &_traces[1];
 
 		do
-			trace = atomic_compare_exchange(_active_trace, _inactive_trace, active_trace);
-		while (trace != active_trace);
+			trace = deduced_active_trace;
+		while (!_active_trace.compare_exchange_strong(trace, _inactive_trace, mt::memory_order_relaxed));
 
 		_inactive_trace = trace;
 
 		if (_inactive_trace->byte_size() >= _trace_limit)
-			_proceed_collection.raise();
+			_continue.set();
 
 		if (_inactive_trace->size())
 			reader(_inactive_trace->data(), _inactive_trace->size());

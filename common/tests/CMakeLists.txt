@@ -1,0 +1,10 @@
+set(COMMON_TEST_SOURCES
+	MiscTests.cpp
+	PrimitivesTests.cpp
+	SerializationTests.cpp
+	TextFormattingServicesTests.cpp
+)
+
+add_library(common.tests SHARED ${COMMON_TEST_SOURCES})
+
+target_link_libraries(common.tests common test-helpers utee)

@@ -21,12 +21,13 @@
 #pragma once
 
 #include "calls_collector_thread.h"
-#include "system.h"
 
 #include <memory>
+#include <mt/mutex.h>
+#include <mt/thread.h>
+#include <mt/tls.h>
 #include <patcher/platform.h>
 #include <vector>
-#include <wpl/mt/thread.h>
 
 namespace micro_profiler
 {
@@ -41,7 +42,7 @@ namespace micro_profiler
 
 	struct calls_collector_i::acceptor
 	{
-		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count) = 0;
+		virtual void accept_calls(mt::thread::id threadid, const call_record *calls, size_t count) = 0;
 	};
 
 
@@ -60,7 +61,7 @@ namespace micro_profiler
 		virtual timestamp_t profiler_latency() const throw();
 
 	private:
-		typedef std::vector< std::pair< unsigned int, std::shared_ptr<calls_collector_thread> > > call_traces_t;
+		typedef std::vector< std::pair< mt::thread::id, std::shared_ptr<calls_collector_thread> > > call_traces_t;
 
 	private:
 		calls_collector_thread &get_current_thread_trace();
@@ -68,10 +69,10 @@ namespace micro_profiler
 		calls_collector_thread &construct_thread_trace();
 
 	private:
-		wpl::mt::tls<calls_collector_thread> _trace_pointers_tls;
+		mt::tls<calls_collector_thread> _trace_pointers_tls;
 		const size_t _trace_limit;
 		timestamp_t _profiler_latency;
 		call_traces_t _call_traces;
-		mutex _thread_blocks_mtx;
+		mt::mutex _thread_blocks_mtx;
 	};
 }

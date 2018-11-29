@@ -25,9 +25,7 @@
 #include <collector/statistics_bridge.h>
 
 #include <windows.h>
-#include <wpl/mt/thread.h>
 
-using namespace wpl::mt;
 using namespace std;
 using namespace std::placeholders;
 
@@ -102,7 +100,7 @@ namespace micro_profiler
 		if (1 == _InterlockedIncrement(_worker_refcount.get()))
 		{
 			shared_ptr<void> exit_event(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
-			auto_ptr<thread> frontend_thread(new thread(bind(&frontend_controller::frontend_worker,
+			auto_ptr<mt::thread> frontend_thread(new mt::thread(bind(&frontend_controller::frontend_worker,
 				_frontend_thread.get(), _factory, &_collector, _image_load_queue, exit_event)));
 
 			_frontend_thread.release();
@@ -120,10 +118,11 @@ namespace micro_profiler
 		{
 			::SetEvent(_exit_event.get());
 			_frontend_thread->join();
+			_frontend_thread.reset();
 		}
 	}
 
-	void frontend_controller::frontend_worker(thread *previous_thread, const frontend_factory_t &factory,
+	void frontend_controller::frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
 		calls_collector_i *collector, const shared_ptr<image_load_queue> &image_load_queue,
 		const shared_ptr<void> &exit_event)
 	{

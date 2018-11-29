@@ -36,7 +36,7 @@ namespace micro_profiler
 	{
 		struct delay_evaluator : acceptor
 		{
-			virtual void accept_calls(unsigned int, const call_record *calls, size_t count)
+			virtual void accept_calls(mt::thread::id, const call_record *calls, size_t count)
 			{
 				for (const call_record *i = calls; i < calls + count; i += 2)
 					delay = i != calls ? (min)(delay, (i + 1)->timestamp - i->timestamp) : (i + 1)->timestamp - i->timestamp;
@@ -56,7 +56,7 @@ namespace micro_profiler
 
 	void calls_collector::read_collected(acceptor &a)
 	{
-		scoped_lock l(_thread_blocks_mtx);
+		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
 		for (call_traces_t::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
 			i->second->read_collected(bind(&acceptor::accept_calls, &a, i->first, _1, _2));
@@ -93,9 +93,9 @@ namespace micro_profiler
 	calls_collector_thread &calls_collector::construct_thread_trace()
 	{
 		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_trace_limit));
-		scoped_lock l(_thread_blocks_mtx);
+		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
-		_call_traces.push_back(make_pair(current_thread_id(), trace));
+		_call_traces.push_back(make_pair(mt::this_thread::get_id(), trace));
 		_trace_pointers_tls.set(trace.get());
 		return *trace;
 	}

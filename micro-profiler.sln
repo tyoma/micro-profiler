@@ -114,6 +114,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "debug", "debug", "{235C198B
 		debug\visualizers.natvis = debug\visualizers.natvis
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mt", "mt\src\mt.vcxproj", "{3D321437-3220-4BAF-AA87-A5D6297BBE82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -379,6 +381,14 @@ Global
 		{C051C262-E929-4A27-B8A6-1BC5345747B6}.Release|Win32.Build.0 = Release|Win32
 		{C051C262-E929-4A27-B8A6-1BC5345747B6}.Release|x64.ActiveCfg = Release|x64
 		{C051C262-E929-4A27-B8A6-1BC5345747B6}.Release|x64.Build.0 = Release|x64
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Debug|Win32.Build.0 = Debug|Win32
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Debug|x64.ActiveCfg = Debug|x64
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Debug|x64.Build.0 = Debug|x64
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Release|Win32.ActiveCfg = Release|Win32
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Release|Win32.Build.0 = Release|Win32
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Release|x64.ActiveCfg = Release|x64
+		{3D321437-3220-4BAF-AA87-A5D6297BBE82}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

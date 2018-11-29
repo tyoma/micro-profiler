@@ -10,7 +10,6 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
-using wpl::mt::thread;
 using namespace std;
 
 namespace micro_profiler
@@ -25,7 +24,7 @@ namespace micro_profiler
 					: total_entries(0)
 				{	}
 
-				virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count)
+				virtual void accept_calls(mt::thread::id threadid, const call_record *calls, size_t count)
 				{
 					collected.push_back(make_pair(threadid, vector<call_record>()));
 					collected.back().second.assign(calls, calls + count);
@@ -33,10 +32,10 @@ namespace micro_profiler
 				}
 
 				size_t total_entries;
-				vector< pair< thread::id, vector<call_record> > > collected;
+				vector< pair< mt::thread::id, vector<call_record> > > collected;
 			};
 
-			bool call_trace_less(const pair< thread::id, vector<call_record> > &lhs, const pair< thread::id, vector<call_record> > &rhs)
+			bool call_trace_less(const pair< mt::thread::id, vector<call_record> > &lhs, const pair< mt::thread::id, vector<call_record> > &rhs)
 			{	return lhs.first < rhs.first;	}
 
 			void on_enter(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp, const void *callee)
@@ -130,15 +129,17 @@ namespace micro_profiler
 			{
 				// INIT
 				collection_acceptor a;
-				thread::id threadid1, threadid2;
+				mt::thread::id threadid1, threadid2;
 
 				// ACT
 				{
-					thread t1(bind(&emulate_n_calls, ref(*collector), 2, (void *)0x12FF00)),
+					mt::thread t1(bind(&emulate_n_calls, ref(*collector), 2, (void *)0x12FF00)),
 						t2(bind(&emulate_n_calls, ref(*collector), 3, (void *)0xE1FF0));
 
 					threadid1 = t1.get_id();
 					threadid2 = t2.get_id();
+					t1.join();
+					t2.join();
 				}
 
 				collector->read_collected(a);
@@ -213,9 +214,9 @@ namespace micro_profiler
 				collection_acceptor a1, a2, a3;
 
 				// ACT (blockage during this test is equivalent to the failure)
-				thread t1(bind(&emulate_n_calls, ref(c1), 670, (void *)0x12345671));
-				thread t2(bind(&emulate_n_calls, ref(c2), 1230, (void *)0x12345672));
-				thread t3(bind(&emulate_n_calls, ref(c3), 635, (void *)0x12345673));
+				mt::thread t1(bind(&emulate_n_calls, ref(c1), 670, (void *)0x12345671));
+				mt::thread t2(bind(&emulate_n_calls, ref(c2), 1230, (void *)0x12345672));
+				mt::thread t3(bind(&emulate_n_calls, ref(c3), 635, (void *)0x12345673));
 
 				while (a1.total_entries < 1340)
 				{

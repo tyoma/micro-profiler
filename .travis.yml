@@ -1,0 +1,15 @@
+sudo: required
+dist: trusty
+
+language: cpp
+
+compiler:
+ - clang
+ - gcc
+
+script:
+ - mkdir _build
+ - cd _build
+ - cmake ..
+ - make
+ - bin/utee-runner bin/libcommon.tests.so

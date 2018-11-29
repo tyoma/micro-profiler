@@ -13,7 +13,6 @@
 #pragma warning(disable:4965)
 
 using namespace std;
-using namespace wpl::mt;
 
 namespace micro_profiler
 {
@@ -23,13 +22,13 @@ namespace micro_profiler
 		{
 			int dummy = 0;
 
-			void RaiseAt(event_flag *e, volatile long *times_to_event)
+			void setAt(mt::event *e, volatile long *times_to_event)
 			{
 				if (0 == _InterlockedDecrement(times_to_event))
-					e->raise();
+					e->set();
 			}
 
-			void ValidateThread(shared_ptr<running_thread> *hthread, event_flag *second_initialized, bool *first_finished)
+			void ValidateThread(shared_ptr<running_thread> *hthread, mt::event *second_initialized, bool *first_finished)
 			{
 				shared_ptr<running_thread> previous_hthread = *hthread;
 
@@ -37,25 +36,25 @@ namespace micro_profiler
 				if (previous_hthread)
 				{
 					*first_finished = !previous_hthread->is_running();
-					second_initialized->raise();
+					second_initialized->set();
 				}
 			}
 
-			void LogThread1(shared_ptr<running_thread> *hthread, event_flag *initialized)
+			void LogThread1(shared_ptr<running_thread> *hthread, mt::event *initialized)
 			{
 				*hthread = this_thread::open();
-				initialized->raise();
+				initialized->set();
 			}
 
 			void LogThreadN(vector< shared_ptr<running_thread> > *log, volatile long *times_to_initialized,
-				event_flag *initialized)
+				mt::event *initialized)
 			{
 				log->push_back(this_thread::open());
-				RaiseAt(initialized, times_to_initialized);
+				setAt(initialized, times_to_initialized);
 			}
 
-			void ControlInitialization(event_flag *proceed, vector< shared_ptr<running_thread> > *log,
-				volatile long *times_to_initialized, event_flag *initialized)
+			void ControlInitialization(mt::event *proceed, vector< shared_ptr<running_thread> > *log,
+				volatile long *times_to_initialized, mt::event *initialized)
 			{
 				proceed->wait();
 				LogThreadN(log, times_to_initialized, initialized);
@@ -109,14 +108,14 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::Tracer tracer;
-				event_flag initialized(false, true);
-				mocks::FrontendState state(bind(&event_flag::raise, &initialized));
+				mt::event initialized;
+				mocks::FrontendState state(bind(&mt::event::set, &initialized));
 
 				// ACT
 				{	frontend_controller fc(tracer, state.MakeFactory());	}
 
 				// ASSERT
-				assert_equal(waitable::timeout, initialized.wait(0));
+				assert_is_false(initialized.wait(0));
 			}
 
 
@@ -152,7 +151,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				scoped_thread_join stj(hthread);
 				frontend_controller fc(tracer, state.MakeFactory());
@@ -173,7 +172,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer1, tracer2;
 				shared_ptr<running_thread> hthread1, hthread2;
-				event_flag initialized1(false, true), initialized2(false, true);
+				mt::event initialized1, initialized2;
 				mocks::FrontendState state1(bind(&LogThread1, &hthread1, &initialized1)),
 					state2(bind(&LogThread1, &hthread2, &initialized2));
 				auto_frontend_controller fc1(tracer1, state1);
@@ -193,7 +192,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer(11);
 				shared_ptr<running_thread> hthread;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h(profile_this(fc));
@@ -212,9 +211,9 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::Tracer tracer;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				volatile long counter = 2;
-				mocks::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				mocks::FrontendState state(bind(&setAt, &initialized, &counter));
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h;
 
@@ -246,9 +245,9 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::Tracer tracer;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				volatile long counter = 1;
-				mocks::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				mocks::FrontendState state(bind(&setAt, &initialized, &counter));
 				frontend_controller fc(tracer, state.MakeFactory());
 
 				// ACT
@@ -270,9 +269,9 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::Tracer tracer;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				volatile long counter = 1;
-				mocks::FrontendState state(bind(&RaiseAt, &initialized, &counter));
+				mocks::FrontendState state(bind(&setAt, &initialized, &counter));
 				frontend_controller fc(tracer, state.MakeFactory());
 
 				// ACT
@@ -297,7 +296,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
-				event_flag second_initialized(false, true);
+				mt::event second_initialized;
 				bool first_finished = false;
 				mocks::FrontendState state(bind(&ValidateThread, &hthread, &second_initialized, &first_finished));
 				scoped_thread_join stj(hthread);
@@ -319,7 +318,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::Tracer tracer;
-				event_flag proceed(false, false), finished(false, true);
+				mt::event proceed(false, false), finished;
 				vector< shared_ptr<running_thread> > htread_log;
 				volatile long times = 2;
 				mocks::FrontendState state(bind(&ControlInitialization, &proceed, &htread_log, &times, &finished));
@@ -331,7 +330,7 @@ namespace micro_profiler
 				h.reset();
 				h.reset(profile_this(fc));
 				h.reset();
-				proceed.raise();
+				proceed.set();
 				finished.wait();	// wait for the second thread to initialize the frontend
 
 				// ASSERT (must not hang)
@@ -344,7 +343,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				scoped_thread_join stj(hthread);
 				frontend_controller fc(tracer, state.MakeFactory());
@@ -367,7 +366,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				shared_ptr<running_thread> hthread;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h(profile_this(fc));
@@ -386,8 +385,8 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::Tracer tracer;
-				event_flag initialized(false, true);
-				mocks::FrontendState state(bind(&event_flag::raise, &initialized));
+				mt::event initialized;
+				mocks::FrontendState state(bind(&mt::event::set, &initialized));
 				auto_frontend_controller fc(tracer, state);
 
 				// ACT
@@ -407,7 +406,7 @@ namespace micro_profiler
 				auto_frontend_controller fc(tracer, state);
 
 				// ACT / ASSERT
-				assert_equal(waitable::timeout, state.updated.wait(500));
+				assert_is_false(state.updated.wait(500));
 			}
 
 
@@ -487,12 +486,12 @@ namespace micro_profiler
 				state.modules_state_updated.wait();
 
 				// ACT
-				state.update_lock.lower();	// suspend on before exiting next update
-				tracer.Add(thread::id(), trace1);
+				state.update_lock.reset();	// suspend on before exiting next update
+				tracer.Add(mt::thread::id(), trace1);
 				state.updated.wait();
 				h.reset();
-				tracer.Add(thread::id(), trace2);
-				state.update_lock.raise();	// resume
+				tracer.Add(mt::thread::id(), trace2);
+				state.update_lock.set();	// resume
 				state.modules_state_updated.wait();
 
 				// ASSERT
@@ -520,7 +519,7 @@ namespace micro_profiler
 					{	1000, (void *)0	},
 				};
 
-				tracer.Add(thread::id(), trace1);
+				tracer.Add(mt::thread::id(), trace1);
 
 				state.updated.wait();
 
@@ -543,7 +542,7 @@ namespace micro_profiler
 					{	14000, (void *)0	},
 				};
 
-				tracer.Add(thread::id(), trace2);
+				tracer.Add(mt::thread::id(), trace2);
 
 				state.updated.wait();
 
@@ -568,9 +567,9 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::Tracer tracer;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				volatile long times = 2;
-				mocks::FrontendState state(bind(&RaiseAt, &initialized, &times));
+				mocks::FrontendState state(bind(&setAt, &initialized, &times));
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h(profile_this(fc));
 				call_record trace[] = {
@@ -583,13 +582,13 @@ namespace micro_profiler
 				initialized.wait();
 
 				// ACT
-				tracer.Add(thread::id(), trace);
+				tracer.Add(mt::thread::id(), trace);
 
 				// ASSERT (must not hang)
 				state.updated.wait();
 
 				// ACT (duplicated intentionally - flush-at-exit events may count for the first wait)
-				tracer.Add(thread::id(), trace);
+				tracer.Add(mt::thread::id(), trace);
 
 				// ASSERT (must not hang)
 				state.updated.wait();
@@ -624,7 +623,7 @@ namespace micro_profiler
 					{	14, (void *)0	},
 				};
 
-				tracer.Add(thread::id(), trace1);
+				tracer.Add(mt::thread::id(), trace1);
 
 				state.updated.wait();
 
@@ -650,7 +649,7 @@ namespace micro_profiler
 					{	10, (void *)0	},
 				};
 
-				tracer.Add(thread::id(), trace2);
+				tracer.Add(mt::thread::id(), trace2);
 
 				state.updated.wait();
 
@@ -684,10 +683,10 @@ namespace micro_profiler
 					{	14000, (void *)0	},
 				};
 
-				tracer1.Add(thread::id(), trace);
+				tracer1.Add(mt::thread::id(), trace);
 				state1.updated.wait();
 
-				tracer2.Add(thread::id(), trace);
+				tracer2.Add(mt::thread::id(), trace);
 				state2.updated.wait();
 
 				// ASSERT
@@ -724,7 +723,7 @@ namespace micro_profiler
 					{	1490, (void *)0	},
 				};
 
-				tracer.Add(thread::id(), trace);
+				tracer.Add(mt::thread::id(), trace);
 
 				state.updated.wait();
 
@@ -764,7 +763,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer(11);
 				shared_ptr<running_thread> hthread;
-				event_flag initialized(false, true);
+				mt::event initialized;
 				mocks::FrontendState state(bind(&LogThread1, &hthread, &initialized));
 				scoped_thread_join stj(hthread);
 				auto_ptr<frontend_controller> fc(new frontend_controller(tracer, state.MakeFactory()));
@@ -774,20 +773,20 @@ namespace micro_profiler
 					{	14000, (void *)0	},
 				};
 
-				tracer.Add(thread::id(), trace);
+				tracer.Add(mt::thread::id(), trace);
 				state.updated.wait();
 
 				// ACT / ASSERT (must not hang)
 				fc.reset();
 
 				// ACT
-				tracer.Add(thread::id(), trace);
+				tracer.Add(mt::thread::id(), trace);
 				
 				// ASSERT
 				state.updated.wait();
 
 				// ACT (duplicated intentionally - flush-at-exit events may count for the first wait)
-				tracer.Add(thread::id(), trace);
+				tracer.Add(mt::thread::id(), trace);
 
 				// ASSERT (must not hang)
 				state.updated.wait();

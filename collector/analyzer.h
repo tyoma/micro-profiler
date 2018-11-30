@@ -103,7 +103,7 @@ namespace micro_profiler
 	template <typename OutputMapType>
 	inline void shadow_stack<OutputMapType>::restore_state(OutputMapType &statistics)
 	{
-		for (pod_vector<call_record_ex>::iterator i = _stack.begin(); i != _stack.end(); ++i)
+		for (typename pod_vector<call_record_ex>::iterator i = _stack.begin(); i != _stack.end(); ++i)
 			i->entry = &statistics[i->call.callee];
 	}
 

@@ -50,7 +50,7 @@ namespace micro_profiler
 		{	static_cast<statistics_bridge *>(bridge)->update_frontend();	}
 	}
 
-	class frontend_controller::profiler_instance : public handle, wpl::noncopyable
+	class frontend_controller::profiler_instance : public handle, noncopyable
 	{
 	public:
 		profiler_instance(patched_image &pi, void *in_image_address, shared_ptr<image_load_queue> image_load_queue,

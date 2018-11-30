@@ -22,7 +22,7 @@
 
 #include "statistics_bridge.h"
 
-#include <wpl/base/concepts.h>
+#include <common/noncopyable.h>
 #include <functional>
 #include <memory>
 
@@ -38,7 +38,7 @@ namespace micro_profiler
 	class image_load_queue;
 	class patched_image;
 
-	class frontend_controller : wpl::noncopyable
+	class frontend_controller : noncopyable
 	{
 	public:
 		frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory);

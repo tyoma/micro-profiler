@@ -1,12 +1,26 @@
 #pragma once
 
-#include <collector/calls_collector_thread.h>
+#include <collector/calls_collector.h>
 #include <vector>
 
 namespace micro_profiler
 {
 	namespace tests
 	{
+		inline void on_enter(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp,
+			const void *callee)
+		{	collector.on_enter(stack_ptr, timestamp, callee);	}
+
+		inline const void *on_exit(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp)
+		{	return collector.on_exit(stack_ptr, timestamp);	}
+
+		inline void on_enter(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp, const void *callee)
+		{	calls_collector::on_enter(&collector, stack_ptr, timestamp, callee);	}
+
+		inline const void *on_exit(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp)
+		{	return calls_collector::on_exit(&collector, stack_ptr, timestamp);	}
+
+
 		struct virtual_stack
 		{
 			virtual_stack()

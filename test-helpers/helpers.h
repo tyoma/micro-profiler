@@ -51,7 +51,6 @@ namespace micro_profiler
 
 		namespace this_thread
 		{
-			void sleep_for(unsigned int duration);
 			std::shared_ptr<running_thread> open();
 		};
 

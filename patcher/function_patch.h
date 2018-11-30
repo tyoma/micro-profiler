@@ -22,12 +22,13 @@
 
 #include "dynamic_hooking.h"
 
+#include <common/noncopyable.h>
 #include <common/allocator.h>
 #include <common/primitives.h>
 
 namespace micro_profiler
 {
-	class function_patch : wpl::noncopyable
+	class function_patch : noncopyable
 	{
 	public:
 		template <typename T>

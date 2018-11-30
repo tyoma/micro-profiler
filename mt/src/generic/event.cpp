@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace micro_profiler
+namespace mt
 {
 	class event::impl
 	{

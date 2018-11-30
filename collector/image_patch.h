@@ -27,7 +27,7 @@
 
 namespace micro_profiler
 {
-	class image_patch : wpl::noncopyable
+	class image_patch : noncopyable
 	{
 	public:
 		typedef std::function<bool (const function_body &body)> filter_t;

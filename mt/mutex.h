@@ -9,11 +9,11 @@
 		using std::lock_guard;
 	}
 #else
-	#include <wpl/base/concepts.h>
+	#include <common/noncopyable.h>
 
 	namespace mt
 	{
-		class mutex : wpl::noncopyable
+		class mutex : micro_profiler::noncopyable
 		{
 		public:
 			mutex();
@@ -28,7 +28,7 @@
 	
 	
 		template <typename MutexT>
-		class lock_guard : wpl::noncopyable
+		class lock_guard : micro_profiler::noncopyable
 		{
 		public:
 			lock_guard(MutexT &mtx);

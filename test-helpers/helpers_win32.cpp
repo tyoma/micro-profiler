@@ -38,9 +38,6 @@ namespace micro_profiler
 
 		namespace this_thread
 		{
-			void sleep_for(unsigned int duration)
-			{	::Sleep(duration);	}
-
 			shared_ptr<running_thread> open()
 			{
 				class this_running_thread : shared_ptr<void>, public running_thread

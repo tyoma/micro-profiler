@@ -20,13 +20,14 @@
 
 #include <common/allocator.h>
 
+#include <common/noncopyable.h>
 #include <windows.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	class executable_memory_allocator::block : wpl::noncopyable
+	class executable_memory_allocator::block : noncopyable
 	{
 	public:
 		block(size_t block_size);

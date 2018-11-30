@@ -88,7 +88,7 @@ namespace micro_profiler
 			};
 
 
-			class scoped_thread_join : wpl::noncopyable
+			class scoped_thread_join : noncopyable
 			{
 			public:
 				scoped_thread_join(shared_ptr<running_thread> &thread_)
@@ -163,7 +163,7 @@ namespace micro_profiler
 				initialized.wait();
 
 				assert_not_null(hthread);
-				assert_not_equal(this_thread::open()->get_id(), hthread->get_id());
+				assert_not_equal(mt::this_thread::get_id(), hthread->get_id());
 			}
 
 

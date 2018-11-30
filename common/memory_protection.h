@@ -2,11 +2,11 @@
 
 #include "primitives.h"
 
-#include <wpl/base/concepts.h>
+#include <common/noncopyable.h>
 
 namespace micro_profiler
 {
-	class scoped_unprotect : wpl::noncopyable
+	class scoped_unprotect : noncopyable
 	{
 	public:
 		scoped_unprotect(range<byte> region);

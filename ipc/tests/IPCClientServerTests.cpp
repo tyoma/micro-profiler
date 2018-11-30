@@ -7,7 +7,6 @@
 #include <mt/event.h>
 #include <mt/mutex.h>
 #include <mt/thread.h>
-#include <wpl/base/concepts.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -39,7 +38,7 @@ namespace micro_profiler
 				};
 
 
-				class mock_session : public ipc::server::session, wpl::noncopyable
+				class mock_session : public ipc::server::session, noncopyable
 				{
 				public:
 					mock_session(const shared_ptr<server_data> &data);

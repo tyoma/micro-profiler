@@ -20,15 +20,15 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <memory>
 #include <vector>
-#include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
 	class function_patch;
 
-	class patched_image : wpl::noncopyable
+	class patched_image : noncopyable
 	{
 	public:
 		void patch_image(void *in_image_address);

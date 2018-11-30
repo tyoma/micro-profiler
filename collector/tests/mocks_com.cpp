@@ -1,7 +1,7 @@
 #include "mocks_com.h"
 
+#include <common/noncopyable.h>
 #include <windows.h>
-#include <wpl/base/concepts.h>
 
 using namespace std;
 
@@ -13,7 +13,7 @@ namespace micro_profiler
 		{
 			namespace
 			{
-				class frontend : public ISequentialStream, wpl::noncopyable
+				class frontend : public ISequentialStream, noncopyable
 				{
 				public:
 					frontend(unsigned &referneces)
@@ -57,7 +57,7 @@ namespace micro_profiler
 					unsigned _my_references, &_references;
 				};
 
-				class factory : private IClassFactory, wpl::noncopyable
+				class factory : private IClassFactory, noncopyable
 				{
 				public:
 					factory(const guid_t &id, unsigned &references)

@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+
 set(COMMON_TEST_SOURCES
 	MiscTests.cpp
 	PrimitivesTests.cpp

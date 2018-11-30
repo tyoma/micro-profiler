@@ -34,13 +34,6 @@ namespace micro_profiler
 				vector< vector<call_record> > collected;
 			};
 
-			void on_enter(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp,
-				const void *callee)
-			{	collector.on_enter(stack_ptr, timestamp, callee);	}
-
-			const void *on_exit(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp)
-			{	return collector.on_exit(stack_ptr, timestamp);	}
-
 			void emulate_n_calls(calls_collector_thread &collector, size_t calls_number, void *callee)
 			{
 				virtual_stack vstack;
@@ -155,17 +148,17 @@ namespace micro_profiler
 
 				while (a1.total_entries < 1340)
 				{
-					this_thread::sleep_for(30);
+					mt::this_thread::sleep_for(mt::milliseconds(30));
 					c1.read_collected(a1.get_reader());
 				}
 				while (a2.total_entries < 2460)
 				{
-					this_thread::sleep_for(30);
+					mt::this_thread::sleep_for(mt::milliseconds(30));
 					c2.read_collected(a2.get_reader());
 				}
 				while (a3.total_entries < 1270)
 				{
-					this_thread::sleep_for(30);
+					mt::this_thread::sleep_for(mt::milliseconds(30));
 					c3.read_collected(a3.get_reader());
 				}
 

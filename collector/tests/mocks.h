@@ -1,10 +1,10 @@
 #pragma once
 
+#include <common/noncopyable.h>
 #include <common/protocol.h>
 #include <common/types.h>
 #include <collector/calls_collector.h>
 #include <mt/mutex.h>
-#include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
@@ -16,7 +16,7 @@ namespace micro_profiler
 			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
 
 
-			struct FrontendState : wpl::noncopyable
+			struct FrontendState : noncopyable
 			{
 				struct ReceivedEntry;
 

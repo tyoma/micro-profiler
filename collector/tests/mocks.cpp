@@ -3,8 +3,8 @@
 #include <test-helpers/helpers.h>
 
 #include <common/serialization.h>
-
 #include <stdexcept>
+#include <string.h>
 #include <ut/assert.h>
 
 using namespace std;

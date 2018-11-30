@@ -38,12 +38,6 @@ namespace micro_profiler
 			bool call_trace_less(const pair< mt::thread::id, vector<call_record> > &lhs, const pair< mt::thread::id, vector<call_record> > &rhs)
 			{	return lhs.first < rhs.first;	}
 
-			void on_enter(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp, const void *callee)
-			{	calls_collector::on_enter(&collector, stack_ptr, timestamp, callee);	}
-
-			const void *on_exit(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp)
-			{	return calls_collector::on_exit(&collector, stack_ptr, timestamp);	}
-
 			void emulate_n_calls(calls_collector &collector, size_t calls_number, void *callee)
 			{
 				virtual_stack vstack;
@@ -102,7 +96,7 @@ namespace micro_profiler
 				};
 
 				assert_equal(1u, a.collected.size());
-				assert_equal(this_thread::open()->get_id(), a.collected[0].first);
+				assert_equal(mt::this_thread::get_id(), a.collected[0].first);
 				assert_equal(reference, a.collected[0].second);
 			}
 
@@ -220,17 +214,17 @@ namespace micro_profiler
 
 				while (a1.total_entries < 1340)
 				{
-					this_thread::sleep_for(30);
+					mt::this_thread::sleep_for(mt::milliseconds(30));
 					c1.read_collected(a1);
 				}
 				while (a2.total_entries < 2460)
 				{
-					this_thread::sleep_for(30);
+					mt::this_thread::sleep_for(mt::milliseconds(30));
 					c2.read_collected(a2);
 				}
 				while (a3.total_entries < 1270)
 				{
-					this_thread::sleep_for(30);
+					mt::this_thread::sleep_for(mt::milliseconds(30));
 					c3.read_collected(a3);
 				}
 

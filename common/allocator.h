@@ -20,12 +20,12 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <memory>
-#include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
-	class executable_memory_allocator : wpl::noncopyable
+	class executable_memory_allocator : noncopyable
 	{
 	public:
 		enum { block_size = 0x10000 };

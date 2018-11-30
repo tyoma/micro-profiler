@@ -22,19 +22,19 @@
 
 #include "primitives.h"
 
+#include <common/noncopyable.h>
 #include <functional>
 #include <memory>
-#include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
-	struct function_body : wpl::noncopyable
+	struct function_body : noncopyable
 	{
 		virtual std::string name() const = 0;
 		virtual byte_range body() const = 0;
 	};
 
-	struct binary_image : wpl::noncopyable
+	struct binary_image : noncopyable
 	{
 		typedef std::function<void (const function_body &function)> function_callback;
 

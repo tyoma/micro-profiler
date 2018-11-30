@@ -20,12 +20,12 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <memory>
-#include <wpl/base/concepts.h>
 
 namespace mt
 {
-	class event : wpl::noncopyable
+	class event : micro_profiler::noncopyable
 	{
 	public:
 		event(bool initial = false, bool auto_reset = true);

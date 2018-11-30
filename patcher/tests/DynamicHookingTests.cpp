@@ -253,12 +253,12 @@ namespace micro_profiler
 
 				// INIT
 				shared_ptr<void> thunk2 = allocator.allocate(c_thunk_size);
-				exception_call_tracer trace;
+				exception_call_tracer trace2;
 
 				initialize_hooks(thunk_memory.get(), address_cast_hack<const void *>(&throwing_function),
-					"thrower", &trace);
+					"thrower", &trace2);
 				initialize_hooks(thunk2.get(), address_cast_hack<const void *>(&calling_a_thrower_1<throwing_fn_t, string>),
-					"caller", &trace);
+					"caller", &trace2);
 				throwing_fn_t *thrower = address_cast_hack<throwing_fn_t *>(thunk_memory.get());
 				fn_t *caller = address_cast_hack<fn_t *>(thunk2.get());
 

@@ -18,50 +18,25 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/stopwatch.h>
+#include <common/time.h>
 
-#include <windows.h>
-
-#pragma intrinsic(__rdtsc)
+#include <intrin.h>
 
 namespace micro_profiler
 {
-	namespace
+	timestamp_t read_tick_counter()
+	{	return __rdtsc();	}
+
+	timestamp_t ticks_per_second()
 	{
-		double get_pq_period()
-		{
-			LARGE_INTEGER frequency;
+		timestamp_t tsc_start, tsc_end;
+		counter_t c;
 
-			::QueryPerformanceFrequency(&frequency);
-			return 1.0 / frequency.QuadPart;
-		}
-
-		timestamp_t ticks_per_second()
-		{
-			timestamp_t tsc_start, tsc_end;
-			counter_t c;
-
-			stopwatch(c);
-			tsc_start = __rdtsc();
-			for (volatile int i = 0; i < 1000000; ++i)
-			{	}
-			tsc_end = __rdtsc();
-			return static_cast<timestamp_t>((tsc_end - tsc_start) / stopwatch(c));
-		}
-
-		const double c_pq_period = get_pq_period();
-	}
-
-	const timestamp_t c_ticks_per_second = ticks_per_second();
-
-	double stopwatch(counter_t &counter)
-	{
-		LARGE_INTEGER c;
-		double period;
-
-		::QueryPerformanceCounter(&c);
-		period = c_pq_period * (c.QuadPart - counter);
-		counter = c.QuadPart;
-		return period;
+		stopwatch(c);
+		tsc_start = read_tick_counter();
+		for (volatile int i = 0; i < 1000000; ++i)
+		{	}
+		tsc_end = read_tick_counter();
+		return static_cast<timestamp_t>((tsc_end - tsc_start) / stopwatch(c));
 	}
 }

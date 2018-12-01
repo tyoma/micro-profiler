@@ -1,6 +1,6 @@
 #include <collector/binary_image.h>
 
-#include <common/allocator.h>
+#include <common/memory.h>
 #include <map>
 #include <patcher/binary_translation.h>
 #include <test-helpers/helpers.h>

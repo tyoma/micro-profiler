@@ -22,8 +22,9 @@
 
 #include <frontend/function_list.h>
 
-#include <common/symbol_resolver.h>
+#include <common/memory.h>
 #include <common/serialization.h>
+#include <common/symbol_resolver.h>
 
 using namespace std;
 
@@ -40,7 +41,7 @@ namespace micro_profiler
 
 			void read(void *data, size_t size)
 			{
-				memcpy(data, _ptr, size);
+				mem_copy(data, _ptr, size);
 				_ptr += size;
 				_remaining -= size;
 			}

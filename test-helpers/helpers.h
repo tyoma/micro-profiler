@@ -24,35 +24,7 @@ namespace micro_profiler
 			return assertion[0];
 		}
 
-		class com_event
-		{
-		public:
-			com_event();
-
-			void signal();
-			void wait();
-
-		private:
-			std::shared_ptr<void> _handle;
-		};
-
-		struct running_thread
-		{
-			virtual ~running_thread() throw() { }
-			virtual void join() = 0;
-			virtual mt::thread::id get_id() const = 0;
-			virtual bool is_running() const = 0;
-			
-			virtual void suspend() = 0;
-			virtual void resume() = 0;
-		};
-
 		std::wstring get_current_process_executable();
-
-		namespace this_thread
-		{
-			std::shared_ptr<running_thread> open();
-		};
 
 		class image : private std::shared_ptr<void>
 		{
@@ -105,20 +77,14 @@ namespace micro_profiler
 		template <typename T, size_t size>
 		inline std::vector<T> mkvector(T (&array_ptr)[size])
 		{	return std::vector<T>(array_ptr, array_ptr + size);	}
+
+		inline bool mem_equal(const void *lhs, const void *rhs, size_t length)
+		{
+			return std::equal(static_cast<const byte *>(lhs), static_cast<const byte *>(lhs) + length,
+				static_cast<const byte *>(rhs));
+		}
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);
 	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
-}
-
-namespace ut
-{
-	inline void are_equal(double lhs, double rhs, const LocationInfo &i_location)
-	{
-		const double tolerance = 0.0000001;
-		double d = lhs - rhs, s = 0.5 * (lhs + rhs);
-
-		if (s && (d /= s, d < -tolerance || tolerance < d))
-			throw FailedAssertion("Values are equal!", i_location);
-	}
 }

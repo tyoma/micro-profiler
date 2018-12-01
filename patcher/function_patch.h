@@ -22,9 +22,7 @@
 
 #include "dynamic_hooking.h"
 
-#include <common/noncopyable.h>
-#include <common/allocator.h>
-#include <common/primitives.h>
+#include <common/memory.h>
 
 namespace micro_profiler
 {

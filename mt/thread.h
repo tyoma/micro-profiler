@@ -19,13 +19,12 @@
 	namespace mt
 	{
 		using wpl::mt::thread;
-		
-		inline unsigned int milliseconds(unsigned int value) {	return value;	}
+		typedef unsigned int milliseconds;
 
 		namespace this_thread
 		{
 			thread::id get_id();
-			void sleep_for(unsigned int period);
+			void sleep_for(milliseconds period);
 		}
 	}
 #endif

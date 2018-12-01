@@ -24,7 +24,7 @@
 #include <collector/frontend_controller.h>
 #include <collector/entry.h>
 #include <common/constants.h>
-#include <common/memory_protection.h>
+#include <common/memory.h>
 #include <patcher/src.x86/assembler_intel.h>
 
 #include <windows.h>
@@ -46,14 +46,14 @@ namespace micro_profiler
 		void detour(void *target_function, void *where, byte (&backup)[sizeof(jmp)])
 		{
 			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
-			memcpy(backup, target_function, sizeof(jmp));
+			mem_copy(backup, target_function, sizeof(jmp));
 			static_cast<jmp *>(target_function)->init(where);
 		}
 
 		void restore(void *target_function, byte (&backup)[sizeof(jmp)])
 		{
 			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
-			memcpy(target_function, backup, sizeof(jmp));
+			mem_copy(target_function, backup, sizeof(jmp));
 		}
 
 		void WINAPI ExitProcessHooked(UINT exit_code)

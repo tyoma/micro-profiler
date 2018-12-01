@@ -18,30 +18,39 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/memory.h>
 
-#include "thread.h"
+#include <new>
+#include <stdexcept>
+#include <windows.h>
 
-#include <common/noncopyable.h>
-#include <memory>
-
-namespace mt
+namespace micro_profiler
 {
-	class event : micro_profiler::noncopyable
+	scoped_unprotect::scoped_unprotect(range<byte> region)
+		: _region(region)
 	{
-	public:
-		event(bool initial = false, bool auto_reset = true);
-		~event();
+		DWORD previous_access;
 
-		void wait();
-		bool wait(milliseconds period);
-		void set();
-		void reset();
+		if (!::VirtualProtect(_region.begin(), _region.length(), PAGE_EXECUTE_WRITECOPY, &previous_access))
+			throw std::runtime_error("Cannot change protection mode!");
+		_previous_access = previous_access;
+	}
 
-	private:
-		class impl;
+	scoped_unprotect::~scoped_unprotect()
+	{
+		DWORD dummy;
+		::VirtualProtect(_region.begin(), _region.length(), _previous_access, &dummy);
+		::FlushInstructionCache(::GetCurrentProcess(), _region.begin(), _region.length());
+	}
 
-	private:
-		std::auto_ptr<impl> _impl;
-	};
+	executable_memory_allocator::block::block(size_t size)
+		: _region(static_cast<byte *>(::VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE)), size),
+			_occupied(0)
+	{
+		if (!_region.begin())
+			throw std::bad_alloc();
+	}
+
+	executable_memory_allocator::block::~block()
+	{	::VirtualFree(_region.begin(), 0, MEM_RELEASE);	}
 }

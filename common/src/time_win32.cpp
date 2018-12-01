@@ -18,27 +18,33 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/time.h>
 
-#include <common/noncopyable.h>
-#include <memory>
+#include <windows.h>
 
 namespace micro_profiler
 {
-	class executable_memory_allocator : noncopyable
+	namespace
 	{
-	public:
-		enum { block_size = 0x10000 };
+		double get_period()
+		{
+			LARGE_INTEGER frequency;
 
-	public:
-		executable_memory_allocator();
+			::QueryPerformanceFrequency(&frequency);
+			return 1.0 / frequency.QuadPart;
+		}
 
-		std::shared_ptr<void> allocate(size_t size);
+		const double c_period = get_period();
+	}
 
-	private:
-		class block;
+	double stopwatch(counter_t &counter)
+	{
+		LARGE_INTEGER c;
+		double period;
 
-	private:
-		std::shared_ptr<block> _block;
-	};
+		::QueryPerformanceCounter(&c);
+		period = c_period * (c.QuadPart - counter);
+		counter = c.QuadPart;
+		return period;
+	}
 }

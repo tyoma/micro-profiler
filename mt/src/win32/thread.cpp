@@ -9,7 +9,7 @@ namespace mt
 		thread::id get_id()
 		{	return ::GetCurrentThreadId();	}
 
-		void sleep_for(unsigned int period)
+		void sleep_for(milliseconds period)
 		{	::Sleep(period);	}
 	}
 }

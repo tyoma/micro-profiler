@@ -19,13 +19,16 @@
     <ClCompile Include="symbol_resolver.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="allocator.cpp">
+    <ClCompile Include="time.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="memory_protection.cpp">
+    <ClCompile Include="time_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="stopwatch.cpp">
+    <ClCompile Include="memory_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,8 +50,7 @@
     <ClInclude Include="..\types.h" />
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\symbol_resolver.h" />
-    <ClInclude Include="..\allocator.h" />
-    <ClInclude Include="..\memory_protection.h" />
-    <ClInclude Include="..\stopwatch.h" />
+    <ClInclude Include="..\memory.h" />
+    <ClInclude Include="..\time.h" />
   </ItemGroup>
 </Project>

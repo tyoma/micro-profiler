@@ -1,8 +1,8 @@
-#include <common/allocator.h>
+#include <common/memory.h>
 
 #include <common/primitives.h>
 
-#include <string.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -41,12 +41,12 @@ namespace micro_profiler
 				shared_ptr<void> m2 = a.allocate(sizeof(sample2));
 
 				// ACT
-				memcpy(m1.get(), sample1, sizeof(sample1));
-				memcpy(m2.get(), sample2, sizeof(sample2));
+				mem_copy(m1.get(), sample1, sizeof(sample1));
+				mem_copy(m2.get(), sample2, sizeof(sample2));
 
 				// ASSERT
-				assert_equal(0, memcmp(m1.get(), sample1, sizeof(sample1)));
-				assert_equal(0, memcmp(m2.get(), sample2, sizeof(sample2)));
+				assert_is_true(mem_equal(m1.get(), sample1, sizeof(sample1)));
+				assert_is_true(mem_equal(m2.get(), sample2, sizeof(sample2)));
 			}
 
 
@@ -62,12 +62,12 @@ namespace micro_profiler
 
 				// ACT
 				a.reset();
-				memcpy(m1.get(), sample1, sizeof(sample1));
-				memcpy(m2.get(), sample2, sizeof(sample2));
+				mem_copy(m1.get(), sample1, sizeof(sample1));
+				mem_copy(m2.get(), sample2, sizeof(sample2));
 
 				// ASSERT
-				assert_equal(0, memcmp(m1.get(), sample1, sizeof(sample1)));
-				assert_equal(0, memcmp(m2.get(), sample2, sizeof(sample2)));
+				assert_is_true(mem_equal(m1.get(), sample1, sizeof(sample1)));
+				assert_is_true(mem_equal(m2.get(), sample2, sizeof(sample2)));
 			}
 
 
@@ -83,12 +83,12 @@ namespace micro_profiler
 				shared_ptr<void> m = a.allocate(executable_memory_allocator::block_size);
 				shared_ptr<void> m1 = a.allocate(sizeof(sample1));
 				shared_ptr<void> m2 = a.allocate(sizeof(sample2));
-				memcpy(m1.get(), sample1, sizeof(sample1));
-				memcpy(m2.get(), sample2, sizeof(sample2));
+				mem_copy(m1.get(), sample1, sizeof(sample1));
+				mem_copy(m2.get(), sample2, sizeof(sample2));
 
 				// ASSERT
-				assert_equal(0, memcmp(m1.get(), sample1, sizeof(sample1)));
-				assert_equal(0, memcmp(m2.get(), sample2, sizeof(sample2)));
+				assert_is_true(mem_equal(m1.get(), sample1, sizeof(sample1)));
+				assert_is_true(mem_equal(m2.get(), sample2, sizeof(sample2)));
 			}
 
 

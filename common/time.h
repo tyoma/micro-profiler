@@ -18,27 +18,15 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/memory_protection.h>
+#pragma once
 
-#include <stdexcept>
-#include <windows.h>
+#include <common/types.h>
 
 namespace micro_profiler
 {
-	scoped_unprotect::scoped_unprotect(range<byte> region)
-		: _address(region.begin()), _size(region.length())
-	{
-		DWORD previous_access;
+	typedef unsigned long long counter_t;
 
-		if (!::VirtualProtect(_address, _size, PAGE_EXECUTE_WRITECOPY, &previous_access))
-			throw std::runtime_error("Cannot change protection mode!");
-		_previous_access = previous_access;
-	}
-
-	scoped_unprotect::~scoped_unprotect()
-	{
-		DWORD dummy;
-		::VirtualProtect(_address, _size, _previous_access, &dummy);
-		::FlushInstructionCache(::GetCurrentProcess(), _address, _size);
-	}
+	double stopwatch(counter_t &counter);
+	timestamp_t read_tick_counter();
+	timestamp_t ticks_per_second();
 }

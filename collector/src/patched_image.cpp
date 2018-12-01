@@ -24,7 +24,6 @@
 #include <collector/calls_collector.h>
 #include <collector/image_patch.h>
 
-#include <common/allocator.h>
 #include <common/module.h>
 #include <iostream>
 #include <map>

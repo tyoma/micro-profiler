@@ -18,15 +18,26 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/time.h>
 
-#include <common/types.h>
+#include <time.h>
 
 namespace micro_profiler
 {
-	typedef unsigned long long counter_t;
+	double stopwatch(counter_t &counter)
+	{
+		timespec ts;
+		
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
+		
+		counter_t new_counter = ts.tv_sec;
+		
+		new_counter *= 1000000000;
+		new_counter += ts.tv_nsec;
+		
+		counter_t interval = new_counter - counter;
 
-	double stopwatch(counter_t &counter);
-
-	extern const timestamp_t c_ticks_per_second;
+		counter = new_counter;
+		return interval * 1e-9;
+	}
 }

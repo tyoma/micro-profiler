@@ -2,7 +2,8 @@
 
 #include "mocks_com.h"
 
-#include <test-helpers/helpers.h>
+#include <mt/thread.h>
+#include <test-helpers/com.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 

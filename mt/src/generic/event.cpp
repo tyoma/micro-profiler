@@ -33,11 +33,24 @@ namespace mt
 			: _state(initial), _auto(auto_reset)
 		{	}
 
-		bool wait(unsigned int milliseconds)
+		void wait()
 		{
 			unique_lock<mutex> l(_mtx);
 
-			return _cv.wait_for(l, chrono::milliseconds(milliseconds), [this] {
+			return _cv.wait(l, [this] {
+				const auto state = _state;
+
+				if (_auto)
+					_state = false;
+				return state;
+			});
+		}
+
+		bool wait(milliseconds period)
+		{
+			unique_lock<mutex> l(_mtx);
+
+			return _cv.wait_for(l, chrono::milliseconds(period), [this] {
 				const auto state = _state;
 
 				if (_auto)
@@ -74,8 +87,11 @@ namespace mt
 	event::~event()
 	{	}
 
-	bool event::wait(unsigned int milliseconds)
-	{	return _impl->wait(milliseconds);	}
+	void event::wait()
+	{	_impl->wait();	}
+
+	bool event::wait(milliseconds period)
+	{	return _impl->wait(period);	}
 
 	void event::set()
 	{	_impl->set();	}

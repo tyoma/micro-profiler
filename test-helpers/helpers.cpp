@@ -1,6 +1,6 @@
 #include <test-helpers/helpers.h>
 
-#include <string.h>
+#include <common/memory.h>
 
 using namespace std;
 
@@ -22,7 +22,7 @@ namespace micro_profiler
 		void vector_adapter::read(void *buffer_, size_t size)
 		{
 			assert_is_true(size <= buffer.size() - ptr);
-			memcpy(buffer_, &buffer[ptr], size);
+			mem_copy(buffer_, &buffer[ptr], size);
 			ptr += size;
 		}
 

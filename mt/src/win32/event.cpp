@@ -25,8 +25,11 @@ namespace mt
 	event::~event()
 	{	}
 
-	bool event::wait(unsigned int milliseconds)
-	{	return WAIT_TIMEOUT != ::WaitForSingleObject(_impl->handle, milliseconds);	}
+	void event::wait()
+	{	::WaitForSingleObject(_impl->handle, INFINITE);	}
+
+	bool event::wait(milliseconds period)
+	{	return WAIT_TIMEOUT != ::WaitForSingleObject(_impl->handle, period);	}
 
 	void event::set()
 	{	::SetEvent(_impl->handle);	}

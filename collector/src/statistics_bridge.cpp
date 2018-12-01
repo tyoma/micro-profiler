@@ -25,7 +25,7 @@
 #include <common/module.h>
 #include <common/protocol.h>
 #include <common/serialization.h>
-#include <common/stopwatch.h>
+#include <common/time.h>
 
 #include <algorithm>
 #include <iterator>
@@ -96,7 +96,7 @@ namespace micro_profiler
 	{
 		initialization_data idata = {
 			get_module_info(0).path,
-			c_ticks_per_second
+			ticks_per_second()
 		};
 		send(init, idata);
 	}

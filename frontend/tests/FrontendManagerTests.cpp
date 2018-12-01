@@ -5,10 +5,10 @@
 #include <common/symbol_resolver.h>
 #include <frontend/function_list.h>
 
-#include <test-helpers/helpers.h>
-
 #include <algorithm>
 #include <strmd/serializer.h>
+#include <test-helpers/com.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 

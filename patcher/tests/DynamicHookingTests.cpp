@@ -2,9 +2,8 @@
 
 #include "mocks.h"
 
-#include <common/allocator.h>
-#include <common/stopwatch.h>
-#include <string.h>
+#include <common/memory.h>
+#include <common/time.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -23,7 +22,7 @@ namespace micro_profiler
 				byte data[n];
 
 				bool operator ==(const bytes &rhs) const
-				{	return 0 == memcmp(data, rhs.data, n);	}
+				{	return mem_equal(data, rhs.data, n);	}
 			};
 
 

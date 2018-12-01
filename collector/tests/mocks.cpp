@@ -2,9 +2,9 @@
 
 #include <test-helpers/helpers.h>
 
+#include <common/memory.h>
 #include <common/serialization.h>
 #include <stdexcept>
-#include <string.h>
 #include <ut/assert.h>
 
 using namespace std;
@@ -28,7 +28,7 @@ namespace micro_profiler
 					void read(void *data, size_t size)
 					{
 						assert_is_true(size <= _remaining);
-						memcpy(data, _ptr, size);
+						mem_copy(data, _ptr, size);
 						_ptr += size;
 						_remaining -= size;
 					}

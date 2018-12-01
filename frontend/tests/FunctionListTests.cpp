@@ -25,6 +25,7 @@ namespace micro_profiler
 		namespace 
 		{
 			timestamp_t test_ticks_per_second = 1;
+			const double c_tolerance = 0.000001;
 
 			template <typename T>
 			wstring to_string(const T &value)
@@ -1696,20 +1697,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(4u, m->size());
-				assert_equal(12000.0, m->get_value(0));
-				assert_equal(127.0, m->get_value(1));
-				assert_equal(123.0, m->get_value(2));
-				assert_equal(12.0, m->get_value(3));
+				assert_approx_equal(12000.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(127.0, m->get_value(1), c_tolerance);
+				assert_approx_equal(123.0, m->get_value(2), c_tolerance);
+				assert_approx_equal(12.0, m->get_value(3), c_tolerance);
 
 				// ACT
 				fl->set_order(2, true);
 
 				// ASSERT
 				assert_equal(4u, m->size());
-				assert_equal(12000.0, m->get_value(3));
-				assert_equal(127.0, m->get_value(2));
-				assert_equal(123.0, m->get_value(1));
-				assert_equal(12.0, m->get_value(0));
+				assert_approx_equal(12000.0, m->get_value(3), c_tolerance);
+				assert_approx_equal(127.0, m->get_value(2), c_tolerance);
+				assert_approx_equal(123.0, m->get_value(1), c_tolerance);
+				assert_approx_equal(12.0, m->get_value(0), c_tolerance);
 			}
 
 
@@ -1743,10 +1744,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1, invalidated_count);
 				assert_equal(5u, m->size());
-				assert_equal(11001.0, m->get_value(1));
-				assert_equal(127.0, m->get_value(2));
-				assert_equal(123.0, m->get_value(3));
-				assert_equal(12.0, m->get_value(4));
+				assert_approx_equal(11001.0, m->get_value(1), c_tolerance);
+				assert_approx_equal(127.0, m->get_value(2), c_tolerance);
+				assert_approx_equal(123.0, m->get_value(3), c_tolerance);
+				assert_approx_equal(12.0, m->get_value(4), c_tolerance);
 			}
 
 
@@ -1773,14 +1774,14 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, m1->size());
-				assert_equal(0.254, m1->get_value(0));
-				assert_equal(0.026, m1->get_value(1));
-				assert_equal(0.024, m1->get_value(2));
+				assert_approx_equal(0.254, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.026, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.024, m1->get_value(2), c_tolerance);
 				assert_equal(4u, m2->size());
-				assert_equal(120.0, m2->get_value(0));
-				assert_equal(1.27, m2->get_value(1));
-				assert_equal(0.13, m2->get_value(2));
-				assert_equal(0.12, m2->get_value(3));
+				assert_approx_equal(120.0, m2->get_value(0), c_tolerance);
+				assert_approx_equal(1.27, m2->get_value(1), c_tolerance);
+				assert_approx_equal(0.13, m2->get_value(2), c_tolerance);
+				assert_approx_equal(0.12, m2->get_value(3), c_tolerance);
 			}
 
 
@@ -1808,40 +1809,40 @@ namespace micro_profiler
 				fl2->set_order(4, true);
 
 				// ASSERT
-				assert_equal(0.240, m1->get_value(0));
-				assert_equal(0.030, m1->get_value(1));
-				assert_equal(0.015, m2->get_value(0));
-				assert_equal(0.120, m2->get_value(1));
+				assert_approx_equal(0.240, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.030, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.015, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.120, m2->get_value(1), c_tolerance);
 
 				// ACT
 				fl1->set_order(5, false);
 				fl2->set_order(5, true);
 
 				// ASSERT
-				assert_equal(0.00032, m1->get_value(0));
-				assert_equal(0.00026, m1->get_value(1));
-				assert_equal(0.00013, m2->get_value(0));
-				assert_equal(0.00016, m2->get_value(1));
+				assert_approx_equal(0.00032, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.00026, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.00013, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.00016, m2->get_value(1), c_tolerance);
 
 				// ACT
 				fl1->set_order(6, false);
 				fl2->set_order(6, true);
 
 				// ASSERT
-				assert_equal(0.00030, m1->get_value(0));
-				assert_equal(0.00024, m1->get_value(1));
-				assert_equal(0.00012, m2->get_value(0));
-				assert_equal(0.00015, m2->get_value(1));
+				assert_approx_equal(0.00030, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.00024, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.00012, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.00015, m2->get_value(1), c_tolerance);
 
 				// ACT
 				fl1->set_order(8, false);
 				fl2->set_order(8, true);
 
 				// ASSERT
-				assert_equal(0.256, m1->get_value(0));
-				assert_equal(0.028, m1->get_value(1));
-				assert_equal(0.014, m2->get_value(0));
-				assert_equal(0.128, m2->get_value(1));
+				assert_approx_equal(0.256, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.028, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.014, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.128, m2->get_value(1), c_tolerance);
 			}
 
 
@@ -1865,15 +1866,15 @@ namespace micro_profiler
 				fl->set_order(5, false);
 
 				// ASSERT
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(1));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(1), c_tolerance);
 
 				// ACT
 				fl->set_order(6, false);
 
 				// ASSERT
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(1));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(1), c_tolerance);
 			}
 
 
@@ -1931,16 +1932,16 @@ namespace micro_profiler
 				// ACT / ASSERT
 				fl->set_order(2, true);
 				fl->set_order(0, true);
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(3));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
 				fl->set_order(2, true);
 				fl->set_order(1, false);
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(3));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
 				fl->set_order(2, true);
 				fl->set_order(7, true);
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(3));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
 			}
 
 
@@ -1972,8 +1973,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, m->size());
-				assert_equal(29.0, m->get_value(0));
-				assert_equal(31.0, m->get_value(1));
+				assert_approx_equal(29.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(31.0, m->get_value(1), c_tolerance);
 
 				// ACT
 				ls = fl->watch_children(1);
@@ -1982,9 +1983,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, m->size());
-				assert_equal(1.12, m->get_value(0));
-				assert_equal(0.09, m->get_value(1));
-				assert_equal(0.03, m->get_value(2));
+				assert_approx_equal(1.12, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.09, m->get_value(1), c_tolerance);
+				assert_approx_equal(0.03, m->get_value(2), c_tolerance);
 			}
 
 

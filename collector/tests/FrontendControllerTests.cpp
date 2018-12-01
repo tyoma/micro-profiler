@@ -4,8 +4,10 @@
 
 #include "mocks.h"
 
-#include <common/stopwatch.h>
+#include <common/time.h>
+#include <test-helpers/com.h>
 #include <test-helpers/helpers.h>
+#include <test-helpers/thread.h>
 
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -394,7 +396,7 @@ namespace micro_profiler
 
 				// ASERT
 				assert_equal(get_current_process_executable(), state.process_init.executable);
-				assert_equal(c_ticks_per_second, state.process_init.ticks_per_second);
+				assert_approx_equal(ticks_per_second(), state.process_init.ticks_per_second, 0.01);
 			}
 
 

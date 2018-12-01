@@ -1,7 +1,7 @@
 #include <patcher/binary_translation.h>
 
+#include <common/memory.h>
 #include <stddef.h>
-#include <string.h>
 
 extern "C" {
 	#include <ld32.h>
@@ -105,7 +105,7 @@ namespace micro_profiler
 				}
 
 			default:
-				memcpy(destination, source, l);
+				mem_copy(destination, source, l);
 				continue;
 			}
 		}

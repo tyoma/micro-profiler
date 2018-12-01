@@ -22,7 +22,7 @@
 
 #include "assembler_intel.h"
 
-#include <string.h>
+#include <common/memory.h>
 
 #pragma pack(1)
 
@@ -117,7 +117,7 @@ namespace micro_profiler
 
 			i81.init();
 
-			memset(padding, 0xCC, sizeof(padding));
+			mem_set(padding, 0xCC, sizeof(padding));
 		}
 	}
 

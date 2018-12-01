@@ -18,60 +18,35 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/allocator.h>
-
-#include <common/noncopyable.h>
-#include <common/types.h>
-#ifdef _WIN32
-	#include <windows.h>
-#elif __unix__
-	#include <sys/mman.h>
-#endif
+#include <common/memory.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	class executable_memory_allocator::block : noncopyable
+	void mem_copy(void *dest, const void *src, size_t length)
 	{
-	public:
-		block(size_t block_size);
-		~block();
+		byte *dest_ = static_cast<byte *>(dest);
+		const byte *src_ = static_cast<const byte *>(src);
 
-		void *allocate(size_t size);
-
-	private:
-		byte * const _region;
-		const size_t _block_size;
-		size_t _occupied;
-	};
-
-
-
-	executable_memory_allocator::block::block(size_t block_size)
-#ifdef _WIN32
-		: _region(static_cast<byte *>(::VirtualAlloc(0, block_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE))),
-#elif __unix__
-		: _region(static_cast<byte *>(::mmap(0, block_size, PROT_EXEC | PROT_READ | PROT_WRITE,
-			 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0))),
-#endif
-			_block_size(block_size), _occupied(0)
-	{	}
-
-	executable_memory_allocator::block::~block()
-	{
-#ifdef _WIN32
-		::VirtualFree(_region, 0, MEM_RELEASE);
-#elif __unix__
-		::munmap(_region, _block_size);
-#endif
+		while (length--)
+			*dest_++ = *src_++;
 	}
+
+	void mem_set(void *dest, byte value, size_t length)
+	{
+		byte *dest_ = static_cast<byte *>(dest);
+
+		while (length--)
+			*dest_++ = value;
+	}
+
 
 	void *executable_memory_allocator::block::allocate(size_t size)
 	{
-		if (size <= _block_size - _occupied)
+		if (size <= _region.length() - _occupied)
 		{
-			void *ptr = _region + _occupied;
+			void *ptr = _region.begin() + _occupied;
 
 			_occupied += size;
 			return ptr;

@@ -36,12 +36,10 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="allocator.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="formatting.cpp" />
-    <ClCompile Include="memory_protection.cpp">
+    <ClCompile Include="memory.cpp" />
+    <ClCompile Include="memory_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="module.cpp">
@@ -50,7 +48,8 @@
     <ClCompile Include="registry_configuration.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="stopwatch.cpp">
+    <ClCompile Include="time.cpp" />
+    <ClCompile Include="time_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="string.cpp" />
@@ -64,18 +63,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\configuration.h" />
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\formatting.h" />
-    <ClInclude Include="..\memory_protection.h" />
+    <ClInclude Include="..\memory.h" />
     <ClInclude Include="..\module.h" />
     <ClInclude Include="..\path.h" />
     <ClInclude Include="..\pod_vector.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\protocol.h" />
     <ClInclude Include="..\serialization.h" />
-    <ClInclude Include="..\stopwatch.h" />
+    <ClInclude Include="..\time.h" />
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\types.h" />

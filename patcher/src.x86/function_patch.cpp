@@ -3,8 +3,7 @@
 
 #include "assembler_intel.h"
 
-#include <common/memory_protection.h>
-#include <string.h>
+#include <common/memory.h>
 
 using namespace std;
 
@@ -40,22 +39,22 @@ namespace micro_profiler
 		move_function(thunk + c_thunk_size, source_chunk);
 		reinterpret_cast<intel::jmp_rel_imm32 *>(thunk + c_thunk_size + _chunk_length)
 			->init(_target_function + _chunk_length);
-		memset(thunk + size0, 0xCC, size - size0);
+		mem_set(thunk + size0, 0xCC, size - size0);
 
 		// place hooking jump to original body
 		intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(_target_function);
 			
-		memcpy(_saved, source_chunk.begin(), source_chunk.length());
+		mem_copy(_saved, source_chunk.begin(), source_chunk.length());
 
 		scoped_unprotect su(source_chunk);
 		jmp_original.init(thunk);
-		memset(_target_function + jmp_size, 0xCC, _chunk_length - jmp_size);
+		mem_set(_target_function + jmp_size, 0xCC, _chunk_length - jmp_size);
 	}
 
 	function_patch::~function_patch()
 	{
 		scoped_unprotect su(range<byte>(_target_function, _chunk_length));
 
-		memcpy(_target_function, _saved, _chunk_length);
+		mem_copy(_target_function, _saved, _chunk_length);
 	}
 }

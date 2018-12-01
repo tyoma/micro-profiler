@@ -1,9 +1,10 @@
 #include <patcher/function_patch.h>
+#include <patcher/binary_translation.h>
 
 #include "assembler_intel.h"
 
 #include <common/memory_protection.h>
-#include <patcher/binary_translation.h>
+#include <string.h>
 
 using namespace std;
 

@@ -27,18 +27,23 @@
 namespace micro_profiler
 {
 	template <typename InterceptorT>
-	struct hooks
+	struct hook_types
 	{
 		typedef void (CC_(fastcall) on_enter_t)(InterceptorT *interceptor, const void **stack_ptr,
 			timestamp_t timestamp, const void *callee) _CC(fastcall);
 		typedef const void *(CC_(fastcall) on_exit_t)(InterceptorT *interceptor, const void **stack_ptr,
 			timestamp_t timestamp) _CC(fastcall);
 
-		static hooks<void>::on_enter_t *on_enter()
-		{	return reinterpret_cast<hooks<void>::on_enter_t *>(static_cast<on_enter_t *>(&InterceptorT::on_enter));	}
+	};
+	
+	template <typename InterceptorT>
+	struct hooks : hook_types<InterceptorT>
+	{
+		static hook_types<void>::on_enter_t *on_enter()
+		{	return reinterpret_cast<hook_types<void>::on_enter_t *>(reinterpret_cast<hook_types<void>::on_enter_t *>(&InterceptorT::on_enter));	}
 
-		static hooks<void>::on_exit_t *on_exit()
-		{	return reinterpret_cast<hooks<void>::on_exit_t *>(static_cast<on_exit_t *>(&InterceptorT::on_exit));	}
+		static hook_types<void>::on_exit_t *on_exit()
+		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit));	}
 	};
 
 	extern const size_t c_thunk_size;

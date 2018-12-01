@@ -1,5 +1,8 @@
 #include <patcher/binary_translation.h>
 
+#include <stddef.h>
+#include <string.h>
+
 extern "C" {
 	#include <ld32.h>
 }

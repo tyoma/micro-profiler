@@ -2,6 +2,7 @@
 
 #include <common/primitives.h>
 
+#include <string.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 

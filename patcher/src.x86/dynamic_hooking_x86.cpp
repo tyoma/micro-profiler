@@ -22,6 +22,8 @@
 
 #include "assembler_intel.h"
 
+#include <string.h>
+
 #pragma pack(1)
 
 namespace micro_profiler

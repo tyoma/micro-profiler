@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(COMMON_SOURCES
+	allocator.cpp
 	constants.cpp
 	formatting.cpp
 	string.cpp
+#	stopwatch.cpp
 )
 
 if (WIN32)

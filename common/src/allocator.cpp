@@ -21,7 +21,12 @@
 #include <common/allocator.h>
 
 #include <common/noncopyable.h>
-#include <windows.h>
+#include <common/types.h>
+#ifdef _WIN32
+	#include <windows.h>
+#elif __unix__
+	#include <sys/mman.h>
+#endif
 
 using namespace std;
 
@@ -44,12 +49,23 @@ namespace micro_profiler
 
 
 	executable_memory_allocator::block::block(size_t block_size)
+#ifdef _WIN32
 		: _region(static_cast<byte *>(::VirtualAlloc(0, block_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE))),
+#elif __unix__
+		: _region(static_cast<byte *>(::mmap(0, block_size, PROT_EXEC | PROT_READ | PROT_WRITE,
+			 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0))),
+#endif
 			_block_size(block_size), _occupied(0)
 	{	}
 
 	executable_memory_allocator::block::~block()
-	{	::VirtualFree(_region, 0, MEM_RELEASE);	}
+	{
+#ifdef _WIN32
+		::VirtualFree(_region, 0, MEM_RELEASE);
+#elif __unix__
+		::munmap(_region, _block_size);
+#endif
+	}
 
 	void *executable_memory_allocator::block::allocate(size_t size)
 	{

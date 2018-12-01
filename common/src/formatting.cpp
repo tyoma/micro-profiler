@@ -32,8 +32,8 @@ namespace micro_profiler
 	const size_t c_int_buffer_length = 24;
 	const wchar_t *c_time_units[] = {	L"s", L"ms", L"\x03bcs", L"ns",	};
 	const int c_time_units_count = sizeof(c_time_units) / sizeof(c_time_units[0]);
-	const wchar_t *c_formatting = L"%.3g%s";
-	const wchar_t *c_formatting_enhanced = L"%.4g%s";
+	const wchar_t *c_formatting = L"%.3g%ls";
+	const wchar_t *c_formatting_enhanced = L"%.4g%ls";
 	
 	void format_interval(wstring &destination, double interval)
 	{

@@ -16,6 +16,30 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			template <typename U, typename V>
+			inline U address_cast_hack2(V v)
+			{
+				union {
+					U u;
+					V v2;
+				};
+				v2 = v;
+				U assertion[sizeof(u) == sizeof(v) ? 1 : 0] = { u };
+				return assertion[0];
+			}
+
+			template <typename U, typename V>
+			inline U address_cast_hack3(V v)
+			{
+				union {
+					U u;
+					V v2;
+				};
+				v2 = v;
+				U assertion[sizeof(u) == sizeof(v) ? 1 : 0] = { u };
+				return assertion[0];
+			}
+
 			template <size_t n>
 			struct bytes
 			{
@@ -39,10 +63,14 @@ namespace micro_profiler
 			string outer_function(T f, const string &value)
 			{	return f(value); }
 
-			string CC_(stdcall) reverse_string_3(string value) _CC(stdcall)
+			string CC_(stdcall) reverse_string_3(string value) _CC(stdcall);
+
+			string CC_(stdcall) reverse_string_3(string value)
 			{	return string(value.rbegin(),value.rend());	}
 
-			string CC_(fastcall) reverse_string_4(string value) _CC(fastcall)
+			string CC_(fastcall) reverse_string_4(string value) _CC(fastcall);
+
+			string CC_(fastcall) reverse_string_4(string value)
 			{	return string(value.rbegin(),value.rend());	}
 
 			template <typename T>
@@ -54,19 +82,31 @@ namespace micro_profiler
 			{	return input;	}
 
 			template <typename T>
-			T CC_(stdcall) identity_2(const T &input) _CC(stdcall)
+			T CC_(stdcall) identity_2(const T &input) _CC(stdcall);
+
+			template <typename T>
+			T CC_(stdcall) identity_2(const T &input)
 			{	return input;	}
 
 			template <typename T>
-			T CC_(stdcall) identity_21(T input) _CC(stdcall)
+			T CC_(stdcall) identity_21(T input) _CC(stdcall);
+
+			template <typename T>
+			T CC_(stdcall) identity_21(T input)
 			{	return input;	}
 
 			template <typename T>
-			T CC_(fastcall) identity_3(const T &input) _CC(fastcall)
+			T CC_(fastcall) identity_3(const T &input) _CC(fastcall);
+
+			template <typename T>
+			T CC_(fastcall) identity_3(const T &input)
 			{	return input;	}
 
 			template <typename T>
-			T CC_(fastcall) identity_31(T input) _CC(fastcall)
+			T CC_(fastcall) identity_31(T input) _CC(fastcall);
+
+			template <typename T>
+			T CC_(fastcall) identity_31(T input)
 			{	return input;	}
 
 			void throwing_function()
@@ -116,25 +156,31 @@ namespace micro_profiler
 				{	}
 
 				static void CC_(fastcall) on_enter(exception_call_tracer *self, const void **stack_ptr,
-					timestamp_t /*timestamp*/, const void * /*callee*/) _CC(fastcall)
-				{
-					if (!self->return_address)
-						self->return_address = *stack_ptr;
-				}
+					timestamp_t timestamp, const void *callee) _CC(fastcall);
 
-				static const void *CC_(fastcall) on_exit(exception_call_tracer *self, const void ** /*stack_ptr*/,
-					timestamp_t /*timestamp*/) _CC(fastcall)
-				{
-					const void *r = self->return_address;
-
-					assert_not_null(r); // Will crash the tests, if failed.
-					self->return_address = 0;
-					return r;
-				}
+				static const void *CC_(fastcall) on_exit(exception_call_tracer *self, const void **stack_ptr,
+					timestamp_t timestamp) _CC(fastcall);
 
 				const void *return_address;
 				std::vector<const void **> entry_queue, exit_queue;
 			};
+
+			void CC_(fastcall) exception_call_tracer::on_enter(exception_call_tracer *self, const void **stack_ptr,
+				timestamp_t, const void *)
+			{
+				if (!self->return_address)
+					self->return_address = *stack_ptr;
+			}
+
+			const void *CC_(fastcall) exception_call_tracer::on_exit(exception_call_tracer *self, const void **,
+				timestamp_t)
+			{
+				const void *r = self->return_address;
+
+				assert_not_null(r); // Will crash the tests, if failed.
+				self->return_address = 0;
+				return r;
+			}
 		}
 
 		begin_test_suite( DynamicHookingTests )
@@ -193,16 +239,38 @@ namespace micro_profiler
 				assert_equal(original(input), f(input));
 			}
 
+			template <typename FunctionT, typename T>
+			void CheckReturnValueIdentity2(FunctionT *original, const T &input)
+			{
+				// INIT / ACT
+				initialize_hooks(thunk_memory.get(), address_cast_hack2<const void *>(original), 0, &trace);
+				FunctionT *f = address_cast_hack2<FunctionT *>(thunk_memory.get());
+
+				// ACT / ASSERT
+				assert_equal(original(input), f(input));
+			}
+
+			template <typename FunctionT, typename T>
+			void CheckReturnValueIdentity3(FunctionT *original, const T &input)
+			{
+				// INIT / ACT
+				initialize_hooks(thunk_memory.get(), address_cast_hack3<const void *>(original), 0, &trace);
+				FunctionT *f = address_cast_hack3<FunctionT *>(thunk_memory.get());
+
+				// ACT / ASSERT
+				assert_equal(original(input), f(input));
+			}
+
 			test( CheckFunctionsOfAvailableConventionsAreCallable )
 			{
 				CheckReturnValueIdentity(&reverse_string_1, "lorem ipsum");
 				CheckReturnValueIdentity(&reverse_string_1, "Transylvania");
 				CheckReturnValueIdentity(&reverse_string_2, "lorem ipsum");
 				CheckReturnValueIdentity(&reverse_string_2, "Transylvania");
-				CheckReturnValueIdentity(&reverse_string_3, "lorem ipsum");
-				CheckReturnValueIdentity(&reverse_string_3, "Transylvania");
-				CheckReturnValueIdentity(&reverse_string_4, "lorem ipsum");
-				CheckReturnValueIdentity(&reverse_string_4, "Transylvania");
+				CheckReturnValueIdentity2(&reverse_string_3, "lorem ipsum");
+				CheckReturnValueIdentity2(&reverse_string_3, "Transylvania");
+				CheckReturnValueIdentity3(&reverse_string_4, "lorem ipsum");
+				CheckReturnValueIdentity3(&reverse_string_4, "Transylvania");
 			}
 
 
@@ -227,22 +295,22 @@ namespace micro_profiler
 				CheckReturnValueIdentity(&identity_11< bytes<4> >, values1[1]);
 				CheckReturnValueIdentity(&identity_11< bytes<100> >, values2[0]);
 				CheckReturnValueIdentity(&identity_11< bytes<100> >, values2[1]);
-				CheckReturnValueIdentity(&identity_2< bytes<4> >, values1[0]);
-				CheckReturnValueIdentity(&identity_2< bytes<4> >, values1[1]);
-				CheckReturnValueIdentity(&identity_2< bytes<100> >, values2[0]);
-				CheckReturnValueIdentity(&identity_2< bytes<100> >, values2[1]);
-				CheckReturnValueIdentity(&identity_21< bytes<4> >, values1[0]);
-				CheckReturnValueIdentity(&identity_21< bytes<4> >, values1[1]);
-				CheckReturnValueIdentity(&identity_21< bytes<100> >, values2[0]);
-				CheckReturnValueIdentity(&identity_21< bytes<100> >, values2[1]);
-				CheckReturnValueIdentity(&identity_3< bytes<4> >, values1[0]);
-				CheckReturnValueIdentity(&identity_3< bytes<4> >, values1[1]);
-				CheckReturnValueIdentity(&identity_3< bytes<100> >, values2[0]);
-				CheckReturnValueIdentity(&identity_3< bytes<100> >, values2[1]);
-				CheckReturnValueIdentity(&identity_31< bytes<4> >, values1[0]);
-				CheckReturnValueIdentity(&identity_31< bytes<4> >, values1[1]);
-				CheckReturnValueIdentity(&identity_31< bytes<100> >, values2[0]);
-				CheckReturnValueIdentity(&identity_31< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity2(&identity_2< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity2(&identity_2< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity2(&identity_2< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity2(&identity_2< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity2(&identity_21< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity2(&identity_21< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity2(&identity_21< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity2(&identity_21< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity3(&identity_3< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity3(&identity_3< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity3(&identity_3< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity3(&identity_3< bytes<100> >, values2[1]);
+				CheckReturnValueIdentity3(&identity_31< bytes<4> >, values1[0]);
+				CheckReturnValueIdentity3(&identity_31< bytes<4> >, values1[1]);
+				CheckReturnValueIdentity3(&identity_31< bytes<100> >, values2[0]);
+				CheckReturnValueIdentity3(&identity_31< bytes<100> >, values2[1]);
 			}
 
 

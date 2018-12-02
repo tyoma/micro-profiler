@@ -39,7 +39,7 @@ namespace micro_profiler
 
 
 			inline void CC_(fastcall) trace_events::on_enter(trace_events *self, const void **stack_ptr,
-				timestamp_t timestamp, const void *callee) _CC(fastcall)
+				timestamp_t timestamp, const void *callee)
 			{
 				call_record call = { timestamp, callee };
 
@@ -49,7 +49,7 @@ namespace micro_profiler
 			}
 
 			inline const void *CC_(fastcall) trace_events::on_exit(trace_events *self, const void **stack_ptr,
-				timestamp_t timestamp) _CC(fastcall)
+				timestamp_t timestamp)
 			{
 				call_record call = { timestamp, 0 };
 				const void *return_address = self->return_stack.back().first;

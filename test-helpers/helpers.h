@@ -13,7 +13,7 @@ namespace micro_profiler
 	namespace tests
 	{
 		template <typename U, typename V>
-		U address_cast_hack(V v)
+		inline U address_cast_hack(V v)
 		{
 			union {
 				U u;

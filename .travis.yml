@@ -10,3 +10,4 @@ script:
  - cmake ..
  - make
  - ./bin/utee-runner ./bin/libcommon.tests.so ./bin/libcollector.tests.so
+

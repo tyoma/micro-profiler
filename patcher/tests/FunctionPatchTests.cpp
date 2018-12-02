@@ -14,6 +14,10 @@ namespace micro_profiler
 	namespace tests
 	{
 		int recursive_factorial(int v);
+		int guinea_snprintf(char *buffer, size_t count, const char *format, ...);
+
+		byte_range get_function_body(void *f)
+		{	return byte_range(static_cast<byte *>(f), 5);	}
 
 		begin_test_suite( FunctionPatchTests )
 			executable_memory_allocator allocator;
@@ -80,8 +84,7 @@ namespace micro_profiler
 				typedef int (fn_t)(char *buffer, size_t count, const char *format, ...);
 
 				// INIT
-				image img(L"symbol_container_2");
-				fn_t *f = img.get_symbol<fn_t>("guinea_snprintf");
+				fn_t *f = &guinea_snprintf;
 				char buffer[1000] = { 0 };
 				byte_range b = get_function_body(f);
 

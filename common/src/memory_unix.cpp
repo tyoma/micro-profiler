@@ -26,6 +26,21 @@
 
 namespace micro_profiler
 {
+	scoped_unprotect::scoped_unprotect(range<byte> region)
+		: _region(region)
+	{
+		byte *page = reinterpret_cast<byte *>(reinterpret_cast<size_t>(region.begin()) & ~static_cast<size_t>(0x0FFF));
+		size_t full_length = region.length() + (region.begin() - page);
+		
+		_region = byte_range(page, full_length);
+		if (mprotect(_region.begin(), _region.length(), PROT_EXEC | PROT_READ | PROT_WRITE))
+			throw std::runtime_error("Cannot change protection mode!");
+	}
+
+	scoped_unprotect::~scoped_unprotect()
+	{	mprotect(_region.begin(), _region.length(), PROT_EXEC | PROT_READ);	}
+
+
 	executable_memory_allocator::block::block(size_t size)
 		: _region(static_cast<byte *>(::mmap(0, size, PROT_EXEC | PROT_READ | PROT_WRITE,
 			 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)), size), _occupied(0)

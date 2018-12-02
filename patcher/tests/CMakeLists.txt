@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 set(PATCHER_TEST_SOURCES
 	BinaryTranslationTestsX86.cpp
 	DynamicHookingTests.cpp
-#	FunctionPatchTests.cpp
+	FunctionPatchTests.cpp
 	guineapigs.cpp
 #	helpers.cpp
 )

@@ -1,5 +1,9 @@
 language: cpp
 
+install:
+ - sudo apt-get install -y gcc-multilib
+ - sudo apt-get install -y g++-multilib
+  
 compiler:
  - clang
  - gcc
@@ -7,7 +11,7 @@ compiler:
 script:
  - mkdir _build
  - cd _build
- - cmake ..
+ - cmake .. -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_C_FLAGS="-m32"
  - make
- - ./bin/utee-runner ./bin/libcommon.tests.so ./bin/libcollector.tests.so
+ - ./bin/utee-runner ./bin/libcommon.tests.so ./bin/libcollector.tests.so ./bin/libpatcher.tests.so
 

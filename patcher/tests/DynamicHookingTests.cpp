@@ -313,7 +313,7 @@ namespace micro_profiler
 				CheckReturnValueIdentity3(&identity_31< bytes<100> >, values2[1]);
 			}
 
-
+#ifndef MP_NO_EXCEPTIONS
 			test( ReturnAddressIsRestoredWhenExceptionIsThrown )
 			{
 				typedef void (throwing_fn_t)();
@@ -334,7 +334,7 @@ namespace micro_profiler
 				calling_a_thrower_1(&throwing_function, "");
 				assert_equal("zabazu", caller(thrower, "zabazu"));
 			}
-
+#endif
 
 			test( StackAddressesAreDecreasingOnEnteringAndIncreasingOnExiting )
 			{

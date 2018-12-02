@@ -10,6 +10,9 @@ include_directories(./libraries/strmd)
 include_directories(./libraries/utee)
 
 add_definitions(-DMP_MT_GENERIC)
+if(UNIX)
+	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11 -frtti")

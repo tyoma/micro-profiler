@@ -25,18 +25,15 @@
 #include <common/noncopyable.h>
 #include <functional>
 #include <memory>
-
-namespace mt
-{
-	class thread;
-}
+#include <mt/atomic.h>
+#include <mt/event.h>
+#include <mt/thread.h>
 
 namespace micro_profiler
 {
 	struct calls_collector_i;
 	struct handle;
 	class image_load_queue;
-	class patched_image;
 
 	class frontend_controller : noncopyable
 	{
@@ -48,20 +45,20 @@ namespace micro_profiler
 		void force_stop();
 
 	private:
+		typedef mt::atomic<int> ref_counter_t;
 		class profiler_instance;
 
 	private:
 		static void frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
-			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &image_load_queue_,
-			const std::shared_ptr<void> &exit_event);
+			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &lqueue,
+			const std::shared_ptr<mt::event> &exit_event);
 
 	private:
 		calls_collector_i &_collector;
 		frontend_factory_t _factory;
 		std::shared_ptr<image_load_queue> _image_load_queue;
-		std::shared_ptr<volatile long> _worker_refcount;
-		std::shared_ptr<void> _exit_event;
+		std::shared_ptr<ref_counter_t> _worker_refcount;
+		std::shared_ptr<mt::event> _exit_event;
 		std::auto_ptr<mt::thread> _frontend_thread;
-		std::auto_ptr<patched_image> _patched_image;
 	};
 }

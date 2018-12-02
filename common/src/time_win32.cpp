@@ -37,6 +37,9 @@ namespace micro_profiler
 		const double c_period = get_period();
 	}
 
+	timestamp_t clock()
+	{	return ::GetTickCount64();	}
+
 	double stopwatch(counter_t &counter)
 	{
 		LARGE_INTEGER c;

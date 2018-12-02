@@ -6,8 +6,8 @@ set(COLLECTOR_LIB_SOURCES
 	calls_collector.cpp
 	calls_collector_thread.cpp 
 #	channel_client.cpp
-#	frontend_controller.cpp
-#	image_patch.cpp
+	frontend_controller.cpp
+	image_patch.cpp
 #	main.cpp
 #	patched_image.cpp
 	statistics_bridge.cpp

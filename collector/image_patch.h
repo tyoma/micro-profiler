@@ -23,6 +23,7 @@
 #include "binary_image.h"
 
 #include <patcher/function_patch.h>
+#include <vector>
 
 namespace micro_profiler
 {

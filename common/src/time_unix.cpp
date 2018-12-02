@@ -24,6 +24,14 @@
 
 namespace micro_profiler
 {
+	timestamp_t clock()
+	{
+		timespec ts;
+		
+		clock_gettime(CLOCK_MONOTONIC, &ts);
+		return timestamp_t(ts.tv_sec) + ts.tv_nsec / 1000000;
+	}
+	
 	double stopwatch(counter_t &counter)
 	{
 		timespec ts;

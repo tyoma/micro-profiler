@@ -26,6 +26,7 @@ namespace micro_profiler
 {
 	typedef unsigned long long counter_t;
 
+	timestamp_t clock(); // monotonic clock in milliseconds
 	double stopwatch(counter_t &counter);
 	timestamp_t read_tick_counter();
 	timestamp_t ticks_per_second();

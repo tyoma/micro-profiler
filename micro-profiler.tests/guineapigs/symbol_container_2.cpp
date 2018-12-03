@@ -14,7 +14,7 @@ namespace vale_of_mean_creatures
 	}
 }
 
-extern "C" __declspec(dllexport) void get_function_addresses_2(void (*&f1)(), void (*&f2)(), void (*&f3)())
+extern "C" void get_function_addresses_2(void (*&f1)(), void (*&f2)(), void (*&f3)())
 {
 	f1 = &vale_of_mean_creatures::this_one_for_the_birds;
 	f2 = &vale_of_mean_creatures::this_one_for_the_whales;
@@ -23,17 +23,17 @@ extern "C" __declspec(dllexport) void get_function_addresses_2(void (*&f1)(), vo
 
 void bubble_sort(int * volatile begin, int * volatile end);
 
-extern "C" __declspec(dllexport) void function_with_a_nested_call_2()
+extern "C" void function_with_a_nested_call_2()
 {
 	bubble_sort(0, 0);
 }
 
-extern "C" __declspec(dllexport) void bubble_sort2(int * volatile begin, int * volatile end)
+extern "C" void bubble_sort2(int * volatile begin, int * volatile end)
 {
 	bubble_sort(begin, end);
 }
 
-extern "C" __declspec(dllexport) void bubble_sort_expose(void (*&f)(int * volatile begin, int * volatile end))
+extern "C" void bubble_sort_expose(void (*&f)(int * volatile begin, int * volatile end))
 {
 	f = &bubble_sort;
 }
@@ -41,7 +41,7 @@ extern "C" __declspec(dllexport) void bubble_sort_expose(void (*&f)(int * volati
 #include <stdio.h>
 #include <stdarg.h>
 
-extern "C" __declspec(dllexport) int guinea_snprintf(char *buffer, size_t count, const char *format, ...)
+extern "C" int guinea_snprintf(char *buffer, size_t count, const char *format, ...)
 {
 	va_list args;
 

@@ -10,7 +10,7 @@ namespace micro_profiler
 			: _handle(::CreateEvent(NULL, FALSE, FALSE, NULL), &::CloseHandle)
 		{	}
 
-		void com_event::signal()
+		void com_event::set()
 		{	::SetEvent(_handle.get());	}
 
 		void com_event::wait()

@@ -1,5 +1,5 @@
-#include <collector/channel_client.h>
 #include <collector/frontend_controller.h>
+
 #include <collector/entry.h>
 
 #include "mocks.h"
@@ -7,7 +7,6 @@
 #include <common/time.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/thread.h>
-
 #include <ut/assert.h>
 #include <ut/test.h>
 

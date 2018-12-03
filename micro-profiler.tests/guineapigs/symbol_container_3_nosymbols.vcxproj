@@ -30,8 +30,6 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
-
   <PropertyGroup>
     <LinkIncremental>false</LinkIncremental>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
@@ -39,10 +37,14 @@
   <ItemDefinitionGroup>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ModuleDefinitionFile>symbol_container_3.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="symbol_container_3.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="symbol_container_3.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

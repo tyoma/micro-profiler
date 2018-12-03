@@ -37,3 +37,5 @@ add_subdirectory(mt/src)
 add_subdirectory(test-helpers)
 add_subdirectory(patcher/src.x86)
 add_subdirectory(patcher/tests)
+
+add_subdirectory(micro-profiler.tests/guineapigs)

@@ -1,6 +1,8 @@
 #include <test-helpers/helpers.h>
 
+#include <common/path.h>
 #include <dlfcn.h>
+#include <link.h>
 
 using namespace std;
 
@@ -11,15 +13,32 @@ namespace micro_profiler
 		image::image(const wchar_t *path_)
 		{
 			wstring path(path_);
-			string apath(path.begin(), path.end());
 
+			if (path.find(L".so") == wstring::npos)
+				path = path + L".so";
+			if (path.find(L'/') == wstring::npos)
+				path = L"./" & (L"lib" + path);
+
+			string apath(path.begin(), path.end());
+			
 			reset(::dlopen(apath.c_str(), RTLD_NOW), &::dlclose);
 			if (!get())
 				throw runtime_error("Cannot load module specified!");
+
+			link_map *lm = 0;
+			
+			::dlinfo(get(), RTLD_DI_LINKMAP, &lm);
+			apath = lm->l_name;
+			_fullpath.assign(apath.begin(), apath.end());
 		}
 
 		long_address_t image::load_address() const
-		{	return reinterpret_cast<size_t>(get());	}
+		{
+			link_map *lm = 0;
+			
+			::dlinfo(get(), RTLD_DI_LINKMAP, &lm);
+			return reinterpret_cast<size_t>(lm->l_addr);
+		}
 
 		const wchar_t *image::absolute_path() const
 		{	return _fullpath.c_str();	}

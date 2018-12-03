@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(COMMON_TEST_SOURCES
 	AllocatorTests.cpp
+	ImageInfoTests.cpp
 	MiscTests.cpp
 	PrimitivesTests.cpp
 	SerializationTests.cpp

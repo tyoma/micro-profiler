@@ -42,7 +42,7 @@
     <ClCompile Include="memory_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="module.cpp">
+    <ClCompile Include="module_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="registry_configuration.cpp">

@@ -37,7 +37,7 @@ namespace micro_profiler
 				{
 					ok = false;
 				}
-				evt.signal();
+				evt.set();
 			}
 
 			test( ChannelConstructionDoesntFailForExistingFactory )

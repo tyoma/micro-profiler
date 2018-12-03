@@ -13,5 +13,5 @@ script:
  - cd _build
  - cmake .. -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_C_FLAGS="-m32"
  - make
- - ./bin/utee-runner ./bin/libcommon.tests.so ./bin/libcollector.tests.so ./bin/libpatcher.tests.so
-
+ - cd bin
+ - ./utee-runner ./libcommon.tests.so ./libcollector.tests.so ./libpatcher.tests.so

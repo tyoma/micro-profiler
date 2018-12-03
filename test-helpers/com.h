@@ -11,7 +11,7 @@ namespace micro_profiler
 		public:
 			com_event();
 
-			void signal();
+			void set();
 			void wait();
 
 		private:

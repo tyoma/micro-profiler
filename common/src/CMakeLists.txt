@@ -10,13 +10,19 @@ set(COMMON_SOURCES
 if (WIN32)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
 		memory_win32.cpp
+		module_win32.cpp
 		time_win32.cpp
 	)	
 elseif (UNIX)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
 		memory_unix.cpp
+		module_unix.cpp
 		time_unix.cpp
 	)		
 endif()
 
 add_library(common STATIC ${COMMON_SOURCES})
+
+if (UNIX)
+	target_link_libraries(common dl)
+endif()

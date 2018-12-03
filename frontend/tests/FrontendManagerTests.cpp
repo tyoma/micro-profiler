@@ -418,7 +418,7 @@ namespace micro_profiler
 					channels.push_back(open_channel(id));
 					write(channels.back(), init, make_initialization_data(L"", 1));
 				}
- 				clients_ready.signal();
+ 				clients_ready.set();
 				server_ready.wait();
 				for (size_t i = 0; i != channels.size(); ++i)
 				{
@@ -427,7 +427,7 @@ namespace micro_profiler
 						failed_sends.push_back(i);
 				}
 				channels.clear();
- 				clients_ready.signal();
+ 				clients_ready.set();
 			}
 
 			test( FrontendsAreDisconnectedWhenManagerIsReleased )
@@ -440,7 +440,7 @@ namespace micro_profiler
 
 				// ACT
 				m.reset();
-				server_ready.signal();
+				server_ready.set();
 				clients_ready.wait();
 				t.join();
 
@@ -463,7 +463,7 @@ namespace micro_profiler
 				// ACT
 				_ui_creation_log[0]->emulate_close();
 				_ui_creation_log[2]->emulate_close();
-				server_ready.signal();
+				server_ready.set();
 				clients_ready.wait();
 				t.join();
 
@@ -746,7 +746,7 @@ namespace micro_profiler
 
 				// ACT
 				m->close_all();
-				server_ready.signal();
+				server_ready.set();
 				clients_ready.wait();
 				t.join();
 

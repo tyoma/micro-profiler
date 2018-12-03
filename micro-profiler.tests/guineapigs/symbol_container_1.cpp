@@ -7,13 +7,13 @@ namespace a_tiny_namespace
 	void function_that_hides_under_a_namespace() {	}
 }
 
-extern "C" __declspec(dllexport) void get_function_addresses_1(void (*&f1)(), void (*&f2)())
+extern "C" void get_function_addresses_1(void (*&f1)(), void (*&f2)())
 {
 	f1 = &very_simple_global_function;
 	f2 = &a_tiny_namespace::function_that_hides_under_a_namespace;
 }
 
-extern "C" __declspec(dllexport) void format_decimal(char *buffer0, int value)
+extern "C" void format_decimal(char *buffer0, int value)
 {
 	char *buffer = buffer0;
 

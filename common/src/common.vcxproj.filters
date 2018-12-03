@@ -7,9 +7,6 @@
     <ClCompile Include="string.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="module.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="registry_configuration.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -29,6 +26,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="memory.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="module_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -26,34 +26,8 @@
 using namespace std;
 using namespace std::placeholders;
 
-extern "C" void profile_enter();
-extern "C" void profile_exit();
-
 namespace micro_profiler
 {
-	calls_collector::calls_collector(size_t trace_limit)
-		: _trace_limit(trace_limit), _profiler_latency(0)
-	{
-		struct delay_evaluator : acceptor
-		{
-			virtual void accept_calls(mt::thread::id, const call_record *calls, size_t count)
-			{
-				for (const call_record *i = calls; i < calls + count; i += 2)
-					delay = i != calls ? (min)(delay, (i + 1)->timestamp - i->timestamp) : (i + 1)->timestamp - i->timestamp;
-			}
-
-			timestamp_t delay;
-		} de;
-
-		const unsigned int check_times = 10000;
-
-		for (unsigned int i = 0; i < check_times; ++i)
-			profile_enter(), profile_exit();
-
-		read_collected(de);
-		_profiler_latency = de.delay;
-	}
-
 	void calls_collector::read_collected(acceptor &a)
 	{
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);

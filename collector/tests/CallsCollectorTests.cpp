@@ -1,6 +1,5 @@
 #include <collector/calls_collector.h>
 
-#include "globals.h"
 #include "helpers.h"
 
 #include <algorithm>
@@ -59,11 +58,6 @@ namespace micro_profiler
 
 			init( ConstructCollector )
 			{
-				collection_acceptor a;
-
-				g_collector_ptr->read_collected(a);
-				g_collector_ptr->read_collected(a);
-
 				collector.reset(new calls_collector(1000));
 			}
 

@@ -12,15 +12,12 @@ set(COLLECTOR_TESTS_SOURCES
 	SerializationTests.cpp
 	ShadowStackTests.cpp
 #	StatisticsBridgeTests.cpp
-	globals.cpp
 	mocks.cpp
 #	mocks_com.cpp
-	globals.h
 	helpers.h
 	mocks.h
 #	mocks_com.h
-	stubs.cpp
 )
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES})
-target_link_libraries(collector.tests collector.lib common test-helpers utee)
+target_link_libraries(collector.tests collector.lib common patcher mt test-helpers utee)

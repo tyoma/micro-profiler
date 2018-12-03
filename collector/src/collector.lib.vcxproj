@@ -37,6 +37,10 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <MASM>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
+    </MASM>
     <Lib>
       <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
     </Lib>
@@ -47,6 +51,7 @@
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="binary_image.cpp" />
+    <ClCompile Include="calibration.cpp" />
     <ClCompile Include="calls_collector.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -56,16 +61,14 @@
     <ClCompile Include="channel_client.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="empty_function.intel.c" />
     <ClCompile Include="frontend_controller.cpp" />
     <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="patched_image.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="hooks.asm">
-      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
-    </MASM>
+    <MASM Include="hooks.asm" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\analyzer.h" />

@@ -57,7 +57,6 @@
     <ClCompile Include="CallsCollectorThreadTests.cpp" />
     <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
-    <ClCompile Include="globals.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
     <ClCompile Include="ImagePatchTests.cpp" />
     <ClCompile Include="mocks.cpp" />
@@ -69,7 +68,6 @@
     <ClCompile Include="StatisticsBridgeTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="globals.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mocks_com.h" />

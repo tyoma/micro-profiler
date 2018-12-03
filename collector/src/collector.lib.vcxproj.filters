@@ -28,6 +28,12 @@
     <ClCompile Include="calls_collector_thread.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="calibration.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="empty_function.intel.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

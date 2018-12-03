@@ -18,39 +18,46 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/memory.h>
+#include <collector/calls_collector.h>
 
-#include <new>
-#include <stdexcept>
-#include <windows.h>
+#include <common/memory.h>
+#include <patcher/function_patch.h>
+
+using namespace std;
+
+extern "C" unsigned char g_empty_function[];
+extern "C" unsigned int g_empty_function_size;
 
 namespace micro_profiler
 {
-	scoped_unprotect::scoped_unprotect(range<byte> region)
-		: _region(region)
+
+	calls_collector::calls_collector(size_t trace_limit)
+		: _trace_limit(trace_limit), _profiler_latency(0)
 	{
-		DWORD previous_access;
+		struct delay_evaluator : acceptor
+		{
+			virtual void accept_calls(mt::thread::id, const call_record *calls, size_t count)
+			{
+				for (const call_record *i = calls; i < calls + count; i += 2)
+					delay = i != calls ? (min)(delay, (i + 1)->timestamp - i->timestamp) : (i + 1)->timestamp - i->timestamp;
+			}
 
-		if (!::VirtualProtect(_region.begin(), _region.length(), PAGE_EXECUTE_READWRITE, &previous_access))
-			throw std::runtime_error("Cannot change protection mode!");
-		_previous_access = previous_access;
+			timestamp_t delay;
+		} de;
+
+		executable_memory_allocator a;
+		shared_ptr<void> body = a.allocate(g_empty_function_size);
+		void (*f)() = ((void (*)())(size_t)body.get());
+
+		mem_copy(body.get(), g_empty_function, g_empty_function_size);
+
+		byte_range rng(static_cast<byte *>(body.get()), g_empty_function_size);
+		function_patch p(a, rng, this);
+
+		for (size_t i = (min)(trace_limit / 2, static_cast<size_t>(10000u)) & ~1; i--; )
+			f();
+
+		read_collected(de);
+		_profiler_latency = de.delay;
 	}
-
-	scoped_unprotect::~scoped_unprotect()
-	{
-		DWORD dummy;
-		::VirtualProtect(_region.begin(), _region.length(), _previous_access, &dummy);
-		::FlushInstructionCache(::GetCurrentProcess(), _region.begin(), _region.length());
-	}
-
-	executable_memory_allocator::block::block(size_t size)
-		: _region(static_cast<byte *>(::VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE)), size),
-			_occupied(0)
-	{
-		if (!_region.begin())
-			throw std::bad_alloc();
-	}
-
-	executable_memory_allocator::block::~block()
-	{	::VirtualFree(_region.begin(), 0, MEM_RELEASE);	}
 }

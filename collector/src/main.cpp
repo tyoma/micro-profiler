@@ -25,6 +25,7 @@
 #include <collector/entry.h>
 #include <common/constants.h>
 #include <common/memory.h>
+#include <mt/atomic.h>
 #include <patcher/src.x86/assembler_intel.h>
 
 #include <windows.h>
@@ -41,7 +42,7 @@ namespace micro_profiler
 		auto_ptr<frontend_controller> g_frontend_controller;
 		void *g_exitprocess_address = 0;
 		byte g_backup[sizeof(jmp)];
-		volatile long g_patch_lockcount = 0;
+		mt::atomic<int> g_patch_lockcount(0);
 
 		void detour(void *target_function, void *where, byte (&backup)[sizeof(jmp)])
 		{
@@ -106,15 +107,12 @@ namespace micro_profiler
 		}
 
 	private:
-		static void deactivate_context(void *cookie)
-		{	::DeactivateActCtx(0, reinterpret_cast<ULONG_PTR>(cookie));	}
-
 		shared_ptr<void> lock_context() const
 		{
 			ULONG_PTR cookie;
 
 			::ActivateActCtx(_activation_context.get(), &cookie);
-			return shared_ptr<void>(reinterpret_cast<void*>(cookie), &deactivate_context);
+			return shared_ptr<void>(reinterpret_cast<void*>(cookie), bind(&::DeactivateActCtx, 0, cookie));
 		}
 
 		static bool null(const void * /*buffer*/, size_t /*size*/)
@@ -150,7 +148,7 @@ extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(void *imag
 {
 	using namespace micro_profiler;
 
-	if (1 == _InterlockedIncrement(&g_patch_lockcount))
+	if (0 == g_patch_lockcount.fetch_add(1))
 	{
 		HMODULE dummy;
 

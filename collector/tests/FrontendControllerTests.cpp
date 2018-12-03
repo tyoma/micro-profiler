@@ -5,7 +5,6 @@
 #include "mocks.h"
 
 #include <common/time.h>
-#include <test-helpers/com.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/thread.h>
 
@@ -24,9 +23,9 @@ namespace micro_profiler
 		{
 			int dummy = 0;
 
-			void setAt(mt::event *e, volatile long *times_to_event)
+			void setAt(mt::event *e, mt::atomic<int> *times_to_event)
 			{
-				if (0 == _InterlockedDecrement(times_to_event))
+				if (1 == times_to_event->fetch_add(-1))
 					e->set();
 			}
 
@@ -48,7 +47,7 @@ namespace micro_profiler
 				initialized->set();
 			}
 
-			void LogThreadN(vector< shared_ptr<running_thread> > *log, volatile long *times_to_initialized,
+			void LogThreadN(vector< shared_ptr<running_thread> > *log, mt::atomic<int> *times_to_initialized,
 				mt::event *initialized)
 			{
 				log->push_back(this_thread::open());
@@ -56,7 +55,7 @@ namespace micro_profiler
 			}
 
 			void ControlInitialization(mt::event *proceed, vector< shared_ptr<running_thread> > *log,
-				volatile long *times_to_initialized, mt::event *initialized)
+				mt::atomic<int> *times_to_initialized, mt::event *initialized)
 			{
 				proceed->wait();
 				LogThreadN(log, times_to_initialized, initialized);
@@ -214,7 +213,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				mt::event initialized;
-				volatile long counter = 2;
+				mt::atomic<int> counter(2);
 				mocks::FrontendState state(bind(&setAt, &initialized, &counter));
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h;
@@ -228,7 +227,7 @@ namespace micro_profiler
 				initialized.wait();
 
 				// INIT
-				counter = 3;
+				counter = mt::atomic<int>(3);
 
 				// ACT
 				h.reset();
@@ -248,7 +247,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				mt::event initialized;
-				volatile long counter = 1;
+				mt::atomic<int> counter(1);
 				mocks::FrontendState state(bind(&setAt, &initialized, &counter));
 				frontend_controller fc(tracer, state.MakeFactory());
 
@@ -263,7 +262,7 @@ namespace micro_profiler
 				fc.force_stop();
 
 				// ASSERT
-				assert_equal(0, counter);
+				assert_equal(0, counter.fetch_add(0));
 			}
 
 
@@ -272,7 +271,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				mt::event initialized;
-				volatile long counter = 1;
+				mt::atomic<int> counter(1);
 				mocks::FrontendState state(bind(&setAt, &initialized, &counter));
 				frontend_controller fc(tracer, state.MakeFactory());
 
@@ -289,7 +288,7 @@ namespace micro_profiler
 				fc.force_stop();
 
 				// ASSERT
-				assert_equal(0, counter);
+				assert_equal(0, counter.fetch_add(0));
 			}
 
 
@@ -322,7 +321,7 @@ namespace micro_profiler
 				mocks::Tracer tracer;
 				mt::event proceed(false, false), finished;
 				vector< shared_ptr<running_thread> > htread_log;
-				volatile long times = 2;
+				mt::atomic<int> times(2);
 				mocks::FrontendState state(bind(&ControlInitialization, &proceed, &htread_log, &times, &finished));
 				frontend_controller fc(tracer, state.MakeFactory());
 				auto_ptr<handle> h;
@@ -570,7 +569,7 @@ namespace micro_profiler
 				// INIT
 				mocks::Tracer tracer;
 				mt::event initialized;
-				volatile long times = 2;
+				mt::atomic<int> times(2);
 				mocks::FrontendState state(bind(&setAt, &initialized, &times));
 				sync_stop_frontend_controller fc(tracer, state);
 				auto_ptr<handle> h(profile_this(fc));

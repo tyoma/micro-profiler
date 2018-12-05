@@ -15,6 +15,26 @@ namespace micro_profiler
 			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
 			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
 
+			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>
+			{
+			public:
+				frontend_state(const std::shared_ptr<void> &ownee);
+
+				channel_t create();
+
+			public:
+				std::function<void ()> constructed;
+				std::function<void ()> destroyed;
+
+				std::function<void (const initialization_data &id)> initialized;
+				std::function<void (const loaded_modules &m)> modules_loaded;
+				std::function<void (const statistics_map_detailed &u)> updated;
+				std::function<void (const unloaded_modules &m)> modules_unloaded;
+
+			private:
+				std::shared_ptr<void> _ownee;
+			};
+
 
 			struct FrontendState : noncopyable
 			{

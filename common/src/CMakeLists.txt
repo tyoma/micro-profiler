@@ -5,19 +5,19 @@ set(COMMON_SOURCES
 	formatting.cpp
 	memory.cpp
 	string.cpp
+	time.cpp
+	time_generic.cpp
 )
 
 if (WIN32)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
 		memory_win32.cpp
 		module_win32.cpp
-		time_win32.cpp
 	)	
 elseif (UNIX)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
 		memory_unix.cpp
 		module_unix.cpp
-		time_unix.cpp
 	)		
 endif()
 

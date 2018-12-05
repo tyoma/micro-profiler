@@ -20,7 +20,11 @@
 
 #include <common/time.h>
 
-#include <intrin.h>
+#ifdef _MSC_VER
+	#include <intrin.h>
+#else
+	#include <x86intrin.h>
+#endif
 
 namespace micro_profiler
 {

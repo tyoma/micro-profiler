@@ -20,23 +20,34 @@
 
 #include <common/module.h>
 
+#include <common/string.h>
+
 #include <dlfcn.h>
+#include <link.h>
 #include <stdexcept>
+#include <unistd.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
+	wstring get_current_executable()
+	{
+			char path[1000] = {};
+
+			::readlink("/proc/self/exe", path, sizeof(path) - 1);
+			return unicode(path);
+	}
+	
 	module_info get_module_info(const void *address)
 	{
 		Dl_info di = { };
 		
 		::dladdr(address, &di);
 
-		string apath(di.dli_fname);
 		module_info info = {
 			reinterpret_cast<size_t>(di.dli_fbase),
-			wstring(apath.begin(), apath.end())
+			unicode(di.dli_fname)
 		};
 
 		return info;

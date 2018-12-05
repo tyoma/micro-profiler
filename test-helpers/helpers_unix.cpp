@@ -3,6 +3,7 @@
 #include <common/path.h>
 #include <dlfcn.h>
 #include <link.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -10,6 +11,16 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		wstring get_current_process_executable()
+		{
+			char path[1000] = {};
+
+			::readlink("/proc/self/exe", path, sizeof(path) - 1);
+			string apath(path);
+			return wstring(apath.begin(), apath.end());
+		}
+
+
 		image::image(const wchar_t *path_)
 		{
 			wstring path(path_);

@@ -20,32 +20,23 @@
 
 #include <common/time.h>
 
-#include <time.h>
+#include <chrono>
+
+using namespace std;
 
 namespace micro_profiler
 {
 	timestamp_t clock()
 	{
-		timespec ts;
-		
-		clock_gettime(CLOCK_MONOTONIC, &ts);
-		return timestamp_t(ts.tv_sec) + ts.tv_nsec / 1000000;
+		return chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
 	}
 	
 	double stopwatch(counter_t &counter)
 	{
-		timespec ts;
-		
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
-		
-		counter_t new_counter = ts.tv_sec;
-		
-		new_counter *= 1000000000;
-		new_counter += ts.tv_nsec;
-		
-		counter_t interval = new_counter - counter;
+		counter_t now = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now().time_since_epoch()).count();
+		double d = 1e-9 * (now - counter);
 
-		counter = new_counter;
-		return interval * 1e-9;
+		counter = now;
+		return d;
 	}
 }

@@ -6,7 +6,7 @@ set(COLLECTOR_TESTS_SOURCES
 #	COMChannelTests.cpp
 	CallsCollectorTests.cpp
 	CallsCollectorThreadTests.cpp
-#	FrontendControllerTests.cpp
+	FrontendControllerTests.cpp
 #	ImageLoadQueueTests.cpp
 #	ImagePatchTests.cpp
 	SerializationTests.cpp

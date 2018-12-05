@@ -26,6 +26,9 @@ using namespace std;
 
 namespace micro_profiler
 {
+	wstring get_current_executable()
+	{	return get_module_info(0).path;	}
+
 	module_info get_module_info(const void *address)
 	{
 		HMODULE load_address = 0;

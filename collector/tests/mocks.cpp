@@ -143,6 +143,92 @@ namespace micro_profiler
 
 			timestamp_t Tracer::profiler_latency() const throw()
 			{	return _latency;	}
+
+
+
+			template <typename ArchiveT>
+			void serialize(ArchiveT &a, frontend_state &state)
+			{
+				commands c;
+				initialization_data id;
+				loaded_modules lm;
+				statistics_map_detailed u;
+				unloaded_modules um;
+
+				a(c);
+				switch (c)
+				{
+				case init:
+					if (state.initialized)
+						a(id), state.initialized(id);
+					break;
+
+				case modules_loaded:
+					if (state.modules_loaded)
+						a(lm), state.modules_loaded(lm);
+					break;
+
+				case update_statistics:
+					if (state.updated)
+						a(u), state.updated(u);
+					break;
+
+				case modules_unloaded:
+					if (state.modules_unloaded)
+						a(um), state.modules_unloaded(um);
+					break;
+				}
+			}
+
+			class frontend
+			{
+			public:
+				explicit frontend(shared_ptr<frontend_state> state);
+				frontend(const frontend &other);
+				~frontend();
+
+				bool operator ()(const void *buffer, size_t size);
+
+			private:
+				const frontend &operator =(const frontend &rhs);
+
+			private:
+				mutable shared_ptr<frontend_state> _state;
+			};
+
+
+			frontend_state::frontend_state(const shared_ptr<void> &ownee)
+				: _ownee(ownee)
+			{	}
+
+			channel_t frontend_state::create()
+			{	return frontend(shared_from_this());	}
+
+
+			frontend::frontend(shared_ptr<frontend_state> state)
+				: _state(state)
+			{
+				if (_state->constructed)
+					_state->constructed();
+			}
+
+			frontend::frontend(const frontend &other)
+			{	swap(other._state, _state);	}
+
+			frontend::~frontend()
+			{
+				if (_state && _state->destroyed)
+						_state->destroyed();
+			}
+
+			bool frontend::operator ()(const void *buffer, size_t size)
+			{
+				buffer_reader reader(buffer, size);
+				strmd::deserializer<buffer_reader, packer> a(reader);
+
+				a(*_state);
+				return true;
+			}
 		}
 	}
 }

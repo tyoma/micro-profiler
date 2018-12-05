@@ -94,7 +94,7 @@ namespace micro_profiler
 			_image_load_queue(image_load_queue_)
 	{
 		initialization_data idata = {
-			get_module_info(0).path,
+			get_current_executable(),
 			ticks_per_second()
 		};
 		send(init, idata);

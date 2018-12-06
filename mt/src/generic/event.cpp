@@ -63,8 +63,8 @@ namespace mt
 		{
 			_mtx.lock();
 			_state = true;
-			_mtx.unlock();
 			_cv.notify_all();
+			_mtx.unlock();
 		}
 
 		void reset()

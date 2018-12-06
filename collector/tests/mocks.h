@@ -4,7 +4,6 @@
 #include <common/protocol.h>
 #include <common/types.h>
 #include <collector/calls_collector.h>
-#include <mt/mutex.h>
 
 namespace micro_profiler
 {
@@ -33,36 +32,6 @@ namespace micro_profiler
 
 			private:
 				std::shared_ptr<void> _ownee;
-			};
-
-
-			struct FrontendState : noncopyable
-			{
-				struct ReceivedEntry;
-
-				explicit FrontendState(const std::function<void()>& oninitialized = std::function<void()>());
-
-				frontend_factory_t MakeFactory();
-
-				mt::event update_lock;
-				std::function<void()> oninitialized;
-
-				// Collected data
-				initialization_data process_init;
-
-				std::vector<ReceivedEntry> update_log;
-				mt::event updated;
-				mt::event modules_state_updated;
-
-				size_t ref_count;
-			};
-			
-
-			struct FrontendState::ReceivedEntry
-			{
-				loaded_modules image_loads;
-				statistics_map_detailed update;
-				unloaded_modules image_unloads;
 			};
 
 

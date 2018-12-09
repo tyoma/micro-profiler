@@ -21,9 +21,11 @@
 #include <collector/frontend_controller.h>
 
 #include <collector/entry.h>
-#include <collector/patched_image.h>
+#include <collector/image_patch.h>
 #include <collector/statistics_bridge.h>
 #include <common/time.h>
+#include <common/module.h>
+#include <set>
 
 using namespace std;
 using namespace std::placeholders;
@@ -69,17 +71,30 @@ namespace micro_profiler
 		shared_ptr<image_load_queue> _image_load_queue;
 		shared_ptr<ref_counter_t> _worker_refcount;
 		shared_ptr<mt::event> _exit_event;
-		std::auto_ptr<patched_image> _patched_image;
+		std::auto_ptr<image_patch> _patch;
 	};
 
+
+	extern "C" micro_profiler::calls_collector *g_collector_ptr;
 
 	frontend_controller::profiler_instance::profiler_instance(void *in_image_address,
 			shared_ptr<image_load_queue> lqueue, shared_ptr<ref_counter_t> worker_refcount,
 			shared_ptr<mt::event> exit_event)
 		: _in_image_address(in_image_address), _image_load_queue(lqueue), _worker_refcount(worker_refcount),
-			_exit_event(exit_event), _patched_image(new patched_image)
+			_exit_event(exit_event)
 	{
-//		_patched_image->patch_image(in_image_address);
+		//set<const void *> patched;
+		//module_info mi = get_module_info(in_image_address);
+		//shared_ptr<image_info> ii(new offset_image_info(image_info::load(mi.path.c_str()), (size_t)mi.load_address));
+		//_patch.reset(new image_patch(ii, g_collector_ptr));
+
+		//_patch->apply_for([&] (const symbol_info &symbol) -> bool {
+		//	if (symbol.name == "_VEC_memcpy")
+		//		return false;
+		//	return patched.insert(symbol.body.begin()).second;
+		//});
+
+
 		_image_load_queue->load(in_image_address);
 	}
 

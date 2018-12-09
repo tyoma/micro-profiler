@@ -16,12 +16,6 @@
     <ClCompile Include="statistics_bridge.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="patched_image.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="binary_image.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="image_patch.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -53,7 +47,6 @@
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\patched_image.h" />
-    <ClInclude Include="..\binary_image.h" />
     <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
   </ItemGroup>

@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 set(COLLECTOR_TESTS_SOURCES
 	AnalyzerTests.cpp
-#	BinaryImageTests.cpp
 #	COMChannelTests.cpp
 	CallsCollectorTests.cpp
 	CallsCollectorThreadTests.cpp
@@ -14,9 +13,6 @@ set(COLLECTOR_TESTS_SOURCES
 	StatisticsBridgeTests.cpp
 	mocks.cpp
 #	mocks_com.cpp
-	helpers.h
-	mocks.h
-#	mocks_com.h
 )
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES})

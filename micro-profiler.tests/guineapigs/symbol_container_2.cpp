@@ -51,3 +51,6 @@ extern "C" int guinea_snprintf(char *buffer, size_t count, const char *format, .
 
 	return n;
 }
+
+extern "C" int datum1 = 1123;
+extern "C" char datum2[] = "SOMETEXTSOMETEXTSOMETEXT";

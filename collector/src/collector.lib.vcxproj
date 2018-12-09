@@ -50,7 +50,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
-    <ClCompile Include="binary_image.cpp" />
     <ClCompile Include="calibration.cpp" />
     <ClCompile Include="calls_collector.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
@@ -64,7 +63,6 @@
     <ClCompile Include="empty_function.intel.c" />
     <ClCompile Include="frontend_controller.cpp" />
     <ClCompile Include="image_patch.cpp" />
-    <ClCompile Include="patched_image.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -76,7 +74,6 @@
     <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\frontend_controller.h" />
-    <ClInclude Include="..\binary_image.h" />
     <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\primitives.h" />

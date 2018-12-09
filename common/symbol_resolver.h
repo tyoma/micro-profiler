@@ -29,9 +29,32 @@ namespace micro_profiler
 {
 	struct symbol_info
 	{
-		const char *name;
-		void *location;
-		unsigned size;
+		symbol_info(const char *name_, byte_range body_);
+
+		std::string name;
+		byte_range body;
+	};
+
+	struct image_info
+	{
+		typedef std::function<void(const symbol_info &symbol)> symbol_callback_t;
+
+		virtual ~image_info() {	}
+		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
+
+		static std::shared_ptr<image_info> load(const wchar_t *image_path);
+	};
+
+	class offset_image_info : public image_info
+	{
+	public:
+		offset_image_info(const std::shared_ptr<image_info> &underlying, size_t base);
+
+		virtual void enumerate_functions(const symbol_callback_t &callback) const;
+
+	private:
+		std::shared_ptr<image_info> _underlying;
+		size_t _base;
 	};
 
 	struct symbol_resolver
@@ -45,4 +68,10 @@ namespace micro_profiler
 
 		static std::shared_ptr<symbol_resolver> create();
 	};
+
+
+
+	inline symbol_info::symbol_info(const char *name_, byte_range body_)
+		: name(name_), body(body_)
+	{	}
 }

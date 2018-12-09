@@ -1,5 +1,4 @@
 #include <collector/image_patch.h>
-#include <collector/binary_image.h>
 
 #include <patcher/tests/mocks.h>
 
@@ -15,13 +14,14 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			bool all(const function_body &)
+			bool all(const symbol_info &)
 			{	return true;	}
 		}
 
 		begin_test_suite( ImagePatchTests )
 			mocks::trace_events trace[2];
 			auto_ptr<image> images[2];
+			shared_ptr<image_info> image_infos[2];
 			void (*f11)();
 			void (*f12)();
 			void (*f13)(char *buffer0, int value);
@@ -39,16 +39,21 @@ namespace micro_profiler
 			init( LoadGuineas )
 			{
 				images[0].reset(new image(L"symbol_container_1"));
+				image_infos[0].reset(new offset_image_info(image_info::load(images[0]->absolute_path()),
+					static_cast<size_t>(images[0]->load_address())));
 				f1F = images[0]->get_symbol<void (void (*&f1)(), void (*&f2)())>("get_function_addresses_1");
 				f13 = images[0]->get_symbol<void (char *buffer0, int value)>("format_decimal");
 				f1F(f11, f12);
 
 				images[1].reset(new image(L"symbol_container_2"));
+				image_infos[1].reset(new offset_image_info(image_info::load(images[1]->absolute_path()),
+					static_cast<size_t>(images[1]->load_address())));
 				f22 = images[1]->get_symbol<int (char *buffer, size_t count, const char *format, ...)>("guinea_snprintf");
 				f23 = images[1]->get_symbol<void (void (*&f1)(), void (*&f2)(), void (*&f3)())>("get_function_addresses_2");
 				f2F = images[1]->get_symbol<void (void (*&f)(int * volatile begin, int * volatile end))>("bubble_sort_expose");
 				f2F(f21);
 			}
+
 
 			test( FunctionsArePatchedForAlwaysTrueFilter )
 			{
@@ -57,8 +62,8 @@ namespace micro_profiler
 				void (*ff12)();
 
 				// INIT / ACT
-				image_patch ip1(load_image_at(reinterpret_cast<void *>(images[0]->load_address())), &trace[0]);
-				image_patch ip2(load_image_at(reinterpret_cast<void *>(images[1]->load_address())), &trace[1]);
+				image_patch ip1(image_infos[0], &trace[0]);
+				image_patch ip2(image_infos[1], &trace[1]);
 				int data[1234];
 				char buffer[1000] = { 0 };
 
@@ -108,16 +113,16 @@ namespace micro_profiler
 				void (*ff3)();
 
 				// INIT / ACT
-				image_patch ip1(load_image_at(reinterpret_cast<void *>(images[0]->load_address())), &trace[0]);
-				image_patch ip2(load_image_at(reinterpret_cast<void *>(images[1]->load_address())), &trace[1]);
+				image_patch ip1(image_infos[0], &trace[0]);
+				image_patch ip2(image_infos[1], &trace[1]);
 				char buffer[1000] = { 0 };
 				int data[10];
 
-				ip1.apply_for([] (const function_body &fb) {
-					return fb.name() == "format_decimal";
+				ip1.apply_for([] (const symbol_info &fb) {
+					return fb.name == "format_decimal";
 				});
-				ip2.apply_for([] (const function_body &fb) {
-					return fb.name() == "get_function_addresses_2" || fb.name() == "bubble_sort";
+				ip2.apply_for([] (const symbol_info &fb) {
+					return fb.name == "get_function_addresses_2" || fb.name == "bubble_sort";
 				});
 
 				// ACT
@@ -166,14 +171,13 @@ namespace micro_profiler
 				void (*ff4)(int * volatile begin, int * volatile end);
 
 				// INIT / ACT
-				auto_ptr<image_patch> ip(new image_patch(load_image_at(reinterpret_cast<void *>(images[1]->load_address())),
-					&trace[0]));
+				auto_ptr<image_patch> ip(new image_patch(image_infos[1], &trace[0]));
 				int data[10];
 
 				f2F(ff4);
 
-				ip->apply_for([] (const function_body &fb) -> bool {
-					if (fb.name() != "get_function_addresses_2")
+				ip->apply_for([] (const symbol_info &fb) -> bool {
+					if (fb.name != "get_function_addresses_2")
 						return true;
 					throw runtime_error("");
 				});
@@ -191,11 +195,10 @@ namespace micro_profiler
 				assert_equal(reference1, trace[0].call_log);
 
 				// INIT
-				ip.reset(new image_patch(load_image_at(reinterpret_cast<void *>(images[1]->load_address())),
-					&trace[1]));
+				ip.reset(new image_patch(image_infos[1], &trace[1]));
 
-				ip->apply_for([] (const function_body &fb) -> bool {
-					if (fb.name() != "bubble_sort")
+				ip->apply_for([] (const symbol_info &fb) -> bool {
+					if (fb.name != "bubble_sort")
 						return true;
 					throw runtime_error("");
 				});

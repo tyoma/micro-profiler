@@ -1,6 +1,7 @@
 {
 	global:
 		get_function_addresses_3
+
 	local:
 		*;
 };

@@ -349,17 +349,18 @@ namespace micro_profiler
 			test( ProfilerHandleReleaseIsNonBlockingAndFrontendThreadIsFinishedEventually )
 			{
 				// INIT
-				mt::event ready, go;
+				mt::event ready;
+				shared_ptr<mt::event> go(new mt::event);
 				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
 
-				state->constructed = [&] { ready.set(), go.wait(); };
+				state->constructed = [&ready, go] { ready.set(), go->wait(); };
 
 				auto_ptr<handle> h(profile_this(fc));
 
 				// ACT / ASSERT (must not hang)
 				ready.wait();
 				h.reset();
-				go.set();
+				go->set();
 			}
 
 

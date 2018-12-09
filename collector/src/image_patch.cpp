@@ -6,13 +6,13 @@ namespace micro_profiler
 {
 	void image_patch::apply_for(const filter_t &function_filter)
 	{
-		_image->enumerate_functions([&] (const function_body &body) {
+		_image->enumerate_functions([&] (const symbol_info &symbol) {
 			try
 			{
-				if (body.body().length() < 5 || !function_filter(body))
+				if (symbol.body.length() < 5 || !function_filter(symbol))
 					return;
 
-				shared_ptr<function_patch> p(new function_patch(_allocator, body.body(),
+				shared_ptr<function_patch> p(new function_patch(_allocator, symbol.body,
 					_interceptor, _on_enter, _on_exit));
 
 				_patches.push_back(p);

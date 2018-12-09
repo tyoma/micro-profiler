@@ -20,8 +20,7 @@
 
 #pragma once
 
-#include "binary_image.h"
-
+#include <common/symbol_resolver.h>
 #include <patcher/function_patch.h>
 #include <vector>
 
@@ -30,16 +29,16 @@ namespace micro_profiler
 	class image_patch : noncopyable
 	{
 	public:
-		typedef std::function<bool (const function_body &body)> filter_t;
+		typedef std::function<bool (const symbol_info &function)> filter_t;
 
 	public:
 		template <typename InterceptorT>
-		image_patch(const std::shared_ptr<binary_image> &image, InterceptorT *interceptor);
+		image_patch(const std::shared_ptr<image_info> &image, InterceptorT *interceptor);
 
 		void apply_for(const filter_t &function_filter);
 
 	private:
-		const std::shared_ptr<binary_image> _image;
+		const std::shared_ptr<image_info> _image;
 		void * const _interceptor;
 		hooks<void>::on_enter_t * const _on_enter;
 		hooks<void>::on_exit_t * const _on_exit;
@@ -50,7 +49,7 @@ namespace micro_profiler
 	
 	
 	template <typename InterceptorT>
-	inline image_patch::image_patch(const std::shared_ptr<binary_image> &image, InterceptorT *interceptor)
+	inline image_patch::image_patch(const std::shared_ptr<image_info> &image, InterceptorT *interceptor)
 		: _image(image), _interceptor(interceptor),
 			_on_enter(hooks<InterceptorT>::on_enter()), _on_exit(hooks<InterceptorT>::on_exit())
 	{	}

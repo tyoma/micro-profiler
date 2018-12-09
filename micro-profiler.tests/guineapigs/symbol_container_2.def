@@ -4,3 +4,6 @@ EXPORTS
 	bubble_sort2
 	bubble_sort_expose
 	guinea_snprintf
+
+	datum1
+	datum2

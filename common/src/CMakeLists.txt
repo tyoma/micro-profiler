@@ -18,8 +18,11 @@ if (WIN32)
 	)	
 elseif (UNIX)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
+		elf/filemapping_unix.cpp
+		elf/sym-elf.cpp
 		memory_unix.cpp
 		module_unix.cpp
+		symbol_resolver_unix.cpp
 	)		
 endif()
 

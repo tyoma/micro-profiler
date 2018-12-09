@@ -7,7 +7,7 @@ set(COLLECTOR_TESTS_SOURCES
 	CallsCollectorThreadTests.cpp
 	FrontendControllerTests.cpp
 	ImageLoadQueueTests.cpp
-#	ImagePatchTests.cpp
+	ImagePatchTests.cpp
 	SerializationTests.cpp
 	ShadowStackTests.cpp
 	StatisticsBridgeTests.cpp

@@ -10,6 +10,12 @@ set(COMMON_TEST_SOURCES
 	TextFormattingServicesTests.cpp
 )
 
+if (WIN32)
+	set(COMMON_TEST_SOURCES ${COMMON_TEST_SOURCES}
+		ImageInfoTests.cpp
+	)
+endif()
+
 add_library(common.tests SHARED ${COMMON_TEST_SOURCES})
 
 target_link_libraries(common.tests common test-helpers utee)

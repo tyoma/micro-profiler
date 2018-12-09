@@ -13,9 +13,6 @@
     <ClCompile Include="constants.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="symbol_resolver.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="time.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -29,6 +26,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="module_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol_resolver_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol_resolver.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -48,12 +48,13 @@
     <ClCompile Include="registry_configuration.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="time_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="string.cpp" />
-    <ClCompile Include="symbol_resolver.cpp">
+    <ClCompile Include="symbol_resolver_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemGroup>

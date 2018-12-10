@@ -49,14 +49,11 @@ namespace mt
 		bool wait(milliseconds period)
 		{
 			unique_lock<mutex> l(_mtx);
+			const bool state = _cv.wait_for(l, chrono::milliseconds(period), [this] { return _state; });
 
-			return _cv.wait_for(l, chrono::milliseconds(period), [this] {
-				const auto state = _state;
-
-				if (_auto)
-					_state = false;
-				return state;
-			});
+			if (_auto & state)
+				_state = false;
+			return state;
 		}
 
 		void set()

@@ -3,6 +3,7 @@
 #include <common/primitives.h>
 
 #include <algorithm>
+#include <memory>
 #include <mt/thread.h>
 #include <string>
 #include <vector>

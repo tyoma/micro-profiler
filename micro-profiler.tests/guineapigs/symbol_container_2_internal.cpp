@@ -1,5 +1,7 @@
-void bubble_sort(int * volatile begin, int * volatile end)
+extern "C" void bubble_sort(int * volatile begin, int * volatile end)
 {
+	for (volatile int i = 1, j = 1; i < 1000; j = i, ++i)
+		i = i + j;
 	for (int *i = begin; i != end; ++i)
 		for (int *j = begin; j != end - 1; ++j)
 		{

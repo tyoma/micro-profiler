@@ -62,6 +62,7 @@
     <ClCompile Include="mocks_com.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="mocks_image_info.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
@@ -70,6 +71,7 @@
     <ClInclude Include="helpers.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mocks_com.h" />
+    <ClInclude Include="mocks_image_info.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

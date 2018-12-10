@@ -1,7 +1,8 @@
 #include <collector/image_patch.h>
 
-#include <patcher/tests/mocks.h>
+#include "mocks_image_info.h"
 
+#include <patcher/tests/mocks.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -214,6 +215,30 @@ namespace micro_profiler
 				};
 
 				assert_equal(reference2, trace[1].call_log);
+			}
+
+
+			test( DuplicatedFunctionsAreOnlyPatchedOnce )
+			{
+				// INIT
+				shared_ptr<mocks::image_info> info(new mocks::image_info);
+				image_patch ip(info, &trace[0]);
+				char buffer[100];
+
+				info->add_function(f13);
+				info->add_function(f13);
+				ip.apply_for(&all);
+
+				// ACT
+				f13(buffer, 123322);
+
+				// ASSERT
+				mocks::call_record reference[] = {
+					{ 0, address_cast_hack<const void *>(f13) },
+					{ 0, 0 },
+				};
+
+				assert_equal(reference, trace[0].call_log);
 			}
 		end_test_suite
 	}

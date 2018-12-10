@@ -13,6 +13,7 @@ set(COLLECTOR_TESTS_SOURCES
 	StatisticsBridgeTests.cpp
 	mocks.cpp
 #	mocks_com.cpp
+	mocks_image_info.cpp
 )
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES})

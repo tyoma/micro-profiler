@@ -57,7 +57,7 @@ namespace micro_profiler
 		typedef ordered_view<MapT> view_type;
 
 	protected:
-		typename const MapT::value_type &get_entry(index_type row) const;
+		const typename MapT::value_type &get_entry(index_type row) const;
 		virtual void on_updated();
 
 	private:
@@ -105,7 +105,7 @@ namespace micro_profiler
 	{	return get_entry(item).first;	}
 
 	template <typename BaseT, typename MapT>
-	inline typename const MapT::value_type &statistics_model_impl<BaseT, MapT>::get_entry(index_type row) const
+	inline const typename MapT::value_type &statistics_model_impl<BaseT, MapT>::get_entry(index_type row) const
 	{	return _view->at(row);	}
 
 	template <typename BaseT, typename MapT>

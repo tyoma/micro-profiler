@@ -202,21 +202,21 @@ namespace micro_profiler
 	template <typename ContainerT>
 	inline void ordered_view<ContainerT>::invalidate_trackables()
 	{
-		for (trackables_t::iterator j = _trackables->begin(); j != _trackables->end(); ++j)
-			j->current_index = trackable::npos;
+		for (typename trackables_t::iterator j = _trackables->begin(); j != _trackables->end(); ++j)
+			j->current_index = trackable::npos();
 	}
 
 	template <typename ContainerT>
 	inline void ordered_view<ContainerT>::update_trackables()
 	{
-		const trackables_t::iterator b = _trackables->begin(), e = _trackables->end();
+		const typename trackables_t::iterator b = _trackables->begin(), e = _trackables->end();
 
 		invalidate_trackables();
 		for (index_type i = 0, count = size(); i != count; ++i)
 		{
 			const value_type &entry = at(i);
 
-			for (trackables_t::iterator j = b; j != e; ++j)
+			for (typename trackables_t::iterator j = b; j != e; ++j)
 				if (j->key == entry.first)
 					j->current_index = i;
 		}
@@ -243,7 +243,7 @@ namespace micro_profiler
 			if (at(i).first == key)
 				return i;
 		}
-		return npos;
+		return npos();
 	}
 
 	template <class ContainerT>
@@ -254,7 +254,7 @@ namespace micro_profiler
 		struct deleter
 		{	static void erase(const shared_ptr<trackables_t> &c, typename trackables_t::iterator i) { c->erase(i); } };
 
-		trackables_t::iterator i = _trackables->insert(_trackables->end(), trackable(at(index).first, index));
+		typename trackables_t::iterator i = _trackables->insert(_trackables->end(), trackable(at(index).first, index));
 
 		return shared_ptr<trackable>(&*i, bind(&deleter::erase, _trackables, i));
 	}

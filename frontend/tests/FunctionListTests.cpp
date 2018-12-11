@@ -1,5 +1,4 @@
 #include <frontend/function_list.h>
-#include <frontend/piechart.h>
 
 #include <test-helpers/helpers.h>
 
@@ -181,7 +180,7 @@ namespace micro_profiler
 				for (table_model::index_type i = 0, c = m.get_count(); i != c; ++i)
 					if (m.get_text(i, 1, result), result == name)
 						return i;
-				return table_model::npos;
+				return table_model::npos();
 			}
 		}
 
@@ -265,7 +264,7 @@ namespace micro_profiler
 				assert_equal(0u, fl->get_count());
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(0u, ih.invalidations.back()); //check what's coming as event arg
-				assert_equal(table_model::npos, first->index());
+				assert_equal(table_model::npos(), first->index());
 
 				// INIT
 				_buffer.rewind();
@@ -377,10 +376,10 @@ namespace micro_profiler
 				for (table_model::index_type i = 0; i < expected.size(); ++i)
 					assert_equal(expected[i], i);
 
-				assert_not_equal(table_model::npos, idx1118);
-				assert_not_equal(table_model::npos, idx2229);
-				assert_not_equal(table_model::npos, idx5550);
-				assert_equal(table_model::npos, fl->get_index(1234));
+				assert_not_equal(table_model::npos(), idx1118);
+				assert_not_equal(table_model::npos(), idx2229);
+				assert_not_equal(table_model::npos(), idx5550);
+				assert_equal(table_model::npos(), fl->get_index(1234));
 
 				//Check twice. Kind of regularity check.
 				assert_equal(fl->get_index(1118), idx1118);
@@ -401,7 +400,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s1[2229]) = function_statistics(10, 3, 7, 5, 4);
 				static_cast<function_statistics &>(s2[1118]) = function_statistics(5, 0, 10, 7, 6);
 				static_cast<function_statistics &>(s2[5550]) = function_statistics(15, 1024, 1011, 723, 215);
-				static_cast<function_statistics &>(s3[1118]) = function_statistics(1, 0, 4, 4, 4);
+				static_cast<function_statistics &>(s3[1118]) = function_statistics(100111222333, 0, 17000, 14000, 4);
 
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				fl->set_order(2, true); // by times called
@@ -453,7 +452,7 @@ namespace micro_profiler
 				assert_equal(3u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, fl->get_index(1118), L"0000045E", L"25", L"45s", L"40s", L"1.8s", L"1.6s", L"0", L"6s");
+				assert_row(*fl, fl->get_index(1118), L"0000045E", L"100111222357", L"1.7e+04s", L"1.4e+04s", L"170ns", L"140ns", L"0", L"6s");
 				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
 				assert_row(*fl, fl->get_index(5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
 
@@ -553,7 +552,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 3);
 				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 4);
 				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 5);
-				static_cast<function_statistics &>(s[3000]) = function_statistics(15233, 3, 65450, 13470, 6);
+				static_cast<function_statistics &>(s[3000]) = function_statistics(15233, 3, 65460, 13470, 6);
 				ser(s);
 
 				ih.bind_to_model(*fl);
@@ -914,10 +913,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_children(2), out_of_range);
 				assert_throws(fl1->watch_children(20), out_of_range);
-				assert_throws(fl1->watch_children(table_model::npos), out_of_range);
+				assert_throws(fl1->watch_children(table_model::npos()), out_of_range);
 				assert_throws(fl2->watch_children(3), out_of_range);
 				assert_throws(fl2->watch_children(30), out_of_range);
-				assert_throws(fl2->watch_children(table_model::npos), out_of_range);
+				assert_throws(fl2->watch_children(table_model::npos()), out_of_range);
 			}
 
 
@@ -989,11 +988,11 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equal(1u, ls_0->get_count());
-				assert_not_equal(table_model::npos, find_row(*ls_0, L"00002001"));
+				assert_not_equal(table_model::npos(), find_row(*ls_0, L"00002001"));
 				assert_equal(3u, ls_1->get_count());
-				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002004"));
-				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002008"));
-				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002011"));
+				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002004"));
+				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002008"));
+				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002011"));
 			}
 
 
@@ -1217,7 +1216,7 @@ namespace micro_profiler
 				fl = shared_ptr<functions_list>();
 
 				// ACT / ASSERT
-				assert_equal(trackable::npos, t->index());
+				assert_equal(trackable::npos(), t->index());
 			}
 
 
@@ -1242,10 +1241,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_parents(2), out_of_range);
 				assert_throws(fl1->watch_parents(20), out_of_range);
-				assert_throws(fl1->watch_parents(table_model::npos), out_of_range);
+				assert_throws(fl1->watch_parents(table_model::npos()), out_of_range);
 				assert_throws(fl2->watch_parents(3), out_of_range);
 				assert_throws(fl2->watch_parents(30), out_of_range);
-				assert_throws(fl2->watch_parents(table_model::npos), out_of_range);
+				assert_throws(fl2->watch_parents(table_model::npos()), out_of_range);
 			}
 
 

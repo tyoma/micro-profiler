@@ -19,13 +19,6 @@ namespace micro_profiler
 				return result;
 			}
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-			init( ForceMSVCPrintfCompliance )
-			{
-				_set_output_format(_TWO_DIGIT_EXPONENT);
-			}
-#endif
-
 
 			test( EscapeZeroSecondsOnZero )
 			{

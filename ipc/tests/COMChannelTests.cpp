@@ -1,4 +1,4 @@
-#include <collector/channel_client.h>
+#include <ipc/channel_client.h>
 
 #include "mocks_com.h"
 

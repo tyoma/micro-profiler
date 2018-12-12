@@ -43,7 +43,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+	 <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="IPCClientServerTests.cpp" />
+    <ClCompile Include="mocks_com.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mocks_com.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

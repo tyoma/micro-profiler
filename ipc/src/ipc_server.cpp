@@ -34,6 +34,16 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
+		struct zero_init
+		{
+			template <typename T>
+			operator T() const
+			{
+				T t = { };
+				return t;
+			}
+		};
+
 		class server::impl : OVERLAPPED
 		{
 		public:

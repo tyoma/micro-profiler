@@ -20,11 +20,11 @@
 
 #include <crtdbg.h>
 
-#include <collector/channel_client.h>
 #include <collector/frontend_controller.h>
 #include <collector/entry.h>
 #include <common/constants.h>
 #include <common/memory.h>
+#include <ipc/channel_client.h>
 #include <mt/atomic.h>
 #include <patcher/src.x86/assembler_intel.h>
 

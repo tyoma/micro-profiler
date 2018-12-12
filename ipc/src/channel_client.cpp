@@ -18,7 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/channel_client.h>
+#include <ipc/channel_client.h>
 
 #include <windows.h>
 

@@ -54,14 +54,10 @@
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallsCollectorTests.cpp" />
     <ClCompile Include="CallsCollectorThreadTests.cpp" />
-    <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="FrontendControllerTests.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
     <ClCompile Include="ImagePatchTests.cpp" />
     <ClCompile Include="mocks.cpp" />
-    <ClCompile Include="mocks_com.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
     <ClCompile Include="mocks_image_info.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
@@ -70,7 +66,6 @@
   <ItemGroup>
     <ClInclude Include="helpers.h" />
     <ClInclude Include="mocks.h" />
-    <ClInclude Include="mocks_com.h" />
     <ClInclude Include="mocks_image_info.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

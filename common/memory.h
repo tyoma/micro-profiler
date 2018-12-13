@@ -14,11 +14,11 @@ namespace micro_profiler
 	class scoped_unprotect : noncopyable
 	{
 	public:
-		scoped_unprotect(range<byte> region);
+		scoped_unprotect(byte_range region);
 		~scoped_unprotect();
 
 	private:
-		range<byte> _region;
+		byte_range _region;
 		unsigned _previous_access;
 	};
 
@@ -49,7 +49,7 @@ namespace micro_profiler
 		void *allocate(size_t size);
 
 	private:
-		const range<byte> _region;
+		const byte_range _region;
 		size_t _occupied;
 	};
 }

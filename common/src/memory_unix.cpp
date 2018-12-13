@@ -26,7 +26,7 @@
 
 namespace micro_profiler
 {
-	scoped_unprotect::scoped_unprotect(range<byte> region)
+	scoped_unprotect::scoped_unprotect(byte_range region)
 		: _region(region)
 	{
 		byte *page = reinterpret_cast<byte *>(reinterpret_cast<size_t>(region.begin()) & ~static_cast<size_t>(0x0FFF));

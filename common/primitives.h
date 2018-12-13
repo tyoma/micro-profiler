@@ -26,11 +26,11 @@
 
 namespace micro_profiler
 {
-	template <typename T>
+	template <typename T, typename SizeT>
 	class range;
 
-	typedef range<const byte> const_byte_range;
-	typedef range<byte> byte_range;
+	typedef range<const byte, size_t> const_byte_range;
+	typedef range<byte, size_t> byte_range;
 
 	struct address_compare
 	{
@@ -69,7 +69,8 @@ namespace micro_profiler
 	{
 	};
 
-	template <typename T>
+#pragma pack(push, 1)
+	template <typename T, typename SizeT>
 	class range
 	{
 	private:
@@ -77,7 +78,7 @@ namespace micro_profiler
 
 	public:
 		template <typename U>
-		range(const range<U> &u);
+		range(const range<U, SizeT> &u);
 		range(T *start, size_t length);
 
 		T *begin() const;
@@ -87,9 +88,9 @@ namespace micro_profiler
 
 	private:
 		T *_start;
-		size_t _length;
+		SizeT _length;
 	};
-	
+#pragma pack(pop)	
 
 
 	// address_compare - inline definitions
@@ -140,31 +141,31 @@ namespace micro_profiler
 	}
 
 	
-	template <typename T>
+	template <typename T, typename SizeT>
 	template <typename U>
-	inline range<T>::range(const range<U> &u)
+	inline range<T, SizeT>::range(const range<U, SizeT> &u)
 		: _start(u.begin()), _length(u.length())
 	{	}
 
-	template <typename T>
-	inline range<T>::range(T *start, size_t length)
-		: _start(start), _length(length)
+	template <typename T, typename SizeT>
+	inline range<T, SizeT>::range(T *start, size_t length)
+		: _start(start), _length(static_cast<SizeT>(length))
 	{	}
 
-	template <typename T>
-	inline T *range<T>::begin() const
+	template <typename T, typename SizeT>
+	inline T *range<T, SizeT>::begin() const
 	{	return _start;	}
 
-	template <typename T>
-	inline T *range<T>::end() const
+	template <typename T, typename SizeT>
+	inline T *range<T, SizeT>::end() const
 	{	return _start + _length;	}
 
-	template <typename T>
-	inline size_t range<T>::length() const
+	template <typename T, typename SizeT>
+	inline size_t range<T, SizeT>::length() const
 	{	return _length;	}
 
-	template <typename T>
-	inline bool range<T>::inside(const T *ptr) const
+	template <typename T, typename SizeT>
+	inline bool range<T, SizeT>::inside(const T *ptr) const
 	{	return (begin() <= ptr) & (ptr < end());	}
 	
 

@@ -26,7 +26,7 @@
 
 namespace micro_profiler
 {
-	scoped_unprotect::scoped_unprotect(range<byte> region)
+	scoped_unprotect::scoped_unprotect(byte_range region)
 		: _region(region)
 	{
 		DWORD previous_access;

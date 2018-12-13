@@ -21,14 +21,41 @@
 #pragma once
 
 #include <common/primitives.h>
+#include <vector>
 
 namespace micro_profiler
 {
+#pragma pack(push, 1)
+	template <size_t size = sizeof(void*)>
+	struct revert_entry : range<byte, byte>
+	{
+		revert_entry(byte *ptr, byte length);
+
+		void restore() const;
+
+		byte original[size];
+	};
+#pragma pack(pop)
+
+	typedef std::vector< revert_entry<> > revert_buffer;
+
 	struct inconsistent_function_range_exception : std::runtime_error
 	{
 		inconsistent_function_range_exception(const char *message);
 	};
 
-	size_t calculate_function_length(const_byte_range source, size_t min_length);
+
+
+	size_t calculate_fragment_length(const_byte_range source, size_t min_length);
+
 	void move_function(byte *destination, const_byte_range source);
+
+	void offset_displaced_references(revert_buffer &rbuffer, byte_range source, const_byte_range displaced_region,
+		const byte *displaced_to);
+
+
+	template <size_t size>
+	inline revert_entry<size>::revert_entry(byte *ptr, byte length)
+		: range<byte, byte>(ptr, length)
+	{	}
 }

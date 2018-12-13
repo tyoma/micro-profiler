@@ -230,11 +230,11 @@ namespace micro_profiler
 				};
 
 				// ACT / ASSERT
-				assert_equal(5u, calculate_function_length(mkrange(instructions), 5));
-				assert_equal(3u, calculate_function_length(const_byte_range(instructions + 5, 3), 3));
-				assert_equal(2u, calculate_function_length(const_byte_range(instructions + 8, 2), 2));
-				assert_equal(8u, calculate_function_length(mkrange(instructions), 8));
-				assert_equal(11u, calculate_function_length(const_byte_range(instructions + 5, sizeof(instructions) - 5), 11));
+				assert_equal(5u, calculate_fragment_length(mkrange(instructions), 5));
+				assert_equal(3u, calculate_fragment_length(const_byte_range(instructions + 5, 3), 3));
+				assert_equal(2u, calculate_fragment_length(const_byte_range(instructions + 8, 2), 2));
+				assert_equal(8u, calculate_fragment_length(mkrange(instructions), 8));
+				assert_equal(11u, calculate_fragment_length(const_byte_range(instructions + 5, sizeof(instructions) - 5), 11));
 			}
 
 
@@ -255,11 +255,11 @@ namespace micro_profiler
 				};
 
 				// ACT / ASSERT
-				assert_equal(5u, calculate_function_length(mkrange(instructions), 2));
-				assert_equal(3u, calculate_function_length(const_byte_range(instructions + 5, 3), 1));
-				assert_equal(8u, calculate_function_length(const_byte_range(instructions + 8, 8), 3));
-				assert_equal(8u, calculate_function_length(mkrange(instructions), 8));
-				assert_equal(7u, calculate_function_length(const_byte_range(instructions + 16, sizeof(instructions) - 16), 4));
+				assert_equal(5u, calculate_fragment_length(mkrange(instructions), 2));
+				assert_equal(3u, calculate_fragment_length(const_byte_range(instructions + 5, 3), 1));
+				assert_equal(8u, calculate_fragment_length(const_byte_range(instructions + 8, 8), 3));
+				assert_equal(8u, calculate_fragment_length(mkrange(instructions), 8));
+				assert_equal(7u, calculate_fragment_length(const_byte_range(instructions + 16, sizeof(instructions) - 16), 4));
 			}
 
 
@@ -368,12 +368,12 @@ namespace micro_profiler
 				byte is6[] = { 0x0F, 0xC7, 0x8C, 0xA9, 0x00, 0x00, 0x10, 0x00, };	//	cmpxchg8b	qword ptr [ecx+ebp*4+100000h]
 
 				// ACT / ASSERT
-				assert_equal(4u, calculate_function_length(mkrange(is1), 1));
-				assert_equal(6u, calculate_function_length(mkrange(is2), 1));
-				assert_equal(6u, calculate_function_length(mkrange(is3), 1));
-				assert_equal(5u, calculate_function_length(mkrange(is4), 1));
-				assert_equal(3u, calculate_function_length(mkrange(is5), 1));
-				assert_equal(8u, calculate_function_length(mkrange(is6), 1));
+				assert_equal(4u, calculate_fragment_length(mkrange(is1), 1));
+				assert_equal(6u, calculate_fragment_length(mkrange(is2), 1));
+				assert_equal(6u, calculate_fragment_length(mkrange(is3), 1));
+				assert_equal(5u, calculate_fragment_length(mkrange(is4), 1));
+				assert_equal(3u, calculate_fragment_length(mkrange(is5), 1));
+				assert_equal(8u, calculate_fragment_length(mkrange(is6), 1));
 			}
 
 

@@ -42,7 +42,7 @@ namespace micro_profiler
 	private:
 		std::shared_ptr<void> _memory;
 		byte *_target_function;
-		size_t _chunk_length;
+		size_t _fragment_length;
 		byte _saved[40];
 	};
 

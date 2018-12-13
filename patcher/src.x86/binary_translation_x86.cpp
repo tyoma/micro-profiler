@@ -7,6 +7,8 @@ extern "C" {
 	#include <ld32.h>
 }
 
+using namespace std;
+
 namespace micro_profiler
 {
 	namespace
@@ -18,6 +20,38 @@ namespace micro_profiler
 		template <typename DispT>
 		bool is_target_inside(const byte *disp, const_byte_range source)
 		{	return source.inside(disp + sizeof(DispT) + *reinterpret_cast<const DispT *>(disp));	}
+
+		template <typename ByteT>
+		class instruction_iterator
+		{
+		public:
+			instruction_iterator(range<ByteT, size_t> body)
+				: _ptr(body.begin()), _remaining_length(body.length()), _current_length(0)
+			{	}
+
+			ByteT *ptr() const
+			{	return _ptr;	}
+
+			byte length() const
+			{	return _current_length;	}
+
+			bool fetch()
+			{
+				if (_remaining_length <= _current_length)
+					return false;
+				_ptr += _current_length;
+				_remaining_length -= _current_length;
+				_current_length = static_cast<byte>(length_disasm((void *)_ptr));
+				if (_current_length > _remaining_length)
+					throw inconsistent_function_range_exception("Attempt to read past the function body!"); // TODO: test!
+				return true;
+			}
+
+		private:
+			ByteT *_ptr;
+			size_t _remaining_length;
+			byte _current_length;
+		};
 	}
 
 	inconsistent_function_range_exception::inconsistent_function_range_exception(const char *message)
@@ -25,27 +59,23 @@ namespace micro_profiler
 	{	}
 
 
-	size_t calculate_function_length(const_byte_range source, size_t min_length)
+	size_t calculate_fragment_length(const_byte_range source, size_t min_length)
 	{
-		size_t result = 0, l = 0;
-		const byte *ptr = source.begin();
+		ptrdiff_t remainder = min_length;
+		size_t actual_length = 0;
 
-		for (bool end = false; !end; end = min_length <= l, min_length -= l, result += l, ptr += l)
-			l = length_disasm((void *)ptr);
-		return result;
+		for (instruction_iterator<const byte> i(source); remainder > 0 && i.fetch(); remainder -= i.length())
+			actual_length += i.length();
+		return actual_length;
 	}
 
-	void move_function(byte *destination, const_byte_range source_)
+	void move_function(byte *destination, const_byte_range source)
 	{
-		const byte *source = source_.begin();
-		size_t size = source_.length();
-		const ptrdiff_t delta = source - destination;
+		const ptrdiff_t delta = source.begin() - destination;
 
-		for (size_t l = 0; size; destination += l, source += l, size -= l)
+		for (instruction_iterator<const byte> i(source); i.fetch(); destination += i.length())
 		{
-			l = length_disasm(const_cast<byte *>(source));
-
-			switch (*source)
+			switch (*i.ptr())
 			{
 			case 0x70:
 			case 0x71:
@@ -64,23 +94,26 @@ namespace micro_profiler
 			case 0x7e:
 			case 0x7f:
 			case 0xEB:
-				if (!is_target_inside<sbyte>(source + 1, source_))
+				if (!is_target_inside<sbyte>(i.ptr() + 1, source))
 					throw inconsistent_function_range_exception("Short relative jump outside the copied range is met!");
-				*destination = *source, *(destination + 1) = *(source + 1);
-				continue;
+				break;
 
 			case 0xCC:
 				throw inconsistent_function_range_exception("Debug interrupt met!");
 
 			case 0xE9:
 			case 0xE8:
-				*destination = *source;
-				*reinterpret_cast<dword *>(destination + 1) = static_cast<dword>(*reinterpret_cast<const dword *>(source + 1)
-					+ (!is_target_inside<sdword>(source + 1, source_) ? delta : 0));
-				continue;
+				if (!is_target_inside<sdword>(i.ptr() + 1, source))
+				{
+					*destination = *i.ptr();
+					*reinterpret_cast<dword *>(destination + 1)
+						= static_cast<dword>(*reinterpret_cast<const dword *>(i.ptr() + 1)) + delta;
+					continue;
+				}
+				break;
 
 			case 0x0F:
-				switch (*(source + 1))
+				switch (*(i.ptr() + 1))
 				{
 				case 0x80:
 				case 0x81:
@@ -98,16 +131,36 @@ namespace micro_profiler
 				case 0x8d:
 				case 0x8e:
 				case 0x8f:
-					*destination = *source,  *(destination + 1) = *(source + 1);
-					*reinterpret_cast<dword *>(destination + 2) = static_cast<dword>(*reinterpret_cast<const dword *>(source + 2)
-						+ (!is_target_inside<sdword>(source + 2, source_) ? delta : 0));
-					continue;
+					if (!is_target_inside<sdword>(i.ptr() + 2, source))
+					{
+						*destination = *i.ptr();
+						*(destination + 1) = *(i.ptr() + 1);
+						*reinterpret_cast<dword *>(destination + 2)
+							= static_cast<dword>(*reinterpret_cast<const dword *>(i.ptr() + 2)) + delta;
+						continue;
+					}
+					break;
 				}
-
-			default:
-				mem_copy(destination, source, l);
-				continue;
 			}
+			mem_copy(destination, i.ptr(), i.length());
 		}
+	}
+
+	void offset_displaced_references(revert_buffer &rbuffer, byte_range source, const_byte_range displaced_region,
+		const byte *displaced_to)
+	{
+		const ptrdiff_t delta = displaced_to - displaced_region.begin();
+
+		for (instruction_iterator<byte> i(source); i.fetch(); )
+			switch (*i.ptr())
+			{
+			case 0xE9:
+				if (is_target_inside<sdword>(i.ptr() + 1, displaced_region))
+				{
+					rbuffer.push_back(revert_entry<>(i.ptr() + 1, 4));
+					*reinterpret_cast<dword *>(i.ptr() + 1) += delta;
+				}
+				break;
+			}
 	}
 }

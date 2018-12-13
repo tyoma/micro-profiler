@@ -5,7 +5,8 @@ set(PATCHER_TEST_SOURCES
 	DynamicHookingTests.cpp
 	FunctionPatchTests.cpp
 	guineapigs.cpp
-#	helpers.cpp
+	helpers.cpp
+	OffsetDisplacedReferencesTestsX86.cpp
 )
 
 add_library(patcher.tests SHARED ${PATCHER_TEST_SOURCES})

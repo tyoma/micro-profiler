@@ -12,17 +12,16 @@ namespace micro_profiler
 	{
 		byte_range get_function_body(void *f)
 		{
-			shared_ptr<symbol_resolver> r = symbol_resolver::create();
 			module_info mi = get_module_info(f);
-			size_t body_size = 0;
+			shared_ptr<image_info> img(new offset_image_info(image_info::load(mi.path.c_str()), static_cast<size_t>(mi.load_address)));
+			byte_range body(0, 0);
 
-			r->add_image(mi.path.c_str(), mi.load_address);
-			r->enumerate_symbols((size_t)mi.load_address, [&] (const symbol_info &symbol) {
-				if (symbol.location == f)
-					body_size = symbol.size;
+			img->enumerate_functions([&] (const symbol_info &symbol) {
+				if (symbol.body.begin() == f)
+					body = symbol.body;
 			});
-			assert_is_true(body_size > 0);
-			return byte_range((byte *)f, body_size);
+			assert_is_true(body.length() > 0);
+			return body;
 		}
 	}
 }

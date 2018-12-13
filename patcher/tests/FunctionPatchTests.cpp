@@ -16,9 +16,6 @@ namespace micro_profiler
 		int recursive_factorial(int v);
 		int guinea_snprintf(char *buffer, size_t count, const char *format, ...);
 
-		byte_range get_function_body(void *f)
-		{	return byte_range(static_cast<byte *>(f), 5);	}
-
 		begin_test_suite( FunctionPatchTests )
 			executable_memory_allocator allocator;
 			mocks::trace_events trace;

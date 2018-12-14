@@ -44,6 +44,12 @@ namespace micro_profiler
 		inconsistent_function_range_exception(const char *message);
 	};
 
+	struct offset_prohibited : std::runtime_error
+	{
+		offset_prohibited(const char *message);
+	};
+
+
 
 
 	size_t calculate_fragment_length(const_byte_range source, size_t min_length);

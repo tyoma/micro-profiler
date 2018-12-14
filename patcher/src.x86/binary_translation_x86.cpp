@@ -58,6 +58,10 @@ namespace micro_profiler
 		: runtime_error(message)
 	{	}
 
+	offset_prohibited::offset_prohibited(const char *message)
+		: runtime_error(message)
+	{	}
+
 
 	size_t calculate_fragment_length(const_byte_range source, size_t min_length)
 	{
@@ -77,22 +81,8 @@ namespace micro_profiler
 		{
 			switch (*i.ptr())
 			{
-			case 0x70:
-			case 0x71:
-			case 0x72:
-			case 0x73:
-			case 0x74:
-			case 0x75:
-			case 0x76:
-			case 0x77:
-			case 0x78:
-			case 0x79:
-			case 0x7a:
-			case 0x7b:
-			case 0x7c:
-			case 0x7d:
-			case 0x7e:
-			case 0x7f:
+			case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
+			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
 			case 0xEB:
 				if (!is_target_inside<sbyte>(i.ptr() + 1, source))
 					throw inconsistent_function_range_exception("Short relative jump outside the copied range is met!");
@@ -115,22 +105,8 @@ namespace micro_profiler
 			case 0x0F:
 				switch (*(i.ptr() + 1))
 				{
-				case 0x80:
-				case 0x81:
-				case 0x82:
-				case 0x83:
-				case 0x84:
-				case 0x85:
-				case 0x86:
-				case 0x87:
-				case 0x88:
-				case 0x89:
-				case 0x8a:
-				case 0x8b:
-				case 0x8c:
-				case 0x8d:
-				case 0x8e:
-				case 0x8f:
+				case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+				case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
 					if (!is_target_inside<sdword>(i.ptr() + 2, source))
 					{
 						*destination = *i.ptr();
@@ -161,6 +137,12 @@ namespace micro_profiler
 					*reinterpret_cast<dword *>(i.ptr() + 1) += delta;
 				}
 				break;
+
+			case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
+			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
+			case 0xEB:
+				if (is_target_inside<sbyte>(i.ptr() + 1, displaced_region))
+					throw offset_prohibited("short conditional jump to a moved region");
 			}
 	}
 }

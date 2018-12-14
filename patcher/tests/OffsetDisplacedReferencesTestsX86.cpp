@@ -169,6 +169,83 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(is, original);
 			}
+
+
+			test( ShortJumpsToProhibitedRegionCauseProhibitedException )
+			{
+				// INIT
+				byte is[] = {
+					0x90,
+					0xFF, 0x01,
+					0x90,
+					0x90,
+				};
+				vector<byte> original = mkvector(is);
+
+				for (byte i = 0x70; i <= 0x7F; ++i)
+				{
+					is[1] = i;
+
+				// ACT / ASSERT
+					assert_throws(offset_displaced_references(rb, byte_range(is, 3), const_byte_range(is + 3, 2),
+						is + 13 + 0x10000), offset_prohibited);
+				}
+
+				// INIT
+				is[1] = 0xEB;
+
+				// ACT
+					assert_throws(offset_displaced_references(rb, byte_range(is, 3), const_byte_range(is + 3, 2),
+						is + 13 + 0x10000), offset_prohibited);
+			}
+
+
+			test( ShortJumpsToNonProhibitedRegionPassedNormally )
+			{
+				for (byte i = 0x70; i <= 0x7F; ++i)
+				{
+				// INIT
+					byte is[] = {
+						0x90,
+						0x90,
+						0xFF, 0x08,
+						0xE9, 0x01, 0x00, 0x00, 0x00,
+						0x90,
+						0x90,
+						0x90,
+						0x90,
+					};
+
+					rb.clear();
+					is[2] = i;
+
+				// ACT / ASSERT (must not throw)
+					offset_displaced_references(rb, byte_range(is, 9), const_byte_range(is + 10, 2), is + 13 + 0x10000),
+
+				// ASSERT
+					assert_equal(1u, rb.size());
+				}
+
+				// INIT
+				byte is[] = {
+					0x90,
+					0x90,
+					0xEB, 0x08,
+					0xE9, 0x01, 0x00, 0x00, 0x00,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+				};
+
+				rb.clear();
+
+				// ACT
+				offset_displaced_references(rb, byte_range(is, 9), const_byte_range(is + 10, 2), is + 13 + 0x10000),
+
+				// ASSERT
+				assert_equal(1u, rb.size());
+			}
 		end_test_suite
 	}
 }

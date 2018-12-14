@@ -43,7 +43,7 @@ namespace micro_profiler
 				_remaining_length -= _current_length;
 				_current_length = static_cast<byte>(length_disasm((void *)_ptr));
 				if (_current_length > _remaining_length)
-					throw inconsistent_function_range_exception("Attempt to read past the function body!"); // TODO: test!
+					throw inconsistent_function_range_exception("attempt to read past the function body"); // TODO: test!
 				return true;
 			}
 
@@ -52,6 +52,41 @@ namespace micro_profiler
 			size_t _remaining_length;
 			byte _current_length;
 		};
+
+		template <typename ByteT>
+		struct displacement_visitor
+		{
+			virtual void visit_byte(ByteT *displacement) const = 0;
+			virtual void visit_dword(ByteT *displacement) const = 0;
+		};
+
+		template <typename ByteT>
+		void visit_instruction(const displacement_visitor<ByteT> &v, const instruction_iterator<ByteT> &i)
+		{
+			ByteT *ptr = i.ptr();
+
+			switch (*ptr++)
+			{
+			case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
+			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
+			case 0xEB:
+				v.visit_byte(ptr);
+				return;
+			
+			case 0xE8: case 0xE9:
+				v.visit_dword(ptr);
+				return;
+
+			case 0x0F:
+				switch (*ptr++)
+				{
+				case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+				case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+					v.visit_dword(ptr);
+				}
+				return;
+			}
+		}
 	}
 
 	inconsistent_function_range_exception::inconsistent_function_range_exception(const char *message)
@@ -75,50 +110,39 @@ namespace micro_profiler
 
 	void move_function(byte *destination, const_byte_range source)
 	{
-		const ptrdiff_t delta = source.begin() - destination;
+		struct offset_displacement : displacement_visitor<const byte>
+		{
+			offset_displacement(const_byte_range source, ptrdiff_t delta)
+				: _source(source), _delta(delta)
+			{	}
+
+			virtual void visit_byte(const byte *displacement) const
+			{
+				if (!is_target_inside<sbyte>(displacement, _source))
+					throw inconsistent_function_range_exception("short relative jump outside the moved range");
+			}
+
+			virtual void visit_dword(const byte *displacement) const
+			{
+				if (!is_target_inside<sdword>(displacement, _source))
+					*reinterpret_cast<dword *>(dest + (displacement - src)) += _delta;
+			}
+
+			const byte *src;
+			byte *dest;
+
+		private:
+			const_byte_range _source;
+			ptrdiff_t _delta;
+		} v(source, source.begin() - destination);
 
 		for (instruction_iterator<const byte> i(source); i.fetch(); destination += i.length())
 		{
-			switch (*i.ptr())
-			{
-			case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
-			case 0xEB:
-				if (!is_target_inside<sbyte>(i.ptr() + 1, source))
-					throw inconsistent_function_range_exception("Short relative jump outside the copied range is met!");
-				break;
-
-			case 0xCC:
-				throw inconsistent_function_range_exception("Debug interrupt met!");
-
-			case 0xE9:
-			case 0xE8:
-				if (!is_target_inside<sdword>(i.ptr() + 1, source))
-				{
-					*destination = *i.ptr();
-					*reinterpret_cast<dword *>(destination + 1)
-						= static_cast<dword>(*reinterpret_cast<const dword *>(i.ptr() + 1)) + delta;
-					continue;
-				}
-				break;
-
-			case 0x0F:
-				switch (*(i.ptr() + 1))
-				{
-				case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
-				case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
-					if (!is_target_inside<sdword>(i.ptr() + 2, source))
-					{
-						*destination = *i.ptr();
-						*(destination + 1) = *(i.ptr() + 1);
-						*reinterpret_cast<dword *>(destination + 2)
-							= static_cast<dword>(*reinterpret_cast<const dword *>(i.ptr() + 2)) + delta;
-						continue;
-					}
-					break;
-				}
-			}
+			if (0xCC == *i.ptr())
+				throw inconsistent_function_range_exception("debug interrupt met");
 			mem_copy(destination, i.ptr(), i.length());
+			v.src = i.ptr(), v.dest = destination;
+			visit_instruction(v, i);
 		}
 	}
 
@@ -142,7 +166,7 @@ namespace micro_profiler
 			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
 			case 0xEB:
 				if (is_target_inside<sbyte>(i.ptr() + 1, displaced_region))
-					throw offset_prohibited("short conditional jump to a moved region");
+					throw offset_prohibited("short relative jump to a moved range");
 			}
 	}
 }

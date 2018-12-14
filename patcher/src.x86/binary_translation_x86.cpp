@@ -1,6 +1,7 @@
 #include <patcher/binary_translation.h>
 
 #include <common/memory.h>
+#include <common/noncopyable.h>
 #include <stddef.h>
 
 extern "C" {
@@ -149,24 +150,34 @@ namespace micro_profiler
 	void offset_displaced_references(revert_buffer &rbuffer, byte_range source, const_byte_range displaced_region,
 		const byte *displaced_to)
 	{
-		const ptrdiff_t delta = displaced_to - displaced_region.begin();
+		struct offset_displacement : displacement_visitor<byte>, noncopyable
+		{
+			offset_displacement(revert_buffer &rb, const_byte_range displaced_region, ptrdiff_t delta)
+				: _rb(rb), _displaced_region(displaced_region), _delta(delta)
+			{	}
 
-		for (instruction_iterator<byte> i(source); i.fetch(); )
-			switch (*i.ptr())
+			virtual void visit_dword(byte *displacement) const
 			{
-			case 0xE9:
-				if (is_target_inside<sdword>(i.ptr() + 1, displaced_region))
+				if (is_target_inside<sdword>(displacement, _displaced_region))
 				{
-					rbuffer.push_back(revert_entry<>(i.ptr() + 1, 4));
-					*reinterpret_cast<dword *>(i.ptr() + 1) += delta;
+					_rb.push_back(revert_entry<>(displacement, 4));
+					*reinterpret_cast<dword *>(displacement) += _delta;
 				}
-				break;
+			}
 
-			case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
-			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
-			case 0xEB:
-				if (is_target_inside<sbyte>(i.ptr() + 1, displaced_region))
+			virtual void visit_byte(byte *displacement) const
+			{
+				if (is_target_inside<sbyte>(displacement, _displaced_region))
 					throw offset_prohibited("short relative jump to a moved range");
 			}
+
+		private:
+			revert_buffer &_rb;
+			const_byte_range _displaced_region;
+			ptrdiff_t _delta;
+		} v(rbuffer, displaced_region, displaced_to - displaced_region.begin());
+
+		for (instruction_iterator<byte> i(source); i.fetch(); )
+			visit_instruction(v, i);
 	}
 }

@@ -20,27 +20,35 @@
 
 #pragma once
 
-#include <common/memory.h>
-#include <patcher/revert_buffer.h>
+#include <common/primitives.h>
+#include <vector>
 
 namespace micro_profiler
 {
-	struct inconsistent_function_range_exception : std::runtime_error
+#pragma pack(push, 1)
+	template <size_t size = sizeof(void*)>
+	struct revert_entry : range<byte, byte>
 	{
-		inconsistent_function_range_exception(const char *message);
+		typedef byte buffer_t[size];
+
+		revert_entry(byte *ptr, byte length);
+
+		void restore() const;
+
+		buffer_t original;
 	};
+#pragma pack(pop)
 
-	struct offset_prohibited : std::runtime_error
-	{
-		offset_prohibited(const char *message);
-	};
+	typedef std::vector< revert_entry<> > revert_buffer;
 
 
 
-	size_t calculate_fragment_length(const_byte_range source, size_t min_length);
+	template <size_t size>
+	inline revert_entry<size>::revert_entry(byte *ptr, byte length_)
+		: range<byte, byte>(ptr, length_)
+	{	mem_copy(original, begin(), length());	}
 
-	void move_function(byte *destination, const_byte_range source);
-
-	void offset_displaced_references(revert_buffer &rbuffer, byte_range source, const_byte_range displaced_region,
-		const byte *displaced_to);
+	template <size_t size>
+	inline void revert_entry<size>::restore() const
+	{	mem_copy(begin(), original, length());	}
 }

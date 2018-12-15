@@ -54,6 +54,7 @@
     <ClInclude Include="..\dynamic_hooking.h" />
     <ClInclude Include="..\function_patch.h" />
     <ClInclude Include="..\platform.h" />
+    <ClInclude Include="..\revert_buffer.h" />
     <ClInclude Include="assembler_intel.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

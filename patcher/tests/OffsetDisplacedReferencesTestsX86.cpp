@@ -180,7 +180,6 @@ namespace micro_profiler
 					0x90,
 					0x90,
 				};
-				vector<byte> original = mkvector(is);
 
 				for (byte i = 0x70; i <= 0x7F; ++i)
 				{
@@ -246,6 +245,101 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, rb.size());
 			}
+
+
+			test( CallsDisplacementsDoNotGetOffset )
+			{
+				// INIT
+				byte is[] = {
+					0x90,
+					0xE8, 0x07, 0x00, 0x00, 0x00,
+					0xE8, 0x02, 0x00, 0x00, 0x00,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+				};
+				vector<byte> original = mkvector(is);
+
+				// ACT
+				offset_displaced_references(rb, byte_range(is, 12), const_byte_range(is + 12, 3), is + 13 + 0x10000),
+
+				// ASSERT
+				assert_is_empty(rb);
+				assert_equal(is, original);
+			}
+
+
+			test( RevertingItemsFromRevertBuffersRestoresInitialDisplacements )
+			{
+				// INIT
+				byte is[] = {
+					0xE9, 0x08, 0x00, 0x00, 0x00, // jmp $L1
+					0xE9, 0x05, 0x00, 0x00, 0x00, // jmp $L2
+					0xEB, 0x00,
+					0xCC,
+					0x90, // L1
+					0x90, // L3
+					0x90, // L2
+					0x90,
+					0x90,
+					0xE9, 0xF6, 0xFF, 0xFF, 0xFF, // jmp $L1
+					0xE9, 0xF2, 0xFF, 0xFF, 0xFF, // jmp $L3
+					0xCC,
+					0x90,
+				};
+				vector<byte> original = mkvector(is);
+
+				// ACT
+				offset_displaced_references(rb, byte_range(is, 13), const_byte_range(is + 13, 5), is + 13 + 0x10000);
+				rb[0].restore();
+				rb[1].restore();
+
+				// ASSERT
+				assert_equal(is, original);
+
+				// INIT
+				rb.clear();
+
+				// ACT
+				offset_displaced_references(rb, byte_range(is + 14, 16), const_byte_range(is + 13, 1), is + 13 - 0x1010);
+				rb[0].restore();
+
+				// ASSERT
+				assert_equal(is, original);
+			}
+
+
+			test( ThrownExceptionRestoresOriginalCode )
+			{
+				// INIT
+				byte is[] = {
+					0xEB, 0x00,
+					0xE9, 0x08, 0x00, 0x00, 0x00, // jmp $L1
+					0xE9, 0x05, 0x00, 0x00, 0x00, // jmp $L3
+					0xE9, 0x05, 0x00, 0x00, 0x00, // jmp $L2
+					0xEB, 0x00,
+					0x90, // L1
+					0x90, // L2
+					0x90, // L3
+					0x90,
+					0x90,
+					0xE9, 0xF6, 0xFF, 0xFF, 0xFF, // jmp $L1
+					0xE9, 0xF2, 0xFF, 0xFF, 0xFF, // jmp $L3
+					0xCC,
+					0x90,
+				};
+				vector<byte> original = mkvector(is);
+
+				// ACT / ASSERT
+				assert_throws(offset_displaced_references(rb, byte_range(is, 19), const_byte_range(is + 19, 10),
+					is + 13 + 0x10000), offset_prohibited);
+
+				// ASSERT
+				assert_equal(is, original);
+				assert_is_empty(rb);
+			}
+
 		end_test_suite
 	}
 }

@@ -38,7 +38,7 @@ namespace micro_profiler
 
 			bool fetch()
 			{
-				if (_remaining_length <= _current_length)
+				if (_remaining_length == _current_length)
 					return false;
 				_ptr += _current_length;
 				_remaining_length -= _current_length;
@@ -149,6 +149,7 @@ namespace micro_profiler
 
 	void offset_displaced_references(revert_buffer &rbuffer, byte_range source, const_byte_range displaced_region,
 		const byte *displaced_to)
+	try
 	{
 		struct offset_displacement : displacement_visitor<byte>, noncopyable
 		{
@@ -178,6 +179,20 @@ namespace micro_profiler
 		} v(rbuffer, displaced_region, displaced_to - displaced_region.begin());
 
 		for (instruction_iterator<byte> i(source); i.fetch(); )
-			visit_instruction(v, i);
+			switch (*i.ptr())
+			{
+			case 0xE8:
+				continue;
+
+			default:
+				visit_instruction(v, i);
+			}
+	}
+	catch (...)
+	{
+		for (revert_buffer::const_iterator i = rbuffer.begin(); i != rbuffer.end(); ++i)
+			i->restore();
+		rbuffer.clear();
+		throw;
 	}
 }

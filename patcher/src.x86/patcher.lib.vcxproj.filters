@@ -28,6 +28,9 @@
     <ClInclude Include="..\..\libraries\lend\ld32.h">
       <Filter>libraries\lend</Filter>
     </ClInclude>
+    <ClInclude Include="..\revert_buffer.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

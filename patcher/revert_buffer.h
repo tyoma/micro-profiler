@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/memory.h>
 #include <common/primitives.h>
 #include <vector>
 

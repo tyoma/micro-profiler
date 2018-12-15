@@ -4,6 +4,7 @@ set(PATCHER_TEST_SOURCES
 	BinaryTranslationTestsX86.cpp
 	DynamicHookingTests.cpp
 	FunctionPatchTests.cpp
+	FunctionPatchTestsX86.cpp
 	guineapigs.cpp
 	helpers.cpp
 	OffsetDisplacedReferencesTestsX86.cpp

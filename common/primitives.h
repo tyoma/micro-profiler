@@ -83,7 +83,7 @@ namespace micro_profiler
 
 		T *begin() const;
 		T *end() const;
-		size_t length() const;
+		SizeT length() const;
 		bool inside(const T *ptr) const;
 
 	private:
@@ -161,7 +161,7 @@ namespace micro_profiler
 	{	return _start + _length;	}
 
 	template <typename T, typename SizeT>
-	inline size_t range<T, SizeT>::length() const
+	inline SizeT range<T, SizeT>::length() const
 	{	return _length;	}
 
 	template <typename T, typename SizeT>

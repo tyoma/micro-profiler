@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "revert_buffer.h"
 #include "dynamic_hooking.h"
 
 #include <common/memory.h>
@@ -36,19 +37,23 @@ namespace micro_profiler
 		~function_patch();
 
 	private:
+		typedef revert_entry<24> revert_entry_t;
+
+	private:
 		void init(executable_memory_allocator &allocator, byte_range body, void *interceptor,
 			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 
 	private:
-		std::shared_ptr<void> _memory;
-		byte *_target_function;
-		size_t _fragment_length;
-		byte _saved[40];
+		std::shared_ptr<void> _thunk;
+		byte_range _patched_fragment;
+		revert_entry_t _original_fragment;
+		revert_buffer _revert_buffer;
 	};
 
 
 
 	template <typename T>
 	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
+		: _patched_fragment(0, 0), _original_fragment(0, 0)
 	{	init(allocator, body, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
 }

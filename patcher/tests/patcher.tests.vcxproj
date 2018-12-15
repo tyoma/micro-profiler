@@ -54,6 +54,7 @@
     <ClCompile Include="BinaryTranslationTestsX86.cpp" />
     <ClCompile Include="DynamicHookingTests.cpp" />
     <ClCompile Include="FunctionPatchTests.cpp" />
+    <ClCompile Include="FunctionPatchTestsX86.cpp" />
     <ClCompile Include="guineapigs.cpp">
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>

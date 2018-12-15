@@ -240,6 +240,90 @@ namespace micro_profiler
 
 				assert_equal(reference, trace[0].call_log);
 			}
+
+
+			test( FunctionsAreOnlyPatchedOnce )
+			{
+				// INIT
+				auto_ptr<image_patch> ip(new image_patch(image_infos[1], &trace[0]));
+				int data[10];
+				char buffer[100] = { 0 };
+
+				ip->apply_for([] (const symbol_info &symbol) {
+					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
+				});
+
+				// ACT
+				ip->apply_for([] (const symbol_info &symbol) {
+					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
+				});
+
+				// ACT / ASSERT
+				f22(buffer, sizeof(buffer), "%d", 1234);
+				f21(data, array_end(data));
+
+				// ASSERT
+				assert_equal(4u, trace[0].call_log.size());
+
+				// ACT / ASSERT
+				f22(buffer, sizeof(buffer), "%d", 7751);
+
+				// ASSERT
+				assert_equal(6u, trace[0].call_log.size());
+			}
+
+
+			test( PatchesAreRemovedWhenUnmatchedFromFilter )
+			{
+				// INIT
+				auto_ptr<image_patch> ip(new image_patch(image_infos[1], &trace[0]));
+				int data[10];
+				char buffer[100] = { 0 };
+
+				ip->apply_for([] (const symbol_info &symbol) {
+					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
+				});
+
+				// ACT
+				ip->apply_for([] (const symbol_info &symbol) {
+					return symbol.name == "bubble_sort";
+				});
+
+				// ACT / ASSERT
+				f22(buffer, sizeof(buffer), "%d", 1234);
+				f21(data, array_end(data));
+
+				// ASSERT
+				mocks::call_record reference1[] = {
+					{ 0, address_cast_hack<const void *>(f21) },
+					{ 0, 0 },
+				};
+
+				assert_equal(reference1, trace[0].call_log);
+
+				// INIT
+				ip->apply_for([] (const symbol_info &symbol) {
+					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
+				});
+				trace[0].call_log.clear();
+
+				// ACT
+				ip->apply_for([] (const symbol_info &symbol) {
+					return symbol.name == "guinea_snprintf";
+				});
+
+				// ACT / ASSERT
+				f22(buffer, sizeof(buffer), "%d", 1234);
+				f21(data, array_end(data));
+
+				// ASSERT
+				mocks::call_record reference2[] = {
+					{ 0, address_cast_hack<const void *>(f22) },
+					{ 0, 0 },
+				};
+
+				assert_equal(reference2, trace[0].call_log);
+			}
 		end_test_suite
 	}
 }

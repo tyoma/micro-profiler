@@ -22,7 +22,7 @@
 
 #include <common/symbol_resolver.h>
 #include <patcher/function_patch.h>
-#include <vector>
+#include <unordered_map>
 
 namespace micro_profiler
 {
@@ -35,14 +35,29 @@ namespace micro_profiler
 		template <typename InterceptorT>
 		image_patch(const std::shared_ptr<image_info> &image, InterceptorT *interceptor);
 
-		void apply_for(const filter_t &function_filter);
+		void apply_for(const filter_t &filter);
+
+	private:
+		class patch_entry
+		{
+		public:
+			patch_entry(symbol_info symbol, const std::shared_ptr<function_patch> &patch);
+
+			const symbol_info &get_symbol() const;
+
+		private:
+			symbol_info _symbol;
+			std::shared_ptr<function_patch> _patch;
+		};
+
+		typedef std::unordered_map<const void *, patch_entry> patches_container_t;
 
 	private:
 		const std::shared_ptr<image_info> _image;
 		void * const _interceptor;
 		hooks<void>::on_enter_t * const _on_enter;
 		hooks<void>::on_exit_t * const _on_exit;
-		std::vector< std::shared_ptr<function_patch> > _patches;
+		patches_container_t _patches;
 		executable_memory_allocator _allocator;
 	};
 

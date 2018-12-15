@@ -83,18 +83,13 @@ namespace micro_profiler
 		: _in_image_address(in_image_address), _image_load_queue(lqueue), _worker_refcount(worker_refcount),
 			_exit_event(exit_event)
 	{
-		//set<const void *> patched;
-		//module_info mi = get_module_info(in_image_address);
-		//shared_ptr<image_info> ii(new offset_image_info(image_info::load(mi.path.c_str()), (size_t)mi.load_address));
-		//_patch.reset(new image_patch(ii, g_collector_ptr));
+		module_info mi = get_module_info(in_image_address);
+		shared_ptr<image_info> ii(new offset_image_info(image_info::load(mi.path.c_str()), (size_t)mi.load_address));
 
-		//_patch->apply_for([&] (const symbol_info &symbol) -> bool {
-		//	if (symbol.name == "_VEC_memcpy")
-		//		return false;
-		//	return patched.insert(symbol.body.begin()).second;
-		//});
-
-
+//		_patch.reset(new image_patch(ii, g_collector_ptr));
+//		_patch->apply_for([&] (const symbol_info &symbol) -> bool {
+//			return symbol.name != "_VEC_memcpy";
+//		});
 		_image_load_queue->load(in_image_address);
 	}
 

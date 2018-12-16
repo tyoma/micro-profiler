@@ -30,7 +30,6 @@ extern "C" unsigned int g_empty_function_size;
 
 namespace micro_profiler
 {
-
 	calls_collector::calls_collector(size_t trace_limit)
 		: _trace_limit(trace_limit), _profiler_latency(0)
 	{

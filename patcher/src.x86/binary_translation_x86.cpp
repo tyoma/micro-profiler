@@ -126,7 +126,7 @@ namespace micro_profiler
 			virtual void visit_dword(const byte *displacement) const
 			{
 				if (!is_target_inside<sdword>(displacement, _source))
-					*reinterpret_cast<dword *>(dest + (displacement - src)) += _delta;
+					*reinterpret_cast<dword *>(dest + (displacement - src)) += static_cast<sdword>(_delta);
 			}
 
 			const byte *src;
@@ -162,7 +162,7 @@ namespace micro_profiler
 				if (is_target_inside<sdword>(displacement, _displaced_region))
 				{
 					_rb.push_back(revert_entry<>(displacement, 4));
-					*reinterpret_cast<dword *>(displacement) += _delta;
+					*reinterpret_cast<dword *>(displacement) += static_cast<sdword>(_delta);
 				}
 			}
 

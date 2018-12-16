@@ -23,8 +23,6 @@
 #include "revert_buffer.h"
 #include "dynamic_hooking.h"
 
-#include <common/memory.h>
-
 namespace micro_profiler
 {
 	class function_patch : noncopyable

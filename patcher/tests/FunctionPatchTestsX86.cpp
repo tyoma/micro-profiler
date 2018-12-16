@@ -36,7 +36,7 @@ namespace micro_profiler
 				function_patch p(allocator, byte_range(is_ptr, sizeof(is)), &trace);
 
 				// ASSERT
-				int delta = *reinterpret_cast<int *>(is_ptr + 1) + 5 + c_thunk_size;
+				ptrdiff_t delta = *reinterpret_cast<int *>(is_ptr + 1) + 5 + c_thunk_size;
 
 				assert_equal(-6 + delta, *reinterpret_cast<int *>(is_ptr + 6));
 				assert_equal(-16 + delta, *reinterpret_cast<int *>(is_ptr + 14));

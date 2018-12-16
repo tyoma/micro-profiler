@@ -40,10 +40,10 @@ namespace micro_profiler
 	struct hooks : hook_types<InterceptorT>
 	{
 		static hook_types<void>::on_enter_t *on_enter()
-		{	return reinterpret_cast<hook_types<void>::on_enter_t *>(reinterpret_cast<hook_types<void>::on_enter_t *>(&InterceptorT::on_enter));	}
+		{	return reinterpret_cast<hook_types<void>::on_enter_t *>(&InterceptorT::on_enter);	}
 
 		static hook_types<void>::on_exit_t *on_exit()
-		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit));	}
+		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit);	}
 	};
 
 	extern const size_t c_thunk_size;

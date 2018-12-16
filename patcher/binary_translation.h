@@ -20,8 +20,7 @@
 
 #pragma once
 
-#include <common/memory.h>
-#include <patcher/revert_buffer.h>
+#include "revert_buffer.h"
 
 namespace micro_profiler
 {

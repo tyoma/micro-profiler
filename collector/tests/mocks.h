@@ -17,7 +17,7 @@ namespace micro_profiler
 			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>
 			{
 			public:
-				frontend_state(const std::shared_ptr<void> &ownee);
+				explicit frontend_state(const std::shared_ptr<void> &ownee = std::shared_ptr<void>());
 
 				channel_t create();
 
@@ -55,6 +55,46 @@ namespace micro_profiler
 				mt::mutex _mutex;
 			};
 
+
+
+			template <typename ArchiveT>
+			inline void serialize(ArchiveT &a, frontend_state &state)
+			{
+				commands c;
+				initialization_data id;
+				loaded_modules lm;
+				statistics_map_detailed u;
+				unloaded_modules um;
+
+				a(c);
+				switch (c)
+				{
+				case init:
+					if (state.initialized)
+						a(id), state.initialized(id);
+					break;
+
+				case modules_loaded:
+					if (state.modules_loaded)
+						a(lm), state.modules_loaded(lm);
+					break;
+
+				case update_statistics:
+					if (state.updated)
+						a(u), state.updated(u);
+					break;
+
+				case modules_unloaded:
+					if (state.modules_unloaded)
+						a(um), state.modules_unloaded(um);
+					break;
+				}
+			}
+
+
+			inline frontend_state::frontend_state(const std::shared_ptr<void> &ownee)
+				: _ownee(ownee)
+			{	}
 
 
 			template <size_t size>

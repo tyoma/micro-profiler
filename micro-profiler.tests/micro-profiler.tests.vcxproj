@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1220DC3A-2E6D-492E-95B2-73968C209940}</ProjectGuid>
+    <ProjectGuid>{8C499723-AB70-4401-9089-864A948532AF}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
@@ -29,20 +29,17 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
+  <PropertyGroup>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\mt\src\mt.vcxproj">
-      <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\src\ipc.vcxproj">
-      <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)libraries\wpl\src\wpl.mt\wpl.mt.vcxproj">
-      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-	 <ClCompile Include="COMChannelTests.cpp" />
-    <ClCompile Include="IPCClientServerTests.cpp" />
+    <ClCompile Include="CollectorIntegrationTests.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

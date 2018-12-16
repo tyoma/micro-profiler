@@ -16,12 +16,12 @@ namespace micro_profiler
 		};
 	}
 
-	function_patch::function_patch(executable_memory_allocator &allocator_, byte_range body,
+	function_patch::function_patch(executable_memory_allocator &a, byte_range body,
 			void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 		: _patched_fragment(0, 0), _original_fragment(0, 0)
-	{	init(allocator_, body, interceptor, on_enter, on_exit);	}
+	{	init(a, body, interceptor, on_enter, on_exit);	}
 
-	void function_patch::init(executable_memory_allocator &allocator_, byte_range body,
+	void function_patch::init(executable_memory_allocator &a, byte_range body,
 		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
 		_patched_fragment = byte_range(body.begin(), calculate_fragment_length(body, jmp_size));
@@ -30,7 +30,7 @@ namespace micro_profiler
 		const size_t size0 = c_thunk_size + _patched_fragment.length() + jmp_size;
 		const size_t size = (size0 + 0x0F) & ~0x0F;
 
-		_thunk = allocator_.allocate(size);
+		_thunk = a.allocate(size);
 
 		byte *thunk = static_cast<byte *>(_thunk.get());
 
@@ -40,7 +40,7 @@ namespace micro_profiler
 		move_function(moved_fragment, _patched_fragment);
 		reinterpret_cast<intel::jmp_rel_imm32 *>(moved_fragment + _patched_fragment.length())
 			->init(_patched_fragment.end());
-		mem_set(thunk + size0, 0xCC, size - size0);
+		mem_set(thunk + size0, 0xCC, size - size0); // fill with 'int 3'
 
 		// place hooking jump to original body & correct displacement references
 		intel::jmp_rel_imm32 &jmp_original = *(intel::jmp_rel_imm32 *)(_patched_fragment.begin());			
@@ -48,7 +48,7 @@ namespace micro_profiler
 
 		offset_displaced_references(_revert_buffer, body, _patched_fragment, moved_fragment);
 		jmp_original.init(thunk);
-		mem_set(_patched_fragment.begin() + jmp_size, 0xCC, _patched_fragment.length() - jmp_size);
+		mem_set(_patched_fragment.begin() + jmp_size, 0xCC, _patched_fragment.length() - jmp_size); // fill with 'int 3'
 	}
 
 	function_patch::~function_patch()

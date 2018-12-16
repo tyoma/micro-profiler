@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <mt/thread.h>
+#include <stdlib.h>
 #include <string>
 #include <vector>
 #include <ut/assert.h>
@@ -89,3 +90,5 @@ namespace micro_profiler
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);
 	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
 }
+
+extern "C" int setenv(const char *name, const char *value, int overwrite);

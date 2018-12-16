@@ -1,5 +1,6 @@
 #include "mocks_com.h"
 
+#include <collector/tests/mocks.h>
 #include <common/noncopyable.h>
 #include <windows.h>
 
@@ -13,12 +14,24 @@ namespace micro_profiler
 		{
 			namespace
 			{
+				void add(unsigned *value, int addendum)
+				{	*value += addendum;	}
+
 				class frontend : public ISequentialStream, noncopyable
 				{
 				public:
-					frontend(unsigned &referneces)
-						: _my_references(0), _references(referneces)
-					{	}
+					frontend(const shared_ptr<frontend_state> &state)
+						: _references(0), _state(state)
+					{
+						if (_state->constructed)
+							_state->constructed();
+					}
+
+					~frontend()
+					{
+						if (_state->destroyed)
+							_state->destroyed();
+					}
 
 					// IUnknown methods
 					virtual STDMETHODIMP QueryInterface(REFIID riid, void **object)
@@ -34,13 +47,12 @@ namespace micro_profiler
 					}
 
 					virtual STDMETHODIMP_(ULONG) AddRef()
-					{	return ++_references, ++_my_references;	}
+					{	return ++_references;	}
 
 					virtual STDMETHODIMP_(ULONG) STDMETHODCALLTYPE Release()
 					{
-						unsigned result = --_my_references;
+						unsigned result = --_references;
 
-						--_references;
 						if (!result)
 							delete this;
 						return result;
@@ -54,14 +66,15 @@ namespace micro_profiler
 					{	return S_OK;	}
 
 				private:
-					unsigned _my_references, &_references;
+					unsigned _references;
+					shared_ptr<frontend_state> _state;
 				};
 
 				class factory : private IClassFactory, noncopyable
 				{
 				public:
-					factory(const guid_t &id, unsigned &references)
-						: _references(references)
+					factory(const guid_t &id, const shared_ptr<frontend_state> &state)
+						: _references(0), _state(state)
 					{
 						::CoInitialize(0);
 						::CoRegisterClassObject(reinterpret_cast<const GUID &>(id), this,
@@ -96,19 +109,29 @@ namespace micro_profiler
 
 					// IClassFactory methods
 					virtual STDMETHODIMP CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
-					{	return (new frontend(_references))->QueryInterface(riid, object);	}
+					{	return (new frontend(_state))->QueryInterface(riid, object);	}
 
 					virtual STDMETHODIMP LockServer(BOOL /*lock*/)
 					{	return S_OK;	}
 
 				private:
 					DWORD _cookie;
-					unsigned &_references;
+					unsigned _references;
+					shared_ptr<frontend_state> _state;
 				};
 			}
 
 			shared_ptr<void> create_frontend_factory(const guid_t &id, unsigned &references)
-			{	return shared_ptr<void>(new factory(id, references));	}
+			{
+				shared_ptr<frontend_state> state(new frontend_state);
+
+				state->constructed = bind(&add, &references, +1);
+				state->destroyed = bind(&add, &references, -1);
+				return create_frontend_factory(id, state);
+			}
+
+			shared_ptr<void> create_frontend_factory(const guid_t &id, const shared_ptr<frontend_state> &state)
+			{	return shared_ptr<void>(new factory(id, state));	}
 		}
 	}
 }

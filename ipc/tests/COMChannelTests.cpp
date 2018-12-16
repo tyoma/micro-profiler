@@ -1,6 +1,6 @@
 #include <ipc/channel_client.h>
 
-#include "mocks_com.h"
+#include <test-helpers/mocks_com.h>
 
 #include <mt/thread.h>
 #include <test-helpers/com.h>

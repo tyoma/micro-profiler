@@ -59,40 +59,6 @@ namespace micro_profiler
 			{	return _latency;	}
 
 
-			template <typename ArchiveT>
-			void serialize(ArchiveT &a, frontend_state &state)
-			{
-				commands c;
-				initialization_data id;
-				loaded_modules lm;
-				statistics_map_detailed u;
-				unloaded_modules um;
-
-				a(c);
-				switch (c)
-				{
-				case init:
-					if (state.initialized)
-						a(id), state.initialized(id);
-					break;
-
-				case modules_loaded:
-					if (state.modules_loaded)
-						a(lm), state.modules_loaded(lm);
-					break;
-
-				case update_statistics:
-					if (state.updated)
-						a(u), state.updated(u);
-					break;
-
-				case modules_unloaded:
-					if (state.modules_unloaded)
-						a(um), state.modules_unloaded(um);
-					break;
-				}
-			}
-
 			class frontend
 			{
 			public:
@@ -109,10 +75,6 @@ namespace micro_profiler
 				mutable shared_ptr<frontend_state> _state;
 			};
 
-
-			frontend_state::frontend_state(const shared_ptr<void> &ownee)
-				: _ownee(ownee)
-			{	}
 
 			channel_t frontend_state::create()
 			{	return frontend(shared_from_this());	}

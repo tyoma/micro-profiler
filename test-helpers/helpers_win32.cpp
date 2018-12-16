@@ -44,3 +44,10 @@ namespace micro_profiler
 		}
 	}
 }
+
+extern "C" int setenv(const char *name, const char *value, int overwrite)
+{
+	if (overwrite || !GetEnvironmentVariableA(name, NULL, 0))
+		::SetEnvironmentVariableA(name, value);
+	return 0;
+}

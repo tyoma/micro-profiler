@@ -28,7 +28,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
@@ -41,9 +40,6 @@
       <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
     </MASM>
-    <Lib>
-      <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
-    </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>

@@ -24,6 +24,7 @@
 #include <collector/entry.h>
 #include <common/constants.h>
 #include <common/memory.h>
+#include <common/string.h>
 #include <ipc/channel_client.h>
 #include <mt/atomic.h>
 #include <patcher/src.x86/assembler_intel.h>
@@ -75,7 +76,8 @@ namespace micro_profiler
 	class isolation_aware_channel_factory
 	{
 	public:
-		explicit isolation_aware_channel_factory(HINSTANCE hinstance)
+		explicit isolation_aware_channel_factory(HINSTANCE hinstance, const vector<guid_t> &candidate_ids)
+			: _candidate_ids(candidate_ids)
 		{
 			ACTCTX ctx = { sizeof(ACTCTX), };
 
@@ -89,15 +91,11 @@ namespace micro_profiler
 		{
 			shared_ptr<void> lock = lock_context();
 
-			try
-			{
-				return open_channel(c_integrated_frontend_id);
-			}
-			catch (const channel_creation_exception &)
+			for (vector<guid_t>::const_iterator i = _candidate_ids.begin(); i != _candidate_ids.end(); ++i)
 			{
 				try
 				{
-					return open_channel(c_standalone_frontend_id);
+					return open_channel(*i);
 				}
 				catch (const channel_creation_exception &)
 				{
@@ -120,6 +118,7 @@ namespace micro_profiler
 
 	private:
 		shared_ptr<void> _activation_context;
+		vector<guid_t> _candidate_ids;
 	};
 }
 
@@ -129,12 +128,19 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reser
 {
 	using namespace micro_profiler;
 
+	vector<guid_t> candidate_ids;
+
 	switch (reason)
 	{
 	case DLL_PROCESS_ATTACH:
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-		g_frontend_controller.reset(new frontend_controller(g_collector, isolation_aware_channel_factory(hinstance)));
+		if (const char *env_id = getenv(c_frontend_id_env))
+			candidate_ids.push_back(from_string(env_id));
+		candidate_ids.push_back(c_integrated_frontend_id);
+		candidate_ids.push_back(c_standalone_frontend_id);
+		g_frontend_controller.reset(new frontend_controller(g_collector,
+			isolation_aware_channel_factory(hinstance, candidate_ids)));
 		break;
 
 	case DLL_PROCESS_DETACH:

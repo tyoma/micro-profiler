@@ -28,7 +28,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -38,7 +37,8 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemDefinitionGroup>
-  <ItemGroup>
+  <ItemGroup>  
+    <ClCompile Include="channel_client.cpp" />
     <ClCompile Include="ipc_client.cpp" />
     <ClCompile Include="ipc_server.cpp" />
   </ItemGroup>
@@ -48,9 +48,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\client.h" />
-    <ClInclude Include="common.h" />
     <ClInclude Include="..\server.h" />
+    <ClInclude Include="common.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -33,6 +33,7 @@
 namespace micro_profiler
 {
 	struct calls_collector_i;
+	struct overhead;
 
 	class image_load_queue
 	{
@@ -43,7 +44,7 @@ namespace micro_profiler
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
 	private:
-		mutex _mtx;
+		mt::mutex _mtx;
 		std::deque<module_info> _lqueue;
 		std::deque<long_address_t> _uqueue;
 	};
@@ -51,8 +52,8 @@ namespace micro_profiler
 	class statistics_bridge
 	{
 	public:
-		statistics_bridge(calls_collector_i &collector, const std::function<channel_t ()> &factory,
-			const std::shared_ptr<image_load_queue> &image_load_queue_);
+		statistics_bridge(calls_collector_i &collector, const overhead &overhead_,
+			const std::function<channel_t ()> &factory, const std::shared_ptr<image_load_queue> &image_load_queue_);
 
 		void analyze();
 		void update_frontend();

@@ -7,13 +7,31 @@
     <ClCompile Include="string.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="module.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="registry_configuration.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="constants.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="time.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="time_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="memory.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="module_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol_resolver_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol_resolver.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -34,5 +52,8 @@
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="..\constants.h" />
+    <ClInclude Include="..\symbol_resolver.h" />
+    <ClInclude Include="..\memory.h" />
+    <ClInclude Include="..\time.h" />
   </ItemGroup>
 </Project>

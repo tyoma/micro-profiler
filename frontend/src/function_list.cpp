@@ -21,10 +21,9 @@
 #include <frontend/function_list.h>
 
 #include <common/formatting.h>
-
-#include <utility>
 #include <cmath>
 #include <clocale>
+#include <utility>
 
 using namespace std;
 using namespace placeholders;
@@ -38,7 +37,7 @@ namespace micro_profiler
 	namespace
 	{
 		template <typename T> const wchar_t *fmt();
-		template <> const wchar_t *fmt<count_t>() {	return L"%I64u";	}
+		template <> const wchar_t *fmt<count_t>() {	return L"%llu";	}
 		template <> const wchar_t *fmt<unsigned int>() {	return L"%u";	}
 		template <> const wchar_t *fmt<double>() {	return L"%g";	}
 
@@ -198,7 +197,7 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
 	{
-		const view_type::value_type &row = get_entry(item);
+		const typename view_type::value_type &row = get_entry(item);
 
 		switch (subitem)
 		{

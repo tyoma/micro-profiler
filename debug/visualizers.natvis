@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="micro_profiler::pod_vector&lt;*&gt;">
+		<DisplayString>{{ size={_end - _begin} }}</DisplayString>
+		<Expand>
+			<Item Name="[size]" ExcludeView="simple">_end - _begin</Item>
+			<Item Name="[capacity]" ExcludeView="simple">_limit - _begin</Item>
+			<ArrayItems>
+					<Size>_end - _begin</Size>
+					<ValuePointer>_begin</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type> 
+</AutoVisualizer>

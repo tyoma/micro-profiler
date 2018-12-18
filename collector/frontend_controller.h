@@ -20,19 +20,15 @@
 
 #pragma once
 
+#include "calibration.h"
 #include "statistics_bridge.h"
 
-#include <wpl/base/concepts.h>
+#include <common/noncopyable.h>
 #include <functional>
 #include <memory>
-
-namespace wpl
-{
-	namespace mt
-	{
-		class thread;
-	}
-}
+#include <mt/atomic.h>
+#include <mt/event.h>
+#include <mt/thread.h>
 
 namespace micro_profiler
 {
@@ -40,29 +36,31 @@ namespace micro_profiler
 	struct handle;
 	class image_load_queue;
 
-	class frontend_controller : wpl::noncopyable
+	class frontend_controller : noncopyable
 	{
 	public:
-		frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory);
+		frontend_controller(const frontend_factory_t& factory, calls_collector_i &collector, const overhead &overhead_);
 		virtual ~frontend_controller();
 
-		handle *profile(const void *in_image_address);
+		handle *profile(void *in_image_address);
 		void force_stop();
 
 	private:
+		typedef mt::atomic<int> ref_counter_t;
 		class profiler_instance;
 
 	private:
-		static void frontend_worker(wpl::mt::thread *previous_thread, const frontend_factory_t &factory,
-			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &image_load_queue_,
-			const std::shared_ptr<void> &exit_event);
+		static void frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
+			calls_collector_i *collector, const overhead &overhead_, const std::shared_ptr<image_load_queue> &lqueue,
+			const std::shared_ptr<mt::event> &exit_event);
 
 	private:
-		calls_collector_i &_collector;
 		frontend_factory_t _factory;
+		calls_collector_i &_collector;
+		overhead _overhead;
 		std::shared_ptr<image_load_queue> _image_load_queue;
-		std::shared_ptr<volatile long> _worker_refcount;
-		std::shared_ptr<void> _exit_event;
-		std::auto_ptr<wpl::mt::thread> _frontend_thread;
+		std::shared_ptr<ref_counter_t> _worker_refcount;
+		std::shared_ptr<mt::event> _exit_event;
+		std::auto_ptr<mt::thread> _frontend_thread;
 	};
 }

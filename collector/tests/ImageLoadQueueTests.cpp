@@ -20,9 +20,9 @@ namespace micro_profiler
 			init( LoadImages )
 			{
 				image images[] = {
-					image(L"symbol_container_1.dll"),
-					image(L"symbol_container_2.dll"),
-					image(L"symbol_container_3_nosymbols.dll"),
+					image(L"symbol_container_1"),
+					image(L"symbol_container_2"),
+					image(L"symbol_container_3_nosymbols"),
 				};
 
 				_images.assign(images, array_end(images));
@@ -61,7 +61,7 @@ namespace micro_profiler
 				assert_is_empty(unloaded_images);
 
 				assert_equal(loaded_images[0].load_address, _images.at(0).load_address());
-				assert_not_equal(wstring::npos, loaded_images[0].path.find(L"symbol_container_1.dll"));
+				assert_not_equal(wstring::npos, loaded_images[0].path.find(L"symbol_container_1"));
 
 				// ACT
 				q.load(_images.at(1).get_symbol_address("get_function_addresses_2"));
@@ -73,9 +73,9 @@ namespace micro_profiler
 				assert_is_empty(unloaded_images);
 
 				assert_equal(loaded_images[0].load_address, _images.at(1).load_address());
-				assert_not_equal(wstring::npos, loaded_images[0].path.find(L"symbol_container_2.dll"));
+				assert_not_equal(wstring::npos, loaded_images[0].path.find(L"symbol_container_2"));
 				assert_equal(loaded_images[1].load_address, _images.at(2).load_address());
-				assert_not_equal(wstring::npos, loaded_images[1].path.find(L"symbol_container_3_nosymbols.dll"));
+				assert_not_equal(wstring::npos, loaded_images[1].path.find(L"symbol_container_3_nosymbols"));
 			}
 
 
@@ -128,7 +128,7 @@ namespace micro_profiler
 				assert_equal(2u, unloaded_images.size());
 
 				assert_equal(loaded_images[0].load_address, _images.at(0).load_address());
-				assert_not_equal(wstring::npos, loaded_images[0].path.find(L"symbol_container_1.dll"));
+				assert_not_equal(wstring::npos, loaded_images[0].path.find(L"symbol_container_1"));
 				assert_equal(unloaded_images[0], _images.at(1).load_address());
 				assert_equal(unloaded_images[1], _images.at(2).load_address());
 			}

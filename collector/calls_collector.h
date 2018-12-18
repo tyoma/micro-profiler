@@ -20,58 +20,55 @@
 
 #pragma once
 
-#include "system.h"
+#include "calls_collector_thread.h"
 
-#include <wpl/mt/thread.h>
-#include <list>
+#include <memory>
+#include <mt/mutex.h>
+#include <mt/thread.h>
+#include <mt/tls.h>
+#include <patcher/platform.h>
+#include <vector>
 
 namespace micro_profiler
 {
-	struct call_record;
-
 	struct calls_collector_i
 	{
 		struct acceptor;
 
-		virtual ~calls_collector_i() throw()	{	}
+		virtual ~calls_collector_i() {	}
 		virtual void read_collected(acceptor &a) = 0;
-		virtual timestamp_t profiler_latency() const throw() = 0;
 	};
 
 	struct calls_collector_i::acceptor
 	{
-		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count) = 0;
+		virtual void accept_calls(mt::thread::id threadid, const call_record *calls, size_t count) = 0;
 	};
+
 
 	class calls_collector : public calls_collector_i
 	{
 	public:
 		calls_collector(size_t trace_limit);
-		virtual ~calls_collector() throw();
 
-		static calls_collector *instance() throw();
 		virtual void read_collected(acceptor &a);
 
-		void track(call_record call) throw();
-		void track(timestamp_t timestamp, const void *address) throw();
-
-		size_t trace_limit() const throw();
-		virtual timestamp_t profiler_latency() const throw();
-
-	private:
-		class thread_trace_block;
-
-		static calls_collector _instance;
+		static void CC_(fastcall) on_enter(calls_collector *instance, const void **stack_ptr,
+			timestamp_t timestamp, const void *callee) _CC(fastcall);
+		static const void *CC_(fastcall) on_exit(calls_collector *instance, const void **stack_ptr,
+			timestamp_t timestamp) _CC(fastcall);
 
 	private:
-		thread_trace_block &get_current_thread_trace();
-		thread_trace_block &construct_thread_trace();
+		typedef std::vector< std::pair< mt::thread::id, std::shared_ptr<calls_collector_thread> > > call_traces_t;
 
 	private:
+		calls_collector_thread &get_current_thread_trace();
+		calls_collector_thread &get_current_thread_trace_guaranteed();
+		calls_collector_thread &construct_thread_trace();
+
+	private:
+		mt::tls<calls_collector_thread> _trace_pointers_tls;
 		const size_t _trace_limit;
-		timestamp_t _profiler_latency;
-		wpl::mt::tls<thread_trace_block> _trace_pointers_tls;
-		mutex _thread_blocks_mtx;
-		std::list<thread_trace_block> _call_traces;
+		call_traces_t _call_traces;
+		mt::mutex _thread_blocks_mtx;
 	};
 }

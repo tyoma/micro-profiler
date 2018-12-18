@@ -3,18 +3,16 @@
 
 #include <test-helpers/helpers.h>
 
-#include <collector/system.h>
 #include <deque>
-#include <wpl/base/concepts.h>
-#include <wpl/mt/synchronization.h>
-#include <wpl/mt/thread.h>
+#include <mt/event.h>
+#include <mt/mutex.h>
+#include <mt/thread.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
 #pragma warning(disable:4355)
 
 using namespace std;
-using namespace wpl::mt;
 
 namespace micro_profiler
 {
@@ -29,18 +27,18 @@ namespace micro_profiler
 				struct server_data
 				{
 					server_data()
-						: session_count(0), changed_event(false, true)
+						: session_count(0)
 					{	}
 
 					int session_count;
 					deque< vector<byte> > inputs;
 					deque< vector<byte> > outputs;
-					event_flag changed_event;
-					mutex server_mutex;
+					mt::event changed_event;
+					mt::mutex server_mutex;
 				};
 
 
-				class mock_session : public ipc::server::session, wpl::noncopyable
+				class mock_session : public ipc::server::session, noncopyable
 				{
 				public:
 					mock_session(const shared_ptr<server_data> &data);
@@ -70,7 +68,7 @@ namespace micro_profiler
 					{
 						for (;; data->changed_event.wait())
 						{
-							scoped_lock l(data->server_mutex);
+							mt::lock_guard<mt::mutex> l(data->server_mutex);
 
 							if (data->session_count == expected_count)
 								return;
@@ -79,14 +77,14 @@ namespace micro_profiler
 
 					void add_output(const vector<byte> &data_)
 					{
-						scoped_lock l(data->server_mutex);
+						mt::lock_guard<mt::mutex> l(data->server_mutex);
 
 						data->outputs.push_back(data_);
 					}
 
 					deque< vector<byte> > get_inputs()
 					{
-						scoped_lock l(data->server_mutex);
+						mt::lock_guard<mt::mutex> l(data->server_mutex);
 
 						return data->inputs;
 					}
@@ -98,7 +96,7 @@ namespace micro_profiler
 					{	return new mock_session(data);	}
 
 				private:
-					thread _thread;
+					mt::thread _thread;
 				};
 
 
@@ -106,23 +104,23 @@ namespace micro_profiler
 				mock_session::mock_session(const shared_ptr<server_data> &data)
 					: _data(data)
 				{
-					scoped_lock l(_data->server_mutex);
+					mt::lock_guard<mt::mutex> l(_data->server_mutex);
 						
 					++_data->session_count;
-					data->changed_event.raise();
+					data->changed_event.set();
 				}
 
 				mock_session::~mock_session()
 				{
-					scoped_lock l(_data->server_mutex);
+					mt::lock_guard<mt::mutex> l(_data->server_mutex);
 						
 					--_data->session_count;
-					_data->changed_event.raise();
+					_data->changed_event.set();
 				}
 
 				void mock_session::on_message(const vector<byte> &input, vector<byte> &output)
 				{
-					scoped_lock l(_data->server_mutex);
+					mt::lock_guard<mt::mutex> l(_data->server_mutex);
 
 					_data->inputs.push_back(input);
 					output = _data->outputs.front();

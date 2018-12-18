@@ -2,6 +2,7 @@
 
 #include <common/primitives.h>
 
+#include <memory>
 #include <string>
 #include <wpl/base/concepts.h>
 

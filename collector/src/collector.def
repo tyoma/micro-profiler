@@ -1,5 +1,4 @@
 EXPORTS
-	_penter = profile_enter
-	_pexit = profile_exit
-
+	_penter
+	_pexit
 	micro_profiler_initialize

@@ -20,10 +20,15 @@
 
 #pragma once
 
+#include "types.h"
+
 #include <string>
 
 namespace micro_profiler
 {
 	std::string unicode(const std::wstring &value);
 	std::wstring unicode(const std::string &value);
+
+	std::string to_string(const guid_t &id);
+	guid_t from_string(const std::string &text);
 }

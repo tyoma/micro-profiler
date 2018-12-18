@@ -20,7 +20,7 @@
 
 #include "entry.h"
 
-namespace
+namespace micro_profiler
 {
 	class initializer
 	{

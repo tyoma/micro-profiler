@@ -28,7 +28,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\common.vcxproj">
@@ -36,9 +35,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AllocatorTests.cpp" />
+    <ClCompile Include="ImageInfoTests.cpp" />
+    <ClCompile Include="ImageUtilitiesTests.cpp" />
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
+    <ClCompile Include="SymbolResolverTests.cpp" />
     <ClCompile Include="TextFormattingServicesTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

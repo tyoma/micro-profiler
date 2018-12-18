@@ -23,9 +23,9 @@
 #include "common.h"
 
 #include <algorithm>
+#include <common/noncopyable.h>
 #include <functional>
 #include <memory>
-#include <wpl/base/concepts.h>
 #include <windows.h>
 
 using namespace std;
@@ -34,6 +34,16 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
+		struct zero_init
+		{
+			template <typename T>
+			operator T() const
+			{
+				T t = { };
+				return t;
+			}
+		};
+
 		class server::impl : OVERLAPPED
 		{
 		public:
@@ -59,7 +69,7 @@ namespace micro_profiler
 			vector< shared_ptr<server::outer_session> > _sessions;
 		};
 
-		class server::outer_session : OVERLAPPED, wpl::noncopyable, public enable_shared_from_this<server::outer_session>
+		class server::outer_session : OVERLAPPED, noncopyable, public enable_shared_from_this<server::outer_session>
 		{
 		public:
 			outer_session(server::impl &server, const shared_ptr<void> &pipe);

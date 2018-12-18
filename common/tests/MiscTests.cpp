@@ -1,8 +1,5 @@
 #include <common/path.h>
-#include <common/module.h>
 #include <common/pod_vector.h>
-
-#include <test-helpers/helpers.h>
 
 #include <list>
 #include <ut/assert.h>
@@ -513,61 +510,57 @@ namespace micro_profiler
 				assert_equal(v2.end(), i2);
 			}
 
-		end_test_suite
 
-
-		begin_test_suite( ImageUtilitiesTests )
-
-			vector<image> _images;
-
-			init( LoadImages )
+			test( EmptyPushReservesNewObject )
 			{
-				image images[] = {
-					image(L"symbol_container_1.dll"),
-					image(L"symbol_container_2.dll"),
-					image(L"symbol_container_3_nosymbols.dll"),
-				};
+				// INIT
+				pod_vector<int> v1(10);
+				pod_vector<double> v2(10);
+				pod_vector<int>::iterator i1 = v1.begin();
+				pod_vector<double>::iterator i2 = v2.begin();
 
-				_images.assign(images, array_end(images));
-			}
-
-			test( ImageInfoIsEvaluatedByImageLoadAddress )
-			{
 				// ACT
-				module_info info1 = get_module_info(reinterpret_cast<const void *>(_images[0].load_address()));
-				module_info info2 = get_module_info(reinterpret_cast<const void *>(_images[1].load_address()));
-				module_info info3 = get_module_info(reinterpret_cast<const void *>(_images[2].load_address()));
+				v1.push_back();
+				v2.push_back();
 
 				// ASSERT
-				assert_equal(info1.path.size() - wstring(L"symbol_container_1.dll").size(),
-					info1.path.find(L"symbol_container_1.dll"));
-				assert_equal(_images[0].load_address(), info1.load_address);
-				assert_equal(info2.path.size() - wstring(L"symbol_container_2.dll").size(),
-					info2.path.find(L"symbol_container_2.dll"));
-				assert_equal(_images[1].load_address(), info2.load_address);
-				assert_equal(info3.path.size() - wstring(L"symbol_container_3_nosymbols.dll").size(),
-					info3.path.find(L"symbol_container_3_nosymbols.dll"));
-				assert_equal(_images[2].load_address(), info3.load_address);
+				assert_equal(1, v1.end() - i1);
+				assert_equal(1u, v1.size());
+				assert_equal(1, v2.end() - i2);
+				assert_equal(1u, v2.size());
+
+				// ACT
+				v1.push_back();
+				v1.push_back();
+				v2.push_back();
+
+				// ASSERT
+				assert_equal(3, v1.end() - i1);
+				assert_equal(3u, v1.size());
+				assert_equal(2, v2.end() - i2);
+				assert_equal(2u, v2.size());
 			}
 
 
-			test( ImageInfoIsEvaluatedByInImageAddress )
+			test( EmptyPushCausesSpaceGrowWhenLimitIsHit )
 			{
+				// INIT
+				pod_vector<int> v(5);
+
+				v.push_back(3);
+				v.push_back(13);
+				v.push_back(3221);
+				v.push_back(332221);
+				v.push_back(17);
+
+				pod_vector<int>::iterator b = v.begin();
+
 				// ACT
-				module_info info1 = get_module_info(_images[0].get_symbol_address("get_function_addresses_1"));
-				module_info info2 = get_module_info(_images[1].get_symbol_address("get_function_addresses_2"));
-				module_info info3 = get_module_info(_images[2].get_symbol_address("get_function_addresses_3"));
+				v.push_back();
 
 				// ASSERT
-				assert_equal(info1.path.size() - wstring(L"symbol_container_1.dll").size(),
-					info1.path.find(L"symbol_container_1.dll"));
-				assert_equal(_images[0].load_address(), info1.load_address);
-				assert_equal(info2.path.size() - wstring(L"symbol_container_2.dll").size(),
-					info2.path.find(L"symbol_container_2.dll"));
-				assert_equal(_images[1].load_address(), info2.load_address);
-				assert_equal(info3.path.size() - wstring(L"symbol_container_3_nosymbols.dll").size(),
-					info3.path.find(L"symbol_container_3_nosymbols.dll"));
-				assert_equal(_images[1].load_address(), info2.load_address);
+				assert_not_equal(b, v.begin());
+				assert_equal(6u, v.size());
 			}
 
 		end_test_suite

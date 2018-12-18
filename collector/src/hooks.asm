@@ -23,8 +23,9 @@ IF _M_IX86
 	.model flat
 	.code
 
-	extern ?track@calls_collector@micro_profiler@@QAEXUcall_record@2@@Z:near
-	extern ?_instance@calls_collector@micro_profiler@@0V12@A:dword
+	extern ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z:near
+	extern ?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z:near
+	extern _g_collector_ptr:dword
 
 	PUSHREGS	macro
 		push	eax
@@ -44,31 +45,36 @@ IF _M_IX86
 		push	eax
 	endm
 
-	_profile_enter	proc
+	__penter proc
 		PUSHREGS
-		mov	ecx, [esp + 0Ch]
-		push	ecx
-		PUSHRDTSC
-		mov	ecx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
-		call	?track@calls_collector@micro_profiler@@QAEXUcall_record@2@@Z
-		POPREGS
-		ret
-	_profile_enter	endp
 
-	_profile_exit	proc
-		PUSHREGS
-		push 0
+		mov	ecx, [_g_collector_ptr]
+		push	[esp + 0Ch]
 		PUSHRDTSC
-		mov	ecx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
-		call	?track@calls_collector@micro_profiler@@QAEXUcall_record@2@@Z
+		lea	edx, [esp + 18h]
+		call	?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z
+
 		POPREGS
 		ret
-	_profile_exit	endp
+	__penter	endp
+
+	__pexit proc
+		PUSHREGS
+
+		mov	ecx, [_g_collector_ptr]
+		PUSHRDTSC
+		lea	edx, [esp + 14h]
+		call	?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z
+
+		POPREGS
+		ret
+	__pexit	endp
 ELSEIF _M_X64
 	.code
 
-	extrn ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z:near
-	extrn ?_instance@calls_collector@micro_profiler@@0V12@A:qword
+	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z:near
+	extrn ?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@PEAPEBX_J@Z:near
+	extern g_collector_ptr:qword
 
 	PUSHREGS	macro
 		push	rax
@@ -100,35 +106,38 @@ ELSEIF _M_X64
 		or		rdx, rax
 	endm
 
-	profile_enter	proc
+	_penter	proc
 		PUSHREGS
-		lea	rsp, [rsp - 20h]
+		sub	rsp, 20h
 
+		mov	rcx, [g_collector_ptr]
 		RDTSC64
-		mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
-		mov	r8, qword ptr [rsp + 60h]
-		call	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
+		mov	r8, rdx
+		lea	rdx, qword ptr [rsp + 60h]
+		mov r9, [rdx]
+		call ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z
 
-		lea	rsp, [rsp + 20h]
+		add	rsp, 20h
 		POPREGS
 		ret
-	profile_enter	endp
+	_penter	endp
 
-	profile_exit	proc
+	_pexit	proc
 		PUSHREGS
 		movdqu	[rsp - 10h], xmm0
 		sub	rsp, 30h
 
-		mov	rcx, offset ?_instance@calls_collector@micro_profiler@@0V12@A
-		xor	r8, r8
+		mov	rcx, [g_collector_ptr]
 		RDTSC64
-		call	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
+		mov	r8, rdx
+		lea	rdx, qword ptr [rsp + 60h]
+		call	?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@PEAPEBX_J@Z
 
 		add	rsp, 30h
 		movdqu	xmm0, [rsp - 10h]
 		POPREGS
 		ret
-	profile_exit	endp
+	_pexit	endp
 ENDIF
 
 end

@@ -29,14 +29,16 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\collector\src\collector.lib.vcxproj">
       <Project>{ed61e2d0-f586-4b4e-9ce6-bae8f03dbbc7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\libraries\wpl\src\wpl.ui\wpl.ui.vcxproj">
-      <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>
+    <ProjectReference Include="..\..\ipc\src\ipc.vcxproj">
+      <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libraries\wpl\src\wpl.mt\wpl.mt.vcxproj">
+      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
     </ProjectReference>
     <ProjectReference Include="..\src\frontend.lib.vcxproj">
       <Project>{15AD9007-29B9-462F-B7BE-A433B6E83EC9}</Project>
@@ -56,7 +58,6 @@
     <ClCompile Include="main.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="SymbolResolverTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

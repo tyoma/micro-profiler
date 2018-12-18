@@ -26,5 +26,6 @@
 
 namespace micro_profiler
 {
+	std::wstring get_current_executable();
 	module_info get_module_info(const void *address);
 }

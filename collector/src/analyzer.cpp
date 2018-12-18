@@ -38,7 +38,7 @@ namespace micro_profiler
 	analyzer::const_iterator analyzer::end() const throw()
 	{	return _statistics.end();	}
 
-	void analyzer::accept_calls(unsigned int threadid, const call_record *calls, size_t count)
+	void analyzer::accept_calls(mt::thread::id threadid, const call_record *calls, size_t count)
 	{
 		stacks_container::iterator i = _stacks.find(threadid);
 

@@ -31,6 +31,10 @@ namespace micro_profiler
 	};
 #pragma pack(pop)
 
+	typedef unsigned char byte;
 	typedef std::function<bool(const void *buffer, size_t size)> channel_t;
+	typedef unsigned long long int count_t;
 	typedef std::function<channel_t ()> frontend_factory_t;
+	typedef long long timestamp_t;
+	typedef unsigned long long int long_address_t;
 }

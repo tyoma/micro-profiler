@@ -7,6 +7,9 @@
     <ClCompile Include="ipc_server.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="channel_client.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\client.h" />
@@ -14,6 +17,7 @@
     <ClInclude Include="common.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\channel_client.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

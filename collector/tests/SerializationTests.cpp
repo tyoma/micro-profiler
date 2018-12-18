@@ -38,7 +38,7 @@ namespace micro_profiler
 					{	12330, (void *)0	},
 				};
 
-				a.accept_calls(2, trace, array_size(trace));
+				a.accept_calls(mt::thread::id(), trace, array_size(trace));
 
 				// ACT
 				s(a);

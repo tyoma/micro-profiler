@@ -3,4 +3,10 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="config.props" />
   </ImportGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <FloatingPointModel>Fast</FloatingPointModel>
+    </ClCompile>
+  </ItemDefinitionGroup>
 </Project>

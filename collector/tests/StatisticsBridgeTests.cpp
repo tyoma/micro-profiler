@@ -1,9 +1,11 @@
 #include <collector/statistics_bridge.h>
 
-#include <test-helpers/helpers.h>
 #include "mocks.h"
 
 #include <algorithm>
+#include <collector/calibration.h>
+#include <common/time.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -16,6 +18,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			const overhead c_overhead = { 17, 0 };
+
 			bool dummy(const void *, size_t)
 			{	return true;	}
 
@@ -27,31 +31,44 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( StatisticsBridgeTests )
-			vector<image> _images;
-			mocks::FrontendState _state;
-			shared_ptr<image_load_queue> _queue;
+			vector<image> images;
+			shared_ptr<mocks::Tracer> cc;
+			shared_ptr<mocks::frontend_state> state;
+			vector<mocks::statistics_map_detailed> update_log;
+			shared_ptr<image_load_queue> queue;
+			unsigned int ref_count;
 
 			init( CreateQueue )
 			{
-				image images[] = {
-					image(L"symbol_container_1.dll"),
-					image(L"symbol_container_2.dll"),
-					image(L"symbol_container_3_nosymbols.dll"),
+				image images_[] = {
+					image(L"symbol_container_1"),
+					image(L"symbol_container_2"),
+					image(L"symbol_container_3_nosymbols"),
 				};
 
-				_images.assign(images, array_end(images));
-				_queue.reset(new image_load_queue);
+				images.assign(images_, array_end(images_));
+				queue.reset(new image_load_queue);
+			}
+
+
+			init( InitializeFrontendMock )
+			{
+				ref_count = 0;
+				cc.reset(new mocks::Tracer);
+				state.reset(new mocks::frontend_state(cc));
+				state->constructed = [this] { ++ref_count; };
+				state->destroyed = [this] { --ref_count; };
+				state->updated = [this] (const mocks::statistics_map_detailed &u) { update_log.push_back(u); };
 			}
 
 
 			test( ConstructingBridgeInvokesFrontendFactory )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
 				bool created = false;
 
 				// ACT
-				statistics_bridge b(cc, bind(&VoidCreationFactory, ref(created)), _queue);
+				statistics_bridge b(*cc, c_overhead, bind(&VoidCreationFactory, ref(created)), queue);
 
 				// ASSERT
 				assert_is_true(created);
@@ -60,88 +77,86 @@ namespace micro_profiler
 
 			test( BridgeHoldsFrontendForALifetime )
 			{
-				// INIT
-				mocks::Tracer cc(10000);
-
 				// INIT / ACT
 				{
-					statistics_bridge b(cc, _state.MakeFactory(), _queue);
+					statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
 
 				// ASSERT
-					assert_equal(1u, _state.ref_count);
+					assert_equal(1u, ref_count);
+
+				// INIT / ACT
+				statistics_bridge b2(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+
+				// ASSERT
+				assert_equal(2u, ref_count);
 
 				// ACT (dtor)
 				}
 
 				// ASSERT
-				assert_equal(0u, _state.ref_count);
+				assert_equal(0u, ref_count);
 			}
 
 
 			test( FrontendIsInitializedAtBridgeConstruction )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
+				initialization_data process_init;
+
+				state->initialized = [&] (const initialization_data &id) { process_init = id; };
 
 				// ACT
-				statistics_bridge b(cc, _state.MakeFactory(), _queue);
+				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
 
 				// ASSERT
-				timestamp_t real_ticks_per_second = ticks_per_second();
-
-				assert_equal(get_current_process_executable(), _state.process_init.executable);
-				assert_is_true(90 * real_ticks_per_second / 100
-					< _state.process_init.ticks_per_second && _state.process_init.ticks_per_second
-					< 110 * real_ticks_per_second / 100);
+				assert_equal(get_current_process_executable(), process_init.executable);
+				assert_approx_equal(ticks_per_second(), process_init.ticks_per_second, 0.01);
 			}
 
 
 			test( FrontendUpdateIsNotCalledIfNoUpdates )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
-				statistics_bridge b(cc, _state.MakeFactory(), _queue);
+				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
 
 				// ACT
 				b.analyze();
 				b.update_frontend();
 
 				// ASSERT
-				assert_is_empty(_state.update_log);
+				assert_is_empty(update_log);
 			}
 
 
 			test( FrontendUpdateIsNotCalledIfNoAnalysisInvoked )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
-				statistics_bridge b(cc, _state.MakeFactory(), _queue);
+				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
-					{	10 + cc.profiler_latency(), (void *)(0)	},
+					{	10 + c_overhead.external, (void *)(0)	},
 				};
 
-				cc.Add(0, trace);
+				cc->Add(mt::thread::id(), trace);
 
 				// ACT
 				b.update_frontend();
 
 				// ASSERT
-				assert_is_empty(_state.update_log);
+				assert_is_empty(update_log);
 			}
 
 
 			test( FrontendUpdateClearsTheAnalyzer )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
-				statistics_bridge b(cc, _state.MakeFactory(), _queue);
+				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
-					{	10 + cc.profiler_latency(), (void *)(0)	},
+					{	10 + c_overhead.external, (void *)(0)	},
 				};
 
-				cc.Add(0, trace);
+				cc->Add(mt::thread::id(), trace);
 
 				b.analyze();
 				b.update_frontend();
@@ -150,34 +165,39 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				assert_equal(1u, _state.update_log.size());
+				assert_equal(1u, update_log.size());
 			}
 
 
 			test( CollectedCallsArePassedToFrontend )
 			{
 				// INIT
-				mocks::FrontendState state2;
-				mocks::Tracer cc1(10000), cc2(1000);
-				statistics_bridge b1(cc1, _state.MakeFactory(), _queue),
-					b2(cc2, state2.MakeFactory(), _queue);
+				vector<mocks::statistics_map_detailed> update_log1, update_log2;
+				mocks::Tracer cc1, cc2;
+				overhead o1 = { 23, 0, }, o2 = { 31, 0 };
+				shared_ptr<mocks::frontend_state> state1(new mocks::frontend_state(shared_ptr<void>())),
+					state2(new mocks::frontend_state(shared_ptr<void>()));
+				statistics_bridge b1(cc1, o1, bind(&mocks::frontend_state::create, state1), queue),
+					b2(cc2, o2, bind(&mocks::frontend_state::create, state2), queue);
 				call_record trace1[] = {
 					{	0, (void *)0x1223	},
-					{	10 + cc1.profiler_latency(), (void *)(0)	},
+					{	10 + o1.external, (void *)(0)	},
 					{	1000, (void *)0x1223	},
-					{	1029 + cc1.profiler_latency(), (void *)(0)	},
+					{	1029 + o1.external, (void *)(0)	},
 				};
 				call_record trace2[] = {
 					{	0, (void *)0x2223	},
-					{	13 + cc2.profiler_latency(), (void *)(0)	},
+					{	13 + o2.external, (void *)(0)	},
 					{	1000, (void *)0x3223	},
-					{	1017 + cc2.profiler_latency(), (void *)(0)	},
+					{	1017 + o2.external, (void *)(0)	},
 					{	2000, (void *)0x4223	},
-					{	2019 + cc2.profiler_latency(), (void *)(0)	},
+					{	2019 + o2.external, (void *)(0)	},
 				};
+				state1->updated = [&] (const mocks::statistics_map_detailed &u) { update_log1.push_back(u); };
+				state2->updated = [&] (const mocks::statistics_map_detailed &u) { update_log2.push_back(u); };
 
-				cc1.Add(0, trace1);
-				cc2.Add(0, trace2);
+				cc1.Add(mt::thread::id(), trace1);
+				cc2.Add(mt::thread::id(), trace2);
 
 				// ACT
 				b1.analyze();
@@ -186,121 +206,119 @@ namespace micro_profiler
 				b2.update_frontend();
 
 				// ASSERT
-				assert_equal(1u, _state.update_log.size());
-				assert_equal(1u, _state.update_log[0].update.size());
-				assert_equal(2u, _state.update_log[0].update[0x1223].times_called);
-				assert_equal(39, _state.update_log[0].update[0x1223].exclusive_time);
-				assert_equal(39, _state.update_log[0].update[0x1223].inclusive_time);
+				assert_equal(1u, update_log1.size());
+				assert_equal(1u, update_log1[0].size());
+				assert_equal(2u, update_log1[0][0x1223].times_called);
+				assert_equal(39, update_log1[0][0x1223].exclusive_time);
+				assert_equal(39, update_log1[0][0x1223].inclusive_time);
 
-				assert_equal(1u, state2.update_log.size());
-				assert_equal(3u, state2.update_log[0].update.size());
-				assert_equal(1u, state2.update_log[0].update[0x2223].times_called);
-				assert_equal(13, state2.update_log[0].update[0x2223].exclusive_time);
-				assert_equal(13, state2.update_log[0].update[0x2223].inclusive_time);
-				assert_equal(1u, state2.update_log[0].update[0x3223].times_called);
-				assert_equal(17, state2.update_log[0].update[0x3223].exclusive_time);
-				assert_equal(17, state2.update_log[0].update[0x3223].inclusive_time);
-				assert_equal(1u, state2.update_log[0].update[0x4223].times_called);
-				assert_equal(19, state2.update_log[0].update[0x4223].exclusive_time);
-				assert_equal(19, state2.update_log[0].update[0x4223].inclusive_time);
+				assert_equal(1u, update_log2.size());
+				assert_equal(3u, update_log2[0].size());
+				assert_equal(1u, update_log2[0][0x2223].times_called);
+				assert_equal(13, update_log2[0][0x2223].exclusive_time);
+				assert_equal(13, update_log2[0][0x2223].inclusive_time);
+				assert_equal(1u, update_log2[0][0x3223].times_called);
+				assert_equal(17, update_log2[0][0x3223].exclusive_time);
+				assert_equal(17, update_log2[0][0x3223].inclusive_time);
+				assert_equal(1u, update_log2[0][0x4223].times_called);
+				assert_equal(19, update_log2[0][0x4223].exclusive_time);
+				assert_equal(19, update_log2[0][0x4223].inclusive_time);
 			}
 
 
 			test( LoadedModulesAreReportedOnUpdate )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
-				statistics_bridge b(cc, _state.MakeFactory(), _queue);
+				vector<loaded_modules> loads;
+				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+
+				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
 
 				// ACT
-				(_queue)->load(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				(queue)->load(images.at(0).get_symbol_address("get_function_addresses_1"));
 				b.update_frontend();
 
 				// ASSERT
-				assert_equal(1u, _state.update_log.size());
-				assert_equal(1u, _state.update_log[0].image_loads.size());
+				assert_equal(1u, loads.size());
+				assert_equal(1u, loads[0].size());
 
-				assert_equal(_images.at(0).load_address(), _state.update_log[0].image_loads[0].load_address);
-				assert_not_equal(wstring::npos, _state.update_log[0].image_loads[0].path.find(L"symbol_container_1.dll"));
+				assert_equal(images.at(0).load_address(), loads[0][0].load_address);
+				assert_not_equal(wstring::npos, loads[0][0].path.find(L"symbol_container_1"));
 
 				// ACT
-				(_queue)->load(_images.at(1).get_symbol_address("get_function_addresses_2"));
-				(_queue)->load(_images.at(2).get_symbol_address("get_function_addresses_3"));
+				(queue)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
+				(queue)->load(images.at(2).get_symbol_address("get_function_addresses_3"));
 				b.update_frontend();
 
 				// ASSERT
-				assert_equal(2u, _state.update_log.size());
-				assert_equal(2u, _state.update_log[1].image_loads.size());
+				assert_equal(2u, loads.size());
+				assert_equal(2u, loads[1].size());
 
-				assert_equal(_images.at(1).load_address(), _state.update_log[1].image_loads[0].load_address);
-				assert_not_equal(wstring::npos, _state.update_log[1].image_loads[0].path.find(L"symbol_container_2.dll"));
-				assert_equal(_images.at(2).load_address(), _state.update_log[1].image_loads[1].load_address);
-				assert_not_equal(wstring::npos, _state.update_log[1].image_loads[1].path.find(L"symbol_container_3_nosymbols.dll"));
+				assert_equal(images.at(1).load_address(), loads[1][0].load_address);
+				assert_not_equal(wstring::npos, loads[1][0].path.find(L"symbol_container_2"));
+				assert_equal(images.at(2).load_address(), loads[1][1].load_address);
+				assert_not_equal(wstring::npos, loads[1][1].path.find(L"symbol_container_3_nosymbols"));
 			}
 
 
 			test( UnloadedModulesAreReportedOnUpdate )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
-				statistics_bridge b(cc, _state.MakeFactory(), _queue);
+				vector<unloaded_modules> unloads;
+				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+
+				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
 
 				// ACT
-				(_queue)->unload(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				(queue)->unload(images.at(0).get_symbol_address("get_function_addresses_1"));
 				b.update_frontend();
 
 				// ASSERT
-				assert_equal(1u, _state.update_log.size());
-				assert_equal(1u, _state.update_log[0].image_unloads.size());
+				assert_equal(1u, unloads.size());
+				assert_equal(1u, unloads[0].size());
 
-				assert_equal(_images.at(0).load_address(), _state.update_log[0].image_unloads[0]);
+				assert_equal(images.at(0).load_address(), unloads[0][0]);
 
 				// ACT
-				(_queue)->unload(_images.at(1).get_symbol_address("get_function_addresses_2"));
-				(_queue)->unload(_images.at(2).get_symbol_address("get_function_addresses_3"));
+				(queue)->unload(images.at(1).get_symbol_address("get_function_addresses_2"));
+				(queue)->unload(images.at(2).get_symbol_address("get_function_addresses_3"));
 				b.update_frontend();
 
 				// ASSERT
-				assert_equal(2u, _state.update_log.size());
-				assert_equal(2u, _state.update_log[1].image_unloads.size());
+				assert_equal(2u, unloads.size());
+				assert_equal(2u, unloads[1].size());
 
-				assert_equal(_images.at(1).load_address(), _state.update_log[1].image_unloads[0]);
-				assert_equal(_images.at(2).load_address(), _state.update_log[1].image_unloads[1]);
+				assert_equal(images.at(1).load_address(), unloads[1][0]);
+				assert_equal(images.at(2).load_address(), unloads[1][1]);
 			}
 
 
 			test( EventsAreReportedInLoadsUpdatesUnloadsOrder )
 			{
 				// INIT
-				mocks::Tracer cc(10000);
-				statistics_bridge b(cc, _state.MakeFactory(), _queue);
+				vector<int> order;
+				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
 				call_record trace[] = {
 					{	0, (void *)0x2223	},
 					{	2019, (void *)0	},
 				};
 
-				cc.Add(0, trace);
+				state->modules_loaded = [&] (const loaded_modules &) { order.push_back(0); };
+				state->updated = [&] (const mocks::statistics_map_detailed &) { order.push_back(1); };
+				state->modules_unloaded = [&] (const unloaded_modules &) { order.push_back(2); };
+
+				cc->Add(mt::thread::id(), trace);
 				b.analyze();
 
 				// ACT
-				(_queue)->load(_images.at(1).get_symbol_address("get_function_addresses_2"));
-				(_queue)->unload(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				(queue)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
+				(queue)->unload(images.at(0).get_symbol_address("get_function_addresses_1"));
 				b.update_frontend();
 
 				// ASSERT
-				assert_equal(3u, _state.update_log.size());
-				
-				assert_equal(1u, _state.update_log[0].image_loads.size());
-				assert_is_empty(_state.update_log[0].update);
-				assert_is_empty(_state.update_log[0].image_unloads);
-				
-				assert_is_empty(_state.update_log[1].image_loads);
-				assert_equal(1u, _state.update_log[1].update.size());
-				assert_is_empty(_state.update_log[1].image_unloads);
-				
-				assert_is_empty(_state.update_log[2].image_loads);
-				assert_is_empty(_state.update_log[2].update);
-				assert_equal(1u, _state.update_log[2].image_unloads.size());
+				int reference1[] = { 0, 1, 2, };
+
+				assert_equal(reference1, order);
 			}
 		end_test_suite
 	}

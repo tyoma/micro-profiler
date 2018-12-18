@@ -132,7 +132,7 @@ namespace micro_profiler
 
 	void tables_ui::on_selection_change(listview::index_type index, bool selected)
 	{
-		index = selected ? index : listview::npos;
+		index = selected ? index : listview::npos();
 		switch_linked(index);
 		_statistics_pc->select(index);
 	}
@@ -141,7 +141,7 @@ namespace micro_profiler
 	{
 		switch_linked(index);
 		_statistics_lv->select(index, true);
-		if (piechart::npos != index)
+		if (piechart::npos() != index)
 			_statistics_lv->ensure_visible(index);
 	}
 
@@ -162,20 +162,20 @@ namespace micro_profiler
 	}
 
 	void tables_ui::on_children_selection_change(wpl::ui::listview::index_type index, bool selected)
-	{	_children_pc->select(selected ? index : listview::npos);	}
+	{	_children_pc->select(selected ? index : listview::npos());	}
 
 	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
 	{
 		_children_lv->select(index, true);
-		if (piechart::npos != index)
+		if (piechart::npos() != index)
 			_children_lv->ensure_visible(index);
 	}
 
 	void tables_ui::switch_linked(wpl::ui::table_model::index_type index)
 	{
-		_children_statistics = index != wpl::ui::table_model::npos ? _statistics->watch_children(index)
+		_children_statistics = index != wpl::ui::table_model::npos() ? _statistics->watch_children(index)
 			: shared_ptr<linked_statistics>();
-		_parents_statistics = index != wpl::ui::table_model::npos ? _statistics->watch_parents(index)
+		_parents_statistics = index != wpl::ui::table_model::npos() ? _statistics->watch_parents(index)
 			: shared_ptr<linked_statistics>();
 		_children_lv->set_model(_children_statistics);
 		_children_pc->set_model(_children_statistics ? _children_statistics->get_column_series()

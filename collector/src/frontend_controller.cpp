@@ -20,13 +20,13 @@
 
 #include <collector/frontend_controller.h>
 
-#include <collector/statistics_bridge.h>
 #include <collector/entry.h>
+#include <collector/image_patch.h>
+#include <collector/statistics_bridge.h>
+#include <common/time.h>
+#include <common/module.h>
+#include <set>
 
-#include <windows.h>
-#include <wpl/mt/thread.h>
-
-using namespace wpl::mt;
 using namespace std;
 using namespace std::placeholders;
 
@@ -34,56 +34,77 @@ namespace micro_profiler
 {
 	namespace
 	{
-		shared_ptr<void> create_waitable_timer(int period, PTIMERAPCROUTINE routine, void *parameter)
+		class task
 		{
-			LARGE_INTEGER li_period = {};
-			shared_ptr<void> htimer(::CreateWaitableTimer(NULL, FALSE, NULL), &::CloseHandle);
+		public:
+			task(const function<void()> &f, timestamp_t period)
+				: _task(f), _period(period), _expires_at(period + clock())
+			{	}
 
-			li_period.QuadPart = -period * 10000;
-			::SetWaitableTimer(htimer.get(), &li_period, period, routine, parameter, FALSE);
-			return htimer;
-		}
+			timestamp_t execute(timestamp_t &t)
+			{
+				if (t >= _expires_at)
+				{
+					_task();
+					t = clock();
+					_expires_at = t + _period;
+				}
+				return _expires_at;
+			}
 
-		void __stdcall analyze(void *bridge, DWORD /*ignored*/, DWORD /*ignored*/)
-		{	static_cast<statistics_bridge *>(bridge)->analyze();	}
-
-		void __stdcall update(void *bridge, DWORD /*ignored*/, DWORD /*ignored*/)
-		{	static_cast<statistics_bridge *>(bridge)->update_frontend();	}
+		private:
+			function<void()> _task;
+			timestamp_t _period;
+			timestamp_t _expires_at;
+		};
 	}
 
-	class frontend_controller::profiler_instance : public handle, wpl::noncopyable
+	class frontend_controller::profiler_instance : public handle, noncopyable
 	{
 	public:
-		profiler_instance(const void *in_image_address, shared_ptr<image_load_queue> image_load_queue,
-			shared_ptr<volatile long> worker_refcount, shared_ptr<void> exit_event);
-		virtual ~profiler_instance();
+		profiler_instance(void *in_image_address, shared_ptr<image_load_queue> lqueue,
+			shared_ptr<ref_counter_t> worker_refcount, shared_ptr<mt::event> exit_event);
+		virtual ~profiler_instance() throw();
 
 	private:
 		const void *_in_image_address;
 		shared_ptr<image_load_queue> _image_load_queue;
-		shared_ptr<volatile long> _worker_refcount;
-		shared_ptr<void> _exit_event;
+		shared_ptr<ref_counter_t> _worker_refcount;
+		shared_ptr<mt::event> _exit_event;
+		std::auto_ptr<image_patch> _patch;
 	};
 
 
-	frontend_controller::profiler_instance::profiler_instance(const void *in_image_address,
-			shared_ptr<image_load_queue> image_load_queue_, shared_ptr<volatile long> worker_refcount,
-			shared_ptr<void> exit_event)
-		: _in_image_address(in_image_address), _image_load_queue(image_load_queue_), _worker_refcount(worker_refcount),
-			_exit_event(exit_event)
-	{	_image_load_queue->load(in_image_address);	}
+	extern "C" micro_profiler::calls_collector *g_collector_ptr;
 
-	frontend_controller::profiler_instance::~profiler_instance()
+	frontend_controller::profiler_instance::profiler_instance(void *in_image_address,
+			shared_ptr<image_load_queue> lqueue, shared_ptr<ref_counter_t> worker_refcount,
+			shared_ptr<mt::event> exit_event)
+		: _in_image_address(in_image_address), _image_load_queue(lqueue), _worker_refcount(worker_refcount),
+			_exit_event(exit_event)
+	{
+		module_info mi = get_module_info(in_image_address);
+		shared_ptr<image_info> ii(new offset_image_info(image_info::load(mi.path.c_str()), (size_t)mi.load_address));
+
+//		_patch.reset(new image_patch(ii, g_collector_ptr));
+//		_patch->apply_for([&] (const symbol_info &symbol) -> bool {
+//			return symbol.name != "_VEC_memcpy";
+//		});
+		_image_load_queue->load(in_image_address);
+	}
+
+	frontend_controller::profiler_instance::~profiler_instance() throw()
 	{
 		_image_load_queue->unload(_in_image_address);
-		if (0 == _InterlockedDecrement(_worker_refcount.get()))
-			::SetEvent(_exit_event.get());
+		if (1 == _worker_refcount->fetch_add(-1))
+			_exit_event->set();
 	}
 
 
-	frontend_controller::frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory)
-		: _collector(collector), _factory(factory), _image_load_queue(new image_load_queue),
-			_worker_refcount(new volatile long())			
+	frontend_controller::frontend_controller(const frontend_factory_t& factory, calls_collector_i &collector,
+			const overhead &overhead_)
+		: _factory(factory), _collector(collector), _overhead(overhead_), _image_load_queue(new image_load_queue),
+			_worker_refcount(new ref_counter_t(0))
 	{	}
 
 	frontend_controller::~frontend_controller()
@@ -92,20 +113,19 @@ namespace micro_profiler
 			_frontend_thread->detach();
 	}
 
-	handle *frontend_controller::profile(const void *in_image_address)
+	handle *frontend_controller::profile(void *in_image_address)
 	{
-		if (1 == _InterlockedIncrement(_worker_refcount.get()))
+		if (!_worker_refcount->fetch_add(1))
 		{
-			shared_ptr<void> exit_event(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
-			auto_ptr<thread> frontend_thread(new thread(bind(&frontend_controller::frontend_worker,
-				_frontend_thread.get(), _factory, &_collector, _image_load_queue, exit_event)));
+			shared_ptr<mt::event> exit_event(new mt::event);
+			auto_ptr<mt::thread> frontend_thread(new mt::thread(bind(&frontend_controller::frontend_worker,
+				_frontend_thread.get(), _factory, &_collector, _overhead, _image_load_queue, exit_event)));
 
 			_frontend_thread.release();
 
 			swap(_exit_event, exit_event);
 			swap(_frontend_thread, frontend_thread);
 		}
-
 		return new profiler_instance(in_image_address, _image_load_queue, _worker_refcount, _exit_event);
 	}
 
@@ -113,27 +133,45 @@ namespace micro_profiler
 	{
 		if (_exit_event && _frontend_thread.get())
 		{
-			::SetEvent(_exit_event.get());
+			_exit_event->set();
 			_frontend_thread->join();
+			_frontend_thread.reset();
 		}
 	}
 
-	void frontend_controller::frontend_worker(thread *previous_thread, const frontend_factory_t &factory,
-		calls_collector_i *collector, const shared_ptr<image_load_queue> &image_load_queue,
-		const shared_ptr<void> &exit_event)
+	void frontend_controller::frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
+		calls_collector_i *collector, const overhead &overhead_, const shared_ptr<image_load_queue> &lqueue,
+		const shared_ptr<mt::event> &exit_event)
 	{
 		if (previous_thread)
 			previous_thread->join();
 		delete previous_thread;
 
-		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+//		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
-		statistics_bridge b(*collector, factory, image_load_queue);
-		shared_ptr<void> analyzer_timer(create_waitable_timer(10, &analyze, &b));
-		shared_ptr<void> sender_timer(create_waitable_timer(67, &update, &b));
+		statistics_bridge b(*collector, overhead_, factory, lqueue);
+		timestamp_t t = clock();
 
-		while (WAIT_IO_COMPLETION == ::WaitForSingleObjectEx(exit_event.get(), INFINITE, TRUE))
-		{	}
+		task tasks[] = {
+			task(bind(&statistics_bridge::analyze, &b), 10),
+			task(bind(&statistics_bridge::update_frontend, &b), 67),
+		};
+
+		for (mt::milliseconds p(0); !exit_event->wait(p); )
+		{
+			timestamp_t expires_at = numeric_limits<timestamp_t>::max();
+
+			t = clock();
+			for (task *i = tasks; i != tasks + sizeof(tasks) / sizeof(task); ++i)
+			{
+				timestamp_t next_at = i->execute(t);
+
+				if (next_at < expires_at)
+					expires_at = next_at;
+			}
+			p = mt::milliseconds(expires_at > t ? expires_at - t : 0);
+		}
+
 		b.analyze();
 		b.update_frontend();
 	}

@@ -1,17 +1,16 @@
 #include <frontend/frontend_manager.h>
 
-#include <collector/channel_client.h>
 #include <common/serialization.h>
+#include <common/symbol_resolver.h>
 #include <frontend/function_list.h>
-#include <frontend/symbol_resolver.h>
-
-#include <test-helpers/helpers.h>
+#include <ipc/channel_client.h>
 
 #include <algorithm>
 #include <strmd/serializer.h>
+#include <test-helpers/com.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
-#include <wpl/mt/synchronization.h>
 
 using namespace std;
 using namespace placeholders;
@@ -313,7 +312,7 @@ namespace micro_profiler
 				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				channel_t c = open_channel(id);
-				image images[] = { image(L"symbol_container_1.dll"), image(L"symbol_container_2.dll"), };
+				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
 				module_info mi[] = {
 					{ images[0].load_address(), images[0].absolute_path() },
 					{ images[1].load_address(), images[1].absolute_path() },
@@ -351,9 +350,9 @@ namespace micro_profiler
 					_1, _2));
 				channel_t c = open_channel(id);
 				image images[] = {
-					image(L"symbol_container_1.dll"),
-					image(L"symbol_container_2.dll"),
-					image(L"symbol_container_3_nosymbols.dll"),
+					image(L"symbol_container_1"),
+					image(L"symbol_container_2"),
+					image(L"symbol_container_3_nosymbols"),
 				};
 				module_info mi[] = {
 					{ images[0].load_address(), images[0].absolute_path() },
@@ -419,7 +418,7 @@ namespace micro_profiler
 					channels.push_back(open_channel(id));
 					write(channels.back(), init, make_initialization_data(L"", 1));
 				}
- 				clients_ready.signal();
+ 				clients_ready.set();
 				server_ready.wait();
 				for (size_t i = 0; i != channels.size(); ++i)
 				{
@@ -428,20 +427,20 @@ namespace micro_profiler
 						failed_sends.push_back(i);
 				}
 				channels.clear();
- 				clients_ready.signal();
+ 				clients_ready.set();
 			}
 
 			test( FrontendsAreDisconnectedWhenManagerIsReleased )
 			{
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(id, &dummy_ui_factory);
-				wpl::mt::thread t(bind(&FrontendManagerTests::try_send, this, 2));
+				mt::thread t(bind(&FrontendManagerTests::try_send, this, 2));
 
 				clients_ready.wait();
 
 				// ACT
 				m.reset();
-				server_ready.signal();
+				server_ready.set();
 				clients_ready.wait();
 				t.join();
 
@@ -457,14 +456,14 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
-				wpl::mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
+				mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
 
 				clients_ready.wait();
 
 				// ACT
 				_ui_creation_log[0]->emulate_close();
 				_ui_creation_log[2]->emulate_close();
-				server_ready.signal();
+				server_ready.set();
 				clients_ready.wait();
 				t.join();
 
@@ -726,11 +725,11 @@ namespace micro_profiler
 				channel_t c = open_channel(id);
 
 				// ACT
-				write(c, init, make_initialization_data(L"c:\\dev\\micro-profiler.dll", 1));
+				write(c, init, make_initialization_data(L"c:\\dev\\micro-profiler", 1));
 
 				// ACT / ASSERT
 				assert_not_null(m->get_instance(0));
-				assert_equal(L"c:\\dev\\micro-profiler.dll", m->get_instance(0)->executable);
+				assert_equal(L"c:\\dev\\micro-profiler", m->get_instance(0)->executable);
 				assert_equal(_ui_creation_log[0]->model, m->get_instance(0)->model);
 				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
 			}
@@ -741,13 +740,13 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(id, bind(&FrontendManagerTests::log_ui_creation_w, this,
 					_1, _2));
-				wpl::mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
+				mt::thread t(bind(&FrontendManagerTests::try_send, this, 3));
 
 				clients_ready.wait();
 
 				// ACT
 				m->close_all();
-				server_ready.signal();
+				server_ready.set();
 				clients_ready.wait();
 				t.join();
 

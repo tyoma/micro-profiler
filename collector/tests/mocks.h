@@ -1,11 +1,9 @@
 #pragma once
 
+#include <common/noncopyable.h>
 #include <common/protocol.h>
 #include <common/types.h>
 #include <collector/calls_collector.h>
-
-#include <wpl/mt/synchronization.h>
-#include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
@@ -16,62 +14,88 @@ namespace micro_profiler
 			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
 			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
 
-			struct FrontendState : wpl::noncopyable
+			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>
 			{
-				struct ReceivedEntry;
+			public:
+				explicit frontend_state(const std::shared_ptr<void> &ownee = std::shared_ptr<void>());
 
-				explicit FrontendState(const std::function<void()>& oninitialized = std::function<void()>());
+				channel_t create();
 
-				frontend_factory_t MakeFactory();
+			public:
+				std::function<void ()> constructed;
+				std::function<void ()> destroyed;
 
-				wpl::mt::event_flag update_lock;
-				std::function<void()> oninitialized;
+				std::function<void (const initialization_data &id)> initialized;
+				std::function<void (const loaded_modules &m)> modules_loaded;
+				std::function<void (const statistics_map_detailed &u)> updated;
+				std::function<void (const unloaded_modules &m)> modules_unloaded;
 
-				// Collected data
-				initialization_data process_init;
-
-				std::vector<ReceivedEntry> update_log;
-				wpl::mt::event_flag updated;
-				wpl::mt::event_flag modules_state_updated;
-
-				size_t ref_count;
-			};
-			
-
-			struct FrontendState::ReceivedEntry
-			{
-				loaded_modules image_loads;
-				statistics_map_detailed update;
-				unloaded_modules image_unloads;
+			private:
+				std::shared_ptr<void> _ownee;
 			};
 
 
 			class Tracer : public calls_collector_i
 			{
 			public:
-				explicit Tracer(timestamp_t latency = 0);
-				virtual ~Tracer() throw();
-
 				template <size_t size>
-				void Add(wpl::mt::thread::id threadid, call_record (&array_ptr)[size]);
+				void Add(mt::thread::id threadid, call_record (&array_ptr)[size]);
 
 				virtual void read_collected(acceptor &a);
-				virtual timestamp_t profiler_latency() const throw();
 
 			private:
-				typedef std::unordered_map< wpl::mt::thread::id, std::vector<call_record> > TracesMap;
+				typedef std::unordered_map< mt::thread::id, std::vector<call_record> > TracesMap;
 
-				timestamp_t _latency;
 				TracesMap _traces;
-				mutex _mutex;
+				mt::mutex _mutex;
 			};
 
 
 
-			template <size_t size>
-			inline void Tracer::Add(wpl::mt::thread::id threadid, call_record (&trace_chunk)[size])
+			template <typename ArchiveT>
+			inline void serialize(ArchiveT &a, frontend_state &state)
 			{
-				scoped_lock l(_mutex);
+				commands c;
+				initialization_data id;
+				loaded_modules lm;
+				statistics_map_detailed u;
+				unloaded_modules um;
+
+				a(c);
+				switch (c)
+				{
+				case init:
+					if (state.initialized)
+						a(id), state.initialized(id);
+					break;
+
+				case modules_loaded:
+					if (state.modules_loaded)
+						a(lm), state.modules_loaded(lm);
+					break;
+
+				case update_statistics:
+					if (state.updated)
+						a(u), state.updated(u);
+					break;
+
+				case modules_unloaded:
+					if (state.modules_unloaded)
+						a(um), state.modules_unloaded(um);
+					break;
+				}
+			}
+
+
+			inline frontend_state::frontend_state(const std::shared_ptr<void> &ownee)
+				: _ownee(ownee)
+			{	}
+
+
+			template <size_t size>
+			inline void Tracer::Add(mt::thread::id threadid, call_record (&trace_chunk)[size])
+			{
+				mt::lock_guard<mt::mutex> l(_mutex);
 				_traces[threadid].insert(_traces[threadid].end(), trace_chunk, trace_chunk + size);
 			}
 		}

@@ -20,10 +20,14 @@
 
 #include <crtdbg.h>
 
-#include <collector/channel_client.h>
 #include <collector/frontend_controller.h>
 #include <collector/entry.h>
 #include <common/constants.h>
+#include <common/memory.h>
+#include <common/string.h>
+#include <ipc/channel_client.h>
+#include <mt/atomic.h>
+#include <patcher/src.x86/assembler_intel.h>
 
 #include <windows.h>
 
@@ -33,53 +37,48 @@ namespace micro_profiler
 {
 	namespace
 	{
-#ifdef _M_IX86
-		unsigned char g_exitprocess_patch[] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
-		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 1);
-#elif _M_X64
-		unsigned char g_exitprocess_patch[] = { 0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xE0 };
-		void **g_exitprocess_patch_jmp_address = reinterpret_cast<void **>(g_exitprocess_patch + 2);
-#endif
+		typedef intel::jmp_rel_imm32 jmp;
+
+		const size_t c_trace_limit = 5000000;
+		calls_collector g_collector(c_trace_limit);
 		auto_ptr<frontend_controller> g_frontend_controller;
 		void *g_exitprocess_address = 0;
-		volatile long g_patch_lockcount = 0;
+		byte g_backup[sizeof(jmp)];
+		mt::atomic<int> g_patch_lockcount(0);
 
-		void Patch(void *address, void *patch, size_t size)
+		void detour(void *target_function, void *where, byte (&backup)[sizeof(jmp)])
 		{
-			DWORD old_mode;
-			vector<unsigned char> buffer(size);
+			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
+			mem_copy(backup, target_function, sizeof(jmp));
+			static_cast<jmp *>(target_function)->init(where);
+		}
 
-			if (::VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &old_mode))
-			{
-				memcpy(&buffer[0], address, size);
-				memcpy(address, patch, size);
-				memcpy(patch, &buffer[0], size);
-				::FlushInstructionCache(::GetCurrentProcess(), address, size);
-				::VirtualProtect(address, size, old_mode, &old_mode);
-			}
+		void restore(void *target_function, byte (&backup)[sizeof(jmp)])
+		{
+			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
+			mem_copy(target_function, backup, sizeof(jmp));
 		}
 
 		void WINAPI ExitProcessHooked(UINT exit_code)
 		{
-			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
+			restore(g_exitprocess_address, g_backup);
 			g_frontend_controller->force_stop();
 			::ExitProcess(exit_code);
 		}
 
 		void PatchExitProcess()
 		{
-			shared_ptr<void> hkernel(::LoadLibraryW(L"kernel32.dll"), &::FreeLibrary);
-
+			shared_ptr<void> hkernel(::LoadLibraryW(L"kernel32"), &::FreeLibrary);
 			g_exitprocess_address = ::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "ExitProcess");
-			*g_exitprocess_patch_jmp_address = &ExitProcessHooked;
-			Patch(g_exitprocess_address, g_exitprocess_patch, sizeof(g_exitprocess_patch));
+			detour(g_exitprocess_address, &ExitProcessHooked, g_backup);
 		}
 	}
 
 	class isolation_aware_channel_factory
 	{
 	public:
-		explicit isolation_aware_channel_factory(HINSTANCE hinstance)
+		explicit isolation_aware_channel_factory(HINSTANCE hinstance, const vector<guid_t> &candidate_ids)
+			: _candidate_ids(candidate_ids)
 		{
 			ACTCTX ctx = { sizeof(ACTCTX), };
 
@@ -93,15 +92,11 @@ namespace micro_profiler
 		{
 			shared_ptr<void> lock = lock_context();
 
-			try
-			{
-				return open_channel(c_integrated_frontend_id);
-			}
-			catch (const channel_creation_exception &)
+			for (vector<guid_t>::const_iterator i = _candidate_ids.begin(); i != _candidate_ids.end(); ++i)
 			{
 				try
 				{
-					return open_channel(c_standalone_frontend_id);
+					return open_channel(*i);
 				}
 				catch (const channel_creation_exception &)
 				{
@@ -111,15 +106,12 @@ namespace micro_profiler
 		}
 
 	private:
-		static void deactivate_context(void *cookie)
-		{	::DeactivateActCtx(0, reinterpret_cast<ULONG_PTR>(cookie));	}
-
 		shared_ptr<void> lock_context() const
 		{
 			ULONG_PTR cookie;
 
 			::ActivateActCtx(_activation_context.get(), &cookie);
-			return shared_ptr<void>(reinterpret_cast<void*>(cookie), &deactivate_context);
+			return shared_ptr<void>(reinterpret_cast<void*>(cookie), bind(&::DeactivateActCtx, 0, cookie));
 		}
 
 		static bool null(const void * /*buffer*/, size_t /*size*/)
@@ -127,20 +119,29 @@ namespace micro_profiler
 
 	private:
 		shared_ptr<void> _activation_context;
+		vector<guid_t> _candidate_ids;
 	};
 }
+
+extern "C" micro_profiler::calls_collector *g_collector_ptr = &micro_profiler::g_collector;
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reserved*/)
 {
 	using namespace micro_profiler;
+
+	vector<guid_t> candidate_ids;
 
 	switch (reason)
 	{
 	case DLL_PROCESS_ATTACH:
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-		g_frontend_controller.reset(new frontend_controller(*calls_collector::instance(),
-			isolation_aware_channel_factory(hinstance)));
+		if (const char *env_id = getenv(c_frontend_id_env))
+			candidate_ids.push_back(from_string(env_id));
+		candidate_ids.push_back(c_integrated_frontend_id);
+		candidate_ids.push_back(c_standalone_frontend_id);
+		g_frontend_controller.reset(new frontend_controller(isolation_aware_channel_factory(hinstance, candidate_ids),
+			g_collector, calibrate_overhead(g_collector, c_trace_limit / 10)));
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -150,11 +151,11 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reser
 	return TRUE;
 }
 
-extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(const void *image_address)
+extern "C" micro_profiler::handle * MPCDECL micro_profiler_initialize(void *image_address)
 {
 	using namespace micro_profiler;
 
-	if (1 == _InterlockedIncrement(&g_patch_lockcount))
+	if (0 == g_patch_lockcount.fetch_add(1))
 	{
 		HMODULE dummy;
 

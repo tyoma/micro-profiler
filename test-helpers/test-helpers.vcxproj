@@ -28,20 +28,24 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemDefinitionGroup>
-    <Lib>
-      <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
-    </Lib>
-  </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="helpers.cpp">
+    <ClCompile>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="com.cpp" />
+    <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="helpers_win32.cpp" />
+    <ClCompile Include="mocks_com.cpp" />
+    <ClCompile Include="thread_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="com.h" />
     <ClInclude Include="helpers.h" />
+    <ClInclude Include="mocks_com.h" />
+    <ClInclude Include="thread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

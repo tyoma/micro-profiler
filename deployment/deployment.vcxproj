@@ -1,55 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<ItemGroup Label="ProjectConfigurations" Condition="'$(VisualStudioVersion)'=='10.0'">
-		<ProjectConfiguration Include="Release|Win32">
-			<Configuration>Release</Configuration>
-			<Platform>Win32</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Release|x64">
-			<Configuration>Release</Configuration>
-			<Platform>x64</Platform>
-		</ProjectConfiguration>
-	</ItemGroup>
-	<PropertyGroup Label="Globals">
-		<ProjectGuid>{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}</ProjectGuid>
-	</PropertyGroup>
-	<Import Project="$(SolutionDir)build.props\platform.props" />
-	<PropertyGroup Label="Configuration">
-		<ConfigurationType>Utility</ConfigurationType>
-	</PropertyGroup>
-	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-	<ImportGroup Label="PropertySheets">
-		<Import Project="$(SolutionDir)build.props\config.props" />
-	</ImportGroup>
-	<PropertyGroup>
-		<OutDir>$(SetupDir)</OutDir>
-		<ExtensionsToDeleteOnClean>*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
-		<TargetName>micro-profiler.deploy_$(Platform2)</TargetName>
-		<TargetExt>.zip</TargetExt>
-	</PropertyGroup>
-	<ItemGroup>
-		<Pack Include="$(BinDir)playground.*" />
-		<Pack Include="$(BinDir)micro-profiler_*.*" />
-		<Pack Include="$(BinDir)micro-profiler.stub.*" />
-		<Pack Include="$(BinDir)micro-profiler.pkgdef" />
-		<Pack Include="$(BinDir)extension.vsixmanifest" />
-		<Pack Include="$(BinDir)*.cpp" />
-		<Pack Include="$(BinDir)*.h" />
-	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="$(SolutionDir)micro-profiler\micro-profiler.vcxproj">
-			<Project>{d5d49128-2510-4a14-9a0f-9f8f0abad700}</Project>
-		</ProjectReference>
-		<ProjectReference Include="$(SolutionDir)micro-profiler\micro-profiler.stub.vcxproj">
-			<Project>{3b1f8640-9f9a-4989-a074-73590a82a26c}</Project>
-		</ProjectReference>
-		<ProjectReference Include="$(SolutionDir)playground\playground.vcxproj">
-			<Project>{3d930790-1e56-4749-9b09-731e22556cb1}</Project>
-		</ProjectReference>
-	</ItemGroup>
-	<Target Name="Compress" AfterTargets="Midl">
-		<Message Text="%(Pack.Identity)" />
-		<Exec Command="mkzip &quot;%(Pack.Identity)&quot; &quot;$(OutDir)$(TargetName)$(TargetExt)&quot;" />
-	</Target>
-	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ItemGroup Label="ProjectConfigurations" Condition="'$(VisualStudioVersion)'=='10.0'">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)build.props\platform.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(SolutionDir)build.props\config.props" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>$(SetupDir)</OutDir>
+    <ExtensionsToDeleteOnClean>*.cmd;*.txt;*.cdf;*.cache;*.obj;*.ilk;*.resources;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.meta;*.tlog;*.manifest;*.res;*.pch;*.exp;*.idb;*.rep;*.xdc;*.pdb;*_manifest.rc;*.bsc;*.sbr;*.xml;*.metagen;*.bi</ExtensionsToDeleteOnClean>
+    <TargetName>micro-profiler.deploy_$(Platform2)</TargetName>
+    <TargetExt>.zip</TargetExt>
+  </PropertyGroup>
+  <ItemGroup>
+    <Pack Include="$(BinDir)playground.*" />
+    <Pack Include="$(BinDir)micro-profiler_*.*" />
+    <Pack Include="$(BinDir)micro-profiler.pkgdef" />
+    <Pack Include="$(BinDir)extension.vsixmanifest" />
+    <Pack Include="$(BinDir)*.cpp" />
+    <Pack Include="$(BinDir)*.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)micro-profiler\micro-profiler.vcxproj">
+      <Project>{d5d49128-2510-4a14-9a0f-9f8f0abad700}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)playground\playground.vcxproj">
+      <Project>{3d930790-1e56-4749-9b09-731e22556cb1}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="Compress" AfterTargets="Midl">
+    <Message Text="%(Pack.Identity)" />
+    <Exec Command="mkzip &quot;%(Pack.Identity)&quot; &quot;$(OutDir)$(TargetName)$(TargetExt)&quot;" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

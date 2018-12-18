@@ -51,7 +51,7 @@ namespace micro_profiler
 
 	void columns_model::store(hive &configuration) const
 	{
-		configuration.store(c_order_by, _sort_column != npos ? _sort_column : -1);
+		configuration.store(c_order_by, _sort_column != npos() ? _sort_column : -1);
 		configuration.store(c_order_direction, _sort_ascending ? 1 : 0);
 		for (vector<column>::const_iterator i = _columns.begin(); i != _columns.end(); ++i)
 		{
@@ -65,7 +65,7 @@ namespace micro_profiler
 	void columns_model::update(const hive &configuration)
 	{
 		load_int(configuration, c_order_by, _sort_column);
-		_sort_column = _sort_column < static_cast<index_type>(_columns.size()) ? _sort_column : npos;
+		_sort_column = _sort_column < static_cast<index_type>(_columns.size()) ? _sort_column : npos();
 		load_int(configuration, c_order_direction, _sort_ascending);
 		for (vector<column>::iterator i = _columns.begin(); i != _columns.end(); ++i)
 			if (shared_ptr<const hive> cc = configuration.open(i->id.c_str()))

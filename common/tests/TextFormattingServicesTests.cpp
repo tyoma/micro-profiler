@@ -19,6 +19,7 @@ namespace micro_profiler
 				return result;
 			}
 
+
 			test( EscapeZeroSecondsOnZero )
 			{
 				// INIT / ACT / ASSERT
@@ -63,8 +64,8 @@ namespace micro_profiler
 				assert_equal(L"1000s", format_interval_proxy(1000));
 				assert_equal(L"5123s", format_interval_proxy(5122.9));
 				assert_equal(L"9999s", format_interval_proxy(9999.4));
-				assert_equal(L"1e+004s", format_interval_proxy(10000));
-				assert_equal(L"-7.23e+004s", format_interval_proxy(-72300));
+				assert_equal(L"1e+04s", format_interval_proxy(10000));
+				assert_equal(L"-7.23e+04s", format_interval_proxy(-72300));
 			}
 
 

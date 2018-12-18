@@ -5,6 +5,6 @@
     <ClCompile Include="$(OutDir)micro-profiler.initializer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\_bin\Debug_x86\micro-profiler_Win32.lib" />
+    <Library Include="$(OutDir)micro-profiler_$(PlatformName).lib" />
   </ItemGroup>
 </Project>

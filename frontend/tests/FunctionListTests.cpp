@@ -1,10 +1,9 @@
 #include <frontend/function_list.h>
-#include <frontend/piechart.h>
 
 #include <test-helpers/helpers.h>
 
 #include <common/serialization.h>
-#include <frontend/symbol_resolver.h>
+#include <common/symbol_resolver.h>
 
 #include <iomanip>
 #include <strmd/serializer.h>
@@ -25,6 +24,7 @@ namespace micro_profiler
 		namespace 
 		{
 			timestamp_t test_ticks_per_second = 1;
+			const double c_tolerance = 0.000001;
 
 			template <typename T>
 			wstring to_string(const T &value)
@@ -180,7 +180,7 @@ namespace micro_profiler
 				for (table_model::index_type i = 0, c = m.get_count(); i != c; ++i)
 					if (m.get_text(i, 1, result), result == name)
 						return i;
-				return table_model::npos;
+				return table_model::npos();
 			}
 		}
 
@@ -264,7 +264,7 @@ namespace micro_profiler
 				assert_equal(0u, fl->get_count());
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(0u, ih.invalidations.back()); //check what's coming as event arg
-				assert_equal(table_model::npos, first->index());
+				assert_equal(table_model::npos(), first->index());
 
 				// INIT
 				_buffer.rewind();
@@ -376,10 +376,10 @@ namespace micro_profiler
 				for (table_model::index_type i = 0; i < expected.size(); ++i)
 					assert_equal(expected[i], i);
 
-				assert_not_equal(table_model::npos, idx1118);
-				assert_not_equal(table_model::npos, idx2229);
-				assert_not_equal(table_model::npos, idx5550);
-				assert_equal(table_model::npos, fl->get_index(1234));
+				assert_not_equal(table_model::npos(), idx1118);
+				assert_not_equal(table_model::npos(), idx2229);
+				assert_not_equal(table_model::npos(), idx5550);
+				assert_equal(table_model::npos(), fl->get_index(1234));
 
 				//Check twice. Kind of regularity check.
 				assert_equal(fl->get_index(1118), idx1118);
@@ -400,7 +400,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s1[2229]) = function_statistics(10, 3, 7, 5, 4);
 				static_cast<function_statistics &>(s2[1118]) = function_statistics(5, 0, 10, 7, 6);
 				static_cast<function_statistics &>(s2[5550]) = function_statistics(15, 1024, 1011, 723, 215);
-				static_cast<function_statistics &>(s3[1118]) = function_statistics(1, 0, 4, 4, 4);
+				static_cast<function_statistics &>(s3[1118]) = function_statistics(100111222333, 0, 17000, 14000, 4);
 
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				fl->set_order(2, true); // by times called
@@ -452,7 +452,7 @@ namespace micro_profiler
 				assert_equal(3u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, fl->get_index(1118), L"0000045E", L"25", L"45s", L"40s", L"1.8s", L"1.6s", L"0", L"6s");
+				assert_row(*fl, fl->get_index(1118), L"0000045E", L"100111222357", L"1.7e+04s", L"1.4e+04s", L"170ns", L"140ns", L"0", L"6s");
 				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
 				assert_row(*fl, fl->get_index(5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
 
@@ -526,7 +526,7 @@ namespace micro_profiler
 				assert_row(*fl, fl->get_index(3118), L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0", L"3.23ms");
 				assert_row(*fl, fl->get_index(5550), L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0", L"2.35s");
 				assert_row(*fl, fl->get_index(4550), L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0", L"2347s");
-				assert_row(*fl, fl->get_index(6661), L"00001A05", L"1", L"6.55e+006s", L"2.35e+006s", L"6.55e+006s", L"2.35e+006s", L"0", L"2.35e+006s");
+				assert_row(*fl, fl->get_index(6661), L"00001A05", L"1", L"6.55e+06s", L"2.35e+06s", L"6.55e+06s", L"2.35e+06s", L"0", L"2.35e+06s");
 				
 				// ASSERT (boundary cases)
 				assert_row(*fl, fl->get_index(1990), L"000007C6", L"1", L"999ns", L"999ns", L"999ns", L"999ns", L"0", L"999ns");
@@ -538,7 +538,7 @@ namespace micro_profiler
 				assert_row(*fl, fl->get_index(4990), L"0000137E", L"1", L"999s", L"999s", L"999s", L"999s", L"0", L"999s");
 				assert_row(*fl, fl->get_index(5000), L"00001388", L"1", L"999.6s", L"999.6s", L"999.6s", L"999.6s", L"0", L"999.6s");
 				assert_row(*fl, fl->get_index(5990), L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0", L"9999s");
-				assert_row(*fl, fl->get_index(6000), L"00001770", L"1", L"1e+004s", L"1e+004s", L"1e+004s", L"1e+004s", L"0", L"1e+004s");
+				assert_row(*fl, fl->get_index(6000), L"00001770", L"1", L"1e+04s", L"1e+04s", L"1e+04s", L"1e+04s", L"0", L"1e+04s");
 			}
 
 
@@ -552,7 +552,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 3);
 				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 4);
 				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 5);
-				static_cast<function_statistics &>(s[3000]) = function_statistics(15233, 3, 65450, 13470, 6);
+				static_cast<function_statistics &>(s[3000]) = function_statistics(15233, 3, 65460, 13470, 6);
 				ser(s);
 
 				ih.bind_to_model(*fl);
@@ -580,8 +580,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); // s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); // s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); // s4
+				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); // s3
+				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); // s4
 
 				assert_equal(1u, t0.index());
 				assert_equal(2u, t1.index());
@@ -597,8 +597,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(2u, t0.index());
 				assert_equal(1u, t1.index());
@@ -614,8 +614,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 				
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -631,8 +631,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -648,8 +648,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -665,8 +665,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -682,8 +682,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -699,8 +699,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -716,8 +716,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(1u, t0.index());
 				assert_equal(2u, t1.index());
@@ -733,8 +733,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(2u, t0.index());
 				assert_equal(1u, t1.index());
@@ -750,8 +750,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(0u, t0.index());
 				assert_equal(2u, t1.index());
@@ -767,8 +767,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(3u, t0.index());
 				assert_equal(1u, t1.index());
@@ -784,8 +784,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -801,8 +801,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -818,8 +818,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -835,8 +835,8 @@ namespace micro_profiler
 
 				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
 				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+007s", L"3.23e+007s", L"1.67e+007s", L"1.62e+007s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+004s", L"1.35e+004s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
+				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -874,7 +874,7 @@ namespace micro_profiler
 				assert_equal(s.size(), fl->get_count());
 				assert_equal(dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
-										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"
+										L"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"
 										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
 										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
 
@@ -888,7 +888,7 @@ namespace micro_profiler
 										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
 										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
 										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
-										L"00000BAE\t2\t3.23333e+007\t3.345e+007\t1.61667e+007\t1.6725e+007\t2\t4\r\n"), result);
+										L"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"), result);
 			}
 
 
@@ -913,10 +913,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_children(2), out_of_range);
 				assert_throws(fl1->watch_children(20), out_of_range);
-				assert_throws(fl1->watch_children(table_model::npos), out_of_range);
+				assert_throws(fl1->watch_children(table_model::npos()), out_of_range);
 				assert_throws(fl2->watch_children(3), out_of_range);
 				assert_throws(fl2->watch_children(30), out_of_range);
-				assert_throws(fl2->watch_children(table_model::npos), out_of_range);
+				assert_throws(fl2->watch_children(table_model::npos()), out_of_range);
 			}
 
 
@@ -988,11 +988,11 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equal(1u, ls_0->get_count());
-				assert_not_equal(table_model::npos, find_row(*ls_0, L"00002001"));
+				assert_not_equal(table_model::npos(), find_row(*ls_0, L"00002001"));
 				assert_equal(3u, ls_1->get_count());
-				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002004"));
-				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002008"));
-				assert_not_equal(table_model::npos, find_row(*ls_1, L"00002011"));
+				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002004"));
+				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002008"));
+				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002011"));
 			}
 
 
@@ -1216,7 +1216,7 @@ namespace micro_profiler
 				fl = shared_ptr<functions_list>();
 
 				// ACT / ASSERT
-				assert_equal(trackable::npos, t->index());
+				assert_equal(trackable::npos(), t->index());
 			}
 
 
@@ -1241,10 +1241,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_parents(2), out_of_range);
 				assert_throws(fl1->watch_parents(20), out_of_range);
-				assert_throws(fl1->watch_parents(table_model::npos), out_of_range);
+				assert_throws(fl1->watch_parents(table_model::npos()), out_of_range);
 				assert_throws(fl2->watch_parents(3), out_of_range);
 				assert_throws(fl2->watch_parents(30), out_of_range);
-				assert_throws(fl2->watch_parents(table_model::npos), out_of_range);
+				assert_throws(fl2->watch_parents(table_model::npos()), out_of_range);
 			}
 
 
@@ -1696,20 +1696,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(4u, m->size());
-				assert_equal(12000.0, m->get_value(0));
-				assert_equal(127.0, m->get_value(1));
-				assert_equal(123.0, m->get_value(2));
-				assert_equal(12.0, m->get_value(3));
+				assert_approx_equal(12000.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(127.0, m->get_value(1), c_tolerance);
+				assert_approx_equal(123.0, m->get_value(2), c_tolerance);
+				assert_approx_equal(12.0, m->get_value(3), c_tolerance);
 
 				// ACT
 				fl->set_order(2, true);
 
 				// ASSERT
 				assert_equal(4u, m->size());
-				assert_equal(12000.0, m->get_value(3));
-				assert_equal(127.0, m->get_value(2));
-				assert_equal(123.0, m->get_value(1));
-				assert_equal(12.0, m->get_value(0));
+				assert_approx_equal(12000.0, m->get_value(3), c_tolerance);
+				assert_approx_equal(127.0, m->get_value(2), c_tolerance);
+				assert_approx_equal(123.0, m->get_value(1), c_tolerance);
+				assert_approx_equal(12.0, m->get_value(0), c_tolerance);
 			}
 
 
@@ -1743,10 +1743,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1, invalidated_count);
 				assert_equal(5u, m->size());
-				assert_equal(11001.0, m->get_value(1));
-				assert_equal(127.0, m->get_value(2));
-				assert_equal(123.0, m->get_value(3));
-				assert_equal(12.0, m->get_value(4));
+				assert_approx_equal(11001.0, m->get_value(1), c_tolerance);
+				assert_approx_equal(127.0, m->get_value(2), c_tolerance);
+				assert_approx_equal(123.0, m->get_value(3), c_tolerance);
+				assert_approx_equal(12.0, m->get_value(4), c_tolerance);
 			}
 
 
@@ -1773,14 +1773,14 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, m1->size());
-				assert_equal(0.254, m1->get_value(0));
-				assert_equal(0.026, m1->get_value(1));
-				assert_equal(0.024, m1->get_value(2));
+				assert_approx_equal(0.254, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.026, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.024, m1->get_value(2), c_tolerance);
 				assert_equal(4u, m2->size());
-				assert_equal(120.0, m2->get_value(0));
-				assert_equal(1.27, m2->get_value(1));
-				assert_equal(0.13, m2->get_value(2));
-				assert_equal(0.12, m2->get_value(3));
+				assert_approx_equal(120.0, m2->get_value(0), c_tolerance);
+				assert_approx_equal(1.27, m2->get_value(1), c_tolerance);
+				assert_approx_equal(0.13, m2->get_value(2), c_tolerance);
+				assert_approx_equal(0.12, m2->get_value(3), c_tolerance);
 			}
 
 
@@ -1808,40 +1808,40 @@ namespace micro_profiler
 				fl2->set_order(4, true);
 
 				// ASSERT
-				assert_equal(0.240, m1->get_value(0));
-				assert_equal(0.030, m1->get_value(1));
-				assert_equal(0.015, m2->get_value(0));
-				assert_equal(0.120, m2->get_value(1));
+				assert_approx_equal(0.240, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.030, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.015, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.120, m2->get_value(1), c_tolerance);
 
 				// ACT
 				fl1->set_order(5, false);
 				fl2->set_order(5, true);
 
 				// ASSERT
-				assert_equal(0.00032, m1->get_value(0));
-				assert_equal(0.00026, m1->get_value(1));
-				assert_equal(0.00013, m2->get_value(0));
-				assert_equal(0.00016, m2->get_value(1));
+				assert_approx_equal(0.00032, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.00026, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.00013, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.00016, m2->get_value(1), c_tolerance);
 
 				// ACT
 				fl1->set_order(6, false);
 				fl2->set_order(6, true);
 
 				// ASSERT
-				assert_equal(0.00030, m1->get_value(0));
-				assert_equal(0.00024, m1->get_value(1));
-				assert_equal(0.00012, m2->get_value(0));
-				assert_equal(0.00015, m2->get_value(1));
+				assert_approx_equal(0.00030, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.00024, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.00012, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.00015, m2->get_value(1), c_tolerance);
 
 				// ACT
 				fl1->set_order(8, false);
 				fl2->set_order(8, true);
 
 				// ASSERT
-				assert_equal(0.256, m1->get_value(0));
-				assert_equal(0.028, m1->get_value(1));
-				assert_equal(0.014, m2->get_value(0));
-				assert_equal(0.128, m2->get_value(1));
+				assert_approx_equal(0.256, m1->get_value(0), c_tolerance);
+				assert_approx_equal(0.028, m1->get_value(1), c_tolerance);
+				assert_approx_equal(0.014, m2->get_value(0), c_tolerance);
+				assert_approx_equal(0.128, m2->get_value(1), c_tolerance);
 			}
 
 
@@ -1865,15 +1865,15 @@ namespace micro_profiler
 				fl->set_order(5, false);
 
 				// ASSERT
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(1));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(1), c_tolerance);
 
 				// ACT
 				fl->set_order(6, false);
 
 				// ASSERT
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(1));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(1), c_tolerance);
 			}
 
 
@@ -1931,16 +1931,16 @@ namespace micro_profiler
 				// ACT / ASSERT
 				fl->set_order(2, true);
 				fl->set_order(0, true);
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(3));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
 				fl->set_order(2, true);
 				fl->set_order(1, false);
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(3));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
 				fl->set_order(2, true);
 				fl->set_order(7, true);
-				assert_equal(0.0, m->get_value(0));
-				assert_equal(0.0, m->get_value(3));
+				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
 			}
 
 
@@ -1972,8 +1972,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, m->size());
-				assert_equal(29.0, m->get_value(0));
-				assert_equal(31.0, m->get_value(1));
+				assert_approx_equal(29.0, m->get_value(0), c_tolerance);
+				assert_approx_equal(31.0, m->get_value(1), c_tolerance);
 
 				// ACT
 				ls = fl->watch_children(1);
@@ -1982,9 +1982,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, m->size());
-				assert_equal(1.12, m->get_value(0));
-				assert_equal(0.09, m->get_value(1));
-				assert_equal(0.03, m->get_value(2));
+				assert_approx_equal(1.12, m->get_value(0), c_tolerance);
+				assert_approx_equal(0.09, m->get_value(1), c_tolerance);
+				assert_approx_equal(0.03, m->get_value(2), c_tolerance);
 			}
 
 

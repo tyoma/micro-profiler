@@ -20,27 +20,22 @@
 
 #pragma once
 
+#include "types.h"
+
 #include <unordered_map>
 
 namespace micro_profiler
 {
-	typedef unsigned char byte;
-	typedef unsigned long long int count_t;
-	typedef long long timestamp_t;
-	typedef unsigned long long int long_address_t;
+	template <typename T, typename SizeT>
+	class range;
 
-#pragma pack(push, 4)
-	struct call_record
-	{
-		timestamp_t timestamp;
-		const void *callee;	// call address + sizeof(void *) + 1 bytes
-	};
-#pragma pack(pop)
+	typedef range<const byte, size_t> const_byte_range;
+	typedef range<byte, size_t> byte_range;
 
 	struct address_compare
 	{
 		size_t operator ()(unsigned int key) const throw();
-		size_t operator ()(unsigned long long int key) const throw();
+		size_t operator ()(long_address_t key) const throw();
 		size_t operator ()(const void *key) const throw();
 	};
 
@@ -74,17 +69,47 @@ namespace micro_profiler
 	{
 	};
 
+#pragma pack(push, 1)
+	template <typename T, typename SizeT>
+	class range
+	{
+	private:
+		typedef T value_type;
+
+	public:
+		template <typename U>
+		range(const range<U, SizeT> &u);
+		range(T *start, size_t length);
+
+		T *begin() const;
+		T *end() const;
+		SizeT length() const;
+		bool inside(const T *ptr) const;
+
+	private:
+		T *_start;
+		SizeT _length;
+	};
+#pragma pack(pop)	
 
 
 	// address_compare - inline definitions
 	inline size_t address_compare::operator ()(unsigned int key) const throw()
 	{	return (key >> 4) * 2654435761;	}
 
-	inline size_t address_compare::operator ()(unsigned long long int key) const throw()
+	inline size_t address_compare::operator ()(long_address_t key) const throw()
 	{	return static_cast<size_t>((key >> 4) * 0x7FFFFFFFFFFFFFFF);	}
 
 	inline size_t address_compare::operator ()(const void *key) const throw()
-	{	return (*this)(reinterpret_cast<size_t>(key));	}
+	{
+#pragma warning(push)
+#pragma warning(disable:4127)
+		if (sizeof(key) == 8)
+			return (*this)(static_cast<long_address_t>(reinterpret_cast<size_t>(key)));
+		else
+			return (*this)(static_cast<unsigned int>(reinterpret_cast<size_t>(key)));
+#pragma warning(pop)
+	}
 
 
 	// function_statistics - inline definitions
@@ -115,6 +140,34 @@ namespace micro_profiler
 			max_call_time = rhs.max_call_time;
 	}
 
+	
+	template <typename T, typename SizeT>
+	template <typename U>
+	inline range<T, SizeT>::range(const range<U, SizeT> &u)
+		: _start(u.begin()), _length(u.length())
+	{	}
+
+	template <typename T, typename SizeT>
+	inline range<T, SizeT>::range(T *start, size_t length)
+		: _start(start), _length(static_cast<SizeT>(length))
+	{	}
+
+	template <typename T, typename SizeT>
+	inline T *range<T, SizeT>::begin() const
+	{	return _start;	}
+
+	template <typename T, typename SizeT>
+	inline T *range<T, SizeT>::end() const
+	{	return _start + _length;	}
+
+	template <typename T, typename SizeT>
+	inline SizeT range<T, SizeT>::length() const
+	{	return _length;	}
+
+	template <typename T, typename SizeT>
+	inline bool range<T, SizeT>::inside(const T *ptr) const
+	{	return (begin() <= ptr) & (ptr < end());	}
+	
 
 	// helper methods - inline definitions
 	template <typename AddressT>

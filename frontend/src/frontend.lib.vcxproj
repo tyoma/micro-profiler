@@ -28,12 +28,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ItemDefinitionGroup>
-    <Lib>
-      <AdditionalDependencies>dbghelp.lib</AdditionalDependencies>
-    </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
@@ -48,10 +44,6 @@
     </ClCompile>
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="columns_model.cpp" />
-    <ClCompile Include="symbol_resolver.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <DisableSpecificWarnings>4091</DisableSpecificWarnings>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend.h" />
@@ -63,7 +55,6 @@
     <ClInclude Include="..\series.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
-    <ClInclude Include="..\symbol_resolver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

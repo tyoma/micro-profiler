@@ -131,13 +131,11 @@
 		<?if $(var.Platform) = "x64"?>
 			<Component Id="compCollectorDLL_x64" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes" Directory="TARGETDIR" Win64="yes">
 				<File Id="fileCollectorDLL_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.dll" Vital="yes" />
-				<File Id="fileCollectorStubDLL_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.stub.dll" Vital="yes" />
 			</Component>
 		<?endif?>
 
 		<Component Id="compCollectorDLL_x86" Guid="4EC2E786-D232-4EDF-940E-EC18DFFFADBB" KeyPath="yes" Directory="TARGETDIR" Win64="no">
 			<File Id="fileCollectorDLL_x86" Source="$(var.SOURCEDIRX86)/micro-profiler_x86.dll" Vital="yes" />
-			<File Id="fileCollectorStubDLL_x86" Source="$(var.SOURCEDIRX86)/micro-profiler_x86.stub.dll" Vital="yes" />
 		</Component>
 
 		<?define VSVERSION="7.1"?>

@@ -21,6 +21,7 @@
 #include <common/string.h>
 
 #include <cstdlib>
+#include <stdio.h>
 #include <vector>
 
 using namespace std;
@@ -41,5 +42,33 @@ namespace micro_profiler
 		
 		mbstowcs(&buffer[0], value.c_str(), buffer.size());
 		return &buffer[0];
+	}
+
+	string to_string(const guid_t &id)
+	{
+		char buffer[100];
+		const byte (&v)[16] = id.values;
+
+		sprintf(buffer, "{%02hhX%02hhX%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
+			v[0], v[1], v[2], v[3],
+			v[4], v[5],  v[6], v[7],  v[8], v[9],
+			v[10], v[11], v[12], v[13], v[14], v[15]);
+		return buffer;
+	}
+
+	guid_t from_string(const string &text)
+	{
+		struct {
+			int padding1;
+			guid_t id;
+			int padding2;
+		} x;
+		byte (&v)[16] = x.id.values;
+
+		sscanf(text.c_str(), "{%02hhX%02hhX%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
+			&v[0], &v[1], &v[2], &v[3],
+			&v[4], &v[5],  &v[6], &v[7],  &v[8], &v[9],
+			&v[10], &v[11], &v[12], &v[13], &v[14], &v[15]);
+		return x.id;
 	}
 }

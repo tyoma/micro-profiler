@@ -20,11 +20,13 @@
 
 #include <collector/statistics_bridge.h>
 
+#include <collector/calibration.h>
 #include <collector/calls_collector.h>
 
 #include <common/module.h>
 #include <common/protocol.h>
 #include <common/serialization.h>
+#include <common/time.h>
 
 #include <algorithm>
 #include <iterator>
@@ -36,8 +38,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const timestamp_t c_ticks_per_second(ticks_per_second());
-
 		class vector_writer
 		{
 		public:
@@ -63,14 +63,14 @@ namespace micro_profiler
 
 	void image_load_queue::load(const void *in_image_address)
 	{
-		scoped_lock l(_mtx);
+		mt::lock_guard<mt::mutex> l(_mtx);
 
 		_lqueue.push_back(get_module_info(in_image_address));
 	}
 
 	void image_load_queue::unload(const void *in_image_address)
 	{
-		scoped_lock l(_mtx);
+		mt::lock_guard<mt::mutex> l(_mtx);
 
 		_uqueue.push_back(get_module_info(in_image_address).load_address);
 	}
@@ -80,7 +80,7 @@ namespace micro_profiler
 		loaded_modules_.clear();
 		unloaded_modules_.clear();
 
-		scoped_lock l(_mtx);
+		mt::lock_guard<mt::mutex> l(_mtx);
 
 		loaded_modules_.insert(loaded_modules_.end(), _lqueue.begin(), _lqueue.end());
 		unloaded_modules_.insert(unloaded_modules_.end(), _uqueue.begin(), _uqueue.end());
@@ -89,15 +89,14 @@ namespace micro_profiler
 	}
 
 
-	statistics_bridge::statistics_bridge(calls_collector_i &collector,
-			const function<channel_t ()> &factory,
-			const std::shared_ptr<image_load_queue> &image_load_queue_)
-		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(factory()),
+	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_,
+			const function<channel_t ()> &factory, const std::shared_ptr<image_load_queue> &image_load_queue_)
+		: _analyzer(overhead_.external), _collector(collector), _frontend(factory()),
 			_image_load_queue(image_load_queue_)
 	{
 		initialization_data idata = {
-			get_module_info(0).path,
-			c_ticks_per_second
+			get_current_executable(),
+			ticks_per_second()
 		};
 		send(init, idata);
 	}

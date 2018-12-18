@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\atomic.h" />
+    <ClInclude Include="..\event.h" />
+    <ClInclude Include="..\mutex.h" />
+    <ClInclude Include="..\thread.h" />
+    <ClInclude Include="..\tls.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{7bc7d5f7-f6da-4ace-95ab-a0bcf86bc746}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\win32">
+      <UniqueIdentifier>{4f8045b8-8e57-407f-8e9a-ac2ccc0f4509}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="win32\mutex.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\event.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\thread.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\atomic.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\tls.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

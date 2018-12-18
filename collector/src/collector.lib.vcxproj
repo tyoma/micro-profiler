@@ -28,15 +28,18 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ItemDefinitionGroup>
-    <Lib>
-      <AdditionalDependencies>rpcrt4.lib;dbghelp.lib</AdditionalDependencies>
-    </Lib>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <MASM>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
+    </MASM>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
@@ -44,38 +47,29 @@
   <ItemGroup>
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="calls_collector.cpp">
-      <Optimization>Full</Optimization>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OmitFramePointers>true</OmitFramePointers>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="channel_client.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    <ClCompile Include="calls_collector_thread.cpp">
+      <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="frontend_controller.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <ClCompile Include="empty_function.intel.c" />
+    <ClCompile Include="frontend_controller.cpp" />
+    <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
-    <ClCompile Include="system.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="hooks.asm">
-      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
-    </MASM>
+    <MASM Include="hooks.asm" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
+    <ClInclude Include="..\calibration.h" />
     <ClInclude Include="..\calls_collector.h" />
-    <ClInclude Include="..\channel_client.h" />
+    <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\frontend_controller.h" />
+    <ClInclude Include="..\image_patch.h" />
+    <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
-    <ClInclude Include="..\system.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

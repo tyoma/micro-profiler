@@ -50,7 +50,7 @@ namespace micro_profiler
 
 	void piechart::select(index_type item)
 	{
-		_selection = item != npos && _model ? _model->track(item) : shared_ptr<trackable>();
+		_selection = item != npos() && _model ? _model->track(item) : shared_ptr<trackable>();
 		invalidate(0);
 	}
 
@@ -59,12 +59,12 @@ namespace micro_profiler
 		typedef blender_solid_color<simd::blender_solid_color, order_bgra> blender;
 
 		real_t start = -pi * 0.5f;
-		const index_type selection = _selection ? _selection->index() : npos;
+		const index_type selection = _selection ? _selection->index() : npos();
 
 		for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
 		{
 			real_t end = start + i->share_angle;
-			real_t outer_r = _outer_r * ((selection != npos) & (selection == i->index) ? _selection_emphasis_k + 1.0f : 1.0f);
+			real_t outer_r = _outer_r * ((selection != npos()) & (selection == i->index) ? _selection_emphasis_k + 1.0f : 1.0f);
 
 			if (i->share_angle > 0.005)
 			{
@@ -89,7 +89,7 @@ namespace micro_profiler
 	{
 		index_type idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
 
-		_selection = _model && idx != npos ? _model->track(idx) : shared_ptr<const trackable>();
+		_selection = _model && idx != npos() ? _model->track(idx) : shared_ptr<const trackable>();
 		invalidate(0);
 		selection_changed(idx);
 	}
@@ -98,19 +98,19 @@ namespace micro_profiler
 	{
 		index_type idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
 
-		if (npos != idx)
+		if (npos() != idx)
 			item_activate(idx);
 	}
 
 	void piechart::on_invalidated()
 	{
-		segment rest = { npos, 0.0f, 2.0f * pi, _color_rest };
+		segment rest = { npos(), 0.0f, 2.0f * pi, _color_rest };
 		real_t reciprocal_sum = 0.0f;
 		index_type i, count;
 		vector<color>::const_iterator j;
 
 		_segments.clear();
-		if (_selection && _selection->index() == npos)
+		if (_selection && _selection->index() == npos())
 			_selection.reset();
 		for (i = 0, j = _palette.begin(), count = _model ? _model->size() : 0; i != count; ++i)
 		{
@@ -144,20 +144,20 @@ namespace micro_profiler
 		if (r >= _inner_r)
 		{
 			real_t start = -pi * 0.5f;
-			const index_type selection = _selection ? _selection->index() : npos;
+			const index_type selection = _selection ? _selection->index() : npos();
 
 			for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
 			{
 				real_t end = start + i->share_angle;
 
 				if (((start <= a) & (a < end))
-					&& r < _outer_r * ((selection != npos) & (selection == i->index) ? (_selection_emphasis_k + 1.0f) : 1.0f))
+					&& r < _outer_r * ((selection != npos()) & (selection == i->index) ? (_selection_emphasis_k + 1.0f) : 1.0f))
 				{
 					return i->index;
 				}
 				start = end;
 			}
 		}
-		return npos;
+		return npos();
 	}
 }

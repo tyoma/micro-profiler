@@ -39,7 +39,8 @@ namespace micro_profiler
 	{
 		typedef intel::jmp_rel_imm32 jmp;
 
-		calls_collector g_collector(5000000);
+		const size_t c_trace_limit = 5000000;
+		calls_collector g_collector(c_trace_limit);
 		auto_ptr<frontend_controller> g_frontend_controller;
 		void *g_exitprocess_address = 0;
 		byte g_backup[sizeof(jmp)];
@@ -139,8 +140,8 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reser
 			candidate_ids.push_back(from_string(env_id));
 		candidate_ids.push_back(c_integrated_frontend_id);
 		candidate_ids.push_back(c_standalone_frontend_id);
-		g_frontend_controller.reset(new frontend_controller(g_collector,
-			isolation_aware_channel_factory(hinstance, candidate_ids)));
+		g_frontend_controller.reset(new frontend_controller(isolation_aware_channel_factory(hinstance, candidate_ids),
+			g_collector, calibrate_overhead(g_collector, c_trace_limit / 10)));
 		break;
 
 	case DLL_PROCESS_DETACH:

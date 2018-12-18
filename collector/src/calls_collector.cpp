@@ -28,6 +28,10 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
+	calls_collector::calls_collector(size_t trace_limit)
+		: _trace_limit(trace_limit)
+	{	}
+
 	void calls_collector::read_collected(acceptor &a)
 	{
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
@@ -49,9 +53,6 @@ namespace micro_profiler
 		return instance->get_current_thread_trace_guaranteed()
 			.on_exit(stack_ptr, timestamp);
 	}
-
-	timestamp_t calls_collector::profiler_latency() const throw()
-	{	return _profiler_latency;	}
 
 	calls_collector_thread &calls_collector::get_current_thread_trace()
 	{

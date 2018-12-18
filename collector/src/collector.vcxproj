@@ -45,6 +45,17 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="calibration.cpp" />
+    <ClCompile Include="calibration_functions_inner_instrumented.cpp">
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="calibration_functions_outer_instrumented.cpp">
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="main.cpp" />
     <None Include="..\entry.h" />
     <None Include="micro-profiler.initializer.cpp" />

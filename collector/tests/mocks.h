@@ -38,19 +38,14 @@ namespace micro_profiler
 			class Tracer : public calls_collector_i
 			{
 			public:
-				explicit Tracer(timestamp_t latency = 0);
-				virtual ~Tracer() throw();
-
 				template <size_t size>
 				void Add(mt::thread::id threadid, call_record (&array_ptr)[size]);
 
 				virtual void read_collected(acceptor &a);
-				virtual timestamp_t profiler_latency() const throw();
 
 			private:
 				typedef std::unordered_map< mt::thread::id, std::vector<call_record> > TracesMap;
 
-				timestamp_t _latency;
 				TracesMap _traces;
 				mt::mutex _mutex;
 			};

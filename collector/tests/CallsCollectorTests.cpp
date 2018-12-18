@@ -185,16 +185,6 @@ namespace micro_profiler
 			}
 
 
-			test( ProfilerLatencyGreaterThanZero )
-			{
-				// INIT / ACT
-				timestamp_t profiler_latency = collector->profiler_latency();
-
-				// ASSERT
-				assert_is_true(profiler_latency > 0);
-			}
-
-
 			test( MaxTraceLengthIsLimited )
 			{
 				// INIT

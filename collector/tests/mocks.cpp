@@ -37,13 +37,6 @@ namespace micro_profiler
 			}
 
 
-			Tracer::Tracer(timestamp_t latency)
-				: _latency(latency)
-			{	}
-
-			Tracer::~Tracer() throw()
-			{	}
-
 			void Tracer::read_collected(acceptor &a)
 			{
 				mt::lock_guard<mt::mutex> l(_mutex);
@@ -55,8 +48,6 @@ namespace micro_profiler
 				_traces.clear();
 			}
 
-			timestamp_t Tracer::profiler_latency() const throw()
-			{	return _latency;	}
 
 
 			class frontend

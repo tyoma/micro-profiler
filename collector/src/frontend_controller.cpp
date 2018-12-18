@@ -101,8 +101,9 @@ namespace micro_profiler
 	}
 
 
-	frontend_controller::frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory)
-		: _collector(collector), _factory(factory), _image_load_queue(new image_load_queue),
+	frontend_controller::frontend_controller(const frontend_factory_t& factory, calls_collector_i &collector,
+			const overhead &overhead_)
+		: _factory(factory), _collector(collector), _overhead(overhead_), _image_load_queue(new image_load_queue),
 			_worker_refcount(new ref_counter_t(0))
 	{	}
 
@@ -118,7 +119,7 @@ namespace micro_profiler
 		{
 			shared_ptr<mt::event> exit_event(new mt::event);
 			auto_ptr<mt::thread> frontend_thread(new mt::thread(bind(&frontend_controller::frontend_worker,
-				_frontend_thread.get(), _factory, &_collector, _image_load_queue, exit_event)));
+				_frontend_thread.get(), _factory, &_collector, _overhead, _image_load_queue, exit_event)));
 
 			_frontend_thread.release();
 
@@ -139,7 +140,7 @@ namespace micro_profiler
 	}
 
 	void frontend_controller::frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
-		calls_collector_i *collector, const shared_ptr<image_load_queue> &lqueue,
+		calls_collector_i *collector, const overhead &overhead_, const shared_ptr<image_load_queue> &lqueue,
 		const shared_ptr<mt::event> &exit_event)
 	{
 		if (previous_thread)
@@ -148,7 +149,7 @@ namespace micro_profiler
 
 //		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
-		statistics_bridge b(*collector, factory, lqueue);
+		statistics_bridge b(*collector, overhead_, factory, lqueue);
 		timestamp_t t = clock();
 
 		task tasks[] = {

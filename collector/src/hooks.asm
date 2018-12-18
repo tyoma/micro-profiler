@@ -45,7 +45,7 @@ IF _M_IX86
 		push	eax
 	endm
 
-	_profile_enter	proc
+	__penter proc
 		PUSHREGS
 
 		mov	ecx, [_g_collector_ptr]
@@ -56,9 +56,9 @@ IF _M_IX86
 
 		POPREGS
 		ret
-	_profile_enter	endp
+	__penter	endp
 
-	_profile_exit	proc
+	__pexit proc
 		PUSHREGS
 
 		mov	ecx, [_g_collector_ptr]
@@ -68,7 +68,7 @@ IF _M_IX86
 
 		POPREGS
 		ret
-	_profile_exit	endp
+	__pexit	endp
 ELSEIF _M_X64
 	.code
 
@@ -106,7 +106,7 @@ ELSEIF _M_X64
 		or		rdx, rax
 	endm
 
-	profile_enter	proc
+	_penter	proc
 		PUSHREGS
 		sub	rsp, 20h
 
@@ -120,9 +120,9 @@ ELSEIF _M_X64
 		add	rsp, 20h
 		POPREGS
 		ret
-	profile_enter	endp
+	_penter	endp
 
-	profile_exit	proc
+	_pexit	proc
 		PUSHREGS
 		movdqu	[rsp - 10h], xmm0
 		sub	rsp, 30h
@@ -137,7 +137,7 @@ ELSEIF _M_X64
 		movdqu	xmm0, [rsp - 10h]
 		POPREGS
 		ret
-	profile_exit	endp
+	_pexit	endp
 ENDIF
 
 end

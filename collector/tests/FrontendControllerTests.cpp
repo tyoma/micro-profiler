@@ -21,6 +21,7 @@ namespace micro_profiler
 		namespace
 		{
 			int dummy = 0;
+			const overhead c_overhead = { 11, 0 };
 
 			handle *profile_this(frontend_controller &fc)
 			{	return fc.profile(&dummy);	}
@@ -29,8 +30,9 @@ namespace micro_profiler
 			class sync_stop_frontend_controller : public frontend_controller
 			{
 			public:
-				sync_stop_frontend_controller(calls_collector_i &collector, const frontend_factory_t &factory)
-					: frontend_controller(collector, factory)
+				sync_stop_frontend_controller(const frontend_factory_t &factory, calls_collector_i &collector,
+						const overhead &o = c_overhead)
+					: frontend_controller(factory, collector, o)
 				{	}
 
 				~sync_stop_frontend_controller()
@@ -41,8 +43,9 @@ namespace micro_profiler
 			class auto_frontend_controller : public sync_stop_frontend_controller
 			{
 			public:
-				auto_frontend_controller(calls_collector_i &collector, const frontend_factory_t &factory)
-					: sync_stop_frontend_controller(collector, factory), _profiler_handle(profile(&dummy))
+				auto_frontend_controller(const frontend_factory_t &factory, calls_collector_i &collector,
+						const overhead &o = c_overhead)
+					: sync_stop_frontend_controller(factory, collector, o), _profiler_handle(profile(&dummy))
 				{	}
 
 			private:
@@ -89,7 +92,7 @@ namespace micro_profiler
 				state->initialized = bind(&mt::event::set, &initialized);
 
 				// ACT
-				{	frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));	}
+				{	frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);	}
 
 				// ASSERT
 				assert_is_false(initialized.wait(mt::milliseconds(0)));
@@ -99,7 +102,7 @@ namespace micro_profiler
 			test( ForcedStopIsAllowedOnStartedController )
 			{
 				// INIT
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				// ACT / ASSERT (must not throw)
 				fc.force_stop();
@@ -109,7 +112,7 @@ namespace micro_profiler
 			test( NonNullHandleObtained )
 			{
 				// INIT
-				sync_stop_frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				sync_stop_frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer);
 
 				// ACT
 				auto_ptr<handle> h(profile_this(fc));
@@ -124,7 +127,7 @@ namespace micro_profiler
 				// INIT
 				mt::event constructed;
 				mt::thread::id tid = mt::thread::id();
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				state->constructed = [&] {
 					tid = mt::this_thread::get_id();
@@ -147,7 +150,7 @@ namespace micro_profiler
 				// INIT
 				mt::thread::id tidc, tidd;
 				mt::event destroyed;
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				state->constructed = [&] { tidc = mt::this_thread::get_id(); };
 				state->destroyed = [&] {
@@ -180,8 +183,8 @@ namespace micro_profiler
 						go.set();
 				};
 
-				auto_frontend_controller fc1(*tracer, bind(&mocks::frontend_state::create, state));
-				auto_frontend_controller fc2(*tracer, bind(&mocks::frontend_state::create, state));
+				auto_frontend_controller fc1(bind(&mocks::frontend_state::create, state), *tracer);
+				auto_frontend_controller fc2(bind(&mocks::frontend_state::create, state), *tracer);
 
 				// ACT
 				auto_ptr<handle> h1(profile_this(fc1));
@@ -199,7 +202,7 @@ namespace micro_profiler
 				// INIT
 				mt::event constructed;
 				bool destroyed = false;
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				state->constructed = [&] { constructed.set(); };
 				state->destroyed = [&] { destroyed = true; };
@@ -223,7 +226,7 @@ namespace micro_profiler
 				bool violation = false;
 				mt::atomic<int> alive(0);
 				int n = 0;
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 				auto_ptr<handle> h;
 
 				state->constructed = [&] {
@@ -264,7 +267,7 @@ namespace micro_profiler
 				// INIT
 				mt::atomic<int> allowed(1);
 				mt::event go;
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 				auto_ptr<handle> h;
 
 				state->constructed = [&] {
@@ -292,7 +295,7 @@ namespace micro_profiler
 				// INIT
 				mt::atomic<int> allowed(1);
 				mt::event go;
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 				auto_ptr<handle> h;
 
 				state->constructed = [&] {
@@ -326,7 +329,7 @@ namespace micro_profiler
 				// INIT
 				mt::event go;
 				mt::atomic<int> alive(2);
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 				auto_ptr<handle> h;
 
 				state->destroyed = [&] {
@@ -351,7 +354,7 @@ namespace micro_profiler
 				// INIT
 				mt::event ready;
 				shared_ptr<mt::event> go(new mt::event);
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				state->constructed = [&ready, go] { ready.set(), go->wait(); };
 
@@ -369,7 +372,7 @@ namespace micro_profiler
 				// INIT
 				mt::event initialized;
 				initialization_data id;
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				state->initialized = [&] (const initialization_data &id_) {
 					id = id_;
@@ -391,7 +394,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event updated;
-				frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				state->updated = [&] (const mocks::statistics_map_detailed &) { updated.wait(); };
 
@@ -406,7 +409,7 @@ namespace micro_profiler
 				mt::event ready;
 				loaded_modules m;
 				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
-				sync_stop_frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				sync_stop_frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer);
 
 				state->modules_loaded = [&] (const loaded_modules &m_) {
 					m = m_;
@@ -442,7 +445,7 @@ namespace micro_profiler
 				mt::event ready, unloaded_event;
 				unloaded_modules m;
 				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
-				sync_stop_frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				sync_stop_frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer);
 
 				state->modules_loaded = bind(&mt::event::set, &ready);
 				state->modules_unloaded = [&] (const unloaded_modules &um) {
@@ -482,7 +485,7 @@ namespace micro_profiler
 				mt::event modules_state_updated, update_lock(false, false), updated;
 				vector<mocks::statistics_map_detailed> updates;
 				unloaded_modules m;
-				sync_stop_frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				sync_stop_frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer);
 
 				state->modules_loaded = bind(&mt::event::set, &modules_state_updated);
 				state->updated = [&] (const mocks::statistics_map_detailed &u) {
@@ -528,12 +531,12 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				auto_frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				auto_frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer, c_overhead);
 
 				// ACT
 				call_record trace1[] = {
 					{	0, (void *)0x1223	},
-					{	1000, (void *)0	},
+					{	1000 + c_overhead.external, (void *)0	},
 				};
 
 				tracer->Add(mt::thread::id(), trace1);
@@ -556,7 +559,7 @@ namespace micro_profiler
 				// ACT
 				call_record trace2[] = {
 					{	10000, (void *)0x31223	},
-					{	14000, (void *)0	},
+					{	14000 + c_overhead.external, (void *)0	},
 				};
 
 				tracer->Add(mt::thread::id(), trace2);
@@ -588,7 +591,7 @@ namespace micro_profiler
 				state->initialized = bind(&mt::event::set, &initialized);
 				state->updated = bind(&mt::event::set, &updated);
 
-				sync_stop_frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				sync_stop_frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer);
 				auto_ptr<handle> h(profile_this(fc));
 				call_record trace[] = {
 					{	10000, (void *)0x31223	},
@@ -625,7 +628,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				auto_frontend_controller fc(*tracer, bind(&mocks::frontend_state::create, state));
+				auto_frontend_controller fc(bind(&mocks::frontend_state::create, state), *tracer);
 
 				// ACT
 				call_record trace1[] = {
@@ -690,8 +693,8 @@ namespace micro_profiler
 				// INIT
 				mt::event updated1, updated2;
 				mocks::statistics_map_detailed u1, u2;
-				shared_ptr<mocks::Tracer> tracer1(new mocks::Tracer(13)),
-					tracer2(new mocks::Tracer(29));
+				overhead o1 = { 13, }, o2 = { 29, };
+				shared_ptr<mocks::Tracer> tracer1(new mocks::Tracer), tracer2(new mocks::Tracer);
 				shared_ptr<mocks::frontend_state> state1(new mocks::frontend_state(tracer1)),
 					state2(new mocks::frontend_state(tracer2));
 
@@ -704,8 +707,8 @@ namespace micro_profiler
 					updated2.set();
 				};
 
-				auto_frontend_controller fe1(*tracer1, bind(&mocks::frontend_state::create, state1));
-				auto_frontend_controller fe2(*tracer2, bind(&mocks::frontend_state::create, state2));
+				auto_frontend_controller fe1(bind(&mocks::frontend_state::create, state1), *tracer1, o1);
+				auto_frontend_controller fe2(bind(&mocks::frontend_state::create, state2), *tracer2, o2);
 
 				// ACT
 				call_record trace[] = {
@@ -730,7 +733,7 @@ namespace micro_profiler
 				// INIT
 				mt::event updated;
 				mocks::statistics_map_detailed u;
-				shared_ptr<mocks::Tracer> tracer2(new mocks::Tracer(11));
+				shared_ptr<mocks::Tracer> tracer2(new mocks::Tracer);
 				shared_ptr<mocks::frontend_state> state2(new mocks::frontend_state(tracer2));
 
 				state2->updated = [&] (const mocks::statistics_map_detailed &u_) {
@@ -738,7 +741,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				auto_frontend_controller fc(*tracer2, bind(&mocks::frontend_state::create, state2));
+				auto_frontend_controller fc(bind(&mocks::frontend_state::create, state2), *tracer2);
 
 				// ACT
 				call_record trace[] = {
@@ -804,7 +807,8 @@ namespace micro_profiler
 				};
 				state->updated = bind(&mt::event::set, &updated);
 
-				auto_ptr<frontend_controller> fc(new frontend_controller(*tracer, bind(&mocks::frontend_state::create, state)));
+				auto_ptr<frontend_controller> fc(new frontend_controller(bind(&mocks::frontend_state::create, state),
+					*tracer, c_overhead));
 				auto_ptr<handle> h(profile_this(*fc));
 				call_record trace[] = {
 					{	10000, (void *)0x31223	},

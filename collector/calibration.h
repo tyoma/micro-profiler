@@ -18,45 +18,19 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/calibration.h>
+#pragma once
 
-#include <collector/analyzer.h>
-
-using namespace std;
+#include <common/types.h>
 
 namespace micro_profiler
 {
-	volatile void empty_call();
-	volatile void call_empty_call();
+	class calls_collector;
 
-	namespace
+	struct overhead
 	{
-		template <typename FunctionT>
-		void run_load(FunctionT *f, size_t iterations)
-		{
-			while (iterations--)
-				f();
-		}
-	}
+		timestamp_t external; // How much more the call costs comparing to it's visible cost.
+		timestamp_t internal; // How much more the call to an inner function costs comparing to it's visible cost.
+	};
 
-	overhead calibrate_overhead(calls_collector &collector, size_t iterations)
-	{
-		analyzer a(0);
-		overhead o = { };
-
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		a.clear();
-
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
-		{
-			if (i->second.callees.empty())
-				o.external = i->second.inclusive_time / iterations;
-		}
-		return o;
-	}
+	overhead calibrate_overhead(calls_collector &collector, size_t iterations);
 }

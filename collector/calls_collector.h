@@ -37,7 +37,6 @@ namespace micro_profiler
 
 		virtual ~calls_collector_i() {	}
 		virtual void read_collected(acceptor &a) = 0;
-		virtual timestamp_t profiler_latency() const throw() = 0;
 	};
 
 	struct calls_collector_i::acceptor
@@ -58,8 +57,6 @@ namespace micro_profiler
 		static const void *CC_(fastcall) on_exit(calls_collector *instance, const void **stack_ptr,
 			timestamp_t timestamp) _CC(fastcall);
 
-		virtual timestamp_t profiler_latency() const throw();
-
 	private:
 		typedef std::vector< std::pair< mt::thread::id, std::shared_ptr<calls_collector_thread> > > call_traces_t;
 
@@ -71,7 +68,6 @@ namespace micro_profiler
 	private:
 		mt::tls<calls_collector_thread> _trace_pointers_tls;
 		const size_t _trace_limit;
-		timestamp_t _profiler_latency;
 		call_traces_t _call_traces;
 		mt::mutex _thread_blocks_mtx;
 	};

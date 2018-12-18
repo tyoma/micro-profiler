@@ -18,45 +18,8 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/calibration.h>
-
-#include <collector/analyzer.h>
-
-using namespace std;
-
 namespace micro_profiler
 {
-	volatile void empty_call();
-	volatile void call_empty_call();
-
-	namespace
-	{
-		template <typename FunctionT>
-		void run_load(FunctionT *f, size_t iterations)
-		{
-			while (iterations--)
-				f();
-		}
-	}
-
-	overhead calibrate_overhead(calls_collector &collector, size_t iterations)
-	{
-		analyzer a(0);
-		overhead o = { };
-
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		a.clear();
-
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
-		{
-			if (i->second.callees.empty())
-				o.external = i->second.inclusive_time / iterations;
-		}
-		return o;
-	}
+	volatile void empty_call()
+	{	}
 }

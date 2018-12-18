@@ -7,9 +7,6 @@
     <ClCompile Include="calls_collector.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="channel_client.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="frontend_controller.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -20,9 +17,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="calls_collector_thread.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="calibration.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="empty_function.intel.c">
@@ -42,12 +36,12 @@
   <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
-    <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\frontend_controller.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
+    <ClInclude Include="..\calibration.h" />
   </ItemGroup>
 </Project>

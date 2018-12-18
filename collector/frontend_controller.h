@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "calibration.h"
 #include "statistics_bridge.h"
 
 #include <common/noncopyable.h>
@@ -38,7 +39,7 @@ namespace micro_profiler
 	class frontend_controller : noncopyable
 	{
 	public:
-		frontend_controller(calls_collector_i &collector, const frontend_factory_t& factory);
+		frontend_controller(const frontend_factory_t& factory, calls_collector_i &collector, const overhead &overhead_);
 		virtual ~frontend_controller();
 
 		handle *profile(void *in_image_address);
@@ -50,12 +51,13 @@ namespace micro_profiler
 
 	private:
 		static void frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
-			calls_collector_i *collector, const std::shared_ptr<image_load_queue> &lqueue,
+			calls_collector_i *collector, const overhead &overhead_, const std::shared_ptr<image_load_queue> &lqueue,
 			const std::shared_ptr<mt::event> &exit_event);
 
 	private:
-		calls_collector_i &_collector;
 		frontend_factory_t _factory;
+		calls_collector_i &_collector;
+		overhead _overhead;
 		std::shared_ptr<image_load_queue> _image_load_queue;
 		std::shared_ptr<ref_counter_t> _worker_refcount;
 		std::shared_ptr<mt::event> _exit_event;

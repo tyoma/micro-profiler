@@ -20,6 +20,7 @@
 
 #include <collector/statistics_bridge.h>
 
+#include <collector/calibration.h>
 #include <collector/calls_collector.h>
 
 #include <common/module.h>
@@ -88,9 +89,9 @@ namespace micro_profiler
 	}
 
 
-	statistics_bridge::statistics_bridge(calls_collector_i &collector, const function<channel_t ()> &factory,
-			const std::shared_ptr<image_load_queue> &image_load_queue_)
-		: _analyzer(collector.profiler_latency()), _collector(collector), _frontend(factory()),
+	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_,
+			const function<channel_t ()> &factory, const std::shared_ptr<image_load_queue> &image_load_queue_)
+		: _analyzer(overhead_.external), _collector(collector), _frontend(factory()),
 			_image_load_queue(image_load_queue_)
 	{
 		initialization_data idata = {

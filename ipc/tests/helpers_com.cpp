@@ -13,13 +13,19 @@ namespace micro_profiler
 			{
 				class Module : public CAtlDllModuleT<Module>
 				{
-				public:
-					Module()
-					{	::CoInitialize(NULL);	}
+				};
+			}
 
-					~Module()
-					{	::CoUninitialize();	}
-				} g_module;
+			com_initialize::com_initialize()
+			{
+				::CoInitialize(NULL);
+				_module.reset(new Module);
+			}
+
+			com_initialize::~com_initialize()
+			{
+				_module.reset();
+				::CoUninitialize();
 			}
 
 			bool is_factory_registered(const guid_t &id)

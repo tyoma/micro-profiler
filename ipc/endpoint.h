@@ -29,7 +29,7 @@ namespace micro_profiler
 	{
 		struct channel
 		{
-			virtual void disconnect() = 0;
+			virtual void disconnect() throw() = 0;
 			virtual void message(const_byte_range payload) = 0;
 		};
 

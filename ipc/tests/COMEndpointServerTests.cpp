@@ -7,6 +7,8 @@
 #include <common/string.h>
 #include <common/time.h>
 #include <memory>
+#include <mt/thread.h>
+#include <test-helpers/com.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -21,6 +23,7 @@ namespace micro_profiler
 		{
 			begin_test_suite( COMEndpointServerTests )
 				guid_t ids[2];
+				auto_ptr<com_initialize> initializer;
 
 				init( GenerateIDs )
 				{
@@ -28,6 +31,12 @@ namespace micro_profiler
 					generate(ids[0].values, micro_profiler::tests::array_end(ids[0].values), rand);
 					generate(ids[1].values, micro_profiler::tests::array_end(ids[1].values), rand);
 				}
+
+				init( InitCOM )
+				{
+					initializer.reset(new com_initialize);
+				}
+
 
 				test( CreatingEndpointReturnsNonNullObjects )
 				{
@@ -184,6 +193,65 @@ namespace micro_profiler
 					assert_equal(3u, session->payloads_log.size());
 					assert_equal(data2, session->payloads_log[1]);
 					assert_equal(data3, session->payloads_log[2]);
+				}
+
+
+				void client_thread(const guid_t &id, micro_profiler::tests::com_event *ready,
+					micro_profiler::tests::com_event *go, bool *ok)
+				{
+					com_initialize ci;
+					stream_function_t stream(open_stream(id));
+					byte garbage[10];
+
+					ready->set();
+					go->wait();
+					*ok = stream(garbage, sizeof(garbage));
+					stream = stream_function_t();
+					ready->set();
+				}
+
+				test( DisconnectingSuppliedChannelDisconnectsClientAndReleasesSession )
+				{
+					// INIT
+					shared_ptr<endpoint> e = com::create_endpoint();
+					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
+					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					micro_profiler::tests::com_event client_ready, client_go;
+					bool ok = true, session_released = false;
+					mt::thread t(bind(&COMEndpointServerTests::client_thread, this, ids[0], &client_ready, &client_go, &ok));
+
+					client_ready.wait();
+
+					const shared_ptr<mocks::session> &session = f->sessions[0];
+
+					// ACT
+					session->passive->disconnect();
+
+					session_released = session.unique();
+					client_go.set();
+					client_ready.wait();
+					t.join();
+
+					// ASSERT
+					assert_is_false(ok);
+					assert_is_true(session_released);
+				}
+
+
+				test( ClientReleasingChannelLeadsLeadsToDisconnectNotificationInSession )
+				{
+					// INIT
+					shared_ptr<endpoint> e = com::create_endpoint();
+					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
+					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					stream_function_t stream = open_stream(ids[0]);
+					shared_ptr<mocks::session> session = f->sessions[0];
+
+					// ACT
+					stream = stream_function_t();
+
+					// ASSERT
+					assert_is_true(session->disconnected);
 				}
 			end_test_suite
 		}

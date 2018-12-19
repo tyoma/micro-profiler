@@ -36,7 +36,7 @@ namespace micro_profiler
 
 
 			class ATL_NO_VTABLE channel : public ISequentialStream, public CComObjectRootEx<CComSingleThreadModel>,
-				public CComCoClass<channel>
+				public CComCoClass<channel>, public ipc::channel
 			{
 			public:
 //				DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
@@ -46,12 +46,17 @@ namespace micro_profiler
 					COM_INTERFACE_ENTRY(ISequentialStream)
 				END_COM_MAP()
 
+				void FinalRelease();
+
 			public:
 				shared_ptr<ipc::channel> _inbound;
 
 			private:
 				STDMETHODIMP Read(void *, ULONG, ULONG *);
 				STDMETHODIMP Write(const void *message, ULONG size, ULONG *written);
+
+				virtual void disconnect() throw();
+				virtual void message(const_byte_range payload);
 			};
 
 
@@ -72,6 +77,8 @@ namespace micro_profiler
 			};
 
 
+			void channel::FinalRelease()
+			{	_inbound->disconnect();	}
 
 			STDMETHODIMP channel::Read(void *, ULONG, ULONG *)
 			{	return E_UNEXPECTED;	}
@@ -82,6 +89,12 @@ namespace micro_profiler
 				return S_OK;
 			}
 
+			void channel::disconnect()
+			{	::CoDisconnectObject(this, 0);	}
+
+			void channel::message(const_byte_range /*payload*/)
+			{	}
+
 
 			STDMETHODIMP channel_factory::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
 			try
@@ -90,7 +103,7 @@ namespace micro_profiler
 				CComObject<channel>::CreateInstance(&p);
 				CComPtr<ISequentialStream> lock(p);
 
-				p->_inbound = _session_factory->create_session(*(ipc::channel *)0);
+				p->_inbound = _session_factory->create_session(*p);
 				return p->QueryInterface(riid, object);
 			}
 			catch (const bad_alloc &)

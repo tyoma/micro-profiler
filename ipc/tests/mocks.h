@@ -15,10 +15,12 @@ namespace micro_profiler
 				class session : public ipc::channel
 				{
 				public:
+					bool disconnected;
+					ipc::channel *passive;
 					std::vector< std::vector<byte> > payloads_log;
 
 				private:
-					virtual void disconnect();
+					virtual void disconnect() throw();
 					virtual void message(const_byte_range payload);
 				};
 
@@ -33,17 +35,19 @@ namespace micro_profiler
 
 
 
-				inline void session::disconnect()
-				{	}
+				inline void session::disconnect() throw()
+				{	disconnected = true;	}
 
 				inline void session::message(const_byte_range payload)
 				{	payloads_log.push_back(std::vector<byte>(payload.begin(), payload.end()));	}
 
 
-				inline std::shared_ptr<channel> session_factory::create_session(channel &/*passive*/)
+				inline std::shared_ptr<channel> session_factory::create_session(channel &passive)
 				{
 					std::shared_ptr<session> s(new session);
 
+					s->disconnected = false;
+					s->passive = &passive;
 					sessions.push_back(s);
 					return s;
 				}

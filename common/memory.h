@@ -1,7 +1,7 @@
 #pragma once
 
 #include "noncopyable.h"
-#include "primitives.h"
+#include "range.h"
 
 #include <memory>
 

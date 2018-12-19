@@ -10,6 +10,9 @@
     <ClCompile Include="channel_client.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="endpoint_com.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\client.h" />
@@ -18,6 +21,8 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\channel_client.h" />
+    <ClInclude Include="..\endpoint.h" />
+    <ClInclude Include="..\endpoint_com.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

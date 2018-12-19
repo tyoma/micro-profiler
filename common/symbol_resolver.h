@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "primitives.h"
+#include "range.h"
 
 #include <memory>
 #include <string>

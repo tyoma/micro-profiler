@@ -20,36 +20,29 @@
 
 #pragma once
 
-#include <common/memory.h>
 #include <common/range.h>
-#include <vector>
+#include <memory>
 
 namespace micro_profiler
 {
-#pragma pack(push, 1)
-	template <size_t size = sizeof(void*)>
-	struct revert_entry : range<byte, byte>
+	namespace ipc
 	{
-		typedef byte buffer_t[size];
+		struct channel
+		{
+			virtual void disconnect() = 0;
+			virtual void message(const_byte_range payload) = 0;
+		};
 
-		revert_entry(byte *ptr, byte length);
+		struct session_factory
+		{
+			virtual std::shared_ptr<channel> create_session(channel &passive) = 0;
+		};
 
-		void restore() const;
-
-		buffer_t original;
-	};
-#pragma pack(pop)
-
-	typedef std::vector< revert_entry<> > revert_buffer;
-
-
-
-	template <size_t size>
-	inline revert_entry<size>::revert_entry(byte *ptr, byte length_)
-		: range<byte, byte>(ptr, length_)
-	{	mem_copy(original, begin(), length());	}
-
-	template <size_t size>
-	inline void revert_entry<size>::restore() const
-	{	mem_copy(begin(), original, length());	}
+		struct endpoint
+		{
+			virtual std::shared_ptr<session_factory> create_active(const char *destination_endpoint) = 0;
+			virtual std::shared_ptr<void> create_passive(const char *endpoint_id,
+				const std::shared_ptr<session_factory> &factory) = 0;
+		};
+	}
 }

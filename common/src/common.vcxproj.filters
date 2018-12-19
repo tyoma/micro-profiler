@@ -55,5 +55,6 @@
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\memory.h" />
     <ClInclude Include="..\time.h" />
+    <ClInclude Include="..\range.h" />
   </ItemGroup>
 </Project>

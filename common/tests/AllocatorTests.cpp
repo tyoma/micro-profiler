@@ -1,7 +1,5 @@
 #include <common/memory.h>
 
-#include <common/primitives.h>
-
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>

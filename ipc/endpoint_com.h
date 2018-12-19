@@ -20,36 +20,15 @@
 
 #pragma once
 
-#include <common/memory.h>
-#include <common/range.h>
-#include <vector>
+#include "endpoint.h"
 
 namespace micro_profiler
 {
-#pragma pack(push, 1)
-	template <size_t size = sizeof(void*)>
-	struct revert_entry : range<byte, byte>
+	namespace ipc
 	{
-		typedef byte buffer_t[size];
-
-		revert_entry(byte *ptr, byte length);
-
-		void restore() const;
-
-		buffer_t original;
-	};
-#pragma pack(pop)
-
-	typedef std::vector< revert_entry<> > revert_buffer;
-
-
-
-	template <size_t size>
-	inline revert_entry<size>::revert_entry(byte *ptr, byte length_)
-		: range<byte, byte>(ptr, length_)
-	{	mem_copy(original, begin(), length());	}
-
-	template <size_t size>
-	inline void revert_entry<size>::restore() const
-	{	mem_copy(begin(), original, length());	}
+		namespace com
+		{
+			std::shared_ptr<endpoint> create_endpoint();
+		}
+	}
 }

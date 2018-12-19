@@ -37,8 +37,9 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemDefinitionGroup>
-  <ItemGroup>  
+  <ItemGroup>
     <ClCompile Include="channel_client.cpp" />
+    <ClCompile Include="endpoint_com.cpp" />
     <ClCompile Include="ipc_client.cpp" />
     <ClCompile Include="ipc_server.cpp" />
   </ItemGroup>
@@ -50,7 +51,9 @@
   <ItemGroup>
     <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\client.h" />
+    <ClInclude Include="..\endpoint_com.h" />
     <ClInclude Include="..\server.h" />
+    <ClInclude Include="..\endpoint.h" />
     <ClInclude Include="common.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

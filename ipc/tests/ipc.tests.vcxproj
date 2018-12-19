@@ -30,6 +30,9 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
@@ -41,8 +44,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-	 <ClCompile Include="COMChannelTests.cpp" />
+    <ClCompile Include="COMChannelTests.cpp" />
+    <ClCompile Include="COMEndpointServerTests.cpp" />
+    <ClCompile Include="helpers_com.cpp">
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="IPCClientServerTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="helpers_com.h" />
+    <ClInclude Include="mocks.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

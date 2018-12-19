@@ -20,6 +20,7 @@
 
 #include <common/symbol_resolver.h>
 
+#include <common/primitives.h>
 #include <common/string.h>
 
 #include <windows.h>

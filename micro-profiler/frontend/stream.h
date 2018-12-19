@@ -1,14 +1,13 @@
 #pragma once
 
-#include <common/primitives.h>
-
+#include <common/noncopyable.h>
+#include <common/types.h>
 #include <memory>
 #include <string>
-#include <wpl/base/concepts.h>
 
 namespace micro_profiler
 {
-	class write_stream : wpl::noncopyable
+	class write_stream : noncopyable
 	{
 	public:
 		write_stream(const std::wstring &path);
@@ -16,10 +15,10 @@ namespace micro_profiler
 		void write(const byte *buffer, size_t size);
 
 	private:
-		std::shared_ptr<void> _file;
+		const std::shared_ptr<void> _file;
 	};
 
-	class read_stream : wpl::noncopyable
+	class read_stream : noncopyable
 	{
 	public:
 		read_stream(const std::wstring &path);
@@ -27,6 +26,6 @@ namespace micro_profiler
 		void read(byte *buffer, size_t size);
 
 	private:
-		std::shared_ptr<void> _file;
+		const std::shared_ptr<void> _file;
 	};
 }

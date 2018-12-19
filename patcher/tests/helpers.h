@@ -1,7 +1,7 @@
 #pragma once
 
 #include <algorithm>
-#include <common/primitives.h>
+#include <common/range.h>
 #include <test-helpers/helpers.h>
 
 namespace micro_profiler

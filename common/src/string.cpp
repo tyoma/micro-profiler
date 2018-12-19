@@ -49,10 +49,10 @@ namespace micro_profiler
 		char buffer[100];
 		const byte (&v)[16] = id.values;
 
-		sprintf(buffer, "{%02hhX%02hhX%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
-			v[0], v[1], v[2], v[3],
-			v[4], v[5],  v[6], v[7],  v[8], v[9],
-			v[10], v[11], v[12], v[13], v[14], v[15]);
+		sprintf(buffer, "{%08X-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
+			*reinterpret_cast<const unsigned int *>(&v[0]),
+			*reinterpret_cast<const unsigned short *>(&v[4]),  *reinterpret_cast<const unsigned short *>(&v[6]),
+			v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]);
 		return buffer;
 	}
 
@@ -65,10 +65,10 @@ namespace micro_profiler
 		} x;
 		byte (&v)[16] = x.id.values;
 
-		sscanf(text.c_str(), "{%02hhX%02hhX%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
-			&v[0], &v[1], &v[2], &v[3],
-			&v[4], &v[5],  &v[6], &v[7],  &v[8], &v[9],
-			&v[10], &v[11], &v[12], &v[13], &v[14], &v[15]);
+		sscanf(text.c_str(), "{%08X-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
+			reinterpret_cast<unsigned int *>(&v[0]),
+			reinterpret_cast<unsigned short *>(&v[4]),  reinterpret_cast<unsigned short *>(&v[6]),
+			&v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15]);
 		return x.id;
 	}
 }

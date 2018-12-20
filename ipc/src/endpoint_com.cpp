@@ -124,6 +124,7 @@ namespace micro_profiler
 				CComObject<channel_factory> *p = 0;
 
 				CComObject<channel_factory>::CreateInstance(&p);
+
 				CComPtr<IClassFactory> lock(p);
 				DWORD cookie;
 

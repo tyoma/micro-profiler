@@ -21,7 +21,7 @@
 #pragma once
 
 #include <common/types.h>
-
+#include <ipc/endpoint.h>
 #include <memory>
 #include <list>
 #include <string>
@@ -31,10 +31,8 @@ namespace micro_profiler
 {
 	class functions_list;
 
-	struct frontend
+	struct frontend : ipc::channel
 	{
-		virtual void disconnect() = 0;
-
 		std::function<void(const std::wstring &process_name, const std::shared_ptr<functions_list> &model)> initialized;
 		std::function<void()> released;
 	};

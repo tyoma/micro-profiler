@@ -20,23 +20,39 @@
 
 #pragma once
 
-#include "frontend_manager.h"
+#include "frontend.h"
+
+#include <resources/resource.h>
+
+#include <atlbase.h>
+#include <atlcom.h>
 
 namespace micro_profiler
 {
-	struct symbol_resolver;
+	class frontend_manager_impl;
 
-	class frontend_impl : public frontend
+	class ATL_NO_VTABLE Frontend : public ISequentialStream, public CComObjectRootEx<CComSingleThreadModel>,
+		public CComCoClass<Frontend>, public frontend_impl
 	{
 	public:
-		frontend_impl();
-		~frontend_impl();
+		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
+		DECLARE_CLASSFACTORY_EX(frontend_manager_impl)
 
-//		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
+		BEGIN_COM_MAP(Frontend)
+			COM_INTERFACE_ENTRY(ISequentialStream)
+		END_COM_MAP()
 
-	private:
-		std::shared_ptr<symbol_resolver> _resolver;
-		std::shared_ptr<functions_list> _model;
+	public:
+		void disconnect() throw()
+		{	::CoDisconnectObject(this, 0);	}
+
+		STDMETHODIMP Read(void *, ULONG, ULONG *)
+		{	return E_NOTIMPL;	}
+
+		STDMETHODIMP Write(const void *message_, ULONG size, ULONG * /*written*/)
+		{
+			message(const_byte_range(static_cast<const byte *>(message_), size));
+			return S_OK;
+		}
 	};
 }

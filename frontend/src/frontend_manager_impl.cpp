@@ -20,7 +20,7 @@
 
 #include <frontend/frontend_manager_impl.h>
 
-#include <frontend/frontend.h>
+#include <frontend/frontend2.h>
 
 using namespace std;
 using namespace placeholders;

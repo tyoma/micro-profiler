@@ -35,8 +35,8 @@ namespace micro_profiler
 		class buffer_reader
 		{
 		public:
-			buffer_reader(const byte *data, size_t size)
-				: _ptr(data), _remaining(size)
+			buffer_reader(const_byte_range payload)
+				: _ptr(payload.begin()), _remaining(payload.length())
 			{	}
 
 			void read(void *data, size_t size)
@@ -52,26 +52,20 @@ namespace micro_profiler
 		};
 	}
 
-	Frontend::Frontend()
+	frontend_impl::frontend_impl()
 		: _resolver(symbol_resolver::create())
 	{	}
 
-	void Frontend::disconnect() throw()
-	{	::CoDisconnectObject(this, 0);	}
-
-	void Frontend::FinalRelease()
+	frontend_impl::~frontend_impl()
 	{
 		if (_model)
 			_model->release_resolver();
 		released();
 	}
 
-	STDMETHODIMP Frontend::Read(void *, ULONG, ULONG *)
-	{	return E_NOTIMPL;	}
-
-	STDMETHODIMP Frontend::Write(const void *message, ULONG size, ULONG * /*written*/)
+	void frontend_impl::message(const_byte_range payload)
 	{
-		buffer_reader reader(static_cast<const byte *>(message), size);
+		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> archive(reader);
 		initialization_data idata;
 		loaded_modules lmodules;
@@ -97,6 +91,5 @@ namespace micro_profiler
 				archive(*_model);
 			break;
 		}
-		return S_OK;
 	}
 }

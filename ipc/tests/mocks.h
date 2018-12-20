@@ -16,7 +16,7 @@ namespace micro_profiler
 				{
 				public:
 					bool disconnected;
-					ipc::channel *passive;
+					ipc::channel *other_side;
 					std::vector< std::vector<byte> > payloads_log;
 
 				private:
@@ -30,7 +30,7 @@ namespace micro_profiler
 					std::vector< std::shared_ptr<session> > sessions;
 
 				private:
-					virtual std::shared_ptr<channel> create_session(channel &passive);
+					virtual std::shared_ptr<channel> create_session(channel &other_side);
 				};
 
 
@@ -42,12 +42,12 @@ namespace micro_profiler
 				{	payloads_log.push_back(std::vector<byte>(payload.begin(), payload.end()));	}
 
 
-				inline std::shared_ptr<channel> session_factory::create_session(channel &passive)
+				inline std::shared_ptr<channel> session_factory::create_session(channel &other_side)
 				{
 					std::shared_ptr<session> s(new session);
 
 					s->disconnected = false;
-					s->passive = &passive;
+					s->other_side = &other_side;
 					sessions.push_back(s);
 					return s;
 				}

@@ -35,7 +35,7 @@ namespace micro_profiler
 
 		struct session_factory
 		{
-			virtual std::shared_ptr<channel> create_session(channel &passive) = 0;
+			virtual std::shared_ptr<channel> create_session(channel &other_side) = 0;
 		};
 
 		struct endpoint

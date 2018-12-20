@@ -225,7 +225,7 @@ namespace micro_profiler
 					const shared_ptr<mocks::session> &session = f->sessions[0];
 
 					// ACT
-					session->passive->disconnect();
+					session->other_side->disconnect();
 
 					session_released = session.unique();
 					client_go.set();

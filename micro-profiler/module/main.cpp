@@ -21,7 +21,7 @@
 #include <crtdbg.h>
 
 #include <common/constants.h>
-#include <frontend/frontend.h>
+#include <frontend/frontend2.h>
 #include <frontend/frontend_manager_impl.h>
 #include <frontend/ProfilerMainDialog.h>
 #include <setup/environment.h>

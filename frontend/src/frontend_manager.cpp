@@ -20,6 +20,8 @@
 
 #include <frontend/frontend_manager.h>
 
+#include <frontend/frontend.h>
+
 using namespace std;
 using namespace placeholders;
 
@@ -29,9 +31,13 @@ namespace micro_profiler
 		: frontend(frontend_)
 	{	}
 
+
 	frontend_manager::frontend_manager(const frontend_ui_factory &ui_factory)
-		: _ui_factory(ui_factory), _active_instance(0)
+		: _references(1), _ui_factory(ui_factory), _active_instance(0)
 	{	}
+
+	shared_ptr<frontend_manager> frontend_manager::create(const frontend_ui_factory &ui_factory)
+	{	return shared_ptr<frontend_manager>(new frontend_manager(ui_factory), &destroy);	}
 
 	void frontend_manager::close_all() throw()
 	{
@@ -42,7 +48,7 @@ namespace micro_profiler
 
 			ii->ui.reset();
 			if (!ui)
-				ii->frontend->disconnect();
+				ii->frontend->disconnect_session();
 		}
 	}
 
@@ -64,6 +70,14 @@ namespace micro_profiler
 	void frontend_manager::create_instance(const wstring &executable, const shared_ptr<functions_list> &model)
 	{	on_ready_for_ui(_instances.insert(_instances.end(), instance_impl(0)), executable, model);	}
 
+	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
+	{
+		shared_ptr<frontend> f(new frontend_impl(outbound));
+
+		register_frontend(*f);
+		return f;
+	}
+
 	void frontend_manager::set_ui_factory(const frontend_ui_factory &ui_factory)
 	{	_ui_factory = ui_factory;	}
 
@@ -82,7 +96,7 @@ namespace micro_profiler
 			_instances.erase(i);
 			throw;
 		}
-		lock();
+		addref();
 	}
 
 	void frontend_manager::on_frontend_released(instance_container::iterator i) throw()
@@ -90,7 +104,7 @@ namespace micro_profiler
 		i->frontend = 0;
 		if (!i->ui)
 			_instances.erase(i);
-		unlock();
+		release();
 	}
 
 	void frontend_manager::on_ready_for_ui(instance_container::iterator i, const wstring &executable,
@@ -104,7 +118,7 @@ namespace micro_profiler
 			i->ui_closed_connection = ui->closed += bind(&frontend_manager::on_ui_closed, this, i);
 			i->ui = ui;
 			_active_instance = &*i;
-			lock();
+			addref();
 		}
 	}
 
@@ -120,9 +134,24 @@ namespace micro_profiler
 		i->ui_closed_connection.reset();
 		i->ui.reset();
 		if (i->frontend)
-			i->frontend->disconnect();
+			i->frontend->disconnect_session();
 		else
 			_instances.erase(i);
-		unlock();
+		release();
+	}
+
+	void frontend_manager::addref() throw()
+	{	++_references;	}
+
+	void frontend_manager::release() throw()
+	{
+		if (!--_references)
+			delete this;
+	}
+
+	void frontend_manager::destroy(frontend_manager *p)
+	{
+		p->close_all();
+		p->release();
 	}
 }

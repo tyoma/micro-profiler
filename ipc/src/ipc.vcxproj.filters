@@ -23,10 +23,16 @@
     <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\endpoint.h" />
     <ClInclude Include="..\endpoint_com.h" />
+    <ClInclude Include="..\com\endpoint.h">
+      <Filter>com</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{2f81d937-48d4-40c4-bb2e-2128138b1d85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="com">
+      <UniqueIdentifier>{952abf62-8626-48fd-aeae-321ea5a3df48}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -18,10 +18,8 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <ipc/endpoint_com.h>
+#include <ipc/com/endpoint.h>
 
-#include <atlbase.h>
-#include <atlcom.h>
 #include <common/string.h>
 
 using namespace std;
@@ -32,44 +30,6 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			class channel_factory;
-
-
-			class ATL_NO_VTABLE channel : public ISequentialStream, public CComObjectRootEx<CComSingleThreadModel>,
-				public CComCoClass<channel>, public ipc::channel
-			{
-			public:
-//				DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
-				DECLARE_CLASSFACTORY_EX(channel_factory)
-
-				BEGIN_COM_MAP(channel)
-					COM_INTERFACE_ENTRY(ISequentialStream)
-				END_COM_MAP()
-
-				void FinalRelease();
-
-			public:
-				shared_ptr<ipc::channel> _inbound;
-
-			private:
-				STDMETHODIMP Read(void *, ULONG, ULONG *);
-				STDMETHODIMP Write(const void *message, ULONG size, ULONG *written);
-
-				virtual void disconnect() throw();
-				virtual void message(const_byte_range payload);
-			};
-
-
-			class channel_factory : public CComClassFactory
-			{
-			public:
-				shared_ptr<session_factory> _session_factory;
-
-			private:
-				STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);
-			};
-
-
 			class endpoint : public ipc::endpoint
 			{
 				virtual shared_ptr<session_factory> create_active(const char *destination_endpoint);
@@ -78,14 +38,14 @@ namespace micro_profiler
 
 
 			void channel::FinalRelease()
-			{	_inbound->disconnect();	}
+			{	inbound->disconnect();	}
 
 			STDMETHODIMP channel::Read(void *, ULONG, ULONG *)
 			{	return E_UNEXPECTED;	}
 
 			STDMETHODIMP channel::Write(const void *message, ULONG size, ULONG * /*written*/)
 			{
-				_inbound->message(const_byte_range(static_cast<const byte *>(message), size));
+				inbound->message(const_byte_range(static_cast<const byte *>(message), size));
 				return S_OK;
 			}
 
@@ -96,6 +56,13 @@ namespace micro_profiler
 			{	}
 
 
+			channel_factory::channel_factory(const shared_ptr<session_factory> &factory)
+				: _session_factory(factory)
+			{	}
+
+			void channel_factory::set_session_factory(const shared_ptr<session_factory> &factory)
+			{	_session_factory = factory;	}
+
 			STDMETHODIMP channel_factory::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
 			try
 			{
@@ -103,7 +70,7 @@ namespace micro_profiler
 				CComObject<channel>::CreateInstance(&p);
 				CComPtr<ISequentialStream> lock(p);
 
-				p->_inbound = _session_factory->create_session(*p);
+				p->inbound = _session_factory->create_session(*p);
 				return p->QueryInterface(riid, object);
 			}
 			catch (const bad_alloc &)
@@ -128,7 +95,7 @@ namespace micro_profiler
 				CComPtr<IClassFactory> lock(p);
 				DWORD cookie;
 
-				p->_session_factory = sf;
+				p->set_session_factory(sf);
 				if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
 					return shared_ptr<void>(p, bind(&::CoRevokeClassObject, cookie));
 				throw 0;

@@ -23,10 +23,12 @@
 #include "vs-pane.h"
 
 #include <common/constants.h>
+#include <common/string.h>
 #include <frontend/frontend_manager.h>
-#include <visualstudio/command-target.h>
+#include <ipc/endpoint_com.h>
 #include <resources/resource.h>
 #include <setup/environment.h>
+#include <visualstudio/command-target.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
@@ -85,8 +87,9 @@ namespace micro_profiler
 				_service_provider = sp;
 				_service_provider->QueryService(__uuidof(IVsUIShell), &_shell);
 				register_path(false);
-				_frontend_manager = frontend_manager::create(c_integrated_frontend_id,
-					bind(&profiler_package::create_ui, this, _1, _2));
+				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
+				_endpoint = ipc::com::create_endpoint()->create_passive(to_string(c_integrated_frontend_id).c_str(),
+					_frontend_manager);
 				return S_OK;
 			}
 
@@ -96,6 +99,7 @@ namespace micro_profiler
 			STDMETHODIMP Close()
 			{
 				_frontend_manager.reset();
+				_endpoint.reset();
 				return S_OK;
 			}
 
@@ -130,6 +134,7 @@ namespace micro_profiler
 		private:
 			CComPtr<IServiceProvider> _service_provider;
 			CComPtr<IVsUIShell> _shell;
+			shared_ptr<void> _endpoint;
 			shared_ptr<frontend_manager> _frontend_manager;
 			unsigned _next_tool_id;
 		};

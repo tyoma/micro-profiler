@@ -1,32 +1,32 @@
 #include "helpers_com.h"
 
-#include <atlbase.h>
 #include <ipc/channel_client.h>
+#include <ipc/com/endpoint.h>
 
 namespace micro_profiler
 {
 	namespace ipc
 	{
+		namespace com
+		{
+			shared_ptr<session_factory> channel_factory::create_default_session_factory()
+			{	return shared_ptr<session_factory>();	}
+		}
+
 		namespace tests
 		{
 			namespace
 			{
-				class Module : public CAtlDllModuleT<Module>
-				{
-				};
+				class Module : public CAtlDllModuleT<Module> {	} g_module;
 			}
+
 
 			com_initialize::com_initialize()
-			{
-				::CoInitialize(NULL);
-				_module.reset(new Module);
-			}
+			{	::CoInitialize(NULL);	}
 
 			com_initialize::~com_initialize()
-			{
-				_module.reset();
-				::CoUninitialize();
-			}
+			{	::CoUninitialize();	}
+
 
 			bool is_factory_registered(const guid_t &id)
 			{

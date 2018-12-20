@@ -20,31 +20,47 @@
 
 #include <crtdbg.h>
 
+#include <resources/resource.h>
+
 #include <common/constants.h>
-#include <frontend/frontend2.h>
-#include <frontend/frontend_manager_impl.h>
+#include <frontend/frontend_manager.h>
 #include <frontend/ProfilerMainDialog.h>
+#include <ipc/com/endpoint.h>
 #include <setup/environment.h>
 
-#include <vector>
-
-using namespace std;
 using namespace micro_profiler;
+using namespace std;
+
+namespace
+{
+	class Module : public CAtlDllModuleT<Module> { } g_module;
+}
 
 namespace micro_profiler
 {
 	HINSTANCE g_instance;
 
-	namespace
+	namespace ipc
 	{
-		class Module : public CAtlDllModuleT<Module> { } g_module;
+		namespace com
+		{
+			class FauxChannel : public ipc::com::channel, public CComCoClass<FauxChannel>
+			{
+			public:
+				DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
+				DECLARE_CLASSFACTORY_EX(ipc::com::channel_factory)
+			};
 
-		OBJECT_ENTRY_AUTO(reinterpret_cast<const GUID &>(c_standalone_frontend_id), Frontend);
+			OBJECT_ENTRY_AUTO(reinterpret_cast<const GUID &>(c_standalone_frontend_id), FauxChannel);
+
+
+			shared_ptr<frontend_ui> default_ui_factory(const shared_ptr<functions_list> &model, const wstring &executable)
+			{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable));	}
+
+			shared_ptr<session_factory> channel_factory::create_default_session_factory()
+			{	return shared_ptr<session_factory>(frontend_manager::create(&default_ui_factory));	}
+		}
 	}
-
-	shared_ptr<frontend_ui> frontend_manager_impl::default_ui_factory(const shared_ptr<functions_list> &model,
-		const wstring &executable)
-	{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable));	}
 }
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)

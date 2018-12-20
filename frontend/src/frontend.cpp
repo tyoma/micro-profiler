@@ -52,8 +52,8 @@ namespace micro_profiler
 		};
 	}
 
-	frontend_impl::frontend_impl()
-		: _resolver(symbol_resolver::create())
+	frontend_impl::frontend_impl(ipc::channel &outbound)
+		: _outbound(outbound), _resolver(symbol_resolver::create())
 	{	}
 
 	frontend_impl::~frontend_impl()
@@ -62,6 +62,9 @@ namespace micro_profiler
 			_model->release_resolver();
 		released();
 	}
+
+	void frontend_impl::disconnect() throw()
+	{	}
 
 	void frontend_impl::message(const_byte_range payload)
 	{
@@ -92,4 +95,7 @@ namespace micro_profiler
 			break;
 		}
 	}
+
+	void frontend_impl::disconnect_session() throw()
+	{	_outbound.disconnect();	}
 }

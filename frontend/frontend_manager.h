@@ -33,6 +33,7 @@ namespace micro_profiler
 
 	struct frontend : ipc::channel
 	{
+		virtual void disconnect_session() throw() = 0;
 		std::function<void(const std::wstring &process_name, const std::shared_ptr<functions_list> &model)> initialized;
 		std::function<void()> released;
 	};
@@ -47,7 +48,7 @@ namespace micro_profiler
 		wpl::signal<void()> closed;
 	};
 
-	class frontend_manager
+	class frontend_manager : public ipc::session_factory
 	{
 	public:
 		struct instance
@@ -62,7 +63,7 @@ namespace micro_profiler
 		typedef std::shared_ptr<frontend_manager> ptr;
 
 	public:
-		static std::shared_ptr<frontend_manager> create(const guid_t &id, const frontend_ui_factory &ui_factory);
+		static std::shared_ptr<frontend_manager> create(const frontend_ui_factory &ui_factory);
 
 		void close_all() throw();
 
@@ -70,6 +71,9 @@ namespace micro_profiler
 		const instance *get_instance(unsigned index) const throw();
 		const instance *get_active() const throw();
 		void create_instance(const std::wstring &executable, const std::shared_ptr<functions_list> &model);
+
+		// ipc::session_factory methods
+		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
 
 	protected:
 		frontend_manager(const frontend_ui_factory &ui_factory);
@@ -97,10 +101,12 @@ namespace micro_profiler
 		void on_ui_activated(instance_container::iterator i);
 		void on_ui_closed(instance_container::iterator i) throw();
 
-		virtual void lock() throw() = 0;
-		virtual void unlock() throw() = 0;
+		void addref() throw();
+		void release() throw();
+		static void destroy(frontend_manager *p);
 
 	private:
+		unsigned _references;
 		frontend_ui_factory _ui_factory;
 		instance_container _instances;
 		const instance_impl *_active_instance;

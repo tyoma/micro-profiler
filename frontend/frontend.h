@@ -22,20 +22,27 @@
 
 #include "frontend_manager.h"
 
+#include <common/noncopyable.h>
+
 namespace micro_profiler
 {
 	struct symbol_resolver;
 
-	class frontend_impl : public frontend
+	class frontend_impl : public frontend, noncopyable
 	{
 	public:
-		frontend_impl();
+		frontend_impl(ipc::channel &outbound);
 		~frontend_impl();
 
-//		virtual void disconnect() throw();
+		// ipc::channel methods
+		virtual void disconnect() throw();
 		virtual void message(const_byte_range payload);
 
+		// frontend methods
+		virtual void disconnect_session() throw();
+
 	private:
+		ipc::channel &_outbound;
 		std::shared_ptr<symbol_resolver> _resolver;
 		std::shared_ptr<functions_list> _model;
 	};

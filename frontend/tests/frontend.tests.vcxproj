@@ -55,9 +55,6 @@
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
-    <ClCompile Include="main.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

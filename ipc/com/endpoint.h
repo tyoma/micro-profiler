@@ -18,41 +18,58 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
-#include "frontend.h"
-
-#include <resources/resource.h>
+#include <ipc/endpoint_com.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
-	class frontend_manager_impl;
-
-	class ATL_NO_VTABLE Frontend : public ISequentialStream, public CComObjectRootEx<CComSingleThreadModel>,
-		public CComCoClass<Frontend>, public frontend_impl
+	namespace ipc
 	{
-	public:
-		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
-		DECLARE_CLASSFACTORY_EX(frontend_manager_impl)
-
-		BEGIN_COM_MAP(Frontend)
-			COM_INTERFACE_ENTRY(ISequentialStream)
-		END_COM_MAP()
-
-	public:
-		void disconnect() throw()
-		{	::CoDisconnectObject(this, 0);	}
-
-		STDMETHODIMP Read(void *, ULONG, ULONG *)
-		{	return E_NOTIMPL;	}
-
-		STDMETHODIMP Write(const void *message_, ULONG size, ULONG * /*written*/)
+		namespace com
 		{
-			message(const_byte_range(static_cast<const byte *>(message_), size));
-			return S_OK;
+			class channel_factory;
+
+			class channel : public ISequentialStream, public /*outbound*/ ipc::channel,
+				public CComObjectRootEx<CComSingleThreadModel>
+			{
+			public:
+				BEGIN_COM_MAP(channel)
+					COM_INTERFACE_ENTRY(ISequentialStream)
+				END_COM_MAP()
+
+				void FinalRelease();
+
+			public:
+				shared_ptr<ipc::channel> inbound;
+
+			private:
+				STDMETHODIMP Read(void *, ULONG, ULONG *);
+				STDMETHODIMP Write(const void *message, ULONG size, ULONG *written);
+
+				virtual void disconnect() throw();
+				virtual void message(const_byte_range payload);
+			};
+
+
+			class channel_factory : public CComClassFactory
+			{
+			public:
+				channel_factory(const std::shared_ptr<session_factory> &factory = create_default_session_factory());
+
+				void set_session_factory(const std::shared_ptr<session_factory> &factory);
+
+				static std::shared_ptr<session_factory> create_default_session_factory();
+
+			private:
+				STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);
+
+			private:
+				shared_ptr<session_factory> _session_factory;
+			};
 		}
-	};
+	}
 }

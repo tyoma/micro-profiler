@@ -1,4 +1,4 @@
-#include <visualstudio/command-target.h>
+#include <micro-profiler/visualstudio/command-target.h>
 
 #include <guiddef.h>
 #include <ut/assert.h>

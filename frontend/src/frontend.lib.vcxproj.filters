@@ -10,9 +10,6 @@
     <ClCompile Include="frontend_manager.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="frontend_manager_impl.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="function_list.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -20,14 +17,12 @@
   <ItemGroup>
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
-    <ClInclude Include="..\frontend_manager_impl.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\columns_model.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\series.h" />
-    <ClInclude Include="..\frontend2.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

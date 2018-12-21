@@ -33,9 +33,9 @@ namespace micro_profiler
 				socket_h _socket;
 			};
 
+
+
 			bool is_local_port_open(unsigned short port);
-
-
 		}
 	}
 }

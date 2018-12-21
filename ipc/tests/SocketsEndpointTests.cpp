@@ -5,6 +5,7 @@
 
 #include <mt/event.h>
 #include <stdexcept>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -138,18 +139,44 @@ namespace micro_profiler
 				test( MessagesSentAreReceivedBySession )
 				{
 					// INIT
+					int times = 1;
+					mt::event ready;
 					shared_ptr<endpoint> e = sockets::create_endpoint();
 					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
 					shared_ptr<void> s = e->create_passive("6101", f);
+
+					f->session_opened = [&] (const shared_ptr<mocks::session> &s) {
+						s->received_message = [&] {
+							if (!--times)
+								ready.set();
+						};
+					};
+
 					sender stream(6101);
 					byte data1[] = "if you’re going to try, go all the way.";
-//					byte data2[] = "otherwise, don’t even start.";
-	//				byte data3[] = "this could mean losing girlfriends, wives, relatives, jobs and maybe your mind.";
+					byte data2[] = "otherwise, don’t even start.";
+					byte data3[] = "this could mean losing girlfriends, wives, relatives, jobs and maybe your mind.";
 
 					// ACT
 					stream(data1, sizeof(data1));
+					ready.wait();
 
 					// ASSERT
+					assert_equal(1u, f->sessions[0]->payloads_log.size());
+					assert_equal(micro_profiler::tests::mkvector(data1), f->sessions[0]->payloads_log[0]);
+
+					// INIT
+					times = 2;
+
+					// ACT
+					stream(data2, sizeof(data2));
+					stream(data3, sizeof(data3));
+					ready.wait();
+
+					// ASSERT
+					assert_equal(3u, f->sessions[0]->payloads_log.size());
+					assert_equal(micro_profiler::tests::mkvector(data2), f->sessions[0]->payloads_log[1]);
+					assert_equal(micro_profiler::tests::mkvector(data3), f->sessions[0]->payloads_log[2]);
 				}
 			end_test_suite
 		}

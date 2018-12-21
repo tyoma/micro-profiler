@@ -22,13 +22,40 @@
 
 #include "endpoint.h"
 
+#include <algorithm>
+
 namespace micro_profiler
 {
 	namespace ipc
 	{
 		namespace sockets
 		{
+			template <typename T>
+			union byte_representation
+			{
+				char bytes[sizeof(T)];
+				T value;
+
+				void reorder();
+			};
+
+
+
 			std::shared_ptr<endpoint> create_endpoint();
+
+
+			template <typename T>
+			inline void byte_representation<T>::reorder()
+			{
+				byte_representation<unsigned> order;
+
+				order.value = 0xFF;
+				if (order.bytes[0])
+				{
+					for (size_t i = 0; i < sizeof(T) / 2; ++i)
+						std::swap(bytes[i], bytes[sizeof(T) - 1 - i]);
+				}
+			}
 		}
 	}
 }

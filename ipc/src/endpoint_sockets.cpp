@@ -31,6 +31,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 
 using namespace std;
 
@@ -130,8 +131,16 @@ namespace micro_profiler
 			{
 				_inbound = factory.create_session(*this);
 				_thread.reset(new mt::thread([this] {
-					char buffer[10];
-					recv(_socket, buffer, sizeof(buffer), MSG_WAITALL);
+					sockets::byte_representation<unsigned int> size;
+					vector<byte> buffer;
+
+					for (int read; read = ::recv(_socket, size.bytes, sizeof(size.bytes), MSG_WAITALL), read > 0; )
+					{
+						size.reorder();
+						buffer.resize(size.value);
+						::recv(_socket, reinterpret_cast<char *>(&buffer[0]), size.value, MSG_WAITALL);
+						_inbound->message(const_byte_range(&buffer[0], buffer.size()));
+					}
 					_inbound->disconnect();
 					_inbound.reset();
 				}));

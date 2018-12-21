@@ -2,10 +2,11 @@
 
 #include <arpa/inet.h>
 #include <common/noncopyable.h>
-#include <ut/assert.h>
+#include <ipc/endpoint_sockets.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <ut/assert.h>
 
 namespace micro_profiler
 {
@@ -34,8 +35,15 @@ namespace micro_profiler
 			sender::~sender()
 			{	}
 
-			void sender::operator ()(const void * /*buffer*/, size_t /*size*/)
-			{	}
+			void sender::operator ()(const void *buffer, size_t size_)
+			{
+				sockets::byte_representation<unsigned int> size;
+
+				size.value = static_cast<unsigned int>(size_);
+				size.reorder();
+				::send(_socket, size.bytes, sizeof(size.bytes), 0);
+				::send(_socket, static_cast<const char *>(buffer), static_cast<unsigned int>(size_), 0);
+			}
 
 
 			bool is_local_port_open(unsigned short port)

@@ -41,7 +41,6 @@
     <ClCompile Include="columns_model.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />

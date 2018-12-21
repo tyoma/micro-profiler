@@ -18,7 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <frontend/frontend.h>
+#include <frontend/frontend_manager.h>
 
 #include <frontend/function_list.h>
 
@@ -52,21 +52,21 @@ namespace micro_profiler
 		};
 	}
 
-	frontend_impl::frontend_impl(ipc::channel &outbound)
+	frontend::frontend(ipc::channel &outbound)
 		: _outbound(outbound), _resolver(symbol_resolver::create())
 	{	}
 
-	frontend_impl::~frontend_impl()
+	frontend::~frontend()
 	{
 		if (_model)
 			_model->release_resolver();
 		released();
 	}
 
-	void frontend_impl::disconnect() throw()
+	void frontend::disconnect() throw()
 	{	}
 
-	void frontend_impl::message(const_byte_range payload)
+	void frontend::message(const_byte_range payload)
 	{
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> archive(reader);
@@ -96,6 +96,6 @@ namespace micro_profiler
 		}
 	}
 
-	void frontend_impl::disconnect_session() throw()
+	void frontend::disconnect_session() throw()
 	{	_outbound.disconnect();	}
 }

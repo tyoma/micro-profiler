@@ -124,9 +124,6 @@
     <ProjectReference Include="..\ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libraries\wpl\src\wpl.mt\wpl.mt.vcxproj">
-      <Project>{4db355c8-12f1-4bbd-842c-f8d085b52f8c}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Target Name="CopyFixed" AfterTargets="Midl">
     <Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;&#xD;&#xA;		 replace &quot;%(Fix.Identity)&quot; &gt; &quot;$(OutDir)%(Fix.Filename)%(Fix.Extension)&quot;" />

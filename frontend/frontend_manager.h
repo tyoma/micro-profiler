@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <common/types.h>
 #include <ipc/endpoint.h>
 #include <memory>
@@ -30,12 +31,29 @@
 namespace micro_profiler
 {
 	class functions_list;
+	struct symbol_resolver;
 
-	struct frontend : ipc::channel
+	class frontend : public ipc::channel, noncopyable
 	{
-		virtual void disconnect_session() throw() = 0;
+	public:
+		frontend(ipc::channel &outbound);
+		~frontend();
+
+		void disconnect_session() throw();
+
+	public:
 		std::function<void(const std::wstring &process_name, const std::shared_ptr<functions_list> &model)> initialized;
 		std::function<void()> released;
+
+	private:
+		// ipc::channel methods
+		virtual void disconnect() throw();
+		virtual void message(const_byte_range payload);
+
+	private:
+		ipc::channel &_outbound;
+		std::shared_ptr<symbol_resolver> _resolver;
+		std::shared_ptr<functions_list> _model;
 	};
 
 	struct frontend_ui
@@ -75,12 +93,6 @@ namespace micro_profiler
 		// ipc::session_factory methods
 		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
 
-	protected:
-		frontend_manager(const frontend_ui_factory &ui_factory);
-
-		void set_ui_factory(const frontend_ui_factory &ui_factory);
-		void register_frontend(frontend &new_frontend);
-
 	private:
 		struct instance_impl : instance
 		{
@@ -94,6 +106,8 @@ namespace micro_profiler
 		typedef std::list<instance_impl> instance_container;
 
 	private:
+		frontend_manager(const frontend_ui_factory &ui_factory);
+
 		void on_frontend_released(instance_container::iterator i) throw();
 		void on_ready_for_ui(instance_container::iterator i, const std::wstring &executable,
 			const std::shared_ptr<functions_list> &model);

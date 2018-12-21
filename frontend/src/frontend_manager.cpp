@@ -20,8 +20,6 @@
 
 #include <frontend/frontend_manager.h>
 
-#include <frontend/frontend.h>
-
 using namespace std;
 using namespace placeholders;
 
@@ -72,24 +70,14 @@ namespace micro_profiler
 
 	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
 	{
-		shared_ptr<frontend> f(new frontend_impl(outbound));
-
-		register_frontend(*f);
-		return f;
-	}
-
-	void frontend_manager::set_ui_factory(const frontend_ui_factory &ui_factory)
-	{	_ui_factory = ui_factory;	}
-
-	void frontend_manager::register_frontend(frontend &new_frontend)
-	{
-		instance_container::iterator i = _instances.insert(_instances.end(), instance_impl(&new_frontend));
+		shared_ptr<frontend> f(new frontend(outbound));
+		instance_container::iterator i = _instances.insert(_instances.end(), instance_impl(f.get()));
 
 		try
 		{
 			// Untested: guarantee that any exception thrown after the instance is in the list would remove the entry.
-			new_frontend.initialized = bind(&frontend_manager::on_ready_for_ui, this, i, _1, _2);
-			new_frontend.released = bind(&frontend_manager::on_frontend_released, this, i); // Must go the last.
+			f->initialized = bind(&frontend_manager::on_ready_for_ui, this, i, _1, _2);
+			f->released = bind(&frontend_manager::on_frontend_released, this, i); // Must go the last.
 		}
 		catch (...)
 		{
@@ -97,6 +85,7 @@ namespace micro_profiler
 			throw;
 		}
 		addref();
+		return f;
 	}
 
 	void frontend_manager::on_frontend_released(instance_container::iterator i) throw()

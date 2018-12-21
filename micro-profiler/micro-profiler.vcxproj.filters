@@ -57,7 +57,6 @@
     <None Include="logo.ico">
       <Filter>resources</Filter>
     </None>
-    <None Include="micro-profiler.initializer.cpp" />
     <None Include="frontend\micro-profiler-frontend.rgs">
       <Filter>frontend</Filter>
     </None>

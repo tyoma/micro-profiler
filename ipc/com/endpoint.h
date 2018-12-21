@@ -31,8 +31,6 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			class channel_factory;
-
 			class channel : public ISequentialStream, public /*outbound*/ ipc::channel,
 				public CComObjectRootEx<CComSingleThreadModel>
 			{

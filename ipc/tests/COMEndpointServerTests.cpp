@@ -241,17 +241,20 @@ namespace micro_profiler
 				test( ClientReleasingChannelLeadsLeadsToDisconnectNotificationInSession )
 				{
 					// INIT
+					bool disconnected = false;
 					shared_ptr<endpoint> e = com::create_endpoint();
 					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
 					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
 					stream_function_t stream = open_stream(ids[0]);
 					shared_ptr<mocks::session> session = f->sessions[0];
 
+					session->disconnected = [&] { disconnected = true; };
+
 					// ACT
 					stream = stream_function_t();
 
 					// ASSERT
-					assert_is_true(session->disconnected);
+					assert_is_true(disconnected);
 				}
 			end_test_suite
 		}

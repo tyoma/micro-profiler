@@ -29,6 +29,14 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+    <ClCompile>
+    	<AdditionalIncludeDirectories>..\..\compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
@@ -47,15 +55,17 @@
     <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="COMEndpointServerTests.cpp" />
     <ClCompile Include="helpers_com.cpp">
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="helpers_sockets.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="IPCClientServerTests.cpp" />
+    <ClCompile Include="SocketsEndpointTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers_com.h" />
+    <ClInclude Include="helpers_sockets.h" />
     <ClInclude Include="mocks.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

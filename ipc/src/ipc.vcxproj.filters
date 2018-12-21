@@ -13,6 +13,9 @@
     <ClCompile Include="endpoint_com.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="endpoint_sockets.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\client.h" />
@@ -26,6 +29,7 @@
     <ClInclude Include="..\com\endpoint.h">
       <Filter>com</Filter>
     </ClInclude>
+    <ClInclude Include="..\endpoint_sockets.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

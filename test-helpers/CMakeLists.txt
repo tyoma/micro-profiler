@@ -4,7 +4,9 @@ set(TEST_HELPERS_SOURCES
 
 if (WIN32)
 	set(TEST_HELPERS_SOURCES ${TEST_HELPERS_SOURCES}
+		com.cpp
 		helpers_win32.cpp
+		mocks_com.cpp
 		thread_win32.cpp
 	)
 elseif(UNIX)

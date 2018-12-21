@@ -178,6 +178,33 @@ namespace micro_profiler
 					assert_equal(micro_profiler::tests::mkvector(data2), f->sessions[0]->payloads_log[1]);
 					assert_equal(micro_profiler::tests::mkvector(data3), f->sessions[0]->payloads_log[2]);
 				}
+
+
+				test( DisconnectingSuppliedChannelDisconnectsClientAndReleasesSession )
+				{
+					// INIT
+					mt::event ready;
+					shared_ptr<endpoint> e = sockets::create_endpoint();
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server("6101", f);
+					byte data[10];
+
+					f->session_opened = [&] (shared_ptr<void>) {
+						ready.set();
+					};
+
+					sender stream(6101);
+
+					ready.wait();
+
+					const shared_ptr<mocks::session> &session = f->sessions[0];
+
+					// ACT
+					session->outbound->disconnect();
+
+					// ACT / ASSERT
+					assert_is_false(stream(data, sizeof(data)));
+				}
 			end_test_suite
 		}
 	}

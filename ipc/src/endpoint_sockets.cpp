@@ -151,7 +151,7 @@ namespace micro_profiler
 			}
 
 			void session::disconnect() throw()
-			{	}
+			{	_socket.reset();	}
 
 			void session::message(const_byte_range /*payload*/)
 			{	}

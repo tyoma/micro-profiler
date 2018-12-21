@@ -44,21 +44,21 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			class FauxChannel : public ipc::com::channel, public CComCoClass<FauxChannel>
+			class FauxSession : public ipc::com::session, public CComCoClass<FauxSession>
 			{
 			public:
 				DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
-				DECLARE_CLASSFACTORY_EX(ipc::com::channel_factory)
+				DECLARE_CLASSFACTORY_EX(ipc::com::server)
 			};
 
-			OBJECT_ENTRY_AUTO(reinterpret_cast<const GUID &>(c_standalone_frontend_id), FauxChannel);
+			OBJECT_ENTRY_AUTO(reinterpret_cast<const GUID &>(c_standalone_frontend_id), FauxSession);
 
 
 			shared_ptr<frontend_ui> default_ui_factory(const shared_ptr<functions_list> &model, const wstring &executable)
 			{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable));	}
 
-			shared_ptr<session_factory> channel_factory::create_default_session_factory()
-			{	return shared_ptr<session_factory>(frontend_manager::create(&default_ui_factory));	}
+			shared_ptr<ipc::server> server::create_default_session_factory()
+			{	return frontend_manager::create(&default_ui_factory);	}
 		}
 	}
 }

@@ -35,14 +35,18 @@ namespace micro_profiler
 			sender::~sender()
 			{	}
 
-			void sender::operator ()(const void *buffer, size_t size_)
+			bool sender::operator ()(const void *buffer, size_t sz)
 			{
+				int size_ = static_cast<unsigned int>(sz);
 				sockets::byte_representation<unsigned int> size;
 
-				size.value = static_cast<unsigned int>(size_);
+				size.value = size_;
 				size.reorder();
-				::send(_socket, size.bytes, sizeof(size.bytes), 0);
-				::send(_socket, static_cast<const char *>(buffer), static_cast<unsigned int>(size_), 0);
+				if (::send(_socket, size.bytes, sizeof(size.bytes), 0) < sizeof(size.bytes))
+					return false;
+				if (::send(_socket, static_cast<const char *>(buffer), size_, 0) < size_)
+					return false;
+				return true;
 			}
 
 

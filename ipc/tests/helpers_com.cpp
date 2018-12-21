@@ -9,8 +9,8 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			shared_ptr<session_factory> channel_factory::create_default_session_factory()
-			{	return shared_ptr<session_factory>();	}
+			shared_ptr<ipc::server> server::create_default_session_factory()
+			{	return shared_ptr<ipc::server>();	}
 		}
 
 		namespace tests

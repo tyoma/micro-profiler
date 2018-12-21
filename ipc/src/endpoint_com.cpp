@@ -32,42 +32,41 @@ namespace micro_profiler
 		{
 			class endpoint : public ipc::endpoint
 			{
-				virtual shared_ptr<session_factory> create_active(const char *destination_endpoint);
-				virtual shared_ptr<void> create_passive(const char *endpoint_id, const shared_ptr<session_factory> &sf);
+				virtual shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &sf);
 			};
 
 
-			void channel::FinalRelease()
+			void session::FinalRelease()
 			{	inbound->disconnect();	}
 
-			STDMETHODIMP channel::Read(void *, ULONG, ULONG *)
+			STDMETHODIMP session::Read(void *, ULONG, ULONG *)
 			{	return E_UNEXPECTED;	}
 
-			STDMETHODIMP channel::Write(const void *message, ULONG size, ULONG * /*written*/)
+			STDMETHODIMP session::Write(const void *message, ULONG size, ULONG * /*written*/)
 			{
 				inbound->message(const_byte_range(static_cast<const byte *>(message), size));
 				return S_OK;
 			}
 
-			void channel::disconnect()
+			void session::disconnect()
 			{	::CoDisconnectObject(this, 0);	}
 
-			void channel::message(const_byte_range /*payload*/)
+			void session::message(const_byte_range /*payload*/)
 			{	}
 
 
-			channel_factory::channel_factory(const shared_ptr<session_factory> &factory)
+			server::server(const shared_ptr<ipc::server> &factory)
 				: _session_factory(factory)
 			{	}
 
-			void channel_factory::set_session_factory(const shared_ptr<session_factory> &factory)
+			void server::set_server(const shared_ptr<ipc::server> &factory)
 			{	_session_factory = factory;	}
 
-			STDMETHODIMP channel_factory::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
+			STDMETHODIMP server::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
 			try
 			{
-				CComObject<channel> *p = 0;
-				CComObject<channel>::CreateInstance(&p);
+				CComObject<session> *p = 0;
+				CComObject<session>::CreateInstance(&p);
 				CComPtr<ISequentialStream> lock(p);
 
 				p->inbound = _session_factory->create_session(*p);
@@ -79,23 +78,18 @@ namespace micro_profiler
 			}
 
 
-			shared_ptr<session_factory> endpoint::create_active(const char * /*destination_endpoint*/)
-			{
-				throw 0;
-			}
-
-			shared_ptr<void> endpoint::create_passive(const char *endpoint_id, const shared_ptr<session_factory> &sf)
+			shared_ptr<void> endpoint::run_server(const char *endpoint_id, const shared_ptr<ipc::server> &sf)
 			{
 				guid_t id = from_string(endpoint_id);
 				const CLSID &clsid = reinterpret_cast<const CLSID &>(id);
-				CComObject<channel_factory> *p = 0;
+				CComObject<server> *p = 0;
 
-				CComObject<channel_factory>::CreateInstance(&p);
+				CComObject<server>::CreateInstance(&p);
 
 				CComPtr<IClassFactory> lock(p);
 				DWORD cookie;
 
-				p->set_session_factory(sf);
+				p->set_server(sf);
 				if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
 					return shared_ptr<void>(p, bind(&::CoRevokeClassObject, cookie));
 				throw 0;

@@ -66,7 +66,7 @@ namespace micro_profiler
 		wpl::signal<void()> closed;
 	};
 
-	class frontend_manager : public ipc::session_factory
+	class frontend_manager : public ipc::server
 	{
 	public:
 		struct instance
@@ -90,7 +90,7 @@ namespace micro_profiler
 		const instance *get_active() const throw();
 		void create_instance(const std::wstring &executable, const std::shared_ptr<functions_list> &model);
 
-		// ipc::session_factory methods
+		// ipc::server methods
 		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
 
 	private:

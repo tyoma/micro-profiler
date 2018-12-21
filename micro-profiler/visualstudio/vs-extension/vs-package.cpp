@@ -88,7 +88,7 @@ namespace micro_profiler
 				_service_provider->QueryService(__uuidof(IVsUIShell), &_shell);
 				register_path(false);
 				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
-				_endpoint = ipc::com::create_endpoint()->create_passive(to_string(c_integrated_frontend_id).c_str(),
+				_endpoint = ipc::com::create_endpoint()->run_server(to_string(c_integrated_frontend_id).c_str(),
 					_frontend_manager);
 				return S_OK;
 			}

@@ -16,7 +16,7 @@ namespace micro_profiler
 				class session : public ipc::channel
 				{
 				public:
-					ipc::channel *other_side;
+					ipc::channel *outbound;
 					std::vector< std::vector<byte> > payloads_log;
 					std::function<void()> received_message;
 					std::function<void()> disconnected;
@@ -26,14 +26,14 @@ namespace micro_profiler
 					virtual void message(const_byte_range payload);
 				};
 
-				class session_factory : public ipc::session_factory
+				class server : public ipc::server
 				{
 				public:
 					std::vector< std::shared_ptr<session> > sessions;
 					std::function<void (const std::shared_ptr<session> &new_session)> session_opened;
 
 				private:
-					virtual std::shared_ptr<channel> create_session(channel &other_side);
+					virtual std::shared_ptr<channel> create_session(channel &outbound);
 				};
 
 
@@ -52,11 +52,11 @@ namespace micro_profiler
 				}
 
 
-				inline std::shared_ptr<channel> session_factory::create_session(channel &other_side)
+				inline std::shared_ptr<channel> server::create_session(channel &outbound)
 				{
 					std::shared_ptr<session> s(new session);
 
-					s->other_side = &other_side;
+					s->outbound = &outbound;
 					sessions.push_back(s);
 					if (session_opened)
 						session_opened(s);

@@ -27,7 +27,7 @@ namespace micro_profiler
 				sender(unsigned short port);
 				~sender();
 
-				void operator ()(const void *buffer, size_t size);
+				bool operator ()(const void *buffer, size_t size);
 
 			private:
 				socket_h _socket;

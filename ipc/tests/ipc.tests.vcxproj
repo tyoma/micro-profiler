@@ -34,7 +34,7 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <ClCompile>
-    	<AdditionalIncludeDirectories>..\..\compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -61,7 +61,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="IPCClientServerTests.cpp" />
-    <ClCompile Include="SocketsEndpointTests.cpp" />
+    <ClCompile Include="SocketsEndpointServerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers_com.h" />

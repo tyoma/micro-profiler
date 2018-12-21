@@ -33,16 +33,14 @@ namespace micro_profiler
 			virtual void message(const_byte_range payload) = 0;
 		};
 
-		struct session_factory
+		struct server
 		{
-			virtual std::shared_ptr<channel> create_session(channel &other_side) = 0;
+			virtual std::shared_ptr<channel> create_session(channel &outbound) = 0;
 		};
 
 		struct endpoint
 		{
-			virtual std::shared_ptr<session_factory> create_active(const char *destination_endpoint) = 0;
-			virtual std::shared_ptr<void> create_passive(const char *endpoint_id,
-				const std::shared_ptr<session_factory> &factory) = 0;
+			virtual std::shared_ptr<void> run_server(const char *endpoint_id, const std::shared_ptr<server> &factory) = 0;
 		};
 	}
 }

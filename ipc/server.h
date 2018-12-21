@@ -20,44 +20,46 @@
 
 #pragma once
 
+#include <common/types.h>
 #include <vector>
 
 namespace micro_profiler
 {
 	namespace ipc
 	{
-		typedef unsigned char byte;
-
-		class server
+		namespace named_pipes
 		{
-		public:
-			struct session;
+			class server
+			{
+			public:
+				struct session;
 
-		public:
-			server(const char *server_name);
-			virtual ~server();
+			public:
+				server(const char *server_name);
+				virtual ~server();
 
-			void run();
-			void stop();
+				void run();
+				void stop();
 
-		private:
-			class impl;
-			class outer_session;
+			private:
+				class impl;
+				class outer_session;
 
-		private:
-			virtual session *create_session() = 0;
+			private:
+				virtual session *create_session() = 0;
 
-		private:
-			impl *_impl;
+			private:
+				impl *_impl;
 
-			friend impl;
-		};
+				friend impl;
+			};
 
-		struct server::session
-		{
-			virtual ~session() { }
+			struct server::session
+			{
+				virtual ~session() { }
 
-			virtual void on_message(const std::vector<byte> &input, std::vector<byte> &output) = 0;
-		};
+				virtual void on_message(const std::vector<byte> &input, std::vector<byte> &output) = 0;
+			};
+		}
 	}
 }

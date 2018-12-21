@@ -55,17 +55,17 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
+					shared_ptr<mocks::server> f(new mocks::server);
 
 					// INIT / ACT
-					shared_ptr<void> h1 = e->create_passive(to_string(ids[0]).c_str(), f);
+					shared_ptr<void> h1 = e->run_server(to_string(ids[0]).c_str(), f);
 
 					// ACT / ASSERT
 					assert_is_true(is_factory_registered(ids[0]));
 					assert_is_false(is_factory_registered(ids[1]));
 
 					// INIT / ACT
-					shared_ptr<void> h2 = e->create_passive(to_string(ids[1]).c_str(), f);
+					shared_ptr<void> h2 = e->run_server(to_string(ids[1]).c_str(), f);
 
 					// ACT / ASSERT
 					assert_is_true(is_factory_registered(ids[0]));
@@ -77,10 +77,10 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
+					shared_ptr<mocks::server> f(new mocks::server);
 
-					shared_ptr<void> h1 = e->create_passive(to_string(ids[0]).c_str(), f);
-					shared_ptr<void> h2 = e->create_passive(to_string(ids[1]).c_str(), f);
+					shared_ptr<void> h1 = e->run_server(to_string(ids[0]).c_str(), f);
+					shared_ptr<void> h2 = e->run_server(to_string(ids[1]).c_str(), f);
 
 					// ACT
 					h1.reset();
@@ -102,10 +102,10 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
+					shared_ptr<mocks::server> f(new mocks::server);
 
 					// INIT / ACT
-					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					shared_ptr<void> h = e->run_server(to_string(ids[0]).c_str(), f);
 
 					// ASSERT
 					assert_is_false(f.unique());
@@ -122,8 +122,8 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server(to_string(ids[0]).c_str(), f);
 
 					// ACT
 					stream_function_t s1 = open_stream(ids[0]);
@@ -147,8 +147,8 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server(to_string(ids[0]).c_str(), f);
 
 					// ACT
 					open_stream(ids[0]);
@@ -166,12 +166,12 @@ namespace micro_profiler
 				}
 
 
-				test( SendingDataIsDeliveredToSessionChannel )
+				test( DataSentIsDeliveredToSessionChannel )
 				{
 					// INIT
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server(to_string(ids[0]).c_str(), f);
 					stream_function_t stream = open_stream(ids[0]);
 					shared_ptr<mocks::session> session = f->sessions[0];
 					byte data1[] = "if you’re going to try, go all the way.";
@@ -214,8 +214,8 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server(to_string(ids[0]).c_str(), f);
 					micro_profiler::tests::com_event client_ready, client_go;
 					bool ok = true, session_released = false;
 					mt::thread t(bind(&COMEndpointServerTests::client_thread, this, ids[0], &client_ready, &client_go, &ok));
@@ -225,7 +225,7 @@ namespace micro_profiler
 					const shared_ptr<mocks::session> &session = f->sessions[0];
 
 					// ACT
-					session->other_side->disconnect();
+					session->outbound->disconnect();
 
 					session_released = session.unique();
 					client_go.set();
@@ -243,8 +243,8 @@ namespace micro_profiler
 					// INIT
 					bool disconnected = false;
 					shared_ptr<endpoint> e = com::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> h = e->create_passive(to_string(ids[0]).c_str(), f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server(to_string(ids[0]).c_str(), f);
 					stream_function_t stream = open_stream(ids[0]);
 					shared_ptr<mocks::session> session = f->sessions[0];
 

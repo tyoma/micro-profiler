@@ -28,7 +28,7 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			std::shared_ptr<endpoint> create_endpoint();
+			std::shared_ptr<ipc::endpoint> create_endpoint();
 		}
 	}
 }

@@ -31,11 +31,11 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			class channel : public ISequentialStream, public /*outbound*/ ipc::channel,
+			class session : public ISequentialStream, public /*outbound*/ ipc::channel,
 				public CComObjectRootEx<CComSingleThreadModel>
 			{
 			public:
-				BEGIN_COM_MAP(channel)
+				BEGIN_COM_MAP(session)
 					COM_INTERFACE_ENTRY(ISequentialStream)
 				END_COM_MAP()
 
@@ -53,20 +53,20 @@ namespace micro_profiler
 			};
 
 
-			class channel_factory : public CComClassFactory
+			class server : public CComClassFactory
 			{
 			public:
-				channel_factory(const std::shared_ptr<session_factory> &factory = create_default_session_factory());
+				server(const std::shared_ptr<ipc::server> &factory = create_default_session_factory());
 
-				void set_session_factory(const std::shared_ptr<session_factory> &factory);
+				void set_server(const std::shared_ptr<ipc::server> &factory);
 
-				static std::shared_ptr<session_factory> create_default_session_factory();
+				static std::shared_ptr<ipc::server> create_default_session_factory();
 
 			private:
 				STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);
 
 			private:
-				shared_ptr<session_factory> _session_factory;
+				shared_ptr<ipc::server> _session_factory;
 			};
 		}
 	}

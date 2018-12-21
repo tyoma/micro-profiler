@@ -6,7 +6,7 @@ endif()
 
 set(IPC_TESTS_SOURCES
 	helpers_sockets.cpp
-	SocketsEndpointTests.cpp
+	SocketsEndpointServerTests.cpp
 )
 
 if (WIN32)

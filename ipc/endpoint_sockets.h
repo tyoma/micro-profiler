@@ -41,7 +41,7 @@ namespace micro_profiler
 
 
 
-			std::shared_ptr<endpoint> create_endpoint();
+			std::shared_ptr<ipc::endpoint> create_endpoint();
 
 
 			template <typename T>

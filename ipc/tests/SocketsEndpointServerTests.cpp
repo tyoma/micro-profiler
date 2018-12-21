@@ -17,7 +17,7 @@ namespace micro_profiler
 	{
 		namespace tests
 		{
-			begin_test_suite( SocketsEndpointTests )
+			begin_test_suite( SocketsEndpointServerTests )
 				test( CreatingEndpointReturnsNonNullObjects )
 				{
 					// INIT / ACT
@@ -35,17 +35,17 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = sockets::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
+					shared_ptr<mocks::server> f(new mocks::server);
 
 					// ACT
-					shared_ptr<void> s1 = e->create_passive("6101", f);
+					shared_ptr<void> s1 = e->run_server("6101", f);
 
 					// ASSERT
 					assert_is_true(is_local_port_open(6101));
 					assert_is_false(is_local_port_open(6103));
 
 					// ACT
-					shared_ptr<void> s2 = e->create_passive("6103", f);
+					shared_ptr<void> s2 = e->run_server("6103", f);
 
 					// ASSERT
 					assert_is_true(is_local_port_open(6101));
@@ -57,11 +57,11 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<endpoint> e = sockets::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> s1 = e->create_passive("6101", f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> s1 = e->run_server("6101", f);
 
 					// ACT / ASSERT
-					assert_throws(e->create_passive("6101", f), runtime_error);
+					assert_throws(e->run_server("6101", f), runtime_error);
 				}
 
 
@@ -71,8 +71,8 @@ namespace micro_profiler
 					int times = 1;
 					mt::event ready;
 					shared_ptr<endpoint> e = sockets::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> h = e->create_passive("6101", f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server("6101", f);
 
 					f->session_opened = [&] (const shared_ptr<void> &) {
 						if (!--times)
@@ -107,8 +107,8 @@ namespace micro_profiler
 					// INIT
 					mt::event ready;
 					shared_ptr<endpoint> e = sockets::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> h = e->create_passive("6101", f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = e->run_server("6101", f);
 
 					f->session_opened = [&] (const shared_ptr<mocks::session> &s) {
 						s->disconnected = [&] {
@@ -136,14 +136,14 @@ namespace micro_profiler
 				}
 
 
-				test( MessagesSentAreReceivedBySession )
+				test( DataSentIsDeliveredToSessionChannel )
 				{
 					// INIT
 					int times = 1;
 					mt::event ready;
 					shared_ptr<endpoint> e = sockets::create_endpoint();
-					shared_ptr<mocks::session_factory> f(new mocks::session_factory);
-					shared_ptr<void> s = e->create_passive("6101", f);
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> s = e->run_server("6101", f);
 
 					f->session_opened = [&] (const shared_ptr<mocks::session> &s) {
 						s->received_message = [&] {
@@ -157,8 +157,8 @@ namespace micro_profiler
 					byte data2[] = "otherwise, don’t even start.";
 					byte data3[] = "this could mean losing girlfriends, wives, relatives, jobs and maybe your mind.";
 
-					// ACT
-					stream(data1, sizeof(data1));
+					// ACT / ASSERT
+					assert_is_true(stream(data1, sizeof(data1)));
 					ready.wait();
 
 					// ASSERT
@@ -168,9 +168,9 @@ namespace micro_profiler
 					// INIT
 					times = 2;
 
-					// ACT
-					stream(data2, sizeof(data2));
-					stream(data3, sizeof(data3));
+					// ACT / ASSERT
+					assert_is_true(stream(data2, sizeof(data2)));
+					assert_is_true(stream(data3, sizeof(data3)));
 					ready.wait();
 
 					// ASSERT

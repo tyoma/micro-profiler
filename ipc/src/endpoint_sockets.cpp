@@ -90,7 +90,7 @@ namespace micro_profiler
 			class session : /*outbound*/ ipc::channel
 			{
 			public:
-				session(int s, session_factory &factory);
+				session(int s, ipc::server &factory);
 				~session();
 
 				void disconnect() throw();
@@ -106,7 +106,7 @@ namespace micro_profiler
 			class server
 			{
 			public:
-				server(const char *endpoint_id, const shared_ptr<session_factory> &factory);
+				server(const char *endpoint_id, const shared_ptr<ipc::server> &factory);
 				~server();
 
 			private:
@@ -119,14 +119,12 @@ namespace micro_profiler
 
 			class endpoint : public ipc::endpoint
 			{
-				virtual shared_ptr<session_factory> create_active(const char *destination_endpoint);
-				virtual shared_ptr<void> create_passive(const char *endpoint_id,
-					const shared_ptr<session_factory> &factory);
+				virtual shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &factory);
 			};
 
 
 
-			session::session(int s, session_factory &factory)
+			session::session(int s, ipc::server &factory)
 				: _socket(s)
 			{
 				_inbound = factory.create_session(*this);
@@ -159,7 +157,7 @@ namespace micro_profiler
 			{	}
 
 
-			server::server(const char *endpoint_id, const shared_ptr<session_factory> &factory)
+			server::server(const char *endpoint_id, const shared_ptr<ipc::server> &factory)
 				: _server_socket((int)::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
 			{
 				sockaddr_in service = {
@@ -186,12 +184,7 @@ namespace micro_profiler
 			}
 
 
-			shared_ptr<session_factory> endpoint::create_active(const char * /*destination_endpoint*/)
-			{
-				throw 0;
-			}
-
-			shared_ptr<void> endpoint::create_passive(const char *endpoint_id, const shared_ptr<session_factory> &factory)
+			shared_ptr<void> endpoint::run_server(const char *endpoint_id, const shared_ptr<ipc::server> &factory)
 			{	return shared_ptr<void>(new server(endpoint_id, factory));	}
 
 			shared_ptr<ipc::endpoint> create_endpoint()

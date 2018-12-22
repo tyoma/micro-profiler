@@ -26,6 +26,7 @@
 #include <mt/thread.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
+#include <signal.h>
 #include <stdexcept>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -117,12 +118,6 @@ namespace micro_profiler
 			};
 
 
-			class endpoint : public ipc::endpoint
-			{
-				virtual shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &factory);
-			};
-
-
 
 			session::session(int s, ipc::server &factory)
 				: _socket(s)
@@ -184,11 +179,13 @@ namespace micro_profiler
 			}
 
 
-			shared_ptr<void> endpoint::run_server(const char *endpoint_id, const shared_ptr<ipc::server> &factory)
-			{	return shared_ptr<void>(new server(endpoint_id, factory));	}
-
-			shared_ptr<ipc::endpoint> create_endpoint()
-			{	return shared_ptr<endpoint>(new endpoint);	}
+			shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &factory)
+			{
+#ifndef _WIN32
+				signal(SIGPIPE, SIG_IGN);
+#endif
+				return shared_ptr<void>(new server(endpoint_id, factory));
+			}
 		}
 	}
 }

@@ -16,6 +16,9 @@
     <ClCompile Include="endpoint_sockets.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="endpoint.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\client.h" />

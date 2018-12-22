@@ -5,6 +5,7 @@ if (WIN32)
 endif()
 
 set(IPC_SOURCES
+	endpoint.cpp
 	endpoint_sockets.cpp
 )
 

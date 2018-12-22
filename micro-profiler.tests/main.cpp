@@ -18,8 +18,7 @@ namespace micro_profiler
 			{
 				initializer()
 				{
-					srand(static_cast<unsigned int>(clock()));
-					generate(c_mock_frontend_id.values, array_end(c_mock_frontend_id.values), &rand);
+					c_mock_frontend_id = generate_id();
 					setenv(c_frontend_id_env, to_string(c_mock_frontend_id).c_str(), 1);
 				}
 			} c_initializer;

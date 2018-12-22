@@ -8,10 +8,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		template <typename T, size_t size>
-		inline range<T, size_t> mkrange(T (&array_ptr)[size])
-		{	return range<T, size_t>(array_ptr, size);	}
-
 		byte_range get_function_body(void *f);
 
 		template <typename T>

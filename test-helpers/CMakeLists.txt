@@ -17,3 +17,5 @@ elseif(UNIX)
 endif()
 
 add_library(test-helpers STATIC ${TEST_HELPERS_SOURCES})
+
+target_link_libraries(test-helpers common)

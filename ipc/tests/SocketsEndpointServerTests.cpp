@@ -18,34 +18,29 @@ namespace micro_profiler
 		namespace tests
 		{
 			begin_test_suite( SocketsEndpointServerTests )
-				test( CreatingEndpointReturnsNonNullObjects )
-				{
-					// INIT / ACT
-					shared_ptr<endpoint> e1 = sockets::create_endpoint();
-					shared_ptr<endpoint> e2 = sockets::create_endpoint();
 
-					// ASSERT
-					assert_not_null(e1);
-					assert_not_null(e2);
-					assert_not_equal(e1, e2);
+				init( CheckPortsAreFree )
+				{
+					assert_is_false(is_local_port_open(6101));
+					assert_is_false(is_local_port_open(6102));
+					assert_is_false(is_local_port_open(6103));
 				}
 
 
 				test( CreatingPassiveSessionOpensExpectedPort )
 				{
 					// INIT
-					shared_ptr<endpoint> e = sockets::create_endpoint();
 					shared_ptr<mocks::server> f(new mocks::server);
 
 					// ACT
-					shared_ptr<void> s1 = e->run_server("6101", f);
+					shared_ptr<void> s1 = sockets::run_server("6101", f);
 
 					// ASSERT
 					assert_is_true(is_local_port_open(6101));
 					assert_is_false(is_local_port_open(6103));
 
 					// ACT
-					shared_ptr<void> s2 = e->run_server("6103", f);
+					shared_ptr<void> s2 = sockets::run_server("6103", f);
 
 					// ASSERT
 					assert_is_true(is_local_port_open(6101));
@@ -56,12 +51,11 @@ namespace micro_profiler
 				test( CreatingPassiveSessionAtTheSamePortThrowsException )
 				{
 					// INIT
-					shared_ptr<endpoint> e = sockets::create_endpoint();
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> s1 = e->run_server("6101", f);
+					shared_ptr<void> s1 = sockets::run_server("6101", f);
 
 					// ACT / ASSERT
-					assert_throws(e->run_server("6101", f), runtime_error);
+					assert_throws(sockets::run_server("6101", f), runtime_error);
 				}
 
 
@@ -70,9 +64,8 @@ namespace micro_profiler
 					// INIT
 					int times = 1;
 					mt::event ready;
-					shared_ptr<endpoint> e = sockets::create_endpoint();
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> h = e->run_server("6101", f);
+					shared_ptr<void> h = sockets::run_server("6101", f);
 
 					f->session_opened = [&] (const shared_ptr<void> &) {
 						if (!--times)
@@ -106,9 +99,8 @@ namespace micro_profiler
 				{
 					// INIT
 					mt::event ready;
-					shared_ptr<endpoint> e = sockets::create_endpoint();
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> h = e->run_server("6101", f);
+					shared_ptr<void> h = sockets::run_server("6101", f);
 
 					f->session_opened = [&] (const shared_ptr<mocks::session> &s) {
 						s->disconnected = [&] {
@@ -141,9 +133,8 @@ namespace micro_profiler
 					// INIT
 					int times = 1;
 					mt::event ready;
-					shared_ptr<endpoint> e = sockets::create_endpoint();
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> s = e->run_server("6101", f);
+					shared_ptr<void> s = sockets::run_server("6101", f);
 
 					f->session_opened = [&] (const shared_ptr<mocks::session> &s) {
 						s->received_message = [&] {
@@ -184,9 +175,8 @@ namespace micro_profiler
 				{
 					// INIT
 					mt::event ready;
-					shared_ptr<endpoint> e = sockets::create_endpoint();
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> h = e->run_server("6101", f);
+					shared_ptr<void> h = sockets::run_server("6101", f);
 					byte data[10];
 
 					f->session_opened = [&] (shared_ptr<void>) {

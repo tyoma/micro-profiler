@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/primitives.h>
+#include <common/range.h>
 
 #include <algorithm>
 #include <memory>
@@ -25,6 +26,8 @@ namespace micro_profiler
 			U assertion[sizeof(u) == sizeof(v) ? 1 : 0] = { u };
 			return assertion[0];
 		}
+
+		guid_t generate_id();
 
 		std::wstring get_current_process_executable();
 
@@ -79,6 +82,10 @@ namespace micro_profiler
 		template <typename T, size_t size>
 		inline std::vector<T> mkvector(T (&array_ptr)[size])
 		{	return std::vector<T>(array_ptr, array_ptr + size);	}
+
+		template <typename T, size_t size>
+		inline range<T, size_t> mkrange(T (&array_ptr)[size])
+		{	return range<T, size_t>(array_ptr, size);	}
 
 		inline bool mem_equal(const void *lhs, const void *rhs, size_t length)
 		{

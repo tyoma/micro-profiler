@@ -22,11 +22,28 @@
 
 #include <common/range.h>
 #include <memory>
+#include <stdexcept>
 
 namespace micro_profiler
 {
 	namespace ipc
 	{
+		struct initialization_failed : std::runtime_error
+		{
+			initialization_failed();
+		};
+
+		struct protocol_not_supported : std::invalid_argument
+		{
+			protocol_not_supported(const char *message);
+		};
+
+		struct connection_refused : std::runtime_error
+		{
+			connection_refused(const char *message);
+		};
+
+
 		struct channel
 		{
 			virtual void disconnect() throw() = 0;
@@ -38,9 +55,7 @@ namespace micro_profiler
 			virtual std::shared_ptr<channel> create_session(channel &outbound) = 0;
 		};
 
-		struct endpoint
-		{
-			virtual std::shared_ptr<void> run_server(const char *endpoint_id, const std::shared_ptr<server> &factory) = 0;
-		};
+		std::shared_ptr<channel> connect_client(const char *typed_destination_endpoint_id, channel &inbound);
+		std::shared_ptr<void> run_server(const char *typed_endpoint_id, const std::shared_ptr<server> &factory);
 	}
 }

@@ -30,6 +30,8 @@ namespace micro_profiler
 	{
 		namespace sockets
 		{
+			std::shared_ptr<void> run_server(const char *endpoint_id, const std::shared_ptr<server> &factory);
+
 			template <typename T>
 			union byte_representation
 			{
@@ -39,9 +41,6 @@ namespace micro_profiler
 				void reorder();
 			};
 
-
-
-			std::shared_ptr<ipc::endpoint> create_endpoint();
 
 
 			template <typename T>

@@ -88,8 +88,7 @@ namespace micro_profiler
 				_service_provider->QueryService(__uuidof(IVsUIShell), &_shell);
 				register_path(false);
 				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
-				_endpoint = ipc::com::create_endpoint()->run_server(to_string(c_integrated_frontend_id).c_str(),
-					_frontend_manager);
+				_server = ipc::com::run_server(to_string(c_integrated_frontend_id).c_str(), _frontend_manager);
 				return S_OK;
 			}
 
@@ -99,7 +98,7 @@ namespace micro_profiler
 			STDMETHODIMP Close()
 			{
 				_frontend_manager.reset();
-				_endpoint.reset();
+				_server.reset();
 				return S_OK;
 			}
 
@@ -134,7 +133,7 @@ namespace micro_profiler
 		private:
 			CComPtr<IServiceProvider> _service_provider;
 			CComPtr<IVsUIShell> _shell;
-			shared_ptr<void> _endpoint;
+			shared_ptr<void> _server;
 			shared_ptr<frontend_manager> _frontend_manager;
 			unsigned _next_tool_id;
 		};

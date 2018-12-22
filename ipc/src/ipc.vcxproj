@@ -34,7 +34,7 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <ClCompile>
-    	<AdditionalIncludeDirectories>..\..\compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\compat;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <Lib>
@@ -43,6 +43,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="channel_client.cpp" />
+    <ClCompile Include="endpoint.cpp" />
     <ClCompile Include="endpoint_com.cpp" />
     <ClCompile Include="endpoint_sockets.cpp" />
     <ClCompile Include="ipc_client.cpp" />

@@ -30,10 +30,33 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			class endpoint : public ipc::endpoint
+			namespace
 			{
-				virtual shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &sf);
+				template <typename T>
+				CComPtr< CComObject<T> > construct_com()
+				{
+					CComObject<T> *p;
+
+					if (E_OUTOFMEMORY == CComObject<T>::CreateInstance(&p) || !p)
+						throw bad_alloc();
+					return CComPtr< CComObject<T> > (p);
+				}
+			}
+
+
+			class client_session : public channel
+			{
+			public:
+				client_session(const char *destination_endpoint_id, channel &inbound);
+
+				virtual void disconnect() throw();
+				virtual void message(const_byte_range payload);
+
+			private:
+				channel &_inbound;
+				CComPtr<ISequentialStream> _stream;
 			};
+
 
 
 			void session::FinalRelease()
@@ -65,9 +88,7 @@ namespace micro_profiler
 			STDMETHODIMP server::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
 			try
 			{
-				CComObject<session> *p = 0;
-				CComObject<session>::CreateInstance(&p);
-				CComPtr<ISequentialStream> lock(p);
+				CComPtr< CComObject<session> > p = construct_com<session>();
 
 				p->inbound = _session_factory->create_session(*p);
 				return p->QueryInterface(riid, object);
@@ -78,26 +99,44 @@ namespace micro_profiler
 			}
 
 
-			shared_ptr<void> endpoint::run_server(const char *endpoint_id, const shared_ptr<ipc::server> &sf)
+			client_session::client_session(const char *destination_endpoint_id, channel &inbound)
+				: _inbound(inbound)
+			{
+				const guid_t id = from_string(destination_endpoint_id);
+
+				if (S_OK != _stream.CoCreateInstance(reinterpret_cast<const GUID &>(id), NULL, CLSCTX_LOCAL_SERVER))
+					throw connection_refused(destination_endpoint_id);
+			}
+
+			void client_session::disconnect() throw()
+			{	}
+
+			void client_session::message(const_byte_range payload)
+			{
+				ULONG written;
+				HRESULT hr = _stream->Write(payload.begin(), static_cast<ULONG>(payload.length()), &written);
+
+				if (S_OK != hr)
+					_inbound.disconnect();
+			}
+
+
+			shared_ptr<channel> connect_client(const char *destination_endpoint_id, channel &inbound)
+			{	return shared_ptr<channel>(new client_session(destination_endpoint_id, inbound));	}
+
+
+			shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &sf)
 			{
 				guid_t id = from_string(endpoint_id);
 				const CLSID &clsid = reinterpret_cast<const CLSID &>(id);
-				CComObject<server> *p = 0;
-
-				CComObject<server>::CreateInstance(&p);
-
-				CComPtr<IClassFactory> lock(p);
+				CComPtr< CComObject<server> > p = construct_com<server>();
 				DWORD cookie;
 
 				p->set_server(sf);
 				if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
-					return shared_ptr<void>(p, bind(&::CoRevokeClassObject, cookie));
-				throw 0;
+					return shared_ptr<void>((IUnknown *)p, bind(&::CoRevokeClassObject, cookie));
+				throw initialization_failed();
 			}
-
-
-			shared_ptr<ipc::endpoint> create_endpoint()
-			{	return shared_ptr<endpoint>(new endpoint);	}
 		}
 	}
 }

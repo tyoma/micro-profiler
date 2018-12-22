@@ -2,12 +2,12 @@
 
 #include <algorithm>
 #include <test-helpers/com.h>
-#include <collector/tests/mocks.h>
 #include <common/string.h>
 #include <common/types.h>
+#include <ipc/endpoint.h>
 #include <stdlib.h>
 #include <test-helpers/helpers.h>
-#include <test-helpers/mocks_com.h>
+#include <test-helpers/mock_frontend.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -21,15 +21,23 @@ namespace micro_profiler
 
 		begin_test_suite( CollectorIntegrationTests )
 
-			shared_ptr<mocks::frontend_state> frontend_state;
-			shared_ptr<void> factory_instance;
+			struct frontend_factory : mocks::frontend_state, ipc::server
+			{
+				virtual shared_ptr<ipc::channel> create_session(ipc::channel &/*outbound*/)
+				{	return create();	}
+			};
+
+			auto_ptr<com_initialize> initializer;
+			shared_ptr<frontend_factory> frontend_state;
+			shared_ptr<void> hserver;
 			com_event frontend_destroyed;
 
 			init( PrepareFrontend )
 			{
-				frontend_state.reset(new mocks::frontend_state);
+				initializer.reset(new com_initialize);
+				frontend_state.reset(new frontend_factory);
 				frontend_state->destroyed = bind(&com_event::set, &frontend_destroyed);
-				factory_instance = mocks::create_frontend_factory(c_mock_frontend_id, frontend_state);
+				hserver = ipc::run_server(("com|" + to_string(c_mock_frontend_id)).c_str(), frontend_state);
 			}
 
 			teardown( WaitFrontendDestroyed )

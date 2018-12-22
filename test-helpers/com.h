@@ -1,11 +1,18 @@
 #pragma once
 
+#include <common/noncopyable.h>
 #include <memory>
 
 namespace micro_profiler
 {
 	namespace tests
 	{
+		struct com_initialize : noncopyable
+		{
+			com_initialize();
+			~com_initialize();
+		};
+
 		class com_event
 		{
 		public:

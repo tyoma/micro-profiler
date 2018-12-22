@@ -7,18 +7,10 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		namespace com
-		{
-			shared_ptr<ipc::server> server::create_default_session_factory()
-			{	return shared_ptr<ipc::server>();	}
-		}
-
 		namespace tests
 		{
 			namespace
 			{
-				class Module : public CAtlDllModuleT<Module> {	} g_module;
-
 				class sequential_stream
 				{
 				public:
@@ -46,15 +38,7 @@ namespace micro_profiler
 				private:
 					ISequentialStream *_frontend;
 				};
-
 			}
-
-
-			com_initialize::com_initialize()
-			{	::CoInitialize(NULL);	}
-
-			com_initialize::~com_initialize()
-			{	::CoUninitialize();	}
 
 
 			bool is_factory_registered(const guid_t &id)

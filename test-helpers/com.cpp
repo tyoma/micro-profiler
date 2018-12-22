@@ -1,11 +1,33 @@
 #include "com.h"
 
-#include <windows.h>
+#include <ipc/com/endpoint.h>
 
 namespace micro_profiler
 {
+	namespace ipc
+	{
+		namespace com
+		{
+			shared_ptr<ipc::server> server::create_default_session_factory()
+			{	return shared_ptr<ipc::server>();	}
+		}
+	}
+
 	namespace tests
 	{
+		namespace
+		{
+			class Module : public CAtlDllModuleT<Module> {	} g_module;
+		}
+
+
+		com_initialize::com_initialize()
+		{	::CoInitialize(NULL);	}
+
+		com_initialize::~com_initialize()
+		{	::CoUninitialize();	}
+
+
 		com_event::com_event()
 			: _handle(::CreateEvent(NULL, FALSE, FALSE, NULL), &::CloseHandle)
 		{	}

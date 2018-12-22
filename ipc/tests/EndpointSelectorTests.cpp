@@ -7,11 +7,13 @@
 #include <algorithm>
 #include <common/string.h>
 #include <common/time.h>
+#include <test-helpers/com.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
 using namespace std;
+using namespace micro_profiler::tests;
 
 namespace micro_profiler
 {

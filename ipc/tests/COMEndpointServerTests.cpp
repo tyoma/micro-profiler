@@ -14,6 +14,7 @@
 #include <ut/test.h>
 
 using namespace std;
+using namespace micro_profiler::tests;
 
 namespace micro_profiler
 {

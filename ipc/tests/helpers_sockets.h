@@ -9,11 +9,11 @@ namespace micro_profiler
 	{
 		namespace tests
 		{
-			class socket_h : noncopyable
+			class socket_handle : noncopyable
 			{
 			public:
-				socket_h();
-				~socket_h();
+				socket_handle();
+				~socket_handle();
 
 				operator int() const;
 
@@ -30,7 +30,7 @@ namespace micro_profiler
 				bool operator ()(const void *buffer, size_t size);
 
 			private:
-				socket_h _socket;
+				socket_handle _socket;
 			};
 
 

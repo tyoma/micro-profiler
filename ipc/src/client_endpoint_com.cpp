@@ -31,20 +31,6 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			namespace
-			{
-				template <typename T>
-				CComPtr< CComObject<T> > construct_com()
-				{
-					CComObject<T> *p;
-
-					if (E_OUTOFMEMORY == CComObject<T>::CreateInstance(&p) || !p)
-						throw bad_alloc();
-					return CComPtr< CComObject<T> > (p);
-				}
-			}
-
-
 			class client_session : public channel
 			{
 			public:
@@ -59,46 +45,6 @@ namespace micro_profiler
 				CComPtr<ISequentialStream> _stream;
 			};
 
-
-
-			void session::FinalRelease()
-			{	inbound->disconnect();	}
-
-			STDMETHODIMP session::Read(void *, ULONG, ULONG *)
-			{	return E_UNEXPECTED;	}
-
-			STDMETHODIMP session::Write(const void *message, ULONG size, ULONG * /*written*/)
-			{
-				inbound->message(const_byte_range(static_cast<const byte *>(message), size));
-				return S_OK;
-			}
-
-			void session::disconnect()
-			{	::CoDisconnectObject(this, 0);	}
-
-			void session::message(const_byte_range /*payload*/)
-			{	}
-
-
-			server::server(const shared_ptr<ipc::server> &factory)
-				: _session_factory(factory)
-			{	}
-
-			void server::set_server(const shared_ptr<ipc::server> &factory)
-			{	_session_factory = factory;	}
-
-			STDMETHODIMP server::CreateInstance(IUnknown * /*outer*/, REFIID riid, void **object)
-			try
-			{
-				CComPtr< CComObject<session> > p = construct_com<session>();
-
-				p->inbound = _session_factory->create_session(*p);
-				return p->QueryInterface(riid, object);
-			}
-			catch (const bad_alloc &)
-			{
-				return E_OUTOFMEMORY;
-			}
 
 
 			client_session::client_session(const char *destination_endpoint_id, channel &inbound)
@@ -132,20 +78,6 @@ namespace micro_profiler
 
 			shared_ptr<channel> connect_client(const char *destination_endpoint_id, channel &inbound)
 			{	return shared_ptr<channel>(new client_session(destination_endpoint_id, inbound));	}
-
-
-			shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &sf)
-			{
-				guid_t id = from_string(endpoint_id);
-				const CLSID &clsid = reinterpret_cast<const CLSID &>(id);
-				CComPtr< CComObject<server> > p = construct_com<server>();
-				DWORD cookie;
-
-				p->set_server(sf);
-				if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
-					return shared_ptr<void>((IUnknown *)p, bind(&::CoRevokeClassObject, cookie));
-				throw initialization_failed();
-			}
 		}
 	}
 }

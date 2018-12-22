@@ -55,7 +55,7 @@ namespace micro_profiler
 					shared_ptr<void> s1 = sockets::run_server("6101", f);
 
 					// ACT / ASSERT
-					assert_throws(sockets::run_server("6101", f), runtime_error);
+					assert_throws(sockets::run_server("6101", f), initialization_failed);
 				}
 
 
@@ -67,7 +67,7 @@ namespace micro_profiler
 					shared_ptr<mocks::server> f(new mocks::server);
 					shared_ptr<void> h = sockets::run_server("6101", f);
 
-					f->session_opened = [&] (const shared_ptr<void> &) {
+					f->session_created = [&] (const shared_ptr<void> &) {
 						if (!--times)
 							ready.set();
 					};
@@ -102,7 +102,7 @@ namespace micro_profiler
 					shared_ptr<mocks::server> f(new mocks::server);
 					shared_ptr<void> h = sockets::run_server("6101", f);
 
-					f->session_opened = [&] (const shared_ptr<mocks::session> &s) {
+					f->session_created = [&] (const shared_ptr<mocks::session> &s) {
 						s->disconnected = [&] {
 							ready.set();
 						};
@@ -136,7 +136,7 @@ namespace micro_profiler
 					shared_ptr<mocks::server> f(new mocks::server);
 					shared_ptr<void> s = sockets::run_server("6101", f);
 
-					f->session_opened = [&] (const shared_ptr<mocks::session> &s) {
+					f->session_created = [&] (const shared_ptr<mocks::session> &s) {
 						s->received_message = [&] {
 							if (!--times)
 								ready.set();
@@ -179,7 +179,7 @@ namespace micro_profiler
 					shared_ptr<void> h = sockets::run_server("6101", f);
 					byte data[10];
 
-					f->session_opened = [&] (shared_ptr<void>) {
+					f->session_created = [&] (shared_ptr<void>) {
 						ready.set();
 					};
 

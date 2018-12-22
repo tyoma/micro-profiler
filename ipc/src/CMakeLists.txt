@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 2.8)
 
-if (WIN32)
-	include_directories(../../compat)
-endif()
-
 set(IPC_SOURCES
-	endpoint.cpp
-	endpoint_sockets.cpp
+	client_endpoint.cpp
+	client_endpoint_sockets.cpp
+	server_endpoint.cpp
+	server_endpoint_sockets.cpp
 )
 
 if (WIN32)
 	set(IPC_SOURCES ${IPC_SOURCES}
-		endpoint_com.cpp
+		client_endpoint_com.cpp
 		ipc_client.cpp
 		ipc_server.cpp
+		server_endpoint_com.cpp
 	)	
 endif()
 

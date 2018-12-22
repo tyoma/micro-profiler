@@ -20,6 +20,8 @@
 
 #include <ipc/endpoint_sockets.h>
 
+#include "socket_helpers.h"
+
 #include <arpa/inet.h>
 #include <common/noncopyable.h>
 #include <list>
@@ -29,9 +31,7 @@
 #include <signal.h>
 #include <stdexcept>
 #include <stdio.h>
-#include <sys/socket.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <vector>
 
 using namespace std;
@@ -58,36 +58,6 @@ namespace micro_profiler
 			struct winsock_initializer {	};
 #endif
 
-			class socket_h : noncopyable
-			{
-			public:
-				explicit socket_h(int s)
-					: _socket(s)
-				{
-					if (s == -1)
-						throw runtime_error("invalid socket");
-				}
-
-				~socket_h()
-				{	reset();	}
-
-				void reset()
-				{
-					if (_socket)
-					{
-						::shutdown(_socket, 2);
-						::close(_socket);
-						_socket = 0;
-					}
-				}
-
-				operator int() const
-				{	return _socket;	}
-
-			private:
-				int _socket;
-			};
-
 			class session : /*outbound*/ ipc::channel
 			{
 			public:
@@ -98,7 +68,7 @@ namespace micro_profiler
 				void message(const_byte_range payload);
 
 			private:
-				socket_h _socket;
+				socket_handle _socket;
 				shared_ptr<ipc::channel> _inbound;
 				auto_ptr<mt::thread> _thread;
 			};
@@ -112,7 +82,7 @@ namespace micro_profiler
 
 			private:
 				winsock_initializer _initializer;
-				socket_h _server_socket;
+				socket_handle _server_socket;
 				auto_ptr<mt::thread> _server_thread;
 				list< shared_ptr<session> > _sessions;
 			};
@@ -163,7 +133,7 @@ namespace micro_profiler
 				};
 
 				if (::bind(_server_socket, (sockaddr *)&service, sizeof(service)))
-					throw runtime_error("bind() failed");
+					throw initialization_failed("bind() failed");
 				if (::listen(_server_socket, 5))
 					throw runtime_error("listen() failed");
 				_server_thread.reset(new mt::thread([this, factory] {

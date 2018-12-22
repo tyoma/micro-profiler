@@ -17,7 +17,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			class Module : public CAtlDllModuleT<Module> {	} g_module;
+			CComModule g_module;
 		}
 
 

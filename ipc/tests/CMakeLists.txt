@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
-if (WIN32)
-	include_directories(../../compat)
-endif()
-
 set(IPC_TESTS_SOURCES
 	helpers_sockets.cpp
 	EndpointSelectorTests.cpp
+	SocketsEndpointClientTests.cpp
 	SocketsEndpointServerTests.cpp
 )
 

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <common/string.h>
 #include <common/time.h>
+#include <mt/event.h>
 #include <test-helpers/com.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
@@ -86,7 +87,84 @@ namespace micro_profiler
 #else
 				test( CreatingCOMServerEndpointFailsOnNonWindows )
 				{
-					assert_throws(run_server(("com|" + to_string(generate_id())).c_str(), session_factory), protocol_not_supported);
+					// ACT / ASSERT
+					assert_throws(run_server(("com|" + to_string(generate_id())).c_str(), session_factory),
+						protocol_not_supported);
+				}
+#endif
+
+
+				test( CreatingSocketClientEndpoint )
+				{
+					// INIT
+					mt::event ready;
+					mocks::session dummy;
+					shared_ptr<mocks::server> session_factory2(new mocks::server);
+					shared_ptr<void> s1 = run_server("sockets|6101", session_factory);
+					shared_ptr<void> s2 = run_server("sockets|6113", session_factory2);
+
+					session_factory->session_created = [&] (shared_ptr<void>) {
+						ready.set();
+					};
+					session_factory2->session_created = [&] (shared_ptr<void>) {
+						ready.set();
+					};
+
+					// INIT / ACT
+					shared_ptr<channel> c1 = connect_client("sockets|127.0.0.1:6113", dummy);
+					ready.wait();
+
+					// ASSERT
+					assert_equal(0u, session_factory->sessions.size());
+					assert_equal(1u, session_factory2->sessions.size());
+
+					// INIT / ACT
+					shared_ptr<channel> c2 = connect_client("sockets|127.0.0.1:6101", dummy);
+					ready.wait();
+					shared_ptr<channel> c3 = connect_client("sockets|127.0.0.1:6113", dummy);
+					ready.wait();
+
+					// ASSERT
+					assert_equal(1u, session_factory->sessions.size());
+					assert_equal(2u, session_factory2->sessions.size());
+				}
+
+
+#ifdef _WIN32
+				test( CreatingCOMClientEndpoint )
+				{
+					// INIT
+					com_initialize ci;
+					mocks::session dummy;
+					string ids[] = { to_string(generate_id()), to_string(generate_id()), };
+					shared_ptr<mocks::server> session_factory2(new mocks::server);
+					shared_ptr<void> hs1 = run_server(("com|" + ids[0]).c_str(), session_factory);
+					shared_ptr<void> hs2 = run_server(("com|" + ids[1]).c_str(), session_factory2);
+
+					// INIT / ACT
+					shared_ptr<channel> c1 = connect_client(("com|" + ids[1]).c_str(), dummy);
+
+					// ASSERT
+					assert_equal(0u, session_factory->sessions.size());
+					assert_equal(1u, session_factory2->sessions.size());
+
+					// INIT / ACT
+					shared_ptr<channel> c2 = connect_client(("com|" + ids[0]).c_str(), dummy);
+					shared_ptr<channel> c3 = connect_client(("com|" + ids[1]).c_str(), dummy);
+
+					// ASSERT
+					assert_equal(1u, session_factory->sessions.size());
+					assert_equal(2u, session_factory2->sessions.size());
+				}
+#else
+				test( CreatingCOMClientEndpointFailsOnNonWindows )
+				{
+					// INIT
+					mocks::session dummy;
+
+					// ACT / ASSERT
+					assert_throws(connect_client(("com|" + to_string(generate_id())).c_str(), dummy),
+						protocol_not_supported);
 				}
 #endif
 

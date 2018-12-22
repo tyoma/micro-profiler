@@ -24,24 +24,15 @@
 #include <collector/entry.h>
 #include <common/constants.h>
 #include <common/memory.h>
-#include <common/string.h>
-#include <ipc/com/endpoint.h>
+#include <ipc/endpoint.h>
 #include <mt/atomic.h>
 #include <patcher/src.x86/assembler_intel.h>
+#include <windows.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	namespace ipc
-	{
-		namespace com
-		{
-			shared_ptr<ipc::server> server::create_default_session_factory()
-			{	return shared_ptr<ipc::server>();	}
-		}
-	}
-
 	namespace
 	{
 		typedef intel::jmp_rel_imm32 jmp;
@@ -84,8 +75,8 @@ namespace micro_profiler
 	class isolation_aware_channel_factory
 	{
 	public:
-		explicit isolation_aware_channel_factory(HINSTANCE hinstance, const vector<guid_t> &candidate_ids)
-			: _candidate_ids(candidate_ids)
+		explicit isolation_aware_channel_factory(HINSTANCE hinstance, const vector<string> &candidate_endpoints)
+			: _candidate_endpoints(candidate_endpoints)
 		{
 			ACTCTX ctx = { sizeof(ACTCTX), };
 
@@ -99,11 +90,11 @@ namespace micro_profiler
 		{
 			shared_ptr<void> lock = lock_context();
 
-			for (vector<guid_t>::const_iterator i = _candidate_ids.begin(); i != _candidate_ids.end(); ++i)
+			for (vector<string>::const_iterator i = _candidate_endpoints.begin(); i != _candidate_endpoints.end(); ++i)
 			{
 				try
 				{
-					return ipc::com::connect_client(to_string(*i).c_str(), inbound);
+					return ipc::connect_client(i->c_str(), inbound);
 				}
 				catch (const exception &)
 				{
@@ -133,7 +124,7 @@ namespace micro_profiler
 
 	private:
 		shared_ptr<void> _activation_context;
-		vector<guid_t> _candidate_ids;
+		vector<string> _candidate_endpoints;
 	};
 }
 
@@ -143,18 +134,17 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID /*reser
 {
 	using namespace micro_profiler;
 
-	vector<guid_t> candidate_ids;
+	vector<string> endpoints;
 
 	switch (reason)
 	{
 	case DLL_PROCESS_ATTACH:
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
+		endpoints = c_candidate_endpoints;
 		if (const char *env_id = getenv(c_frontend_id_env))
-			candidate_ids.push_back(from_string(env_id));
-		candidate_ids.push_back(c_integrated_frontend_id);
-		candidate_ids.push_back(c_standalone_frontend_id);
-		g_frontend_controller.reset(new frontend_controller(isolation_aware_channel_factory(hinstance, candidate_ids),
+			endpoints.insert(endpoints.begin(), env_id);
+		g_frontend_controller.reset(new frontend_controller(isolation_aware_channel_factory(hinstance, endpoints),
 			g_collector, calibrate_overhead(g_collector, c_trace_limit / 10)));
 		break;
 

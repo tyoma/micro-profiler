@@ -20,9 +20,13 @@
 
 #include <common/constants.h>
 
+#include <common/string.h>
+
+using namespace std;
+
 namespace micro_profiler
 {
-	const char *c_frontend_id_env = "MICROPROFILERCOMM";
+	const char *c_frontend_id_env = "MICROPROFILERFRONTEND";
 
 	// {0ED7654C-DE8A-4964-9661-0B0C391BE15E}
 	const guid_t c_standalone_frontend_id = {
@@ -33,4 +37,11 @@ namespace micro_profiler
 	const guid_t c_integrated_frontend_id = {
 		{ 0x12, 0xce, 0xc0, 0x91, 0x77, 0xc6, 0x50, 0x4a, 0xa5, 0x22, 0xc8, 0x60, 0x40, 0xac, 0x50, 0x52, }
 	};
+
+	const string c_candidate_endpoints_array[] = {
+		"com|" + to_string(c_integrated_frontend_id),
+		"com|" + to_string(c_standalone_frontend_id),
+	};
+
+	const vector<string> c_candidate_endpoints(c_candidate_endpoints_array, c_candidate_endpoints_array + 2);
 }

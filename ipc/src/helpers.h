@@ -20,15 +20,42 @@
 
 #pragma once
 
-#include "types.h"
-
 #include <string>
-#include <vector>
+#include <stdexcept>
 
 namespace micro_profiler
 {
-	extern const char *c_frontend_id_env;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
+	namespace ipc
+	{
+		template <typename FactoryT>
+		struct constructor
+		{
+			std::string protocol;
+			FactoryT constructor_method;
+		};
+
+
+
+		template <typename FactoryT, size_t n>
+		inline const FactoryT &select(constructor<FactoryT> (&constructors)[n], const char *typed_endpoint_id,
+			std::string &endpoint_id)
+		{
+			if (!typed_endpoint_id)
+				throw std::invalid_argument("");
+			const std::string id = typed_endpoint_id;
+			const size_t delim = id.find('|');
+			if (delim == std::string::npos)
+				throw std::invalid_argument(typed_endpoint_id);
+			const std::string protocol = id.substr(0, delim);
+
+			endpoint_id = id.substr(delim + 1);
+
+			for (size_t i = 0; i != n; ++i)
+			{
+				if (protocol == constructors[i].protocol)
+					return constructors[i].constructor_method;
+			}
+			throw protocol_not_supported(typed_endpoint_id);
+		}
+	}
 }

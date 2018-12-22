@@ -7,13 +7,22 @@
     <ClCompile Include="ipc_server.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="endpoint_com.cpp">
+    <ClCompile Include="client_endpoint_sockets.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="endpoint_sockets.cpp">
+    <ClCompile Include="server_endpoint_sockets.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="endpoint.cpp">
+    <ClCompile Include="client_endpoint_com.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="server_endpoint_com.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="client_endpoint.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="server_endpoint.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,6 +38,12 @@
       <Filter>com</Filter>
     </ClInclude>
     <ClInclude Include="..\endpoint_sockets.h" />
+    <ClInclude Include="socket_helpers.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

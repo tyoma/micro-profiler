@@ -18,17 +18,35 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <ipc/endpoint_com.h>
+#include <ipc/endpoint_sockets.h>
 
-#include "types.h"
+#include "helpers.h"
 
-#include <string>
-#include <vector>
+#include <functional>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	extern const char *c_frontend_id_env;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
+	namespace ipc
+	{
+		shared_ptr<channel> connect_client(const char * typed_destination_endpoint_id, channel &inbound)
+		{
+			typedef function<shared_ptr<channel> (const char *destination_endpoint_id, channel &inbound)>
+				client_endpoint_factory_t;
+
+			constructor<client_endpoint_factory_t> c_constructors[] = {
+#ifdef _WIN32
+				{ "com", &com::connect_client },
+#endif
+				{ "sockets", &sockets::connect_client },
+			};
+
+			string endpoint_id;
+			client_endpoint_factory_t ctor = select(c_constructors, typed_destination_endpoint_id, endpoint_id);
+
+			return ctor(endpoint_id.c_str(), inbound);
+		}
+	}
 }

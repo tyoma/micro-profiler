@@ -20,15 +20,54 @@
 
 #pragma once
 
-#include "types.h"
-
-#include <string>
-#include <vector>
+#include <common/noncopyable.h>
+#include <stdexcept>
+#include <sys/socket.h>
+#include <unistd.h>
 
 namespace micro_profiler
 {
-	extern const char *c_frontend_id_env;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
+	namespace ipc
+	{
+		namespace sockets
+		{
+			class socket_handle : noncopyable
+			{
+			public:
+				explicit socket_handle(int s);
+				~socket_handle();
+
+				void reset();
+				operator int() const;
+
+			private:
+				int _socket;
+			};
+
+
+
+			inline socket_handle::socket_handle(int s)
+				: _socket(s)
+			{
+				if (s == -1)
+					throw std::runtime_error("invalid socket");
+			}
+
+			inline socket_handle::~socket_handle()
+			{	reset();	}
+
+			inline void socket_handle::reset()
+			{
+				if (_socket)
+				{
+					::shutdown(_socket, 2);
+					::close(_socket);
+					_socket = 0;
+				}
+			}
+
+			inline socket_handle::operator int() const
+			{	return _socket;	}
+		}
+	}
 }

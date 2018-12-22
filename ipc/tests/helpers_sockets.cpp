@@ -14,14 +14,14 @@ namespace micro_profiler
 	{
 		namespace tests
 		{
-			socket_h::socket_h()
+			socket_handle::socket_handle()
 				: _socket(static_cast<int>(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)))
 			{	}
 
-			socket_h::~socket_h()
+			socket_handle::~socket_handle()
 			{	::close(_socket);	}
 
-			socket_h::operator int() const
+			socket_handle::operator int() const
 			{	return _socket;	}
 
 
@@ -52,7 +52,7 @@ namespace micro_profiler
 
 			bool is_local_port_open(unsigned short port)
 			{
-				socket_h s;
+				socket_handle s;
 				sockaddr_in service = { AF_INET, htons(port), inet_addr("127.0.0.1"), { 0 } };
 
 				return 0 == ::connect(s, (sockaddr *)&service, sizeof(service));

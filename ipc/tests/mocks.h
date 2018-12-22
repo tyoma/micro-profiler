@@ -30,7 +30,7 @@ namespace micro_profiler
 				{
 				public:
 					std::vector< std::shared_ptr<session> > sessions;
-					std::function<void (const std::shared_ptr<session> &new_session)> session_opened;
+					std::function<void (const std::shared_ptr<session> &new_session)> session_created;
 
 				private:
 					virtual std::shared_ptr<channel> create_session(channel &outbound);
@@ -58,8 +58,8 @@ namespace micro_profiler
 
 					s->outbound = &outbound;
 					sessions.push_back(s);
-					if (session_opened)
-						session_opened(s);
+					if (session_created)
+						session_created(s);
 					return s;
 				}
 			}

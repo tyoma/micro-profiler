@@ -62,6 +62,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="IPCClientServerTests.cpp" />
+    <ClCompile Include="SocketsEndpointClientTests.cpp" />
     <ClCompile Include="SocketsEndpointServerTests.cpp" />
   </ItemGroup>
   <ItemGroup>

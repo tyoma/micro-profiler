@@ -50,14 +50,15 @@ namespace micro_profiler
 
 
 
-			class frontend
+			class frontend : public ipc::channel
 			{
 			public:
 				explicit frontend(shared_ptr<frontend_state> state);
 				frontend(const frontend &other);
 				~frontend();
 
-				bool operator ()(const void *buffer, size_t size);
+				virtual void disconnect() throw();
+				virtual void message(const_byte_range payload);
 
 			private:
 				const frontend &operator =(const frontend &rhs);
@@ -68,7 +69,7 @@ namespace micro_profiler
 
 
 			channel_t frontend_state::create()
-			{	return frontend(shared_from_this());	}
+			{	return channel_t(new frontend(shared_from_this()));	}
 
 
 			frontend::frontend(shared_ptr<frontend_state> state)
@@ -87,13 +88,15 @@ namespace micro_profiler
 						_state->destroyed();
 			}
 
-			bool frontend::operator ()(const void *buffer, size_t size)
+			void frontend::disconnect() throw()
+			{	}
+
+			void frontend::message(const_byte_range payload)
 			{
-				buffer_reader reader(buffer, size);
+				buffer_reader reader(payload.begin(), payload.length());
 				strmd::deserializer<buffer_reader, packer> a(reader);
 
 				a(*_state);
-				return true;
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 #include "helpers_com.h"
 
-#include <ipc/channel_client.h>
 #include <ipc/com/endpoint.h>
+#include <ut/assert.h>
 
 namespace micro_profiler
 {
@@ -18,6 +18,35 @@ namespace micro_profiler
 			namespace
 			{
 				class Module : public CAtlDllModuleT<Module> {	} g_module;
+
+				class sequential_stream
+				{
+				public:
+					sequential_stream(const CLSID &id)
+						: _frontend(0)
+					{
+						::CoCreateInstance(id, NULL, CLSCTX_LOCAL_SERVER, IID_ISequentialStream, (void **)&_frontend);
+						assert_not_null(_frontend);
+					}
+
+					sequential_stream(const sequential_stream &other)
+						: _frontend(other._frontend)
+					{	_frontend->AddRef();	}
+
+					~sequential_stream()
+					{	_frontend->Release();	}
+
+					bool operator()(const void *buffer, size_t size)
+					{
+						ULONG written;
+
+						return S_OK == _frontend->Write(buffer, static_cast<ULONG>(size), &written);
+					}
+
+				private:
+					ISequentialStream *_frontend;
+				};
+
 			}
 
 
@@ -42,7 +71,7 @@ namespace micro_profiler
 			}
 
 			stream_function_t open_stream(const guid_t &id)
-			{	return open_channel(id);	}
+			{	return sequential_stream(reinterpret_cast<const CLSID &>(id));	}
 		}
 	}
 }

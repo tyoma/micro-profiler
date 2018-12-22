@@ -42,7 +42,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="channel_client.cpp" />
     <ClCompile Include="endpoint.cpp" />
     <ClCompile Include="endpoint_com.cpp" />
     <ClCompile Include="endpoint_sockets.cpp" />
@@ -55,7 +54,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\channel_client.h" />
     <ClInclude Include="..\client.h" />
     <ClInclude Include="..\com\endpoint.h" />
     <ClInclude Include="..\endpoint_com.h" />

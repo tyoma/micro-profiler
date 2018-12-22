@@ -12,7 +12,6 @@ set(IPC_TESTS_SOURCES
 
 if (WIN32)
 	set(IPC_TESTS_SOURCES ${IPC_TESTS_SOURCES}
-		COMChannelTests.cpp
 		COMEndpointClientTests.cpp
 		COMEndpointServerTests.cpp
 		helpers_com.cpp

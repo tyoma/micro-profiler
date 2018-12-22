@@ -11,7 +11,6 @@ set(IPC_SOURCES
 
 if (WIN32)
 	set(IPC_SOURCES ${IPC_SOURCES}
-		channel_client.cpp
 		endpoint_com.cpp
 		ipc_client.cpp
 		ipc_server.cpp

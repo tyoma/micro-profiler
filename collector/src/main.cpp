@@ -25,16 +25,23 @@
 #include <common/constants.h>
 #include <common/memory.h>
 #include <common/string.h>
-#include <ipc/channel_client.h>
+#include <ipc/com/endpoint.h>
 #include <mt/atomic.h>
 #include <patcher/src.x86/assembler_intel.h>
-
-#include <windows.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
+	namespace ipc
+	{
+		namespace com
+		{
+			shared_ptr<ipc::server> server::create_default_session_factory()
+			{	return shared_ptr<ipc::server>();	}
+		}
+	}
+
 	namespace
 	{
 		typedef intel::jmp_rel_imm32 jmp;
@@ -88,7 +95,7 @@ namespace micro_profiler
 			_activation_context.reset(::CreateActCtx(&ctx), ::ReleaseActCtx);
 		}
 
-		channel_t operator ()() const
+		channel_t operator ()(ipc::channel &inbound) const
 		{
 			shared_ptr<void> lock = lock_context();
 
@@ -96,13 +103,23 @@ namespace micro_profiler
 			{
 				try
 				{
-					return open_channel(*i);
+					return ipc::com::connect_client(to_string(*i).c_str(), inbound);
 				}
-				catch (const channel_creation_exception &)
+				catch (const exception &)
 				{
 				}
 			}
-			return &null;
+
+			struct dummy : ipc::channel
+			{
+				virtual void disconnect() throw()
+				{	}
+
+				virtual void message(const_byte_range /*payload*/)
+				{	}
+			};
+
+			return channel_t(new dummy);
 		}
 
 	private:
@@ -113,9 +130,6 @@ namespace micro_profiler
 			::ActivateActCtx(_activation_context.get(), &cookie);
 			return shared_ptr<void>(reinterpret_cast<void*>(cookie), bind(&::DeactivateActCtx, 0, cookie));
 		}
-
-		static bool null(const void * /*buffer*/, size_t /*size*/)
-		{	return true;	}
 
 	private:
 		shared_ptr<void> _activation_context;

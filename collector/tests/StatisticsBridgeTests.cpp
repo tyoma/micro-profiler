@@ -20,13 +20,19 @@ namespace micro_profiler
 		{
 			const overhead c_overhead = { 17, 0 };
 
-			bool dummy(const void *, size_t)
-			{	return true;	}
+			struct dummy : ipc::channel
+			{
+				virtual void disconnect() throw()
+				{	}
+
+				virtual void message(const_byte_range /*payload*/)
+				{	}
+			};
 
 			channel_t VoidCreationFactory(bool &created)
 			{
 				created = true;
-				return &dummy;
+				return channel_t(new dummy);
 			}
 		}
 

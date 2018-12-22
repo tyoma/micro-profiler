@@ -25,7 +25,7 @@
 #include <common/pod_vector.h>
 #include <common/protocol.h>
 #include <common/types.h>
-
+#include <ipc/endpoint.h>
 #include <deque>
 #include <functional>
 #include <memory>
@@ -33,8 +33,8 @@
 namespace micro_profiler
 {
 	struct calls_collector_i;
-	typedef std::function<bool(const void *buffer, size_t size)> channel_t;
-	typedef std::function<channel_t ()> frontend_factory_t;
+	typedef std::shared_ptr<ipc::channel> channel_t;
+	typedef std::function<channel_t (ipc::channel &inbound)> frontend_factory_t;
 	struct overhead;
 
 	class image_load_queue
@@ -51,7 +51,7 @@ namespace micro_profiler
 		std::deque<long_address_t> _uqueue;
 	};
 
-	class statistics_bridge
+	class statistics_bridge : /*inbound*/ ipc::channel
 	{
 	public:
 		statistics_bridge(calls_collector_i &collector, const overhead &overhead_,
@@ -63,6 +63,10 @@ namespace micro_profiler
 	private:
 		template <typename DataT>
 		void send(commands command, const DataT &data);
+
+		// ipc:channel methods
+		virtual void disconnect() throw();
+		virtual void message(const_byte_range payload);
 
 	public:
 		pod_vector<unsigned char> _buffer;

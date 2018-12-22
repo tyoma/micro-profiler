@@ -52,7 +52,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="COMChannelTests.cpp" />
     <ClCompile Include="COMEndpointClientTests.cpp" />
     <ClCompile Include="COMEndpointServerTests.cpp" />
     <ClCompile Include="EndpointSelectorTests.cpp" />

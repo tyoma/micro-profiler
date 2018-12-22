@@ -2,6 +2,7 @@
 
 #include <common/noncopyable.h>
 #include <common/types.h>
+#include <functional>
 #include <memory>
 
 namespace micro_profiler

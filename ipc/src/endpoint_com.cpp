@@ -21,6 +21,7 @@
 #include <ipc/com/endpoint.h>
 
 #include <common/string.h>
+#include <functional>
 
 using namespace std;
 
@@ -48,6 +49,7 @@ namespace micro_profiler
 			{
 			public:
 				client_session(const char *destination_endpoint_id, channel &inbound);
+				~client_session();
 
 				virtual void disconnect() throw();
 				virtual void message(const_byte_range payload);
@@ -104,9 +106,16 @@ namespace micro_profiler
 			{
 				const guid_t id = from_string(destination_endpoint_id);
 
+				::CoInitialize(NULL);
 				if (S_OK != _stream.CoCreateInstance(reinterpret_cast<const GUID &>(id), NULL, CLSCTX_LOCAL_SERVER))
+				{
+					::CoUninitialize();
 					throw connection_refused(destination_endpoint_id);
+				}
 			}
+
+			client_session::~client_session()
+			{	::CoUninitialize();	}
 
 			void client_session::disconnect() throw()
 			{	}

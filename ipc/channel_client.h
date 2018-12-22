@@ -21,10 +21,13 @@
 #pragma once
 
 #include <common/types.h>
+#include <functional>
 #include <stdexcept>
 
 namespace micro_profiler
 {
+	typedef std::function<bool(const void *buffer, size_t size)> channel_t;
+
 	struct channel_creation_exception : std::runtime_error
 	{
 		channel_creation_exception(const char *message);

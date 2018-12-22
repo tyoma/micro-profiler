@@ -33,6 +33,8 @@
 namespace micro_profiler
 {
 	struct calls_collector_i;
+	typedef std::function<bool(const void *buffer, size_t size)> channel_t;
+	typedef std::function<channel_t ()> frontend_factory_t;
 	struct overhead;
 
 	class image_load_queue
@@ -53,7 +55,7 @@ namespace micro_profiler
 	{
 	public:
 		statistics_bridge(calls_collector_i &collector, const overhead &overhead_,
-			const std::function<channel_t ()> &factory, const std::shared_ptr<image_load_queue> &image_load_queue_);
+			const frontend_factory_t &factory, const std::shared_ptr<image_load_queue> &image_load_queue_);
 
 		void analyze();
 		void update_frontend();

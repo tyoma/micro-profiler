@@ -3,7 +3,6 @@
 #include <common/serialization.h>
 #include <common/symbol_resolver.h>
 #include <frontend/function_list.h>
-#include <ipc/channel_client.h>
 
 #include <algorithm>
 #include <strmd/serializer.h>

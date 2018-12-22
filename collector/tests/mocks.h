@@ -1,9 +1,10 @@
 #pragma once
 
+#include <collector/calls_collector.h>
+#include <collector/statistics_bridge.h>
 #include <common/noncopyable.h>
 #include <common/protocol.h>
 #include <common/types.h>
-#include <collector/calls_collector.h>
 
 namespace micro_profiler
 {

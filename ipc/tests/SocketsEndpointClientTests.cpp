@@ -68,7 +68,6 @@ namespace micro_profiler
 					mt::event ready;
 					shared_ptr<mocks::server> s(new mocks::server);
 					shared_ptr<void> hs = sockets::run_server("6101", s);
-					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6101", inbound);
 					byte data1[] = "I celebrate myself, and sing myself,";
 					byte data2[] = "And what I assume you shall assume,";
 					byte data3[] = "For every atom belonging to me as good belongs to you.";
@@ -78,6 +77,8 @@ namespace micro_profiler
 							ready.set();
 						};
 					};
+
+					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6101", inbound);
 
 					// ACT
 					c->message(mkrange(data1));

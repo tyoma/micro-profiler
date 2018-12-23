@@ -5,6 +5,8 @@ project(micro-profiler)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+
+# Setup include directories
 include_directories(.)
 include_directories(./libraries/agge)
 include_directories(./libraries/strmd)
@@ -14,24 +16,45 @@ if (WIN32)
 	include_directories(./compat)
 endif()
 
+
+# Add definitions: global, platform-based, compiler-based
 add_definitions(-DMP_MT_GENERIC)
 if(UNIX)
 	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
 endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11 -frtti -Wl,--no-undefined")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -Wno-unknown-pragmas")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+if (MSVC)
+	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
 
+
+# Setup global compiler/linker settings
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11 -frtti -fvisibility=hidden -Wl,--no-undefined")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fvisibility=hidden")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -Wno-unknown-pragmas")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	set(configurations
+		CMAKE_C_FLAGS_DEBUG
+		CMAKE_C_FLAGS_MINSIZEREL
+		CMAKE_C_FLAGS_RELEASE
+		CMAKE_C_FLAGS_RELWITHDEBINFO
+		CMAKE_CXX_FLAGS_DEBUG
+		CMAKE_CXX_FLAGS_MINSIZEREL
+		CMAKE_CXX_FLAGS_RELEASE
+		CMAKE_CXX_FLAGS_RELWITHDEBINFO
+	)
+	foreach (configuration ${configurations})
+		string(REGEX REPLACE "/MDd" "/MTd" ${configuration} "${${configuration}}")
+		string(REGEX REPLACE "/MD" "/MT" ${configuration} "${${configuration}}")
+	endforeach()
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /OPT:REF")
+endif()
 if (UNIX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif()
 
+
+# Add subdirectories
 add_subdirectory(collector/src)
 add_subdirectory(collector/tests)
 add_subdirectory(common/src)

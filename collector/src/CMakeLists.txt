@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
 
+if(MSVC)
+	project(micro-profiler C CXX ASM_MASM)
+	enable_language(ASM_MASM)
+
+	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+		add_definitions(-D_M_IX86=1)
+	else()
+		add_definitions(-D_M_X64=1)
+	endif()
+endif()
+
 set(COLLECTOR_LIB_SOURCES
 	analyzer.cpp
 	calls_collector.cpp
@@ -28,6 +39,7 @@ elseif(WIN32)
 		hooks.asm
 		main.cpp
 	)
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
 endif()
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
@@ -37,10 +49,10 @@ target_compile_options(calibration PRIVATE $<$<CXX_COMPILER_ID:GNU>:-finstrument
 target_compile_options(calibration PRIVATE $<$<CXX_COMPILER_ID:Clang>:-finstrument-functions>)
 target_compile_options(calibration PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/GH /Gh>)
 
-add_library(collector SHARED ${COLLECTOR_SOURCES})
-target_compile_options(collector PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fvisibility=default>)
-target_link_libraries(collector calibration collector.lib patcher ipc common)
+add_library(micro-profiler SHARED ${COLLECTOR_SOURCES})
+target_link_libraries(micro-profiler calibration collector.lib patcher ipc common)
 
 if(UNIX)
-	set_target_properties(collector PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/collector.expmap") 
+	target_compile_options(micro-profiler PRIVATE -fvisibility=default)
+	set_target_properties(micro-profiler PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/collector.expmap") 
 endif()

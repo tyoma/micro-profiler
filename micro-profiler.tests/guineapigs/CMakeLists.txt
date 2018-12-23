@@ -12,7 +12,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	add_library(symbol_container_3_nosymbols SHARED symbol_container_3.cpp)
 
 	target_compile_options(symbol_container_2_instrumented PRIVATE -finstrument-functions)
-	target_link_libraries(symbol_container_2_instrumented collector)
 	
 	set_target_properties(symbol_container_1 PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/symbol_container_1.expmap") 
 	set_target_properties(symbol_container_2 symbol_container_2_instrumented PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/symbol_container_2.expmap") 
@@ -26,9 +25,10 @@ elseif(MSVC)
 	add_library(symbol_container_3_nosymbols SHARED symbol_container_3.cpp symbol_container_3.def)
 
 	target_compile_options(symbol_container_2_instrumented PRIVATE /GH /Gh)
-	target_link_libraries(symbol_container_2_instrumented collector)
 	
 	set_target_properties(symbol_container_1 symbol_container_2 symbol_container_2_instrumented symbol_container_3_nosymbols PROPERTIES LINK_FLAGS "/INCREMENTAL:NO")
 	set_target_properties(symbol_container_1 symbol_container_2 symbol_container_2_instrumented PROPERTIES LINK_FLAGS "/DEBUG")
 	set_target_properties(symbol_container_3_nosymbols PROPERTIES LINK_FLAGS "/DEBUG:NONE")
 endif()
+
+target_link_libraries(symbol_container_2_instrumented micro-profiler)

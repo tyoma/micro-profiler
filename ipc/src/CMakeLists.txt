@@ -13,7 +13,12 @@ if (WIN32)
 		ipc_client.cpp
 		ipc_server.cpp
 		server_endpoint_com.cpp
-	)	
+		socket_helpers_win32.cpp
+	)
+elseif(UNIX)
+	set(IPC_SOURCES ${IPC_SOURCES}
+		socket_helpers_unix.cpp
+	)
 endif()
 
 add_library(ipc STATIC ${IPC_SOURCES})

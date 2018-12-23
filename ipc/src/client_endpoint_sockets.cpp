@@ -46,6 +46,7 @@ namespace micro_profiler
 				static int open(const char *host, unsigned short port);
 
 			private:
+				sockets_initializer _initializer;
 				socket_handle _socket;
 			};
 
@@ -72,10 +73,15 @@ namespace micro_profiler
 			int client_session::open(const char *host, unsigned short port)
 			{
 				sockaddr_in service = { AF_INET, htons(port), inet_addr(host), { 0 } };
-				int hsocket = static_cast<int>(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+				int hsocket = static_cast<int>(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
 
+				if (-1 == hsocket)
+					throw initialization_failed("socket creation failed");
 				if (::connect(hsocket, (sockaddr *)&service, sizeof(service)))
+				{
+					::close(hsocket);
 					throw connection_refused(host);
+				}
 				return hsocket;
 			}
 
@@ -92,4 +98,3 @@ namespace micro_profiler
 		}
 	}
 }
-

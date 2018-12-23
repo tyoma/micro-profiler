@@ -28,7 +28,6 @@
 #include <mt/thread.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
-#include <signal.h>
 #include <stdexcept>
 #include <stdio.h>
 #include <sys/types.h>
@@ -42,22 +41,6 @@ namespace micro_profiler
 	{
 		namespace sockets
 		{
-#if defined(WIN32)
-			struct winsock_initializer
-			{
-				winsock_initializer()
-				{
-					WSADATA data = { };
-					::WSAStartup(MAKEWORD(2, 2), &data);
-				}
-
-				~winsock_initializer()
-				{	::WSACleanup();	}
-			};
-#else
-			struct winsock_initializer {	};
-#endif
-
 			class session : /*outbound*/ ipc::channel
 			{
 			public:
@@ -81,7 +64,7 @@ namespace micro_profiler
 				~server();
 
 			private:
-				winsock_initializer _initializer;
+				sockets_initializer _initializer;
 				socket_handle _server_socket;
 				auto_ptr<mt::thread> _server_thread;
 				list< shared_ptr<session> > _sessions;
@@ -150,12 +133,7 @@ namespace micro_profiler
 
 
 			shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &factory)
-			{
-#ifndef _WIN32
-				signal(SIGPIPE, SIG_IGN);
-#endif
-				return shared_ptr<void>(new server(endpoint_id, factory));
-			}
+			{	return shared_ptr<void>(new server(endpoint_id, factory));}
 		}
 	}
 }

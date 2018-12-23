@@ -25,6 +25,12 @@
     <ClCompile Include="server_endpoint.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="socket_helpers_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="socket_helpers_unix.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\client.h" />

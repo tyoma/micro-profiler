@@ -18,12 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include "socket_helpers.h"
 
-#include <common/noncopyable.h>
-#include <stdexcept>
-#include <sys/socket.h>
-#include <unistd.h>
+#include <windows.h>
 
 namespace micro_profiler
 {
@@ -31,49 +28,14 @@ namespace micro_profiler
 	{
 		namespace sockets
 		{
-			struct sockets_initializer : noncopyable
+			sockets_initializer::sockets_initializer()
 			{
-				sockets_initializer();
-				~sockets_initializer();
-			};
-
-			class socket_handle : noncopyable
-			{
-			public:
-				explicit socket_handle(int s);
-				~socket_handle();
-
-				void reset();
-				operator int() const;
-
-			private:
-				int _socket;
-			};
-
-
-
-			inline socket_handle::socket_handle(int s)
-				: _socket(s)
-			{
-				if (s == -1)
-					throw std::runtime_error("invalid socket");
+				WSADATA data = { };
+				::WSAStartup(MAKEWORD(2, 2), &data);
 			}
 
-			inline socket_handle::~socket_handle()
-			{	reset();	}
-
-			inline void socket_handle::reset()
-			{
-				if (_socket)
-				{
-					::shutdown(_socket, 2);
-					::close(_socket);
-					_socket = 0;
-				}
-			}
-
-			inline socket_handle::operator int() const
-			{	return _socket;	}
+			sockets_initializer::~sockets_initializer()
+			{	::WSACleanup();	}
 		}
 	}
 }

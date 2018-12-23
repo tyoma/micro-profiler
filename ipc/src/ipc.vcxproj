@@ -50,6 +50,13 @@
     <ClCompile Include="server_endpoint_sockets.cpp" />
     <ClCompile Include="ipc_client.cpp" />
     <ClCompile Include="ipc_server.cpp" />
+    <ClCompile Include="socket_helpers_unix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="socket_helpers_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)collector\src\collector.lib.vcxproj">

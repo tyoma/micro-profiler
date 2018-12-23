@@ -20,6 +20,7 @@
 
 #include <ipc/com/endpoint.h>
 
+#include <common/module.h>
 #include <common/string.h>
 #include <functional>
 
@@ -31,37 +32,49 @@ namespace micro_profiler
 	{
 		namespace com
 		{
+			struct com_initialize
+			{
+				com_initialize();
+				~com_initialize();
+			};
+
 			class client_session : public channel
 			{
 			public:
 				client_session(const char *destination_endpoint_id, channel &inbound);
-				~client_session();
 
 				virtual void disconnect() throw();
 				virtual void message(const_byte_range payload);
 
 			private:
+				static shared_ptr<void> create_activation_context();
+				static shared_ptr<void> lock_activation_context(const shared_ptr<void> &ctx);
+
+			private:
 				channel &_inbound;
+				com_initialize _com_initialize;
 				CComPtr<ISequentialStream> _stream;
 			};
 
 
 
+			com_initialize::com_initialize()
+			{	::CoInitialize(NULL);	}
+
+			com_initialize::~com_initialize()
+			{	::CoUninitialize();	}
+
+
 			client_session::client_session(const char *destination_endpoint_id, channel &inbound)
 				: _inbound(inbound)
 			{
+				shared_ptr<void> ctx = create_activation_context();
+				shared_ptr<void> ctx_lock = lock_activation_context(ctx);
 				const guid_t id = from_string(destination_endpoint_id);
 
-				::CoInitialize(NULL);
 				if (S_OK != _stream.CoCreateInstance(reinterpret_cast<const GUID &>(id), NULL, CLSCTX_LOCAL_SERVER))
-				{
-					::CoUninitialize();
 					throw connection_refused(destination_endpoint_id);
-				}
 			}
-
-			client_session::~client_session()
-			{	::CoUninitialize();	}
 
 			void client_session::disconnect() throw()
 			{	}
@@ -73,6 +86,25 @@ namespace micro_profiler
 
 				if (S_OK != hr)
 					_inbound.disconnect();
+			}
+
+			shared_ptr<void> client_session::create_activation_context()
+			{
+				ACTCTX ctx = { sizeof(ACTCTX), };
+				HMODULE hmodule = (HMODULE)get_module_info((void *)&create_activation_context).load_address;
+
+				ctx.hModule = hmodule;
+				ctx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
+				ctx.dwFlags = ACTCTX_FLAG_HMODULE_VALID | ACTCTX_FLAG_RESOURCE_NAME_VALID;
+				return shared_ptr<void>(::CreateActCtx(&ctx), &::ReleaseActCtx);
+			}
+
+			shared_ptr<void> client_session::lock_activation_context(const shared_ptr<void> &ctx)
+			{
+				ULONG_PTR cookie;
+
+				::ActivateActCtx(ctx.get(), &cookie);
+				return shared_ptr<void>(reinterpret_cast<void*>(cookie), bind(&::DeactivateActCtx, 0, cookie));
 			}
 
 

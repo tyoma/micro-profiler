@@ -27,6 +27,7 @@ set(CALIBRATION_SOURCES
 
 set(COLLECTOR_SOURCES
 	calibration.cpp
+	main.cpp
 )
 
 if(UNIX)
@@ -37,7 +38,7 @@ elseif(WIN32)
 	set(COLLECTOR_SOURCES ${COLLECTOR_SOURCES}
 		collector.def
 		hooks.asm
-		main.cpp
+		main_win32.cpp
 	)
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
 endif()

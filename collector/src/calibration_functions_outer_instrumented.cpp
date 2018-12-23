@@ -20,8 +20,8 @@
 
 namespace micro_profiler
 {
-	volatile void empty_call();
+	void empty_call();
 
-	volatile void call_empty_call()
+	void call_empty_call()
 	{	empty_call();	}
 }

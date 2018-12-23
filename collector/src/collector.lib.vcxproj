@@ -29,17 +29,10 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
-  </ImportGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <MASM>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
-    </MASM>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
@@ -58,9 +51,6 @@
     <ClCompile Include="statistics_bridge.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="hooks.asm" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calibration.h" />
     <ClInclude Include="..\calls_collector.h" />
@@ -72,7 +62,4 @@
     <ClInclude Include="..\statistics_bridge.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
-  </ImportGroup>
 </Project>

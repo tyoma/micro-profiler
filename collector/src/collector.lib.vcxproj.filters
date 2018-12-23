@@ -29,11 +29,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="hooks.asm">
-      <Filter>src</Filter>
-    </MASM>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\frontend_controller.h" />

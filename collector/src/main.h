@@ -18,16 +18,21 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "main.h"
+#pragma once
 
-#include <collector/frontend_controller.h>
+#include <common/noncopyable.h>
 
 namespace micro_profiler
 {
-	platform_initializer::platform_initializer(frontend_controller &frontend_controller_)
-		: _frontend_controller(frontend_controller_)
-	{	}
+	class frontend_controller;
 
-	platform_initializer::~platform_initializer()
-	{	_frontend_controller.force_stop();	}
+	class platform_initializer : noncopyable
+	{
+	public:
+		platform_initializer(frontend_controller &frontend_controller_);
+		~platform_initializer();
+
+	private:
+		frontend_controller &_frontend_controller;
+	};
 }

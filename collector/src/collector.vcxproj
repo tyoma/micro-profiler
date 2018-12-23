@@ -26,6 +26,9 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
@@ -33,9 +36,10 @@
     <TargetName>micro-profiler_$(Platform2)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
-    <ClCompile>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <MASM>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
+    </MASM>
     <Link>
       <ModuleDefinitionFile>collector.def</ModuleDefinitionFile>
       <ImportLibrary>$(OutDir)micro-profiler_$(PlatformName).lib</ImportLibrary>
@@ -57,7 +61,16 @@
       <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="main_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="main_win32.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <None Include="..\entry.h" />
+    <MASM Include="hooks.asm">
+      <FileType>Document</FileType>
+    </MASM>
     <None Include="micro-profiler.initializer.cpp" />
     <Content Include="..\entry.h;micro-profiler.initializer.cpp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -87,5 +100,11 @@
   <ItemGroup>
     <Manifest Include="com.manifest" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="main.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
 </Project>

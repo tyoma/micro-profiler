@@ -37,13 +37,13 @@ namespace micro_profiler
 			class client_session : public channel
 			{
 			public:
-				client_session(const char *host, unsigned short port, channel &inbound);
+				client_session(const host_port &hp, channel &inbound);
 
 				virtual void disconnect() throw();
 				virtual void message(const_byte_range payload);
 
 			private:
-				static int open(const char *host, unsigned short port);
+				static int open(const host_port &hp);
 
 			private:
 				sockets_initializer _initializer;
@@ -52,8 +52,8 @@ namespace micro_profiler
 
 
 
-			client_session::client_session(const char *host, unsigned short port, channel &/*inbound*/)
-				: _socket(open(host, port))
+			client_session::client_session(const host_port &hp, channel &/*inbound*/)
+				: _socket(open(hp))
 			{	}
 
 			void client_session::disconnect() throw()
@@ -70,9 +70,9 @@ namespace micro_profiler
 				::send(_socket, reinterpret_cast<const char *>(payload.begin()), size_, 0);
 			}
 
-			int client_session::open(const char *host, unsigned short port)
+			int client_session::open(const host_port &hp)
 			{
-				sockaddr_in service = { AF_INET, htons(port), inet_addr(host), { 0 } };
+				sockaddr_in service = { AF_INET, htons(hp.port), inet_addr(hp.host.c_str()), { 0 } };
 				int hsocket = static_cast<int>(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
 
 				if (-1 == hsocket)
@@ -80,7 +80,7 @@ namespace micro_profiler
 				if (::connect(hsocket, (sockaddr *)&service, sizeof(service)))
 				{
 					::close(hsocket);
-					throw connection_refused(host);
+					throw connection_refused(hp.host.c_str());
 				}
 				return hsocket;
 			}
@@ -88,12 +88,9 @@ namespace micro_profiler
 
 			shared_ptr<channel> connect_client(const char *destination_endpoint_id, channel &inbound)
 			{
-				const string destination = destination_endpoint_id;
-				size_t delim = destination.find(':');
-				const string host = destination.substr(0, delim++);
-				const unsigned short port = static_cast<unsigned short>(atoi(destination.substr(delim).c_str()));
+				host_port hp(destination_endpoint_id, "127.0.0.1");
 
-				return shared_ptr<channel>(new client_session(host.c_str(), port, inbound));
+				return shared_ptr<channel>(new client_session(hp, inbound));
 			}
 		}
 	}

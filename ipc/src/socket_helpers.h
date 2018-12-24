@@ -22,6 +22,8 @@
 
 #include <common/noncopyable.h>
 #include <stdexcept>
+#include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -37,6 +39,14 @@ namespace micro_profiler
 				~sockets_initializer();
 			};
 
+			struct host_port
+			{
+				host_port(const char *address, const char *default_host);
+
+				std::string host;
+				unsigned short port;
+			};
+
 			class socket_handle : noncopyable
 			{
 			public:
@@ -50,6 +60,15 @@ namespace micro_profiler
 				int _socket;
 			};
 
+
+
+			inline host_port::host_port(const char *address, const char *default_host)
+			{
+				if (const char *delim = strchr(address, ':'))
+					host.assign(address, delim), port = static_cast<unsigned short>(atoi(delim + 1));
+				else
+					host = default_host, port = static_cast<unsigned short>(atoi(address));
+			}
 
 
 			inline socket_handle::socket_handle(int s)

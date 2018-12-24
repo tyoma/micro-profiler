@@ -195,6 +195,25 @@ namespace micro_profiler
 					// ACT / ASSERT
 					assert_is_false(stream(data, sizeof(data)));
 				}
+
+
+				test( InterfaceCanBeSpecifiedWhenBinding )
+				{
+					// INIT
+					mt::event ready;
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = sockets::run_server("127.0.0.1:6101", f);
+
+					f->session_created = [&] (shared_ptr<void>) {
+						ready.set();
+					};
+
+					// ACT
+					sender stream(6101);
+
+					// ASSERT (must not hang)
+					ready.wait();
+				}
 			end_test_suite
 		}
 	}

@@ -91,7 +91,7 @@ namespace micro_profiler
 				_marshalling_server.reset(new marshalling_server(_frontend_manager));
 				_hservers.push_back(ipc::run_server(("com|" + to_string(c_integrated_frontend_id)).c_str(),
 					_frontend_manager));
-				_hservers.push_back(ipc::run_server("sockets|6100", _marshalling_server));
+				_hservers.push_back(ipc::run_server("sockets|0.0.0.0:6100", _marshalling_server));
 				return S_OK;
 			}
 

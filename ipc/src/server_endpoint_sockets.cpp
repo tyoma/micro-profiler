@@ -108,12 +108,8 @@ namespace micro_profiler
 			server::server(const char *endpoint_id, const shared_ptr<ipc::server> &factory)
 				: _server_socket((int)::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP))
 			{
-				sockaddr_in service = {
-					AF_INET,
-					htons(static_cast<u_short>(atoi(endpoint_id))),
-					inet_addr("127.0.0.1"),
-					{ 0 }
-				};
+				host_port hp(endpoint_id, "127.0.0.1");
+				sockaddr_in service = { AF_INET, htons(hp.port), inet_addr(hp.host.c_str()), { 0 } };
 
 				if (::bind(_server_socket, (sockaddr *)&service, sizeof(service)))
 					throw initialization_failed("bind() failed");

@@ -25,7 +25,7 @@
 #include <common/constants.h>
 #include <common/string.h>
 #include <frontend/frontend_manager.h>
-#include <ipc/endpoint_com.h>
+#include <frontend/marshalling_server.h>
 #include <resources/resource.h>
 #include <setup/environment.h>
 #include <visualstudio/command-target.h>
@@ -88,7 +88,10 @@ namespace micro_profiler
 				_service_provider->QueryService(__uuidof(IVsUIShell), &_shell);
 				register_path(false);
 				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
-				_server = ipc::com::run_server(to_string(c_integrated_frontend_id).c_str(), _frontend_manager);
+				_marshalling_server.reset(new marshalling_server(_frontend_manager));
+				_hservers.push_back(ipc::run_server(("com|" + to_string(c_integrated_frontend_id)).c_str(),
+					_frontend_manager));
+				_hservers.push_back(ipc::run_server("sockets|6100", _marshalling_server));
 				return S_OK;
 			}
 
@@ -98,7 +101,7 @@ namespace micro_profiler
 			STDMETHODIMP Close()
 			{
 				_frontend_manager.reset();
-				_server.reset();
+				_hservers.clear();
 				return S_OK;
 			}
 
@@ -133,7 +136,8 @@ namespace micro_profiler
 		private:
 			CComPtr<IServiceProvider> _service_provider;
 			CComPtr<IVsUIShell> _shell;
-			shared_ptr<void> _server;
+			vector< shared_ptr<void> > _hservers;
+			shared_ptr<marshalling_server> _marshalling_server;
 			shared_ptr<frontend_manager> _frontend_manager;
 			unsigned _next_tool_id;
 		};

@@ -50,6 +50,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="frontend\file.cpp" />
+    <ClCompile Include="frontend\marshalling_server.cpp" />
     <ClCompile Include="frontend\piechart.cpp" />
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
     <ClCompile Include="frontend\stream.cpp" />
@@ -61,6 +62,7 @@
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClInclude Include="constants.h" />
+    <ClInclude Include="frontend\marshalling_server.h" />
     <ClInclude Include="frontend\piechart.h" />
     <ClInclude Include="frontend\tables_ui.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />

@@ -40,6 +40,9 @@
     <ClCompile Include="frontend\piechart.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\marshalling_server.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -137,6 +140,9 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="constants.h" />
+    <ClInclude Include="frontend\marshalling_server.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">

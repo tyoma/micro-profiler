@@ -1,7 +1,6 @@
 #define _CRT_RAND_S
 #include <stdlib.h>
 #include <time.h>
-#include <conio.h>
 
 #include <vector>
 #include <algorithm>
@@ -10,7 +9,7 @@ using namespace std;
 
 namespace
 {
-	double random()
+	double my_random()
 	{
 		unsigned int value1(rand()), value2(rand());
 
@@ -29,13 +28,11 @@ int main()
 	vector<double> v(500);
 #endif
 
-	generate_n(v.begin(), v.size(), &random);
+	generate_n(v.begin(), v.size(), &my_random);
 	sort(v.begin(), v.end());
 	sort(v.rbegin(), v.rend());
 	sort(v.begin(), v.end());
 	sort(v.rbegin(), v.rend());
-
-	_getch();
 
 	return 0;
 }

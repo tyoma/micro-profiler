@@ -76,13 +76,13 @@ extern "C" handle * MPCDECL micro_profiler_initialize(void *image_address)
 	return g_frontend_controller.profile(image_address);
 }
 
-extern "C" void __cyg_profile_func_enter(void *callee, void * /*call_site*/)
+extern "C" void micro_profiler_func_enter(void *callee, void * /*call_site*/)
 {
 	const void *stck = 0;
 	calls_collector::on_enter(g_collector_ptr, &stck, read_tick_counter(), callee);
 }
 
-extern "C" void __cyg_profile_func_exit(void * /*callee*/, void * /*call_site*/)
+extern "C" void micro_profiler_func_exit(void * /*callee*/, void * /*call_site*/)
 {
 	const void *stck = 0;
 	calls_collector::on_exit(g_collector_ptr, &stck, read_tick_counter());

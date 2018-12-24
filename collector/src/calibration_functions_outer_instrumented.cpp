@@ -25,3 +25,16 @@ namespace micro_profiler
 	void call_empty_call()
 	{	empty_call();	}
 }
+
+#if defined(__GNUC__) || defined(__clang__)
+	extern "C" void micro_profiler_func_enter(void *callee, void *call_site);
+	extern "C" void micro_profiler_func_exit(void *callee, void *call_site);
+
+	extern "C" void __cyg_profile_func_enter(void *callee, void *call_site) __attribute__((no_instrument_function));
+	extern "C" void __cyg_profile_func_enter(void *callee, void *call_site)
+	{	micro_profiler_func_enter(callee, call_site);	}
+
+	extern "C" void __cyg_profile_func_exit(void *callee, void *call_site) __attribute__((no_instrument_function));
+	extern "C" void __cyg_profile_func_exit(void *callee, void *call_site)
+	{	micro_profiler_func_exit(callee, call_site);	}
+#endif

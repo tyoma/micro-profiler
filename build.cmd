@@ -42,11 +42,11 @@ echo 6.4.   Building (x64)...
 
 echo 7. Tagging...
 call scripts\make-version VERSION_TAG version.h
-git tag -a -m "" v%VERSION_TAG% HEAD
+git tag -a -m "" v%VERSION_TAG% %commithash%~1
 git push origin v%VERSION_TAG%
 
-echo 8. Resetting to origin/master...
-git reset --hard origin/master
+echo 8. Resetting to origin...
+git reset --hard %commithash%
 
 echo Build complete!
 

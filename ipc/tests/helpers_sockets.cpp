@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <ut/assert.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
 	namespace ipc
@@ -32,9 +34,6 @@ namespace micro_profiler
 				::connect(_socket, (sockaddr *)&service, sizeof(service));
 			}
 
-			sender::~sender()
-			{	}
-
 			bool sender::operator ()(const void *buffer, size_t sz)
 			{
 				int size_ = static_cast<unsigned int>(sz);
@@ -42,9 +41,29 @@ namespace micro_profiler
 
 				size.value = size_;
 				size.reorder();
-				if (::send(_socket, size.bytes, sizeof(size.bytes), 0) < sizeof(size.bytes))
+				if (::send(_socket, size.bytes, sizeof(size.bytes), MSG_NOSIGNAL) < (int)sizeof(size.bytes))
 					return false;
-				if (::send(_socket, static_cast<const char *>(buffer), size_, 0) < size_)
+				if (::send(_socket, static_cast<const char *>(buffer), size_, MSG_NOSIGNAL) < size_)
+					return false;
+				return true;
+			}
+
+
+			reader::reader(unsigned short port)
+			{
+				sockaddr_in service = { AF_INET, htons(port), inet_addr("127.0.0.1"), { 0 } };
+
+				::connect(_socket, (sockaddr *)&service, sizeof(service));
+			}
+
+			bool reader::operator ()(vector<byte> &buffer)
+			{
+				sockets::byte_representation<unsigned int> size;
+
+				if (::recv(_socket, size.bytes, sizeof(size.bytes), MSG_WAITALL) < (int)sizeof(size.bytes))
+					return false;
+				buffer.resize(size.value);
+				if (::recv(_socket, reinterpret_cast<char *>(&buffer[0]), size.value, MSG_WAITALL) < (int)size.value)
 					return false;
 				return true;
 			}

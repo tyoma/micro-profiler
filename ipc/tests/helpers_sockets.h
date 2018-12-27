@@ -1,7 +1,8 @@
 #pragma once
 
 #include <common/noncopyable.h>
-#include <mt/thread.h>
+#include <common/types.h>
+#include <vector>
 
 namespace micro_profiler
 {
@@ -25,9 +26,19 @@ namespace micro_profiler
 			{
 			public:
 				sender(unsigned short port);
-				~sender();
 
-				bool operator ()(const void *buffer, size_t size);
+				bool operator ()(const void *buffer, size_t size);				
+
+			private:
+				socket_handle _socket;
+			};
+
+			class reader : noncopyable
+			{
+			public:
+				reader(unsigned short port);
+
+				bool operator ()(std::vector<byte> &buffer);				
 
 			private:
 				socket_handle _socket;

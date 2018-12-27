@@ -50,6 +50,9 @@
     <ClInclude Include="helpers.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="server_endpoint_sockets.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

@@ -21,9 +21,9 @@ namespace micro_profiler
 
 				init( CheckPortsAreFree )
 				{
-					assert_is_false(is_local_port_open(6101));
-					assert_is_false(is_local_port_open(6102));
-					assert_is_false(is_local_port_open(6103));
+					assert_is_false(is_local_port_open(6111));
+					assert_is_false(is_local_port_open(6112));
+					assert_is_false(is_local_port_open(6113));
 				}
 
 
@@ -33,18 +33,18 @@ namespace micro_profiler
 					shared_ptr<mocks::server> f(new mocks::server);
 
 					// ACT
-					shared_ptr<void> s1 = sockets::run_server("6101", f);
+					shared_ptr<void> s1 = sockets::run_server("6111", f);
 
 					// ASSERT
-					assert_is_true(is_local_port_open(6101));
-					assert_is_false(is_local_port_open(6103));
+					assert_is_true(is_local_port_open(6111));
+					assert_is_false(is_local_port_open(6113));
 
 					// ACT
-					shared_ptr<void> s2 = sockets::run_server("6103", f);
+					shared_ptr<void> s2 = sockets::run_server("6113", f);
 
 					// ASSERT
-					assert_is_true(is_local_port_open(6101));
-					assert_is_true(is_local_port_open(6103));
+					assert_is_true(is_local_port_open(6111));
+					assert_is_true(is_local_port_open(6113));
 				}
 
 
@@ -52,10 +52,10 @@ namespace micro_profiler
 				{
 					// INIT
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> s1 = sockets::run_server("6101", f);
+					shared_ptr<void> s1 = sockets::run_server("6111", f);
 
 					// ACT / ASSERT
-					assert_throws(sockets::run_server("6101", f), initialization_failed);
+					assert_throws(sockets::run_server("6111", f), initialization_failed);
 				}
 
 
@@ -65,7 +65,7 @@ namespace micro_profiler
 					int times = 1;
 					mt::event ready;
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> h = sockets::run_server("6101", f);
+					shared_ptr<void> h = sockets::run_server("6111", f);
 
 					f->session_created = [&] (const shared_ptr<void> &) {
 						if (!--times)
@@ -73,7 +73,7 @@ namespace micro_profiler
 					};
 
 					// ACT
-					sender s1(6101);
+					sender s1(6111);
 					ready.wait();
 
 					// ASSERT
@@ -84,8 +84,8 @@ namespace micro_profiler
 					times = 2;
 
 					// ACT
-					sender s2(6101);
-					sender s3(6101);
+					sender s2(6111);
+					sender s3(6111);
 					ready.wait();
 
 					// ASSERT
@@ -100,7 +100,7 @@ namespace micro_profiler
 					// INIT
 					mt::event ready;
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> h = sockets::run_server("6101", f);
+					shared_ptr<void> h = sockets::run_server("6111", f);
 
 					f->session_created = [&] (const shared_ptr<mocks::session> &s) {
 						s->disconnected = [&] {
@@ -109,7 +109,7 @@ namespace micro_profiler
 					};
 
 					// ACT
-					sender(6101);
+					sender(6111);
 					ready.wait();
 
 					// ASSERT
@@ -118,7 +118,7 @@ namespace micro_profiler
 					assert_is_true(f->sessions[0].unique());
 
 					// ACT
-					sender(6101);
+					sender(6111);
 					ready.wait();
 
 					// ASSERT
@@ -134,7 +134,7 @@ namespace micro_profiler
 					int times = 1;
 					mt::event ready;
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> s = sockets::run_server("6101", f);
+					shared_ptr<void> s = sockets::run_server("6111", f);
 
 					f->session_created = [&] (const shared_ptr<mocks::session> &s) {
 						s->received_message = [&] {
@@ -143,7 +143,7 @@ namespace micro_profiler
 						};
 					};
 
-					sender stream(6101);
+					sender stream(6111);
 					byte data1[] = "if you’re going to try, go all the way.";
 					byte data2[] = "otherwise, don’t even start.";
 					byte data3[] = "this could mean losing girlfriends, wives, relatives, jobs and maybe your mind.";
@@ -176,31 +176,35 @@ namespace micro_profiler
 					// INIT
 					mt::event ready;
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> h = sockets::run_server("6101", f);
-					byte data = 1;
+					shared_ptr<void> h = sockets::run_server("6111", f);
+					vector<byte> dummy;
 
-					f->sessions.reserve(2);	
 					f->session_created = [&] (shared_ptr<void>) {
 						ready.set();
 					};
 
-					sender stream(6101);
-
-					ready.wait();
-
-					const shared_ptr<mocks::session> &session = f->sessions[0];
+					reader stream1(6111); ready.wait();
+					reader stream2(6111); ready.wait();
+					reader stream3(6111); ready.wait();
 
 					// ACT
-					session->outbound->disconnect();
-					sender(6101);
-					ready.wait();
-
-					// ACT / ASSERT (must not hang)
-					while (stream(&data, 1))
-						mt::this_thread::sleep_for(mt::milliseconds(50));
+					f->sessions[1]->outbound->disconnect();
+					stream2(dummy);
 
 					// ASSERT
-					assert_is_true(session.unique());
+					assert_is_false(f->sessions[0].unique());
+					assert_is_true(f->sessions[1].unique());
+					assert_is_false(f->sessions[2].unique());
+
+					// ACT
+					f->sessions[0]->outbound->disconnect();
+					f->sessions[2]->outbound->disconnect();
+					stream3(dummy);
+					stream1(dummy);
+
+					// ASSERT
+					assert_is_true(f->sessions[0].unique());
+					assert_is_true(f->sessions[2].unique());
 				}
 
 
@@ -209,14 +213,14 @@ namespace micro_profiler
 					// INIT
 					mt::event ready;
 					shared_ptr<mocks::server> f(new mocks::server);
-					shared_ptr<void> h = sockets::run_server("127.0.0.1:6101", f);
+					shared_ptr<void> h = sockets::run_server("127.0.0.1:6111", f);
 
 					f->session_created = [&] (shared_ptr<void>) {
 						ready.set();
 					};
 
 					// ACT
-					sender stream(6101);
+					sender stream(6111);
 
 					// ASSERT (must not hang)
 					ready.wait();

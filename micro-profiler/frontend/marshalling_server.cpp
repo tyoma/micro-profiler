@@ -70,6 +70,7 @@ namespace micro_profiler
 	{	::SendMessage(_hwnd, WM_USER, 0, (LPARAM)&f);	}
 
 	LRESULT CALLBACK marshalling_window::wndproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+	try
 	{
 		if (WM_USER == message)
 		{
@@ -82,6 +83,10 @@ namespace micro_profiler
 		{
 			return ::DefWindowProc(hwnd, message, wparam, lparam);
 		}
+	}
+	catch (...)
+	{
+		return 0;
 	}
 
 

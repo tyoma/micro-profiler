@@ -34,30 +34,30 @@ namespace micro_profiler
 
 				init( CheckPortsAreFree )
 				{
-					assert_is_false(is_local_port_open(6101));
-					assert_is_false(is_local_port_open(6102));
-					assert_is_false(is_local_port_open(6103));
+					assert_is_false(is_local_port_open(6121));
+					assert_is_false(is_local_port_open(6122));
+					assert_is_false(is_local_port_open(6123));
 				}
 
 
 				test( CreatingSocketServerEndpoint )
 				{
 					// INIT / ACT
-					shared_ptr<void> s1 = run_server("sockets|6102", session_factory);
+					shared_ptr<void> s1 = run_server("sockets|6122", session_factory);
 
 					// ASSERT
-					assert_is_false(is_local_port_open(6101));
-					assert_is_true(is_local_port_open(6102));
-					assert_is_false(is_local_port_open(6103));
+					assert_is_false(is_local_port_open(6121));
+					assert_is_true(is_local_port_open(6122));
+					assert_is_false(is_local_port_open(6123));
 
 					// INIT / ACT
-					shared_ptr<void> s2 = run_server("sockets|6101", session_factory);
-					shared_ptr<void> s3 = run_server("sockets|6103", session_factory);
+					shared_ptr<void> s2 = run_server("sockets|6121", session_factory);
+					shared_ptr<void> s3 = run_server("sockets|6123", session_factory);
 
 					// ASSERT
-					assert_is_true(is_local_port_open(6101));
-					assert_is_true(is_local_port_open(6102));
-					assert_is_true(is_local_port_open(6103));
+					assert_is_true(is_local_port_open(6121));
+					assert_is_true(is_local_port_open(6122));
+					assert_is_true(is_local_port_open(6123));
 				}
 
 #ifdef _WIN32
@@ -100,8 +100,8 @@ namespace micro_profiler
 					mt::event ready;
 					mocks::session dummy;
 					shared_ptr<mocks::server> session_factory2(new mocks::server);
-					shared_ptr<void> s1 = run_server("sockets|6101", session_factory);
-					shared_ptr<void> s2 = run_server("sockets|6113", session_factory2);
+					shared_ptr<void> s1 = run_server("sockets|6121", session_factory);
+					shared_ptr<void> s2 = run_server("sockets|6123", session_factory2);
 
 					session_factory->session_created = [&] (shared_ptr<void>) {
 						ready.set();
@@ -111,7 +111,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = connect_client("sockets|127.0.0.1:6113", dummy);
+					shared_ptr<channel> c1 = connect_client("sockets|127.0.0.1:6123", dummy);
 					ready.wait();
 
 					// ASSERT
@@ -119,9 +119,9 @@ namespace micro_profiler
 					assert_equal(1u, session_factory2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = connect_client("sockets|127.0.0.1:6101", dummy);
+					shared_ptr<channel> c2 = connect_client("sockets|127.0.0.1:6121", dummy);
 					ready.wait();
-					shared_ptr<channel> c3 = connect_client("sockets|127.0.0.1:6113", dummy);
+					shared_ptr<channel> c3 = connect_client("sockets|127.0.0.1:6123", dummy);
 					ready.wait();
 
 					// ASSERT

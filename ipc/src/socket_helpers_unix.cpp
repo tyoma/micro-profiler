@@ -20,8 +20,6 @@
 
 #include "socket_helpers.h"
 
-#include <signal.h>
-
 namespace micro_profiler
 {
 	namespace ipc
@@ -29,7 +27,7 @@ namespace micro_profiler
 		namespace sockets
 		{
 			sockets_initializer::sockets_initializer()
-			{	::signal(SIGPIPE, SIG_IGN);	}
+			{	}
 
 			sockets_initializer::~sockets_initializer()
 			{	}

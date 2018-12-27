@@ -1,5 +1,6 @@
 #include <ipc/endpoint_sockets.h>
 
+#include "helpers_sockets.h"
 #include "mocks.h"
 
 #include <mt/event.h>
@@ -20,11 +21,18 @@ namespace micro_profiler
 			begin_test_suite( SocketsEndpointClientTests )
 				mocks::session inbound;
 
+				init( CheckPortsAreFree )
+				{
+					assert_is_false(is_local_port_open(6131));
+					assert_is_false(is_local_port_open(6132));
+					assert_is_false(is_local_port_open(6133));
+				}
+
 
 				test( ConnectionRefusedOnMissingServerEndpoint )
 				{
 					// ACT / ASSERT
-					assert_throws(sockets::connect_client("127.0.0.1:6101", inbound), connection_refused);
+					assert_throws(sockets::connect_client("127.0.0.1:6131", inbound), connection_refused);
 				}
 
 
@@ -33,14 +41,14 @@ namespace micro_profiler
 					// INIT
 					mt::event ready;
 					shared_ptr<mocks::server> s1(new mocks::server), s2(new mocks::server);
-					shared_ptr<void> hs1 = sockets::run_server("6101", s1), hs2 = sockets::run_server("6102", s2);
+					shared_ptr<void> hs1 = sockets::run_server("6131", s1), hs2 = sockets::run_server("6132", s2);
 
 					s1->session_created = s2->session_created = [&] (shared_ptr<mocks::session> session) {
 						ready.set();
 					};
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = sockets::connect_client("127.0.0.1:6101", inbound);
+					shared_ptr<channel> c1 = sockets::connect_client("127.0.0.1:6131", inbound);
 					ready.wait();
 
 					// ASSERT
@@ -49,9 +57,9 @@ namespace micro_profiler
 					assert_equal(0u, s2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = sockets::connect_client("127.0.0.1:6101", inbound);
+					shared_ptr<channel> c2 = sockets::connect_client("127.0.0.1:6131", inbound);
 					ready.wait();
-					shared_ptr<channel> c3 = sockets::connect_client("127.0.0.1:6102", inbound);
+					shared_ptr<channel> c3 = sockets::connect_client("127.0.0.1:6132", inbound);
 					ready.wait();
 
 					// ASSERT
@@ -67,7 +75,7 @@ namespace micro_profiler
 					// INIT
 					mt::event ready;
 					shared_ptr<mocks::server> s(new mocks::server);
-					shared_ptr<void> hs = sockets::run_server("6101", s);
+					shared_ptr<void> hs = sockets::run_server("6131", s);
 					byte data1[] = "I celebrate myself, and sing myself,";
 					byte data2[] = "And what I assume you shall assume,";
 					byte data3[] = "For every atom belonging to me as good belongs to you.";
@@ -78,7 +86,7 @@ namespace micro_profiler
 						};
 					};
 
-					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6101", inbound);
+					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
 
 					// ACT
 					c->message(mkrange(data1));
@@ -109,7 +117,7 @@ namespace micro_profiler
 				//	bool disconnected = false;
 				//	byte data[10];
 				//	shared_ptr<mocks::server> s(new mocks::server);
-				//	shared_ptr<void> hs = sockets::run_server("6101", s);
+				//	shared_ptr<void> hs = sockets::run_server("6131", s);
 
 				//	ready.wait();
 
@@ -117,7 +125,7 @@ namespace micro_profiler
 				//		disconnected = true;
 				//	};
 
-				//	shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6101", inbound);
+				//	shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
 
 				//	// ACT
 				//	exit.set();

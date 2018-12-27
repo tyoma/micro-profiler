@@ -66,8 +66,8 @@ namespace micro_profiler
 
 				size.value = size_;
 				size.reorder();
-				::send(_socket, size.bytes, sizeof(size.bytes), 0);
-				::send(_socket, reinterpret_cast<const char *>(payload.begin()), size_, 0);
+				::send(_socket, size.bytes, sizeof(size.bytes), MSG_NOSIGNAL);
+				::send(_socket, reinterpret_cast<const char *>(payload.begin()), size_, MSG_NOSIGNAL);
 			}
 
 			int client_session::open(const host_port &hp)

@@ -72,6 +72,7 @@
     <ClInclude Include="..\endpoint.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="helpers.h" />
+    <ClInclude Include="server_endpoint_sockets.h" />
     <ClInclude Include="socket_helpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

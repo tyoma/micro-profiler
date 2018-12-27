@@ -91,7 +91,6 @@ namespace micro_profiler
 			{
 				if (_socket)
 				{
-					::shutdown(_socket, 2);
 					::close(_socket);
 				}
 				if (s == -1)

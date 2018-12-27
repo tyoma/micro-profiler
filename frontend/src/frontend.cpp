@@ -69,6 +69,7 @@ namespace micro_profiler
 	{	return E_NOTIMPL;	}
 
 	STDMETHODIMP Frontend::Write(const void *message, ULONG size, ULONG * /*written*/)
+	try
 	{
 		buffer_reader reader(static_cast<const byte *>(message), size);
 		strmd::deserializer<buffer_reader, packer> archive(reader);
@@ -97,5 +98,9 @@ namespace micro_profiler
 			break;
 		}
 		return S_OK;
+	}
+	catch (...)
+	{
+		return E_FAIL;
 	}
 }

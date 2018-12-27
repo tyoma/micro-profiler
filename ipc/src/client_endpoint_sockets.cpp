@@ -88,7 +88,7 @@ namespace micro_profiler
 
 			shared_ptr<channel> connect_client(const char *destination_endpoint_id, channel &inbound)
 			{
-				host_port hp(destination_endpoint_id, "127.0.0.1");
+				host_port hp(destination_endpoint_id);
 
 				return shared_ptr<channel>(new client_session(hp, inbound));
 			}

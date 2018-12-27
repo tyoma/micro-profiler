@@ -36,10 +36,10 @@ namespace micro_profiler
 {
 	namespace
 	{
-		template <typename T> const wchar_t *fmt();
-		template <> const wchar_t *fmt<count_t>() {	return L"%llu";	}
-		template <> const wchar_t *fmt<unsigned int>() {	return L"%u";	}
-		template <> const wchar_t *fmt<double>() {	return L"%g";	}
+		void to_string(wchar_t *b, size_t size, unsigned long long value) {	::swprintf(b, size, L"%llu", value);	}
+		void to_string(wchar_t *b, size_t size, unsigned long int value) {	::swprintf(b, size, L"%lu", value);	}
+		void to_string(wchar_t *b, size_t size, unsigned int value) {	::swprintf(b, size, L"%u", value);	}
+		void to_string(wchar_t *b, size_t size, double value) {	::swprintf(b, size, L"%g", value);	}
 
 		template <typename T>
 		wstring to_string2(T value)
@@ -47,7 +47,7 @@ namespace micro_profiler
 			const size_t buffer_size = 24;
 			wchar_t buffer[buffer_size] = { };
 
-			::swprintf(buffer, buffer_size, fmt<T>(), value);
+			to_string(buffer, buffer_size, value);
 			return buffer;
 		}
 

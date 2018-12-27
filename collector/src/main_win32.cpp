@@ -43,8 +43,9 @@ namespace micro_profiler
 
 		shared_ptr<void> get_exit_process()
 		{
-			HMODULE hkernel = ::LoadLibraryW(L"kernel32");
+			HMODULE hkernel;
 
+			::GetModuleHandleExA(0, "kernel32", &hkernel);
 			return shared_ptr<void>(::GetProcAddress(hkernel, "ExitProcess"), bind(&::FreeLibrary, hkernel));
 		}
 

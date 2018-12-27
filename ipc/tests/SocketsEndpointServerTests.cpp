@@ -177,8 +177,9 @@ namespace micro_profiler
 					mt::event ready;
 					shared_ptr<mocks::server> f(new mocks::server);
 					shared_ptr<void> h = sockets::run_server("6101", f);
-					byte data[10];
+					byte data = 1;
 
+					f->sessions.reserve(2);	
 					f->session_created = [&] (shared_ptr<void>) {
 						ready.set();
 					};
@@ -191,9 +192,15 @@ namespace micro_profiler
 
 					// ACT
 					session->outbound->disconnect();
+					sender(6101);
+					ready.wait();
 
-					// ACT / ASSERT
-					assert_is_false(stream(data, sizeof(data)));
+					// ACT / ASSERT (must not hang)
+					while (stream(&data, 1))
+						mt::this_thread::sleep_for(mt::milliseconds(50));
+
+					// ASSERT
+					assert_is_true(session.unique());
 				}
 
 

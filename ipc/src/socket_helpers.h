@@ -33,6 +33,8 @@ namespace micro_profiler
 	{
 		namespace sockets
 		{
+			const char c_localhost[] = "127.0.0.1";
+
 			struct sockets_initializer : noncopyable
 			{
 				sockets_initializer();
@@ -41,7 +43,7 @@ namespace micro_profiler
 
 			struct host_port
 			{
-				host_port(const char *address, const char *default_host);
+				host_port(const char *address, const char *default_host = c_localhost);
 
 				std::string host;
 				unsigned short port;
@@ -50,10 +52,12 @@ namespace micro_profiler
 			class socket_handle : noncopyable
 			{
 			public:
-				explicit socket_handle(int s);
+				template <typename T>
+				explicit socket_handle(T s);
+				socket_handle(socket_handle &other);
 				~socket_handle();
 
-				void reset();
+				void reset(int s = 0);
 				operator int() const;
 
 			private:
@@ -71,24 +75,28 @@ namespace micro_profiler
 			}
 
 
-			inline socket_handle::socket_handle(int s)
-				: _socket(s)
-			{
-				if (s == -1)
-					throw std::runtime_error("invalid socket");
-			}
+			template <typename T>
+			inline socket_handle::socket_handle(T s)
+				: _socket(0)
+			{	reset(static_cast<int>(s));	}
+
+			inline socket_handle::socket_handle(socket_handle &other)
+				: _socket(other._socket)
+			{	other._socket = 0;	}
 
 			inline socket_handle::~socket_handle()
 			{	reset();	}
 
-			inline void socket_handle::reset()
+			inline void socket_handle::reset(int s)
 			{
 				if (_socket)
 				{
 					::shutdown(_socket, 2);
 					::close(_socket);
-					_socket = 0;
 				}
+				if (s == -1)
+					throw std::invalid_argument("invalid socket");
+				_socket = s;
 			}
 
 			inline socket_handle::operator int() const

@@ -12,3 +12,4 @@ inline in_addr inet_addr_winsock(const char *address)
 
 #define close closesocket
 #define inet_addr inet_addr_winsock
+#define O_NONBLOCK FIONBIO

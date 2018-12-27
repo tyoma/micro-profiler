@@ -61,7 +61,7 @@ namespace micro_profiler
 
 	marshalling_window::marshalling_window()
 		: _hwnd(::CreateWindowA("static", 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0))
-	{	::SetWindowLong(_hwnd, GWLP_WNDPROC, (ULONG_PTR)&wndproc);	}
+	{	::SetWindowLongPtr(_hwnd, GWLP_WNDPROC, (ULONG_PTR)&wndproc);	}
 
 	marshalling_window::~marshalling_window()
 	{	::DestroyWindow(_hwnd);	}

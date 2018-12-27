@@ -7,15 +7,15 @@
 		<Icon>logo.ico</Icon>
 	</Metadata>
 	<Installation InstalledByMsi="false" AllUsers="false" SystemComponent="false" Scope="ProductExtension">
-		<InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[11.0, 16.0)" />
-		<InstallationTarget Id="Microsoft.VisualStudio.Premium" Version="[11.0, 16.0)" />
-		<InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[11.0, 16.0)" />
-		<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[11.0, 16.0)" />
+		<InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[11.0, 17.0)" />
+		<InstallationTarget Id="Microsoft.VisualStudio.Premium" Version="[11.0, 17.0)" />
+		<InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[11.0, 17.0)" />
+		<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[11.0, 17.0)" />
 	</Installation>
 	<Assets>
 		<Asset Type="Microsoft.VisualStudio.VsPackage" Path="micro-profiler.pkgdef" />
 	</Assets>
 	<Prerequisites>
-		<Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[11.0,16.0)" DisplayName="Visual Studio core editor" />
+		<Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[11.0,17.0)" DisplayName="Visual Studio core editor" />
 	</Prerequisites>
 </PackageManifest>

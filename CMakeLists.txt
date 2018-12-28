@@ -18,8 +18,9 @@ endif()
 
 
 # Add definitions: global, platform-based, compiler-based
-add_definitions(-DMP_MT_GENERIC)
 if(UNIX)
+	set(MP_MT_GENERIC 1)
+	add_definitions(-DMP_MT_GENERIC)
 	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
 endif()
 if (MSVC)
@@ -72,3 +73,7 @@ add_subdirectory(patcher/src.x86)
 add_subdirectory(patcher/tests)
 
 add_subdirectory(playground)
+
+if (WIN32)
+	add_subdirectory(mt/tests)
+endif()

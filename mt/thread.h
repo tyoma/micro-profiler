@@ -14,11 +14,29 @@
 		}
 	}
 #else
-	#include <wpl/mt/thread.h>
+	#include <functional>
 
 	namespace mt
 	{
-		using wpl::mt::thread;
+		class thread
+		{
+		public:
+			typedef unsigned int id;
+
+		public:
+			explicit thread(const std::function<void()> &f);
+			~thread() throw();
+
+			void join();
+			void detach();
+
+			id get_id() const throw();
+
+		private:
+			id _id;
+			void *_thread;
+		};
+
 		typedef unsigned int milliseconds;
 
 		namespace this_thread
@@ -26,5 +44,10 @@
 			thread::id get_id();
 			void sleep_for(milliseconds period);
 		}
+
+
+
+		inline thread::id thread::get_id() const throw()
+		{	return _id;	}
 	}
 #endif

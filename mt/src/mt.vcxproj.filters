@@ -14,22 +14,34 @@
     <Filter Include="src\win32">
       <UniqueIdentifier>{4f8045b8-8e57-407f-8e9a-ac2ccc0f4509}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\unix">
+      <UniqueIdentifier>{7940e565-d8a8-4479-b014-29675afbf15e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\generic">
+      <UniqueIdentifier>{476f1f06-b0e5-454a-8012-ca4908f500d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="win32\mutex.cpp">
+    <ClCompile Include="atomic_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
-    <ClCompile Include="win32\event.cpp">
+    <ClCompile Include="event_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
-    <ClCompile Include="win32\thread.cpp">
+    <ClCompile Include="mutex_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
-    <ClCompile Include="win32\atomic.cpp">
+    <ClCompile Include="thread_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
-    <ClCompile Include="win32\tls.cpp">
+    <ClCompile Include="tls_win32.cpp">
       <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="tls_pthreads.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="event_generic.cpp">
+      <Filter>src\generic</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

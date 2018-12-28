@@ -7,7 +7,6 @@ set(COMMON_SOURCES
 	string.cpp
 	symbol_resolver.cpp
 	time.cpp
-	time_generic.cpp
 )
 
 if (WIN32)
@@ -15,6 +14,7 @@ if (WIN32)
 		memory_win32.cpp
 		module_win32.cpp
 		symbol_resolver_win32.cpp
+		time_win32.cpp
 	)	
 elseif (UNIX)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
@@ -23,6 +23,7 @@ elseif (UNIX)
 		memory_unix.cpp
 		module_unix.cpp
 		symbol_resolver_unix.cpp
+		time_generic.cpp
 	)		
 endif()
 

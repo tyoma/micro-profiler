@@ -19,40 +19,28 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3D321437-3220-4BAF-AA87-A5D6297BBE82}</ProjectGuid>
+    <ProjectGuid>{9B322934-ADAB-4D13-965E-E27879370F77}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)build.props\config.props" />
+    <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\mt.vcxproj">
+      <Project>{3D321437-3220-4BAF-AA87-A5D6297BBE82}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\atomic.h" />
-    <ClInclude Include="..\event.h" />
-    <ClInclude Include="..\mutex.h" />
-    <ClInclude Include="..\thread.h" />
-    <ClInclude Include="..\tls.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="atomic_win32.cpp" />
-    <ClCompile Include="event_generic.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="event_win32.cpp" />
-    <ClCompile Include="mutex_win32.cpp" />
-    <ClCompile Include="thread_win32.cpp" />
-    <ClCompile Include="tls_pthreads.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="tls_win32.cpp" />
+    <ClCompile Include="ThreadTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

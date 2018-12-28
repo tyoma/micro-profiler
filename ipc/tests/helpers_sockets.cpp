@@ -62,6 +62,7 @@ namespace micro_profiler
 
 				if (::recv(_socket, size.bytes, sizeof(size.bytes), MSG_WAITALL) < (int)sizeof(size.bytes))
 					return false;
+				size.reorder();
 				buffer.resize(size.value);
 				if (::recv(_socket, reinterpret_cast<char *>(&buffer[0]), size.value, MSG_WAITALL) < (int)size.value)
 					return false;

@@ -34,7 +34,7 @@ namespace micro_profiler
 	{
 		namespace sockets
 		{
-			class socket_handler : noncopyable
+			class socket_handler : public /*outbound*/ channel, noncopyable
 			{
 			public:
 				enum status { proceed, remove_this, exit, };
@@ -42,11 +42,14 @@ namespace micro_profiler
 				typedef std::shared_ptr<socket_handler> ptr_t;
 
 			public:
-				socket_handler(unsigned id_, socket_handle &s, const handler_t &initial_handler);
-				~socket_handler();
+				socket_handler(unsigned id_, socket_handle &s, const socket_handle &aux_socket,
+					const handler_t &initial_handler);
 
 				template <typename ContainerT>
 				static void run(ContainerT &handlers);
+
+				virtual void disconnect() throw();
+				virtual void message(const_byte_range payload);
 
 			public:
 				const unsigned id;
@@ -54,6 +57,7 @@ namespace micro_profiler
 
 			private:
 				socket_handle _socket;
+				const socket_handle &_aux_socket;
 			};
 
 			class server
@@ -74,6 +78,7 @@ namespace micro_profiler
 				socket_handler::status handle_preinit(socket_handler &h, const socket_handle &s);
 				socket_handler::status accept_preinit(const socket_handle &s);
 				socket_handler::status accept_regular(const socket_handle &s);
+				socket_handler::status handle_session(const socket_handle &s, const std::shared_ptr<channel> &inbound);
 				socket_handler::status handle_aux(const socket_handle &s);
 
 				static int connect_aux(unsigned short port);
@@ -85,24 +90,6 @@ namespace micro_profiler
 				unsigned _next_id;
 				handlers_t _handlers;
 				std::auto_ptr<mt::thread> _server_thread;
-			};
-
-
-			class session : /*outbound*/ ipc::channel, noncopyable
-			{
-			public:
-				session(unsigned id, const socket_handle &aux_socket, ipc::server &factory);
-
-				socket_handler::status handle_socket(const socket_handle &s);
-
-				void disconnect() throw();
-				void message(const_byte_range payload);
-
-			private:
-				unsigned _id;
-				const socket_handle &_aux_socket;
-				std::shared_ptr<ipc::channel> _inbound;
-				std::vector<byte> _buffer;
 			};
 		}
 	}

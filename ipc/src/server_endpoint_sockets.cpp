@@ -72,17 +72,15 @@ namespace micro_profiler
 					value = data.value;
 					return result;
 				}
+
+				socket_handler::status dummy(socket_handler &, const socket_handle &)
+				{	return socket_handler::proceed;	}				
 			}
 
-			socket_handler::socket_handler(unsigned id_, socket_handle &s, const handler_t &initial_handler)
-				: id(id_), handler(initial_handler), _socket(s)
+			socket_handler::socket_handler(unsigned id_, socket_handle &s, const socket_handle &aux_socket,
+					const handler_t &initial_handler)
+				: id(id_), handler(initial_handler), _socket(s), _aux_socket(aux_socket)
 			{	}
-
-			socket_handler::~socket_handler()
-			{
-				handler = handler_t(); // first - release the underlying session...
-				_socket.reset(); // ... then - the socket
-			}
 
 			template <typename ContainerT>
 			void socket_handler::run(ContainerT &handlers)
@@ -115,34 +113,16 @@ namespace micro_profiler
 				}
 			}
 
+			void socket_handler::disconnect() throw()
+			{	send_scalar(_aux_socket, id);	}
 
-			session::session(unsigned id, const socket_handle &aux_socket, ipc::server &factory)
-				: _id(id), _aux_socket(aux_socket)
-			{	_inbound = factory.create_session(*this);	}
-
-			socket_handler::status session::handle_socket(const socket_handle &s)
+			void socket_handler::message(const_byte_range payload)
 			{
-				unsigned int size;
+				unsigned int size = static_cast<unsigned int>(payload.length());
 
-				if (recv_scalar(s, size, MSG_WAITALL) > 0)
-				{
-					_buffer.resize(size);
-					::recv(s, reinterpret_cast<char *>(&_buffer[0]), size, MSG_WAITALL);
-					_inbound->message(const_byte_range(&_buffer[0], _buffer.size()));
-					return socket_handler::proceed;
-				}
-				else
-				{
-					_inbound->disconnect();
-				}
-				return socket_handler::remove_this;
+				send_scalar(_socket, size);
+				::send(_socket, reinterpret_cast<const char *>(payload.begin()), size, MSG_NOSIGNAL);
 			}
-
-			void session::disconnect() throw()
-			{	send_scalar(_aux_socket, _id);	}
-
-			void session::message(const_byte_range /*payload*/)
-			{	}
 
 
 			server::server(const char *endpoint_id, const shared_ptr<ipc::server> &factory)
@@ -160,7 +140,7 @@ namespace micro_profiler
 
 				_aux_socket.reset(connect_aux(hp.port));
 				_handlers.push_back(socket_handler::ptr_t(new socket_handler(_next_id++, server_socket,
-					bind(&server::accept_preinit, this, _2))));
+					_aux_socket, bind(&server::accept_preinit, this, _2))));
 				_server_thread.reset(new mt::thread(bind(&socket_handler::run<handlers_t>, ref(_handlers))));
 			}
 
@@ -186,7 +166,7 @@ namespace micro_profiler
 						else if (i->get() == &h) // aux handler
 							handler = bind(&server::handle_aux, this, _2);
 						else // regular session handler
-							handler = bind(&session::handle_socket, shared_ptr<session>(new session((*i)->id, _aux_socket, *_factory)), _2);
+							handler = bind(&server::handle_session, this, _2, _factory->create_session(**i));
 					}
 				}
 				return socket_handler::proceed;
@@ -198,20 +178,39 @@ namespace micro_profiler
 
 				setup_socket(new_connection);
 				_handlers.push_back(socket_handler::ptr_t(new socket_handler(_next_id++, new_connection,
-					bind(&server::handle_preinit, this, _1, _2))));
+					_aux_socket, bind(&server::handle_preinit, this, _1, _2))));
 				return socket_handler::proceed;
 			}
 
 			socket_handler::status server::accept_regular(const socket_handle &s)
 			{
 				socket_handle new_connection(::accept(s, NULL, NULL));
-				const unsigned id = _next_id++;
-				shared_ptr<session> session_(new session(id, _aux_socket, *_factory));
 
 				setup_socket(new_connection);
-				_handlers.push_back(socket_handler::ptr_t(new socket_handler(id, new_connection,
-					bind(&session::handle_socket, session_, _2))));
+
+				socket_handler::ptr_t h(new socket_handler(_next_id++, new_connection, _aux_socket, &dummy));
+
+				h->handler = bind(&server::handle_session, this, _2, _factory->create_session(*h));
+				_handlers.push_back(h);
 				return socket_handler::proceed;
+			}
+
+			socket_handler::status server::handle_session(const socket_handle &s, const shared_ptr<channel> &inbound)
+			{
+				unsigned int size;
+
+				if (recv_scalar(s, size, MSG_WAITALL) > 0)
+				{
+					vector<byte> buffer(size);
+					::recv(s, reinterpret_cast<char *>(&buffer[0]), size, MSG_WAITALL);
+					inbound->message(const_byte_range(&buffer[0], buffer.size()));
+					return socket_handler::proceed;
+				}
+				else
+				{
+					inbound->disconnect();
+				}
+				return socket_handler::remove_this;
 			}
 
 			socket_handler::status server::handle_aux(const socket_handle &s)

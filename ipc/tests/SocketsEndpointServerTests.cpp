@@ -13,6 +13,8 @@ using namespace std;
 
 namespace micro_profiler
 {
+	using namespace tests;
+
 	namespace ipc
 	{
 		namespace tests
@@ -144,8 +146,8 @@ namespace micro_profiler
 					};
 
 					sender stream(6111);
-					byte data1[] = "if you’re going to try, go all the way.";
-					byte data2[] = "otherwise, don’t even start.";
+					byte data1[] = "if you're going to try, go all the way.";
+					byte data2[] = "otherwise, don't even start.";
 					byte data3[] = "this could mean losing girlfriends, wives, relatives, jobs and maybe your mind.";
 
 					// ACT / ASSERT
@@ -224,6 +226,48 @@ namespace micro_profiler
 
 					// ASSERT (must not hang)
 					ready.wait();
+				}
+
+
+				test( WritingToOutboundChannelDeliversDataToClient )
+				{
+					// INIT
+					mt::event ready;
+					shared_ptr<mocks::server> f(new mocks::server);
+					shared_ptr<void> h = sockets::run_server("6111", f);
+					byte data1[] = "Well you see I happened to be back on the east coast";
+					byte data2[] = "A few years back tryin' to make me a buck";
+					byte data3[] = "Like everybody else, well you know...";
+					vector<byte> buffer;
+
+					f->session_created = [&] (shared_ptr<void>) {
+						ready.set();
+					};
+
+					reader stream(6111);
+
+					ready.wait();
+
+					// ACT
+					f->sessions[0]->outbound->message(mkrange(data1));
+					stream(buffer);
+
+					// ASSERT
+					assert_equal(data1, buffer);
+
+					// ACT
+					f->sessions[0]->outbound->message(mkrange(data2));
+					stream(buffer);
+
+					// ASSERT
+					assert_equal(data2, buffer);
+
+					// ACT
+					f->sessions[0]->outbound->message(mkrange(data3));
+					stream(buffer);
+
+					// ASSERT
+					assert_equal(data3, buffer);
 				}
 			end_test_suite
 		}

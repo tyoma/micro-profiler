@@ -23,8 +23,10 @@
 #include "socket_helpers.h"
 
 #include <arpa/inet.h>
+#include <mt/thread.h>
 #include <netinet/in.h>
 #include <stdlib.h>
+#include <vector>
 
 using namespace std;
 
@@ -38,23 +40,33 @@ namespace micro_profiler
 			{
 			public:
 				client_session(const host_port &hp, channel &inbound);
+				~client_session();
 
 				virtual void disconnect() throw();
 				virtual void message(const_byte_range payload);
 
 			private:
+				void worker(channel *inbound);
 				static int open(const host_port &hp);
 
 			private:
 				sockets_initializer _initializer;
 				socket_handle _socket;
+				auto_ptr<mt::thread> _thread;
 			};
 
 
 
-			client_session::client_session(const host_port &hp, channel &/*inbound*/)
+			client_session::client_session(const host_port &hp, channel &inbound)
 				: _socket(open(hp))
-			{	}
+			{	_thread.reset(new mt::thread(bind(&client_session::worker, this, &inbound)));	}
+
+			client_session::~client_session()
+			{
+			    ::shutdown(_socket, SHUT_RDWR);
+				_socket.reset();
+				_thread->join();
+			}
 
 			void client_session::disconnect() throw()
 			{	}
@@ -68,6 +80,21 @@ namespace micro_profiler
 				size.reorder();
 				::send(_socket, size.bytes, sizeof(size.bytes), MSG_NOSIGNAL);
 				::send(_socket, reinterpret_cast<const char *>(payload.begin()), size_, MSG_NOSIGNAL);
+			}
+
+			void client_session::worker(channel *inbound)
+			{
+				byte_representation<unsigned int> size;
+				vector<byte> buffer;
+
+				while (::recv(_socket, size.bytes, sizeof(size), MSG_WAITALL) == (int)sizeof(size))						
+				{
+					size.reorder();
+					buffer.resize(size.value);
+					::recv(_socket, (char *)&buffer[0], size.value, MSG_WAITALL);
+					inbound->message(const_byte_range(&buffer[0], buffer.size()));
+				}
+				inbound->disconnect();
 			}
 
 			int client_session::open(const host_port &hp)

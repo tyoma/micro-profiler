@@ -14,3 +14,4 @@ inline in_addr inet_addr_winsock(const char *address)
 #define inet_addr inet_addr_winsock
 #define O_NONBLOCK FIONBIO
 #define MSG_NOSIGNAL 0
+#define SHUT_RDWR SD_BOTH

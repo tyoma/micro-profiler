@@ -109,6 +109,74 @@ namespace micro_profiler
 				}
 
 
+				test( InboundMessagesAreReceivedIntoChannel )
+				{
+					// INIT
+					mt::event ready;
+					shared_ptr<mocks::server> s(new mocks::server);
+					shared_ptr<void> hs = sockets::run_server("6131", s);
+					byte data1[] = "I celebrate myself, and sing myself,";
+					byte data2[] = "And what I assume you shall assume,";
+					byte data3[] = "For every atom belonging to me as good belongs to you.";
+
+					inbound.received_message = [&] {
+						ready.set();
+					};
+					s->session_created = [&] (shared_ptr<void>) {
+						ready.set();
+					};
+
+					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
+
+					ready.wait();
+
+					// ACT
+					s->sessions[0]->outbound->message(mkrange(data1));
+					ready.wait();
+
+					// ASSERT
+					assert_equal(1u, inbound.payloads_log.size());
+					assert_equal(mkvector(data1), inbound.payloads_log[0]);
+
+					// ACT
+					s->sessions[0]->outbound->message(mkrange(data2));
+					ready.wait();
+					s->sessions[0]->outbound->message(mkrange(data3));
+					ready.wait();
+
+					// ASSERT
+					assert_equal(3u, inbound.payloads_log.size());
+					assert_equal(mkvector(data2), inbound.payloads_log[1]);
+					assert_equal(mkvector(data3), inbound.payloads_log[2]);
+				}
+
+
+				test( ChannelIsNotifiedOfDisconnectionWhenSocketIsDisconnected )
+				{
+					// INIT
+					mt::event ready;
+					shared_ptr<mocks::server> s(new mocks::server);
+					shared_ptr<void> hs = sockets::run_server("6131", s);
+
+					inbound.disconnected = [&] {
+						ready.set();
+					};
+					s->session_created = [&] (shared_ptr<void>) {
+						ready.set();
+					};
+
+					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
+
+					ready.wait();
+
+					// ACT
+					s->sessions[0]->outbound->disconnect();
+
+					// ACT / ASSERT (must not hang)
+					ready.wait();
+				}
+
+
 				//test( AttemptToSendToDisconnectedServerCausesDisconnectInInboundSession )
 				//{
 				//	// INIT

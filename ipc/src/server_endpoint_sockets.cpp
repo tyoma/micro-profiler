@@ -82,6 +82,12 @@ namespace micro_profiler
 				: id(id_), handler(initial_handler), _socket(s), _aux_socket(aux_socket)
 			{	}
 
+			socket_handler::~socket_handler()
+			{
+				handler = handler_t(); // first - release the underlying session...
+				_socket.reset(); // ... then - the socket
+			}
+
 			template <typename ContainerT>
 			void socket_handler::run(ContainerT &handlers)
 			{

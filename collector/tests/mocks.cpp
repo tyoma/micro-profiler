@@ -9,6 +9,10 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
+			Tracer::Tracer()
+				: calls_collector(10000)
+			{	}
+
 			void Tracer::read_collected(acceptor &a)
 			{
 				mt::lock_guard<mt::mutex> l(_mutex);

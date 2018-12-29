@@ -24,15 +24,15 @@
 
 namespace micro_profiler
 {
-	class frontend_controller;
+	class collector_app;
 
 	class platform_initializer : noncopyable
 	{
 	public:
-		platform_initializer(frontend_controller &frontend_controller_);
+		platform_initializer(collector_app &app);
 		~platform_initializer();
 
 	private:
-		frontend_controller &_frontend_controller;
+		collector_app &_app;
 	};
 }

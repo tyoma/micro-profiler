@@ -22,7 +22,7 @@
 
 #include "main.h"
 
-#include <collector/frontend_controller.h>
+#include <collector/collector_app.h>
 
 #include <common/memory.h>
 #include <mt/atomic.h>
@@ -39,7 +39,7 @@ namespace micro_profiler
 
 		void *g_exitprocess_address = 0;
 		byte g_backup[sizeof(jmp)];
-		frontend_controller *g_frontend_controller = 0;
+		collector_app *g_app = 0;
 
 		shared_ptr<void> get_exit_process()
 		{
@@ -67,14 +67,14 @@ namespace micro_profiler
 		void WINAPI ExitProcessHooked(UINT exit_code)
 		{
 			restore(g_backup);
-			if (g_frontend_controller)
-				g_frontend_controller->force_stop();
+			if (g_app)
+				g_app->stop();
 			::ExitProcess(exit_code);
 		}
 	}
 
-	platform_initializer::platform_initializer(frontend_controller &frontend_controller_)
-		: _frontend_controller(frontend_controller_)
+	platform_initializer::platform_initializer(collector_app &app)
+		: _app(app)
 	{
 		static mt::atomic<int> g_patch_lockcount(0);
 
@@ -83,7 +83,7 @@ namespace micro_profiler
 			HMODULE dummy;
 
 			_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-			g_frontend_controller = &frontend_controller_;
+			g_app = &_app;
 			::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
 				reinterpret_cast<LPCTSTR>(&ExitProcessHooked), &dummy);
 			detour(get_exit_process().get(), &ExitProcessHooked, g_backup);

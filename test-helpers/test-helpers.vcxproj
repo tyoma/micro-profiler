@@ -37,8 +37,14 @@
   <ItemGroup>
     <ClCompile Include="com.cpp" />
     <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="helpers_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="helpers_win32.cpp" />
     <ClCompile Include="mock_frontend.cpp" />
+    <ClCompile Include="thread_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="thread_win32.cpp" />
   </ItemGroup>
   <ItemGroup>

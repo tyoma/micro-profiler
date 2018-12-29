@@ -45,8 +45,8 @@
     <ClCompile Include="calls_collector_thread.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="empty_function.intel.c" />
     <ClCompile Include="frontend_controller.cpp" />
+    <ClCompile Include="empty_function.intel.c" />
     <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
   </ItemGroup>
@@ -55,9 +55,8 @@
     <ClInclude Include="..\calibration.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
-    <ClInclude Include="..\frontend_controller.h" />
+    <ClInclude Include="..\collector_app.h" />
     <ClInclude Include="..\image_patch.h" />
-    <ClInclude Include="..\patched_image.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_bridge.h" />
   </ItemGroup>

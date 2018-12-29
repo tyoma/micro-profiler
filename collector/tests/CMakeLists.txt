@@ -2,17 +2,15 @@ cmake_minimum_required(VERSION 2.8)
 
 set(COLLECTOR_TESTS_SOURCES
 	AnalyzerTests.cpp
-#	COMChannelTests.cpp
 	CallsCollectorTests.cpp
 	CallsCollectorThreadTests.cpp
-	FrontendControllerTests.cpp
+	CollectorAppTests.cpp
 	ImageLoadQueueTests.cpp
 	ImagePatchTests.cpp
 	SerializationTests.cpp
 	ShadowStackTests.cpp
 	StatisticsBridgeTests.cpp
 	mocks.cpp
-#	mocks_com.cpp
 	mocks_image_info.cpp
 )
 

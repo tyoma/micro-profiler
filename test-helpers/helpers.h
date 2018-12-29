@@ -49,6 +49,7 @@ namespace micro_profiler
 		{
 		public:
 			vector_adapter();
+			vector_adapter(const_byte_range from);
 
 			void write(const void *buffer, size_t size);
 			void read(void *buffer, size_t size);
@@ -86,6 +87,10 @@ namespace micro_profiler
 		template <typename T, size_t size>
 		inline range<T, size_t> mkrange(T (&array_ptr)[size])
 		{	return range<T, size_t>(array_ptr, size);	}
+
+		template <typename T>
+		inline range<const T, size_t> mkrange(const std::vector<T> &from)
+		{	return range<const T, size_t>(&from[0], from.size());	}
 
 		inline bool mem_equal(const void *lhs, const void *rhs, size_t length)
 		{

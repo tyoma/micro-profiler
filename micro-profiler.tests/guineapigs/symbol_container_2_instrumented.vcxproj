@@ -44,9 +44,7 @@
   <ItemGroup>
     <ClCompile Include="symbol_container_2.cpp" />
     <ClCompile Include="symbol_container_2_internal.cpp" />
-
-    <ClCompile Include="$(OutDir)..\micro-profiler.initializer.cpp" /> 
-  
+    <ClCompile Include="$(OutDir)..\micro-profiler.initializer.cpp" />   
   </ItemGroup>
   <ItemGroup>
     <None Include="symbol_container_2.def" />

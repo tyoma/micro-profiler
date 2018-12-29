@@ -19,34 +19,32 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8C499723-AB70-4401-9089-864A948532AF}</ProjectGuid>
+    <ProjectGuid>{CD421114-D215-4B1E-A884-55CD1858802D}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
-  <PropertyGroup>
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
-      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\ipc\src\ipc.vcxproj">
-      <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
-    </ProjectReference>
+    <ClCompile Include="guinea_runner.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CollectorIntegrationTests.cpp" />
-    <None Include="$(OutDir)..\micro-profiler_$(Platform2).dll" />
-    <Content Include="$(OutDir)..\micro-profiler_$(Platform2).dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>true</Visible>
-    </Content>
+    <ClInclude Include="guinea_runner.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ipc\src\ipc.vcxproj">
+      <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\mt\src\mt.vcxproj">
+      <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

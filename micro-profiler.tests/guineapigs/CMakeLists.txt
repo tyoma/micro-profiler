@@ -32,3 +32,6 @@ elseif(MSVC)
 endif()
 
 target_link_libraries(symbol_container_2_instrumented micro-profiler)
+
+add_executable(guinea_runner guinea_runner.cpp)
+target_link_libraries(guinea_runner ipc test-helpers common utee)

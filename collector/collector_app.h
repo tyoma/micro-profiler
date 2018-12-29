@@ -20,20 +20,45 @@
 
 #pragma once
 
+#include "entry.h"
+
 #include <common/noncopyable.h>
-#include <memory>
-#include <vector>
+#include <functional>
+#include <ipc/endpoint.h>
+#include <mt/event.h>
+#include <mt/thread.h>
 
 namespace micro_profiler
 {
-	class function_patch;
+	class calls_collector;
+	class image_load_queue;
+	struct overhead;
 
-	class patched_image : noncopyable
+	class collector_app : ipc::channel, noncopyable
 	{
 	public:
-		void patch_image(void *in_image_address);
+		typedef std::shared_ptr<ipc::channel> channel_t;
+		typedef std::function<channel_t (ipc::channel &inbound)> frontend_factory_t;
+
+	public:
+		collector_app(const frontend_factory_t &factory, const std::shared_ptr<calls_collector> &collector,
+			const overhead &overhead_);
+		~collector_app();
+
+		handle *profile_image(void *in_image_address);
+		void stop();
+
+		// ipc::channel methods
+		virtual void disconnect() throw();
+		virtual void message(const_byte_range command_payload);
 
 	private:
-		std::vector< std::shared_ptr<function_patch> > _patches;
+		void worker(const frontend_factory_t &factory, const overhead &overhead_);
+
+	private:
+		const std::shared_ptr<calls_collector> _collector;
+		const std::shared_ptr<image_load_queue> _image_load_queue;
+		mt::event _exit;
+		std::auto_ptr<mt::thread> _frontend_thread;
 	};
 }

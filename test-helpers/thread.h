@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <mt/thread.h>
 
 namespace micro_profiler
 {
@@ -9,6 +10,7 @@ namespace micro_profiler
 		struct running_thread
 		{
 			virtual void join() = 0;
+			virtual bool join(mt::milliseconds timeout) = 0;
 		};
 
 		namespace this_thread

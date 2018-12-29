@@ -47,7 +47,7 @@
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallsCollectorTests.cpp" />
     <ClCompile Include="CallsCollectorThreadTests.cpp" />
-    <ClCompile Include="FrontendControllerTests.cpp" />
+    <ClCompile Include="CollectorAppTests.cpp" />
     <ClCompile Include="ImageLoadQueueTests.cpp" />
     <ClCompile Include="ImagePatchTests.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>

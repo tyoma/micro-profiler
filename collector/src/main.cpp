@@ -20,8 +20,9 @@
 
 #include "main.h"
 
+#include <collector/calibration.h>
 #include <collector/calls_collector.h>
-#include <collector/frontend_controller.h>
+#include <collector/collector_app.h>
 #include <common/time.h>
 #include <common/constants.h>
 #include <ipc/endpoint.h>
@@ -41,7 +42,7 @@ namespace
 		{	}
 	};
 
-	frontend_controller::channel_t probe_create_channel(ipc::channel &inbound)
+	collector_app::channel_t probe_create_channel(ipc::channel &inbound)
 	{
 		vector<string> candidate_endpoints = c_candidate_endpoints;
 
@@ -58,22 +59,22 @@ namespace
 			{
 			}
 		}
-		return frontend_controller::channel_t(new null_channel);
+		return collector_app::channel_t(new null_channel);
 	}
 }
 
 const size_t c_trace_limit = 5000000;
-calls_collector g_collector(c_trace_limit);
-extern "C" calls_collector *g_collector_ptr = &g_collector;
-frontend_controller g_frontend_controller(&probe_create_channel, g_collector,
-	calibrate_overhead(*g_collector_ptr, c_trace_limit / 10));
+shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit));
+extern "C" calls_collector *g_collector_ptr = g_collector.get();
+overhead c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);
+collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead);
 auto_ptr<platform_initializer> g_intializer;
 
 extern "C" handle * MPCDECL micro_profiler_initialize(void *image_address)
 {
 	if (!g_intializer.get())
-		g_intializer.reset(new platform_initializer(g_frontend_controller));
-	return g_frontend_controller.profile(image_address);
+		g_intializer.reset(new platform_initializer(g_profiler_app));
+	return g_profiler_app.profile_image(image_address);
 }
 
 extern "C" void micro_profiler_func_enter(void *callee, void * /*call_site*/)

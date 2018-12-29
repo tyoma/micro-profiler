@@ -9,9 +9,11 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			class Tracer : public calls_collector_i
+			class Tracer : public calls_collector
 			{
 			public:
+				Tracer();
+
 				template <size_t size>
 				void Add(mt::thread::id threadid, call_record (&array_ptr)[size]);
 

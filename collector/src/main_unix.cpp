@@ -20,14 +20,14 @@
 
 #include "main.h"
 
-#include <collector/frontend_controller.h>
+#include <collector/collector_app.h>
 
 namespace micro_profiler
 {
-	platform_initializer::platform_initializer(frontend_controller &frontend_controller_)
-		: _frontend_controller(frontend_controller_)
+	platform_initializer::platform_initializer(collector_app &app)
+		: _app(app)
 	{	}
 
 	platform_initializer::~platform_initializer()
-	{	_frontend_controller.force_stop();	}
+	{	}
 }

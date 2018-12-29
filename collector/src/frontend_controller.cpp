@@ -18,18 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/frontend_controller.h>
+#include <collector/collector_app.h>
 
-#include <collector/entry.h>
-#include <collector/image_patch.h>
+#include <collector/calibration.h>
 #include <collector/statistics_bridge.h>
+
 #include <common/time.h>
-#include <common/module.h>
-#include <ipc/endpoint.h>
-#include <set>
 
 using namespace std;
-using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -58,107 +54,54 @@ namespace micro_profiler
 			timestamp_t _period;
 			timestamp_t _expires_at;
 		};
-
-		struct dummy_channel : ipc::channel
-		{
-			virtual void disconnect() throw() {	}
-			virtual void message(const_byte_range /*payload*/) {	}
-		};
 	}
 
-	class frontend_controller::profiler_instance : public handle, noncopyable
-	{
-	public:
-		profiler_instance(void *in_image_address, shared_ptr<image_load_queue> lqueue,
-			shared_ptr<ref_counter_t> worker_refcount, shared_ptr<mt::event> exit_event);
-		virtual ~profiler_instance() throw();
-
-	private:
-		const void *_in_image_address;
-		shared_ptr<image_load_queue> _image_load_queue;
-		shared_ptr<ref_counter_t> _worker_refcount;
-		shared_ptr<mt::event> _exit_event;
-		std::auto_ptr<image_patch> _patch;
-	};
-
-
-	extern "C" micro_profiler::calls_collector *g_collector_ptr;
-
-	frontend_controller::profiler_instance::profiler_instance(void *in_image_address,
-			shared_ptr<image_load_queue> lqueue, shared_ptr<ref_counter_t> worker_refcount,
-			shared_ptr<mt::event> exit_event)
-		: _in_image_address(in_image_address), _image_load_queue(lqueue), _worker_refcount(worker_refcount),
-			_exit_event(exit_event)
-	{
-		module_info mi = get_module_info(in_image_address);
-		shared_ptr<image_info> ii(new offset_image_info(image_info::load(mi.path.c_str()), (size_t)mi.load_address));
-
-//		_patch.reset(new image_patch(ii, g_collector_ptr));
-//		_patch->apply_for([&] (const symbol_info &symbol) -> bool {
-//			return symbol.name != "_VEC_memcpy";
-//		});
-		_image_load_queue->load(in_image_address);
-	}
-
-	frontend_controller::profiler_instance::~profiler_instance() throw()
-	{
-		_image_load_queue->unload(_in_image_address);
-		if (1 == _worker_refcount->fetch_add(-1))
-			_exit_event->set();
-	}
-
-
-	frontend_controller::frontend_controller(const frontend_factory_t& factory, calls_collector_i &collector,
+	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector> &collector,
 			const overhead &overhead_)
-		: _factory(factory), _collector(collector), _overhead(overhead_), _image_load_queue(new image_load_queue),
-			_worker_refcount(new ref_counter_t(0))
-	{	}
+		: _collector(collector), _image_load_queue(new image_load_queue)
+	{	_frontend_thread.reset(new mt::thread(bind(&collector_app::worker, this, factory, overhead_)));	}
 
-	frontend_controller::~frontend_controller()
+	collector_app::~collector_app()
+	{	stop();	}
+
+	handle *collector_app::profile_image(void *in_image_address)
+	{
+		struct image_instance : handle
+		{
+			image_instance(shared_ptr<image_load_queue> q, void *in_image_address)
+				: _queue(q), _in_image_address(in_image_address)
+			{	_queue->load(_in_image_address);	}
+
+			virtual ~image_instance() throw()
+			{	_queue->unload(_in_image_address);	}
+
+			shared_ptr<image_load_queue> _queue;
+			void *_in_image_address;
+		};
+
+		return new image_instance(_image_load_queue, in_image_address);
+	}
+
+	void collector_app::stop()
 	{
 		if (_frontend_thread.get())
-			_frontend_thread->detach();
-	}
-
-	handle *frontend_controller::profile(void *in_image_address)
-	{
-		if (!_worker_refcount->fetch_add(1))
 		{
-			shared_ptr<mt::event> exit_event(new mt::event);
-			auto_ptr<mt::thread> frontend_thread(new mt::thread(bind(&frontend_controller::frontend_worker,
-				_frontend_thread.get(), _factory, &_collector, _overhead, _image_load_queue, exit_event)));
-
-			_frontend_thread.release();
-
-			swap(_exit_event, exit_event);
-			swap(_frontend_thread, frontend_thread);
-		}
-		return new profiler_instance(in_image_address, _image_load_queue, _worker_refcount, _exit_event);
-	}
-
-	void frontend_controller::force_stop()
-	{
-		if (_exit_event && _frontend_thread.get())
-		{
-			_exit_event->set();
+			_exit.set();
 			_frontend_thread->join();
 			_frontend_thread.reset();
 		}
 	}
 
-	void frontend_controller::frontend_worker(mt::thread *previous_thread, const frontend_factory_t &factory,
-		calls_collector_i *collector, const overhead &overhead_, const shared_ptr<image_load_queue> &lqueue,
-		const shared_ptr<mt::event> &exit_event)
+	void collector_app::disconnect() throw()
+	{	}
+
+	void collector_app::message(const_byte_range /*command_payload*/)
+	{	}
+
+	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
-		if (previous_thread)
-			previous_thread->join();
-		delete previous_thread;
-
-//		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-
-		dummy_channel dc;
-		shared_ptr<ipc::channel> frontend = factory(dc);
-		statistics_bridge b(*collector, overhead_, *frontend, lqueue);
+		shared_ptr<ipc::channel> frontend = factory(*this);
+		statistics_bridge b(*_collector, overhead_, *frontend, _image_load_queue);
 		timestamp_t t = clock();
 
 		task tasks[] = {
@@ -166,7 +109,7 @@ namespace micro_profiler
 			task(bind(&statistics_bridge::update_frontend, &b), 67),
 		};
 
-		for (mt::milliseconds p(0); !exit_event->wait(p); )
+		for (mt::milliseconds p(0); !_exit.wait(p); )
 		{
 			timestamp_t expires_at = numeric_limits<timestamp_t>::max();
 

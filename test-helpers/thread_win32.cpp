@@ -22,6 +22,9 @@ namespace micro_profiler
 
 					virtual void join()
 					{	::WaitForSingleObject(get(), INFINITE);	}
+
+					virtual bool join(mt::milliseconds timeout)
+					{	return WAIT_TIMEOUT != ::WaitForSingleObject(get(), timeout);	}
 				};
 
 				return shared_ptr<running_thread>(new this_running_thread());

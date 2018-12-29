@@ -26,6 +26,10 @@ namespace micro_profiler
 			: ptr(0)
 		{	}
 
+		vector_adapter::vector_adapter(const_byte_range from)
+			: ptr(0), buffer(from.begin(), from.end())
+		{	}
+
 		void vector_adapter::write(const void *buffer_, size_t size)
 		{
 			const unsigned char *b = reinterpret_cast<const unsigned char *>(buffer_);

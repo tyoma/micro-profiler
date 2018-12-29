@@ -21,7 +21,7 @@
 #pragma once
 
 #include "calibration.h"
-#include "statistics_bridge.h"
+#include "entry.h"
 
 #include <common/noncopyable.h>
 #include <functional>
@@ -33,11 +33,19 @@
 namespace micro_profiler
 {
 	struct calls_collector_i;
-	struct handle;
 	class image_load_queue;
+
+	namespace ipc
+	{
+		struct channel;
+	}
 
 	class frontend_controller : noncopyable
 	{
+	public:
+		typedef std::shared_ptr<ipc::channel> channel_t;
+		typedef std::function<channel_t (ipc::channel &inbound)> frontend_factory_t;
+
 	public:
 		frontend_controller(const frontend_factory_t& factory, calls_collector_i &collector, const overhead &overhead_);
 		virtual ~frontend_controller();

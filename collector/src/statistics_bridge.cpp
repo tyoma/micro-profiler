@@ -23,12 +23,12 @@
 #include <collector/calibration.h>
 #include <collector/calls_collector.h>
 
+#include <algorithm>
 #include <common/module.h>
 #include <common/protocol.h>
 #include <common/serialization.h>
 #include <common/time.h>
-
-#include <algorithm>
+#include <ipc/endpoint.h>
 #include <iterator>
 #include <strmd/serializer.h>
 
@@ -89,11 +89,10 @@ namespace micro_profiler
 	}
 
 
-	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_,
-			const frontend_factory_t &factory, const std::shared_ptr<image_load_queue> &image_load_queue_)
-		: _analyzer(overhead_.external), _collector(collector), _image_load_queue(image_load_queue_)
+	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
+			const std::shared_ptr<image_load_queue> &image_load_queue_)
+		: _analyzer(overhead_.external), _collector(collector), _frontend(frontend), _image_load_queue(image_load_queue_)
 	{
-		_frontend = factory(*this);
 		initialization_data idata = {
 			get_current_executable(),
 			ticks_per_second()
@@ -127,12 +126,6 @@ namespace micro_profiler
 
 		archive(command);
 		archive(data);
-		_frontend->message(const_byte_range(_buffer.data(), _buffer.size()));
+		_frontend.message(const_byte_range(_buffer.data(), _buffer.size()));
 	}
-
-	void statistics_bridge::disconnect() throw()
-	{	}
-
-	void statistics_bridge::message(const_byte_range /*payload*/)
-	{	}
 }

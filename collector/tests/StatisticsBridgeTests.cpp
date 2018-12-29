@@ -10,7 +10,6 @@
 #include <ut/test.h>
 
 using namespace std;
-using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -19,27 +18,13 @@ namespace micro_profiler
 		namespace
 		{
 			const overhead c_overhead = { 17, 0 };
-
-			struct dummy : ipc::channel
-			{
-				virtual void disconnect() throw()
-				{	}
-
-				virtual void message(const_byte_range /*payload*/)
-				{	}
-			};
-
-			channel_t VoidCreationFactory(bool &created)
-			{
-				created = true;
-				return channel_t(new dummy);
-			}
 		}
 
 		begin_test_suite( StatisticsBridgeTests )
 			vector<image> images;
 			shared_ptr<mocks::Tracer> cc;
 			shared_ptr<mocks::frontend_state> state;
+			shared_ptr<ipc::channel> frontend;
 			vector<mocks::statistics_map_detailed> update_log;
 			shared_ptr<image_load_queue> queue;
 			unsigned int ref_count;
@@ -62,45 +47,8 @@ namespace micro_profiler
 				ref_count = 0;
 				cc.reset(new mocks::Tracer);
 				state.reset(new mocks::frontend_state(cc));
-				state->constructed = [this] { ++ref_count; };
-				state->destroyed = [this] { --ref_count; };
 				state->updated = [this] (const mocks::statistics_map_detailed &u) { update_log.push_back(u); };
-			}
-
-
-			test( ConstructingBridgeInvokesFrontendFactory )
-			{
-				// INIT
-				bool created = false;
-
-				// ACT
-				statistics_bridge b(*cc, c_overhead, bind(&VoidCreationFactory, ref(created)), queue);
-
-				// ASSERT
-				assert_is_true(created);
-			}
-
-
-			test( BridgeHoldsFrontendForALifetime )
-			{
-				// INIT / ACT
-				{
-					statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
-
-				// ASSERT
-					assert_equal(1u, ref_count);
-
-				// INIT / ACT
-				statistics_bridge b2(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
-
-				// ASSERT
-				assert_equal(2u, ref_count);
-
-				// ACT (dtor)
-				}
-
-				// ASSERT
-				assert_equal(0u, ref_count);
+				frontend = state->create();
 			}
 
 
@@ -112,7 +60,7 @@ namespace micro_profiler
 				state->initialized = [&] (const initialization_data &id) { process_init = id; };
 
 				// ACT
-				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, queue);
 
 				// ASSERT
 				assert_equal(get_current_process_executable(), process_init.executable);
@@ -123,7 +71,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoUpdates )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, queue);
 
 				// ACT
 				b.analyze();
@@ -137,7 +85,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoAnalysisInvoked )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, queue);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
 					{	10 + c_overhead.external, (void *)(0)	},
@@ -156,7 +104,7 @@ namespace micro_profiler
 			test( FrontendUpdateClearsTheAnalyzer )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, queue);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
 					{	10 + c_overhead.external, (void *)(0)	},
@@ -181,10 +129,10 @@ namespace micro_profiler
 				vector<mocks::statistics_map_detailed> update_log1, update_log2;
 				mocks::Tracer cc1, cc2;
 				overhead o1 = { 23, 0, }, o2 = { 31, 0 };
-				shared_ptr<mocks::frontend_state> state1(new mocks::frontend_state(shared_ptr<void>())),
+				shared_ptr<mocks::frontend_state> state1(state),
 					state2(new mocks::frontend_state(shared_ptr<void>()));
-				statistics_bridge b1(cc1, o1, bind(&mocks::frontend_state::create, state1), queue),
-					b2(cc2, o2, bind(&mocks::frontend_state::create, state2), queue);
+				shared_ptr<ipc::channel> frontend2 = state2->create();
+				statistics_bridge b1(cc1, o1, *frontend, queue), b2(cc2, o2, *frontend2, queue);
 				call_record trace1[] = {
 					{	0, (void *)0x1223	},
 					{	10 + o1.external, (void *)(0)	},
@@ -236,7 +184,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<loaded_modules> loads;
-				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, queue);
 
 				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
 
@@ -271,7 +219,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<unloaded_modules> unloads;
-				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, queue);
 
 				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
 
@@ -303,7 +251,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<int> order;
-				statistics_bridge b(*cc, c_overhead, bind(&mocks::frontend_state::create, state), queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, queue);
 				call_record trace[] = {
 					{	0, (void *)0x2223	},
 					{	2019, (void *)0	},

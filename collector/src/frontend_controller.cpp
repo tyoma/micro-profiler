@@ -25,6 +25,7 @@
 #include <collector/statistics_bridge.h>
 #include <common/time.h>
 #include <common/module.h>
+#include <ipc/endpoint.h>
 #include <set>
 
 using namespace std;
@@ -56,6 +57,12 @@ namespace micro_profiler
 			function<void()> _task;
 			timestamp_t _period;
 			timestamp_t _expires_at;
+		};
+
+		struct dummy_channel : ipc::channel
+		{
+			virtual void disconnect() throw() {	}
+			virtual void message(const_byte_range /*payload*/) {	}
 		};
 	}
 
@@ -149,7 +156,9 @@ namespace micro_profiler
 
 //		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
-		statistics_bridge b(*collector, overhead_, factory, lqueue);
+		dummy_channel dc;
+		shared_ptr<ipc::channel> frontend = factory(dc);
+		statistics_bridge b(*collector, overhead_, *frontend, lqueue);
 		timestamp_t t = clock();
 
 		task tasks[] = {

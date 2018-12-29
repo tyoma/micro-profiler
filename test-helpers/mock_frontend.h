@@ -1,8 +1,9 @@
 #pragma once
 
-#include <collector/statistics_bridge.h>
 #include <common/noncopyable.h>
 #include <common/protocol.h>
+#include <functional>
+#include <ipc/endpoint.h>
 
 namespace micro_profiler
 {
@@ -18,7 +19,7 @@ namespace micro_profiler
 			public:
 				explicit frontend_state(const std::shared_ptr<void> &ownee = std::shared_ptr<void>());
 
-				channel_t create();
+				std::shared_ptr<ipc::channel> create();
 
 			public:
 				std::function<void ()> constructed;

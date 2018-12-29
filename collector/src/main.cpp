@@ -20,8 +20,8 @@
 
 #include "main.h"
 
+#include <collector/calls_collector.h>
 #include <collector/frontend_controller.h>
-#include <collector/entry.h>
 #include <common/time.h>
 #include <common/constants.h>
 #include <ipc/endpoint.h>
@@ -41,7 +41,7 @@ namespace
 		{	}
 	};
 
-	channel_t probe_create_channel(ipc::channel &inbound)
+	frontend_controller::channel_t probe_create_channel(ipc::channel &inbound)
 	{
 		vector<string> candidate_endpoints = c_candidate_endpoints;
 
@@ -58,7 +58,7 @@ namespace
 			{
 			}
 		}
-		return channel_t(new null_channel);
+		return frontend_controller::channel_t(new null_channel);
 	}
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <collector/calls_collector.h>
 #include <test-helpers/mock_frontend.h>
 
 namespace micro_profiler

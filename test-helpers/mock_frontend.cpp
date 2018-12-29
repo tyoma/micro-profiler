@@ -55,8 +55,8 @@ namespace micro_profiler
 			};
 
 
-			channel_t frontend_state::create()
-			{	return channel_t(new frontend(shared_from_this()));	}
+			shared_ptr<ipc::channel> frontend_state::create()
+			{	return shared_ptr<ipc::channel>(new frontend(shared_from_this()));	}
 
 
 			frontend::frontend(shared_ptr<frontend_state> state)

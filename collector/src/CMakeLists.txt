@@ -15,7 +15,7 @@ set(COLLECTOR_LIB_SOURCES
 	analyzer.cpp
 	calls_collector.cpp
 	calls_collector_thread.cpp
-	frontend_controller.cpp
+	collector_app.cpp
 	image_patch.cpp
 	statistics_bridge.cpp
 )

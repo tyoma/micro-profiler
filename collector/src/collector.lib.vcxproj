@@ -45,8 +45,7 @@
     <ClCompile Include="calls_collector_thread.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="frontend_controller.cpp" />
-    <ClCompile Include="empty_function.intel.c" />
+    <ClCompile Include="collector_app.cpp" />
     <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
   </ItemGroup>

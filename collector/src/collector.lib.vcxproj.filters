@@ -16,10 +16,7 @@
     <ClCompile Include="calls_collector_thread.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="empty_function.intel.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend_controller.cpp">
+    <ClCompile Include="collector_app.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

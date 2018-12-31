@@ -39,10 +39,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="constants.cpp" />
+    <ClCompile Include="elf\filemapping_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="elf\sym-elf.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="formatting.cpp" />
     <ClCompile Include="memory.cpp" />
+    <ClCompile Include="memory_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="memory_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="module_linux.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="module_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -51,6 +63,9 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="symbol_resolver.cpp" />
+    <ClCompile Include="symbol_resolver_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="time.cpp" />
     <ClCompile Include="time_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -81,6 +96,8 @@
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\types.h" />
+    <ClInclude Include="elf\filemapping.h" />
+    <ClInclude Include="elf\sym-elf.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

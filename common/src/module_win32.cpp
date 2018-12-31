@@ -20,7 +20,10 @@
 
 #include <common/module.h>
 
+#include <common/string.h>
+
 #include <windows.h>
+#include <tlhelp32.h>
 
 using namespace std;
 
@@ -39,5 +42,20 @@ namespace micro_profiler
 		::FreeLibrary(load_address);
 		module_info info = { reinterpret_cast<size_t>(load_address), path };
 		return info;
+	}
+
+	void enumerate_process_modules(const module_callback_t &callback)
+	{
+		mapped_module module;
+		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0), &::CloseHandle);
+		MODULEENTRY32 entry = { sizeof(MODULEENTRY32), };
+
+		for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next, module.addresses.clear())
+		{
+			module.module = unicode(entry.szExePath);
+			module.base = entry.modBaseAddr;
+			module.addresses.push_back(byte_range(entry.modBaseAddr, entry.modBaseSize));
+			callback(module);
+		}
 	}
 }

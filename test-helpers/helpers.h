@@ -97,6 +97,18 @@ namespace micro_profiler
 			return std::equal(static_cast<const byte *>(lhs), static_cast<const byte *>(lhs) + length,
 				static_cast<const byte *>(rhs));
 		}
+
+		template <typename CharT>
+		inline void toupper(CharT &c)
+		{	c = static_cast<CharT>(::toupper(c));	}
+
+		template <typename CharT>
+		inline bool equal_nocase(std::basic_string<CharT> lhs, std::basic_string<CharT> rhs)
+		{
+			std::for_each(lhs.begin(), lhs.end(), &toupper<CharT>);
+			std::for_each(rhs.begin(), rhs.end(), &toupper<CharT>);
+			return lhs == rhs;
+		}
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);

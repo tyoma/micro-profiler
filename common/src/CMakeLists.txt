@@ -21,7 +21,7 @@ elseif (UNIX)
 		elf/filemapping_unix.cpp
 		elf/sym-elf.cpp
 		memory_unix.cpp
-		module_unix.cpp
+		module_linux.cpp
 		symbol_resolver_unix.cpp
 		time_generic.cpp
 	)		

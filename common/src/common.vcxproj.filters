@@ -7,37 +7,61 @@
     <ClCompile Include="string.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="registry_configuration.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="constants.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="time.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="time_win32.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="memory_win32.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="memory.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="module_win32.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="symbol_resolver_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="symbol_resolver.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="memory_unix.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol_resolver_unix.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="module_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="symbol_resolver_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="registry_configuration.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="time_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="elf\filemapping_unix.cpp">
+      <Filter>src\unix\elf</Filter>
+    </ClCompile>
+    <ClCompile Include="elf\sym-elf.cpp">
+      <Filter>src\unix\elf</Filter>
+    </ClCompile>
+    <ClCompile Include="module_linux.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{22cb85fe-689f-4618-bf93-9099c7ea6999}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\unix">
+      <UniqueIdentifier>{8eed48b5-06de-4107-89e1-4d2c28a9aab6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\win32">
+      <UniqueIdentifier>{31439396-aa07-4937-be91-f7723d368ef4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\unix\elf">
+      <UniqueIdentifier>{4f43e400-c8ad-4c11-be84-a49c6cdd7f0f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -56,5 +80,11 @@
     <ClInclude Include="..\memory.h" />
     <ClInclude Include="..\time.h" />
     <ClInclude Include="..\range.h" />
+    <ClInclude Include="elf\filemapping.h">
+      <Filter>src\unix\elf</Filter>
+    </ClInclude>
+    <ClInclude Include="elf\sym-elf.h">
+      <Filter>src\unix\elf</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

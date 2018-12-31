@@ -33,23 +33,48 @@ namespace micro_profiler
 {
 	wstring get_current_executable()
 	{
-			char path[1000] = {};
+		char path[1000] = { 0 };
+		int result = ::readlink("/proc/self/exe", path, sizeof(path) - 1);
 
-			::readlink("/proc/self/exe", path, sizeof(path) - 1);
-			return unicode(path);
+		if (result > 0);
+			return path[result] = 0, unicode(path);
+		return wstring();
 	}
-	
+
 	module_info get_module_info(const void *address)
 	{
 		Dl_info di = { };
-		
+
 		::dladdr(address, &di);
 
 		module_info info = {
 			reinterpret_cast<size_t>(di.dli_fbase),
-			unicode(di.dli_fname)
+			di.dli_fname && *di.dli_fname ? unicode(di.dli_fname) : get_current_executable()
 		};
 
 		return info;
+	}
+
+	void enumerate_process_modules(const module_callback_t &callback)
+	{
+		struct local
+		{
+			static int on_phdr(dl_phdr_info *phdr, size_t, void *cb)
+			{
+				mapped_module m;
+				int n = phdr->dlpi_phnum;
+				const module_callback_t &callback = *static_cast<const module_callback_t *>(cb);
+
+				m.base = reinterpret_cast<byte *>(phdr->dlpi_addr);
+				m.module = phdr->dlpi_name && *phdr->dlpi_name ? unicode(phdr->dlpi_name) : get_current_executable();
+				for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
+					if (segment->p_type == PT_LOAD)
+						m.addresses.push_back(byte_range(m.base + segment->p_vaddr, segment->p_memsz));
+				callback(m);
+				return 0;
+			}
+		};
+
+		::dl_iterate_phdr(&local::on_phdr, const_cast<module_callback_t *>(&callback));
 	}
 }

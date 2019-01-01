@@ -34,6 +34,9 @@ namespace micro_profiler
 		: _references(1), _ui_factory(ui_factory), _active_instance(0)
 	{	}
 
+	frontend_manager::~frontend_manager()
+	{	}
+
 	shared_ptr<frontend_manager> frontend_manager::create(const frontend_ui_factory &ui_factory)
 	{	return shared_ptr<frontend_manager>(new frontend_manager(ui_factory), &destroy);	}
 
@@ -65,7 +68,7 @@ namespace micro_profiler
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
 	{	return _active_instance;	}
 
-	void frontend_manager::create_instance(const wstring &executable, const shared_ptr<functions_list> &model)
+	void frontend_manager::create_instance(const string &executable, const shared_ptr<functions_list> &model)
 	{	on_ready_for_ui(_instances.insert(_instances.end(), instance_impl(0)), executable, model);	}
 
 	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
@@ -96,7 +99,7 @@ namespace micro_profiler
 		release();
 	}
 
-	void frontend_manager::on_ready_for_ui(instance_container::iterator i, const wstring &executable,
+	void frontend_manager::on_ready_for_ui(instance_container::iterator i, const string &executable,
 		const shared_ptr<functions_list> &model)
 	{
 		i->executable = executable;

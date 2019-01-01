@@ -21,6 +21,7 @@
 #include <frontend/columns_model.h>
 
 #include <common/configuration.h>
+#include <common/string.h>
 
 using namespace std;
 
@@ -58,12 +59,14 @@ namespace micro_profiler
 			shared_ptr<hive> cc = configuration.create(i->id.c_str());
 
 			cc->store(c_width, i->width);
-			cc->store(c_caption, i->caption.c_str());
+			cc->store(c_caption, unicode(i->caption).c_str());
 		}
 	}
 
 	void columns_model::update(const hive &configuration)
 	{
+		string tmp;
+
 		load_int(configuration, c_order_by, _sort_column);
 		_sort_column = _sort_column < static_cast<index_type>(_columns.size()) ? _sort_column : npos();
 		load_int(configuration, c_order_direction, _sort_ascending);
@@ -71,7 +74,8 @@ namespace micro_profiler
 			if (shared_ptr<const hive> cc = configuration.open(i->id.c_str()))
 			{
 				load_int(*cc, c_width, i->width);
-				cc->load(c_caption, i->caption);
+				cc->load(c_caption, tmp);
+				i->caption = unicode(tmp);
 			}
 	}
 	

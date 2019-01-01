@@ -27,7 +27,8 @@
 
 namespace micro_profiler
 {
-	extern const char *c_frontend_id_env;
+	extern const char *c_profilerdir_ev;
+	extern const char *c_frontend_id_ev;
 	extern const guid_t c_standalone_frontend_id;
 	extern const guid_t c_integrated_frontend_id;
 	extern const std::vector<std::string> c_candidate_endpoints;

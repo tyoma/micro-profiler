@@ -130,7 +130,7 @@ namespace micro_profiler
 				return global_context(dispatch(IDispatchPtr()), _frontend_manager, _shell);
 			}
 
-			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const wstring &executable)
+			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const string &executable)
 			{	return integration::create_ui(*_shell, _next_tool_id++, model, executable);	}
 
 		private:

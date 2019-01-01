@@ -22,7 +22,7 @@ namespace micro_profiler
 		void save(hive &configuration);
 
 	public:
-		wpl::signal<void(const std::wstring &file, unsigned line)> open_source;
+		wpl::signal<void(const std::string &file, unsigned line)> open_source;
 
 	private:
 		void on_selection_change(wpl::ui::listview::index_type index, bool selected);

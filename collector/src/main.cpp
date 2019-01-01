@@ -46,7 +46,7 @@ namespace
 	{
 		vector<string> candidate_endpoints = c_candidate_endpoints;
 
-		if (const char *env_id = getenv(c_frontend_id_env))
+		if (const char *env_id = getenv(c_frontend_id_ev))
 			candidate_endpoints.insert(candidate_endpoints.begin(), env_id);
 
 		for (vector<string>::const_iterator i = candidate_endpoints.begin(); i != candidate_endpoints.end(); ++i)

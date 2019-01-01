@@ -24,29 +24,29 @@
 
 namespace micro_profiler
 {
-	inline std::wstring operator &(const std::wstring &lhs, const std::wstring &rhs)
+	inline std::string operator &(const std::string &lhs, const std::string &rhs)
 	{
 		if (lhs.empty())
 			return rhs;
-		if (*lhs.rbegin() == L'\\' || *lhs.rbegin() == L'/')
+		if (*lhs.rbegin() == '\\' || *lhs.rbegin() == '/')
 			return lhs + rhs;
-		return lhs + L"/" + rhs;
+		return lhs + "/" + rhs;
 	}
 
-	inline std::wstring operator ~(const std::wstring &value)
+	inline std::string operator ~(const std::string &value)
 	{
-		const size_t pos = value.find_last_of(L"\\/");
+		const size_t pos = value.find_last_of("\\/");
 
-		if (pos != std::wstring::npos)
+		if (pos != std::string::npos)
 			return value.substr(0, pos);
-		return std::wstring();
+		return std::string();
 	}
 
-	inline std::wstring operator *(const std::wstring &value)
+	inline std::string operator *(const std::string &value)
 	{
-		const size_t pos = value.find_last_of(L"\\/");
+		const size_t pos = value.find_last_of("\\/");
 
-		if (pos != std::wstring::npos)
+		if (pos != std::string::npos)
 			return value.substr(pos + 1);
 		return value;
 	}

@@ -36,14 +36,14 @@ namespace micro_profiler
 
 	struct initialization_data
 	{
-		std::wstring executable;
+		std::string executable;
 		timestamp_t ticks_per_second;
 	};
 
 	struct module_info
 	{
 		long_address_t load_address;
-		std::wstring path;
+		std::string path;
 	};
 	typedef std::vector<module_info> loaded_modules;
 

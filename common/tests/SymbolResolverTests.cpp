@@ -37,8 +37,8 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 
 				// ACT / ASSERT
-				assert_throws(r->add_image(L"", 0x12345), invalid_argument);
-				assert_throws(r->add_image(L"missingABCDEFG", 0x23451), invalid_argument);
+				assert_throws(r->add_image("", 0x12345), invalid_argument);
+				assert_throws(r->add_image("missingABCDEFG", 0x23451), invalid_argument);
 			}
 
 
@@ -46,7 +46,7 @@ namespace micro_profiler
 			{
 				// INIT
 				image img1(get_module_info(&g_dummy).path.c_str());
-				image img2(L"symbol_container_1");
+				image img2("symbol_container_1");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 
 				// ACT / ASSERT (must not throw)
@@ -59,7 +59,7 @@ namespace micro_profiler
 			test( ReturnNamesOfLocalFunctions1 )
 			{
 				// INIT
-				image img(L"symbol_container_1");
+				image img("symbol_container_1");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t *getter_1 = img.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
 				void_f_t f1 = 0, f2 = 0;
@@ -68,19 +68,19 @@ namespace micro_profiler
 				getter_1(f1, f2);
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)f1);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f2);
+				string name1 = r->symbol_name_by_va((long_address_t)f1);
+				string name2 = r->symbol_name_by_va((long_address_t)f2);
 
 				// ASSERT
-				assert_equal(name1, L"very_simple_global_function");
-				assert_equal(name2, L"a_tiny_namespace::function_that_hides_under_a_namespace");
+				assert_equal(name1, "very_simple_global_function");
+				assert_equal(name2, "a_tiny_namespace::function_that_hides_under_a_namespace");
 			}
 
 
 			test( ReturnNamesOfLocalFunctions2 )
 			{
 				// INIT
-				image img(L"symbol_container_2");
+				image img("symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t *getter_2 =
 					img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
@@ -90,21 +90,21 @@ namespace micro_profiler
 				getter_2(f1, f2, f3);
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)f1);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f2);
-				wstring name3 = r->symbol_name_by_va((long_address_t)f3);
+				string name1 = r->symbol_name_by_va((long_address_t)f1);
+				string name2 = r->symbol_name_by_va((long_address_t)f2);
+				string name3 = r->symbol_name_by_va((long_address_t)f3);
 
 				// ASSERT
-				assert_equal(name1, L"vale_of_mean_creatures::this_one_for_the_birds");
-				assert_equal(name2, L"vale_of_mean_creatures::this_one_for_the_whales");
-				assert_equal(name3, L"vale_of_mean_creatures::the_abyss::bubble_sort");
+				assert_equal(name1, "vale_of_mean_creatures::this_one_for_the_birds");
+				assert_equal(name2, "vale_of_mean_creatures::this_one_for_the_whales");
+				assert_equal(name3, "vale_of_mean_creatures::the_abyss::bubble_sort");
 			}
 
 
 			test( RespectLoadAddress )
 			{
 				// INIT
-				image img(L"symbol_container_2");
+				image img("symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t *getter_2 =
 					img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
@@ -118,21 +118,21 @@ namespace micro_profiler
 				*reinterpret_cast<const char **>(&f3) += 113;
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)f1);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f2);
-				wstring name3 = r->symbol_name_by_va((long_address_t)f3);
+				string name1 = r->symbol_name_by_va((long_address_t)f1);
+				string name2 = r->symbol_name_by_va((long_address_t)f2);
+				string name3 = r->symbol_name_by_va((long_address_t)f3);
 
 				// ASSERT
-				assert_equal(name1, L"vale_of_mean_creatures::this_one_for_the_birds");
-				assert_equal(name2, L"vale_of_mean_creatures::this_one_for_the_whales");
-				assert_equal(name3, L"vale_of_mean_creatures::the_abyss::bubble_sort");
+				assert_equal(name1, "vale_of_mean_creatures::this_one_for_the_birds");
+				assert_equal(name2, "vale_of_mean_creatures::this_one_for_the_whales");
+				assert_equal(name3, "vale_of_mean_creatures::the_abyss::bubble_sort");
 			}
 
 
 			test( LoadModuleWithNoSymbols )
 			{
 				// INIT
-				image img(L"symbol_container_3_nosymbols");
+				image img("symbol_container_3_nosymbols");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_3_t *getter_3 = img.get_symbol<get_function_addresses_3_t>("get_function_addresses_3");
 				void_f_t f = 0;
@@ -141,19 +141,19 @@ namespace micro_profiler
 				getter_3(f);
 
 				// ACT
-				wstring name1 = r->symbol_name_by_va((long_address_t)getter_3);
-				wstring name2 = r->symbol_name_by_va((long_address_t)f);
+				string name1 = r->symbol_name_by_va((long_address_t)getter_3);
+				string name2 = r->symbol_name_by_va((long_address_t)f);
 
 				// ASSERT
-				assert_equal(name1, L"get_function_addresses_3"); // exported function will have a name
-				assert_equal(name2, L"");
+				assert_equal(name1, "get_function_addresses_3"); // exported function will have a name
+				assert_equal(name2, "");
 			}
 
 
 			test( ConstantReferenceFromResolverIsTheSame )
 			{
 				// INIT
-				image img(L"symbol_container_2");
+				image img("symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_2_t *getter_2 = img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
 				void_f_t f1 = 0, f2 = 0, f3 = 0;
@@ -162,13 +162,13 @@ namespace micro_profiler
 				getter_2(f1, f2, f3);
 
 				// ACT
-				const wstring *name1_1 = &r->symbol_name_by_va((long_address_t)f1);
-				const wstring *name2_1 = &r->symbol_name_by_va((long_address_t)f2);
-				const wstring *name3_1 = &r->symbol_name_by_va((long_address_t)f3);
+				const string *name1_1 = &r->symbol_name_by_va((long_address_t)f1);
+				const string *name2_1 = &r->symbol_name_by_va((long_address_t)f2);
+				const string *name3_1 = &r->symbol_name_by_va((long_address_t)f3);
 
-				const wstring *name2_2 = &r->symbol_name_by_va((long_address_t)f2);
-				const wstring *name1_2 = &r->symbol_name_by_va((long_address_t)f1);
-				const wstring *name3_2 = &r->symbol_name_by_va((long_address_t)f3);
+				const string *name2_2 = &r->symbol_name_by_va((long_address_t)f2);
+				const string *name1_2 = &r->symbol_name_by_va((long_address_t)f1);
+				const string *name3_2 = &r->symbol_name_by_va((long_address_t)f3);
 
 				// ASSERT
 				assert_equal(name1_1, name1_2);
@@ -180,7 +180,7 @@ namespace micro_profiler
 			test( LoadSymbolsForSecondModule )
 			{
 				// INIT
-				image img1(L"symbol_container_1"), img2(L"symbol_container_2");
+				image img1("symbol_container_1"), img2("symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t *getter_1 = img1.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
 				get_function_addresses_2_t *getter_2 = img2.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
@@ -194,18 +194,18 @@ namespace micro_profiler
 				r->add_image(img2.absolute_path(), img2.load_address());
 
 				// ACT / ASSERT
-				assert_equal(r->symbol_name_by_va((long_address_t)f1_2), L"vale_of_mean_creatures::this_one_for_the_birds");
-				assert_equal(r->symbol_name_by_va((long_address_t)f2_2), L"vale_of_mean_creatures::this_one_for_the_whales");
-				assert_equal(r->symbol_name_by_va((long_address_t)f3_2), L"vale_of_mean_creatures::the_abyss::bubble_sort");
-				assert_equal(r->symbol_name_by_va((long_address_t)f1_1), L"very_simple_global_function");
-				assert_equal(r->symbol_name_by_va((long_address_t)f2_1), L"a_tiny_namespace::function_that_hides_under_a_namespace");
+				assert_equal(r->symbol_name_by_va((long_address_t)f1_2), "vale_of_mean_creatures::this_one_for_the_birds");
+				assert_equal(r->symbol_name_by_va((long_address_t)f2_2), "vale_of_mean_creatures::this_one_for_the_whales");
+				assert_equal(r->symbol_name_by_va((long_address_t)f3_2), "vale_of_mean_creatures::the_abyss::bubble_sort");
+				assert_equal(r->symbol_name_by_va((long_address_t)f1_1), "very_simple_global_function");
+				assert_equal(r->symbol_name_by_va((long_address_t)f2_1), "a_tiny_namespace::function_that_hides_under_a_namespace");
 			}
 
 
 			test( FileLineInformationIsReturnedBySymbolProvider )
 			{
 				// INIT
-				image img1(L"symbol_container_1"), img2(L"symbol_container_2");
+				image img1("symbol_container_1"), img2("symbol_container_2");
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 				get_function_addresses_1_t *getter_1 = img1.get_symbol<get_function_addresses_1_t>("get_function_addresses_1");
 				get_function_addresses_2_t *getter_2 = img2.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
@@ -217,7 +217,7 @@ namespace micro_profiler
 				r->add_image(img2.absolute_path(), img2.load_address());
 
 				// ACT
-				pair<wstring, unsigned> filelines[] = {
+				pair<string, unsigned> filelines[] = {
 					r->symbol_fileline_by_va((long_address_t)f1_1),
 					r->symbol_fileline_by_va((long_address_t)f2_1),
 					r->symbol_fileline_by_va((long_address_t)f1_2),
@@ -226,15 +226,15 @@ namespace micro_profiler
 				};
 
 				// ASSERT
-				for (pair<wstring, unsigned> *i = begin(filelines); i != end(filelines); ++i)
+				for (pair<string, unsigned> *i = begin(filelines); i != end(filelines); ++i)
 					i->first = *i->first;
 
-				pair<wstring, unsigned> reference[] = {
-					make_pair(L"symbol_container_1.cpp", 1),
-					make_pair(L"symbol_container_1.cpp", 7),
-					make_pair(L"symbol_container_2.cpp", 3),
-					make_pair(L"symbol_container_2.cpp", 7),
-					make_pair(L"symbol_container_2.cpp", 13),
+				pair<string, unsigned> reference[] = {
+					make_pair("symbol_container_1.cpp", 1),
+					make_pair("symbol_container_1.cpp", 7),
+					make_pair("symbol_container_2.cpp", 3),
+					make_pair("symbol_container_2.cpp", 7),
+					make_pair("symbol_container_2.cpp", 13),
 				};
 
 
@@ -248,10 +248,10 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(symbol_resolver::create());
 
 				// ACT
-				pair<wstring, unsigned> fileline = r->symbol_fileline_by_va(0);
+				pair<string, unsigned> fileline = r->symbol_fileline_by_va(0);
 
 				// ASSERT
-				assert_equal(make_pair(wstring(), 0u), fileline);
+				assert_equal(make_pair(string(), 0u), fileline);
 			}
 		end_test_suite
 	}

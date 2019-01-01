@@ -14,7 +14,7 @@ namespace micro_profiler
 		struct instance_context
 		{
 			std::shared_ptr<functions_list> model;
-			std::wstring executable;
+			std::string executable;
 			CComPtr<IVsUIShell> shell;
 		};
 

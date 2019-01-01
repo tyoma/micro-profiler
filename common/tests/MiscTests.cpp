@@ -570,42 +570,42 @@ namespace micro_profiler
 			test( PathAppendConcantenatesStringsWithSlash )
 			{
 				// ACT / ASSERT
-				assert_equal(L"/test/mymodule.so", wstring(L"/test") & L"mymodule.so");
-				assert_equal(L"c:\\another/mymodule2.dll", wstring(L"c:\\another") & L"mymodule2.dll");
+				assert_equal("/test/mymodule.so", string("/test") & "mymodule.so");
+				assert_equal("c:\\another/mymodule2.dll", string("c:\\another") & "mymodule2.dll");
 			}
 
 		
 			test( AppendingToEmptyDirectoryDoesNotPrependSlash )
 			{
 				// ACT / ASSERT
-				assert_equal(L"mymodule.so", wstring(L"") & L"mymodule.so");
-				assert_equal(L"test.dll", wstring(L"") & L"test.dll");
+				assert_equal("mymodule.so", string("") & "mymodule.so");
+				assert_equal("test.dll", string("") & "test.dll");
 			}
 
 		
 			test( AppendingToDirectoryEndingWithSlashDoesNotAddSlash )
 			{
 				// ACT / ASSERT
-				assert_equal(L"/test/mymodule.so", wstring(L"/test/") & L"mymodule.so");
-				assert_equal(L"c:\\another\\mymodule2.dll", wstring(L"c:\\another\\") & L"mymodule2.dll");
+				assert_equal("/test/mymodule.so", string("/test/") & "mymodule.so");
+				assert_equal("c:\\another\\mymodule2.dll", string("c:\\another\\") & "mymodule2.dll");
 			}
 
 
 			test( TildeRemovesFilespec )
 			{
 				// ACT / ASSERT
-				assert_equal(L"/test", ~wstring(L"/test/somemodule.so"));
-				assert_equal(L"c:\\anotherdir", ~wstring(L"c:\\anotherdir\\testmodule.dll"));
-				assert_equal(L"", ~wstring(L"testmodule.dll"));
+				assert_equal("/test", ~string("/test/somemodule.so"));
+				assert_equal("c:\\anotherdir", ~string("c:\\anotherdir\\testmodule.dll"));
+				assert_equal("", ~string("testmodule.dll"));
 			}
 
 
 			test( StarLeavesOnlyFilespec )
 			{
 				// ACT / ASSERT
-				assert_equal(L"somemodule.so", *wstring(L"/test/somemodule.so"));
-				assert_equal(L"testmodule.dll", *wstring(L"c:\\anotherdir\\testmodule.dll"));
-				assert_equal(L"testmodule.dll", *wstring(L"testmodule.dll"));
+				assert_equal("somemodule.so", *string("/test/somemodule.so"));
+				assert_equal("testmodule.dll", *string("c:\\anotherdir\\testmodule.dll"));
+				assert_equal("testmodule.dll", *string("testmodule.dll"));
 			}
 		end_test_suite
 	}

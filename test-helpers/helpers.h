@@ -29,17 +29,17 @@ namespace micro_profiler
 
 		guid_t generate_id();
 
-		std::wstring get_current_process_executable();
+		std::string get_current_process_executable();
 
 		class image : private std::shared_ptr<void>
 		{
-			std::wstring _fullpath;
+			std::string _fullpath;
 
 		public:
-			explicit image(const wchar_t *path);
+			explicit image(const char *path);
 
 			long_address_t load_address() const;
-			const wchar_t *absolute_path() const;
+			const char *absolute_path() const;
 			void *get_symbol_address(const char *name) const;
 			template <typename T>
 			T *get_symbol(const char *name) const;

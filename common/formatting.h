@@ -24,5 +24,5 @@
 
 namespace micro_profiler
 {
-	void format_interval(std::wstring &destination, double interval);
+	void format_interval(std::string &destination, double interval);
 }

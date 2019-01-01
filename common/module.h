@@ -30,14 +30,14 @@ namespace micro_profiler
 {
 	struct mapped_module
 	{
-		std::wstring module;
+		std::string module;
 		byte *base;
 		std::vector<byte_range> addresses;
 	};
 
 	typedef std::function<void (const mapped_module &module)> module_callback_t;
 
-	std::wstring get_current_executable();
+	std::string get_current_executable();
 	module_info get_module_info(const void *address);
 	void enumerate_process_modules(const module_callback_t &callback);
 }

@@ -26,7 +26,8 @@ using namespace std;
 
 namespace micro_profiler
 {
-	const char *c_frontend_id_env = "MICROPROFILERFRONTEND";
+	const char *c_profilerdir_ev = "MICROPROFILERDIR";
+	const char *c_frontend_id_ev = "MICROPROFILERFRONTEND";
 
 	// {0ED7654C-DE8A-4964-9661-0B0C391BE15E}
 	const guid_t c_standalone_frontend_id = {

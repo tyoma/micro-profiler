@@ -24,6 +24,7 @@
 #include "tables_ui.h"
 
 #include <common/configuration.h>
+#include <common/string.h>
 #include <frontend/function_list.h>
 
 #include <algorithm>
@@ -98,7 +99,7 @@ namespace micro_profiler
 		}
 	}
 
-	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const wstring &executable)
+	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const string &executable)
 		: _hwnd(create_dialog()), _configuration(open_configuration()), _statistics(s), _executable(executable)
 	{
 		HICON hicon = ::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN));
@@ -148,7 +149,7 @@ namespace micro_profiler
 				TRUE);
 		}
 		::SendMessage(_hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hicon));
-		::SetWindowText(_hwnd, (L"MicroProfiler - " + _executable).c_str());
+		::SetWindowText(_hwnd, unicode("MicroProfiler - " + _executable).c_str());
 		::ShowWindow(_hwnd, SW_SHOW);
 	}
 
@@ -192,9 +193,12 @@ namespace micro_profiler
 
 	void ProfilerMainDialog::OnCopyAll()
 	{
-		wstring result;
+		string result_utf8;
 
-		_statistics->print(result);
+		_statistics->print(result_utf8);
+
+		wstring result = unicode(result_utf8);
+
 		if (::OpenClipboard(_hwnd))
 		{
 			if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(wchar_t)))

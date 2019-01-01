@@ -23,7 +23,7 @@ namespace micro_profiler
 			char buffer[100];
 			static mt::atomic<int> port(6110);
 
-			sprintf(buffer, "sockets|127.0.0.1:%d", port.fetch_add(1));
+			snprintf(buffer, 100, "sockets|127.0.0.1:%d", port.fetch_add(1));
 			return buffer;
 		}
 
@@ -99,7 +99,7 @@ namespace micro_profiler
 			{
 				string frontend_id(format_endpoint_id()), runner_id(format_endpoint_id());
 
-				setenv(c_frontend_id_env, frontend_id.c_str(), 1);
+				setenv(c_frontend_id_ev, frontend_id.c_str(), 1);
 
 				frontend_state.reset(new frontend_factory);
 				hserver = ipc::run_server(frontend_id.c_str(), frontend_state);
@@ -165,7 +165,7 @@ namespace micro_profiler
 					ready.set();
 				};
 				
-				guineapig.reset(new image(L"symbol_container_2_instrumented"));
+				guineapig.reset(new image("symbol_container_2_instrumented"));
 
 				f22_t *f22 = guineapig->get_symbol<f22_t>("guinea_snprintf");
 				f2F_t *f2F = guineapig->get_symbol<f2F_t>("bubble_sort_expose");

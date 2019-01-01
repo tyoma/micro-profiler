@@ -32,9 +32,9 @@ namespace micro_profiler
 			init( CreateQueue )
 			{
 				image images_[] = {
-					image(L"symbol_container_1"),
-					image(L"symbol_container_2"),
-					image(L"symbol_container_3_nosymbols"),
+					image("symbol_container_1"),
+					image("symbol_container_2"),
+					image("symbol_container_3_nosymbols"),
 				};
 
 				images.assign(images_, array_end(images_));
@@ -197,7 +197,7 @@ namespace micro_profiler
 				assert_equal(1u, loads[0].size());
 
 				assert_equal(images.at(0).load_address(), loads[0][0].load_address);
-				assert_not_equal(wstring::npos, loads[0][0].path.find(L"symbol_container_1"));
+				assert_not_equal(string::npos, loads[0][0].path.find("symbol_container_1"));
 
 				// ACT
 				(queue)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
@@ -209,9 +209,9 @@ namespace micro_profiler
 				assert_equal(2u, loads[1].size());
 
 				assert_equal(images.at(1).load_address(), loads[1][0].load_address);
-				assert_not_equal(wstring::npos, loads[1][0].path.find(L"symbol_container_2"));
+				assert_not_equal(string::npos, loads[1][0].path.find("symbol_container_2"));
 				assert_equal(images.at(2).load_address(), loads[1][1].load_address);
-				assert_not_equal(wstring::npos, loads[1][1].path.find(L"symbol_container_3_nosymbols"));
+				assert_not_equal(string::npos, loads[1][1].path.find("symbol_container_3_nosymbols"));
 			}
 
 

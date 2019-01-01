@@ -11,36 +11,36 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		wstring get_current_process_executable()
+		string get_current_process_executable()
 		{
+			int n;
 			char path[1000] = {};
 
-			::readlink("/proc/self/exe", path, sizeof(path) - 1);
-			string apath(path);
-			return wstring(apath.begin(), apath.end());
+			if (n = ::readlink("/proc/self/exe", path, sizeof(path) - 1), n == -1)
+				return string();
+			path[n] = 0;
+			return path;
 		}
 
 
-		image::image(const wchar_t *path_)
+		image::image(const char *path_)
 		{
-			wstring path(path_);
+			string path(path_);
 
-			if (path.find(L".so") == wstring::npos)
-				path = path + L".so";
-			if (path.find(L'/') == wstring::npos)
-				path = L"./" & (L"lib" + path);
-
-			string apath(path.begin(), path.end());
+			if (path.find(".so") == string::npos)
+				path = path + ".so";
+			if (path.find('/') == string::npos)
+				path = "./" & ("lib" + path);
 			
-			reset(::dlopen(apath.c_str(), RTLD_NOW), &::dlclose);
+			reset(::dlopen(path.c_str(), RTLD_NOW), &::dlclose);
 			if (!get())
 				throw runtime_error("Cannot load module specified!");
 
 			link_map *lm = 0;
 			
 			::dlinfo(get(), RTLD_DI_LINKMAP, &lm);
-			apath = lm->l_name;
-			_fullpath.assign(apath.begin(), apath.end());
+			path = lm->l_name;
+			_fullpath.assign(path.begin(), path.end());
 		}
 
 		long_address_t image::load_address() const
@@ -51,7 +51,7 @@ namespace micro_profiler
 			return reinterpret_cast<size_t>(lm->l_addr);
 		}
 
-		const wchar_t *image::absolute_path() const
+		const char *image::absolute_path() const
 		{	return _fullpath.c_str();	}
 
 		void *image::get_symbol_address(const char *name) const

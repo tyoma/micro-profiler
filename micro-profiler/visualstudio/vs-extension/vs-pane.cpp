@@ -4,6 +4,7 @@
 #include "commands-instance.h"
 
 #include <common/configuration.h>
+#include <common/string.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/tables_ui.h>
 #include <visualstudio/command-target.h>
@@ -52,7 +53,7 @@ namespace micro_profiler
 				_frame.Release();
 			}
 
-			void set_model(const shared_ptr<functions_list> &model, const wstring &executable)
+			void set_model(const shared_ptr<functions_list> &model, const string &executable)
 			{
 				shared_ptr<tables_ui> ui(new tables_ui(model, *open_configuration()));
 
@@ -122,7 +123,7 @@ namespace micro_profiler
 				return ctx;
 			}
 
-			void on_open_source(const wstring &file, unsigned line)
+			void on_open_source(const string &file, unsigned line)
 			{
 				CComPtr<IVsUIShellOpenDocument> od;
 
@@ -133,7 +134,7 @@ namespace micro_profiler
 					VSITEMID itemid;
 					CComPtr<IVsWindowFrame> frame;
 
-					if (od->OpenDocumentViaProject(file.c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), frame)
+					if (od->OpenDocumentViaProject(unicode(file).c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), frame)
 					{
 						CComPtr<IVsCodeWindow> window;
 
@@ -155,7 +156,7 @@ namespace micro_profiler
 
 		private:
 			shared_ptr<functions_list> _model;
-			wstring _executable;
+			string _executable;
 			shared_ptr<wpl::ui::view_host> _host;
 			CComPtr<IVsWindowFrame> _frame;
 			CComPtr<IServiceProvider> _service_provider;
@@ -165,7 +166,7 @@ namespace micro_profiler
 
 
 		shared_ptr<frontend_ui> create_ui(IVsUIShell &shell, unsigned id, const shared_ptr<functions_list> &model,
-			const wstring &executable)
+			const string &executable)
 		{
 			CComObject<vs_pane> *p;
 			CComObject<vs_pane>::CreateInstance(&p);
@@ -173,7 +174,7 @@ namespace micro_profiler
 			CComPtr<IVsWindowFrame> frame;
 
 			if (S_OK == shell.CreateToolWindow(CTW_fMultiInstance | CTW_fToolbarHost, id, sp, GUID_NULL, c_settingsSlot,
-				GUID_NULL, NULL, (L"MicroProfiler - " + executable).c_str(), NULL, &frame) && frame)
+				GUID_NULL, NULL, (L"MicroProfiler - " + unicode(executable)).c_str(), NULL, &frame) && frame)
 			{
 				CComVariant vtbhost;
 

@@ -34,10 +34,10 @@ namespace micro_profiler
 				return s.str();
 			}
 
-			wstring to_string_address(address_t value)
+			string to_string_address(address_t value)
 			{
-				wstringstream s;
-				s << uppercase << hex << setw(8) << setfill(L'0') << value;
+				stringstream s;
+				s << uppercase << hex << setw(8) << setfill('0') << value;
 				return s.str();
 			}
 
@@ -141,34 +141,34 @@ namespace micro_profiler
 					: names(symbols, symbols + n)
 				{	}
 
-				virtual const wstring &symbol_name_by_va(address_t address) const
+				virtual const string &symbol_name_by_va(address_t address) const
 				{
-					map<address_t, wstring>::const_iterator i = names.find(address);
+					map<address_t, string>::const_iterator i = names.find(address);
 
 					if (i == names.end())
 						i = names.insert(make_pair(address, to_string_address(address))).first;
 					return i->second;
 				}
 
-				virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(address_t /*address*/) const
+				virtual std::pair<std::string, unsigned> symbol_fileline_by_va(address_t /*address*/) const
 				{
 					throw 0;
 				}
 
-				virtual void add_image(const wchar_t * /*image*/, address_t /*base*/)
+				virtual void add_image(const char * /*image*/, address_t /*base*/)
 				{
 				}
 
 			public:
-				mutable map<address_t, wstring> names;
+				mutable map<address_t, string> names;
 			};
 
 			// convert decimal point to current(default) locale
-			wstring dp2cl(const wchar_t *input, wchar_t stub_char = L'.')
+			string dp2cl(const char *input, char stub_char = '.')
 			{
-				static wchar_t decimal_point = use_facet< numpunct<wchar_t> > (locale("")).decimal_point();
+				static char decimal_point = use_facet< numpunct<char> > (locale("")).decimal_point();
 
-				wstring result = input;
+				string result = input;
 				replace(result.begin(), result.end(), stub_char, decimal_point);
 				return result;
 			}
@@ -850,7 +850,7 @@ namespace micro_profiler
 				// INIT
 				statistics_map_detailed s;
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
-				wstring result;
+				string result;
 
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 2);
 				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 3);
@@ -862,8 +862,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0u, fl->get_count());
-				assert_equal(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
-					L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
+				assert_equal("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+					"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
 
 				// ACT
 				dser(*fl);
@@ -872,11 +872,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(s.size(), fl->get_count());
-				assert_equal(dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
-										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
-										L"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"
-										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
-										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
+				assert_equal(dp2cl("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+										"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
+										"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"
+										"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
+										"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
 
 				// ACT
 				fl->set_order(5, true); // avg. exclusive time
@@ -884,11 +884,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(s.size(), fl->get_count());
-				assert_equal(dp2cl(L"Function\tTimes Called\tExclusive Time\tInclusive Time\t"
-										L"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
-										L"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
-										L"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
-										L"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"), result);
+				assert_equal(dp2cl("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
+										"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
+										"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
+										"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
+										"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"), result);
 			}
 
 
@@ -1544,12 +1544,12 @@ namespace micro_profiler
 			test( SymbolsRequiredAndTicksPerSecondAreSerializedForFile )
 			{
 				// INIT
-				pair<address_t, wstring> symbols1[] = {
-					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				pair<address_t, string> symbols1[] = {
+					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
 				shared_ptr<functions_list> fl1(functions_list::create(16, shared_ptr<sri>(new sri(symbols1))));
-				pair<address_t, wstring> symbols2[] = {
-					make_pair(7, L"A"), make_pair(11, L"B"), make_pair(19, L"C"), make_pair(131, L"D"), make_pair(113, L"E"),
+				pair<address_t, string> symbols2[] = {
+					make_pair(7, "A"), make_pair(11, "B"), make_pair(19, "C"), make_pair(131, "D"), make_pair(113, "E"),
 				};
 				shared_ptr<functions_list> fl2(functions_list::create(25000000000, shared_ptr<sri>(new sri(symbols2))));
 				statistics_map_detailed s;
@@ -1568,8 +1568,8 @@ namespace micro_profiler
 				fl1->save(ser);
 
 				// ASSERT
-				vector< pair<address_t, wstring> > data;
-				pair<address_t, wstring> reference1[] = { make_pair(1, L"Lorem"), make_pair(17, L"Amet"), };
+				vector< pair<address_t, string> > data;
+				pair<address_t, string> reference1[] = { make_pair(1, "Lorem"), make_pair(17, "Amet"), };
 
 				dser(ticks_per_second);
 				dser(data);
@@ -1582,8 +1582,8 @@ namespace micro_profiler
 				fl2->save(ser);
 
 				// ASSERT
-				pair<address_t, wstring> reference2[] = {
-					make_pair(7, L"A"), make_pair(11, L"B"), make_pair(131, L"D"), make_pair(113, L"E"),
+				pair<address_t, string> reference2[] = {
+					make_pair(7, "A"), make_pair(11, "B"), make_pair(131, "D"), make_pair(113, "E"),
 				};
 
 				data.clear();
@@ -1599,8 +1599,8 @@ namespace micro_profiler
 			test( StatisticsFollowsTheSymbolsInFileSerialization )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = {
-					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				pair<address_t, string> symbols[] = {
+					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
 				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
 				statistics_map_detailed s;
@@ -1614,7 +1614,7 @@ namespace micro_profiler
 				fl->save(ser);
 
 				// ASSERT
-				vector< pair<address_t, wstring> > symbols_read;
+				vector< pair<address_t, string> > symbols_read;
 				statistics_map_detailed stats_read;
 
 				dser(ticks_per_second);
@@ -1628,8 +1628,8 @@ namespace micro_profiler
 			test( FunctionListIsComletelyRestoredWithSymbols )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = {
-					make_pair(5, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				pair<address_t, string> symbols[] = {
+					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
 				statistics_map_detailed s;
 
@@ -1661,8 +1661,8 @@ namespace micro_profiler
 			test( NonNullPiechartModelIsReturnedFromFunctionsList )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = {
-					make_pair(5, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				pair<address_t, string> symbols[] = {
+					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
 				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
 
@@ -1677,8 +1677,8 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForTimesCalled )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = {
-					make_pair(5, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				pair<address_t, string> symbols[] = {
+					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
 				statistics_map_detailed s;
 
@@ -1716,7 +1716,7 @@ namespace micro_profiler
 			test( FunctionListUpdateLeadsToPiechartModelUpdateAndSignal )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				pair<address_t, string> symbols[] = { make_pair(0, ""), };
 				statistics_map_detailed s;
 				int invalidated_count = 0;
 
@@ -1753,7 +1753,7 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForExclusiveTime )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				pair<address_t, string> symbols[] = { make_pair(0, ""), };
 				statistics_map_detailed s;
 
 				s[5].exclusive_time = 13, s[17].exclusive_time = 127, s[13].exclusive_time = 12;
@@ -1787,7 +1787,7 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForTheRestOfTheFields )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				pair<address_t, string> symbols[] = { make_pair(0, ""), };
 				statistics_map_detailed s;
 
 				s[5].times_called = 100, s[17].times_called = 1000;
@@ -1850,7 +1850,7 @@ namespace micro_profiler
 			test( PiechartModelReturnsZeroesAverageValuesForUncalledFunctions )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				pair<address_t, string> symbols[] = { make_pair(0, ""), };
 				statistics_map_detailed s;
 
 				s[5].times_called = 0, s[17].times_called = 0;
@@ -1880,7 +1880,7 @@ namespace micro_profiler
 			test( SwitchingSortOrderLeadsToPiechartModelUpdate )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				pair<address_t, string> symbols[] = { make_pair(0, ""), };
 				statistics_map_detailed s;
 				int invalidated_count = 0;
 
@@ -1916,7 +1916,7 @@ namespace micro_profiler
 			test( PiechartForUnsupportedColumnsIsSimplyZero )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				pair<address_t, string> symbols[] = { make_pair(0, ""), };
 				statistics_map_detailed s;
 
 				s[5].times_called = 100, s[17].times_called = 1000;
@@ -1947,7 +1947,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsProvideColumnSeries )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = { make_pair(0, L""), };
+				pair<address_t, string> symbols[] = { make_pair(0, ""), };
 				statistics_map_detailed s;
 				shared_ptr< series<double> > m;
 
@@ -1991,8 +1991,8 @@ namespace micro_profiler
 			test( AllSymbolsAreLoadedOnRequestAndResolverIsReleased )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = {
-					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				pair<address_t, string> symbols[] = {
+					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
 				shared_ptr<sri> sr(new sri(symbols));
 				shared_ptr<functions_list> fl(functions_list::create(16, sr));
@@ -2026,8 +2026,8 @@ namespace micro_profiler
 			test( AllSymbolsAreLoadedOnRequestAndResolverIsReleasedByLinkedStatistics )
 			{
 				// INIT
-				pair<address_t, wstring> symbols[] = {
-					make_pair(1, L"Lorem"), make_pair(13, L"Ipsum"), make_pair(17, L"Amet"), make_pair(123, L"dolor"),
+				pair<address_t, string> symbols[] = {
+					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
 				shared_ptr<sri> sr(new sri(symbols));
 				shared_ptr<functions_list> fl(functions_list::create(16, sr));

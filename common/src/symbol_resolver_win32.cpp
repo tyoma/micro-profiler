@@ -21,7 +21,6 @@
 #include <common/symbol_resolver.h>
 
 #include <common/primitives.h>
-#include <common/string.h>
 
 #include <windows.h>
 #include <dbghelp.h>
@@ -52,12 +51,12 @@ namespace micro_profiler
 		public:
 			dbghelp_symbol_resolver();
 
-			virtual const wstring &symbol_name_by_va(long_address_t address) const;
-			virtual pair<wstring, unsigned> symbol_fileline_by_va(long_address_t address) const;
-			virtual void add_image(const wchar_t *image, long_address_t load_address);
+			virtual const string &symbol_name_by_va(long_address_t address) const;
+			virtual pair<string, unsigned> symbol_fileline_by_va(long_address_t address) const;
+			virtual void add_image(const char *image, long_address_t load_address);
 
 		private:
-			typedef unordered_map<long_address_t, wstring, address_compare> cached_names_map;
+			typedef unordered_map<long_address_t, string, address_compare> cached_names_map;
 
 		private:
 			shared_ptr<void> _dbghelp;
@@ -136,7 +135,7 @@ namespace micro_profiler
 			: _dbghelp(create_dbghelp())
 		{	}
 
-		const wstring &dbghelp_symbol_resolver::symbol_name_by_va(long_address_t address) const
+		const string &dbghelp_symbol_resolver::symbol_name_by_va(long_address_t address) const
 		{
 			cached_names_map::iterator i = _names.find(address);
 
@@ -154,30 +153,30 @@ namespace micro_profiler
 					symbol.MaxNameLen <<= 1;
 					::SymFromAddr(_dbghelp.get(), address, 0, symbol2.get());
 				} while (symbol2->MaxNameLen == symbol2->NameLen);
-				i = _names.insert(make_pair(address, unicode(symbol2->Name))).first;
+				i = _names.insert(make_pair(address, symbol2->Name)).first;
 			}
 			return i->second;
 		}
 
-		pair<wstring, unsigned> dbghelp_symbol_resolver::symbol_fileline_by_va(long_address_t address) const
+		pair<string, unsigned> dbghelp_symbol_resolver::symbol_fileline_by_va(long_address_t address) const
 		{
 			DWORD displacement;
-			IMAGEHLP_LINEW64 info = { sizeof(IMAGEHLP_LINEW64), };
+			IMAGEHLP_LINE64 info = { sizeof(IMAGEHLP_LINE64), };
 
-			return ::SymGetLineFromAddrW64(_dbghelp.get(), address, &displacement, &info)
-				? pair<wstring, unsigned>(info.FileName, info.LineNumber) : pair<wstring, unsigned>();
+			return ::SymGetLineFromAddr64(_dbghelp.get(), address, &displacement, &info)
+				? pair<string, unsigned>(info.FileName, info.LineNumber) : pair<string, unsigned>();
 		}
 
-		void dbghelp_symbol_resolver::add_image(const wchar_t *image, long_address_t load_address)
+		void dbghelp_symbol_resolver::add_image(const char *image, long_address_t load_address)
 		{
-			shared_ptr<image_info> ii(new dbghelp_image_info(_dbghelp, unicode(image).c_str(), load_address));
+			shared_ptr<image_info> ii(new dbghelp_image_info(_dbghelp, image, load_address));
 			_loaded_images.push_back(ii);
 		}
 	}
 
 
-	shared_ptr<image_info> image_info::load(const wchar_t *image_path)
-	{	return shared_ptr<image_info>(new dbghelp_image_info(create_dbghelp(), unicode(image_path), 1));	}
+	shared_ptr<image_info> image_info::load(const char *image_path)
+	{	return shared_ptr<image_info>(new dbghelp_image_info(create_dbghelp(), image_path, 1));	}
 
 
 	shared_ptr<symbol_resolver> symbol_resolver::create()

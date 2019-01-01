@@ -23,8 +23,6 @@
 #include "elf/filemapping.h"
 #include "elf/sym-elf.h"
 
-#include <common/string.h>
-
 using namespace std;
 using namespace std::placeholders;
 
@@ -62,6 +60,6 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr<image_info> image_info::load(const wchar_t *image_path)
-	{	return shared_ptr<image_info>(new elf_image_info(unicode(image_path)));	}
+	shared_ptr<image_info> image_info::load(const char *image_path)
+	{	return shared_ptr<image_info>(new elf_image_info(image_path));	}
 }

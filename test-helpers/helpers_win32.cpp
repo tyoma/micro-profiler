@@ -9,31 +9,31 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		wstring get_current_process_executable()
+		string get_current_process_executable()
 		{
-			wchar_t fullpath[MAX_PATH + 1] = { };
+			char fullpath[MAX_PATH + 1] = { };
 
-			::GetModuleFileNameW(NULL, fullpath, MAX_PATH);
+			::GetModuleFileNameA(NULL, fullpath, MAX_PATH);
 			return fullpath;
 		}
 
 
-		image::image(const wchar_t *path)
-			: shared_ptr<void>(::LoadLibraryW(path), &::FreeLibrary)
+		image::image(const char *path)
+			: shared_ptr<void>(::LoadLibraryA(path), &::FreeLibrary)
 		{
 			if (!get())
 				throw runtime_error("Cannot load module specified!");
 
-			wchar_t fullpath[MAX_PATH + 1] = { };
+			char fullpath[MAX_PATH + 1] = { };
 
-			::GetModuleFileNameW(static_cast<HMODULE>(get()), fullpath, MAX_PATH);
+			::GetModuleFileNameA(static_cast<HMODULE>(get()), fullpath, MAX_PATH);
 			_fullpath = fullpath;
 		}
 
 		long_address_t image::load_address() const
 		{	return reinterpret_cast<size_t>(get());	}
 
-		const wchar_t *image::absolute_path() const
+		const char *image::absolute_path() const
 		{	return _fullpath.c_str();	}
 
 		void *image::get_symbol_address(const char *name) const

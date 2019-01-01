@@ -54,7 +54,7 @@ namespace micro_profiler
 			OBJECT_ENTRY_AUTO(reinterpret_cast<const GUID &>(c_standalone_frontend_id), FauxSession);
 
 
-			shared_ptr<frontend_ui> default_ui_factory(const shared_ptr<functions_list> &model, const wstring &executable)
+			shared_ptr<frontend_ui> default_ui_factory(const shared_ptr<functions_list> &model, const string &executable)
 			{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable));	}
 
 			shared_ptr<ipc::server> server::create_default_session_factory()

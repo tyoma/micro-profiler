@@ -2,7 +2,6 @@
 
 #include <common/memory.h>
 #include <common/noncopyable.h>
-#include <common/string.h>
 #include <ipc/endpoint.h>
 #include <map>
 #include <mt/event.h>
@@ -36,7 +35,7 @@ namespace micro_profiler
 				{
 				case load_module:
 					archive(data1);
-					images.insert(make_pair(data1, image(unicode(data1).c_str())));
+					images.insert(make_pair(data1, image(data1.c_str())));
 					break;
 
 				case unload_module:

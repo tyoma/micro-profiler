@@ -20,6 +20,7 @@
 
 #include <frontend/function_list.h>
 
+#include <common/string.h>
 #include <common/formatting.h>
 #include <cmath>
 #include <clocale>
@@ -36,16 +37,16 @@ namespace micro_profiler
 {
 	namespace
 	{
-		void to_string(wchar_t *b, size_t size, unsigned long long value) {	::swprintf(b, size, L"%llu", value);	}
-		void to_string(wchar_t *b, size_t size, unsigned long int value) {	::swprintf(b, size, L"%lu", value);	}
-		void to_string(wchar_t *b, size_t size, unsigned int value) {	::swprintf(b, size, L"%u", value);	}
-		void to_string(wchar_t *b, size_t size, double value) {	::swprintf(b, size, L"%g", value);	}
+		void to_string(char *b, size_t size, unsigned long long value) {	snprintf(b, size, "%llu", value);	}
+		void to_string(char *b, size_t size, unsigned long int value) {	snprintf(b, size, "%lu", value);	}
+		void to_string(char *b, size_t size, unsigned int value) {	snprintf(b, size, "%u", value);	}
+		void to_string(char *b, size_t size, double value) {	snprintf(b, size, "%g", value);	}
 
 		template <typename T>
-		wstring to_string2(T value)
+		string to_string2(T value)
 		{
 			const size_t buffer_size = 24;
-			wchar_t buffer[buffer_size] = { };
+			char buffer[buffer_size] = { };
 
 			to_string(buffer, buffer_size, value);
 			return buffer;
@@ -195,8 +196,9 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename MapT>
-	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
+	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text_) const
 	{
+		string text;
 		const typename view_type::value_type &row = get_entry(item);
 
 		switch (subitem)
@@ -211,6 +213,7 @@ namespace micro_profiler
 		case 7:	text = to_string2(row.second.max_reentrance);	break;
 		case 8:	format_interval(text, max_call_time(_tick_interval)(row.second));	break;
 		}
+		text_ = unicode(text);
 	}
 
 	template <typename BaseT, typename MapT>
@@ -268,8 +271,9 @@ namespace micro_profiler
 
 	template <>
 	void statistics_model_impl<linked_statistics_ex, statistics_map_callers>::get_text(index_type item, index_type subitem,
-		wstring &text) const
+		wstring &text_) const
 	{
+		string text;
 		const statistics_map_callers::value_type &row = get_entry(item);
 
 		switch (subitem)
@@ -278,6 +282,7 @@ namespace micro_profiler
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
 		case 2:	text = to_string2(row.second);	break;
 		}
+		text_ = unicode(text);
 	}
 
 	template <>
@@ -312,26 +317,26 @@ namespace micro_profiler
 		base::on_updated();
 	}
 
-	void functions_list::print(wstring &content) const
+	void functions_list::print(string &content) const
 	{
 		const char* old_locale = ::setlocale(LC_NUMERIC, NULL);  
 		bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;  
 
 		content.clear();
 		content.reserve(256 * (get_count() + 1)); // kind of magic number
-		content += L"Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
+		content += "Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
 		for (index_type i = 0; i != get_count(); ++i)
 		{
 			const view_type::value_type &row = get_entry(i);
 
-			content += _resolver->symbol_name_by_va(row.first) + L"\t";
-			content += to_string2(row.second.times_called) + L"\t";
-			content += to_string2(exclusive_time(_tick_interval)(row.second)) + L"\t";
-			content += to_string2(inclusive_time(_tick_interval)(row.second)) + L"\t";
-			content += to_string2(exclusive_time_avg(_tick_interval)(row.second)) + L"\t";
-			content += to_string2(inclusive_time_avg(_tick_interval)(row.second)) + L"\t";
-			content += to_string2(row.second.max_reentrance) + L"\t";
-			content += to_string2(max_call_time(_tick_interval)(row.second)) + L"\r\n";
+			content += _resolver->symbol_name_by_va(row.first) + "\t";
+			content += to_string2(row.second.times_called) + "\t";
+			content += to_string2(exclusive_time(_tick_interval)(row.second)) + "\t";
+			content += to_string2(inclusive_time(_tick_interval)(row.second)) + "\t";
+			content += to_string2(exclusive_time_avg(_tick_interval)(row.second)) + "\t";
+			content += to_string2(inclusive_time_avg(_tick_interval)(row.second)) + "\t";
+			content += to_string2(row.second.max_reentrance) + "\t";
+			content += to_string2(max_call_time(_tick_interval)(row.second)) + "\r\n";
 		}
 
 		if (locale_ok)
@@ -397,12 +402,12 @@ namespace micro_profiler
 	}
 
 
-	const wstring &functions_list::static_resolver::symbol_name_by_va(address_t address) const
+	const string &functions_list::static_resolver::symbol_name_by_va(address_t address) const
 	{	return symbols[address];	}
 
-	pair<wstring, unsigned> functions_list::static_resolver::symbol_fileline_by_va(address_t /*address*/) const
-	{	return make_pair(L"", 0);	}
+	pair<string, unsigned> functions_list::static_resolver::symbol_fileline_by_va(address_t /*address*/) const
+	{	return make_pair("", 0);	}
 
-	void functions_list::static_resolver::add_image(const wchar_t * /*image*/, address_t /*load_address*/)
+	void functions_list::static_resolver::add_image(const char * /*image*/, address_t /*load_address*/)
 	{	}
 }

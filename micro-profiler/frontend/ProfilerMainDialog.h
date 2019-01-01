@@ -38,7 +38,7 @@ namespace micro_profiler
 	class ProfilerMainDialog : public frontend_ui, wpl::noncopyable
 	{
 	public:
-		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::wstring &executable);
+		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::string &executable);
 		~ProfilerMainDialog();
 
 	private:
@@ -54,7 +54,7 @@ namespace micro_profiler
 		HWND _hwnd;
 		const std::shared_ptr<hive> _configuration;
 		const std::shared_ptr<functions_list> _statistics;
-		const std::wstring _executable;
+		const std::string _executable;
 		agge::rect_i _placement;
 		std::shared_ptr<wpl::ui::view_host> _host;
 		std::shared_ptr<tables_ui> _statistics_display;

@@ -19,7 +19,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			frontend_ui::ptr dummy_ui_factory(const shared_ptr<functions_list> &, const wstring &)
+			frontend_ui::ptr dummy_ui_factory(const shared_ptr<functions_list> &, const string &)
 			{	return frontend_ui::ptr();	}
 
 			template <typename CommandDataT>
@@ -33,7 +33,7 @@ namespace micro_profiler
 				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
 			}
 
-			initialization_data make_initialization_data(const wstring &executable, timestamp_t ticks_per_second)
+			initialization_data make_initialization_data(const string &executable, timestamp_t ticks_per_second)
 			{
 				initialization_data idata = {	executable, ticks_per_second };
 				return idata;
@@ -48,7 +48,7 @@ namespace micro_profiler
 				class frontend_ui : public micro_profiler::frontend_ui
 				{		
 				public:
-					frontend_ui(const shared_ptr<functions_list> &model_, const wstring &process_name_)
+					frontend_ui(const shared_ptr<functions_list> &model_, const string &process_name_)
 						: model(model_), process_name(process_name_)
 					{	}
 
@@ -60,7 +60,7 @@ namespace micro_profiler
 
 				public:
 					shared_ptr<functions_list> model;
-					wstring process_name;
+					string process_name;
 
 				private:
 					virtual void activate() {	}
@@ -127,7 +127,7 @@ namespace micro_profiler
 
 			vector< shared_ptr<mocks::frontend_ui> > _ui_creation_log;
 
-			shared_ptr<frontend_ui> log_ui_creation(const shared_ptr<functions_list> &model, const wstring &process_name)
+			shared_ptr<frontend_ui> log_ui_creation(const shared_ptr<functions_list> &model, const string &process_name)
 			{
 				shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(model, process_name));
 
@@ -144,22 +144,22 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c2 = m->create_session(outbound);
 
 				// ACT
-				write(*c1, init, make_initialization_data(L"c:\\test\\some.exe", 12332));
+				write(*c1, init, make_initialization_data("c:\\test\\some.exe", 12332));
 
 				// ASSERT
 				assert_equal(1u, _ui_creation_log.size());
 
 				assert_not_null(_ui_creation_log[0]->model);
-				assert_equal(L"c:\\test\\some.exe", _ui_creation_log[0]->process_name);
+				assert_equal("c:\\test\\some.exe", _ui_creation_log[0]->process_name);
 
 				// ACT
-				write(*c2, init, make_initialization_data(L"kernel.exe", 12332));
+				write(*c2, init, make_initialization_data("kernel.exe", 12332));
 
 				// ASSERT
 				assert_equal(2u, _ui_creation_log.size());
 
 				assert_not_null(_ui_creation_log[1]->model);
-				assert_equal(L"kernel.exe", _ui_creation_log[1]->process_name);
+				assert_equal("kernel.exe", _ui_creation_log[1]->process_name);
 				assert_not_equal(_ui_creation_log[0]->model, _ui_creation_log[1]->model);
  			}
 
@@ -178,7 +178,7 @@ namespace micro_profiler
 					make_pair(13, function_statistics_detailed_t<unsigned>()),
 				};
 
-				write(*c, init, make_initialization_data(L"", 11));
+				write(*c, init, make_initialization_data("", 11));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
@@ -233,8 +233,8 @@ namespace micro_profiler
 
 				data[0].second.inclusive_time = 150;
 
-				write(*c1, init, make_initialization_data(L"", 10));
-				write(*c2, init, make_initialization_data(L"", 15));
+				write(*c1, init, make_initialization_data("", 10));
+				write(*c2, init, make_initialization_data("", 15));
 
 				shared_ptr<functions_list> model1 = _ui_creation_log[0]->model;
 				shared_ptr<functions_list> model2 = _ui_creation_log[1]->model;
@@ -257,7 +257,7 @@ namespace micro_profiler
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
+				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
 				module_info mi[] = {
 					{ images[0].load_address(), images[0].absolute_path() },
 					{ images[1].load_address(), images[1].absolute_path() },
@@ -269,7 +269,7 @@ namespace micro_profiler
 						function_statistics_detailed_t<const void *>()),
 				};
 
-				write(*c, init, make_initialization_data(L"", 10));
+				write(*c, init, make_initialization_data("", 10));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
@@ -295,9 +295,9 @@ namespace micro_profiler
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 				image images[] = {
-					image(L"symbol_container_1"),
-					image(L"symbol_container_2"),
-					image(L"symbol_container_3_nosymbols"),
+					image("symbol_container_1"),
+					image("symbol_container_2"),
+					image("symbol_container_3_nosymbols"),
 				};
 				module_info mi[] = {
 					{ images[0].load_address(), images[0].absolute_path() },
@@ -313,7 +313,7 @@ namespace micro_profiler
 						function_statistics_detailed_t<const void *>()),
 				};
 
-				write(*c, init, make_initialization_data(L"", 10));
+				write(*c, init, make_initialization_data("", 10));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
@@ -339,7 +339,7 @@ namespace micro_profiler
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 
-				write(*c, init, make_initialization_data(L"", 10));
+				write(*c, init, make_initialization_data("", 10));
 
 				shared_ptr<symbol_resolver> sr = _ui_creation_log[0]->model->get_resolver();
 
@@ -380,9 +380,9 @@ namespace micro_profiler
 					m->create_session(outbound_channels[2]),
 				};
 
-				write(*c[0], init, make_initialization_data(L"", 1));
-				write(*c[1], init, make_initialization_data(L"", 1));
-				write(*c[2], init, make_initialization_data(L"", 1));
+				write(*c[0], init, make_initialization_data("", 1));
+				write(*c[1], init, make_initialization_data("", 1));
+				write(*c[2], init, make_initialization_data("", 1));
 
 				// ACT
 				_ui_creation_log[0]->emulate_close();
@@ -402,7 +402,7 @@ namespace micro_profiler
 
 			vector< weak_ptr<mocks::frontend_ui> > _ui_creation_log_w;
 
-			shared_ptr<frontend_ui> log_ui_creation_w(const shared_ptr<functions_list> &model, const wstring &process_name)
+			shared_ptr<frontend_ui> log_ui_creation_w(const shared_ptr<functions_list> &model, const string &process_name)
 			{
 				shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(model, process_name));
 
@@ -659,11 +659,11 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 
 				// ACT
-				write(*c, init, make_initialization_data(L"c:\\dev\\micro-profiler", 1));
+				write(*c, init, make_initialization_data("c:\\dev\\micro-profiler", 1));
 
 				// ACT / ASSERT
 				assert_not_null(m->get_instance(0));
-				assert_equal(L"c:\\dev\\micro-profiler", m->get_instance(0)->executable);
+				assert_equal("c:\\dev\\micro-profiler", m->get_instance(0)->executable);
 				assert_equal(_ui_creation_log[0]->model, m->get_instance(0)->model);
 				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
 			}
@@ -679,9 +679,9 @@ namespace micro_profiler
 					m->create_session(outbound_channels[0]), m->create_session(outbound_channels[1]), m->create_session(outbound_channels[2]),
 				};
 
-				write(*c[0], init, make_initialization_data(L"", 1));
-				write(*c[1], init, make_initialization_data(L"", 1));
-				write(*c[2], init, make_initialization_data(L"", 1));
+				write(*c[0], init, make_initialization_data("", 1));
+				write(*c[1], init, make_initialization_data("", 1));
+				write(*c[2], init, make_initialization_data("", 1));
 				
 				// ACT
 				m->close_all();
@@ -875,20 +875,20 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl1 = functions_list::create(123, sr), fl2 = functions_list::create(123, sr);
 
 				// ACT
-				m->create_instance(L"somefile.exe", fl1);
+				m->create_instance("somefile.exe", fl1);
 
 				// ASSERT
 				assert_equal(1u, m->instances_count());
-				assert_equal(L"somefile.exe", m->get_instance(0)->executable);
+				assert_equal("somefile.exe", m->get_instance(0)->executable);
 				assert_equal(fl1, m->get_instance(0)->model);
 				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
 
 				// ACT
-				m->create_instance(L"jump.exe", fl2);
+				m->create_instance("jump.exe", fl2);
 
 				// ASSERT
 				assert_equal(2u, m->instances_count());
-				assert_equal(L"jump.exe", m->get_instance(1)->executable);
+				assert_equal("jump.exe", m->get_instance(1)->executable);
 				assert_equal(fl2, m->get_instance(1)->model);
 				assert_equal(_ui_creation_log[1], m->get_instance(1)->ui);
 			}

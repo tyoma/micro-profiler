@@ -4,6 +4,7 @@
 #include "helpers.h"
 
 #include <common/serialization.h>
+#include <common/string.h>
 #include <frontend/file.h>
 #include <frontend/function_list.h>
 
@@ -56,9 +57,12 @@ namespace micro_profiler
 
 		void copy::exec(context_type &ctx, unsigned /*item*/)
 		{
-			wstring result;
+			string result_utf8;
 
-			ctx.model->print(result);
+			ctx.model->print(result_utf8);
+
+			wstring result = unicode(result_utf8);
+
 			if (::OpenClipboard(NULL))
 			{
 				if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(wchar_t)))

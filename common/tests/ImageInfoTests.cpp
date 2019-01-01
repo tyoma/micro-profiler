@@ -29,22 +29,22 @@ namespace micro_profiler
 
 		begin_test_suite( ImageInfoTests )
 
-			wstring image_paths[4];
+			string image_paths[4];
 
 			init( InitializePaths )
 			{
 				image_paths[0] = get_module_info(&g_dummy).path.c_str();
-				image_paths[1] = image(L"symbol_container_1").absolute_path();
-				image_paths[2] = image(L"symbol_container_2").absolute_path();
-				image_paths[3] = image(L"symbol_container_3_nosymbols").absolute_path();
+				image_paths[1] = image("symbol_container_1").absolute_path();
+				image_paths[2] = image("symbol_container_2").absolute_path();
+				image_paths[3] = image("symbol_container_3_nosymbols").absolute_path();
 			}
 
 
 			test( LoadImageFailsWhenInvalidModuleSpecified )
 			{
 				// ACT / ASSERT
-				assert_throws(image_info::load(L""), invalid_argument);
-				assert_throws(image_info::load(L"missingABCDEFG"), invalid_argument);
+				assert_throws(image_info::load(""), invalid_argument);
+				assert_throws(image_info::load("missingABCDEFG"), invalid_argument);
 			}
 
 
@@ -168,7 +168,7 @@ namespace micro_profiler
 			test( SymbolsEnumeratedAreOffsetAccordinglyToBase )
 			{
 				// INIT
-				image img(L"symbol_container_2");
+				image img("symbol_container_2");
 				shared_ptr<image_info> ii = image_info::load(img.absolute_path());
 				map<string, symbol_info> functions_original, functions_offset;
 

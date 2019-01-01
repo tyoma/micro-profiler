@@ -70,10 +70,10 @@ namespace micro_profiler
 					sizeof(value));
 			}
 
-			virtual void store(const char *name, const wchar_t *value)
+			virtual void store(const char *name, const char *value)
 			{
-				::RegSetValueExW(*this, unicode(name).c_str(), 0, REG_SZ,
-					reinterpret_cast<BYTE *>(const_cast<wchar_t *>(value)), static_cast<DWORD>(2 * (wcslen(value) + 1)));
+				::RegSetValueExA(*this, name, 0, REG_SZ, reinterpret_cast<BYTE *>(const_cast<char *>(value)),
+					static_cast<DWORD>(strlen(value) + 1));
 			}
 
 			virtual bool load(const char *name, int &value) const
@@ -84,17 +84,17 @@ namespace micro_profiler
 					reinterpret_cast<BYTE *>(&value), &size) && type == REG_DWORD && size == sizeof(value);
 			}
 
-			virtual bool load(const char *name, wstring &value) const
+			virtual bool load(const char *name, string &value) const
 			{
 				DWORD type = 0, size = sizeof(value);
 
 				if (ERROR_SUCCESS == ::RegQueryValueExW(*this, unicode(name).c_str(), 0, &type, NULL, &size)
 					&& REG_SZ == type)
 				{
-					vector<wchar_t> buffer(size / sizeof(wchar_t) + 1);
+					vector<wchar_t> buffer(size / sizeof(char) + 1);
 
 					::RegQueryValueExW(*this, unicode(name).c_str(), 0, &type, reinterpret_cast<BYTE*>(&buffer[0]), &size);
-					value = &buffer[0];
+					value = unicode(&buffer[0]);
 					return true;
 				}
 				return false;

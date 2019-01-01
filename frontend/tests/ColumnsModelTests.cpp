@@ -43,7 +43,7 @@ namespace micro_profiler
 			{
 			public:
 				typedef map<string, int> int_values_map;
-				typedef map<string, wstring> str_values_map;
+				typedef map<string, string> str_values_map;
 				
 			public:
 				mock_hive(int_values_map &int_values, str_values_map &str_values, const char *prefix = "");
@@ -55,10 +55,10 @@ namespace micro_profiler
 				virtual shared_ptr<const hive> open(const char *name) const;
 
 				virtual void store(const char *name, int value);
-				virtual void store(const char *name, const wchar_t *value);
+				virtual void store(const char *name, const char *value);
 
 				virtual bool load(const char *name, int &value) const;
-				virtual bool load(const char *name, wstring &value) const;
+				virtual bool load(const char *name, string &value) const;
 
 			private:
 				int_values_map &_int_values;
@@ -94,7 +94,7 @@ namespace micro_profiler
 			void mock_hive::store(const char *name, int value)
 			{	_int_values[_prefix + name] = value;	}
 
-			void mock_hive::store(const char *name, const wchar_t *value)
+			void mock_hive::store(const char *name, const char *value)
 			{	_str_values[_prefix + name] = value;	}
 
 			bool mock_hive::load(const char *name, int &value) const
@@ -104,7 +104,7 @@ namespace micro_profiler
 				return m != _int_values.end() ? value = m->second, true : false;
 			}
 
-			bool mock_hive::load(const char *name, wstring &value) const
+			bool mock_hive::load(const char *name, string &value) const
 			{
 				str_values_map::const_iterator m = _str_values.find(_prefix + name);
 
@@ -348,7 +348,7 @@ namespace micro_profiler
 				shared_ptr<columns_model> cm3(new columns_model(columns2, 1, true));
 
 				map<string, int> int_values;
-				map<string, wstring> str_values;
+				map<string, string> str_values;
 				shared_ptr<mock_hive> h(new mock_hive(int_values, str_values));
 
 				// ACT
@@ -363,11 +363,11 @@ namespace micro_profiler
 					make_pair("id2/Width", 2),
 					make_pair("id3/Width", 3),
 				};
-				pair<const string, wstring> rstrings1[] = {
-					make_pair("fourth/Caption", L"Inclusive Time"),
-					make_pair("id1/Caption", L"Index"),
-					make_pair("id2/Caption", L"Function"),
-					make_pair("id3/Caption", L"Exclusive Time"),
+				pair<const string, string> rstrings1[] = {
+					make_pair("fourth/Caption", "Inclusive Time"),
+					make_pair("id1/Caption", "Index"),
+					make_pair("id2/Caption", "Function"),
+					make_pair("id3/Caption", "Exclusive Time"),
 				};
 
 				assert_equal(rints1, int_values);
@@ -387,9 +387,9 @@ namespace micro_profiler
 					make_pair("id1/Width", 191),
 					make_pair("id2/Width", 171),
 				};
-				pair<const string, wstring> rstrings2[] = {
-					make_pair("id1/Caption", L"a first column"),
-					make_pair("id2/Caption", L"a second column"),
+				pair<const string, string> rstrings2[] = {
+					make_pair("id1/Caption", "a first column"),
+					make_pair("id2/Caption", "a second column"),
 				};
 
 				assert_equal(rints2, int_values);
@@ -431,14 +431,14 @@ namespace micro_profiler
 				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
 
 				map<string, int> int_values;
-				map<string, wstring> str_values;
+				map<string, string> str_values;
 				shared_ptr<mock_hive> h(new mock_hive(int_values, str_values));
 
 				int_values["OrderBy"] = 1;
 				int_values["OrderDirection"] = 1;
-				str_values["id1/Caption"] = L"Contract";
+				str_values["id1/Caption"] = "Contract";
 				int_values["id1/Width"] = 20;
-				str_values["id2/Caption"] = L"Price";
+				str_values["id2/Caption"] = "Price";
 				int_values["id2/Width"] = 31;
 
 				// ACT
@@ -452,11 +452,11 @@ namespace micro_profiler
 				// INIT
 				int_values["OrderBy"] = 2;
 				int_values["OrderDirection"] = 0;
-				str_values["col1/Caption"] = L"Contract";
+				str_values["col1/Caption"] = "Contract";
 				int_values["col1/Width"] = 20;
-				str_values["col2/Caption"] = L"Kind";
+				str_values["col2/Caption"] = "Kind";
 				int_values["col2/Width"] = 20;
-				str_values["col3/Caption"] = L"Price";
+				str_values["col3/Caption"] = "Price";
 				int_values["col3/Width"] = 53;
 
 				// ACT
@@ -481,14 +481,14 @@ namespace micro_profiler
 				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
 
 				map<string, int> int_values;
-				map<string, wstring> str_values;
+				map<string, string> str_values;
 				shared_ptr<mock_hive> h(new mock_hive(int_values, str_values));
 
 				int_values["OrderBy"] = 3;
 				int_values["OrderDirection"] = 0;
-				str_values["col1/Caption"] = L"Contract";
+				str_values["col1/Caption"] = "Contract";
 				int_values["col1/Width"] = 233;
-				str_values["col3/Caption"] = L"Price";
+				str_values["col3/Caption"] = "Price";
 
 				// ACT
 				cm->update(*h);

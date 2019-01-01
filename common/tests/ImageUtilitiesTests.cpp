@@ -33,9 +33,9 @@ namespace micro_profiler
 			template <typename ContainerT>
 			void filter_modules(ContainerT &modules, const mapped_module &m)
 			{
-				if (wstring::npos != m.module.find(L"symbol_container_1")
-					|| wstring::npos != m.module.find(L"symbol_container_2")
-					|| wstring::npos != m.module.find(L"symbol_container_3_nosymbols"))
+				if (string::npos != m.module.find("symbol_container_1")
+					|| string::npos != m.module.find("symbol_container_2")
+					|| string::npos != m.module.find("symbol_container_3_nosymbols"))
 				{
 					modules.push_back(m);
 				}
@@ -48,9 +48,9 @@ namespace micro_profiler
 			{
 				// INIT
 				image images[] = {
-					image(L"symbol_container_1"),
-					image(L"symbol_container_2"),
-					image(L"symbol_container_3_nosymbols"),
+					image("symbol_container_1"),
+					image("symbol_container_2"),
+					image("symbol_container_3_nosymbols"),
 				};
 
 				// ACT
@@ -59,11 +59,11 @@ namespace micro_profiler
 				module_info info3 = get_module_info(reinterpret_cast<const void *>(images[2].load_address()));
 
 				// ASSERT
-				assert_not_equal(wstring::npos, info1.path.find(L"symbol_container_1"));
+				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
 				assert_equal(images[0].load_address(), info1.load_address);
-				assert_not_equal(wstring::npos, info2.path.find(L"symbol_container_2"));
+				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
 				assert_equal(images[1].load_address(), info2.load_address);
-				assert_not_equal(wstring::npos, info3.path.find(L"symbol_container_3_nosymbols"));
+				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
 				assert_equal(images[2].load_address(), info3.load_address);
 			}
 
@@ -72,9 +72,9 @@ namespace micro_profiler
 			{
 				// INIT
 				image images[] = {
-					image(L"symbol_container_1"),
-					image(L"symbol_container_2"),
-					image(L"symbol_container_3_nosymbols"),
+					image("symbol_container_1"),
+					image("symbol_container_2"),
+					image("symbol_container_3_nosymbols"),
 				};
 
 				// ACT
@@ -83,11 +83,11 @@ namespace micro_profiler
 				module_info info3 = get_module_info(images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
-				assert_not_equal(wstring::npos, info1.path.find(L"symbol_container_1"));
+				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
 				assert_equal(images[0].load_address(), info1.load_address);
-				assert_not_equal(wstring::npos, info2.path.find(L"symbol_container_2"));
+				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
 				assert_equal(images[1].load_address(), info2.load_address);
-				assert_not_equal(wstring::npos, info3.path.find(L"symbol_container_3_nosymbols"));
+				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
 				assert_equal(images[1].load_address(), info2.load_address);
 			}
 
@@ -98,21 +98,21 @@ namespace micro_profiler
 				vector<mapped_module> modules;
 
 				// ACT
-				image img1(L"symbol_container_1");
+				image img1("symbol_container_1");
 				enumerate_process_modules(bind(&filter_modules< vector<mapped_module> >, ref(modules), _1));
 
 				// ASSERT
 				assert_equal(1u, modules.size());
 				assert_is_true(is_address_inside(modules[0].addresses, img1.get_symbol_address("get_function_addresses_1")));
-				assert_is_true(equal_nocase(wstring(img1.absolute_path()), modules[0].module));
+				assert_is_true(equal_nocase(string(img1.absolute_path()), modules[0].module));
 				assert_equal((byte *)img1.load_address(), modules[0].base);
 
 				// INIT
 				modules.clear();
 
 				// ACT
-				image img2(L"symbol_container_2");
-				image img3(L"symbol_container_3_nosymbols");
+				image img2("symbol_container_2");
+				image img3("symbol_container_3_nosymbols");
 				enumerate_process_modules(bind(&filter_modules< vector<mapped_module> >, ref(modules), _1));
 
 				// ASSERT
@@ -121,11 +121,11 @@ namespace micro_profiler
 				sort(modules.begin(), modules.end(), less_module());
 
 				assert_is_true(is_address_inside(modules[1].addresses, img2.get_symbol_address("get_function_addresses_2")));
-				assert_is_true(equal_nocase(wstring(img2.absolute_path()), modules[1].module));
+				assert_is_true(equal_nocase(string(img2.absolute_path()), modules[1].module));
 				assert_equal((byte *)img2.load_address(), modules[1].base);
 
 				assert_is_true(is_address_inside(modules[2].addresses, img3.get_symbol_address("get_function_addresses_3")));
-				assert_is_true(equal_nocase(wstring(img3.absolute_path()), modules[2].module));
+				assert_is_true(equal_nocase(string(img3.absolute_path()), modules[2].module));
 				assert_equal((byte *)img3.load_address(), modules[2].base);
 			}
 
@@ -135,11 +135,11 @@ namespace micro_profiler
 				// INIT
 				vector<mapped_module> modules;
 
-				image img1(L"symbol_container_1");
-				auto_ptr<image> img2(new image(L"symbol_container_2"));
-				image img3(L"symbol_container_3_nosymbols");
+				image img1("symbol_container_1");
+				auto_ptr<image> img2(new image("symbol_container_2"));
+				image img3("symbol_container_3_nosymbols");
 
-				wstring unloaded = img2->absolute_path();
+				string unloaded = img2->absolute_path();
 
 				// ACT
 				img2.reset();

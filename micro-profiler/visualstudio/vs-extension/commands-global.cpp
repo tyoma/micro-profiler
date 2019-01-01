@@ -23,11 +23,11 @@
 #include "command-ids.h"
 #include "helpers.h"
 
-#include <constants.h>
-
+#include <common/constants.h>
 #include <common/module.h>
 #include <common/path.h>
 #include <common/serialization.h>
+#include <common/string.h>
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
@@ -49,9 +49,9 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const wstring c_profilerdir_macro = L"$(" + c_profilerdir_evar + L")";
-			const wstring c_initializer_cpp = c_profilerdir_macro + L"\\micro-profiler.initializer.cpp";
-			const wstring c_profiler_library = c_profilerdir_macro + L"\\micro-profiler_$(PlatformName).lib";
+			const string c_profilerdir_macro = "$(" + string(c_profilerdir_ev) + ")";
+			const string c_initializer_cpp = c_profilerdir_macro + "\\micro-profiler.initializer.cpp";
+			const string c_profiler_library = c_profilerdir_macro + "\\micro-profiler_$(PlatformName).lib";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
 
@@ -162,8 +162,8 @@ namespace micro_profiler
 			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
 			{
 				state = supported | enabled | visible | (tool && has_instrumentation(dispatch(tool))
-					&& IDispatchPtr(find_item_by_relpath(ctx.project, c_initializer_cpp))
-					&& IDispatchPtr(find_item_by_relpath(ctx.project, c_profiler_library))
+					&& IDispatchPtr(find_item_by_relpath(ctx.project, unicode(c_initializer_cpp)))
+					&& IDispatchPtr(find_item_by_relpath(ctx.project, unicode(c_profiler_library)))
 					? checked : 0);
 			}
 			return true;
@@ -172,8 +172,8 @@ namespace micro_profiler
 		void toggle_profiling::exec(context_type &ctx, unsigned /*item*/)
 		{
 			dispatch compiler(get_tool(ctx.project, L"VCCLCompilerTool"));
-			IDispatchPtr initializer_item = find_item_by_relpath(ctx.project, c_initializer_cpp);
-			IDispatchPtr library_item = find_item_by_relpath(ctx.project, c_profiler_library);
+			IDispatchPtr initializer_item = find_item_by_relpath(ctx.project, unicode(c_initializer_cpp));
+			IDispatchPtr library_item = find_item_by_relpath(ctx.project, unicode(c_profiler_library));
 			const bool has_profiling = has_instrumentation(compiler) && initializer_item && library_item;
 
 			if (!has_profiling)
@@ -197,14 +197,14 @@ namespace micro_profiler
 		{
 			state = 0;
 			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
-				state = supported | (IDispatchPtr(find_item_by_relpath(ctx.project, c_initializer_cpp)) ? enabled | visible : 0);
+				state = supported | (IDispatchPtr(find_item_by_relpath(ctx.project, unicode(c_initializer_cpp))) ? enabled | visible : 0);
 			return true;
 		}
 
 		void remove_profiling_support::exec(context_type &ctx, unsigned /*item*/)
 		{
-			dispatch initializer = find_item_by_relpath(ctx.project, c_initializer_cpp);
-			dispatch library = find_item_by_relpath(ctx.project, c_profiler_library);
+			dispatch initializer = find_item_by_relpath(ctx.project, unicode(c_initializer_cpp));
+			dispatch library = find_item_by_relpath(ctx.project, unicode(c_profiler_library));
 
 			for_each_configuration_tool(ctx.project, L"VCCLCompilerTool", &disable_instrumentation);
 			if (IDispatchPtr(initializer))
@@ -226,7 +226,7 @@ namespace micro_profiler
 
 		void open_statistics::exec(context_type &ctx, unsigned /*item*/)
 		{
-			wstring path;
+			string path;
 			auto_ptr<read_stream> s = open_file(get_frame_hwnd(ctx.shell), path);
 
 			if (s.get())
@@ -251,7 +251,7 @@ namespace micro_profiler
 		bool save_statistics::get_name(const context_type &ctx, unsigned /*item*/, std::wstring &name) const
 		{
 			if (const frontend_manager::instance *i = ctx.frontend->get_active())
-				return name = L"Save " + *i->executable + L" Statistics As...", true;
+				return name = L"Save " + unicode(*i->executable) + L" Statistics As...", true;
 			return false;
 		}
 
@@ -287,7 +287,7 @@ namespace micro_profiler
 		bool window_activate::get_name(const context_type &ctx, unsigned item, std::wstring &name) const
 		{
 			const frontend_manager::instance *i = ctx.frontend->get_instance(item);
-			return i ? name = *i->executable, true : false;
+			return i ? name = unicode(*i->executable), true : false;
 		}
 
 		void window_activate::exec(context_type &ctx, unsigned item)

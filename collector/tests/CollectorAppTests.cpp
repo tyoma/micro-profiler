@@ -200,7 +200,7 @@ namespace micro_profiler
 				// INIT
 				mt::event ready;
 				loaded_modules m;
-				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
+				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
 
 				state->modules_loaded = [&] (const loaded_modules &m_) {
 					m = m_;
@@ -217,7 +217,7 @@ namespace micro_profiler
 				assert_not_null(h1.get());
 				assert_equal(1u, m.size());
 				assert_equal(images[0].load_address(), m[0].load_address);
-				assert_not_equal(wstring::npos, m[0].path.find(L"symbol_container_1"));
+				assert_not_equal(string::npos, m[0].path.find("symbol_container_1"));
 
 				// INIT
 				m.clear();
@@ -230,7 +230,7 @@ namespace micro_profiler
 				assert_not_null(h2.get());
 				assert_equal(1u, m.size());
 				assert_equal(images[1].load_address(), m[0].load_address);
-				assert_not_equal(wstring::npos, m[0].path.find(L"symbol_container_2"));
+				assert_not_equal(string::npos, m[0].path.find("symbol_container_2"));
 			}
 
 
@@ -240,7 +240,7 @@ namespace micro_profiler
 				// INIT
 				mt::event ready, unloaded_event;
 				unloaded_modules m;
-				image images[] = { image(L"symbol_container_1"), image(L"symbol_container_2"), };
+				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
 
 				state->modules_loaded = bind(&mt::event::set, &ready);
 				state->modules_unloaded = [&] (const unloaded_modules &um) {

@@ -43,7 +43,7 @@ namespace micro_profiler
 		virtual ~image_info() {	}
 		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
 
-		static std::shared_ptr<image_info> load(const wchar_t *image_path);
+		static std::shared_ptr<image_info> load(const char *image_path);
 	};
 
 	class offset_image_info : public image_info
@@ -61,9 +61,9 @@ namespace micro_profiler
 	struct symbol_resolver
 	{
 		virtual ~symbol_resolver()	{	}
-		virtual const std::wstring &symbol_name_by_va(long_address_t address) const = 0;
-		virtual std::pair<std::wstring, unsigned> symbol_fileline_by_va(long_address_t address) const = 0;
-		virtual void add_image(const wchar_t *image, long_address_t load_address) = 0;
+		virtual const std::string &symbol_name_by_va(long_address_t address) const = 0;
+		virtual std::pair<std::string, unsigned> symbol_fileline_by_va(long_address_t address) const = 0;
+		virtual void add_image(const char *image, long_address_t load_address) = 0;
 
 		static std::shared_ptr<symbol_resolver> create();
 	};

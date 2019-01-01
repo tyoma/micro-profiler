@@ -139,7 +139,6 @@
     <ClInclude Include="frontend\piechart.h">
       <Filter>frontend</Filter>
     </ClInclude>
-    <ClInclude Include="constants.h" />
     <ClInclude Include="frontend\marshalling_server.h">
       <Filter>frontend</Filter>
     </ClInclude>

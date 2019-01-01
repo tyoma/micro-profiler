@@ -42,7 +42,7 @@ namespace micro_profiler
 		void disconnect_session() throw();
 
 	public:
-		std::function<void(const std::wstring &process_name, const std::shared_ptr<functions_list> &model)> initialized;
+		std::function<void(const std::string &process_name, const std::shared_ptr<functions_list> &model)> initialized;
 		std::function<void()> released;
 
 	private:
@@ -71,13 +71,13 @@ namespace micro_profiler
 	public:
 		struct instance
 		{
-			std::wstring executable;
+			std::string executable;
 			std::shared_ptr<functions_list> model;
 			frontend_ui::ptr ui;
 		};
 
 		typedef std::function<frontend_ui::ptr(const std::shared_ptr<functions_list> &model,
-			const std::wstring &executable)> frontend_ui_factory;
+			const std::string &executable)> frontend_ui_factory;
 		typedef std::shared_ptr<frontend_manager> ptr;
 
 	public:
@@ -88,7 +88,7 @@ namespace micro_profiler
 		size_t instances_count() const throw();
 		const instance *get_instance(unsigned index) const throw();
 		const instance *get_active() const throw();
-		void create_instance(const std::wstring &executable, const std::shared_ptr<functions_list> &model);
+		void create_instance(const std::string &executable, const std::shared_ptr<functions_list> &model);
 
 		// ipc::server methods
 		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
@@ -107,9 +107,10 @@ namespace micro_profiler
 
 	private:
 		frontend_manager(const frontend_ui_factory &ui_factory);
+		virtual ~frontend_manager();
 
 		void on_frontend_released(instance_container::iterator i) throw();
-		void on_ready_for_ui(instance_container::iterator i, const std::wstring &executable,
+		void on_ready_for_ui(instance_container::iterator i, const std::string &executable,
 			const std::shared_ptr<functions_list> &model);
 
 		void on_ui_activated(instance_container::iterator i);

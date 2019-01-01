@@ -18,7 +18,7 @@ namespace micro_profiler
 			{
 				bool operator ()(const mapped_module &lhs, const mapped_module &rhs) const
 				{
-					return lhs.module < rhs.module ? true : lhs.module > rhs.module ? false : lhs.base < rhs.base;
+					return lhs.path < rhs.path ? true : lhs.path > rhs.path ? false : lhs.base < rhs.base;
 				}
 			};
 
@@ -33,9 +33,9 @@ namespace micro_profiler
 			template <typename ContainerT>
 			void filter_modules(ContainerT &modules, const mapped_module &m)
 			{
-				if (string::npos != m.module.find("symbol_container_1")
-					|| string::npos != m.module.find("symbol_container_2")
-					|| string::npos != m.module.find("symbol_container_3_nosymbols"))
+				if (string::npos != m.path.find("symbol_container_1")
+					|| string::npos != m.path.find("symbol_container_2")
+					|| string::npos != m.path.find("symbol_container_3_nosymbols"))
 				{
 					modules.push_back(m);
 				}
@@ -54,17 +54,17 @@ namespace micro_profiler
 				};
 
 				// ACT
-				module_info info1 = get_module_info(reinterpret_cast<const void *>(images[0].load_address()));
-				module_info info2 = get_module_info(reinterpret_cast<const void *>(images[1].load_address()));
-				module_info info3 = get_module_info(reinterpret_cast<const void *>(images[2].load_address()));
+				mapped_module info1 = get_module_info(reinterpret_cast<const void *>(images[0].load_address()));
+				mapped_module info2 = get_module_info(reinterpret_cast<const void *>(images[1].load_address()));
+				mapped_module info3 = get_module_info(reinterpret_cast<const void *>(images[2].load_address()));
 
 				// ASSERT
 				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
-				assert_equal(images[0].load_address(), info1.load_address);
+				assert_equal(images[0].load_address_ptr(), info1.base);
 				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
-				assert_equal(images[1].load_address(), info2.load_address);
+				assert_equal(images[1].load_address_ptr(), info2.base);
 				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
-				assert_equal(images[2].load_address(), info3.load_address);
+				assert_equal(images[2].load_address_ptr(), info3.base);
 			}
 
 
@@ -78,17 +78,17 @@ namespace micro_profiler
 				};
 
 				// ACT
-				module_info info1 = get_module_info(images[0].get_symbol_address("get_function_addresses_1"));
-				module_info info2 = get_module_info(images[1].get_symbol_address("get_function_addresses_2"));
-				module_info info3 = get_module_info(images[2].get_symbol_address("get_function_addresses_3"));
+				mapped_module info1 = get_module_info(images[0].get_symbol_address("get_function_addresses_1"));
+				mapped_module info2 = get_module_info(images[1].get_symbol_address("get_function_addresses_2"));
+				mapped_module info3 = get_module_info(images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
 				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
-				assert_equal(images[0].load_address(), info1.load_address);
+				assert_equal(images[0].load_address_ptr(), info1.base);
 				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
-				assert_equal(images[1].load_address(), info2.load_address);
+				assert_equal(images[1].load_address_ptr(), info2.base);
 				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
-				assert_equal(images[1].load_address(), info2.load_address);
+				assert_equal(images[1].load_address_ptr(), info2.base);
 			}
 
 
@@ -104,7 +104,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, modules.size());
 				assert_is_true(is_address_inside(modules[0].addresses, img1.get_symbol_address("get_function_addresses_1")));
-				assert_is_true(equal_nocase(string(img1.absolute_path()), modules[0].module));
+				assert_is_true(equal_nocase(string(img1.absolute_path()), modules[0].path));
 				assert_equal((byte *)img1.load_address(), modules[0].base);
 
 				// INIT
@@ -121,11 +121,11 @@ namespace micro_profiler
 				sort(modules.begin(), modules.end(), less_module());
 
 				assert_is_true(is_address_inside(modules[1].addresses, img2.get_symbol_address("get_function_addresses_2")));
-				assert_is_true(equal_nocase(string(img2.absolute_path()), modules[1].module));
+				assert_is_true(equal_nocase(string(img2.absolute_path()), modules[1].path));
 				assert_equal((byte *)img2.load_address(), modules[1].base);
 
 				assert_is_true(is_address_inside(modules[2].addresses, img3.get_symbol_address("get_function_addresses_3")));
-				assert_is_true(equal_nocase(string(img3.absolute_path()), modules[2].module));
+				assert_is_true(equal_nocase(string(img3.absolute_path()), modules[2].path));
 				assert_equal((byte *)img3.load_address(), modules[2].base);
 			}
 

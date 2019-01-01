@@ -22,6 +22,7 @@ namespace micro_profiler
 			return id;
 		}
 
+
 		vector_adapter::vector_adapter()
 			: ptr(0)
 		{	}

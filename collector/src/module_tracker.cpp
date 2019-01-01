@@ -26,6 +26,12 @@ using namespace std;
 
 namespace micro_profiler
 {
+	mapped_module_ex::operator module_info() const
+	{
+		module_info mi = { instance_id, reinterpret_cast<size_t>(base), path };
+		return mi;
+	}
+
 	module_tracker::module_tracker()
 		: _next_instance_id(0)
 	{	}
@@ -33,10 +39,11 @@ namespace micro_profiler
 	void module_tracker::load(const void *in_image_address)
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
-		instance_id_t id = _next_instance_id++;
-		module_info m = get_module_info(in_image_address);
+		mapped_module_ex::instance_id_t id = _next_instance_id++;
+		shared_ptr<mapped_module_ex> m(new mapped_module_ex);
 
-		m.instance_id = id;
+		(mapped_module &)*m = get_module_info(in_image_address);
+		m->instance_id = id;
 		_modules_registry.insert(make_pair(id, m));
 		_lqueue.push_back(id);
 	}
@@ -44,17 +51,14 @@ namespace micro_profiler
 	void module_tracker::unload(const void *in_image_address)
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
-		const long_address_t addr = get_module_info(in_image_address).load_address;
-		instance_id_t id;
+		const byte *base = get_module_info(in_image_address).base;
 
 		for (modules_registry_t::iterator i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
-			if (addr == i->second.load_address)
+			if (base == i->second->base)
 			{
-				id = i->first;
+				_uqueue.push_back(i->first);
 				break;
 			}
-
-		_uqueue.push_back(id);
 	}
 
 	void module_tracker::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
@@ -64,18 +68,17 @@ namespace micro_profiler
 
 		mt::lock_guard<mt::mutex> l(_mtx);
 
-		for (vector<instance_id_t>::const_iterator i = _lqueue.begin(); i != _lqueue.end(); ++i)
-			loaded_modules_.push_back(*get_registered_module(*i));
-		for (vector<instance_id_t>::const_iterator i = _uqueue.begin(); i != _uqueue.end(); ++i)
-			unloaded_modules_.push_back(*i);
+		for (vector<mapped_module_ex::instance_id_t>::const_iterator i = _lqueue.begin(); i != _lqueue.end(); ++i)
+			loaded_modules_.push_back(*get_module(*i));
 		_lqueue.clear();
-		_uqueue.clear();
+
+		swap(unloaded_modules_, _uqueue);
 	}
 
-	const module_info *module_tracker::get_registered_module(instance_id_t id) const
+	shared_ptr<mapped_module_ex> module_tracker::get_module(mapped_module_ex::instance_id_t id) const
 	{
 		modules_registry_t::const_iterator i = _modules_registry.find(id);
 
-		return &i->second;
+		return i != _modules_registry.end() ? i->second : shared_ptr<mapped_module_ex>();
 	}
 }

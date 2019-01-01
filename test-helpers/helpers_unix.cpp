@@ -43,13 +43,16 @@ namespace micro_profiler
 			_fullpath.assign(path.begin(), path.end());
 		}
 
-		long_address_t image::load_address() const
+		byte *image::load_address_ptr() const
 		{
 			link_map *lm = 0;
 			
 			::dlinfo(get(), RTLD_DI_LINKMAP, &lm);
-			return reinterpret_cast<size_t>(lm->l_addr);
+			return reinterpret_cast<byte *>(lm->l_addr);
 		}
+
+		long_address_t image::load_address() const
+		{	return reinterpret_cast<size_t>(load_address_ptr());	}
 
 		const char *image::absolute_path() const
 		{	return _fullpath.c_str();	}

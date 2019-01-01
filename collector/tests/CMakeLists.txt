@@ -5,8 +5,8 @@ set(COLLECTOR_TESTS_SOURCES
 	CallsCollectorTests.cpp
 	CallsCollectorThreadTests.cpp
 	CollectorAppTests.cpp
-	ImageLoadQueueTests.cpp
 	ImagePatchTests.cpp
+	ModuleTrackerTests.cpp
 	SerializationTests.cpp
 	ShadowStackTests.cpp
 	StatisticsBridgeTests.cpp

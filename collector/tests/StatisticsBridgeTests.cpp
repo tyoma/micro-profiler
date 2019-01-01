@@ -265,6 +265,9 @@ namespace micro_profiler
 					{	2019, (void *)0	},
 				};
 
+				(mtracker)->load(images.at(0).get_symbol_address("get_function_addresses_1"));
+				b.update_frontend();
+
 				state->modules_loaded = [&] (const loaded_modules &) { order.push_back(0); };
 				state->updated = [&] (const mocks::statistics_map_detailed &) { order.push_back(1); };
 				state->modules_unloaded = [&] (const unloaded_modules &) { order.push_back(2); };

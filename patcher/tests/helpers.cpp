@@ -12,8 +12,8 @@ namespace micro_profiler
 	{
 		byte_range get_function_body(void *f)
 		{
-			module_info mi = get_module_info(f);
-			shared_ptr<image_info> img(new offset_image_info(image_info::load(mi.path.c_str()), static_cast<size_t>(mi.load_address)));
+			mapped_module mi = get_module_info(f);
+			shared_ptr<image_info> img(new offset_image_info(image_info::load(mi.path.c_str()), reinterpret_cast<size_t>(mi.base)));
 			byte_range body(0, 0);
 
 			img->enumerate_functions([&] (const symbol_info &symbol) {

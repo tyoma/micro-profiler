@@ -30,6 +30,9 @@ namespace micro_profiler
 			_fullpath = fullpath;
 		}
 
+		byte *image::load_address_ptr() const
+		{	return static_cast<byte *>(get());	}
+
 		long_address_t image::load_address() const
 		{	return reinterpret_cast<size_t>(get());	}
 

@@ -39,16 +39,15 @@ namespace micro_profiler
 		return string();
 	}
 
-	module_info get_module_info(const void *address)
+	mapped_module get_module_info(const void *address)
 	{
 		Dl_info di = { };
 
 		::dladdr(address, &di);
 
-		module_info info = {
-			0,
-			reinterpret_cast<size_t>(di.dli_fbase),
-			di.dli_fname && *di.dli_fname ? di.dli_fname : get_current_executable()
+		mapped_module info = {
+			di.dli_fname && *di.dli_fname ? di.dli_fname : get_current_executable(),
+			static_cast<byte *>(di.dli_fbase),
 		};
 
 		return info;
@@ -60,12 +59,13 @@ namespace micro_profiler
 		{
 			static int on_phdr(dl_phdr_info *phdr, size_t, void *cb)
 			{
-				mapped_module m;
 				int n = phdr->dlpi_phnum;
 				const module_callback_t &callback = *static_cast<const module_callback_t *>(cb);
+				mapped_module m = {
+					phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : get_current_executable(),
+					reinterpret_cast<byte *>(phdr->dlpi_addr),
+				};
 
-				m.base = reinterpret_cast<byte *>(phdr->dlpi_addr);
-				m.module = phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : get_current_executable();
 				for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
 					if (segment->p_type == PT_LOAD)
 						m.addresses.push_back(byte_range(m.base + segment->p_vaddr, segment->p_memsz));

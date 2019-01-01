@@ -20,17 +20,28 @@
 
 #pragma once
 
+#include <common/module.h>
 #include <common/primitives.h>
 #include <common/protocol.h>
-#include <deque>
+#include <memory>
 #include <mt/mutex.h>
 
 namespace micro_profiler
 {
-	class module_tracker
+	class mapped_module_ex : public mapped_module
 	{
 	public:
 		typedef unsigned int instance_id_t;
+
+	public:
+		operator module_info() const;
+
+	public:
+		instance_id_t instance_id;
+	};
+
+	class module_tracker
+	{
 	public:
 		module_tracker();
 
@@ -39,15 +50,14 @@ namespace micro_profiler
 		
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
-	private:
-		typedef std::unordered_map<unsigned int, module_info> modules_registry_t;
+		std::shared_ptr<mapped_module_ex> get_module(mapped_module_ex::instance_id_t id) const;
 
 	private:
-		const module_info *get_registered_module(instance_id_t id) const;
+		typedef std::unordered_map< mapped_module_ex::instance_id_t, std::shared_ptr<mapped_module_ex> > modules_registry_t;
 
 	private:
 		mt::mutex _mtx;
-		std::vector<instance_id_t> _lqueue, _uqueue;
+		std::vector<mapped_module_ex::instance_id_t> _lqueue, _uqueue;
 		modules_registry_t _modules_registry;
 		unsigned int _next_instance_id;
 	};

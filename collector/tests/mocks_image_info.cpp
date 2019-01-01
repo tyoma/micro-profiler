@@ -21,9 +21,9 @@ namespace micro_profiler
 			void image_info::add_function(void *f)
 			{
 				bool done = false;
-				module_info mi = get_module_info(f);
+				mapped_module mi = get_module_info(f);
 				shared_ptr<micro_profiler::image_info> ii(new offset_image_info(micro_profiler::image_info::load(
-					mi.path.c_str()), static_cast<size_t>(mi.load_address)));
+					mi.path.c_str()), (size_t)mi.base));
 
 				ii->enumerate_functions([&] (const symbol_info &symbol) {
 					if (symbol.body.begin() == f && !done)

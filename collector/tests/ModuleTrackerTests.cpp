@@ -190,6 +190,79 @@ namespace micro_profiler
 				assert_equal(4u, l[0].instance_id);
 				assert_equal(5u, l[1].instance_id);
 			}
+
+
+			test( UnloadingUnknownModuleDoesNotPutIntoUnloadQueue )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
+
+				// ACT
+				t.unload(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				t.unload(_images.at(1).get_symbol_address("get_function_addresses_2"));
+				t.unload(_images.at(2).get_symbol_address("get_function_addresses_3"));
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_is_empty(u);
+			}
+
+
+			test( ModuleInformationCanBeRetrievedByInstanceID )
+			{
+				// INIT
+				module_tracker t;
+
+				t.load(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				t.load(_images.at(1).get_symbol_address("get_function_addresses_2"));
+
+				// ACT
+				shared_ptr<mapped_module_ex> m1 = t.get_module(0);
+				shared_ptr<mapped_module_ex> m2 = t.get_module(1);
+
+				// ASSERT
+				assert_not_null(m1);
+				assert_equal(_images[0].load_address_ptr(), m1->base);
+				assert_not_null(m2);
+				assert_equal(_images[1].load_address_ptr(), m2->base);
+			}
+
+
+			test( ModuleInformationIsNotRetrievedForWrongID )
+			{
+				// INIT
+				module_tracker t;
+
+				// ACT / ASSERT
+				assert_null(t.get_module(0));
+
+				// INIT
+				t.load(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				t.load(_images.at(1).get_symbol_address("get_function_addresses_2"));
+
+				// ACT / ASSERT
+				assert_null(t.get_module(2));
+			}
+
+
+			test( SameModuleObjectIsReturnedOnRepeatedCalls )
+			{
+				// INIT
+				module_tracker t;
+
+				t.load(_images.at(0).get_symbol_address("get_function_addresses_1"));
+				t.load(_images.at(1).get_symbol_address("get_function_addresses_2"));
+
+				// ACT
+				shared_ptr<mapped_module_ex> m1 = t.get_module(0);
+				shared_ptr<mapped_module_ex> m2 = t.get_module(1);
+				shared_ptr<mapped_module_ex> m11 = t.get_module(0);
+
+				// ASSERT
+				assert_equal(m1, m11);
+			}
 		end_test_suite
 	}
 }

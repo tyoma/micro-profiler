@@ -30,7 +30,7 @@ namespace micro_profiler
 	string get_current_executable()
 	{	return get_module_info(0).path;	}
 
-	module_info get_module_info(const void *address)
+	mapped_module get_module_info(const void *address)
 	{
 		HMODULE load_address = 0;
 		char path[MAX_PATH + 1] = { };
@@ -38,7 +38,7 @@ namespace micro_profiler
 		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &load_address);
 		::GetModuleFileNameA(load_address, path, sizeof(path));
 		::FreeLibrary(load_address);
-		module_info info = { 0, reinterpret_cast<size_t>(load_address), path };
+		mapped_module info = { path, static_cast<byte *>(static_cast<void *>(load_address)), };
 		return info;
 	}
 
@@ -50,7 +50,7 @@ namespace micro_profiler
 
 		for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next, module.addresses.clear())
 		{
-			module.module = entry.szExePath;
+			module.path = entry.szExePath;
 			module.base = entry.modBaseAddr;
 			module.addresses.push_back(byte_range(entry.modBaseAddr, entry.modBaseSize));
 			callback(module);

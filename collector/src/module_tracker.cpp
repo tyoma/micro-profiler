@@ -21,6 +21,7 @@
 #include <collector/module_tracker.h>
 
 #include <common/module.h>
+#include <common/symbol_resolver.h>
 
 using namespace std;
 
@@ -31,6 +32,14 @@ namespace micro_profiler
 		module_info mi = { instance_id, reinterpret_cast<size_t>(base), path };
 		return mi;
 	}
+
+	shared_ptr<image_info> mapped_module_ex::get_image_info() const
+	{
+		shared_ptr<image_info> i1(image_info::load(path.c_str()));
+
+		return shared_ptr<image_info>(new offset_image_info(i1, (size_t)base));
+	}
+
 
 	module_tracker::module_tracker()
 		: _next_instance_id(0)

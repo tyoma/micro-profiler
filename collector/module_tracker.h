@@ -28,6 +28,8 @@
 
 namespace micro_profiler
 {
+	struct image_info;
+
 	class mapped_module_ex : public mapped_module
 	{
 	public:
@@ -35,6 +37,7 @@ namespace micro_profiler
 
 	public:
 		operator module_info() const;
+		std::shared_ptr<image_info> get_image_info() const;
 
 	public:
 		instance_id_t instance_id;

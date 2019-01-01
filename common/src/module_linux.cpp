@@ -46,6 +46,7 @@ namespace micro_profiler
 		::dladdr(address, &di);
 
 		module_info info = {
+			0,
 			reinterpret_cast<size_t>(di.dli_fbase),
 			di.dli_fname && *di.dli_fname ? di.dli_fname : get_current_executable()
 		};

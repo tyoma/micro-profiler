@@ -31,7 +31,7 @@
 namespace micro_profiler
 {
 	class calls_collector;
-	class image_load_queue;
+	class module_tracker;
 	struct overhead;
 
 	class collector_app : ipc::channel, noncopyable
@@ -57,7 +57,7 @@ namespace micro_profiler
 
 	private:
 		const std::shared_ptr<calls_collector> _collector;
-		const std::shared_ptr<image_load_queue> _image_load_queue;
+		const std::shared_ptr<module_tracker> _module_tracker;
 		mt::event _exit;
 		std::auto_ptr<mt::thread> _frontend_thread;
 	};

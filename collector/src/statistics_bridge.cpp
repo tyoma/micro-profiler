@@ -21,15 +21,12 @@
 #include <collector/statistics_bridge.h>
 
 #include <collector/calibration.h>
-#include <collector/calls_collector.h>
+#include <collector/module_tracker.h>
 
-#include <algorithm>
 #include <common/module.h>
-#include <common/protocol.h>
 #include <common/serialization.h>
 #include <common/time.h>
 #include <ipc/endpoint.h>
-#include <iterator>
 #include <strmd/serializer.h>
 
 using namespace std;
@@ -61,37 +58,11 @@ namespace micro_profiler
 		};
 	}
 
-	void image_load_queue::load(const void *in_image_address)
-	{
-		mt::lock_guard<mt::mutex> l(_mtx);
-
-		_lqueue.push_back(get_module_info(in_image_address));
-	}
-
-	void image_load_queue::unload(const void *in_image_address)
-	{
-		mt::lock_guard<mt::mutex> l(_mtx);
-
-		_uqueue.push_back(get_module_info(in_image_address).load_address);
-	}
-
-	void image_load_queue::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
-	{
-		loaded_modules_.clear();
-		unloaded_modules_.clear();
-
-		mt::lock_guard<mt::mutex> l(_mtx);
-
-		loaded_modules_.insert(loaded_modules_.end(), _lqueue.begin(), _lqueue.end());
-		unloaded_modules_.insert(unloaded_modules_.end(), _uqueue.begin(), _uqueue.end());
-		_lqueue.clear();
-		_uqueue.clear();
-	}
 
 
 	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
-			const std::shared_ptr<image_load_queue> &image_load_queue_)
-		: _analyzer(overhead_.external), _collector(collector), _frontend(frontend), _image_load_queue(image_load_queue_)
+			const std::shared_ptr<module_tracker> &module_tracker_)
+		: _analyzer(overhead_.external), _collector(collector), _frontend(frontend), _module_tracker(module_tracker_)
 	{
 		initialization_data idata = {
 			get_current_executable(),
@@ -108,7 +79,7 @@ namespace micro_profiler
 		loaded_modules loaded;
 		unloaded_modules unloaded;
 		
-		_image_load_queue->get_changes(loaded, unloaded);
+		_module_tracker->get_changes(loaded, unloaded);
 		if (!loaded.empty())
 			send(modules_loaded, loaded);
 		if (_analyzer.size())

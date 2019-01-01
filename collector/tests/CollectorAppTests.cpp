@@ -216,6 +216,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_not_null(h1.get());
 				assert_equal(1u, m.size());
+				assert_equal(0u, m[0].instance_id);
 				assert_equal(images[0].load_address(), m[0].load_address);
 				assert_not_equal(string::npos, m[0].path.find("symbol_container_1"));
 
@@ -229,6 +230,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_not_null(h2.get());
 				assert_equal(1u, m.size());
+				assert_equal(1u, m[0].instance_id);
 				assert_equal(images[1].load_address(), m[0].load_address);
 				assert_not_equal(string::npos, m[0].path.find("symbol_container_2"));
 			}
@@ -261,7 +263,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, m.size());
-				assert_equal(images[0].load_address(), m[0]);
+				assert_equal(0u, m[0]);
 
 				// INIT
 				m.clear();
@@ -272,7 +274,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, m.size());
-				assert_equal(images[1].load_address(), m[0]);
+				assert_equal(1u, m[0]);
 			}
 
 

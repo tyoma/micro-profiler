@@ -114,6 +114,7 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, module_info &data)
 	{
+		archive(data.instance_id);
 		archive(data.load_address);
 		archive(data.path);
 	}

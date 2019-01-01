@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <collector/calibration.h>
+#include <collector/module_tracker.h>
 #include <common/time.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
@@ -26,7 +27,7 @@ namespace micro_profiler
 			shared_ptr<mocks::frontend_state> state;
 			shared_ptr<ipc::channel> frontend;
 			vector<mocks::statistics_map_detailed> update_log;
-			shared_ptr<image_load_queue> queue;
+			shared_ptr<module_tracker> mtracker;
 			unsigned int ref_count;
 
 			init( CreateQueue )
@@ -38,7 +39,7 @@ namespace micro_profiler
 				};
 
 				images.assign(images_, array_end(images_));
-				queue.reset(new image_load_queue);
+				mtracker.reset(new module_tracker);
 			}
 
 
@@ -60,7 +61,7 @@ namespace micro_profiler
 				state->initialized = [&] (const initialization_data &id) { process_init = id; };
 
 				// ACT
-				statistics_bridge b(*cc, c_overhead, *frontend, queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 
 				// ASSERT
 				assert_equal(get_current_process_executable(), process_init.executable);
@@ -71,7 +72,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoUpdates )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 
 				// ACT
 				b.analyze();
@@ -85,7 +86,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoAnalysisInvoked )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
 					{	10 + c_overhead.external, (void *)(0)	},
@@ -104,7 +105,7 @@ namespace micro_profiler
 			test( FrontendUpdateClearsTheAnalyzer )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
 					{	10 + c_overhead.external, (void *)(0)	},
@@ -132,7 +133,7 @@ namespace micro_profiler
 				shared_ptr<mocks::frontend_state> state1(state),
 					state2(new mocks::frontend_state(shared_ptr<void>()));
 				shared_ptr<ipc::channel> frontend2 = state2->create();
-				statistics_bridge b1(cc1, o1, *frontend, queue), b2(cc2, o2, *frontend2, queue);
+				statistics_bridge b1(cc1, o1, *frontend, mtracker), b2(cc2, o2, *frontend2, mtracker);
 				call_record trace1[] = {
 					{	0, (void *)0x1223	},
 					{	10 + o1.external, (void *)(0)	},
@@ -184,32 +185,35 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<loaded_modules> loads;
-				statistics_bridge b(*cc, c_overhead, *frontend, queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 
 				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
 
 				// ACT
-				(queue)->load(images.at(0).get_symbol_address("get_function_addresses_1"));
+				(mtracker)->load(images.at(0).get_symbol_address("get_function_addresses_1"));
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(1u, loads.size());
 				assert_equal(1u, loads[0].size());
 
+				assert_equal(0u, loads[0][0].instance_id);
 				assert_equal(images.at(0).load_address(), loads[0][0].load_address);
 				assert_not_equal(string::npos, loads[0][0].path.find("symbol_container_1"));
 
 				// ACT
-				(queue)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
-				(queue)->load(images.at(2).get_symbol_address("get_function_addresses_3"));
+				(mtracker)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
+				(mtracker)->load(images.at(2).get_symbol_address("get_function_addresses_3"));
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(2u, loads.size());
 				assert_equal(2u, loads[1].size());
 
+				assert_equal(1u, loads[1][0].instance_id);
 				assert_equal(images.at(1).load_address(), loads[1][0].load_address);
 				assert_not_equal(string::npos, loads[1][0].path.find("symbol_container_2"));
+				assert_equal(2u, loads[1][1].instance_id);
 				assert_equal(images.at(2).load_address(), loads[1][1].load_address);
 				assert_not_equal(string::npos, loads[1][1].path.find("symbol_container_3_nosymbols"));
 			}
@@ -219,31 +223,35 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<unloaded_modules> unloads;
-				statistics_bridge b(*cc, c_overhead, *frontend, queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 
+				(mtracker)->load(images.at(0).get_symbol_address("get_function_addresses_1"));
+				(mtracker)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
+				(mtracker)->load(images.at(2).get_symbol_address("get_function_addresses_3"));
+				b.update_frontend();
 				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
 
 				// ACT
-				(queue)->unload(images.at(0).get_symbol_address("get_function_addresses_1"));
+				(mtracker)->unload(images.at(0).get_symbol_address("get_function_addresses_1"));
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(1u, unloads.size());
 				assert_equal(1u, unloads[0].size());
 
-				assert_equal(images.at(0).load_address(), unloads[0][0]);
+				assert_equal(0u, unloads[0][0]);
 
 				// ACT
-				(queue)->unload(images.at(1).get_symbol_address("get_function_addresses_2"));
-				(queue)->unload(images.at(2).get_symbol_address("get_function_addresses_3"));
+				(mtracker)->unload(images.at(1).get_symbol_address("get_function_addresses_2"));
+				(mtracker)->unload(images.at(2).get_symbol_address("get_function_addresses_3"));
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(2u, unloads.size());
 				assert_equal(2u, unloads[1].size());
 
-				assert_equal(images.at(1).load_address(), unloads[1][0]);
-				assert_equal(images.at(2).load_address(), unloads[1][1]);
+				assert_equal(1u, unloads[1][0]);
+				assert_equal(2u, unloads[1][1]);
 			}
 
 
@@ -251,7 +259,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<int> order;
-				statistics_bridge b(*cc, c_overhead, *frontend, queue);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 				call_record trace[] = {
 					{	0, (void *)0x2223	},
 					{	2019, (void *)0	},
@@ -265,8 +273,8 @@ namespace micro_profiler
 				b.analyze();
 
 				// ACT
-				(queue)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
-				(queue)->unload(images.at(0).get_symbol_address("get_function_addresses_1"));
+				(mtracker)->load(images.at(1).get_symbol_address("get_function_addresses_2"));
+				(mtracker)->unload(images.at(0).get_symbol_address("get_function_addresses_1"));
 				b.update_frontend();
 
 				// ASSERT

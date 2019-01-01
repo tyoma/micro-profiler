@@ -19,6 +19,9 @@
     <ClCompile Include="collector_app.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="module_tracker.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -34,5 +37,6 @@
     <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\calibration.h" />
     <ClInclude Include="..\collector_app.h" />
+    <ClInclude Include="..\module_tracker.h" />
   </ItemGroup>
 </Project>

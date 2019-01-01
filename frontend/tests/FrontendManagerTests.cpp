@@ -259,8 +259,8 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
 				module_info mi[] = {
-					{ images[0].load_address(), images[0].absolute_path() },
-					{ images[1].load_address(), images[1].absolute_path() },
+					{ 0, images[0].load_address(), images[0].absolute_path() },
+					{ 1, images[1].load_address(), images[1].absolute_path() },
 				};
 				pair< const void *, function_statistics_detailed_t<const void *> > data[] = {
 					make_pair(images[0].get_symbol_address("get_function_addresses_1"),
@@ -300,9 +300,9 @@ namespace micro_profiler
 					image("symbol_container_3_nosymbols"),
 				};
 				module_info mi[] = {
-					{ images[0].load_address(), images[0].absolute_path() },
-					{ images[1].load_address(), images[1].absolute_path() },
-					{ images[2].load_address(), images[2].absolute_path() },
+					{ 0, images[0].load_address(), images[0].absolute_path() },
+					{ 1, images[1].load_address(), images[1].absolute_path() },
+					{ 2, images[2].load_address(), images[2].absolute_path() },
 				};
 				pair< const void *, function_statistics_detailed_t<const void *> > data[] = {
 					make_pair(images[0].get_symbol_address("get_function_addresses_1"),

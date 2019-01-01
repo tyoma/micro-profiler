@@ -17,6 +17,7 @@ set(COLLECTOR_LIB_SOURCES
 	calls_collector_thread.cpp
 	collector_app.cpp
 	image_patch.cpp
+	module_tracker.cpp
 	statistics_bridge.cpp
 )
 

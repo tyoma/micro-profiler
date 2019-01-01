@@ -42,10 +42,11 @@ namespace micro_profiler
 
 	struct module_info
 	{
+		unsigned int instance_id;
 		long_address_t load_address;
 		std::string path;
 	};
 	typedef std::vector<module_info> loaded_modules;
 
-	typedef std::vector<long_address_t> unloaded_modules;
+	typedef std::vector<unsigned int> unloaded_modules;
 }

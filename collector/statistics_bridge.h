@@ -22,16 +22,12 @@
 
 #include "analyzer.h"
 
-#include <common/pod_vector.h>
 #include <common/protocol.h>
-#include <common/types.h>
-#include <deque>
-#include <functional>
-#include <memory>
 
 namespace micro_profiler
 {
 	struct calls_collector_i;
+	class module_tracker;
 	struct overhead;
 
 	namespace ipc
@@ -39,25 +35,11 @@ namespace micro_profiler
 		struct channel;
 	}
 
-	class image_load_queue
-	{
-	public:
-		void load(const void *in_image_address);
-		void unload(const void *in_image_address);
-		
-		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-
-	private:
-		mt::mutex _mtx;
-		std::deque<module_info> _lqueue;
-		std::deque<long_address_t> _uqueue;
-	};
-
 	class statistics_bridge
 	{
 	public:
 		statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
-			const std::shared_ptr<image_load_queue> &image_load_queue_);
+			const std::shared_ptr<module_tracker> &module_tracker_);
 
 		void analyze();
 		void update_frontend();
@@ -71,6 +53,6 @@ namespace micro_profiler
 		analyzer _analyzer;
 		calls_collector_i &_collector;
 		ipc::channel &_frontend;
-		std::shared_ptr<image_load_queue> _image_load_queue;
+		std::shared_ptr<module_tracker> _module_tracker;
 	};
 }

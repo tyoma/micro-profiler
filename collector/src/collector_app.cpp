@@ -21,6 +21,7 @@
 #include <collector/collector_app.h>
 
 #include <collector/calibration.h>
+#include <collector/module_tracker.h>
 #include <collector/statistics_bridge.h>
 
 #include <common/time.h>
@@ -58,7 +59,7 @@ namespace micro_profiler
 
 	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector> &collector,
 			const overhead &overhead_)
-		: _collector(collector), _image_load_queue(new image_load_queue)
+		: _collector(collector), _module_tracker(new module_tracker)
 	{	_frontend_thread.reset(new mt::thread(bind(&collector_app::worker, this, factory, overhead_)));	}
 
 	collector_app::~collector_app()
@@ -68,18 +69,18 @@ namespace micro_profiler
 	{
 		struct image_instance : handle
 		{
-			image_instance(shared_ptr<image_load_queue> q, void *in_image_address)
+			image_instance(shared_ptr<module_tracker> q, void *in_image_address)
 				: _queue(q), _in_image_address(in_image_address)
 			{	_queue->load(_in_image_address);	}
 
 			virtual ~image_instance() throw()
 			{	_queue->unload(_in_image_address);	}
 
-			shared_ptr<image_load_queue> _queue;
+			shared_ptr<module_tracker> _queue;
 			void *_in_image_address;
 		};
 
-		return new image_instance(_image_load_queue, in_image_address);
+		return new image_instance(_module_tracker, in_image_address);
 	}
 
 	void collector_app::stop()
@@ -101,7 +102,7 @@ namespace micro_profiler
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
 		shared_ptr<ipc::channel> frontend = factory(*this);
-		statistics_bridge b(*_collector, overhead_, *frontend, _image_load_queue);
+		statistics_bridge b(*_collector, overhead_, *frontend, _module_tracker);
 		timestamp_t t = clock();
 
 		task tasks[] = {

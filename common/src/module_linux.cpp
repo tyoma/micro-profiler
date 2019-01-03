@@ -31,12 +31,10 @@ namespace micro_profiler
 {
 	string get_current_executable()
 	{
-		char path[1000] = { 0 };
+		char path[1000];
 		int result = ::readlink("/proc/self/exe", path, sizeof(path) - 1);
 
-		if (result > 0);
-			return path[result] = 0, path;
-		return string();
+		return path[result >= 0 ? result : 0] = 0, path;
 	}
 
 	mapped_module get_module_info(const void *address)

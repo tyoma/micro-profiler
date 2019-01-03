@@ -53,7 +53,9 @@ namespace micro_profiler
 					{	}
 
 					~frontend_ui()
-					{	closed();	}
+					{
+						closed(); // this is here only to make frontend_manager's life harder - it should ignore this signal.
+					}
 
 					void emulate_close()
 					{	closed();	}
@@ -75,13 +77,28 @@ namespace micro_profiler
 
 				public:
 					bool disconnected;
+					vector<unsigned int /*instance_id*/> requested_metadata;
 
 				private:
 					virtual void disconnect() throw()
 					{	disconnected = true;	}
 
-					virtual void message(const_byte_range /*payload*/)
-					{	}
+					virtual void message(const_byte_range payload)
+					{
+						buffer_reader reader(payload);
+						strmd::deserializer<buffer_reader, packer> d(reader);
+						commands c;
+
+						switch (d(c), c)
+						{
+						case request_metadata:
+							requested_metadata.push_back(0), d(requested_metadata.back());
+							break;
+
+						default:
+							break;
+						}
+					}
 				};
 			}
 		}
@@ -875,7 +892,7 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl1 = functions_list::create(123, sr), fl2 = functions_list::create(123, sr);
 
 				// ACT
-				m->create_instance("somefile.exe", fl1);
+				m->load_session("somefile.exe", fl1);
 
 				// ASSERT
 				assert_equal(1u, m->instances_count());
@@ -884,13 +901,52 @@ namespace micro_profiler
 				assert_equal(_ui_creation_log[0], m->get_instance(0)->ui);
 
 				// ACT
-				m->create_instance("jump.exe", fl2);
+				m->load_session("jump.exe", fl2);
 
 				// ASSERT
 				assert_equal(2u, m->instances_count());
 				assert_equal("jump.exe", m->get_instance(1)->executable);
 				assert_equal(fl2, m->get_instance(1)->model);
 				assert_equal(_ui_creation_log[1], m->get_instance(1)->ui);
+			}
+
+
+			test( MetadataRequestIsSentOnModulesLoaded )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(&dummy_ui_factory);
+				shared_ptr<ipc::channel> c = m->create_session(outbound);
+				image images[] = {
+					image("symbol_container_1"), image("symbol_container_2"), image("symbol_container_3_nosymbols"),
+				};
+				module_info_basic mi1[] = {
+					{ 0, images[0].load_address(), images[0].absolute_path() },
+				};
+				module_info_basic mi2[] = {
+					{ 1, images[1].load_address(), images[1].absolute_path() },
+					{ 10, images[2].load_address(), images[2].absolute_path() },
+				};
+
+				write(*c, init, initialization_data());
+
+				// ACT
+				write(*c, modules_loaded, mkvector(mi1));
+
+				// ASSERT
+				unsigned int reference1[] = { 0u, };
+
+				assert_equal(reference1, outbound.requested_metadata);
+
+				// INIT
+				outbound.requested_metadata.clear();
+
+				// ACT
+				write(*c, modules_loaded, mkvector(mi2));
+
+				// ASSERT
+				unsigned int reference2[] = { 1u, 10u, };
+
+				assert_equal(reference2, outbound.requested_metadata);
 			}
 
 		end_test_suite

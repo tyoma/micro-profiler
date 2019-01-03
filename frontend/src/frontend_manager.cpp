@@ -20,6 +20,8 @@
 
 #include <frontend/frontend_manager.h>
 
+#include <frontend/frontend.h>
+
 using namespace std;
 using namespace placeholders;
 
@@ -68,7 +70,7 @@ namespace micro_profiler
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
 	{	return _active_instance;	}
 
-	void frontend_manager::create_instance(const string &executable, const shared_ptr<functions_list> &model)
+	void frontend_manager::load_session(const string &executable, const shared_ptr<functions_list> &model)
 	{	on_ready_for_ui(_instances.insert(_instances.end(), instance_impl(0)), executable, model);	}
 
 	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)

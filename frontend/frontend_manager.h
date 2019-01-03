@@ -30,31 +30,8 @@
 
 namespace micro_profiler
 {
+	class frontend;
 	class functions_list;
-	struct symbol_resolver;
-
-	class frontend : public ipc::channel, noncopyable
-	{
-	public:
-		frontend(ipc::channel &outbound);
-		~frontend();
-
-		void disconnect_session() throw();
-
-	public:
-		std::function<void(const std::string &process_name, const std::shared_ptr<functions_list> &model)> initialized;
-		std::function<void()> released;
-
-	private:
-		// ipc::channel methods
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
-
-	private:
-		ipc::channel &_outbound;
-		std::shared_ptr<symbol_resolver> _resolver;
-		std::shared_ptr<functions_list> _model;
-	};
 
 	struct frontend_ui
 	{
@@ -66,7 +43,7 @@ namespace micro_profiler
 		wpl::signal<void()> closed;
 	};
 
-	class frontend_manager : public ipc::server
+	class frontend_manager : public ipc::server, noncopyable
 	{
 	public:
 		struct instance
@@ -88,7 +65,7 @@ namespace micro_profiler
 		size_t instances_count() const throw();
 		const instance *get_instance(unsigned index) const throw();
 		const instance *get_active() const throw();
-		void create_instance(const std::string &executable, const std::shared_ptr<functions_list> &model);
+		void load_session(const std::string &executable, const std::shared_ptr<functions_list> &model);
 
 		// ipc::server methods
 		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);

@@ -234,7 +234,7 @@ namespace micro_profiler
 				strmd::deserializer<read_stream, packer> dser(*s);
 				shared_ptr<functions_list> model = functions_list::load(dser);
 
-				ctx.frontend->create_instance(*path, model);
+				ctx.frontend->load_session(*path, model);
 			}
 		}
 

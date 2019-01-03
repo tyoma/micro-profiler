@@ -18,13 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <frontend/frontend_manager.h>
+#include <frontend/frontend.h>
 
 #include <frontend/function_list.h>
 
 #include <common/memory.h>
 #include <common/serialization.h>
 #include <common/symbol_resolver.h>
+#include <strmd/serializer.h>
 
 using namespace std;
 
@@ -40,6 +41,9 @@ namespace micro_profiler
 			_model->release_resolver();
 		released();
 	}
+
+	void frontend::disconnect_session() throw()
+	{	_outbound.disconnect();	}
 
 	void frontend::disconnect() throw()
 	{	}
@@ -63,7 +67,10 @@ namespace micro_profiler
 		case modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
+			{
+				send(request_metadata, i->instance_id);
 				_resolver->add_image(i->path.c_str(), i->load_address);
+			}
 			break;
 
 		case update_statistics:
@@ -76,6 +83,14 @@ namespace micro_profiler
 		}
 	}
 
-	void frontend::disconnect_session() throw()
-	{	_outbound.disconnect();	}
+	template <typename DataT>
+	void frontend::send(commands command, const DataT &data)
+	{
+		buffer_writer< pod_vector<byte> > writer(_buffer);
+		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
+
+		archive(command);
+		archive(data);
+		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
+	}
 }

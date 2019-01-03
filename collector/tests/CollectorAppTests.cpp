@@ -5,14 +5,17 @@
 #include <collector/calibration.h>
 #include <collector/calls_collector.h>
 
+#include <common/serialization.h>
 #include <common/time.h>
 #include <mt/event.h>
+#include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/thread.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
 using namespace std;
+using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -31,11 +34,18 @@ namespace micro_profiler
 			shared_ptr<mocks::frontend_state> state;
 			collector_app::frontend_factory_t factory;
 			shared_ptr<mocks::Tracer> collector;
+			ipc::channel *inbound;
+
+			shared_ptr<ipc::channel> create_frontned(ipc::channel &inbound_)
+			{
+				inbound = &inbound_;
+				return state->create();
+			}
 
 			init( CreateMocks )
 			{
 				state.reset(new mocks::frontend_state(shared_ptr<void>()));
-				factory = bind(&mocks::frontend_state::create, state);
+				factory = bind(&CollectorAppTests::create_frontned, this, _1);
 				collector.reset(new mocks::Tracer);
 			}
 
@@ -514,15 +524,13 @@ namespace micro_profiler
 				// INIT
 				mt::event updated;
 				mocks::statistics_map_detailed u;
-				shared_ptr<mocks::Tracer> tracer2(new mocks::Tracer);
-				shared_ptr<mocks::frontend_state> state2(new mocks::frontend_state(tracer2));
 
-				state2->updated = [&] (const mocks::statistics_map_detailed &u_) {
+				state->updated = [&] (const mocks::statistics_map_detailed &u_) {
 					u = u_;
 					updated.set();
 				};
 
-				collector_app app(bind(&mocks::frontend_state::create, state2), tracer2, c_overhead);
+				collector_app app(factory, collector, c_overhead);
 				auto_ptr<handle> h(profile_this(app));
 
 				// ACT
@@ -543,7 +551,7 @@ namespace micro_profiler
 					{	1490, (void *)0	},
 				};
 
-				tracer2->Add(mt::thread::id(), trace);
+				collector->Add(mt::thread::id(), trace);
 
 				updated.wait();
 
@@ -575,6 +583,54 @@ namespace micro_profiler
 				assert_equal(1u, callinfo_child12.times_called);
 				assert_equal(8, callinfo_child12.inclusive_time);
 				assert_equal(8, callinfo_child12.exclusive_time);
+			}
+
+
+			test( ModuleMetadataRequestLeadsToMetadataSending )
+			{
+				// INIT
+				mt::event ready;
+				module_info_basic m;
+				vector_adapter message_buffer;
+				strmd::serializer<vector_adapter, packer> ser(message_buffer);
+				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
+
+				state->modules_loaded = [&] (const loaded_modules &) {
+					ready.set();
+				};
+				state->metadata_received = [&] (const module_info_basic &m_, const module_info_metadata &) {
+					m = m_;
+					ready.set();
+				};
+
+				collector_app app(factory, collector, c_overhead);
+				auto_ptr<handle> h1(app.profile_image(images[0].get_symbol_address("get_function_addresses_1")));
+				ready.wait();
+				auto_ptr<handle> h2(app.profile_image(images[1].get_symbol_address("get_function_addresses_2")));
+				ready.wait();
+
+				// ACT
+				ser(request_metadata);
+				ser(1u);
+				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				ready.wait();
+
+				// ASSERT
+				assert_not_equal(string::npos, m.path.find("symbol_container_2"));
+				assert_equal(images[1].load_address(), m.load_address);
+
+				// INIT
+				message_buffer.buffer.clear();
+
+				// ACT
+				ser(request_metadata);
+				ser(0u);
+				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				ready.wait();
+
+				// ASSERT
+				assert_not_equal(string::npos, m.path.find("symbol_container_1"));
+				assert_equal(images[0].load_address(), m.load_address);
 			}
 
 		end_test_suite

@@ -14,6 +14,12 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
+	inline bool operator ==(const symbol_metadata &lhs, const symbol_metadata &rhs)
+	{
+		return lhs.id == rhs.id && lhs.name == rhs.name && lhs.rva == rhs.rva && lhs.size == rhs.size
+			&& lhs.file_id == rhs.file_id && lhs.line == rhs.line;
+	}
+
 	namespace tests
 	{
 		namespace
@@ -279,6 +285,80 @@ namespace micro_profiler
 				assert_equivalent(reference_1231, mkvector(dss[(void *)1231].callers));
 				assert_equivalent(reference_1241, mkvector(dss[(void *)1241].callers));
 				assert_equivalent(reference_1251, mkvector(dss[(void *)1251].callers));
+			}
+
+
+			test( SerializedSymbolMetadataIsProperlyDeserialized )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				symbol_metadata symbols[] = {
+					{ 13, "fourrier_transform", 0x10010, 100, 11, 1001 },
+					{ 13110, "build_trie", 0x8000, 301, 1171, 101 },
+				};
+				symbol_metadata read;
+
+				// ACT
+				s(symbols[0]);
+				ds(read);
+
+				// ASSERT
+				assert_equal(read, symbols[0]);
+
+				// ACT
+				s(symbols[1]);
+				ds(read);
+
+				// ASSERT
+				assert_equal(read, symbols[1]);
+			}
+
+
+			test( SerializedModuleMetadataIsProperlyDeserialized )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				symbol_metadata symbols1[] = {
+					{ 13, "fourrier_transform", 0x10010, 100, 11, 1001 },
+					{ 13110, "build_trie", 0x8000, 301, 1171, 101 },
+					{ 13111, "merge_sort", 0x8181, 274, 19, 200 },
+				};
+				symbol_metadata symbols2[] = {
+					{ 11, "fast_fourrier_transform", 0x4010, 100, 11, 1001 },
+					{ 1111, "quick_sort", 0x5181, 274, 23, 200 },
+				};
+				pair<unsigned, string> files1[] = {
+					make_pair(11, "fourrier.cpp"),
+					make_pair(1171, "trie.c"),
+					make_pair(19, "sort.cpp"),
+				};
+				pair<unsigned, string> files2[] = {
+					make_pair(11, "fourrier.cpp"),
+					make_pair(23, "sort.c"),
+				};
+				module_info_metadata m1 = { mkvector(symbols1), mkvector(files1) };
+				module_info_metadata m2 = { mkvector(symbols2), mkvector(files2) };
+				module_info_metadata read;
+
+				// ACT
+				s(m1);
+				ds(read);
+
+				// ASSERT
+				assert_equal(symbols1, read.symbols);
+				assert_equal(files1, read.source_files);
+
+				// ACT
+				s(m2);
+				ds(read);
+
+				// ASSERT
+				assert_equal(symbols2, read.symbols);
+				assert_equal(files2, read.source_files);
 			}
 
 		end_test_suite

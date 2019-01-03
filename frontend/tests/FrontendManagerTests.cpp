@@ -251,14 +251,14 @@ namespace micro_profiler
 			}
 
 
-			test( SymbolAreLoadedWhenCorrespondingCommandIsProcessed )
+			test( SymbolsAreLoadedWhenCorrespondingCommandIsProcessed )
 			{
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
-				module_info mi[] = {
+				module_info_basic mi[] = {
 					{ 0, images[0].load_address(), images[0].absolute_path() },
 					{ 1, images[1].load_address(), images[1].absolute_path() },
 				};
@@ -274,8 +274,8 @@ namespace micro_profiler
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, modules_loaded, vector<module_info>(1, mi[0]));
-				write(*c, modules_loaded, vector<module_info>(1, mi[1]));
+				write(*c, modules_loaded, vector<module_info_basic>(1, mi[0]));
+				write(*c, modules_loaded, vector<module_info_basic>(1, mi[1]));
 
 				// ASSERT
 				wstring text;
@@ -299,7 +299,7 @@ namespace micro_profiler
 					image("symbol_container_2"),
 					image("symbol_container_3_nosymbols"),
 				};
-				module_info mi[] = {
+				module_info_basic mi[] = {
 					{ 0, images[0].load_address(), images[0].absolute_path() },
 					{ 1, images[1].load_address(), images[1].absolute_path() },
 					{ 2, images[2].load_address(), images[2].absolute_path() },

@@ -19,7 +19,7 @@ namespace micro_profiler
 				{
 				public:
 					buffer_reader(const void *message, size_t size)
-						: _ptr(static_cast<const unsigned char *>(message)), _remaining(size)
+						: _ptr(static_cast<const byte *>(message)), _remaining(size)
 					{	}
 
 					void read(void *data, size_t size)
@@ -31,7 +31,7 @@ namespace micro_profiler
 					}
 
 				private:
-					const unsigned char *_ptr;
+					const byte *_ptr;
 					size_t _remaining;
 				};
 			}

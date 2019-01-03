@@ -24,6 +24,7 @@
 #include <collector/module_tracker.h>
 #include <collector/statistics_bridge.h>
 
+#include <common/serialization.h>
 #include <common/time.h>
 
 using namespace std;
@@ -96,18 +97,35 @@ namespace micro_profiler
 	void collector_app::disconnect() throw()
 	{	}
 
-	void collector_app::message(const_byte_range /*command_payload*/)
-	{	}
+	void collector_app::message(const_byte_range payload)
+	{
+		buffer_reader reader(payload);
+		strmd::deserializer<buffer_reader, packer> d(reader);
+		commands c;
+		unsigned int instance_id;
+
+		switch (d(c), c)
+		{
+		case request_metadata:
+			d(instance_id);
+			_bridge->send_module_metadata(instance_id);
+			break;
+
+		default:
+			break;
+		}
+	}
 
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
 		shared_ptr<ipc::channel> frontend = factory(*this);
-		statistics_bridge b(*_collector, overhead_, *frontend, _module_tracker);
 		timestamp_t t = clock();
 
+		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker));
+
 		task tasks[] = {
-			task(bind(&statistics_bridge::analyze, &b), 10),
-			task(bind(&statistics_bridge::update_frontend, &b), 67),
+			task(bind(&statistics_bridge::analyze, _bridge.get()), 10),
+			task(bind(&statistics_bridge::update_frontend, _bridge.get()), 67),
 		};
 
 		for (mt::milliseconds p(0); !_exit.wait(p); )
@@ -125,7 +143,7 @@ namespace micro_profiler
 			p = mt::milliseconds(expires_at > t ? expires_at - t : 0);
 		}
 
-		b.analyze();
-		b.update_frontend();
+		_bridge->analyze();
+		_bridge->update_frontend();
 	}
 }

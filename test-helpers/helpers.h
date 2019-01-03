@@ -59,7 +59,7 @@ namespace micro_profiler
 
 		public:
 			size_t ptr;
-			std::vector<unsigned char> buffer;
+			std::vector<byte> buffer;
 		};
 
 

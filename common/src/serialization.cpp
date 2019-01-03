@@ -18,44 +18,20 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/serialization.h>
 
-#include "analyzer.h"
-
-#include <common/protocol.h>
-#include <mt/mutex.h>
+#include <common/memory.h>
 
 namespace micro_profiler
 {
-	struct calls_collector_i;
-	class module_tracker;
-	struct overhead;
+	buffer_reader::buffer_reader(const_byte_range payload)
+		: _ptr(payload.begin()), _remaining(payload.length())
+	{	}
 
-	namespace ipc
+	void buffer_reader::read(void *data, size_t size)
 	{
-		struct channel;
+		mem_copy(data, _ptr, size);
+		_ptr += size;
+		_remaining -= size;
 	}
-
-	class statistics_bridge
-	{
-	public:
-		statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
-			const std::shared_ptr<module_tracker> &module_tracker_);
-
-		void analyze();
-		void update_frontend();
-		void send_module_metadata(unsigned int instance_id);
-
-	private:
-		template <typename DataT>
-		void send(commands command, const DataT &data);
-
-	public:
-		pod_vector<byte> _buffer;
-		analyzer _analyzer;
-		calls_collector_i &_collector;
-		ipc::channel &_frontend;
-		std::shared_ptr<module_tracker> _module_tracker;
-		mt::mutex _mutex;
-	};
 }

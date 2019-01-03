@@ -233,8 +233,8 @@ namespace micro_profiler
 				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
 
 				// ACT
-				shared_ptr<mapped_module_ex> m1 = t.get_module(0);
-				shared_ptr<mapped_module_ex> m2 = t.get_module(1);
+				shared_ptr<const mapped_module_ex> m1 = t.get_module(0);
+				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
 
 				// ASSERT
 				assert_not_null(m1);
@@ -270,9 +270,9 @@ namespace micro_profiler
 				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
 
 				// ACT
-				shared_ptr<mapped_module_ex> m1 = t.get_module(0);
-				shared_ptr<mapped_module_ex> m2 = t.get_module(1);
-				shared_ptr<mapped_module_ex> m11 = t.get_module(0);
+				shared_ptr<const mapped_module_ex> m1 = t.get_module(0);
+				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
+				shared_ptr<const mapped_module_ex> m11 = t.get_module(0);
 
 				// ASSERT
 				assert_equal(m1, m11);
@@ -287,8 +287,8 @@ namespace micro_profiler
 				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
 				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
 
-				shared_ptr<mapped_module_ex> m1 = t.get_module(0);
-				shared_ptr<mapped_module_ex> m2 = t.get_module(1);
+				shared_ptr<const mapped_module_ex> m1 = t.get_module(0);
+				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
 
 				// ACT
 				shared_ptr<symbol_info> s1 = get_function_containing(*m1->get_image_info(), "get_function_addresses_1");

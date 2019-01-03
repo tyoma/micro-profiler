@@ -36,11 +36,14 @@ namespace micro_profiler
 		typedef unsigned int instance_id_t;
 
 	public:
-		operator module_info() const;
+		mapped_module_ex(instance_id_t instance_id, const mapped_module &mm);
+
 		std::shared_ptr<image_info> get_image_info() const;
 
+		operator module_info_basic() const;
+
 	public:
-		instance_id_t instance_id;
+		instance_id_t _instance_id;
 	};
 
 	class module_tracker
@@ -53,7 +56,7 @@ namespace micro_profiler
 		
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
-		std::shared_ptr<mapped_module_ex> get_module(mapped_module_ex::instance_id_t id) const;
+		std::shared_ptr<const mapped_module_ex> get_module(mapped_module_ex::instance_id_t id) const;
 
 	private:
 		typedef std::unordered_map< mapped_module_ex::instance_id_t, std::shared_ptr<mapped_module_ex> > modules_registry_t;

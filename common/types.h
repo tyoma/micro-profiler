@@ -24,15 +24,15 @@
 
 namespace micro_profiler
 {
-#pragma pack(push, 1)
-	struct guid_t
-	{
-		unsigned char values[16];
-	};
-#pragma pack(pop)
-
 	typedef unsigned char byte;
 	typedef unsigned long long int count_t;
 	typedef long long timestamp_t;
 	typedef unsigned long long int long_address_t;
+
+#pragma pack(push, 1)
+	struct guid_t
+	{
+		byte values[16];
+	};
+#pragma pack(pop)
 }

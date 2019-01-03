@@ -30,28 +30,6 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace
-	{
-		class buffer_reader
-		{
-		public:
-			buffer_reader(const_byte_range payload)
-				: _ptr(payload.begin()), _remaining(payload.length())
-			{	}
-
-			void read(void *data, size_t size)
-			{
-				mem_copy(data, _ptr, size);
-				_ptr += size;
-				_remaining -= size;
-			}
-
-		private:
-			const byte *_ptr;
-			size_t _remaining;
-		};
-	}
-
 	frontend::frontend(ipc::channel &outbound)
 		: _outbound(outbound), _resolver(symbol_resolver::create())
 	{	}
@@ -74,8 +52,7 @@ namespace micro_profiler
 		loaded_modules lmodules;
 		commands c;
 
-		archive(c);
-		switch (c)
+		switch (archive(c), c)
 		{
 		case init:
 			archive(idata);
@@ -92,6 +69,9 @@ namespace micro_profiler
 		case update_statistics:
 			if (_model)
 				archive(*_model);
+			break;
+
+		default:
 			break;
 		}
 	}

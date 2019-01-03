@@ -27,17 +27,21 @@ using namespace std;
 
 namespace micro_profiler
 {
-	mapped_module_ex::operator module_info() const
-	{
-		module_info mi = { instance_id, reinterpret_cast<size_t>(base), path };
-		return mi;
-	}
+	mapped_module_ex::mapped_module_ex(instance_id_t instance_id, const mapped_module &mm)
+		: mapped_module(mm), _instance_id(instance_id)
+	{	}
 
 	shared_ptr<image_info> mapped_module_ex::get_image_info() const
 	{
 		shared_ptr<image_info> i1(image_info::load(path.c_str()));
 
 		return shared_ptr<image_info>(new offset_image_info(i1, (size_t)base));
+	}
+
+	mapped_module_ex::operator module_info_basic() const
+	{
+		module_info_basic mi = { _instance_id, reinterpret_cast<size_t>(base), path };
+		return mi;
 	}
 
 
@@ -49,10 +53,8 @@ namespace micro_profiler
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
 		mapped_module_ex::instance_id_t id = _next_instance_id++;
-		shared_ptr<mapped_module_ex> m(new mapped_module_ex);
+		shared_ptr<mapped_module_ex> m(new mapped_module_ex(id, get_module_info(in_image_address)));
 
-		(mapped_module &)*m = get_module_info(in_image_address);
-		m->instance_id = id;
 		_modules_registry.insert(make_pair(id, m));
 		_lqueue.push_back(id);
 	}
@@ -84,7 +86,7 @@ namespace micro_profiler
 		swap(unloaded_modules_, _uqueue);
 	}
 
-	shared_ptr<mapped_module_ex> module_tracker::get_module(mapped_module_ex::instance_id_t id) const
+	shared_ptr<const mapped_module_ex> module_tracker::get_module(mapped_module_ex::instance_id_t id) const
 	{
 		modules_registry_t::const_iterator i = _modules_registry.find(id);
 

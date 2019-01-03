@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "primitives.h"
+#include "types.h"
 
 #include <string>
 #include <vector>
@@ -28,11 +28,14 @@
 namespace micro_profiler
 {
 	enum commands {
-		init,
-		modules_loaded,
-		update_statistics,
-		modules_unloaded
+		init = 0, // + initialization_data
+		modules_loaded = 1, // + loaded_modules
+		update_statistics = 2, // + statistics_map_detailed_t<void * / long_address_t>
+		modules_unloaded = 3, // + unloaded_modules
+		module_metadata = 4, // + module_info_metadata
+		request_metadata = 5, // + instance_id
 	};
+
 
 	struct initialization_data
 	{
@@ -40,13 +43,30 @@ namespace micro_profiler
 		timestamp_t ticks_per_second;
 	};
 
-	struct module_info
+
+	struct module_info_basic
 	{
 		unsigned int instance_id;
 		long_address_t load_address;
 		std::string path;
 	};
-	typedef std::vector<module_info> loaded_modules;
+	typedef std::vector<module_info_basic> loaded_modules;
+
 
 	typedef std::vector<unsigned int> unloaded_modules;
+
+
+	struct symbol_metadata
+	{
+		unsigned int id;
+		std::string name;
+		unsigned int rva, size;
+		unsigned int file_id, line;
+	};
+
+	struct module_info_metadata
+	{
+		std::vector<symbol_metadata> symbols;
+		std::vector< std::pair<unsigned int /*file_id*/, std::string /*file*/> > source_files;
+	};
 }

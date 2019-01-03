@@ -25,6 +25,7 @@
 
 #include <common/module.h>
 #include <common/serialization.h>
+#include <common/symbol_resolver.h>
 #include <common/time.h>
 #include <ipc/endpoint.h>
 #include <strmd/serializer.h>
@@ -89,9 +90,31 @@ namespace micro_profiler
 		_analyzer.clear();
 	}
 
+	void statistics_bridge::send_module_metadata(unsigned int instance_id)
+	{
+		shared_ptr<const mapped_module_ex> module = _module_tracker->get_module(instance_id);
+		shared_ptr<image_info> ii = module->get_image_info();
+		module_info_metadata md;
+
+		ii->enumerate_functions([&] (const symbol_info &symbol) {
+			symbol_metadata symbol_md = { 0, symbol.name, static_cast<unsigned>(symbol.body.begin() - module->base), 0, 0, 0 };
+			md.symbols.push_back(symbol_md);
+		});
+
+		mt::lock_guard<mt::mutex> lock(_mutex);
+		vector_writer writer(_buffer);
+		strmd::serializer<vector_writer, packer> archive(writer);
+
+		archive(module_metadata);
+		archive((const module_info_basic &)*module);
+		archive(md);
+		_frontend.message(const_byte_range(_buffer.data(), _buffer.size()));
+	}
+
 	template <typename DataT>
 	void statistics_bridge::send(commands command, const DataT &data)
 	{
+		mt::lock_guard<mt::mutex> lock(_mutex);
 		vector_writer writer(_buffer);
 		strmd::serializer<vector_writer, packer> archive(writer);
 

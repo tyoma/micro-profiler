@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/noncopyable.h>
+#include <common/primitives.h>
 #include <common/protocol.h>
 #include <functional>
 #include <ipc/endpoint.h>
@@ -29,6 +30,7 @@ namespace micro_profiler
 				std::function<void (const loaded_modules &m)> modules_loaded;
 				std::function<void (const statistics_map_detailed &u)> updated;
 				std::function<void (const unloaded_modules &m)> modules_unloaded;
+				std::function<void (const module_info_basic &mb, const module_info_metadata &md)> metadata_received;
 
 			private:
 				std::shared_ptr<void> _ownee;
@@ -44,6 +46,8 @@ namespace micro_profiler
 				loaded_modules lm;
 				statistics_map_detailed u;
 				unloaded_modules um;
+				module_info_basic mb;
+				module_info_metadata md;
 
 				a(c);
 				switch (c)
@@ -66,6 +70,14 @@ namespace micro_profiler
 				case modules_unloaded:
 					if (state.modules_unloaded)
 						a(um), state.modules_unloaded(um);
+					break;
+
+				case module_metadata:
+					if (state.metadata_received)
+						a(mb), a(md), state.metadata_received(mb, md);
+					break;
+
+				default:
 					break;
 				}
 			}

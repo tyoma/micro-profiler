@@ -33,7 +33,7 @@ namespace micro_profiler
 
 		void vector_adapter::write(const void *buffer_, size_t size)
 		{
-			const unsigned char *b = reinterpret_cast<const unsigned char *>(buffer_);
+			const byte *b = reinterpret_cast<const byte *>(buffer_);
 
 			buffer.insert(buffer.end(), b, b + size);
 		}

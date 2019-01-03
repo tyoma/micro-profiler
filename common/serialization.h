@@ -20,7 +20,9 @@
 
 #pragma once
 
+#include "primitives.h"
 #include "protocol.h"
+#include "range.h"
 
 #include <strmd/deserializer.h>
 
@@ -83,6 +85,20 @@ namespace micro_profiler
 {
 	typedef strmd::varint packer;
 
+	class buffer_reader
+	{
+	public:
+		buffer_reader(const_byte_range payload);
+
+		void read(void *data, size_t size);
+
+	private:
+		const byte *_ptr;
+		size_t _remaining;
+	};
+
+
+
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, initialization_data &data)
 	{
@@ -112,10 +128,28 @@ namespace micro_profiler
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, module_info &data)
+	void serialize(ArchiveT &archive, module_info_basic &data)
 	{
 		archive(data.instance_id);
 		archive(data.load_address);
 		archive(data.path);
+	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, symbol_metadata &data)
+	{
+		archive(data.id);
+		archive(data.name);
+		archive(data.rva);
+		archive(data.size);
+		archive(data.file_id);
+		archive(data.line);
+	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, module_info_metadata &data)
+	{
+		archive(data.symbols);
+		archive(data.source_files);
 	}
 }

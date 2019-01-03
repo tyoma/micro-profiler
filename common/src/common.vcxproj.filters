@@ -49,6 +49,9 @@
     <ClCompile Include="module_linux.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
+    <ClCompile Include="serialization.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

@@ -47,11 +47,12 @@ namespace micro_profiler
 	template <typename SymbolT>
 	struct image_info
 	{
-		typedef std::function<void(const SymbolT &symbol)> symbol_callback_t;
+		typedef std::function<void (const SymbolT &symbol)> symbol_callback_t;
+		typedef std::function<void (const std::pair<unsigned /*file_id*/, std::string /*path*/> &file)> file_callback_t;
 
 		virtual ~image_info() {	}
 		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
-
+		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
 	};
 
 	std::shared_ptr< image_info<symbol_info> > load_image_info(const char *image_path);

@@ -20,11 +20,71 @@
 
 #include <common/symbol_resolver.h>
 
+#include <map>
+
 using namespace std;
 using namespace std::placeholders;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		class ii_symbol_resolver : public symbol_resolver
+		{
+		public:
+			virtual const string &symbol_name_by_va(long_address_t address) const
+			{
+				cached_names_map::const_iterator i = find_symbol_by_va(address);
+
+				return i != _mapped_symbols.end() ? i->second.name : _empty;
+			}
+
+			virtual pair<string, unsigned> symbol_fileline_by_va(long_address_t address) const
+			{
+				cached_names_map::const_iterator i = find_symbol_by_va(address);
+
+				if (i == _mapped_symbols.end())
+					return pair<string, unsigned>();
+				files_map::const_iterator j = _files.find(i->second.file_id);
+
+				return make_pair(j->second, i->second.line);
+			}
+
+			virtual void add_image(const char *image, long_address_t load_address)
+			{
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(image);
+				unsigned file_id_base = _files.size();
+
+				ii->enumerate_files([&] (const pair<unsigned, string> &file) {
+					_files.insert(make_pair(file_id_base + file.first, file.second));
+				});
+				ii->enumerate_functions([&] (symbol_info symbol) {
+					symbol.file_id += file_id_base;
+					_mapped_symbols.insert(make_pair(load_address + symbol.rva, symbol));
+				});
+			}
+
+		private:
+			typedef map<unsigned int, string> files_map;
+			typedef map<long_address_t, symbol_info> cached_names_map;
+
+		private:
+			cached_names_map::const_iterator find_symbol_by_va(long_address_t address) const
+			{
+				cached_names_map::const_iterator i = _mapped_symbols.lower_bound(address);
+
+				if (i->first > address && i != _mapped_symbols.begin())
+					--i;
+				return address < i->second.size + i->first ? i : _mapped_symbols.end();
+			}
+
+		private:
+			string _empty;
+			files_map _files;
+			cached_names_map _mapped_symbols;
+		};
+	}
+
 	symbol_info_mapped::symbol_info_mapped(const char *name_, byte_range body_)
 		: name(name_), body(body_)
 	{	}
@@ -47,4 +107,8 @@ namespace micro_profiler
 		};
 		_underlying->enumerate_functions(bind(&local::offset_symbol, callback, _1, _base));
 	}
+
+
+	shared_ptr<symbol_resolver> symbol_resolver::create()
+	{	return shared_ptr<ii_symbol_resolver>(new ii_symbol_resolver());	}
 }

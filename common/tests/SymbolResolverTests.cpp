@@ -101,6 +101,30 @@ namespace micro_profiler
 			}
 
 
+			test( ReturnNamesOfLocalFunctionsOffset )
+			{
+				// INIT
+				image img("symbol_container_2");
+				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				get_function_addresses_2_t *getter_2 =
+					img.get_symbol<get_function_addresses_2_t>("get_function_addresses_2");
+				void_f_t f1 = 0, f2 = 0, f3 = 0;
+
+				r->add_image(img.absolute_path(), img.load_address());
+				getter_2(f1, f2, f3);
+
+				// ACT
+				string name1 = r->symbol_name_by_va((long_address_t)f1 + 1);
+				string name2 = r->symbol_name_by_va((long_address_t)f2 + 2);
+				string name3 = r->symbol_name_by_va((long_address_t)f3 + 3);
+
+				// ASSERT
+				assert_equal(name1, "vale_of_mean_creatures::this_one_for_the_birds");
+				assert_equal(name2, "vale_of_mean_creatures::this_one_for_the_whales");
+				assert_equal(name3, "vale_of_mean_creatures::the_abyss::bubble_sort");
+			}
+
+
 			test( RespectLoadAddress )
 			{
 				// INIT
@@ -129,7 +153,7 @@ namespace micro_profiler
 			}
 
 
-			test( LoadModuleWithNoSymbols )
+			test( LoadingModuleWithNoSymbolsGivesNoSymbolMatches )
 			{
 				// INIT
 				image img("symbol_container_3_nosymbols");
@@ -145,7 +169,7 @@ namespace micro_profiler
 				string name2 = r->symbol_name_by_va((long_address_t)f);
 
 				// ASSERT
-				assert_equal(name1, "get_function_addresses_3"); // exported function will have a name
+				assert_equal(name1, "");
 				assert_equal(name2, "");
 			}
 
@@ -221,8 +245,8 @@ namespace micro_profiler
 					r->symbol_fileline_by_va((long_address_t)f1_1),
 					r->symbol_fileline_by_va((long_address_t)f2_1),
 					r->symbol_fileline_by_va((long_address_t)f1_2),
-					r->symbol_fileline_by_va((long_address_t)f2_2),
-					r->symbol_fileline_by_va((long_address_t)f3_2),
+					r->symbol_fileline_by_va((long_address_t)f2_2 + 1),
+					r->symbol_fileline_by_va((long_address_t)f3_2 + 2),
 				};
 
 				// ASSERT

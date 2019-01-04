@@ -28,6 +28,16 @@ namespace micro_profiler
 
 			void add_function_mapped(map<string, symbol_info_mapped> &functions, const symbol_info_mapped &si)
 			{	functions.insert(make_pair(si.name, si));	}
+
+			struct less_nocase
+			{
+				bool operator ()(string lhs, string rhs) const
+				{
+					for_each(lhs.begin(), lhs.end(), &toupper<char>);
+					for_each(rhs.begin(), rhs.end(), &toupper<char>);
+					return lhs < rhs;
+				}
+			};
 		}
 
 		begin_test_suite( ImageInfoTests )
@@ -159,6 +169,76 @@ namespace micro_profiler
 				assert_is_true(functions.find("guinea_snprintf")->second.size
 					< functions.find("bubble_sort")->second.size);
 			}
+
+#ifdef _WIN32
+			test( FilesAreEnumeratedOnDemand )
+			{
+				// INIT
+				shared_ptr< image_info<symbol_info> > ii[] = {
+					load_image_info(image_paths[1].c_str()),
+					load_image_info(image_paths[2].c_str()),
+				};
+				multiset<string> files[2];
+
+				// ACT
+				ii[0]->enumerate_files([&] (const pair<unsigned, string> &file) {
+					files[0].insert(*file.second);
+				});
+				ii[1]->enumerate_files([&] (const pair<unsigned, string> &file) {
+					files[1].insert(*file.second);
+				});
+
+				// ASSERT
+				assert_equal(1u, files[0].count("symbol_container_1.cpp"));
+				assert_equal(1u, files[1].count("symbol_container_2.cpp"));
+				assert_equal(1u, files[1].count("symbol_container_2_internal.cpp"));
+			}
+
+
+			test( EnumeratedFilesHaveUniqueIDs )
+			{
+				// INIT
+				shared_ptr< image_info<symbol_info> > ii[] = {
+					load_image_info(image_paths[0].c_str()),
+					load_image_info(image_paths[2].c_str()),
+				};
+				map<string, unsigned, less_nocase> files[2];
+
+				// ACT
+				ii[0]->enumerate_files([&] (const pair<unsigned, string> &file) {
+					files[0].insert(make_pair(*file.second, file.first));
+				});
+				ii[1]->enumerate_files([&] (const pair<unsigned, string> &file) {
+					files[1].insert(make_pair(*file.second, file.first));
+				});
+
+				// ASSERT
+				assert_not_equal(files[0]["AllocatorTests.cpp"], files[0]["ImageInfoTests.cpp"]);
+				assert_not_equal(files[0]["AllocatorTests.cpp"], files[0]["ImageUtilitiesTests.cpp"]);
+				assert_not_equal(files[0]["ImageInfoTests.cpp"], files[0]["ImageUtilitiesTests.cpp"]);
+				assert_not_equal(files[1]["symbol_container_2.cpp"], files[1]["symbol_container_2_internal.cpp"]);
+			}
+
+
+			test( FunctionsAreLinkedToCorrespondingFileIDs )
+			{
+				// INIT
+				map<string, unsigned> files;
+				map<string, symbol_info> functions;
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(image_paths[2].c_str());
+
+				// ACT
+				ii->enumerate_functions(bind(&add_function, ref(functions), _1));
+				ii->enumerate_files([&] (const pair<unsigned, string> &file) {
+					files.insert(make_pair(*file.second, file.first));
+				});
+
+				// ASSERT
+				assert_equal(files["symbol_container_2.cpp"], functions["get_function_addresses_2"].file_id);
+				assert_equal(files["symbol_container_2.cpp"], functions["guinea_snprintf"].file_id);
+				assert_equal(files["symbol_container_2_internal.cpp"], functions["bubble_sort"].file_id);
+			}
+#endif
 		end_test_suite
 
 

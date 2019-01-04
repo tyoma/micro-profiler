@@ -4,16 +4,16 @@ using namespace std;
 
 namespace micro_profiler
 {
-	image_patch::patch_entry::patch_entry(symbol_info symbol, const shared_ptr<function_patch> &patch)
+	image_patch::patch_entry::patch_entry(symbol_info_mapped symbol, const shared_ptr<function_patch> &patch)
 		: _symbol(symbol), _patch(patch)
 	{	}
 
-	const symbol_info &image_patch::patch_entry::get_symbol() const
+	const symbol_info_mapped &image_patch::patch_entry::get_symbol() const
 	{	return _symbol;	}
 
 	void image_patch::apply_for(const filter_t &filter)
 	{
-		_image->enumerate_functions([&] (const symbol_info &symbol) {
+		_image->enumerate_functions([&] (const symbol_info_mapped &symbol) {
 			try
 			{
 				if (_patches.find(symbol.body.begin()) == _patches.end() && symbol.body.length() >= 5 && filter(symbol))

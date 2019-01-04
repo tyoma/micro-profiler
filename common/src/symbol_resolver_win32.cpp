@@ -33,7 +33,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		class dbghelp_image_info : public image_info
+		class dbghelp_image_info : public image_info<symbol_info>
 		{
 		public:
 			dbghelp_image_info(const shared_ptr<void> &dbghelp, const string &path, long_address_t base);
@@ -60,7 +60,7 @@ namespace micro_profiler
 
 		private:
 			shared_ptr<void> _dbghelp;
-			vector< shared_ptr<image_info> > _loaded_images;
+			vector< shared_ptr< image_info<symbol_info> > > _loaded_images;
 			mutable cached_names_map _names;
 		};
 
@@ -169,14 +169,14 @@ namespace micro_profiler
 
 		void dbghelp_symbol_resolver::add_image(const char *image, long_address_t load_address)
 		{
-			shared_ptr<image_info> ii(new dbghelp_image_info(_dbghelp, image, load_address));
+			shared_ptr< image_info<symbol_info> > ii(new dbghelp_image_info(_dbghelp, image, load_address));
 			_loaded_images.push_back(ii);
 		}
 	}
 
 
-	shared_ptr<image_info> image_info::load(const char *image_path)
-	{	return shared_ptr<image_info>(new dbghelp_image_info(create_dbghelp(), image_path, 1));	}
+	shared_ptr< image_info<symbol_info> > load_image_info(const char *image_path)
+	{	return shared_ptr< image_info<symbol_info> >(new dbghelp_image_info(create_dbghelp(), image_path, 1));	}
 
 
 	shared_ptr<symbol_resolver> symbol_resolver::create()

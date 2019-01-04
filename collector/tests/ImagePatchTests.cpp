@@ -15,14 +15,14 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			bool all(const symbol_info &)
+			bool all(const symbol_info_mapped &)
 			{	return true;	}
 		}
 
 		begin_test_suite( ImagePatchTests )
 			mocks::trace_events trace[2];
 			auto_ptr<image> images[2];
-			shared_ptr<image_info> image_infos[2];
+			shared_ptr< image_info<symbol_info_mapped> > image_infos[2];
 			void (*f11)();
 			void (*f12)();
 			void (*f13)(char *buffer0, int value);
@@ -40,14 +40,14 @@ namespace micro_profiler
 			init( LoadGuineas )
 			{
 				images[0].reset(new image("symbol_container_1"));
-				image_infos[0].reset(new offset_image_info(image_info::load(images[0]->absolute_path()),
+				image_infos[0].reset(new offset_image_info(load_image_info(images[0]->absolute_path()),
 					static_cast<size_t>(images[0]->load_address())));
 				f1F = images[0]->get_symbol<void (void (*&f1)(), void (*&f2)())>("get_function_addresses_1");
 				f13 = images[0]->get_symbol<void (char *buffer0, int value)>("format_decimal");
 				f1F(f11, f12);
 
 				images[1].reset(new image("symbol_container_2"));
-				image_infos[1].reset(new offset_image_info(image_info::load(images[1]->absolute_path()),
+				image_infos[1].reset(new offset_image_info(load_image_info(images[1]->absolute_path()),
 					static_cast<size_t>(images[1]->load_address())));
 				f22 = images[1]->get_symbol<int (char *buffer, size_t count, const char *format, ...)>("guinea_snprintf");
 				f23 = images[1]->get_symbol<void (void (*&f1)(), void (*&f2)(), void (*&f3)())>("get_function_addresses_2");
@@ -119,10 +119,10 @@ namespace micro_profiler
 				char buffer[1000] = { 0 };
 				int data[10];
 
-				ip1.apply_for([] (const symbol_info &fb) {
+				ip1.apply_for([] (const symbol_info_mapped &fb) {
 					return fb.name == "format_decimal";
 				});
-				ip2.apply_for([] (const symbol_info &fb) {
+				ip2.apply_for([] (const symbol_info_mapped &fb) {
 					return fb.name == "get_function_addresses_2" || fb.name == "bubble_sort";
 				});
 
@@ -177,7 +177,7 @@ namespace micro_profiler
 
 				f2F(ff4);
 
-				ip->apply_for([] (const symbol_info &fb) -> bool {
+				ip->apply_for([] (const symbol_info_mapped &fb) -> bool {
 					if (fb.name != "get_function_addresses_2")
 						return true;
 					throw runtime_error("");
@@ -198,7 +198,7 @@ namespace micro_profiler
 				// INIT
 				ip.reset(new image_patch(image_infos[1], &trace[1]));
 
-				ip->apply_for([] (const symbol_info &fb) -> bool {
+				ip->apply_for([] (const symbol_info_mapped &fb) -> bool {
 					if (fb.name != "bubble_sort")
 						return true;
 					throw runtime_error("");
@@ -249,12 +249,12 @@ namespace micro_profiler
 				int data[10];
 				char buffer[100] = { 0 };
 
-				ip->apply_for([] (const symbol_info &symbol) {
+				ip->apply_for([] (const symbol_info_mapped &symbol) {
 					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
 				});
 
 				// ACT
-				ip->apply_for([] (const symbol_info &symbol) {
+				ip->apply_for([] (const symbol_info_mapped &symbol) {
 					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
 				});
 
@@ -280,12 +280,12 @@ namespace micro_profiler
 				int data[10];
 				char buffer[100] = { 0 };
 
-				ip->apply_for([] (const symbol_info &symbol) {
+				ip->apply_for([] (const symbol_info_mapped &symbol) {
 					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
 				});
 
 				// ACT
-				ip->apply_for([] (const symbol_info &symbol) {
+				ip->apply_for([] (const symbol_info_mapped &symbol) {
 					return symbol.name == "bubble_sort";
 				});
 
@@ -302,13 +302,13 @@ namespace micro_profiler
 				assert_equal(reference1, trace[0].call_log);
 
 				// INIT
-				ip->apply_for([] (const symbol_info &symbol) {
+				ip->apply_for([] (const symbol_info_mapped &symbol) {
 					return symbol.name == "bubble_sort" || symbol.name == "guinea_snprintf";
 				});
 				trace[0].call_log.clear();
 
 				// ACT
-				ip->apply_for([] (const symbol_info &symbol) {
+				ip->apply_for([] (const symbol_info_mapped &symbol) {
 					return symbol.name == "guinea_snprintf";
 				});
 

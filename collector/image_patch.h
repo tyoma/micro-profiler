@@ -29,11 +29,11 @@ namespace micro_profiler
 	class image_patch : noncopyable
 	{
 	public:
-		typedef std::function<bool (const symbol_info &function)> filter_t;
+		typedef std::function<bool (const symbol_info_mapped &function)> filter_t;
 
 	public:
 		template <typename InterceptorT>
-		image_patch(const std::shared_ptr<image_info> &image, InterceptorT *interceptor);
+		image_patch(const std::shared_ptr< image_info<symbol_info_mapped> > &image, InterceptorT *interceptor);
 
 		void apply_for(const filter_t &filter);
 
@@ -41,19 +41,19 @@ namespace micro_profiler
 		class patch_entry
 		{
 		public:
-			patch_entry(symbol_info symbol, const std::shared_ptr<function_patch> &patch);
+			patch_entry(symbol_info_mapped symbol, const std::shared_ptr<function_patch> &patch);
 
-			const symbol_info &get_symbol() const;
+			const symbol_info_mapped &get_symbol() const;
 
 		private:
-			symbol_info _symbol;
+			symbol_info_mapped _symbol;
 			std::shared_ptr<function_patch> _patch;
 		};
 
 		typedef std::unordered_map<const void *, patch_entry> patches_container_t;
 
 	private:
-		const std::shared_ptr<image_info> _image;
+		const std::shared_ptr< image_info<symbol_info_mapped> > _image;
 		void * const _interceptor;
 		hooks<void>::on_enter_t * const _on_enter;
 		hooks<void>::on_exit_t * const _on_exit;
@@ -64,7 +64,8 @@ namespace micro_profiler
 	
 	
 	template <typename InterceptorT>
-	inline image_patch::image_patch(const std::shared_ptr<image_info> &image, InterceptorT *interceptor)
+	inline image_patch::image_patch(const std::shared_ptr< image_info<symbol_info_mapped> > &image,
+			InterceptorT *interceptor)
 		: _image(image), _interceptor(interceptor),
 			_on_enter(hooks<InterceptorT>::on_enter()), _on_exit(hooks<InterceptorT>::on_exit())
 	{	}

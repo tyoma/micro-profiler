@@ -25,6 +25,9 @@ namespace micro_profiler
 
 			void add_function(map<string, symbol_info> &functions, const symbol_info &si)
 			{	functions.insert(make_pair(si.name, si));	}
+
+			void add_function_mapped(map<string, symbol_info_mapped> &functions, const symbol_info_mapped &si)
+			{	functions.insert(make_pair(si.name, si));	}
 		}
 
 		begin_test_suite( ImageInfoTests )
@@ -43,27 +46,27 @@ namespace micro_profiler
 			test( LoadImageFailsWhenInvalidModuleSpecified )
 			{
 				// ACT / ASSERT
-				assert_throws(image_info::load(""), invalid_argument);
-				assert_throws(image_info::load("missingABCDEFG"), invalid_argument);
+				assert_throws(load_image_info(""), invalid_argument);
+				assert_throws(load_image_info("missingABCDEFG"), invalid_argument);
 			}
 
 
 			test( CreateResolverForValidImage )
 			{
 				// ACT / ASSERT
-				assert_not_null(image_info::load(image_paths[0].c_str()));
-				assert_not_null(image_info::load(image_paths[1].c_str()));
-				assert_not_null(image_info::load(image_paths[2].c_str()));
-				assert_not_null(image_info::load(image_paths[3].c_str()));
+				assert_not_null(load_image_info(image_paths[0].c_str()));
+				assert_not_null(load_image_info(image_paths[1].c_str()));
+				assert_not_null(load_image_info(image_paths[2].c_str()));
+				assert_not_null(load_image_info(image_paths[3].c_str()));
 			}
 
 
 			test( EnumerationReturnsKnownFunctions )
 			{
 				// INIT
-				shared_ptr<image_info> ii[] = {
-					image_info::load(image_paths[1].c_str()),
-					image_info::load(image_paths[2].c_str()),
+				shared_ptr< image_info<symbol_info> > ii[] = {
+					load_image_info(image_paths[1].c_str()),
+					load_image_info(image_paths[2].c_str()),
 				};
 				map<string, symbol_info> functions[2];
 
@@ -86,7 +89,7 @@ namespace micro_profiler
 			test( DataSymbolsAreSkipped )
 			{
 				// INIT
-				shared_ptr<image_info> ii = image_info::load(image_paths[2].c_str());
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(image_paths[2].c_str());
 				map<string, symbol_info> functions;
 
 				// ACT
@@ -119,9 +122,9 @@ namespace micro_profiler
 					static_cast<const byte *>(images[1].get_symbol_address("bubble_sort_expose")),
 					static_cast<const byte *>(images[1].get_symbol_address("guinea_snprintf")),
 				};
-				shared_ptr<image_info> ii[] = {
-					image_info::load(image_paths[1].c_str()),
-					image_info::load(image_paths[2].c_str()),
+				shared_ptr< image_info<symbol_info> > ii[] = {
+					load_image_info(image_paths[1].c_str()),
+					load_image_info(image_paths[2].c_str()),
 				};
 				map<string, symbol_info> functions[2];
 
@@ -146,7 +149,7 @@ namespace micro_profiler
 				// This test may not pass on all platoforms/compilers. Need a better one.
 
 				// INIT
-				shared_ptr<image_info> ii = image_info::load(image_paths[2].c_str());
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(image_paths[2].c_str());
 				map<string, symbol_info> functions;
 
 				// ACT
@@ -169,15 +172,16 @@ namespace micro_profiler
 			{
 				// INIT
 				image img("symbol_container_2");
-				shared_ptr<image_info> ii = image_info::load(img.absolute_path());
-				map<string, symbol_info> functions_original, functions_offset;
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(img.absolute_path());
+				map<string, symbol_info> functions_original;
+				map<string, symbol_info_mapped> functions_offset;
 
 				ii->enumerate_functions(bind(&add_function, ref(functions_original), _1));
 
 				// INIT / ACT
 				offset_image_info oii1(ii, 0x123);
 
-				oii1.enumerate_functions(bind(&add_function, ref(functions_offset), _1));
+				oii1.enumerate_functions(bind(&add_function_mapped, ref(functions_offset), _1));
 
 				// ASSERT
 				assert_equal(functions_original.find("get_function_addresses_2")->second.body.begin() + 0x123,
@@ -199,7 +203,7 @@ namespace micro_profiler
 				// INIT / ACT
 				offset_image_info oii2(ii, 0x12345678);
 
-				oii2.enumerate_functions(bind(&add_function, ref(functions_offset), _1));
+				oii2.enumerate_functions(bind(&add_function_mapped, ref(functions_offset), _1));
 
 				// ASSERT
 				assert_equal(functions_original.find("get_function_addresses_2")->second.body.begin() + 0x12345678,

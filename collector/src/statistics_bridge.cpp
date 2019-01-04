@@ -66,10 +66,10 @@ namespace micro_profiler
 	void statistics_bridge::send_module_metadata(unsigned int instance_id)
 	{
 		shared_ptr<const mapped_module_ex> module = _module_tracker->get_module(instance_id);
-		shared_ptr<image_info> ii = module->get_image_info();
+		shared_ptr< image_info<symbol_info_mapped> > ii = module->get_image_info();
 		module_info_metadata md;
 
-		ii->enumerate_functions([&] (const symbol_info &symbol) {
+		ii->enumerate_functions([&] (const symbol_info_mapped &symbol) {
 			symbol_metadata symbol_md = { 0, symbol.name, static_cast<unsigned>(symbol.body.begin() - module->base), 0, 0, 0 };
 			md.symbols.push_back(symbol_md);
 		});

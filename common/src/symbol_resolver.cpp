@@ -25,7 +25,17 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	offset_image_info::offset_image_info(const std::shared_ptr<image_info> &underlying, size_t base)
+	symbol_info::symbol_info(const char *name_, byte_range body_)
+		: name(name_), body(body_)
+	{	}
+
+
+	symbol_info_mapped::symbol_info_mapped(const char *name_, byte_range body_)
+		: name(name_), body(body_)
+	{	}
+
+
+	offset_image_info::offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base)
 		: _underlying(underlying), _base(base)
 	{	}
 
@@ -35,7 +45,7 @@ namespace micro_profiler
 		{
 			static void offset_symbol(const symbol_callback_t &callback, const symbol_info &si, size_t offset)
 			{
-				symbol_info offset_si(si);
+				symbol_info_mapped offset_si(si.name.c_str(), si.body);
 
 				offset_si.body = byte_range(si.body.begin() + offset, si.body.length());
 				callback(offset_si);

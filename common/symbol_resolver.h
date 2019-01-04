@@ -34,27 +34,41 @@ namespace micro_profiler
 
 		std::string name;
 		byte_range body;
+
+		//unsigned int id;
+		//unsigned int rva, size;
+		//unsigned int file_id, line;
 	};
 
+	struct symbol_info_mapped
+	{
+		symbol_info_mapped(const char *name_, byte_range body_);
+
+		std::string name;
+		byte_range body;
+	};
+
+	template <typename SymbolT>
 	struct image_info
 	{
-		typedef std::function<void(const symbol_info &symbol)> symbol_callback_t;
+		typedef std::function<void(const SymbolT &symbol)> symbol_callback_t;
 
 		virtual ~image_info() {	}
 		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
 
-		static std::shared_ptr<image_info> load(const char *image_path);
 	};
 
-	class offset_image_info : public image_info
+	std::shared_ptr< image_info<symbol_info> > load_image_info(const char *image_path);
+
+	class offset_image_info : public image_info<symbol_info_mapped>
 	{
 	public:
-		offset_image_info(const std::shared_ptr<image_info> &underlying, size_t base);
+		offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base);
 
 		virtual void enumerate_functions(const symbol_callback_t &callback) const;
 
 	private:
-		std::shared_ptr<image_info> _underlying;
+		std::shared_ptr< image_info<symbol_info> > _underlying;
 		size_t _base;
 	};
 
@@ -67,10 +81,4 @@ namespace micro_profiler
 
 		static std::shared_ptr<symbol_resolver> create();
 	};
-
-
-
-	inline symbol_info::symbol_info(const char *name_, byte_range body_)
-		: name(name_), body(body_)
-	{	}
 }

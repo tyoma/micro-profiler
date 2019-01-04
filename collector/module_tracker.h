@@ -28,6 +28,9 @@
 
 namespace micro_profiler
 {
+	struct symbol_info_mapped;
+
+	template <typename SymbolT>
 	struct image_info;
 
 	class mapped_module_ex : public mapped_module
@@ -38,7 +41,7 @@ namespace micro_profiler
 	public:
 		mapped_module_ex(instance_id_t instance_id, const mapped_module &mm);
 
-		std::shared_ptr<image_info> get_image_info() const;
+		std::shared_ptr< image_info<symbol_info_mapped> > get_image_info() const;
 
 		operator module_info_basic() const;
 

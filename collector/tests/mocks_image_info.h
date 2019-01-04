@@ -10,7 +10,7 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			class image_info : public micro_profiler::image_info
+			class image_info : public micro_profiler::image_info<symbol_info_mapped>
 			{
 			public:
 				template <typename F>
@@ -22,7 +22,7 @@ namespace micro_profiler
 				void add_function(void *f);
 
 			private:
-				std::vector<symbol_info> _symbols;
+				std::vector<symbol_info_mapped> _symbols;
 			};
 
 

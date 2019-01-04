@@ -13,13 +13,13 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			shared_ptr<symbol_info> get_function_containing(const image_info &ii, const char *name_part)
+			shared_ptr<symbol_info_mapped> get_function_containing(const image_info<symbol_info_mapped> &ii, const char *name_part)
 			{
-				shared_ptr<symbol_info> symbol;
+				shared_ptr<symbol_info_mapped> symbol;
 
-				ii.enumerate_functions([&] (const symbol_info &s) {
+				ii.enumerate_functions([&] (const symbol_info_mapped &s) {
 					if (string::npos != s.name.find(name_part))
-						symbol.reset(new symbol_info(s));
+						symbol.reset(new symbol_info_mapped(s));
 				});
 				return symbol;
 			}
@@ -291,9 +291,9 @@ namespace micro_profiler
 				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
 
 				// ACT
-				shared_ptr<symbol_info> s1 = get_function_containing(*m1->get_image_info(), "get_function_addresses_1");
-				shared_ptr<symbol_info> s2 = get_function_containing(*m2->get_image_info(), "get_function_addresses_2");
-				shared_ptr<symbol_info> s3 = get_function_containing(*m2->get_image_info(), "guinea_snprintf");
+				shared_ptr<symbol_info_mapped> s1 = get_function_containing(*m1->get_image_info(), "get_function_addresses_1");
+				shared_ptr<symbol_info_mapped> s2 = get_function_containing(*m2->get_image_info(), "get_function_addresses_2");
+				shared_ptr<symbol_info_mapped> s3 = get_function_containing(*m2->get_image_info(), "guinea_snprintf");
 
 				// ASSERT
 				assert_not_null(s1);

@@ -48,9 +48,6 @@ namespace micro_profiler
 
 			bool sort_by_c_less(const void *const, const POD &left, const void *const, const POD &right)
 			{	return left.c < right.c;	}
-
-			void increment(int *value)
-			{	++*value;	}
 		}
 
 

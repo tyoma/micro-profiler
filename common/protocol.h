@@ -21,6 +21,7 @@
 #pragma once
 
 #include "types.h"
+#include "symbol_resolver.h"
 
 #include <string>
 #include <vector>
@@ -56,17 +57,9 @@ namespace micro_profiler
 	typedef std::vector<unsigned int> unloaded_modules;
 
 
-	struct symbol_metadata
-	{
-		unsigned int id;
-		std::string name;
-		unsigned int rva, size;
-		unsigned int file_id, line;
-	};
-
 	struct module_info_metadata
 	{
-		std::vector<symbol_metadata> symbols;
+		std::vector<symbol_info> symbols;
 		std::vector< std::pair<unsigned int /*file_id*/, std::string /*file*/> > source_files;
 	};
 }

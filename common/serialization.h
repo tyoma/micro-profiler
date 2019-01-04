@@ -149,7 +149,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, symbol_metadata &data)
+	void serialize(ArchiveT &archive, symbol_info &data)
 	{
 		archive(data.id);
 		archive(data.name);

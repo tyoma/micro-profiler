@@ -45,6 +45,13 @@ namespace micro_profiler
 				return symbol;
 			throw runtime_error("Symbol specified was not found!");
 		}
+
+		unsigned image::get_symbol_rva(const char *name) const
+		{
+			if (void *symbol = ::GetProcAddress(static_cast<HMODULE>(get()), name))
+				return static_cast<byte *>(symbol) - load_address_ptr();
+			throw runtime_error("Symbol specified was not found!");
+		}
 	}
 }
 

@@ -53,8 +53,14 @@ namespace micro_profiler
 
 		void elf_image_info::enumerate_functions(const symbol_callback_t &callback) const
 		{
-			symreader::read_symbols(_image->first, _image->second, [&callback] (const symreader::symbol &symbol) {
-				callback(symbol_info(symbol.name, byte_range(static_cast<byte *>(0) + symbol.virtual_address, symbol.size)));
+			symreader::read_symbols(_image->first, _image->second, [&callback] (const symreader::symbol &elf_symbol) {
+				symbol_info symbol = {
+					elf_symbol.name,
+					static_cast<unsigned>(elf_symbol.virtual_address),
+					static_cast<unsigned>(elf_symbol.size)
+				};
+
+				callback(symbol);
 			});
 		}
 	}

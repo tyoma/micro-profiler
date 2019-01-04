@@ -13,13 +13,13 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			shared_ptr<symbol_info_mapped> get_function_containing(const image_info<symbol_info_mapped> &ii, const char *name_part)
+			shared_ptr<symbol_info> get_function_containing(const image_info<symbol_info> &ii, const char *name_part)
 			{
-				shared_ptr<symbol_info_mapped> symbol;
+				shared_ptr<symbol_info> symbol;
 
-				ii.enumerate_functions([&] (const symbol_info_mapped &s) {
+				ii.enumerate_functions([&] (const symbol_info &s) {
 					if (string::npos != s.name.find(name_part))
-						symbol.reset(new symbol_info_mapped(s));
+						symbol.reset(new symbol_info(s));
 				});
 				return symbol;
 			}
@@ -291,17 +291,17 @@ namespace micro_profiler
 				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
 
 				// ACT
-				shared_ptr<symbol_info_mapped> s1 = get_function_containing(*m1->get_image_info(), "get_function_addresses_1");
-				shared_ptr<symbol_info_mapped> s2 = get_function_containing(*m2->get_image_info(), "get_function_addresses_2");
-				shared_ptr<symbol_info_mapped> s3 = get_function_containing(*m2->get_image_info(), "guinea_snprintf");
+				shared_ptr<symbol_info> s1 = get_function_containing(*m1->get_image_info(), "get_function_addresses_1");
+				shared_ptr<symbol_info> s2 = get_function_containing(*m2->get_image_info(), "get_function_addresses_2");
+				shared_ptr<symbol_info> s3 = get_function_containing(*m2->get_image_info(), "guinea_snprintf");
 
 				// ASSERT
 				assert_not_null(s1);
-				assert_equal(_images[0].get_symbol_address("get_function_addresses_1"), s1->body.begin());
+				assert_equal(_images[0].get_symbol_rva("get_function_addresses_1"), s1->rva);
 				assert_not_null(s2);
-				assert_equal(_images[1].get_symbol_address("get_function_addresses_2"), s2->body.begin());
+				assert_equal(_images[1].get_symbol_rva("get_function_addresses_2"), s2->rva);
 				assert_not_null(s3);
-				assert_equal(_images[1].get_symbol_address("guinea_snprintf"), s3->body.begin());
+				assert_equal(_images[1].get_symbol_rva("guinea_snprintf"), s3->rva);
 			}
 		end_test_suite
 	}

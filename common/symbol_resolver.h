@@ -30,14 +30,10 @@ namespace micro_profiler
 {
 	struct symbol_info
 	{
-		symbol_info(const char *name_, byte_range body_);
-
 		std::string name;
-		byte_range body;
-
-		//unsigned int id;
-		//unsigned int rva, size;
-		//unsigned int file_id, line;
+		unsigned int rva, size;
+		unsigned int id;
+		unsigned int file_id, line;
 	};
 
 	struct symbol_info_mapped
@@ -69,7 +65,7 @@ namespace micro_profiler
 
 	private:
 		std::shared_ptr< image_info<symbol_info> > _underlying;
-		size_t _base;
+		byte *_base;
 	};
 
 	struct symbol_resolver

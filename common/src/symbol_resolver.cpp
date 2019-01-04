@@ -25,29 +25,23 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	symbol_info::symbol_info(const char *name_, byte_range body_)
-		: name(name_), body(body_)
-	{	}
-
-
 	symbol_info_mapped::symbol_info_mapped(const char *name_, byte_range body_)
 		: name(name_), body(body_)
 	{	}
 
 
 	offset_image_info::offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base)
-		: _underlying(underlying), _base(base)
+		: _underlying(underlying), _base((byte *)base)
 	{	}
 
 	void offset_image_info::enumerate_functions(const symbol_callback_t &callback) const
 	{
 		struct local
 		{
-			static void offset_symbol(const symbol_callback_t &callback, const symbol_info &si, size_t offset)
+			static void offset_symbol(const symbol_callback_t &callback, const symbol_info &si, byte *base)
 			{
-				symbol_info_mapped offset_si(si.name.c_str(), si.body);
+				symbol_info_mapped offset_si(si.name.c_str(), byte_range(base + si.rva, si.size));
 
-				offset_si.body = byte_range(si.body.begin() + offset, si.body.length());
 				callback(offset_si);
 			}
 		};

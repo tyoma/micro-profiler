@@ -85,7 +85,7 @@ namespace micro_profiler
 			{
 			public:
 				local(const symbol_callback_t &callback)
-					: _callback(callback), _si("", byte_range(0, 0))
+					: _callback(callback)
 				{	}
 
 				static BOOL CALLBACK on_symbol(SYMBOL_INFO *symbol, ULONG, void *context)
@@ -95,8 +95,8 @@ namespace micro_profiler
 						local *self = static_cast<local *>(context);
 
 						self->_si.name = symbol->Name;
-						self->_si.body = byte_range(reinterpret_cast<byte *>(symbol->Address - symbol->ModBase),
-							symbol->Size);
+						self->_si.rva = static_cast<unsigned>(symbol->Address - symbol->ModBase);
+						self->_si.size = symbol->Size;
 						self->_callback(self->_si);
 					}
 					return TRUE;

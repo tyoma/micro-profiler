@@ -42,6 +42,7 @@ namespace micro_profiler
 			long_address_t load_address() const;
 			const char *absolute_path() const;
 			void *get_symbol_address(const char *name) const;
+			unsigned get_symbol_rva(const char *name) const;
 			template <typename T>
 			T *get_symbol(const char *name) const;
 		};

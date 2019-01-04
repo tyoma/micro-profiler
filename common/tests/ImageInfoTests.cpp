@@ -108,19 +108,14 @@ namespace micro_profiler
 					image(image_paths[1].c_str()),
 					image(image_paths[2].c_str()),
 				};
-				const size_t base[] = {
-					static_cast<size_t>(images[0].load_address()),
-					static_cast<size_t>(images[1].load_address()),
-				};
-				const byte *reference[] = {
-					static_cast<const byte *>(images[0].get_symbol_address("get_function_addresses_1")),
-					static_cast<const byte *>(images[0].get_symbol_address("format_decimal")),
-
-					static_cast<const byte *>(images[1].get_symbol_address("get_function_addresses_2")),
-					static_cast<const byte *>(images[1].get_symbol_address("function_with_a_nested_call_2")),
-					static_cast<const byte *>(images[1].get_symbol_address("bubble_sort2")),
-					static_cast<const byte *>(images[1].get_symbol_address("bubble_sort_expose")),
-					static_cast<const byte *>(images[1].get_symbol_address("guinea_snprintf")),
+				unsigned reference[] = {
+					images[0].get_symbol_rva("get_function_addresses_1"),
+					images[0].get_symbol_rva("format_decimal"),
+					images[1].get_symbol_rva("get_function_addresses_2"),
+					images[1].get_symbol_rva("function_with_a_nested_call_2"),
+					images[1].get_symbol_rva("bubble_sort2"),
+					images[1].get_symbol_rva("bubble_sort_expose"),
+					images[1].get_symbol_rva("guinea_snprintf"),
 				};
 				shared_ptr< image_info<symbol_info> > ii[] = {
 					load_image_info(image_paths[1].c_str()),
@@ -133,14 +128,14 @@ namespace micro_profiler
 				ii[1]->enumerate_functions(bind(&add_function, ref(functions[1]), _1));
 
 				// ASSERT
-				assert_equal(reference[0] - base[0], functions[0].find("get_function_addresses_1")->second.body.begin());
-				assert_equal(reference[1] - base[0], functions[0].find("format_decimal")->second.body.begin());
+				assert_equal(reference[0], functions[0].find("get_function_addresses_1")->second.rva);
+				assert_equal(reference[1], functions[0].find("format_decimal")->second.rva);
 
-				assert_equal(reference[2] - base[1], functions[1].find("get_function_addresses_2")->second.body.begin());
-				assert_equal(reference[3] - base[1], functions[1].find("function_with_a_nested_call_2")->second.body.begin());
-				assert_equal(reference[4] - base[1], functions[1].find("bubble_sort2")->second.body.begin());
-				assert_equal(reference[5] - base[1], functions[1].find("bubble_sort_expose")->second.body.begin());
-				assert_equal(reference[6] - base[1], functions[1].find("guinea_snprintf")->second.body.begin());
+				assert_equal(reference[2], functions[1].find("get_function_addresses_2")->second.rva);
+				assert_equal(reference[3], functions[1].find("function_with_a_nested_call_2")->second.rva);
+				assert_equal(reference[4], functions[1].find("bubble_sort2")->second.rva);
+				assert_equal(reference[5], functions[1].find("bubble_sort_expose")->second.rva);
+				assert_equal(reference[6], functions[1].find("guinea_snprintf")->second.rva);
 			}
 
 
@@ -158,11 +153,11 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, functions.count("bubble_sort"));
 
-				assert_is_true(0 < functions.find("bubble_sort_expose")->second.body.length());
-				assert_is_true(functions.find("bubble_sort_expose")->second.body.length()
-					< functions.find("guinea_snprintf")->second.body.length());
-				assert_is_true(functions.find("guinea_snprintf")->second.body.length()
-					< functions.find("bubble_sort")->second.body.length());
+				assert_is_true(0 < functions.find("bubble_sort_expose")->second.size);
+				assert_is_true(functions.find("bubble_sort_expose")->second.size
+					< functions.find("guinea_snprintf")->second.size);
+				assert_is_true(functions.find("guinea_snprintf")->second.size
+					< functions.find("bubble_sort")->second.size);
 			}
 		end_test_suite
 
@@ -184,17 +179,17 @@ namespace micro_profiler
 				oii1.enumerate_functions(bind(&add_function_mapped, ref(functions_offset), _1));
 
 				// ASSERT
-				assert_equal(functions_original.find("get_function_addresses_2")->second.body.begin() + 0x123,
+				assert_equal(functions_original.find("get_function_addresses_2")->second.rva + (byte *)0x123,
 					functions_offset.find("get_function_addresses_2")->second.body.begin());
-				assert_equal(functions_original.find("get_function_addresses_2")->second.body.length(),
+				assert_equal(functions_original.find("get_function_addresses_2")->second.size,
 					functions_offset.find("get_function_addresses_2")->second.body.length());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.body.begin() + 0x123,
+				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.rva + (byte *)0x123,
 					functions_offset.find("function_with_a_nested_call_2")->second.body.begin());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.body.length(),
+				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.size,
 					functions_offset.find("function_with_a_nested_call_2")->second.body.length());
-				assert_equal(functions_original.find("bubble_sort_expose")->second.body.begin() + 0x123,
+				assert_equal(functions_original.find("bubble_sort_expose")->second.rva + (byte *)0x123,
 					functions_offset.find("bubble_sort_expose")->second.body.begin());
-				assert_equal(functions_original.find("bubble_sort_expose")->second.body.length(),
+				assert_equal(functions_original.find("bubble_sort_expose")->second.size,
 					functions_offset.find("bubble_sort_expose")->second.body.length());
 
 				// INIT
@@ -206,13 +201,13 @@ namespace micro_profiler
 				oii2.enumerate_functions(bind(&add_function_mapped, ref(functions_offset), _1));
 
 				// ASSERT
-				assert_equal(functions_original.find("get_function_addresses_2")->second.body.begin() + 0x12345678,
+				assert_equal(functions_original.find("get_function_addresses_2")->second.rva + (byte *)0x12345678,
 					functions_offset.find("get_function_addresses_2")->second.body.begin());
-				assert_equal(functions_original.find("get_function_addresses_2")->second.body.length(),
+				assert_equal(functions_original.find("get_function_addresses_2")->second.size,
 					functions_offset.find("get_function_addresses_2")->second.body.length());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.body.begin() + 0x12345678,
+				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.rva + (byte *)0x12345678,
 					functions_offset.find("function_with_a_nested_call_2")->second.body.begin());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.body.length(),
+				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.size,
 					functions_offset.find("function_with_a_nested_call_2")->second.body.length());
 			}
 		end_test_suite

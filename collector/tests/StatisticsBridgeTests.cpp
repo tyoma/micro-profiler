@@ -22,7 +22,7 @@ namespace micro_profiler
 			const overhead c_overhead = { 17, 0 };
 
 			template <typename ContainerT>
-			const symbol_metadata *get_symbol_by_name(const ContainerT &symbols, const char *name)
+			const symbol_info *get_symbol_by_name(const ContainerT &symbols, const char *name)
 			{
 				for (typename ContainerT::const_iterator i = symbols.begin(); i != symbols.end(); ++i)
 					if (string::npos != i->name.find(name))
@@ -330,7 +330,7 @@ namespace micro_profiler
 				assert_equal(images[1].load_address(), mb.load_address);
 				assert_not_equal(string::npos, mb.path.find("symbol_container_2"));
 
-				const symbol_metadata *symbol = get_symbol_by_name(md.symbols, "get_function_addresses_2");
+				const symbol_info *symbol = get_symbol_by_name(md.symbols, "get_function_addresses_2");
 
 				assert_not_null(symbol);
 				assert_equal(images[1].get_symbol_address("get_function_addresses_2"),

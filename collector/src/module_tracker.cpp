@@ -31,11 +31,9 @@ namespace micro_profiler
 		: mapped_module(mm), _instance_id(instance_id)
 	{	}
 
-	shared_ptr< image_info<symbol_info_mapped> > mapped_module_ex::get_image_info() const
+	shared_ptr< image_info<symbol_info> > mapped_module_ex::get_image_info() const
 	{
-		shared_ptr< image_info<symbol_info> > i1(load_image_info(path.c_str()));
-
-		return shared_ptr< image_info<symbol_info_mapped> >(new offset_image_info(i1, (size_t)base));
+		return load_image_info(path.c_str());
 	}
 
 	mapped_module_ex::operator module_info_basic() const

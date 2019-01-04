@@ -14,7 +14,7 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const symbol_metadata &lhs, const symbol_metadata &rhs)
+	inline bool operator ==(const symbol_info &lhs, const symbol_info &rhs)
 	{
 		return lhs.id == rhs.id && lhs.name == rhs.name && lhs.rva == rhs.rva && lhs.size == rhs.size
 			&& lhs.file_id == rhs.file_id && lhs.line == rhs.line;
@@ -294,11 +294,11 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				symbol_metadata symbols[] = {
-					{ 13, "fourrier_transform", 0x10010, 100, 11, 1001 },
-					{ 13110, "build_trie", 0x8000, 301, 1171, 101 },
+				symbol_info symbols[] = {
+					{ "fourrier_transform", 0x10010, 100, 13, 11, 1001 },
+					{ "build_trie", 0x8000, 301, 13110, 1171, 101 },
 				};
-				symbol_metadata read;
+				symbol_info read;
 
 				// ACT
 				s(symbols[0]);
@@ -322,14 +322,14 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				symbol_metadata symbols1[] = {
-					{ 13, "fourrier_transform", 0x10010, 100, 11, 1001 },
-					{ 13110, "build_trie", 0x8000, 301, 1171, 101 },
-					{ 13111, "merge_sort", 0x8181, 274, 19, 200 },
+				symbol_info symbols1[] = {
+					{ "fourrier_transform", 13, 0x10010, 100, 11, 1001 },
+					{ "build_trie", 13110, 0x8000, 301, 1171, 101 },
+					{ "merge_sort", 0x8181, 274, 13111, 19, 200 },
 				};
-				symbol_metadata symbols2[] = {
-					{ 11, "fast_fourrier_transform", 0x4010, 100, 11, 1001 },
-					{ 1111, "quick_sort", 0x5181, 274, 23, 200 },
+				symbol_info symbols2[] = {
+					{ "fast_fourrier_transform", 0x4010, 100, 11, 11, 1001 },
+					{ "quick_sort", 0x5181, 274, 1111, 23, 200 },
 				};
 				pair<unsigned, string> files1[] = {
 					make_pair(11, "fourrier.cpp"),

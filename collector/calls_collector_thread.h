@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <common/pod_vector.h>
 #include <common/types.h>
 #include <functional>
@@ -43,7 +44,7 @@ namespace micro_profiler
 #pragma pack(pop)
 
 
-	class calls_collector_thread
+	class calls_collector_thread : noncopyable
 	{
 	public:
 		typedef std::function<void (const call_record *calls, size_t count)> reader_t;
@@ -54,17 +55,13 @@ namespace micro_profiler
 		void on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw();
 		const void *on_exit(const void **stack_ptr, timestamp_t timestamp) throw();
 
+		void track(const void *callee, timestamp_t timestamp) throw();
+
 		void read_collected(const reader_t &reader);
 
 	private:
 		typedef pod_vector<call_record> trace_t;
 		typedef pod_vector<return_entry> return_stack_t;
-
-	private:
-		void track(const void *callee, timestamp_t timestamp) throw();
-
-		calls_collector_thread(const calls_collector_thread &other);
-		const calls_collector_thread &operator =(const calls_collector_thread &rhs);
 
 	private:
 		return_stack_t _return_stack;

@@ -78,13 +78,7 @@ extern "C" handle * MPCDECL micro_profiler_initialize(void *image_address)
 }
 
 extern "C" void micro_profiler_func_enter(void *callee, void * /*call_site*/)
-{
-	const void *stck = 0;
-	calls_collector::on_enter(g_collector_ptr, &stck, read_tick_counter(), callee);
-}
+{	calls_collector::on_enter_nostack(g_collector_ptr, callee, read_tick_counter());	}
 
 extern "C" void micro_profiler_func_exit(void * /*callee*/, void * /*call_site*/)
-{
-	const void *stck = 0;
-	calls_collector::on_exit(g_collector_ptr, &stck, read_tick_counter());
-}
+{	calls_collector::on_exit_nostack(g_collector_ptr, read_tick_counter());	}

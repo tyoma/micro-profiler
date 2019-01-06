@@ -48,6 +48,18 @@ namespace micro_profiler
 					vstack.on_exit(collector, timestamp++);
 				}
 			}
+
+			void emulate_n_calls_nostack(calls_collector &collector, size_t calls_number, void *callee)
+			{
+				virtual_stack vstack;
+				timestamp_t timestamp = timestamp_t();
+
+				for (size_t i = 0; i != calls_number; ++i)
+				{
+					calls_collector::on_enter_nostack(&collector, callee, timestamp++);
+					calls_collector::on_exit_nostack(&collector, timestamp++);
+				}
+			}
 		}
 
 
@@ -95,6 +107,43 @@ namespace micro_profiler
 			}
 
 
+			test( CollectEntryExitOnSimpleExternalFunctionNoStack )
+			{
+				// INIT
+				collection_acceptor a;
+
+				// ACT
+				calls_collector::on_enter_nostack(&*collector, (void *)0x12345678, 100);
+				calls_collector::on_exit_nostack(&*collector, 10010);
+				collector->read_collected(a);
+
+				// ASSERT
+				call_record reference1[] = {
+					{ 100, (void *)0x12345678 }, { 10010, 0 },
+				};
+
+				assert_equal(1u, a.collected.size());
+				assert_equal(mt::this_thread::get_id(), a.collected[0].first);
+				assert_equal(reference1, a.collected[0].second);
+
+				// ACT
+				calls_collector::on_enter_nostack(&*collector, (void *)0x1100000, 100000);
+				calls_collector::on_exit_nostack(&*collector, 100001);
+				calls_collector::on_enter_nostack(&*collector, (void *)0x1100001, 110000);
+				calls_collector::on_exit_nostack(&*collector, 110002000000);
+				collector->read_collected(a);
+
+				// ASSERT
+				call_record reference2[] = {
+					{ 100000, (void *)0x1100000 }, { 100001, 0 },
+					{ 110000, (void *)0x1100001 }, { 110002000000, 0 },
+				};
+
+				assert_equal(2u, a.collected.size());
+				assert_equal(reference2, a.collected[1].second);
+			}
+
+
 			test( ReadNothingAfterPreviousReadingAndNoCalls )
 			{
 				// INIT
@@ -123,6 +172,52 @@ namespace micro_profiler
 				{
 					mt::thread t1(bind(&emulate_n_calls, ref(*collector), 2, (void *)0x12FF00)),
 						t2(bind(&emulate_n_calls, ref(*collector), 3, (void *)0xE1FF0));
+
+					threadid1 = t1.get_id();
+					threadid2 = t2.get_id();
+					t1.join();
+					t2.join();
+				}
+
+				collector->read_collected(a);
+
+				// ASSERT
+				assert_equal(2u, a.collected.size());
+
+				const vector<call_record> *trace1 = &a.collected[0].second;
+				const vector<call_record> *trace2 = &a.collected[1].second;
+				sort(a.collected.begin(), a.collected.end(), &call_trace_less);
+				if (threadid1 > threadid2)
+					swap(threadid1, threadid2), swap(trace1, trace2);
+
+				call_record reference1[] = {
+					{ 0, (void *)0x12FF00 }, { 1, 0 },
+					{ 2, (void *)0x12FF00 }, { 3, 0 },
+				};
+				call_record reference2[] = {
+					{ 0, (void *)0xE1FF0 }, { 1, 0 },
+					{ 2, (void *)0xE1FF0 }, { 3, 0 },
+					{ 4, (void *)0xE1FF0 }, { 5, 0 },
+				};
+
+				assert_equal(threadid1, a.collected[0].first);
+				assert_equal(reference1, *trace1);
+
+				assert_equal(threadid2, a.collected[1].first);
+				assert_equal(reference2, *trace2);
+			}
+
+
+			test( ReadCollectedFromOtherThreadsNoStack )
+			{
+				// INIT
+				collection_acceptor a;
+				mt::thread::id threadid1, threadid2;
+
+				// ACT
+				{
+					mt::thread t1(bind(&emulate_n_calls_nostack, ref(*collector), 2, (void *)0x12FF00)),
+						t2(bind(&emulate_n_calls_nostack, ref(*collector), 3, (void *)0xE1FF0));
 
 					threadid1 = t1.get_id();
 					threadid2 = t2.get_id();

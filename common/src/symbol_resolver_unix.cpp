@@ -23,6 +23,8 @@
 #include "elf/filemapping.h"
 #include "elf/sym-elf.h"
 
+#include <cxxabi.h>
+
 using namespace std;
 using namespace std::placeholders;
 
@@ -53,15 +55,25 @@ namespace micro_profiler
 
 		void elf_image_info::enumerate_functions(const symbol_callback_t &callback) const
 		{
-			symreader::read_symbols(_image->first, _image->second, [&callback] (const symreader::symbol &elf_symbol) {
+			char *demangled = 0;
+			size_t length = 0;
+
+			symreader::read_symbols(_image->first, _image->second, [&] (const symreader::symbol &elf_symbol) {
+				int status = 0;
+				char *demangled2 = __cxxabiv1::__cxa_demangle(elf_symbol.name, demangled, &length, &status);
+
+				if (demangled2 && !status)
+					demangled = demangled2;
+
 				symbol_info symbol = {
-					elf_symbol.name,
+					demangled2 ? demangled2 : elf_symbol.name,
 					static_cast<unsigned>(elf_symbol.virtual_address),
 					static_cast<unsigned>(elf_symbol.size)
 				};
 
 				callback(symbol);
 			});
+			free(demangled);
 		}
 	}
 

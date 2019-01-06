@@ -29,6 +29,14 @@ namespace micro_profiler
 			void add_function_mapped(map<string, symbol_info_mapped> &functions, const symbol_info_mapped &si)
 			{	functions.insert(make_pair(si.name, si));	}
 
+			bool has_function_containing(const map<string, symbol_info> &functions, const char *substring)
+			{
+				for (map<string, symbol_info>::const_iterator i = functions.begin(); i != functions.end(); ++i)
+					if (i->first.find(substring) != string::npos)
+						return true;
+				return false;
+			}
+
 			struct less_nocase
 			{
 				bool operator ()(string lhs, string rhs) const
@@ -239,6 +247,34 @@ namespace micro_profiler
 				assert_equal(files["symbol_container_2_internal.cpp"], functions["bubble_sort"].file_id);
 			}
 #endif
+
+			test( CPPNamesAreDemangledOnEnumeration )
+			{
+				// INIT
+				map<string, symbol_info> functions;
+				shared_ptr< image_info<symbol_info> > ii[] = {
+					load_image_info(image_paths[1].c_str()),
+					load_image_info(image_paths[2].c_str()),
+				};
+
+				// ACT
+				ii[0]->enumerate_functions(bind(&add_function, ref(functions), _1));
+
+				// ASSERT
+				assert_is_true(has_function_containing(functions,
+					"a_tiny_namespace::function_that_hides_under_a_namespace"));
+
+				// INIT
+				functions.clear();
+
+				// ACT
+				ii[1]->enumerate_functions(bind(&add_function, ref(functions), _1));
+
+				// ASSERT
+				assert_is_true(has_function_containing(functions, "vale_of_mean_creatures::this_one_for_the_birds"));
+				assert_is_true(has_function_containing(functions, "vale_of_mean_creatures::this_one_for_the_whales"));
+				assert_is_true(has_function_containing(functions, "vale_of_mean_creatures::the_abyss::bubble_sort"));
+			}
 		end_test_suite
 
 

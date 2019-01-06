@@ -73,6 +73,10 @@ namespace micro_profiler
 			md.symbols.push_back(symbol);
 		});
 
+		ii->enumerate_files([&] (const pair<unsigned, string> &file) {
+			md.source_files.push_back(file);
+		});
+
 		mt::lock_guard<mt::mutex> lock(_mutex);
 		buffer_writer< pod_vector<byte> > writer(_buffer);
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);

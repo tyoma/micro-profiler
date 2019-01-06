@@ -150,14 +150,11 @@ namespace micro_profiler
 					return i->second;
 				}
 
-				virtual std::pair<std::string, unsigned> symbol_fileline_by_va(address_t /*address*/) const
-				{
-					throw 0;
-				}
+				virtual bool symbol_fileline_by_va(address_t /*address*/, fileline_t &) const
+				{	throw 0;	}
 
-				virtual void add_image(const char * /*image*/, address_t /*base*/)
-				{
-				}
+				virtual void add_metadata(const module_info_basic &, const module_info_metadata &)
+				{	throw 0;	}
 
 			public:
 				mutable map<address_t, string> names;

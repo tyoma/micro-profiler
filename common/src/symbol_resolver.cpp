@@ -20,6 +20,8 @@
 
 #include <common/symbol_resolver.h>
 
+#include <algorithm>
+#include <common/protocol.h>
 #include <map>
 
 using namespace std;
@@ -39,29 +41,34 @@ namespace micro_profiler
 				return i != _mapped_symbols.end() ? i->second.name : _empty;
 			}
 
-			virtual pair<string, unsigned> symbol_fileline_by_va(long_address_t address) const
+			virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const
 			{
 				cached_names_map::const_iterator i = find_symbol_by_va(address);
 
 				if (i == _mapped_symbols.end())
-					return pair<string, unsigned>();
+					return false;
 				files_map::const_iterator j = _files.find(i->second.file_id);
 
-				return make_pair(j->second, i->second.line);
+				return result.first = j->second, result.second = i->second.line, true;
 			}
 
-			virtual void add_image(const char *image, long_address_t load_address)
+			virtual void add_metadata(const module_info_basic &basic, const module_info_metadata &metadata)
 			{
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(image);
-				unsigned file_id_base = _files.size();
+				const unsigned int file_id_base = _files.empty() ? 0u : max_element(_files.begin(), _files.end())->first;
 
-				ii->enumerate_files([&] (const pair<unsigned, string> &file) {
-					_files.insert(make_pair(file_id_base + file.first, file.second));
-				});
-				ii->enumerate_functions([&] (symbol_info symbol) {
-					symbol.file_id += file_id_base;
-					_mapped_symbols.insert(make_pair(load_address + symbol.rva, symbol));
-				});
+				for (vector<symbol_info>::const_iterator i = metadata.symbols.begin(); i != metadata.symbols.end(); ++i)
+				{
+					symbol_info s = *i;
+
+					s.file_id += file_id_base;
+					_mapped_symbols.insert(make_pair(basic.load_address + i->rva, s));
+				}
+
+				for (vector< pair<unsigned int, string> >::const_iterator i = metadata.source_files.begin();
+					i != metadata.source_files.end(); ++i)
+				{
+					_files.insert(make_pair(file_id_base + i->first, i->second));
+				}
 			}
 
 		private:
@@ -71,11 +78,13 @@ namespace micro_profiler
 		private:
 			cached_names_map::const_iterator find_symbol_by_va(long_address_t address) const
 			{
-				cached_names_map::const_iterator i = _mapped_symbols.lower_bound(address);
+				cached_names_map::const_iterator i = _mapped_symbols.upper_bound(address);
 
-				if (i->first > address && i != _mapped_symbols.begin())
+				if (i != _mapped_symbols.begin())
 					--i;
-				return address < i->second.size + i->first ? i : _mapped_symbols.end();
+				else if (i == _mapped_symbols.end())
+					return _mapped_symbols.end();
+				return (i->first <= address) & (address < i->second.size + i->first) ? i : _mapped_symbols.end();
 			}
 
 		private:

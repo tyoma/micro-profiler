@@ -7,6 +7,7 @@ set(COMMON_TEST_SOURCES
 	MiscTests.cpp
 	PrimitivesTests.cpp
 	SerializationTests.cpp
+	SymbolResolverTests.cpp
 	TextFormattingServicesTests.cpp
 )
 

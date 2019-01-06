@@ -54,6 +54,8 @@ namespace micro_profiler
 		strmd::deserializer<buffer_reader, packer> archive(reader);
 		initialization_data idata;
 		loaded_modules lmodules;
+		module_info_basic mbasic;
+		module_info_metadata mmetadata;
 		commands c;
 
 		switch (archive(c), c)
@@ -67,15 +69,18 @@ namespace micro_profiler
 		case modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-			{
-				send(request_metadata, i->instance_id);
-				_resolver->add_image(i->path.c_str(), i->load_address);
-			}
+				send(request_metadata, *i);
 			break;
 
 		case update_statistics:
 			if (_model)
 				archive(*_model);
+			break;
+
+		case module_metadata:
+			archive(mbasic);
+			archive(mmetadata);
+			_resolver->add_metadata(mbasic, mmetadata);
 			break;
 
 		default:

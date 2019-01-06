@@ -148,9 +148,9 @@ namespace micro_profiler
 	void tables_ui::on_activate(wpl::ui::index_traits::index_type index)
 	{
 		const address_t address = _statistics->get_address(index);
-		const pair<string, unsigned> fileline = _statistics->get_resolver()->symbol_fileline_by_va(address);
+		symbol_resolver::fileline_t fileline;
 
-		if (!fileline.first.empty())
+		if (_statistics->get_resolver()->symbol_fileline_by_va(address, fileline))
 			open_source(fileline.first, fileline.second);
 	}
 

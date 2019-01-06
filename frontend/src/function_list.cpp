@@ -405,9 +405,9 @@ namespace micro_profiler
 	const string &functions_list::static_resolver::symbol_name_by_va(address_t address) const
 	{	return symbols[address];	}
 
-	pair<string, unsigned> functions_list::static_resolver::symbol_fileline_by_va(address_t /*address*/) const
-	{	return make_pair("", 0);	}
+	bool functions_list::static_resolver::symbol_fileline_by_va(address_t /*address*/, fileline_t & /*fileline*/) const
+	{	return false;	}
 
-	void functions_list::static_resolver::add_image(const char * /*image*/, address_t /*load_address*/)
+	void functions_list::static_resolver::add_metadata(const module_info_basic &, const module_info_metadata &)
 	{	}
 }

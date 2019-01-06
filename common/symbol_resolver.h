@@ -28,6 +28,9 @@
 
 namespace micro_profiler
 {
+	struct module_info_basic;
+	struct module_info_metadata;
+
 	struct symbol_info
 	{
 		std::string name;
@@ -71,10 +74,12 @@ namespace micro_profiler
 
 	struct symbol_resolver
 	{
+		typedef std::pair<std::string, unsigned> fileline_t;
+
 		virtual ~symbol_resolver()	{	}
 		virtual const std::string &symbol_name_by_va(long_address_t address) const = 0;
-		virtual std::pair<std::string, unsigned> symbol_fileline_by_va(long_address_t address) const = 0;
-		virtual void add_image(const char *image, long_address_t load_address) = 0;
+		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &fileline) const = 0;
+		virtual void add_metadata(const module_info_basic &basic, const module_info_metadata &metadata) = 0;
 
 		static std::shared_ptr<symbol_resolver> create();
 	};

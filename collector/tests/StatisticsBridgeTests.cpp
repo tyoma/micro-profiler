@@ -218,9 +218,7 @@ namespace micro_profiler
 				assert_equal(1u, loads.size());
 				assert_equal(1u, loads[0].size());
 
-				assert_equal(0u, loads[0][0].instance_id);
-				assert_equal(images[0].load_address(), loads[0][0].load_address);
-				assert_not_equal(string::npos, loads[0][0].path.find("symbol_container_1"));
+				assert_equal(0u, loads[0][0]);
 
 				// ACT
 				mtracker->load(images[1].get_symbol_address("get_function_addresses_2"));
@@ -231,12 +229,8 @@ namespace micro_profiler
 				assert_equal(2u, loads.size());
 				assert_equal(2u, loads[1].size());
 
-				assert_equal(1u, loads[1][0].instance_id);
-				assert_equal(images[1].load_address(), loads[1][0].load_address);
-				assert_not_equal(string::npos, loads[1][0].path.find("symbol_container_2"));
-				assert_equal(2u, loads[1][1].instance_id);
-				assert_equal(images[2].load_address(), loads[1][1].load_address);
-				assert_not_equal(string::npos, loads[1][1].path.find("symbol_container_3_nosymbols"));
+				assert_equal(1u, loads[1][0]);
+				assert_equal(2u, loads[1][1]);
 			}
 
 
@@ -335,14 +329,18 @@ namespace micro_profiler
 				assert_not_null(symbol);
 				assert_equal(images[1].get_symbol_address("get_function_addresses_2"),
 					images[1].load_address_ptr() + symbol->rva);
-//				assert_equal("symbol_container_2.cpp", *get_file(md.source_files, symbol->file_id));
+#ifdef _WIN32
+				assert_equal("symbol_container_2.cpp", *get_file(md.source_files, symbol->file_id));
+#endif
 
 				symbol = get_symbol_by_name(md.symbols, "guinea_snprintf");
 
 				assert_not_null(symbol);
 				assert_equal(images[1].get_symbol_address("guinea_snprintf"),
 					images[1].load_address_ptr() + symbol->rva);
-//				assert_equal("symbol_container_2.cpp", *get_file(md.source_files, symbol->file_id));
+#ifdef _WIN32
+				assert_equal("symbol_container_2.cpp", *get_file(md.source_files, symbol->file_id));
+#endif
 
 				// ACT
 				b.send_module_metadata(0);
@@ -357,7 +355,9 @@ namespace micro_profiler
 				assert_not_null(symbol);
 				assert_equal(images[0].get_symbol_address("get_function_addresses_1"),
 					images[0].load_address_ptr() + symbol->rva);
-//				assert_equal("symbol_container_1.cpp", *get_file(md.source_files, symbol->file_id));
+#ifdef _WIN32
+				assert_equal("symbol_container_1.cpp", *get_file(md.source_files, symbol->file_id));
+#endif
 			}
 		end_test_suite
 	}

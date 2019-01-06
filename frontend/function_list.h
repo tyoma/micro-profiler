@@ -90,8 +90,8 @@ namespace micro_profiler
 	struct functions_list::static_resolver : public symbol_resolver
 	{
 		virtual const std::string &symbol_name_by_va(address_t address) const;
-		virtual std::pair<std::string, unsigned> symbol_fileline_by_va(address_t address) const;
-		virtual void add_image(const char *image, address_t load_address);
+		virtual bool symbol_fileline_by_va(address_t address, fileline_t &result) const;
+		virtual void add_metadata(const module_info_basic &, const module_info_metadata &);
 
 		mutable std::unordered_map<address_t, std::string> symbols;
 	};

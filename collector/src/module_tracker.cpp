@@ -77,10 +77,7 @@ namespace micro_profiler
 
 		mt::lock_guard<mt::mutex> l(_mtx);
 
-		for (vector<mapped_module_ex::instance_id_t>::const_iterator i = _lqueue.begin(); i != _lqueue.end(); ++i)
-			loaded_modules_.push_back(*get_module(*i));
-		_lqueue.clear();
-
+		swap(loaded_modules_, _lqueue);
 		swap(unloaded_modules_, _uqueue);
 	}
 

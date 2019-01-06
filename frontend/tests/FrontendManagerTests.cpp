@@ -33,6 +33,18 @@ namespace micro_profiler
 				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
 			}
 
+			template <typename Data1T, typename Data2T>
+			void write(ipc::channel &channel, commands c, const typename Data1T &data1, const typename Data2T &data2)
+			{
+				vector_adapter b;
+				strmd::serializer<vector_adapter, packer> archive(b);
+
+				archive(c);
+				archive(data1);
+				archive(data2);
+				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
+			}
+
 			initialization_data make_initialization_data(const string &executable, timestamp_t ticks_per_second)
 			{
 				initialization_data idata = {	executable, ticks_per_second };
@@ -268,22 +280,23 @@ namespace micro_profiler
 			}
 
 
-			test( SymbolsAreLoadedWhenCorrespondingCommandIsProcessed )
+			test( SymbolsNamesAreLoadedUponMetadataReceival )
 			{
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
-				module_info_basic mi[] = {
-					{ 0, images[0].load_address(), images[0].absolute_path() },
-					{ 1, images[1].load_address(), images[1].absolute_path() },
+				symbol_info symbols1[] = { { "foo", 0x0100, 1 }, { "bar", 0x0200, 1 }, { "baz", 0x1100, 1 }, };
+				symbol_info symbols2[] = { { "FOO", 0x0100, 1 }, { "BAR", 0x2000, 1 }, };
+				module_info_basic basic[] = { { 0, 0x10000, }, { 0, 0x100000, }, };
+				module_info_metadata metadata[] = { { mkvector(symbols1), }, { mkvector(symbols2), }, };
+				pair< unsigned, function_statistics_detailed_t<unsigned> > data1[] = {
+					make_pair(0x10100, function_statistics_detailed_t<unsigned>()),
+					make_pair(0x11100, function_statistics_detailed_t<unsigned>()),
 				};
-				pair< const void *, function_statistics_detailed_t<const void *> > data[] = {
-					make_pair(images[0].get_symbol_address("get_function_addresses_1"),
-						function_statistics_detailed_t<const void *>()),
-					make_pair(images[1].get_symbol_address("get_function_addresses_2"),
-						function_statistics_detailed_t<const void *>()),
+				pair< unsigned, function_statistics_detailed_t<unsigned> > data2[] = {
+					make_pair(0x10200, function_statistics_detailed_t<unsigned>()),
+					make_pair(0x102000, function_statistics_detailed_t<unsigned>()),
 				};
 
 				write(*c, init, make_initialization_data("", 10));
@@ -291,61 +304,30 @@ namespace micro_profiler
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, modules_loaded, vector<module_info_basic>(1, mi[0]));
-				write(*c, modules_loaded, vector<module_info_basic>(1, mi[1]));
+				write(*c, module_metadata, basic[0], metadata[0]);
+				write(*c, update_statistics, mkvector(data1));
 
 				// ASSERT
 				wstring text;
 
-				write(*c, update_statistics, mkvector(data));
 				model->set_order(1, true);
 
-				assert_equal(L"get_function_addresses_1", (model->get_text(0, 1, text), text));
-				assert_equal(L"get_function_addresses_2", (model->get_text(1, 1, text), text));
-			}
-
-
-			test( SymbolAreLoadedWhenCorrespondingCommandIsProcessedBatch )
-			{
-				// INIT
-				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
-					_1, _2));
-				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				image images[] = {
-					image("symbol_container_1"),
-					image("symbol_container_2"),
-					image("symbol_container_3_nosymbols"),
-				};
-				module_info_basic mi[] = {
-					{ 0, images[0].load_address(), images[0].absolute_path() },
-					{ 1, images[1].load_address(), images[1].absolute_path() },
-					{ 2, images[2].load_address(), images[2].absolute_path() },
-				};
-				pair< const void *, function_statistics_detailed_t<const void *> > data[] = {
-					make_pair(images[0].get_symbol_address("get_function_addresses_1"),
-						function_statistics_detailed_t<const void *>()),
-					make_pair(images[1].get_symbol_address("get_function_addresses_2"),
-						function_statistics_detailed_t<const void *>()),
-					make_pair(images[2].get_symbol_address("get_function_addresses_3"),
-						function_statistics_detailed_t<const void *>()),
-				};
-
-				write(*c, init, make_initialization_data("", 10));
-
-				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
+				assert_equal(L"baz", (model->get_text(0, 1, text), text));
+				assert_equal(0x11100, model->get_address(0));
+				assert_equal(L"foo", (model->get_text(1, 1, text), text));
+				assert_equal(0x10100, model->get_address(1));
 
 				// ACT
-				write(*c, modules_loaded, mkvector(mi));
+				write(*c, module_metadata, basic[1], metadata[1]);
+				write(*c, update_statistics, mkvector(data2));
 
 				// ASSERT
-				wstring text;
-
-				write(*c, update_statistics, mkvector(data));
-				model->set_order(1, true);
-
-				assert_equal(L"get_function_addresses_1", (model->get_text(0, 1, text), text));
-				assert_equal(L"get_function_addresses_2", (model->get_text(1, 1, text), text));
-				assert_equal(L"get_function_addresses_3", (model->get_text(2, 1, text), text));
+				assert_equal(L"BAR", (model->get_text(0, 1, text), text));
+				assert_equal(0x102000, model->get_address(0));
+				assert_equal(L"bar", (model->get_text(1, 1, text), text));
+				assert_equal(0x10200, model->get_address(1));
+				assert_equal(L"baz", (model->get_text(2, 1, text), text));
+				assert_equal(L"foo", (model->get_text(3, 1, text), text));
 			}
 
 
@@ -916,16 +898,8 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(&dummy_ui_factory);
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				image images[] = {
-					image("symbol_container_1"), image("symbol_container_2"), image("symbol_container_3_nosymbols"),
-				};
-				module_info_basic mi1[] = {
-					{ 0, images[0].load_address(), images[0].absolute_path() },
-				};
-				module_info_basic mi2[] = {
-					{ 1, images[1].load_address(), images[1].absolute_path() },
-					{ 10, images[2].load_address(), images[2].absolute_path() },
-				};
+				unsigned int mi1[] = { 0, };
+				unsigned int mi2[] = { 1, 10, };
 
 				write(*c, init, initialization_data());
 

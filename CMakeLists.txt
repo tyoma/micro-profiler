@@ -39,8 +39,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-undefined")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--no-undefined")
 	else()
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-undefined,error")
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,-undefined,error")
+		# TODO: prevent clang from linking incomplete shared objects
 	endif()	
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set(configurations

@@ -1,6 +1,8 @@
 #include <common/symbol_resolver.h>
 
 #include <common/protocol.h>
+#include <common/serialization.h>
+#include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 
 #include <ut/assert.h>
@@ -12,28 +14,11 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			int g_dummy;
-
-			typedef void (*void_f_t)();
-			typedef void (get_function_addresses_1_t)(void_f_t &f1, void_f_t &f2);
-			typedef void (get_function_addresses_2_t)(void_f_t &f1, void_f_t &f2, void_f_t &f3);
-			typedef void (get_function_addresses_3_t)(void_f_t &f);
-		}
-
 		begin_test_suite( SymbolResolverTests )
-			test( ResolverCreationReturnsNonNullObject )
-			{
-				// INIT / ACT / ASSERT
-				assert_not_null(symbol_resolver::create());
-			}
-
-
 			test( EmptyNameIsReturnedWhenNoMetadataIsLoaded )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x00F));
@@ -44,7 +29,7 @@ namespace micro_profiler
 			test( EmptyNameIsReturnedForFunctionsBeforeTheirBegining )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				module_info_basic basic = { 0, 0, };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -60,7 +45,7 @@ namespace micro_profiler
 			test( EmptyNameIsReturnedForFunctionsPassTheEnd )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				module_info_basic basic = { 0, 0, };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -76,7 +61,7 @@ namespace micro_profiler
 			test( FunctionsLoadedThroughAsMetadataAreSearchableByAbsoluteAddress )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				module_info_basic basic = { 0, 0, };
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -94,7 +79,7 @@ namespace micro_profiler
 			test( FunctionsLoadedThroughAsMetadataAreOffsetAccordingly )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				module_info_basic basic = { 0, 0x1100000, };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -124,7 +109,7 @@ namespace micro_profiler
 			test( ConstantReferenceFromResolverIsTheSame )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				module_info_basic basic = { 0, 0, };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -150,7 +135,7 @@ namespace micro_profiler
 			test( NoFileLineInformationIsReturnedForInvalidAddress )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				symbol_resolver::fileline_t dummy;
 
 				// ACT / ASSERT
@@ -161,7 +146,7 @@ namespace micro_profiler
 			test( FileLineInformationIsReturnedBySymolProvider )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				module_info_basic basic = { 0, 0, };
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
@@ -198,7 +183,7 @@ namespace micro_profiler
 			test( FileLineInformationIsRebasedForNewMetadata )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(symbol_resolver::create());
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
 				module_info_basic basic = { 0, 0, };
 				symbol_info symbols1[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
@@ -251,6 +236,91 @@ namespace micro_profiler
 				};
 
 				assert_equal(reference, results);
+			}
+
+
+			test( SymbolResolverIsSerializable )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				module_info_basic basic = { 0, 0, };
+				symbol_info symbols[] = {
+					{ "a", 0x010, 3, 0, 11, 121 },
+					{ "b", 0x101, 5, 0, 1, 1 },
+					{ "cccc", 0x158, 5, 0, 7, 71 },
+					{ "ddd", 0x188, 5, 0, 7, 713 },
+				};
+				pair<unsigned, string> files[] = {
+					make_pair(11, "zoo.cpp"), make_pair(1, "c:/umi.cpp"), make_pair(7, "d:\\dev\\kloo.cpp"),
+				};
+				module_info_metadata metadata = { mkvector(symbols), mkvector(files) };
+				symbol_resolver::fileline_t results[4];
+
+				r->add_metadata(basic, metadata);
+
+				// ACT
+				shared_ptr<symbol_resolver> r2(new symbol_resolver);
+
+				ser(*r);
+				dser(*r2);
+
+				// ASSERT
+				assert_equal("a", r2->symbol_name_by_va(0x010));
+				assert_equal("b", r2->symbol_name_by_va(0x101));
+				assert_equal("cccc", r2->symbol_name_by_va(0x158));
+				assert_equal("ddd", r2->symbol_name_by_va(0x188));
+
+				assert_is_true(r2->symbol_fileline_by_va(0x010, results[0]));
+				assert_is_true(r2->symbol_fileline_by_va(0x101, results[1]));
+				assert_is_true(r2->symbol_fileline_by_va(0x158, results[2]));
+				assert_is_true(r2->symbol_fileline_by_va(0x188, results[3]));
+
+				symbol_resolver::fileline_t reference[] = {
+					make_pair("zoo.cpp", 121),
+					make_pair("c:/umi.cpp", 1),
+					make_pair("d:\\dev\\kloo.cpp", 71),
+					make_pair("d:\\dev\\kloo.cpp", 713),
+				};
+
+				assert_equal(reference, results);
+			}
+
+
+			test( FilelineIsNotAvailableForMissingFunctions )
+			{
+				// INIT
+				symbol_resolver r;
+				symbol_resolver::fileline_t result;
+
+				// ACT / ASSERT
+				assert_is_false(r.symbol_fileline_by_va(123, result));
+			}
+
+
+			test( FilelineIsNotAvailableForFunctionsWithMissingFiles )
+			{
+				// INIT
+				symbol_resolver r;
+				symbol_info symbols[] = {
+					{ "a", 0x010, 3, 0, 11, 121 },
+					{ "b", 0x101, 5, 0, 1, 1 },
+					{ "cccc", 0x158, 5, 0, 0, 71 },
+					{ "ddd", 0x188, 5, 0, 0, 713 },
+				};
+				module_info_basic basic = { };
+				module_info_metadata metadata = { mkvector(symbols), };
+				symbol_resolver::fileline_t result;
+
+				r.add_metadata(basic, metadata);
+
+				// ACT / ASSERT
+				assert_is_false(r.symbol_fileline_by_va(0x010, result));
+				assert_is_false(r.symbol_fileline_by_va(0x101, result));
+				assert_is_false(r.symbol_fileline_by_va(0x158, result));
+				assert_is_false(r.symbol_fileline_by_va(0x188, result));
 			}
 
 

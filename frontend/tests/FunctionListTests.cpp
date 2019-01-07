@@ -137,27 +137,32 @@ namespace micro_profiler
 				{	}
 
 				template <typename T, size_t n>
-				explicit sri(T (&symbols)[n])
-					: names(symbols, symbols + n)
-				{	}
+				explicit sri(T (&symbols)[n])					
+				{
+					module_info_basic basic = { };
+					module_info_metadata metadata;
+
+					for (size_t i = 0; i != n; ++i)
+					{
+						symbol_info symbol = { symbols[i].second, static_cast<unsigned>(symbols[i].first), 1, };
+
+						metadata.symbols.push_back(symbol);
+					}
+					add_metadata(basic, metadata);
+				}
 
 				virtual const string &symbol_name_by_va(address_t address) const
 				{
-					map<address_t, string>::const_iterator i = names.find(address);
+					const string &match = symbol_resolver::symbol_name_by_va(address);
 
-					if (i == names.end())
-						i = names.insert(make_pair(address, to_string_address(address))).first;
-					return i->second;
+					if (!match.empty())
+						return match;
+
+					return _names[address] = to_string_address(address);
 				}
 
-				virtual bool symbol_fileline_by_va(address_t /*address*/, fileline_t &) const
-				{	throw 0;	}
-
-				virtual void add_metadata(const module_info_basic &, const module_info_metadata &)
-				{	throw 0;	}
-
-			public:
-				mutable map<address_t, string> names;
+			private:
+				mutable unordered_map<address_t, string> _names;
 			};
 
 			// convert decimal point to current(default) locale
@@ -1565,31 +1570,29 @@ namespace micro_profiler
 				fl1->save(ser);
 
 				// ASSERT
-				vector< pair<address_t, string> > data;
-				pair<address_t, string> reference1[] = { make_pair(1, "Lorem"), make_pair(17, "Amet"), };
+				symbol_resolver r;
 
 				dser(ticks_per_second);
-				dser(data);
+				dser(r);
 				dser(s);
 
 				assert_equal(16, ticks_per_second);
-				assert_equivalent(reference1, data);
+				assert_equal("Lorem", r.symbol_name_by_va(1));
+				assert_equal("Amet", r.symbol_name_by_va(17));
 
 				// ACT
 				fl2->save(ser);
 
 				// ASSERT
-				pair<address_t, string> reference2[] = {
-					make_pair(7, "A"), make_pair(11, "B"), make_pair(131, "D"), make_pair(113, "E"),
-				};
-
-				data.clear();
 				dser(ticks_per_second);
-				dser(data);
+				dser(r);
 				dser(s);
 
 				assert_equal(25000000000, ticks_per_second);
-				assert_equivalent(reference2, data);
+				assert_equal("A", r.symbol_name_by_va(7));
+				assert_equal("B", r.symbol_name_by_va(11));
+				assert_equal("D", r.symbol_name_by_va(131));
+				assert_equal("E", r.symbol_name_by_va(113));
 			}
 
 
@@ -1611,11 +1614,11 @@ namespace micro_profiler
 				fl->save(ser);
 
 				// ASSERT
-				vector< pair<address_t, string> > symbols_read;
+				symbol_resolver r;
 				statistics_map_detailed stats_read;
 
 				dser(ticks_per_second);
-				dser(symbols_read);
+				dser(r);
 				dser(stats_read);
 
 				assert_equal(3u, stats_read.size());
@@ -1634,7 +1637,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 1000, s[123].inclusive_time = 250;
 
 				ser(500);
-				ser(mkvector(symbols));
+				ser(sri(symbols));
 				ser(s);
 
 				// ACT
@@ -1682,7 +1685,7 @@ namespace micro_profiler
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 
 				ser(500);
-				ser(mkvector(symbols));
+				ser(sri(symbols));
 				ser(s);
 
 				shared_ptr<functions_list> fl = functions_list::load(dser);
@@ -1720,7 +1723,7 @@ namespace micro_profiler
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 
 				ser(500);
-				ser(mkvector(symbols));
+				ser(sri(symbols));
 				ser(s);
 				s.clear();
 
@@ -1755,12 +1758,12 @@ namespace micro_profiler
 
 				s[5].exclusive_time = 13, s[17].exclusive_time = 127, s[13].exclusive_time = 12;
 
-				ser(500), ser(mkvector(symbols)), ser(s);
+				ser(500), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
 				s[123].exclusive_time = 12000;
-				ser(100), ser(mkvector(symbols)), ser(s);
+				ser(100), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
@@ -1792,11 +1795,11 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(mkvector(symbols)), ser(s);
+				ser(500), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
-				ser(1000), ser(mkvector(symbols)), ser(s);
+				ser(1000), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
@@ -1854,7 +1857,7 @@ namespace micro_profiler
 				s[5].exclusive_time = 16, s[17].exclusive_time = 0;
 				s[5].inclusive_time = 15, s[17].inclusive_time = 0;
 
-				ser(500), ser(mkvector(symbols)), ser(s);
+				ser(500), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
@@ -1886,7 +1889,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(mkvector(symbols)), ser(s);
+				ser(500), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
@@ -1921,7 +1924,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(mkvector(symbols)), ser(s);
+				ser(500), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
@@ -1956,7 +1959,7 @@ namespace micro_profiler
 				s[17].callees[11].times_called = 101, s[17].callees[19].times_called = 103, s[17].callees[23].times_called = 1100;
 				s[17].callees[11].exclusive_time = 3, s[17].callees[19].exclusive_time = 112, s[17].callees[23].exclusive_time = 9;
 
-				ser(100), ser(mkvector(symbols)), ser(s);
+				ser(100), ser(sri(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr<linked_statistics> ls;
 
@@ -1982,89 +1985,6 @@ namespace micro_profiler
 				assert_approx_equal(1.12, m->get_value(0), c_tolerance);
 				assert_approx_equal(0.09, m->get_value(1), c_tolerance);
 				assert_approx_equal(0.03, m->get_value(2), c_tolerance);
-			}
-
-
-			test( AllSymbolsAreLoadedOnRequestAndResolverIsReleased )
-			{
-				// INIT
-				pair<address_t, string> symbols[] = {
-					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				shared_ptr<sri> sr(new sri(symbols));
-				shared_ptr<functions_list> fl(functions_list::create(16, sr));
-				statistics_map_detailed s;
-
-				s[1].times_called = 11;
-				s[13].times_called = 117;
-				s[17].times_called = 1187;
-				s[123].times_called = 187;
-
-				ser(s);
-				dser(*fl);
-
-				// ACT
-				fl->release_resolver();
-
-				// ACT / ASSERT
-				assert_is_true(sr.unique());
-
-				// INIT
-				fl->set_order(1, true);
-
-				// ACT
-				assert_equal(L"Amet", get_text(*fl, 0, 1));
-				assert_equal(L"Ipsum", get_text(*fl, 1, 1));
-				assert_equal(L"Lorem", get_text(*fl, 2, 1));
-				assert_equal(L"dolor", get_text(*fl, 3, 1));
-			}
-
-
-			test( AllSymbolsAreLoadedOnRequestAndResolverIsReleasedByLinkedStatistics )
-			{
-				// INIT
-				pair<address_t, string> symbols[] = {
-					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				shared_ptr<sri> sr(new sri(symbols));
-				shared_ptr<functions_list> fl(functions_list::create(16, sr));
-				statistics_map_detailed s;
-
-				s[1].times_called = 11; // Lorem
-				s[1].callees[17].times_called = 2; // Lorem [2] -> Amet
-				s[13].times_called = 117; // Ipsum
-				s[13].callees[123].times_called = 17; // Ipsum [1] -> dolor
-				s[13].callees[1].times_called = 5; // Ipsum[1] -> Lorem
-				s[17].times_called = 1187; // Amet
-				s[123].times_called = 187; // dolor
-
-				ser(s);
-				dser(*fl);
-				fl->set_order(1, true);
-				shared_ptr<linked_statistics> children[] = {
-					fl->watch_children(0), fl->watch_children(1), fl->watch_children(2), fl->watch_children(2),
-				};
-				shared_ptr<linked_statistics> parents[] = {
-					fl->watch_parents(0), fl->watch_parents(1), fl->watch_parents(2), fl->watch_parents(2),
-				};
-				parents;
-
-				// ACT
-				fl->release_resolver();
-
-				// ASSERT
-				assert_is_true(sr.unique());
-
-				assert_equal(2u, children[1]->get_count());
-				children[1]->set_order(1, true);
-				assert_equal(L"Lorem", get_text(*children[1], 0, 1));
-				assert_equal(L"dolor", get_text(*children[1], 1, 1));
-
-				assert_equal(1u, children[2]->get_count());
-				assert_equal(L"Amet", get_text(*children[2], 0, 1));
-
-				assert_equal(1u, parents[2]->get_count());
-				assert_equal(L"Ipsum", get_text(*parents[2], 0, 1));
 			}
 		end_test_suite
 	}

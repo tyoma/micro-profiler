@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(FRONTEND_TESTS_SOURCES
 	ColumnsModelTests.cpp
+	FrontendManagerTests.cpp
 	FunctionListTests.cpp
 	OrderedViewTests.cpp
 )
@@ -9,7 +10,6 @@ set(FRONTEND_TESTS_SOURCES
 if(WIN32)
 	set(FRONTEND_TESTS_SOURCES ${FRONTEND_TESTS_SOURCES}
 		CommandTargetTests.cpp
-		FrontendManagerTests.cpp
 	)
 endif()
 

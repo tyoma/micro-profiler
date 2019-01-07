@@ -54,8 +54,6 @@ namespace micro_profiler
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
 		std::shared_ptr<symbol_resolver> get_resolver() const;
 
-		void release_resolver();
-
 		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
 			std::shared_ptr<symbol_resolver> resolver);
 
@@ -67,7 +65,6 @@ namespace micro_profiler
 
 	private:
 		typedef statistics_model_impl<wpl::ui::table_model, statistics_map_detailed> base;
-		struct static_resolver;
 		typedef std::list<linked_statistics_ex *> linked_statistics_list_t;
 
 	private:
@@ -87,24 +84,13 @@ namespace micro_profiler
 		friend void serialize(ArchiveT &archive, functions_list &data);
 	};
 
-	struct functions_list::static_resolver : public symbol_resolver
-	{
-		virtual const std::string &symbol_name_by_va(address_t address) const;
-		virtual bool symbol_fileline_by_va(address_t address, fileline_t &result) const;
-		virtual void add_metadata(const module_info_basic &, const module_info_metadata &);
-
-		mutable std::unordered_map<address_t, std::string> symbols;
-	};
-
 
 
 	template <typename ArchiveT>
 	inline void functions_list::save(ArchiveT &archive) const
 	{
 		archive(static_cast<timestamp_t>(1 / _tick_interval));
-		archive(_statistics->size());
-		for (statistics_map_detailed::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
-			archive(make_pair(i->first, _resolver->symbol_name_by_va(i->first)));
+		archive(*_resolver);
 		archive(*_statistics);
 	}
 
@@ -112,10 +98,10 @@ namespace micro_profiler
 	inline std::shared_ptr<functions_list> functions_list::load(ArchiveT &archive)
 	{
 		timestamp_t ticks_per_second;
-		std::shared_ptr<static_resolver> resolver(new static_resolver);
+		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver);
 
 		archive(ticks_per_second);
-		archive(resolver->symbols);
+		archive(*resolver);
 
 		std::shared_ptr<functions_list> fl(create(ticks_per_second, resolver));
 

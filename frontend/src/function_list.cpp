@@ -376,18 +376,6 @@ namespace micro_profiler
 	std::shared_ptr<symbol_resolver> functions_list::get_resolver() const
 	{	return _resolver;	}
 
-	void functions_list::release_resolver()
-	{
-		shared_ptr<static_resolver> resolver(new static_resolver);
-
-		for (statistics_map_detailed::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
-			resolver->symbols.insert(make_pair(i->first, _resolver->symbol_name_by_va(i->first)));
-		set_resolver(resolver);
-		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
-			(*i)->set_resolver(resolver);
-		_resolver = resolver;
-	}
-
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list(
@@ -400,14 +388,4 @@ namespace micro_profiler
 			(*i)->on_updated();
 		base::on_updated();
 	}
-
-
-	const string &functions_list::static_resolver::symbol_name_by_va(address_t address) const
-	{	return symbols[address];	}
-
-	bool functions_list::static_resolver::symbol_fileline_by_va(address_t /*address*/, fileline_t & /*fileline*/) const
-	{	return false;	}
-
-	void functions_list::static_resolver::add_metadata(const module_info_basic &, const module_info_metadata &)
-	{	}
 }

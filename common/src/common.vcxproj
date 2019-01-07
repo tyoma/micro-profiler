@@ -46,6 +46,7 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="formatting.cpp" />
+    <ClCompile Include="image_info.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="memory_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -64,7 +65,7 @@
     </ClCompile>
     <ClCompile Include="serialization.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
-    <ClCompile Include="symbol_resolver_unix.cpp">
+    <ClCompile Include="image_info_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="time.cpp" />
@@ -72,7 +73,7 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="string.cpp" />
-    <ClCompile Include="symbol_resolver_win32.cpp">
+    <ClCompile Include="image_info_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemGroup>
@@ -85,6 +86,7 @@
     <ClInclude Include="..\configuration.h" />
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\formatting.h" />
+    <ClInclude Include="..\image_info.h" />
     <ClInclude Include="..\memory.h" />
     <ClInclude Include="..\module.h" />
     <ClInclude Include="..\path.h" />

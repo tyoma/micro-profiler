@@ -29,7 +29,7 @@
 namespace micro_profiler
 {
 	class functions_list;
-	struct symbol_resolver;
+	class symbol_resolver;
 
 	class frontend : public ipc::channel, noncopyable
 	{

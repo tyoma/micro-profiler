@@ -7,8 +7,8 @@ using namespace std;
 
 namespace micro_profiler
 {
-	const wchar_t c_microProfilerFileExtension[] = L"mpstats";
-	const wchar_t c_microProfilerFiles[] = L"MicroProfiler Statistics\0*.mpstats\0\0";
+	const wchar_t c_microProfilerFileExtension[] = L"mpstats2";
+	const wchar_t c_microProfilerFiles[] = L"MicroProfiler Statistics\0*.mpstats2\0\0";
 
 	auto_ptr<write_stream> create_file(HWND hparent, const string &default_name)
 	{

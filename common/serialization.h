@@ -24,6 +24,7 @@
 #include "primitives.h"
 #include "protocol.h"
 #include "range.h"
+#include "symbol_resolver.h"
 
 #include <strmd/deserializer.h>
 
@@ -39,6 +40,24 @@ namespace strmd
 
 	template <> struct is_container<analyzer> { static const bool value = true; };
 	template <typename AddressT> struct is_container< statistics_map_detailed_t<AddressT> > { static const bool value = true; };
+	template <typename KeyT, typename ValueT> struct is_container< std::map<KeyT, ValueT> > { static const bool value = true; };
+
+	template <typename KeyT, typename ValueT>
+	struct container_reader< std::map<KeyT, ValueT> >
+	{
+		template <typename ArchiveT>
+		void operator()(ArchiveT &archive, size_t count, std::map<KeyT, ValueT> &data)
+		{
+			std::pair<KeyT, ValueT> value;
+
+			data.clear();
+			while (count--)
+			{
+				archive(value);
+				data.insert(value);
+			}
+		}
+	};
 
 	template <typename AddressT> struct container_reader< unordered_map<AddressT, function_statistics, address_compare> >
 	{
@@ -78,7 +97,7 @@ namespace strmd
 	};
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, const void *&data)
+	inline void serialize(ArchiveT &archive, const void *&data)
 	{	archive(reinterpret_cast<uintptr_t &>(data));	}
 }
 
@@ -113,14 +132,14 @@ namespace micro_profiler
 
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, initialization_data &data)
+	inline void serialize(ArchiveT &archive, initialization_data &data)
 	{
 		archive(data.executable);
 		archive(data.ticks_per_second);
 	}	
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_statistics &data)
+	inline void serialize(ArchiveT &archive, function_statistics &data)
 	{
 		archive(data.times_called);
 		archive(data.max_reentrance);
@@ -130,18 +149,18 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename AddressT>
-	void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data)
+	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data)
 	{
 		archive(static_cast<function_statistics &>(data));
 		archive(data.callees);
 	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, commands &data)
+	inline void serialize(ArchiveT &archive, commands &data)
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, module_info_basic &data)
+	inline void serialize(ArchiveT &archive, module_info_basic &data)
 	{
 		archive(data.instance_id);
 		archive(data.load_address);
@@ -149,7 +168,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, symbol_info &data)
+	inline void serialize(ArchiveT &archive, symbol_info &data)
 	{
 		archive(data.id);
 		archive(data.name);
@@ -160,10 +179,17 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, module_info_metadata &data)
+	inline void serialize(ArchiveT &archive, module_info_metadata &data)
 	{
 		archive(data.symbols);
 		archive(data.source_files);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, symbol_resolver &data)
+	{
+		archive(data._mapped_symbols);
+		archive(data._files);
 	}
 
 

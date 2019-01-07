@@ -34,7 +34,7 @@ namespace micro_profiler
 			}
 
 			template <typename Data1T, typename Data2T>
-			void write(ipc::channel &channel, commands c, const typename Data1T &data1, const typename Data2T &data2)
+			void write(ipc::channel &channel, commands c, const Data1T &data1, const Data2T &data2)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter, packer> archive(b);
@@ -328,25 +328,6 @@ namespace micro_profiler
 				assert_equal(0x10200, model->get_address(1));
 				assert_equal(L"baz", (model->get_text(2, 1, text), text));
 				assert_equal(L"foo", (model->get_text(3, 1, text), text));
-			}
-
-
-			test( ReleasingFrontendReleasesSymbolResolver )
-			{
-				// INIT
-				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
-					_1, _2));
-				shared_ptr<ipc::channel> c = m->create_session(outbound);
-
-				write(*c, init, make_initialization_data("", 10));
-
-				shared_ptr<symbol_resolver> sr = _ui_creation_log[0]->model->get_resolver();
-
-				// ACT
-				c.reset();
-
-				// ASSERT
-				assert_is_true(sr.unique());
 			}
 
 
@@ -870,7 +851,7 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
-				shared_ptr<symbol_resolver> sr = symbol_resolver::create();
+				shared_ptr<symbol_resolver> sr(new symbol_resolver);
 				shared_ptr<functions_list> fl1 = functions_list::create(123, sr), fl2 = functions_list::create(123, sr);
 
 				// ACT

@@ -20,44 +20,52 @@
 
 #pragma once
 
-#include "types.h"
-#include "image_info.h"
+#include "range.h"
 
-#include <vector>
+#include <functional>
+#include <memory>
+#include <string>
 
 namespace micro_profiler
 {
-	enum commands {
-		init = 0, // + initialization_data
-		modules_loaded = 1, // + loaded_modules
-		update_statistics = 2, // + statistics_map_detailed_t<void * / long_address_t>
-		modules_unloaded = 3, // + unloaded_modules
-		module_metadata = 4, // + module_info_metadata
-		request_metadata = 5, // + instance_id
+	struct symbol_info
+	{
+		std::string name;
+		unsigned int rva, size;
+		unsigned int id;
+		unsigned int file_id, line;
 	};
 
-
-	struct initialization_data
+	struct symbol_info_mapped
 	{
-		std::string executable;
-		timestamp_t ticks_per_second;
+		symbol_info_mapped(const char *name_, byte_range body_);
+
+		std::string name;
+		byte_range body;
 	};
 
-
-	typedef std::vector<unsigned int> loaded_modules;
-	typedef std::vector<unsigned int> unloaded_modules;
-
-
-	struct module_info_basic
+	template <typename SymbolT>
+	struct image_info
 	{
-		unsigned int instance_id;
-		long_address_t load_address;
-		std::string path;
+		typedef std::function<void (const SymbolT &symbol)> symbol_callback_t;
+		typedef std::function<void (const std::pair<unsigned /*file_id*/, std::string /*path*/> &file)> file_callback_t;
+
+		virtual ~image_info() {	}
+		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
+		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
 	};
 
-	struct module_info_metadata
+	std::shared_ptr< image_info<symbol_info> > load_image_info(const char *image_path);
+
+	class offset_image_info : public image_info<symbol_info_mapped>
 	{
-		std::vector<symbol_info> symbols;
-		std::vector< std::pair<unsigned int /*file_id*/, std::string /*file*/> > source_files;
+	public:
+		offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base);
+
+		virtual void enumerate_functions(const symbol_callback_t &callback) const;
+
+	private:
+		std::shared_ptr< image_info<symbol_info> > _underlying;
+		byte *_base;
 	};
 }

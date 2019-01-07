@@ -22,16 +22,10 @@
     <ClCompile Include="memory_unix.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
-    <ClCompile Include="symbol_resolver_unix.cpp">
-      <Filter>src\unix</Filter>
-    </ClCompile>
     <ClCompile Include="memory_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
     <ClCompile Include="module_win32.cpp">
-      <Filter>src\win32</Filter>
-    </ClCompile>
-    <ClCompile Include="symbol_resolver_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
     <ClCompile Include="registry_configuration.cpp">
@@ -51,6 +45,15 @@
     </ClCompile>
     <ClCompile Include="serialization.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="image_info.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="image_info_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="image_info_unix.cpp">
+      <Filter>src\unix</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,5 +92,6 @@
     <ClInclude Include="elf\sym-elf.h">
       <Filter>src\unix\elf</Filter>
     </ClInclude>
+    <ClInclude Include="..\image_info.h" />
   </ItemGroup>
 </Project>

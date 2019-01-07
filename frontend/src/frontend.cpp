@@ -32,13 +32,11 @@ using namespace std;
 namespace micro_profiler
 {
 	frontend::frontend(ipc::channel &outbound)
-		: _outbound(outbound), _resolver(symbol_resolver::create())
+		: _outbound(outbound), _resolver(new symbol_resolver())
 	{	}
 
 	frontend::~frontend()
 	{
-		if (_model)
-			_model->release_resolver();
 		released();
 	}
 

@@ -23,6 +23,7 @@
 #include <common/noncopyable.h>
 #include <stdexcept>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>

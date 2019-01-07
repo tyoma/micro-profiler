@@ -17,6 +17,14 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Android">
+      <Configuration>Debug</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Android">
+      <Configuration>Release</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5EDCE420-14E9-46E6-B19E-E4AC3240FC94}</ProjectGuid>
@@ -43,8 +51,8 @@
     <Link>
       <ModuleDefinitionFile>collector.def</ModuleDefinitionFile>
       <ImportLibrary>$(OutDir)micro-profiler_$(PlatformName).lib</ImportLibrary>
-      <AdditionalDependencies>delayimp.lib;ole32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <DelayLoadDLLs>ole32.dll;ws2_32.dll</DelayLoadDLLs>
+      <AdditionalDependencies Condition="'$(Platform)'!='Android'">delayimp.lib;ole32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs Condition="'$(Platform)'!='Android'">ole32.dll;ws2_32.dll</DelayLoadDLLs>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>com.manifest</AdditionalManifestFiles>
@@ -55,23 +63,26 @@
     <ClCompile Include="calibration_functions_inner_instrumented.cpp">
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)'!='Android'">/GH /Gh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)'=='Android'">-finstrument-functions %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="calibration_functions_outer_instrumented.cpp">
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)'!='Android'">/GH /Gh %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Platform)'=='Android'">-finstrument-functions %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_unix.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="main_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <None Include="..\entry.h" />
     <MASM Include="hooks.asm">
-      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </MASM>
     <None Include="micro-profiler.initializer.cpp" />
     <Content Include="..\entry.h;micro-profiler.initializer.cpp">
@@ -83,7 +94,7 @@
     <ProjectReference Include="..\..\ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\patcher\src.x86\patcher.lib.vcxproj">
+    <ProjectReference Condition="'$(Platform)'!='Android'" Include="..\..\patcher\src.x86\patcher.lib.vcxproj">
       <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
     </ProjectReference>
     <ProjectReference Include="collector.lib.vcxproj">
@@ -94,7 +105,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="collector.rc" />
+    <ResourceCompile Include="collector.rc">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="com.manifest" />

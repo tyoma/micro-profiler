@@ -20,16 +20,27 @@
 
 #include <common/time.h>
 
+#include <time.h>
+
 #ifdef _MSC_VER
 	#include <intrin.h>
-#else
+#elif !defined(__arm__)
 	#include <x86intrin.h>
 #endif
 
 namespace micro_profiler
 {
 	timestamp_t read_tick_counter()
+#if !defined(__arm__)
 	{	return __rdtsc();	}
+#else
+	{
+		timespec t;
+
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+		return timestamp_t(t.tv_sec) * 1000000000 + t.tv_nsec;
+	}
+#endif
 
 	timestamp_t ticks_per_second()
 	{

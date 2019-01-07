@@ -17,6 +17,14 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Android">
+      <Configuration>Debug</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Android">
+      <Configuration>Release</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2ECFC1AE-8829-4A91-9B6E-2BEFC569ACF7}</ProjectGuid>
@@ -43,20 +51,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="client_endpoint.cpp" />
-    <ClCompile Include="client_endpoint_com.cpp" />
+    <ClCompile Include="client_endpoint_com.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="client_endpoint_sockets.cpp" />
     <ClCompile Include="server_endpoint.cpp" />
-    <ClCompile Include="server_endpoint_com.cpp" />
-    <ClCompile Include="server_endpoint_sockets.cpp" />
-    <ClCompile Include="ipc_client.cpp" />
-    <ClCompile Include="ipc_server.cpp" />
-    <ClCompile Include="socket_helpers_unix.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    <ClCompile Include="server_endpoint_com.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="socket_helpers_win32.cpp" />
+    <ClCompile Include="server_endpoint_sockets.cpp" />
+    <ClCompile Include="ipc_client.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ipc_server.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="socket_helpers_unix.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="socket_helpers_win32.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)collector\src\collector.lib.vcxproj">

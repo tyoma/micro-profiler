@@ -33,8 +33,6 @@ namespace micro_profiler
 
 		class image : private std::shared_ptr<void>
 		{
-			std::string _fullpath;
-
 		public:
 			explicit image(const char *path);
 
@@ -45,6 +43,10 @@ namespace micro_profiler
 			unsigned get_symbol_rva(const char *name) const;
 			template <typename T>
 			T *get_symbol(const char *name) const;
+
+		private:
+			byte *_base;
+			std::string _fullpath;
 		};
 
 		class vector_adapter

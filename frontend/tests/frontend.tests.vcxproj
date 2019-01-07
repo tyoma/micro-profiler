@@ -17,6 +17,14 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Android">
+      <Configuration>Debug</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Android">
+      <Configuration>Release</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{81701143-86EC-4436-9CF7-697EE748BCE8}</ProjectGuid>
@@ -42,6 +50,7 @@
     <ClCompile Include="ColumnsModelTests.cpp" />
     <ClCompile Include="CommandTargetTests.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />

@@ -17,6 +17,14 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Android">
+      <Configuration>Debug</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Android">
+      <Configuration>Release</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EA61B516-201C-4AB0-93C4-D43248712764}</ProjectGuid>
@@ -33,7 +41,7 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\patcher\src.x86\patcher.lib.vcxproj">
+    <ProjectReference Condition="'$(Platform)'!='Android'" Include="..\..\patcher\src.x86\patcher.lib.vcxproj">
       <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
     </ProjectReference>
     <ProjectReference Include="..\src\collector.lib.vcxproj">
@@ -51,6 +59,7 @@
     <ClCompile Include="ModuleTrackerTests.cpp" />
     <ClCompile Include="ImagePatchTests.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="mocks_image_info.cpp" />

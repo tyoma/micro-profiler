@@ -91,7 +91,7 @@ namespace micro_profiler
 				assert_equal(images[1].load_address_ptr(), info2.base);
 			}
 
-
+#if !defined(__ANDROID__)
 			test( EnumeratingModulesListsLoadedModules )
 			{
 				// INIT
@@ -148,6 +148,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, modules.size());
 			}
+#endif
 		end_test_suite
 	}
 }

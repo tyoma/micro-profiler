@@ -2,7 +2,8 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <Platform2 Condition="$(PlatformArchitecture)==32">x86</Platform2>
+    <Platform2 Condition="'$(Platform)'=='Android'">arm</Platform2>
+    <Platform2 Condition="$(PlatformArchitecture)==32 And '$(Platform)'!='Android'">x86</Platform2>
     <Platform2 Condition="$(PlatformArchitecture)==64">x64</Platform2>
     <BinDir>$(SolutionDir)_bin\$(Configuration)_$(Platform2)\</BinDir>
     <SetupDir>$(SolutionDir)_setup\</SetupDir>
@@ -30,7 +31,9 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>snprintf=_snprintf;_SECURE_SCL=0;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1;WIN32;_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SECURE_SCL=0;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;ISOLATION_AWARE_ENABLED=1;WIN32;_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'!='Android'">snprintf=_snprintf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='Android'">MP_MT_GENERIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FunctionLevelLinking>false</FunctionLevelLinking>
@@ -40,6 +43,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4996;4312;4503</DisableSpecificWarnings>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <AdditionalOptions Condition="'$(Platform)'=='Android'">-std=c++11 -frtti -fexceptions -fPIC -Wl,-no-undefined -Wno-deprecated-declarations %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

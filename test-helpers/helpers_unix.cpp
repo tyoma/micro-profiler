@@ -1,8 +1,12 @@
 #include <test-helpers/helpers.h>
 
+#define __STDC_FORMAT_MACROS
+
 #include <common/path.h>
 #include <dlfcn.h>
 #include <link.h>
+#include <inttypes.h>
+#include <stdio.h>
 #include <unistd.h>
 
 using namespace std;
@@ -11,6 +15,43 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			void *find_any_mapped_for(const string &name)
+			{
+				shared_ptr<FILE> f(fopen("/proc/self/maps", "r"), &fclose);
+				char line[1000] = { 0 };
+
+				while (fgets(line, sizeof(line) - 1, f.get()))
+				{
+					void *from, *to, *offset;
+					char rights[10], path[1000] = { 0 };
+					unsigned dummy;
+
+					if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR " %s %" SCNxPTR " %x:%x %d %s\n",
+						&from, &to, rights, &offset, &dummy, &dummy, &dummy, path) > 0 && path[0])
+					{
+						if (string(path).find(name) != string::npos)
+							return from;
+					}
+				}
+				return 0;
+			}
+
+			void release_module(void *h)
+			{
+				if (h)
+					::dlclose(h);
+			}
+
+			string make_dlpath(const string &from)
+			{
+				if (from.find('/') == string::npos)
+					return "./" & from;
+				return from;
+			}
+		}
+
 		string get_current_process_executable()
 		{
 			int n;
@@ -29,27 +70,25 @@ namespace micro_profiler
 
 			if (path.find(".so") == string::npos)
 				path = path + ".so";
-			if (path.find('/') == string::npos)
-				path = "./" & ("lib" + path);
-			
-			reset(::dlopen(path.c_str(), RTLD_NOW), &::dlclose);
+			reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
 			if (!get())
-				throw runtime_error("Cannot load module specified!");
+			{
+				reset(::dlopen(make_dlpath("lib" + path).c_str(), RTLD_NOW), &release_module);
+				if (!get())
+					throw runtime_error("Cannot load module specified!");
+			}
 
-			link_map *lm = 0;
-			
-			::dlinfo(get(), RTLD_DI_LINKMAP, &lm);
-			path = lm->l_name;
-			_fullpath.assign(path.begin(), path.end());
+			void *addr = find_any_mapped_for(*path);
+
+			Dl_info di = { };
+
+			::dladdr(addr, &di);
+			_base = static_cast<byte *>(di.dli_fbase);
+			_fullpath = di.dli_fname;
 		}
 
 		byte *image::load_address_ptr() const
-		{
-			link_map *lm = 0;
-			
-			::dlinfo(get(), RTLD_DI_LINKMAP, &lm);
-			return reinterpret_cast<byte *>(lm->l_addr);
-		}
+		{	return _base;	}
 
 		long_address_t image::load_address() const
 		{	return reinterpret_cast<size_t>(load_address_ptr());	}

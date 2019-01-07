@@ -17,6 +17,14 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Android">
+      <Configuration>Debug</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Android">
+      <Configuration>Release</Configuration>
+      <Platform>Android</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1220DC3A-2E6D-492E-95B2-73968C209940}</ProjectGuid>
@@ -49,16 +57,23 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="COMEndpointClientTests.cpp" />
-    <ClCompile Include="COMEndpointServerTests.cpp" />
+    <ClCompile Include="COMEndpointClientTests.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="COMEndpointServerTests.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="EndpointSelectorTests.cpp" />
     <ClCompile Include="helpers_com.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="helpers_sockets.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="IPCClientServerTests.cpp" />
+    <ClCompile Include="IPCClientServerTests.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="SocketsEndpointClientTests.cpp" />
     <ClCompile Include="SocketsEndpointServerTests.cpp" />
   </ItemGroup>

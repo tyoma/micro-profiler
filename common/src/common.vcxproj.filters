@@ -55,6 +55,9 @@
     <ClCompile Include="image_info_unix.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
+    <ClCompile Include="time_generic.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

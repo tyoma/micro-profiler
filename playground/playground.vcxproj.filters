@@ -4,7 +4,4 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="$(OutDir)micro-profiler.initializer.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <Library Include="$(OutDir)micro-profiler_$(PlatformName).lib" />
-  </ItemGroup>
 </Project>

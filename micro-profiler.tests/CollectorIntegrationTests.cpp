@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_frontend.h>
+#include <test-helpers/process.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -27,11 +28,11 @@ namespace micro_profiler
 			return buffer;
 		}
 
-		class runner_controller : public ipc::server, public ipc::channel, public enable_shared_from_this<ipc::channel>
+		struct guinea_session : controllee_session
 		{
-		public:
-			bool wait_connection()
-			{	return _ready.wait(mt::milliseconds(10000));	}
+			guinea_session(ipc::channel &outbound)
+				: controllee_session(outbound)
+			{	}
 
 			void load_module(const string &module)
 			{
@@ -40,7 +41,7 @@ namespace micro_profiler
 
 				s(tests::load_module);
 				s(module);
-				_outbound->message(mkrange<byte>(b.buffer));
+				send(mkrange<byte>(b.buffer));
 			}
 
 			void unload_module(const string &module)
@@ -50,7 +51,7 @@ namespace micro_profiler
 
 				s(tests::unload_module);
 				s(module);
-				_outbound->message(mkrange<byte>(b.buffer));
+				send(mkrange<byte>(b.buffer));
 			}
 
 			void execute_function(const string &module, const string &fn)
@@ -61,26 +62,8 @@ namespace micro_profiler
 				s(tests::execute_function);
 				s(module);
 				s(fn);
-				_outbound->message(mkrange<byte>(b.buffer));
+				send(mkrange<byte>(b.buffer));
 			}
-
-		private:
-			virtual shared_ptr<ipc::channel> create_session(ipc::channel &outbound)
-			{
-				_outbound = &outbound;
-				_ready.set();
-				return shared_from_this();
-			}
-
-			virtual void disconnect() throw()
-			{	}
-
-			virtual void message(const_byte_range /*payload*/)
-			{	}
-
-		private:
-			mt::event _ready;
-			ipc::channel *_outbound;
 		};
 
 		begin_test_suite( CollectorIntegrationTests )
@@ -92,7 +75,7 @@ namespace micro_profiler
 			};
 
 			shared_ptr<frontend_factory> frontend_state;
-			shared_ptr<runner_controller> runner;
+			shared_ptr< runner_controller<guinea_session> > controller;
 			shared_ptr<void> hserver, hrunner;
 
 			init( PrepareFrontend )
@@ -104,14 +87,14 @@ namespace micro_profiler
 				frontend_state.reset(new frontend_factory);
 				hserver = ipc::run_server(frontend_id.c_str(), frontend_state);
 				
-				runner.reset(new runner_controller);
-				hrunner= ipc::run_server(runner_id.c_str(), runner);
+				controller.reset(new runner_controller<guinea_session>);
+				hrunner= ipc::run_server(runner_id.c_str(), controller);
 #ifdef _WIN32
 				system(("start guinea_runner \"" + runner_id + "\"").c_str());
 #else
 				system(("./guinea_runner \"" + runner_id + "\" &").c_str());
 #endif
-				assert_is_true(runner->wait_connection());
+				assert_is_true(controller->wait_connection());
 			}
 
 
@@ -123,7 +106,7 @@ namespace micro_profiler
 				frontend_state->modules_loaded = bind(&mt::event::set, &ready);
 
 				// ACT
-				runner->load_module("symbol_container_2_instrumented");
+				controller->sessions[0]->load_module("symbol_container_2_instrumented");
 
 				// ASSERT
 				ready.wait();
@@ -136,10 +119,10 @@ namespace micro_profiler
 				mt::event ready;
 
 				frontend_state->modules_unloaded = bind(&mt::event::set, &ready);
-				runner->load_module("symbol_container_2_instrumented");
+				controller->sessions[0]->load_module("symbol_container_2_instrumented");
 
 				// ACT
-				runner->unload_module("symbol_container_2_instrumented");
+				controller->sessions[0]->unload_module("symbol_container_2_instrumented");
 
 				// ASSERT
 				ready.wait();

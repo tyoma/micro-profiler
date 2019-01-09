@@ -91,10 +91,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ipc\src\ipc.vcxproj">
+    <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
-    <ProjectReference Condition="'$(Platform)'!='Android'" Include="..\..\patcher\src.x86\patcher.lib.vcxproj">
+    <ProjectReference Condition="'$(Platform)'!='Android'" Include="$(SolutionDir)patcher\src.x86\patcher.lib.vcxproj">
       <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
     </ProjectReference>
     <ProjectReference Include="collector.lib.vcxproj">

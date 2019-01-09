@@ -76,12 +76,11 @@ add_subdirectory(libraries/utee/src)
 add_subdirectory(micro-profiler.tests/guineapigs)
 add_subdirectory(micro-profiler.tests)
 add_subdirectory(mt/src)
-add_subdirectory(test-helpers)
-add_subdirectory(patcher/src.x86)
-add_subdirectory(patcher/tests)
-
-add_subdirectory(playground)
-
 if (WIN32)
 	add_subdirectory(mt/tests)
 endif()
+add_subdirectory(patcher/src.x86)
+add_subdirectory(patcher/tests)
+add_subdirectory(test-helpers/src)
+
+add_subdirectory(playground)

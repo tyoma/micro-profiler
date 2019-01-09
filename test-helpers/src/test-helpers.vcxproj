@@ -54,6 +54,7 @@
       <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="mock_frontend.cpp" />
+    <ClCompile Include="process_win32.cpp" />
     <ClCompile Include="thread_unix.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
     </ClCompile>
@@ -62,10 +63,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="com.h" />
-    <ClInclude Include="helpers.h" />
-    <ClInclude Include="mock_frontend.h" />
-    <ClInclude Include="thread.h" />
+    <ClInclude Include="..\com.h" />
+    <ClInclude Include="..\helpers.h" />
+    <ClInclude Include="..\mock_frontend.h" />
+    <ClInclude Include="..\process.h" />
+    <ClInclude Include="..\thread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -74,11 +74,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)collector\src\collector.lib.vcxproj">
-      <Project>{ED61E2D0-F586-4B4E-9CE6-BAE8F03DBBC7}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\client.h" />
     <ClInclude Include="..\com\endpoint.h" />
     <ClInclude Include="..\endpoint_com.h" />

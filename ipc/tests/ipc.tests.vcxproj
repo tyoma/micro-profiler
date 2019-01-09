@@ -46,10 +46,10 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\common\src\common.vcxproj">
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\mt\src\mt.vcxproj">
+    <ProjectReference Include="$(SolutionDir)mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
     <ProjectReference Include="..\src\ipc.vcxproj">

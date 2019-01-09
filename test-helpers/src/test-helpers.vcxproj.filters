@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="com.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers_unix.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="mock_frontend.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="process_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_unix.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\com.h" />
+    <ClInclude Include="..\helpers.h" />
+    <ClInclude Include="..\mock_frontend.h" />
+    <ClInclude Include="..\process.h" />
+    <ClInclude Include="..\thread.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{215206a5-b477-41d8-9ea0-e9cc9ab1c037}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

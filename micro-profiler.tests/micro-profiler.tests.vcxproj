@@ -44,8 +44,8 @@
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\ipc\src\ipc.vcxproj">
-      <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
+    <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
+      <Project>{2ECFC1AE-8829-4A91-9B6E-2BEFC569ACF7}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

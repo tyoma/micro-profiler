@@ -1,4 +1,4 @@
-#include "thread.h"
+#include <test-helpers/thread.h>
 
 #include <windows.h>
 

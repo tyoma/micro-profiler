@@ -1,4 +1,4 @@
-#include "com.h"
+#include <test-helpers/com.h>
 
 #include <ipc/com/endpoint.h>
 

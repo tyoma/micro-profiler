@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+
 set(TEST_HELPERS_SOURCES
 	helpers.cpp
 	mock_frontend.cpp

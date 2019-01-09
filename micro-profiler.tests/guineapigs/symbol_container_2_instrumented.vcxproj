@@ -58,7 +58,7 @@
     <None Include="symbol_container_2.def" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\collector\src\collector.vcxproj">
+    <ProjectReference Include="$(SolutionDir)collector\src\collector.vcxproj">
       <Project>{5edce420-14e9-46e6-b19e-e4ac3240fc94}</Project>
     </ProjectReference>
   </ItemGroup>

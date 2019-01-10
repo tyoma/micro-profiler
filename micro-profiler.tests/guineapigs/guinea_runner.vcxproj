@@ -37,6 +37,12 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
+  <ItemDefinitionGroup>
+    <PostBuildEvent>
+      <Command>copy /Y "$(TargetPath)" "$(TargetDir)$(TargetName)2$(TargetExt)"
+copy /Y "$(TargetPath)" "$(TargetDir)$(TargetName)3$(TargetExt)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="guinea_runner.cpp" />
   </ItemGroup>

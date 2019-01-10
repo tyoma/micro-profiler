@@ -15,6 +15,7 @@ namespace micro_profiler
 		{
 			virtual ~running_process() {	}
 			virtual unsigned int get_pid() const = 0;
+			virtual void wait() const = 0;
 		};
 
 
@@ -23,6 +24,7 @@ namespace micro_profiler
 		public:
 			controllee_session(ipc::channel &outbound);
 
+			void disconnect_client();
 			void send(const_byte_range payload);
 
 			virtual void disconnect() throw();
@@ -62,6 +64,9 @@ namespace micro_profiler
 		inline controllee_session::controllee_session(ipc::channel &outbound)
 			: _outbound(&outbound)
 		{	}
+
+		inline void controllee_session::disconnect_client()
+		{	_outbound->disconnect();	}
 
 		inline void controllee_session::send(const_byte_range payload)
 		{	_outbound->message(payload);	}

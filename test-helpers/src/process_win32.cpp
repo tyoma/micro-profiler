@@ -44,6 +44,9 @@ namespace micro_profiler
 				virtual unsigned int get_pid() const
 				{	return _process.dwProcessId;	}
 
+				virtual void wait() const
+				{	::WaitForSingleObject(_process.hProcess, INFINITE);	}
+
 			private:
 				PROCESS_INFORMATION _process;
 			};

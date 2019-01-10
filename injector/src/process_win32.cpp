@@ -23,6 +23,7 @@
 #include <common/module.h>
 #include <common/path.h>
 #include <windows.h>
+#include <tlhelp32.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -36,15 +37,18 @@ namespace micro_profiler
 		class process : public micro_profiler::process
 		{
 		public:
-			process(unsigned int pid)
-				: _pid(pid), _hprocess(::OpenProcess(rights, FALSE, pid), &::CloseHandle)
+			process(unsigned int pid, const string &name_)
+				: _pid(pid), _name(name_), _hprocess(::OpenProcess(rights, FALSE, pid), &::CloseHandle)
 			{
 				if (!_hprocess)
 					throw runtime_error("");
 			}
 
+			virtual unsigned get_pid() const
+			{	return _pid;	}
+
 			virtual string name() const
-			{	throw 0;	}
+			{	return _name;	}
 
 			virtual void remote_execute(injection_function_t *injection, const_byte_range payload)
 			{
@@ -105,10 +109,26 @@ namespace micro_profiler
 
 		private:
 			unsigned _pid;
+			string _name;
 			shared_ptr<void> _hprocess;
 		};
 	}
 
 	shared_ptr<process> process::open(unsigned int pid)
-	{	return shared_ptr<process>(new win32::process(pid));	}
+	{	return shared_ptr<process>(new win32::process(pid, string()));	}
+
+	void process::enumerate(const enumerate_callback_t &callback)
+	{
+		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
+		PROCESSENTRY32 entry = { sizeof(PROCESSENTRY32), };
+
+		for (auto lister = &::Process32First; lister(snapshot.get(), &entry); lister = &::Process32Next)
+			try
+			{
+				callback(shared_ptr<process>(new win32::process(entry.th32ProcessID, entry.szExeFile)));
+			}
+			catch (...)
+			{
+			}
+	}
 }

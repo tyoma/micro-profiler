@@ -43,6 +43,9 @@
     <ClCompile Include="frontend\marshalling_server.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\AttachToProcessDialog.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -140,6 +143,9 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="frontend\marshalling_server.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\AttachToProcessDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>

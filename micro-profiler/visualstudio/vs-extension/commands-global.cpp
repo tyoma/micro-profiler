@@ -28,6 +28,7 @@
 #include <common/path.h>
 #include <common/serialization.h>
 #include <common/string.h>
+#include <frontend/AttachToProcessDialog.h>
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
@@ -268,6 +269,25 @@ namespace micro_profiler
 					model->save(ser);
 				}
 			}
+		}
+
+
+		profile_process::profile_process()
+			: global_command(cmdidProfileProcess)
+		{	}
+
+		bool profile_process::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
+		{
+			state = visible | supported | (_dialog ? 0 : enabled);
+			return true;
+		}
+
+		void profile_process::exec(context_type &/*ctx*/, unsigned /*item*/)
+		{
+			_dialog.reset(new AttachToProcessDialog);
+			_closed_connection = _dialog->closed += [this] {
+				_dialog.reset();
+			};
 		}
 
 

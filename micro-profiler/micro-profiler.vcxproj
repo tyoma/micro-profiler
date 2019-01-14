@@ -57,6 +57,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="frontend\AttachToProcessDialog.cpp" />
     <ClCompile Include="frontend\file.cpp" />
     <ClCompile Include="frontend\marshalling_server.cpp" />
     <ClCompile Include="frontend\piechart.cpp" />
@@ -69,6 +70,7 @@
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClInclude Include="frontend\AttachToProcessDialog.h" />
     <ClInclude Include="frontend\marshalling_server.h" />
     <ClInclude Include="frontend\piechart.h" />
     <ClInclude Include="frontend\tables_ui.h" />
@@ -132,6 +134,9 @@
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\injector\src\injector.vcxproj">
+      <Project>{b0596b9d-8303-4fd1-8a0a-5db7882f6f89}</Project>
     </ProjectReference>
   </ItemGroup>
   <Target Name="CopyFixed" AfterTargets="Midl">

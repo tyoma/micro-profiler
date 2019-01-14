@@ -5,6 +5,7 @@ set(FRONTEND_LIB_SOURCES
 	frontend.cpp
 	frontend_manager.cpp
 	function_list.cpp
+	process_list.cpp
 )
 
 add_library(frontend.lib STATIC ${FRONTEND_LIB_SOURCES})

@@ -20,6 +20,8 @@
 
 #include <frontend/function_list.h>
 
+#include "text_conversion.h"
+
 #include <common/string.h>
 #include <common/formatting.h>
 #include <cmath>
@@ -37,21 +39,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		void to_string(char *b, size_t size, unsigned long long value) {	snprintf(b, size, "%llu", value);	}
-		void to_string(char *b, size_t size, unsigned long int value) {	snprintf(b, size, "%lu", value);	}
-		void to_string(char *b, size_t size, unsigned int value) {	snprintf(b, size, "%u", value);	}
-		void to_string(char *b, size_t size, double value) {	snprintf(b, size, "%g", value);	}
-
-		template <typename T>
-		string to_string2(T value)
-		{
-			const size_t buffer_size = 24;
-			char buffer[buffer_size] = { };
-
-			to_string(buffer, buffer_size, value);
-			return buffer;
-		}
-
 		class by_name
 		{
 		public:

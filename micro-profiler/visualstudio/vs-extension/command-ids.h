@@ -58,6 +58,7 @@
 #define cmdidRemoveProfilingSupport 0x104
 #define cmdidSaveStatistics 0x110
 #define cmdidLoadStatistics 0x111
+#define cmdidProfileProcess 0x120
 #define cmdidCloseAll 0x300
 #define cmdidClearStatistics 0x400
 #define cmdidCopyStatistics 0x401

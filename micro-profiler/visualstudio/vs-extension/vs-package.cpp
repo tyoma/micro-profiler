@@ -54,6 +54,7 @@ namespace micro_profiler
 
 				global_command::ptr(new open_statistics),
 				global_command::ptr(new save_statistics),
+				global_command::ptr(new profile_process),
 				global_command::ptr(new window_activate),
 				global_command::ptr(new close_all),
 

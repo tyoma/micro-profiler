@@ -13,6 +13,9 @@
     <ClCompile Include="function_list.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="process_list.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -23,6 +26,10 @@
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\series.h" />
     <ClInclude Include="..\frontend.h" />
+    <ClInclude Include="..\process_list.h" />
+    <ClInclude Include="text_conversion.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

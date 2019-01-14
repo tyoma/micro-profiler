@@ -25,8 +25,6 @@
 #include "primitives.h"
 
 #include <wpl/ui/models.h>
-#include <string>
-#include <memory>
 
 namespace micro_profiler
 {

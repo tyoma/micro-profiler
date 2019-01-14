@@ -5,6 +5,7 @@ set(FRONTEND_TESTS_SOURCES
 	FrontendManagerTests.cpp
 	FunctionListTests.cpp
 	OrderedViewTests.cpp
+	ProcessListTests.cpp
 )
 
 if(WIN32)

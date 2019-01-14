@@ -77,6 +77,13 @@
 					<ButtonText>Save Selected Statistics As...</ButtonText>
 				</Strings>
 			</Button>
+			<Button guid="guidGlobalCmdSet" id="cmdidProfileProcess" priority="0x0130" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_MAIN" />
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Profile Process...</ButtonText>
+				</Strings>
+			</Button>
 			<Button guid="guidGlobalCmdSet" id="cmdidWindowActivateDynamic" priority="0x0300" type="Button">
 				<Parent guid="guidGlobalCmdSet" id="IDG_MP_WINDOWS" />
 				<CommandFlag>TextOnly</CommandFlag>

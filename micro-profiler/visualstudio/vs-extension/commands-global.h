@@ -25,9 +25,11 @@
 
 #include <atlbase.h>
 #include <vsshell.h>
+#include <wpl/base/signals.h>
 
 namespace micro_profiler
 {
+	class AttachToProcessDialog;
 	class frontend_manager;
 
 	namespace integration
@@ -79,6 +81,21 @@ namespace micro_profiler
 			virtual bool get_name(const context_type &ctx, unsigned item, std::wstring &name) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
+
+
+		class profile_process : public global_command
+		{
+		public:
+			profile_process();
+
+			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context_type &ctx, unsigned item);
+
+		private:
+			std::shared_ptr<AttachToProcessDialog> _dialog;
+			wpl::slot_connection _closed_connection;
+		};
+
 
 		struct window_activate : global_command
 		{

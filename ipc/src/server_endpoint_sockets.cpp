@@ -82,7 +82,7 @@ namespace micro_profiler
 				: id(id_), handler(initial_handler), _socket(s), _aux_socket(aux_socket)
 			{	}
 
-			socket_handler::~socket_handler()
+			socket_handler::~socket_handler() throw()
 			{
 				handler = handler_t(); // first - release the underlying session...
 				_socket.reset(); // ... then - the socket

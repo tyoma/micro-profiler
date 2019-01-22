@@ -33,7 +33,7 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\injector.vcxproj">
+    <ProjectReference Include="..\src\injector.lib.vcxproj">
       <Project>{B0596B9D-8303-4FD1-8A0A-5DB7882F6F89}</Project>
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">

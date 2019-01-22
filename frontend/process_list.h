@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2018 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
+//	Copyright (c) 2011-2018 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -33,11 +33,21 @@ namespace micro_profiler
 	public:
 		void update(const process_enumerator_t &enumerator);
 
+		std::shared_ptr<process> get_process(index_type row) const;
+
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
 
 	private:
+		typedef std::vector< std::shared_ptr<process> > process_container_t;
+
+	private:
+		template <typename PredicateT>
+		void init_sorter(const PredicateT &p);
+
+	private:
 		std::vector< std::shared_ptr<process> > _processes;
+		std::function<void (process_container_t &processes)> _sorter;
 	};
 }

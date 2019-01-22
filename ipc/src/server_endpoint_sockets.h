@@ -44,7 +44,7 @@ namespace micro_profiler
 			public:
 				socket_handler(unsigned id_, socket_handle &s, const socket_handle &aux_socket,
 					const handler_t &initial_handler);
-				~socket_handler();
+				~socket_handler() throw();
 
 				template <typename ContainerT>
 				static void run(ContainerT &handlers);

@@ -18,24 +18,17 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
-#include <stdio.h>
+#include <common/module.h>
+#include <common/path.h>
+#include <common/range.h>
+#include <windows.h>
 
 namespace micro_profiler
 {
-	inline void to_string(char *b, size_t size, unsigned long long value) {	snprintf(b, size, "%llu", value);	}
-	inline void to_string(char *b, size_t size, unsigned long int value) {	snprintf(b, size, "%lu", value);	}
-	inline void to_string(char *b, size_t size, unsigned int value) {	snprintf(b, size, "%u", value);	}
-	inline void to_string(char *b, size_t size, double value) {	snprintf(b, size, "%g", value);	}
-
-	template <typename T>
-	std::string to_string2(T value)
+	void inject_profiler(const_byte_range /*payload*/)
 	{
-		const size_t buffer_size = 24;
-		char buffer[buffer_size];
+		const auto dir = ~get_module_info(&inject_profiler).path;
 
-		to_string(buffer, buffer_size, value);
-		return buffer;
+		::LoadLibraryA((dir & "micro-profiler_x86.dll").c_str());
 	}
 }

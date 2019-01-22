@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2018 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
+//	Copyright (c) 2011-2018 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,7 @@
 
 #include "text_conversion.h"
 
+#include <algorithm>
 #include <common/string.h>
 
 using namespace std;
@@ -34,8 +35,13 @@ namespace micro_profiler
 		enumerator([this] (const shared_ptr<process> &p) {
 			_processes.push_back(p);
 		});
+		if (_sorter)
+			_sorter(_processes);
 		invalidated(_processes.size());
 	}
+
+	shared_ptr<process> process_list::get_process(index_type row) const
+	{	return _processes[row];	}
 
 	process_list::index_type process_list::get_count() const throw()
 	{	return _processes.size();	}
@@ -56,6 +62,32 @@ namespace micro_profiler
 		}
 	}
 
-	void process_list::set_order(index_type /*column*/, bool /*ascending*/)
-	{	}
+	void process_list::set_order(index_type column, bool ascending)
+	{
+		if ((0 == column) & ascending)
+			init_sorter([] (const shared_ptr<process> &lhs, const shared_ptr<process> &rhs) {
+				return lhs->name() < rhs->name();
+			});
+		else if ((0 == column) & !ascending)
+			init_sorter([] (const shared_ptr<process> &lhs, const shared_ptr<process> &rhs) {
+				return lhs->name() > rhs->name();
+			});
+		else if ((1 == column) & ascending)
+			init_sorter([] (const shared_ptr<process> &lhs, const shared_ptr<process> &rhs) {
+				return lhs->get_pid() < rhs->get_pid();
+			});
+		else if ((1 == column) & !ascending)
+			init_sorter([] (const shared_ptr<process> &lhs, const shared_ptr<process> &rhs) {
+				return lhs->get_pid() > rhs->get_pid();
+			});
+		_sorter(_processes);
+	}
+
+	template <typename PredicateT>	
+	void process_list::init_sorter(const PredicateT &p)
+	{
+		_sorter = [p] (process_container_t &processes) {
+			sort(processes.begin(), processes.end(), p);
+		};
+	}
 }

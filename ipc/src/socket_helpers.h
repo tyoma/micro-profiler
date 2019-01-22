@@ -58,7 +58,8 @@ namespace micro_profiler
 				socket_handle(socket_handle &other);
 				~socket_handle();
 
-				void reset(int s = 0);
+				void reset() throw();
+				void reset(int s);
 				operator int() const;
 
 			private:
@@ -88,14 +89,18 @@ namespace micro_profiler
 			inline socket_handle::~socket_handle()
 			{	reset();	}
 
-			inline void socket_handle::reset(int s)
+			inline void socket_handle::reset() throw()
 			{
 				if (_socket)
-				{
 					::close(_socket);
-				}
+				_socket = 0;
+			}
+
+			inline void socket_handle::reset(int s)
+			{
 				if (s == -1)
 					throw std::invalid_argument("invalid socket");
+				reset();
 				_socket = s;
 			}
 

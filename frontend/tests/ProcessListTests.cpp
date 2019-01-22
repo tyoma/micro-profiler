@@ -135,6 +135,116 @@ namespace micro_profiler
 				assert_equal(0u, n_arg);
 				assert_equal(0u, n_count);
 			}
+
+
+			test( ProcessIsReturnedByIndex )
+			{
+				// INIT
+				process_list l;
+				shared_ptr<process> p[] = {
+					shared_ptr<process>(new mocks::process(12, "foo")),
+					shared_ptr<process>(new mocks::process(12111, "bar")),
+					shared_ptr<process>(new mocks::process(12113, "BAZ")),
+				};
+
+				l.update(enumerate_processes(p));
+
+				// ACT / ASSERT
+				assert_equal(p[0], l.get_process(0));
+				assert_equal(p[1], l.get_process(1));
+				assert_equal(p[2], l.get_process(2));
+			}
+
+
+			test( ProcessListIsSortable )
+			{
+				// INIT
+				process_list l;
+				shared_ptr<process> p[] = {
+					shared_ptr<process>(new mocks::process(12, "Lorem")),
+					shared_ptr<process>(new mocks::process(12111, "Amet")),
+					shared_ptr<process>(new mocks::process(1211, "Quand")),
+				};
+				wstring text;
+
+				l.update(enumerate_processes(p));
+
+				// ACT
+				l.set_order(1, true);
+
+				// ASSERT
+				assert_equal(L"Lorem", (l.get_text(0, 0, text), text));
+				assert_equal(p[0], l.get_process(0));
+				assert_equal(L"Quand", (l.get_text(1, 0, text), text));
+				assert_equal(p[2], l.get_process(1));
+				assert_equal(L"Amet", (l.get_text(2, 0, text), text));
+				assert_equal(p[1], l.get_process(2));
+
+				// ACT
+				l.set_order(1, false);
+
+				// ASSERT
+				assert_equal(L"Amet", (l.get_text(0, 0, text), text));
+				assert_equal(L"Quand", (l.get_text(1, 0, text), text));
+				assert_equal(L"Lorem", (l.get_text(2, 0, text), text));
+
+				// ACT
+				l.set_order(0, true);
+
+				// ASSERT
+				assert_equal(L"12111", (l.get_text(0, 1, text), text));
+				assert_equal(L"12", (l.get_text(1, 1, text), text));
+				assert_equal(L"1211", (l.get_text(2, 1, text), text));
+
+				// ACT
+				l.set_order(0, false);
+
+				// ASSERT
+				assert_equal(L"1211", (l.get_text(0, 1, text), text));
+				assert_equal(p[2], l.get_process(0));
+				assert_equal(L"12", (l.get_text(1, 1, text), text));
+				assert_equal(p[0], l.get_process(1));
+				assert_equal(L"12111", (l.get_text(2, 1, text), text));
+				assert_equal(p[1], l.get_process(2));
+			}
+
+
+			test( SortOrderIsAppliedOnUpdate )
+			{
+				// INIT
+				process_list l;
+				shared_ptr<process> p1[] = {
+					shared_ptr<process>(new mocks::process(12, "Lorem")),
+					shared_ptr<process>(new mocks::process(12111, "Amet")),
+					shared_ptr<process>(new mocks::process(1211, "Quand")),
+				};
+				shared_ptr<process> p2[] = {
+					shared_ptr<process>(new mocks::process(12, "Lorem")),
+					shared_ptr<process>(new mocks::process(12111, "Amet")),
+					shared_ptr<process>(new mocks::process(1311, "Dolor")),
+					shared_ptr<process>(new mocks::process(1211, "Quand")),
+				};
+				wstring text;
+
+				l.set_order(0, true);
+
+				// ACT
+				l.update(enumerate_processes(p1));
+
+				// ASSERT
+				assert_equal(L"12111", (l.get_text(0, 1, text), text));
+				assert_equal(L"12", (l.get_text(1, 1, text), text));
+				assert_equal(L"1211", (l.get_text(2, 1, text), text));
+
+				// ACT
+				l.update(enumerate_processes(p2));
+
+				// ASSERT
+				assert_equal(L"12111", (l.get_text(0, 1, text), text));
+				assert_equal(L"1311", (l.get_text(1, 1, text), text));
+				assert_equal(L"12", (l.get_text(2, 1, text), text));
+				assert_equal(L"1211", (l.get_text(3, 1, text), text));
+			}
 		end_test_suite
 	}
 }

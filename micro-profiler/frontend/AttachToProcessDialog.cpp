@@ -27,22 +27,25 @@
 #include <wpl/ui/controls.h>
 #include <wpl/ui/layout.h>
 #include <wpl/ui/win32/controls.h>
+#include <wpl/ui/win32/form.h>
 
 using namespace std;
 using namespace wpl::ui;
 
 namespace micro_profiler
 {
+	void inject_profiler(const_byte_range payload);
+
 	namespace
 	{
 		const columns_model::column c_columns_processes[] = {
-			columns_model::column("ProcessExe", L"Process (exe)", 100, columns_model::dir_none),
-			columns_model::column("ProcessID", L"PID", 100, columns_model::dir_none),
+			columns_model::column("ProcessExe", L"Process (exe)", 200, columns_model::dir_ascending),
+			columns_model::column("ProcessID", L"PID", 100, columns_model::dir_ascending),
 		};
 	}
 
-	AttachToProcessDialog::AttachToProcessDialog()
-		: _form(wpl::ui::form::create()), _processes_lv(wpl::ui::create_listview()), _model(new process_list)
+	AttachToProcessDialog::AttachToProcessDialog(const shared_ptr<wpl::ui::form> &form)
+		: _form(form), _processes_lv(wpl::ui::create_listview()), _model(new process_list)
 	{
 		shared_ptr<container> root(new container);
 		shared_ptr<container> vstack(new container), toolbar(new container);
@@ -50,9 +53,14 @@ namespace micro_profiler
 		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
 		shared_ptr<button> btn;
 
-		_model.reset(new process_list);
 		_processes_lv->set_model(_model);
-		_processes_lv->set_columns_model(shared_ptr<listview::columns_model>(new columns_model(c_columns_processes, 0, true)));
+		_processes_lv->set_columns_model(shared_ptr<listview::columns_model>(new columns_model(c_columns_processes, 0,
+			true)));
+		_connections.push_back(_processes_lv->item_activate += [this] (wpl::ui::listview::index_type item) {
+			auto process = _model->get_process(item);
+
+			process->remote_execute(&inject_profiler, const_byte_range(0, 0));
+		});
 
 
 		toolbar->set_layout(lm_toolbar);
@@ -81,6 +89,7 @@ namespace micro_profiler
 		root->add_view(vstack);
 		_form->set_view(root);
 		_form->set_visible(true);
+		_connections.push_back(_form->close += [this] { closed(); });
 
 		_model->update(&process::enumerate);
 	}

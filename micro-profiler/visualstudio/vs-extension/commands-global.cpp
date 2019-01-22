@@ -36,6 +36,7 @@
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <visualstudio/dispatch.h>
+#include <wpl/ui/win32/form.h>
 
 #include <io.h>
 #include <memory>
@@ -282,9 +283,10 @@ namespace micro_profiler
 			return true;
 		}
 
-		void profile_process::exec(context_type &/*ctx*/, unsigned /*item*/)
+		void profile_process::exec(context_type &ctx, unsigned /*item*/)
 		{
-			_dialog.reset(new AttachToProcessDialog);
+			shared_ptr<wpl::ui::form> form(wpl::ui::create_form(get_frame_hwnd(ctx.shell)));
+			_dialog.reset(new AttachToProcessDialog(form));
 			_closed_connection = _dialog->closed += [this] {
 				_dialog.reset();
 			};

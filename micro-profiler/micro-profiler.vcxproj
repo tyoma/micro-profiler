@@ -59,6 +59,7 @@
     <ClCompile Include="frontend\SupportDevDialog.cpp" />
     <ClCompile Include="frontend\tables_ui.cpp" />
     <ClCompile Include="module\main.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\async.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
@@ -66,6 +67,8 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="frontend\piechart.h" />
     <ClInclude Include="frontend\tables_ui.h" />
+    <ClInclude Include="visualstudio\vs-extension\async.h" />
+    <ClInclude Include="visualstudio\vs-extension\com.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\icon-ids.h" />
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h" />

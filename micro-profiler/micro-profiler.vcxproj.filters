@@ -40,6 +40,9 @@
     <ClCompile Include="frontend\piechart.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\async.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -57,7 +60,6 @@
     <None Include="logo.ico">
       <Filter>resources</Filter>
     </None>
-    <None Include="micro-profiler.initializer.cpp" />
     <None Include="frontend\micro-profiler-frontend.rgs">
       <Filter>frontend</Filter>
     </None>
@@ -138,6 +140,12 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="constants.h" />
+    <ClInclude Include="visualstudio\vs-extension\async.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\com.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler-frontend.rc">

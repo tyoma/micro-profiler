@@ -64,6 +64,7 @@
 				<Parent guid="guidGlobalCmdSet" id="IDG_MP_MAIN" />
 				<Icon guid="guidIconSet" id="iconidOpen"/>
 				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DefaultDisabled</CommandFlag>
 				<Strings>
 					<ButtonText>Open Statistics...</ButtonText>
 				</Strings>
@@ -73,6 +74,7 @@
 				<Icon guid="guidIconSet" id="iconidSave"/>
 				<CommandFlag>TextChanges</CommandFlag>
 				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DefaultDisabled</CommandFlag>
 				<Strings>
 					<ButtonText>Save Selected Statistics As...</ButtonText>
 				</Strings>
@@ -84,6 +86,7 @@
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicItemStart</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
 					<ButtonText>---window---</ButtonText>
 				</Strings>
@@ -92,6 +95,7 @@
 				<Parent guid="guidGlobalCmdSet" id="IDG_MP_WINDOWS" />
 				<Icon guid="guidIconSet" id="iconidCloseAll"/>
 				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DefaultDisabled</CommandFlag>
 				<Strings>
 					<ButtonText>Close All</ButtonText>
 				</Strings>

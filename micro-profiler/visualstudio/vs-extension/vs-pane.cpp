@@ -38,7 +38,7 @@ namespace micro_profiler
 			};
 		}
 
-		class vs_pane : public CComObjectRoot, public IVsWindowPane, public frontend_ui,
+		class vs_pane : public CComObjectRootEx<CComSingleThreadModel>, public IVsWindowPane, public frontend_ui,
 			public CommandTarget<instance_context, &c_guidInstanceCmdSet>
 		{
 		public:

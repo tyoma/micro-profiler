@@ -7,12 +7,13 @@
 
 [$RootKey$\Packages\{43a50861-7e04-4169-b47e-d4cffe1b3db8}]
 "InprocServer32"="$PackageFolder$\micro-profiler_frontend.dll"
+"AllowsBackgroundLoad"=dword:00000001
 
 [$RootKey$\AutoLoadPackages\{ADFC4E64-0397-11D1-9F4E-00A0C911004F}]
-"{43a50861-7e04-4169-b47e-d4cffe1b3db8}"=dword:0
+"{43a50861-7e04-4169-b47e-d4cffe1b3db8}"=dword:2
 
 [$RootKey$\AutoLoadPackages\{F1536EF8-92EC-443C-9ED7-FDADF150DA82}]
-"{43a50861-7e04-4169-b47e-d4cffe1b3db8}"=dword:0
+"{43a50861-7e04-4169-b47e-d4cffe1b3db8}"=dword:2
 
 [$RootKey$\Menus]
 "{43a50861-7e04-4169-b47e-d4cffe1b3db8}"=", 1000, 1"

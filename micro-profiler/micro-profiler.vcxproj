@@ -53,8 +53,9 @@
       <AdditionalIncludeDirectories>$(IntDir)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);./compat</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+      <PreprocessorDefinitions>_ATL_FREE_THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="frontend\AttachToProcessDialog.cpp" />
@@ -106,7 +107,6 @@
     <ClInclude Include="visualstudio\dispatch.h" />
     <ClCompile Include="visualstudio\vs-extension\commands-global.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="visualstudio\dispatch.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>

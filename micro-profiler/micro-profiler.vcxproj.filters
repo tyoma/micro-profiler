@@ -49,6 +49,9 @@
     <ClCompile Include="frontend\inject_profiler.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\async.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -150,6 +153,13 @@
     </ClInclude>
     <ClInclude Include="frontend\AttachToProcessDialog.h">
       <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.h" />
+    <ClInclude Include="visualstudio\vs-extension\async.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\com.h">
+      <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

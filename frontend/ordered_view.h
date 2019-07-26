@@ -203,7 +203,7 @@ namespace micro_profiler
 	inline void ordered_view<ContainerT>::invalidate_trackables()
 	{
 		for (trackables_t::iterator j = _trackables->begin(); j != _trackables->end(); ++j)
-			j->current_index = trackable::npos;
+			j->current_index = trackable::npos();
 	}
 
 	template <typename ContainerT>
@@ -243,7 +243,7 @@ namespace micro_profiler
 			if (at(i).first == key)
 				return i;
 		}
-		return npos;
+		return npos();
 	}
 
 	template <class ContainerT>

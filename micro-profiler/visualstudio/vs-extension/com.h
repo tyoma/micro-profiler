@@ -26,7 +26,7 @@
 namespace micro_profiler
 {
 	template <typename BaseT>
-	class freethreaded : public BaseT
+	class freethreaded : public BaseT, public IUnknown
 	{
 	protected:
 		typedef freethreaded freethreaded_base;
@@ -35,6 +35,7 @@ namespace micro_profiler
 		DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 		BEGIN_COM_MAP(freethreaded)
+			COM_INTERFACE_ENTRY(IUnknown)
 			COM_INTERFACE_ENTRY_AGGREGATE(IID_IMarshal, _marshaller)
 		END_COM_MAP()
 

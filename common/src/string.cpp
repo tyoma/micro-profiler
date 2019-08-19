@@ -82,11 +82,11 @@ namespace micro_profiler
 			{
 				if (i == utf8.size())
 					throw invalid_argument("not a UTF-8 string");
-				unsigned char ch = utf8[i++];
-				if (ch < 0x80 || ch > 0xBF)
+				unsigned char ch2 = utf8[i++];
+				if (ch2 < 0x80 || ch2 > 0xBF)
 					throw invalid_argument("not a UTF-8 string");
 				uni <<= 6;
-				uni += ch & 0x3F;
+				uni += ch2 & 0x3F;
 			}
 			if (uni >= 0xD800 && uni <= 0xDFFF)
 				throw invalid_argument("not a UTF-8 string");
@@ -95,9 +95,9 @@ namespace micro_profiler
 			unicode.push_back(uni);
 		}
 		wstring utf16;
-		for (size_t i = 0; i < unicode.size(); ++i)
+		for (size_t j = 0; j < unicode.size(); ++j)
 		{
-			unsigned long uni = unicode[i];
+			unsigned long uni = unicode[j];
 			if (uni <= 0xFFFF)
 			{
 				utf16 += (wchar_t)uni;

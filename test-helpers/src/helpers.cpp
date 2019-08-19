@@ -9,6 +9,12 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			byte rand()
+			{	return static_cast<byte>(::rand());	}
+		}
+
 		guid_t generate_id()
 		{
 			static bool seed_initialized = false;
@@ -18,7 +24,7 @@ namespace micro_profiler
 
 			guid_t id;
 
-			generate(id.values, array_end(id.values), rand);
+			generate(id.values, array_end(id.values), &rand);
 			return id;
 		}
 

@@ -23,9 +23,11 @@ IF _M_IX86
 	.model flat
 	.code
 
-	extern ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z:near
-	extern ?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z:near
-	extern _g_collector_ptr:dword
+	extrn ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z:near
+	extrn ?on_enter_nostack@calls_collector@micro_profiler@@QAEX_JPBX@Z:near
+	extrn ?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z:near
+	extrn ?on_exit_nostack@calls_collector@micro_profiler@@QAEX_J@Z:near
+	extrn _g_collector_ptr:dword
 
 	PUSHREGS	macro
 		push	eax
@@ -49,10 +51,10 @@ IF _M_IX86
 		PUSHREGS
 
 		mov	ecx, [_g_collector_ptr]
-		push	[esp + 0Ch]
+		mov	edx, [esp + 0Ch]
+		push	edx
 		PUSHRDTSC
-		lea	edx, [esp + 18h]
-		call	?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z
+		call	?on_enter_nostack@calls_collector@micro_profiler@@QAEX_JPBX@Z
 
 		POPREGS
 		ret
@@ -63,8 +65,7 @@ IF _M_IX86
 
 		mov	ecx, [_g_collector_ptr]
 		PUSHRDTSC
-		lea	edx, [esp + 14h]
-		call	?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z
+		call	?on_exit_nostack@calls_collector@micro_profiler@@QAEX_J@Z
 
 		POPREGS
 		ret
@@ -73,8 +74,10 @@ ELSEIF _M_X64
 	.code
 
 	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z:near
+	extrn ?on_enter_nostack@calls_collector@micro_profiler@@QEAAX_JPEBX@Z:near
 	extrn ?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@PEAPEBX_J@Z:near
-	extern g_collector_ptr:qword
+	extrn ?on_exit_nostack@calls_collector@micro_profiler@@QEAAX_J@Z:near
+	extrn g_collector_ptr:qword
 
 	PUSHREGS	macro
 		push	rax
@@ -111,11 +114,9 @@ ELSEIF _M_X64
 		sub	rsp, 20h
 
 		mov	rcx, [g_collector_ptr]
+		mov	r8, qword ptr [rsp + 60h]
 		RDTSC64
-		mov	r8, rdx
-		lea	rdx, qword ptr [rsp + 60h]
-		mov r9, [rdx]
-		call ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z
+		call ?on_enter_nostack@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
 		add	rsp, 20h
 		POPREGS
@@ -129,9 +130,7 @@ ELSEIF _M_X64
 
 		mov	rcx, [g_collector_ptr]
 		RDTSC64
-		mov	r8, rdx
-		lea	rdx, qword ptr [rsp + 60h]
-		call	?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@PEAPEBX_J@Z
+		call	?on_exit_nostack@calls_collector@micro_profiler@@QEAAX_J@Z
 
 		add	rsp, 30h
 		movdqu	xmm0, [rsp - 10h]

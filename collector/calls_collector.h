@@ -57,9 +57,8 @@ namespace micro_profiler
 		static const void *CC_(fastcall) on_exit(calls_collector *instance, const void **stack_ptr,
 			timestamp_t timestamp) _CC(fastcall);
 
-		static void CC_(fastcall) on_enter_nostack(calls_collector *instance, const void *callee,
-			timestamp_t timestamp) _CC(fastcall);
-		static void CC_(fastcall) on_exit_nostack(calls_collector *instance, timestamp_t timestamp) _CC(fastcall);
+		void on_enter_nostack(timestamp_t timestamp, const void *callee);
+		void on_exit_nostack(timestamp_t timestamp);
 
 	private:
 		typedef std::vector< std::pair< mt::thread::id, std::shared_ptr<calls_collector_thread> > > call_traces_t;

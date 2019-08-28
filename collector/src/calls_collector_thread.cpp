@@ -68,25 +68,6 @@ namespace micro_profiler
 		return return_address;
 	}
 
-	void calls_collector_thread::track(const void *callee, timestamp_t timestamp) throw()
-	{
-		for (trace_t *trace; ; _active_trace.store(trace, mt::memory_order_release), _continue.wait())
-		{
-			do
-				trace = _active_trace.load(mt::memory_order_relaxed);
-			while (!_active_trace.compare_exchange_strong(trace, 0, mt::memory_order_acquire));
-
-			if (trace->byte_size() < _trace_limit)
-			{
-				const call_record record = { timestamp, callee };
-
-				trace->push_back(record);
-				_active_trace.store(trace, mt::memory_order_release);
-				break;
-			}
-		}
-	}
-
 	void calls_collector_thread::read_collected(const reader_t &reader)
 	{
 		trace_t *trace;

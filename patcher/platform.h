@@ -23,10 +23,19 @@
 #if defined(_MSC_VER) && defined(_M_IX86)
 	#define CC_(cc) __ ## cc
 	#define _CC(cc)
+	
+	#define FORCE_INLINE __forceinline
+
 #elif defined(__GNUC__) && defined(__i386)
 	#define CC_(cc)
 	#define _CC(cc) __attribute__((cc))
+
+	#define FORCE_INLINE __attribute__((always_inline)) inline
+
 #else
 	#define CC_(cc)
 	#define _CC(cc)
+
+	#define FORCE_INLINE inline
+
 #endif

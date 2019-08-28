@@ -141,7 +141,7 @@ namespace micro_profiler
 				calls_collector_thread c1(67), c2(123), c3(127);
 				collection_acceptor a1, a2, a3;
 
-				// ACT (blockage during this test is equivalent to the failure)
+				// ACT (blockage during this test is a failure)
 				mt::thread t1(bind(&emulate_n_calls, ref(c1), 670, (void *)0x12345671));
 				mt::thread t2(bind(&emulate_n_calls, ref(c2), 1230, (void *)0x12345672));
 				mt::thread t3(bind(&emulate_n_calls, ref(c3), 635, (void *)0x12345673));

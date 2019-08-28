@@ -56,8 +56,8 @@ namespace micro_profiler
 
 				for (size_t i = 0; i != calls_number; ++i)
 				{
-					calls_collector::on_enter_nostack(&collector, callee, timestamp++);
-					calls_collector::on_exit_nostack(&collector, timestamp++);
+					collector.on_enter_nostack(timestamp++, callee);
+					collector.on_exit_nostack(timestamp++);
 				}
 			}
 		}
@@ -113,8 +113,8 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				calls_collector::on_enter_nostack(&*collector, (void *)0x12345678, 100);
-				calls_collector::on_exit_nostack(&*collector, 10010);
+				collector->on_enter_nostack(100, (void *)0x12345678);
+				collector->on_exit_nostack(10010);
 				collector->read_collected(a);
 
 				// ASSERT
@@ -127,10 +127,10 @@ namespace micro_profiler
 				assert_equal(reference1, a.collected[0].second);
 
 				// ACT
-				calls_collector::on_enter_nostack(&*collector, (void *)0x1100000, 100000);
-				calls_collector::on_exit_nostack(&*collector, 100001);
-				calls_collector::on_enter_nostack(&*collector, (void *)0x1100001, 110000);
-				calls_collector::on_exit_nostack(&*collector, 110002000000);
+				collector->on_enter_nostack(100000, (void *)0x1100000);
+				collector->on_exit_nostack(100001);
+				collector->on_enter_nostack(110000, (void *)0x1100001);
+				collector->on_exit_nostack(110002000000);
 				collector->read_collected(a);
 
 				// ASSERT

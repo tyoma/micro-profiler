@@ -24,7 +24,9 @@ if(UNIX)
 	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
 endif()
 if (MSVC)
-	add_definitions(-Dsnprintf=_snprintf)
+	if (MSVC_TOOLSET_VERSION LESS 140)
+		add_definitions(-Dsnprintf=_snprintf)
+	endif()
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
 

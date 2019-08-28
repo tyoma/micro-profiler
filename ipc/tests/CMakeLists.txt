@@ -12,7 +12,6 @@ if (WIN32)
 		COMEndpointClientTests.cpp
 		COMEndpointServerTests.cpp
 		helpers_com.cpp
-		IPCClientServerTests.cpp
 	)	
 endif()
 

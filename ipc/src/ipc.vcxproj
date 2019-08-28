@@ -60,12 +60,6 @@
       <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="server_endpoint_sockets.cpp" />
-    <ClCompile Include="ipc_client.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="ipc_server.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="socket_helpers_unix.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
     </ClCompile>
@@ -74,11 +68,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\client.h" />
     <ClInclude Include="..\com\endpoint.h" />
     <ClInclude Include="..\endpoint_com.h" />
     <ClInclude Include="..\endpoint_sockets.h" />
-    <ClInclude Include="..\server.h" />
     <ClInclude Include="..\endpoint.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="helpers.h" />

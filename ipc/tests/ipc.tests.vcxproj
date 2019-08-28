@@ -71,9 +71,6 @@
     <ClCompile Include="helpers_sockets.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="IPCClientServerTests.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="SocketsEndpointClientTests.cpp" />
     <ClCompile Include="SocketsEndpointServerTests.cpp" />
   </ItemGroup>

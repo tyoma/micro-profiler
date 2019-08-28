@@ -1,6 +1,7 @@
 #include <mt/thread.h>
 #include <mt/tls.h>
 
+#include <memory>
 #include <ut/assert.h>
 #include <ut/test.h>
 #include <windows.h>

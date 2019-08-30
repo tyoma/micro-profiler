@@ -50,6 +50,7 @@
 #define IDM_MP_PANE_TOOLBAR	0x1033
 #define IDG_MP_INSTANCE_COMMANDS 0x1034
 #define IDG_MP_INSTANCE_MISC_COMMANDS 0x1035
+#define IDG_MP_IPC	0x1036
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,6 +60,8 @@
 #define cmdidSaveStatistics 0x110
 #define cmdidLoadStatistics 0x111
 #define cmdidProfileProcess 0x120
+#define cmdidIPCEnableRemote 0x201
+#define cmdidIPCSocketPort 0x202
 #define cmdidCloseAll 0x300
 #define cmdidClearStatistics 0x400
 #define cmdidCopyStatistics 0x401

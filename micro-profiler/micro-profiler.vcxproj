@@ -62,6 +62,7 @@
     <ClCompile Include="frontend\AttachToProcessDialog.cpp" />
     <ClCompile Include="frontend\file.cpp" />
     <ClCompile Include="frontend\inject_profiler.cpp" />
+    <ClCompile Include="frontend\ipc_manager.cpp" />
     <ClCompile Include="frontend\marshalling_server.cpp" />
     <ClCompile Include="frontend\piechart.cpp" />
     <ClCompile Include="frontend\ProfilerMainDialog.cpp" />
@@ -71,10 +72,12 @@
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="visualstudio\vs-extension\async.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\helpers.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClInclude Include="frontend\AttachToProcessDialog.h" />
+    <ClInclude Include="frontend\ipc_manager.h" />
     <ClInclude Include="frontend\marshalling_server.h" />
     <ClInclude Include="frontend\piechart.h" />
     <ClInclude Include="frontend\tables_ui.h" />

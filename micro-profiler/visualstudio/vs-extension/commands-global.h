@@ -32,17 +32,23 @@ namespace micro_profiler
 	class AttachToProcessDialog;
 	class frontend_manager;
 
+	namespace ipc
+	{
+		class ipc_manager;
+	}
+
 	namespace integration
 	{
 		struct global_context
 		{
 			global_context(const dispatch &project, const std::shared_ptr<frontend_manager> &frontend,
-				const CComPtr<IVsUIShell> &shell);
+				const CComPtr<IVsUIShell> &shell, const std::shared_ptr<ipc::ipc_manager> &ipc_manager_);
 
 			dispatch project;
 			
 			std::shared_ptr<frontend_manager> frontend;
 			CComPtr<IVsUIShell> shell;
+			std::shared_ptr<ipc::ipc_manager> ipc_manager;
 		};
 
 		typedef command<global_context> global_command;
@@ -97,6 +103,25 @@ namespace micro_profiler
 		};
 
 
+		struct enable_remote_connections : global_command
+		{
+			enable_remote_connections();
+
+			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
+			virtual void exec(context_type &ctx, unsigned item);
+		};
+
+
+		struct port_display : global_command
+		{
+			port_display();
+
+			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
+			virtual bool get_name(const context_type &ctx, unsigned item, std::wstring &name) const;
+			virtual void exec(context_type &ctx, unsigned item);
+		};
+
+
 		struct window_activate : global_command
 		{
 			window_activate();
@@ -125,8 +150,9 @@ namespace micro_profiler
 
 
 		inline global_context::global_context(const dispatch &project_,
-				const std::shared_ptr<frontend_manager> &frontend_, const CComPtr<IVsUIShell> &shell_)
-			: project(project_), frontend(frontend_), shell(shell_)
+				const std::shared_ptr<frontend_manager> &frontend_, const CComPtr<IVsUIShell> &shell_,
+				const std::shared_ptr<ipc::ipc_manager> &ipc_manager_)
+			: project(project_), frontend(frontend_), shell(shell_), ipc_manager(ipc_manager_)
 		{	}
 	}
 }

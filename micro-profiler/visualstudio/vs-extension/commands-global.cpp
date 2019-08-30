@@ -32,6 +32,7 @@
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
+#include <frontend/ipc_manager.h>
 #include <frontend/SupportDevDialog.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
@@ -250,7 +251,7 @@ namespace micro_profiler
 			return true;
 		}
 
-		bool save_statistics::get_name(const context_type &ctx, unsigned /*item*/, std::wstring &name) const
+		bool save_statistics::get_name(const context_type &ctx, unsigned /*item*/, wstring &name) const
 		{
 			if (const frontend_manager::instance *i = ctx.frontend->get_active())
 				return name = L"Save " + unicode(*i->executable) + L" Statistics As...", true;
@@ -293,6 +294,40 @@ namespace micro_profiler
 		}
 
 
+		enable_remote_connections::enable_remote_connections()
+			: global_command(cmdidIPCEnableRemote)
+		{	}
+
+		bool enable_remote_connections::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
+		{
+			state = visible | supported | enabled | (ctx.ipc_manager->remote_sockets_enabled() ? checked : 0);
+			return true;
+		}
+
+		void enable_remote_connections::exec(context_type &ctx, unsigned /*item*/)
+		{	ctx.ipc_manager->enable_remote_sockets(!ctx.ipc_manager->remote_sockets_enabled());	}
+
+
+		port_display::port_display()
+			: global_command(cmdidIPCSocketPort)
+		{	}
+
+		bool port_display::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
+		{	return state = visible | supported, true;	}
+
+		bool port_display::get_name(const context_type &ctx, unsigned /*item*/, wstring &name) const
+		{
+			wchar_t buffer[100] = { 0 };
+
+			snwprintf(buffer, sizeof buffer - 1, L"  TCP Port (autoconfigured): #%d", ctx.ipc_manager->get_sockets_port());
+			name = buffer;
+			return true;
+		}
+
+		void port_display::exec(context_type &/*ctx*/, unsigned /*item*/)
+		{	}
+
+
 		window_activate::window_activate()
 			: global_command(cmdidWindowActivateDynamic, true)
 		{	}
@@ -306,7 +341,7 @@ namespace micro_profiler
 			return true;
 		}
 
-		bool window_activate::get_name(const context_type &ctx, unsigned item, std::wstring &name) const
+		bool window_activate::get_name(const context_type &ctx, unsigned item, wstring &name) const
 		{
 			const frontend_manager::instance *i = ctx.frontend->get_instance(item);
 			return i ? name = unicode(*i->executable), true : false;

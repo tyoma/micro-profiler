@@ -18,19 +18,13 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include "helpers.h"
 
-#include <atlbase.h>
-#include <vsshell.h>
+#include <windows.h>
 
-namespace micro_profiler
+extern "C" int setenv(const char *name, const char *value, int overwrite)
 {
-	inline HWND get_frame_hwnd(const CComPtr<IVsUIShell> &shell)
-	{
-		HWND hparent = HWND_DESKTOP;
-
-		return shell ? shell->GetDialogOwnerHwnd(&hparent), hparent : hparent;
-	}
+	if (overwrite || !GetEnvironmentVariableA(name, NULL, 0))
+		::SetEnvironmentVariableA(name, value);
+	return 0;
 }
-
-extern "C" int setenv(const char *name, const char *value, int overwrite);

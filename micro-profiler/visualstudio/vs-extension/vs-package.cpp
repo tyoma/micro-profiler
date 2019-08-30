@@ -22,12 +22,13 @@
 #include "com.h"
 #include "commands-global.h"
 #include "command-ids.h"
+#include "helpers.h"
 #include "vs-pane.h"
 
 #include <common/constants.h>
 #include <common/string.h>
 #include <frontend/frontend_manager.h>
-#include <frontend/marshalling_server.h>
+#include <frontend/ipc_manager.h>
 #include <resources/resource.h>
 #include <setup/environment.h>
 #include <visualstudio/command-target.h>
@@ -56,6 +57,8 @@ namespace micro_profiler
 
 				global_command::ptr(new open_statistics),
 				global_command::ptr(new save_statistics),
+				global_command::ptr(new enable_remote_connections),
+				global_command::ptr(new port_display),
 				global_command::ptr(new profile_process),
 				global_command::ptr(new window_activate),
 				global_command::ptr(new close_all),
@@ -147,8 +150,8 @@ namespace micro_profiler
 
 			STDMETHODIMP Close()
 			{
+				_ipc_manager.reset();
 				_frontend_manager.reset();
-				_hservers.clear();
 				return S_OK;
 			}
 
@@ -172,10 +175,9 @@ namespace micro_profiler
 				_shell = shell;
 				register_path(false);
 				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
-				_marshalling_server.reset(new marshalling_server(_frontend_manager));
-				_hservers.push_back(ipc::run_server(("com|" + to_string(c_integrated_frontend_id)).c_str(),
-					_frontend_manager));
-				_hservers.push_back(ipc::run_server("sockets|0.0.0.0:6100", _marshalling_server));
+				_ipc_manager.reset(new ipc::ipc_manager(_frontend_manager, make_pair(6100u, 10u)));
+				setenv(c_frontend_id_ev, ipc::ipc_manager::format_endpoint("127.0.0.1",
+					_ipc_manager->get_sockets_port()).c_str(), 1);
 			}
 
 			IDispatchPtr get_dte()
@@ -187,11 +189,13 @@ namespace micro_profiler
 
 			virtual global_context get_context()
 			{
+				dispatch project((IDispatchPtr()));
+
 				if (IDispatchPtr dte = get_dte())
 					if (IDispatchPtr selection = dispatch(dte).get(L"SelectedItems"))
 						if (dispatch(selection).get(L"Count") == 1)
-							return global_context(dispatch(selection)[1].get(L"Project"), _frontend_manager, _shell);
-				return global_context(dispatch(IDispatchPtr()), _frontend_manager, _shell);
+							project = dispatch(selection)[1].get(L"Project");
+				return global_context(project, _frontend_manager, _shell, _ipc_manager);
 			}
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const string &executable)
@@ -201,9 +205,8 @@ namespace micro_profiler
 			CComPtr<IServiceProvider> _service_provider;
 			IDispatchPtr _dte;
 			CComPtr<IVsUIShell> _shell;
-			vector< shared_ptr<void> > _hservers;
-			shared_ptr<marshalling_server> _marshalling_server;
 			shared_ptr<frontend_manager> _frontend_manager;
+			shared_ptr<ipc::ipc_manager> _ipc_manager;
 			unsigned _next_tool_id;
 		};
 

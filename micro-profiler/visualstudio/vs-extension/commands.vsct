@@ -28,6 +28,9 @@
 			<Group guid="guidGlobalCmdSet" id="IDG_MP_MAIN" priority="0x0800">
 				<Parent guid="guidGlobalCmdSet" id="IDM_MP_MM_MICROPROFILER" />
 			</Group>
+			<Group guid="guidGlobalCmdSet" id="IDG_MP_IPC" priority="0x0850">
+				<Parent guid="guidGlobalCmdSet" id="IDM_MP_MM_MICROPROFILER" />
+			</Group>
 			<Group guid="guidGlobalCmdSet" id="IDG_MP_WINDOWS" priority="0x0900">
 				<Parent guid="guidGlobalCmdSet" id="IDM_MP_MM_MICROPROFILER" />
 			</Group>
@@ -85,6 +88,25 @@
 				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<ButtonText>Profile Process...</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidGlobalCmdSet" id="cmdidIPCEnableRemote" priority="0x0100" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_IPC" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Enable Remote Connections</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidGlobalCmdSet" id="cmdidIPCSocketPort" priority="0x0110" type="Button">
+				<Parent guid="guidGlobalCmdSet" id="IDG_MP_IPC" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultDisabled</CommandFlag>
+				<Strings>
+					<ButtonText>  TCP Port (autoconfigured)</ButtonText>
 				</Strings>
 			</Button>
 			<Button guid="guidGlobalCmdSet" id="cmdidWindowActivateDynamic" priority="0x0300" type="Button">

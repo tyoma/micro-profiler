@@ -52,6 +52,12 @@
     <ClCompile Include="visualstudio\vs-extension\async.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
+    <ClCompile Include="frontend\ipc_manager.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\helpers.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\appicon.ico">
@@ -154,12 +160,14 @@
     <ClInclude Include="frontend\AttachToProcessDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>
-    <ClInclude Include="constants.h" />
     <ClInclude Include="visualstudio\vs-extension\async.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\com.h">
       <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\ipc_manager.h">
+      <Filter>frontend</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

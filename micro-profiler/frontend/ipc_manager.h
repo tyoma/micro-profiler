@@ -20,17 +20,43 @@
 
 #pragma once
 
-#include <atlbase.h>
-#include <vsshell.h>
+#include <common/noncopyable.h>
+#include <ipc/endpoint.h>
 
 namespace micro_profiler
 {
-	inline HWND get_frame_hwnd(const CComPtr<IVsUIShell> &shell)
+	namespace ipc
 	{
-		HWND hparent = HWND_DESKTOP;
+		class ipc_manager : noncopyable
+		{
+		public:
+			typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
 
-		return shell ? shell->GetDialogOwnerHwnd(&hparent), hparent : hparent;
+		public:
+			ipc_manager(const std::shared_ptr<server> &underlying, port_range range);
+
+			unsigned short get_sockets_port() const;
+			bool remote_sockets_enabled() const;
+			void enable_remote_sockets(bool enable);
+
+			bool com_enabled() const;
+			void enable_com(bool enable);
+
+			static std::string format_endpoint(const std::string &interface_, unsigned short port);
+
+		private:
+			static std::shared_ptr<void> probe_create_server(const std::shared_ptr<server> &underlying,
+				const std::string &interface_, unsigned short &port, port_range range);
+
+		private:
+			const std::shared_ptr<server> _underlying;
+			const port_range _range;
+
+			std::shared_ptr<void> _sockets_server;
+			bool _remote_enabled;
+			unsigned short _port;
+
+			std::shared_ptr<void> _com_server;
+		};
 	}
 }
-
-extern "C" int setenv(const char *name, const char *value, int overwrite);

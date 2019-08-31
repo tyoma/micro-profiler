@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <elf.h>
+#include <stdexcept>
 #include <string.h>
 
 using namespace std;
@@ -73,10 +74,19 @@ namespace symreader
 
 	void read_sections(const void *image, size_t size, const std::function<void (const section &)> &callback)
 	{
-		if (_32bit == get_bitness(image))
+		switch (get_bitness(image))
+		{
+		case _32bit:
 			read_sections<Elf32_Ehdr, Elf32_Shdr>(image, size, callback);
-		else if (_64bit == get_bitness(image))
+			break;
+
+		case _64bit:
 			read_sections<Elf64_Ehdr, Elf64_Shdr>(image, size, callback);
+			break;
+
+		default:
+			throw runtime_error("Only 32-bit & 64-bit platforms are supported!");
+		}
 	}
 
 	void read_symbols(const void *image, size_t size, const std::function<void (const symbol &)> &callback)
@@ -122,6 +132,9 @@ namespace symreader
 			if (dynstr)
 				read_symbols<Elf64_Sym>(image, code_section_index, dynsym, dynstr, callback);
 			break;
+
+		default:
+			throw runtime_error("Only 32-bit & 64-bit platforms are supported!");
 		}
 	}
 }

@@ -23,6 +23,7 @@
 #include "endpoint.h"
 
 #include <algorithm>
+#include <functional>
 
 namespace micro_profiler
 {

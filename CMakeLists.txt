@@ -24,7 +24,7 @@ if(UNIX)
 	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
 endif()
 if (MSVC)
-	if (MSVC_TOOLSET_VERSION LESS 140)
+	if (MSVC_VERSION LESS 1900)
 		add_definitions(-Dsnprintf=_snprintf)
 	endif()
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING -D_WINSOCK_DEPRECATED_NO_WARNINGS)
@@ -33,16 +33,22 @@ endif()
 
 # Setup global compiler/linker settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fPIC -std=c++11 -frtti -fvisibility=hidden")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fPIC -std=c++11 -fexceptions -frtti -fvisibility=hidden")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC -fvisibility=hidden")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -Wno-unknown-pragmas")
-	
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-delete-non-virtual-dtor")
+
 	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-undefined")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--no-undefined")
+		if (CMAKE_BUILD_TYPE MATCHES "Release")
+			set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-S")
+		endif()
 	else()
-		# TODO: prevent clang from linking incomplete shared objects
-	endif()	
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-private-field")
+		if (CMAKE_BUILD_TYPE MATCHES "Release")
+			set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-strip-debug")
+		endif()
+	endif()			
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set(configurations
 		CMAKE_C_FLAGS_DEBUG

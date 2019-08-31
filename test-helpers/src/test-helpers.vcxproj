@@ -54,7 +54,9 @@
       <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="mock_frontend.cpp" />
-    <ClCompile Include="process_win32.cpp" />
+    <ClCompile Include="process_win32.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="thread_unix.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
     </ClCompile>

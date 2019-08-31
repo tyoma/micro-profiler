@@ -319,7 +319,7 @@ namespace micro_profiler
 		{
 			wchar_t buffer[100] = { 0 };
 
-			snwprintf(buffer, sizeof buffer - 1, L"  TCP Port (autoconfigured): #%d", ctx.ipc_manager->get_sockets_port());
+			swprintf(buffer, sizeof buffer - 1, L"  TCP Port (autoconfigured): #%d", ctx.ipc_manager->get_sockets_port());
 			name = buffer;
 			return true;
 		}

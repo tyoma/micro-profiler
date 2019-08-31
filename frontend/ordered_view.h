@@ -120,7 +120,7 @@ namespace micro_profiler
 		{	return _predicate(lhs->first, lhs->second, rhs->first, rhs->second);	}
 
 	private:
-		PredicateT _predicate;
+		mutable PredicateT _predicate;
 	};
 
 
@@ -138,7 +138,7 @@ namespace micro_profiler
 		{	return _predicate(rhs->first, rhs->second, lhs->first, lhs->second);	}
 
 	private:
-		PredicateT _predicate;
+		mutable PredicateT _predicate;
 	};
 
 

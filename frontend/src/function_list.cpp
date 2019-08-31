@@ -213,7 +213,7 @@ namespace micro_profiler
 			break;
 
 		case 1:
-			_view->set_order(by_name(bind(&statistics_model_impl::_resolver, this)), ascending);
+			_view->set_order(by_name([this] { return _resolver; }), ascending);
 			_view->disable_projection();
 			break;
 
@@ -277,7 +277,7 @@ namespace micro_profiler
 	{
 		switch (column)
 		{
-		case 1:	_view->set_order(by_name(bind(&statistics_model_impl::_resolver, this)), ascending);	break;
+		case 1:	_view->set_order(by_name([this] { return _resolver; }), ascending);	break;
 		case 2:	_view->set_order(by_times_called(), ascending);	break;
 		}
 		this->invalidated(_view->size());

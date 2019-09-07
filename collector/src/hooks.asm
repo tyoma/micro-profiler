@@ -18,7 +18,7 @@
 ;	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;	THE SOFTWARE.
 
-IF _M_IX86
+IFDEF _M_IX86
 	.586
 	.model flat
 	.code
@@ -70,7 +70,7 @@ IF _M_IX86
 		POPREGS
 		ret
 	__pexit	endp
-ELSEIF _M_X64
+ELSEIFDEF _M_X64
 	.code
 
 	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z:near

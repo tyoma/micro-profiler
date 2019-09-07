@@ -1,9 +1,10 @@
 #include <frontend/function_list.h>
 
+#include "mocks.h"
+
 #include <test-helpers/helpers.h>
 
 #include <common/serialization.h>
-#include <common/symbol_resolver.h>
 
 #include <iomanip>
 #include <strmd/serializer.h>
@@ -31,13 +32,6 @@ namespace micro_profiler
 			{
 				wstringstream s;
 				s << value;
-				return s.str();
-			}
-
-			string to_string_address(address_t value)
-			{
-				stringstream s;
-				s << uppercase << hex << setw(8) << setfill('0') << value;
 				return s.str();
 			}
 
@@ -130,41 +124,6 @@ namespace micro_profiler
 			};
 
 
-			class sri : public symbol_resolver
-			{
-			public:
-				sri()
-				{	}
-
-				template <typename T, size_t n>
-				explicit sri(T (&symbols)[n])					
-				{
-					module_info_basic basic = { };
-					module_info_metadata metadata;
-
-					for (size_t i = 0; i != n; ++i)
-					{
-						symbol_info symbol = { symbols[i].second, static_cast<unsigned>(symbols[i].first), 1, };
-
-						metadata.symbols.push_back(symbol);
-					}
-					add_metadata(basic, metadata);
-				}
-
-				virtual const string &symbol_name_by_va(address_t address) const
-				{
-					const string &match = symbol_resolver::symbol_name_by_va(address);
-
-					if (!match.empty())
-						return match;
-
-					return _names[address] = to_string_address(address);
-				}
-
-			private:
-				mutable unordered_map<address_t, string> _names;
-			};
-
 			// convert decimal point to current(default) locale
 			string dp2cl(const char *input, char stub_char = '.')
 			{
@@ -200,7 +159,7 @@ namespace micro_profiler
 
 			init( CreateResolver )
 			{
-				resolver.reset(new sri);
+				resolver.reset(new mocks::symbol_resolver);
 			}
 
 
@@ -1549,11 +1508,11 @@ namespace micro_profiler
 				pair<address_t, string> symbols1[] = {
 					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
-				shared_ptr<functions_list> fl1(functions_list::create(16, shared_ptr<sri>(new sri(symbols1))));
+				shared_ptr<functions_list> fl1(functions_list::create(16, mocks::symbol_resolver::create(symbols1)));
 				pair<address_t, string> symbols2[] = {
 					make_pair(7, "A"), make_pair(11, "B"), make_pair(19, "C"), make_pair(131, "D"), make_pair(113, "E"),
 				};
-				shared_ptr<functions_list> fl2(functions_list::create(25000000000, shared_ptr<sri>(new sri(symbols2))));
+				shared_ptr<functions_list> fl2(functions_list::create(25000000000, mocks::symbol_resolver::create(symbols2)));
 				statistics_map_detailed s;
 				timestamp_t ticks_per_second;
 
@@ -1602,7 +1561,7 @@ namespace micro_profiler
 				pair<address_t, string> symbols[] = {
 					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
-				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
+				shared_ptr<functions_list> fl(functions_list::create(1, mocks::symbol_resolver::create(symbols)));
 				statistics_map_detailed s;
 				timestamp_t ticks_per_second;
 
@@ -1637,7 +1596,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 1000, s[123].inclusive_time = 250;
 
 				ser(500);
-				ser(sri(symbols));
+				ser(*mocks::symbol_resolver::create(symbols));
 				ser(s);
 
 				// ACT
@@ -1664,7 +1623,7 @@ namespace micro_profiler
 				pair<address_t, string> symbols[] = {
 					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
-				shared_ptr<functions_list> fl(functions_list::create(1, shared_ptr<sri>(new sri(symbols))));
+				shared_ptr<functions_list> fl(functions_list::create(1, mocks::symbol_resolver::create(symbols)));
 
 				// ACT
 				shared_ptr< series<double> > m = fl->get_column_series();
@@ -1685,7 +1644,7 @@ namespace micro_profiler
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 
 				ser(500);
-				ser(sri(symbols));
+				ser(*mocks::symbol_resolver::create(symbols));
 				ser(s);
 
 				shared_ptr<functions_list> fl = functions_list::load(dser);
@@ -1723,7 +1682,7 @@ namespace micro_profiler
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 
 				ser(500);
-				ser(sri(symbols));
+				ser(*mocks::symbol_resolver::create(symbols));
 				ser(s);
 				s.clear();
 
@@ -1758,12 +1717,12 @@ namespace micro_profiler
 
 				s[5].exclusive_time = 13, s[17].exclusive_time = 127, s[13].exclusive_time = 12;
 
-				ser(500), ser(sri(symbols)), ser(s);
+				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
 				s[123].exclusive_time = 12000;
-				ser(100), ser(sri(symbols)), ser(s);
+				ser(100), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
@@ -1795,11 +1754,11 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(sri(symbols)), ser(s);
+				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
-				ser(1000), ser(sri(symbols)), ser(s);
+				ser(1000), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
@@ -1857,7 +1816,7 @@ namespace micro_profiler
 				s[5].exclusive_time = 16, s[17].exclusive_time = 0;
 				s[5].inclusive_time = 15, s[17].inclusive_time = 0;
 
-				ser(500), ser(sri(symbols)), ser(s);
+				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
@@ -1889,7 +1848,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(sri(symbols)), ser(s);
+				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
@@ -1924,7 +1883,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(sri(symbols)), ser(s);
+				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
@@ -1959,7 +1918,7 @@ namespace micro_profiler
 				s[17].callees[11].times_called = 101, s[17].callees[19].times_called = 103, s[17].callees[23].times_called = 1100;
 				s[17].callees[11].exclusive_time = 3, s[17].callees[19].exclusive_time = 112, s[17].callees[23].exclusive_time = 9;
 
-				ser(100), ser(sri(symbols)), ser(s);
+				ser(100), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr<linked_statistics> ls;
 

@@ -5,9 +5,9 @@ if(MSVC)
 	enable_language(ASM_MASM)
 
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		add_definitions(-D_M_IX86=1)
+		add_definitions(-D_M_IX86)
 	else()
-		add_definitions(-D_M_X64=1)
+		add_definitions(-D_M_X64)
 	endif()
 endif()
 

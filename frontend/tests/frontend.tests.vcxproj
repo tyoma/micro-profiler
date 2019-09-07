@@ -54,8 +54,12 @@
     </ClCompile>
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
+    <ClCompile Include="mocks.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="ProcessListTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mocks.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+include(test)
+
 include_directories(../../collector)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")

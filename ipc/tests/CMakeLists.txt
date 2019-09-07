@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+include(test)
+
 set(IPC_TESTS_SOURCES
 	helpers_sockets.cpp
 	EndpointSelectorTests.cpp
@@ -17,4 +19,4 @@ endif()
 
 add_library(ipc.tests SHARED ${IPC_TESTS_SOURCES})
 
-target_link_libraries(ipc.tests ipc common test-helpers utee)
+target_link_libraries(ipc.tests ipc common test-helpers)

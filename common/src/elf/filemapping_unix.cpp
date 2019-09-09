@@ -2,7 +2,6 @@
 
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 using namespace std;
@@ -11,6 +10,19 @@ namespace symreader
 {
 	namespace
 	{
+		size_t get_file_size(const char *path)
+		{
+			if (FILE *f = fopen(path, "rb"))
+			{
+				fseek(f, 0, SEEK_END);
+				size_t s = ftell(f);
+				fseek(f, 0, SEEK_SET);
+				fclose(f);
+				return s;
+			}
+			return 0;
+		}
+
 		struct mapping : mapped_region
 		{
 			mapping(const char *path)
@@ -18,11 +30,8 @@ namespace symreader
 			{
 				if ((file = ::open(path, O_RDONLY)) >= 0)
 				{
-					struct stat st;
-
-					if (::fstat(file, &st) >= 0)
+					if (second = get_file_size(path), second)
 					{
-						second = static_cast<size_t>(st.st_size);
 						first = ::mmap(0, second, PROT_READ, MAP_PRIVATE, file, 0);
 						if (first != MAP_FAILED)
 							return;

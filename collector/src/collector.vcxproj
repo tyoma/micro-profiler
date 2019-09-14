@@ -45,8 +45,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <MASM>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1;_M_X64=0</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_IX86=0;_M_X64=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_X64=1</PreprocessorDefinitions>
     </MASM>
     <Link>
       <ModuleDefinitionFile>collector.def</ModuleDefinitionFile>

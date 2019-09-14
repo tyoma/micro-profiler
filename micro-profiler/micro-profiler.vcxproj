@@ -59,7 +59,9 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="frontend\AttachToProcessDialog.cpp" />
+    <ClCompile Include="frontend\AttachToProcessDialog.cpp">
+    	      <ExcludedFromBuild Condition="'$(Platform)'!='Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="frontend\file.cpp" />
     <ClCompile Include="frontend\inject_profiler.cpp" />
     <ClCompile Include="frontend\ipc_manager.cpp" />
@@ -143,7 +145,7 @@
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\injector\src\injector.lib.vcxproj">
+    <ProjectReference Condition="'$(Platform)'=='Win32'" Include="..\injector\src\injector.lib.vcxproj">
       <Project>{b0596b9d-8303-4fd1-8a0a-5db7882f6f89}</Project>
     </ProjectReference>
   </ItemGroup>

@@ -313,7 +313,7 @@ namespace micro_profiler
 				model->set_order(1, true);
 
 				assert_equal(L"baz", (model->get_text(0, 1, text), text));
-				assert_equal(0x11100, model->get_address(0));
+				assert_equal(0x11100u, model->get_address(0));
 				assert_equal(L"foo", (model->get_text(1, 1, text), text));
 				assert_equal(0x10100, model->get_address(1));
 

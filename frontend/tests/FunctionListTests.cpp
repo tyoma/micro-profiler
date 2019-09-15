@@ -1151,10 +1151,10 @@ namespace micro_profiler
 				ls->set_order(1, true);
 
 				// ACT / ASSERT
-				assert_equal(0x2001, ls->get_address(0));
-				assert_equal(0x2004, ls->get_address(1));
-				assert_equal(0x2008, ls->get_address(2));
-				assert_equal(0x2011, ls->get_address(3));
+				assert_equal(0x2001u, ls->get_address(0));
+				assert_equal(0x2004u, ls->get_address(1));
+				assert_equal(0x2008u, ls->get_address(2));
+				assert_equal(0x2011u, ls->get_address(3));
 			}
 
 

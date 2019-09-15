@@ -33,36 +33,27 @@ endif()
 
 # Setup global compiler/linker settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fPIC -std=c++11 -fexceptions -fno-rtti -fvisibility=hidden")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC -fvisibility=hidden")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fPIC -std=c++11 -fexceptions -fno-rtti -fvisibility=hidden -ffunction-sections -fdata-sections")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-delete-non-virtual-dtor")
 
 	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-undefined")
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--no-undefined")
-		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S")
-		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S")
+		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
+		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
 	else()
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-private-field")
-		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-strip-debug")
-		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-strip-debug")
+		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,-strip-debug -Wl,-dead-strip")
+		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,-strip-debug -Wl,-dead-strip")
 	endif()			
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	set(configurations
-		CMAKE_C_FLAGS_DEBUG
-		CMAKE_C_FLAGS_MINSIZEREL
-		CMAKE_C_FLAGS_RELEASE
-		CMAKE_C_FLAGS_RELWITHDEBINFO
-		CMAKE_CXX_FLAGS_DEBUG
-		CMAKE_CXX_FLAGS_MINSIZEREL
-		CMAKE_CXX_FLAGS_RELEASE
-		CMAKE_CXX_FLAGS_RELWITHDEBINFO
-	)
+	set(configurations CMAKE_C_FLAGS CMAKE_CXX_FLAGS_DEBUG)
+	
 	foreach (configuration ${configurations})
 		string(REGEX REPLACE "/MDd" "/MTd" ${configuration} "${${configuration}}")
 		string(REGEX REPLACE "/MD" "/MT" ${configuration} "${${configuration}}")
 	endforeach()
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /OPT:REF")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /OPT:REF")
 endif()
 if (UNIX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")

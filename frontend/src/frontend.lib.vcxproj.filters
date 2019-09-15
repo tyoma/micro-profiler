@@ -16,6 +16,27 @@
     <ClCompile Include="process_list.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="untested\file.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\ipc_manager.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\marshalling_server.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\piechart.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\stream.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\tables_ui.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\about_ui.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -30,10 +51,33 @@
     <ClInclude Include="text_conversion.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\file.h" />
+    <ClInclude Include="..\ipc_manager.h" />
+    <ClInclude Include="..\marshalling_server.h" />
+    <ClInclude Include="..\piechart.h" />
+    <ClInclude Include="..\stream.h" />
+    <ClInclude Include="..\tables_ui.h" />
+    <ClInclude Include="..\about_ui.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{363e13f7-9874-4068-beb4-1bc14f8253c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\untested">
+      <UniqueIdentifier>{5c83aa4d-fbce-4cc8-8e80-01e9d785eb45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\untested\resources">
+      <UniqueIdentifier>{3070a1b7-4ecb-459d-a0cf-fb3cfb3f91f2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="untested\resources\frontend.rc">
+      <Filter>src\untested\resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="untested\resources\appicon.ico">
+      <Filter>src\untested\resources</Filter>
+    </None>
   </ItemGroup>
 </Project>

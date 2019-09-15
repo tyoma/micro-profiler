@@ -20,16 +20,8 @@
 
 #include <crtdbg.h>
 
-#include <resources/resource.h>
-
-#include <common/constants.h>
-#include <frontend/frontend_manager.h>
-#include <frontend/ProfilerMainDialog.h>
+#include <atlbase.h>
 #include <ipc/com/endpoint.h>
-#include <setup/environment.h>
-
-using namespace micro_profiler;
-using namespace std;
 
 namespace
 {
@@ -40,27 +32,8 @@ namespace micro_profiler
 {
 	HINSTANCE g_instance;
 
-	namespace ipc
-	{
-		namespace com
-		{
-			class FauxSession : public ipc::com::session, public CComCoClass<FauxSession>
-			{
-			public:
-				DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
-				DECLARE_CLASSFACTORY_EX(ipc::com::server)
-			};
-
-			OBJECT_ENTRY_AUTO(reinterpret_cast<const GUID &>(c_standalone_frontend_id), FauxSession);
-
-
-			shared_ptr<frontend_ui> default_ui_factory(const shared_ptr<functions_list> &model, const string &executable)
-			{	return shared_ptr<frontend_ui>(new ProfilerMainDialog(model, executable));	}
-
-			shared_ptr<ipc::server> server::create_default_session_factory()
-			{	return frontend_manager::create(&default_ui_factory);	}
-		}
-	}
+	std::shared_ptr<ipc::server> ipc::com::server::create_default_session_factory()
+	{	throw 0;	}
 }
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
@@ -68,7 +41,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 	if (DLL_PROCESS_ATTACH == reason)
 	{
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-		g_instance = hinstance;
+		micro_profiler::g_instance = hinstance;
 	}
 
 	return g_module.DllMain(reason, reserved);
@@ -79,9 +52,3 @@ STDAPI DllCanUnloadNow()
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {	return g_module.DllGetClassObject(rclsid, riid, ppv);	}
-
-STDAPI DllRegisterServer()
-{	return register_path(false), g_module.DllRegisterServer(FALSE);	}
-
-STDAPI DllUnregisterServer()
-{	return unregister_path(false), g_module.DllUnregisterServer(FALSE);	}

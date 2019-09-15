@@ -28,12 +28,12 @@
 #include <common/path.h>
 #include <common/serialization.h>
 #include <common/string.h>
+#include <frontend/about_ui.h>
 #include <frontend/AttachToProcessDialog.h>
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
-#include <frontend/SupportDevDialog.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <visualstudio/dispatch.h>

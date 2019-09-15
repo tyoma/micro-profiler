@@ -18,7 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "SupportDevDialog.h"
+#include <frontend/about_ui.h>
+
+#include <common/string.h>
 
 namespace micro_profiler
 {
@@ -37,7 +39,7 @@ namespace micro_profiler
 	{
 		const NMLINK *n = static_cast<const NMLINK *>(static_cast<const void *>(nmhdr));
 
-		::ShellExecute(NULL, _T("open"), n->item.szUrl, NULL, NULL, SW_SHOWNORMAL);
+		::ShellExecute(NULL, _T("open"), unicode(n->item.szUrl).c_str(), NULL, NULL, SW_SHOWNORMAL);
 		return handled = TRUE, 1;
 	}
 

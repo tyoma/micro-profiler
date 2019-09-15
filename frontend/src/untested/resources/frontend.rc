@@ -1,0 +1,93 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "../../../resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SUPPORT_DEV DIALOGEX 0, 0, 215, 96
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "MicroProfiler - Support Developer"
+FONT 10, "Segoe UI", 400, 0, 0x0
+BEGIN
+    CONTROL         "1. Leave a review on <a href=""https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details"">Visual Studio Marketplace</a>",IDC_WAYS_TO_SUPPORT,
+                    "SysLink",WS_TABSTOP,17,27,191,10
+    CONTROL         "2. Write an <a href=""https://github.com/tyoma/micro-profiler/issues"">issue or a suggestion</a>",IDC_WAYS_TO_SUPPORT,
+                    "SysLink",WS_TABSTOP,17,42,191,10
+    CONTROL         "3. Star MicroProfiler on <a href=""https://github.com/tyoma/micro-profiler"">github.com</a>",IDC_WAYS_TO_SUPPORT,
+                    "SysLink",WS_TABSTOP,17,57,191,10
+    DEFPUSHBUTTON   "Thank You!",IDOK,7,75,201,14
+    LTEXT           "Please, take any of these steps to support development of MicroProfiler:",IDC_STATIC,7,7,201,18
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_SUPPORT_DEV, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 208
+        VERTGUIDE, 17
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 89
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "../../../resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_APPMAIN             ICON                    "appicon.ico"
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////

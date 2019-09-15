@@ -10,6 +10,10 @@
 			<Platform>x64</Platform>
 		</ProjectConfiguration>
 	</ItemGroup>
+  <PropertyGroup Label="UserMacros">
+    <OutDirX86>$(SolutionDir)_bin\Release_x86\</OutDirX86>
+    <OutDirX64>$(SolutionDir)_bin\Release_x64\</OutDirX64>
+  </PropertyGroup>
 	<PropertyGroup Label="Globals">
 		<ProjectGuid>{569EEA47-BC7D-4447-A26B-50CFD48B1F81}</ProjectGuid>
 	</PropertyGroup>
@@ -28,24 +32,24 @@
 		<TargetExt>.vsix</TargetExt>
 	</PropertyGroup>
 	<ItemGroup>
-		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_frontend.dll" />
-		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
-		<None Include="$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib" />
-		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
-		<None Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
+		<None Include="$(OutDirX86)micro-profiler_frontend.dll" />
+		<None Include="$(OutDirX86)micro-profiler_x86.dll" />
+		<None Include="$(OutDirX86)micro-profiler_Win32.lib" />
+		<None Include="$(OutDirX64)micro-profiler_x64.dll" />
+		<None Include="$(OutDirX64)micro-profiler_x64.lib" />
 		<None Include="*.json;*.xml" />
-		<None Include="$(BinDir)*.cpp;$(BinDir)*.h;$(BinDir)*.pkgdef;$(BinDir)*.vsixmanifest;$(BinDir)logo.ico"/>
-		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_frontend.dll" />
-		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll" />
-		<Pack Include="$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib" />
-		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll" />
-		<Pack Include="$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib" />
+		<None Include="$(OutDirX86)*.cpp;$(OutDirX86)*.h;$(OutDirX86)*.pkgdef;$(OutDirX86)*.vsixmanifest;$(OutDirX86)logo.ico"/>
+		<Pack Include="$(OutDirX86)micro-profiler_frontend.dll" />
+		<Pack Include="$(OutDirX86)micro-profiler_x86.dll" />
+		<Pack Include="$(OutDirX86)micro-profiler_Win32.lib" />
+		<Pack Include="$(OutDirX64)micro-profiler_x64.dll" />
+		<Pack Include="$(OutDirX64)micro-profiler_x64.lib" />
 		<PackReplace Include="*.json;*.xml"/>
-		<Pack Include="&quot;$(BinDir)*.cpp&quot;;&quot;$(BinDir)*.h&quot;;&quot;$(BinDir)*.pkgdef&quot;;&quot;$(BinDir)*.vsixmanifest&quot;;&quot;$(BinDir)logo.ico&quot;"/>
+		<Pack Include="&quot;$(OutDirX86)*.cpp&quot;;&quot;$(OutDirX86)*.h&quot;;&quot;$(OutDirX86)*.pkgdef&quot;;&quot;$(OutDirX86)*.vsixmanifest&quot;;&quot;$(OutDirX86)logo.ico&quot;"/>
 
-		<CustomBuild Include="$(SolutionDir)_bin\Release_x86\1033\micro-profiler.ui.dll">
+		<CustomBuild Include="$(OutDirX86)1033\micro-profiler.ui.dll">
 			<FileType>Document</FileType>
-			<Command>cd "$(SolutionDir)_bin\Release_x86"
+			<Command>cd "$(OutDirX86)"
 mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
 			<Outputs>$(IntDir)%(Filename).cto</Outputs>
 			<Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
@@ -57,7 +61,7 @@ mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
 		<ProjectReference Include="$(SolutionDir)micro-profiler\micro-profiler.vcxproj">
 			<Project>{d5d49128-2510-4a14-9a0f-9f8f0abad700}</Project>
 		</ProjectReference>
-		<ProjectReference Include="..\..\collector\src\collector.vcxproj">
+		<ProjectReference Include="$(SolutionDir)collector\src\collector.vcxproj">
 			<Project>{5edce420-14e9-46e6-b19e-e4ac3240fc94}</Project>
 		</ProjectReference>
 	</ItemGroup>
@@ -66,19 +70,19 @@ mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
 	</Target>
 	<Target Name="CompressAndReplace" AfterTargets="Compress">
 		<Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;
-			call sha256 hashmpxfrontend &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_frontend.dll&quot;
-			call sha256 hashmpx86 &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_x86.dll&quot;
-			call sha256 hashmpx86lib &quot;$(SolutionDir)_bin\Release_x86\micro-profiler_Win32.lib&quot;
-			call sha256 hashmpx64 &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.dll&quot;
-			call sha256 hashmpx64lib &quot;$(SolutionDir)_bin\Release_x64\micro-profiler_x64.lib&quot;
-			call sha256 hashmpui &quot;$(SolutionDir)_bin\Release_x86\1033\micro-profiler.ui.dll&quot;
+			call sha256 hashmpxfrontend &quot;$(OutDirX86)micro-profiler_frontend.dll&quot;
+			call sha256 hashmpx86 &quot;$(OutDirX86)micro-profiler_x86.dll&quot;
+			call sha256 hashmpx86lib &quot;$(OutDirX86)micro-profiler_Win32.lib&quot;
+			call sha256 hashmpx64 &quot;$(OutDirX64)micro-profiler_x64.dll&quot;
+			call sha256 hashmpx64lib &quot;$(OutDirX64)micro-profiler_x64.lib&quot;
+			call sha256 hashmpui &quot;$(OutDirX86)1033\micro-profiler.ui.dll&quot;
 
-			call sha256 hashmanifest &quot;$(BinDir)extension.vsixmanifest&quot;
-			call sha256 hashappicon &quot;$(BinDir)logo.ico&quot;
-			call sha256 hashpkgdef &quot;$(BinDir)micro-profiler.pkgdef&quot;
+			call sha256 hashmanifest &quot;$(OutDirX86)extension.vsixmanifest&quot;
+			call sha256 hashappicon &quot;$(OutDirX86)logo.ico&quot;
+			call sha256 hashpkgdef &quot;$(OutDirX86)micro-profiler.pkgdef&quot;
 
-			call sha256 hashentry &quot;$(BinDir)entry.h&quot;
-			call sha256 hashinit &quot;$(BinDir)micro-profiler.initializer.cpp&quot;
+			call sha256 hashentry &quot;$(OutDirX86)entry.h&quot;
+			call sha256 hashinit &quot;$(OutDirX86)micro-profiler.initializer.cpp&quot;
 
 			call replace &quot;%(PackReplace.Identity)&quot; &gt; &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot;
 			call mkzip &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot; &quot;$(IntDir)$(TargetName).zip&quot;"/>

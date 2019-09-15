@@ -49,11 +49,9 @@
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="calls_collector.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
-      <AssemblerOutput Condition="'$(Platform)'!='Android'">All</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="calls_collector_thread.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
-      <AssemblerOutput Condition="'$(Platform)'!='Android'">All</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="collector_app.cpp" />
     <ClCompile Include="image_patch.cpp" />

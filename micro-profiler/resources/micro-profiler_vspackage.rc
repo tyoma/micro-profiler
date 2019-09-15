@@ -1,0 +1,142 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+#include "../../version.h"
+
+#define MP_VERSION_RES MP_VERSION_MAJOR,MP_VERSION_MINOR,MP_BUILD,MP_BRANCH
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_SUPPORT_DEV, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 208
+        VERTGUIDE, 17
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 89
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "#include ""../../version.h""\r\n"
+    "\r\n"
+    "#define MP_VERSION_RES MP_VERSION_MAJOR,MP_VERSION_MINOR,MP_BUILD,MP_BRANCH\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "1000 CTMENU ""commands.cto""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION MP_VERSION_RES
+ PRODUCTVERSION MP_VERSION_RES
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004e4"
+        BEGIN
+            VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
+            VALUE "FileDescription", "Profiler with RealTime Frontend"
+            VALUE "FileVersion", MP_VERSION_STR
+            VALUE "InternalName", "micro-profiler_x86.dll"
+            VALUE "LegalCopyright", "© Copyright 2011-2018 gevorkyan.org. All rights reserved."
+            VALUE "OriginalFilename", "micro-profiler_x86.dll"
+            VALUE "ProductName", "MicroProfiler"
+            VALUE "ProductVersion", MP_VERSION_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PROJNAME            "micro-profiler-frontend"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PACKAGE_LOAD_KEY    "ZCC0IPQMHCQZQDCEDMPIACP0ZQC2DPAJCEKIZRCZKZQMJQEADJH3E9H0ZIJTEDPCZMRHIQRIACJEA3QRMAR0J9C3P2K0J2JKQJDEHHI0ZIK9D2H1JPQ3ECJ3Q8AEDRH3"
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1000 CTMENU "commands.cto"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

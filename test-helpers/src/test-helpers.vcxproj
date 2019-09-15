@@ -39,6 +39,7 @@
   </ImportGroup>
   <ItemDefinitionGroup>
     <ClCompile>
+    	<AdditionalIncludeDirectories>$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemDefinitionGroup>

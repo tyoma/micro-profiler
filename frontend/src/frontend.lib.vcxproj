@@ -41,6 +41,9 @@
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <ResourceCompile>
+      <ResourceOutputFileName>$(OutDir)%(Filename).res</ResourceOutputFileName>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="frontend.cpp" />
@@ -48,18 +51,44 @@
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="columns_model.cpp" />
     <ClCompile Include="process_list.cpp" />
+    <ClCompile Include="untested\file.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="untested\ipc_manager.cpp" />
+    <ClCompile Include="untested\marshalling_server.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="untested\piechart.cpp" />
+    <ClCompile Include="untested\stream.cpp" />
+    <ClCompile Include="untested\about_ui.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\file.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
+    <ClInclude Include="..\ipc_manager.h" />
+    <ClInclude Include="..\marshalling_server.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\columns_model.h" />
+    <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\series.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
+    <ClInclude Include="..\stream.h" />
+    <ClInclude Include="..\about_ui.h" />
+    <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="text_conversion.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="untested\resources\frontend.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="untested\resources\appicon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

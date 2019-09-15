@@ -36,13 +36,14 @@
   <ItemDefinitionGroup>
     <Link>
       <NoEntryPoint>true</NoEntryPoint>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(IntDir)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ResourceCompile Include="resources\micro-profiler-package.rc" />
+    <ResourceCompile Include="resources\micro-profiler_ui.rc" />
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <FileType>Document</FileType>
       <Command>"$(VSSDKRoot)VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" "$(IntDir)%(Filename).cto" -I"$(VSSDKRoot)VisualStudioIntegration\Common\Inc"</Command>

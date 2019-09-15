@@ -18,7 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "piechart.h"
+#include <frontend/piechart.h>
 
 #include <agge/blenders.h>
 #include <agge/curves.h>
@@ -54,7 +54,7 @@ namespace micro_profiler
 		invalidate(0);
 	}
 
-	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer) const
+	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer_) const
 	{
 		typedef blender_solid_color<simd::blender_solid_color, order_bgra> blender;
 
@@ -68,9 +68,9 @@ namespace micro_profiler
 
 			if (i->share_angle > 0.005)
 			{
-				add_path(*rasterizer, pie_segment(_center.x, _center.y, outer_r, _inner_r, start, end));
-				rasterizer->close_polygon();
-				ctx(rasterizer, blender(i->segment_color), winding<>());
+				add_path(*rasterizer_, pie_segment(_center.x, _center.y, outer_r, _inner_r, start, end));
+				rasterizer_->close_polygon();
+				ctx(rasterizer_, blender(i->segment_color), winding<>());
 			}
 			start = end;
 		}

@@ -18,33 +18,46 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/constants.h>
+#pragma once
 
-#include <common/string.h>
+#include <frontend/frontend_manager.h>
 
-using namespace std;
+#include <functional>
+#include <string>
+#include <wpl/base/concepts.h>
+#include <wpl/base/signals.h>
+#include <wpl/ui/view_host.h>
+#include <wpl/ui/win32/window.h>
 
 namespace micro_profiler
 {
-	const char *c_profilerdir_ev = "MICROPROFILERDIR";
-	const char *c_frontend_id_ev = "MICROPROFILERFRONTEND";
+	class functions_list;
+	struct hive;
+	class tables_ui;
 
-	// {0ED7654C-DE8A-4964-9661-0B0C391BE15E}
-	const guid_t c_standalone_frontend_id = {
-		{ 0x4c, 0x65, 0xd7, 0x0e, 0x8a, 0xde, 0x64, 0x49, 0x96, 0x61, 0x0b, 0x0c, 0x39, 0x1b, 0xe1, 0x5e, }
+	class ProfilerMainDialog : public frontend_ui, wpl::noncopyable
+	{
+	public:
+		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::string &executable);
+		~ProfilerMainDialog();
+
+	private:
+		void OnCopyAll();
+		void OnSupport();
+
+	private:
+		LRESULT on_message(UINT message, WPARAM wparam, LPARAM lparam, const wpl::ui::window::original_handler_t &handler);
+
+		virtual void activate();
+
+	private:
+		HWND _hwnd;
+		const std::shared_ptr<hive> _configuration;
+		const std::shared_ptr<functions_list> _statistics;
+		const std::string _executable;
+		agge::rect_i _placement;
+		std::shared_ptr<wpl::ui::view_host> _host;
+		std::shared_ptr<tables_ui> _statistics_display;
+		std::vector<wpl::slot_connection> _connections;
 	};
-
-	// {91C0CE12-C677-4A50-A522-C86040AC5052}
-	const guid_t c_integrated_frontend_id = {
-		{ 0x12, 0xce, 0xc0, 0x91, 0x77, 0xc6, 0x50, 0x4a, 0xa5, 0x22, 0xc8, 0x60, 0x40, 0xac, 0x50, 0x52, }
-	};
-
-	const string c_candidate_endpoints_array[] = {
-		"sockets|127.0.0.1:6100",
-		"com|" + to_string(c_integrated_frontend_id),
-		"com|" + to_string(c_standalone_frontend_id),
-	};
-
-	const vector<string> c_candidate_endpoints(c_candidate_endpoints_array, c_candidate_endpoints_array
-		+ sizeof c_candidate_endpoints_array / sizeof c_candidate_endpoints_array[0]);
 }

@@ -18,33 +18,26 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/constants.h>
-
-#include <common/string.h>
+#include <frontend/stream.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	const char *c_profilerdir_ev = "MICROPROFILERDIR";
-	const char *c_frontend_id_ev = "MICROPROFILERFRONTEND";
+	write_stream::write_stream(const wstring &path)
+		: _file(_wfopen(path.c_str(), L"wb+"), &::fclose)
+	{	}
 
-	// {0ED7654C-DE8A-4964-9661-0B0C391BE15E}
-	const guid_t c_standalone_frontend_id = {
-		{ 0x4c, 0x65, 0xd7, 0x0e, 0x8a, 0xde, 0x64, 0x49, 0x96, 0x61, 0x0b, 0x0c, 0x39, 0x1b, 0xe1, 0x5e, }
-	};
+	void write_stream::write(const byte *buffer, size_t size)
+	{	fwrite(buffer, 1, size, static_cast<FILE *>(_file.get()));	}
 
-	// {91C0CE12-C677-4A50-A522-C86040AC5052}
-	const guid_t c_integrated_frontend_id = {
-		{ 0x12, 0xce, 0xc0, 0x91, 0x77, 0xc6, 0x50, 0x4a, 0xa5, 0x22, 0xc8, 0x60, 0x40, 0xac, 0x50, 0x52, }
-	};
+	read_stream::read_stream(const wstring &path)
+		: _file(_wfopen(path.c_str(), L"rb"), &::fclose)
+	{	}
 
-	const string c_candidate_endpoints_array[] = {
-		"sockets|127.0.0.1:6100",
-		"com|" + to_string(c_integrated_frontend_id),
-		"com|" + to_string(c_standalone_frontend_id),
-	};
-
-	const vector<string> c_candidate_endpoints(c_candidate_endpoints_array, c_candidate_endpoints_array
-		+ sizeof c_candidate_endpoints_array / sizeof c_candidate_endpoints_array[0]);
+	void read_stream::read(byte *buffer, size_t size)
+	{
+		if (size != fread(buffer, 1, size, static_cast<FILE *>(_file.get())))
+			throw runtime_error("Reading past end the file!");
+	}
 }

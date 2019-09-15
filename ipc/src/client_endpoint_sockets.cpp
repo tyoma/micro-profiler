@@ -63,7 +63,7 @@ namespace micro_profiler
 
 			client_session::~client_session()
 			{
-			    ::shutdown(_socket, SHUT_RDWR);
+				::shutdown(_socket, SHUT_RDWR);
 				_socket.reset();
 				_thread->join();
 			}

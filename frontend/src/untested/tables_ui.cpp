@@ -1,6 +1,6 @@
-#include "tables_ui.h"
+#include <frontend/tables_ui.h>
 
-#include "piechart.h"
+#include <frontend/piechart.h>
 
 #include <common/configuration.h>
 #include <frontend/columns_model.h>

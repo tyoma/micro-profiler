@@ -1,0 +1,15 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {0ED7654C-DE8A-4964-9661-0B0C391BE15E} = s 'MicroProfiler COM Default Frontend'
+		{
+			ForceRemove Programmable
+			LocalServer32 = s '%MODULE%'
+			{
+				val ServerExecutable = s '%MODULE_RAW%'
+			}
+			Version = s '1.0'
+		}
+	}
+}

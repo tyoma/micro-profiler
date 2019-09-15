@@ -18,9 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "ipc_manager.h"
+#include <frontend/ipc_manager.h>
 
-#include "marshalling_server.h"
+#include <frontend/marshalling_server.h>
 
 using namespace std;
 
@@ -41,8 +41,8 @@ namespace micro_profiler
 			}
 		}
 
-		ipc_manager::ipc_manager(const shared_ptr<server> &underlying, port_range range)
-			: _underlying(underlying), _range(range), _remote_enabled(false), _port(0)
+		ipc_manager::ipc_manager(const shared_ptr<server> &underlying, port_range range_)
+			: _underlying(underlying), _range(range_), _remote_enabled(false), _port(0)
 		{
 			shared_ptr<server> m(new marshalling_server(_underlying));
 
@@ -79,12 +79,12 @@ namespace micro_profiler
 		}
 
 		shared_ptr<void> ipc_manager::probe_create_server(const shared_ptr<server> &underlying,
-			const string &interface_, unsigned short &port, port_range range)
+			const string &interface_, unsigned short &port, port_range range_)
 		{
 			shared_ptr<void> hserver = port ? try_run_server(format_endpoint(interface_, port).c_str(), underlying)
 				: shared_ptr<void>();
 
-			for (unsigned short p = range.first, last = range.first + range.second; !hserver && p != last; ++p)
+			for (unsigned short p = range_.first, last = range_.first + range_.second; !hserver && p != last; ++p)
 			{
 				hserver = try_run_server(format_endpoint(interface_, p).c_str(), underlying);
 				if (hserver)

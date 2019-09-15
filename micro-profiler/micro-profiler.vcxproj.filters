@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="frontend\ProfilerMainDialog.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="module\main.cpp">
       <Filter>module</Filter>
     </ClCompile>
@@ -16,18 +13,6 @@
     <ClCompile Include="setup\environment.cpp">
       <Filter>setup</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\file.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\SupportDevDialog.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\stream.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\tables_ui.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
@@ -36,12 +21,6 @@
     </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp">
       <Filter>visualstudio\vs-extension</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\piechart.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="frontend\marshalling_server.cpp">
-      <Filter>frontend</Filter>
     </ClCompile>
     <ClCompile Include="frontend\AttachToProcessDialog.cpp">
       <Filter>frontend</Filter>
@@ -52,17 +31,11 @@
     <ClCompile Include="visualstudio\vs-extension\async.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\ipc_manager.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\helpers.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\appicon.ico">
-      <Filter>resources</Filter>
-    </None>
     <None Include="module\micro-profiler.def">
       <Filter>module</Filter>
     </None>
@@ -74,9 +47,6 @@
     </None>
     <None Include="logo.ico">
       <Filter>resources</Filter>
-    </None>
-    <None Include="frontend\micro-profiler-frontend.rgs">
-      <Filter>frontend</Filter>
     </None>
     <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest">
       <Filter>visualstudio\vs-extension</Filter>
@@ -106,9 +76,6 @@
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\ProfilerMainDialog.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\command-ids.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
@@ -124,20 +91,8 @@
     <ClInclude Include="visualstudio\command.h">
       <Filter>visualstudio</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\file.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\SupportDevDialog.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\stream.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\helpers.h">
       <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\tables_ui.h">
-      <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h">
       <Filter>visualstudio\vs-extension</Filter>
@@ -151,12 +106,6 @@
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\piechart.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\marshalling_server.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
     <ClInclude Include="frontend\AttachToProcessDialog.h">
       <Filter>frontend</Filter>
     </ClInclude>
@@ -166,18 +115,18 @@
     <ClInclude Include="visualstudio\vs-extension\com.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
-    <ClInclude Include="frontend\ipc_manager.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="resources\micro-profiler-frontend.rc">
-      <Filter>resources</Filter>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <Filter>visualstudio\vs-extension</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="$(OutDir)frontend.res" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\micro-profiler_vspackage.rc">
+      <Filter>resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

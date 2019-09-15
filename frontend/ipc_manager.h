@@ -20,27 +20,43 @@
 
 #pragma once
 
-#include <resources/resource.h>
-
-#include <atlbase.h>
-#include <atlwin.h>
+#include <common/noncopyable.h>
+#include <ipc/endpoint.h>
 
 namespace micro_profiler
 {
-	class SupportDevDialog : public ATL::CDialogImpl<SupportDevDialog>
+	namespace ipc
 	{
-	public:
-		enum {	IDD = IDD_SUPPORT_DEV	};
+		class ipc_manager : noncopyable
+		{
+		public:
+			typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
 
-	private:
-		BEGIN_MSG_MAP(SupportDevDialog)
-			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-			COMMAND_RANGE_HANDLER(IDOK, IDNO, OnCloseCmd)
-			NOTIFY_HANDLER(IDC_WAYS_TO_SUPPORT, NM_CLICK, OnLinkClicked)
-		END_MSG_MAP()
+		public:
+			ipc_manager(const std::shared_ptr<server> &underlying, port_range range_);
 
-		LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-		LRESULT OnLinkClicked(int id, NMHDR *nmhdr, BOOL &handled);
-		LRESULT OnCloseCmd(WORD, WORD id, HWND, BOOL &handled);
-	};
+			unsigned short get_sockets_port() const;
+			bool remote_sockets_enabled() const;
+			void enable_remote_sockets(bool enable);
+
+			bool com_enabled() const;
+			void enable_com(bool enable);
+
+			static std::string format_endpoint(const std::string &interface_, unsigned short port);
+
+		private:
+			static std::shared_ptr<void> probe_create_server(const std::shared_ptr<server> &underlying,
+				const std::string &interface_, unsigned short &port, port_range range_);
+
+		private:
+			const std::shared_ptr<server> _underlying;
+			const port_range _range;
+
+			std::shared_ptr<void> _sockets_server;
+			bool _remote_enabled;
+			unsigned short _port;
+
+			std::shared_ptr<void> _com_server;
+		};
+	}
 }

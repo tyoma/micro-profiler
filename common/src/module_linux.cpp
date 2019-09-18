@@ -51,7 +51,6 @@ namespace micro_profiler
 		return info;
 	}
 
-#if !defined(__ANDROID__)
 	void enumerate_process_modules(const module_callback_t &callback)
 	{
 		struct local
@@ -75,5 +74,4 @@ namespace micro_profiler
 
 		::dl_iterate_phdr(&local::on_phdr, const_cast<module_callback_t *>(&callback));
 	}
-#endif
 }

@@ -5,8 +5,10 @@
 #include <common/path.h>
 #include <dlfcn.h>
 #include <link.h>
+#include <linux/limits.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 using namespace std;
@@ -36,6 +38,15 @@ namespace micro_profiler
 					}
 				}
 				return 0;
+			}
+
+			string get_current_dir()
+			{
+				char path[PATH_MAX] = { 0 };
+				char *p = getcwd(path, PATH_MAX);
+
+				assert_not_null(p);
+				return p;
 			}
 
 			void release_module(void *h)
@@ -73,18 +84,18 @@ namespace micro_profiler
 			reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
 			if (!get())
 			{
-				reset(::dlopen(make_dlpath("lib" + path).c_str(), RTLD_NOW), &release_module);
+				path = "lib" + path;
+				reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
 				if (!get())
 					throw runtime_error("Cannot load module specified!");
 			}
 
 			void *addr = find_any_mapped_for(*path);
-
 			Dl_info di = { };
 
 			::dladdr(addr, &di);
 			_base = static_cast<byte *>(di.dli_fbase);
-			_fullpath = di.dli_fname;
+			_fullpath = get_current_dir() & path;
 		}
 
 		byte *image::load_address_ptr() const
@@ -108,6 +119,15 @@ namespace micro_profiler
 			if (void *symbol = ::dlsym(get(), name))
 				return static_cast<byte *>(symbol) - load_address_ptr();
 			throw runtime_error("Symbol specified was not found!");
+		}
+
+
+		bool is_same_file(const string& i_lhs, const string& i_rhs)
+		{
+			struct stat s[2] = { 0 };
+
+			return !stat(i_lhs.c_str(), &s[0]) && !stat(i_rhs.c_str(), &s[1])
+				&& s[1].st_ino == s[0].st_ino && s[1].st_dev == s[0].st_dev;
 		}
 	}
 }

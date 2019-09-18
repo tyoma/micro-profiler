@@ -18,7 +18,7 @@ if (WIN32)
 		module_win32.cpp
 		time_win32.cpp
 	)	
-elseif (UNIX)
+elseif (UNIX)	
 	set(COMMON_SOURCES ${COMMON_SOURCES}
 		elf/filemapping_unix.cpp
 		elf/sym-elf.cpp
@@ -27,6 +27,16 @@ elseif (UNIX)
 		module_linux.cpp
 		time_generic.cpp
 	)		
+endif()
+
+if (ANDROID)
+	if (${ANDROID_NATIVE_API_LEVEL} LESS 21)
+		include_directories(BEFORE android-compat)
+		
+		set(COMMON_SOURCES ${COMMON_SOURCES}
+			android-compat/src/dl_iterate_phdr.c
+		)
+	endif()
 endif()
 
 add_library(common STATIC ${COMMON_SOURCES})

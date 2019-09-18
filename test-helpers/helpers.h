@@ -106,13 +106,7 @@ namespace micro_profiler
 		inline void toupper(CharT &c)
 		{	c = static_cast<CharT>(::toupper(c));	}
 
-		template <typename CharT>
-		inline bool equal_nocase(std::basic_string<CharT> lhs, std::basic_string<CharT> rhs)
-		{
-			std::for_each(lhs.begin(), lhs.end(), &toupper<CharT>);
-			std::for_each(rhs.begin(), rhs.end(), &toupper<CharT>);
-			return lhs == rhs;
-		}
+		bool is_same_file(const std::string& i_lhs, const std::string& i_rhs);
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);

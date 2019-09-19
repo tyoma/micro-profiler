@@ -3,6 +3,7 @@
 #include <ipc/endpoint.h>
 
 #include <functional>
+#include <mt/mutex.h>
 #include <vector>
 
 namespace micro_profiler
@@ -34,6 +35,9 @@ namespace micro_profiler
 
 				private:
 					virtual std::shared_ptr<channel> create_session(channel &outbound);
+
+				private:
+					mt::mutex _mutex;
 				};
 
 
@@ -55,6 +59,7 @@ namespace micro_profiler
 				inline std::shared_ptr<channel> server::create_session(channel &outbound)
 				{
 					std::shared_ptr<session> s(new session);
+					mt::lock_guard<mt::mutex> lock(_mutex);
 
 					s->outbound = &outbound;
 					sessions.push_back(s);

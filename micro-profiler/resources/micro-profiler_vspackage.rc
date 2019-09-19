@@ -97,7 +97,7 @@ BEGIN
             VALUE "FileDescription", "Profiler with RealTime Frontend"
             VALUE "FileVersion", MP_VERSION_STR
             VALUE "InternalName", "micro-profiler_x86.dll"
-            VALUE "LegalCopyright", "© Copyright 2011-2018 gevorkyan.org. All rights reserved."
+            VALUE "LegalCopyright", "© Copyright 2011-2019 gevorkyan.org. All rights reserved."
             VALUE "OriginalFilename", "micro-profiler_x86.dll"
             VALUE "ProductName", "MicroProfiler"
             VALUE "ProductVersion", MP_VERSION_STR

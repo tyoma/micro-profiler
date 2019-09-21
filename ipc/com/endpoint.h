@@ -31,12 +31,13 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			class session : public ISequentialStream, public /*outbound*/ ipc::channel,
+			class session : public ISequentialStream, public IConnectionPoint, public /*outbound*/ ipc::channel,
 				public CComObjectRootEx<CComSingleThreadModel>
 			{
 			public:
 				BEGIN_COM_MAP(session)
 					COM_INTERFACE_ENTRY(ISequentialStream)
+					COM_INTERFACE_ENTRY(IConnectionPoint)
 				END_COM_MAP()
 
 				void FinalRelease();
@@ -45,11 +46,22 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> inbound;
 
 			private:
+				// ISequentialStream methods
 				STDMETHODIMP Read(void *, ULONG, ULONG *);
 				STDMETHODIMP Write(const void *message, ULONG size, ULONG *written);
 
+				// IConnectionPoint methods
+				STDMETHODIMP GetConnectionInterface(IID *iid);
+				STDMETHODIMP GetConnectionPointContainer(IConnectionPointContainer **container);
+				STDMETHODIMP Advise(IUnknown *sink, DWORD *cookie);
+				STDMETHODIMP Unadvise(DWORD cookie);
+				STDMETHODIMP EnumConnections(IEnumConnections **enumerator);
+
 				virtual void disconnect() throw();
 				virtual void message(const_byte_range payload);
+
+			private:
+				CComPtr<ISequentialStream> _outbound;
 			};
 
 

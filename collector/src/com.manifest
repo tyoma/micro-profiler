@@ -5,6 +5,11 @@
 	<comInterfaceExternalProxyStub
 		name="ISequentialStream"
 		iid="{0c733a30-2a1c-11ce-ade5-00aa0044773d}"
-		proxyStubClsid32	="{00000320-0000-0000-C000-000000000046}"
+		proxyStubClsid32="{00000320-0000-0000-C000-000000000046}"
+	/>
+	<comInterfaceExternalProxyStub
+		name="IConnectionPoint"
+		iid="{B196B286-BAB4-101A-B69C-00AA00341D07}"
+		proxyStubClsid32="{00000320-0000-0000-C000-000000000046}"
 	/>
 </assembly>

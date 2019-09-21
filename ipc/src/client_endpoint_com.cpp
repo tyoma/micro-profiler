@@ -18,8 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <ipc/com/endpoint.h>
+#include <ipc/endpoint.h>
 
+#include <atlbase.h>
 #include <common/module.h>
 #include <common/string.h>
 #include <functional>
@@ -38,6 +39,26 @@ namespace micro_profiler
 				~com_initialize();
 			};
 
+			class inbound_stream : public ISequentialStream
+			{
+			public:
+				inbound_stream(channel &underlying);
+				~inbound_stream();
+
+				// IUnknown methods
+				STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+				STDMETHODIMP_(ULONG) AddRef();
+				STDMETHODIMP_(ULONG) Release();
+
+				// ISequentialStream methods
+				STDMETHODIMP Read(void *, ULONG, ULONG *);
+				STDMETHODIMP Write(const void *message, ULONG size, ULONG *written);
+
+			private:
+				unsigned _references;
+				channel &_underlying;
+			};
+
 			class client_session : public channel
 			{
 			public:
@@ -54,6 +75,7 @@ namespace micro_profiler
 				channel &_inbound;
 				com_initialize _com_initialize;
 				CComPtr<ISequentialStream> _stream;
+				DWORD _sink_cookie;
 			};
 
 
@@ -65,15 +87,54 @@ namespace micro_profiler
 			{	::CoUninitialize();	}
 
 
+			inbound_stream::inbound_stream(channel &underlying)
+				: _references(0), _underlying(underlying)
+			{	}
+
+			inbound_stream::~inbound_stream()
+			{	_underlying.disconnect();	}
+
+			STDMETHODIMP inbound_stream::QueryInterface(REFIID riid, void **object)
+			{
+				if (IID_IUnknown != riid && IID_ISequentialStream != riid)
+					return E_NOINTERFACE;
+				*object = (ISequentialStream *)this;
+				AddRef();
+				return S_OK;
+			}
+
+			STDMETHODIMP_(ULONG) inbound_stream::AddRef()
+			{	return ++_references;	}
+
+			STDMETHODIMP_(ULONG) inbound_stream::Release()
+			{
+				unsigned r = --_references;
+
+				if (!r)
+					delete this;
+				return r;
+			}
+
+			STDMETHODIMP inbound_stream::Read(void *, ULONG, ULONG *)
+			{	return E_NOTIMPL;	}
+
+			STDMETHODIMP inbound_stream::Write(const void *buffer, ULONG size, ULONG * /*written*/)
+			{	return _underlying.message(const_byte_range(static_cast<const byte *>(buffer), size)), S_OK;	}
+
+
+
 			client_session::client_session(const char *destination_endpoint_id, channel &inbound)
 				: _inbound(inbound)
 			{
 				shared_ptr<void> ctx = create_activation_context();
 				shared_ptr<void> ctx_lock = lock_activation_context(ctx);
 				const guid_t id = from_string(destination_endpoint_id);
+				CComPtr<inbound_stream> sink(new inbound_stream(inbound));
 
 				if (S_OK != _stream.CoCreateInstance(reinterpret_cast<const GUID &>(id), NULL, CLSCTX_LOCAL_SERVER))
 					throw connection_refused(destination_endpoint_id);
+
+				CComQIPtr<IConnectionPoint>(_stream)->Advise(sink, &_sink_cookie);
 			}
 
 			void client_session::disconnect() throw()
@@ -82,10 +143,7 @@ namespace micro_profiler
 			void client_session::message(const_byte_range payload)
 			{
 				ULONG written;
-				HRESULT hr = _stream->Write(payload.begin(), static_cast<ULONG>(payload.length()), &written);
-
-				if (S_OK != hr)
-					_inbound.disconnect();
+				_stream->Write(payload.begin(), static_cast<ULONG>(payload.length()), &written);
 			}
 
 			shared_ptr<void> client_session::create_activation_context()

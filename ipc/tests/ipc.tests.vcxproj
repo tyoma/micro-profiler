@@ -60,6 +60,9 @@
     <ClCompile Include="COMEndpointClientTests.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="COMEndpointServerDuplexTests.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="COMEndpointServerTests.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>

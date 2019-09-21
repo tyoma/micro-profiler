@@ -91,21 +91,24 @@ namespace micro_profiler
 				}
 
 
-				test( AttemptToSendToDisconnectedServerCausesDisconnectInInboundSession )
+				test( DisconnectionOnInboundChannelIsInvokedOnceServerDisconnects )
 				{
 					// INIT
 					const string id = to_string(generate_id());
-					mt::event ready;
+					com_event ready;
 					com_event exit;
 					bool disconnected = false;
-					byte data[10];
 					mt::thread t([&] {
-						com_initialize ci;
 						shared_ptr<mocks::server> s(new mocks::server);
-						shared_ptr<void> hs = com::run_server(id.c_str(), s);
 
+						{
+							com_initialize ci;
+							shared_ptr<void> hs = com::run_server(id.c_str(), s);
+
+							ready.set();
+							exit.wait();
+						}
 						ready.set();
-						exit.wait();
 					});
 
 					ready.wait();
@@ -118,11 +121,40 @@ namespace micro_profiler
 
 					// ACT
 					exit.set();
+					ready.wait();
 					t.join();
-					c->message(mkrange(data));
 
 					// ASSERT
 					assert_is_true(disconnected);
+				}
+
+
+				test( MessagesSentByTheServerAreDeliveredToClient )
+				{
+					// INIT
+					string id = to_string(generate_id());
+					shared_ptr<mocks::server> s(new mocks::server);
+					shared_ptr<void> hs = com::run_server(id.c_str(), s);
+					shared_ptr<channel> c = com::connect_client(id.c_str(), inbound);
+					byte data1[] = "I celebrate myself, and sing myself,";
+					byte data2[] = "And what I assume you shall assume,";
+					byte data3[] = "For every atom belonging to me as good belongs to you.";
+
+					// ACT
+					s->sessions[0]->outbound->message(mkrange(data1));
+
+					// ASSERT
+					assert_equal(1u, inbound.payloads_log.size());
+					assert_equal(data1, inbound.payloads_log[0]);
+
+					// ACT
+					s->sessions[0]->outbound->message(mkrange(data2));
+					s->sessions[0]->outbound->message(mkrange(data3));
+
+					// ASSERT
+					assert_equal(3u, inbound.payloads_log.size());
+					assert_equal(data2, inbound.payloads_log[1]);
+					assert_equal(data3, inbound.payloads_log[2]);
 				}
 			end_test_suite
 		}

@@ -58,11 +58,45 @@ namespace micro_profiler
 				return S_OK;
 			}
 
-			void session::disconnect()
-			{	::CoDisconnectObject(this, 0);	}
+			STDMETHODIMP session::GetConnectionInterface(IID *iid)
+			{	return iid ? *iid = IID_ISequentialStream, S_OK : E_POINTER;	}
 
-			void session::message(const_byte_range /*payload*/)
-			{	}
+			STDMETHODIMP session::GetConnectionPointContainer(IConnectionPointContainer ** /*container*/)
+			{	return E_NOTIMPL;	}
+
+			STDMETHODIMP session::Advise(IUnknown *sink, DWORD *cookie)
+			{
+				if (!cookie)
+					return E_POINTER;
+				if (!sink)
+					return E_INVALIDARG;
+				if (_outbound)
+					return CONNECT_E_ADVISELIMIT;
+
+				HRESULT hr = sink->QueryInterface(&_outbound);
+
+				if (S_OK == hr)
+				{
+					*cookie = 1;
+				}
+				return hr;
+			}
+
+			STDMETHODIMP session::Unadvise(DWORD cookie)
+			{	return cookie == 1 && _outbound ? _outbound = 0, S_OK : CONNECT_E_NOCONNECTION;	}
+
+			STDMETHODIMP session::EnumConnections(IEnumConnections ** /*enumerator*/)
+			{	return E_NOTIMPL;	}
+
+			void session::disconnect()
+			{	::CoDisconnectObject(static_cast<ISequentialStream *>(this), 0);	}
+
+			void session::message(const_byte_range payload)
+			{
+				if (!_outbound)
+					throw runtime_error("Sink channel has not been created yet!");
+				_outbound->Write(payload.begin(), static_cast<ULONG>(payload.length()), NULL);
+			}
 
 
 			server::server(const shared_ptr<ipc::server> &factory)

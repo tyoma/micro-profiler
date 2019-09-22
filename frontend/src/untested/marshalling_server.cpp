@@ -33,6 +33,7 @@ namespace micro_profiler
 		marshalling_window();
 		~marshalling_window();
 
+		void stop();
 		void call(const function<void ()> &f);
 
 	private:
@@ -65,6 +66,14 @@ namespace micro_profiler
 
 	marshalling_window::~marshalling_window()
 	{	::DestroyWindow(_hwnd);	}
+
+	void marshalling_window::stop()
+	{
+		HWND hwnd = _hwnd;
+
+		_hwnd = NULL;
+		::DestroyWindow(hwnd);
+	}
 
 	void marshalling_window::call(const function<void ()> &f)
 	{	::SendMessage(_hwnd, WM_USER, 0, (LPARAM)&f);	}
@@ -131,6 +140,9 @@ namespace micro_profiler
 			_underlying.reset();
 		});
 	}
+
+	void marshalling_server::stop()
+	{	_m->stop();	}
 
 	shared_ptr<ipc::channel> marshalling_server::create_session(ipc::channel &outbound)
 	{	return shared_ptr<ipc::channel>(new marshalling_session(_m, *_underlying, outbound));	}

@@ -42,12 +42,11 @@ namespace micro_profiler
 		}
 
 		ipc_manager::ipc_manager(const shared_ptr<server> &underlying, port_range range_)
-			: _underlying(underlying), _range(range_), _remote_enabled(false), _port(0)
-		{
-			shared_ptr<server> m(new marshalling_server(_underlying));
+			: _underlying(new marshalling_server(underlying)), _range(range_), _remote_enabled(false), _port(0)
+		{	_sockets_server = probe_create_server(_underlying, "127.0.0.1", _port, _range);	}
 
-			_sockets_server = probe_create_server(m, "127.0.0.1", _port, _range);
-		}
+		ipc_manager::~ipc_manager()
+		{	_underlying->stop();	}
 
 		unsigned short ipc_manager::get_sockets_port() const
 		{	return _sockets_server ? _port : 0;	}
@@ -60,10 +59,8 @@ namespace micro_profiler
 			if (enable == _remote_enabled)
 				return;
 
-			shared_ptr<server> m(new marshalling_server(_underlying));
-
 			_sockets_server.reset(); // Free the port before reopening.
-			_sockets_server = probe_create_server(m, enable ? "0.0.0.0" : "127.0.0.1", _port, _range);
+			_sockets_server = probe_create_server(_underlying, enable ? "0.0.0.0" : "127.0.0.1", _port, _range);
 			_remote_enabled = enable;
 		}
 

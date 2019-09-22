@@ -25,6 +25,8 @@
 
 namespace micro_profiler
 {
+	class marshalling_server;
+
 	namespace ipc
 	{
 		class ipc_manager : noncopyable
@@ -34,6 +36,7 @@ namespace micro_profiler
 
 		public:
 			ipc_manager(const std::shared_ptr<server> &underlying, port_range range_);
+			~ipc_manager();
 
 			unsigned short get_sockets_port() const;
 			bool remote_sockets_enabled() const;
@@ -49,7 +52,7 @@ namespace micro_profiler
 				const std::string &interface_, unsigned short &port, port_range range_);
 
 		private:
-			const std::shared_ptr<server> _underlying;
+			const std::shared_ptr<marshalling_server> _underlying;
 			const port_range _range;
 
 			std::shared_ptr<void> _sockets_server;

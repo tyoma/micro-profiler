@@ -9,7 +9,6 @@
 #include <common/string.h>
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
-#include <frontend/marshalling_server.h>
 #include <ipc/com/endpoint.h>
 #include <tchar.h>
 #include <windows.h>
@@ -95,11 +94,10 @@ try
 	auto main_form = wpl::ui::create_form();
 	auto cancellation = main_form->close += [] { ::PostQuitMessage(0); };
 	auto frontend_manager = micro_profiler::frontend_manager::create(ui_factory);
-	auto ipc_manager = make_shared<micro_profiler::ipc::ipc_manager>(frontend_manager, make_pair(6100u, 10u));
-	auto marshalling_server = make_shared<micro_profiler::marshalling_server>(frontend_manager);
+	micro_profiler::ipc::ipc_manager ipc_manager(frontend_manager, make_pair(6100u, 10u));
 	com_initialize ci;
 	auto com_server = micro_profiler::ipc::run_server(
-		("com|" + micro_profiler::to_string(micro_profiler::c_standalone_frontend_id)).c_str(), marshalling_server);
+		("com|" + micro_profiler::to_string(micro_profiler::c_standalone_frontend_id)).c_str(), frontend_manager);
 
 	//setenv(micro_profiler::c_frontend_id_ev, micro_profiler::ipc::ipc_manager::format_endpoint("127.0.0.1",
 	//	ipc_manager->get_sockets_port()).c_str(), 1);

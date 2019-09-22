@@ -26,7 +26,7 @@ set(CALIBRATION_SOURCES
 	calibration_functions_outer_instrumented.cpp
 )
 
-set(COLLECTOR_SOURCES
+set(COLLECTOR_SOURCES ${CALIBRATION_SOURCES}
 	calibration.cpp
 	main.cpp
 )
@@ -46,15 +46,16 @@ endif()
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
 
-add_library(calibration STATIC ${CALIBRATION_SOURCES})
-target_compile_options(calibration PRIVATE $<$<CXX_COMPILER_ID:GNU>:-finstrument-functions>)
-target_compile_options(calibration PRIVATE $<$<CXX_COMPILER_ID:Clang>:-finstrument-functions>)
-target_compile_options(calibration PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/GH /Gh>)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	set_property(SOURCE ${CALIBRATION_SOURCES} PREPEND_STRING PROPERTY COMPILE_FLAGS " -finstrument-functions ")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	set_property(SOURCE ${CALIBRATION_SOURCES} PREPEND_STRING PROPERTY COMPILE_FLAGS " /GH /Gh ")
+endif()
 
-add_library(micro-profiler SHARED ${COLLECTOR_SOURCES})
-target_link_libraries(micro-profiler calibration collector.lib patcher ipc common)
+add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES})
+target_link_libraries(${micro-profiler} collector.lib patcher ipc common)
 
 if(UNIX)
-	target_compile_options(micro-profiler PRIVATE -fvisibility=default)
-	set_target_properties(micro-profiler PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/collector.expmap") 
+	target_compile_options(${micro-profiler} PRIVATE -fvisibility=default)
+	set_target_properties(${micro-profiler} PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/collector.expmap ") 
 endif()

@@ -10,4 +10,4 @@ endif()
 
 
 add_executable(playground main.cpp ../collector/src/micro-profiler.initializer.cpp)
-target_link_libraries(playground micro-profiler)
+target_link_libraries(playground ${micro-profiler})

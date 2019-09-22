@@ -30,6 +30,11 @@ if (MSVC)
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+	set(micro-profiler "micro-profiler_x86")
+else()
+	set(micro-profiler "micro-profiler_x64")
+endif()
 
 # Setup global compiler/linker settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")

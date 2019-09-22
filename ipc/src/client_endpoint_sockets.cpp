@@ -87,7 +87,7 @@ namespace micro_profiler
 				byte_representation<unsigned int> size;
 				vector<byte> buffer;
 
-				while (::recv(_socket, size.bytes, sizeof(size), MSG_WAITALL) == (int)sizeof(size))						
+				while (::recv(_socket, size.bytes, sizeof(size), MSG_WAITALL) == (int)sizeof(size))
 				{
 					size.reorder();
 					buffer.resize(size.value);

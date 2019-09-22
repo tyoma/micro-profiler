@@ -74,7 +74,7 @@ namespace micro_profiler
 				}
 
 				socket_handler::status dummy(socket_handler &, const socket_handle &)
-				{	return socket_handler::proceed;	}				
+				{	return socket_handler::proceed;	}
 			}
 
 			socket_handler::socket_handler(unsigned id_, socket_handle &s, const socket_handle &aux_socket,

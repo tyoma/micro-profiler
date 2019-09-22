@@ -280,7 +280,7 @@ namespace micro_profiler
 
 		bool profile_process::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{
-			state = visible | supported | (_dialog ? 0 : enabled);
+			state = 0;//visible | supported | (_dialog ? 0 : enabled);
 			return true;
 		}
 

@@ -57,6 +57,7 @@ namespace micro_profiler
 			const string c_profiler_library = c_profilerdir_macro + "\\micro-profiler_$(PlatformName).lib";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
+			const wstring c_inherit = L"%(AdditionalOptions)";
 
 			bool replace(wstring &text, const wstring &what, const wstring &replacement)
 			{
@@ -68,6 +69,14 @@ namespace micro_profiler
 					return true;
 				}
 				return false;
+			}
+
+			void trim_space(wstring &text)
+			{
+				size_t first = text.find_first_not_of(L' ');
+				size_t last = text.find_last_not_of(L' ');
+				text = first != wstring::npos ? text.substr(first, wstring::npos != last ? last - first + 1 : wstring::npos)
+					: wstring();
 			}
 
 			dispatch find_item_by_relpath(dispatch project, const wstring &relative_unexpanded_path)
@@ -91,7 +100,13 @@ namespace micro_profiler
 				dispatch configurations(project.get(L"Object").get(L"Configurations"));
 
 				for (long i = 1, count = configurations.get(L"Count"); i <= count; ++i)
+				try
+				{
 					action(configurations[i].get(L"Tools")[tool_name]);
+				}
+				catch (const runtime_error &)
+				{
+				}
 			}
 
 			dispatch get_tool(const dispatch &project, const wchar_t *tool_name)
@@ -109,7 +124,13 @@ namespace micro_profiler
 				dispatch configurations(item.get(L"Object").get(L"FileConfigurations"));
 
 				for (long i = 1, count = configurations.get(L"Count"); i <= count; ++i)
+				try
+				{
 					configurations[i].get(L"Tool").put(L"UsePrecompiledHeader", 0 /*pchNone*/);
+				}
+				catch (const runtime_error &)
+				{
+				}
 			}
 
 			bool has_instrumentation(const dispatch &compiler)
@@ -124,15 +145,14 @@ namespace micro_profiler
 				bool changed = false;
 				wstring additionalOptions = compiler.get(L"AdditionalOptions");
 
-				if (-1 == additionalOptions.find(c_GH_option))
+				if (wstring::npos == additionalOptions.find(c_GH_option))
 					additionalOptions += L" " + c_GH_option, changed = true;
-				if (-1 == additionalOptions.find(c_Gh_option))
+				if (wstring::npos == additionalOptions.find(c_Gh_option))
 					additionalOptions += L" " + c_Gh_option, changed = true;
+				if (wstring::npos == additionalOptions.find(c_inherit))
+					additionalOptions += L" " + c_inherit, changed = true;
 				if (changed)
-				{
-//					additionalOptions.Trim();
 					compiler.put(L"AdditionalOptions", additionalOptions.c_str());
-				}
 			}
 
 			void disable_instrumentation(dispatch compiler)
@@ -148,8 +168,8 @@ namespace micro_profiler
 				changed = replace(additionalOptions, c_Gh_option, L"") || changed;
 				if (changed)
 				{
-//					additionalOptions.Trim();
-					compiler.put(L"AdditionalOptions", !additionalOptions.empty() ? additionalOptions.c_str() : NULL);
+					trim_space(additionalOptions);
+					compiler.put(L"AdditionalOptions", additionalOptions.c_str());
 				}
 			}
 		}

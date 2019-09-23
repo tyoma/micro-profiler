@@ -26,7 +26,6 @@
 
 #include <common/memory.h>
 #include <mt/atomic.h>
-#include <patcher/src.x86/assembler_intel.h>
 #include <windows.h>
 
 using namespace std;
@@ -35,9 +34,40 @@ namespace micro_profiler
 {
 	namespace
 	{
-		typedef intel::jmp_rel_imm32 jmp;
+#pragma pack(push, 1)
+#ifdef _M_IX86
+		struct jmp
+		{
+			void init(const void *address_)
+			{
+				mov_opcode = 0xb8; // move eax, address
+				address = reinterpret_cast<size_t>(address_);
+				jmp_opcode[0] = 0xff, jmp_opcode[1] = 0xe0; // jmp [eax]
+			}
 
-		void *g_exitprocess_address = 0;
+			byte mov_opcode;
+			size_t address;
+			byte jmp_opcode[2];
+		};
+
+#elif _M_X64
+		struct jmp
+		{
+			void init(const void *address_)
+			{
+				mov_opcode[0] = 0x48, mov_opcode[1] = 0xb8; // move rax, address
+				address = reinterpret_cast<size_t>(address_);
+				jmp_opcode[0] = 0xff, jmp_opcode[1] = 0xe0; // jmp [rax]
+			}
+
+			byte mov_opcode[2];
+			size_t address;
+			byte jmp_opcode[2];
+		};
+
+#endif
+#pragma pack(pop)
+
 		byte g_backup[sizeof(jmp)];
 		collector_app *g_app = 0;
 

@@ -20,7 +20,8 @@
 
 #include <collector/calibration.h>
 
-#include <collector/analyzer.h>
+#include <collector/calls_collector.h>
+#include <common/time.h>
 
 using namespace std;
 
@@ -41,22 +42,38 @@ namespace micro_profiler
 
 	overhead calibrate_overhead(calls_collector &collector, size_t iterations)
 	{
-		analyzer a(0);
+		struct delay_evaluator : calls_collector_i::acceptor
+		{
+			virtual void accept_calls(mt::thread::id, const call_record *calls, size_t count)
+			{
+				for (const call_record *i = calls; count >= 2; count -= 2, i += 2)
+				{
+					timestamp_t d = (i + 1)->timestamp - i->timestamp;
+
+					delay = i != calls ? min(delay, d) : d;
+				}
+			}
+
+			timestamp_t delay;
+		} de;
+
 		overhead o = { };
 
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		a.clear();
+		run_load(&empty_call, iterations);
+		collector.read_collected(de);
+		run_load(&empty_call, iterations);
+		collector.read_collected(de);
 
-		run_load(&call_empty_call, iterations);
-		collector.read_collected(a);
-		for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
-		{
-			if (i->second.callees.empty())
-				o.external = i->second.inclusive_time / iterations;
-		}
+		timestamp_t start = read_tick_counter();
+		run_load(&empty_call, iterations);
+		timestamp_t end = read_tick_counter();
+		collector.read_collected(de);
+#ifdef __arm__
+		o.external = (end - start) / iterations / 2;
+#else
+		end, start;
+		o.external = de.delay;
+#endif
 		return o;
 	}
 }

@@ -11,7 +11,7 @@ compiler:
 script:
  - mkdir _build
  - cd _build
- - cmake .. -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_C_FLAGS="-m32"
+ - cmake .. -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_C_FLAGS="-m32" -DCMAKE_BUILD_TYPE=Release
  - make -j3
  - cd bin
  - ./utee-runner ./*.tests.so

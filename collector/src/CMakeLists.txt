@@ -37,14 +37,12 @@ if(UNIX)
 	)
 elseif(WIN32)
 	set(COLLECTOR_SOURCES ${COLLECTOR_SOURCES}
-		collector.def
+		collector.rc
 		hooks.asm
 		main_win32.cpp
 	)
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
 endif()
-
-add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	set_property(SOURCE ${CALIBRATION_SOURCES} PREPEND_STRING PROPERTY COMPILE_FLAGS " -finstrument-functions ")
@@ -52,10 +50,13 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set_property(SOURCE ${CALIBRATION_SOURCES} PREPEND_STRING PROPERTY COMPILE_FLAGS " /GH /Gh ")
 endif()
 
+add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES})
 target_link_libraries(${micro-profiler} collector.lib patcher ipc common)
 
 if(UNIX)
 	target_compile_options(${micro-profiler} PRIVATE -fvisibility=default)
-	set_target_properties(${micro-profiler} PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/collector.expmap ") 
+	set_target_properties(${micro-profiler} PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/collector.expmap ")
+elseif(WIN32)
+	set_target_properties(${micro-profiler} PROPERTIES LINK_FLAGS " /DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def ")
 endif()

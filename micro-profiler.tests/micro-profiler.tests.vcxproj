@@ -17,14 +17,6 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|Android">
-      <Configuration>Debug</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Android">
-      <Configuration>Release</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8C499723-AB70-4401-9089-864A948532AF}</ProjectGuid>
@@ -53,7 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CollectorIntegrationTests.cpp" />
-    <Content Include="$(OutDir)..\micro-profiler_$(Platform2).dll" Condition="'$(Platform)'!='Android'">
+    <Content Include="$(OutDir)..\micro-profiler_$(Platform2).dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>true</Visible>
     </Content>

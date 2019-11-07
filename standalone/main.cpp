@@ -2,7 +2,7 @@
 
 #include "ProfilerMainDialog.h"
 
-#include <resources/resource.h>
+#include "resources/resource.h"
 
 #include <atlbase.h>
 #include <common/constants.h>

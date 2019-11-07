@@ -17,14 +17,6 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|Android">
-      <Configuration>Debug</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Android">
-      <Configuration>Release</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{69508827-452F-479E-A28F-AF300C5C1633}</ProjectGuid>
@@ -48,49 +40,44 @@
   <ItemGroup>
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="elf\filemapping_unix.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="elf\sym-elf.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="formatting.cpp" />
     <ClCompile Include="image_info.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="memory_unix.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="memory_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="module_linux.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="module_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="registry_configuration.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="serialization.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="image_info_unix.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="time.cpp" />
     <ClCompile Include="time_generic.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="time_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="string.cpp" />
     <ClCompile Include="image_info_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

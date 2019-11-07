@@ -17,7 +17,7 @@ namespace micro_profiler
 			public:
 				running_process_impl(const string &executable_path, const string &command_line)
 				{
-					STARTUPINFO si = { };
+					STARTUPINFOA si = { };
 					string path = executable_path;
 					vector<char> cl2(command_line.begin(), command_line.end());
 

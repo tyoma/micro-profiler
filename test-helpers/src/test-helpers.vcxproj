@@ -17,14 +17,6 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|Android">
-      <Configuration>Debug</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Android">
-      <Configuration>Release</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3B56B4A3-F4F6-44EC-A7F5-E9045A3C3394}</ProjectGuid>
@@ -44,26 +36,18 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="com.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="com.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="helpers_unix.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="helpers_win32.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="helpers_win32.cpp" />
     <ClCompile Include="mock_frontend.cpp" />
-    <ClCompile Include="process_win32.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="process_win32.cpp" />
     <ClCompile Include="thread_unix.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'!='Android'">true</ExcludedFromBuild>
+      <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="thread_win32.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Android'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="thread_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\com.h" />

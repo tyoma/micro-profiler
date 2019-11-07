@@ -16,6 +16,7 @@ if (WIN32)
 		image_info_win32.cpp
 		memory_win32.cpp
 		module_win32.cpp
+		registry_configuration.cpp
 		time_win32.cpp
 	)	
 elseif (UNIX)	

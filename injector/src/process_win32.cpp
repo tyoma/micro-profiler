@@ -22,6 +22,7 @@
 
 #include <common/module.h>
 #include <common/path.h>
+#include <common/string.h>
 #include <windows.h>
 #include <tlhelp32.h>
 
@@ -125,7 +126,7 @@ namespace micro_profiler
 		for (auto lister = &::Process32First; lister(snapshot.get(), &entry); lister = &::Process32Next)
 			try
 			{
-				callback(shared_ptr<process>(new win32::process(entry.th32ProcessID, entry.szExeFile)));
+				callback(shared_ptr<process>(new win32::process(entry.th32ProcessID, unicode(entry.szExeFile))));
 			}
 			catch (...)
 			{

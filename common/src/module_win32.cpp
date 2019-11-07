@@ -20,6 +20,8 @@
 
 #include <common/module.h>
 
+#include <common/string.h>
+
 #include <windows.h>
 #include <tlhelp32.h>
 
@@ -50,7 +52,7 @@ namespace micro_profiler
 
 		for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next, module.addresses.clear())
 		{
-			module.path = entry.szExePath;
+			module.path = unicode(entry.szExePath);
 			module.base = entry.modBaseAddr;
 			module.addresses.push_back(byte_range(entry.modBaseAddr, entry.modBaseSize));
 			callback(module);

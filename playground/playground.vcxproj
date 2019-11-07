@@ -17,49 +17,35 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|Android">
-      <Configuration>Debug</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Android">
-      <Configuration>Release</Configuration>
-      <Platform>Android</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3D930790-1E56-4749-9B09-731E22556CB1}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType Condition="'$(Platform)'!='Android'">Application</ConfigurationType>
-    <ConfigurationType Condition="'$(Platform)'=='Android'">DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
-  <PropertyGroup Condition="'$(Platform)'=='Android'">
-    <TargetExt>.</TargetExt>
-  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <AdditionalOptions Condition="'$(Platform)'!='Android'">/GH /Gh %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Platform)'=='Android'">-finstrument-functions -pie -fPIE %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <NoExecStack>false</NoExecStack>
       <GenerateSharedLibrary>false</GenerateSharedLibrary>
-      <AdditionalDependencies Condition="'$(Platform)'=='Android'">$(OutDir)micro-profiler_arm.so</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="$(OutDir)micro-profiler.initializer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
-  <ItemGroup Condition="'$(Platform)'!='Android'">
+  <ItemGroup>
     <Library Include="$(OutDir)micro-profiler_$(PlatformName).lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

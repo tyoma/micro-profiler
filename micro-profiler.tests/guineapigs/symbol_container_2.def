@@ -1,9 +1,0 @@
-EXPORTS
-	get_function_addresses_2
-	function_with_a_nested_call_2
-	bubble_sort2
-	bubble_sort_expose
-	guinea_snprintf
-
-	datum1
-	datum2

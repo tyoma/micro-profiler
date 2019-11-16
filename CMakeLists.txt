@@ -1,10 +1,13 @@
+
 cmake_minimum_required(VERSION 2.8)
 
 project(micro-profiler)
 
+
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
 
 
 # Setup include directories
@@ -28,76 +31,73 @@ if (MSVC)
 		add_definitions(-Dsnprintf=_snprintf)
 	endif()
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING -D_WINSOCK_DEPRECATED_NO_WARNINGS)
-endif()
-
-add_definitions(-DUNICODE -D_UNICODE)
-
-if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86.*")
-	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		set(micro-profiler "micro-profiler_x86")
-	else()
-		set(micro-profiler "micro-profiler_x64")
-	endif()
-elseif(ANDROID_ABI MATCHES "arm.*")
-	set(micro-profiler "micro-profiler_arm")
+	add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 # Setup global compiler/linker settings
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fPIC -std=c++11 -fexceptions -fno-rtti -fvisibility=hidden -ffunction-sections -fdata-sections")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-delete-non-virtual-dtor")
+set(GCC_CLANG_COMPILER_OPTIONS_C
+	-g -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
+	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas
+)
+set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
+	-std=c++11 -fexceptions -fno-rtti
+	-Wno-delete-non-virtual-dtor
+)
+set(MSVC_COMPILER_OPTIONS /W4 /wd4503)
+set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
+set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
+set(MSVC_COMPILER_OPTIONS_RELEASE_MAX /Ox /Ob2 /Oi /Ot /Oy)
 
-	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
-		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
-	else()
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-private-field")
-		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,-strip-debug")
-		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,-strip-debug")
-	endif()			
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	set(configurations CMAKE_C_FLAGS CMAKE_CXX_FLAGS_DEBUG)
-	
-	foreach (configuration ${configurations})
-		string(REGEX REPLACE "/MDd" "/MTd" ${configuration} "${${configuration}}")
-		string(REGEX REPLACE "/MD" "/MT" ${configuration} "${${configuration}}")
-	endforeach()
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /OPT:REF")
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /OPT:REF")
+add_compile_options(
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:C>:${GCC_CLANG_COMPILER_OPTIONS_C}>>"
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:CXX>:${GCC_CLANG_COMPILER_OPTIONS_CXX}>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:${MSVC_COMPILER_OPTIONS_DEBUG}>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<NOT:$<CONFIG:Debug>>:${MSVC_COMPILER_OPTIONS_RELEASE}>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:${MSVC_COMPILER_OPTIONS_RELEASE_MAX}>>"
+)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+elseif(MSVC)
+	add_link_options(/INCREMENTAL:NO /SAFESEH:NO)
+	add_link_options($<$<NOT:$<CONFIG:Debug>>:/LTCG>)
+	add_link_options($<$<NOT:$<CONFIG:Debug>>:/OPT:REF>)
+	set(CMAKE_STATIC_LINKER_FLAGS_RELEASE ${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /LTCG)
+	set(CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO ${CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO} /LTCG)
+	set(CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO ${CMAKE_STATIC_LINKER_FLAGS_MINSIZEREL} /LTCG)
 endif()
+
 if (UNIX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif()
 
-
-# Add subdirectories (sorted by less dependent to most dependent then by name)
+# Add subdirectories
 add_subdirectory(libraries/utee/src)
 add_subdirectory(libraries/agge)
-if (WIN32)
-	add_subdirectory(libraries/wpl/src/wpl.ui)
-endif()
 add_subdirectory(collector/src)
-add_subdirectory(collector/tests)
 add_subdirectory(common/src)
-add_subdirectory(common/tests)
 add_subdirectory(frontend/src)
-add_subdirectory(frontend/tests)
 add_subdirectory(ipc/src)
+add_subdirectory(mt/src)
+add_subdirectory(patcher/src.x86)
+add_subdirectory(playground)
+
+add_subdirectory(collector/tests)
+add_subdirectory(common/tests)
+add_subdirectory(frontend/tests)
 add_subdirectory(ipc/tests)
 add_subdirectory(micro-profiler.tests/guineapigs)
 add_subdirectory(micro-profiler.tests)
-add_subdirectory(mt/src)
-if (WIN32)
-	add_subdirectory(injector/src)
-	add_subdirectory(micro-profiler)
-	add_subdirectory(mt/tests)
-	add_subdirectory(standalone)
-endif()
-add_subdirectory(patcher/src.x86)
 if((NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86") AND CMAKE_SIZEOF_VOID_P EQUAL 4)
 	add_subdirectory(patcher/tests)
 endif()
 add_subdirectory(test-helpers/src)
 
-add_subdirectory(playground)
+if (WIN32)
+	add_subdirectory(injector/src)
+	add_subdirectory(libraries/wpl/src/wpl.ui)
+	add_subdirectory(micro-profiler)
+	add_subdirectory(standalone)
+
+	add_subdirectory(mt/tests)
+endif()

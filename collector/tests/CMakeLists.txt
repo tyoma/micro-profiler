@@ -16,9 +16,7 @@ set(COLLECTOR_TESTS_SOURCES
 	mocks_image_info.cpp
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set_property(SOURCE mocks.cpp PREPEND_STRING PROPERTY COMPILE_FLAGS " -fno-rtti ")
-endif()
+set_property(SOURCE mocks.cpp APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fno-rtti>")
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES})
 target_link_libraries(collector.tests collector.lib common patcher mt test-helpers)

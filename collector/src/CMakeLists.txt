@@ -1,5 +1,28 @@
 cmake_minimum_required(VERSION 2.8)
 
+if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86.*")
+	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+		if(WIN32)
+			set(micro-profiler "micro-profiler_Win32")
+		else()
+			set(micro-profiler "micro-profiler_x86")
+		endif()
+	else()
+		set(micro-profiler "micro-profiler_x64")
+	endif()
+elseif(ANDROID_ABI MATCHES "arm.*")
+	set(micro-profiler "micro-profiler_arm")
+endif()
+
+set(MP_OUTDIR $<TARGET_FILE_DIR:${micro-profiler}>)
+
+add_custom_command(OUTPUT mpsdk
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../entry.h ${MP_OUTDIR}
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/micro-profiler.initializer.cpp ${MP_OUTDIR}
+	COMMENT "Copying SDK..."
+)
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/mpsdk PROPERTIES SYMBOLIC 1)
+
 if(MSVC)
 	project(micro-profiler C CXX ASM_MASM)
 	enable_language(ASM_MASM)
@@ -29,6 +52,8 @@ set(CALIBRATION_SOURCES
 set(COLLECTOR_SOURCES ${CALIBRATION_SOURCES}
 	calibration.cpp
 	main.cpp
+
+	mpsdk
 )
 
 if(UNIX)
@@ -41,22 +66,21 @@ elseif(WIN32)
 		hooks.asm
 		main_win32.cpp
 	)
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set_property(SOURCE ${CALIBRATION_SOURCES} PREPEND_STRING PROPERTY COMPILE_FLAGS " -finstrument-functions ")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	set_property(SOURCE ${CALIBRATION_SOURCES} PREPEND_STRING PROPERTY COMPILE_FLAGS " /GH /Gh ")
 endif()
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES})
+
 target_link_libraries(${micro-profiler} collector.lib patcher ipc common)
 
-if(UNIX)
-	target_compile_options(${micro-profiler} PRIVATE -fvisibility=default)
-	set_target_properties(${micro-profiler} PROPERTIES LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/collector.expmap ")
-elseif(WIN32)
-	set_target_properties(${micro-profiler} PROPERTIES LINK_FLAGS " /DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def ")
+set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>: -fno-inline -finstrument-functions>")
+set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<CXX_COMPILER_ID:MSVC>:/Ob0 /GH /Gh /GL->")
+set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS $<$<CXX_COMPILER_ID:MSVC>:/DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def /IMPLIB:${MP_OUTDIR}/${micro-profiler}.lib>)
+
+if(MSVC)
+	add_library(micro-profiler SHARED IMPORTED GLOBAL)
+	add_dependencies(micro-profiler ${micro-profiler})
+	set_property(TARGET micro-profiler PROPERTY IMPORTED_IMPLIB ${micro-profiler}.lib)
+else()
+	add_library(micro-profiler ALIAS ${micro-profiler})
 endif()

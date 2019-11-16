@@ -129,7 +129,8 @@ namespace micro_profiler
 			}
 
 
-			test( StatisticsIsReceivedFromProfillee )
+			// TODO: restore after CMakeLists.txt refactoring
+			ignored_test( StatisticsIsReceivedFromProfillee )
 			{
 				// INIT
 				typedef void (f21_t)(int * volatile begin, int * volatile end);
@@ -137,6 +138,7 @@ namespace micro_profiler
 				typedef void (f2F_t)(void (*&f)(int * volatile begin, int * volatile end));
 
 				mt::event ready;
+				auto_ptr<image> mp(new image("micro-profiler_x64"));
 				auto_ptr<image> guineapig;
 				shared_ptr< vector<mocks::statistics_map_detailed> >
 					statistics(new vector<mocks::statistics_map_detailed>);

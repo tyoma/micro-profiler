@@ -12,9 +12,8 @@ set(PATCHER_TEST_SOURCES
 	OffsetDisplacedReferencesTestsX86.cpp
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set_property(SOURCE guineapigs.cpp PREPEND_STRING PROPERTY COMPILE_FLAGS " -O0 ")
-endif()
+set_property(SOURCE guineapigs.cpp APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-O0>")
+set_property(SOURCE guineapigs.cpp APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<CXX_COMPILER_ID:MSVC>:/Od>")
 
 add_library(patcher.tests SHARED ${PATCHER_TEST_SOURCES})
 

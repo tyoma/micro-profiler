@@ -17,9 +17,7 @@ if(WIN32)
 	)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set_property(SOURCE mocks.cpp PREPEND_STRING PROPERTY COMPILE_FLAGS " -fno-rtti ")
-endif()
+set_property(SOURCE mocks.cpp APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fno-rtti>")
 
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})
 target_link_libraries(frontend.tests frontend.lib test-helpers common)

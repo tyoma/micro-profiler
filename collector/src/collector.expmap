@@ -1,9 +1,0 @@
-{
-	global:
-		micro_profiler_func_enter;
-		micro_profiler_func_exit;
-		micro_profiler_initialize;
-
-	local:
-		*;
-};

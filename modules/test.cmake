@@ -1,7 +1,5 @@
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../libraries/utee)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frtti")
-endif()
+add_compile_options("$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-frtti>")
 
 link_libraries(utee)

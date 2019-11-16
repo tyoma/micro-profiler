@@ -70,15 +70,21 @@ overhead c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 100);
 collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead);
 auto_ptr<platform_initializer> g_intializer;
 
-extern "C" handle * MPCDECL micro_profiler_initialize(void *image_address)
+#if defined(__clang__) || defined(__GNUC__)
+	#define PUBLIC __attribute__ ((visibility ("default")))
+#else
+	#define PUBLIC
+#endif
+
+extern "C" PUBLIC handle * MPCDECL micro_profiler_initialize(void *image_address)
 {
 	if (!g_intializer.get())
 		g_intializer.reset(new platform_initializer(g_profiler_app));
 	return g_profiler_app.profile_image(image_address);
 }
 
-extern "C" void micro_profiler_func_enter(void *callee, void * /*call_site*/)
+extern "C" PUBLIC void __cyg_profile_func_enter(void *callee, void * /*call_site*/)
 {	g_collector_ptr->on_enter_nostack(read_tick_counter(), callee);	}
 
-extern "C" void micro_profiler_func_exit(void * /*callee*/, void * /*call_site*/)
+extern "C" PUBLIC void __cyg_profile_func_exit(void * /*callee*/, void * /*call_site*/)
 {	g_collector_ptr->on_exit_nostack(read_tick_counter());	}

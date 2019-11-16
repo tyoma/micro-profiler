@@ -1,3 +1,5 @@
+#include "export.h"
+
 namespace vale_of_mean_creatures
 {
 	void this_one_for_the_birds() {	}
@@ -14,7 +16,7 @@ namespace vale_of_mean_creatures
 	}
 }
 
-extern "C" void get_function_addresses_2(void (*&f1)(), void (*&f2)(), void (*&f3)())
+extern "C" PUBLIC void get_function_addresses_2(void (*&f1)(), void (*&f2)(), void (*&f3)())
 {
 	// do this in order to prevent early inclusion of pc-based offset thunk usage in GCC
 	for (volatile int i = 1, j = 1; i < 1000; j = i, ++i)
@@ -24,19 +26,19 @@ extern "C" void get_function_addresses_2(void (*&f1)(), void (*&f2)(), void (*&f
 	f3 = &vale_of_mean_creatures::the_abyss::bubble_sort;
 }
 
-extern "C" void bubble_sort(int * volatile begin, int * volatile end);
+extern "C" PUBLIC void bubble_sort(int * volatile begin, int * volatile end);
 
-extern "C" void function_with_a_nested_call_2()
+extern "C" PUBLIC void function_with_a_nested_call_2()
 {
 	bubble_sort(0, 0);
 }
 
-extern "C" void bubble_sort2(int * volatile begin, int * volatile end)
+extern "C" PUBLIC void bubble_sort2(int * volatile begin, int * volatile end)
 {
 	bubble_sort(begin, end);
 }
 
-extern "C" void bubble_sort_expose(void (*&f)(int * volatile begin, int * volatile end))
+extern "C" PUBLIC void bubble_sort_expose(void (*&f)(int * volatile begin, int * volatile end))
 {
 	// do this in order to prevent early inclusion of pc-based offset thunk usage in GCC
 	for (volatile int i = 1, j = 1; i < 1000; j = i, ++i)
@@ -47,7 +49,7 @@ extern "C" void bubble_sort_expose(void (*&f)(int * volatile begin, int * volati
 #include <stdio.h>
 #include <stdarg.h>
 
-extern "C" int guinea_snprintf(char *buffer, size_t count, const char *format, ...)
+extern "C" PUBLIC int guinea_snprintf(char *buffer, size_t count, const char *format, ...)
 {
 	for (volatile int i = 1, j = 1; i < 1000; j = i, ++i)
 		i = i + j;
@@ -61,5 +63,5 @@ extern "C" int guinea_snprintf(char *buffer, size_t count, const char *format, .
 	return n;
 }
 
-extern "C" int datum1 = 1123;
-extern "C" char datum2[] = "SOMETEXTSOMETEXTSOMETEXT";
+extern "C" PUBLIC int datum1 = 1123;
+extern "C" PUBLIC char datum2[] = "SOMETEXTSOMETEXTSOMETEXT";

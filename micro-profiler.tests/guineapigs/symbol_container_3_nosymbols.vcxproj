@@ -36,14 +36,10 @@
   <ItemDefinitionGroup>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <ModuleDefinitionFile>symbol_container_3.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="symbol_container_3.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="symbol_container_3.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -37,17 +37,11 @@
     <ClCompile>
       <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <Link>
-      <ModuleDefinitionFile>symbol_container_2.def</ModuleDefinitionFile>
-    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="symbol_container_2.cpp" />
     <ClCompile Include="symbol_container_2_internal.cpp" />
     <ClCompile Include="$(OutDir)..\micro-profiler.initializer.cpp" />   
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="symbol_container_2.def" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)collector\src\collector.vcxproj">

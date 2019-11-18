@@ -80,7 +80,17 @@ set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS $<$<CXX_COMPI
 if(MSVC)
 	add_library(micro-profiler SHARED IMPORTED GLOBAL)
 	add_dependencies(micro-profiler ${micro-profiler})
+	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+		set_property(SOURCE calls_collector.cpp calls_collector_thread.cpp APPEND PROPERTY COMPILE_OPTIONS /arch:SSE)
+	endif()
+	set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS /MANIFEST:NO)
 	set_property(TARGET micro-profiler PROPERTY IMPORTED_IMPLIB ${micro-profiler}.lib)
+
+	add_custom_command(TARGET ${micro-profiler} POST_BUILD
+		COMMAND "mt.exe" -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\com.manifest\" -outputresource:${micro-profiler}.dll\;\#2
+		WORKING_DIRECTORY ${MP_OUTDIR}
+		COMMENT "Adding custom manifest containing default COM proxystubs..." 
+	)
 else()
 	add_library(micro-profiler ALIAS ${micro-profiler})
 endif()

@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 2.8)
 
 project(micro-profiler)
@@ -43,7 +42,7 @@ set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-std=c++11 -fexceptions -fno-rtti
 	-Wno-delete-non-virtual-dtor
 )
-set(MSVC_COMPILER_OPTIONS /W4 /wd4503 /GR- /GS- /Gy-)
+set(MSVC_COMPILER_OPTIONS /MP /W4 /wd4503 /GR- /GS- /Gy-)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
 set(MSVC_COMPILER_OPTIONS_RELEASE_MAX /Ox /Ob2 /Oi /Ot /Oy)
@@ -56,9 +55,16 @@ add_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:${MSVC_COMPILER_OPTIONS_RELEASE_MAX}>>"
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
+	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S ")
+	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,-S ")
 elseif(MSVC)
+	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+		add_compile_options(/arch:SSE2)
+	endif()
 	add_link_options(/INCREMENTAL:NO /SAFESEH:NO)
 	add_link_options($<$<NOT:$<CONFIG:Debug>>:/LTCG>)
 	add_link_options($<$<NOT:$<CONFIG:Debug>>:/OPT:REF>)

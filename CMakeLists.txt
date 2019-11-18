@@ -46,6 +46,8 @@ set(MSVC_COMPILER_OPTIONS /MP /W4 /wd4503 /GR- /GS- /Gy-)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
 set(MSVC_COMPILER_OPTIONS_RELEASE_MAX /Ox /Ob2 /Oi /Ot /Oy)
+set(AGGE_NO_TESTS 1)
+set(UTEE_NO_TESTS 1)
 
 add_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:C>:${GCC_CLANG_COMPILER_OPTIONS_C}>>"
@@ -77,7 +79,7 @@ if (UNIX)
 endif()
 
 # Add subdirectories
-add_subdirectory(libraries/utee/src)
+add_subdirectory(libraries/utee)
 add_subdirectory(libraries/agge)
 add_subdirectory(collector/src)
 add_subdirectory(common/src)

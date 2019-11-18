@@ -4,7 +4,7 @@ set(VSSDKROOT $ENV{VSSDK100Install}/VisualStudioIntegration)
 set(VSSDKINCLUDE ${VSSDKROOT}/Common/Inc)
 set(VSSDKLIB ${VSSDKROOT}/Common/Lib)
 set(VSSDKBIN ${VSSDKROOT}/Tools/Bin)
-set(MP_INTDIR ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>)
+set(MP_INTDIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 set(MP_OUTDIR $<TARGET_FILE_DIR:micro-profiler_frontend>)
 
 include_directories(.)
@@ -12,7 +12,7 @@ include_directories(compat)
 include_directories(${VSSDKINCLUDE})
 include_directories(${MP_INTDIR})
 
-add_custom_command(OUTPUT commands.cto
+add_custom_command(OUTPUT ${MP_INTDIR}/commands.cto
 	COMMAND "${VSSDKBIN}/vsct.exe" "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct" "${MP_INTDIR}/commands.cto" -I"${VSSDKINCLUDE}"
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct"
 	COMMENT "Compiling vsct..."
@@ -48,13 +48,13 @@ set(MICROPROFILER_SOURCES
 	../frontend/src/untested/resources/frontend.rc
 	
 	micro-profiler.pkgdef
-	commands.cto
+	${MP_INTDIR}/commands.cto
 )
 
 set(MICROPROFILER_UI_SOURCES
 	resources/micro-profiler_ui.rc
 
-	commands.cto
+	${MP_INTDIR}/commands.cto
 )
 
 add_library(micro-profiler_frontend SHARED ${MICROPROFILER_SOURCES})

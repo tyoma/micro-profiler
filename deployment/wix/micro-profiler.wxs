@@ -8,6 +8,20 @@
 		<Property Id="ARPPRODUCTICON" Value="icoInstaller" />
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
+		<!-- External Properties -->
+		<PropertyRef Id="VS2010DEVENV" />
+		<PropertyRef Id="VS2010_EXTENSIONS_DIR" />
+		<PropertyRef Id="VS2012DEVENV" />
+		<PropertyRef Id="VS2012_EXTENSIONS_DIR" />
+		<PropertyRef Id="VS2013DEVENV" />
+		<PropertyRef Id="VS2013_EXTENSIONS_DIR" />
+		<PropertyRef Id="VS2015DEVENV" />
+		<PropertyRef Id="VS2015_EXTENSIONS_DIR" />
+		<PropertyRef Id="VS2017DEVENV" />
+		<PropertyRef Id="VS2017_EXTENSIONS_DIR" />
+		<PropertyRef Id="VS2019DEVENV" />
+		<PropertyRef Id="VS2019_EXTENSIONS_DIR" />
+
 		<!-- Properties -->
 		<Property Id="WIXUI_INSTALLDIR" Value="TARGETDIR" />
 		<Property Id="DEVENV_EXE_7.1">
@@ -33,8 +47,13 @@
 		</Property>
 
 		<!-- Features -->
-		<Feature Id="featCollector_x86" Title="Call Tracer Module (x86)" Description="Enables collection and analysis of the calls an application makes.">
+		<Feature Id="featCollector_x86" Title="Call Tracer Module (x86)" Description="Enables collection and analysis of the calls an application makes (x86).">
 			<ComponentRef Id="compCollectorDLL_x86" />
+			<ComponentRef Id="compSystemEnvironmentSetup" />
+			<ComponentRef Id="compUserEnvironmentSetup" />
+		</Feature>
+		<Feature Id="featCollector_x64" Title="Call Tracer Module (x64)" Description="Enables collection and analysis of the calls an application makes (x64).">
+			<ComponentRef Id="compCollectorDLL_x64" />
 			<ComponentRef Id="compSystemEnvironmentSetup" />
 			<ComponentRef Id="compUserEnvironmentSetup" />
 		</Feature>
@@ -44,63 +63,94 @@
 		<Feature Id="featFrontend" Title="Frontend UI" Description="Installs and registers the Frontend UI that displays realtime performance statistics.">
 			<ComponentRef Id="compFrontend" />
 		</Feature>
-		<?if $(var.Platform) = "x64"?>
-			<Feature Id="featCollector_x64" Title="Call Tracer Module (x64)">
-				<ComponentRef Id="compCollectorDLL_x64" />
-				<ComponentRef Id="compSystemEnvironmentSetup" />
-				<ComponentRef Id="compUserEnvironmentSetup" />
-			</Feature>
-		<?endif?>
 		<Feature Id="featVSIntegration" Title="VisualStudio Integration" Description="Integrates 'Enable Profiling' / 'Remove Profiling Support' menus to the Project Context Menu. Intergation is installed for versions 7.1 to 11.0.">
 			<ComponentRef Id="compVSPackage" />
 			<ComponentRef Id="compVSPackageRegistration_7.1" />
 			<ComponentRef Id="compVSPackageRegistration_8.0" />
 			<ComponentRef Id="compVSPackageRegistration_9.0" />
-			<ComponentRef Id="compVSPackageRegistration_10.0" />
-			<ComponentRef Id="compVSPackageRegistration_11.0" />
-			<ComponentRef Id="compVSPackageRegistration_12.0" />
-			<ComponentRef Id="compVSPackageRegistration_14.0" />
+			<ComponentRef Id="compVSX2010" />
+			<ComponentRef Id="compVSX2012" />
+			<ComponentRef Id="compVSX2013" />
+			<ComponentRef Id="compVSX2015" />
+			<ComponentRef Id="compVSX2017" />
+			<ComponentRef Id="compVSX2019" />
 		</Feature>
 
-		
+
 		<InstallUISequence>
 			<Custom Action="caSetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
 		</InstallUISequence>
 
 		<InstallExecuteSequence>
 			<Custom Action="caSetTARGETDIR" Before="CostFinalize">TARGETDIR=""</Custom>
-			<Custom Action="caSetupPackagesVS2003" Before="InstallFinalize">DEVENV_EXE_7.1</Custom>
-			<Custom Action="caSetupPackagesVS2005" Before="InstallFinalize">DEVENV_EXE_8.0</Custom>
-			<Custom Action="caSetupPackagesVS2008" Before="InstallFinalize">DEVENV_EXE_9.0</Custom>
-			<Custom Action="caSetupPackagesVS2010" Before="InstallFinalize">DEVENV_EXE_10.0</Custom>
-			<Custom Action="caSetupPackagesVS2012" Before="InstallFinalize">DEVENV_EXE_11.0</Custom>
-			<Custom Action="caSetupPackagesVS2013" Before="InstallFinalize">DEVENV_EXE_12.0</Custom>
-			<Custom Action="caSetupPackagesVS2014" Before="InstallFinalize">DEVENV_EXE_14.0</Custom>
+			<Custom Action="VS2003Setup" Before="InstallFinalize">VS2003DEVENV</Custom>
+			<Custom Action="VS2005Setup" Before="InstallFinalize">VS2005DEVENV</Custom>
+			<Custom Action="VS90Setup" Before="InstallFinalize">VS90DEVENV</Custom>
+			<Custom Action="VS2010Setup" Before="InstallFinalize">VS2010DEVENV</Custom>
+			<Custom Action="VS2012Setup" Before="InstallFinalize">VS2012DEVENV</Custom>
+			<Custom Action="VS2013Setup" Before="InstallFinalize">VS2013DEVENV</Custom>
+			<Custom Action="VS2015Setup" Before="InstallFinalize">VS2015DEVENV</Custom>
+			<Custom Action="VS2017Setup" Before="InstallFinalize">VS2017DEVENV</Custom>
+			<Custom Action="VS2019Setup" Before="InstallFinalize">VS2019DEVENV</Custom>
 		</InstallExecuteSequence>
 
 		<!-- CustomActions -->
-		<?if $(var.Platform) = "x64" ?>
+		<?if $(sys.BUILDARCH)=x64?>
 			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFiles64Folder][Manufacturer]\[ProductName]" Execute="firstSequence" />
-		<?elseif $(var.Platform) = "x86" ?>
+		<?elseif $(sys.BUILDARCH)=x86?>
 			<CustomAction Id="caSetTARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ProductName]" Execute="firstSequence" />
 		<?endif?>
-		<CustomAction Id="caSetupPackagesVS2003" Property="DEVENV_EXE_7.1" ExeCommand="/setup" Impersonate="no" Execute="deferred" />
-		<CustomAction Id="caSetupPackagesVS2005" Property="DEVENV_EXE_8.0" ExeCommand="/setup" Impersonate="no" Execute="deferred" />
-		<CustomAction Id="caSetupPackagesVS2008" Property="DEVENV_EXE_9.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
-		<CustomAction Id="caSetupPackagesVS2010" Property="DEVENV_EXE_10.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
-		<CustomAction Id="caSetupPackagesVS2012" Property="DEVENV_EXE_11.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
-		<CustomAction Id="caSetupPackagesVS2013" Property="DEVENV_EXE_12.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
-		<CustomAction Id="caSetupPackagesVS2014" Property="DEVENV_EXE_14.0" ExeCommand="/setup /nosetupvstemplates" Impersonate="no" Execute="deferred" />
 
-		<Directory Id="TARGETDIR" Name="SourceDir" FileSource="$(var.SOURCEDIR)"/>
+		<!-- External Custom Actions -->
+		<CustomActionRef Id="VS2003Setup" />
+		<CustomActionRef Id="VS2005Setup" />
+		<CustomActionRef Id="VS90Setup" />
+		<CustomActionRef Id="VS2010Setup" />
+		<CustomActionRef Id="VS2012Setup" />
+		<CustomActionRef Id="VS2013Setup" />
+		<CustomActionRef Id="VS2015Setup" />
+		<CustomActionRef Id="VS2017Setup" />
+		<CustomActionRef Id="VS2019Setup" />
+
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Name="Extensions" Id="VS2010_EXTENSIONS_DIR">
+				<Directory Name="MicroProfiler" Id="EXTENSION_MP_2010">
+					<Directory Name="1033" Id="EXTENSION_MP_2010_RES"/>
+				</Directory>
+			</Directory>
+			<Directory Name="Extensions" Id="VS2012_EXTENSIONS_DIR">
+				<Directory Name="MicroProfiler" Id="EXTENSION_MP_2012">
+					<Directory Name="1033" Id="EXTENSION_MP_2012_RES"/>
+				</Directory>
+			</Directory>
+			<Directory Name="Extensions" Id="VS2013_EXTENSIONS_DIR">
+				<Directory Name="MicroProfiler" Id="EXTENSION_MP_2013">
+					<Directory Name="1033" Id="EXTENSION_MP_2013_RES"/>
+				</Directory>
+			</Directory>
+			<Directory Name="Extensions" Id="VS2015_EXTENSIONS_DIR">
+				<Directory Name="MicroProfiler" Id="EXTENSION_MP_2015">
+					<Directory Name="1033" Id="EXTENSION_MP_2015_RES"/>
+				</Directory>
+			</Directory>
+			<Directory Name="Extensions" Id="VS2017_EXTENSIONS_DIR">
+				<Directory Name="MicroProfiler" Id="EXTENSION_MP_2017">
+					<Directory Name="1033" Id="EXTENSION_MP_2017_RES"/>
+				</Directory>
+			</Directory>
+			<Directory Name="Extensions" Id="VS2019_EXTENSIONS_DIR">
+				<Directory Name="MicroProfiler" Id="EXTENSION_MP_2019">
+					<Directory Name="1033" Id="EXTENSION_MP_2019_RES"/>
+				</Directory>
+			</Directory>
+		</Directory>
+
 
 		<Component Id="compCollectorSDK" Guid="FA5EE4E6-A12A-4697-88EB-FC1C5CE98D18" Directory="TARGETDIR" KeyPath="yes">
-			<File Id="fileInitializerCPP" Source="$(var.SOURCEDIR)/micro-profiler.initializer.cpp" Vital="yes"/>
-			<File Id="fileEntryH" Source="$(var.SOURCEDIR)/entry.h" Vital="yes"/>
-			<File Id="fileImpLib_x86" Source="$(var.SOURCEDIRX86)/micro-profiler_Win32.lib" Vital="yes"/>
-			<?if $(var.Platform) = "x64"?>
-				<File Id="fileImpLib_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.lib" Vital="yes"/>
-			<?endif?>
+			<File Id="fileInitializerCPP" Source="$(var.SOURCEDIRWX86)/micro-profiler.initializer.cpp" Vital="yes"/>
+			<File Id="fileEntryH" Source="$(var.SOURCEDIRWX86)/entry.h" Vital="yes"/>
+			<File Id="fileImpLib_x86" Source="$(var.SOURCEDIRWX86)/micro-profiler_Win32.lib" Vital="yes"/>
+			<File Id="fileImpLib_x64" Source="$(var.SOURCEDIRWX64)/micro-profiler_x64.lib" Vital="yes"/>
 		</Component>
 
 
@@ -121,19 +171,93 @@
 			<File Id="fileFrontendDLL" Source="$(var.SOURCEDIR)/micro-profiler_standalone.exe" Vital="yes" />
 			<Class Id="0ED7654C-DE8A-4964-9661-0B0C391BE15E" Description="MicroProfiler Frontend Class" Context="LocalServer32" ThreadingModel="apartment" ForeignServer="[#fileFrontendDLL]" Version="1.0"/>
 		</Component>
-
-		<Component Id="compVSPackage" Directory="TARGETDIR" Guid="57A2000C-A414-4F8F-A3A3-92DA925C6D11" KeyPath="yes">
-			<File Id="fileVSPackage" Source="$(var.SOURCEDIRX86)/micro-profiler_frontend.dll" Name="micro-profiler_vspackage.dll" Vital="yes" />
+		
+		<Component Id="compVSX2010" Guid="91E6EA57-83D7-4B9F-8BB8-178543618B1A" Directory="EXTENSION_MP_2010">
+			<Condition>VS2010DEVENV</Condition>
+			<CopyFile Id="fileVSPackage_2010" FileId="fileVSPackage" DestinationDirectory="EXTENSION_MP_2010" />
+			<CopyFile Id="fileVSPackageReg_2010" FileId="fileVSPackageReg" DestinationDirectory="EXTENSION_MP_2010" />
+			<CopyFile Id="fileVSPackageVSIX_2010" FileId="fileVSPackageVSIX10" DestinationName="extension.vsixmanifest" DestinationDirectory="EXTENSION_MP_2010" />
+			<CopyFile Id="fileInitializerCPP_2010" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_2010" />
+			<CopyFile Id="fileEntryH_2010" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_2010" />
+			<CopyFile Id="fileImpLib_x86_2010" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_2010" />
+			<CopyFile Id="fileImpLib_x64_2010" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_2010" />
+			<CopyFile Id="fileVSPackageUI_2010" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_2010_RES" />
 		</Component>
 
-		<?if $(var.Platform) = "x64"?>
-			<Component Id="compCollectorDLL_x64" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes" Directory="TARGETDIR" Win64="yes">
-				<File Id="fileCollectorDLL_x64" Source="$(var.SOURCEDIR)/micro-profiler_x64.dll" Vital="yes" />
-			</Component>
-		<?endif?>
+		<Component Id="compVSX2012" Guid="6703439A-B703-4444-9A98-F846D669106A" Directory="EXTENSION_MP_2012">
+			<Condition>VS2012DEVENV</Condition>
+			<CopyFile Id="fileVSPackage_2012" FileId="fileVSPackage" DestinationDirectory="EXTENSION_MP_2012" />
+			<CopyFile Id="fileVSPackageReg_2012" FileId="fileVSPackageReg" DestinationDirectory="EXTENSION_MP_2012" />
+			<CopyFile Id="fileVSPackageVSIX_2012" FileId="fileVSPackageVSIX11" DestinationDirectory="EXTENSION_MP_2012" />
+			<CopyFile Id="fileInitializerCPP_2012" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_2012" />
+			<CopyFile Id="fileEntryH_2012" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_2012" />
+			<CopyFile Id="fileImpLib_x86_2012" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_2012" />
+			<CopyFile Id="fileImpLib_x64_2012" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_2012" />
+			<CopyFile Id="fileVSPackageUI_2012" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_2012_RES" />
+		</Component>
 
-		<Component Id="compCollectorDLL_x86" Guid="4EC2E786-D232-4EDF-940E-EC18DFFFADBB" KeyPath="yes" Directory="TARGETDIR" Win64="no">
-			<File Id="fileCollectorDLL_x86" Source="$(var.SOURCEDIRX86)/micro-profiler_x86.dll" Vital="yes" />
+		<Component Id="compVSX2013" Guid="C271D4AF-C8BF-427A-B122-2C5440E3D911" Directory="EXTENSION_MP_2013">
+			<Condition>VS2013DEVENV</Condition>
+			<CopyFile Id="fileVSPackage_2013" FileId="fileVSPackage" DestinationDirectory="EXTENSION_MP_2013" />
+			<CopyFile Id="fileVSPackageReg_2013" FileId="fileVSPackageReg" DestinationDirectory="EXTENSION_MP_2013" />
+			<CopyFile Id="fileVSPackageVSIX_2013" FileId="fileVSPackageVSIX11" DestinationDirectory="EXTENSION_MP_2013" />
+			<CopyFile Id="fileInitializerCPP_2013" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_2013" />
+			<CopyFile Id="fileEntryH_2013" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_2013" />
+			<CopyFile Id="fileImpLib_x86_2013" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_2013" />
+			<CopyFile Id="fileImpLib_x64_2013" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_2013" />
+			<CopyFile Id="fileVSPackageUI_2013" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_2013_RES" />
+		</Component>
+
+		<Component Id="compVSX2015" Guid="A896E8E4-FAD6-49AE-A2F6-61FE7186A700" Directory="EXTENSION_MP_2015">
+			<Condition>VS2015DEVENV</Condition>
+			<CopyFile Id="fileVSPackage_2015" FileId="fileVSPackage" DestinationDirectory="EXTENSION_MP_2015" />
+			<CopyFile Id="fileVSPackageReg_2015" FileId="fileVSPackageReg" DestinationDirectory="EXTENSION_MP_2015" />
+			<CopyFile Id="fileVSPackageVSIX_2015" FileId="fileVSPackageVSIX11" DestinationDirectory="EXTENSION_MP_2015" />
+			<CopyFile Id="fileInitializerCPP_2015" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_2015" />
+			<CopyFile Id="fileEntryH_2015" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_2015" />
+			<CopyFile Id="fileImpLib_x86_2015" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_2015" />
+			<CopyFile Id="fileImpLib_x64_2015" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_2015" />
+			<CopyFile Id="fileVSPackageUI_2015" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_2015_RES" />
+		</Component>
+
+		<Component Id="compVSX2017" Guid="8B09F062-8AAC-412B-B50B-8DE3D7743DDD" Directory="EXTENSION_MP_2017">
+			<Condition>VS2017DEVENV</Condition>
+			<CopyFile Id="fileVSPackage_2017" FileId="fileVSPackage" DestinationDirectory="EXTENSION_MP_2017" />
+			<CopyFile Id="fileVSPackageReg_2017" FileId="fileVSPackageReg" DestinationDirectory="EXTENSION_MP_2017" />
+			<CopyFile Id="fileVSPackageVSIX_2017" FileId="fileVSPackageVSIX11" DestinationDirectory="EXTENSION_MP_2017" />
+			<CopyFile Id="fileInitializerCPP_2017" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_2017" />
+			<CopyFile Id="fileEntryH_2017" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_2017" />
+			<CopyFile Id="fileImpLib_x86_2017" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_2017" />
+			<CopyFile Id="fileImpLib_x64_2017" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_2017" />
+			<CopyFile Id="fileVSPackageUI_2017" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_2017_RES" />
+		</Component>
+
+		<Component Id="compVSX2019" Guid="FF55BEA2-4CFA-4A4A-B3BC-954C2B0E03DB" Directory="EXTENSION_MP_2019">
+			<Condition>VS2019DEVENV</Condition>
+			<CopyFile Id="fileVSPackage_2019" FileId="fileVSPackage" DestinationDirectory="EXTENSION_MP_2019" />
+			<CopyFile Id="fileVSPackageReg_2019" FileId="fileVSPackageReg" DestinationDirectory="EXTENSION_MP_2019" />
+			<CopyFile Id="fileVSPackageVSIX_2019" FileId="fileVSPackageVSIX11" DestinationDirectory="EXTENSION_MP_2019" />
+			<CopyFile Id="fileInitializerCPP_2019" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_2019" />
+			<CopyFile Id="fileEntryH_2019" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_2019" />
+			<CopyFile Id="fileImpLib_x86_2019" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_2019" />
+			<CopyFile Id="fileImpLib_x64_2019" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_2019" />
+			<CopyFile Id="fileVSPackageUI_2019" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_2019_RES" />
+		</Component>
+
+		<Component Id="compVSPackage" Directory="TARGETDIR" Guid="57A2000C-A414-4F8F-A3A3-92DA925C6D11" KeyPath="yes">
+			<File Id="fileVSPackage" Source="$(var.SOURCEDIRWX86)/micro-profiler_frontend.dll" Vital="yes"/>
+			<File Id="fileVSPackageReg" Source="$(var.SOURCEDIRWX86)/micro-profiler.pkgdef" Vital="yes"/>
+			<File Id="fileVSPackageVSIX10" Source="$(var.SOURCEDIRWX86)/extension.vs10.vsixmanifest" Name="extension.vs10.vsixmanifest" Vital="yes"/>
+			<File Id="fileVSPackageVSIX11" Source="$(var.SOURCEDIRWX86)/extension.vsixmanifest" Vital="yes"/>
+			<File Id="fileVSPackageUI" Source="$(var.SOURCEDIRWX86)/1033/micro-profiler.ui.dll" Name="micro-profiler.ui.dll" Vital="yes"/>
+		</Component>
+
+		<Component Id="compCollectorDLL_x64" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes" Directory="TARGETDIR">
+			<File Id="fileCollectorDLL_x64" Source="$(var.SOURCEDIRWX64)/micro-profiler_x64.dll" Vital="yes" />
+		</Component>
+
+		<Component Id="compCollectorDLL_x86" Guid="4EC2E786-D232-4EDF-940E-EC18DFFFADBB" KeyPath="yes" Directory="TARGETDIR">
+			<File Id="fileCollectorDLL_x86" Source="$(var.SOURCEDIRWX86)/micro-profiler_Win32.dll" Vital="yes" />
 		</Component>
 
 		<?define VSVERSION="7.1"?>
@@ -148,33 +272,19 @@
 		<?include vspackage.wxi?>
 		<?undef VSVERSION ?>
 
-		<?define VSVERSION="10.0"?>
-		<?include vspackage.wxi?>
-		<?undef VSVERSION ?>
-		
-		<?define VSVERSION="11.0"?>
-		<?include vspackage.wxi?>
-		<?undef VSVERSION ?>
-
-		<?define VSVERSION="12.0"?>
-		<?include vspackage.wxi?>
-		<?undef VSVERSION ?>
-
-		<?define VSVERSION="14.0"?>
-		<?include vspackage.wxi?>
-		<?undef VSVERSION ?>
-
 		<!-- UI -->
 		<WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 		<UIRef Id="WixUI_InstallDir" />
 		<UI>
-			<ProgressText Action="caSetupPackagesVS2003">Configuring Visual Studio .NET 2003... (this may take a few minutes)</ProgressText>
-			<ProgressText Action="caSetupPackagesVS2005">Configuring Visual Studio 2005... (this may take a few minutes)</ProgressText>
-			<ProgressText Action="caSetupPackagesVS2008">Configuring Visual Studio 2008... (this may take a few minutes)</ProgressText>
-			<ProgressText Action="caSetupPackagesVS2010">Configuring Visual Studio 2010... (this may take a few minutes)</ProgressText>
-			<ProgressText Action="caSetupPackagesVS2012">Configuring Visual Studio 2012... (this may take a few minutes)</ProgressText>
-			<ProgressText Action="caSetupPackagesVS2013">Configuring Visual Studio 2013... (this may take a few minutes)</ProgressText>
-			<ProgressText Action="caSetupPackagesVS2014">Configuring Visual Studio 2015... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2003Setup">Configuring Visual Studio .NET 2003... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2005Setup">Configuring Visual Studio 2005... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS90Setup">Configuring Visual Studio 2008... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2010Setup">Configuring Visual Studio 2010... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2012Setup">Configuring Visual Studio 2012... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2013Setup">Configuring Visual Studio 2013... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2015Setup">Configuring Visual Studio 2015... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2017Setup">Configuring Visual Studio 2017... (this may take a few minutes)</ProgressText>
+			<ProgressText Action="VS2019Setup">Configuring Visual Studio 2019... (this may take a few minutes)</ProgressText>
 		</UI>
 		
 	</Product>

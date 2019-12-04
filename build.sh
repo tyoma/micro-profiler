@@ -1,7 +1,7 @@
 echo Building Android binaries...
 mkdir _build.android.arm
 cd _build.android.arm
-cmake .. -DCMAKE_TOOLCHAIN=/mnt/c/android/android-ndk-r20-linux/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_STL=c++_static
+cmake .. -DCMAKE_TOOLCHAIN_FILE=/mnt/c/android/android-ndk-r20-linux/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_STL=c++_static
 make -j4
 cd ..
 

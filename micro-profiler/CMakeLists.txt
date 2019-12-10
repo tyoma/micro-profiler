@@ -25,6 +25,7 @@ add_custom_command(OUTPUT micro-profiler.pkgdef
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/replace.cmd micro-profiler.pkgdef > ${MP_OUTDIR}/micro-profiler.pkgdef
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/replace.cmd extension.vsixmanifest > ${MP_OUTDIR}/extension.vsixmanifest
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/replace.cmd extension.vs10.vsixmanifest > ${MP_OUTDIR}/extension.vs10.vsixmanifest
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/logo.ico ${MP_OUTDIR}/.
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/micro-profiler.pkgdef"
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/extension.vsixmanifest"
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/extension.vs10.vsixmanifest"

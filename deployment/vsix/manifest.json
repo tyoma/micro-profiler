@@ -7,7 +7,7 @@
 	"files": [
 		{"fileName":"/extension.vsixmanifest","sha256":"!hashmanifest!"},
 		{"fileName":"/micro-profiler_frontend.dll","sha256":"!hashmpfrontend!"},
-		{"fileName":"/micro-profiler_x86.dll","sha256":"!hashmpx86!"},
+		{"fileName":"/micro-profiler_Win32.dll","sha256":"!hashmpx86!"},
 		{"fileName":"/micro-profiler_x64.dll","sha256":"!hashmpx64!"},
 		{"fileName":"/1033/micro-profiler.ui.dll","sha256":"!hashmpui!"},
 		{"fileName":"/micro-profiler.pkgdef","sha256":"!hashpkgdef!"},
@@ -17,5 +17,5 @@
 		{"fileName":"/micro-profiler_x64.lib","sha256":"!hashmpx64lib!"},
 		{"fileName":"/logo.ico","sha256":"!hashappicon!"}
 	],
-	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,16.0)"}
+	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,17.0)"}
 }

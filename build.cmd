@@ -2,12 +2,6 @@
 
 setlocal
 
-set tools32=%SystemRoot%\System32
-if exist "%SystemRoot%\SysWOW64" set tools32=%SystemRoot%\SysWOW64
-
-call :setmsbuildpath
-if %errorlevel% neq 0 goto :novisualstudio
-
 echo 1. Preparing repository...
 git pull
 git submodule update --init
@@ -32,6 +26,7 @@ git reset --hard %commithash%~1
 echo 6. Building micro-profiler...
 call build-windows
 call build-install
+call build-vsix
 
 echo 7. Tagging...
 call scripts\make-version VERSION_TAG version.h
@@ -56,20 +51,6 @@ goto :end
 	@if %~1==%~3 set /a value+=1
 	@echo %~2 %~3 %value% %~5
 	@exit /b 0
-
-:setmsbuildpath
-	call :getvsregvalue 4.0 MSBuildToolsPath msbuildpath
-	set msbuildpath="%msbuildpath%msbuild.exe"
-	if exist %msbuildpath% exit /b 0
-	exit /b 1
-
-:getvsregvalue
-	for /f "tokens=2*" %%i in ('%tools32%\reg query "HKLM\SOFTWARE\Microsoft\MSBuild\ToolsVersions\%1" /v %2') do set %3=%%j
-	exit /b 0
-
-:novisualstudio
-	echo Visual Studio not found...
-	goto :end
 
 :pushrejected
 	echo Remote repository was updated while incrementing the build version...

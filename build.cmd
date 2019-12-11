@@ -2,6 +2,8 @@
 
 setlocal
 
+set WSLENV=NDK/p
+
 echo 1. Preparing repository...
 git pull
 git submodule update --init
@@ -24,6 +26,7 @@ echo 5. Resetting to a build revision (one before 'commithash')...
 git reset --hard %commithash%~1
 
 echo 6. Building micro-profiler...
+wsl bash ./build.sh
 call build-windows
 call build-install
 call build-vsix

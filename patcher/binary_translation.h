@@ -22,6 +22,8 @@
 
 #include "revert_buffer.h"
 
+#include <stdexcept>
+
 namespace micro_profiler
 {
 	struct inconsistent_function_range_exception : std::runtime_error

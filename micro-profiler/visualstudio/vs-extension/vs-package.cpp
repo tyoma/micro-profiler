@@ -175,7 +175,8 @@ namespace micro_profiler
 				_shell = shell;
 				register_path(false);
 				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
-				_ipc_manager.reset(new ipc::ipc_manager(_frontend_manager, make_pair(6100u, 10u)));
+				_ipc_manager.reset(new ipc::ipc_manager(_frontend_manager,
+					make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u))));
 				setenv(c_frontend_id_ev, ipc::ipc_manager::format_endpoint("127.0.0.1",
 					_ipc_manager->get_sockets_port()).c_str(), 1);
 			}

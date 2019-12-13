@@ -23,6 +23,7 @@
 #include <common/module.h>
 #include <common/path.h>
 #include <common/string.h>
+#include <stdexcept>
 #include <windows.h>
 #include <tlhelp32.h>
 

@@ -139,7 +139,7 @@ namespace micro_profiler
 	piechart::index_type piechart::find_sector(real_t x, real_t y)
 	{
 		x -= _center.x, y -= _center.y;
-		real_t r = distance(0.0f, 0.0f, x, y), a = 0.5f * pi - atan2(x, y);
+		real_t r = distance(0.0f, 0.0f, x, y), a = 0.5f * pi - static_cast<real_t>(atan2(x, y));
 
 		if (r >= _inner_r)
 		{

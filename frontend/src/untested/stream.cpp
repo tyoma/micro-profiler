@@ -20,6 +20,8 @@
 
 #include <frontend/stream.h>
 
+#include <stdexcept>
+
 using namespace std;
 
 namespace micro_profiler

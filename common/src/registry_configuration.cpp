@@ -22,6 +22,7 @@
 
 #include <common/string.h>
 
+#include <stdexcept>
 #include <vector>
 #include <windows.h>
 

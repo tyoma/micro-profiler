@@ -26,6 +26,7 @@
 #include <common/formatting.h>
 #include <cmath>
 #include <clocale>
+#include <stdexcept>
 #include <utility>
 
 using namespace std;

@@ -25,6 +25,7 @@
 #include <windows.h>
 #include <dbghelp.h>
 #include <set>
+#include <stdexcept>
 #include <unordered_map>
 
 using namespace std;

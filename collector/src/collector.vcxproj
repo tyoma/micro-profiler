@@ -33,7 +33,7 @@
     <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
   <PropertyGroup>
-    <TargetName>micro-profiler_$(Platform2)</TargetName>
+    <TargetName>micro-profiler_$(PlatformName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <MASM>
@@ -42,7 +42,6 @@
     </MASM>
     <Link>
       <ModuleDefinitionFile>collector.def</ModuleDefinitionFile>
-      <ImportLibrary>$(OutDir)micro-profiler_$(PlatformName).lib</ImportLibrary>
       <AdditionalDependencies>delayimp.lib;ole32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>ole32.dll;ws2_32.dll</DelayLoadDLLs>
     </Link>

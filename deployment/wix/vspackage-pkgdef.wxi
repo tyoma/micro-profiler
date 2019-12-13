@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Include>
+	<Component Id="compVSX$(var.VSVERSION)" Guid="$(var.COMPVSXGUID)" Directory="EXTENSION_MP_$(var.VSVERSION)">
+		<Condition>VS$(var.VSVERSION)DEVENV</Condition>
+		<CopyFile Id="fileVSPackage_$(var.VSVERSION)" FileId="fileVSPackage" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<CopyFile Id="fileVSPackageReg_$(var.VSVERSION)" FileId="fileVSPackageReg" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<?if VSVERSION=2010?>
+			<CopyFile Id="fileVSPackageVSIX_$(var.VSVERSION)" FileId="fileVSPackageVSIX10" DestinationName="extension.vsixmanifest" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<?else?>
+			<CopyFile Id="fileVSPackageVSIX_$(var.VSVERSION)" FileId="fileVSPackageVSIX11" DestinationName="extension.vsixmanifest" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<?endif?>
+		<CopyFile Id="fileInitializerCPP_$(var.VSVERSION)" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<CopyFile Id="fileEntryH_$(var.VSVERSION)" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<CopyFile Id="fileImpLib_x86_$(var.VSVERSION)" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<?ifdef SOURCEDIRWX64?>
+			<CopyFile Id="fileImpLib_x64_$(var.VSVERSION)" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
+		<?endif?>
+		<CopyFile Id="fileVSPackageUI_$(var.VSVERSION)" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)_RES" />
+	</Component>
+</Include>

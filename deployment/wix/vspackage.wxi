@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <Include>
-	<Component Id="compVSPackageRegistration_$(var.VSVERSION)" Directory="TARGETDIR" Win64="no">
+	<Component Id="compVSX$(var.VSVERSION)" Directory="TARGETDIR" Win64="no">
 		<RegistryKey Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSVERSION)">
 			<RegistryKey Key="Packages">
 				<RegistryKey Key="{43a50861-7e04-4169-b47e-d4cffe1b3db8}">

@@ -13,18 +13,24 @@
     <Name>micro-profiler.installer</Name>
   </PropertyGroup>
   <PropertyGroup>
-    <OutputPath>$(SolutionDir)\_setup\</OutputPath>
+    <OutputPath>$(SolutionDir)_setup\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants>SOURCEDIR=../../_bin/$(Configuration)_$(Platform);SOURCEDIRX86=../../_bin/$(Configuration)_x86</DefineConstants>
+    <DefineConstants Condition="'$(Platform)'=='x86'">SOURCEDIR=$(SolutionDir)_bin\$(Configuration)_$(Platform);SOURCEDIRWX86=$(SolutionDir)_bin\$(Configuration)_x86</DefineConstants>
+    <DefineConstants Condition="'$(Platform)'=='x64'">SOURCEDIR=$(SolutionDir)_bin\$(Configuration)_$(Platform);SOURCEDIRWX86=$(SolutionDir)_bin\$(Configuration)_x86;SOURCEDIRWX64=$(SolutionDir)_bin\$(Configuration)_x64</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="micro-profiler.wxs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="license.rtf" />
+    <Content Include="vspackage-pkgdef.wxi" />
     <Content Include="vspackage.wxi" />
   </ItemGroup>
   <ItemGroup>
+    <WixExtension Include="WixVSExtension">
+      <HintPath>$(WixExtDir)\WixVSExtension.dll</HintPath>
+      <Name>WixVSExtension</Name>
+    </WixExtension>
     <WixExtension Include="WixUIExtension">
       <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
       <Name>WixUIExtension</Name>
@@ -34,7 +40,7 @@
   <PropertyGroup>
     <PostBuildEvent>call "$(SolutionDir)scripts\make-version.cmd" VERSION "$(SolutionDir)version.h"
 
-set TargetNameVer="$(TargetName)_$(PlatformName).v%25VERSION%25$(TargetExt)"
+set TargetNameVer="$(TargetName)_$(Platform).v%25VERSION%25$(TargetExt)"
 
 del "$(TargetDir)%25TargetNameVer%25"
 ren "$(TargetPath)" "%25TargetNameVer%25"</PostBuildEvent>

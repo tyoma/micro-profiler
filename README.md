@@ -70,18 +70,18 @@ In order to profile Windows Service or other application running with credential
 The steps are much like the ones above.
 
 1. Copy profiler's collector ```[lib]micro-profiler_<platform>.{dll|so}``` to the directory next to the executable / dynamic library you're profiling. You may need to chmod the binaries so that they are executable;
-2. (Linux) You'll may need to add current directory ('.') to the LD_LIBRARY_PATH using this command: ```export LD_LIBRARY_PATH=.:${LD_LIBRARY_PATH}```;
+2. (Linux) You'll may need to add current directory ('.') to the LD_LIBRARY_PATH using this command: ```export LD_LIBRARY_PATH=.:${LD_LIBRARY_PATH}```. Sometimes, the profiled application or a shared object may not link the profiler's hook functions resulting in a missing profiler statistics. To remedy this, please use 'preload trick' - run your executable with an LD_PRELOAD: ```LD_PRELOAD=<path_to_profiler.so> <your_app_executable>```;
 3. Set the frontend's host variable: ```export MICROPROFILERFRONTEND="sockets|<frontend_machine_ip>:6100"```;
 4. Run the application.
 
 # Revision History
 
-## v1.5.608
+## v1.5.611
 
 * Cross-platformness supported - the collector's binaries for Linux are supplied along with the extension/application;
 * Issue [#44](https://github.com/tyoma/micro-profiler/issues/44) fixed: when running profiled application from Visual Studio the profiling results are shown in that instance;
-* Issue [#45](https://github.com/tyoma/micro-profiler/issues/45) fixed: changed project files are completely rolled back when remoing profiler support;
-* Issue [#8](https://github.com/tyoma/micro-profiler/issues/8) fixed: the debug info is loaded completely asynchronously from within the profiled application. Once it's loadead, the symbols are released;
+* Issue [#45](https://github.com/tyoma/micro-profiler/issues/45) fixed: changed project files are completely rolled back when removing profiler support;
+* Issue [#8](https://github.com/tyoma/micro-profiler/issues/8) fixed: the debug info is loaded completely asynchronously from within the profiled application. Once it's loaded, the symbols are released;
 
 ## v1.4.606
 

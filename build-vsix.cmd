@@ -23,6 +23,15 @@ pushd "%~dp0_build.windows.x64\_bin\RelWithDebInfo"
 	call sha256 hashmpx64 micro-profiler_x64.dll
 	call sha256 hashmpx64lib micro-profiler_x64.lib
 popd
+pushd "%~dp0_build.linux.x86\_bin"
+	call sha256 hashlinuxmpx86 libmicro-profiler_x86.so
+popd
+pushd "%~dp0_build.linux.x64\_bin"
+	call sha256 hashlinuxmpx64 libmicro-profiler_x64.so
+popd
+pushd "%~dp0_build.android.arm\_bin"
+	call sha256 hashandroidarm libmicro-profiler_arm.so
+popd
 
 pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
 	call mkzip micro-profiler_frontend.dll "%OUTPUT%"
@@ -41,6 +50,15 @@ popd
 pushd "%~dp0_build.windows.x64\_bin\RelWithDebInfo"
 	call mkzip micro-profiler_x64.dll "%OUTPUT%"
 	call mkzip micro-profiler_x64.lib "%OUTPUT%"
+popd
+pushd "%~dp0_build.linux.x86\_bin"
+	call mkzip libmicro-profiler_x86.so "%OUTPUT%"
+popd
+pushd "%~dp0_build.linux.x64\_bin"
+	call mkzip libmicro-profiler_x64.so "%OUTPUT%"
+popd
+pushd "%~dp0_build.android.arm\_bin"
+	call mkzip libmicro-profiler_arm.so "%OUTPUT%"
 popd
 
 pushd "%~dp0_setup"

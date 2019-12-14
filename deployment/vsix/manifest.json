@@ -15,7 +15,10 @@
 		{"fileName":"/micro-profiler.initializer.cpp","sha256":"!hashinit!"},
 		{"fileName":"/micro-profiler_Win32.lib","sha256":"!hashmpx86lib!"},
 		{"fileName":"/micro-profiler_x64.lib","sha256":"!hashmpx64lib!"},
-		{"fileName":"/logo.ico","sha256":"!hashappicon!"}
+		{"fileName":"/logo.ico","sha256":"!hashappicon!"},
+		{"fileName":"/libmicro-profiler_x86.so","sha256":"!hashlinuxmpx86!"},
+		{"fileName":"/libmicro-profiler_x64.so","sha256":"!hashlinuxmpx64!"},
+		{"fileName":"/libmicro-profiler_arm.so","sha256":"!hashandroidarm!"}
 	],
 	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,17.0)"}
 }

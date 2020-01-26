@@ -35,4 +35,18 @@ namespace micro_profiler
 		byte values[16];
 	};
 #pragma pack(pop)
+
+	struct overhead
+	{
+		overhead(timestamp_t inner_, timestamp_t outer_);
+
+		timestamp_t inner; // The overhead observed between entry/exit measurements of a leaf function.
+		timestamp_t outer; // The overhead observed by a parent function (in addition to inner) when making a call.
+	};
+
+
+
+	inline overhead::overhead(timestamp_t inner_, timestamp_t outer_)
+		: inner(inner_), outer(outer_)
+	{	}
 }

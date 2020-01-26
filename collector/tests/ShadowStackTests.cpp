@@ -1,4 +1,4 @@
-#include <collector/analyzer.h>
+#include <collector/shadow_stack.h>
 
 #include <test-helpers/helpers.h>
 
@@ -37,7 +37,7 @@ namespace micro_profiler
 			test( UpdatingWithEmptyTraceProvidesNoStatUpdates )
 			{
 				// INIT
-				shadow_stack< unordered_map<const void *, function_statistics> > ss;
+				shadow_stack< unordered_map<const void *, function_statistics> > ss(overhead(0, 0));
 				vector<call_record> trace;
 				unordered_map<const void *, function_statistics> statistics;
 
@@ -52,7 +52,7 @@ namespace micro_profiler
 			test( UpdatingWithSimpleEnterExitAtOnceStoresDuration )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] = {
 					{	123450000, (void *)0x01234567	},
@@ -101,7 +101,7 @@ namespace micro_profiler
 			test( UpdatingWithSimpleEnterExitAtSeparateTimesStoresDuration )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] = {	{	123450000, (void *)0x01234567	},	};
 				call_record trace2[] = {	{	123450013, (void *)0	},	};
@@ -163,7 +163,7 @@ namespace micro_profiler
 			test( UpdatingWithEnterExitSequenceStoresStatsOnlyAtExitsMakesEmptyEntriesOnEnters )
 			{
 				// INIT
-				shadow_stack< unordered_map<const void *, function_statistics> > ss1, ss2;
+				shadow_stack< unordered_map<const void *, function_statistics> > ss1(overhead(0, 0)), ss2(overhead(0, 0));
 				unordered_map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace1[] = {
 					{	123450000, (void *)0x01234567	},
@@ -206,7 +206,7 @@ namespace micro_profiler
 			test( UpdatingWithEnterExitSequenceStoresStatsForAllExits )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	123450000, (void *)0x01234567	},
@@ -240,7 +240,7 @@ namespace micro_profiler
 			test( TraceStatisticsIsAddedToExistingEntries )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	123450000, (void *)0x01234567	},
@@ -298,7 +298,7 @@ namespace micro_profiler
 			test( EvaluateExclusiveTimeForASingleChildCall )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace1[] ={
 					{	123440000, (void *)0x00000010	},
@@ -355,7 +355,7 @@ namespace micro_profiler
 			test( EvaluateExclusiveTimeForSeveralChildCalls )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	123440000, (void *)0x00000010	},
@@ -402,18 +402,18 @@ namespace micro_profiler
 			test( ApplyProfilerLatencyCorrection )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss1(1), ss2(2);
+				shadow_stack< map<const void *, function_statistics> > ss1(overhead(1, 1)), ss2(overhead(2, 5));
 				map<const void *, function_statistics> statistics1, statistics2;
 				call_record trace[] = {
 					{	123440000, (void *)0x00000010	},
 						{	123450013, (void *)0x01234560	},
 							{	123450023, (void *)0x0bcdef10	},
 								{	123450029, (void *)0x0bcdef20	},
-								{	123450037, (void *)0	},
-							{	123450047, (void *)0	},
+								{	123450037, (void *)0	}, // 0x0bcdef20 - 8
+							{	123450047, (void *)0	}, // 0x0bcdef10 - 24
 							{	123450057, (void *)0x0bcdef10	},
-							{	123450071, (void *)0	},
-						{	123450083, (void *)0	},
+							{	123450071, (void *)0	}, // 0x0bcdef10 - 14
+						{	123450083, (void *)0	}, // 0x01234560 - 70
 				};
 
 				// ACT
@@ -427,31 +427,32 @@ namespace micro_profiler
 				++i1_1, ++++i1_2, ++++++i1_3;
 				++i2_1, ++++i2_2, ++++++i2_3;
 
-				//	Observed timings:
-				// 0x01234560 -	1,	70,	32
-				// 0x0bcdef10 -	2,	38,	30
-				// 0x0bcdef20 -	1,	8,		8
-
-				assert_equal(69, i1_1->second.inclusive_time);
+				// 0x01234560
+				assert_equal(63, i1_1->second.inclusive_time);
 				assert_equal(29, i1_1->second.exclusive_time);
-				assert_equal(69, i1_1->second.max_call_time);
+				assert_equal(63, i1_1->second.max_call_time);
 
-				assert_equal(36, i1_2->second.inclusive_time);
+				// 0x0bcdef10
+				assert_equal(34, i1_2->second.inclusive_time);
 				assert_equal(27, i1_2->second.exclusive_time);
-				assert_equal(23, i1_2->second.max_call_time);
+				assert_equal(21, i1_2->second.max_call_time);
 
+				// 0x0bcdef20
 				assert_equal(7, i1_3->second.inclusive_time);
 				assert_equal(7, i1_3->second.exclusive_time);
 				assert_equal(7, i1_3->second.max_call_time);
 
-				assert_equal(68, i2_1->second.inclusive_time);
-				assert_equal(26, i2_1->second.exclusive_time);
-				assert_equal(68, i2_1->second.max_call_time);
+				// 0x01234560
+				assert_equal(47, i2_1->second.inclusive_time);
+				assert_equal(20, i2_1->second.exclusive_time);
+				assert_equal(47, i2_1->second.max_call_time);
 
-				assert_equal(34, i2_2->second.inclusive_time);
-				assert_equal(24, i2_2->second.exclusive_time);
-				assert_equal(22, i2_2->second.max_call_time);
+				// 0x0bcdef10
+				assert_equal(27, i2_2->second.inclusive_time);
+				assert_equal(21, i2_2->second.exclusive_time);
+				assert_equal(15, i2_2->second.max_call_time);
 
+				// 0x0bcdef20
 				assert_equal(6, i2_3->second.inclusive_time);
 				assert_equal(6, i2_3->second.exclusive_time);
 				assert_equal(6, i2_3->second.max_call_time);
@@ -461,7 +462,7 @@ namespace micro_profiler
 			test( RecursionControlNoInterleave )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	123450001, (void *)0x01234560	},
@@ -497,7 +498,7 @@ namespace micro_profiler
 			test( RecursionControlInterleaved )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	123450001, (void *)0x01234560	},
@@ -533,7 +534,7 @@ namespace micro_profiler
 			test( CalculateMaxReentranceMetric )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics> > ss;
+				shadow_stack< map<const void *, function_statistics> > ss(overhead(0, 0));
 				map<const void *, function_statistics> statistics;
 				call_record trace[] = {
 					{	123450001, (void *)0x01234560	},
@@ -590,7 +591,7 @@ namespace micro_profiler
 			test( DirectChildrenStatisticsIsAddedToParentNoRecursion )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics_detailed> > ss, ss_delayed(1);
+				shadow_stack< map<const void *, function_statistics_detailed> > ss(overhead(0, 0)), ss_delayed(overhead(1, 0));
 				map<const void *, function_statistics_detailed> statistics, statistics_delayed;
 				call_record trace[] = {
 					{	1, (void *)1	},
@@ -717,7 +718,7 @@ namespace micro_profiler
 			test( DirectChildrenStatisticsIsAddedToParentNoRecursionWithNesting )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics_detailed> > ss;
+				shadow_stack< map<const void *, function_statistics_detailed> > ss(overhead(0, 0));
 				map<const void *, function_statistics_detailed> statistics;
 				call_record trace[] = {
 					{	1, (void *)1	},
@@ -760,7 +761,7 @@ namespace micro_profiler
 			test( PopulateChildrenStatisticsForSpecificParents )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics_detailed> > ss;
+				shadow_stack< map<const void *, function_statistics_detailed> > ss(overhead(0, 0));
 				map<const void *, function_statistics_detailed> statistics;
 				call_record trace[] = {
 					{	1, (void *)0x1	},
@@ -850,7 +851,7 @@ namespace micro_profiler
 				// INIT
 				typedef unordered_map<const void *, function_statistics_guarded> smap;
 				
-				shadow_stack<smap> ss1, ss2;
+				shadow_stack<smap> ss1(overhead(0, 0)), ss2(overhead(0, 0));
 				smap statistics;
 				call_record trace1[] = {
 					{	1, (void *)0x1	},

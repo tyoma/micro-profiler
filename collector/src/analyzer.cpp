@@ -22,8 +22,8 @@
 
 namespace micro_profiler
 {
-	analyzer::analyzer(timestamp_t profiler_latency)
-		: _profiler_latency(profiler_latency)
+	analyzer::analyzer(const overhead &overhead_)
+		: _overhead(overhead_)
 	{	}
 
 	void analyzer::clear() throw()
@@ -43,7 +43,7 @@ namespace micro_profiler
 		stacks_container::iterator i = _stacks.find(threadid);
 
 		if (i == _stacks.end())
-			i = _stacks.insert(std::make_pair(threadid, shadow_stack<statistics_map_detailed>(_profiler_latency))).first;
+			i = _stacks.insert(std::make_pair(threadid, shadow_stack<statistics_map_detailed>(_overhead))).first;
 		i->second.update(calls, calls + count, _statistics);
 	}
 }

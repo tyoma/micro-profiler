@@ -3,7 +3,7 @@
 #include "mocks.h"
 
 #include <algorithm>
-#include <collector/calibration.h>
+//#include <collector/calibration.h>
 #include <collector/module_tracker.h>
 #include <common/path.h>
 #include <common/time.h>
@@ -19,7 +19,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const overhead c_overhead = { 17, 0 };
+			const overhead c_overhead(17, 0);
 
 			template <typename ContainerT>
 			const symbol_info *get_symbol_by_name(const ContainerT &symbols, const char *name)
@@ -110,7 +110,7 @@ namespace micro_profiler
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
-					{	10 + c_overhead.external, (void *)(0)	},
+					{	10 + c_overhead.inner, (void *)(0)	},
 				};
 
 				cc->Add(mt::thread::id(), trace);
@@ -129,7 +129,7 @@ namespace micro_profiler
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 				call_record trace[] = {
 					{	0, (void *)0x1223	},
-					{	10 + c_overhead.external, (void *)(0)	},
+					{	10 + c_overhead.inner, (void *)(0)	},
 				};
 
 				cc->Add(mt::thread::id(), trace);
@@ -150,24 +150,24 @@ namespace micro_profiler
 				// INIT
 				vector<mocks::statistics_map_detailed> update_log1, update_log2;
 				mocks::Tracer cc1, cc2;
-				overhead o1 = { 23, 0, }, o2 = { 31, 0 };
+				overhead o1(23, 0), o2(31, 0);
 				shared_ptr<mocks::frontend_state> state1(state),
 					state2(new mocks::frontend_state(shared_ptr<void>()));
 				shared_ptr<ipc::channel> frontend2 = state2->create();
 				statistics_bridge b1(cc1, o1, *frontend, mtracker), b2(cc2, o2, *frontend2, mtracker);
 				call_record trace1[] = {
 					{	0, (void *)0x1223	},
-					{	10 + o1.external, (void *)(0)	},
+					{	10 + o1.inner, (void *)(0)	},
 					{	1000, (void *)0x1223	},
-					{	1029 + o1.external, (void *)(0)	},
+					{	1029 + o1.inner, (void *)(0)	},
 				};
 				call_record trace2[] = {
 					{	0, (void *)0x2223	},
-					{	13 + o2.external, (void *)(0)	},
+					{	13 + o2.inner, (void *)(0)	},
 					{	1000, (void *)0x3223	},
-					{	1017 + o2.external, (void *)(0)	},
+					{	1017 + o2.inner, (void *)(0)	},
 					{	2000, (void *)0x4223	},
-					{	2019 + o2.external, (void *)(0)	},
+					{	2019 + o2.inner, (void *)(0)	},
 				};
 				state1->updated = [&] (const mocks::statistics_map_detailed &u) { update_log1.push_back(u); };
 				state2->updated = [&] (const mocks::statistics_map_detailed &u) { update_log2.push_back(u); };

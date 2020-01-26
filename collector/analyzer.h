@@ -20,59 +20,17 @@
 
 #pragma once
 
-#include "calls_collector.h"
-
-#include "primitives.h"
-
-#include <common/pod_vector.h>
+#include "shadow_stack.h"
 
 namespace micro_profiler
 {
-	template <typename OutputMapType>
-	class shadow_stack
-	{
-	public:
-		shadow_stack(timestamp_t profiler_latency = 0);
-
-		template <typename ForwardConstIterator>
-		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMapType &statistics);
-
-	private:
-		struct call_record_ex;
-		typedef std::unordered_map<const void *, unsigned int, address_compare> entrance_counter_map;
-
-	private:
-		const shadow_stack &operator =(const shadow_stack &rhs);
-
-		void restore_state(OutputMapType &statistics);
-
-	private:
-		const timestamp_t _profiler_latency;
-		pod_vector<call_record_ex> _stack;
-		entrance_counter_map _entrance_counter;
-	};
-
-
-	template <typename OutputMapType>
-	struct shadow_stack<OutputMapType>::call_record_ex
-	{
-		static call_record_ex create(const call_record &from, unsigned int &level,
-			typename OutputMapType::mapped_type *entry);
-
-		call_record call;
-		timestamp_t child_time;
-		unsigned int *level;
-		typename OutputMapType::mapped_type *entry;
-	};
-
-
 	class analyzer : public calls_collector_i::acceptor
 	{
 	public:
 		typedef statistics_map_detailed::const_iterator const_iterator;
 
 	public:
-		analyzer(timestamp_t profiler_latency = 0);
+		analyzer(const overhead& overhead_);
 
 		void clear() throw();
 		size_t size() const throw();
@@ -88,65 +46,8 @@ namespace micro_profiler
 		const analyzer &operator =(const analyzer &rhs);
 
 	private:
-		const timestamp_t _profiler_latency;
+		const overhead _overhead;
 		statistics_map_detailed _statistics;
 		stacks_container _stacks;
 	};
-
-
-
-	template <typename OutputMapType>
-	inline shadow_stack<OutputMapType>::shadow_stack(timestamp_t profiler_latency)
-		: _profiler_latency(profiler_latency)
-	{	}
-
-	template <typename OutputMapType>
-	inline void shadow_stack<OutputMapType>::restore_state(OutputMapType &statistics)
-	{
-		for (typename pod_vector<call_record_ex>::iterator i = _stack.begin(); i != _stack.end(); ++i)
-			i->entry = &statistics[i->call.callee];
-	}
-
-	template <typename OutputMapType>
-	template <typename ForwardConstIterator>
-	inline void shadow_stack<OutputMapType>::update(ForwardConstIterator i, ForwardConstIterator end,
-		OutputMapType &statistics)
-	{
-		restore_state(statistics);
-		for (; i != end; ++i)
-		{
-			if (i->callee)
-			{
-				_stack.push_back(call_record_ex::create(*i, ++_entrance_counter[i->callee], &statistics[i->callee]));
-			}
-			else
-			{
-				const call_record_ex &current = _stack.back();
-				const void *callee = current.call.callee;
-				unsigned int level = --*current.level;
-				timestamp_t inclusive_time_observed = i->timestamp - current.call.timestamp;
-				timestamp_t inclusive_time = inclusive_time_observed - _profiler_latency;
-				timestamp_t exclusive_time = inclusive_time - current.child_time;
-
-				current.entry->add_call(level, inclusive_time, exclusive_time);
-				_stack.pop_back();
-				if (!_stack.empty())
-				{
-					call_record_ex &parent = _stack.back();
-
-					parent.child_time += inclusive_time_observed + _profiler_latency;
-					add_child_statistics(*parent.entry, callee, 0, inclusive_time, exclusive_time);
-				}
-			}
-		}
-	}
-
-
-	template <typename OutputMapType>
-	inline typename shadow_stack<OutputMapType>::call_record_ex shadow_stack<OutputMapType>::call_record_ex::create(
-		const call_record &from, unsigned int &level, typename OutputMapType::mapped_type *entry)
-	{
-		call_record_ex r = { from, 0, &level, entry };
-		return r;
-	}
 }

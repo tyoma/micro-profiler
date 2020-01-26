@@ -23,8 +23,6 @@
 #include <collector/calls_collector.h>
 #include <common/time.h>
 
-using namespace std;
-
 namespace micro_profiler
 {
 	void empty_call();
@@ -46,18 +44,16 @@ namespace micro_profiler
 		{
 			virtual void accept_calls(mt::thread::id, const call_record *calls, size_t count)
 			{
-				for (const call_record *i = calls; count >= 2; count -= 2, i += 2)
-				{
-					timestamp_t d = (i + 1)->timestamp - i->timestamp;
+				const size_t count2 = count;
 
-					delay = i != calls ? min(delay, d) : d;
-				}
+				inner = 0;
+				for (const call_record *i = calls; count >= 2; count -= 2, i += 2)
+					inner += (i + 1)->timestamp - i->timestamp;
+				inner /= count2 / 2;
 			}
 
-			timestamp_t delay;
+			timestamp_t inner;
 		} de;
-
-		overhead o = { };
 
 		run_load(&empty_call, iterations);
 		collector.read_collected(de);
@@ -68,12 +64,11 @@ namespace micro_profiler
 		run_load(&empty_call, iterations);
 		timestamp_t end = read_tick_counter();
 		collector.read_collected(de);
+
 #ifdef __arm__
-		o.external = (end - start) / iterations / 2;
+		return overhead((end - start) / iterations / 2, (end - start) / iterations / 2);
 #else
-		end, start;
-		o.external = de.delay;
+		return overhead(de.inner, (end - start) / iterations - de.inner);
 #endif
-		return o;
 	}
 }

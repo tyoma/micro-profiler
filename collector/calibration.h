@@ -26,11 +26,5 @@ namespace micro_profiler
 {
 	class calls_collector;
 
-	struct overhead
-	{
-		timestamp_t external; // How much more the call costs comparing to it's visible cost.
-		timestamp_t internal; // How much more the call to an inner function costs comparing to it's visible cost.
-	};
-
 	overhead calibrate_overhead(calls_collector &collector, size_t iterations);
 }

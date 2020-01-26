@@ -29,12 +29,12 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				analyzer a;
+				analyzer a(overhead(0, 0));
 				map<const void *, function_statistics> m;
 				call_record trace[] = {
 					{	12319, (void *)1234	},
-					{	12324, (void *)2234	},
-					{	12326, (void *)0	},
+						{	12324, (void *)2234	},
+						{	12326, (void *)0	},
 					{	12330, (void *)0	},
 				};
 

@@ -36,7 +36,7 @@ namespace micro_profiler
 {
 	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
 			const std::shared_ptr<module_tracker> &module_tracker_)
-		: _analyzer(overhead_.external), _collector(collector), _frontend(frontend), _module_tracker(module_tracker_)
+		: _analyzer(overhead_), _collector(collector), _frontend(frontend), _module_tracker(module_tracker_)
 	{
 		initialization_data idata = {
 			get_current_executable(),

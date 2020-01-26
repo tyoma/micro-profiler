@@ -24,7 +24,7 @@ namespace micro_profiler
 		namespace
 		{
 			int dummy = 0;
-			const overhead c_overhead = { 11, 0 };
+			const overhead c_overhead(0, 0);
 
 			handle *profile_this(collector_app &app)
 			{	return app.profile_image(&dummy);	}
@@ -352,7 +352,7 @@ namespace micro_profiler
 				// ACT
 				call_record trace1[] = {
 					{	0, (void *)0x1223	},
-					{	1000 + c_overhead.external, (void *)0	},
+					{	1000 + c_overhead.inner, (void *)0	},
 				};
 
 				collector->Add(mt::thread::id(), trace1);
@@ -375,7 +375,7 @@ namespace micro_profiler
 				// ACT
 				call_record trace2[] = {
 					{	10000, (void *)0x31223	},
-					{	14000 + c_overhead.external, (void *)0	},
+					{	14000 + c_overhead.inner, (void *)0	},
 				};
 
 				collector->Add(mt::thread::id(), trace2);
@@ -476,7 +476,7 @@ namespace micro_profiler
 				// INIT
 				mt::event updated1, updated2;
 				mocks::statistics_map_detailed u1, u2;
-				overhead o1 = { 13, }, o2 = { 29, };
+				overhead o1(13, 0), o2(29, 0);
 				shared_ptr<mocks::Tracer> tracer1(new mocks::Tracer), tracer2(new mocks::Tracer);
 				shared_ptr<mocks::frontend_state> state1(new mocks::frontend_state(tracer1)),
 					state2(new mocks::frontend_state(tracer2));
@@ -526,7 +526,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, overhead(7, 10));
 				auto_ptr<handle> h(profile_this(app));
 
 				// ACT
@@ -557,28 +557,28 @@ namespace micro_profiler
 				const mocks::function_statistics_detailed &callinfo_parent3 = u[0x13000];
 
 				assert_equal(2u, callinfo_parent1.callees.size());
-				assert_equal(108, callinfo_parent1.inclusive_time);
-				assert_equal(8, callinfo_parent1.exclusive_time);
+				assert_equal(61, callinfo_parent1.inclusive_time);
+				assert_equal(15, callinfo_parent1.exclusive_time);
 				
 				assert_equal(1u, callinfo_parent2.callees.size());
-				assert_equal(389, callinfo_parent2.inclusive_time);
-				assert_equal(288, callinfo_parent2.exclusive_time);
+				assert_equal(376, callinfo_parent2.inclusive_time);
+				assert_equal(293, callinfo_parent2.exclusive_time);
 
 				assert_equal(0u, callinfo_parent3.callees.size());
-				assert_equal(138, callinfo_parent3.inclusive_time);
-				assert_equal(138, callinfo_parent3.exclusive_time);
+				assert_equal(146, callinfo_parent3.inclusive_time);
+				assert_equal(146, callinfo_parent3.exclusive_time);
 
 
 				const function_statistics &callinfo_child11 = u[0x31000].callees[0x37000];
 				const function_statistics &callinfo_child12 = u[0x31000].callees[0x41000];
 
 				assert_equal(2u, callinfo_child11.times_called);
-				assert_equal(26, callinfo_child11.inclusive_time);
-				assert_equal(26, callinfo_child11.exclusive_time);
+				assert_equal(34, callinfo_child11.inclusive_time);
+				assert_equal(34, callinfo_child11.exclusive_time);
 
 				assert_equal(1u, callinfo_child12.times_called);
-				assert_equal(8, callinfo_child12.inclusive_time);
-				assert_equal(8, callinfo_child12.exclusive_time);
+				assert_equal(12, callinfo_child12.inclusive_time);
+				assert_equal(12, callinfo_child12.exclusive_time);
 			}
 
 

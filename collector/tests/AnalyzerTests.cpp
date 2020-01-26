@@ -47,7 +47,7 @@ namespace micro_profiler
 			test( NewAnalyzerHasNoFunctionRecords )
 			{
 				// INIT / ACT
-				analyzer a;
+				analyzer a(overhead(0, 0));
 
 				// ACT / ASSERT
 				assert_equal(a.begin(), a.end());
@@ -57,7 +57,7 @@ namespace micro_profiler
 			test( EnteringOnlyToFunctionsLeavesOnlyEmptyStatTraces )
 			{
 				// INIT
-				analyzer a;
+				analyzer a(overhead(0, 0));
 				calls_collector_i::acceptor &as_acceptor(a);
 				call_record trace[] = {
 					{	12300, (void *)1234	},
@@ -77,7 +77,7 @@ namespace micro_profiler
 			test( EvaluateSeveralFunctionDurations )
 			{
 				// INIT
-				analyzer a;
+				analyzer a(overhead(0, 0));
 				call_record trace[] = {
 					{	12300, (void *)1234	},
 					{	12305, (void *)0	},
@@ -118,7 +118,7 @@ namespace micro_profiler
 			test( AnalyzerCollectsDetailedStatistics )
 			{
 				// INIT
-				analyzer a;
+				analyzer a(overhead(0, 0));
 				call_record trace[] = {
 					{	1, (void *)1	},
 						{	2, (void *)11	},
@@ -151,15 +151,15 @@ namespace micro_profiler
 			test( ProfilerLatencyIsTakenIntoAccount )
 			{
 				// INIT
-				analyzer a(1);
+				analyzer a(overhead(1, 2));
 				call_record trace[] = {
 					{	12300, (void *)1234	},
 					{	12305, (void *)0	},
 					{	12310, (void *)2234	},
 					{	12317, (void *)0	},
 					{	12320, (void *)2234	},
-					{	12322, (void *)12234	},
-					{	12325, (void *)0	},
+						{	12322, (void *)12234	},
+						{	12325, (void *)0	},
 					{	12327, (void *)0	},
 				};
 
@@ -180,8 +180,8 @@ namespace micro_profiler
 				assert_equal(4, i1->second.exclusive_time);
 
 				assert_equal(2u, i2->second.times_called);
-				assert_equal(12, i2->second.inclusive_time);
-				assert_equal(8, i2->second.exclusive_time);
+				assert_equal(9, i2->second.inclusive_time);
+				assert_equal(7, i2->second.exclusive_time);
 
 				assert_equal(1u, i3->second.times_called);
 				assert_equal(2, i3->second.inclusive_time);
@@ -192,7 +192,7 @@ namespace micro_profiler
 			test( DifferentShadowStacksAreMaintainedForEachThread )
 			{
 				// INIT
-				analyzer a;
+				analyzer a(overhead(0, 0));
 				map<const void *, function_statistics> m;
 				call_record trace1[] = {	{	12300, (void *)1234	},	};
 				call_record trace2[] = {	{	12313, (void *)1234	},	};
@@ -234,7 +234,7 @@ namespace micro_profiler
 			test( ClearingRemovesPreviousStatButLeavesStackStates )
 			{
 				// INIT
-				analyzer a;
+				analyzer a(overhead(0, 0));
 				map<const void *, function_statistics> m;
 				call_record trace1[] = {
 					{	12319, (void *)1234	},

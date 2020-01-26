@@ -59,6 +59,7 @@
     <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\module_tracker.h" />
     <ClInclude Include="..\primitives.h" />
+    <ClInclude Include="..\shadow_stack.h" />
     <ClInclude Include="..\statistics_bridge.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

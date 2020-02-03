@@ -33,7 +33,7 @@ namespace micro_profiler
 	HINSTANCE g_instance;
 
 	std::shared_ptr<ipc::server> ipc::com::server::create_default_session_factory()
-	{	throw 0;	}
+	{	return std::shared_ptr<ipc::server>();	}
 }
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)

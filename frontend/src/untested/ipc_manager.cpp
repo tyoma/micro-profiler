@@ -20,6 +20,8 @@
 
 #include <frontend/ipc_manager.h>
 
+#include <common/constants.h>
+#include <common/string.h>
 #include <frontend/marshalling_server.h>
 
 using namespace std;
@@ -43,7 +45,10 @@ namespace micro_profiler
 
 		ipc_manager::ipc_manager(const shared_ptr<server> &underlying, port_range range_)
 			: _underlying(new marshalling_server(underlying)), _range(range_), _remote_enabled(false), _port(0)
-		{	_sockets_server = probe_create_server(_underlying, "127.0.0.1", _port, _range);	}
+		{
+			_sockets_server = probe_create_server(_underlying, "127.0.0.1", _port, _range);
+			_com_server = run_server(("com|" + to_string(c_integrated_frontend_id)).c_str(), underlying);
+		}
 
 		ipc_manager::~ipc_manager()
 		{	_underlying->stop();	}

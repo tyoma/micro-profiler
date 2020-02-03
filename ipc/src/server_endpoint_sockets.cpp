@@ -90,6 +90,7 @@ namespace micro_profiler
 
 			template <typename ContainerT>
 			void socket_handler::run(ContainerT &handlers)
+			try
 			{
 				for (;;)
 				{
@@ -97,7 +98,7 @@ namespace micro_profiler
 
 					FD_ZERO(&fds);
 					for (typename ContainerT::const_iterator i = handlers.begin(); i != handlers.end(); ++i)
-						FD_SET((*i)->_socket, &fds);					
+						FD_SET((*i)->_socket, &fds);
 					if (::select(FD_SETSIZE, &fds, NULL, NULL, NULL) < 0)
 						return;
 					for (typename ContainerT::iterator i = handlers.begin(); i != handlers.end(); )
@@ -117,6 +118,15 @@ namespace micro_profiler
 						}
 					}
 				}
+			}
+			catch (exception &e)
+			{
+				// TODO: Add logging of initialization error here.
+				e.what();
+			}
+			catch (...)
+			{
+				// TODO: Add logging of initialization error here.
 			}
 
 			void socket_handler::disconnect() throw()
@@ -244,7 +254,7 @@ namespace micro_profiler
 				::ioctl(s, O_NONBLOCK, &arg);
 				::connect(s, (sockaddr *)&service, sizeof(service));
 				send_scalar(s, 0xFFFFFFFE);
- 				return s;
+				return s;
 			}
 
 

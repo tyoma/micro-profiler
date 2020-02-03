@@ -170,7 +170,7 @@ namespace micro_profiler
 			{
 				unsigned int magic;
 
-				if (sizeof(magic) == recv_scalar(s, magic, MSG_PEEK) && magic == 0xFFFFFFFE)
+				if (sizeof(magic) == recv_scalar(s, magic, MSG_PEEK) && magic == init_magic)
 				{
 					recv_scalar(s, magic, MSG_WAITALL);
 					for (handlers_t::const_iterator i = _handlers.begin() ; i != _handlers.end(); ++i)
@@ -217,9 +217,9 @@ namespace micro_profiler
 
 				if (recv_scalar(s, size, MSG_WAITALL) > 0)
 				{
-					vector<byte> buffer(size);
-					::recv(s, reinterpret_cast<char *>(&buffer[0]), size, MSG_WAITALL);
-					inbound->message(const_byte_range(&buffer[0], buffer.size()));
+					_buffer.resize(size);
+					::recv(s, reinterpret_cast<char *>(&_buffer[0]), size, MSG_WAITALL);
+					inbound->message(const_byte_range(&_buffer[0], _buffer.size()));
 					return socket_handler::proceed;
 				}
 				else
@@ -253,7 +253,7 @@ namespace micro_profiler
 					throw initialization_failed("aux socket creation failed");
 				::ioctl(s, O_NONBLOCK, &arg);
 				::connect(s, (sockaddr *)&service, sizeof(service));
-				send_scalar(s, 0xFFFFFFFE);
+				send_scalar(s, init_magic);
 				return s;
 			}
 

@@ -70,6 +70,7 @@ namespace micro_profiler
 			private:
 				enum {
 					max_backlog = 5,
+					init_magic = 0xFFFFFFFE,
 				};
 
 				typedef std::list<socket_handler::ptr_t> handlers_t;
@@ -91,6 +92,7 @@ namespace micro_profiler
 				unsigned _next_id;
 				handlers_t _handlers;
 				std::auto_ptr<mt::thread> _server_thread;
+				std::vector<byte> _buffer;
 			};
 		}
 	}

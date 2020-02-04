@@ -97,9 +97,6 @@
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\icon-ids.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\commands-global.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
@@ -115,11 +112,6 @@
     <ClInclude Include="visualstudio\vs-extension\com.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
-      <Filter>visualstudio\vs-extension</Filter>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="$(OutDir)frontend.res" />

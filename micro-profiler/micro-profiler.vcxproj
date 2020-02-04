@@ -61,7 +61,6 @@
     <ClInclude Include="visualstudio\vs-extension\async.h" />
     <ClInclude Include="visualstudio\vs-extension\com.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
-    <ClInclude Include="visualstudio\vs-extension\icon-ids.h" />
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
@@ -87,12 +86,6 @@
     <ClInclude Include="visualstudio\dispatch.h" />
     <ClCompile Include="visualstudio\vs-extension\commands-global.cpp" />
     <ClCompile Include="visualstudio\dispatch.cpp" />
-    <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
-      <FileType>Document</FileType>
-      <Command>"$(VSSDKRoot)VisualStudioIntegration\Tools\Bin\vsct.exe" "%(FullPath)" "$(IntDir)%(Filename).cto" -I"$(VSSDKRoot)VisualStudioIntegration\Common\Inc"</Command>
-      <Outputs>$(IntDir)%(Filename).cto</Outputs>
-      <Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
-    </CustomBuild>
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp" />
   </ItemGroup>

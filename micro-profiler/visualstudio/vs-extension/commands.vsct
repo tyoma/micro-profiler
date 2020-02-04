@@ -57,7 +57,7 @@
 			</Button>
 			<Button guid="guidGlobalCmdSet" id="cmdidRemoveProfilingSupport" priority="0x0110" type="Button">
 				<Parent guid="guidGlobalCmdSet" id="IDG_MP_PROJECT_SETUP" />
-				<Icon guid="guidIconSet" id="iconidDelete"/>
+				<Icon guid="guidIconSet" id="iconidClear"/>
 				<CommandFlag>DontCache</CommandFlag>
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<Strings>

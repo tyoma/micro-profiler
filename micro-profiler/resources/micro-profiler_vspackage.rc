@@ -62,12 +62,6 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE 
-BEGIN
-    "1000 CTMENU ""commands.cto""\r\n"
-    "\0"
-END
-
 #endif    // APSTUDIO_INVOKED
 
 
@@ -117,26 +111,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROJNAME            "micro-profiler-frontend"
-END
-
-STRINGTABLE
-BEGIN
     IDS_PACKAGE_LOAD_KEY    "ZCC0IPQMHCQZQDCEDMPIACP0ZQC2DPAJCEKIZRCZKZQMJQEADJH3E9H0ZIJTEDPCZMRHIQRIACJEA3QRMAR0J9C3P2K0J2JKQJDEHHI0ZIK9D2H1JPQ3ECJ3Q8AEDRH3"
 END
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-1000 CTMENU "commands.cto"
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

@@ -115,7 +115,8 @@
 			<File Id="fileVSPackageReg" Source="$(var.SOURCEDIRWX86)/micro-profiler.pkgdef" Vital="yes"/>
 			<File Id="fileVSPackageVSIX10" Source="$(var.SOURCEDIRWX86)/extension.vs10.vsixmanifest" Vital="yes"/>
 			<File Id="fileVSPackageVSIX11" Source="$(var.SOURCEDIRWX86)/extension.vsixmanifest" Vital="yes"/>
-			<File Id="fileVSPackageUI" Source="$(var.SOURCEDIRWX86)/1033/micro-profiler.ui.dll" Name="micro-profiler.ui.dll" Vital="yes"/>
+			<File Id="fileVSPackageUI" Source="$(var.SOURCEDIRWX86)/1033/micro-profiler.ui.dll" Vital="yes"/>
+			<File Id="fileVSPackageUI10" Source="$(var.SOURCEDIRWX86)/1033/micro-profiler.ui.vs10.dll" Vital="yes"/>
 		</Component>
 
 		<Component Id="compCollectorWindows" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes" Directory="TARGETDIR">

@@ -15,7 +15,7 @@
 				</RegistryKey>
 			</RegistryKey>
 			<RegistryKey Key="Menus">
-				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="[#fileVSPackage], 1000, 1" Type="string" />
+				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="[#fileVSPackageUI10], 1000, 1" Type="string" />
 			</RegistryKey>
 			<RegistryKey Key="AutoLoadPackages\{ADFC4E64-0397-11D1-9F4E-00A0C911004F}">
 				<RegistryValue Name="{43a50861-7e04-4169-b47e-d4cffe1b3db8}" Value="0" Type="integer" />

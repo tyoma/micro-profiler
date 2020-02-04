@@ -3,7 +3,6 @@
 // Used by micro-profiler-package.rc
 //
 #define IDS_PACKAGE_LOAD_KEY            1
-#define IDS_PROJNAME                    100
 
 // Next default values for new objects
 // 

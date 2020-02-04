@@ -13,6 +13,12 @@ include_directories(${VSSDKINCLUDE})
 include_directories(${MP_INTDIR})
 
 add_custom_command(OUTPUT ${MP_INTDIR}/commands.cto
+	COMMAND "${VSSDKBIN}/vsct.exe" "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct" "${MP_INTDIR}/commands.cto" -I"${VSSDKINCLUDE}" -DMP_MSVS11PLUS_SUPPORT
+	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct"
+	COMMENT "Compiling vsct..."
+)
+
+add_custom_command(OUTPUT ${MP_INTDIR}/commands.vs10.cto
 	COMMAND "${VSSDKBIN}/vsct.exe" "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct" "${MP_INTDIR}/commands.cto" -I"${VSSDKINCLUDE}"
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct"
 	COMMENT "Compiling vsct..."
@@ -60,12 +66,24 @@ set(MICROPROFILER_UI_SOURCES
 	${MP_INTDIR}/commands.cto
 )
 
+set(MICROPROFILER_UI_VS10_SOURCES
+	resources/micro-profiler_ui.rc
+
+	${MP_INTDIR}/commands.vs10.cto
+)
+
 add_library(micro-profiler_frontend SHARED ${MICROPROFILER_SOURCES})
 add_library(micro-profiler.ui SHARED ${MICROPROFILER_UI_SOURCES})
+add_library(micro-profiler.ui.vs10 SHARED ${MICROPROFILER_UI_VS10_SOURCES})
 
 target_link_libraries(micro-profiler_frontend frontend.lib ipc injector common wpl.ui)
 
 set_target_properties(micro-profiler.ui PROPERTIES
+	LINK_OPTIONS /NOENTRY
+	RUNTIME_OUTPUT_DIRECTORY ${MP_OUTDIR}/1033
+)
+
+set_target_properties(micro-profiler.ui.vs10 PROPERTIES
 	LINK_OPTIONS /NOENTRY
 	RUNTIME_OUTPUT_DIRECTORY ${MP_OUTDIR}/1033
 )

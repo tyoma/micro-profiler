@@ -55,6 +55,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build-info", "build-info", 
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "micro-profiler.installer", "deployment\wix\micro-profiler.installer.wixproj", "{EE4583A8-C1F3-4353-B504-4D739466FF63}"
 	ProjectSection(ProjectDependencies) = postProject
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6} = {E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}
+		{C6F0D31E-3D60-476A-A427-5919AFF52E8A} = {C6F0D31E-3D60-476A-A427-5919AFF52E8A}
+		{5EDCE420-14E9-46E6-B19E-E4AC3240FC94} = {5EDCE420-14E9-46E6-B19E-E4AC3240FC94}
 		{D5D49128-2510-4A14-9A0F-9F8F0ABAD700} = {D5D49128-2510-4A14-9A0F-9F8F0ABAD700}
 		{3888C39F-2F1A-40F0-B75E-7EF50D1B5CA7} = {3888C39F-2F1A-40F0-B75E-7EF50D1B5CA7}
 	EndProjectSection
@@ -122,6 +125,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "injector.lib", "injector\src\injector.lib.vcxproj", "{B0596B9D-8303-4FD1-8A0A-5DB7882F6F89}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "standalone", "standalone\standalone.vcxproj", "{3888C39F-2F1A-40F0-B75E-7EF50D1B5CA7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler.ui.vs10", "micro-profiler\micro-profiler.ui.vs10.vcxproj", "{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -418,6 +423,14 @@ Global
 		{3888C39F-2F1A-40F0-B75E-7EF50D1B5CA7}.Release|Win32.Build.0 = Release|Win32
 		{3888C39F-2F1A-40F0-B75E-7EF50D1B5CA7}.Release|x64.ActiveCfg = Release|x64
 		{3888C39F-2F1A-40F0-B75E-7EF50D1B5CA7}.Release|x64.Build.0 = Release|x64
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Debug|Win32.Build.0 = Debug|Win32
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Debug|x64.ActiveCfg = Debug|x64
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Debug|x64.Build.0 = Debug|x64
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Release|Win32.ActiveCfg = Release|Win32
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Release|Win32.Build.0 = Release|Win32
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Release|x64.ActiveCfg = Release|x64
+		{E438720E-5FD4-DC27-B547-B4F8BAEB1FD6}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

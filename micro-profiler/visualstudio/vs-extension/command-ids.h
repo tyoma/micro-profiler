@@ -50,6 +50,7 @@
 #define IDM_MP_PANE_TOOLBAR	0x1033
 #define IDG_MP_INSTANCE_COMMANDS 0x1034
 #define IDG_MP_INSTANCE_MISC_COMMANDS 0x1035
+#define IDG_MP_INSTANCE_RUN_COMMANDS 0x1036
 #define IDG_MP_IPC	0x1036
 
 
@@ -57,6 +58,8 @@
 // Command IDs
 #define cmdidToggleProfiling 0x101
 #define cmdidRemoveProfilingSupport 0x104
+#define cmdidPauseUpdates 0x108
+#define cmdidResumeUpdates 0x109
 #define cmdidSaveStatistics 0x110
 #define cmdidLoadStatistics 0x111
 #define cmdidProfileProcess 0x120

@@ -61,6 +61,9 @@ namespace micro_profiler
 		template <typename ArchiveT>
 		static std::shared_ptr<functions_list> load(ArchiveT &archive);
 
+	public:
+		bool updates_enabled;
+
 	private:
 		typedef statistics_model_impl<wpl::ui::table_model, statistics_map_detailed> base;
 		typedef std::list<linked_statistics_ex *> linked_statistics_list_t;
@@ -112,6 +115,8 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, functions_list &data)
 	{
+		if (!data.updates_enabled)
+			return;
 		archive(*data._statistics);
 		data.on_updated();
 	}

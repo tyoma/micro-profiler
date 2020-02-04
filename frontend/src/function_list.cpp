@@ -287,8 +287,8 @@ namespace micro_profiler
 
 	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver)
-		: base(*statistics, tick_interval), _statistics(statistics), _linked(new linked_statistics_list_t),
-			_tick_interval(tick_interval), _resolver(resolver)
+		: base(*statistics, tick_interval), updates_enabled(true), _statistics(statistics),
+			_linked(new linked_statistics_list_t), _tick_interval(tick_interval), _resolver(resolver)
 	{	set_resolver(resolver);	}
 
 	functions_list::~functions_list()

@@ -261,6 +261,7 @@ namespace micro_profiler
 			}
 		}
 
+
 		save_statistics::save_statistics()
 			: global_command(cmdidSaveStatistics)
 		{	}

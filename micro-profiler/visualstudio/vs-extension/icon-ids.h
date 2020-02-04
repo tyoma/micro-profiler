@@ -11,3 +11,5 @@
 #define iconidCloseAll 0x0012
 #define iconidCopy 0x0017
 #define iconidClear 0x001B
+#define iconidPause 0x004B
+#define iconidPlay 0x004C

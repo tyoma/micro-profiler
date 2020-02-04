@@ -33,6 +33,8 @@ namespace micro_profiler
 			extern const GUID c_guidInstanceCmdSet = guidInstanceCmdSet;
 
 			instance_command::ptr g_commands[] = {
+				instance_command::ptr(new pause_updates),
+				instance_command::ptr(new resume_updates),
 				instance_command::ptr(new save),
 				instance_command::ptr(new clear),
 				instance_command::ptr(new copy),
@@ -178,13 +180,13 @@ namespace micro_profiler
 			{
 				CComVariant vtbhost;
 
+				p->set_model(model, executable);
 				if (S_OK == frame->GetProperty(VSFPROPID_ToolbarHost, &vtbhost) && vtbhost.pdispVal)
 				{
 					if (CComQIPtr<IVsToolWindowToolbarHost> tbhost = vtbhost.punkVal)
 						tbhost->AddToolbar(VSTWT_TOP, &c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR);
 				}
 				p->set_frame(frame);
-				p->set_model(model, executable);
 				return shared_ptr<vs_pane>(p, bind(&vs_pane::close, _1));
 			}
 			return shared_ptr<frontend_ui>();

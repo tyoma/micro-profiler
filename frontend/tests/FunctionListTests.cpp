@@ -172,6 +172,7 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_equal(0u, fl.get_count());
 				assert_equal(resolver, fl.get_resolver());
+				assert_is_true(fl.updates_enabled);
 			}
 
 
@@ -190,6 +191,28 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, fl->get_count());
+			}
+
+
+			test( FunctionListDoesNotAcceptsUpdatesIfNotEnabled )
+			{
+				// INIT
+				int invalidated_count = 0;
+				statistics_map_detailed s;
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				slot_connection conn = fl->invalidated += bind(&increment, &invalidated_count);
+
+				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
+				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
+				ser(s);
+				
+				// ACT
+				fl->updates_enabled = false;
+				dser(*fl);
+
+				// ASSERT
+				assert_equal(0u, fl->get_count());
+				assert_equal(0, invalidated_count);
 			}
 
 

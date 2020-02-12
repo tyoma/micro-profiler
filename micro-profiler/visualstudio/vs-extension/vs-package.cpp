@@ -32,6 +32,7 @@
 #include <resources/resource.h>
 #include <setup/environment.h>
 #include <visualstudio/command-target.h>
+#include <visualstudio/dispatch.h>
 
 #include <atlcom.h>
 #include <dte.h>
@@ -50,6 +51,8 @@ namespace micro_profiler
 			extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
 			extern const GUID c_guidGlobalCmdSet = guidGlobalCmdSet;
 			extern const GUID UICONTEXT_VCProject = { 0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 } };
+
+			typedef command<global_context> global_command;
 
 			global_command::ptr g_commands[] = {
 				global_command::ptr(new toggle_profiling),
@@ -181,7 +184,7 @@ namespace micro_profiler
 					_ipc_manager->get_sockets_port()).c_str(), 1);
 			}
 
-			IDispatchPtr get_dte()
+			CComPtr<_DTE> get_dte()
 			{
 				if (!_dte && _service_provider)
 					_service_provider->QueryService(__uuidof(_DTE), &_dte);
@@ -190,13 +193,15 @@ namespace micro_profiler
 
 			virtual global_context get_context()
 			{
-				dispatch project((IDispatchPtr()));
+				vector<IDispatchPtr> selected_items;
 
-				if (IDispatchPtr dte = get_dte())
-					if (IDispatchPtr selection = dispatch(dte).get(L"SelectedItems"))
-						if (dispatch(selection).get(L"Count") == 1)
-							project = dispatch(selection)[1].get(L"Project");
-				return global_context(project, _frontend_manager, _shell, _ipc_manager);
+				if (CComPtr<_DTE> dte = get_dte())
+					if (IDispatchPtr si = dispatch::get(IDispatchPtr(dte, true), L"SelectedItems"))
+						dispatch::for_each_variant_as_dispatch(si, [&] (const IDispatchPtr &item) {
+							selected_items.push_back(dispatch::get(item, L"Project"));
+						});
+				global_context ctx = { selected_items, _frontend_manager, _shell, _ipc_manager };
+				return ctx;
 			}
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const string &executable)
@@ -204,7 +209,7 @@ namespace micro_profiler
 
 		private:
 			CComPtr<IServiceProvider> _service_provider;
-			IDispatchPtr _dte;
+			CComPtr<_DTE> _dte;
 			CComPtr<IVsUIShell> _shell;
 			shared_ptr<frontend_manager> _frontend_manager;
 			shared_ptr<ipc::ipc_manager> _ipc_manager;

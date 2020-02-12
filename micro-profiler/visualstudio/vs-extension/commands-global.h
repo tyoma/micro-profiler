@@ -20,12 +20,16 @@
 
 #pragma once
 
+#include "command-ids.h"
+
 #include <visualstudio/command.h>
-#include <visualstudio/dispatch.h>
 
 #include <atlbase.h>
+#include <comdef.h>
 #include <vsshell.h>
 #include <wpl/base/signals.h>
+
+#pragma warning(disable:4510; disable:4610)
 
 namespace micro_profiler
 {
@@ -41,59 +45,44 @@ namespace micro_profiler
 	{
 		struct global_context
 		{
-			global_context(const dispatch &project, const std::shared_ptr<frontend_manager> &frontend,
-				const CComPtr<IVsUIShell> &shell, const std::shared_ptr<ipc::ipc_manager> &ipc_manager_);
-
-			dispatch project;
-			
+			std::vector<IDispatchPtr> selected_items;
 			std::shared_ptr<frontend_manager> frontend;
 			CComPtr<IVsUIShell> shell;
 			std::shared_ptr<ipc::ipc_manager> ipc_manager;
 		};
 
-		typedef command<global_context> global_command;
 
-		struct toggle_profiling : global_command
+		struct toggle_profiling : command_defined<global_context, cmdidToggleProfiling>
 		{
-			toggle_profiling();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
-		struct remove_profiling_support : global_command
+		struct remove_profiling_support : command_defined<global_context, cmdidRemoveProfilingSupport>
 		{
-			remove_profiling_support();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
 
-		struct open_statistics : global_command
+		struct open_statistics : command_defined<global_context, cmdidLoadStatistics>
 		{
-			open_statistics();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
 
-		struct save_statistics : global_command
+		struct save_statistics : command_defined<global_context, cmdidSaveStatistics>
 		{
-			save_statistics();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual bool get_name(const context_type &ctx, unsigned item, std::wstring &name) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
 
-		class profile_process : public global_command
+		class profile_process : public command_defined<global_context, cmdidProfileProcess>
 		{
 		public:
-			profile_process();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 
@@ -103,56 +92,38 @@ namespace micro_profiler
 		};
 
 
-		struct enable_remote_connections : global_command
+		struct enable_remote_connections : command_defined<global_context, cmdidIPCEnableRemote>
 		{
-			enable_remote_connections();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
 
-		struct port_display : global_command
+		struct port_display : command_defined<global_context, cmdidIPCSocketPort>
 		{
-			port_display();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual bool get_name(const context_type &ctx, unsigned item, std::wstring &name) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
 
-		struct window_activate : global_command
+		struct window_activate : command_defined<global_context, cmdidWindowActivateDynamic, true>
 		{
-			window_activate();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual bool get_name(const context_type &ctx, unsigned item, std::wstring &name) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
-		struct close_all : global_command
+		struct close_all : command_defined<global_context, cmdidCloseAll>
 		{
-			close_all();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
-		struct support_developer : global_command
+		struct support_developer : command_defined<global_context, cmdidSupportDeveloper>
 		{
-			support_developer();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
-
-
-
-		inline global_context::global_context(const dispatch &project_,
-				const std::shared_ptr<frontend_manager> &frontend_, const CComPtr<IVsUIShell> &shell_,
-				const std::shared_ptr<ipc::ipc_manager> &ipc_manager_)
-			: project(project_), frontend(frontend_), shell(shell_), ipc_manager(ipc_manager_)
-		{	}
 	}
 }

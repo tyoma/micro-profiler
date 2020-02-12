@@ -20,8 +20,8 @@
 
 #include "commands-global.h"
 
-#include "command-ids.h"
 #include "helpers.h"
+#include "vcmodel.h"
 
 #include <common/constants.h>
 #include <common/module.h>
@@ -36,7 +36,6 @@
 #include <frontend/ipc_manager.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
-#include <visualstudio/dispatch.h>
 #include <wpl/ui/win32/form.h>
 
 #include <io.h>
@@ -52,9 +51,9 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const string c_profilerdir_macro = "$(" + string(c_profilerdir_ev) + ")";
-			const string c_initializer_cpp = c_profilerdir_macro + "\\micro-profiler.initializer.cpp";
-			const string c_profiler_library = c_profilerdir_macro + "\\micro-profiler_$(PlatformName).lib";
+			const wstring c_profilerdir_macro = L"$(" + unicode(c_profilerdir_ev) + L")";
+			const wstring c_initializer_cpp = c_profilerdir_macro + L"\\micro-profiler.initializer.cpp";
+			const wstring c_profiler_library = c_profilerdir_macro + L"\\micro-profiler_$(PlatformName).lib";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
 			const wstring c_inherit = L"%(AdditionalOptions)";
@@ -79,167 +78,185 @@ namespace micro_profiler
 					: wstring();
 			}
 
-			dispatch find_item_by_relpath(dispatch project, const wstring &relative_unexpanded_path)
+			vcmodel::file_ptr find_item_by_relpath(const vcmodel::project &project, const wstring &relative_unexpanded_path)
 			{
-				dispatch files = project.get(L"Object").get(L"Files");
+				vcmodel::file_ptr file;
 
-				for (long i = 1, count = files.get(L"Count"); i <= count; ++i)
-				{
-					dispatch file = files[i];
-					const wstring path = file.get(L"UnexpandedRelativePath");
-
-					if (wcsicmp(path.c_str(), relative_unexpanded_path.c_str()) == 0)
-						return file.get(L"Object");
-				}
-				return dispatch(IDispatchPtr());
+				project.enum_files([&] (vcmodel::file_ptr f) {
+					if (!file && wcsicmp(f->unexpanded_relative_path().c_str(), relative_unexpanded_path.c_str()) == 0)
+						file = f;
+				});
+				return file;
 			}
 
-			template <typename FuncT>
-			void for_each_configuration_tool(const dispatch &project, const wchar_t *tool_name, FuncT action)
+			void disable_pch(vcmodel::file &file)
 			{
-				dispatch configurations(project.get(L"Object").get(L"Configurations"));
+				file.enum_configurations([] (vcmodel::file_configuration_ptr c) {
+					struct disable_pch : vcmodel::tool::visitor
+					{
+						virtual void visit(vcmodel::compiler_tool &t) const
+						{	t.use_precompiled_header(vcmodel::compiler_tool::pch_none);	}
+					};
 
-				for (long i = 1, count = configurations.get(L"Count"); i <= count; ++i)
-				try
-				{
-					action(configurations[i].get(L"Tools")[tool_name]);
-				}
-				catch (const runtime_error &)
-				{
-				}
+					if (vcmodel::tool_ptr t = c->get_tool())
+						t->visit(disable_pch());
+				});
 			}
 
-			dispatch get_tool(const dispatch &project, const wchar_t *tool_name)
+			bool has_instrumentation(vcmodel::compiler_tool &compiler)
 			{
-				dispatch vcproject(project.get(L"Object"));
-				wstring activeConfigurationName(project.get(L"ConfigurationManager").get(L"ActiveConfiguration").get(L"ConfigurationName"));
-				wstring activePlatformName(project.get(L"ConfigurationManager").get(L"ActiveConfiguration").get(L"PlatformName"));
-				dispatch configuration(vcproject.get(L"Configurations")[(activeConfigurationName + L"|" + activePlatformName).c_str()]);
+				wstring options = compiler.additional_options();
 
-				return configuration.get(L"Tools")[tool_name];
+				return wstring::npos != options.find(c_GH_option) && wstring::npos != options.find(c_Gh_option);
 			}
 
-			void disable_pch(const dispatch &item)
+			struct instrument : vcmodel::tool::visitor
 			{
-				dispatch configurations(item.get(L"Object").get(L"FileConfigurations"));
+				instrument(bool enable)
+					: _enable(enable)
+				{	}
 
-				for (long i = 1, count = configurations.get(L"Count"); i <= count; ++i)
-				try
+				void visit(vcmodel::compiler_tool &compiler) const
 				{
-					configurations[i].get(L"Tool").put(L"UsePrecompiledHeader", 0 /*pchNone*/);
+					bool changed = false;
+					wstring options = compiler.additional_options();
+
+					if (_enable)
+					{
+						if (wstring::npos == options.find(c_GH_option))
+							options += L" " + c_GH_option, changed = true;
+						if (wstring::npos == options.find(c_Gh_option))
+							options += L" " + c_Gh_option, changed = true;
+						if (wstring::npos == options.find(c_inherit))
+							options += L" " + c_inherit, changed = true;
+					}
+					else
+					{
+						changed = replace(options, L" " + c_GH_option, L"") || changed;
+						changed = replace(options, c_GH_option + L" ", L"") || changed;
+						changed = replace(options, c_GH_option, L"") || changed;
+						changed = replace(options, L" " + c_Gh_option, L"") || changed;
+						changed = replace(options, c_Gh_option + L" ", L"") || changed;
+						changed = replace(options, c_Gh_option, L"") || changed;
+					}
+					if (changed)
+					{
+						trim_space(options);
+						compiler.additional_options(options);
+					}
 				}
-				catch (const runtime_error &)
+
+			private:
+				bool _enable;
+			};
+
+			bool is_enabled(IDispatch *dte_project)
+			{
+				bool enabled = false;
+
+				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
+					if (find_item_by_relpath(*project, c_initializer_cpp)
+						&& find_item_by_relpath(*project, c_profiler_library))
+					{
+						project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
+							struct check_compiler : vcmodel::tool::visitor
+							{
+								check_compiler(bool &enabled) : _enabled(&enabled) {	}
+								void visit(vcmodel::compiler_tool &t) const {	*_enabled = has_instrumentation(t);	}
+								bool *_enabled;
+							};
+
+							t->visit(check_compiler(enabled));
+						});
+					}
 				}
+				return enabled;
 			}
 
-			bool has_instrumentation(const dispatch &compiler)
+			bool is_enabled_partially(IDispatch *dte_project)
 			{
-				wstring additionalOptions = compiler.get(L"AdditionalOptions");
+				bool enabled = false;
 
-				return wstring::npos != additionalOptions.find(c_GH_option) && wstring::npos != additionalOptions.find(c_Gh_option);
-			}
-
-			void enable_instrumentation(const dispatch &compiler)
-			{
-				bool changed = false;
-				wstring additionalOptions = compiler.get(L"AdditionalOptions");
-
-				if (wstring::npos == additionalOptions.find(c_GH_option))
-					additionalOptions += L" " + c_GH_option, changed = true;
-				if (wstring::npos == additionalOptions.find(c_Gh_option))
-					additionalOptions += L" " + c_Gh_option, changed = true;
-				if (wstring::npos == additionalOptions.find(c_inherit))
-					additionalOptions += L" " + c_inherit, changed = true;
-				if (changed)
-					compiler.put(L"AdditionalOptions", additionalOptions.c_str());
-			}
-
-			void disable_instrumentation(dispatch compiler)
-			{
-				bool changed = false;
-				wstring additionalOptions = compiler.get(L"AdditionalOptions");
-
-				changed = replace(additionalOptions, L" " + c_GH_option, L"") || changed;
-				changed = replace(additionalOptions, c_GH_option + L" ", L"") || changed;
-				changed = replace(additionalOptions, c_GH_option, L"") || changed;
-				changed = replace(additionalOptions, L" " + c_Gh_option, L"") || changed;
-				changed = replace(additionalOptions, c_Gh_option + L" ", L"") || changed;
-				changed = replace(additionalOptions, c_Gh_option, L"") || changed;
-				if (changed)
+				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
-					trim_space(additionalOptions);
-					compiler.put(L"AdditionalOptions", additionalOptions.c_str());
+					if (find_item_by_relpath(*project, c_initializer_cpp) || find_item_by_relpath(*project, c_profiler_library))
+						return true;
+					project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
+						struct check_compiler : vcmodel::tool::visitor
+						{
+							check_compiler(bool &enabled) : _enabled(&enabled) {	}
+							void visit(vcmodel::compiler_tool &t) const {	*_enabled = has_instrumentation(t);	}
+							bool *_enabled;
+						};
+
+						t->visit(check_compiler(enabled));
+					});
 				}
+				return enabled;
 			}
 		}
 
 
-		toggle_profiling::toggle_profiling()
-			: global_command(cmdidToggleProfiling)
-		{	}
-
 		bool toggle_profiling::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
-			state = 0;
-			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
-			{
-				state = supported | enabled | visible | (tool && has_instrumentation(dispatch(tool))
-					&& IDispatchPtr(find_item_by_relpath(ctx.project, unicode(c_initializer_cpp)))
-					&& IDispatchPtr(find_item_by_relpath(ctx.project, unicode(c_profiler_library)))
-					? checked : 0);
-			}
+			state = supported | enabled | visible;
+			if (all_of(ctx.selected_items.begin(), ctx.selected_items.end(), &is_enabled))
+				state |= checked;
 			return true;
 		}
 
 		void toggle_profiling::exec(context_type &ctx, unsigned /*item*/)
 		{
-			dispatch compiler(get_tool(ctx.project, L"VCCLCompilerTool"));
-			IDispatchPtr initializer_item = find_item_by_relpath(ctx.project, unicode(c_initializer_cpp));
-			IDispatchPtr library_item = find_item_by_relpath(ctx.project, unicode(c_profiler_library));
-			const bool has_profiling = has_instrumentation(compiler) && initializer_item && library_item;
+			bool add = !all_of(ctx.selected_items.begin(), ctx.selected_items.end(), &is_enabled);
 
-			if (!has_profiling)
-			{
-				if (!initializer_item)
-					disable_pch(ctx.project.get(L"ProjectItems")(L"AddFromFile", c_initializer_cpp.c_str()));
-				if (!library_item)
-					ctx.project.get(L"ProjectItems")(L"AddFromFile", c_profiler_library.c_str());
-				enable_instrumentation(compiler);
-			}
-			else
-				disable_instrumentation(compiler);
+			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&] (IDispatchPtr dte_project) {
+				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
+				{
+					if (add)
+					{
+						if (!find_item_by_relpath(*project, c_initializer_cpp))
+							disable_pch(*project->add_file(c_initializer_cpp));
+						if (!find_item_by_relpath(*project, c_profiler_library))
+							project->add_file(c_profiler_library);
+					}
+
+					project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
+						t->visit(instrument(add));
+					});
+				}
+			});
 		}
 
 
-		remove_profiling_support::remove_profiling_support()
-			: global_command(cmdidRemoveProfilingSupport)
-		{	}
-
 		bool remove_profiling_support::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
-			state = 0;
-			if (IDispatchPtr tool = get_tool(ctx.project, L"VCCLCompilerTool"))
-				state = supported | (IDispatchPtr(find_item_by_relpath(ctx.project, unicode(c_initializer_cpp))) ? enabled | visible : 0);
+			state = supported;
+
+			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&state, this] (IDispatchPtr dte_project) {
+				state |= is_enabled_partially(dte_project) ? enabled | visible : 0;
+			});
 			return true;
 		}
 
 		void remove_profiling_support::exec(context_type &ctx, unsigned /*item*/)
 		{
-			dispatch initializer = find_item_by_relpath(ctx.project, unicode(c_initializer_cpp));
-			dispatch library = find_item_by_relpath(ctx.project, unicode(c_profiler_library));
-
-			for_each_configuration_tool(ctx.project, L"VCCLCompilerTool", &disable_instrumentation);
-			if (IDispatchPtr(initializer))
-				initializer(L"Remove");
-			if (IDispatchPtr(library))
-				library(L"Remove");
+			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [] (IDispatchPtr dte_project) {
+				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
+				{
+					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_initializer_cpp))
+						f->remove();
+					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_profiler_library))
+						f->remove();
+					project->enum_configurations([] (vcmodel::configuration_ptr cfg) {
+						cfg->enum_tools([] (vcmodel::tool_ptr t) {
+							t->visit(instrument(false));
+						});
+					});
+				}
+			});
 		}
 
-
-		open_statistics::open_statistics()
-			: global_command(cmdidLoadStatistics)
-		{	}
 
 		bool open_statistics::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{
@@ -261,10 +278,6 @@ namespace micro_profiler
 			}
 		}
 
-
-		save_statistics::save_statistics()
-			: global_command(cmdidSaveStatistics)
-		{	}
 
 		bool save_statistics::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
@@ -295,10 +308,6 @@ namespace micro_profiler
 		}
 
 
-		profile_process::profile_process()
-			: global_command(cmdidProfileProcess)
-		{	}
-
 		bool profile_process::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{
 			state = 0;//visible | supported | (_dialog ? 0 : enabled);
@@ -315,10 +324,6 @@ namespace micro_profiler
 		}
 
 
-		enable_remote_connections::enable_remote_connections()
-			: global_command(cmdidIPCEnableRemote)
-		{	}
-
 		bool enable_remote_connections::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			state = visible | supported | enabled | (ctx.ipc_manager->remote_sockets_enabled() ? checked : 0);
@@ -328,10 +333,6 @@ namespace micro_profiler
 		void enable_remote_connections::exec(context_type &ctx, unsigned /*item*/)
 		{	ctx.ipc_manager->enable_remote_sockets(!ctx.ipc_manager->remote_sockets_enabled());	}
 
-
-		port_display::port_display()
-			: global_command(cmdidIPCSocketPort)
-		{	}
 
 		bool port_display::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{	return state = visible | supported, true;	}
@@ -348,10 +349,6 @@ namespace micro_profiler
 		void port_display::exec(context_type &/*ctx*/, unsigned /*item*/)
 		{	}
 
-
-		window_activate::window_activate()
-			: global_command(cmdidWindowActivateDynamic, true)
-		{	}
 
 		bool window_activate::query_state(const context_type &ctx, unsigned item, unsigned &state) const
 		{
@@ -375,10 +372,6 @@ namespace micro_profiler
 		}
 
 
-		close_all::close_all()
-			: global_command(cmdidCloseAll)
-		{	}
-
 		bool close_all::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
 			state = (ctx.frontend->instances_count() ? enabled : 0 ) | visible | supported;
@@ -388,10 +381,6 @@ namespace micro_profiler
 		void close_all::exec(context_type &ctx, unsigned /*item*/)
 		{	ctx.frontend->close_all();	}
 
-
-		support_developer::support_developer()
-			: global_command(cmdidSupportDeveloper)
-		{	}
 
 		bool support_developer::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{	return state = enabled | visible | supported, true;	}

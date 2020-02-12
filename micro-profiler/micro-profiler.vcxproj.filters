@@ -7,9 +7,6 @@
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
-    <ClCompile Include="visualstudio\dispatch.cpp">
-      <Filter>visualstudio</Filter>
-    </ClCompile>
     <ClCompile Include="setup\environment.cpp">
       <Filter>setup</Filter>
     </ClCompile>
@@ -32,6 +29,12 @@
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\helpers.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\dispatch.cpp">
+      <Filter>visualstudio</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\vcmodel-impl.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
   </ItemGroup>
@@ -79,9 +82,6 @@
     <ClInclude Include="visualstudio\vs-extension\command-ids.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
-    <ClInclude Include="visualstudio\dispatch.h">
-      <Filter>visualstudio</Filter>
-    </ClInclude>
     <ClInclude Include="setup\environment.h">
       <Filter>setup</Filter>
     </ClInclude>
@@ -111,6 +111,12 @@
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\com.h">
       <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\vcmodel.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\dispatch.h">
+      <Filter>visualstudio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

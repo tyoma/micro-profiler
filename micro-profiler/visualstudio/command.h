@@ -46,6 +46,12 @@ namespace micro_profiler
 		bool is_group;
 	};
 
+	template <typename ContextT, int cmdid, bool is_group = false>
+	struct command_defined : command<ContextT>
+	{
+		command_defined();
+	};
+
 
 
 	template <typename ContextT>
@@ -56,4 +62,10 @@ namespace micro_profiler
 	template <typename ContextT>
 	inline bool command<ContextT>::get_name(const ContextT &/*context*/, unsigned /*item*/, std::wstring &/*name*/) const
 	{	return false;	}
+
+
+	template <typename ContextT, int cmdid, bool is_group>
+	inline command_defined<ContextT, cmdid, is_group>::command_defined()
+		: command<ContextT>(cmdid, is_group)
+	{	}
 }

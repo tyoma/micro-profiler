@@ -17,10 +17,6 @@ namespace micro_profiler
 {
 	namespace integration
 	{
-		pause_updates::pause_updates()
-			: instance_command(cmdidPauseUpdates)
-		{	}
-
 		bool pause_updates::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{	return state = (ctx.model->updates_enabled ? enabled : 0) | supported | visible, true;	}
 
@@ -28,20 +24,12 @@ namespace micro_profiler
 		{	ctx.model->updates_enabled = false;	}
 
 
-		resume_updates::resume_updates()
-			: instance_command(cmdidResumeUpdates)
-		{	}
-
 		bool resume_updates::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{	return state = (ctx.model->updates_enabled ? 0 : enabled) | supported | visible, true;	}
 
 		void resume_updates::exec(context_type &ctx, unsigned /*item*/)
 		{	ctx.model->updates_enabled = true;	}
 
-
-		save::save()
-			: instance_command(cmdidSaveStatistics)
-		{	}
 
 		bool save::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{	return state = visible | supported | enabled, true;	}
@@ -59,20 +47,12 @@ namespace micro_profiler
 		}
 
 
-		clear::clear()
-			: instance_command(cmdidClearStatistics)
-		{	}
-
 		bool clear::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{	return state = enabled | visible | supported, true;	}
 
 		void clear::exec(context_type &ctx, unsigned /*item*/)
 		{	ctx.model->clear();	}
 
-
-		copy::copy()
-			: instance_command(cmdidCopyStatistics)
-		{	}
 
 		bool copy::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{	return state = enabled | visible | supported, true;	}

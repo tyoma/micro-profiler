@@ -1,5 +1,7 @@
 #pragma once
 
+#include "command-ids.h"
+
 #include <visualstudio/command.h>
 
 #include <atlbase.h>
@@ -18,44 +20,33 @@ namespace micro_profiler
 			CComPtr<IVsUIShell> shell;
 		};
 
-		typedef command<instance_context> instance_command;
 
-		struct pause_updates : instance_command
+		struct pause_updates : command_defined<instance_context, cmdidPauseUpdates>
 		{
-			pause_updates();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
-		struct resume_updates : instance_command
+		struct resume_updates : command_defined<instance_context, cmdidResumeUpdates>
 		{
-			resume_updates();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
-		struct save : instance_command
+		struct save : command_defined<instance_context, cmdidSaveStatistics>
 		{
-			save();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
-		struct clear : instance_command
+		struct clear : command_defined<instance_context, cmdidClearStatistics>
 		{
-			clear();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};
 
-		struct copy : instance_command
+		struct copy : command_defined<instance_context, cmdidCopyStatistics>
 		{
-			copy();
-
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
 		};

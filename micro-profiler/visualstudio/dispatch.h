@@ -21,78 +21,34 @@
 #pragma once
 
 #include <comdef.h>
-#include <stdexcept>
 
 namespace micro_profiler
 {
-	namespace integration
+	struct dispatch
 	{
-		class dispatch
+		static _variant_t get(const IDispatchPtr &object, const wchar_t *name, const _variant_t &index = vtMissing);
+		static _variant_t get(const IDispatchPtr &object, DISPID id);
+		static _variant_t get_item(const IDispatchPtr &object, const _variant_t &index);
+		static void put(const IDispatchPtr &object, const wchar_t *name, const _variant_t &value);
+		static _variant_t call(const IDispatchPtr &object, const wchar_t *name);
+		static _variant_t call(const IDispatchPtr &object, const wchar_t *name, const _variant_t &arg1);
+
+		template <typename F>
+		static void for_each_variant_as_dispatch(const IDispatchPtr &collection, F receiver);
+	};
+
+
+
+	template <typename F>
+	inline void dispatch::for_each_variant_as_dispatch(const IDispatchPtr &collection, F receiver)
+	{
+		IEnumVARIANTPtr ev(dispatch::get(collection, DISPID_NEWENUM));
+		ULONG fetched = 0;
+
+		for (_variant_t v; S_OK == ev->Next(1u, &v, &fetched) && fetched; v.Clear())
 		{
-			_variant_t _underlying;
-
-			explicit dispatch(const _variant_t &result);
-
-			IDispatchPtr this_object() const;
-
-			DISPID name_id(const wchar_t *name) const;
-
-			HRESULT invoke(const wchar_t *name, WORD wFlags, DISPPARAMS &parameters, _variant_t &result) const;
-
-			_variant_t invoke(const wchar_t *name, WORD wFlags, DISPPARAMS &parameters) const;
-
-		public:
-			explicit dispatch(const IDispatchPtr &object);
-
-			dispatch get(const wchar_t *name, const _variant_t &index = vtMissing) const;
-			void put(const wchar_t *name, const _variant_t &value) const;
-
-			template <typename IndexT>
-			dispatch operator[](const IndexT &index) const;
-
-			dispatch operator()(const wchar_t *name);
-
-			template <typename Arg1>
-			dispatch operator()(const wchar_t *name, const Arg1 &arg1);
-
-			template <typename Arg1, typename Arg2>
-			dispatch operator()(const wchar_t *name, const Arg1 &arg1, const Arg2 &arg2);
-
-			operator std::wstring() const;
-			operator long() const;
-			operator IDispatchPtr() const;
-		};
-
-
-
-		template <typename IndexT>
-		inline dispatch dispatch::operator[](const IndexT &index) const
-		{
-			_variant_t vindex(index), result;
-			DISPPARAMS dispparams = { &vindex, NULL, 1, 0 };
-
-			if (S_OK == invoke(NULL, DISPATCH_PROPERTYGET, dispparams, result)
-				|| S_OK == invoke(NULL, DISPATCH_METHOD, dispparams, result))
-				return dispatch(result);
-			throw runtime_error("Accessing an indexed property failed!");
-		}
-
-		template <typename Arg1>
-		inline dispatch dispatch::operator()(const wchar_t *name, const Arg1 &arg1)
-		{
-			_variant_t args[] = { arg1, };
-			DISPPARAMS dispparams = { args, NULL, _countof(args), 0 };
-
-			return dispatch(invoke(name, DISPATCH_METHOD, dispparams));
-		}
-
-		template <typename Arg1, typename Arg2>
-		inline dispatch dispatch::operator()(const wchar_t *name, const Arg1 &arg1, const Arg2 &arg2)
-		{
-			_variant_t args[] = { arg1, arg2, };
-			DISPPARAMS dispparams = { args, NULL, _countof(args), 0 };
-
-			return dispatch(invoke(name, DISPATCH_METHOD, dispparams));
+			v.ChangeType(VT_DISPATCH);
+			receiver(v);
 		}
 	}
 }

@@ -25,6 +25,9 @@
 			<Group guid="guidGlobalCmdSet" id="IDG_MP_PROJECT_SETUP" priority="0x0800">
 				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
 			</Group>
+			<Group guid="guidGlobalCmdSet" id="IDG_MP_PROJECT_SETUP" priority="0x0800">
+				<Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ"/>
+			</Group>
 			<Group guid="guidGlobalCmdSet" id="IDG_MP_MAIN" priority="0x0800">
 				<Parent guid="guidGlobalCmdSet" id="IDM_MP_MM_MICROPROFILER" />
 			</Group>

@@ -26,82 +26,84 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace integration
+	namespace
 	{
-		dispatch::dispatch(const _variant_t &result)
-			: _underlying(result)
-		{	}
-
-		dispatch::dispatch(const IDispatchPtr &object)
-			: _underlying(object, true)
-		{	}
-
-		IDispatchPtr dispatch::this_object() const
-		{
-			if (IDispatchPtr o = _underlying)
-				return o;
-			throw runtime_error("The result is not an object!");
-		}
-
-		DISPID dispatch::name_id(const wchar_t *name) const
+		DISPID name_id(const IDispatchPtr &object, const wchar_t *name)
 		{
 			DISPID id;
 			LPOLESTR names[] = { const_cast<LPOLESTR>(name), };
 
-			if (S_OK == this_object()->GetIDsOfNames(IID_NULL, names, 1, LOCALE_USER_DEFAULT, &id))
+			if (S_OK == object->GetIDsOfNames(IID_NULL, names, 1, LOCALE_USER_DEFAULT, &id))
 				return id;
 			throw runtime_error(static_cast<const char *>(_bstr_t(L"The name '") + name + L"' was not found for the object!"));
 		}
 
-		HRESULT dispatch::invoke(const wchar_t *name, WORD wFlags, DISPPARAMS &parameters, _variant_t &result) const
+		HRESULT invoke(const IDispatchPtr &object, const wchar_t *name, WORD wFlags, DISPPARAMS &parameters, _variant_t &result)
 		{
 			UINT invalidArg = 0;
 
-			return this_object()->Invoke(name ? name_id(name) : 0, IID_NULL, LOCALE_USER_DEFAULT, wFlags,
+			return object->Invoke(name ? name_id(object, name) : 0, IID_NULL, LOCALE_USER_DEFAULT, wFlags,
 				&parameters, &result, NULL, &invalidArg);
 		}
 
-		_variant_t dispatch::invoke(const wchar_t *name, WORD wFlags, DISPPARAMS &parameters) const
+		_variant_t invoke(const IDispatchPtr &object, const wchar_t *name, WORD wFlags, DISPPARAMS &parameters)
 		{
 			_variant_t result;
 
-			if (S_OK == invoke(name, wFlags, parameters, result))
+			if (S_OK == invoke(object, name, wFlags, parameters, result))
 				return result;
 			throw runtime_error("Failed invoking method!");
 		}
+	}
 
-		dispatch dispatch::get(const wchar_t *name, const _variant_t &index) const
-		{
-			DISPPARAMS dispparams = { const_cast<_variant_t *>(&index), NULL, index != vtMissing ? 1u : 0u, 0u };
+	_variant_t dispatch::get(const IDispatchPtr &object, const wchar_t *name, const _variant_t &index)
+	{
+		DISPPARAMS dispparams = { const_cast<_variant_t *>(&index), NULL, index != vtMissing ? 1u : 0u, 0u };
 
-			return dispatch(invoke(name, DISPATCH_PROPERTYGET, dispparams));
-		}
+		return invoke(object, name, DISPATCH_PROPERTYGET, dispparams);
+	}
 
-		void dispatch::put(const wchar_t *name, const _variant_t &value) const
-		{
-			DISPID propputnamed = DISPID_PROPERTYPUT;
-			DISPPARAMS dispparams = { const_cast<_variant_t *>(&value), &propputnamed, 1u, 1u };
+	_variant_t dispatch::get(const IDispatchPtr &object, DISPID id)
+	{
+		_variant_t result;
+		DISPPARAMS dispparams = { NULL, NULL, 0u, 0u };
+		UINT invalidArg = 0;
 
-			invoke(name, DISPATCH_PROPERTYPUT, dispparams);
-		}
+		if (S_OK == object->Invoke(id, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD | DISPATCH_PROPERTYGET, &dispparams, &result, NULL, &invalidArg))
+			return result;
+		throw runtime_error("Cannot call the get-method by ID!");
+	}
 
-		dispatch dispatch::operator()(const wchar_t *name)
-		{
-			DISPPARAMS dispparams = { };
+	_variant_t dispatch::get_item(const IDispatchPtr &object, const _variant_t &index)
+	{
+		_variant_t vindex(index), result;
+		DISPPARAMS dispparams = { &vindex, NULL, 1, 0 };
 
-			return dispatch(invoke(name, DISPATCH_METHOD, dispparams));
-		}
+		if (S_OK == invoke(object, NULL, DISPATCH_METHOD | DISPATCH_PROPERTYGET, dispparams, result))
+			return result;
+		throw runtime_error("Accessing an indexed property failed!");
+	}
 
-		dispatch::operator wstring() const
-		{
-			_bstr_t str = _underlying;
-			return str.GetBSTR() ? str.GetBSTR() : wstring();
-		}
+	void dispatch::put(const IDispatchPtr &object, const wchar_t *name, const _variant_t &value)
+	{
+		DISPID propputnamed = DISPID_PROPERTYPUT;
+		DISPPARAMS dispparams = { const_cast<_variant_t *>(&value), &propputnamed, 1u, 1u };
 
-		dispatch::operator long() const
-		{	return _underlying;	}
+		invoke(object, name, DISPATCH_PROPERTYPUT, dispparams);
+	}
 
-		dispatch::operator IDispatchPtr() const
-		{	return _underlying;	}
+	_variant_t dispatch::call(const IDispatchPtr &object, const wchar_t *name)
+	{
+		DISPPARAMS dispparams = { };
+
+		return invoke(object, name, DISPATCH_METHOD, dispparams);
+	}
+
+	_variant_t dispatch::call(const IDispatchPtr &object, const wchar_t *name, const _variant_t &arg1)
+	{
+		_variant_t args[] = { arg1, };
+		DISPPARAMS dispparams = { args, NULL, _countof(args), 0 };
+
+		return invoke(object, name, DISPATCH_METHOD, dispparams);
 	}
 }

@@ -32,6 +32,8 @@ namespace micro_profiler
 
 			extern const GUID c_guidInstanceCmdSet = guidInstanceCmdSet;
 
+			typedef command<instance_context> instance_command;
+
 			instance_command::ptr g_commands[] = {
 				instance_command::ptr(new pause_updates),
 				instance_command::ptr(new resume_updates),

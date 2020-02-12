@@ -53,15 +53,19 @@
     <ClCompile Include="frontend\AttachToProcessDialog.cpp" />
     <ClCompile Include="frontend\inject_profiler.cpp" />
     <ClCompile Include="module\main.cpp" />
+    <ClCompile Include="visualstudio\dispatch.cpp" />
     <ClCompile Include="visualstudio\vs-extension\async.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
     <ClCompile Include="visualstudio\vs-extension\helpers.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\vcmodel-impl.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp" />
     <ClInclude Include="frontend\AttachToProcessDialog.h" />
+    <ClInclude Include="visualstudio\dispatch.h" />
     <ClInclude Include="visualstudio\vs-extension\async.h" />
     <ClInclude Include="visualstudio\vs-extension\com.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h" />
+    <ClInclude Include="visualstudio\vs-extension\vcmodel.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
     <None Include="module\micro-profiler.def" />
@@ -83,9 +87,7 @@
     <ClInclude Include="visualstudio\command-target.h" />
     <ClInclude Include="visualstudio\command.h" />
     <ClInclude Include="visualstudio\vs-extension\commands-global.h" />
-    <ClInclude Include="visualstudio\dispatch.h" />
     <ClCompile Include="visualstudio\vs-extension\commands-global.cpp" />
-    <ClCompile Include="visualstudio\dispatch.cpp" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp" />
   </ItemGroup>

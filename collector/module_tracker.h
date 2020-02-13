@@ -43,8 +43,6 @@ namespace micro_profiler
 
 		std::shared_ptr< image_info<symbol_info> > get_image_info() const;
 
-		operator module_info_basic() const;
-
 	public:
 		instance_id_t _instance_id;
 	};

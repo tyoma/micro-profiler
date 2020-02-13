@@ -305,11 +305,11 @@ namespace micro_profiler
 			test( ModuleMetadataIsSerializedOnRequest )
 			{
 				// INIT
-				module_info_basic mb;
+				mapped_module mb;
 				module_info_metadata md;
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 
-				state->metadata_received = [&] (const module_info_basic &mb_, const module_info_metadata &md_) {
+				state->metadata_received = [&] (const mapped_module &mb_, const module_info_metadata &md_) {
 					mb = mb_, md = md_;
 				};
 

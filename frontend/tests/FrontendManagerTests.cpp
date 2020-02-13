@@ -288,7 +288,7 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 				symbol_info symbols1[] = { { "foo", 0x0100, 1 }, { "bar", 0x0200, 1 }, { "baz", 0x1100, 1 }, };
 				symbol_info symbols2[] = { { "FOO", 0x0100, 1 }, { "BAR", 0x2000, 1 }, };
-				module_info_basic basic[] = { { 0, 0x10000, }, { 0, 0x100000, }, };
+				mapped_module basic[] = { { 0, 0x10000, }, { 0, 0x100000, }, };
 				module_info_metadata metadata[] = { { mkvector(symbols1), }, { mkvector(symbols2), }, };
 				pair< unsigned, function_statistics_detailed_t<unsigned> > data1[] = {
 					make_pair(0x10100, function_statistics_detailed_t<unsigned>()),

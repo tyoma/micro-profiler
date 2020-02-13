@@ -36,12 +36,6 @@ namespace micro_profiler
 		return load_image_info(path.c_str());
 	}
 
-	mapped_module_ex::operator module_info_basic() const
-	{
-		module_info_basic mi = { _instance_id, reinterpret_cast<size_t>(base), path };
-		return mi;
-	}
-
 
 	module_tracker::module_tracker()
 		: _next_instance_id(0)

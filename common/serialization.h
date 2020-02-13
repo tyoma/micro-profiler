@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "module.h"
 #include "noncopyable.h"
 #include "primitives.h"
 #include "protocol.h"
@@ -160,7 +161,7 @@ namespace micro_profiler
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, module_info_basic &data)
+	inline void serialize(ArchiveT &archive, mapped_module &data)
 	{
 		archive(data.instance_id);
 		archive(data.load_address);

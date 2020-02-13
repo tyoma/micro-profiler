@@ -27,7 +27,7 @@
 
 namespace micro_profiler
 {
-	struct module_info_basic;
+	struct mapped_module;
 	struct module_info_metadata;
 
 	class symbol_resolver
@@ -39,7 +39,7 @@ namespace micro_profiler
 		virtual ~symbol_resolver();
 		virtual const std::string &symbol_name_by_va(long_address_t address) const;
 		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
-		void add_metadata(const module_info_basic &basic, const module_info_metadata &metadata);
+		void add_metadata(const mapped_module &basic, const module_info_metadata &metadata);
 
 	private:
 		typedef std::unordered_map<unsigned int, std::string> files_map;

@@ -40,7 +40,8 @@ namespace micro_profiler
 		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &load_address);
 		::GetModuleFileNameA(load_address, path, sizeof(path));
 		::FreeLibrary(load_address);
-		mapped_module info = { path, static_cast<byte *>(static_cast<void *>(load_address)), };
+		mapped_module info = { 0u, 0u, path, };
+		info.base = static_cast<byte *>(static_cast<void *>(load_address));
 		return info;
 	}
 

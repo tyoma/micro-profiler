@@ -82,7 +82,7 @@ namespace micro_profiler
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
 
 		archive(module_metadata);
-		archive((const module_info_basic &)*module);
+		archive(*module);
 		archive(md);
 		_frontend.message(const_byte_range(_buffer.data(), _buffer.size()));
 	}

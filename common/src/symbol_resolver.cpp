@@ -21,6 +21,7 @@
 #include <common/symbol_resolver.h>
 
 #include <algorithm>
+#include <common/module.h>
 #include <common/protocol.h>
 #include <map>
 
@@ -49,7 +50,7 @@ namespace micro_profiler
 		return j != _files.end() ? result.first = j->second, result.second = i->second.line, true : false;
 	}
 
-	void symbol_resolver::add_metadata(const module_info_basic &basic, const module_info_metadata &metadata)
+	void symbol_resolver::add_metadata(const mapped_module &basic, const module_info_metadata &metadata)
 	{
 		const unsigned int file_id_base = _files.empty() ? 0u : max_element(_files.begin(), _files.end())->first;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <common/module.h>
 #include <common/noncopyable.h>
 #include <common/primitives.h>
 #include <common/protocol.h>
@@ -30,7 +31,7 @@ namespace micro_profiler
 				std::function<void (const loaded_modules &m)> modules_loaded;
 				std::function<void (const statistics_map_detailed &u)> updated;
 				std::function<void (const unloaded_modules &m)> modules_unloaded;
-				std::function<void (const module_info_basic &mb, const module_info_metadata &md)> metadata_received;
+				std::function<void (const mapped_module &mb, const module_info_metadata &md)> metadata_received;
 
 			private:
 				std::shared_ptr<void> _ownee;
@@ -46,7 +47,7 @@ namespace micro_profiler
 				loaded_modules lm;
 				statistics_map_detailed u;
 				unloaded_modules um;
-				module_info_basic mb;
+				mapped_module mb;
 				module_info_metadata md;
 
 				a(c);

@@ -20,18 +20,24 @@
 
 #pragma once
 
-#include "protocol.h"
 #include "range.h"
 
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace micro_profiler
 {
 	struct mapped_module
 	{
+		unsigned int instance_id; // One-based instance ID of this mapping to identify it among loaded.
+		unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
 		std::string path;
-		byte *base;
+		union
+		{
+			long_address_t load_address;
+			byte *base;
+		};
 		std::vector<byte_range> addresses;
 	};
 

@@ -52,7 +52,7 @@ namespace micro_profiler
 		strmd::deserializer<buffer_reader, packer> archive(reader);
 		initialization_data idata;
 		loaded_modules lmodules;
-		module_info_basic mbasic;
+		mapped_module mbasic;
 		module_info_metadata mmetadata;
 		commands c;
 

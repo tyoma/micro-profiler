@@ -586,7 +586,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready;
-				module_info_basic m;
+				mapped_module m;
 				vector_adapter message_buffer;
 				strmd::serializer<vector_adapter, packer> ser(message_buffer);
 				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
@@ -594,7 +594,7 @@ namespace micro_profiler
 				state->modules_loaded = [&] (const loaded_modules &) {
 					ready.set();
 				};
-				state->metadata_received = [&] (const module_info_basic &m_, const module_info_metadata &) {
+				state->metadata_received = [&] (const mapped_module &m_, const module_info_metadata &) {
 					m = m_;
 					ready.set();
 				};

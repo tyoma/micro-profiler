@@ -47,14 +47,6 @@ namespace micro_profiler
 	typedef std::vector<unsigned int> loaded_modules;
 	typedef std::vector<unsigned int> unloaded_modules;
 
-
-	struct module_info_basic
-	{
-		unsigned int instance_id;
-		long_address_t load_address;
-		std::string path;
-	};
-
 	struct module_info_metadata
 	{
 		std::vector<symbol_info> symbols;

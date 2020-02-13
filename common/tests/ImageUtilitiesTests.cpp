@@ -1,5 +1,7 @@
 #include <common/module.h>
 
+#include <common/file_id.h>
+
 #include <iterator>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
@@ -103,7 +105,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, modules.size());
 				assert_is_true(is_address_inside(modules[0].addresses, img1.get_symbol_address("get_function_addresses_1")));
-				assert_is_true(is_same_file(img1.absolute_path(), modules[0].path));
+				assert_equal(file_id(img1.absolute_path()), file_id(modules[0].path));
 				assert_equal((byte *)img1.load_address(), modules[0].base);
 
 				// INIT
@@ -120,11 +122,11 @@ namespace micro_profiler
 				sort(modules.begin(), modules.end(), less_module());
 
 				assert_is_true(is_address_inside(modules[1].addresses, img2.get_symbol_address("get_function_addresses_2")));
-				assert_is_true(is_same_file(img2.absolute_path(), modules[1].path));
+				assert_equal(file_id(img2.absolute_path()), file_id(modules[1].path));
 				assert_equal((byte *)img2.load_address(), modules[1].base);
 
 				assert_is_true(is_address_inside(modules[2].addresses, img3.get_symbol_address("get_function_addresses_3")));
-				assert_is_true(is_same_file(img3.absolute_path(), modules[2].path));
+				assert_equal(file_id(img3.absolute_path()), file_id(modules[2].path));
 				assert_equal((byte *)img3.load_address(), modules[2].base);
 			}
 

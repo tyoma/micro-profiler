@@ -1,5 +1,8 @@
 #include <collector/module_tracker.h>
 
+#include <common/file_id.h>
+#include <common/path.h>
+
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -71,6 +74,8 @@ namespace micro_profiler
 				assert_is_empty(unloaded_images);
 
 				assert_equal(0u, loaded_images[0].instance_id);
+				assert_equal(_images[0].load_address(), loaded_images[0].load_address);
+				assert_equal(file_id(_images[0].absolute_path()), file_id(loaded_images[0].path));
 
 				// ACT
 				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
@@ -82,7 +87,11 @@ namespace micro_profiler
 				assert_is_empty(unloaded_images);
 
 				assert_equal(1u, loaded_images[0].instance_id);
+				assert_equal(_images[1].load_address_ptr(), loaded_images[0].base);
+				assert_equal(file_id(_images[1].absolute_path()), file_id(loaded_images[0].path));
 				assert_equal(2u, loaded_images[1].instance_id);
+				assert_equal(_images[2].load_address_ptr(), loaded_images[1].base);
+				assert_equal(file_id(_images[2].absolute_path()), file_id(loaded_images[1].path));
 			}
 
 
@@ -135,6 +144,81 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, l[0].instance_id);
 				assert_equal(2u, l[1].instance_id);
+			}
+
+
+			test( ModulesLoadedGetTheirUniquePersistentIDs )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
+
+				// ACT
+				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_equal(1u, l[0].persistent_id);
+
+				// ACT
+				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
+				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_equal(2u, l[0].persistent_id);
+				assert_equal(3u, l[1].persistent_id);
+			}
+
+
+			test( SameModulesReloadedPreservePersistentIDs )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l, lhistory;
+				unloaded_modules u;
+
+				// get_changes() is called after each load to guarantee id ordering.
+				t.load(_images[0].load_address_ptr());
+				t.get_changes(l, u);
+				lhistory.insert(lhistory.end(), l.begin(), l.end());
+				t.load(_images[1].load_address_ptr());
+				t.get_changes(l, u);
+				lhistory.insert(lhistory.end(), l.begin(), l.end());
+				t.load(_images[2].load_address_ptr());
+				t.get_changes(l, u);
+				lhistory.insert(lhistory.end(), l.begin(), l.end());
+				t.unload(_images[0].load_address_ptr());
+				t.unload(_images[1].load_address_ptr());
+				t.unload(_images[2].load_address_ptr());
+				t.get_changes(l, u);
+				_images.clear();
+				LoadImages();
+
+				// ACT
+				t.load(_images[1].load_address_ptr());
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_equal(3u, l[0].instance_id);
+				assert_equal(2u, l[0].persistent_id);
+
+				// ACT
+				t.load(_images[0].load_address_ptr());
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_equal(4u, l[0].instance_id);
+				assert_equal(1u, l[0].persistent_id);
+
+				// ACT
+				t.load(_images[2].load_address_ptr());
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_equal(5u, l[0].instance_id);
+				assert_equal(3u, l[0].persistent_id);
 			}
 
 

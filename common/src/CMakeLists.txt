@@ -12,6 +12,7 @@ set(COMMON_SOURCES
 
 if (WIN32)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
+		file_id_win32.cpp
 		image_info_win32.cpp
 		memory_win32.cpp
 		module_win32.cpp
@@ -22,6 +23,7 @@ elseif (UNIX)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
 		elf/filemapping_unix.cpp
 		elf/sym-elf.cpp
+		file_id_unix.cpp
 		image_info_unix.cpp
 		memory_unix.cpp
 		module_linux.cpp

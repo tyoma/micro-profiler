@@ -105,8 +105,6 @@ namespace micro_profiler
 		template <typename CharT>
 		inline void toupper(CharT &c)
 		{	c = static_cast<CharT>(::toupper(c));	}
-
-		bool is_same_file(const std::string& i_lhs, const std::string& i_rhs);
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);

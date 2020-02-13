@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AllocatorTests.cpp" />
+    <ClCompile Include="FileUtilitiesTests.cpp" />
     <ClCompile Include="ImageInfoTests.cpp" />
     <ClCompile Include="ImageUtilitiesTests.cpp" />
     <ClCompile Include="MiscTests.cpp" />

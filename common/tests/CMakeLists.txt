@@ -4,6 +4,7 @@ include(test)
 
 set(COMMON_TEST_SOURCES
 	AllocatorTests.cpp
+	FileUtilitiesTests.cpp
 	ImageInfoTests.cpp
 	ImageUtilitiesTests.cpp
 	MiscTests.cpp

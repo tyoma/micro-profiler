@@ -16,9 +16,6 @@
     <ClCompile Include="memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="symbol_resolver.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="memory_unix.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
@@ -58,6 +55,12 @@
     <ClCompile Include="time_generic.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
+    <ClCompile Include="file_id_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="file_id_unix.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -85,7 +88,6 @@
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="..\constants.h" />
-    <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\memory.h" />
     <ClInclude Include="..\time.h" />
     <ClInclude Include="..\range.h" />
@@ -96,5 +98,6 @@
       <Filter>src\unix\elf</Filter>
     </ClInclude>
     <ClInclude Include="..\image_info.h" />
+    <ClInclude Include="..\file_id.h" />
   </ItemGroup>
 </Project>

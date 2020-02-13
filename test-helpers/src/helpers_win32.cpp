@@ -64,17 +64,6 @@ namespace micro_profiler
 				return static_cast<unsigned>(static_cast<byte *>(symbol) - load_address_ptr());
 			throw runtime_error("Symbol specified was not found!");
 		}
-
-
-		bool is_same_file(const string& i_lhs, const string& i_rhs)
-		{
-			shared_ptr<void> files[] = { open_file(i_lhs.c_str()), open_file(i_rhs.c_str()), };
-			BY_HANDLE_FILE_INFORMATION bhfi[2] = { 0 };
-
-			return ::GetFileInformationByHandle(files[0].get(), &bhfi[0])
-				&& ::GetFileInformationByHandle(files[1].get(), &bhfi[1])
-				&& bhfi[1].nFileIndexHigh == bhfi[0].nFileIndexHigh && bhfi[1].nFileIndexLow == bhfi[0].nFileIndexLow;
-		}
 	}
 }
 

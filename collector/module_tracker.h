@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/file_id.h>
 #include <common/module.h>
 #include <common/primitives.h>
 #include <common/protocol.h>
@@ -35,7 +36,7 @@ namespace micro_profiler
 
 	struct mapped_module_ex : mapped_module
 	{
-		mapped_module_ex(instance_id_t instance_id_, const mapped_module &mm);
+		mapped_module_ex(instance_id_t instance_id_, instance_id_t persistent_id_, const mapped_module &mm);
 
 		std::shared_ptr< image_info<symbol_info> > get_image_info() const;
 	};
@@ -53,13 +54,15 @@ namespace micro_profiler
 		std::shared_ptr<const mapped_module_ex> get_module(mapped_module_ex::instance_id_t id) const;
 
 	private:
-		typedef std::unordered_map< mapped_module_ex::instance_id_t, std::shared_ptr<mapped_module_ex> > modules_registry_t;
+		typedef std::unordered_map<file_id, mapped_module::instance_id_t> modules_registry_t;
+		typedef std::unordered_map< mapped_module::instance_id_t, std::shared_ptr<mapped_module_ex> > mapped_modules_registry_t;
 
 	private:
 		mt::mutex _mtx;
+		modules_registry_t _registry;
 		std::vector<mapped_module> _lqueue;
 		std::vector<mapped_module::instance_id_t> _uqueue;
-		modules_registry_t _modules_registry;
-		unsigned int _next_instance_id;
+		mapped_modules_registry_t _modules_registry;
+		mapped_module::instance_id_t _next_instance_id, _next_persistent_id;
 	};
 }

@@ -45,6 +45,12 @@
     <ClCompile Include="elf\sym-elf.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="file_id_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="file_id_win32.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="formatting.cpp" />
     <ClCompile Include="image_info.cpp" />
     <ClCompile Include="memory.cpp" />
@@ -87,6 +93,7 @@
   <ItemGroup>
     <ClInclude Include="..\configuration.h" />
     <ClInclude Include="..\constants.h" />
+    <ClInclude Include="..\file_id.h" />
     <ClInclude Include="..\formatting.h" />
     <ClInclude Include="..\image_info.h" />
     <ClInclude Include="..\memory.h" />

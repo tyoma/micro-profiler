@@ -24,6 +24,7 @@ if(UNIX)
 	set(MP_MT_GENERIC 1)
 	add_definitions(-DMP_MT_GENERIC)
 	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
+	add_definitions(-D_FILE_OFFSET_BITS=64) # Fixes problems 32-bit app on 64-bit Ubuntu
 endif()
 if (MSVC)
 	if (MSVC_VERSION LESS 1900)

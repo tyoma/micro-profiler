@@ -218,7 +218,7 @@ namespace micro_profiler
 				assert_equal(1u, loads.size());
 				assert_equal(1u, loads[0].size());
 
-				assert_equal(0u, loads[0][0]);
+				assert_equal(0u, loads[0][0].instance_id);
 
 				// ACT
 				mtracker->load(images[1].get_symbol_address("get_function_addresses_2"));
@@ -229,8 +229,8 @@ namespace micro_profiler
 				assert_equal(2u, loads.size());
 				assert_equal(2u, loads[1].size());
 
-				assert_equal(1u, loads[1][0]);
-				assert_equal(2u, loads[1][1]);
+				assert_equal(1u, loads[1][0].instance_id);
+				assert_equal(2u, loads[1][1].instance_id);
 			}
 
 

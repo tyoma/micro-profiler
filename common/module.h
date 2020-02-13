@@ -30,8 +30,10 @@ namespace micro_profiler
 {
 	struct mapped_module
 	{
-		unsigned int instance_id; // One-based instance ID of this mapping to identify it among loaded.
-		unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
+		typedef unsigned int instance_id_t;
+
+		instance_id_t instance_id; // One-based instance ID of this mapping to identify it among loaded.
+		instance_id_t persistent_id; // Persistent one-based ID of the image this mapping is for.
 		std::string path;
 		union
 		{

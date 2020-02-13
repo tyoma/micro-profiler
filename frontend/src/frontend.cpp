@@ -67,7 +67,7 @@ namespace micro_profiler
 		case modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				send(request_metadata, *i);
+				send(request_metadata, i->instance_id);
 			break;
 
 		case update_statistics:

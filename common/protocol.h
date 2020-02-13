@@ -20,8 +20,9 @@
 
 #pragma once
 
+#include "module.h"
+#include "image_info.h" // TODO: remove?
 #include "types.h"
-#include "image_info.h"
 
 #include <vector>
 
@@ -44,7 +45,7 @@ namespace micro_profiler
 	};
 
 
-	typedef std::vector<unsigned int> loaded_modules;
+	typedef std::vector<mapped_module> loaded_modules;
 	typedef std::vector<unsigned int> unloaded_modules;
 
 	struct module_info_metadata

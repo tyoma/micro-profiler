@@ -71,7 +71,7 @@ namespace micro_profiler
 				assert_equal(1u, loaded_images.size());
 				assert_is_empty(unloaded_images);
 
-				assert_equal(0u, loaded_images[0]);
+				assert_equal(0u, loaded_images[0].instance_id);
 
 				// ACT
 				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
@@ -82,8 +82,8 @@ namespace micro_profiler
 				assert_equal(2u, loaded_images.size());
 				assert_is_empty(unloaded_images);
 
-				assert_equal(1u, loaded_images[0]);
-				assert_equal(2u, loaded_images[1]);
+				assert_equal(1u, loaded_images[0].instance_id);
+				assert_equal(2u, loaded_images[1].instance_id);
 			}
 
 
@@ -108,7 +108,7 @@ namespace micro_profiler
 				assert_equal(1u, loaded_images.size());
 				assert_equal(2u, unloaded_images.size());
 
-				assert_equal(2u, loaded_images[0]);
+				assert_equal(2u, loaded_images[0].instance_id);
 				assert_equal(1u, unloaded_images[0]);
 				assert_equal(0u, unloaded_images[1]);
 			}
@@ -126,7 +126,7 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				// ASSERT
-				assert_equal(0u, l[0]);
+				assert_equal(0u, l[0].instance_id);
 
 				// ACT
 				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
@@ -134,8 +134,8 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				// ASSERT
-				assert_equal(1u, l[0]);
-				assert_equal(2u, l[1]);
+				assert_equal(1u, l[0].instance_id);
+				assert_equal(2u, l[1].instance_id);
 			}
 
 
@@ -189,7 +189,7 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				// ASSERT
-				assert_equal(3u, l[0]);
+				assert_equal(3u, l[0].instance_id);
 
 				// ACT
 				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
@@ -197,8 +197,8 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				// ASSERT
-				assert_equal(4u, l[0]);
-				assert_equal(5u, l[1]);
+				assert_equal(4u, l[0].instance_id);
+				assert_equal(5u, l[1].instance_id);
 			}
 
 

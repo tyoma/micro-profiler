@@ -27,14 +27,12 @@ using namespace std;
 
 namespace micro_profiler
 {
-	mapped_module_ex::mapped_module_ex(instance_id_t instance_id, const mapped_module &mm)
-		: mapped_module(mm), _instance_id(instance_id)
-	{	}
+	mapped_module_ex::mapped_module_ex(instance_id_t instance_id_, const mapped_module &mm)
+		: mapped_module(mm)
+	{	instance_id = instance_id_;	}
 
 	shared_ptr< image_info<symbol_info> > mapped_module_ex::get_image_info() const
-	{
-		return load_image_info(path.c_str());
-	}
+	{	return load_image_info(path.c_str());	}
 
 
 	module_tracker::module_tracker()
@@ -48,7 +46,7 @@ namespace micro_profiler
 		shared_ptr<mapped_module_ex> m(new mapped_module_ex(id, get_module_info(in_image_address)));
 
 		_modules_registry.insert(make_pair(id, m));
-		_lqueue.push_back(id);
+		_lqueue.push_back(*m);
 	}
 
 	void module_tracker::unload(const void *in_image_address)

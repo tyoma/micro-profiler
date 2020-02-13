@@ -226,7 +226,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_not_null(h1.get());
 				assert_equal(1u, m.size());
-				assert_equal(0u, m[0]);
+				assert_equal(0u, m[0].instance_id);
 
 				// INIT
 				m.clear();
@@ -238,7 +238,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_not_null(h2.get());
 				assert_equal(1u, m.size());
-				assert_equal(1u, m[0]);
+				assert_equal(1u, m[0].instance_id);
 			}
 
 

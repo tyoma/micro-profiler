@@ -33,18 +33,11 @@ namespace micro_profiler
 	template <typename SymbolT>
 	struct image_info;
 
-	class mapped_module_ex : public mapped_module
+	struct mapped_module_ex : mapped_module
 	{
-	public:
-		typedef unsigned int instance_id_t;
-
-	public:
-		mapped_module_ex(instance_id_t instance_id, const mapped_module &mm);
+		mapped_module_ex(instance_id_t instance_id_, const mapped_module &mm);
 
 		std::shared_ptr< image_info<symbol_info> > get_image_info() const;
-
-	public:
-		instance_id_t _instance_id;
 	};
 
 	class module_tracker
@@ -64,7 +57,8 @@ namespace micro_profiler
 
 	private:
 		mt::mutex _mtx;
-		std::vector<mapped_module_ex::instance_id_t> _lqueue, _uqueue;
+		std::vector<mapped_module> _lqueue;
+		std::vector<mapped_module::instance_id_t> _uqueue;
 		modules_registry_t _modules_registry;
 		unsigned int _next_instance_id;
 	};

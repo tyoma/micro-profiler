@@ -288,7 +288,7 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 				symbol_info symbols1[] = { { "foo", 0x0100, 1 }, { "bar", 0x0200, 1 }, { "baz", 0x1100, 1 }, };
 				symbol_info symbols2[] = { { "FOO", 0x0100, 1 }, { "BAR", 0x2000, 1 }, };
-				mapped_module basic[] = { { 0, 0x10000, }, { 0, 0x100000, }, };
+				mapped_module basic[] = { { 0u, 0u, "", { 0x10000, } }, { 0u, 0u, "", { 0x100000, } }, };
 				module_info_metadata metadata[] = { { mkvector(symbols1), }, { mkvector(symbols2), }, };
 				pair< unsigned, function_statistics_detailed_t<unsigned> > data1[] = {
 					make_pair(0x10100, function_statistics_detailed_t<unsigned>()),
@@ -879,8 +879,8 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(&dummy_ui_factory);
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				unsigned int mi1[] = { 0, };
-				unsigned int mi2[] = { 1, 10, };
+				mapped_module mi1[] = { { }, };
+				mapped_module mi2[] = { { 1, 99u, "", { 0x1000000, } }, { 10, 1000u, "", { 0x1000000, } }, };
 
 				write(*c, init, initialization_data());
 

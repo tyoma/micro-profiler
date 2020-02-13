@@ -1,4 +1,4 @@
-#include <common/symbol_resolver.h>
+#include <common/image_info.h>
 
 #include <common/module.h>
 #include <common/path.h>

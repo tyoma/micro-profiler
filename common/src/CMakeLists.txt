@@ -7,7 +7,6 @@ set(COMMON_SOURCES
 	memory.cpp
 	serialization.cpp
 	string.cpp
-	symbol_resolver.cpp
 	time.cpp
 )
 

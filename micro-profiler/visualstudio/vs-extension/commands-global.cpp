@@ -26,7 +26,6 @@
 #include <common/constants.h>
 #include <common/module.h>
 #include <common/path.h>
-#include <common/serialization.h>
 #include <common/string.h>
 #include <frontend/about_ui.h>
 #include <frontend/AttachToProcessDialog.h>
@@ -34,6 +33,7 @@
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/serialization.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <wpl/ui/win32/form.h>

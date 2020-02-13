@@ -18,7 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/symbol_resolver.h>
+#include <frontend/symbol_resolver.h>
 
 #include <algorithm>
 #include <common/module.h>

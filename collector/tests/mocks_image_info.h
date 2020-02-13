@@ -1,8 +1,8 @@
 #pragma once
 
-#include <test-helpers/helpers.h>
+#include <common/image_info.h>
 
-#include <common/symbol_resolver.h>
+#include <test-helpers/helpers.h>
 
 namespace micro_profiler
 {

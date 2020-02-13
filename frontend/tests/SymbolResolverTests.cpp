@@ -1,10 +1,10 @@
-#include <common/symbol_resolver.h>
+#include <frontend/symbol_resolver.h>
+
+#include <frontend/serialization.h>
 
 #include <common/protocol.h>
-#include <common/serialization.h>
 #include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
-
 #include <ut/assert.h>
 #include <ut/test.h>
 

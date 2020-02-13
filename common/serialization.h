@@ -25,7 +25,6 @@
 #include "primitives.h"
 #include "protocol.h"
 #include "range.h"
-#include "symbol_resolver.h"
 
 #include <strmd/deserializer.h>
 
@@ -41,24 +40,6 @@ namespace strmd
 
 	template <> struct is_container<analyzer> { static const bool value = true; };
 	template <typename AddressT> struct is_container< statistics_map_detailed_t<AddressT> > { static const bool value = true; };
-	template <typename KeyT, typename ValueT> struct is_container< std::map<KeyT, ValueT> > { static const bool value = true; };
-
-	template <typename KeyT, typename ValueT>
-	struct container_reader< std::map<KeyT, ValueT> >
-	{
-		template <typename ArchiveT>
-		void operator()(ArchiveT &archive, size_t count, std::map<KeyT, ValueT> &data)
-		{
-			std::pair<KeyT, ValueT> value;
-
-			data.clear();
-			while (count--)
-			{
-				archive(value);
-				data.insert(value);
-			}
-		}
-	};
 
 	template <typename AddressT> struct container_reader< unordered_map<AddressT, function_statistics, address_compare> >
 	{
@@ -184,13 +165,6 @@ namespace micro_profiler
 	{
 		archive(data.symbols);
 		archive(data.source_files);
-	}
-
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_resolver &data)
-	{
-		archive(data._mapped_symbols);
-		archive(data._files);
 	}
 
 

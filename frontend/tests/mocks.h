@@ -1,7 +1,7 @@
 #pragma once
 
 #include <common/protocol.h>
-#include <common/symbol_resolver.h>
+#include <frontend/symbol_resolver.h>
 
 namespace micro_profiler
 {

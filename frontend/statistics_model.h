@@ -22,8 +22,7 @@
 
 #include "ordered_view.h"
 #include "primitives.h"
-
-#include <common/symbol_resolver.h>
+#include "symbol_resolver.h"
 
 #include <wpl/ui/models.h>
 

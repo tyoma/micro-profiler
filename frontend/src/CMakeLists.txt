@@ -6,6 +6,7 @@ set(FRONTEND_LIB_SOURCES
 	frontend_manager.cpp
 	function_list.cpp
 	process_list.cpp
+	symbol_resolver.cpp
 )
 
 if(WIN32)

@@ -64,7 +64,6 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="serialization.cpp" />
-    <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="image_info_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -100,7 +99,6 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\time.h" />
     <ClInclude Include="..\string.h" />
-    <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="elf\filemapping.h" />
     <ClInclude Include="elf\sym-elf.h" />

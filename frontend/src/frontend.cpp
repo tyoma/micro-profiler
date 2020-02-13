@@ -21,10 +21,10 @@
 #include <frontend/frontend.h>
 
 #include <frontend/function_list.h>
+#include <frontend/serialization.h>
+#include <frontend/symbol_resolver.h>
 
 #include <common/memory.h>
-#include <common/serialization.h>
-#include <common/symbol_resolver.h>
 #include <strmd/serializer.h>
 
 using namespace std;

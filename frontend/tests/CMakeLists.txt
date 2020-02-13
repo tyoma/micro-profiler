@@ -9,6 +9,7 @@ set(FRONTEND_TESTS_SOURCES
 	mocks.cpp
 	OrderedViewTests.cpp
 	ProcessListTests.cpp
+	SymbolResolverTests.cpp
 )
 
 if(WIN32)

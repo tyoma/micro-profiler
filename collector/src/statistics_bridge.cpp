@@ -25,7 +25,6 @@
 
 #include <common/module.h>
 #include <common/serialization.h>
-#include <common/symbol_resolver.h>
 #include <common/time.h>
 #include <ipc/endpoint.h>
 #include <strmd/serializer.h>

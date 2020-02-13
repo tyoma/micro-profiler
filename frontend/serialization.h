@@ -20,41 +20,43 @@
 
 #pragma once
 
-#include "image_info.h"
+#include "symbol_resolver.h"
 
-#include <map>
-#include <unordered_map>
+#include <common/serialization.h>
 
 namespace micro_profiler
 {
-	struct mapped_module;
-	struct module_info_metadata;
+	class analyzer;
+}
 
-	class symbol_resolver
+namespace strmd
+{
+	template <typename KeyT, typename ValueT> struct is_container< std::map<KeyT, ValueT> > { static const bool value = true; };
+
+	template <typename KeyT, typename ValueT>
+	struct container_reader< std::map<KeyT, ValueT> >
 	{
-	public:
-		typedef std::pair<std::string, unsigned> fileline_t;
-
-	public:
-		virtual ~symbol_resolver();
-		virtual const std::string &symbol_name_by_va(long_address_t address) const;
-		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
-		void add_metadata(const mapped_module &basic, const module_info_metadata &metadata);
-
-	private:
-		typedef std::unordered_map<unsigned int, std::string> files_map;
-		typedef std::map<long_address_t, symbol_info> cached_names_map;
-
-	private:
-		cached_names_map::const_iterator find_symbol_by_va(long_address_t address) const;
-
-	private:
-		std::string _empty;
-		files_map _files;
-		cached_names_map _mapped_symbols;
-
-	private:
 		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, symbol_resolver &data);
+		void operator()(ArchiveT &archive, size_t count, std::map<KeyT, ValueT> &data)
+		{
+			std::pair<KeyT, ValueT> value;
+
+			data.clear();
+			while (count--)
+			{
+				archive(value);
+				data.insert(value);
+			}
+		}
 	};
+}
+
+namespace micro_profiler
+{
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, symbol_resolver &data)
+	{
+		archive(data._mapped_symbols);
+		archive(data._files);
+	}
 }

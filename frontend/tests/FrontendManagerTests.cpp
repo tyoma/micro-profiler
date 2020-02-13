@@ -1,8 +1,7 @@
 #include <frontend/frontend_manager.h>
 
-#include <common/serialization.h>
-#include <common/symbol_resolver.h>
 #include <frontend/function_list.h>
+#include <frontend/serialization.h>
 
 #include <algorithm>
 #include <strmd/serializer.h>

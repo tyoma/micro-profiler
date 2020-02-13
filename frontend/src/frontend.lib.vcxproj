@@ -43,6 +43,7 @@
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="columns_model.cpp" />
     <ClCompile Include="process_list.cpp" />
+    <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="untested\file.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -68,11 +69,13 @@
     <ClInclude Include="..\columns_model.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
+    <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\series.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\about_ui.h" />
+    <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="text_conversion.h" />
   </ItemGroup>

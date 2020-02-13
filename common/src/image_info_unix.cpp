@@ -18,7 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/symbol_resolver.h>
+#include <common/image_info.h>
 
 #include "elf/filemapping.h"
 #include "elf/sym-elf.h"

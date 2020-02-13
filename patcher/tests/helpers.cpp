@@ -1,7 +1,7 @@
 #include "helpers.h"
 
 #include <common/module.h>
-#include <common/symbol_resolver.h>
+#include <common/image_info.h>
 #include <ut/assert.h>
 
 using namespace std;

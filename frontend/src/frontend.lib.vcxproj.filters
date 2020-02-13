@@ -37,6 +37,9 @@
     <ClCompile Include="untested\about_ui.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
+    <ClCompile Include="symbol_resolver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -58,6 +61,8 @@
     <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\about_ui.h" />
+    <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\symbol_resolver.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

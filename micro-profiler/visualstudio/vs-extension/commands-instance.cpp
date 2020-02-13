@@ -3,10 +3,10 @@
 #include "command-ids.h"
 #include "helpers.h"
 
-#include <common/serialization.h>
 #include <common/string.h>
 #include <frontend/file.h>
 #include <frontend/function_list.h>
+#include <frontend/serialization.h>
 
 #include <strmd/serializer.h>
 #include <windows.h>

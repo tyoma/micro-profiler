@@ -21,7 +21,6 @@
 #include <collector/module_tracker.h>
 
 #include <common/module.h>
-#include <common/symbol_resolver.h>
 
 using namespace std;
 

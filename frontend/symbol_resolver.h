@@ -21,52 +21,40 @@
 #pragma once
 
 #include <common/image_info.h>
-#include <patcher/function_patch.h>
+
+#include <map>
 #include <unordered_map>
 
 namespace micro_profiler
 {
-	class image_patch : noncopyable
+	struct mapped_module;
+	struct module_info_metadata;
+
+	class symbol_resolver
 	{
 	public:
-		typedef std::function<bool (const symbol_info_mapped &function)> filter_t;
+		typedef std::pair<std::string, unsigned> fileline_t;
 
 	public:
-		template <typename InterceptorT>
-		image_patch(const std::shared_ptr< image_info<symbol_info_mapped> > &image, InterceptorT *interceptor);
-
-		void apply_for(const filter_t &filter);
-
-	private:
-		class patch_entry
-		{
-		public:
-			patch_entry(symbol_info_mapped symbol, const std::shared_ptr<function_patch> &patch);
-
-			const symbol_info_mapped &get_symbol() const;
-
-		private:
-			symbol_info_mapped _symbol;
-			std::shared_ptr<function_patch> _patch;
-		};
-
-		typedef std::unordered_map<const void *, patch_entry> patches_container_t;
+		virtual ~symbol_resolver();
+		virtual const std::string &symbol_name_by_va(long_address_t address) const;
+		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
+		void add_metadata(const mapped_module &basic, const module_info_metadata &metadata);
 
 	private:
-		const std::shared_ptr< image_info<symbol_info_mapped> > _image;
-		void * const _interceptor;
-		hooks<void>::on_enter_t * const _on_enter;
-		hooks<void>::on_exit_t * const _on_exit;
-		patches_container_t _patches;
-		executable_memory_allocator _allocator;
+		typedef std::unordered_map<unsigned int, std::string> files_map;
+		typedef std::map<long_address_t, symbol_info> cached_names_map;
+
+	private:
+		cached_names_map::const_iterator find_symbol_by_va(long_address_t address) const;
+
+	private:
+		std::string _empty;
+		files_map _files;
+		cached_names_map _mapped_symbols;
+
+	private:
+		template <typename ArchiveT>
+		friend void serialize(ArchiveT &archive, symbol_resolver &data);
 	};
-
-	
-	
-	template <typename InterceptorT>
-	inline image_patch::image_patch(const std::shared_ptr< image_info<symbol_info_mapped> > &image,
-			InterceptorT *interceptor)
-		: _image(image), _interceptor(interceptor),
-			_on_enter(hooks<InterceptorT>::on_enter()), _on_exit(hooks<InterceptorT>::on_exit())
-	{	}
 }

@@ -1,6 +1,5 @@
 #include "mocks_image_info.h"
 
-#include <common/symbol_resolver.h>
 #include <common/module.h>
 #include <ut/assert.h>
 

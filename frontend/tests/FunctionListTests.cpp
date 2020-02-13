@@ -4,7 +4,7 @@
 
 #include <test-helpers/helpers.h>
 
-#include <common/serialization.h>
+#include <frontend/serialization.h>
 
 #include <iomanip>
 #include <strmd/serializer.h>

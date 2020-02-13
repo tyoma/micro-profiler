@@ -1,6 +1,5 @@
 #include <collector/module_tracker.h>
 
-#include <common/symbol_resolver.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>

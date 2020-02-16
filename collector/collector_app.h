@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include "entry.h"
-
 #include <common/noncopyable.h>
 #include <functional>
 #include <ipc/endpoint.h>
@@ -46,7 +44,6 @@ namespace micro_profiler
 			const overhead &overhead_);
 		~collector_app();
 
-		handle *profile_image(void *in_image_address);
 		void stop();
 
 		// ipc::channel methods

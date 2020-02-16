@@ -52,7 +52,6 @@ namespace micro_profiler
 		namespace
 		{
 			const wstring c_profilerdir_macro = L"$(" + unicode(c_profilerdir_ev) + L")";
-			const wstring c_initializer_cpp = c_profilerdir_macro + L"\\micro-profiler.initializer.cpp";
 			const wstring c_profiler_library = c_profilerdir_macro + L"\\micro-profiler_$(PlatformName).lib";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
@@ -87,20 +86,6 @@ namespace micro_profiler
 						file = f;
 				});
 				return file;
-			}
-
-			void disable_pch(vcmodel::file &file)
-			{
-				file.enum_configurations([] (vcmodel::file_configuration_ptr c) {
-					struct disable_pch : vcmodel::tool::visitor
-					{
-						virtual void visit(vcmodel::compiler_tool &t) const
-						{	t.use_precompiled_header(vcmodel::compiler_tool::pch_none);	}
-					};
-
-					if (vcmodel::tool_ptr t = c->get_tool())
-						t->visit(disable_pch());
-				});
 			}
 
 			bool has_instrumentation(vcmodel::compiler_tool &compiler)
@@ -156,8 +141,7 @@ namespace micro_profiler
 
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
-					if (find_item_by_relpath(*project, c_initializer_cpp)
-						&& find_item_by_relpath(*project, c_profiler_library))
+					if (find_item_by_relpath(*project, c_profiler_library))
 					{
 						project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
 							struct check_compiler : vcmodel::tool::visitor
@@ -180,7 +164,7 @@ namespace micro_profiler
 
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
-					if (find_item_by_relpath(*project, c_initializer_cpp) || find_item_by_relpath(*project, c_profiler_library))
+					if (find_item_by_relpath(*project, c_profiler_library))
 						return true;
 					project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
 						struct check_compiler : vcmodel::tool::visitor
@@ -213,13 +197,8 @@ namespace micro_profiler
 			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&] (IDispatchPtr dte_project) {
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
-					if (add)
-					{
-						if (!find_item_by_relpath(*project, c_initializer_cpp))
-							disable_pch(*project->add_file(c_initializer_cpp));
-						if (!find_item_by_relpath(*project, c_profiler_library))
-							project->add_file(c_profiler_library);
-					}
+					if (add && !find_item_by_relpath(*project, c_profiler_library))
+						project->add_file(c_profiler_library);
 
 					project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
 						t->visit(instrument(add));
@@ -244,8 +223,6 @@ namespace micro_profiler
 			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [] (IDispatchPtr dte_project) {
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
-					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_initializer_cpp))
-						f->remove();
 					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_profiler_library))
 						f->remove();
 					project->enum_configurations([] (vcmodel::configuration_ptr cfg) {

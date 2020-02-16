@@ -34,7 +34,7 @@ namespace micro_profiler
 		class image : private std::shared_ptr<void>
 		{
 		public:
-			explicit image(const char *path);
+			explicit image(std::string path);
 
 			byte *load_address_ptr() const;
 			long_address_t load_address() const;
@@ -105,6 +105,8 @@ namespace micro_profiler
 		template <typename CharT>
 		inline void toupper(CharT &c)
 		{	c = static_cast<CharT>(::toupper(c));	}
+
+		std::shared_ptr<void> occupy_memory(void *start, unsigned int length = 1000);
 	}
 
 	bool operator <(const function_statistics &lhs, const function_statistics &rhs);

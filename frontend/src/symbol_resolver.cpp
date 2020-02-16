@@ -22,62 +22,77 @@
 
 #include <algorithm>
 #include <common/module.h>
-#include <common/protocol.h>
 #include <map>
 
 using namespace std;
 
 namespace micro_profiler
 {
+	const symbol_info *symbol_resolver::module_info::find_symbol_by_va(unsigned address) const
+	{
+		if (symbol_index.empty())
+			for (vector<symbol_info>::const_iterator i = symbols.begin(); i != symbols.end(); ++i)
+				symbol_index.insert(make_pair(i->rva, &*i));
+
+		module_info::addressed_symbols::const_iterator j = symbol_index.upper_bound(address);
+
+		if (j != symbol_index.begin())
+			--j;
+		else if (j == symbol_index.end())
+			return 0;
+		return (j->first <= address) & (address < j->second->size + j->first) ? j->second : 0;
+	}
+
+
 	symbol_resolver::~symbol_resolver()
 	{	}
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
 	{
-		cached_names_map::const_iterator i = find_symbol_by_va(address);
+		const module_info *m;
+		const symbol_info *i = find_symbol_by_va(address, m);
 
-		return i != _mapped_symbols.end() ? i->second.name : _empty;
+		return i ? i->name : _empty;
 	}
 
 	bool symbol_resolver::symbol_fileline_by_va(long_address_t address, fileline_t &result) const
 	{
-		cached_names_map::const_iterator i = find_symbol_by_va(address);
+		const module_info *m;
+		const symbol_info *i = find_symbol_by_va(address, m);
 
-		if (i == _mapped_symbols.end())
+		if (!i)
 			return false;
-		files_map::const_iterator j = _files.find(i->second.file_id);
+		module_info::files_map::const_iterator j = m->files.find(i->file_id);
 
-		return j != _files.end() ? result.first = j->second, result.second = i->second.line, true : false;
+		return j != m->files.end() ? result.first = j->second, result.second = i->line, true : false;
 	}
 
-	void symbol_resolver::add_metadata(const mapped_module &basic, const module_info_metadata &metadata)
+	void symbol_resolver::add_mapping(const mapped_module &mapping)
+	{	_mappings.insert(make_pair(mapping.load_address, mapping));	}
+
+	void symbol_resolver::add_metadata(unsigned persistent_id, module_info_metadata &metadata)
 	{
-		const unsigned int file_id_base = _files.empty() ? 0u : max_element(_files.begin(), _files.end())->first;
+		module_info &m = _modules[persistent_id];
 
-		for (vector<symbol_info>::const_iterator i = metadata.symbols.begin(); i != metadata.symbols.end(); ++i)
-		{
-			symbol_info s = *i;
-
-			s.file_id += file_id_base;
-			_mapped_symbols.insert(make_pair(basic.load_address + i->rva, s));
-		}
-
-		for (vector< pair<unsigned int, string> >::const_iterator i = metadata.source_files.begin();
-			i != metadata.source_files.end(); ++i)
-		{
-			_files.insert(make_pair(file_id_base + i->first, i->second));
-		}
+		for (vector< pair<unsigned int, string> >::const_iterator i = metadata.source_files.begin(); i != metadata.source_files.end(); ++i)
+			m.files.insert(make_pair(i->first, i->second));
+		swap(m.symbols, metadata.symbols);
 	}
 
-	symbol_resolver::cached_names_map::const_iterator symbol_resolver::find_symbol_by_va(
-		long_address_t address) const
+	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const module_info *&module) const
 	{
-		cached_names_map::const_iterator i = _mapped_symbols.upper_bound(address);
+		mappings_map::const_iterator i = _mappings.upper_bound(address);
 
-		if (i != _mapped_symbols.begin())
+		if (i != _mappings.begin())
 			--i;
-		else if (i == _mapped_symbols.end())
-			return _mapped_symbols.end();
-		return (i->first <= address) & (address < i->second.size + i->first) ? i : _mapped_symbols.end();
+		else if (i == _mappings.end())
+			return 0;
+
+		const modules_map::const_iterator m = _modules.find(i->second.persistent_id);
+
+		if (m == _modules.end()) // not tested yet
+			return 0;
+		module = &m->second;
+		return module->find_symbol_by_va(static_cast<unsigned>(address - i->second.load_address));
 	}
 }

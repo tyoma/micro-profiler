@@ -3,6 +3,8 @@
 #include <common/file_id.h>
 #include <common/path.h>
 
+#include "helpers.h"
+
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -15,7 +17,10 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			shared_ptr<symbol_info> get_function_containing(const image_info<symbol_info> &ii, const char *name_part)
+			typedef const image_info<symbol_info> metadata_t;
+			typedef shared_ptr<metadata_t> metadata_ptr;
+
+			shared_ptr<symbol_info> get_function_containing(metadata_t &ii, const char *name_part)
 			{
 				shared_ptr<symbol_info> symbol;
 
@@ -25,17 +30,20 @@ namespace micro_profiler
 				});
 				return symbol;
 			}
+
+			int dummy;
 		}
 
 		begin_test_suite( ModuleTrackerTests )
-			vector<image> _images;
+			vector<string> _images;
 
 			init( LoadImages )
 			{
-				image images[] = {
-					image("symbol_container_1"),
-					image("symbol_container_2"),
-					image("symbol_container_3_nosymbols"),
+				string images[] = {
+					image("symbol_container_1").absolute_path(),
+					image("symbol_container_2").absolute_path(),
+					image("symbol_container_3_nosymbols").absolute_path(),
+					get_module_info(&dummy).path,
 				};
 
 				_images.assign(images, array_end(images));
@@ -46,8 +54,11 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t;
-				loaded_modules loaded_images(1);
-				unloaded_modules unloaded_images(2);
+				loaded_modules loaded_images;
+				unloaded_modules unloaded_images;
+
+				t.get_changes(loaded_images, unloaded_images);
+				loaded_images.resize(10), unloaded_images.resize(10);
 
 				// ACT
 				t.get_changes(loaded_images, unloaded_images);
@@ -65,60 +76,38 @@ namespace micro_profiler
 				loaded_modules loaded_images;
 				unloaded_modules unloaded_images;
 
+				t.get_changes(loaded_images, unloaded_images);
+
 				// ACT
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
+				image image0(_images[0]);
 				t.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
 				assert_equal(1u, loaded_images.size());
 				assert_is_empty(unloaded_images);
 
-				assert_equal(0u, loaded_images[0].instance_id);
-				assert_equal(_images[0].load_address(), loaded_images[0].load_address);
-				assert_equal(file_id(_images[0].absolute_path()), file_id(loaded_images[0].path));
+				assert_equal(image0.load_address_ptr(), loaded_images[0].base);
+				assert_equal(file_id(_images[0]), file_id(loaded_images[0].path));
 
 				// ACT
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
+				image image1(_images[1]);
+				image image2(_images[2]);
 				t.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
 				assert_equal(2u, loaded_images.size());
 				assert_is_empty(unloaded_images);
 
-				assert_equal(1u, loaded_images[0].instance_id);
-				assert_equal(_images[1].load_address_ptr(), loaded_images[0].base);
-				assert_equal(file_id(_images[1].absolute_path()), file_id(loaded_images[0].path));
-				assert_equal(2u, loaded_images[1].instance_id);
-				assert_equal(_images[2].load_address_ptr(), loaded_images[1].base);
-				assert_equal(file_id(_images[2].absolute_path()), file_id(loaded_images[1].path));
-			}
+				const mapped_module *mm[] ={
+					find_module(loaded_images, _images[1]),
+					find_module(loaded_images, _images[2]),
+				};
 
-
-			test( MixedEventsAreTranslatedToImageInfoResultPathAndBaseAddressInTheResult )
-			{
-				// INIT
-				module_tracker t;
-				loaded_modules loaded_images;
-				unloaded_modules unloaded_images;
-
-				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.get_changes(loaded_images, unloaded_images); // to clear queues
-
-				// ACT
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.unload(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.unload(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.get_changes(loaded_images, unloaded_images);
-
-				// ASSERT
-				assert_equal(1u, loaded_images.size());
-				assert_equal(2u, unloaded_images.size());
-
-				assert_equal(2u, loaded_images[0].instance_id);
-				assert_equal(1u, unloaded_images[0]);
-				assert_equal(0u, unloaded_images[1]);
+				assert_null(find_module(loaded_images, _images[0]));
+				assert_not_null(mm[0]);
+				assert_equal(image1.load_address_ptr(), mm[0]->base);
+				assert_not_null(mm[1]);
+				assert_equal(image2.load_address_ptr(), mm[1]->base);
 			}
 
 
@@ -126,24 +115,20 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t;
-				loaded_modules l;
+				loaded_modules l[2];
 				unloaded_modules u;
 
 				// ACT
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.get_changes(l, u);
+				image image0(_images[0]); // To guarantee at least one module - we don't care if it's the first in the list.
+				t.get_changes(l[0], u);
+				image image1(_images[1]);
+				image image2(_images[2]);
+				t.get_changes(l[1], u);
 
 				// ASSERT
-				assert_equal(0u, l[0].instance_id);
-
-				// ACT
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.get_changes(l, u);
-
-				// ASSERT
-				assert_equal(1u, l[0].instance_id);
-				assert_equal(2u, l[1].instance_id);
+				assert_is_true(l[0][0].instance_id < l[1][0].instance_id);
+				assert_is_true(l[0][0].instance_id < l[1][1].instance_id);
+				assert_not_equal(l[1][1].instance_id, l[1][0].instance_id);
 			}
 
 
@@ -151,74 +136,28 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t;
-				loaded_modules l;
+				loaded_modules l[2];
 				unloaded_modules u;
 
-				// ACT
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.get_changes(l, u);
-
-				// ASSERT
-				assert_equal(1u, l[0].persistent_id);
+				t.get_changes(l[0], u);
 
 				// ACT
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.get_changes(l, u);
+				image image0(_images[0]);
+				t.get_changes(l[0], u);
 
 				// ASSERT
-				assert_equal(2u, l[0].persistent_id);
-				assert_equal(3u, l[1].persistent_id);
-			}
-
-
-			test( SameModulesReloadedPreservePersistentIDs )
-			{
-				// INIT
-				module_tracker t;
-				loaded_modules l, lhistory;
-				unloaded_modules u;
-
-				// get_changes() is called after each load to guarantee id ordering.
-				t.load(_images[0].load_address_ptr());
-				t.get_changes(l, u);
-				lhistory.insert(lhistory.end(), l.begin(), l.end());
-				t.load(_images[1].load_address_ptr());
-				t.get_changes(l, u);
-				lhistory.insert(lhistory.end(), l.begin(), l.end());
-				t.load(_images[2].load_address_ptr());
-				t.get_changes(l, u);
-				lhistory.insert(lhistory.end(), l.begin(), l.end());
-				t.unload(_images[0].load_address_ptr());
-				t.unload(_images[1].load_address_ptr());
-				t.unload(_images[2].load_address_ptr());
-				t.get_changes(l, u);
-				_images.clear();
-				LoadImages();
+				assert_equal(1u, l[0].size());
+				assert_is_true(1 <= l[0][0].persistent_id);
 
 				// ACT
-				t.load(_images[1].load_address_ptr());
-				t.get_changes(l, u);
+				image image1(_images[1]);
+				image image2(_images[2]);
+				t.get_changes(l[1], u);
 
 				// ASSERT
-				assert_equal(3u, l[0].instance_id);
-				assert_equal(2u, l[0].persistent_id);
-
-				// ACT
-				t.load(_images[0].load_address_ptr());
-				t.get_changes(l, u);
-
-				// ASSERT
-				assert_equal(4u, l[0].instance_id);
-				assert_equal(1u, l[0].persistent_id);
-
-				// ACT
-				t.load(_images[2].load_address_ptr());
-				t.get_changes(l, u);
-
-				// ASSERT
-				assert_equal(5u, l[0].instance_id);
-				assert_equal(3u, l[0].persistent_id);
+				assert_is_true(l[0][0].persistent_id < l[1][0].persistent_id);
+				assert_is_true(l[0][0].persistent_id < l[1][1].persistent_id);
+				assert_not_equal(l[1][0].persistent_id, l[1][1].persistent_id);
 			}
 
 
@@ -226,100 +165,145 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t;
-				loaded_modules l;
+				loaded_modules l[2];
 				unloaded_modules u;
 
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.get_changes(l, u);
+				auto_ptr<image> image0(new image(_images[0]));
+				auto_ptr<image> image1(new image(_images[1]));
+				auto_ptr<image> image2(new image(_images[2]));
+				t.get_changes(l[0], u);
+
+				const mapped_module *mm[] = {
+					find_module(l[0], _images[0]),
+					find_module(l[0], _images[1]),
+					find_module(l[0], _images[2]),
+				};
 
 				// ACT
-				t.unload(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.get_changes(l, u);
+				image1.reset();
+				t.get_changes(l[1], u);
 
 				// ASSERT
-				assert_equal(1u, u[0]);
+				unsigned reference1[] = { mm[1]->instance_id, };
+
+				assert_equivalent(reference1, u);
 
 				// ACT
-				t.unload(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.unload(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.get_changes(l, u);
+				image0.reset();
+				image2.reset();
+				t.get_changes(l[1], u);
 
 				// ASSERT
-				assert_equal(2u, u[0]);
-				assert_equal(0u, u[1]);
+				unsigned reference2[] = { mm[0]->instance_id, mm[2]->instance_id, };
+
+				assert_equivalent(reference2, u);
 			}
 
 
-			test( ModuleGetsNewIDOnReload )
+			test( MixedEventsAreTranslatedToImageInfoResultPathAndBaseAddressInTheResult )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l[2];
+				unloaded_modules u;
+
+				auto_ptr<image> image0(new image(_images[0]));
+				auto_ptr<image> image1(new image(_images[1]));
+				t.get_changes(l[0], u);
+
+				const mapped_module *mm[] = { find_module(l[0], _images[0]), find_module(l[0], _images[1]), };
+
+				// ACT
+				image image2(_images[2]);
+				image0.reset();
+				image1.reset();
+				t.get_changes(l[1], u);
+
+				// ASSERT
+				assert_equal(1u, l[1].size());
+				assert_not_null(find_module(l[1], _images[2]));
+
+				unsigned reference[] = { mm[0]->instance_id, mm[1]->instance_id, };
+
+				assert_equivalent(reference, u);
+			}
+
+
+			test( SameModulesReloadedPreservePersistentIDsAndHaveNewInstanceIDs ) // Run exclusively from others.
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l[5];
+				unloaded_modules u;
+
+				auto_ptr<image> image0(new image(_images[0]));
+				auto_ptr<image> image1(new image(_images[1]));
+				auto_ptr<image> image2(new image(_images[2]));
+				t.get_changes(l[0], u);
+				image0.reset();
+				image1.reset();
+				image2.reset();
+				t.get_changes(l[1], u);
+
+				const mapped_module *mm[] = {
+					find_module(l[0], _images[0]), find_module(l[0], _images[1]), find_module(l[0], _images[2]),
+				};
+				const unsigned initial_iid_max = max_element(l[0].begin(), l[0].end(),
+					[] (mapped_module lhs, mapped_module rhs) {
+					return lhs.instance_id < rhs.instance_id;
+				})->instance_id;
+
+				// Trying to guarantee different load addresses.
+				shared_ptr<void> guards[] = {
+					occupy_memory(mm[0]->base), occupy_memory(mm[1]->base), occupy_memory(mm[2]->base),
+				};
+				guards;
+
+				// ACT
+				image1.reset(new image(_images[1]));
+				t.get_changes(l[2], u);
+
+				// ASSERT
+				assert_equal(1u, l[2].size());
+				
+				assert_equal(mm[1]->persistent_id, l[2][0].persistent_id);
+				assert_is_true(initial_iid_max < l[2][0].instance_id);
+				assert_not_equal(mm[1]->base, l[2][0].base);
+
+				// ACT
+				image0.reset(new image(_images[0]));
+				t.get_changes(l[3], u);
+
+				// ASSERT
+				assert_equal(mm[0]->persistent_id, l[3][0].persistent_id);
+				assert_is_true(l[2][0].instance_id < l[3][0].instance_id);
+				assert_not_equal(mm[0]->base, l[3][0].base);
+
+				// ACT
+				image2.reset(new image(_images[2]));
+				t.get_changes(l[4], u);
+
+				// ASSERT
+				assert_equal(mm[2]->persistent_id, l[4][0].persistent_id);
+				assert_is_true(l[3][0].instance_id < l[4][0].instance_id);
+				assert_not_equal(mm[2]->base, l[4][0].base);
+			}
+
+
+			test( ModuleMetadataCanBeRetrievedByPersistentID )
 			{
 				// INIT
 				module_tracker t;
 				loaded_modules l;
 				unloaded_modules u;
 
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.unload(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.unload(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.unload(_images[2].get_symbol_address("get_function_addresses_3"));
+				auto_ptr<image> image0(new image(_images[0])); // Not necessairly these will be returned...
+				auto_ptr<image> image1(new image(_images[1]));
 				t.get_changes(l, u);
 
-				// ACT
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.get_changes(l, u);
-
-				// ASSERT
-				assert_equal(3u, l[0].instance_id);
-
-				// ACT
-				t.load(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.get_changes(l, u);
-
-				// ASSERT
-				assert_equal(4u, l[0].instance_id);
-				assert_equal(5u, l[1].instance_id);
-			}
-
-
-			test( UnloadingUnknownModuleDoesNotPutIntoUnloadQueue )
-			{
-				// INIT
-				module_tracker t;
-				loaded_modules l;
-				unloaded_modules u;
-
-				// ACT
-				t.unload(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.unload(_images[1].get_symbol_address("get_function_addresses_2"));
-				t.unload(_images[2].get_symbol_address("get_function_addresses_3"));
-				t.get_changes(l, u);
-
-				// ASSERT
-				assert_is_empty(u);
-			}
-
-
-			test( ModuleInformationCanBeRetrievedByInstanceID )
-			{
-				// INIT
-				module_tracker t;
-
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-
-				// ACT
-				shared_ptr<const mapped_module_ex> m1 = t.get_module(0);
-				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
-
-				// ASSERT
-				assert_not_null(m1);
-				assert_equal(_images[0].load_address_ptr(), m1->base);
-				assert_not_null(m2);
-				assert_equal(_images[1].load_address_ptr(), m2->base);
+				// ACT / ASSERT
+				assert_not_null(t.get_metadata(find_module(l, _images[0])->persistent_id));
+				assert_not_null(t.get_metadata(find_module(l, _images[1])->persistent_id));
 			}
 
 
@@ -327,34 +311,18 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
 
-				// ACT / ASSERT
-				assert_null(t.get_module(0));
+				// ACT / ASSERT (calls are made prior to first get_changes())
+				assert_null(t.get_metadata(0));
+				assert_null(t.get_metadata(1));
 
 				// INIT
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
+				t.get_changes(l, u);
 
-				// ACT / ASSERT
-				assert_null(t.get_module(2));
-			}
-
-
-			test( SameModuleObjectIsReturnedOnRepeatedCalls )
-			{
-				// INIT
-				module_tracker t;
-
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
-
-				// ACT
-				shared_ptr<const mapped_module_ex> m1 = t.get_module(0);
-				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
-				shared_ptr<const mapped_module_ex> m11 = t.get_module(0);
-
-				// ASSERT
-				assert_equal(m1, m11);
+				// ACT / ASSERT (we expect there're no that many modules loaded)
+				assert_null(t.get_metadata(3000));
 			}
 
 
@@ -362,25 +330,50 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
 
-				t.load(_images[0].get_symbol_address("get_function_addresses_1"));
-				t.load(_images[1].get_symbol_address("get_function_addresses_2"));
+				image image0(_images[0]);
+				image image1(_images[1]);
+				t.get_changes(l, u);
 
-				shared_ptr<const mapped_module_ex> m1 = t.get_module(0);
-				shared_ptr<const mapped_module_ex> m2 = t.get_module(1);
+				metadata_ptr md[] = {
+					t.get_metadata(find_module(l, _images[0])->persistent_id),
+					t.get_metadata(find_module(l, _images[1])->persistent_id),
+				};
 
 				// ACT
-				shared_ptr<symbol_info> s1 = get_function_containing(*m1->get_image_info(), "get_function_addresses_1");
-				shared_ptr<symbol_info> s2 = get_function_containing(*m2->get_image_info(), "get_function_addresses_2");
-				shared_ptr<symbol_info> s3 = get_function_containing(*m2->get_image_info(), "guinea_snprintf");
+				shared_ptr<symbol_info> s1 = get_function_containing(*md[0], "get_function_addresses_1");
+				shared_ptr<symbol_info> s2 = get_function_containing(*md[1], "get_function_addresses_2");
+				shared_ptr<symbol_info> s3 = get_function_containing(*md[1], "guinea_snprintf");
 
 				// ASSERT
 				assert_not_null(s1);
-				assert_equal(_images[0].get_symbol_rva("get_function_addresses_1"), s1->rva);
+				assert_equal(image0.get_symbol_rva("get_function_addresses_1"), s1->rva);
 				assert_not_null(s2);
-				assert_equal(_images[1].get_symbol_rva("get_function_addresses_2"), s2->rva);
+				assert_equal(image1.get_symbol_rva("get_function_addresses_2"), s2->rva);
 				assert_not_null(s3);
-				assert_equal(_images[1].get_symbol_rva("guinea_snprintf"), s3->rva);
+				assert_equal(image1.get_symbol_rva("guinea_snprintf"), s3->rva);
+			}
+
+
+			test( ImageInfoIsAccessibleEvenAfterTheModuleIsUnloaded )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
+
+				auto_ptr<image> image0(new image(_images[0]));
+				t.get_changes(l, u);
+				const mapped_module mm = *find_module(l, _images[0]);
+
+				//ACT
+				image0.reset();
+				t.get_changes(l, u);
+
+				// ACT / ASSERT
+				assert_not_null(t.get_metadata(mm.persistent_id));
 			}
 		end_test_suite
 	}

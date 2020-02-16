@@ -41,7 +41,6 @@
   <ItemGroup>
     <ClCompile Include="symbol_container_2.cpp" />
     <ClCompile Include="symbol_container_2_internal.cpp" />
-    <ClCompile Include="$(OutDir)..\micro-profiler.initializer.cpp" />   
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)collector\src\collector.vcxproj">

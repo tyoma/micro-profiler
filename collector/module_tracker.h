@@ -34,35 +34,35 @@ namespace micro_profiler
 	template <typename SymbolT>
 	struct image_info;
 
-	struct mapped_module_ex : mapped_module
-	{
-		mapped_module_ex(instance_id_t instance_id_, instance_id_t persistent_id_, const mapped_module &mm);
-
-		std::shared_ptr< image_info<symbol_info> > get_image_info() const;
-	};
-
 	class module_tracker
 	{
 	public:
+		typedef image_info<symbol_info> metadata_t;
+		typedef std::shared_ptr<const metadata_t> metadata_ptr;
+
+	public:
 		module_tracker();
 
-		void load(const void *in_image_address);
-		void unload(const void *in_image_address);
-		
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
-		std::shared_ptr<const mapped_module_ex> get_module(mapped_module_ex::instance_id_t id) const;
+		metadata_ptr get_metadata(mapped_module::instance_id_t persistent_id) const;
 
 	private:
-		typedef std::unordered_map<file_id, mapped_module::instance_id_t> modules_registry_t;
-		typedef std::unordered_map< mapped_module::instance_id_t, std::shared_ptr<mapped_module_ex> > mapped_modules_registry_t;
+		struct module_info
+		{
+			std::string path;
+			std::shared_ptr<mapped_module> mapping;
+		};
+
+		typedef std::unordered_map<file_id, mapped_module::instance_id_t /*persistent_id*/> files_registry_t;
+		typedef std::unordered_map<mapped_module::instance_id_t /*persistent_id*/, module_info> modules_registry_t;
 
 	private:
-		mt::mutex _mtx;
-		modules_registry_t _registry;
+		mutable mt::mutex _mtx;
+		files_registry_t _files_registry;
+		modules_registry_t _modules_registry;
 		std::vector<mapped_module> _lqueue;
 		std::vector<mapped_module::instance_id_t> _uqueue;
-		mapped_modules_registry_t _modules_registry;
 		mapped_module::instance_id_t _next_instance_id, _next_persistent_id;
 	};
 }

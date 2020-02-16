@@ -68,20 +68,13 @@ shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit));
 extern "C" calls_collector *g_collector_ptr = g_collector.get();
 overhead c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);
 collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead);
-auto_ptr<platform_initializer> g_intializer;
+platform_initializer g_intializer(g_profiler_app);
 
 #if defined(__clang__) || defined(__GNUC__)
 	#define PUBLIC __attribute__ ((visibility ("default")))
 #else
 	#define PUBLIC
 #endif
-
-extern "C" PUBLIC handle * MPCDECL micro_profiler_initialize(void *image_address)
-{
-	if (!g_intializer.get())
-		g_intializer.reset(new platform_initializer(g_profiler_app));
-	return g_profiler_app.profile_image(image_address);
-}
 
 extern "C" PUBLIC void __cyg_profile_func_enter(void *callee, void * /*call_site*/)
 {	g_collector_ptr->on_enter_nostack(read_tick_counter(), callee);	}

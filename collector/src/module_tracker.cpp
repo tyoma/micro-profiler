@@ -21,53 +21,50 @@
 #include <collector/module_tracker.h>
 
 #include <common/module.h>
+#include <unordered_set>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	mapped_module_ex::mapped_module_ex(instance_id_t instance_id_, instance_id_t persistent_id_, const mapped_module &mm)
-		: mapped_module(mm)
-	{	instance_id = instance_id_, persistent_id = persistent_id_;	}
-
-	shared_ptr< image_info<symbol_info> > mapped_module_ex::get_image_info() const
-	{	return load_image_info(path.c_str());	}
-
-
 	module_tracker::module_tracker()
 		: _next_instance_id(0u), _next_persistent_id(1u)
 	{	}
 
-	void module_tracker::load(const void *in_image_address)
-	{
-		mt::lock_guard<mt::mutex> l(_mtx);
-		const mapped_module mm = get_module_info(in_image_address);
-		const file_id fid = mm.path;
-		const mapped_module_ex::instance_id_t id = _next_instance_id++;
-		const modules_registry_t::const_iterator existed = _registry.find(file_id(mm.path));
-		const mapped_module_ex::instance_id_t persistent_id = existed == _registry.end()
-			? _registry[fid] = _next_persistent_id++ : existed->second;
-		const shared_ptr<mapped_module_ex> m(new mapped_module_ex(id, persistent_id, mm));
-
-		_modules_registry.insert(make_pair(id, m));
-		_lqueue.push_back(*m);
-	}
-
-	void module_tracker::unload(const void *in_image_address)
-	{
-		mt::lock_guard<mt::mutex> l(_mtx);
-		const byte *base = get_module_info(in_image_address).base;
-
-		for (mapped_modules_registry_t::iterator i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
-			if (base == i->second->base)
-			{
-				_uqueue.push_back(i->first);
-				break;
-			}
-	}
-
 	void module_tracker::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
 	{
+		unordered_set<unsigned> in_snapshot;
+
+		enumerate_process_modules([&] (mapped_module mm) {
+			file_id fid(mm.path);
+			const unsigned &persistent_id = _files_registry[fid];
+			const bool is_new = !persistent_id;
+
+			if (is_new)
+				_files_registry[fid] = _next_persistent_id++;
+
+			module_info &mi = _modules_registry[persistent_id];
+
+			mm.persistent_id = persistent_id;
+			if (!mi.mapping)
+			{
+				mm.instance_id = _next_instance_id++;
+				mi.path = mm.path;
+				mi.mapping.reset(new mapped_module(mm));
+				_lqueue.push_back(mm);
+			}
+			in_snapshot.insert(persistent_id);
+		});
+
+		for (modules_registry_t::iterator i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
+		{
+			if (i->second.mapping && !in_snapshot.count(i->first))
+			{
+				_uqueue.push_back(i->second.mapping->instance_id);
+				i->second.mapping.reset();
+			}
+		}
+
 		loaded_modules_.clear();
 		unloaded_modules_.clear();
 
@@ -77,10 +74,11 @@ namespace micro_profiler
 		swap(unloaded_modules_, _uqueue);
 	}
 
-	shared_ptr<const mapped_module_ex> module_tracker::get_module(mapped_module_ex::instance_id_t id) const
+	module_tracker::metadata_ptr module_tracker::get_metadata(mapped_module::instance_id_t persistent_id) const
 	{
-		mapped_modules_registry_t::const_iterator i = _modules_registry.find(id);
+		mt::lock_guard<mt::mutex> l(_mtx);
+		modules_registry_t::const_iterator i = _modules_registry.find(persistent_id);
 
-		return i != _modules_registry.end() ? i->second : shared_ptr<mapped_module_ex>();
+		return i != _modules_registry.end() ? load_image_info(i->second.path.c_str()) : 0;
 	}
 }

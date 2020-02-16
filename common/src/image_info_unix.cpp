@@ -78,6 +78,6 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr< image_info<symbol_info> > load_image_info(const char *image_path)
+	shared_ptr< image_info<symbol_info> > load_image_info(const string &image_path)
 	{	return shared_ptr< image_info<symbol_info> >(new elf_image_info(image_path));	}
 }

@@ -55,7 +55,7 @@ namespace micro_profiler
 		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
 	};
 
-	std::shared_ptr< image_info<symbol_info> > load_image_info(const char *image_path);
+	std::shared_ptr< image_info<symbol_info> > load_image_info(const std::string &image_path);
 
 	class offset_image_info : public image_info<symbol_info_mapped>
 	{

@@ -32,7 +32,7 @@ namespace micro_profiler
 	{
 		typedef unsigned int instance_id_t;
 
-		instance_id_t instance_id; // One-based instance ID of this mapping to identify it among loaded.
+		instance_id_t instance_id; // Zero-based instance ID of this mapping to identify it among loaded.
 		instance_id_t persistent_id; // Persistent one-based ID of the image this mapping is for.
 		std::string path;
 		union

@@ -31,7 +31,7 @@ namespace micro_profiler
 				std::function<void (const loaded_modules &m)> modules_loaded;
 				std::function<void (const statistics_map_detailed &u)> updated;
 				std::function<void (const unloaded_modules &m)> modules_unloaded;
-				std::function<void (const mapped_module &mb, const module_info_metadata &md)> metadata_received;
+				std::function<void (unsigned id, const module_info_metadata &md)> metadata_received;
 
 			private:
 				std::shared_ptr<void> _ownee;
@@ -42,12 +42,12 @@ namespace micro_profiler
 			template <typename ArchiveT>
 			inline void serialize(ArchiveT &a, frontend_state &state)
 			{
+				unsigned metadata_id;
 				commands c;
 				initialization_data id;
 				loaded_modules lm;
 				statistics_map_detailed u;
 				unloaded_modules um;
-				mapped_module mb;
 				module_info_metadata md;
 
 				a(c);
@@ -75,7 +75,7 @@ namespace micro_profiler
 
 				case module_metadata:
 					if (state.metadata_received)
-						a(mb), a(md), state.metadata_received(mb, md);
+						a(metadata_id), a(md), state.metadata_received(metadata_id, md);
 					break;
 
 				default:

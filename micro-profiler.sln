@@ -7,9 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micro-profiler", "micro-pro
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playground", "playground\playground.vcxproj", "{3D930790-1E56-4749-9B09-731E22556CB1}"
-	ProjectSection(ProjectDependencies) = postProject
-		{5EDCE420-14E9-46E6-B19E-E4AC3240FC94} = {5EDCE420-14E9-46E6-B19E-E4AC3240FC94}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deployment", "deployment\deployment.vcxproj", "{AB34E6B5-083B-4463-9CF0-21B02F4C5D48}"
 	ProjectSection(ProjectDependencies) = postProject

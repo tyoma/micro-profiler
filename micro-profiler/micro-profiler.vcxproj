@@ -69,9 +69,13 @@
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
     <None Include="module\micro-profiler.def" />
-    <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest" />
+    <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
     <Fix Include="visualstudio\vs-extension\extension.vs10.vsixmanifest" />
-    <None Include="visualstudio\vs-extension\extension.vsixmanifest" />
+    <None Include="visualstudio\vs-extension\extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
     <Fix Include="visualstudio\vs-extension\extension.vsixmanifest" />
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
     <Fix Include="visualstudio\vs-extension\micro-profiler.pkgdef" />

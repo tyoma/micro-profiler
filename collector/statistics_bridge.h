@@ -44,7 +44,7 @@ namespace micro_profiler
 
 		void analyze();
 		void update_frontend();
-		void send_module_metadata(unsigned int instance_id);
+		void send_module_metadata(unsigned int persistent_id);
 
 	private:
 		template <typename DataT>

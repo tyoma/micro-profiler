@@ -1,5 +1,3 @@
-#include <collector/entry.h>
-
 #include <micro-profiler.tests/guineapigs/guinea_runner.h>
 
 #include <common/constants.h>
@@ -118,8 +116,11 @@ namespace micro_profiler
 				// INIT
 				mt::event ready;
 
+				frontend_state->modules_loaded = bind(&mt::event::set, &ready);
 				frontend_state->modules_unloaded = bind(&mt::event::set, &ready);
 				controller->sessions[0]->load_module("symbol_container_2_instrumented");
+
+				ready.wait();
 
 				// ACT
 				controller->sessions[0]->unload_module("symbol_container_2_instrumented");
@@ -138,7 +139,6 @@ namespace micro_profiler
 				typedef void (f2F_t)(void (*&f)(int * volatile begin, int * volatile end));
 
 				mt::event ready;
-				auto_ptr<image> mp(new image("micro-profiler_x64"));
 				auto_ptr<image> guineapig;
 				shared_ptr< vector<mocks::statistics_map_detailed> >
 					statistics(new vector<mocks::statistics_map_detailed>);

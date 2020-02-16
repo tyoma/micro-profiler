@@ -21,12 +21,20 @@
 #include "main.h"
 
 #include <collector/collector_app.h>
+#include <common/module.h>
+#include <dlfcn.h>
+#include <mt/atomic.h>
 
 namespace micro_profiler
 {
 	platform_initializer::platform_initializer(collector_app &app)
 		: _app(app)
-	{	}
+	{
+		static mt::atomic<int> g_patch_lockcount(0);
+
+		if (0 == g_patch_lockcount.fetch_add(1))
+			dlopen(get_module_info(&g_patch_lockcount).path.c_str(), RTLD_NODELETE | RTLD_LAZY);
+	}
 
 	platform_initializer::~platform_initializer()
 	{	}

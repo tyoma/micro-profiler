@@ -1,6 +1,8 @@
 #pragma once
 
 #include <collector/calls_collector.h>
+#include <common/file_id.h>
+#include <common/module.h>
 #include <vector>
 
 namespace micro_profiler
@@ -38,6 +40,15 @@ namespace micro_profiler
 			std::vector<const void *> _stack;
 			const void **_stack_ptr;
 		};
+
+		template <typename T>
+		inline const mapped_module *find_module(T &m, const std::string &path)
+		{
+			for (typename T::const_iterator i = m.begin(); i != m.end(); ++i)
+				if (file_id(i->path) == file_id(path))
+					return &*i;
+			return 0;
+		}
 	}
 
 	inline bool operator ==(const call_record &lhs, const call_record &rhs)

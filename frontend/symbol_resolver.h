@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/image_info.h>
+#include <common/protocol.h>
 
 #include <map>
 #include <unordered_map>
@@ -28,7 +29,6 @@
 namespace micro_profiler
 {
 	struct mapped_module;
-	struct module_info_metadata;
 
 	class symbol_resolver
 	{
@@ -39,22 +39,38 @@ namespace micro_profiler
 		virtual ~symbol_resolver();
 		virtual const std::string &symbol_name_by_va(long_address_t address) const;
 		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
-		void add_metadata(const mapped_module &basic, const module_info_metadata &metadata);
+		void add_mapping(const mapped_module &mapping);
+		void add_metadata(unsigned persistent_id, module_info_metadata &metadata);
 
 	private:
-		typedef std::unordered_map<unsigned int, std::string> files_map;
-		typedef std::map<long_address_t, symbol_info> cached_names_map;
+		struct module_info
+		{
+			typedef std::map<unsigned /*rva*/, const symbol_info * /*symbol*/> addressed_symbols;
+			typedef std::unordered_map<unsigned int, std::string> files_map;
+
+			const symbol_info *find_symbol_by_va(unsigned address) const;
+
+			std::vector<symbol_info> symbols;
+			files_map files;
+			mutable addressed_symbols symbol_index;
+		};
+
+		typedef std::map<long_address_t /*base*/, mapped_module> mappings_map;
+		typedef std::unordered_map<unsigned int /*persistent_id*/, module_info> modules_map;
 
 	private:
-		cached_names_map::const_iterator find_symbol_by_va(long_address_t address) const;
+		const symbol_info *find_symbol_by_va(long_address_t address, const module_info *&module) const;
 
 	private:
 		std::string _empty;
-		files_map _files;
-		cached_names_map _mapped_symbols;
+		mappings_map _mappings;
+		modules_map _modules;
 
 	private:
 		template <typename ArchiveT>
 		friend void serialize(ArchiveT &archive, symbol_resolver &data);
+
+		template <typename ArchiveT>
+		friend void serialize(ArchiveT &archive, module_info &data);
 	};
 }

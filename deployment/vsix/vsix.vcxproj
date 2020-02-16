@@ -81,9 +81,6 @@ mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
 			call sha256 hashappicon &quot;$(OutDirX86)logo.ico&quot;
 			call sha256 hashpkgdef &quot;$(OutDirX86)micro-profiler.pkgdef&quot;
 
-			call sha256 hashentry &quot;$(OutDirX86)entry.h&quot;
-			call sha256 hashinit &quot;$(OutDirX86)micro-profiler.initializer.cpp&quot;
-
 			call replace &quot;%(PackReplace.Identity)&quot; &gt; &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot;
 			call mkzip &quot;$(IntDir)%(PackReplace.Filename)%(PackReplace.Extension)&quot; &quot;$(IntDir)$(TargetName).zip&quot;"/>
 	</Target>

@@ -62,17 +62,16 @@ namespace micro_profiler
 		_analyzer.clear();
 	}
 
-	void statistics_bridge::send_module_metadata(unsigned int instance_id)
+	void statistics_bridge::send_module_metadata(unsigned int persistent_id)
 	{
-		shared_ptr<const mapped_module_ex> module = _module_tracker->get_module(instance_id);
-		shared_ptr< image_info<symbol_info> > ii = module->get_image_info();
+		module_tracker::metadata_ptr metadata = _module_tracker->get_metadata(persistent_id);
 		module_info_metadata md;
 
-		ii->enumerate_functions([&] (const symbol_info &symbol) {
+		metadata->enumerate_functions([&] (const symbol_info &symbol) {
 			md.symbols.push_back(symbol);
 		});
 
-		ii->enumerate_files([&] (const pair<unsigned, string> &file) {
+		metadata->enumerate_files([&] (const pair<unsigned, string> &file) {
 			md.source_files.push_back(file);
 		});
 
@@ -81,7 +80,7 @@ namespace micro_profiler
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
 
 		archive(module_metadata);
-		archive(*module);
+		archive(persistent_id);
 		archive(md);
 		_frontend.message(const_byte_range(_buffer.data(), _buffer.size()));
 	}

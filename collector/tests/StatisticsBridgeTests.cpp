@@ -1,9 +1,9 @@
 #include <collector/statistics_bridge.h>
 
+#include "helpers.h"
 #include "mocks.h"
 
 #include <algorithm>
-//#include <collector/calibration.h>
 #include <collector/module_tracker.h>
 #include <common/path.h>
 #include <common/time.h>
@@ -43,7 +43,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( StatisticsBridgeTests )
-			vector<image> images;
+			vector<string> images;
 			shared_ptr<mocks::Tracer> cc;
 			shared_ptr<mocks::frontend_state> state;
 			shared_ptr<ipc::channel> frontend;
@@ -53,10 +53,10 @@ namespace micro_profiler
 
 			init( CreateQueue )
 			{
-				image images_[] = {
-					image("symbol_container_1"),
-					image("symbol_container_2"),
-					image("symbol_container_3_nosymbols"),
+				string images_[] = {
+					image("symbol_container_1").absolute_path(),
+					image("symbol_container_2").absolute_path(),
+					image("symbol_container_3_nosymbols").absolute_path(),
 				};
 
 				images.assign(images_, array_end(images_));
@@ -211,124 +211,100 @@ namespace micro_profiler
 				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
 
 				// ACT
-				mtracker->load(images[0].get_symbol_address("get_function_addresses_1"));
+				image image0(images[0]);
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(1u, loads.size());
-				assert_equal(1u, loads[0].size());
-
-				assert_equal(0u, loads[0][0].instance_id);
+				assert_not_null(find_module(loads[0], images[0]));
 
 				// ACT
-				mtracker->load(images[1].get_symbol_address("get_function_addresses_2"));
-				mtracker->load(images[2].get_symbol_address("get_function_addresses_3"));
+				image image1(images[1]);
+				image image3(images[2]);
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(2u, loads.size());
 				assert_equal(2u, loads[1].size());
-
-				assert_equal(1u, loads[1][0].instance_id);
-				assert_equal(2u, loads[1][1].instance_id);
+				assert_not_null(find_module(loads[1], images[1]));
+				assert_not_null(find_module(loads[1], images[2]));
 			}
 
 
 			test( UnloadedModulesAreReportedOnUpdate )
 			{
 				// INIT
+				loaded_modules l;
 				vector<unloaded_modules> unloads;
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 
-				mtracker->load(images[0].get_symbol_address("get_function_addresses_1"));
-				mtracker->load(images[1].get_symbol_address("get_function_addresses_2"));
-				mtracker->load(images[2].get_symbol_address("get_function_addresses_3"));
-				b.update_frontend();
+				state->modules_loaded = [&] (const loaded_modules &m) { l = m; };
 				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
 
+				auto_ptr<image> image0(new image(images[0]));
+				auto_ptr<image> image1(new image(images[1]));
+				auto_ptr<image> image2(new image(images[2]));
+				b.update_frontend();
+
+				const mapped_module *mm[] = {
+					find_module(l, images[0]), find_module(l, images[1]), find_module(l, images[2]),
+				};
+
 				// ACT
-				mtracker->unload(images[0].get_symbol_address("get_function_addresses_1"));
+				image1.reset();
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(1u, unloads.size());
-				assert_equal(1u, unloads[0].size());
 
-				assert_equal(0u, unloads[0][0]);
+				unsigned reference1[] = { mm[1]->instance_id, };
+
+				assert_equivalent(reference1, unloads[0]);
 
 				// ACT
-				mtracker->unload(images[1].get_symbol_address("get_function_addresses_2"));
-				mtracker->unload(images[2].get_symbol_address("get_function_addresses_3"));
+				image0.reset();
+				image2.reset();
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(2u, unloads.size());
-				assert_equal(2u, unloads[1].size());
 
-				assert_equal(1u, unloads[1][0]);
-				assert_equal(2u, unloads[1][1]);
-			}
+				unsigned reference2[] = { mm[0]->instance_id, mm[2]->instance_id, };
 
-
-			test( EventsAreReportedInLoadsUpdatesUnloadsOrder )
-			{
-				// INIT
-				vector<int> order;
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
-				call_record trace[] = {
-					{	0, (void *)0x2223	},
-					{	2019, (void *)0	},
-				};
-
-				mtracker->load(images[0].get_symbol_address("get_function_addresses_1"));
-				b.update_frontend();
-
-				state->modules_loaded = [&] (const loaded_modules &) { order.push_back(0); };
-				state->updated = [&] (const mocks::statistics_map_detailed &) { order.push_back(1); };
-				state->modules_unloaded = [&] (const unloaded_modules &) { order.push_back(2); };
-
-				cc->Add(mt::thread::id(), trace);
-				b.analyze();
-
-				// ACT
-				mtracker->load(images[1].get_symbol_address("get_function_addresses_2"));
-				mtracker->unload(images[0].get_symbol_address("get_function_addresses_1"));
-				b.update_frontend();
-
-				// ASSERT
-				int reference1[] = { 0, 1, 2, };
-
-				assert_equal(reference1, order);
+				assert_equivalent(reference2, unloads[1]);
 			}
 
 
 			test( ModuleMetadataIsSerializedOnRequest )
 			{
 				// INIT
-				mapped_module mb;
+				unsigned persistent_id;
 				module_info_metadata md;
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				loaded_modules l;
+				unloaded_modules u;
 
-				state->metadata_received = [&] (const mapped_module &mb_, const module_info_metadata &md_) {
-					mb = mb_, md = md_;
+				state->metadata_received = [&] (unsigned id, const module_info_metadata &md_) {
+					persistent_id = id, md = md_;
 				};
 
-				mtracker->load(images[0].get_symbol_address("get_function_addresses_1"));
-				mtracker->load(images[1].get_symbol_address("get_function_addresses_2"));
+				image image0(images[0]);
+				image image1(images[1]);
+
+				mtracker->get_changes(l, u);
+
+				const mapped_module *mm[] = { find_module(l, images[0]), find_module(l, images[1]), };
 
 				// ACT
-				b.send_module_metadata(1);
+				b.send_module_metadata(mm[1]->persistent_id);
 
 				// ASSERT
-				assert_equal(1u, mb.instance_id);
-				assert_equal(images[1].load_address(), mb.load_address);
-				assert_not_equal(string::npos, mb.path.find("symbol_container_2"));
+				assert_equal(persistent_id, mm[1]->persistent_id);
 
 				const symbol_info *symbol = get_symbol_by_name(md.symbols, "get_function_addresses_2");
 
 				assert_not_null(symbol);
-				assert_equal(images[1].get_symbol_address("get_function_addresses_2"),
-					images[1].load_address_ptr() + symbol->rva);
+				assert_equal(image1.get_symbol_rva("get_function_addresses_2"), symbol->rva);
 #ifdef _WIN32
 				assert_equal("symbol_container_2.cpp", *get_file(md.source_files, symbol->file_id));
 #endif
@@ -336,25 +312,21 @@ namespace micro_profiler
 				symbol = get_symbol_by_name(md.symbols, "guinea_snprintf");
 
 				assert_not_null(symbol);
-				assert_equal(images[1].get_symbol_address("guinea_snprintf"),
-					images[1].load_address_ptr() + symbol->rva);
+				assert_equal(image1.get_symbol_rva("guinea_snprintf"), symbol->rva);
 #ifdef _WIN32
 				assert_equal("symbol_container_2.cpp", *get_file(md.source_files, symbol->file_id));
 #endif
 
 				// ACT
-				b.send_module_metadata(0);
+				b.send_module_metadata(mm[0]->persistent_id);
 
 				// ASSERT
-				assert_equal(0u, mb.instance_id);
-				assert_equal(images[0].load_address(), mb.load_address);
-				assert_not_equal(string::npos, mb.path.find("symbol_container_1"));
+				assert_equal(persistent_id, mm[0]->persistent_id);
 
 				symbol = get_symbol_by_name(md.symbols, "get_function_addresses_1");
 
 				assert_not_null(symbol);
-				assert_equal(images[0].get_symbol_address("get_function_addresses_1"),
-					images[0].load_address_ptr() + symbol->rva);
+				assert_equal(image0.get_symbol_rva("get_function_addresses_1"), symbol->rva);
 #ifdef _WIN32
 				assert_equal("symbol_container_1.cpp", *get_file(md.source_files, symbol->file_id));
 #endif

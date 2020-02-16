@@ -16,13 +16,6 @@ endif()
 
 set(MP_OUTDIR $<TARGET_FILE_DIR:${micro-profiler}>)
 
-add_custom_command(OUTPUT mpsdk
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../entry.h ${MP_OUTDIR}
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/micro-profiler.initializer.cpp ${MP_OUTDIR}
-	COMMENT "Copying SDK..."
-)
-set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/mpsdk PROPERTIES SYMBOLIC 1)
-
 if(MSVC)
 	project(micro-profiler C CXX ASM_MASM)
 	enable_language(ASM_MASM)
@@ -52,8 +45,6 @@ set(CALIBRATION_SOURCES
 set(COLLECTOR_SOURCES ${CALIBRATION_SOURCES}
 	calibration.cpp
 	main.cpp
-
-	mpsdk
 )
 
 if(UNIX)

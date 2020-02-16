@@ -15,9 +15,6 @@ pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
 
 	call sha256 hashmpx86 micro-profiler_Win32.dll
 	call sha256 hashmpx86lib micro-profiler_Win32.lib
-	
-	call sha256 hashinit micro-profiler.initializer.cpp
-	call sha256 hashentry entry.h
 popd
 pushd "%~dp0_build.windows.x64\_bin\RelWithDebInfo"
 	call sha256 hashmpx64 micro-profiler_x64.dll
@@ -43,9 +40,6 @@ pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
 	
 	call mkzip micro-profiler_Win32.dll "%OUTPUT%"
 	call mkzip micro-profiler_Win32.lib "%OUTPUT%"
-
-	call mkzip micro-profiler.initializer.cpp "%OUTPUT%"
-	call mkzip entry.h "%OUTPUT%"
 popd
 pushd "%~dp0_build.windows.x64\_bin\RelWithDebInfo"
 	call mkzip micro-profiler_x64.dll "%OUTPUT%"

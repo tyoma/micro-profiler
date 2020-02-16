@@ -1,4 +1,3 @@
 EXPORTS
 	_penter
 	_pexit
-	micro_profiler_initialize

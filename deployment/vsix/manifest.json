@@ -11,8 +11,6 @@
 		{"fileName":"/micro-profiler_x64.dll","sha256":"!hashmpx64!"},
 		{"fileName":"/1033/micro-profiler.ui.dll","sha256":"!hashmpui!"},
 		{"fileName":"/micro-profiler.pkgdef","sha256":"!hashpkgdef!"},
-		{"fileName":"/entry.h","sha256":"!hashentry!"},
-		{"fileName":"/micro-profiler.initializer.cpp","sha256":"!hashinit!"},
 		{"fileName":"/micro-profiler_Win32.lib","sha256":"!hashmpx86lib!"},
 		{"fileName":"/micro-profiler_x64.lib","sha256":"!hashmpx64lib!"},
 		{"fileName":"/logo.ico","sha256":"!hashappicon!"},

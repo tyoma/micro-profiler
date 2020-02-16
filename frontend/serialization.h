@@ -56,7 +56,14 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, symbol_resolver &data)
 	{
-		archive(data._mapped_symbols);
-		archive(data._files);
+		archive(data._mappings);
+		archive(data._modules);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, symbol_resolver::module_info &data)
+	{
+		archive(data.symbols);
+		archive(data.files);
 	}
 }

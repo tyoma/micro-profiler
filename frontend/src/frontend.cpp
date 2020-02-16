@@ -48,11 +48,11 @@ namespace micro_profiler
 
 	void frontend::message(const_byte_range payload)
 	{
+		unsigned id;
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> archive(reader);
 		initialization_data idata;
 		loaded_modules lmodules;
-		mapped_module mbasic;
 		module_info_metadata mmetadata;
 		commands c;
 
@@ -67,7 +67,10 @@ namespace micro_profiler
 		case modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				send(request_metadata, i->instance_id);
+			{
+				_resolver->add_mapping(*i);
+				send(request_metadata, i->persistent_id);
+			}
 			break;
 
 		case update_statistics:
@@ -76,9 +79,9 @@ namespace micro_profiler
 			break;
 
 		case module_metadata:
-			archive(mbasic);
+			archive(id);
 			archive(mmetadata);
-			_resolver->add_metadata(mbasic, mmetadata);
+			_resolver->add_metadata(id, mmetadata);
 			break;
 
 		default:

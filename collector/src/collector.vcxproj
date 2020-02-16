@@ -68,13 +68,7 @@
     <ClCompile Include="main_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <None Include="..\entry.h" />
     <MASM Include="hooks.asm" />
-    <None Include="micro-profiler.initializer.cpp" />
-    <Content Include="..\entry.h;micro-profiler.initializer.cpp">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>true</Visible>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
@@ -92,7 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="collector.rc">
-     </ResourceCompile>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="com.manifest" />

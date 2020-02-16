@@ -38,7 +38,7 @@ namespace micro_profiler
 		class dbghelp_image_info : public image_info<symbol_info>
 		{
 		public:
-			dbghelp_image_info(const shared_ptr<void> &dbghelp, const string &path, long_address_t base);
+			dbghelp_image_info(const shared_ptr<void> &dbghelp, const string &path);
 
 		private:
 			virtual void enumerate_functions(const symbol_callback_t &callback) const;
@@ -52,17 +52,12 @@ namespace micro_profiler
 
 
 
-		dbghelp_image_info::dbghelp_image_info(const shared_ptr<void> &dbghelp, const string &path, long_address_t base)
-			: _path(path), _dbghelp(dbghelp), _base(base)
+		dbghelp_image_info::dbghelp_image_info(const shared_ptr<void> &dbghelp, const string &path)
+			: _path(path), _dbghelp(dbghelp),
+				_base((::SetLastError(0), ::SymLoadModule64(_dbghelp.get(), NULL, path.c_str(), NULL, 0, 0)))
 		{
-			::SetLastError(0);
-			if (::SymLoadModule64(_dbghelp.get(), NULL, path.c_str(), NULL, _base, 0))
-			{
-				if (ERROR_SUCCESS == ::GetLastError() || INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path.c_str()))
-					return;
-				::SymUnloadModule64(_dbghelp.get(), _base);
-			}
-			throw invalid_argument("");
+			if (!_base)
+				throw invalid_argument("");
 		}
 
 		void dbghelp_image_info::enumerate_functions(const symbol_callback_t &callback) const
@@ -176,6 +171,6 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr< image_info<symbol_info> > load_image_info(const char *image_path)
-	{	return shared_ptr< image_info<symbol_info> >(new dbghelp_image_info(create_dbghelp(), image_path, 1));	}
+	shared_ptr< image_info<symbol_info> > load_image_info(const string &image_path)
+	{	return shared_ptr< image_info<symbol_info> >(new dbghelp_image_info(create_dbghelp(), image_path));	}
 }

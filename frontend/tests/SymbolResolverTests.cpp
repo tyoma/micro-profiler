@@ -34,7 +34,8 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata);
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x00F));
@@ -50,7 +51,8 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata);
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x013));
@@ -67,7 +69,8 @@ namespace micro_profiler
 				module_info_metadata metadata = { mkvector(symbols), };
 
 				// ACT
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata);
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1010));
@@ -80,29 +83,31 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver);
-				mapped_module basic = { 0, 0, "", { 0x1100000, }, };
+				mapped_module basic = { 0, 1, "", { 0x1100000, }, };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
+				r->add_metadata(1, metadata);
+
 				// ACT
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
 				assert_equal("bar", r->symbol_name_by_va(0x1100101));
 
 				// INIT
-				basic.load_address = 0x1100050;
+				basic.load_address = 0x1100501;
 
 				// ACT
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
 				assert_equal("bar", r->symbol_name_by_va(0x1100101));
 
-				assert_equal("foo", r->symbol_name_by_va(0x1100060));
-				assert_equal("bar", r->symbol_name_by_va(0x1100151));
+				assert_equal("foo", r->symbol_name_by_va(0x1100511));
+				assert_equal("bar", r->symbol_name_by_va(0x1100602));
 			}
 
 
@@ -114,7 +119,8 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata);
 
 				// ACT
 				const string *name1_1 = &r->symbol_name_by_va(0x0010);
@@ -160,7 +166,8 @@ namespace micro_profiler
 				module_info_metadata metadata = { mkvector(symbols), mkvector(files) };
 				symbol_resolver::fileline_t results[4];
 
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata);
 
 				// ACT / ASSERT
 				assert_is_true(r->symbol_fileline_by_va(0x010, results[0]));
@@ -209,11 +216,16 @@ namespace micro_profiler
 				};
 				symbol_resolver::fileline_t results[8];
 
-				r->add_metadata(basic, metadata[0]);
+				basic.persistent_id = 1;
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata[0]);
+
+				basic.persistent_id = 2;
 				basic.load_address = 0x8000;
 
 				// ACT / ASSERT
-				r->add_metadata(basic, metadata[1]);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata[1]);
 				r->symbol_fileline_by_va(0x010, results[0]);
 				r->symbol_fileline_by_va(0x101, results[1]);
 				r->symbol_fileline_by_va(0x158, results[2]);
@@ -259,7 +271,8 @@ namespace micro_profiler
 				module_info_metadata metadata = { mkvector(symbols), mkvector(files) };
 				symbol_resolver::fileline_t results[4];
 
-				r->add_metadata(basic, metadata);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata);
 
 				// ACT
 				shared_ptr<symbol_resolver> r2(new symbol_resolver);
@@ -314,7 +327,8 @@ namespace micro_profiler
 				module_info_metadata metadata = { mkvector(symbols), };
 				symbol_resolver::fileline_t result;
 
-				r.add_metadata(basic, metadata);
+				r.add_mapping(basic);
+				r.add_metadata(basic.persistent_id, metadata);
 
 				// ACT / ASSERT
 				assert_is_false(r.symbol_fileline_by_va(0x010, result));

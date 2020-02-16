@@ -8,6 +8,7 @@
 #include <linux/limits.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 using namespace std;
@@ -74,10 +75,8 @@ namespace micro_profiler
 		}
 
 
-		image::image(const char *path_)
+		image::image(string path)
 		{
-			string path(path_);
-
 			if (path.find(".so") == string::npos)
 				path = path + ".so";
 			reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
@@ -86,7 +85,7 @@ namespace micro_profiler
 				path = "lib" + path;
 				reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
 				if (!get())
-					throw runtime_error("Cannot load module specified!");
+					throw runtime_error(("Cannot load module '" + path + "' specified!").c_str());
 			}
 
 			void *addr = find_any_mapped_for(*path);
@@ -118,6 +117,14 @@ namespace micro_profiler
 			if (void *symbol = ::dlsym(get(), name))
 				return static_cast<byte *>(symbol) - load_address_ptr();
 			throw runtime_error("Symbol specified was not found!");
+		}
+
+		shared_ptr<void> occupy_memory(void *s, unsigned int l)
+		{
+			return shared_ptr<void>(::mmap(s, l, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0),
+				[l] (void *p) {
+				::munmap(p, l);
+			});
 		}
 	}
 }

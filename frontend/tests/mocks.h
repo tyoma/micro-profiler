@@ -40,7 +40,9 @@ namespace micro_profiler
 
 					metadata.symbols.push_back(symbol);
 				}
-				r->add_metadata(basic, metadata);
+				basic.persistent_id = static_cast<unsigned>(-1);
+				r->add_mapping(basic);
+				r->add_metadata(basic.persistent_id, metadata);
 				return r;
 			}
 		}

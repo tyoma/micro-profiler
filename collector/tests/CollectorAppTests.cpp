@@ -1,5 +1,6 @@
 #include <collector/collector_app.h>
 
+#include "helpers.h"
 #include "mocks.h"
 
 #include <collector/calibration.h>
@@ -23,11 +24,15 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			int dummy = 0;
 			const overhead c_overhead(0, 0);
 
-			handle *profile_this(collector_app &app)
-			{	return app.profile_image(&dummy);	}
+			bool has_function_containing(const map<string, symbol_info> &functions, const char *substring)
+			{
+				for (map<string, symbol_info>::const_iterator i = functions.begin(); i != functions.end(); ++i)
+					if (i->first.find(substring) != string::npos)
+						return true;
+				return false;
+			}
 		}
 
 		begin_test_suite( CollectorAppTests )
@@ -205,125 +210,143 @@ namespace micro_profiler
 			}
 
 
-			test( ImageLoadEventArrivesAtHandleObtaining )
+			test( ImageLoadEventArrivesWhenModuleLoads )
 			{
 				// INIT
 				mt::event ready;
-				loaded_modules m;
-				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
+				loaded_modules l;
 
-				state->modules_loaded = [&] (const loaded_modules &m_) {
-					m = m_;
+				state->modules_loaded = [&] (const loaded_modules &m) {
+					l = m;
+					ready.set();
+				};
+
+				collector_app app(factory, collector, c_overhead);
+
+				ready.wait(); // Guarantee that the load below leads to an individual notification.
+
+				// ACT
+				image image0("symbol_container_1");
+				ready.wait();
+
+				// ASSERT
+				assert_equal(1u, l.size());
+				assert_not_null(find_module(l, image0.absolute_path()));
+
+				// ACT
+				image image1("symbol_container_2");
+				ready.wait();
+
+				// ASSERT
+				assert_equal(1u, l.size());
+				assert_not_null(find_module(l, image1.absolute_path()));
+			}
+
+
+			test( ImageUnloadEventArrivesWhenModuleIsReleased )
+			{
+				// INIT
+				mt::mutex mtx;
+				mt::event ready;
+				loaded_modules l;
+				unloaded_modules u;
+				auto_ptr<image> image0(new image("symbol_container_1"));
+				auto_ptr<image> image1(new image("symbol_container_2"));
+				auto_ptr<image> image2(new image("symbol_container_3_nosymbols"));
+
+				state->modules_loaded = [&] (const loaded_modules &m) {
+					l.insert(l.end(), m.begin(), m.end());
+					ready.set();
+				};
+				state->modules_unloaded = [&] (const unloaded_modules &m) {
+					mt::lock_guard<mt::mutex> lock(mtx);
+
+					u.insert(u.end(), m.begin(), m.end());
 					ready.set();
 				};
 
 				collector_app app(factory, collector, c_overhead);
 
 				// ACT
-				auto_ptr<handle> h1(app.profile_image(images[0].get_symbol_address("get_function_addresses_1")));
 				ready.wait();
 
 				// ASSERT
-				assert_not_null(h1.get());
-				assert_equal(1u, m.size());
-				assert_equal(0u, m[0].instance_id);
+				assert_is_empty(u);
 
 				// INIT
-				m.clear();
-
-				// ACT
-				auto_ptr<handle> h2(app.profile_image(images[1].get_symbol_address("get_function_addresses_2")));
-				ready.wait();
-
-				// ASSERT
-				assert_not_null(h2.get());
-				assert_equal(1u, m.size());
-				assert_equal(1u, m[0].instance_id);
-			}
-
-
-
-			test( ImageUnloadEventArrivesAtHandleRelease )
-			{
-				// INIT
-				mt::event ready, unloaded_event;
-				unloaded_modules m;
-				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
-
-				state->modules_loaded = bind(&mt::event::set, &ready);
-				state->modules_unloaded = [&] (const unloaded_modules &um) {
-					m = um;
-					unloaded_event.set();
+				const mapped_module mm[] = {
+					*find_module(l, image0->absolute_path()),
+					*find_module(l, image1->absolute_path()),
+					*find_module(l, image2->absolute_path()),
 				};
 
-				collector_app app(factory, collector, c_overhead);
-
-				auto_ptr<handle> h1(app.profile_image(images[0].get_symbol_address("get_function_addresses_1")));
-				ready.wait();
-				auto_ptr<handle> h2(app.profile_image(images[1].get_symbol_address("get_function_addresses_2")));
-				ready.wait();
+				l.clear();
 
 				// ACT
-				h1.reset();
-				unloaded_event.wait();
+				image1.reset();
+				ready.wait();
 
 				// ASSERT
-				assert_equal(1u, m.size());
-				assert_equal(0u, m[0]);
+				unsigned reference1[] = { mm[1].instance_id, };
+
+				assert_is_empty(l);
+				assert_equivalent(reference1, u);
 
 				// INIT
-				m.clear();
+				u.clear();
 
 				// ACT
-				h2.reset();
-				unloaded_event.wait();
+				image0.reset();
+				image2.reset();
+
+				for (;;)
+				{
+					ready.wait();
+					mt::lock_guard<mt::mutex> lock(mtx);
+					if (u.size() == 2u)
+						break;
+				}
 
 				// ASSERT
-				assert_equal(1u, m.size());
-				assert_equal(1u, m[0]);
+				unsigned reference2[] = { mm[0].instance_id, mm[2].instance_id, };
+
+				assert_is_empty(l);
+				assert_equivalent(reference2, u);
 			}
 
 
 			test( LastBatchIsReportedToFrontend )
 			{
 				// INIT
-				mt::event modules_state_updated, update_lock(false, false), updated, resetter_ready;
+				mt::event exit_collector(false, false), ready, update_lock(false, false), updated;
 				vector<mocks::statistics_map_detailed> updates;
-				unloaded_modules m;
 
-				state->modules_loaded = bind(&mt::event::set, &modules_state_updated);
+				state->modules_loaded = bind(&mt::event::set, &ready);
 				state->updated = [&] (const mocks::statistics_map_detailed &u) {
 					updates.push_back(u);
 					updated.set();
 					update_lock.wait();
 				};
-				state->modules_unloaded = [&] (const unloaded_modules &um) {
-					m = um;
-					modules_state_updated.set();
-				};
 
-				auto_ptr<collector_app> app(new collector_app(factory, collector, c_overhead));
+				mt::thread worker([&] {
+					collector_app app(factory, collector, c_overhead);
 
-				auto_ptr<handle> h(profile_this(*app));
+					exit_collector.wait();
+				});
+
 				call_record trace1[] = { { 0, (void *)0x1223 }, { 1000, (void *)0 }, };
 				call_record trace2[] = { { 0, (void *)0x12230 }, { 545, (void *)0 }, };
 
-				modules_state_updated.wait();
+				ready.wait();
 
 				// ACT
 				collector->Add(mt::thread::id(), trace1);
 				updated.wait();
 				collector->Add(mt::thread::id(), trace2); // this will be the last batch
-				mt::thread resetter([&] {
-					resetter_ready.set();
-					h.reset();
-					app.reset();
-				});
-				resetter_ready.wait();
+				exit_collector.set();
 				mt::this_thread::sleep_for(mt::milliseconds(100));
 				update_lock.set();	// resume
-				modules_state_updated.wait();
-				resetter.join();
+				worker.join();
 
 				// ASSERT
 				assert_equal(2u, updates.size());
@@ -331,7 +354,6 @@ namespace micro_profiler
 				assert_equal(1u, updates[0].count(0x1223));
 				assert_equal(1u, updates[1].size());
 				assert_equal(1u, updates[1].count(0x12230));
-				assert_equal(1u, m.size());
 			}
 
 
@@ -347,7 +369,6 @@ namespace micro_profiler
 				};
 
 				collector_app app(factory, collector, c_overhead);
-				auto_ptr<handle> h(profile_this(app));
 
 				// ACT
 				call_record trace1[] = {
@@ -411,7 +432,6 @@ namespace micro_profiler
 				};
 
 				collector_app app(factory, collector, c_overhead);
-				auto_ptr<handle> h(profile_this(app));
 
 				// ACT
 				call_record trace1[] = {
@@ -491,9 +511,7 @@ namespace micro_profiler
 				};
 
 				collector_app app1(bind(&mocks::frontend_state::create, state1), tracer1, o1);
-				auto_ptr<handle> h1(profile_this(app1));
 				collector_app app2(bind(&mocks::frontend_state::create, state2), tracer2, o2);
-				auto_ptr<handle> h2(profile_this(app2));
 
 				// ACT
 				call_record trace[] = {
@@ -527,7 +545,6 @@ namespace micro_profiler
 				};
 
 				collector_app app(factory, collector, overhead(7, 10));
-				auto_ptr<handle> h(profile_this(app));
 
 				// ACT
 				call_record trace[] = {
@@ -585,48 +602,75 @@ namespace micro_profiler
 			test( ModuleMetadataRequestLeadsToMetadataSending )
 			{
 				// INIT
+				mt::mutex mtx;
 				mt::event ready;
-				mapped_module m;
 				vector_adapter message_buffer;
 				strmd::serializer<vector_adapter, packer> ser(message_buffer);
-				image images[] = { image("symbol_container_1"), image("symbol_container_2"), };
+				loaded_modules l;
+				unsigned persistent_id;
+				module_info_metadata md;
 
-				state->modules_loaded = [&] (const loaded_modules &) {
+				state->modules_loaded = [&] (const loaded_modules &m) {
+					mt::lock_guard<mt::mutex> lock(mtx);
+
+					l.insert(l.end(), m.begin(), m.end());
 					ready.set();
 				};
-				state->metadata_received = [&] (const mapped_module &m_, const module_info_metadata &) {
-					m = m_;
+				state->metadata_received = [&] (unsigned id, const module_info_metadata &m) {
+					persistent_id = id;
+					md = m;
 					ready.set();
 				};
 
 				collector_app app(factory, collector, c_overhead);
-				auto_ptr<handle> h1(app.profile_image(images[0].get_symbol_address("get_function_addresses_1")));
+
 				ready.wait();
-				auto_ptr<handle> h2(app.profile_image(images[1].get_symbol_address("get_function_addresses_2")));
-				ready.wait();
+				l.clear();
+
+				image image0("symbol_container_1");
+				image image1("symbol_container_2");
+
+				for (;;)
+				{
+					ready.wait();
+					mt::lock_guard<mt::mutex> lock(mtx);
+					if (l.size())
+						break;
+				}
+
+				const mapped_module mm[] = {
+					*find_module(l, image0.absolute_path()),
+					*find_module(l, image1.absolute_path()),
+				};
 
 				// ACT
 				ser(request_metadata);
-				ser(1u);
+				ser(mm[1].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 				ready.wait();
 
 				// ASSERT
-				assert_not_equal(string::npos, m.path.find("symbol_container_2"));
-				assert_equal(images[1].load_address(), m.load_address);
+				assert_equal(mm[1].persistent_id, persistent_id);
+				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
+					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
+				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
+					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
 
 				// INIT
 				message_buffer.buffer.clear();
 
 				// ACT
 				ser(request_metadata);
-				ser(0u);
+				ser(mm[0].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 				ready.wait();
 
 				// ASSERT
-				assert_not_equal(string::npos, m.path.find("symbol_container_1"));
-				assert_equal(images[0].load_address(), m.load_address);
+				assert_equal(mm[0].persistent_id, persistent_id);
+				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
+					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
+				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
+					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
 			}
 
 		end_test_suite

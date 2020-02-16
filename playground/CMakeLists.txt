@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 include_directories(../collector)
 link_directories($<TARGET_FILE_DIR:playground>)
 
-add_executable(playground main.cpp ../collector/src/micro-profiler.initializer.cpp)
+add_executable(playground main.cpp)
 
 target_link_libraries(playground micro-profiler)
 

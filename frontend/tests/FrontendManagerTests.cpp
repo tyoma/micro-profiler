@@ -287,7 +287,8 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 				symbol_info symbols1[] = { { "foo", 0x0100, 1 }, { "bar", 0x0200, 1 }, { "baz", 0x1100, 1 }, };
 				symbol_info symbols2[] = { { "FOO", 0x0100, 1 }, { "BAR", 0x2000, 1 }, };
-				mapped_module basic[] = { { 0u, 0u, "", { 0x10000, } }, { 0u, 0u, "", { 0x100000, } }, };
+				mapped_module basic1[] = { { 0u, 1u, "", { 0x10000, } }, };
+				mapped_module basic2[] = { { 10u, 2u, "", { 0x100000, } }, };
 				module_info_metadata metadata[] = { { mkvector(symbols1), }, { mkvector(symbols2), }, };
 				pair< unsigned, function_statistics_detailed_t<unsigned> > data1[] = {
 					make_pair(0x10100, function_statistics_detailed_t<unsigned>()),
@@ -303,7 +304,8 @@ namespace micro_profiler
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, module_metadata, basic[0], metadata[0]);
+				write(*c, modules_loaded, mkvector(basic1));
+				write(*c, module_metadata, basic1[0].persistent_id, metadata[0]);
 				write(*c, update_statistics, mkvector(data1));
 
 				// ASSERT
@@ -317,7 +319,8 @@ namespace micro_profiler
 				assert_equal(0x10100, model->get_address(1));
 
 				// ACT
-				write(*c, module_metadata, basic[1], metadata[1]);
+				write(*c, modules_loaded, mkvector(basic2));
+				write(*c, module_metadata, basic2[0].persistent_id, metadata[1]);
 				write(*c, update_statistics, mkvector(data2));
 
 				// ASSERT
@@ -898,7 +901,7 @@ namespace micro_profiler
 				write(*c, modules_loaded, mkvector(mi2));
 
 				// ASSERT
-				unsigned int reference2[] = { 1u, 10u, };
+				unsigned int reference2[] = { 99u, 1000u, };
 
 				assert_equal(reference2, outbound.requested_metadata);
 			}

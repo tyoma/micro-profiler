@@ -30,8 +30,8 @@ namespace micro_profiler
 		}
 
 
-		image::image(const char *path)
-			: shared_ptr<void>(::LoadLibraryA(path), &::FreeLibrary)
+		image::image(string path)
+			: shared_ptr<void>(::LoadLibraryA(path.c_str()), &::FreeLibrary)
 		{
 			if (!get())
 				throw runtime_error("Cannot load module specified!");
@@ -63,6 +63,14 @@ namespace micro_profiler
 			if (void *symbol = ::GetProcAddress(static_cast<HMODULE>(get()), name))
 				return static_cast<unsigned>(static_cast<byte *>(symbol) - load_address_ptr());
 			throw runtime_error("Symbol specified was not found!");
+		}
+
+		shared_ptr<void> occupy_memory(void *start, unsigned int length)
+		{
+			return shared_ptr<void>(::VirtualAlloc(start, length, MEM_RESERVE | MEM_COMMIT, PAGE_READONLY | PAGE_GUARD),
+				[length] (void *p) {
+				::VirtualFree(p, length, MEM_RELEASE);
+			});
 		}
 	}
 }

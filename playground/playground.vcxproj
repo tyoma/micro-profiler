@@ -42,11 +42,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="$(OutDir)micro-profiler.initializer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="$(OutDir)micro-profiler_$(PlatformName).lib" />
+    <ProjectReference Include="..\collector\src\collector.vcxproj">
+      <Project>{5edce420-14e9-46e6-b19e-e4ac3240fc94}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -66,24 +66,6 @@ namespace micro_profiler
 	collector_app::~collector_app()
 	{	stop();	}
 
-	handle *collector_app::profile_image(void *in_image_address)
-	{
-		struct image_instance : handle
-		{
-			image_instance(shared_ptr<module_tracker> q, void *in_image_address)
-				: _queue(q), _in_image_address(in_image_address)
-			{	_queue->load(_in_image_address);	}
-
-			virtual ~image_instance() throw()
-			{	_queue->unload(_in_image_address);	}
-
-			shared_ptr<module_tracker> _queue;
-			void *_in_image_address;
-		};
-
-		return new image_instance(_module_tracker, in_image_address);
-	}
-
 	void collector_app::stop()
 	{
 		if (_frontend_thread.get())
@@ -102,13 +84,13 @@ namespace micro_profiler
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> d(reader);
 		commands c;
-		unsigned int instance_id;
+		unsigned int persistent_id;
 
 		switch (d(c), c)
 		{
 		case request_metadata:
-			d(instance_id);
-			_bridge->send_module_metadata(instance_id);
+			d(persistent_id);
+			_bridge->send_module_metadata(persistent_id);
 			break;
 
 		default:

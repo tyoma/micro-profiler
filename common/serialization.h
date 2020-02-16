@@ -145,6 +145,7 @@ namespace micro_profiler
 	inline void serialize(ArchiveT &archive, mapped_module &data)
 	{
 		archive(data.instance_id);
+		archive(data.persistent_id);
 		archive(data.load_address);
 		archive(data.path);
 	}

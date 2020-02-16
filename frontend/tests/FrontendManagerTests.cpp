@@ -933,6 +933,35 @@ namespace micro_profiler
 			}
 
 
+			test( MetadataIsNoLongerRequestedAfterFrontendDestruction )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
+				shared_ptr<ipc::channel> c = m->create_session(outbound);
+				mapped_module_identified mi[] = {
+					create_mapping(17u, 0u),
+				};
+				pair< unsigned, function_statistics_detailed_t<unsigned> > data[] = {
+					make_pair(0x0100, function_statistics_detailed_t<unsigned>()),
+				};
+				wstring text;
+
+				write(*c, init, initialization_data());
+
+				const functions_list &fl = *_ui_creation_log[0]->model;
+
+				write(*c, modules_loaded, mkvector(mi));
+				write(*c, update_statistics, mkvector(data));
+
+				// ACT
+				c.reset();
+				fl.get_text(0, 1, text);
+
+				// ASSERT
+				assert_is_empty(outbound.requested_metadata);
+			}
+
 		end_test_suite
 	}
 }

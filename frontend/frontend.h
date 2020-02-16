@@ -31,7 +31,7 @@ namespace micro_profiler
 	class functions_list;
 	class symbol_resolver;
 
-	class frontend : public ipc::channel, noncopyable
+	class frontend : public ipc::channel, noncopyable, public std::enable_shared_from_this<frontend>
 	{
 	public:
 		frontend(ipc::channel &outbound);
@@ -50,6 +50,8 @@ namespace micro_profiler
 
 		template <typename DataT>
 		void send(commands command, const DataT &data);
+
+		std::shared_ptr<symbol_resolver> get_resolver();
 
 	private:
 		ipc::channel &_outbound;

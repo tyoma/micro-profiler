@@ -33,16 +33,10 @@ namespace micro_profiler
 {
 	frontend::frontend(ipc::channel &outbound)
 		: _outbound(outbound)			
-	{
-		_resolver.reset(new symbol_resolver([this] (unsigned int persistent_id) {
-			send(request_metadata, persistent_id);
-		}));
-	}
+	{	}
 
 	frontend::~frontend()
-	{
-		released();
-	}
+	{	released();	}
 
 	void frontend::disconnect_session() throw()
 	{	_outbound.disconnect();	}
@@ -64,14 +58,14 @@ namespace micro_profiler
 		{
 		case init:
 			archive(idata);
-			_model = functions_list::create(idata.ticks_per_second, _resolver);
+			_model = functions_list::create(idata.ticks_per_second, get_resolver());
 			initialized(idata.executable, _model);
 			break;
 
 		case modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				_resolver->add_mapping(*i);
+				get_resolver()->add_mapping(*i);
 			break;
 
 		case update_statistics:
@@ -82,7 +76,7 @@ namespace micro_profiler
 		case module_metadata:
 			archive(id);
 			archive(mmetadata);
-			_resolver->add_metadata(id, mmetadata);
+			get_resolver()->add_metadata(id, mmetadata);
 			break;
 
 		default:
@@ -99,5 +93,19 @@ namespace micro_profiler
 		archive(command);
 		archive(data);
 		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
+	}
+
+	shared_ptr<symbol_resolver> frontend::get_resolver()
+	{
+		if (!_resolver)
+		{
+			weak_ptr<frontend> wself = shared_from_this();
+
+			_resolver.reset(new symbol_resolver([wself] (unsigned int persistent_id) {
+				if (shared_ptr<frontend> self = wself.lock())
+					self->send(request_metadata, persistent_id);
+			}));
+		}
+		return _resolver;
 	}
 }

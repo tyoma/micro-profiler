@@ -274,7 +274,7 @@ namespace micro_profiler
 				assert_is_empty(u);
 
 				// INIT
-				const mapped_module mm[] = {
+				const mapped_module_identified mmi[] = {
 					*find_module(l, image0->absolute_path()),
 					*find_module(l, image1->absolute_path()),
 					*find_module(l, image2->absolute_path()),
@@ -287,7 +287,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				unsigned reference1[] = { mm[1].instance_id, };
+				unsigned reference1[] = { mmi[1].instance_id, };
 
 				assert_is_empty(l);
 				assert_equivalent(reference1, u);
@@ -308,7 +308,7 @@ namespace micro_profiler
 				}
 
 				// ASSERT
-				unsigned reference2[] = { mm[0].instance_id, mm[2].instance_id, };
+				unsigned reference2[] = { mmi[0].instance_id, mmi[2].instance_id, };
 
 				assert_is_empty(l);
 				assert_equivalent(reference2, u);
@@ -638,19 +638,19 @@ namespace micro_profiler
 						break;
 				}
 
-				const mapped_module mm[] = {
+				const mapped_module_identified mmi[] = {
 					*find_module(l, image0.absolute_path()),
 					*find_module(l, image1.absolute_path()),
 				};
 
 				// ACT
 				ser(request_metadata);
-				ser(mm[1].persistent_id);
+				ser(mmi[1].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 				ready.wait();
 
 				// ASSERT
-				assert_equal(mm[1].persistent_id, persistent_id);
+				assert_equal(mmi[1].persistent_id, persistent_id);
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
@@ -661,12 +661,12 @@ namespace micro_profiler
 
 				// ACT
 				ser(request_metadata);
-				ser(mm[0].persistent_id);
+				ser(mmi[0].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 				ready.wait();
 
 				// ASSERT
-				assert_equal(mm[0].persistent_id, persistent_id);
+				assert_equal(mmi[0].persistent_id, persistent_id);
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),

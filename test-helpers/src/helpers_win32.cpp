@@ -42,10 +42,10 @@ namespace micro_profiler
 			_fullpath = fullpath;
 		}
 
-		byte *image::load_address_ptr() const
+		byte *image::base_ptr() const
 		{	return static_cast<byte *>(get());	}
 
-		long_address_t image::load_address() const
+		long_address_t image::base() const
 		{	return reinterpret_cast<size_t>(get());	}
 
 		const char *image::absolute_path() const
@@ -61,7 +61,7 @@ namespace micro_profiler
 		unsigned image::get_symbol_rva(const char *name) const
 		{
 			if (void *symbol = ::GetProcAddress(static_cast<HMODULE>(get()), name))
-				return static_cast<unsigned>(static_cast<byte *>(symbol) - load_address_ptr());
+				return static_cast<unsigned>(static_cast<byte *>(symbol) - base_ptr());
 			throw runtime_error("Symbol specified was not found!");
 		}
 

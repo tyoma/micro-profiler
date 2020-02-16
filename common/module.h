@@ -30,17 +30,20 @@ namespace micro_profiler
 {
 	struct mapped_module
 	{
-		typedef unsigned int instance_id_t;
-
-		instance_id_t instance_id; // Zero-based instance ID of this mapping to identify it among loaded.
-		instance_id_t persistent_id; // Persistent one-based ID of the image this mapping is for.
 		std::string path;
-		union
-		{
-			long_address_t load_address;
-			byte *base;
-		};
+		byte *base;
 		std::vector<byte_range> addresses;
+	};
+
+	struct mapped_module_identified
+	{
+		static mapped_module_identified from(unsigned int instance_id_, unsigned int persistent_id_,
+			const mapped_module &mm);
+
+		unsigned int instance_id; // Zero-based instance ID of this mapping to identify it among loaded.
+		unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
+		std::string path;
+		long_address_t base;
 	};
 
 	typedef std::function<void (const mapped_module &module)> module_callback_t;
@@ -48,4 +51,19 @@ namespace micro_profiler
 	std::string get_current_executable();
 	mapped_module get_module_info(const void *address);
 	void enumerate_process_modules(const module_callback_t &callback);
+
+
+
+	inline mapped_module_identified mapped_module_identified::from(unsigned int instance_id_,
+		unsigned int persistent_id_, const mapped_module &mm)
+	{
+		mapped_module_identified mmi = {
+			instance_id_,
+			persistent_id_,
+			mm.path,
+			reinterpret_cast<size_t>(mm.base),
+		};
+
+		return mmi;
+	}
 }

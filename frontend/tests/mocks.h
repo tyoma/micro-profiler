@@ -31,7 +31,7 @@ namespace micro_profiler
 			inline std::shared_ptr<symbol_resolver> symbol_resolver::create(T (&symbols)[n])
 			{
 				std::shared_ptr<symbol_resolver> r(new symbol_resolver);
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				module_info_metadata metadata;
 
 				for (size_t i = 0; i != n; ++i)

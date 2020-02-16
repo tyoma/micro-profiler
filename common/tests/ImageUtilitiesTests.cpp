@@ -56,17 +56,17 @@ namespace micro_profiler
 				};
 
 				// ACT
-				mapped_module info1 = get_module_info(reinterpret_cast<const void *>(images[0].load_address()));
-				mapped_module info2 = get_module_info(reinterpret_cast<const void *>(images[1].load_address()));
-				mapped_module info3 = get_module_info(reinterpret_cast<const void *>(images[2].load_address()));
+				mapped_module info1 = get_module_info(reinterpret_cast<const void *>(images[0].base()));
+				mapped_module info2 = get_module_info(reinterpret_cast<const void *>(images[1].base()));
+				mapped_module info3 = get_module_info(reinterpret_cast<const void *>(images[2].base()));
 
 				// ASSERT
 				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
-				assert_equal(images[0].load_address_ptr(), info1.base);
+				assert_equal(images[0].base_ptr(), info1.base);
 				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
-				assert_equal(images[1].load_address_ptr(), info2.base);
+				assert_equal(images[1].base_ptr(), info2.base);
 				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
-				assert_equal(images[2].load_address_ptr(), info3.base);
+				assert_equal(images[2].base_ptr(), info3.base);
 			}
 
 
@@ -86,11 +86,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
-				assert_equal(images[0].load_address_ptr(), info1.base);
+				assert_equal(images[0].base_ptr(), info1.base);
 				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
-				assert_equal(images[1].load_address_ptr(), info2.base);
+				assert_equal(images[1].base_ptr(), info2.base);
 				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
-				assert_equal(images[1].load_address_ptr(), info2.base);
+				assert_equal(images[1].base_ptr(), info2.base);
 			}
 
 			test( EnumeratingModulesListsLoadedModules )
@@ -106,7 +106,7 @@ namespace micro_profiler
 				assert_equal(1u, modules.size());
 				assert_is_true(is_address_inside(modules[0].addresses, img1.get_symbol_address("get_function_addresses_1")));
 				assert_equal(file_id(img1.absolute_path()), file_id(modules[0].path));
-				assert_equal((byte *)img1.load_address(), modules[0].base);
+				assert_equal((byte *)img1.base(), modules[0].base);
 
 				// INIT
 				modules.clear();
@@ -123,11 +123,11 @@ namespace micro_profiler
 
 				assert_is_true(is_address_inside(modules[1].addresses, img2.get_symbol_address("get_function_addresses_2")));
 				assert_equal(file_id(img2.absolute_path()), file_id(modules[1].path));
-				assert_equal((byte *)img2.load_address(), modules[1].base);
+				assert_equal((byte *)img2.base(), modules[1].base);
 
 				assert_is_true(is_address_inside(modules[2].addresses, img3.get_symbol_address("get_function_addresses_3")));
 				assert_equal(file_id(img3.absolute_path()), file_id(modules[2].path));
-				assert_equal((byte *)img3.load_address(), modules[2].base);
+				assert_equal((byte *)img3.base(), modules[2].base);
 			}
 
 

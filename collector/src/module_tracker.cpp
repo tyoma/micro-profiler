@@ -35,7 +35,7 @@ namespace micro_profiler
 	{
 		unordered_set<unsigned> in_snapshot;
 
-		enumerate_process_modules([&] (mapped_module mm) {
+		enumerate_process_modules([&] (const mapped_module &mm) {
 			file_id fid(mm.path);
 			const unsigned &persistent_id = _files_registry[fid];
 			const bool is_new = !persistent_id;
@@ -45,13 +45,13 @@ namespace micro_profiler
 
 			module_info &mi = _modules_registry[persistent_id];
 
-			mm.persistent_id = persistent_id;
 			if (!mi.mapping)
 			{
-				mm.instance_id = _next_instance_id++;
+				mapped_module_identified mmi = mapped_module_identified::from(_next_instance_id++, persistent_id, mm);
+
 				mi.path = mm.path;
-				mi.mapping.reset(new mapped_module(mm));
-				_lqueue.push_back(mm);
+				mi.mapping.reset(new mapped_module_identified(mmi));
+				_lqueue.push_back(mmi);
 			}
 			in_snapshot.insert(persistent_id);
 		});
@@ -74,7 +74,7 @@ namespace micro_profiler
 		swap(unloaded_modules_, _uqueue);
 	}
 
-	module_tracker::metadata_ptr module_tracker::get_metadata(mapped_module::instance_id_t persistent_id) const
+	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int persistent_id) const
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
 		modules_registry_t::const_iterator i = _modules_registry.find(persistent_id);

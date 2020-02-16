@@ -42,7 +42,7 @@ namespace micro_profiler
 		};
 
 		template <typename T>
-		inline const mapped_module *find_module(T &m, const std::string &path)
+		inline const typename T::value_type *find_module(T &m, const std::string &path)
 		{
 			for (typename T::const_iterator i = m.begin(); i != m.end(); ++i)
 				if (file_id(i->path) == file_id(path))

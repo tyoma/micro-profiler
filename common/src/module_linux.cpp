@@ -44,12 +44,10 @@ namespace micro_profiler
 		::dladdr(address, &di);
 
 		mapped_module info = {
-			0,
-			0u,
 			di.dli_fname && *di.dli_fname ? di.dli_fname : get_current_executable(),
+			static_cast<byte *>(di.dli_fbase),
 		};
 
-		info.base = static_cast<byte *>(di.dli_fbase);
 		return info;
 	}
 
@@ -62,10 +60,8 @@ namespace micro_profiler
 				int n = phdr->dlpi_phnum;
 				const module_callback_t &callback = *static_cast<const module_callback_t *>(cb);
 				mapped_module m = {
-					0u,
-					0u,
 					phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : get_current_executable(),
-					{ phdr->dlpi_addr, },
+					reinterpret_cast<byte *>(phdr->dlpi_addr),
 				};
 
 				for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)

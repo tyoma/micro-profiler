@@ -142,11 +142,11 @@ namespace micro_profiler
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, mapped_module &data)
+	inline void serialize(ArchiveT &archive, mapped_module_identified &data)
 	{
 		archive(data.instance_id);
 		archive(data.persistent_id);
-		archive(data.load_address);
+		archive(data.base);
 		archive(data.path);
 	}
 

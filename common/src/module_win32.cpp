@@ -34,14 +34,13 @@ namespace micro_profiler
 
 	mapped_module get_module_info(const void *address)
 	{
-		HMODULE load_address = 0;
+		HMODULE base = 0;
 		char path[MAX_PATH + 1] = { };
 
-		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &load_address);
-		::GetModuleFileNameA(load_address, path, sizeof(path));
-		::FreeLibrary(load_address);
-		mapped_module info = { 0u, 0u, path, };
-		info.base = static_cast<byte *>(static_cast<void *>(load_address));
+		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &base);
+		::GetModuleFileNameA(base, path, sizeof(path));
+		::FreeLibrary(base);
+		mapped_module info = { path, static_cast<byte *>(static_cast<void *>(base)), };
 		return info;
 	}
 

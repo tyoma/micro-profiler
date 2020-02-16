@@ -45,7 +45,7 @@ namespace micro_profiler
 	};
 
 
-	typedef std::vector<mapped_module> loaded_modules;
+	typedef std::vector<mapped_module_identified> loaded_modules;
 	typedef std::vector<unsigned int> unloaded_modules;
 
 	struct module_info_metadata

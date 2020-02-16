@@ -6,10 +6,10 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		mapped_module create_mapping(unsigned peristent_id, long_address_t base)
+		inline mapped_module_identified create_mapping(unsigned peristent_id, long_address_t base)
 		{
-			mapped_module mm = { 0u, peristent_id, std::string(), { base, }, };
-			return mm;
+			mapped_module_identified mmi = { 0u, peristent_id, std::string(), base, };
+			return mmi;
 		}
 	}
 }

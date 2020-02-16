@@ -246,7 +246,7 @@ namespace micro_profiler
 				auto_ptr<image> image2(new image(images[2]));
 				b.update_frontend();
 
-				const mapped_module *mm[] = {
+				const mapped_module_identified *mmi[] = {
 					find_module(l, images[0]), find_module(l, images[1]), find_module(l, images[2]),
 				};
 
@@ -257,7 +257,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, unloads.size());
 
-				unsigned reference1[] = { mm[1]->instance_id, };
+				unsigned reference1[] = { mmi[1]->instance_id, };
 
 				assert_equivalent(reference1, unloads[0]);
 
@@ -269,7 +269,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, unloads.size());
 
-				unsigned reference2[] = { mm[0]->instance_id, mm[2]->instance_id, };
+				unsigned reference2[] = { mmi[0]->instance_id, mmi[2]->instance_id, };
 
 				assert_equivalent(reference2, unloads[1]);
 			}
@@ -293,13 +293,13 @@ namespace micro_profiler
 
 				mtracker->get_changes(l, u);
 
-				const mapped_module *mm[] = { find_module(l, images[0]), find_module(l, images[1]), };
+				const mapped_module_identified *mmi[] = { find_module(l, images[0]), find_module(l, images[1]), };
 
 				// ACT
-				b.send_module_metadata(mm[1]->persistent_id);
+				b.send_module_metadata(mmi[1]->persistent_id);
 
 				// ASSERT
-				assert_equal(persistent_id, mm[1]->persistent_id);
+				assert_equal(persistent_id, mmi[1]->persistent_id);
 
 				const symbol_info *symbol = get_symbol_by_name(md.symbols, "get_function_addresses_2");
 
@@ -318,10 +318,10 @@ namespace micro_profiler
 #endif
 
 				// ACT
-				b.send_module_metadata(mm[0]->persistent_id);
+				b.send_module_metadata(mmi[0]->persistent_id);
 
 				// ASSERT
-				assert_equal(persistent_id, mm[0]->persistent_id);
+				assert_equal(persistent_id, mmi[0]->persistent_id);
 
 				symbol = get_symbol_by_name(md.symbols, "get_function_addresses_1");
 

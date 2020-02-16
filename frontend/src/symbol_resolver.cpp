@@ -68,8 +68,8 @@ namespace micro_profiler
 		return j != m->files.end() ? result.first = j->second, result.second = i->line, true : false;
 	}
 
-	void symbol_resolver::add_mapping(const mapped_module &mapping)
-	{	_mappings.insert(make_pair(mapping.load_address, mapping));	}
+	void symbol_resolver::add_mapping(const mapped_module_identified &mapping)
+	{	_mappings.insert(make_pair(mapping.base, mapping));	}
 
 	void symbol_resolver::add_metadata(unsigned persistent_id, module_info_metadata &metadata)
 	{
@@ -98,6 +98,6 @@ namespace micro_profiler
 			return 0;
 		}
 		module = &m->second;
-		return module->find_symbol_by_va(static_cast<unsigned>(address - i->second.load_address));
+		return module->find_symbol_by_va(static_cast<unsigned>(address - i->second.base));
 	}
 }

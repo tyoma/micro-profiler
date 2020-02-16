@@ -41,14 +41,14 @@ namespace micro_profiler
 			{
 				images[0].reset(new image("symbol_container_1"));
 				image_infos[0].reset(new offset_image_info(load_image_info(images[0]->absolute_path()),
-					static_cast<size_t>(images[0]->load_address())));
+					static_cast<size_t>(images[0]->base())));
 				f1F = images[0]->get_symbol<void (void (*&f1)(), void (*&f2)())>("get_function_addresses_1");
 				f13 = images[0]->get_symbol<void (char *buffer0, int value)>("format_decimal");
 				f1F(f11, f12);
 
 				images[1].reset(new image("symbol_container_2"));
 				image_infos[1].reset(new offset_image_info(load_image_info(images[1]->absolute_path()),
-					static_cast<size_t>(images[1]->load_address())));
+					static_cast<size_t>(images[1]->base())));
 				f22 = images[1]->get_symbol<int (char *buffer, size_t count, const char *format, ...)>("guinea_snprintf");
 				f23 = images[1]->get_symbol<void (void (*&f1)(), void (*&f2)(), void (*&f3)())>("get_function_addresses_2");
 				f2F = images[1]->get_symbol<void (void (*&f)(int * volatile begin, int * volatile end))>("bubble_sort_expose");

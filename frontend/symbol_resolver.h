@@ -29,8 +29,6 @@
 
 namespace micro_profiler
 {
-	struct mapped_module;
-
 	class symbol_resolver
 	{
 	public:
@@ -41,13 +39,13 @@ namespace micro_profiler
 		symbol_resolver(const request_metadata_t &requestor);
 		virtual const std::string &symbol_name_by_va(long_address_t address) const;
 		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
-		void add_mapping(const mapped_module &mapping);
+		void add_mapping(const mapped_module_identified &mapping);
 		void add_metadata(unsigned persistent_id, module_info_metadata &metadata);
 
 	private:
-		struct mapped_module_ex : mapped_module
+		struct mapped_module_ex : mapped_module_identified
 		{
-			mapped_module_ex(const mapped_module &mm = mapped_module()) : mapped_module(mm), requested(false) { }
+			mapped_module_ex(const mapped_module_identified &mm = mapped_module_identified());
 
 			bool requested;
 		};
@@ -83,4 +81,10 @@ namespace micro_profiler
 		template <typename ArchiveT>
 		friend void serialize(ArchiveT &archive, module_info &data);
 	};
+
+
+
+	inline symbol_resolver::mapped_module_ex::mapped_module_ex(const mapped_module_identified &mmi)
+		: mapped_module_identified(mmi), requested(false)
+	{ }
 }

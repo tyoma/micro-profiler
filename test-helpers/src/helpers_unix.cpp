@@ -96,11 +96,11 @@ namespace micro_profiler
 			_fullpath = get_current_dir() & path;
 		}
 
-		byte *image::load_address_ptr() const
+		byte *image::base_ptr() const
 		{	return _base;	}
 
-		long_address_t image::load_address() const
-		{	return reinterpret_cast<size_t>(load_address_ptr());	}
+		long_address_t image::base() const
+		{	return reinterpret_cast<size_t>(base_ptr());	}
 
 		const char *image::absolute_path() const
 		{	return _fullpath.c_str();	}
@@ -115,7 +115,7 @@ namespace micro_profiler
 		unsigned image::get_symbol_rva(const char *name) const
 		{
 			if (void *symbol = ::dlsym(get(), name))
-				return static_cast<byte *>(symbol) - load_address_ptr();
+				return static_cast<byte *>(symbol) - base_ptr();
 			throw runtime_error("Symbol specified was not found!");
 		}
 

@@ -36,8 +36,8 @@ namespace micro_profiler
 		public:
 			explicit image(std::string path);
 
-			byte *load_address_ptr() const;
-			long_address_t load_address() const;
+			byte *base_ptr() const;
+			long_address_t base() const;
 			const char *absolute_path() const;
 			void *get_symbol_address(const char *name) const;
 			unsigned get_symbol_rva(const char *name) const;

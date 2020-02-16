@@ -41,7 +41,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
@@ -58,7 +58,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
@@ -75,7 +75,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
@@ -94,7 +94,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { 0, 1, "", { 0x1100000, }, };
+				mapped_module_identified basic = create_mapping(1u, 0x1100000);
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
@@ -108,7 +108,7 @@ namespace micro_profiler
 				assert_equal("bar", r->symbol_name_by_va(0x1100101));
 
 				// INIT
-				basic.load_address = 0x1100501;
+				basic.base = 0x1100501;
 
 				// ACT
 				r->add_mapping(basic);
@@ -126,7 +126,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
 
@@ -164,7 +164,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
 					{ "b", 0x101, 5, 0, 1, 1 },
@@ -202,7 +202,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				symbol_info symbols1[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
 					{ "b", 0x101, 5, 0, 1, 1 },
@@ -232,7 +232,7 @@ namespace micro_profiler
 				r->add_metadata(basic.persistent_id, metadata[0]);
 
 				basic.persistent_id = 2;
-				basic.load_address = 0x8000;
+				basic.base = 0x8000;
 
 				// ACT / ASSERT
 				r->add_mapping(basic);
@@ -269,7 +269,7 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> ser(buffer);
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
 					{ "b", 0x101, 5, 0, 1, 1 },
@@ -334,7 +334,7 @@ namespace micro_profiler
 					{ "cccc", 0x158, 5, 0, 0, 71 },
 					{ "ddd", 0x188, 5, 0, 0, 713 },
 				};
-				mapped_module basic = { };
+				mapped_module_identified basic = { };
 				module_info_metadata metadata = { mkvector(symbols), };
 				symbol_resolver::fileline_t result;
 

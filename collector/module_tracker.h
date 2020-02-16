@@ -45,24 +45,24 @@ namespace micro_profiler
 
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 
-		metadata_ptr get_metadata(mapped_module::instance_id_t persistent_id) const;
+		metadata_ptr get_metadata(unsigned int persistent_id) const;
 
 	private:
 		struct module_info
 		{
 			std::string path;
-			std::shared_ptr<mapped_module> mapping;
+			std::shared_ptr<mapped_module_identified> mapping;
 		};
 
-		typedef std::unordered_map<file_id, mapped_module::instance_id_t /*persistent_id*/> files_registry_t;
-		typedef std::unordered_map<mapped_module::instance_id_t /*persistent_id*/, module_info> modules_registry_t;
+		typedef std::unordered_map<file_id, unsigned int /*persistent_id*/> files_registry_t;
+		typedef std::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
 
 	private:
 		mutable mt::mutex _mtx;
 		files_registry_t _files_registry;
 		modules_registry_t _modules_registry;
-		std::vector<mapped_module> _lqueue;
-		std::vector<mapped_module::instance_id_t> _uqueue;
-		mapped_module::instance_id_t _next_instance_id, _next_persistent_id;
+		loaded_modules _lqueue;
+		unloaded_modules _uqueue;
+		unsigned int _next_instance_id, _next_persistent_id;
 	};
 }

@@ -153,6 +153,9 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
 
+			function<void (unsigned persistent_id)> get_requestor()
+			{	return [this] (unsigned /*persistent_id*/) { };	}
+
 			FunctionListTests()
 				: ser(_buffer), dser(_buffer)
 			{	}
@@ -1552,7 +1555,7 @@ namespace micro_profiler
 				fl1->save(ser);
 
 				// ASSERT
-				symbol_resolver r;
+				symbol_resolver r(get_requestor());
 
 				dser(ticks_per_second);
 				dser(r);
@@ -1596,7 +1599,7 @@ namespace micro_profiler
 				fl->save(ser);
 
 				// ASSERT
-				symbol_resolver r;
+				symbol_resolver r(get_requestor());
 				statistics_map_detailed stats_read;
 
 				dser(ticks_per_second);

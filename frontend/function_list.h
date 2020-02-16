@@ -99,7 +99,7 @@ namespace micro_profiler
 	inline std::shared_ptr<functions_list> functions_list::load(ArchiveT &archive)
 	{
 		timestamp_t ticks_per_second;
-		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver);
+		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver([] (unsigned int /*persistent_id*/) {}));
 
 		archive(ticks_per_second);
 		archive(*resolver);

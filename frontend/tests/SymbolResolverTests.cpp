@@ -1,5 +1,7 @@
 #include <frontend/symbol_resolver.h>
 
+#include "helpers.h"
+
 #include <frontend/serialization.h>
 
 #include <common/protocol.h>
@@ -15,10 +17,19 @@ namespace micro_profiler
 	namespace tests
 	{
 		begin_test_suite( SymbolResolverTests )
+			vector<unsigned> _requested;
+
+			function<void (unsigned persistent_id)> get_requestor()
+			{
+				return [this] (unsigned persistent_id) {
+					_requested.push_back(persistent_id);
+				};
+			}
+
 			test( EmptyNameIsReturnedWhenNoMetadataIsLoaded )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x00F));
@@ -29,7 +40,7 @@ namespace micro_profiler
 			test( EmptyNameIsReturnedForFunctionsBeforeTheirBegining )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -46,7 +57,7 @@ namespace micro_profiler
 			test( EmptyNameIsReturnedForFunctionsPassTheEnd )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -63,7 +74,7 @@ namespace micro_profiler
 			test( FunctionsLoadedThroughAsMetadataAreSearchableByAbsoluteAddress )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { };
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -82,7 +93,7 @@ namespace micro_profiler
 			test( FunctionsLoadedThroughAsMetadataAreOffsetAccordingly )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { 0, 1, "", { 0x1100000, }, };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -114,7 +125,7 @@ namespace micro_profiler
 			test( ConstantReferenceFromResolverIsTheSame )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { };
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
@@ -141,7 +152,7 @@ namespace micro_profiler
 			test( NoFileLineInformationIsReturnedForInvalidAddress )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				symbol_resolver::fileline_t dummy;
 
 				// ACT / ASSERT
@@ -152,7 +163,7 @@ namespace micro_profiler
 			test( FileLineInformationIsReturnedBySymolProvider )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { };
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
@@ -190,7 +201,7 @@ namespace micro_profiler
 			test( FileLineInformationIsRebasedForNewMetadata )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { };
 				symbol_info symbols1[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
@@ -257,7 +268,7 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> ser(buffer);
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
-				shared_ptr<symbol_resolver> r(new symbol_resolver);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module basic = { };
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
@@ -275,7 +286,7 @@ namespace micro_profiler
 				r->add_metadata(basic.persistent_id, metadata);
 
 				// ACT
-				shared_ptr<symbol_resolver> r2(new symbol_resolver);
+				shared_ptr<symbol_resolver> r2(new symbol_resolver(get_requestor()));
 
 				ser(*r);
 				dser(*r2);
@@ -305,7 +316,7 @@ namespace micro_profiler
 			test( FilelineIsNotAvailableForMissingFunctions )
 			{
 				// INIT
-				symbol_resolver r;
+				symbol_resolver r(get_requestor());
 				symbol_resolver::fileline_t result;
 
 				// ACT / ASSERT
@@ -316,7 +327,7 @@ namespace micro_profiler
 			test( FilelineIsNotAvailableForFunctionsWithMissingFiles )
 			{
 				// INIT
-				symbol_resolver r;
+				symbol_resolver r(get_requestor());
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 0, 11, 121 },
 					{ "b", 0x101, 5, 0, 1, 1 },
@@ -335,6 +346,80 @@ namespace micro_profiler
 				assert_is_false(r.symbol_fileline_by_va(0x101, result));
 				assert_is_false(r.symbol_fileline_by_va(0x158, result));
 				assert_is_false(r.symbol_fileline_by_va(0x188, result));
+			}
+
+
+			test( SymbolResolverRequestsMetadataOnFindSymbolHits )
+			{
+				// INIT
+				vector_adapter buffer;
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
+
+				r->add_mapping(create_mapping(11, 0x120050));
+				r->add_mapping(create_mapping(12, 0x120100));
+				r->add_mapping(create_mapping(11711, 0x200000));
+				r->add_mapping(create_mapping(100, 0x310000));
+
+				// ACT
+				r->symbol_name_by_va(0x120060);
+
+				// ASSERT
+				unsigned reference1[] = { 11, };
+
+				assert_equal(reference1, _requested);
+
+				// ACT
+				r->symbol_name_by_va(0x311000);
+				r->symbol_name_by_va(0x210000);
+
+				// ASSERT
+				unsigned reference2[] = { 11, 100, 11711, };
+
+				assert_equal(reference2, _requested);
+			}
+
+
+			test( MetadataIsNotRequestedIfAlreadyPresent )
+			{
+				// INIT
+				vector_adapter buffer;
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
+				module_info_metadata metadata;
+
+				r->add_mapping(create_mapping(100, 0x120050));
+				r->add_mapping(create_mapping(2, 0x120100));
+
+				r->add_metadata(100, metadata);
+
+				// ACT
+				r->symbol_name_by_va(0x1200A0);
+
+				// ASSERT
+				assert_is_empty(_requested);
+			}
+
+
+			test( MetadataIsOnlyRequestedOncePerModule )
+			{
+				// INIT
+				vector_adapter buffer;
+				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
+				module_info_metadata metadata;
+
+				r->add_mapping(create_mapping(100, 0x120050));
+				r->add_mapping(create_mapping(2, 0x120100));
+
+				// ACT
+				r->symbol_name_by_va(0x120100);
+				r->symbol_name_by_va(0x120050);
+				r->symbol_name_by_va(0x1200A0);
+				r->symbol_name_by_va(0x1200A0);
+				r->symbol_name_by_va(0x120101);
+
+				// ASSERT
+				unsigned reference[] = { 2, 100, };
+
+				assert_equal(reference, _requested);
 			}
 
 

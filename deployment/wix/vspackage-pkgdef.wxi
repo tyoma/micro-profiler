@@ -12,8 +12,6 @@
 			<CopyFile Id="fileVSPackageVSIX_$(var.VSVERSION)" FileId="fileVSPackageVSIX11" DestinationName="extension.vsixmanifest" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
 			<CopyFile Id="fileVSPackageUI_$(var.VSVERSION)" FileId="fileVSPackageUI" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)_RES" />
 		<?endif?>
-		<CopyFile Id="fileInitializerCPP_$(var.VSVERSION)" FileId="fileInitializerCPP" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
-		<CopyFile Id="fileEntryH_$(var.VSVERSION)" FileId="fileEntryH" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
 		<CopyFile Id="fileImpLib_x86_$(var.VSVERSION)" FileId="fileImpLib_x86" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />
 		<?ifdef SOURCEDIRWX64?>
 			<CopyFile Id="fileImpLib_x64_$(var.VSVERSION)" FileId="fileImpLib_x64" DestinationDirectory="EXTENSION_MP_$(var.VSVERSION)" />

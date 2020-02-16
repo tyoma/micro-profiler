@@ -51,6 +51,7 @@ set(MICROPROFILER_SOURCES
 	visualstudio/vs-extension/commands-global.cpp
 	visualstudio/vs-extension/commands-instance.cpp
 	visualstudio/vs-extension/helpers.cpp
+	visualstudio/vs-extension/vcmodel-impl.cpp
 	visualstudio/vs-extension/vs-package.cpp
 	visualstudio/vs-extension/vs-pane.cpp
 

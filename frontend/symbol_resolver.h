@@ -23,6 +23,7 @@
 #include <common/image_info.h>
 #include <common/protocol.h>
 
+#include <functional>
 #include <map>
 #include <unordered_map>
 
@@ -34,15 +35,23 @@ namespace micro_profiler
 	{
 	public:
 		typedef std::pair<std::string, unsigned> fileline_t;
+		typedef std::function<void (unsigned persistent_id)> request_metadata_t;
 
 	public:
-		virtual ~symbol_resolver();
+		symbol_resolver(const request_metadata_t &requestor);
 		virtual const std::string &symbol_name_by_va(long_address_t address) const;
 		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
 		void add_mapping(const mapped_module &mapping);
 		void add_metadata(unsigned persistent_id, module_info_metadata &metadata);
 
 	private:
+		struct mapped_module_ex : mapped_module
+		{
+			mapped_module_ex(const mapped_module &mm = mapped_module()) : mapped_module(mm), requested(false) { }
+
+			bool requested;
+		};
+
 		struct module_info
 		{
 			typedef std::map<unsigned /*rva*/, const symbol_info * /*symbol*/> addressed_symbols;
@@ -55,15 +64,16 @@ namespace micro_profiler
 			mutable addressed_symbols symbol_index;
 		};
 
-		typedef std::map<long_address_t /*base*/, mapped_module> mappings_map;
+		typedef std::map<long_address_t /*base*/, mapped_module_ex> mappings_map;
 		typedef std::unordered_map<unsigned int /*persistent_id*/, module_info> modules_map;
 
 	private:
 		const symbol_info *find_symbol_by_va(long_address_t address, const module_info *&module) const;
 
 	private:
+		request_metadata_t _requestor;
 		std::string _empty;
-		mappings_map _mappings;
+		mutable mappings_map _mappings;
 		modules_map _modules;
 
 	private:

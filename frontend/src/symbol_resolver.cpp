@@ -44,7 +44,8 @@ namespace micro_profiler
 	}
 
 
-	symbol_resolver::~symbol_resolver()
+	symbol_resolver::symbol_resolver(const request_metadata_t &requestor)
+		: _requestor(requestor)
 	{	}
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
@@ -81,7 +82,7 @@ namespace micro_profiler
 
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const module_info *&module) const
 	{
-		mappings_map::const_iterator i = _mappings.upper_bound(address);
+		mappings_map::iterator i = _mappings.upper_bound(address);
 
 		if (i != _mappings.begin())
 			--i;
@@ -90,8 +91,12 @@ namespace micro_profiler
 
 		const modules_map::const_iterator m = _modules.find(i->second.persistent_id);
 
-		if (m == _modules.end()) // not tested yet
+		if (m == _modules.end())
+		{
+			if (!i->second.requested)
+				_requestor(i->second.persistent_id), i->second.requested = true;
 			return 0;
+		}
 		module = &m->second;
 		return module->find_symbol_by_va(static_cast<unsigned>(address - i->second.load_address));
 	}

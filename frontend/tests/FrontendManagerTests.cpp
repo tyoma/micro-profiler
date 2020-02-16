@@ -117,6 +117,14 @@ namespace micro_profiler
 		begin_test_suite( FrontendManagerTests )
 
 			mocks::outbound_channel outbound;
+			vector<unsigned> requested;
+
+			function<void (unsigned persistent_id)> get_requestor()
+			{
+				return [this] (unsigned persistent_id) {
+					requested.push_back(persistent_id);
+				};
+			}
 
 
 			test( OpeningFrontendChannelIncrementsInstanceCount )
@@ -853,7 +861,7 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
-				shared_ptr<symbol_resolver> sr(new symbol_resolver);
+				shared_ptr<symbol_resolver> sr(new symbol_resolver(get_requestor()));
 				shared_ptr<functions_list> fl1 = functions_list::create(123, sr), fl2 = functions_list::create(123, sr);
 
 				// ACT
@@ -876,21 +884,33 @@ namespace micro_profiler
 			}
 
 
-			test( MetadataRequestIsSentOnModulesLoaded )
+			test( MetadataRequestOnAttemptingToResolveMissingFunction )
 			{
 				// INIT
-				frontend_manager::ptr m = frontend_manager::create(&dummy_ui_factory);
+				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
+					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				mapped_module mi1[] = { { }, };
-				mapped_module mi2[] = { { 1, 99u, "", { 0x1000000, } }, { 10, 1000u, "", { 0x1000000, } }, };
+				mapped_module mi[] = { { 0u, 17u }, { 1u, 99u, "", { 0x1000, } }, { 10u, 1000u, "", { 0x1900, } }, };
+				pair< unsigned, function_statistics_detailed_t<unsigned> > data[] = {
+					make_pair(0x0100, function_statistics_detailed_t<unsigned>()),
+					make_pair(0x1001, function_statistics_detailed_t<unsigned>()),
+					make_pair(0x1100, function_statistics_detailed_t<unsigned>()),
+					make_pair(0x1910, function_statistics_detailed_t<unsigned>()),
+				};
+				wstring text;
 
 				write(*c, init, initialization_data());
 
+				const functions_list &fl = *_ui_creation_log[0]->model;
+
+				write(*c, modules_loaded, mkvector(mi));
+				write(*c, update_statistics, mkvector(data));
+
 				// ACT
-				write(*c, modules_loaded, mkvector(mi1));
+				fl.get_text(fl.get_index(0x1100), 1, text);
 
 				// ASSERT
-				unsigned int reference1[] = { 0u, };
+				unsigned int reference1[] = { 99u, };
 
 				assert_equal(reference1, outbound.requested_metadata);
 
@@ -898,13 +918,16 @@ namespace micro_profiler
 				outbound.requested_metadata.clear();
 
 				// ACT
-				write(*c, modules_loaded, mkvector(mi2));
+				fl.get_text(fl.get_index(0x1001), 1, text);
+				fl.get_text(fl.get_index(0x0100), 1, text);
+				fl.get_text(fl.get_index(0x1910), 1, text);
 
 				// ASSERT
-				unsigned int reference2[] = { 99u, 1000u, };
+				unsigned int reference2[] = { 17u, 1000u, };
 
 				assert_equal(reference2, outbound.requested_metadata);
 			}
+
 
 		end_test_suite
 	}

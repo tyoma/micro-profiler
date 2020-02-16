@@ -32,8 +32,12 @@ using namespace std;
 namespace micro_profiler
 {
 	frontend::frontend(ipc::channel &outbound)
-		: _outbound(outbound), _resolver(new symbol_resolver())
-	{	}
+		: _outbound(outbound)			
+	{
+		_resolver.reset(new symbol_resolver([this] (unsigned int persistent_id) {
+			send(request_metadata, persistent_id);
+		}));
+	}
 
 	frontend::~frontend()
 	{
@@ -67,10 +71,7 @@ namespace micro_profiler
 		case modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-			{
 				_resolver->add_mapping(*i);
-				send(request_metadata, i->persistent_id);
-			}
 			break;
 
 		case update_statistics:

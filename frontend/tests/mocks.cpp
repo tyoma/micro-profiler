@@ -12,6 +12,7 @@ namespace micro_profiler
 		namespace mocks
 		{
 			symbol_resolver::symbol_resolver()
+				: micro_profiler::symbol_resolver([] (unsigned) {})
 			{	}
 
 			const std::string &symbol_resolver::symbol_name_by_va(long_address_t address) const

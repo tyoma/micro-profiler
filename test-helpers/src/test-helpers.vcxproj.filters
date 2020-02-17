@@ -25,6 +25,9 @@
     <ClCompile Include="thread_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="test_constants.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\com.h" />
@@ -32,6 +35,7 @@
     <ClInclude Include="..\mock_frontend.h" />
     <ClInclude Include="..\process.h" />
     <ClInclude Include="..\thread.h" />
+    <ClInclude Include="..\constants.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

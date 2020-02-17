@@ -7,6 +7,7 @@
 #include <collector/module_tracker.h>
 #include <common/path.h>
 #include <common/time.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -43,7 +44,6 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( StatisticsBridgeTests )
-			vector<string> images;
 			shared_ptr<mocks::Tracer> cc;
 			shared_ptr<mocks::frontend_state> state;
 			shared_ptr<ipc::channel> frontend;
@@ -53,13 +53,6 @@ namespace micro_profiler
 
 			init( CreateQueue )
 			{
-				string images_[] = {
-					image("symbol_container_1").absolute_path(),
-					image("symbol_container_2").absolute_path(),
-					image("symbol_container_3_nosymbols").absolute_path(),
-				};
-
-				images.assign(images_, array_end(images_));
 				mtracker.reset(new module_tracker);
 			}
 
@@ -211,23 +204,23 @@ namespace micro_profiler
 				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
 
 				// ACT
-				image image0(images[0]);
+				image image0(c_symbol_container_1);
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(1u, loads.size());
-				assert_not_null(find_module(loads[0], images[0]));
+				assert_not_null(find_module(loads[0], c_symbol_container_1));
 
 				// ACT
-				image image1(images[1]);
-				image image3(images[2]);
+				image image1(c_symbol_container_2);
+				image image3(c_symbol_container_3_nosymbols);
 				b.update_frontend();
 
 				// ASSERT
 				assert_equal(2u, loads.size());
 				assert_equal(2u, loads[1].size());
-				assert_not_null(find_module(loads[1], images[1]));
-				assert_not_null(find_module(loads[1], images[2]));
+				assert_not_null(find_module(loads[1], c_symbol_container_2));
+				assert_not_null(find_module(loads[1], c_symbol_container_3_nosymbols));
 			}
 
 
@@ -241,13 +234,13 @@ namespace micro_profiler
 				state->modules_loaded = [&] (const loaded_modules &m) { l = m; };
 				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
 
-				auto_ptr<image> image0(new image(images[0]));
-				auto_ptr<image> image1(new image(images[1]));
-				auto_ptr<image> image2(new image(images[2]));
+				auto_ptr<image> image0(new image(c_symbol_container_1));
+				auto_ptr<image> image1(new image(c_symbol_container_2));
+				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 				b.update_frontend();
 
 				const mapped_module_identified *mmi[] = {
-					find_module(l, images[0]), find_module(l, images[1]), find_module(l, images[2]),
+					find_module(l, c_symbol_container_1), find_module(l, c_symbol_container_2), find_module(l, c_symbol_container_3_nosymbols),
 				};
 
 				// ACT
@@ -288,12 +281,12 @@ namespace micro_profiler
 					persistent_id = id, md = md_;
 				};
 
-				image image0(images[0]);
-				image image1(images[1]);
+				image image0(c_symbol_container_1);
+				image image1(c_symbol_container_2);
 
 				mtracker->get_changes(l, u);
 
-				const mapped_module_identified *mmi[] = { find_module(l, images[0]), find_module(l, images[1]), };
+				const mapped_module_identified *mmi[] = { find_module(l, c_symbol_container_1), find_module(l, c_symbol_container_2), };
 
 				// ACT
 				b.send_module_metadata(mmi[1]->persistent_id);

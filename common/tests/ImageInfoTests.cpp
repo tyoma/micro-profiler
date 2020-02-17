@@ -2,6 +2,7 @@
 
 #include <common/module.h>
 #include <common/path.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 
 #include <ut/assert.h>
@@ -16,8 +17,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			int g_dummy;
-
 			typedef void (*void_f_t)();
 			typedef void (get_function_addresses_1_t)(void_f_t &f1, void_f_t &f2);
 			typedef void (get_function_addresses_2_t)(void_f_t &f1, void_f_t &f2, void_f_t &f3);
@@ -50,17 +49,6 @@ namespace micro_profiler
 
 		begin_test_suite( ImageInfoTests )
 
-			string image_paths[4];
-
-			init( InitializePaths )
-			{
-				image_paths[0] = get_module_info(&g_dummy).path.c_str();
-				image_paths[1] = image("symbol_container_1").absolute_path();
-				image_paths[2] = image("symbol_container_2").absolute_path();
-				image_paths[3] = image("symbol_container_3_nosymbols").absolute_path();
-			}
-
-
 			test( LoadImageFailsWhenInvalidModuleSpecified )
 			{
 				// ACT / ASSERT
@@ -72,10 +60,10 @@ namespace micro_profiler
 			test( CreateResolverForValidImage )
 			{
 				// ACT / ASSERT
-				assert_not_null(load_image_info(image_paths[0].c_str()));
-				assert_not_null(load_image_info(image_paths[1].c_str()));
-				assert_not_null(load_image_info(image_paths[2].c_str()));
-				assert_not_null(load_image_info(image_paths[3].c_str()));
+				assert_not_null(load_image_info(c_this_module));
+				assert_not_null(load_image_info(c_symbol_container_1));
+				assert_not_null(load_image_info(c_symbol_container_2));
+				assert_not_null(load_image_info(c_symbol_container_3_nosymbols));
 			}
 
 
@@ -83,8 +71,8 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr< image_info<symbol_info> > ii[] = {
-					load_image_info(image_paths[1].c_str()),
-					load_image_info(image_paths[2].c_str()),
+					load_image_info(c_symbol_container_1),
+					load_image_info(c_symbol_container_2),
 				};
 				map<string, symbol_info> functions[2];
 
@@ -107,7 +95,7 @@ namespace micro_profiler
 			test( DataSymbolsAreSkipped )
 			{
 				// INIT
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(image_paths[2].c_str());
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
 				map<string, symbol_info> functions;
 
 				// ACT
@@ -123,8 +111,8 @@ namespace micro_profiler
 			{
 				// INIT
 				image images[] = {
-					image(image_paths[1].c_str()),
-					image(image_paths[2].c_str()),
+					image(c_symbol_container_1),
+					image(c_symbol_container_2),
 				};
 				unsigned reference[] = {
 					images[0].get_symbol_rva("get_function_addresses_1"),
@@ -136,8 +124,8 @@ namespace micro_profiler
 					images[1].get_symbol_rva("guinea_snprintf"),
 				};
 				shared_ptr< image_info<symbol_info> > ii[] = {
-					load_image_info(image_paths[1].c_str()),
-					load_image_info(image_paths[2].c_str()),
+					load_image_info(c_symbol_container_1),
+					load_image_info(c_symbol_container_2),
 				};
 				map<string, symbol_info> functions[2];
 
@@ -162,7 +150,7 @@ namespace micro_profiler
 				// This test may not pass on all platoforms/compilers. Need a better one.
 
 				// INIT
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(image_paths[2].c_str());
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
 				map<string, symbol_info> functions;
 
 				// ACT
@@ -183,8 +171,8 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr< image_info<symbol_info> > ii[] = {
-					load_image_info(image_paths[1].c_str()),
-					load_image_info(image_paths[2].c_str()),
+					load_image_info(c_symbol_container_1),
+					load_image_info(c_symbol_container_2),
 				};
 				multiset<string> files[2];
 
@@ -207,8 +195,8 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr< image_info<symbol_info> > ii[] = {
-					load_image_info(image_paths[0].c_str()),
-					load_image_info(image_paths[2].c_str()),
+					load_image_info(c_this_module),
+					load_image_info(c_symbol_container_2),
 				};
 				map<string, unsigned, less_nocase> files[2];
 
@@ -233,7 +221,7 @@ namespace micro_profiler
 				// INIT
 				map<string, unsigned> files;
 				map<string, symbol_info> functions;
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(image_paths[2].c_str());
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
 
 				// ACT
 				ii->enumerate_functions(bind(&add_function, ref(functions), _1));
@@ -253,8 +241,8 @@ namespace micro_profiler
 				// INIT
 				map<string, symbol_info> functions;
 				shared_ptr< image_info<symbol_info> > ii[] = {
-					load_image_info(image_paths[1].c_str()),
-					load_image_info(image_paths[2].c_str()),
+					load_image_info(c_symbol_container_1),
+					load_image_info(c_symbol_container_2),
 				};
 
 				// ACT
@@ -282,8 +270,7 @@ namespace micro_profiler
 			test( SymbolsEnumeratedAreOffsetAccordinglyToBase )
 			{
 				// INIT
-				image img("symbol_container_2");
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(img.absolute_path());
+				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
 				map<string, symbol_info> functions_original;
 				map<string, symbol_info_mapped> functions_offset;
 

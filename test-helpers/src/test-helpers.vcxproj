@@ -31,12 +31,13 @@
   </ImportGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-    	<AdditionalIncludeDirectories>$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="com.cpp" />
+    <ClCompile Include="test_constants.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="helpers_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -51,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\com.h" />
+    <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\helpers.h" />
     <ClInclude Include="..\mock_frontend.h" />
     <ClInclude Include="..\process.h" />

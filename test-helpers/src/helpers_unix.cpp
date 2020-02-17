@@ -93,7 +93,7 @@ namespace micro_profiler
 
 			::dladdr(addr, &di);
 			_base = static_cast<byte *>(di.dli_fbase);
-			_fullpath = get_current_dir() & path;
+			_fullpath = path.front() != '/' ? get_current_dir() & path : path;
 		}
 
 		byte *image::base_ptr() const

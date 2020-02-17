@@ -5,6 +5,7 @@ include(test)
 set(TEST_HELPERS_SOURCES
 	helpers.cpp
 	mock_frontend.cpp
+	test_constants.cpp
 )
 
 if (WIN32)

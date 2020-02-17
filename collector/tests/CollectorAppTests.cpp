@@ -10,6 +10,7 @@
 #include <common/time.h>
 #include <mt/event.h>
 #include <strmd/serializer.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/thread.h>
 #include <ut/assert.h>
@@ -226,7 +227,7 @@ namespace micro_profiler
 				ready.wait(); // Guarantee that the load below leads to an individual notification.
 
 				// ACT
-				image image0("symbol_container_1");
+				image image0(c_symbol_container_1);
 				ready.wait();
 
 				// ASSERT
@@ -234,7 +235,7 @@ namespace micro_profiler
 				assert_not_null(find_module(l, image0.absolute_path()));
 
 				// ACT
-				image image1("symbol_container_2");
+				image image1(c_symbol_container_2);
 				ready.wait();
 
 				// ASSERT
@@ -250,9 +251,9 @@ namespace micro_profiler
 				mt::event ready;
 				loaded_modules l;
 				unloaded_modules u;
-				auto_ptr<image> image0(new image("symbol_container_1"));
-				auto_ptr<image> image1(new image("symbol_container_2"));
-				auto_ptr<image> image2(new image("symbol_container_3_nosymbols"));
+				auto_ptr<image> image0(new image(c_symbol_container_1));
+				auto_ptr<image> image1(new image(c_symbol_container_2));
+				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 
 				state->modules_loaded = [&] (const loaded_modules &m) {
 					l.insert(l.end(), m.begin(), m.end());
@@ -627,8 +628,8 @@ namespace micro_profiler
 				ready.wait();
 				l.clear();
 
-				image image0("symbol_container_1");
-				image image1("symbol_container_2");
+				image image0(c_symbol_container_1);
+				image image1(c_symbol_container_2);
 
 				for (;;)
 				{

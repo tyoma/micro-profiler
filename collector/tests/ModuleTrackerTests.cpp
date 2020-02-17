@@ -5,6 +5,7 @@
 
 #include "helpers.h"
 
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -35,20 +36,6 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( ModuleTrackerTests )
-			vector<string> _images;
-
-			init( LoadImages )
-			{
-				string images[] = {
-					image("symbol_container_1").absolute_path(),
-					image("symbol_container_2").absolute_path(),
-					image("symbol_container_3_nosymbols").absolute_path(),
-					get_module_info(&dummy).path,
-				};
-
-				_images.assign(images, array_end(images));
-			}
-
 
 			test( NoChangesIfNoLoadsUnloadsOccured )
 			{
@@ -79,7 +66,7 @@ namespace micro_profiler
 				t.get_changes(loaded_images, unloaded_images);
 
 				// ACT
-				image image0(_images[0]);
+				image image0(c_symbol_container_1);
 				t.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
@@ -87,11 +74,11 @@ namespace micro_profiler
 				assert_is_empty(unloaded_images);
 
 				assert_equal(image0.base(), loaded_images[0].base);
-				assert_equal(file_id(_images[0]), file_id(loaded_images[0].path));
+				assert_equal(file_id(c_symbol_container_1), file_id(loaded_images[0].path));
 
 				// ACT
-				image image1(_images[1]);
-				image image2(_images[2]);
+				image image1(c_symbol_container_2);
+				image image2(c_symbol_container_3_nosymbols);
 				t.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
@@ -99,11 +86,11 @@ namespace micro_profiler
 				assert_is_empty(unloaded_images);
 
 				const mapped_module_identified *mmi[] ={
-					find_module(loaded_images, _images[1]),
-					find_module(loaded_images, _images[2]),
+					find_module(loaded_images, c_symbol_container_2),
+					find_module(loaded_images, c_symbol_container_3_nosymbols),
 				};
 
-				assert_null(find_module(loaded_images, _images[0]));
+				assert_null(find_module(loaded_images, c_symbol_container_1));
 				assert_not_null(mmi[0]);
 				assert_equal(image1.base(), mmi[0]->base);
 				assert_not_null(mmi[1]);
@@ -119,10 +106,10 @@ namespace micro_profiler
 				unloaded_modules u;
 
 				// ACT
-				image image0(_images[0]); // To guarantee at least one module - we don't care if it's the first in the list.
+				image image0(c_symbol_container_1); // To guarantee at least one module - we don't care if it's the first in the list.
 				t.get_changes(l[0], u);
-				image image1(_images[1]);
-				image image2(_images[2]);
+				image image1(c_symbol_container_2);
+				image image2(c_symbol_container_3_nosymbols);
 				t.get_changes(l[1], u);
 
 				// ASSERT
@@ -142,7 +129,7 @@ namespace micro_profiler
 				t.get_changes(l[0], u);
 
 				// ACT
-				image image0(_images[0]);
+				image image0(c_symbol_container_1);
 				t.get_changes(l[0], u);
 
 				// ASSERT
@@ -150,8 +137,8 @@ namespace micro_profiler
 				assert_is_true(1 <= l[0][0].persistent_id);
 
 				// ACT
-				image image1(_images[1]);
-				image image2(_images[2]);
+				image image1(c_symbol_container_2);
+				image image2(c_symbol_container_3_nosymbols);
 				t.get_changes(l[1], u);
 
 				// ASSERT
@@ -168,15 +155,15 @@ namespace micro_profiler
 				loaded_modules l[2];
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(_images[0]));
-				auto_ptr<image> image1(new image(_images[1]));
-				auto_ptr<image> image2(new image(_images[2]));
+				auto_ptr<image> image0(new image(c_symbol_container_1));
+				auto_ptr<image> image1(new image(c_symbol_container_2));
+				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 				t.get_changes(l[0], u);
 
 				const mapped_module_identified *mmi[] = {
-					find_module(l[0], _images[0]),
-					find_module(l[0], _images[1]),
-					find_module(l[0], _images[2]),
+					find_module(l[0], c_symbol_container_1),
+					find_module(l[0], c_symbol_container_2),
+					find_module(l[0], c_symbol_container_3_nosymbols),
 				};
 
 				// ACT
@@ -207,21 +194,21 @@ namespace micro_profiler
 				loaded_modules l[2];
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(_images[0]));
-				auto_ptr<image> image1(new image(_images[1]));
+				auto_ptr<image> image0(new image(c_symbol_container_1));
+				auto_ptr<image> image1(new image(c_symbol_container_2));
 				t.get_changes(l[0], u);
 
-				const mapped_module_identified *mmi[] = { find_module(l[0], _images[0]), find_module(l[0], _images[1]), };
+				const mapped_module_identified *mmi[] = { find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), };
 
 				// ACT
-				image image2(_images[2]);
+				image image2(c_symbol_container_3_nosymbols);
 				image0.reset();
 				image1.reset();
 				t.get_changes(l[1], u);
 
 				// ASSERT
 				assert_equal(1u, l[1].size());
-				assert_not_null(find_module(l[1], _images[2]));
+				assert_not_null(find_module(l[1], c_symbol_container_3_nosymbols));
 
 				unsigned reference[] = { mmi[0]->instance_id, mmi[1]->instance_id, };
 
@@ -236,9 +223,9 @@ namespace micro_profiler
 				loaded_modules l[5];
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(_images[0]));
-				auto_ptr<image> image1(new image(_images[1]));
-				auto_ptr<image> image2(new image(_images[2]));
+				auto_ptr<image> image0(new image(c_symbol_container_1));
+				auto_ptr<image> image1(new image(c_symbol_container_2));
+				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 				t.get_changes(l[0], u);
 				image0.reset();
 				image1.reset();
@@ -246,7 +233,7 @@ namespace micro_profiler
 				t.get_changes(l[1], u);
 
 				const mapped_module_identified *mmi[] = {
-					find_module(l[0], _images[0]), find_module(l[0], _images[1]), find_module(l[0], _images[2]),
+					find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), find_module(l[0], c_symbol_container_3_nosymbols),
 				};
 				const unsigned initial_iid_max = max_element(l[0].begin(), l[0].end(),
 					[] (mapped_module_identified lhs, mapped_module_identified rhs) {
@@ -262,7 +249,7 @@ namespace micro_profiler
 				guards;
 
 				// ACT
-				image1.reset(new image(_images[1]));
+				image1.reset(new image(c_symbol_container_2));
 				t.get_changes(l[2], u);
 
 				// ASSERT
@@ -273,7 +260,7 @@ namespace micro_profiler
 				assert_not_equal(mmi[1]->base, l[2][0].base);
 
 				// ACT
-				image0.reset(new image(_images[0]));
+				image0.reset(new image(c_symbol_container_1));
 				t.get_changes(l[3], u);
 
 				// ASSERT
@@ -282,7 +269,7 @@ namespace micro_profiler
 				assert_not_equal(mmi[0]->base, l[3][0].base);
 
 				// ACT
-				image2.reset(new image(_images[2]));
+				image2.reset(new image(c_symbol_container_3_nosymbols));
 				t.get_changes(l[4], u);
 
 				// ASSERT
@@ -299,13 +286,13 @@ namespace micro_profiler
 				loaded_modules l;
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(_images[0])); // Not necessairly these will be returned...
-				auto_ptr<image> image1(new image(_images[1]));
+				auto_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
+				auto_ptr<image> image1(new image(c_symbol_container_2));
 				t.get_changes(l, u);
 
 				// ACT / ASSERT
-				assert_not_null(t.get_metadata(find_module(l, _images[0])->persistent_id));
-				assert_not_null(t.get_metadata(find_module(l, _images[1])->persistent_id));
+				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_1)->persistent_id));
+				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_2)->persistent_id));
 			}
 
 
@@ -335,13 +322,13 @@ namespace micro_profiler
 				loaded_modules l;
 				unloaded_modules u;
 
-				image image0(_images[0]);
-				image image1(_images[1]);
+				image image0(c_symbol_container_1);
+				image image1(c_symbol_container_2);
 				t.get_changes(l, u);
 
 				metadata_ptr md[] = {
-					t.get_metadata(find_module(l, _images[0])->persistent_id),
-					t.get_metadata(find_module(l, _images[1])->persistent_id),
+					t.get_metadata(find_module(l, c_symbol_container_1)->persistent_id),
+					t.get_metadata(find_module(l, c_symbol_container_2)->persistent_id),
 				};
 
 				// ACT
@@ -366,9 +353,9 @@ namespace micro_profiler
 				loaded_modules l;
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(_images[0]));
+				auto_ptr<image> image0(new image(c_symbol_container_1));
 				t.get_changes(l, u);
-				const mapped_module_identified mmi = *find_module(l, _images[0]);
+				const mapped_module_identified mmi = *find_module(l, c_symbol_container_1);
 
 				//ACT
 				image0.reset();

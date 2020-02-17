@@ -3,6 +3,7 @@
 #include "mocks_image_info.h"
 
 #include <patcher/tests/mocks.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -39,14 +40,14 @@ namespace micro_profiler
 
 			init( LoadGuineas )
 			{
-				images[0].reset(new image("symbol_container_1"));
+				images[0].reset(new image(c_symbol_container_1));
 				image_infos[0].reset(new offset_image_info(load_image_info(images[0]->absolute_path()),
 					static_cast<size_t>(images[0]->base())));
 				f1F = images[0]->get_symbol<void (void (*&f1)(), void (*&f2)())>("get_function_addresses_1");
 				f13 = images[0]->get_symbol<void (char *buffer0, int value)>("format_decimal");
 				f1F(f11, f12);
 
-				images[1].reset(new image("symbol_container_2"));
+				images[1].reset(new image(c_symbol_container_2));
 				image_infos[1].reset(new offset_image_info(load_image_info(images[1]->absolute_path()),
 					static_cast<size_t>(images[1]->base())));
 				f22 = images[1]->get_symbol<int (char *buffer, size_t count, const char *format, ...)>("guinea_snprintf");

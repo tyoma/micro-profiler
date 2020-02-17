@@ -3,6 +3,7 @@
 #include <common/file_id.h>
 
 #include <iterator>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -35,9 +36,9 @@ namespace micro_profiler
 			template <typename ContainerT>
 			void filter_modules(ContainerT &modules, const mapped_module &m)
 			{
-				if (string::npos != m.path.find("symbol_container_1")
-					|| string::npos != m.path.find("symbol_container_2")
-					|| string::npos != m.path.find("symbol_container_3_nosymbols"))
+				if (file_id(m.path) == file_id(c_symbol_container_1)
+					|| file_id(m.path) == file_id(c_symbol_container_2)
+					|| file_id(m.path) == file_id(c_symbol_container_3_nosymbols))
 				{
 					modules.push_back(m);
 				}
@@ -50,9 +51,9 @@ namespace micro_profiler
 			{
 				// INIT
 				image images[] = {
-					image("symbol_container_1"),
-					image("symbol_container_2"),
-					image("symbol_container_3_nosymbols"),
+					image(c_symbol_container_1),
+					image(c_symbol_container_2),
+					image(c_symbol_container_3_nosymbols),
 				};
 
 				// ACT
@@ -61,11 +62,11 @@ namespace micro_profiler
 				mapped_module info3 = get_module_info(reinterpret_cast<const void *>(images[2].base()));
 
 				// ASSERT
-				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
+				assert_equal(file_id(c_symbol_container_1), file_id(info1.path));
 				assert_equal(images[0].base_ptr(), info1.base);
-				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
+				assert_equal(file_id(c_symbol_container_2), file_id(info2.path));
 				assert_equal(images[1].base_ptr(), info2.base);
-				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
+				assert_equal(file_id(c_symbol_container_3_nosymbols), file_id(info3.path));
 				assert_equal(images[2].base_ptr(), info3.base);
 			}
 
@@ -74,9 +75,9 @@ namespace micro_profiler
 			{
 				// INIT
 				image images[] = {
-					image("symbol_container_1"),
-					image("symbol_container_2"),
-					image("symbol_container_3_nosymbols"),
+					image(c_symbol_container_1),
+					image(c_symbol_container_2),
+					image(c_symbol_container_3_nosymbols),
 				};
 
 				// ACT
@@ -85,11 +86,11 @@ namespace micro_profiler
 				mapped_module info3 = get_module_info(images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
-				assert_not_equal(string::npos, info1.path.find("symbol_container_1"));
+				assert_equal(file_id(c_symbol_container_1), file_id(info1.path));
 				assert_equal(images[0].base_ptr(), info1.base);
-				assert_not_equal(string::npos, info2.path.find("symbol_container_2"));
+				assert_equal(file_id(c_symbol_container_2), file_id(info2.path));
 				assert_equal(images[1].base_ptr(), info2.base);
-				assert_not_equal(string::npos, info3.path.find("symbol_container_3_nosymbols"));
+				assert_equal(file_id(c_symbol_container_3_nosymbols), file_id(info3.path));
 				assert_equal(images[1].base_ptr(), info2.base);
 			}
 
@@ -99,7 +100,7 @@ namespace micro_profiler
 				vector<mapped_module> modules;
 
 				// ACT
-				image img1("symbol_container_1");
+				image img1(c_symbol_container_1);
 				enumerate_process_modules(bind(&filter_modules< vector<mapped_module> >, ref(modules), _1));
 
 				// ASSERT
@@ -112,8 +113,8 @@ namespace micro_profiler
 				modules.clear();
 
 				// ACT
-				image img2("symbol_container_2");
-				image img3("symbol_container_3_nosymbols");
+				image img2(c_symbol_container_2);
+				image img3(c_symbol_container_3_nosymbols);
 				enumerate_process_modules(bind(&filter_modules< vector<mapped_module> >, ref(modules), _1));
 
 				// ASSERT
@@ -136,9 +137,9 @@ namespace micro_profiler
 				// INIT
 				vector<mapped_module> modules;
 
-				image img1("symbol_container_1");
-				auto_ptr<image> img2(new image("symbol_container_2"));
-				image img3("symbol_container_3_nosymbols");
+				image img1(c_symbol_container_1);
+				auto_ptr<image> img2(new image(c_symbol_container_2));
+				image img3(c_symbol_container_3_nosymbols);
 
 				string unloaded = img2->absolute_path();
 

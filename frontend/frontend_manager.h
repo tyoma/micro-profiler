@@ -84,7 +84,7 @@ namespace micro_profiler
 
 	private:
 		frontend_manager(const frontend_ui_factory &ui_factory);
-		virtual ~frontend_manager();
+		~frontend_manager();
 
 		void on_frontend_released(instance_container::iterator i) throw();
 		void on_ready_for_ui(instance_container::iterator i, const std::string &executable,

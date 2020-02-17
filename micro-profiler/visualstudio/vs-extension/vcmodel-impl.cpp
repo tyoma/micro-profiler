@@ -8,6 +8,15 @@ namespace micro_profiler
 {
 	namespace vcmodel
 	{
+		namespace
+		{
+			wstring v2s(_variant_t from)
+			{
+				from.ChangeType(VT_BSTR);
+				return from.pbstrVal ? wstring((const wchar_t *)from.pbstrVal) : L"";
+			}
+		}
+
 		struct compiler_tool_impl : compiler_tool, IDispatchPtr
 		{
 			compiler_tool_impl(const IDispatchPtr &object)
@@ -18,7 +27,7 @@ namespace micro_profiler
 			{	v.visit(*this);	}
 
 			virtual wstring additional_options() const
-			{	return (const wchar_t *)(_bstr_t)dispatch::get(*this, L"AdditionalOptions");	}
+			{	return v2s(dispatch::get(*this, L"AdditionalOptions"));	}
 
 			virtual void additional_options(const wstring &value)
 			{	dispatch::put(*this, L"AdditionalOptions", _bstr_t(value.c_str()));	}
@@ -30,10 +39,34 @@ namespace micro_profiler
 			{	dispatch::put(*this, L"UsePrecompiledHeader", (long)value);}
 		};
 
-		struct linker_tool_impl : linker_tool, IDispatchPtr
+		template <typename T>
+		struct linker_base_tool : T, IDispatchPtr
+		{
+			linker_base_tool(const IDispatchPtr &object)
+				: IDispatchPtr(object)
+			{	}
+
+			virtual wstring additional_dependencies() const
+			{	return v2s(dispatch::get(*this, L"AdditionalDependencies"));	}
+
+			virtual void additional_dependencies(const wstring &value)
+			{	dispatch::put(*this, L"AdditionalDependencies", _bstr_t(value.c_str()));	}
+		};
+
+		struct linker_tool_impl : linker_base_tool<linker_tool>
 		{
 			linker_tool_impl(const IDispatchPtr &object)
-				: IDispatchPtr(object)
+				: linker_base_tool(object)
+			{	}
+
+			virtual void visit(const visitor &v)
+			{	v.visit(*this);	}
+		};
+
+		struct librarian_tool_impl : linker_base_tool<librarian_tool>
+		{
+			librarian_tool_impl(const IDispatchPtr &object)
+				: linker_base_tool(object)
 			{	}
 
 			virtual void visit(const visitor &v)
@@ -48,6 +81,8 @@ namespace micro_profiler
 				return tool_ptr(new compiler_tool_impl(object));
 			else if (name == _bstr_t(L"VCLinkerTool"))
 				return tool_ptr(new linker_tool_impl(object));
+			else if (name == _bstr_t(L"VCLibrarianTool"))
+				return tool_ptr(new librarian_tool_impl(object));
 			return tool_ptr();
 		}
 

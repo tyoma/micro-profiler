@@ -14,6 +14,7 @@ namespace micro_profiler
 		struct configuration;
 		struct file;
 		struct file_configuration;
+		struct librarian_tool;
 		struct linker_tool;
 		struct project;
 		struct tool;
@@ -37,6 +38,7 @@ namespace micro_profiler
 		{
 			virtual void visit(compiler_tool &/*t*/) const { }
 			virtual void visit(linker_tool &/*t*/) const { }
+			virtual void visit(librarian_tool &/*t*/) const { }
 		};
 
 		struct compiler_tool : tool
@@ -52,6 +54,14 @@ namespace micro_profiler
 
 		struct linker_tool : tool
 		{
+			virtual std::wstring additional_dependencies() const = 0;
+			virtual void additional_dependencies(const std::wstring &value) = 0;
+		};
+
+		struct librarian_tool : tool
+		{
+			virtual std::wstring additional_dependencies() const = 0;
+			virtual void additional_dependencies(const std::wstring &value) = 0;
 		};
 
 		struct configuration

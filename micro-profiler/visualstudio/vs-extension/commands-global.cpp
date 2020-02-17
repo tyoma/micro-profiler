@@ -52,9 +52,12 @@ namespace micro_profiler
 		namespace
 		{
 			const wstring c_profilerdir_macro = L"$(" + unicode(c_profilerdir_ev) + L")";
-			const wstring c_profiler_library = c_profilerdir_macro + L"\\micro-profiler_$(PlatformName).lib";
+			const wstring c_initializer_cpp = c_profilerdir_macro & L"micro-profiler.initializer.cpp";
+			const wstring c_profiler_library = c_profilerdir_macro & L"micro-profiler_$(PlatformName).lib";
+			const wstring c_profiler_library_quoted = L"\"" + c_profiler_library + L"\"";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
+			const wstring c_separator = L";";
 			const wstring c_inherit = L"%(AdditionalOptions)";
 
 			bool replace(wstring &text, const wstring &what, const wstring &replacement)
@@ -93,6 +96,14 @@ namespace micro_profiler
 				wstring options = compiler.additional_options();
 
 				return wstring::npos != options.find(c_GH_option) && wstring::npos != options.find(c_Gh_option);
+			}
+
+			template <typename LinkerT>
+			bool has_library(LinkerT &linker)
+			{
+				wstring deps = linker.additional_dependencies();
+
+				return wstring::npos != deps.find(c_profiler_library);
 			}
 
 			struct instrument : vcmodel::tool::visitor
@@ -135,49 +146,82 @@ namespace micro_profiler
 				bool _enable;
 			};
 
-			bool is_enabled(IDispatch *dte_project)
+			struct link_library : vcmodel::tool::visitor
 			{
-				bool enabled = false;
+				link_library(bool enable)
+					: _enable(enable)
+				{	}
 
-				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
+				virtual void visit(vcmodel::linker_tool &linker) const
+				{	apply(linker);	}
+
+				virtual void visit(vcmodel::librarian_tool &librarian) const
+				{	apply(librarian);	}
+
+				template <typename LinkerT>
+				void apply(LinkerT &linker) const
 				{
-					if (find_item_by_relpath(*project, c_profiler_library))
-					{
-						project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
-							struct check_compiler : vcmodel::tool::visitor
-							{
-								check_compiler(bool &enabled) : _enabled(&enabled) {	}
-								void visit(vcmodel::compiler_tool &t) const {	*_enabled = has_instrumentation(t);	}
-								bool *_enabled;
-							};
+					bool changed = false;
+					wstring deps = linker.additional_dependencies();
 
-							t->visit(check_compiler(enabled));
-						});
+					if (_enable)
+					{
+						if (wstring::npos == deps.find(c_profiler_library))
+						{
+							if (!deps.empty())
+								deps += c_separator;
+							deps += c_profiler_library_quoted;
+							changed = true;
+						}
+					}
+					else
+					{
+						changed = replace(deps, c_separator + c_profiler_library_quoted, L"") || changed;
+						changed = replace(deps, c_profiler_library_quoted + c_separator, L"") || changed;
+						changed = replace(deps, c_profiler_library_quoted, L"") || changed;
+						changed = replace(deps, c_separator + c_profiler_library, L"") || changed;
+						changed = replace(deps, c_profiler_library + c_separator, L"") || changed;
+						changed = replace(deps, c_profiler_library, L"") || changed;
+					}
+					if (changed)
+					{
+						trim_space(deps);
+						linker.additional_dependencies(deps);
 					}
 				}
+
+			private:
+				bool _enable;
+			};
+
+			struct check_presence : vcmodel::tool::visitor
+			{
+				check_presence(pair<bool, bool>  &enabled) : _enabled(&enabled) {	}
+				void visit(vcmodel::compiler_tool &t) const {	_enabled->second = has_instrumentation(t);	}
+				void visit(vcmodel::linker_tool &t) const {	_enabled->first = has_library(t);	}
+				void visit(vcmodel::librarian_tool &t) const {	_enabled->first = has_library(t);	}
+				pair<bool /*library*/, bool /*instrumentation*/> *_enabled;
+			};
+
+
+			pair<bool /*library*/, bool /*instrumentation*/> is_enabled_detailed(vcmodel::project &project)
+			{
+				pair<bool, bool> enabled = make_pair(false, false);
+
+				project.get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
+					t->visit(check_presence(enabled));
+				});
 				return enabled;
 			}
 
-			bool is_enabled_partially(IDispatch *dte_project)
+			bool is_enabled(IDispatch *dte_project)
 			{
-				bool enabled = false;
-
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
-					if (find_item_by_relpath(*project, c_profiler_library))
-						return true;
-					project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
-						struct check_compiler : vcmodel::tool::visitor
-						{
-							check_compiler(bool &enabled) : _enabled(&enabled) {	}
-							void visit(vcmodel::compiler_tool &t) const {	*_enabled = has_instrumentation(t);	}
-							bool *_enabled;
-						};
-
-						t->visit(check_compiler(enabled));
-					});
+					pair<bool, bool> e = is_enabled_detailed(*project);
+					return e.first && e.second;
 				}
-				return enabled;
+				return false;
 			}
 		}
 
@@ -197,11 +241,9 @@ namespace micro_profiler
 			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&] (IDispatchPtr dte_project) {
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
-					if (add && !find_item_by_relpath(*project, c_profiler_library))
-						project->add_file(c_profiler_library);
-
 					project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
 						t->visit(instrument(add));
+						t->visit(link_library(add));
 					});
 				}
 			});
@@ -210,11 +252,30 @@ namespace micro_profiler
 
 		bool remove_profiling_support::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
 		{
-			state = supported;
+			bool has_it = false;
 
-			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&state, this] (IDispatchPtr dte_project) {
-				state |= is_enabled_partially(dte_project) ? enabled | visible : 0;
+			state = supported;
+			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&has_it, this] (IDispatchPtr dte_project) {
+				if (vcmodel::project_ptr p = vcmodel::create(dte_project))
+				{
+					if (find_item_by_relpath(*p, c_profiler_library) || find_item_by_relpath(*p, c_profiler_library))
+					{
+						has_it = true;
+					}
+					else
+					{
+						pair<bool, bool> e = make_pair(false, false);
+
+						p->enum_configurations([&] (vcmodel::configuration_ptr cfg) {
+							cfg->enum_tools([&] (vcmodel::tool_ptr t) {
+								t->visit(check_presence(e));
+							});
+						});
+						has_it = e.first || e.second;
+					}
+				}
 			});
+			state |= has_it ? enabled | visible : 0;
 			return true;
 		}
 
@@ -223,11 +284,16 @@ namespace micro_profiler
 			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [] (IDispatchPtr dte_project) {
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
+					// For compatibility - remove legacy settings.
 					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_profiler_library))
 						f->remove();
+					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_initializer_cpp))
+						f->remove();
+
 					project->enum_configurations([] (vcmodel::configuration_ptr cfg) {
 						cfg->enum_tools([] (vcmodel::tool_ptr t) {
 							t->visit(instrument(false));
+							t->visit(link_library(false));
 						});
 					});
 				}

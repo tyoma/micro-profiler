@@ -24,14 +24,23 @@
 
 namespace micro_profiler
 {
-	inline std::string operator &(const std::string &lhs, const std::string &rhs)
+	template <typename T>
+	inline std::basic_string<T> operator &(const std::basic_string<T> &lhs, const std::basic_string<T> &rhs)
 	{
 		if (lhs.empty())
 			return rhs;
-		if (*lhs.rbegin() == '\\' || *lhs.rbegin() == '/')
+		if (lhs.back() == T('\\') || lhs.back() == T('/'))
 			return lhs + rhs;
-		return lhs + "/" + rhs;
+		return lhs + T('/') + rhs;
 	}
+
+	template <typename T>
+	inline std::basic_string<T> operator &(const std::basic_string<T> &lhs, const T *rhs)
+	{	return lhs & std::basic_string<T>(rhs);	}
+
+	template <typename T>
+	inline std::basic_string<T> operator &(const T *lhs, const std::basic_string<T> &rhs)
+	{	return std::basic_string<T>(lhs) & rhs;	}
 
 	inline std::string operator ~(const std::string &value)
 	{

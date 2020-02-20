@@ -22,10 +22,16 @@
 
 #include <atlbase.h>
 #include <ipc/com/endpoint.h>
+#include <logger/multithreaded_logger.h>
 
 namespace
 {
 	class Module : public CAtlDllModuleT<Module> { } g_module;
+
+	void writer(const char *text)
+	{
+		OutputDebugStringA(text);
+	}
 }
 
 namespace micro_profiler
@@ -42,6 +48,8 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 	{
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 		micro_profiler::g_instance = hinstance;
+		micro_profiler::log::g_logger.reset(new micro_profiler::log::multithreaded_logger(&writer,
+			&micro_profiler::get_datetime));
 	}
 
 	return g_module.DllMain(reason, reserved);

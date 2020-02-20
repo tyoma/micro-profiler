@@ -18,50 +18,42 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/time.h>
+#pragma once
 
-#include <windows.h>
+#include "log.h"
+
+#include <common/time.h>
+#include <functional>
+#include <list>
+#include <mt/mutex.h>
+#include <mt/tls.h>
 
 namespace micro_profiler
 {
-	namespace
+	namespace log
 	{
-		double get_period()
+		class multithreaded_logger : public logger, noncopyable
 		{
-			LARGE_INTEGER frequency;
+		public:
+			typedef std::function<void (const char *text)> writer_t;
+			typedef std::function<datetime ()> time_provider_t;
 
-			::QueryPerformanceFrequency(&frequency);
-			return 1.0 / frequency.QuadPart;
-		}
+		public:
+			multithreaded_logger(const writer_t &writer, const time_provider_t &time_provider);
 
-		const double c_period = get_period();
-	}
+			virtual void begin(const char *message, level level_) throw();
+			virtual void add_attribute(const attribute &a) throw();
+			virtual void commit() throw();
 
-	timestamp_t clock()
-	{	return ::GetTickCount64();	}
+		private:
+			buffer_t &get_buffer();
 
-	double stopwatch(counter_t &counter)
-	{
-		LARGE_INTEGER c;
-		double period;
-
-		::QueryPerformanceCounter(&c);
-		period = c_period * (c.QuadPart - counter);
-		counter = c.QuadPart;
-		return period;
-	}
-
-	datetime get_datetime()
-	{
-		SYSTEMTIME st = {};
-
-		::GetSystemTime(&st);
-
-		datetime dt = {
-			st.wYear - 1900, st.wMonth, st.wDay,
-			st.wHour, st.wMinute, st.wSecond, st.wMilliseconds
+		private:
+			const writer_t _writer;
+			const time_provider_t _time_provider;
+			std::list<buffer_t> _buffer_container;
+			mt::tls<buffer_t> _buffers;
+			mt::mutex _construction_mutex;
 		};
-
-		return dt;
 	}
 }

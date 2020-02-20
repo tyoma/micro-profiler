@@ -19,4 +19,4 @@ endif()
 
 add_library(ipc.tests SHARED ${IPC_TESTS_SOURCES})
 
-target_link_libraries(ipc.tests ipc common test-helpers)
+target_link_libraries(ipc.tests ipc logger common test-helpers)

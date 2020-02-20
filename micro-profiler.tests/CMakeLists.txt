@@ -8,4 +8,4 @@ set(MICROPROFILER_TEST_SOURCES
 
 add_library(micro-profiler.tests SHARED ${MICROPROFILER_TEST_SOURCES})
 
-target_link_libraries(micro-profiler.tests ipc common test-helpers)
+target_link_libraries(micro-profiler.tests ipc logger common test-helpers)

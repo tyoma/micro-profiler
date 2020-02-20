@@ -19,42 +19,28 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{81701143-86EC-4436-9CF7-697EE748BCE8}</ProjectGuid>
+    <ProjectGuid>{F1EB4266-766C-4087-95F4-387A955B12AA}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\logger\src\logger.vcxproj">
-      <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\src\frontend.lib.vcxproj">
-      <Project>{15AD9007-29B9-462F-B7BE-A433B6E83EC9}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
-      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
-    </ProjectReference>
+    <ClCompile Include="log.cpp" />
+    <ClCompile Include="multithreaded_logger.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ColumnsModelTests.cpp" />
-    <ClCompile Include="CommandTargetTests.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
-    <ClCompile Include="FrontendManagerTests.cpp" />
-    <ClCompile Include="FunctionListTests.cpp" />
-    <ClCompile Include="mocks.cpp" />
-    <ClCompile Include="OrderedViewTests.cpp" />
-    <ClCompile Include="ProcessListTests.cpp" />
-    <ClCompile Include="SymbolResolverTests.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="helpers.h" />
-    <ClInclude Include="mocks.h" />
+    <ClInclude Include="..\log.h" />
+    <ClInclude Include="..\multithreaded_logger.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

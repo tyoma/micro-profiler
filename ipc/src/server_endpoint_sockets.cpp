@@ -21,6 +21,7 @@
 #include "server_endpoint_sockets.h"
 
 #include <arpa/inet.h>
+#include <logger/log.h>
 #include <common/noncopyable.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -31,6 +32,8 @@
 
 #pragma warning(disable: 4127)
 #pragma warning(disable: 4389)
+
+#define PREAMBLE "IPC socket server: "
 
 using namespace std;
 using namespace std::placeholders;
@@ -92,6 +95,7 @@ namespace micro_profiler
 			void socket_handler::run(ContainerT &handlers)
 			try
 			{
+				LOG(PREAMBLE "processing thread started.");
 				for (;;)
 				{
 					fd_set fds;
@@ -114,6 +118,7 @@ namespace micro_profiler
 							break;
 
 						case exit:
+							LOG(PREAMBLE "processing thread ended...") % A(handlers.size());
 							return;
 						}
 					}
@@ -121,12 +126,11 @@ namespace micro_profiler
 			}
 			catch (exception &e)
 			{
-				// TODO: Add logging of initialization error here.
-				e.what();
+				LOGE(PREAMBLE "processing failed.") % A(e.what());
 			}
 			catch (...)
 			{
-				// TODO: Add logging of initialization error here.
+				LOGE(PREAMBLE "processing failed (unknown reason).");
 			}
 
 			void socket_handler::disconnect() throw()

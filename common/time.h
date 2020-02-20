@@ -26,8 +26,20 @@ namespace micro_profiler
 {
 	typedef unsigned long long counter_t;
 
+	struct datetime
+	{
+		unsigned int year : 8; // zero is 1900
+		unsigned int month : 4; // 1-12
+		unsigned int day : 5; // 1-31
+		unsigned int hour : 5; // 0-23
+		unsigned int minute : 6; // 0-59
+		unsigned int second : 6; // 0-59
+		unsigned int millisecond : 10; // 0-999
+	};
+
 	timestamp_t clock(); // monotonic clock in milliseconds
 	double stopwatch(counter_t &counter);
 	timestamp_t read_tick_counter();
 	timestamp_t ticks_per_second();
+	datetime get_datetime(); // Zulu date/time
 }

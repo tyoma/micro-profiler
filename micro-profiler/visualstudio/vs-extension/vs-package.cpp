@@ -26,6 +26,7 @@
 #include "vs-pane.h"
 
 #include <common/constants.h>
+#include <logger/log.h>
 #include <common/string.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/ipc_manager.h>
@@ -38,6 +39,8 @@
 #include <dte.h>
 #include <vsshell.h>
 #include <vsshell140.h>
+
+#define PREAMBLE "VS Package: "
 
 using namespace std;
 using namespace placeholders;
@@ -76,7 +79,10 @@ namespace micro_profiler
 				CComPtr<IVsTask> acquisition;
 
 				if (S_OK != sp->QueryServiceAsync(serviceid, &acquisition))
+				{
+					LOGE(PREAMBLE "failed to obtain a service!");
 					throw runtime_error("Cannot begin acquistion of a service!");
+				}
 				return async::when_complete(acquisition, VSTC_UITHREAD_NORMAL_PRIORITY,
 					[onready] (_variant_t r) -> _variant_t {
 
@@ -116,10 +122,13 @@ namespace micro_profiler
 			{
 				CComPtr<profiler_package> self = this;
 
+				LOG(PREAMBLE "initializing (async)...");
 				obtain_service<_DTE>(sp, [self] (_DTE *p) {
+					LOG(PREAMBLE "DTE obtained (async)...") % A(p);
 					self->_dte = p;
 				});
 				obtain_service<IVsUIShell>(sp, [self] (CComPtr<IVsUIShell> p) {
+					LOG(PREAMBLE "VSShell obtained (async)...") % A(p);
 					self->initialize(p);
 				});
 				ppTask = NULL;
@@ -127,6 +136,7 @@ namespace micro_profiler
 			}
 			catch (...)
 			{
+				LOGE(PREAMBLE "failed...");
 				return E_FAIL;
 			}
 
@@ -135,6 +145,7 @@ namespace micro_profiler
 			{
 				CComPtr<IVsUIShell> shell;
 
+				LOG(PREAMBLE "initializing (sync)...") % A(sp);
 				_service_provider = sp;
 				_service_provider->QueryService(__uuidof(IVsUIShell), &shell);
 				initialize(shell);
@@ -142,6 +153,7 @@ namespace micro_profiler
 			}
 			catch (...)
 			{
+				LOGE(PREAMBLE "failed...");
 				return E_FAIL;
 			}
 
@@ -187,7 +199,10 @@ namespace micro_profiler
 			CComPtr<_DTE> get_dte()
 			{
 				if (!_dte && _service_provider)
+				{
 					_service_provider->QueryService(__uuidof(_DTE), &_dte);
+					LOG(PREAMBLE "DTE obtained on demand.") % A(_dte);
+				}
 				return _dte;
 			}
 
@@ -205,7 +220,13 @@ namespace micro_profiler
 			}
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const string &executable)
-			{	return integration::create_ui(*_shell, _next_tool_id++, model, executable);	}
+			{
+				const unsigned tool_id = _next_tool_id++;
+				shared_ptr<frontend_ui> ui = integration::create_ui(*_shell, tool_id, model, executable);
+
+				LOG(PREAMBLE "tool window created") % A(executable) % A(tool_id);
+				return ui;
+			}
 
 		private:
 			CComPtr<IServiceProvider> _service_provider;

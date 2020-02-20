@@ -19,4 +19,4 @@ if(WIN32)
 endif()
 
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})
-target_link_libraries(frontend.tests frontend.lib test-helpers common)
+target_link_libraries(frontend.tests frontend.lib test-helpers logger common)

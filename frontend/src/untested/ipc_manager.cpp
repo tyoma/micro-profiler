@@ -21,8 +21,11 @@
 #include <frontend/ipc_manager.h>
 
 #include <common/constants.h>
+#include <logger/log.h>
 #include <common/string.h>
 #include <frontend/marshalling_server.h>
+
+#define PREAMBLE "IPC manager: "
 
 using namespace std;
 
@@ -35,10 +38,14 @@ namespace micro_profiler
 			shared_ptr<void> try_run_server(const char *endpoint_id, const shared_ptr<server> &factory)
 			try
 			{
-				return run_server(endpoint_id, factory);
+				LOG(PREAMBLE "attempting server creation...") % A(endpoint_id);
+				shared_ptr<void> hserver = run_server(endpoint_id, factory);
+				LOG(PREAMBLE "succeeded.");
+				return hserver;
 			}
-			catch (const initialization_failed &)
+			catch (const initialization_failed &e)
 			{
+				LOG(PREAMBLE "failed.") % A(e.what());
 				return shared_ptr<void>();
 			}
 		}
@@ -63,10 +70,10 @@ namespace micro_profiler
 		{
 			if (enable == _remote_enabled)
 				return;
-
 			_sockets_server.reset(); // Free the port before reopening.
 			_sockets_server = probe_create_server(_underlying, enable ? "0.0.0.0" : "127.0.0.1", _port, _range);
 			_remote_enabled = enable;
+			LOG(PREAMBLE "enable remote...") % A(enable);
 		}
 
 		//bool ipc_manager::com_enabled() const;
@@ -90,7 +97,9 @@ namespace micro_profiler
 			{
 				hserver = try_run_server(format_endpoint(interface_, p).c_str(), underlying);
 				if (hserver)
+				{
 					port = p;
+				}
 			}
 			return hserver;
 		}

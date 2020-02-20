@@ -24,8 +24,11 @@
 #include <frontend/serialization.h>
 #include <frontend/symbol_resolver.h>
 
+#include <logger/log.h>
 #include <common/memory.h>
 #include <strmd/serializer.h>
+
+#define PREAMBLE "Frontend: "
 
 using namespace std;
 
@@ -33,20 +36,26 @@ namespace micro_profiler
 {
 	frontend::frontend(ipc::channel &outbound)
 		: _outbound(outbound)			
-	{	}
+	{	LOG(PREAMBLE "constructed...") % A(this);	}
 
 	frontend::~frontend()
-	{	released();	}
+	{
+		released();
+		LOG(PREAMBLE "destroyed...") % A(this);
+	}
 
 	void frontend::disconnect_session() throw()
-	{	_outbound.disconnect();	}
+	{
+		_outbound.disconnect();
+		LOG(PREAMBLE "disconnect requested locally...") % A(this);
+	}
 
 	void frontend::disconnect() throw()
-	{	}
+	{	LOG(PREAMBLE "disconnected by remote...") % A(this);	}
 
 	void frontend::message(const_byte_range payload)
 	{
-		unsigned id;
+		unsigned persistent_id;
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> archive(reader);
 		initialization_data idata;
@@ -60,6 +69,7 @@ namespace micro_profiler
 			archive(idata);
 			_model = functions_list::create(idata.ticks_per_second, get_resolver());
 			initialized(idata.executable, _model);
+			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			break;
 
 		case modules_loaded:
@@ -74,9 +84,10 @@ namespace micro_profiler
 			break;
 
 		case module_metadata:
-			archive(id);
+			archive(persistent_id);
 			archive(mmetadata);
-			get_resolver()->add_metadata(id, mmetadata);
+			LOG(PREAMBLE "received metadata...") % A(this) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
+			get_resolver()->add_metadata(persistent_id, mmetadata);
 			break;
 
 		default:
@@ -103,7 +114,10 @@ namespace micro_profiler
 
 			_resolver.reset(new symbol_resolver([wself] (unsigned int persistent_id) {
 				if (shared_ptr<frontend> self = wself.lock())
+				{
 					self->send(request_metadata, persistent_id);
+					LOG(PREAMBLE "requested metadata from remote...") % A(self.get()) % A(persistent_id);
+				}
 			}));
 		}
 		return _resolver;

@@ -22,8 +22,12 @@
 
 #include <frontend/frontend.h>
 
+#include <logger/log.h>
+
 using namespace std;
 using namespace placeholders;
+
+#define PREAMBLE "Frontend manager: "
 
 namespace micro_profiler
 {
@@ -34,10 +38,10 @@ namespace micro_profiler
 
 	frontend_manager::frontend_manager(const frontend_ui_factory &ui_factory)
 		: _references(1), _ui_factory(ui_factory), _active_instance(0)
-	{	}
+	{	LOG(PREAMBLE "constructed.");	}
 
 	frontend_manager::~frontend_manager()
-	{	}
+	{	LOG(PREAMBLE "destroyed.");	}
 
 	shared_ptr<frontend_manager> frontend_manager::create(const frontend_ui_factory &ui_factory)
 	{	return shared_ptr<frontend_manager>(new frontend_manager(ui_factory), &destroy);	}
@@ -53,6 +57,7 @@ namespace micro_profiler
 			if (!ui)
 				ii->frontend->disconnect_session();
 		}
+		LOG(PREAMBLE "all instances closed.");
 	}
 
 	size_t frontend_manager::instances_count() const throw()
@@ -97,7 +102,10 @@ namespace micro_profiler
 	{
 		i->frontend = 0;
 		if (!i->ui)
+		{
 			_instances.erase(i);
+			LOG(PREAMBLE "no UI controller - instance removed.") % A(_instances.size());
+		}
 		release();
 	}
 

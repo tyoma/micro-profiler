@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{81701143-86EC-4436-9CF7-697EE748BCE8}</ProjectGuid>
+    <ProjectGuid>{97C8E773-9F28-4A36-B8B5-D28046B3FDDD}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
@@ -30,31 +30,19 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\logger\src\logger.vcxproj">
-      <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\src\frontend.lib.vcxproj">
-      <Project>{15AD9007-29B9-462F-B7BE-A433B6E83EC9}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+    <ClCompile Include="LogTests.cpp" />
+    <ClCompile Include="MultiThreadedLoggerTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="ColumnsModelTests.cpp" />
-    <ClCompile Include="CommandTargetTests.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
-    <ClCompile Include="FrontendManagerTests.cpp" />
-    <ClCompile Include="FunctionListTests.cpp" />
-    <ClCompile Include="mocks.cpp" />
-    <ClCompile Include="OrderedViewTests.cpp" />
-    <ClCompile Include="ProcessListTests.cpp" />
-    <ClCompile Include="SymbolResolverTests.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="helpers.h" />
-    <ClInclude Include="mocks.h" />
+    <ProjectReference Include="..\..\mt\src\mt.vcxproj">
+      <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\src\logger.vcxproj">
+      <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -106,7 +106,7 @@ namespace micro_profiler
 		{	name = name_;	}
 
 		template <typename T>
-		inline void ref_attribute_impl<T>::format_value(std::vector<char> &buffer) const
+		inline void ref_attribute_impl<T>::format_value(buffer_t &buffer) const
 		{	log::to_string(buffer, _value);	}
 
 

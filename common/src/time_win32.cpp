@@ -58,7 +58,7 @@ namespace micro_profiler
 		::GetSystemTime(&st);
 
 		datetime dt = {
-			st.wYear - 1900, st.wMonth, st.wDay,
+			st.wYear - 1900u, st.wMonth, st.wDay,
 			st.wHour, st.wMinute, st.wSecond, st.wMilliseconds
 		};
 

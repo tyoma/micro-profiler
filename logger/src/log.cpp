@@ -20,7 +20,6 @@
 
 #include <logger/log.h>
 
-#include <algorithm>
 #include <string.h>
 
 using namespace std;
@@ -33,47 +32,63 @@ namespace micro_profiler
 		{
 			struct nil_logger : logger
 			{
-				virtual void begin(const char * /*message*/, level /*level_*/) throw() {	}
-				virtual void add_attribute(const attribute &/*a*/) throw() {	}
+				virtual void begin(const char* /*message*/, level /*level_*/) throw() {	}
+				virtual void add_attribute(const attribute&/*a*/) throw() {	}
 				virtual void commit() throw() {	}
+			};
+
+			template <bool base10_or_less>
+			struct digits
+			{
+				static char get_digit(unsigned char digit)
+				{	return "0123456789ABCDEF"[digit];	}
+			};
+
+			template <>
+			struct digits<true>
+			{
+				static char get_digit(unsigned char digit)
+				{	return '0' + digit;	}
 			};
 
 
 
-			template <typename T>
-			void uitoa(buffer_t &buffer, T value, int base = 10)
+			template <unsigned char base, typename T>
+			void uitoa(buffer_t &buffer, T value)
 			{
-				size_t l0 = buffer.size();
+				enum { max_length = 8 * sizeof(T) }; // Max buffer length for base2 representation.
+				char local_buffer[max_length];
+				char* p = local_buffer + max_length;
 
 				do
-					buffer.push_back("0123456789ABCDEF"[value % base]);
+					*--p = digits<base <= 10>::get_digit(value % base);
 				while (value /= T(base), value);
-				reverse(buffer.begin() + l0, buffer.end());
+				buffer.insert(buffer.end(), p, local_buffer + max_length);
 			}
 
-			template <typename T>
-			void itoa(buffer_t &buffer, T value, int base = 10)
+			template <unsigned char base, typename T>
+			void itoa(buffer_t &buffer, T value)
 			{
 				if (value < 0)
 					buffer.push_back('-'), value = -value;
-				uitoa(buffer, value, base);
+				uitoa<base>(buffer, value);
 			}
 		}
 
 		logger_ptr g_logger(new nil_logger);
 
-		void to_string(buffer_t &buffer, void *value) {	buffer.push_back('0'), buffer.push_back('x'), uitoa(buffer, reinterpret_cast<size_t>(value), 16);	}
+		void to_string(buffer_t &buffer, void *value) {	buffer.push_back('0'), buffer.push_back('x'), uitoa<16>(buffer, reinterpret_cast<size_t>(value));	}
 		void to_string(buffer_t &buffer, bool value) {	to_string(buffer, value ? "true" : "false");	}
-		void to_string(buffer_t &buffer, char value) {	itoa(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned char value) {	uitoa(buffer, value);	}
-		void to_string(buffer_t &buffer, short value) {	itoa(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned short value) {	uitoa(buffer, value);	}
-		void to_string(buffer_t &buffer, int value) {	itoa(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned int value) {	uitoa(buffer, value);	}
-		void to_string(buffer_t &buffer, long int value) {	itoa(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned long int value) {	uitoa(buffer, value);	}
-		void to_string(buffer_t &buffer, long long int value) {	itoa(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned long long int value) {	uitoa(buffer, value);	}
+		void to_string(buffer_t &buffer, char value) {	itoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, unsigned char value) {	uitoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, short value) {	itoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, unsigned short value) {	uitoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, int value) {	itoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, unsigned int value) {	uitoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, long int value) {	itoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, unsigned long int value) {	uitoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, long long int value) {	itoa<10>(buffer, value);	}
+		void to_string(buffer_t &buffer, unsigned long long int value) {	uitoa<10>(buffer, value);	}
 		void to_string(buffer_t &buffer, const string &value) {	buffer.insert(buffer.end(), value.begin(), value.end());	}
 
 		void to_string(buffer_t &buffer, const char *value)
@@ -82,12 +97,8 @@ namespace micro_profiler
 
 			value = value ? value : null;
 
-			const size_t pl = buffer.size(), l = strlen(value);
-
-			buffer.resize(pl + l);
-			if (l)
-				strncpy(&buffer[pl], value, l);
+			if (const size_t l = strlen(value))
+				buffer.insert(buffer.end(), value, value + l);
 		}
-
 	}
 }

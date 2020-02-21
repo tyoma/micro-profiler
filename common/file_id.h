@@ -25,6 +25,8 @@
 #include <string>
 #include <utility>
 
+#pragma warning(disable:4099) // older versions of VisualStudio define std::hash as class
+
 namespace micro_profiler
 {
 	class file_id : std::pair<unsigned long long, unsigned long long>, std::shared_ptr<void>
@@ -36,7 +38,7 @@ namespace micro_profiler
 
 	private:
 		template <typename T>
-		friend class std::hash;
+		friend struct std::hash;
 	};
 
 

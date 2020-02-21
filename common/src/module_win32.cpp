@@ -21,7 +21,7 @@
 #include <common/module.h>
 
 #include <common/string.h>
-
+#include <memory>
 #include <windows.h>
 #include <tlhelp32.h>
 

@@ -88,6 +88,8 @@ try
 		return 0;
 	}
 
+	com_initialize ci;
+
 	auto ui_factory = [] (const shared_ptr<micro_profiler::functions_list> &model, const string &executable)	{
 		return make_shared<micro_profiler::ProfilerMainDialog>(model, executable);
 	};
@@ -96,7 +98,6 @@ try
 	auto frontend_manager = micro_profiler::frontend_manager::create(ui_factory);
 	micro_profiler::ipc::ipc_manager ipc_manager(frontend_manager,
 		make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)));
-	com_initialize ci;
 	auto com_server = micro_profiler::ipc::run_server(
 		("com|" + micro_profiler::to_string(micro_profiler::c_standalone_frontend_id)).c_str(), frontend_manager);
 

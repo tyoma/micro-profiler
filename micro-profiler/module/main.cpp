@@ -51,15 +51,14 @@ namespace micro_profiler
 
 	file_version get_file_version(const string &path_)
 	{
-		DWORD handle = 0;
 		const wstring path = unicode(path_);
 		file_version v = {};
 
-		if (const DWORD version_size = ::GetFileVersionInfoSizeW(path.c_str(), &handle))
+		if (const DWORD version_size = ::GetFileVersionInfoSizeW(path.c_str(), 0))
 		{
 			unique_ptr<byte[]> buffer(new byte[version_size]);
 
-			if (::GetFileVersionInfoW(path.c_str(), handle, version_size, buffer.get()))
+			if (::GetFileVersionInfoW(path.c_str(), 0, version_size, buffer.get()))
 			{
 				void *fragment = 0;
 				UINT fragment_size;
@@ -100,7 +99,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 		const file_version vs = get_file_version(exe);
 
 		LOG("MicroProfiler vspackage module loaded...")
-			% A(self) % A(exe)
+			% A(getpid()) % A(self) % A(exe)
 			% A(vs.major) % A(vs.minor) % A(vs.build) % A(vs.patch);
 	}
 

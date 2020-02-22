@@ -23,13 +23,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _WIN32
-	#include <process.h>
-#else
-	#include <unistd.h>
-#endif
-	
-
 using namespace std;
 
 namespace micro_profiler
@@ -56,19 +49,13 @@ namespace micro_profiler
 			}
 		}
 
+
 		multithreaded_logger::multithreaded_logger(const writer_t &writer, const time_provider_t &time_provider)
 			: _writer(writer), _time_provider(time_provider)
-		{
-			begin("Application logging started...", info);
-			add_attribute(A(getpid()));
-			commit();
-		}
+		{	e(*this, "---------- Application logging started.", info);	}
 
 		multithreaded_logger::~multithreaded_logger()
-		{
-			begin("Application logging complete. Bye!\n", info);
-			commit();
-		}
+		{	e(*this, "---------- Application logging complete. Bye!", info);	}
 
 		void multithreaded_logger::begin(const char *message, level level_) throw()
 		try

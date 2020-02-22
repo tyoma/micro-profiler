@@ -64,11 +64,11 @@ namespace
 }
 
 const size_t c_trace_limit = 5000000;
-shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit));
+const shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit));
 extern "C" calls_collector *g_collector_ptr = g_collector.get();
-overhead c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);
+const overhead c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);
 collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead);
-platform_initializer g_intializer(g_profiler_app);
+const platform_initializer g_intializer(g_profiler_app);
 
 #if defined(__clang__) || defined(__GNUC__)
 	#define PUBLIC __attribute__ ((visibility ("default")))

@@ -31,11 +31,30 @@ namespace micro_profiler
 {
 	string unicode(const wstring &value)
 	{
-		// invalid: must be replaced with utf-16 -> utf-8 encoder
-		vector<char> buffer(wcstombs(0, value.c_str(), 0) + 1u);
-		
-		wcstombs(&buffer[0], value.c_str(), buffer.size());
-		return &buffer[0];
+		string result;
+
+		for (wstring::const_iterator i = value.begin(); i != value.end(); ++i)
+		{
+			if (*i <= 0x007F)
+			{
+				// Plain single-byte ASCII.
+				result.push_back(static_cast<char>(*i));
+			}
+			else if (*i <= 0x07FF)
+			{
+				// Two bytes.
+				result.push_back(static_cast<char>(0xC0 | (*i >> 6)));
+				result.push_back(static_cast<char>(0x80 | ((*i >> 0) & 0x3F)));
+			}
+			else
+			{
+				// Three bytes.
+				result.push_back(static_cast<char>(0xE0 | (*i >> 12)));
+				result.push_back(static_cast<char>(0x80 | ((*i >> 6) & 0x3F)));
+				result.push_back(static_cast<char>(0x80 | ((*i >> 0) & 0x3F)));
+			}
+		}
+		return result;
 	}
 
 	wstring unicode(const string &utf8)

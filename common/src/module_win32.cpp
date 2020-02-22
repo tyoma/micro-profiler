@@ -35,12 +35,12 @@ namespace micro_profiler
 	mapped_module get_module_info(const void *address)
 	{
 		HMODULE base = 0;
-		char path[MAX_PATH + 1] = { };
+		wchar_t path[MAX_PATH + 1] = { };
 
 		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &base);
-		::GetModuleFileNameA(base, path, sizeof(path));
+		::GetModuleFileNameW(base, path, sizeof(path)); // TODO: use GetModuleFileNameW instead.
 		::FreeLibrary(base);
-		mapped_module info = { path, static_cast<byte *>(static_cast<void *>(base)), };
+		mapped_module info = { unicode(path), static_cast<byte *>(static_cast<void *>(base)), };
 		return info;
 	}
 
@@ -48,9 +48,11 @@ namespace micro_profiler
 	{
 		mapped_module module;
 		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0), &::CloseHandle);
-		MODULEENTRY32 entry = { sizeof(MODULEENTRY32), };
+		MODULEENTRY32W entry = { sizeof(MODULEENTRY32W), };
 
-		for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next, module.addresses.clear())
+		for (auto lister = &::Module32FirstW;
+			lister(snapshot.get(), &entry);
+			lister = &::Module32NextW, module.addresses.clear())
 		{
 			module.path = unicode(entry.szExePath);
 			module.base = entry.modBaseAddr;

@@ -24,8 +24,8 @@
 #include <frontend/serialization.h>
 #include <frontend/symbol_resolver.h>
 
-#include <logger/log.h>
 #include <common/memory.h>
+#include <logger/log.h>
 #include <strmd/serializer.h>
 
 #define PREAMBLE "Frontend: "

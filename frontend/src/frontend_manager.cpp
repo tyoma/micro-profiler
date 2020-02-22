@@ -21,7 +21,6 @@
 #include <frontend/frontend_manager.h>
 
 #include <frontend/frontend.h>
-
 #include <logger/log.h>
 
 using namespace std;

@@ -60,18 +60,6 @@ namespace micro_profiler
 			const wstring c_separator = L";";
 			const wstring c_inherit = L"%(AdditionalOptions)";
 
-			bool replace(wstring &text, const wstring &what, const wstring &replacement)
-			{
-				size_t pos = text.find(what);
-
-				if (pos != wstring::npos)
-				{
-					text.replace(pos, what.size(), replacement);
-					return true;
-				}
-				return false;
-			}
-
 			void trim_space(wstring &text)
 			{
 				size_t first = text.find_first_not_of(L' ');
@@ -128,12 +116,12 @@ namespace micro_profiler
 					}
 					else
 					{
-						changed = replace(options, L" " + c_GH_option, L"") || changed;
-						changed = replace(options, c_GH_option + L" ", L"") || changed;
-						changed = replace(options, c_GH_option, L"") || changed;
-						changed = replace(options, L" " + c_Gh_option, L"") || changed;
-						changed = replace(options, c_Gh_option + L" ", L"") || changed;
-						changed = replace(options, c_Gh_option, L"") || changed;
+						changed = replace(options, L" " + c_GH_option, wstring()) || changed;
+						changed = replace(options, c_GH_option + L" ", wstring()) || changed;
+						changed = replace(options, c_GH_option, wstring()) || changed;
+						changed = replace(options, L" " + c_Gh_option, wstring()) || changed;
+						changed = replace(options, c_Gh_option + L" ", wstring()) || changed;
+						changed = replace(options, c_Gh_option, wstring()) || changed;
 					}
 					if (changed)
 					{
@@ -176,12 +164,12 @@ namespace micro_profiler
 					}
 					else
 					{
-						changed = replace(deps, c_separator + c_profiler_library_quoted, L"") || changed;
-						changed = replace(deps, c_profiler_library_quoted + c_separator, L"") || changed;
-						changed = replace(deps, c_profiler_library_quoted, L"") || changed;
-						changed = replace(deps, c_separator + c_profiler_library, L"") || changed;
-						changed = replace(deps, c_profiler_library + c_separator, L"") || changed;
-						changed = replace(deps, c_profiler_library, L"") || changed;
+						changed = replace(deps, c_separator + c_profiler_library_quoted, wstring()) || changed;
+						changed = replace(deps, c_profiler_library_quoted + c_separator, wstring()) || changed;
+						changed = replace(deps, c_profiler_library_quoted, wstring()) || changed;
+						changed = replace(deps, c_separator + c_profiler_library, wstring()) || changed;
+						changed = replace(deps, c_profiler_library + c_separator, wstring()) || changed;
+						changed = replace(deps, c_profiler_library, wstring()) || changed;
 					}
 					if (changed)
 					{

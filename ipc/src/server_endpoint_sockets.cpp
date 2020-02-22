@@ -21,9 +21,9 @@
 #include "server_endpoint_sockets.h"
 
 #include <arpa/inet.h>
-#include <logger/log.h>
 #include <common/noncopyable.h>
 #include <fcntl.h>
+#include <logger/log.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <stdexcept>

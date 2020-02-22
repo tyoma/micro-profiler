@@ -31,4 +31,18 @@ namespace micro_profiler
 
 	std::string to_string(const guid_t &id);
 	guid_t from_string(const std::string &text);
+
+	template <typename CharT>
+	inline bool replace(std::basic_string<CharT> &text, const std::basic_string<CharT> &what,
+		const std::basic_string<CharT> &replacement)
+	{
+		typename std::basic_string<CharT>::size_type pos = text.find(what);
+
+		if (pos != std::basic_string<CharT>::npos)
+		{
+			text.replace(pos, what.size(), replacement);
+			return true;
+		}
+		return false;
+	}
 }

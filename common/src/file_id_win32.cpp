@@ -20,6 +20,8 @@
 
 #include <common/file_id.h>
 
+#include <common/string.h>
+
 #include <windows.h>
 
 using namespace std;
@@ -27,8 +29,8 @@ using namespace std;
 namespace micro_profiler
 {
 	file_id::file_id(const string &path)
-		: shared_ptr<void>(::CreateFileA(path.c_str(), FILE_READ_ATTRIBUTES,
-			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL), &::CloseHandle)
+		: shared_ptr<void>(::CreateFileW(unicode(path).c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE
+			| FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL), &::CloseHandle)
 	{
 		BY_HANDLE_FILE_INFORMATION bhfi = { };
 

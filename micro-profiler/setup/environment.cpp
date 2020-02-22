@@ -20,16 +20,19 @@
 
 #include "environment.h"
 
+#include <atlbase.h>
 #include <common/constants.h>
+#include <common/file_id.h>
 #include <common/module.h>
 #include <common/path.h>
 #include <common/string.h>
-
-#include <atlbase.h>
 #include <functional>
 #include <io.h>
+#include <logger/log.h>
 #include <string>
 #include <vector>
+
+#define PREAMBLE "Setup: "
 
 using namespace std;
 using namespace std::placeholders;
@@ -39,13 +42,14 @@ namespace micro_profiler
 	namespace
 	{
 		const wchar_t *c_environment = L"Environment";
-		const char *c_path_ev = "PATH";
+		const string c_path_ev = "PATH";
 		const string c_profilerdir_ev_decorated = "%" + string(c_profilerdir_ev) + "%";
 		const char c_path_separator_char = ';';
-		const char *c_path_separator = ";";
-		const string c_module_path = get_module_info(&c_module_path).path;
+		const string c_path_separator(1, c_path_separator_char);
+		const string c_profiler_directory = ~get_module_info(&c_profiler_directory).path;
 
-		bool GetStringValue(CRegKey &key, const char *name, string &value)
+
+		bool GetStringValue(CRegKey &key, const string &name, string &value)
 		{
 			ULONG size = 0;
 
@@ -60,13 +64,13 @@ namespace micro_profiler
 			return false;
 		}
 
-		void SetStringValue(CRegKey &key, const char *name, const char *value, DWORD type)
+		void SetStringValue(CRegKey &key, const string &name, const string &value, DWORD type)
 		{	key.SetStringValue(unicode(name).c_str(), unicode(value).c_str(), type);	}
 
-		void DeleteValue(CRegKey &key, const char *name)
+		void DeleteValue(CRegKey &key, const string &name)
 		{	key.DeleteValue(unicode(name).c_str());	}
 
-		void GetEnvironment(const char *name, string &value)
+		void GetEnvironment(const string &name, string &value)
 		{
 			if (DWORD result = ::GetEnvironmentVariableW(unicode(name).c_str(), NULL, 0))
 			{
@@ -77,15 +81,28 @@ namespace micro_profiler
 			}
 		}
 
-		void SetEnvironment(const char *name, const char *value)
+		void SetEnvironment(const string &name, const string &value)
 		{	::SetEnvironmentVariableW(unicode(name).c_str(), unicode(value).c_str());	}
 
-		void replace(string &text, const string &what, const string &replacement)
-		{
-			size_t pos = text.find(what);
+		void RemoveEnvironment(const string &name)
+		{	::SetEnvironmentVariableW(unicode(name).c_str(), NULL);	}
 
-			if (pos != string::npos)
-				text.replace(pos, what.size(), replacement);
+		bool find_in_path(const string &path_value, const string &what)
+		{
+			size_t i = 0, j;
+			string part;
+			file_id whatid(what);
+
+			do
+			{
+				j = path_value.find(c_path_separator_char, i);
+				part.assign(path_value.data() + i, (j == string::npos ? path_value.size() : j) - i);
+				i = j + 1;
+
+				if (file_id(part) == whatid)
+					return true;
+			} while (j != string::npos);
+			return false;
 		}
 
 		template <typename GetF, typename SetF>
@@ -95,18 +112,23 @@ namespace micro_profiler
 			string path;
 
 			if (get(c_path_ev, path),
-				path.find(c_profilerdir_ev_decorated) == string::npos)
+				path.find(c_profilerdir_ev_decorated) == string::npos
+				&& !find_in_path(path, c_profiler_directory))
 			{
-				if (!path.empty() && path[path.size() - 1] != c_path_separator_char)
-					path += c_path_separator;
-				path += c_profilerdir_ev_decorated;
-				set(c_path_ev, path.c_str(), REG_EXPAND_SZ);
+				string new_path = path;
+
+				if (!new_path.empty() && new_path[new_path.size() - 1] != c_path_separator_char)
+					new_path += c_path_separator;
+				new_path += c_profilerdir_ev_decorated;
+				set(c_path_ev, new_path, REG_EXPAND_SZ);
+				LOG(PREAMBLE "PATH environment variable changed...") % A(path) % A(new_path);
 				changed = true;
 			}
 			if (get(c_profilerdir_ev, path),
-				_waccess(unicode(path & *c_module_path).c_str(), 04))
+				!(file_id(path) == file_id(c_profiler_directory)))
 			{
-				set(c_profilerdir_ev, (~c_module_path).c_str(), REG_SZ);
+				set(c_profilerdir_ev, c_profiler_directory, REG_SZ);
+				LOG(PREAMBLE "MICROPRPOFILERDIR environment variable changed...") % A(path) % A(c_profiler_directory);
 				changed = true;
 			}
 			return changed;
@@ -124,7 +146,7 @@ namespace micro_profiler
 				replace(path, c_profilerdir_ev_decorated + c_path_separator, string());
 				replace(path, c_path_separator + c_profilerdir_ev_decorated, string());
 				replace(path, c_profilerdir_ev_decorated, string());
-				set(c_path_ev, path.c_str(), REG_EXPAND_SZ);
+				set(c_path_ev, path, REG_EXPAND_SZ);
 				remove(c_profilerdir_ev);
 				return true;
 			}
@@ -136,9 +158,12 @@ namespace micro_profiler
 	{
 		CRegKey e;
 
+		LOG(PREAMBLE "Configuring environment variables...") % A(global);
 		e.Open(global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, c_environment);
 		if (register_path(bind(&GetStringValue, ref(e), _1, _2), bind(&SetStringValue, ref(e), _1, _2, _3)))
 			::SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
+
+		LOG(PREAMBLE "Configuring application-level environment variables.");
 		register_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2));
 	}
 
@@ -146,9 +171,12 @@ namespace micro_profiler
 	{
 		CRegKey e;
 
+		LOG(PREAMBLE "Cleaning up environment variables...") % A(global);
 		e.Open(global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, c_environment);
 		if (unregister_path(bind(&GetStringValue, ref(e), _1, _2), bind(&SetStringValue, ref(e), _1, _2, _3), bind(&DeleteValue, ref(e), _1)))
 			::SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-		unregister_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2), bind(&SetEnvironment, _1, (const char *)0));
+
+		LOG(PREAMBLE "Cleaning up application-level environment variables.");
+		unregister_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2), bind(&RemoveEnvironment, _1));
 	}
 }

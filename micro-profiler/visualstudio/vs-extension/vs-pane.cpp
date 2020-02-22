@@ -7,12 +7,15 @@
 #include <common/string.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/tables_ui.h>
+#include <logger/log.h>
 #include <visualstudio/command-target.h>
 
 #include <atlbase.h>
 #include <atlcom.h>
 #include <wpl/ui/win32/controls.h>
 #include <wpl/ui/view_host.h>
+
+#define PREAMBLE "VS Pane: "
 
 using namespace std;
 using namespace placeholders;
@@ -49,12 +52,16 @@ namespace micro_profiler
 		public:
 			vs_pane()
 				: command_target_type(g_commands, g_commands + _countof(g_commands))
-			{	}
+			{	LOG(PREAMBLE "constructed...") % A(this);	}
+
+			~vs_pane()
+			{	LOG(PREAMBLE "destroyed...") % A(this);	}
 
 			void close()
 			{
 				_frame->CloseFrame(FRAMECLOSE_NoSave);
 				_frame.Release();
+				LOG(PREAMBLE "closed...") % A(this);
 			}
 
 			void set_model(const shared_ptr<functions_list> &model, const string &executable)
@@ -76,7 +83,10 @@ namespace micro_profiler
 			}
 
 			virtual void activate()
-			{	_frame->Show();	}
+			{
+				_frame->Show();
+				LOG(PREAMBLE "made active...") % A(this);
+			}
 
 		private:
 			BEGIN_COM_MAP(vs_pane)
@@ -106,6 +116,7 @@ namespace micro_profiler
 				closed();
 				_host->set_view(shared_ptr<tables_ui>());
 				_model.reset();
+				LOG(PREAMBLE "closed by shell...") % A(this);
 				return S_OK;
 			}
 

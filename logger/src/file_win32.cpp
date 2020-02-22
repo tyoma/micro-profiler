@@ -20,6 +20,8 @@
 
 #include "file.h"
 
+#include <common/string.h>
+
 using namespace std;
 
 namespace micro_profiler
@@ -28,7 +30,7 @@ namespace micro_profiler
 	{
 		shared_ptr<FILE> fopen_exclusive(const string &path, const string &mode)
 		{
-			if (FILE *file = _fsopen(path.c_str(), mode.c_str(), _SH_DENYWR))
+			if (FILE *file = _wfsopen(unicode(path).c_str(), unicode(mode).c_str(), _SH_DENYWR))
 				return shared_ptr<FILE>(file, &fclose);
 			return shared_ptr<FILE>();
 		}

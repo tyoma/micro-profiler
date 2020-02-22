@@ -26,10 +26,10 @@
 #include "vs-pane.h"
 
 #include <common/constants.h>
-#include <logger/log.h>
 #include <common/string.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/ipc_manager.h>
+#include <logger/log.h>
 #include <resources/resource.h>
 #include <setup/environment.h>
 #include <visualstudio/command-target.h>
@@ -103,7 +103,10 @@ namespace micro_profiler
 		public:
 			profiler_package()
 				: command_target_type(g_commands, g_commands + _countof(g_commands)), _next_tool_id(0)
-			{	}
+			{	LOG(PREAMBLE "constructed...") % A(this);	}
+
+			~profiler_package()
+			{	LOG(PREAMBLE "destroyed.");	}
 
 		public:
 			DECLARE_NO_REGISTRY()

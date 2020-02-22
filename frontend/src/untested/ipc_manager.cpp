@@ -21,9 +21,9 @@
 #include <frontend/ipc_manager.h>
 
 #include <common/constants.h>
-#include <logger/log.h>
 #include <common/string.h>
 #include <frontend/marshalling_server.h>
+#include <logger/log.h>
 
 #define PREAMBLE "IPC manager: "
 

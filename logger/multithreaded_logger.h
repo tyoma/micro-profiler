@@ -40,6 +40,7 @@ namespace micro_profiler
 
 		public:
 			multithreaded_logger(const writer_t &writer, const time_provider_t &time_provider);
+			~multithreaded_logger();
 
 			virtual void begin(const char *message, level level_) throw();
 			virtual void add_attribute(const attribute &a) throw();

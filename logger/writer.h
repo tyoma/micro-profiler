@@ -20,18 +20,15 @@
 
 #pragma once
 
-#include "types.h"
-
+#include <functional>
 #include <string>
-#include <vector>
 
 namespace micro_profiler
 {
-	extern const char *c_profiler_name;
-	extern const char *c_profilerdir_ev;
-	extern const char *c_frontend_id_ev;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
-	extern const std::string c_data_directory;
+	namespace log
+	{
+		typedef std::function<void (const char *text)> writer_t;
+
+		writer_t create_writer(const std::string &base_path);
+	}
 }

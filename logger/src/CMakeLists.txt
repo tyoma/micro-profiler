@@ -3,6 +3,18 @@ cmake_minimum_required(VERSION 2.8)
 set(LOGGER_SOURCES
 	log.cpp
 	multithreaded_logger.cpp
+	writer.cpp
 )
+
+if (WIN32)
+	set(LOGGER_SOURCES ${LOGGER_SOURCES}
+		file_win32.cpp
+	)	
+elseif (UNIX)	
+	set(LOGGER_SOURCES ${LOGGER_SOURCES}
+		file_unix.cpp
+	)		
+endif()
+
 
 add_library(logger STATIC ${LOGGER_SOURCES})

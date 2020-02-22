@@ -20,18 +20,45 @@
 
 #pragma once
 
-#include "types.h"
-
-#include <string>
-#include <vector>
-
 namespace micro_profiler
 {
-	extern const char *c_profiler_name;
-	extern const char *c_profilerdir_ev;
-	extern const char *c_frontend_id_ev;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
-	extern const std::string c_data_directory;
+	namespace log
+	{
+		template <bool base10_or_less>
+		struct digits
+		{
+			static char get(unsigned char digit)
+			{	return "0123456789ABCDEF"[digit];	}
+		};
+
+		template <>
+		struct digits<true>
+		{
+			static char get(unsigned char digit)
+			{	return '0' + digit;	}
+		};
+
+
+
+		template <unsigned char base, typename BufferT, typename T>
+		inline void uitoa(BufferT &buffer, T value)
+		{
+			enum { max_length = 8 * sizeof(T) }; // Max buffer length for base2 representation.
+			char local_buffer[max_length];
+			char* p = local_buffer + max_length;
+
+			do
+				*--p = digits<base <= 10>::get(value % base);
+			while (value /= T(base), value);
+			buffer.insert(buffer.end(), p, local_buffer + max_length);
+		}
+
+		template <unsigned char base, typename BufferT, typename T>
+		inline void itoa(BufferT &buffer, T value)
+		{
+			if (value < 0)
+				buffer.push_back('-'), value = -value;
+			uitoa<base>(buffer, value);
+		}
+	}
 }

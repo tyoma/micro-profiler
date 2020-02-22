@@ -18,20 +18,25 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include "file.h"
 
-#include "types.h"
+#include <sys/file.h>
 
-#include <string>
-#include <vector>
+using namespace std;
 
 namespace micro_profiler
 {
-	extern const char *c_profiler_name;
-	extern const char *c_profilerdir_ev;
-	extern const char *c_frontend_id_ev;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
-	extern const std::string c_data_directory;
+	namespace log
+	{
+		shared_ptr<FILE> fopen_exclusive(const string &path, const string &mode)
+		{
+			if (FILE *file = fopen(path.c_str(), mode.c_str()))
+			{
+				if (!flock(fileno(file), LOCK_EX | LOCK_NB))
+					return shared_ptr<FILE>(file, &fclose);
+				fclose(file);
+			}
+			return shared_ptr<FILE>();
+		}
+	}
 }

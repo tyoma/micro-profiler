@@ -20,6 +20,8 @@
 
 #include <logger/log.h>
 
+#include "format.h"
+
 #include <string.h>
 
 using namespace std;
@@ -36,43 +38,6 @@ namespace micro_profiler
 				virtual void add_attribute(const attribute&/*a*/) throw() {	}
 				virtual void commit() throw() {	}
 			};
-
-			template <bool base10_or_less>
-			struct digits
-			{
-				static char get_digit(unsigned char digit)
-				{	return "0123456789ABCDEF"[digit];	}
-			};
-
-			template <>
-			struct digits<true>
-			{
-				static char get_digit(unsigned char digit)
-				{	return '0' + digit;	}
-			};
-
-
-
-			template <unsigned char base, typename T>
-			void uitoa(buffer_t &buffer, T value)
-			{
-				enum { max_length = 8 * sizeof(T) }; // Max buffer length for base2 representation.
-				char local_buffer[max_length];
-				char* p = local_buffer + max_length;
-
-				do
-					*--p = digits<base <= 10>::get_digit(value % base);
-				while (value /= T(base), value);
-				buffer.insert(buffer.end(), p, local_buffer + max_length);
-			}
-
-			template <unsigned char base, typename T>
-			void itoa(buffer_t &buffer, T value)
-			{
-				if (value < 0)
-					buffer.push_back('-'), value = -value;
-				uitoa<base>(buffer, value);
-			}
 		}
 
 		logger_ptr g_logger(new nil_logger);

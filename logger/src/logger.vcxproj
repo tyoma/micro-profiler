@@ -35,12 +35,20 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="file_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="file_win32.cpp" />
+    <ClCompile Include="writer.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="multithreaded_logger.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\writer.h" />
     <ClInclude Include="..\log.h" />
     <ClInclude Include="..\multithreaded_logger.h" />
+    <ClInclude Include="file.h" />
+    <ClInclude Include="format.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

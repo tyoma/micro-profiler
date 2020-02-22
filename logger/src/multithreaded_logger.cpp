@@ -23,6 +23,13 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+	#include <process.h>
+#else
+	#include <unistd.h>
+#endif
+	
+
 using namespace std;
 
 namespace micro_profiler
@@ -44,18 +51,24 @@ namespace micro_profiler
 
 			void append_string(buffer_t &buffer, const char *text)
 			{
-				const size_t pl = buffer.size();
-				const size_t l = strlen(text);
-
-				buffer.resize(pl + l);
-				if (l)
-					strncpy(&buffer[pl], text, l);
+				if (const size_t l = strlen(text))
+					buffer.insert(buffer.end(), text, text + l);
 			}
 		}
 
 		multithreaded_logger::multithreaded_logger(const writer_t &writer, const time_provider_t &time_provider)
 			: _writer(writer), _time_provider(time_provider)
-		{	}
+		{
+			begin("Application logging started...", info);
+			add_attribute(A(getpid()));
+			commit();
+		}
+
+		multithreaded_logger::~multithreaded_logger()
+		{
+			begin("Application logging complete. Bye!\n", info);
+			commit();
+		}
 
 		void multithreaded_logger::begin(const char *message, level level_) throw()
 		try
@@ -87,6 +100,7 @@ namespace micro_profiler
 			b.push_back('\t');
 			append_string(b, a.name);
 			b.push_back(':');
+			b.push_back(' ');
 			a.format_value(b);
 			b.push_back('\n');
 		}

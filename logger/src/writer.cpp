@@ -18,20 +18,40 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <logger/writer.h>
 
-#include "types.h"
+#include "file.h"
+#include "format.h"
 
-#include <string>
-#include <vector>
+#include <common/path.h>
+#include <memory>
+#include <stdio.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	extern const char *c_profiler_name;
-	extern const char *c_profilerdir_ev;
-	extern const char *c_frontend_id_ev;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
-	extern const std::string c_data_directory;
+	namespace log
+	{
+		writer_t create_writer(const string &base_path)
+		{
+			shared_ptr<FILE> file;
+			const string path = ~base_path;
+			string filename = *base_path;
+			const size_t dot = filename.find_last_of(".");
+			const string ext = dot != string::npos ? filename.substr(dot) : string();
+			unsigned u = 2;
+
+			filename.resize(dot);
+			for (string candidate = base_path; file = fopen_exclusive(candidate, "at"), !file; ++u)
+			{
+				candidate = path & filename;
+				candidate += '-';
+				uitoa<10>(candidate, u);
+				candidate += ext;
+			}
+			setbuf(file.get(), NULL);
+			return [file] (const char *message) { fputs(message, file.get()); };
+		}
+	}
 }

@@ -17,6 +17,7 @@ namespace micro_profiler
 			datetime dt;
 			function<void (const char *)> writer;
 			function<datetime ()> time_provider;
+			unsigned skip;
 
 			void set_time(int year = 0, unsigned month = 0, unsigned day = 0, unsigned hour = 0, unsigned minute = 0,
 				unsigned second = 0, unsigned millisecond = 0)
@@ -27,8 +28,12 @@ namespace micro_profiler
 
 			init( Init )
 			{
+				skip = 1;
 				writer = [this] (const char *text) {
-					buffer += text;
+					if (!skip)
+						buffer += text;
+					else
+						--skip;
 				};
 				time_provider = [this] {
 					return dt;
@@ -39,6 +44,7 @@ namespace micro_profiler
 			test( IncompleteLoggerCycleDoesNotWriteAnything )
 			{
 				// INIT
+				skip = 3;
 				log::multithreaded_logger l1(writer, time_provider);
 				log::multithreaded_logger l2(writer, time_provider);
 				log::multithreaded_logger l3(writer, time_provider);
@@ -99,7 +105,7 @@ namespace micro_profiler
 				l.commit();
 
 				// ASSERT
-				assert_equal("20200219T191141.157Z I message #1\n\t15:15\n\t1011211l:1011211\n\t\"z\":z\n", buffer);
+				assert_equal("20200219T191141.157Z I message #1\n\t15: 15\n\t1011211l: 1011211\n\t\"z\": z\n", buffer);
 
 				// INIT
 				buffer.clear();
@@ -112,7 +118,7 @@ namespace micro_profiler
 				l.commit();
 
 				// ASSERT
-				assert_equal("19100109T050701.005Z S Pulp fiction\n\ts:Pride only hurts. It never helps.\n", buffer);
+				assert_equal("19100109T050701.005Z S Pulp fiction\n\ts: Pride only hurts. It never helps.\n", buffer);
 			}
 
 
@@ -140,7 +146,7 @@ namespace micro_profiler
 				l.commit();
 
 				// ASSERT
-				assert_equal("19000000T000000.000Z S main thread message\n\t1:1\n\t17:17\n", buffer);
+				assert_equal("19000000T000000.000Z S main thread message\n\t1: 1\n\t17: 17\n", buffer);
 
 				// INIT
 				buffer.clear();
@@ -150,7 +156,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				assert_equal("19000000T000000.000Z I other thread message\n\t\"123\":123\n", buffer);
+				assert_equal("19000000T000000.000Z I other thread message\n\t\"123\": 123\n", buffer);
 
 				t.join();
 			}

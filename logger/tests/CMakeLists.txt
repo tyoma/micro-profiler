@@ -5,6 +5,7 @@ include(test)
 set(LOGGER_TEST_SOURCES
 	LogTests.cpp
 	MultiThreadedLoggerTests.cpp
+	WriterTests.cpp
 )
 
 add_library(logger.tests SHARED ${LOGGER_TEST_SOURCES})

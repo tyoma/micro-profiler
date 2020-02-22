@@ -32,6 +32,7 @@
   <ItemGroup>
     <ClCompile Include="LogTests.cpp" />
     <ClCompile Include="MultiThreadedLoggerTests.cpp" />
+    <ClCompile Include="WriterTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\common\src\common.vcxproj">

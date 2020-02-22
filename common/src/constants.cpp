@@ -20,12 +20,15 @@
 
 #include <common/constants.h>
 
+#include <common/path.h>
 #include <common/string.h>
+#include <stdlib.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
+	const char *c_profiler_name = "MicroProfiler";
 	const char *c_profilerdir_ev = "MICROPROFILERDIR";
 	const char *c_frontend_id_ev = "MICROPROFILERFRONTEND";
 
@@ -47,4 +50,12 @@ namespace micro_profiler
 
 	const vector<string> c_candidate_endpoints(c_candidate_endpoints_array, c_candidate_endpoints_array
 		+ sizeof c_candidate_endpoints_array / sizeof c_candidate_endpoints_array[0]);
+
+	const string c_data_directory = [] () -> string {
+		using namespace micro_profiler;
+
+		const char *localdata = getenv("LOCALAPPDATA");
+
+		return string(localdata ? localdata : "") & string(c_profiler_name);
+	}();
 }

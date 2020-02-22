@@ -20,18 +20,14 @@
 
 #pragma once
 
-#include "types.h"
-
+#include <memory>
+#include <stdio.h>
 #include <string>
-#include <vector>
 
 namespace micro_profiler
 {
-	extern const char *c_profiler_name;
-	extern const char *c_profilerdir_ev;
-	extern const char *c_frontend_id_ev;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
-	extern const std::string c_data_directory;
+	namespace log
+	{
+		std::shared_ptr<FILE> fopen_exclusive(const std::string &path, const std::string &mode);
+	}
 }

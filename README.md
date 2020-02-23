@@ -52,8 +52,7 @@ To remove the instrumentation and profiling support click 'Remove Profiling Supp
 
 ## Manual Configuration for a Profiled Build
 
-1. Add construction/destruction of the profiler's frontend to the project that corresponds to the module (executable or library) you want to profile. You may do this by adding ```micro-profiler.initializer.cpp``` to your project/makefile. The file is located in MicroProfiler's installation directory;
-2. (Linux) Build the application with ```-finstrument-functions``` flag on. Link with ```micro-profiler_<platform>```. The shared objects are located in MicroProfiler's installation directory;
+1. (Linux) Build the application with ```-finstrument-functions``` flag on. Link with ```micro-profiler_<platform>```. The shared objects are located in MicroProfiler's installation directory;
 2. (Windows, MSVC) Build the application with ```/GH /Gh``` flags on. Link with ```micro-profiler_<platform>.lib```;
 
 ## Windows Services Profiling
@@ -75,6 +74,18 @@ The steps are much like the ones above.
 4. Run the application.
 
 # Revision History
+
+## v1.6.614
+
+* Issue [#55](https://github.com/tyoma/micro-profiler/issues/55) implemented: it is now possible to enable/disable profiling on multiple projects at the same time;
+* It is now possible to enable profiling on a static library project without adding it to the containing EXE/DLL;
+* Issue [#4](https://github.com/tyoma/micro-profiler/issues/4) implemented: Pause/Resume functionality added;
+* Issues [#50](https://github.com/tyoma/micro-profiler/issues/50), [#51](https://github.com/tyoma/micro-profiler/issues/51) fixed: required environment variables are always updated on Visual Studio start;
+* Child overhead is now correctly calculated. Inclusive times are now correct and do not include profiler's overhead from child calls;
+* Necessity in inclusion of ```micro-profiler.initializer.cpp``` eliminated - profiled modules are automatically picked up;
+* Profiler import-library is now added to the project via additional dependencies instead of including it into project hierarchy;
+* Logging is now implemented for the Visual Studio package - on Windows the log files are placed in ```%LOCALAPPDATA%\.MicroProfiler```;
+* Non-ANSI symbols in micro-profiler installation directory supported;
 
 ## v1.5.611
 

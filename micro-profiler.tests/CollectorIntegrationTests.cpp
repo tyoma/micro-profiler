@@ -2,6 +2,7 @@
 
 #include <common/constants.h>
 #include <ipc/endpoint.h>
+#include <ipc/misc.h>
 #include <mt/atomic.h>
 #include <mt/event.h>
 #include <stdlib.h>
@@ -19,11 +20,9 @@ namespace micro_profiler
 	{
 		string format_endpoint_id()
 		{
-			char buffer[100];
 			static mt::atomic<int> port(6110);
 
-			snprintf(buffer, 100, "sockets|127.0.0.1:%d", port.fetch_add(1));
-			return buffer;
+			return ipc::sockets_endpoint_id(ipc::localhost, static_cast<unsigned short>(port.fetch_add(1)));
 		}
 
 		struct guinea_session : controllee_session
@@ -80,13 +79,13 @@ namespace micro_profiler
 			{
 				string frontend_id(format_endpoint_id()), runner_id(format_endpoint_id());
 
-				setenv(c_frontend_id_ev, frontend_id.c_str(), 1);
+				setenv(constants::frontend_id_ev, frontend_id.c_str(), 1);
 
 				frontend_state.reset(new frontend_factory);
-				hserver = ipc::run_server(frontend_id.c_str(), frontend_state);
+				hserver = ipc::run_server(frontend_id, frontend_state);
 				
 				controller.reset(new runner_controller<guinea_session>);
-				hrunner= ipc::run_server(runner_id.c_str(), controller);
+				hrunner= ipc::run_server(runner_id, controller);
 #ifdef _WIN32
 				system(("start guinea_runner \"" + runner_id + "\"").c_str());
 #else

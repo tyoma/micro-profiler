@@ -77,7 +77,6 @@
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\tables_ui.h" />
-    <ClInclude Include="text_conversion.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="untested\resources\frontend.rc" />

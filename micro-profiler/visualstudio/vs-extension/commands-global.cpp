@@ -51,7 +51,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const wstring c_profilerdir_macro = L"$(" + unicode(c_profilerdir_ev) + L")";
+			const wstring c_profilerdir_macro = L"$(" + unicode(constants::profilerdir_ev) + L")";
 			const wstring c_initializer_cpp = c_profilerdir_macro & L"micro-profiler.initializer.cpp";
 			const wstring c_profiler_library = c_profilerdir_macro & L"micro-profiler_$(PlatformName).lib";
 			const wstring c_profiler_library_quoted = L"\"" + c_profiler_library + L"\"";

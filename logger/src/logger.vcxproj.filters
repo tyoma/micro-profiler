@@ -26,9 +26,6 @@
     <ClInclude Include="..\log.h" />
     <ClInclude Include="..\multithreaded_logger.h" />
     <ClInclude Include="..\writer.h" />
-    <ClInclude Include="format.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="file.h">
       <Filter>src</Filter>
     </ClInclude>

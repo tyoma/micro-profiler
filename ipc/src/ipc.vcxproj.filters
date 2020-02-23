@@ -25,6 +25,9 @@
     <ClCompile Include="socket_helpers_unix.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="misc.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -45,6 +48,7 @@
     <ClInclude Include="server_endpoint_sockets.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\misc.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

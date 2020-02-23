@@ -1,5 +1,7 @@
 #include <ipc/endpoint.h>
 
+#include <ipc/misc.h>
+
 #include "helpers_com.h"
 #include "helpers_sockets.h"
 #include "mocks.h"
@@ -18,12 +20,12 @@ using namespace micro_profiler::tests;
 
 namespace micro_profiler
 {
+	using namespace tests;
+
 	namespace ipc
 	{
 		namespace tests
 		{
-			using micro_profiler::tests::generate_id;
-
 			begin_test_suite( EndpointSelectorTests )
 				shared_ptr<mocks::server> session_factory;
 
@@ -43,7 +45,7 @@ namespace micro_profiler
 				test( CreatingSocketServerEndpoint )
 				{
 					// INIT / ACT
-					shared_ptr<void> s1 = run_server("sockets|6122", session_factory);
+					shared_ptr<void> s1 = run_server(sockets_endpoint_id(localhost, 6122), session_factory);
 
 					// ASSERT
 					assert_is_false(is_local_port_open(6121));
@@ -51,8 +53,8 @@ namespace micro_profiler
 					assert_is_false(is_local_port_open(6123));
 
 					// INIT / ACT
-					shared_ptr<void> s2 = run_server("sockets|6121", session_factory);
-					shared_ptr<void> s3 = run_server("sockets|6123", session_factory);
+					shared_ptr<void> s2 = run_server(sockets_endpoint_id(localhost, 6121), session_factory);
+					shared_ptr<void> s3 = run_server(sockets_endpoint_id(localhost, 6123), session_factory);
 
 					// ASSERT
 					assert_is_true(is_local_port_open(6121));
@@ -65,30 +67,30 @@ namespace micro_profiler
 				{
 					// INIT
 					com_initialize ci;
-					string ids[] = { to_string(generate_id()), to_string(generate_id()), to_string(generate_id()) };
+					guid_t ids[] = { generate_id(), generate_id(), generate_id() };
 
 					// INIT / ACT
-					shared_ptr<void> s1 = run_server(("com|" + ids[0]).c_str(), session_factory);
+					shared_ptr<void> s1 = run_server(com_endpoint_id(ids[0]), session_factory);
 
 					// ASSERT
-					assert_is_true(is_factory_registered(from_string(ids[0])));
-					assert_is_false(is_factory_registered(from_string(ids[1])));
-					assert_is_false(is_factory_registered(from_string(ids[2])));
+					assert_is_true(is_factory_registered(ids[0]));
+					assert_is_false(is_factory_registered(ids[1]));
+					assert_is_false(is_factory_registered(ids[2]));
 
 					// INIT / ACT
-					shared_ptr<void> s2 = run_server(("com|" + ids[1]).c_str(), session_factory);
-					shared_ptr<void> s3 = run_server(("com|" + ids[2]).c_str(), session_factory);
+					shared_ptr<void> s2 = run_server(com_endpoint_id(ids[1]), session_factory);
+					shared_ptr<void> s3 = run_server(com_endpoint_id(ids[2]), session_factory);
 
 					// ASSERT
-					assert_is_true(is_factory_registered(from_string(ids[0])));
-					assert_is_true(is_factory_registered(from_string(ids[1])));
-					assert_is_true(is_factory_registered(from_string(ids[2])));
+					assert_is_true(is_factory_registered(ids[0]));
+					assert_is_true(is_factory_registered(ids[1]));
+					assert_is_true(is_factory_registered(ids[2]));
 				}
 #else
 				test( CreatingCOMServerEndpointFailsOnNonWindows )
 				{
 					// ACT / ASSERT
-					assert_throws(run_server(("com|" + to_string(generate_id())).c_str(), session_factory),
+					assert_throws(run_server(com_endpoint_id(generate_id()), session_factory),
 						protocol_not_supported);
 				}
 #endif
@@ -100,8 +102,8 @@ namespace micro_profiler
 					mt::event ready;
 					mocks::session dummy;
 					shared_ptr<mocks::server> session_factory2(new mocks::server);
-					shared_ptr<void> s1 = run_server("sockets|6121", session_factory);
-					shared_ptr<void> s2 = run_server("sockets|6123", session_factory2);
+					shared_ptr<void> s1 = run_server(sockets_endpoint_id(localhost, 6121), session_factory);
+					shared_ptr<void> s2 = run_server(sockets_endpoint_id(localhost, 6123), session_factory2);
 
 					session_factory->session_created = [&] (shared_ptr<void>) {
 						ready.set();
@@ -111,7 +113,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = connect_client("sockets|127.0.0.1:6123", dummy);
+					shared_ptr<channel> c1 = connect_client(sockets_endpoint_id(localhost, 6123), dummy);
 					ready.wait();
 
 					// ASSERT
@@ -119,9 +121,9 @@ namespace micro_profiler
 					assert_equal(1u, session_factory2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = connect_client("sockets|127.0.0.1:6121", dummy);
+					shared_ptr<channel> c2 = connect_client(sockets_endpoint_id(localhost, 6121), dummy);
 					ready.wait();
-					shared_ptr<channel> c3 = connect_client("sockets|127.0.0.1:6123", dummy);
+					shared_ptr<channel> c3 = connect_client(sockets_endpoint_id(localhost, 6123), dummy);
 					ready.wait();
 
 					// ASSERT
@@ -136,21 +138,21 @@ namespace micro_profiler
 					// INIT
 					com_initialize ci;
 					mocks::session dummy;
-					string ids[] = { to_string(generate_id()), to_string(generate_id()), };
+					guid_t ids[] = { generate_id(), generate_id(), };
 					shared_ptr<mocks::server> session_factory2(new mocks::server);
-					shared_ptr<void> hs1 = run_server(("com|" + ids[0]).c_str(), session_factory);
-					shared_ptr<void> hs2 = run_server(("com|" + ids[1]).c_str(), session_factory2);
+					shared_ptr<void> hs1 = run_server(com_endpoint_id(ids[0]), session_factory);
+					shared_ptr<void> hs2 = run_server(com_endpoint_id(ids[1]), session_factory2);
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = connect_client(("com|" + ids[1]).c_str(), dummy);
+					shared_ptr<channel> c1 = connect_client(com_endpoint_id(ids[1]), dummy);
 
 					// ASSERT
 					assert_equal(0u, session_factory->sessions.size());
 					assert_equal(1u, session_factory2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = connect_client(("com|" + ids[0]).c_str(), dummy);
-					shared_ptr<channel> c3 = connect_client(("com|" + ids[1]).c_str(), dummy);
+					shared_ptr<channel> c2 = connect_client(com_endpoint_id(ids[0]), dummy);
+					shared_ptr<channel> c3 = connect_client(com_endpoint_id(ids[1]), dummy);
 
 					// ASSERT
 					assert_equal(1u, session_factory->sessions.size());
@@ -163,7 +165,7 @@ namespace micro_profiler
 					mocks::session dummy;
 
 					// ACT / ASSERT
-					assert_throws(connect_client(("com|" + to_string(generate_id())).c_str(), dummy),
+					assert_throws(connect_client(com_endpoint_id(generate_id()), dummy),
 						protocol_not_supported);
 				}
 #endif
@@ -172,9 +174,9 @@ namespace micro_profiler
 				test( CreatingWeirdProtocolEndpointFails )
 				{
 					// ACT / ASSERT
-					assert_throws(run_server(("ipx|" + to_string(generate_id())).c_str(), session_factory),
+					assert_throws(run_server(("ipx|" + to_string(generate_id())), session_factory),
 						protocol_not_supported);
-					assert_throws(run_server(("dunnowhatthisis|" + to_string(generate_id())).c_str(), session_factory),
+					assert_throws(run_server(("dunnowhatthisis|" + to_string(generate_id())), session_factory),
 						protocol_not_supported);
 				}
 
@@ -184,7 +186,6 @@ namespace micro_profiler
 					// ACT / ASSERT
 					assert_throws(run_server("", session_factory), invalid_argument);
 					assert_throws(run_server("{123-123-123}", session_factory), invalid_argument);
-					assert_throws(run_server(0, session_factory), invalid_argument);
 				}
 			end_test_suite
 		}

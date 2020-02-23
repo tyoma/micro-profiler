@@ -20,8 +20,6 @@
 
 #include <logger/log.h>
 
-#include "format.h"
-
 #include <string.h>
 
 using namespace std;
@@ -42,18 +40,7 @@ namespace micro_profiler
 
 		logger_ptr g_logger(new nil_logger);
 
-		void to_string(buffer_t &buffer, void *value) {	buffer.push_back('0'), buffer.push_back('x'), uitoa<16>(buffer, reinterpret_cast<size_t>(value));	}
 		void to_string(buffer_t &buffer, bool value) {	to_string(buffer, value ? "true" : "false");	}
-		void to_string(buffer_t &buffer, char value) {	itoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned char value) {	uitoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, short value) {	itoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned short value) {	uitoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, int value) {	itoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned int value) {	uitoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, long int value) {	itoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned long int value) {	uitoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, long long int value) {	itoa<10>(buffer, value);	}
-		void to_string(buffer_t &buffer, unsigned long long int value) {	uitoa<10>(buffer, value);	}
 		void to_string(buffer_t &buffer, const string &value) {	buffer.insert(buffer.end(), value.begin(), value.end());	}
 
 		void to_string(buffer_t &buffer, const char *value)

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/formatting.h>
 #include <common/noncopyable.h>
 
 #include <memory>
@@ -80,18 +81,19 @@ namespace micro_profiler
 
 
 
-		void to_string(buffer_t &buffer, void *value);
+		inline void to_string(buffer_t &buffer, void *value) {	buffer.push_back('0'), buffer.push_back('x'), itoa<16>(buffer, reinterpret_cast<size_t>(value));	}
+		inline void to_string(buffer_t &buffer, char value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, unsigned char value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, short value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, unsigned short value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, int value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, unsigned int value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, long int value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, unsigned long int value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, long long int value) {	itoa<10>(buffer, value);	}
+		inline void to_string(buffer_t &buffer, unsigned long long int value) {	itoa<10>(buffer, value);	}
+
 		void to_string(buffer_t &buffer, bool value);
-		void to_string(buffer_t &buffer, char value);
-		void to_string(buffer_t &buffer, unsigned char value);
-		void to_string(buffer_t &buffer, short value);
-		void to_string(buffer_t &buffer, unsigned short value);
-		void to_string(buffer_t &buffer, int value);
-		void to_string(buffer_t &buffer, unsigned int value);
-		void to_string(buffer_t &buffer, long int value);
-		void to_string(buffer_t &buffer, unsigned long int value);
-		void to_string(buffer_t &buffer, long long int value);
-		void to_string(buffer_t &buffer, unsigned long long int value);
 		void to_string(buffer_t &buffer, const char *value);
 		void to_string(buffer_t &buffer, const std::string &value);
 

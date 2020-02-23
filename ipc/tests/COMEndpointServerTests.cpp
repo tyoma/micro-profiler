@@ -18,6 +18,8 @@ using namespace micro_profiler::tests;
 
 namespace micro_profiler
 {
+	using namespace tests;
+
 	namespace ipc
 	{
 		namespace tests
@@ -28,8 +30,8 @@ namespace micro_profiler
 
 				init( GenerateIDs )
 				{
-					ids[0] = micro_profiler::tests::generate_id();
-					ids[1] = micro_profiler::tests::generate_id();
+					ids[0] = generate_id();
+					ids[1] = generate_id();
 				}
 
 				init( InitCOM )
@@ -177,8 +179,7 @@ namespace micro_profiler
 				}
 
 
-				void client_thread(const guid_t &id, micro_profiler::tests::com_event *ready,
-					micro_profiler::tests::com_event *go, bool *ok)
+				void client_thread(const guid_t &id, com_event *ready, com_event *go, bool *ok)
 				{
 					com_initialize ci;
 					stream_function_t stream(open_stream(id));
@@ -196,7 +197,7 @@ namespace micro_profiler
 					// INIT
 					shared_ptr<mocks::server> f(new mocks::server);
 					shared_ptr<void> h = com::run_server(to_string(ids[0]).c_str(), f);
-					micro_profiler::tests::com_event client_ready, client_go;
+					com_event client_ready, client_go;
 					bool ok = true, session_released = false;
 					mt::thread t(bind(&COMEndpointServerTests::client_thread, this, ids[0], &client_ready, &client_go, &ok));
 

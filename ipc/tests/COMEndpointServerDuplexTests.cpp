@@ -89,8 +89,8 @@ namespace micro_profiler
 
 				init( Initialize )
 				{
-					ids[0] = micro_profiler::tests::generate_id();
-					ids[1] = micro_profiler::tests::generate_id();
+					ids[0] = generate_id();
+					ids[1] = generate_id();
 					initializer.reset(new com_initialize);
 					server_factory.reset(new mocks::server);
 				}

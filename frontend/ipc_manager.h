@@ -22,6 +22,7 @@
 
 #include <common/noncopyable.h>
 #include <ipc/endpoint.h>
+#include <ipc/misc.h>
 
 namespace micro_profiler
 {
@@ -33,7 +34,7 @@ namespace micro_profiler
 		typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
 
 	public:
-		ipc_manager(const std::shared_ptr<ipc::server> &server, port_range range_);
+		ipc_manager(const std::shared_ptr<ipc::server> &server, port_range range_, const guid_t *com_server_id);
 		~ipc_manager();
 
 		unsigned short get_sockets_port() const;
@@ -43,11 +44,9 @@ namespace micro_profiler
 		bool com_enabled() const;
 		void enable_com(bool enable);
 
-		static std::string format_endpoint(const std::string &interface_, unsigned short port);
-
 	private:
 		static std::shared_ptr<void> probe_create_server(const std::shared_ptr<ipc::server> &server,
-			const std::string &interface_, unsigned short &port, port_range range_);
+			ipc::ip_v4 interface_, unsigned short &port, port_range range_);
 
 	private:
 		const std::shared_ptr<marshalling_server> _server;

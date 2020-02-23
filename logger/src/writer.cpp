@@ -21,8 +21,8 @@
 #include <logger/writer.h>
 
 #include "file.h"
-#include "format.h"
 
+#include <common/formatting.h>
 #include <common/path.h>
 #include <memory>
 #include <stdio.h>
@@ -47,7 +47,7 @@ namespace micro_profiler
 			{
 				candidate = path & filename;
 				candidate += '-';
-				uitoa<10>(candidate, u);
+				itoa<10>(candidate, u);
 				candidate += ext;
 			}
 			setbuf(file.get(), NULL);

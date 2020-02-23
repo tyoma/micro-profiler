@@ -43,7 +43,7 @@ namespace micro_profiler
 	{
 		const wchar_t *c_environment = L"Environment";
 		const string c_path_ev = "PATH";
-		const string c_profilerdir_ev_decorated = "%" + string(c_profilerdir_ev) + "%";
+		const string c_profilerdir_ev_decorated = "%" + string(constants::profilerdir_ev) + "%";
 		const char c_path_separator_char = ';';
 		const string c_path_separator(1, c_path_separator_char);
 		const string c_profiler_directory = ~get_module_info(&c_profiler_directory).path;
@@ -124,10 +124,10 @@ namespace micro_profiler
 				LOG(PREAMBLE "PATH environment variable changed...") % A(path) % A(new_path);
 				changed = true;
 			}
-			if (get(c_profilerdir_ev, path),
+			if (get(constants::profilerdir_ev, path),
 				!(file_id(path) == file_id(c_profiler_directory)))
 			{
-				set(c_profilerdir_ev, c_profiler_directory, REG_SZ);
+				set(constants::profilerdir_ev, c_profiler_directory, REG_SZ);
 				LOG(PREAMBLE "MICROPRPOFILERDIR environment variable changed...") % A(path) % A(c_profiler_directory);
 				changed = true;
 			}
@@ -147,7 +147,7 @@ namespace micro_profiler
 				replace(path, c_path_separator + c_profilerdir_ev_decorated, string());
 				replace(path, c_profilerdir_ev_decorated, string());
 				set(c_path_ev, path, REG_EXPAND_SZ);
-				remove(c_profilerdir_ev);
+				remove(constants::profilerdir_ev);
 				return true;
 			}
 			return false;

@@ -1,6 +1,7 @@
 #include <injector/process.h>
 
 #include <ipc/endpoint.h>
+#include <ipc/misc.h>
 #include <set>
 #include <mt/atomic.h>
 #include <mt/event.h>
@@ -32,11 +33,9 @@ namespace micro_profiler
 
 			string format_endpoint_id()
 			{
-				char buffer[100];
-				static mt::atomic<int> port(6150);
+				static mt::atomic<int> port(6110);
 
-				snprintf(buffer, 100, "sockets|127.0.0.1:%d", port.fetch_add(1));
-				return buffer;
+				return ipc::sockets_endpoint_id(ipc::localhost, static_cast<unsigned short>(port.fetch_add(1)));
 			}
 
 			string controller_id;
@@ -48,7 +47,7 @@ namespace micro_profiler
 				controller_id = format_endpoint_id();
 
 				controller.reset(new runner_controller<>);
-				hcontroller = ipc::run_server(controller_id.c_str(), controller);
+				hcontroller = ipc::run_server(controller_id, controller);
 			}
 
 

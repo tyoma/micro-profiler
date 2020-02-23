@@ -18,24 +18,39 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <ipc/misc.h>
 
-#include <stdio.h>
+#include <common/formatting.h>
+#include <common/string.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	inline void to_string(char *b, size_t size, unsigned long long value) {	snprintf(b, size, "%llu", value);	}
-	inline void to_string(char *b, size_t size, unsigned long int value) {	snprintf(b, size, "%lu", value);	}
-	inline void to_string(char *b, size_t size, unsigned int value) {	snprintf(b, size, "%u", value);	}
-	inline void to_string(char *b, size_t size, double value) {	snprintf(b, size, "%g", value);	}
-
-	template <typename T>
-	std::string to_string2(T value)
+	namespace ipc
 	{
-		const size_t buffer_size = 24;
-		char buffer[buffer_size];
+		string sockets_endpoint_id(ip_v4 host, unsigned short port)
+		{
+			string endpoint_id("sockets|");
 
-		to_string(buffer, buffer_size, value);
-		return buffer;
+			itoa<10>(endpoint_id, host.components[0]);
+			endpoint_id += '.';
+			itoa<10>(endpoint_id, host.components[1]);
+			endpoint_id += '.';
+			itoa<10>(endpoint_id, host.components[2]);
+			endpoint_id += '.';
+			itoa<10>(endpoint_id, host.components[3]);
+			endpoint_id += ':';
+			itoa<10>(endpoint_id, port);
+			return endpoint_id;
+		}
+
+		string com_endpoint_id(const guid_t &id)
+		{
+			string endpoint_id("com|");
+
+			endpoint_id += to_string(id);
+			return endpoint_id;
+		}
 	}
 }

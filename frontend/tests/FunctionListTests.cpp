@@ -47,11 +47,11 @@ namespace micro_profiler
 				wstring result;
 
 				fl.get_text(row, 0, result); // row number
-				assert_equal(result, to_string(row + 1));
+				assert_equal(to_string(row + 1), result);
 				fl.get_text(row, 1, result); // name
-				assert_equal(result, name);
+				assert_equal(name, result);
 				fl.get_text(row, 2, result); // times called
-				assert_equal(result, times_called);
+				assert_equal(times_called, result);
 			}
 
 			void assert_row(
@@ -70,17 +70,17 @@ namespace micro_profiler
 
 				assert_row(fl, row, name, times_called);
 				fl.get_text(row, 3, result); // exclusive time
-				assert_equal(result, exclusive_time);
+				assert_equal(exclusive_time, result);
 				fl.get_text(row, 4, result); // inclusive time
-				assert_equal(result, inclusive_time);
+				assert_equal(inclusive_time, result);
 				fl.get_text(row, 5, result); // avg. exclusive time
-				assert_equal(result, avg_exclusive_time);
+				assert_equal(avg_exclusive_time, result);
 				fl.get_text(row, 6, result); // avg. inclusive time
-				assert_equal(result, avg_inclusive_time);
+				assert_equal(avg_inclusive_time, result);
 				fl.get_text(row, 7, result); // max reentrance
-				assert_equal(result, max_reentrance);
+				assert_equal(max_reentrance, result);
 				fl.get_text(row, 8, result); // max reentrance
-				assert_equal(result, max_call_time);
+				assert_equal(max_call_time, result);
 			}
 
 			void increment(int *value)

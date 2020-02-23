@@ -20,9 +20,51 @@
 
 #pragma once
 
+#include <limits>
 #include <string>
 
 namespace micro_profiler
 {
+	template <bool base10_or_less>
+	struct digits
+	{	static char get(unsigned char digit) {	return "0123456789ABCDEF"[digit];	}	};
+
+	template <>
+	struct digits</*base10_or_less =*/ true>
+	{	static char get(unsigned char digit) {	return '0' + digit;	}	};
+
+	template <bool is_signed>
+	struct itoa_worker
+	{
+		template <unsigned char base, typename ContainerT, typename T>
+		static void convert(ContainerT &destination, T value, unsigned char /*min_width*/ = 0, char /*padding*/ = '0')
+		{
+			enum { max_length = 8 * sizeof(T) }; // Max buffer length for base2 representation.
+			char local_buffer[max_length];
+			char* p = local_buffer + max_length;
+
+			do
+				*--p = digits<base <= 10>::get(value % base);
+			while (value /= T(base), value);
+			destination.insert(destination.end(), p, local_buffer + max_length);
+		}
+	};
+
+	template <>
+	struct itoa_worker</*is_signed =*/ true>
+	{
+		template <unsigned char base, typename ContainerT, typename T>
+		static void convert(ContainerT &destination, T value, unsigned char /*min_width*/ = 0, char /*padding*/ = '0')
+		{
+			if (value < 0)
+				destination.push_back('-'), value = -value;
+			itoa_worker<false>::template convert<base>(destination, value);
+		}
+	};
+
+	template <unsigned char base, typename ContainerT, typename T>
+	inline void itoa(ContainerT &destination, T value, unsigned char /*min_width*/ = 0, char /*padding*/ = '0')
+	{	itoa_worker<std::numeric_limits<T>::is_signed>::template convert<base>(destination, value);	}
+
 	void format_interval(std::string &destination, double interval);
 }

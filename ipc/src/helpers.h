@@ -37,25 +37,22 @@ namespace micro_profiler
 
 
 		template <typename FactoryT, size_t n>
-		inline const FactoryT &select(constructor<FactoryT> (&constructors)[n], const char *typed_endpoint_id,
+		inline const FactoryT &select(constructor<FactoryT> (&constructors)[n], const std::string &typed_endpoint_id,
 			std::string &endpoint_id)
 		{
-			if (!typed_endpoint_id)
-				throw std::invalid_argument("");
-			const std::string id = typed_endpoint_id;
-			const size_t delim = id.find('|');
+			const size_t delim = typed_endpoint_id.find('|');
 			if (delim == std::string::npos)
 				throw std::invalid_argument(typed_endpoint_id);
-			const std::string protocol = id.substr(0, delim);
+			const std::string protocol = typed_endpoint_id.substr(0, delim);
 
-			endpoint_id = id.substr(delim + 1);
+			endpoint_id = typed_endpoint_id.substr(delim + 1);
 
 			for (size_t i = 0; i != n; ++i)
 			{
 				if (protocol == constructors[i].protocol)
 					return constructors[i].constructor_method;
 			}
-			throw protocol_not_supported(typed_endpoint_id);
+			throw protocol_not_supported(typed_endpoint_id.c_str());
 		}
 	}
 }

@@ -48,7 +48,6 @@
     <ClInclude Include="..\log.h" />
     <ClInclude Include="..\multithreaded_logger.h" />
     <ClInclude Include="file.h" />
-    <ClInclude Include="format.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

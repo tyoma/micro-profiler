@@ -90,8 +90,8 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 		g_instance = hinstance;
-		mkdir(c_data_directory.c_str());
-		log::g_logger.reset(new log::multithreaded_logger(log::create_writer(c_data_directory & c_logname),
+		mkdir(constants::data_directory().c_str());
+		log::g_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
 			&get_datetime));
 
 		const string self = get_module_info(&c_logname).path;

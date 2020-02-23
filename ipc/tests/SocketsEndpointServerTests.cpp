@@ -156,7 +156,7 @@ namespace micro_profiler
 
 					// ASSERT
 					assert_equal(1u, f->sessions[0]->payloads_log.size());
-					assert_equal(micro_profiler::tests::mkvector(data1), f->sessions[0]->payloads_log[0]);
+					assert_equal(mkvector(data1), f->sessions[0]->payloads_log[0]);
 
 					// INIT
 					times = 2;
@@ -168,8 +168,8 @@ namespace micro_profiler
 
 					// ASSERT
 					assert_equal(3u, f->sessions[0]->payloads_log.size());
-					assert_equal(micro_profiler::tests::mkvector(data2), f->sessions[0]->payloads_log[1]);
-					assert_equal(micro_profiler::tests::mkvector(data3), f->sessions[0]->payloads_log[2]);
+					assert_equal(mkvector(data2), f->sessions[0]->payloads_log[1]);
+					assert_equal(mkvector(data3), f->sessions[0]->payloads_log[2]);
 				}
 
 

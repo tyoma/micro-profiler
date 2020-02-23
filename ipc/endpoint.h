@@ -23,6 +23,7 @@
 #include <common/range.h>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 namespace micro_profiler
 {
@@ -57,8 +58,8 @@ namespace micro_profiler
 
 
 
-		std::shared_ptr<channel> connect_client(const char *typed_destination_endpoint_id, channel &inbound);
-		std::shared_ptr<void> run_server(const char *typed_endpoint_id, const std::shared_ptr<server> &factory);
+		std::shared_ptr<channel> connect_client(const std::string &typed_destination_endpoint_id, channel &inbound);
+		std::shared_ptr<void> run_server(const std::string &typed_endpoint_id, const std::shared_ptr<server> &factory);
 
 
 		inline initialization_failed::initialization_failed(const char *message)

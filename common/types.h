@@ -22,6 +22,8 @@
 
 #include <cstddef>
 
+typedef struct _GUID GUID;
+
 namespace micro_profiler
 {
 	typedef unsigned char byte;
@@ -33,6 +35,8 @@ namespace micro_profiler
 	struct guid_t
 	{
 		byte values[16];
+
+		operator const GUID &() const;
 	};
 #pragma pack(pop)
 
@@ -44,6 +48,10 @@ namespace micro_profiler
 		timestamp_t outer; // The overhead observed by a parent function (in addition to inner) when making a call.
 	};
 
+
+
+	inline guid_t::operator const GUID &() const
+	{	return *reinterpret_cast<const GUID *>(values);	}
 
 
 	inline overhead::overhead(timestamp_t inner_, timestamp_t outer_)

@@ -131,7 +131,7 @@ namespace micro_profiler
 				const guid_t id = from_string(destination_endpoint_id);
 				CComPtr<inbound_stream> sink(new inbound_stream(inbound));
 
-				if (S_OK != _stream.CoCreateInstance(reinterpret_cast<const GUID &>(id), NULL, CLSCTX_LOCAL_SERVER))
+				if (S_OK != _stream.CoCreateInstance(id, NULL, CLSCTX_LOCAL_SERVER))
 					throw connection_refused(destination_endpoint_id);
 
 				CComQIPtr<IConnectionPoint>(_stream)->Advise(sink, &_sink_cookie);

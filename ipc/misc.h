@@ -20,45 +20,22 @@
 
 #pragma once
 
+#include <common/types.h>
+#include <string>
+
 namespace micro_profiler
 {
-	namespace log
+	namespace ipc
 	{
-		template <bool base10_or_less>
-		struct digits
+		struct ip_v4
 		{
-			static char get(unsigned char digit)
-			{	return "0123456789ABCDEF"[digit];	}
+			unsigned char components[4];
 		};
 
-		template <>
-		struct digits<true>
-		{
-			static char get(unsigned char digit)
-			{	return '0' + digit;	}
-		};
+		const ip_v4 localhost = { { 127, 0, 0, 1 } };
+		const ip_v4 all_interfaces = { { 0, 0, 0, 0 } };
 
-
-
-		template <unsigned char base, typename BufferT, typename T>
-		inline void uitoa(BufferT &buffer, T value)
-		{
-			enum { max_length = 8 * sizeof(T) }; // Max buffer length for base2 representation.
-			char local_buffer[max_length];
-			char* p = local_buffer + max_length;
-
-			do
-				*--p = digits<base <= 10>::get(value % base);
-			while (value /= T(base), value);
-			buffer.insert(buffer.end(), p, local_buffer + max_length);
-		}
-
-		template <unsigned char base, typename BufferT, typename T>
-		inline void itoa(BufferT &buffer, T value)
-		{
-			if (value < 0)
-				buffer.push_back('-'), value = -value;
-			uitoa<base>(buffer, value);
-		}
+		std::string sockets_endpoint_id(ip_v4 host, unsigned short port);
+		std::string com_endpoint_id(const guid_t &id);
 	}
 }

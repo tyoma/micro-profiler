@@ -20,8 +20,6 @@
 
 #include <frontend/function_list.h>
 
-#include "text_conversion.h"
-
 #include <common/string.h>
 #include <common/formatting.h>
 #include <cmath>
@@ -40,6 +38,16 @@ namespace micro_profiler
 {
 	namespace
 	{
+		template <typename ContainerT>
+		void gcvt(ContainerT &destination, double value)
+		{
+			const size_t buffer_size = 24;
+			char buffer[buffer_size];
+			int l = snprintf(buffer, buffer_size, "%g", value);
+
+			destination.append(buffer, buffer + l);
+		}
+
 		class by_name
 		{
 		public:
@@ -189,16 +197,17 @@ namespace micro_profiler
 		string text;
 		const typename view_type::value_type &row = get_entry(item);
 
+		text_.clear();
 		switch (subitem)
 		{
-		case 0:	text = to_string2(item + 1);	break;
+		case 0:	itoa<10>(text_, item + 1);	return;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
-		case 2:	text = to_string2(row.second.times_called);	break;
+		case 2:	itoa<10>(text_, row.second.times_called);	return;
 		case 3:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
 		case 4:	format_interval(text, inclusive_time(_tick_interval)(row.second));	break;
 		case 5:	format_interval(text, exclusive_time_avg(_tick_interval)(row.second));	break;
 		case 6:	format_interval(text, inclusive_time_avg(_tick_interval)(row.second));	break;
-		case 7:	text = to_string2(row.second.max_reentrance);	break;
+		case 7:	itoa<10>(text_, row.second.max_reentrance);	return;
 		case 8:	format_interval(text, max_call_time(_tick_interval)(row.second));	break;
 		}
 		text_ = unicode(text);
@@ -264,11 +273,12 @@ namespace micro_profiler
 		string text;
 		const statistics_map_callers::value_type &row = get_entry(item);
 
+		text_.clear();
 		switch (subitem)
 		{
-		case 0:	text = to_string2(item + 1);	break;
+		case 0:	itoa<10>(text_, item + 1);	return;
 		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
-		case 2:	text = to_string2(row.second);	break;
+		case 2:	itoa<10>(text_, row.second);	return;
 		}
 		text_ = unicode(text);
 	}
@@ -318,13 +328,13 @@ namespace micro_profiler
 			const view_type::value_type &row = get_entry(i);
 
 			content += _resolver->symbol_name_by_va(row.first) + "\t";
-			content += to_string2(row.second.times_called) + "\t";
-			content += to_string2(exclusive_time(_tick_interval)(row.second)) + "\t";
-			content += to_string2(inclusive_time(_tick_interval)(row.second)) + "\t";
-			content += to_string2(exclusive_time_avg(_tick_interval)(row.second)) + "\t";
-			content += to_string2(inclusive_time_avg(_tick_interval)(row.second)) + "\t";
-			content += to_string2(row.second.max_reentrance) + "\t";
-			content += to_string2(max_call_time(_tick_interval)(row.second)) + "\r\n";
+			itoa<10>(content, row.second.times_called), content += "\t";
+			gcvt(content, exclusive_time(_tick_interval)(row.second)), content += "\t";
+			gcvt(content, inclusive_time(_tick_interval)(row.second)), content += "\t";
+			gcvt(content, exclusive_time_avg(_tick_interval)(row.second)), content += "\t";
+			gcvt(content, inclusive_time_avg(_tick_interval)(row.second)), content += "\t";
+			itoa<10>(content, row.second.max_reentrance), content += "\t";
+			gcvt(content, max_call_time(_tick_interval)(row.second)), content += "\r\n";
 		}
 
 		if (locale_ok)

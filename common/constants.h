@@ -23,15 +23,19 @@
 #include "types.h"
 
 #include <string>
-#include <vector>
 
 namespace micro_profiler
 {
-	extern const char *c_profiler_name;
-	extern const char *c_profilerdir_ev;
-	extern const char *c_frontend_id_ev;
-	extern const guid_t c_standalone_frontend_id;
-	extern const guid_t c_integrated_frontend_id;
-	extern const std::vector<std::string> c_candidate_endpoints;
-	extern const std::string c_data_directory;
+	struct constants
+	{
+		// C-style constants - safe to access anytime
+		static const char *profiler_name;
+		static const char *profilerdir_ev;
+		static const char *frontend_id_ev;
+		static const guid_t standalone_frontend_id;
+		static const guid_t integrated_frontend_id;
+
+		// C++-style constants - made functions to be safe for access
+		static std::string data_directory();
+	};
 }

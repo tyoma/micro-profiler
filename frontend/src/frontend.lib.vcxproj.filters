@@ -51,9 +51,6 @@
     <ClInclude Include="..\series.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\process_list.h" />
-    <ClInclude Include="text_conversion.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\file.h" />
     <ClInclude Include="..\ipc_manager.h" />
     <ClInclude Include="..\marshalling_server.h" />

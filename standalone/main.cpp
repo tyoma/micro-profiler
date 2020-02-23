@@ -61,7 +61,7 @@ namespace
 		END_COM_MAP()
 	};
 
-	OBJECT_ENTRY_NON_CREATEABLE_EX_AUTO(reinterpret_cast<const GUID &>(micro_profiler::c_standalone_frontend_id),
+	OBJECT_ENTRY_NON_CREATEABLE_EX_AUTO(static_cast<const GUID &>(micro_profiler::constants::standalone_frontend_id),
 		FauxFrontend);
 }
 
@@ -97,12 +97,8 @@ try
 	auto cancellation = main_form->close += [] { ::PostQuitMessage(0); };
 	auto frontend_manager = micro_profiler::frontend_manager::create(ui_factory);
 	micro_profiler::ipc_manager ipc_manager(frontend_manager,
-		make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)));
-	auto com_server = micro_profiler::ipc::run_server(
-		("com|" + micro_profiler::to_string(micro_profiler::c_standalone_frontend_id)).c_str(), frontend_manager);
-
-	//setenv(micro_profiler::c_frontend_id_ev, micro_profiler::ipc::ipc_manager::format_endpoint("127.0.0.1",
-	//	ipc_manager->get_sockets_port()).c_str(), 1);
+		make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
+		&micro_profiler::constants::standalone_frontend_id);
 
 	main_form->set_visible(true);
 	module.Run(show_command);

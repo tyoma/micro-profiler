@@ -20,9 +20,8 @@
 
 #include <frontend/process_list.h>
 
-#include "text_conversion.h"
-
 #include <algorithm>
+#include <common/formatting.h>
 #include <common/string.h>
 
 using namespace std;
@@ -50,6 +49,7 @@ namespace micro_profiler
 	{
 		process &p = *_processes[row];
 
+		text.clear();
 		switch (column)
 		{
 		case 0:
@@ -57,7 +57,7 @@ namespace micro_profiler
 			break;
 
 		case 1:
-			text = unicode(to_string2(p.get_pid()));
+			itoa<10>(text, p.get_pid());
 			break;
 		}
 	}

@@ -21,6 +21,7 @@
 #include <frontend/ipc_manager.h>
 
 #include <common/constants.h>
+#include <common/formatting.h>
 #include <common/string.h>
 #include <frontend/marshalling_server.h>
 #include <logger/log.h>
@@ -51,7 +52,7 @@ namespace micro_profiler
 			const string _endpoint_id;
 		};
 
-		shared_ptr<void> try_run_server(const char *endpoint_id, const shared_ptr<ipc::server> &server)
+		shared_ptr<void> try_run_server(const string &endpoint_id, const shared_ptr<ipc::server> &server)
 		try
 		{
 			LOG(PREAMBLE "attempting server creation...") % A(endpoint_id);
@@ -67,14 +68,18 @@ namespace micro_profiler
 		}
 	}
 
-	ipc_manager::ipc_manager(const shared_ptr<ipc::server> &server, port_range range_)
+	ipc_manager::ipc_manager(const shared_ptr<ipc::server> &server, port_range range_, const guid_t *com_server_id)
 		: _server(new marshalling_server(server)), _range(range_), _remote_enabled(false), _port(0)
 	{
-		const string endpoint_id = "com|" + to_string(c_integrated_frontend_id);
-		shared_ptr<ipc::server> lserver(new logging_server(server, endpoint_id));
+		if (com_server_id)
+		{
+			const string endpoint_id = ipc::com_endpoint_id(*com_server_id);
+			shared_ptr<ipc::server> lserver(new logging_server(server, endpoint_id));
+	
+			_com_server_handle = run_server(endpoint_id, lserver);
+		}
 
-		_sockets_server_handle = probe_create_server(_server, "127.0.0.1", _port, _range);
-		_com_server_handle = run_server(endpoint_id.c_str(), lserver);
+		_sockets_server_handle = probe_create_server(_server, ipc::localhost, _port, _range);
 	}
 
 	ipc_manager::~ipc_manager()
@@ -91,7 +96,7 @@ namespace micro_profiler
 		if (enable == _remote_enabled)
 			return;
 		_sockets_server_handle.reset(); // Free the port before reopening.
-		_sockets_server_handle = probe_create_server(_server, enable ? "0.0.0.0" : "127.0.0.1", _port, _range);
+		_sockets_server_handle = probe_create_server(_server, enable ? ipc::all_interfaces : ipc::localhost, _port, _range);
 		_remote_enabled = enable;
 		LOG(PREAMBLE "enable remote...") % A(enable);
 	}
@@ -99,23 +104,15 @@ namespace micro_profiler
 	//bool ipc_manager::com_enabled() const;
 	//void ipc_manager::enable_com(bool enable);
 
-	string ipc_manager::format_endpoint(const string &interface_, unsigned short port)
-	{
-		char buffer[100] = { 0 };
-
-		snprintf(buffer, sizeof buffer - 1, "sockets|%s:%d", interface_.c_str(), port);
-		return buffer;
-	}
-
 	shared_ptr<void> ipc_manager::probe_create_server(const shared_ptr<ipc::server> &server,
-		const string &interface_, unsigned short &port, port_range range_)
+		ipc::ip_v4 interface_, unsigned short &port, port_range range_)
 	{
-		shared_ptr<void> hserver = port ? try_run_server(format_endpoint(interface_, port).c_str(), server)
+		shared_ptr<void> hserver = port ? try_run_server(ipc::sockets_endpoint_id(interface_, port), server)
 			: shared_ptr<void>();
 
 		for (unsigned short p = range_.first, last = range_.first + range_.second; !hserver && p != last; ++p)
 		{
-			hserver = try_run_server(format_endpoint(interface_, p).c_str(), server);
+			hserver = try_run_server(ipc::sockets_endpoint_id(interface_, p), server);
 			if (hserver)
 				port = p;
 		}

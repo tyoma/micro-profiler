@@ -26,6 +26,7 @@
 #include <common/time.h>
 #include <common/constants.h>
 #include <ipc/endpoint.h>
+#include <ipc/misc.h>
 
 using namespace micro_profiler;
 using namespace std;
@@ -33,6 +34,12 @@ using namespace std::placeholders;
 
 namespace
 {
+	const string c_candidate_endpoints[] = {
+		ipc::sockets_endpoint_id(ipc::localhost, 6100),
+		ipc::com_endpoint_id(constants::integrated_frontend_id),
+		ipc::com_endpoint_id(constants::standalone_frontend_id),
+	};
+
 	struct null_channel : ipc::channel
 	{
 		virtual void disconnect() throw()
@@ -44,9 +51,10 @@ namespace
 
 	collector_app::channel_t probe_create_channel(ipc::channel &inbound)
 	{
-		vector<string> candidate_endpoints = c_candidate_endpoints;
+		vector<string> candidate_endpoints(c_candidate_endpoints, c_candidate_endpoints
+			+ sizeof(c_candidate_endpoints) / sizeof(c_candidate_endpoints[0]));
 
-		if (const char *env_id = getenv(c_frontend_id_ev))
+		if (const char *env_id = getenv(constants::frontend_id_ev))
 			candidate_endpoints.insert(candidate_endpoints.begin(), env_id);
 
 		for (vector<string>::const_iterator i = candidate_endpoints.begin(); i != candidate_endpoints.end(); ++i)

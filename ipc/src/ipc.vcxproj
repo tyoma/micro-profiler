@@ -45,6 +45,7 @@
     <ClCompile Include="client_endpoint.cpp" />
     <ClCompile Include="client_endpoint_com.cpp" />
     <ClCompile Include="client_endpoint_sockets.cpp" />
+    <ClCompile Include="misc.cpp" />
     <ClCompile Include="server_endpoint.cpp" />
     <ClCompile Include="server_endpoint_com.cpp" />
     <ClCompile Include="server_endpoint_sockets.cpp" />
@@ -58,6 +59,7 @@
     <ClInclude Include="..\endpoint_com.h" />
     <ClInclude Include="..\endpoint_sockets.h" />
     <ClInclude Include="..\endpoint.h" />
+    <ClInclude Include="..\misc.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="server_endpoint_sockets.h" />

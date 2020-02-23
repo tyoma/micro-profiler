@@ -194,9 +194,10 @@ namespace micro_profiler
 				register_path(false);
 				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
 				_ipc_manager.reset(new ipc_manager(_frontend_manager,
-					make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u))));
-				setenv(c_frontend_id_ev, ipc_manager::format_endpoint("127.0.0.1",
-					_ipc_manager->get_sockets_port()).c_str(), 1);
+					make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
+					&constants::integrated_frontend_id));
+				setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),
+					1);
 			}
 
 			CComPtr<_DTE> get_dte()

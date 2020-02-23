@@ -31,7 +31,7 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		shared_ptr<void> run_server(const char *typed_endpoint_id, const shared_ptr<server> &factory)
+		shared_ptr<void> run_server(const string &typed_endpoint_id, const shared_ptr<server> &factory)
 		{
 			typedef function<shared_ptr<void> (const char *typed_endpoint_id, const shared_ptr<server> &factory)>
 				server_endpoint_factory_t;

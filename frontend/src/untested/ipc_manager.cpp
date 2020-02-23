@@ -31,77 +31,94 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace ipc
+	namespace
 	{
-		namespace
+		class logging_server : public ipc::server, noncopyable
 		{
-			shared_ptr<void> try_run_server(const char *endpoint_id, const shared_ptr<server> &factory)
-			try
+		public:
+			logging_server(const shared_ptr<ipc::server> &server, const string &endpoint_id)
+				: _server(server), _endpoint_id(endpoint_id)
+			{	}
+
+			virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound)
 			{
-				LOG(PREAMBLE "attempting server creation...") % A(endpoint_id);
-				shared_ptr<void> hserver = run_server(endpoint_id, factory);
-				LOG(PREAMBLE "succeeded.");
-				return hserver;
+				LOG(PREAMBLE "creating frontend server session...") % A(_endpoint_id);
+				return _server->create_session(outbound);
 			}
-			catch (const initialization_failed &e)
-			{
-				LOG(PREAMBLE "failed.") % A(e.what());
-				return shared_ptr<void>();
-			}
-		}
 
-		ipc_manager::ipc_manager(const shared_ptr<server> &underlying, port_range range_)
-			: _underlying(new marshalling_server(underlying)), _range(range_), _remote_enabled(false), _port(0)
+		private:
+			const shared_ptr<ipc::server> _server;
+			const string _endpoint_id;
+		};
+
+		shared_ptr<void> try_run_server(const char *endpoint_id, const shared_ptr<ipc::server> &server)
+		try
 		{
-			_sockets_server = probe_create_server(_underlying, "127.0.0.1", _port, _range);
-			_com_server = run_server(("com|" + to_string(c_integrated_frontend_id)).c_str(), underlying);
-		}
-
-		ipc_manager::~ipc_manager()
-		{	_underlying->stop();	}
-
-		unsigned short ipc_manager::get_sockets_port() const
-		{	return _sockets_server ? _port : 0;	}
-
-		bool ipc_manager::remote_sockets_enabled() const
-		{	return _remote_enabled;	}
-
-		void ipc_manager::enable_remote_sockets(bool enable)
-		{
-			if (enable == _remote_enabled)
-				return;
-			_sockets_server.reset(); // Free the port before reopening.
-			_sockets_server = probe_create_server(_underlying, enable ? "0.0.0.0" : "127.0.0.1", _port, _range);
-			_remote_enabled = enable;
-			LOG(PREAMBLE "enable remote...") % A(enable);
-		}
-
-		//bool ipc_manager::com_enabled() const;
-		//void ipc_manager::enable_com(bool enable);
-
-		string ipc_manager::format_endpoint(const string &interface_, unsigned short port)
-		{
-			char buffer[100] = { 0 };
-
-			snprintf(buffer, sizeof buffer - 1, "sockets|%s:%d", interface_.c_str(), port);
-			return buffer;
-		}
-
-		shared_ptr<void> ipc_manager::probe_create_server(const shared_ptr<server> &underlying,
-			const string &interface_, unsigned short &port, port_range range_)
-		{
-			shared_ptr<void> hserver = port ? try_run_server(format_endpoint(interface_, port).c_str(), underlying)
-				: shared_ptr<void>();
-
-			for (unsigned short p = range_.first, last = range_.first + range_.second; !hserver && p != last; ++p)
-			{
-				hserver = try_run_server(format_endpoint(interface_, p).c_str(), underlying);
-				if (hserver)
-				{
-					port = p;
-				}
-			}
+			LOG(PREAMBLE "attempting server creation...") % A(endpoint_id);
+			shared_ptr<ipc::server> lserver(new logging_server(server, endpoint_id));
+			shared_ptr<void> hserver = run_server(endpoint_id, lserver);
+			LOG(PREAMBLE "succeeded.");
 			return hserver;
 		}
+		catch (const ipc::initialization_failed &e)
+		{
+			LOG(PREAMBLE "failed.") % A(e.what());
+			return shared_ptr<void>();
+		}
+	}
+
+	ipc_manager::ipc_manager(const shared_ptr<ipc::server> &server, port_range range_)
+		: _server(new marshalling_server(server)), _range(range_), _remote_enabled(false), _port(0)
+	{
+		const string endpoint_id = "com|" + to_string(c_integrated_frontend_id);
+		shared_ptr<ipc::server> lserver(new logging_server(server, endpoint_id));
+
+		_sockets_server_handle = probe_create_server(_server, "127.0.0.1", _port, _range);
+		_com_server_handle = run_server(endpoint_id.c_str(), lserver);
+	}
+
+	ipc_manager::~ipc_manager()
+	{	_server->stop();	}
+
+	unsigned short ipc_manager::get_sockets_port() const
+	{	return _sockets_server_handle ? _port : 0;	}
+
+	bool ipc_manager::remote_sockets_enabled() const
+	{	return _remote_enabled;	}
+
+	void ipc_manager::enable_remote_sockets(bool enable)
+	{
+		if (enable == _remote_enabled)
+			return;
+		_sockets_server_handle.reset(); // Free the port before reopening.
+		_sockets_server_handle = probe_create_server(_server, enable ? "0.0.0.0" : "127.0.0.1", _port, _range);
+		_remote_enabled = enable;
+		LOG(PREAMBLE "enable remote...") % A(enable);
+	}
+
+	//bool ipc_manager::com_enabled() const;
+	//void ipc_manager::enable_com(bool enable);
+
+	string ipc_manager::format_endpoint(const string &interface_, unsigned short port)
+	{
+		char buffer[100] = { 0 };
+
+		snprintf(buffer, sizeof buffer - 1, "sockets|%s:%d", interface_.c_str(), port);
+		return buffer;
+	}
+
+	shared_ptr<void> ipc_manager::probe_create_server(const shared_ptr<ipc::server> &server,
+		const string &interface_, unsigned short &port, port_range range_)
+	{
+		shared_ptr<void> hserver = port ? try_run_server(format_endpoint(interface_, port).c_str(), server)
+			: shared_ptr<void>();
+
+		for (unsigned short p = range_.first, last = range_.first + range_.second; !hserver && p != last; ++p)
+		{
+			hserver = try_run_server(format_endpoint(interface_, p).c_str(), server);
+			if (hserver)
+				port = p;
+		}
+		return hserver;
 	}
 }

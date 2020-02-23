@@ -96,7 +96,7 @@ try
 	auto main_form = wpl::ui::create_form();
 	auto cancellation = main_form->close += [] { ::PostQuitMessage(0); };
 	auto frontend_manager = micro_profiler::frontend_manager::create(ui_factory);
-	micro_profiler::ipc::ipc_manager ipc_manager(frontend_manager,
+	micro_profiler::ipc_manager ipc_manager(frontend_manager,
 		make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)));
 	auto com_server = micro_profiler::ipc::run_server(
 		("com|" + micro_profiler::to_string(micro_profiler::c_standalone_frontend_id)).c_str(), frontend_manager);

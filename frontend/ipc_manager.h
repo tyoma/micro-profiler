@@ -27,39 +27,36 @@ namespace micro_profiler
 {
 	class marshalling_server;
 
-	namespace ipc
+	class ipc_manager : noncopyable
 	{
-		class ipc_manager : noncopyable
-		{
-		public:
-			typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
+	public:
+		typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
 
-		public:
-			ipc_manager(const std::shared_ptr<server> &underlying, port_range range_);
-			~ipc_manager();
+	public:
+		ipc_manager(const std::shared_ptr<ipc::server> &server, port_range range_);
+		~ipc_manager();
 
-			unsigned short get_sockets_port() const;
-			bool remote_sockets_enabled() const;
-			void enable_remote_sockets(bool enable);
+		unsigned short get_sockets_port() const;
+		bool remote_sockets_enabled() const;
+		void enable_remote_sockets(bool enable);
 
-			bool com_enabled() const;
-			void enable_com(bool enable);
+		bool com_enabled() const;
+		void enable_com(bool enable);
 
-			static std::string format_endpoint(const std::string &interface_, unsigned short port);
+		static std::string format_endpoint(const std::string &interface_, unsigned short port);
 
-		private:
-			static std::shared_ptr<void> probe_create_server(const std::shared_ptr<server> &underlying,
-				const std::string &interface_, unsigned short &port, port_range range_);
+	private:
+		static std::shared_ptr<void> probe_create_server(const std::shared_ptr<ipc::server> &server,
+			const std::string &interface_, unsigned short &port, port_range range_);
 
-		private:
-			const std::shared_ptr<marshalling_server> _underlying;
-			const port_range _range;
+	private:
+		const std::shared_ptr<marshalling_server> _server;
+		const port_range _range;
 
-			std::shared_ptr<void> _sockets_server;
-			bool _remote_enabled;
-			unsigned short _port;
+		std::shared_ptr<void> _sockets_server_handle;
+		bool _remote_enabled;
+		unsigned short _port;
 
-			std::shared_ptr<void> _com_server;
-		};
-	}
+		std::shared_ptr<void> _com_server_handle;
+	};
 }

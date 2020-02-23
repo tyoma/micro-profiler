@@ -28,7 +28,7 @@ using namespace std;
 
 namespace micro_profiler
 {
-	const char *c_profiler_name = "MicroProfiler";
+	const char *c_profiler_name = ".MicroProfiler";
 	const char *c_profilerdir_ev = "MICROPROFILERDIR";
 	const char *c_frontend_id_ev = "MICROPROFILERFRONTEND";
 

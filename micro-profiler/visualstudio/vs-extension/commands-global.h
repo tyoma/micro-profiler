@@ -35,11 +35,7 @@ namespace micro_profiler
 {
 	class AttachToProcessDialog;
 	class frontend_manager;
-
-	namespace ipc
-	{
-		class ipc_manager;
-	}
+	class ipc_manager;
 
 	namespace integration
 	{
@@ -48,7 +44,7 @@ namespace micro_profiler
 			std::vector<IDispatchPtr> selected_items;
 			std::shared_ptr<frontend_manager> frontend;
 			CComPtr<IVsUIShell> shell;
-			std::shared_ptr<ipc::ipc_manager> ipc_manager;
+			std::shared_ptr<ipc_manager> ipc_manager;
 		};
 
 

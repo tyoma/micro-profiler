@@ -20,7 +20,6 @@
 
 #include <frontend/function_list.h>
 
-#include <common/string.h>
 #include <common/formatting.h>
 #include <cmath>
 #include <clocale>
@@ -41,12 +40,17 @@ namespace micro_profiler
 		template <typename ContainerT>
 		void gcvt(ContainerT &destination, double value)
 		{
-			const size_t buffer_size = 24;
-			char buffer[buffer_size];
-			int l = snprintf(buffer, buffer_size, "%g", value);
+			const size_t buffer_size = 100;
+			wchar_t buffer[buffer_size];
+			const int l = swprintf(buffer, buffer_size, L"%g", value);
 
-			destination.append(buffer, buffer + l);
+			if (l > 0)
+				destination.append(buffer, buffer + l);
 		}
+
+		template <typename DestT, typename SrcT>
+		void assign(DestT &dest, SrcT src)
+		{	dest.assign(src.begin(), src.end());	}
 
 		class by_name
 		{
@@ -192,25 +196,23 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename MapT>
-	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text_) const
+	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
 	{
-		string text;
 		const typename view_type::value_type &row = get_entry(item);
 
-		text_.clear();
+		text.clear();
 		switch (subitem)
 		{
-		case 0:	itoa<10>(text_, item + 1);	return;
-		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
-		case 2:	itoa<10>(text_, row.second.times_called);	return;
+		case 0:	itoa<10>(text, item + 1);	break;
+		case 1:	assign(text, _resolver->symbol_name_by_va(row.first));	break;
+		case 2:	itoa<10>(text, row.second.times_called);	break;
 		case 3:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
 		case 4:	format_interval(text, inclusive_time(_tick_interval)(row.second));	break;
 		case 5:	format_interval(text, exclusive_time_avg(_tick_interval)(row.second));	break;
 		case 6:	format_interval(text, inclusive_time_avg(_tick_interval)(row.second));	break;
-		case 7:	itoa<10>(text_, row.second.max_reentrance);	return;
+		case 7:	itoa<10>(text, row.second.max_reentrance);	break;
 		case 8:	format_interval(text, max_call_time(_tick_interval)(row.second));	break;
 		}
-		text_ = unicode(text);
 	}
 
 	template <typename BaseT, typename MapT>
@@ -268,19 +270,17 @@ namespace micro_profiler
 
 	template <>
 	void statistics_model_impl<linked_statistics_ex, statistics_map_callers>::get_text(index_type item, index_type subitem,
-		wstring &text_) const
+		wstring &text) const
 	{
-		string text;
 		const statistics_map_callers::value_type &row = get_entry(item);
 
-		text_.clear();
+		text.clear();
 		switch (subitem)
 		{
-		case 0:	itoa<10>(text_, item + 1);	return;
-		case 1:	text = _resolver->symbol_name_by_va(row.first);	break;
-		case 2:	itoa<10>(text_, row.second);	return;
+		case 0:	itoa<10>(text, item + 1);	break;
+		case 1:	assign(text, _resolver->symbol_name_by_va(row.first));	break;
+		case 2:	itoa<10>(text, row.second);	break;
 		}
-		text_ = unicode(text);
 	}
 
 	template <>

@@ -219,15 +219,15 @@ namespace micro_profiler
 				assert_equal(2u, m1.size());
 				assert_equal(1u, m1[(const void *)0x0011].callers.size());
 				assert_equal(1u, m1[(const void *)0x0013].callers.size());
-				assert_equal(10, m1[(const void *)0x0011].callers[(const void *)0x7011]);
-				assert_equal(11, m1[(const void *)0x0013].callers[(const void *)0x7011]);
+				assert_equal(10u, m1[(const void *)0x0011].callers[(const void *)0x7011]);
+				assert_equal(11u, m1[(const void *)0x0013].callers[(const void *)0x7011]);
 
 				assert_equal(3u, m2.size());
 				assert_equal(1u, m2[(const void *)0x0021].callers.size());
 				assert_equal(1u, m2[(const void *)0x0023].callers.size());
 				assert_equal(1u, m2[(const void *)0x0027].callers.size());
-				assert_equal(13, m2[(const void *)0x0021].callers[(const void *)0x5011]);
-				assert_equal(17, m2[(const void *)0x0023].callers[(const void *)0x5011]);
+				assert_equal(13u, m2[(const void *)0x0021].callers[(const void *)0x5011]);
+				assert_equal(17u, m2[(const void *)0x0023].callers[(const void *)0x5011]);
 				assert_equal(0x1000000000u, m2[(const void *)0x0027].callers[(const void *)0x5011]);
 			}
 
@@ -255,9 +255,9 @@ namespace micro_profiler
 				assert_equal(1u, m[(const void *)0x0021].callers.size());
 				assert_equal(2u, m[(const void *)0x0023].callers.size());
 				assert_equal(1u, m[(const void *)0x0027].callers.size());
-				assert_equal(13, m[(const void *)0x0021].callers[(const void *)0x0191]);
-				assert_equal(17, m[(const void *)0x0023].callers[(const void *)0x0191]);
-				assert_equal(88, m[(const void *)0x0023].callers[(const void *)0x0791]);
+				assert_equal(13u, m[(const void *)0x0021].callers[(const void *)0x0191]);
+				assert_equal(17u, m[(const void *)0x0023].callers[(const void *)0x0191]);
+				assert_equal(88u, m[(const void *)0x0023].callers[(const void *)0x0791]);
 				assert_equal(0x1000000000u, m[(const void *)0x0027].callers[(const void *)0x0191]);
 
 				assert_equal(17, m[(const void *)0x0021].inclusive_time);

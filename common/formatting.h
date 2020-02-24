@@ -20,11 +20,21 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
 #include <limits>
 #include <string>
 
 namespace micro_profiler
 {
+	extern const double c_bias;
+	extern const wchar_t *c_time_units[];
+	extern const int c_time_units_count;
+	extern const wchar_t *c_formatting;
+	extern const wchar_t *c_formatting_enhanced;
+
+
 	template <bool base10_or_less>
 	struct digits
 	{	static char get(unsigned char digit) {	return "0123456789ABCDEF"[digit];	}	};
@@ -65,5 +75,24 @@ namespace micro_profiler
 		destination.insert(destination.end(), p, local_buffer + max_length);
 	}
 
-	void format_interval(std::string &destination, double interval);
+	template <typename ContainerT>
+	inline void format_interval(ContainerT &destination, double interval)
+	{
+		const size_t max_length = 100;
+		wchar_t buffer[max_length];
+		const double uinterval = interval < 0 ? -interval : interval;
+		const wchar_t *formatting = 999.5 <= uinterval && uinterval < 10000 ? c_formatting_enhanced : c_formatting;
+		int unit = interval != 0 ? -static_cast<int>(std::floor(c_bias + std::log10(uinterval) / 3)) : 0;
+
+		unit = (std::max)(unit, 0);
+		if (unit >= c_time_units_count)
+			unit = 0, interval = 0;
+		interval *= std::pow(1000.0, unit);
+
+		const int written = std::swprintf(buffer, max_length, formatting, interval);
+
+		if (written > 0)
+			destination.insert(destination.end(), buffer, buffer + written);
+		destination += c_time_units[unit];
+	}
 }

@@ -24,6 +24,7 @@
 #include "vcmodel.h"
 
 #include <common/constants.h>
+#include <common/formatting.h>
 #include <common/module.h>
 #include <common/path.h>
 #include <common/string.h>
@@ -371,10 +372,9 @@ namespace micro_profiler
 
 		bool port_display::get_name(const context_type &ctx, unsigned /*item*/, wstring &name) const
 		{
-			wchar_t buffer[100] = { 0 };
-
-			swprintf(buffer, sizeof buffer - 1, L"  TCP Port (autoconfigured): #%d", ctx.ipc_manager->get_sockets_port());
-			name = buffer;
+			name.clear();
+			name += L"  TCP Port (autoconfigured): #";
+			itoa<10>(name, ctx.ipc_manager->get_sockets_port());
 			return true;
 		}
 

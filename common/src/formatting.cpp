@@ -20,37 +20,15 @@
 
 #include <common/formatting.h>
 
-#include <algorithm>
-#include <cmath>
-#include <cwchar>
-
-using namespace std;
-
 namespace micro_profiler
 {
 	const double c_bias = 7.25e-5;
-	const size_t c_int_buffer_length = 24;
-	const char *c_time_units[] = {	"s", "ms", "\xCE\xBCs", "ns",	};
+	const wchar_t *c_time_units[] = {	L"s", L"ms", L"\x03BCs", L"ns",	};
 	const int c_time_units_count = sizeof(c_time_units) / sizeof(c_time_units[0]);
-	const char *c_formatting = (
+	const wchar_t *c_formatting = (
 #if defined(_MSC_VER) && _MSC_VER < 1900
 		_set_output_format(_TWO_DIGIT_EXPONENT), // Force compliant %g formatting.
 #endif
-		"%.3g%s");
-	const char *c_formatting_enhanced = "%.4g%s";
-	
-	void format_interval(string &destination, double interval)
-	{
-		char buffer[c_int_buffer_length];
-		const double uinterval = interval < 0 ? -interval : interval;
-		const char *formatting = 999.5 <= uinterval && uinterval < 10000 ? c_formatting_enhanced : c_formatting;
-		int unit = interval != 0 ? -static_cast<int>(floor(c_bias + log10(uinterval) / 3)) : 0;
-
-		unit = (max)(unit, 0);
-		if (unit >= c_time_units_count)
-			unit = 0, interval = 0;
-		interval *= pow(1000.0, unit);
-		snprintf(buffer, c_int_buffer_length, formatting, interval, c_time_units[unit]);
-		destination = buffer;
-	}
+		L"%.3g");
+	const wchar_t *c_formatting_enhanced = L"%.4g";
 }

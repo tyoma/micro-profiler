@@ -12,11 +12,11 @@ namespace micro_profiler
 		namespace
 		{
 			template <unsigned char base, typename T>
-			string itoa_s(T value)
+			string itoa_s(T value, char min_width = 0, char padding = ' ')
 			{
 				string result(4, ' ');
 
-				itoa<base>(result, value);
+				itoa<base>(result, value, min_width, padding);
 				assert_is_true(result.size() > 4);
 				return result.substr(4);
 			}
@@ -160,6 +160,32 @@ namespace micro_profiler
 				assert_equal("-22272", itoa_s<8>(-022272));
 				assert_equal("-31415926", itoa_s<10>(-31415926));
 				assert_equal("-3AADF00D", itoa_s<16>(-0x3AADF00D));
+			}
+
+
+			test( PaddingSymbolIsAppliedForAsManyTimesAsRequested )
+			{
+				// ACT / ASSERT
+				assert_equal("0012272", itoa_s<8>(012272, 7, '0'));
+				assert_equal(" 31415926", itoa_s<10>(31415926, 9, ' '));
+				assert_equal("....BDFD", itoa_s<16>(0xBDFD, 8, '.'));
+			}
+
+
+			test( PaddingSymbolIsNotAppliedIfDigitsExceedPadding )
+			{
+				// ACT / ASSERT
+				assert_equal("12272", itoa_s<8>(012272, 1, '0'));
+				assert_equal("31415926", itoa_s<10>(31415926, 3, 'z'));
+				assert_equal("BDFD", itoa_s<16>(0xBDFD, 2, '.'));
+			}
+
+
+			test( MinusSignIsConsideredWhenApplyingPadding )
+			{
+				// ACT / ASSERT
+				assert_equal("-12272", itoa_s<10>(-12272, 6, '0'));
+				assert_equal("-031415926", itoa_s<10>(-31415926, 10, '0'));
 			}
 		end_test_suite
 	}

@@ -81,7 +81,6 @@ namespace micro_profiler
 
 
 
-		inline void to_string(buffer_t &buffer, void *value) {	buffer.push_back('0'), buffer.push_back('x'), itoa<16>(buffer, reinterpret_cast<size_t>(value));	}
 		inline void to_string(buffer_t &buffer, char value) {	itoa<10>(buffer, value);	}
 		inline void to_string(buffer_t &buffer, unsigned char value) {	itoa<10>(buffer, value);	}
 		inline void to_string(buffer_t &buffer, short value) {	itoa<10>(buffer, value);	}
@@ -94,6 +93,7 @@ namespace micro_profiler
 		inline void to_string(buffer_t &buffer, unsigned long long int value) {	itoa<10>(buffer, value);	}
 
 		void to_string(buffer_t &buffer, bool value);
+		void to_string(buffer_t &buffer, const void *value);
 		void to_string(buffer_t &buffer, const char *value);
 		void to_string(buffer_t &buffer, const std::string &value);
 

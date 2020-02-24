@@ -40,8 +40,17 @@ namespace micro_profiler
 
 		logger_ptr g_logger(new nil_logger);
 
-		void to_string(buffer_t &buffer, bool value) {	to_string(buffer, value ? "true" : "false");	}
-		void to_string(buffer_t &buffer, const string &value) {	buffer.insert(buffer.end(), value.begin(), value.end());	}
+		void to_string(buffer_t &buffer, bool value)
+		{	to_string(buffer, value ? "true" : "false");	}
+
+		void to_string(buffer_t &buffer, const void *value)
+		{
+			buffer.push_back('0'), buffer.push_back('x');
+			itoa<16>(buffer, reinterpret_cast<size_t>(value), sizeof(size_t) * 2, '0');
+		}
+
+		void to_string(buffer_t &buffer, const string &value)
+		{	buffer.insert(buffer.end(), value.begin(), value.end());	}
 
 		void to_string(buffer_t &buffer, const char *value)
 		{

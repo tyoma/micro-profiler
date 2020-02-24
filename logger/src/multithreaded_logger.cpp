@@ -20,7 +20,7 @@
 
 #include <logger/multithreaded_logger.h>
 
-#include <stdio.h>
+#include <common/formatting.h>
 #include <string.h>
 
 using namespace std;
@@ -33,13 +33,15 @@ namespace micro_profiler
 		{
 			void format_datetime(buffer_t &buffer, datetime dt)
 			{
-				const size_t l = buffer.size();
+				const unsigned int packed_date = ((dt.year + 1900) * 100 + dt.month) * 100 + dt.day;
+				const unsigned int packed_time = (dt.hour * 100 + dt.minute) * 100 + dt.second;
 
-				buffer.resize(l + 21 /*compact ISO8601 with milliseconds + null-terminator*/);
-				sprintf(&buffer[l], "%04u%02u%02uT%02u%02u%02u.%03uZ",
-					dt.year + 1900, dt.month, dt.day,
-					dt.hour, dt.minute, dt.second, dt.millisecond % 1000);
-				buffer.pop_back();
+				itoa<10>(buffer, packed_date, 8, '0');
+				buffer.push_back('T');
+				itoa<10>(buffer, packed_time, 6, '0');
+				buffer.push_back('.');
+				itoa<10>(buffer, dt.millisecond % 1000, 3, '0');
+				buffer.push_back('Z');
 			}
 
 			void append_string(buffer_t &buffer, const char *text)

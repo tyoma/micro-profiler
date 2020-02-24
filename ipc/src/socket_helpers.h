@@ -22,7 +22,6 @@
 
 #include <common/noncopyable.h>
 #include <stdexcept>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <string.h>

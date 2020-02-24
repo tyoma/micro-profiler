@@ -34,37 +34,36 @@ namespace micro_profiler
 	{	static char get(unsigned char digit) {	return '0' + digit;	}	};
 
 	template <bool is_signed>
-	struct itoa_worker
+	struct adjust_signed
 	{
-		template <unsigned char base, typename ContainerT, typename T>
-		static void convert(ContainerT &destination, T value, unsigned char /*min_width*/ = 0, char /*padding*/ = '0')
-		{
-			enum { max_length = 8 * sizeof(T) }; // Max buffer length for base2 representation.
-			char local_buffer[max_length];
-			char* p = local_buffer + max_length;
-
-			do
-				*--p = digits<base <= 10>::get(value % base);
-			while (value /= T(base), value);
-			destination.insert(destination.end(), p, local_buffer + max_length);
-		}
+		template <typename ContainerT, typename T>
+		static T adjust(ContainerT &/*destination*/, T value, char &/*min_width*/)
+		{	return value;	}
 	};
 
 	template <>
-	struct itoa_worker</*is_signed =*/ true>
+	struct adjust_signed<true>
 	{
-		template <unsigned char base, typename ContainerT, typename T>
-		static void convert(ContainerT &destination, T value, unsigned char /*min_width*/ = 0, char /*padding*/ = '0')
-		{
-			if (value < 0)
-				destination.push_back('-'), value = -value;
-			itoa_worker<false>::template convert<base>(destination, value);
-		}
+		template <typename ContainerT, typename T>
+		static T adjust(ContainerT &destination, T value, char &min_width)
+		{	return value < 0 ? destination.push_back('-'), --min_width, -value : value;	}
 	};
 
 	template <unsigned char base, typename ContainerT, typename T>
-	inline void itoa(ContainerT &destination, T value, unsigned char /*min_width*/ = 0, char /*padding*/ = '0')
-	{	itoa_worker<std::numeric_limits<T>::is_signed>::template convert<base>(destination, value);	}
+	inline void itoa(ContainerT &destination, T value, char min_width = 0, char padding = '0')
+	{
+		enum { max_length = 8 * sizeof(T) + 1 }; // Max buffer length for base2 representation plus sign.
+		char local_buffer[max_length];
+		char* p = local_buffer + max_length;
+
+		value = adjust_signed<std::numeric_limits<T>::is_signed>::adjust(destination, value, min_width);
+		do
+			*--p = digits<base <= 10>::get(value % base), --min_width;
+		while (value /= T(base), value);
+		while (min_width-- > 0)
+			*--p = padding;
+		destination.insert(destination.end(), p, local_buffer + max_length);
+	}
 
 	void format_interval(std::string &destination, double interval);
 }

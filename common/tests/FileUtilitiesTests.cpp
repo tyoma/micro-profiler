@@ -26,9 +26,9 @@ namespace micro_profiler
 			test( FileIDsAreEqualWhenPathsAreDifferent )
 			{
 				// INIT / ACT / ASSERT
-				assert_equal(file_id(c_symbol_container_1), file_id("." & *c_symbol_container_1));
-				assert_equal(file_id(c_symbol_container_2), file_id("." & *c_symbol_container_2));
-				assert_equal(file_id(c_symbol_container_3_nosymbols), file_id("." & *c_symbol_container_3_nosymbols));
+				assert_equal(file_id(c_symbol_container_1), file_id("." & *(string)c_symbol_container_1));
+				assert_equal(file_id(c_symbol_container_2), file_id("." & *(string)c_symbol_container_2));
+				assert_equal(file_id(c_symbol_container_3_nosymbols), file_id("." & *(string)c_symbol_container_3_nosymbols));
 			}
 
 

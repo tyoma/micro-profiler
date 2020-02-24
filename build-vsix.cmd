@@ -5,6 +5,9 @@ call make-version.cmd VERSION version.h
 mkdir "%~dp0_setup/"
 set OUTPUT="%~dp0_setup\micro-profiler.v%VERSION%.vsix"
 
+pushd "%~dp0legacy"
+	call sha256 hashinit micro-profiler.initializer.cpp
+popd
 pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
 	call sha256 hashmpfrontend micro-profiler_frontend.dll
 	call sha256 hashmpui 1033\micro-profiler.ui.dll
@@ -30,6 +33,9 @@ pushd "%~dp0_build.android.arm\_bin"
 	call sha256 hashandroidarm libmicro-profiler_arm.so
 popd
 
+pushd "%~dp0legacy"
+	call mkzip micro-profiler.initializer.cpp "%OUTPUT%"
+popd
 pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
 	call mkzip micro-profiler_frontend.dll "%OUTPUT%"
 	call mkzip 1033\micro-profiler.ui.dll "%OUTPUT%"

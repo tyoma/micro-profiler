@@ -73,15 +73,15 @@ namespace micro_profiler
 			{	v.visit(*this);	}
 		};
 
-		tool_ptr create_tool(const IDispatchPtr &object)
+		tool_ptr create_tool(const IDispatchPtr &object, int configuration_type)
 		{
 			_bstr_t name = dispatch::get(object, L"ToolKind");
 
 			if (name == _bstr_t(L"VCCLCompilerTool"))
 				return tool_ptr(new compiler_tool_impl(object));
-			else if (name == _bstr_t(L"VCLinkerTool"))
+			else if (name == _bstr_t(L"VCLinkerTool") && configuration_type != 4 /*typeStaticLibrary*/)
 				return tool_ptr(new linker_tool_impl(object));
-			else if (name == _bstr_t(L"VCLibrarianTool"))
+			else if (name == _bstr_t(L"VCLibrarianTool") && configuration_type == 4 /*typeStaticLibrary*/)
 				return tool_ptr(new librarian_tool_impl(object));
 			return tool_ptr();
 		}
@@ -94,8 +94,10 @@ namespace micro_profiler
 
 			virtual void enum_tools(const function<void (const tool_ptr &t)> &cb) const
 			{
-				dispatch::for_each_variant_as_dispatch(dispatch::get(*this, L"Tools"), [&cb] (const IDispatchPtr &c) {
-					if (tool_ptr t = create_tool(c))
+				const int type = dispatch::get(*this, L"ConfigurationType");
+
+				dispatch::for_each_variant_as_dispatch(dispatch::get(*this, L"Tools"), [&cb, type] (const IDispatchPtr &c) {
+					if (tool_ptr t = create_tool(c, type))
 						cb(t);
 				});
 			}
@@ -108,7 +110,7 @@ namespace micro_profiler
 			{	}
 
 			virtual tool_ptr get_tool() const
-			{	return create_tool(dispatch::get(*this, L"Tool"));	}
+			{	return create_tool(dispatch::get(*this, L"Tool"), -1);	}
 		};
 
 		struct file_impl : file, IDispatchPtr

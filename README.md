@@ -75,7 +75,7 @@ The steps are much like the ones above.
 
 # Revision History
 
-## v1.6.614
+## v1.6.615
 
 * Issue [#55](https://github.com/tyoma/micro-profiler/issues/55) implemented: it is now possible to enable/disable profiling on multiple projects at the same time;
 * It is now possible to enable profiling on a static library project without adding it to the containing EXE/DLL;

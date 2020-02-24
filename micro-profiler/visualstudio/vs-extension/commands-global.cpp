@@ -52,8 +52,9 @@ namespace micro_profiler
 		namespace
 		{
 			const wstring c_profilerdir_macro = L"$(" + unicode(constants::profilerdir_ev) + L")";
-			const wstring c_initializer_cpp = c_profilerdir_macro & L"micro-profiler.initializer.cpp";
-			const wstring c_profiler_library = c_profilerdir_macro & L"micro-profiler_$(PlatformName).lib";
+			const wstring c_initializer_cpp_filename = L"micro-profiler.initializer.cpp";
+			const wstring c_profiler_library_filename = L"micro-profiler_$(PlatformName).lib";
+			const wstring c_profiler_library = c_profilerdir_macro & c_profiler_library_filename;
 			const wstring c_profiler_library_quoted = L"\"" + c_profiler_library + L"\"";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
@@ -68,12 +69,12 @@ namespace micro_profiler
 					: wstring();
 			}
 
-			vcmodel::file_ptr find_item_by_relpath(const vcmodel::project &project, const wstring &relative_unexpanded_path)
+			vcmodel::file_ptr find_item_by_filename(const vcmodel::project &project, const wstring &filename)
 			{
 				vcmodel::file_ptr file;
 
 				project.enum_files([&] (vcmodel::file_ptr f) {
-					if (!file && wcsicmp(f->unexpanded_relative_path().c_str(), relative_unexpanded_path.c_str()) == 0)
+					if (!file && wcsicmp((*f->unexpanded_relative_path()).c_str(), filename.c_str()) == 0)
 						file = f;
 				});
 				return file;
@@ -91,7 +92,7 @@ namespace micro_profiler
 			{
 				wstring deps = linker.additional_dependencies();
 
-				return wstring::npos != deps.find(c_profiler_library);
+				return wstring::npos != deps.find(c_profiler_library_filename);
 			}
 
 			struct instrument : vcmodel::tool::visitor
@@ -154,7 +155,7 @@ namespace micro_profiler
 
 					if (_enable)
 					{
-						if (wstring::npos == deps.find(c_profiler_library))
+						if (wstring::npos == deps.find(c_profiler_library_filename))
 						{
 							if (!deps.empty())
 								deps += c_separator;
@@ -246,7 +247,7 @@ namespace micro_profiler
 			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&has_it, this] (IDispatchPtr dte_project) {
 				if (vcmodel::project_ptr p = vcmodel::create(dte_project))
 				{
-					if (find_item_by_relpath(*p, c_profiler_library) || find_item_by_relpath(*p, c_profiler_library))
+					if (find_item_by_filename(*p, c_profiler_library_filename) || find_item_by_filename(*p, c_initializer_cpp_filename))
 					{
 						has_it = true;
 					}
@@ -273,9 +274,9 @@ namespace micro_profiler
 				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 				{
 					// For compatibility - remove legacy settings.
-					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_profiler_library))
+					if (vcmodel::file_ptr f = find_item_by_filename(*project, c_profiler_library_filename))
 						f->remove();
-					if (vcmodel::file_ptr f = find_item_by_relpath(*project, c_initializer_cpp))
+					if (vcmodel::file_ptr f = find_item_by_filename(*project, c_initializer_cpp_filename))
 						f->remove();
 
 					project->enum_configurations([] (vcmodel::configuration_ptr cfg) {

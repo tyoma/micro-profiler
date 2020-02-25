@@ -59,7 +59,7 @@ namespace micro_profiler
 			const wstring c_profiler_library_quoted = L"\"" + c_profiler_library + L"\"";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
-			const wstring c_separator = L";";
+			const wstring c_separator = L" ";
 			const wstring c_inherit = L"%(AdditionalOptions)";
 
 			void trim_space(wstring &text)

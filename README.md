@@ -75,6 +75,10 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v1.6.616
+
+* Last-minute fixes of the new/changed functionality: invalid characters in 'Additional Dependencies' settings, non-Unicode paths of the profiled modules, extended logging, etc.;
+
 ## v1.6.615
 
 * Issue [#55](https://github.com/tyoma/micro-profiler/issues/55) implemented: it is now possible to enable/disable profiling on multiple projects at the same time;

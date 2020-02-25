@@ -35,12 +35,15 @@
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
 #include <frontend/serialization.h>
+#include <logger/log.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <wpl/ui/win32/form.h>
 
 #include <io.h>
 #include <memory>
+
+#define PREAMBLE "Command processors: "
 
 #pragma warning(disable:4996)
 
@@ -105,7 +108,8 @@ namespace micro_profiler
 				void visit(vcmodel::compiler_tool &compiler) const
 				{
 					bool changed = false;
-					wstring options = compiler.additional_options();
+					const wstring options_were = compiler.additional_options();
+					wstring options = options_were;
 
 					if (_enable)
 					{
@@ -130,6 +134,8 @@ namespace micro_profiler
 						trim_space(options);
 						compiler.additional_options(options);
 					}
+					LOG(PREAMBLE "instrumentation change attempt...")
+						% A(_enable) % A(changed) % A(unicode(options_were)) % A(unicode(options));
 				}
 
 			private:
@@ -143,16 +149,17 @@ namespace micro_profiler
 				{	}
 
 				virtual void visit(vcmodel::linker_tool &linker) const
-				{	apply(linker);	}
+				{	apply(linker, false);	}
 
 				virtual void visit(vcmodel::librarian_tool &librarian) const
-				{	apply(librarian);	}
+				{	apply(librarian, true);	}
 
 				template <typename LinkerT>
-				void apply(LinkerT &linker) const
+				void apply(LinkerT &linker, bool is_static) const
 				{
 					bool changed = false;
-					wstring deps = linker.additional_dependencies();
+					const wstring deps_were = linker.additional_dependencies();
+					wstring deps = deps_were;
 
 					if (_enable)
 					{
@@ -173,11 +180,14 @@ namespace micro_profiler
 						changed = replace(deps, c_profiler_library + c_separator, wstring()) || changed;
 						changed = replace(deps, c_profiler_library, wstring()) || changed;
 					}
+
 					if (changed)
 					{
 						trim_space(deps);
 						linker.additional_dependencies(deps);
 					}
+					LOG(PREAMBLE "dependencies change attempt...")
+						% A(is_static) % A(_enable) % A(changed) % A(unicode(deps_were)) % A(unicode(deps));
 				}
 
 			private:

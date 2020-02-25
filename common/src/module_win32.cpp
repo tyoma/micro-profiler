@@ -29,18 +29,29 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		void get_module_path(string &path, HMODULE hmodule)
+		{
+			wchar_t buffer[MAX_PATH + 1];
+
+			buffer[MAX_PATH] = L'\0';
+			::GetModuleFileNameW(hmodule, buffer, sizeof(buffer));
+			path = unicode(buffer);
+		}
+	}
+
 	string get_current_executable()
 	{	return get_module_info(0).path;	}
 
 	mapped_module get_module_info(const void *address)
 	{
 		HMODULE base = 0;
-		wchar_t path[MAX_PATH + 1] = { };
-
 		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &base);
-		::GetModuleFileNameW(base, path, sizeof(path)); // TODO: use GetModuleFileNameW instead.
-		::FreeLibrary(base);
-		mapped_module info = { unicode(path), static_cast<byte *>(static_cast<void *>(base)), };
+		shared_ptr<void> h(base, &::FreeLibrary);
+		mapped_module info = { string(), static_cast<byte *>(static_cast<void *>(base)), };
+
+		get_module_path(info.path, base);
 		return info;
 	}
 
@@ -54,7 +65,7 @@ namespace micro_profiler
 			lister(snapshot.get(), &entry);
 			lister = &::Module32NextW, module.addresses.clear())
 		{
-			module.path = unicode(entry.szExePath);
+			get_module_path(module.path, entry.hModule);
 			module.base = entry.modBaseAddr;
 			module.addresses.push_back(byte_range(entry.modBaseAddr, entry.modBaseSize));
 			callback(module);

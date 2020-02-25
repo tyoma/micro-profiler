@@ -26,6 +26,9 @@
 
 #include <common/serialization.h>
 #include <common/time.h>
+#include <logger/log.h>
+
+#define PREAMBLE "Collector app: "
 
 using namespace std;
 
@@ -80,6 +83,7 @@ namespace micro_profiler
 	{	}
 
 	void collector_app::message(const_byte_range payload)
+	try
 	{
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> d(reader);
@@ -96,6 +100,10 @@ namespace micro_profiler
 		default:
 			break;
 		}
+	}
+	catch (const exception &/*e*/)
+	{
+//		LOG(PREAMBLE "caught an exception while processing frontend request...") % A(e.what());
 	}
 
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)

@@ -20,7 +20,9 @@
 
 #include <common/image_info.h>
 
+#include <common/noncopyable.h>
 #include <common/primitives.h>
+#include <common/string.h>
 
 #include <windows.h>
 #include <dbghelp.h>
@@ -35,10 +37,27 @@ namespace micro_profiler
 {
 	namespace
 	{
+		class dbghelp : noncopyable
+		{
+		public:
+			dbghelp();
+			~dbghelp();
+
+			DWORD64 load_image(const string &path);
+
+		private:
+			typedef DWORD64 (__stdcall *load_module_ex_t)(HANDLE hProcess, HANDLE hFile, PCWSTR ImageName,
+				PCWSTR ModuleName, DWORD64 BaseOfDll,DWORD DllSize, PMODLOAD_DATA Data, DWORD Flags);
+
+		private:
+			shared_ptr<void> _module;
+		};
+
+
 		class dbghelp_image_info : public image_info<symbol_info>
 		{
 		public:
-			dbghelp_image_info(const shared_ptr<void> &dbghelp, const string &path);
+			dbghelp_image_info(const shared_ptr<dbghelp> &dbghelp_, const string &path);
 
 		private:
 			virtual void enumerate_functions(const symbol_callback_t &callback) const;
@@ -46,27 +65,52 @@ namespace micro_profiler
 
 		private:
 			string _path;
-			shared_ptr<void> _dbghelp;
+			shared_ptr<dbghelp> _dbghelp;
 			long_address_t _base;
 		};
 
 
 
-		dbghelp_image_info::dbghelp_image_info(const shared_ptr<void> &dbghelp, const string &path)
-			: _path(path), _dbghelp(dbghelp),
-				_base((::SetLastError(0), ::SymLoadModule64(_dbghelp.get(), NULL, path.c_str(), NULL, 0, 0)))
+		dbghelp::dbghelp()
+			: _module(::LoadLibraryA("dbghelp.dll"), &FreeLibrary)
 		{
-			if (!_base)
-				throw invalid_argument("");
+			if (!::SymInitialize(this, NULL, FALSE))
+				throw 0;
 		}
+
+		dbghelp::~dbghelp()
+		{	::SymCleanup(this);	}
+
+		DWORD64 dbghelp::load_image(const string &path)
+		{
+			// Attempt to obtain symbols via dbghelp.dll/v6.0.
+			if (load_module_ex_t load_module_ex = reinterpret_cast<load_module_ex_t>(::GetProcAddress(
+				static_cast<HMODULE>(_module.get()), "SymLoadModuleExW")))
+			{
+				::SetLastError(0);
+				if (DWORD64 base = load_module_ex(this, NULL, unicode(path).c_str(), NULL, 0, 0, NULL, 0))
+					return base;
+			}
+			// Fallback attempt to obtain symbols via dbghelp.dll/v5.1 (who knows, maybe we're on Windows XP).
+			else if (DWORD64 base = (::SetLastError(0), ::SymLoadModule64(this, NULL, path.c_str(), NULL, 0, 0)))
+			{
+				return base;
+			}
+			throw invalid_argument("The symbols for module '" + path + "' can not be loaded!");
+		}
+
+
+		dbghelp_image_info::dbghelp_image_info(const shared_ptr<dbghelp> &dbghelp_, const string &path)
+			: _path(path), _dbghelp(dbghelp_), _base(dbghelp_->load_image(path))
+		{	}
 
 		void dbghelp_image_info::enumerate_functions(const symbol_callback_t &callback) const
 		{
 			class local
 			{
 			public:
-				local(const shared_ptr<void> &dbghelp, const symbol_callback_t &callback)
-					: _file_id(0), _dbghelp(dbghelp), _callback(callback)
+				local(const shared_ptr<void> &dbghelp_, const symbol_callback_t &callback)
+					: _file_id(0), _dbghelp(dbghelp_), _callback(callback)
 				{	}
 
 				static BOOL CALLBACK on_symbol(SYMBOL_INFO *symbol, ULONG, void *context)
@@ -118,8 +162,8 @@ namespace micro_profiler
 			class local
 			{
 			public:
-				local(const shared_ptr<void> &dbghelp, const file_callback_t &callback)
-					: _file_id(0), _dbghelp(dbghelp), _callback(callback)
+				local(const shared_ptr<void> &dbghelp_, const file_callback_t &callback)
+					: _file_id(0), _dbghelp(dbghelp_), _callback(callback)
 				{	}
 
 				static BOOL CALLBACK on_symbol(SYMBOL_INFO *symbol, ULONG, void *context)
@@ -150,27 +194,13 @@ namespace micro_profiler
 
 			::SymEnumSymbols(_dbghelp.get(), _base, NULL, &local::on_symbol, &cb);
 		}
-
-
-		shared_ptr<void> create_dbghelp()
-		{
-			struct dbghelp
-			{
-				dbghelp()
-				{
-					if (!::SymInitialize(this, NULL, FALSE))
-						throw 0;
-				}
-
-				~dbghelp()
-				{	::SymCleanup(this);	}
-			};
-
-			return shared_ptr<void>(new dbghelp);
-		}
 	}
 
 
 	shared_ptr< image_info<symbol_info> > load_image_info(const string &image_path)
-	{	return shared_ptr< image_info<symbol_info> >(new dbghelp_image_info(create_dbghelp(), image_path));	}
+	{
+		shared_ptr<dbghelp> dh(new dbghelp);
+
+		return shared_ptr< image_info<symbol_info> >(new dbghelp_image_info(dh, image_path));
+	}
 }

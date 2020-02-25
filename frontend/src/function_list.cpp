@@ -31,7 +31,7 @@ using namespace placeholders;
 using namespace wpl;
 using namespace wpl::ui;
 
-#pragma warning(disable: 4775)
+#pragma warning(disable: 4244)
 
 namespace micro_profiler
 {

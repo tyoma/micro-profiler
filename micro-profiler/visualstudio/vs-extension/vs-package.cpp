@@ -219,7 +219,7 @@ namespace micro_profiler
 						dispatch::for_each_variant_as_dispatch(si, [&] (const IDispatchPtr &item) {
 							selected_items.push_back(dispatch::get(item, L"Project"));
 						});
-				global_context ctx = { selected_items, _frontend_manager, _shell, _ipc_manager };
+				global_context ctx = { selected_items, _frontend_manager, _shell, _ipc_manager, _running_objects };
 				return ctx;
 			}
 
@@ -239,6 +239,7 @@ namespace micro_profiler
 			shared_ptr<frontend_manager> _frontend_manager;
 			shared_ptr<ipc_manager> _ipc_manager;
 			unsigned _next_tool_id;
+			global_context::running_objects_t _running_objects;
 		};
 
 		OBJECT_ENTRY_AUTO(c_guidMicroProfilerPkg, profiler_package);

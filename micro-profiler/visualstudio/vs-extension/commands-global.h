@@ -26,6 +26,7 @@
 
 #include <atlbase.h>
 #include <comdef.h>
+#include <list>
 #include <vsshell.h>
 #include <wpl/base/signals.h>
 
@@ -41,10 +42,16 @@ namespace micro_profiler
 	{
 		struct global_context
 		{
+			typedef std::list< std::shared_ptr<void> > running_objects_t;
+
 			std::vector<IDispatchPtr> selected_items;
 			std::shared_ptr<frontend_manager> frontend;
 			CComPtr<IVsUIShell> shell;
 			std::shared_ptr<ipc_manager> ipc_manager;
+			running_objects_t &running_objects;
+
+		private:
+			const global_context &operator =(const global_context &rhs);
 		};
 
 

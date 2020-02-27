@@ -20,6 +20,8 @@
 
 #include "ProfilerMainDialog.h"
 
+#include "resources/resource.h"
+
 #include <common/configuration.h>
 #include <common/string.h>
 #include <frontend/about_ui.h>
@@ -30,8 +32,10 @@
 #include <src/wpl.ui/win32/view_host.h>
 #include <wpl/ui/container.h>
 #include <wpl/ui/controls.h>
+#include <wpl/ui/form.h>
 #include <wpl/ui/layout.h>
 #include <wpl/ui/win32/controls.h>
+#include <wpl/ui/win32/form.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -126,6 +130,7 @@ namespace micro_profiler
 		lm_toolbar->add(-100);
 		toolbar->add_view(shared_ptr<view>(new view));
 		lnk = create_link();
+		lnk->set_align(text_container::right);
 		lnk->set_text(L"<a>Support Developer...</a>");
 		_connections.push_back(lnk->clicked += bind(&ProfilerMainDialog::OnSupport, this));
 		lm_toolbar->add(200);
@@ -215,11 +220,18 @@ namespace micro_profiler
 
 	void ProfilerMainDialog::OnSupport()
 	{
-		SupportDevDialog dlg;
+		shared_ptr<form> f = create_form(_hwnd);
+
+		_about.reset(new about_ui(f));
+
+		_about_connection = f->close += [this] {
+			::EnableWindow(_hwnd, TRUE);
+			_about.reset();
+			_about_connection.reset();
+		};
 
 		::EnableWindow(_hwnd, FALSE);
-		dlg.DoModal(_hwnd);
-		::EnableWindow(_hwnd, TRUE);
+		f->set_visible(true);
 	}
 
 	void ProfilerMainDialog::activate()

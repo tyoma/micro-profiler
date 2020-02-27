@@ -31,6 +31,7 @@
 
 namespace micro_profiler
 {
+	class about_ui;
 	class functions_list;
 	struct hive;
 	class tables_ui;
@@ -59,5 +60,7 @@ namespace micro_profiler
 		std::shared_ptr<wpl::ui::view_host> _host;
 		std::shared_ptr<tables_ui> _statistics_display;
 		std::vector<wpl::slot_connection> _connections;
+		std::unique_ptr<about_ui> _about;
+		wpl::slot_connection _about_connection;
 	};
 }

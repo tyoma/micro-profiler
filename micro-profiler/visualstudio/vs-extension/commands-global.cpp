@@ -429,9 +429,21 @@ namespace micro_profiler
 
 		void support_developer::exec(context_type &ctx, unsigned /*item*/)
 		{
-			SupportDevDialog dlg;
+			shared_ptr< pair<shared_ptr<about_ui>, wpl::slot_connection> > o(
+				new pair<shared_ptr<about_ui>, wpl::slot_connection>);
+			HWND hshell = get_frame_hwnd(ctx.shell);
+			shared_ptr<wpl::ui::form> form = wpl::ui::create_form(hshell);
+			o->first.reset(new about_ui(form));
+			global_context::running_objects_t &running_objects = ctx.running_objects;
+			global_context::running_objects_t::iterator i = running_objects.insert(ctx.running_objects.end(), o);
 
-			dlg.DoModal(get_frame_hwnd(ctx.shell));
+			o->second = form->close += [i, &running_objects, hshell] {
+				::EnableWindow(hshell, TRUE);
+				running_objects.erase(i);
+			};
+
+			::EnableWindow(hshell, FALSE);
+			form->set_visible(true);
 		}
 	}
 }

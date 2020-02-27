@@ -5,6 +5,7 @@
 #define IDR_PROFILER_FRONTEND           102
 #define IDD_SUPPORT_DEV                 202
 #define IDC_WAYS_TO_SUPPORT             209
+#define IDI_APPMAIN 202
 
 // Next default values for new objects
 // 

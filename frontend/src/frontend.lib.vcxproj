@@ -78,11 +78,5 @@
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\tables_ui.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="untested\resources\frontend.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="untested\resources\appicon.ico" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

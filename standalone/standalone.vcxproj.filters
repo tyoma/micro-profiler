@@ -28,7 +28,4 @@
       <Filter>resources</Filter>
     </ResourceCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Resource Include="$(OutDir)frontend.res" />
-  </ItemGroup>
 </Project>

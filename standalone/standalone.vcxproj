@@ -81,8 +81,5 @@
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler_standalone.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <Resource Include="$(OutDir)frontend.res" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

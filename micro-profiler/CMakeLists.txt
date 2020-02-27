@@ -55,8 +55,6 @@ set(MICROPROFILER_SOURCES
 	visualstudio/vs-extension/vs-package.cpp
 	visualstudio/vs-extension/vs-pane.cpp
 
-	../frontend/src/untested/resources/frontend.rc
-	
 	micro-profiler.pkgdef
 	${MP_INTDIR}/commands.cto
 )

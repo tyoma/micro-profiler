@@ -20,27 +20,21 @@
 
 #pragma once
 
-#include "resource.h"
+#include <wpl/ui/form.h>
 
-#include <atlbase.h>
-#include <atlwin.h>
 
 namespace micro_profiler
 {
-	class SupportDevDialog : public ATL::CDialogImpl<SupportDevDialog>
+	class about_ui
 	{
 	public:
-		enum {	IDD = IDD_SUPPORT_DEV	};
+		about_ui(const std::shared_ptr<wpl::ui::form> &form);
 
 	private:
-		BEGIN_MSG_MAP(SupportDevDialog)
-			MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-			COMMAND_RANGE_HANDLER(IDOK, IDNO, OnCloseCmd)
-			NOTIFY_HANDLER(IDC_WAYS_TO_SUPPORT, NM_CLICK, OnLinkClicked)
-		END_MSG_MAP()
+		void on_link(const std::wstring &address);
 
-		LRESULT OnInitDialog(UINT message, WPARAM wparam, LPARAM lparam, BOOL &handled);
-		LRESULT OnLinkClicked(int id, NMHDR *nmhdr, BOOL &handled);
-		LRESULT OnCloseCmd(WORD, WORD id, HWND, BOOL &handled);
+	private:
+		std::shared_ptr<wpl::ui::form> _form;
+		std::vector<wpl::slot_connection> _connections;
 	};
 }

@@ -85,7 +85,6 @@
     </Content>
     <ClInclude Include="resources\resource.h" />
     <ResourceCompile Include="resources\micro-profiler_vspackage.rc" />
-    <Resource Include="$(OutDir)frontend.res" />
     <ClCompile Include="setup\environment.cpp" />
     <ClInclude Include="setup\environment.h" />
     <ClInclude Include="visualstudio\command-target.h" />

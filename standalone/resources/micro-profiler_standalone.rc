@@ -110,5 +110,7 @@ END
 
 IDR_PROFILER_FRONTEND   REGISTRY                "micro-profiler-frontend.rgs"
 
+IDI_APPMAIN             ICON                    "appicon.ico"
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////

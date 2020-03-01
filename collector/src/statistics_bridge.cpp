@@ -22,9 +22,9 @@
 
 #include <collector/calibration.h>
 #include <collector/module_tracker.h>
+#include <collector/serialization.h>
 
 #include <common/module.h>
-#include <common/serialization.h>
 #include <common/time.h>
 #include <ipc/endpoint.h>
 #include <strmd/serializer.h>
@@ -55,8 +55,8 @@ namespace micro_profiler
 		_module_tracker->get_changes(loaded, unloaded);
 		if (!loaded.empty())
 			send(modules_loaded, loaded);
-		if (_analyzer.size())
-			send(update_statistics, _analyzer);
+		if (_analyzer.has_data())
+			send(update_statistics_threaded, _analyzer);
 		if (!unloaded.empty())
 			send(modules_unloaded, unloaded);
 		_analyzer.clear();

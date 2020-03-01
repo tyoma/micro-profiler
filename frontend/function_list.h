@@ -26,6 +26,12 @@
 
 #include <wpl/ui/models.h>
 
+namespace strmd
+{
+	template <typename T>
+	struct container_reader;
+}
+
 namespace micro_profiler
 {
 	struct linked_statistics : wpl::ui::table_model
@@ -81,8 +87,8 @@ namespace micro_profiler
 		std::shared_ptr<symbol_resolver> _resolver;
 
 	private:
-		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, functions_list &data);
+		template <typename T>
+		friend struct strmd::container_reader;
 	};
 
 
@@ -109,15 +115,5 @@ namespace micro_profiler
 		archive(*fl->_statistics);
 		fl->on_updated();
 		return fl;
-	}
-
-
-	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, functions_list &data)
-	{
-		if (!data.updates_enabled)
-			return;
-		archive(*data._statistics);
-		data.on_updated();
 	}
 }

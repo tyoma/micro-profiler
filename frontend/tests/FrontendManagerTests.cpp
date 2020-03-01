@@ -52,6 +52,11 @@ namespace micro_profiler
 				return idata;
 			}
 
+			template <typename T, size_t size>
+			vector< pair< unsigned /*threadid*/, vector<T> > > make_single_threaded(T (&array_ptr)[size],
+				unsigned int threadid = 1u)
+			{	return vector< pair< unsigned /*threadid*/, vector<T> > >(1, make_pair(threadid, mkvector(array_ptr)));	}
+
 			template <typename T, size_t n>
 			void reset_all(T (&a)[n])
 			{	fill_n(a, n, T());	}
@@ -221,19 +226,19 @@ namespace micro_profiler
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, update_statistics, mkvector(data1));
+				write(*c, update_statistics_threaded, make_single_threaded(data1));
 
 				// ASSERT
 				assert_equal(2u, model->get_count());
 
 				// ACT
-				write(*c, update_statistics, mkvector(data2));
+				write(*c, update_statistics_threaded, make_single_threaded(data2));
 
 				// ASSERT
 				assert_equal(3u, model->get_count());
 
 				// ACT
-				write(*c, update_statistics, mkvector(data1));
+				write(*c, update_statistics_threaded, make_single_threaded(data1));
 
 				// ASSERT
 				assert_equal(3u, model->get_count());
@@ -278,8 +283,8 @@ namespace micro_profiler
 				shared_ptr<functions_list> model2 = _ui_creation_log[1]->model;
 
 				// ACT
-				write(*c1, update_statistics, mkvector(data));
-				write(*c2, update_statistics, mkvector(data));
+				write(*c1, update_statistics_threaded, make_single_threaded(data));
+				write(*c2, update_statistics_threaded, make_single_threaded(data));
 
 				// ASSERT
 				wstring text;
@@ -316,7 +321,7 @@ namespace micro_profiler
 				// ACT
 				write(*c, modules_loaded, mkvector(basic1));
 				write(*c, module_metadata, basic1[0].persistent_id, metadata[0]);
-				write(*c, update_statistics, mkvector(data1));
+				write(*c, update_statistics_threaded, make_single_threaded(data1));
 
 				// ASSERT
 				wstring text;
@@ -331,7 +336,7 @@ namespace micro_profiler
 				// ACT
 				write(*c, modules_loaded, mkvector(basic2));
 				write(*c, module_metadata, basic2[0].persistent_id, metadata[1]);
-				write(*c, update_statistics, mkvector(data2));
+				write(*c, update_statistics_threaded, make_single_threaded(data2));
 
 				// ASSERT
 				assert_equal(L"BAR", (model->get_text(0, 1, text), text));
@@ -854,7 +859,7 @@ namespace micro_profiler
 				};
 
 				// ACT / ASSERT (must not crash)
-				write(*c, update_statistics, mkvector(data));
+				write(*c, update_statistics_threaded, make_single_threaded(data));
 			}
 
 
@@ -908,7 +913,7 @@ namespace micro_profiler
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
 				write(*c, modules_loaded, mkvector(mi));
-				write(*c, update_statistics, mkvector(data));
+				write(*c, update_statistics_threaded, make_single_threaded(data));
 
 				// ACT
 				fl.get_text(fl.get_index(0x1100), 1, text);
@@ -952,7 +957,7 @@ namespace micro_profiler
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
 				write(*c, modules_loaded, mkvector(mi));
-				write(*c, update_statistics, mkvector(data));
+				write(*c, update_statistics_threaded, make_single_threaded(data));
 
 				// ACT
 				c.reset();

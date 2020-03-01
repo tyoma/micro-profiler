@@ -15,6 +15,7 @@ namespace micro_profiler
 		{
 			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
 			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
+			typedef std::unordered_map<unsigned /*threadid*/, statistics_map_detailed> thread_statistics_map;
 
 			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>
 			{
@@ -29,7 +30,7 @@ namespace micro_profiler
 
 				std::function<void (const initialization_data &id)> initialized;
 				std::function<void (const loaded_modules &m)> modules_loaded;
-				std::function<void (const statistics_map_detailed &u)> updated;
+				std::function<void (const thread_statistics_map &u)> updated;
 				std::function<void (const unloaded_modules &m)> modules_unloaded;
 				std::function<void (unsigned id, const module_info_metadata &md)> metadata_received;
 
@@ -46,7 +47,7 @@ namespace micro_profiler
 				commands c;
 				initialization_data id;
 				loaded_modules lm;
-				statistics_map_detailed u;
+				thread_statistics_map u;
 				unloaded_modules um;
 				module_info_metadata md;
 
@@ -63,7 +64,7 @@ namespace micro_profiler
 						a(lm), state.modules_loaded(lm);
 					break;
 
-				case update_statistics:
+				case update_statistics_threaded:
 					if (state.updated)
 						a(u), state.updated(u);
 					break;

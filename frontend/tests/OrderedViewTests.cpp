@@ -22,7 +22,7 @@ namespace micro_profiler
 				double c;
 			};
 
-			bool operator== (const POD &left, const POD &right)
+			bool operator == (const POD &left, const POD &right)
 			{	return left.a == right.a && left.b == right.b && left.c == right.c;	}
 
 			typedef unordered_map<void *, POD> pod_map;

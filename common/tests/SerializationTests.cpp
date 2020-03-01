@@ -1,6 +1,7 @@
 #include <common/serialization.h>
 #include <collector/primitives.h>
 
+#include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
 
 #include <functional>

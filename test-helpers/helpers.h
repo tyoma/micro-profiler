@@ -108,9 +108,6 @@ namespace micro_profiler
 
 		std::shared_ptr<void> occupy_memory(void *start, unsigned int length = 1000);
 	}
-
-	bool operator <(const function_statistics &lhs, const function_statistics &rhs);
-	bool operator ==(const function_statistics &lhs, const function_statistics &rhs);
 }
 
 extern "C" int setenv(const char *name, const char *value, int overwrite);

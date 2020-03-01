@@ -23,8 +23,8 @@
 #include <collector/calibration.h>
 #include <collector/module_tracker.h>
 #include <collector/statistics_bridge.h>
+#include <collector/serialization.h>
 
-#include <common/serialization.h>
 #include <common/time.h>
 #include <logger/log.h>
 

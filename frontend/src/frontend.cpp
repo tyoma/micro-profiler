@@ -79,6 +79,10 @@ namespace micro_profiler
 			break;
 
 		case update_statistics:
+			LOG(PREAMBLE "non-threaded update_statistics is no longer supported. Are you using older version of the collector library?");
+			break;
+
+		case update_statistics_threaded:
 			if (_model)
 				archive(*_model);
 			break;

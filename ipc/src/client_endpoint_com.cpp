@@ -108,7 +108,7 @@ namespace micro_profiler
 
 			STDMETHODIMP_(ULONG) inbound_stream::Release()
 			{
-				unsigned r = --_references;
+				unsigned int r = --_references;
 
 				if (!r)
 					delete this;

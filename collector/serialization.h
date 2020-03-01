@@ -18,40 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <logger/writer.h>
+#pragma once
 
-#include "file.h"
+#include <collector/analyzer.h>
 
-#include <common/formatting.h>
-#include <common/path.h>
-#include <memory>
-#include <stdio.h>
+#include <common/serialization.h>
 
-using namespace std;
-
-namespace micro_profiler
+namespace strmd
 {
-	namespace log
-	{
-		writer_t create_writer(const string &base_path)
-		{
-			shared_ptr<FILE> file;
-			const string path = ~base_path;
-			string filename = *base_path;
-			const size_t dot = filename.find_last_of(".");
-			const string ext = dot != string::npos ? filename.substr(dot) : string();
-			unsigned int u = 2;
-
-			filename.resize(dot);
-			for (string candidate = base_path; file = fopen_exclusive(candidate, "at"), !file; ++u)
-			{
-				candidate = path & filename;
-				candidate += '-';
-				itoa<10>(candidate, u);
-				candidate += ext;
-			}
-			setbuf(file.get(), NULL);
-			return [file] (const char *message) { fputs(message, file.get()); };
-		}
-	}
+	template <> struct is_container<micro_profiler::thread_analyzer> { static const bool value = true; };
+	template <> struct is_container<micro_profiler::analyzer> { static const bool value = true; };
 }

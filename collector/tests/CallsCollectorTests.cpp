@@ -1,6 +1,7 @@
 #include <collector/calls_collector.h>
 
 #include "helpers.h"
+#include "mocks.h"
 
 #include <algorithm>
 #include <test-helpers/helpers.h>
@@ -23,7 +24,7 @@ namespace micro_profiler
 					: total_entries(0)
 				{	}
 
-				virtual void accept_calls(mt::thread::id threadid, const call_record *calls, size_t count)
+				virtual void accept_calls(unsigned threadid, const call_record *calls, size_t count)
 				{
 					collected.push_back(make_pair(threadid, vector<call_record>()));
 					collected.back().second.assign(calls, calls + count);
@@ -31,10 +32,11 @@ namespace micro_profiler
 				}
 
 				size_t total_entries;
-				vector< pair< mt::thread::id, vector<call_record> > > collected;
+				vector< pair< unsigned, vector<call_record> > > collected;
 			};
 
-			bool call_trace_less(const pair< mt::thread::id, vector<call_record> > &lhs, const pair< mt::thread::id, vector<call_record> > &rhs)
+			bool call_trace_less(const pair< unsigned, vector<call_record> > &lhs,
+				const pair< unsigned, vector<call_record> > &rhs)
 			{	return lhs.first < rhs.first;	}
 
 			void emulate_n_calls(calls_collector &collector, size_t calls_number, void *callee)
@@ -67,10 +69,11 @@ namespace micro_profiler
 
 			virtual_stack vstack;
 			auto_ptr<calls_collector> collector;
+			mocks::thread_registry threads;
 
 			init( ConstructCollector )
 			{
-				collector.reset(new calls_collector(1000));
+				collector.reset(new calls_collector(1000, threads));
 			}
 
 			test( CollectNothingOnNoCalls )
@@ -102,7 +105,7 @@ namespace micro_profiler
 				};
 
 				assert_equal(1u, a.collected.size());
-				assert_equal(mt::this_thread::get_id(), a.collected[0].first);
+				assert_equal(threads.get_this_thread_id(), a.collected[0].first);
 				assert_equal(reference, a.collected[0].second);
 			}
 
@@ -123,7 +126,7 @@ namespace micro_profiler
 				};
 
 				assert_equal(1u, a.collected.size());
-				assert_equal(mt::this_thread::get_id(), a.collected[0].first);
+				assert_equal(threads.get_this_thread_id(), a.collected[0].first);
 				assert_equal(reference1, a.collected[0].second);
 
 				// ACT
@@ -184,12 +187,6 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, a.collected.size());
 
-				const vector<call_record> *trace1 = &a.collected[0].second;
-				const vector<call_record> *trace2 = &a.collected[1].second;
-				sort(a.collected.begin(), a.collected.end(), &call_trace_less);
-				if (threadid1 > threadid2)
-					swap(threadid1, threadid2), swap(trace1, trace2);
-
 				call_record reference1[] = {
 					{ 0, (void *)0x12FF00 }, { 1, 0 },
 					{ 2, (void *)0x12FF00 }, { 3, 0 },
@@ -200,11 +197,10 @@ namespace micro_profiler
 					{ 4, (void *)0xE1FF0 }, { 5, 0 },
 				};
 
-				assert_equal(threadid1, a.collected[0].first);
-				assert_equal(reference1, *trace1);
-
-				assert_equal(threadid2, a.collected[1].first);
-				assert_equal(reference2, *trace2);
+				assert_not_null(find_by_first(a.collected, threads.get_id(threadid1)));
+				assert_equal(reference1, *find_by_first(a.collected, threads.get_id(threadid1)));
+				assert_not_null(find_by_first(a.collected, threads.get_id(threadid2)));
+				assert_equal(reference2, *find_by_first(a.collected, threads.get_id(threadid2)));
 			}
 
 
@@ -230,27 +226,20 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, a.collected.size());
 
-				const vector<call_record> *trace1 = &a.collected[0].second;
-				const vector<call_record> *trace2 = &a.collected[1].second;
-				sort(a.collected.begin(), a.collected.end(), &call_trace_less);
-				if (threadid1 > threadid2)
-					swap(threadid1, threadid2), swap(trace1, trace2);
-
 				call_record reference1[] = {
-					{ 0, (void *)0x12FF00 }, { 1, 0 },
-					{ 2, (void *)0x12FF00 }, { 3, 0 },
+					{ 0, (void*)0x12FF00 }, { 1, 0 },
+					{ 2, (void*)0x12FF00 }, { 3, 0 },
 				};
 				call_record reference2[] = {
-					{ 0, (void *)0xE1FF0 }, { 1, 0 },
-					{ 2, (void *)0xE1FF0 }, { 3, 0 },
-					{ 4, (void *)0xE1FF0 }, { 5, 0 },
+					{ 0, (void*)0xE1FF0 }, { 1, 0 },
+					{ 2, (void*)0xE1FF0 }, { 3, 0 },
+					{ 4, (void*)0xE1FF0 }, { 5, 0 },
 				};
 
-				assert_equal(threadid1, a.collected[0].first);
-				assert_equal(reference1, *trace1);
-
-				assert_equal(threadid2, a.collected[1].first);
-				assert_equal(reference2, *trace2);
+				assert_not_null(find_by_first(a.collected, threads.get_id(threadid1)));
+				assert_equal(reference1, *find_by_first(a.collected, threads.get_id(threadid1)));
+				assert_not_null(find_by_first(a.collected, threads.get_id(threadid2)));
+				assert_equal(reference2, *find_by_first(a.collected, threads.get_id(threadid2)));
 			}
 
 
@@ -283,7 +272,7 @@ namespace micro_profiler
 			test( MaxTraceLengthIsLimited )
 			{
 				// INIT
-				calls_collector c1(67), c2(123), c3(127);
+				calls_collector c1(67, threads), c2(123, threads), c3(127, threads);
 				collection_acceptor a1, a2, a3;
 
 				// ACT (blockage during this test is equivalent to the failure)
@@ -309,8 +298,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(20u, a1.collected.size());
+				assert_equal(threads.get_id(t1.get_id()), a1.collected[0].first);
 				assert_equal(20u, a2.collected.size());
+				assert_equal(threads.get_id(t2.get_id()), a2.collected[0].first);
 				assert_equal(10u, a3.collected.size());
+				assert_equal(threads.get_id(t3.get_id()), a3.collected[0].first);
 
 				// INIT
 				a1.collected.clear();
@@ -335,7 +327,7 @@ namespace micro_profiler
 			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
 			{
 				// INIT
-				calls_collector c1(1000), c2(1000);
+				calls_collector c1(1000, threads), c2(1000, threads);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT

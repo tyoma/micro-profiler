@@ -139,12 +139,12 @@ namespace micro_profiler
 
 				mt::event ready;
 				auto_ptr<image> guineapig;
-				shared_ptr< vector<mocks::statistics_map_detailed> >
-					statistics(new vector<mocks::statistics_map_detailed>);
+				shared_ptr< vector<mocks::thread_statistics_map> >
+					statistics(new vector<mocks::thread_statistics_map>);
 				char buffer[100];
 				int data[10];
 
-				frontend_state->updated = [&, statistics] (const mocks::statistics_map_detailed &u) {
+				frontend_state->updated = [&, statistics] (const mocks::thread_statistics_map &u) {
 					statistics->push_back(u);
 					ready.set();
 				};
@@ -160,8 +160,9 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				assert_equal(1u, statistics->size());
-				assert_is_true((*statistics)[0].size() >= 1u);
+				assert_equal(1u, statistics->size()); // single update
+				assert_equal(1u, (*statistics)[0].size()); // single thread
+				assert_equal(1u, (*statistics)[0].begin()->second.size()); // single function
 
 				// INIT
 				f2F(f21);
@@ -171,8 +172,9 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				assert_equal(2u, statistics->size());
-				assert_is_true((*statistics)[1].size() >= 1u);
+				assert_equal(2u, statistics->size()); // two updates
+				assert_equal(1u, (*statistics)[1].size()); // single thread
+				assert_equal(1u, (*statistics)[1].begin()->second.size()); // single function
 			}
 
 		end_test_suite

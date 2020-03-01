@@ -22,12 +22,41 @@
 
 #include "shadow_stack.h"
 
+#include <common/noncopyable.h>
+
 namespace micro_profiler
 {
-	class analyzer : public calls_collector_i::acceptor
+	class thread_analyzer
 	{
 	public:
-		typedef statistics_map_detailed::const_iterator const_iterator;
+		typedef statistics_map_detailed_t<const void *> statistics_t;
+		typedef statistics_t::const_iterator const_iterator;
+		typedef std::pair<statistics_t::key_type, statistics_t::mapped_type> value_type;
+
+	public:
+		thread_analyzer(const overhead& overhead_);
+
+		void clear() throw();
+		size_t size() const throw();
+		const_iterator begin() const throw();
+		const_iterator end() const throw();
+
+		void accept_calls(const call_record *calls, size_t count);
+
+	private:
+		const thread_analyzer &operator =(const thread_analyzer &rhs);
+
+	private:
+		statistics_t _statistics;
+		shadow_stack<statistics_t> _stack;
+	};
+
+	class analyzer : public calls_collector_i::acceptor, noncopyable
+	{
+	public:
+		typedef std::unordered_map<unsigned int, thread_analyzer> thread_analyzers;
+		typedef thread_analyzers::const_iterator const_iterator;
+		typedef std::pair<unsigned int, thread_analyzer> value_type;
 
 	public:
 		analyzer(const overhead& overhead_);
@@ -36,18 +65,12 @@ namespace micro_profiler
 		size_t size() const throw();
 		const_iterator begin() const throw();
 		const_iterator end() const throw();
+		bool has_data() const throw();
 
-		virtual void accept_calls(mt::thread::id threadid, const call_record *calls, size_t count);
-
-	private:
-		typedef std::unordered_map< mt::thread::id, shadow_stack<statistics_map_detailed> > stacks_container;
-
-	private:
-		const analyzer &operator =(const analyzer &rhs);
+		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count);
 
 	private:
 		const overhead _overhead;
-		statistics_map_detailed _statistics;
-		stacks_container _stacks;
+		thread_analyzers _thread_analyzers;
 	};
 }

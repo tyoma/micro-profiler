@@ -1,17 +1,17 @@
 #include <collector/collector_app.h>
 
+#include <collector/serialization.h>
+
 #include "helpers.h"
 #include "mocks.h"
 
-#include <collector/calibration.h>
-#include <collector/calls_collector.h>
-
-#include <common/serialization.h>
 #include <common/time.h>
 #include <mt/event.h>
 #include <strmd/serializer.h>
 #include <test-helpers/constants.h>
+#include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
+#include <test-helpers/primitive_helpers.h>
 #include <test-helpers/thread.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -25,21 +25,16 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const overhead c_overhead(0, 0);
+			typedef function_statistics_detailed_t<unsigned> function_statistics_detailed;
+			typedef pair<unsigned, function_statistics_detailed> addressed_statistics;
 
-			bool has_function_containing(const map<string, symbol_info> &functions, const char *substring)
-			{
-				for (map<string, symbol_info>::const_iterator i = functions.begin(); i != functions.end(); ++i)
-					if (i->first.find(substring) != string::npos)
-						return true;
-				return false;
-			}
+			const overhead c_overhead(0, 0);
 		}
 
 		begin_test_suite( CollectorAppTests )
 			shared_ptr<mocks::frontend_state> state;
 			collector_app::frontend_factory_t factory;
-			shared_ptr<mocks::Tracer> collector;
+			shared_ptr<mocks::tracer> collector;
 			ipc::channel *inbound;
 
 			shared_ptr<ipc::channel> create_frontned(ipc::channel &inbound_)
@@ -52,7 +47,7 @@ namespace micro_profiler
 			{
 				state.reset(new mocks::frontend_state(shared_ptr<void>()));
 				factory = bind(&CollectorAppTests::create_frontned, this, _1);
-				collector.reset(new mocks::Tracer);
+				collector.reset(new mocks::tracer);
 			}
 
 
@@ -150,17 +145,17 @@ namespace micro_profiler
 
 
 
-			test( TwoCoexistingAppsHasDifferentWorkerThreads )
+			test( TwoCoexistingAppsHaveDifferentWorkerThreads )
 			{
 				// INIT
-				vector<mt::thread::id> tids;
+				vector<mt::thread::id> tids_;
 				mt::event go;
 				mt::mutex mtx;
 
 				state->constructed = [&] {
 					mt::lock_guard<mt::mutex> l(mtx);
-					tids.push_back(mt::this_thread::get_id());
-					if (2u == tids.size())
+					tids_.push_back(mt::this_thread::get_id());
+					if (2u == tids_.size())
 						go.set();
 				};
 
@@ -171,7 +166,7 @@ namespace micro_profiler
 				go.wait();
 
 				// ASSERT
-				assert_not_equal(tids[1], tids[0]);
+				assert_not_equal(tids_[1], tids_[0]);
 			}
 
 
@@ -201,7 +196,7 @@ namespace micro_profiler
 				// INIT
 				mt::event updated;
 
-				state->updated = [&] (const mocks::statistics_map_detailed &) { updated.wait(); };
+				state->updated = [&] (const mocks::thread_statistics_map &) { updated.wait(); };
 
 				// ACT
 				collector_app app(factory, collector, c_overhead);
@@ -320,10 +315,10 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event exit_collector(false, false), ready, update_lock(false, false), updated;
-				vector<mocks::statistics_map_detailed> updates;
+				vector<mocks::thread_statistics_map> updates;
 
 				state->modules_loaded = bind(&mt::event::set, &ready);
-				state->updated = [&] (const mocks::statistics_map_detailed &u) {
+				state->updated = [&] (const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
 					updated.set();
 					update_lock.wait();
@@ -341,20 +336,27 @@ namespace micro_profiler
 				ready.wait();
 
 				// ACT
-				collector->Add(mt::thread::id(), trace1);
+				collector->Add(11710u, trace1);
 				updated.wait();
-				collector->Add(mt::thread::id(), trace2); // this will be the last batch
+				collector->Add(11710u, trace2); // this will be the last batch
 				exit_collector.set();
 				mt::this_thread::sleep_for(mt::milliseconds(100));
 				update_lock.set();	// resume
 				worker.join();
 
 				// ASSERT
+				addressed_statistics reference1[] = {
+					make_statistics(0x1223u, 1, 0, 1000, 1000, 1000),
+				};
+				addressed_statistics reference2[] = {
+					make_statistics(0x12230u, 1, 0, 545, 545, 545),
+				};
+
 				assert_equal(2u, updates.size());
-				assert_equal(1u, updates[0].size());
-				assert_equal(1u, updates[0].count(0x1223));
-				assert_equal(1u, updates[1].size());
-				assert_equal(1u, updates[1].count(0x12230));
+				assert_not_null(find_by_first(updates[0], 11710u));
+				assert_equivalent(reference1, *find_by_first(updates[0], 11710u));
+				assert_not_null(find_by_first(updates[1], 11710u));
+				assert_equivalent(reference2, *find_by_first(updates[1], 11710u));
 			}
 
 
@@ -362,9 +364,9 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event updated;
-				vector<mocks::statistics_map_detailed> updates;
+				vector<mocks::thread_statistics_map> updates;
 
-				state->updated = [&] (const mocks::statistics_map_detailed &u) {
+				state->updated = [&] (const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
 					updated.set();
 				};
@@ -377,22 +379,18 @@ namespace micro_profiler
 					{	1000 + c_overhead.inner, (void *)0	},
 				};
 
-				collector->Add(mt::thread::id(), trace1);
+				collector->Add(11710u, trace1);
 
 				updated.wait();
 
 				// ASERT
+				addressed_statistics reference1[] = {
+					make_statistics(0x1223u, 1, 0, 1000, 1000, 1000),
+				};
+
 				assert_equal(1u, updates.size());
-
-				mocks::statistics_map_detailed::const_iterator callinfo_1 = updates[0].find(0x1223);
-
-				assert_not_equal(updates[0].end(), callinfo_1);
-
-				assert_equal(1u, callinfo_1->second.times_called);
-				assert_equal(0u, callinfo_1->second.max_reentrance);
-				assert_equal(1000, callinfo_1->second.inclusive_time);
-				assert_equal(callinfo_1->second.inclusive_time, callinfo_1->second.exclusive_time);
-				assert_equal(callinfo_1->second.inclusive_time, callinfo_1->second.max_call_time);
+				assert_not_null(find_by_first(updates[0], 11710u));
+				assert_equivalent(reference1, *find_by_first(updates[0], 11710u));
 
 				// ACT
 				call_record trace2[] = {
@@ -400,24 +398,18 @@ namespace micro_profiler
 					{	14000 + c_overhead.inner, (void *)0	},
 				};
 
-				collector->Add(mt::thread::id(), trace2);
+				collector->Add(11710u, trace2);
 
 				updated.wait();
 
 				// ASERT
+				addressed_statistics reference2[] = {
+					make_statistics(0x31223u, 1, 0, 4000, 4000, 4000),
+				};
+
 				assert_equal(2u, updates.size());
-
-				assert_equal(1u, updates[1].size());	// The new batch MUST NOT not contain previous function.
-
-				mocks::statistics_map_detailed::const_iterator callinfo_2 = updates[1].find(0x31223);
-
-				assert_not_equal(updates[1].end(), callinfo_2);
-
-				assert_equal(1u, callinfo_2->second.times_called);
-				assert_equal(0u, callinfo_2->second.max_reentrance);
-				assert_equal(4000, callinfo_2->second.inclusive_time);
-				assert_equal(callinfo_2->second.inclusive_time, callinfo_2->second.exclusive_time);
-				assert_equal(callinfo_2->second.inclusive_time, callinfo_2->second.max_call_time);
+				assert_not_null(find_by_first(updates[1], 11710u));
+				assert_equivalent(reference2, *find_by_first(updates[1], 11710u));
 			}
 
 
@@ -425,9 +417,9 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event updated;
-				vector<mocks::statistics_map_detailed> updates;
+				vector<mocks::thread_statistics_map> updates;
 
-				state->updated = [&] (const mocks::statistics_map_detailed &u) {
+				state->updated = [&] (const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
 					updated.set();
 				};
@@ -452,17 +444,19 @@ namespace micro_profiler
 					{	14, (void *)0	},
 				};
 
-				collector->Add(mt::thread::id(), trace1);
+				collector->Add(11710u, trace1);
 
 				updated.wait();
 
 				// ASERT
+				addressed_statistics reference1[] = {
+					make_statistics(0x31000u, 7, 3, 12, 12, 7,
+						make_statistics_base(0x31000u, 5, 0, 13, 8, 5)),
+				};
+
 				assert_equal(1u, updates.size());
-
-				const mocks::function_statistics_detailed callinfo_1 = updates[0][0x31000];
-
-				assert_equal(7u, callinfo_1.times_called);
-				assert_equal(3u, callinfo_1.max_reentrance);
+				assert_not_null(find_by_first(updates[0], 11710u));
+				assert_equivalent(reference1, *find_by_first(updates[0], 11710u));
 
 				// ACT
 				call_record trace2[] = {
@@ -478,17 +472,19 @@ namespace micro_profiler
 					{	10, (void *)0	},
 				};
 
-				collector->Add(mt::thread::id(), trace2);
+				collector->Add(11710u, trace2);
 
 				updated.wait();
 
 				// ASERT
+				addressed_statistics reference2[] = {
+					make_statistics(0x31000u, 5, 4, 9, 9, 9,
+						make_statistics_base(0x31000u, 4, 0, 16, 7, 7)),
+				};
+
 				assert_equal(2u, updates.size());
-
-				const mocks::function_statistics_detailed &callinfo_2 = updates[1][0x31000];
-
-				assert_equal(5u, callinfo_2.times_called);
-				assert_equal(4u, callinfo_2.max_reentrance);
+				assert_not_null(find_by_first(updates[1], 11710u));
+				assert_equivalent(reference2, *find_by_first(updates[1], 11710u));
 			}
 
 
@@ -496,17 +492,17 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event updated1, updated2;
-				mocks::statistics_map_detailed u1, u2;
+				mocks::thread_statistics_map u1, u2;
 				overhead o1(13, 0), o2(29, 0);
-				shared_ptr<mocks::Tracer> tracer1(new mocks::Tracer), tracer2(new mocks::Tracer);
+				shared_ptr<mocks::tracer> tracer1(new mocks::tracer), tracer2(new mocks::tracer);
 				shared_ptr<mocks::frontend_state> state1(new mocks::frontend_state(tracer1)),
 					state2(new mocks::frontend_state(tracer2));
 
-				state1->updated = [&] (const mocks::statistics_map_detailed &u) {
+				state1->updated = [&] (const mocks::thread_statistics_map &u) {
 					u1 = u;
 					updated1.set();
 				};
-				state2->updated = [&] (const mocks::statistics_map_detailed &u) {
+				state2->updated = [&] (const mocks::thread_statistics_map &u) {
 					u2 = u;
 					updated2.set();
 				};
@@ -520,15 +516,22 @@ namespace micro_profiler
 					{	14000, (void *)0	},
 				};
 
-				tracer1->Add(mt::thread::id(), trace);
+				tracer1->Add(11710u, trace);
 				updated1.wait();
 
-				tracer2->Add(mt::thread::id(), trace);
+				tracer2->Add(11710u, trace);
 				updated2.wait();
 
 				// ASSERT
-				assert_equal(4000 - 13, u1[0x3171717].inclusive_time);
-				assert_equal(4000 - 29, u2[0x3171717].inclusive_time);
+				addressed_statistics reference1[] = {
+					make_statistics(0x3171717u, 1, 0, 4000 - 13, 4000 - 13, 4000 - 13),
+				};
+				addressed_statistics reference2[] = {
+					make_statistics(0x3171717u, 1, 0, 4000 - 29, 4000 - 29, 4000 - 29),
+				};
+
+				assert_equivalent(reference1, *find_by_first(u1, 11710u));
+				assert_equivalent(reference2, *find_by_first(u2, 11710u));
 			}
 
 
@@ -538,9 +541,9 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event updated;
-				mocks::statistics_map_detailed u;
+				mocks::thread_statistics_map u;
 
-				state->updated = [&] (const mocks::statistics_map_detailed &u_) {
+				state->updated = [&] (const mocks::thread_statistics_map &u_) {
 					u = u_;
 					updated.set();
 				};
@@ -565,38 +568,23 @@ namespace micro_profiler
 					{	1490, (void *)0	},
 				};
 
-				collector->Add(mt::thread::id(), trace);
+				collector->Add(11710u, trace);
 
 				updated.wait();
 
 				// ASSERT
-				const mocks::function_statistics_detailed &callinfo_parent1 = u[0x31000];
-				const mocks::function_statistics_detailed &callinfo_parent2 = u[0x11000];
-				const mocks::function_statistics_detailed &callinfo_parent3 = u[0x13000];
+				addressed_statistics reference[] = {
+					make_statistics(0x11000u, 1, 0, 376, 293, 376,
+						make_statistics_base(0x13000u, 1, 0, 83, 83, 83)),
+					make_statistics(0x13000u, 2, 0, 146, 146, 83),
+					make_statistics(0x31000u, 1, 0, 61, 15, 61,
+						make_statistics_base(0x37000u, 2, 0, 34, 34, 23),
+						make_statistics_base(0x41000u, 1, 0, 12, 12, 12)),
+					make_statistics(0x37000u, 2, 0, 34, 34, 23),
+					make_statistics(0x41000u, 1, 0, 12, 12, 12),
+				};
 
-				assert_equal(2u, callinfo_parent1.callees.size());
-				assert_equal(61, callinfo_parent1.inclusive_time);
-				assert_equal(15, callinfo_parent1.exclusive_time);
-				
-				assert_equal(1u, callinfo_parent2.callees.size());
-				assert_equal(376, callinfo_parent2.inclusive_time);
-				assert_equal(293, callinfo_parent2.exclusive_time);
-
-				assert_equal(0u, callinfo_parent3.callees.size());
-				assert_equal(146, callinfo_parent3.inclusive_time);
-				assert_equal(146, callinfo_parent3.exclusive_time);
-
-
-				const function_statistics &callinfo_child11 = u[0x31000].callees[0x37000];
-				const function_statistics &callinfo_child12 = u[0x31000].callees[0x41000];
-
-				assert_equal(2u, callinfo_child11.times_called);
-				assert_equal(34, callinfo_child11.inclusive_time);
-				assert_equal(34, callinfo_child11.exclusive_time);
-
-				assert_equal(1u, callinfo_child12.times_called);
-				assert_equal(12, callinfo_child12.inclusive_time);
-				assert_equal(12, callinfo_child12.exclusive_time);
+				assert_equivalent(reference, *find_by_first(u, 11710u));
 			}
 
 

@@ -42,7 +42,7 @@ namespace micro_profiler
 	{
 		struct delay_evaluator : calls_collector_i::acceptor
 		{
-			virtual void accept_calls(mt::thread::id, const call_record *calls, size_t count)
+			virtual void accept_calls(unsigned int, const call_record *calls, size_t count)
 			{
 				const size_t count2 = count;
 

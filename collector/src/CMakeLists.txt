@@ -48,10 +48,18 @@ set(COLLECTOR_SOURCES ${CALIBRATION_SOURCES}
 )
 
 if(UNIX)
+	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		thread_registry_linux.cpp
+	)
+	
 	set(COLLECTOR_SOURCES ${COLLECTOR_SOURCES}
 		main_unix.cpp
 	)
 elseif(WIN32)
+	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		thread_registry_win32.cpp
+	)
+	
 	set(COLLECTOR_SOURCES ${COLLECTOR_SOURCES}
 		collector.rc
 		hooks.asm

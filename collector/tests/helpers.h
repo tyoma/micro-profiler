@@ -49,6 +49,18 @@ namespace micro_profiler
 					return &*i;
 			return 0;
 		}
+
+		template <typename ContainerT, typename KeyT>
+		const typename ContainerT::value_type::second_type *find_by_first(const ContainerT &c, const KeyT &key)
+		{
+			for (typename ContainerT::const_iterator i = c.begin(); i != c.end(); ++i)
+				if (i->first == key)
+					return &i->second;
+			return 0;
+		}
+
+		inline const void *addr(size_t value)
+		{	return reinterpret_cast<const void *>(value);	}
 	}
 
 	inline bool operator ==(const call_record &lhs, const call_record &rhs)

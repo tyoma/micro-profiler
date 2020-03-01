@@ -12,6 +12,7 @@ set(COLLECTOR_TESTS_SOURCES
 	SerializationTests.cpp
 	ShadowStackTests.cpp
 	StatisticsBridgeTests.cpp
+	ThreadAnalyzerTests.cpp
 	mocks.cpp
 	mocks_image_info.cpp
 )

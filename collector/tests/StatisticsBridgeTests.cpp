@@ -7,8 +7,10 @@
 #include <collector/module_tracker.h>
 #include <common/path.h>
 #include <common/time.h>
+#include <test-helpers/comparisons.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
+#include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -21,6 +23,9 @@ namespace micro_profiler
 		namespace
 		{
 			const overhead c_overhead(17, 0);
+
+			typedef function_statistics_detailed_t<unsigned> function_statistics_detailed;
+			typedef pair<unsigned, function_statistics_detailed> addressed_statistics;
 
 			template <typename ContainerT>
 			const symbol_info *get_symbol_by_name(const ContainerT &symbols, const char *name)
@@ -44,10 +49,10 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( StatisticsBridgeTests )
-			shared_ptr<mocks::Tracer> cc;
+			shared_ptr<mocks::tracer> cc;
 			shared_ptr<mocks::frontend_state> state;
 			shared_ptr<ipc::channel> frontend;
-			vector<mocks::statistics_map_detailed> update_log;
+			vector<mocks::thread_statistics_map> update_log;
 			shared_ptr<module_tracker> mtracker;
 			unsigned int ref_count;
 
@@ -60,9 +65,9 @@ namespace micro_profiler
 			init( InitializeFrontendMock )
 			{
 				ref_count = 0;
-				cc.reset(new mocks::Tracer);
+				cc.reset(new mocks::tracer);
 				state.reset(new mocks::frontend_state(cc));
-				state->updated = [this] (const mocks::statistics_map_detailed &u) { update_log.push_back(u); };
+				state->updated = [this] (const mocks::thread_statistics_map &u) { update_log.push_back(u); };
 				frontend = state->create();
 			}
 
@@ -102,11 +107,11 @@ namespace micro_profiler
 				// INIT
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 				call_record trace[] = {
-					{	0, (void *)0x1223	},
-					{	10 + c_overhead.inner, (void *)(0)	},
+					{	0, addr(0x1223)	},
+					{	10 + c_overhead.inner, addr(0)	},
 				};
 
-				cc->Add(mt::thread::id(), trace);
+				cc->Add(1221, trace);
 
 				// ACT
 				b.update_frontend();
@@ -121,11 +126,11 @@ namespace micro_profiler
 				// INIT
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
 				call_record trace[] = {
-					{	0, (void *)0x1223	},
-					{	10 + c_overhead.inner, (void *)(0)	},
+					{	0, addr(0x1223)	},
+					{	10 + c_overhead.inner, addr(0)	},
 				};
 
-				cc->Add(mt::thread::id(), trace);
+				cc->Add(141, trace);
 
 				b.analyze();
 				b.update_frontend();
@@ -141,32 +146,32 @@ namespace micro_profiler
 			test( CollectedCallsArePassedToFrontend )
 			{
 				// INIT
-				vector<mocks::statistics_map_detailed> update_log1, update_log2;
-				mocks::Tracer cc1, cc2;
+				vector<mocks::thread_statistics_map> update_log1, update_log2;
+				mocks::tracer cc1, cc2;
 				overhead o1(23, 0), o2(31, 0);
 				shared_ptr<mocks::frontend_state> state1(state),
 					state2(new mocks::frontend_state(shared_ptr<void>()));
 				shared_ptr<ipc::channel> frontend2 = state2->create();
 				statistics_bridge b1(cc1, o1, *frontend, mtracker), b2(cc2, o2, *frontend2, mtracker);
 				call_record trace1[] = {
-					{	0, (void *)0x1223	},
-					{	10 + o1.inner, (void *)(0)	},
-					{	1000, (void *)0x1223	},
-					{	1029 + o1.inner, (void *)(0)	},
+					{	0, addr(0x1223)	},
+					{	10 + o1.inner, addr(0)	},
+					{	1000, addr(0x1223)	},
+					{	1029 + o1.inner, addr(0)	},
 				};
 				call_record trace2[] = {
-					{	0, (void *)0x2223	},
-					{	13 + o2.inner, (void *)(0)	},
-					{	1000, (void *)0x3223	},
-					{	1017 + o2.inner, (void *)(0)	},
-					{	2000, (void *)0x4223	},
-					{	2019 + o2.inner, (void *)(0)	},
+					{	0, addr(0x2223)	},
+					{	13 + o2.inner, addr(0)	},
+					{	1000, addr(0x3223)	},
+					{	1017 + o2.inner, addr(0)	},
+					{	2000, addr(0x4223)	},
+					{	2019 + o2.inner, addr(0)	},
 				};
-				state1->updated = [&] (const mocks::statistics_map_detailed &u) { update_log1.push_back(u); };
-				state2->updated = [&] (const mocks::statistics_map_detailed &u) { update_log2.push_back(u); };
+				state1->updated = [&] (const mocks::thread_statistics_map &u) { update_log1.push_back(u); };
+				state2->updated = [&] (const mocks::thread_statistics_map &u) { update_log2.push_back(u); };
 
-				cc1.Add(mt::thread::id(), trace1);
-				cc2.Add(mt::thread::id(), trace2);
+				cc1.Add(18, trace1);
+				cc2.Add(18881, trace2);
 
 				// ACT
 				b1.analyze();
@@ -175,23 +180,24 @@ namespace micro_profiler
 				b2.update_frontend();
 
 				// ASSERT
+				addressed_statistics reference1[] = {
+					make_statistics(0x1223u, 2, 0, 39, 39, 29),
+				};
+				addressed_statistics reference2[] = {
+					make_statistics(0x2223u, 1, 0, 13, 13, 13),
+					make_statistics(0x3223u, 1, 0, 17, 17, 17),
+					make_statistics(0x4223u, 1, 0, 19, 19, 19),
+				};
+
 				assert_equal(1u, update_log1.size());
 				assert_equal(1u, update_log1[0].size());
-				assert_equal(2u, update_log1[0][0x1223].times_called);
-				assert_equal(39, update_log1[0][0x1223].exclusive_time);
-				assert_equal(39, update_log1[0][0x1223].inclusive_time);
+				assert_equal(18u, update_log1[0].begin()->first);
+				assert_equivalent(reference1, update_log1[0].begin()->second);
 
 				assert_equal(1u, update_log2.size());
-				assert_equal(3u, update_log2[0].size());
-				assert_equal(1u, update_log2[0][0x2223].times_called);
-				assert_equal(13, update_log2[0][0x2223].exclusive_time);
-				assert_equal(13, update_log2[0][0x2223].inclusive_time);
-				assert_equal(1u, update_log2[0][0x3223].times_called);
-				assert_equal(17, update_log2[0][0x3223].exclusive_time);
-				assert_equal(17, update_log2[0][0x3223].inclusive_time);
-				assert_equal(1u, update_log2[0][0x4223].times_called);
-				assert_equal(19, update_log2[0][0x4223].exclusive_time);
-				assert_equal(19, update_log2[0][0x4223].inclusive_time);
+				assert_equal(1u, update_log2[0].size());
+				assert_equal(18881u, update_log2[0].begin()->first);
+				assert_equivalent(reference2, update_log2[0].begin()->second);
 			}
 
 

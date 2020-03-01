@@ -63,6 +63,7 @@
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
+    <ClCompile Include="ThreadAnalyzerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

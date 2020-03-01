@@ -1,8 +1,10 @@
 #include <collector/analyzer.h>
 
-#include <test-helpers/helpers.h>
+#include "helpers.h"
 
-#include <map>
+#include <test-helpers/comparisons.h>
+#include <test-helpers/helpers.h>
+#include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -15,42 +17,19 @@ namespace micro_profiler
 		namespace
 		{
 			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
-
-			bool has_empty_statistics(const analyzer &a)
-			{
-				for (analyzer::const_iterator i = a.begin(); i != a.end(); ++i)
-					if (i->second.times_called || i->second.inclusive_time || i->second.exclusive_time || i->second.max_reentrance || i->second.max_call_time)
-						return false;
-				return true;
-			}
+			typedef std::pair<const void *, function_statistics_detailed> addressed_statistics;
+			typedef std::pair< mt::thread::id, vector<addressed_statistics> > threaded_statistics;
 		}
 
 		begin_test_suite( AnalyzerTests )
-			auto_ptr<mt::thread> threads[2];
-			mt::thread::id tids[2];
-
-			static void nul()
-			{	}
-
-			init( CreateDummyThreads )
-			{
-				threads[0].reset(new mt::thread(&nul));
-				tids[0] = threads[0]->get_id();
-				threads[1].reset(new mt::thread(&nul));
-				tids[1] = threads[1]->get_id();
-			}
-
-			teardown( JoinDummyThreads )
-			{	threads[0]->join(), threads[1]->join();	}
-			
-
-			test( NewAnalyzerHasNoFunctionRecords )
+			test( NewAnalyzerHasNoThreads )
 			{
 				// INIT / ACT
 				analyzer a(overhead(0, 0));
 
 				// ACT / ASSERT
 				assert_equal(a.begin(), a.end());
+				assert_is_false(a.has_data());
 			}
 
 
@@ -60,132 +39,73 @@ namespace micro_profiler
 				analyzer a(overhead(0, 0));
 				calls_collector_i::acceptor &as_acceptor(a);
 				call_record trace[] = {
-					{	12300, (void *)1234	},
-					{	12305, (void *)2234	},
+					{	12300, addr(1234)	},
+					{	12305, addr(2234)	},
 				};
 
 				// ACT
-				as_acceptor.accept_calls(tids[0], trace, array_size(trace));
-				as_acceptor.accept_calls(tids[1], trace, array_size(trace));
+				as_acceptor.accept_calls(1177u, trace, array_size(trace));
+
+				// ASSERT
+				addressed_statistics reference[] = {
+					make_statistics(addr(1234), 0, 0, 0, 0, 0),
+					make_statistics(addr(2234), 0, 0, 0, 0, 0),
+				};
+
+				assert_equal(1, distance(a.begin(), a.end()));
+				assert_not_null(find_by_first(a, 1177u));
+				assert_null(find_by_first(a, 1317u));
+				assert_equivalent(reference, *find_by_first(a, 1177u));
+				assert_is_true(a.has_data());
+
+				// ACT
+				as_acceptor.accept_calls(1317u, trace, array_size(trace));
 
 				// ASSERT
 				assert_equal(2, distance(a.begin(), a.end()));
-				assert_is_true(has_empty_statistics(a));
-			}
-
-
-			test( EvaluateSeveralFunctionDurations )
-			{
-				// INIT
-				analyzer a(overhead(0, 0));
-				call_record trace[] = {
-					{	12300, (void *)1234	},
-					{	12305, (void *)0	},
-					{	12310, (void *)2234	},
-					{	12317, (void *)0	},
-					{	12320, (void *)2234	},
-					{	12322, (void *)12234	},
-					{	12325, (void *)0	},
-					{	12327, (void *)0	},
-				};
-
-				// ACT
-				a.accept_calls(tids[0], trace, array_size(trace));
-
-				// ASSERT
-				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
-
-				assert_equal(3u, m.size());
-
-				map<const void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
-
-				++i2, ++++i3;
-
-				assert_equal(1u, i1->second.times_called);
-				assert_equal(5, i1->second.inclusive_time);
-				assert_equal(5, i1->second.exclusive_time);
-
-				assert_equal(2u, i2->second.times_called);
-				assert_equal(14, i2->second.inclusive_time);
-				assert_equal(11, i2->second.exclusive_time);
-
-				assert_equal(1u, i3->second.times_called);
-				assert_equal(3, i3->second.inclusive_time);
-				assert_equal(3, i3->second.exclusive_time);
-			}
-
-
-			test( AnalyzerCollectsDetailedStatistics )
-			{
-				// INIT
-				analyzer a(overhead(0, 0));
-				call_record trace[] = {
-					{	1, (void *)1	},
-						{	2, (void *)11	},
-						{	3, (void *)0	},
-					{	4, (void *)0	},
-					{	5, (void *)2	},
-						{	10, (void *)21	},
-						{	11, (void *)0	},
-						{	13, (void *)22	},
-						{	17, (void *)0	},
-					{	23, (void *)0	},
-				};
-
-				// ACT
-				a.accept_calls(tids[0], trace, array_size(trace));
-
-				// ASSERT
-				map<const void *, function_statistics_detailed> m(a.begin(), a.end());	// use map to ensure proper sorting
-
-				assert_equal(5u, m.size());
-
-				assert_equal(1u, m[(void *)1].callees.size());
-				assert_equal(2u, m[(void *)2].callees.size());
-				assert_equal(0u, m[(void *)11].callees.size());
-				assert_equal(0u, m[(void *)21].callees.size());
-				assert_equal(0u, m[(void *)22].callees.size());
+				assert_not_null(find_by_first(a, 1177u));
+				assert_not_null(find_by_first(a, 1317u));
+				assert_equivalent(reference, *find_by_first(a, 1317u));
+				assert_is_true(a.has_data());
 			}
 
 
 			test( ProfilerLatencyIsTakenIntoAccount )
 			{
 				// INIT
-				analyzer a(overhead(1, 2));
+				analyzer a1(overhead(1, 2));
+				analyzer a2(overhead(2, 1));
 				call_record trace[] = {
-					{	12300, (void *)1234	},
-					{	12305, (void *)0	},
-					{	12310, (void *)2234	},
-					{	12317, (void *)0	},
-					{	12320, (void *)2234	},
-						{	12322, (void *)12234	},
-						{	12325, (void *)0	},
-					{	12327, (void *)0	},
+					{	12300, addr(1234)	},
+					{	12305, addr(0)	},
+					{	12310, addr(2234)	},
+					{	12317, addr(0)	},
+					{	12320, addr(2234)	},
+						{	12322, addr(12234)	},
+						{	12325, addr(0)	},
+					{	12327, addr(0)	},
 				};
 
 				// ACT
-				a.accept_calls(tids[0], trace, array_size(trace));
+				a1.accept_calls(1177u, trace, array_size(trace));
+				a2.accept_calls(1177u, trace, array_size(trace));
 
 				// ASSERT
-				map<const void *, function_statistics> m(a.begin(), a.end());	// use map to ensure proper sorting
+				addressed_statistics reference1[] = {
+					make_statistics(addr(1234), 1, 0, 4, 4, 4),
+					make_statistics(addr(2234), 2, 0, 9, 7, 6,
+						make_statistics_base(addr(12234), 1, 0, 2, 2, 2)),
+					make_statistics(addr(12234), 1, 0, 2, 2, 2),
+				};
+				addressed_statistics reference2[] = {
+					make_statistics(addr(1234), 1, 0, 3, 3, 3),
+					make_statistics(addr(2234), 2, 0, 7, 6, 5,
+						make_statistics_base(addr(12234), 1, 0, 1, 1, 1)),
+					make_statistics(addr(12234), 1, 0, 1, 1, 1),
+				};
 
-				assert_equal(3u, m.size());
-
-				map<const void *, function_statistics>::const_iterator i1(m.begin()), i2(m.begin()), i3(m.begin());
-
-				++i2, ++++i3;
-
-				assert_equal(1u, i1->second.times_called);
-				assert_equal(4, i1->second.inclusive_time);
-				assert_equal(4, i1->second.exclusive_time);
-
-				assert_equal(2u, i2->second.times_called);
-				assert_equal(9, i2->second.inclusive_time);
-				assert_equal(7, i2->second.exclusive_time);
-
-				assert_equal(1u, i3->second.times_called);
-				assert_equal(2, i3->second.inclusive_time);
-				assert_equal(2, i3->second.exclusive_time);
+				assert_equivalent(reference1, *find_by_first(a1, 1177u));
+				assert_equivalent(reference2, *find_by_first(a2, 1177u));
 			}
 
 
@@ -193,41 +113,53 @@ namespace micro_profiler
 			{
 				// INIT
 				analyzer a(overhead(0, 0));
-				map<const void *, function_statistics> m;
-				call_record trace1[] = {	{	12300, (void *)1234	},	};
-				call_record trace2[] = {	{	12313, (void *)1234	},	};
-				call_record trace3[] = {	{	12307, (void *)0	},	};
-				call_record trace4[] = {
-					{	12319, (void *)0	},
-					{	12323, (void *)1234	},
+				calls_collector_i::acceptor &as_acceptor(a);
+				call_record trace[] = {
+					{	12300, addr(1234)	},
+						{	12305, addr(2234)	},
+				};
+				call_record trace1[] = {
+						{	12310, 0	},
+				};
+
+				as_acceptor.accept_calls(1177u, trace, array_size(trace));
+				as_acceptor.accept_calls(1317u, trace, array_size(trace));
+
+				// ACT
+				as_acceptor.accept_calls(1177u, trace1, array_size(trace1));
+
+				// ASSERT
+				addressed_statistics reference1[] = {
+					make_statistics(addr(1234), 0, 0, 0, 0, 0),
+					make_statistics(addr(2234), 0, 0, 0, 0, 0),
+				};
+				addressed_statistics reference2[] = {
+					make_statistics(addr(1234), 0, 0, 0, 0, 0,
+						make_statistics_base(addr(2234), 1, 0, 5, 5, 5)),
+					make_statistics(addr(2234), 1, 0, 5, 5, 5),
+				};
+
+				assert_equivalent(reference2, *find_by_first(a, 1177u));
+				assert_equivalent(reference1, *find_by_first(a, 1317u));
+
+				// INIT
+				call_record trace2[] = {
+						{	12320, 0	},
+					{	12340, 0	},
 				};
 
 				// ACT
-				a.accept_calls(tids[0], trace1, array_size(trace1));
-				a.accept_calls(tids[1], trace2, array_size(trace2));
+				as_acceptor.accept_calls(1317u, trace2, array_size(trace2));
 
 				// ASSERT
-				assert_is_true(has_empty_statistics(a));
+				addressed_statistics reference3[] = {
+					make_statistics(addr(1234), 1, 0, 40, 25, 40,
+						make_statistics_base(addr(2234), 1, 0, 15, 15, 15)),
+					make_statistics(addr(2234), 1, 0, 15, 15, 15),
+				};
 
-				// ACT
-				a.accept_calls(tids[0], trace3, array_size(trace3));
-
-				// ASSERT
-				assert_equal(1, distance(a.begin(), a.end()));
-				assert_equal((void *)1234, a.begin()->first);
-				assert_equal(1u, a.begin()->second.times_called);
-				assert_equal(7, a.begin()->second.inclusive_time);
-				assert_equal(7, a.begin()->second.exclusive_time);
-
-				// ACT
-				a.accept_calls(tids[1], trace4, array_size(trace4));
-
-				// ASSERT
-				assert_equal(1, distance(a.begin(), a.end()));
-				assert_equal((void *)1234, a.begin()->first);
-				assert_equal(2u, a.begin()->second.times_called);
-				assert_equal(13, a.begin()->second.inclusive_time);
-				assert_equal(13, a.begin()->second.exclusive_time);
+				assert_equivalent(reference2, *find_by_first(a, 1177u));
+				assert_equivalent(reference3, *find_by_first(a, 1317u));
 			}
 
 
@@ -244,19 +176,66 @@ namespace micro_profiler
 					{	12330, (void *)2234	},
 				};
 				call_record trace2[] = {	{	12350, (void *)0	},	};
+				call_record trace3[] = {	{	12353, (void *)0	},	};
 
-				a.accept_calls(tids[1], trace1, array_size(trace1));
+				a.accept_calls(111888, trace1, array_size(trace1));
+				a.accept_calls(111889, trace1, array_size(trace1));
 
 				// ACT
 				a.clear();
-				a.accept_calls(tids[1], trace2, array_size(trace2));
+
+				// ASSERT (has no data, but thread analyzers still exist)
+				assert_is_false(a.has_data());
+				assert_not_null(find_by_first(a, 111888u));
+				assert_not_null(find_by_first(a, 111889u));
+
+				// ACT
+				a.accept_calls(111888, trace2, array_size(trace2));
+				a.accept_calls(111889, trace3, array_size(trace3));
 
 				// ASSERT
-				assert_equal(1, distance(a.begin(), a.end()));
-				assert_equal((void *)2234, a.begin()->first);
-				assert_equal(1u, a.begin()->second.times_called);
-				assert_equal(20, a.begin()->second.inclusive_time);
-				assert_equal(20, a.begin()->second.exclusive_time);
+				addressed_statistics reference1[] = {
+					make_statistics(addr(2234), 1, 0, 20, 20, 20),
+				};
+				addressed_statistics reference2[] = {
+					make_statistics(addr(2234), 1, 0, 23, 23, 23),
+				};
+
+				assert_not_null(find_by_first(a, 111888u));
+				assert_not_null(find_by_first(a, 111889u));
+				assert_equivalent(reference1, *find_by_first(a, 111888u));
+				assert_equivalent(reference2, *find_by_first(a, 111889u));
+			}
+
+
+			test( AnalyzerHasDataIfAnyThreadAnalyzerHasIt )
+			{
+				// INIT
+				analyzer a(overhead(0, 0));
+				map<const void *, function_statistics> m;
+				call_record trace[] = {
+					{	12319, (void *)1234	},
+					{	12324, (void *)0	},
+				};
+
+				a.accept_calls(111888, trace, array_size(trace));
+				a.accept_calls(111889, trace, array_size(trace));
+				a.clear();
+
+				// ACT
+				a.accept_calls(111888, trace, array_size(trace));
+
+				// ASSERT
+				assert_is_true(a.has_data());
+
+				// INIT
+				a.clear();
+
+				// ACT
+				a.accept_calls(111889, trace, array_size(trace));
+
+				// ASSERT
+				assert_is_true(a.has_data());
 			}
 		end_test_suite
 	}

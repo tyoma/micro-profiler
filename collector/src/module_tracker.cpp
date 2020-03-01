@@ -37,7 +37,7 @@ namespace micro_profiler
 
 		enumerate_process_modules([&] (const mapped_module &mm) {
 			file_id fid(mm.path);
-			const unsigned &persistent_id = _files_registry[fid];
+			const unsigned int &persistent_id = _files_registry[fid];
 			const bool is_new = !persistent_id;
 
 			if (is_new)

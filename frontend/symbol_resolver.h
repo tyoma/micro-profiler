@@ -52,7 +52,7 @@ namespace micro_profiler
 
 		struct module_info
 		{
-			typedef std::map<unsigned /*rva*/, const symbol_info * /*symbol*/> addressed_symbols;
+			typedef std::map<unsigned int /*rva*/, const symbol_info * /*symbol*/> addressed_symbols;
 			typedef std::unordered_map<unsigned int, std::string> files_map;
 
 			const symbol_info *find_symbol_by_va(unsigned address) const;

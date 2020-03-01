@@ -22,28 +22,61 @@
 
 namespace micro_profiler
 {
+	thread_analyzer::thread_analyzer(const overhead &overhead_)
+		: _stack(overhead_)
+	{	}
+
+	void thread_analyzer::clear() throw()
+	{	_statistics.clear();	}
+
+	size_t thread_analyzer::size() const throw()
+	{	return _statistics.size();	}
+
+	thread_analyzer::const_iterator thread_analyzer::begin() const throw()
+	{	return _statistics.begin();	}
+
+	thread_analyzer::const_iterator thread_analyzer::end() const throw()
+	{	return _statistics.end();	}
+
+	void thread_analyzer::accept_calls(const call_record *calls, size_t count)
+	{	_stack.update(calls, calls + count, _statistics);	}
+
+
 	analyzer::analyzer(const overhead &overhead_)
 		: _overhead(overhead_)
 	{	}
 
 	void analyzer::clear() throw()
-	{	_statistics.clear();	}
+	{
+		for (thread_analyzers::iterator i = _thread_analyzers.begin(); i != _thread_analyzers.end(); ++i)
+			i->second.clear();
+	}
 
 	size_t analyzer::size() const throw()
-	{	return _statistics.size();	}
+	{	return _thread_analyzers.size();	}
 
 	analyzer::const_iterator analyzer::begin() const throw()
-	{	return _statistics.begin();	}
+	{	return _thread_analyzers.begin();	}
 
 	analyzer::const_iterator analyzer::end() const throw()
-	{	return _statistics.end();	}
+	{	return _thread_analyzers.end();	}
 
-	void analyzer::accept_calls(mt::thread::id threadid, const call_record *calls, size_t count)
+	bool analyzer::has_data() const throw()
 	{
-		stacks_container::iterator i = _stacks.find(threadid);
+		for (thread_analyzers::const_iterator i = _thread_analyzers.begin(); i != _thread_analyzers.end(); ++i)
+		{
+			if (i->second.size())
+				return true;
+		}
+		return false;
+	}
 
-		if (i == _stacks.end())
-			i = _stacks.insert(std::make_pair(threadid, shadow_stack<statistics_map_detailed>(_overhead))).first;
-		i->second.update(calls, calls + count, _statistics);
+	void analyzer::accept_calls(unsigned int threadid, const call_record *calls, size_t count)
+	{
+		thread_analyzers::iterator i = _thread_analyzers.find(threadid);
+
+		if (i == _thread_analyzers.end())
+			i = _thread_analyzers.insert(std::make_pair(threadid, thread_analyzer(_overhead))).first;
+		i->second.accept_calls(calls, count);
 	}
 }

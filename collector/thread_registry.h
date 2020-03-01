@@ -20,52 +20,27 @@
 
 #pragma once
 
-#include "range.h"
-
-#include <functional>
-#include <memory>
-#include <string>
+#include <mt/thread.h>
 
 namespace micro_profiler
 {
-	struct symbol_info
+	struct thread_info
 	{
-		std::string name;
-		unsigned int rva, size;
-		unsigned int id;
-		unsigned int file_id, line;
+		mt::thread::id native_id;
 	};
 
-	struct symbol_info_mapped
+	struct thread_registry_i
 	{
-		symbol_info_mapped(const char *name_, byte_range body_);
-
-		std::string name;
-		byte_range body;
+		virtual unsigned int register_self() = 0;
+		virtual thread_info get_info(unsigned int id) = 0;
 	};
 
-	template <typename SymbolT>
-	struct image_info
-	{
-		typedef std::function<void (const SymbolT &symbol)> symbol_callback_t;
-		typedef std::function<void (const std::pair<unsigned int /*file_id*/, std::string /*path*/> &file)> file_callback_t;
-
-		virtual ~image_info() {	}
-		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
-		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
-	};
-
-	std::shared_ptr< image_info<symbol_info> > load_image_info(const std::string &image_path);
-
-	class offset_image_info : public image_info<symbol_info_mapped>
+	class thread_registry : public thread_registry_i
 	{
 	public:
-		offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base);
+		void notify_thread_exit();
 
-		virtual void enumerate_functions(const symbol_callback_t &callback) const;
-
-	private:
-		std::shared_ptr< image_info<symbol_info> > _underlying;
-		byte *_base;
+		virtual unsigned int register_self();
+		virtual thread_info get_info(unsigned int id);
 	};
 }

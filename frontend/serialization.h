@@ -20,18 +20,24 @@
 
 #pragma once
 
+#include "function_list.h"
 #include "symbol_resolver.h"
 
 #include <common/serialization.h>
 
 namespace micro_profiler
 {
-	class analyzer;
+	struct thread_statistics_proxy
+	{
+		unsigned int thread_id;
+		statistics_map_detailed *statistics;
+	};
 }
 
 namespace strmd
 {
 	template <typename KeyT, typename ValueT> struct is_container< std::map<KeyT, ValueT> > { static const bool value = true; };
+	template <> struct is_container<micro_profiler::functions_list> { static const bool value = true; };
 
 	template <typename KeyT, typename ValueT>
 	struct container_reader< std::map<KeyT, ValueT> >
@@ -47,6 +53,22 @@ namespace strmd
 				archive(value);
 				data.insert(value);
 			}
+		}
+	};
+
+	template <>
+	struct container_reader<micro_profiler::functions_list>
+	{
+		template <typename ArchiveT>
+		void operator()(ArchiveT &archive, size_t count, micro_profiler::functions_list &data)
+		{
+			thread_statistics_proxy proxy = { 0, data._statistics.get() };
+
+			if (!data.updates_enabled)
+				return;
+			while (count--)
+				archive(proxy);
+			data.on_updated();
 		}
 	};
 }
@@ -65,5 +87,12 @@ namespace micro_profiler
 	{
 		archive(data.symbols);
 		archive(data.files);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, thread_statistics_proxy &data)
+	{
+		archive(data.thread_id);
+		archive(*data.statistics);
 	}
 }

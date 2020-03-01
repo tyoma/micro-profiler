@@ -21,7 +21,7 @@
 #pragma once
 
 #include "module.h"
-#include "image_info.h" // TODO: remove?
+#include "image_info.h"
 #include "types.h"
 
 #include <vector>
@@ -29,25 +29,29 @@
 namespace micro_profiler
 {
 	enum commands {
-		init = 0, // + initialization_data
-		modules_loaded = 1, // + loaded_modules
-		update_statistics = 2, // + statistics_map_detailed_t<void * / long_address_t>
-		modules_unloaded = 3, // + unloaded_modules
-		module_metadata = 4, // + module_info_metadata
+		init = 0,
+		modules_loaded = 1,
+		update_statistics = 2,
+		modules_unloaded = 3,
+		module_metadata = 4,
 		request_metadata = 5, // + instance_id
+		update_statistics_threaded = 6,
 	};
 
-
+	// init
 	struct initialization_data
 	{
 		std::string executable;
 		timestamp_t ticks_per_second;
 	};
 
-
+	// modules_loaded
 	typedef std::vector<mapped_module_identified> loaded_modules;
+
+	// modules_unloaded
 	typedef std::vector<unsigned int> unloaded_modules;
 
+	// module_metadata
 	struct module_info_metadata
 	{
 		std::vector<symbol_info> symbols;

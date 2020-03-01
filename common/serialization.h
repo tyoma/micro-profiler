@@ -28,17 +28,11 @@
 
 #include <strmd/deserializer.h>
 
-namespace micro_profiler
-{
-	class analyzer;
-}
-
 namespace strmd
 {
 	using namespace micro_profiler;
 	using namespace std;
 
-	template <> struct is_container<analyzer> { static const bool value = true; };
 	template <typename AddressT> struct is_container< statistics_map_detailed_t<AddressT> > { static const bool value = true; };
 
 	template <typename AddressT> struct container_reader< unordered_map<AddressT, function_statistics, address_compare> >

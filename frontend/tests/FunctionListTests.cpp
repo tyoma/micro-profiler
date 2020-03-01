@@ -143,6 +143,22 @@ namespace micro_profiler
 						return i;
 				return table_model::npos();
 			}
+
+			template <typename ArchiveT, typename DataT>
+			void emulate_save(ArchiveT &archive, signed long long ticks_per_second, const symbol_resolver &resolver, const DataT &data)
+			{
+				archive(ticks_per_second);
+				archive(resolver);
+				archive(data);
+			}
+
+			template <typename ArchiveT, typename ContainerT>
+			void serialize_single_threaded(ArchiveT &archive, const ContainerT &container, unsigned int threadid = 1u)
+			{
+				vector< pair< unsigned /*threadid*/, ContainerT > > data(1, make_pair(threadid, container));
+
+				archive(data);
+			}
 		}
 
 
@@ -186,7 +202,7 @@ namespace micro_profiler
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
-				ser(s);
+				serialize_single_threaded(ser, s);
 				
 				// ACT
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
@@ -207,7 +223,7 @@ namespace micro_profiler
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
-				ser(s);
+				serialize_single_threaded(ser, s);
 				
 				// ACT
 				fl->updates_enabled = false;
@@ -226,7 +242,7 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				// ACT
 				invalidation_tracer ih;
@@ -277,7 +293,7 @@ namespace micro_profiler
 				s[1123].callees[11000];
 				s[1123].callees[11001];
 				s[1124].callees[11100];
-				ser(s);
+				serialize_single_threaded(ser, s);
 				dser(*fl);
 
 				fl->set_order(1, true);
@@ -310,7 +326,7 @@ namespace micro_profiler
 				s[1123].callees[11000];
 				s[1123].callees[11001];
 				s[1124].callees[11000];
-				ser(s);
+				serialize_single_threaded(ser, s);
 				dser(*fl);
 
 				fl->set_order(1, true);
@@ -343,7 +359,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[1118]) = function_statistics(19, 0, 31, 29);
 				static_cast<function_statistics &>(s[2229]) = function_statistics(10, 3, 7, 5);
 				static_cast<function_statistics &>(s[5550]) = function_statistics(5, 0, 10, 7);
-				ser(s);
+				serialize_single_threaded(ser, s);
 				
 				// ACT
 				dser(*fl);
@@ -395,9 +411,9 @@ namespace micro_profiler
 				invalidation_tracer ih;
 				ih.bind_to_model(*fl);
 
-				ser(s1);
-				ser(s2);
-				ser(s3);
+				serialize_single_threaded(ser, s1);
+				serialize_single_threaded(ser, s2);
+				serialize_single_threaded(ser, s3);
 
 				// ACT
 				dser(*fl);
@@ -499,7 +515,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[5000]) = s5lb;
 				static_cast<function_statistics &>(s[5990]) = s5ub;
 				static_cast<function_statistics &>(s[6000]) = s6lb;
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				// ACT
 				dser(*fl);
@@ -540,7 +556,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 4);
 				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 5);
 				static_cast<function_statistics &>(s[3000]) = function_statistics(15233, 3, 65460, 13470, 6);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				ih.bind_to_model(*fl);
 
@@ -842,7 +858,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 2);
 				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 3);
 				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 4);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				// ACT
 				fl->print(result);
@@ -891,8 +907,8 @@ namespace micro_profiler
 				s2[2001];
 				s2[2004];
 				s2[2011];
-				ser(s1);
-				ser(s2);
+				serialize_single_threaded(ser, s1);
+				serialize_single_threaded(ser, s2);
 
 				dser(*fl1);
 				dser(*fl2);
@@ -919,8 +935,8 @@ namespace micro_profiler
 				s2[2001];
 				s2[2004];
 				s2[2011];
-				ser(s1);
-				ser(s2);
+				serialize_single_threaded(ser, s1);
+				serialize_single_threaded(ser, s2);
 
 				dser(*fl1);
 				dser(*fl2);
@@ -942,7 +958,7 @@ namespace micro_profiler
 
 				s[1973];
 				s[1990];
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				dser(*fl);
 
@@ -965,7 +981,7 @@ namespace micro_profiler
 				s[0x1995].callees[0x2004];
 				s[0x1995].callees[0x2008];
 				s[0x1995].callees[0x2011];
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				dser(*fl);
 				
@@ -994,8 +1010,8 @@ namespace micro_profiler
 				s2[0x1978].callees[0x2004] = function_statistics(17);
 				s2[0x1978].callees[0x2008] = function_statistics(18);
 				s2[0x1978].callees[0x2011] = function_statistics(29);
-				ser(s1);
-				ser(s2);
+				serialize_single_threaded(ser, s1);
+				serialize_single_threaded(ser, s2);
 
 				dser(*fl);
 				dser(*fl);
@@ -1031,7 +1047,7 @@ namespace micro_profiler
 
 				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
 				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				dser(*fl);
 				fl->set_order(1, true);
@@ -1054,9 +1070,9 @@ namespace micro_profiler
 
 				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
 				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
-				ser(s);
+				serialize_single_threaded(ser, s);
 				s[0x1978].callees.clear();
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				dser(*fl);
 
@@ -1085,7 +1101,7 @@ namespace micro_profiler
 
 				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
 				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				dser(*fl);
 
@@ -1117,8 +1133,8 @@ namespace micro_profiler
 				s1[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
 				s2[0x1978].callees[0x2004] = function_statistics(11, 0, 1, 7, 91);
 				s2[0x1978].callees[0x2007] = function_statistics(17, 5, 2, 8, 97);
-				ser(s1);
-				ser(s2);
+				serialize_single_threaded(ser, s1);
+				serialize_single_threaded(ser, s2);
 
 				dser(*fl);
 				_buffer.rewind();
@@ -1146,7 +1162,7 @@ namespace micro_profiler
 				statistics_map_detailed s3;
 
 				s3[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
-				ser(s3);
+				serialize_single_threaded(ser, s3);
 
 				// ACT
 				dser(*fl);
@@ -1167,7 +1183,7 @@ namespace micro_profiler
 				s[0x1978].callees[0x2004] = function_statistics(17);
 				s[0x1978].callees[0x2008] = function_statistics(18);
 				s[0x1978].callees[0x2011] = function_statistics(29);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				dser(*fl);
 				fl->set_order(1, true);
@@ -1193,7 +1209,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[0x2001]) = function_statistics(11);
 				static_cast<function_statistics &>(s[0x2004]) = function_statistics(17);
 				static_cast<function_statistics &>(s[0x2008]) = function_statistics(18);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				dser(*fl);
 
@@ -1216,11 +1232,11 @@ namespace micro_profiler
 
 				s1[0x1978];
 				s1[0x1995];
-				ser(s1);
+				serialize_single_threaded(ser, s1);
 				s2[0x2001];
 				s2[0x2004];
 				s2[0x2008];
-				ser(s2);
+				serialize_single_threaded(ser, s2);
 
 				dser(*fl1);
 				dser(*fl2);
@@ -1244,11 +1260,11 @@ namespace micro_profiler
 
 				s1[0x1978];
 				s1[0x1995];
-				ser(s1);
+				serialize_single_threaded(ser, s1);
 				s2[0x2001];
 				s2[0x2004];
 				s2[0x2008];
-				ser(s2);
+				serialize_single_threaded(ser, s2);
 
 				dser(*fl1);
 				dser(*fl2);
@@ -1272,7 +1288,7 @@ namespace micro_profiler
 				s[2995].callees[3001];
 				s[3001].callees[2995];
 				s[3001].callees[3001];
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				fl->set_order(1, true);
 
@@ -1300,8 +1316,8 @@ namespace micro_profiler
 				s1[2995].callees[2978];
 				s1[3001].callees[2978];
 				s2[3002].callees[2978];
-				ser(s1);
-				ser(s2);
+				serialize_single_threaded(ser, s1);
+				serialize_single_threaded(ser, s2);
 
 				fl->set_order(1, true);
 
@@ -1333,7 +1349,7 @@ namespace micro_profiler
 				s[0x2340].callees[0x3451] = function_statistics(5000000000);
 				static_cast<function_statistics &>(s[0x3451]) = function_statistics(5000000000);
 				s[0x3451].callees[0x122F] = function_statistics(1);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				fl->set_order(1, true);
 
@@ -1359,7 +1375,7 @@ namespace micro_profiler
 				s[0x2978].callees[0x3001] = function_statistics(3);
 				s[0x2995].callees[0x3001] = function_statistics(700);
 				s[0x3001].callees[0x3001] = function_statistics(30);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				fl->set_order(1, true);
 
@@ -1411,9 +1427,9 @@ namespace micro_profiler
 				s1[0x2978].callees[0x3001];
 				s1[0x2995].callees[0x3001];
 				s1[0x3001].callees[0x3001];
-				ser(s1);
+				serialize_single_threaded(ser, s1);
 				s2[0x3002].callees[0x3001];
-				ser(s2);
+				serialize_single_threaded(ser, s2);
 
 				fl->set_order(1, true);
 				dser(*fl);
@@ -1449,7 +1465,7 @@ namespace micro_profiler
 				s[0x2978].callees[0x3001] = function_statistics(3);
 				s[0x2995].callees[0x3001] = function_statistics(700);
 				s[0x3001].callees[0x3001] = function_statistics(30);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				fl->set_order(1, true);
 
@@ -1475,9 +1491,9 @@ namespace micro_profiler
 				s[0x2978].callees[0x3001] = function_statistics(3);
 				s[0x2995].callees[0x3001] = function_statistics(30);
 				s[0x3001].callees[0x3001] = function_statistics(50);
-				ser(s);
+				serialize_single_threaded(ser, s);
 				s.erase(0x3001);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				fl->set_order(1, true);
 
@@ -1511,7 +1527,7 @@ namespace micro_profiler
 				s[0x2978].callees[0x3001] = function_statistics(3);
 				s[0x2995].callees[0x3001] = function_statistics(30);
 				s[0x3001].callees[0x3001] = function_statistics(50);
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				fl->set_order(1, true);
 
@@ -1543,12 +1559,12 @@ namespace micro_profiler
 				timestamp_t ticks_per_second;
 
 				s[1], s[17];
-				ser(s);
+				serialize_single_threaded(ser, s);
 				dser(*fl1);
 
 				s.clear();
 				s[7], s[11], s[131], s[113];
-				ser(s);
+				serialize_single_threaded(ser, s);
 				dser(*fl2);
 
 				// ACT
@@ -1592,7 +1608,7 @@ namespace micro_profiler
 				timestamp_t ticks_per_second;
 
 				s[1], s[17], s[13];
-				ser(s);
+				serialize_single_threaded(ser, s);
 				dser(*fl);
 
 				// ACT
@@ -1621,9 +1637,7 @@ namespace micro_profiler
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 				s[5].inclusive_time = 1000, s[123].inclusive_time = 250;
 
-				ser(500);
-				ser(*mocks::symbol_resolver::create(symbols));
-				ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 
 				// ACT
 				shared_ptr<functions_list> fl = functions_list::load(dser);
@@ -1669,9 +1683,7 @@ namespace micro_profiler
 
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 
-				ser(500);
-				ser(*mocks::symbol_resolver::create(symbols));
-				ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
@@ -1707,9 +1719,7 @@ namespace micro_profiler
 
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 
-				ser(500);
-				ser(*mocks::symbol_resolver::create(symbols));
-				ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 				s.clear();
 
 				shared_ptr<functions_list> fl = functions_list::load(dser);
@@ -1718,7 +1728,7 @@ namespace micro_profiler
 				fl->set_order(2, false);
 
 				s[120].times_called = 11001;
-				ser(s);
+				serialize_single_threaded(ser, s);
 
 				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
 
@@ -1743,12 +1753,12 @@ namespace micro_profiler
 
 				s[5].exclusive_time = 13, s[17].exclusive_time = 127, s[13].exclusive_time = 12;
 
-				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
 				s[123].exclusive_time = 12000;
-				ser(100), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
@@ -1780,11 +1790,11 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl1 = functions_list::load(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
-				ser(1000), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 1000, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl2 = functions_list::load(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
@@ -1842,7 +1852,7 @@ namespace micro_profiler
 				s[5].exclusive_time = 16, s[17].exclusive_time = 0;
 				s[5].inclusive_time = 15, s[17].inclusive_time = 0;
 
-				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
@@ -1874,7 +1884,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
@@ -1909,7 +1919,7 @@ namespace micro_profiler
 				s[5].inclusive_time = 15, s[17].inclusive_time = 120;
 				s[5].max_call_time = 14, s[17].max_call_time = 128;
 
-				ser(500), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
@@ -1944,7 +1954,7 @@ namespace micro_profiler
 				s[17].callees[11].times_called = 101, s[17].callees[19].times_called = 103, s[17].callees[23].times_called = 1100;
 				s[17].callees[11].exclusive_time = 3, s[17].callees[19].exclusive_time = 112, s[17].callees[23].exclusive_time = 9;
 
-				ser(100), ser(*mocks::symbol_resolver::create(symbols)), ser(s);
+				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s);
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr<linked_statistics> ls;
 

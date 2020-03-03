@@ -18,16 +18,11 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "main.h"
+#pragma once
 
-using namespace std;
+#include <memory>
 
 namespace micro_profiler
 {
-	platform_initializer::platform_initializer(collector_app &app)
-		: _app(app)
-	{	}
-
-	platform_initializer::~platform_initializer()
-	{	}
+	std::shared_ptr<void> detour(void *target_function, void *where_to);
 }

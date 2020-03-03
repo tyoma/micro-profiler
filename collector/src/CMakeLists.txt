@@ -44,6 +44,7 @@ set(CALIBRATION_SOURCES
 
 set(COLLECTOR_SOURCES ${CALIBRATION_SOURCES}
 	calibration.cpp
+	detour.cpp
 	main.cpp
 )
 
@@ -72,11 +73,10 @@ add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES})
 
 target_link_libraries(${micro-profiler} collector.lib patcher ipc common)
 
-set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>: -fno-inline -finstrument-functions>")
-set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<CXX_COMPILER_ID:MSVC>:/Ob0 /GH /Gh /GL->")
-set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS $<$<CXX_COMPILER_ID:MSVC>:/DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def /IMPLIB:${MP_OUTDIR}/${micro-profiler}.lib>)
-
 if(MSVC)
+	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " /Ob0 /GH /Gh /GL- ")
+	set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS /DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def /IMPLIB:${MP_OUTDIR}/${micro-profiler}.lib)
+	
 	add_library(micro-profiler SHARED IMPORTED GLOBAL)
 	add_dependencies(micro-profiler ${micro-profiler})
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -91,5 +91,8 @@ if(MSVC)
 		COMMENT "Adding custom manifest containing default COM proxystubs..." 
 	)
 else()
+	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-inline -finstrument-functions ")
+	set_property(TARGET ${micro-profiler} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-znodelete -Wl,-zinterpose ")
+
 	add_library(micro-profiler ALIAS ${micro-profiler})
 endif()

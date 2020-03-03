@@ -20,56 +20,21 @@
 
 #include <crtdbg.h>
 
+#include "detour.h"
 #include "main.h"
 
 #include <collector/collector_app.h>
-
-#include <common/memory.h>
-#include <mt/atomic.h>
 #include <windows.h>
 
 using namespace std;
+
+extern micro_profiler::collector_app g_profiler_app;
 
 namespace micro_profiler
 {
 	namespace
 	{
-#pragma pack(push, 1)
-#ifdef _M_IX86
-		struct jmp
-		{
-			void init(const void *address_)
-			{
-				mov_opcode = 0xb8; // move eax, address
-				address = reinterpret_cast<size_t>(address_);
-				jmp_opcode[0] = 0xff, jmp_opcode[1] = 0xe0; // jmp [eax]
-			}
-
-			byte mov_opcode;
-			size_t address;
-			byte jmp_opcode[2];
-		};
-
-#elif _M_X64
-		struct jmp
-		{
-			void init(const void *address_)
-			{
-				mov_opcode[0] = 0x48, mov_opcode[1] = 0xb8; // move rax, address
-				address = reinterpret_cast<size_t>(address_);
-				jmp_opcode[0] = 0xff, jmp_opcode[1] = 0xe0; // jmp [rax]
-			}
-
-			byte mov_opcode[2];
-			size_t address;
-			byte jmp_opcode[2];
-		};
-
-#endif
-#pragma pack(pop)
-
-		byte g_backup[sizeof(jmp)];
-		collector_app *g_app = 0;
+		shared_ptr<void> *g_exit_process_detour = 0;
 
 		shared_ptr<void> get_exit_process()
 		{
@@ -79,26 +44,11 @@ namespace micro_profiler
 			return shared_ptr<void>(::GetProcAddress(hkernel, "ExitProcess"), bind(&::FreeLibrary, hkernel));
 		}
 
-		void detour(void *target_function, void *where, byte (&backup)[sizeof(jmp)])
-		{
-			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
-			mem_copy(backup, target_function, sizeof(jmp));
-			static_cast<jmp *>(target_function)->init(where);
-		}
-
-		void restore(byte (&backup)[sizeof(jmp)])
-		{
-			shared_ptr<void> exit_process = get_exit_process();
-			scoped_unprotect u(byte_range(static_cast<byte *>(exit_process.get()), sizeof(jmp)));
-
-			mem_copy(exit_process.get(), backup, sizeof(jmp));
-		}
-
 		void WINAPI ExitProcessHooked(UINT exit_code)
 		{
-			restore(g_backup);
-			if (g_app)
-				g_app->stop();
+			if (g_exit_process_detour)
+				g_exit_process_detour->reset();
+			g_profiler_app.stop();
 			::ExitProcess(exit_code);
 		}
 	}
@@ -106,18 +56,15 @@ namespace micro_profiler
 	platform_initializer::platform_initializer(collector_app &app)
 		: _app(app)
 	{
-		static mt::atomic<int> g_patch_lockcount(0);
+		HMODULE dummy;
 
-		if (0 == g_patch_lockcount.fetch_add(1))
-		{
-			HMODULE dummy;
+		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
+			reinterpret_cast<LPCTSTR>(&ExitProcessHooked), &dummy);
 
-			_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-			g_app = &_app;
-			::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
-				reinterpret_cast<LPCTSTR>(&ExitProcessHooked), &dummy);
-			detour(get_exit_process().get(), &ExitProcessHooked, g_backup);
-		}
+		static shared_ptr<void> exit_process_detour = detour(get_exit_process().get(), &ExitProcessHooked);
+
+		g_exit_process_detour = &exit_process_detour;
 	}
 
 	platform_initializer::~platform_initializer()

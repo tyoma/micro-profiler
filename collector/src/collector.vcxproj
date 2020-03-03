@@ -61,6 +61,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="detour.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -92,6 +93,7 @@
     <Manifest Include="com.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="detour.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

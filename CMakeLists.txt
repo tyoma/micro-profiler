@@ -20,6 +20,8 @@ endif()
 
 
 # Add definitions: global, platform-based, compiler-based
+set(AGGE_NO_TESTS 1)
+set(UTEE_NO_TESTS 1)
 if(UNIX)
 	set(MP_MT_GENERIC 1)
 	add_definitions(-DMP_MT_GENERIC)
@@ -27,12 +29,10 @@ if(UNIX)
 	add_definitions(-D_FILE_OFFSET_BITS=64) # Fixes problems 32-bit app on 64-bit Ubuntu
 endif()
 if (MSVC)
-	if (MSVC_VERSION LESS 1900)
-		add_definitions(-Dsnprintf=_snprintf)
-	endif()
-	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING -D_WINSOCK_DEPRECATED_NO_WARNINGS)
+	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 	add_definitions(-DUNICODE -D_UNICODE)
 endif()
+
 
 # Setup global compiler/linker settings
 set(GCC_CLANG_COMPILER_OPTIONS_C
@@ -47,8 +47,6 @@ set(MSVC_COMPILER_OPTIONS /MP /W4 /wd4503 /GR- /GS- /Gy-)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
 set(MSVC_COMPILER_OPTIONS_RELEASE_MAX /Ox /Ob2 /Oi /Ot /Oy)
-set(AGGE_NO_TESTS 1)
-set(UTEE_NO_TESTS 1)
 
 add_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:C>:${GCC_CLANG_COMPILER_OPTIONS_C}>>"
@@ -58,13 +56,15 @@ add_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:${MSVC_COMPILER_OPTIONS_RELEASE_MAX}>>"
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
-	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,-S -Wl,--no-undefined -Wl,--gc-sections")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-S ")
-	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -Wl,-S ")
-elseif(MSVC)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
+	add_link_options(
+		$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--gc-sections>>
+		$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,-S>>
+		$<$<CXX_COMPILER_ID:GNU>:-Wl,--no-undefined>
+	)
+endif()
+
+if(MSVC)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
 		add_compile_options(/arch:SSE2)
 	endif()
@@ -78,6 +78,7 @@ endif()
 if (UNIX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif()
+
 
 # Add subdirectories
 add_subdirectory(libraries/utee)

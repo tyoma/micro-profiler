@@ -36,28 +36,11 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <typename KeyT, typename ValueT> struct is_container< std::map<KeyT, ValueT> > { static const bool value = true; };
 	template <> struct is_container<micro_profiler::functions_list> { static const bool value = true; };
-
-	template <typename KeyT, typename ValueT>
-	struct container_reader< std::map<KeyT, ValueT> >
-	{
-		template <typename ArchiveT>
-		void operator()(ArchiveT &archive, size_t count, std::map<KeyT, ValueT> &data)
-		{
-			std::pair<KeyT, ValueT> value;
-
-			data.clear();
-			while (count--)
-			{
-				archive(value);
-				data.insert(value);
-			}
-		}
-	};
+	template <> struct is_associative<micro_profiler::functions_list, true> { static const bool value = true; };
 
 	template <>
-	struct container_reader<micro_profiler::functions_list>
+	struct container_reader<micro_profiler::functions_list, true>
 	{
 		template <typename ArchiveT>
 		void operator()(ArchiveT &archive, size_t count, micro_profiler::functions_list &data)

@@ -28,7 +28,7 @@
 
 namespace strmd
 {
-	template <typename T>
+	template <typename, bool>
 	struct container_reader;
 }
 
@@ -87,7 +87,7 @@ namespace micro_profiler
 		std::shared_ptr<symbol_resolver> _resolver;
 
 	private:
-		template <typename T>
+		template <typename, bool>
 		friend struct strmd::container_reader;
 	};
 

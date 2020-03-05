@@ -35,10 +35,6 @@ namespace micro_profiler
 				vector< pair< unsigned, vector<call_record> > > collected;
 			};
 
-			bool call_trace_less(const pair< unsigned, vector<call_record> > &lhs,
-				const pair< unsigned, vector<call_record> > &rhs)
-			{	return lhs.first < rhs.first;	}
-
 			void emulate_n_calls(calls_collector &collector, size_t calls_number, void *callee)
 			{
 				virtual_stack vstack;

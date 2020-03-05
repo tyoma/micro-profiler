@@ -29,11 +29,12 @@ namespace micro_profiler
 	struct function_statistics;
 	template <typename KeyT> struct function_statistics_detailed_t;
 
-	struct address_compare
+	struct address_hash
 	{
 		size_t operator ()(unsigned int key) const throw();
 		size_t operator ()(long_address_t key) const throw();
 		size_t operator ()(const void *key) const throw();
+		template <typename T1, typename T2> size_t operator ()(const std::pair<T1, T2> &key) const throw();
 	};
 
 	template <typename KeyT>
@@ -42,9 +43,9 @@ namespace micro_profiler
 		typedef function_statistics function;
 		typedef function_statistics_detailed_t<KeyT> function_detailed;
 
-		typedef std::unordered_map<KeyT, function_detailed, address_compare> map_detailed;
-		typedef std::unordered_map<KeyT, function, address_compare> map;
-		typedef std::unordered_map<KeyT, count_t, address_compare> map_callers;
+		typedef std::unordered_map<KeyT, function_detailed, address_hash> map_detailed;
+		typedef std::unordered_map<KeyT, function, address_hash> map;
+		typedef std::unordered_map<KeyT, count_t, address_hash> map_callers;
 	};
 
 	struct function_statistics
@@ -72,22 +73,23 @@ namespace micro_profiler
 
 
 
-	// address_compare - inline definitions
-	inline size_t address_compare::operator ()(unsigned int key) const throw()
-	{	return (key >> 4) * 2654435761;	}
+	// address_hash - inline definitions
+	inline size_t address_hash::operator ()(unsigned int key) const throw()
+	{	return key * 0x9e3779b9u;	}
 
-	inline size_t address_compare::operator ()(long_address_t key) const throw()
-	{	return static_cast<size_t>((key >> 4) * 0x7FFFFFFFFFFFFFFF);	}
+	inline size_t address_hash::operator ()(long_address_t key) const throw()
+	{	return static_cast<size_t>(key * 0x7FFFFFFFFFFFFFFFull);	}
 
-	inline size_t address_compare::operator ()(const void *key) const throw()
+	inline size_t address_hash::operator ()(const void *key) const throw()
+	{	return (*this)(reinterpret_cast<size_t>(key));	}
+
+	template <typename T1, typename T2>
+	inline size_t address_hash::operator ()(const std::pair<T1, T2> &key) const throw()
 	{
-#pragma warning(push)
-#pragma warning(disable:4127)
-		if (sizeof(key) == 8)
-			return (*this)(static_cast<long_address_t>(reinterpret_cast<size_t>(key)));
-		else
-			return (*this)(static_cast<unsigned int>(reinterpret_cast<size_t>(key)));
-#pragma warning(pop)
+		size_t seed = (*this)(key.first);
+
+		seed ^= (*this)(key.second) + 0x9e3779b9u + (seed << 6) + (seed >> 2);
+		return seed;
 	}
 
 

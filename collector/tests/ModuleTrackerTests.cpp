@@ -31,8 +31,6 @@ namespace micro_profiler
 				});
 				return symbol;
 			}
-
-			int dummy;
 		}
 
 		begin_test_suite( ModuleTrackerTests )

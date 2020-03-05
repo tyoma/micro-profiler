@@ -31,7 +31,7 @@
 namespace strmd
 {
 	template <typename KeyT, typename T>
-	struct container_reader<std::unordered_map<KeyT, T, micro_profiler::address_compare>, true>
+	struct container_reader<std::unordered_map<KeyT, T, micro_profiler::address_hash>, true>
 	{
 		template <typename ArchiveT, typename ContainerT>
 		void operator()(ArchiveT &archive, size_t count, ContainerT &data)

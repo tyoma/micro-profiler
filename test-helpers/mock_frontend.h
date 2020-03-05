@@ -13,9 +13,8 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			typedef function_statistics_detailed_t<unsigned int> function_statistics_detailed;
-			typedef statistics_map_detailed_t<unsigned int> statistics_map_detailed;
-			typedef std::unordered_map<unsigned /*threadid*/, statistics_map_detailed> thread_statistics_map;
+			typedef std::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed>
+				thread_statistics_map;
 
 			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>
 			{

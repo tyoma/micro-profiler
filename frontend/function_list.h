@@ -47,7 +47,7 @@ namespace micro_profiler
 		virtual void set_resolver(const std::shared_ptr<symbol_resolver> &resolver) = 0;
 	};
 
-	class functions_list : public statistics_model_impl<wpl::ui::table_model, statistics_map_detailed>
+	class functions_list : public statistics_model_impl<wpl::ui::table_model, statistic_types::map_detailed>
 	{
 	public:
 		virtual ~functions_list();
@@ -71,17 +71,17 @@ namespace micro_profiler
 		bool updates_enabled;
 
 	private:
-		typedef statistics_model_impl<wpl::ui::table_model, statistics_map_detailed> base;
+		typedef statistics_model_impl<wpl::ui::table_model, statistic_types::map_detailed> base;
 		typedef std::list<linked_statistics_ex *> linked_statistics_list_t;
 
 	private:
-		functions_list(std::shared_ptr<statistics_map_detailed> statistics, double tick_interval,
+		functions_list(std::shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
 			std::shared_ptr<symbol_resolver> resolver);
 
 		void on_updated();
 
 	private:
-		std::shared_ptr<statistics_map_detailed> _statistics;
+		std::shared_ptr<statistic_types::map_detailed> _statistics;
 		std::shared_ptr<linked_statistics_list_t> _linked;
 		double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;

@@ -16,11 +16,11 @@ namespace micro_profiler
 		}
 
 		template <typename AddressT>
-		std::pair< AddressT, function_statistics_detailed_t<AddressT> > make_statistics(AddressT address,
+		std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > make_statistics(AddressT address,
 			count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time,
 			timestamp_t max_call_time)
 		{
-			std::pair< AddressT, function_statistics_detailed_t<AddressT> > result;
+			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result;
 
 			result.first = address;
 			static_cast<function_statistics &>(result.second) = function_statistics(times_called, max_reentrance,
@@ -29,11 +29,11 @@ namespace micro_profiler
 		}
 
 		template <typename AddressT>
-		std::pair< AddressT, function_statistics_detailed_t<AddressT> > make_statistics(AddressT address,
+		std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > make_statistics(AddressT address,
 			count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time,
 			timestamp_t max_call_time, const std::pair<AddressT, function_statistics> &callee1)
 		{
-			std::pair< AddressT, function_statistics_detailed_t<AddressT> > result = make_statistics(address, times_called,
+			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result = make_statistics(address, times_called,
 				max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
 			result.second.callees.insert(callee1);
@@ -41,12 +41,12 @@ namespace micro_profiler
 		}
 
 		template <typename AddressT>
-		std::pair< AddressT, function_statistics_detailed_t<AddressT> > make_statistics(AddressT address,
+		std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > make_statistics(AddressT address,
 			count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time,
 			timestamp_t max_call_time, const std::pair<AddressT, function_statistics> &callee1,
 			const std::pair<AddressT, function_statistics> &callee2)
 		{
-			std::pair< AddressT, function_statistics_detailed_t<AddressT> > result = make_statistics(address, times_called,
+			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result = make_statistics(address, times_called,
 				max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
 			result.second.callees.insert(callee1);
@@ -55,13 +55,13 @@ namespace micro_profiler
 		}
 
 		template <typename AddressT>
-		std::pair< AddressT, function_statistics_detailed_t<AddressT> > make_statistics(AddressT address,
+		std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > make_statistics(AddressT address,
 			count_t times_called, unsigned int max_reentrance, timestamp_t inclusive_time, timestamp_t exclusive_time,
 			timestamp_t max_call_time, const std::pair<AddressT, function_statistics> &callee1,
 			const std::pair<AddressT, function_statistics> &callee2,
 			const std::pair<AddressT, function_statistics> &callee3)
 		{
-			std::pair< AddressT, function_statistics_detailed_t<AddressT> > result = make_statistics(address, times_called,
+			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result = make_statistics(address, times_called,
 				max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
 			result.second.callees.insert(callee1);

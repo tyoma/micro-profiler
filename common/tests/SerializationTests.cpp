@@ -25,8 +25,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
-			typedef function_statistics_detailed_t<const void *>::callees_map statistics_map;
+			typedef statistic_types_t<const void *> statistic_types;
 		}
 
 		begin_test_suite( SerializationTests )
@@ -60,8 +59,8 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistics_map s1, s2;
-				statistics_map ds1, ds2;
+				statistic_types::map s1, s2;
+				statistic_types::map ds1, ds2;
 
 				s1[(void *)123441] = function_statistics(17, 2012, 123123123, 32123, 2213);
 				s1[(void *)71341] = function_statistics(1117, 212, 1231123, 3213, 112213);
@@ -91,7 +90,7 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistics_map s1, s2;
+				statistic_types::map s1, s2;
 
 				s1[(void *)123441] = function_statistics(17, 2012, 123123123, 32123, 2213);
 				s1[(void *)7741] = function_statistics(1117, 212, 1231123, 3213, 112213);
@@ -107,7 +106,7 @@ namespace micro_profiler
 				ds(s2);
 
 				// ASSERT
-				statistics_map reference1;
+				statistic_types::map reference1;
 
 				reference1[(void *)141] = function_statistics(17, 12012, 11293123, 132123, 12213);
 				reference1[(void *)7341] = function_statistics(21117, 2212, 21231123, 23213, 2112213);
@@ -120,7 +119,7 @@ namespace micro_profiler
 				ds(s2);
 
 				// ASSERT
-				statistics_map reference2;
+				statistic_types::map reference2;
 
 				reference2[(void *)141] = function_statistics(2 * 17, 12012, 2 * 11293123, 2 * 132123, 12213);
 				reference2[(void *)7341] = function_statistics(2 * 21117, 2212, 2 * 21231123, 2 * 23213, 2112213);
@@ -136,7 +135,7 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				function_statistics_detailed s1;
+				statistic_types::function_detailed s1;
 
 				static_cast<function_statistics &>(s1) = function_statistics(17, 2012, 123123123, 32123, 2213);
 				s1.callees[(void *)7741] = function_statistics(1117, 212, 1231123, 3213, 112213);
@@ -150,7 +149,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				function_statistics_detailed ds1;
+				statistic_types::function_detailed ds1;
 				vector< pair<const void *, function_statistics> > callees;
 				vector< pair<const void *, count_t> > callers;
 
@@ -173,7 +172,7 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistics_map_detailed ss, addition;
+				statistic_types::map_detailed ss, addition;
 
 				static_cast<function_statistics &>(ss[(void *)1221]) = function_statistics(17, 2012, 123123123, 32124, 2213);
 				static_cast<function_statistics &>(ss[(void *)1231]) = function_statistics(18, 2011, 123123122, 32125, 2211);
@@ -188,15 +187,15 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// INIT
-				statistics_map_detailed dss;
+				statistic_types::map_detailed dss;
 
-				static_cast<statistics_map_detailed &>(dss) = ss;
+				static_cast<statistic_types::map_detailed &>(dss) = ss;
 
 				// ACT
 				ds(dss);
 
 				// ASSERT
-				statistics_map_detailed reference;
+				statistic_types::map_detailed reference;
 
 				static_cast<function_statistics &>(reference[(void *)1221]) = function_statistics(17, 2012, 123123123, 32124, 2213);
 				static_cast<function_statistics &>(reference[(void *)1231]) = function_statistics(18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211);
@@ -212,7 +211,7 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistics_map_detailed ss, addition;
+				statistic_types::map_detailed ss, addition;
 
 				ss[(void *)1221].callees[(void *)1221] = function_statistics(17, 2012, 123123123, 32124, 2213);
 				ss[(void *)1221].callees[(void *)1231] = function_statistics(18, 2011, 123123122, 32125, 2211);
@@ -227,15 +226,15 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
 
 				// INIT
-				statistics_map_detailed dss;
+				statistic_types::map_detailed dss;
 
-				static_cast<statistics_map_detailed &>(dss) = ss;
+				static_cast<statistic_types::map_detailed &>(dss) = ss;
 
 				// ACT
 				ds(dss);
 
 				// ASSERT
-				statistics_map reference;
+				statistic_types::map reference;
 
 				reference[(void *)1221] = function_statistics(17, 2012, 123123123, 32124, 2213);
 				reference[(void *)1231] = function_statistics(18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211);
@@ -251,8 +250,8 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistics_map_detailed ss;
-				statistics_map_detailed dss;
+				statistic_types::map_detailed ss;
+				statistic_types::map_detailed dss;
 
 				ss[(void *)1221].callees[(void *)1221] = function_statistics(17, 0, 0, 0, 0);
 				ss[(void *)1221].callees[(void *)1231] = function_statistics(18, 0, 0, 0, 0);

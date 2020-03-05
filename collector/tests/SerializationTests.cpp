@@ -21,8 +21,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef function_statistics_detailed_t<unsigned> function_statistics_detailed;
-			typedef pair<unsigned, function_statistics_detailed> addressed_statistics;
+			typedef statistic_types_t<unsigned> statistic_types;
+			typedef pair<unsigned, statistic_types::function_detailed> addressed_statistics;
 		}
 
 		begin_test_suite( SerializationTests )
@@ -46,7 +46,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				unordered_map< unsigned /*threadid*/, statistics_map_detailed_t<unsigned> > ss;
+				unordered_map<unsigned /*threadid*/, statistic_types::map_detailed> ss;
 
 				// ACT
 				ds(ss);
@@ -88,7 +88,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				unordered_map< unsigned, statistics_map_detailed_t<unsigned> > ss;
+				unordered_map<unsigned, statistic_types::map_detailed> ss;
 
 				// ACT
 				ds(ss);

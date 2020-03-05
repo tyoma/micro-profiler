@@ -24,5 +24,5 @@
 
 namespace micro_profiler
 {
-	typedef statistics_map_detailed_t<const void *> statistics_map_detailed;
+	typedef statistic_types_t<const void *> statistic_types;
 }

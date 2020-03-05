@@ -23,8 +23,6 @@
 #include <atlbase.h>
 #include <atlcom.h>
 
-using namespace std;
-
 namespace micro_profiler
 {
 	namespace ipc
@@ -43,7 +41,7 @@ namespace micro_profiler
 				void FinalRelease();
 
 			public:
-				shared_ptr<ipc::channel> inbound;
+				std::shared_ptr<ipc::channel> inbound;
 
 			private:
 				// ISequentialStream methods
@@ -78,7 +76,7 @@ namespace micro_profiler
 				STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);
 
 			private:
-				shared_ptr<ipc::server> _session_factory;
+				std::shared_ptr<ipc::server> _session_factory;
 			};
 		}
 	}

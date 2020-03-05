@@ -30,7 +30,7 @@ namespace micro_profiler
 	struct thread_statistics_proxy
 	{
 		unsigned int thread_id;
-		statistics_map_detailed *statistics;
+		statistic_types::map_detailed *statistics;
 	};
 }
 
@@ -45,7 +45,7 @@ namespace strmd
 		template <typename ArchiveT>
 		void operator()(ArchiveT &archive, size_t count, micro_profiler::functions_list &data)
 		{
-			thread_statistics_proxy proxy = { 0, data._statistics.get() };
+			micro_profiler::thread_statistics_proxy proxy = { 0, data._statistics.get() };
 
 			if (!data.updates_enabled)
 				return;

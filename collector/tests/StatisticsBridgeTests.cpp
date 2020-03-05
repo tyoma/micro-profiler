@@ -24,8 +24,7 @@ namespace micro_profiler
 		{
 			const overhead c_overhead(17, 0);
 
-			typedef function_statistics_detailed_t<unsigned> function_statistics_detailed;
-			typedef pair<unsigned, function_statistics_detailed> addressed_statistics;
+			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
 
 			template <typename ContainerT>
 			const symbol_info *get_symbol_by_name(const ContainerT &symbols, const char *name)

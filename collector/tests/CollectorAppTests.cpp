@@ -25,8 +25,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef function_statistics_detailed_t<unsigned> function_statistics_detailed;
-			typedef pair<unsigned, function_statistics_detailed> addressed_statistics;
+			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
 
 			const overhead c_overhead(0, 0);
 		}

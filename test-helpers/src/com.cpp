@@ -2,6 +2,8 @@
 
 #include <ipc/com/endpoint.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
 	namespace ipc

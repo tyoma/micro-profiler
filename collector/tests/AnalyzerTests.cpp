@@ -16,8 +16,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
-			typedef std::pair<const void *, function_statistics_detailed> addressed_statistics;
+			typedef std::pair<const void *, statistic_types_t<const void *>::function_detailed> addressed_statistics;
 			typedef std::pair< mt::thread::id, vector<addressed_statistics> > threaded_statistics;
 		}
 

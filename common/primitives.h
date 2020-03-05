@@ -26,6 +26,9 @@
 
 namespace micro_profiler
 {
+	struct function_statistics;
+	template <typename KeyT> struct function_statistics_detailed_t;
+
 	struct address_compare
 	{
 		size_t operator ()(unsigned int key) const throw();
@@ -33,9 +36,21 @@ namespace micro_profiler
 		size_t operator ()(const void *key) const throw();
 	};
 
+	template <typename KeyT>
+	struct statistic_types_t
+	{
+		typedef function_statistics function;
+		typedef function_statistics_detailed_t<KeyT> function_detailed;
+
+		typedef std::unordered_map<KeyT, function_detailed, address_compare> map_detailed;
+		typedef std::unordered_map<KeyT, function, address_compare> map;
+		typedef std::unordered_map<KeyT, count_t, address_compare> map_callers;
+	};
+
 	struct function_statistics
 	{
-		explicit function_statistics(count_t times_called = 0, unsigned int max_reentrance = 0, timestamp_t inclusive_time = 0, timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0);
+		explicit function_statistics(count_t times_called = 0, unsigned int max_reentrance = 0,
+			timestamp_t inclusive_time = 0, timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0);
 
 		void add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time);
 
@@ -51,16 +66,8 @@ namespace micro_profiler
 	template <typename AddressT>
 	struct function_statistics_detailed_t : function_statistics
 	{
-		typedef std::unordered_map<AddressT, function_statistics, address_compare> callees_map;
-		typedef std::unordered_map<AddressT, count_t, address_compare> callers_map;
-
-		callees_map callees;
-		callers_map callers;
-	};
-
-	template <typename AddressT>
-	struct statistics_map_detailed_t : std::unordered_map<AddressT, function_statistics_detailed_t<AddressT>, address_compare>
-	{
+		typename statistic_types_t<AddressT>::map callees;
+		typename statistic_types_t<AddressT>::map_callers callers;
 	};
 
 
@@ -85,11 +92,14 @@ namespace micro_profiler
 
 
 	// function_statistics - inline definitions
-	inline function_statistics::function_statistics(count_t times_called_, unsigned int max_reentrance_, timestamp_t inclusive_time_, timestamp_t exclusive_time_, timestamp_t max_call_time_)
-		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_), max_call_time(max_call_time_)
+	inline function_statistics::function_statistics(count_t times_called_, unsigned int max_reentrance_,
+			timestamp_t inclusive_time_, timestamp_t exclusive_time_, timestamp_t max_call_time_)
+		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_),
+			exclusive_time(exclusive_time_), max_call_time(max_call_time_)
 	{	}
 
-	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time_, timestamp_t exclusive_time_)
+	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time_,
+		timestamp_t exclusive_time_)
 	{
 		++times_called;
 		if (level > max_reentrance)
@@ -115,13 +125,14 @@ namespace micro_profiler
 
 	// helper methods - inline definitions
 	template <typename AddressT>
-	inline void add_child_statistics(function_statistics_detailed_t<AddressT> &s, AddressT function, unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time)
+	inline void add_child_statistics(function_statistics_detailed_t<AddressT> &s, AddressT function, unsigned int level,
+		timestamp_t inclusive_time, timestamp_t exclusive_time)
 	{	s.callees[function].add_call(level, inclusive_time, exclusive_time);	}
 
-	template <typename AddressT, typename AddressCompareT>
-	inline void update_parent_statistics(std::unordered_map<AddressT, function_statistics_detailed_t<AddressT>, AddressCompareT> &s, AddressT address, const function_statistics_detailed_t<AddressT> &f)
+	template <typename DetailedMapT, typename AddressT, typename ChildrenMapT>
+	inline void update_parent_statistics(DetailedMapT &s, AddressT key, const ChildrenMapT &callees)
 	{
-		for (typename function_statistics_detailed_t<AddressT>::callees_map::const_iterator i = f.callees.begin(); i != f.callees.end(); ++i)
-			s[i->first].callers[address] = i->second.times_called;
+		for (typename ChildrenMapT::const_iterator i = callees.begin(), end = callees.end(); i != end; ++i)
+			s[i->first].callers[key] = i->second.times_called;
 	}
 }

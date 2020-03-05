@@ -213,12 +213,12 @@ namespace micro_profiler
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data1[] = {
-					make_pair(1321222, function_statistics_detailed_t<unsigned>()),
-					make_pair(1321221, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data1[] = {
+					make_pair(1321222, statistic_types::function_detailed()),
+					make_pair(1321221, statistic_types::function_detailed()),
 				};
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data2[] = {
-					make_pair(13, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data2[] = {
+					make_pair(13, statistic_types::function_detailed()),
 				};
 
 				write(*c, init, make_initialization_data("", 11));
@@ -270,8 +270,8 @@ namespace micro_profiler
 					_1, _2));
 				shared_ptr<ipc::channel> c1 = m->create_session(outbound);
 				shared_ptr<ipc::channel> c2 = m->create_session(outbound);
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data[] = {
-					make_pair(1321222, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data[] = {
+					make_pair(1321222, statistic_types::function_detailed()),
 				};
 
 				data[0].second.inclusive_time = 150;
@@ -305,13 +305,13 @@ namespace micro_profiler
 				mapped_module_identified basic1[] = { create_mapping(1u, 0x10000), };
 				mapped_module_identified basic2[] = { create_mapping(2u, 0x100000), };
 				module_info_metadata metadata[] = { { mkvector(symbols1), }, { mkvector(symbols2), }, };
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data1[] = {
-					make_pair(0x10100, function_statistics_detailed_t<unsigned>()),
-					make_pair(0x11100, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data1[] = {
+					make_pair(0x10100, statistic_types::function_detailed()),
+					make_pair(0x11100, statistic_types::function_detailed()),
 				};
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data2[] = {
-					make_pair(0x10200, function_statistics_detailed_t<unsigned>()),
-					make_pair(0x102000, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data2[] = {
+					make_pair(0x10200, statistic_types::function_detailed()),
+					make_pair(0x102000, statistic_types::function_detailed()),
 				};
 
 				write(*c, init, make_initialization_data("", 10));
@@ -853,9 +853,9 @@ namespace micro_profiler
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data[] = {
-					make_pair(1321222, function_statistics_detailed_t<unsigned>()),
-					make_pair(1321221, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data[] = {
+					make_pair(1321222, statistic_types::function_detailed()),
+					make_pair(1321221, statistic_types::function_detailed()),
 				};
 
 				// ACT / ASSERT (must not crash)
@@ -900,11 +900,11 @@ namespace micro_profiler
 				mapped_module_identified mi[] = {
 					create_mapping(17u, 0u), create_mapping(99u, 0x1000), create_mapping(1000u, 0x1900),
 				};
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data[] = {
-					make_pair(0x0100, function_statistics_detailed_t<unsigned>()),
-					make_pair(0x1001, function_statistics_detailed_t<unsigned>()),
-					make_pair(0x1100, function_statistics_detailed_t<unsigned>()),
-					make_pair(0x1910, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data[] = {
+					make_pair(0x0100, statistic_types::function_detailed()),
+					make_pair(0x1001, statistic_types::function_detailed()),
+					make_pair(0x1100, statistic_types::function_detailed()),
+					make_pair(0x1910, statistic_types::function_detailed()),
 				};
 				wstring text;
 
@@ -947,8 +947,8 @@ namespace micro_profiler
 				mapped_module_identified mi[] = {
 					create_mapping(17u, 0u),
 				};
-				pair< unsigned, function_statistics_detailed_t<unsigned> > data[] = {
-					make_pair(0x0100, function_statistics_detailed_t<unsigned>()),
+				pair< unsigned, statistic_types::function_detailed > data[] = {
+					make_pair(0x0100, statistic_types::function_detailed()),
 				};
 				wstring text;
 

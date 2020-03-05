@@ -30,36 +30,25 @@
 
 namespace strmd
 {
-	using namespace micro_profiler;
-	using namespace std;
-
-	template <typename AddressT> struct is_container< statistics_map_detailed_t<AddressT> > { static const bool value = true; };
-	template <typename AddressT> struct is_associative<statistics_map_detailed_t<AddressT>, true> { static const bool value = true; };
-
-	template <typename KeyT, typename T> struct container_reader<unordered_map<KeyT, T, address_compare>, true>
+	template <typename KeyT, typename T>
+	struct container_reader<std::unordered_map<KeyT, T, micro_profiler::address_compare>, true>
 	{
-		typedef unordered_map<KeyT, T, address_compare> data_t;
-
-		template <typename ArchiveT>
-		void operator()(ArchiveT &archive, size_t count, data_t &data)
+		template <typename ArchiveT, typename ContainerT>
+		void operator()(ArchiveT &archive, size_t count, ContainerT &data)
 		{
-			typename remove_const<typename data_t::key_type>::type key;
+			typename ContainerT::key_type key;
 
 			while (count--)
 			{
 				archive(key);
-				serialize_append_statistics(archive, data, key, data[key]);
+				deserialize_statistics(archive, data, key, data[key]);
 			}
 		}
 	};
 
-	template <typename AddressT> struct container_reader<statistics_map_detailed_t<AddressT>, true>
-		: container_reader<unordered_map<AddressT, function_statistics_detailed_t<AddressT>, address_compare>, true>
-	{	};
-
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, const void *&data)
-	{	archive(reinterpret_cast<uintptr_t &>(data));	}
+	{	archive(reinterpret_cast<size_t &>(data));	}
 }
 
 namespace micro_profiler
@@ -93,7 +82,7 @@ namespace micro_profiler
 
 
 	template <typename ArchiveT, typename ContainerT, typename AddressT>
-	inline void serialize_append_statistics(ArchiveT &archive, ContainerT &/*container*/, AddressT /*key*/,
+	inline void deserialize_statistics(ArchiveT &archive, ContainerT &/*container*/, AddressT /*key*/,
 		function_statistics &data)
 	{
 		function_statistics v;
@@ -103,12 +92,12 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename ContainerT, typename AddressT>
-	inline void serialize_append_statistics(ArchiveT &archive, ContainerT &container, AddressT key,
+	inline void deserialize_statistics(ArchiveT &archive, ContainerT &container, AddressT key,
 		function_statistics_detailed_t<AddressT> &data)
 	{
-		serialize_append_statistics(archive, container, key, static_cast<function_statistics &>(data));
+		deserialize_statistics(archive, container, key, static_cast<function_statistics &>(data));
 		archive(data.callees);
-		update_parent_statistics(container, key, data);
+		update_parent_statistics(container, key, data.callees);
 	}
 
 	template <typename ArchiveT>

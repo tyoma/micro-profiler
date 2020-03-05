@@ -11,8 +11,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
-			typedef unordered_map<const void *, function_statistics_detailed> statistics_map_detailed;
+			typedef statistic_types_t<const void *> statistic_types;
 		}
 
 		begin_test_suite( PrimitivesTests )
@@ -150,7 +149,7 @@ namespace micro_profiler
 			test( DetailedStatisticsAddChildCallFollowsAddCallRules )
 			{
 				// INIT
-				function_statistics_detailed s1, s2;
+				statistic_types::function_detailed s1, s2;
 
 				// ACT
 				add_child_statistics(s1, (const void *)1, 0, 1, 3);
@@ -201,8 +200,8 @@ namespace micro_profiler
 			test( AddingParentCallsAddsNewStatisticsForParentFunctions )
 			{
 				// INIT
-				statistics_map_detailed m1, m2;
-				function_statistics_detailed f1, f2;
+				statistic_types::map_detailed m1, m2;
+				statistic_types::function_detailed f1, f2;
 
 				f1.callees[(const void *)0x0011] = function_statistics(10);
 				f1.callees[(const void *)0x0013] = function_statistics(11);
@@ -212,8 +211,8 @@ namespace micro_profiler
 				f2.callees[(const void *)0x0027] = function_statistics(0x1000000000);
 
 				// ACT
-				update_parent_statistics(m1, (const void *)0x7011, f1);
-				update_parent_statistics(m2, (const void *)0x5011, f2);
+				update_parent_statistics(m1, (const void *)0x7011, f1.callees);
+				update_parent_statistics(m2, (const void *)0x5011, f2.callees);
 
 				// ASSERT
 				assert_equal(2u, m1.size());
@@ -235,8 +234,8 @@ namespace micro_profiler
 			test( AddingParentCallsUpdatesExistingStatisticsForParentFunctions )
 			{
 				// INIT
-				statistics_map_detailed m;
-				function_statistics_detailed f;
+				statistic_types::map_detailed m;
+				statistic_types::function_detailed f;
 
 				(function_statistics &)m[(const void *)0x0021] = function_statistics(10, 0, 17, 11, 30);
 				m[(const void *)0x0021].callers[(const void *)0x0191] = 123;
@@ -248,7 +247,7 @@ namespace micro_profiler
 				f.callees[(const void *)0x0027] = function_statistics(0x1000000000);
 
 				// ACT
-				update_parent_statistics(m, (const void *)0x0191, f);
+				update_parent_statistics(m, (const void *)0x0191, f.callees);
 
 				// ASSERT
 				assert_equal(3u, m.size());

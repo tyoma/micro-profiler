@@ -19,8 +19,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef function_statistics_detailed_t<const void *> function_statistics_detailed;
-			typedef function_statistics_detailed::callees_map statistics_map;
+			typedef statistic_types_t<const void *> statistic_types;
 
 			struct function_statistics_guarded : function_statistics
 			{
@@ -591,8 +590,8 @@ namespace micro_profiler
 			test( DirectChildrenStatisticsIsAddedToParentNoRecursion )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics_detailed> > ss(overhead(0, 0)), ss_delayed(overhead(1, 0));
-				map<const void *, function_statistics_detailed> statistics, statistics_delayed;
+				shadow_stack< map<const void *, statistic_types::function_detailed> > ss(overhead(0, 0)), ss_delayed(overhead(1, 0));
+				map<const void *, statistic_types::function_detailed> statistics, statistics_delayed;
 				call_record trace[] = {
 					{	1, (void *)1	},
 						{	2, (void *)101	},
@@ -634,12 +633,12 @@ namespace micro_profiler
 				assert_is_empty(statistics_delayed[(void *)302].callees);
 				assert_is_empty(statistics_delayed[(void *)303].callees);
 				
-				statistics_map &cs1 = statistics[(void *)1].callees;
-				statistics_map &cs2 = statistics[(void *)2].callees;
-				statistics_map &cs3 = statistics[(void *)3].callees;
-				statistics_map &cs1_d = statistics_delayed[(void *)1].callees;
-				statistics_map &cs2_d = statistics_delayed[(void *)2].callees;
-				statistics_map &cs3_d = statistics_delayed[(void *)3].callees;
+				statistic_types::map &cs1 = statistics[(void *)1].callees;
+				statistic_types::map &cs2 = statistics[(void *)2].callees;
+				statistic_types::map &cs3 = statistics[(void *)3].callees;
+				statistic_types::map &cs1_d = statistics_delayed[(void *)1].callees;
+				statistic_types::map &cs2_d = statistics_delayed[(void *)2].callees;
+				statistic_types::map &cs3_d = statistics_delayed[(void *)3].callees;
 
 				assert_equal(1u, cs1.size());
 				assert_equal(1u, cs1[(void *)101].times_called);
@@ -718,8 +717,8 @@ namespace micro_profiler
 			test( DirectChildrenStatisticsIsAddedToParentNoRecursionWithNesting )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics_detailed> > ss(overhead(0, 0));
-				map<const void *, function_statistics_detailed> statistics;
+				shadow_stack< map<const void *, statistic_types::function_detailed> > ss(overhead(0, 0));
+				map<const void *, statistic_types::function_detailed> statistics;
 				call_record trace[] = {
 					{	1, (void *)1	},
 						{	2, (void *)101	},
@@ -747,7 +746,7 @@ namespace micro_profiler
 				assert_equal(0u, statistics[(void *)10202].callees.size());
 
 
-				statistics_map &cs = statistics[(void *)1].callees;
+				statistic_types::map &cs = statistics[(void *)1].callees;
 
 				assert_equal(5, cs[(void *)101].inclusive_time);
 				assert_equal(3, cs[(void *)101].exclusive_time);
@@ -761,8 +760,8 @@ namespace micro_profiler
 			test( PopulateChildrenStatisticsForSpecificParents )
 			{
 				// INIT
-				shadow_stack< map<const void *, function_statistics_detailed> > ss(overhead(0, 0));
-				map<const void *, function_statistics_detailed> statistics;
+				shadow_stack< map<const void *, statistic_types::function_detailed> > ss(overhead(0, 0));
+				map<const void *, statistic_types::function_detailed> statistics;
 				call_record trace[] = {
 					{	1, (void *)0x1	},
 						{	2, (void *)0x2	},
@@ -794,10 +793,10 @@ namespace micro_profiler
 				ss.update(trace, array_end(trace), statistics);
 
 				// ASSERT
-				statistics_map &cs1 = statistics[(void *)0x1].callees;
-				statistics_map &cs2 = statistics[(void *)0x2].callees;
-				statistics_map &cs3 = statistics[(void *)0x3].callees;
-				statistics_map &cs4 = statistics[(void *)0x4].callees;
+				statistic_types::map &cs1 = statistics[(void *)0x1].callees;
+				statistic_types::map &cs2 = statistics[(void *)0x2].callees;
+				statistic_types::map &cs3 = statistics[(void *)0x3].callees;
+				statistic_types::map &cs4 = statistics[(void *)0x4].callees;
 
 				assert_equal(3u, cs1.size());
 				assert_equal(2u, cs2.size());

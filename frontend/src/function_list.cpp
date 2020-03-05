@@ -190,8 +190,8 @@ namespace micro_profiler
 	}
 
 
-	typedef statistics_model_impl<linked_statistics_ex, statistics_map> children_statistics;
-	typedef statistics_model_impl<linked_statistics_ex, statistics_map_callers> parents_statistics;
+	typedef statistics_model_impl<linked_statistics_ex, statistic_types::map> children_statistics;
+	typedef statistics_model_impl<linked_statistics_ex, statistic_types::map_callers> parents_statistics;
 
 
 
@@ -269,10 +269,10 @@ namespace micro_profiler
 
 
 	template <>
-	void statistics_model_impl<linked_statistics_ex, statistics_map_callers>::get_text(index_type item, index_type subitem,
+	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::get_text(index_type item, index_type subitem,
 		wstring &text) const
 	{
-		const statistics_map_callers::value_type &row = get_entry(item);
+		const statistic_types::map_callers::value_type &row = get_entry(item);
 
 		text.clear();
 		switch (subitem)
@@ -284,7 +284,7 @@ namespace micro_profiler
 	}
 
 	template <>
-	void statistics_model_impl<linked_statistics_ex, statistics_map_callers>::set_order(index_type column, bool ascending)
+	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::set_order(index_type column, bool ascending)
 	{
 		switch (column)
 		{
@@ -295,7 +295,7 @@ namespace micro_profiler
 	}
 
 
-	functions_list::functions_list(shared_ptr<statistics_map_detailed> statistics, double tick_interval,
+	functions_list::functions_list(shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver)
 		: base(*statistics, tick_interval), updates_enabled(true), _statistics(statistics),
 			_linked(new linked_statistics_list_t), _tick_interval(tick_interval), _resolver(resolver)
@@ -346,7 +346,7 @@ namespace micro_profiler
 		if (item >= get_count())
 			throw out_of_range("");
 
-		const statistics_map_detailed::value_type &s = get_entry(item);
+		const statistic_types::map_detailed::value_type &s = get_entry(item);
 		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
 		shared_ptr<children_statistics> children(new children_statistics(s.second.callees,
 			_tick_interval), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
@@ -361,7 +361,7 @@ namespace micro_profiler
 		if (item >= get_count())
 			throw out_of_range("");
 
-		const statistics_map_detailed::value_type &s = get_entry(item);
+		const statistic_types::map_detailed::value_type &s = get_entry(item);
 		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
 		shared_ptr<parents_statistics> parents(new parents_statistics(s.second.callers,
 			_tick_interval), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
@@ -377,7 +377,7 @@ namespace micro_profiler
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver)
 	{
 		return shared_ptr<functions_list>(new functions_list(
-			shared_ptr<statistics_map_detailed>(new statistics_map_detailed), 1.0 / ticks_per_second, resolver));
+			shared_ptr<statistic_types::map_detailed>(new statistic_types::map_detailed), 1.0 / ticks_per_second, resolver));
 	}
 
 	void functions_list::on_updated()

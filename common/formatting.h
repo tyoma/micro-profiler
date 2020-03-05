@@ -47,7 +47,7 @@ namespace micro_profiler
 	struct adjust_signed
 	{
 		template <typename ContainerT, typename T>
-		static T adjust(ContainerT &/*destination*/, T value, char &/*min_width*/)
+		static T adjust(ContainerT &/*destination*/, T value, signed char &/*min_width*/)
 		{	return value;	}
 	};
 
@@ -55,12 +55,12 @@ namespace micro_profiler
 	struct adjust_signed<true>
 	{
 		template <typename ContainerT, typename T>
-		static T adjust(ContainerT &destination, T value, char &min_width)
+		static T adjust(ContainerT &destination, T value, signed char &min_width)
 		{	return value < 0 ? destination.push_back('-'), --min_width, -value : value;	}
 	};
 
 	template <unsigned char base, typename ContainerT, typename T>
-	inline void itoa(ContainerT &destination, T value, char min_width = 0, char padding = '0')
+	inline void itoa(ContainerT &destination, T value, signed char min_width = 0, char padding = '0')
 	{
 		enum { max_length = 8 * sizeof(T) + 1 }; // Max buffer length for base2 representation plus sign.
 		char local_buffer[max_length];

@@ -33,10 +33,12 @@ namespace micro_profiler
 			void (*f23)(void (*&f1)(), void (*&f2)(), void (*&f3)());
 			void (*f2F)(void (*&f)(int * volatile begin, int * volatile end));
 
-			init( FailX64 )
+#if !defined(_M_IX86) && !defined(__i386__)
+			init( FailNonX86 )
 			{
-				assert_equal(4u, sizeof(void*));
+				assert_is_true(false);
 			}
+#endif
 
 			init( LoadGuineas )
 			{

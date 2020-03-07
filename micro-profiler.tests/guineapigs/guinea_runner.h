@@ -19,6 +19,6 @@ namespace micro_profiler
 namespace strmd
 {
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, micro_profiler::tests::runner_commands &data)
+	void serialize(ArchiveT &archive, micro_profiler::tests::runner_commands &data, unsigned int /*version*/)
 	{	archive(reinterpret_cast<int &>(data));	}
 }

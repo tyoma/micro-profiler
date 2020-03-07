@@ -59,21 +59,21 @@ namespace strmd
 namespace micro_profiler
 {
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_resolver &data)
+	inline void serialize(ArchiveT &archive, symbol_resolver &data, unsigned int /*version*/)
 	{
 		archive(data._mappings);
 		archive(data._modules);
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_resolver::module_info &data)
+	inline void serialize(ArchiveT &archive, symbol_resolver::module_info &data, unsigned int /*version*/)
 	{
 		archive(data.symbols);
 		archive(data.files);
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, thread_statistics_proxy &data)
+	inline void serialize(ArchiveT &archive, thread_statistics_proxy &data, unsigned int /*version*/)
 	{
 		archive(data.thread_id);
 		archive(*data.statistics);

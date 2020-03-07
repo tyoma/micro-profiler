@@ -27,6 +27,7 @@
 #include "range.h"
 
 #include <strmd/deserializer.h>
+#include <strmd/type_traits_ex.h>
 
 namespace strmd
 {
@@ -47,7 +48,7 @@ namespace strmd
 	};
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, const void *&data)
+	inline void serialize(ArchiveT &archive, const void *&data, unsigned int /*version*/)
 	{	archive(reinterpret_cast<size_t &>(data));	}
 }
 
@@ -101,14 +102,14 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, initialization_data &data)
+	inline void serialize(ArchiveT &archive, initialization_data &data, unsigned int /*version*/)
 	{
 		archive(data.executable);
 		archive(data.ticks_per_second);
 	}	
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, function_statistics &data)
+	inline void serialize(ArchiveT &archive, function_statistics &data, unsigned int /*version*/)
 	{
 		archive(data.times_called);
 		archive(data.max_reentrance);
@@ -118,18 +119,18 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename AddressT>
-	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data)
+	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data, unsigned int /*version*/)
 	{
 		archive(static_cast<function_statistics &>(data));
 		archive(data.callees);
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, commands &data)
+	inline void serialize(ArchiveT &archive, commands &data, unsigned int /*version*/)
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, mapped_module_identified &data)
+	inline void serialize(ArchiveT &archive, mapped_module_identified &data, unsigned int /*version*/)
 	{
 		archive(data.instance_id);
 		archive(data.persistent_id);
@@ -138,7 +139,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_info &data)
+	inline void serialize(ArchiveT &archive, symbol_info &data, unsigned int /*version*/)
 	{
 		archive(data.id);
 		archive(data.name);
@@ -149,7 +150,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, module_info_metadata &data)
+	inline void serialize(ArchiveT &archive, module_info_metadata &data, unsigned int /*version*/)
 	{
 		archive(data.symbols);
 		archive(data.source_files);

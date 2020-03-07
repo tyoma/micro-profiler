@@ -5,6 +5,7 @@
 #include <frontend/serialization.h>
 
 #include <common/protocol.h>
+#include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>

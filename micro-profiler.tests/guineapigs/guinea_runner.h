@@ -1,8 +1,6 @@
 #pragma once
 
 #include <string>
-#include <strmd/serializer.h>
-#include <strmd/deserializer.h>
 
 namespace micro_profiler
 {
@@ -13,12 +11,9 @@ namespace micro_profiler
 			unload_module,
 			execute_function,
 		};
-	}
-}
 
-namespace strmd
-{
-	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, micro_profiler::tests::runner_commands &data, unsigned int /*version*/)
-	{	archive(reinterpret_cast<int &>(data));	}
+		template <typename ArchiveT>
+		void serialize(ArchiveT &archive, runner_commands &data, unsigned int /*version*/)
+		{	archive(reinterpret_cast<int &>(data));	}
+	}
 }

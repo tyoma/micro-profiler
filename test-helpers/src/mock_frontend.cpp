@@ -2,6 +2,7 @@
 
 #include <common/memory.h>
 #include <common/serialization.h>
+#include <strmd/deserializer.h>
 #include <ut/assert.h>
 
 using namespace std;

@@ -27,37 +27,78 @@
 
 namespace micro_profiler
 {
-	struct thread_statistics_proxy
+	template <typename KeyT>
+	struct deserialization_context
 	{
-		unsigned int thread_id;
-		statistic_types::map_detailed *statistics;
+		typename statistic_types_t<KeyT>::map_detailed *map;
+		unsigned int threadid;
+		KeyT caller;
 	};
-}
 
-namespace strmd
-{
-	template <> struct is_container<micro_profiler::functions_list> { static const bool value = true; };
-	template <> struct is_associative<micro_profiler::functions_list, true> { static const bool value = true; };
-
-	template <>
-	struct container_reader<micro_profiler::functions_list, true>
+	struct statistics_map_reader
 	{
-		template <typename ArchiveT>
-		void operator()(ArchiveT &archive, size_t count, micro_profiler::functions_list &data)
-		{
-			micro_profiler::thread_statistics_proxy proxy = { 0, data._statistics.get() };
+		template <typename ContainerT>
+		void prepare(ContainerT &/*data*/)
+		{	}
 
-			if (!data.updates_enabled)
-				return;
-			while (count--)
-				archive(proxy);
-			data.on_updated();
+		template <typename ArchiveT, typename ContainerT, typename KeyT>
+		void operator()(ArchiveT &archive, ContainerT &data, const micro_profiler::deserialization_context<KeyT> &context)
+		{
+			micro_profiler::deserialization_context<KeyT> new_context = context;
+
+			archive(new_context.caller);
+			archive(data[new_context.caller], new_context);
+		}
+
+		template <typename ArchiveT, typename ContainerT>
+		void operator()(ArchiveT &archive, ContainerT &data)
+		{
+			typename ContainerT::key_type key;
+
+			archive(key);
+			archive(data[key]);
 		}
 	};
-}
 
-namespace micro_profiler
-{
+	struct functions_list_reader
+	{
+		void prepare(functions_list &/*container*/)
+		{	}
+
+		template <typename ArchiveT>
+		void operator()(ArchiveT &archive, functions_list &container)
+		{
+			deserialization_context<address_t> context = { &*container._statistics, };
+
+			if (!container.updates_enabled)
+				return;
+			archive(context.threadid);
+			archive(*container._statistics, context);
+			container.on_updated();
+		}
+	};
+
+
+
+	template <typename ArchiveT, typename KeyT>
+	inline void serialize(ArchiveT &archive, function_statistics &data, unsigned int/*version*/,
+		const deserialization_context<KeyT> &/*context*/)
+	{
+		function_statistics v;
+
+		archive(v);
+		data += v;
+	}
+
+	template <typename ArchiveT, typename KeyT>
+	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<KeyT> &data, unsigned int/*version*/,
+		const deserialization_context<KeyT> &context)
+	{
+		archive(static_cast<function_statistics &>(data), context);
+		archive(data.callees, context);
+		update_parent_statistics(*context.map, context.caller, data.callees);
+	}
+
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, symbol_resolver &data, unsigned int /*version*/)
 	{
@@ -71,11 +112,21 @@ namespace micro_profiler
 		archive(data.symbols);
 		archive(data.files);
 	}
+}
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, thread_statistics_proxy &data, unsigned int /*version*/)
+namespace strmd
+{
+	template <>
+	struct container_traits<micro_profiler::functions_list>
 	{
-		archive(data.thread_id);
-		archive(*data.statistics);
-	}
+		static const bool is_container = true;
+		typedef micro_profiler::functions_list_reader reader_type;
+	};
+
+	template <typename KeyT, typename T>
+	struct container_traits< std::unordered_map<KeyT, T, micro_profiler::address_hash> >
+	{
+		static const bool is_container = true;
+		typedef micro_profiler::statistics_map_reader reader_type;
+	};
 }

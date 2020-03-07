@@ -26,6 +26,7 @@
 
 #include <common/memory.h>
 #include <logger/log.h>
+#include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 
 #define PREAMBLE "Frontend: "

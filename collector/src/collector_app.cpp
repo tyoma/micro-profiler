@@ -27,6 +27,7 @@
 
 #include <common/time.h>
 #include <logger/log.h>
+#include <strmd/deserializer.h>
 
 #define PREAMBLE "Collector app: "
 

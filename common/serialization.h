@@ -26,31 +26,8 @@
 #include "protocol.h"
 #include "range.h"
 
-#include <strmd/deserializer.h>
-#include <strmd/type_traits_ex.h>
-
-namespace strmd
-{
-	template <typename KeyT, typename T>
-	struct container_reader<std::unordered_map<KeyT, T, micro_profiler::address_hash>, true>
-	{
-		template <typename ArchiveT, typename ContainerT>
-		void operator()(ArchiveT &archive, size_t count, ContainerT &data)
-		{
-			typename ContainerT::key_type key;
-
-			while (count--)
-			{
-				archive(key);
-				deserialize_statistics(archive, data, key, data[key]);
-			}
-		}
-	};
-
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, const void *&data, unsigned int /*version*/)
-	{	archive(reinterpret_cast<size_t &>(data));	}
-}
+#include <strmd/container_ex.h>
+#include <strmd/packer.h>
 
 namespace micro_profiler
 {
@@ -81,25 +58,6 @@ namespace micro_profiler
 	};
 
 
-
-	template <typename ArchiveT, typename ContainerT, typename AddressT>
-	inline void deserialize_statistics(ArchiveT &archive, ContainerT &/*container*/, AddressT /*key*/,
-		function_statistics &data)
-	{
-		function_statistics v;
-
-		archive(v);
-		data += v;
-	}
-
-	template <typename ArchiveT, typename ContainerT, typename AddressT>
-	inline void deserialize_statistics(ArchiveT &archive, ContainerT &container, AddressT key,
-		function_statistics_detailed_t<AddressT> &data)
-	{
-		deserialize_statistics(archive, container, key, static_cast<function_statistics &>(data));
-		archive(data.callees);
-		update_parent_statistics(container, key, data.callees);
-	}
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, initialization_data &data, unsigned int /*version*/)
@@ -172,4 +130,11 @@ namespace micro_profiler
 		else
 			_buffer.append(data_, data_ + size);
 	}
+}
+
+namespace strmd
+{
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, const void *&data, unsigned int /*version*/)
+	{	archive(reinterpret_cast<size_t &>(data));	}
 }

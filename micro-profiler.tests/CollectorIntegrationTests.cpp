@@ -6,6 +6,7 @@
 #include <mt/atomic.h>
 #include <mt/event.h>
 #include <stdlib.h>
+#include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_frontend.h>
 #include <test-helpers/process.h>

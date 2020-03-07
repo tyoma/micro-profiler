@@ -87,8 +87,7 @@ namespace micro_profiler
 		std::shared_ptr<symbol_resolver> _resolver;
 
 	private:
-		template <typename, bool>
-		friend struct strmd::container_reader;
+		friend struct functions_list_reader;
 	};
 
 

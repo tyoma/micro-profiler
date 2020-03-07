@@ -5,6 +5,7 @@
 #include <ipc/endpoint.h>
 #include <map>
 #include <mt/event.h>
+#include <strmd/deserializer.h>
 #include <test-helpers/helpers.h>
 
 using namespace std;

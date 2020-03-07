@@ -50,6 +50,7 @@
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="ProcessListTests.cpp" />
+    <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
   </ItemGroup>
   <ItemGroup>

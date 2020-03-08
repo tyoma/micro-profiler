@@ -63,7 +63,7 @@ namespace micro_profiler
 			bool operator ()(address_t lhs_addr, const AnyT &, address_t rhs_addr, const AnyT &) const
 			{
 				shared_ptr<symbol_resolver> r = _resolver_accessor();
-				return r->symbol_name_by_va(lhs_addr) < r->symbol_name_by_va(rhs_addr);
+				return r->symbol_name_by_va(lhs_addr.first) < r->symbol_name_by_va(rhs_addr.first);
 			}
 
 		private:
@@ -204,7 +204,7 @@ namespace micro_profiler
 		switch (subitem)
 		{
 		case 0:	itoa<10>(text, item + 1);	break;
-		case 1:	assign(text, _resolver->symbol_name_by_va(row.first));	break;
+		case 1:	assign(text, _resolver->symbol_name_by_va(row.first.first));	break;
 		case 2:	itoa<10>(text, row.second.times_called);	break;
 		case 3:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
 		case 4:	format_interval(text, inclusive_time(_tick_interval)(row.second));	break;
@@ -278,7 +278,7 @@ namespace micro_profiler
 		switch (subitem)
 		{
 		case 0:	itoa<10>(text, item + 1);	break;
-		case 1:	assign(text, _resolver->symbol_name_by_va(row.first));	break;
+		case 1:	assign(text, _resolver->symbol_name_by_va(row.first.first));	break;
 		case 2:	itoa<10>(text, row.second);	break;
 		}
 	}
@@ -327,7 +327,7 @@ namespace micro_profiler
 		{
 			const view_type::value_type &row = get_entry(i);
 
-			content += _resolver->symbol_name_by_va(row.first) + "\t";
+			content += _resolver->symbol_name_by_va(row.first.first) + "\t";
 			itoa<10>(content, row.second.times_called), content += "\t";
 			gcvt(content, exclusive_time(_tick_interval)(row.second)), content += "\t";
 			gcvt(content, inclusive_time(_tick_interval)(row.second)), content += "\t";

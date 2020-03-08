@@ -27,12 +27,11 @@
 
 namespace micro_profiler
 {
-	template <typename KeyT>
 	struct deserialization_context
 	{
-		typename statistic_types_t<KeyT>::map_detailed *map;
+		statistic_types::map_detailed *map;
+		long_address_t caller;
 		unsigned int threadid;
-		KeyT caller;
 	};
 
 	struct statistics_map_reader
@@ -41,13 +40,13 @@ namespace micro_profiler
 		void prepare(ContainerT &/*data*/)
 		{	}
 
-		template <typename ArchiveT, typename ContainerT, typename KeyT>
-		void operator()(ArchiveT &archive, ContainerT &data, const micro_profiler::deserialization_context<KeyT> &context)
+		template <typename ArchiveT, typename ContainerT>
+		void operator()(ArchiveT &archive, ContainerT &data, const micro_profiler::deserialization_context &context)
 		{
-			micro_profiler::deserialization_context<KeyT> new_context = context;
+			micro_profiler::deserialization_context new_context = context;
 
 			archive(new_context.caller);
-			archive(data[new_context.caller], new_context);
+			archive(data[address_t(new_context.caller, new_context.threadid)], new_context);
 		}
 
 		template <typename ArchiveT, typename ContainerT>
@@ -68,7 +67,7 @@ namespace micro_profiler
 		template <typename ArchiveT>
 		void operator()(ArchiveT &archive, functions_list &container)
 		{
-			deserialization_context<address_t> context = { &*container._statistics, };
+			deserialization_context context = { &*container._statistics, };
 
 			if (!container.updates_enabled)
 				return;
@@ -80,9 +79,9 @@ namespace micro_profiler
 
 
 
-	template <typename ArchiveT, typename KeyT>
-	inline void serialize(ArchiveT &archive, function_statistics &data, unsigned int/*version*/,
-		const deserialization_context<KeyT> &/*context*/)
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, statistic_types::function &data, unsigned int/*version*/,
+		const deserialization_context &/*context*/)
 	{
 		function_statistics v;
 
@@ -90,13 +89,13 @@ namespace micro_profiler
 		data += v;
 	}
 
-	template <typename ArchiveT, typename KeyT>
-	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<KeyT> &data, unsigned int/*version*/,
-		const deserialization_context<KeyT> &context)
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, unsigned int/*version*/,
+		const deserialization_context &context)
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
-		update_parent_statistics(*context.map, context.caller, data.callees);
+		update_parent_statistics(*context.map, address_t(context.caller, context.threadid), data.callees);
 	}
 
 	template <typename ArchiveT>
@@ -123,8 +122,8 @@ namespace strmd
 		typedef micro_profiler::functions_list_reader reader_type;
 	};
 
-	template <typename KeyT, typename T>
-	struct container_traits< std::unordered_map<KeyT, T, micro_profiler::address_hash> >
+	template <typename T>
+	struct container_traits< std::unordered_map<micro_profiler::address_t, T, micro_profiler::address_hash> >
 	{
 		static const bool is_container = true;
 		typedef micro_profiler::statistics_map_reader reader_type;

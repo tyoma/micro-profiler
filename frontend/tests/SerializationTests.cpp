@@ -1,7 +1,10 @@
 #include <frontend/serialization.h>
 
+#include "helpers.h"
+
 #include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
+#include <test-helpers/primitive_helpers.h>
 
 #include <functional>
 #include <strmd/serializer.h>
@@ -18,57 +21,107 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef statistic_types_t<address_t> statistic_types;
-			typedef deserialization_context<address_t> test_context;
-
-			address_t addr(size_t value)
-			{	return value;	}
+			typedef std::pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
+			typedef std::pair<address_t, statistic_types_t<address_t>::function_detailed> threaded_addressed_statistics;
 		}
 
 		begin_test_suite( SerializationTests )
-			test( DeserializationIntoExistingValuesAddsValues )
+			test( ContextDeserializationFillsThreadIDFromContext )
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistic_types::map s1, s2;
-				test_context context = { };
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				addressed_statistics batch1[] = {
+					make_statistics(123441u, 17, 2012, 123123123, 32123, 2213),
+					make_statistics(7741u, 17, 2012, 123123123, 32123, 2213),
+				};
+				addressed_statistics batch2[] = {
+					make_statistics(141u, 17, 12012, 11293123, 132123, 12213),
+					make_statistics(7341u, 21117, 2212, 21231123, 23213, 2112213),
+					make_statistics(7741u, 31117, 3212, 31231123, 33213, 3112213),
+				};
+				statistic_types::map_detailed s1, s2;
+				deserialization_context context = { };
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
 
-				s1[addr(123441)] = function_statistics(17, 2012, 123123123, 32123, 2213);
-				s1[addr(7741)] = function_statistics(1117, 212, 1231123, 3213, 112213);
-				s2[addr(141)] = function_statistics(17, 12012, 11293123, 132123, 12213);
-				s2[addr(7341)] = function_statistics(21117, 2212, 21231123, 23213, 2112213);
-				s2[addr(7741)] = function_statistics(31117, 3212, 31231123, 33213, 3112213);
-				s(s1);
-				s(s2);
-
-				strmd::deserializer<vector_adapter, packer> ds(buffer);
-
-				// ACT
-				ds(s2, context);
-
-				// ASSERT
-				statistic_types::map reference1;
-
-				reference1[addr(141)] = function_statistics(17, 12012, 11293123, 132123, 12213);
-				reference1[addr(7341)] = function_statistics(21117, 2212, 21231123, 23213, 2112213);
-				reference1[addr(7741)] = function_statistics(31117 + 1117, 3212, 31231123 + 1231123, 33213 + 3213, 3112213);
-				reference1[addr(123441)] = function_statistics(17, 2012, 123123123, 32123, 2213);
-
-				assert_equivalent(reference1, s2);
+				ser(mkvector(batch1));
+				ser(mkvector(batch2));
 
 				// ACT
-				ds(s2, context);
+				context.threadid = 13110;
+				dser(s1, context);
+				context.threadid = 1700;
+				dser(s2, context);
 
 				// ASSERT
-				statistic_types::map reference2;
+				threaded_addressed_statistics reference1[] = {
+					make_statistics(addr(123441u, 13110), 17, 2012, 123123123, 32123, 2213),
+					make_statistics(addr(7741u, 13110), 17, 2012, 123123123, 32123, 2213),
+				};
+				threaded_addressed_statistics reference2[] = {
+					make_statistics(addr(141u, 1700), 17, 12012, 11293123, 132123, 12213),
+					make_statistics(addr(7341u, 1700), 21117, 2212, 21231123, 23213, 2112213),
+					make_statistics(addr(7741u, 1700), 31117, 3212, 31231123, 33213, 3112213),
+				};
 
-				reference2[addr(141)] = function_statistics(2 * 17, 12012, 2 * 11293123, 2 * 132123, 12213);
-				reference2[addr(7341)] = function_statistics(2 * 21117, 2212, 2 * 21231123, 2 * 23213, 2112213);
-				reference2[addr(7741)] = function_statistics(2 * 31117 + 1117, 3212, 2 * 31231123 + 1231123, 2 * 33213 + 3213, 3112213);
-				reference2[addr(123441)] = function_statistics(17, 2012, 123123123, 32123, 2213);
-
+				assert_equivalent(reference1, s1);
 				assert_equivalent(reference2, s2);
+			}
+
+			test( DeserializationIntoExistingValuesAddsValuesBase )
+			{
+				typedef std::pair<unsigned, statistic_types_t<unsigned>::function> addressed_statistics;
+				typedef std::pair<address_t, statistic_types_t<address_t>::function> threaded_addressed_statistics;
+
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				addressed_statistics batch1[] = {
+					make_statistics_base(123441u, 17, 2012, 123123123, 32123, 2213),
+					make_statistics_base(7741u, 1117, 212, 1231123, 3213, 112213),
+				};
+				addressed_statistics batch2[] = {
+					make_statistics_base(141u, 17, 12012, 11293123, 132123, 12213),
+					make_statistics_base(7341u, 21117, 2212, 21231123, 23213, 2112213),
+					make_statistics_base(7741u, 31117, 3212, 31231123, 33213, 3112213),
+				};
+				statistic_types::map s;
+				deserialization_context context = { };
+
+				ser(mkvector(batch1));
+				ser(mkvector(batch2));
+
+				// ACT
+				context.threadid = 1;
+				dser(s, context);
+				dser(s, context);
+
+				// ASSERT
+				threaded_addressed_statistics reference1[] = {
+					make_statistics_base(addr(141), 17, 12012, 11293123, 132123, 12213),
+					make_statistics_base(addr(7341), 21117, 2212, 21231123, 23213, 2112213),
+					make_statistics_base(addr(7741), 31117 + 1117, 3212, 31231123 + 1231123, 33213 + 3213, 3112213),
+					make_statistics_base(addr(123441), 17, 2012, 123123123, 32123, 2213),
+				};
+
+				assert_equivalent(reference1, s);
+
+				// INIT
+				ser(mkvector(batch2));
+
+				// ACT
+				dser(s, context);
+
+				// ASSERT
+				threaded_addressed_statistics reference2[] = {
+					make_statistics_base(addr(141), 2 * 17, 12012, 2 * 11293123, 2 * 132123, 12213),
+					make_statistics_base(addr(7341), 2 * 21117, 2212, 2 * 21231123, 2 * 23213, 2112213),
+					make_statistics_base(addr(7741), 2 * 31117 + 1117, 3212, 2 * 31231123 + 1231123, 2 * 33213 + 3213, 3112213),
+					make_statistics_base(addr(123441), 17, 2012, 123123123, 32123, 2213),
+				};
+
+				assert_equivalent(reference2, s);
 			}
 
 
@@ -76,39 +129,39 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistic_types::map_detailed ss, addition;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				statistic_types::map_detailed s;
+				deserialization_context context = { &s, 0, 1 };
 
-				static_cast<function_statistics &>(ss[addr(1221)]) = function_statistics(17, 2012, 123123123, 32124, 2213);
-				static_cast<function_statistics &>(ss[addr(1231)]) = function_statistics(18, 2011, 123123122, 32125, 2211);
-				static_cast<function_statistics &>(ss[addr(1241)]) = function_statistics(19, 2010, 123123121, 32126, 2209);
+				addressed_statistics initial[] = {
+					make_statistics(1221u, 17, 2012, 123123123, 32124, 2213),
+					make_statistics(1231u, 18, 2011, 123123122, 32125, 2211),
+					make_statistics(1241u, 19, 2010, 123123121, 32126, 2209),
+				};
+				addressed_statistics addition[] = {
+					make_statistics(1231u, 28, 1011, 23123122, 72125, 3211),
+					make_statistics(1241u, 29, 3013, 23123121, 72126, 1209),
+					make_statistics(12211u, 97, 2012, 123123123, 32124, 2213),
+				};
 
-				static_cast<function_statistics &>(addition[addr(1231)]) = function_statistics(28, 1011, 23123122, 72125, 3211);
-				static_cast<function_statistics &>(addition[addr(1241)]) = function_statistics(29, 3013, 23123121, 72126, 1209);
-				static_cast<function_statistics &>(addition[addr(12211)]) = function_statistics(97, 2012, 123123123, 32124, 2213);
+				ser(mkvector(initial));
+				ser(mkvector(addition));
 
-				s(addition);
-
-				strmd::deserializer<vector_adapter, packer> ds(buffer);
-
-				// INIT
-				statistic_types::map_detailed dss;
-				test_context context = { &dss, };
-
-				dss = ss;
+				dser(s, context); // read 'initial'
 
 				// ACT
-				ds(dss, context);
+				dser(s, context); // read 'addition'
 
 				// ASSERT
-				statistic_types::map_detailed reference;
+				threaded_addressed_statistics reference[] = {
+					make_statistics(addr(1221), 17, 2012, 123123123, 32124, 2213),
+					make_statistics(addr(1231), 18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211),
+					make_statistics(addr(1241), 19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209),
+					make_statistics(addr(12211), 97, 2012, 123123123, 32124, 2213),
+				};
 
-				static_cast<function_statistics &>(reference[addr(1221)]) = function_statistics(17, 2012, 123123123, 32124, 2213);
-				static_cast<function_statistics &>(reference[addr(1231)]) = function_statistics(18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211);
-				static_cast<function_statistics &>(reference[addr(1241)]) = function_statistics(19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209);
-				static_cast<function_statistics &>(reference[addr(12211)]) = function_statistics(97, 2012, 123123123, 32124, 2213);
-
-				assert_equivalent(reference, dss);
+				assert_equivalent(reference, s);
 			}
 
 
@@ -116,39 +169,45 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistic_types::map_detailed ss, addition;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				statistic_types::map_detailed s;
+				deserialization_context context = { &s, 0, 1 };
 
-				ss[addr(1221)].callees[addr(1221)] = function_statistics(17, 2012, 123123123, 32124, 2213);
-				ss[addr(1221)].callees[addr(1231)] = function_statistics(18, 2011, 123123122, 32125, 2211);
-				ss[addr(1221)].callees[addr(1241)] = function_statistics(19, 2010, 123123121, 32126, 2209);
+				addressed_statistics initial[] = {
+					make_statistics(1221u, 0, 0, 0, 0, 0,
+						make_statistics_base(1221u, 17, 2012, 123123123, 32124, 2213),
+						make_statistics_base(1231u, 18, 2011, 123123122, 32125, 2211),
+						make_statistics_base(1241u, 19, 2010, 123123121, 32126, 2209)),
+				};
+				addressed_statistics addition[] = {
+					make_statistics(1221u, 0, 0, 0, 0, 0,
+						make_statistics_base(1231u, 28, 1011, 23123122, 72125, 3211),
+						make_statistics_base(1241u, 29, 3013, 23123121, 72126, 1209),
+						make_statistics_base(12211u, 97, 2012, 123123123, 32124, 2213)),
+				};
 
-				addition[addr(1221)].callees[addr(1231)] = function_statistics(28, 1011, 23123122, 72125, 3211);
-				addition[addr(1221)].callees[addr(1241)] = function_statistics(29, 3013, 23123121, 72126, 1209);
-				addition[addr(1221)].callees[addr(12211)] = function_statistics(97, 2012, 123123123, 32124, 2213);
+				ser(mkvector(initial));
+				ser(mkvector(addition));
 
-				s(addition);
-
-				strmd::deserializer<vector_adapter, packer> ds(buffer);
-
-				// INIT
-				statistic_types::map_detailed dss;
-				test_context context = { &dss, };
-
-				dss = ss;
+				dser(s, context); // read 'initial'
 
 				// ACT
-				ds(dss, context);
+				dser(s, context); // read 'addition'
 
 				// ASSERT
-				statistic_types::map reference;
+				threaded_addressed_statistics reference[] = {
+					make_statistics(addr(1221), 0, 0, 0, 0, 0,
+						make_statistics_base(addr(1221), 17, 2012, 123123123, 32124, 2213),
+						make_statistics_base(addr(1231), 18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211),
+						make_statistics_base(addr(1241), 19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209),
+						make_statistics_base(addr(12211), 97, 2012, 123123123, 32124, 2213)),
+					make_statistics(addr(1231), 0, 0, 0, 0, 0),
+					make_statistics(addr(1241), 0, 0, 0, 0, 0),
+					make_statistics(addr(12211), 0, 0, 0, 0, 0),
+				};
 
-				reference[addr(1221)] = function_statistics(17, 2012, 123123123, 32124, 2213);
-				reference[addr(1231)] = function_statistics(18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211);
-				reference[addr(1241)] = function_statistics(19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209);
-				reference[addr(12211)] = function_statistics(97, 2012, 123123123, 32124, 2213);
-
-				assert_equivalent(reference, dss[addr(1221)].callees);
+				assert_equivalent(reference, s);
 			}
 
 
@@ -156,44 +215,77 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				strmd::serializer<vector_adapter, packer> s(buffer);
-				test_context context;
-				statistic_types::map_detailed ss;
-				statistic_types::map_detailed dss;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				addressed_statistics batch1[] = {
+					make_statistics(1221u, 0, 0, 0, 0, 0,
+						make_statistics_base(1221u, 17, 0, 0, 0, 0),
+						make_statistics_base(1231u, 18, 0, 0, 0, 0),
+						make_statistics_base(1241u, 19, 0, 0, 0, 0)),
+					make_statistics(1222u, 0, 0, 0, 0, 0,
+						make_statistics_base(1221u, 8, 0, 0, 0, 0),
+						make_statistics_base(1251u, 9, 0, 0, 0, 0)),
+				};
+				addressed_statistics batch2[] = {
+					make_statistics(12210u, 1, 0, 0, 0, 0,
+						make_statistics_base(12211u, 107, 0, 0, 0, 0),
+						make_statistics_base(1221u, 8, 0, 0, 0, 0)),
+				};
 
-				context.map = &dss;
-				ss[addr(1221)].callees[addr(1221)] = function_statistics(17, 0, 0, 0, 0);
-				ss[addr(1221)].callees[addr(1231)] = function_statistics(18, 0, 0, 0, 0);
-				ss[addr(1221)].callees[addr(1241)] = function_statistics(19, 0, 0, 0, 0);
-				ss[addr(1222)].callees[addr(1221)] = function_statistics(8, 0, 0, 0, 0);
-				ss[addr(1222)].callees[addr(1251)] = function_statistics(9, 0, 0, 0, 0);
+				statistic_types::map_detailed s;
+				deserialization_context context = { &s, };
 
-				s(ss);
-
-				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				ser(mkvector(batch1));
+				ser(mkvector(batch2));
 
 				// ACT
-				ds(dss, context);
+				context.threadid = 101;
+				dser(s, context);
 
 				// ASSERT
 				pair<address_t, count_t> reference_1221[] = {
-					make_pair(addr(1221), 17),
-					make_pair(addr(1222), 8),
+					make_pair(addr(1221, 101), 17),
+					make_pair(addr(1222, 101), 8),
 				};
 				pair<address_t, count_t> reference_1231[] = {
-					make_pair(addr(1221), 18),
+					make_pair(addr(1221, 101), 18),
 				};
 				pair<address_t, count_t> reference_1241[] = {
-					make_pair(addr(1221), 19),
+					make_pair(addr(1221, 101), 19),
 				};
 				pair<address_t, count_t> reference_1251[] = {
-					make_pair(addr(1222), 9),
+					make_pair(addr(1222, 101), 9),
 				};
 
-				assert_equivalent(reference_1221, dss[addr(1221)].callers);
-				assert_equivalent(reference_1231, dss[addr(1231)].callers);
-				assert_equivalent(reference_1241, dss[addr(1241)].callers);
-				assert_equivalent(reference_1251, dss[addr(1251)].callers);
+				assert_equal(5u, s.size());
+				assert_equivalent(reference_1221, s[addr(1221, 101)].callers);
+				assert_is_empty(s[addr(1222, 101)].callers);
+				assert_equivalent(reference_1231, s[addr(1231, 101)].callers);
+				assert_equivalent(reference_1241, s[addr(1241, 101)].callers);
+				assert_equivalent(reference_1251, s[addr(1251, 101)].callers);
+
+				// ACT
+				context.threadid = 110;
+				dser(s, context);
+
+				// ASSERT
+				pair<address_t, count_t> reference_12211_110[] = {
+					make_pair(addr(12210, 110), 107),
+				};
+				pair<address_t, count_t> reference_1221_110[] = {
+					make_pair(addr(12210, 110), 8),
+				};
+
+				assert_equal(8u, s.size());
+				assert_equivalent(reference_1221, s[addr(1221, 101)].callers);
+				assert_is_empty(s[addr(1222, 101)].callers);
+				assert_equivalent(reference_1231, s[addr(1231, 101)].callers);
+				assert_equivalent(reference_1241, s[addr(1241, 101)].callers);
+				assert_equivalent(reference_1251, s[addr(1251, 101)].callers);
+
+				assert_equivalent(reference_12211_110, s[addr(12211, 110)].callers);
+				assert_equivalent(reference_1221_110, s[addr(1221, 110)].callers);
+				assert_is_empty(s[addr(12210, 110)].callers);
 			}
 
 		end_test_suite

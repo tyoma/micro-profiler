@@ -21,6 +21,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
+
 			frontend_ui::ptr dummy_ui_factory(const shared_ptr<functions_list> &, const string &)
 			{	return frontend_ui::ptr();	}
 
@@ -214,12 +216,12 @@ namespace micro_profiler
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				pair< unsigned, statistic_types::function_detailed > data1[] = {
-					make_pair(1321222, statistic_types::function_detailed()),
-					make_pair(1321221, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data1[] = {
+					make_pair(1321222, unthreaded_statistic_types::function_detailed()),
+					make_pair(1321221, unthreaded_statistic_types::function_detailed()),
 				};
-				pair< unsigned, statistic_types::function_detailed > data2[] = {
-					make_pair(13, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data2[] = {
+					make_pair(13, unthreaded_statistic_types::function_detailed()),
 				};
 
 				write(*c, init, make_initialization_data("", 11));
@@ -271,8 +273,8 @@ namespace micro_profiler
 					_1, _2));
 				shared_ptr<ipc::channel> c1 = m->create_session(outbound);
 				shared_ptr<ipc::channel> c2 = m->create_session(outbound);
-				pair< unsigned, statistic_types::function_detailed > data[] = {
-					make_pair(1321222, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data[] = {
+					make_pair(1321222, unthreaded_statistic_types::function_detailed()),
 				};
 
 				data[0].second.inclusive_time = 150;
@@ -308,13 +310,13 @@ namespace micro_profiler
 				mapped_module_identified basic1[] = { create_mapping(1u, 0x10000), };
 				mapped_module_identified basic2[] = { create_mapping(2u, 0x100000), };
 				module_info_metadata metadata[] = { { mkvector(symbols1), }, { mkvector(symbols2), }, };
-				pair< unsigned, statistic_types::function_detailed > data1[] = {
-					make_pair(0x10100, statistic_types::function_detailed()),
-					make_pair(0x11100, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data1[] = {
+					make_pair(0x10100, unthreaded_statistic_types::function_detailed()),
+					make_pair(0x11100, unthreaded_statistic_types::function_detailed()),
 				};
-				pair< unsigned, statistic_types::function_detailed > data2[] = {
-					make_pair(0x10200, statistic_types::function_detailed()),
-					make_pair(0x102000, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data2[] = {
+					make_pair(0x10200, unthreaded_statistic_types::function_detailed()),
+					make_pair(0x102000, unthreaded_statistic_types::function_detailed()),
 				};
 
 				write(*c, init, make_initialization_data("", 10));
@@ -330,9 +332,9 @@ namespace micro_profiler
 				model->set_order(columns::name, true);
 
 				assert_equal(L"baz", get_text(*model, 0, columns::name));
-				assert_equal(0x11100u, model->get_address(0));
+				assert_equal(addr(0x11100u), model->get_address(0));
 				assert_equal(L"foo", get_text(*model, 1, columns::name));
-				assert_equal(0x10100, model->get_address(1));
+				assert_equal(addr(0x10100), model->get_address(1));
 
 				// ACT
 				write(*c, modules_loaded, mkvector(basic2));
@@ -341,9 +343,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(L"BAR", get_text(*model, 0, columns::name));
-				assert_equal(0x102000, model->get_address(0));
+				assert_equal(addr(0x102000), model->get_address(0));
 				assert_equal(L"bar", get_text(*model, 1, columns::name));
-				assert_equal(0x10200, model->get_address(1));
+				assert_equal(addr(0x10200), model->get_address(1));
 				assert_equal(L"baz", get_text(*model, 2, columns::name));
 				assert_equal(L"foo", get_text(*model, 3, columns::name));
 			}
@@ -854,9 +856,9 @@ namespace micro_profiler
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
-				pair< unsigned, statistic_types::function_detailed > data[] = {
-					make_pair(1321222, statistic_types::function_detailed()),
-					make_pair(1321221, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data[] = {
+					make_pair(1321222, unthreaded_statistic_types::function_detailed()),
+					make_pair(1321221, unthreaded_statistic_types::function_detailed()),
 				};
 
 				// ACT / ASSERT (must not crash)
@@ -901,11 +903,11 @@ namespace micro_profiler
 				mapped_module_identified mi[] = {
 					create_mapping(17u, 0u), create_mapping(99u, 0x1000), create_mapping(1000u, 0x1900),
 				};
-				pair< unsigned, statistic_types::function_detailed > data[] = {
-					make_pair(0x0100, statistic_types::function_detailed()),
-					make_pair(0x1001, statistic_types::function_detailed()),
-					make_pair(0x1100, statistic_types::function_detailed()),
-					make_pair(0x1910, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data[] = {
+					make_pair(0x0100, unthreaded_statistic_types::function_detailed()),
+					make_pair(0x1001, unthreaded_statistic_types::function_detailed()),
+					make_pair(0x1100, unthreaded_statistic_types::function_detailed()),
+					make_pair(0x1910, unthreaded_statistic_types::function_detailed()),
 				};
 
 				write(*c, init, initialization_data());
@@ -916,7 +918,7 @@ namespace micro_profiler
 				write(*c, update_statistics_threaded, make_single_threaded(data));
 
 				// ACT
-				get_text(fl, fl.get_index(0x1100), columns::name);
+				get_text(fl, fl.get_index(addr(0x1100)), columns::name);
 
 				// ASSERT
 				unsigned int reference1[] = { 99u, };
@@ -927,9 +929,9 @@ namespace micro_profiler
 				outbound.requested_metadata.clear();
 
 				// ACT
-				get_text(fl, fl.get_index(0x1001), columns::name);
-				get_text(fl, fl.get_index(0x0100), columns::name);
-				get_text(fl, fl.get_index(0x1910), columns::name);
+				get_text(fl, fl.get_index(addr(0x1001)), columns::name);
+				get_text(fl, fl.get_index(addr(0x0100)), columns::name);
+				get_text(fl, fl.get_index(addr(0x1910)), columns::name);
 
 				// ASSERT
 				unsigned int reference2[] = { 17u, 1000u, };
@@ -947,8 +949,8 @@ namespace micro_profiler
 				mapped_module_identified mi[] = {
 					create_mapping(17u, 0u),
 				};
-				pair< unsigned, statistic_types::function_detailed > data[] = {
-					make_pair(0x0100, statistic_types::function_detailed()),
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data[] = {
+					make_pair(0x0100, unthreaded_statistic_types::function_detailed()),
 				};
 				wstring text;
 

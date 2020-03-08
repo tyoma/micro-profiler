@@ -1,5 +1,7 @@
 #pragma once
 
+#include <frontend/primitives.h>
+
 #include <common/module.h>
 #include <ut/assert.h>
 #include <wpl/ui/models.h>
@@ -24,6 +26,9 @@ namespace micro_profiler
 			};
 		};
 
+
+		inline address_t addr(size_t address, unsigned int threadid = 1)
+		{	return address_t(address, threadid);	}
 
 		inline std::wstring get_text(const wpl::ui::table_model &fl, unsigned row, unsigned column)
 		{

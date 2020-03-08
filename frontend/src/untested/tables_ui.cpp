@@ -150,7 +150,7 @@ namespace micro_profiler
 		const address_t address = _statistics->get_address(index);
 		symbol_resolver::fileline_t fileline;
 
-		if (_statistics->get_resolver()->symbol_fileline_by_va(address, fileline))
+		if (_statistics->get_resolver()->symbol_fileline_by_va(address.first, fileline))
 			open_source(fileline.first, fileline.second);
 	}
 

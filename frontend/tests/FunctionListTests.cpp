@@ -4,6 +4,7 @@
 #include "mocks.h"
 
 #include <test-helpers/helpers.h>
+#include <test-helpers/primitive_helpers.h>
 
 #include <frontend/serialization.h>
 
@@ -26,6 +27,7 @@ namespace micro_profiler
 		namespace 
 		{
 			typedef statistic_types_t<long_address_t> unthreaded_statistic_types;
+			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> unthreaded_addressed_function;
 
 			const columns::main name_times_inc_exc_iavg_eavg_reent_minc[] = {
 				columns::name, columns::times_called, columns::inclusive, columns::exclusive,
@@ -441,55 +443,38 @@ namespace micro_profiler
 			test( FunctionListTimeFormatter )
 			{
 				// INIT
-				// ~ ns
-				function_statistics s1(1, 0, 31, 29, 29);
-				function_statistics s1ub(1, 0, 9994, 9994, 9994);
+				unthreaded_addressed_function functions[] = {
+					// ~ ns
+					make_statistics(1118u, 1, 0, 31, 29, 29),
+					make_statistics(1990u, 1, 0, 9994, 9994, 9994),
 
-				// >= 1us
-				function_statistics s2lb(1, 0, 9996, 9996, 9996);
-				function_statistics s2(1, 0, 45340, 36666, 36666);
-				function_statistics s2ub(1, 0, 9994000, 9994000, 9994000);
+					// >= 1us
+					make_statistics(2000u, 1, 0, 9996, 9996, 9996),
+					make_statistics(2229u, 1, 0, 45340, 36666, 36666),
+					make_statistics(2990u, 1, 0, 9994000, 9994000, 9994000),
 
-				// >= 1ms
-				function_statistics s3lb(1, 0, 9996000, 9996000, 9996000);
-				function_statistics s3(1, 0, 33450030, 32333333, 32333333);
-				function_statistics s3ub(1, 0, 9994000000, 9994000000, 9994000000);
+					// >= 1ms
+					make_statistics(3000u, 1, 0, 9996000, 9996000, 9996000),
+					make_statistics(3118u, 1, 0, 33450030, 32333333, 32333333),
+					make_statistics(3990u, 1, 0, 9994000000, 9994000000, 9994000000),
 
-				// >= 1s
-				function_statistics s4lb(1, 0, 9996000000, 9996000000, 9996000000);
-				function_statistics s4(1, 0, 65450031030, 23470030000, 23470030000);
-				function_statistics s4ub(1, 0, 9994000000000, 9994000000000, 9994000000000);
+					// >= 1s
+					make_statistics(4000u, 1, 0, 9996000000, 9996000000, 9996000000),
+					make_statistics(5550u, 1, 0, 65450031030, 23470030000, 23470030000),
+					make_statistics(4990u, 1, 0, 9994000000000, 9994000000000, 9994000000000),
 
-				// >= 1000s
-				function_statistics s5lb(1, 0, 9996000000000, 9996000000000, 9996000000000);
-				function_statistics s5(1, 0, 65450031030567, 23470030000987, 23470030000987);
-				function_statistics s5ub(1, 0, 99990031030567, 99990030000987, 99990030000987);
+					// >= 1000s
+					make_statistics(5000u, 1, 0, 9996000000000, 9996000000000, 9996000000000),
+					make_statistics(4550u, 1, 0, 65450031030567, 23470030000987, 23470030000987),
+					make_statistics(5990u, 1, 0, 99990031030567, 99990030000987, 99990030000987),
 				
-				// >= 10000s
-				function_statistics s6lb(1, 0, 99999031030567, 99999030000987, 99999030000987);
-				function_statistics s6(1, 0, 65450031030567000, 23470030000987000, 23470030000987000);
-
-				unthreaded_statistic_types::map_detailed s;
+					// >= 10000s
+					make_statistics(6000u, 1, 0, 99999031030567, 99999030000987, 99999030000987),
+					make_statistics(6661u, 1, 0, 65450031030567000, 23470030000987000, 23470030000987000),
+				};
 				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver)); // 10 * billion ticks per second
 
-				static_cast<function_statistics &>(s[1118]) = s1;
-				static_cast<function_statistics &>(s[2229]) = s2;
-				static_cast<function_statistics &>(s[3118]) = s3;
-				static_cast<function_statistics &>(s[5550]) = s4;
-				static_cast<function_statistics &>(s[4550]) = s5;
-				static_cast<function_statistics &>(s[6661]) = s6;
-
-				static_cast<function_statistics &>(s[1990]) = s1ub;
-				static_cast<function_statistics &>(s[2000]) = s2lb;
-				static_cast<function_statistics &>(s[2990]) = s2ub;
-				static_cast<function_statistics &>(s[3000]) = s3lb;
-				static_cast<function_statistics &>(s[3990]) = s3ub;
-				static_cast<function_statistics &>(s[4000]) = s4lb;
-				static_cast<function_statistics &>(s[4990]) = s4ub;
-				static_cast<function_statistics &>(s[5000]) = s5lb;
-				static_cast<function_statistics &>(s[5990]) = s5ub;
-				static_cast<function_statistics &>(s[6000]) = s6lb;
-				serialize_single_threaded(ser, s);
+				serialize_single_threaded(ser, mkvector(functions));
 
 				// ACT
 				dser(*fl);
@@ -523,27 +508,25 @@ namespace micro_profiler
 			test( FunctionListSorting )
 			{
 				// INIT
-				unthreaded_statistic_types::map_detailed s;
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				invalidation_tracer ih;
+				const size_t data_size = 4;
+				unthreaded_addressed_function functions[data_size] = {
+					make_statistics(1990u, 15, 0, 31, 29, 3),
+					make_statistics(2000u, 35, 1, 453, 366, 4),
+					make_statistics(2990u, 2, 2, 33450030, 32333333, 5),
+					make_statistics(3000u, 15233, 3, 65460, 13470, 6),
+				};
 
-				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 3);
-				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 4);
-				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 5);
-				static_cast<function_statistics &>(s[3000]) = function_statistics(15233, 3, 65460, 13470, 6);
-				serialize_single_threaded(ser, s);
-
+				serialize_single_threaded(ser, mkvector(functions));
 				ih.bind_to_model(*fl);
-
-				const size_t data_size = s.size();
-
 				dser(*fl);
 
 				shared_ptr<const trackable> pt0 = fl->track(fl->get_index(addr(1990)));
 				shared_ptr<const trackable> pt1 = fl->track(fl->get_index(addr(2000)));
 				shared_ptr<const trackable> pt2 = fl->track(fl->get_index(addr(2990)));
 				shared_ptr<const trackable> pt3 = fl->track(fl->get_index(addr(3000)));
-				
+
 				const trackable &t0 = *pt0;
 				const trackable &t1 = *pt1;
 				const trackable &t2 = *pt2;
@@ -884,6 +867,89 @@ namespace micro_profiler
 				assert_equal(2u, t1.index());
 				assert_equal(1u, t2.index());
 				assert_equal(0u, t3.index());
+			}
+
+
+			test( FunctionListProvidesThreadIDAsAColumn )
+			{
+				// INIT
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				unthreaded_addressed_function functions[][1] = {
+					{	make_statistics(10000u, 1, 0, 1, 1, 1),	},
+					{	make_statistics(10000u, 2, 0, 1, 1, 1),	},
+					{	make_statistics(10000u, 3, 0, 1, 1, 1),	},
+				};
+				columns::main ordering[] = {	columns::threadid,	};
+
+				serialize_single_threaded(ser, mkvector(functions[0]), 18);
+				serialize_single_threaded(ser, mkvector(functions[1]), 171717);
+				serialize_single_threaded(ser, mkvector(functions[2]), 111);
+				dser(*fl);
+				dser(*fl);
+				fl->set_order(columns::times_called, true);
+
+				// ACT / ASSERT
+				wstring reference1[][1] = {	{	L"18",	}, {	L"171717",	},	};
+
+				assert_table_equal(ordering, reference1, *fl);
+
+				// INIT
+				dser(*fl);
+
+				// ACT / ASSERT
+				wstring reference2[][1] = {	{	L"18",	}, {	L"171717",	}, {	L"111",	},	};
+
+				assert_table_equal(ordering, reference2, *fl);
+			}
+
+
+			test( FunctionListCanBeSortedByThreadID )
+			{
+				// INIT
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				invalidation_tracer ih;
+				const size_t data_size = 5;
+				unthreaded_addressed_function functions[data_size][1] = {
+					{	make_statistics(10000u, 1, 0, 1, 1, 1),	},
+					{	make_statistics(10000u, 2, 0, 1, 1, 1),	},
+					{	make_statistics(10000u, 3, 0, 1, 1, 1),	},
+					{	make_statistics(10000u, 4, 0, 1, 1, 1),	},
+					{	make_statistics(10000u, 5, 0, 1, 1, 1),	},
+				};
+
+				serialize_single_threaded(ser, mkvector(functions[0]), 18);
+				serialize_single_threaded(ser, mkvector(functions[1]), 1);
+				serialize_single_threaded(ser, mkvector(functions[2]), 180);
+				serialize_single_threaded(ser, mkvector(functions[3]), 179);
+				serialize_single_threaded(ser, mkvector(functions[4]), 17900);
+				ih.bind_to_model(*fl);
+				dser(*fl);
+				dser(*fl);
+				dser(*fl);
+				dser(*fl);
+				dser(*fl);
+				ih.invalidations.clear();
+
+				// ACT (times called, ascending)
+				fl->set_order(columns::threadid, true);
+
+				// ASSERT
+				columns::main ordering[] = {	columns::times_called,	};
+				size_t reference_updates1[] = {	data_size,	};
+				wstring reference1[][1] = {	{	L"2",	}, {	L"1",	}, {	L"4",	}, {	L"3",	}, {	L"5",	},	};
+
+				assert_table_equal(ordering, reference1, *fl);
+				assert_equal(reference_updates1, ih.invalidations);
+
+				// ACT (times called, ascending)
+				fl->set_order(columns::threadid, false);
+
+				// ASSERT
+				size_t reference_updates2[] = {	data_size, data_size,	};
+				wstring reference2[][1] = {	{	L"5",	}, {	L"3",	},{	L"4",	},{	L"1",	},  {	L"2",	}, 	};
+
+				assert_table_equal(ordering, reference2, *fl);
+				assert_equal(reference_updates2, ih.invalidations);
 			}
 
 

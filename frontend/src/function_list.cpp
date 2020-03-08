@@ -70,6 +70,12 @@ namespace micro_profiler
 			function<shared_ptr<symbol_resolver> ()> _resolver_accessor;
 		};
 
+		struct by_threadid
+		{
+			bool operator ()(const function_key &lhs, const function_statistics &, const function_key &rhs, const function_statistics &) const
+			{	return lhs.second < rhs.second;	}
+		};
+
 		struct by_times_called
 		{
 			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
@@ -205,13 +211,14 @@ namespace micro_profiler
 		{
 		case 0:	itoa<10>(text, item + 1);	break;
 		case 1:	assign(text, _resolver->symbol_name_by_va(row.first.first));	break;
-		case 2:	itoa<10>(text, row.second.times_called);	break;
-		case 3:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
-		case 4:	format_interval(text, inclusive_time(_tick_interval)(row.second));	break;
-		case 5:	format_interval(text, exclusive_time_avg(_tick_interval)(row.second));	break;
-		case 6:	format_interval(text, inclusive_time_avg(_tick_interval)(row.second));	break;
-		case 7:	itoa<10>(text, row.second.max_reentrance);	break;
-		case 8:	format_interval(text, max_call_time(_tick_interval)(row.second));	break;
+		case 2:	itoa<10>(text, row.first.second);	break;
+		case 3:	itoa<10>(text, row.second.times_called);	break;
+		case 4:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
+		case 5:	format_interval(text, inclusive_time(_tick_interval)(row.second));	break;
+		case 6:	format_interval(text, exclusive_time_avg(_tick_interval)(row.second));	break;
+		case 7:	format_interval(text, inclusive_time_avg(_tick_interval)(row.second));	break;
+		case 8:	itoa<10>(text, row.second.max_reentrance);	break;
+		case 9:	format_interval(text, max_call_time(_tick_interval)(row.second));	break;
 		}
 	}
 
@@ -230,36 +237,41 @@ namespace micro_profiler
 			break;
 
 		case 2:
+			_view->set_order(by_threadid(), ascending);
+			// _view->disable_projection();
+			break;
+
+		case 3:
 			_view->set_order(by_times_called(), ascending);
 			_view->project_value(get_times_called());
 			break;
 
-		case 3:
+		case 4:
 			_view->set_order(by_exclusive_time(), ascending);
 			_view->project_value(exclusive_time(_tick_interval));
 			break;
 
-		case 4:
+		case 5:
 			_view->set_order(by_inclusive_time(), ascending);
 			_view->project_value(inclusive_time(_tick_interval));
 			break;
 
-		case 5:
+		case 6:
 			_view->set_order(by_avg_exclusive_call_time(), ascending);
 			_view->project_value(exclusive_time_avg(_tick_interval));
 			break;
 
-		case 6:
+		case 7:
 			_view->set_order(by_avg_inclusive_call_time(), ascending);
 			_view->project_value(inclusive_time_avg(_tick_interval));
 			break;
 
-		case 7:
+		case 8:
 			_view->set_order(by_max_reentrance(), ascending);
 			_view->disable_projection();
 			break;
 
-		case 8:
+		case 9:
 			_view->set_order(by_max_call_time(), ascending);
 			_view->project_value(max_call_time(_tick_interval));
 			break;
@@ -279,7 +291,7 @@ namespace micro_profiler
 		{
 		case 0:	itoa<10>(text, item + 1);	break;
 		case 1:	assign(text, _resolver->symbol_name_by_va(row.first.first));	break;
-		case 2:	itoa<10>(text, row.second);	break;
+		case 3:	itoa<10>(text, row.second);	break;
 		}
 	}
 
@@ -289,7 +301,7 @@ namespace micro_profiler
 		switch (column)
 		{
 		case 1:	_view->set_order(by_name([this] { return _resolver; }), ascending);	break;
-		case 2:	_view->set_order(by_times_called(), ascending);	break;
+		case 3:	_view->set_order(by_times_called(), ascending);	break;
 		}
 		this->invalidated(_view->size());
 	}

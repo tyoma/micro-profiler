@@ -16,13 +16,14 @@ namespace micro_profiler
 			{
 				order = 0,
 				name = 1,
-				times_called = 2,
-				exclusive = 3,
-				inclusive = 4,
-				exclusive_avg = 5,
-				inclusive_avg = 6,
-				max_reentrance = 7,
-				max_time = 8,
+				threadid = 2,
+				times_called = 3,
+				exclusive = 4,
+				inclusive = 5,
+				exclusive_avg = 6,
+				inclusive_avg = 7,
+				max_reentrance = 8,
+				max_time = 9,
 			};
 		};
 

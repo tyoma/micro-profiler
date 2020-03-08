@@ -29,6 +29,9 @@ namespace micro_profiler
 	struct function_statistics;
 	template <typename KeyT> struct function_statistics_detailed_t;
 
+	template <size_t size_t_size>
+	struct address_hash_fixed;
+
 	struct address_hash
 	{
 		size_t operator ()(unsigned int key) const throw();
@@ -74,14 +77,23 @@ namespace micro_profiler
 
 
 	// address_hash - inline definitions
+	template <>
+	struct address_hash_fixed<4>
+	{	size_t operator ()(unsigned int key) const throw() {	return key * 0x9e3779b9u;	}	};
+
+	template <>
+	struct address_hash_fixed<8>
+	{	size_t operator ()(long_address_t key) const throw() {	return static_cast<size_t>(key * 0x7FFFFFFFFFFFFFFFull);	}	};
+
+
 	inline size_t address_hash::operator ()(unsigned int key) const throw()
-	{	return key * 0x9e3779b9u;	}
+	{	return address_hash_fixed<sizeof(key)>()(key);	}
 
 	inline size_t address_hash::operator ()(long_address_t key) const throw()
-	{	return static_cast<size_t>(key * 0x7FFFFFFFFFFFFFFFull);	}
+	{	return address_hash_fixed<sizeof(key)>()(key);	}
 
 	inline size_t address_hash::operator ()(const void *key) const throw()
-	{	return (*this)(reinterpret_cast<size_t>(key));	}
+	{	return address_hash_fixed<sizeof(size_t)>()(reinterpret_cast<size_t>(key));	}
 
 	template <typename T1, typename T2>
 	inline size_t address_hash::operator ()(const std::pair<T1, T2> &key) const throw()

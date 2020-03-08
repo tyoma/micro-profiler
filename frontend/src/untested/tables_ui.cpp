@@ -39,6 +39,7 @@ namespace micro_profiler
 		const columns_model::column c_columns_statistics[] = {
 			columns_model::column("Index", L"#", 28, columns_model::dir_none),
 			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
+			columns_model::column("ThreadID", L"Thread #", 64, columns_model::dir_ascending),
 			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
 			columns_model::column("ExclusiveTime", L"Exclusive Time", 48, columns_model::dir_descending),
 			columns_model::column("InclusiveTime", L"Inclusive Time", 48, columns_model::dir_descending),
@@ -51,6 +52,7 @@ namespace micro_profiler
 		const columns_model::column c_columns_statistics_parents[] = {
 			columns_model::column("Index", L"#", 28, columns_model::dir_none),
 			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
+			columns_model::column("ThreadID", L"Thread #", 64, columns_model::dir_ascending),
 			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
 		};
 	}

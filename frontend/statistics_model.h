@@ -48,9 +48,9 @@ namespace micro_profiler
 		virtual void set_order(index_type column, bool ascending);
 		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type row) const;
 
-		virtual index_type get_index(address_t address) const;
+		virtual index_type get_index(function_key address) const;
 
-		virtual address_t get_address(index_type item) const;
+		virtual function_key get_function_key(index_type item) const;
 
 	protected:
 		typedef ordered_view<MapT> view_type;
@@ -96,11 +96,11 @@ namespace micro_profiler
 	{	return _view->track(row);	}
 
 	template <typename BaseT, typename MapT>
-	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(address_t address) const
-	{	return _view->find_by_key(address);	}
+	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(function_key key) const
+	{	return _view->find_by_key(key);	}
 
 	template <typename BaseT, typename MapT>
-	inline address_t statistics_model_impl<BaseT, MapT>::get_address(index_type item) const
+	inline function_key statistics_model_impl<BaseT, MapT>::get_function_key(index_type item) const
 	{	return get_entry(item).first;	}
 
 	template <typename BaseT, typename MapT>

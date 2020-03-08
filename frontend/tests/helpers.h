@@ -27,8 +27,8 @@ namespace micro_profiler
 		};
 
 
-		inline address_t addr(size_t address, unsigned int threadid = 1)
-		{	return address_t(address, threadid);	}
+		inline function_key addr(size_t address, unsigned int threadid = 1)
+		{	return function_key(address, threadid);	}
 
 		inline std::wstring get_text(const wpl::ui::table_model &fl, unsigned row, unsigned column)
 		{

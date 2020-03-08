@@ -60,7 +60,7 @@ namespace micro_profiler
 			{	}
 
 			template <typename AnyT>
-			bool operator ()(address_t lhs_addr, const AnyT &, address_t rhs_addr, const AnyT &) const
+			bool operator ()(function_key lhs_addr, const AnyT &, function_key rhs_addr, const AnyT &) const
 			{
 				shared_ptr<symbol_resolver> r = _resolver_accessor();
 				return r->symbol_name_by_va(lhs_addr.first) < r->symbol_name_by_va(rhs_addr.first);
@@ -72,46 +72,46 @@ namespace micro_profiler
 
 		struct by_times_called
 		{
-			bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
+			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
 			{	return lhs.times_called < rhs.times_called;	}
 
-			bool operator ()(address_t, count_t lhs, address_t, count_t rhs) const
+			bool operator ()(function_key, count_t lhs, function_key, count_t rhs) const
 			{	return lhs < rhs;	}
 		};
 
 		struct by_exclusive_time
 		{
-			bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
+			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
 			{	return lhs.exclusive_time < rhs.exclusive_time;	}
 		};
 
 		struct by_inclusive_time
 		{
-			bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
+			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
 			{	return lhs.inclusive_time < rhs.inclusive_time;	}
 		};
 
 		struct by_avg_exclusive_call_time
 		{
-			bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
+			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
 			{	return lhs.times_called && rhs.times_called ? lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 		};
 
 		struct by_avg_inclusive_call_time
 		{
-			bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
+			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
 			{	return lhs.times_called && rhs.times_called ? lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called : lhs.times_called < rhs.times_called;	}
 		};
 
 		struct by_max_reentrance
 		{
-			bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
+			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
 			{	return lhs.max_reentrance < rhs.max_reentrance;	}
 		};
 
 		struct by_max_call_time
 		{
-			bool operator ()(address_t, const function_statistics &lhs, address_t, const function_statistics &rhs) const
+			bool operator ()(function_key, const function_statistics &lhs, function_key, const function_statistics &rhs) const
 			{	return lhs.max_call_time < rhs.max_call_time;	}
 		};
 

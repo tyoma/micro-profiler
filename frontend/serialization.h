@@ -46,7 +46,7 @@ namespace micro_profiler
 			micro_profiler::deserialization_context new_context = context;
 
 			archive(new_context.caller);
-			archive(data[address_t(new_context.caller, new_context.threadid)], new_context);
+			archive(data[function_key(new_context.caller, new_context.threadid)], new_context);
 		}
 
 		template <typename ArchiveT, typename ContainerT>
@@ -95,7 +95,7 @@ namespace micro_profiler
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
-		update_parent_statistics(*context.map, address_t(context.caller, context.threadid), data.callees);
+		update_parent_statistics(*context.map, function_key(context.caller, context.threadid), data.callees);
 	}
 
 	template <typename ArchiveT>
@@ -123,7 +123,7 @@ namespace strmd
 	};
 
 	template <typename T>
-	struct container_traits< std::unordered_map<micro_profiler::address_t, T, micro_profiler::address_hash> >
+	struct container_traits< std::unordered_map<micro_profiler::function_key, T, micro_profiler::address_hash> >
 	{
 		static const bool is_container = true;
 		typedef micro_profiler::statistics_map_reader reader_type;

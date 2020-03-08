@@ -22,7 +22,7 @@ namespace micro_profiler
 		namespace
 		{
 			typedef std::pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
-			typedef std::pair<address_t, statistic_types_t<address_t>::function_detailed> threaded_addressed_statistics;
+			typedef std::pair<function_key, statistic_types_t<function_key>::function_detailed> threaded_addressed_statistics;
 		}
 
 		begin_test_suite( SerializationTests )
@@ -71,7 +71,7 @@ namespace micro_profiler
 			test( DeserializationIntoExistingValuesAddsValuesBase )
 			{
 				typedef std::pair<unsigned, statistic_types_t<unsigned>::function> addressed_statistics;
-				typedef std::pair<address_t, statistic_types_t<address_t>::function> threaded_addressed_statistics;
+				typedef std::pair<function_key, statistic_types_t<function_key>::function> threaded_addressed_statistics;
 
 				// INIT
 				vector_adapter buffer;
@@ -243,17 +243,17 @@ namespace micro_profiler
 				dser(s, context);
 
 				// ASSERT
-				pair<address_t, count_t> reference_1221[] = {
+				pair<function_key, count_t> reference_1221[] = {
 					make_pair(addr(1221, 101), 17),
 					make_pair(addr(1222, 101), 8),
 				};
-				pair<address_t, count_t> reference_1231[] = {
+				pair<function_key, count_t> reference_1231[] = {
 					make_pair(addr(1221, 101), 18),
 				};
-				pair<address_t, count_t> reference_1241[] = {
+				pair<function_key, count_t> reference_1241[] = {
 					make_pair(addr(1221, 101), 19),
 				};
-				pair<address_t, count_t> reference_1251[] = {
+				pair<function_key, count_t> reference_1251[] = {
 					make_pair(addr(1222, 101), 9),
 				};
 
@@ -269,10 +269,10 @@ namespace micro_profiler
 				dser(s, context);
 
 				// ASSERT
-				pair<address_t, count_t> reference_12211_110[] = {
+				pair<function_key, count_t> reference_12211_110[] = {
 					make_pair(addr(12210, 110), 107),
 				};
-				pair<address_t, count_t> reference_1221_110[] = {
+				pair<function_key, count_t> reference_1221_110[] = {
 					make_pair(addr(12210, 110), 8),
 				};
 

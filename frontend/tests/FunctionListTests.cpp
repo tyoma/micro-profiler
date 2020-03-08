@@ -1244,10 +1244,10 @@ namespace micro_profiler
 				ls->set_order(columns::name, true);
 
 				// ACT / ASSERT
-				assert_equal(addr(0x2001u), ls->get_address(0));
-				assert_equal(addr(0x2004u), ls->get_address(1));
-				assert_equal(addr(0x2008u), ls->get_address(2));
-				assert_equal(addr(0x2011u), ls->get_address(3));
+				assert_equal(addr(0x2001u), ls->get_function_key(0));
+				assert_equal(addr(0x2004u), ls->get_function_key(1));
+				assert_equal(addr(0x2008u), ls->get_function_key(2));
+				assert_equal(addr(0x2011u), ls->get_function_key(3));
 			}
 
 
@@ -1617,9 +1617,9 @@ namespace micro_profiler
 				p->set_order(columns::times_called, true);
 
 				// ACT / ASSERT
-				assert_equal(addr(0x2978), p->get_address(0));
-				assert_equal(addr(0x2995), p->get_address(1));
-				assert_equal(addr(0x3001), p->get_address(2));
+				assert_equal(addr(0x2978), p->get_function_key(0));
+				assert_equal(addr(0x2995), p->get_function_key(1));
+				assert_equal(addr(0x3001), p->get_function_key(2));
 			}
 
 

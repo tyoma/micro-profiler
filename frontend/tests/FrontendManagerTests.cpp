@@ -288,10 +288,12 @@ namespace micro_profiler
 				write(*c2, update_statistics_threaded, make_single_threaded(data));
 
 				// ASSERT
-				wstring text;
+				columns::main ordering[] = {	columns::inclusive,	};
+				wstring reference1[][1] = {	{	L"15s",	},	};
+				wstring reference2[][1] = {	{	L"10s",	},	};
 
-				assert_equal(L"15s", (model1->get_text(0, 4, text), text));
-				assert_equal(L"10s", (model2->get_text(0, 4, text), text));
+				assert_table_equivalent(ordering, reference1, *model1);
+				assert_table_equivalent(ordering, reference2, *model2);
 			}
 
 
@@ -325,13 +327,11 @@ namespace micro_profiler
 				write(*c, update_statistics_threaded, make_single_threaded(data1));
 
 				// ASSERT
-				wstring text;
+				model->set_order(columns::name, true);
 
-				model->set_order(1, true);
-
-				assert_equal(L"baz", (model->get_text(0, 1, text), text));
+				assert_equal(L"baz", get_text(*model, 0, columns::name));
 				assert_equal(0x11100u, model->get_address(0));
-				assert_equal(L"foo", (model->get_text(1, 1, text), text));
+				assert_equal(L"foo", get_text(*model, 1, columns::name));
 				assert_equal(0x10100, model->get_address(1));
 
 				// ACT
@@ -340,12 +340,12 @@ namespace micro_profiler
 				write(*c, update_statistics_threaded, make_single_threaded(data2));
 
 				// ASSERT
-				assert_equal(L"BAR", (model->get_text(0, 1, text), text));
+				assert_equal(L"BAR", get_text(*model, 0, columns::name));
 				assert_equal(0x102000, model->get_address(0));
-				assert_equal(L"bar", (model->get_text(1, 1, text), text));
+				assert_equal(L"bar", get_text(*model, 1, columns::name));
 				assert_equal(0x10200, model->get_address(1));
-				assert_equal(L"baz", (model->get_text(2, 1, text), text));
-				assert_equal(L"foo", (model->get_text(3, 1, text), text));
+				assert_equal(L"baz", get_text(*model, 2, columns::name));
+				assert_equal(L"foo", get_text(*model, 3, columns::name));
 			}
 
 
@@ -907,7 +907,6 @@ namespace micro_profiler
 					make_pair(0x1100, statistic_types::function_detailed()),
 					make_pair(0x1910, statistic_types::function_detailed()),
 				};
-				wstring text;
 
 				write(*c, init, initialization_data());
 
@@ -917,7 +916,7 @@ namespace micro_profiler
 				write(*c, update_statistics_threaded, make_single_threaded(data));
 
 				// ACT
-				fl.get_text(fl.get_index(0x1100), 1, text);
+				get_text(fl, fl.get_index(0x1100), columns::name);
 
 				// ASSERT
 				unsigned int reference1[] = { 99u, };
@@ -928,9 +927,9 @@ namespace micro_profiler
 				outbound.requested_metadata.clear();
 
 				// ACT
-				fl.get_text(fl.get_index(0x1001), 1, text);
-				fl.get_text(fl.get_index(0x0100), 1, text);
-				fl.get_text(fl.get_index(0x1910), 1, text);
+				get_text(fl, fl.get_index(0x1001), columns::name);
+				get_text(fl, fl.get_index(0x0100), columns::name);
+				get_text(fl, fl.get_index(0x1910), columns::name);
 
 				// ASSERT
 				unsigned int reference2[] = { 17u, 1000u, };
@@ -962,7 +961,7 @@ namespace micro_profiler
 
 				// ACT
 				c.reset();
-				fl.get_text(0, 1, text);
+				get_text(fl, 0, columns::name);
 
 				// ASSERT
 				assert_is_empty(outbound.requested_metadata);

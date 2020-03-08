@@ -1,5 +1,6 @@
 #include <frontend/function_list.h>
 
+#include "helpers.h"
 #include "mocks.h"
 
 #include <test-helpers/helpers.h>
@@ -24,6 +25,13 @@ namespace micro_profiler
 	{
 		namespace 
 		{
+			const columns::main name_times_inc_exc_iavg_eavg_reent_minc[] = {
+				columns::name, columns::times_called, columns::inclusive, columns::exclusive,
+				columns::inclusive_avg, columns::exclusive_avg, columns::max_reentrance, columns::max_time
+			};
+
+			const columns::main name_times[] = {	columns::name, columns::times_called,	};
+
 			timestamp_t test_ticks_per_second = 1;
 			const double c_tolerance = 0.000001;
 
@@ -33,54 +41,6 @@ namespace micro_profiler
 				wstringstream s;
 				s << value;
 				return s.str();
-			}
-
-			wstring get_text(const table_model &fl, unsigned row, unsigned column)
-			{
-				wstring text;
-
-				return fl.get_text(row, column, text), text;
-			}
-
-			void assert_row(const table_model &fl, table_model::index_type row, const wchar_t* name, const wchar_t* times_called)
-			{
-				wstring result;
-
-				fl.get_text(row, 0, result); // row number
-				assert_equal(to_string(row + 1), result);
-				fl.get_text(row, 1, result); // name
-				assert_equal(name, result);
-				fl.get_text(row, 2, result); // times called
-				assert_equal(times_called, result);
-			}
-
-			void assert_row(
-				const table_model &fl, 
-				table_model::index_type row, 
-				const wchar_t* name, 
-				const wchar_t* times_called, 
-				const wchar_t* inclusive_time, 
-				const wchar_t* exclusive_time, 
-				const wchar_t* avg_inclusive_time, 
-				const wchar_t* avg_exclusive_time, 
-				const wchar_t* max_reentrance,
-				const wchar_t* max_call_time = L"")
-			{
-				wstring result;
-
-				assert_row(fl, row, name, times_called);
-				fl.get_text(row, 3, result); // exclusive time
-				assert_equal(exclusive_time, result);
-				fl.get_text(row, 4, result); // inclusive time
-				assert_equal(inclusive_time, result);
-				fl.get_text(row, 5, result); // avg. exclusive time
-				assert_equal(avg_exclusive_time, result);
-				fl.get_text(row, 6, result); // avg. inclusive time
-				assert_equal(avg_inclusive_time, result);
-				fl.get_text(row, 7, result); // max reentrance
-				assert_equal(max_reentrance, result);
-				fl.get_text(row, 8, result); // max reentrance
-				assert_equal(max_call_time, result);
 			}
 
 			void increment(int *value)
@@ -117,9 +77,13 @@ namespace micro_profiler
 
 				void operator ()(table_model::index_type /*count*/) const
 				{
-					assert_row(_model, 0, L"00002995", L"700");
-					assert_row(_model, 1, L"00003001", L"30");
-					assert_row(_model, 2, L"00002978", L"3");
+					wstring reference[][2] = {
+						{	L"00002995", L"700",	},
+						{	L"00003001", L"30",	},
+						{	L"00002978", L"3",	},
+					};
+
+					assert_table_equal(name_times, reference, _model);
 				}
 			};
 
@@ -139,7 +103,7 @@ namespace micro_profiler
 				wstring result;
 
 				for (table_model::index_type i = 0, c = m.get_count(); i != c; ++i)
-					if (m.get_text(i, 1, result), result == name)
+					if (m.get_text(i, columns::name, result), result == name)
 						return i;
 				return table_model::npos();
 			}
@@ -296,7 +260,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 				dser(*fl);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> children[] = {	fl->watch_children(0), fl->watch_children(1),	};
 
@@ -329,7 +293,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 				dser(*fl);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> parents[] = {	fl->watch_parents(2), fl->watch_parents(2),	};
 
@@ -406,7 +370,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s3[1118]) = function_statistics(100111222333, 0, 17000, 14000, 4);
 
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
-				fl->set_order(2, true); // by times called
+				fl->set_order(columns::times_called, true);
 				
 				invalidation_tracer ih;
 				ih.bind_to_model(*fl);
@@ -421,13 +385,15 @@ namespace micro_profiler
 				shared_ptr<const trackable> second = fl->track(1); // 1118
 
 				// ASSERT
-				assert_equal(2u, fl->get_count());
 				assert_equal(1u, ih.invalidations.size());
 				assert_equal(2u, ih.invalidations.back()); //check what's coming as event arg
 		
-				/* name, times_called, inclusive_time, exclusive_time, avg_inclusive_time, avg_exclusive_time, max_reentrance */
-				assert_row(*fl, fl->get_index(1118), L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0", L"3s");
-				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
+				wstring reference1[][8] = {
+					{	L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0", L"3s"	},
+					{	L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s"	},
+				};
+
+				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *fl);
 
 				assert_equal(0u, first->index());
 				assert_equal(1u, second->index());
@@ -436,13 +402,16 @@ namespace micro_profiler
 				dser(*fl);
 				
 				// ASSERT
-				assert_equal(3u, fl->get_count());
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, fl->get_index(1118), L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0", L"6s");
-				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
-				assert_row(*fl, fl->get_index(5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
+				wstring reference2[][8] = {
+					{	L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0", L"6s",	},
+					{	L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s",	},
+					{	L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s",	},
+				};
+
+				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *fl);
 
 				assert_equal(0u, first->index());
 				assert_equal(2u, second->index()); // kind of moved down
@@ -451,13 +420,16 @@ namespace micro_profiler
 				dser(*fl);
 				
 				// ASSERT
-				assert_equal(3u, fl->get_count());
 				assert_equal(3u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, fl->get_index(1118), L"0000045E", L"100111222357", L"1.7e+04s", L"1.4e+04s", L"170ns", L"140ns", L"0", L"6s");
-				assert_row(*fl, fl->get_index(2229), L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s");
-				assert_row(*fl, fl->get_index(5550), L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s");
+				wstring reference3[][8] = {
+					{	L"0000045E", L"100111222357", L"1.7e+04s", L"1.4e+04s", L"170ns", L"140ns", L"0", L"6s",	},
+					{	L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s",	},
+					{	L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s",	},
+				};
+
+				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference3, *fl);
 
 				assert_equal(0u, first->index());
 				assert_equal(2u, second->index()); // stand still
@@ -521,27 +493,28 @@ namespace micro_profiler
 				dser(*fl);
 
 				// ASSERT
-				assert_equal(fl->get_count(), s.size());
-		
-				// columns: name, times called, inclusive time, exclusive time, avg. inclusive time, avg. exclusive time, max reentrance, max call time
-				assert_row(*fl, fl->get_index(1118), L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0", L"2.9ns");
-				assert_row(*fl, fl->get_index(2229), L"000008B5", L"1", L"4.53\x03bcs", L"3.67\x03bcs", L"4.53\x03bcs", L"3.67\x03bcs", L"0", L"3.67\x03bcs");
-				assert_row(*fl, fl->get_index(3118), L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0", L"3.23ms");
-				assert_row(*fl, fl->get_index(5550), L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0", L"2.35s");
-				assert_row(*fl, fl->get_index(4550), L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0", L"2347s");
-				assert_row(*fl, fl->get_index(6661), L"00001A05", L"1", L"6.55e+06s", L"2.35e+06s", L"6.55e+06s", L"2.35e+06s", L"0", L"2.35e+06s");
-				
-				// ASSERT (boundary cases)
-				assert_row(*fl, fl->get_index(1990), L"000007C6", L"1", L"999ns", L"999ns", L"999ns", L"999ns", L"0", L"999ns");
-				assert_row(*fl, fl->get_index(2000), L"000007D0", L"1", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"0", L"1\x03bcs");
-				assert_row(*fl, fl->get_index(2990), L"00000BAE", L"1", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"0", L"999\x03bcs");
-				assert_row(*fl, fl->get_index(3000), L"00000BB8", L"1", L"1ms", L"1ms", L"1ms", L"1ms", L"0", L"1ms");
-				assert_row(*fl, fl->get_index(3990), L"00000F96", L"1", L"999ms", L"999ms", L"999ms", L"999ms", L"0", L"999ms");
-				assert_row(*fl, fl->get_index(4000), L"00000FA0", L"1", L"1s", L"1s", L"1s", L"1s", L"0", L"1s");
-				assert_row(*fl, fl->get_index(4990), L"0000137E", L"1", L"999s", L"999s", L"999s", L"999s", L"0", L"999s");
-				assert_row(*fl, fl->get_index(5000), L"00001388", L"1", L"999.6s", L"999.6s", L"999.6s", L"999.6s", L"0", L"999.6s");
-				assert_row(*fl, fl->get_index(5990), L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0", L"9999s");
-				assert_row(*fl, fl->get_index(6000), L"00001770", L"1", L"1e+04s", L"1e+04s", L"1e+04s", L"1e+04s", L"0", L"1e+04s");
+				wstring reference[][8] = {
+					{	L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0", L"2.9ns",	},
+					{	L"000008B5", L"1", L"4.53\x03bcs", L"3.67\x03bcs", L"4.53\x03bcs", L"3.67\x03bcs", L"0", L"3.67\x03bcs",	},
+					{	L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0", L"3.23ms",	},
+					{	L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0", L"2.35s",	},
+					{	L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0", L"2347s",	},
+					{	L"00001A05", L"1", L"6.55e+06s", L"2.35e+06s", L"6.55e+06s", L"2.35e+06s", L"0", L"2.35e+06s",	},
+
+					// boundary cases
+					{	L"000007C6", L"1", L"999ns", L"999ns", L"999ns", L"999ns", L"0", L"999ns",	},
+					{	L"000007D0", L"1", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"0", L"1\x03bcs",	},
+					{	L"00000BAE", L"1", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"0", L"999\x03bcs",	},
+					{	L"00000BB8", L"1", L"1ms", L"1ms", L"1ms", L"1ms", L"0", L"1ms",	},
+					{	L"00000F96", L"1", L"999ms", L"999ms", L"999ms", L"999ms", L"0", L"999ms",	},
+					{	L"00000FA0", L"1", L"1s", L"1s", L"1s", L"1s", L"0", L"1s",	},
+					{	L"0000137E", L"1", L"999s", L"999s", L"999s", L"999s", L"0", L"999s",	},
+					{	L"00001388", L"1", L"999.6s", L"999.6s", L"999.6s", L"999.6s", L"0", L"999.6s",	},
+					{	L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0", L"9999s",	},
+					{	L"00001770", L"1", L"1e+04s", L"1e+04s", L"1e+04s", L"1e+04s", L"0", L"1e+04s",	},
+				};
+
+				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference, *fl);
 			}
 
 
@@ -575,16 +548,20 @@ namespace micro_profiler
 				const trackable &t3 = *pt3;
 
 				// ACT (times called, ascending)
-				fl->set_order(2, true);
+				fl->set_order(columns::times_called, true);
 				
 				// ASSERT
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); // s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); // s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); // s4
+				wstring reference1[][8] = {
+					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s",	},
+					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s",	},
+					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s",	},
+					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s",	},
+				};
+
+				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *fl);
 
 				assert_equal(1u, t0.index());
 				assert_equal(2u, t1.index());
@@ -592,16 +569,20 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (times called, descending)
-				fl->set_order(2, false);
+				fl->set_order(columns::times_called, false);
 
 				// ASSERT
 				assert_equal(3u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference2[][8] = {
+					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"	},
+					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"	},
+					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"	},
+					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"	},
+				};
+
+				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *fl);
 
 				assert_equal(2u, t0.index());
 				assert_equal(1u, t1.index());
@@ -609,33 +590,41 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (name, ascending; after times called to see that sorting in asc direction works)
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				// ASSERT
 				assert_equal(4u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
-				
+				wstring reference3[][8] = {
+					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"	},
+					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"	},
+					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"	},
+					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"	},
+				};
+
+				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference3, *fl);
+
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
 				assert_equal(2u, t2.index());
 				assert_equal(3u, t3.index());
 
 				// ACT (name, descending)
-				fl->set_order(1, false);
+				fl->set_order(columns::name, false);
 
 				// ASSERT
 				assert_equal(5u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference4[][8] = {
+					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"	},
+					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"	},
+					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"	},
+					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"	},
+				};
+
+				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference4, *fl);
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -643,16 +632,20 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (exclusive time, ascending)
-				fl->set_order(3, true);
+				fl->set_order(columns::exclusive, true);
 
 				// ASSERT
 				assert_equal(6u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference5[][2] = {
+					{	L"000007C6", L"15",	},
+					{	L"000007D0", L"35",	},
+					{	L"00000BB8", L"15233",	},
+					{	L"00000BAE", L"2",	},
+				};
+
+				assert_table_equal(name_times, reference5, *fl);
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -660,16 +653,20 @@ namespace micro_profiler
 				assert_equal(2u, t3.index());
 
 				// ACT (exclusive time, descending)
-				fl->set_order(3, false);
+				fl->set_order(columns::exclusive, false);
 
 				// ASSERT
 				assert_equal(7u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference6[][2] = {
+					{	L"00000BAE", L"2",	},
+					{	L"00000BB8", L"15233",	},
+					{	L"000007D0", L"35",	},
+					{	L"000007C6", L"15",	},
+				};
+
+				assert_table_equal(name_times, reference6, *fl);
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -677,16 +674,20 @@ namespace micro_profiler
 				assert_equal(1u, t3.index());
 
 				// ACT (inclusive time, ascending)
-				fl->set_order(4, true);
+				fl->set_order(columns::inclusive, true);
 
 				// ASSERT
 				assert_equal(8u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference7[][2] = {
+					{	L"000007C6", L"15",	},
+					{	L"000007D0", L"35",	},
+					{	L"00000BB8", L"15233",	},
+					{	L"00000BAE", L"2",	},
+				};
+
+				assert_table_equal(name_times, reference7, *fl);
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -694,16 +695,20 @@ namespace micro_profiler
 				assert_equal(2u, t3.index());
 
 				// ACT (inclusive time, descending)
-				fl->set_order(4, false);
+				fl->set_order(columns::inclusive, false);
 
 				// ASSERT
 				assert_equal(9u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference8[][2] = {
+					{	L"00000BAE", L"2",	},
+					{	L"00000BB8", L"15233",	},
+					{	L"000007D0", L"35",	},
+					{	L"000007C6", L"15",	},
+				};
+
+				assert_table_equal(name_times, reference8, *fl);
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -711,16 +716,20 @@ namespace micro_profiler
 				assert_equal(1u, t3.index());
 				
 				// ACT (avg. exclusive time, ascending)
-				fl->set_order(5, true);
+				fl->set_order(columns::exclusive_avg, true);
 				
 				// ASSERT
 				assert_equal(10u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 1, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference9[][2] = {
+					{	L"00000BB8", L"15233",	},
+					{	L"000007C6", L"15",	},
+					{	L"000007D0", L"35",	},
+					{	L"00000BAE", L"2",	},
+				};
+
+				assert_table_equal(name_times, reference9, *fl);
 
 				assert_equal(1u, t0.index());
 				assert_equal(2u, t1.index());
@@ -728,16 +737,20 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (avg. exclusive time, descending)
-				fl->set_order(5, false);
+				fl->set_order(columns::exclusive_avg, false);
 				
 				// ASSERT
 				assert_equal(11u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 2, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference10[][2] = {
+					{	L"00000BAE", L"2",	},
+					{	L"000007D0", L"35",	},
+					{	L"000007C6", L"15",	},
+					{	L"00000BB8", L"15233",	},
+				};
+
+				assert_table_equal(name_times, reference10, *fl);
 
 				assert_equal(2u, t0.index());
 				assert_equal(1u, t1.index());
@@ -745,16 +758,20 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (avg. inclusive time, ascending)
-				fl->set_order(6, true);
+				fl->set_order(columns::inclusive_avg, true);
 				
 				// ASSERT
 				assert_equal(12u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 3, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 1, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference11[][2] = {
+					{	L"000007C6", L"15",	},
+					{	L"00000BB8", L"15233",	},
+					{	L"000007D0", L"35",	},
+					{	L"00000BAE", L"2",	},
+				};
+
+				assert_table_equal(name_times, reference11, *fl);
 
 				assert_equal(0u, t0.index());
 				assert_equal(2u, t1.index());
@@ -762,16 +779,20 @@ namespace micro_profiler
 				assert_equal(1u, t3.index());
 
 				// ACT (avg. inclusive time, descending)
-				fl->set_order(6, false);
+				fl->set_order(columns::inclusive_avg, false);
 				
 				// ASSERT
 				assert_equal(13u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 0, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 2, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference12[][2] = {
+					{	L"00000BAE", L"2",	},
+					{	L"000007D0", L"35",	},
+					{	L"00000BB8", L"15233",	},
+					{	L"000007C6", L"15",	},
+				};
+
+				assert_table_equal(name_times, reference12, *fl);
 
 				assert_equal(3u, t0.index());
 				assert_equal(1u, t1.index());
@@ -779,16 +800,20 @@ namespace micro_profiler
 				assert_equal(2u, t3.index());
 
 				// ACT (max reentrance, ascending)
-				fl->set_order(7, true);
+				fl->set_order(columns::max_reentrance, true);
 				
 				// ASSERT
 				assert_equal(14u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference13[][2] = {
+					{	L"000007C6", L"15",	},
+					{	L"000007D0", L"35",	},
+					{	L"00000BAE", L"2",	},
+					{	L"00000BB8", L"15233",	},
+				};
+
+				assert_table_equal(name_times, reference13, *fl);
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -796,16 +821,20 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (max reentrance, descending)
-				fl->set_order(7, false);
+				fl->set_order(columns::max_reentrance, false);
 				
 				// ASSERT
 				assert_equal(15u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference14[][2] = {
+					{	L"00000BB8", L"15233",	},
+					{	L"00000BAE", L"2",	},
+					{	L"000007D0", L"35",	},
+					{	L"000007C6", L"15",	},
+				};
+
+				assert_table_equal(name_times, reference14, *fl);
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -813,16 +842,20 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (max call time, ascending)
-				fl->set_order(8, true);
+				fl->set_order(columns::max_time, true);
 				
 				// ASSERT
 				assert_equal(16u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 0, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 1, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 2, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 3, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference15[][2] = {
+					{	L"000007C6", L"15",	},
+					{	L"000007D0", L"35",	},
+					{	L"00000BAE", L"2",	},
+					{	L"00000BB8", L"15233",	},
+				};
+
+				assert_table_equal(name_times, reference15, *fl);
 
 				assert_equal(0u, t0.index());
 				assert_equal(1u, t1.index());
@@ -830,16 +863,20 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (max call time, descending)
-				fl->set_order(8, false);
+				fl->set_order(columns::max_time, false);
 				
 				// ASSERT
 				assert_equal(17u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				assert_row(*fl, 3, L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"); //s1
-				assert_row(*fl, 2, L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"); //s2
-				assert_row(*fl, 1, L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"); //s3
-				assert_row(*fl, 0, L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"); //s4
+				wstring reference16[][2] = {
+					{	L"00000BB8", L"15233",	},
+					{	L"00000BAE", L"2",	},
+					{	L"000007D0", L"35",	},
+					{	L"000007C6", L"15",	},
+				};
+
+				assert_table_equal(name_times, reference16, *fl);
 
 				assert_equal(3u, t0.index());
 				assert_equal(2u, t1.index());
@@ -870,7 +907,7 @@ namespace micro_profiler
 
 				// ACT
 				dser(*fl);
-				fl->set_order(2, true); // by times called
+				fl->set_order(columns::times_called, true);
 				fl->print(result);
 
 				// ASSERT
@@ -882,7 +919,7 @@ namespace micro_profiler
 										"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
 
 				// ACT
-				fl->set_order(5, true); // avg. exclusive time
+				fl->set_order(columns::exclusive_avg, true);
 				fl->print(result);
 
 				// ASSERT
@@ -1015,27 +1052,35 @@ namespace micro_profiler
 
 				dser(*fl);
 				dser(*fl);
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 
 				// ACT
-				ls->set_order(1, false);
+				ls->set_order(columns::name, false);
 
 				// ASSERT
-				assert_row(*ls, 0, L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
-				assert_row(*ls, 1, L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
-				assert_row(*ls, 2, L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
-				assert_row(*ls, 3, L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				wstring reference1[][8] = {
+					{	L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+					{	L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+					{	L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+					{	L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+				};
+
+				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *ls);
 
 				// ACT
-				ls->set_order(2, true);
+				ls->set_order(columns::times_called, true);
 
 				// ASSERT
-				assert_row(*ls, 0, L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
-				assert_row(*ls, 1, L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
-				assert_row(*ls, 2, L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
-				assert_row(*ls, 3, L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s");
+				wstring reference2[][8] = {
+					{	L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+					{	L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+					{	L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+					{	L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+				};
+
+				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *ls);
 			}
 
 
@@ -1050,14 +1095,18 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 
 				dser(*fl);
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
-				ls->set_order(1, true);
+				ls->set_order(columns::name, true);
 
 				// ACT / ASSERT
-				assert_row(*ls, 0, L"00002001", L"11", L"100ms", L"700ms", L"9.09ms", L"63.6ms", L"0", L"9.1s");
-				assert_row(*ls, 1, L"00002004", L"17", L"200ms", L"800ms", L"11.8ms", L"47.1ms", L"5", L"9.7s");
+				wstring reference[][8] = {
+					{	L"00002001", L"11", L"100ms", L"700ms", L"9.09ms", L"63.6ms", L"0", L"9.1s",	},
+					{	L"00002004", L"17", L"200ms", L"800ms", L"11.8ms", L"47.1ms", L"5", L"9.7s",	},
+				};
+
+				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference, *ls);
 			}
 
 
@@ -1138,7 +1187,7 @@ namespace micro_profiler
 
 				dser(*fl);
 				_buffer.rewind();
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 
@@ -1186,11 +1235,11 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 
 				dser(*fl);
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
 
-				ls->set_order(1, true);
+				ls->set_order(columns::name, true);
 
 				// ACT / ASSERT
 				assert_equal(0x2001u, ls->get_address(0));
@@ -1290,7 +1339,7 @@ namespace micro_profiler
 				s[3001].callees[3001];
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				// ACT
 				dser(*fl);
@@ -1319,7 +1368,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s1);
 				serialize_single_threaded(ser, s2);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				// ACT
 				dser(*fl);
@@ -1351,7 +1400,7 @@ namespace micro_profiler
 				s[0x3451].callees[0x122F] = function_statistics(1);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				dser(*fl);
 
@@ -1360,9 +1409,13 @@ namespace micro_profiler
 				shared_ptr<linked_statistics> p2 = fl->watch_parents(2);
 
 				// ACT / ASSERT
-				assert_row(*p0, 0, L"00003451", L"1");
-				assert_row(*p1, 0, L"0000122F", L"3");
-				assert_row(*p2, 0, L"00002340", L"5000000000");
+				wstring reference1[][2] = {	{	L"00003451", L"1",	},	};
+				wstring reference2[][2] = {	{	L"0000122F", L"3",	},	};
+				wstring reference3[][2] = {	{	L"00002340", L"5000000000",	},	};
+
+				assert_table_equal(name_times, reference1, *p0);
+				assert_table_equal(name_times, reference2, *p1);
+				assert_table_equal(name_times, reference3, *p2);
 			}
 
 
@@ -1377,43 +1430,59 @@ namespace micro_profiler
 				s[0x3001].callees[0x3001] = function_statistics(30);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
 				// ACT
-				p->set_order(1, true);
+				p->set_order(columns::name, true);
 
 				// ASSERT
-				assert_row(*p, 0, L"00002978", L"3");
-				assert_row(*p, 1, L"00002995", L"700");
-				assert_row(*p, 2, L"00003001", L"30");
+				wstring reference1[][2] = {
+					{	L"00002978", L"3",	},
+					{	L"00002995", L"700",	},
+					{	L"00003001", L"30",	},
+				};
+
+				assert_table_equal(name_times, reference1, *p);
 
 				// ACT
-				p->set_order(1, false);
+				p->set_order(columns::name, false);
 
 				// ASSERT
-				assert_row(*p, 0, L"00003001", L"30");
-				assert_row(*p, 1, L"00002995", L"700");
-				assert_row(*p, 2, L"00002978", L"3");
+				wstring reference2[][2] = {
+					{	L"00003001", L"30",	},
+					{	L"00002995", L"700",	},
+					{	L"00002978", L"3",	},
+				};
+
+				assert_table_equal(name_times, reference2, *p);
 
 				// ACT
-				p->set_order(2, true);
+				p->set_order(columns::times_called, true);
 
 				// ASSERT
-				assert_row(*p, 0, L"00002978", L"3");
-				assert_row(*p, 1, L"00003001", L"30");
-				assert_row(*p, 2, L"00002995", L"700");
+				wstring reference3[][2] = {
+					{	L"00002978", L"3",	},
+					{	L"00003001", L"30",	},
+					{	L"00002995", L"700",	},
+				};
+
+				assert_table_equal(name_times, reference3, *p);
 
 				// ACT
-				p->set_order(2, false);
+				p->set_order(columns::times_called, false);
 
 				// ASSERT
-				assert_row(*p, 0, L"00002995", L"700");
-				assert_row(*p, 1, L"00003001", L"30");
-				assert_row(*p, 2, L"00002978", L"3");
+				wstring reference4[][2] = {
+					{	L"00002995", L"700",	},
+					{	L"00003001", L"30",	},
+					{	L"00002978", L"3",	},
+				};
+
+				assert_table_equal(name_times, reference4, *p);
 			}
 
 
@@ -1431,14 +1500,14 @@ namespace micro_profiler
 				s2[0x3002].callees[0x3001];
 				serialize_single_threaded(ser, s2);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 				dser(*fl);
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
 				t.bind_to_model(*p);
 
 				// ACT
-				p->set_order(1, true);
+				p->set_order(columns::name, true);
 
 				// ASSERT
 				table_model::index_type reference1[] = { 3u, };
@@ -1447,7 +1516,7 @@ namespace micro_profiler
 
 				// ACT
 				dser(*fl);
-				p->set_order(2, false);
+				p->set_order(columns::times_called, false);
 
 				// ASSERT
 				table_model::index_type reference2[] = { 3u, 4u, 4u, };
@@ -1467,18 +1536,18 @@ namespace micro_profiler
 				s[0x3001].callees[0x3001] = function_statistics(30);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
-				p->set_order(2, true);
+				p->set_order(columns::times_called, true);
 
 				wpl::slot_connection c = p->invalidated += invalidation_at_sorting_check1(*p);
 
 				// ACT / ASSERT
-				p->set_order(2, false);
+				p->set_order(columns::times_called, false);
 			}
 
 
@@ -1495,26 +1564,34 @@ namespace micro_profiler
 				s.erase(0x3001);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
-				p->set_order(2, true);
+				p->set_order(columns::times_called, true);
 
 				// pre-ASSERT
-				assert_row(*p, 0, L"00002978", L"3");
-				assert_row(*p, 1, L"00002995", L"30");
-				assert_row(*p, 2, L"00003001", L"50");
+				wstring reference1[][2] = {
+					{	L"00002978", L"3",	},
+					{	L"00002995", L"30",	},
+					{	L"00003001", L"50",	},
+				};
+
+				assert_table_equal(name_times, reference1, *p);
 
 				// ACT
 				dser(*fl);
 
 				// ASSERT
-				assert_row(*p, 0, L"00002978", L"6");
-				assert_row(*p, 1, L"00003001", L"50");
-				assert_row(*p, 2, L"00002995", L"60");
+				wstring reference2[][2] = {
+					{	L"00002978", L"6",	},
+					{	L"00003001", L"50",	},
+					{	L"00002995", L"60",	},
+				};
+
+				assert_table_equal(name_times, reference2, *p);
 			}
 
 
@@ -1529,13 +1606,13 @@ namespace micro_profiler
 				s[0x3001].callees[0x3001] = function_statistics(50);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				dser(*fl);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
-				p->set_order(2, true);
+				p->set_order(columns::times_called, true);
 
 				// ACT / ASSERT
 				assert_equal(0x2978, p->get_address(0));
@@ -1641,19 +1718,18 @@ namespace micro_profiler
 
 				// ACT
 				shared_ptr<functions_list> fl = functions_list::load(dser);
-				fl->set_order(1, true);
+				fl->set_order(columns::name, true);
 
 				// ASSERT
-				assert_equal(L"Amet", get_text(*fl, 0, 1));
-				assert_equal(L"127", get_text(*fl, 0, 2));
-				assert_equal(L"Ipsum", get_text(*fl, 1, 1));
-				assert_equal(L"12", get_text(*fl, 1, 2));
-				assert_equal(L"Lorem", get_text(*fl, 2, 1));
-				assert_equal(L"123", get_text(*fl, 2, 2));
-				assert_equal(L"2s", get_text(*fl, 2, 4));
-				assert_equal(L"dolor", get_text(*fl, 3, 1));
-				assert_equal(L"12000", get_text(*fl, 3, 2));
-				assert_equal(L"500ms", get_text(*fl, 3, 4));
+				columns::main ordering[] = {	columns::name, columns::times_called, columns::inclusive,	};
+				wstring reference[][3] = {
+					{	L"Amet", L"127", L"0s",	},
+					{	L"Ipsum", L"12", L"0s",	},
+					{	L"Lorem", L"123", L"2s",	},
+					{	L"dolor", L"12000", L"500ms",	},
+				};
+
+				assert_table_equivalent(ordering, reference, *fl);
 			}
 
 
@@ -1689,7 +1765,7 @@ namespace micro_profiler
 				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT
-				fl->set_order(2, false);
+				fl->set_order(columns::times_called, false);
 
 				// ASSERT
 				assert_equal(4u, m->size());
@@ -1699,7 +1775,7 @@ namespace micro_profiler
 				assert_approx_equal(12.0, m->get_value(3), c_tolerance);
 
 				// ACT
-				fl->set_order(2, true);
+				fl->set_order(columns::times_called, true);
 
 				// ASSERT
 				assert_equal(4u, m->size());
@@ -1725,7 +1801,7 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
-				fl->set_order(2, false);
+				fl->set_order(columns::times_called, false);
 
 				s[120].times_called = 11001;
 				serialize_single_threaded(ser, s);
@@ -1763,8 +1839,8 @@ namespace micro_profiler
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
 				// ACT
-				fl1->set_order(3, false);
-				fl2->set_order(3, false);
+				fl1->set_order(columns::exclusive, false);
+				fl2->set_order(columns::exclusive, false);
 
 				// ASSERT
 				assert_equal(3u, m1->size());
@@ -1799,8 +1875,8 @@ namespace micro_profiler
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
 				// ACT
-				fl1->set_order(4, false);
-				fl2->set_order(4, true);
+				fl1->set_order(columns::inclusive, false);
+				fl2->set_order(columns::inclusive, true);
 
 				// ASSERT
 				assert_approx_equal(0.240, m1->get_value(0), c_tolerance);
@@ -1809,8 +1885,8 @@ namespace micro_profiler
 				assert_approx_equal(0.120, m2->get_value(1), c_tolerance);
 
 				// ACT
-				fl1->set_order(5, false);
-				fl2->set_order(5, true);
+				fl1->set_order(columns::exclusive_avg, false);
+				fl2->set_order(columns::exclusive_avg, true);
 
 				// ASSERT
 				assert_approx_equal(0.00032, m1->get_value(0), c_tolerance);
@@ -1819,8 +1895,8 @@ namespace micro_profiler
 				assert_approx_equal(0.00016, m2->get_value(1), c_tolerance);
 
 				// ACT
-				fl1->set_order(6, false);
-				fl2->set_order(6, true);
+				fl1->set_order(columns::inclusive_avg, false);
+				fl2->set_order(columns::inclusive_avg, true);
 
 				// ASSERT
 				assert_approx_equal(0.00030, m1->get_value(0), c_tolerance);
@@ -1829,8 +1905,8 @@ namespace micro_profiler
 				assert_approx_equal(0.00015, m2->get_value(1), c_tolerance);
 
 				// ACT
-				fl1->set_order(8, false);
-				fl2->set_order(8, true);
+				fl1->set_order(columns::max_time, false);
+				fl2->set_order(columns::max_time, true);
 
 				// ASSERT
 				assert_approx_equal(0.256, m1->get_value(0), c_tolerance);
@@ -1857,14 +1933,14 @@ namespace micro_profiler
 				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT
-				fl->set_order(5, false);
+				fl->set_order(columns::exclusive_avg, false);
 
 				// ASSERT
 				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
 				assert_approx_equal(0.0, m->get_value(1), c_tolerance);
 
 				// ACT
-				fl->set_order(6, false);
+				fl->set_order(columns::inclusive_avg, false);
 
 				// ASSERT
 				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
@@ -1890,18 +1966,18 @@ namespace micro_profiler
 				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
 
 				// ACT
-				fl->set_order(2, false);
+				fl->set_order(columns::times_called, false);
 
 				// ASSERT
 				assert_equal(1, invalidated_count);
 
 				// ACT
-				fl->set_order(2, true);
-				fl->set_order(3, false);
-				fl->set_order(4, false);
-				fl->set_order(5, false);
-				fl->set_order(6, false);
-				fl->set_order(8, false);
+				fl->set_order(columns::times_called, true);
+				fl->set_order(columns::exclusive, false);
+				fl->set_order(columns::inclusive, false);
+				fl->set_order(columns::exclusive_avg, false);
+				fl->set_order(columns::inclusive_avg, false);
+				fl->set_order(columns::max_time, false);
 
 				// ASSERT
 				assert_equal(7, invalidated_count);
@@ -1924,16 +2000,16 @@ namespace micro_profiler
 				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT / ASSERT
-				fl->set_order(2, true);
-				fl->set_order(0, true);
+				fl->set_order(columns::times_called, true);
+				fl->set_order(columns::order, true);
 				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
 				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
-				fl->set_order(2, true);
-				fl->set_order(1, false);
+				fl->set_order(columns::times_called, true);
+				fl->set_order(columns::name, false);
 				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
 				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
-				fl->set_order(2, true);
-				fl->set_order(7, true);
+				fl->set_order(columns::times_called, true);
+				fl->set_order(columns::max_reentrance, true);
 				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
 				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
 			}
@@ -1958,11 +2034,11 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl = functions_list::load(dser);
 				shared_ptr<linked_statistics> ls;
 
-				fl->set_order(2, false);
+				fl->set_order(columns::times_called, false);
 
 				// ACT
 				ls = fl->watch_children(0);
-				ls->set_order(2, true);
+				ls->set_order(columns::times_called, true);
 				m = ls->get_column_series();
 
 				// ASSERT
@@ -1973,7 +2049,7 @@ namespace micro_profiler
 				// ACT
 				ls = fl->watch_children(1);
 				m = ls->get_column_series();
-				ls->set_order(3, false);
+				ls->set_order(columns::exclusive, false);
 
 				// ASSERT
 				assert_equal(3u, m->size());

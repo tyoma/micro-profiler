@@ -11,11 +11,11 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			thread_registry::thread_registry()
+			thread_monitor::thread_monitor()
 				: _next_id(1)
 			{	}
 
-			unsigned thread_registry::get_id(mt::thread::id native_id) const
+			unsigned thread_monitor::get_id(mt::thread::id native_id) const
 			{
 				mt::lock_guard<mt::mutex> lock(_mtx);
 				unordered_map<mt::thread::id, unsigned>::const_iterator i = _ids.find(native_id);
@@ -23,16 +23,16 @@ namespace micro_profiler
 				return i != _ids.end() ? i->second : 0;
 			}
 
-			unsigned thread_registry::get_this_thread_id() const
+			unsigned thread_monitor::get_this_thread_id() const
 			{	return get_id(mt::this_thread::get_id());	}
 
-			unsigned int thread_registry::register_self()
+			unsigned int thread_monitor::register_self()
 			{
 				mt::lock_guard<mt::mutex> lock(_mtx);
 				return _ids.insert(make_pair(mt::this_thread::get_id(), _next_id++)).first->second;
 			}
 
-			thread_info thread_registry::get_info(unsigned int /*id*/)
+			thread_info thread_monitor::get_info(unsigned int /*id*/)
 			{	throw 0;	}
 
 

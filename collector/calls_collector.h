@@ -30,7 +30,7 @@
 
 namespace micro_profiler
 {
-	struct thread_registry_i;
+	struct thread_monitor;
 
 	struct calls_collector_i
 	{
@@ -49,7 +49,7 @@ namespace micro_profiler
 	class calls_collector : public calls_collector_i, noncopyable
 	{
 	public:
-		calls_collector(size_t trace_limit, thread_registry_i &thread_registry_);
+		calls_collector(size_t trace_limit, thread_monitor &thread_monitor_);
 
 		virtual void read_collected(acceptor &a);
 
@@ -71,7 +71,7 @@ namespace micro_profiler
 
 	private:
 		mt::tls<calls_collector_thread> _trace_pointers_tls;
-		thread_registry_i &_thread_registry;
+		thread_monitor &_thread_monitor;
 		const size_t _trace_limit;
 		call_traces_t _call_traces;
 		mt::mutex _thread_blocks_mtx;

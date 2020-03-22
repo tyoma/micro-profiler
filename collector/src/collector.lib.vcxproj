@@ -49,12 +49,6 @@
     <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="module_tracker.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
-    <ClCompile Include="thread_registry_linux.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="thread_registry_win32.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
@@ -68,7 +62,6 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\shadow_stack.h" />
     <ClInclude Include="..\statistics_bridge.h" />
-    <ClInclude Include="..\thread_registry.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

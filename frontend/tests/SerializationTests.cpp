@@ -70,18 +70,18 @@ namespace micro_profiler
 
 			test( DeserializationIntoExistingValuesAddsValuesBase )
 			{
-				typedef std::pair<unsigned, statistic_types_t<unsigned>::function> addressed_statistics;
-				typedef std::pair<function_key, statistic_types_t<function_key>::function> threaded_addressed_statistics;
+				typedef std::pair<unsigned, statistic_types_t<unsigned>::function> addressed_statistics2;
+				typedef std::pair<function_key, statistic_types_t<function_key>::function> threaded_addressed_statistics2;
 
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> ser(buffer);
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
-				addressed_statistics batch1[] = {
+				addressed_statistics2 batch1[] = {
 					make_statistics_base(123441u, 17, 2012, 123123123, 32123, 2213),
 					make_statistics_base(7741u, 1117, 212, 1231123, 3213, 112213),
 				};
-				addressed_statistics batch2[] = {
+				addressed_statistics2 batch2[] = {
 					make_statistics_base(141u, 17, 12012, 11293123, 132123, 12213),
 					make_statistics_base(7341u, 21117, 2212, 21231123, 23213, 2112213),
 					make_statistics_base(7741u, 31117, 3212, 31231123, 33213, 3112213),
@@ -98,7 +98,7 @@ namespace micro_profiler
 				dser(s, context);
 
 				// ASSERT
-				threaded_addressed_statistics reference1[] = {
+				threaded_addressed_statistics2 reference1[] = {
 					make_statistics_base(addr(141), 17, 12012, 11293123, 132123, 12213),
 					make_statistics_base(addr(7341), 21117, 2212, 21231123, 23213, 2112213),
 					make_statistics_base(addr(7741), 31117 + 1117, 3212, 31231123 + 1231123, 33213 + 3213, 3112213),
@@ -114,7 +114,7 @@ namespace micro_profiler
 				dser(s, context);
 
 				// ASSERT
-				threaded_addressed_statistics reference2[] = {
+				threaded_addressed_statistics2 reference2[] = {
 					make_statistics_base(addr(141), 2 * 17, 12012, 2 * 11293123, 2 * 132123, 12213),
 					make_statistics_base(addr(7341), 2 * 21117, 2212, 2 * 21231123, 2 * 23213, 2112213),
 					make_statistics_base(addr(7741), 2 * 31117 + 1117, 3212, 2 * 31231123 + 1231123, 2 * 33213 + 3213, 3112213),

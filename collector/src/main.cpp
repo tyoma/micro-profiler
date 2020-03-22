@@ -23,7 +23,7 @@
 #include <collector/calibration.h>
 #include <collector/calls_collector.h>
 #include <collector/collector_app.h>
-#include <collector/thread_registry.h>
+#include <common/thread_monitor.h>
 #include <common/time.h>
 #include <common/constants.h>
 #include <ipc/endpoint.h>
@@ -73,8 +73,8 @@ namespace
 }
 
 const size_t c_trace_limit = 5000000;
-thread_registry g_thread_registry;
-const shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit, g_thread_registry));
+shared_ptr<thread_monitor> g_thread_monitor = create_thread_monitor();
+const shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit, *g_thread_monitor));
 extern "C" calls_collector *g_collector_ptr = g_collector.get();
 const overhead c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);
 collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead);

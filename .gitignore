@@ -11,4 +11,5 @@ UpgradeLog.htm*
 ipch
 *.aps
 .vs
+*.VC.db
 !*.tests.vcxproj.user

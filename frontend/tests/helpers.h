@@ -31,11 +31,11 @@ namespace micro_profiler
 		inline function_key addr(size_t address, unsigned int threadid = 1)
 		{	return function_key(address, threadid);	}
 
-		inline std::wstring get_text(const wpl::ui::table_model &fl, unsigned row, unsigned column)
+		inline std::wstring get_text(const wpl::ui::table_model &fl, size_t row, unsigned column)
 		{
 			std::wstring text;
 
-			return fl.get_text(row, column, text), text;
+			return fl.get_text(static_cast<unsigned>(row), column, text), text;
 		}
 
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
@@ -58,7 +58,7 @@ namespace micro_profiler
 			vector< vector<wstring> > actual_rows(rows_n);
 
 			ut::are_equal(rows_n, actual.get_count(), location);
-			for (size_t j = 0; j != rows_n; ++j)
+			for (unsigned int j = 0; j != rows_n; ++j)
 			{
 				for (size_t i = 0; i != columns_n; ++i)
 				{

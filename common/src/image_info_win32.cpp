@@ -24,6 +24,8 @@
 #include <common/primitives.h>
 #include <common/string.h>
 
+#pragma warning(disable: 4091)
+
 #include <windows.h>
 #include <dbghelp.h>
 #include <set>

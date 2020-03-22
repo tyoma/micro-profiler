@@ -23,15 +23,15 @@
 
 #include <collector/calls_collector.h>
 
-#include <collector/thread_registry.h>
+#include <common/thread_monitor.h>
 
 using namespace std;
 using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	calls_collector::calls_collector(size_t trace_limit, thread_registry_i &thread_registry_)
-		: _thread_registry(thread_registry_), _trace_limit(trace_limit)
+	calls_collector::calls_collector(size_t trace_limit, thread_monitor &thread_monitor_)
+		: _thread_monitor(thread_monitor_), _trace_limit(trace_limit)
 	{	}
 
 	void calls_collector::read_collected(acceptor &a)
@@ -78,7 +78,7 @@ namespace micro_profiler
 		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_trace_limit));
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
-		_call_traces.push_back(make_pair(_thread_registry.register_self(), trace));
+		_call_traces.push_back(make_pair(_thread_monitor.register_self(), trace));
 		_trace_pointers_tls.set(trace.get());
 		return *trace;
 	}

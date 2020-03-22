@@ -18,16 +18,32 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/thread_registry.h>
+#include <common/thread_monitor.h>
 
-#include <sys/syscall.h>
-#include <unistd.h>
+#include <windows.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	unsigned int thread_registry::register_self()
-	{	return syscall(SYS_gettid);	}
+	class thread_monitor_impl : public thread_monitor
+	{
+	public:
+		void notify_thread_exit();
 
-	thread_info thread_registry::get_info(unsigned int /*id*/)
+		virtual unsigned int register_self();
+		virtual thread_info get_info(unsigned int id);
+	};
+
+
+
+	unsigned int thread_monitor_impl::register_self()
+	{	return GetCurrentThreadId();	}
+
+	thread_info thread_monitor_impl::get_info(unsigned int /*id*/)
 	{	throw 0;	}
+
+
+	shared_ptr<thread_monitor> create_thread_monitor()
+	{	return shared_ptr<thread_monitor>(new thread_monitor_impl);	}
 }

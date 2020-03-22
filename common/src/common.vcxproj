@@ -73,6 +73,12 @@
     <ClCompile Include="image_info_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="thread_monitor_linux.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="thread_monitor_win32.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
     <ClCompile Include="time.cpp" />
     <ClCompile Include="time_generic.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -106,6 +112,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\time.h" />
     <ClInclude Include="..\string.h" />
+    <ClInclude Include="..\thread_monitor.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="elf\filemapping.h" />
     <ClInclude Include="elf\sym-elf.h" />

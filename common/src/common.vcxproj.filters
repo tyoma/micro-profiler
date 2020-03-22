@@ -61,6 +61,12 @@
     <ClCompile Include="file_id_unix.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
+    <ClCompile Include="thread_monitor_linux.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_monitor_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -99,5 +105,6 @@
     </ClInclude>
     <ClInclude Include="..\image_info.h" />
     <ClInclude Include="..\file_id.h" />
+    <ClInclude Include="..\thread_monitor.h" />
   </ItemGroup>
 </Project>

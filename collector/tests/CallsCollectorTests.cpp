@@ -65,7 +65,7 @@ namespace micro_profiler
 
 			virtual_stack vstack;
 			auto_ptr<calls_collector> collector;
-			mocks::thread_registry threads;
+			mocks::thread_monitor threads;
 
 			init( ConstructCollector )
 			{

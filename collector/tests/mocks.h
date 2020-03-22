@@ -1,7 +1,7 @@
 #pragma once
 
 #include <collector/calls_collector.h>
-#include <collector/thread_registry.h>
+#include <common/thread_monitor.h>
 
 #include <mt/mutex.h>
 #include <test-helpers/mock_frontend.h>
@@ -13,10 +13,10 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			class thread_registry : public micro_profiler::thread_registry_i
+			class thread_monitor : public micro_profiler::thread_monitor
 			{
 			public:
-				thread_registry();
+				thread_monitor();
 
 				unsigned get_id(mt::thread::id native_id) const;
 				unsigned get_this_thread_id() const;
@@ -31,7 +31,7 @@ namespace micro_profiler
 				mutable mt::mutex _mtx;
 			};
 
-			class tracer : public thread_registry, public calls_collector
+			class tracer : public thread_monitor, public calls_collector
 			{
 			public:
 				tracer();

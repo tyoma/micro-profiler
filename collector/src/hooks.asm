@@ -111,14 +111,14 @@ ELSEIFDEF _M_X64
 
 	_penter	proc
 		PUSHREGS
-		sub	rsp, 20h
+		sub	rsp, 28h
 
 		mov	rcx, [g_collector_ptr]
-		mov	r8, qword ptr [rsp + 60h]
+		mov	r8, qword ptr [rsp + 68h]
 		RDTSC64
 		call ?on_enter_nostack@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
-		add	rsp, 20h
+		add	rsp, 28h
 		POPREGS
 		ret
 	_penter	endp

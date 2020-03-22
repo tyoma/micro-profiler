@@ -18,15 +18,27 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/thread_registry.h>
+#pragma once
 
-#include <windows.h>
+#include <memory>
+#include <mt/thread.h>
 
 namespace micro_profiler
 {
-	unsigned int thread_registry::register_self()
-	{	return GetCurrentThreadId();	}
+	struct thread_info
+	{
+		mt::thread::id native_id;
+		std::string name; // If the platform supports it, contains the name of the thread.
+		mt::milliseconds start_time; // Relative to the process start time.
+		mt::milliseconds end_time; // Relative to the process start time.
+		mt::milliseconds cpu_time;
+	};
 
-	thread_info thread_registry::get_info(unsigned int /*id*/)
-	{	throw 0;	}
+	struct thread_monitor
+	{
+		virtual unsigned int register_self() = 0;
+		virtual thread_info get_info(unsigned int id) = 0;
+	};
+
+	std::shared_ptr<thread_monitor> create_thread_monitor();
 }

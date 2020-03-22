@@ -17,6 +17,7 @@ if (WIN32)
 		memory_win32.cpp
 		module_win32.cpp
 		registry_configuration.cpp
+		thread_monitor_win32.cpp
 		time_win32.cpp
 	)	
 elseif (UNIX)	
@@ -27,6 +28,7 @@ elseif (UNIX)
 		image_info_unix.cpp
 		memory_unix.cpp
 		module_linux.cpp
+		thread_monitor_linux.cpp
 		time_generic.cpp
 	)		
 endif()

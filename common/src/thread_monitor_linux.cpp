@@ -18,24 +18,17 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/thread_monitor.h>
 
-#include <mt/thread.h>
+#include <memory>
+#include <sys/syscall.h>
+#include <unistd.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	struct thread_info
-	{
-		mt::thread::id native_id;
-	};
-
-	struct thread_registry_i
-	{
-		virtual unsigned int register_self() = 0;
-		virtual thread_info get_info(unsigned int id) = 0;
-	};
-
-	class thread_registry : public thread_registry_i
+	class thread_monitor_impl : public thread_monitor
 	{
 	public:
 		void notify_thread_exit();
@@ -43,4 +36,16 @@ namespace micro_profiler
 		virtual unsigned int register_self();
 		virtual thread_info get_info(unsigned int id);
 	};
+
+
+
+	unsigned int thread_monitor_impl::register_self()
+	{	return syscall(SYS_gettid);	}
+
+	thread_info thread_monitor_impl::get_info(unsigned int /*id*/)
+	{	throw 0;	}
+
+
+	shared_ptr<thread_monitor> create_thread_monitor()
+	{	return shared_ptr<thread_monitor>(new thread_monitor_impl);	}
 }

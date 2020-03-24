@@ -21,9 +21,12 @@ namespace micro_profiler
 				unsigned get_id(mt::thread::id native_id) const;
 				unsigned get_this_thread_id() const;
 
+			public:
+				thread_id provide_this_id;
+
 			private:
-				virtual unsigned int register_self();
-				virtual thread_info get_info(unsigned int id);
+				virtual thread_id register_self();
+				virtual thread_info get_info(thread_id id) const;
 
 			private:
 				unsigned _next_id;

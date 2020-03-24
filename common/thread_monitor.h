@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <mt/thread.h>
 
@@ -27,18 +28,30 @@ namespace micro_profiler
 {
 	struct thread_info
 	{
-		mt::thread::id native_id;
-		std::string name; // If the platform supports it, contains the name of the thread.
+		unsigned int native_id;
+		std::string description; // If the platform supports it, contains thread description.
 		mt::milliseconds start_time; // Relative to the process start time.
 		mt::milliseconds end_time; // Relative to the process start time.
 		mt::milliseconds cpu_time;
 	};
 
-	struct thread_monitor
+	struct thread_callbacks
 	{
-		virtual unsigned int register_self() = 0;
-		virtual thread_info get_info(unsigned int id) = 0;
+		typedef std::function<void () throw()> atexit_t;
+
+		virtual void at_thread_exit(const atexit_t &handler) = 0;
 	};
 
-	std::shared_ptr<thread_monitor> create_thread_monitor();
+	struct thread_monitor
+	{
+		typedef unsigned int thread_id;
+
+		virtual thread_id register_self() = 0;
+		virtual thread_info get_info(thread_id id) const = 0;
+	};
+
+
+
+	thread_callbacks &get_thread_callbacks();
+	std::shared_ptr<thread_monitor> create_thread_monitor(thread_callbacks &callbacks);
 }

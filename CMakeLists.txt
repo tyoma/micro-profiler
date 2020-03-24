@@ -36,7 +36,7 @@ endif()
 
 # Setup global compiler/linker settings
 set(GCC_CLANG_COMPILER_OPTIONS_C
-	-g -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
+	-ggdb -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
 	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas
 )
 set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
@@ -115,5 +115,7 @@ if (WIN32)
 	add_subdirectory(standalone)
 
 	add_subdirectory(injector/tests)
-	add_subdirectory(mt/tests)
+	if (!MP_MT_GENERIC)
+		add_subdirectory(mt/tests)
+	endif()
 endif()

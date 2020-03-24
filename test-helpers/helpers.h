@@ -96,6 +96,10 @@ namespace micro_profiler
 		inline range<const T, size_t> mkrange(const std::vector<T> &from)
 		{	return range<const T, size_t>(&from[0], from.size());	}
 
+		template <typename T>
+		inline bool unique(const std::shared_ptr<T> &p)
+		{	return p.use_count() == 1;	}
+
 		inline bool mem_equal(const void *lhs, const void *rhs, size_t length)
 		{
 			return std::equal(static_cast<const byte *>(lhs), static_cast<const byte *>(lhs) + length,

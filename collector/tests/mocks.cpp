@@ -32,7 +32,7 @@ namespace micro_profiler
 				return _ids.insert(make_pair(mt::this_thread::get_id(), _next_id++)).first->second;
 			}
 
-			thread_info thread_monitor::get_info(unsigned int /*id*/)
+			thread_info thread_monitor::get_info(unsigned int /*id*/) const
 			{	throw 0;	}
 
 

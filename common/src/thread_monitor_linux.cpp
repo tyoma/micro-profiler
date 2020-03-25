@@ -50,26 +50,24 @@ namespace micro_profiler
 		thread_monitor_impl(thread_callbacks &callbacks);
 
 		virtual thread_id register_self();
-		virtual thread_info get_info(thread_id id) const;
+		virtual void update_live_info(thread_info &info, unsigned int native_id) const;
 
 	private:
-		struct thread_info_ex : thread_info
+		struct live_thread_info
 		{
-			static void update(thread_info &destination, clockid_t clock_handle_);
+			live_thread_info();
 
+			threads_map::value_type *thread_info_entry;
 			clockid_t clock_handle;
 		};
 
-		typedef unordered_map<thread_id, thread_info_ex> threads_map;
-		typedef unordered_map<unsigned int, threads_map::value_type *> running_threads_map;
+		typedef unordered_map<unsigned int /*native_id*/, live_thread_info> running_threads_map;
 
 	private:
 		static void thread_exited(const weak_ptr<thread_monitor_impl> &wself, unsigned int native_id);
 
 	private:
 		thread_callbacks &_callbacks;
-		mutable mt::mutex _mutex;
-		mutable threads_map _threads;
 		running_threads_map _alive_threads;
 		thread_id _next_id;
 	};
@@ -133,6 +131,11 @@ namespace micro_profiler
 	}
 
 
+	thread_monitor_impl::live_thread_info::live_thread_info()
+		: thread_info_entry(0)
+	{	}
+
+
 	thread_monitor_impl::thread_monitor_impl(thread_callbacks &callbacks)
 		: _callbacks(callbacks), _next_id(0)
 	{	}
@@ -141,35 +144,26 @@ namespace micro_profiler
 	{
 		const unsigned int id = syscall(SYS_gettid);
 		mt::lock_guard<mt::mutex> lock(_mutex);
-		threads_map::value_type *&p = _alive_threads[id];
+		live_thread_info &lti = _alive_threads[id];
 
-		if (!p)
+		if (!lti.thread_info_entry)
 		{
 			weak_ptr<thread_monitor_impl> wself = shared_from_this();
+			thread_info ti = { id, string(), mt::milliseconds(), mt::milliseconds(0), mt::milliseconds() };
 
-			p = &*_threads.insert(make_pair(_next_id++, thread_info_ex())).first;
-			p->second.native_id = id;
-			p->second.clock_handle = clockid_t();
-			::pthread_getcpuclockid(pthread_self(), &p->second.clock_handle);
-			p->second.end_time = mt::milliseconds(0);
+			lti.thread_info_entry = &*_threads.insert(make_pair(_next_id++, ti)).first;
+			::pthread_getcpuclockid(pthread_self(), &lti.clock_handle);
 			_callbacks.at_thread_exit(bind(&thread_monitor_impl::thread_exited, wself, id));
 		}
-		return p->first;
+		return lti.thread_info_entry->first;
 	}
 
-	thread_info thread_monitor_impl::get_info(thread_id id) const
+	void thread_monitor_impl::update_live_info(thread_info &info, unsigned int native_id) const
 	{
-		mt::lock_guard<mt::mutex> lock(_mutex);
-		threads_map::iterator i = _threads.find(id);
+		running_threads_map::const_iterator i = _alive_threads.find(native_id);
 
-		if (i == _threads.end())
-			throw invalid_argument("Unknown thread id!");
-
-		thread_info ti = i->second;
-
-		if (i->second.clock_handle)
-			thread_info_ex::update(ti, i->second.clock_handle);
-		return ti;
+		if (i != _alive_threads.end())
+			info.cpu_time = get_time(i->second.clock_handle);
 	}
 
 	void thread_monitor_impl::thread_exited(const weak_ptr<thread_monitor_impl> &wself, unsigned int native_id)
@@ -178,17 +172,13 @@ namespace micro_profiler
 		{
 			mt::lock_guard<mt::mutex> lock(self->_mutex);
 			running_threads_map::iterator i = self->_alive_threads.find(native_id);
+			thread_info &ti = i->second.thread_info_entry->second;
 
-			thread_info_ex::update(i->second->second, i->second->second.clock_handle);
-			i->second->second.end_time = get_time(CLOCK_MONOTONIC);
-			i->second->second.clock_handle = clockid_t();
+			self->update_live_info(ti, native_id);
+			ti.end_time = get_time(CLOCK_MONOTONIC);
 			self->_alive_threads.erase(i);
 		}
 	}
-
-
-	void thread_monitor_impl::thread_info_ex::update(thread_info &destination, clockid_t clock)
-	{	destination.cpu_time = get_time(clock);	}
 
 
 	thread_callbacks &get_thread_callbacks()

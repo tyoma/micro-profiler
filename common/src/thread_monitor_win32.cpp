@@ -43,14 +43,13 @@ namespace micro_profiler
 			return shared_ptr<void>(handle, &CloseHandle);
 		}
 
-		long long microseconds(FILETIME t)
+		mt::milliseconds milliseconds(FILETIME t)
 		{
 			long long v = t.dwHighDateTime;
 
 			v <<= 32;
 			v += t.dwLowDateTime;
-			v /= 10; // FILETIME is expressed in 100-ns intervals
-			return v;
+			return mt::milliseconds(v / 10000); // FILETIME is expressed in 100-ns intervals
 		}
 	}
 
@@ -78,28 +77,26 @@ namespace micro_profiler
 		thread_monitor_impl(thread_callbacks &callbacks);
 
 		virtual thread_id register_self();
-		virtual thread_info get_info(thread_id id) const;
+		virtual void update_live_info(thread_info &info, unsigned int native_id) const;
 
 	private:
 		typedef HRESULT (WINAPI *GetThreadDescription_t)(HANDLE hThread, PWSTR *ppszThreadDescription);
 
-		struct thread_info_ex : thread_info
+		struct live_thread_info
 		{
-			static void update(thread_info &destination, HANDLE hthread, GetThreadDescription_t GetThreadDescription_);
+			live_thread_info();
 
+			threads_map::value_type *thread_info_entry;
 			shared_ptr<void> handle;
 		};
 
-		typedef unordered_map<thread_id, thread_info_ex> threads_map;
-		typedef unordered_map<unsigned int, threads_map::value_type *> running_threads_map;
+		typedef unordered_map<unsigned int /*native_id*/, live_thread_info> running_threads_map;
 
 	private:
 		static void thread_exited(const weak_ptr<thread_monitor_impl> &wself, unsigned int native_id);
 
 	private:
 		thread_callbacks &_callbacks;
-		mutable mt::mutex _mutex;
-		mutable threads_map _threads;
 		running_threads_map _alive_threads;
 		thread_id _next_id;
 		shared_ptr<void> _kernel_dll;
@@ -137,6 +134,11 @@ namespace micro_profiler
 	}
 
 
+	thread_monitor_impl::live_thread_info::live_thread_info()
+		: thread_info_entry(0)
+	{	}
+
+
 	thread_monitor_impl::thread_monitor_impl(thread_callbacks &callbacks)
 		: _callbacks(callbacks), _next_id(0), _kernel_dll(::LoadLibraryA("kernel32.dll"), &::FreeLibrary),
 			_GetThreadDescription(reinterpret_cast<GetThreadDescription_t>(::GetProcAddress(
@@ -147,34 +149,34 @@ namespace micro_profiler
 	{
 		const unsigned int id = ::GetCurrentThreadId();
 		mt::lock_guard<mt::mutex> lock(_mutex);
-		threads_map::value_type *&p = _alive_threads[id];
+		live_thread_info &lti = _alive_threads[id];
 
-		if (!p)
+		if (!lti.thread_info_entry)
 		{
 			weak_ptr<thread_monitor_impl> wself = shared_from_this();
+			thread_info ti = { id, string(), mt::milliseconds(), mt::milliseconds(0), mt::milliseconds() };
 
-			p = &*_threads.insert(make_pair(_next_id++, thread_info_ex())).first;
-			p->second.native_id = id;
-			p->second.handle = get_current_thread();
-			p->second.end_time = mt::milliseconds(0);
+			lti.thread_info_entry = &*_threads.insert(make_pair(_next_id++, ti)).first;
+			lti.handle = get_current_thread();
 			_callbacks.at_thread_exit(bind(&thread_monitor_impl::thread_exited, wself, id));
 		}
-		return p->first;
+		return lti.thread_info_entry->first;
 	}
 
-	thread_info thread_monitor_impl::get_info(thread_id id) const
+	void thread_monitor_impl::update_live_info(thread_info &info, unsigned int native_id) const
 	{
-		mt::lock_guard<mt::mutex> lock(_mutex);
-		threads_map::iterator i = _threads.find(id);
+		running_threads_map::const_iterator i = _alive_threads.find(native_id);
 
-		if (i == _threads.end())
-			throw invalid_argument("Unknown thread id!");
+		if (i != _alive_threads.end())
+		{
+			FILETIME dummy, user;
+			PWSTR description;
 
-		thread_info ti = i->second;
-
-		if (i->second.handle)
-			thread_info_ex::update(ti, i->second.handle.get(), _GetThreadDescription);
-		return ti;
+			::GetThreadTimes(i->second.handle.get(), &dummy, &dummy, &dummy, &user);
+			if (_GetThreadDescription && SUCCEEDED(_GetThreadDescription(i->second.handle.get(), &description)))
+				info.description = unicode(description), ::LocalFree(description);
+			info.cpu_time = milliseconds(user);
+		}
 	}
 
 	void thread_monitor_impl::thread_exited(const weak_ptr<thread_monitor_impl> &wself, unsigned int native_id)
@@ -184,26 +186,13 @@ namespace micro_profiler
 			FILETIME exit_time = {};
 			mt::lock_guard<mt::mutex> lock(self->_mutex);
 			running_threads_map::iterator i = self->_alive_threads.find(native_id);
+			thread_info &ti = i->second.thread_info_entry->second;
 
-			thread_info_ex::update(i->second->second, i->second->second.handle.get(), self->_GetThreadDescription);
+			self->update_live_info(ti, native_id);
 			::GetSystemTimeAsFileTime(&exit_time);
-			i->second->second.end_time = mt::milliseconds(microseconds(exit_time) / 1000);
-			i->second->second.handle.reset();
+			ti.end_time = milliseconds(exit_time);
 			self->_alive_threads.erase(i);
 		}
-	}
-
-
-	void thread_monitor_impl::thread_info_ex::update(thread_info &destination, HANDLE hthread,
-		GetThreadDescription_t GetThreadDescription_)
-	{
-		PWSTR description2;
-		FILETIME dummy, user;
-
-		::GetThreadTimes(hthread, &dummy, &dummy, &dummy, &user);
-		if (GetThreadDescription_ && SUCCEEDED(GetThreadDescription_(hthread, &description2)))
-			destination.description = unicode(description2), ::LocalFree(description2);
-		destination.cpu_time = mt::milliseconds(microseconds(user) / 1000);
 	}
 
 

@@ -26,7 +26,7 @@ namespace micro_profiler
 
 			private:
 				virtual thread_id register_self();
-				virtual thread_info get_info(thread_id id) const;
+				virtual void update_live_info(thread_info &info, unsigned int native_id) const;
 
 			private:
 				unsigned _next_id;

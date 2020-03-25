@@ -30,7 +30,7 @@
 
 namespace micro_profiler
 {
-	struct thread_monitor;
+	class thread_monitor;
 
 	struct calls_collector_i
 	{

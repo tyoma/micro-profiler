@@ -21,6 +21,8 @@
 #pragma once
 
 #include <cstddef>
+#include <mt/chrono.h>
+#include <string>
 
 typedef struct _GUID GUID;
 
@@ -46,6 +48,15 @@ namespace micro_profiler
 
 		timestamp_t inner; // The overhead observed between entry/exit measurements of a leaf function.
 		timestamp_t outer; // The overhead observed by a parent function (in addition to inner) when making a call.
+	};
+
+	struct thread_info
+	{
+		unsigned int native_id;
+		std::string description; // If the platform supports it, contains thread description.
+		mt::milliseconds start_time; // Relative to the process start time.
+		mt::milliseconds end_time; // Relative to the process start time.
+		mt::milliseconds cpu_time;
 	};
 
 

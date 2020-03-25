@@ -40,7 +40,7 @@ namespace micro_profiler
 			timespec t = {};
 
 			::clock_gettime(clock, &t);
-			return mt::milliseconds(static_cast<unsigned int>(t.tv_sec * 1000 + t.tv_nsec / 1000000));
+			return mt::milliseconds(t.tv_sec * 1000 + t.tv_nsec / 1000000);
 		}
 	}
 

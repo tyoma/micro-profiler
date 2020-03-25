@@ -29,7 +29,7 @@ namespace mt
 	{	::WaitForSingleObject(_impl->handle, INFINITE);	}
 
 	bool event::wait(milliseconds period)
-	{	return WAIT_TIMEOUT != ::WaitForSingleObject(_impl->handle, period);	}
+	{	return WAIT_TIMEOUT != ::WaitForSingleObject(_impl->handle, static_cast<DWORD>(period.count()));	}
 
 	void event::set()
 	{	::SetEvent(_impl->handle);	}

@@ -6,6 +6,7 @@
     <ClInclude Include="..\mutex.h" />
     <ClInclude Include="..\thread.h" />
     <ClInclude Include="..\tls.h" />
+    <ClInclude Include="..\chrono.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

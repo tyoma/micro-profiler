@@ -36,6 +36,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\atomic.h" />
+    <ClInclude Include="..\chrono.h" />
     <ClInclude Include="..\event.h" />
     <ClInclude Include="..\mutex.h" />
     <ClInclude Include="..\thread.h" />

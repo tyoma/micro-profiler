@@ -20,12 +20,5 @@ namespace micro_profiler
 			mt::milliseconds get_cpu_time();
 			bool set_description(const wchar_t *description);
 		};
-
-		inline unsigned int count(unsigned int v)
-		{	return v;	}
-
-		template <typename T>
-		inline unsigned int count(const T& v)
-		{	return static_cast<unsigned int>(v.count());	}
 	}
 }

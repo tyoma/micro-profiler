@@ -219,10 +219,10 @@ namespace micro_profiler
 				t3.join();
 
 				// ACT / ASSERT
-				assert_approx_equal(count(times[tids[0]]), count(monitor->get_info(tids[0]).cpu_time), 0.05);
-				assert_approx_equal(count(times[tids[1]]), count(monitor->get_info(tids[1]).cpu_time), 0.05);
-				assert_approx_equal(count(times[tids[2]]), count(monitor->get_info(tids[2]).cpu_time), 0.05);
-				assert_approx_equal(count(times[tids[3]]), count(monitor->get_info(tids[3]).cpu_time), 0.05);
+				assert_approx_equal(times[tids[0]].count(), monitor->get_info(tids[0]).cpu_time.count(), 0.3);
+				assert_approx_equal(times[tids[1]].count(), monitor->get_info(tids[1]).cpu_time.count(), 0.2);
+				assert_approx_equal(times[tids[2]].count(), monitor->get_info(tids[2]).cpu_time.count(), 0.1);
+				assert_approx_equal(times[tids[3]].count(), monitor->get_info(tids[3]).cpu_time.count(), 0.1);
 			}
 
 
@@ -328,7 +328,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_not_equal(mt::milliseconds(0), monitor->get_info(tids[0]).end_time);
 				assert_not_equal(mt::milliseconds(0), monitor->get_info(tids[1]).end_time);
-				assert_is_true(monitor->get_info(tids[1]).end_time > monitor->get_info(tids[0]).end_time);
+				assert_is_true(monitor->get_info(tids[1]).end_time.count() > monitor->get_info(tids[0]).end_time.count());
 			}
 
 
@@ -336,12 +336,12 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::thread_callbacks tc;
-				shared_ptr<thread_monitor> monitor = create_thread_monitor(tc);
+				shared_ptr<thread_monitor> monitor2 = create_thread_monitor(tc);
 
 				// ACT
-				thread_monitor::thread_id id1 = monitor->register_self();
+				thread_monitor::thread_id id1 = monitor2->register_self();
 				tc.invoke_destructors();
-				thread_monitor::thread_id id2 = monitor->register_self();
+				thread_monitor::thread_id id2 = monitor2->register_self();
 
 				// ASSERT
 				assert_not_equal(id2, id1);

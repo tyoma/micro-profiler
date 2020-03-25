@@ -1,12 +1,13 @@
 #pragma once
 
+#include "chrono.h"
+
 #if defined(MP_MT_GENERIC)
 	#include <thread>
 
 	namespace mt
 	{
 		using std::thread;
-		using std::chrono::milliseconds;
 
 		namespace this_thread
 		{
@@ -36,8 +37,6 @@
 			id _id;
 			void *_thread;
 		};
-
-		typedef unsigned int milliseconds;
 
 		namespace this_thread
 		{

@@ -114,6 +114,16 @@ namespace micro_profiler
 		archive(data.source_files);
 	}
 
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, thread_info &data, unsigned int /*version*/)
+	{
+		archive(data.native_id);
+		archive(data.description);
+		archive(data.start_time);
+		archive(data.end_time);
+		archive(data.cpu_time);
+	}
+
 
 	template <typename BufferT>
 	inline buffer_writer<BufferT>::buffer_writer(BufferT &buffer)

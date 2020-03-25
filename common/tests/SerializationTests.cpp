@@ -20,6 +20,12 @@ namespace micro_profiler
 			&& lhs.file_id == rhs.file_id && lhs.line == rhs.line;
 	}
 
+	inline bool operator ==(const thread_info &lhs, const thread_info &rhs)
+	{
+		return lhs.native_id == rhs.native_id && lhs.description == rhs.description && lhs.start_time == rhs.start_time
+			&& lhs.end_time == rhs.end_time && lhs.cpu_time == rhs.cpu_time;
+	}
+
 	namespace tests
 	{
 		namespace
@@ -55,7 +61,7 @@ namespace micro_profiler
 				assert_equal(s2, ds2);
 			}
 
-			
+
 			test( SerializationDeserializationOfContainersOfFunctionStaticsProducesTheSameResults )
 			{
 				// INIT
@@ -195,6 +201,48 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(symbols2, read.symbols);
 				assert_equal(files2, read.source_files);
+			}
+
+
+			test( ChronoTypesAreSerialized )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				mt::milliseconds v;
+
+				// ACT
+				s(mt::milliseconds(123));
+				s(mt::milliseconds(123101010101));
+
+				// ACT / ASSERT
+				ds(v);
+				assert_equal(mt::milliseconds(123), v);
+				ds(v);
+				assert_equal(mt::milliseconds(123101010101), v);
+			}
+
+
+			test( ThreadInfoIsSerialized )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				thread_info ti1 = { 122, "thread 1", mt::milliseconds(123), mt::milliseconds(2345), mt::milliseconds(18), };
+				thread_info ti2 = { 27, "t #2", mt::milliseconds(1), mt::milliseconds(2), mt::milliseconds(18191716), };
+				thread_info v;
+
+				// ACT
+				s(ti1);
+				s(ti2);
+
+				// ACT / ASSERT
+				ds(v);
+				assert_equal(ti1, v);
+				ds(v);
+				assert_equal(ti2, v);
 			}
 
 		end_test_suite

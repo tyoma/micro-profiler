@@ -53,5 +53,5 @@ namespace mt
 	{	return ::GetCurrentThreadId();	}
 
 	void this_thread::sleep_for(milliseconds period)
-	{	::Sleep(period);	}
+	{	::Sleep(static_cast<DWORD>(period.count()));	}
 }

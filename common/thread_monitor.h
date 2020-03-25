@@ -20,24 +20,16 @@
 
 #pragma once
 
+#include "types.h"
+
 #include <functional>
 #include <memory>
-#include <mt/thread.h>
 
 namespace micro_profiler
 {
-	struct thread_info
-	{
-		unsigned int native_id;
-		std::string description; // If the platform supports it, contains thread description.
-		mt::milliseconds start_time; // Relative to the process start time.
-		mt::milliseconds end_time; // Relative to the process start time.
-		mt::milliseconds cpu_time;
-	};
-
 	struct thread_callbacks
 	{
-		typedef std::function<void () throw()> atexit_t;
+		typedef std::function<void () /*throw()*/> atexit_t;
 
 		virtual void at_thread_exit(const atexit_t &handler) = 0;
 	};

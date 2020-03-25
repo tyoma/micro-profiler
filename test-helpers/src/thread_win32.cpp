@@ -30,15 +30,19 @@ namespace micro_profiler
 			{
 			public:
 				this_running_thread()
-					: shared_ptr<void>(::OpenThread(THREAD_QUERY_INFORMATION | SYNCHRONIZE, FALSE,
-						::GetCurrentThreadId()), &::CloseHandle)
-				{	}
+				{
+					HANDLE handle = NULL;
+
+					::DuplicateHandle(::GetCurrentProcess(), ::GetCurrentThread(), ::GetCurrentProcess(), &handle, 0, FALSE,
+						DUPLICATE_SAME_ACCESS);
+					reset(handle, &CloseHandle);
+				}
 
 				virtual void join()
 				{	::WaitForSingleObject(get(), INFINITE);	}
 
 				virtual bool join(mt::milliseconds timeout)
-				{	return WAIT_TIMEOUT != ::WaitForSingleObject(get(), count(timeout));	}
+				{	return WAIT_TIMEOUT != ::WaitForSingleObject(get(), static_cast<DWORD>(timeout.count()));	}
 			};
 
 			return shared_ptr<running_thread>(new this_running_thread());
@@ -52,7 +56,7 @@ namespace micro_profiler
 			FILETIME dummy, user = {}, kernel = {};
 
 			::GetThreadTimes(::GetCurrentThread(), &dummy, &dummy, &kernel, &user);
-			return mt::milliseconds(static_cast<unsigned int>(microseconds(user) / 1000));
+			return mt::milliseconds(microseconds(user) / 1000);
 		}
 
 		bool this_thread::set_description(const wchar_t *description)

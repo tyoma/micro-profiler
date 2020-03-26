@@ -15,6 +15,6 @@ set(COMMON_TEST_SOURCES
 	ThreadMonitorTests.cpp
 )
 
-add_library(common.tests SHARED ${COMMON_TEST_SOURCES})
+add_library(common.tests SHARED ${COMMON_TEST_SOURCES} $<TARGET_OBJECTS:common.thread_callbacks>)
 
 target_link_libraries(common.tests common test-helpers mt)

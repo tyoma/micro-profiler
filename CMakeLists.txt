@@ -115,7 +115,5 @@ if (WIN32)
 	add_subdirectory(standalone)
 
 	add_subdirectory(injector/tests)
-	if (!MP_MT_GENERIC)
-		add_subdirectory(mt/tests)
-	endif()
+	add_subdirectory(mt/tests)
 endif()

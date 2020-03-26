@@ -4,6 +4,7 @@
 #include <common/thread_monitor.h>
 
 #include <mt/mutex.h>
+#include <mt/thread.h>
 #include <test-helpers/mock_frontend.h>
 #include <unordered_map>
 
@@ -18,19 +19,19 @@ namespace micro_profiler
 			public:
 				thread_monitor();
 
-				unsigned get_id(mt::thread::id native_id) const;
-				unsigned get_this_thread_id() const;
+				thread_monitor::thread_id get_id(mt::thread::id tid) const;
+				thread_monitor::thread_id get_this_thread_id() const;
 
 			public:
 				thread_id provide_this_id;
 
 			private:
 				virtual thread_id register_self();
-				virtual void update_live_info(thread_info &info, unsigned int native_id) const;
+				virtual void update_live_info(thread_info &info, thread_monitor::thread_id native_id) const;
 
 			private:
 				unsigned _next_id;
-				std::unordered_map<mt::thread::id, unsigned> _ids;
+				std::unordered_map<mt::thread::id, thread_monitor::thread_id> _ids;
 				mutable mt::mutex _mtx;
 			};
 

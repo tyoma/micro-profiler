@@ -19,7 +19,11 @@ if (WIN32)
 		registry_configuration.cpp
 		thread_monitor_win32.cpp
 		time_win32.cpp
-	)	
+	)
+	
+	set(COMMON_THREAD_SOURCES
+		thread_callbacks_win32.cpp
+	)
 elseif (UNIX)	
 	set(COMMON_SOURCES ${COMMON_SOURCES}
 		elf/filemapping_unix.cpp
@@ -31,6 +35,10 @@ elseif (UNIX)
 		thread_monitor_linux.cpp
 		time_generic.cpp
 	)		
+
+	set(COMMON_THREAD_SOURCES
+		thread_callbacks_unix.cpp
+	)
 endif()
 
 if (ANDROID)
@@ -44,6 +52,7 @@ if (ANDROID)
 endif()
 
 add_library(common STATIC ${COMMON_SOURCES})
+add_library(common.thread_callbacks OBJECT ${COMMON_THREAD_SOURCES})
 
 if (WIN32)
 	target_link_libraries(common dbghelp)

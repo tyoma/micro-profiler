@@ -61,7 +61,7 @@ elseif(WIN32)
 endif()
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
-add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES})
+add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:common.thread_callbacks>)
 
 target_link_libraries(${micro-profiler} collector.lib patcher ipc common)
 

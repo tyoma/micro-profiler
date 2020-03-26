@@ -54,22 +54,6 @@ namespace micro_profiler
 	}
 
 
-	class thread_callbacks_impl : public thread_callbacks
-	{
-	public:
-		void notify_thread_exit() throw();
-
-		virtual void at_thread_exit(const atexit_t &handler);
-
-	private:
-		typedef vector<atexit_t> destructors_t;
-
-	private:
-		mt::mutex _mutex;
-		list<destructors_t> _all_destructors;
-		mt::tls<destructors_t> _thread_destructors;
-	};
-
 
 	class thread_monitor_impl : public thread_monitor, public enable_shared_from_this<thread_monitor_impl>
 	{
@@ -103,35 +87,6 @@ namespace micro_profiler
 		GetThreadDescription_t _GetThreadDescription;
 	};
 
-
-
-	void thread_callbacks_impl::notify_thread_exit() throw()
-	{
-		if (destructors_t *destructors = _thread_destructors.get())
-		{
-			while (!destructors->empty())
-			{
-				atexit_t d(destructors->back());
-
-				destructors->pop_back();
-				d();
-			}
-		}
-	}
-
-	void thread_callbacks_impl::at_thread_exit(const atexit_t &handler)
-	{
-		destructors_t *destructors = _thread_destructors.get();
-
-		if (!destructors)
-		{
-			mt::lock_guard<mt::mutex> lock(_mutex);
-
-			destructors = &*_all_destructors.insert(_all_destructors.end(), destructors_t());
-			_thread_destructors.set(destructors);
-		}
-		destructors->push_back(handler);
-	}
 
 
 	thread_monitor_impl::live_thread_info::live_thread_info()
@@ -196,22 +151,6 @@ namespace micro_profiler
 	}
 
 
-	thread_callbacks_impl &get_thread_callbacks_impl()
-	{
-		static thread_callbacks_impl callbacks;
-		return callbacks;
-	}
-
-	thread_callbacks &get_thread_callbacks()
-	{	return get_thread_callbacks_impl();	}
-
 	shared_ptr<thread_monitor> create_thread_monitor(thread_callbacks &callbacks)
 	{	return shared_ptr<thread_monitor>(new thread_monitor_impl(callbacks));	}
-}
-
-BOOL WINAPI DllMain(HINSTANCE /*hinstance*/, DWORD reason, LPVOID /*reserved*/)
-{
-	if (DLL_THREAD_DETACH == reason)
-		micro_profiler::get_thread_callbacks_impl().notify_thread_exit();
-	return TRUE;
 }

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "thread.h"
+#include "chrono.h"
 
 #include <common/noncopyable.h>
 #include <memory>

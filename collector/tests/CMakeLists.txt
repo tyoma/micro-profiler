@@ -17,5 +17,5 @@ set(COLLECTOR_TESTS_SOURCES
 	mocks_image_info.cpp
 )
 
-add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES})
+add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES} $<TARGET_OBJECTS:common.thread_callbacks>)
 target_link_libraries(collector.tests collector.lib common patcher mt logger test-helpers)

@@ -69,7 +69,7 @@ namespace micro_profiler
 		{
 			return shared_ptr<void>(::VirtualAlloc(start, length, MEM_RESERVE | MEM_COMMIT, PAGE_READONLY | PAGE_GUARD),
 				[length] (void *p) {
-				::VirtualFree(p, length, MEM_RELEASE);
+				::VirtualFree(p, 0, MEM_RELEASE);
 			});
 		}
 	}

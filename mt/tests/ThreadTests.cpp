@@ -24,8 +24,16 @@ namespace mt
 				*thread_id = this_thread::get_id();
 			}
 
-			void wait(void *event)
-			{	::WaitForSingleObject(event, INFINITE);	}
+			void thread_handle_capture_and_wait(shared_ptr<void> &hthread, shared_ptr<void> ready, shared_ptr<void> go)
+			{
+				HANDLE h;
+
+				::DuplicateHandle(::GetCurrentProcess(), ::GetCurrentThread(), ::GetCurrentProcess(), &h, 0, FALSE,
+					DUPLICATE_SAME_ACCESS);
+				hthread.reset(h, &::CloseHandle);
+				::SetEvent(ready.get());
+				::WaitForSingleObject(go.get(), INFINITE);
+			}
 
 			template <typename T>
 			void get_from_tls(const tls<T> *ptls, T **result)
@@ -81,7 +89,7 @@ namespace mt
 				thread t(&do_nothing);
 
 				// ACT / ASSERT
-				assert_not_equal(0u, t.get_id());
+				assert_not_equal(mt::thread::id(), t.get_id());
 			}
 
 
@@ -113,12 +121,13 @@ namespace mt
 			test( DetachedThreadContinuesExecution )
 			{
 				// INIT
-				shared_ptr<void> e(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
-				auto_ptr<thread> t(new thread(bind(&wait, e.get())));
-				thread::id thread_id = t->get_id();
+				shared_ptr<void> hthread;
+				shared_ptr<void> ready(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
+				shared_ptr<void> go(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
+				auto_ptr<thread> t(new thread(bind(&thread_handle_capture_and_wait, ref(hthread), ready, go)));
 				DWORD exit_code = 0;
-				shared_ptr<void> hthread(::OpenThread(THREAD_QUERY_INFORMATION | SYNCHRONIZE, FALSE, thread_id),
-					&::CloseHandle);
+
+				::WaitForSingleObject(ready.get(), INFINITE);
 
 				// ACT
 				t->detach();
@@ -126,16 +135,16 @@ namespace mt
 
 				// ASSERT
 				::GetExitCodeThread(hthread.get(), &exit_code);
-					
+
 				assert_equal(STILL_ACTIVE, exit_code);
 
 				// ACT
-				::SetEvent(e.get());
-				wait(hthread.get());
+				::SetEvent(go.get());
+				::WaitForSingleObject(hthread.get(), INFINITE);
 
 				// ASSERT
 				::GetExitCodeThread(hthread.get(), &exit_code);
-					
+
 				assert_equal(0u, exit_code);
 			}
 
@@ -143,18 +152,21 @@ namespace mt
 			test( JoinThreadGuaranteesItsCompletion )
 			{
 				// INIT
-				auto_ptr<thread> t(new thread(&do_nothing));
-				thread::id thread_id = t->get_id();
+				shared_ptr<void> hthread;
+				shared_ptr<void> ready(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
+				shared_ptr<void> go(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
+				auto_ptr<thread> t(new thread(bind(&thread_handle_capture_and_wait, ref(hthread), ready, go)));
 				DWORD exit_code = STILL_ACTIVE;
-				shared_ptr<void> hthread(::OpenThread(THREAD_QUERY_INFORMATION | SYNCHRONIZE, FALSE, thread_id),
-					&::CloseHandle);
+
+				::WaitForSingleObject(ready.get(), INFINITE);
+				::SetEvent(go.get());
 
 				// ACT
 				t->join();
 
 				// ASSERT
 				::GetExitCodeThread(hthread.get(), &exit_code);
-					
+
 				assert_equal(0u, exit_code);
 			}
 

@@ -28,6 +28,9 @@
     <ClCompile Include="test_constants.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="thread.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\com.h" />

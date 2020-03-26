@@ -76,7 +76,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready;
-				shared_ptr<running_thread> hthread;
+				shared_ptr<mt::event> hthread;
 
 				state->constructed = [&] {
 					hthread = this_thread::open();
@@ -91,7 +91,7 @@ namespace micro_profiler
 				app.stop();
 
 				// ASSERT
-				assert_is_true(hthread->join(mt::milliseconds(0)));
+				assert_is_true(hthread->wait(mt::milliseconds(0)));
 			}
 
 
@@ -99,7 +99,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready;
-				shared_ptr<running_thread> hthread;
+				shared_ptr<mt::event> hthread;
 
 				state->constructed = [&] {
 					hthread = this_thread::open();
@@ -114,7 +114,7 @@ namespace micro_profiler
 				app.reset();
 
 				// ASSERT
-				assert_is_true(hthread->join(mt::milliseconds(0)));
+				assert_is_true(hthread->wait(mt::milliseconds(0)));
 			}
 
 
@@ -124,7 +124,6 @@ namespace micro_profiler
 				mt::thread::id thread_id;
 				bool destroyed_ok = false;
 				mt::event ready;
-				shared_ptr<running_thread> hthread;
 
 				state->constructed = [&] {
 					thread_id = mt::this_thread::get_id();

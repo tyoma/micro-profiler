@@ -45,6 +45,7 @@
     <ClCompile Include="helpers_win32.cpp" />
     <ClCompile Include="mock_frontend.cpp" />
     <ClCompile Include="process_win32.cpp" />
+    <ClCompile Include="thread.cpp" />
     <ClCompile Include="thread_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>

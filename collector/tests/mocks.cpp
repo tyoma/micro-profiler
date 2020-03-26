@@ -15,18 +15,18 @@ namespace micro_profiler
 				: _next_id(1)
 			{	}
 
-			unsigned thread_monitor::get_id(mt::thread::id native_id) const
+			thread_monitor::thread_id thread_monitor::get_id(mt::thread::id native_id) const
 			{
 				mt::lock_guard<mt::mutex> lock(_mtx);
-				unordered_map<mt::thread::id, unsigned>::const_iterator i = _ids.find(native_id);
+				unordered_map<mt::thread::id, thread_monitor::thread_id>::const_iterator i = _ids.find(native_id);
 
 				return i != _ids.end() ? i->second : 0;
 			}
 
-			unsigned thread_monitor::get_this_thread_id() const
+			thread_monitor::thread_id thread_monitor::get_this_thread_id() const
 			{	return get_id(mt::this_thread::get_id());	}
 
-			unsigned int thread_monitor::register_self()
+			thread_monitor::thread_id thread_monitor::register_self()
 			{
 				mt::lock_guard<mt::mutex> lock(_mtx);
 				return _ids.insert(make_pair(mt::this_thread::get_id(), _next_id++)).first->second;

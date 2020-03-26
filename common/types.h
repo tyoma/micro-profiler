@@ -57,6 +57,7 @@ namespace micro_profiler
 		mt::milliseconds start_time; // Relative to the process start time.
 		mt::milliseconds end_time; // Relative to the process start time.
 		mt::milliseconds cpu_time;
+		bool complete;
 	};
 
 

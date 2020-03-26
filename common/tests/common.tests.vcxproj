@@ -30,6 +30,9 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\mt\src\mt.vcxproj">
+      <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\src\common.vcxproj">
       <Project>{69508827-452F-479E-A28F-AF300C5C1633}</Project>
     </ProjectReference>

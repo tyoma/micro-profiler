@@ -40,10 +40,13 @@ namespace micro_profiler
 	{
 	public:
 		typedef unsigned int thread_id;
+		typedef std::pair<thread_id, thread_info> value_type;
 
 	public:
 		virtual thread_id register_self() = 0;
-		thread_info get_info(thread_id id) const;
+
+		template <typename OutputIteratorT, typename IteratorT>
+		void get_info(OutputIteratorT destination, IteratorT begin_id, IteratorT end_id) const;
 
 	protected:
 		typedef std::unordered_map<thread_id, thread_info> threads_map;
@@ -62,17 +65,23 @@ namespace micro_profiler
 	std::shared_ptr<thread_monitor> create_thread_monitor(thread_callbacks &callbacks);
 
 
-	inline thread_info thread_monitor::get_info(thread_id id) const
+	template <typename OutputIteratorT, typename IteratorT>
+	inline void thread_monitor::get_info(OutputIteratorT destination, IteratorT begin_id, IteratorT end_id) const
 	{
+		value_type v;
 		mt::lock_guard<mt::mutex> lock(_mutex);
-		threads_map::iterator i = _threads.find(id);
 
-		if (i == _threads.end())
-			throw std::invalid_argument("Unknown thread id!");
+		for (; begin_id != end_id; ++begin_id)
+		{
+			threads_map::iterator i = _threads.find(*begin_id);
 
-		thread_info ti = i->second;
-
-		update_live_info(ti, i->second.native_id);
-		return ti;
+			if (i == _threads.end())
+				throw std::invalid_argument("Unknown thread id!");
+			v.first = i->first;
+			v.second = i->second;
+			if (!v.second.complete)
+				update_live_info(v.second, i->second.native_id);
+			*destination++ = v;
+		}
 	}
 }

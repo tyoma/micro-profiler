@@ -120,9 +120,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="$(OutDir)frontend.res" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler_vspackage.rc">
       <Filter>resources</Filter>
     </ResourceCompile>

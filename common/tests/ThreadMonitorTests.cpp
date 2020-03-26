@@ -3,9 +3,8 @@
 #include <test-helpers/helpers.h>
 #include <test-helpers/thread.h>
 
+#include <iterator>
 #include <math.h>
-#include <mt/event.h>
-#include <mt/mutex.h>
 #include <mt/thread.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -16,6 +15,17 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			thread_info get_info(thread_monitor &m, const thread_monitor::thread_id id)
+			{
+				thread_monitor::value_type v;
+
+				m.get_info(&v, &id, &id + 1);
+				return v.second;
+			}
+		}
+
 		namespace mocks
 		{
 			class thread_callbacks : public micro_profiler::thread_callbacks
@@ -116,7 +126,7 @@ namespace micro_profiler
 			test( RegisteringTheSameThreadReturnsTheSameID )
 			{
 				// INIT
-				vector<unsigned> tids;
+				vector<thread_monitor::thread_id> tids;
 
 				// ACT
 				mt::thread t([&] {
@@ -147,7 +157,7 @@ namespace micro_profiler
 			test( MonitorThreadIDsAreTotallyOrdered )
 			{
 				// INIT
-				vector<unsigned> tids;
+				vector<thread_monitor::thread_id> tids;
 
 				// ACT
 				mt::thread t1([&] { tids.push_back(monitor->register_self()); });
@@ -159,7 +169,7 @@ namespace micro_profiler
 				tids.push_back(monitor->register_self());
 
 				// ASSERT
-				unsigned reference1[] = { 0, 1, 2, 3, };
+				thread_monitor::thread_id reference1[] = { 0, 1, 2, 3, };
 
 				assert_equal(reference1, tids);
 
@@ -168,7 +178,7 @@ namespace micro_profiler
 				t4.join();
 
 				// ASSERT
-				unsigned reference2[] = { 0, 1, 2, 3, 4, };
+				thread_monitor::thread_id reference2[] = { 0, 1, 2, 3, 4, };
 
 				assert_equal(reference2, tids);
 			}
@@ -177,16 +187,16 @@ namespace micro_profiler
 			test( AccessingUnknownThreadThrows )
 			{
 				// ACT / ASSERT
-				assert_throws(monitor->get_info(1234567), invalid_argument);
+				assert_throws(get_info(*monitor, 1234567), invalid_argument);
 			}
 
 
 			test( ThreadTimesFromMonitorEqualToThoseCollectedFromThread )
 			{
 				// INIT
-				unsigned tids[4];
+				thread_monitor::thread_id tids[4];
 				mt::mutex mtx;
-				map<unsigned, mt::milliseconds> times;
+				map<thread_monitor::thread_id, mt::milliseconds> times;
 				volatile double v[] = { 1, 1, 1, 1 };
 
 				// ACT
@@ -219,17 +229,18 @@ namespace micro_profiler
 				t3.join();
 
 				// ACT / ASSERT
-				assert_approx_equal(times[tids[0]].count(), monitor->get_info(tids[0]).cpu_time.count(), 0.3);
-				assert_approx_equal(times[tids[1]].count(), monitor->get_info(tids[1]).cpu_time.count(), 0.2);
-				assert_approx_equal(times[tids[2]].count(), monitor->get_info(tids[2]).cpu_time.count(), 0.1);
-				assert_approx_equal(times[tids[3]].count(), monitor->get_info(tids[3]).cpu_time.count(), 0.1);
+				assert_approx_equal(times[tids[0]].count(), get_info(*monitor, tids[0]).cpu_time.count(), 0.3);
+				assert_approx_equal(times[tids[1]].count(), get_info(*monitor, tids[1]).cpu_time.count(), 0.2);
+				assert_approx_equal(times[tids[2]].count(), get_info(*monitor, tids[2]).cpu_time.count(), 0.1);
+				assert_approx_equal(times[tids[3]].count(), get_info(*monitor, tids[3]).cpu_time.count(), 0.1);
 			}
 
 
 			test( NativeIDEqualsToOneTakenFromCurrenThread )
 			{
 				// INIT
-				unsigned ntids[3], tids[3];
+				unsigned ntids[3];
+				thread_monitor::thread_id tids[3];
 				mt::mutex mtx;
 
 				// ACT
@@ -252,16 +263,16 @@ namespace micro_profiler
 				tids[2] = monitor->register_self();
 
 				// ACT / ASSERT
-				assert_equal(ntids[0], monitor->get_info(tids[0]).native_id);
-				assert_equal(ntids[1], monitor->get_info(tids[1]).native_id);
-				assert_equal(ntids[2], monitor->get_info(tids[2]).native_id);
+				assert_equal(ntids[0], get_info(*monitor, tids[0]).native_id);
+				assert_equal(ntids[1], get_info(*monitor, tids[1]).native_id);
+				assert_equal(ntids[2], get_info(*monitor, tids[2]).native_id);
 			}
 
 
 			test( ThreadNamesAreReportedInInfo )
 			{
 				// INIT
-				unsigned tids[3];
+				thread_monitor::thread_id tids[3];
 
 				if (!this_thread::set_description(L"main thread"))
 					return; // Not supported on the current platform.
@@ -282,24 +293,24 @@ namespace micro_profiler
 				tids[2] = monitor->register_self();
 
 				// ACT / ASSERT
-				assert_equal("main thread", monitor->get_info(tids[2]).description);
-				assert_equal("producer", monitor->get_info(tids[0]).description);
-				assert_equal("consumer", monitor->get_info(tids[1]).description);
+				assert_equal("main thread", get_info(*monitor, tids[2]).description);
+				assert_equal("producer", get_info(*monitor, tids[0]).description);
+				assert_equal("consumer", get_info(*monitor, tids[1]).description);
 
 				// ACT
 				this_thread::set_description(L"main thread renamed");
 
 				// ACT / ASSERT
-				assert_equal("main thread renamed", monitor->get_info(tids[2]).description);
-				assert_equal("producer", monitor->get_info(tids[0]).description);
-				assert_equal("consumer", monitor->get_info(tids[1]).description);
+				assert_equal("main thread renamed", get_info(*monitor, tids[2]).description);
+				assert_equal("producer", get_info(*monitor, tids[0]).description);
+				assert_equal("consumer", get_info(*monitor, tids[1]).description);
 			}
 
 
 			test( ThreadEndTimeIsRegisteredAfterThreadExits )
 			{
 				// INIT
-				unsigned tids[2];
+				thread_monitor::thread_id tids[2];
 				mt::event go, ready;
 
 				// ACT
@@ -317,8 +328,8 @@ namespace micro_profiler
 				t1.join();
 
 				// ASSERT
-				assert_not_equal(mt::milliseconds(0), monitor->get_info(tids[0]).end_time);
-				assert_equal(mt::milliseconds(0), monitor->get_info(tids[1]).end_time);
+				assert_not_equal(mt::milliseconds(0), get_info(*monitor, tids[0]).end_time);
+				assert_equal(mt::milliseconds(0), get_info(*monitor, tids[1]).end_time);
 
 				// ACT
 				ready.wait();
@@ -326,9 +337,9 @@ namespace micro_profiler
 				t2.join();
 
 				// ASSERT
-				assert_not_equal(mt::milliseconds(0), monitor->get_info(tids[0]).end_time);
-				assert_not_equal(mt::milliseconds(0), monitor->get_info(tids[1]).end_time);
-				assert_is_true(monitor->get_info(tids[1]).end_time.count() > monitor->get_info(tids[0]).end_time.count());
+				assert_not_equal(mt::milliseconds(0), get_info(*monitor, tids[0]).end_time);
+				assert_not_equal(mt::milliseconds(0), get_info(*monitor, tids[1]).end_time);
+				assert_is_true(get_info(*monitor, tids[1]).end_time.count() > get_info(*monitor, tids[0]).end_time.count());
 			}
 
 
@@ -345,6 +356,81 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_not_equal(id2, id1);
+			}
+
+
+			test( ThreadCompletionStatusIsProvidedInInfo )
+			{
+				// INIT
+				mocks::thread_callbacks tc;
+				shared_ptr<thread_monitor> monitor2 = create_thread_monitor(tc);
+				volatile double v = 1;
+				const mt::milliseconds t0 = this_thread::get_cpu_time();
+
+				// ACT
+				thread_monitor::thread_id id1 = monitor2->register_self();
+				tc.invoke_destructors();
+				thread_monitor::thread_id id2 = monitor2->register_self();
+
+				mt::milliseconds t1 = this_thread::get_cpu_time();
+				for (int n = 10000000; n--; )
+					v = sin(v);
+				mt::milliseconds t2 = this_thread::get_cpu_time();
+
+				// ACT / ASSERT
+				assert_not_equal(0.0, v);
+				assert_is_true(get_info(*monitor2, id1).complete);
+				assert_is_false(get_info(*monitor2, id2).complete);
+				assert_approx_equal(get_info(*monitor2, id1).cpu_time.count()  - t0.count() + (t2.count() - t1.count()),
+					get_info(*monitor2, id2).cpu_time.count() - t0.count(), 0.1);
+			}
+
+
+			test( ThreadMonitorReturnsMultipleInfos )
+			{
+				// INIT
+				thread_monitor::thread_id tids[3];
+				unsigned ntids[3];
+				vector<thread_monitor::value_type> v1;
+
+				// ACT
+				mt::thread t1([&] {
+					ntids[0] = this_thread::get_native_id();
+					tids[0] = monitor->register_self();
+				});
+				mt::thread t2([&] {
+					ntids[1] = this_thread::get_native_id();
+					tids[1] = monitor->register_self();
+				});
+				mt::thread t3([&] {
+					ntids[2] = this_thread::get_native_id();
+					tids[2] = monitor->register_self();
+				});
+
+				t1.join();
+				t2.join();
+				t3.join();
+
+				// ACT
+				monitor->get_info(back_inserter(v1), tids, array_end(tids));
+
+				// ASSERT
+				assert_equal(3u, v1.size());
+				assert_equal(ntids[0], v1[0].second.native_id);
+				assert_equal(ntids[1], v1[1].second.native_id);
+				assert_equal(ntids[2], v1[2].second.native_id);
+
+				// INIT
+				thread_monitor::thread_id tids2[] = { tids[2], tids[1], };
+				map<thread_monitor::thread_id, thread_info> v2;
+
+				// ACT
+				monitor->get_info(inserter(v2, v2.end()), tids2, array_end(tids2));
+
+				// ASSERT
+				assert_equal(2u, v2.size());
+				assert_equal(ntids[1], v2[tids[1]].native_id);
+				assert_equal(ntids[2], v2[tids[2]].native_id);
 			}
 
 		end_test_suite

@@ -109,7 +109,7 @@ namespace micro_profiler
 		if (!lti.thread_info_entry)
 		{
 			weak_ptr<thread_monitor_impl> wself = shared_from_this();
-			thread_info ti = { id, string(), mt::milliseconds(), mt::milliseconds(0), mt::milliseconds() };
+			thread_info ti = { id, string(), mt::milliseconds(), mt::milliseconds(0), mt::milliseconds(), false };
 
 			lti.thread_info_entry = &*_threads.insert(make_pair(_next_id++, ti)).first;
 			lti.handle = get_current_thread();
@@ -146,6 +146,7 @@ namespace micro_profiler
 			self->update_live_info(ti, native_id);
 			::GetSystemTimeAsFileTime(&exit_time);
 			ti.end_time = milliseconds(exit_time);
+			ti.complete = true;
 			self->_alive_threads.erase(i);
 		}
 	}

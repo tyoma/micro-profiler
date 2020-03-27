@@ -26,6 +26,6 @@
 
 namespace strmd
 {
-	template <> struct container_traits<micro_profiler::thread_analyzer> { static const bool is_container = true; };
-	template <> struct container_traits<micro_profiler::analyzer> { static const bool is_container = true; };
+	template <> struct type_traits<micro_profiler::thread_analyzer> { typedef container_type_tag category; };
+	template <> struct type_traits<micro_profiler::analyzer> { typedef container_type_tag category; };
 }

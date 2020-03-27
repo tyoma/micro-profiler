@@ -116,16 +116,16 @@ namespace micro_profiler
 namespace strmd
 {
 	template <>
-	struct container_traits<micro_profiler::functions_list>
+	struct type_traits<micro_profiler::functions_list>
 	{
-		static const bool is_container = true;
-		typedef micro_profiler::functions_list_reader reader_type;
+		typedef container_type_tag category;
+		typedef micro_profiler::functions_list_reader item_reader_type;
 	};
 
 	template <typename T>
-	struct container_traits< std::unordered_map<micro_profiler::function_key, T, micro_profiler::address_hash> >
+	struct type_traits< std::unordered_map<micro_profiler::function_key, T, micro_profiler::address_hash> >
 	{
-		static const bool is_container = true;
-		typedef micro_profiler::statistics_map_reader reader_type;
+		typedef container_type_tag category;
+		typedef micro_profiler::statistics_map_reader item_reader_type;
 	};
 }

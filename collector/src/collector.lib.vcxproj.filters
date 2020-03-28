@@ -22,11 +22,11 @@
     <ClCompile Include="module_tracker.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="thread_monitor_win32.cpp">
-      <Filter>src\win32</Filter>
-    </ClCompile>
     <ClCompile Include="thread_monitor_linux.cpp">
       <Filter>src\unix</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_monitor_win32.cpp">
+      <Filter>src\win32</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +52,5 @@
     <ClInclude Include="..\module_tracker.h" />
     <ClInclude Include="..\shadow_stack.h" />
     <ClInclude Include="..\serialization.h" />
-    <ClInclude Include="..\thread_monitor.h" />
   </ItemGroup>
 </Project>

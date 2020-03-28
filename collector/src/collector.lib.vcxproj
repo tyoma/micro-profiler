@@ -49,6 +49,12 @@
     <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="module_tracker.cpp" />
     <ClCompile Include="statistics_bridge.cpp" />
+    <ClCompile Include="thread_monitor_linux.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="thread_monitor_win32.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\analyzer.h" />

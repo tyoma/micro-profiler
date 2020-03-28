@@ -47,7 +47,6 @@
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="TextConversionTests.cpp" />
     <ClCompile Include="TextFormattingServicesTests.cpp" />
-    <ClCompile Include="ThreadMonitorTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

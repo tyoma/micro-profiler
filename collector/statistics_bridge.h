@@ -21,9 +21,9 @@
 #pragma once
 
 #include "analyzer.h"
+#include "thread_monitor.h"
 
 #include <common/protocol.h>
-#include <common/thread_monitor.h>
 
 namespace micro_profiler
 {

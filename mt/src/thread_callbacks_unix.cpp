@@ -18,16 +18,17 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/thread_monitor.h>
+#include <mt/thread_callbacks.h>
+
+#include <mt/mutex.h>
 
 #include <list>
-#include <mt/mutex.h>
 #include <pthread.h>
 #include <vector>
 
 using namespace std;
 
-namespace micro_profiler
+namespace mt
 {
 	class thread_callbacks_impl : public thread_callbacks
 	{

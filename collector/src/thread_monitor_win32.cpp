@@ -18,14 +18,11 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/thread_monitor.h>
+#include <collector/thread_monitor.h>
 
 #include <common/string.h>
-
-#include <list>
-#include <mt/mutex.h>
+#include <mt/thread_callbacks.h>
 #include <mt/tls.h>
-#include <unordered_map>
 #include <windows.h>
 
 using namespace std;
@@ -58,7 +55,7 @@ namespace micro_profiler
 	class thread_monitor_impl : public thread_monitor, public enable_shared_from_this<thread_monitor_impl>
 	{
 	public:
-		thread_monitor_impl(thread_callbacks &callbacks);
+		thread_monitor_impl(mt::thread_callbacks &callbacks);
 
 		virtual thread_id register_self();
 		virtual void update_live_info(thread_info &info, unsigned int native_id) const;
@@ -80,7 +77,7 @@ namespace micro_profiler
 		static void thread_exited(const weak_ptr<thread_monitor_impl> &wself, unsigned int native_id);
 
 	private:
-		thread_callbacks &_callbacks;
+		mt::thread_callbacks &_callbacks;
 		running_threads_map _alive_threads;
 		thread_id _next_id;
 		shared_ptr<void> _kernel_dll;
@@ -94,7 +91,7 @@ namespace micro_profiler
 	{	}
 
 
-	thread_monitor_impl::thread_monitor_impl(thread_callbacks &callbacks)
+	thread_monitor_impl::thread_monitor_impl(mt::thread_callbacks &callbacks)
 		: _callbacks(callbacks), _next_id(0), _kernel_dll(::LoadLibraryA("kernel32.dll"), &::FreeLibrary),
 			_GetThreadDescription(reinterpret_cast<GetThreadDescription_t>(::GetProcAddress(
 				static_cast<HMODULE>(_kernel_dll.get()), "GetThreadDescription")))
@@ -152,6 +149,6 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr<thread_monitor> create_thread_monitor(thread_callbacks &callbacks)
+	shared_ptr<thread_monitor> create_thread_monitor(mt::thread_callbacks &callbacks)
 	{	return shared_ptr<thread_monitor>(new thread_monitor_impl(callbacks));	}
 }

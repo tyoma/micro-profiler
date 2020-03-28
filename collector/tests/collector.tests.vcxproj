@@ -64,6 +64,7 @@
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="StatisticsBridgeTests.cpp" />
     <ClCompile Include="ThreadAnalyzerTests.cpp" />
+    <ClCompile Include="ThreadMonitorTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

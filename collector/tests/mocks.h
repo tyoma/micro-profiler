@@ -1,9 +1,8 @@
 #pragma once
 
 #include <collector/calls_collector.h>
-#include <common/thread_monitor.h>
+#include <collector/thread_monitor.h>
 
-#include <mt/mutex.h>
 #include <mt/thread.h>
 #include <test-helpers/mock_frontend.h>
 #include <unordered_map>

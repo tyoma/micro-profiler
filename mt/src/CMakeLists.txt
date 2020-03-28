@@ -21,10 +21,17 @@ if(WIN32)
 	set(MT_SOURCES ${MT_SOURCES}
 		tls_win32.cpp
 	)
+	set(MT_THREAD_SOURCES
+		thread_callbacks_win32.cpp
+	)
 elseif(UNIX)
 	set(MT_SOURCES ${MT_SOURCES}
 		tls_pthreads.cpp
 	)
+	set(MT_THREAD_SOURCES
+		thread_callbacks_unix.cpp
+	)
 endif()
 
 add_library(mt STATIC ${MT_SOURCES})
+add_library(mt.thread_callbacks OBJECT ${MT_THREAD_SOURCES})

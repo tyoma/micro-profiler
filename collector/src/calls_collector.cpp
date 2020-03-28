@@ -23,7 +23,7 @@
 
 #include <collector/calls_collector.h>
 
-#include <common/thread_monitor.h>
+#include <collector/thread_monitor.h>
 
 using namespace std;
 using namespace std::placeholders;

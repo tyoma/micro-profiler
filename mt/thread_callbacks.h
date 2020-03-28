@@ -20,14 +20,9 @@
 
 #pragma once
 
-#include "types.h"
-
 #include <functional>
-#include <memory>
-#include <mt/mutex.h>
-#include <unordered_map>
 
-namespace micro_profiler
+namespace mt
 {
 	struct thread_callbacks
 	{
@@ -36,52 +31,7 @@ namespace micro_profiler
 		virtual void at_thread_exit(const atexit_t &handler) = 0;
 	};
 
-	class thread_monitor
-	{
-	public:
-		typedef unsigned int thread_id;
-		typedef std::pair<thread_id, thread_info> value_type;
-
-	public:
-		virtual thread_id register_self() = 0;
-
-		template <typename OutputIteratorT, typename IteratorT>
-		void get_info(OutputIteratorT destination, IteratorT begin_id, IteratorT end_id) const;
-
-	protected:
-		typedef std::unordered_map<thread_id, thread_info> threads_map;
-
-	protected:
-		virtual void update_live_info(thread_info &info, unsigned int native_id) const = 0;
-
-	protected:
-		mutable mt::mutex _mutex;
-		mutable threads_map _threads;
-	};
-
 
 
 	thread_callbacks &get_thread_callbacks();
-	std::shared_ptr<thread_monitor> create_thread_monitor(thread_callbacks &callbacks);
-
-
-	template <typename OutputIteratorT, typename IteratorT>
-	inline void thread_monitor::get_info(OutputIteratorT destination, IteratorT begin_id, IteratorT end_id) const
-	{
-		value_type v;
-		mt::lock_guard<mt::mutex> lock(_mutex);
-
-		for (; begin_id != end_id; ++begin_id)
-		{
-			threads_map::iterator i = _threads.find(*begin_id);
-
-			if (i == _threads.end())
-				throw std::invalid_argument("Unknown thread id!");
-			v.first = i->first;
-			v.second = i->second;
-			if (!v.second.complete)
-				update_live_info(v.second, i->second.native_id);
-			*destination++ = v;
-		}
-	}
 }

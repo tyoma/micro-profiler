@@ -1,4 +1,4 @@
-#include <common/thread_monitor.h>
+#include <collector/thread_monitor.h>
 
 #include <test-helpers/helpers.h>
 #include <test-helpers/thread.h>
@@ -6,6 +6,7 @@
 #include <iterator>
 #include <math.h>
 #include <mt/thread.h>
+#include <mt/thread_callbacks.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -28,7 +29,7 @@ namespace micro_profiler
 
 		namespace mocks
 		{
-			class thread_callbacks : public micro_profiler::thread_callbacks
+			class thread_callbacks : public mt::thread_callbacks
 			{
 			public:
 				void invoke_destructors()
@@ -51,76 +52,12 @@ namespace micro_profiler
 			};
 		}
 
-		begin_test_suite( ThreadCallbacksTests )
-			thread_callbacks *callbacks;
-
-			init( SetCallbacksInterface )
-			{	callbacks = &get_thread_callbacks();	}
-
-
-			test( ThreadExitsAreCalledInTheCorrespondingThread )
-			{
-				// INIT
-				unsigned ntids[3] = { 0 }, ntids_atexit[4] = { 0 };
-
-				// ACT
-				mt::thread t1([&] {
-					ntids[0] = this_thread::get_native_id();
-					callbacks->at_thread_exit([&] {
-						ntids_atexit[0] = this_thread::get_native_id();
-					});
-					callbacks->at_thread_exit([&] {
-						ntids_atexit[3] = this_thread::get_native_id();
-					});
-				});
-				mt::thread t2([&] {
-					ntids[1] = this_thread::get_native_id();
-					callbacks->at_thread_exit([&] {
-						ntids_atexit[1] = this_thread::get_native_id();
-					});
-				});
-				mt::thread t3([&] {
-					ntids[2] = this_thread::get_native_id();
-					callbacks->at_thread_exit([&] {
-						ntids_atexit[2] = this_thread::get_native_id();
-					});
-				});
-
-				t1.join();
-				t2.join();
-				t3.join();
-
-				// ASSERT
-				assert_equal(ntids[0], ntids_atexit[0]);
-				assert_equal(ntids[0], ntids_atexit[3]);
-				assert_equal(ntids[1], ntids_atexit[1]);
-				assert_equal(ntids[2], ntids_atexit[2]);
-			}
-
-
-			test( DestructorObjectsAreReleasedAfterExecuted )
-			{
-				// INIT
-				shared_ptr<bool> alive(new bool);
-
-				// ACT
-				mt::thread t([this, &alive] {
-					shared_ptr<bool> alive2 = alive;
-					callbacks->at_thread_exit([alive2] { });
-				});
-				t.join();
-
-				// ASSERT
-				assert_is_true(unique(alive));
-			}
-		end_test_suite
-
 
 		begin_test_suite( ThreadMonitorTests )
 			shared_ptr<thread_monitor> monitor;
 
 			init( CreateThreadMonitor )
-			{	monitor = create_thread_monitor(get_thread_callbacks());	}
+			{	monitor = create_thread_monitor(mt::get_thread_callbacks());	}
 
 
 			test( RegisteringTheSameThreadReturnsTheSameID )

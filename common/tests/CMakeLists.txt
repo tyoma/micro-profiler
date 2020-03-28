@@ -12,9 +12,8 @@ set(COMMON_TEST_SOURCES
 	SerializationTests.cpp
 	TextConversionTests.cpp
 	TextFormattingServicesTests.cpp
-	ThreadMonitorTests.cpp
 )
 
-add_library(common.tests SHARED ${COMMON_TEST_SOURCES} $<TARGET_OBJECTS:common.thread_callbacks>)
+add_library(common.tests SHARED ${COMMON_TEST_SOURCES})
 
-target_link_libraries(common.tests common test-helpers mt)
+target_link_libraries(common.tests common test-helpers)

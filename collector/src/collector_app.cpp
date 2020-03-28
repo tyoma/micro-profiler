@@ -24,9 +24,9 @@
 #include <collector/module_tracker.h>
 #include <collector/statistics_bridge.h>
 #include <collector/serialization.h>
+#include <collector/thread_monitor.h>
 
 #include <common/time.h>
-#include <common/thread_monitor.h>
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 

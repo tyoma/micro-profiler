@@ -18,15 +18,18 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/thread_monitor.h>
+#include <mt/thread_callbacks.h>
+
+#include <mt/mutex.h>
+#include <mt/tls.h>
 
 #include <list>
-#include <mt/tls.h>
+#include <vector>
 #include <windows.h>
 
 using namespace std;
 
-namespace micro_profiler
+namespace mt
 {
 	class thread_callbacks_impl : public thread_callbacks
 	{
@@ -88,6 +91,6 @@ namespace micro_profiler
 BOOL WINAPI DllMain(HINSTANCE /*hinstance*/, DWORD reason, LPVOID /*reserved*/)
 {
 	if (DLL_THREAD_DETACH == reason)
-		micro_profiler::get_thread_callbacks_impl().notify_thread_exit();
+		mt::get_thread_callbacks_impl().notify_thread_exit();
 	return TRUE;
 }

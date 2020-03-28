@@ -37,6 +37,16 @@ set(COLLECTOR_LIB_SOURCES
 	statistics_bridge.cpp
 )
 
+if (WIN32)
+	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		thread_monitor_win32.cpp
+	)
+elseif (UNIX)	
+	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		thread_monitor_linux.cpp
+	)
+endif()
+
 set(CALIBRATION_SOURCES
 	calibration_functions_inner_instrumented.cpp
 	calibration_functions_outer_instrumented.cpp
@@ -61,7 +71,7 @@ elseif(WIN32)
 endif()
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
-add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:common.thread_callbacks>)
+add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 
 target_link_libraries(${micro-profiler} collector.lib patcher ipc common)
 

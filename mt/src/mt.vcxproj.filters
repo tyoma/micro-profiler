@@ -44,5 +44,11 @@
     <ClCompile Include="event_generic.cpp">
       <Filter>src\generic</Filter>
     </ClCompile>
+    <ClCompile Include="thread_callbacks_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_callbacks_unix.cpp">
+      <Filter>src\unix</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

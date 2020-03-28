@@ -13,9 +13,10 @@ set(COLLECTOR_TESTS_SOURCES
 	ShadowStackTests.cpp
 	StatisticsBridgeTests.cpp
 	ThreadAnalyzerTests.cpp
+	ThreadMonitorTests.cpp
 	mocks.cpp
 	mocks_image_info.cpp
 )
 
-add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES} $<TARGET_OBJECTS:common.thread_callbacks>)
+add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 target_link_libraries(collector.tests collector.lib common patcher mt logger test-helpers)

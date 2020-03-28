@@ -49,6 +49,10 @@
     </ClCompile>
     <ClCompile Include="event_win32.cpp" />
     <ClCompile Include="mutex_win32.cpp" />
+    <ClCompile Include="thread_callbacks_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="thread_callbacks_win32.cpp" />
     <ClCompile Include="thread_win32.cpp" />
     <ClCompile Include="tls_pthreads.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>

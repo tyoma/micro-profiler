@@ -1,7 +1,7 @@
 #include <test-helpers/thread.h>
 
-#include <common/thread_monitor.h>
 #include <mt/event.h>
+#include <mt/thread_callbacks.h>
 
 using namespace std;
 
@@ -13,7 +13,7 @@ namespace micro_profiler
 		{
 			shared_ptr<mt::event> exited(new mt::event((false, false)));
 
-			get_thread_callbacks().at_thread_exit(bind(&mt::event::set, exited));
+			mt::get_thread_callbacks().at_thread_exit(bind(&mt::event::set, exited));
 			return exited;
 		}
 	}

@@ -34,46 +34,44 @@ namespace micro_profiler
 		unsigned int threadid;
 	};
 
-	struct statistics_map_reader
+	struct statistics_map_reader : strmd::indexed_associative_container_reader
 	{
 		template <typename ContainerT>
-		void prepare(ContainerT &/*data*/)
+		void prepare(ContainerT &/*data*/, size_t /*count*/)
 		{	}
 
 		template <typename ArchiveT, typename ContainerT>
-		void operator()(ArchiveT &archive, ContainerT &data, const micro_profiler::deserialization_context &context)
+		void read_item(ArchiveT &archive, ContainerT &data, const deserialization_context &context)
 		{
-			micro_profiler::deserialization_context new_context = context;
+			deserialization_context new_context = context;
 
 			archive(new_context.caller);
 			archive(data[function_key(new_context.caller, new_context.threadid)], new_context);
 		}
 
 		template <typename ArchiveT, typename ContainerT>
-		void operator()(ArchiveT &archive, ContainerT &data)
-		{
-			typename ContainerT::key_type key;
-
-			archive(key);
-			archive(data[key]);
-		}
+		void read_item(ArchiveT &archive, ContainerT &data)
+		{	strmd::indexed_associative_container_reader::read_item(archive, data);	}
 	};
 
 	struct functions_list_reader
 	{
-		void prepare(functions_list &/*container*/)
+		void prepare(functions_list &/*container*/, size_t /*count*/)
 		{	}
 
 		template <typename ArchiveT>
-		void operator()(ArchiveT &archive, functions_list &container)
+		void read_item(ArchiveT &archive, functions_list &container)
 		{
 			deserialization_context context = { &*container._statistics, };
 
-			if (!container.updates_enabled)
-				return;
-			archive(context.threadid);
-			archive(*container._statistics, context);
-			container.on_updated();
+			if (container.updates_enabled)
+				archive(context.threadid), archive(*container._statistics, context);
+		}
+
+		void complete(functions_list &container)
+		{
+			if (container.updates_enabled)
+				container.on_updated();
 		}
 	};
 

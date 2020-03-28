@@ -181,7 +181,7 @@ namespace micro_profiler
 			}
 
 
-			test( FunctionListDoesNotAcceptsUpdatesIfNotEnabled )
+			test( FunctionListDoesNotAcceptUpdatesIfNotEnabled )
 			{
 				// INIT
 				int invalidated_count = 0;
@@ -189,16 +189,23 @@ namespace micro_profiler
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
 				slot_connection conn = fl->invalidated += bind(&increment, &invalidated_count);
 
+				static_cast<function_statistics &>(s[1123]) = function_statistics(1, 0, 30, 20);
+				serialize_single_threaded(ser, s);
+
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
 				serialize_single_threaded(ser, s);
-				
+
+				dser(*fl);
+				invalidated_count = 0;
+
 				// ACT
 				fl->updates_enabled = false;
 				dser(*fl);
 
 				// ASSERT
-				assert_equal(0u, fl->get_count());
+				assert_equal(1u, fl->get_count());
+				assert_equal(L"1", get_text(*fl, 0, 3));
 				assert_equal(0, invalidated_count);
 			}
 

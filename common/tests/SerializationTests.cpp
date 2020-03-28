@@ -20,12 +20,6 @@ namespace micro_profiler
 			&& lhs.file_id == rhs.file_id && lhs.line == rhs.line;
 	}
 
-	inline bool operator ==(const thread_info &lhs, const thread_info &rhs)
-	{
-		return lhs.native_id == rhs.native_id && lhs.description == rhs.description && lhs.start_time == rhs.start_time
-			&& lhs.end_time == rhs.end_time && lhs.cpu_time == rhs.cpu_time;
-	}
-
 	namespace tests
 	{
 		namespace
@@ -230,8 +224,8 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				thread_info ti1 = { 122, "thread 1", mt::milliseconds(123), mt::milliseconds(2345), mt::milliseconds(18), };
-				thread_info ti2 = { 27, "t #2", mt::milliseconds(1), mt::milliseconds(2), mt::milliseconds(18191716), };
+				thread_info ti1 = { 122, "thread 1", mt::milliseconds(123), mt::milliseconds(2345), mt::milliseconds(18), true };
+				thread_info ti2 = { 27, "t #2", mt::milliseconds(1), mt::milliseconds(2), mt::milliseconds(18191716), false };
 				thread_info v;
 
 				// ACT

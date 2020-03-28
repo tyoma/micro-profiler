@@ -32,6 +32,7 @@ namespace micro_profiler
 				std::function<void (const thread_statistics_map &u)> updated;
 				std::function<void (const unloaded_modules &m)> modules_unloaded;
 				std::function<void (unsigned id, const module_info_metadata &md)> metadata_received;
+				std::function<void (const std::vector< std::pair<unsigned /*thread_id*/, thread_info> > &threads)> threads_received;
 
 			private:
 				std::shared_ptr<void> _ownee;
@@ -49,6 +50,7 @@ namespace micro_profiler
 				thread_statistics_map u;
 				unloaded_modules um;
 				module_info_metadata md;
+				std::vector< std::pair<unsigned /*thread_id*/, thread_info> > threads;
 
 				a(c);
 				switch (c)
@@ -76,6 +78,11 @@ namespace micro_profiler
 				case module_metadata:
 					if (state.metadata_received)
 						a(metadata_id), a(md), state.metadata_received(metadata_id, md);
+					break;
+
+				case threads_info:
+					if (state.threads_received)
+						a(threads), state.threads_received(threads);
 					break;
 
 				default:

@@ -2,6 +2,7 @@
 
 #include <common/primitives.h>
 #include <common/range.h>
+#include <common/types.h>
 
 #include <algorithm>
 #include <memory>
@@ -111,6 +112,12 @@ namespace micro_profiler
 		{	c = static_cast<CharT>(::toupper(c));	}
 
 		std::shared_ptr<void> occupy_memory(void *start, unsigned int length = 1000);
+	}
+
+	inline bool operator ==(const thread_info &lhs, const thread_info &rhs)
+	{
+		return lhs.native_id == rhs.native_id && lhs.description == rhs.description && lhs.start_time == rhs.start_time
+			&& lhs.end_time == rhs.end_time && lhs.cpu_time == rhs.cpu_time && lhs.complete == rhs.complete;
 	}
 }
 

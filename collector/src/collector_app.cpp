@@ -26,6 +26,7 @@
 #include <collector/serialization.h>
 
 #include <common/time.h>
+#include <common/thread_monitor.h>
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 
@@ -63,8 +64,8 @@ namespace micro_profiler
 	}
 
 	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector> &collector,
-			const overhead &overhead_)
-		: _collector(collector), _module_tracker(new module_tracker)
+			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_)
+		: _collector(collector), _module_tracker(new module_tracker), _thread_monitor(thread_monitor_)
 	{	_frontend_thread.reset(new mt::thread(bind(&collector_app::worker, this, factory, overhead_)));	}
 
 	collector_app::~collector_app()
@@ -90,12 +91,18 @@ namespace micro_profiler
 		strmd::deserializer<buffer_reader, packer> d(reader);
 		commands c;
 		unsigned int persistent_id;
+		vector<thread_monitor::thread_id> thread_ids;
 
 		switch (d(c), c)
 		{
 		case request_metadata:
 			d(persistent_id);
 			_bridge->send_module_metadata(persistent_id);
+			break;
+
+		case request_threads_info:
+			d(thread_ids);
+			_bridge->send_thread_info(thread_ids);
 			break;
 
 		default:
@@ -112,7 +119,7 @@ namespace micro_profiler
 		shared_ptr<ipc::channel> frontend = factory(*this);
 		timestamp_t t = clock();
 
-		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker));
+		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker, _thread_monitor));
 
 		task tasks[] = {
 			task(bind(&statistics_bridge::analyze, _bridge.get()), 10),

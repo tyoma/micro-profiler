@@ -36,6 +36,8 @@ namespace micro_profiler
 		module_metadata = 4,
 		request_metadata = 5, // + instance_id
 		update_statistics_threaded = 6,
+		request_threads_info = 7,
+		threads_info = 8,
 	};
 
 	// init

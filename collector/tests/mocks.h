@@ -22,6 +22,8 @@ namespace micro_profiler
 				thread_monitor::thread_id get_id(mt::thread::id tid) const;
 				thread_monitor::thread_id get_this_thread_id() const;
 
+				void add_info(thread_id id, const thread_info &info);
+
 			public:
 				thread_id provide_this_id;
 

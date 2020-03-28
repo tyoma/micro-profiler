@@ -26,6 +26,9 @@ namespace micro_profiler
 			thread_monitor::thread_id thread_monitor::get_this_thread_id() const
 			{	return get_id(mt::this_thread::get_id());	}
 
+			void thread_monitor::add_info(thread_id id, const thread_info &info)
+			{	_threads[id] = info;	}
+
 			thread_monitor::thread_id thread_monitor::register_self()
 			{
 				mt::lock_guard<mt::mutex> lock(_mtx);
@@ -33,7 +36,7 @@ namespace micro_profiler
 			}
 
 			void thread_monitor::update_live_info(thread_info &/*info*/, unsigned int /*native_id*/) const
-			{	throw 0;	}
+			{	}
 
 
 			tracer::tracer()

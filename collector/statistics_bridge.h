@@ -23,7 +23,7 @@
 #include "analyzer.h"
 
 #include <common/protocol.h>
-#include <mt/mutex.h>
+#include <common/thread_monitor.h>
 
 namespace micro_profiler
 {
@@ -36,15 +36,17 @@ namespace micro_profiler
 		struct channel;
 	}
 
-	class statistics_bridge
+	class statistics_bridge : noncopyable
 	{
 	public:
 		statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
-			const std::shared_ptr<module_tracker> &module_tracker_);
+			const std::shared_ptr<module_tracker> &module_tracker_,
+			const std::shared_ptr<thread_monitor> &thread_monitor_);
 
 		void analyze();
 		void update_frontend();
 		void send_module_metadata(unsigned int persistent_id);
+		void send_thread_info(const std::vector<thread_monitor::thread_id> &ids);
 
 	private:
 		template <typename DataT>
@@ -52,10 +54,12 @@ namespace micro_profiler
 
 	public:
 		pod_vector<byte> _buffer;
+		std::vector< std::pair<thread_monitor::thread_id, thread_info> > _threads_buffer;
 		analyzer _analyzer;
 		calls_collector_i &_collector;
 		ipc::channel &_frontend;
-		std::shared_ptr<module_tracker> _module_tracker;
+		const std::shared_ptr<module_tracker> _module_tracker;
+		const std::shared_ptr<thread_monitor> _thread_monitor;
 		mt::mutex _mutex;
 	};
 }

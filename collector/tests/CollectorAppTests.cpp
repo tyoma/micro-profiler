@@ -34,6 +34,7 @@ namespace micro_profiler
 			shared_ptr<mocks::frontend_state> state;
 			collector_app::frontend_factory_t factory;
 			shared_ptr<mocks::tracer> collector;
+			shared_ptr<mocks::thread_monitor> tmonitor;
 			ipc::channel *inbound;
 
 			shared_ptr<ipc::channel> create_frontned(ipc::channel &inbound_)
@@ -47,6 +48,7 @@ namespace micro_profiler
 				state.reset(new mocks::frontend_state(shared_ptr<void>()));
 				factory = bind(&CollectorAppTests::create_frontned, this, _1);
 				collector.reset(new mocks::tracer);
+				tmonitor.reset(new mocks::thread_monitor);
 			}
 
 
@@ -62,7 +64,7 @@ namespace micro_profiler
 				};
 
 				// INIT / ACT
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT / ASSERT (must not hang)
 				ready.wait();
@@ -83,7 +85,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				ready.wait();
 
@@ -106,7 +108,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				auto_ptr<collector_app> app(new collector_app(factory, collector, c_overhead));
+				auto_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor));
 
 				ready.wait();
 
@@ -132,7 +134,7 @@ namespace micro_profiler
 					destroyed_ok = thread_id == mt::this_thread::get_id();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT
 				app.stop();
@@ -158,8 +160,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app1(factory, collector, c_overhead);
-				collector_app app2(factory, collector, c_overhead);
+				collector_app app1(factory, collector, c_overhead, tmonitor);
+				collector_app app2(factory, collector, c_overhead, tmonitor);
 
 				go.wait();
 
@@ -180,7 +182,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 				initialized.wait();
 
 				// ASERT
@@ -197,7 +199,7 @@ namespace micro_profiler
 				state->updated = [&] (const mocks::thread_statistics_map &) { updated.wait(); };
 
 				// ACT
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT / ASSERT
 				assert_is_false(updated.wait(mt::milliseconds(500)));
@@ -215,7 +217,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				ready.wait(); // Guarantee that the load below leads to an individual notification.
 
@@ -259,7 +261,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT
 				ready.wait();
@@ -323,7 +325,7 @@ namespace micro_profiler
 				};
 
 				mt::thread worker([&] {
-					collector_app app(factory, collector, c_overhead);
+					collector_app app(factory, collector, c_overhead, tmonitor);
 
 					exit_collector.wait();
 				});
@@ -369,7 +371,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT
 				call_record trace1[] = {
@@ -422,7 +424,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT
 				call_record trace1[] = {
@@ -505,8 +507,8 @@ namespace micro_profiler
 					updated2.set();
 				};
 
-				collector_app app1(bind(&mocks::frontend_state::create, state1), tracer1, o1);
-				collector_app app2(bind(&mocks::frontend_state::create, state2), tracer2, o2);
+				collector_app app1(bind(&mocks::frontend_state::create, state1), tracer1, o1, tmonitor);
+				collector_app app2(bind(&mocks::frontend_state::create, state2), tracer2, o2, tmonitor);
 
 				// ACT
 				call_record trace[] = {
@@ -546,7 +548,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				collector_app app(factory, collector, overhead(7, 10));
+				collector_app app(factory, collector, overhead(7, 10), tmonitor);
 
 				// ACT
 				call_record trace[] = {
@@ -609,7 +611,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead);
+				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				ready.wait();
 				l.clear();
@@ -658,6 +660,67 @@ namespace micro_profiler
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
+			}
+
+
+			test( ThreadInfoRequestLeadsToThreadInfoSending )
+			{
+				// INIT
+				mt::event ready;
+				vector_adapter message_buffer;
+				strmd::serializer<vector_adapter, packer> ser(message_buffer);
+				vector< pair<unsigned /*thread_id*/, thread_info> > threads;
+				thread_info ti[] = {
+					{ 1221, "thread 1", mt::milliseconds(190212), mt::milliseconds(0), mt::milliseconds(1902), false },
+					{ 171717, "thread 2", mt::milliseconds(112), mt::milliseconds(0), mt::milliseconds(2900), false },
+					{ 17171, "thread #3", mt::milliseconds(112), mt::milliseconds(3000), mt::milliseconds(900), true },
+				};
+				thread_monitor::thread_id request1[] = { 1, }, request2[] = { 1, 19, 2, };
+
+				tmonitor->add_info(1 /*thread_id*/, ti[0]);
+				tmonitor->add_info(2 /*thread_id*/, ti[1]);
+				tmonitor->add_info(19 /*thread_id*/, ti[2]);
+
+				state->modules_loaded = [&] (const loaded_modules &) {
+					ready.set();
+				};
+				state->threads_received = [&] (const vector< pair<unsigned /*thread_id*/, thread_info> > &threads_) {
+					threads = threads_;
+					ready.set();
+				};
+
+				collector_app app(factory, collector, c_overhead, tmonitor);
+
+				ready.wait();
+
+				// ACT
+				ser(request_threads_info);
+				ser(mkvector(request1));
+				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				ready.wait();
+
+				// ASSERT
+				pair<thread_monitor::thread_id, thread_info> reference1[] = {
+					make_pair(1, ti[0]),
+				};
+
+				assert_equal(reference1, threads);
+
+				// INIT
+				message_buffer.buffer.clear();
+
+				// ACT
+				ser(request_threads_info);
+				ser(mkvector(request2));
+				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				ready.wait();
+
+				// ASSERT
+				pair<thread_monitor::thread_id, thread_info> reference2[] = {
+					make_pair(1, ti[0]), make_pair(19, ti[2]), make_pair(2, ti[1]),
+				};
+
+				assert_equal(reference2, threads);
 			}
 
 		end_test_suite

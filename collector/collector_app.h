@@ -32,6 +32,7 @@ namespace micro_profiler
 	class module_tracker;
 	struct overhead;
 	class statistics_bridge;
+	class thread_monitor;
 
 	class collector_app : ipc::channel, noncopyable
 	{
@@ -41,7 +42,7 @@ namespace micro_profiler
 
 	public:
 		collector_app(const frontend_factory_t &factory, const std::shared_ptr<calls_collector> &collector,
-			const overhead &overhead_);
+			const overhead &overhead_, const std::shared_ptr<thread_monitor> &thread_monitor_);
 		~collector_app();
 
 		void stop();
@@ -56,6 +57,7 @@ namespace micro_profiler
 	private:
 		const std::shared_ptr<calls_collector> _collector;
 		const std::shared_ptr<module_tracker> _module_tracker;
+		const std::shared_ptr<thread_monitor> _thread_monitor;
 		std::auto_ptr<statistics_bridge> _bridge;
 		mt::event _exit;
 		std::auto_ptr<mt::thread> _frontend_thread;

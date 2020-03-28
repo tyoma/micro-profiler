@@ -122,6 +122,7 @@ namespace micro_profiler
 		archive(data.start_time);
 		archive(data.end_time);
 		archive(data.cpu_time);
+		archive(reinterpret_cast<unsigned char &>(data.complete));
 	}
 
 

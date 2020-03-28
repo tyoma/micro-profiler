@@ -53,11 +53,13 @@ namespace micro_profiler
 			shared_ptr<ipc::channel> frontend;
 			vector<mocks::thread_statistics_map> update_log;
 			shared_ptr<module_tracker> mtracker;
+			shared_ptr<mocks::thread_monitor> tmonitor;
 			unsigned int ref_count;
 
 			init( CreateQueue )
 			{
 				mtracker.reset(new module_tracker);
+				tmonitor.reset(new mocks::thread_monitor);
 			}
 
 
@@ -79,7 +81,7 @@ namespace micro_profiler
 				state->initialized = [&] (const initialization_data &id) { process_init = id; };
 
 				// ACT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 
 				// ASSERT
 				assert_equal(get_current_process_executable(), process_init.executable);
@@ -90,7 +92,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoUpdates )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 
 				// ACT
 				b.analyze();
@@ -104,7 +106,7 @@ namespace micro_profiler
 			test( FrontendUpdateIsNotCalledIfNoAnalysisInvoked )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 				call_record trace[] = {
 					{	0, addr(0x1223)	},
 					{	10 + c_overhead.inner, addr(0)	},
@@ -123,7 +125,7 @@ namespace micro_profiler
 			test( FrontendUpdateClearsTheAnalyzer )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 				call_record trace[] = {
 					{	0, addr(0x1223)	},
 					{	10 + c_overhead.inner, addr(0)	},
@@ -151,7 +153,8 @@ namespace micro_profiler
 				shared_ptr<mocks::frontend_state> state1(state),
 					state2(new mocks::frontend_state(shared_ptr<void>()));
 				shared_ptr<ipc::channel> frontend2 = state2->create();
-				statistics_bridge b1(cc1, o1, *frontend, mtracker), b2(cc2, o2, *frontend2, mtracker);
+				statistics_bridge b1(cc1, o1, *frontend, mtracker, tmonitor),
+					b2(cc2, o2, *frontend2, mtracker, tmonitor);
 				call_record trace1[] = {
 					{	0, addr(0x1223)	},
 					{	10 + o1.inner, addr(0)	},
@@ -204,7 +207,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<loaded_modules> loads;
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 
 				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
 
@@ -234,7 +237,7 @@ namespace micro_profiler
 				// INIT
 				loaded_modules l;
 				vector<unloaded_modules> unloads;
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 
 				state->modules_loaded = [&] (const loaded_modules &m) { l = m; };
 				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
@@ -278,7 +281,7 @@ namespace micro_profiler
 				// INIT
 				unsigned persistent_id;
 				module_info_metadata md;
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 				loaded_modules l;
 				unloaded_modules u;
 
@@ -328,6 +331,48 @@ namespace micro_profiler
 #ifdef _WIN32
 				assert_equal("symbol_container_1.cpp", *get_file(md.source_files, symbol->file_id));
 #endif
+			}
+
+
+			test( ThreadInfoIsSerializedOnRequest )
+			{
+				// INIT
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				thread_info ti[] = {
+					{ 1221, "thread 1", mt::milliseconds(190212), mt::milliseconds(0), mt::milliseconds(1902), false },
+					{ 171717, "thread 2", mt::milliseconds(112), mt::milliseconds(0), mt::milliseconds(2900), false },
+					{ 17171, "thread #3", mt::milliseconds(112), mt::milliseconds(3000), mt::milliseconds(900), true },
+				};
+				thread_monitor::thread_id request1[] = { 1, 19, }, request2[] = { 1, 19, 2, };
+				vector< pair<unsigned /*thread_id*/, thread_info> > threads;
+
+				state->threads_received = [&] (const vector< pair<thread_monitor::thread_id, thread_info> > &threads_) {
+					threads = threads_;
+				};
+
+				tmonitor->add_info(1 /*thread_id*/, ti[0]);
+				tmonitor->add_info(2 /*thread_id*/, ti[1]);
+				tmonitor->add_info(19 /*thread_id*/, ti[2]);
+
+				// ACT
+				b.send_thread_info(mkvector(request1));
+
+				// ASSERT
+				pair<thread_monitor::thread_id, thread_info> reference1[] = {
+					make_pair(1, ti[0]), make_pair(19, ti[2]),
+				};
+
+				assert_equal(reference1, threads);
+
+				// ACT
+				b.send_thread_info(mkvector(request2));
+
+				// ASSERT
+				pair<thread_monitor::thread_id, thread_info> reference2[] = {
+					make_pair(1, ti[0]), make_pair(19, ti[2]), make_pair(2, ti[1]),
+				};
+
+				assert_equal(reference2, threads);
 			}
 		end_test_suite
 	}

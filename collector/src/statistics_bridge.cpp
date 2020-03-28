@@ -34,8 +34,9 @@ using namespace std;
 namespace micro_profiler
 {
 	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
-			const std::shared_ptr<module_tracker> &module_tracker_)
-		: _analyzer(overhead_), _collector(collector), _frontend(frontend), _module_tracker(module_tracker_)
+			const shared_ptr<module_tracker> &module_tracker_, const shared_ptr<thread_monitor> &thread_monitor_)
+		: _analyzer(overhead_), _collector(collector), _frontend(frontend), _module_tracker(module_tracker_),
+			_thread_monitor(thread_monitor_)
 	{
 		initialization_data idata = {
 			get_current_executable(),
@@ -83,6 +84,13 @@ namespace micro_profiler
 		archive(persistent_id);
 		archive(md);
 		_frontend.message(const_byte_range(_buffer.data(), _buffer.size()));
+	}
+
+	void statistics_bridge::send_thread_info(const vector<thread_monitor::thread_id> &ids)
+	{
+		_threads_buffer.resize(ids.size());
+		_thread_monitor->get_info(_threads_buffer.begin(), ids.begin(), ids.end());
+		send(threads_info, _threads_buffer);
 	}
 
 	template <typename DataT>

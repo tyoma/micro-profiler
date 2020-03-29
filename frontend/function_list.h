@@ -39,7 +39,6 @@ namespace micro_profiler
 	{
 		virtual void on_updated() = 0;
 		virtual void detach() = 0;
-		virtual void set_resolver(const std::shared_ptr<symbol_resolver> &resolver) = 0;
 	};
 
 	class functions_list : public statistics_model_impl<wpl::ui::table_model, statistic_types::map_detailed>
@@ -51,7 +50,6 @@ namespace micro_profiler
 		void print(std::string &content) const;
 		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
-		std::shared_ptr<symbol_resolver> get_resolver() const;
 
 		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
 			std::shared_ptr<symbol_resolver> resolver);
@@ -79,7 +77,6 @@ namespace micro_profiler
 		std::shared_ptr<statistic_types::map_detailed> _statistics;
 		std::shared_ptr<linked_statistics_list_t> _linked;
 		double _tick_interval;
-		std::shared_ptr<symbol_resolver> _resolver;
 
 	private:
 		friend struct functions_list_reader;
@@ -91,7 +88,7 @@ namespace micro_profiler
 	inline void functions_list::save(ArchiveT &archive) const
 	{
 		archive(static_cast<timestamp_t>(1 / _tick_interval));
-		archive(*_resolver);
+		archive(*get_resolver());
 		archive(*_statistics);
 	}
 

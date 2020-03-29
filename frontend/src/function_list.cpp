@@ -309,9 +309,9 @@ namespace micro_profiler
 
 	functions_list::functions_list(shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver)
-		: base(*statistics, tick_interval), updates_enabled(true), _statistics(statistics),
-			_linked(new linked_statistics_list_t), _tick_interval(tick_interval), _resolver(resolver)
-	{	set_resolver(resolver);	}
+		: base(*statistics, tick_interval, resolver), updates_enabled(true), _statistics(statistics),
+			_linked(new linked_statistics_list_t), _tick_interval(tick_interval)
+	{	}
 
 	functions_list::~functions_list()
 	{
@@ -329,8 +329,9 @@ namespace micro_profiler
 
 	void functions_list::print(string &content) const
 	{
-		const char* old_locale = ::setlocale(LC_NUMERIC, NULL);  
-		bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;  
+		const char* old_locale = ::setlocale(LC_NUMERIC, NULL);
+		bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;
+		shared_ptr<symbol_resolver> resolver = get_resolver();
 
 		content.clear();
 		content.reserve(256 * (get_count() + 1)); // kind of magic number
@@ -339,7 +340,7 @@ namespace micro_profiler
 		{
 			const view_type::value_type &row = get_entry(i);
 
-			content += _resolver->symbol_name_by_va(row.first.first) + "\t";
+			content += resolver->symbol_name_by_va(row.first.first) + "\t";
 			itoa<10>(content, row.second.times_called), content += "\t";
 			gcvt(content, exclusive_time(_tick_interval)(row.second)), content += "\t";
 			gcvt(content, inclusive_time(_tick_interval)(row.second)), content += "\t";
@@ -361,10 +362,9 @@ namespace micro_profiler
 		const statistic_types::map_detailed::value_type &s = get_entry(item);
 		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
 		shared_ptr<children_statistics> children(new children_statistics(s.second.callees,
-			_tick_interval), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
+			_tick_interval, get_resolver()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = children.get();
-		children->set_resolver(_resolver);
 		return children;
 	}
 
@@ -376,15 +376,11 @@ namespace micro_profiler
 		const statistic_types::map_detailed::value_type &s = get_entry(item);
 		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
 		shared_ptr<parents_statistics> parents(new parents_statistics(s.second.callers,
-			_tick_interval), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
+			_tick_interval, get_resolver()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = parents.get();
-		parents->set_resolver(_resolver);
 		return parents;
 	}
-
-	std::shared_ptr<symbol_resolver> functions_list::get_resolver() const
-	{	return _resolver;	}
 
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver)
 	{

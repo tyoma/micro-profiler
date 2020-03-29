@@ -35,11 +35,12 @@ namespace micro_profiler
 		typedef typename BaseT::index_type index_type;
 
 	public:
-		statistics_model_impl(const MapT &statistics, double tick_interval);
+		statistics_model_impl(const MapT &statistics, double tick_interval,
+			const std::shared_ptr<symbol_resolver> &resolver);
 
-		void set_resolver(const std::shared_ptr<symbol_resolver> &resolver);
+		std::shared_ptr<symbol_resolver> get_resolver() const throw();
 
-		std::shared_ptr< series<double> > get_column_series() const;
+		std::shared_ptr< series<double> > get_column_series() const throw();
 
 		virtual void detach() throw();
 
@@ -60,24 +61,25 @@ namespace micro_profiler
 		virtual void on_updated();
 
 	private:
+		std::shared_ptr< ordered_view<MapT> > _view;
 		double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;
-		std::shared_ptr< ordered_view<MapT> > _view;
 	};
 
 
 
 	template <typename BaseT, typename MapT>
-	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval)
-		: _tick_interval(tick_interval), _view(new ordered_view<MapT>(statistics))
+	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval,
+			const std::shared_ptr<symbol_resolver> &resolver)
+		: _view(new ordered_view<MapT>(statistics)), _tick_interval(tick_interval), _resolver(resolver)
 	{ }
 
 	template <typename BaseT, typename MapT>
-	inline void statistics_model_impl<BaseT, MapT>::set_resolver(const std::shared_ptr<symbol_resolver> &resolver)
-	{	_resolver = resolver;	}
+	inline std::shared_ptr<symbol_resolver> statistics_model_impl<BaseT, MapT>::get_resolver() const throw()
+	{	return _resolver;	}
 
 	template <typename BaseT, typename MapT>
-	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const
+	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
 	{	return _view;	}
 
 	template <typename BaseT, typename MapT>

@@ -40,6 +40,9 @@
     <ClCompile Include="symbol_resolver.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="threads_model.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -60,6 +63,7 @@
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\symbol_resolver.h" />
+    <ClInclude Include="..\threads_model.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

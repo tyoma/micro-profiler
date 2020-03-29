@@ -26,16 +26,11 @@
 
 #include <wpl/ui/models.h>
 
-namespace strmd
-{
-	template <typename, bool>
-	struct container_reader;
-}
-
 namespace micro_profiler
 {
 	struct linked_statistics : wpl::ui::table_model
 	{
+		virtual ~linked_statistics() {	}
 		virtual function_key get_function_key(index_type item) const = 0;
 		virtual std::shared_ptr< series<double> > get_column_series() const = 0;
 	};

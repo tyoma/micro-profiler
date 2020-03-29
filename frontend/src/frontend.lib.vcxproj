@@ -44,6 +44,7 @@
     <ClCompile Include="columns_model.cpp" />
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
+    <ClCompile Include="threads_model.cpp" />
     <ClCompile Include="untested\file.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -77,6 +78,7 @@
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\tables_ui.h" />
+    <ClInclude Include="..\threads_model.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

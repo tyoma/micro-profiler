@@ -11,6 +11,7 @@ set(FRONTEND_TESTS_SOURCES
 	ProcessListTests.cpp
 	SerializationTests.cpp
 	SymbolResolverTests.cpp
+	ThreadsModelTests.cpp
 )
 
 if(WIN32)

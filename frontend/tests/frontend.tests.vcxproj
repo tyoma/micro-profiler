@@ -52,6 +52,7 @@
     <ClCompile Include="ProcessListTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
+    <ClCompile Include="ThreadsModelTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

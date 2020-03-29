@@ -7,6 +7,7 @@ set(FRONTEND_LIB_SOURCES
 	function_list.cpp
 	process_list.cpp
 	symbol_resolver.cpp
+	threads_model.cpp
 )
 
 if(WIN32)

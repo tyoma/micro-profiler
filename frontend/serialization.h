@@ -22,6 +22,7 @@
 
 #include "function_list.h"
 #include "symbol_resolver.h"
+#include "threads_model.h"
 
 #include <common/serialization.h>
 
@@ -75,6 +76,18 @@ namespace micro_profiler
 		}
 	};
 
+	struct threads_model_reader : strmd::indexed_associative_container_reader
+	{
+		void prepare(threads_model &/*container*/, size_t /*count*/)
+		{	}
+
+		void complete(threads_model &container)
+		{
+			container._view.resort();
+			container.invalidated();
+		}
+	};
+
 
 
 	template <typename ArchiveT>
@@ -125,5 +138,12 @@ namespace strmd
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::statistics_map_reader item_reader_type;
+	};
+
+	template <>
+	struct type_traits<micro_profiler::threads_model>
+	{
+		typedef container_type_tag category;
+		typedef micro_profiler::threads_model_reader item_reader_type;
 	};
 }

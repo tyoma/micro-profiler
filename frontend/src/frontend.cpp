@@ -68,7 +68,7 @@ namespace micro_profiler
 		{
 		case init:
 			archive(idata);
-			_model = functions_list::create(idata.ticks_per_second, get_resolver());
+			_model = functions_list::create(idata.ticks_per_second, get_resolver(), nullptr);
 			initialized(idata.executable, _model);
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			break;

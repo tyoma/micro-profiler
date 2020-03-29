@@ -6,7 +6,7 @@
 #include <common/string.h>
 #include <frontend/file.h>
 #include <frontend/function_list.h>
-#include <frontend/serialization.h>
+#include <frontend/persistence.h>
 
 #include <strmd/serializer.h>
 #include <windows.h>
@@ -42,7 +42,7 @@ namespace micro_profiler
 			if (s.get())
 			{
 				strmd::serializer<write_stream, packer> ser(*s);
-				model->save(ser);
+				micro_profiler::save(ser, *model);
 			}
 		}
 

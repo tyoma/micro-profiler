@@ -46,6 +46,8 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="FrontendManagerTests.cpp" />
+    <ClCompile Include="FunctionListPersistence.cpp" />
+    <ClCompile Include="FunctionListPiechartTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />

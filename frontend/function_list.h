@@ -22,12 +22,10 @@
 
 #include "statistics_model.h"
 
-#include "primitives.h"
-
-#include <wpl/ui/models.h>
-
 namespace micro_profiler
 {
+	class threads_model;
+
 	struct linked_statistics : wpl::ui::table_model
 	{
 		virtual ~linked_statistics() {	}
@@ -52,13 +50,7 @@ namespace micro_profiler
 		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
 
 		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
-			std::shared_ptr<symbol_resolver> resolver);
-
-		template <typename ArchiveT>
-		void save(ArchiveT &archive) const;
-
-		template <typename ArchiveT>
-		static std::shared_ptr<functions_list> load(ArchiveT &archive);
+			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);
 
 	public:
 		bool updates_enabled;
@@ -80,31 +72,9 @@ namespace micro_profiler
 
 	private:
 		friend struct functions_list_reader;
+		template <typename ArchiveT>
+		friend void save(ArchiveT &archive, const functions_list &model);
+		template <typename ArchiveT>
+		friend std::shared_ptr<functions_list> load_functions_list(ArchiveT &archive);
 	};
-
-
-
-	template <typename ArchiveT>
-	inline void functions_list::save(ArchiveT &archive) const
-	{
-		archive(static_cast<timestamp_t>(1 / _tick_interval));
-		archive(*get_resolver());
-		archive(*_statistics);
-	}
-
-	template <typename ArchiveT>
-	inline std::shared_ptr<functions_list> functions_list::load(ArchiveT &archive)
-	{
-		timestamp_t ticks_per_second;
-		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver([] (unsigned int /*persistent_id*/) {}));
-
-		archive(ticks_per_second);
-		archive(*resolver);
-
-		std::shared_ptr<functions_list> fl(create(ticks_per_second, resolver));
-
-		archive(*fl->_statistics);
-		fl->on_updated();
-		return fl;
-	}
 }

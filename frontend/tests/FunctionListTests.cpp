@@ -17,7 +17,6 @@
 
 using namespace std;
 using namespace placeholders;
-using namespace wpl;
 using namespace wpl::ui;
 
 namespace micro_profiler
@@ -111,22 +110,6 @@ namespace micro_profiler
 						return i;
 				return table_model::npos();
 			}
-
-			template <typename ArchiveT, typename DataT>
-			void emulate_save(ArchiveT &archive, signed long long ticks_per_second, const symbol_resolver &resolver, const DataT &data)
-			{
-				archive(ticks_per_second);
-				archive(resolver);
-				archive(data);
-			}
-
-			template <typename ArchiveT, typename ContainerT>
-			void serialize_single_threaded(ArchiveT &archive, const ContainerT &container, unsigned int threadid = 1u)
-			{
-				vector< pair< unsigned /*threadid*/, ContainerT > > data(1, make_pair(threadid, container));
-
-				archive(data);
-			}
 		}
 
 
@@ -136,6 +119,7 @@ namespace micro_profiler
 			strmd::serializer<vector_adapter, packer> ser;
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
+			shared_ptr<mocks::threads_model> tmodel;
 
 			function<void (unsigned persistent_id)> get_requestor()
 			{	return [this] (unsigned /*persistent_id*/) { };	}
@@ -144,16 +128,17 @@ namespace micro_profiler
 				: ser(_buffer), dser(_buffer)
 			{	}
 
-			init( CreateResolver )
+			init( CreatePrerequisites )
 			{
 				resolver.reset(new mocks::symbol_resolver);
+				tmodel.reset(new mocks::threads_model);
 			}
 
 
 			test( CanCreateEmptyFunctionList )
 			{
 				// INIT / ACT
-				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				const functions_list &fl = *sp_fl;
 
 				// ACT / ASSERT
@@ -173,7 +158,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 				
 				// ACT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				dser(*fl);
 
 				// ASSERT
@@ -186,8 +171,8 @@ namespace micro_profiler
 				// INIT
 				int invalidated_count = 0;
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
-				slot_connection conn = fl->invalidated += bind(&increment, &invalidated_count);
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				wpl::slot_connection conn = fl->invalidated += bind(&increment, &invalidated_count);
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(1, 0, 30, 20);
 				serialize_single_threaded(ser, s);
@@ -214,7 +199,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				serialize_single_threaded(ser, s);
@@ -262,7 +247,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer it1, it2;
 
 				s[1123].callees[11000];
@@ -295,7 +280,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer it1, it2;
 
 				s[1123].callees[11000];
@@ -328,7 +313,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				vector<functions_list::index_type> expected;
 
 				static_cast<function_statistics &>(s[1118]) = function_statistics(19, 0, 31, 29);
@@ -380,7 +365,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s2[5550]) = function_statistics(15, 1024, 1011, 723, 215);
 				static_cast<function_statistics &>(s3[1118]) = function_statistics(100111222333, 0, 17000, 14000, 4);
 
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				fl->set_order(columns::times_called, true);
 				
 				invalidation_tracer ih;
@@ -479,7 +464,7 @@ namespace micro_profiler
 					make_statistics(6000u, 1, 0, 99999031030567, 99999030000987, 99999030000987),
 					make_statistics(6661u, 1, 0, 65450031030567000, 23470030000987000, 23470030000987000),
 				};
-				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver)); // 10 * billion ticks per second
+				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver, tmodel)); // 10 * billion ticks per second
 
 				serialize_single_threaded(ser, mkvector(functions));
 
@@ -515,7 +500,7 @@ namespace micro_profiler
 			test( FunctionListSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer ih;
 				const size_t data_size = 4;
 				unthreaded_addressed_function functions[data_size] = {
@@ -880,7 +865,7 @@ namespace micro_profiler
 			test( FunctionListProvidesThreadIDAsAColumn )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_addressed_function functions[][1] = {
 					{	make_statistics(10000u, 1, 0, 1, 1, 1),	},
 					{	make_statistics(10000u, 2, 0, 1, 1, 1),	},
@@ -913,7 +898,7 @@ namespace micro_profiler
 			test( FunctionListCanBeSortedByThreadID )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer ih;
 				const size_t data_size = 5;
 				unthreaded_addressed_function functions[data_size][1] = {
@@ -964,7 +949,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				string result;
 
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 2);
@@ -1010,8 +995,8 @@ namespace micro_profiler
 			test( FailOnGettingChildrenListFromNonEmptyRootList )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[1978];
@@ -1038,8 +1023,8 @@ namespace micro_profiler
 			test( ReturnChildrenModelForAValidRecord )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[1978];
@@ -1065,7 +1050,7 @@ namespace micro_profiler
 			test( LinkedStatisticsObjectIsReturnedForChildren )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[1973];
@@ -1086,7 +1071,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsForNonEmptyChildren )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x1978].callees[0x2001];
@@ -1114,7 +1099,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[0x1978].callees[0x2001] = function_statistics(11);
@@ -1162,7 +1147,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsGetText )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(10, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(10, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
@@ -1188,7 +1173,7 @@ namespace micro_profiler
 			test( IncomingDetailStatisticsUpdateNoLinkedStatisticsAfterClear )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer t1, t2;
 				unthreaded_statistic_types::map_detailed s;
 
@@ -1219,7 +1204,7 @@ namespace micro_profiler
 			test( LinkedStatisticsInvalidatedToEmptyOnMasterDestruction )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer t1, t2;
 				unthreaded_statistic_types::map_detailed s;
 
@@ -1249,7 +1234,7 @@ namespace micro_profiler
 			test( IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer t;
 				unthreaded_statistic_types::map_detailed s1, s2;
 
@@ -1300,7 +1285,7 @@ namespace micro_profiler
 			test( GetFunctionAddressFromLinkedChildrenStatistics )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x1978].callees[0x2001] = function_statistics(11);
@@ -1327,7 +1312,7 @@ namespace micro_profiler
 			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				static_cast<function_statistics &>(s[0x2001]) = function_statistics(11);
@@ -1350,8 +1335,8 @@ namespace micro_profiler
 			test( FailOnGettingParentsListFromNonEmptyRootList )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[0x1978];
@@ -1378,8 +1363,8 @@ namespace micro_profiler
 			test( ReturnParentsModelForAValidRecord )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[0x1978];
@@ -1405,7 +1390,7 @@ namespace micro_profiler
 			test( SizeOfParentsListIsReturnedFromParentsModel )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[2978].callees[3001];
@@ -1433,7 +1418,7 @@ namespace micro_profiler
 			test( ParentStatisticsIsUpdatedOnGlobalUpdates1 )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[2978].callees[2978];
@@ -1464,7 +1449,7 @@ namespace micro_profiler
 			test( ParentStatisticsValuesAreFormatted )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				static_cast<function_statistics &>(s[0x122F]) = function_statistics(1);
@@ -1497,7 +1482,7 @@ namespace micro_profiler
 			test( ParentStatisticsSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1564,7 +1549,7 @@ namespace micro_profiler
 			test( ParentStatisticsResortingCausesInvalidation )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				invalidation_tracer t;
 				unthreaded_statistic_types::map_detailed s1, s2;
 
@@ -1603,7 +1588,7 @@ namespace micro_profiler
 			test( ParentStatisticsCausesInvalidationAfterTheSort )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1629,7 +1614,7 @@ namespace micro_profiler
 			test( ParentStatisticsIsUpdatedOnGlobalUpdates2 )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1673,7 +1658,7 @@ namespace micro_profiler
 			test( GettingAddressOfParentStatisticsItem )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver));
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1695,445 +1680,6 @@ namespace micro_profiler
 				assert_equal(addr(0x3001), p->get_function_key(2));
 			}
 
-
-			test( SymbolsRequiredAndTicksPerSecondAreSerializedForFile )
-			{
-				// INIT
-				pair<long_address_t, string> symbols1[] = {
-					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				shared_ptr<functions_list> fl1(functions_list::create(16, mocks::symbol_resolver::create(symbols1)));
-				pair<long_address_t, string> symbols2[] = {
-					make_pair(7, "A"), make_pair(11, "B"), make_pair(19, "C"), make_pair(131, "D"), make_pair(113, "E"),
-				};
-				shared_ptr<functions_list> fl2(functions_list::create(25000000000, mocks::symbol_resolver::create(symbols2)));
-				unthreaded_statistic_types::map_detailed s;
-				statistic_types::map_detailed read;
-				timestamp_t ticks_per_second;
-
-				s[1], s[17];
-				serialize_single_threaded(ser, s);
-				dser(*fl1);
-
-				s.clear();
-				s[7], s[11], s[131], s[113];
-				serialize_single_threaded(ser, s);
-				dser(*fl2);
-
-				// ACT
-				fl1->save(ser);
-
-				// ASSERT
-				symbol_resolver r(get_requestor());
-
-				dser(ticks_per_second);
-				dser(r);
-				dser(read);
-
-				assert_equal(16, ticks_per_second);
-				assert_equal("Lorem", r.symbol_name_by_va(1));
-				assert_equal("Amet", r.symbol_name_by_va(17));
-
-				// ACT
-				fl2->save(ser);
-
-				// ASSERT
-				dser(ticks_per_second);
-				dser(r);
-				dser(read);
-
-				assert_equal(25000000000, ticks_per_second);
-				assert_equal("A", r.symbol_name_by_va(7));
-				assert_equal("B", r.symbol_name_by_va(11));
-				assert_equal("D", r.symbol_name_by_va(131));
-				assert_equal("E", r.symbol_name_by_va(113));
-			}
-
-
-			test( StatisticsFollowsTheSymbolsInFileSerialization )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				shared_ptr<functions_list> fl(functions_list::create(1, mocks::symbol_resolver::create(symbols)));
-				unthreaded_statistic_types::map_detailed s;
-				timestamp_t ticks_per_second;
-
-				s[1], s[17], s[13];
-				serialize_single_threaded(ser, s);
-				dser(*fl);
-
-				// ACT
-				fl->save(ser);
-
-				// ASSERT
-				symbol_resolver r(get_requestor());
-				statistic_types::map_detailed stats_read;
-
-				dser(ticks_per_second);
-				dser(r);
-				dser(stats_read);
-
-				assert_equal(3u, stats_read.size());
-			}
-
-
-			test( FunctionListIsComletelyRestoredWithSymbols )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 123, s[addr(17)].times_called = 127, s[addr(13)].times_called = 12, s[addr(123)].times_called = 12000;
-				s[addr(5)].inclusive_time = 1000, s[addr(123)].inclusive_time = 250;
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-
-				// ACT
-				shared_ptr<functions_list> fl = functions_list::load(dser);
-				fl->set_order(columns::name, true);
-
-				// ASSERT
-				columns::main ordering[] = {	columns::name, columns::times_called, columns::inclusive,	};
-				wstring reference[][3] = {
-					{	L"Amet", L"127", L"0s",	},
-					{	L"Ipsum", L"12", L"0s",	},
-					{	L"Lorem", L"123", L"2s",	},
-					{	L"dolor", L"12000", L"500ms",	},
-				};
-
-				assert_table_equivalent(ordering, reference, *fl);
-			}
-
-
-			test( NonNullPiechartModelIsReturnedFromFunctionsList )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				shared_ptr<functions_list> fl(functions_list::create(1, mocks::symbol_resolver::create(symbols)));
-
-				// ACT
-				shared_ptr< series<double> > m = fl->get_column_series();
-
-				// ASSERT
-				assert_equal(0u, m->size());
-			}
-
-
-			test( PiechartModelReturnsConvertedValuesForTimesCalled )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 123, s[addr(17)].times_called = 127, s[addr(13)].times_called = 12, s[addr(123)].times_called = 12000;
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-
-				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr< series<double> > m = fl->get_column_series();
-
-				// ACT
-				fl->set_order(columns::times_called, false);
-
-				// ASSERT
-				assert_equal(4u, m->size());
-				assert_approx_equal(12000.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(127.0, m->get_value(1), c_tolerance);
-				assert_approx_equal(123.0, m->get_value(2), c_tolerance);
-				assert_approx_equal(12.0, m->get_value(3), c_tolerance);
-
-				// ACT
-				fl->set_order(columns::times_called, true);
-
-				// ASSERT
-				assert_equal(4u, m->size());
-				assert_approx_equal(12000.0, m->get_value(3), c_tolerance);
-				assert_approx_equal(127.0, m->get_value(2), c_tolerance);
-				assert_approx_equal(123.0, m->get_value(1), c_tolerance);
-				assert_approx_equal(12.0, m->get_value(0), c_tolerance);
-			}
-
-
-			test( FunctionListUpdateLeadsToPiechartModelUpdateAndSignal )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				shared_ptr<functions_list> fl(functions_list::create(500, mocks::symbol_resolver::create(symbols)));
-				unthreaded_statistic_types::map_detailed s;
-				int invalidated_count = 0;
-
-				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
-
-				serialize_single_threaded(ser, s);
-				dser(*fl);
-				s.clear();
-
-				shared_ptr< series<double> > m = fl->get_column_series();
-
-				fl->set_order(columns::times_called, false);
-
-				s[120].times_called = 11001;
-				serialize_single_threaded(ser, s);
-
-				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
-
-				// ACT
-				dser(*fl);
-
-				// ASSERT
-				assert_equal(1, invalidated_count);
-				assert_equal(5u, m->size());
-				assert_approx_equal(12000.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(11001.0, m->get_value(1), c_tolerance);
-				assert_approx_equal(127.0, m->get_value(2), c_tolerance);
-				assert_approx_equal(123.0, m->get_value(3), c_tolerance);
-				assert_approx_equal(12.0, m->get_value(4), c_tolerance);
-			}
-
-
-			test( PiechartModelReturnsConvertedValuesForExclusiveTime )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				statistic_types::map_detailed s;
-
-				s[addr(5)].exclusive_time = 13, s[addr(17)].exclusive_time = 127, s[addr(13)].exclusive_time = 12;
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl1 = functions_list::load(dser);
-				shared_ptr< series<double> > m1 = fl1->get_column_series();
-				
-				s[addr(123)].exclusive_time = 12000;
-				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl2 = functions_list::load(dser);
-				shared_ptr< series<double> > m2 = fl2->get_column_series();
-
-				// ACT
-				fl1->set_order(columns::exclusive, false);
-				fl2->set_order(columns::exclusive, false);
-
-				// ASSERT
-				assert_equal(3u, m1->size());
-				assert_approx_equal(0.254, m1->get_value(0), c_tolerance);
-				assert_approx_equal(0.026, m1->get_value(1), c_tolerance);
-				assert_approx_equal(0.024, m1->get_value(2), c_tolerance);
-				assert_equal(4u, m2->size());
-				assert_approx_equal(120.0, m2->get_value(0), c_tolerance);
-				assert_approx_equal(1.27, m2->get_value(1), c_tolerance);
-				assert_approx_equal(0.13, m2->get_value(2), c_tolerance);
-				assert_approx_equal(0.12, m2->get_value(3), c_tolerance);
-			}
-
-
-			test( PiechartModelReturnsConvertedValuesForTheRestOfTheFields )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 130;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
-				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl1 = functions_list::load(dser);
-				shared_ptr< series<double> > m1 = fl1->get_column_series();
-				
-				emulate_save(ser, 1000, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl2 = functions_list::load(dser);
-				shared_ptr< series<double> > m2 = fl2->get_column_series();
-
-				// ACT
-				fl1->set_order(columns::inclusive, false);
-				fl2->set_order(columns::inclusive, true);
-
-				// ASSERT
-				assert_approx_equal(0.240, m1->get_value(0), c_tolerance);
-				assert_approx_equal(0.030, m1->get_value(1), c_tolerance);
-				assert_approx_equal(0.015, m2->get_value(0), c_tolerance);
-				assert_approx_equal(0.120, m2->get_value(1), c_tolerance);
-
-				// ACT
-				fl1->set_order(columns::exclusive_avg, false);
-				fl2->set_order(columns::exclusive_avg, true);
-
-				// ASSERT
-				assert_approx_equal(0.00032, m1->get_value(0), c_tolerance);
-				assert_approx_equal(0.00026, m1->get_value(1), c_tolerance);
-				assert_approx_equal(0.00013, m2->get_value(0), c_tolerance);
-				assert_approx_equal(0.00016, m2->get_value(1), c_tolerance);
-
-				// ACT
-				fl1->set_order(columns::inclusive_avg, false);
-				fl2->set_order(columns::inclusive_avg, true);
-
-				// ASSERT
-				assert_approx_equal(0.00030, m1->get_value(0), c_tolerance);
-				assert_approx_equal(0.00024, m1->get_value(1), c_tolerance);
-				assert_approx_equal(0.00012, m2->get_value(0), c_tolerance);
-				assert_approx_equal(0.00015, m2->get_value(1), c_tolerance);
-
-				// ACT
-				fl1->set_order(columns::max_time, false);
-				fl2->set_order(columns::max_time, true);
-
-				// ASSERT
-				assert_approx_equal(0.256, m1->get_value(0), c_tolerance);
-				assert_approx_equal(0.028, m1->get_value(1), c_tolerance);
-				assert_approx_equal(0.014, m2->get_value(0), c_tolerance);
-				assert_approx_equal(0.128, m2->get_value(1), c_tolerance);
-			}
-
-
-
-			test( PiechartModelReturnsZeroesAverageValuesForUncalledFunctions )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 0, s[addr(17)].times_called = 0;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 0;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 0;
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr< series<double> > m = fl->get_column_series();
-
-				// ACT
-				fl->set_order(columns::exclusive_avg, false);
-
-				// ASSERT
-				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(0.0, m->get_value(1), c_tolerance);
-
-				// ACT
-				fl->set_order(columns::inclusive_avg, false);
-
-				// ASSERT
-				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(0.0, m->get_value(1), c_tolerance);
-			}
-
-
-			test( SwitchingSortOrderLeadsToPiechartModelUpdate )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				statistic_types::map_detailed s;
-				int invalidated_count = 0;
-
-				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 130;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
-				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr< series<double> > m = fl->get_column_series();
-				slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
-
-				// ACT
-				fl->set_order(columns::times_called, false);
-
-				// ASSERT
-				assert_equal(1, invalidated_count);
-
-				// ACT
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::exclusive, false);
-				fl->set_order(columns::inclusive, false);
-				fl->set_order(columns::exclusive_avg, false);
-				fl->set_order(columns::inclusive_avg, false);
-				fl->set_order(columns::max_time, false);
-
-				// ASSERT
-				assert_equal(7, invalidated_count);
-			}
-
-
-			test( PiechartForUnsupportedColumnsIsSimplyZero )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 130;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
-				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr< series<double> > m = fl->get_column_series();
-
-				// ACT / ASSERT
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::order, true);
-				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::name, false);
-				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::max_reentrance, true);
-				assert_approx_equal(0.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(0.0, m->get_value(3), c_tolerance);
-			}
-
-
-			test( ChildrenStatisticsProvideColumnSeries )
-			{
-				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				statistic_types::map_detailed s;
-				shared_ptr< series<double> > m;
-
-				s[addr(5)].times_called = 2000;
-				s[addr(5)].callees[addr(11)].times_called = 29, s[addr(5)].callees[addr(13)].times_called = 31;
-				s[addr(5)].callees[addr(11)].exclusive_time = 16, s[addr(5)].callees[addr(13)].exclusive_time = 10;
-
-				s[addr(17)].times_called = 1999;
-				s[addr(17)].callees[addr(11)].times_called = 101, s[addr(17)].callees[addr(19)].times_called = 103, s[addr(17)].callees[addr(23)].times_called = 1100;
-				s[addr(17)].callees[addr(11)].exclusive_time = 3, s[addr(17)].callees[addr(19)].exclusive_time = 112, s[addr(17)].callees[addr(23)].exclusive_time = 9;
-
-				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = functions_list::load(dser);
-				shared_ptr<linked_statistics> ls;
-
-				fl->set_order(columns::times_called, false);
-
-				// ACT
-				ls = fl->watch_children(0);
-				ls->set_order(columns::times_called, true);
-				m = ls->get_column_series();
-
-				// ASSERT
-				assert_equal(2u, m->size());
-				assert_approx_equal(29.0, m->get_value(0), c_tolerance);
-				assert_approx_equal(31.0, m->get_value(1), c_tolerance);
-
-				// ACT
-				ls = fl->watch_children(1);
-				m = ls->get_column_series();
-				ls->set_order(columns::exclusive, false);
-
-				// ASSERT
-				assert_equal(3u, m->size());
-				assert_approx_equal(1.12, m->get_value(0), c_tolerance);
-				assert_approx_equal(0.09, m->get_value(1), c_tolerance);
-				assert_approx_equal(0.03, m->get_value(2), c_tolerance);
-			}
 		end_test_suite
 	}
 }

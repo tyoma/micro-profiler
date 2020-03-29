@@ -20,6 +20,8 @@
 
 #include <frontend/function_list.h>
 
+#include <frontend/symbol_resolver.h>
+
 #include <common/formatting.h>
 #include <cmath>
 #include <clocale>
@@ -382,7 +384,8 @@ namespace micro_profiler
 		return parents;
 	}
 
-	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver)
+	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver,
+		shared_ptr<threads_model> /*threads*/)
 	{
 		return shared_ptr<functions_list>(new functions_list(
 			shared_ptr<statistic_types::map_detailed>(new statistic_types::map_detailed), 1.0 / ticks_per_second, resolver));

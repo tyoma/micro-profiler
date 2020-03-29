@@ -68,6 +68,7 @@
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\columns_model.h" />
+    <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\serialization.h" />

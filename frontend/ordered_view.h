@@ -27,7 +27,6 @@
 #include <list>
 #include <memory>
 #include <vector>
-#include <wpl/ui/models.h>
 
 namespace micro_profiler
 {

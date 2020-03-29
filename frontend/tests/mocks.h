@@ -2,6 +2,7 @@
 
 #include <common/protocol.h>
 #include <frontend/symbol_resolver.h>
+#include <frontend/threads_model.h>
 
 namespace micro_profiler
 {
@@ -23,6 +24,10 @@ namespace micro_profiler
 
 			private:
 				mutable std::unordered_map<long_address_t, std::string> _names;
+			};
+
+			class threads_model : public micro_profiler::threads_model
+			{
 			};
 
 

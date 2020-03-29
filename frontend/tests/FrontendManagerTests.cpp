@@ -1,6 +1,7 @@
 #include <frontend/frontend_manager.h>
 
 #include "helpers.h"
+#include "mocks.h"
 
 #include <frontend/function_list.h>
 #include <frontend/serialization.h>
@@ -63,78 +64,71 @@ namespace micro_profiler
 			template <typename T, size_t n>
 			void reset_all(T (&a)[n])
 			{	fill_n(a, n, T());	}
-
-			namespace mocks
-			{
-				class frontend_ui : public micro_profiler::frontend_ui
-				{		
-				public:
-					frontend_ui(const shared_ptr<functions_list> &model_, const string &process_name_)
-						: model(model_), process_name(process_name_)
-					{	}
-
-					~frontend_ui()
-					{
-						closed(); // this is here only to make frontend_manager's life harder - it should ignore this signal.
-					}
-
-					void emulate_close()
-					{	closed();	}
-
-				public:
-					shared_ptr<functions_list> model;
-					string process_name;
-
-				private:
-					virtual void activate() {	}
-				};
-
-				class outbound_channel : public ipc::channel
-				{
-				public:
-					outbound_channel()
-						: disconnected(false)
-					{	}
-
-				public:
-					bool disconnected;
-					vector<unsigned int /*instance_id*/> requested_metadata;
-
-				private:
-					virtual void disconnect() throw()
-					{	disconnected = true;	}
-
-					virtual void message(const_byte_range payload)
-					{
-						buffer_reader reader(payload);
-						strmd::deserializer<buffer_reader, packer> d(reader);
-						commands c;
-
-						switch (d(c), c)
-						{
-						case request_metadata:
-							requested_metadata.push_back(0), d(requested_metadata.back());
-							break;
-
-						default:
-							break;
-						}
-					}
-				};
-			}
 		}
+
+		namespace mocks
+		{
+			class frontend_ui : public micro_profiler::frontend_ui
+			{		
+			public:
+				frontend_ui(const shared_ptr<functions_list> &model_, const string &process_name_)
+					: model(model_), process_name(process_name_)
+				{	}
+
+				~frontend_ui()
+				{
+					closed(); // this is here only to make frontend_manager's life harder - it should ignore this signal.
+				}
+
+				void emulate_close()
+				{	closed();	}
+
+			public:
+				shared_ptr<functions_list> model;
+				string process_name;
+
+			private:
+				virtual void activate() {	}
+			};
+
+			class outbound_channel : public ipc::channel
+			{
+			public:
+				outbound_channel()
+					: disconnected(false)
+				{	}
+
+			public:
+				bool disconnected;
+				vector<unsigned int /*instance_id*/> requested_metadata;
+
+			private:
+				virtual void disconnect() throw()
+				{	disconnected = true;	}
+
+				virtual void message(const_byte_range payload)
+				{
+					buffer_reader reader(payload);
+					strmd::deserializer<buffer_reader, packer> d(reader);
+					commands c;
+
+					switch (d(c), c)
+					{
+					case request_metadata:
+						requested_metadata.push_back(0), d(requested_metadata.back());
+						break;
+
+					default:
+						break;
+					}
+				}
+			};
+		}
+
 
 		begin_test_suite( FrontendManagerTests )
 
 			mocks::outbound_channel outbound;
-			vector<unsigned> requested;
-
-			function<void (unsigned persistent_id)> get_requestor()
-			{
-				return [this] (unsigned persistent_id) {
-					requested.push_back(persistent_id);
-				};
-			}
 
 
 			test( OpeningFrontendChannelIncrementsInstanceCount )
@@ -871,8 +865,10 @@ namespace micro_profiler
 				// INIT
 				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this,
 					_1, _2));
-				shared_ptr<symbol_resolver> sr(new symbol_resolver(get_requestor()));
-				shared_ptr<functions_list> fl1 = functions_list::create(123, sr), fl2 = functions_list::create(123, sr);
+				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver);
+				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
+				shared_ptr<functions_list> fl1 = functions_list::create(123, sr, tmodel),
+					fl2 = functions_list::create(123, sr, tmodel);
 
 				// ACT
 				m->load_session("somefile.exe", fl1);

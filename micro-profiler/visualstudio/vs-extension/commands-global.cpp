@@ -34,7 +34,7 @@
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
-#include <frontend/serialization.h>
+#include <frontend/persistence.h>
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
@@ -315,7 +315,7 @@ namespace micro_profiler
 			if (s.get())
 			{
 				strmd::deserializer<read_stream, packer> dser(*s);
-				shared_ptr<functions_list> model = functions_list::load(dser);
+				shared_ptr<functions_list> model = load_functions_list(dser);
 
 				ctx.frontend->load_session(*path, model);
 			}
@@ -345,7 +345,7 @@ namespace micro_profiler
 				if (s.get())
 				{
 					strmd::serializer<write_stream, packer> ser(*s);
-					model->save(ser);
+					save(ser, *model);
 				}
 			}
 		}

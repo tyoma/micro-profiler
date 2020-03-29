@@ -8,6 +8,8 @@
 
 namespace micro_profiler
 {
+	class symbol_resolver;
+
 	namespace tests
 	{
 		struct columns
@@ -73,6 +75,23 @@ namespace micro_profiler
 		{
 			mapped_module_identified mmi = { 0u, peristent_id, std::string(), base, };
 			return mmi;
+		}
+
+		template <typename ArchiveT, typename DataT>
+		inline void emulate_save(ArchiveT &archive, signed long long ticks_per_second, const symbol_resolver &resolver,
+			const DataT &data)
+		{
+			archive(ticks_per_second);
+			archive(resolver);
+			archive(data);
+		}
+
+		template <typename ArchiveT, typename ContainerT>
+		inline void serialize_single_threaded(ArchiveT &archive, const ContainerT &container, unsigned int threadid = 1u)
+		{
+			std::vector< std::pair< unsigned /*threadid*/, ContainerT > > data(1, std::make_pair(threadid, container));
+
+			archive(data);
 		}
 	}
 }

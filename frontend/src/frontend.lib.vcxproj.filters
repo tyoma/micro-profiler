@@ -64,6 +64,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\threads_model.h" />
+    <ClInclude Include="..\persistence.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

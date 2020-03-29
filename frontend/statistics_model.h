@@ -23,22 +23,25 @@
 #include "ordered_view.h"
 #include "primitives.h"
 
+#include <common/noncopyable.h>
+
 namespace micro_profiler
 {
 	class symbol_resolver;
+	class threads_model;
 
 	template <typename BaseT, typename MapT>
-	class statistics_model_impl : public BaseT
+	class statistics_model_impl : public BaseT, noncopyable
 	{
 	public:
 		typedef typename BaseT::index_type index_type;
 
 	public:
 		statistics_model_impl(const MapT &statistics, double tick_interval,
-			const std::shared_ptr<symbol_resolver> &resolver);
+			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads);
 
 		std::shared_ptr<symbol_resolver> get_resolver() const throw();
-
+		std::shared_ptr<threads_model> get_threads() const throw();
 		std::shared_ptr< series<double> > get_column_series() const throw();
 
 		virtual void detach() throw();
@@ -61,21 +64,26 @@ namespace micro_profiler
 
 	private:
 		std::shared_ptr< ordered_view<MapT> > _view;
-		double _tick_interval;
-		std::shared_ptr<symbol_resolver> _resolver;
+		const double _tick_interval;
+		const std::shared_ptr<symbol_resolver> _resolver;
+		const std::shared_ptr<threads_model> _threads;
 	};
 
 
 
 	template <typename BaseT, typename MapT>
 	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval,
-			const std::shared_ptr<symbol_resolver> &resolver)
-		: _view(new ordered_view<MapT>(statistics)), _tick_interval(tick_interval), _resolver(resolver)
+			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads)
+		: _view(new ordered_view<MapT>(statistics)), _tick_interval(tick_interval), _resolver(resolver), _threads(threads)
 	{ }
 
 	template <typename BaseT, typename MapT>
 	inline std::shared_ptr<symbol_resolver> statistics_model_impl<BaseT, MapT>::get_resolver() const throw()
 	{	return _resolver;	}
+
+	template <typename BaseT, typename MapT>
+	inline std::shared_ptr<threads_model> statistics_model_impl<BaseT, MapT>::get_threads() const throw()
+	{	return _threads;	}
 
 	template <typename BaseT, typename MapT>
 	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()

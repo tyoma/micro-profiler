@@ -93,6 +93,13 @@ namespace micro_profiler
 
 			archive(data);
 		}
+
+		inline thread_info make_thread_info(unsigned native_id, std::string description, mt::milliseconds start_time,
+			mt::milliseconds end_time, mt::milliseconds cpu_time, bool complete)
+		{
+			thread_info ti = { native_id, description, start_time, end_time, cpu_time, complete };
+			return ti;
+		}
 	}
 }
 

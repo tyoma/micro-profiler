@@ -21,6 +21,7 @@
 #include <frontend/function_list.h>
 
 #include <frontend/symbol_resolver.h>
+#include <frontend/threads_model.h>
 
 #include <common/formatting.h>
 #include <cmath>
@@ -57,25 +58,35 @@ namespace micro_profiler
 		class by_name
 		{
 		public:
-			by_name(const function<shared_ptr<symbol_resolver> ()> &resolver_accessor)
-				: _resolver_accessor(resolver_accessor)
+			by_name(const shared_ptr<symbol_resolver> &resolver)
+				: _resolver(resolver)
 			{	}
 
 			template <typename AnyT>
 			bool operator ()(function_key lhs_addr, const AnyT &, function_key rhs_addr, const AnyT &) const
-			{
-				shared_ptr<symbol_resolver> r = _resolver_accessor();
-				return r->symbol_name_by_va(lhs_addr.first) < r->symbol_name_by_va(rhs_addr.first);
-			}
+			{	return _resolver->symbol_name_by_va(lhs_addr.first) < _resolver->symbol_name_by_va(rhs_addr.first);	}
 
 		private:
-			function<shared_ptr<symbol_resolver> ()> _resolver_accessor;
+			shared_ptr<symbol_resolver> _resolver;
 		};
 
 		struct by_threadid
 		{
-			bool operator ()(const function_key &lhs, const function_statistics &, const function_key &rhs, const function_statistics &) const
-			{	return lhs.second < rhs.second;	}
+		public:
+			by_threadid(const shared_ptr<threads_model> &threads)
+				: _threads(threads)
+			{	}
+
+			bool operator ()(const function_key &lhs_, const function_statistics &, const function_key &rhs_,
+				const function_statistics &) const
+			{
+				unsigned int lhs = 0u, rhs = 0u;
+
+				return (_threads->get_native_id(lhs, lhs_.second), lhs) < (_threads->get_native_id(rhs, rhs_.second), rhs);
+			}
+
+		private:
+			shared_ptr<threads_model> _threads;
 		};
 
 		struct by_times_called
@@ -206,6 +217,7 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
 	{
+		unsigned int tmp;
 		const typename view_type::value_type &row = get_entry(item);
 
 		text.clear();
@@ -213,7 +225,7 @@ namespace micro_profiler
 		{
 		case 0:	itoa<10>(text, item + 1);	break;
 		case 1:	assign(text, _resolver->symbol_name_by_va(row.first.first));	break;
-		case 2:	itoa<10>(text, row.first.second);	break;
+		case 2:	_threads->get_native_id(tmp, row.first.second) ? itoa<10>(text, tmp), 0 : 0;	break;
 		case 3:	itoa<10>(text, row.second.times_called);	break;
 		case 4:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
 		case 5:	format_interval(text, inclusive_time(_tick_interval)(row.second));	break;
@@ -234,12 +246,12 @@ namespace micro_profiler
 			break;
 
 		case 1:
-			_view->set_order(by_name([this] { return _resolver; }), ascending);
+			_view->set_order(by_name(_resolver), ascending);
 			_view->disable_projection();
 			break;
 
 		case 2:
-			_view->set_order(by_threadid(), ascending);
+			_view->set_order(by_threadid(get_threads()), ascending);
 			// _view->disable_projection();
 			break;
 
@@ -302,7 +314,7 @@ namespace micro_profiler
 	{
 		switch (column)
 		{
-		case 1:	_view->set_order(by_name([this] { return _resolver; }), ascending);	break;
+		case 1:	_view->set_order(by_name(_resolver), ascending);	break;
 		case 3:	_view->set_order(by_times_called(), ascending);	break;
 		}
 		this->invalidated(_view->size());
@@ -310,8 +322,8 @@ namespace micro_profiler
 
 
 	functions_list::functions_list(shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
-			shared_ptr<symbol_resolver> resolver)
-		: base(*statistics, tick_interval, resolver), updates_enabled(true), _statistics(statistics),
+			shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads)
+		: base(*statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
 			_linked(new linked_statistics_list_t), _tick_interval(tick_interval)
 	{	}
 
@@ -363,8 +375,8 @@ namespace micro_profiler
 
 		const statistic_types::map_detailed::value_type &s = get_entry(item);
 		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<children_statistics> children(new children_statistics(s.second.callees,
-			_tick_interval, get_resolver()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
+		shared_ptr<children_statistics> children(new children_statistics(s.second.callees, _tick_interval, get_resolver(),
+			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = children.get();
 		return children;
@@ -377,18 +389,19 @@ namespace micro_profiler
 
 		const statistic_types::map_detailed::value_type &s = get_entry(item);
 		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<parents_statistics> parents(new parents_statistics(s.second.callers,
-			_tick_interval, get_resolver()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
+		shared_ptr<parents_statistics> parents(new parents_statistics(s.second.callers, _tick_interval, get_resolver(),
+			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = parents.get();
 		return parents;
 	}
 
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver,
-		shared_ptr<threads_model> /*threads*/)
+		shared_ptr<threads_model> threads)
 	{
-		return shared_ptr<functions_list>(new functions_list(
-			shared_ptr<statistic_types::map_detailed>(new statistic_types::map_detailed), 1.0 / ticks_per_second, resolver));
+		shared_ptr<statistic_types::map_detailed> base_map(new statistic_types::map_detailed);
+
+		return shared_ptr<functions_list>(new functions_list(base_map, 1.0 / ticks_per_second, resolver, threads));
 	}
 
 	void functions_list::on_updated()

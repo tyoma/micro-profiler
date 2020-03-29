@@ -1,17 +1,16 @@
 #include <frontend/function_list.h>
 
+#include <frontend/serialization.h>
+
 #include "helpers.h"
 #include "mocks.h"
-
-#include <test-helpers/helpers.h>
-#include <test-helpers/primitive_helpers.h>
-
-#include <frontend/serialization.h>
 
 #include <iomanip>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
 #include <sstream>
+#include <test-helpers/helpers.h>
+#include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -34,6 +33,8 @@ namespace micro_profiler
 			};
 
 			const columns::main name_times[] = {	columns::name, columns::times_called,	};
+
+			const columns::main name_threadid[] = {	columns::name, columns::threadid,	};
 
 			timestamp_t test_ticks_per_second = 1;
 			const double c_tolerance = 0.000001;
@@ -862,36 +863,54 @@ namespace micro_profiler
 			}
 
 
-			test( FunctionListProvidesThreadIDAsAColumn )
+			test( FunctionListTakesNativeIDFromThreadModel )
 			{
 				// INIT
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
 				unthreaded_addressed_function functions[][1] = {
-					{	make_statistics(10000u, 1, 0, 1, 1, 1),	},
-					{	make_statistics(10000u, 2, 0, 1, 1, 1),	},
-					{	make_statistics(10000u, 3, 0, 1, 1, 1),	},
+					{ make_statistics(0x1000u, 1, 0, 0, 0, 0), },
+					{ make_statistics(0x1010u, 1, 0, 0, 0, 0), },
+					{ make_statistics(0x1020u, 1, 0, 0, 0, 0), },
+					{ make_statistics(0x1030u, 1, 0, 0, 0, 0), },
 				};
-				columns::main ordering[] = {	columns::threadid,	};
+				pair< unsigned, vector<unthreaded_addressed_function> > data[] = {
+					make_pair(3, mkvector(functions[0])),
+					make_pair(2, mkvector(functions[1])),
+					make_pair(7, mkvector(functions[2])),
+					make_pair(9, mkvector(functions[3])),
+				};
 
-				serialize_single_threaded(ser, mkvector(functions[0]), 18);
-				serialize_single_threaded(ser, mkvector(functions[1]), 171717);
-				serialize_single_threaded(ser, mkvector(functions[2]), 111);
+				ser(mkvector(data));
 				dser(*fl);
-				dser(*fl);
-				fl->set_order(columns::times_called, true);
+
+				tmodel->add(3, 100, string());
+				tmodel->add(2, 1000, string());
+				tmodel->add(7, 900, string());
+
+				fl->set_order(columns::name, true);
 
 				// ACT / ASSERT
-				wstring reference1[][1] = {	{	L"18",	}, {	L"171717",	},	};
+				wstring reference1[][2] = {
+					{	L"00001000", L"100",	},
+					{	L"00001010", L"1000",	},
+					{	L"00001020", L"900",	},
+					{	L"00001030", L"",	},
+				};
 
-				assert_table_equal(ordering, reference1, *fl);
+				assert_table_equivalent(name_threadid, reference1, *fl);
 
 				// INIT
-				dser(*fl);
+				tmodel->add(9, 90, string());
 
 				// ACT / ASSERT
-				wstring reference2[][1] = {	{	L"18",	}, {	L"171717",	}, {	L"111",	},	};
+				wstring reference2[][2] = {
+					{	L"00001000", L"100",	},
+					{	L"00001010", L"1000",	},
+					{	L"00001020", L"900",	},
+					{	L"00001030", L"90",	},
+				};
 
-				assert_table_equal(ordering, reference2, *fl);
+				assert_table_equivalent(name_threadid, reference2, *fl);
 			}
 
 
@@ -908,17 +927,23 @@ namespace micro_profiler
 					{	make_statistics(10000u, 4, 0, 1, 1, 1),	},
 					{	make_statistics(10000u, 5, 0, 1, 1, 1),	},
 				};
+				pair< unsigned, vector<unthreaded_addressed_function> > data[] = {
+					make_pair(0, mkvector(functions[0])),
+					make_pair(1, mkvector(functions[1])),
+					make_pair(2, mkvector(functions[2])),
+					make_pair(3, mkvector(functions[3])),
+					make_pair(4, mkvector(functions[4])),
+				};
 
-				serialize_single_threaded(ser, mkvector(functions[0]), 18);
-				serialize_single_threaded(ser, mkvector(functions[1]), 1);
-				serialize_single_threaded(ser, mkvector(functions[2]), 180);
-				serialize_single_threaded(ser, mkvector(functions[3]), 179);
-				serialize_single_threaded(ser, mkvector(functions[4]), 17900);
+				tmodel->add(0, 18, string());
+				tmodel->add(1, 1, string());
+				tmodel->add(2, 180, string());
+				tmodel->add(3, 179, string());
+				tmodel->add(4, 17900, string());
+
+				ser(mkvector(data));
+
 				ih.bind_to_model(*fl);
-				dser(*fl);
-				dser(*fl);
-				dser(*fl);
-				dser(*fl);
 				dser(*fl);
 				ih.invalidations.clear();
 

@@ -2,6 +2,8 @@
 
 #include <frontend/serialization.h>
 
+#include "helpers.h"
+
 #include <common/types.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
@@ -17,13 +19,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			thread_info make_thread_info(unsigned native_id, string description, mt::milliseconds start_time,
-				mt::milliseconds end_time, mt::milliseconds cpu_time, bool complete)
-			{
-				thread_info ti = { native_id, description, start_time, end_time, cpu_time, complete };
-				return ti;
-			}
-
 			wstring get_text(const wpl::ui::list_model &m, unsigned index)
 			{
 				wstring text;
@@ -150,6 +145,46 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_true(invalidated);
+			}
+
+
+			test( NativeIDIsRetrievedByThreadID )
+			{
+				// INIT
+				shared_ptr<threads_model> m(new threads_model);
+				pair<unsigned int, thread_info> data1[] = {
+					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						true)),
+					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						false)),
+				};
+				pair<unsigned int, thread_info> data2[] = {
+					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						true)),
+					make_pair(1, make_thread_info(100, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						false)),
+				};
+				unsigned native_id;
+
+				ser(mkvector(data1));
+				ser(mkvector(data2));
+				dser(*m);
+
+				// ACT / ASSERT
+				assert_is_true(m->get_native_id(native_id, 11));
+				assert_equal(1717u, native_id);
+				assert_is_true(m->get_native_id(native_id, 110));
+				assert_equal(11717u, native_id);
+				assert_is_false(m->get_native_id(native_id, 1));
+
+				// INIT
+				dser(*m);
+
+				// ACT / ASSERT
+				assert_is_true(m->get_native_id(native_id, 11));
+				assert_is_true(m->get_native_id(native_id, 110));
+				assert_is_true(m->get_native_id(native_id, 1));
+				assert_equal(100u, native_id);
 			}
 		end_test_suite
 	}

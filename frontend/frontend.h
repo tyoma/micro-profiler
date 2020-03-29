@@ -30,6 +30,7 @@ namespace micro_profiler
 {
 	class functions_list;
 	class symbol_resolver;
+	class threads_model;
 
 	class frontend : public ipc::channel, noncopyable, public std::enable_shared_from_this<frontend>
 	{
@@ -56,6 +57,7 @@ namespace micro_profiler
 	private:
 		ipc::channel &_outbound;
 		std::shared_ptr<symbol_resolver> _resolver;
+		std::shared_ptr<threads_model> _threads;
 		std::shared_ptr<functions_list> _model;
 		pod_vector<byte> _buffer;
 	};

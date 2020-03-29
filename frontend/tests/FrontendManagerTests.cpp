@@ -1,10 +1,10 @@
 #include <frontend/frontend_manager.h>
 
-#include "helpers.h"
-#include "mocks.h"
-
 #include <frontend/function_list.h>
 #include <frontend/serialization.h>
+
+#include "helpers.h"
+#include "mocks.h"
 
 #include <algorithm>
 #include <strmd/deserializer.h>
@@ -190,6 +190,8 @@ namespace micro_profiler
 				assert_equal(1u, _ui_creation_log.size());
 
 				assert_not_null(_ui_creation_log[0]->model);
+				assert_not_null(_ui_creation_log[0]->model->get_resolver());
+				assert_not_null(_ui_creation_log[0]->model->get_threads());
 				assert_equal("c:\\test\\some.exe", _ui_creation_log[0]->process_name);
 
 				// ACT
@@ -199,9 +201,13 @@ namespace micro_profiler
 				assert_equal(2u, _ui_creation_log.size());
 
 				assert_not_null(_ui_creation_log[1]->model);
+				assert_not_null(_ui_creation_log[1]->model->get_resolver());
+				assert_not_null(_ui_creation_log[1]->model->get_threads());
 				assert_equal("kernel.exe", _ui_creation_log[1]->process_name);
 				assert_not_equal(_ui_creation_log[0]->model, _ui_creation_log[1]->model);
- 			}
+				assert_not_equal(_ui_creation_log[0]->model->get_resolver(), _ui_creation_log[1]->model->get_resolver());
+				assert_not_equal(_ui_creation_log[0]->model->get_threads(), _ui_creation_log[1]->model->get_threads());
+			}
 
 
 			test( WritingStatisticsDataFillsUpFunctionsList )
@@ -963,6 +969,49 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_empty(outbound.requested_metadata);
+			}
+
+
+			test( ThreadsModelGetsUpdatedOnThreadInfosMessage )
+			{
+				// INIT
+				frontend_manager::ptr m = frontend_manager::create(bind(&FrontendManagerTests::log_ui_creation, this, _1,
+					_2));
+				shared_ptr<ipc::channel> c = m->create_session(outbound);
+				pair<unsigned int, thread_info> data1[] = {
+					make_pair(0, make_thread_info(1717, "thread 1", mt::milliseconds(), mt::milliseconds(),
+						mt::milliseconds(), true)),
+					make_pair(1, make_thread_info(11717, "thread 2", mt::milliseconds(), mt::milliseconds(),
+						mt::milliseconds(), false)),
+				};
+				pair<unsigned int, thread_info> data2[] = {
+					make_pair(1, make_thread_info(117, "", mt::milliseconds(), mt::milliseconds(),
+						mt::milliseconds(), true)),
+				};
+
+				write(*c, init, initialization_data());
+
+				const shared_ptr<threads_model> threads = _ui_creation_log[0]->model->get_threads();
+
+				// ACT
+				write(*c, threads_info, mkvector(data1));
+
+				// ASSERT
+				unsigned int native_id;
+
+				assert_equal(2u, threads->get_count());
+				assert_is_true(threads->get_native_id(native_id, 0));
+				assert_equal(1717u, native_id);
+				assert_is_true(threads->get_native_id(native_id, 1));
+				assert_equal(11717u, native_id);
+
+				// ACT
+				write(*c, threads_info, mkvector(data2));
+
+				// ASSERT
+				assert_equal(2u, threads->get_count());
+				assert_is_true(threads->get_native_id(native_id, 1));
+				assert_equal(117u, native_id);
 			}
 
 		end_test_suite

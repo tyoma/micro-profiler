@@ -61,7 +61,7 @@ namespace micro_profiler
 
 	private:
 		functions_list(std::shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
-			std::shared_ptr<symbol_resolver> resolver);
+			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);
 
 		void on_updated();
 

@@ -2,13 +2,12 @@
 
 #include "helpers.h"
 
-#include <test-helpers/comparisons.h>
-#include <test-helpers/helpers.h>
-#include <test-helpers/primitive_helpers.h>
-
 #include <functional>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
+#include <test-helpers/comparisons.h>
+#include <test-helpers/helpers.h>
+#include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 

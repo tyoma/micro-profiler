@@ -36,7 +36,7 @@ using namespace std;
 namespace micro_profiler
 {
 	frontend::frontend(ipc::channel &outbound)
-		: _outbound(outbound)			
+		: _outbound(outbound)
 	{	LOG(PREAMBLE "constructed...") % A(this);	}
 
 	frontend::~frontend()
@@ -68,7 +68,8 @@ namespace micro_profiler
 		{
 		case init:
 			archive(idata);
-			_model = functions_list::create(idata.ticks_per_second, get_resolver(), nullptr);
+			_threads.reset(new threads_model);
+			_model = functions_list::create(idata.ticks_per_second, get_resolver(), _threads);
 			initialized(idata.executable, _model);
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			break;
@@ -93,6 +94,10 @@ namespace micro_profiler
 			archive(mmetadata);
 			LOG(PREAMBLE "received metadata...") % A(this) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
 			get_resolver()->add_metadata(persistent_id, mmetadata);
+			break;
+
+		case threads_info:
+			archive(*_threads);
 			break;
 
 		default:

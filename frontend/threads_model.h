@@ -39,6 +39,8 @@ namespace micro_profiler
 	public:
 		threads_model();
 
+		bool get_native_id(unsigned int &native_id, unsigned int thread_id) const throw();
+
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type index, std::wstring &text) const;
 

@@ -23,6 +23,13 @@ namespace micro_profiler
 		}, false);
 	}
 
+	bool threads_model::get_native_id(unsigned int &native_id, unsigned int thread_id) const throw()
+	{
+		const const_iterator i = find(thread_id);
+
+		return end() != i ? native_id = i->second.native_id, true : false;
+	}
+
 	threads_model::index_type threads_model::get_count() const throw()
 	{	return _view.size();	}
 

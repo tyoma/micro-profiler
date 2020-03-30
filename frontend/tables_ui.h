@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <vector>
+#include <wpl/ui/combobox.h>
 #include <wpl/ui/listview.h>
 #include <wpl/ui/container.h>
 
@@ -40,6 +41,8 @@ namespace micro_profiler
 		const std::shared_ptr<functions_list> _statistics;
 		const std::shared_ptr<wpl::ui::listview> _statistics_lv;
 		const std::shared_ptr<piechart> _statistics_pc;
+
+		std::shared_ptr<wpl::ui::combobox> _threads_cb;
 
 		const std::shared_ptr<columns_model> _columns_parents;
 		std::shared_ptr<linked_statistics> _parents_statistics;

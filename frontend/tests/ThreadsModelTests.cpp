@@ -115,7 +115,7 @@ namespace micro_profiler
 				pair<unsigned int, thread_info> data2[] = {
 					make_pair(10, make_thread_info(1718, "thread #7", mt::milliseconds(1), mt::milliseconds(0),
 						mt::milliseconds(180), false)),
-					make_pair(110, make_thread_info(11717, "thread #2", mt::milliseconds(10001), mt::milliseconds(4),
+					make_pair(110, make_thread_info(11717, string(), mt::milliseconds(10001), mt::milliseconds(4),
 						mt::milliseconds(10), true)),
 				};
 
@@ -130,7 +130,7 @@ namespace micro_profiler
 				assert_equal(3u, m->get_count());
 				assert_equal(L"#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m, 0));
 				assert_equal(L"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m, 1));
-				assert_equal(L"#11717 - thread #2 - CPU: 10ms, started: +10s, ended: +4ms", get_text(*m, 2));
+				assert_equal(L"#11717 - CPU: 10ms, started: +10s, ended: +4ms", get_text(*m, 2));
 			}
 
 

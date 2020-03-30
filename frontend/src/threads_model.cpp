@@ -38,7 +38,8 @@ namespace micro_profiler
 		const thread_info &v = _view.at(index).second;
 
 		text = L"#", itoa<10>(text, v.native_id);
-		text += L" - " + unicode(v.description);
+		if (!v.description.empty())
+			text += L" - " + unicode(v.description);
 		text += L" - CPU: ", format_interval(text, to_seconds(v.cpu_time));
 		text += L", started: +", format_interval(text, to_seconds(v.start_time));
 		if (v.complete)

@@ -42,6 +42,9 @@ namespace micro_profiler
 	class functions_list : public statistics_model_impl<wpl::ui::table_model, statistic_types::map_detailed>
 	{
 	public:
+		typedef statistic_types::map_detailed::value_type value_type;
+
+	public:
 		virtual ~functions_list();
 
 		void clear();

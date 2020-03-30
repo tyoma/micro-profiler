@@ -1740,6 +1740,116 @@ namespace micro_profiler
 				assert_equivalent(reference2, collected_ids);
 			}
 
+
+			test( OnlyAllowedItemsAreExposedByTheModelAfterFilterApplication )
+			{
+				// INIT
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				unthreaded_addressed_function functions[][2] = {
+					{ make_statistics(0x1000u, 1, 0, 0, 0, 0), make_statistics(0x1010u, 2, 0, 0, 0, 0), },
+					{ make_statistics(0x1020u, 3, 0, 0, 0, 0), make_statistics(0x1030u, 4, 0, 0, 0, 0), },
+					{ make_statistics(0x1040u, 5, 0, 0, 0, 0), make_statistics(0x1050u, 6, 0, 0, 0, 0), },
+				};
+				pair< unsigned, vector<unthreaded_addressed_function> > data[] = {
+					make_pair(0, mkvector(functions[0])),
+					make_pair(2, mkvector(functions[1])),
+					make_pair(3, mkvector(functions[2])),
+				};
+
+				ser(mkvector(data));
+				dser(*fl, dummy_context);
+
+				// ACT
+				fl->set_filter([] (const functions_list::value_type &v) { return v.first.second == 3; });
+
+				// ASSERT
+				wstring reference1[][2] = {
+					{	L"00001040", L"5",	},
+					{	L"00001050", L"6",	},
+				};
+
+				assert_table_equivalent(name_times, reference1, *fl);
+
+				// ACT
+				fl->set_filter([] (const functions_list::value_type &v) { return v.first.second == 0; });
+
+				// ASSERT
+				wstring reference2[][2] = {
+					{	L"00001000", L"1",	},
+					{	L"00001010", L"2",	},
+				};
+
+				assert_table_equivalent(name_times, reference2, *fl);
+
+				// ACT
+				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 3; });
+
+				// ASSERT
+				wstring reference3[][2] = {
+					{	L"00001030", L"4",	},
+					{	L"00001040", L"5",	},
+					{	L"00001050", L"6",	},
+				};
+
+				assert_table_equivalent(name_times, reference3, *fl);
+
+				// ACT
+				fl->set_filter();
+
+				// ASSERT
+				wstring reference4[][2] = {
+					{	L"00001000", L"1",	},
+					{	L"00001010", L"2",	},
+					{	L"00001020", L"3",	},
+					{	L"00001030", L"4",	},
+					{	L"00001040", L"5",	},
+					{	L"00001050", L"6",	},
+				};
+
+				assert_table_equivalent(name_times, reference4, *fl);
+			}
+
+
+			test( InvalidationIsEmittedOnFilterChange )
+			{
+				// INIT
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				unthreaded_addressed_function functions[] = {
+					make_statistics(0x1000u, 1, 0, 0, 0, 0), make_statistics(0x1010u, 2, 0, 0, 0, 0),
+				};
+				invalidation_tracer it;
+
+				it.bind_to_model(*fl);
+
+				serialize_single_threaded(ser, mkvector(functions));
+				dser(*fl, dummy_context);
+				it.invalidations.clear();
+
+				// ACT
+				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 1; });
+
+				// ASSERT
+				table_model::index_type reference1[] = { 1u, };
+
+				assert_equal(reference1, it.invalidations);
+
+				// ACT
+				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 2; });
+
+				// ASSERT
+				table_model::index_type reference2[] = { 1u, 0u, };
+
+				assert_equal(reference2, it.invalidations);
+
+				// ACT
+				fl->set_filter();
+
+				// ASSERT
+				table_model::index_type reference3[] = { 1u, 0u, 2u, };
+
+				assert_equal(reference3, it.invalidations);
+			}
+
 		end_test_suite
 	}
 }

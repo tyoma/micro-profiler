@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\file.h" />
+    <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\ipc_manager.h" />

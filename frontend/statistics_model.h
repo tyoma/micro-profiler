@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "filter_view.h"
 #include "ordered_view.h"
 #include "primitives.h"
 
@@ -44,6 +45,10 @@ namespace micro_profiler
 		std::shared_ptr<threads_model> get_threads() const throw();
 		std::shared_ptr< series<double> > get_column_series() const throw();
 
+		template <typename PredicateT>
+		void set_filter(const PredicateT &predicate);
+		void set_filter();
+
 		virtual void detach() throw();
 
 		// wpl::ui::table_model methods
@@ -65,7 +70,8 @@ namespace micro_profiler
 		virtual void on_updated();
 
 	private:
-		std::shared_ptr< ordered_view<MapT> > _view;
+		filter_view<MapT> _filter;
+		std::shared_ptr< ordered_view< filter_view<MapT> > > _view;
 		const double _tick_interval;
 		const std::shared_ptr<symbol_resolver> _resolver;
 		const std::shared_ptr<threads_model> _threads;
@@ -76,7 +82,8 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval,
 			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads)
-		: _view(new ordered_view<MapT>(statistics)), _tick_interval(tick_interval), _resolver(resolver), _threads(threads)
+		: _filter(statistics), _view(new ordered_view< filter_view<MapT> >(_filter)), _tick_interval(tick_interval),
+			_resolver(resolver), _threads(threads)
 	{ }
 
 	template <typename BaseT, typename MapT>
@@ -90,6 +97,21 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
 	{	return _view;	}
+
+	template <typename BaseT, typename MapT>
+	template <typename PredicateT>
+	inline void statistics_model_impl<BaseT, MapT>::set_filter(const PredicateT &predicate)
+	{
+		_filter.set_filter(predicate);
+		on_updated();
+	}
+
+	template <typename BaseT, typename MapT>
+	inline void statistics_model_impl<BaseT, MapT>::set_filter()
+	{
+		_filter.set_filter();
+		on_updated();
+	}
 
 	template <typename BaseT, typename MapT>
 	inline void statistics_model_impl<BaseT, MapT>::detach() throw()

@@ -65,6 +65,7 @@
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\persistence.h" />
+    <ClInclude Include="..\filter_view.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

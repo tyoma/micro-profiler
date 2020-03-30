@@ -35,7 +35,7 @@ namespace micro_profiler
 
 	void threads_model::get_text(index_type index, wstring &text) const
 	{
-		const thread_info &v = _view.at(index).second;
+		const thread_info &v = _view[index].second;
 
 		text = L"#", itoa<10>(text, v.native_id);
 		if (!v.description.empty())

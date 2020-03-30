@@ -21,10 +21,10 @@
 #pragma once
 
 #include <common/noncopyable.h>
+#include <common/pod_vector.h>
 #include <common/protocol.h>
 #include <functional>
 #include <ipc/endpoint.h>
-#include <common/pod_vector.h>
 
 namespace micro_profiler
 {

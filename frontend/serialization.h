@@ -91,7 +91,7 @@ namespace micro_profiler
 
 		void complete(threads_model &container)
 		{
-			container._view.resort();
+			container._view.fetch();
 			container.invalidated();
 		}
 	};

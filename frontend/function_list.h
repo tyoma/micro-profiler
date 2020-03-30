@@ -29,7 +29,7 @@ namespace micro_profiler
 	struct linked_statistics : wpl::ui::table_model
 	{
 		virtual ~linked_statistics() {	}
-		virtual function_key get_function_key(index_type item) const = 0;
+		virtual function_key get_key(index_type item) const = 0;
 		virtual std::shared_ptr< series<double> > get_column_series() const = 0;
 	};
 

@@ -295,9 +295,9 @@ namespace micro_profiler
 				model->set_order(columns::name, true);
 
 				assert_equal(L"baz", get_text(*model, 0, columns::name));
-				assert_equal(addr(0x11100u), model->get_function_key(0));
+				assert_equal(addr(0x11100u), model->get_key(0));
 				assert_equal(L"foo", get_text(*model, 1, columns::name));
-				assert_equal(addr(0x10100), model->get_function_key(1));
+				assert_equal(addr(0x10100), model->get_key(1));
 
 				// ACT
 				write(*c, modules_loaded, mkvector(basic2));
@@ -306,9 +306,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(L"BAR", get_text(*model, 0, columns::name));
-				assert_equal(addr(0x102000), model->get_function_key(0));
+				assert_equal(addr(0x102000), model->get_key(0));
 				assert_equal(L"bar", get_text(*model, 1, columns::name));
-				assert_equal(addr(0x10200), model->get_function_key(1));
+				assert_equal(addr(0x10200), model->get_key(1));
 				assert_equal(L"baz", get_text(*model, 2, columns::name));
 				assert_equal(L"foo", get_text(*model, 3, columns::name));
 			}

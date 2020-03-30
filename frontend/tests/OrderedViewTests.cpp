@@ -126,7 +126,7 @@ namespace micro_profiler
 				pod_map::const_iterator it = source.begin();
 				for (; it != source.end(); ++it, ++i)
 				{
-					assert_equal(s.at(i), (*it));
+					assert_equal(s[i], (*it));
 				}
 			}
 
@@ -146,9 +146,9 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				
-				assert_equal(make_pod(biggestA), s.at(0));
-				assert_equal(make_pod(biggestC), s.at(1));
-				assert_equal(make_pod(biggestB), s.at(2));
+				assert_equal(make_pod(biggestA), s[0]);
+				assert_equal(make_pod(biggestC), s[1]);
+				assert_equal(make_pod(biggestB), s[2]);
 			}
 
 
@@ -167,9 +167,9 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, false);
 
-				assert_equal(make_pod(biggestB), s.at(0));
-				assert_equal(make_pod(biggestC), s.at(1));
-				assert_equal(make_pod(biggestA), s.at(2));
+				assert_equal(make_pod(biggestB), s[0]);
+				assert_equal(make_pod(biggestC), s[1]);
+				assert_equal(make_pod(biggestA), s[2]);
 			}
 
 
@@ -188,13 +188,13 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 
-				assert_equal(make_pod(biggestA), s.at(0));
+				assert_equal(make_pod(biggestA), s[0]);
 
 				s.set_order(sort_by_b(), true);
-				assert_equal(make_pod(biggestB), s.at(0));
+				assert_equal(make_pod(biggestB), s[0]);
 
 				s.set_order(&sort_by_c, true);
-				assert_equal(make_pod(biggestC), s.at(0));
+				assert_equal(make_pod(biggestC), s[0]);
 			}
 
 
@@ -213,16 +213,16 @@ namespace micro_profiler
 				sorted_pods s(source);
 
 				s.set_order(&sort_by_a, true);
-				assert_equal(make_pod(biggestA), s.at(0));
+				assert_equal(make_pod(biggestA), s[0]);
 
 				s.set_order(&sort_by_a, false);
-				assert_equal(make_pod(biggestA), s.at(s.size() - 1));
+				assert_equal(make_pod(biggestA), s[s.size() - 1]);
 
 				s.set_order(sort_by_b(), true);
-				assert_equal(make_pod(biggestB), s.at(0));
+				assert_equal(make_pod(biggestB), s[0]);
 
 				s.set_order(sort_by_b(), false);
-				assert_equal(make_pod(biggestB), s.at(s.size() - 1));
+				assert_equal(make_pod(biggestB), s[s.size() - 1]);
 			}
 
 
@@ -325,7 +325,7 @@ namespace micro_profiler
 				assert_equal(source.size(), s.size());
 				// Alter source map
 				source[&four] = four;
-				s.resort();
+				s.fetch();
 				assert_not_equal(s.find_by_key(&four), sorted_pods::npos());
 				assert_equal(source.size(), initial_size + 1);
 				assert_equal(source.size(), s.size());
@@ -348,27 +348,27 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				// Check if order is valid
-				assert_equal(make_pod(one), s.at(0));
-				assert_equal(make_pod(two), s.at(1));
-				assert_equal(make_pod(three), s.at(2));
+				assert_equal(make_pod(one), s[0]);
+				assert_equal(make_pod(two), s[1]);
+				assert_equal(make_pod(three), s[2]);
 				assert_not_equal(s.find_by_key(&two), sorted_pods::npos());
 				assert_equal(sorted_pods::npos(), s.find_by_key(&four));
 				// Resort(aka repopulate)
-				s.resort();
+				s.fetch();
 				// Check if order is still valid
-				assert_equal(make_pod(one), s.at(0));
-				assert_equal(make_pod(two), s.at(1));
-				assert_equal(make_pod(three), s.at(2));
+				assert_equal(make_pod(one), s[0]);
+				assert_equal(make_pod(two), s[1]);
+				assert_equal(make_pod(three), s[2]);
 				assert_not_equal(s.find_by_key(&two), sorted_pods::npos());
 				assert_equal(sorted_pods::npos(), s.find_by_key(&four));
-				// Alter source map and resort
+				// Alter source map and fetch
 				source[&four] = four;
-				s.resort();
+				s.fetch();
 				// Check if order is valid and new item there
-				assert_equal(make_pod(one), s.at(0));
-				assert_equal(make_pod(four), s.at(1));
-				assert_equal(make_pod(two), s.at(2));
-				assert_equal(make_pod(three), s.at(3));
+				assert_equal(make_pod(one), s[0]);
+				assert_equal(make_pod(four), s[1]);
+				assert_equal(make_pod(two), s[2]);
+				assert_equal(make_pod(three), s[3]);
 				assert_not_equal(s.find_by_key(&two), sorted_pods::npos());
 				assert_not_equal(s.find_by_key(&four), sorted_pods::npos());
 			}
@@ -389,22 +389,22 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				// Check if order is valid
-				assert_equal(make_pod(one), s.at(0));
-				assert_equal(make_pod(two), s.at(1));
+				assert_equal(make_pod(one), s[0]);
+				assert_equal(make_pod(two), s[1]);
 				// Change order
 				s.set_order(&sort_by_c, false);
 				// Check if order is changed
-				assert_equal(make_pod(two), s.at(0));
-				assert_equal(make_pod(one), s.at(1));
-				// Alter source map and resort
+				assert_equal(make_pod(two), s[0]);
+				assert_equal(make_pod(one), s[1]);
+				// Alter source map and fetch
 				source[&three] = three;
 				source[&four] = four;
-				s.resort();
+				s.fetch();
 				// Check if order is valid and new item there
-				assert_equal(make_pod(three), s.at(0));
-				assert_equal(make_pod(two), s.at(1));
-				assert_equal(make_pod(four), s.at(2));
-				assert_equal(make_pod(one), s.at(3));
+				assert_equal(make_pod(three), s[0]);
+				assert_equal(make_pod(two), s[1]);
+				assert_equal(make_pod(four), s[2]);
+				assert_equal(make_pod(one), s[3]);
 				assert_not_equal(s.find_by_key(&two), sorted_pods::npos());
 				assert_not_equal(s.find_by_key(&four), sorted_pods::npos());
 			}
@@ -425,19 +425,19 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(&sort_by_a, true);
 				// Check if order is valid
-				assert_equal(make_pod(one), s.at(0));
-				assert_equal(make_pod(two), s.at(1));
-				// Alter source map and resort
+				assert_equal(make_pod(one), s[0]);
+				assert_equal(make_pod(two), s[1]);
+				// Alter source map and fetch
 				source[&three] = three;
 				source[&four] = four;
-				s.resort();
+				s.fetch();
 				// Set another order
 				s.set_order(&sort_by_c, false);
 				// Check if order is valid and new item there
-				assert_equal(make_pod(three), s.at(0));
-				assert_equal(make_pod(two), s.at(1));
-				assert_equal(make_pod(four), s.at(2));
-				assert_equal(make_pod(one), s.at(3));
+				assert_equal(make_pod(three), s[0]);
+				assert_equal(make_pod(two), s[1]);
+				assert_equal(make_pod(four), s[2]);
+				assert_equal(make_pod(one), s[3]);
 				assert_not_equal(s.find_by_key(&two), sorted_pods::npos());
 				assert_not_equal(s.find_by_key(&four), sorted_pods::npos());
 			}
@@ -458,20 +458,19 @@ namespace micro_profiler
 				// Add couple and check they are in rigth places
 				source[&one] = one;
 				source[&two] = two;
-				s.resort();
+				s.fetch();
 				assert_equal(source.size(), s.size());
-				assert_equal(make_pod(two), s.at(0));
-				assert_equal(make_pod(one), s.at(1));
+				assert_equal(make_pod(two), s[0]);
+				assert_equal(make_pod(one), s[1]);
 				// Add another couple and check they ALL are in rigth places
 				source[&three] = three;
 				source[&four] = four;
-				s.resort();
+				s.fetch();
 				assert_equal(source.size(), s.size());
-				assert_equal(make_pod(four), s.at(0));
-				assert_equal(make_pod(three), s.at(1));
-				assert_equal(make_pod(two), s.at(2));
-				assert_equal(make_pod(one), s.at(3));
-
+				assert_equal(make_pod(four), s[0]);
+				assert_equal(make_pod(three), s[1]);
+				assert_equal(make_pod(two), s[2]);
+				assert_equal(make_pod(one), s[3]);
 			}
 
 
@@ -501,7 +500,7 @@ namespace micro_profiler
 				source[pods + 0] = pods[0], source[pods + 1] = pods[1], source[pods + 2] = pods[2];
 
 				s->set_order(&sort_by_a_less, false);
-				s->resort();
+				s->fetch();
 
 				// INIT / ACT
 				s->project_value(bind(&POD::a, _1));
@@ -544,7 +543,7 @@ namespace micro_profiler
 				source[pods + 3] = pods[3];
 
 				s->set_order(&sort_by_a_less, true);
-				s->resort();
+				s->fetch();
 
 				// INIT / ACT
 				s->project_value(bind(&POD::a, _1));
@@ -590,7 +589,7 @@ namespace micro_profiler
 				source[pods + 3] = pods[3];
 
 				s->set_order(&sort_by_a_less, true);
-				s->resort();
+				s->fetch();
 
 				// ACT / ASSERT
 				assert_equal(0.0, s->get_value(0));
@@ -623,7 +622,7 @@ namespace micro_profiler
 				underlying.push_back(make_pair(17230, "dolor"));
 				underlying.push_back(make_pair(172311, "ipsum"));
 				underlying.push_back(make_pair(17231, "amet"));
-				ov->resort();
+				ov->fetch();
 				ov->set_order(bind(less<string>(), _2, _4), true);
 
 				// ACT
@@ -650,7 +649,7 @@ namespace micro_profiler
 				underlying.push_back(make_pair(17230, "dolor"));
 				underlying.push_back(make_pair(172311, "ipsum")); // t2
 				underlying.push_back(make_pair(17231, "amet")); // t1
-				ov->resort();
+				ov->fetch();
 				ov->set_order(bind(less<string>(), _2, _4), true);
 				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(2);
 
@@ -686,14 +685,14 @@ namespace micro_profiler
 				underlying.push_back(make_pair(17230, "dolor"));
 				underlying.push_back(make_pair(172311, "ipsum")); // t2
 				underlying.push_back(make_pair(17231, "amet")); // t1
-				ov->resort();
+				ov->fetch();
 				ov->set_order(bind(less<string>(), _2, _4), true);
 
 				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(2);
 
 				// ACT
 				underlying.push_back(make_pair(17232, "bass"));
-				ov->resort();
+				ov->fetch();
 
 				// ASSERT
 				assert_not_null(t1);
@@ -703,7 +702,7 @@ namespace micro_profiler
 
 				// ACT
 				underlying.push_back(make_pair(17233, "a"));
-				ov->resort();
+				ov->fetch();
 
 				// ASSERT
 				assert_not_null(t1);
@@ -726,14 +725,14 @@ namespace micro_profiler
 				underlying.insert(underlying.end(), make_pair(17230, "a"));
 				underlying.insert(underlying.end(), make_pair(172311, "ipsum")); // t2
 				underlying_t::iterator i = underlying.insert(underlying.end(), make_pair(17231, "amet")); // t1
-				ov->resort();
+				ov->fetch();
 				ov->set_order(bind(less<string>(), _2, _4), true);
 
 				shared_ptr<const trackable> t1 = ov->track(1), t2 = ov->track(3);
 
 				// ACT
 				underlying.erase(i);
-				ov->resort();
+				ov->fetch();
 
 				// ASSERT
 				assert_not_null(t1);
@@ -755,7 +754,7 @@ namespace micro_profiler
 				underlying.push_back(make_pair(17230, "dolor"));
 				underlying.push_back(make_pair(172311, "ipsum")); // t2
 				underlying.push_back(make_pair(17231, "amet")); // t1
-				ov->resort();
+				ov->fetch();
 				ov->set_order(bind(less<string>(), _2, _4), true);
 
 				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(2);
@@ -769,7 +768,7 @@ namespace micro_profiler
 
 				// ACT
 				underlying.push_back(make_pair(17233, "a"));
-				ov->resort();
+				ov->fetch();
 
 				// ASSERT
 				assert_not_null(t2);
@@ -789,7 +788,7 @@ namespace micro_profiler
 				underlying.push_back(make_pair(17230, "dolor"));
 				underlying.push_back(make_pair(172311, "ipsum"));
 				underlying.push_back(make_pair(17231, "amet"));
-				ov->resort();
+				ov->fetch();
 				ov->set_order(bind(less<string>(), _2, _4), true);
 
 				shared_ptr<const trackable> t1 = ov->track(0), t2 = ov->track(1), t3 = ov->track(2);

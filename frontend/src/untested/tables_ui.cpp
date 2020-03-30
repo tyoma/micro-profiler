@@ -156,7 +156,7 @@ namespace micro_profiler
 
 	void tables_ui::on_activate(wpl::ui::index_traits::index_type index)
 	{
-		const function_key key = _statistics->get_function_key(index);
+		const function_key key = _statistics->get_key(index);
 		symbol_resolver::fileline_t fileline;
 
 		if (_statistics->get_resolver()->symbol_fileline_by_va(key.first, fileline))
@@ -165,7 +165,7 @@ namespace micro_profiler
 
 	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, listview::index_type index)
 	{
-		index = _statistics->get_index(view->get_function_key(index));
+		index = _statistics->get_index(view->get_key(index));
 		_statistics_lv->select(index, true);
 		_statistics_lv->ensure_visible(index);
 	}

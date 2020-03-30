@@ -33,23 +33,35 @@ namespace micro_profiler
 			vector_adapter _buffer;
 			strmd::serializer<vector_adapter, packer> ser;
 			strmd::deserializer<vector_adapter, packer> dser;
+			vector< vector<unsigned> > _requested;
+
+			function<void (const vector<unsigned> &threads)> get_requestor()
+			{
+				return [this] (const vector<unsigned> &threads) {
+					_requested.push_back(threads);
+				};
+			}
 
 			ThreadsModelTests()
 				: ser(_buffer), dser(_buffer)
 			{	}
 
+
 			test( ThreadModelIsAListModel )
 			{
 				// INIT / ACT / ASSERT
-				shared_ptr<wpl::ui::list_model> m(new threads_model);
+				shared_ptr<wpl::ui::list_model> m(new threads_model(get_requestor()));
+
+				// ASSERT
+				assert_is_empty(_requested);
 			}
 
 
 			test( ThreadModelCanBeDeserializedFromContainerData )
 			{
 				// INIT
-				shared_ptr<threads_model> m1(new threads_model);
-				shared_ptr<threads_model> m2(new threads_model);
+				shared_ptr<threads_model> m1(new threads_model(get_requestor()));
+				shared_ptr<threads_model> m2(new threads_model(get_requestor()));
 				pair<unsigned int, thread_info> data1[] = {
 					make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
 						mt::milliseconds(100), true)),
@@ -93,7 +105,7 @@ namespace micro_profiler
 			test( DeserializationKeepsEntriesAndUpdatesExisting )
 			{
 				// INIT
-				shared_ptr<threads_model> m(new threads_model);
+				shared_ptr<threads_model> m(new threads_model(get_requestor()));
 				pair<unsigned int, thread_info> data1[] = {
 					make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
 						mt::milliseconds(100), true)),
@@ -125,7 +137,7 @@ namespace micro_profiler
 			test( ModelIsInvalidatedOnDeserialize )
 			{
 				// INIT
-				shared_ptr<threads_model> m(new threads_model);
+				shared_ptr<threads_model> m(new threads_model(get_requestor()));
 				pair<unsigned int, thread_info> data[] = {
 					make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
 						mt::milliseconds(100), true)),
@@ -151,7 +163,7 @@ namespace micro_profiler
 			test( NativeIDIsRetrievedByThreadID )
 			{
 				// INIT
-				shared_ptr<threads_model> m(new threads_model);
+				shared_ptr<threads_model> m(new threads_model(get_requestor()));
 				pair<unsigned int, thread_info> data1[] = {
 					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
 						true)),
@@ -185,6 +197,81 @@ namespace micro_profiler
 				assert_is_true(m->get_native_id(native_id, 110));
 				assert_is_true(m->get_native_id(native_id, 1));
 				assert_equal(100u, native_id);
+			}
+
+
+			test( NewThreadsAreRequestedOnNotify )
+			{
+				// INIT
+				shared_ptr<threads_model> m(new threads_model(get_requestor()));
+				unsigned threads[] = { 10, 17, 100, 11, };
+
+				// ACT
+				m->notify_threads(threads, array_end(threads));
+
+				// ASSERT
+				assert_equal(1u, _requested.size());
+				assert_equivalent(threads, _requested[0]);
+			}
+
+
+			test( NewAndExistingRunningThreadsAreRequestedOnNotify )
+			{
+				// INIT
+				shared_ptr<threads_model> m(new threads_model(get_requestor()));
+				unsigned threads[] = { 10, 17, 100, 11, };
+				unsigned native_id;
+				pair<unsigned int, thread_info> data1[] = {
+					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						false)),
+					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						true)),
+					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						false)),
+				};
+
+				ser(mkvector(data1));
+				dser(*m);
+
+				// ACT
+				m->notify_threads(threads, array_end(threads));
+
+				// ASSERT
+				unsigned reference1[] = { 10, 17, 100, 11, 111, };
+
+				assert_equal(1u, _requested.size());
+				assert_equivalent(reference1, _requested[0]);
+
+				assert_is_true(m->get_native_id(native_id, 10));
+				assert_equal(0u, native_id);
+				assert_is_true(m->get_native_id(native_id, 17));
+				assert_equal(0u, native_id);
+				assert_is_true(m->get_native_id(native_id, 100));
+				assert_equal(0u, native_id);
+
+				assert_equal(3u, m->get_count()); // Still '3' - the view shall not be updated.
+
+				// INIT
+				pair<unsigned int, thread_info> data2[] = {
+					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						true)),
+					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						true)),
+					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
+						true)),
+				};
+
+				ser(mkvector(data2));
+				dser(*m);
+
+				// ACT (no threads - just referesh all alive ones)
+				m->notify_threads(threads, threads);
+
+				// ASSERT
+				unsigned reference2[] = { 10, 17, 100, };
+
+				assert_equal(2u, _requested.size());
+				assert_equivalent(reference2, _requested[1]);
 			}
 		end_test_suite
 	}

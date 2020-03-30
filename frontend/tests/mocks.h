@@ -29,6 +29,8 @@ namespace micro_profiler
 			class threads_model : public micro_profiler::threads_model
 			{
 			public:
+				threads_model();
+
 				void add(unsigned int thread_id, unsigned int native_id, const std::string &description);
 			};
 

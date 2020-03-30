@@ -26,7 +26,8 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
-
+			vector<unsigned int> dummy_context;
+			
 			function<void (unsigned persistent_id)> get_requestor()
 			{	return [this] (unsigned /*persistent_id*/) { };	}
 
@@ -58,12 +59,12 @@ namespace micro_profiler
 
 				s[1], s[17];
 				serialize_single_threaded(ser, s);
-				dser(*fl1);
+				dser(*fl1, dummy_context);
 
 				s.clear();
 				s[7], s[11], s[131], s[113];
 				serialize_single_threaded(ser, s);
-				dser(*fl2);
+				dser(*fl2, dummy_context);
 
 				// ACT
 				save(ser, *fl1);
@@ -107,7 +108,7 @@ namespace micro_profiler
 
 				s[1], s[17], s[13];
 				serialize_single_threaded(ser, s);
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ACT
 				save(ser, *fl);

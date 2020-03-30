@@ -33,6 +33,7 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
+			vector<unsigned int> dummy_context;
 
 			FunctionListPiechartTests()
 				: ser(_buffer), dser(_buffer)
@@ -109,7 +110,7 @@ namespace micro_profiler
 				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
 
 				serialize_single_threaded(ser, s);
-				dser(*fl);
+				dser(*fl, dummy_context);
 				s.clear();
 
 				shared_ptr< series<double> > m = fl->get_column_series();
@@ -122,7 +123,7 @@ namespace micro_profiler
 				wpl::slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(1, invalidated_count);

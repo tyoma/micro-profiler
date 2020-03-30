@@ -37,6 +37,10 @@ namespace micro_profiler
 			}
 
 
+			threads_model::threads_model()
+				: micro_profiler::threads_model([] (vector<unsigned>) { })
+			{	}
+
 			void threads_model::add(unsigned int thread_id, unsigned int native_id, const string &description)
 			{
 				vector_adapter stream;

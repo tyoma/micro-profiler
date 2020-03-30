@@ -58,15 +58,20 @@ namespace micro_profiler
 	struct functions_list_reader
 	{
 		void prepare(functions_list &/*container*/, size_t /*count*/)
-		{	}
+		{	_first = true;	}
 
 		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, functions_list &container)
+		void read_item(ArchiveT &archive, functions_list &container, std::vector<unsigned int> &threads)
 		{
 			deserialization_context context = { &*container._statistics, };
 
 			if (container.updates_enabled)
+			{
 				archive(context.threadid), archive(*container._statistics, context);
+				if (_first)
+					threads.clear(), _first = false;
+				threads.push_back(context.threadid);
+			}
 		}
 
 		void complete(functions_list &container)
@@ -74,6 +79,9 @@ namespace micro_profiler
 			if (container.updates_enabled)
 				container.on_updated();
 		}
+
+	private:
+		bool _first;
 	};
 
 	struct threads_model_reader : strmd::indexed_associative_container_reader

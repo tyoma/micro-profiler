@@ -5,6 +5,7 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "mock_channel.h"
 
 #include <algorithm>
 #include <strmd/deserializer.h>
@@ -56,11 +57,6 @@ namespace micro_profiler
 				return idata;
 			}
 
-			template <typename T, size_t size>
-			vector< pair< unsigned /*threadid*/, vector<T> > > make_single_threaded(T (&array_ptr)[size],
-				unsigned int threadid = 1u)
-			{	return vector< pair< unsigned /*threadid*/, vector<T> > >(1, make_pair(threadid, mkvector(array_ptr)));	}
-
 			template <typename T, size_t n>
 			void reset_all(T (&a)[n])
 			{	fill_n(a, n, T());	}
@@ -89,39 +85,6 @@ namespace micro_profiler
 
 			private:
 				virtual void activate() {	}
-			};
-
-			class outbound_channel : public ipc::channel
-			{
-			public:
-				outbound_channel()
-					: disconnected(false)
-				{	}
-
-			public:
-				bool disconnected;
-				vector<unsigned int /*instance_id*/> requested_metadata;
-
-			private:
-				virtual void disconnect() throw()
-				{	disconnected = true;	}
-
-				virtual void message(const_byte_range payload)
-				{
-					buffer_reader reader(payload);
-					strmd::deserializer<buffer_reader, packer> d(reader);
-					commands c;
-
-					switch (d(c), c)
-					{
-					case request_metadata:
-						requested_metadata.push_back(0), d(requested_metadata.back());
-						break;
-
-					default:
-						break;
-					}
-				}
 			};
 		}
 

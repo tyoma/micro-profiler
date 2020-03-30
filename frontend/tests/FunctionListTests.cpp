@@ -121,6 +121,7 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
+			vector<unsigned int> dummy_context;
 
 			function<void (unsigned persistent_id)> get_requestor()
 			{	return [this] (unsigned /*persistent_id*/) { };	}
@@ -157,10 +158,10 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
 				serialize_single_threaded(ser, s);
-				
+
 				// ACT
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(2u, fl->get_count());
@@ -182,12 +183,12 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 				invalidated_count = 0;
 
 				// ACT
 				fl->updates_enabled = false;
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
@@ -208,7 +209,7 @@ namespace micro_profiler
 				// ACT
 				invalidation_tracer ih;
 				ih.bind_to_model(*fl);
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
@@ -234,7 +235,7 @@ namespace micro_profiler
 				_buffer.rewind();
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
@@ -255,7 +256,7 @@ namespace micro_profiler
 				s[1123].callees[11001];
 				s[1124].callees[11100];
 				serialize_single_threaded(ser, s);
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				fl->set_order(columns::name, true);
 
@@ -288,7 +289,7 @@ namespace micro_profiler
 				s[1123].callees[11001];
 				s[1124].callees[11000];
 				serialize_single_threaded(ser, s);
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				fl->set_order(columns::name, true);
 
@@ -323,7 +324,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 				
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				functions_list::index_type idx1118 = fl->get_index(addr(1118));
 				functions_list::index_type idx2229 = fl->get_index(addr(2229));
@@ -377,7 +378,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s3);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 				shared_ptr<const trackable> first = fl->track(0); // 2229
 				shared_ptr<const trackable> second = fl->track(1); // 1118
 
@@ -396,7 +397,7 @@ namespace micro_profiler
 				assert_equal(1u, second->index());
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 				
 				// ASSERT
 				assert_equal(2u, ih.invalidations.size());
@@ -414,7 +415,7 @@ namespace micro_profiler
 				assert_equal(2u, second->index()); // kind of moved down
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 				
 				// ASSERT
 				assert_equal(3u, ih.invalidations.size());
@@ -470,7 +471,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, mkvector(functions));
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				wstring reference[][8] = {
@@ -513,7 +514,7 @@ namespace micro_profiler
 
 				serialize_single_threaded(ser, mkvector(functions));
 				ih.bind_to_model(*fl);
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<const trackable> pt0 = fl->track(fl->get_index(addr(1990)));
 				shared_ptr<const trackable> pt1 = fl->track(fl->get_index(addr(2000)));
@@ -881,7 +882,7 @@ namespace micro_profiler
 				};
 
 				ser(mkvector(data));
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				tmodel->add(3, 100, string());
 				tmodel->add(2, 1000, string());
@@ -944,7 +945,7 @@ namespace micro_profiler
 				ser(mkvector(data));
 
 				ih.bind_to_model(*fl);
-				dser(*fl);
+				dser(*fl, dummy_context);
 				ih.invalidations.clear();
 
 				// ACT (times called, ascending)
@@ -991,7 +992,7 @@ namespace micro_profiler
 					"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 				fl->set_order(columns::times_called, true);
 				fl->print(result);
 
@@ -1032,8 +1033,8 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s1);
 				serialize_single_threaded(ser, s2);
 
-				dser(*fl1);
-				dser(*fl2);
+				dser(*fl1, dummy_context);
+				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
 				assert_throws(fl1->watch_children(2), out_of_range);
@@ -1060,8 +1061,8 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s1);
 				serialize_single_threaded(ser, s2);
 
-				dser(*fl1);
-				dser(*fl2);
+				dser(*fl1, dummy_context);
+				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
 				assert_not_null(fl1->watch_children(0));
@@ -1082,7 +1083,7 @@ namespace micro_profiler
 				s[1990];
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ACT
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -1105,7 +1106,7 @@ namespace micro_profiler
 				s[0x1995].callees[0x2011];
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 				
 				// ACT
 				shared_ptr<linked_statistics> ls_0 = fl->watch_children(find_row(*fl, L"00001978"));
@@ -1135,8 +1136,8 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s1);
 				serialize_single_threaded(ser, s2);
 
-				dser(*fl);
-				dser(*fl);
+				dser(*fl, dummy_context);
+				dser(*fl, dummy_context);
 				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -1179,7 +1180,7 @@ namespace micro_profiler
 				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -1208,7 +1209,7 @@ namespace micro_profiler
 				s[0x1978].callees.clear();
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> ls1 = fl->watch_children(0);
 				shared_ptr<linked_statistics> ls2 = fl->watch_parents(0);
@@ -1218,7 +1219,7 @@ namespace micro_profiler
 				t2.bind_to_model(*ls2);
 
 				// ACT (linked statistics are detached)
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_is_empty(t1.invalidations);
@@ -1237,7 +1238,7 @@ namespace micro_profiler
 				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> ls1 = fl->watch_children(0);
 				shared_ptr<linked_statistics> ls2 = fl->watch_parents(0);
@@ -1270,7 +1271,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s1);
 				serialize_single_threaded(ser, s2);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 				_buffer.rewind();
 				fl->set_order(columns::name, true);
 
@@ -1279,14 +1280,14 @@ namespace micro_profiler
 				t.bind_to_model(*ls);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(1u, t.invalidations.size());
 				assert_equal(2u, t.invalidations.back());
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(2u, t.invalidations.size());
@@ -1299,7 +1300,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s3);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(3u, t.invalidations.size());
@@ -1319,7 +1320,7 @@ namespace micro_profiler
 				s[0x1978].callees[0x2011] = function_statistics(29);
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 				fl->set_order(columns::name, true);
 
 				shared_ptr<linked_statistics> ls = fl->watch_children(0);
@@ -1345,7 +1346,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s[0x2008]) = function_statistics(18);
 				serialize_single_threaded(ser, s);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ACT
 				shared_ptr<const trackable> t(fl->track(1));
@@ -1372,8 +1373,8 @@ namespace micro_profiler
 				s2[0x2008];
 				serialize_single_threaded(ser, s2);
 
-				dser(*fl1);
-				dser(*fl2);
+				dser(*fl1, dummy_context);
+				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
 				assert_throws(fl1->watch_parents(2), out_of_range);
@@ -1400,8 +1401,8 @@ namespace micro_profiler
 				s2[0x2008];
 				serialize_single_threaded(ser, s2);
 
-				dser(*fl1);
-				dser(*fl2);
+				dser(*fl1, dummy_context);
+				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
 				assert_not_null(fl1->watch_parents(0));
@@ -1427,7 +1428,7 @@ namespace micro_profiler
 				fl->set_order(columns::name, true);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
 				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
@@ -1456,7 +1457,7 @@ namespace micro_profiler
 				fl->set_order(columns::name, true);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(0);
 
@@ -1464,7 +1465,7 @@ namespace micro_profiler
 				assert_equal(3u, p->get_count());
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				assert_equal(4u, p->get_count());
@@ -1487,7 +1488,7 @@ namespace micro_profiler
 
 				fl->set_order(columns::name, true);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
 				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
@@ -1517,7 +1518,7 @@ namespace micro_profiler
 
 				fl->set_order(columns::name, true);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
@@ -1586,7 +1587,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s2);
 
 				fl->set_order(columns::name, true);
-				dser(*fl);
+				dser(*fl, dummy_context);
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
 				t.bind_to_model(*p);
@@ -1600,7 +1601,7 @@ namespace micro_profiler
 				assert_equal(reference1, t.invalidations);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 				p->set_order(columns::times_called, false);
 
 				// ASSERT
@@ -1623,7 +1624,7 @@ namespace micro_profiler
 
 				fl->set_order(columns::name, true);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
@@ -1651,7 +1652,7 @@ namespace micro_profiler
 
 				fl->set_order(columns::name, true);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
@@ -1667,7 +1668,7 @@ namespace micro_profiler
 				assert_table_equal(name_times, reference1, *p);
 
 				// ACT
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				// ASSERT
 				wstring reference2[][2] = {
@@ -1693,7 +1694,7 @@ namespace micro_profiler
 
 				fl->set_order(columns::name, true);
 
-				dser(*fl);
+				dser(*fl, dummy_context);
 
 				shared_ptr<linked_statistics> p = fl->watch_parents(2);
 
@@ -1703,6 +1704,40 @@ namespace micro_profiler
 				assert_equal(addr(0x2978), p->get_function_key(0));
 				assert_equal(addr(0x2995), p->get_function_key(1));
 				assert_equal(addr(0x3001), p->get_function_key(2));
+			}
+
+
+			test( ThreadsAreAccumulatedInTheContext )
+			{
+				// INIT
+				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				unthreaded_addressed_function functions[] = { make_statistics(0x1000u, 1, 0, 0, 0, 0), };
+				pair< unsigned, vector<unthreaded_addressed_function> > data1[] = {
+					make_pair(3, mkvector(functions)), make_pair(2, mkvector(functions)),
+				};
+				pair< unsigned, vector<unthreaded_addressed_function> > data2[] = {
+					make_pair(3, mkvector(functions)), make_pair(2, mkvector(functions)), make_pair(9112, mkvector(functions)),
+				};
+				vector<unsigned> collected_ids;
+
+				ser(mkvector(data1));
+				ser(mkvector(data2));
+
+				// ACT
+				dser(*fl, collected_ids);
+
+				// ASSERT
+				unsigned reference1[] = { 2u, 3u, };
+
+				assert_equivalent(reference1, collected_ids);
+
+				// ACT
+				dser(*fl, collected_ids);
+
+				// ASSERT
+				unsigned reference2[] = { 2u, 3u, 9112u, };
+
+				assert_equivalent(reference2, collected_ids);
 			}
 
 		end_test_suite

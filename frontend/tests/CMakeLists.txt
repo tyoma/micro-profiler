@@ -5,6 +5,8 @@ include(test)
 set(FRONTEND_TESTS_SOURCES
 	ColumnsModelTests.cpp
 	FrontendManagerTests.cpp
+	FrontendTests.cpp
+	FunctionListPersistence.cpp
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
 	mocks.cpp

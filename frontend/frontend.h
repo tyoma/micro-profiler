@@ -53,6 +53,7 @@ namespace micro_profiler
 		void send(commands command, const DataT &data);
 
 		std::shared_ptr<symbol_resolver> get_resolver();
+		std::shared_ptr<threads_model> get_threads();
 
 	private:
 		ipc::channel &_outbound;
@@ -60,5 +61,6 @@ namespace micro_profiler
 		std::shared_ptr<threads_model> _threads;
 		std::shared_ptr<functions_list> _model;
 		pod_vector<byte> _buffer;
+		std::vector<unsigned int> _threads_buffer;
 	};
 }

@@ -15,8 +15,8 @@ namespace micro_profiler
 		{	return v.count() * 0.001;	}
 	}
 
-	threads_model::threads_model()
-		: _view(*this)
+	threads_model::threads_model(const request_threads_t &requestor)
+		: _requestor(requestor), _view(*this)
 	{
 		_view.set_order([] (unsigned int, const thread_info &lhs, unsigned int, const thread_info &rhs) {
 			return lhs.cpu_time < rhs.cpu_time;

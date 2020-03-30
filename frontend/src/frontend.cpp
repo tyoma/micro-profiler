@@ -68,8 +68,7 @@ namespace micro_profiler
 		{
 		case init:
 			archive(idata);
-			_threads.reset(new threads_model);
-			_model = functions_list::create(idata.ticks_per_second, get_resolver(), _threads);
+			_model = functions_list::create(idata.ticks_per_second, get_resolver(), get_threads());
 			initialized(idata.executable, _model);
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			break;
@@ -86,7 +85,8 @@ namespace micro_profiler
 
 		case update_statistics_threaded:
 			if (_model)
-				archive(*_model);
+				archive(*_model, _threads_buffer);
+			get_threads()->notify_threads(_threads_buffer.begin(), _threads_buffer.end());
 			break;
 
 		case module_metadata:
@@ -131,5 +131,16 @@ namespace micro_profiler
 			}));
 		}
 		return _resolver;
+	}
+
+	shared_ptr<threads_model> frontend::get_threads()
+	{
+		if (!_threads)
+		{
+			_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
+				send(request_threads_info, threads);
+			}));
+		}
+		return _threads;
 	}
 }

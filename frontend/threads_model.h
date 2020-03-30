@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <common/types.h>
 #include <frontend/ordered_view.h>
 #include <unordered_map>
@@ -34,10 +35,16 @@ namespace micro_profiler
 {
 	struct threads_model_reader;
 
-	class threads_model : public wpl::ui::list_model, std::unordered_map<unsigned int, thread_info>
+	class threads_model : public wpl::ui::list_model, std::unordered_map<unsigned int, thread_info>, noncopyable
 	{
 	public:
-		threads_model();
+		typedef std::function<void (const std::vector<unsigned int> &threads)> request_threads_t;
+
+	public:
+		threads_model(const request_threads_t &requestor);
+
+		template <typename IteratorT>
+		void notify_threads(IteratorT begin_, IteratorT end_);
 
 		bool get_native_id(unsigned int &native_id, unsigned int thread_id) const throw();
 
@@ -45,10 +52,36 @@ namespace micro_profiler
 		virtual void get_text(index_type index, std::wstring &text) const;
 
 	private:
+		const request_threads_t _requestor;
 		ordered_view< std::unordered_map<unsigned int, thread_info> > _view;
+		std::vector<unsigned int> _ids_buffer;
 
 	private:
 		friend struct strmd::indexed_associative_container_reader;
 		friend struct threads_model_reader;
 	};
+
+
+
+	template <typename IteratorT>
+	inline void threads_model::notify_threads(IteratorT begin_, IteratorT end_)
+	{
+		for (; begin_ != end_; ++begin_)
+		{
+			if (end() != find(*begin_))
+				continue;
+
+			thread_info &ti = operator [](*begin_);
+
+			ti.native_id = 0u;
+			ti.complete = false;
+		}
+		_ids_buffer.clear();
+		for (const_iterator i = begin(); i != end(); ++i)
+		{
+			if (!i->second.complete)
+				_ids_buffer.push_back(i->first);
+		}
+		_requestor(_ids_buffer);
+	}
 }

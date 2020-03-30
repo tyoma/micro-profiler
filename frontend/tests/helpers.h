@@ -3,6 +3,7 @@
 #include <frontend/primitives.h>
 
 #include <common/module.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <wpl/ui/models.h>
 
@@ -84,6 +85,14 @@ namespace micro_profiler
 			archive(ticks_per_second);
 			archive(resolver);
 			archive(data);
+		}
+
+		template <typename T, size_t size>
+		std::vector< std::pair< unsigned /*threadid*/, std::vector<T> > > make_single_threaded(T (&array_ptr)[size],
+			unsigned int threadid = 1u)
+		{
+			return std::vector< std::pair< unsigned /*threadid*/, std::vector<T> > >(1, std::make_pair(threadid,
+				mkvector(array_ptr)));
 		}
 
 		template <typename ArchiveT, typename ContainerT>

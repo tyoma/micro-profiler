@@ -20,7 +20,9 @@
 
 #include <collector/thread_monitor.h>
 
+#include <common/formatting.h>
 #include <mt/thread_callbacks.h>
+#include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <vector>
@@ -31,6 +33,58 @@ namespace micro_profiler
 {
 	namespace
 	{
+		string read_file_string(const string &path)
+		{
+			if (FILE *f = fopen(path.c_str(), "r"))
+			{
+				char buffer[1000];
+				shared_ptr<FILE> f2(f, &fclose);
+				return fgets(buffer, sizeof(buffer), f2.get());
+			}
+			return string();
+		}
+
+		string read_stat(unsigned int *tid)
+		{
+			string filename = "/proc/self";
+			if (tid)
+				filename += "/task/", itoa<10>(filename, *tid);
+			return read_file_string(filename + "/stat");
+		}
+
+		mt::milliseconds extract_start_time(const string &stat_text)
+		{
+			size_t p = stat_text.find(')');
+			unsigned n = 20u; // Relatively to the executable's file name.
+			unsigned long long time = 0;
+
+			while (p != string::npos && p != stat_text.size() && n--)
+			{
+				p = stat_text.find(' ', p);
+				if (p != string::npos)
+					p++;
+			}
+			if (p != string::npos && p != stat_text.size())
+				sscanf(&stat_text[p], "%llu", &time);
+			time = 1000 * time / sysconf(_SC_CLK_TCK);
+			return mt::milliseconds(time);
+		}
+
+		mt::milliseconds get_thread_start_time(unsigned int pid)
+		{	return extract_start_time(read_stat(&pid));	}
+
+		mt::milliseconds get_process_start_time()
+		{	return extract_start_time(read_stat(nullptr));	}
+
+		mt::milliseconds get_uptime()
+		{
+			float uptime;
+			const string uptime_text = read_file_string("/proc/uptime");
+
+			sscanf(uptime_text.c_str(), "%f", &uptime);
+			return mt::milliseconds(static_cast<long long>(uptime * 1000.0f));
+		}
+
 		mt::milliseconds get_time(clockid_t clock)
 		{
 			timespec t = {};
@@ -88,7 +142,8 @@ namespace micro_profiler
 		if (!lti.thread_info_entry)
 		{
 			weak_ptr<thread_monitor_impl> wself = shared_from_this();
-			thread_info ti = { id, string(), mt::milliseconds(), mt::milliseconds(0), mt::milliseconds(), false };
+			thread_info ti = { id, string(), get_thread_start_time(id) - get_process_start_time(), mt::milliseconds(0),
+				mt::milliseconds(), false };
 
 			lti.thread_info_entry = &*_threads.insert(make_pair(_next_id++, ti)).first;
 			::pthread_getcpuclockid(pthread_self(), &lti.clock_handle);
@@ -114,7 +169,7 @@ namespace micro_profiler
 			thread_info &ti = i->second.thread_info_entry->second;
 
 			self->update_live_info(ti, native_id);
-			ti.end_time = get_time(CLOCK_MONOTONIC);
+			ti.end_time = get_uptime() - get_process_start_time();
 			ti.complete = true;
 			self->_alive_threads.erase(i);
 		}

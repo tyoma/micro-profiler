@@ -82,6 +82,7 @@ namespace micro_profiler
 		thread_id _next_id;
 		shared_ptr<void> _kernel_dll;
 		GetThreadDescription_t _GetThreadDescription;
+		mt::milliseconds _process_start_time;
 	};
 
 
@@ -95,7 +96,12 @@ namespace micro_profiler
 		: _callbacks(callbacks), _next_id(0), _kernel_dll(::LoadLibraryA("kernel32.dll"), &::FreeLibrary),
 			_GetThreadDescription(reinterpret_cast<GetThreadDescription_t>(::GetProcAddress(
 				static_cast<HMODULE>(_kernel_dll.get()), "GetThreadDescription")))
-	{	}
+	{
+		FILETIME start_time, dummy;
+
+		::GetProcessTimes(::GetCurrentProcess(), &start_time, &dummy, &dummy, &dummy);
+		_process_start_time = milliseconds(start_time);
+	}
 
 	thread_monitor::thread_id thread_monitor_impl::register_self()
 	{
@@ -106,7 +112,10 @@ namespace micro_profiler
 		if (!lti.thread_info_entry)
 		{
 			weak_ptr<thread_monitor_impl> wself = shared_from_this();
-			thread_info ti = { id, string(), mt::milliseconds(), mt::milliseconds(0), mt::milliseconds(), false };
+			FILETIME start_time, dummy;
+			::GetThreadTimes(::GetCurrentThread(), &start_time, &dummy, &dummy, &dummy);
+			thread_info ti = { id, string(), milliseconds(start_time) - _process_start_time, mt::milliseconds(0),
+				mt::milliseconds(), false };
 
 			lti.thread_info_entry = &*_threads.insert(make_pair(_next_id++, ti)).first;
 			lti.handle = get_current_thread();
@@ -142,7 +151,7 @@ namespace micro_profiler
 
 			self->update_live_info(ti, native_id);
 			::GetSystemTimeAsFileTime(&exit_time);
-			ti.end_time = milliseconds(exit_time);
+			ti.end_time = milliseconds(exit_time) - self->_process_start_time;
 			ti.complete = true;
 			self->_alive_threads.erase(i);
 		}

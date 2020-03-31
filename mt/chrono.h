@@ -58,6 +58,14 @@
 		template <typename RepT, typename RatioT>
 		inline bool operator !=(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
 		{	return lhs.count() != rhs.count();	}
+
+		template <typename RepT, typename RatioT>
+		inline duration<RepT, RatioT> operator +(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
+		{	return duration<RepT, RatioT>(lhs.count() + rhs.count());	}
+
+		template <typename RepT, typename RatioT>
+		inline duration<RepT, RatioT> operator -(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
+		{	return duration<RepT, RatioT>(lhs.count() - rhs.count());	}
 	}
 
 #endif

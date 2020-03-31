@@ -276,7 +276,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_not_equal(mt::milliseconds(0), get_info(*monitor, tids[0]).end_time);
 				assert_not_equal(mt::milliseconds(0), get_info(*monitor, tids[1]).end_time);
-				assert_is_true(get_info(*monitor, tids[1]).end_time.count() > get_info(*monitor, tids[0]).end_time.count());
+				assert_is_true(get_info(*monitor, tids[1]).end_time > get_info(*monitor, tids[0]).end_time);
 			}
 
 
@@ -318,8 +318,8 @@ namespace micro_profiler
 				assert_not_equal(0.0, v);
 				assert_is_true(get_info(*monitor2, id1).complete);
 				assert_is_false(get_info(*monitor2, id2).complete);
-				assert_approx_equal(get_info(*monitor2, id1).cpu_time.count()  - t0.count() + (t2.count() - t1.count()),
-					get_info(*monitor2, id2).cpu_time.count() - t0.count(), 0.1);
+				assert_approx_equal((get_info(*monitor2, id1).cpu_time - t0 + (t2 - t1)).count(),
+					(get_info(*monitor2, id2).cpu_time - t0).count(), 0.1);
 			}
 
 
@@ -368,6 +368,59 @@ namespace micro_profiler
 				assert_equal(2u, v2.size());
 				assert_equal(ntids[1], v2[tids[1]].native_id);
 				assert_equal(ntids[2], v2[tids[2]].native_id);
+			}
+
+
+			test( ThreadStartTimeDoesNotChange )
+			{
+				// INIT
+				mt::milliseconds start_time;
+				thread_monitor::thread_id tid;
+
+				// ACT
+				mt::thread t([&] {
+					tid = monitor->register_self();
+					start_time = get_info(*monitor, tid).start_time;
+				});
+				t.join();
+
+				// ACT / ASSERT
+				assert_equal(start_time, get_info(*monitor, tid).start_time);
+			}
+
+
+			test( StartEndTimesDeltaCorrespondsToThreadAliveTime )
+			{
+				// INIT
+				thread_monitor::thread_id tids[3];
+				vector< pair<thread_monitor::thread_id, thread_info> > infos;
+
+				// ACT
+				mt::thread t1([&] {
+					mt::this_thread::sleep_for(mt::milliseconds(100));
+					tids[0] = monitor->register_self();
+					mt::this_thread::sleep_for(mt::milliseconds(400));
+				});
+				mt::thread t2([&] {
+					tids[1] = monitor->register_self();
+					mt::this_thread::sleep_for(mt::milliseconds(400));
+				});
+				mt::thread t3([&] {
+					mt::this_thread::sleep_for(mt::milliseconds(200));
+					tids[2] = monitor->register_self();
+				});
+
+				t1.join();
+				t2.join();
+				t3.join();
+
+				// ACT
+				monitor->get_info(back_inserter(infos), tids, array_end(tids));
+
+				// ASSERT
+				assert_approx_equal(500, static_cast<int>((infos[0].second.end_time - infos[0].second.start_time).count()), 0.10);
+				assert_approx_equal(400, static_cast<int>((infos[1].second.end_time - infos[1].second.start_time).count()), 0.10);
+				assert_approx_equal(200, static_cast<int>((infos[2].second.end_time - infos[2].second.start_time).count()), 0.10);
 			}
 
 		end_test_suite

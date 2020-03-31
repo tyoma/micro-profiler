@@ -86,19 +86,21 @@ namespace micro_profiler
 				dser(*m1);
 
 				// ASSERT
-				assert_equal(2u, m1->get_count());
-				assert_equal(L"#11717 - thread 2 - CPU: 20s, started: +10s", get_text(*m1, 0));
-				assert_equal(L"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m1, 1));
+				assert_equal(3u, m1->get_count());
+				assert_equal(L"All Threads", get_text(*m1, 0));
+				assert_equal(L"#11717 - thread 2 - CPU: 20s, started: +10s", get_text(*m1, 1));
+				assert_equal(L"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m1, 2));
 
 				// ACT
 				dser(*m2);
 
 				// ASSERT
-				assert_equal(4u, m2->get_count());
-				assert_equal(L"#11717 - thread #2 - CPU: 10s, started: +10s, ended: +4ms", get_text(*m2, 0));
-				assert_equal(L"#32717 - thread #4 - CPU: 1s, started: +20s", get_text(*m2, 1));
-				assert_equal(L"#22717 - thread #3 - CPU: 1s, started: +5ms", get_text(*m2, 2));
-				assert_equal(L"#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m2, 3));
+				assert_equal(5u, m2->get_count());
+				assert_equal(L"All Threads", get_text(*m2, 0));
+				assert_equal(L"#11717 - thread #2 - CPU: 10s, started: +10s, ended: +4ms", get_text(*m2, 1));
+				assert_equal(L"#32717 - thread #4 - CPU: 1s, started: +20s", get_text(*m2, 2));
+				assert_equal(L"#22717 - thread #3 - CPU: 1s, started: +5ms", get_text(*m2, 3));
+				assert_equal(L"#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m2, 4));
 			}
 
 
@@ -127,10 +129,10 @@ namespace micro_profiler
 				dser(*m);
 
 				// ASSERT
-				assert_equal(3u, m->get_count());
-				assert_equal(L"#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m, 0));
-				assert_equal(L"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m, 1));
-				assert_equal(L"#11717 - CPU: 10ms, started: +10s, ended: +4ms", get_text(*m, 2));
+				assert_equal(4u, m->get_count());
+				assert_equal(L"#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m, 1));
+				assert_equal(L"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m, 2));
+				assert_equal(L"#11717 - CPU: 10ms, started: +10s, ended: +4ms", get_text(*m, 3));
 			}
 
 
@@ -146,7 +148,7 @@ namespace micro_profiler
 				};
 				bool invalidated = false;
 				wpl::slot_connection c = m->invalidated += [&] {
-					assert_equal(2u, m->get_count());
+					assert_equal(3u, m->get_count());
 					invalidated = true;
 				};
 
@@ -249,7 +251,7 @@ namespace micro_profiler
 				assert_is_true(m->get_native_id(native_id, 100));
 				assert_equal(0u, native_id);
 
-				assert_equal(3u, m->get_count()); // Still '3' - the view shall not be updated.
+				assert_equal(4u, m->get_count()); // Still '3' - the view shall not be updated.
 
 				// INIT
 				pair<unsigned int, thread_info> data2[] = {
@@ -273,6 +275,50 @@ namespace micro_profiler
 				assert_equal(2u, _requested.size());
 				assert_equivalent(reference2, _requested[1]);
 			}
+
+
+			test( ThreadIDCanBeRetrievedFromIndex )
+			{
+				// INIT
+				shared_ptr<threads_model> m(new threads_model(get_requestor()));
+				unsigned thread_id;
+				pair<unsigned int, thread_info> data1[] = {
+					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
+						false)),
+					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
+						true)),
+					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
+						false)),
+				};
+
+				ser(mkvector(data1));
+				dser(*m);
+
+				// ACT / ASSERT
+				assert_is_false(m->get_key(thread_id, 0));
+				assert_is_true(m->get_key(thread_id, 1));
+				assert_equal(110u, thread_id);
+				assert_is_true(m->get_key(thread_id, 2));
+				assert_equal(11u, thread_id);
+				assert_is_true(m->get_key(thread_id, 3));
+				assert_equal(111u, thread_id);
+				assert_is_false(m->get_key(thread_id, 4));
+
+				// INIT
+				pair<unsigned int, thread_info> data2[] = {
+					make_pair(12, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(3),
+						false)),
+				};
+
+				ser(mkvector(data2));
+				dser(*m);
+
+				// ACT / ASSERT
+				assert_is_true(m->get_key(thread_id, 4));
+				assert_equal(12u, thread_id);
+				assert_is_false(m->get_key(thread_id, 5));
+			}
+
 		end_test_suite
 	}
 }

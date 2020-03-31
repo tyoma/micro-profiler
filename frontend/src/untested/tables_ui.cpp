@@ -73,8 +73,18 @@ namespace micro_profiler
 
 		_parents_lv->set_columns_model(_columns_parents);
 		_statistics_lv->set_model(_statistics);
+		_threads_cb->set_model(_statistics->get_threads());
 		_statistics_lv->set_columns_model(_columns_main);
 		_children_lv->set_columns_model(_columns_children);
+
+		_connections.push_back(_threads_cb->selection_changed += [model] (unsigned int index) {
+			unsigned id;
+
+			if (model->get_threads()->get_key(id, index))
+				model->set_filter([id] (const functions_list::value_type &v) { return id == v.first.second;	});
+			else
+				model->set_filter();
+		});
 
 		_connections.push_back(_statistics_lv->selection_changed
 			+= bind(&tables_ui::on_selection_change, this, _1, _2));
@@ -128,7 +138,6 @@ namespace micro_profiler
 		layout->add(150);
 		add_view(split);
 
-		_threads_cb->set_model(_statistics->get_threads());
 		_statistics_pc->set_model(_statistics->get_column_series());
 	}
 

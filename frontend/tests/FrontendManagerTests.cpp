@@ -962,7 +962,7 @@ namespace micro_profiler
 				// ASSERT
 				unsigned int native_id;
 
-				assert_equal(2u, threads->get_count());
+				assert_equal(3u, threads->get_count());
 				assert_is_true(threads->get_native_id(native_id, 0));
 				assert_equal(1717u, native_id);
 				assert_is_true(threads->get_native_id(native_id, 1));
@@ -972,7 +972,7 @@ namespace micro_profiler
 				write(*c, threads_info, mkvector(data2));
 
 				// ASSERT
-				assert_equal(2u, threads->get_count());
+				assert_equal(3u, threads->get_count());
 				assert_is_true(threads->get_native_id(native_id, 1));
 				assert_equal(117u, native_id);
 			}

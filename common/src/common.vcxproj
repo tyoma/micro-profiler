@@ -90,6 +90,7 @@
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\file_id.h" />
     <ClInclude Include="..\formatting.h" />
+    <ClInclude Include="..\hash.h" />
     <ClInclude Include="..\image_info.h" />
     <ClInclude Include="..\memory.h" />
     <ClInclude Include="..\module.h" />

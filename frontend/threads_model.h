@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/noncopyable.h>
+#include <common/hash.h>
 #include <common/types.h>
 #include <frontend/ordered_view.h>
 #include <unordered_map>
@@ -35,7 +36,8 @@ namespace micro_profiler
 {
 	struct threads_model_reader;
 
-	class threads_model : public wpl::ui::list_model, std::unordered_map<unsigned int, thread_info>, noncopyable
+	class threads_model : public wpl::ui::list_model, std::unordered_map<unsigned int, thread_info, knuth_hash>,
+		noncopyable
 	{
 	public:
 		typedef std::function<void (const std::vector<unsigned int> &threads)> request_threads_t;
@@ -47,13 +49,14 @@ namespace micro_profiler
 		void notify_threads(IteratorT begin_, IteratorT end_);
 
 		bool get_native_id(unsigned int &native_id, unsigned int thread_id) const throw();
+		bool get_key(unsigned int &thread_id, index_type index) const throw();
 
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type index, std::wstring &text) const;
 
 	private:
 		const request_threads_t _requestor;
-		ordered_view< std::unordered_map<unsigned int, thread_info> > _view;
+		ordered_view< std::unordered_map<unsigned int, thread_info, knuth_hash> > _view;
 		std::vector<unsigned int> _ids_buffer;
 
 	private:

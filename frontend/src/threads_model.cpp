@@ -30,19 +30,29 @@ namespace micro_profiler
 		return end() != i ? native_id = i->second.native_id, true : false;
 	}
 
+	bool threads_model::get_key(unsigned int &thread_id, index_type index) const throw()
+	{	return index >= 1 && index < get_count() ? thread_id = _view[index - 1].first, true : false;	}
+
 	threads_model::index_type threads_model::get_count() const throw()
-	{	return _view.size();	}
+	{	return _view.size() + 1;	}
 
 	void threads_model::get_text(index_type index, wstring &text) const
 	{
-		const thread_info &v = _view[index].second;
+		if (index == 0)
+		{
+			text = L"All Threads";
+		}
+		else
+		{
+			const thread_info &v = _view[index - 1].second;
 
-		text = L"#", itoa<10>(text, v.native_id);
-		if (!v.description.empty())
-			text += L" - " + unicode(v.description);
-		text += L" - CPU: ", format_interval(text, to_seconds(v.cpu_time));
-		text += L", started: +", format_interval(text, to_seconds(v.start_time));
-		if (v.complete)
-			text += L", ended: +", format_interval(text, to_seconds(v.end_time));
+			text = L"#", itoa<10>(text, v.native_id);
+			if (!v.description.empty())
+				text += L" - " + unicode(v.description);
+			text += L" - CPU: ", format_interval(text, to_seconds(v.cpu_time));
+			text += L", started: +", format_interval(text, to_seconds(v.start_time));
+			if (v.complete)
+				text += L", ended: +", format_interval(text, to_seconds(v.end_time));
+		}
 	}
 }

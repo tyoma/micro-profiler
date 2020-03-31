@@ -99,5 +99,6 @@
     </ClInclude>
     <ClInclude Include="..\image_info.h" />
     <ClInclude Include="..\file_id.h" />
+    <ClInclude Include="..\hash.h" />
   </ItemGroup>
 </Project>

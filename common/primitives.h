@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "hash.h"
 #include "types.h"
 
 #include <unordered_map>
@@ -29,26 +30,15 @@ namespace micro_profiler
 	struct function_statistics;
 	template <typename KeyT> struct function_statistics_detailed_t;
 
-	template <size_t size_t_size>
-	struct address_hash_fixed;
-
-	struct address_hash
-	{
-		size_t operator ()(unsigned int key) const throw();
-		size_t operator ()(long_address_t key) const throw();
-		size_t operator ()(const void *key) const throw();
-		template <typename T1, typename T2> size_t operator ()(const std::pair<T1, T2> &key) const throw();
-	};
-
 	template <typename KeyT>
 	struct statistic_types_t
 	{
 		typedef function_statistics function;
 		typedef function_statistics_detailed_t<KeyT> function_detailed;
 
-		typedef std::unordered_map<KeyT, function_detailed, address_hash> map_detailed;
-		typedef std::unordered_map<KeyT, function, address_hash> map;
-		typedef std::unordered_map<KeyT, count_t, address_hash> map_callers;
+		typedef std::unordered_map<KeyT, function_detailed, knuth_hash> map_detailed;
+		typedef std::unordered_map<KeyT, function, knuth_hash> map;
+		typedef std::unordered_map<KeyT, count_t, knuth_hash> map_callers;
 	};
 
 	struct function_statistics
@@ -74,35 +64,6 @@ namespace micro_profiler
 		typename statistic_types_t<AddressT>::map_callers callers;
 	};
 
-
-
-	// address_hash - inline definitions
-	template <>
-	struct address_hash_fixed<4>
-	{	size_t operator ()(unsigned int key) const throw() {	return key * 0x9e3779b9u;	}	};
-
-	template <>
-	struct address_hash_fixed<8>
-	{	size_t operator ()(long_address_t key) const throw() {	return static_cast<size_t>(key * 0x7FFFFFFFFFFFFFFFull);	}	};
-
-
-	inline size_t address_hash::operator ()(unsigned int key) const throw()
-	{	return address_hash_fixed<sizeof(key)>()(key);	}
-
-	inline size_t address_hash::operator ()(long_address_t key) const throw()
-	{	return address_hash_fixed<sizeof(key)>()(key);	}
-
-	inline size_t address_hash::operator ()(const void *key) const throw()
-	{	return address_hash_fixed<sizeof(size_t)>()(reinterpret_cast<size_t>(key));	}
-
-	template <typename T1, typename T2>
-	inline size_t address_hash::operator ()(const std::pair<T1, T2> &key) const throw()
-	{
-		size_t seed = (*this)(key.first);
-
-		seed ^= (*this)(key.second) + 0x9e3779b9u + (seed << 6) + (seed >> 2);
-		return seed;
-	}
 
 
 	// function_statistics - inline definitions

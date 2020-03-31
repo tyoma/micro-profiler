@@ -142,7 +142,7 @@ namespace strmd
 	};
 
 	template <typename T>
-	struct type_traits< std::unordered_map<micro_profiler::function_key, T, micro_profiler::address_hash> >
+	struct type_traits< std::unordered_map<micro_profiler::function_key, T, micro_profiler::knuth_hash> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::statistics_map_reader item_reader_type;

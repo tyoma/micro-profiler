@@ -59,6 +59,8 @@ namespace micro_profiler
 
 			void close()
 			{
+				if (_hosted_ui)
+					_hosted_ui->save(*open_configuration());
 				_frame->CloseFrame(FRAMECLOSE_NoSave);
 				_frame.Release();
 				LOG(PREAMBLE "closed...") % A(this);
@@ -66,12 +68,11 @@ namespace micro_profiler
 
 			void set_model(const shared_ptr<functions_list> &model, const string &executable)
 			{
-				shared_ptr<tables_ui> ui(new tables_ui(model, *open_configuration()));
-
+				_hosted_ui.reset(new tables_ui(model, *open_configuration()));
 				_model = model;
 				_executable = executable;
-				_host->set_view(ui);
-				_open_source_connection = ui->open_source += bind(&vs_pane::on_open_source, this, _1, _2);
+				_host->set_view(_hosted_ui);
+				_open_source_connection = _hosted_ui->open_source += bind(&vs_pane::on_open_source, this, _1, _2);
 				_host->set_background_color(agge::color::make(24, 32, 48));
 			}
 
@@ -170,6 +171,7 @@ namespace micro_profiler
 			}
 
 		private:
+			shared_ptr<tables_ui> _hosted_ui;
 			shared_ptr<functions_list> _model;
 			string _executable;
 			shared_ptr<wpl::ui::view_host> _host;

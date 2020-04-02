@@ -18,3 +18,7 @@
 	path = libraries/lend
 	url = ../lend.git
 	branch = origin/master
+[submodule "libraries/polyq"]
+	path = libraries/polyq
+	url = ../polyq.git
+	branch = master

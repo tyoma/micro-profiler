@@ -27,6 +27,8 @@
 #include <mt/atomic.h>
 #include <mt/event.h>
 #include <patcher/platform.h>
+#include <polyq/circular.h>
+#include <polyq/static_entry.h>
 
 namespace micro_profiler
 {
@@ -44,6 +46,18 @@ namespace micro_profiler
 	};
 #pragma pack(pop)
 
+	template <typename T, unsigned n = 2 * (4096 - sizeof(void*)) / sizeof(call_record)>
+	struct static_buffer
+	{
+		enum { max_buffer_size = n, };
+
+		size_t size() const throw()
+		{	return end - buffer;	}
+
+		T buffer[n];
+		T *end;
+	};
+
 
 	class calls_collector_thread : noncopyable
 	{
@@ -60,37 +74,30 @@ namespace micro_profiler
 
 		void read_collected(const reader_t &reader);
 
+		void flush();
+
 	private:
-		typedef pod_vector<call_record> trace_t;
+		typedef static_buffer<call_record> trace_t;
+		typedef std::unique_ptr<trace_t> trace_ptr_t;
 		typedef pod_vector<return_entry> return_stack_t;
 
 	private:
+		call_record *_ptr, *_end;
+		std::unique_ptr<trace_t> _active_trace;
 		return_stack_t _return_stack;
-		volatile mt::atomic<trace_t *> _active_trace;
-		trace_t *_inactive_trace;
-		const size_t _trace_limit;
 		mt::event _continue;
-		trace_t _traces[2];
+		polyq::circular_buffer< trace_ptr_t, polyq::static_entry<trace_ptr_t> > _ready_buffers, _empty_buffers;
 	};
 
 
 
 	FORCE_INLINE void calls_collector_thread::track(const void *callee, timestamp_t timestamp) throw()
 	{
-		for (trace_t *trace; ; _active_trace.store(trace, mt::memory_order_release), _continue.wait())
-		{
-			do
-				trace = _active_trace.load(mt::memory_order_relaxed);
-			while (!_active_trace.compare_exchange_strong(trace, 0, mt::memory_order_acquire));
+		auto ptr = _ptr++;
 
-			if (trace->byte_size() < _trace_limit)
-			{
-				const call_record record = { timestamp, callee };
-
-				trace->push_back(record);
-				_active_trace.store(trace, mt::memory_order_release);
-				break;
-			}
-		}
+		ptr->timestamp = timestamp;
+		ptr->callee = callee;
+		if (_ptr == _end)
+			flush();
 	}
 }

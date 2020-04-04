@@ -20,6 +20,7 @@
 
 #include <collector/calibration.h>
 
+#include <collector/analyzer.h>
 #include <collector/calls_collector.h>
 #include <common/time.h>
 
@@ -30,6 +31,12 @@ namespace micro_profiler
 
 	namespace
 	{
+		struct null_reader : calls_collector_i::acceptor
+		{
+			virtual void accept_calls(unsigned int, const call_record *, size_t)
+			{ }
+		};
+
 		template <typename FunctionT>
 		void run_load(FunctionT *f, size_t iterations)
 		{
@@ -40,35 +47,43 @@ namespace micro_profiler
 
 	overhead calibrate_overhead(calls_collector &collector, size_t iterations)
 	{
-		struct delay_evaluator : calls_collector_i::acceptor
+		null_reader nr;
+
+		for (int warmup_rounds = 10; warmup_rounds--; )
 		{
-			virtual void accept_calls(unsigned int, const call_record *calls, size_t count)
-			{
-				const size_t count2 = count;
-
-				inner = 0;
-				for (const call_record *i = calls; count >= 2; count -= 2, i += 2)
-					inner += (i + 1)->timestamp - i->timestamp;
-				inner /= count2 / 2;
-			}
-
-			timestamp_t inner;
-		} de;
-
-		run_load(&empty_call, iterations);
-		collector.read_collected(de);
-		run_load(&empty_call, iterations);
-		collector.read_collected(de);
+			run_load(&empty_call, iterations);
+			collector.flush();
+			collector.read_collected(nr);
+		}
 
 		timestamp_t start = read_tick_counter();
 		run_load(&empty_call, iterations);
 		timestamp_t end = read_tick_counter();
-		collector.read_collected(de);
+
+		analyzer a(overhead(0, 0));
+
+		collector.flush();
+		collector.read_collected(a);
+
+		if (1u == a.size())
+		{
+			const thread_analyzer &aa = a.begin()->second;
+
+			if (1u == aa.size())
+			{
+				const statistic_types::function_detailed &f = aa.begin()->second;
+				const timestamp_t inner = f.inclusive_time / f.times_called;
+				const timestamp_t total = (end - start) / f.times_called;
+
+				printf("Profiler overhead: inner=%lld, total=%lld\n", inner, total);
+				return overhead(inner, total - inner);
+			}
+		}
 
 #ifdef __arm__
 		return overhead((end - start) / iterations / 2, (end - start) / iterations / 2);
 #else
-		return overhead(de.inner, (end - start) / iterations - de.inner);
+		return overhead(0, 0);
 #endif
 	}
 }

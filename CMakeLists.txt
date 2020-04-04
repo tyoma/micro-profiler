@@ -12,10 +12,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
 # Setup include directories
 include_directories(.)
 include_directories(./libraries/agge)
+include_directories(./libraries/polyq)
 include_directories(./libraries/strmd)
 include_directories(./libraries/wpl)
 if (WIN32)
-	include_directories(./compat)
+	include_directories(./compat/win32)
 endif()
 
 
@@ -29,6 +30,9 @@ if(UNIX)
 	add_definitions(-D_FILE_OFFSET_BITS=64) # Fixes problems 32-bit app on 64-bit Ubuntu
 endif()
 if (MSVC)
+	if (MSVC_VERSION LESS_EQUAL 1700)
+		include_directories(./compat/msvc10-)
+	endif()
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 	add_definitions(-DUNICODE -D_UNICODE)
 endif()
@@ -85,8 +89,8 @@ endif()
 
 
 # Add subdirectories
-add_subdirectory(libraries/utee)
 add_subdirectory(libraries/agge)
+add_subdirectory(libraries/utee)
 add_subdirectory(collector/src)
 add_subdirectory(common/src)
 add_subdirectory(frontend/src)

@@ -28,10 +28,20 @@ using namespace std;
 namespace micro_profiler
 {
 	calls_collector_thread::calls_collector_thread(size_t trace_limit)
-		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1]), _trace_limit(sizeof(call_record) * trace_limit)
+		: _active_trace(new trace_t), _ready_buffers(trace_limit / trace_t::max_buffer_size + 1),
+			_empty_buffers(trace_limit / trace_t::max_buffer_size + 1)
 	{
 		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
 		_return_stack.push_back(re);
+
+		_ptr = _active_trace->buffer;
+		_end = _active_trace->buffer + calls_collector_thread::trace_t::max_buffer_size;
+
+		for (size_t n = trace_limit / trace_t::max_buffer_size - 1; n--; ) // plus one in _active_trace
+		{
+			trace_ptr_t t(new trace_t);
+			_empty_buffers.produce(move(t), [] (int) {});
+		}
 	}
 
 	void calls_collector_thread::on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw()
@@ -70,20 +80,30 @@ namespace micro_profiler
 
 	void calls_collector_thread::read_collected(const reader_t &reader)
 	{
-		trace_t *trace;
-		trace_t *const deduced_active_trace = &_traces[1] == _inactive_trace ? &_traces[0] : &_traces[1];
+		while (_ready_buffers.consume([this, &reader] (trace_ptr_t &p) {
+			mt::event &continue_ = _continue;
+			reader(p->buffer, p->size());
+			p->end = p->buffer;
+			_empty_buffers.produce(std::move(p), [&continue_] (int n) {
+				if (!n)
+					continue_.set();
+			});
+		}, [] (int n) {
+			return !!n;
+		}))
+		{	}
+	}
 
-		do
-			trace = deduced_active_trace;
-		while (!_active_trace.compare_exchange_strong(trace, _inactive_trace, mt::memory_order_relaxed));
-
-		_inactive_trace = trace;
-
-		if (_inactive_trace->byte_size() >= _trace_limit)
-			_continue.set();
-
-		if (_inactive_trace->size())
-			reader(_inactive_trace->data(), _inactive_trace->size());
-		_inactive_trace->clear();
+	FORCE_NOINLINE void calls_collector_thread::flush()
+	{
+		_active_trace->end = _ptr;
+		_ready_buffers.produce(std::move(_active_trace), [] (int) {});
+		_empty_buffers.consume([this] (trace_ptr_t &p) {
+			_active_trace = std::move(p);
+			_ptr = _active_trace->buffer;
+			_end = _active_trace->buffer + calls_collector_thread::trace_t::max_buffer_size;
+		}, [this] (int n) {
+			return !n ? _continue.wait(), true : true;
+		});
 	}
 }

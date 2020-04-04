@@ -61,6 +61,8 @@ namespace micro_profiler
 		void on_enter_nostack(timestamp_t timestamp, const void *callee);
 		void on_exit_nostack(timestamp_t timestamp);
 
+		void flush();
+
 	private:
 		typedef std::vector< std::pair< unsigned int, std::shared_ptr<calls_collector_thread> > > call_traces_t;
 

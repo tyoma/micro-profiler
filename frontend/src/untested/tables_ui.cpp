@@ -77,10 +77,10 @@ namespace micro_profiler
 		_statistics_lv->set_columns_model(_columns_main);
 		_children_lv->set_columns_model(_columns_children);
 
-		_connections.push_back(_threads_cb->selection_changed += [model] (unsigned int index) {
+		_connections.push_back(_threads_cb->selection_changed += [model] (size_t index) {
 			unsigned id;
 
-			if (model->get_threads()->get_key(id, index))
+			if (model->get_threads()->get_key(id, static_cast<unsigned>(index)))
 				model->set_filter([id] (const functions_list::value_type &v) { return id == v.first.second;	});
 			else
 				model->set_filter();

@@ -26,7 +26,7 @@
 #include <collector/thread_monitor.h>
 
 using namespace std;
-using namespace std::placeholders;
+using namespace placeholders;
 
 namespace micro_profiler
 {
@@ -62,7 +62,10 @@ namespace micro_profiler
 	void calls_collector::on_exit_nostack(timestamp_t timestamp)
 	{	get_current_thread_trace_guaranteed().track(0, timestamp);	}
 
-	calls_collector_thread &calls_collector::get_current_thread_trace()
+	void calls_collector::flush()
+	{	get_current_thread_trace().flush();	}
+
+	FORCE_INLINE calls_collector_thread &calls_collector::get_current_thread_trace()
 	{
 		if (calls_collector_thread *trace = _trace_pointers_tls.get())
 			return *trace;

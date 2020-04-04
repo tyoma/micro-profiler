@@ -25,17 +25,20 @@
 	#define _CC(cc)
 	
 	#define FORCE_INLINE __forceinline
+	#define FORCE_NOINLINE __declspec(noinline)
 
 #elif defined(__GNUC__) && defined(__i386)
 	#define CC_(cc)
 	#define _CC(cc) __attribute__((cc))
 
 	#define FORCE_INLINE __attribute__((always_inline)) inline
+	#define FORCE_NOINLINE __attribute__((noinline))
 
 #else
 	#define CC_(cc)
 	#define _CC(cc)
 
 	#define FORCE_INLINE inline
+	#define FORCE_NOINLINE
 
 #endif

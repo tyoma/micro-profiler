@@ -36,7 +36,7 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libraries/agge;$(SolutionDir)libraries/wpl;$(SolutionDir)libraries/strmd;$(SolutionDir)libraries/polyq;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="$(PlatformToolsetVersion)&lt;=100">$(SolutionDir)compat/msvc10-;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(PlatformToolsetVersion)'=='100'">$(SolutionDir)compat/msvc10-;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4996;4312;4503</DisableSpecificWarnings>

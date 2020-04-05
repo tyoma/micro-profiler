@@ -73,10 +73,11 @@ namespace micro_profiler
 
 		_parents_lv->set_columns_model(_columns_parents);
 		_statistics_lv->set_model(_statistics);
-		_threads_cb->set_model(_statistics->get_threads());
 		_statistics_lv->set_columns_model(_columns_main);
 		_children_lv->set_columns_model(_columns_children);
 
+		_threads_cb->set_model(_statistics->get_threads());
+		_threads_cb->select(0u);
 		_connections.push_back(_threads_cb->selection_changed += [model] (unsigned int index) {
 			unsigned id;
 

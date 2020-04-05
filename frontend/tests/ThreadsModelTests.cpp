@@ -319,6 +319,71 @@ namespace micro_profiler
 				assert_is_false(m->get_key(thread_id, 5));
 			}
 
+
+			test( TrackableObtainedFromModelFollowsTheItemPosition )
+			{
+				// INIT
+				shared_ptr<threads_model> m(new threads_model(get_requestor()));
+				pair<unsigned int, thread_info> data1[] = {
+					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
+						false)),
+					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
+						true)),
+					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
+						false)),
+				};
+
+				ser(mkvector(data1));
+				dser(*m);
+
+				// ACT
+				shared_ptr<const wpl::ui::trackable> t0 = m->track(0); // 'All Threads'
+				shared_ptr<const wpl::ui::trackable> t1 = m->track(3); // thread_id: 111
+				shared_ptr<const wpl::ui::trackable> t2 = m->track(1); // thread_id: 110
+
+				// ASSERT
+				assert_not_null(t0);
+				assert_not_null(t1);
+				assert_not_null(t2);
+				assert_equal(0u, t0->index());
+				assert_equal(3u, t1->index());
+				assert_equal(1u, t2->index());
+
+				// INIT
+				pair<unsigned int, thread_info> data2[] = {
+					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(18),
+						false)),
+				};
+
+				ser(mkvector(data2));
+
+				// ACT
+				dser(*m);
+
+				// ASSERT
+				assert_equal(0u, t0->index());
+				assert_equal(2u, t1->index());
+				assert_equal(1u, t2->index());
+
+				// INIT
+				pair<unsigned int, thread_info> data3[] = {
+					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(21),
+						false)),
+					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(27),
+						false)),
+				};
+
+				ser(mkvector(data3));
+
+				// ACT
+				dser(*m);
+
+				// ASSERT
+				assert_equal(0u, t0->index());
+				assert_equal(1u, t1->index());
+				assert_equal(3u, t2->index());
+			}
+
 		end_test_suite
 	}
 }

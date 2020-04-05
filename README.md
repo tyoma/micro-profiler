@@ -33,7 +33,7 @@ Good news for folks maintaining legacy software: MicroProfiler runs on Microsoft
 
 # Trust in OpenSource?
 
-MicroProfiler comes with no spyware/malware. You are free to checkout the latest sources and build it yourself. You will only have to have MSVC 2010+ and Visual Studio SDK. The sourcecode can be found here: **[https://github.com/tyoma/micro-profiler](https://github.com/tyoma/micro-profiler)**
+MicroProfiler comes with no spyware/malware. You are free to checkout the latest sources and build it yourself. You will only have to have MSVC 2010+ and Visual Studio SDK. The sourcecode can be found here:Â **[https://github.com/tyoma/micro-profiler](https://github.com/tyoma/micro-profiler)**
 
 # Usage Guidelines
 
@@ -74,6 +74,12 @@ The steps are much like the ones above.
 4. Run the application.
 
 # Revision History
+
+## v1.6.620
+
+* Multithreading information: new column added to display native thread id (LWP on Linux) the statistics is collected from;
+* Multithreaded support: ability to filter the statistics view by the thread id or display statistics for every thread. The filtering combobx is as well a source of information - it displays native thread id, thread name (if supported and set) and thread times (including completion time for ended threads). These two features closed Issue [#48](https://github.com/tyoma/micro-profiler/issues/48);
+* Issue [#56](https://github.com/tyoma/micro-profiler/issues/56) fixed: columns widthds and sorting is now restored next time the profiler pane is opened.
 
 ## v1.6.616
 

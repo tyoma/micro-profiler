@@ -53,6 +53,7 @@ namespace micro_profiler
 
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type index, std::wstring &text) const;
+		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type index) const;
 
 	private:
 		const request_threads_t _requestor;

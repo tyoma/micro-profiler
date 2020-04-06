@@ -13,6 +13,19 @@ namespace micro_profiler
 	{
 		double to_seconds(mt::milliseconds v)
 		{	return v.count() * 0.001;	}
+
+		struct trackable : wpl::ui::trackable
+		{
+			template <typename U>
+			trackable(U &u, index_type index)
+				: _underlying(index ? u.track(index - 1) : shared_ptr<const wpl::ui::trackable>())
+			{	}
+
+			virtual index_type index() const
+			{	return _underlying ? _underlying->index() + 1 : 0;	}
+
+			shared_ptr<const wpl::ui::trackable> _underlying;
+		};
 	}
 
 	threads_model::threads_model(const request_threads_t &requestor)
@@ -55,4 +68,7 @@ namespace micro_profiler
 				text += L", ended: +", format_interval(text, to_seconds(v.end_time));
 		}
 	}
+
+	shared_ptr<const wpl::ui::trackable> threads_model::track(index_type index) const
+	{	return shared_ptr<trackable>(new trackable(_view, index));	}
 }

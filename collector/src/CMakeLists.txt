@@ -81,9 +81,7 @@ if(MSVC)
 	
 	add_library(micro-profiler SHARED IMPORTED GLOBAL)
 	add_dependencies(micro-profiler ${micro-profiler})
-	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		set_property(SOURCE calls_collector.cpp calls_collector_thread.cpp APPEND PROPERTY COMPILE_OPTIONS /arch:SSE)
-	endif()
+	set_property(SOURCE calls_collector.cpp calls_collector_thread.cpp APPEND PROPERTY COMPILE_OPTIONS $<$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>:/arch:SSE>)
 	set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS /MANIFEST:NO)
 	set_property(TARGET micro-profiler PROPERTY IMPORTED_IMPLIB ${micro-profiler}.lib)
 

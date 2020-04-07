@@ -10,18 +10,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
 
 
 # Setup include directories
-include_directories(.)
-include_directories(./libraries/agge)
-include_directories(./libraries/strmd)
-include_directories(./libraries/wpl)
-if (WIN32)
-	include_directories(./compat)
-endif()
+include_directories(${CMAKE_CURRENT_LIST_DIR})
+include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/agge)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/polyq)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/strmd)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/wpl)
+include_directories($<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/compat/win32>)
 
 
 # Add definitions: global, platform-based, compiler-based
 set(AGGE_NO_TESTS 1)
 set(UTEE_NO_TESTS 1)
+set(WPL_NO_TESTS 1)
 if(UNIX)
 	set(MP_MT_GENERIC 1)
 	add_definitions(-DMP_MT_GENERIC)
@@ -29,6 +29,7 @@ if(UNIX)
 	add_definitions(-D_FILE_OFFSET_BITS=64) # Fixes problems 32-bit app on 64-bit Ubuntu
 endif()
 if (MSVC)
+	include_directories($<$<VERSION_LESS_EQUAL:${MSVC_VERSION},1600>:${CMAKE_CURRENT_LIST_DIR}/compat/msvc10->)
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 	add_definitions(-DUNICODE -D_UNICODE)
 endif()
@@ -46,7 +47,7 @@ set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 set(MSVC_COMPILER_OPTIONS /MP /W4 /wd4503 /GR- /GS- /Gy-)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
-set(MSVC_COMPILER_OPTIONS_RELEASE_MAX /Ox /Ob2 /Oi /Ot /Oy)
+set(MSVC_COMPILER_OPTIONS_RELEASE_MAX /Ox)
 
 add_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:C>:${GCC_CLANG_COMPILER_OPTIONS_C}>>"
@@ -56,6 +57,7 @@ add_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<CONFIG:Debug>:${MSVC_COMPILER_OPTIONS_DEBUG}>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<NOT:$<CONFIG:Debug>>:${MSVC_COMPILER_OPTIONS_RELEASE}>>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:${MSVC_COMPILER_OPTIONS_RELEASE_MAX}>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>:/arch:SSE2>>"
 )
 
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
@@ -69,9 +71,6 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
 endif()
 
 if(MSVC)
-	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		add_compile_options(/arch:SSE2)
-	endif()
 	add_link_options(/INCREMENTAL:NO /SAFESEH:NO)
 	add_link_options($<$<NOT:$<CONFIG:Debug>>:/LTCG>)
 	add_link_options($<$<NOT:$<CONFIG:Debug>>:/OPT:REF>)
@@ -85,8 +84,9 @@ endif()
 
 
 # Add subdirectories
-add_subdirectory(libraries/utee)
 add_subdirectory(libraries/agge)
+add_subdirectory(libraries/utee)
+
 add_subdirectory(collector/src)
 add_subdirectory(common/src)
 add_subdirectory(frontend/src)
@@ -110,8 +110,9 @@ endif()
 add_subdirectory(test-helpers/src)
 
 if (WIN32)
+	add_subdirectory(libraries/wpl)
+
 	add_subdirectory(injector/src)
-	add_subdirectory(libraries/wpl/src/wpl.ui)
 	add_subdirectory(micro-profiler)
 	add_subdirectory(standalone)
 

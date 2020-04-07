@@ -35,11 +35,12 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libraries/agge;$(SolutionDir)libraries/wpl;$(SolutionDir)libraries/strmd;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libraries/agge;$(SolutionDir)libraries/wpl;$(SolutionDir)libraries/strmd;$(SolutionDir)libraries/polyq;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(PlatformToolsetVersion)'=='100'">$(SolutionDir)compat/msvc10-;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4996;4312;4503</DisableSpecificWarnings>
-      <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(PlatformToolsetVersion)'!='110' And '$(PlatformToolsetVersion)'!='120'">true</DisableLanguageExtensions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

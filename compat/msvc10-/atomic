@@ -1,0 +1,14 @@
+#pragma once
+
+#include <mt/atomic.h>
+
+namespace std
+{
+	using mt::atomic;
+	using mt::memory_order_relaxed;
+	using mt::memory_order_consume;
+	using mt::memory_order_acquire;
+	using mt::memory_order_release;
+	using mt::memory_order_acq_rel;
+	using mt::memory_order_seq_cst;
+}

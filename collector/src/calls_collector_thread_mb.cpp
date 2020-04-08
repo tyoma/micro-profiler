@@ -32,19 +32,20 @@ namespace micro_profiler
 
 
 	calls_collector_thread_mb::calls_collector_thread_mb(size_t trace_limit)
-		: _active_buffer(new buffer), _ready_buffers(buffers_number(trace_limit)),
-			_empty_buffers(buffers_number(trace_limit))
+		: _max_buffers(buffers_required(trace_limit)), _ready_buffers(_max_buffers), _empty_buffers(_max_buffers)
 	{
-		_ptr = _active_buffer->data, _n_left = buffer_size;
-
 		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
 		_return_stack.push_back(re);
 
-		for (size_t n = buffers_number(trace_limit) - 1; n--; )
+		buffer_ptr b;
+
+		for (size_t n = _max_buffers - 1; n--; )
 		{
-			buffer_ptr b(new buffer);
+			b.reset(new buffer);
 			_empty_buffers.produce(move(b), [] (int) {});
 		}
+		b.reset(new buffer);
+		start_buffer(b);
 	}
 
 	calls_collector_thread_mb::~calls_collector_thread_mb()
@@ -88,19 +89,19 @@ namespace micro_profiler
 	{
 		_active_buffer->size = buffer_size - _n_left;
 		_ready_buffers.produce(move(_active_buffer), [] (int) {});
-		_empty_buffers.consume([this] (buffer_ptr &active) {
-			_active_buffer = move(active);
-			_ptr = _active_buffer->data, _n_left = buffer_size;
+		_empty_buffers.consume([this] (buffer_ptr &new_buffer) {
+			start_buffer(new_buffer);
 		}, [this] (int n) -> bool {
-			if (!n)
-				_continue.wait();
-			return true;
+			return !n ? _continue.wait(), true : true;
 		});
 	}
 
 	void calls_collector_thread_mb::read_collected(const reader_t &reader)
 	{
-		for (buffer_ptr ready; _ready_buffers.consume([&ready] (buffer_ptr &ready_) {
+		size_t n = _max_buffers; // Untested: even under a heavy load, analyzer thread shall be responsible.
+		buffer_ptr ready;
+
+		for (; n-- && _ready_buffers.consume([&ready] (buffer_ptr &ready_) {
 			ready = move(ready_);
 		}, [] (int n) {
 			return !!n;
@@ -114,6 +115,13 @@ namespace micro_profiler
 		}
 	}
 
-	size_t calls_collector_thread_mb::buffers_number(size_t trace_limit)
+	void calls_collector_thread_mb::start_buffer(buffer_ptr &new_buffer) throw()
+	{
+		_active_buffer = move(new_buffer);
+		_ptr = _active_buffer->data;
+		_n_left = buffer_size;
+	}
+
+	size_t calls_collector_thread_mb::buffers_required(size_t trace_limit) throw()
 	{	return 1u + (max<size_t>)((trace_limit - 1u) / buffer_size, 1u);	}
 }

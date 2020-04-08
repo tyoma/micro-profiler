@@ -63,13 +63,15 @@ namespace micro_profiler
 		typedef pod_vector<return_entry> return_stack_t;
 
 	private:
-		static size_t buffers_number(size_t trace_limit);
+		void start_buffer(buffer_ptr &new_buffer) throw();
+		static size_t buffers_required(size_t trace_limit) throw();
 
 	private:
 		call_record *_ptr;
 		unsigned int _n_left;
 		return_stack_t _return_stack;
 		buffer_ptr _active_buffer;
+		const size_t _max_buffers;
 		buffers_queue_t _ready_buffers, _empty_buffers;
 		mt::event _continue;
 	};

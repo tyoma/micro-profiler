@@ -20,24 +20,21 @@
 
 #pragma once
 
-#if defined(_MSC_VER)
-	#if defined(_M_IX86)
-		#define CC_(cc) __ ## cc
-		#define _CC(cc)
-	#else
-		#define CC_(cc)
-		#define _CC(cc)
-	#endif
-	#define FORCE_INLINE __forceinline
-	#define FORCE_NOINLINE __declspec(noinline)
-#elif defined(__GNUC__) && defined(__i386)
-	#define CC_(cc)
-	#define _CC(cc) __attribute__((cc))
-	#define FORCE_INLINE __attribute__((always_inline)) inline
-	#define FORCE_NOINLINE __attribute__((noinline))
-#else
-	#define CC_(cc)
-	#define _CC(cc)
-	#define FORCE_INLINE inline
-	#define FORCE_NOINLINE
-#endif
+#include <common/types.h>
+
+namespace micro_profiler
+{
+#pragma pack(push, 4)
+	struct call_record
+	{
+		timestamp_t timestamp;
+		const void *callee;
+	};
+
+	struct return_entry
+	{
+		const void **stack_ptr;
+		const void *return_address;
+	};
+#pragma pack(pop)
+}

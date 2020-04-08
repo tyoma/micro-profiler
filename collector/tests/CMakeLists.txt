@@ -5,8 +5,10 @@ include(test)
 set(COLLECTOR_TESTS_SOURCES
 	AnalyzerTests.cpp
 	CallsCollectorTests.cpp
+	CallsCollectorThreadMBTests.cpp
 	CallsCollectorThreadTests.cpp
 	CollectorAppTests.cpp
+	helpers.cpp
 	ImagePatchTests.cpp
 	ModuleTrackerTests.cpp
 	SerializationTests.cpp

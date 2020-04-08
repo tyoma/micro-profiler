@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include "calls_collector_thread.h"
-
+#include <collector/types.h>
+#include <common/noncopyable.h>
 #include <memory>
 #include <mt/mutex.h>
 #include <mt/tls.h>
@@ -30,6 +30,7 @@
 
 namespace micro_profiler
 {
+	class calls_collector_thread;
 	class thread_monitor;
 
 	struct calls_collector_i

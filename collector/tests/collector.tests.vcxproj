@@ -52,8 +52,10 @@
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="CallsCollectorTests.cpp" />
+    <ClCompile Include="CallsCollectorThreadMBTests.cpp" />
     <ClCompile Include="CallsCollectorThreadTests.cpp" />
     <ClCompile Include="CollectorAppTests.cpp" />
+    <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ModuleTrackerTests.cpp" />
     <ClCompile Include="ImagePatchTests.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>

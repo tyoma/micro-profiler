@@ -28,6 +28,9 @@
     <ClCompile Include="thread_monitor_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
+    <ClCompile Include="calls_collector_thread_mb.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -52,5 +55,7 @@
     <ClInclude Include="..\module_tracker.h" />
     <ClInclude Include="..\shadow_stack.h" />
     <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\types.h" />
+    <ClInclude Include="..\calls_collector_thread_mb.h" />
   </ItemGroup>
 </Project>

@@ -23,6 +23,7 @@
 
 #include <collector/calls_collector.h>
 
+#include <collector/calls_collector_thread.h>
 #include <collector/thread_monitor.h>
 
 using namespace std;

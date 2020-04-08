@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "calls_collector.h"
 #include "shadow_stack.h"
 
 #include <common/noncopyable.h>

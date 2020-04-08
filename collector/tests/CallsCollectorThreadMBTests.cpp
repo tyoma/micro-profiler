@@ -311,6 +311,260 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(reference, actual);
 			}
+
+
+			virtual_stack vstack;
+			auto_ptr<calls_collector_thread_mb> collector;
+
+			init( InitCollector )
+			{
+				acceptor = acceptor_object.get_reader();
+				collector.reset(new calls_collector_thread_mb(1));
+			}
+
+
+			test( CollectEntryExitOnSimpleExternalFunction )
+			{
+				// ACT
+				vstack.on_enter(*collector, 100, (void *)0x12345678);
+				vstack.on_exit(*collector, 10010);
+
+				collector->flush();
+				collector->read_collected(acceptor);
+
+				// ASSERT
+				call_record reference[] = {
+					{ 100, (void *)0x12345678 }, { 10010, 0 },
+				};
+
+				assert_equal(1u, acceptor_object.collected.size());
+				assert_equal(reference, acceptor_object.collected[0]);
+			}
+
+
+			test( ReadNothingAfterPreviousReadingAndNoCalls )
+			{
+				// INIT
+				vstack.on_enter(*collector, 100, (void *)0x12345678);
+				vstack.on_exit(*collector, 10010);
+				collector->flush();
+				collector->read_collected(acceptor);
+
+				// ACT
+				collector->read_collected(acceptor);
+				collector->read_collected(acceptor);
+
+				// ASSERT
+				assert_equal(1u, acceptor_object.collected.size());
+			}
+
+
+			test( CollectEntryExitOnNestingFunction )
+			{
+				// ACT
+				vstack.on_enter(*collector, 100, (void *)0x12345678);
+					vstack.on_enter(*collector, 110, (void *)0xABAB00);
+					vstack.on_exit(*collector, 10010);
+					vstack.on_enter(*collector, 10011, (void *)0x12345678);
+					vstack.on_exit(*collector, 100100);
+				vstack.on_exit(*collector, 100105);
+
+				collector->flush();
+				collector->read_collected(acceptor);
+
+				// ASSERT
+				call_record reference[] = {
+					{ 100, (void *)0x12345678 },
+						{ 110, (void *)0xABAB00 }, { 10010, 0 },
+						{ 10011, (void *)0x12345678 }, { 100100, 0 },
+					{ 100105, 0 },
+				};
+
+				assert_equal(reference, acceptor_object.collected[0]);
+			}
+
+
+			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
+			{
+				// INIT
+				calls_collector_thread_mb c1(1), c2(1);
+				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
+
+				// ACT
+				on_enter(c1, return_address + 0, 0, 0);
+				on_enter(c2, return_address + 1, 0, 0);
+
+				// ACT / ASSERT
+				assert_equal(return_address[0], on_exit(c1, return_address + 0, 0));
+				assert_equal(return_address[1], on_exit(c2, return_address + 1, 0));
+			}
+
+
+			test( ReturnAddressesAreStoredByValue )
+			{
+				// INIT
+				calls_collector_thread_mb c1(1), c2(1);
+				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
+
+				on_enter(c1, return_address + 0, 0, 0);
+				on_enter(c2, return_address + 1, 0, 0);
+
+				// ACT
+				return_address[0] = 0, return_address[1] = 0;
+
+				// ACT / ASSERT
+				assert_equal((const void *)0x122211, on_exit(c1, return_address + 0, 0));
+				assert_equal((const void *)0xFF00FF00, on_exit(c2, return_address + 1, 0));
+			}
+
+
+			test( ReturnAddressesAreReturnedInLIFOOrderForNestedCalls )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+					(const void *)0x5F00FF00, (const void *)0x5F00FF00,
+				};
+
+				// ACT
+				on_enter(*collector, return_address + 5, 0, 0);
+				on_enter(*collector, return_address + 3, 0, 0);
+				on_enter(*collector, return_address + 2, 0, 0);
+				on_enter(*collector, return_address + 1, 0, 0);
+				on_enter(*collector, return_address + 0, 0, 0);
+
+				// ACT / ASSERT
+				assert_equal(return_address[0], on_exit(*collector, return_address + 0, 0));
+				assert_equal(return_address[1], on_exit(*collector, return_address + 1, 0));
+				assert_equal(return_address[2], on_exit(*collector, return_address + 2, 0));
+				assert_equal(return_address[3], on_exit(*collector, return_address + 3, 0));
+				assert_equal(return_address[5], on_exit(*collector, return_address + 5, 0));
+			}
+
+
+			test( ReturnAddressIsPreservedForTailCallOptimization )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+				};
+
+				// ACT
+				on_enter(*collector, return_address + 2, 0, 0);
+				on_enter(*collector, return_address + 1, 0, 0);
+				return_address[1] = (const void *)0x12345;
+				on_enter(*collector, return_address + 1, 0, 0);
+				on_enter(*collector, return_address + 0, 0, 0);
+				return_address[2] = (const void *)0x52345;
+				on_enter(*collector, return_address + 0, 0, 0);
+
+				// ACT / ASSERT
+				assert_equal((const void *)0x122211, on_exit(*collector, return_address + 0, 0));
+				assert_equal((const void *)0xFF00FF00, on_exit(*collector, return_address + 1, 0));
+				assert_equal((const void *)0x222211, on_exit(*collector, return_address + 2, 0));
+			}
+
+
+			test( FunctionExitIsRecordedOnTailCallOptimization )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+				};
+				collection_acceptor a;
+
+				// ACT
+				on_enter(*collector, return_address + 0, 0, (void *)1);
+				on_enter(*collector, return_address + 1, 11, (void *)2);
+				return_address[1] = (const void *)0x12345;
+				on_enter(*collector, return_address + 1, 120, (void *)3);
+
+				// ASSERT
+				collector->flush();
+				collector->read_collected(a.get_reader());
+
+				call_record reference1[] = {
+					{ 0, (void *)1 },
+						{ 11, (void *)2 }, { 120, 0 },
+						{ 120, (void *)3 },
+				};
+
+				assert_equal(reference1, a.collected[0]);
+
+				// ACT
+				on_enter(*collector, return_address + 2, 140, (void *)4);
+				on_enter(*collector, return_address + 3, 150, (void *)5);
+				return_address[3] = (const void *)0x777;
+				on_enter(*collector, return_address + 3, 1000, (void *)6);
+
+				// ASSERT
+				collector->flush();
+				collector->read_collected(a.get_reader());
+
+				call_record reference2[] = {
+							{ 140, (void *)4 },
+								{ 150, (void *)5 }, { 1000, 0 },
+								{ 1000, (void *)6 },
+				};
+
+				assert_equal(reference2, a.collected[1]);
+			}
+
+
+			test( StackGetsUnwoundOnSkippedFunctionExitsAccordinglyToTheStackPointer )
+			{
+				// INIT
+				const void *return_address[] = {
+					(const void *)0x122211, (const void *)0xFF00FF00,
+					(const void *)0x222211, (const void *)0x5F00FF00,
+					(const void *)0x5F9FF11, (const void *)0x0,
+				};
+				collection_acceptor a;
+
+				on_enter(*collector, return_address + 4, 0, (void *)1);
+				on_enter(*collector, return_address + 3, 11, (void *)1);
+				on_enter(*collector, return_address + 2, 19191911, (void *)1);
+				on_enter(*collector, return_address + 1, 19192911, (void *)1);
+				on_enter(*collector, return_address + 0, 19193911, (void *)1);
+
+				// ACT / ASSERT (two entries at once)
+				assert_equal((void *)0xFF00FF00, on_exit(*collector, return_address + 1, 19195911));
+
+				// ASSERT
+				collector->flush();
+				collector->read_collected(a.get_reader());
+
+				call_record reference1[] = {
+					{ 0, (void *)1 },
+						{ 11, (void *)1 },
+							{ 19191911, (void *)1 },
+								{ 19192911, (void *)1 },
+									{ 19193911, (void *)1 },
+									{ 19195911, 0 },
+								{ 19195911, 0 },
+				};
+
+				assert_equal(reference1, a.collected[0]);
+
+				// ACT / ASSERT (three entries, we go above the tracked stack - this happen with callee-emptied conventions)
+				assert_equal((void *)0x5F9FF11, on_exit(*collector, return_address + 5, 29195911));
+
+				// ASSERT
+				collector->flush();
+				collector->read_collected(a.get_reader());
+
+				call_record reference2[] = {
+							{ 29195911, 0 },
+						{ 29195911, 0 },
+					{ 29195911, 0 },
+				};
+
+				assert_equal(reference2, a.collected[1]);
+			}
+
 		end_test_suite
 	}
 }

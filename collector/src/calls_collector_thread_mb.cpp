@@ -36,6 +36,10 @@ namespace micro_profiler
 			_empty_buffers(buffers_number(trace_limit))
 	{
 		_ptr = _active_buffer->data, _n_left = buffer_size;
+
+		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
+		_return_stack.push_back(re);
+
 		for (size_t n = buffers_number(trace_limit) - 1; n--; )
 		{
 			buffer_ptr b(new buffer);
@@ -45,6 +49,40 @@ namespace micro_profiler
 
 	calls_collector_thread_mb::~calls_collector_thread_mb()
 	{	}
+
+	void calls_collector_thread_mb::on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw()
+	{
+		if (_return_stack.back().stack_ptr != stack_ptr)
+		{
+			// Regular nesting...
+			_return_stack.push_back();
+
+			return_entry &e = _return_stack.back();
+
+			e.stack_ptr = stack_ptr;
+			e.return_address = *stack_ptr;
+		}
+		else
+		{
+			// Tail-call optimization...
+			track(0, timestamp);
+		}
+		track(callee, timestamp);
+	}
+
+	const void *calls_collector_thread_mb::on_exit(const void **stack_ptr, timestamp_t timestamp) throw()
+	{
+		const void *return_address;
+		
+		do
+		{
+			return_address = _return_stack.back().return_address;
+
+			_return_stack.pop_back();
+			track(0, timestamp);
+		} while (_return_stack.back().stack_ptr <= stack_ptr);
+		return return_address;
+	}
 
 	FORCE_NOINLINE void calls_collector_thread_mb::flush()
 	{

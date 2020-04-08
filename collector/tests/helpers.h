@@ -9,12 +9,17 @@ namespace micro_profiler
 {
 	class calls_collector;
 	class calls_collector_thread;
+	class calls_collector_thread_mb;
 
 	namespace tests
 	{
 		void on_enter(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp,
 			const void *callee);
 		const void *on_exit(calls_collector_thread &collector, const void **stack_ptr, timestamp_t timestamp);
+
+		void on_enter(calls_collector_thread_mb &collector, const void **stack_ptr, timestamp_t timestamp,
+			const void *callee);
+		const void *on_exit(calls_collector_thread_mb &collector, const void **stack_ptr, timestamp_t timestamp);
 
 		void on_enter(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp, const void *callee);
 		const void *on_exit(calls_collector &collector, const void **stack_ptr, timestamp_t timestamp);

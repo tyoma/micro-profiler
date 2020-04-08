@@ -22,6 +22,7 @@
 
 #include <collector/types.h>
 #include <common/noncopyable.h>
+#include <common/pod_vector.h>
 #include <functional>
 #include <mt/event.h>
 #include <patcher/platform.h>
@@ -46,6 +47,9 @@ namespace micro_profiler
 		explicit calls_collector_thread_mb(size_t trace_limit);
 		~calls_collector_thread_mb();
 
+		void on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw();
+		const void *on_exit(const void **stack_ptr, timestamp_t timestamp) throw();
+
 		void track(const void *callee, timestamp_t timestamp) throw();
 
 		void flush();
@@ -56,6 +60,7 @@ namespace micro_profiler
 
 		typedef std::unique_ptr<buffer> buffer_ptr;
 		typedef polyq::circular_buffer< buffer_ptr, polyq::static_entry<buffer_ptr> > buffers_queue_t;
+		typedef pod_vector<return_entry> return_stack_t;
 
 	private:
 		static size_t buffers_number(size_t trace_limit);
@@ -63,6 +68,7 @@ namespace micro_profiler
 	private:
 		call_record *_ptr;
 		unsigned int _n_left;
+		return_stack_t _return_stack;
 		buffer_ptr _active_buffer;
 		buffers_queue_t _ready_buffers, _empty_buffers;
 		mt::event _continue;

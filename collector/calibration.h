@@ -27,4 +27,8 @@ namespace micro_profiler
 	class calls_collector;
 
 	overhead calibrate_overhead(calls_collector &collector, size_t iterations);
+
+	void empty_call();
+	void empty_call_instrumented();
+	void call_empty_call_instrumented();
 }

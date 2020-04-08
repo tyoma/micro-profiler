@@ -18,13 +18,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-extern "C" void __cyg_profile_func_enter(void *callee, void * call_site);
-extern "C" void __cyg_profile_func_exit(void * callee, void * call_site);
+#include <collector/calibration.h>
 
-namespace micro_profiler
-{
-	void empty_call();
-
-	void call_empty_call()
-	{	empty_call();	}
-}
+void micro_profiler::call_empty_call_instrumented()
+{	empty_call_instrumented();	}

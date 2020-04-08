@@ -20,18 +20,22 @@
 
 #include <collector/calibration.h>
 
+#include <collector/analyzer.h>
 #include <collector/calls_collector.h>
 #include <common/time.h>
 
 namespace micro_profiler
 {
-	void empty_call();
-	void call_empty_call();
-
 	namespace
 	{
+		struct null_reader : calls_collector_i::acceptor
+		{
+			virtual void accept_calls(unsigned int, const call_record *, size_t)
+			{ }
+		};
+
 		template <typename FunctionT>
-		void run_load(FunctionT *f, size_t iterations)
+		void run_load(FunctionT *volatile f, size_t iterations)
 		{
 			while (iterations--)
 				f();
@@ -40,35 +44,46 @@ namespace micro_profiler
 
 	overhead calibrate_overhead(calls_collector &collector, size_t iterations)
 	{
-		struct delay_evaluator : calls_collector_i::acceptor
+		null_reader nr;
+
+		for (int warmup_rounds = 10; warmup_rounds--; )
 		{
-			virtual void accept_calls(unsigned int, const call_record *calls, size_t count)
-			{
-				const size_t count2 = count;
+			run_load(&empty_call_instrumented, iterations);
+//			collector.flush();
+			collector.read_collected(nr);
+		}
 
-				inner = 0;
-				for (const call_record *i = calls; count >= 2; count -= 2, i += 2)
-					inner += (i + 1)->timestamp - i->timestamp;
-				inner /= count2 / 2;
-			}
-
-			timestamp_t inner;
-		} de;
-
+		timestamp_t start_ref = read_tick_counter();
 		run_load(&empty_call, iterations);
-		collector.read_collected(de);
-		run_load(&empty_call, iterations);
-		collector.read_collected(de);
+		timestamp_t end_ref = read_tick_counter();
 
 		timestamp_t start = read_tick_counter();
-		run_load(&empty_call, iterations);
+		run_load(&empty_call_instrumented, iterations);
 		timestamp_t end = read_tick_counter();
-		collector.read_collected(de);
 
-#ifdef __arm__
-		return overhead((end - start) / iterations / 2, (end - start) / iterations / 2);
-#else
-		return overhead(de.inner, (end - start) / iterations - de.inner);
-#endif
+		analyzer a(overhead(0, 0));
+
+//		collector.flush();
+		collector.read_collected(a);
+
+		if (1u == a.size())
+		{
+			const thread_analyzer &aa = a.begin()->second;
+
+			if (1u == aa.size())
+			{
+				const statistic_types::function_detailed &f = aa.begin()->second;
+				const timestamp_t inner = f.inclusive_time / f.times_called;
+				const timestamp_t total = ((end - start) - (end_ref - start_ref)) / f.times_called;
+
+				printf("MicroProfiler overhead (ticks): inner=%lld, total_original=%lld, total=%lld\n",
+					inner, (end_ref - start_ref) / f.times_called, total);
+				return overhead(inner, total - inner);
+			}
+		}
+		return overhead(0, 0);
 	}
+
+	void empty_call()
+	{	}
 }

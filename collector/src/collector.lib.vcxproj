@@ -59,7 +59,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\analyzer.h" />
-    <ClInclude Include="..\calibration.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\calls_collector_thread_mb.h" />

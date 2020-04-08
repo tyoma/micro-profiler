@@ -96,6 +96,7 @@
     <Manifest Include="com.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\calibration.h" />
     <ClInclude Include="detour.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>

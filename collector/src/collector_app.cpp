@@ -20,7 +20,6 @@
 
 #include <collector/collector_app.h>
 
-#include <collector/calibration.h>
 #include <collector/module_tracker.h>
 #include <collector/statistics_bridge.h>
 #include <collector/serialization.h>

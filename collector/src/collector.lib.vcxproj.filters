@@ -50,7 +50,6 @@
     <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
-    <ClInclude Include="..\calibration.h" />
     <ClInclude Include="..\collector_app.h" />
     <ClInclude Include="..\module_tracker.h" />
     <ClInclude Include="..\shadow_stack.h" />

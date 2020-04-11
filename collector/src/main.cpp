@@ -75,7 +75,8 @@ namespace
 
 const size_t c_trace_limit = 5000000;
 shared_ptr<thread_monitor> g_thread_monitor = create_thread_monitor(mt::get_thread_callbacks());
-const shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit, *g_thread_monitor));
+const shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit, *g_thread_monitor,
+	mt::get_thread_callbacks()));
 extern "C" calls_collector *g_collector_ptr = g_collector.get();
 const overhead c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);
 collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead, g_thread_monitor);

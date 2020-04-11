@@ -45,7 +45,6 @@
     <ClCompile Include="calls_collector_thread.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
     </ClCompile>
-    <ClCompile Include="calls_collector_thread_mb.cpp" />
     <ClCompile Include="collector_app.cpp" />
     <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="module_tracker.cpp" />
@@ -61,7 +60,6 @@
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
-    <ClInclude Include="..\calls_collector_thread_mb.h" />
     <ClInclude Include="..\collector_app.h" />
     <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\module_tracker.h" />

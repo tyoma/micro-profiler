@@ -35,7 +35,7 @@ namespace micro_profiler
 				vector< pair< unsigned, vector<call_record> > > collected;
 			};
 
-			void emulate_n_calls(calls_collector &collector, size_t calls_number, void *callee)
+			void emulate_n_calls_no_flush(calls_collector &collector, size_t calls_number, void *callee)
 			{
 				virtual_stack vstack;
 				timestamp_t timestamp = timestamp_t();
@@ -45,6 +45,12 @@ namespace micro_profiler
 					vstack.on_enter(collector, timestamp++, callee);
 					vstack.on_exit(collector, timestamp++);
 				}
+			}
+
+			void emulate_n_calls(calls_collector &collector, size_t calls_number, void *callee)
+			{
+				emulate_n_calls_no_flush(collector, calls_number, callee);
+				collector.flush();
 			}
 
 			void emulate_n_calls_nostack(calls_collector &collector, size_t calls_number, void *callee)
@@ -57,6 +63,7 @@ namespace micro_profiler
 					collector.on_enter_nostack(timestamp++, callee);
 					collector.on_exit_nostack(timestamp++);
 				}
+				collector.flush();
 			}
 		}
 
@@ -64,12 +71,13 @@ namespace micro_profiler
 		begin_test_suite( CallsCollectorTests )
 
 			virtual_stack vstack;
-			auto_ptr<calls_collector> collector;
 			mocks::thread_monitor threads;
+			mocks::thread_callbacks tcallbacks;
+			auto_ptr<calls_collector> collector;
 
 			init( ConstructCollector )
 			{
-				collector.reset(new calls_collector(1000, threads));
+				collector.reset(new calls_collector(1000, threads, tcallbacks));
 			}
 
 			test( CollectNothingOnNoCalls )
@@ -78,6 +86,13 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
+				collector->read_collected(a);
+
+				// ASSERT
+				assert_is_empty(a.collected);
+
+				// ACT
+				collector->flush();
 				collector->read_collected(a);
 
 				// ASSERT
@@ -93,6 +108,7 @@ namespace micro_profiler
 				// ACT
 				vstack.on_enter(*collector, 100, (void *)0x12345678);
 				vstack.on_exit(*collector, 10010);
+				collector->flush();
 				collector->read_collected(a);
 
 				// ASSERT
@@ -114,6 +130,7 @@ namespace micro_profiler
 				// ACT
 				collector->on_enter_nostack(100, (void *)0x12345678);
 				collector->on_exit_nostack(10010);
+				collector->flush();
 				collector->read_collected(a);
 
 				// ASSERT
@@ -130,6 +147,7 @@ namespace micro_profiler
 				collector->on_exit_nostack(100001);
 				collector->on_enter_nostack(110000, (void *)0x1100001);
 				collector->on_exit_nostack(110002000000);
+				collector->flush();
 				collector->read_collected(a);
 
 				// ASSERT
@@ -150,6 +168,7 @@ namespace micro_profiler
 
 				vstack.on_enter(*collector, 100, (void *)0x12345678);
 				vstack.on_exit(*collector, 10010);
+				collector->flush();
 				collector->read_collected(a);
 
 				// ACT
@@ -251,6 +270,7 @@ namespace micro_profiler
 					vstack.on_enter(*collector, 10011, (void *)0x12345678);
 					vstack.on_exit(*collector, 100100);
 				vstack.on_exit(*collector, 100105);
+				collector->flush();
 				collector->read_collected(a);
 
 				// ASSERT
@@ -265,65 +285,78 @@ namespace micro_profiler
 			}
 
 
-			test( MaxTraceLengthIsLimited )
+			test( ThreadDataIsFlushedOnThreadExit )
 			{
 				// INIT
-				calls_collector c1(67, threads), c2(123, threads), c3(127, threads);
-				collection_acceptor a1, a2, a3;
-
-				// ACT (blockage during this test is equivalent to the failure)
-				mt::thread t1(bind(&emulate_n_calls, ref(c1), 670, (void *)0x12345671));
-				mt::thread t2(bind(&emulate_n_calls, ref(c2), 1230, (void *)0x12345672));
-				mt::thread t3(bind(&emulate_n_calls, ref(c3), 635, (void *)0x12345673));
-
-				while (a1.total_entries < 1340)
-				{
-					mt::this_thread::sleep_for(mt::milliseconds(30));
-					c1.read_collected(a1);
-				}
-				while (a2.total_entries < 2460)
-				{
-					mt::this_thread::sleep_for(mt::milliseconds(30));
-					c2.read_collected(a2);
-				}
-				while (a3.total_entries < 1270)
-				{
-					mt::this_thread::sleep_for(mt::milliseconds(30));
-					c3.read_collected(a3);
-				}
-
-				// ASSERT
-				assert_equal(20u, a1.collected.size());
-				assert_equal(threads.get_id(t1.get_id()), a1.collected[0].first);
-				assert_equal(20u, a2.collected.size());
-				assert_equal(threads.get_id(t2.get_id()), a2.collected[0].first);
-				assert_equal(10u, a3.collected.size());
-				assert_equal(threads.get_id(t3.get_id()), a3.collected[0].first);
-
-				// INIT
-				a1.collected.clear();
-				a2.collected.clear();
-				a3.collected.clear();
+				mt::thread t1(bind(&emulate_n_calls_no_flush, ref(*collector), 5, (void *)0x12345671));
+				mt::thread::id tid1 = t1.get_id();
+				mt::thread t2(bind(&emulate_n_calls_no_flush, ref(*collector), 7, (void *)0x12345678));
+				mt::thread::id tid2 = t2.get_id();
+				collection_acceptor a;
 
 				// ACT
 				t1.join();
 				t2.join();
-				t3.join();
-				c1.read_collected(a1);
-				c2.read_collected(a2);
-				c3.read_collected(a3);
+				collector->read_collected(a);
 
-				// ASSERT (no more calls were recorded)
-				assert_is_empty(a1.collected);
-				assert_is_empty(a2.collected);
-				assert_is_empty(a3.collected);
+				// ASSERT
+				assert_is_empty(a.collected);
+
+				// ACT
+				tcallbacks.invoke_destructors(tid1);
+				collector->read_collected(a);
+
+				// ASSERT
+				assert_equal(1u, a.collected.size());
+				assert_equal(threads.get_id(tid1), a.collected[0].first);
+				assert_equal(10u, a.collected[0].second.size());
+
+				// ACT
+				tcallbacks.invoke_destructors(tid2);
+				collector->read_collected(a);
+
+				// ASSERT
+				assert_equal(2u, a.collected.size());
+				assert_equal(threads.get_id(tid2), a.collected[1].first);
+				assert_equal(14u, a.collected[1].second.size());
+			}
+
+
+			test( MaxTraceLengthIsLimited )
+			{
+				// INIT
+				calls_collector c1(3000, threads, mt::get_thread_callbacks()),
+					c2(10000, threads, mt::get_thread_callbacks());
+				collection_acceptor a1, a2;
+				unsigned n1 = 0, n2 = 0;
+
+				// ACT (blockage during this test is equivalent to the failure)
+				mt::thread t1(bind(&emulate_n_calls, ref(c1), 100000, (void *)0x12345671));
+				mt::thread t2(bind(&emulate_n_calls, ref(c2), 100000, (void *)0x12345672));
+
+				mt::thread t1c([&] {
+					while (a1.total_entries < 200000)
+						c1.read_collected(a1), ++n1, mt::this_thread::sleep_for(mt::milliseconds(10));
+				});
+				mt::thread t2c([&] {
+					while (a2.total_entries < 200000)
+						c2.read_collected(a2), ++n2, mt::this_thread::sleep_for(mt::milliseconds(10));
+				});
+
+				t1.join();
+				t1c.join();
+				t2.join();
+				t2c.join();
+
+				// ASSERT (a very-very approximate test)
+				assert_is_true(n2 < n1);
 			}
 
 
 			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
 			{
 				// INIT
-				calls_collector c1(1000, threads), c2(1000, threads);
+				calls_collector c1(1000, threads, tcallbacks), c2(1000, threads, tcallbacks);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT

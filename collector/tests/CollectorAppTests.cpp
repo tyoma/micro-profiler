@@ -360,6 +360,37 @@ namespace micro_profiler
 			}
 
 
+			test( CollectorIsFlushedOnDestroy )
+			{
+				// INIT
+				mocks::thread_monitor threads;
+				mocks::thread_callbacks tcallbacks;
+				shared_ptr<calls_collector> collector2(new calls_collector(100000, threads, tcallbacks));
+				mt::event updated;
+				vector<mocks::thread_statistics_map> updates;
+
+				state->updated = [&] (const mocks::thread_statistics_map &u) {
+					updates.push_back(u);
+					updated.set();
+				};
+
+				// ACT
+				mt::thread worker([&] {
+					collector_app app(factory, collector2, c_overhead, tmonitor);
+
+					collector2->on_enter_nostack(123456, addr(0x1234567));
+					collector2->on_exit_nostack(123460);
+				});
+				worker.join();
+
+				// ASSERT
+				assert_equal(1u, updates.size());
+				assert_equal(1u, updates[0].size());
+				assert_equal(1u, updates[0].begin()->second.size());
+				assert_equal(0x1234567u, updates[0].begin()->second.begin()->first);
+			}
+
+
 			test( MakeACallAndWaitForDataPost )
 			{
 				// INIT

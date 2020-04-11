@@ -74,6 +74,7 @@ namespace micro_profiler
 	{
 		if (_frontend_thread.get())
 		{
+			_collector->flush();
 			_exit.set();
 			_frontend_thread->join();
 			_frontend_thread.reset();

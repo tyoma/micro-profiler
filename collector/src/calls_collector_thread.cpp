@@ -18,21 +18,38 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-// Important! Compilation of this file implies NO SSE/SSE2 usage! (/arch:xxx for MSVC compiler)
-// Please, check Code Generation settings for this file!
-
 #include <collector/calls_collector_thread.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
+	struct calls_collector_thread::buffer
+	{
+		call_record data[calls_collector_thread::buffer_size];
+		unsigned size;
+	};
+
+
 	calls_collector_thread::calls_collector_thread(size_t trace_limit)
-		: _active_trace(&_traces[0]), _inactive_trace(&_traces[1]), _trace_limit(sizeof(call_record) * trace_limit)
+		: _max_buffers(buffers_required(trace_limit)), _ready_buffers(_max_buffers), _empty_buffers(_max_buffers)
 	{
 		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
 		_return_stack.push_back(re);
+
+		buffer_ptr b;
+
+		for (size_t n = _max_buffers - 1; n--; )
+		{
+			b.reset(new buffer);
+			_empty_buffers.produce(move(b), [] (int) {});
+		}
+		b.reset(new buffer);
+		start_buffer(b);
 	}
+
+	calls_collector_thread::~calls_collector_thread()
+	{	}
 
 	void calls_collector_thread::on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw()
 	{
@@ -54,7 +71,7 @@ namespace micro_profiler
 		track(callee, timestamp);
 	}
 
-	const void *calls_collector_thread::on_exit(const void ** stack_ptr, timestamp_t timestamp) throw()
+	const void *calls_collector_thread::on_exit(const void **stack_ptr, timestamp_t timestamp) throw()
 	{
 		const void *return_address;
 		
@@ -68,22 +85,43 @@ namespace micro_profiler
 		return return_address;
 	}
 
+	FORCE_NOINLINE void calls_collector_thread::flush()
+	{
+		_active_buffer->size = buffer_size - _n_left;
+		_ready_buffers.produce(move(_active_buffer), [] (int) {});
+		_empty_buffers.consume([this] (buffer_ptr &new_buffer) {
+			start_buffer(new_buffer);
+		}, [this] (int n) -> bool {
+			return !n ? _continue.wait(), true : true;
+		});
+	}
+
 	void calls_collector_thread::read_collected(const reader_t &reader)
 	{
-		trace_t *trace;
-		trace_t *const deduced_active_trace = &_traces[1] == _inactive_trace ? &_traces[0] : &_traces[1];
+		size_t n = _max_buffers; // Untested: even under a heavy load, analyzer thread shall be responsible.
+		buffer_ptr ready;
 
-		do
-			trace = deduced_active_trace;
-		while (!_active_trace.compare_exchange_strong(trace, _inactive_trace, mt::memory_order_relaxed));
-
-		_inactive_trace = trace;
-
-		if (_inactive_trace->byte_size() >= _trace_limit)
-			_continue.set();
-
-		if (_inactive_trace->size())
-			reader(_inactive_trace->data(), _inactive_trace->size());
-		_inactive_trace->clear();
+		for (; n-- && _ready_buffers.consume([&ready] (buffer_ptr &ready_) {
+			ready = move(ready_);
+		}, [] (int n) {
+			return !!n;
+		}); )
+		{
+			reader(ready->data, ready->size);
+			_empty_buffers.produce(move(ready), [this] (int n) {
+				if (!n)
+					_continue.set();
+			});
+		}
 	}
+
+	void calls_collector_thread::start_buffer(buffer_ptr &new_buffer) throw()
+	{
+		_active_buffer = move(new_buffer);
+		_ptr = _active_buffer->data;
+		_n_left = buffer_size;
+	}
+
+	size_t calls_collector_thread::buffers_required(size_t trace_limit) throw()
+	{	return 1u + (max<size_t>)((trace_limit - 1u) / buffer_size, 1u);	}
 }

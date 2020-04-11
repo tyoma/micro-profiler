@@ -7,6 +7,7 @@
     <ClInclude Include="..\thread.h" />
     <ClInclude Include="..\tls.h" />
     <ClInclude Include="..\chrono.h" />
+    <ClInclude Include="..\thread_callbacks.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

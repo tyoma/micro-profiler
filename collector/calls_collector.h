@@ -28,6 +28,11 @@
 #include <patcher/platform.h>
 #include <vector>
 
+namespace mt
+{
+	struct thread_callbacks;
+}
+
 namespace micro_profiler
 {
 	class calls_collector_thread;
@@ -50,7 +55,7 @@ namespace micro_profiler
 	class calls_collector : public calls_collector_i, noncopyable
 	{
 	public:
-		calls_collector(size_t trace_limit, thread_monitor &thread_monitor_);
+		calls_collector(size_t trace_limit, thread_monitor &thread_monitor_, mt::thread_callbacks &thread_callbacks);
 
 		virtual void read_collected(acceptor &a);
 
@@ -61,6 +66,8 @@ namespace micro_profiler
 
 		void on_enter_nostack(timestamp_t timestamp, const void *callee);
 		void on_exit_nostack(timestamp_t timestamp);
+
+		void flush();
 
 	private:
 		typedef std::vector< std::pair< unsigned int, std::shared_ptr<calls_collector_thread> > > call_traces_t;
@@ -73,6 +80,7 @@ namespace micro_profiler
 	private:
 		mt::tls<calls_collector_thread> _trace_pointers_tls;
 		thread_monitor &_thread_monitor;
+		mt::thread_callbacks &_thread_callbacks;
 		const size_t _trace_limit;
 		call_traces_t _call_traces;
 		mt::mutex _thread_blocks_mtx;

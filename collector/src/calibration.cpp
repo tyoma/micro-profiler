@@ -49,7 +49,7 @@ namespace micro_profiler
 		for (int warmup_rounds = 10; warmup_rounds--; )
 		{
 			run_load(&empty_call_instrumented, iterations);
-//			collector.flush();
+			collector.flush();
 			collector.read_collected(nr);
 		}
 
@@ -63,7 +63,7 @@ namespace micro_profiler
 
 		analyzer a(overhead(0, 0));
 
-//		collector.flush();
+		collector.flush();
 		collector.read_collected(a);
 
 		if (1u == a.size())

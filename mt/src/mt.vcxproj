@@ -40,6 +40,7 @@
     <ClInclude Include="..\event.h" />
     <ClInclude Include="..\mutex.h" />
     <ClInclude Include="..\thread.h" />
+    <ClInclude Include="..\thread_callbacks.h" />
     <ClInclude Include="..\tls.h" />
   </ItemGroup>
   <ItemGroup>

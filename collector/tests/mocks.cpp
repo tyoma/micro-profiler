@@ -11,6 +11,54 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
+			unsigned thread_callbacks::invoke_destructors()
+			{
+				unsigned n = 0;
+
+				for (unordered_map< mt::thread::id, vector<atexit_t> >::iterator i = _destructors.begin();
+					i != _destructors.end(); ++i)
+				{
+					while (!i->second.empty())
+					{
+						atexit_t d = i->second.back();
+
+						i->second.pop_back();
+						d();
+						n++;
+					}
+				}
+				return n;
+			}
+
+			unsigned thread_callbacks::invoke_destructors(mt::thread::id thread_id)
+			{
+				unsigned n = 0;
+				vector<atexit_t> handlers;
+
+				{
+					mt::lock_guard<mt::mutex> lock(_mutex);
+					handlers.swap(_destructors[thread_id]);
+				}
+
+				while (!handlers.empty())
+				{
+					atexit_t d = handlers.back();
+
+					handlers.pop_back();
+					d();
+					n++;
+				}
+				return n;
+			}
+
+			void thread_callbacks::at_thread_exit(const atexit_t &handler)
+			{
+				mt::lock_guard<mt::mutex> lock(_mutex);
+				_destructors[mt::this_thread::get_id()].push_back(handler);
+			}
+
+
+
 			thread_monitor::thread_monitor()
 				: _next_id(1)
 			{	}
@@ -40,7 +88,7 @@ namespace micro_profiler
 
 
 			tracer::tracer()
-				: calls_collector(10000, *this)
+				: calls_collector(10000, *this, *this)
 			{	}
 
 			void tracer::read_collected(acceptor &a)

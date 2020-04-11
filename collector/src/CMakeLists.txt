@@ -30,7 +30,6 @@ endif()
 set(COLLECTOR_LIB_SOURCES
 	analyzer.cpp
 	calls_collector.cpp
-	calls_collector_thread_mb.cpp
 	calls_collector_thread.cpp
 	collector_app.cpp
 	image_patch.cpp

@@ -1,5 +1,7 @@
 #include <collector/thread_monitor.h>
 
+#include "mocks.h"
+
 #include <test-helpers/helpers.h>
 #include <test-helpers/thread.h>
 
@@ -25,31 +27,6 @@ namespace micro_profiler
 				m.get_info(&v, &id, &id + 1);
 				return v.second;
 			}
-		}
-
-		namespace mocks
-		{
-			class thread_callbacks : public mt::thread_callbacks
-			{
-			public:
-				void invoke_destructors()
-				{
-					while (!_destructors.empty())
-					{
-						atexit_t d = _destructors.back();
-
-						_destructors.pop_back();
-						d();
-					}
-				}
-
-			private:
-				virtual void at_thread_exit(const atexit_t &handler)
-				{	_destructors.push_back(handler);	}
-
-			private:
-				vector<atexit_t> _destructors;
-			};
 		}
 
 

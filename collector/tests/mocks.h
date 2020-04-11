@@ -3,7 +3,9 @@
 #include <collector/calls_collector.h>
 #include <collector/thread_monitor.h>
 
+#include <mt/mutex.h>
 #include <mt/thread.h>
+#include <mt/thread_callbacks.h>
 #include <test-helpers/mock_frontend.h>
 #include <unordered_map>
 
@@ -13,6 +15,21 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
+			class thread_callbacks : public mt::thread_callbacks
+			{
+			public:
+				unsigned invoke_destructors();
+				unsigned invoke_destructors(mt::thread::id thread_id);
+
+			private:
+				virtual void at_thread_exit(const atexit_t &handler);
+
+			private:
+				mt::mutex _mutex;
+				std::unordered_map< mt::thread::id, std::vector<atexit_t> > _destructors;
+			};
+
+
 			class thread_monitor : public micro_profiler::thread_monitor
 			{
 			public:
@@ -36,7 +53,8 @@ namespace micro_profiler
 				mutable mt::mutex _mtx;
 			};
 
-			class tracer : public thread_monitor, public calls_collector
+
+			class tracer : public thread_monitor, public thread_callbacks, public calls_collector
 			{
 			public:
 				tracer();

@@ -25,14 +25,16 @@
 
 #include <collector/calls_collector_thread.h>
 #include <collector/thread_monitor.h>
+#include <mt/thread_callbacks.h>
 
 using namespace std;
 using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	calls_collector::calls_collector(size_t trace_limit, thread_monitor &thread_monitor_)
-		: _thread_monitor(thread_monitor_), _trace_limit(trace_limit)
+	calls_collector::calls_collector(size_t trace_limit, thread_monitor &thread_monitor_,
+			mt::thread_callbacks &thread_callbacks)
+		: _thread_monitor(thread_monitor_), _thread_callbacks(thread_callbacks), _trace_limit(trace_limit)
 	{	}
 
 	void calls_collector::read_collected(acceptor &a)
@@ -63,6 +65,12 @@ namespace micro_profiler
 	void calls_collector::on_exit_nostack(timestamp_t timestamp)
 	{	get_current_thread_trace_guaranteed().track(0, timestamp);	}
 
+	void calls_collector::flush()
+	{
+		if (calls_collector_thread *trace = _trace_pointers_tls.get())
+			trace->flush();
+	}
+
 	calls_collector_thread &calls_collector::get_current_thread_trace()
 	{
 		if (calls_collector_thread *trace = _trace_pointers_tls.get())
@@ -79,6 +87,7 @@ namespace micro_profiler
 		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_trace_limit));
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
+		_thread_callbacks.at_thread_exit(bind(&calls_collector_thread::flush, trace));
 		_call_traces.push_back(make_pair(_thread_monitor.register_self(), trace));
 		_trace_pointers_tls.set(trace.get());
 		return *trace;

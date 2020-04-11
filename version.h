@@ -1,6 +1,6 @@
 #pragma once  
 #define MP_VERSION_MAJOR 1 
-#define MP_VERSION_MINOR 6 
+#define MP_VERSION_MINOR 7 
 #define MP_BUILD 621 
 #define MP_BRANCH 0 
 #define MAKE_TOKEN(token) #token 

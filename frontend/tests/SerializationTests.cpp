@@ -40,7 +40,7 @@ namespace micro_profiler
 					make_statistics(7741u, 31117, 3212, 31231123, 33213, 3112213),
 				};
 				statistic_types::map_detailed s1, s2;
-				deserialization_context context = { };
+				serialization_context_wire context = { };
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
 
 				ser(mkvector(batch1));
@@ -86,7 +86,7 @@ namespace micro_profiler
 					make_statistics_base(7741u, 31117, 3212, 31231123, 33213, 3112213),
 				};
 				statistic_types::map s;
-				deserialization_context context = { };
+				serialization_context_wire context = { };
 
 				ser(mkvector(batch1));
 				ser(mkvector(batch2));
@@ -131,7 +131,7 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> ser(buffer);
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
 				statistic_types::map_detailed s;
-				deserialization_context context = { &s, 0, 1 };
+				serialization_context_wire context = { &s, 0, 1 };
 
 				addressed_statistics initial[] = {
 					make_statistics(1221u, 17, 2012, 123123123, 32124, 2213),
@@ -171,7 +171,7 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> ser(buffer);
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
 				statistic_types::map_detailed s;
-				deserialization_context context = { &s, 0, 1 };
+				serialization_context_wire context = { &s, 0, 1 };
 
 				addressed_statistics initial[] = {
 					make_statistics(1221u, 0, 0, 0, 0, 0,
@@ -232,7 +232,7 @@ namespace micro_profiler
 				};
 
 				statistic_types::map_detailed s;
-				deserialization_context context = { &s, };
+				serialization_context_wire context = { &s, };
 
 				ser(mkvector(batch1));
 				ser(mkvector(batch2));

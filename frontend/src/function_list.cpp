@@ -324,7 +324,7 @@ namespace micro_profiler
 	functions_list::functions_list(shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads)
 		: base(*statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
-			_linked(new linked_statistics_list_t), _tick_interval(tick_interval)
+			_linked(new linked_statistics_list_t)
 	{	}
 
 	functions_list::~functions_list()

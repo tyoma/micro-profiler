@@ -69,10 +69,12 @@ namespace micro_profiler
 		const typename MapT::value_type &get_entry(index_type row) const;
 		virtual void on_updated();
 
+	protected:
+		double _tick_interval;
+
 	private:
 		filter_view<MapT> _filter;
 		std::shared_ptr< ordered_view< filter_view<MapT> > > _view;
-		const double _tick_interval;
 		const std::shared_ptr<symbol_resolver> _resolver;
 		const std::shared_ptr<threads_model> _threads;
 	};
@@ -82,7 +84,7 @@ namespace micro_profiler
 	template <typename BaseT, typename MapT>
 	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval,
 			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads)
-		: _filter(statistics), _view(new ordered_view< filter_view<MapT> >(_filter)), _tick_interval(tick_interval),
+		: _tick_interval(tick_interval), _filter(statistics), _view(new ordered_view< filter_view<MapT> >(_filter)),
 			_resolver(resolver), _threads(threads)
 	{ }
 

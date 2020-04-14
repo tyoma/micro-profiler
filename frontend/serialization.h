@@ -21,30 +21,51 @@
 #pragma once
 
 #include "function_list.h"
+#include "serialization_context.h"
 #include "symbol_resolver.h"
 #include "threads_model.h"
 
 #include <common/serialization.h>
 
+#pragma warning(disable: 4510; disable: 4610)
+
 namespace micro_profiler
 {
-	struct deserialization_context
+	struct function_list_serialization_proxy
 	{
-		statistic_types::map_detailed *map;
-		long_address_t caller;
-		unsigned int threadid;
+		functions_list &self;
+		double &tick_interval;
+		symbol_resolver &resolver;
+		statistic_types::map_detailed &statistics;
+		threads_model &threads;
+
+	private:
+		void operator =(const function_list_serialization_proxy &);
 	};
+
 
 	struct statistics_map_reader : strmd::indexed_associative_container_reader
 	{
 		template <typename ContainerT>
 		void prepare(ContainerT &/*data*/, size_t /*count*/)
-		{	}
+		{	_first = true;	}
+
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, std::vector<unsigned int> &threads)
+		{
+			serialization_context_wire context = { &data, };
+
+			archive(context.threadid); // key: thread_id
+			archive(data, context); // value: per-thread statistics
+			if (_first)
+				threads.clear(), _first = false;
+			threads.push_back(context.threadid);
+		}
 
 		template <typename ArchiveT, typename ContainerT>
-		void read_item(ArchiveT &archive, ContainerT &data, const deserialization_context &context)
+		void read_item(ArchiveT &archive, ContainerT &data, const serialization_context_wire &context)
 		{
-			deserialization_context new_context = context;
+			serialization_context_wire new_context = context;
 
 			archive(new_context.caller);
 			archive(data[function_key(new_context.caller, new_context.threadid)], new_context);
@@ -53,32 +74,6 @@ namespace micro_profiler
 		template <typename ArchiveT, typename ContainerT>
 		void read_item(ArchiveT &archive, ContainerT &data)
 		{	strmd::indexed_associative_container_reader::read_item(archive, data);	}
-	};
-
-	struct functions_list_reader
-	{
-		void prepare(functions_list &/*container*/, size_t /*count*/)
-		{	_first = true;	}
-
-		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, functions_list &container, std::vector<unsigned int> &threads)
-		{
-			deserialization_context context = { &*container._statistics, };
-
-			if (container.updates_enabled)
-			{
-				archive(context.threadid), archive(*container._statistics, context);
-				if (_first)
-					threads.clear(), _first = false;
-				threads.push_back(context.threadid);
-			}
-		}
-
-		void complete(functions_list &container)
-		{
-			if (container.updates_enabled)
-				container.on_updated();
-		}
 
 	private:
 		bool _first;
@@ -98,9 +93,52 @@ namespace micro_profiler
 
 
 
+	template <typename ArchiveT, typename ContextT>
+	void serialize(ArchiveT &archive, functions_list &data, unsigned int/*version*/, ContextT &context)
+	{
+		function_list_serialization_proxy proxy = {
+			data,
+			data._tick_interval,
+			*data.get_resolver(),
+			*data._statistics,
+			*data.get_threads()
+		};
+
+		archive(proxy, context);
+		if (data.updates_enabled)
+			data.on_updated();
+	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
+		std::vector<unsigned int> &context)
+	{
+		if (data.self.updates_enabled)
+			archive(data.statistics, context);
+	}
+
+	template <typename ArchiveT>
+	void reciprocal(ArchiveT &archive, double &value)
+	{
+		long long rv = static_cast<long long>(value ? 1 / value : 1);
+
+		archive(rv);
+		value = 1.0 / rv;
+	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
+		serialization_context_file_v4 &/*context*/)
+	{
+		reciprocal(archive, data.tick_interval);
+		archive(data.resolver);
+		archive(data.statistics);
+		archive(data.threads);
+	}
+
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, statistic_types::function &data, unsigned int/*version*/,
-		const deserialization_context &/*context*/)
+		const serialization_context_wire &/*context*/)
 	{
 		function_statistics v;
 
@@ -110,7 +148,7 @@ namespace micro_profiler
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, unsigned int/*version*/,
-		const deserialization_context &context)
+		const serialization_context_wire &context)
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
@@ -134,13 +172,6 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <>
-	struct type_traits<micro_profiler::functions_list>
-	{
-		typedef container_type_tag category;
-		typedef micro_profiler::functions_list_reader item_reader_type;
-	};
-
 	template <typename T>
 	struct type_traits< std::unordered_map<micro_profiler::function_key, T, micro_profiler::knuth_hash> >
 	{

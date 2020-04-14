@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2020 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
+//	Copyright (c) 2011-2020 by Artem A. Gevorkyan (gevorkyan.org)
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -20,38 +20,22 @@
 
 #pragma once
 
-#include "function_list.h"
-#include "serialization.h"
-#include "symbol_resolver.h"
+#include "primitives.h"
 
 namespace micro_profiler
 {
-	template <typename ArchiveT>
-	inline void save(ArchiveT &archive, const functions_list &model)
+	struct serialization_context_wire
 	{
-		serialization_context_file_v4 context;
+		statistic_types::map_detailed *map;
+		long_address_t caller;
+		unsigned int threadid;
+	};
 
-		archive(model, context);
-	}
-
-	template <typename ArchiveT>
-	inline std::shared_ptr<functions_list> load_functions_list(ArchiveT &archive)
+	struct serialization_context_file_v3
 	{
-		struct dummy_
-		{
-			static void dummy_request(unsigned int)
-			{	}
+	};
 
-			static void dummy_threads_request(const std::vector<unsigned int> &)
-			{	}
-		};
-
-		serialization_context_file_v4 context;
-		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver(&dummy_::dummy_request));
-		std::shared_ptr<threads_model> threads(new threads_model(&dummy_::dummy_threads_request));
-		std::shared_ptr<functions_list> fl(functions_list::create(1, resolver, threads));
-
-		archive(*fl, context);
-		return fl;
-	}
+	struct serialization_context_file_v4
+	{
+	};
 }

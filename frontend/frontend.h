@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "serialization_context.h"
+
 #include <common/noncopyable.h>
 #include <common/pod_vector.h>
 #include <common/protocol.h>
@@ -61,6 +63,6 @@ namespace micro_profiler
 		std::shared_ptr<threads_model> _threads;
 		std::shared_ptr<functions_list> _model;
 		pod_vector<byte> _buffer;
-		std::vector<unsigned int> _threads_buffer;
+		scontext::wire _serialization_context;
 	};
 }

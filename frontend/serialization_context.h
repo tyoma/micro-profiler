@@ -22,20 +22,30 @@
 
 #include "primitives.h"
 
+#include <vector>
+
 namespace micro_profiler
 {
-	struct serialization_context_wire
+	namespace scontext
 	{
-		statistic_types::map_detailed *map;
-		long_address_t caller;
-		unsigned int threadid;
-	};
+		struct detailed_threaded
+		{
+			statistic_types::map_detailed *map;
+			long_address_t caller;
+			unsigned int threadid;
+		};
 
-	struct serialization_context_file_v3
-	{
-	};
+		struct wire
+		{
+			std::vector<unsigned int> threads;
+		};
 
-	struct serialization_context_file_v4
-	{
-	};
+		struct file_v3
+		{
+		};
+
+		struct file_v4
+		{
+		};
+	}
 }

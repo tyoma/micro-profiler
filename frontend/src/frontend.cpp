@@ -85,8 +85,8 @@ namespace micro_profiler
 
 		case update_statistics_threaded:
 			if (_model)
-				archive(*_model, _threads_buffer);
-			get_threads()->notify_threads(_threads_buffer.begin(), _threads_buffer.end());
+				archive(*_model, _serialization_context);
+			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
 			break;
 
 		case module_metadata:

@@ -315,7 +315,7 @@ namespace micro_profiler
 			if (s.get())
 			{
 				strmd::deserializer<read_stream, packer> dser(*s);
-				shared_ptr<functions_list> model = load_functions_list(dser);
+				shared_ptr<functions_list> model = snapshot_load<scontext::file_v4>(dser);
 
 				ctx.frontend->load_session(*path, model);
 			}
@@ -345,7 +345,7 @@ namespace micro_profiler
 				if (s.get())
 				{
 					strmd::serializer<write_stream, packer> ser(*s);
-					save(ser, *model);
+					snapshot_save<scontext::file_v4>(ser, *model);
 				}
 			}
 		}

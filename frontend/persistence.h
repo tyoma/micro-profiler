@@ -26,16 +26,15 @@
 
 namespace micro_profiler
 {
-	template <typename ArchiveT>
-	inline void save(ArchiveT &archive, const functions_list &model)
+	template <typename ContextT, typename ArchiveT>
+	inline void snapshot_save(ArchiveT &archive, const functions_list &model)
 	{
-		serialization_context_file_v4 context;
-
+		ContextT context;
 		archive(model, context);
 	}
 
-	template <typename ArchiveT>
-	inline std::shared_ptr<functions_list> load_functions_list(ArchiveT &archive)
+	template <typename ContextT, typename ArchiveT>
+	inline std::shared_ptr<functions_list> snapshot_load(ArchiveT &archive)
 	{
 		struct dummy_
 		{
@@ -46,7 +45,7 @@ namespace micro_profiler
 			{	}
 		};
 
-		serialization_context_file_v4 context;
+		ContextT context;
 		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver(&dummy_::dummy_request));
 		std::shared_ptr<threads_model> threads(new threads_model(&dummy_::dummy_threads_request));
 		std::shared_ptr<functions_list> fl(functions_list::create(1, resolver, threads));

@@ -38,9 +38,6 @@ namespace micro_profiler
 		symbol_resolver &resolver;
 		statistic_types::map_detailed &statistics;
 		threads_model &threads;
-
-	private:
-		void operator =(const function_list_serialization_proxy &);
 	};
 
 
@@ -51,21 +48,21 @@ namespace micro_profiler
 		{	_first = true;	}
 
 		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, std::vector<unsigned int> &threads)
+		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, scontext::wire &context)
 		{
-			serialization_context_wire context = { &data, };
+			scontext::detailed_threaded inner_context = { &data, };
 
-			archive(context.threadid); // key: thread_id
-			archive(data, context); // value: per-thread statistics
+			archive(inner_context.threadid); // key: thread_id
+			archive(data, inner_context); // value: per-thread statistics
 			if (_first)
-				threads.clear(), _first = false;
-			threads.push_back(context.threadid);
+				context.threads.clear(), _first = false;
+			context.threads.push_back(inner_context.threadid);
 		}
 
 		template <typename ArchiveT, typename ContainerT>
-		void read_item(ArchiveT &archive, ContainerT &data, const serialization_context_wire &context)
+		void read_item(ArchiveT &archive, ContainerT &data, const scontext::detailed_threaded &context)
 		{
-			serialization_context_wire new_context = context;
+			scontext::detailed_threaded new_context = context;
 
 			archive(new_context.caller);
 			archive(data[function_key(new_context.caller, new_context.threadid)], new_context);
@@ -111,7 +108,7 @@ namespace micro_profiler
 
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
-		std::vector<unsigned int> &context)
+		scontext::wire &context)
 	{
 		if (data.self.updates_enabled)
 			archive(data.statistics, context);
@@ -128,7 +125,7 @@ namespace micro_profiler
 
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
-		serialization_context_file_v4 &/*context*/)
+		const scontext::file_v4 &/*context*/)
 	{
 		reciprocal(archive, data.tick_interval);
 		archive(data.resolver);
@@ -138,7 +135,7 @@ namespace micro_profiler
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, statistic_types::function &data, unsigned int/*version*/,
-		const serialization_context_wire &/*context*/)
+		const scontext::detailed_threaded &/*context*/)
 	{
 		function_statistics v;
 
@@ -148,7 +145,7 @@ namespace micro_profiler
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, unsigned int/*version*/,
-		const serialization_context_wire &context)
+		const scontext::detailed_threaded &context)
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);

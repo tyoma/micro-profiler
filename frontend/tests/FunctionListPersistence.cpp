@@ -28,13 +28,13 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
-			vector<unsigned int> dummy_context;
+			scontext::wire dummy_context;
 			
 			function<void (unsigned persistent_id)> get_requestor()
-			{	return [this] (unsigned /*persistent_id*/) { };	}
+			{	return [] (unsigned /*persistent_id*/) { };	}
 
 			function<void (const vector<unsigned> &)> get_requestor_threads()
-			{	return [this] (const vector<unsigned> &) { };	}
+			{	return [] (const vector<unsigned> &) { };	}
 
 			FunctionListPersistenceTests()
 				: ser(_buffer), dser(_buffer)
@@ -73,7 +73,7 @@ namespace micro_profiler
 				dser(*fl2, dummy_context);
 
 				// ACT
-				save(ser, *fl1);
+				snapshot_save<scontext::file_v4>(ser, *fl1);
 
 				// ASSERT
 				symbol_resolver r(get_requestor());
@@ -88,7 +88,7 @@ namespace micro_profiler
 				assert_equal("Amet", r.symbol_name_by_va(17));
 
 				// ACT
-				save(ser, *fl2);
+				snapshot_save<scontext::file_v4>(ser, *fl2);
 
 				// ASSERT
 				dser(ticks_per_second);
@@ -122,7 +122,7 @@ namespace micro_profiler
 				tmodel2->add(14, 113, "#3");
 
 				// ACT
-				save(ser, *fl1);
+				snapshot_save<scontext::file_v4>(ser, *fl1);
 
 				// ASSERT
 				long long dummy_frequency;
@@ -144,7 +144,7 @@ namespace micro_profiler
 				assert_equal(1212u, native_id);
 
 				// ACT
-				save(ser, *fl2);
+				snapshot_save<scontext::file_v4>(ser, *fl2);
 
 				// ASSERT
 				dser(dummy_frequency);
@@ -178,7 +178,7 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 
 				// ACT
-				save(ser, *fl);
+				snapshot_save<scontext::file_v4>(ser, *fl);
 
 				// ASSERT
 				symbol_resolver r(get_requestor());
@@ -193,7 +193,7 @@ namespace micro_profiler
 			}
 
 
-			test( FunctionListIsComletelyRestoredWithSymbols )
+			test( FunctionListIsCompletelyRestoredWithSymbols )
 			{
 				// INIT
 				pair<long_address_t, string> symbols[] = {
@@ -213,7 +213,7 @@ namespace micro_profiler
 				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), mkvector(s), threads);
 
 				// ACT
-				shared_ptr<functions_list> fl = load_functions_list(dser);
+				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
 				fl->set_order(columns::name, true);
 
 				// ASSERT

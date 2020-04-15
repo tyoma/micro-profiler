@@ -38,7 +38,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)libraries/agge;$(SolutionDir)libraries/wpl;$(SolutionDir)libraries/strmd;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <DisableSpecificWarnings>4996;4312;4503</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4996;4503;4510;4610;4512;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DisableLanguageExtensions>true</DisableLanguageExtensions>
     </ClCompile>
     <Link>

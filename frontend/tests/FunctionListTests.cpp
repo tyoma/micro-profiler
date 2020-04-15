@@ -36,8 +36,7 @@ namespace micro_profiler
 
 			const columns::main name_threadid[] = {	columns::name, columns::threadid,	};
 
-			timestamp_t test_ticks_per_second = 1;
-			const double c_tolerance = 0.000001;
+			const timestamp_t test_ticks_per_second = 1;
 
 			template <typename T>
 			wstring to_string(const T &value)
@@ -121,10 +120,10 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
-			vector<unsigned int> dummy_context;
+			scontext::wire dummy_context;
 
 			function<void (unsigned persistent_id)> get_requestor()
-			{	return [this] (unsigned /*persistent_id*/) { };	}
+			{	return [] (unsigned /*persistent_id*/) { };	}
 
 			FunctionListTests()
 				: ser(_buffer), dser(_buffer)
@@ -1718,7 +1717,7 @@ namespace micro_profiler
 				pair< unsigned, vector<unthreaded_addressed_function> > data2[] = {
 					make_pair(3, mkvector(functions)), make_pair(2, mkvector(functions)), make_pair(9112, mkvector(functions)),
 				};
-				vector<unsigned> collected_ids;
+				scontext::wire collected_ids;
 
 				ser(mkvector(data1));
 				ser(mkvector(data2));
@@ -1729,7 +1728,7 @@ namespace micro_profiler
 				// ASSERT
 				unsigned reference1[] = { 2u, 3u, };
 
-				assert_equivalent(reference1, collected_ids);
+				assert_equivalent(reference1, collected_ids.threads);
 
 				// ACT
 				dser(*fl, collected_ids);
@@ -1737,7 +1736,7 @@ namespace micro_profiler
 				// ASSERT
 				unsigned reference2[] = { 2u, 3u, 9112u, };
 
-				assert_equivalent(reference2, collected_ids);
+				assert_equivalent(reference2, collected_ids.threads);
 			}
 
 

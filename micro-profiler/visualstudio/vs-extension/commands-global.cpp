@@ -65,6 +65,13 @@ namespace micro_profiler
 			const wstring c_separator = L" ";
 			const wstring c_inherit = L"%(AdditionalOptions)";
 
+			string extension(const string &filename)
+			{
+				size_t pos = filename.find_last_of('.');
+
+				return pos != string::npos ? filename.substr(pos) : string();
+			}
+
 			void trim_space(wstring &text)
 			{
 				size_t first = text.find_first_not_of(L' ');
@@ -314,8 +321,10 @@ namespace micro_profiler
 
 			if (s.get())
 			{
+				const string ext = extension(*path);
 				strmd::deserializer<read_stream, packer> dser(*s);
-				shared_ptr<functions_list> model = snapshot_load<scontext::file_v4>(dser);
+				shared_ptr<functions_list> model = !stricmp(ext.c_str(), ".mpstat3")
+					? snapshot_load<scontext::file_v3>(dser) : snapshot_load<scontext::file_v4>(dser);
 
 				ctx.frontend->load_session(*path, model);
 			}

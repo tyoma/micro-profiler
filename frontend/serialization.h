@@ -125,6 +125,17 @@ namespace micro_profiler
 
 	template <typename ArchiveT>
 	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
+		const scontext::file_v3 &/*context*/)
+	{
+		scontext::detailed_threaded context = { &data.statistics, 0, 0 };
+
+		reciprocal(archive, data.tick_interval);
+		archive(data.resolver);
+		archive(data.statistics, context);
+	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
 		const scontext::file_v4 &/*context*/)
 	{
 		reciprocal(archive, data.tick_interval);

@@ -26,7 +26,6 @@ namespace micro_profiler
 			vector_adapter _buffer;
 			strmd::serializer<vector_adapter, packer> ser;
 			strmd::deserializer<vector_adapter, packer> dser;
-			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
 			scontext::wire dummy_context;
 			
@@ -42,7 +41,6 @@ namespace micro_profiler
 
 			init( CreatePrerequisites )
 			{
-				resolver.reset(new mocks::symbol_resolver);
 				tmodel.reset(new mocks::threads_model);
 			}
 
@@ -221,6 +219,41 @@ namespace micro_profiler
 				wstring reference[][4] = {
 					{	L"Amet", L"17000", L"127", L"0s",	},
 					{	L"Ipsum", L"19001", L"12", L"0s",	},
+					{	L"Lorem", L"", L"123", L"2s",	},
+					{	L"dolor", L"", L"12000", L"500ms",	},
+				};
+
+				assert_table_equivalent(ordering, reference, *fl);
+			}
+
+			test( FunctionListIsCompletelyRestoredWithSymbolsV3 )
+			{
+				typedef pair<long_address_t, unthreaded_statistic_types::function_detailed> addressed_function;
+
+				// INIT
+				pair<long_address_t, string> symbols[] = {
+					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
+				};
+				addressed_function s[] = {
+					make_statistics(5ull, 123, 0, 1000, 0, 0),
+					make_statistics(13ull, 12, 0, 0, 0, 0),
+					make_statistics(17ull, 127, 0, 0, 0, 0),
+					make_statistics(123ull, 12000, 0, 250, 0, 0),
+				};
+
+				ser(500);
+				ser(*mocks::symbol_resolver::create(symbols));
+				ser(mkvector(s));
+
+				// ACT
+				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v3>(dser);
+				fl->set_order(columns::name, true);
+
+				// ASSERT
+				columns::main ordering[] = {	columns::name, columns::threadid, columns::times_called, columns::inclusive,	};
+				wstring reference[][4] = {
+					{	L"Amet", L"", L"127", L"0s",	},
+					{	L"Ipsum", L"", L"12", L"0s",	},
 					{	L"Lorem", L"", L"123", L"2s",	},
 					{	L"dolor", L"", L"12000", L"500ms",	},
 				};

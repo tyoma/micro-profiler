@@ -5,6 +5,7 @@
 #include "helpers.h"
 #include "mocks.h"
 
+#include <common/module.h>
 #include <common/time.h>
 #include <mt/event.h>
 #include <strmd/serializer.h>
@@ -186,7 +187,7 @@ namespace micro_profiler
 				initialized.wait();
 
 				// ASERT
-				assert_equal(get_current_process_executable(), id.executable);
+				assert_equal(get_current_executable(), id.executable);
 				assert_approx_equal(ticks_per_second(), id.ticks_per_second, 0.05);
 			}
 

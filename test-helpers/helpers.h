@@ -30,8 +30,6 @@ namespace micro_profiler
 
 		guid_t generate_id();
 
-		std::string get_current_process_executable();
-
 		class image : private std::shared_ptr<void>
 		{
 		public:

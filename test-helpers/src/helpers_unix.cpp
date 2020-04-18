@@ -4,8 +4,6 @@
 
 #include <common/path.h>
 #include <dlfcn.h>
-#include <link.h>
-#include <linux/limits.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -19,22 +17,31 @@ namespace micro_profiler
 	{
 		namespace
 		{
+#ifdef __APPLE__
+			const char c_library_ext[] = ".dylib";
+#else
+			const char c_library_ext[] = ".so";
+#endif
+
+
 			void *find_any_mapped_for(const string &name)
 			{
-				shared_ptr<FILE> f(fopen("/proc/self/maps", "r"), &fclose);
-				char line[1000] = { 0 };
-
-				while (fgets(line, sizeof(line) - 1, f.get()))
+				if (shared_ptr<FILE> f = shared_ptr<FILE>(fopen("/proc/self/maps", "r"), &fclose))
 				{
-					void *from, *to, *offset;
-					char rights[10], path[1000] = { 0 };
-					unsigned dummy;
+					char line[1000] = { 0 };
 
-					if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR " %s %" SCNxPTR " %x:%x %d %s\n",
-						&from, &to, rights, &offset, &dummy, &dummy, &dummy, path) > 0 && path[0])
+					while (fgets(line, sizeof(line) - 1, f.get()))
 					{
-						if (string(path).find(name) != string::npos)
-							return from;
+						void *from, *to, *offset;
+						char rights[10], path[1000] = { 0 };
+						unsigned dummy;
+
+						if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR " %s %" SCNxPTR " %x:%x %d %s\n",
+							&from, &to, rights, &offset, &dummy, &dummy, &dummy, path) > 0 && path[0])
+						{
+							if (string(path).find(name) != string::npos)
+								return from;
+						}
 					}
 				}
 				return 0;
@@ -42,8 +49,8 @@ namespace micro_profiler
 
 			string get_current_dir()
 			{
-				char path[PATH_MAX] = { 0 };
-				char *p = getcwd(path, PATH_MAX);
+				char path[4096] = { 0 };
+				char *p = getcwd(path, 4096);
 
 				assert_not_null(p);
 				return p;
@@ -63,22 +70,11 @@ namespace micro_profiler
 			}
 		}
 
-		string get_current_process_executable()
-		{
-			int n;
-			char path[1000] = {};
-
-			if (n = ::readlink("/proc/self/exe", path, sizeof(path) - 1), n == -1)
-				return string();
-			path[n] = 0;
-			return path;
-		}
-
 
 		image::image(string path)
 		{
-			if (path.find(".so") == string::npos)
-				path = path + ".so";
+			if (path.find(c_library_ext) == string::npos)
+				path = path + c_library_ext;
 			reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
 			if (!get())
 			{
@@ -91,6 +87,8 @@ namespace micro_profiler
 			void *addr = find_any_mapped_for(*path);
 			Dl_info di = { };
 
+			if (!addr)
+				addr = get();
 			::dladdr(addr, &di);
 			_base = static_cast<byte *>(di.dli_fbase);
 			_fullpath = path.front() != '/' ? get_current_dir() & path : path;

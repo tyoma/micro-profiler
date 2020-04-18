@@ -1,10 +1,12 @@
 #include <collector/statistics_bridge.h>
 
+#include <collector/module_tracker.h>
+
 #include "helpers.h"
 #include "mocks.h"
 
 #include <algorithm>
-#include <collector/module_tracker.h>
+#include <common/module.h>
 #include <common/path.h>
 #include <common/time.h>
 #include <test-helpers/comparisons.h>
@@ -84,7 +86,7 @@ namespace micro_profiler
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
 
 				// ASSERT
-				assert_equal(get_current_process_executable(), process_init.executable);
+				assert_equal(get_current_executable(), process_init.executable);
 				assert_approx_equal(ticks_per_second(), process_init.ticks_per_second, 0.01);
 			}
 

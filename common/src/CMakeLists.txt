@@ -26,9 +26,17 @@ elseif (UNIX)
 		file_id_unix.cpp
 		image_info_unix.cpp
 		memory_unix.cpp
-		module_linux.cpp
 		time_generic.cpp
-	)		
+	)
+	if (APPLE)
+		set(COMMON_SOURCES ${COMMON_SOURCES}
+			module_macos.cpp
+		)
+	else()
+		set(COMMON_SOURCES ${COMMON_SOURCES}
+			module_linux.cpp
+		)
+	endif()		
 endif()
 
 if (ANDROID)
@@ -39,6 +47,8 @@ if (ANDROID)
 			android-compat/src/dl_iterate_phdr.c
 		)
 	endif()
+elseif (APPLE)
+	include_directories(BEFORE macos-compat)
 endif()
 
 add_library(common STATIC ${COMMON_SOURCES})

@@ -21,14 +21,6 @@ namespace micro_profiler
 			}
 		}
 
-		string get_current_process_executable()
-		{
-			char fullpath[MAX_PATH + 1] = { };
-
-			::GetModuleFileNameA(NULL, fullpath, MAX_PATH);
-			return fullpath;
-		}
-
 
 		image::image(string path)
 			: shared_ptr<void>(::LoadLibraryA(path.c_str()), &::FreeLibrary)

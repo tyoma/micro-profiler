@@ -10,6 +10,7 @@
 namespace micro_profiler
 {
 	class symbol_resolver;
+	class threads_model;
 
 	namespace tests
 	{
@@ -80,11 +81,12 @@ namespace micro_profiler
 
 		template <typename ArchiveT, typename DataT>
 		inline void emulate_save(ArchiveT &archive, signed long long ticks_per_second, const symbol_resolver &resolver,
-			const DataT &data)
+			const DataT &data, const threads_model &threads)
 		{
 			archive(ticks_per_second);
 			archive(resolver);
 			archive(data);
+			archive(threads);
 		}
 
 		template <typename T, size_t size>

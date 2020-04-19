@@ -42,7 +42,7 @@ namespace micro_profiler
 			if (s.get())
 			{
 				strmd::serializer<write_stream, packer> ser(*s);
-				micro_profiler::save(ser, *model);
+				snapshot_save<scontext::file_v4>(ser, *model);
 			}
 		}
 

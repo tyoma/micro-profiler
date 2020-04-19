@@ -26,33 +26,31 @@
 
 namespace micro_profiler
 {
-	template <typename ArchiveT>
-	inline void save(ArchiveT &archive, const functions_list &model)
+	template <typename ContextT, typename ArchiveT>
+	inline void snapshot_save(ArchiveT &archive, const functions_list &model)
 	{
-		archive(static_cast<timestamp_t>(1 / model._tick_interval));
-		archive(*model.get_resolver());
-		archive(*model._statistics);
+		ContextT context;
+		archive(model, context);
 	}
 
-	template <typename ArchiveT>
-	inline std::shared_ptr<functions_list> load_functions_list(ArchiveT &archive)
+	template <typename ContextT, typename ArchiveT>
+	inline std::shared_ptr<functions_list> snapshot_load(ArchiveT &archive)
 	{
 		struct dummy_
 		{
 			static void dummy_request(unsigned int)
 			{	}
+
+			static void dummy_threads_request(const std::vector<unsigned int> &)
+			{	}
 		};
 
-		timestamp_t ticks_per_second;
+		ContextT context;
 		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver(&dummy_::dummy_request));
+		std::shared_ptr<threads_model> threads(new threads_model(&dummy_::dummy_threads_request));
+		std::shared_ptr<functions_list> fl(functions_list::create(1, resolver, threads));
 
-		archive(ticks_per_second);
-		archive(*resolver);
-
-		std::shared_ptr<functions_list> fl(functions_list::create(ticks_per_second, resolver, nullptr));
-
-		archive(*fl->_statistics);
-		fl->on_updated();
+		archive(*fl, context);
 		return fl;
 	}
 }

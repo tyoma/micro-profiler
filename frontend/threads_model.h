@@ -29,6 +29,8 @@
 
 namespace strmd
 {
+	template <typename StreamT, typename PackerT>
+	class serializer;
 	struct indexed_associative_container_reader;
 }
 
@@ -61,6 +63,8 @@ namespace micro_profiler
 		std::vector<unsigned int> _ids_buffer;
 
 	private:
+		template <typename StreamT, typename PackerT>
+		friend class strmd::serializer;
 		friend struct strmd::indexed_associative_container_reader;
 		friend struct threads_model_reader;
 	};

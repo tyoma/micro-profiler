@@ -24,6 +24,7 @@
 
 namespace micro_profiler
 {
+	struct serialization_context_file_v3;
 	class threads_model;
 
 	struct linked_statistics : wpl::ui::table_model
@@ -69,15 +70,12 @@ namespace micro_profiler
 		void on_updated();
 
 	private:
+		using base::_tick_interval;
 		std::shared_ptr<statistic_types::map_detailed> _statistics;
 		std::shared_ptr<linked_statistics_list_t> _linked;
-		double _tick_interval;
 
 	private:
-		friend struct functions_list_reader;
-		template <typename ArchiveT>
-		friend void save(ArchiveT &archive, const functions_list &model);
-		template <typename ArchiveT>
-		friend std::shared_ptr<functions_list> load_functions_list(ArchiveT &archive);
+		template <typename ArchiveT, typename ContextT>
+		friend void serialize(ArchiveT &archive, functions_list &model, unsigned int version, ContextT &context);
 	};
 }

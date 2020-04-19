@@ -21,64 +21,91 @@
 #pragma once
 
 #include "function_list.h"
+#include "serialization_context.h"
 #include "symbol_resolver.h"
 #include "threads_model.h"
 
 #include <common/serialization.h>
 
+#pragma warning(disable: 4510; disable: 4610)
+
 namespace micro_profiler
 {
-	struct deserialization_context
+	struct function_list_serialization_proxy
 	{
-		statistic_types::map_detailed *map;
-		long_address_t caller;
-		unsigned int threadid;
+		functions_list &self;
+		double &tick_interval;
+		symbol_resolver &resolver;
+		statistic_types::map_detailed &statistics;
+		threads_model &threads;
 	};
+
 
 	struct statistics_map_reader : strmd::indexed_associative_container_reader
 	{
 		template <typename ContainerT>
 		void prepare(ContainerT &/*data*/, size_t /*count*/)
-		{	}
+		{	_first = true;	}
 
-		template <typename ArchiveT, typename ContainerT>
-		void read_item(ArchiveT &archive, ContainerT &data, const deserialization_context &context)
+
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, scontext::wire &context)
 		{
-			deserialization_context new_context = context;
+			scontext::detailed_threaded inner_context;
+
+			archive(inner_context.threadid); // key: thread_id
+			archive(data, inner_context); // value: per-thread statistics
+			if (_first)
+				context.threads.clear(), _first = false;
+			context.threads.push_back(inner_context.threadid);
+		}
+
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, const scontext::detailed_threaded &context)
+		{
+			scontext::detailed_threaded new_context = { &data, 0, context.threadid };
 
 			archive(new_context.caller);
 			archive(data[function_key(new_context.caller, new_context.threadid)], new_context);
 		}
 
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, statistic_types::map &data, const scontext::detailed_threaded &context)
+		{
+			function_key callee_key(0, context.threadid);
+
+			archive(callee_key.first);
+			statistic_types::function &callee = data[callee_key];
+			archive(callee, context);
+			(*context.map)[callee_key].callers[function_key(context.caller, context.threadid)] = callee.times_called;
+		}
+
+
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, statistic_types::map_detailed &data)
+		{
+			std::pair<statistic_types::map_detailed *, function_key> caller_context;
+
+			caller_context.first = &data;
+			archive(caller_context.second);
+			archive(data[caller_context.second], caller_context);
+		}
+
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, statistic_types::map &data, std::pair<statistic_types::map_detailed *, function_key> &caller)
+		{
+			function_key callee_key;
+
+			archive(callee_key);
+			statistic_types::function &callee = data[callee_key];
+			archive(callee);
+			(*caller.first)[callee_key].callers[caller.second] = callee.times_called;
+		}
+
+
 		template <typename ArchiveT, typename ContainerT>
 		void read_item(ArchiveT &archive, ContainerT &data)
 		{	strmd::indexed_associative_container_reader::read_item(archive, data);	}
-	};
-
-	struct functions_list_reader
-	{
-		void prepare(functions_list &/*container*/, size_t /*count*/)
-		{	_first = true;	}
-
-		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, functions_list &container, std::vector<unsigned int> &threads)
-		{
-			deserialization_context context = { &*container._statistics, };
-
-			if (container.updates_enabled)
-			{
-				archive(context.threadid), archive(*container._statistics, context);
-				if (_first)
-					threads.clear(), _first = false;
-				threads.push_back(context.threadid);
-			}
-		}
-
-		void complete(functions_list &container)
-		{
-			if (container.updates_enabled)
-				container.on_updated();
-		}
 
 	private:
 		bool _first;
@@ -98,9 +125,63 @@ namespace micro_profiler
 
 
 
+	template <typename ArchiveT, typename ContextT>
+	void serialize(ArchiveT &archive, functions_list &data, unsigned int/*version*/, ContextT &context)
+	{
+		function_list_serialization_proxy proxy = {
+			data,
+			data._tick_interval,
+			*data.get_resolver(),
+			*data._statistics,
+			*data.get_threads()
+		};
+
+		archive(proxy, context);
+		if (data.updates_enabled)
+			data.on_updated();
+	}
+
 	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
+		scontext::wire &context)
+	{
+		if (data.self.updates_enabled)
+			archive(data.statistics, context);
+	}
+
+	template <typename ArchiveT>
+	void reciprocal(ArchiveT &archive, double &value)
+	{
+		long long rv = static_cast<long long>(value ? 1 / value : 1);
+
+		archive(rv);
+		value = 1.0 / rv;
+	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
+		const scontext::file_v3 &/*context*/)
+	{
+		scontext::detailed_threaded context = { &data.statistics, 0, 0 };
+
+		reciprocal(archive, data.tick_interval);
+		archive(data.resolver);
+		archive(data.statistics, context);
+	}
+
+	template <typename ArchiveT>
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
+		const scontext::file_v4 &/*context*/)
+	{
+		reciprocal(archive, data.tick_interval);
+		archive(data.resolver);
+		archive(data.statistics);
+		archive(data.threads);
+	}
+
+	template <typename ArchiveT, typename ContextT>
 	inline void serialize(ArchiveT &archive, statistic_types::function &data, unsigned int/*version*/,
-		const deserialization_context &/*context*/)
+		const ContextT &/*context*/)
 	{
 		function_statistics v;
 
@@ -108,13 +189,12 @@ namespace micro_profiler
 		data += v;
 	}
 
-	template <typename ArchiveT>
+	template <typename ArchiveT, typename ContextT>
 	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, unsigned int/*version*/,
-		const deserialization_context &context)
+		ContextT &context)
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
-		update_parent_statistics(*context.map, function_key(context.caller, context.threadid), data.callees);
 	}
 
 	template <typename ArchiveT>
@@ -134,13 +214,6 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <>
-	struct type_traits<micro_profiler::functions_list>
-	{
-		typedef container_type_tag category;
-		typedef micro_profiler::functions_list_reader item_reader_type;
-	};
-
 	template <typename T>
 	struct type_traits< std::unordered_map<micro_profiler::function_key, T, micro_profiler::knuth_hash> >
 	{

@@ -9,19 +9,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			shared_ptr<void> open_file(const char *path)
-			{
-				HANDLE hfile = ::CreateFileA(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-					OPEN_EXISTING, 0, NULL);
-
-				assert_not_equal(INVALID_HANDLE_VALUE, hfile);
-				return shared_ptr<void>(hfile, &::CloseHandle);
-			}
-		}
-
-
 		image::image(string path)
 			: shared_ptr<void>(::LoadLibraryA(path.c_str()), &::FreeLibrary)
 		{

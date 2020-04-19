@@ -33,7 +33,7 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer> dser;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
-			vector<unsigned int> dummy_context;
+			scontext::wire dummy_context;
 
 			FunctionListPiechartTests()
 				: ser(_buffer), dser(_buffer)
@@ -72,9 +72,9 @@ namespace micro_profiler
 
 				s[addr(5)].times_called = 123, s[addr(17)].times_called = 127, s[addr(13)].times_called = 12, s[addr(123)].times_called = 12000;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
 
-				shared_ptr<functions_list> fl = load_functions_list(dser);
+				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT
@@ -144,13 +144,13 @@ namespace micro_profiler
 
 				s[addr(5)].exclusive_time = 13, s[addr(17)].exclusive_time = 127, s[addr(13)].exclusive_time = 12;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl1 = load_functions_list(dser);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl1 = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
 				s[addr(123)].exclusive_time = 12000;
-				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl2 = load_functions_list(dser);
+				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl2 = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
 				// ACT
@@ -181,12 +181,12 @@ namespace micro_profiler
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
 				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl1 = load_functions_list(dser);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl1 = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m1 = fl1->get_column_series();
 				
-				emulate_save(ser, 1000, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl2 = load_functions_list(dser);
+				emulate_save(ser, 1000, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl2 = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m2 = fl2->get_column_series();
 
 				// ACT
@@ -242,8 +242,8 @@ namespace micro_profiler
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
 				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = load_functions_list(dser);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT / ASSERT
@@ -277,8 +277,8 @@ namespace micro_profiler
 				s[addr(17)].callees[addr(11)].times_called = 101, s[addr(17)].callees[addr(19)].times_called = 103, s[addr(17)].callees[addr(23)].times_called = 1100;
 				s[addr(17)].callees[addr(11)].exclusive_time = 3, s[addr(17)].callees[addr(19)].exclusive_time = 112, s[addr(17)].callees[addr(23)].exclusive_time = 9;
 
-				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = load_functions_list(dser);
+				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr<linked_statistics> ls;
 
 				fl->set_order(columns::times_called, false);
@@ -316,8 +316,8 @@ namespace micro_profiler
 				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 0;
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 0;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = load_functions_list(dser);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 
 				// ACT
@@ -348,8 +348,8 @@ namespace micro_profiler
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
 				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s);
-				shared_ptr<functions_list> fl = load_functions_list(dser);
+				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
+				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< series<double> > m = fl->get_column_series();
 				wpl::slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
 

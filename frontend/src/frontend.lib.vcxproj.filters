@@ -66,6 +66,7 @@
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\filter_view.h" />
+    <ClInclude Include="..\serialization_context.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

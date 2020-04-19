@@ -20,49 +20,32 @@
 
 #pragma once
 
-#include "serialization_context.h"
+#include "primitives.h"
 
-#include <common/noncopyable.h>
-#include <common/pod_vector.h>
-#include <common/protocol.h>
-#include <functional>
-#include <ipc/endpoint.h>
+#include <vector>
 
 namespace micro_profiler
 {
-	class functions_list;
-	class symbol_resolver;
-	class threads_model;
-
-	class frontend : public ipc::channel, noncopyable, public std::enable_shared_from_this<frontend>
+	namespace scontext
 	{
-	public:
-		frontend(ipc::channel &outbound);
-		~frontend();
+		struct detailed_threaded
+		{
+			statistic_types::map_detailed *map;
+			long_address_t caller;
+			unsigned int threadid;
+		};
 
-		void disconnect_session() throw();
+		struct wire
+		{
+			std::vector<unsigned int> threads;
+		};
 
-	public:
-		std::function<void(const std::string &process_name, const std::shared_ptr<functions_list> &model)> initialized;
-		std::function<void()> released;
+		struct file_v3
+		{
+		};
 
-	private:
-		// ipc::channel methods
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
-
-		template <typename DataT>
-		void send(commands command, const DataT &data);
-
-		std::shared_ptr<symbol_resolver> get_resolver();
-		std::shared_ptr<threads_model> get_threads();
-
-	private:
-		ipc::channel &_outbound;
-		std::shared_ptr<symbol_resolver> _resolver;
-		std::shared_ptr<threads_model> _threads;
-		std::shared_ptr<functions_list> _model;
-		pod_vector<byte> _buffer;
-		scontext::wire _serialization_context;
-	};
+		struct file_v4
+		{
+		};
+	}
 }

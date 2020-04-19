@@ -27,8 +27,9 @@ using namespace std;
 
 namespace micro_profiler
 {
-	const wchar_t c_microProfilerFileExtension[] = L"mpstat3";
-	const wchar_t c_microProfilerFiles[] = L"MicroProfiler Statistics\0*.mpstat3\0\0";
+	const wchar_t c_microProfilerDefaultExtension[] = L"mpstat4";
+	const wchar_t c_microProfilerFilesSave[] = L"MicroProfiler Statistics\0*.mpstat4\0\0";
+	const wchar_t c_microProfilerFilesOpen[] = L"MicroProfiler Statistics\0*.mpstat3;*.mpstat4\0\0";
 
 	auto_ptr<write_stream> create_file(HWND hparent, const string &default_name)
 	{
@@ -37,15 +38,15 @@ namespace micro_profiler
 		wchar_t buffer[1000] = { 0 };
 		wstring default_name2 = unicode(default_name);
 		
-		default_name2.append(L".").append(c_microProfilerFileExtension);
+		default_name2.append(L".").append(c_microProfilerDefaultExtension);
 
 		copy(default_name2.begin(), default_name2.end(), buffer);
 		ofn.lStructSize = sizeof(ofn);
 		ofn.hwndOwner = hparent;
-		ofn.lpstrFilter = c_microProfilerFiles;
+		ofn.lpstrFilter = c_microProfilerFilesSave;
 		ofn.lpstrFile = buffer;
 		ofn.nMaxFile = _countof(buffer);
-		ofn.lpstrDefExt = c_microProfilerFileExtension;
+		ofn.lpstrDefExt = c_microProfilerDefaultExtension;
 		if (::GetSaveFileNameW(&ofn))
 			r.reset(new write_stream(ofn.lpstrFile));
 		return r;
@@ -59,10 +60,10 @@ namespace micro_profiler
 
 		ofn.lStructSize = sizeof(ofn);
 		ofn.hwndOwner = hparent;
-		ofn.lpstrFilter = c_microProfilerFiles;
+		ofn.lpstrFilter = c_microProfilerFilesOpen;
 		ofn.lpstrFile = buffer;
 		ofn.nMaxFile = _countof(buffer);
-		ofn.lpstrDefExt = c_microProfilerFileExtension;
+		ofn.lpstrDefExt = c_microProfilerDefaultExtension;
 		if (::GetOpenFileNameW(&ofn))
 			r.reset(new read_stream(ofn.lpstrFile)), path = unicode(ofn.lpstrFile);
 		return r;

@@ -54,7 +54,7 @@ namespace micro_profiler
 	{	return knuth_hash_fixed<sizeof(key)>()(key);	}
 
 	inline std::size_t knuth_hash::operator ()(const void *key) const throw()
-	{	return knuth_hash_fixed<sizeof(std::size_t)>()(reinterpret_cast<std::size_t>(key));	}
+	{	return knuth_hash_fixed<sizeof(std::size_t)>()(reinterpret_cast<std::size_t>(key) >> 4);	}
 
 	template <typename T1, typename T2>
 	inline std::size_t knuth_hash::operator ()(const std::pair<T1, T2> &key) const throw()

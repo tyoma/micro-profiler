@@ -13,7 +13,7 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			typedef std::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed>
+			typedef containers::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed>
 				thread_statistics_map;
 
 			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>

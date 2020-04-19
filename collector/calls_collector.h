@@ -22,10 +22,10 @@
 
 #include <collector/types.h>
 #include <common/noncopyable.h>
+#include <common/platform.h>
 #include <memory>
 #include <mt/mutex.h>
 #include <mt/tls.h>
-#include <patcher/platform.h>
 #include <vector>
 
 namespace mt

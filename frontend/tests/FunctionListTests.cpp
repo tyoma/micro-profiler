@@ -1640,14 +1640,24 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				unthreaded_statistic_types::map_detailed s;
 
-				s[0x2978].callees[0x3001] = function_statistics(3);
-				s[0x2995].callees[0x3001] = function_statistics(30);
-				s[0x3001].callees[0x3001] = function_statistics(50);
-				serialize_single_threaded(ser, s);
-				s.erase(0x3001);
-				serialize_single_threaded(ser, s);
+				unthreaded_addressed_function batch1[] = {
+					make_statistics(0x2978u, 0, 0, 0, 0, 0,
+						make_statistics_base(0x3001u, 3, 0, 0, 0, 0)),
+					make_statistics(0x2995u, 0, 0, 0, 0, 0,
+						make_statistics_base(0x3001u, 30, 0, 0, 0, 0)),
+					make_statistics(0x3001u, 0, 0, 0, 0, 0,
+						make_statistics_base(0x3001u, 50, 0, 0, 0, 0)),
+				};
+				unthreaded_addressed_function batch2[] = {
+					make_statistics(0x2978u, 0, 0, 0, 0, 0,
+						make_statistics_base(0x3001u, 3, 0, 0, 0, 0)),
+					make_statistics(0x2995u, 0, 0, 0, 0, 0,
+						make_statistics_base(0x3001u, 30, 0, 0, 0, 0)),
+				};
+
+				serialize_single_threaded(ser, mkvector(batch1));
+				serialize_single_threaded(ser, mkvector(batch2));
 
 				fl->set_order(columns::name, true);
 

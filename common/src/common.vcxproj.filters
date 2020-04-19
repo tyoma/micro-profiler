@@ -100,5 +100,6 @@
     <ClInclude Include="..\image_info.h" />
     <ClInclude Include="..\file_id.h" />
     <ClInclude Include="..\hash.h" />
+    <ClInclude Include="..\unordered_map.h" />
   </ItemGroup>
 </Project>

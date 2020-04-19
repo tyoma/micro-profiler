@@ -103,6 +103,7 @@
     <ClInclude Include="..\time.h" />
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />
+    <ClInclude Include="..\unordered_map.h" />
     <ClInclude Include="elf\filemapping.h" />
     <ClInclude Include="elf\sym-elf.h" />
   </ItemGroup>

@@ -44,10 +44,10 @@ namespace micro_profiler
 
 	overhead calibrate_overhead(calls_collector &collector, size_t iterations)
 	{
-		null_reader nr;
-
 		for (int warmup_rounds = 10; warmup_rounds--; )
 		{
+			null_reader nr;
+
 			run_load(&empty_call_instrumented, iterations);
 			collector.flush();
 			collector.read_collected(nr);

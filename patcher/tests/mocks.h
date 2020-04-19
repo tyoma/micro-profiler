@@ -1,7 +1,7 @@
 #pragma once
 
+#include <common/platform.h>
 #include <common/types.h>
-#include <patcher/platform.h>
 #include <vector>
 
 namespace micro_profiler

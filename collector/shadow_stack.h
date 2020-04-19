@@ -38,7 +38,7 @@ namespace micro_profiler
 
 	private:
 		struct call_record_ex;
-		typedef std::unordered_map<const void *, unsigned int, knuth_hash> entrance_counter_map;
+		typedef containers::unordered_map<const void *, unsigned int, knuth_hash> entrance_counter_map;
 
 	private:
 		const shadow_stack &operator =(const shadow_stack &rhs);

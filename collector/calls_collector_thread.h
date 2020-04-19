@@ -22,10 +22,10 @@
 
 #include <collector/types.h>
 #include <common/noncopyable.h>
+#include <common/platform.h>
 #include <common/pod_vector.h>
 #include <functional>
 #include <mt/event.h>
-#include <patcher/platform.h>
 #include <polyq/circular.h>
 #include <polyq/static_entry.h>
 #include <vector>

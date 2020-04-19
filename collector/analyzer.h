@@ -55,7 +55,7 @@ namespace micro_profiler
 	class analyzer : public calls_collector_i::acceptor, noncopyable
 	{
 	public:
-		typedef std::unordered_map<unsigned int, thread_analyzer> thread_analyzers;
+		typedef containers::unordered_map<unsigned int, thread_analyzer> thread_analyzers;
 		typedef thread_analyzers::const_iterator const_iterator;
 		typedef std::pair<unsigned int, thread_analyzer> value_type;
 

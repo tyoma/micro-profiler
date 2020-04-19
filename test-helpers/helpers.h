@@ -79,10 +79,6 @@ namespace micro_profiler
 		inline size_t array_size(T (&)[size])
 		{	return size;	}
 
-		template <typename KeyT, typename ValueT, typename CompT>
-		inline std::vector< std::pair<KeyT, ValueT> > mkvector(const std::unordered_map<KeyT, ValueT, CompT> &from)
-		{	return std::vector< std::pair<KeyT, ValueT> >(from.begin(), from.end());	}
-
 		template <typename T, size_t size>
 		inline std::vector<T> mkvector(T (&array_ptr)[size])
 		{	return std::vector<T>(array_ptr, array_ptr + size);	}

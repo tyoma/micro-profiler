@@ -20,49 +20,34 @@
 
 #pragma once
 
-#include <common/file_id.h>
-#include <common/module.h>
-#include <common/primitives.h>
-#include <common/protocol.h>
-#include <memory>
-#include <mt/mutex.h>
+#include <unordered_map>
 
 namespace micro_profiler
 {
-	struct symbol_info;
-
-	template <typename SymbolT>
-	struct image_info;
-
-	class module_tracker
+	namespace containers
 	{
-	public:
-		typedef image_info<symbol_info> metadata_t;
-		typedef std::shared_ptr<const metadata_t> metadata_ptr;
-
-	public:
-		module_tracker();
-
-		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-
-		metadata_ptr get_metadata(unsigned int persistent_id) const;
-
-	private:
-		struct module_info
+		template <typename KeyT, typename ValueT, typename HashT = std::hash<KeyT>, typename CompT = std::equal_to<KeyT> >
+		class unordered_map : private std::unordered_map<KeyT, ValueT, HashT, CompT>
 		{
-			std::string path;
-			std::shared_ptr<mapped_module_identified> mapping;
+		private:
+			typedef std::unordered_map<KeyT, ValueT, HashT, CompT> base_t;
+
+		public:
+			using typename base_t::key_type;
+			using typename base_t::mapped_type;
+			typedef std::pair<const KeyT, ValueT> value_type;
+			using typename base_t::const_iterator;
+			using typename base_t::iterator;
+
+		public:
+			using base_t::begin;
+			using base_t::end;
+			using base_t::insert;
+			using base_t::clear;
+			using base_t::empty;
+			using base_t::size;
+			using base_t::find;
+			using base_t::operator [];
 		};
-
-		typedef containers::unordered_map<file_id, unsigned int /*persistent_id*/> files_registry_t;
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
-
-	private:
-		mutable mt::mutex _mtx;
-		files_registry_t _files_registry;
-		modules_registry_t _modules_registry;
-		loaded_modules _lqueue;
-		unloaded_modules _uqueue;
-		unsigned int _next_instance_id, _next_persistent_id;
-	};
+	}
 }

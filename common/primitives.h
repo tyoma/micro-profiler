@@ -21,9 +21,9 @@
 #pragma once
 
 #include "hash.h"
+#include "platform.h"
 #include "types.h"
-
-#include <unordered_map>
+#include "unordered_map.h"
 
 namespace micro_profiler
 {
@@ -36,9 +36,9 @@ namespace micro_profiler
 		typedef function_statistics function;
 		typedef function_statistics_detailed_t<KeyT> function_detailed;
 
-		typedef std::unordered_map<KeyT, function_detailed, knuth_hash> map_detailed;
-		typedef std::unordered_map<KeyT, function, knuth_hash> map;
-		typedef std::unordered_map<KeyT, count_t, knuth_hash> map_callers;
+		typedef containers::unordered_map<KeyT, function_detailed, knuth_hash> map_detailed;
+		typedef containers::unordered_map<KeyT, function, knuth_hash> map;
+		typedef containers::unordered_map<KeyT, count_t, knuth_hash> map_callers;
 	};
 
 	struct function_statistics
@@ -100,7 +100,7 @@ namespace micro_profiler
 
 	// helper methods - inline definitions
 	template <typename AddressT>
-	inline void add_child_statistics(function_statistics_detailed_t<AddressT> &s, AddressT function, unsigned int level,
+	FORCE_INLINE void add_child_statistics(function_statistics_detailed_t<AddressT> &s, AddressT function, unsigned int level,
 		timestamp_t inclusive_time, timestamp_t exclusive_time)
 	{	s.callees[function].add_call(level, inclusive_time, exclusive_time);	}
 }

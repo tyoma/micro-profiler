@@ -85,8 +85,9 @@ namespace micro_profiler
 					make_statistics_base(7341u, 21117, 2212, 21231123, 23213, 2112213),
 					make_statistics_base(7741u, 31117, 3212, 31231123, 33213, 3112213),
 				};
+				statistic_types::map_detailed dummy;
 				statistic_types::map s;
-				scontext::detailed_threaded context = { };
+				scontext::detailed_threaded context = { &dummy, };
 
 				ser(mkvector(batch1));
 				ser(mkvector(batch2));
@@ -285,6 +286,88 @@ namespace micro_profiler
 				assert_equivalent(reference_12211_110, s[addr(12211, 110)].callers);
 				assert_equivalent(reference_1221_110, s[addr(1221, 110)].callers);
 				assert_is_empty(s[addr(12210, 110)].callers);
+			}
+
+
+			test( AddingParentCallsAddsNewStatisticsForParentFunctions )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				statistic_types::map_detailed m1, m2;
+				threaded_addressed_statistics batch1[] = {
+					make_statistics(addr(0x7011), 0, 0, 0, 0, 0,
+						make_statistics_base(addr(0x0011), 10, 0, 0, 0, 0),
+						make_statistics_base(addr(0x0013), 11, 0, 0, 0, 0)),
+				};
+				threaded_addressed_statistics batch2[] = {
+					make_statistics(addr(0x5011), 0, 0, 0, 0, 0,
+						make_statistics_base(addr(0x0021), 13, 0, 0, 0, 0),
+						make_statistics_base(addr(0x0023), 17, 0, 0, 0, 0),
+						make_statistics_base(addr(0x0027), 0x1000000000, 0, 0, 0, 0)),
+				};
+
+				ser(mkvector(batch1));
+				ser(mkvector(batch2));
+
+				// ACT
+				dser(m1);
+				dser(m2);
+
+				// ASSERT
+				assert_equal(3u, m1.size());
+				assert_is_empty(m1[addr(0x7011)].callers);
+				assert_equal(1u, m1[addr(0x0011)].callers.size());
+				assert_equal(1u, m1[addr(0x0013)].callers.size());
+				assert_equal(10u, m1[addr(0x0011)].callers[addr(0x7011)]);
+				assert_equal(11u, m1[addr(0x0013)].callers[addr(0x7011)]);
+
+				assert_equal(4u, m2.size());
+				assert_is_empty(m2[addr(0x5011)].callers);
+				assert_equal(1u, m2[addr(0x0021)].callers.size());
+				assert_equal(1u, m2[addr(0x0023)].callers.size());
+				assert_equal(1u, m2[addr(0x0027)].callers.size());
+				assert_equal(13u, m2[addr(0x0021)].callers[addr(0x5011)]);
+				assert_equal(17u, m2[addr(0x0023)].callers[addr(0x5011)]);
+				assert_equal(0x1000000000u, m2[addr(0x0027)].callers[addr(0x5011)]);
+			}
+
+
+			test( AddingParentCallsUpdatesExistingStatisticsForParentFunctions )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				statistic_types::map_detailed m;
+				threaded_addressed_statistics batch[] = {
+					make_statistics(addr(0x0191), 0, 0, 0, 0, 0,
+						make_statistics_base(addr(0x0021), 13, 0, 0, 0, 0),
+						make_statistics_base(addr(0x0023), 17, 0, 0, 0, 0),
+						make_statistics_base(addr(0x0027), 0x1000000000, 0, 0, 0, 0)),
+				};
+
+				(function_statistics &)m[addr(0x0021)] = function_statistics(10, 0, 17, 11, 30);
+				m[addr(0x0021)].callers[addr(0x0191)] = 123;
+				m[addr(0x0023)].callers[addr(0x0791)] = 88;
+				m[addr(0x0027)].callers[addr(0x0191)] = 0x0231;
+
+				ser(mkvector(batch));
+
+				// ACT
+				dser(m);
+
+				// ASSERT
+				assert_equal(4u, m.size());
+				assert_is_empty(m[addr(0x0191)].callers);
+				assert_equal(1u, m[addr(0x0021)].callers.size());
+				assert_equal(2u, m[addr(0x0023)].callers.size());
+				assert_equal(1u, m[addr(0x0027)].callers.size());
+				assert_equal(13u, m[addr(0x0021)].callers[addr(0x0191)]);
+				assert_equal(17u, m[addr(0x0023)].callers[addr(0x0191)]);
+				assert_equal(88u, m[addr(0x0023)].callers[addr(0x0791)]);
+				assert_equal(0x1000000000u, m[addr(0x0027)].callers[addr(0x0191)]);
 			}
 
 		end_test_suite

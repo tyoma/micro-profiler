@@ -75,7 +75,7 @@ The steps are much like the ones above.
 
 # Revision History
 
-## v1.6.621
+## v1.6.622
 
 * Issue [#58](https://github.com/tyoma/micro-profiler/issues/58) fixed: saving and loading of statistics is restored, older .mpstat3 reading is supported as well.
 

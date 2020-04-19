@@ -103,11 +103,4 @@ namespace micro_profiler
 	inline void add_child_statistics(function_statistics_detailed_t<AddressT> &s, AddressT function, unsigned int level,
 		timestamp_t inclusive_time, timestamp_t exclusive_time)
 	{	s.callees[function].add_call(level, inclusive_time, exclusive_time);	}
-
-	template <typename DetailedMapT, typename AddressT, typename ChildrenMapT>
-	inline void update_parent_statistics(DetailedMapT &s, AddressT key, const ChildrenMapT &callees)
-	{
-		for (typename ChildrenMapT::const_iterator i = callees.begin(), end = callees.end(); i != end; ++i)
-			s[i->first].callers[key] = i->second.times_called;
-	}
 }

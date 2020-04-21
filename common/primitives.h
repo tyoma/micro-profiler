@@ -55,6 +55,7 @@ namespace micro_profiler
 		timestamp_t inclusive_time;
 		timestamp_t exclusive_time;
 		timestamp_t max_call_time;
+		unsigned int *entrance_counter;
 	};
 
 	template <typename AddressT>
@@ -70,7 +71,7 @@ namespace micro_profiler
 	inline function_statistics::function_statistics(count_t times_called_, unsigned int max_reentrance_,
 			timestamp_t inclusive_time_, timestamp_t exclusive_time_, timestamp_t max_call_time_)
 		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_),
-			exclusive_time(exclusive_time_), max_call_time(max_call_time_)
+			exclusive_time(exclusive_time_), max_call_time(max_call_time_), entrance_counter(0)
 	{	}
 
 	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time_,

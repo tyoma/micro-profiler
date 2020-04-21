@@ -48,14 +48,14 @@ namespace micro_profiler
 	private:
 		const timestamp_t _inner_overhead, _total_overhead;
 		pod_vector<call_record_ex> _stack;
-		entrance_counter_map _entrance_counter;
+		entrance_counter_map _entrance_counters;
 	};
 
 	template <typename OutputMapType>
 	struct shadow_stack<OutputMapType>::call_record_ex
 	{
 		static call_record_ex create(const call_record &from, unsigned int &level,
-			typename OutputMapType::mapped_type *entry);
+			typename OutputMapType::mapped_type &entry);
 
 		call_record call;
 		timestamp_t children_time_observed, children_overhead;
@@ -87,7 +87,11 @@ namespace micro_profiler
 		{
 			if (i->callee)
 			{
-				_stack.push_back(call_record_ex::create(*i, ++_entrance_counter[i->callee], &statistics[i->callee]));
+				typename OutputMapType::mapped_type &entry = statistics[i->callee];
+
+				if (!entry.entrance_counter)
+					entry.entrance_counter = &_entrance_counters[i->callee];
+				_stack.push_back(call_record_ex::create(*i, ++*entry.entrance_counter, entry));
 			}
 			else
 			{
@@ -116,9 +120,9 @@ namespace micro_profiler
 
 	template <typename OutputMapType>
 	inline typename shadow_stack<OutputMapType>::call_record_ex shadow_stack<OutputMapType>::call_record_ex::create(
-		const call_record &from, unsigned int &level, typename OutputMapType::mapped_type *entry)
+		const call_record &from, unsigned int &level, typename OutputMapType::mapped_type &entry)
 	{
-		call_record_ex r = { from, 0, 0, &level, entry };
+		call_record_ex r = { from, 0, 0, &level, &entry };
 		return r;
 	}
 }

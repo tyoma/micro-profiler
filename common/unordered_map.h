@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include "platform.h"
+
+#include <functional>
 #include <list>
 #include <unordered_map>
 #include <vector>
@@ -30,15 +33,16 @@ namespace micro_profiler
 	{
 		using std::unordered_map;
 
-		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT> >
+		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT>, typename Comparer = std::equal_to<KeyT> >
 		class unordered_map2 : std::list< std::pair<const KeyT, ValueT> >
 		{
 		private:
-			enum { initial_buckets = 16, };
+			enum { initial_nbuckets = 16, };
 			typedef std::list< std::pair<const KeyT, ValueT> > base_t;
 
 		public:
 			typedef KeyT key_type;
+			typedef ValueT mapped_type;
 			typedef std::pair<const KeyT, ValueT> value_type;
 			using typename base_t::const_iterator;
 			using typename base_t::iterator;
@@ -50,29 +54,59 @@ namespace micro_profiler
 			using base_t::size;
 
 		public:
-			unordered_map2()
-				: _buckets(initial_buckets)
-			{	}
+			explicit unordered_map2(size_t nbuckets = initial_nbuckets)
+			{	reset_buckets(nbuckets);	}
+
+			unordered_map2(const unordered_map2 &other)
+			{	*this = other;	}
+
+			const unordered_map2 &operator =(const unordered_map2 &rhs)
+			{
+				base_t::clear();
+				base_t::insert(end(), rhs.begin(), rhs.end());
+				reset_buckets(rhs._buckets.size());
+				for (iterator i = begin(); i != end(); ++i)
+				{
+					bucket_iterator b = get_bucket(i->first);
+
+					if (!b->count++)
+						b->start = i;
+				}
+				return *this;
+			}
+
+			mapped_type &operator [](const key_type &key)
+			{
+				const_bucket_iterator b = get_bucket(key);
+				iterator i = b->start;
+
+				for (unsigned int n = b->count; n; n--, i++)
+					if (key == i->first)
+						return i->second;
+				return insert_empty(key);
+			}
+
+			void clear()
+			{
+				reset_buckets(_buckets.size());
+				base_t::clear();
+			}
 
 			std::pair<iterator, bool> insert(const value_type &value)
 			{
 				iterator i = find(value.first);
 
-				return i != end() ? std::make_pair(i, false) : std::make_pair(insert_internal(value), true);
+				return i != end() ? std::make_pair(i, false) : std::make_pair(insert_always(value), true);
 			}
 
 #define UNORDERED_MAP_CV_DEF(cv, iterator_cv)\
 			iterator_cv find(const KeyT &key) cv\
 			{\
-				const bucket &b = *get_bucket(key);\
-				if (unsigned int n = b.count)\
-				{\
-					if (key == b.start->first)\
-						return b.start;\
-					for (iterator_cv i = b.start; --n; )\
-						if (key == (++i)->first)\
-							return i;\
-				}\
+				const_bucket_iterator b = get_bucket(key);\
+				iterator i = b->start;\
+				for (unsigned int n = b->count; n; n--, i++)\
+					if (key == i->first)\
+						return i;\
 				return end();\
 			}
 
@@ -97,13 +131,16 @@ namespace micro_profiler
 			typedef typename std::vector<bucket>::const_iterator const_bucket_iterator;
 
 		private:
-			iterator insert_internal(const value_type &value)
+			FORCE_NOINLINE mapped_type &insert_empty(const key_type &key)
+			{	return insert_always(std::make_pair(key, mapped_type()))->second;	}
+
+			iterator insert_always(const value_type &value)
 			{
 				bucket_iterator where = get_bucket(value.first);
 
 				if (!where->count)
 				{
-					for (bucket_iterator next = where; ++next == _buckets.end() ? where->start = end(), false : true; )
+					for (bucket_iterator next = where; ++next == _buckets_end ? where->start = end(), false : true; )
 					{
 						if (next->count)
 						{
@@ -123,12 +160,32 @@ namespace micro_profiler
 			}
 
 			bucket_iterator get_bucket(const key_type &key)
-			{	return _buckets.begin() + (_hasher(key) & (_buckets.size() - 1));	}
+			{	return _buckets_begin + (_hasher(key) & _hash_mask);	}
 
 			const_bucket_iterator get_bucket(const key_type &key) const
-			{	return _buckets.begin() + (_hasher(key) & (_buckets.size() - 1));	}
+			{	return _buckets_begin + (_hasher(key) & _hash_mask);	}
+
+			void reset_buckets(size_t nbuckets)
+			{
+				nbuckets = next_power_2(nbuckets);
+				_buckets.assign(nbuckets, bucket());
+				_buckets_begin = _buckets.begin(), _buckets_end = _buckets.end();
+				_hash_mask = nbuckets - 1;
+			}
+
+			static size_t next_power_2(size_t value)
+			{
+				if (value > 1 && !((value - 1) & value))
+					return value;
+				for (size_t i = static_cast<size_t>(1) << (sizeof(size_t) * 8 - 2); i; i >>= 1)
+					if (i < value)
+						return i << 1;
+				return 2;
+			}
 
 		private:
+			bucket_iterator _buckets_begin, _buckets_end;
+			size_t _hash_mask;
 			buckets _buckets;
 			Hasher _hasher;
 		};

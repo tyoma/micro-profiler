@@ -78,7 +78,7 @@ namespace micro_profiler
 
 		_threads_cb->set_model(_statistics->get_threads());
 		_threads_cb->select(0u);
-		_connections.push_back(_threads_cb->selection_changed += [model] (unsigned int index) {
+		_connections.push_back(_threads_cb->selection_changed += [model] (wpl::ui::combobox::index_type index) {
 			unsigned id;
 
 			if (model->get_threads()->get_key(id, index))

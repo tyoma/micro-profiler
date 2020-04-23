@@ -75,6 +75,11 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v1.7.624
+
+* Significant performance improvement due to changes in the collector's queue. Under a constant high load (lots of small un-inlined functions): up to 35% (x86) and 42% (x64) less of profiler's overhead. Up to 50% less overhead in a short bursts of small functions;
+* Issue [#57](https://github.com/tyoma/micro-profiler/issues/57) fixed: due to different queueing implemented in collector (~250 times less of atomic bus-locking), the profiler's overhead is now less subjected to intermittent hikes, therefore, the chances of negative times for extrasmall functions are lower as well.
+
 ## v1.6.622
 
 * Issue [#58](https://github.com/tyoma/micro-profiler/issues/58) fixed: saving and loading of statistics is restored, older .mpstat3 reading is supported as well.

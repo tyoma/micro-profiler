@@ -22,9 +22,16 @@ namespace micro_profiler
 					{	return static_cast<size_t>(v);	}
 				};
 
-				typedef unordered_map2<int, string> map1_t;
-				typedef unordered_map2<string, int> map2_t;
-				typedef unordered_map2<long long, int> map3_t;
+				struct shift_hash
+				{
+					template <typename T>
+					size_t operator ()(T v) const
+					{	return static_cast<size_t>(v) >> 4;	}
+				};
+
+				typedef unordered_map<int, string> map1_t;
+				typedef unordered_map<string, int> map2_t;
+				typedef unordered_map<long long, int> map3_t;
 
 				template <typename T, size_t n, typename ContainerT>
 				void assert_all_entries_found(T (&reference)[n], ContainerT &actual)
@@ -41,7 +48,7 @@ namespace micro_profiler
 				test( NewContainerIsEmpty )
 				{
 					// INIT / ACT
-					unordered_map2<int, int> c;
+					unordered_map<int, int> c;
 
 					// ACT / ASSERT
 					assert_is_true(c.empty());
@@ -180,10 +187,11 @@ namespace micro_profiler
 
 				test( RecordsAreGrouppedByHashValueThenByOrderOfInsertion )
 				{
-					// This test implies that initial buckets amount is 16 and collision allowance is at least 3
-
 					// INIT
-					unordered_map2<int, string, passthrough_hash> c1, c2;
+					unordered_map<int, string, passthrough_hash> c1, c2;
+
+					c1.collision_allowance(3);
+					c2.collision_allowance(3);
 
 					// ACT
 					c1.insert(make_pair(0, "a"));
@@ -221,7 +229,9 @@ namespace micro_profiler
 				test( AllEntriesFromTheSameBucketAreScanned )
 				{
 					// INIT
-					unordered_map2<int, string, passthrough_hash> c;
+					unordered_map<int, string, passthrough_hash> c;
+
+					c.collision_allowance(3);
 
 					c.insert(make_pair(0, "a"));
 					c.insert(make_pair(1, "b"));
@@ -247,9 +257,13 @@ namespace micro_profiler
 
 				test( BucketCountCanBeSpecifiedOnConstruction )
 				{
-					// INIT
-					unordered_map2<long long, char, passthrough_hash> c1(2);
-					unordered_map2<unsigned char, char, passthrough_hash> c2(8);
+					// INIT / ACT
+					unordered_map<long long, char, passthrough_hash> c1(2);
+					unordered_map<unsigned char, char, passthrough_hash> c2(8);
+
+					// ASSERT
+					assert_equal(2u, c1.bucket_count());
+					assert_equal(8u, c2.bucket_count());
 
 					// ACT
 					c1.insert(make_pair(11, 'b'));
@@ -282,8 +296,8 @@ namespace micro_profiler
 				test( EffectiveBucketCountIsATwoToN )
 				{
 					// INIT
-					unordered_map2<long long, char, passthrough_hash> c1(1); // becomes 2
-					unordered_map2<unsigned char, char, passthrough_hash> c2(6); // becomes 8
+					unordered_map<long long, char, passthrough_hash> c1(1); // becomes 2
+					unordered_map<unsigned char, char, passthrough_hash> c2(6); // becomes 8
 
 					// ACT
 					c1.insert(make_pair(11, 'b'));
@@ -316,16 +330,18 @@ namespace micro_profiler
 				test( CopyProducesExactClone )
 				{
 					// INIT
-					unique_ptr< unordered_map2<long long, char, passthrough_hash> > c1(
-						new unordered_map2<long long, char, passthrough_hash>(2));
-					unique_ptr< unordered_map2<unsigned char, char, passthrough_hash> > c2(
-						new unordered_map2<unsigned char, char, passthrough_hash>(8));
+					unique_ptr< unordered_map<long long, char, passthrough_hash> > c1(
+						new unordered_map<long long, char, passthrough_hash>(2));
+					unique_ptr< unordered_map<unsigned char, char, passthrough_hash> > c2(
+						new unordered_map<unsigned char, char, passthrough_hash>(8));
 
+					c1->collision_allowance(3);
 					c1->insert(make_pair(11, 'b'));
 					c1->insert(make_pair(8, 'a'));
 					c1->insert(make_pair(2, 'a'));
 					c1->insert(make_pair(9, 'b'));
 
+					c2->collision_allowance(173);
 					c2->insert(make_pair(16, 'a'));
 					c2->insert(make_pair(11, 'b'));
 					c2->insert(make_pair(12, 'c'));
@@ -333,8 +349,8 @@ namespace micro_profiler
 					c2->insert(make_pair(0, 'a'));
 
 					// ACT
-					unordered_map2<long long, char, passthrough_hash> copy1(*c1);
-					unordered_map2<unsigned char, char, passthrough_hash> copy2(*c2);
+					unordered_map<long long, char, passthrough_hash> copy1(*c1);
+					unordered_map<unsigned char, char, passthrough_hash> copy2(*c2);
 
 					c1.reset();
 					c2.reset();
@@ -350,8 +366,12 @@ namespace micro_profiler
 						make_pair(12, 'c'),
 					};
 
+					assert_equal(2u, copy1.bucket_count());
+					assert_equal(3u, copy1.collision_allowance());
 					assert_equal(reference1, copy1);
 					assert_all_entries_found(reference1, copy1);
+					assert_equal(8u, copy2.bucket_count());
+					assert_equal(173u, copy2.collision_allowance());
 					assert_equal(reference2, copy2);
 					assert_all_entries_found(reference2, copy2);
 				}
@@ -360,16 +380,18 @@ namespace micro_profiler
 				test( AssignmentProducesExactClone )
 				{
 					// INIT
-					unique_ptr< unordered_map2<long long, char, passthrough_hash> > c1(
-						new unordered_map2<long long, char, passthrough_hash>(2));
-					unique_ptr< unordered_map2<unsigned char, char, passthrough_hash> > c2(
-						new unordered_map2<unsigned char, char, passthrough_hash>(8));
+					unique_ptr< unordered_map<long long, char, passthrough_hash> > c1(
+						new unordered_map<long long, char, passthrough_hash>(2));
+					unique_ptr< unordered_map<unsigned char, char, passthrough_hash> > c2(
+						new unordered_map<unsigned char, char, passthrough_hash>(8));
 
+					c1->collision_allowance(2);
 					c1->insert(make_pair(11, 'b'));
 					c1->insert(make_pair(8, 'a'));
 					c1->insert(make_pair(2, 'a'));
 					c1->insert(make_pair(9, 'b'));
 
+					c2->collision_allowance(5);
 					c2->insert(make_pair(16, 'a'));
 					c2->insert(make_pair(11, 'b'));
 					c2->insert(make_pair(12, 'c'));
@@ -377,8 +399,8 @@ namespace micro_profiler
 					c2->insert(make_pair(0, 'a'));
 
 					// ACT
-					unordered_map2<long long, char, passthrough_hash> copy1;
-					unordered_map2<unsigned char, char, passthrough_hash> copy2;
+					unordered_map<long long, char, passthrough_hash> copy1;
+					unordered_map<unsigned char, char, passthrough_hash> copy2;
 
 					copy1 = *c1;
 					copy2 = *c2;
@@ -397,8 +419,10 @@ namespace micro_profiler
 						make_pair(12, 'c'),
 					};
 
+					assert_equal(2u, copy1.collision_allowance());
 					assert_equal(reference1, copy1);
 					assert_all_entries_found(reference1, copy1);
+					assert_equal(5u, copy2.collision_allowance());
 					assert_equal(reference2, copy2);
 					assert_all_entries_found(reference2, copy2);
 				}
@@ -407,7 +431,7 @@ namespace micro_profiler
 				test( MapIsEmptyAndNothingIsFoundAfterClear )
 				{
 					// INIT
-					unordered_map2<unsigned char, char, passthrough_hash> c;
+					unordered_map<unsigned char, char, passthrough_hash> c;
 
 					c.insert(make_pair(16, 'a'));
 					c.insert(make_pair(11, 'b'));
@@ -449,7 +473,9 @@ namespace micro_profiler
 				test( EntryAccessedViaIndexingIsTheSameToInserted )
 				{
 					// INIT
-					unordered_map2<unsigned char, char, passthrough_hash> c(8);
+					unordered_map<unsigned char, char, passthrough_hash> c(8);
+
+					c.collision_allowance(3);
 
 					char *i1 = &c.insert(make_pair(16, 'a')).first->second;
 					char *i2 = &c.insert(make_pair(11, 'b')).first->second;
@@ -471,13 +497,86 @@ namespace micro_profiler
 				test( EntryCanBeAddedWhileIndexing )
 				{
 					// INIT
-					unordered_map2<int, int, passthrough_hash> c;
+					unordered_map<int, int, passthrough_hash> c;
 
 					// ACT / ASSERT
 					assert_equal(&c[10], &c[10]);
 					assert_equal(&c[26], &c[26]);
 					assert_equal(&c[100], &c[100]);
 					assert_equal(&c.insert(make_pair(100, 0)).first->second, &c[100]);
+				}
+
+
+				test( MapIsRehashedOnReachingTheCollisionLimit )
+				{
+					// INIT
+					unordered_map<int, string, passthrough_hash> c1(4), c2(32);
+
+					c1.collision_allowance(3);
+					c2.collision_allowance(2);
+
+					c1[1] = "a lorem";
+					c1[5] = "a ipsum";
+					c1[2] = "b amet";
+					c1[9] = "a limit";
+					c1[10] = "b dolor";
+
+					c2[7] = "b Lorem";
+					c2[39] = "b limit";
+					c2[9] = "c Ipsum";
+					c2[10] = "d amet";
+					c2[5] = "a dolor";
+					c2[37] = "a limit";
+
+					// ACT
+					c1[13] = "a rehash";
+					c2[71] = "b rehash";
+
+					// ASSERT
+					pair<const int, string> reference1[] = {
+						make_pair(1, "a lorem"), make_pair(9, "a limit"),
+						make_pair(2, "b amet"), make_pair(10, "b dolor"),
+						make_pair(13, "a rehash"), make_pair(5, "a ipsum"),
+					};
+					pair<const int, string> reference2[] = {
+						make_pair(5, "a dolor"),
+						make_pair(71, "b rehash"), make_pair(7, "b Lorem"),
+						make_pair(9, "c Ipsum"),
+						make_pair(10, "d amet"),
+						make_pair(37, "a limit"),
+						make_pair(39, "b limit"),
+					};
+
+					assert_equal(8u, c1.bucket_count());
+					assert_equal(reference1, c1);
+					assert_all_entries_found(reference1, c1);
+					assert_equal(64u, c2.bucket_count());
+					assert_equal(reference2, c2);
+					assert_all_entries_found(reference2, c2);
+				}
+
+
+				test( MapIsNotRehashedWhenAnElementWhenAnElementOfExistedHashValueIsAdded )
+				{
+					// INIT
+					unordered_map<int, string, shift_hash> c(4);
+
+					c.collision_allowance(2);
+
+					// ACT (the keys are distinct, but the hashes are not)
+					c[0 + 1] = "a 1";
+					c[0 + 2] = "a 2";
+					c[16 + 1] = "b 1";
+					c[0 + 3] = "a 3";
+
+					// ASSERT
+					pair<const int, string> reference[] = {
+						make_pair(3, "a 3"), make_pair(2, "a 2"), make_pair(1, "a 1"),
+						make_pair(17, "b 1"),
+					};
+
+					assert_equal(4u, c.bucket_count());
+					assert_equal(reference, c);
 				}
 			end_test_suite
 		}

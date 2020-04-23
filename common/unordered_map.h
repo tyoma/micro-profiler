@@ -24,17 +24,14 @@
 
 #include <functional>
 #include <list>
-#include <unordered_map>
 #include <vector>
 
 namespace micro_profiler
 {
 	namespace containers
 	{
-		using std::unordered_map;
-
 		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT>, typename Comparer = std::equal_to<KeyT> >
-		class unordered_map2 : std::list< std::pair<const KeyT, ValueT> >
+		class unordered_map : std::list< std::pair<const KeyT, ValueT> >
 		{
 		private:
 			enum { initial_nbuckets = 16, };
@@ -44,6 +41,7 @@ namespace micro_profiler
 			typedef KeyT key_type;
 			typedef ValueT mapped_type;
 			typedef std::pair<const KeyT, ValueT> value_type;
+			typedef unsigned short internal_size_type;
 			using typename base_t::const_iterator;
 			using typename base_t::iterator;
 
@@ -54,14 +52,31 @@ namespace micro_profiler
 			using base_t::size;
 
 		public:
-			explicit unordered_map2(size_t nbuckets = initial_nbuckets)
+			explicit unordered_map(size_t nbuckets = initial_nbuckets)
+				: _collision_allowance(2)
 			{	reset_buckets(nbuckets);	}
 
-			unordered_map2(const unordered_map2 &other)
+			unordered_map(const unordered_map &other)
 			{	*this = other;	}
 
-			const unordered_map2 &operator =(const unordered_map2 &rhs)
+			void collision_allowance(internal_size_type value)
+			{	_collision_allowance = value;	}
+
+			internal_size_type collision_allowance() const
+			{	return _collision_allowance;	}
+
+			size_t bucket_count() const
+			{	return _buckets.size();	}
+
+			void clear()
 			{
+				reset_buckets(_buckets.size());
+				base_t::clear();
+			}
+
+			const unordered_map &operator =(const unordered_map &rhs)
+			{
+				_collision_allowance = rhs._collision_allowance;
 				base_t::clear();
 				base_t::insert(end(), rhs.begin(), rhs.end());
 				reset_buckets(rhs._buckets.size());
@@ -75,36 +90,40 @@ namespace micro_profiler
 				return *this;
 			}
 
-			mapped_type &operator [](const key_type &key)
-			{
-				const_bucket_iterator b = get_bucket(key);
-				iterator i = b->start;
+#define UNORDERED_MAP_INDEX(key, exit1, exit2)\
+				bucket_iterator b = get_bucket(key);\
+				if (b->count && key == b->start->first)\
+					return exit1;\
+				internal_size_type n = b->count;\
+				for (iterator i = b->start; n > 1; n--)\
+				{\
+					++i;\
+					if (key == i->first)\
+						return exit2;\
+				}
 
-				for (unsigned int n = b->count; n; n--, i++)
-					if (key == i->first)
-						return i->second;
+			FORCE_INLINE mapped_type &operator [](const key_type &key)
+			{
+				UNORDERED_MAP_INDEX(key, b->start->second, i->second);
 				return insert_empty(key);
-			}
-
-			void clear()
-			{
-				reset_buckets(_buckets.size());
-				base_t::clear();
 			}
 
 			std::pair<iterator, bool> insert(const value_type &value)
 			{
-				iterator i = find(value.first);
-
-				return i != end() ? std::make_pair(i, false) : std::make_pair(insert_always(value), true);
+				UNORDERED_MAP_INDEX(value.first, (std::pair<iterator, bool>(b->start, false)),
+					(std::pair<iterator, bool>(i, false)));
+				return std::make_pair(insert_always(value), true);
 			}
+
+#undef UNORDERED_MAP_INDEX
+
 
 #define UNORDERED_MAP_CV_DEF(cv, iterator_cv)\
 			iterator_cv find(const KeyT &key) cv\
 			{\
 				const_bucket_iterator b = get_bucket(key);\
 				iterator i = b->start;\
-				for (unsigned int n = b->count; n; n--, i++)\
+				for (internal_size_type n = b->count; n; n--, i++)\
 					if (key == i->first)\
 						return i;\
 				return end();\
@@ -123,7 +142,7 @@ namespace micro_profiler
 				{	}
 
 				iterator start;
-				unsigned int count;
+				internal_size_type count;
 			};
 
 			typedef std::vector<bucket> buckets;
@@ -136,27 +155,41 @@ namespace micro_profiler
 
 			iterator insert_always(const value_type &value)
 			{
-				bucket_iterator where = get_bucket(value.first);
+				const bucket_iterator where = get_bucket(value.first);
 
-				if (!where->count)
+				if (where->count == _collision_allowance && has_non_unique_hash_values(*where))
+					return rehash(), insert_always(value);
+				iterator inserted = base_t::insert(find_insertion_point(where, _buckets_end), value);
+				return where->count++, where->start = inserted;
+			}
+
+			void rehash()
+			{
+				reset_buckets(_buckets.size() << 1);
+
+				iterator i = begin();
+				size_t n = size();
+
+				while (n--)
 				{
-					for (bucket_iterator next = where; ++next == _buckets_end ? where->start = end(), false : true; )
-					{
-						if (next->count)
-						{
-							where->start = next->start;
-							break;
-						}
-					}
+					iterator from = i++;
+					const bucket_iterator where = get_bucket(from->first);
+					iterator insertion_point = find_insertion_point(where, _buckets_end);
+
+					base_t::splice(insertion_point, *this, from);
+					where->start = --insertion_point;
+					where->count++;
 				}
-				//else if (where->count == max_bucket_occupation)
-				//{
-				//	rehash();
-				//	return insert_internal(value);
-				//}
-				where->start = base_t::insert(where->start, value);
-				where->count++;
-				return where->start;
+			}
+
+			iterator find_insertion_point(const_bucket_iterator where, const_bucket_iterator buckets_end)
+			{
+				do
+				{
+					if (where->count)
+						return where->start;
+				} while (++where != buckets_end);
+				return end();
 			}
 
 			bucket_iterator get_bucket(const key_type &key)
@@ -183,9 +216,24 @@ namespace micro_profiler
 				return 2;
 			}
 
+			bool has_non_unique_hash_values(const bucket &b) const
+			{
+				internal_size_type n = b.count;
+				const_iterator i = b.start;
+				const size_t first_hash = _hasher(i->first);
+
+				while (++i, --n)
+				{
+					if (_hasher(i->first) != first_hash)
+						return true;
+				}
+				return false;
+			}
+
 		private:
 			bucket_iterator _buckets_begin, _buckets_end;
 			size_t _hash_mask;
+			internal_size_type _collision_allowance;
 			buckets _buckets;
 			Hasher _hasher;
 		};

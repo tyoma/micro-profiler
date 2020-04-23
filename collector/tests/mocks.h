@@ -3,11 +3,11 @@
 #include <collector/calls_collector.h>
 #include <collector/thread_monitor.h>
 
+#include <common/unordered_map.h>
 #include <mt/mutex.h>
 #include <mt/thread.h>
 #include <mt/thread_callbacks.h>
 #include <test-helpers/mock_frontend.h>
-#include <unordered_map>
 
 namespace micro_profiler
 {
@@ -26,7 +26,7 @@ namespace micro_profiler
 
 			private:
 				mt::mutex _mutex;
-				std::unordered_map< mt::thread::id, std::vector<atexit_t> > _destructors;
+				containers::unordered_map< mt::thread::id, std::vector<atexit_t> > _destructors;
 			};
 
 
@@ -49,7 +49,7 @@ namespace micro_profiler
 
 			private:
 				unsigned _next_id;
-				std::unordered_map<mt::thread::id, thread_monitor::thread_id> _ids;
+				containers::unordered_map<mt::thread::id, thread_monitor::thread_id> _ids;
 				mutable mt::mutex _mtx;
 			};
 
@@ -65,7 +65,7 @@ namespace micro_profiler
 				virtual void read_collected(acceptor &a);
 
 			private:
-				typedef std::unordered_map< unsigned int, std::vector<call_record> > TracesMap;
+				typedef containers::unordered_map< unsigned int, std::vector<call_record> > TracesMap;
 
 				TracesMap _traces;
 				mt::mutex _mutex;

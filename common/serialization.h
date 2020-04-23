@@ -26,7 +26,7 @@
 #include "protocol.h"
 #include "range.h"
 
-#include <strmd/container_ex.h>
+#include <strmd/container.h>
 #include <strmd/packer.h>
 
 namespace micro_profiler

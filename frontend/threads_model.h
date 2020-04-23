@@ -23,8 +23,8 @@
 #include <common/noncopyable.h>
 #include <common/hash.h>
 #include <common/types.h>
+#include <common/unordered_map.h>
 #include <frontend/ordered_view.h>
-#include <unordered_map>
 #include <wpl/ui/models.h>
 
 namespace strmd
@@ -38,7 +38,7 @@ namespace micro_profiler
 {
 	struct threads_model_reader;
 
-	class threads_model : public wpl::ui::list_model, std::unordered_map<unsigned int, thread_info, knuth_hash>,
+	class threads_model : public wpl::ui::list_model, containers::unordered_map<unsigned int, thread_info, knuth_hash>,
 		noncopyable
 	{
 	public:
@@ -59,7 +59,7 @@ namespace micro_profiler
 
 	private:
 		const request_threads_t _requestor;
-		ordered_view< std::unordered_map<unsigned int, thread_info, knuth_hash> > _view;
+		ordered_view< containers::unordered_map<unsigned int, thread_info, knuth_hash> > _view;
 		std::vector<unsigned int> _ids_buffer;
 
 	private:

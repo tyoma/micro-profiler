@@ -22,10 +22,10 @@
 
 #include <common/image_info.h>
 #include <common/protocol.h>
+#include <common/unordered_map.h>
 
 #include <functional>
 #include <map>
-#include <unordered_map>
 
 namespace micro_profiler
 {
@@ -53,7 +53,7 @@ namespace micro_profiler
 		struct module_info
 		{
 			typedef std::map<unsigned int /*rva*/, const symbol_info * /*symbol*/> addressed_symbols;
-			typedef std::unordered_map<unsigned int, std::string> files_map;
+			typedef containers::unordered_map<unsigned int, std::string> files_map;
 
 			const symbol_info *find_symbol_by_va(unsigned address) const;
 
@@ -63,7 +63,7 @@ namespace micro_profiler
 		};
 
 		typedef std::map<long_address_t /*base*/, mapped_module_ex> mappings_map;
-		typedef std::unordered_map<unsigned int /*persistent_id*/, module_info> modules_map;
+		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_map;
 
 	private:
 		const symbol_info *find_symbol_by_va(long_address_t address, const module_info *&module) const;

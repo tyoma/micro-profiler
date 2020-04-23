@@ -30,7 +30,7 @@
 #include <dbghelp.h>
 #include <set>
 #include <stdexcept>
-#include <unordered_map>
+#include <common/unordered_map.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -127,7 +127,7 @@ namespace micro_profiler
 
 						if (::SymGetLineFromAddr64(self->_dbghelp.get(), symbol->Address, &displacement, &info))
 						{
-							pair<unordered_map<string, unsigned int>::iterator, bool> r
+							pair<containers::unordered_map<string, unsigned int>::iterator, bool> r
 								= self->files.insert(make_pair(info.FileName, 0));
 
 							if (r.second)
@@ -148,7 +148,7 @@ namespace micro_profiler
 
 			private:
 				unsigned int _file_id;
-				unordered_map<string, unsigned int> files;
+				containers::unordered_map<string, unsigned int> files;
 				shared_ptr<void> _dbghelp;
 				symbol_callback_t _callback;
 				symbol_info _si;

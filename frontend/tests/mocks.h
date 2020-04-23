@@ -23,7 +23,7 @@ namespace micro_profiler
 				static std::shared_ptr<symbol_resolver> create(T (&symbols)[n]);
 
 			private:
-				mutable std::unordered_map<long_address_t, std::string> _names;
+				mutable containers::unordered_map<long_address_t, std::string> _names;
 			};
 
 			class threads_model : public micro_profiler::threads_model

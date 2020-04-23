@@ -15,7 +15,7 @@ namespace micro_profiler
 			{
 				unsigned n = 0;
 
-				for (unordered_map< mt::thread::id, vector<atexit_t> >::iterator i = _destructors.begin();
+				for (containers::unordered_map< mt::thread::id, vector<atexit_t> >::iterator i = _destructors.begin();
 					i != _destructors.end(); ++i)
 				{
 					while (!i->second.empty())
@@ -66,7 +66,7 @@ namespace micro_profiler
 			thread_monitor::thread_id thread_monitor::get_id(mt::thread::id native_id) const
 			{
 				mt::lock_guard<mt::mutex> lock(_mtx);
-				unordered_map<mt::thread::id, thread_monitor::thread_id>::const_iterator i = _ids.find(native_id);
+				containers::unordered_map<mt::thread::id, thread_monitor::thread_id>::const_iterator i = _ids.find(native_id);
 
 				return i != _ids.end() ? i->second : 0;
 			}

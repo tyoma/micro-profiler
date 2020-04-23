@@ -1,6 +1,6 @@
 #include <frontend/ordered_view.h>
 
-#include <unordered_map>
+#include <common/unordered_map.h>
 #include <utility>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -25,7 +25,7 @@ namespace micro_profiler
 			bool operator == (const POD &left, const POD &right)
 			{	return left.a == right.a && left.b == right.b && left.c == right.c;	}
 
-			typedef unordered_map<void *, POD> pod_map;
+			typedef containers::unordered_map<void *, POD> pod_map;
 			typedef ordered_view<pod_map> sorted_pods;
 
 			pair<void *const, POD> make_pod(const POD &pod)

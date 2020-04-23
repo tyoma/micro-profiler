@@ -4,6 +4,7 @@
 
 #include "helpers.h"
 
+#include <common/unordered_map.h>
 #include <functional>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
@@ -46,7 +47,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				unordered_map<unsigned /*threadid*/, statistic_types::map_detailed> ss;
+				containers::unordered_map<unsigned /*threadid*/, statistic_types::map_detailed> ss;
 
 				// ACT
 				ds(ss);
@@ -88,7 +89,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				unordered_map<unsigned, statistic_types::map_detailed> ss;
+				containers::unordered_map<unsigned, statistic_types::map_detailed> ss;
 
 				// ACT
 				ds(ss);

@@ -29,8 +29,11 @@ namespace micro_profiler
 
 			sender::sender(unsigned short port)
 			{
-				sockaddr_in service = { AF_INET, htons(port), inet_addr("127.0.0.1"), { 0 } };
+				sockaddr_in service = {};
 
+				service.sin_family = AF_INET;
+				service.sin_addr.s_addr = inet_addr("127.0.0.1");
+				service.sin_port = htons(port);
 				::connect(_socket, (sockaddr *)&service, sizeof(service));
 			}
 
@@ -51,8 +54,11 @@ namespace micro_profiler
 
 			reader::reader(unsigned short port)
 			{
-				sockaddr_in service = { AF_INET, htons(port), inet_addr("127.0.0.1"), { 0 } };
+				sockaddr_in service = {};
 
+				service.sin_family = AF_INET;
+				service.sin_addr.s_addr = inet_addr("127.0.0.1");
+				service.sin_port = htons(port);
 				::connect(_socket, (sockaddr *)&service, sizeof(service));
 			}
 
@@ -73,8 +79,11 @@ namespace micro_profiler
 			bool is_local_port_open(unsigned short port)
 			{
 				socket_handle s;
-				sockaddr_in service = { AF_INET, htons(port), inet_addr("127.0.0.1"), { 0 } };
+				sockaddr_in service = {};
 
+				service.sin_family = AF_INET;
+				service.sin_addr.s_addr = inet_addr("127.0.0.1");
+				service.sin_port = htons(port);
 				return 0 == ::connect(s, (sockaddr *)&service, sizeof(service));
 			}
 		}

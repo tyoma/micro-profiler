@@ -20,7 +20,9 @@
 
 #pragma once
 
+#include <arpa/inet.h>
 #include <common/noncopyable.h>
+#include <netinet/in.h>
 #include <stdexcept>
 #include <stdlib.h>
 #include <string>
@@ -106,6 +108,17 @@ namespace micro_profiler
 
 			inline socket_handle::operator int() const
 			{	return _socket;	}
+
+
+			inline sockaddr_in make_sockaddr_in(const char *ip_address, unsigned short port)
+			{
+				sockaddr_in addr = {};
+
+				addr.sin_family = AF_INET;
+				addr.sin_addr.s_addr = inet_addr(ip_address);
+				addr.sin_port = htons(port);
+				return addr;
+			}
 		}
 	}
 }

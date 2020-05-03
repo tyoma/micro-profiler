@@ -99,7 +99,7 @@ namespace micro_profiler
 
 			int client_session::open(const host_port &hp)
 			{
-				sockaddr_in service = { AF_INET, htons(hp.port), inet_addr(hp.host.c_str()), { 0 } };
+				sockaddr_in service = make_sockaddr_in(hp.host.c_str(), hp.port);
 				int hsocket = static_cast<int>(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
 
 				if (-1 == hsocket)

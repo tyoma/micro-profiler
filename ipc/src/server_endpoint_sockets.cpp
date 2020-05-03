@@ -150,7 +150,7 @@ namespace micro_profiler
 			{
 				socket_handle server_socket(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
 				host_port hp(endpoint_id);
-				sockaddr_in service = { AF_INET, htons(hp.port), inet_addr(hp.host.c_str()), { 0 } };
+				sockaddr_in service = make_sockaddr_in(hp.host.c_str(), hp.port);
 
 				setup_socket(server_socket);
 				if (::bind(server_socket, (sockaddr *)&service, sizeof(service)))
@@ -249,7 +249,7 @@ namespace micro_profiler
 
 			int server::connect_aux(unsigned short port)
 			{
-				sockaddr_in service = { AF_INET, htons(port), inet_addr(c_localhost), { 0 } };
+				sockaddr_in service = make_sockaddr_in(c_localhost, port);
 				int s = static_cast<int>(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
 				u_long arg = 1 /* nonblocking */;
 

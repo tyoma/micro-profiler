@@ -27,6 +27,9 @@ if(UNIX)
 	add_definitions(-DMP_MT_GENERIC)
 	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
 	add_definitions(-D_FILE_OFFSET_BITS=64) # Fixes problems 32-bit app on 64-bit Ubuntu
+	if(APPLE)
+		add_definitions(-DMSG_NOSIGNAL=0)
+	endif()
 endif()
 if (MSVC)
 	include_directories($<$<VERSION_LESS_EQUAL:${MSVC_VERSION},1600>:${CMAKE_CURRENT_LIST_DIR}/compat/msvc10->)
@@ -66,7 +69,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
 		"$<$<CXX_COMPILER_ID:GNU>:-Wl,--no-undefined>"
 		"$<$<CXX_COMPILER_ID:Clang>:-Wl,-undefined,error>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--strip-debug>>"
-		"$<$<CXX_COMPILER_ID:Clang>:$<$<CONFIG:Release>:-Wl,-strip-debug>>"
+#		"$<$<CXX_COMPILER_ID:Clang>:$<$<CONFIG:Release>:-Wl,-strip-debug>>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--gc-sections>>"
 	)
 endif()

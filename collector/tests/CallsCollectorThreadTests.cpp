@@ -43,7 +43,7 @@ namespace micro_profiler
 
 				while (n--)
 				{
-					call_record r = { v2, reinterpret_cast<void *>(v1) };
+					call_record r = { static_cast<timestamp_t>(v2), reinterpret_cast<void *>(v1) };
 
 					cc.track(r.callee, r.timestamp);
 					if (reference)

@@ -3,6 +3,7 @@
 #include <frontend/piechart.h>
 #include <frontend/columns_model.h>
 #include <frontend/function_list.h>
+#include <frontend/listview.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
 
@@ -61,7 +62,7 @@ namespace micro_profiler
 
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
 		: _columns_main(new columns_model(c_columns_statistics, 3, false)), _statistics(model),
-			_statistics_lv(create_listview()), _statistics_pc(new piechart(begin(c_palette), end(c_palette), c_rest)),
+			_statistics_lv(new listview /*create_listview()*/), _statistics_pc(new piechart(begin(c_palette), end(c_palette), c_rest)),
 			_threads_cb(create_combobox()),
 			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)), _parents_lv(create_listview()),
 			_columns_children(new columns_model(c_columns_statistics, 4, false)), _children_lv(create_listview()),

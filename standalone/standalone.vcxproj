@@ -57,6 +57,9 @@
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\libraries\agge\src\agge.text\agge.text.vcxproj">
+      <Project>{4b446510-fa62-ad02-51ba-9bde9564ff26}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\logger\src\logger.vcxproj">
       <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
     </ProjectReference>

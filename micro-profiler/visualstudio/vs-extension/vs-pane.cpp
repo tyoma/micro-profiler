@@ -73,7 +73,7 @@ namespace micro_profiler
 				_executable = executable;
 				_host->set_view(_hosted_ui);
 				_open_source_connection = _hosted_ui->open_source += bind(&vs_pane::on_open_source, this, _1, _2);
-				_host->set_background_color(agge::color::make(24, 32, 48));
+				_host->set_background_color(agge::color::make(255, 255, 255));
 			}
 
 			void set_frame(const CComPtr<IVsWindowFrame> &frame)

@@ -39,7 +39,7 @@ namespace micro_profiler
 	private:
 		const std::shared_ptr<columns_model> _columns_main;
 		const std::shared_ptr<functions_list> _statistics;
-		const std::shared_ptr<wpl::ui::listview> _statistics_lv;
+		std::shared_ptr<wpl::ui::listview> _statistics_lv;
 		const std::shared_ptr<piechart> _statistics_pc;
 
 		std::shared_ptr<wpl::ui::combobox> _threads_cb;

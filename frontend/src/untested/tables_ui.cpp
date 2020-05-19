@@ -62,12 +62,17 @@ namespace micro_profiler
 
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
 		: _columns_main(new columns_model(c_columns_statistics, 3, false)), _statistics(model),
-			_statistics_lv(new listview /*create_listview()*/), _statistics_pc(new piechart(begin(c_palette), end(c_palette), c_rest)),
+			_statistics_pc(new piechart(begin(c_palette), end(c_palette), c_rest)),
 			_threads_cb(create_combobox()),
-			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)), _parents_lv(create_listview()),
-			_columns_children(new columns_model(c_columns_statistics, 4, false)), _children_lv(create_listview()),
+			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)), _parents_lv(wpl::ui::create_listview()),
+			_columns_children(new columns_model(c_columns_statistics, 4, false)), _children_lv(wpl::ui::create_listview()),
 			_children_pc(new piechart(begin(c_palette), end(c_palette), c_rest))
 	{
+		listview_controls main_lv = create_listview();
+
+		_statistics_lv = main_lv.listview;
+
+
 		_columns_parents->update(*configuration.create("ParentsColumns"));
 		_columns_main->update(*configuration.create("MainColumns"));
 		_columns_children->update(*configuration.create("ChildrenColumns"));
@@ -126,7 +131,7 @@ namespace micro_profiler
 			layout_split->add(150);
 			split->add_view(_statistics_pc);
 			layout_split->add(-100);
-			split->add_view(_statistics_lv);
+			split->add_view(main_lv.view);
 		layout->add(-100);
 		add_view(split);
 

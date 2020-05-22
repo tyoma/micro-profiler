@@ -40,24 +40,21 @@ namespace micro_profiler
 		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer) const;
 		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &native_views);
 
-		// listview_core methods
+		// listview methods
 		virtual void set_columns_model(std::shared_ptr<columns_model> cm);
 		virtual void set_model(std::shared_ptr<wpl::ui::table_model> ds);
-
 		virtual void adjust_column_widths();
-
 		virtual void select(index_type item, bool reset_previous);
 		virtual void clear_selection();
-
 		virtual void ensure_visible(index_type item);
-
-		void on_model_invalidated(index_type count);
 
 		// scroll_model methods
 		virtual std::pair<double /*range_min*/, double /*range_width*/> get_range() const;
 		virtual std::pair<double /*window_min*/, double /*window_width*/> get_window() const;
 		virtual void scrolling(bool begins);
 		virtual void scroll_window(double window_min, double window_width);
+
+		void on_model_invalidated(index_type count);
 
 	private:
 		wpl::slot_connection _conn_invalidation;

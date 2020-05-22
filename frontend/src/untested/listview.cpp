@@ -70,7 +70,7 @@ namespace micro_profiler
 
 		const auto count = _model->get_count();
 		const auto columns_count = _cmodel->get_count();
-		auto item = static_cast<index_type>(_first_visible);
+		auto item = static_cast<long long>(_first_visible);
 		auto top = -_item_height * static_cast<real_t>(_first_visible - item);
 		vector<columns_model::column> columns;
 		wstring text;
@@ -88,14 +88,16 @@ namespace micro_profiler
 			real_t x = 0.0f;
 			const auto y = top + m.ascent;
 
-			for (columns_model::index_type citem = 0; citem != columns_count; x += columns[citem++].width)
+			if (item >= 0)
 			{
-				_model->get_text(item, citem, text);
-				_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, x, y);
+				for (columns_model::index_type citem = 0; citem != columns_count; x += columns[citem++].width)
+				{
+					_model->get_text(static_cast<index_type>(item), citem, text);
+					_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, x, y);
+				}
 			}
 		}
-		color text_clr = { 0, 0, 0, 255 };
-		ctx(ras, blender(text_clr), winding<>());
+		ctx(ras, blender(color::make(0, 0, 0)), winding<>());
 	}
 
 	void listview_core::resize(unsigned cx, unsigned cy, positioned_native_views &/*native_views*/)
@@ -132,12 +134,6 @@ namespace micro_profiler
 	void listview_core::ensure_visible(index_type /*item*/)
 	{	}
 
-	void listview_core::on_model_invalidated(index_type count)
-	{
-		_item_count = count;
-		visual::invalidate(0);
-	}
-
 	pair<double /*range_min*/, double /*range_width*/> listview_core::get_range() const
 	{	return make_pair(0, _item_count);	}
 
@@ -150,6 +146,13 @@ namespace micro_profiler
 	void listview_core::scroll_window(double window_min, double /*window_width*/)
 	{
 		_first_visible = window_min;
+		visual::invalidate(0);
+	}
+
+	void listview_core::on_model_invalidated(index_type count)
+	{
+		_item_count = count;
+		scroll_model::invalidated();
 		visual::invalidate(0);
 	}
 

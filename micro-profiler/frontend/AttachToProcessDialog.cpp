@@ -54,7 +54,7 @@ namespace micro_profiler
 		shared_ptr<button> btn;
 
 		_processes_lv->set_model(_model);
-		_processes_lv->set_columns_model(shared_ptr<listview::columns_model>(new columns_model(c_columns_processes, 0,
+		_processes_lv->set_columns_model(shared_ptr<wpl::ui::columns_model>(new columns_model(c_columns_processes, 0,
 			true)));
 		_connections.push_back(_processes_lv->item_activate += [this] (wpl::ui::listview::index_type item) {
 			auto process = _model->get_process(item);

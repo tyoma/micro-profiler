@@ -22,7 +22,7 @@
 
 #include <agge.text/text_engine.h>
 #include <wpl/ui/container.h>
-#include <wpl/ui/listview.h>
+#include <wpl/ui/controls/listview.h>
 
 namespace micro_profiler
 {
@@ -36,51 +36,35 @@ namespace micro_profiler
 	public:
 		column_header(text_engine_ptr text_engine);
 
-		void set_model(std::shared_ptr<wpl::ui::listview::columns_model> model);
+		void set_model(std::shared_ptr<wpl::ui::columns_model> model);
 
 		// visual methods
 		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer) const;
 		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &native_views);
 
 	private:
-		std::shared_ptr<wpl::ui::listview::columns_model> _model;
+		std::shared_ptr<wpl::ui::columns_model> _model;
 		agge::box_r _size;
 		text_engine_ptr _text_engine;
 		agge::font::ptr _font;
 	};
 
-	class listview_core : public wpl::ui::listview, public wpl::ui::scroll_model
+	class listview_core : public wpl::ui::controls::listview_core
 	{
 	public:
 		listview_core(text_engine_ptr text_engine, std::shared_ptr<column_header> cheader);
 
-		// visual methods
-		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer) const;
-		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &native_views);
-
 		// listview methods
-		virtual void set_columns_model(std::shared_ptr<columns_model> cm);
-		virtual void set_model(std::shared_ptr<wpl::ui::table_model> ds);
-		virtual void adjust_column_widths();
-		virtual void select(index_type item, bool reset_previous);
-		virtual void clear_selection();
-		virtual void ensure_visible(index_type item);
-
-		// scroll_model methods
-		virtual std::pair<double /*range_min*/, double /*range_width*/> get_range() const;
-		virtual std::pair<double /*window_min*/, double /*window_width*/> get_window() const;
-		virtual void scrolling(bool begins);
-		virtual void scroll_window(double window_min, double window_width);
-
-		void on_model_invalidated(index_type count);
+		virtual void set_columns_model(std::shared_ptr<wpl::ui::columns_model> cm);
 
 	private:
-		wpl::slot_connection _conn_invalidation;
-		std::shared_ptr<wpl::ui::table_model> _model;
-		std::shared_ptr<columns_model> _cmodel;
-		index_type _item_count;
-		agge::box_r _size;
-		double _first_visible;
+		virtual agge::real_t get_item_height() const;
+		virtual void draw_item_background(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer,
+			const agge::rect_r &box, index_type item, unsigned state) const;
+		virtual void draw_subitem(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer,
+			const agge::rect_r &box, index_type item, unsigned state, index_type subitem, const std::wstring &text) const;
+
+	private:
 		agge::real_t _item_height;
 		text_engine_ptr _text_engine;
 		agge::font::ptr _font;

@@ -71,7 +71,7 @@ namespace micro_profiler
 
 	column_header::column_header(text_engine_ptr text_engine_)
 		: _text_engine(text_engine_)
-	{	_font = _text_engine->create_font(L"Segoe UI", 17, false, false, agge::font::key::gf_vertical);	}
+	{	_font = _text_engine->create_font(L"Segoe UI", 11, true, false, agge::font::key::gf_vertical);	}
 
 	void column_header::set_model(shared_ptr<columns_model> model)
 	{
@@ -105,11 +105,12 @@ namespace micro_profiler
 
 
 	listview_core::listview_core(text_engine_ptr text_engine_, shared_ptr<column_header> cheader)
-		: _text_engine(text_engine_), _cheader(cheader)
+		: _text_engine(text_engine_), _cheader(cheader), _border_width(1.0f)
 	{
-		_font = _text_engine->create_font(L"Segoe UI", 12, false, false, agge::font::key::gf_vertical);
+		_font = _text_engine->create_font(L"Segoe UI", 11, false, false, agge::font::key::gf_vertical);
 		agge::font::metrics m = _font->get_metrics();
-		_item_height = real_t(int(1.4f * (m.leading + m.ascent + m.descent)) | 1);
+		_item_height = real_t(int(1.4f * (m.leading + m.ascent + m.descent) + _border_width));
+		_baseline_offset = real_t(int(0.5f * (_item_height + m.ascent - m.descent + _border_width)));
 	}
 
 	void listview_core::set_columns_model(shared_ptr<columns_model> cmodel)
@@ -124,19 +125,20 @@ namespace micro_profiler
 	void listview_core::draw_item_background(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b,
 		index_type item, unsigned /*state*/) const
 	{
-		add_path(*ras, rectangle(b.x1, b.y1, b.x2, b.y2));
+		if (item)
+		{
+			add_path(*ras, rectangle(b.x1, b.y1, b.x2, b.y1 + _border_width));
+			ctx(ras, blender(color::make(192, 192, 192)), winding<>());
+		}
+		add_path(*ras, rectangle(b.x1, b.y1 + _border_width, b.x2, b.y2));
 		ctx(ras, blender(item & 1 ? color::make(255, 255, 255) : color::make(224, 224, 224)), winding<>());
 	}
 
 	void listview_core::draw_subitem(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b, index_type /*item*/,
 		unsigned /*state*/, index_type /*subitem*/, const wstring &text) const
 	{
-		real_t y = b.y1 + 0.5f * _item_height;
-		agge::font::metrics m = _font->get_metrics();
-
-		y -= 0.5f * (m.ascent + m.descent);
-		y += m.ascent;
-		_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, b.x1, y, b.x2 - b.x1);
+		_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, b.x1, b.y1 + _baseline_offset, b.x2 - b.x1);
+		ras->sort(true);
 		ctx(ras, blender(color::make(0, 0, 0)), winding<>());
 	}
 

@@ -65,7 +65,7 @@ namespace micro_profiler
 			const agge::rect_r &box, index_type item, unsigned state, index_type subitem, const std::wstring &text) const;
 
 	private:
-		agge::real_t _item_height;
+		agge::real_t _item_height, _baseline_offset, _border_width;
 		text_engine_ptr _text_engine;
 		agge::font::ptr _font;
 		std::shared_ptr<column_header> _cheader;

@@ -180,7 +180,7 @@ namespace micro_profiler
 	font::accessor_ptr font_loader::load(const wchar_t *typeface, int height, bool bold, bool italic,
 		font::key::grid_fit grid_fit)
 	{
-		shared_ptr<void> hfont(::CreateFontW(height, 0, 0, 0, bold ? FW_BOLD : FW_NORMAL, !!italic, FALSE, FALSE, 0,
+		shared_ptr<void> hfont(::CreateFontW(-height, 0, 0, 0, bold ? FW_BOLD : FW_NORMAL, !!italic, FALSE, FALSE, 0,
 			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, 0, typeface), &::DeleteObject);
 
 		return shared_ptr<font_accessor>(new font_accessor(hfont, grid_fit));

@@ -26,6 +26,7 @@
 #include <agge/blenders_simd.h>
 #include <agge/filling_rules.h>
 #include <agge/figures.h>
+#include <agge/stroke_features.h>
 #include <agge.text/font.h>
 #include <wpl/ui/layout.h>
 #include <wpl/ui/scroller.h>
@@ -111,6 +112,11 @@ namespace micro_profiler
 		agge::font::metrics m = _font->get_metrics();
 		_item_height = real_t(int(1.4f * (m.leading + m.ascent + m.descent) + _border_width));
 		_baseline_offset = real_t(int(0.5f * (_item_height + m.ascent - m.descent + _border_width)));
+
+		_stroke.set_cap(agge::caps::butt());
+		_stroke.set_join(agge::joins::bevel());
+		_stroke.width(1.0f);
+		_dash.add_dash(1.0f, 1.0f);
 	}
 
 	void listview_core::set_columns_model(shared_ptr<columns_model> cmodel)
@@ -123,7 +129,7 @@ namespace micro_profiler
 	{	return _item_height;	}
 
 	void listview_core::draw_item_background(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b,
-		index_type item, unsigned /*state*/) const
+		index_type item, unsigned state) const
 	{
 		if (item)
 		{
@@ -131,7 +137,19 @@ namespace micro_profiler
 			ctx(ras, blender(color::make(192, 192, 192)), winding<>());
 		}
 		add_path(*ras, rectangle(b.x1, b.y1 + _border_width, b.x2, b.y2));
-		ctx(ras, blender(item & 1 ? color::make(255, 255, 255) : color::make(224, 224, 224)), winding<>());
+		ctx(ras, blender(state & selected ? color::make(32, 208, 255)
+			: item & 1 ? color::make(255, 255, 255) : color::make(224, 224, 224)), winding<>());
+	}
+
+	void listview_core::draw_item(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b, index_type /*item*/,
+		unsigned state) const
+	{
+		if (state & focused)
+		{
+			add_path(*ras, assist(assist(rectangle(b.x1 + 0.25f, b.y1 + 0.5f, b.x2 - 0.25f, b.y2 - _border_width - 0.5f),
+				_dash), _stroke));
+			ctx(ras, blender(color::make(255, 255, 255)), winding<>());
+		}
 	}
 
 	void listview_core::draw_subitem(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b, index_type /*item*/,

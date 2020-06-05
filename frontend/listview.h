@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <agge/dash.h>
+#include <agge/stroke.h>
 #include <agge.text/text_engine.h>
 #include <wpl/ui/container.h>
 #include <wpl/ui/controls/listview.h>
@@ -61,6 +63,8 @@ namespace micro_profiler
 		virtual agge::real_t get_item_height() const;
 		virtual void draw_item_background(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer,
 			const agge::rect_r &box, index_type item, unsigned state) const;
+		virtual void draw_item(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &ras, const agge::rect_r &b,
+			index_type item, unsigned state) const;
 		virtual void draw_subitem(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer,
 			const agge::rect_r &box, index_type item, unsigned state, index_type subitem, const std::wstring &text) const;
 
@@ -69,6 +73,8 @@ namespace micro_profiler
 		text_engine_ptr _text_engine;
 		agge::font::ptr _font;
 		std::shared_ptr<column_header> _cheader;
+		mutable agge::stroke _stroke;
+		mutable agge::dash _dash;
 	};
 
 	struct listview_controls

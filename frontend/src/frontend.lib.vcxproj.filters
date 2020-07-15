@@ -73,8 +73,10 @@
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\serialization_context.h" />
-    <ClInclude Include="..\listview.h" />
     <ClInclude Include="untested\font_loader.h">
+      <Filter>src\untested</Filter>
+    </ClInclude>
+    <ClInclude Include="untested\listview.h">
       <Filter>src\untested</Filter>
     </ClInclude>
   </ItemGroup>

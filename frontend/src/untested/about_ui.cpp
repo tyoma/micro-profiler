@@ -45,7 +45,7 @@ namespace micro_profiler
 			shared_ptr<ui::link> link = ui::create_link();
 
 			link->set_text(text);
-			c.add_view(link);
+			c.add_view(link->get_view());
 			lm.add(size);
 			return link;
 		}
@@ -105,7 +105,7 @@ namespace micro_profiler
 			l2->add(-100);
 			shared_ptr<ui::button> button = ui::create_button();
 			button->set_text(L"Thank You!");
-			c2->add_view(button);
+			c2->add_view(button->get_view());
 			l2->add(yy(30));
 			_connections.push_back(button->clicked += [this] {
 				_form->close();

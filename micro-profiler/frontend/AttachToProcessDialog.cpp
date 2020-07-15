@@ -72,16 +72,16 @@ namespace micro_profiler
 
 		});
 		lm_toolbar->add(50);
-		toolbar->add_view(btn);
+		toolbar->add_view(btn->get_view());
 		btn = create_button();
 		btn->set_text(L"Close");
 		_connections.push_back(btn->clicked += [this] { closed(); });
 		lm_toolbar->add(50);
-		toolbar->add_view(btn);
+		toolbar->add_view(btn->get_view());
 
 		vstack->set_layout(lm_vstack);
 		lm_vstack->add(-100);
-		vstack->add_view(_processes_lv);
+		vstack->add_view(_processes_lv->get_view());
 		lm_vstack->add(24);
 		vstack->add_view(toolbar);
 

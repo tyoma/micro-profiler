@@ -23,8 +23,7 @@
 #include <agge/dash.h>
 #include <agge/stroke.h>
 #include <agge.text/text_engine.h>
-#include <wpl/ui/container.h>
-#include <wpl/ui/controls/listview.h>
+#include <wpl/ui/controls/listview_core.h>
 
 namespace micro_profiler
 {
@@ -33,31 +32,10 @@ namespace micro_profiler
 
 	class font_loader;
 
-	class column_header : public wpl::ui::view
-	{
-	public:
-		column_header(text_engine_ptr text_engine);
-
-		void set_model(std::shared_ptr<wpl::ui::columns_model> model);
-
-		// visual methods
-		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer) const;
-		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &native_views);
-
-	private:
-		std::shared_ptr<wpl::ui::columns_model> _model;
-		agge::box_r _size;
-		text_engine_ptr _text_engine;
-		agge::font::ptr _font;
-	};
-
 	class listview_core : public wpl::ui::controls::listview_core
 	{
 	public:
-		listview_core(text_engine_ptr text_engine, std::shared_ptr<column_header> cheader);
-
-		// listview methods
-		virtual void set_columns_model(std::shared_ptr<wpl::ui::columns_model> cm);
+		listview_core(/*text_engine_ptr text_engine, std::shared_ptr<column_header> cheader*/);
 
 	private:
 		virtual agge::real_t get_item_height() const;
@@ -72,16 +50,7 @@ namespace micro_profiler
 		agge::real_t _item_height, _baseline_offset, _border_width;
 		text_engine_ptr _text_engine;
 		agge::font::ptr _font;
-		std::shared_ptr<column_header> _cheader;
 		mutable agge::stroke _stroke;
 		mutable agge::dash _dash;
 	};
-
-	struct listview_controls
-	{
-		std::shared_ptr<wpl::ui::listview> listview;
-		std::shared_ptr<wpl::ui::view> view;
-	};
-
-	listview_controls create_listview();
 }

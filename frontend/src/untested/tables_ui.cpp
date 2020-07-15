@@ -10,6 +10,7 @@
 #include <common/configuration.h>
 #include <wpl/ui/layout.h>
 #include <wpl/ui/win32/controls.h>
+#include <wpl/ui/controls/listview.h>
 
 using namespace std;
 using namespace placeholders;
@@ -62,17 +63,15 @@ namespace micro_profiler
 
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
 		: _columns_main(new columns_model(c_columns_statistics, 3, false)), _statistics(model),
-			_statistics_pc(new piechart(begin(c_palette), end(c_palette), c_rest)),
+			_statistics_lv(wpl::ui::controls::create_listview<listview_core>()),
+			_statistics_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
 			_threads_cb(create_combobox()),
-			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)), _parents_lv(wpl::ui::create_listview()),
-			_columns_children(new columns_model(c_columns_statistics, 4, false)), _children_lv(wpl::ui::create_listview()),
-			_children_pc(new piechart(begin(c_palette), end(c_palette), c_rest))
+			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
+			_parents_lv(wpl::ui::controls::create_listview<listview_core>()),
+			_columns_children(new columns_model(c_columns_statistics, 4, false)),
+			_children_lv(wpl::ui::controls::create_listview<listview_core>()),
+			_children_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest))
 	{
-		listview_controls main_lv = create_listview();
-
-		_statistics_lv = main_lv.listview;
-
-
 		_columns_parents->update(*configuration.create("ParentsColumns"));
 		_columns_main->update(*configuration.create("MainColumns"));
 		_columns_children->update(*configuration.create("ChildrenColumns"));
@@ -120,10 +119,10 @@ namespace micro_profiler
 		set_layout(layout);
 
 		layout->add(150);
-		add_view(_parents_lv);
+		add_view(_parents_lv->get_view(), 3);
 
 		layout->add(24);
-		add_view(_threads_cb);
+		add_view(_threads_cb->get_view());
 
 			split.reset(new container);
 			layout_split.reset(new stack(5, true));
@@ -131,7 +130,7 @@ namespace micro_profiler
 			layout_split->add(150);
 			split->add_view(_statistics_pc);
 			layout_split->add(-100);
-			split->add_view(main_lv.view);
+			split->add_view(_statistics_lv->get_view(), 1);
 		layout->add(-100);
 		add_view(split);
 
@@ -141,7 +140,7 @@ namespace micro_profiler
 			layout_split->add(150);
 			split->add_view(_children_pc);
 			layout_split->add(-100);
-			split->add_view(_children_lv);
+			split->add_view(_children_lv->get_view(), 2);
 		layout->add(150);
 		add_view(split);
 

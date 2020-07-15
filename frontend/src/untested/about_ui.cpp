@@ -22,11 +22,11 @@
 
 #include <common/string.h>
 
-#include <wpl/ui/container.h>
-#include <wpl/ui/layout.h>
-#include <wpl/ui/controls.h>
-#include <wpl/ui/types.h>
-#include <wpl/ui/win32/controls.h>
+#include <wpl/container.h>
+#include <wpl/controls.h>
+#include <wpl/layout.h>
+#include <wpl/types.h>
+#include <wpl/win32/controls.h>
 
 #include <Windows.h>
 #include <ShellAPI.h>
@@ -40,9 +40,9 @@ namespace micro_profiler
 	namespace
 	{
 		template <typename LayoutManagerT>
-		shared_ptr<ui::link> create_link(ui::container &c, LayoutManagerT &lm, int size, const wstring &text)
+		shared_ptr<link> create_link(container &c, LayoutManagerT &lm, int size, const wstring &text)
 		{
-			shared_ptr<ui::link> link = ui::create_link();
+			shared_ptr<link> link = wpl::create_link();
 
 			link->set_text(text);
 			c.add_view(link->get_view());
@@ -72,27 +72,27 @@ namespace micro_profiler
 	}
 
 
-	about_ui::about_ui(const shared_ptr<ui::form> &form)
+	about_ui::about_ui(const shared_ptr<form> &form)
 		: _form(form)
 	{
 		function<int (int)> xx = scale_x();
 		function<int (int)> yy = scale_y();
-		ui::font f = { L"Segoe UI", 10 };
+		font f = { L"Segoe UI", 10 };
 
 		_form->set_font(f);
 		_form->set_caption(L"MicroProfiler - Support Developer");
 
-		shared_ptr<ui::container> c1(new ui::container);
-		c1->set_layout(shared_ptr<ui::spacer>(new ui::spacer(xx(15), yy(15))));
-			shared_ptr<ui::container> c2(new ui::container);
-			shared_ptr<ui::stack> l2(new ui::stack(yy(5), false));
+		shared_ptr<container> c1(new container);
+		c1->set_layout(shared_ptr<spacer>(new spacer(xx(15), yy(15))));
+			shared_ptr<container> c2(new container);
+			shared_ptr<stack> l2(new stack(yy(5), false));
 			c2->set_layout(l2);
-				shared_ptr<ui::container> c3(new ui::container);
-				c3->set_layout(shared_ptr<ui::spacer>(new ui::spacer(xx(10), 0)));
-					shared_ptr<ui::container> c4(new ui::container);
-					shared_ptr<ui::stack> l4(new ui::stack(yy(10), false));
+				shared_ptr<container> c3(new container);
+				c3->set_layout(shared_ptr<spacer>(new spacer(xx(10), 0)));
+					shared_ptr<container> c4(new container);
+					shared_ptr<stack> l4(new stack(yy(10), false));
 					c4->set_layout(l4);
-					shared_ptr<ui::link> link;
+					shared_ptr<link> link;
 					link = create_link(*c2, *l2, yy(40), L"Please, take any of these steps to support the development of MicroProfiler:");
 					link = create_link(*c4, *l4, yy(20), L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
 					_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
@@ -103,7 +103,7 @@ namespace micro_profiler
 				c3->add_view(c4);
 			c2->add_view(c3);
 			l2->add(-100);
-			shared_ptr<ui::button> button = ui::create_button();
+			shared_ptr<button> button = create_button();
 			button->set_text(L"Thank You!");
 			c2->add_view(button->get_view());
 			l2->add(yy(30));
@@ -112,7 +112,7 @@ namespace micro_profiler
 			});
 		c1->add_view(c2);
 
-		ui::view_location l = { 100, 100, xx(380), yy(230) };
+		view_location l = { 100, 100, xx(380), yy(230) };
 
 		_form->set_style(0);
 		_form->set_location(l);

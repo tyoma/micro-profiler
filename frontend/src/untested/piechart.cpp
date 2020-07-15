@@ -31,7 +31,6 @@ using namespace agge;
 using namespace std;
 using namespace placeholders;
 using namespace wpl;
-using namespace wpl::ui;
 
 namespace micro_profiler
 {

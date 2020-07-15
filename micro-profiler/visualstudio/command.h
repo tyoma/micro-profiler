@@ -22,7 +22,7 @@
 
 #include <memory>
 #include <string>
-#include <wpl/base/concepts.h>
+#include <wpl/concepts.h>
 
 namespace micro_profiler
 {

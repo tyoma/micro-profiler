@@ -51,11 +51,11 @@ namespace micro_profiler
 
 		virtual void detach() throw();
 
-		// wpl::ui::table_model methods
+		// wpl::table_model methods
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
-		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type row) const;
+		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const;
 
 		// linked_statistics methods
 		virtual function_key get_key(index_type item) const;
@@ -127,7 +127,7 @@ namespace micro_profiler
 	{ return _view ? _view->size() : 0u; }
 
 	template <typename BaseT, typename MapT>
-	inline std::shared_ptr<const wpl::ui::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
+	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
 	{	return _view->track(row);	}
 
 	template <typename BaseT, typename MapT>

@@ -22,11 +22,11 @@
 
 #include <agge/color.h>
 #include <frontend/series.h>
-#include <wpl/ui/view.h>
+#include <wpl/view.h>
 
 namespace micro_profiler
 {
-	class piechart : public wpl::ui::view, public wpl::ui::index_traits
+	class piechart : public wpl::view, public wpl::index_traits
 	{
 	public:
 		typedef series<double> model_t;
@@ -53,7 +53,7 @@ namespace micro_profiler
 		typedef std::vector<segment> segments_t;
 
 	private:
-		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer) const;
+		virtual void draw(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer) const;
 		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &nviews);
 
 		virtual void mouse_down(mouse_buttons button, int depressed, int x, int y);
@@ -68,7 +68,7 @@ namespace micro_profiler
 		agge::real_t _outer_r, _inner_r, _selection_emphasis_k;
 		wpl::slot_connection _invalidate_connection;
 		std::shared_ptr<model_t> _model;
-		std::shared_ptr<const wpl::ui::trackable> _selection;
+		std::shared_ptr<const wpl::trackable> _selection;
 		std::vector<agge::color> _palette;
 		agge::color _color_rest;
 	};

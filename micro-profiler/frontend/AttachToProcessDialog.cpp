@@ -23,14 +23,14 @@
 #include <frontend/columns_model.h>
 #include <frontend/process_list.h>
 #include <injector/process.h>
-#include <wpl/ui/container.h>
-#include <wpl/ui/controls.h>
-#include <wpl/ui/layout.h>
-#include <wpl/ui/win32/controls.h>
-#include <wpl/ui/win32/form.h>
+#include <wpl/container.h>
+#include <wpl/controls.h>
+#include <wpl/layout.h>
+#include <wpl/win32/controls.h>
+#include <wpl/win32/form.h>
 
 using namespace std;
-using namespace wpl::ui;
+using namespace wpl;
 
 namespace micro_profiler
 {
@@ -44,8 +44,8 @@ namespace micro_profiler
 		};
 	}
 
-	AttachToProcessDialog::AttachToProcessDialog(const shared_ptr<wpl::ui::form> &form)
-		: _form(form), _processes_lv(wpl::ui::create_listview()), _model(new process_list)
+	AttachToProcessDialog::AttachToProcessDialog(const shared_ptr<wpl::form> &form)
+		: _form(form), _processes_lv(wpl::create_listview()), _model(new process_list)
 	{
 		shared_ptr<container> root(new container);
 		shared_ptr<container> vstack(new container), toolbar(new container);
@@ -54,9 +54,9 @@ namespace micro_profiler
 		shared_ptr<button> btn;
 
 		_processes_lv->set_model(_model);
-		_processes_lv->set_columns_model(shared_ptr<wpl::ui::columns_model>(new columns_model(c_columns_processes, 0,
+		_processes_lv->set_columns_model(shared_ptr<wpl::columns_model>(new columns_model(c_columns_processes, 0,
 			true)));
-		_connections.push_back(_processes_lv->item_activate += [this] (wpl::ui::listview::index_type item) {
+		_connections.push_back(_processes_lv->item_activate += [this] (wpl::listview::index_type item) {
 			auto process = _model->get_process(item);
 
 			process->remote_execute(&inject_profiler, const_byte_range(0, 0));

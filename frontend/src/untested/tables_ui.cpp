@@ -1,20 +1,21 @@
 #include <frontend/tables_ui.h>
 
+#include "listview.h"
+
 #include <frontend/piechart.h>
 #include <frontend/columns_model.h>
 #include <frontend/function_list.h>
-#include <frontend/listview.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
 
 #include <common/configuration.h>
-#include <wpl/ui/layout.h>
-#include <wpl/ui/win32/controls.h>
-#include <wpl/ui/controls/listview.h>
+#include <wpl/controls/listview.h>
+#include <wpl/layout.h>
+#include <wpl/win32/controls.h>
 
 using namespace std;
 using namespace placeholders;
-using namespace wpl::ui;
+using namespace wpl;
 
 namespace micro_profiler
 {
@@ -63,13 +64,13 @@ namespace micro_profiler
 
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
 		: _columns_main(new columns_model(c_columns_statistics, 3, false)), _statistics(model),
-			_statistics_lv(wpl::ui::controls::create_listview<listview_core>()),
+			_statistics_lv(wpl::controls::create_listview<listview_core>()),
 			_statistics_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
 			_threads_cb(create_combobox()),
 			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
-			_parents_lv(wpl::ui::controls::create_listview<listview_core>()),
+			_parents_lv(wpl::controls::create_listview<listview_core>()),
 			_columns_children(new columns_model(c_columns_statistics, 4, false)),
-			_children_lv(wpl::ui::controls::create_listview<listview_core>()),
+			_children_lv(wpl::controls::create_listview<listview_core>()),
 			_children_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest))
 	{
 		_columns_parents->update(*configuration.create("ParentsColumns"));
@@ -83,7 +84,7 @@ namespace micro_profiler
 
 		_threads_cb->set_model(_statistics->get_threads());
 		_threads_cb->select(0u);
-		_connections.push_back(_threads_cb->selection_changed += [model] (wpl::ui::combobox::index_type index) {
+		_connections.push_back(_threads_cb->selection_changed += [model] (wpl::combobox::index_type index) {
 			unsigned id;
 
 			if (model->get_threads()->get_key(id, index))
@@ -169,7 +170,7 @@ namespace micro_profiler
 			_statistics_lv->ensure_visible(index);
 	}
 
-	void tables_ui::on_activate(wpl::ui::index_traits::index_type index)
+	void tables_ui::on_activate(wpl::index_traits::index_type index)
 	{
 		const function_key key = _statistics->get_key(index);
 		symbol_resolver::fileline_t fileline;
@@ -185,7 +186,7 @@ namespace micro_profiler
 		_statistics_lv->ensure_visible(index);
 	}
 
-	void tables_ui::on_children_selection_change(wpl::ui::listview::index_type index, bool selected)
+	void tables_ui::on_children_selection_change(wpl::listview::index_type index, bool selected)
 	{	_children_pc->select(selected ? index : listview::npos());	}
 
 	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
@@ -195,11 +196,11 @@ namespace micro_profiler
 			_children_lv->ensure_visible(index);
 	}
 
-	void tables_ui::switch_linked(wpl::ui::table_model::index_type index)
+	void tables_ui::switch_linked(wpl::table_model::index_type index)
 	{
-		_children_statistics = index != wpl::ui::table_model::npos() ? _statistics->watch_children(index)
+		_children_statistics = index != wpl::table_model::npos() ? _statistics->watch_children(index)
 			: shared_ptr<linked_statistics>();
-		_parents_statistics = index != wpl::ui::table_model::npos() ? _statistics->watch_parents(index)
+		_parents_statistics = index != wpl::table_model::npos() ? _statistics->watch_parents(index)
 			: shared_ptr<linked_statistics>();
 		_children_lv->set_model(_children_statistics);
 		_children_pc->set_model(_children_statistics ? _children_statistics->get_column_series()

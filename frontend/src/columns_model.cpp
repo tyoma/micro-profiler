@@ -82,7 +82,7 @@ namespace micro_profiler
 	columns_model::index_type columns_model::get_count() const throw()
 	{	return static_cast<index_type>(_columns.size());	}
 
-	void columns_model::get_column(index_type index, wpl::ui::columns_model::column &column) const
+	void columns_model::get_column(index_type index, wpl::columns_model::column &column) const
 	{	column = _columns[index];	}
 
 	void columns_model::update_column(index_type index, short int width)

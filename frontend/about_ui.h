@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <wpl/ui/form.h>
+#include <wpl/form.h>
 
 
 namespace micro_profiler
@@ -28,13 +28,13 @@ namespace micro_profiler
 	class about_ui
 	{
 	public:
-		about_ui(const std::shared_ptr<wpl::ui::form> &form);
+		about_ui(const std::shared_ptr<wpl::form> &form);
 
 	private:
 		void on_link(const std::wstring &address);
 
 	private:
-		std::shared_ptr<wpl::ui::form> _form;
+		std::shared_ptr<wpl::form> _form;
 		std::vector<wpl::slot_connection> _connections;
 	};
 }

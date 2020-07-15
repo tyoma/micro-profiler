@@ -20,13 +20,13 @@
 
 #pragma once
 
-#include <wpl/ui/models.h>
+#include <wpl/models.h>
 
 namespace micro_profiler
 {
 	struct hive;
 
-	class columns_model : public wpl::ui::columns_model
+	class columns_model : public wpl::columns_model
 	{
 	public:
 		struct column;
@@ -40,7 +40,7 @@ namespace micro_profiler
 		void update(const hive &configuration);
 
 		virtual index_type get_count() const throw();
-		virtual void get_column(index_type index, wpl::ui::columns_model::column &column) const;
+		virtual void get_column(index_type index, wpl::columns_model::column &column) const;
 		virtual void update_column(index_type index, short int width);
 		virtual std::pair<index_type, bool> get_sort_order() const throw();
 		virtual void activate_column(index_type column);
@@ -52,7 +52,7 @@ namespace micro_profiler
 	};
 
 
-	struct columns_model::column : wpl::ui::columns_model::column
+	struct columns_model::column : wpl::columns_model::column
 	{
 		column(const std::string &id, const std::wstring &caption, short int width,
 			columns_model::sort_direction default_sort_direction);
@@ -72,6 +72,6 @@ namespace micro_profiler
 
 	inline columns_model::column::column(const std::string &id_, const std::wstring &caption, short int width,
 			columns_model::sort_direction default_sort_direction_)
-		: wpl::ui::columns_model::column(caption, width), id(id_), default_sort_direction(default_sort_direction_)
+		: wpl::columns_model::column(caption, width), id(id_), default_sort_direction(default_sort_direction_)
 	{	}
 }

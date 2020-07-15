@@ -14,17 +14,17 @@ namespace micro_profiler
 		double to_seconds(mt::milliseconds v)
 		{	return v.count() * 0.001;	}
 
-		struct trackable : wpl::ui::trackable
+		struct trackable : wpl::trackable
 		{
 			template <typename U>
 			trackable(U &u, index_type index)
-				: _underlying(index ? u.track(index - 1) : shared_ptr<const wpl::ui::trackable>())
+				: _underlying(index ? u.track(index - 1) : shared_ptr<const wpl::trackable>())
 			{	}
 
 			virtual index_type index() const
 			{	return _underlying ? _underlying->index() + 1 : 0;	}
 
-			shared_ptr<const wpl::ui::trackable> _underlying;
+			shared_ptr<const wpl::trackable> _underlying;
 		};
 	}
 
@@ -49,7 +49,7 @@ namespace micro_profiler
 	threads_model::index_type threads_model::get_count() const throw()
 	{	return _view.size() + 1;	}
 
-	void threads_model::get_text(index_type index, wstring &text) const
+	void threads_model::get_value(index_type index, wstring &text) const
 	{
 		if (index == 0)
 		{
@@ -69,6 +69,6 @@ namespace micro_profiler
 		}
 	}
 
-	shared_ptr<const wpl::ui::trackable> threads_model::track(index_type index) const
+	shared_ptr<const wpl::trackable> threads_model::track(index_type index) const
 	{	return shared_ptr<trackable>(new trackable(_view, index));	}
 }

@@ -52,15 +52,15 @@ namespace micro_profiler
 		const value_type &operator [](index_type index) const;
 		index_type find_by_key(const key_type &key) const;
 
-		// wpl::ui::series<...> model support
+		// wpl::series<...> model support
 		template <typename ExtractorT>
 		void project_value(const ExtractorT &extractor);
 		void disable_projection();
 
-		// wpl::ui::series<...> methods
+		// wpl::series<...> methods
 		virtual index_type size() const throw();
 		virtual double get_value(index_type index) const throw();
-		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type index) const;
+		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const;
 
 	private:
 		template <typename PredicateT> class predicate_wrap_a;
@@ -128,7 +128,7 @@ namespace micro_profiler
 
 
 	template <typename ContainerT>
-	class ordered_view<ContainerT>::trackable : public wpl::ui::trackable
+	class ordered_view<ContainerT>::trackable : public wpl::trackable
 	{
 	public:
 		trackable(key_type key_, index_type current_index_) : key(key_), current_index(current_index_) {	}
@@ -211,7 +211,7 @@ namespace micro_profiler
 	{	return _extractor ? _extractor((*this)[index].second) : double();	}
 
 	template <class ContainerT>
-	inline std::shared_ptr<const wpl::ui::trackable> ordered_view<ContainerT>::track(index_type index) const
+	inline std::shared_ptr<const wpl::trackable> ordered_view<ContainerT>::track(index_type index) const
 	{
 		using namespace std;
 

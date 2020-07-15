@@ -28,7 +28,7 @@
 #include <comdef.h>
 #include <list>
 #include <vsshell.h>
-#include <wpl/base/signals.h>
+#include <wpl/signals.h>
 
 #pragma warning(disable:4510; disable:4610)
 

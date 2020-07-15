@@ -7,15 +7,11 @@
 
 using namespace std;
 using namespace std::placeholders;
-//using namespace wpl::ui;
 
 namespace wpl
 {
-	namespace ui
-	{
-		inline bool operator ==(const columns_model::column &lhs, const columns_model::column &rhs)
-		{	return lhs.caption == rhs.caption && lhs.width == rhs.width;	}
-	}
+	inline bool operator ==(const columns_model::column &lhs, const columns_model::column &rhs)
+	{	return lhs.caption == rhs.caption && lhs.width == rhs.width;	}
 }
 
 namespace micro_profiler
@@ -29,10 +25,10 @@ namespace micro_profiler
 			void append_log(log_t *log, columns_model::index_type sort_column, bool sort_ascending)
 			{	log->push_back(make_pair(sort_column, sort_ascending));	}
 
-			wpl::ui::columns_model::column get_column(const wpl::ui::columns_model &cm,
+			wpl::columns_model::column get_column(const wpl::columns_model &cm,
 				columns_model::index_type index)
 			{
-				wpl::ui::columns_model::column c;
+				wpl::columns_model::column c;
 
 				cm.get_column(index, c);
 				return c;
@@ -250,7 +246,7 @@ namespace micro_profiler
 				};
 				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
 				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
-				wpl::ui::columns_model::column c;
+				wpl::columns_model::column c;
 
 				// ACT / ASSERT
 				assert_equal(4, cm1->get_count());
@@ -272,7 +268,7 @@ namespace micro_profiler
 				};
 				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
 				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
-				wpl::ui::columns_model::column c;
+				wpl::columns_model::column c;
 
 				// ACT
 				cm1->get_column(0, c);
@@ -309,7 +305,7 @@ namespace micro_profiler
 					columns_model::column("id3", L"third", 0, columns_model::dir_ascending),
 				};
 				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
-				wpl::ui::columns_model::column c;
+				wpl::columns_model::column c;
 
 				// ACT
 				cm->update_column(0, 13);
@@ -445,8 +441,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(make_pair(static_cast<columns_model::index_type>(1), true), cm1->get_sort_order());
-				assert_equal(wpl::ui::columns_model::column(L"Contract", 20), get_column(*cm1, 0));
-				assert_equal(wpl::ui::columns_model::column(L"Price", 31), get_column(*cm1, 1));
+				assert_equal(wpl::columns_model::column(L"Contract", 20), get_column(*cm1, 0));
+				assert_equal(wpl::columns_model::column(L"Price", 31), get_column(*cm1, 1));
 
 				// INIT
 				int_values["OrderBy"] = 2;
@@ -463,9 +459,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(make_pair(static_cast<columns_model::index_type>(2), false), cm2->get_sort_order());
-				assert_equal(wpl::ui::columns_model::column(L"Contract", 20), get_column(*cm2, 0));
-				assert_equal(wpl::ui::columns_model::column(L"Kind", 20), get_column(*cm2, 1));
-				assert_equal(wpl::ui::columns_model::column(L"Price", 53), get_column(*cm2, 2));
+				assert_equal(wpl::columns_model::column(L"Contract", 20), get_column(*cm2, 0));
+				assert_equal(wpl::columns_model::column(L"Kind", 20), get_column(*cm2, 1));
+				assert_equal(wpl::columns_model::column(L"Price", 53), get_column(*cm2, 2));
 			}
 
 
@@ -494,9 +490,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(make_pair(columns_model::npos(), false), cm->get_sort_order());
-				assert_equal(wpl::ui::columns_model::column(L"Contract", 233), get_column(*cm, 0));
-				assert_equal(wpl::ui::columns_model::column(L"", 17), get_column(*cm, 1));
-				assert_equal(wpl::ui::columns_model::column(L"Price", 31), get_column(*cm, 2));
+				assert_equal(wpl::columns_model::column(L"Contract", 233), get_column(*cm, 0));
+				assert_equal(wpl::columns_model::column(L"", 17), get_column(*cm, 1));
+				assert_equal(wpl::columns_model::column(L"Price", 31), get_column(*cm, 2));
 			}
 		end_test_suite
 	}

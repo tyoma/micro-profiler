@@ -48,7 +48,7 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				process_list l;
-				wpl::ui::table_model &t = l;
+				wpl::table_model &t = l;
 
 				// ACT / ASSERT
 				assert_equal(0u, t.get_count());

@@ -30,16 +30,16 @@
 
 #include <algorithm>
 #include <src/wpl.ui/win32/view_host.h>
-#include <wpl/ui/container.h>
-#include <wpl/ui/controls.h>
-#include <wpl/ui/form.h>
-#include <wpl/ui/layout.h>
-#include <wpl/ui/win32/controls.h>
-#include <wpl/ui/win32/form.h>
+#include <wpl/container.h>
+#include <wpl/controls.h>
+#include <wpl/form.h>
+#include <wpl/layout.h>
+#include <wpl/win32/controls.h>
+#include <wpl/win32/form.h>
 
 using namespace std;
 using namespace std::placeholders;
-using namespace wpl::ui;
+using namespace wpl;
 
 namespace micro_profiler
 {
@@ -121,12 +121,12 @@ namespace micro_profiler
 		btn->set_text(L"Clear Statistics");
 		_connections.push_back(btn->clicked += bind(&functions_list::clear, _statistics));
 		lm_toolbar->add(120);
-		toolbar->add_view(btn);
+		toolbar->add_view(btn->get_view());
 		btn = create_button();
 		btn->set_text(L"Copy All");
 		_connections.push_back(btn->clicked += bind(&ProfilerMainDialog::OnCopyAll, this));
 		lm_toolbar->add(100);
-		toolbar->add_view(btn);
+		toolbar->add_view(btn->get_view());
 		lm_toolbar->add(-100);
 		toolbar->add_view(shared_ptr<view>(new view));
 		lnk = create_link();
@@ -134,7 +134,7 @@ namespace micro_profiler
 		lnk->set_text(L"<a>Support Developer...</a>");
 		_connections.push_back(lnk->clicked += bind(&ProfilerMainDialog::OnSupport, this));
 		lm_toolbar->add(200);
-		toolbar->add_view(lnk);
+		toolbar->add_view(lnk->get_view());
 
 		vstack->set_layout(lm_vstack);
 		lm_vstack->add(-100);
@@ -144,7 +144,7 @@ namespace micro_profiler
 
 		root->set_layout(lm_root);
 		root->add_view(vstack);
-		_host.reset(new wpl::ui::win32::view_host(_hwnd, bind(&ProfilerMainDialog::on_message, this, _1, _2, _3, _4)));
+		_host.reset(new wpl::win32::view_host(_hwnd, bind(&ProfilerMainDialog::on_message, this, _1, _2, _3, _4)));
 		_host->set_view(root);
 		_host->set_background_color(agge::color::make(24, 32, 48));
 		if (load(*_configuration, "Placement", _placement))
@@ -164,7 +164,7 @@ namespace micro_profiler
 	}
 
 	LRESULT ProfilerMainDialog::on_message(UINT message, WPARAM wparam, LPARAM lparam,
-		const wpl::ui::window::original_handler_t &handler)
+		const wpl::win32::window::original_handler_t &handler)
 	{
 		switch (message)
 		{

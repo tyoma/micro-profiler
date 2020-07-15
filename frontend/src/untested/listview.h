@@ -23,27 +23,27 @@
 #include <agge/dash.h>
 #include <agge/stroke.h>
 #include <agge.text/text_engine.h>
-#include <wpl/ui/controls/listview_core.h>
+#include <wpl/controls/listview_core.h>
 
 namespace micro_profiler
 {
-	typedef agge::text_engine<wpl::ui::gcontext::rasterizer_type> text_engine_t;
+	typedef agge::text_engine<wpl::gcontext::rasterizer_type> text_engine_t;
 	typedef std::shared_ptr<text_engine_t> text_engine_ptr;
 
 	class font_loader;
 
-	class listview_core : public wpl::ui::controls::listview_core
+	class listview_core : public wpl::controls::listview_core
 	{
 	public:
 		listview_core(/*text_engine_ptr text_engine, std::shared_ptr<column_header> cheader*/);
 
 	private:
 		virtual agge::real_t get_item_height() const;
-		virtual void draw_item_background(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer,
+		virtual void draw_item_background(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer,
 			const agge::rect_r &box, index_type item, unsigned state) const;
-		virtual void draw_item(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &ras, const agge::rect_r &b,
+		virtual void draw_item(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &ras, const agge::rect_r &b,
 			index_type item, unsigned state) const;
-		virtual void draw_subitem(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer,
+		virtual void draw_subitem(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer,
 			const agge::rect_r &box, index_type item, unsigned state, index_type subitem, const std::wstring &text) const;
 
 	private:

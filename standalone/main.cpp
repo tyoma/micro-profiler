@@ -12,8 +12,8 @@
 #include <ipc/com/endpoint.h>
 #include <tchar.h>
 #include <windows.h>
-#include <wpl/ui/form.h>
-#include <wpl/ui/win32/form.h>
+#include <wpl/form.h>
+#include <wpl/win32/form.h>
 
 using namespace std;
 
@@ -93,7 +93,7 @@ try
 	auto ui_factory = [] (const shared_ptr<micro_profiler::functions_list> &model, const string &executable)	{
 		return make_shared<micro_profiler::ProfilerMainDialog>(model, executable);
 	};
-	auto main_form = wpl::ui::create_form();
+	auto main_form = wpl::create_form();
 	auto cancellation = main_form->close += [] { ::PostQuitMessage(0); };
 	auto frontend_manager = micro_profiler::frontend_manager::create(ui_factory);
 	micro_profiler::ipc_manager ipc_manager(frontend_manager,

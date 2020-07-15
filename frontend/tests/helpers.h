@@ -5,7 +5,7 @@
 #include <common/module.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
-#include <wpl/ui/models.h>
+#include <wpl/models.h>
 
 namespace micro_profiler
 {
@@ -35,7 +35,7 @@ namespace micro_profiler
 		inline function_key addr(size_t address, unsigned int threadid = 1)
 		{	return function_key(address, threadid);	}
 
-		inline std::wstring get_text(const wpl::ui::table_model &fl, size_t row, unsigned column)
+		inline std::wstring get_text(const wpl::table_model &fl, size_t row, unsigned column)
 		{
 			std::wstring text;
 
@@ -44,7 +44,7 @@ namespace micro_profiler
 
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equal(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
-			const wpl::ui::table_model &actual, const ut::LocationInfo &location)
+			const wpl::table_model &actual, const ut::LocationInfo &location)
 		{
 			ut::are_equal(rows_n, actual.get_count(), location);
 			for (size_t j = 0; j != rows_n; ++j)
@@ -54,7 +54,7 @@ namespace micro_profiler
 
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equivalent(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
-			const wpl::ui::table_model &actual, const ut::LocationInfo &location)
+			const wpl::table_model &actual, const ut::LocationInfo &location)
 		{
 			using namespace std;
 

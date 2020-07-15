@@ -38,7 +38,7 @@
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
-#include <wpl/ui/win32/form.h>
+#include <wpl/win32/form.h>
 
 #include <io.h>
 #include <memory>
@@ -368,7 +368,7 @@ namespace micro_profiler
 
 		void profile_process::exec(context_type &ctx, unsigned /*item*/)
 		{
-			shared_ptr<wpl::ui::form> form(wpl::ui::create_form(get_frame_hwnd(ctx.shell)));
+			shared_ptr<wpl::form> form(wpl::create_form(get_frame_hwnd(ctx.shell)));
 			_dialog.reset(new AttachToProcessDialog(form));
 			_closed_connection = _dialog->closed += [this] {
 				_dialog.reset();
@@ -441,7 +441,7 @@ namespace micro_profiler
 			shared_ptr< pair<shared_ptr<about_ui>, wpl::slot_connection> > o(
 				new pair<shared_ptr<about_ui>, wpl::slot_connection>);
 			HWND hshell = get_frame_hwnd(ctx.shell);
-			shared_ptr<wpl::ui::form> form = wpl::ui::create_form(hshell);
+			shared_ptr<wpl::form> form = wpl::create_form(hshell);
 			o->first.reset(new about_ui(form));
 			global_context::running_objects_t &running_objects = ctx.running_objects;
 			global_context::running_objects_t::iterator i = running_objects.insert(ctx.running_objects.end(), o);

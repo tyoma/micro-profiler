@@ -19,11 +19,11 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			wstring get_text(const wpl::ui::list_model &m, unsigned index)
+			wstring get_text(const wpl::list_model<wstring> &m, unsigned index)
 			{
 				wstring text;
 
-				m.get_text(index, text);
+				m.get_value(index, text);
 				return text;
 			}
 		}
@@ -50,7 +50,7 @@ namespace micro_profiler
 			test( ThreadModelIsAListModel )
 			{
 				// INIT / ACT / ASSERT
-				shared_ptr<wpl::ui::list_model> m(new threads_model(get_requestor()));
+				shared_ptr< wpl::list_model<wstring> > m(new threads_model(get_requestor()));
 
 				// ASSERT
 				assert_is_empty(_requested);
@@ -337,9 +337,9 @@ namespace micro_profiler
 				dser(*m);
 
 				// ACT
-				shared_ptr<const wpl::ui::trackable> t0 = m->track(0); // 'All Threads'
-				shared_ptr<const wpl::ui::trackable> t1 = m->track(3); // thread_id: 111
-				shared_ptr<const wpl::ui::trackable> t2 = m->track(1); // thread_id: 110
+				shared_ptr<const wpl::trackable> t0 = m->track(0); // 'All Threads'
+				shared_ptr<const wpl::trackable> t1 = m->track(3); // thread_id: 111
+				shared_ptr<const wpl::trackable> t2 = m->track(1); // thread_id: 110
 
 				// ASSERT
 				assert_not_null(t0);

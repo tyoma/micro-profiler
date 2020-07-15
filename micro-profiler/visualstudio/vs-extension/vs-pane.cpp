@@ -12,14 +12,14 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
-#include <wpl/ui/win32/controls.h>
-#include <wpl/ui/view_host.h>
+#include <wpl/view_host.h>
+#include <wpl/win32/controls.h>
 
 #define PREAMBLE "VS Pane: "
 
 using namespace std;
 using namespace placeholders;
-using namespace wpl::ui;
+using namespace wpl;
 
 namespace micro_profiler
 {
@@ -104,7 +104,7 @@ namespace micro_profiler
 
 			virtual STDMETHODIMP CreatePaneWindow(HWND hparent, int /*x*/, int /*y*/, int /*cx*/, int /*cy*/, HWND * /*hwnd*/)
 			{
-				_host = wpl::ui::wrap_view_host(hparent);
+				_host = wpl::wrap_view_host(hparent);
 				return S_OK;
 			}
 
@@ -174,7 +174,7 @@ namespace micro_profiler
 			shared_ptr<tables_ui> _hosted_ui;
 			shared_ptr<functions_list> _model;
 			string _executable;
-			shared_ptr<wpl::ui::view_host> _host;
+			shared_ptr<wpl::view_host> _host;
 			CComPtr<IVsWindowFrame> _frame;
 			CComPtr<IServiceProvider> _service_provider;
 			wpl::slot_connection _open_source_connection;

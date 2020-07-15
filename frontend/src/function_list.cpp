@@ -32,7 +32,6 @@
 using namespace std;
 using namespace placeholders;
 using namespace wpl;
-using namespace wpl::ui;
 
 #pragma warning(disable: 4244)
 

@@ -21,8 +21,8 @@
 #pragma once
 
 #include <common/noncopyable.h>
-#include <wpl/ui/form.h>
-#include <wpl/ui/listview.h>
+#include <wpl/form.h>
+#include <wpl/listview.h>
 
 namespace micro_profiler
 {
@@ -31,13 +31,13 @@ namespace micro_profiler
 	class AttachToProcessDialog : noncopyable
 	{
 	public:
-		AttachToProcessDialog(const std::shared_ptr<wpl::ui::form> &form);
+		AttachToProcessDialog(const std::shared_ptr<wpl::form> &form);
 
 		wpl::signal<void()> closed;
 
 	private:
-		const std::shared_ptr<wpl::ui::form> _form;
-		const std::shared_ptr<wpl::ui::listview> _processes_lv;
+		const std::shared_ptr<wpl::form> _form;
+		const std::shared_ptr<wpl::listview> _processes_lv;
 		const std::shared_ptr<process_list> _model;
 		std::vector<wpl::slot_connection> _connections;
 	};

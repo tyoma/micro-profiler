@@ -24,10 +24,10 @@
 
 #include <functional>
 #include <string>
-#include <wpl/base/concepts.h>
-#include <wpl/base/signals.h>
-#include <wpl/ui/view_host.h>
-#include <wpl/ui/win32/window.h>
+#include <wpl/concepts.h>
+#include <wpl/signals.h>
+#include <wpl/view_host.h>
+#include <wpl/win32/window.h>
 
 namespace micro_profiler
 {
@@ -47,7 +47,8 @@ namespace micro_profiler
 		void OnSupport();
 
 	private:
-		LRESULT on_message(UINT message, WPARAM wparam, LPARAM lparam, const wpl::ui::window::original_handler_t &handler);
+		LRESULT on_message(UINT message, WPARAM wparam, LPARAM lparam,
+			const wpl::win32::window::original_handler_t &handler);
 
 		virtual void activate();
 
@@ -57,7 +58,7 @@ namespace micro_profiler
 		const std::shared_ptr<functions_list> _statistics;
 		const std::string _executable;
 		agge::rect_i _placement;
-		std::shared_ptr<wpl::ui::view_host> _host;
+		std::shared_ptr<wpl::view_host> _host;
 		std::shared_ptr<tables_ui> _statistics_display;
 		std::vector<wpl::slot_connection> _connections;
 		std::unique_ptr<about_ui> _about;

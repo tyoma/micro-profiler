@@ -16,7 +16,7 @@
 
 using namespace std;
 using namespace placeholders;
-using namespace wpl::ui;
+using namespace wpl;
 
 namespace micro_profiler
 {

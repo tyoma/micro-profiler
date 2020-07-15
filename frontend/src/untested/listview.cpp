@@ -28,13 +28,13 @@
 #include <agge/figures.h>
 #include <agge/stroke_features.h>
 #include <agge.text/font.h>
-#include <wpl/ui/layout.h>
-#include <wpl/ui/scroller.h>
+#include <wpl/layout.h>
+#include <wpl/controls/scroller.h>
 
 using namespace agge;
 using namespace std;
 using namespace placeholders;
-using namespace wpl::ui;
+using namespace wpl;
 
 namespace micro_profiler
 {

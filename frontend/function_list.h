@@ -27,7 +27,7 @@ namespace micro_profiler
 	struct serialization_context_file_v3;
 	class threads_model;
 
-	struct linked_statistics : wpl::ui::table_model
+	struct linked_statistics : wpl::table_model
 	{
 		virtual ~linked_statistics() {	}
 		virtual function_key get_key(index_type item) const = 0;
@@ -40,7 +40,7 @@ namespace micro_profiler
 		virtual void detach() = 0;
 	};
 
-	class functions_list : public statistics_model_impl<wpl::ui::table_model, statistic_types::map_detailed>
+	class functions_list : public statistics_model_impl<wpl::table_model, statistic_types::map_detailed>
 	{
 	public:
 		typedef statistic_types::map_detailed::value_type value_type;
@@ -60,7 +60,7 @@ namespace micro_profiler
 		bool updates_enabled;
 
 	private:
-		typedef statistics_model_impl<wpl::ui::table_model, statistic_types::map_detailed> base;
+		typedef statistics_model_impl<wpl::table_model, statistic_types::map_detailed> base;
 		typedef std::list<linked_statistics_ex *> linked_statistics_list_t;
 
 	private:

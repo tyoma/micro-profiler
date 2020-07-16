@@ -40,6 +40,7 @@ namespace micro_profiler
 		void update(const hive &configuration);
 
 		virtual index_type get_count() const throw();
+		virtual void get_value(index_type index, short int &width) const throw();
 		virtual void get_column(index_type index, wpl::columns_model::column &column) const;
 		virtual void update_column(index_type index, short int width);
 		virtual std::pair<index_type, bool> get_sort_order() const throw();

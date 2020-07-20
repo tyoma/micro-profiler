@@ -23,6 +23,7 @@
 #include <agge/dash.h>
 #include <agge/stroke.h>
 #include <agge.text/text_engine.h>
+#include <wpl/controls/header.h>
 #include <wpl/controls/listview_core.h>
 
 namespace micro_profiler
@@ -53,4 +54,18 @@ namespace micro_profiler
 		mutable agge::stroke _stroke;
 		mutable agge::dash _dash;
 	};
+
+	class header : public wpl::controls::header
+	{
+	public:
+		header();
+
+		virtual void draw_item(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &ras, const agge::rect_r &b,
+			index_type /*item*/, unsigned /*item_state_flags*/ /*state*/, const std::wstring &text) const;
+
+	private:
+		text_engine_ptr _text_engine;
+		std::shared_ptr<agge::font> _font;
+	};
+
 }

@@ -29,7 +29,7 @@
 #include <frontend/tables_ui.h>
 
 #include <algorithm>
-#include <src/wpl.ui/win32/view_host.h>
+#include <wpl/win32/view_host.h>
 #include <wpl/container.h>
 #include <wpl/controls.h>
 #include <wpl/form.h>

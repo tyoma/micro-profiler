@@ -64,13 +64,13 @@ namespace micro_profiler
 
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
 		: _columns_main(new columns_model(c_columns_statistics, 3, false)), _statistics(model),
-			_statistics_lv(wpl::controls::create_listview<listview_core>()),
+			_statistics_lv(wpl::controls::create_listview<listview_core, header>()),
 			_statistics_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
 			_threads_cb(create_combobox()),
 			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
-			_parents_lv(wpl::controls::create_listview<listview_core>()),
+			_parents_lv(wpl::controls::create_listview<listview_core, header>()),
 			_columns_children(new columns_model(c_columns_statistics, 4, false)),
-			_children_lv(wpl::controls::create_listview<listview_core>()),
+			_children_lv(wpl::controls::create_listview<listview_core, header>()),
 			_children_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest))
 	{
 		_columns_parents->update(*configuration.create("ParentsColumns"));

@@ -45,7 +45,8 @@ namespace micro_profiler
 		virtual void draw_item(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &ras, const agge::rect_r &b,
 			index_type item, unsigned state) const;
 		virtual void draw_subitem(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer,
-			const agge::rect_r &box, index_type item, unsigned state, index_type subitem, const std::wstring &text) const;
+			const agge::rect_r &box, index_type item, unsigned state, wpl::columns_model::index_type subitem,
+			const std::wstring &text) const;
 
 	private:
 		agge::real_t _item_height, _baseline_offset, _border_width;

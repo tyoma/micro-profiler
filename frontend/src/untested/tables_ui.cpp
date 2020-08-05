@@ -155,9 +155,9 @@ namespace micro_profiler
 		_columns_children->store(*configuration.create("ChildrenColumns"));
 	}
 
-	void tables_ui::on_selection_change(listview::index_type index, bool selected)
+	void tables_ui::on_selection_change(table_model::index_type index, bool selected)
 	{
-		index = selected ? index : listview::npos();
+		index = selected ? index : table_model::npos();
 		switch_linked(index);
 		_statistics_pc->select(index);
 	}
@@ -178,15 +178,15 @@ namespace micro_profiler
 			open_source(fileline.first, fileline.second);
 	}
 
-	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, listview::index_type index)
+	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, table_model::index_type index)
 	{
 		index = _statistics->get_index(view->get_key(index));
 		_statistics_lv->select(index, true);
 		_statistics_lv->focus(index);
 	}
 
-	void tables_ui::on_children_selection_change(wpl::listview::index_type index, bool selected)
-	{	_children_pc->select(selected ? index : listview::npos());	}
+	void tables_ui::on_children_selection_change(wpl::table_model::index_type index, bool selected)
+	{	_children_pc->select(selected ? index : table_model::npos());	}
 
 	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
 	{

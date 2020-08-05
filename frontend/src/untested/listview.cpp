@@ -89,7 +89,7 @@ namespace micro_profiler
 	}
 
 	void listview_core::draw_subitem(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b, index_type /*item*/,
-		unsigned /*state*/, index_type /*subitem*/, const wstring &text) const
+		unsigned /*state*/, wpl::columns_model::index_type /*subitem*/, const wstring &text) const
 	{
 		_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, b.x1, b.y1 + _baseline_offset, b.x2 - b.x1);
 		ras->sort(true);

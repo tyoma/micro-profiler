@@ -56,7 +56,7 @@ namespace micro_profiler
 		_processes_lv->set_model(_model);
 		_processes_lv->set_columns_model(shared_ptr<wpl::columns_model>(new columns_model(c_columns_processes, 0,
 			true)));
-		_connections.push_back(_processes_lv->item_activate += [this] (wpl::listview::index_type item) {
+		_connections.push_back(_processes_lv->item_activate += [this] (table_model::index_type item) {
 			auto process = _model->get_process(item);
 
 			process->remote_execute(&inject_profiler, const_byte_range(0, 0));

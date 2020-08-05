@@ -26,12 +26,12 @@ namespace micro_profiler
 		wpl::signal<void(const std::string &file, unsigned line)> open_source;
 
 	private:
-		void on_selection_change(wpl::listview::index_type index, bool selected);
+		void on_selection_change(wpl::table_model::index_type index, bool selected);
 		void on_piechart_selection_change(piechart::index_type index);
 		void on_activate(wpl::index_traits::index_type index);
 
-		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::listview::index_type index);
-		void on_children_selection_change(wpl::listview::index_type index, bool selected);
+		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::table_model::index_type index);
+		void on_children_selection_change(wpl::table_model::index_type index, bool selected);
 		void on_children_piechart_selection_change(piechart::index_type index);
 
 		void switch_linked(wpl::table_model::index_type index);

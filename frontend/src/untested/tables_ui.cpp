@@ -166,8 +166,7 @@ namespace micro_profiler
 	{
 		switch_linked(index);
 		_statistics_lv->select(index, true);
-		if (piechart::npos() != index)
-			_statistics_lv->ensure_visible(index);
+		_statistics_lv->focus(index);
 	}
 
 	void tables_ui::on_activate(wpl::index_traits::index_type index)
@@ -183,7 +182,7 @@ namespace micro_profiler
 	{
 		index = _statistics->get_index(view->get_key(index));
 		_statistics_lv->select(index, true);
-		_statistics_lv->ensure_visible(index);
+		_statistics_lv->focus(index);
 	}
 
 	void tables_ui::on_children_selection_change(wpl::listview::index_type index, bool selected)
@@ -192,8 +191,7 @@ namespace micro_profiler
 	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
 	{
 		_children_lv->select(index, true);
-		if (piechart::npos() != index)
-			_children_lv->ensure_visible(index);
+		_children_lv->focus(index);
 	}
 
 	void tables_ui::switch_linked(wpl::table_model::index_type index)

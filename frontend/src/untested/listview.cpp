@@ -50,7 +50,7 @@ namespace micro_profiler
 		shared_ptr<font_loader> l(new font_loader);
 		_text_engine.reset(new text_engine_t(*l, 4), [l] (text_engine_t *p) { delete p; });
 
-		_font = _text_engine->create_font(L"Segoe UI", 11, false, false, agge::font::key::gf_vertical);
+		_font = _text_engine->create_font(L"Segoe UI", 13, false, false, agge::font::key::gf_vertical);
 		agge::font::metrics m = _font->get_metrics();
 		_item_height = real_t(int(1.4f * (m.leading + m.ascent + m.descent) + _border_width));
 		_baseline_offset = real_t(int(0.5f * (_item_height + m.ascent - m.descent + _border_width)));
@@ -70,11 +70,11 @@ namespace micro_profiler
 		if (item)
 		{
 			add_path(*ras, rectangle(b.x1, b.y1, b.x2, b.y1 + _border_width));
-			ctx(ras, blender(color::make(192, 192, 192)), winding<>());
+			ctx(ras, blender(color::make(224, 224, 224)), winding<>());
 		}
 		add_path(*ras, rectangle(b.x1, b.y1 + _border_width, b.x2, b.y2));
-		ctx(ras, blender(state & selected ? color::make(32, 208, 255)
-			: item & 1 ? color::make(255, 255, 255) : color::make(224, 224, 224)), winding<>());
+		ctx(ras, blender(state & selected ? color::make(205, 232, 255)
+			: item & 1 ? color::make(240, 240, 240) : color::make(255, 255, 255)), winding<>());
 	}
 
 	void listview_core::draw_item(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b, index_type /*item*/,
@@ -82,9 +82,9 @@ namespace micro_profiler
 	{
 		if (state & focused)
 		{
-			add_path(*ras, assist(assist(rectangle(b.x1 + 0.25f, b.y1 + 0.5f, b.x2 - 0.25f, b.y2 - _border_width - 0.5f),
+			add_path(*ras, assist(assist(rectangle(b.x1 + 0.25f, b.y1 + 2.5f, b.x2 - 0.25f, b.y2 - _border_width - 0.5f),
 				_dash), _stroke));
-			ctx(ras, blender(color::make(255, 255, 255)), winding<>());
+			ctx(ras, blender(color::make(0, 0, 0)), winding<>());
 		}
 	}
 

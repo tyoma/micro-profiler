@@ -102,16 +102,24 @@ namespace micro_profiler
 		shared_ptr<font_loader> l(new font_loader);
 		_text_engine.reset(new text_engine_t(*l, 4), [l] (text_engine_t *p) { delete p; });
 
-		_font = _text_engine->create_font(L"Segoe UI", 11, false, false, agge::font::key::gf_vertical);
+		_font = _text_engine->create_font(L"Segoe UI", 12, false, false, agge::font::key::gf_vertical);
 	}
 
 	void header::draw_item(gcontext &ctx, gcontext::rasterizer_ptr &ras, const agge::rect_r &b, index_type /*item*/,
-		unsigned /*item_state_flags*/ /*state*/, const wstring &text) const
+		unsigned /*item_state_flags*/ state, const wstring &text) const
 	{
 		auto m = _font->get_metrics();
-		_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, b.x1, b.y2 - m.descent, b.x2 - b.x1);
+		const auto w = b.x2 - b.x1;
+
+		_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, b.x1, b.y2 - m.descent, w);
 		ctx(ras, blender(color::make(0, 0, 0)), winding<>());
 		add_path(*ras, rectangle(b.x2 - 1, b.y1, b.x2, b.y2));
 		ctx(ras, blender(color::make(0, 0, 0, 32)), winding<>());
+		if (header::sorted & state)
+		{
+			const auto order_string = (header::ascending & state) ? L"\x02C4" : L"\x02C5";
+			_text_engine->render_string(*ras, *_font, order_string, layout::center, b.x1 + 0.5f * w, b.y1 + m.ascent);
+			ctx(ras, blender(color::make(0, 0, 0, 128)), winding<>());
+		}
 	}
 }

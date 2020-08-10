@@ -50,7 +50,7 @@ namespace micro_profiler
 		shared_ptr<font_loader> l(new font_loader);
 		_text_engine.reset(new text_engine_t(*l, 4), [l] (text_engine_t *p) { delete p; });
 
-		_font = _text_engine->create_font(L"Segoe UI", 13, false, false, agge::font::key::gf_vertical);
+		_font = _text_engine->create_font(L"Segoe UI", 12, false, false, agge::font::key::gf_vertical);
 		agge::font::metrics m = _font->get_metrics();
 		_item_height = real_t(int(1.4f * (m.leading + m.ascent + m.descent) + _border_width));
 		_baseline_offset = real_t(int(0.5f * (_item_height + m.ascent - m.descent + _border_width)));
@@ -111,5 +111,7 @@ namespace micro_profiler
 		auto m = _font->get_metrics();
 		_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, b.x1, b.y2 - m.descent, b.x2 - b.x1);
 		ctx(ras, blender(color::make(0, 0, 0)), winding<>());
+		add_path(*ras, rectangle(b.x2 - 1, b.y1, b.x2, b.y2));
+		ctx(ras, blender(color::make(0, 0, 0, 32)), winding<>());
 	}
 }

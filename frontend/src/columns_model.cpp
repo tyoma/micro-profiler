@@ -89,7 +89,10 @@ namespace micro_profiler
 	{	column = _columns[index];	}
 
 	void columns_model::update_column(index_type index, short int width)
-	{	_columns[index].width = width;	}
+	{
+		_columns[index].width = width;
+		invalidated();
+	}
 
 	pair<columns_model::index_type, bool> columns_model::get_sort_order() const throw()
 	{	return make_pair(_sort_column, _sort_ascending);	}

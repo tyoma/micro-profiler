@@ -305,7 +305,6 @@ namespace micro_profiler
 					columns_model::column("id3", L"third", 0, columns_model::dir_ascending),
 				};
 				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
-				wpl::columns_model::column c;
 
 				// ACT
 				cm->update_column(0, 13);
@@ -322,6 +321,33 @@ namespace micro_profiler
 				assert_equal(13, get_column(*cm, 0).width);
 				assert_equal(17, get_column(*cm, 1).width);
 				assert_equal(0, get_column(*cm, 2).width);
+			}
+
+
+			test( ModelUpdateInvalidatesIt )
+			{
+				// INIT
+				auto invalidations = 0;
+				columns_model::column columns[] = {
+					columns_model::column("id1", L"first", 0, columns_model::dir_none),
+					columns_model::column("id2", L"second", 0, columns_model::dir_descending),
+					columns_model::column("id3", L"third", 0, columns_model::dir_ascending),
+				};
+				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
+				auto c = cm->invalidated += [&] { invalidations++; };
+
+				// ACT
+				cm->update_column(0, 15);
+
+				// ASSERT
+				assert_equal(1, invalidations);
+
+				// ACT
+				cm->update_column(2, 3);
+				cm->update_column(1, 13);
+
+				// ASSERT
+				assert_equal(3, invalidations);
 			}
 
 

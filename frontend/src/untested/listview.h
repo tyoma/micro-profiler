@@ -61,6 +61,8 @@ namespace micro_profiler
 	public:
 		header();
 
+		virtual void draw_item_background(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer,
+			const agge::rect_r &box, index_type item, unsigned /*item_state_flags*/ state) const;
 		virtual void draw_item(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &ras, const agge::rect_r &b,
 			index_type /*item*/, unsigned /*item_state_flags*/ /*state*/, const std::wstring &text) const;
 

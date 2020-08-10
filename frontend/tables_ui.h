@@ -36,23 +36,27 @@ namespace micro_profiler
 
 		void switch_linked(wpl::table_model::index_type index);
 
+		template <typename ModelT>
+		void set_model(wpl::listview &lv, piechart *pc, wpl::slot_connection &conn_sorted, columns_model &cm,
+			const std::shared_ptr<ModelT> &m);
+
 	private:
-		const std::shared_ptr<columns_model> _columns_main;
-		const std::shared_ptr<functions_list> _statistics;
-		const std::shared_ptr<wpl::listview> _statistics_lv;
-		const std::shared_ptr<piechart> _statistics_pc;
+		const std::shared_ptr<columns_model> _cm_main;
+		const std::shared_ptr<columns_model> _cm_parents;
+		const std::shared_ptr<columns_model> _cm_children;
 
-		std::shared_ptr<wpl::combobox> _threads_cb;
+		const std::shared_ptr<functions_list> _m_main;
+		std::shared_ptr<linked_statistics> _m_parents;
+		std::shared_ptr<linked_statistics> _m_children;
 
-		const std::shared_ptr<columns_model> _columns_parents;
-		std::shared_ptr<linked_statistics> _parents_statistics;
-		const std::shared_ptr<wpl::listview> _parents_lv;
-
-		const std::shared_ptr<columns_model> _columns_children;
-		std::shared_ptr<linked_statistics> _children_statistics;
-		const std::shared_ptr<wpl::listview> _children_lv;
-		const std::shared_ptr<piechart> _children_pc;
+		const std::shared_ptr<wpl::listview> _lv_main;
+		const std::shared_ptr<piechart> _pc_main;
+		const std::shared_ptr<wpl::listview> _lv_parents;
+		const std::shared_ptr<wpl::listview> _lv_children;
+		const std::shared_ptr<piechart> _pc_children;
+		const std::shared_ptr<wpl::combobox> _cb_threads;
 
 		std::vector<wpl::slot_connection> _connections;
+		wpl::slot_connection _conn_sort_main, _conn_sort_children, _conn_sort_parents;
 	};
 }

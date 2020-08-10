@@ -105,6 +105,13 @@ namespace micro_profiler
 		_font = _text_engine->create_font(L"Segoe UI", 12, false, false, agge::font::key::gf_vertical);
 	}
 
+	void header::draw_item_background(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &ras, const agge::rect_r &b,
+		index_type /*item*/, unsigned /*item_state_flags*/ /*state*/) const
+	{
+		add_path(*ras, rectangle(b.x1, b.y1, b.x2, b.y2));
+		ctx(ras, blender(color::make(224, 224, 224)), winding<>());
+	}
+
 	void header::draw_item(gcontext &ctx, gcontext::rasterizer_ptr &ras, const agge::rect_r &b, index_type /*item*/,
 		unsigned /*item_state_flags*/ state, const wstring &text) const
 	{

@@ -63,28 +63,30 @@ namespace micro_profiler
 	}
 
 	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
-		: _columns_main(new columns_model(c_columns_statistics, 3, false)), _statistics(model),
-			_statistics_lv(wpl::controls::create_listview<listview_core, header>()),
-			_statistics_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
-			_threads_cb(create_combobox()),
-			_columns_parents(new columns_model(c_columns_statistics_parents, 2, false)),
-			_parents_lv(wpl::controls::create_listview<listview_core, header>()),
-			_columns_children(new columns_model(c_columns_statistics, 4, false)),
-			_children_lv(wpl::controls::create_listview<listview_core, header>()),
-			_children_pc(new piechart(begin(c_palette), std::end(c_palette), c_rest))
+		: _cm_main(new columns_model(c_columns_statistics, 3, false)),
+			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
+			_cm_children(new columns_model(c_columns_statistics, 4, false)),
+			_m_main(model),
+			_lv_main(wpl::controls::create_listview<listview_core, header>()),
+			_pc_main(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
+			_lv_parents(wpl::controls::create_listview<listview_core, header>()),
+			_lv_children(wpl::controls::create_listview<listview_core, header>()),
+			_pc_children(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
+			_cb_threads(create_combobox())
 	{
-		_columns_parents->update(*configuration.create("ParentsColumns"));
-		_columns_main->update(*configuration.create("MainColumns"));
-		_columns_children->update(*configuration.create("ChildrenColumns"));
+		_cm_parents->update(*configuration.create("ParentsColumns"));
+		_cm_main->update(*configuration.create("MainColumns"));
+		_cm_children->update(*configuration.create("ChildrenColumns"));
 
-		_parents_lv->set_columns_model(_columns_parents);
-		_statistics_lv->set_model(_statistics);
-		_statistics_lv->set_columns_model(_columns_main);
-		_children_lv->set_columns_model(_columns_children);
+		_lv_main->set_columns_model(_cm_main);
+		_lv_parents->set_columns_model(_cm_parents);
+		_lv_children->set_columns_model(_cm_children);
 
-		_threads_cb->set_model(_statistics->get_threads());
-		_threads_cb->select(0u);
-		_connections.push_back(_threads_cb->selection_changed += [model] (wpl::combobox::index_type index) {
+		set_model(*_lv_main, _pc_main.get(), _conn_sort_main, *_cm_main, _m_main);
+
+		_cb_threads->set_model(_m_main->get_threads());
+		_cb_threads->select(0u);
+		_connections.push_back(_cb_threads->selection_changed += [model] (wpl::combobox::index_type index) {
 			unsigned id;
 
 			if (model->get_threads()->get_key(id, index))
@@ -93,25 +95,25 @@ namespace micro_profiler
 				model->set_filter();
 		});
 
-		_connections.push_back(_statistics_lv->selection_changed
+		_connections.push_back(_lv_main->selection_changed
 			+= bind(&tables_ui::on_selection_change, this, _1, _2));
-		_connections.push_back(_statistics_lv->item_activate
+		_connections.push_back(_lv_main->item_activate
 			+= bind(&tables_ui::on_activate, this, _1));
-		_connections.push_back(_statistics_pc->selection_changed
+		_connections.push_back(_pc_main->selection_changed
 			+= bind(&tables_ui::on_piechart_selection_change, this, _1));
-		_connections.push_back(_statistics_pc->item_activate
+		_connections.push_back(_pc_main->item_activate
 			+= bind(&tables_ui::on_activate, this, _1));
 
-		_connections.push_back(_parents_lv->item_activate
-			+= bind(&tables_ui::on_drilldown, this, cref(_parents_statistics), _1));
+		_connections.push_back(_lv_parents->item_activate
+			+= bind(&tables_ui::on_drilldown, this, cref(_m_parents), _1));
 
-		_connections.push_back(_children_lv->item_activate
-			+= bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
-		_connections.push_back(_children_lv->selection_changed
+		_connections.push_back(_lv_children->item_activate
+			+= bind(&tables_ui::on_drilldown, this, cref(_m_children), _1));
+		_connections.push_back(_lv_children->selection_changed
 			+= bind(&tables_ui::on_children_selection_change, this, _1, _2));
-		_connections.push_back(_children_pc->item_activate
-			+= bind(&tables_ui::on_drilldown, this, cref(_children_statistics), _1));
-		_connections.push_back(_children_pc->selection_changed
+		_connections.push_back(_pc_children->item_activate
+			+= bind(&tables_ui::on_drilldown, this, cref(_m_children), _1));
+		_connections.push_back(_pc_children->selection_changed
 			+= bind(&tables_ui::on_children_piechart_selection_change, this, _1));
 
 		shared_ptr<container> split;
@@ -120,18 +122,18 @@ namespace micro_profiler
 		set_layout(layout);
 
 		layout->add(150);
-		add_view(_parents_lv->get_view(), 3);
+		add_view(_lv_parents->get_view(), 3);
 
 		layout->add(24);
-		add_view(_threads_cb->get_view());
+		add_view(_cb_threads->get_view());
 
 			split.reset(new container);
 			layout_split.reset(new stack(5, true));
 			split->set_layout(layout_split);
 			layout_split->add(150);
-			split->add_view(_statistics_pc);
+			split->add_view(_pc_main);
 			layout_split->add(-100);
-			split->add_view(_statistics_lv->get_view(), 1);
+			split->add_view(_lv_main->get_view(), 1);
 		layout->add(-100);
 		add_view(split);
 
@@ -139,70 +141,81 @@ namespace micro_profiler
 			layout_split.reset(new stack(5, true));
 			split->set_layout(layout_split);
 			layout_split->add(150);
-			split->add_view(_children_pc);
+			split->add_view(_pc_children);
 			layout_split->add(-100);
-			split->add_view(_children_lv->get_view(), 2);
+			split->add_view(_lv_children->get_view(), 2);
 		layout->add(150);
 		add_view(split);
-
-		_statistics_pc->set_model(_statistics->get_column_series());
 	}
 
 	void tables_ui::save(hive &configuration)
 	{
-		_columns_parents->store(*configuration.create("ParentsColumns"));
-		_columns_main->store(*configuration.create("MainColumns"));
-		_columns_children->store(*configuration.create("ChildrenColumns"));
+		_cm_parents->store(*configuration.create("ParentsColumns"));
+		_cm_main->store(*configuration.create("MainColumns"));
+		_cm_children->store(*configuration.create("ChildrenColumns"));
 	}
 
 	void tables_ui::on_selection_change(table_model::index_type index, bool selected)
 	{
 		index = selected ? index : table_model::npos();
 		switch_linked(index);
-		_statistics_pc->select(index);
+		_pc_main->select(index);
 	}
 
 	void tables_ui::on_piechart_selection_change(piechart::index_type index)
 	{
 		switch_linked(index);
-		_statistics_lv->select(index, true);
-		_statistics_lv->focus(index);
+		_lv_main->select(index, true);
+		_lv_main->focus(index);
 	}
 
 	void tables_ui::on_activate(wpl::index_traits::index_type index)
 	{
-		const function_key key = _statistics->get_key(index);
+		const function_key key = _m_main->get_key(index);
 		symbol_resolver::fileline_t fileline;
 
-		if (_statistics->get_resolver()->symbol_fileline_by_va(key.first, fileline))
+		if (_m_main->get_resolver()->symbol_fileline_by_va(key.first, fileline))
 			open_source(fileline.first, fileline.second);
 	}
 
 	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, table_model::index_type index)
 	{
-		index = _statistics->get_index(view->get_key(index));
-		_statistics_lv->select(index, true);
-		_statistics_lv->focus(index);
+		index = _m_main->get_index(view->get_key(index));
+		_lv_main->select(index, true);
+		_lv_main->focus(index);
 	}
 
 	void tables_ui::on_children_selection_change(wpl::table_model::index_type index, bool selected)
-	{	_children_pc->select(selected ? index : table_model::npos());	}
+	{	_pc_children->select(selected ? index : table_model::npos());	}
 
 	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
 	{
-		_children_lv->select(index, true);
-		_children_lv->focus(index);
+		_lv_children->select(index, true);
+		_lv_children->focus(index);
 	}
 
 	void tables_ui::switch_linked(wpl::table_model::index_type index)
 	{
-		_children_statistics = index != wpl::table_model::npos() ? _statistics->watch_children(index)
-			: shared_ptr<linked_statistics>();
-		_parents_statistics = index != wpl::table_model::npos() ? _statistics->watch_parents(index)
-			: shared_ptr<linked_statistics>();
-		_children_lv->set_model(_children_statistics);
-		_children_pc->set_model(_children_statistics ? _children_statistics->get_column_series()
-			: shared_ptr< series<double> >());
-		_parents_lv->set_model(_parents_statistics);
+		set_model(*_lv_children, _pc_children.get(), _conn_sort_children, *_cm_children,
+			_m_children = index != table_model::npos() ? _m_main->watch_children(index) : nullptr);
+		set_model(*_lv_parents, nullptr, _conn_sort_parents, *_cm_parents,
+			_m_parents = index != table_model::npos() ? _m_main->watch_parents(index) : nullptr);
+	}
+
+	template <typename ModelT>
+	void tables_ui::set_model(wpl::listview &lv, piechart *pc, wpl::slot_connection &conn_sorted,
+		columns_model &cm, const std::shared_ptr<ModelT> &m)
+	{
+		const auto order = cm.get_sort_order();
+		const auto set_order = [m] (columns_model::index_type column, bool ascending) {
+			if (m)
+				m->set_order(column, ascending);
+		};
+
+		conn_sorted = cm.sort_order_changed += set_order;
+		set_order(order.first, order.second);
+		lv.set_model(m);
+		if (pc)
+			pc->set_model(m ? m->get_column_series() : nullptr);
 	}
 }

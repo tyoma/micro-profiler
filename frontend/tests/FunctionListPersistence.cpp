@@ -228,13 +228,13 @@ namespace micro_profiler
 
 			test( FunctionListIsCompletelyRestoredWithSymbolsV3 )
 			{
-				typedef pair<long_address_t, unthreaded_statistic_types::function_detailed> addressed_function;
+				typedef pair<long_address_t, unthreaded_statistic_types::function_detailed> addressed_function2;
 
 				// INIT
 				pair<long_address_t, string> symbols[] = {
 					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
-				addressed_function s[] = {
+				addressed_function2 s[] = {
 					make_statistics(5ull, 123, 0, 1000, 0, 0),
 					make_statistics(13ull, 12, 0, 0, 0, 0),
 					make_statistics(17ull, 127, 0, 0, 0, 0),

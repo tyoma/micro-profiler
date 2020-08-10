@@ -259,7 +259,7 @@ namespace micro_profiler
 				{
 					// INIT / ACT
 					unordered_map<long long, char, passthrough_hash> c1(2);
-					unordered_map<unsigned char, char, passthrough_hash> c2(8);
+					unordered_map<unsigned int, char, passthrough_hash> c2(8);
 
 					// ASSERT
 					assert_equal(2u, c1.bucket_count());
@@ -271,21 +271,21 @@ namespace micro_profiler
 					c1.insert(make_pair(2, 'a'));
 					c1.insert(make_pair(9, 'b'));
 
-					c2.insert(make_pair(16, 'a'));
-					c2.insert(make_pair(11, 'b'));
-					c2.insert(make_pair(12, 'c'));
-					c2.insert(make_pair(3, 'b'));
-					c2.insert(make_pair(0, 'a'));
+					c2.insert(make_pair(16u, 'a'));
+					c2.insert(make_pair(11u, 'b'));
+					c2.insert(make_pair(12u, 'c'));
+					c2.insert(make_pair(3u, 'b'));
+					c2.insert(make_pair(0u, 'a'));
 
 					// ASSERT
 					pair<const long long, char> reference1[] = {
 						make_pair(2, 'a'), make_pair(8, 'a'),
 						make_pair(9, 'b'), make_pair(11, 'b'),
 					};
-					pair<const unsigned char, char> reference2[] = {
-						make_pair(0, 'a'), make_pair(16, 'a'),
-						make_pair(3, 'b'), make_pair(11, 'b'),
-						make_pair(12, 'c'),
+					pair<const unsigned int, char> reference2[] = {
+						make_pair(0u, 'a'), make_pair(16u, 'a'),
+						make_pair(3u, 'b'), make_pair(11u, 'b'),
+						make_pair(12u, 'c'),
 					};
 
 					assert_equal(reference1, c1);
@@ -297,7 +297,7 @@ namespace micro_profiler
 				{
 					// INIT
 					unordered_map<long long, char, passthrough_hash> c1(1); // becomes 2
-					unordered_map<unsigned char, char, passthrough_hash> c2(6); // becomes 8
+					unordered_map<unsigned int, char, passthrough_hash> c2(6); // becomes 8
 
 					// ACT
 					c1.insert(make_pair(11, 'b'));
@@ -305,21 +305,21 @@ namespace micro_profiler
 					c1.insert(make_pair(2, 'a'));
 					c1.insert(make_pair(9, 'b'));
 
-					c2.insert(make_pair(16, 'a'));
-					c2.insert(make_pair(11, 'b'));
-					c2.insert(make_pair(12, 'c'));
-					c2.insert(make_pair(3, 'b'));
-					c2.insert(make_pair(0, 'a'));
+					c2.insert(make_pair(16u, 'a'));
+					c2.insert(make_pair(11u, 'b'));
+					c2.insert(make_pair(12u, 'c'));
+					c2.insert(make_pair(3u, 'b'));
+					c2.insert(make_pair(0u, 'a'));
 
 					// ASSERT
 					pair<const long long, char> reference1[] = {
 						make_pair(2, 'a'), make_pair(8, 'a'),
 						make_pair(9, 'b'), make_pair(11, 'b'),
 					};
-					pair<const unsigned char, char> reference2[] = {
-						make_pair(0, 'a'), make_pair(16, 'a'),
-						make_pair(3, 'b'), make_pair(11, 'b'),
-						make_pair(12, 'c'),
+					pair<const unsigned int, char> reference2[] = {
+						make_pair(0u, 'a'), make_pair(16u, 'a'),
+						make_pair(3u, 'b'), make_pair(11u, 'b'),
+						make_pair(12u, 'c'),
 					};
 
 					assert_equal(reference1, c1);
@@ -332,8 +332,8 @@ namespace micro_profiler
 					// INIT
 					unique_ptr< unordered_map<long long, char, passthrough_hash> > c1(
 						new unordered_map<long long, char, passthrough_hash>(2));
-					unique_ptr< unordered_map<unsigned char, char, passthrough_hash> > c2(
-						new unordered_map<unsigned char, char, passthrough_hash>(8));
+					unique_ptr< unordered_map<unsigned int, char, passthrough_hash> > c2(
+						new unordered_map<unsigned int, char, passthrough_hash>(8));
 
 					c1->collision_allowance(3);
 					c1->insert(make_pair(11, 'b'));
@@ -342,15 +342,15 @@ namespace micro_profiler
 					c1->insert(make_pair(9, 'b'));
 
 					c2->collision_allowance(173);
-					c2->insert(make_pair(16, 'a'));
-					c2->insert(make_pair(11, 'b'));
-					c2->insert(make_pair(12, 'c'));
-					c2->insert(make_pair(3, 'b'));
-					c2->insert(make_pair(0, 'a'));
+					c2->insert(make_pair(16u, 'a'));
+					c2->insert(make_pair(11u, 'b'));
+					c2->insert(make_pair(12u, 'c'));
+					c2->insert(make_pair(3u, 'b'));
+					c2->insert(make_pair(0u, 'a'));
 
 					// ACT
 					unordered_map<long long, char, passthrough_hash> copy1(*c1);
-					unordered_map<unsigned char, char, passthrough_hash> copy2(*c2);
+					unordered_map<unsigned int, char, passthrough_hash> copy2(*c2);
 
 					c1.reset();
 					c2.reset();
@@ -360,10 +360,10 @@ namespace micro_profiler
 						make_pair(2, 'a'), make_pair(8, 'a'),
 						make_pair(9, 'b'), make_pair(11, 'b'),
 					};
-					pair<const unsigned char, char> reference2[] = {
-						make_pair(0, 'a'), make_pair(16, 'a'),
-						make_pair(3, 'b'), make_pair(11, 'b'),
-						make_pair(12, 'c'),
+					pair<const unsigned int, char> reference2[] = {
+						make_pair(0u, 'a'), make_pair(16u, 'a'),
+						make_pair(3u, 'b'), make_pair(11u, 'b'),
+						make_pair(12u, 'c'),
 					};
 
 					assert_equal(2u, copy1.bucket_count());
@@ -382,8 +382,8 @@ namespace micro_profiler
 					// INIT
 					unique_ptr< unordered_map<long long, char, passthrough_hash> > c1(
 						new unordered_map<long long, char, passthrough_hash>(2));
-					unique_ptr< unordered_map<unsigned char, char, passthrough_hash> > c2(
-						new unordered_map<unsigned char, char, passthrough_hash>(8));
+					unique_ptr< unordered_map<unsigned int, char, passthrough_hash> > c2(
+						new unordered_map<unsigned int, char, passthrough_hash>(8));
 
 					c1->collision_allowance(2);
 					c1->insert(make_pair(11, 'b'));
@@ -392,15 +392,15 @@ namespace micro_profiler
 					c1->insert(make_pair(9, 'b'));
 
 					c2->collision_allowance(5);
-					c2->insert(make_pair(16, 'a'));
-					c2->insert(make_pair(11, 'b'));
-					c2->insert(make_pair(12, 'c'));
-					c2->insert(make_pair(3, 'b'));
-					c2->insert(make_pair(0, 'a'));
+					c2->insert(make_pair(16u, 'a'));
+					c2->insert(make_pair(11u, 'b'));
+					c2->insert(make_pair(12u, 'c'));
+					c2->insert(make_pair(3u, 'b'));
+					c2->insert(make_pair(0u, 'a'));
 
 					// ACT
 					unordered_map<long long, char, passthrough_hash> copy1;
-					unordered_map<unsigned char, char, passthrough_hash> copy2;
+					unordered_map<unsigned int, char, passthrough_hash> copy2;
 
 					copy1 = *c1;
 					copy2 = *c2;
@@ -413,10 +413,10 @@ namespace micro_profiler
 						make_pair(2, 'a'), make_pair(8, 'a'),
 						make_pair(9, 'b'), make_pair(11, 'b'),
 					};
-					pair<const unsigned char, char> reference2[] = {
-						make_pair(0, 'a'), make_pair(16, 'a'),
-						make_pair(3, 'b'), make_pair(11, 'b'),
-						make_pair(12, 'c'),
+					pair<const unsigned int, char> reference2[] = {
+						make_pair(0u, 'a'), make_pair(16u, 'a'),
+						make_pair(3u, 'b'), make_pair(11u, 'b'),
+						make_pair(12u, 'c'),
 					};
 
 					assert_equal(2u, copy1.collision_allowance());
@@ -431,13 +431,13 @@ namespace micro_profiler
 				test( MapIsEmptyAndNothingIsFoundAfterClear )
 				{
 					// INIT
-					unordered_map<unsigned char, char, passthrough_hash> c;
+					unordered_map<unsigned int, char, passthrough_hash> c;
 
-					c.insert(make_pair(16, 'a'));
-					c.insert(make_pair(11, 'b'));
-					c.insert(make_pair(12, 'c'));
-					c.insert(make_pair(3, 'b'));
-					c.insert(make_pair(0, 'a'));
+					c.insert(make_pair(16u, 'a'));
+					c.insert(make_pair(11u, 'b'));
+					c.insert(make_pair(12u, 'c'));
+					c.insert(make_pair(3u, 'b'));
+					c.insert(make_pair(0u, 'a'));
 
 					// ACT
 					c.clear();
@@ -452,17 +452,17 @@ namespace micro_profiler
 					assert_equal(c.end(), c.find(0));
 
 					// ACT
-					c.insert(make_pair(16, 'a'));
-					c.insert(make_pair(11, 'b'));
-					c.insert(make_pair(12, 'c'));
-					c.insert(make_pair(3, 'b'));
-					c.insert(make_pair(0, 'a'));
+					c.insert(make_pair(16u, 'a'));
+					c.insert(make_pair(11u, 'b'));
+					c.insert(make_pair(12u, 'c'));
+					c.insert(make_pair(3u, 'b'));
+					c.insert(make_pair(0u, 'a'));
 
 					// ASSERT
-					pair<const unsigned char, char> reference[] = {
-						make_pair(0, 'a'), make_pair(16, 'a'),
-						make_pair(3, 'b'), make_pair(11, 'b'),
-						make_pair(12, 'c'),
+					pair<const unsigned int, char> reference[] = {
+						make_pair(0u, 'a'), make_pair(16u, 'a'),
+						make_pair(3u, 'b'), make_pair(11u, 'b'),
+						make_pair(12u, 'c'),
 					};
 
 					assert_all_entries_found(reference, c);
@@ -473,16 +473,16 @@ namespace micro_profiler
 				test( EntryAccessedViaIndexingIsTheSameToInserted )
 				{
 					// INIT
-					unordered_map<unsigned char, char, passthrough_hash> c(8);
+					unordered_map<unsigned int, char, passthrough_hash> c(8);
 
 					c.collision_allowance(3);
 
-					char *i1 = &c.insert(make_pair(16, 'a')).first->second;
-					char *i2 = &c.insert(make_pair(11, 'b')).first->second;
-					char *i3 = &c.insert(make_pair(12, 'c')).first->second;
-					char *i4 = &c.insert(make_pair(3, 'b')).first->second;
-					char *i5 = &c.insert(make_pair(0, 'a')).first->second;
-					char *i6 = &c.insert(make_pair(8, 'a')).first->second;
+					char *i1 = &c.insert(make_pair(16u, 'a')).first->second;
+					char *i2 = &c.insert(make_pair(11u, 'b')).first->second;
+					char *i3 = &c.insert(make_pair(12u, 'c')).first->second;
+					char *i4 = &c.insert(make_pair(3u, 'b')).first->second;
+					char *i5 = &c.insert(make_pair(0u, 'a')).first->second;
+					char *i6 = &c.insert(make_pair(8u, 'a')).first->second;
 
 					// ACT / ASSERT
 					assert_equal(i1, &c[16]);

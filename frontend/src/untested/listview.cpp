@@ -70,11 +70,14 @@ namespace micro_profiler
 		if (item)
 		{
 			add_path(*ras, rectangle(b.x1, b.y1, b.x2, b.y1 + _border_width));
-			ctx(ras, blender(color::make(224, 224, 224)), winding<>());
+			ctx(ras, blender(color::make(128, 128, 128, 64)), winding<>());
 		}
-		add_path(*ras, rectangle(b.x1, b.y1 + _border_width, b.x2, b.y2));
-		ctx(ras, blender(state & selected ? color::make(205, 232, 255)
-			: item & 1 ? color::make(240, 240, 240) : color::make(255, 255, 255)), winding<>());
+		if ((state & selected) | (item & 1))
+			add_path(*ras, rectangle(b.x1, b.y1 + _border_width, b.x2, b.y2));
+		if (state & selected)
+			ctx(ras, blender(color::make(205, 232, 255)), winding<>());
+		else if (item & 1)
+			ctx(ras, blender(color::make(128, 128, 128, 32)), winding<>());
 	}
 
 	void listview_core::draw_item(gcontext &ctx, gcontext::rasterizer_ptr &ras, const rect_r &b, index_type /*item*/,

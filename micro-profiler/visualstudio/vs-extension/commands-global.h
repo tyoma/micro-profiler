@@ -27,14 +27,18 @@
 #include <atlbase.h>
 #include <comdef.h>
 #include <list>
+#include <vector>
 #include <vsshell.h>
-#include <wpl/signals.h>
 
 #pragma warning(disable:4510; disable:4610)
 
+namespace wpl
+{
+	class factory;
+}
+
 namespace micro_profiler
 {
-	class AttachToProcessDialog;
 	class frontend_manager;
 	class ipc_manager;
 
@@ -45,10 +49,11 @@ namespace micro_profiler
 			typedef std::list< std::shared_ptr<void> > running_objects_t;
 
 			std::vector<IDispatchPtr> selected_items;
-			std::shared_ptr<frontend_manager> frontend;
+			const std::shared_ptr<frontend_manager> frontend;
 			CComPtr<IVsUIShell> shell;
-			std::shared_ptr<ipc_manager> ipc_manager;
+			const std::shared_ptr<ipc_manager> ipc_manager;
 			running_objects_t &running_objects;
+			const wpl::factory &factory;
 
 		private:
 			const global_context &operator =(const global_context &rhs);
@@ -88,10 +93,6 @@ namespace micro_profiler
 		public:
 			virtual bool query_state(const context_type &ctx, unsigned item, unsigned &state) const;
 			virtual void exec(context_type &ctx, unsigned item);
-
-		private:
-			std::shared_ptr<AttachToProcessDialog> _dialog;
-			wpl::slot_connection _closed_connection;
 		};
 
 

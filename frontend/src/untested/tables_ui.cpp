@@ -1,7 +1,5 @@
 #include <frontend/tables_ui.h>
 
-#include "listview.h"
-
 #include <frontend/piechart.h>
 #include <frontend/columns_model.h>
 #include <frontend/function_list.h>
@@ -9,9 +7,9 @@
 #include <frontend/threads_model.h>
 
 #include <common/configuration.h>
-#include <wpl/controls/listview.h>
+#include <wpl/controls.h>
+#include <wpl/factory.h>
 #include <wpl/layout.h>
-#include <wpl/win32/controls.h>
 
 using namespace std;
 using namespace placeholders;
@@ -21,26 +19,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const agge::color c_palette[] = {
-			agge::color::make(230, 85, 13),
-			agge::color::make(253, 141, 60),
-			agge::color::make(253, 174, 107),
-
-			agge::color::make(49, 163, 84),
-			agge::color::make(116, 196, 118),
-			agge::color::make(161, 217, 155),
-
-			agge::color::make(107, 174, 214),
-			agge::color::make(158, 202, 225),
-			agge::color::make(198, 219, 239),
-
-			agge::color::make(117, 107, 177),
-			agge::color::make(158, 154, 200),
-			agge::color::make(188, 189, 220),
-		};
-
-		const agge::color c_rest = agge::color::make(128, 128, 128, 255);
-
 		const columns_model::column c_columns_statistics[] = {
 			columns_model::column("Index", L"#", 28, columns_model::dir_none),
 			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
@@ -62,17 +40,17 @@ namespace micro_profiler
 		};
 	}
 
-	tables_ui::tables_ui(const shared_ptr<functions_list> &model, hive &configuration)
+	tables_ui::tables_ui(const factory &factory_, const shared_ptr<functions_list> &model, hive &configuration)
 		: _cm_main(new columns_model(c_columns_statistics, 3, false)),
 			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new columns_model(c_columns_statistics, 4, false)),
 			_m_main(model),
-			_lv_main(wpl::controls::create_listview<listview_core, header>()),
-			_pc_main(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
-			_lv_parents(wpl::controls::create_listview<listview_core, header>()),
-			_lv_children(wpl::controls::create_listview<listview_core, header>()),
-			_pc_children(new piechart(begin(c_palette), std::end(c_palette), c_rest)),
-			_cb_threads(create_combobox())
+			_lv_main(static_pointer_cast<listview>(factory_.create_control("listview"))),
+			_pc_main(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
+			_lv_parents(static_pointer_cast<listview>(factory_.create_control("listview"))),
+			_lv_children(static_pointer_cast<listview>(factory_.create_control("listview"))),
+			_pc_children(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
+			_cb_threads(static_pointer_cast<combobox>(factory_.create_control("combobox")))
 	{
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
@@ -86,7 +64,7 @@ namespace micro_profiler
 
 		_cb_threads->set_model(_m_main->get_threads());
 		_cb_threads->select(0u);
-		_connections.push_back(_cb_threads->selection_changed += [model] (wpl::combobox::index_type index) {
+		_connections.push_back(_cb_threads->selection_changed += [model] (wpl::combobox::model_t::index_type index) {
 			unsigned id;
 
 			if (model->get_threads()->get_key(id, index))
@@ -162,7 +140,7 @@ namespace micro_profiler
 		_pc_main->select(index);
 	}
 
-	void tables_ui::on_piechart_selection_change(piechart::index_type index)
+	void tables_ui::on_piechart_selection_change(piechart::model_t::index_type index)
 	{
 		switch_linked(index);
 		_lv_main->select(index, true);
@@ -188,7 +166,7 @@ namespace micro_profiler
 	void tables_ui::on_children_selection_change(wpl::table_model::index_type index, bool selected)
 	{	_pc_children->select(selected ? index : table_model::npos());	}
 
-	void tables_ui::on_children_piechart_selection_change(piechart::index_type index)
+	void tables_ui::on_children_piechart_selection_change(piechart::model_t::index_type index)
 	{
 		_lv_children->select(index, true);
 		_lv_children->focus(index);

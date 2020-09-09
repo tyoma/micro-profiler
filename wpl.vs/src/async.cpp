@@ -20,16 +20,16 @@
 
 #include "async.h"
 
-#include "com.h"
+#include <wpl.vs/com.h>
 
 #include <atlcom.h>
 #include <stdexcept>
 
 using namespace std;
 
-namespace micro_profiler
+namespace wpl
 {
-	namespace integration
+	namespace vs
 	{
 		namespace async
 		{

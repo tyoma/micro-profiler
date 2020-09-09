@@ -22,11 +22,12 @@
 
 #include <agge/color.h>
 #include <frontend/series.h>
+#include <wpl/control.h>
 #include <wpl/view.h>
 
 namespace micro_profiler
 {
-	class piechart : public wpl::view, public wpl::index_traits
+	class piechart : public wpl::control, public wpl::view, public std::enable_shared_from_this<wpl::view>, wpl::index_traits
 	{
 	public:
 		typedef series<double> model_t;
@@ -35,12 +36,14 @@ namespace micro_profiler
 		template <typename PaletteIteratorT>
 		piechart(PaletteIteratorT palette_begin, PaletteIteratorT palette_end, agge::color color_rest);
 
+		virtual std::shared_ptr<view> get_view();
+
 		void set_model(const std::shared_ptr<model_t> &m);
-		void select(index_type item);
+		void select(model_t::index_type item);
 
 	public:
-		wpl::signal<void(index_type item)> selection_changed;
-		wpl::signal<void(index_type item)> item_activate;
+		wpl::signal<void(model_t::index_type item)> selection_changed;
+		wpl::signal<void(model_t::index_type item)> item_activate;
 
 	private:
 		struct segment
@@ -60,7 +63,7 @@ namespace micro_profiler
 		virtual void mouse_double_click(mouse_buttons button, int depressed, int x, int y);
 
 		void on_invalidated();
-		index_type find_sector(agge::real_t x, agge::real_t y);
+		model_t::index_type find_sector(agge::real_t x, agge::real_t y);
 
 	private:
 		segments_t _segments;

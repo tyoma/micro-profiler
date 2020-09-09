@@ -12,4 +12,4 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /MANIFE
 
 add_executable(micro-profiler_standalone ${MICROPROFILER_SOURCES})
 
-target_link_libraries(micro-profiler_standalone frontend.lib ipc logger common wpl.ui)
+target_link_libraries(micro-profiler_standalone frontend.lib ipc logger common wpl)

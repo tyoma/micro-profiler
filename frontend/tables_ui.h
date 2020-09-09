@@ -4,9 +4,15 @@
 
 #include <memory>
 #include <vector>
-#include <wpl/combobox.h>
-#include <wpl/listview.h>
+#include <wpl/models.h>
 #include <wpl/container.h>
+
+namespace wpl
+{
+	struct combobox;
+	class factory;
+	struct listview;
+}
 
 namespace micro_profiler
 {
@@ -18,7 +24,7 @@ namespace micro_profiler
 	class tables_ui : wpl::noncopyable, public wpl::container
 	{
 	public:
-		tables_ui(const std::shared_ptr<functions_list> &model, hive &configuration);
+		tables_ui(const wpl::factory &factory_, const std::shared_ptr<functions_list> &model, hive &configuration);
 
 		void save(hive &configuration);
 
@@ -27,12 +33,12 @@ namespace micro_profiler
 
 	private:
 		void on_selection_change(wpl::table_model::index_type index, bool selected);
-		void on_piechart_selection_change(piechart::index_type index);
+		void on_piechart_selection_change(piechart::model_t::index_type index);
 		void on_activate(wpl::index_traits::index_type index);
 
 		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::table_model::index_type index);
 		void on_children_selection_change(wpl::table_model::index_type index, bool selected);
-		void on_children_piechart_selection_change(piechart::index_type index);
+		void on_children_piechart_selection_change(piechart::model_t::index_type index);
 
 		void switch_linked(wpl::table_model::index_type index);
 

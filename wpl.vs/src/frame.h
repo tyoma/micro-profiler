@@ -20,25 +20,43 @@
 
 #pragma once
 
-#include <common/noncopyable.h>
+#include <atlbase.h>
+#include <atlcom.h>
+
+#include <vsshell.h>
+#include <wpl/concepts.h>
 #include <wpl/form.h>
-#include <wpl/listview.h>
 
-namespace micro_profiler
+namespace wpl
 {
-	class process_list;
-
-	class AttachToProcessDialog : noncopyable
+	namespace vs
 	{
-	public:
-		AttachToProcessDialog(const std::shared_ptr<wpl::form> &form);
+		class pane;
 
-		wpl::signal<void()> closed;
+		class frame : public wpl::form, noncopyable
+		{
+		public:
+			frame(const CComPtr<IVsWindowFrame> &underlying, pane &pane_);
+			~frame();
 
-	private:
-		const std::shared_ptr<wpl::form> _form;
-		const std::shared_ptr<wpl::listview> _processes_lv;
-		const std::shared_ptr<process_list> _model;
-		std::vector<wpl::slot_connection> _connections;
-	};
+		private:
+			virtual void set_view(const std::shared_ptr<wpl::view> &v);
+			virtual void set_background_color(agge::color color_);
+
+			virtual view_location get_location() const;
+			virtual void set_location(const view_location &location);
+			virtual void set_visible(bool value);
+			virtual void set_caption(const std::wstring &caption);
+			virtual void set_caption_icon(const gcontext::surface_type &icon);
+			virtual void set_task_icon(const gcontext::surface_type &icon);
+			virtual std::shared_ptr<form> create_child();
+			virtual void set_style(unsigned /*styles*/ style);
+			virtual void set_font(const font &font_);
+
+		private:
+			const CComPtr<IVsWindowFrame> _underlying;
+			pane &_pane;
+			wpl::slot_connection _closed_connection;
+		};
+	}
 }

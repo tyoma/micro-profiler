@@ -22,46 +22,41 @@
 
 #include <frontend/frontend_manager.h>
 
+#include <agge/types.h>
 #include <functional>
 #include <string>
 #include <wpl/concepts.h>
-#include <wpl/signals.h>
-#include <wpl/view_host.h>
-#include <wpl/win32/window.h>
+
+namespace wpl
+{
+	class factory;
+	struct form;
+}
 
 namespace micro_profiler
 {
-	class about_ui;
 	class functions_list;
 	struct hive;
 	class tables_ui;
 
-	class ProfilerMainDialog : public frontend_ui, wpl::noncopyable
+	class standalone_ui : public frontend_ui, wpl::noncopyable
 	{
 	public:
-		ProfilerMainDialog(std::shared_ptr<functions_list> s, const std::string &executable);
-		~ProfilerMainDialog();
+		standalone_ui(const wpl::factory &factory, std::shared_ptr<functions_list> s,
+			const std::string &executable);
+
+		wpl::signal<void (const std::string &text)> copy_to_buffer;
+		wpl::signal<void (agge::point<int> center, const std::shared_ptr<wpl::form> &new_form)> show_about;
 
 	private:
-		void OnCopyAll();
-		void OnSupport();
-
-	private:
-		LRESULT on_message(UINT message, WPARAM wparam, LPARAM lparam,
-			const wpl::win32::window::original_handler_t &handler);
-
 		virtual void activate();
 
 	private:
-		HWND _hwnd;
 		const std::shared_ptr<hive> _configuration;
 		const std::shared_ptr<functions_list> _statistics;
 		const std::string _executable;
-		agge::rect_i _placement;
-		std::shared_ptr<wpl::view_host> _host;
 		std::shared_ptr<tables_ui> _statistics_display;
 		std::vector<wpl::slot_connection> _connections;
-		std::unique_ptr<about_ui> _about;
-		wpl::slot_connection _about_connection;
+		std::shared_ptr<wpl::form> _form;
 	};
 }

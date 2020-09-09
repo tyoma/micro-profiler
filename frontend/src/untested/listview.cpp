@@ -20,8 +20,6 @@
 
 #include "listview.h"
 
-#include "font_loader.h"
-
 #include <agge/blenders.h>
 #include <agge/blenders_simd.h>
 #include <agge/filling_rules.h>
@@ -30,6 +28,7 @@
 #include <agge.text/font.h>
 #include <wpl/layout.h>
 #include <wpl/controls/scroller.h>
+#include <wpl/win32/font_loader.h>
 
 using namespace agge;
 using namespace std;
@@ -47,7 +46,7 @@ namespace micro_profiler
 	listview_core::listview_core(/*text_engine_ptr text_engine_, shared_ptr<column_header> cheader*/)
 		: /*_text_engine(text_engine_), _cheader(cheader),*/ _border_width(1.0f)
 	{
-		shared_ptr<font_loader> l(new font_loader);
+		shared_ptr<wpl::win32::font_loader> l(new wpl::win32::font_loader);
 		_text_engine.reset(new text_engine_t(*l, 4), [l] (text_engine_t *p) { delete p; });
 
 		_font = _text_engine->create_font(L"Segoe UI", 12, false, false, agge::font::key::gf_vertical);
@@ -87,7 +86,7 @@ namespace micro_profiler
 		{
 			add_path(*ras, assist(assist(rectangle(b.x1 + 0.25f, b.y1 + 2.5f, b.x2 - 0.25f, b.y2 - _border_width - 0.5f),
 				_dash), _stroke));
-			ctx(ras, blender(color::make(0, 0, 0)), winding<>());
+			ctx(ras, blender(color::make(128, 128, 128, 64)), winding<>());
 		}
 	}
 
@@ -96,13 +95,13 @@ namespace micro_profiler
 	{
 		_text_engine->render_string(*ras, *_font, text.c_str(), layout::near, b.x1, b.y1 + _baseline_offset, b.x2 - b.x1);
 		ras->sort(true);
-		ctx(ras, blender(color::make(0, 0, 0)), winding<>());
+		ctx(ras, blender(color::make(192, 192, 192)), winding<>());
 	}
 
 
 	header::header()
 	{
-		shared_ptr<font_loader> l(new font_loader);
+		shared_ptr<wpl::win32::font_loader> l(new wpl::win32::font_loader);
 		_text_engine.reset(new text_engine_t(*l, 4), [l] (text_engine_t *p) { delete p; });
 
 		_font = _text_engine->create_font(L"Segoe UI", 12, false, false, agge::font::key::gf_vertical);

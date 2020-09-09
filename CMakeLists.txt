@@ -41,7 +41,7 @@ endif()
 # Setup global compiler/linker settings
 set(GCC_CLANG_COMPILER_OPTIONS_C
 	-ggdb -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
-	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas
+	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas -msse2
 )
 set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-std=c++11 -fexceptions -fno-rtti
@@ -117,6 +117,7 @@ if (WIN32)
 	add_subdirectory(libraries/wpl)
 
 	add_subdirectory(injector/src)
+	add_subdirectory(wpl.vs/src)
 	add_subdirectory(micro-profiler)
 	add_subdirectory(standalone)
 

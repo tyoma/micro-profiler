@@ -18,16 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "AttachToProcessDialog.h"
+#include "attach_ui.h"
 
 #include <frontend/columns_model.h>
 #include <frontend/process_list.h>
 #include <injector/process.h>
-#include <wpl/container.h>
 #include <wpl/controls.h>
+#include <wpl/factory.h>
 #include <wpl/layout.h>
-#include <wpl/win32/controls.h>
-#include <wpl/win32/form.h>
 
 using namespace std;
 using namespace wpl;
@@ -44,10 +42,10 @@ namespace micro_profiler
 		};
 	}
 
-	AttachToProcessDialog::AttachToProcessDialog(const shared_ptr<wpl::form> &form)
-		: _form(form), _processes_lv(wpl::create_listview()), _model(new process_list)
+	attach_ui::attach_ui(const factory &factory_)
+		: _processes_lv(static_pointer_cast<listview>(factory_.create_control("listview"))),
+			_model(new process_list)
 	{
-		shared_ptr<container> root(new container);
 		shared_ptr<container> vstack(new container), toolbar(new container);
 		shared_ptr<layout_manager> lm_root(new spacer(5, 5));
 		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
@@ -60,22 +58,23 @@ namespace micro_profiler
 			auto process = _model->get_process(item);
 
 			process->remote_execute(&inject_profiler, const_byte_range(0, 0));
+			close();
 		});
 
 
 		toolbar->set_layout(lm_toolbar);
 		lm_toolbar->add(-100);
 		toolbar->add_view(shared_ptr<view>(new view));
-		btn = create_button();
+		btn = static_pointer_cast<button>(factory_.create_control("button"));
 		btn->set_text(L"Attach");
 		_connections.push_back(btn->clicked += [this] {
 
 		});
 		lm_toolbar->add(50);
 		toolbar->add_view(btn->get_view());
-		btn = create_button();
+		btn = static_pointer_cast<button>(factory_.create_control("button"));
 		btn->set_text(L"Close");
-		_connections.push_back(btn->clicked += [this] { closed(); });
+		_connections.push_back(btn->clicked += [this] { close(); });
 		lm_toolbar->add(50);
 		toolbar->add_view(btn->get_view());
 
@@ -85,11 +84,8 @@ namespace micro_profiler
 		lm_vstack->add(24);
 		vstack->add_view(toolbar);
 
-		root->set_layout(lm_root);
-		root->add_view(vstack);
-		_form->set_view(root);
-		_form->set_visible(true);
-		_connections.push_back(_form->close += [this] { closed(); });
+		set_layout(shared_ptr<layout_manager>(new spacer(5, 5)));
+		add_view(vstack);
 
 		_model->update(&process::enumerate);
 	}

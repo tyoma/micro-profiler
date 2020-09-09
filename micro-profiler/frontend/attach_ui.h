@@ -20,29 +20,29 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <wpl/container.h>
 
 namespace wpl
 {
-	struct button;
 	class factory;
+	struct listview;
 }
 
 namespace micro_profiler
 {
-	class about_ui : public wpl::container
+	class process_list;
+
+	class attach_ui : public wpl::container, noncopyable
 	{
 	public:
-		about_ui(const wpl::factory &factory_);
+		attach_ui(const wpl::factory &factory);
+
+		wpl::signal<void()> close;
 
 	private:
-		void on_link(const std::wstring &address);
-
-	private:
+		const std::shared_ptr<wpl::listview> _processes_lv;
+		const std::shared_ptr<process_list> _model;
 		std::vector<wpl::slot_connection> _connections;
-		std::shared_ptr<wpl::button> _close_button;
-
-	public:
-		wpl::signal<void ()> &close;
 	};
 }

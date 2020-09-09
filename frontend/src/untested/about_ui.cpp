@@ -24,9 +24,9 @@
 
 #include <wpl/container.h>
 #include <wpl/controls.h>
+#include <wpl/factory.h>
 #include <wpl/layout.h>
 #include <wpl/types.h>
-#include <wpl/win32/controls.h>
 
 #include <Windows.h>
 #include <ShellAPI.h>
@@ -40,14 +40,14 @@ namespace micro_profiler
 	namespace
 	{
 		template <typename LayoutManagerT>
-		shared_ptr<link> create_link(container &c, LayoutManagerT &lm, int size, const wstring &text)
+		shared_ptr<link> create_link(container &c, const factory &factory_, LayoutManagerT &lm, int size, const wstring &text)
 		{
-			shared_ptr<link> link = wpl::create_link();
+			shared_ptr<link> link_ = static_pointer_cast<link>(factory_.create_control("link"));
 
-			link->set_text(text);
-			c.add_view(link->get_view());
+			link_->set_text(text);
+			c.add_view(link_->get_view());
 			lm.add(size);
-			return link;
+			return link_;
 		}
 
 		function<int (int)> scale_x()
@@ -72,18 +72,13 @@ namespace micro_profiler
 	}
 
 
-	about_ui::about_ui(const shared_ptr<form> &form)
-		: _form(form)
+	about_ui::about_ui(const wpl::factory &factory_)
+		: _close_button(static_pointer_cast<button>(factory_.create_control("button"))), close(_close_button->clicked)
 	{
 		function<int (int)> xx = scale_x();
 		function<int (int)> yy = scale_y();
-		font f = { L"Segoe UI", 10 };
 
-		_form->set_font(f);
-		_form->set_caption(L"MicroProfiler - Support Developer");
-
-		shared_ptr<container> c1(new container);
-		c1->set_layout(shared_ptr<spacer>(new spacer(xx(15), yy(15))));
+		set_layout(shared_ptr<spacer>(new spacer(xx(15), yy(15))));
 			shared_ptr<container> c2(new container);
 			shared_ptr<stack> l2(new stack(yy(5), false));
 			c2->set_layout(l2);
@@ -93,30 +88,20 @@ namespace micro_profiler
 					shared_ptr<stack> l4(new stack(yy(10), false));
 					c4->set_layout(l4);
 					shared_ptr<link> link;
-					link = create_link(*c2, *l2, yy(40), L"Please, take any of these steps to support the development of MicroProfiler:");
-					link = create_link(*c4, *l4, yy(20), L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
+					link = create_link(*c2, factory_, *l2, yy(40), L"Please, take any of these steps to support the development of MicroProfiler:");
+					link = create_link(*c4, factory_, *l4, yy(20), L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
 					_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
-					link = create_link(*c4, *l4, yy(20), L"2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
+					link = create_link(*c4, factory_, *l4, yy(20), L"2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
 					_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
-					link = create_link(*c4, *l4, yy(20), L"3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
+					link = create_link(*c4, factory_, *l4, yy(20), L"3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
 					_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
 				c3->add_view(c4);
 			c2->add_view(c3);
 			l2->add(-100);
-			shared_ptr<button> button = create_button();
-			button->set_text(L"Thank You!");
-			c2->add_view(button->get_view());
+			_close_button->set_text(L"Thank You!");
+			c2->add_view(_close_button->get_view());
 			l2->add(yy(30));
-			_connections.push_back(button->clicked += [this] {
-				_form->close();
-			});
-		c1->add_view(c2);
-
-		view_location l = { 100, 100, xx(380), yy(230) };
-
-		_form->set_style(0);
-		_form->set_location(l);
-		_form->set_view(c1);
+		add_view(c2);
 	}
 
 	void about_ui::on_link(const wstring &address)

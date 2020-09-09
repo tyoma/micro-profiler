@@ -20,29 +20,12 @@
 
 #pragma once
 
-#include <wpl/container.h>
-
 namespace wpl
 {
-	struct button;
 	class factory;
 }
 
 namespace micro_profiler
 {
-	class about_ui : public wpl::container
-	{
-	public:
-		about_ui(const wpl::factory &factory_);
-
-	private:
-		void on_link(const std::wstring &address);
-
-	private:
-		std::vector<wpl::slot_connection> _connections;
-		std::shared_ptr<wpl::button> _close_button;
-
-	public:
-		wpl::signal<void ()> &close;
-	};
+	void setup_factory(wpl::factory &factory_);
 }

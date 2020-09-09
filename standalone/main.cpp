@@ -7,15 +7,19 @@
 #include <atlbase.h>
 #include <common/constants.h>
 #include <common/string.h>
+#include <frontend/about_ui.h>
+#include <frontend/factory.h>
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
 #include <ipc/com/endpoint.h>
 #include <tchar.h>
 #include <windows.h>
+#include <wpl/factory.h>
 #include <wpl/form.h>
-#include <wpl/win32/form.h>
 
+using namespace micro_profiler;
 using namespace std;
+using namespace wpl;
 
 namespace
 {
@@ -61,7 +65,7 @@ namespace
 		END_COM_MAP()
 	};
 
-	OBJECT_ENTRY_NON_CREATEABLE_EX_AUTO(static_cast<const GUID &>(micro_profiler::constants::standalone_frontend_id),
+	OBJECT_ENTRY_NON_CREATEABLE_EX_AUTO(static_cast<const GUID &>(constants::standalone_frontend_id),
 		FauxFrontend);
 }
 
@@ -71,13 +75,20 @@ namespace micro_profiler
 
 	shared_ptr<ipc::server> ipc::com::server::create_default_session_factory()
 	{	return shared_ptr<ipc::server>();	}
+
+	struct ui_composite
+	{
+		shared_ptr<standalone_ui> ui;
+		slot_connection connections[4];
+		shared_ptr<form> about_form;
+	};
 }
 
 int WINAPI _tWinMain(HINSTANCE instance, HINSTANCE /*previous_instance*/, LPTSTR command_line, int show_command)
 try
 {
 	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	micro_profiler::g_instance = instance;
+	g_instance = instance;
 
 	HRESULT hresult;
 	Module module;
@@ -89,16 +100,58 @@ try
 	}
 
 	com_initialize ci;
+	auto factory = factory::create_default(nullptr);
 
-	auto ui_factory = [] (const shared_ptr<micro_profiler::functions_list> &model, const string &executable)	{
-		return make_shared<micro_profiler::ProfilerMainDialog>(model, executable);
+	setup_factory(*factory);
+
+	auto ui_factory = [factory] (const shared_ptr<functions_list> &model, const string &executable) -> shared_ptr<frontend_ui>	{
+		auto composite_ptr = make_shared<ui_composite>();
+		auto &composite = *composite_ptr;
+		auto factory2 = factory;
+
+		composite.ui = make_shared<standalone_ui>(*factory, model, executable);
+		composite.connections[0] = composite.ui->copy_to_buffer += [] (const string &text_utf8) {
+			const auto text = unicode(text_utf8);
+			if (::OpenClipboard(NULL))
+			{
+				if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (text.size() + 1) * sizeof(wchar_t)))
+				{
+					wchar_t *gtext_memory = static_cast<wchar_t *>(::GlobalLock(gtext));
+
+					copy(text.c_str(), text.c_str() + text.size() + 1, gtext_memory);
+					::GlobalUnlock(gtext_memory);
+					::EmptyClipboard();
+					::SetClipboardData(CF_UNICODETEXT, gtext);
+				}
+				::CloseClipboard();
+			}
+		};
+		composite.connections[1] = composite.ui->show_about += [factory2, &composite] (agge::point<int> center, const shared_ptr<form> &new_form) {
+			if (!composite.about_form)
+			{
+				view_location l = { center.x - 200, center.y - 150, 400, 300 };
+				auto &composite2 = composite;
+				auto on_close = [&composite2] {
+					composite2.about_form.reset();
+				};
+				auto about = make_shared<about_ui>(*factory2);
+
+				new_form->set_view(about);
+				new_form->set_location(l);
+				new_form->set_visible(true);
+				composite.connections[2] = new_form->close += on_close;
+				composite.connections[3] = about->close += on_close;
+				composite.about_form = new_form;
+			}
+		};
+		return shared_ptr<frontend_ui>(composite_ptr, composite.ui.get());
 	};
-	auto main_form = wpl::create_form();
+	auto main_form = factory->create_form();
 	auto cancellation = main_form->close += [] { ::PostQuitMessage(0); };
-	auto frontend_manager = micro_profiler::frontend_manager::create(ui_factory);
-	micro_profiler::ipc_manager ipc_manager(frontend_manager,
+	auto frontend_manager = frontend_manager::create(ui_factory);
+	ipc_manager ipc_manager(frontend_manager,
 		make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
-		&micro_profiler::constants::standalone_frontend_id);
+		&constants::standalone_frontend_id);
 
 	main_form->set_visible(true);
 	module.Run(show_command);

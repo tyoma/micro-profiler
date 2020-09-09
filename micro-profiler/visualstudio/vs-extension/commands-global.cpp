@@ -29,7 +29,7 @@
 #include <common/path.h>
 #include <common/string.h>
 #include <frontend/about_ui.h>
-#include <frontend/AttachToProcessDialog.h>
+#include <frontend/attach_ui.h>
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
@@ -38,7 +38,8 @@
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
-#include <wpl/win32/form.h>
+#include <wpl/factory.h>
+#include <wpl/form.h>
 
 #include <io.h>
 #include <memory>
@@ -362,17 +363,28 @@ namespace micro_profiler
 
 		bool profile_process::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
 		{
-			state = 0;//visible | supported | (_dialog ? 0 : enabled);
+			state = visible | supported | enabled;
 			return true;
 		}
 
 		void profile_process::exec(context_type &ctx, unsigned /*item*/)
 		{
-			shared_ptr<wpl::form> form(wpl::create_form(get_frame_hwnd(ctx.shell)));
-			_dialog.reset(new AttachToProcessDialog(form));
-			_closed_connection = _dialog->closed += [this] {
-				_dialog.reset();
+			wpl::view_location l = { 0, 0, 400, 300 }; // TODO: Center attach form.
+			const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
+			auto &running_objects = ctx.running_objects;
+			const auto i = running_objects.insert(ctx.running_objects.end(), o);
+			const auto onclose = [i, &running_objects] {
+				running_objects.erase(i);
 			};
+			const auto attach = make_shared<attach_ui>(ctx.factory);
+
+			o->first = ctx.factory.create_form();
+			o->second.push_back(o->first->close += onclose);
+			o->second.push_back(attach->close += onclose);
+
+			o->first->set_view(attach);
+			o->first->set_location(l);
+			o->first->set_visible(true);
 		}
 
 
@@ -438,21 +450,23 @@ namespace micro_profiler
 
 		void support_developer::exec(context_type &ctx, unsigned /*item*/)
 		{
-			shared_ptr< pair<shared_ptr<about_ui>, wpl::slot_connection> > o(
-				new pair<shared_ptr<about_ui>, wpl::slot_connection>);
-			HWND hshell = get_frame_hwnd(ctx.shell);
-			shared_ptr<wpl::form> form = wpl::create_form(hshell);
-			o->first.reset(new about_ui(form));
-			global_context::running_objects_t &running_objects = ctx.running_objects;
-			global_context::running_objects_t::iterator i = running_objects.insert(ctx.running_objects.end(), o);
-
-			o->second = form->close += [i, &running_objects, hshell] {
-				::EnableWindow(hshell, TRUE);
+			wpl::view_location l = { 0, 0, 400, 300 }; // TODO: Center about form.
+			const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
+			auto &running_objects = ctx.running_objects;
+			const auto i = running_objects.insert(ctx.running_objects.end(), o);
+			const auto onclose = [i, &running_objects/*, hshell*/] {
 				running_objects.erase(i);
 			};
+			const auto about = make_shared<about_ui>(ctx.factory);
 
-			::EnableWindow(hshell, FALSE);
-			form->set_visible(true);
+			o->first = ctx.factory.create_form();
+			o->second.push_back(o->first->close += onclose);
+			o->second.push_back(about->close += onclose);
+
+			o->first->set_view(about);
+			o->first->set_location(l);
+			o->first->set_visible(true);
+			// TODO: Enable/disable main window for the form lifetime.
 		}
 	}
 }

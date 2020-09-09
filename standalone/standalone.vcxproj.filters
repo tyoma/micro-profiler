@@ -2,13 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ProfilerMainDialog.cpp" />
+    <ClCompile Include="standalone_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ProfilerMainDialog.h" />
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
     </ClInclude>
+    <ClInclude Include="standalone_ui.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">

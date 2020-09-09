@@ -18,31 +18,50 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include "pane.h"
 
-#include <wpl/container.h>
+#include <logger/log.h>
+#include <wpl/win32/view_host.h>
+
+#define PREAMBLE "Generic VS Pane: "
 
 namespace wpl
 {
-	struct button;
-	class factory;
-}
-
-namespace micro_profiler
-{
-	class about_ui : public wpl::container
+	namespace vs
 	{
-	public:
-		about_ui(const wpl::factory &factory_);
+		pane::pane()
+		{	LOG(PREAMBLE "constructed...") % A(this);	}
 
-	private:
-		void on_link(const std::wstring &address);
+		pane::~pane()
+		{	LOG(PREAMBLE "destroyed...") % A(this);	}
 
-	private:
-		std::vector<wpl::slot_connection> _connections;
-		std::shared_ptr<wpl::button> _close_button;
+		STDMETHODIMP pane::SetSite(IServiceProvider *site)
+		{	return _service_provider = site, S_OK;	}
 
-	public:
-		wpl::signal<void ()> &close;
-	};
+		STDMETHODIMP pane::CreatePaneWindow(HWND hparent, int, int, int, int, HWND *)
+		{
+			host.reset(new win32::view_host(hparent, backbuffer, renderer, text_engine));
+			return S_OK;
+		}
+
+		STDMETHODIMP pane::GetDefaultSize(SIZE *)
+		{	return S_FALSE;	}
+
+		STDMETHODIMP pane::ClosePane()
+		{
+			LOG(PREAMBLE "ClosePane called. Releasing...") % A(this);
+			closed();
+			_service_provider.Release();
+			return S_OK;
+		}
+
+		STDMETHODIMP pane::LoadViewState(IStream *)
+		{	return E_NOTIMPL;	}
+
+		STDMETHODIMP pane::SaveViewState(IStream *)
+		{	return E_NOTIMPL;	}
+
+		STDMETHODIMP pane::TranslateAccelerator(MSG *)
+		{	return E_NOTIMPL;	}
+	}
 }

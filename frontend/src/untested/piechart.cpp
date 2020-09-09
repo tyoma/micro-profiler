@@ -26,6 +26,7 @@
 #include <agge/path.h>
 #include <agge/blenders_simd.h>
 #include <algorithm>
+#include <math.h>
 
 using namespace agge;
 using namespace std;
@@ -39,6 +40,9 @@ namespace micro_profiler
 		joined_path<arc, arc> pie_segment(real_t cx, real_t cy, real_t outer_r, real_t inner_r, real_t start, real_t end)
 		{	return join(arc(cx, cy, outer_r, start, end), arc(cx, cy, inner_r, end, start));	}
 	}
+
+	shared_ptr<view> piechart::get_view()
+	{	return shared_from_this();	}
 
 	void piechart::set_model(const std::shared_ptr<model_t> &m)
 	{

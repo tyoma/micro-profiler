@@ -21,21 +21,36 @@
 #pragma once
 
 #include <atlbase.h>
-#include <comdef.h>
-#include <functional>
-#include <vsshell110.h>
+#include <atlcom.h>
 
-namespace micro_profiler
+namespace wpl
 {
-	namespace integration
+	namespace vs
 	{
-		namespace async
+		template <typename BaseT>
+		class freethreaded : public BaseT, public IUnknown
 		{
-			typedef std::function<_variant_t (IVsTask *dependents[], unsigned dependents_count)> basic_task_function_t;
-			typedef std::function<_variant_t (const _variant_t& parent_result)> task_function_t;
+		protected:
+			typedef freethreaded freethreaded_base;
 
-			CComPtr<IVsTaskBody> wrap_task(const basic_task_function_t &task);
-			CComPtr<IVsTask> when_complete(IVsTask *parent, VSTASKRUNCONTEXT context, const task_function_t &completion);
-		}
+		protected:
+			DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+			BEGIN_COM_MAP(freethreaded)
+				COM_INTERFACE_ENTRY(IUnknown)
+				COM_INTERFACE_ENTRY_AGGREGATE(IID_IMarshal, _marshaller)
+			END_COM_MAP()
+
+			HRESULT FinalConstruct()
+			{
+				CComPtr<IUnknown> u;
+				HRESULT hr = QueryInterface(IID_PPV_ARGS(&u));
+
+				return S_OK == hr ? ::CoCreateFreeThreadedMarshaler(u, &_marshaller) : hr;
+			}
+
+		private:
+			CComPtr<IUnknown> _marshaller;
+		};
 	}
 }

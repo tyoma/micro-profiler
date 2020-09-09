@@ -10,15 +10,20 @@ set(FRONTEND_LIB_SOURCES
 	threads_model.cpp
 )
 
+set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
+	untested/factory.cpp
+	untested/ipc_manager.cpp
+	untested/listview.cpp
+	untested/piechart.cpp
+	untested/tables_ui.cpp
+)
+
 if(WIN32)
 	set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
 		untested/about_ui.cpp
 		untested/file.cpp
-		untested/ipc_manager.cpp
 		untested/marshalling_server.cpp
-		untested/piechart.cpp
 		untested/stream.cpp
-		untested/tables_ui.cpp
 	)
 endif()
 

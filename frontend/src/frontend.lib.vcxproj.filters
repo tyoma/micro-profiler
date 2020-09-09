@@ -46,7 +46,7 @@
     <ClCompile Include="untested\listview.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
-    <ClCompile Include="untested\font_loader.cpp">
+    <ClCompile Include="untested\factory.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
   </ItemGroup>
@@ -73,12 +73,10 @@
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\serialization_context.h" />
-    <ClInclude Include="untested\font_loader.h">
-      <Filter>src\untested</Filter>
-    </ClInclude>
     <ClInclude Include="untested\listview.h">
       <Filter>src\untested</Filter>
     </ClInclude>
+    <ClInclude Include="..\factory.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

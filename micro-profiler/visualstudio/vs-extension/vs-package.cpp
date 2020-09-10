@@ -36,6 +36,7 @@
 #include <visualstudio/command-target.h>
 #include <visualstudio/dispatch.h>
 #include <wpl/form.h>
+#include <wpl/vs/factory.h>
 #include <wpl/vs/vspackage.h>
 
 #include <atlcom.h>
@@ -121,7 +122,7 @@ namespace micro_profiler
 			END_COM_MAP()
 
 		private:
-			virtual void initialize(wpl::factory &factory)
+			virtual void initialize(wpl::vs::factory &factory)
 			{
 				setup_factory(factory);
 				register_path(false);
@@ -133,7 +134,7 @@ namespace micro_profiler
 					1);
 			}
 
-			virtual void terminate()
+			virtual void terminate() throw()
 			{
 				_ipc_manager.reset();
 				_frontend_manager.reset();
@@ -160,7 +161,7 @@ namespace micro_profiler
 					get_shell(),
 					_ipc_manager,
 					_running_objects,
-					get_control_factory(),
+					get_factory(),
 				};
 
 				return ctx;
@@ -168,10 +169,10 @@ namespace micro_profiler
 
 			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const string &executable)
 			{
-				auto frame = create_pane();
+				auto frame = get_factory().create_pane();
 
 				frame->set_caption(L"MicroProfiler - " + unicode(executable));
-				frame->set_view(make_shared<tables_ui>(get_control_factory(), model, *open_configuration()));
+				frame->set_view(make_shared<tables_ui>(get_factory(), model, *open_configuration()));
 				frame->set_visible(true);
 //				LOG(PREAMBLE "tool window created") % A(executable) % A(tool_id);
 				return make_shared<frontend_ui_impl>(frame);

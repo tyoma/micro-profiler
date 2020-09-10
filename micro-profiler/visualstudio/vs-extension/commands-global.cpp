@@ -38,8 +38,8 @@
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
-#include <wpl/factory.h>
 #include <wpl/form.h>
+#include <wpl/vs/factory.h>
 
 #include <io.h>
 #include <memory>
@@ -378,7 +378,7 @@ namespace micro_profiler
 			};
 			const auto attach = make_shared<attach_ui>(ctx.factory);
 
-			o->first = ctx.factory.create_form();
+			o->first = ctx.factory.create_modal();
 			o->second.push_back(o->first->close += onclose);
 			o->second.push_back(attach->close += onclose);
 
@@ -459,14 +459,13 @@ namespace micro_profiler
 			};
 			const auto about = make_shared<about_ui>(ctx.factory);
 
-			o->first = ctx.factory.create_form();
+			o->first = ctx.factory.create_modal();
 			o->second.push_back(o->first->close += onclose);
 			o->second.push_back(about->close += onclose);
 
 			o->first->set_view(about);
 			o->first->set_location(l);
 			o->first->set_visible(true);
-			// TODO: Enable/disable main window for the form lifetime.
 		}
 	}
 }

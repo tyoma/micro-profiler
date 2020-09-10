@@ -34,7 +34,10 @@
 
 namespace wpl
 {
-	class factory;
+	namespace vs
+	{
+		class factory;
+	}
 }
 
 namespace micro_profiler
@@ -53,7 +56,7 @@ namespace micro_profiler
 			CComPtr<IVsUIShell> shell;
 			const std::shared_ptr<ipc_manager> ipc_manager;
 			running_objects_t &running_objects;
-			const wpl::factory &factory;
+			const wpl::vs::factory &factory;
 
 		private:
 			const global_context &operator =(const global_context &rhs);

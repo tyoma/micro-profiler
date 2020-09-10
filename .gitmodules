@@ -22,3 +22,7 @@
 	path = libraries/polyq
 	url = ../polyq.git
 	branch = master
+[submodule "libraries/wpl.vs"]
+	path = libraries/wpl.vs
+	url = git@github.com:tyoma/wpl.vs.git
+	branch = master

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(micro-profiler)
 
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules")
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/build.props)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
@@ -15,6 +15,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/agge)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/polyq)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/strmd)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/wpl)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/wpl.vs)
 include_directories($<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/compat/win32>)
 
 
@@ -41,8 +42,11 @@ endif()
 # Setup global compiler/linker settings
 set(GCC_CLANG_COMPILER_OPTIONS_C
 	-ggdb -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
-	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas -msse2
+	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas
 )
+if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
+	set(GCC_CLANG_COMPILER_OPTIONS_C ${GCC_CLANG_COMPILER_OPTIONS_C} -msse2)
+endif()
 set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-std=c++11 -fexceptions -fno-rtti
 	-Wno-delete-non-virtual-dtor
@@ -115,9 +119,9 @@ add_subdirectory(test-helpers/src)
 
 if (WIN32)
 	add_subdirectory(libraries/wpl)
+	add_subdirectory(libraries/wpl.vs)
 
 	add_subdirectory(injector/src)
-	add_subdirectory(wpl.vs/src)
 	add_subdirectory(micro-profiler)
 	add_subdirectory(standalone)
 

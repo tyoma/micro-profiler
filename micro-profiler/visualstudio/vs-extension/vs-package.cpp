@@ -36,7 +36,7 @@
 #include <visualstudio/command-target.h>
 #include <visualstudio/dispatch.h>
 #include <wpl/form.h>
-#include <wpl.vs/vspackage.h>
+#include <wpl/vs/vspackage.h>
 
 #include <atlcom.h>
 #include <dte.h>

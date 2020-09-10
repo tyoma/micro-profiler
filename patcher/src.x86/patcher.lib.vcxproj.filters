@@ -21,7 +21,6 @@
     <ClInclude Include="..\binary_translation.h" />
     <ClInclude Include="..\dynamic_hooking.h" />
     <ClInclude Include="..\function_patch.h" />
-    <ClInclude Include="..\platform.h" />
     <ClInclude Include="assembler_intel.h">
       <Filter>src</Filter>
     </ClInclude>

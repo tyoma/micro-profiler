@@ -30,13 +30,14 @@
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(SolutionDir)build.props\vssdk.props" />
     <Import Project="$(SolutionDir)build.props\agge.include.props" />
+    <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
   <PropertyGroup>
     <TargetName>micro-profiler_frontend</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
   	<ClCompile>
-      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\libraries\wpl.vs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
   	</ClCompile>
     <Link>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
@@ -113,8 +114,8 @@
     <ProjectReference Include="..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\wpl.vs\src\wpl.vs.vcxproj">
-      <Project>{120fa1c6-37aa-42ce-b922-346bf91eec0f}</Project>
+    <ProjectReference Include="..\libraries\wpl.vs\src\wpl.vs.vcxproj">
+      <Project>{120FA1C6-37AA-42CE-B922-346BF91EEC0F}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)'=='Win32'">

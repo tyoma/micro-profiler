@@ -43,9 +43,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ColumnsModelTests.cpp" />
-    <ClCompile Include="CommandTargetTests.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FrontendTests.cpp" />

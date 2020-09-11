@@ -33,9 +33,9 @@
 #include <logger/log.h>
 #include <resources/resource.h>
 #include <setup/environment.h>
-#include <visualstudio/command-target.h>
 #include <visualstudio/dispatch.h>
 #include <wpl/form.h>
+#include <wpl/vs/command-target.h>
 #include <wpl/vs/factory.h>
 #include <wpl/vs/vspackage.h>
 

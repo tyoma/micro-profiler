@@ -18,11 +18,5 @@ set(FRONTEND_TESTS_SOURCES
 	ThreadsModelTests.cpp
 )
 
-if(WIN32)
-	set(FRONTEND_TESTS_SOURCES ${FRONTEND_TESTS_SOURCES}
-		CommandTargetTests.cpp
-	)
-endif()
-
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})
 target_link_libraries(frontend.tests frontend.lib test-helpers logger common)

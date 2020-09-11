@@ -22,7 +22,7 @@
 
 #include "command-ids.h"
 
-#include <visualstudio/command.h>
+#include <wpl/vs/command.h>
 
 #include <atlbase.h>
 #include <comdef.h>

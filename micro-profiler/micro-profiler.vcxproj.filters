@@ -82,19 +82,10 @@
     <ClInclude Include="setup\environment.h">
       <Filter>setup</Filter>
     </ClInclude>
-    <ClInclude Include="visualstudio\command-target.h">
-      <Filter>visualstudio</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\command.h">
-      <Filter>visualstudio</Filter>
-    </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\helpers.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\commands-global.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h">
@@ -108,6 +99,9 @@
     </ClInclude>
     <ClInclude Include="frontend\attach_ui.h">
       <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\vs-package.h">
+      <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

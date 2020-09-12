@@ -36,9 +36,9 @@
     <TargetName>micro-profiler_frontend</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
-  	<ClCompile>
+    <ClCompile>
       <AdditionalIncludeDirectories>.;..\libraries\wpl.vs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-  	</ClCompile>
+    </ClCompile>
     <Link>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalDependencies>version.lib;vsguids.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -70,6 +70,7 @@
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\commands-instance.h" />
     <ClInclude Include="visualstudio\vs-extension\vcmodel.h" />
+    <ClInclude Include="visualstudio\vs-extension\vs-package.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
     <None Include="logo.ico" />
     <None Include="module\micro-profiler.def" />
@@ -91,9 +92,6 @@
     <ResourceCompile Include="resources\micro-profiler_vspackage.rc" />
     <ClCompile Include="setup\environment.cpp" />
     <ClInclude Include="setup\environment.h" />
-    <ClInclude Include="visualstudio\command-target.h" />
-    <ClInclude Include="visualstudio\command.h" />
-    <ClInclude Include="visualstudio\vs-extension\commands-global.h" />
     <ClCompile Include="visualstudio\vs-extension\commands-global.cpp" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp" />

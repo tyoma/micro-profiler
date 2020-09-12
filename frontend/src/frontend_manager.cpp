@@ -53,6 +53,8 @@ namespace micro_profiler
 			shared_ptr<frontend_ui> ui = ii->ui;
 
 			ii->ui.reset();
+
+			// TODO: do not attempt to disconnect session for a held instance (which already has session disconnected).
 			if (!ui)
 				ii->frontend->disconnect_session();
 		}
@@ -72,7 +74,10 @@ namespace micro_profiler
 	}
 
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
-	{	return _active_instance;	}
+	{
+		// TODO: do not attempt to return an instance, if there're none.
+		return _active_instance;
+	}
 
 	void frontend_manager::load_session(const string &executable, const shared_ptr<functions_list> &model)
 	{	on_ready_for_ui(_instances.insert(_instances.end(), instance_impl(0)), executable, model);	}

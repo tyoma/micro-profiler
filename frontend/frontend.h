@@ -44,7 +44,6 @@ namespace micro_profiler
 
 	public:
 		std::function<void(const std::string &process_name, const std::shared_ptr<functions_list> &model)> initialized;
-		std::function<void()> released;
 
 	private:
 		// ipc::channel methods

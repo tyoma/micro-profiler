@@ -10,9 +10,6 @@
     <ClCompile Include="setup\environment.cpp">
       <Filter>setup</Filter>
     </ClCompile>
-    <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\commands-global.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
@@ -83,12 +80,6 @@
       <Filter>setup</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\helpers.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\vs-pane.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\commands-instance.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\vcmodel.h">

@@ -35,6 +35,7 @@
 #include <visualstudio/dispatch.h>
 #include <wpl/form.h>
 #include <wpl/vs/factory.h>
+#include <wpl/vs/pane.h>
 
 #define PREAMBLE "VS Package: "
 
@@ -47,9 +48,13 @@ namespace micro_profiler
 	{
 		extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
 
+		void init_instance_menu(wpl::vs::command_target &target, const shared_ptr<functions_list> &model,
+			const string &executable);
+
 		namespace
 		{
 			extern const GUID c_guidGlobalCmdSet = guidGlobalCmdSet;
+			extern const GUID c_guidInstanceCmdSet = guidInstanceCmdSet;
 			extern const GUID UICONTEXT_VCProject = { 0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 } };
 
 			shared_ptr<hive> open_configuration()
@@ -59,20 +64,20 @@ namespace micro_profiler
 			class frontend_ui_impl : public frontend_ui
 			{
 			public:
-				frontend_ui_impl(shared_ptr<wpl::form> frame)
+				frontend_ui_impl(shared_ptr<wpl::vs::pane> frame)
 					: _frame(frame)
 				{
-					_connections[0] = _frame->close += [this] { closed(); };
+					connections[0] = _frame->close += [this] { closed(); };
 				}
 
 				virtual void activate()
-				{
-					// TODO: Implement form activation.
-				}
+				{	_frame->activate();	}
+
+			public:
+				wpl::slot_connection connections[2];
 
 			private:
-				shared_ptr<wpl::form> _frame;
-				wpl::slot_connection _connections[2];
+				shared_ptr<wpl::vs::pane> _frame;
 			};
 		}
 
@@ -103,7 +108,7 @@ namespace micro_profiler
 			_frontend_manager.reset();
 		}
 
-		std::vector<IDispatchPtr> profiler_package::get_selected_items() const
+		vector<IDispatchPtr> profiler_package::get_selected_items() const
 		{
 			vector<IDispatchPtr> selected_items;
 
@@ -121,15 +126,49 @@ namespace micro_profiler
 
 		shared_ptr<frontend_ui> profiler_package::create_ui(const shared_ptr<functions_list> &model, const string &executable)
 		{
-			auto frame = get_factory().create_pane();
+			auto frame = get_factory().create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR);
+			auto ui = make_shared<frontend_ui_impl>(frame);
+			auto tui = make_shared<tables_ui>(get_factory(), model, *open_configuration());
 
+			init_instance_menu(*frame, model, executable);
 			frame->set_caption(L"MicroProfiler - " + unicode(executable));
-			frame->set_view(make_shared<tables_ui>(get_factory(), model, *open_configuration()));
+			frame->set_view(tui);
 			frame->set_visible(true);
+			ui->connections[1] = tui->open_source += bind(&profiler_package::on_open_source, this, _1, _2);
 			LOG(PREAMBLE "tool window created") % A(executable);
-			return make_shared<frontend_ui_impl>(frame);
+			return ui;
 		}
 
+		void profiler_package::on_open_source(const string &file, unsigned line)
+		{
+			CComPtr<IVsUIShellOpenDocument> od;
+
+			if (get_service_provider()->QueryService(__uuidof(IVsUIShellOpenDocument), &od), od)
+			{
+				CComPtr<IServiceProvider> sp;
+				CComPtr<IVsUIHierarchy> hierarchy;
+				VSITEMID itemid;
+				CComPtr<IVsWindowFrame> frame;
+
+				if (od->OpenDocumentViaProject(unicode(file).c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), frame)
+				{
+					CComPtr<IVsCodeWindow> window;
+
+					if (frame->QueryViewInterface(__uuidof(IVsCodeWindow), (void**)&window), window)
+					{
+						CComPtr<IVsTextView> tv;
+
+						if (window->GetPrimaryView(&tv), tv)
+						{
+							tv->SetCaretPos(line, 0);
+							tv->SetScrollPosition(SB_HORZ, 0);
+							frame->Show();
+							tv->CenterLines(line, 1);
+						}
+					}
+				}
+			}
+		}
 
 
 		OBJECT_ENTRY_AUTO(c_guidMicroProfilerPkg, profiler_package);

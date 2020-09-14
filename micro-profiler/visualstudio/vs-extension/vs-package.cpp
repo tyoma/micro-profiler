@@ -68,13 +68,14 @@ namespace micro_profiler
 					: _frame(frame)
 				{
 					connections[0] = _frame->close += [this] { closed(); };
+					connections[1] = _frame->activated += [this] { activated(); };
 				}
 
 				virtual void activate()
 				{	_frame->activate();	}
 
 			public:
-				wpl::slot_connection connections[2];
+				wpl::slot_connection connections[3];
 
 			private:
 				shared_ptr<wpl::vs::pane> _frame;
@@ -134,7 +135,7 @@ namespace micro_profiler
 			frame->set_caption(L"MicroProfiler - " + unicode(executable));
 			frame->set_view(tui);
 			frame->set_visible(true);
-			ui->connections[1] = tui->open_source += bind(&profiler_package::on_open_source, this, _1, _2);
+			ui->connections[2] = tui->open_source += bind(&profiler_package::on_open_source, this, _1, _2);
 			LOG(PREAMBLE "tool window created") % A(executable);
 			return ui;
 		}

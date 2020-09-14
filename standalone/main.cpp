@@ -148,8 +148,8 @@ try
 	};
 	auto main_form = factory->create_form();
 	auto cancellation = main_form->close += [] { ::PostQuitMessage(0); };
-	auto frontend_manager = frontend_manager::create(ui_factory);
-	ipc_manager ipc_manager(frontend_manager,
+	auto frontend_manager_ = make_shared<frontend_manager>(ui_factory);
+	ipc_manager ipc_manager(frontend_manager_,
 		make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 		&constants::standalone_frontend_id);
 

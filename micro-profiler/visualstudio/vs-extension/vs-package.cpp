@@ -26,6 +26,7 @@
 #include <common/configuration.h>
 #include <common/constants.h>
 #include <common/string.h>
+#include <frontend/system_stylesheet.h>
 #include <frontend/factory.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/ipc_manager.h>
@@ -89,6 +90,10 @@ namespace micro_profiler
 
 		profiler_package::~profiler_package()
 		{	LOG(PREAMBLE "destroyed.");	}
+
+		shared_ptr<wpl::stylesheet> profiler_package::create_stylesheet(
+			const shared_ptr<wpl::gcontext::text_engine_type> &text_engine) const
+		{	return shared_ptr<wpl::stylesheet>(new system_stylesheet(text_engine));	}
 
 		void profiler_package::initialize(wpl::vs::factory &factory)
 		{

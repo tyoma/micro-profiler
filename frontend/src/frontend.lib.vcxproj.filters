@@ -49,6 +49,9 @@
     <ClCompile Include="untested\factory.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
+    <ClCompile Include="untested\system_stylesheet.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -77,6 +80,7 @@
       <Filter>src\untested</Filter>
     </ClInclude>
     <ClInclude Include="..\factory.h" />
+    <ClInclude Include="..\system_stylesheet.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

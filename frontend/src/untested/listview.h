@@ -20,11 +20,17 @@
 
 #pragma once
 
+#include <agge/color.h>
 #include <agge/dash.h>
 #include <agge/stroke.h>
-#include <agge.text/text_engine.h>
+#include <agge.text/font.h>
 #include <wpl/controls/header.h>
 #include <wpl/controls/listview_core.h>
+
+namespace wpl
+{
+	struct stylesheet;
+}
 
 namespace micro_profiler
 {
@@ -36,7 +42,7 @@ namespace micro_profiler
 	class listview_core : public wpl::controls::listview_core
 	{
 	public:
-		listview_core(/*text_engine_ptr text_engine, std::shared_ptr<column_header> cheader*/);
+		listview_core(const std::shared_ptr<wpl::stylesheet> &stylesheet);
 
 	private:
 		virtual agge::real_t get_item_height() const;
@@ -48,10 +54,13 @@ namespace micro_profiler
 			const agge::rect_r &box, index_type item, unsigned state, wpl::columns_model::index_type subitem,
 			const std::wstring &text) const;
 
+		void update_styles(const wpl::stylesheet &ss);
+
 	private:
-		agge::real_t _item_height, _baseline_offset, _border_width;
-		text_engine_ptr _text_engine;
+		agge::real_t _item_height, _padding, _baseline_offset, _border_width;
 		agge::font::ptr _font;
+		agge::color _bg_even, _bg_odd, _bg_selected, _fg_normal, _fg_selected, _fg_focus, _fg_focus_selected,
+			_fg_borders;
 		mutable agge::stroke _stroke;
 		mutable agge::dash _dash;
 	};
@@ -59,7 +68,7 @@ namespace micro_profiler
 	class header : public wpl::controls::header
 	{
 	public:
-		header();
+		header(const std::shared_ptr<wpl::stylesheet> &stylesheet);
 
 		virtual void draw_item_background(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer,
 			const agge::rect_r &box, index_type item, unsigned /*item_state_flags*/ state) const;
@@ -67,8 +76,12 @@ namespace micro_profiler
 			index_type /*item*/, unsigned /*item_state_flags*/ /*state*/, const std::wstring &text) const;
 
 	private:
-		text_engine_ptr _text_engine;
+		void update_styles(const wpl::stylesheet &ss);
+
+	private:
+		agge::real_t _padding, _baseline_offset, _separator_width;
 		std::shared_ptr<agge::font> _font;
+		agge::color _bg_normal, _bg_sorted, _fg_normal, _fg_sorted, _fg_separator;
 	};
 
 }

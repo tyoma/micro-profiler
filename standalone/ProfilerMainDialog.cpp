@@ -119,7 +119,6 @@ namespace micro_profiler
 
 		_form = factory_.create_form();
 		_form->set_view(root);
-		_form->set_background_color(agge::color::make(24, 32, 48));
 		if (load(*_configuration, "Placement", l))
 			_form->set_location(l);
 		_form->set_caption(unicode("MicroProfiler - " + _executable));

@@ -1,5 +1,7 @@
 #include <crtdbg.h>
 
+#include <wpl/win32/font_loader.h>
+
 #include "ProfilerMainDialog.h"
 
 #include "resources/resource.h"
@@ -8,6 +10,7 @@
 #include <common/constants.h>
 #include <common/string.h>
 #include <frontend/about_ui.h>
+#include <frontend/system_stylesheet.h>
 #include <frontend/factory.h>
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
@@ -23,6 +26,16 @@ using namespace wpl;
 
 namespace
 {
+	struct text_engine_composite : wpl::noncopyable
+	{
+		text_engine_composite()
+			: text_engine(loader, 4)
+		{	}
+
+		win32::font_loader loader;
+		gcontext::text_engine_type text_engine;
+	};
+
 	struct com_initialize
 	{
 		com_initialize()
@@ -84,7 +97,7 @@ namespace micro_profiler
 	};
 }
 
-int WINAPI _tWinMain(HINSTANCE instance, HINSTANCE /*previous_instance*/, LPTSTR command_line, int show_command)
+int WINAPI _tWinMain(HINSTANCE instance, HINSTANCE /*previous_instance*/, LPTSTR command_line, int /*show_command*/)
 try
 {
 	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -100,8 +113,13 @@ try
 	}
 
 	com_initialize ci;
-	auto factory = factory::create_default(nullptr);
 
+	shared_ptr<text_engine_composite> tec(new text_engine_composite);
+	shared_ptr<gcontext::text_engine_type> te(tec, &tec->text_engine);
+	auto factory = make_shared<wpl::factory>(make_shared<gcontext::surface_type>(1, 1, 16),
+		make_shared<gcontext::renderer_type>(2), te, make_shared<system_stylesheet>(te));
+
+	wpl::factory::setup_default(*factory);
 	setup_factory(*factory);
 
 	auto ui_factory = [factory] (const shared_ptr<functions_list> &model, const string &executable) -> shared_ptr<frontend_ui>	{
@@ -154,7 +172,15 @@ try
 		&constants::standalone_frontend_id);
 
 	main_form->set_visible(true);
-	module.Run(show_command);
+
+	MSG msg;
+
+	while (::GetMessage(&msg, NULL, 0, 0))
+	{
+		::TranslateMessage(&msg);
+		::DispatchMessageW(&msg);
+	}
+//	module.Run(show_command);
 	return 0;
 }
 catch (const exception &e)

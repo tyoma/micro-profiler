@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.4)
 
 if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86.*")
 	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -67,6 +67,7 @@ elseif(WIN32)
 		collector.rc
 		hooks.asm
 		main_win32.cpp
+		collector.manifest
 	)
 endif()
 
@@ -82,14 +83,7 @@ if(MSVC)
 	add_library(micro-profiler SHARED IMPORTED GLOBAL)
 	add_dependencies(micro-profiler ${micro-profiler})
 	set_property(SOURCE calls_collector.cpp calls_collector_thread.cpp APPEND PROPERTY COMPILE_OPTIONS $<$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>:/arch:SSE>)
-	set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS /MANIFEST:NO)
 	set_property(TARGET micro-profiler PROPERTY IMPORTED_IMPLIB ${micro-profiler}.lib)
-
-	add_custom_command(TARGET ${micro-profiler} POST_BUILD
-		COMMAND "mt.exe" -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\com.manifest\" -outputresource:${micro-profiler}.dll\;\#2
-		WORKING_DIRECTORY ${MP_OUTDIR}
-		COMMENT "Adding custom manifest containing default COM proxystubs..." 
-	)
 else()
 	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-inline -finstrument-functions ")
 	set_property(TARGET ${micro-profiler} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-znodelete -Wl,-zinterpose ")

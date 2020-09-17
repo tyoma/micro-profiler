@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 	<assemblyIdentity version="0.0.0.0" name="_._._" type="win32" />
-
 	<comInterfaceExternalProxyStub
 		name="ISequentialStream"
 		iid="{0c733a30-2a1c-11ce-ade5-00aa0044773d}"
@@ -12,4 +11,11 @@
 		iid="{B196B286-BAB4-101A-B69C-00AA00341D07}"
 		proxyStubClsid32="{00000320-0000-0000-C000-000000000046}"
 	/>
+	<trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+		<security>
+			<requestedPrivileges>
+				<requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel>
+			</requestedPrivileges>
+		</security>
+	</trustInfo>
 </assembly>

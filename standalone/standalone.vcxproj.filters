@@ -2,13 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="standalone_ui.cpp" />
+    <ClCompile Include="ProfilerMainDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
     </ClInclude>
-    <ClInclude Include="standalone_ui.h" />
+    <ClInclude Include="ProfilerMainDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">
@@ -27,5 +27,8 @@
     <ResourceCompile Include="resources\micro-profiler_standalone.rc">
       <Filter>resources</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="standalone.manifest" />
   </ItemGroup>
 </Project>

@@ -41,7 +41,6 @@
       <PreprocessorDefinitions>_ATL_SINGLE_THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -84,6 +83,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler_standalone.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="standalone.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

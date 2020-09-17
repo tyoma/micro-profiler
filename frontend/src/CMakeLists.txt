@@ -26,6 +26,7 @@ if(WIN32)
 		untested/file.cpp
 		untested/marshalling_server.cpp
 		untested/stream.cpp
+		untested/system_stylesheet.cpp
 	)
 endif()
 

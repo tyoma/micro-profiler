@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.4)
 
 add_definitions(-D_ATL_SINGLE_THREADED)
 
@@ -8,7 +8,12 @@ set(MICROPROFILER_SOURCES
 	resources/micro-profiler_standalone.rc
 )
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /MANIFESTDEPENDENCY:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+if (WIN32)
+	set(MICROPROFILER_SOURCES ${MICROPROFILER_SOURCES}
+		standalone.manifest
+	)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
+endif()
 
 add_executable(micro-profiler_standalone ${MICROPROFILER_SOURCES})
 

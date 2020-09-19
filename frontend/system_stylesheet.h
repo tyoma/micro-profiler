@@ -26,17 +26,17 @@
 
 namespace micro_profiler
 {
-   class system_stylesheet : public wpl::stylesheet_db, wpl::noncopyable
-   {
-   public:
-      system_stylesheet(const std::shared_ptr<wpl::gcontext::text_engine_type> &text_engine);
-      ~system_stylesheet();
+	class system_stylesheet : public wpl::stylesheet_db, wpl::noncopyable
+	{
+	public:
+		system_stylesheet(const std::shared_ptr<wpl::gcontext::text_engine_type> &text_engine);
+		~system_stylesheet();
 
-   private:
-      void synchronize();
+	private:
+		void synchronize();
 
-   private:
-      const std::shared_ptr<wpl::gcontext::text_engine_type> _text_engine;
-      const std::shared_ptr<void> _notifier_handle;
-   };
+	private:
+		const std::shared_ptr<wpl::gcontext::text_engine_type> _text_engine;
+		const std::shared_ptr<void> _notifier_handle;
+	};
 }

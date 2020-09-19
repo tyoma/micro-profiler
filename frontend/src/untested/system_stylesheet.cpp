@@ -30,63 +30,63 @@ using namespace std;
 
 namespace micro_profiler
 {
-   namespace
-   {
-      shared_ptr<agge::font> create(wpl::gcontext::text_engine_type &text_engine, const LOGFONTW &native_font)
-      {
-         return text_engine.create_font(native_font.lfFaceName, native_font.lfHeight, native_font.lfWeight > FW_NORMAL,
-            native_font.lfItalic, font::key::gf_vertical);
-      }
+	namespace
+	{
+		shared_ptr<agge::font> create(wpl::gcontext::text_engine_type &text_engine, const LOGFONTW &native_font)
+		{
+			return text_engine.create_font(native_font.lfFaceName, native_font.lfHeight, native_font.lfWeight > FW_NORMAL,
+				!!native_font.lfItalic, font::key::gf_vertical);
+		}
 
-      shared_ptr<agge::font> get_system_font(wpl::gcontext::text_engine_type &text_engine)
-      {
-         NONCLIENTMETRICSW m = {};
+		shared_ptr<agge::font> get_system_font(wpl::gcontext::text_engine_type &text_engine)
+		{
+			NONCLIENTMETRICSW m = {};
 
-         m.cbSize = sizeof(m);
-         if (::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
-            return create(text_engine, m.lfMenuFont);
-         throw runtime_error("Cannot retrieve system font!");
-      }
+			m.cbSize = sizeof(m);
+			if (::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
+				return create(text_engine, m.lfMenuFont);
+			throw runtime_error("Cannot retrieve system font!");
+		}
 
-      color get_system_color(int color_kind)
-      {
-         auto c = ::GetSysColor(color_kind);
-         return color::make(GetRValue(c), GetGValue(c), GetBValue(c));
-      }
+		color get_system_color(int color_kind)
+		{
+			auto c = ::GetSysColor(color_kind);
+			return color::make(GetRValue(c), GetGValue(c), GetBValue(c));
+		}
 
-      color invert(color original)
-      {  return color::make(~original.r, ~original.g, ~original.b, original.a); }
+		color invert(color original)
+		{	return color::make(~original.r, ~original.g, ~original.b, original.a);	}
 
-      color semi(color original, double opacity)
-      {  return color::make(original.r, original.g, original.b, static_cast<agge::uint8_t>(opacity * 255)); }
-   }
+		color semi(color original, double opacity)
+		{	return color::make(original.r, original.g, original.b, static_cast<agge::uint8_t>(opacity * 255));	}
+	}
 
-   system_stylesheet::system_stylesheet(const shared_ptr<wpl::gcontext::text_engine_type> &text_engine)
-      : _text_engine(text_engine), _notifier_handle(::CreateWindow(_T("#32770"), NULL, WS_OVERLAPPED, 0, 0, 1, 1,
-         HWND_MESSAGE, NULL, NULL, NULL), &::DestroyWindow)
-   {  synchronize(); }
+	system_stylesheet::system_stylesheet(const shared_ptr<wpl::gcontext::text_engine_type> &text_engine)
+		: _text_engine(text_engine), _notifier_handle(::CreateWindow(_T("#32770"), NULL, WS_OVERLAPPED, 0, 0, 1, 1,
+			HWND_MESSAGE, NULL, NULL, NULL), &::DestroyWindow)
+	{	synchronize();	}
 
-   system_stylesheet::~system_stylesheet()
-   {  }
+	system_stylesheet::~system_stylesheet()
+	{	}
 
-   void system_stylesheet::synchronize()
-   {
-      const auto background = get_system_color(COLOR_BTNFACE);
+	void system_stylesheet::synchronize()
+	{
+		const auto background = get_system_color(COLOR_BTNFACE);
 
-      set_color("background", background);
-      set_color("text", get_system_color(COLOR_BTNTEXT));
-      set_color("text.selected", get_system_color(COLOR_HIGHLIGHTTEXT));
-      set_color("border", semi(get_system_color(COLOR_3DSHADOW), 0.3));
+		set_color("background", background);
+		set_color("text", get_system_color(COLOR_BTNTEXT));
+		set_color("text.selected", get_system_color(COLOR_HIGHLIGHTTEXT));
+		set_color("border", semi(get_system_color(COLOR_3DSHADOW), 0.3));
 
-      set_color("background.listview.even", color::make(0, 0, 0, 0));
-      set_color("background.listview.odd", semi(invert(background), 0.02));
-      set_color("background.selected", get_system_color(COLOR_HIGHLIGHT));
+		set_color("background.listview.even", color::make(0, 0, 0, 0));
+		set_color("background.listview.odd", semi(invert(background), 0.02));
+		set_color("background.selected", get_system_color(COLOR_HIGHLIGHT));
 
-      set_color("background.header.sorted", semi(invert(background), 0.05));
+		set_color("background.header.sorted", semi(invert(background), 0.05));
 
-      set_value("border", 1.0f);
-      set_value("padding", 3.0f);
+		set_value("border", 1.0f);
+		set_value("padding", 3.0f);
 
-      set_font("text", get_system_font(*_text_engine));
-   }
+		set_font("text", get_system_font(*_text_engine));
+	}
 }

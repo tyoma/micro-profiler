@@ -43,9 +43,6 @@
     <ClCompile Include="threads_model.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="untested\listview.cpp">
-      <Filter>src\untested</Filter>
-    </ClCompile>
     <ClCompile Include="untested\factory.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
@@ -76,9 +73,6 @@
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\serialization_context.h" />
-    <ClInclude Include="untested\listview.h">
-      <Filter>src\untested</Filter>
-    </ClInclude>
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\system_stylesheet.h" />
   </ItemGroup>

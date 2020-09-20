@@ -21,9 +21,6 @@
 #include <frontend/factory.h>
 #include <frontend/piechart.h>
 
-#include "listview.h"
-
-#include <wpl/controls/listview.h>
 #include <wpl/factory.h>
 
 using namespace agge;
@@ -57,12 +54,6 @@ namespace micro_profiler
 
 	void setup_factory(wpl::factory &factory_)
 	{
-		factory_.register_control("listview-header", [] (const factory &, const shared_ptr<stylesheet> &stylesheet_) {
-			return shared_ptr<control>(new header(stylesheet_));
-		});
-		factory_.register_control("listview", [] (const factory &factory_, const shared_ptr<stylesheet> &stylesheet_) {
-			return controls::create_listview<listview_core>(factory_, stylesheet_);
-		});
 		factory_.register_control("piechart", [] (const factory &, const shared_ptr<stylesheet> &) {
 			return shared_ptr<control>(new piechart(begin(c_palette), end(c_palette), c_rest));
 		});

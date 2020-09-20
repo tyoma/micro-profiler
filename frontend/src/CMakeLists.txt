@@ -14,7 +14,6 @@ if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
 	set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
 		untested/factory.cpp
 		untested/ipc_manager.cpp
-		untested/listview.cpp
 		untested/piechart.cpp
 		untested/tables_ui.cpp
 	)

@@ -57,7 +57,6 @@
     <ClInclude Include="..\columns_model.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
-    <ClInclude Include="..\series.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\file.h" />

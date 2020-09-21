@@ -43,7 +43,7 @@ namespace micro_profiler
 
 		std::shared_ptr<symbol_resolver> get_resolver() const throw();
 		std::shared_ptr<threads_model> get_threads() const throw();
-		std::shared_ptr< series<double> > get_column_series() const throw();
+		std::shared_ptr< wpl::list_model<double> > get_column_series() const throw();
 
 		template <typename PredicateT>
 		void set_filter(const PredicateT &predicate);
@@ -97,7 +97,7 @@ namespace micro_profiler
 	{	return _threads;	}
 
 	template <typename BaseT, typename MapT>
-	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
+	std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
 	{	return _view;	}
 
 	template <typename BaseT, typename MapT>
@@ -124,7 +124,7 @@ namespace micro_profiler
 
 	template <typename BaseT, typename MapT>
 	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_count() const throw()
-	{ return _view ? _view->size() : 0u; }
+	{ return _view ? _view->get_count() : 0u; }
 
 	template <typename BaseT, typename MapT>
 	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
@@ -148,6 +148,6 @@ namespace micro_profiler
 		if (!_view)
 			return;
 		_view->fetch();
-		this->invalidated(_view->size());
+		this->invalidated(_view->get_count());
 	}
 }

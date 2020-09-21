@@ -115,9 +115,13 @@ namespace micro_profiler
 		_segments.clear();
 		if (_selection && _selection->index() == npos())
 			_selection.reset();
-		for (i = 0, j = _palette.begin(), count = _model ? _model->size() : 0; i != count; ++i)
+		for (i = 0, j = _palette.begin(), count = _model ? _model->get_count() : 0; i != count; ++i)
 		{
-			segment s = { i, static_cast<real_t>(_model->get_value(i)), 0.0f, };
+			double value;
+
+			_model->get_value(i, value);
+
+			segment s = { i, static_cast<real_t>(value), 0.0f, };
 
 			if (j != _palette.end())
 			{

@@ -111,6 +111,15 @@ namespace micro_profiler
 			thread_info ti = { native_id, description, start_time, end_time, cpu_time, complete };
 			return ti;
 		}
+
+		template <typename T>
+		inline T get_value(const wpl::list_model<T> &m, size_t index)
+		{
+			T value;
+
+			m.get_value(index, value);
+			return value;
+		}
 	}
 }
 

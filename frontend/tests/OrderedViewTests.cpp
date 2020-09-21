@@ -1,5 +1,7 @@
 #include <frontend/ordered_view.h>
 
+#include "helpers.h"
+
 #include <common/unordered_map.h>
 #include <utility>
 #include <ut/assert.h>
@@ -58,7 +60,7 @@ namespace micro_profiler
 
 				sorted_pods s(source);
 				assert_equal(0u, source.size());
-				assert_equal(0u, s.size());
+				assert_equal(0u, s.get_count());
 			}
 
 
@@ -71,15 +73,15 @@ namespace micro_profiler
 				sorted_pods s(source);
 
 				s.set_order(&sort_by_a, true);
-				assert_equal(0u, s.size());
+				assert_equal(0u, s.get_count());
 				assert_equal(sorted_pods::npos(), s.find_by_key(&dummy));
 				
 				s.set_order(&sort_by_a, false);
-				assert_equal(0u, s.size());
+				assert_equal(0u, s.get_count());
 				assert_equal(sorted_pods::npos(), s.find_by_key(&dummy));
 
 				s.set_order(sort_by_b(), false);
-				assert_equal(0u, s.size());
+				assert_equal(0u, s.get_count());
 				assert_equal(sorted_pods::npos(), s.find_by_key(&dummy));
 
 				assert_equal(0u, source.size());
@@ -97,10 +99,10 @@ namespace micro_profiler
 				source[&pod2] = pod2;
 
 				sorted_pods s(source);
-				assert_equal(source.size(), s.size());
+				assert_equal(source.size(), s.get_count());
 
 				s.set_order(&sort_by_a, true);
-				assert_equal(source.size(), s.size());
+				assert_equal(source.size(), s.get_count());
 
 			}
 
@@ -121,7 +123,7 @@ namespace micro_profiler
 
 
 				sorted_pods s(source);
-				assert_equal(source.size(), s.size());
+				assert_equal(source.size(), s.get_count());
 				int i = 0;
 				pod_map::const_iterator it = source.begin();
 				for (; it != source.end(); ++it, ++i)
@@ -216,13 +218,13 @@ namespace micro_profiler
 				assert_equal(make_pod(biggestA), s[0]);
 
 				s.set_order(&sort_by_a, false);
-				assert_equal(make_pod(biggestA), s[s.size() - 1]);
+				assert_equal(make_pod(biggestA), s[s.get_count() - 1]);
 
 				s.set_order(sort_by_b(), true);
 				assert_equal(make_pod(biggestB), s[0]);
 
 				s.set_order(sort_by_b(), false);
-				assert_equal(make_pod(biggestB), s[s.size() - 1]);
+				assert_equal(make_pod(biggestB), s[s.get_count() - 1]);
 			}
 
 
@@ -322,13 +324,13 @@ namespace micro_profiler
 
 				size_t initial_size = source.size();
 				sorted_pods s(source);
-				assert_equal(source.size(), s.size());
+				assert_equal(source.size(), s.get_count());
 				// Alter source map
 				source[&four] = four;
 				s.fetch();
 				assert_not_equal(s.find_by_key(&four), sorted_pods::npos());
 				assert_equal(source.size(), initial_size + 1);
-				assert_equal(source.size(), s.size());
+				assert_equal(source.size(), s.get_count());
 			}
 
 
@@ -449,7 +451,7 @@ namespace micro_profiler
 				sorted_pods s(source);
 				s.set_order(sort_by_b(), false);
 
-				assert_equal(0u, s.size());
+				assert_equal(0u, s.get_count());
 
 				POD one = {114, 21, 99.6};
 				POD two = {1, 0, 11.0};
@@ -459,14 +461,14 @@ namespace micro_profiler
 				source[&one] = one;
 				source[&two] = two;
 				s.fetch();
-				assert_equal(source.size(), s.size());
+				assert_equal(source.size(), s.get_count());
 				assert_equal(make_pod(two), s[0]);
 				assert_equal(make_pod(one), s[1]);
 				// Add another couple and check they ALL are in rigth places
 				source[&three] = three;
 				source[&four] = four;
 				s.fetch();
-				assert_equal(source.size(), s.size());
+				assert_equal(source.size(), s.get_count());
 				assert_equal(make_pod(four), s[0]);
 				assert_equal(make_pod(three), s[1]);
 				assert_equal(make_pod(two), s[2]);
@@ -482,10 +484,10 @@ namespace micro_profiler
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
 
 				// INIT / ACT
-				shared_ptr< series<double> > tv = s;
+				shared_ptr< wpl::list_model<double> > tv = s;
 
 				// ASSERT
-				assert_equal(0u, tv->size());
+				assert_equal(0u, tv->get_count());
 			}
 
 
@@ -495,7 +497,7 @@ namespace micro_profiler
 				pod_map source;
 				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}	};
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
-				shared_ptr< series<double> > tv = s;
+				shared_ptr< wpl::list_model<double> > tv = s;
 
 				source[pods + 0] = pods[0], source[pods + 1] = pods[1], source[pods + 2] = pods[2];
 
@@ -506,26 +508,26 @@ namespace micro_profiler
 				s->project_value(bind(&POD::a, _1));
 
 				// ACT / ASSERT
-				assert_equal(3u, tv->size());
-				assert_equal(114.0f, tv->get_value(0));
-				assert_equal(10.0f, tv->get_value(1));
-				assert_equal(1.0f, tv->get_value(2));
+				assert_equal(3u, tv->get_count());
+				assert_equal(114.0f, get_value(*tv, 0));
+				assert_equal(10.0f, get_value(*tv, 1));
+				assert_equal(1.0f, get_value(*tv, 2));
 
 				// INIT / ACT
 				s->project_value(bind(&POD::b, _1));
 
 				// ACT / ASSERT
-				assert_equal(21.0f, tv->get_value(0));
-				assert_equal(30.0f, tv->get_value(1));
-				assert_equal(0.0f, tv->get_value(2));
+				assert_equal(21.0f, get_value(*tv, 0));
+				assert_equal(30.0f, get_value(*tv, 1));
+				assert_equal(0.0f, get_value(*tv, 2));
 
 				// INIT / ACT
 				s->set_order(&sort_by_c_less, false);
 
 				// ACT / ASSERT
-				assert_equal(21.0f, tv->get_value(0));
-				assert_equal(0.0f, tv->get_value(1));
-				assert_equal(30.0f, tv->get_value(2));
+				assert_equal(21.0f, get_value(*tv, 0));
+				assert_equal(0.0f, get_value(*tv, 1));
+				assert_equal(30.0f, get_value(*tv, 2));
 			}
 
 
@@ -535,7 +537,7 @@ namespace micro_profiler
 				pod_map source;
 				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}, {2, 30, 12.0},	};
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
-				shared_ptr< series<double> > tv = s;
+				shared_ptr< wpl::list_model<double> > tv = s;
 
 				source[pods + 0] = pods[0];
 				source[pods + 1] = pods[1];
@@ -549,29 +551,29 @@ namespace micro_profiler
 				s->project_value(bind(&POD::a, _1));
 
 				// ACT / ASSERT
-				assert_equal(4u, tv->size());
-				assert_equal(1.0f, tv->get_value(0));
-				assert_equal(2.0f, tv->get_value(1));
-				assert_equal(10.0f, tv->get_value(2));
-				assert_equal(114.0f, tv->get_value(3));
+				assert_equal(4u, tv->get_count());
+				assert_equal(1.0f, get_value(*tv, 0));
+				assert_equal(2.0f, get_value(*tv, 1));
+				assert_equal(10.0f, get_value(*tv, 2));
+				assert_equal(114.0f, get_value(*tv, 3));
 
 				// INIT / ACT
 				s->project_value(bind(&POD::b, _1));
 
 				// ACT / ASSERT
-				assert_equal(0.0f, tv->get_value(0));
-				assert_equal(30.0f, tv->get_value(1));
-				assert_equal(30.0f, tv->get_value(2));
-				assert_equal(21.0f, tv->get_value(3));
+				assert_equal(0.0f, get_value(*tv, 0));
+				assert_equal(30.0f, get_value(*tv, 1));
+				assert_equal(30.0f, get_value(*tv, 2));
+				assert_equal(21.0f, get_value(*tv, 3));
 
 				// INIT / ACT
 				s->set_order(&sort_by_c_less, true);
 
 				// ACT / ASSERT
-				assert_equal(30.0f, tv->get_value(0));
-				assert_equal(0.0f, tv->get_value(1));
-				assert_equal(30.0f, tv->get_value(2));
-				assert_equal(21.0f, tv->get_value(3));
+				assert_equal(30.0f, get_value(*tv, 0));
+				assert_equal(0.0f, get_value(*tv, 1));
+				assert_equal(30.0f, get_value(*tv, 2));
+				assert_equal(21.0f, get_value(*tv, 3));
 			}
 
 
@@ -581,7 +583,7 @@ namespace micro_profiler
 				pod_map source;
 				POD pods[] = {	{114, 21, 99.6}, {1, 0, 11.0}, {10, 30, 10.0}, {2, 30, 12.0},	};
 				shared_ptr<sorted_pods> s(new sorted_pods(source));
-				shared_ptr< series<double> > tv = s;
+				shared_ptr< wpl::list_model<double> > tv = s;
 
 				source[pods + 0] = pods[0];
 				source[pods + 1] = pods[1];
@@ -592,10 +594,10 @@ namespace micro_profiler
 				s->fetch();
 
 				// ACT / ASSERT
-				assert_equal(0.0, s->get_value(0));
-				assert_equal(0.0, s->get_value(1));
-				assert_equal(0.0, s->get_value(2));
-				assert_equal(0.0, s->get_value(3));
+				assert_equal(0.0, get_value(*s, 0));
+				assert_equal(0.0, get_value(*s, 1));
+				assert_equal(0.0, get_value(*s, 2));
+				assert_equal(0.0, get_value(*s, 3));
 
 				// ACT
 				s->set_order(&sort_by_a_less, true);
@@ -603,10 +605,10 @@ namespace micro_profiler
 				s->disable_projection();
 
 				// ACT / ASSERT
-				assert_equal(0.0, s->get_value(0));
-				assert_equal(0.0, s->get_value(1));
-				assert_equal(0.0, s->get_value(2));
-				assert_equal(0.0, s->get_value(3));
+				assert_equal(0.0, get_value(*s, 0));
+				assert_equal(0.0, get_value(*s, 1));
+				assert_equal(0.0, get_value(*s, 2));
+				assert_equal(0.0, get_value(*s, 3));
 			}
 
 

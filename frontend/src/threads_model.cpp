@@ -47,7 +47,7 @@ namespace micro_profiler
 	{	return index >= 1 && index < get_count() ? thread_id = _view[index - 1].first, true : false;	}
 
 	threads_model::index_type threads_model::get_count() const throw()
-	{	return _view.size() + 1;	}
+	{	return _view.get_count() + 1;	}
 
 	void threads_model::get_value(index_type index, wstring &text) const
 	{

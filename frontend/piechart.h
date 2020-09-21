@@ -21,8 +21,8 @@
 #pragma once
 
 #include <agge/color.h>
-#include <frontend/series.h>
 #include <wpl/control.h>
+#include <wpl/models.h>
 #include <wpl/view.h>
 
 namespace micro_profiler
@@ -30,7 +30,7 @@ namespace micro_profiler
 	class piechart : public wpl::control, public wpl::view, public std::enable_shared_from_this<wpl::view>, wpl::index_traits
 	{
 	public:
-		typedef series<double> model_t;
+		typedef wpl::list_model<double> model_t;
 
 	public:
 		template <typename PaletteIteratorT>

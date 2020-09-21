@@ -20,18 +20,17 @@
 
 #pragma once
 
-#include "series.h"
-
 #include <algorithm>
 #include <functional>
 #include <list>
 #include <memory>
 #include <vector>
+#include <wpl/models.h>
 
 namespace micro_profiler
 {
 	template <class ContainerT>
-	class ordered_view : public series<double>
+	class ordered_view : public wpl::list_model<double>
 	{
 	public:
 		typedef typename ContainerT::value_type value_type;
@@ -58,8 +57,8 @@ namespace micro_profiler
 		void disable_projection();
 
 		// wpl::series<...> methods
-		virtual index_type size() const throw();
-		virtual double get_value(index_type index) const throw();
+		virtual index_type get_count() const throw();
+		virtual void get_value(index_type index, double &value) const throw();
 		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const;
 
 	private:
@@ -185,7 +184,7 @@ namespace micro_profiler
 	template <class ContainerT>
 	inline typename ordered_view<ContainerT>::index_type ordered_view<ContainerT>::find_by_key(const key_type &key) const
 	{
-		for (index_type i = 0, count = size(); i < count; ++i)
+		for (index_type i = 0, count = get_count(); i < count; ++i)
 		{
 			if ((*this)[i].first == key)
 				return i;
@@ -203,12 +202,12 @@ namespace micro_profiler
 	{	_extractor = std::function<double(const mapped_type &entry)>();	}
 
 	template <class ContainerT>
-	inline typename ordered_view<ContainerT>::index_type ordered_view<ContainerT>::size() const throw()
+	inline typename ordered_view<ContainerT>::index_type ordered_view<ContainerT>::get_count() const throw()
 	{	return static_cast<index_type>(_ordered_data.size());	}
 
 	template <class ContainerT>
-	inline double ordered_view<ContainerT>::get_value(index_type index) const throw()
-	{	return _extractor ? _extractor((*this)[index].second) : double();	}
+	inline void ordered_view<ContainerT>::get_value(index_type index, double &value) const throw()
+	{	_extractor ? value = _extractor((*this)[index].second) : value = double();	}
 
 	template <class ContainerT>
 	inline std::shared_ptr<const wpl::trackable> ordered_view<ContainerT>::track(index_type index) const
@@ -244,7 +243,7 @@ namespace micro_profiler
 		const typename trackables_t::iterator b = _trackables->begin(), e = _trackables->end();
 
 		invalidate_trackables();
-		for (index_type i = 0, count = size(); i != count; ++i)
+		for (index_type i = 0, count = get_count(); i != count; ++i)
 		{
 			const value_type &entry = (*this)[i];
 

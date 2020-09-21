@@ -80,7 +80,6 @@
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\serialization_context.h" />
-    <ClInclude Include="..\series.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\stream.h" />

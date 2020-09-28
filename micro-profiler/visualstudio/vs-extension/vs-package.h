@@ -58,8 +58,9 @@ namespace micro_profiler
 			typedef std::list< std::shared_ptr<void> > running_objects_t;
 
 		private:
-			virtual std::shared_ptr<wpl::stylesheet> create_stylesheet(
-				const std::shared_ptr<wpl::gcontext::text_engine_type> &text_engine) const;
+			virtual std::shared_ptr<wpl::stylesheet> create_stylesheet(wpl::signal<void ()> &update,
+				wpl::gcontext::text_engine_type &text_engine, IVsUIShell &shell,
+				IVsFontAndColorStorage &font_and_color) const;
 			virtual void initialize(wpl::vs::factory &factory);
 			virtual void terminate() throw();
 

@@ -22,6 +22,7 @@
 
 #include "command-ids.h"
 #include "helpers.h"
+#include "stylesheet.h"
 
 #include <common/configuration.h>
 #include <common/constants.h>
@@ -91,9 +92,10 @@ namespace micro_profiler
 		profiler_package::~profiler_package()
 		{	LOG(PREAMBLE "destroyed.");	}
 
-		shared_ptr<wpl::stylesheet> profiler_package::create_stylesheet(
-			const shared_ptr<wpl::gcontext::text_engine_type> &text_engine) const
-		{	return shared_ptr<wpl::stylesheet>(new system_stylesheet(text_engine));	}
+		shared_ptr<wpl::stylesheet> profiler_package::create_stylesheet(wpl::signal<void ()> &update,
+				wpl::gcontext::text_engine_type &text_engine, IVsUIShell &shell,
+				IVsFontAndColorStorage &font_and_color) const
+		{	return shared_ptr<vsstylesheet>(new vsstylesheet(update, text_engine, shell, font_and_color));	}
 
 		void profiler_package::initialize(wpl::vs::factory &factory)
 		{

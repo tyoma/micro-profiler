@@ -31,6 +31,9 @@
     <ClCompile Include="frontend\attach_ui.cpp">
       <Filter>frontend</Filter>
     </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\stylesheet.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="module\micro-profiler.def">
@@ -92,6 +95,9 @@
       <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\vs-package.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\stylesheet.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
   </ItemGroup>

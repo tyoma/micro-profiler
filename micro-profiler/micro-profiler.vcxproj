@@ -58,10 +58,12 @@
     <ClCompile Include="visualstudio\dispatch.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
     <ClCompile Include="visualstudio\vs-extension\helpers.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\stylesheet.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vcmodel-impl.cpp" />
     <ClInclude Include="frontend\attach_ui.h" />
     <ClInclude Include="visualstudio\dispatch.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
+    <ClInclude Include="visualstudio\vs-extension\stylesheet.h" />
     <ClInclude Include="visualstudio\vs-extension\vcmodel.h" />
     <ClInclude Include="visualstudio\vs-extension\vs-package.h" />
     <None Include="logo.ico" />

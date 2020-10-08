@@ -99,6 +99,12 @@ namespace micro_profiler
 
 		void profiler_package::initialize(wpl::vs::factory &factory)
 		{
+			CComPtr<profiler_package> self = this;
+
+			obtain_service<_DTE>([self] (CComPtr<_DTE> p) {
+				LOG(PREAMBLE "DTE obtained...") % A(p);
+				self->_dte = p;
+			});
 			setup_factory(factory);
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager(bind(&profiler_package::create_ui, this, _1, _2)));
@@ -114,20 +120,18 @@ namespace micro_profiler
 		{
 			_ipc_manager.reset();
 			_frontend_manager.reset();
+			_dte.Release();
 		}
 
 		vector<IDispatchPtr> profiler_package::get_selected_items() const
 		{
 			vector<IDispatchPtr> selected_items;
 
-			if (CComPtr<_DTE> dte = get_dte())
+			if (IDispatchPtr si = _dte ? dispatch::get(IDispatchPtr(_dte, true), L"SelectedItems") : IDispatchPtr())
 			{
-				if (IDispatchPtr si = dispatch::get(IDispatchPtr(dte, true), L"SelectedItems"))
-				{
-					dispatch::for_each_variant_as_dispatch(si, [&] (const IDispatchPtr &item) {
-						selected_items.push_back(dispatch::get(item, L"Project"));
-					});
-				}
+				dispatch::for_each_variant_as_dispatch(si, [&] (const IDispatchPtr &item) {
+					selected_items.push_back(dispatch::get(item, L"Project"));
+				});
 			}
 			return selected_items;
 		}
@@ -149,24 +153,21 @@ namespace micro_profiler
 
 		void profiler_package::on_open_source(const string &file, unsigned line)
 		{
-			CComPtr<IVsUIShellOpenDocument> od;
-
-			if (get_service_provider()->QueryService(__uuidof(IVsUIShellOpenDocument), &od), od)
-			{
+			obtain_service<IVsUIShellOpenDocument>([file, line] (CComPtr<IVsUIShellOpenDocument> od) {
 				CComPtr<IServiceProvider> sp;
 				CComPtr<IVsUIHierarchy> hierarchy;
 				VSITEMID itemid;
 				CComPtr<IVsWindowFrame> frame;
 
-				if (od->OpenDocumentViaProject(unicode(file).c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), frame)
+				if (od->OpenDocumentViaProject(unicode(file).c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), !!frame)
 				{
 					CComPtr<IVsCodeWindow> window;
 
-					if (frame->QueryViewInterface(__uuidof(IVsCodeWindow), (void**)&window), window)
+					if (frame->QueryViewInterface(__uuidof(IVsCodeWindow), (void**)&window), !!window)
 					{
 						CComPtr<IVsTextView> tv;
 
-						if (window->GetPrimaryView(&tv), tv)
+						if (window->GetPrimaryView(&tv), !!tv)
 						{
 							tv->SetCaretPos(line, 0);
 							tv->SetScrollPosition(SB_HORZ, 0);
@@ -175,7 +176,7 @@ namespace micro_profiler
 						}
 					}
 				}
-			}
+			});
 		}
 
 

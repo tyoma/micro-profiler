@@ -111,6 +111,7 @@ namespace micro_profiler
 
 			fonts_and_colors.OpenCategory(c_environment_category, FCSF_READONLY);
 			fonts_and_colors.GetFont(&lf, &fi);
+			fonts_and_colors.CloseCategory();
 
 			set_font("text", text_engine.create_font(lf.lfFaceName, lf.lfHeight, false, false, agge::font::key::gf_vertical));
 

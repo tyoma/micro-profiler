@@ -22,9 +22,10 @@
 
 #include <atlbase.h>
 #include <comdef.h>
+#include <dte.h>
 #include <list>
 #include <wpl/vs/ole-command-target.h>
-#include <wpl/vs/vspackage.h>
+#include <wpl/vs/package.h>
 
 namespace micro_profiler
 {
@@ -70,6 +71,7 @@ namespace micro_profiler
 			void on_open_source(const std::string &file, unsigned line);
 
 		private:
+			CComPtr<_DTE> _dte;
 			std::shared_ptr<frontend_manager> _frontend_manager;
 			std::shared_ptr<ipc_manager> _ipc_manager;
 			running_objects_t _running_objects;

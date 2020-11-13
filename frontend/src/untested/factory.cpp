@@ -54,7 +54,7 @@ namespace micro_profiler
 
 	void setup_factory(wpl::factory &factory_)
 	{
-		factory_.register_control("piechart", [] (const factory &, const shared_ptr<stylesheet> &) {
+		factory_.register_control("piechart", [] (const factory &, const control_context &) {
 			return shared_ptr<control>(new piechart(begin(c_palette), end(c_palette), c_rest));
 		});
 	}

@@ -19,6 +19,8 @@
 #include <windows.h>
 #include <wpl/factory.h>
 #include <wpl/form.h>
+#include <wpl/win32/cursor_manager.h>
+#include <wpl/win32/queue.h>
 
 using namespace micro_profiler;
 using namespace std;
@@ -116,8 +118,16 @@ try
 
 	shared_ptr<text_engine_composite> tec(new text_engine_composite);
 	shared_ptr<gcontext::text_engine_type> te(tec, &tec->text_engine);
-	auto factory = make_shared<wpl::factory>(make_shared<gcontext::surface_type>(1, 1, 16),
-		make_shared<gcontext::renderer_type>(2), te, make_shared<system_stylesheet>(te));
+	factory_context context = {
+		make_shared<gcontext::surface_type>(1, 1, 16),
+		make_shared<gcontext::renderer_type>(2),
+		te,
+		make_shared<system_stylesheet>(te),
+		make_shared<wpl::win32::cursor_manager>(),
+		&wpl::win32::clock,
+		wpl::win32::queue(),
+	};
+	auto factory = make_shared<wpl::factory>(context);
 
 	wpl::factory::setup_default(*factory);
 	setup_factory(*factory);

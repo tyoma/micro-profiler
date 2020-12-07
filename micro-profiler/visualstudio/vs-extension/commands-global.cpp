@@ -356,13 +356,17 @@ namespace micro_profiler
 				const auto onclose = [i, &running_objects] {
 					running_objects.erase(i);
 				};
-				const auto attach = make_shared<attach_ui>(get_factory());
+				const auto &f = get_factory();
+				const auto root = make_shared<wpl::overlay>();
+					root->add(f.create_control<wpl::control>("background"));
+					const auto attach = make_shared<attach_ui>(f, f.context.queue_);
+					root->add(wpl::pad_control(attach, 5, 5));
 
-				o->first = get_factory().create_modal();
+				o->first = f.create_modal();
 				o->second.push_back(o->first->close += onclose);
 				o->second.push_back(attach->close += onclose);
 
-				o->first->set_view(attach);
+				o->first->set_root(root);
 				o->first->set_location(l);
 				o->first->set_visible(true);
 			}, false, [this] (unsigned, unsigned &state) -> bool {
@@ -417,13 +421,17 @@ namespace micro_profiler
 				const auto onclose = [i, &running_objects/*, hshell*/] {
 					running_objects.erase(i);
 				};
-				const auto about = make_shared<about_ui>(get_factory());
+				const auto &f = get_factory();
+				const auto root = make_shared<wpl::overlay>();
+					root->add(f.create_control<wpl::control>("background"));
+					const auto about = make_shared<about_ui>(f);
+					root->add(wpl::pad_control(about, 5, 5));
 
 				o->first = get_factory().create_modal();
 				o->second.push_back(o->first->close += onclose);
 				o->second.push_back(about->close += onclose);
 
-				o->first->set_view(about);
+				o->first->set_root(root);
 				o->first->set_location(l);
 				o->first->set_visible(true);
 			}, false, [this] (unsigned, unsigned &state) -> bool {

@@ -66,59 +66,44 @@ namespace micro_profiler
 			const string &executable)
 		: _configuration(open_configuration()), _statistics(s), _executable(executable)
 	{
-		wstring caption;
-		shared_ptr<container> root(new container);
-		shared_ptr<container> vstack(new container), toolbar(new container);
-		shared_ptr<layout_manager> lm_root(new spacer(5, 5));
-		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
 
-		_statistics_display.reset(new tables_ui(factory_, s, *_configuration));
+		const auto root = make_shared<overlay>();
+			root->add(factory_.create_control<control>("background"));
+			const auto stk = make_shared<stack>(5, false);
+			root->add(pad_control(stk, 5, 5));
+				stk->add(_statistics_display = make_shared<tables_ui>(factory_, s, *_configuration), -100);
+				const auto toolbar = make_shared<stack>(5, true);
+				stk->add(toolbar, 24);
+					toolbar->add(btn = factory_.create_control<button>("button"), 120, 100);
+						btn->set_text(L"Clear Statistics");
+						_connections.push_back(btn->clicked += [this] {	_statistics->clear();	});
 
-		toolbar->set_layout(lm_toolbar);
-		btn = static_pointer_cast<button>(factory_.create_control("button"));
-		btn->set_text(L"Clear Statistics");
-		_connections.push_back(btn->clicked += bind(&functions_list::clear, _statistics));
-		lm_toolbar->add(120);
-		toolbar->add_view(btn->get_view());
-		btn = static_pointer_cast<button>(factory_.create_control("button"));
-		btn->set_text(L"Copy All");
-		_connections.push_back(btn->clicked += [this] {
-			string text;
+					toolbar->add(btn = factory_.create_control<button>("button"), 100, 101);
+						btn->set_text(L"Copy All");
+						_connections.push_back(btn->clicked += [this] {
+							string text;
 
-			_statistics->print(text);
-			copy_to_buffer(text);
-		});
-		lm_toolbar->add(100);
-		toolbar->add_view(btn->get_view());
-		lm_toolbar->add(-100);
-		toolbar->add_view(shared_ptr<view>(new view));
-		lnk = static_pointer_cast<link>(factory_.create_control("link"));
-		lnk->set_align(text_container::right);
-		lnk->set_text(L"<a>Support Developer...</a>");
-		_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {
-			const auto l = _form->get_location();
-			const agge::point<int> center = { l.left + l.width / 2, l.top + l.height / 2 };
+							_statistics->print(text);
+							copy_to_buffer(text);
+						});
 
-			show_about(center, _form->create_child());
-		});
-		lm_toolbar->add(200);
-		toolbar->add_view(lnk->get_view());
+					toolbar->add(make_shared< controls::integrated_control<control> >(), -100);
+					toolbar->add(lnk = factory_.create_control<link>("link"), 200);
+						lnk->set_align(text_container::right);
+						lnk->set_text(L"<a>Support Developer...</a>");
+						_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {
+							const auto l = _form->get_location();
+							const agge::point<int> center = { l.left + l.width / 2, l.top + l.height / 2 };
 
-		vstack->set_layout(lm_vstack);
-		lm_vstack->add(-100);
-		vstack->add_view(_statistics_display);
-		lm_vstack->add(24);
-		vstack->add_view(toolbar);
-
-		root->set_layout(lm_root);
-		root->add_view(vstack);
+							show_about(center, _form->create_child());
+						});
 
 		view_location l;
 
 		_form = factory_.create_form();
-		_form->set_view(root);
+		_form->set_root(root);
 		if (load(*_configuration, "Placement", l))
 			_form->set_location(l);
 		_form->set_caption(unicode("MicroProfiler - " + _executable));

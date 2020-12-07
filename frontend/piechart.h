@@ -22,12 +22,13 @@
 
 #include <agge/color.h>
 #include <wpl/control.h>
+#include <wpl/controls/integrated.h>
 #include <wpl/models.h>
 #include <wpl/view.h>
 
 namespace micro_profiler
 {
-	class piechart : public wpl::control, public wpl::view, public std::enable_shared_from_this<wpl::view>, wpl::index_traits
+	class piechart : public wpl::controls::integrated_control<wpl::control>, wpl::index_traits
 	{
 	public:
 		typedef wpl::list_model<double> model_t;
@@ -57,7 +58,8 @@ namespace micro_profiler
 
 	private:
 		virtual void draw(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer) const;
-		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &nviews);
+
+		virtual void layout(const wpl::placed_view_appender &append_view, const agge::box<int> &box);
 
 		virtual void mouse_down(mouse_buttons button, int depressed, int x, int y);
 		virtual void mouse_double_click(mouse_buttons button, int depressed, int x, int y);

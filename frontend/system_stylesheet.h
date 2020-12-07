@@ -21,7 +21,7 @@
 #pragma once
 
 #include <wpl/concepts.h>
-#include <wpl/stylesheet.h>
+#include <wpl/stylesheet_db.h>
 #include <wpl/visual.h>
 
 namespace micro_profiler

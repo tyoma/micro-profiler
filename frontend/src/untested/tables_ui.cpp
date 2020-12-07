@@ -41,7 +41,7 @@ namespace micro_profiler
 	}
 
 	tables_ui::tables_ui(const factory &factory_, const shared_ptr<functions_list> &model, hive &configuration)
-		: _cm_main(new columns_model(c_columns_statistics, 3, false)),
+		: stack(5, false), _cm_main(new columns_model(c_columns_statistics, 3, false)),
 			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new columns_model(c_columns_statistics, 4, false)),
 			_m_main(model),
@@ -94,36 +94,17 @@ namespace micro_profiler
 		_connections.push_back(_pc_children->selection_changed
 			+= bind(&tables_ui::on_children_piechart_selection_change, this, _1));
 
-		shared_ptr<container> split;
-		shared_ptr<stack> layout(new stack(5, false)), layout_split;
+		add(_lv_parents, 150, 3);
+		add(_cb_threads, 24, 4);
+		auto split = make_shared<stack>(5, true);
+		add(split, -100);
+			split->add(_pc_main, 150);
+			split->add(_lv_main, -100, 1);
 
-		set_layout(layout);
-
-		layout->add(150);
-		add_view(_lv_parents->get_view(), 3);
-
-		layout->add(24);
-		add_view(_cb_threads->get_view());
-
-			split.reset(new container);
-			layout_split.reset(new stack(5, true));
-			split->set_layout(layout_split);
-			layout_split->add(150);
-			split->add_view(_pc_main);
-			layout_split->add(-100);
-			split->add_view(_lv_main->get_view(), 1);
-		layout->add(-100);
-		add_view(split);
-
-			split.reset(new container);
-			layout_split.reset(new stack(5, true));
-			split->set_layout(layout_split);
-			layout_split->add(150);
-			split->add_view(_pc_children);
-			layout_split->add(-100);
-			split->add_view(_lv_children->get_view(), 2);
-		layout->add(150);
-		add_view(split);
+		split = make_shared<stack>(5, true);
+		add(split, 150);
+			split->add(_pc_children, 150);
+			split->add(_lv_children, -100, 1);
 	}
 
 	void tables_ui::save(hive &configuration)
@@ -156,9 +137,9 @@ namespace micro_profiler
 			open_source(fileline.first, fileline.second);
 	}
 
-	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view, table_model::index_type index)
+	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view_, table_model::index_type index)
 	{
-		index = _m_main->get_index(view->get_key(index));
+		index = _m_main->get_index(view_->get_key(index));
 		_lv_main->select(index, true);
 		_lv_main->focus(index);
 	}

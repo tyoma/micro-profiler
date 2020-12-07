@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <wpl/container.h>
+#include <wpl/layout.h>
 
 namespace wpl
 {
@@ -30,7 +30,7 @@ namespace wpl
 
 namespace micro_profiler
 {
-	class about_ui : public wpl::container
+	class about_ui : public wpl::stack
 	{
 	public:
 		about_ui(const wpl::factory &factory_);

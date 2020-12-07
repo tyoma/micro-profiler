@@ -35,7 +35,7 @@
 #include <logger/log.h>
 #include <setup/environment.h>
 #include <visualstudio/dispatch.h>
-#include <wpl/form.h>
+#include <wpl/layout.h>
 #include <wpl/vs/factory.h>
 #include <wpl/vs/pane.h>
 
@@ -141,10 +141,13 @@ namespace micro_profiler
 			auto frame = get_factory().create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR);
 			auto ui = make_shared<frontend_ui_impl>(frame);
 			auto tui = make_shared<tables_ui>(get_factory(), model, *open_configuration());
+			const auto root = make_shared<wpl::overlay>();
+				root->add(get_factory().create_control<wpl::control>("background"));
+				root->add(pad_control(tui, 5, 5));
 
 			init_instance_menu(*frame, model, executable);
 			frame->set_caption(L"MicroProfiler - " + unicode(executable));
-			frame->set_view(tui);
+			frame->set_root(root);
 			frame->set_visible(true);
 			ui->connections[2] = tui->open_source += bind(&profiler_package::on_open_source, this, _1, _2);
 			LOG(PREAMBLE "tool window created") % A(executable);

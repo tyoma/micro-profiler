@@ -79,13 +79,13 @@ namespace micro_profiler
 		}
 	}
 
-	void piechart::resize(unsigned cx, unsigned cy, positioned_native_views &/*nviews*/)
+	void piechart::layout(const placed_view_appender &append_view, const box<int> &box_)
 	{
-		_outer_r = 0.5f * real_t((min)(cx, cy));
+		_outer_r = 0.5f * real_t((min)(box_.w, box_.h));
 		_center.x = _outer_r, _center.y = _outer_r;
 		_outer_r /= (1.0f + _selection_emphasis_k);
 		_inner_r = 0.5f * _outer_r;
-		invalidate(0);
+		integrated_control<wpl::control>::layout(append_view, box_);
 	}
 
 	void piechart::mouse_down(mouse_buttons /*button*/, int /*depressed*/, int x, int y)

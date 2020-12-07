@@ -24,8 +24,8 @@
 #include <frontend/process_list.h>
 #include <injector/process.h>
 #include <wpl/controls.h>
+#include <wpl/controls/integrated.h>
 #include <wpl/factory.h>
-#include <wpl/layout.h>
 
 using namespace std;
 using namespace wpl;
@@ -42,14 +42,27 @@ namespace micro_profiler
 		};
 	}
 
-	attach_ui::attach_ui(const factory &factory_)
-		: _processes_lv(static_pointer_cast<listview>(factory_.create_control("listview"))),
-			_model(new process_list)
+	attach_ui::attach_ui(const factory &factory_, const wpl::queue &queue_)
+		: wpl::stack(5, false), _processes_lv(factory_.create_control<listview>("listview")),
+			_model(new process_list), _queue(queue_), _alive(make_shared<bool>(true))
 	{
-		shared_ptr<container> vstack(new container), toolbar(new container);
-		shared_ptr<layout_manager> lm_root(new spacer(5, 5));
-		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
+		shared_ptr<stack> toolbar;
 		shared_ptr<button> btn;
+
+		add(_processes_lv, -100, 1);
+		add(toolbar = make_shared<stack>(5, true), 24);
+			toolbar->add(make_shared< controls::integrated_control<wpl::control> >(), -100);
+			toolbar->add(btn = factory_.create_control<button>("button"), 50);
+				btn->set_text(L"Attach");
+				_connections.push_back(btn->clicked += [this] {
+
+				});
+
+			toolbar->add(btn = factory_.create_control<button>("button"), 50);
+				btn->set_text(L"Close");
+				_connections.push_back(btn->clicked += [this] {
+					close();
+				});
 
 		_processes_lv->set_model(_model);
 		_processes_lv->set_columns_model(shared_ptr<wpl::columns_model>(new columns_model(c_columns_processes, 0,
@@ -61,32 +74,20 @@ namespace micro_profiler
 			close();
 		});
 
+		update();
+	}
 
-		toolbar->set_layout(lm_toolbar);
-		lm_toolbar->add(-100);
-		toolbar->add_view(shared_ptr<view>(new view));
-		btn = static_pointer_cast<button>(factory_.create_control("button"));
-		btn->set_text(L"Attach");
-		_connections.push_back(btn->clicked += [this] {
+	attach_ui::~attach_ui()
+	{	*_alive = false;	}
 
-		});
-		lm_toolbar->add(50);
-		toolbar->add_view(btn->get_view());
-		btn = static_pointer_cast<button>(factory_.create_control("button"));
-		btn->set_text(L"Close");
-		_connections.push_back(btn->clicked += [this] { close(); });
-		lm_toolbar->add(50);
-		toolbar->add_view(btn->get_view());
-
-		vstack->set_layout(lm_vstack);
-		lm_vstack->add(-100);
-		vstack->add_view(_processes_lv->get_view());
-		lm_vstack->add(24);
-		vstack->add_view(toolbar);
-
-		set_layout(shared_ptr<layout_manager>(new spacer(5, 5)));
-		add_view(vstack);
+	void attach_ui::update()
+	{
+		auto alive = _alive;
 
 		_model->update(&process::enumerate);
+		_queue([this, alive] {
+			if (*alive)
+				update();
+		}, 100);
 	}
 }

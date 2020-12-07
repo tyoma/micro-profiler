@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <wpl/stylesheet.h>
+#include <wpl/stylesheet_db.h>
 #include <wpl/visual.h>
 
 typedef struct IVsUIShell IVsUIShell;

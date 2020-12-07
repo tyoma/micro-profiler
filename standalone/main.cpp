@@ -162,9 +162,12 @@ try
 				auto on_close = [&composite2] {
 					composite2.about_form.reset();
 				};
-				auto about = make_shared<about_ui>(*factory2);
+				const auto root = make_shared<overlay>();
+					root->add(factory2->create_control<control>("background"));
+					auto about = make_shared<about_ui>(*factory2);;
+					root->add(pad_control(about, 5, 5));
 
-				new_form->set_view(about);
+				new_form->set_root(root);
 				new_form->set_location(l);
 				new_form->set_visible(true);
 				composite.connections[2] = new_form->close += on_close;

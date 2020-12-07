@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 #include <wpl/models.h>
-#include <wpl/container.h>
+#include <wpl/layout.h>
 
 namespace wpl
 {
@@ -21,7 +21,7 @@ namespace micro_profiler
 	struct hive;
 	struct linked_statistics;
 
-	class tables_ui : wpl::noncopyable, public wpl::container
+	class tables_ui : public wpl::stack
 	{
 	public:
 		tables_ui(const wpl::factory &factory_, const std::shared_ptr<functions_list> &model, hive &configuration);

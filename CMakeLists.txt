@@ -73,7 +73,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
 		"$<$<CXX_COMPILER_ID:GNU>:-Wl,--no-undefined>"
 		"$<$<CXX_COMPILER_ID:Clang>:-Wl,-undefined,error>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--strip-debug>>"
-#		"$<$<CXX_COMPILER_ID:Clang>:$<$<CONFIG:Release>:-Wl,-strip-debug>>"
+		"$<$<CXX_COMPILER_ID:Clang>:$<$<CONFIG:Release>:-Wl,-strip-debug>>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--gc-sections>>"
 	)
 endif()

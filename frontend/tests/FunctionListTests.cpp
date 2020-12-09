@@ -61,7 +61,7 @@ namespace micro_profiler
 
 			public:
 				void bind_to_model(table_model &to)
-				{	_connection = to.invalidated += bind(&invalidation_tracer::on_invalidate, this, _1);	}
+				{	_connection = to.invalidate += bind(&invalidation_tracer::on_invalidate, this, _1);	}
 
 				_invalidations_log_t invalidations;
 			};
@@ -173,7 +173,7 @@ namespace micro_profiler
 				int invalidated_count = 0;
 				unthreaded_statistic_types::map_detailed s;
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				wpl::slot_connection conn = fl->invalidated += bind(&increment, &invalidated_count);
+				wpl::slot_connection conn = fl->invalidate += bind(&increment, &invalidated_count);
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(1, 0, 30, 20);
 				serialize_single_threaded(ser, s);
@@ -1629,7 +1629,7 @@ namespace micro_profiler
 
 				p->set_order(columns::times_called, true);
 
-				wpl::slot_connection c = p->invalidated += invalidation_at_sorting_check1(*p);
+				wpl::slot_connection c = p->invalidate += invalidation_at_sorting_check1(*p);
 
 				// ACT / ASSERT
 				p->set_order(columns::times_called, false);

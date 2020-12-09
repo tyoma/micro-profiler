@@ -159,7 +159,7 @@ namespace micro_profiler
 
 		if (_sorter)
 			_sorter();
-		invalidated();
+		invalidate();
 		update_trackables();
 	}
 

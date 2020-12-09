@@ -36,7 +36,7 @@ namespace micro_profiler
 		});
 		if (_sorter)
 			_sorter(_processes);
-		invalidated(_processes.size());
+		invalidate(_processes.size());
 	}
 
 	shared_ptr<process> process_list::get_process(index_type row) const

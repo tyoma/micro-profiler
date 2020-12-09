@@ -116,7 +116,7 @@ namespace micro_profiler
 					shared_ptr<process>(new mocks::process(12, "foo")),
 					shared_ptr<process>(new mocks::process(12111, "bar")),
 				};
-				wpl::slot_connection c = l.invalidated += [&] (size_t n) {
+				wpl::slot_connection c = l.invalidate += [&] (size_t n) {
 					n_arg = n;
 					n_count = l.get_count();
 				};

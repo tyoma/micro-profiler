@@ -119,7 +119,7 @@ namespace micro_profiler
 	inline void statistics_model_impl<BaseT, MapT>::detach() throw()
 	{
 		_view.reset();
-		this->invalidated(0);
+		this->invalidate(0);
 	}
 
 	template <typename BaseT, typename MapT>
@@ -148,6 +148,6 @@ namespace micro_profiler
 		if (!_view)
 			return;
 		_view->fetch();
-		this->invalidated(_view->get_count());
+		this->invalidate(_view->get_count());
 	}
 }

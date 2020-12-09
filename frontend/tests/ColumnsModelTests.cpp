@@ -334,7 +334,7 @@ namespace micro_profiler
 					columns_model::column("id3", L"third", 0, columns_model::dir_ascending),
 				};
 				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
-				auto c = cm->invalidated += [&] { invalidations++; };
+				auto c = cm->invalidate += [&] { invalidations++; };
 
 				// ACT
 				cm->update_column(0, 15);

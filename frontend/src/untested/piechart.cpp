@@ -47,7 +47,7 @@ namespace micro_profiler
 	void piechart::set_model(const std::shared_ptr<model_t> &m)
 	{
 		_model = m;
-		_invalidate_connection = _model ? _model->invalidated += bind(&piechart::on_invalidated, this) : slot_connection();
+		_invalidate_connection = _model ? _model->invalidate += bind(&piechart::on_invalidated, this) : slot_connection();
 		on_invalidated();
 	}
 

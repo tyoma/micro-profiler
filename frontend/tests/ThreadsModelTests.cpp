@@ -147,7 +147,7 @@ namespace micro_profiler
 						mt::milliseconds(20003), false)),
 				};
 				bool invalidated = false;
-				wpl::slot_connection c = m->invalidated += [&] {
+				wpl::slot_connection c = m->invalidate += [&] {
 					assert_equal(3u, m->get_count());
 					invalidated = true;
 				};

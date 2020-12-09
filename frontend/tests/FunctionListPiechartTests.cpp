@@ -120,7 +120,7 @@ namespace micro_profiler
 				s[120].times_called = 11001;
 				serialize_single_threaded(ser, s);
 
-				wpl::slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
+				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT
 				dser(*fl, dummy_context);
@@ -351,7 +351,7 @@ namespace micro_profiler
 				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
 				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
 				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
-				wpl::slot_connection conn = m->invalidated += bind(&increment, &invalidated_count);
+				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT
 				fl->set_order(columns::times_called, false);

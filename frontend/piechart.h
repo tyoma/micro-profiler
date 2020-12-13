@@ -21,6 +21,7 @@
 #pragma once
 
 #include <agge/color.h>
+#include <vector>
 #include <wpl/control.h>
 #include <wpl/controls/integrated.h>
 #include <wpl/models.h>

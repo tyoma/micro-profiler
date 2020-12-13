@@ -21,6 +21,7 @@
 #pragma once
 
 #include <injector/process.h>
+#include <vector>
 #include <wpl/models.h>
 
 namespace micro_profiler

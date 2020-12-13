@@ -25,6 +25,7 @@
 #include <agge/types.h>
 #include <functional>
 #include <string>
+#include <vector>
 #include <wpl/concepts.h>
 
 namespace wpl

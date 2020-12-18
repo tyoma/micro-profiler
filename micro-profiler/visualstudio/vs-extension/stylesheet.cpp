@@ -113,7 +113,11 @@ namespace micro_profiler
 			fonts_and_colors.GetFont(&lf, &fi);
 			fonts_and_colors.CloseCategory();
 
-			set_font("text", text_engine.create_font(lf.lfFaceName, lf.lfHeight, false, false, agge::font::key::gf_vertical));
+			font::key fk(lf.lfFaceName[0] ? lf.lfFaceName : L"Segoe UI", abs(lf.lfHeight), lf.lfWeight > FW_NORMAL,
+				!!lf.lfItalic, agge::font::key::gf_strong);
+
+			set_font("text", text_engine.create_font(fk.typeface.c_str(), fk.height, fk.bold, fk.italic, fk.grid_fit_));
+			set_font("text.header", text_engine.create_font(fk.typeface.c_str(), fk.height, true, fk.italic, fk.grid_fit_));
 
 			changed();
 		}

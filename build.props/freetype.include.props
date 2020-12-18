@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\libraries\freetype2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\libraries\freetype2\builds\windows\vc2010\freetype2.vcxproj">
+      <Project>{78B079BD-9FC7-4B9E-B4A6-96DA0F00248B}</Project>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

@@ -30,6 +30,7 @@
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(SolutionDir)build.props\vssdk.props" />
     <Import Project="$(SolutionDir)build.props\agge.include.props" />
+    <Import Project="$(SolutionDir)build.props\freetype.include.props" />
     <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
   <PropertyGroup>

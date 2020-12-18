@@ -34,8 +34,8 @@ namespace micro_profiler
 	{
 		shared_ptr<agge::font> create(wpl::gcontext::text_engine_type &text_engine, const LOGFONTW &native_font)
 		{
-			return text_engine.create_font(native_font.lfFaceName, native_font.lfHeight, native_font.lfWeight > FW_NORMAL,
-				!!native_font.lfItalic, font::key::gf_vertical);
+			return text_engine.create_font(native_font.lfFaceName, -native_font.lfHeight, native_font.lfWeight > FW_NORMAL,
+				!!native_font.lfItalic, font::key::gf_strong);
 		}
 
 		shared_ptr<agge::font> get_system_font(wpl::gcontext::text_engine_type &text_engine)
@@ -87,6 +87,11 @@ namespace micro_profiler
 		set_value("border", 1.0f);
 		set_value("padding", 3.0f);
 
-		set_font("text", get_system_font(*_text_engine));
+		const auto system_font = get_system_font(*_text_engine);
+		const auto system_font_d = system_font->get_key();
+
+		set_font("text", system_font);
+		set_font("text.header", _text_engine->create_font(system_font_d.typeface.c_str(), system_font_d.height + 1, true,
+			system_font_d.italic, system_font_d.grid_fit_));
 	}
 }

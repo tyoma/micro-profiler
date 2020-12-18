@@ -26,7 +26,7 @@
 #include <memory>
 #include <list>
 #include <string>
-#include <wpl/signals.h>
+#include <wpl/signal.h>
 
 namespace micro_profiler
 {

@@ -51,7 +51,7 @@ set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-std=c++11 -fexceptions -fno-rtti
 	-Wno-delete-non-virtual-dtor
 )
-set(MSVC_COMPILER_OPTIONS /wd4503 /wd4996 /wd4510 /wd4610 /wd4512 /wd4312)
+set(MSVC_COMPILER_OPTIONS /wd4503 /wd4996 /wd4510 /wd4610 /wd4512 /wd4312 /wd4481)
 set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} /MP /W4 /GR- /GS- /Gy-)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
@@ -93,6 +93,7 @@ endif()
 
 # Add subdirectories
 add_subdirectory(libraries/agge)
+add_subdirectory(libraries/freetype2)
 add_subdirectory(libraries/utee)
 
 add_subdirectory(collector/src)
@@ -117,13 +118,16 @@ if((NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86") AND CMAKE_SIZEOF_VOID_P EQUAL 
 endif()
 add_subdirectory(test-helpers/src)
 
-if (WIN32)
+if (WIN32 OR APPLE)
 	add_subdirectory(libraries/wpl)
 	add_subdirectory(libraries/wpl.vs)
 
-	add_subdirectory(injector/src)
-	add_subdirectory(micro-profiler)
 	add_subdirectory(standalone)
 
-	add_subdirectory(injector/tests)
+	if (WIN32)
+		add_subdirectory(injector/src)
+		add_subdirectory(micro-profiler)
+
+		add_subdirectory(injector/tests)
+	endif()
 endif()

@@ -71,10 +71,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="application_win32.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="application.h" />
     <ClInclude Include="ProfilerMainDialog.h" />
     <ClInclude Include="resources\resource.h" />
   </ItemGroup>

@@ -3,12 +3,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
+    <ClCompile Include="application_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
     </ClInclude>
     <ClInclude Include="ProfilerMainDialog.h" />
+    <ClInclude Include="application.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">

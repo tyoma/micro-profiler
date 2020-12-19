@@ -15,6 +15,10 @@ if (WIN32)
 	)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 elseif (APPLE)
+	enable_language(OBJCXX)
+
+	set(CMAKE_OBJCXX_STANDARD 11)
+
 	set(MICROPROFILER_SOURCES ${MICROPROFILER_SOURCES}
 		application_macos.mm
 	)
@@ -27,7 +31,7 @@ target_link_libraries(micro-profiler_standalone frontend.lib ipc logger common w
 if (APPLE)
 	set_target_properties(micro-profiler_standalone PROPERTIES
 		MACOSX_BUNDLE YES
-		MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}info.plist
+		MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/info.plist
 		XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.gevorkyan.org.micro-profiler"
 		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
 		XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"

@@ -20,10 +20,11 @@
 
 #include "application.h"
 
+#include <Cocoa/Cocoa.h>
 #include <common/constants.h>
 #include <common/string.h>
 #include <frontend/factory.h>
-#include <ipc/com/endpoint.h>
+#include <stdexcept>
 #include <wpl/factory.h>
 #include <wpl/freetype2/font_loader.h>
 
@@ -38,7 +39,7 @@ namespace micro_profiler
 		impl();
 		~impl();
 
-		void run()
+		void run();
 		void stop();
 
 		bool schedule(const queue_task &t, timespan defer_by);
@@ -50,7 +51,7 @@ namespace micro_profiler
 	};
 
 
-	impl::impl()
+	application::impl::impl()
 	{
 		_pool = [[NSAutoreleasePool alloc] init];
 		_application = [NSApplication sharedApplication];
@@ -59,13 +60,13 @@ namespace micro_profiler
 		[NSApp activateIgnoringOtherApps:YES];
 	}
 
-	impl::~impl()
+	application::impl::~impl()
 	{	[_pool drain];	}
 
-	void impl::run()
+	void application::impl::run()
 	{	[_application run];	}
 
-	void impl::stop()
+	void application::impl::stop()
 	{	[_application stop:nil];	}
 
 
@@ -77,10 +78,10 @@ namespace micro_profiler
 			make_shared<gcontext::surface_type>(1, 1, 16),
 			make_shared<gcontext::renderer_type>(2),
 			text_engine,
-			make_shared<system_stylesheet>(text_engine),
+			nullptr /*make_shared<system_stylesheet>(text_engine)*/,
 			nullptr,
 			[] {	return timestamp();	},
-			[this] (const queue_task &t, timespan defer_by) {	_impl->schedule(t, defer_by);	},
+			[this] (const queue_task &t, timespan defer_by) {	return _impl->schedule(t, defer_by);	},
 		};
 
 		_factory = wpl::factory::create_default(context);
@@ -91,20 +92,21 @@ namespace micro_profiler
 	{	}
 
 	void application::run()
-	{	[_application run];	}
+	{	_impl->run();	}
 
 	void application::stop()
-	{	[_application stop:nil];	}
+	{	_impl->stop();	}
 
 	void application::clipboard_copy(const string &/*text_utf8*/)
 	{	}
 }
 
 int main()
+try
 {
-	application app;
+	micro_profiler::application app;
 
-	main(app);
+	micro_profiler::main(app);
 	return 0;
 }
 catch (const exception &e)

@@ -18,81 +18,20 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <mt/event.h>
+#pragma once
 
-#include <condition_variable>
+#include <functional>
+#include <memory>
+#include <mt/chrono.h>
 
-using namespace std;
-
-namespace mt
+namespace scheduler
 {
-	class event::impl
+	struct queue
 	{
-	public:
-		impl(bool initial, bool auto_reset)
-			: _state(initial), _auto(auto_reset)
-		{	}
+		typedef std::function<mt::milliseconds ()> clock;
 
-		void wait()
-		{
-			unique_lock<mutex> l(_mtx);
-
-			return _cv.wait(l, [this] {
-				const auto state = _state;
-
-				if (_auto)
-					_state = false;
-				return state;
-			});
-		}
-
-		bool wait(milliseconds timeout)
-		{
-			unique_lock<mutex> l(_mtx);
-			const bool state = _cv.wait_for(l, timeout, [this] { return _state; });
-
-			if (_auto & state)
-				_state = false;
-			return state;
-		}
-
-		void set()
-		{
-			_mtx.lock();
-			_state = true;
-			_cv.notify_all();
-			_mtx.unlock();
-		}
-
-		void reset()
-		{
-			_mtx.lock();
-			_state = false;
-			_mtx.unlock();
-		}
-
-	private:
-		condition_variable _cv;
-		mutex _mtx;
-		bool _state, _auto;
+		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0)) = 0;
 	};
 
-	event::event(bool initial, bool auto_reset)
-		: _impl(new impl(initial, auto_reset))
-	{	}
-
-	event::~event()
-	{	}
-
-	void event::wait()
-	{	_impl->wait();	}
-
-	bool event::wait(milliseconds period)
-	{	return _impl->wait(period);	}
-
-	void event::set()
-	{	_impl->set();	}
-
-	void event::reset()
-	{	_impl->reset();	}
+	std::shared_ptr<queue> create_ui_bound_queue(const queue::clock &clock);
 }

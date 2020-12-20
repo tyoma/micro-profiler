@@ -34,7 +34,7 @@ namespace mt
 		~event();
 
 		void wait();
-		bool wait(milliseconds period);
+		bool wait(milliseconds timeout);
 		void set();
 		void reset();
 

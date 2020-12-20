@@ -18,81 +18,44 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
+#pragma once
+
+#include <functional>
 #include <mt/event.h>
+#include <mt/mutex.h>
+#include <queue>
+#include <utility>
 
-#include <condition_variable>
-
-using namespace std;
-
-namespace mt
+namespace scheduler
 {
-	class event::impl
+	class task_queue
 	{
 	public:
-		impl(bool initial, bool auto_reset)
-			: _state(initial), _auto(auto_reset)
-		{	}
+		typedef std::function<mt::milliseconds ()> clock;
+		typedef std::pair<mt::milliseconds /*execute in*/, bool /*valid*/> wake_up;
 
-		void wait()
-		{
-			unique_lock<mutex> l(_mtx);
+	public:
+		task_queue(const clock &clock_);
 
-			return _cv.wait(l, [this] {
-				const auto state = _state;
-
-				if (_auto)
-					_state = false;
-				return state;
-			});
-		}
-
-		bool wait(milliseconds timeout)
-		{
-			unique_lock<mutex> l(_mtx);
-			const bool state = _cv.wait_for(l, timeout, [this] { return _state; });
-
-			if (_auto & state)
-				_state = false;
-			return state;
-		}
-
-		void set()
-		{
-			_mtx.lock();
-			_state = true;
-			_cv.notify_all();
-			_mtx.unlock();
-		}
-
-		void reset()
-		{
-			_mtx.lock();
-			_state = false;
-			_mtx.unlock();
-		}
+		wake_up schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0));
+		wake_up execute_ready(mt::milliseconds max_duration);
+		void wait();
 
 	private:
-		condition_variable _cv;
-		mutex _mtx;
-		bool _state, _auto;
+		struct deadlined_task
+		{
+			std::function<void ()> task;
+			mt::milliseconds deadline;
+			unsigned long long order;
+
+			bool operator <(const deadlined_task &rhs) const;
+		};
+
+	private:
+		std::priority_queue<deadlined_task> _tasks;
+		clock _clock;
+		mt::event _ready;
+		mt::mutex _mutex;
+		unsigned long long _order;
 	};
-
-	event::event(bool initial, bool auto_reset)
-		: _impl(new impl(initial, auto_reset))
-	{	}
-
-	event::~event()
-	{	}
-
-	void event::wait()
-	{	_impl->wait();	}
-
-	bool event::wait(milliseconds period)
-	{	return _impl->wait(period);	}
-
-	void event::set()
-	{	_impl->set();	}
-
-	void event::reset()
-	{	_impl->reset();	}
 }

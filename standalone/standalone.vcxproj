@@ -64,6 +64,9 @@
     <ProjectReference Include="..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\scheduler\src\scheduler.vcxproj">
+      <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)'=='Win32'">
     <ProjectReference Include="..\injector\src\injector.lib.vcxproj">
@@ -81,6 +84,7 @@
     <ClInclude Include="resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="application_macos.mm" />
     <None Include="resources\appicon.ico" />
     <None Include="resources\micro-profiler-frontend.rgs" />
   </ItemGroup>

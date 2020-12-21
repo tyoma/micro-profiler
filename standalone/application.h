@@ -23,6 +23,11 @@
 #include <memory>
 #include <string>
 
+namespace scheduler
+{
+	struct queue;
+}
+
 namespace wpl
 {
 	class factory;
@@ -37,6 +42,8 @@ namespace micro_profiler
 		~application();
 
 		wpl::factory &get_factory();
+		std::shared_ptr<scheduler::queue> get_ui_queue();
+
 		void run();
 		void stop();
 

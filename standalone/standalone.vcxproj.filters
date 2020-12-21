@@ -24,6 +24,7 @@
     <None Include="resources\micro-profiler-frontend.rgs">
       <Filter>resources</Filter>
     </None>
+    <None Include="application_macos.mm" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler_standalone.rc">

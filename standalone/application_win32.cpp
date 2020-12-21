@@ -28,14 +28,16 @@
 #include <atlcom.h>
 #include <common/constants.h>
 #include <common/string.h>
+#include <common/time.h>
 #include <frontend/factory.h>
 #include <frontend/system_stylesheet.h>
 #include <ipc/com/endpoint.h>
+#include <scheduler/scheduler.h>
+#include <scheduler/task_queue.h>
 #include <windows.h>
 #include <wpl/factory.h>
 #include <wpl/freetype2/font_loader.h>
 #include <wpl/win32/cursor_manager.h>
-#include <wpl/win32/queue.h>
 
 using namespace std;
 using namespace wpl;
@@ -52,6 +54,53 @@ namespace micro_profiler
 
 		~com_initialize()
 		{	::CoUninitialize();	}
+	};
+
+
+	class window_based_queue : public scheduler::queue, noncopyable
+	{
+	public:
+		window_based_queue(const wpl::clock &clock_)
+			: _tasks([clock_] () -> mt::milliseconds {	return mt::milliseconds(clock_());	})
+		{
+			_hwnd.reset(::CreateWindowA("static", 0, WS_OVERLAPPED, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0), &::DestroyWindow);
+			::SetWindowLongPtr(static_cast<HWND>(_hwnd.get()), GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&on_message));
+		}
+
+		virtual void schedule(function<void ()> &&task, mt::milliseconds defer_by) override
+		{	schedule_wakeup(_tasks.schedule(move(task), defer_by));	}
+
+	private:
+		static LRESULT WINAPI on_message(HWND hwnd, UINT message, WPARAM wparam, LPARAM /*lparam*/)
+		{
+			switch (message)
+			{
+			case WM_TIMER:
+				::KillTimer(hwnd, wparam);
+
+			case WM_USER:
+				const auto self = reinterpret_cast<window_based_queue *>(wparam);
+
+				self->schedule_wakeup(self->_tasks.execute_ready(mt::milliseconds(50)));
+			}
+			return 0;
+		}
+
+		void schedule_wakeup(const scheduler::task_queue::wake_up &wakeup)
+		{
+			const auto hwnd = static_cast<HWND>(_hwnd.get());
+
+			if (!wakeup.second)
+				return;
+			if (!wakeup.first.count())
+				::PostMessage(hwnd, WM_USER, reinterpret_cast<WPARAM>(this), 0);
+			else
+				::SetTimer(hwnd, reinterpret_cast<UINT_PTR>(this), static_cast<UINT>(wakeup.first.count()), NULL);
+		}
+
+	private:
+		scheduler::task_queue _tasks;
+		shared_ptr<void> _hwnd;
 	};
 
 
@@ -100,6 +149,8 @@ namespace micro_profiler
 
 	application::application()
 	{
+		const auto clock_ = &clock;
+		const auto queue = make_shared<window_based_queue>(clock_);
 		const auto text_engine = create_text_engine();
 		const factory_context context = {
 			make_shared<gcontext::surface_type>(1, 1, 16),
@@ -107,8 +158,10 @@ namespace micro_profiler
 			text_engine,
 			make_shared<system_stylesheet>(text_engine),
 			make_shared<wpl::win32::cursor_manager>(),
-			&wpl::win32::clock,
-			wpl::win32::queue(),
+			clock_,
+			[queue] (wpl::queue_task t, wpl::timespan defer_by) {
+				return queue->schedule(move(t), mt::milliseconds(defer_by)), true;
+			},
 		};
 
 		_factory = wpl::factory::create_default(context);

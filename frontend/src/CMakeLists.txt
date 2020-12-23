@@ -9,6 +9,7 @@ set(FRONTEND_LIB_SOURCES
 	symbol_resolver.cpp
 	threads_model.cpp
 
+	untested/about_ui.cpp
 	untested/factory.cpp
 	untested/ipc_manager.cpp
 	untested/marshalling_server.cpp
@@ -23,7 +24,6 @@ endif()
 
 if(WIN32)
 	set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
-		untested/about_ui.cpp
 		untested/file.cpp
 		untested/stream.cpp
 		untested/system_stylesheet.cpp

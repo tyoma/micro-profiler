@@ -26,9 +26,6 @@
 #include <wpl/factory.h>
 #include <wpl/types.h>
 
-#include <Windows.h>
-#include <ShellAPI.h>
-
 using namespace std;
 using namespace std::placeholders;
 using namespace wpl;
@@ -38,24 +35,10 @@ namespace micro_profiler
 	namespace
 	{
 		function<int (int)> scale_x()
-		{
-			const shared_ptr<void> hdc(::CreateCompatibleDC(NULL), &::DeleteDC);
-			int scale = ::GetDeviceCaps(static_cast<HDC>(hdc.get()), LOGPIXELSY);
-
-			return [scale] (int value) {
-				return ::MulDiv(value, scale, 96);
-			};
-		}
+		{	return [] (int value) {	return value;	};	}
 
 		function<int (int)> scale_y()
-		{
-			const shared_ptr<void> hdc(::CreateCompatibleDC(NULL), &::DeleteDC);
-			int scale = ::GetDeviceCaps(static_cast<HDC>(hdc.get()), LOGPIXELSX);
-
-			return [scale] (int value) {
-				return ::MulDiv(value, scale, 96);
-			};
-		}
+		{	return [] (int value) {	return value;	};	}
 	}
 
 
@@ -90,5 +73,5 @@ namespace micro_profiler
 	}
 
 	void about_ui::on_link(const wstring &address)
-	{	::ShellExecuteW(NULL, L"open", address.c_str(), NULL, NULL, SW_SHOWNORMAL);	}
+	{	link(address);	}
 }

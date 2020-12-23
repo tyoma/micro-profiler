@@ -44,6 +44,7 @@ namespace micro_profiler
 		std::shared_ptr<wpl::button> _close_button;
 
 	public:
+		wpl::signal<void (const std::wstring &address)> link;
 		wpl::signal<void ()> &close;
 	};
 }

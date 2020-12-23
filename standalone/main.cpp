@@ -36,7 +36,7 @@ namespace micro_profiler
 	struct ui_composite
 	{
 		shared_ptr<standalone_ui> ui;
-		slot_connection connections[4];
+		slot_connection connections[5];
 		shared_ptr<form> about_form;
 	};
 
@@ -52,10 +52,11 @@ namespace micro_profiler
 			composite->connections[0] = composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
 				app2.clipboard_copy(text_utf8);
 			};
-			composite->connections[1] = composite->ui->show_about += [&composite, &factory2] (agge::point<int> center, const shared_ptr<form> &new_form) {
+			composite->connections[1] = composite->ui->show_about += [&app2, &composite, &factory2] (agge::point<int> center, const shared_ptr<form> &new_form) {
 				if (!composite->about_form)
 				{
 					view_location l = { center.x - 200, center.y - 150, 400, 300 };
+					auto &app3 = app2;
 					auto composite2 = composite;
 					auto on_close = [composite2] {
 						composite2->about_form.reset();
@@ -69,7 +70,8 @@ namespace micro_profiler
 					new_form->set_location(l);
 					new_form->set_visible(true);
 					composite->connections[2] = new_form->close += on_close;
-					composite->connections[3] = about->close += on_close;
+					composite->connections[3] = about->link += [&app3] (const wstring &address) {	app3.open_link(address);	};
+					composite->connections[4] = about->close += on_close;
 					composite->about_form = new_form;
 				}
 			};

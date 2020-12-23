@@ -35,7 +35,7 @@
 #include <ipc/com/endpoint.h>
 #include <scheduler/scheduler.h>
 #include <scheduler/task_queue.h>
-#include <windows.h>
+#include <ShellAPI.h>
 #include <wpl/factory.h>
 #include <wpl/freetype2/font_loader.h>
 #include <wpl/win32/cursor_manager.h>
@@ -159,6 +159,9 @@ namespace micro_profiler
 			::CloseClipboard();
 		}
 	}
+
+	void application::open_link(const wstring &address)
+	{	::ShellExecuteW(NULL, L"open", address.c_str(), NULL, NULL, SW_SHOWNORMAL);	}
 }
 
 int WINAPI _tWinMain(HINSTANCE /*instance*/, HINSTANCE /*previous_instance*/, LPTSTR command_line, int /*show_command*/)

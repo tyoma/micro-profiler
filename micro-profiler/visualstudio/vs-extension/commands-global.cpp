@@ -429,6 +429,9 @@ namespace micro_profiler
 
 				o->first = get_factory().create_modal();
 				o->second.push_back(o->first->close += onclose);
+				o->second.push_back(about->link += [] (const wstring &address) {
+					::ShellExecuteW(NULL, L"open", address.c_str(), NULL, NULL, SW_SHOWNORMAL);
+				});
 				o->second.push_back(about->close += onclose);
 
 				o->first->set_root(root);

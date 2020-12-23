@@ -57,15 +57,10 @@
     <ClCompile Include="untested\marshalling_server.cpp" />
     <ClCompile Include="untested\piechart.cpp" />
     <ClCompile Include="untested\stream.cpp" />
-    <ClCompile Include="untested\about_ui.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <ClCompile Include="untested\about_ui.cpp" />
     <ClCompile Include="untested\tables_ui.cpp" />
     <ClCompile Include="untested\ui_queue_win32.cpp">
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
-      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -73,7 +73,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
 		"$<$<CXX_COMPILER_ID:GNU>:-Wl,--no-undefined>"
 		"$<$<CXX_COMPILER_ID:Clang>:-Wl,-undefined,error>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--strip-debug>>"
-		"$<$<CXX_COMPILER_ID:Clang>:$<$<CONFIG:Release>:-Wl,-strip-debug>>"
+		"$<$<CXX_COMPILER_ID:Clang>:$<$<PLATFORM_ID:Apple>:$<$<CONFIG:Release>:-Wl,-strip-debug>>>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--gc-sections>>"
 	)
 endif()
@@ -122,11 +122,12 @@ add_subdirectory(test-helpers/src)
 
 if (WIN32 OR APPLE)
 	add_subdirectory(libraries/wpl)
-	add_subdirectory(libraries/wpl.vs)
 
 	add_subdirectory(standalone)
 
 	if (WIN32)
+		add_subdirectory(libraries/wpl.vs)
+
 		add_subdirectory(injector/src)
 		add_subdirectory(micro-profiler)
 

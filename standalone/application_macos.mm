@@ -26,12 +26,15 @@
 #include <common/string.h>
 #include <common/time.h>
 #include <frontend/factory.h>
+#include <logger/log.h>
 #include <scheduler/scheduler.h>
 #include <scheduler/task_queue.h>
 #include <stdexcept>
 #include <wpl/factory.h>
 #include <wpl/freetype2/font_loader.h>
 #include <wpl/macos/cursor_manager.h>
+
+#define PREAMBLE "UI Queue: "
 
 using namespace std;
 using namespace wpl;
@@ -44,27 +47,52 @@ namespace micro_profiler
 	{
 	public:
 		macos_ui_queue(const wpl::clock &clock_)
-			: _tasks([clock_] () -> mt::milliseconds {	return mt::milliseconds(clock_());	})
+			: _tasks([clock_] () -> mt::milliseconds {	return mt::milliseconds(clock_());	}),
+				_ui_queue(dispatch_get_main_queue())
 		{	}
+		
+		~macos_ui_queue()
+		{	[_ui_queue release];	}
 		
 		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0)) override
 		{	schedule_wakeup(_tasks.schedule(move(task), defer_by));		}
 		
 	private:
+		void execute_ready()
+		try
+		{
+			schedule_wakeup(_tasks.execute_ready(mt::milliseconds(50)));
+		}
+		catch (exception &e)
+		{
+			LOGE(PREAMBLE "exception during scheduled task processing!") % A(_ui_queue) %A(e.what());
+		}
+		catch (...)
+		{
+			LOGE(PREAMBLE "unknown exception during scheduled task processing!") % A(_ui_queue);
+		}
+		
 		void schedule_wakeup(const scheduler::task_queue::wake_up &wakeup)
 		{
-			if (wakeup.second)
+			if (!wakeup.second)
 			{
-				const auto on_fire = ^(NSTimer *) {
-					this->schedule_wakeup(this->_tasks.execute_ready(mt::milliseconds(50)));
-				};
-				
-				[NSTimer scheduledTimerWithTimeInterval:0.001 * wakeup.first.count() repeats:false block:on_fire];
+				return;
+			}
+			else if (const auto interval = 0.001 * wakeup.first.count())
+			{
+				[NSTimer scheduledTimerWithTimeInterval:interval repeats:false	block:^(NSTimer *) {
+					execute_ready();
+				}];
+			}
+			else
+			{
+				dispatch_async(_ui_queue, ^() {	execute_ready();	});
 			}
 		}
 	
 	private:
 		scheduler::task_queue _tasks;
+		dispatch_queue_t _ui_queue;
 	};
 	
 	

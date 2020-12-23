@@ -59,7 +59,7 @@ namespace micro_profiler
 
 	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer_) const
 	{
-		typedef blender_solid_color<simd::blender_solid_color, order_bgra> blender;
+		typedef blender_solid_color<simd::blender_solid_color, platform_pixel_order> blender;
 
 		real_t start = -pi * 0.5f;
 		const index_type selection = _selection ? _selection->index() : npos();

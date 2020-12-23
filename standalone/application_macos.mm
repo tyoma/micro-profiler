@@ -38,6 +38,8 @@ using namespace wpl;
 
 namespace micro_profiler
 {
+	shared_ptr<stylesheet> create_static_stylesheet(gcontext::text_engine_type &text_engine);
+
 	class macos_ui_queue : public scheduler::queue
 	{
 	public:
@@ -116,7 +118,7 @@ namespace micro_profiler
 			make_shared<gcontext::surface_type>(1, 1, 16),
 			make_shared<gcontext::renderer_type>(2),
 			text_engine,
-			nullptr /*make_shared<system_stylesheet>(text_engine)*/,
+			create_static_stylesheet(*text_engine),
 			make_shared<macos::cursor_manager>(),
 			clock_,
 			[queue] (wpl::queue_task t, wpl::timespan defer_by) {

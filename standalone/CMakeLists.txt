@@ -5,6 +5,7 @@ add_definitions(-D_ATL_SINGLE_THREADED)
 set(MICROPROFILER_SOURCES
 	main.cpp
 	ProfilerMainDialog.cpp
+	static_stylesheet.cpp
 )
 
 if (WIN32)

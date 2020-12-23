@@ -77,6 +77,7 @@
     <ClCompile Include="application_win32.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
+    <ClCompile Include="static_stylesheet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application.h" />

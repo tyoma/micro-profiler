@@ -26,7 +26,7 @@ endif()
 
 add_executable(micro-profiler_standalone ${MICROPROFILER_SOURCES})
 
-target_link_libraries(micro-profiler_standalone frontend.lib ipc logger common wpl)
+target_link_libraries(micro-profiler_standalone frontend.lib ipc logger scheduler common wpl)
 
 if (APPLE)
 	set_target_properties(micro-profiler_standalone PROPERTIES

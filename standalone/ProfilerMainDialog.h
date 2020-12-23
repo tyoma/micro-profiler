@@ -43,7 +43,7 @@ namespace micro_profiler
 	class standalone_ui : public frontend_ui, wpl::noncopyable
 	{
 	public:
-		standalone_ui(const wpl::factory &factory, std::shared_ptr<functions_list> s,
+		standalone_ui(std::shared_ptr<hive> configuration, const wpl::factory &factory, std::shared_ptr<functions_list> s,
 			const std::string &executable);
 
 		wpl::signal<void (const std::string &text)> copy_to_buffer;

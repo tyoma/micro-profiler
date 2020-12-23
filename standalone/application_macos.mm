@@ -21,6 +21,7 @@
 #include "application.h"
 
 #include <Cocoa/Cocoa.h>
+#include <common/configuration_file.h>
 #include <common/constants.h>
 #include <common/string.h>
 #include <common/time.h>
@@ -94,6 +95,9 @@ namespace micro_profiler
 
 	application::impl::~impl()
 	{	[_pool drain];	}
+
+	shared_ptr<hive> application::get_configuration()
+	{	return file_hive::open_ini("~/.MicroProfiler/settings.ini");	}
 
 	void application::impl::run()
 	{	[_application run];	}

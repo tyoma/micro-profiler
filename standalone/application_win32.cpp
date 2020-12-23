@@ -29,6 +29,7 @@
 #include <common/constants.h>
 #include <common/string.h>
 #include <common/time.h>
+#include <common/win32/configuration_registry.h>
 #include <frontend/factory.h>
 #include <frontend/system_stylesheet.h>
 #include <frontend/ui_queue.h>
@@ -125,6 +126,9 @@ namespace micro_profiler
 
 	application::~application()
 	{	}
+
+	shared_ptr<hive> application::get_configuration()
+	{	return registry_hive::open_user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}
 
 	void application::run()
 	{

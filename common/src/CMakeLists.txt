@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(COMMON_SOURCES
+	configuration_file.cpp
 	constants.cpp
 	formatting.cpp
 	image_info.cpp
@@ -12,11 +13,11 @@ set(COMMON_SOURCES
 
 if (WIN32)
 	set(COMMON_SOURCES ${COMMON_SOURCES}
+		configuration_registry.cpp
 		file_id_win32.cpp
 		image_info_win32.cpp
 		memory_win32.cpp
 		module_win32.cpp
-		registry_configuration.cpp
 		time_win32.cpp
 	)
 elseif (UNIX)	

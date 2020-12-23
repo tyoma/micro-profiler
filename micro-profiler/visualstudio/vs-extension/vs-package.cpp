@@ -24,10 +24,10 @@
 #include "helpers.h"
 #include "stylesheet.h"
 
-#include <common/configuration.h>
 #include <common/constants.h>
 #include <common/string.h>
 #include <common/time.h>
+#include <common/win32/configuration_registry.h>
 #include <frontend/system_stylesheet.h>
 #include <frontend/factory.h>
 #include <frontend/frontend_manager.h>
@@ -61,9 +61,6 @@ namespace micro_profiler
 			extern const GUID c_guidInstanceCmdSet = guidInstanceCmdSet;
 			extern const GUID UICONTEXT_VCProject = { 0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 } };
 
-			shared_ptr<hive> open_configuration()
-			{	return hive::user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}
-
 
 			class frontend_ui_impl : public frontend_ui
 			{
@@ -88,7 +85,8 @@ namespace micro_profiler
 
 
 		profiler_package::profiler_package()
-			: wpl::vs::ole_command_target(c_guidGlobalCmdSet)
+			: wpl::vs::ole_command_target(c_guidGlobalCmdSet),
+				_configuration(registry_hive::open_user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler"))
 		{	LOG(PREAMBLE "constructed...") % A(this);	}
 
 		profiler_package::~profiler_package()
@@ -142,7 +140,7 @@ namespace micro_profiler
 		{
 			auto frame = get_factory().create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR);
 			auto ui = make_shared<frontend_ui_impl>(frame);
-			auto tui = make_shared<tables_ui>(get_factory(), model, *open_configuration());
+			auto tui = make_shared<tables_ui>(get_factory(), model, *_configuration);
 			const auto root = make_shared<wpl::overlay>();
 				root->add(get_factory().create_control<wpl::control>("background"));
 				root->add(pad_control(tui, 5, 5));

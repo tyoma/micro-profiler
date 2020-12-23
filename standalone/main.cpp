@@ -48,7 +48,7 @@ namespace micro_profiler
 			auto composite = make_shared<ui_composite>();
 			auto &factory2 = factory;
 
-			composite->ui = make_shared<standalone_ui>(factory, model, executable);
+			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, model, executable);
 			composite->connections[0] = composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
 				app2.clipboard_copy(text_utf8);
 			};
@@ -70,7 +70,9 @@ namespace micro_profiler
 					new_form->set_location(l);
 					new_form->set_visible(true);
 					composite->connections[2] = new_form->close += on_close;
-					composite->connections[3] = about->link += [&app3] (const wstring &address) {	app3.open_link(address);	};
+					composite->connections[3] = about->link += [&app3] (const wstring &address) {
+						app3.open_link(address);
+					};
 					composite->connections[4] = about->close += on_close;
 					composite->about_form = new_form;
 				}

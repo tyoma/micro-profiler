@@ -32,6 +32,7 @@ namespace micro_profiler
 	class frontend_manager;
 	struct frontend_ui;
 	class functions_list;
+	struct hive;
 	class ipc_manager;
 
 	namespace integration
@@ -72,6 +73,7 @@ namespace micro_profiler
 
 		private:
 			CComPtr<_DTE> _dte;
+			std::shared_ptr<hive> _configuration;
 			std::shared_ptr<frontend_manager> _frontend_manager;
 			std::shared_ptr<ipc_manager> _ipc_manager;
 			running_objects_t _running_objects;

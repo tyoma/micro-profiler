@@ -20,20 +20,25 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
+#include "configuration.h"
 
 namespace micro_profiler
 {
-	struct hive
+	class file_hive : public hive, public std::enable_shared_from_this<file_hive>
 	{
-		virtual std::shared_ptr<hive> create(const char *name) = 0;
-		virtual std::shared_ptr<const hive> open(const char *name) const = 0;
+	public:
+		static std::shared_ptr<hive> open_ini(const char *path);
 
-		virtual void store(const char *name, int value) = 0;
-		virtual void store(const char *name, const char *value) = 0;
+	private:
+		file_hive(const char *path);
 
-		virtual bool load(const char *name, int &value) const = 0;
-		virtual bool load(const char *name, std::string &value) const = 0;
+		virtual std::shared_ptr<hive> create(const char *name) override;
+		virtual std::shared_ptr<const hive> open(const char *name) const override;
+
+		virtual void store(const char *name, int value) override;
+		virtual void store(const char *name, const char *value) override;
+
+		virtual bool load(const char *name, int &value) const override;
+		virtual bool load(const char *name, std::string &value) const override;
 	};
 }

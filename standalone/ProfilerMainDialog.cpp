@@ -38,9 +38,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		shared_ptr<hive> open_configuration()
-		{	return hive::user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}
-
 		void store(hive &configuration, const string &name, const view_location &r)
 		{
 			configuration.store((name + 'L').c_str(), r.left);
@@ -62,9 +59,9 @@ namespace micro_profiler
 		}
 	}
 
-	standalone_ui::standalone_ui(const factory &factory_, shared_ptr<functions_list> s,
+	standalone_ui::standalone_ui(shared_ptr<hive> configuration, const factory &factory_, shared_ptr<functions_list> s,
 			const string &executable)
-		: _configuration(open_configuration()), _statistics(s), _executable(executable)
+		: _configuration(configuration), _statistics(s), _executable(executable)
 	{
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
@@ -114,6 +111,7 @@ namespace micro_profiler
 
 			if (l.width > 0 && l.height > 0)
 				store(*_configuration, "Placement", l);
+			_statistics_display->save(*_configuration);
 			this->closed();
 		});
 	}

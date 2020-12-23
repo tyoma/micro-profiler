@@ -20,20 +20,32 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
+#include "../configuration.h"
+
+struct HKEY__;
+typedef struct HKEY__ *HKEY;
 
 namespace micro_profiler
 {
-	struct hive
+	class registry_hive : public hive
 	{
-		virtual std::shared_ptr<hive> create(const char *name) = 0;
-		virtual std::shared_ptr<const hive> open(const char *name) const = 0;
+	public:
+		registry_hive(std::shared_ptr<void> key);
 
-		virtual void store(const char *name, int value) = 0;
-		virtual void store(const char *name, const char *value) = 0;
+		static std::shared_ptr<hive> open_user_settings(const char *registry_path);
 
-		virtual bool load(const char *name, int &value) const = 0;
-		virtual bool load(const char *name, std::string &value) const = 0;
+	private:
+		// hive methods
+		virtual std::shared_ptr<hive> create(const char *name) override;
+		virtual std::shared_ptr<const hive> open(const char *name) const override;
+		virtual void store(const char *name, int value) override;
+		virtual void store(const char *name, const char *value) override;
+		virtual bool load(const char *name, int &value) const override;
+		virtual bool load(const char *name, std::string &value) const override;
+
+		operator HKEY() const;
+
+	private:
+		std::shared_ptr<void> _key;
 	};
 }

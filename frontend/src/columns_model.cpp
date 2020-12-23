@@ -74,8 +74,8 @@ namespace micro_profiler
 			if (shared_ptr<const hive> cc = configuration.open(i->id.c_str()))
 			{
 				load_int(*cc, c_width, i->width);
-				cc->load(c_caption, tmp);
-				i->caption = unicode(tmp);
+				if (cc->load(c_caption, tmp))
+					i->caption = unicode(tmp);
 			}
 	}
 	

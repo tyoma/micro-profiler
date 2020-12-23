@@ -35,6 +35,8 @@ namespace wpl
 
 namespace micro_profiler
 {
+	struct hive;
+
 	class application
 	{
 	public:
@@ -43,6 +45,7 @@ namespace micro_profiler
 
 		wpl::factory &get_factory();
 		std::shared_ptr<scheduler::queue> get_ui_queue();
+		std::shared_ptr<hive> get_configuration();
 
 		void run();
 		void stop();

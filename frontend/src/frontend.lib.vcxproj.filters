@@ -49,6 +49,9 @@
     <ClCompile Include="untested\system_stylesheet.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
+    <ClCompile Include="untested\ui_queue_win32.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -74,6 +77,7 @@
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\system_stylesheet.h" />
+    <ClInclude Include="..\ui_queue.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

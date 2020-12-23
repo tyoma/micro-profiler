@@ -121,6 +121,7 @@ namespace micro_profiler
 		};
 
 		_factory = wpl::factory::create_default(context);
+		_queue = queue;
 		setup_factory(*_factory);
 	}
 

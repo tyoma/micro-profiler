@@ -68,22 +68,25 @@ namespace micro_profiler
 		}
 	}
 
-	ipc_manager::ipc_manager(const shared_ptr<ipc::server> &server, port_range range_, const guid_t *com_server_id)
-		: _server(new marshalling_server(server)), _range(range_), _remote_enabled(false), _port(0)
+	ipc_manager::ipc_manager(std::shared_ptr<ipc::server> server, std::shared_ptr<scheduler::queue> queue,
+			port_range range_, const guid_t *com_server_id)
+		: _server(new marshalling_server(server, queue)), _range(range_), _remote_enabled(false), _port(0)
 	{
 		if (com_server_id)
 		{
+#ifdef _WIN32
 			const string endpoint_id = ipc::com_endpoint_id(*com_server_id);
 			shared_ptr<ipc::server> lserver(new logging_server(server, endpoint_id));
 	
 			_com_server_handle = run_server(endpoint_id, lserver);
+#endif
 		}
 
 		_sockets_server_handle = probe_create_server(_server, ipc::localhost, _port, _range);
 	}
 
 	ipc_manager::~ipc_manager()
-	{	_server->stop();	}
+	{	_server->stop(); }
 
 	unsigned short ipc_manager::get_sockets_port() const
 	{	return _sockets_server_handle ? _port : 0;	}

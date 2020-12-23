@@ -1,4 +1,4 @@
-//	Copyright (c) 2011-2020 by Artem A. Gevorkyan (gevorkyan.org)
+//	Copyright (c) 2011-2020 by Artem A. Gevorkyan (gevorkyan.org) and Denis Burenko
 //
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
@@ -20,27 +20,26 @@
 
 #pragma once
 
-#include <common/noncopyable.h>
-#include <ipc/endpoint.h>
+#include <common/types.h>
 #include <scheduler/scheduler.h>
+#include <scheduler/task_queue.h>
 
 namespace micro_profiler
 {
-	class marshalling_window;
-
-	class marshalling_server : public ipc::server, noncopyable
+	class ui_queue : public scheduler::queue, noncopyable
 	{
 	public:
-		marshalling_server(std::shared_ptr<ipc::server> underlying, std::shared_ptr<scheduler::queue> queue);
-		~marshalling_server();
+		ui_queue(const std::function<timestamp_t ()> &clock_);
+		~ui_queue();
 
-		void stop();
-
-	private:
-		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
+		// scheduler::queue methods
+		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by) override;
 
 	private:
-		std::shared_ptr<ipc::server> _underlying;
-		std::shared_ptr<scheduler::queue> _queue;
+		void schedule_wakeup(const scheduler::task_queue::wake_up &wakeup);
+
+	private:
+		scheduler::task_queue _tasks;
+		std::shared_ptr<void> _impl;
 	};
 }

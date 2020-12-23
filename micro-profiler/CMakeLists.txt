@@ -70,7 +70,7 @@ add_library(micro-profiler_frontend SHARED ${MICROPROFILER_SOURCES})
 add_library(micro-profiler.ui SHARED ${MICROPROFILER_UI_SOURCES})
 add_library(micro-profiler.ui.vs10 SHARED ${MICROPROFILER_UI_VS10_SOURCES})
 
-target_link_libraries(micro-profiler_frontend frontend.lib ipc injector logger common wpl.vs wpl version)
+target_link_libraries(micro-profiler_frontend frontend.lib ipc injector logger scheduler common wpl.vs wpl version)
 
 set_target_properties(micro-profiler.ui PROPERTIES
 	LINK_OPTIONS /NOENTRY

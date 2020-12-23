@@ -8,14 +8,16 @@ set(FRONTEND_LIB_SOURCES
 	process_list.cpp
 	symbol_resolver.cpp
 	threads_model.cpp
+
+	untested/factory.cpp
+	untested/ipc_manager.cpp
+	untested/marshalling_server.cpp
+	untested/tables_ui.cpp
 )
 
 if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
 	set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
-		untested/factory.cpp
-		untested/ipc_manager.cpp
 		untested/piechart.cpp
-		untested/tables_ui.cpp
 	)
 endif()
 
@@ -23,9 +25,9 @@ if(WIN32)
 	set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
 		untested/about_ui.cpp
 		untested/file.cpp
-		untested/marshalling_server.cpp
 		untested/stream.cpp
 		untested/system_stylesheet.cpp
+		untested/ui_queue_win32.cpp
 	)
 endif()
 

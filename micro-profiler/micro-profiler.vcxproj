@@ -110,6 +110,9 @@
     <ProjectReference Include="..\libraries\wpl.vs\src\wpl.vs.vcxproj">
       <Project>{120FA1C6-37AA-42CE-B922-346BF91EEC0F}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\scheduler\src\scheduler.vcxproj">
+      <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)'=='Win32'">
     <ProjectReference Include="..\injector\src\injector.lib.vcxproj">

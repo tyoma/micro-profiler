@@ -54,6 +54,7 @@ namespace micro_profiler
 
 	private:
 		std::shared_ptr<wpl::factory> _factory;
+		std::shared_ptr<scheduler::queue> _queue;
 		std::unique_ptr<impl> _impl;
 	};
 
@@ -61,6 +62,9 @@ namespace micro_profiler
 
 	inline wpl::factory &application::get_factory()
 	{	return *_factory;	}
+
+	inline std::shared_ptr<scheduler::queue> application::get_ui_queue()
+	{	return _queue;	}
 
 
 	void main(application &app);

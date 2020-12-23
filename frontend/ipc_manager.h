@@ -24,6 +24,11 @@
 #include <ipc/endpoint.h>
 #include <ipc/misc.h>
 
+namespace scheduler
+{
+	struct queue;
+}
+
 namespace micro_profiler
 {
 	class marshalling_server;
@@ -34,7 +39,8 @@ namespace micro_profiler
 		typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
 
 	public:
-		ipc_manager(const std::shared_ptr<ipc::server> &server, port_range range_, const guid_t *com_server_id);
+		ipc_manager(std::shared_ptr<ipc::server> server, std::shared_ptr<scheduler::queue> queue, port_range range_,
+			const guid_t *com_server_id);
 		~ipc_manager();
 
 		unsigned short get_sockets_port() const;
@@ -49,13 +55,11 @@ namespace micro_profiler
 			ipc::ip_v4 interface_, unsigned short &port, port_range range_);
 
 	private:
+		std::shared_ptr<void> _sockets_server_handle;
 		const std::shared_ptr<marshalling_server> _server;
 		const port_range _range;
-
-		std::shared_ptr<void> _sockets_server_handle;
 		bool _remote_enabled;
 		unsigned short _port;
-
 		std::shared_ptr<void> _com_server_handle;
 	};
 }

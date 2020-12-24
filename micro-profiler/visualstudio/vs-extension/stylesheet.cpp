@@ -104,6 +104,7 @@ namespace micro_profiler
 			set_color("separator", get_syscolor(vsshell, VSCOLOR_DARK));
 			set_color("text", get_syscolor(vsshell, VSCOLOR_PANEL_TEXT));
 			set_color("text.selected", get_syscolor(COLOR_HIGHLIGHTTEXT));
+			set_color("text.header.indicator", semi(get_syscolor(vsshell, VSCOLOR_PANEL_TEXT), 0.5));
 
 			set_value("border", 1.0f);
 			set_value("separator", 1.0f);

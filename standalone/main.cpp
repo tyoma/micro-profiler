@@ -26,6 +26,7 @@
 #include <frontend/ipc_manager.h>
 #include <wpl/factory.h>
 #include <wpl/form.h>
+#include <wpl/helpers.h>
 #include <wpl/layout.h>
 
 using namespace std;
@@ -50,7 +51,6 @@ namespace micro_profiler
 		about_composite about_composite_;
 		auto &factory = app.get_factory();
 		const auto show_about = [&] (agge::point<int> center, const shared_ptr<form> &new_form) {
-			view_location l = { center.x - 200, center.y - 150, 400, 300 };
 			auto on_close = [&] {	about_composite_.about_form.reset();	};
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
@@ -58,7 +58,7 @@ namespace micro_profiler
 				root->add(pad_control(about, 5, 5));
 
 			new_form->set_root(root);
-			new_form->set_location(l);
+			new_form->set_location(create_rect(center.x - 200, center.y - 150, center.x + 200, center.y + 150));
 			new_form->set_visible(true);
 			about_composite_.connections.clear();
 			about_composite_.connections.push_back(new_form->close += on_close);

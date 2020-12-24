@@ -29,6 +29,7 @@
 #include <wpl/controls.h>
 #include <wpl/factory.h>
 #include <wpl/form.h>
+#include <wpl/helpers.h>
 #include <wpl/layout.h>
 
 using namespace std;
@@ -38,23 +39,23 @@ namespace micro_profiler
 {
 	namespace
 	{
-		void store(hive &configuration, const string &name, const view_location &r)
+		void store(hive &configuration, const string &name, const rect_i &r)
 		{
-			configuration.store((name + 'L').c_str(), r.left);
-			configuration.store((name + 'T').c_str(), r.top);
-			configuration.store((name + 'R').c_str(), r.left + r.width);
-			configuration.store((name + 'B').c_str(), r.top + r.height);
+			configuration.store((name + 'L').c_str(), r.x1);
+			configuration.store((name + 'T').c_str(), r.y1);
+			configuration.store((name + 'R').c_str(), r.x2);
+			configuration.store((name + 'B').c_str(), r.y2);
 		}
 
-		bool load(const hive &configuration, const string &name, view_location &r)
+		bool load(const hive &configuration, const string &name, rect_i &r)
 		{
 			bool ok = true;
 			int value = 0;
 
-			ok = ok && configuration.load((name + 'L').c_str(), value), r.left = value;
-			ok = ok && configuration.load((name + 'T').c_str(), value), r.top = value;
-			ok = ok && configuration.load((name + 'R').c_str(), value), r.width = value - r.left;
-			ok = ok && configuration.load((name + 'B').c_str(), value), r.height = value - r.top;
+			ok = ok && configuration.load((name + 'L').c_str(), value), r.x1 = value;
+			ok = ok && configuration.load((name + 'T').c_str(), value), r.y1 = value;
+			ok = ok && configuration.load((name + 'R').c_str(), value), r.x2 = value;
+			ok = ok && configuration.load((name + 'B').c_str(), value), r.y2 = value;
 			return ok;
 		}
 	}
@@ -92,12 +93,12 @@ namespace micro_profiler
 						lnk->set_text(L"<a>Support Developer...</a>");
 						_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {
 							const auto l = _form->get_location();
-							const agge::point<int> center = { l.left + l.width / 2, l.top + l.height / 2 };
+							const agge::point<int> center = { (l.x1 + l.x2) / 2, (l.y1 + l.y2) / 2 };
 
 							show_about(center, _form->create_child());
 						});
 
-		view_location l;
+		rect_i l;
 
 		_form = factory_.create_form();
 		_form->set_root(root);
@@ -107,9 +108,9 @@ namespace micro_profiler
 		_form->set_visible(true);
 
 		_connections.push_back(_form->close += [this] {
-			view_location l = _form->get_location();
+			const auto l = _form->get_location();
 
-			if (l.width > 0 && l.height > 0)
+			if (wpl::width(l) > 0 && wpl::height(l) > 0)
 				store(*_configuration, "Placement", l);
 			_statistics_display->save(*_configuration);
 			this->closed();

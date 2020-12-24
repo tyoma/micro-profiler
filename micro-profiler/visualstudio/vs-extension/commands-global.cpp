@@ -349,7 +349,7 @@ namespace micro_profiler
 
 
 			add_command(cmdidProfileProcess, [this] (unsigned) {
-				wpl::view_location l = { 0, 0, 400, 300 }; // TODO: Center attach form.
+				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center attach form.
 				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
 				auto &running_objects = _running_objects;
 				const auto i = running_objects.insert(running_objects.end(), o);
@@ -414,7 +414,7 @@ namespace micro_profiler
 
 
 			add_command(cmdidSupportDeveloper, [this] (unsigned) {
-				wpl::view_location l = { 0, 0, 400, 300 }; // TODO: Center about form.
+				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center about form.
 				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
 				auto &running_objects = _running_objects;
 				const auto i = running_objects.insert(running_objects.end(), o);

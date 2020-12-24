@@ -97,13 +97,16 @@ namespace micro_profiler
 			set_color("background.selected", get_syscolor(vsshell, VSCOLOR_HIGHLIGHT));
 			set_color("background.header", get_syscolor(vsshell, VSCOLOR_LIGHT));
 			set_color("background.listview", get_syscolor(vsshell, VSCOLOR_LIGHT));
+			set_color("background.listview.even", color::make(0, 0, 0, 0));
 			set_color("background.listview.odd", interpolate(get_syscolor(vsshell, VSCOLOR_LIGHT),
 				get_syscolor(vsshell, VSCOLOR_PANEL_TEXT), 0.03));
 			set_color("border", get_syscolor(vsshell, VSCOLOR_DARK));
+			set_color("separator", get_syscolor(vsshell, VSCOLOR_DARK));
 			set_color("text", get_syscolor(vsshell, VSCOLOR_PANEL_TEXT));
 			set_color("text.selected", get_syscolor(COLOR_HIGHLIGHTTEXT));
 
 			set_value("border", 1.0f);
+			set_value("separator", 1.0f);
 			set_value("padding", 3.0f);
 
 			LOGFONTW lf = {};
@@ -117,7 +120,7 @@ namespace micro_profiler
 				!!lf.lfItalic, agge::font::key::gf_strong);
 
 			set_font("text", text_engine.create_font(fk.typeface.c_str(), fk.height, fk.bold, fk.italic, fk.grid_fit_));
-			set_font("text.header", text_engine.create_font(fk.typeface.c_str(), fk.height, true, fk.italic, fk.grid_fit_));
+			set_font("text.header", text_engine.create_font(fk.typeface.c_str(), fk.height + 1, true, fk.italic, fk.grid_fit_));
 
 			changed();
 		}

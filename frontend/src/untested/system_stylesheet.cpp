@@ -77,6 +77,7 @@ namespace micro_profiler
 		set_color("text", get_system_color(COLOR_BTNTEXT));
 		set_color("text.selected", get_system_color(COLOR_HIGHLIGHTTEXT));
 		set_color("border", semi(get_system_color(COLOR_3DSHADOW), 0.3));
+		set_color("separator", semi(get_system_color(COLOR_3DSHADOW), 0.3));
 
 		set_color("background.listview.even", color::make(0, 0, 0, 0));
 		set_color("background.listview.odd", semi(invert(background), 0.02));
@@ -86,6 +87,7 @@ namespace micro_profiler
 
 		set_value("border", 1.0f);
 		set_value("padding", 3.0f);
+		set_value("separator", 1.0f);
 
 		const auto system_font = get_system_font(*_text_engine);
 		const auto system_font_d = system_font->get_key();

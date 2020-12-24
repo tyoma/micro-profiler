@@ -38,22 +38,28 @@ namespace micro_profiler
 	{
 		const auto stylesheet_ = make_shared<stylesheet_db>();
 
-		stylesheet_->set_color("background", color::make(16, 16, 32));
-		stylesheet_->set_color("text", color::make(255, 255, 255));
-		stylesheet_->set_color("text.selected", color::make(0, 0, 0));
-		stylesheet_->set_color("border", color::make(160, 160, 160));
+		stylesheet_->set_color("background", color::make(42, 43, 44));
+		stylesheet_->set_color("background.selected", color::make(16, 96, 192));
+		stylesheet_->set_color("text", color::make(220, 220, 220));
+		stylesheet_->set_color("text.selected", color::make(220, 220, 220));
+		stylesheet_->set_color("border", color::make(156, 156, 156));
+		stylesheet_->set_color("separator", color::make(64, 65, 67));
 
+		stylesheet_->set_color("background.listview", color::make(27, 28, 29));
 		stylesheet_->set_color("background.listview.even", color::make(0, 0, 0, 0));
-		stylesheet_->set_color("background.listview.odd", color::make(64, 64, 64));
-		stylesheet_->set_color("background.selected", color::make(160, 224, 255));
+		stylesheet_->set_color("background.listview.odd", color::make(38, 39, 40));
 
-		stylesheet_->set_color("background.header.sorted", color::make(32, 32, 32));
+		stylesheet_->set_color("background.header", color::make(39, 40, 42));
+		stylesheet_->set_color("background.header.sorted", color::make(48, 48, 48));
+		stylesheet_->set_color("text.header", color::make(255, 255, 255));
+		stylesheet_->set_color("text.header.indicator", color::make(123, 124, 126));
 
 		stylesheet_->set_value("border", 1.0f);
 		stylesheet_->set_value("padding", 3.0f);
+		stylesheet_->set_value("separator", 1.0f);
 
-		stylesheet_->set_font("text", text_engine.create_font(c_defaultFont, 13, false, false, font::key::gf_strong));
-		stylesheet_->set_font("text.header", text_engine.create_font(c_defaultFont, 14, true, false, font::key::gf_strong));
+		stylesheet_->set_font("text", text_engine.create_font(c_defaultFont, 13, false, false, font::key::gf_vertical));
+		stylesheet_->set_font("text.header", text_engine.create_font(c_defaultFont, 14, true, false, font::key::gf_vertical));
 		return stylesheet_;
 	}
 }

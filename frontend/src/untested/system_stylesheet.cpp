@@ -32,10 +32,25 @@ namespace micro_profiler
 {
 	namespace
 	{
+		font_weight win32_weight_to_agge(long weight)
+		{
+			switch (weight)
+			{
+			case FW_THIN: case FW_EXTRALIGHT: return extra_light;
+			case FW_LIGHT: return light;
+			case FW_MEDIUM: return medium;
+			case FW_SEMIBOLD: return semi_bold;
+			case FW_BOLD: return bold;
+			case FW_EXTRABOLD: return black;
+			case FW_BLACK : return extra_black;
+			case FW_REGULAR: default: return regular;
+			}
+		}
+
 		shared_ptr<agge::font> create(wpl::gcontext::text_engine_type &text_engine, const LOGFONTA &native_font)
 		{
 			return text_engine.create_font(font_descriptor::create(native_font.lfFaceName, -native_font.lfHeight,
-				native_font.lfWeight > FW_NORMAL, !!native_font.lfItalic, hint_vertical));
+				win32_weight_to_agge(native_font.lfWeight), !!native_font.lfItalic, hint_vertical));
 		}
 
 		shared_ptr<agge::font> get_system_font(wpl::gcontext::text_engine_type &text_engine)
@@ -92,6 +107,7 @@ namespace micro_profiler
 		const auto system_font = get_system_font(*_text_engine);
 		auto system_font_d = system_font->get_key();
 
+		system_font_d.weight = semi_bold;
 		system_font_d.height += 1;
 		set_font("text", system_font);
 		set_font("text.header", _text_engine->create_font(system_font_d));

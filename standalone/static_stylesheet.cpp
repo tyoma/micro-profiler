@@ -58,9 +58,9 @@ namespace micro_profiler
 		stylesheet_->set_value("padding", 3.0f);
 		stylesheet_->set_value("separator", 1.0f);
 
-		stylesheet_->set_font("text", text_engine.create_font(font_descriptor::create(c_defaultFont, 13, false, false,
+		stylesheet_->set_font("text", text_engine.create_font(font_descriptor::create(c_defaultFont, 13, regular, false,
 			hint_vertical)));
-		stylesheet_->set_font("text.header", text_engine.create_font(font_descriptor::create(c_defaultFont, 14, true,
+		stylesheet_->set_font("text.header", text_engine.create_font(font_descriptor::create(c_defaultFont, 14, semi_bold,
 			false, hint_vertical)));
 		return stylesheet_;
 	}

@@ -38,6 +38,21 @@ namespace micro_profiler
 		{
 			const GUID c_environment_category = { 0x1F987C00, 0xE7C4, 0x4869, { 0x8A, 0x17, 0x23, 0xFD, 0x60, 0x22, 0x68, 0xB0 } };
 
+			font_weight win32_weight_to_agge(long weight)
+			{
+				switch (weight)
+				{
+				case FW_THIN: case FW_EXTRALIGHT: return extra_light;
+				case FW_LIGHT: return light;
+				case FW_MEDIUM: return medium;
+				case FW_SEMIBOLD: return semi_bold;
+				case FW_BOLD: return bold;
+				case FW_EXTRABOLD: return black;
+				case FW_BLACK : return extra_black;
+				case FW_REGULAR: default: return regular;
+				}
+			}
+
 			color get_syscolor(IVsUIShell &vsshell, VSSYSCOLOREX color_index)
 			{
 				DWORD c;
@@ -119,10 +134,11 @@ namespace micro_profiler
 			fonts_and_colors.CloseCategory();
 
 			auto d = font_descriptor::create(unicode(lf.lfFaceName[0] ? lf.lfFaceName : L"Segoe UI"), abs(lf.lfHeight),
-				lf.lfWeight > FW_NORMAL, !!lf.lfItalic, hint_strong);
+				win32_weight_to_agge(lf.lfWeight), !!lf.lfItalic, hint_vertical);
 
 			set_font("text", text_engine.create_font(d));
 			d.height++;
+			d.weight = semi_bold;
 			set_font("text.header", text_engine.create_font(d));
 
 			changed();

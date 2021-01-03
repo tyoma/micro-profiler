@@ -251,7 +251,7 @@ namespace micro_profiler
 				// INIT
 				columns_model::column columns1[] = {
 					{	"id1", L"first" + style::weight(regular), 0, columns_model::dir_none	},
-					{	"id2", L"second" + style::weight(bold) + L"appendix", 0, columns_model::dir_descending	},
+					{	"id2", L"second" + style::weight(semi_bold) + L"appendix", 0, columns_model::dir_descending	},
 					{	"id3", L"third" + style::weight(regular), 0, columns_model::dir_ascending	},
 				};
 				columns_model::column columns2[] = {
@@ -266,7 +266,7 @@ namespace micro_profiler
 				auto a3 = a;
 
 				caption.set_base_annotation(a);
-				a2.basic.bold = true;
+				a2.basic.weight = semi_bold;
 				a3.basic.family = "verdana";
 
 				// ACT

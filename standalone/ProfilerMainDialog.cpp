@@ -90,7 +90,7 @@ namespace micro_profiler
 					toolbar->add(make_shared< controls::integrated_control<control> >(), -100);
 					toolbar->add(lnk = factory_.create_control<link>("link"), 200);
 						lnk->set_align(text_container::right);
-						lnk->set_text(L"<a>Support Developer...</a>");
+						lnk->set_text(L"<a>Star Me!</a>");
 						_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {
 							const auto l = _form->get_location();
 							const agge::point<int> center = { (l.x1 + l.x2) / 2, (l.y1 + l.y2) / 2 };

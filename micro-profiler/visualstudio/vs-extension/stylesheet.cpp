@@ -22,6 +22,7 @@
 
 #include <agge.text/text_engine.h>
 #include <atlbase.h>
+#include <common/string.h>
 #include <vsshell80.h>
 #include <vsshell100.h>
 
@@ -117,11 +118,12 @@ namespace micro_profiler
 			fonts_and_colors.GetFont(&lf, &fi);
 			fonts_and_colors.CloseCategory();
 
-			font::key fk(lf.lfFaceName[0] ? lf.lfFaceName : L"Segoe UI", abs(lf.lfHeight), lf.lfWeight > FW_NORMAL,
-				!!lf.lfItalic, agge::font::key::gf_strong);
+			auto d = font_descriptor::create(unicode(lf.lfFaceName[0] ? lf.lfFaceName : L"Segoe UI"), abs(lf.lfHeight),
+				lf.lfWeight > FW_NORMAL, !!lf.lfItalic, hint_strong);
 
-			set_font("text", text_engine.create_font(fk.typeface.c_str(), fk.height, fk.bold, fk.italic, fk.grid_fit_));
-			set_font("text.header", text_engine.create_font(fk.typeface.c_str(), fk.height + 1, true, fk.italic, fk.grid_fit_));
+			set_font("text", text_engine.create_font(d));
+			d.height++;
+			set_font("text.header", text_engine.create_font(d));
 
 			changed();
 		}

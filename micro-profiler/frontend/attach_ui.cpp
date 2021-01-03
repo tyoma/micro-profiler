@@ -36,9 +36,11 @@ namespace micro_profiler
 
 	namespace
 	{
+		const auto secondary = agge::style::height(10);
+
 		const columns_model::column c_columns_processes[] = {
-			columns_model::column("ProcessExe", L"Process (exe)", 200, columns_model::dir_ascending),
-			columns_model::column("ProcessID", L"PID", 100, columns_model::dir_ascending),
+			{	"ProcessExe", L"Process\n" + secondary + L"executable", 384, columns_model::dir_ascending	},
+			{	"ProcessID", L"PID", 384, columns_model::dir_ascending	},
 		};
 	}
 

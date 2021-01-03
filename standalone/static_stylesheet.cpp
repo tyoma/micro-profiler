@@ -23,9 +23,9 @@
 #include <wpl/visual.h>
 
 #ifdef _WIN32
-	const auto c_defaultFont = L"Segoe UI";
+	const auto c_defaultFont = "Segoe UI";
 #else
-	const auto c_defaultFont = L"Lucida Grande";
+	const auto c_defaultFont = "Lucida Grande";
 #endif
 
 using namespace agge;
@@ -58,8 +58,10 @@ namespace micro_profiler
 		stylesheet_->set_value("padding", 3.0f);
 		stylesheet_->set_value("separator", 1.0f);
 
-		stylesheet_->set_font("text", text_engine.create_font(c_defaultFont, 13, false, false, font::key::gf_vertical));
-		stylesheet_->set_font("text.header", text_engine.create_font(c_defaultFont, 14, true, false, font::key::gf_vertical));
+		stylesheet_->set_font("text", text_engine.create_font(font_descriptor::create(c_defaultFont, 13, false, false,
+			hint_vertical)));
+		stylesheet_->set_font("text.header", text_engine.create_font(font_descriptor::create(c_defaultFont, 14, true,
+			false, hint_vertical)));
 		return stylesheet_;
 	}
 }

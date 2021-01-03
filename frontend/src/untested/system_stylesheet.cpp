@@ -32,18 +32,18 @@ namespace micro_profiler
 {
 	namespace
 	{
-		shared_ptr<agge::font> create(wpl::gcontext::text_engine_type &text_engine, const LOGFONTW &native_font)
+		shared_ptr<agge::font> create(wpl::gcontext::text_engine_type &text_engine, const LOGFONTA &native_font)
 		{
-			return text_engine.create_font(native_font.lfFaceName, -native_font.lfHeight, native_font.lfWeight > FW_NORMAL,
-				!!native_font.lfItalic, font::key::gf_strong);
+			return text_engine.create_font(font_descriptor::create(native_font.lfFaceName, -native_font.lfHeight,
+				native_font.lfWeight > FW_NORMAL, !!native_font.lfItalic, hint_vertical));
 		}
 
 		shared_ptr<agge::font> get_system_font(wpl::gcontext::text_engine_type &text_engine)
 		{
-			NONCLIENTMETRICSW m = {};
+			NONCLIENTMETRICSA m = {};
 
 			m.cbSize = sizeof(m);
-			if (::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
+			if (::SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
 				return create(text_engine, m.lfMenuFont);
 			throw runtime_error("Cannot retrieve system font!");
 		}
@@ -90,10 +90,10 @@ namespace micro_profiler
 		set_value("separator", 1.0f);
 
 		const auto system_font = get_system_font(*_text_engine);
-		const auto system_font_d = system_font->get_key();
+		auto system_font_d = system_font->get_key();
 
+		system_font_d.height += 1;
 		set_font("text", system_font);
-		set_font("text.header", _text_engine->create_font(system_font_d.typeface.c_str(), system_font_d.height + 1, true,
-			system_font_d.italic, system_font_d.grid_fit_));
+		set_font("text.header", _text_engine->create_font(system_font_d));
 	}
 }

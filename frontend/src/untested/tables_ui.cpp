@@ -11,6 +11,7 @@
 #include <wpl/factory.h>
 #include <wpl/layout.h>
 
+using namespace agge;
 using namespace std;
 using namespace placeholders;
 using namespace wpl;
@@ -19,24 +20,26 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const auto secondary = style::height(10);
+
 		const columns_model::column c_columns_statistics[] = {
-			columns_model::column("Index", L"#", 28, columns_model::dir_none),
-			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
-			columns_model::column("ThreadID", L"Thread #", 64, columns_model::dir_ascending),
-			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
-			columns_model::column("ExclusiveTime", L"Exclusive Time", 48, columns_model::dir_descending),
-			columns_model::column("InclusiveTime", L"Inclusive Time", 48, columns_model::dir_descending),
-			columns_model::column("AvgExclusiveTime", L"Average Exclusive Call Time", 48, columns_model::dir_descending),
-			columns_model::column("AvgInclusiveTime", L"Average Inclusive Call Time", 48, columns_model::dir_descending),
-			columns_model::column("MaxRecursion", L"Max Recursion", 25, columns_model::dir_descending),
-			columns_model::column("MaxCallTime", L"Max Call Time", 121, columns_model::dir_descending),
+			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},
+			{	"Function", L"Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
+			{	"ThreadID", L"Thread\n" + secondary + L"id", 64, columns_model::dir_ascending	},
+			{	"TimesCalled", L"Called\n" + secondary + L"times", 64, columns_model::dir_descending	},
+			{	"ExclusiveTime", L"Exclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
+			{	"InclusiveTime", L"Inclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
+			{	"AvgExclusiveTime", L"Exclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
+			{	"AvgInclusiveTime", L"Inclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
+			{	"MaxRecursion", L"Recursion\n" + secondary + L"max depth", 25, columns_model::dir_descending	},
+			{	"MaxCallTime", L"Inclusive\n" + secondary + L"maximum/call", 121, columns_model::dir_descending	},
 		};
 
 		const columns_model::column c_columns_statistics_parents[] = {
-			columns_model::column("Index", L"#", 28, columns_model::dir_none),
-			columns_model::column("Function", L"Function", 384, columns_model::dir_ascending),
-			columns_model::column("ThreadID", L"Thread #", 64, columns_model::dir_ascending),
-			columns_model::column("TimesCalled", L"Times Called", 64, columns_model::dir_descending),
+			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},
+			{	"Function", L"Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
+			{	"ThreadID", L"Thread\n" + secondary + L"id", 64, columns_model::dir_ascending	},
+			{	"TimesCalled", L"Called\n" + secondary + L"times", 64, columns_model::dir_descending	},
 		};
 	}
 

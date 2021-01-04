@@ -48,25 +48,25 @@ namespace micro_profiler
 	{
 		function<int (int)> xx = scale_x();
 		function<int (int)> yy = scale_y();
-		shared_ptr<wpl::link> link;
+		shared_ptr<wpl::link> link_;
 		shared_ptr<stack> inner_stack;
 
-		add(link = factory_.create_control<wpl::link>("link"), xx(40));
-			link->set_text(L"Please, take any of these steps to support the development of MicroProfiler:");
+		add(link_ = factory_.create_control<wpl::link>("link"), xx(40));
+		link_->set_text(L"Please, take any of these steps to support the development of MicroProfiler:");
 
 		add(pad_control(inner_stack = make_shared<stack>(10, false), xx(10), 0), -100);
-			inner_stack->add(link = factory_.create_control<wpl::link>("link"), yy(20), 1);
-				link->set_text(L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
-				_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
+			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), yy(20), 1);
+			link_->set_text(L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
+				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
-			inner_stack->add(link = factory_.create_control<wpl::link>("link"), yy(20), 2);
-				link->set_text(L"2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
-				_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
+			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), yy(20), 2);
+				link_->set_text(L"2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
+				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
 
-			inner_stack->add(link = factory_.create_control<wpl::link>("link"), yy(20), 3);
-				link->set_text(L"3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
-				_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
+			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), yy(20), 3);
+				link_->set_text(L"3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
+				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
 		add(_close_button, yy(30), 4);
 			_close_button->set_text(L"Thank You!");

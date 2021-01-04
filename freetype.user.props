@@ -5,7 +5,7 @@
 	</ImportGroup>
 	<ItemDefinitionGroup>
 		<ClCompile>
-			<DisableSpecificWarnings>4100;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+	      <TreatWarningAsError>false</TreatWarningAsError>
 		</ClCompile>
 	</ItemDefinitionGroup>
 </Project>

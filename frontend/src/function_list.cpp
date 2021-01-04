@@ -51,8 +51,13 @@ namespace micro_profiler
 		}
 
 		template <typename DestT, typename SrcT>
-		void assign(DestT &dest, SrcT src)
-		{	dest.assign(src.begin(), src.end());	}
+		void assign(DestT &dest, const SrcT &src)
+		{
+			dest.resize(src.size());
+			auto d = dest.begin();
+			for (auto s = src.begin(); s != src.end(); ++d, ++s)
+				*d = *s;
+		}
 
 		class by_name
 		{

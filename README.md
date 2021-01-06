@@ -75,6 +75,12 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v1.8.625
+
+* Major UI rework: statistic lists are now entirely custom, performance (although not measured precisely) significantly improved (meaning, less CPU is busy displaying stats - more available to the profiled app);
+* cross-platformness improved: frontend can now be built on macos;
+* VisualStudio themes are supported in dynamics.
+
 ## v1.7.624
 
 * Significant performance improvement due to changes in the collector's queue. Under a constant high load (lots of small un-inlined functions): up to 35% (x86) and 42% (x64) less of profiler's overhead. Up to 50% less overhead in a short bursts of small functions;

@@ -10,23 +10,14 @@
     <ClCompile Include="setup\environment.cpp">
       <Filter>setup</Filter>
     </ClCompile>
-    <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\commands-global.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\AttachToProcessDialog.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="frontend\inject_profiler.cpp">
       <Filter>frontend</Filter>
-    </ClCompile>
-    <ClCompile Include="visualstudio\vs-extension\async.cpp">
-      <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\helpers.cpp">
       <Filter>visualstudio\vs-extension</Filter>
@@ -35,6 +26,12 @@
       <Filter>visualstudio</Filter>
     </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\vcmodel-impl.cpp">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClCompile>
+    <ClCompile Include="frontend\attach_ui.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="visualstudio\vs-extension\stylesheet.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
   </ItemGroup>
@@ -85,31 +82,7 @@
     <ClInclude Include="setup\environment.h">
       <Filter>setup</Filter>
     </ClInclude>
-    <ClInclude Include="visualstudio\command-target.h">
-      <Filter>visualstudio</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\command.h">
-      <Filter>visualstudio</Filter>
-    </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\helpers.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\vs-pane.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\commands-global.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\commands-instance.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\AttachToProcessDialog.h">
-      <Filter>frontend</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\async.h">
-      <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="visualstudio\vs-extension\com.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\vcmodel.h">
@@ -117,6 +90,15 @@
     </ClInclude>
     <ClInclude Include="visualstudio\dispatch.h">
       <Filter>visualstudio</Filter>
+    </ClInclude>
+    <ClInclude Include="frontend\attach_ui.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\vs-package.h">
+      <Filter>visualstudio\vs-extension</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\stylesheet.h">
+      <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

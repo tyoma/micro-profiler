@@ -22,14 +22,9 @@
 
 #include <common/string.h>
 
-#include <wpl/ui/container.h>
-#include <wpl/ui/layout.h>
-#include <wpl/ui/controls.h>
-#include <wpl/ui/types.h>
-#include <wpl/ui/win32/controls.h>
-
-#include <Windows.h>
-#include <ShellAPI.h>
+#include <wpl/controls.h>
+#include <wpl/factory.h>
+#include <wpl/types.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -39,86 +34,44 @@ namespace micro_profiler
 {
 	namespace
 	{
-		template <typename LayoutManagerT>
-		shared_ptr<ui::link> create_link(ui::container &c, LayoutManagerT &lm, int size, const wstring &text)
-		{
-			shared_ptr<ui::link> link = ui::create_link();
-
-			link->set_text(text);
-			c.add_view(link);
-			lm.add(size);
-			return link;
-		}
-
 		function<int (int)> scale_x()
-		{
-			const shared_ptr<void> hdc(::CreateCompatibleDC(NULL), &::DeleteDC);
-			int scale = ::GetDeviceCaps(static_cast<HDC>(hdc.get()), LOGPIXELSY);
-
-			return [scale] (int value) {
-				return ::MulDiv(value, scale, 96);
-			};
-		}
+		{	return [] (int value) {	return value;	};	}
 
 		function<int (int)> scale_y()
-		{
-			const shared_ptr<void> hdc(::CreateCompatibleDC(NULL), &::DeleteDC);
-			int scale = ::GetDeviceCaps(static_cast<HDC>(hdc.get()), LOGPIXELSX);
-
-			return [scale] (int value) {
-				return ::MulDiv(value, scale, 96);
-			};
-		}
+		{	return [] (int value) {	return value;	};	}
 	}
 
 
-	about_ui::about_ui(const shared_ptr<ui::form> &form)
-		: _form(form)
+	about_ui::about_ui(const wpl::factory &factory_)
+		: stack(scale_y()(5), false), _close_button(static_pointer_cast<button>(factory_.create_control("button"))),
+			close(_close_button->clicked)
 	{
 		function<int (int)> xx = scale_x();
 		function<int (int)> yy = scale_y();
-		ui::font f = { L"Segoe UI", 10 };
+		shared_ptr<wpl::link> link_;
+		shared_ptr<stack> inner_stack;
 
-		_form->set_font(f);
-		_form->set_caption(L"MicroProfiler - Support Developer");
+		add(link_ = factory_.create_control<wpl::link>("link"), xx(40));
+		link_->set_text(L"Please, take any of these steps to support the development of MicroProfiler:");
 
-		shared_ptr<ui::container> c1(new ui::container);
-		c1->set_layout(shared_ptr<ui::spacer>(new ui::spacer(xx(15), yy(15))));
-			shared_ptr<ui::container> c2(new ui::container);
-			shared_ptr<ui::stack> l2(new ui::stack(yy(5), false));
-			c2->set_layout(l2);
-				shared_ptr<ui::container> c3(new ui::container);
-				c3->set_layout(shared_ptr<ui::spacer>(new ui::spacer(xx(10), 0)));
-					shared_ptr<ui::container> c4(new ui::container);
-					shared_ptr<ui::stack> l4(new ui::stack(yy(10), false));
-					c4->set_layout(l4);
-					shared_ptr<ui::link> link;
-					link = create_link(*c2, *l2, yy(40), L"Please, take any of these steps to support the development of MicroProfiler:");
-					link = create_link(*c4, *l4, yy(20), L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
-					_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
-					link = create_link(*c4, *l4, yy(20), L"2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
-					_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
-					link = create_link(*c4, *l4, yy(20), L"3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
-					_connections.push_back(link->clicked += bind(&about_ui::on_link, this, _2));
-				c3->add_view(c4);
-			c2->add_view(c3);
-			l2->add(-100);
-			shared_ptr<ui::button> button = ui::create_button();
-			button->set_text(L"Thank You!");
-			c2->add_view(button);
-			l2->add(yy(30));
-			_connections.push_back(button->clicked += [this] {
-				_form->close();
-			});
-		c1->add_view(c2);
+		add(pad_control(inner_stack = make_shared<stack>(10, false), xx(10), 0), -100);
+			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), yy(20), 1);
+			link_->set_text(L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
+				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
-		ui::view_location l = { 100, 100, xx(380), yy(230) };
+			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), yy(20), 2);
+				link_->set_text(L"2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
+				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
-		_form->set_style(0);
-		_form->set_location(l);
-		_form->set_view(c1);
+
+			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), yy(20), 3);
+				link_->set_text(L"3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
+				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
+
+		add(_close_button, yy(30), 4);
+			_close_button->set_text(L"Thank You!");
 	}
 
 	void about_ui::on_link(const wstring &address)
-	{	::ShellExecuteW(NULL, L"open", address.c_str(), NULL, NULL, SW_SHOWNORMAL);	}
+	{	link(address);	}
 }

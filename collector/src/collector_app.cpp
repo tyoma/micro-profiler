@@ -123,12 +123,12 @@ namespace micro_profiler
 
 		task tasks[] = {
 			task(bind(&statistics_bridge::analyze, _bridge.get()), 10),
-			task(bind(&statistics_bridge::update_frontend, _bridge.get()), 67),
+			task(bind(&statistics_bridge::update_frontend, _bridge.get()), 40),
 		};
 
 		for (mt::milliseconds p(0); !_exit.wait(p); )
 		{
-			timestamp_t expires_at = numeric_limits<timestamp_t>::max();
+			timestamp_t expires_at = (numeric_limits<timestamp_t>::max)();
 
 			t = clock();
 			for (task *i = tasks; i != tasks + sizeof(tasks) / sizeof(task); ++i)

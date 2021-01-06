@@ -43,7 +43,7 @@ namespace micro_profiler
 
 		std::shared_ptr<symbol_resolver> get_resolver() const throw();
 		std::shared_ptr<threads_model> get_threads() const throw();
-		std::shared_ptr< series<double> > get_column_series() const throw();
+		std::shared_ptr< wpl::list_model<double> > get_column_series() const throw();
 
 		template <typename PredicateT>
 		void set_filter(const PredicateT &predicate);
@@ -51,11 +51,11 @@ namespace micro_profiler
 
 		virtual void detach() throw();
 
-		// wpl::ui::table_model methods
+		// wpl::table_model methods
 		virtual index_type get_count() const throw();
 		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
 		virtual void set_order(index_type column, bool ascending);
-		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type row) const;
+		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const;
 
 		// linked_statistics methods
 		virtual function_key get_key(index_type item) const;
@@ -97,7 +97,7 @@ namespace micro_profiler
 	{	return _threads;	}
 
 	template <typename BaseT, typename MapT>
-	std::shared_ptr< series<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
+	std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
 	{	return _view;	}
 
 	template <typename BaseT, typename MapT>
@@ -119,15 +119,15 @@ namespace micro_profiler
 	inline void statistics_model_impl<BaseT, MapT>::detach() throw()
 	{
 		_view.reset();
-		this->invalidated(0);
+		this->invalidate(0);
 	}
 
 	template <typename BaseT, typename MapT>
 	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_count() const throw()
-	{ return _view ? _view->size() : 0u; }
+	{ return _view ? _view->get_count() : 0u; }
 
 	template <typename BaseT, typename MapT>
-	inline std::shared_ptr<const wpl::ui::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
+	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
 	{	return _view->track(row);	}
 
 	template <typename BaseT, typename MapT>
@@ -148,6 +148,6 @@ namespace micro_profiler
 		if (!_view)
 			return;
 		_view->fetch();
-		this->invalidated(_view->size());
+		this->invalidate(_view->get_count());
 	}
 }

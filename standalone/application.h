@@ -22,50 +22,55 @@
 
 #include <memory>
 #include <string>
-#include <wpl/base/concepts.h>
+
+namespace scheduler
+{
+	struct queue;
+}
+
+namespace wpl
+{
+	class factory;
+}
 
 namespace micro_profiler
 {
-	template <typename ContextT>
-	class command : wpl::noncopyable
+	struct hive;
+
+	class application
 	{
 	public:
-		enum { supported = 0x01, enabled = 0x02, visible = 0x04, checked = 0x08 };
-		typedef std::shared_ptr<command> ptr;
-		typedef ContextT context_type;
+		application();
+		~application();
 
-	public:
-		command(int id, bool is_group = false);
+		wpl::factory &get_factory();
+		std::shared_ptr<scheduler::queue> get_ui_queue();
+		std::shared_ptr<hive> get_configuration();
 
-		virtual bool query_state(const ContextT &context, unsigned item, unsigned &flags) const = 0;
-		virtual bool get_name(const ContextT &context, unsigned item, std::wstring &name) const;
-		virtual void exec(ContextT &context, unsigned item) = 0;
+		void run();
+		void stop();
 
-	public:
-		int id;
-		bool is_group;
+		void clipboard_copy(const std::string &text);
+		void open_link(const std::wstring &address);
+
+	private:
+		class impl;
+
+	private:
+		std::shared_ptr<wpl::factory> _factory;
+		std::shared_ptr<scheduler::queue> _queue;
+		std::unique_ptr<impl> _impl;
 	};
 
-	template <typename ContextT, int cmdid, bool is_group = false>
-	struct command_defined : command<ContextT>
-	{
-		command_defined();
-	};
 
 
+	inline wpl::factory &application::get_factory()
+	{	return *_factory;	}
 
-	template <typename ContextT>
-	inline command<ContextT>::command(int id_, bool is_group_)
-		: id(id_), is_group(is_group_)
-	{	}
-
-	template <typename ContextT>
-	inline bool command<ContextT>::get_name(const ContextT &/*context*/, unsigned /*item*/, std::wstring &/*name*/) const
-	{	return false;	}
+	inline std::shared_ptr<scheduler::queue> application::get_ui_queue()
+	{	return _queue;	}
 
 
-	template <typename ContextT, int cmdid, bool is_group>
-	inline command_defined<ContextT, cmdid, is_group>::command_defined()
-		: command<ContextT>(cmdid, is_group)
-	{	}
+	void main(application &app);
 }
+

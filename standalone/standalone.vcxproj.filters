@@ -3,12 +3,15 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
+    <ClCompile Include="application_win32.cpp" />
+    <ClCompile Include="static_stylesheet.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ProfilerMainDialog.h" />
     <ClInclude Include="resources\resource.h">
       <Filter>resources</Filter>
     </ClInclude>
+    <ClInclude Include="ProfilerMainDialog.h" />
+    <ClInclude Include="application.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="resources">
@@ -22,10 +25,14 @@
     <None Include="resources\micro-profiler-frontend.rgs">
       <Filter>resources</Filter>
     </None>
+    <None Include="application_macos.mm" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler_standalone.rc">
       <Filter>resources</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="standalone.manifest" />
   </ItemGroup>
 </Project>

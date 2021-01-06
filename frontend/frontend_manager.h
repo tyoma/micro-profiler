@@ -26,7 +26,7 @@
 #include <memory>
 #include <list>
 #include <string>
-#include <wpl/base/signals.h>
+#include <wpl/signal.h>
 
 namespace micro_profiler
 {
@@ -55,10 +55,10 @@ namespace micro_profiler
 
 		typedef std::function<frontend_ui::ptr(const std::shared_ptr<functions_list> &model,
 			const std::string &executable)> frontend_ui_factory;
-		typedef std::shared_ptr<frontend_manager> ptr;
 
 	public:
-		static std::shared_ptr<frontend_manager> create(const frontend_ui_factory &ui_factory);
+		frontend_manager(const frontend_ui_factory &ui_factory);
+		~frontend_manager();
 
 		void close_all() throw();
 
@@ -81,11 +81,9 @@ namespace micro_profiler
 		};
 
 		typedef std::list<instance_impl> instance_container;
+		typedef std::shared_ptr<instance_container> instance_container_ptr;
 
 	private:
-		frontend_manager(const frontend_ui_factory &ui_factory);
-		~frontend_manager();
-
 		void on_frontend_released(instance_container::iterator i) throw();
 		void on_ready_for_ui(instance_container::iterator i, const std::string &executable,
 			const std::shared_ptr<functions_list> &model);
@@ -93,14 +91,11 @@ namespace micro_profiler
 		void on_ui_activated(instance_container::iterator i);
 		void on_ui_closed(instance_container::iterator i) throw();
 
-		void addref() throw();
-		void release() throw();
-		static void destroy(frontend_manager *p);
+		static void reset_entry(instance_container &instances, instance_container::iterator i);
 
 	private:
-		unsigned _references;
 		frontend_ui_factory _ui_factory;
-		instance_container _instances;
-		const instance_impl *_active_instance;
+		instance_container_ptr _instances;
+		std::shared_ptr<const instance_impl *> _active_instance;
 	};
 }

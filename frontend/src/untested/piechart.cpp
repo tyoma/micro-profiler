@@ -26,12 +26,12 @@
 #include <agge/path.h>
 #include <agge/blenders_simd.h>
 #include <algorithm>
+#include <math.h>
 
 using namespace agge;
 using namespace std;
 using namespace placeholders;
 using namespace wpl;
-using namespace wpl::ui;
 
 namespace micro_profiler
 {
@@ -41,10 +41,13 @@ namespace micro_profiler
 		{	return join(arc(cx, cy, outer_r, start, end), arc(cx, cy, inner_r, end, start));	}
 	}
 
+	shared_ptr<view> piechart::get_view()
+	{	return shared_from_this();	}
+
 	void piechart::set_model(const std::shared_ptr<model_t> &m)
 	{
 		_model = m;
-		_invalidate_connection = _model ? _model->invalidated += bind(&piechart::on_invalidated, this) : slot_connection();
+		_invalidate_connection = _model ? _model->invalidate += bind(&piechart::on_invalidated, this) : slot_connection();
 		on_invalidated();
 	}
 
@@ -56,7 +59,7 @@ namespace micro_profiler
 
 	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer_) const
 	{
-		typedef blender_solid_color<simd::blender_solid_color, order_bgra> blender;
+		typedef blender_solid_color<simd::blender_solid_color, platform_pixel_order> blender;
 
 		real_t start = -pi * 0.5f;
 		const index_type selection = _selection ? _selection->index() : npos();
@@ -76,13 +79,13 @@ namespace micro_profiler
 		}
 	}
 
-	void piechart::resize(unsigned cx, unsigned cy, positioned_native_views &/*nviews*/)
+	void piechart::layout(const placed_view_appender &append_view, const box<int> &box_)
 	{
-		_outer_r = 0.5f * real_t((min)(cx, cy));
+		_outer_r = 0.5f * real_t((min)(box_.w, box_.h));
 		_center.x = _outer_r, _center.y = _outer_r;
 		_outer_r /= (1.0f + _selection_emphasis_k);
 		_inner_r = 0.5f * _outer_r;
-		invalidate(0);
+		integrated_control<wpl::control>::layout(append_view, box_);
 	}
 
 	void piechart::mouse_down(mouse_buttons /*button*/, int /*depressed*/, int x, int y)
@@ -112,9 +115,13 @@ namespace micro_profiler
 		_segments.clear();
 		if (_selection && _selection->index() == npos())
 			_selection.reset();
-		for (i = 0, j = _palette.begin(), count = _model ? _model->size() : 0; i != count; ++i)
+		for (i = 0, j = _palette.begin(), count = _model ? _model->get_count() : 0; i != count; ++i)
 		{
-			segment s = { i, static_cast<real_t>(_model->get_value(i)), 0.0f, };
+			double value;
+
+			_model->get_value(i, value);
+
+			segment s = { i, static_cast<real_t>(value), 0.0f, };
 
 			if (j != _palette.end())
 			{

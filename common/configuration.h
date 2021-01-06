@@ -27,8 +27,6 @@ namespace micro_profiler
 {
 	struct hive
 	{
-		virtual ~hive() { }
-
 		virtual std::shared_ptr<hive> create(const char *name) = 0;
 		virtual std::shared_ptr<const hive> open(const char *name) const = 0;
 
@@ -37,7 +35,5 @@ namespace micro_profiler
 
 		virtual bool load(const char *name, int &value) const = 0;
 		virtual bool load(const char *name, std::string &value) const = 0;
-
-		static std::shared_ptr<hive> user_settings(const char *path);
 	};
 }

@@ -46,10 +46,10 @@ namespace mt
 			});
 		}
 
-		bool wait(milliseconds period)
+		bool wait(milliseconds timeout)
 		{
 			unique_lock<mutex> l(_mtx);
-			const bool state = _cv.wait_for(l, chrono::milliseconds(period), [this] { return _state; });
+			const bool state = _cv.wait_for(l, timeout, [this] { return _state; });
 
 			if (_auto & state)
 				_state = false;

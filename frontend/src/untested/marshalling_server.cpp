@@ -21,32 +21,33 @@
 #include <frontend/marshalling_server.h>
 
 #include <functional>
-#include <windows.h>
+#include <mt/mutex.h>
+#include <vector>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	class marshalling_window
+	class outbound_wrapper : public ipc::channel
 	{
 	public:
-		marshalling_window();
-		~marshalling_window();
+		outbound_wrapper(ipc::channel &underlying);
 
 		void stop();
-		void call(const function<void ()> &f);
 
 	private:
-		static LRESULT CALLBACK wndproc(HWND, UINT message, WPARAM wparam, LPARAM lparam);
+		virtual void disconnect() throw();
+		virtual void message(const_byte_range payload);
 
 	private:
-		HWND _hwnd;
+		mt::mutex _mutex;
+		ipc::channel *_underlying;
 	};
 
 	class marshalling_session : public ipc::channel
 	{
 	public:
-		marshalling_session(const shared_ptr<marshalling_window> &m, ipc::server &underlying, ipc::channel &outbound);
+		marshalling_session(shared_ptr<scheduler::queue> queue, shared_ptr<ipc::server> underlying, ipc::channel &outbound);
 		~marshalling_session();
 
 	private:
@@ -54,96 +55,98 @@ namespace micro_profiler
 		virtual void message(const_byte_range payload);
 
 	private:
-		shared_ptr<marshalling_window> _m;
+		shared_ptr<scheduler::queue> _queue;
 		shared_ptr<ipc::channel> _underlying;
+		shared_ptr<outbound_wrapper> _outbound;
 	};
 
 
 
-	marshalling_window::marshalling_window()
-		: _hwnd(::CreateWindowA("static", 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0))
-	{	::SetWindowLongPtr(_hwnd, GWLP_WNDPROC, (ULONG_PTR)&wndproc);	}
+	outbound_wrapper::outbound_wrapper(ipc::channel &underlying)
+		: _underlying(&underlying)
+	{	}
 
-	marshalling_window::~marshalling_window()
-	{	::DestroyWindow(_hwnd);	}
-
-	void marshalling_window::stop()
+	void outbound_wrapper::stop()
 	{
-		HWND hwnd = _hwnd;
-
-		_hwnd = NULL;
-		::DestroyWindow(hwnd);
+		mt::lock_guard<mt::mutex> lock(_mutex);
+		_underlying = nullptr;
 	}
 
-	void marshalling_window::call(const function<void ()> &f)
-	{	::SendMessage(_hwnd, WM_USER, 0, (LPARAM)&f);	}
-
-	LRESULT CALLBACK marshalling_window::wndproc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
-	try
+	void outbound_wrapper::disconnect() throw()
 	{
-		if (WM_USER == message)
-		{
-			const function<void ()> &f = *(const function<void ()> *)lparam;
-
-			f();
-			return 1;
-		}
-		else
-		{
-			return ::DefWindowProc(hwnd, message, wparam, lparam);
-		}
+		mt::lock_guard<mt::mutex> lock(_mutex);
+		if (_underlying)
+			_underlying->disconnect();
 	}
-	catch (...)
+
+	void outbound_wrapper::message(const_byte_range payload)
 	{
-		return 0;
+		mt::lock_guard<mt::mutex> lock(_mutex);
+		if (_underlying)
+			_underlying->message(payload);
 	}
 
 
-	marshalling_session::marshalling_session(const shared_ptr<marshalling_window> &m, ipc::server &underlying,
-			ipc::channel &outbound)
-		: _m(m)
+	marshalling_session::marshalling_session(shared_ptr<scheduler::queue> queue, shared_ptr<ipc::server> underlying,
+			ipc::channel &outbound_)
+		: _queue(queue), _outbound(make_shared<outbound_wrapper>(outbound_))
 	{
-		_m->call([&] {
-			_underlying = underlying.create_session(outbound);
+		typedef pair<shared_ptr<ipc::channel>, shared_ptr<ipc::channel> > composite_t;
+
+		const auto outbound = _outbound;
+
+		_queue->schedule([this, underlying, outbound] {
+			const auto composite = make_shared<composite_t>(outbound, underlying->create_session(*outbound));
+			_underlying = shared_ptr<ipc::channel>(composite, composite->second.get());
 		});
 	}
 
 	marshalling_session::~marshalling_session()
 	{
-		_m->call([&] {
-			_underlying.reset();
-		});
+		auto underlying = move(_underlying);
+		function<void ()> destroy = [underlying] {	};
+
+		_outbound->stop();
+		_queue->schedule(move(destroy));
 	}
 
 	void marshalling_session::disconnect() throw()
 	{
-		_m->call([&] {
-			_underlying->disconnect();
+		auto underlying = _underlying;
+
+		_queue->schedule([underlying] {
+			if (underlying)
+				underlying->disconnect();
 		});
 	}
 
 	void marshalling_session::message(const_byte_range payload)
 	{
-		_m->call([&] {
-			_underlying->message(payload);
+		auto underlying = _underlying;
+		auto data = make_shared< vector<byte> >(payload.begin(), payload.end());
+
+		_queue->schedule([underlying, data] {
+			if (underlying)
+				underlying->message(const_byte_range(data->data(), data->size()));
 		});
 	}
 
 
-	marshalling_server::marshalling_server(const shared_ptr<ipc::server> &underlying)
-		: _underlying(underlying), _m(new marshalling_window)
+	marshalling_server::marshalling_server(shared_ptr<ipc::server> underlying, shared_ptr<scheduler::queue> queue)
+		: _underlying(underlying), _queue(queue)
 	{	}
 
 	marshalling_server::~marshalling_server()
 	{
-		_m->call([&] {
-			_underlying.reset();
-		});
+		auto underlying = move(_underlying);
+		function<void ()> destroy = [underlying] {	};
+
+		_queue->schedule(move(destroy));
 	}
 
 	void marshalling_server::stop()
-	{	_m->stop();	}
+	{	_underlying = nullptr;	}
 
 	shared_ptr<ipc::channel> marshalling_server::create_session(ipc::channel &outbound)
-	{	return shared_ptr<ipc::channel>(new marshalling_session(_m, *_underlying, outbound));	}
+	{	return shared_ptr<ipc::channel>(new marshalling_session(_queue, _underlying, outbound));	}
 }

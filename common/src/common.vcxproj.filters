@@ -25,9 +25,6 @@
     <ClCompile Include="module_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
-    <ClCompile Include="registry_configuration.cpp">
-      <Filter>src\win32</Filter>
-    </ClCompile>
     <ClCompile Include="time_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
@@ -61,6 +58,12 @@
     <ClCompile Include="file_id_unix.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
+    <ClCompile Include="configuration_registry.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="configuration_file.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -74,6 +77,9 @@
     </Filter>
     <Filter Include="src\unix\elf">
       <UniqueIdentifier>{4f43e400-c8ad-4c11-be84-a49c6cdd7f0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win32">
+      <UniqueIdentifier>{67ad5596-afa5-4f58-bedd-bab5e430cea9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -101,5 +107,9 @@
     <ClInclude Include="..\file_id.h" />
     <ClInclude Include="..\hash.h" />
     <ClInclude Include="..\unordered_map.h" />
+    <ClInclude Include="..\win32\configuration_registry.h">
+      <Filter>win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\configuration_file.h" />
   </ItemGroup>
 </Project>

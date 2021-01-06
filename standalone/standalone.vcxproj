@@ -29,6 +29,8 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(SolutionDir)build.props\agge.include.props" />
+    <Import Project="$(SolutionDir)build.props\freetype.include.props" />
+    <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
   <PropertyGroup>
     <TargetName>micro-profiler_standalone</TargetName>
@@ -40,7 +42,6 @@
       <PreprocessorDefinitions>_ATL_SINGLE_THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalManifestDependencies>type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'</AdditionalManifestDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -48,20 +49,23 @@
     <ProjectReference Include="$(SolutionDir)frontend\src\frontend.lib.vcxproj">
       <Project>{15ad9007-29b9-462f-b7be-a433b6e83ec9}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)libraries\wpl\src\wpl.ui\wpl.ui.vcxproj">
-      <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>
-    </ProjectReference>
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\libraries\agge\src\agge.text\agge.text.vcxproj">
+      <Project>{4b446510-fa62-ad02-51ba-9bde9564ff26}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\logger\src\logger.vcxproj">
       <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
     </ProjectReference>
     <ProjectReference Include="..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\scheduler\src\scheduler.vcxproj">
+      <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)'=='Win32'">
@@ -70,19 +74,26 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="application_win32.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProfilerMainDialog.cpp" />
+    <ClCompile Include="static_stylesheet.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="application.h" />
     <ClInclude Include="ProfilerMainDialog.h" />
     <ClInclude Include="resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="application_macos.mm" />
     <None Include="resources\appicon.ico" />
     <None Include="resources\micro-profiler-frontend.rgs" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler_standalone.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="standalone.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

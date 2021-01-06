@@ -21,11 +21,12 @@
 #pragma once
 
 #include <injector/process.h>
-#include <wpl/ui/models.h>
+#include <vector>
+#include <wpl/models.h>
 
 namespace micro_profiler
 {
-	class process_list : public wpl::ui::table_model
+	class process_list : public wpl::table_model
 	{
 	public:
 		typedef std::function<void (const process::enumerate_callback_t &callback)> process_enumerator_t;

@@ -7,6 +7,7 @@
 	{
 		using std::mutex;
 		using std::lock_guard;
+		using std::unique_lock;
 	}
 #else
 	#include <common/noncopyable.h>
@@ -25,8 +26,8 @@
 		private:
 			unsigned char _mtx_buffer[6 * sizeof(void*)];
 		};
-	
-	
+
+
 		template <typename MutexT>
 		class lock_guard : micro_profiler::noncopyable
 		{
@@ -39,6 +40,22 @@
 		};
 
 
+		template <typename MutexT>
+		class unique_lock : micro_profiler::noncopyable
+		{
+		public:
+			unique_lock(MutexT &mtx);
+			~unique_lock();
+
+			void lock();
+			void unlock();
+
+		private:
+			MutexT &_mutex;
+			bool _locked;
+		};
+
+
 
 		template <typename MutexT>
 		inline lock_guard<MutexT>::lock_guard(MutexT &mtx)
@@ -48,5 +65,29 @@
 		template <typename MutexT>
 		inline lock_guard<MutexT>::~lock_guard()
 		{	_mutex.unlock();	}
+
+
+		template <typename MutexT>
+		inline unique_lock<MutexT>::unique_lock(MutexT &mtx)
+			: _mutex(mtx), _locked(true)
+		{	_mutex.lock();	}
+
+		template <typename MutexT>
+		inline unique_lock<MutexT>::~unique_lock()
+		{	unlock();	}
+
+		template <typename MutexT>
+		inline void unique_lock<MutexT>::lock()
+		{
+			if (!_locked)
+				_mutex.lock(), _locked = true;
+		}
+
+		template <typename MutexT>
+		inline void unique_lock<MutexT>::unlock()
+		{
+			if (_locked)
+				_mutex.unlock(), _locked = false;
+		}
 	}
 #endif

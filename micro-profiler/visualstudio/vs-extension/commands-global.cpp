@@ -18,8 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "commands-global.h"
+#include "vs-package.h"
 
+#include "command-ids.h"
 #include "helpers.h"
 #include "vcmodel.h"
 
@@ -29,7 +30,7 @@
 #include <common/path.h>
 #include <common/string.h>
 #include <frontend/about_ui.h>
-#include <frontend/AttachToProcessDialog.h>
+#include <frontend/attach_ui.h>
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/function_list.h>
@@ -38,7 +39,8 @@
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
-#include <wpl/ui/win32/form.h>
+#include <wpl/form.h>
+#include <wpl/vs/factory.h>
 
 #include <io.h>
 #include <memory>
@@ -232,227 +234,212 @@ namespace micro_profiler
 			}
 		}
 
-
-		bool toggle_profiling::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
+		void profiler_package::init_menu()
 		{
-			state = supported | enabled | visible;
-			if (all_of(ctx.selected_items.begin(), ctx.selected_items.end(), &is_enabled))
-				state |= checked;
-			return true;
-		}
+			add_command(cmdidToggleProfiling, [this] (unsigned) {
+				const auto selected_items = get_selected_items();
+				bool add = !all_of(selected_items.begin(), selected_items.end(), &is_enabled);
 
-		void toggle_profiling::exec(context_type &ctx, unsigned /*item*/)
-		{
-			bool add = !all_of(ctx.selected_items.begin(), ctx.selected_items.end(), &is_enabled);
-
-			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&] (IDispatchPtr dte_project) {
-				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
-				{
-					project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
-						t->visit(instrument(add));
-						t->visit(link_library(add));
-					});
-				}
-			});
-		}
-
-
-		bool remove_profiling_support::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
-		{
-			bool has_it = false;
-
-			state = supported;
-			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [&has_it, this] (IDispatchPtr dte_project) {
-				if (vcmodel::project_ptr p = vcmodel::create(dte_project))
-				{
-					if (find_item_by_filename(*p, c_profiler_library_filename) || find_item_by_filename(*p, c_initializer_cpp_filename))
+				for_each(selected_items.begin(), selected_items.end(), [&] (IDispatchPtr dte_project) {
+					if (vcmodel::project_ptr project = vcmodel::create(dte_project))
 					{
-						has_it = true;
+						project->get_active_configuration()->enum_tools([&] (vcmodel::tool_ptr t) {
+							t->visit(instrument(add));
+							t->visit(link_library(add));
+						});
 					}
-					else
-					{
-						pair<bool, bool> e = make_pair(false, false);
+				});
+			}, false, [this] (unsigned, unsigned &state) -> bool {
+				const auto selected_items = get_selected_items();
+				state = supported | enabled | visible;
+				if (all_of(selected_items.begin(), selected_items.end(), &is_enabled))
+					state |= checked;
+				return true;
+			});
 
-						p->enum_configurations([&] (vcmodel::configuration_ptr cfg) {
-							cfg->enum_tools([&] (vcmodel::tool_ptr t) {
-								t->visit(check_presence(e));
+
+			add_command(cmdidRemoveProfilingSupport, [this] (unsigned) {
+				const auto selected_items = get_selected_items();
+
+				for_each(selected_items.begin(), selected_items.end(), [] (IDispatchPtr dte_project) {
+					if (vcmodel::project_ptr project = vcmodel::create(dte_project))
+					{
+						// For compatibility - remove legacy settings.
+						if (vcmodel::file_ptr f = find_item_by_filename(*project, c_profiler_library_filename))
+							f->remove();
+						if (vcmodel::file_ptr f = find_item_by_filename(*project, c_initializer_cpp_filename))
+							f->remove();
+
+						project->enum_configurations([] (vcmodel::configuration_ptr cfg) {
+							cfg->enum_tools([] (vcmodel::tool_ptr t) {
+								t->visit(instrument(false));
+								t->visit(link_library(false));
 							});
 						});
-						has_it = e.first || e.second;
 					}
-				}
+				});
+			}, false, [this] (unsigned, unsigned &state) -> bool {
+				const auto selected_items = get_selected_items();
+				bool has_it = false;
+
+				state = supported;
+				for_each(selected_items.begin(), selected_items.end(), [&has_it] (IDispatchPtr dte_project) {
+					if (vcmodel::project_ptr p = vcmodel::create(dte_project))
+					{
+						if (find_item_by_filename(*p, c_profiler_library_filename) || find_item_by_filename(*p, c_initializer_cpp_filename))
+						{
+							has_it = true;
+						}
+						else
+						{
+							pair<bool, bool> e = make_pair(false, false);
+
+							p->enum_configurations([&] (vcmodel::configuration_ptr cfg) {
+								cfg->enum_tools([&] (vcmodel::tool_ptr t) {
+									t->visit(check_presence(e));
+								});
+							});
+							has_it = e.first || e.second;
+						}
+					}
+				});
+				state |= has_it ? enabled | visible : 0;
+				return true;
 			});
-			state |= has_it ? enabled | visible : 0;
-			return true;
-		}
-
-		void remove_profiling_support::exec(context_type &ctx, unsigned /*item*/)
-		{
-			for_each(ctx.selected_items.begin(), ctx.selected_items.end(), [] (IDispatchPtr dte_project) {
-				if (vcmodel::project_ptr project = vcmodel::create(dte_project))
-				{
-					// For compatibility - remove legacy settings.
-					if (vcmodel::file_ptr f = find_item_by_filename(*project, c_profiler_library_filename))
-						f->remove();
-					if (vcmodel::file_ptr f = find_item_by_filename(*project, c_initializer_cpp_filename))
-						f->remove();
-
-					project->enum_configurations([] (vcmodel::configuration_ptr cfg) {
-						cfg->enum_tools([] (vcmodel::tool_ptr t) {
-							t->visit(instrument(false));
-							t->visit(link_library(false));
-						});
-					});
-				}
-			});
-		}
 
 
-		bool open_statistics::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
-		{
-			state = enabled | visible | supported;
-			return true;
-		}
-
-		void open_statistics::exec(context_type &ctx, unsigned /*item*/)
-		{
-			string path;
-			auto_ptr<read_stream> s = open_file(get_frame_hwnd(ctx.shell), path);
-
-			if (s.get())
-			{
-				const string ext = extension(*path);
-				strmd::deserializer<read_stream, packer> dser(*s);
-				shared_ptr<functions_list> model = !stricmp(ext.c_str(), ".mpstat3")
-					? snapshot_load<scontext::file_v3>(dser) : snapshot_load<scontext::file_v4>(dser);
-
-				ctx.frontend->load_session(*path, model);
-			}
-		}
-
-
-		bool save_statistics::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
-		{
-			state = visible | supported | (ctx.frontend->get_active() ? enabled : 0);
-			return true;
-		}
-
-		bool save_statistics::get_name(const context_type &ctx, unsigned /*item*/, wstring &name) const
-		{
-			if (const frontend_manager::instance *i = ctx.frontend->get_active())
-				return name = L"Save " + unicode(*i->executable) + L" Statistics As...", true;
-			return false;
-		}
-
-		void save_statistics::exec(context_type &ctx, unsigned /*item*/)
-		{
-			if (const frontend_manager::instance *i = ctx.frontend->get_active())
-			{
-				shared_ptr<functions_list> model = i->model;
-				auto_ptr<write_stream> s = create_file(get_frame_hwnd(ctx.shell), i->executable);
+			add_command(cmdidLoadStatistics, [this] (unsigned) {
+				string path;
+				auto_ptr<read_stream> s = open_file(get_frame_hwnd(get_shell()), path);
 
 				if (s.get())
 				{
-					strmd::serializer<write_stream, packer> ser(*s);
-					snapshot_save<scontext::file_v4>(ser, *model);
+					const string ext = extension(*path);
+					strmd::deserializer<read_stream, packer> dser(*s);
+					shared_ptr<functions_list> model = !stricmp(ext.c_str(), ".mpstat3")
+						? snapshot_load<scontext::file_v3>(dser) : snapshot_load<scontext::file_v4>(dser);
+
+					_frontend_manager->load_session(*path, model);
 				}
-			}
-		}
+			}, false, [this] (unsigned, unsigned &state) -> bool {
+				return state = enabled | visible | supported, true;
+			});
 
 
-		bool profile_process::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
-		{
-			state = 0;//visible | supported | (_dialog ? 0 : enabled);
-			return true;
-		}
+			add_command(cmdidSaveStatistics, [this] (unsigned) {
+				if (const frontend_manager::instance *i = _frontend_manager->get_active())
+				{
+					shared_ptr<functions_list> model = i->model;
+					auto_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), i->executable);
 
-		void profile_process::exec(context_type &ctx, unsigned /*item*/)
-		{
-			shared_ptr<wpl::ui::form> form(wpl::ui::create_form(get_frame_hwnd(ctx.shell)));
-			_dialog.reset(new AttachToProcessDialog(form));
-			_closed_connection = _dialog->closed += [this] {
-				_dialog.reset();
-			};
-		}
-
-
-		bool enable_remote_connections::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
-		{
-			state = visible | supported | enabled | (ctx.ipc_manager->remote_sockets_enabled() ? checked : 0);
-			return true;
-		}
-
-		void enable_remote_connections::exec(context_type &ctx, unsigned /*item*/)
-		{	ctx.ipc_manager->enable_remote_sockets(!ctx.ipc_manager->remote_sockets_enabled());	}
-
-
-		bool port_display::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
-		{	return state = visible | supported, true;	}
-
-		bool port_display::get_name(const context_type &ctx, unsigned /*item*/, wstring &name) const
-		{
-			name.clear();
-			name += L"  TCP Port (autoconfigured): #";
-			itoa<10>(name, ctx.ipc_manager->get_sockets_port());
-			return true;
-		}
-
-		void port_display::exec(context_type &/*ctx*/, unsigned /*item*/)
-		{	}
-
-
-		bool window_activate::query_state(const context_type &ctx, unsigned item, unsigned &state) const
-		{
-			if (item >= ctx.frontend->instances_count())
+					if (s.get())
+					{
+						strmd::serializer<write_stream, packer> ser(*s);
+						snapshot_save<scontext::file_v4>(ser, *model);
+					}
+				}
+			}, false, [this] (unsigned, unsigned &state) -> bool {
+				return state = visible | supported | (_frontend_manager->get_active() ? enabled : 0), true;
+			}, [this] (unsigned /**/, wstring &caption) -> bool {
+				if (_frontend_manager->instances_count())
+					if (const frontend_manager::instance *i = _frontend_manager->get_active())
+						return caption = L"Save " + unicode(*i->executable) + L" Statistics As...", true;
 				return false;
-			if (const frontend_manager::instance *i = ctx.frontend->get_instance(item))
-				state = i->ui ? enabled | visible | supported | (ctx.frontend->get_active() == i ? checked : 0): 0;
-			return true;
-		}
-
-		bool window_activate::get_name(const context_type &ctx, unsigned item, wstring &name) const
-		{
-			const frontend_manager::instance *i = ctx.frontend->get_instance(item);
-			return i ? name = unicode(*i->executable), true : false;
-		}
-
-		void window_activate::exec(context_type &ctx, unsigned item)
-		{
-			if (const frontend_manager::instance *i = ctx.frontend->get_instance(item))
-				i->ui->activate();
-		}
+			});
 
 
-		bool close_all::query_state(const context_type &ctx, unsigned /*item*/, unsigned &state) const
-		{
-			state = (ctx.frontend->instances_count() ? enabled : 0 ) | visible | supported;
-			return true;
-		}
+			add_command(cmdidProfileProcess, [this] (unsigned) {
+				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center attach form.
+				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
+				auto &running_objects = _running_objects;
+				const auto i = running_objects.insert(running_objects.end(), o);
+				const auto onclose = [i, &running_objects] {
+					running_objects.erase(i);
+				};
+				const auto &f = get_factory();
+				const auto root = make_shared<wpl::overlay>();
+					root->add(f.create_control<wpl::control>("background"));
+					const auto attach = make_shared<attach_ui>(f, f.context.queue_);
+					root->add(wpl::pad_control(attach, 5, 5));
 
-		void close_all::exec(context_type &ctx, unsigned /*item*/)
-		{	ctx.frontend->close_all();	}
+				o->first = f.create_modal();
+				o->second.push_back(o->first->close += onclose);
+				o->second.push_back(attach->close += onclose);
+
+				o->first->set_root(root);
+				o->first->set_location(l);
+				o->first->set_visible(true);
+			}, false, [this] (unsigned, unsigned &state) -> bool {
+				return state = visible | supported | enabled, true;
+			});
 
 
-		bool support_developer::query_state(const context_type &/*ctx*/, unsigned /*item*/, unsigned &state) const
-		{	return state = enabled | visible | supported, true;	}
+			add_command(cmdidIPCEnableRemote, [this] (unsigned) {
+				_ipc_manager->enable_remote_sockets(!_ipc_manager->remote_sockets_enabled());
+			}, false, [this] (unsigned, unsigned &state) {
+				return state = visible | supported | enabled | (_ipc_manager->remote_sockets_enabled() ? checked : 0), true;
+			});
 
-		void support_developer::exec(context_type &ctx, unsigned /*item*/)
-		{
-			shared_ptr< pair<shared_ptr<about_ui>, wpl::slot_connection> > o(
-				new pair<shared_ptr<about_ui>, wpl::slot_connection>);
-			HWND hshell = get_frame_hwnd(ctx.shell);
-			shared_ptr<wpl::ui::form> form = wpl::ui::create_form(hshell);
-			o->first.reset(new about_ui(form));
-			global_context::running_objects_t &running_objects = ctx.running_objects;
-			global_context::running_objects_t::iterator i = running_objects.insert(ctx.running_objects.end(), o);
 
-			o->second = form->close += [i, &running_objects, hshell] {
-				::EnableWindow(hshell, TRUE);
-				running_objects.erase(i);
-			};
+			add_command(cmdidIPCSocketPort, [] (unsigned) { }, false, [this] (unsigned, unsigned &state) {
+				return state = visible | supported, true;
+			}, [this] (unsigned, wstring &caption) ->bool {
+				caption.clear();
+				caption += L"  TCP Port (autoconfigured): #";
+				itoa<10>(caption, _ipc_manager->get_sockets_port());
+				return true;
+			});
 
-			::EnableWindow(hshell, FALSE);
-			form->set_visible(true);
+
+			add_command(cmdidWindowActivateDynamic, [this] (unsigned item) {
+				if (const frontend_manager::instance *i = _frontend_manager->get_instance(item))
+					i->ui->activate();
+			}, true, [this] (unsigned item, unsigned &state) ->bool {
+				if (item >= _frontend_manager->instances_count())
+					return false;
+				if (const frontend_manager::instance *i = _frontend_manager->get_instance(item))
+					state = i->ui ? enabled | visible | supported | (_frontend_manager->get_active() == i ? checked : 0) : visible | supported;
+				return true;
+			}, [this] (unsigned item, wstring &caption) -> bool {
+				const frontend_manager::instance *i = _frontend_manager->get_instance(item);
+				return i ? caption = unicode(*i->executable), true : false;
+			});
+
+
+			add_command(cmdidCloseAll, [this] (unsigned) {
+				_frontend_manager->close_all();
+			}, false, [this] (unsigned, unsigned &state) -> bool {
+				return state = (_frontend_manager->instances_count() ? enabled : 0 ) | visible | supported, true;
+			});
+
+
+			add_command(cmdidSupportDeveloper, [this] (unsigned) {
+				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center about form.
+				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
+				auto &running_objects = _running_objects;
+				const auto i = running_objects.insert(running_objects.end(), o);
+				const auto onclose = [i, &running_objects/*, hshell*/] {
+					running_objects.erase(i);
+				};
+				const auto &f = get_factory();
+				const auto root = make_shared<wpl::overlay>();
+					root->add(f.create_control<wpl::control>("background"));
+					const auto about = make_shared<about_ui>(f);
+					root->add(wpl::pad_control(about, 5, 5));
+
+				o->first = get_factory().create_modal();
+				o->second.push_back(o->first->close += onclose);
+				o->second.push_back(about->link += [] (const wstring &address) {
+					::ShellExecuteW(NULL, L"open", address.c_str(), NULL, NULL, SW_SHOWNORMAL);
+				});
+				o->second.push_back(about->close += onclose);
+
+				o->first->set_root(root);
+				o->first->set_location(l);
+				o->first->set_visible(true);
+			}, false, [this] (unsigned, unsigned &state) -> bool {
+				return state = enabled | visible | supported, true;
+			});
 		}
 	}
 }

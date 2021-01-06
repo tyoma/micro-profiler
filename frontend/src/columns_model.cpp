@@ -59,13 +59,13 @@ namespace micro_profiler
 			shared_ptr<hive> cc = configuration.create(i->id.c_str());
 
 			cc->store(c_width, i->width);
-			cc->store(c_caption, unicode(i->caption).c_str());
+//			cc->store(c_caption, unicode(i->caption).c_str());
 		}
 	}
 
 	void columns_model::update(const hive &configuration)
 	{
-		string tmp;
+//		string tmp;
 
 		load_int(configuration, c_order_by, _sort_column);
 		_sort_column = _sort_column < static_cast<index_type>(_columns.size()) ? _sort_column : npos();
@@ -74,22 +74,28 @@ namespace micro_profiler
 			if (shared_ptr<const hive> cc = configuration.open(i->id.c_str()))
 			{
 				load_int(*cc, c_width, i->width);
-				cc->load(c_caption, tmp);
-				i->caption = unicode(tmp);
+//				if (cc->load(c_caption, tmp))
+//					i->caption = unicode(tmp);
 			}
 	}
 	
 	columns_model::index_type columns_model::get_count() const throw()
 	{	return static_cast<index_type>(_columns.size());	}
 
-	void columns_model::get_column(index_type index, wpl::ui::listview::columns_model::column &column) const
-	{	column = _columns[index];	}
-
-	void columns_model::update_column(index_type index, short int width)
-	{	_columns[index].width = width;	}
+	void columns_model::get_value(index_type index, short int &width) const throw()
+	{	width = _columns[index].width;	}
 
 	pair<columns_model::index_type, bool> columns_model::get_sort_order() const throw()
 	{	return make_pair(_sort_column, _sort_ascending);	}
+
+	void columns_model::update_column(index_type index, short int width)
+	{
+		_columns[index].width = width;
+		invalidate();
+	}
+
+	void columns_model::get_caption(index_type index, agge::richtext_t &caption) const
+	{	caption << _columns[index].caption;	}
 
 	void columns_model::activate_column(index_type column_)
 	{

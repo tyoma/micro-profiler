@@ -5,19 +5,9 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
+using namespace agge;
 using namespace std;
 using namespace std::placeholders;
-using namespace wpl::ui;
-
-namespace wpl
-{
-	namespace ui
-	{
-		inline bool operator ==(const listview::columns_model::column &lhs,
-			const listview::columns_model::column &rhs)
-		{	return lhs.caption == rhs.caption && lhs.width == rhs.width;	}
-	}
-}
 
 namespace micro_profiler
 {
@@ -25,18 +15,16 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef vector< pair<listview::columns_model::index_type, bool> > log_t;
+			typedef vector< pair<columns_model::index_type, bool> > log_t;
 
-			void append_log(log_t *log, listview::columns_model::index_type sort_column, bool sort_ascending)
+			void append_log(log_t *log, columns_model::index_type sort_column, bool sort_ascending)
 			{	log->push_back(make_pair(sort_column, sort_ascending));	}
 
-			listview::columns_model::column get_column(const listview::columns_model &cm,
-				columns_model::index_type index)
+			short int get_width(const wpl::columns_model &cm, columns_model::index_type item)
 			{
-				listview::columns_model::column c;
+				short int v;
 
-				cm.get_column(index, c);
-				return c;
+				return cm.get_value(item, v), v;
 			}
 
 			class mock_hive : public hive
@@ -117,28 +105,28 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns[] = {
-					columns_model::column("id1", L"", 0, columns_model::dir_none),
-					columns_model::column("id2", L"", 0, columns_model::dir_descending),
-					columns_model::column("id3", L"", 0, columns_model::dir_descending),
+					{	"id1", L"", 0, columns_model::dir_none	},
+					{	"id2", L"", 0, columns_model::dir_descending	},
+					{	"id3", L"", 0, columns_model::dir_descending	},
 				};
 
 				// ACT
-				shared_ptr<listview::columns_model> cm1(new columns_model(columns, listview::columns_model::npos(),
+				shared_ptr<columns_model> cm1(new columns_model(columns, columns_model::npos(),
 					false));
 
 				// ACT / ASSERT
-				assert_equal(listview::columns_model::npos(), cm1->get_sort_order().first);
+				assert_equal(columns_model::npos(), cm1->get_sort_order().first);
 				assert_is_false(cm1->get_sort_order().second);
 
 				// ACT
-				shared_ptr<listview::columns_model> cm2(new columns_model(columns, 1, false));
+				shared_ptr<columns_model> cm2(new columns_model(columns, 1, false));
 
 				// ACT / ASSERT
 				assert_equal(1, cm2->get_sort_order().first);
 				assert_is_false(cm2->get_sort_order().second);
 
 				// ACT
-				shared_ptr<listview::columns_model> cm3(new columns_model(columns, 2, true));
+				shared_ptr<columns_model> cm3(new columns_model(columns, 2, true));
 
 				// ACT / ASSERT
 				assert_equal(2, cm3->get_sort_order().first);
@@ -150,27 +138,27 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns[] = {
-					columns_model::column("id1", L"", 0, columns_model::dir_none),
-					columns_model::column("id2", L"", 0, columns_model::dir_descending),
-					columns_model::column("id3", L"", 0, columns_model::dir_ascending),
-					columns_model::column("id4", L"", 0, columns_model::dir_descending),
+					{	"id1", L"", 0, columns_model::dir_none	},
+					{	"id2", L"", 0, columns_model::dir_descending	},
+					{	"id3", L"", 0, columns_model::dir_ascending	},
+					{	"id4", L"", 0, columns_model::dir_descending	},
 				};
-				shared_ptr<listview::columns_model> cm;
+				shared_ptr<columns_model> cm;
 				log_t log;
 				wpl::slot_connection slot;
 
 				// ACT
-				cm.reset(new columns_model(columns, listview::columns_model::npos(), false));
+				cm.reset(new columns_model(columns, columns_model::npos(), false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(0);
 
 				// ACT / ASSERT
 				assert_is_empty(log);
 				assert_is_false(cm->get_sort_order().second);
-				assert_equal(listview::columns_model::npos(), cm->get_sort_order().first);
+				assert_equal(columns_model::npos(), cm->get_sort_order().first);
 
 				// ACT
-				cm.reset(new columns_model(columns, listview::columns_model::npos(), false));
+				cm.reset(new columns_model(columns, columns_model::npos(), false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(3);
 
@@ -182,7 +170,7 @@ namespace micro_profiler
 				assert_is_false(log[0].second);
 
 				// ACT
-				cm.reset(new columns_model(columns, listview::columns_model::npos(), false));
+				cm.reset(new columns_model(columns, columns_model::npos(), false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(2);
 
@@ -199,14 +187,14 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns[] = {
-					columns_model::column("id1", L"", 0, columns_model::dir_none),
-					columns_model::column("id2", L"", 0, columns_model::dir_descending),
-					columns_model::column("id3", L"", 0, columns_model::dir_ascending),
-					columns_model::column("id4", L"", 0, columns_model::dir_descending),
+					{	"id1", L"", 0, columns_model::dir_none	},
+					{	"id2", L"", 0, columns_model::dir_descending	},
+					{	"id3", L"", 0, columns_model::dir_ascending	},
+					{	"id4", L"", 0, columns_model::dir_descending	},
 				};
-				shared_ptr<listview::columns_model> cm1(new columns_model(columns, listview::columns_model::npos(),
+				shared_ptr<columns_model> cm1(new columns_model(columns, columns_model::npos(),
 					false));
-				shared_ptr<listview::columns_model> cm2(new columns_model(columns, 2, false));
+				shared_ptr<columns_model> cm2(new columns_model(columns, 2, false));
 				log_t log;
 				wpl::slot_connection slot1, slot2;
 
@@ -240,18 +228,17 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns1[] = {
-					columns_model::column("id1", L"first", 0, columns_model::dir_none),
-					columns_model::column("id2", L"second", 0, columns_model::dir_descending),
-					columns_model::column("id3", L"third", 0, columns_model::dir_ascending),
-					columns_model::column("id4", L"fourth", 0, columns_model::dir_ascending),
+					{	"id1", L"first", 0, columns_model::dir_none	},
+					{	"id2", L"second", 0, columns_model::dir_descending	},
+					{	"id3", L"third", 0, columns_model::dir_ascending	},
+					{	"id4", L"fourth", 0, columns_model::dir_ascending	},
 				};
 				columns_model::column columns2[] = {
-					columns_model::column("id1", L"a first column", 0, columns_model::dir_none),
-					columns_model::column("id2", L"a second column", 0, columns_model::dir_ascending),
+					{	"id1", L"a first column", 0, columns_model::dir_none	},
+					{	"id2", L"a second column", 0, columns_model::dir_ascending	},
 				};
-				shared_ptr<listview::columns_model> cm1(new columns_model(columns1, 0, false));
-				shared_ptr<listview::columns_model> cm2(new columns_model(columns2, 0, false));
-				listview::columns_model::column c;
+				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
+				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
 
 				// ACT / ASSERT
 				assert_equal(4, cm1->get_count());
@@ -263,41 +250,79 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns1[] = {
-					columns_model::column("id1", L"first", 0, columns_model::dir_none),
-					columns_model::column("id2", L"second", 0, columns_model::dir_descending),
-					columns_model::column("id3", L"third", 0, columns_model::dir_ascending),
+					{	"id1", L"first" + style::weight(regular), 0, columns_model::dir_none	},
+					{	"id2", L"second" + style::weight(semi_bold) + L"appendix", 0, columns_model::dir_descending	},
+					{	"id3", L"third" + style::weight(regular), 0, columns_model::dir_ascending	},
 				};
 				columns_model::column columns2[] = {
-					columns_model::column("id1", L"a first column", 0, columns_model::dir_none),
-					columns_model::column("id2", L"a second column", 0, columns_model::dir_ascending),
+					{	"id1", L"a first " + style::family("verdana") + L"column", 0, columns_model::dir_none	},
+					{	"id2", L"a second column" + style::weight(regular), 0, columns_model::dir_ascending	},
 				};
-				shared_ptr<listview::columns_model> cm1(new columns_model(columns1, 0, false));
-				shared_ptr<listview::columns_model> cm2(new columns_model(columns2, 0, false));
-				listview::columns_model::column c;
+				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
+				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
+				richtext_t caption;
+				font_style_annotation a = {	font_descriptor::create("Tahoma", 10)	};
+				auto a2 = a;
+				auto a3 = a;
+
+				caption.set_base_annotation(a);
+				a2.basic.weight = semi_bold;
+				a3.basic.family = "verdana";
 
 				// ACT
-				cm1->get_column(0, c);
+				cm1->get_caption(0, caption);
 
 				// ASSERT
-				assert_equal(L"first", c.caption);
+				assert_equal(1, distance(caption.ranges_begin(), caption.ranges_end()));
+				richtext_t::const_iterator i = caption.ranges_begin();
+				assert_equal(L"first", wstring(i->begin(), i->end()));
+				assert_equal(a.basic, i->get_annotation().basic);
 
 				// ACT
-				cm1->get_column(2, c);
+				caption.clear();
+				cm1->get_caption(1, caption);
 
 				// ASSERT
-				assert_equal(L"third", c.caption);
+				assert_equal(2, distance(caption.ranges_begin(), caption.ranges_end()));
+				i = caption.ranges_begin();
+				assert_equal(L"second", wstring(i->begin(), i->end()));
+				assert_equal(a.basic, i->get_annotation().basic);
+				++i;
+				assert_equal(L"appendix", wstring(i->begin(), i->end()));
+				assert_equal(a2.basic, i->get_annotation().basic);
 
 				// ACT
-				cm2->get_column(0, c);
+				caption.clear();
+				cm1->get_caption(2, caption);
 
 				// ASSERT
-				assert_equal(L"a first column", c.caption);
+				assert_equal(1, distance(caption.ranges_begin(), caption.ranges_end()));
+				i = caption.ranges_begin();
+				assert_equal(L"third", wstring(i->begin(), i->end()));
+				assert_equal(a.basic, i->get_annotation().basic);
 
 				// ACT
-				cm2->get_column(1, c);
+				caption.clear();
+				cm2->get_caption(0, caption);
 
 				// ASSERT
-				assert_equal(L"a second column", c.caption);
+				assert_equal(2, distance(caption.ranges_begin(), caption.ranges_end()));
+				i = caption.ranges_begin();
+				assert_equal(L"a first ", wstring(i->begin(), i->end()));
+				assert_equal(a.basic, i->get_annotation().basic);
+				++i;
+				assert_equal(L"column", wstring(i->begin(), i->end()));
+				assert_equal(a3.basic, i->get_annotation().basic);
+
+				// ACT
+				caption.clear();
+				cm2->get_caption(1, caption);
+
+				// ASSERT
+				assert_equal(1, distance(caption.ranges_begin(), caption.ranges_end()));
+				i = caption.ranges_begin();
+				assert_equal(L"a second column", wstring(i->begin(), i->end()));
+				assert_equal(a.basic, i->get_annotation().basic);
 			}
 
 
@@ -305,28 +330,54 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns[] = {
-					columns_model::column("id1", L"first", 0, columns_model::dir_none),
-					columns_model::column("id2", L"second", 0, columns_model::dir_descending),
-					columns_model::column("id3", L"third", 0, columns_model::dir_ascending),
+					{	"id1", L"first", 0, columns_model::dir_none	},
+					{	"id2", L"second", 0, columns_model::dir_descending	},
+					{	"id3", L"third", 0, columns_model::dir_ascending	},
 				};
-				shared_ptr<listview::columns_model> cm(new columns_model(columns, 0, false));
-				listview::columns_model::column c;
+				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
 
 				// ACT
 				cm->update_column(0, 13);
 
 				// ASSERT
-				assert_equal(13, get_column(*cm, 0).width);
-				assert_equal(0, get_column(*cm, 1).width);
-				assert_equal(0, get_column(*cm, 2).width);
+				assert_equal(13, get_width(*cm, 0));
+				assert_equal(0, get_width(*cm, 1));
+				assert_equal(0, get_width(*cm, 2));
 
 				// ACT
 				cm->update_column(1, 17);
 
 				// ASSERT
-				assert_equal(13, get_column(*cm, 0).width);
-				assert_equal(17, get_column(*cm, 1).width);
-				assert_equal(0, get_column(*cm, 2).width);
+				assert_equal(13, get_width(*cm, 0));
+				assert_equal(17, get_width(*cm, 1));
+				assert_equal(0, get_width(*cm, 2));
+			}
+
+
+			test( ModelUpdateInvalidatesIt )
+			{
+				// INIT
+				auto invalidations = 0;
+				columns_model::column columns[] = {
+					{	"id1", L"first", 0, columns_model::dir_none	},
+					{	"id2", L"second", 0, columns_model::dir_descending	},
+					{	"id3", L"third", 0, columns_model::dir_ascending	},
+				};
+				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
+				auto c = cm->invalidate += [&] { invalidations++; };
+
+				// ACT
+				cm->update_column(0, 15);
+
+				// ASSERT
+				assert_equal(1, invalidations);
+
+				// ACT
+				cm->update_column(2, 3);
+				cm->update_column(1, 13);
+
+				// ASSERT
+				assert_equal(3, invalidations);
 			}
 
 
@@ -334,17 +385,17 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns1[] = {
-					columns_model::column("id1", L"Index", 1, columns_model::dir_none),
-					columns_model::column("id2", L"Function", 2, columns_model::dir_descending),
-					columns_model::column("id3", L"Exclusive Time", 3, columns_model::dir_ascending),
-					columns_model::column("fourth", L"Inclusive Time", 4, columns_model::dir_ascending),
+					{	"id1", L"Index", 1, columns_model::dir_none	},
+					{	"id2", L"Function", 2, columns_model::dir_descending	},
+					{	"id3", L"Exclusive Time", 3, columns_model::dir_ascending	},
+					{	"fourth", L"Inclusive Time", 4, columns_model::dir_ascending	},
 				};
 				columns_model::column columns2[] = {
-					columns_model::column("id1", L"a first column", 191, columns_model::dir_none),
-					columns_model::column("id2", L"a second column", 171, columns_model::dir_ascending),
+					{	"id1", L"a first column", 191, columns_model::dir_none	},
+					{	"id2", L"a second column", 171, columns_model::dir_ascending	},
 				};
 				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
-				shared_ptr<columns_model> cm2(new columns_model(columns2, listview::columns_model::npos(), false));
+				shared_ptr<columns_model> cm2(new columns_model(columns2, columns_model::npos(), false));
 				shared_ptr<columns_model> cm3(new columns_model(columns2, 1, true));
 
 				map<string, int> int_values;
@@ -363,15 +414,15 @@ namespace micro_profiler
 					make_pair("id2/Width", 2),
 					make_pair("id3/Width", 3),
 				};
-				pair<const string, string> rstrings1[] = {
-					make_pair("fourth/Caption", "Inclusive Time"),
-					make_pair("id1/Caption", "Index"),
-					make_pair("id2/Caption", "Function"),
-					make_pair("id3/Caption", "Exclusive Time"),
-				};
+//				pair<const string, string> rstrings1[] = {
+//					make_pair("fourth/Caption", "Inclusive Time"),
+//					make_pair("id1/Caption", "Index"),
+//					make_pair("id2/Caption", "Function"),
+//					make_pair("id3/Caption", "Exclusive Time"),
+//				};
 
 				assert_equal(rints1, int_values);
-				assert_equal(rstrings1, str_values);
+//				assert_equal(rstrings1, str_values);
 
 				// INIT
 				int_values.clear();
@@ -387,13 +438,13 @@ namespace micro_profiler
 					make_pair("id1/Width", 191),
 					make_pair("id2/Width", 171),
 				};
-				pair<const string, string> rstrings2[] = {
-					make_pair("id1/Caption", "a first column"),
-					make_pair("id2/Caption", "a second column"),
-				};
+//				pair<const string, string> rstrings2[] = {
+//					make_pair("id1/Caption", "a first column"),
+//					make_pair("id2/Caption", "a second column"),
+//				};
 
 				assert_equal(rints2, int_values);
-				assert_equal(rstrings2, str_values);
+//				assert_equal(rstrings2, str_values);
 
 				// INIT
 				int_values.clear();
@@ -411,7 +462,7 @@ namespace micro_profiler
 				};
 
 				assert_equal(rints3, int_values);
-				assert_equal(rstrings2, str_values);
+//				assert_equal(rstrings2, str_values);
 			}
 
 
@@ -419,13 +470,13 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns1[] = {
-					columns_model::column("id1", L"", 1, columns_model::dir_none),
-					columns_model::column("id2", L"", 2, columns_model::dir_ascending),
+					{	"id1", L"", 1, columns_model::dir_none	},
+					{	"id2", L"", 2, columns_model::dir_ascending	},
 				};
 				columns_model::column columns2[] = {
-					columns_model::column("col1", L"", 0, columns_model::dir_none),
-					columns_model::column("col2", L"", 0, columns_model::dir_ascending),
-					columns_model::column("col3", L"", 0, columns_model::dir_ascending),
+					{	"col1", L"", 0, columns_model::dir_none	},
+					{	"col2", L"", 0, columns_model::dir_ascending	},
+					{	"col3", L"", 0, columns_model::dir_ascending	},
 				};
 				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
 				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
@@ -445,9 +496,9 @@ namespace micro_profiler
 				cm1->update(*h);
 
 				// ASSERT
-				assert_equal(make_pair(static_cast<listview::columns_model::index_type>(1), true), cm1->get_sort_order());
-				assert_equal(listview::columns_model::column(L"Contract", 20), get_column(*cm1, 0));
-				assert_equal(listview::columns_model::column(L"Price", 31), get_column(*cm1, 1));
+				assert_equal(make_pair(static_cast<columns_model::index_type>(1), true), cm1->get_sort_order());
+				assert_equal(20, get_width(*cm1, 0));
+				assert_equal(31, get_width(*cm1, 1));
 
 				// INIT
 				int_values["OrderBy"] = 2;
@@ -463,10 +514,10 @@ namespace micro_profiler
 				cm2->update(*h);
 
 				// ASSERT
-				assert_equal(make_pair(static_cast<listview::columns_model::index_type>(2), false), cm2->get_sort_order());
-				assert_equal(listview::columns_model::column(L"Contract", 20), get_column(*cm2, 0));
-				assert_equal(listview::columns_model::column(L"Kind", 20), get_column(*cm2, 1));
-				assert_equal(listview::columns_model::column(L"Price", 53), get_column(*cm2, 2));
+				assert_equal(make_pair(static_cast<columns_model::index_type>(2), false), cm2->get_sort_order());
+				assert_equal(20, get_width(*cm2, 0));
+				assert_equal(20, get_width(*cm2, 1));
+				assert_equal(53, get_width(*cm2, 2));
 			}
 
 
@@ -474,9 +525,9 @@ namespace micro_profiler
 			{
 				// INIT
 				columns_model::column columns[] = {
-					columns_model::column("col1", L"", 13, columns_model::dir_none),
-					columns_model::column("col2", L"", 17, columns_model::dir_ascending),
-					columns_model::column("col3", L"", 31, columns_model::dir_ascending),
+					{	"col1", L"", 13, columns_model::dir_none	},
+					{	"col2", L"", 17, columns_model::dir_ascending	},
+					{	"col3", L"", 31, columns_model::dir_ascending	},
 				};
 				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
 
@@ -495,9 +546,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(make_pair(columns_model::npos(), false), cm->get_sort_order());
-				assert_equal(listview::columns_model::column(L"Contract", 233), get_column(*cm, 0));
-				assert_equal(listview::columns_model::column(L"", 17), get_column(*cm, 1));
-				assert_equal(listview::columns_model::column(L"Price", 31), get_column(*cm, 2));
+				assert_equal(233, get_width(*cm, 0));
+				assert_equal(17, get_width(*cm, 1));
+				assert_equal(31, get_width(*cm, 2));
 			}
 		end_test_suite
 	}

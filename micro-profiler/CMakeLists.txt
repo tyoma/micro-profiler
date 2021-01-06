@@ -1,15 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 
-set(VSSDKROOT $ENV{VSSDK100Install}/VisualStudioIntegration)
-set(VSSDKINCLUDE ${VSSDKROOT}/Common/Inc)
-set(VSSDKLIB ${VSSDKROOT}/Common/Lib)
-set(VSSDKBIN ${VSSDKROOT}/Tools/Bin)
+include(vssdk)
+
 set(MP_INTDIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
 set(MP_OUTDIR $<TARGET_FILE_DIR:micro-profiler_frontend>)
 
 include_directories(.)
-include_directories(compat)
-include_directories(${VSSDKINCLUDE})
 include_directories(${MP_INTDIR})
 
 add_custom_command(OUTPUT ${MP_INTDIR}/commands.cto
@@ -40,20 +36,19 @@ add_custom_command(OUTPUT micro-profiler.pkgdef
 )
 
 set(MICROPROFILER_SOURCES
-	frontend/AttachToProcessDialog.cpp
+	frontend/attach_ui.cpp
 	frontend/inject_profiler.cpp
 	module/main.cpp
 	module/micro-profiler.def
 	resources/micro-profiler_ui.rc
 	setup/environment.cpp
 	visualstudio/dispatch.cpp
-	visualstudio/vs-extension/async.cpp
 	visualstudio/vs-extension/commands-global.cpp
 	visualstudio/vs-extension/commands-instance.cpp
 	visualstudio/vs-extension/helpers.cpp
+	visualstudio/vs-extension/stylesheet.cpp
 	visualstudio/vs-extension/vcmodel-impl.cpp
 	visualstudio/vs-extension/vs-package.cpp
-	visualstudio/vs-extension/vs-pane.cpp
 
 	micro-profiler.pkgdef
 	${MP_INTDIR}/commands.cto
@@ -75,7 +70,7 @@ add_library(micro-profiler_frontend SHARED ${MICROPROFILER_SOURCES})
 add_library(micro-profiler.ui SHARED ${MICROPROFILER_UI_SOURCES})
 add_library(micro-profiler.ui.vs10 SHARED ${MICROPROFILER_UI_VS10_SOURCES})
 
-target_link_libraries(micro-profiler_frontend frontend.lib ipc injector logger common wpl.ui version)
+target_link_libraries(micro-profiler_frontend frontend.lib ipc injector logger scheduler common wpl.vs wpl version)
 
 set_target_properties(micro-profiler.ui PROPERTIES
 	LINK_OPTIONS /NOENTRY

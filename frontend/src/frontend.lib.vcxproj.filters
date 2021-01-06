@@ -43,6 +43,15 @@
     <ClCompile Include="threads_model.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="untested\factory.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\system_stylesheet.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\ui_queue_win32.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -51,7 +60,6 @@
     <ClInclude Include="..\columns_model.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
-    <ClInclude Include="..\series.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\file.h" />
@@ -67,6 +75,9 @@
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\serialization_context.h" />
+    <ClInclude Include="..\factory.h" />
+    <ClInclude Include="..\system_stylesheet.h" />
+    <ClInclude Include="..\ui_queue.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

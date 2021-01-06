@@ -18,27 +18,28 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include "async.h"
-#include "com.h"
-#include "commands-global.h"
+#include "vs-package.h"
+
 #include "command-ids.h"
 #include "helpers.h"
-#include "vs-pane.h"
+#include "stylesheet.h"
 
 #include <common/constants.h>
 #include <common/string.h>
+#include <common/time.h>
+#include <common/win32/configuration_registry.h>
+#include <frontend/system_stylesheet.h>
+#include <frontend/factory.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/tables_ui.h>
+#include <frontend/ui_queue.h>
 #include <logger/log.h>
-#include <resources/resource.h>
 #include <setup/environment.h>
-#include <visualstudio/command-target.h>
 #include <visualstudio/dispatch.h>
-
-#include <atlcom.h>
-#include <dte.h>
-#include <vsshell.h>
-#include <vsshell140.h>
+#include <wpl/layout.h>
+#include <wpl/vs/factory.h>
+#include <wpl/vs/pane.h>
 
 #define PREAMBLE "VS Package: "
 
@@ -49,198 +50,138 @@ namespace micro_profiler
 {
 	namespace integration
 	{
+		extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
+
+		void init_instance_menu(wpl::vs::command_target &target, const shared_ptr<functions_list> &model,
+			const string &executable);
+
 		namespace
 		{
-			extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
 			extern const GUID c_guidGlobalCmdSet = guidGlobalCmdSet;
+			extern const GUID c_guidInstanceCmdSet = guidInstanceCmdSet;
 			extern const GUID UICONTEXT_VCProject = { 0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 } };
 
-			typedef command<global_context> global_command;
 
-			global_command::ptr g_commands[] = {
-				global_command::ptr(new toggle_profiling),
-				global_command::ptr(new remove_profiling_support),
-
-				global_command::ptr(new open_statistics),
-				global_command::ptr(new save_statistics),
-				global_command::ptr(new enable_remote_connections),
-				global_command::ptr(new port_display),
-				global_command::ptr(new profile_process),
-				global_command::ptr(new window_activate),
-				global_command::ptr(new close_all),
-
-				global_command::ptr(new support_developer),
-			};
-
-			template <typename T>
-			CComPtr<IVsTask> obtain_service(IAsyncServiceProvider *sp, const function<void (const CComPtr<T> &p)> &onready,
-				const GUID &serviceid = __uuidof(T))
+			class frontend_ui_impl : public frontend_ui
 			{
-				CComPtr<IVsTask> acquisition;
-
-				if (S_OK != sp->QueryServiceAsync(serviceid, &acquisition))
+			public:
+				frontend_ui_impl(shared_ptr<wpl::vs::pane> frame)
+					: _frame(frame)
 				{
-					LOGE(PREAMBLE "failed to obtain a service!");
-					throw runtime_error("Cannot begin acquistion of a service!");
+					connections[0] = _frame->close += [this] { closed(); };
+					connections[1] = _frame->activated += [this] { activated(); };
 				}
-				return async::when_complete(acquisition, VSTC_UITHREAD_NORMAL_PRIORITY,
-					[onready] (_variant_t r) -> _variant_t {
 
-					r.ChangeType(VT_UNKNOWN);
-					onready(CComQIPtr<T>(r.punkVal));
-					return _variant_t();
-				});
-			}
+				virtual void activate()
+				{	_frame->activate();	}
+
+			public:
+				wpl::slot_connection connections[3];
+
+			private:
+				shared_ptr<wpl::vs::pane> _frame;
+			};
 		}
 
 
-		class profiler_package : public freethreaded< CComObjectRootEx<CComMultiThreadModel> >,
-			public CComCoClass<profiler_package, &c_guidMicroProfilerPkg>,
-			public IVsPackage,
-			public IAsyncLoadablePackageInitialize,
-			public CommandTarget<global_context, &c_guidGlobalCmdSet>
+		profiler_package::profiler_package()
+			: wpl::vs::ole_command_target(c_guidGlobalCmdSet),
+				_configuration(registry_hive::open_user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler"))
+		{	LOG(PREAMBLE "constructed...") % A(this);	}
+
+		profiler_package::~profiler_package()
+		{	LOG(PREAMBLE "destroyed.");	}
+
+		shared_ptr<wpl::stylesheet> profiler_package::create_stylesheet(wpl::signal<void ()> &update,
+				wpl::gcontext::text_engine_type &text_engine, IVsUIShell &shell,
+				IVsFontAndColorStorage &font_and_color) const
+		{	return shared_ptr<vsstylesheet>(new vsstylesheet(update, text_engine, shell, font_and_color));	}
+
+		void profiler_package::initialize(wpl::vs::factory &factory)
 		{
-		public:
-			profiler_package()
-				: command_target_type(g_commands, g_commands + _countof(g_commands)), _next_tool_id(0)
-			{	LOG(PREAMBLE "constructed...") % A(this);	}
+			CComPtr<profiler_package> self = this;
 
-			~profiler_package()
-			{	LOG(PREAMBLE "destroyed.");	}
+			obtain_service<_DTE>([self] (CComPtr<_DTE> p) {
+				LOG(PREAMBLE "DTE obtained...") % A(p);
+				self->_dte = p;
+			});
+			setup_factory(factory);
+			register_path(false);
+			_frontend_manager.reset(new frontend_manager(bind(&profiler_package::create_ui, this, _1, _2)));
+			_ipc_manager.reset(new ipc_manager(_frontend_manager, make_shared<ui_queue>(&micro_profiler::clock),
+				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
+				&constants::integrated_frontend_id));
+			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),
+				1);
+			init_menu();
+		}
 
-		public:
-			DECLARE_NO_REGISTRY()
-			DECLARE_PROTECT_FINAL_CONSTRUCT()
+		void profiler_package::terminate() throw()
+		{
+			_ipc_manager.reset();
+			_frontend_manager.reset();
+			_dte.Release();
+		}
 
-			BEGIN_COM_MAP(profiler_package)
-				COM_INTERFACE_ENTRY(IVsPackage)
-				COM_INTERFACE_ENTRY(IAsyncLoadablePackageInitialize)
-				COM_INTERFACE_ENTRY(IOleCommandTarget)
-				COM_INTERFACE_ENTRY_CHAIN(freethreaded_base)
-			END_COM_MAP()
+		vector<IDispatchPtr> profiler_package::get_selected_items() const
+		{
+			vector<IDispatchPtr> selected_items;
 
-		private:
-			STDMETHODIMP Initialize(IAsyncServiceProvider *sp, IProfferAsyncService *, IAsyncProgressCallback *, IVsTask **ppTask)
-			try
+			if (IDispatchPtr si = _dte ? dispatch::get(IDispatchPtr(_dte, true), L"SelectedItems") : IDispatchPtr())
 			{
-				CComPtr<profiler_package> self = this;
-
-				LOG(PREAMBLE "initializing (async)...");
-				obtain_service<_DTE>(sp, [self] (_DTE *p) {
-					LOG(PREAMBLE "DTE obtained (async)...") % A(p);
-					self->_dte = p;
+				dispatch::for_each_variant_as_dispatch(si, [&] (const IDispatchPtr &item) {
+					selected_items.push_back(dispatch::get(item, L"Project"));
 				});
-				obtain_service<IVsUIShell>(sp, [self] (CComPtr<IVsUIShell> p) {
-					LOG(PREAMBLE "VSShell obtained (async)...") % A(p);
-					self->initialize(p);
-				});
-				ppTask = NULL;
-				return S_OK;
 			}
-			catch (...)
-			{
-				LOGE(PREAMBLE "failed...");
-				return E_FAIL;
-			}
+			return selected_items;
+		}
 
-			STDMETHODIMP SetSite(IServiceProvider *sp)
-			try
-			{
-				CComPtr<IVsUIShell> shell;
+		shared_ptr<frontend_ui> profiler_package::create_ui(const shared_ptr<functions_list> &model, const string &executable)
+		{
+			auto frame = get_factory().create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR);
+			auto ui = make_shared<frontend_ui_impl>(frame);
+			auto tui = make_shared<tables_ui>(get_factory(), model, *_configuration);
+			const auto root = make_shared<wpl::overlay>();
+				root->add(get_factory().create_control<wpl::control>("background"));
+				root->add(pad_control(tui, 5, 5));
 
-				LOG(PREAMBLE "initializing (sync)...") % A(sp);
-				_service_provider = sp;
-				_service_provider->QueryService(__uuidof(IVsUIShell), &shell);
-				initialize(shell);
-				return S_OK;
-			}
-			catch (...)
-			{
-				LOGE(PREAMBLE "failed...");
-				return E_FAIL;
-			}
+			init_instance_menu(*frame, model, executable);
+			frame->set_caption(L"MicroProfiler - " + unicode(executable));
+			frame->set_root(root);
+			frame->set_visible(true);
+			ui->connections[2] = tui->open_source += bind(&profiler_package::on_open_source, this, _1, _2);
+			LOG(PREAMBLE "tool window created") % A(executable);
+			return ui;
+		}
 
-			STDMETHODIMP QueryClose(BOOL *can_close)
-			{
-				*can_close = TRUE;
-				return S_OK;
-			}
+		void profiler_package::on_open_source(const string &file, unsigned line)
+		{
+			obtain_service<IVsUIShellOpenDocument>([file, line] (CComPtr<IVsUIShellOpenDocument> od) {
+				CComPtr<IServiceProvider> sp;
+				CComPtr<IVsUIHierarchy> hierarchy;
+				VSITEMID itemid;
+				CComPtr<IVsWindowFrame> frame;
 
-			STDMETHODIMP Close()
-			{
-				_ipc_manager.reset();
-				_frontend_manager.reset();
-				return S_OK;
-			}
-
-			STDMETHODIMP GetAutomationObject(LPCOLESTR /*pszPropName*/, IDispatch ** /*ppDisp*/)
-			{	return E_NOTIMPL;	}
-
-			STDMETHODIMP CreateTool(REFGUID /*rguidPersistenceSlot*/)
-			{	return E_NOTIMPL;	}
-
-			STDMETHODIMP ResetDefaults(VSPKGRESETFLAGS /*grfFlags*/)
-			{	return E_NOTIMPL;	}
-
-			STDMETHODIMP GetPropertyPage(REFGUID /*rguidPage*/, VSPROPSHEETPAGE * /*ppage*/)
-			{	return E_NOTIMPL;	}
-
-		private:
-			void initialize(CComPtr<IVsUIShell> shell)
-			{
-				if (_shell)
-					return;
-				_shell = shell;
-				register_path(false);
-				_frontend_manager = frontend_manager::create(bind(&profiler_package::create_ui, this, _1, _2));
-				_ipc_manager.reset(new ipc_manager(_frontend_manager,
-					make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
-					&constants::integrated_frontend_id));
-				setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),
-					1);
-			}
-
-			CComPtr<_DTE> get_dte()
-			{
-				if (!_dte && _service_provider)
+				if (od->OpenDocumentViaProject(unicode(file).c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), !!frame)
 				{
-					_service_provider->QueryService(__uuidof(_DTE), &_dte);
-					LOG(PREAMBLE "DTE obtained on demand.") % A(_dte);
+					CComPtr<IVsCodeWindow> window;
+
+					if (frame->QueryViewInterface(__uuidof(IVsCodeWindow), (void**)&window), !!window)
+					{
+						CComPtr<IVsTextView> tv;
+
+						if (window->GetPrimaryView(&tv), !!tv)
+						{
+							tv->SetCaretPos(line, 0);
+							tv->SetScrollPosition(SB_HORZ, 0);
+							frame->Show();
+							tv->CenterLines(line, 1);
+						}
+					}
 				}
-				return _dte;
-			}
+			});
+		}
 
-			virtual global_context get_context()
-			{
-				vector<IDispatchPtr> selected_items;
-
-				if (CComPtr<_DTE> dte = get_dte())
-					if (IDispatchPtr si = dispatch::get(IDispatchPtr(dte, true), L"SelectedItems"))
-						dispatch::for_each_variant_as_dispatch(si, [&] (const IDispatchPtr &item) {
-							selected_items.push_back(dispatch::get(item, L"Project"));
-						});
-				global_context ctx = { selected_items, _frontend_manager, _shell, _ipc_manager, _running_objects };
-				return ctx;
-			}
-
-			shared_ptr<frontend_ui> create_ui(const shared_ptr<functions_list> &model, const string &executable)
-			{
-				const unsigned tool_id = _next_tool_id++;
-				shared_ptr<frontend_ui> ui = integration::create_ui(*_shell, tool_id, model, executable);
-
-				LOG(PREAMBLE "tool window created") % A(executable) % A(tool_id);
-				return ui;
-			}
-
-		private:
-			CComPtr<IServiceProvider> _service_provider;
-			CComPtr<_DTE> _dte;
-			CComPtr<IVsUIShell> _shell;
-			shared_ptr<frontend_manager> _frontend_manager;
-			shared_ptr<ipc_manager> _ipc_manager;
-			unsigned _next_tool_id;
-			global_context::running_objects_t _running_objects;
-		};
 
 		OBJECT_ENTRY_AUTO(c_guidMicroProfilerPkg, profiler_package);
 	}

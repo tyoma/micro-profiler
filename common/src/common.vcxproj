@@ -38,6 +38,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="configuration_file.cpp" />
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="elf\filemapping_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -66,7 +67,7 @@
     <ClCompile Include="module_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="registry_configuration.cpp">
+    <ClCompile Include="configuration_registry.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="serialization.cpp" />
@@ -87,6 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\configuration.h" />
+    <ClInclude Include="..\configuration_file.h" />
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\file_id.h" />
     <ClInclude Include="..\formatting.h" />
@@ -104,6 +106,7 @@
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="..\unordered_map.h" />
+    <ClInclude Include="..\win32\configuration_registry.h" />
     <ClInclude Include="elf\filemapping.h" />
     <ClInclude Include="elf\sym-elf.h" />
   </ItemGroup>

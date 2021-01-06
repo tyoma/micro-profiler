@@ -9,5 +9,8 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\libraries\agge\src\agge\agge.vcxproj">
       <Project>{F849E92C-248A-46B2-9EAB-F86578A21316}</Project>
     </ProjectReference>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\libraries\agge\src\agge.text\agge.text.vcxproj">
+      <Project>{4B446510-FA62-AD02-51BA-9BDE9564FF26}</Project>
+    </ProjectReference>
   </ItemGroup>
 </Project>

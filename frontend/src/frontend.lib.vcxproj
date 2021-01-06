@@ -28,6 +28,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
+    <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -45,21 +46,25 @@
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
+    <ClCompile Include="untested\system_stylesheet.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="untested\factory.cpp" />
     <ClCompile Include="untested\file.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="untested\ipc_manager.cpp" />
-    <ClCompile Include="untested\marshalling_server.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
+    <ClCompile Include="untested\marshalling_server.cpp" />
     <ClCompile Include="untested\piechart.cpp" />
     <ClCompile Include="untested\stream.cpp" />
-    <ClCompile Include="untested\about_ui.cpp">
+    <ClCompile Include="untested\about_ui.cpp" />
+    <ClCompile Include="untested\tables_ui.cpp" />
+    <ClCompile Include="untested\ui_queue_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\file.h" />
     <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\frontend.h" />
@@ -74,14 +79,15 @@
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\serialization_context.h" />
-    <ClInclude Include="..\series.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />
+    <ClInclude Include="..\system_stylesheet.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
+    <ClInclude Include="..\ui_queue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

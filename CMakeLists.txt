@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(micro-profiler)
 
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules")
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/build.props)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
@@ -15,6 +15,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/agge)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/polyq)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/strmd)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/wpl)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/wpl.vs)
 include_directories($<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/compat/win32>)
 
 
@@ -43,11 +44,14 @@ set(GCC_CLANG_COMPILER_OPTIONS_C
 	-ggdb -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
 	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas
 )
+if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
+	set(GCC_CLANG_COMPILER_OPTIONS_C ${GCC_CLANG_COMPILER_OPTIONS_C} -msse2)
+endif()
 set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-std=c++11 -fexceptions -fno-rtti
 	-Wno-delete-non-virtual-dtor
 )
-set(MSVC_COMPILER_OPTIONS /wd4503 /wd4996 /wd4510 /wd4610 /wd4512 /wd4312)
+set(MSVC_COMPILER_OPTIONS /wd4503 /wd4996 /wd4510 /wd4610 /wd4512 /wd4312 /wd4481)
 set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} /MP /W4 /GR- /GS- /Gy-)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
@@ -69,7 +73,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
 		"$<$<CXX_COMPILER_ID:GNU>:-Wl,--no-undefined>"
 		"$<$<CXX_COMPILER_ID:Clang>:-Wl,-undefined,error>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--strip-debug>>"
-#		"$<$<CXX_COMPILER_ID:Clang>:$<$<CONFIG:Release>:-Wl,-strip-debug>>"
+		"$<$<CXX_COMPILER_ID:Clang>:$<$<PLATFORM_ID:Apple>:$<$<CONFIG:Release>:-Wl,-strip-debug>>>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--gc-sections>>"
 	)
 endif()
@@ -89,6 +93,7 @@ endif()
 
 # Add subdirectories
 add_subdirectory(libraries/agge)
+add_subdirectory(libraries/freetype2)
 add_subdirectory(libraries/utee)
 
 add_subdirectory(collector/src)
@@ -99,6 +104,7 @@ add_subdirectory(logger/src)
 add_subdirectory(mt/src)
 add_subdirectory(patcher/src.x86)
 add_subdirectory(playground)
+add_subdirectory(scheduler/src)
 
 add_subdirectory(collector/tests)
 add_subdirectory(common/tests)
@@ -111,14 +117,20 @@ add_subdirectory(mt/tests)
 if((NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86") AND CMAKE_SIZEOF_VOID_P EQUAL 4)
 	add_subdirectory(patcher/tests)
 endif()
+add_subdirectory(scheduler/tests)
 add_subdirectory(test-helpers/src)
 
-if (WIN32)
+if (WIN32 OR APPLE)
 	add_subdirectory(libraries/wpl)
 
-	add_subdirectory(injector/src)
-	add_subdirectory(micro-profiler)
 	add_subdirectory(standalone)
 
-	add_subdirectory(injector/tests)
+	if (WIN32)
+		add_subdirectory(libraries/wpl.vs)
+
+		add_subdirectory(injector/src)
+		add_subdirectory(micro-profiler)
+
+		add_subdirectory(injector/tests)
+	endif()
 endif()

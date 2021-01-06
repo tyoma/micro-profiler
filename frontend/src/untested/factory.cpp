@@ -18,27 +18,44 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <frontend/factory.h>
+#include <frontend/piechart.h>
 
-#include <common/noncopyable.h>
-#include <wpl/ui/form.h>
-#include <wpl/ui/listview.h>
+#include <wpl/factory.h>
+
+using namespace agge;
+using namespace std;
+using namespace wpl;
 
 namespace micro_profiler
 {
-	class process_list;
-
-	class AttachToProcessDialog : noncopyable
+	namespace
 	{
-	public:
-		AttachToProcessDialog(const std::shared_ptr<wpl::ui::form> &form);
+		const color c_palette[] = {
+			color::make(230, 85, 13),
+			color::make(253, 141, 60),
+			color::make(253, 174, 107),
 
-		wpl::signal<void()> closed;
+			color::make(49, 163, 84),
+			color::make(116, 196, 118),
+			color::make(161, 217, 155),
 
-	private:
-		const std::shared_ptr<wpl::ui::form> _form;
-		const std::shared_ptr<wpl::ui::listview> _processes_lv;
-		const std::shared_ptr<process_list> _model;
-		std::vector<wpl::slot_connection> _connections;
-	};
+			color::make(107, 174, 214),
+			color::make(158, 202, 225),
+			color::make(198, 219, 239),
+
+			color::make(117, 107, 177),
+			color::make(158, 154, 200),
+			color::make(188, 189, 220),
+		};
+
+		const color c_rest = color::make(128, 128, 128, 255);
+	}
+
+	void setup_factory(wpl::factory &factory_)
+	{
+		factory_.register_control("piechart", [] (const factory &, const control_context &) {
+			return shared_ptr<control>(new piechart(begin(c_palette), end(c_palette), c_rest));
+		});
+	}
 }

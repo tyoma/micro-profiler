@@ -179,7 +179,7 @@
 				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_MISC_COMMANDS" />
 				<CommandFlag>TextOnly</CommandFlag>
 				<Strings>
-					<ButtonText>Support Developer...</ButtonText>
+					<ButtonText>Star Me!</ButtonText>
 				</Strings>
 			</Button>
 		</Buttons>

@@ -20,21 +20,31 @@
 
 #pragma once
 
-#include <wpl/ui/form.h>
+#include <string>
+#include <wpl/layout.h>
 
+namespace wpl
+{
+	struct button;
+	class factory;
+}
 
 namespace micro_profiler
 {
-	class about_ui
+	class about_ui : public wpl::stack
 	{
 	public:
-		about_ui(const std::shared_ptr<wpl::ui::form> &form);
+		about_ui(const wpl::factory &factory_);
 
 	private:
 		void on_link(const std::wstring &address);
 
 	private:
-		std::shared_ptr<wpl::ui::form> _form;
 		std::vector<wpl::slot_connection> _connections;
+		std::shared_ptr<wpl::button> _close_button;
+
+	public:
+		wpl::signal<void (const std::wstring &address)> link;
+		wpl::signal<void ()> &close;
 	};
 }

@@ -28,6 +28,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\agge.include.props" />
+    <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\logger\src\logger.vcxproj">
@@ -42,9 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ColumnsModelTests.cpp" />
-    <ClCompile Include="CommandTargetTests.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FrontendTests.cpp" />

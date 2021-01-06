@@ -36,76 +36,62 @@ namespace micro_profiler
 
 
 	frontend_manager::frontend_manager(const frontend_ui_factory &ui_factory)
-		: _references(1), _ui_factory(ui_factory), _active_instance(0)
+		: _ui_factory(ui_factory), _instances(new instance_container), _active_instance(new const instance_impl *())
 	{	LOG(PREAMBLE "constructed.");	}
 
 	frontend_manager::~frontend_manager()
-	{	LOG(PREAMBLE "destroyed.");	}
-
-	shared_ptr<frontend_manager> frontend_manager::create(const frontend_ui_factory &ui_factory)
-	{	return shared_ptr<frontend_manager>(new frontend_manager(ui_factory), &destroy);	}
+	{
+		for (auto i = _instances->begin(); i != _instances->end(); )
+			reset_entry(*_instances, i++);
+		LOG(PREAMBLE "destroyed.");
+	}
 
 	void frontend_manager::close_all() throw()
 	{
-		for (instance_container::iterator i = _instances.begin(); i != _instances.end(); )
-		{
-			instance_container::iterator ii = i++;
-			shared_ptr<frontend_ui> ui = ii->ui;
-
-			ii->ui.reset();
-			if (!ui)
-				ii->frontend->disconnect_session();
-		}
+		for (auto i = _instances->begin(); i != _instances->end(); )
+			reset_entry(*_instances, i++);
+		*_active_instance = nullptr;
 		LOG(PREAMBLE "all instances closed.");
 	}
 
 	size_t frontend_manager::instances_count() const throw()
-	{	return _instances.size();	}
+	{	return _instances->size();	}
 
 	const frontend_manager::instance *frontend_manager::get_instance(unsigned index) const throw()
 	{
-		instance_container::const_iterator i = _instances.begin();
+		auto i = _instances->begin();
 
-		if (index >= _instances.size())
-			return 0;
+		if (index >= _instances->size())
+			return nullptr;
 		return advance(i, index), &*i;
 	}
 
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
-	{	return _active_instance;	}
+	{	return *_active_instance;	}
 
 	void frontend_manager::load_session(const string &executable, const shared_ptr<functions_list> &model)
-	{	on_ready_for_ui(_instances.insert(_instances.end(), instance_impl(0)), executable, model);	}
+	{	on_ready_for_ui(_instances->insert(_instances->end(), instance_impl(nullptr)), executable, model);	}
 
 	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
 	{
-		shared_ptr<frontend> f(new frontend(outbound));
-		instance_container::iterator i = _instances.insert(_instances.end(), instance_impl(f.get()));
+		unique_ptr<frontend> uf(new frontend(outbound));
+		const auto instances = _instances;
+		const auto active_instance = _active_instance;
+		const auto i = _instances->insert(_instances->end(), instance_impl(uf.get()));
+		shared_ptr<frontend> f(uf.release(), [instances, active_instance, i] (frontend *p) {
+			if (*active_instance == &*i)
+				*active_instance = nullptr;
+			delete p;
+			i->frontend = nullptr;
+			if (!i->ui)
+			{
+				instances->erase(i);
+				LOG(PREAMBLE "no UI controller - instance removed.") % A(instances->size());
+			}
+		});
 
-		try
-		{
-			// Untested: guarantee that any exception thrown after the instance is in the list would remove the entry.
-			f->initialized = bind(&frontend_manager::on_ready_for_ui, this, i, _1, _2);
-			f->released = bind(&frontend_manager::on_frontend_released, this, i); // Must go the last.
-		}
-		catch (...)
-		{
-			_instances.erase(i);
-			throw;
-		}
-		addref();
+		f->initialized = bind(&frontend_manager::on_ready_for_ui, this, i, _1, _2);
 		return f;
-	}
-
-	void frontend_manager::on_frontend_released(instance_container::iterator i) throw()
-	{
-		i->frontend = 0;
-		if (!i->ui)
-		{
-			_instances.erase(i);
-			LOG(PREAMBLE "no UI controller - instance removed.") % A(_instances.size());
-		}
-		release();
 	}
 
 	void frontend_manager::on_ready_for_ui(instance_container::iterator i, const string &executable,
@@ -113,46 +99,33 @@ namespace micro_profiler
 	{
 		i->executable = executable;
 		i->model = model;
-		if (shared_ptr<frontend_ui> ui = _ui_factory(model, executable))
+		if (const auto ui = _ui_factory(model, executable))
 		{
 			i->ui_activated_connection = ui->activated += bind(&frontend_manager::on_ui_activated, this, i);
 			i->ui_closed_connection = ui->closed += bind(&frontend_manager::on_ui_closed, this, i);
 			i->ui = ui;
-			_active_instance = &*i;
-			addref();
+			*_active_instance = &*i;
 		}
 	}
 
 	void frontend_manager::on_ui_activated(instance_container::iterator i)
-	{	_active_instance = &*i;	}
+	{	*_active_instance = &*i;	}
 
 	void frontend_manager::on_ui_closed(instance_container::iterator i) throw()
 	{
-		shared_ptr<frontend_ui> ui = i->ui;
+		if (*_active_instance == &*i)
+			*_active_instance = nullptr;
+		reset_entry(*_instances, i);
+	}
 
-		if (_active_instance == &*i)
-			_active_instance = 0;
+	void frontend_manager::reset_entry(instance_container &instances, instance_container::iterator i)
+	{
+		i->ui_activated_connection.reset();
 		i->ui_closed_connection.reset();
 		i->ui.reset();
 		if (i->frontend)
 			i->frontend->disconnect_session();
 		else
-			_instances.erase(i);
-		release();
-	}
-
-	void frontend_manager::addref() throw()
-	{	++_references;	}
-
-	void frontend_manager::release() throw()
-	{
-		if (!--_references)
-			delete this;
-	}
-
-	void frontend_manager::destroy(frontend_manager *p)
-	{
-		p->close_all();
-		p->release();
+			instances.erase(i);
 	}
 }

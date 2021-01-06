@@ -18,24 +18,33 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/configuration_file.h>
 
-#include <atlbase.h>
-#include <comdef.h>
-#include <functional>
-#include <vsshell110.h>
+using namespace std;
 
 namespace micro_profiler
 {
-	namespace integration
-	{
-		namespace async
-		{
-			typedef std::function<_variant_t (IVsTask *dependents[], unsigned dependents_count)> basic_task_function_t;
-			typedef std::function<_variant_t (const _variant_t& parent_result)> task_function_t;
+		shared_ptr<hive> file_hive::open_ini(const char *path)
+		{	return shared_ptr<hive>(new file_hive(path));	}
 
-			CComPtr<IVsTaskBody> wrap_task(const basic_task_function_t &task);
-			CComPtr<IVsTask> when_complete(IVsTask *parent, VSTASKRUNCONTEXT context, const task_function_t &completion);
-		}
-	}
+		file_hive::file_hive(const char * /*path*/)
+		{	}
+
+		shared_ptr<hive> file_hive::create(const char * /*name*/)
+		{	return shared_from_this();	}
+
+		shared_ptr<const hive> file_hive::open(const char * /*name*/) const
+		{	return shared_from_this();	}
+
+		void file_hive::store(const char * /*name*/, int /*value*/)
+		{	}
+
+		void file_hive::store(const char * /*name*/, const char * /*value*/)
+		{	}
+
+		bool file_hive::load(const char * /*name*/, int &/*value*/) const
+		{	return false;	}
+
+		bool file_hive::load(const char * /*name*/, string &/*value*/) const
+		{	return false;	}
 }

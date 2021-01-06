@@ -41,7 +41,6 @@ namespace micro_profiler
 
 				frontend_.reset(new frontend(outbound));
 				frontend_->initialized = [&] (string, shared_ptr<functions_list> model_) { model = model_; };
-				frontend_->released = [] {};
 				write(*frontend_, (init), idata);
 			}
 

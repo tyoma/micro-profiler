@@ -33,14 +33,14 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="$(OutDirX86)micro-profiler_frontend.dll" />
-		<None Include="$(OutDirX86)micro-profiler_x86.dll" />
+		<None Include="$(OutDirX86)micro-profiler_Win32.dll" />
 		<None Include="$(OutDirX86)micro-profiler_Win32.lib" />
 		<None Include="$(OutDirX64)micro-profiler_x64.dll" />
 		<None Include="$(OutDirX64)micro-profiler_x64.lib" />
 		<None Include="*.json;*.xml" />
 		<None Include="$(OutDirX86)*.cpp;$(OutDirX86)*.h;$(OutDirX86)*.pkgdef;$(OutDirX86)*.vsixmanifest;$(OutDirX86)logo.ico"/>
 		<Pack Include="$(OutDirX86)micro-profiler_frontend.dll" />
-		<Pack Include="$(OutDirX86)micro-profiler_x86.dll" />
+		<Pack Include="$(OutDirX86)micro-profiler_Win32.dll" />
 		<Pack Include="$(OutDirX86)micro-profiler_Win32.lib" />
 		<Pack Include="$(OutDirX64)micro-profiler_x64.dll" />
 		<Pack Include="$(OutDirX64)micro-profiler_x64.lib" />
@@ -51,9 +51,6 @@
 			<FileType>Document</FileType>
 			<Command>cd "$(OutDirX86)"
 mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
-			<Outputs>$(IntDir)%(Filename).cto</Outputs>
-			<Message>Compiling Commands Table: %(Filename)%(Extension)</Message>
-			<SubType>Designer</SubType>
 		</CustomBuild>		
 	</ItemGroup>
 
@@ -71,7 +68,7 @@ mkzip 1033\micro-profiler.ui.dll "$(IntDir)$(TargetName).zip"</Command>
 	<Target Name="CompressAndReplace" AfterTargets="Compress">
 		<Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;
 			call sha256 hashmpxfrontend &quot;$(OutDirX86)micro-profiler_frontend.dll&quot;
-			call sha256 hashmpx86 &quot;$(OutDirX86)micro-profiler_x86.dll&quot;
+			call sha256 hashmpx86 &quot;$(OutDirX86)micro-profiler_Win32.dll&quot;
 			call sha256 hashmpx86lib &quot;$(OutDirX86)micro-profiler_Win32.lib&quot;
 			call sha256 hashmpx64 &quot;$(OutDirX64)micro-profiler_x64.dll&quot;
 			call sha256 hashmpx64lib &quot;$(OutDirX64)micro-profiler_x64.lib&quot;

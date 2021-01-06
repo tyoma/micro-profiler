@@ -21,26 +21,31 @@
 #pragma once
 
 #include <agge/color.h>
-#include <frontend/series.h>
-#include <wpl/ui/view.h>
+#include <vector>
+#include <wpl/control.h>
+#include <wpl/controls/integrated.h>
+#include <wpl/models.h>
+#include <wpl/view.h>
 
 namespace micro_profiler
 {
-	class piechart : public wpl::ui::view, public wpl::ui::index_traits
+	class piechart : public wpl::controls::integrated_control<wpl::control>, wpl::index_traits
 	{
 	public:
-		typedef series<double> model_t;
+		typedef wpl::list_model<double> model_t;
 
 	public:
 		template <typename PaletteIteratorT>
 		piechart(PaletteIteratorT palette_begin, PaletteIteratorT palette_end, agge::color color_rest);
 
+		virtual std::shared_ptr<view> get_view();
+
 		void set_model(const std::shared_ptr<model_t> &m);
-		void select(index_type item);
+		void select(model_t::index_type item);
 
 	public:
-		wpl::signal<void(index_type item)> selection_changed;
-		wpl::signal<void(index_type item)> item_activate;
+		wpl::signal<void(model_t::index_type item)> selection_changed;
+		wpl::signal<void(model_t::index_type item)> item_activate;
 
 	private:
 		struct segment
@@ -53,14 +58,15 @@ namespace micro_profiler
 		typedef std::vector<segment> segments_t;
 
 	private:
-		virtual void draw(wpl::ui::gcontext &ctx, wpl::ui::gcontext::rasterizer_ptr &rasterizer) const;
-		virtual void resize(unsigned cx, unsigned cy, positioned_native_views &nviews);
+		virtual void draw(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer) const;
+
+		virtual void layout(const wpl::placed_view_appender &append_view, const agge::box<int> &box);
 
 		virtual void mouse_down(mouse_buttons button, int depressed, int x, int y);
 		virtual void mouse_double_click(mouse_buttons button, int depressed, int x, int y);
 
 		void on_invalidated();
-		index_type find_sector(agge::real_t x, agge::real_t y);
+		model_t::index_type find_sector(agge::real_t x, agge::real_t y);
 
 	private:
 		segments_t _segments;
@@ -68,7 +74,7 @@ namespace micro_profiler
 		agge::real_t _outer_r, _inner_r, _selection_emphasis_k;
 		wpl::slot_connection _invalidate_connection;
 		std::shared_ptr<model_t> _model;
-		std::shared_ptr<const wpl::ui::trackable> _selection;
+		std::shared_ptr<const wpl::trackable> _selection;
 		std::vector<agge::color> _palette;
 		agge::color _color_rest;
 	};

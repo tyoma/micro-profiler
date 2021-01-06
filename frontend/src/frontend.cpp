@@ -41,7 +41,6 @@ namespace micro_profiler
 
 	frontend::~frontend()
 	{
-		released();
 		LOG(PREAMBLE "destroyed...") % A(this);
 	}
 

@@ -22,6 +22,7 @@
 
 #include <common/noncopyable.h>
 #include <ipc/endpoint.h>
+#include <scheduler/scheduler.h>
 
 namespace micro_profiler
 {
@@ -30,7 +31,7 @@ namespace micro_profiler
 	class marshalling_server : public ipc::server, noncopyable
 	{
 	public:
-		marshalling_server(const std::shared_ptr<ipc::server> &underlying);
+		marshalling_server(std::shared_ptr<ipc::server> underlying, std::shared_ptr<scheduler::queue> queue);
 		~marshalling_server();
 
 		void stop();
@@ -40,6 +41,6 @@ namespace micro_profiler
 
 	private:
 		std::shared_ptr<ipc::server> _underlying;
-		std::shared_ptr<marshalling_window> _m;
+		std::shared_ptr<scheduler::queue> _queue;
 	};
 }

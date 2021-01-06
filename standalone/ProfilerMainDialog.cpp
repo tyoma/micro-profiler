@@ -20,40 +20,26 @@
 
 #include "ProfilerMainDialog.h"
 
-#include "resources/resource.h"
-
 #include <common/configuration.h>
 #include <common/string.h>
-#include <frontend/about_ui.h>
 #include <frontend/function_list.h>
 #include <frontend/tables_ui.h>
 
 #include <algorithm>
-#include <src/wpl.ui/win32/view_host.h>
-#include <wpl/ui/container.h>
-#include <wpl/ui/controls.h>
-#include <wpl/ui/form.h>
-#include <wpl/ui/layout.h>
-#include <wpl/ui/win32/controls.h>
-#include <wpl/ui/win32/form.h>
+#include <wpl/controls.h>
+#include <wpl/factory.h>
+#include <wpl/form.h>
+#include <wpl/helpers.h>
+#include <wpl/layout.h>
 
 using namespace std;
-using namespace std::placeholders;
-using namespace wpl::ui;
+using namespace wpl;
 
 namespace micro_profiler
 {
-	extern HINSTANCE g_instance;
-
 	namespace
 	{
-		const DWORD style = DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION
-			 | WS_SYSMENU | WS_THICKFRAME;
-
-		shared_ptr<hive> open_configuration()
-		{	return hive::user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}
-
-		void store(hive &configuration, const string &name, const agge::rect_i &r)
+		void store(hive &configuration, const string &name, const rect_i &r)
 		{
 			configuration.store((name + 'L').c_str(), r.x1);
 			configuration.store((name + 'T').c_str(), r.y1);
@@ -61,7 +47,7 @@ namespace micro_profiler
 			configuration.store((name + 'B').c_str(), r.y2);
 		}
 
-		bool load(const hive &configuration, const string &name, agge::rect_i &r)
+		bool load(const hive &configuration, const string &name, rect_i &r)
 		{
 			bool ok = true;
 			int value = 0;
@@ -72,171 +58,65 @@ namespace micro_profiler
 			ok = ok && configuration.load((name + 'B').c_str(), value), r.y2 = value;
 			return ok;
 		}
-
-		bool is_rect_empty(const agge::rect_i &r)
-		{	return r.x1 == r.x2 || r.y1 == r.y2;	}
-
-		INT_PTR CALLBACK passthrough(HWND, UINT, WPARAM, LPARAM)
-		{	return 0;	}
-
-
-		HWND create_dialog()
-		{
-#pragma pack(push, 1)
-			struct template_t
-			{
-				DLGTEMPLATE dlgtemplate;
-				unsigned short hmenu, dlg_classname, title, text_size;
-				wchar_t text_typeface[100];
-			} t = {
-				{ style, 0, 0, 0, 0, 600, 400, },
-				0, 0, 0, 9,
-				L"MS Shell Dlg"
-			};
-#pragma pack(pop)
-
-			HWND hwnd = ::CreateDialogIndirect(NULL, &t.dlgtemplate, NULL, &passthrough);
-			DWORD err = ::GetLastError();
-			err;
-			return hwnd;
-		}
 	}
 
-	ProfilerMainDialog::ProfilerMainDialog(shared_ptr<functions_list> s, const string &executable)
-		: _hwnd(create_dialog()), _configuration(open_configuration()), _statistics(s), _executable(executable)
+	standalone_ui::standalone_ui(shared_ptr<hive> configuration, const factory &factory_, shared_ptr<functions_list> s,
+			const string &executable)
+		: _configuration(configuration), _statistics(s), _executable(executable)
 	{
-		HICON hicon = ::LoadIcon(g_instance, MAKEINTRESOURCE(IDI_APPMAIN));
-		wstring caption;
-		shared_ptr<container> root(new container);
-		shared_ptr<container> vstack(new container), toolbar(new container);
-		shared_ptr<layout_manager> lm_root(new spacer(5, 5));
-		shared_ptr<stack> lm_vstack(new stack(5, false)), lm_toolbar(new stack(5, true));
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
 
-		_statistics_display.reset(new tables_ui(s, *_configuration));
+		const auto root = make_shared<overlay>();
+			root->add(factory_.create_control<control>("background"));
+			const auto stk = make_shared<stack>(5, false);
+			root->add(pad_control(stk, 5, 5));
+				stk->add(_statistics_display = make_shared<tables_ui>(factory_, s, *_configuration), -100);
+				const auto toolbar = make_shared<stack>(5, true);
+				stk->add(toolbar, 24);
+					toolbar->add(btn = factory_.create_control<button>("button"), 120, 100);
+						btn->set_text(L"Clear Statistics");
+						_connections.push_back(btn->clicked += [this] {	_statistics->clear();	});
 
-		toolbar->set_layout(lm_toolbar);
-		btn = create_button();
-		btn->set_text(L"Clear Statistics");
-		_connections.push_back(btn->clicked += bind(&functions_list::clear, _statistics));
-		lm_toolbar->add(120);
-		toolbar->add_view(btn);
-		btn = create_button();
-		btn->set_text(L"Copy All");
-		_connections.push_back(btn->clicked += bind(&ProfilerMainDialog::OnCopyAll, this));
-		lm_toolbar->add(100);
-		toolbar->add_view(btn);
-		lm_toolbar->add(-100);
-		toolbar->add_view(shared_ptr<view>(new view));
-		lnk = create_link();
-		lnk->set_align(text_container::right);
-		lnk->set_text(L"<a>Support Developer...</a>");
-		_connections.push_back(lnk->clicked += bind(&ProfilerMainDialog::OnSupport, this));
-		lm_toolbar->add(200);
-		toolbar->add_view(lnk);
+					toolbar->add(btn = factory_.create_control<button>("button"), 100, 101);
+						btn->set_text(L"Copy All");
+						_connections.push_back(btn->clicked += [this] {
+							string text;
 
-		vstack->set_layout(lm_vstack);
-		lm_vstack->add(-100);
-		vstack->add_view(_statistics_display);
-		lm_vstack->add(24);
-		vstack->add_view(toolbar);
+							_statistics->print(text);
+							copy_to_buffer(text);
+						});
 
-		root->set_layout(lm_root);
-		root->add_view(vstack);
-		_host.reset(new wpl::ui::win32::view_host(_hwnd, bind(&ProfilerMainDialog::on_message, this, _1, _2, _3, _4)));
-		_host->set_view(root);
-		_host->set_background_color(agge::color::make(24, 32, 48));
-		if (load(*_configuration, "Placement", _placement))
-		{
-			::MoveWindow(_hwnd, _placement.x1, _placement.y1, _placement.x2 - _placement.x1, _placement.y2 - _placement.y1,
-				TRUE);
-		}
-		::SendMessage(_hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hicon));
-		::SetWindowText(_hwnd, unicode("MicroProfiler - " + _executable).c_str());
-		::ShowWindow(_hwnd, SW_SHOW);
-	}
+					toolbar->add(make_shared< controls::integrated_control<control> >(), -100);
+					toolbar->add(lnk = factory_.create_control<link>("link"), 200);
+						lnk->set_align(text_container::right);
+						lnk->set_text(L"<a>Star Me!</a>");
+						_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {
+							const auto l = _form->get_location();
+							const agge::point<int> center = { (l.x1 + l.x2) / 2, (l.y1 + l.y2) / 2 };
 
-	ProfilerMainDialog::~ProfilerMainDialog()
-	{
-		if (_hwnd)
-			::DestroyWindow(_hwnd);
-	}
+							show_about(center, _form->create_child());
+						});
 
-	LRESULT ProfilerMainDialog::on_message(UINT message, WPARAM wparam, LPARAM lparam,
-		const wpl::ui::window::original_handler_t &handler)
-	{
-		switch (message)
-		{
-		case WM_ACTIVATE:
-			if (WA_INACTIVE != wparam)
-				activated();
-			break;
+		rect_i l;
 
-		case WM_CLOSE:
-			DestroyWindow(_hwnd);
-			return 0;
+		_form = factory_.create_form();
+		_form->set_root(root);
+		if (load(*_configuration, "Placement", l))
+			_form->set_location(l);
+		_form->set_caption(unicode("MicroProfiler - " + _executable));
+		_form->set_visible(true);
 
-		case WM_NCDESTROY:
-			if (!is_rect_empty(_placement) && !::IsIconic(_hwnd))
-				store(*_configuration, "Placement", _placement);
+		_connections.push_back(_form->close += [this] {
+			const auto l = _form->get_location();
+
+			if (wpl::width(l) > 0 && wpl::height(l) > 0)
+				store(*_configuration, "Placement", l);
 			_statistics_display->save(*_configuration);
-			_hwnd = NULL;
-			closed();
-			break;
-
-		case WM_WINDOWPOSCHANGED:
-			const WINDOWPOS *wndpos = reinterpret_cast<const WINDOWPOS *>(lparam);
-
-			if (0 == (wndpos->flags & SWP_NOSIZE) || 0 == (wndpos->flags & SWP_NOMOVE))
-				_placement.x1 = wndpos->x, _placement.y1 = wndpos->y, _placement.x2 = wndpos->x + wndpos->cx, _placement.y2 = wndpos->y + wndpos->cy;
-			break;
-		}
-		return handler(message, wparam, lparam);
+			this->closed();
+		});
 	}
 
-	void ProfilerMainDialog::OnCopyAll()
-	{
-		string result_utf8;
-
-		_statistics->print(result_utf8);
-
-		wstring result = unicode(result_utf8);
-
-		if (::OpenClipboard(_hwnd))
-		{
-			if (HGLOBAL gtext = ::GlobalAlloc(GMEM_MOVEABLE, (result.size() + 1) * sizeof(wchar_t)))
-			{
-				wchar_t *gtext_memory = static_cast<wchar_t *>(::GlobalLock(gtext));
-
-				copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
-				::GlobalUnlock(gtext_memory);
-				::EmptyClipboard();
-				::SetClipboardData(CF_UNICODETEXT, gtext);
-			}
-			::CloseClipboard();
-		}
-	}
-
-	void ProfilerMainDialog::OnSupport()
-	{
-		shared_ptr<form> f = create_form(_hwnd);
-
-		_about.reset(new about_ui(f));
-
-		_about_connection = f->close += [this] {
-			::EnableWindow(_hwnd, TRUE);
-			_about.reset();
-			_about_connection.reset();
-		};
-
-		::EnableWindow(_hwnd, FALSE);
-		f->set_visible(true);
-	}
-
-	void ProfilerMainDialog::activate()
-	{
-		::ShowWindow(_hwnd, SW_RESTORE);
-		::BringWindowToTop(_hwnd);
-	}
+	void standalone_ui::activate()
+	{	}
 }

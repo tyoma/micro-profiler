@@ -20,34 +20,25 @@
 
 #pragma once
 
-#include <atlbase.h>
-#include <atlcom.h>
+#include "configuration.h"
 
 namespace micro_profiler
 {
-	template <typename BaseT>
-	class freethreaded : public BaseT, public IUnknown
+	class file_hive : public hive, public std::enable_shared_from_this<file_hive>
 	{
-	protected:
-		typedef freethreaded freethreaded_base;
-
-	protected:
-		DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-		BEGIN_COM_MAP(freethreaded)
-			COM_INTERFACE_ENTRY(IUnknown)
-			COM_INTERFACE_ENTRY_AGGREGATE(IID_IMarshal, _marshaller)
-		END_COM_MAP()
-
-		HRESULT FinalConstruct()
-		{
-			CComPtr<IUnknown> u;
-			HRESULT hr = QueryInterface(IID_PPV_ARGS(&u));
-
-			return S_OK == hr ? ::CoCreateFreeThreadedMarshaler(u, &_marshaller) : hr;
-		}
+	public:
+		static std::shared_ptr<hive> open_ini(const char *path);
 
 	private:
-		CComPtr<IUnknown> _marshaller;
+		file_hive(const char *path);
+
+		virtual std::shared_ptr<hive> create(const char *name) override;
+		virtual std::shared_ptr<const hive> open(const char *name) const override;
+
+		virtual void store(const char *name, int value) override;
+		virtual void store(const char *name, const char *value) override;
+
+		virtual bool load(const char *name, int &value) const override;
+		virtual bool load(const char *name, std::string &value) const override;
 	};
 }

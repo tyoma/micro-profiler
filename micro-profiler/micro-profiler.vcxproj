@@ -30,11 +30,16 @@
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(SolutionDir)build.props\vssdk.props" />
     <Import Project="$(SolutionDir)build.props\agge.include.props" />
+    <Import Project="$(SolutionDir)build.props\freetype.include.props" />
+    <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
   <PropertyGroup>
     <TargetName>micro-profiler_frontend</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;..\libraries\wpl.vs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <Link>
       <ModuleDefinitionFile>module/micro-profiler.def</ModuleDefinitionFile>
       <AdditionalDependencies>version.lib;vsguids.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -44,29 +49,24 @@
       <AdditionalIncludeDirectories>$(IntDir)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ClCompile>
-      <AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories);./compat</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <PreprocessorDefinitions>_ATL_FREE_THREADED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="frontend\AttachToProcessDialog.cpp" />
+    <ClCompile Include="frontend\attach_ui.cpp" />
     <ClCompile Include="frontend\inject_profiler.cpp" />
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="visualstudio\dispatch.cpp" />
-    <ClCompile Include="visualstudio\vs-extension\async.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
     <ClCompile Include="visualstudio\vs-extension\helpers.cpp" />
+    <ClCompile Include="visualstudio\vs-extension\stylesheet.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vcmodel-impl.cpp" />
-    <ClCompile Include="visualstudio\vs-extension\vs-pane.cpp" />
-    <ClInclude Include="frontend\AttachToProcessDialog.h" />
+    <ClInclude Include="frontend\attach_ui.h" />
     <ClInclude Include="visualstudio\dispatch.h" />
-    <ClInclude Include="visualstudio\vs-extension\async.h" />
-    <ClInclude Include="visualstudio\vs-extension\com.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
-    <ClInclude Include="visualstudio\vs-extension\commands-instance.h" />
+    <ClInclude Include="visualstudio\vs-extension\stylesheet.h" />
     <ClInclude Include="visualstudio\vs-extension\vcmodel.h" />
-    <ClInclude Include="visualstudio\vs-extension\vs-pane.h" />
+    <ClInclude Include="visualstudio\vs-extension\vs-package.h" />
     <None Include="logo.ico" />
     <None Include="module\micro-profiler.def" />
     <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest">
@@ -87,24 +87,18 @@
     <ResourceCompile Include="resources\micro-profiler_vspackage.rc" />
     <ClCompile Include="setup\environment.cpp" />
     <ClInclude Include="setup\environment.h" />
-    <ClInclude Include="visualstudio\command-target.h" />
-    <ClInclude Include="visualstudio\command.h" />
-    <ClInclude Include="visualstudio\vs-extension\commands-global.h" />
     <ClCompile Include="visualstudio\vs-extension\commands-global.cpp" />
     <ClInclude Include="visualstudio\vs-extension\command-ids.h" />
     <ClCompile Include="visualstudio\vs-extension\vs-package.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)frontend\src\frontend.lib.vcxproj">
+    <ProjectReference Include="..\frontend\src\frontend.lib.vcxproj">
       <Project>{15ad9007-29b9-462f-b7be-a433b6e83ec9}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)libraries\wpl\src\wpl.ui\wpl.ui.vcxproj">
-      <Project>{2423f23a-b689-f3f7-a864-a1729ec337c9}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+    <ProjectReference Include="..\common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
+    <ProjectReference Include="..\ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
     <ProjectReference Include="..\logger\src\logger.vcxproj">
@@ -112,6 +106,12 @@
     </ProjectReference>
     <ProjectReference Include="..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libraries\wpl.vs\src\wpl.vs.vcxproj">
+      <Project>{120FA1C6-37AA-42CE-B922-346BF91EEC0F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\scheduler\src\scheduler.vcxproj">
+      <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup Condition="'$(Platform)'=='Win32'">

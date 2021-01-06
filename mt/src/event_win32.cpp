@@ -28,8 +28,8 @@ namespace mt
 	void event::wait()
 	{	::WaitForSingleObject(_impl->handle, INFINITE);	}
 
-	bool event::wait(milliseconds period)
-	{	return WAIT_TIMEOUT != ::WaitForSingleObject(_impl->handle, static_cast<DWORD>(period.count()));	}
+	bool event::wait(milliseconds timeout)
+	{	return WAIT_TIMEOUT != ::WaitForSingleObject(_impl->handle, static_cast<DWORD>(timeout.count()));	}
 
 	void event::set()
 	{	::SetEvent(_impl->handle);	}

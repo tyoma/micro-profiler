@@ -25,7 +25,7 @@
 #include <common/types.h>
 #include <common/unordered_map.h>
 #include <frontend/ordered_view.h>
-#include <wpl/ui/models.h>
+#include <wpl/models.h>
 
 namespace strmd
 {
@@ -38,8 +38,8 @@ namespace micro_profiler
 {
 	struct threads_model_reader;
 
-	class threads_model : public wpl::ui::list_model, containers::unordered_map<unsigned int, thread_info, knuth_hash>,
-		noncopyable
+	class threads_model : public wpl::list_model<std::wstring>,
+		containers::unordered_map<unsigned int, thread_info, knuth_hash>, noncopyable
 	{
 	public:
 		typedef std::function<void (const std::vector<unsigned int> &threads)> request_threads_t;
@@ -54,8 +54,8 @@ namespace micro_profiler
 		bool get_key(unsigned int &thread_id, index_type index) const throw();
 
 		virtual index_type get_count() const throw();
-		virtual void get_text(index_type index, std::wstring &text) const;
-		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type index) const;
+		virtual void get_value(index_type index, std::wstring &text) const;
+		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const;
 
 	private:
 		const request_threads_t _requestor;

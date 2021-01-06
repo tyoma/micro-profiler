@@ -20,17 +20,18 @@
 
 #pragma once
 
-#include <wpl/ui/models.h>
+#include <functional>
+#include <memory>
+#include <mt/chrono.h>
 
-namespace micro_profiler
+namespace scheduler
 {
-	template <typename T>
-	struct series : wpl::destructible, wpl::ui::index_traits
+	struct queue
 	{
-		virtual index_type size() const throw() = 0;
-		virtual T get_value(index_type index) const throw() = 0;
-		virtual std::shared_ptr<const wpl::ui::trackable> track(index_type item) const = 0;
+		typedef std::function<mt::milliseconds ()> clock;
 
-		wpl::signal<void()> invalidated;
+		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0)) = 0;
 	};
+
+	std::shared_ptr<queue> create_ui_bound_queue(const queue::clock &clock);
 }

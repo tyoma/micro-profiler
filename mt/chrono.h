@@ -48,8 +48,16 @@
 		{	return lhs.count() < rhs.count();	}
 
 		template <typename RepT, typename RatioT>
+		inline bool operator <=(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
+		{	return lhs.count() <= rhs.count();	}
+
+		template <typename RepT, typename RatioT>
 		inline bool operator >(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
 		{	return lhs.count() > rhs.count();	}
+
+		template <typename RepT, typename RatioT>
+		inline bool operator >=(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
+		{	return lhs.count() >= rhs.count();	}
 
 		template <typename RepT, typename RatioT>
 		inline bool operator ==(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
@@ -66,6 +74,14 @@
 		template <typename RepT, typename RatioT>
 		inline duration<RepT, RatioT> operator -(duration<RepT, RatioT> lhs, duration<RepT, RatioT> rhs)
 		{	return duration<RepT, RatioT>(lhs.count() - rhs.count());	}
+
+		template <typename T, typename RepT, typename RatioT>
+		inline duration<RepT, RatioT> operator *(T lhs, duration<RepT, RatioT> rhs)
+		{	return duration<RepT, RatioT>(static_cast<RepT>(lhs * rhs.count()));	}
+
+		template <typename T, typename RepT, typename RatioT>
+		inline duration<RepT, RatioT> operator *(duration<RepT, RatioT> lhs, T rhs)
+		{	return rhs * lhs;	}
 	}
 
 #endif

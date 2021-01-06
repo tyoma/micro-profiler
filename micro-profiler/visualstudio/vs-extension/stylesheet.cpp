@@ -36,6 +36,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			const auto c_default_hinting = hint_vertical;
 			const GUID c_environment_category = { 0x1F987C00, 0xE7C4, 0x4869, { 0x8A, 0x17, 0x23, 0xFD, 0x60, 0x22, 0x68, 0xB0 } };
 
 			font_weight win32_weight_to_agge(long weight)
@@ -73,6 +74,22 @@ namespace micro_profiler
 			{
 				auto c = ::GetSysColor(color_kind);
 				return color::make(GetRValue(c), GetGValue(c), GetBValue(c));
+			}
+
+			font_descriptor get_sysfont()
+			{
+				NONCLIENTMETRICSA m = {};
+
+				m.cbSize = sizeof(m);
+				if (::SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, 0, &m, 0))
+				{
+					return font_descriptor::create(m.lfMenuFont.lfFaceName, -m.lfMenuFont.lfHeight,
+						win32_weight_to_agge(m.lfMenuFont.lfWeight), !!m.lfMenuFont.lfItalic, c_default_hinting);
+				}
+				else
+				{
+					return font_descriptor::create("Arial", 12);
+				}
 			}
 
 			color invert(color original)
@@ -133,8 +150,18 @@ namespace micro_profiler
 			fonts_and_colors.GetFont(&lf, &fi);
 			fonts_and_colors.CloseCategory();
 
-			auto d = font_descriptor::create(unicode(lf.lfFaceName[0] ? lf.lfFaceName : L"Segoe UI"), abs(lf.lfHeight),
-				win32_weight_to_agge(lf.lfWeight), !!lf.lfItalic, hint_vertical);
+			auto d = font_descriptor::create(unicode(lf.lfFaceName), abs(lf.lfHeight),
+				win32_weight_to_agge(lf.lfWeight), !!lf.lfItalic, c_default_hinting);
+
+			if (d.family.empty() || !d.height)
+			{
+				const auto sysfont = get_sysfont();
+
+				if (d.family.empty())
+					d.family = sysfont.family;
+				if (!d.height)
+					d.height = sysfont.height;
+			}
 
 			set_font("text", text_engine.create_font(d));
 			d.height++;

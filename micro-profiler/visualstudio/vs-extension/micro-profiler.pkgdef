@@ -1,7 +1,7 @@
 [$RootKey$\InstalledProducts\MicroProfiler]
 @="MicroProfiler"
 "Package"="43a50861-7e04-4169-b47e-d4cffe1b3db8"
-"ProductDetails"="Realtime Instrumenting Profiler for Visual Studio. Please, submit your questions, issues and suggestions to https://github.com/tyoma/micro-profiler/issues Copyright (c) 2011-2020 Artem Gevorkyan"
+"ProductDetails"="Realtime Instrumenting Profiler for Visual Studio. Please, submit your questions, issues and suggestions to https://github.com/tyoma/micro-profiler/issues Copyright (c) 2011-2021 Artem Gevorkyan"
 "UseInterface"=dword:0
 "PID"="!version!"
 

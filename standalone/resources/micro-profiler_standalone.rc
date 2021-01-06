@@ -91,7 +91,7 @@ BEGIN
             VALUE "CompanyName", "Artem Gevorkyan (gevorkyan.org)"
             VALUE "FileDescription", "MicroProfiler standalone frontend executable."
             VALUE "FileVersion", MP_VERSION_STR
-            VALUE "LegalCopyright", "© Copyright 2011-2020 gevorkyan.org. All rights reserved."
+            VALUE "LegalCopyright", "© Copyright 2011-2021 gevorkyan.org. All rights reserved."
             VALUE "ProductName", "MicroProfiler"
             VALUE "ProductVersion", MP_VERSION_STR
         END

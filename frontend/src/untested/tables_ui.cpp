@@ -20,7 +20,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const auto secondary = style::height(10);
+		const auto secondary = style::height_scale(0.85);
 
 		const columns_model::column c_columns_statistics[] = {
 			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},

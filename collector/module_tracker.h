@@ -25,7 +25,6 @@
 #include <common/primitives.h>
 #include <common/protocol.h>
 #include <memory>
-#include <mt/mutex.h>
 
 namespace micro_profiler
 {
@@ -58,7 +57,6 @@ namespace micro_profiler
 		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
 
 	private:
-		mutable mt::mutex _mtx;
 		files_registry_t _files_registry;
 		modules_registry_t _modules_registry;
 		loaded_modules _lqueue;

@@ -60,6 +60,5 @@ namespace micro_profiler
 		ipc::channel &_frontend;
 		const std::shared_ptr<module_tracker> _module_tracker;
 		const std::shared_ptr<thread_monitor> _thread_monitor;
-		mt::mutex _mutex;
 	};
 }

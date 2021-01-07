@@ -67,6 +67,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\shadow_stack.h" />
     <ClInclude Include="..\statistics_bridge.h" />
+    <ClInclude Include="..\thread_monitor.h" />
     <ClInclude Include="..\types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

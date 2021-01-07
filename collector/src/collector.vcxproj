@@ -78,6 +78,9 @@
     <ProjectReference Include="..\..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\scheduler\src\scheduler.vcxproj">
+      <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
+    </ProjectReference>
     <ProjectReference Include="collector.lib.vcxproj">
       <Project>{ED61E2D0-F586-4B4E-9CE6-BAE8F03DBBC7}</Project>
     </ProjectReference>

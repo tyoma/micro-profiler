@@ -23,8 +23,8 @@
 #include <common/noncopyable.h>
 #include <functional>
 #include <ipc/endpoint.h>
-#include <mt/event.h>
 #include <mt/thread.h>
+#include <scheduler/task_queue.h>
 
 namespace micro_profiler
 {
@@ -55,11 +55,12 @@ namespace micro_profiler
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
 
 	private:
+		scheduler::task_queue _queue;
 		const std::shared_ptr<calls_collector> _collector;
 		const std::shared_ptr<module_tracker> _module_tracker;
 		const std::shared_ptr<thread_monitor> _thread_monitor;
-		std::auto_ptr<statistics_bridge> _bridge;
-		mt::event _exit;
-		std::auto_ptr<mt::thread> _frontend_thread;
+		std::unique_ptr<statistics_bridge> _bridge;
+		bool _exit;
+		std::unique_ptr<mt::thread> _frontend_thread;
 	};
 }

@@ -74,7 +74,7 @@ endif()
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 
-target_link_libraries(${micro-profiler} collector.lib patcher ipc common)
+target_link_libraries(${micro-profiler} collector.lib patcher ipc common scheduler)
 
 if(MSVC)
 	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " /Ob0 /GH /Gh /GL- ")

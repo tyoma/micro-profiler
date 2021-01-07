@@ -67,16 +67,12 @@ namespace micro_profiler
 
 		loaded_modules_.clear();
 		unloaded_modules_.clear();
-
-		mt::lock_guard<mt::mutex> l(_mtx);
-
 		swap(loaded_modules_, _lqueue);
 		swap(unloaded_modules_, _uqueue);
 	}
 
 	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int persistent_id) const
 	{
-		mt::lock_guard<mt::mutex> l(_mtx);
 		modules_registry_t::const_iterator i = _modules_registry.find(persistent_id);
 
 		return i != _modules_registry.end() ? load_image_info(i->second.path.c_str()) : 0;

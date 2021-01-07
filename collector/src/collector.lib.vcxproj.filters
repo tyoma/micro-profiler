@@ -52,5 +52,6 @@
     <ClInclude Include="..\shadow_stack.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\types.h" />
+    <ClInclude Include="..\thread_monitor.h" />
   </ItemGroup>
 </Project>

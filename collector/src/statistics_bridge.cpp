@@ -75,7 +75,6 @@ namespace micro_profiler
 			md.source_files.push_back(file);
 		});
 
-		mt::lock_guard<mt::mutex> lock(_mutex);
 		buffer_writer< pod_vector<byte> > writer(_buffer);
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
 
@@ -95,7 +94,6 @@ namespace micro_profiler
 	template <typename DataT>
 	void statistics_bridge::send(commands command, const DataT &data)
 	{
-		mt::lock_guard<mt::mutex> lock(_mutex);
 		buffer_writer< pod_vector<byte> > writer(_buffer);
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
 

@@ -64,7 +64,8 @@ namespace micro_profiler
 
 	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector> &collector,
 			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_)
-		: _collector(collector), _module_tracker(new module_tracker), _thread_monitor(thread_monitor_)
+		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _module_tracker(new module_tracker),
+			_thread_monitor(thread_monitor_), _exit(false)
 	{	_frontend_thread.reset(new mt::thread(bind(&collector_app::worker, this, factory, overhead_)));	}
 
 	collector_app::~collector_app()
@@ -75,7 +76,7 @@ namespace micro_profiler
 		if (_frontend_thread.get())
 		{
 			_collector->flush();
-			_exit.set();
+			_queue.schedule([this] {	this->_exit = true;	});
 			_frontend_thread->join();
 			_frontend_thread.reset();
 		}
@@ -97,12 +98,12 @@ namespace micro_profiler
 		{
 		case request_metadata:
 			d(persistent_id);
-			_bridge->send_module_metadata(persistent_id);
+			_queue.schedule([this, persistent_id] {	_bridge->send_module_metadata(persistent_id);	});
 			break;
 
 		case request_threads_info:
 			d(thread_ids);
-			_bridge->send_thread_info(thread_ids);
+			_queue.schedule([this, thread_ids] {	_bridge->send_thread_info(thread_ids);	});
 			break;
 
 		default:
@@ -117,30 +118,25 @@ namespace micro_profiler
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
 		shared_ptr<ipc::channel> frontend = factory(*this);
-		timestamp_t t = clock();
-
 		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker, _thread_monitor));
-
-		task tasks[] = {
-			task(bind(&statistics_bridge::analyze, _bridge.get()), 10),
-			task(bind(&statistics_bridge::update_frontend, _bridge.get()), 40),
+		function<void ()> analyze;
+		const auto analyze_ = [&] {
+			_bridge->analyze();
+			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
+		};
+		function<void ()> update_frontend;
+		const auto update_frontend_ = [&] {
+			_bridge->update_frontend();
+			_queue.schedule(function<void ()>(update_frontend), mt::milliseconds(40));
 		};
 
-		for (mt::milliseconds p(0); !_exit.wait(p); )
+		_queue.schedule(function<void ()>(analyze = analyze_), mt::milliseconds(10));
+		_queue.schedule(function<void ()>(update_frontend = update_frontend_), mt::milliseconds(40));
+		while (!_exit)
 		{
-			timestamp_t expires_at = (numeric_limits<timestamp_t>::max)();
-
-			t = clock();
-			for (task *i = tasks; i != tasks + sizeof(tasks) / sizeof(task); ++i)
-			{
-				timestamp_t next_at = i->execute(t);
-
-				if (next_at < expires_at)
-					expires_at = next_at;
-			}
-			p = mt::milliseconds(expires_at > t ? expires_at - t : 0);
+			_queue.wait();
+			_queue.execute_ready(mt::milliseconds(100));
 		}
-
 		_bridge->analyze();
 		_bridge->update_frontend();
 	}

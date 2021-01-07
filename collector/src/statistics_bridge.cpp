@@ -64,24 +64,16 @@ namespace micro_profiler
 
 	void statistics_bridge::send_module_metadata(unsigned int persistent_id)
 	{
-		module_tracker::metadata_ptr metadata = _module_tracker->get_metadata(persistent_id);
-		module_info_metadata md;
+		const auto metadata = _module_tracker->get_metadata(persistent_id);
+		auto md = make_pair(persistent_id, module_info_metadata());
 
 		metadata->enumerate_functions([&] (const symbol_info &symbol) {
-			md.symbols.push_back(symbol);
+			md.second.symbols.push_back(symbol);
 		});
-
 		metadata->enumerate_files([&] (const pair<unsigned, string> &file) {
-			md.source_files.push_back(file);
+			md.second.source_files.push_back(file);
 		});
-
-		buffer_writer< pod_vector<byte> > writer(_buffer);
-		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
-
-		archive(module_metadata);
-		archive(persistent_id);
-		archive(md);
-		_frontend.message(const_byte_range(_buffer.data(), _buffer.size()));
+		send(module_metadata, md);
 	}
 
 	void statistics_bridge::send_thread_info(const vector<thread_monitor::thread_id> &ids)

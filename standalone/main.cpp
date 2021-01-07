@@ -87,6 +87,7 @@ namespace micro_profiler
 			&constants::standalone_frontend_id);
 
 		ipc_manager.enable_remote_sockets(true);
+
 		main_form->set_visible(true);
 		app.run();
 	}

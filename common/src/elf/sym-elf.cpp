@@ -85,7 +85,8 @@ namespace symreader
 			break;
 
 		default:
-			throw runtime_error("Only 32-bit & 64-bit platforms are supported!");
+			// throw runtime_error("Only 32-bit & 64-bit platforms are supported!");
+			break;
 		}
 	}
 
@@ -134,7 +135,8 @@ namespace symreader
 			break;
 
 		default:
-			throw runtime_error("Only 32-bit & 64-bit platforms are supported!");
+			// throw runtime_error("Only 32-bit & 64-bit platforms are supported!");
+			break;
 		}
 	}
 }

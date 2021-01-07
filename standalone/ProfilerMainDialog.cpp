@@ -72,7 +72,7 @@ namespace micro_profiler
 			stk->set_spacing(5);
 			root->add(pad_control(stk, 5, 5));
 				stk->add(_statistics_display = make_shared<tables_ui>(factory_, s, *_configuration), percents(100), false);
-				const auto toolbar = factory_.create_control<stack>("hstack");
+/*				const auto toolbar = factory_.create_control<stack>("hstack");
 				toolbar->set_spacing(5);
 				stk->add(toolbar, pixels(24), false);
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
@@ -97,7 +97,7 @@ namespace micro_profiler
 							const agge::point<int> center = { (l.x1 + l.x2) / 2, (l.y1 + l.y2) / 2 };
 
 							show_about(center, _form->create_child());
-						});
+						});*/
 
 		rect_i l;
 

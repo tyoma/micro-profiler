@@ -35,33 +35,6 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace
-	{
-		class task
-		{
-		public:
-			task(const function<void()> &f, timestamp_t period)
-				: _task(f), _period(period), _expires_at(period + clock())
-			{	}
-
-			timestamp_t execute(timestamp_t &t)
-			{
-				if (t >= _expires_at)
-				{
-					_task();
-					t = clock();
-					_expires_at = t + _period;
-				}
-				return _expires_at;
-			}
-
-		private:
-			function<void()> _task;
-			timestamp_t _period;
-			timestamp_t _expires_at;
-		};
-	}
-
 	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector> &collector,
 			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_)
 		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _module_tracker(new module_tracker),

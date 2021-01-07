@@ -41,7 +41,9 @@ namespace micro_profiler
 			HMODULE hkernel;
 
 			::GetModuleHandleExA(0, "kernel32", &hkernel);
-			return shared_ptr<void>(::GetProcAddress(hkernel, "ExitProcess"), bind(&::FreeLibrary, hkernel));
+			return shared_ptr<void>(::GetProcAddress(hkernel, "ExitProcess"), [hkernel] (void *) {
+				::FreeLibrary(hkernel);
+			});
 		}
 
 		void WINAPI ExitProcessHooked(UINT exit_code)

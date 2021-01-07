@@ -66,7 +66,11 @@ namespace micro_profiler
 			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_)
 		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _module_tracker(new module_tracker),
 			_thread_monitor(thread_monitor_), _exit(false)
-	{	_frontend_thread.reset(new mt::thread(bind(&collector_app::worker, this, factory, overhead_)));	}
+	{
+		_frontend_thread.reset(new mt::thread([this, factory, overhead_] {
+			worker(factory, overhead_);
+		}));
+	}
 
 	collector_app::~collector_app()
 	{	stop();	}

@@ -28,7 +28,6 @@
 #include <mt/thread_callbacks.h>
 
 using namespace std;
-using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -42,7 +41,11 @@ namespace micro_profiler
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
 		for (call_traces_t::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
-			i->second->read_collected(bind(&acceptor::accept_calls, &a, i->first, _1, _2));
+		{
+			i->second->read_collected([&a, i] (const call_record *calls, size_t count)	{
+				a.accept_calls(i->first, calls, count);
+			});
+		}
 	}
 
 	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void **stack_ptr,
@@ -87,7 +90,7 @@ namespace micro_profiler
 		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_trace_limit));
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
-		_thread_callbacks.at_thread_exit(bind(&calls_collector_thread::flush, trace));
+		_thread_callbacks.at_thread_exit([trace] {	trace->flush();	});
 		_call_traces.push_back(make_pair(_thread_monitor.register_self(), trace));
 		_trace_pointers_tls.set(trace.get());
 		return *trace;

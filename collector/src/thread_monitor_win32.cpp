@@ -119,7 +119,7 @@ namespace micro_profiler
 
 			lti.thread_info_entry = &*_threads.insert(make_pair(_next_id++, ti)).first;
 			lti.handle = get_current_thread();
-			_callbacks.at_thread_exit(bind(&thread_monitor_impl::thread_exited, wself, id));
+			_callbacks.at_thread_exit([wself, id] {	thread_exited(wself, id);	});
 		}
 		return lti.thread_info_entry->first;
 	}

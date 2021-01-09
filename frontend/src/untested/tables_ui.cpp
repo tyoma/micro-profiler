@@ -43,8 +43,9 @@ namespace micro_profiler
 		};
 	}
 
-	tables_ui::tables_ui(const factory &factory_, const shared_ptr<functions_list> &model, hive &configuration)
-		: stack(5, false), _cm_main(new columns_model(c_columns_statistics, 3, false)),
+	tables_ui::tables_ui(const factory &factory_, shared_ptr<functions_list> model, hive &configuration)
+		: resizable_stack(5, false, factory_.context.cursor_manager_),
+			_cm_main(new columns_model(c_columns_statistics, 3, false)),
 			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new columns_model(c_columns_statistics, 4, false)),
 			_m_main(model),
@@ -97,17 +98,19 @@ namespace micro_profiler
 		_connections.push_back(_pc_children->selection_changed
 			+= bind(&tables_ui::on_children_piechart_selection_change, this, _1));
 
-		add(_lv_parents, 150, 3);
-		add(_cb_threads, 24, 4);
-		auto split = make_shared<stack>(5, true);
-		add(split, -100);
-			split->add(_pc_main, 150);
-			split->add(_lv_main, -100, 1);
+		shared_ptr<stack> panel[2];
 
-		split = make_shared<stack>(5, true);
-		add(split, 150);
-			split->add(_pc_children, 150);
-			split->add(_lv_children, -100, 1);
+		add(_lv_parents, 1);
+
+		add(panel[0] = make_shared<stack>(5, false), 3);
+			panel[0]->add(_cb_threads, 24, 4);
+			panel[0]->add(panel[1] = make_shared<stack>(5, true), -100);
+				panel[1]->add(_pc_main, 150);
+				panel[1]->add(_lv_main, -100, 1);
+
+		add(panel[0] = make_shared<stack>(5, true), 1);
+			panel[0]->add(_pc_children, 150);
+			panel[0]->add(_lv_children, -100, 1);
 	}
 
 	void tables_ui::save(hive &configuration)

@@ -21,10 +21,10 @@ namespace micro_profiler
 	struct hive;
 	struct linked_statistics;
 
-	class tables_ui : public wpl::stack
+	class tables_ui : public wpl::resizable_stack
 	{
 	public:
-		tables_ui(const wpl::factory &factory_, const std::shared_ptr<functions_list> &model, hive &configuration);
+		tables_ui(const wpl::factory &factory_, std::shared_ptr<functions_list> model, hive &configuration);
 
 		void save(hive &configuration);
 

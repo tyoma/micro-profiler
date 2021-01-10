@@ -21,7 +21,7 @@ namespace micro_profiler
 	struct hive;
 	struct linked_statistics;
 
-	class tables_ui : public wpl::resizable_stack
+	class tables_ui : public wpl::stack
 	{
 	public:
 		tables_ui(const wpl::factory &factory_, std::shared_ptr<functions_list> model, hive &configuration);

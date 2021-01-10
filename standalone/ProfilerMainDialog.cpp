@@ -69,16 +69,16 @@ namespace micro_profiler
 
 		const auto root = make_shared<overlay>();
 			root->add(factory_.create_control<control>("background"));
-			const auto stk = make_shared<stack>(5, false);
+			const auto stk = make_shared<stack>(5, false, factory_.context.cursor_manager_);
 			root->add(pad_control(stk, 5, 5));
-				stk->add(_statistics_display = make_shared<tables_ui>(factory_, s, *_configuration), -100);
-				const auto toolbar = make_shared<stack>(5, true);
-				stk->add(toolbar, 24);
-					toolbar->add(btn = factory_.create_control<button>("button"), 120, 100);
+				stk->add(_statistics_display = make_shared<tables_ui>(factory_, s, *_configuration), percents(100), false);
+				const auto toolbar = make_shared<stack>(5, true, factory_.context.cursor_manager_);
+				stk->add(toolbar, pixels(24), false);
+					toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
 						btn->set_text(L"Clear Statistics");
 						_connections.push_back(btn->clicked += [this] {	_statistics->clear();	});
 
-					toolbar->add(btn = factory_.create_control<button>("button"), 100, 101);
+					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
 						btn->set_text(L"Copy All");
 						_connections.push_back(btn->clicked += [this] {
 							string text;
@@ -87,8 +87,8 @@ namespace micro_profiler
 							copy_to_buffer(text);
 						});
 
-					toolbar->add(make_shared< controls::integrated_control<control> >(), -100);
-					toolbar->add(lnk = factory_.create_control<link>("link"), 200);
+					toolbar->add(make_shared< controls::integrated_control<control> >(), percents(100), false);
+					toolbar->add(lnk = factory_.create_control<link>("link"), pixels(200), false);
 						lnk->set_align(text_container::right);
 						lnk->set_text(L"<a>Star Me!</a>");
 						_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {

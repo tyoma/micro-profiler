@@ -44,7 +44,7 @@ namespace micro_profiler
 	}
 
 	tables_ui::tables_ui(const factory &factory_, shared_ptr<functions_list> model, hive &configuration)
-		: resizable_stack(5, false, factory_.context.cursor_manager_),
+		: stack(5, false, factory_.context.cursor_manager_),
 			_cm_main(new columns_model(c_columns_statistics, 3, false)),
 			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new columns_model(c_columns_statistics, 4, false)),
@@ -100,17 +100,17 @@ namespace micro_profiler
 
 		shared_ptr<stack> panel[2];
 
-		add(_lv_parents, 1);
+		add(_lv_parents, percents(20), true);
 
-		add(panel[0] = make_shared<stack>(5, false), 3);
-			panel[0]->add(_cb_threads, 24, 4);
-			panel[0]->add(panel[1] = make_shared<stack>(5, true), -100);
-				panel[1]->add(_pc_main, 150);
-				panel[1]->add(_lv_main, -100, 1);
+		add(panel[0] = make_shared<stack>(5, false, factory_.context.cursor_manager_), percents(60), true);
+			panel[0]->add(_cb_threads, pixels(24), false, 4);
+			panel[0]->add(panel[1] = make_shared<stack>(5, true, factory_.context.cursor_manager_), percents(100), false);
+				panel[1]->add(_pc_main, pixels(150), false);
+				panel[1]->add(_lv_main, percents(100), false, 1);
 
-		add(panel[0] = make_shared<stack>(5, true), 1);
-			panel[0]->add(_pc_children, 150);
-			panel[0]->add(_lv_children, -100, 1);
+		add(panel[0] = make_shared<stack>(5, true, factory_.context.cursor_manager_), percents(20), true);
+			panel[0]->add(_pc_children, pixels(150), false);
+			panel[0]->add(_lv_children, percents(100), false, 1);
 	}
 
 	void tables_ui::save(hive &configuration)

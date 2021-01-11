@@ -45,22 +45,24 @@ namespace micro_profiler
 	}
 
 	attach_ui::attach_ui(const factory &factory_, const wpl::queue &queue_)
-		: wpl::stack(5, false, factory_.context.cursor_manager_), _processes_lv(factory_.create_control<listview>("listview")),
+		: wpl::stack(false, factory_.context.cursor_manager_), _processes_lv(factory_.create_control<listview>("listview")),
 			_model(new process_list), _queue(queue_), _alive(make_shared<bool>(true))
 	{
 		shared_ptr<stack> toolbar;
 		shared_ptr<button> btn;
 
+		set_spacing(5);
 		add(_processes_lv, percents(100), false, 1);
-		add(toolbar = make_shared<stack>(5, true, factory_.context.cursor_manager_), pixels(24), false);
+		add(toolbar = factory_.create_control<stack>("hstack"), pixels(24), false);
+		toolbar->set_spacing(5);
 		toolbar->add(make_shared< controls::integrated_control<wpl::control> >(), percents(100), false);
-			toolbar->add(btn = factory_.create_control<button>("button"), pixels(50), false);
+			toolbar->add(btn = factory_.create_control<button>("button"), pixels(50), false, 2);
 				btn->set_text(L"Attach");
 				_connections.push_back(btn->clicked += [this] {
 
 				});
 
-			toolbar->add(btn = factory_.create_control<button>("button"), pixels(50), false);
+			toolbar->add(btn = factory_.create_control<button>("button"), pixels(50), false, 3);
 				btn->set_text(L"Close");
 				_connections.push_back(btn->clicked += [this] {
 					close();

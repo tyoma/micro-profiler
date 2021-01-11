@@ -44,7 +44,7 @@ namespace micro_profiler
 	}
 
 	tables_ui::tables_ui(const factory &factory_, shared_ptr<functions_list> model, hive &configuration)
-		: stack(5, false, factory_.context.cursor_manager_),
+		: stack(false, factory_.context.cursor_manager_),
 			_cm_main(new columns_model(c_columns_statistics, 3, false)),
 			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new columns_model(c_columns_statistics, 4, false)),
@@ -56,6 +56,8 @@ namespace micro_profiler
 			_pc_children(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
 			_cb_threads(static_pointer_cast<combobox>(factory_.create_control("combobox")))
 	{
+		set_spacing(5);
+
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
@@ -100,17 +102,20 @@ namespace micro_profiler
 
 		shared_ptr<stack> panel[2];
 
-		add(_lv_parents, percents(20), true);
+		add(_lv_parents, percents(20), true, 3);
 
-		add(panel[0] = make_shared<stack>(5, false, factory_.context.cursor_manager_), percents(60), true);
+		add(panel[0] = factory_.create_control<stack>("vstack"), percents(60), true);
+			panel[0]->set_spacing(5);
 			panel[0]->add(_cb_threads, pixels(24), false, 4);
-			panel[0]->add(panel[1] = make_shared<stack>(5, true, factory_.context.cursor_manager_), percents(100), false);
+			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), percents(100), false);
+				panel[1]->set_spacing(5);
 				panel[1]->add(_pc_main, pixels(150), false);
 				panel[1]->add(_lv_main, percents(100), false, 1);
 
-		add(panel[0] = make_shared<stack>(5, true, factory_.context.cursor_manager_), percents(20), true);
+		add(panel[0] = factory_.create_control<stack>("hstack"), percents(20), true);
+			panel[0]->set_spacing(5);
 			panel[0]->add(_pc_children, pixels(150), false);
-			panel[0]->add(_lv_children, percents(100), false, 1);
+			panel[0]->add(_lv_children, percents(100), false, 2);
 	}
 
 	void tables_ui::save(hive &configuration)

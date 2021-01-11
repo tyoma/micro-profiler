@@ -33,17 +33,19 @@ using namespace wpl;
 namespace micro_profiler
 {
 	about_ui::about_ui(const wpl::factory &factory_)
-		: stack(5, false, factory_.context.cursor_manager_), _close_button(static_pointer_cast<button>(factory_.create_control("button"))),
+		: stack(false, factory_.context.cursor_manager_), _close_button(static_pointer_cast<button>(factory_.create_control("button"))),
 			close(_close_button->clicked)
 	{
 		const auto cursor_manager_ = factory_.context.cursor_manager_;
 		shared_ptr<wpl::link> link_;
 		shared_ptr<stack> inner_stack;
 
+		set_spacing(5);
 		add(link_ = factory_.create_control<wpl::link>("link"), pixels(40), false);
 		link_->set_text(L"Please, take any of these steps to support the development of MicroProfiler:");
 
-		add(pad_control(inner_stack = make_shared<stack>(10, false, cursor_manager_), 10, 0), percents(100), false);
+		add(pad_control(inner_stack = factory_.create_control<stack>("vstack"), 10, 0), percents(100), false);
+			inner_stack->set_spacing(10);
 			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), pixels(20), false, 1);
 			link_->set_text(L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
 				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));

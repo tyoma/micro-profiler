@@ -69,10 +69,12 @@ namespace micro_profiler
 
 		const auto root = make_shared<overlay>();
 			root->add(factory_.create_control<control>("background"));
-			const auto stk = make_shared<stack>(5, false, factory_.context.cursor_manager_);
+			const auto stk = factory_.create_control<stack>("vstack");
+			stk->set_spacing(5);
 			root->add(pad_control(stk, 5, 5));
 				stk->add(_statistics_display = make_shared<tables_ui>(factory_, s, *_configuration), percents(100), false);
-				const auto toolbar = make_shared<stack>(5, true, factory_.context.cursor_manager_);
+				const auto toolbar = factory_.create_control<stack>("hstack");
+				toolbar->set_spacing(5);
 				stk->add(toolbar, pixels(24), false);
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
 						btn->set_text(L"Clear Statistics");

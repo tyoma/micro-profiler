@@ -22,19 +22,26 @@
 
 #include <common/noncopyable.h>
 #include <ipc/endpoint.h>
-#include <scheduler/scheduler.h>
+#include <mt/mutex.h>
+
+namespace scheduler
+{
+	struct queue;
+}
 
 namespace micro_profiler
 {
-	class marshalling_window;
-
-	class marshalling_server : public ipc::server, noncopyable
+	class marshalled_server : public ipc::server, noncopyable
 	{
 	public:
-		marshalling_server(std::shared_ptr<ipc::server> underlying, std::shared_ptr<scheduler::queue> queue);
-		~marshalling_server();
+		marshalled_server(std::shared_ptr<ipc::server> underlying, std::shared_ptr<scheduler::queue> queue);
+		~marshalled_server();
 
 		void stop();
+
+	private:
+		class outbound_wrapper;
+		class marshalled_session;
 
 	private:
 		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
@@ -42,5 +49,38 @@ namespace micro_profiler
 	private:
 		std::shared_ptr<ipc::server> _underlying;
 		std::shared_ptr<scheduler::queue> _queue;
+	};
+
+	class marshalled_server::outbound_wrapper : public ipc::channel
+	{
+	public:
+		outbound_wrapper(ipc::channel &underlying);
+
+		void stop();
+
+	private:
+		virtual void disconnect() throw();
+		virtual void message(const_byte_range payload);
+
+	private:
+		mt::mutex _mutex;
+		ipc::channel *_underlying;
+	};
+
+	class marshalled_server::marshalled_session : public ipc::channel
+	{
+	public:
+		marshalled_session(std::shared_ptr<scheduler::queue> queue, std::shared_ptr<ipc::server> underlying,
+			ipc::channel &outbound);
+		~marshalled_session();
+
+	private:
+		virtual void disconnect() throw();
+		virtual void message(const_byte_range payload);
+
+	private:
+		std::shared_ptr<scheduler::queue> _queue;
+		std::shared_ptr<ipc::channel> _underlying;
+		std::shared_ptr<outbound_wrapper> _outbound;
 	};
 }

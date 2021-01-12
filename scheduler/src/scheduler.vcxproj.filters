@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClInclude Include="..\task_queue.h" />
     <ClInclude Include="..\scheduler.h" />
+    <ClInclude Include="..\ui_queue.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -11,6 +12,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="task_queue.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="ui_queue_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

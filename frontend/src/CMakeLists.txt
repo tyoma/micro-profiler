@@ -12,7 +12,7 @@ set(FRONTEND_LIB_SOURCES
 	untested/about_ui.cpp
 	untested/factory.cpp
 	untested/ipc_manager.cpp
-	untested/marshalling_server.cpp
+	untested/marshalled_server.cpp
 	untested/tables_ui.cpp
 )
 
@@ -27,7 +27,6 @@ if(WIN32)
 		untested/file.cpp
 		untested/stream.cpp
 		untested/system_stylesheet.cpp
-		untested/ui_queue_win32.cpp
 	)
 endif()
 

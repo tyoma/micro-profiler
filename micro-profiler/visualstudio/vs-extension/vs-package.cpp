@@ -33,8 +33,8 @@
 #include <frontend/frontend_manager.h>
 #include <frontend/ipc_manager.h>
 #include <frontend/tables_ui.h>
-#include <frontend/ui_queue.h>
 #include <logger/log.h>
+#include <scheduler/ui_queue.h>
 #include <setup/environment.h>
 #include <visualstudio/dispatch.h>
 #include <wpl/layout.h>
@@ -108,7 +108,8 @@ namespace micro_profiler
 			setup_factory(factory);
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager(bind(&profiler_package::create_ui, this, _1, _2)));
-			_ipc_manager.reset(new ipc_manager(_frontend_manager, make_shared<ui_queue>(&micro_profiler::clock),
+			_ipc_manager.reset(new ipc_manager(_frontend_manager,
+				make_shared<scheduler::ui_queue>([] {	return mt::milliseconds(micro_profiler::clock());	}),
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 				&constants::integrated_frontend_id));
 			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),

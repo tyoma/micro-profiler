@@ -54,14 +54,11 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="untested\ipc_manager.cpp" />
-    <ClCompile Include="untested\marshalling_server.cpp" />
+    <ClCompile Include="untested\marshalled_server.cpp" />
     <ClCompile Include="untested\piechart.cpp" />
     <ClCompile Include="untested\stream.cpp" />
     <ClCompile Include="untested\about_ui.cpp" />
     <ClCompile Include="untested\tables_ui.cpp" />
-    <ClCompile Include="untested\ui_queue_win32.cpp">
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\factory.h" />
@@ -70,7 +67,7 @@
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\ipc_manager.h" />
-    <ClInclude Include="..\marshalling_server.h" />
+    <ClInclude Include="..\marshalled_server.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\columns_model.h" />
@@ -87,7 +84,6 @@
     <ClInclude Include="..\system_stylesheet.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
-    <ClInclude Include="..\ui_queue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

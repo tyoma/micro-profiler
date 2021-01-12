@@ -18,49 +18,51 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <frontend/ui_queue.h>
+#include "../ui_queue.h"
 
 #include <logger/log.h>
 #include <windows.h>
 
-#define PREAMBLE "UI Queue: "
+#define PREAMBLE "Scheduler UI Queue: "
 
 using namespace std;
 
-namespace micro_profiler
+namespace scheduler
 {
-	ui_queue::ui_queue(const std::function<timestamp_t ()> &clock_)
-		: _tasks([clock_] () -> mt::milliseconds {	return mt::milliseconds(clock_());	})
+	ui_queue::ui_queue(const clock &clock_)
+		: _tasks(clock_)
 	{
 		struct functions
 		{
 			static LRESULT WINAPI on_message(HWND hwnd, UINT message, WPARAM wparam, LPARAM /*lparam*/)
-			try
 			{
 				switch (message)
 				{
+				default:
+					return 0;
+
 				case WM_TIMER:
 					::KillTimer(hwnd, wparam);
 
 				case WM_USER:
 					const auto self = reinterpret_cast<ui_queue *>(wparam);
+					task_queue::wake_up wakeup(mt::milliseconds(0), true);
 
-					self->schedule_wakeup(self->_tasks.execute_ready(mt::milliseconds(50)));
+					try
+					{
+						wakeup = self->_tasks.execute_ready(mt::milliseconds(50));
+					}
+					catch (exception &e)
+					{
+						LOGE(PREAMBLE "exception during scheduled task processing!") % A(self) % A(e.what());
+					}
+					catch (...)
+					{
+						LOGE(PREAMBLE "unknown exception during scheduled task processing!") % A(self);
+					}
+					self->schedule_wakeup(wakeup);
+					return 0;
 				}
-				return 0;
-			}
-			catch (exception &e)
-			{
-				LOGE(PREAMBLE "exception during scheduled task processing!")
-					% A(reinterpret_cast<ui_queue *>(wparam))
-					%A(e.what());
-				return 0;
-			}
-			catch (...)
-			{
-				LOGE(PREAMBLE "unknown exception during scheduled task processing!")
-					% A(reinterpret_cast<ui_queue *>(wparam));
-				return 0;
 			}
 		};
 
@@ -69,11 +71,11 @@ namespace micro_profiler
 		LOG(PREAMBLE "constructed...") % A(this) % A(_impl.get());
 	}
 
-	void ui_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
-	{	schedule_wakeup(_tasks.schedule(move(task), defer_by));	}
-
 	ui_queue::~ui_queue()
 	{	LOG(PREAMBLE "destroyed...") % A(this);	}
+
+	void ui_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
+	{	schedule_wakeup(_tasks.schedule(move(task), defer_by));	}
 
 	void ui_queue::schedule_wakeup(const scheduler::task_queue::wake_up &wakeup)
 	{

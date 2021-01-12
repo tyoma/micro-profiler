@@ -32,10 +32,8 @@
 #include <common/win32/configuration_registry.h>
 #include <frontend/factory.h>
 #include <frontend/system_stylesheet.h>
-#include <frontend/ui_queue.h>
 #include <ipc/com/endpoint.h>
-#include <scheduler/scheduler.h>
-#include <scheduler/task_queue.h>
+#include <scheduler/ui_queue.h>
 #include <ShellAPI.h>
 #include <wpl/factory.h>
 #include <wpl/freetype2/font_loader.h>
@@ -105,7 +103,7 @@ namespace micro_profiler
 	application::application()
 	{
 		const auto clock_ = &clock;
-		const auto queue = make_shared<ui_queue>(clock_);
+		const auto queue = make_shared<scheduler::ui_queue>([] {	return mt::milliseconds(clock());	});
 		const auto text_engine = create_text_engine();
 		const factory_context context = {
 			make_shared<gcontext::surface_type>(1, 1, 16),

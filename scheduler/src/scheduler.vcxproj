@@ -36,9 +36,13 @@
   <ItemGroup>
     <ClInclude Include="..\scheduler.h" />
     <ClInclude Include="..\task_queue.h" />
+    <ClInclude Include="..\ui_queue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="task_queue.cpp" />
+    <ClCompile Include="ui_queue_win32.cpp">
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

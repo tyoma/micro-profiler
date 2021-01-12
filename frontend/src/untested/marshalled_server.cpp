@@ -18,68 +18,35 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <frontend/marshalling_server.h>
+#include <frontend/marshalled_server.h>
 
 #include <functional>
 #include <mt/mutex.h>
+#include <scheduler/scheduler.h>
 #include <vector>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	class outbound_wrapper : public ipc::channel
-	{
-	public:
-		outbound_wrapper(ipc::channel &underlying);
-
-		void stop();
-
-	private:
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
-
-	private:
-		mt::mutex _mutex;
-		ipc::channel *_underlying;
-	};
-
-	class marshalling_session : public ipc::channel
-	{
-	public:
-		marshalling_session(shared_ptr<scheduler::queue> queue, shared_ptr<ipc::server> underlying, ipc::channel &outbound);
-		~marshalling_session();
-
-	private:
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
-
-	private:
-		shared_ptr<scheduler::queue> _queue;
-		shared_ptr<ipc::channel> _underlying;
-		shared_ptr<outbound_wrapper> _outbound;
-	};
-
-
-
-	outbound_wrapper::outbound_wrapper(ipc::channel &underlying)
+	marshalled_server::outbound_wrapper::outbound_wrapper(ipc::channel &underlying)
 		: _underlying(&underlying)
 	{	}
 
-	void outbound_wrapper::stop()
+	void marshalled_server::outbound_wrapper::stop()
 	{
 		mt::lock_guard<mt::mutex> lock(_mutex);
 		_underlying = nullptr;
 	}
 
-	void outbound_wrapper::disconnect() throw()
+	void marshalled_server::outbound_wrapper::disconnect() throw()
 	{
 		mt::lock_guard<mt::mutex> lock(_mutex);
 		if (_underlying)
 			_underlying->disconnect();
 	}
 
-	void outbound_wrapper::message(const_byte_range payload)
+	void marshalled_server::outbound_wrapper::message(const_byte_range payload)
 	{
 		mt::lock_guard<mt::mutex> lock(_mutex);
 		if (_underlying)
@@ -87,8 +54,8 @@ namespace micro_profiler
 	}
 
 
-	marshalling_session::marshalling_session(shared_ptr<scheduler::queue> queue, shared_ptr<ipc::server> underlying,
-			ipc::channel &outbound_)
+	marshalled_server::marshalled_session::marshalled_session(shared_ptr<scheduler::queue> queue,
+			shared_ptr<ipc::server> underlying, ipc::channel &outbound_)
 		: _queue(queue), _outbound(make_shared<outbound_wrapper>(outbound_))
 	{
 		typedef pair<shared_ptr<ipc::channel>, shared_ptr<ipc::channel> > composite_t;
@@ -101,16 +68,17 @@ namespace micro_profiler
 		});
 	}
 
-	marshalling_session::~marshalling_session()
+	marshalled_server::marshalled_session::~marshalled_session()
 	{
 		auto underlying = move(_underlying);
 		function<void ()> destroy = [underlying] {	};
 
+		underlying.reset();
 		_outbound->stop();
 		_queue->schedule(move(destroy));
 	}
 
-	void marshalling_session::disconnect() throw()
+	void marshalled_server::marshalled_session::disconnect() throw()
 	{
 		auto underlying = _underlying;
 
@@ -120,7 +88,7 @@ namespace micro_profiler
 		});
 	}
 
-	void marshalling_session::message(const_byte_range payload)
+	void marshalled_server::marshalled_session::message(const_byte_range payload)
 	{
 		auto underlying = _underlying;
 		auto data = make_shared< vector<byte> >(payload.begin(), payload.end());
@@ -132,11 +100,11 @@ namespace micro_profiler
 	}
 
 
-	marshalling_server::marshalling_server(shared_ptr<ipc::server> underlying, shared_ptr<scheduler::queue> queue)
+	marshalled_server::marshalled_server(shared_ptr<ipc::server> underlying, shared_ptr<scheduler::queue> queue)
 		: _underlying(underlying), _queue(queue)
 	{	}
 
-	marshalling_server::~marshalling_server()
+	marshalled_server::~marshalled_server()
 	{
 		auto underlying = move(_underlying);
 		function<void ()> destroy = [underlying] {	};
@@ -144,9 +112,9 @@ namespace micro_profiler
 		_queue->schedule(move(destroy));
 	}
 
-	void marshalling_server::stop()
+	void marshalled_server::stop()
 	{	_underlying = nullptr;	}
 
-	shared_ptr<ipc::channel> marshalling_server::create_session(ipc::channel &outbound)
-	{	return shared_ptr<ipc::channel>(new marshalling_session(_queue, _underlying, outbound));	}
+	shared_ptr<ipc::channel> marshalled_server::create_session(ipc::channel &outbound)
+	{	return shared_ptr<ipc::channel>(new marshalled_session(_queue, _underlying, outbound));	}
 }

@@ -23,7 +23,7 @@
 #include <common/constants.h>
 #include <common/formatting.h>
 #include <common/string.h>
-#include <frontend/marshalling_server.h>
+#include <frontend/marshalled_server.h>
 #include <logger/log.h>
 
 #define PREAMBLE "IPC manager: "
@@ -70,7 +70,7 @@ namespace micro_profiler
 
 	ipc_manager::ipc_manager(std::shared_ptr<ipc::server> server, std::shared_ptr<scheduler::queue> queue,
 			port_range range_, const guid_t *com_server_id)
-		: _server(new marshalling_server(server, queue)), _range(range_), _remote_enabled(false), _port(0)
+		: _server(new marshalled_server(server, queue)), _range(range_), _remote_enabled(false), _port(0)
 	{
 		if (com_server_id)
 		{

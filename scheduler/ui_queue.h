@@ -20,23 +20,21 @@
 
 #pragma once
 
-#include <common/types.h>
-#include <scheduler/scheduler.h>
-#include <scheduler/task_queue.h>
+#include "scheduler.h"
+#include "task_queue.h"
 
-namespace micro_profiler
+namespace scheduler
 {
-	class ui_queue : public scheduler::queue, noncopyable
+	class ui_queue : public queue
 	{
 	public:
-		ui_queue(const std::function<timestamp_t ()> &clock_);
+		ui_queue(const clock &clock_);
 		~ui_queue();
 
-		// scheduler::queue methods
 		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by) override;
 
 	private:
-		void schedule_wakeup(const scheduler::task_queue::wake_up &wakeup);
+		void schedule_wakeup(const task_queue::wake_up &wakeup);
 
 	private:
 		scheduler::task_queue _tasks;

@@ -22,9 +22,6 @@
     <ClCompile Include="untested\ipc_manager.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
-    <ClCompile Include="untested\marshalling_server.cpp">
-      <Filter>src\untested</Filter>
-    </ClCompile>
     <ClCompile Include="untested\piechart.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
@@ -49,7 +46,7 @@
     <ClCompile Include="untested\system_stylesheet.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
-    <ClCompile Include="untested\ui_queue_win32.cpp">
+    <ClCompile Include="untested\marshalled_server.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,7 +61,6 @@
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\file.h" />
     <ClInclude Include="..\ipc_manager.h" />
-    <ClInclude Include="..\marshalling_server.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\tables_ui.h" />
@@ -77,7 +73,7 @@
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\system_stylesheet.h" />
-    <ClInclude Include="..\ui_queue.h" />
+    <ClInclude Include="..\marshalled_server.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

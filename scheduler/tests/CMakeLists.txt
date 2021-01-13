@@ -20,6 +20,11 @@ elseif (APPLE)
 		helpers_macos.mm
 		UIQueueTests.cpp
 	)
+elseif (ANDROID)
+	set(SCHEDULER_TEST_SOURCES ${SCHEDULER_TEST_SOURCES}
+		helpers_android.cpp
+		UIQueueTests.cpp
+	)	
 endif()
 
 add_library(scheduler.tests SHARED ${SCHEDULER_TEST_SOURCES})

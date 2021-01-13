@@ -40,9 +40,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="task_queue.cpp" />
+    <ClCompile Include="ui_queue_android.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ui_queue_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ui_queue_macos.mm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

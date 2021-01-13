@@ -30,12 +30,7 @@ namespace scheduler
 						loop_term();
 						_loop.reset();
 					})
-				{	}
-
-				void wait_init()
-				{
-					_ready.wait();
-				}
+				{	_ready.wait();	}
 
 				mt::thread::id get_id() const
 				{	return _thread.get_id();	}
@@ -68,9 +63,6 @@ namespace scheduler
 					queue_[1].reset(new ui_queue([&] {	return time;	}));
 				}, [&] {	queue_[1].reset();	});
 
-				tl1.wait_init();
-				tl2.wait_init();
-
 				// ACT
 				queue_[0]->schedule([&] {	id[0] = mt::this_thread::get_id(), done[0].set();	});
 				queue_[1]->schedule([&] {	id[1] = mt::this_thread::get_id(), done[1].set();	});
@@ -94,8 +86,6 @@ namespace scheduler
 				threaded_message_loop tl([&] {
 					queue_.reset(new ui_queue([&] {	return time;	}));
 				}, [&] {	queue_.reset();	});
-
-				tl.wait_init();
 
 				// ACT
 				queue_->schedule([&] {	data.push_back(3);	});
@@ -134,8 +124,6 @@ namespace scheduler
 				}, [&] {	queue_.reset();	});
 				mt::milliseconds delay[3];
 
-				tl.wait_init();
-
 				// ACT
 				const auto sw1 = create_stopwatch();
 				const auto sw2 = create_stopwatch();
@@ -167,8 +155,6 @@ namespace scheduler
 				threaded_message_loop tl([&] {
 					queue_.reset(new ui_queue(get_clock()));
 				}, [&] {	queue_.reset();	});
-
-				tl.wait_init();
 
 				// ACT / ASSERT (must exit)
 				queue_->schedule([&] {	throw 0;	});

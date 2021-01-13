@@ -16,10 +16,16 @@ elseif (APPLE)
 	set(SCHEDULER_SOURCES ${SCHEDULER_SOURCES}
 		ui_queue_macos.mm
 	)
+elseif (ANDROID)
+	set(SCHEDULER_SOURCES ${SCHEDULER_SOURCES}
+		ui_queue_android.cpp
+	)
 endif()
 
 add_library(scheduler STATIC ${SCHEDULER_SOURCES})
 
 if (APPLE)
 	target_link_libraries(scheduler "-framework Foundation -framework Cocoa")
+elseif (ANDROID) 
+	target_link_libraries(scheduler log android)
 endif()

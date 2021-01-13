@@ -17,5 +17,13 @@
     <ClCompile Include="ui_queue_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="ui_queue_android.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ui_queue_macos.mm">
+      <Filter>src</Filter>
+    </None>
   </ItemGroup>
 </Project>

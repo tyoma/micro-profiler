@@ -32,12 +32,12 @@ namespace scheduler
 		~ui_queue();
 
 		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by) override;
-
+		
 	private:
-		void schedule_wakeup(const task_queue::wake_up &wakeup);
+		struct impl;
 
 	private:
 		scheduler::task_queue _tasks;
-		std::shared_ptr<void> _impl;
+		std::shared_ptr<impl> _impl;
 	};
 }

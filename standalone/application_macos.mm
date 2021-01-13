@@ -27,8 +27,7 @@
 #include <common/time.h>
 #include <frontend/factory.h>
 #include <logger/log.h>
-#include <scheduler/scheduler.h>
-#include <scheduler/task_queue.h>
+#include <scheduler/ui_queue.h>
 #include <stdexcept>
 #include <wpl/factory.h>
 #include <wpl/freetype2/font_loader.h>
@@ -42,58 +41,6 @@ using namespace wpl;
 namespace micro_profiler
 {
 	shared_ptr<stylesheet> create_static_stylesheet(gcontext::text_engine_type &text_engine);
-
-	class macos_ui_queue : public scheduler::queue
-	{
-	public:
-		macos_ui_queue(const wpl::clock &clock_)
-			: _tasks([clock_] () -> mt::milliseconds {	return mt::milliseconds(clock_());	}),
-				_ui_queue(dispatch_get_main_queue())
-		{	}
-		
-		~macos_ui_queue()
-		{	[_ui_queue release];	}
-		
-		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0)) override
-		{	schedule_wakeup(_tasks.schedule(move(task), defer_by));		}
-		
-	private:
-		void execute_ready()
-		try
-		{
-			schedule_wakeup(_tasks.execute_ready(mt::milliseconds(50)));
-		}
-		catch (exception &e)
-		{
-			LOGE(PREAMBLE "exception during scheduled task processing!") % A(_ui_queue) %A(e.what());
-		}
-		catch (...)
-		{
-			LOGE(PREAMBLE "unknown exception during scheduled task processing!") % A(_ui_queue);
-		}
-		
-		void schedule_wakeup(const scheduler::task_queue::wake_up &wakeup)
-		{
-			if (!wakeup.second)
-			{
-				return;
-			}
-			else if (const auto interval = 0.001 * wakeup.first.count())
-			{
-				[NSTimer scheduledTimerWithTimeInterval:interval repeats:false	block:^(NSTimer *) {
-					execute_ready();
-				}];
-			}
-			else
-			{
-				dispatch_async(_ui_queue, ^() {	execute_ready();	});
-			}
-		}
-	
-	private:
-		scheduler::task_queue _tasks;
-		dispatch_queue_t _ui_queue;
-	};
 	
 	
 	class application::impl
@@ -140,7 +87,7 @@ namespace micro_profiler
 		: _impl(new impl)
 	{
 		const auto clock_ = &micro_profiler::clock;
-		const auto queue = make_shared<macos_ui_queue>(clock_);
+		const auto queue = make_shared<scheduler::ui_queue>([clock_] {	return mt::milliseconds(clock_());	});
 		const auto text_engine = create_text_engine();
 		const factory_context context = {
 			make_shared<gcontext::surface_type>(1, 1, 16),

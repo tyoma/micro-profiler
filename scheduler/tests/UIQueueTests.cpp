@@ -22,19 +22,19 @@ namespace scheduler
 			{
 			public:
 				threaded_message_loop(const function<void ()> &loop_init, const function<void ()> &loop_term = [] {})
-					: _loop_created(false), _thread([this, loop_init, loop_term] {
+					: _thread([this, loop_init, loop_term] {
 						_loop = _loop->create();
 						loop_init();
 						_ready.set();
 						_loop->run();
 						loop_term();
+						_loop.reset();
 					})
 				{	}
 
 				void wait_init()
 				{
 					_ready.wait();
-					_loop_created = true;
 				}
 
 				mt::thread::id get_id() const
@@ -48,7 +48,6 @@ namespace scheduler
 
 			private:
 				mt::event _ready;
-				bool _loop_created;
 				shared_ptr<message_loop> _loop;
 				mt::thread _thread;
 			};

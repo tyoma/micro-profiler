@@ -14,7 +14,12 @@ elseif (APPLE)
 	set(CMAKE_OBJCXX_STANDARD 11)
 
 	set(SCHEDULER_SOURCES ${SCHEDULER_SOURCES}
+		ui_queue_macos.mm
 	)
 endif()
 
 add_library(scheduler STATIC ${SCHEDULER_SOURCES})
+
+if (APPLE)
+	target_link_libraries(scheduler "-framework Foundation -framework Cocoa")
+endif()

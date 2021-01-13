@@ -29,63 +29,61 @@ using namespace std;
 
 namespace scheduler
 {
-	ui_queue::ui_queue(const clock &clock_)
-		: _tasks(clock_)
+	struct ui_queue::impl
 	{
-		struct functions
+		impl(task_queue &tasks)
+			: _tasks(&tasks), _hwnd(::CreateWindowA("static", 0, WS_OVERLAPPED, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0))
+		{	::SetWindowLongPtr(_hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&impl::on_message));	}
+
+		~impl()
+		{	::DestroyWindow(_hwnd);	}
+
+		void schedule_wakeup(const task_queue::wake_up &wakeup)
 		{
-			static LRESULT WINAPI on_message(HWND hwnd, UINT message, WPARAM wparam, LPARAM /*lparam*/)
+			if (!wakeup.second)
+				return;
+			if (!wakeup.first.count())
+				::PostMessage(_hwnd, WM_USER, reinterpret_cast<WPARAM>(this), 0);
+			else
+				::SetTimer(_hwnd, reinterpret_cast<UINT_PTR>(this), static_cast<UINT>(wakeup.first.count()), NULL);
+		}
+
+	private:
+		static LRESULT WINAPI on_message(HWND hwnd, UINT message, WPARAM wparam, LPARAM /*lparam*/)
+		{
+			switch (message)
 			{
-				switch (message)
-				{
-				default:
-					return 0;
+			case WM_TIMER:
+				::KillTimer(hwnd, wparam);
 
-				case WM_TIMER:
-					::KillTimer(hwnd, wparam);
+			case WM_USER:
+				const auto self = reinterpret_cast<impl *>(wparam);
+				task_queue::wake_up wakeup(mt::milliseconds(0), true);
 
-				case WM_USER:
-					const auto self = reinterpret_cast<ui_queue *>(wparam);
-					task_queue::wake_up wakeup(mt::milliseconds(0), true);
-
-					try
-					{
-						wakeup = self->_tasks.execute_ready(mt::milliseconds(50));
-					}
-					catch (exception &e)
-					{
-						LOGE(PREAMBLE "exception during scheduled task processing!") % A(self) % A(e.what());
-					}
-					catch (...)
-					{
-						LOGE(PREAMBLE "unknown exception during scheduled task processing!") % A(self);
-					}
-					self->schedule_wakeup(wakeup);
-					return 0;
-				}
+				try
+				{	wakeup = self->_tasks->execute_ready(mt::milliseconds(50));	}
+				catch (exception &e)
+				{	LOGE(PREAMBLE "exception during scheduled task processing!") % A(self) % A(e.what());	}
+				catch (...)
+				{	LOGE(PREAMBLE "unknown exception during scheduled task processing!") % A(self);	}
+				self->schedule_wakeup(wakeup);
 			}
-		};
+			return 0;
+		}
 
-		_impl.reset(::CreateWindowA("static", 0, WS_OVERLAPPED, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0), &::DestroyWindow);
-		::SetWindowLongPtr(static_cast<HWND>(_impl.get()), GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&functions::on_message));
-		LOG(PREAMBLE "constructed...") % A(this) % A(_impl.get());
-	}
+	private:
+		task_queue *_tasks;
+		HWND _hwnd;
+	};
+
+
+	ui_queue::ui_queue(const clock &clock_)
+		: _tasks(clock_), _impl(make_shared<impl>(_tasks))
+	{	LOG(PREAMBLE "constructed...") % A(this) % A(_impl.get());	}
 
 	ui_queue::~ui_queue()
 	{	LOG(PREAMBLE "destroyed...") % A(this);	}
 
 	void ui_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
-	{	schedule_wakeup(_tasks.schedule(move(task), defer_by));	}
-
-	void ui_queue::schedule_wakeup(const scheduler::task_queue::wake_up &wakeup)
-	{
-		const auto hwnd = static_cast<HWND>(_impl.get());
-
-		if (!wakeup.second)
-			return;
-		if (!wakeup.first.count())
-			::PostMessage(hwnd, WM_USER, reinterpret_cast<WPARAM>(this), 0);
-		else
-			::SetTimer(hwnd, reinterpret_cast<UINT_PTR>(this), static_cast<UINT>(wakeup.first.count()), NULL);
-	}
+	{	_impl->schedule_wakeup(_tasks.schedule(move(task), defer_by));	}
 }

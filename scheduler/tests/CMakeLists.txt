@@ -17,6 +17,7 @@ elseif (APPLE)
 	set(CMAKE_OBJCXX_STANDARD 11)
 
 	set(SCHEDULER_TEST_SOURCES ${SCHEDULER_TEST_SOURCES}
+		helpers_macos.mm
 		UIQueueTests.cpp
 	)
 endif()

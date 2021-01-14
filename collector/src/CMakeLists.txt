@@ -35,15 +35,20 @@ set(COLLECTOR_LIB_SOURCES
 	image_patch.cpp
 	module_tracker.cpp
 	statistics_bridge.cpp
+	thread_monitor.cpp
 )
 
 if (WIN32)
 	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
-		thread_monitor_win32.cpp
+		process_explorer_win32.cpp
 	)
 elseif (UNIX)	
 	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
-		thread_monitor_linux.cpp
+		process_explorer_linux.cpp
+	)
+elseif (APPLE)
+	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		process_explorer_macos.cpp
 	)
 endif()
 

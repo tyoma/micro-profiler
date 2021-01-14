@@ -34,7 +34,7 @@ namespace micro_profiler
 			shared_ptr<thread_monitor> monitor;
 
 			init( CreateThreadMonitor )
-			{	monitor = create_thread_monitor(mt::get_thread_callbacks());	}
+			{	monitor = make_shared<thread_monitor>(mt::get_thread_callbacks());	}
 
 
 			test( RegisteringTheSameThreadReturnsTheSameID )
@@ -261,7 +261,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::thread_callbacks tc;
-				shared_ptr<thread_monitor> monitor2 = create_thread_monitor(tc);
+				const auto monitor2 = make_shared<thread_monitor>(tc);
 
 				// ACT
 				thread_monitor::thread_id id1 = monitor2->register_self();
@@ -277,7 +277,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::thread_callbacks tc;
-				shared_ptr<thread_monitor> monitor2 = create_thread_monitor(tc);
+				const auto monitor2 = make_shared<thread_monitor>(tc);
 				volatile double v = 1;
 				const mt::milliseconds t0 = this_thread::get_cpu_time();
 

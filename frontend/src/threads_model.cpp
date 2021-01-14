@@ -40,7 +40,7 @@ namespace micro_profiler
 	{
 		const const_iterator i = find(thread_id);
 
-		return end() != i ? native_id = i->second.native_id, true : false;
+		return end() != i ? native_id = static_cast<unsigned int>(i->second.native_id), true : false;
 	}
 
 	bool threads_model::get_key(unsigned int &thread_id, index_type index) const throw()

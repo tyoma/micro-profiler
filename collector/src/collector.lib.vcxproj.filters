@@ -22,11 +22,17 @@
     <ClCompile Include="module_tracker.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="thread_monitor_linux.cpp">
+    <ClCompile Include="process_explorer_win32.cpp">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="thread_monitor.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="process_explorer_linux.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
-    <ClCompile Include="thread_monitor_win32.cpp">
-      <Filter>src\win32</Filter>
+    <ClCompile Include="process_explorer_macos.cpp">
+      <Filter>src\macos</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -38,6 +44,9 @@
     </Filter>
     <Filter Include="src\unix">
       <UniqueIdentifier>{a7b2acc8-fb66-4f01-b088-717131e77974}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\macos">
+      <UniqueIdentifier>{c3746242-c961-4000-8fdd-849566429d7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -53,5 +62,8 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="..\thread_monitor.h" />
+    <ClInclude Include="process_explorer.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

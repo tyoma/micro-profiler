@@ -20,53 +20,20 @@
 
 #pragma once
 
-#include <cstddef>
+#include <common/types.h>
+#include <functional>
 #include <mt/chrono.h>
-#include <string>
-
-typedef struct _GUID GUID;
 
 namespace micro_profiler
 {
-	typedef unsigned char byte;
-	typedef unsigned long long int count_t;
-	typedef long long timestamp_t;
-	typedef unsigned long long int long_address_t;
-
-#pragma pack(push, 1)
-	struct guid_t
+	struct this_process
 	{
-		byte values[16];
-
-		operator const GUID &() const;
-	};
-#pragma pack(pop)
-
-	struct overhead
-	{
-		overhead(timestamp_t inner_, timestamp_t outer_);
-
-		timestamp_t inner; // The overhead observed between entry/exit measurements of a leaf function.
-		timestamp_t outer; // The overhead observed by a parent function (in addition to inner) when making a call.
+		static mt::milliseconds get_process_uptime();
 	};
 
-	struct thread_info
+	struct this_thread
 	{
-		unsigned long long native_id;
-		std::string description; // If the platform supports it, contains thread description.
-		mt::milliseconds start_time; // Relative to the process start time.
-		mt::milliseconds end_time; // Relative to the process start time.
-		mt::milliseconds cpu_time;
-		bool complete;
+		static unsigned long long get_native_id();
+		static std::function<void (thread_info &info)> open_info();
 	};
-
-
-
-	inline guid_t::operator const GUID &() const
-	{	return *reinterpret_cast<const GUID *>(values);	}
-
-
-	inline overhead::overhead(timestamp_t inner_, timestamp_t outer_)
-		: inner(inner_), outer(outer_)
-	{	}
 }

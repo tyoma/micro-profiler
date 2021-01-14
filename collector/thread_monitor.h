@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/types.h>
+#include <functional>
 #include <memory>
 #include <mt/mutex.h>
 #include <unordered_map>
@@ -32,32 +33,45 @@ namespace mt
 
 namespace micro_profiler
 {
-	class thread_monitor
+	class thread_monitor : public std::enable_shared_from_this<thread_monitor>
 	{
 	public:
 		typedef unsigned int thread_id;
+		typedef unsigned long long native_thread_id;
 		typedef std::pair<thread_id, thread_info> value_type;
 
 	public:
-		virtual thread_id register_self() = 0;
+		thread_monitor(mt::thread_callbacks &callbacks);
+
+		virtual thread_id register_self();
 
 		template <typename OutputIteratorT, typename IteratorT>
 		void get_info(OutputIteratorT destination, IteratorT begin_id, IteratorT end_id) const;
 
 	protected:
+		struct live_thread_info;
+
+		typedef std::unordered_map<native_thread_id, live_thread_info> running_threads_map;
 		typedef std::unordered_map<thread_id, thread_info> threads_map;
 
-	protected:
-		virtual void update_live_info(thread_info &info, unsigned int native_id) const = 0;
+		struct live_thread_info
+		{
+			threads_map::value_type *thread_info_entry;
+			std::function<void (thread_info &info)> accessor;
+		};
 
 	protected:
+		virtual void update_live_info(thread_info &info, native_thread_id native_id) const;
+		void thread_exited(native_thread_id native_id);
+
+	protected:
+		mt::thread_callbacks &_callbacks;
 		mutable mt::mutex _mutex;
 		mutable threads_map _threads;
+		mutable running_threads_map _alive_threads;
+		thread_id _next_id;
 	};
 
-
-
-	std::shared_ptr<thread_monitor> create_thread_monitor(mt::thread_callbacks &callbacks);
 
 
 	template <typename OutputIteratorT, typename IteratorT>

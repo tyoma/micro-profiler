@@ -11,6 +11,15 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
+			namespace
+			{
+				struct thread_callbacks_stub_ : thread_callbacks
+				{
+					virtual void at_thread_exit(const atexit_t &/*handler*/) override
+					{	}
+				} thread_callbacks_stub;
+			}
+
 			unsigned thread_callbacks::invoke_destructors()
 			{
 				unsigned n = 0;
@@ -60,7 +69,7 @@ namespace micro_profiler
 
 
 			thread_monitor::thread_monitor()
-				: _next_id(1)
+				: micro_profiler::thread_monitor(thread_callbacks_stub), _next_id(1)
 			{	}
 
 			thread_monitor::thread_id thread_monitor::get_id(mt::thread::id native_id) const

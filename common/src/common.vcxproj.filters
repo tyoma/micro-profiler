@@ -64,6 +64,9 @@
     <ClCompile Include="configuration_file.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="module_macos.cpp">
+      <Filter>src\macos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -80,6 +83,9 @@
     </Filter>
     <Filter Include="win32">
       <UniqueIdentifier>{67ad5596-afa5-4f58-bedd-bab5e430cea9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\macos">
+      <UniqueIdentifier>{523d3e64-b0a9-44a8-869c-7018854d0bc5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

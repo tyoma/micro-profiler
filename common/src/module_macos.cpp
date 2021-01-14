@@ -61,8 +61,8 @@ namespace micro_profiler
 		for (uint32_t n = ::_dyld_image_count(); n--; )
 		{
 			mapped_module m = {
-				_dyld_get_image_name(n),
-				reinterpret_cast<byte *>(_dyld_get_image_vmaddr_slide(n)),
+				::_dyld_get_image_name(n),
+				reinterpret_cast<byte *>(::_dyld_get_image_vmaddr_slide(n)),
 			};
 			callback(m);
 		}

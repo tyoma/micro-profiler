@@ -42,13 +42,13 @@ if (WIN32)
 	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
 		process_explorer_win32.cpp
 	)
-elseif (UNIX)	
-	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
-		process_explorer_linux.cpp
-	)
 elseif (APPLE)
 	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
 		process_explorer_macos.cpp
+	)
+elseif (UNIX)	
+	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		process_explorer_linux.cpp
 	)
 endif()
 
@@ -91,7 +91,7 @@ if(MSVC)
 	set_property(TARGET micro-profiler PROPERTY IMPORTED_IMPLIB ${micro-profiler}.lib)
 else()
 	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-inline -finstrument-functions ")
-	set_property(TARGET ${micro-profiler} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-znodelete -Wl,-zinterpose ")
+#	set_property(TARGET ${micro-profiler} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-znodelete -Wl,-zinterpose ")
 
 	add_library(micro-profiler ALIAS ${micro-profiler})
 endif()

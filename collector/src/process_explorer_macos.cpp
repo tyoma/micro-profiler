@@ -20,12 +20,13 @@
 
 #include "process_explorer.h"
 
-#include <common/formatting.h>
-#include <memory>
-#include <stdio.h>
-#include <sys/syscall.h>
+#include <mach/clock.h>
+#include <mach/mach_init.h>
+#include <mach/thread_act.h>
+#include <mach/mach_port.h>
+#include <pthread.h>
+#include <time.h>
 #include <unistd.h>
-#include <vector>
 
 using namespace std;
 
@@ -33,25 +34,38 @@ namespace micro_profiler
 {
 	namespace
 	{
+		mt::milliseconds get_uptime()
+		{
+			timespec t = {};
+			
+			::clock_gettime(CLOCK_UPTIME_RAW, &t);
+			return mt::milliseconds(static_cast<long long>(t.tv_sec) * 1000 + t.tv_nsec / 1000000);
+		}
+		
+		const auto c_process_start = get_uptime();
 	}
 
 	mt::milliseconds this_process::get_process_uptime()
-	{	return mt::milliseconds(0);	}
+	{	return get_uptime() - c_process_start;	}
 
 	unsigned long long this_thread::get_native_id()
-	{	return ::syscall(SYS_gettid);	}
+	{	return pthread_mach_thread_np(pthread_self());	}
 
 	function<void (thread_info &info)> this_thread::open_info()
 	{
 		const auto id = get_native_id();
-		const auto start_time = mt::milliseconds(0);
-		clockid_t clock_handle;
+		const auto thread = mach_thread_self();
+		const auto start_time = this_process::get_process_uptime();
 
-		return [id, start_time, clock_handle] (thread_info &info) {
-			timespec t = {};
-
+		return [id, thread, start_time] (thread_info &info) {
+			mach_msg_type_number_t count = THREAD_EXTENDED_INFO_COUNT;
+			thread_extended_info ti;
+			
+			::thread_info(thread, THREAD_EXTENDED_INFO, reinterpret_cast<thread_info_t>(&ti), &count);
 			info.native_id = id;
+			info.description = ti.pth_name;
 			info.start_time = start_time;
+			info.cpu_time = mt::milliseconds((ti.pth_user_time + ti.pth_system_time) / 1000000);
 		};
 	}
 }

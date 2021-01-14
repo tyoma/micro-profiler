@@ -1,5 +1,6 @@
 #include <test-helpers/thread.h>
 
+#include <pthread.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 
@@ -10,7 +11,11 @@ namespace micro_profiler
 	namespace tests
 	{
 		unsigned int this_thread::get_native_id()
+#ifdef __MACH__
+		{	return ::pthread_mach_thread_np(::pthread_self());	}
+#else
 		{	return ::syscall(SYS_gettid);	}
+#endif
 
 		mt::milliseconds this_thread::get_cpu_time()
 		{

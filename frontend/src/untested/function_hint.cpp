@@ -24,6 +24,7 @@
 #include <agge/blenders_simd.h>
 #include <agge/figures.h>
 #include <agge/filling_rules.h>
+#include <agge/stroke_features.h>
 #include <agge.text/text_engine.h>
 #include <wpl/helpers.h>
 #include <wpl/stylesheet.h>
@@ -35,7 +36,7 @@ using namespace wpl;
 namespace micro_profiler
 {
 	function_hint::function_hint(gcontext::text_engine_type &text_services)
-		: _measurer(text_services), _selected(functions_list::npos())
+		: _measurer(text_services), _selected(table_model::npos())
 	{	}
 
 	void function_hint::apply_styles(const stylesheet &stylesheet_)
@@ -48,37 +49,40 @@ namespace micro_profiler
 		_text_color = stylesheet_.get_color("text.hint");
 		_back_color = stylesheet_.get_color("background.hint");
 		_border_color = stylesheet_.get_color("border.hint");
-		_min_width = 25.0f * static_cast<real_t>(a.basic.height);
-		_padding = stylesheet_.get_value("padding");
+		_min_width = 20.0f * static_cast<real_t>(a.basic.height);
+		_padding = stylesheet_.get_value("padding.hint");
+		_border_width = stylesheet_.get_value("border.hint");
 
 		_items.clear();
 		_items.append(L"Exclusive (total)\nInclusive (total)\nExclusive (average)\nInclusive (average)");
+		_stroke.width(_border_width);
+		_stroke.set_join(joins::bevel());
 	}
 
-	void function_hint::set_model(shared_ptr<functions_list> model)
+	void function_hint::set_model(shared_ptr<table_model> model)
 	{
 		_invalidate = model ? model->invalidate += [this] (...) {
-			if (_selected != functions_list::npos())
+			if (_selected != table_model::npos())
 				update_text_and_calculate_locations(_selected);
 		} : nullptr;
 		_model = model;
 	}
 
-	bool function_hint::select(functions_list::index_type index)
+	bool function_hint::select(table_model::index_type index)
 	{
 		if (index == _selected)
 			return false;
 
-		const auto hierarchy_changed = index == functions_list::npos() || _selected == functions_list::npos();
+		const auto hierarchy_changed = index == table_model::npos() || _selected == table_model::npos();
 
 		_selected = index;
-		if (index != functions_list::npos())
+		if (_model && index != table_model::npos())
 			update_text_and_calculate_locations(index);
 		return hierarchy_changed;
 	}
 
 	bool function_hint::is_active() const
-	{	return _selected != functions_list::npos();	}
+	{	return _selected != table_model::npos();	}
 
 	box<int> function_hint::get_box() const
 	{
@@ -90,8 +94,13 @@ namespace micro_profiler
 	{
 		typedef blender_solid_color<simd::blender_solid_color, platform_pixel_order> blender;
 
-		add_path(*rasterizer_, rectangle(0.0f, 0.0f, _name_location.x2 + _padding, _items_location.y2 + _padding));
+		auto rc = create_rect(0.0f, 0.0f, _name_location.x2 + _padding, _items_location.y2 + _padding);
+
+		add_path(*rasterizer_, rectangle(rc.x1, rc.y1, rc.x2, rc.y2));
 		context(rasterizer_, blender(_back_color), winding<>());
+		inflate(rc, -0.5f * _border_width, -0.5f * _border_width);
+		add_path(*rasterizer_, assist(rectangle(rc.x1, rc.y1, rc.x2, rc.y2), _stroke));
+		context(rasterizer_, blender(_border_color), winding<>());
 		context.text_engine.render(*rasterizer_, _name, align_center, align_near, _name_location);
 		context.text_engine.render(*rasterizer_, _items, align_near, align_near, _items_location);
 		context.text_engine.render(*rasterizer_, _item_values, align_far, align_near, _items_location);
@@ -99,7 +108,7 @@ namespace micro_profiler
 		context(rasterizer_, blender(_text_color), winding<>());
 	}
 
-	void function_hint::update_text_and_calculate_locations(functions_list::index_type index)
+	void function_hint::update_text_and_calculate_locations(table_model::index_type index)
 	{
 		_name.clear();
 		_model->get_text(index, 1, _buffer);
@@ -120,7 +129,7 @@ namespace micro_profiler
 		_measurer.set_width_limit(width);
 		_measurer.process(_name);
 		const auto box_name = _measurer.get_box();
-		auto rc = create_rect(_padding, _padding, width + _padding, box_name.h + _padding);
+		auto rc = create_rect(0.0f, 0.0f, width, box_name.h);
 		offset(rc, _padding, _padding);
 		_name_location = rc;
 		rc.y2 += _padding;

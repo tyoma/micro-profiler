@@ -129,19 +129,21 @@ namespace micro_profiler
 			set_color("background", get_syscolor(vsshell, VSCOLOR_ENVIRONMENT_BACKGROUND));
 			set_color("background.selected", get_syscolor(vsshell, VSCOLOR_HIGHLIGHT));
 			set_color("background.header", get_syscolor(vsshell, VSCOLOR_LIGHT));
+			set_color("background.hint", get_syscolor(vsshell, VSCOLOR_DEBUGGER_DATATIP_ACTIVE_BACKGROUND));
 			set_color("background.listview", get_syscolor(vsshell, VSCOLOR_LIGHT));
 			set_color("background.listview.even", color::make(0, 0, 0, 0));
 			set_color("background.listview.odd", interpolate(get_syscolor(vsshell, VSCOLOR_LIGHT),
 				get_syscolor(vsshell, VSCOLOR_PANEL_TEXT), 0.03));
 			set_color("border", get_syscolor(vsshell, VSCOLOR_DARK));
+			set_color("border.hint", get_syscolor(vsshell, VSCOLOR_DEBUGGER_DATATIP_ACTIVE_BORDER));
 			set_color("separator", get_syscolor(vsshell, VSCOLOR_DARK));
 			set_color("text", get_syscolor(vsshell, VSCOLOR_PANEL_TEXT));
-			set_color("text.selected", get_syscolor(COLOR_HIGHLIGHTTEXT));
 			set_color("text.header.indicator", semi(get_syscolor(vsshell, VSCOLOR_PANEL_TEXT), 0.5));
+			set_color("text.hint", get_syscolor(vsshell, VSCOLOR_DEBUGGER_DATATIP_ACTIVE_TEXT));
+			set_color("text.selected", get_syscolor(COLOR_HIGHLIGHTTEXT));
 
 			set_value("border", 1.0f);
 			set_value("separator", 1.0f);
-			set_value("padding", 3.0f);
 
 			LOGFONTW lf = {};
 			FontInfo fi = {};
@@ -164,6 +166,8 @@ namespace micro_profiler
 			}
 
 			set_font("text", text_engine.create_font(d));
+			set_value("padding", floorf(0.3f * d.height));
+			set_value("padding.hint", floorf(0.4f * d.height));
 			d.height++;
 			d.weight = semi_bold;
 			set_font("text.header", text_engine.create_font(d));

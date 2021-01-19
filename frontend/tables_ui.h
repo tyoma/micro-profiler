@@ -43,8 +43,8 @@ namespace micro_profiler
 		void switch_linked(wpl::table_model::index_type index);
 
 		template <typename ModelT>
-		void set_model(wpl::listview &lv, piechart *pc, wpl::slot_connection &conn_sorted, columns_model &cm,
-			const std::shared_ptr<ModelT> &m);
+		void set_model(wpl::listview &lv, piechart *pc, function_hint *hint, wpl::slot_connection &conn_sorted,
+			columns_model &cm, const std::shared_ptr<ModelT> &m);
 
 	private:
 		const std::shared_ptr<columns_model> _cm_main;
@@ -57,9 +57,11 @@ namespace micro_profiler
 
 		const std::shared_ptr<wpl::listview> _lv_main;
 		const std::shared_ptr<piechart> _pc_main;
+		const std::shared_ptr<function_hint> _hint_main;
 		const std::shared_ptr<wpl::listview> _lv_parents;
 		const std::shared_ptr<wpl::listview> _lv_children;
 		const std::shared_ptr<piechart> _pc_children;
+		const std::shared_ptr<function_hint> _hint_children;
 		const std::shared_ptr<wpl::combobox> _cb_threads;
 
 		std::vector<wpl::slot_connection> _connections;

@@ -52,27 +52,28 @@ namespace micro_profiler
 			_m_main(model),
 			_lv_main(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
 			_pc_main(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
+			_hint_main(wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine),
+				*factory_.context.stylesheet_)),
 			_lv_parents(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
 			_lv_children(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
 			_pc_children(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
+			_hint_children(wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine),
+				*factory_.context.stylesheet_)),
 			_cb_threads(static_pointer_cast<wpl::combobox>(factory_.create_control("combobox")))
 	{
-		auto hint_main = wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine),
-			*factory_.context.stylesheet_);
-
 		set_spacing(5);
 
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
-		_pc_main->set_hint(hint_main);
+		_pc_main->set_hint(_hint_main);
 		_lv_main->set_columns_model(_cm_main);
 		_lv_parents->set_columns_model(_cm_parents);
+		_pc_children->set_hint(_hint_children);
 		_lv_children->set_columns_model(_cm_children);
 
-		hint_main->set_model(_m_main);
-		set_model(*_lv_main, _pc_main.get(), _conn_sort_main, *_cm_main, _m_main);
+		set_model(*_lv_main, _pc_main.get(), _hint_main.get(), _conn_sort_main, *_cm_main, _m_main);
 
 		_cb_threads->set_model(_m_main->get_threads());
 		_cb_threads->select(0u);
@@ -172,14 +173,14 @@ namespace micro_profiler
 
 	void tables_ui::switch_linked(wpl::table_model::index_type index)
 	{
-		set_model(*_lv_children, _pc_children.get(), _conn_sort_children, *_cm_children,
+		set_model(*_lv_children, _pc_children.get(), _hint_children.get(), _conn_sort_children, *_cm_children,
 			_m_children = index != wpl::table_model::npos() ? _m_main->watch_children(index) : nullptr);
-		set_model(*_lv_parents, nullptr, _conn_sort_parents, *_cm_parents,
+		set_model(*_lv_parents, nullptr, nullptr, _conn_sort_parents, *_cm_parents,
 			_m_parents = index != wpl::table_model::npos() ? _m_main->watch_parents(index) : nullptr);
 	}
 
 	template <typename ModelT>
-	void tables_ui::set_model(wpl::listview &lv, piechart *pc, wpl::slot_connection &conn_sorted,
+	void tables_ui::set_model(wpl::listview &lv, piechart *pc, function_hint *hint, wpl::slot_connection &conn_sorted,
 		columns_model &cm, const std::shared_ptr<ModelT> &m)
 	{
 		const auto order = cm.get_sort_order();
@@ -193,5 +194,7 @@ namespace micro_profiler
 		lv.set_model(m);
 		if (pc)
 			pc->set_model(m ? m->get_column_series() : nullptr);
+		if (hint)
+			hint->set_model(m);
 	}
 }

@@ -95,7 +95,7 @@ namespace micro_profiler
 			placed_view pv = {
 				_hint,
 				shared_ptr<native_view>(),
-				create_rect(_last_mouse.x, _last_mouse.y - box.h, _last_mouse.x + box.w, _last_mouse.y),
+				create_rect(_last_mouse.x, _last_mouse.y + 16, _last_mouse.x + box.w, _last_mouse.y + box.h + 16),
 				0,
 				true,
 			};

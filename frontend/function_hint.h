@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include "function_list.h"
-
 #include <agge/color.h>
+#include <agge/stroke.h>
 #include <agge.text/layout.h>
 #include <wpl/view.h>
+#include <wpl/models.h>
 
 namespace wpl
 {
@@ -40,26 +40,27 @@ namespace micro_profiler
 
 		void apply_styles(const wpl::stylesheet &stylesheet_);
 
-		void set_model(std::shared_ptr<functions_list> model);
-		bool select(functions_list::index_type index);
+		void set_model(std::shared_ptr<wpl::table_model> model);
+		bool select(wpl::table_model::index_type index);
 		bool is_active() const;
 		agge::box<int> get_box() const;
 
 	private:
 		virtual void draw(wpl::gcontext &context, wpl::gcontext::rasterizer_ptr &rasterizer) const override;
 
-		void update_text_and_calculate_locations(functions_list::index_type index);
+		void update_text_and_calculate_locations(wpl::table_model::index_type index);
 
 	private:
 		mutable agge::layout _measurer;
-		std::shared_ptr<functions_list> _model;
+		std::shared_ptr<wpl::table_model> _model;
 		std::wstring _buffer;
 		agge::richtext_t _name, _items, _item_values;
 		agge::real_t _padding, _border_width;
 		agge::color _text_color, _back_color, _border_color;
-		functions_list::index_type _selected;
+		wpl::table_model::index_type _selected;
 		agge::real_t _min_width;
 		agge::rect_r _name_location, _items_location;
 		wpl::slot_connection _invalidate;
+		mutable agge::stroke _stroke;
 	};
 }

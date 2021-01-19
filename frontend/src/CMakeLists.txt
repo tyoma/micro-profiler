@@ -11,6 +11,7 @@ set(FRONTEND_LIB_SOURCES
 
 	untested/about_ui.cpp
 	untested/factory.cpp
+	untested/function_hint.cpp
 	untested/ipc_manager.cpp
 	untested/marshalled_server.cpp
 	untested/tables_ui.cpp

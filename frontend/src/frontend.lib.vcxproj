@@ -46,6 +46,7 @@
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
+    <ClCompile Include="untested\function_hint.cpp" />
     <ClCompile Include="untested\system_stylesheet.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -66,6 +67,7 @@
     <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
+    <ClInclude Include="..\function_hint.h" />
     <ClInclude Include="..\ipc_manager.h" />
     <ClInclude Include="..\marshalled_server.h" />
     <ClInclude Include="..\ordered_view.h" />

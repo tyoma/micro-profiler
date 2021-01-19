@@ -49,6 +49,9 @@
     <ClCompile Include="untested\marshalled_server.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
+    <ClCompile Include="untested\function_hint.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -74,6 +77,7 @@
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\system_stylesheet.h" />
     <ClInclude Include="..\marshalled_server.h" />
+    <ClInclude Include="..\function_hint.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

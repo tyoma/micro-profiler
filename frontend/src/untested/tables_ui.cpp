@@ -1,8 +1,9 @@
 #include <frontend/tables_ui.h>
 
-#include <frontend/piechart.h>
 #include <frontend/columns_model.h>
+#include <frontend/function_hint.h>
 #include <frontend/function_list.h>
+#include <frontend/piechart.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
 
@@ -10,11 +11,11 @@
 #include <wpl/controls.h>
 #include <wpl/factory.h>
 #include <wpl/layout.h>
+#include <wpl/stylesheet_helpers.h>
 
 using namespace agge;
 using namespace std;
 using namespace placeholders;
-using namespace wpl;
 
 namespace micro_profiler
 {
@@ -43,29 +44,34 @@ namespace micro_profiler
 		};
 	}
 
-	tables_ui::tables_ui(const factory &factory_, shared_ptr<functions_list> model, hive &configuration)
-		: stack(false, factory_.context.cursor_manager_),
+	tables_ui::tables_ui(const wpl::factory &factory_, shared_ptr<functions_list> model, hive &configuration)
+		: wpl::stack(false, factory_.context.cursor_manager_),
 			_cm_main(new columns_model(c_columns_statistics, 3, false)),
 			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new columns_model(c_columns_statistics, 4, false)),
 			_m_main(model),
-			_lv_main(static_pointer_cast<listview>(factory_.create_control("listview"))),
+			_lv_main(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
 			_pc_main(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
-			_lv_parents(static_pointer_cast<listview>(factory_.create_control("listview"))),
-			_lv_children(static_pointer_cast<listview>(factory_.create_control("listview"))),
+			_lv_parents(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
+			_lv_children(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
 			_pc_children(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
-			_cb_threads(static_pointer_cast<combobox>(factory_.create_control("combobox")))
+			_cb_threads(static_pointer_cast<wpl::combobox>(factory_.create_control("combobox")))
 	{
+		auto hint_main = wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine),
+			*factory_.context.stylesheet_);
+
 		set_spacing(5);
 
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
+		_pc_main->set_hint(hint_main);
 		_lv_main->set_columns_model(_cm_main);
 		_lv_parents->set_columns_model(_cm_parents);
 		_lv_children->set_columns_model(_cm_children);
 
+		hint_main->set_model(_m_main);
 		set_model(*_lv_main, _pc_main.get(), _conn_sort_main, *_cm_main, _m_main);
 
 		_cb_threads->set_model(_m_main->get_threads());
@@ -102,20 +108,20 @@ namespace micro_profiler
 
 		shared_ptr<stack> panel[2];
 
-		add(_lv_parents, percents(20), true, 3);
+		add(_lv_parents, wpl::percents(20), true, 3);
 
-		add(panel[0] = factory_.create_control<stack>("vstack"), percents(60), true);
+		add(panel[0] = factory_.create_control<stack>("vstack"), wpl::percents(60), true);
 			panel[0]->set_spacing(5);
-			panel[0]->add(_cb_threads, pixels(24), false, 4);
-			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), percents(100), false);
+			panel[0]->add(_cb_threads, wpl::pixels(24), false, 4);
+			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), wpl::percents(100), false);
 				panel[1]->set_spacing(5);
-				panel[1]->add(_pc_main, pixels(150), false);
-				panel[1]->add(_lv_main, percents(100), false, 1);
+				panel[1]->add(_pc_main, wpl::pixels(150), false);
+				panel[1]->add(_lv_main, wpl::percents(100), false, 1);
 
-		add(panel[0] = factory_.create_control<stack>("hstack"), percents(20), true);
+		add(panel[0] = factory_.create_control<stack>("hstack"), wpl::percents(20), true);
 			panel[0]->set_spacing(5);
-			panel[0]->add(_pc_children, pixels(150), false);
-			panel[0]->add(_lv_children, percents(100), false, 2);
+			panel[0]->add(_pc_children, wpl::pixels(150), false);
+			panel[0]->add(_lv_children, wpl::percents(100), false, 2);
 	}
 
 	void tables_ui::save(hive &configuration)
@@ -125,9 +131,9 @@ namespace micro_profiler
 		_cm_children->store(*configuration.create("ChildrenColumns"));
 	}
 
-	void tables_ui::on_selection_change(table_model::index_type index, bool selected)
+	void tables_ui::on_selection_change(wpl::table_model::index_type index, bool selected)
 	{
-		index = selected ? index : table_model::npos();
+		index = selected ? index : wpl::table_model::npos();
 		switch_linked(index);
 		_pc_main->select(index);
 	}
@@ -148,7 +154,7 @@ namespace micro_profiler
 			open_source(fileline.first, fileline.second);
 	}
 
-	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view_, table_model::index_type index)
+	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view_, wpl::table_model::index_type index)
 	{
 		index = _m_main->get_index(view_->get_key(index));
 		_lv_main->select(index, true);
@@ -156,7 +162,7 @@ namespace micro_profiler
 	}
 
 	void tables_ui::on_children_selection_change(wpl::table_model::index_type index, bool selected)
-	{	_pc_children->select(selected ? index : table_model::npos());	}
+	{	_pc_children->select(selected ? index : wpl::table_model::npos());	}
 
 	void tables_ui::on_children_piechart_selection_change(piechart::model_t::index_type index)
 	{
@@ -167,9 +173,9 @@ namespace micro_profiler
 	void tables_ui::switch_linked(wpl::table_model::index_type index)
 	{
 		set_model(*_lv_children, _pc_children.get(), _conn_sort_children, *_cm_children,
-			_m_children = index != table_model::npos() ? _m_main->watch_children(index) : nullptr);
+			_m_children = index != wpl::table_model::npos() ? _m_main->watch_children(index) : nullptr);
 		set_model(*_lv_parents, nullptr, _conn_sort_parents, *_cm_parents,
-			_m_parents = index != table_model::npos() ? _m_main->watch_parents(index) : nullptr);
+			_m_parents = index != wpl::table_model::npos() ? _m_main->watch_parents(index) : nullptr);
 	}
 
 	template <typename ModelT>

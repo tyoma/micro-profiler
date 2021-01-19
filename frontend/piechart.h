@@ -29,6 +29,8 @@
 
 namespace micro_profiler
 {
+	class function_hint;
+
 	class piechart : public wpl::controls::integrated_control<wpl::control>, wpl::index_traits
 	{
 	public:
@@ -38,9 +40,8 @@ namespace micro_profiler
 		template <typename PaletteIteratorT>
 		piechart(PaletteIteratorT palette_begin, PaletteIteratorT palette_end, agge::color color_rest);
 
-		virtual std::shared_ptr<view> get_view();
-
-		void set_model(const std::shared_ptr<model_t> &m);
+		void set_hint(std::shared_ptr<function_hint> hint);
+		void set_model(std::shared_ptr<model_t> m);
 		void select(model_t::index_type item);
 
 	public:
@@ -58,12 +59,17 @@ namespace micro_profiler
 		typedef std::vector<segment> segments_t;
 
 	private:
-		virtual void draw(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer) const;
+		// visual methods
+		virtual void draw(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer) const override;
 
-		virtual void layout(const wpl::placed_view_appender &append_view, const agge::box<int> &box);
+		// control methods
+		virtual void layout(const wpl::placed_view_appender &append_view, const agge::box<int> &box) override;
 
-		virtual void mouse_down(mouse_buttons button, int depressed, int x, int y);
-		virtual void mouse_double_click(mouse_buttons button, int depressed, int x, int y);
+		// mouse_input methods
+		virtual void mouse_leave() override;
+		virtual void mouse_move(int depressed, int x, int y) override;
+		virtual void mouse_down(mouse_buttons button, int depressed, int x, int y) override;
+		virtual void mouse_double_click(mouse_buttons button, int depressed, int x, int y) override;
 
 		void on_invalidated();
 		model_t::index_type find_sector(agge::real_t x, agge::real_t y);
@@ -77,6 +83,8 @@ namespace micro_profiler
 		std::shared_ptr<const wpl::trackable> _selection;
 		std::vector<agge::color> _palette;
 		agge::color _color_rest;
+		std::shared_ptr<function_hint> _hint;
+		agge::point<int> _last_mouse;
 	};
 
 

@@ -20,6 +20,8 @@
 
 #include <frontend/piechart.h>
 
+#include <frontend/function_hint.h>
+
 #include <agge/blenders.h>
 #include <agge/curves.h>
 #include <agge/filling_rules.h>
@@ -41,10 +43,10 @@ namespace micro_profiler
 		{	return join(arc(cx, cy, outer_r, start, end), arc(cx, cy, inner_r, end, start));	}
 	}
 
-	shared_ptr<view> piechart::get_view()
-	{	return shared_from_this();	}
+	void piechart::set_hint(shared_ptr<function_hint> hint)
+	{	_hint = hint;	}
 
-	void piechart::set_model(const std::shared_ptr<model_t> &m)
+	void piechart::set_model(shared_ptr<model_t> m)
 	{
 		_model = m;
 		_invalidate_connection = _model ? _model->invalidate += bind(&piechart::on_invalidated, this) : slot_connection();
@@ -86,11 +88,45 @@ namespace micro_profiler
 		_outer_r /= (1.0f + _selection_emphasis_k);
 		_inner_r = 0.5f * _outer_r;
 		integrated_control<wpl::control>::layout(append_view, box_);
+
+		if (_hint && _hint->is_active())
+		{
+			const auto box = _hint->get_box();
+			placed_view pv = {
+				_hint,
+				shared_ptr<native_view>(),
+				create_rect(_last_mouse.x, _last_mouse.y - box.h, _last_mouse.x + box.w, _last_mouse.y),
+				0,
+				true,
+			};
+
+			append_view(pv);
+		}
+	}
+
+	void piechart::mouse_leave()
+	{
+		if (_hint && _hint->select(npos()))
+			layout_changed(true);
+	}
+
+	void piechart::mouse_move(int /*depressed*/, int x, int y)
+	{
+		if (_hint)
+		{
+			auto index = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
+			index = npos() != index ? _segments[index].index : npos();
+			const auto update_hierarchy = _hint->select(find_sector(static_cast<real_t>(x), static_cast<real_t>(y)));
+
+			_last_mouse = create_point(x, y);
+			if (_hint->is_active() || update_hierarchy)
+				layout_changed(update_hierarchy);
+		}
 	}
 
 	void piechart::mouse_down(mouse_buttons /*button*/, int /*depressed*/, int x, int y)
 	{
-		index_type idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
+		const auto idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
 
 		_selection = _model && idx != npos() ? _model->track(idx) : shared_ptr<const trackable>();
 		invalidate(0);

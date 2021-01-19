@@ -104,11 +104,11 @@ namespace micro_profiler
 		function<void ()> update_frontend;
 		const auto update_frontend_ = [&] {
 			_bridge->update_frontend();
-			_queue.schedule(function<void ()>(update_frontend), mt::milliseconds(40));
+			_queue.schedule(function<void ()>(update_frontend), mt::milliseconds(25));
 		};
 
 		_queue.schedule(function<void ()>(analyze = analyze_), mt::milliseconds(10));
-		_queue.schedule(function<void ()>(update_frontend = update_frontend_), mt::milliseconds(40));
+		_queue.schedule(function<void ()>(update_frontend = update_frontend_), mt::milliseconds(25));
 		while (!_exit)
 		{
 			_queue.wait();

@@ -85,12 +85,27 @@ namespace micro_profiler
 
 
 		profiler_package::profiler_package()
-			: wpl::vs::ole_command_target(c_guidGlobalCmdSet),
+			: wpl::vs::ole_command_target(c_guidGlobalCmdSet), _clock([] {	return mt::milliseconds(clock());	}),
 				_configuration(registry_hive::open_user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler"))
 		{	LOG(PREAMBLE "constructed...") % A(this);	}
 
 		profiler_package::~profiler_package()
 		{	LOG(PREAMBLE "destroyed.");	}
+
+		wpl::clock profiler_package::get_clock() const
+		{
+			const auto c = _clock;
+			return [c] () -> wpl::timestamp {	return c().count();	};
+		}
+
+		wpl::queue profiler_package::initialize_queue()
+		{
+			auto q = _ui_queue = make_shared<scheduler::ui_queue>(_clock);
+
+			return [q] (wpl::queue_task t, wpl::timespan defer_by) {
+				return q->schedule(move(t), mt::milliseconds(defer_by)), true;
+			};
+		}
 
 		shared_ptr<wpl::stylesheet> profiler_package::create_stylesheet(wpl::signal<void ()> &update,
 				wpl::gcontext::text_engine_type &text_engine, IVsUIShell &shell,
@@ -109,7 +124,7 @@ namespace micro_profiler
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager(bind(&profiler_package::create_ui, this, _1, _2)));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
-				make_shared<scheduler::ui_queue>([] {	return mt::milliseconds(micro_profiler::clock());	}),
+				_ui_queue,
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 				&constants::integrated_frontend_id));
 			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),

@@ -24,6 +24,7 @@
 #include <comdef.h>
 #include <dte.h>
 #include <list>
+#include <scheduler/scheduler.h>
 #include <wpl/vs/ole-command-target.h>
 #include <wpl/vs/package.h>
 
@@ -60,11 +61,13 @@ namespace micro_profiler
 			typedef std::list< std::shared_ptr<void> > running_objects_t;
 
 		private:
+			virtual wpl::clock get_clock() const override;
+			virtual wpl::queue initialize_queue() override;
 			virtual std::shared_ptr<wpl::stylesheet> create_stylesheet(wpl::signal<void ()> &update,
 				wpl::gcontext::text_engine_type &text_engine, IVsUIShell &shell,
-				IVsFontAndColorStorage &font_and_color) const;
-			virtual void initialize(wpl::vs::factory &factory);
-			virtual void terminate() throw();
+				IVsFontAndColorStorage &font_and_color) const override;
+			virtual void initialize(wpl::vs::factory &factory) override;
+			virtual void terminate() throw() override;
 
 			void init_menu();
 			std::vector<IDispatchPtr> get_selected_items() const;
@@ -72,6 +75,8 @@ namespace micro_profiler
 			void on_open_source(const std::string &file, unsigned line);
 
 		private:
+			std::function<mt::milliseconds ()> _clock;
+			std::shared_ptr<scheduler::queue> _ui_queue;
 			CComPtr<_DTE> _dte;
 			std::shared_ptr<hive> _configuration;
 			std::shared_ptr<frontend_manager> _frontend_manager;

@@ -54,9 +54,13 @@ namespace micro_profiler
 			return mt::milliseconds(v / 10000); // FILETIME is expressed in 100-ns intervals
 		}
 
-		FILETIME _process_start, _dummy;
-		const mt::milliseconds c_process_start = (::GetProcessTimes(::GetCurrentProcess(), &_process_start, &_dummy,
-			&_dummy, &_dummy), milliseconds(_process_start));
+		mt::milliseconds get_process_start_time()
+		{
+			FILETIME start_time, dummy;
+
+			::GetProcessTimes(::GetCurrentProcess(), &start_time, &dummy, &dummy, &dummy);
+			return milliseconds(start_time);
+		}
 	}
 
 	mt::milliseconds this_process::get_process_uptime()
@@ -64,7 +68,7 @@ namespace micro_profiler
 		FILETIME t = {};
 
 		::GetSystemTimeAsFileTime(&t);
-		return milliseconds(t) - c_process_start;
+		return milliseconds(t) - get_process_start_time();
 	}
 
 	unsigned long long this_thread::get_native_id()
@@ -75,7 +79,7 @@ namespace micro_profiler
 		FILETIME thread_start, dummy;
 		const auto handle = get_current_thread();
 		const auto start_time = milliseconds((::GetThreadTimes(handle.get(), &thread_start, &dummy, &dummy, &dummy),
-			thread_start)) - c_process_start;
+			thread_start)) - get_process_start_time();
 
 		return [handle, start_time] (thread_info &info) {
 			FILETIME dummy, user;

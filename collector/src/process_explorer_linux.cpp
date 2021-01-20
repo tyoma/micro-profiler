@@ -71,8 +71,8 @@ namespace micro_profiler
 			return mt::milliseconds(time);
 		}
 
-		mt::milliseconds get_thread_start_time(unsigned int pid)
-		{	return extract_start_time(read_stat(&pid));	}
+		mt::milliseconds get_thread_start_time(unsigned int tid)
+		{	return extract_start_time(read_stat(&tid));	}
 
 		mt::milliseconds get_process_start_time()
 		{	return extract_start_time(read_stat(nullptr));	}

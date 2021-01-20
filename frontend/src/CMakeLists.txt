@@ -11,7 +11,6 @@ set(FRONTEND_LIB_SOURCES
 
 	untested/about_ui.cpp
 	untested/factory.cpp
-	untested/function_hint.cpp
 	untested/ipc_manager.cpp
 	untested/marshalled_server.cpp
 	untested/tables_ui.cpp
@@ -19,6 +18,7 @@ set(FRONTEND_LIB_SOURCES
 
 if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
 	set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
+		untested/function_hint.cpp
 		untested/piechart.cpp
 	)
 endif()

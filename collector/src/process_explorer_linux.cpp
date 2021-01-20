@@ -22,6 +22,7 @@
 
 #include <common/formatting.h>
 #include <memory>
+#include <pthread.h>
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -95,7 +96,7 @@ namespace micro_profiler
 		const auto start_time = get_thread_start_time(get_native_id()) - get_process_start_time();
 		clockid_t clock_handle;
 
-		::pthread_getcpuclockid(pthread_self(), &clock_handle);
+		::pthread_getcpuclockid(::pthread_self(), &clock_handle);
 		return [id, start_time, clock_handle] (thread_info &info) {
 			timespec t = {};
 

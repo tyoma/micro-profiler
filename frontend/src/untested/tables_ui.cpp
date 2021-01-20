@@ -36,9 +36,22 @@ namespace micro_profiler
 			{	"MaxCallTime", L"Inclusive\n" + secondary + L"maximum/call", 121, columns_model::dir_descending	},
 		};
 
+		const columns_model::column c_columns_statistics_children[] = {
+			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},
+			{	"Function", L"Called Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
+			{	"ThreadID", L"Thread\n" + secondary + L"id", 64, columns_model::dir_ascending	},
+			{	"TimesCalled", L"Called\n" + secondary + L"times", 64, columns_model::dir_descending	},
+			{	"ExclusiveTime", L"Exclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
+			{	"InclusiveTime", L"Inclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
+			{	"AvgExclusiveTime", L"Exclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
+			{	"AvgInclusiveTime", L"Inclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
+			{	"MaxRecursion", L"Recursion\n" + secondary + L"max depth", 25, columns_model::dir_descending	},
+			{	"MaxCallTime", L"Inclusive\n" + secondary + L"maximum/call", 121, columns_model::dir_descending	},
+		};
+
 		const columns_model::column c_columns_statistics_parents[] = {
 			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},
-			{	"Function", L"Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
+			{	"Function", L"Calling Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
 			{	"ThreadID", L"Thread\n" + secondary + L"id", 64, columns_model::dir_ascending	},
 			{	"TimesCalled", L"Called\n" + secondary + L"times", 64, columns_model::dir_descending	},
 		};
@@ -48,7 +61,7 @@ namespace micro_profiler
 		: wpl::stack(false, factory_.context.cursor_manager_),
 			_cm_main(new columns_model(c_columns_statistics, 3, false)),
 			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
-			_cm_children(new columns_model(c_columns_statistics, 4, false)),
+			_cm_children(new columns_model(c_columns_statistics_children, 4, false)),
 			_m_main(model),
 			_lv_main(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
 			_pc_main(static_pointer_cast<piechart>(factory_.create_control("piechart"))),

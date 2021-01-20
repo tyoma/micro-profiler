@@ -75,10 +75,12 @@ The steps are much like the ones above.
 
 # Revision History
 
-## v1.8.625
+## v1.8.626
 
 * Major UI rework: statistic lists are now entirely custom, performance (although not measured precisely) significantly improved (meaning, less CPU is busy displaying stats - more available to the profiled app);
-* cross-platformness improved: frontend can now be built on macos;
+* Mouse hovering the piechart now displays a hint with a function name and times;
+* Parent/main/children statistic panes are now resizable;
+* Cross-platformness improved: frontend can now be built on macos;
 * VisualStudio themes are supported in dynamics.
 
 ## v1.7.624

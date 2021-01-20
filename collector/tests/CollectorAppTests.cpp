@@ -624,7 +624,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::mutex mtx;
-				mt::event ready;
+				mt::event ready, md_ready;
 				vector_adapter message_buffer;
 				strmd::serializer<vector_adapter, packer> ser(message_buffer);
 				loaded_modules l;
@@ -640,7 +640,7 @@ namespace micro_profiler
 				state->metadata_received = [&] (unsigned id, const module_info_metadata &m) {
 					persistent_id = id;
 					md = m;
-					ready.set();
+					md_ready.set();
 				};
 
 				collector_app app(factory, collector, c_overhead, tmonitor);
@@ -668,7 +668,7 @@ namespace micro_profiler
 				ser(request_metadata);
 				ser(mmi[1].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
-				ready.wait();
+				md_ready.wait();
 
 				// ASSERT
 				assert_equal(mmi[1].persistent_id, persistent_id);
@@ -684,7 +684,7 @@ namespace micro_profiler
 				ser(request_metadata);
 				ser(mmi[0].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
-				ready.wait();
+				md_ready.wait();
 
 				// ASSERT
 				assert_equal(mmi[0].persistent_id, persistent_id);

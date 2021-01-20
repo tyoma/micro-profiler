@@ -62,24 +62,44 @@ namespace micro_profiler
 			extern const GUID UICONTEXT_VCProject = { 0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 } };
 
 
-			class frontend_ui_impl : public frontend_ui
+			class frontend_pane : public frontend_ui, noncopyable
 			{
 			public:
-				frontend_ui_impl(shared_ptr<wpl::vs::pane> frame)
-					: _frame(frame)
+				frontend_pane(const wpl::vs::factory &factory, shared_ptr<functions_list> model,
+						const string &executable, shared_ptr<hive> configuration_)
+					: _pane(factory.create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR)),
+						_tables_ui(make_shared<tables_ui>(factory, model, *configuration_)), _configuration(configuration_)
 				{
-					connections[0] = _frame->close += [this] { closed(); };
-					connections[1] = _frame->activated += [this] { activated(); };
+					const auto root = make_shared<wpl::overlay>();
+						root->add(factory.create_control("background"));
+						root->add(pad_control(_tables_ui, 5, 5));
+
+					_connections.push_back(_pane->close += [this] {
+						_tables_ui->save(*_configuration);
+						closed();
+					});
+					_connections.push_back(_pane->activated += [this] {
+						activated();
+					});
+					init_instance_menu(*_pane, model, executable);
+					_pane->set_caption(L"MicroProfiler - " + unicode(executable));
+					_pane->set_root(root);
+					_pane->set_visible(true);
 				}
 
-				virtual void activate()
-				{	_frame->activate();	}
-
-			public:
-				wpl::slot_connection connections[3];
+				void add_open_source_listener(const function<void (const string &file, int line)> &listener)
+				{	_connections.push_back(_tables_ui->open_source += listener);	}
 
 			private:
-				shared_ptr<wpl::vs::pane> _frame;
+				// frontend_ui methods
+				virtual void activate()
+				{	_pane->activate();	}
+
+			private:
+				const shared_ptr<wpl::vs::pane> _pane;
+				const shared_ptr<tables_ui> _tables_ui;
+				const shared_ptr<hive> _configuration;
+				vector<wpl::slot_connection> _connections;
 			};
 		}
 
@@ -152,21 +172,12 @@ namespace micro_profiler
 			return selected_items;
 		}
 
-		shared_ptr<frontend_ui> profiler_package::create_ui(const shared_ptr<functions_list> &model, const string &executable)
+		shared_ptr<frontend_ui> profiler_package::create_ui(const shared_ptr<functions_list> &model,
+			const string &executable)
 		{
-			auto frame = get_factory().create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR);
-			auto ui = make_shared<frontend_ui_impl>(frame);
-			auto tui = make_shared<tables_ui>(get_factory(), model, *_configuration);
-			const auto root = make_shared<wpl::overlay>();
-				root->add(get_factory().create_control<wpl::control>("background"));
-				root->add(pad_control(tui, 5, 5));
+			const auto ui = make_shared<frontend_pane>(get_factory(), model, executable, _configuration);
 
-			init_instance_menu(*frame, model, executable);
-			frame->set_caption(L"MicroProfiler - " + unicode(executable));
-			frame->set_root(root);
-			frame->set_visible(true);
-			ui->connections[2] = tui->open_source += bind(&profiler_package::on_open_source, this, _1, _2);
-			LOG(PREAMBLE "tool window created") % A(executable);
+			ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
 			return ui;
 		}
 

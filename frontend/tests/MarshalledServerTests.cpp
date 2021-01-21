@@ -248,8 +248,10 @@ namespace micro_profiler
 			}
 
 
-			test( UnderlyingServerGetsDestroyedOnTaskProcessing )
+			ignored_test( UnderlyingServerGetsDestroyedOnTaskProcessing )
 			{
+				// Since we're explicitly resetting marshalled server - this logic is not necessary.
+
 				// INIT
 				unique_ptr<marshalled_server> ms(new marshalled_server(server, queue));
 

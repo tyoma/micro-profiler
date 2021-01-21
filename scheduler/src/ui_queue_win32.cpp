@@ -21,6 +21,7 @@
 #include "../ui_queue.h"
 
 #include <logger/log.h>
+#include <tchar.h>
 #include <windows.h>
 
 #define PREAMBLE "Scheduler UI Queue: "
@@ -32,7 +33,7 @@ namespace scheduler
 	struct ui_queue::impl
 	{
 		impl(task_queue &tasks)
-			: _tasks(&tasks), _hwnd(::CreateWindowA("static", 0, WS_OVERLAPPED, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0))
+			: _tasks(&tasks), _hwnd(::CreateWindow(_T("static"), 0, WS_OVERLAPPED, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0))
 		{	::SetWindowLongPtr(_hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&impl::on_message));	}
 
 		~impl()

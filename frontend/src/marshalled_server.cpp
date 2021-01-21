@@ -60,13 +60,17 @@ namespace micro_profiler
 		}
 
 		template <typename F>
-		void execute(const F &f)
+		void execute_safe(const F &f)
 		{
 			mt::lock_guard<mt::mutex> l(_mtx);
 
 			if (*_alive)
 				f();
 		}
+
+		template <typename T>
+		static void schedule_safe(const shared_ptr<lifetime> &self, scheduler::queue &queue, const T &task)
+		{	queue.schedule([self, task] {	self->execute_safe(task);	});	}
 
 	private:
 		mt::mutex _mtx;
@@ -81,19 +85,20 @@ namespace micro_profiler
 	{	_lifetime->mark_destroyed();	}
 
 	void marshalled_server::outbound_wrapper::disconnect() throw()
-	{	_lifetime->execute([this] {	_underlying.disconnect();	});	}
+	{	_lifetime->execute_safe([this] {	_underlying.disconnect();	});	}
 
 	void marshalled_server::outbound_wrapper::message(const_byte_range payload)
-	{	_lifetime->execute([this, payload] {	_underlying.message(payload);	});	}
+	{	_lifetime->execute_safe([this, payload] {	_underlying.message(payload);	});	}
 
 
-	marshalled_server::marshalled_session::marshalled_session(shared_ptr<scheduler::queue> queue,
-			ipc::channel &outbound_)
-		: _lifetime(make_shared<lifetime>()), _queue(queue), _outbound(make_shared<outbound_wrapper>(outbound_))
+	marshalled_server::marshalled_session::marshalled_session(shared_ptr<scheduler::queue> queue, ipc::channel &outbound)
+		: _lifetime(make_shared<lifetime>()), _queue(queue), _outbound(make_shared<outbound_wrapper>(outbound))
 	{	}
 
 	marshalled_server::marshalled_session::~marshalled_session()
 	{
+		LOG(PREAMBLE "destroying marshalled session and scheduling an underlying session destruction...")
+			% A(this) % A(_underlying.get());
 		_lifetime->mark_destroyed();
 		_outbound->stop();
 		schedule_destroy(*_queue, _underlying);
@@ -101,37 +106,25 @@ namespace micro_profiler
 
 	void marshalled_server::marshalled_session::create_underlying(shared_ptr<ipc::server> underlying_server)
 	{
-		const auto lt = _lifetime;
+		LOG(PREAMBLE "scheduling an underlying session creation...") % A(this) % A(underlying_server.get());
+		lifetime::schedule_safe(_lifetime, *_queue, [this, underlying_server] {
+			typedef pair< shared_ptr<ipc::channel>, shared_ptr<ipc::channel> > composite_t;
 
-		_queue->schedule([=] {
-			auto &us = *underlying_server;
+			const auto composite = make_shared<composite_t>(_outbound, underlying_server->create_session(*_outbound));
 
-			lt->execute([&] {
-				typedef pair< shared_ptr<ipc::channel>, shared_ptr<ipc::channel> > composite_t;
-
-				const auto composite = make_shared<composite_t>(_outbound, us.create_session(*_outbound));
-
-				_underlying = shared_ptr<ipc::channel>(composite, composite->second.get());
-			});
+			_underlying = shared_ptr<ipc::channel>(composite, composite->second.get());
 		});
 	}
 
 	void marshalled_server::marshalled_session::disconnect() throw()
-	{
-		const auto lt = _lifetime;
-
-		_queue->schedule([=] {	lt->execute([&] {	_underlying->disconnect();	});	});
-	}
+	{	lifetime::schedule_safe(_lifetime, *_queue, [this]	{	_underlying->disconnect();	});	}
 
 	void marshalled_server::marshalled_session::message(const_byte_range payload)
 	{
-		const auto lt = _lifetime;
 		const auto data = make_shared< vector<byte> >(payload.begin(), payload.end());
 
-		_queue->schedule([=] {
-			auto &data2 = *data;
-
-			lt->execute([&] {	_underlying->message(const_byte_range(data2.data(), data2.size()));	});
+		lifetime::schedule_safe(_lifetime, *_queue, [this, data]	{
+			_underlying->message(const_byte_range(data->data(), data->size()));
 		});
 	}
 
@@ -141,7 +134,10 @@ namespace micro_profiler
 	{	}
 
 	marshalled_server::~marshalled_server()
-	{	schedule_destroy(*_queue, _underlying);	}
+	{
+		if (_underlying)
+			LOGE(PREAMBLE "underlying server was not explicitly reset!") % A(this) % A(_underlying.get());
+	}
 
 	void marshalled_server::stop()
 	{
@@ -153,7 +149,7 @@ namespace micro_profiler
 	{
 		shared_ptr<marshalled_session> msession;
 
-		_lifetime->execute([&] {
+		_lifetime->execute_safe([&] {
 			msession = make_shared<marshalled_session>(_queue, outbound);
 			msession->create_underlying(_underlying);
 		});

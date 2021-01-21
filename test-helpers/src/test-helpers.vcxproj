@@ -57,6 +57,7 @@
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\helpers.h" />
     <ClInclude Include="..\mock_frontend.h" />
+    <ClInclude Include="..\mock_queue.h" />
     <ClInclude Include="..\primitive_helpers.h" />
     <ClInclude Include="..\process.h" />
     <ClInclude Include="..\thread.h" />

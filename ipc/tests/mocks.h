@@ -17,8 +17,12 @@ namespace micro_profiler
 				class session : public ipc::channel
 				{
 				public:
+					session();
+
+				public:
 					ipc::channel *outbound;
 					std::vector< std::vector<byte> > payloads_log;
+					unsigned disconnections;
 					std::function<void()> received_message;
 					std::function<void()> disconnected;
 
@@ -42,8 +46,13 @@ namespace micro_profiler
 
 
 
+				inline session::session()
+					: disconnections(0)
+				{	}
+
 				inline void session::disconnect() throw()
 				{
+					disconnections++;
 					if (disconnected)
 						disconnected();
 				}

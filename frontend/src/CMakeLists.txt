@@ -5,6 +5,7 @@ set(FRONTEND_LIB_SOURCES
 	frontend.cpp
 	frontend_manager.cpp
 	function_list.cpp
+	marshalled_server.cpp
 	process_list.cpp
 	symbol_resolver.cpp
 	threads_model.cpp
@@ -12,7 +13,6 @@ set(FRONTEND_LIB_SOURCES
 	untested/about_ui.cpp
 	untested/factory.cpp
 	untested/ipc_manager.cpp
-	untested/marshalled_server.cpp
 	untested/tables_ui.cpp
 )
 

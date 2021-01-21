@@ -76,7 +76,7 @@ namespace micro_profiler
 		{
 #ifdef _WIN32
 			const string endpoint_id = ipc::com_endpoint_id(*com_server_id);
-			shared_ptr<ipc::server> lserver(new logging_server(server, endpoint_id));
+			shared_ptr<ipc::server> lserver(new logging_server(_server, endpoint_id));
 	
 			_com_server_handle = run_server(endpoint_id, lserver);
 #endif

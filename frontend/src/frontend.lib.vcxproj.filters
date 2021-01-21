@@ -46,11 +46,11 @@
     <ClCompile Include="untested\system_stylesheet.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
-    <ClCompile Include="untested\marshalled_server.cpp">
-      <Filter>src\untested</Filter>
-    </ClCompile>
     <ClCompile Include="untested\function_hint.cpp">
       <Filter>src\untested</Filter>
+    </ClCompile>
+    <ClCompile Include="marshalled_server.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

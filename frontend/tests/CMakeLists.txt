@@ -10,6 +10,7 @@ set(FRONTEND_TESTS_SOURCES
 	FunctionListPersistence.cpp
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
+	MarshalledServerTests.cpp
 	mocks.cpp
 	OrderedViewTests.cpp
 	ProcessListTests.cpp
@@ -20,4 +21,4 @@ set(FRONTEND_TESTS_SOURCES
 
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})
 
-target_link_libraries(frontend.tests frontend.lib test-helpers logger common agge.text)
+target_link_libraries(frontend.tests frontend.lib test-helpers logger common mt agge.text)

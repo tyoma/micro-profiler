@@ -43,6 +43,7 @@
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="columns_model.cpp" />
+    <ClCompile Include="marshalled_server.cpp" />
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
@@ -55,7 +56,6 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="untested\ipc_manager.cpp" />
-    <ClCompile Include="untested\marshalled_server.cpp" />
     <ClCompile Include="untested\piechart.cpp" />
     <ClCompile Include="untested\stream.cpp" />
     <ClCompile Include="untested\about_ui.cpp" />

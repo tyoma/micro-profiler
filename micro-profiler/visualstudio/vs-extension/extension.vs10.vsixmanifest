@@ -5,6 +5,9 @@
 		<Author>gevorkyan.org</Author>
 		<Version>!version!</Version>
 		<Description xml:space="preserve">A low-overhead instrumenting profiler with realtime statistics display for native applications.</Description>
+		<Icon>logo.ico</Icon>
+		<PreviewImage>micro-profiler_preview.png</PreviewImage>
+		<License>license.rtf</License>
 		<Locale>1033</Locale>
 		<SupportedProducts>
 			<VisualStudio Version="10.0">

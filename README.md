@@ -75,7 +75,7 @@ The steps are much like the ones above.
 
 # Revision History
 
-## v1.8.626
+## v1.8.629
 
 * Major UI rework: statistic lists are now entirely custom, performance (although not measured precisely) significantly improved (meaning, less CPU is busy displaying stats - more available to the profiled app);
 * Mouse hovering the piechart now displays a hint with a function name and times;

@@ -5,6 +5,9 @@
 	<Default Extension="so" ContentType="application/octet-stream" />
 	<Default Extension="lib" ContentType="application/octet-stream" />
 	<Default Extension="ico" ContentType="application/octet-stream" />
+	<Default Extension="png" ContentType="image/png" />
+	<Default Extension="jpg" ContentType="image/jpg" />
+	<Default Extension="rtf" ContentType="application/rtf" />
 	<Default Extension="pkgdef" ContentType="text/plain" />
 	<Default Extension="json" ContentType="application/json" />
 	<Default Extension="cpp" ContentType="text/plain" />

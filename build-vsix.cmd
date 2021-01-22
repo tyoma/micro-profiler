@@ -5,6 +5,12 @@ call make-version.cmd VERSION version.h
 mkdir "%~dp0_setup/"
 set OUTPUT="%~dp0_setup\micro-profiler.v%VERSION%.vsix"
 
+pushd "%~dp0content"
+	call sha256 hashpreview micro-profiler_preview.png
+popd
+pushd "%~dp0deployment\wix"
+	call sha256 hashlicense license.rtf
+popd
 pushd "%~dp0legacy"
 	call sha256 hashinit micro-profiler.initializer.cpp
 popd
@@ -35,6 +41,12 @@ popd
 
 pushd "%~dp0legacy"
 	call mkzip micro-profiler.initializer.cpp "%OUTPUT%"
+popd
+pushd "%~dp0content"
+	call mkzip micro-profiler_preview.png "%OUTPUT%"
+popd
+pushd "%~dp0deployment\wix"
+	call mkzip license.rtf "%OUTPUT%"
 popd
 pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
 	call mkzip micro-profiler_frontend.dll "%OUTPUT%"

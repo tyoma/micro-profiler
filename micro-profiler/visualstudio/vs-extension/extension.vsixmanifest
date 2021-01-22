@@ -5,6 +5,8 @@
 		<DisplayName>MicroProfiler</DisplayName>
 		<Description>A low-overhead instrumenting profiler with realtime statistics display for native applications.</Description>
 		<Icon>logo.ico</Icon>
+		<PreviewImage>micro-profiler_preview.png</PreviewImage>
+		<License>license.rtf</License>
 	</Metadata>
 	<Installation InstalledByMsi="false" AllUsers="false" SystemComponent="false" Scope="ProductExtension">
 		<InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[11.0, 17.0)" />

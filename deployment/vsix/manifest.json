@@ -6,6 +6,8 @@
 	"extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\micro-profiler",
 	"files": [
 		{"fileName":"/extension.vsixmanifest","sha256":"!hashmanifest!"},
+		{"fileName":"/license.rtf","sha256":"!hashlicense!"},
+		{"fileName":"/micro-profiler_preview.png","sha256":"!hashpreview!"},
 		{"fileName":"/micro-profiler_frontend.dll","sha256":"!hashmpfrontend!"},
 		{"fileName":"/micro-profiler_Win32.dll","sha256":"!hashmpx86!"},
 		{"fileName":"/micro-profiler_x64.dll","sha256":"!hashmpx64!"},

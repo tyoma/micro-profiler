@@ -20,7 +20,9 @@
 
 #include <common/image_info.h>
 
+#include <common/module.h>
 #include <common/noncopyable.h>
+#include <common/path.h>
 #include <common/primitives.h>
 #include <common/string.h>
 
@@ -39,6 +41,12 @@ namespace micro_profiler
 {
 	namespace
 	{
+#ifdef _M_IX86
+		const string c_own_dbghelp_filename = "dbghelp_x86.dll";
+#elif _M_X64
+		const string c_own_dbghelp_filename = "dbghelp_x64.dll";
+#endif
+
 		class dbghelp : noncopyable
 		{
 		public:
@@ -46,6 +54,8 @@ namespace micro_profiler
 			~dbghelp();
 
 			DWORD64 load_image(const string &path);
+			decltype(::SymEnumSymbols) *SymEnumSymbols;
+			decltype(::SymGetLineFromAddr64) *SymGetLineFromAddr64;
 
 		private:
 			typedef DWORD64 (__stdcall *load_module_ex_t)(HANDLE hProcess, HANDLE hFile, PCWSTR ImageName,
@@ -53,6 +63,11 @@ namespace micro_profiler
 
 		private:
 			shared_ptr<void> _module;
+
+			decltype(::SymInitialize) *_SymInitialize;
+			decltype(::SymCleanup) *_SymCleanup;
+			decltype(::SymLoadModuleExW) *_SymLoadModuleExW;
+			decltype(::SymLoadModule64) *_SymLoadModule64;
 		};
 
 
@@ -74,27 +89,44 @@ namespace micro_profiler
 
 
 		dbghelp::dbghelp()
-			: _module(::LoadLibraryA("dbghelp.dll"), &FreeLibrary)
 		{
-			if (!::SymInitialize(this, NULL, FALSE))
+			const auto local_directory = ~get_module_info(&c_own_dbghelp_filename).path;
+
+			_module.reset(::LoadLibraryW(unicode(local_directory & c_own_dbghelp_filename).c_str()), &FreeLibrary);
+			if (!_module)
+				_module.reset(::LoadLibraryW(L"dbghelp.dll"), &FreeLibrary);
+
+			const auto hmodule = static_cast<HMODULE>(_module.get());
+
+			SymEnumSymbols = reinterpret_cast<decltype(::SymEnumSymbols) *>(::GetProcAddress(hmodule, "SymEnumSymbols"));
+			SymGetLineFromAddr64 = reinterpret_cast<decltype(::SymGetLineFromAddr64) *>(::GetProcAddress(hmodule,
+				"SymGetLineFromAddr64"));
+			_SymInitialize = reinterpret_cast<decltype(::SymInitialize) *>(::GetProcAddress(hmodule, "SymInitialize"));
+			_SymCleanup = reinterpret_cast<decltype(::SymCleanup) *>(::GetProcAddress(hmodule, "SymCleanup"));
+			_SymLoadModuleExW = reinterpret_cast<decltype(::SymLoadModuleExW) *>(::GetProcAddress(hmodule,
+				"SymLoadModuleExW"));
+			_SymLoadModule64 = reinterpret_cast<decltype(::SymLoadModule64) *>(::GetProcAddress(hmodule,
+				"SymLoadModule64"));
+
+			if (!_SymInitialize(this, NULL, FALSE))
 				throw 0;
 		}
 
 		dbghelp::~dbghelp()
-		{	::SymCleanup(this);	}
+		{	_SymCleanup(this);	}
 
 		DWORD64 dbghelp::load_image(const string &path)
 		{
+			::SetLastError(0);
+
 			// Attempt to obtain symbols via dbghelp.dll/v6.0.
-			if (load_module_ex_t load_module_ex = reinterpret_cast<load_module_ex_t>(::GetProcAddress(
-				static_cast<HMODULE>(_module.get()), "SymLoadModuleExW")))
+			if (_SymLoadModuleExW)
 			{
-				::SetLastError(0);
-				if (DWORD64 base = load_module_ex(this, NULL, unicode(path).c_str(), NULL, 0, 0, NULL, 0))
+				if (DWORD64 base = _SymLoadModuleExW(this, NULL, unicode(path).c_str(), NULL, 0, 0, NULL, 0))
 					return base;
 			}
 			// Fallback attempt to obtain symbols via dbghelp.dll/v5.1 (who knows, maybe we're on Windows XP).
-			else if (DWORD64 base = (::SetLastError(0), ::SymLoadModule64(this, NULL, path.c_str(), NULL, 0, 0)))
+			else if (DWORD64 base = _SymLoadModule64(this, NULL, path.c_str(), NULL, 0, 0))
 			{
 				return base;
 			}
@@ -111,7 +143,7 @@ namespace micro_profiler
 			class local
 			{
 			public:
-				local(const shared_ptr<void> &dbghelp_, const symbol_callback_t &callback)
+				local(const shared_ptr<dbghelp> &dbghelp_, const symbol_callback_t &callback)
 					: _file_id(0), _dbghelp(dbghelp_), _callback(callback)
 				{	}
 
@@ -125,7 +157,7 @@ namespace micro_profiler
 						IMAGEHLP_LINE64 info = { sizeof(IMAGEHLP_LINE64), };
 						unsigned int file_id = 0, line = 0;
 
-						if (::SymGetLineFromAddr64(self->_dbghelp.get(), symbol->Address, &displacement, &info))
+						if (self->_dbghelp->SymGetLineFromAddr64(self->_dbghelp.get(), symbol->Address, &displacement, &info))
 						{
 							pair<containers::unordered_map<string, unsigned int>::iterator, bool> r
 								= self->files.insert(make_pair(info.FileName, 0));
@@ -149,14 +181,14 @@ namespace micro_profiler
 			private:
 				unsigned int _file_id;
 				containers::unordered_map<string, unsigned int> files;
-				shared_ptr<void> _dbghelp;
+				shared_ptr<dbghelp> _dbghelp;
 				symbol_callback_t _callback;
 				symbol_info _si;
 			};
 
 			local cb(_dbghelp, callback);
 
-			::SymEnumSymbols(_dbghelp.get(), _base, NULL, &local::on_symbol, &cb);
+			_dbghelp->SymEnumSymbols(_dbghelp.get(), _base, NULL, &local::on_symbol, &cb);
 		}
 
 		void dbghelp_image_info::enumerate_files(const file_callback_t &callback) const
@@ -164,7 +196,7 @@ namespace micro_profiler
 			class local
 			{
 			public:
-				local(const shared_ptr<void> &dbghelp_, const file_callback_t &callback)
+				local(const shared_ptr<dbghelp> &dbghelp_, const file_callback_t &callback)
 					: _file_id(0), _dbghelp(dbghelp_), _callback(callback)
 				{	}
 
@@ -176,7 +208,7 @@ namespace micro_profiler
 						DWORD displacement;
 						IMAGEHLP_LINE64 info = { sizeof(IMAGEHLP_LINE64), };
 
-						if (::SymGetLineFromAddr64(self->_dbghelp.get(), symbol->Address, &displacement, &info))
+						if (self->_dbghelp->SymGetLineFromAddr64(self->_dbghelp.get(), symbol->Address, &displacement, &info))
 						{
 							if (self->files.insert(info.FileName).second)
 								self->_callback(make_pair(self->_file_id++, info.FileName));
@@ -188,13 +220,13 @@ namespace micro_profiler
 			private:
 				unsigned int _file_id;
 				set<string> files;
-				shared_ptr<void> _dbghelp;
+				shared_ptr<dbghelp> _dbghelp;
 				file_callback_t _callback;
 			};
 
 			local cb(_dbghelp, callback);
 
-			::SymEnumSymbols(_dbghelp.get(), _base, NULL, &local::on_symbol, &cb);
+			_dbghelp->SymEnumSymbols(_dbghelp.get(), _base, NULL, &local::on_symbol, &cb);
 		}
 	}
 

@@ -91,7 +91,7 @@ namespace micro_profiler
 
 					toolbar->add(make_shared< controls::integrated_control<control> >(), percents(100), false);
 					toolbar->add(lnk = factory_.create_control<link>("link"), pixels(200), false);
-						lnk->set_align(text_container::right);
+						lnk->set_halign(agge::align_far);
 						lnk->set_text(L"<a>Star Me!</a>");
 						_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {
 							const auto l = _form->get_location();

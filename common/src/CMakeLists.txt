@@ -54,8 +54,6 @@ endif()
 
 add_library(common STATIC ${COMMON_SOURCES})
 
-if (WIN32)
-	target_link_libraries(common dbghelp)
-elseif (UNIX)
+if (UNIX)
 	target_link_libraries(common dl)
 endif()

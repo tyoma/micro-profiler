@@ -20,25 +20,25 @@
 
 #include <common/time.h>
 
+#include <time.h>
 #include <windows.h>
 
 namespace micro_profiler
 {
 	namespace
 	{
-		double get_period()
-		{
-			LARGE_INTEGER frequency;
-
-			::QueryPerformanceFrequency(&frequency);
-			return 1.0 / frequency.QuadPart;
-		}
-
-		const double c_period = get_period();
+		LARGE_INTEGER c_dummy;
+		const long long c_high_perf_counter_frequency = (::QueryPerformanceFrequency(&c_dummy), c_dummy.QuadPart);
+		const double c_high_perf_counter_period = 1.0 / c_high_perf_counter_frequency;
 	}
 
 	timestamp_t clock()
-	{	return ::GetTickCount64();	}
+	{
+		LARGE_INTEGER v = {};
+
+		::QueryPerformanceCounter(&v);
+		return 1000 * v.QuadPart / c_high_perf_counter_frequency;
+	}
 
 	double stopwatch(counter_t &counter)
 	{
@@ -46,7 +46,7 @@ namespace micro_profiler
 		double period;
 
 		::QueryPerformanceCounter(&c);
-		period = c_period * (c.QuadPart - counter);
+		period = c_high_perf_counter_period * (c.QuadPart - counter);
 		counter = c.QuadPart;
 		return period;
 	}

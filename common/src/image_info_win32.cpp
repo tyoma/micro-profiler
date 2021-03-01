@@ -34,6 +34,8 @@
 #include <stdexcept>
 #include <common/unordered_map.h>
 
+#define GET_PROC_ADDRESS(hmodule, symbol) reinterpret_cast<decltype(::symbol) *>(::GetProcAddress(hmodule, #symbol))
+
 using namespace std;
 using namespace std::placeholders;
 
@@ -42,10 +44,15 @@ namespace micro_profiler
 	namespace
 	{
 #ifdef _M_IX86
-		const string c_own_dbghelp_filename = "dbghelp_x86.dll";
+		const string c_bitness_directory = "x86";
 #elif _M_X64
-		const string c_own_dbghelp_filename = "dbghelp_x64.dll";
+		const string c_bitness_directory = "x64";
 #endif
+		const string c_dbghelps[] = {
+			~get_module_info(&c_bitness_directory).path & "windows7+" & c_bitness_directory & "dbghelp.dll",
+			~get_module_info(&c_bitness_directory).path & "windowsxp+" & c_bitness_directory & "dbghelp.dll",
+			"dbghelp.dll",
+		};
 
 		class dbghelp : noncopyable
 		{
@@ -90,23 +97,24 @@ namespace micro_profiler
 
 		dbghelp::dbghelp()
 		{
-			const auto local_directory = ~get_module_info(&c_own_dbghelp_filename).path;
+			auto path_env = _wgetenv(L"PATH");
 
-			_module.reset(::LoadLibraryW(unicode(local_directory & c_own_dbghelp_filename).c_str()), &FreeLibrary);
-			if (!_module)
-				_module.reset(::LoadLibraryW(L"dbghelp.dll"), &FreeLibrary);
+			path_env = path_env ? path_env : L"";
+			for (auto i = begin(c_dbghelps); !_module && i != end(c_dbghelps); ++i)
+			{
+				::SetEnvironmentVariableW(L"PATH", (wstring(path_env) + L";" + unicode(~*i)).c_str());
+				_module.reset(::LoadLibraryW(unicode(*i).c_str()), &FreeLibrary);
+			}
+			::SetEnvironmentVariableW(L"PATH", path_env);
 
 			const auto hmodule = static_cast<HMODULE>(_module.get());
 
-			SymEnumSymbols = reinterpret_cast<decltype(::SymEnumSymbols) *>(::GetProcAddress(hmodule, "SymEnumSymbols"));
-			SymGetLineFromAddr64 = reinterpret_cast<decltype(::SymGetLineFromAddr64) *>(::GetProcAddress(hmodule,
-				"SymGetLineFromAddr64"));
-			_SymInitialize = reinterpret_cast<decltype(::SymInitialize) *>(::GetProcAddress(hmodule, "SymInitialize"));
-			_SymCleanup = reinterpret_cast<decltype(::SymCleanup) *>(::GetProcAddress(hmodule, "SymCleanup"));
-			_SymLoadModuleExW = reinterpret_cast<decltype(::SymLoadModuleExW) *>(::GetProcAddress(hmodule,
-				"SymLoadModuleExW"));
-			_SymLoadModule64 = reinterpret_cast<decltype(::SymLoadModule64) *>(::GetProcAddress(hmodule,
-				"SymLoadModule64"));
+			SymEnumSymbols = GET_PROC_ADDRESS(hmodule, SymEnumSymbols);
+			SymGetLineFromAddr64 = GET_PROC_ADDRESS(hmodule, SymGetLineFromAddr64);
+			_SymInitialize = GET_PROC_ADDRESS(hmodule, SymInitialize);
+			_SymCleanup = GET_PROC_ADDRESS(hmodule, SymCleanup);
+			_SymLoadModuleExW = GET_PROC_ADDRESS(hmodule, SymLoadModuleExW);
+			_SymLoadModule64 = GET_PROC_ADDRESS(hmodule, SymLoadModule64);
 
 			if (!_SymInitialize(this, NULL, FALSE))
 				throw 0;

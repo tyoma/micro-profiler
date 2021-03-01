@@ -75,6 +75,10 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v1.8.631
+
+* Symbols produced by Visual Studio 2019 are now correctly read by using redistributable dbghelp.dll.
+
 ## v1.8.629
 
 * Major UI rework: statistic lists are now entirely custom, performance (although not measured precisely) significantly improved (meaning, less CPU is busy displaying stats - more available to the profiled app);

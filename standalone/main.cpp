@@ -62,7 +62,7 @@ namespace micro_profiler
 			new_form->set_visible(true);
 			about_composite_.connections.clear();
 			about_composite_.connections.push_back(new_form->close += on_close);
-			about_composite_.connections.push_back(about->link += [&] (const wstring &address) {
+			about_composite_.connections.push_back(about->link += [&] (const string &address) {
 				app.open_link(address);
 			});
 			about_composite_.connections.push_back(about->close += on_close);

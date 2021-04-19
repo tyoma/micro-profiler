@@ -57,9 +57,9 @@ namespace micro_profiler
 		void disable_projection();
 
 		// wpl::series<...> methods
-		virtual index_type get_count() const throw();
-		virtual void get_value(index_type index, double &value) const throw();
-		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const;
+		virtual index_type get_count() const throw() override;
+		virtual void get_value(index_type index, double &value) const throw() override;
+		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const override;
 
 	private:
 		template <typename PredicateT> class predicate_wrap_a;
@@ -131,7 +131,7 @@ namespace micro_profiler
 	{
 	public:
 		trackable(key_type key_, index_type current_index_) : key(key_), current_index(current_index_) {	}
-		virtual index_type index() const { return current_index; }
+		virtual index_type index() const override {	return current_index;	}
 
 	public:
 		key_type key;
@@ -159,7 +159,7 @@ namespace micro_profiler
 
 		if (_sorter)
 			_sorter();
-		invalidate();
+		invalidate(npos());
 		update_trackables();
 	}
 

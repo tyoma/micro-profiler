@@ -17,17 +17,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			wstring get_text(const wpl::list_model<wstring> &m, unsigned index)
-			{
-				wstring text;
-
-				m.get_value(index, text);
-				return text;
-			}
-		}
-
 		begin_test_suite( ThreadsModelTests )
 
 			vector_adapter _buffer;
@@ -50,7 +39,7 @@ namespace micro_profiler
 			test( ThreadModelIsAListModel )
 			{
 				// INIT / ACT / ASSERT
-				shared_ptr< wpl::list_model<wstring> > m(new threads_model(get_requestor()));
+				shared_ptr< wpl::list_model<string> > m(new threads_model(get_requestor()));
 
 				// ASSERT
 				assert_is_empty(_requested);
@@ -87,20 +76,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, m1->get_count());
-				assert_equal(L"All Threads", get_text(*m1, 0));
-				assert_equal(L"#11717 - thread 2 - CPU: 20s, started: +10s", get_text(*m1, 1));
-				assert_equal(L"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m1, 2));
+				assert_equal("All Threads", get_text(*m1, 0));
+				assert_equal("#11717 - thread 2 - CPU: 20s, started: +10s", get_text(*m1, 1));
+				assert_equal("#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m1, 2));
 
 				// ACT
 				dser(*m2);
 
 				// ASSERT
 				assert_equal(5u, m2->get_count());
-				assert_equal(L"All Threads", get_text(*m2, 0));
-				assert_equal(L"#11717 - thread #2 - CPU: 10s, started: +10s, ended: +4ms", get_text(*m2, 1));
-				assert_equal(L"#32717 - thread #4 - CPU: 1s, started: +20s", get_text(*m2, 2));
-				assert_equal(L"#22717 - thread #3 - CPU: 1s, started: +5ms", get_text(*m2, 3));
-				assert_equal(L"#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m2, 4));
+				assert_equal("All Threads", get_text(*m2, 0));
+				assert_equal("#11717 - thread #2 - CPU: 10s, started: +10s, ended: +4ms", get_text(*m2, 1));
+				assert_equal("#32717 - thread #4 - CPU: 1s, started: +20s", get_text(*m2, 2));
+				assert_equal("#22717 - thread #3 - CPU: 1s, started: +5ms", get_text(*m2, 3));
+				assert_equal("#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m2, 4));
 			}
 
 
@@ -130,9 +119,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(4u, m->get_count());
-				assert_equal(L"#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m, 1));
-				assert_equal(L"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m, 2));
-				assert_equal(L"#11717 - CPU: 10ms, started: +10s, ended: +4ms", get_text(*m, 3));
+				assert_equal("#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m, 1));
+				assert_equal("#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m, 2));
+				assert_equal("#11717 - CPU: 10ms, started: +10s, ended: +4ms", get_text(*m, 3));
 			}
 
 
@@ -147,8 +136,9 @@ namespace micro_profiler
 						mt::milliseconds(20003), false)),
 				};
 				bool invalidated = false;
-				wpl::slot_connection c = m->invalidate += [&] {
+				wpl::slot_connection c = m->invalidate += [&] (threads_model::index_type item) {
 					assert_equal(3u, m->get_count());
+					assert_equal(threads_model::npos(), item);
 					invalidated = true;
 				};
 

@@ -2,7 +2,6 @@
 
 #include <test-helpers/helpers.h>
 
-#include <common/string.h>
 #include <windows.h>
 
 using namespace std;

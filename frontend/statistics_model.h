@@ -51,11 +51,11 @@ namespace micro_profiler
 
 		virtual void detach() throw();
 
-		// wpl::table_model methods
-		virtual index_type get_count() const throw();
-		virtual void get_text(index_type item, index_type subitem, std::wstring &text) const;
-		virtual void set_order(index_type column, bool ascending);
-		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const;
+		// wpl::string_table_model methods
+		virtual index_type get_count() const throw() override;
+		virtual void get_text(index_type item, index_type subitem, std::string &text) const override;
+		virtual void set_order(index_type column, bool ascending) override;
+		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const override;
 
 		// linked_statistics methods
 		virtual function_key get_key(index_type item) const;

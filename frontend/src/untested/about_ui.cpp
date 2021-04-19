@@ -20,8 +20,6 @@
 
 #include <frontend/about_ui.h>
 
-#include <common/string.h>
-
 #include <wpl/controls.h>
 #include <wpl/factory.h>
 #include <wpl/types.h>
@@ -42,27 +40,27 @@ namespace micro_profiler
 
 		set_spacing(5);
 		add(link_ = factory_.create_control<wpl::link>("link"), pixels(40), false);
-		link_->set_text(L"Please, take any of these steps to support the development of MicroProfiler:");
+		link_->set_text(agge::style_modifier::empty + "Please, take any of these steps to support the development of MicroProfiler:");
 
 		add(pad_control(inner_stack = factory_.create_control<stack>("vstack"), 10, 0), percents(100), false);
 			inner_stack->set_spacing(10);
 			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), pixels(20), false, 1);
-			link_->set_text(L"1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
+			link_->set_text(agge::style_modifier::empty + "1. Leave a review on <a href=\"https://marketplace.visualstudio.com/items?itemName=ArtemGevorkyan.MicroProfilerx64x86#review-details\">Visual Studio Marketplace</a>");
 				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
 			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), pixels(20), false, 2);
-				link_->set_text(L"2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
+				link_->set_text(agge::style_modifier::empty + "2. Write <a href=\"https://github.com/tyoma/micro-profiler/issues\">an issue or a suggestion</a>");
 				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
 
 			inner_stack->add(link_ = factory_.create_control<wpl::link>("link"), pixels(20), false, 3);
-				link_->set_text(L"3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
+				link_->set_text(agge::style_modifier::empty + "3. Star MicroProfiler on <a href=\"https://github.com/tyoma/micro-profiler\">github.com</a>");
 				_connections.push_back(link_->clicked += bind(&about_ui::on_link, this, _2));
 
 		add(_close_button, pixels(30), false, 4);
-			_close_button->set_text(L"Thank You!");
+			_close_button->set_text(agge::style_modifier::empty + "Thank You!");
 	}
 
-	void about_ui::on_link(const wstring &address)
+	void about_ui::on_link(const string &address)
 	{	link(address);	}
 }

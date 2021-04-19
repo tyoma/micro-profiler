@@ -119,7 +119,7 @@ namespace micro_profiler
 		void complete(threads_model &container)
 		{
 			container._view.fetch();
-			container.invalidate();
+			container.invalidate(threads_model::npos());
 		}
 	};
 

@@ -60,6 +60,7 @@
     <ClInclude Include="..\mock_queue.h" />
     <ClInclude Include="..\primitive_helpers.h" />
     <ClInclude Include="..\process.h" />
+    <ClInclude Include="..\richtext.h" />
     <ClInclude Include="..\thread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

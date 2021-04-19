@@ -68,7 +68,7 @@ namespace micro_profiler
 		void load_session(const std::string &executable, const std::shared_ptr<functions_list> &model);
 
 		// ipc::server methods
-		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
+		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound) override;
 
 	private:
 		struct instance_impl : instance

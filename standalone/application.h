@@ -51,7 +51,7 @@ namespace micro_profiler
 		void stop();
 
 		void clipboard_copy(const std::string &text);
-		void open_link(const std::wstring &address);
+		void open_link(const std::string &address);
 
 	private:
 		class impl;

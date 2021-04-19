@@ -216,11 +216,11 @@ namespace micro_profiler
 
 				// ASSERT
 				columns::main ordering[] = {	columns::name, columns::threadid, columns::times_called, columns::inclusive,	};
-				wstring reference[][4] = {
-					{	L"Amet", L"17000", L"127", L"0s",	},
-					{	L"Ipsum", L"19001", L"12", L"0s",	},
-					{	L"Lorem", L"", L"123", L"2s",	},
-					{	L"dolor", L"", L"12000", L"500ms",	},
+				string reference[][4] = {
+					{	"Amet", "17000", "127", "0s",	},
+					{	"Ipsum", "19001", "12", "0s",	},
+					{	"Lorem", "", "123", "2s",	},
+					{	"dolor", "", "12000", "500ms",	},
 				};
 
 				assert_table_equivalent(ordering, reference, *fl);
@@ -251,11 +251,11 @@ namespace micro_profiler
 
 				// ASSERT
 				columns::main ordering[] = {	columns::name, columns::threadid, columns::times_called, columns::inclusive,	};
-				wstring reference[][4] = {
-					{	L"Amet", L"", L"127", L"0s",	},
-					{	L"Ipsum", L"", L"12", L"0s",	},
-					{	L"Lorem", L"", L"123", L"2s",	},
-					{	L"dolor", L"", L"12000", L"500ms",	},
+				string reference[][4] = {
+					{	"Amet", "", "127", "0s",	},
+					{	"Ipsum", "", "12", "0s",	},
+					{	"Lorem", "", "123", "2s",	},
+					{	"dolor", "", "12000", "500ms",	},
 				};
 
 				assert_table_equivalent(ordering, reference, *fl);

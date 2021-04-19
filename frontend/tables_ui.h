@@ -16,7 +16,7 @@ namespace wpl
 
 namespace micro_profiler
 {
-	class columns_model;
+	class headers_model;
 	class functions_list;
 	struct hive;
 	struct linked_statistics;
@@ -32,24 +32,24 @@ namespace micro_profiler
 		wpl::signal<void(const std::string &file, unsigned line)> open_source;
 
 	private:
-		void on_selection_change(wpl::table_model::index_type index, bool selected);
+		void on_selection_change(wpl::table_model_base::index_type index, bool selected);
 		void on_piechart_selection_change(piechart::model_t::index_type index);
 		void on_activate(wpl::index_traits::index_type index);
 
-		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::table_model::index_type index);
-		void on_children_selection_change(wpl::table_model::index_type index, bool selected);
+		void on_drilldown(const std::shared_ptr<linked_statistics> &view, wpl::table_model_base::index_type index);
+		void on_children_selection_change(wpl::table_model_base::index_type index, bool selected);
 		void on_children_piechart_selection_change(piechart::model_t::index_type index);
 
-		void switch_linked(wpl::table_model::index_type index);
+		void switch_linked(wpl::table_model_base::index_type index);
 
 		template <typename ModelT>
 		void set_model(wpl::listview &lv, piechart *pc, function_hint *hint, wpl::slot_connection &conn_sorted,
-			columns_model &cm, const std::shared_ptr<ModelT> &m);
+			headers_model &cm, const std::shared_ptr<ModelT> &m);
 
 	private:
-		const std::shared_ptr<columns_model> _cm_main;
-		const std::shared_ptr<columns_model> _cm_parents;
-		const std::shared_ptr<columns_model> _cm_children;
+		const std::shared_ptr<headers_model> _cm_main;
+		const std::shared_ptr<headers_model> _cm_parents;
+		const std::shared_ptr<headers_model> _cm_children;
 
 		const std::shared_ptr<functions_list> _m_main;
 		std::shared_ptr<linked_statistics> _m_parents;

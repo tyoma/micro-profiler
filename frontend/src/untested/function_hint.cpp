@@ -25,6 +25,7 @@
 #include <agge/figures.h>
 #include <agge/filling_rules.h>
 #include <agge/stroke_features.h>
+#include <agge.text/limit.h>
 #include <agge.text/text_engine.h>
 #include <wpl/helpers.h>
 #include <wpl/stylesheet.h>
@@ -36,7 +37,8 @@ using namespace wpl;
 namespace micro_profiler
 {
 	function_hint::function_hint(gcontext::text_engine_type &text_services)
-		: _measurer(text_services), _selected(table_model::npos())
+		: _text_services(text_services), _name(font_style_annotation()), _items(font_style_annotation()),
+			_item_values(font_style_annotation()), _selected(table_model_base::npos())
 	{	}
 
 	void function_hint::apply_styles(const stylesheet &stylesheet_)
@@ -54,35 +56,35 @@ namespace micro_profiler
 		_border_width = stylesheet_.get_value("border.hint");
 
 		_items.clear();
-		_items.append(L"Exclusive (total)\nInclusive (total)\nExclusive (average)\nInclusive (average)");
+		_items << "Exclusive (total)\nInclusive (total)\nExclusive (average)\nInclusive (average)";
 		_stroke.width(_border_width);
 		_stroke.set_join(joins::bevel());
 	}
 
-	void function_hint::set_model(shared_ptr<table_model> model)
+	void function_hint::set_model(shared_ptr<string_table_model> model)
 	{
 		_invalidate = model ? model->invalidate += [this] (...) {
-			if (_selected != table_model::npos())
+			if (_selected != table_model_base::npos())
 				update_text_and_calculate_locations(_selected);
 		} : nullptr;
 		_model = model;
 	}
 
-	bool function_hint::select(table_model::index_type index)
+	bool function_hint::select(table_model_base::index_type item)
 	{
-		if (index == _selected)
+		if (item == _selected)
 			return false;
 
-		const auto hierarchy_changed = index == table_model::npos() || _selected == table_model::npos();
+		const auto hierarchy_changed = item == table_model_base::npos() || _selected == table_model_base::npos();
 
-		_selected = index;
-		if (_model && index != table_model::npos())
-			update_text_and_calculate_locations(index);
+		_selected = item;
+		if (_model && item != table_model_base::npos())
+			update_text_and_calculate_locations(item);
 		return hierarchy_changed;
 	}
 
 	bool function_hint::is_active() const
-	{	return _selected != table_model::npos();	}
+	{	return _selected != table_model_base::npos();	}
 
 	box<int> function_hint::get_box() const
 	{
@@ -101,33 +103,31 @@ namespace micro_profiler
 		inflate(rc, -0.5f * _border_width, -0.5f * _border_width);
 		add_path(*rasterizer_, assist(rectangle(rc.x1, rc.y1, rc.x2, rc.y2), _stroke));
 		context(rasterizer_, blender(_border_color), winding<>());
-		context.text_engine.render(*rasterizer_, _name, align_center, align_near, _name_location);
-		context.text_engine.render(*rasterizer_, _items, align_near, align_near, _items_location);
-		context.text_engine.render(*rasterizer_, _item_values, align_far, align_near, _items_location);
+		context.text_engine.render(*rasterizer_, _name, align_center, align_near, _name_location, limit::wrap(width(_name_location)));
+		context.text_engine.render(*rasterizer_, _items, align_near, align_near, _items_location, limit::wrap(width(_items_location)));
+		context.text_engine.render(*rasterizer_, _item_values, align_far, align_near, _items_location, limit::wrap(width(_items_location)));
 		rasterizer_->sort(true);
 		context(rasterizer_, blender(_text_color), winding<>());
 	}
 
-	void function_hint::update_text_and_calculate_locations(table_model::index_type index)
+	void function_hint::update_text_and_calculate_locations(table_model_base::index_type item)
 	{
 		_name.clear();
-		_model->get_text(index, 1, _buffer);
-		_name.append(_buffer);
+		_model->get_text(item, 1, _buffer);
+		_name << _buffer.c_str();
 		_item_values.clear();
 		_item_values << style::weight(bold);
-		_model->get_text(index, 4, _buffer), _buffer += L"\n", _item_values.append(_buffer);
-		_model->get_text(index, 5, _buffer), _buffer += L"\n", _item_values.append(_buffer);
-		_model->get_text(index, 6, _buffer), _buffer += L"\n", _item_values.append(_buffer);
-		_model->get_text(index, 7, _buffer), _item_values.append(_buffer);
+		_buffer.clear(), _model->get_text(item, 4, _buffer), _buffer += "\n", _item_values << _buffer.c_str();
+		_buffer.clear(), _model->get_text(item, 5, _buffer), _buffer += "\n", _item_values << _buffer.c_str();
+		_buffer.clear(), _model->get_text(item, 6, _buffer), _buffer += "\n", _item_values << _buffer.c_str();
+		_buffer.clear(), _model->get_text(item, 7, _buffer), _item_values << _buffer.c_str();
 
-		_measurer.set_width_limit(1000.0f);
-		_measurer.process(_items);
+		_measurer.process(_items, limit::none(), _text_services);
 		const auto box_items = _measurer.get_box();
-		_measurer.process(_item_values);
+		_measurer.process(_item_values, limit::none(), _text_services);
 		const auto box_item_values = _measurer.get_box();
 		const auto width = agge_max(_min_width, box_items.w + box_item_values.w + _padding);
-		_measurer.set_width_limit(width);
-		_measurer.process(_name);
+		_measurer.process(_name, limit::wrap(width), _text_services);
 		const auto box_name = _measurer.get_box();
 		auto rc = create_rect(0.0f, 0.0f, width, box_name.h);
 		offset(rc, _padding, _padding);

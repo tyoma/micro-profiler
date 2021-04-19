@@ -1,6 +1,6 @@
 #include <frontend/tables_ui.h>
 
-#include <frontend/columns_model.h>
+#include <frontend/headers_model.h>
 #include <frontend/function_hint.h>
 #include <frontend/function_list.h>
 #include <frontend/piechart.h>
@@ -23,45 +23,45 @@ namespace micro_profiler
 	{
 		const auto secondary = style::height_scale(0.85);
 
-		const columns_model::column c_columns_statistics[] = {
-			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},
-			{	"Function", L"Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
-			{	"ThreadID", L"Thread\n" + secondary + L"id", 64, columns_model::dir_ascending	},
-			{	"TimesCalled", L"Called\n" + secondary + L"times", 64, columns_model::dir_descending	},
-			{	"ExclusiveTime", L"Exclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
-			{	"InclusiveTime", L"Inclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
-			{	"AvgExclusiveTime", L"Exclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
-			{	"AvgInclusiveTime", L"Inclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
-			{	"MaxRecursion", L"Recursion\n" + secondary + L"max depth", 25, columns_model::dir_descending	},
-			{	"MaxCallTime", L"Inclusive\n" + secondary + L"maximum/call", 121, columns_model::dir_descending	},
+		const headers_model::column c_columns_statistics[] = {
+			{	"Index", "#" + secondary, 28, headers_model::dir_none	},
+			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending	},
+			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending	},
+			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending	},
+			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
+			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
+			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
+			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
+			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, headers_model::dir_descending	},
+			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, headers_model::dir_descending	},
 		};
 
-		const columns_model::column c_columns_statistics_children[] = {
-			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},
-			{	"Function", L"Called Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
-			{	"ThreadID", L"Thread\n" + secondary + L"id", 64, columns_model::dir_ascending	},
-			{	"TimesCalled", L"Called\n" + secondary + L"times", 64, columns_model::dir_descending	},
-			{	"ExclusiveTime", L"Exclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
-			{	"InclusiveTime", L"Inclusive\n" + secondary + L"total", 48, columns_model::dir_descending	},
-			{	"AvgExclusiveTime", L"Exclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
-			{	"AvgInclusiveTime", L"Inclusive\n" + secondary + L"average/call", 48, columns_model::dir_descending	},
-			{	"MaxRecursion", L"Recursion\n" + secondary + L"max depth", 25, columns_model::dir_descending	},
-			{	"MaxCallTime", L"Inclusive\n" + secondary + L"maximum/call", 121, columns_model::dir_descending	},
+		const headers_model::column c_columns_statistics_children[] = {
+			{	"Index", "#" + secondary, 28, headers_model::dir_none	},
+			{	"Function", "Called Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending	},
+			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending	},
+			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending	},
+			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
+			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
+			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
+			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
+			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, headers_model::dir_descending	},
+			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, headers_model::dir_descending	},
 		};
 
-		const columns_model::column c_columns_statistics_parents[] = {
-			{	"Index", richtext_modifier_t(L"#", zero()), 28, columns_model::dir_none	},
-			{	"Function", L"Calling Function\n" + secondary + L"qualified name", 384, columns_model::dir_ascending	},
-			{	"ThreadID", L"Thread\n" + secondary + L"id", 64, columns_model::dir_ascending	},
-			{	"TimesCalled", L"Called\n" + secondary + L"times", 64, columns_model::dir_descending	},
+		const headers_model::column c_columns_statistics_parents[] = {
+			{	"Index", "#" + secondary, 28, headers_model::dir_none	},
+			{	"Function", "Calling Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending	},
+			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending	},
+			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending	},
 		};
 	}
 
 	tables_ui::tables_ui(const wpl::factory &factory_, shared_ptr<functions_list> model, hive &configuration)
 		: wpl::stack(false, factory_.context.cursor_manager_),
-			_cm_main(new columns_model(c_columns_statistics, 3, false)),
-			_cm_parents(new columns_model(c_columns_statistics_parents, 2, false)),
-			_cm_children(new columns_model(c_columns_statistics_children, 4, false)),
+			_cm_main(new headers_model(c_columns_statistics, 3, false)),
+			_cm_parents(new headers_model(c_columns_statistics_parents, 2, false)),
+			_cm_children(new headers_model(c_columns_statistics_children, 4, false)),
 			_m_main(model),
 			_lv_main(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
 			_pc_main(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
@@ -145,9 +145,9 @@ namespace micro_profiler
 		_cm_children->store(*configuration.create("ChildrenColumns"));
 	}
 
-	void tables_ui::on_selection_change(wpl::table_model::index_type index, bool selected)
+	void tables_ui::on_selection_change(wpl::table_model_base::index_type index, bool selected)
 	{
-		index = selected ? index : wpl::table_model::npos();
+		index = selected ? index : wpl::table_model_base::npos();
 		switch_linked(index);
 		_pc_main->select(index);
 	}
@@ -168,15 +168,15 @@ namespace micro_profiler
 			open_source(fileline.first, fileline.second);
 	}
 
-	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view_, wpl::table_model::index_type index)
+	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view_, wpl::table_model_base::index_type index)
 	{
 		index = _m_main->get_index(view_->get_key(index));
 		_lv_main->select(index, true);
 		_lv_main->focus(index);
 	}
 
-	void tables_ui::on_children_selection_change(wpl::table_model::index_type index, bool selected)
-	{	_pc_children->select(selected ? index : wpl::table_model::npos());	}
+	void tables_ui::on_children_selection_change(wpl::table_model_base::index_type index, bool selected)
+	{	_pc_children->select(selected ? index : wpl::table_model_base::npos());	}
 
 	void tables_ui::on_children_piechart_selection_change(piechart::model_t::index_type index)
 	{
@@ -184,20 +184,20 @@ namespace micro_profiler
 		_lv_children->focus(index);
 	}
 
-	void tables_ui::switch_linked(wpl::table_model::index_type index)
+	void tables_ui::switch_linked(wpl::table_model_base::index_type index)
 	{
 		set_model(*_lv_children, _pc_children.get(), _hint_children.get(), _conn_sort_children, *_cm_children,
-			_m_children = index != wpl::table_model::npos() ? _m_main->watch_children(index) : nullptr);
+			_m_children = index != wpl::table_model_base::npos() ? _m_main->watch_children(index) : nullptr);
 		set_model(*_lv_parents, nullptr, nullptr, _conn_sort_parents, *_cm_parents,
-			_m_parents = index != wpl::table_model::npos() ? _m_main->watch_parents(index) : nullptr);
+			_m_parents = index != wpl::table_model_base::npos() ? _m_main->watch_parents(index) : nullptr);
 	}
 
 	template <typename ModelT>
 	void tables_ui::set_model(wpl::listview &lv, piechart *pc, function_hint *hint, wpl::slot_connection &conn_sorted,
-		columns_model &cm, const std::shared_ptr<ModelT> &m)
+		headers_model &cm, const std::shared_ptr<ModelT> &m)
 	{
 		const auto order = cm.get_sort_order();
-		const auto set_order = [m] (columns_model::index_type column, bool ascending) {
+		const auto set_order = [m] (headers_model::index_type column, bool ascending) {
 			if (m)
 				m->set_order(column, ascending);
 		};

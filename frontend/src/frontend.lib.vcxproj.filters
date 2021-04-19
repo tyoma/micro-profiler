@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="columns_model.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="frontend.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -52,12 +49,14 @@
     <ClCompile Include="marshalled_server.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="headers_model.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
-    <ClInclude Include="..\columns_model.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\frontend.h" />
@@ -78,6 +77,7 @@
     <ClInclude Include="..\system_stylesheet.h" />
     <ClInclude Include="..\marshalled_server.h" />
     <ClInclude Include="..\function_hint.h" />
+    <ClInclude Include="..\headers_model.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

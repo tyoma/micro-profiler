@@ -1,7 +1,6 @@
 #include <frontend/threads_model.h>
 
 #include <common/formatting.h>
-#include <common/string.h>
 
 #pragma warning(disable: 4355)
 
@@ -21,7 +20,7 @@ namespace micro_profiler
 				: _underlying(index ? u.track(index - 1) : shared_ptr<const wpl::trackable>())
 			{	}
 
-			virtual index_type index() const
+			virtual index_type index() const override
 			{	return _underlying ? _underlying->index() + 1 : 0;	}
 
 			shared_ptr<const wpl::trackable> _underlying;
@@ -49,23 +48,23 @@ namespace micro_profiler
 	threads_model::index_type threads_model::get_count() const throw()
 	{	return _view.get_count() + 1;	}
 
-	void threads_model::get_value(index_type index, wstring &text) const
+	void threads_model::get_value(index_type index, string &text) const
 	{
 		if (index == 0)
 		{
-			text = L"All Threads";
+			text = "All Threads";
 		}
 		else
 		{
 			const thread_info &v = _view[index - 1].second;
 
-			text = L"#", itoa<10>(text, v.native_id);
+			text = "#", itoa<10>(text, v.native_id);
 			if (!v.description.empty())
-				text += L" - " + unicode(v.description);
-			text += L" - CPU: ", format_interval(text, to_seconds(v.cpu_time));
-			text += L", started: +", format_interval(text, to_seconds(v.start_time));
+				text += " - " + v.description;
+			text += " - CPU: ", format_interval(text, to_seconds(v.cpu_time));
+			text += ", started: +", format_interval(text, to_seconds(v.start_time));
 			if (v.complete)
-				text += L", ended: +", format_interval(text, to_seconds(v.end_time));
+				text += ", ended: +", format_interval(text, to_seconds(v.end_time));
 		}
 	}
 

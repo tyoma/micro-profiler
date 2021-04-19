@@ -44,7 +44,7 @@ namespace micro_profiler
 		class marshalled_session;
 
 	private:
-		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
+		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound) override;
 
 	private:
 		const std::shared_ptr<lifetime> _lifetime;
@@ -60,8 +60,8 @@ namespace micro_profiler
 		void stop();
 
 	private:
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
+		virtual void disconnect() throw() override;
+		virtual void message(const_byte_range payload) override;
 
 	private:
 		const std::shared_ptr<lifetime> _lifetime;
@@ -77,8 +77,8 @@ namespace micro_profiler
 		void create_underlying(std::shared_ptr<ipc::server> underlying_server);
 
 	private:
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
+		virtual void disconnect() throw() override;
+		virtual void message(const_byte_range payload) override;
 
 	private:
 		const std::shared_ptr<lifetime> _lifetime;

@@ -21,7 +21,6 @@
 #include "ProfilerMainDialog.h"
 
 #include <common/configuration.h>
-#include <common/string.h>
 #include <frontend/function_list.h>
 #include <frontend/tables_ui.h>
 
@@ -77,11 +76,11 @@ namespace micro_profiler
 				toolbar->set_spacing(5);
 				stk->add(toolbar, pixels(24), false);
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
-						btn->set_text(L"Clear Statistics");
+						btn->set_text(agge::style_modifier::empty + "Clear Statistics");
 						_connections.push_back(btn->clicked += [this] {	_statistics->clear();	});
 
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
-						btn->set_text(L"Copy All");
+						btn->set_text(agge::style_modifier::empty + "Copy All");
 						_connections.push_back(btn->clicked += [this] {
 							string text;
 
@@ -92,8 +91,8 @@ namespace micro_profiler
 					toolbar->add(make_shared< controls::integrated_control<control> >(), percents(100), false);
 					toolbar->add(lnk = factory_.create_control<link>("link"), pixels(200), false);
 						lnk->set_halign(agge::align_far);
-						lnk->set_text(L"<a>Star Me!</a>");
-						_connections.push_back(lnk->clicked += [this] (size_t, const wstring &) {
+						lnk->set_text(agge::style_modifier::empty + "<a>Star Me!</a>");
+						_connections.push_back(lnk->clicked += [this] (size_t, const string &) {
 							const auto l = _form->get_location();
 							const agge::point<int> center = { (l.x1 + l.x2) / 2, (l.y1 + l.y2) / 2 };
 
@@ -106,7 +105,7 @@ namespace micro_profiler
 		_form->set_root(root);
 		if (load(*_configuration, "Placement", l))
 			_form->set_location(l);
-		_form->set_caption(unicode("MicroProfiler - " + _executable));
+		_form->set_caption("MicroProfiler - " + _executable);
 		_form->set_visible(true);
 
 		_connections.push_back(_form->close += [this] {

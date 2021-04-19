@@ -35,16 +35,25 @@ namespace micro_profiler
 		inline function_key addr(size_t address, unsigned int threadid = 1)
 		{	return function_key(address, threadid);	}
 
-		inline std::wstring get_text(const wpl::table_model &fl, size_t row, unsigned column)
+		inline std::string get_text(const wpl::list_model<std::string> &m, unsigned item)
 		{
-			std::wstring text;
+			std::string text;
 
-			return fl.get_text(static_cast<unsigned>(row), column, text), text;
+			m.get_value(item, text);
+			return text;
+		}
+
+		inline std::string get_text(const wpl::string_table_model &fl, size_t row, size_t column)
+		{
+			std::string text;
+
+			return fl.get_text(static_cast<wpl::table_model_base::index_type>(row),
+				static_cast<wpl::table_model_base::index_type>(column), text), text;
 		}
 
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equal(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
-			const wpl::table_model &actual, const ut::LocationInfo &location)
+			const wpl::string_table_model &actual, const ut::LocationInfo &location)
 		{
 			ut::are_equal(rows_n, actual.get_count(), location);
 			for (size_t j = 0; j != rows_n; ++j)
@@ -54,12 +63,12 @@ namespace micro_profiler
 
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equivalent(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
-			const wpl::table_model &actual, const ut::LocationInfo &location)
+			const wpl::string_table_model &actual, const ut::LocationInfo &location)
 		{
 			using namespace std;
 
-			vector< vector<wstring> > reference_rows(rows_n);
-			vector< vector<wstring> > actual_rows(rows_n);
+			vector< vector<string> > reference_rows(rows_n);
+			vector< vector<string> > actual_rows(rows_n);
 
 			ut::are_equal(rows_n, actual.get_count(), location);
 			for (unsigned int j = 0; j != rows_n; ++j)

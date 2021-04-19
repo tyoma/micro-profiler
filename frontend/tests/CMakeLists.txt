@@ -3,13 +3,13 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(FRONTEND_TESTS_SOURCES
-	ColumnsModelTests.cpp
 	FilterViewTests.cpp
 	FrontendManagerTests.cpp
 	FrontendTests.cpp
 	FunctionListPersistence.cpp
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
+	HeadersModelTests.cpp
 	MarshalledServerTests.cpp
 	mocks.cpp
 	OrderedViewTests.cpp

@@ -22,7 +22,6 @@
 
 #include <common/constants.h>
 #include <common/formatting.h>
-#include <common/string.h>
 #include <frontend/marshalled_server.h>
 #include <logger/log.h>
 
@@ -41,7 +40,7 @@ namespace micro_profiler
 				: _server(server), _endpoint_id(endpoint_id)
 			{	}
 
-			virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound)
+			virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound) override
 			{
 				LOG(PREAMBLE "creating frontend server session...") % A(_endpoint_id);
 				return _server->create_session(outbound);

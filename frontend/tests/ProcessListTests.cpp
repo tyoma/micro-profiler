@@ -48,7 +48,7 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				process_list l;
-				wpl::table_model &t = l;
+				wpl::string_table_model &t = l;
 
 				// ACT / ASSERT
 				assert_equal(0u, t.get_count());
@@ -81,29 +81,29 @@ namespace micro_profiler
 					shared_ptr<process>(new mocks::process(11111, "bar")),
 					shared_ptr<process>(new mocks::process(16111, "BAZ")),
 				};
-				wstring text;
+				string text;
 
 				// ACT
 				l.update(enumerate_processes(p1));
 
 				// ASSERT
 				assert_equal(2u, l.get_count());
-				assert_equal(L"foo", (l.get_text(0, 0, text), text));
-				assert_equal(L"12", (l.get_text(0, 1, text), text));
-				assert_equal(L"bar", (l.get_text(1, 0, text), text));
-				assert_equal(L"12111", (l.get_text(1, 1, text), text));
+				assert_equal("foo", (l.get_text(0, 0, text), text));
+				assert_equal("12", (l.get_text(0, 1, text), text));
+				assert_equal("bar", (l.get_text(1, 0, text), text));
+				assert_equal("12111", (l.get_text(1, 1, text), text));
 
 				// ACT
 				l.update(enumerate_processes(p2));
 
 				// ASSERT
 				assert_equal(3u, l.get_count());
-				assert_equal(L"FOO", (l.get_text(0, 0, text), text));
-				assert_equal(L"1", (l.get_text(0, 1, text), text));
-				assert_equal(L"bar", (l.get_text(1, 0, text), text));
-				assert_equal(L"11111", (l.get_text(1, 1, text), text));
-				assert_equal(L"BAZ", (l.get_text(2, 0, text), text));
-				assert_equal(L"16111", (l.get_text(2, 1, text), text));
+				assert_equal("FOO", (l.get_text(0, 0, text), text));
+				assert_equal("1", (l.get_text(0, 1, text), text));
+				assert_equal("bar", (l.get_text(1, 0, text), text));
+				assert_equal("11111", (l.get_text(1, 1, text), text));
+				assert_equal("BAZ", (l.get_text(2, 0, text), text));
+				assert_equal("16111", (l.get_text(2, 1, text), text));
 			}
 
 
@@ -165,7 +165,7 @@ namespace micro_profiler
 					shared_ptr<process>(new mocks::process(12111, "Amet")),
 					shared_ptr<process>(new mocks::process(1211, "Quand")),
 				};
-				wstring text;
+				string text;
 
 				l.update(enumerate_processes(p));
 
@@ -173,38 +173,38 @@ namespace micro_profiler
 				l.set_order(1, true);
 
 				// ASSERT
-				assert_equal(L"Lorem", (l.get_text(0, 0, text), text));
+				assert_equal("Lorem", (l.get_text(0, 0, text), text));
 				assert_equal(p[0], l.get_process(0));
-				assert_equal(L"Quand", (l.get_text(1, 0, text), text));
+				assert_equal("Quand", (l.get_text(1, 0, text), text));
 				assert_equal(p[2], l.get_process(1));
-				assert_equal(L"Amet", (l.get_text(2, 0, text), text));
+				assert_equal("Amet", (l.get_text(2, 0, text), text));
 				assert_equal(p[1], l.get_process(2));
 
 				// ACT
 				l.set_order(1, false);
 
 				// ASSERT
-				assert_equal(L"Amet", (l.get_text(0, 0, text), text));
-				assert_equal(L"Quand", (l.get_text(1, 0, text), text));
-				assert_equal(L"Lorem", (l.get_text(2, 0, text), text));
+				assert_equal("Amet", (l.get_text(0, 0, text), text));
+				assert_equal("Quand", (l.get_text(1, 0, text), text));
+				assert_equal("Lorem", (l.get_text(2, 0, text), text));
 
 				// ACT
 				l.set_order(0, true);
 
 				// ASSERT
-				assert_equal(L"12111", (l.get_text(0, 1, text), text));
-				assert_equal(L"12", (l.get_text(1, 1, text), text));
-				assert_equal(L"1211", (l.get_text(2, 1, text), text));
+				assert_equal("12111", (l.get_text(0, 1, text), text));
+				assert_equal("12", (l.get_text(1, 1, text), text));
+				assert_equal("1211", (l.get_text(2, 1, text), text));
 
 				// ACT
 				l.set_order(0, false);
 
 				// ASSERT
-				assert_equal(L"1211", (l.get_text(0, 1, text), text));
+				assert_equal("1211", (l.get_text(0, 1, text), text));
 				assert_equal(p[2], l.get_process(0));
-				assert_equal(L"12", (l.get_text(1, 1, text), text));
+				assert_equal("12", (l.get_text(1, 1, text), text));
 				assert_equal(p[0], l.get_process(1));
-				assert_equal(L"12111", (l.get_text(2, 1, text), text));
+				assert_equal("12111", (l.get_text(2, 1, text), text));
 				assert_equal(p[1], l.get_process(2));
 			}
 
@@ -224,7 +224,7 @@ namespace micro_profiler
 					shared_ptr<process>(new mocks::process(1311, "Dolor")),
 					shared_ptr<process>(new mocks::process(1211, "Quand")),
 				};
-				wstring text;
+				string text;
 
 				l.set_order(0, true);
 
@@ -232,18 +232,18 @@ namespace micro_profiler
 				l.update(enumerate_processes(p1));
 
 				// ASSERT
-				assert_equal(L"12111", (l.get_text(0, 1, text), text));
-				assert_equal(L"12", (l.get_text(1, 1, text), text));
-				assert_equal(L"1211", (l.get_text(2, 1, text), text));
+				assert_equal("12111", (l.get_text(0, 1, text), text));
+				assert_equal("12", (l.get_text(1, 1, text), text));
+				assert_equal("1211", (l.get_text(2, 1, text), text));
 
 				// ACT
 				l.update(enumerate_processes(p2));
 
 				// ASSERT
-				assert_equal(L"12111", (l.get_text(0, 1, text), text));
-				assert_equal(L"1311", (l.get_text(1, 1, text), text));
-				assert_equal(L"12", (l.get_text(2, 1, text), text));
-				assert_equal(L"1211", (l.get_text(3, 1, text), text));
+				assert_equal("12111", (l.get_text(0, 1, text), text));
+				assert_equal("1311", (l.get_text(1, 1, text), text));
+				assert_equal("12", (l.get_text(2, 1, text), text));
+				assert_equal("1211", (l.get_text(3, 1, text), text));
 			}
 		end_test_suite
 	}

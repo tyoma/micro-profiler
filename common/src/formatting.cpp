@@ -23,12 +23,12 @@
 namespace micro_profiler
 {
 	const double c_bias = 7.25e-5;
-	const wchar_t *c_time_units[] = {	L"s", L"ms", L"\x03BCs", L"ns",	};
+	const char *c_time_units[] = {	"s", "ms", "\xCE\xBCs", "ns",	};
 	const int c_time_units_count = sizeof(c_time_units) / sizeof(c_time_units[0]);
-	const wchar_t *c_formatting = (
+	const char *c_formatting = (
 #if defined(_MSC_VER) && _MSC_VER < 1900
 		_set_output_format(_TWO_DIGIT_EXPONENT), // Force compliant %g formatting.
 #endif
-		L"%.3g");
-	const wchar_t *c_formatting_enhanced = L"%.4g";
+		"%.3g");
+	const char *c_formatting_enhanced = "%.4g";
 }

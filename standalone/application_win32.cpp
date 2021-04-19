@@ -162,8 +162,8 @@ namespace micro_profiler
 		}
 	}
 
-	void application::open_link(const wstring &address)
-	{	::ShellExecuteW(NULL, L"open", address.c_str(), NULL, NULL, SW_SHOWNORMAL);	}
+	void application::open_link(const string &address)
+	{	::ShellExecuteW(NULL, L"open", unicode(address).c_str(), NULL, NULL, SW_SHOWNORMAL);	}
 }
 
 int WINAPI _tWinMain(HINSTANCE /*instance*/, HINSTANCE /*previous_instance*/, LPTSTR command_line, int /*show_command*/)

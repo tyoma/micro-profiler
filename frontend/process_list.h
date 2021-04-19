@@ -26,7 +26,7 @@
 
 namespace micro_profiler
 {
-	class process_list : public wpl::table_model
+	class process_list : public wpl::string_table_model
 	{
 	public:
 		typedef std::function<void (const process::enumerate_callback_t &callback)> process_enumerator_t;
@@ -36,9 +36,9 @@ namespace micro_profiler
 
 		std::shared_ptr<process> get_process(index_type row) const;
 
-		virtual index_type get_count() const throw();
-		virtual void get_text(index_type row, index_type column, std::wstring &text) const;
-		virtual void set_order(index_type column, bool ascending);
+		virtual index_type get_count() const throw() override;
+		virtual void get_text(index_type row, index_type column, std::string &text) const override;
+		virtual void set_order(index_type column, bool ascending) override;
 
 	private:
 		typedef std::vector< std::shared_ptr<process> > process_container_t;

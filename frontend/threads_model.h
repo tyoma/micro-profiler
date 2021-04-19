@@ -38,7 +38,7 @@ namespace micro_profiler
 {
 	struct threads_model_reader;
 
-	class threads_model : public wpl::list_model<std::wstring>,
+	class threads_model : public wpl::list_model<std::string>,
 		containers::unordered_map<unsigned int, thread_info, knuth_hash>, noncopyable
 	{
 	public:
@@ -53,9 +53,9 @@ namespace micro_profiler
 		bool get_native_id(unsigned int &native_id, unsigned int thread_id) const throw();
 		bool get_key(unsigned int &thread_id, index_type index) const throw();
 
-		virtual index_type get_count() const throw();
-		virtual void get_value(index_type index, std::wstring &text) const;
-		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const;
+		virtual index_type get_count() const throw() override;
+		virtual void get_value(index_type index, std::string &text) const override;
+		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const override;
 
 	private:
 		const request_threads_t _requestor;

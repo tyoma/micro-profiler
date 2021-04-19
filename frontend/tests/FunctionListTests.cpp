@@ -38,14 +38,6 @@ namespace micro_profiler
 
 			const timestamp_t test_ticks_per_second = 1;
 
-			template <typename T>
-			wstring to_string(const T &value)
-			{
-				wstringstream s;
-				s << value;
-				return s.str();
-			}
-
 			void increment(int *value)
 			{	++*value;	}
 
@@ -53,14 +45,14 @@ namespace micro_profiler
 			{
 				wpl::slot_connection _connection;
 
-				void on_invalidate(table_model::index_type count)
+				void on_invalidate(table_model_base::index_type count)
 				{	invalidations.push_back(count);	}
 
 			public:
-				typedef vector<table_model::index_type> _invalidations_log_t;
+				typedef vector<table_model_base::index_type> _invalidations_log_t;
 
 			public:
-				void bind_to_model(table_model &to)
+				void bind_to_model(string_table_model &to)
 				{	_connection = to.invalidate += bind(&invalidation_tracer::on_invalidate, this, _1);	}
 
 				_invalidations_log_t invalidations;
@@ -69,21 +61,21 @@ namespace micro_profiler
 
 			class invalidation_at_sorting_check1
 			{
-				const table_model &_model;
+				const string_table_model &_model;
 
 				const invalidation_at_sorting_check1 &operator =(const invalidation_at_sorting_check1 &);
 
 			public:
-				invalidation_at_sorting_check1(table_model &m)
+				invalidation_at_sorting_check1(string_table_model &m)
 					: _model(m)
 				{	}
 
-				void operator ()(table_model::index_type /*count*/) const
+				void operator ()(table_model_base::index_type /*count*/) const
 				{
-					wstring reference[][2] = {
-						{	L"00002995", L"700",	},
-						{	L"00003001", L"30",	},
-						{	L"00002978", L"3",	},
+					string reference[][2] = {
+						{	"00002995", "700",	},
+						{	"00003001", "30",	},
+						{	"00002978", "3",	},
 					};
 
 					assert_table_equal(name_times, reference, _model);
@@ -101,14 +93,14 @@ namespace micro_profiler
 				return result;
 			}
 
-			table_model::index_type find_row(const table_model &m, const wstring &name)
+			table_model_base::index_type find_row(const string_table_model &m, const string &name)
 			{
-				wstring result;
+				string result;
 
-				for (table_model::index_type i = 0, c = m.get_count(); i != c; ++i)
+				for (table_model_base::index_type i = 0, c = m.get_count(); i != c; ++i)
 					if (m.get_text(i, columns::name, result), result == name)
 						return i;
-				return table_model::npos();
+				return table_model_base::npos();
 			}
 		}
 
@@ -191,7 +183,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
-				assert_equal(L"1", get_text(*fl, 0, 3));
+				assert_equal("1", get_text(*fl, 0, 3));
 				assert_equal(0, invalidated_count);
 			}
 
@@ -228,7 +220,7 @@ namespace micro_profiler
 				assert_equal(0u, fl->get_count());
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(0u, ih.invalidations.back()); //check what's coming as event arg
-				assert_equal(table_model::npos(), first->index());
+				assert_equal(table_model_base::npos(), first->index());
 
 				// INIT
 				_buffer.rewind();
@@ -268,7 +260,7 @@ namespace micro_profiler
 				fl->clear();
 
 				// ASSERT
-				table_model::index_type reference[] = { 0, };
+				table_model_base::index_type reference[] = { 0, };
 
 				assert_equal(0u, children[0]->get_count());
 				assert_equal(reference, it1.invalidations);
@@ -301,7 +293,7 @@ namespace micro_profiler
 				fl->clear();
 
 				// ASSERT
-				table_model::index_type reference[] = { 0, };
+				table_model_base::index_type reference[] = { 0, };
 
 				assert_equal(0u, parents[0]->get_count());
 				assert_equal(reference, it1.invalidations);
@@ -337,13 +329,13 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(3u, fl->get_count());
 
-				for (table_model::index_type i = 0; i < expected.size(); ++i)
+				for (table_model_base::index_type i = 0; i < expected.size(); ++i)
 					assert_equal(expected[i], i);
 
-				assert_not_equal(table_model::npos(), idx1118);
-				assert_not_equal(table_model::npos(), idx2229);
-				assert_not_equal(table_model::npos(), idx5550);
-				assert_equal(table_model::npos(), fl->get_index(addr(1234)));
+				assert_not_equal(table_model_base::npos(), idx1118);
+				assert_not_equal(table_model_base::npos(), idx2229);
+				assert_not_equal(table_model_base::npos(), idx5550);
+				assert_equal(table_model_base::npos(), fl->get_index(addr(1234)));
 
 				//Check twice. Kind of regularity check.
 				assert_equal(fl->get_index(addr(1118)), idx1118);
@@ -385,9 +377,9 @@ namespace micro_profiler
 				assert_equal(1u, ih.invalidations.size());
 				assert_equal(2u, ih.invalidations.back()); //check what's coming as event arg
 		
-				wstring reference1[][8] = {
-					{	L"0000045E", L"19", L"31s", L"29s", L"1.63s", L"1.53s", L"0", L"3s"	},
-					{	L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s"	},
+				string reference1[][8] = {
+					{	"0000045E", "19", "31s", "29s", "1.63s", "1.53s", "0", "3s"	},
+					{	"000008B5", "10", "7s", "5s", "700ms", "500ms", "3", "4s"	},
 				};
 
 				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *fl);
@@ -402,10 +394,10 @@ namespace micro_profiler
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference2[][8] = {
-					{	L"0000045E", L"24", L"41s", L"36s", L"1.71s", L"1.5s", L"0", L"6s",	},
-					{	L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s",	},
-					{	L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s",	},
+				string reference2[][8] = {
+					{	"0000045E", "24", "41s", "36s", "1.71s", "1.5s", "0", "6s",	},
+					{	"000008B5", "10", "7s", "5s", "700ms", "500ms", "3", "4s",	},
+					{	"000015AE", "15", "1011s", "723s", "67.4s", "48.2s", "1024", "215s",	},
 				};
 
 				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *fl);
@@ -420,10 +412,10 @@ namespace micro_profiler
 				assert_equal(3u, ih.invalidations.size());
 				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference3[][8] = {
-					{	L"0000045E", L"100111222357", L"1.7e+04s", L"1.4e+04s", L"170ns", L"140ns", L"0", L"6s",	},
-					{	L"000008B5", L"10", L"7s", L"5s", L"700ms", L"500ms", L"3", L"4s",	},
-					{	L"000015AE", L"15", L"1011s", L"723s", L"67.4s", L"48.2s", L"1024", L"215s",	},
+				string reference3[][8] = {
+					{	"0000045E", "100111222357", "1.7e+04s", "1.4e+04s", "170ns", "140ns", "0", "6s",	},
+					{	"000008B5", "10", "7s", "5s", "700ms", "500ms", "3", "4s",	},
+					{	"000015AE", "15", "1011s", "723s", "67.4s", "48.2s", "1024", "215s",	},
 				};
 
 				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference3, *fl);
@@ -473,25 +465,25 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 
 				// ASSERT
-				wstring reference[][8] = {
-					{	L"0000045E", L"1", L"3.1ns", L"2.9ns", L"3.1ns", L"2.9ns", L"0", L"2.9ns",	},
-					{	L"000008B5", L"1", L"4.53\x03bcs", L"3.67\x03bcs", L"4.53\x03bcs", L"3.67\x03bcs", L"0", L"3.67\x03bcs",	},
-					{	L"00000C2E", L"1", L"3.35ms", L"3.23ms", L"3.35ms", L"3.23ms", L"0", L"3.23ms",	},
-					{	L"000015AE", L"1", L"6.55s", L"2.35s", L"6.55s", L"2.35s", L"0", L"2.35s",	},
-					{	L"000011C6", L"1", L"6545s", L"2347s", L"6545s", L"2347s", L"0", L"2347s",	},
-					{	L"00001A05", L"1", L"6.55e+06s", L"2.35e+06s", L"6.55e+06s", L"2.35e+06s", L"0", L"2.35e+06s",	},
+				string reference[][8] = {
+					{	"0000045E", "1", "3.1ns", "2.9ns", "3.1ns", "2.9ns", "0", "2.9ns",	},
+					{	"000008B5", "1", "4.53\xC2\xB5s", "3.67\xC2\xB5s", "4.53\xC2\xB5s", "3.67\xC2\xB5s", "0", "3.67\xC2\xB5s",	},
+					{	"00000C2E", "1", "3.35ms", "3.23ms", "3.35ms", "3.23ms", "0", "3.23ms",	},
+					{	"000015AE", "1", "6.55s", "2.35s", "6.55s", "2.35s", "0", "2.35s",	},
+					{	"000011C6", "1", "6545s", "2347s", "6545s", "2347s", "0", "2347s",	},
+					{	"00001A05", "1", "6.55e+06s", "2.35e+06s", "6.55e+06s", "2.35e+06s", "0", "2.35e+06s",	},
 
 					// boundary cases
-					{	L"000007C6", L"1", L"999ns", L"999ns", L"999ns", L"999ns", L"0", L"999ns",	},
-					{	L"000007D0", L"1", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"1\x03bcs", L"0", L"1\x03bcs",	},
-					{	L"00000BAE", L"1", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"999\x03bcs", L"0", L"999\x03bcs",	},
-					{	L"00000BB8", L"1", L"1ms", L"1ms", L"1ms", L"1ms", L"0", L"1ms",	},
-					{	L"00000F96", L"1", L"999ms", L"999ms", L"999ms", L"999ms", L"0", L"999ms",	},
-					{	L"00000FA0", L"1", L"1s", L"1s", L"1s", L"1s", L"0", L"1s",	},
-					{	L"0000137E", L"1", L"999s", L"999s", L"999s", L"999s", L"0", L"999s",	},
-					{	L"00001388", L"1", L"999.6s", L"999.6s", L"999.6s", L"999.6s", L"0", L"999.6s",	},
-					{	L"00001766", L"1", L"9999s", L"9999s", L"9999s", L"9999s", L"0", L"9999s",	},
-					{	L"00001770", L"1", L"1e+04s", L"1e+04s", L"1e+04s", L"1e+04s", L"0", L"1e+04s",	},
+					{	"000007C6", "1", "999ns", "999ns", "999ns", "999ns", "0", "999ns",	},
+					{	"000007D0", "1", "1\xC2\xB5s", "1\xC2\xB5s", "1\xC2\xB5s", "1\xC2\xB5s", "0", "1\xC2\xB5s",	},
+					{	"00000BAE", "1", "999\xC2\xB5s", "999\xC2\xB5s", "999\xC2\xB5s", "999\xC2\xB5s", "0", "999\xC2\xB5s",	},
+					{	"00000BB8", "1", "1ms", "1ms", "1ms", "1ms", "0", "1ms",	},
+					{	"00000F96", "1", "999ms", "999ms", "999ms", "999ms", "0", "999ms",	},
+					{	"00000FA0", "1", "1s", "1s", "1s", "1s", "0", "1s",	},
+					{	"0000137E", "1", "999s", "999s", "999s", "999s", "0", "999s",	},
+					{	"00001388", "1", "999.6s", "999.6s", "999.6s", "999.6s", "0", "999.6s",	},
+					{	"00001766", "1", "9999s", "9999s", "9999s", "9999s", "0", "9999s",	},
+					{	"00001770", "1", "1e+04s", "1e+04s", "1e+04s", "1e+04s", "0", "1e+04s",	},
 				};
 
 				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference, *fl);
@@ -532,11 +524,11 @@ namespace micro_profiler
 				assert_equal(2u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference1[][8] = {
-					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s",	},
-					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s",	},
-					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s",	},
-					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s",	},
+				string reference1[][8] = {
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "2", "5s",	},
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "0", "3s",	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "1", "4s",	},
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *fl);
@@ -553,11 +545,11 @@ namespace micro_profiler
 				assert_equal(3u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference2[][8] = {
-					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"	},
-					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"	},
-					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"	},
-					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"	},
+				string reference2[][8] = {
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s"	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "1", "4s"	},
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "0", "3s"	},
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "2", "5s"	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *fl);
@@ -574,11 +566,11 @@ namespace micro_profiler
 				assert_equal(4u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference3[][8] = {
-					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"	},
-					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"	},
-					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"	},
-					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"	},
+				string reference3[][8] = {
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "0", "3s"	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "1", "4s"	},
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "2", "5s"	},
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s"	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference3, *fl);
@@ -595,11 +587,11 @@ namespace micro_profiler
 				assert_equal(5u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference4[][8] = {
-					{	L"00000BB8", L"15233", L"6.55e+04s", L"1.35e+04s", L"4.3s", L"884ms", L"3", L"6s"	},
-					{	L"00000BAE", L"2", L"3.35e+07s", L"3.23e+07s", L"1.67e+07s", L"1.62e+07s", L"2", L"5s"	},
-					{	L"000007D0", L"35", L"453s", L"366s", L"12.9s", L"10.5s", L"1", L"4s"	},
-					{	L"000007C6", L"15", L"31s", L"29s", L"2.07s", L"1.93s", L"0", L"3s"	},
+				string reference4[][8] = {
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s"	},
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "2", "5s"	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "1", "4s"	},
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "0", "3s"	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference4, *fl);
@@ -616,11 +608,11 @@ namespace micro_profiler
 				assert_equal(6u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference5[][2] = {
-					{	L"000007C6", L"15",	},
-					{	L"000007D0", L"35",	},
-					{	L"00000BB8", L"15233",	},
-					{	L"00000BAE", L"2",	},
+				string reference5[][2] = {
+					{	"000007C6", "15",	},
+					{	"000007D0", "35",	},
+					{	"00000BB8", "15233",	},
+					{	"00000BAE", "2",	},
 				};
 
 				assert_table_equal(name_times, reference5, *fl);
@@ -637,11 +629,11 @@ namespace micro_profiler
 				assert_equal(7u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference6[][2] = {
-					{	L"00000BAE", L"2",	},
-					{	L"00000BB8", L"15233",	},
-					{	L"000007D0", L"35",	},
-					{	L"000007C6", L"15",	},
+				string reference6[][2] = {
+					{	"00000BAE", "2",	},
+					{	"00000BB8", "15233",	},
+					{	"000007D0", "35",	},
+					{	"000007C6", "15",	},
 				};
 
 				assert_table_equal(name_times, reference6, *fl);
@@ -658,11 +650,11 @@ namespace micro_profiler
 				assert_equal(8u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference7[][2] = {
-					{	L"000007C6", L"15",	},
-					{	L"000007D0", L"35",	},
-					{	L"00000BB8", L"15233",	},
-					{	L"00000BAE", L"2",	},
+				string reference7[][2] = {
+					{	"000007C6", "15",	},
+					{	"000007D0", "35",	},
+					{	"00000BB8", "15233",	},
+					{	"00000BAE", "2",	},
 				};
 
 				assert_table_equal(name_times, reference7, *fl);
@@ -679,11 +671,11 @@ namespace micro_profiler
 				assert_equal(9u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference8[][2] = {
-					{	L"00000BAE", L"2",	},
-					{	L"00000BB8", L"15233",	},
-					{	L"000007D0", L"35",	},
-					{	L"000007C6", L"15",	},
+				string reference8[][2] = {
+					{	"00000BAE", "2",	},
+					{	"00000BB8", "15233",	},
+					{	"000007D0", "35",	},
+					{	"000007C6", "15",	},
 				};
 
 				assert_table_equal(name_times, reference8, *fl);
@@ -700,11 +692,11 @@ namespace micro_profiler
 				assert_equal(10u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference9[][2] = {
-					{	L"00000BB8", L"15233",	},
-					{	L"000007C6", L"15",	},
-					{	L"000007D0", L"35",	},
-					{	L"00000BAE", L"2",	},
+				string reference9[][2] = {
+					{	"00000BB8", "15233",	},
+					{	"000007C6", "15",	},
+					{	"000007D0", "35",	},
+					{	"00000BAE", "2",	},
 				};
 
 				assert_table_equal(name_times, reference9, *fl);
@@ -721,11 +713,11 @@ namespace micro_profiler
 				assert_equal(11u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference10[][2] = {
-					{	L"00000BAE", L"2",	},
-					{	L"000007D0", L"35",	},
-					{	L"000007C6", L"15",	},
-					{	L"00000BB8", L"15233",	},
+				string reference10[][2] = {
+					{	"00000BAE", "2",	},
+					{	"000007D0", "35",	},
+					{	"000007C6", "15",	},
+					{	"00000BB8", "15233",	},
 				};
 
 				assert_table_equal(name_times, reference10, *fl);
@@ -742,11 +734,11 @@ namespace micro_profiler
 				assert_equal(12u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference11[][2] = {
-					{	L"000007C6", L"15",	},
-					{	L"00000BB8", L"15233",	},
-					{	L"000007D0", L"35",	},
-					{	L"00000BAE", L"2",	},
+				string reference11[][2] = {
+					{	"000007C6", "15",	},
+					{	"00000BB8", "15233",	},
+					{	"000007D0", "35",	},
+					{	"00000BAE", "2",	},
 				};
 
 				assert_table_equal(name_times, reference11, *fl);
@@ -763,11 +755,11 @@ namespace micro_profiler
 				assert_equal(13u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference12[][2] = {
-					{	L"00000BAE", L"2",	},
-					{	L"000007D0", L"35",	},
-					{	L"00000BB8", L"15233",	},
-					{	L"000007C6", L"15",	},
+				string reference12[][2] = {
+					{	"00000BAE", "2",	},
+					{	"000007D0", "35",	},
+					{	"00000BB8", "15233",	},
+					{	"000007C6", "15",	},
 				};
 
 				assert_table_equal(name_times, reference12, *fl);
@@ -784,11 +776,11 @@ namespace micro_profiler
 				assert_equal(14u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference13[][2] = {
-					{	L"000007C6", L"15",	},
-					{	L"000007D0", L"35",	},
-					{	L"00000BAE", L"2",	},
-					{	L"00000BB8", L"15233",	},
+				string reference13[][2] = {
+					{	"000007C6", "15",	},
+					{	"000007D0", "35",	},
+					{	"00000BAE", "2",	},
+					{	"00000BB8", "15233",	},
 				};
 
 				assert_table_equal(name_times, reference13, *fl);
@@ -805,11 +797,11 @@ namespace micro_profiler
 				assert_equal(15u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference14[][2] = {
-					{	L"00000BB8", L"15233",	},
-					{	L"00000BAE", L"2",	},
-					{	L"000007D0", L"35",	},
-					{	L"000007C6", L"15",	},
+				string reference14[][2] = {
+					{	"00000BB8", "15233",	},
+					{	"00000BAE", "2",	},
+					{	"000007D0", "35",	},
+					{	"000007C6", "15",	},
 				};
 
 				assert_table_equal(name_times, reference14, *fl);
@@ -826,11 +818,11 @@ namespace micro_profiler
 				assert_equal(16u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference15[][2] = {
-					{	L"000007C6", L"15",	},
-					{	L"000007D0", L"35",	},
-					{	L"00000BAE", L"2",	},
-					{	L"00000BB8", L"15233",	},
+				string reference15[][2] = {
+					{	"000007C6", "15",	},
+					{	"000007D0", "35",	},
+					{	"00000BAE", "2",	},
+					{	"00000BB8", "15233",	},
 				};
 
 				assert_table_equal(name_times, reference15, *fl);
@@ -847,11 +839,11 @@ namespace micro_profiler
 				assert_equal(17u, ih.invalidations.size());
 				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
 
-				wstring reference16[][2] = {
-					{	L"00000BB8", L"15233",	},
-					{	L"00000BAE", L"2",	},
-					{	L"000007D0", L"35",	},
-					{	L"000007C6", L"15",	},
+				string reference16[][2] = {
+					{	"00000BB8", "15233",	},
+					{	"00000BAE", "2",	},
+					{	"000007D0", "35",	},
+					{	"000007C6", "15",	},
 				};
 
 				assert_table_equal(name_times, reference16, *fl);
@@ -890,11 +882,11 @@ namespace micro_profiler
 				fl->set_order(columns::name, true);
 
 				// ACT / ASSERT
-				wstring reference1[][2] = {
-					{	L"00001000", L"100",	},
-					{	L"00001010", L"1000",	},
-					{	L"00001020", L"900",	},
-					{	L"00001030", L"",	},
+				string reference1[][2] = {
+					{	"00001000", "100",	},
+					{	"00001010", "1000",	},
+					{	"00001020", "900",	},
+					{	"00001030", "",	},
 				};
 
 				assert_table_equivalent(name_threadid, reference1, *fl);
@@ -903,11 +895,11 @@ namespace micro_profiler
 				tmodel->add(9, 90, string());
 
 				// ACT / ASSERT
-				wstring reference2[][2] = {
-					{	L"00001000", L"100",	},
-					{	L"00001010", L"1000",	},
-					{	L"00001020", L"900",	},
-					{	L"00001030", L"90",	},
+				string reference2[][2] = {
+					{	"00001000", "100",	},
+					{	"00001010", "1000",	},
+					{	"00001020", "900",	},
+					{	"00001030", "90",	},
 				};
 
 				assert_table_equivalent(name_threadid, reference2, *fl);
@@ -953,7 +945,7 @@ namespace micro_profiler
 				// ASSERT
 				columns::main ordering[] = {	columns::times_called,	};
 				size_t reference_updates1[] = {	data_size,	};
-				wstring reference1[][1] = {	{	L"2",	}, {	L"1",	}, {	L"4",	}, {	L"3",	}, {	L"5",	},	};
+				string reference1[][1] = {	{	"2",	}, {	"1",	}, {	"4",	}, {	"3",	}, {	"5",	},	};
 
 				assert_table_equal(ordering, reference1, *fl);
 				assert_equal(reference_updates1, ih.invalidations);
@@ -963,7 +955,7 @@ namespace micro_profiler
 
 				// ASSERT
 				size_t reference_updates2[] = {	data_size, data_size,	};
-				wstring reference2[][1] = {	{	L"5",	}, {	L"3",	},{	L"4",	},{	L"1",	},  {	L"2",	}, 	};
+				string reference2[][1] = {	{	"5",	}, {	"3",	},{	"4",	},{	"1",	},  {	"2",	}, 	};
 
 				assert_table_equal(ordering, reference2, *fl);
 				assert_equal(reference_updates2, ih.invalidations);
@@ -1038,10 +1030,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_children(2), out_of_range);
 				assert_throws(fl1->watch_children(20), out_of_range);
-				assert_throws(fl1->watch_children(table_model::npos()), out_of_range);
+				assert_throws(fl1->watch_children(table_model_base::npos()), out_of_range);
 				assert_throws(fl2->watch_children(3), out_of_range);
 				assert_throws(fl2->watch_children(30), out_of_range);
-				assert_throws(fl2->watch_children(table_model::npos()), out_of_range);
+				assert_throws(fl2->watch_children(table_model_base::npos()), out_of_range);
 			}
 
 
@@ -1108,16 +1100,16 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 				
 				// ACT
-				shared_ptr<linked_statistics> ls_0 = fl->watch_children(find_row(*fl, L"00001978"));
-				shared_ptr<linked_statistics> ls_1 = fl->watch_children(find_row(*fl, L"00001995"));
+				shared_ptr<linked_statistics> ls_0 = fl->watch_children(find_row(*fl, "00001978"));
+				shared_ptr<linked_statistics> ls_1 = fl->watch_children(find_row(*fl, "00001995"));
 
 				// ACT / ASSERT
 				assert_equal(1u, ls_0->get_count());
-				assert_not_equal(table_model::npos(), find_row(*ls_0, L"00002001"));
+				assert_not_equal(table_model_base::npos(), find_row(*ls_0, "00002001"));
 				assert_equal(3u, ls_1->get_count());
-				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002004"));
-				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002008"));
-				assert_not_equal(table_model::npos(), find_row(*ls_1, L"00002011"));
+				assert_not_equal(table_model_base::npos(), find_row(*ls_1, "00002004"));
+				assert_not_equal(table_model_base::npos(), find_row(*ls_1, "00002008"));
+				assert_not_equal(table_model_base::npos(), find_row(*ls_1, "00002011"));
 			}
 
 
@@ -1145,11 +1137,11 @@ namespace micro_profiler
 				ls->set_order(columns::name, false);
 
 				// ASSERT
-				wstring reference1[][8] = {
-					{	L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
-					{	L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
-					{	L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
-					{	L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+				string reference1[][8] = {
+					{	"00002011", "29", "0s", "0s", "0s", "0s", "0", "0s",	},
+					{	"00002008", "18", "0s", "0s", "0s", "0s", "0", "0s",	},
+					{	"00002004", "17", "0s", "0s", "0s", "0s", "0", "0s",	},
+					{	"00002001", "22", "0s", "0s", "0s", "0s", "0", "0s",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *ls);
@@ -1158,11 +1150,11 @@ namespace micro_profiler
 				ls->set_order(columns::times_called, true);
 
 				// ASSERT
-				wstring reference2[][8] = {
-					{	L"00002004", L"17", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
-					{	L"00002008", L"18", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
-					{	L"00002001", L"22", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
-					{	L"00002011", L"29", L"0s", L"0s", L"0s", L"0s", L"0", L"0s",	},
+				string reference2[][8] = {
+					{	"00002004", "17", "0s", "0s", "0s", "0s", "0", "0s",	},
+					{	"00002008", "18", "0s", "0s", "0s", "0s", "0", "0s",	},
+					{	"00002001", "22", "0s", "0s", "0s", "0s", "0", "0s",	},
+					{	"00002011", "29", "0s", "0s", "0s", "0s", "0", "0s",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *ls);
@@ -1186,9 +1178,9 @@ namespace micro_profiler
 				ls->set_order(columns::name, true);
 
 				// ACT / ASSERT
-				wstring reference[][8] = {
-					{	L"00002001", L"11", L"100ms", L"700ms", L"9.09ms", L"63.6ms", L"0", L"9.1s",	},
-					{	L"00002004", L"17", L"200ms", L"800ms", L"11.8ms", L"47.1ms", L"5", L"9.7s",	},
+				string reference[][8] = {
+					{	"00002001", "11", "100ms", "700ms", "9.09ms", "63.6ms", "0", "9.1s",	},
+					{	"00002004", "17", "200ms", "800ms", "11.8ms", "47.1ms", "5", "9.7s",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference, *ls);
@@ -1249,7 +1241,7 @@ namespace micro_profiler
 				fl.reset();
 
 				// ASSERT
-				table_model::index_type reference[] = { 0u, };
+				table_model_base::index_type reference[] = { 0u, };
 
 				assert_equal(reference, t1.invalidations);
 				assert_equal(reference, t2.invalidations);
@@ -1378,10 +1370,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_throws(fl1->watch_parents(2), out_of_range);
 				assert_throws(fl1->watch_parents(20), out_of_range);
-				assert_throws(fl1->watch_parents(table_model::npos()), out_of_range);
+				assert_throws(fl1->watch_parents(table_model_base::npos()), out_of_range);
 				assert_throws(fl2->watch_parents(3), out_of_range);
 				assert_throws(fl2->watch_parents(30), out_of_range);
-				assert_throws(fl2->watch_parents(table_model::npos()), out_of_range);
+				assert_throws(fl2->watch_parents(table_model_base::npos()), out_of_range);
 			}
 
 
@@ -1494,9 +1486,9 @@ namespace micro_profiler
 				shared_ptr<linked_statistics> p2 = fl->watch_parents(2);
 
 				// ACT / ASSERT
-				wstring reference1[][2] = {	{	L"00003451", L"1",	},	};
-				wstring reference2[][2] = {	{	L"0000122F", L"3",	},	};
-				wstring reference3[][2] = {	{	L"00002340", L"5000000000",	},	};
+				string reference1[][2] = {	{	"00003451", "1",	},	};
+				string reference2[][2] = {	{	"0000122F", "3",	},	};
+				string reference3[][2] = {	{	"00002340", "5000000000",	},	};
 
 				assert_table_equal(name_times, reference1, *p0);
 				assert_table_equal(name_times, reference2, *p1);
@@ -1525,10 +1517,10 @@ namespace micro_profiler
 				p->set_order(columns::name, true);
 
 				// ASSERT
-				wstring reference1[][2] = {
-					{	L"00002978", L"3",	},
-					{	L"00002995", L"700",	},
-					{	L"00003001", L"30",	},
+				string reference1[][2] = {
+					{	"00002978", "3",	},
+					{	"00002995", "700",	},
+					{	"00003001", "30",	},
 				};
 
 				assert_table_equal(name_times, reference1, *p);
@@ -1537,10 +1529,10 @@ namespace micro_profiler
 				p->set_order(columns::name, false);
 
 				// ASSERT
-				wstring reference2[][2] = {
-					{	L"00003001", L"30",	},
-					{	L"00002995", L"700",	},
-					{	L"00002978", L"3",	},
+				string reference2[][2] = {
+					{	"00003001", "30",	},
+					{	"00002995", "700",	},
+					{	"00002978", "3",	},
 				};
 
 				assert_table_equal(name_times, reference2, *p);
@@ -1549,10 +1541,10 @@ namespace micro_profiler
 				p->set_order(columns::times_called, true);
 
 				// ASSERT
-				wstring reference3[][2] = {
-					{	L"00002978", L"3",	},
-					{	L"00003001", L"30",	},
-					{	L"00002995", L"700",	},
+				string reference3[][2] = {
+					{	"00002978", "3",	},
+					{	"00003001", "30",	},
+					{	"00002995", "700",	},
 				};
 
 				assert_table_equal(name_times, reference3, *p);
@@ -1561,10 +1553,10 @@ namespace micro_profiler
 				p->set_order(columns::times_called, false);
 
 				// ASSERT
-				wstring reference4[][2] = {
-					{	L"00002995", L"700",	},
-					{	L"00003001", L"30",	},
-					{	L"00002978", L"3",	},
+				string reference4[][2] = {
+					{	"00002995", "700",	},
+					{	"00003001", "30",	},
+					{	"00002978", "3",	},
 				};
 
 				assert_table_equal(name_times, reference4, *p);
@@ -1595,7 +1587,7 @@ namespace micro_profiler
 				p->set_order(columns::name, true);
 
 				// ASSERT
-				table_model::index_type reference1[] = { 3u, };
+				table_model_base::index_type reference1[] = { 3u, };
 
 				assert_equal(reference1, t.invalidations);
 
@@ -1604,7 +1596,7 @@ namespace micro_profiler
 				p->set_order(columns::times_called, false);
 
 				// ASSERT
-				table_model::index_type reference2[] = { 3u, 4u, 4u, };
+				table_model_base::index_type reference2[] = { 3u, 4u, 4u, };
 
 				assert_equal(reference2, t.invalidations);
 			}
@@ -1668,10 +1660,10 @@ namespace micro_profiler
 				p->set_order(columns::times_called, true);
 
 				// pre-ASSERT
-				wstring reference1[][2] = {
-					{	L"00002978", L"3",	},
-					{	L"00002995", L"30",	},
-					{	L"00003001", L"50",	},
+				string reference1[][2] = {
+					{	"00002978", "3",	},
+					{	"00002995", "30",	},
+					{	"00003001", "50",	},
 				};
 
 				assert_table_equal(name_times, reference1, *p);
@@ -1680,10 +1672,10 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 
 				// ASSERT
-				wstring reference2[][2] = {
-					{	L"00002978", L"6",	},
-					{	L"00003001", L"50",	},
-					{	L"00002995", L"60",	},
+				string reference2[][2] = {
+					{	"00002978", "6",	},
+					{	"00003001", "50",	},
+					{	"00002995", "60",	},
 				};
 
 				assert_table_equal(name_times, reference2, *p);
@@ -1772,9 +1764,9 @@ namespace micro_profiler
 				fl->set_filter([] (const functions_list::value_type &v) { return v.first.second == 3; });
 
 				// ASSERT
-				wstring reference1[][2] = {
-					{	L"00001040", L"5",	},
-					{	L"00001050", L"6",	},
+				string reference1[][2] = {
+					{	"00001040", "5",	},
+					{	"00001050", "6",	},
 				};
 
 				assert_table_equivalent(name_times, reference1, *fl);
@@ -1783,9 +1775,9 @@ namespace micro_profiler
 				fl->set_filter([] (const functions_list::value_type &v) { return v.first.second == 0; });
 
 				// ASSERT
-				wstring reference2[][2] = {
-					{	L"00001000", L"1",	},
-					{	L"00001010", L"2",	},
+				string reference2[][2] = {
+					{	"00001000", "1",	},
+					{	"00001010", "2",	},
 				};
 
 				assert_table_equivalent(name_times, reference2, *fl);
@@ -1794,10 +1786,10 @@ namespace micro_profiler
 				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 3; });
 
 				// ASSERT
-				wstring reference3[][2] = {
-					{	L"00001030", L"4",	},
-					{	L"00001040", L"5",	},
-					{	L"00001050", L"6",	},
+				string reference3[][2] = {
+					{	"00001030", "4",	},
+					{	"00001040", "5",	},
+					{	"00001050", "6",	},
 				};
 
 				assert_table_equivalent(name_times, reference3, *fl);
@@ -1806,13 +1798,13 @@ namespace micro_profiler
 				fl->set_filter();
 
 				// ASSERT
-				wstring reference4[][2] = {
-					{	L"00001000", L"1",	},
-					{	L"00001010", L"2",	},
-					{	L"00001020", L"3",	},
-					{	L"00001030", L"4",	},
-					{	L"00001040", L"5",	},
-					{	L"00001050", L"6",	},
+				string reference4[][2] = {
+					{	"00001000", "1",	},
+					{	"00001010", "2",	},
+					{	"00001020", "3",	},
+					{	"00001030", "4",	},
+					{	"00001040", "5",	},
+					{	"00001050", "6",	},
 				};
 
 				assert_table_equivalent(name_times, reference4, *fl);
@@ -1838,7 +1830,7 @@ namespace micro_profiler
 				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 1; });
 
 				// ASSERT
-				table_model::index_type reference1[] = { 1u, };
+				table_model_base::index_type reference1[] = { 1u, };
 
 				assert_equal(reference1, it.invalidations);
 
@@ -1846,7 +1838,7 @@ namespace micro_profiler
 				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 2; });
 
 				// ASSERT
-				table_model::index_type reference2[] = { 1u, 0u, };
+				table_model_base::index_type reference2[] = { 1u, 0u, };
 
 				assert_equal(reference2, it.invalidations);
 
@@ -1854,7 +1846,7 @@ namespace micro_profiler
 				fl->set_filter();
 
 				// ASSERT
-				table_model::index_type reference3[] = { 1u, 0u, 2u, };
+				table_model_base::index_type reference3[] = { 1u, 0u, 2u, };
 
 				assert_equal(reference3, it.invalidations);
 			}

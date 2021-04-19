@@ -18,10 +18,9 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <frontend/columns_model.h>
+#include <frontend/headers_model.h>
 
 #include <common/configuration.h>
-#include <common/string.h>
 
 using namespace std;
 
@@ -50,7 +49,7 @@ namespace micro_profiler
 		}
 	}
 
-	void columns_model::store(hive &configuration) const
+	void headers_model::store(hive &configuration) const
 	{
 		configuration.store(c_order_by, _sort_column != npos() ? _sort_column : -1);
 		configuration.store(c_order_direction, _sort_ascending ? 1 : 0);
@@ -63,7 +62,7 @@ namespace micro_profiler
 		}
 	}
 
-	void columns_model::update(const hive &configuration)
+	void headers_model::update(const hive &configuration)
 	{
 //		string tmp;
 
@@ -79,25 +78,25 @@ namespace micro_profiler
 			}
 	}
 	
-	columns_model::index_type columns_model::get_count() const throw()
+	headers_model::index_type headers_model::get_count() const throw()
 	{	return static_cast<index_type>(_columns.size());	}
 
-	void columns_model::get_value(index_type index, short int &width) const throw()
+	void headers_model::get_value(index_type index, short int &width) const throw()
 	{	width = _columns[index].width;	}
 
-	pair<columns_model::index_type, bool> columns_model::get_sort_order() const throw()
+	pair<headers_model::index_type, bool> headers_model::get_sort_order() const throw()
 	{	return make_pair(_sort_column, _sort_ascending);	}
 
-	void columns_model::update_column(index_type index, short int width)
+	void headers_model::set_width(index_type item, short int width)
 	{
-		_columns[index].width = width;
-		invalidate();
+		_columns[item].width = width;
+		invalidate(item);
 	}
 
-	void columns_model::get_caption(index_type index, agge::richtext_t &caption) const
-	{	caption << _columns[index].caption;	}
+	void headers_model::get_caption(index_type item, agge::richtext_t &caption) const
+	{	caption << _columns[item].caption;	}
 
-	void columns_model::activate_column(index_type column_)
+	void headers_model::activate_column(index_type column_)
 	{
 		const column &activated = _columns[column_];
 

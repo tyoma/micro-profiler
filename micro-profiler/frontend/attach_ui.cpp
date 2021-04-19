@@ -20,7 +20,7 @@
 
 #include "attach_ui.h"
 
-#include <frontend/columns_model.h>
+#include <frontend/headers_model.h>
 #include <frontend/process_list.h>
 #include <injector/process.h>
 #include <wpl/controls.h>
@@ -38,9 +38,9 @@ namespace micro_profiler
 	{
 		const auto secondary = agge::style::height(10);
 
-		const columns_model::column c_columns_processes[] = {
-			{	"ProcessExe", L"Process\n" + secondary + L"executable", 384, columns_model::dir_ascending	},
-			{	"ProcessID", L"PID", 384, columns_model::dir_ascending	},
+		const headers_model::column c_columns_processes[] = {
+			{	"ProcessExe", "Process\n" + secondary + "executable", 384, headers_model::dir_ascending	},
+			{	"ProcessID", "PID" + secondary, 384, headers_model::dir_ascending	},
 		};
 	}
 
@@ -57,21 +57,20 @@ namespace micro_profiler
 		toolbar->set_spacing(5);
 		toolbar->add(make_shared< controls::integrated_control<wpl::control> >(), percents(100), false);
 			toolbar->add(btn = factory_.create_control<button>("button"), pixels(50), false, 2);
-				btn->set_text(L"Attach");
+				btn->set_text("Attach" + secondary);
 				_connections.push_back(btn->clicked += [this] {
 
 				});
 
 			toolbar->add(btn = factory_.create_control<button>("button"), pixels(50), false, 3);
-				btn->set_text(L"Close");
+				btn->set_text("Close" + secondary);
 				_connections.push_back(btn->clicked += [this] {
 					close();
 				});
 
 		_processes_lv->set_model(_model);
-		_processes_lv->set_columns_model(shared_ptr<wpl::columns_model>(new columns_model(c_columns_processes, 0,
-			true)));
-		_connections.push_back(_processes_lv->item_activate += [this] (table_model::index_type item) {
+		_processes_lv->set_columns_model(shared_ptr<wpl::headers_model>(new headers_model(c_columns_processes, 0, true)));
+		_connections.push_back(_processes_lv->item_activate += [this] (table_model_base::index_type item) {
 			auto process = _model->get_process(item);
 
 			process->remote_execute(&inject_profiler, const_byte_range(0, 0));

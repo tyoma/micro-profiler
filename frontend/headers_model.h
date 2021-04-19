@@ -27,7 +27,7 @@ namespace micro_profiler
 {
 	struct hive;
 
-	class columns_model : public wpl::columns_model
+	class headers_model : public wpl::headers_model
 	{
 	public:
 		struct column;
@@ -35,17 +35,17 @@ namespace micro_profiler
 
 	public:
 		template <size_t N>
-		columns_model(const column (&columns)[N], index_type sort_column, bool sort_ascending);
+		headers_model(const column (&columns)[N], index_type sort_column, bool sort_ascending);
 
 		void store(hive &configuration) const;
 		void update(const hive &configuration);
 
-		virtual index_type get_count() const throw();
-		virtual void get_value(index_type index, short int &width) const throw();
-		virtual std::pair<index_type, bool> get_sort_order() const throw();
-		virtual void update_column(index_type index, short int width);
-		virtual void get_caption(index_type index, agge::richtext_t &caption) const;
-		virtual void activate_column(index_type column);
+		virtual index_type get_count() const throw() override;
+		virtual void get_value(index_type index, short int &width) const throw() override;
+		virtual std::pair<index_type, bool> get_sort_order() const throw() override;
+		virtual void set_width(index_type index, short int width) override;
+		virtual void get_caption(index_type index, agge::richtext_t &caption) const override;
+		virtual void activate_column(index_type column) override;
 
 	private:
 		std::vector<column> _columns;
@@ -54,18 +54,18 @@ namespace micro_profiler
 	};
 
 
-	struct columns_model::column
+	struct headers_model::column
 	{
 		std::string id;
 		agge::richtext_modifier_t caption;
 		short int width;
-		columns_model::sort_direction default_sort_direction;
+		headers_model::sort_direction default_sort_direction;
 	};
 
 
 
 	template <size_t N>
-	inline columns_model::columns_model(const column (&columns)[N], index_type sort_column,
+	inline headers_model::headers_model(const column (&columns)[N], index_type sort_column,
 			bool sort_ascending)
 		: _columns(columns, columns + N), _sort_column(sort_column), _sort_ascending(sort_ascending)
 	{	}

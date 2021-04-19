@@ -46,7 +46,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ColumnsModelTests.cpp" />
+    <ClCompile Include="HeadersModelTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FrontendTests.cpp" />

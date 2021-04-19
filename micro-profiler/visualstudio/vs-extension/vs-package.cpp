@@ -82,7 +82,7 @@ namespace micro_profiler
 						activated();
 					});
 					init_instance_menu(*_pane, model, executable);
-					_pane->set_caption(L"MicroProfiler - " + unicode(executable));
+					_pane->set_caption("MicroProfiler - " + executable);
 					_pane->set_root(root);
 					_pane->set_visible(true);
 				}

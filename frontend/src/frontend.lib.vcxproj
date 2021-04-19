@@ -42,7 +42,7 @@
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="function_list.cpp" />
-    <ClCompile Include="columns_model.cpp" />
+    <ClCompile Include="headers_model.cpp" />
     <ClCompile Include="marshalled_server.cpp" />
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
@@ -72,7 +72,7 @@
     <ClInclude Include="..\marshalled_server.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
-    <ClInclude Include="..\columns_model.h" />
+    <ClInclude Include="..\headers_model.h" />
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />

@@ -118,7 +118,7 @@ namespace micro_profiler
 	void application::clipboard_copy(const string &/*text_utf8*/)
 	{	}
 
-	void application::open_link(const wstring &/*address*/)
+	void application::open_link(const string &/*address*/)
 	{	}
 }
 

@@ -284,8 +284,8 @@ namespace micro_profiler
 
 				// ASSERT
 				columns::main ordering[] = {	columns::inclusive,	};
-				wstring reference1[][1] = {	{	L"15s",	},	};
-				wstring reference2[][1] = {	{	L"10s",	},	};
+				string reference1[][1] = {	{	"15s",	},	};
+				string reference2[][1] = {	{	"10s",	},	};
 
 				assert_table_equivalent(ordering, reference1, *model1);
 				assert_table_equivalent(ordering, reference2, *model2);
@@ -323,9 +323,9 @@ namespace micro_profiler
 				// ASSERT
 				model->set_order(columns::name, true);
 
-				assert_equal(L"baz", get_text(*model, 0, columns::name));
+				assert_equal("baz", get_text(*model, 0, columns::name));
 				assert_equal(addr(0x11100u), model->get_key(0));
-				assert_equal(L"foo", get_text(*model, 1, columns::name));
+				assert_equal("foo", get_text(*model, 1, columns::name));
 				assert_equal(addr(0x10100), model->get_key(1));
 
 				// ACT
@@ -334,12 +334,12 @@ namespace micro_profiler
 				write(*c, update_statistics_threaded, make_single_threaded(data2));
 
 				// ASSERT
-				assert_equal(L"BAR", get_text(*model, 0, columns::name));
+				assert_equal("BAR", get_text(*model, 0, columns::name));
 				assert_equal(addr(0x102000), model->get_key(0));
-				assert_equal(L"bar", get_text(*model, 1, columns::name));
+				assert_equal("bar", get_text(*model, 1, columns::name));
 				assert_equal(addr(0x10200), model->get_key(1));
-				assert_equal(L"baz", get_text(*model, 2, columns::name));
-				assert_equal(L"foo", get_text(*model, 3, columns::name));
+				assert_equal("baz", get_text(*model, 2, columns::name));
+				assert_equal("foo", get_text(*model, 3, columns::name));
 			}
 
 
@@ -945,7 +945,7 @@ namespace micro_profiler
 				pair< unsigned, unthreaded_statistic_types::function_detailed > data[] = {
 					make_pair(0x0100, unthreaded_statistic_types::function_detailed()),
 				};
-				wstring text;
+				string text;
 
 				write(*c, init, initialization_data());
 

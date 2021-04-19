@@ -47,8 +47,8 @@ namespace micro_profiler
 
 	private:
 		// ipc::channel methods
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range payload);
+		virtual void disconnect() throw() override;
+		virtual void message(const_byte_range payload) override;
 
 		template <typename DataT>
 		void send(commands command, const DataT &data);

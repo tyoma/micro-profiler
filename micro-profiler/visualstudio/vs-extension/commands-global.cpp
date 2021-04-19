@@ -340,10 +340,10 @@ namespace micro_profiler
 				}
 			}, false, [this] (unsigned, unsigned &state) -> bool {
 				return state = visible | supported | (_frontend_manager->get_active() ? enabled : 0), true;
-			}, [this] (unsigned /**/, wstring &caption) -> bool {
+			}, [this] (unsigned /**/, string &caption) -> bool {
 				if (_frontend_manager->instances_count())
 					if (const frontend_manager::instance *i = _frontend_manager->get_active())
-						return caption = L"Save " + unicode(*i->executable) + L" Statistics As...", true;
+						return caption = "Save " + i->executable + " Statistics As...", true;
 				return false;
 			});
 
@@ -383,9 +383,9 @@ namespace micro_profiler
 
 			add_command(cmdidIPCSocketPort, [] (unsigned) { }, false, [this] (unsigned, unsigned &state) {
 				return state = visible | supported, true;
-			}, [this] (unsigned, wstring &caption) ->bool {
+			}, [this] (unsigned, string &caption) ->bool {
 				caption.clear();
-				caption += L"  TCP Port (autoconfigured): #";
+				caption += "  TCP Port (autoconfigured): #";
 				itoa<10>(caption, _ipc_manager->get_sockets_port());
 				return true;
 			});
@@ -400,9 +400,9 @@ namespace micro_profiler
 				if (const frontend_manager::instance *i = _frontend_manager->get_instance(item))
 					state = i->ui ? enabled | visible | supported | (_frontend_manager->get_active() == i ? checked : 0) : visible | supported;
 				return true;
-			}, [this] (unsigned item, wstring &caption) -> bool {
+			}, [this] (unsigned item, string &caption) -> bool {
 				const frontend_manager::instance *i = _frontend_manager->get_instance(item);
-				return i ? caption = unicode(*i->executable), true : false;
+				return i ? caption = *i->executable, true : false;
 			});
 
 
@@ -429,8 +429,8 @@ namespace micro_profiler
 
 				o->first = get_factory().create_modal();
 				o->second.push_back(o->first->close += onclose);
-				o->second.push_back(about->link += [] (const wstring &address) {
-					::ShellExecuteW(NULL, L"open", address.c_str(), NULL, NULL, SW_SHOWNORMAL);
+				o->second.push_back(about->link += [] (const string &address) {
+					::ShellExecuteW(NULL, L"open", unicode(address).c_str(), NULL, NULL, SW_SHOWNORMAL);
 				});
 				o->second.push_back(about->close += onclose);
 

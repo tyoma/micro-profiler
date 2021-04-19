@@ -37,14 +37,14 @@ namespace micro_profiler
 		about_ui(const wpl::factory &factory_);
 
 	private:
-		void on_link(const std::wstring &address);
+		void on_link(const std::string &address);
 
 	private:
 		std::vector<wpl::slot_connection> _connections;
 		std::shared_ptr<wpl::button> _close_button;
 
 	public:
-		wpl::signal<void (const std::wstring &address)> link;
+		wpl::signal<void (const std::string &address)> link;
 		wpl::signal<void ()> &close;
 	};
 }

@@ -219,7 +219,7 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename MapT>
-	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, wstring &text) const
+	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, string &text) const
 	{
 		unsigned int tmp;
 		const typename view_type::value_type &row = get_entry(item);
@@ -299,8 +299,8 @@ namespace micro_profiler
 
 
 	template <>
-	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::get_text(index_type item, index_type subitem,
-		wstring &text) const
+	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::get_text(index_type item,
+		index_type subitem, string &text) const
 	{
 		const statistic_types::map_callers::value_type &row = get_entry(item);
 
@@ -314,7 +314,8 @@ namespace micro_profiler
 	}
 
 	template <>
-	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::set_order(index_type column, bool ascending)
+	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::set_order(index_type column,
+		bool ascending)
 	{
 		switch (column)
 		{

@@ -1,7 +1,8 @@
-#include <frontend/columns_model.h>
+#include <frontend/headers_model.h>
 
 #include <common/configuration.h>
 #include <map>
+#include <test-helpers/richtext.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -15,12 +16,12 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef vector< pair<columns_model::index_type, bool> > log_t;
+			typedef vector< pair<headers_model::index_type, bool> > log_t;
 
-			void append_log(log_t *log, columns_model::index_type sort_column, bool sort_ascending)
+			void append_log(log_t *log, headers_model::index_type sort_column, bool sort_ascending)
 			{	log->push_back(make_pair(sort_column, sort_ascending));	}
 
-			short int get_width(const wpl::columns_model &cm, columns_model::index_type item)
+			short int get_width(const wpl::headers_model &cm, headers_model::index_type item)
 			{
 				short int v;
 
@@ -100,36 +101,36 @@ namespace micro_profiler
 			}
 		}
 
-		begin_test_suite( ColumnsModelTests )
+		begin_test_suite( HeadersModelTests )
 			test( ColumnsModelIsInitiallyOrderedAcordinglyToConstructionParam )
 			{
 				// INIT
-				columns_model::column columns[] = {
-					{	"id1", L"", 0, columns_model::dir_none	},
-					{	"id2", L"", 0, columns_model::dir_descending	},
-					{	"id3", L"", 0, columns_model::dir_descending	},
+				headers_model::column columns[] = {
+					{	"id1", T(""), 0, headers_model::dir_none	},
+					{	"id2", T(""), 0, headers_model::dir_descending	},
+					{	"id3", T(""), 0, headers_model::dir_descending	},
 				};
 
 				// ACT
-				shared_ptr<columns_model> cm1(new columns_model(columns, columns_model::npos(),
+				shared_ptr<headers_model> cm1(new headers_model(columns, headers_model::npos(),
 					false));
 
 				// ACT / ASSERT
-				assert_equal(columns_model::npos(), cm1->get_sort_order().first);
+				assert_equal(headers_model::npos(), cm1->get_sort_order().first);
 				assert_is_false(cm1->get_sort_order().second);
 
 				// ACT
-				shared_ptr<columns_model> cm2(new columns_model(columns, 1, false));
+				shared_ptr<headers_model> cm2(new headers_model(columns, 1, false));
 
 				// ACT / ASSERT
-				assert_equal(1, cm2->get_sort_order().first);
+				assert_equal(1u, cm2->get_sort_order().first);
 				assert_is_false(cm2->get_sort_order().second);
 
 				// ACT
-				shared_ptr<columns_model> cm3(new columns_model(columns, 2, true));
+				shared_ptr<headers_model> cm3(new headers_model(columns, 2, true));
 
 				// ACT / ASSERT
-				assert_equal(2, cm3->get_sort_order().first);
+				assert_equal(2u, cm3->get_sort_order().first);
 				assert_is_true(cm3->get_sort_order().second);
 			}
 
@@ -137,48 +138,48 @@ namespace micro_profiler
 			test( FirstOrderingIsDoneAccordinglyToDefaults )
 			{
 				// INIT
-				columns_model::column columns[] = {
-					{	"id1", L"", 0, columns_model::dir_none	},
-					{	"id2", L"", 0, columns_model::dir_descending	},
-					{	"id3", L"", 0, columns_model::dir_ascending	},
-					{	"id4", L"", 0, columns_model::dir_descending	},
+				headers_model::column columns[] = {
+					{	"id1", T(""), 0, headers_model::dir_none	},
+					{	"id2", T(""), 0, headers_model::dir_descending	},
+					{	"id3", T(""), 0, headers_model::dir_ascending	},
+					{	"id4", T(""), 0, headers_model::dir_descending	},
 				};
-				shared_ptr<columns_model> cm;
+				shared_ptr<headers_model> cm;
 				log_t log;
 				wpl::slot_connection slot;
 
 				// ACT
-				cm.reset(new columns_model(columns, columns_model::npos(), false));
+				cm.reset(new headers_model(columns, headers_model::npos(), false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(0);
 
 				// ACT / ASSERT
 				assert_is_empty(log);
 				assert_is_false(cm->get_sort_order().second);
-				assert_equal(columns_model::npos(), cm->get_sort_order().first);
+				assert_equal(headers_model::npos(), cm->get_sort_order().first);
 
 				// ACT
-				cm.reset(new columns_model(columns, columns_model::npos(), false));
+				cm.reset(new headers_model(columns, headers_model::npos(), false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(3);
 
 				// ACT / ASSERT
-				assert_equal(3, cm->get_sort_order().first);
+				assert_equal(3u, cm->get_sort_order().first);
 				assert_is_false(cm->get_sort_order().second);
 				assert_equal(1u, log.size());
-				assert_equal(3, log[0].first);
+				assert_equal(3u, log[0].first);
 				assert_is_false(log[0].second);
 
 				// ACT
-				cm.reset(new columns_model(columns, columns_model::npos(), false));
+				cm.reset(new headers_model(columns, headers_model::npos(), false));
 				slot = cm->sort_order_changed += bind(&append_log, &log, _1, _2);
 				cm->activate_column(2);
 
 				// ACT / ASSERT
-				assert_equal(2, cm->get_sort_order().first);
+				assert_equal(2u, cm->get_sort_order().first);
 				assert_is_true(cm->get_sort_order().second);
 				assert_equal(2u, log.size());
-				assert_equal(2, log[1].first);
+				assert_equal(2u, log[1].first);
 				assert_is_true(log[1].second);
 			}
 
@@ -186,15 +187,15 @@ namespace micro_profiler
 			test( SubsequentOrderingReversesTheColumnsState )
 			{
 				// INIT
-				columns_model::column columns[] = {
-					{	"id1", L"", 0, columns_model::dir_none	},
-					{	"id2", L"", 0, columns_model::dir_descending	},
-					{	"id3", L"", 0, columns_model::dir_ascending	},
-					{	"id4", L"", 0, columns_model::dir_descending	},
+				headers_model::column columns[] = {
+					{	"id1", T(""), 0, headers_model::dir_none	},
+					{	"id2", T(""), 0, headers_model::dir_descending	},
+					{	"id3", T(""), 0, headers_model::dir_ascending	},
+					{	"id4", T(""), 0, headers_model::dir_descending	},
 				};
-				shared_ptr<columns_model> cm1(new columns_model(columns, columns_model::npos(),
+				shared_ptr<headers_model> cm1(new headers_model(columns, headers_model::npos(),
 					false));
-				shared_ptr<columns_model> cm2(new columns_model(columns, 2, false));
+				shared_ptr<headers_model> cm2(new headers_model(columns, 2, false));
 				log_t log;
 				wpl::slot_connection slot1, slot2;
 
@@ -206,20 +207,20 @@ namespace micro_profiler
 				cm1->activate_column(1);	// ascending
 
 				// ACT / ASSERT
-				assert_equal(1, cm1->get_sort_order().first);
+				assert_equal(1u, cm1->get_sort_order().first);
 				assert_is_true(cm1->get_sort_order().second);
 				assert_equal(2u, log.size());
-				assert_equal(1, log[1].first);
+				assert_equal(1u, log[1].first);
 				assert_is_true(log[1].second);
 
 				// ACT
 				cm2->activate_column(2);	// ascending
 
 				// ACT / ASSERT
-				assert_equal(2, cm2->get_sort_order().first);
+				assert_equal(2u, cm2->get_sort_order().first);
 				assert_is_true(cm2->get_sort_order().second);
 				assert_equal(3u, log.size());
-				assert_equal(2, log[2].first);
+				assert_equal(2u, log[2].first);
 				assert_is_true(log[1].second);
 			}
 
@@ -227,45 +228,44 @@ namespace micro_profiler
 			test( GettingColumnsCount )
 			{
 				// INIT
-				columns_model::column columns1[] = {
-					{	"id1", L"first", 0, columns_model::dir_none	},
-					{	"id2", L"second", 0, columns_model::dir_descending	},
-					{	"id3", L"third", 0, columns_model::dir_ascending	},
-					{	"id4", L"fourth", 0, columns_model::dir_ascending	},
+				headers_model::column columns1[] = {
+					{	"id1", T("first"), 0, headers_model::dir_none	},
+					{	"id2", T("second"), 0, headers_model::dir_descending	},
+					{	"id3", T("third"), 0, headers_model::dir_ascending	},
+					{	"id4", T("fourth"), 0, headers_model::dir_ascending	},
 				};
-				columns_model::column columns2[] = {
-					{	"id1", L"a first column", 0, columns_model::dir_none	},
-					{	"id2", L"a second column", 0, columns_model::dir_ascending	},
+				headers_model::column columns2[] = {
+					{	"id1", T("a first column"), 0, headers_model::dir_none	},
+					{	"id2", T("a second column"), 0, headers_model::dir_ascending	},
 				};
-				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
-				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
+				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
+				shared_ptr<headers_model> cm2(new headers_model(columns2, 0, false));
 
 				// ACT / ASSERT
-				assert_equal(4, cm1->get_count());
-				assert_equal(2, cm2->get_count());
+				assert_equal(4u, cm1->get_count());
+				assert_equal(2u, cm2->get_count());
 			}
 
 
 			test( GetColumnItem )
 			{
 				// INIT
-				columns_model::column columns1[] = {
-					{	"id1", L"first" + style::weight(regular), 0, columns_model::dir_none	},
-					{	"id2", L"second" + style::weight(semi_bold) + L"appendix", 0, columns_model::dir_descending	},
-					{	"id3", L"third" + style::weight(regular), 0, columns_model::dir_ascending	},
+				headers_model::column columns1[] = {
+					{	"id1", "first" + style::weight(regular), 0, headers_model::dir_none	},
+					{	"id2", "second" + style::weight(semi_bold) + "appendix", 0, headers_model::dir_descending	},
+					{	"id3", "third" + style::weight(regular), 0, headers_model::dir_ascending	},
 				};
-				columns_model::column columns2[] = {
-					{	"id1", L"a first " + style::family("verdana") + L"column", 0, columns_model::dir_none	},
-					{	"id2", L"a second column" + style::weight(regular), 0, columns_model::dir_ascending	},
+				headers_model::column columns2[] = {
+					{	"id1", "a first " + style::family("verdana") + "column", 0, headers_model::dir_none	},
+					{	"id2", "a second column" + style::weight(regular), 0, headers_model::dir_ascending	},
 				};
-				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
-				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
-				richtext_t caption;
+				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
+				shared_ptr<headers_model> cm2(new headers_model(columns2, 0, false));
 				font_style_annotation a = {	font_descriptor::create("Tahoma", 10)	};
+				richtext_t caption(a);
 				auto a2 = a;
 				auto a3 = a;
 
-				caption.set_base_annotation(a);
 				a2.basic.weight = semi_bold;
 				a3.basic.family = "verdana";
 
@@ -275,7 +275,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1, distance(caption.ranges_begin(), caption.ranges_end()));
 				richtext_t::const_iterator i = caption.ranges_begin();
-				assert_equal(L"first", wstring(i->begin(), i->end()));
+				assert_equal("first", string(i->begin(), i->end()));
 				assert_equal(a.basic, i->get_annotation().basic);
 
 				// ACT
@@ -285,10 +285,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2, distance(caption.ranges_begin(), caption.ranges_end()));
 				i = caption.ranges_begin();
-				assert_equal(L"second", wstring(i->begin(), i->end()));
+				assert_equal("second", string(i->begin(), i->end()));
 				assert_equal(a.basic, i->get_annotation().basic);
 				++i;
-				assert_equal(L"appendix", wstring(i->begin(), i->end()));
+				assert_equal("appendix", string(i->begin(), i->end()));
 				assert_equal(a2.basic, i->get_annotation().basic);
 
 				// ACT
@@ -298,7 +298,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1, distance(caption.ranges_begin(), caption.ranges_end()));
 				i = caption.ranges_begin();
-				assert_equal(L"third", wstring(i->begin(), i->end()));
+				assert_equal("third", string(i->begin(), i->end()));
 				assert_equal(a.basic, i->get_annotation().basic);
 
 				// ACT
@@ -308,10 +308,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2, distance(caption.ranges_begin(), caption.ranges_end()));
 				i = caption.ranges_begin();
-				assert_equal(L"a first ", wstring(i->begin(), i->end()));
+				assert_equal("a first ", string(i->begin(), i->end()));
 				assert_equal(a.basic, i->get_annotation().basic);
 				++i;
-				assert_equal(L"column", wstring(i->begin(), i->end()));
+				assert_equal("column", string(i->begin(), i->end()));
 				assert_equal(a3.basic, i->get_annotation().basic);
 
 				// ACT
@@ -321,7 +321,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1, distance(caption.ranges_begin(), caption.ranges_end()));
 				i = caption.ranges_begin();
-				assert_equal(L"a second column", wstring(i->begin(), i->end()));
+				assert_equal("a second column", string(i->begin(), i->end()));
 				assert_equal(a.basic, i->get_annotation().basic);
 			}
 
@@ -329,15 +329,15 @@ namespace micro_profiler
 			test( ModelUpdateDoesChangeColumnsWidth )
 			{
 				// INIT
-				columns_model::column columns[] = {
-					{	"id1", L"first", 0, columns_model::dir_none	},
-					{	"id2", L"second", 0, columns_model::dir_descending	},
-					{	"id3", L"third", 0, columns_model::dir_ascending	},
+				headers_model::column columns[] = {
+					{	"id1", T("first"), 0, headers_model::dir_none	},
+					{	"id2", T("second"), 0, headers_model::dir_descending	},
+					{	"id3", T("third"), 0, headers_model::dir_ascending	},
 				};
-				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
+				shared_ptr<headers_model> cm(new headers_model(columns, 0, false));
 
 				// ACT
-				cm->update_column(0, 13);
+				cm->set_width(0, 13);
 
 				// ASSERT
 				assert_equal(13, get_width(*cm, 0));
@@ -345,7 +345,7 @@ namespace micro_profiler
 				assert_equal(0, get_width(*cm, 2));
 
 				// ACT
-				cm->update_column(1, 17);
+				cm->set_width(1, 17);
 
 				// ASSERT
 				assert_equal(13, get_width(*cm, 0));
@@ -357,46 +357,50 @@ namespace micro_profiler
 			test( ModelUpdateInvalidatesIt )
 			{
 				// INIT
-				auto invalidations = 0;
-				columns_model::column columns[] = {
-					{	"id1", L"first", 0, columns_model::dir_none	},
-					{	"id2", L"second", 0, columns_model::dir_descending	},
-					{	"id3", L"third", 0, columns_model::dir_ascending	},
+				vector<headers_model::index_type> invalidations;
+				headers_model::column columns[] = {
+					{	"id1", T("first"), 0, headers_model::dir_none	},
+					{	"id2", T("second"), 0, headers_model::dir_descending	},
+					{	"id3", T("third"), 0, headers_model::dir_ascending	},
 				};
-				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
-				auto c = cm->invalidate += [&] { invalidations++; };
+				shared_ptr<headers_model> cm(new headers_model(columns, 0, false));
+				auto c = cm->invalidate += [&] (headers_model::index_type item) {	invalidations.push_back(item);	};
 
 				// ACT
-				cm->update_column(0, 15);
+				cm->set_width(0, 15);
 
 				// ASSERT
-				assert_equal(1, invalidations);
+				headers_model::index_type reference1[] = {	0u,	};
+
+				assert_equal(reference1, invalidations);
 
 				// ACT
-				cm->update_column(2, 3);
-				cm->update_column(1, 13);
+				cm->set_width(2, 3);
+				cm->set_width(1, 13);
 
 				// ASSERT
-				assert_equal(3, invalidations);
+				headers_model::index_type reference2[] = {	0u, 2u, 1u,	};
+
+				assert_equal(reference2, invalidations);
 			}
 
 
 			test( UnchangedModelIsStoredAsProvidedAtConstruction )
 			{
 				// INIT
-				columns_model::column columns1[] = {
-					{	"id1", L"Index", 1, columns_model::dir_none	},
-					{	"id2", L"Function", 2, columns_model::dir_descending	},
-					{	"id3", L"Exclusive Time", 3, columns_model::dir_ascending	},
-					{	"fourth", L"Inclusive Time", 4, columns_model::dir_ascending	},
+				headers_model::column columns1[] = {
+					{	"id1", T("Index"), 1, headers_model::dir_none	},
+					{	"id2", T("Function"), 2, headers_model::dir_descending	},
+					{	"id3", T("Exclusive Time"), 3, headers_model::dir_ascending	},
+					{	"fourth", T("Inclusive Time"), 4, headers_model::dir_ascending	},
 				};
-				columns_model::column columns2[] = {
-					{	"id1", L"a first column", 191, columns_model::dir_none	},
-					{	"id2", L"a second column", 171, columns_model::dir_ascending	},
+				headers_model::column columns2[] = {
+					{	"id1", T("a first column"), 191, headers_model::dir_none	},
+					{	"id2", T("a second column"), 171, headers_model::dir_ascending	},
 				};
-				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
-				shared_ptr<columns_model> cm2(new columns_model(columns2, columns_model::npos(), false));
-				shared_ptr<columns_model> cm3(new columns_model(columns2, 1, true));
+				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
+				shared_ptr<headers_model> cm2(new headers_model(columns2, headers_model::npos(), false));
+				shared_ptr<headers_model> cm3(new headers_model(columns2, 1, true));
 
 				map<string, int> int_values;
 				map<string, string> str_values;
@@ -469,17 +473,17 @@ namespace micro_profiler
 			test( ModelStateIsUpdatedOnLoad )
 			{
 				// INIT
-				columns_model::column columns1[] = {
-					{	"id1", L"", 1, columns_model::dir_none	},
-					{	"id2", L"", 2, columns_model::dir_ascending	},
+				headers_model::column columns1[] = {
+					{	"id1", T(""), 1, headers_model::dir_none	},
+					{	"id2", T(""), 2, headers_model::dir_ascending	},
 				};
-				columns_model::column columns2[] = {
-					{	"col1", L"", 0, columns_model::dir_none	},
-					{	"col2", L"", 0, columns_model::dir_ascending	},
-					{	"col3", L"", 0, columns_model::dir_ascending	},
+				headers_model::column columns2[] = {
+					{	"col1", T(""), 0, headers_model::dir_none	},
+					{	"col2", T(""), 0, headers_model::dir_ascending	},
+					{	"col3", T(""), 0, headers_model::dir_ascending	},
 				};
-				shared_ptr<columns_model> cm1(new columns_model(columns1, 0, false));
-				shared_ptr<columns_model> cm2(new columns_model(columns2, 0, false));
+				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
+				shared_ptr<headers_model> cm2(new headers_model(columns2, 0, false));
 
 				map<string, int> int_values;
 				map<string, string> str_values;
@@ -496,7 +500,7 @@ namespace micro_profiler
 				cm1->update(*h);
 
 				// ASSERT
-				assert_equal(make_pair(static_cast<columns_model::index_type>(1), true), cm1->get_sort_order());
+				assert_equal(make_pair(static_cast<headers_model::index_type>(1), true), cm1->get_sort_order());
 				assert_equal(20, get_width(*cm1, 0));
 				assert_equal(31, get_width(*cm1, 1));
 
@@ -514,7 +518,7 @@ namespace micro_profiler
 				cm2->update(*h);
 
 				// ASSERT
-				assert_equal(make_pair(static_cast<columns_model::index_type>(2), false), cm2->get_sort_order());
+				assert_equal(make_pair(static_cast<headers_model::index_type>(2), false), cm2->get_sort_order());
 				assert_equal(20, get_width(*cm2, 0));
 				assert_equal(20, get_width(*cm2, 1));
 				assert_equal(53, get_width(*cm2, 2));
@@ -524,12 +528,12 @@ namespace micro_profiler
 			test( MissingColumnsAreNotUpdatedAndInvalidOrderColumnIsFixedOnModelStateLoad )
 			{
 				// INIT
-				columns_model::column columns[] = {
-					{	"col1", L"", 13, columns_model::dir_none	},
-					{	"col2", L"", 17, columns_model::dir_ascending	},
-					{	"col3", L"", 31, columns_model::dir_ascending	},
+				headers_model::column columns[] = {
+					{	"col1", T(""), 13, headers_model::dir_none	},
+					{	"col2", T(""), 17, headers_model::dir_ascending	},
+					{	"col3", T(""), 31, headers_model::dir_ascending	},
 				};
-				shared_ptr<columns_model> cm(new columns_model(columns, 0, false));
+				shared_ptr<headers_model> cm(new headers_model(columns, 0, false));
 
 				map<string, int> int_values;
 				map<string, string> str_values;
@@ -545,7 +549,7 @@ namespace micro_profiler
 				cm->update(*h);
 
 				// ASSERT
-				assert_equal(make_pair(columns_model::npos(), false), cm->get_sort_order());
+				assert_equal(make_pair(headers_model::npos(), false), cm->get_sort_order());
 				assert_equal(233, get_width(*cm, 0));
 				assert_equal(17, get_width(*cm, 1));
 				assert_equal(31, get_width(*cm, 2));

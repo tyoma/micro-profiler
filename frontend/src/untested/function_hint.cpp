@@ -104,8 +104,8 @@ namespace micro_profiler
 		add_path(*rasterizer_, assist(rectangle(rc.x1, rc.y1, rc.x2, rc.y2), _stroke));
 		context(rasterizer_, blender(_border_color), winding<>());
 		context.text_engine.render(*rasterizer_, _name, align_center, align_near, _name_location, limit::wrap(width(_name_location)));
-		context.text_engine.render(*rasterizer_, _items, align_near, align_near, _items_location, limit::wrap(width(_items_location)));
-		context.text_engine.render(*rasterizer_, _item_values, align_far, align_near, _items_location, limit::wrap(width(_items_location)));
+		context.text_engine.render(*rasterizer_, _items, align_near, align_near, _items_location, limit::none());
+		context.text_engine.render(*rasterizer_, _item_values, align_far, align_near, _items_location, limit::none());
 		rasterizer_->sort(true);
 		context(rasterizer_, blender(_text_color), winding<>());
 	}
@@ -122,13 +122,10 @@ namespace micro_profiler
 		_model->get_text(item, 6, _item_values), _item_values << "\n";
 		_model->get_text(item, 7, _item_values);
 
-		_measurer.process(_items, limit::none(), _text_services);
-		const auto box_items = _measurer.get_box();
-		_measurer.process(_item_values, limit::none(), _text_services);
-		const auto box_item_values = _measurer.get_box();
+		const auto box_items = _text_services.measure(_items, limit::none());
+		const auto box_item_values = _text_services.measure(_item_values, limit::none());
 		const auto width = agge_max(_min_width, box_items.w + box_item_values.w + _padding);
-		_measurer.process(_name, limit::wrap(width), _text_services);
-		const auto box_name = _measurer.get_box();
+		const auto box_name = _text_services.measure(_name, limit::wrap(width));
 		auto rc = create_rect(0.0f, 0.0f, width, box_name.h);
 		offset(rc, _padding, _padding);
 		_name_location = rc;

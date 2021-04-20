@@ -22,7 +22,6 @@
 
 #include <agge/color.h>
 #include <agge/stroke.h>
-#include <agge.text/layout.h>
 #include <wpl/view.h>
 #include <wpl/models.h>
 
@@ -51,7 +50,6 @@ namespace micro_profiler
 		void update_text_and_calculate_locations(wpl::table_model_base::index_type index);
 
 	private:
-		mutable agge::layout _measurer;
 		wpl::gcontext::text_engine_type &_text_services;
 		std::shared_ptr<wpl::richtext_table_model> _model;
 		agge::richtext_t _name, _items, _item_values;

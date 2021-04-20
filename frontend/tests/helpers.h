@@ -43,17 +43,17 @@ namespace micro_profiler
 			return text;
 		}
 
-		inline std::string get_text(const wpl::string_table_model &fl, size_t row, size_t column)
+		inline std::string get_text(const wpl::richtext_table_model &fl, size_t row, size_t column)
 		{
-			std::string text;
+			agge::richtext_t text((agge::font_style_annotation()));
 
 			return fl.get_text(static_cast<wpl::table_model_base::index_type>(row),
-				static_cast<wpl::table_model_base::index_type>(column), text), text;
+				static_cast<wpl::table_model_base::index_type>(column), text), text.underlying();
 		}
 
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equal(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
-			const wpl::string_table_model &actual, const ut::LocationInfo &location)
+			const wpl::richtext_table_model &actual, const ut::LocationInfo &location)
 		{
 			ut::are_equal(rows_n, actual.get_count(), location);
 			for (size_t j = 0; j != rows_n; ++j)
@@ -63,7 +63,7 @@ namespace micro_profiler
 
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equivalent(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
-			const wpl::string_table_model &actual, const ut::LocationInfo &location)
+			const wpl::richtext_table_model &actual, const ut::LocationInfo &location)
 		{
 			using namespace std;
 

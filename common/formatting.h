@@ -20,9 +20,11 @@
 
 #pragma once
 
+#include <agge.text/annotated_string.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <limits>
 #include <string>
 
@@ -59,6 +61,22 @@ namespace micro_profiler
 		{	return value < 0 ? destination.push_back('-'), --min_width, -value : value;	}
 	};
 
+	template <typename ContainerT, typename IteratorT>
+	inline void append(ContainerT &container, IteratorT begin, IteratorT end)
+	{	container.insert(container.end(), begin, end);	}
+
+	template <typename ContainerT, typename CharT>
+	inline void append(ContainerT &container, const CharT *cstring)
+	{	container.insert(container.end(), cstring, cstring + std::strlen(cstring));	}
+
+	template <typename CharT, typename AnnotationT, typename IteratorT>
+	inline void append(agge::annotated_string<CharT, AnnotationT> &container, IteratorT begin, IteratorT end)
+	{	container.append(begin, end);	}
+
+	template <typename CharT, typename AnnotationT>
+	inline void append(agge::annotated_string<CharT, AnnotationT> &container, const CharT *cstring)
+	{	container << cstring;	}
+
 	template <unsigned char base, typename ContainerT, typename T>
 	inline void itoa(ContainerT &destination, T value, signed char min_width = 0, char padding = '0')
 	{
@@ -72,7 +90,7 @@ namespace micro_profiler
 		while (value /= T(base), value);
 		while (min_width-- > 0)
 			*--p = padding;
-		destination.insert(destination.end(), p, local_buffer + max_length);
+		append(destination, p, local_buffer + max_length);
 	}
 
 	template <typename ContainerT>
@@ -92,7 +110,7 @@ namespace micro_profiler
 		const int written = std::sprintf(buffer, formatting, interval);
 
 		if (written > 0)
-			destination.insert(destination.end(), buffer, buffer + written);
-		destination += c_time_units[unit];
+			append(destination, buffer, buffer + written);
+		append(destination, c_time_units[unit]);
 	}
 }

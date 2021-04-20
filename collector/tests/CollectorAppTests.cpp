@@ -622,6 +622,8 @@ namespace micro_profiler
 
 			test( ModuleMetadataRequestLeadsToMetadataSending )
 			{
+				// TODO: Observed a 'segmentation fault' here, when running tests in Linux.
+
 				// INIT
 				mt::mutex mtx;
 				mt::event ready, md_ready;

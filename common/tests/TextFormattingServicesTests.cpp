@@ -90,17 +90,17 @@ namespace micro_profiler
 			test( EscapeNonZeroMicrosecondValues )
 			{
 				// INIT / ACT / ASSERT
-				assert_equal("3\xC2\xB5s", format_interval_proxy(0.000003));
-				assert_equal("2.09\xC2\xB5s", format_interval_proxy(0.0000020949));
-				assert_equal("1.97\xC2\xB5s", format_interval_proxy(0.00000197));
-				assert_equal("13.6\xC2\xB5s", format_interval_proxy(0.00001364555));
-				assert_equal("117\xC2\xB5s", format_interval_proxy(0.000117489));
-				assert_equal("999\xC2\xB5s", format_interval_proxy(0.00099945555));
-				assert_equal("-7.91\xC2\xB5s", format_interval_proxy(-0.000007914));
-				assert_equal("-5.09\xC2\xB5s", format_interval_proxy(-0.000005094));
-				assert_equal("-17\xC2\xB5s", format_interval_proxy(-0.000017));
-				assert_equal("-231\xC2\xB5s", format_interval_proxy(-0.000231));
-				assert_equal("-999\xC2\xB5s", format_interval_proxy(-0.000999));
+				assert_equal("3\xCE\xBCs", format_interval_proxy(0.000003));
+				assert_equal("2.09\xCE\xBCs", format_interval_proxy(0.0000020949));
+				assert_equal("1.97\xCE\xBCs", format_interval_proxy(0.00000197));
+				assert_equal("13.6\xCE\xBCs", format_interval_proxy(0.00001364555));
+				assert_equal("117\xCE\xBCs", format_interval_proxy(0.000117489));
+				assert_equal("999\xCE\xBCs", format_interval_proxy(0.00099945555));
+				assert_equal("-7.91\xCE\xBCs", format_interval_proxy(-0.000007914));
+				assert_equal("-5.09\xCE\xBCs", format_interval_proxy(-0.000005094));
+				assert_equal("-17\xCE\xBCs", format_interval_proxy(-0.000017));
+				assert_equal("-231\xCE\xBCs", format_interval_proxy(-0.000231));
+				assert_equal("-999\xCE\xBCs", format_interval_proxy(-0.000999));
 			}
 
 

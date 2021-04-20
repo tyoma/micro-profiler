@@ -52,7 +52,8 @@ namespace micro_profiler
 				typedef vector<table_model_base::index_type> _invalidations_log_t;
 
 			public:
-				void bind_to_model(string_table_model &to)
+				template <typename ModelT>
+				void bind_to_model(ModelT &to)
 				{	_connection = to.invalidate += bind(&invalidation_tracer::on_invalidate, this, _1);	}
 
 				_invalidations_log_t invalidations;
@@ -61,12 +62,12 @@ namespace micro_profiler
 
 			class invalidation_at_sorting_check1
 			{
-				const string_table_model &_model;
+				const richtext_table_model &_model;
 
 				const invalidation_at_sorting_check1 &operator =(const invalidation_at_sorting_check1 &);
 
 			public:
-				invalidation_at_sorting_check1(string_table_model &m)
+				invalidation_at_sorting_check1(richtext_table_model &m)
 					: _model(m)
 				{	}
 
@@ -93,12 +94,13 @@ namespace micro_profiler
 				return result;
 			}
 
-			table_model_base::index_type find_row(const string_table_model &m, const string &name)
+			template <typename ModelT>
+			table_model_base::index_type find_row(const ModelT &m, const string &name)
 			{
 				string result;
 
 				for (table_model_base::index_type i = 0, c = m.get_count(); i != c; ++i)
-					if (m.get_text(i, columns::name, result), result == name)
+					if (get_text(m, i, columns::name) == name)
 						return i;
 				return table_model_base::npos();
 			}
@@ -467,7 +469,7 @@ namespace micro_profiler
 				// ASSERT
 				string reference[][8] = {
 					{	"0000045E", "1", "3.1ns", "2.9ns", "3.1ns", "2.9ns", "0", "2.9ns",	},
-					{	"000008B5", "1", "4.53\xC2\xB5s", "3.67\xC2\xB5s", "4.53\xC2\xB5s", "3.67\xC2\xB5s", "0", "3.67\xC2\xB5s",	},
+					{	"000008B5", "1", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "0", "3.67\xCE\xBCs",	},
 					{	"00000C2E", "1", "3.35ms", "3.23ms", "3.35ms", "3.23ms", "0", "3.23ms",	},
 					{	"000015AE", "1", "6.55s", "2.35s", "6.55s", "2.35s", "0", "2.35s",	},
 					{	"000011C6", "1", "6545s", "2347s", "6545s", "2347s", "0", "2347s",	},
@@ -475,8 +477,8 @@ namespace micro_profiler
 
 					// boundary cases
 					{	"000007C6", "1", "999ns", "999ns", "999ns", "999ns", "0", "999ns",	},
-					{	"000007D0", "1", "1\xC2\xB5s", "1\xC2\xB5s", "1\xC2\xB5s", "1\xC2\xB5s", "0", "1\xC2\xB5s",	},
-					{	"00000BAE", "1", "999\xC2\xB5s", "999\xC2\xB5s", "999\xC2\xB5s", "999\xC2\xB5s", "0", "999\xC2\xB5s",	},
+					{	"000007D0", "1", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "0", "1\xCE\xBCs",	},
+					{	"00000BAE", "1", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "0", "999\xCE\xBCs",	},
 					{	"00000BB8", "1", "1ms", "1ms", "1ms", "1ms", "0", "1ms",	},
 					{	"00000F96", "1", "999ms", "999ms", "999ms", "999ms", "0", "999ms",	},
 					{	"00000FA0", "1", "1s", "1s", "1s", "1s", "0", "1s",	},

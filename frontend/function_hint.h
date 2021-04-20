@@ -40,7 +40,7 @@ namespace micro_profiler
 
 		void apply_styles(const wpl::stylesheet &stylesheet_);
 
-		void set_model(std::shared_ptr<wpl::string_table_model> model);
+		void set_model(std::shared_ptr<wpl::richtext_table_model> model);
 		bool select(wpl::table_model_base::index_type index);
 		bool is_active() const;
 		agge::box<int> get_box() const;
@@ -53,8 +53,7 @@ namespace micro_profiler
 	private:
 		mutable agge::layout _measurer;
 		wpl::gcontext::text_engine_type &_text_services;
-		std::shared_ptr<wpl::string_table_model> _model;
-		std::string _buffer;
+		std::shared_ptr<wpl::richtext_table_model> _model;
 		agge::richtext_t _name, _items, _item_values;
 		agge::real_t _padding, _border_width;
 		agge::color _text_color, _back_color, _border_color;

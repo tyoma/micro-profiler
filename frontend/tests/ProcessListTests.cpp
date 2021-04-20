@@ -1,5 +1,7 @@
 #include <frontend/process_list.h>
 
+#include "helpers.h"
+
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -48,7 +50,7 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				process_list l;
-				wpl::string_table_model &t = l;
+				wpl::richtext_table_model &t = l;
 
 				// ACT / ASSERT
 				assert_equal(0u, t.get_count());
@@ -88,22 +90,22 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, l.get_count());
-				assert_equal("foo", (l.get_text(0, 0, text), text));
-				assert_equal("12", (l.get_text(0, 1, text), text));
-				assert_equal("bar", (l.get_text(1, 0, text), text));
-				assert_equal("12111", (l.get_text(1, 1, text), text));
+				assert_equal("foo", get_text(l, 0, 0));
+				assert_equal("12", get_text(l, 0, 1));
+				assert_equal("bar", get_text(l, 1, 0));
+				assert_equal("12111", get_text(l, 1, 1));
 
 				// ACT
 				l.update(enumerate_processes(p2));
 
 				// ASSERT
 				assert_equal(3u, l.get_count());
-				assert_equal("FOO", (l.get_text(0, 0, text), text));
-				assert_equal("1", (l.get_text(0, 1, text), text));
-				assert_equal("bar", (l.get_text(1, 0, text), text));
-				assert_equal("11111", (l.get_text(1, 1, text), text));
-				assert_equal("BAZ", (l.get_text(2, 0, text), text));
-				assert_equal("16111", (l.get_text(2, 1, text), text));
+				assert_equal("FOO", get_text(l, 0, 0));
+				assert_equal("1", get_text(l, 0, 1));
+				assert_equal("bar", get_text(l, 1, 0));
+				assert_equal("11111", get_text(l, 1, 1));
+				assert_equal("BAZ", get_text(l, 2, 0));
+				assert_equal("16111", get_text(l, 2, 1));
 			}
 
 
@@ -173,38 +175,38 @@ namespace micro_profiler
 				l.set_order(1, true);
 
 				// ASSERT
-				assert_equal("Lorem", (l.get_text(0, 0, text), text));
+				assert_equal("Lorem", get_text(l, 0, 0));
 				assert_equal(p[0], l.get_process(0));
-				assert_equal("Quand", (l.get_text(1, 0, text), text));
+				assert_equal("Quand", get_text(l, 1, 0));
 				assert_equal(p[2], l.get_process(1));
-				assert_equal("Amet", (l.get_text(2, 0, text), text));
+				assert_equal("Amet", get_text(l, 2, 0));
 				assert_equal(p[1], l.get_process(2));
 
 				// ACT
 				l.set_order(1, false);
 
 				// ASSERT
-				assert_equal("Amet", (l.get_text(0, 0, text), text));
-				assert_equal("Quand", (l.get_text(1, 0, text), text));
-				assert_equal("Lorem", (l.get_text(2, 0, text), text));
+				assert_equal("Amet", get_text(l, 0, 0));
+				assert_equal("Quand", get_text(l, 1, 0));
+				assert_equal("Lorem", get_text(l, 2, 0));
 
 				// ACT
 				l.set_order(0, true);
 
 				// ASSERT
-				assert_equal("12111", (l.get_text(0, 1, text), text));
-				assert_equal("12", (l.get_text(1, 1, text), text));
-				assert_equal("1211", (l.get_text(2, 1, text), text));
+				assert_equal("12111", get_text(l, 0, 1));
+				assert_equal("12", get_text(l, 1, 1));
+				assert_equal("1211", get_text(l, 2, 1));
 
 				// ACT
 				l.set_order(0, false);
 
 				// ASSERT
-				assert_equal("1211", (l.get_text(0, 1, text), text));
+				assert_equal("1211", get_text(l, 0, 1));
 				assert_equal(p[2], l.get_process(0));
-				assert_equal("12", (l.get_text(1, 1, text), text));
+				assert_equal("12", get_text(l, 1, 1));
 				assert_equal(p[0], l.get_process(1));
-				assert_equal("12111", (l.get_text(2, 1, text), text));
+				assert_equal("12111", get_text(l, 2, 1));
 				assert_equal(p[1], l.get_process(2));
 			}
 
@@ -232,18 +234,18 @@ namespace micro_profiler
 				l.update(enumerate_processes(p1));
 
 				// ASSERT
-				assert_equal("12111", (l.get_text(0, 1, text), text));
-				assert_equal("12", (l.get_text(1, 1, text), text));
-				assert_equal("1211", (l.get_text(2, 1, text), text));
+				assert_equal("12111", get_text(l, 0, 1));
+				assert_equal("12", get_text(l, 1, 1));
+				assert_equal("1211", get_text(l, 2, 1));
 
 				// ACT
 				l.update(enumerate_processes(p2));
 
 				// ASSERT
-				assert_equal("12111", (l.get_text(0, 1, text), text));
-				assert_equal("1311", (l.get_text(1, 1, text), text));
-				assert_equal("12", (l.get_text(2, 1, text), text));
-				assert_equal("1211", (l.get_text(3, 1, text), text));
+				assert_equal("12111", get_text(l, 0, 1));
+				assert_equal("1311", get_text(l, 1, 1));
+				assert_equal("12", get_text(l, 2, 1));
+				assert_equal("1211", get_text(l, 3, 1));
 			}
 		end_test_suite
 	}

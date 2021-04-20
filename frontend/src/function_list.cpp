@@ -50,15 +50,6 @@ namespace micro_profiler
 				destination.append(buffer, buffer + l);
 		}
 
-		template <typename DestT, typename SrcT>
-		void assign(DestT &dest, const SrcT &src)
-		{
-			dest.resize(src.size());
-			auto d = dest.begin();
-			for (auto s = src.begin(); s != src.end(); ++d, ++s)
-				*d = *s;
-		}
-
 		class by_name
 		{
 		public:
@@ -219,16 +210,15 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename MapT>
-	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, string &text) const
+	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, agge::richtext_t &text) const
 	{
 		unsigned int tmp;
 		const typename view_type::value_type &row = get_entry(item);
 
-		text.clear();
 		switch (subitem)
 		{
 		case 0:	itoa<10>(text, item + 1);	break;
-		case 1:	assign(text, _resolver->symbol_name_by_va(row.first.first));	break;
+		case 1:	text << _resolver->symbol_name_by_va(row.first.first).c_str();	break;
 		case 2:	_threads->get_native_id(tmp, row.first.second) ? itoa<10>(text, tmp), 0 : 0;	break;
 		case 3:	itoa<10>(text, row.second.times_called);	break;
 		case 4:	format_interval(text, exclusive_time(_tick_interval)(row.second));	break;
@@ -300,15 +290,14 @@ namespace micro_profiler
 
 	template <>
 	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::get_text(index_type item,
-		index_type subitem, string &text) const
+		index_type subitem, agge::richtext_t &text) const
 	{
 		const statistic_types::map_callers::value_type &row = get_entry(item);
 
-		text.clear();
 		switch (subitem)
 		{
 		case 0:	itoa<10>(text, item + 1);	break;
-		case 1:	assign(text, _resolver->symbol_name_by_va(row.first.first));	break;
+		case 1:	text << _resolver->symbol_name_by_va(row.first.first).c_str();	break;
 		case 3:	itoa<10>(text, row.second);	break;
 		}
 	}

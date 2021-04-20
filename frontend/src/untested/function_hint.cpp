@@ -61,7 +61,7 @@ namespace micro_profiler
 		_stroke.set_join(joins::bevel());
 	}
 
-	void function_hint::set_model(shared_ptr<string_table_model> model)
+	void function_hint::set_model(shared_ptr<richtext_table_model> model)
 	{
 		_invalidate = model ? model->invalidate += [this] (...) {
 			if (_selected != table_model_base::npos())
@@ -113,14 +113,14 @@ namespace micro_profiler
 	void function_hint::update_text_and_calculate_locations(table_model_base::index_type item)
 	{
 		_name.clear();
-		_model->get_text(item, 1, _buffer);
-		_name << _buffer.c_str();
 		_item_values.clear();
+
+		_model->get_text(item, 1, _name);
 		_item_values << style::weight(bold);
-		_buffer.clear(), _model->get_text(item, 4, _buffer), _buffer += "\n", _item_values << _buffer.c_str();
-		_buffer.clear(), _model->get_text(item, 5, _buffer), _buffer += "\n", _item_values << _buffer.c_str();
-		_buffer.clear(), _model->get_text(item, 6, _buffer), _buffer += "\n", _item_values << _buffer.c_str();
-		_buffer.clear(), _model->get_text(item, 7, _buffer), _item_values << _buffer.c_str();
+		_model->get_text(item, 4, _item_values), _item_values << "\n";
+		_model->get_text(item, 5, _item_values), _item_values << "\n";
+		_model->get_text(item, 6, _item_values), _item_values << "\n";
+		_model->get_text(item, 7, _item_values);
 
 		_measurer.process(_items, limit::none(), _text_services);
 		const auto box_items = _measurer.get_box();

@@ -311,7 +311,7 @@ namespace micro_profiler
 		case 1:	_view->set_order(by_name(_resolver), ascending);	break;
 		case 3:	_view->set_order(by_times_called(), ascending);	break;
 		}
-		this->invalidate(_view->get_count());
+		this->invalidate(this->npos());
 	}
 
 

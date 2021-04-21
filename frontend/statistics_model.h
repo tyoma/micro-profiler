@@ -54,10 +54,10 @@ namespace micro_profiler
 		// wpl::richtext_table_model methods
 		virtual index_type get_count() const throw() override;
 		virtual void get_text(index_type item, index_type subitem, agge::richtext_t &text) const override;
-		virtual void set_order(index_type column, bool ascending) override;
 		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const override;
 
 		// linked_statistics methods
+		virtual void set_order(index_type column, bool ascending) /*override*/;
 		virtual function_key get_key(index_type item) const;
 
 		index_type get_index(function_key address) const;
@@ -119,7 +119,7 @@ namespace micro_profiler
 	inline void statistics_model_impl<BaseT, MapT>::detach() throw()
 	{
 		_view.reset();
-		this->invalidate(0);
+		this->invalidate(this->npos());
 	}
 
 	template <typename BaseT, typename MapT>
@@ -148,6 +148,6 @@ namespace micro_profiler
 		if (!_view)
 			return;
 		_view->fetch();
-		this->invalidate(_view->get_count());
+		this->invalidate(this->npos());
 	}
 }

@@ -30,6 +30,7 @@ namespace micro_profiler
 	struct linked_statistics : wpl::richtext_table_model
 	{
 		virtual ~linked_statistics() {	}
+		virtual void set_order(index_type column, bool ascending) = 0;
 		virtual function_key get_key(index_type item) const = 0;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const = 0;
 	};

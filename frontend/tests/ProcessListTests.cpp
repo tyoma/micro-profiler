@@ -112,29 +112,27 @@ namespace micro_profiler
 			test( InvalidationIsSignalledOnUpdate )
 			{
 				// INIT
-				size_t n_arg = 0, n_count = 0;
+				size_t n_count = 0;
 				process_list l;
 				shared_ptr<process> p[] = {
 					shared_ptr<process>(new mocks::process(12, "foo")),
 					shared_ptr<process>(new mocks::process(12111, "bar")),
 				};
-				wpl::slot_connection c = l.invalidate += [&] (size_t n) {
-					n_arg = n;
+				wpl::slot_connection c = l.invalidate += [&] (wpl::table_model_base::index_type item) {
 					n_count = l.get_count();
+					assert_equal(wpl::table_model_base::npos(), item);
 				};
 
 				// ACT
 				l.update(enumerate_processes(p));
 
 				// ASSERT
-				assert_equal(2u, n_arg);
 				assert_equal(2u, n_count);
 
 				// ACT
 				l.update([&] (const process::enumerate_callback_t &/*callback*/) { });
 
 				// ASSERT
-				assert_equal(0u, n_arg);
 				assert_equal(0u, n_count);
 			}
 

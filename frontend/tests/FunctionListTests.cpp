@@ -45,18 +45,18 @@ namespace micro_profiler
 			{
 				wpl::slot_connection _connection;
 
-				void on_invalidate(table_model_base::index_type count)
-				{	invalidations.push_back(count);	}
-
-			public:
-				typedef vector<table_model_base::index_type> _invalidations_log_t;
+				void on_invalidate(table_model_base::index_type index, table_model_base *m)
+				{
+					counts.push_back(m->get_count());
+					assert_equal(table_model_base::npos(), index);
+				}
 
 			public:
 				template <typename ModelT>
 				void bind_to_model(ModelT &to)
-				{	_connection = to.invalidate += bind(&invalidation_tracer::on_invalidate, this, _1);	}
+				{	_connection = to.invalidate += bind(&invalidation_tracer::on_invalidate, this, _1, &to);	}
 
-				_invalidations_log_t invalidations;
+				vector<table_model_base::index_type> counts;
 			};
 
 
@@ -206,8 +206,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
-				assert_equal(1u, ih.invalidations.size());
-				assert_equal(1u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(1u, ih.counts.size());
+				assert_equal(1u, ih.counts.back()); //check what's coming as event arg
 
 				// ACT
 				shared_ptr<const trackable> first = fl->track(0); // 2229
@@ -220,8 +220,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0u, fl->get_count());
-				assert_equal(2u, ih.invalidations.size());
-				assert_equal(0u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(2u, ih.counts.size());
+				assert_equal(0u, ih.counts.back()); //check what's coming as event arg
 				assert_equal(table_model_base::npos(), first->index());
 
 				// INIT
@@ -232,8 +232,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, fl->get_count());
-				assert_equal(3u, ih.invalidations.size());
-				assert_equal(1u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(3u, ih.counts.size());
+				assert_equal(1u, ih.counts.back()); //check what's coming as event arg
 				assert_equal(0u, first->index()); // kind of side effect
 			}
 
@@ -265,9 +265,9 @@ namespace micro_profiler
 				table_model_base::index_type reference[] = { 0, };
 
 				assert_equal(0u, children[0]->get_count());
-				assert_equal(reference, it1.invalidations);
+				assert_equal(reference, it1.counts);
 				assert_equal(0u, children[1]->get_count());
-				assert_equal(reference, it2.invalidations);
+				assert_equal(reference, it2.counts);
 			}
 
 
@@ -298,9 +298,9 @@ namespace micro_profiler
 				table_model_base::index_type reference[] = { 0, };
 
 				assert_equal(0u, parents[0]->get_count());
-				assert_equal(reference, it1.invalidations);
+				assert_equal(reference, it1.counts);
 				assert_equal(0u, parents[1]->get_count());
-				assert_equal(reference, it2.invalidations);
+				assert_equal(reference, it2.counts);
 			}
 
 
@@ -376,8 +376,8 @@ namespace micro_profiler
 				shared_ptr<const trackable> second = fl->track(1); // 1118
 
 				// ASSERT
-				assert_equal(1u, ih.invalidations.size());
-				assert_equal(2u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(1u, ih.counts.size());
+				assert_equal(2u, ih.counts.back()); //check what's coming as event arg
 		
 				string reference1[][8] = {
 					{	"0000045E", "19", "31s", "29s", "1.63s", "1.53s", "0", "3s"	},
@@ -393,8 +393,8 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 				
 				// ASSERT
-				assert_equal(2u, ih.invalidations.size());
-				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(2u, ih.counts.size());
+				assert_equal(3u, ih.counts.back()); //check what's coming as event arg
 
 				string reference2[][8] = {
 					{	"0000045E", "24", "41s", "36s", "1.71s", "1.5s", "0", "6s",	},
@@ -411,8 +411,8 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 				
 				// ASSERT
-				assert_equal(3u, ih.invalidations.size());
-				assert_equal(3u, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(3u, ih.counts.size());
+				assert_equal(3u, ih.counts.back()); //check what's coming as event arg
 
 				string reference3[][8] = {
 					{	"0000045E", "100111222357", "1.7e+04s", "1.4e+04s", "170ns", "140ns", "0", "6s",	},
@@ -523,8 +523,8 @@ namespace micro_profiler
 				fl->set_order(columns::times_called, true);
 				
 				// ASSERT
-				assert_equal(2u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(2u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference1[][8] = {
 					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "2", "5s",	},
@@ -544,8 +544,8 @@ namespace micro_profiler
 				fl->set_order(columns::times_called, false);
 
 				// ASSERT
-				assert_equal(3u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(3u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference2[][8] = {
 					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s"	},
@@ -565,8 +565,8 @@ namespace micro_profiler
 				fl->set_order(columns::name, true);
 
 				// ASSERT
-				assert_equal(4u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference3[][8] = {
 					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "0", "3s"	},
@@ -586,8 +586,8 @@ namespace micro_profiler
 				fl->set_order(columns::name, false);
 
 				// ASSERT
-				assert_equal(5u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(5u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference4[][8] = {
 					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s"	},
@@ -607,8 +607,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive, true);
 
 				// ASSERT
-				assert_equal(6u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(6u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference5[][2] = {
 					{	"000007C6", "15",	},
@@ -628,8 +628,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive, false);
 
 				// ASSERT
-				assert_equal(7u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(7u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference6[][2] = {
 					{	"00000BAE", "2",	},
@@ -649,8 +649,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive, true);
 
 				// ASSERT
-				assert_equal(8u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(8u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference7[][2] = {
 					{	"000007C6", "15",	},
@@ -670,8 +670,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive, false);
 
 				// ASSERT
-				assert_equal(9u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(9u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference8[][2] = {
 					{	"00000BAE", "2",	},
@@ -691,8 +691,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive_avg, true);
 				
 				// ASSERT
-				assert_equal(10u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(10u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference9[][2] = {
 					{	"00000BB8", "15233",	},
@@ -712,8 +712,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive_avg, false);
 				
 				// ASSERT
-				assert_equal(11u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(11u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference10[][2] = {
 					{	"00000BAE", "2",	},
@@ -733,8 +733,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive_avg, true);
 				
 				// ASSERT
-				assert_equal(12u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(12u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference11[][2] = {
 					{	"000007C6", "15",	},
@@ -754,8 +754,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive_avg, false);
 				
 				// ASSERT
-				assert_equal(13u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(13u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference12[][2] = {
 					{	"00000BAE", "2",	},
@@ -775,8 +775,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_reentrance, true);
 				
 				// ASSERT
-				assert_equal(14u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(14u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference13[][2] = {
 					{	"000007C6", "15",	},
@@ -796,8 +796,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_reentrance, false);
 				
 				// ASSERT
-				assert_equal(15u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(15u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference14[][2] = {
 					{	"00000BB8", "15233",	},
@@ -817,8 +817,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_time, true);
 				
 				// ASSERT
-				assert_equal(16u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(16u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference15[][2] = {
 					{	"000007C6", "15",	},
@@ -838,8 +838,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_time, false);
 				
 				// ASSERT
-				assert_equal(17u, ih.invalidations.size());
-				assert_equal(data_size, ih.invalidations.back()); //check what's coming as event arg
+				assert_equal(17u, ih.counts.size());
+				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
 
 				string reference16[][2] = {
 					{	"00000BB8", "15233",	},
@@ -939,7 +939,7 @@ namespace micro_profiler
 
 				ih.bind_to_model(*fl);
 				dser(*fl, dummy_context);
-				ih.invalidations.clear();
+				ih.counts.clear();
 
 				// ACT (times called, ascending)
 				fl->set_order(columns::threadid, true);
@@ -950,7 +950,7 @@ namespace micro_profiler
 				string reference1[][1] = {	{	"2",	}, {	"1",	}, {	"4",	}, {	"3",	}, {	"5",	},	};
 
 				assert_table_equal(ordering, reference1, *fl);
-				assert_equal(reference_updates1, ih.invalidations);
+				assert_equal(reference_updates1, ih.counts);
 
 				// ACT (times called, ascending)
 				fl->set_order(columns::threadid, false);
@@ -960,7 +960,7 @@ namespace micro_profiler
 				string reference2[][1] = {	{	"5",	}, {	"3",	},{	"4",	},{	"1",	},  {	"2",	}, 	};
 
 				assert_table_equal(ordering, reference2, *fl);
-				assert_equal(reference_updates2, ih.invalidations);
+				assert_equal(reference_updates2, ih.counts);
 			}
 
 
@@ -1215,8 +1215,8 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 
 				// ASSERT
-				assert_is_empty(t1.invalidations);
-				assert_is_empty(t2.invalidations);
+				assert_is_empty(t1.counts);
+				assert_is_empty(t2.counts);
 			}
 
 
@@ -1245,8 +1245,8 @@ namespace micro_profiler
 				// ASSERT
 				table_model_base::index_type reference[] = { 0u, };
 
-				assert_equal(reference, t1.invalidations);
-				assert_equal(reference, t2.invalidations);
+				assert_equal(reference, t1.counts);
+				assert_equal(reference, t2.counts);
 			}
 
 
@@ -1276,15 +1276,15 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 
 				// ASSERT
-				assert_equal(1u, t.invalidations.size());
-				assert_equal(2u, t.invalidations.back());
+				assert_equal(1u, t.counts.size());
+				assert_equal(2u, t.counts.back());
 
 				// ACT
 				dser(*fl, dummy_context);
 
 				// ASSERT
-				assert_equal(2u, t.invalidations.size());
-				assert_equal(3u, t.invalidations.back());
+				assert_equal(2u, t.counts.size());
+				assert_equal(3u, t.counts.back());
 
 				// INIT
 				unthreaded_statistic_types::map_detailed s3;
@@ -1296,8 +1296,8 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 
 				// ASSERT
-				assert_equal(3u, t.invalidations.size());
-				assert_equal(3u, t.invalidations.back());
+				assert_equal(3u, t.counts.size());
+				assert_equal(3u, t.counts.back());
 			}
 
 
@@ -1591,7 +1591,7 @@ namespace micro_profiler
 				// ASSERT
 				table_model_base::index_type reference1[] = { 3u, };
 
-				assert_equal(reference1, t.invalidations);
+				assert_equal(reference1, t.counts);
 
 				// ACT
 				dser(*fl, dummy_context);
@@ -1600,7 +1600,7 @@ namespace micro_profiler
 				// ASSERT
 				table_model_base::index_type reference2[] = { 3u, 4u, 4u, };
 
-				assert_equal(reference2, t.invalidations);
+				assert_equal(reference2, t.counts);
 			}
 
 
@@ -1826,7 +1826,7 @@ namespace micro_profiler
 
 				serialize_single_threaded(ser, mkvector(functions));
 				dser(*fl, dummy_context);
-				it.invalidations.clear();
+				it.counts.clear();
 
 				// ACT
 				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 1; });
@@ -1834,7 +1834,7 @@ namespace micro_profiler
 				// ASSERT
 				table_model_base::index_type reference1[] = { 1u, };
 
-				assert_equal(reference1, it.invalidations);
+				assert_equal(reference1, it.counts);
 
 				// ACT
 				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 2; });
@@ -1842,7 +1842,7 @@ namespace micro_profiler
 				// ASSERT
 				table_model_base::index_type reference2[] = { 1u, 0u, };
 
-				assert_equal(reference2, it.invalidations);
+				assert_equal(reference2, it.counts);
 
 				// ACT
 				fl->set_filter();
@@ -1850,7 +1850,7 @@ namespace micro_profiler
 				// ASSERT
 				table_model_base::index_type reference3[] = { 1u, 0u, 2u, };
 
-				assert_equal(reference3, it.invalidations);
+				assert_equal(reference3, it.counts);
 			}
 
 		end_test_suite

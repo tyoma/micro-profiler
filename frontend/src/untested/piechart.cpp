@@ -56,7 +56,7 @@ namespace micro_profiler
 	void piechart::select(index_type item)
 	{
 		_selection = item != npos() && _model ? _model->track(item) : shared_ptr<trackable>();
-		invalidate(0);
+		invalidate(nullptr);
 	}
 
 	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer_) const
@@ -129,7 +129,7 @@ namespace micro_profiler
 		const auto idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
 
 		_selection = _model && idx != npos() ? _model->track(idx) : shared_ptr<const trackable>();
-		invalidate(0);
+		invalidate(nullptr);
 		selection_changed(idx);
 	}
 
@@ -176,7 +176,7 @@ namespace micro_profiler
 			rest.share_angle -= share_angle;
 		}
 		_segments.push_back(rest);
-		invalidate(0);
+		invalidate(nullptr);
 	}
 
 	piechart::index_type piechart::find_sector(real_t x, real_t y)

@@ -35,10 +35,10 @@ namespace micro_profiler
 		void update(const process_enumerator_t &enumerator);
 
 		std::shared_ptr<process> get_process(index_type row) const;
+		void set_order(index_type column, bool ascending);
 
 		virtual index_type get_count() const throw() override;
 		virtual void get_text(index_type row, index_type column, agge::richtext_t &text) const override;
-		virtual void set_order(index_type column, bool ascending) override;
 
 	private:
 		typedef std::vector< std::shared_ptr<process> > process_container_t;

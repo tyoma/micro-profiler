@@ -35,30 +35,11 @@ namespace micro_profiler
 		});
 		if (_sorter)
 			_sorter(_processes);
-		invalidate(_processes.size());
+		invalidate(npos());
 	}
 
 	shared_ptr<process> process_list::get_process(index_type row) const
 	{	return _processes[row];	}
-
-	process_list::index_type process_list::get_count() const throw()
-	{	return _processes.size();	}
-
-	void process_list::get_text(index_type row, index_type column, agge::richtext_t &text) const
-	{
-		process &p = *_processes[row];
-
-		switch (column)
-		{
-		case 0:
-			text << p.name().c_str();
-			break;
-
-		case 1:
-			itoa<10>(text, p.get_pid());
-			break;
-		}
-	}
 
 	void process_list::set_order(index_type column, bool ascending)
 	{
@@ -79,6 +60,20 @@ namespace micro_profiler
 				return lhs->get_pid() > rhs->get_pid();
 			});
 		_sorter(_processes);
+	}
+
+	process_list::index_type process_list::get_count() const throw()
+	{	return _processes.size();	}
+
+	void process_list::get_text(index_type row, index_type column, agge::richtext_t &text) const
+	{
+		process &p = *_processes[row];
+
+		switch (column)
+		{
+		case 0:	text << p.name().c_str();	break;
+		case 1:	itoa<10>(text, p.get_pid());	break;
+		}
 	}
 
 	template <typename PredicateT>	

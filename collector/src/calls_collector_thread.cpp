@@ -20,19 +20,30 @@
 
 #include <collector/calls_collector_thread.h>
 
+#include <collector/allocator.h>
+
 using namespace std;
 
 namespace micro_profiler
 {
-	struct calls_collector_thread::buffer
+	calls_collector_thread::buffer_deleter::buffer_deleter()
+		: _allocator(nullptr)
+	{	}
+
+	calls_collector_thread::buffer_deleter::buffer_deleter(allocator &allocator_)
+		: _allocator(&allocator_)
+	{	}
+
+	void calls_collector_thread::buffer_deleter::operator ()(buffer *object) throw()
 	{
-		call_record data[calls_collector_thread::buffer_size];
-		unsigned size;
-	};
+		object->~buffer();
+		_allocator->deallocate(object);
+	}
 
 
-	calls_collector_thread::calls_collector_thread(size_t trace_limit)
-		: _max_buffers(buffers_required(trace_limit)), _ready_buffers(_max_buffers), _empty_buffers(_max_buffers)
+	calls_collector_thread::calls_collector_thread(allocator &allocator_, size_t trace_limit)
+		: _max_buffers(buffers_required(trace_limit)), _ready_buffers(_max_buffers), _empty_buffers(_max_buffers),
+			_allocator(allocator_)
 	{
 		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
 		_return_stack.push_back(re);
@@ -41,11 +52,11 @@ namespace micro_profiler
 
 		for (size_t n = _max_buffers - 1; n--; )
 		{
-			b.reset(new buffer);
+			create_buffer(b);
 			_empty_buffers.produce(move(b), [] (int) {});
 		}
-		b.reset(new buffer);
-		start_buffer(b);
+		create_buffer(b);
+		start_buffer(move(b));
 	}
 
 	calls_collector_thread::~calls_collector_thread()
@@ -89,10 +100,12 @@ namespace micro_profiler
 	{
 		_active_buffer->size = buffer_size - _n_left;
 		_ready_buffers.produce(move(_active_buffer), [] (int) {});
-		_empty_buffers.consume([this] (buffer_ptr &new_buffer) {
-			start_buffer(new_buffer);
+		_empty_buffers.consume([this] (buffer_ptr &ready_buffer) {
+			start_buffer(move(ready_buffer));
 		}, [this] (int n) -> bool {
-			return !n ? _continue.wait(), true : true;
+			if (!n)
+				_continue.wait();
+			return true;
 		});
 	}
 
@@ -115,7 +128,13 @@ namespace micro_profiler
 		}
 	}
 
-	void calls_collector_thread::start_buffer(buffer_ptr &new_buffer) throw()
+	void calls_collector_thread::create_buffer(buffer_ptr &new_buffer)
+	{
+		buffer_ptr b(new (_allocator.allocate(sizeof(buffer))) buffer, buffer_deleter(_allocator));
+		new_buffer = move(b);
+	}
+
+	void calls_collector_thread::start_buffer(buffer_ptr &&new_buffer) throw()
 	{
 		_active_buffer = move(new_buffer);
 		_ptr = _active_buffer->data;

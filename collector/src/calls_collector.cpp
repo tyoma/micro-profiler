@@ -31,9 +31,10 @@ using namespace std;
 
 namespace micro_profiler
 {
-	calls_collector::calls_collector(size_t trace_limit, thread_monitor &thread_monitor_,
+	calls_collector::calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &thread_monitor_,
 			mt::thread_callbacks &thread_callbacks)
-		: _thread_monitor(thread_monitor_), _thread_callbacks(thread_callbacks), _trace_limit(trace_limit)
+		: _thread_monitor(thread_monitor_), _thread_callbacks(thread_callbacks), _trace_limit(trace_limit),
+			_allocator(allocator_)
 	{	}
 
 	void calls_collector::read_collected(acceptor &a)
@@ -87,7 +88,7 @@ namespace micro_profiler
 
 	calls_collector_thread &calls_collector::construct_thread_trace()
 	{
-		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_trace_limit));
+		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_allocator, _trace_limit));
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
 		_thread_callbacks.at_thread_exit([trace] {	trace->flush();	});

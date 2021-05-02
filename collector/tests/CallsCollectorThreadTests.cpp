@@ -1,6 +1,7 @@
 #include <collector/calls_collector_thread.h>
 
 #include "helpers.h"
+#include "mocks_allocator.h"
 
 #include <mt/event.h>
 #include <mt/thread.h>
@@ -16,6 +17,9 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			size_t buffers_required(size_t trace_limit)
+			{	return 1u + (trace_limit - 1u) / calls_collector_thread::buffer_size;	}
+
 			struct collection_acceptor
 			{
 				collection_acceptor()
@@ -58,6 +62,7 @@ namespace micro_profiler
 
 			collection_acceptor acceptor_object;
 			calls_collector_thread::reader_t acceptor;
+			mocks::allocator allocator_;
 
 
 			init( Init )
@@ -66,7 +71,7 @@ namespace micro_profiler
 			test( NoCallsReadIfNoneWereMade )
 			{
 				// INIT
-				calls_collector_thread cc(1);
+				calls_collector_thread cc(allocator_, 1);
 
 				// ACT
 				cc.read_collected(acceptor);
@@ -80,7 +85,7 @@ namespace micro_profiler
 			test( UpToBufferSizeMinusOneCallsDoNotLeadToReadCalls )
 			{
 				// INIT
-				calls_collector_thread cc(1);
+				calls_collector_thread cc(allocator_, 1);
 
 				for (unsigned i = 0; i != calls_collector_thread::buffer_size - 1; ++i)
 				{
@@ -99,7 +104,7 @@ namespace micro_profiler
 			{
 				// INIT
 				call_record r;
-				calls_collector_thread cc(1);
+				calls_collector_thread cc(allocator_, 1);
 				vector<call_record> reference;
 
 				for (unsigned i = 0; i != calls_collector_thread::buffer_size - 1; ++i)
@@ -124,7 +129,7 @@ namespace micro_profiler
 			{
 				// INIT
 				call_record r;
-				calls_collector_thread cc(3u * calls_collector_thread::buffer_size);
+				calls_collector_thread cc(allocator_, 3u * calls_collector_thread::buffer_size);
 				vector<call_record> reference[2];
 
 				for (unsigned i = 0; i != 2 * calls_collector_thread::buffer_size - 1; ++i)
@@ -146,9 +151,9 @@ namespace micro_profiler
 			test( BuffersAreRecycledAfterReading )
 			{
 				// INIT
-				calls_collector_thread cc1(1 /* the minimum number (2) of buffers will be used */);
-				calls_collector_thread cc2(3 * calls_collector_thread::buffer_size);
-				calls_collector_thread cc3(5 * calls_collector_thread::buffer_size - 1); // Still, 5 buffers totally.
+				calls_collector_thread cc1(allocator_, 1 /* the minimum number (2) of buffers will be used */);
+				calls_collector_thread cc2(allocator_, 3 * calls_collector_thread::buffer_size);
+				calls_collector_thread cc3(allocator_, 5 * calls_collector_thread::buffer_size - 1); // Still, 5 buffers totally.
 				vector<const call_record *> reference;
 
 				fill(cc1, calls_collector_thread::buffer_size);
@@ -222,7 +227,7 @@ namespace micro_profiler
 			test( FlushingIncompleteBufferMakesItAvailable )
 			{
 				// INIT
-				calls_collector_thread cc(1);
+				calls_collector_thread cc(allocator_, 1);
 				vector<call_record> reference;
 
 				// ACT
@@ -264,7 +269,7 @@ namespace micro_profiler
 				// INIT
 				unsigned n = 371 * calls_collector_thread::buffer_size + 123;
 				mt::event done;
-				calls_collector_thread cc1(5 * calls_collector_thread::buffer_size);
+				calls_collector_thread cc1(allocator_, 5 * calls_collector_thread::buffer_size);
 				vector<call_record> reference, actual;
 				calls_collector_thread::reader_t r = [&actual] (const call_record *calls, size_t count) {
 					actual.insert(actual.end(), calls, calls + count);
@@ -292,7 +297,7 @@ namespace micro_profiler
 				actual.clear();
 				done.reset();
 				n = 5 * calls_collector_thread::buffer_size;
-				calls_collector_thread cc2(1);
+				calls_collector_thread cc2(allocator_, 1);
 				mt::thread t2([&] {
 
 				// ACT
@@ -319,7 +324,7 @@ namespace micro_profiler
 			init( InitCollector )
 			{
 				acceptor = acceptor_object.get_reader();
-				collector.reset(new calls_collector_thread(1));
+				collector.reset(new calls_collector_thread(allocator_, 1));
 			}
 
 
@@ -387,7 +392,7 @@ namespace micro_profiler
 			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
 			{
 				// INIT
-				calls_collector_thread c1(1), c2(1);
+				calls_collector_thread c1(allocator_, 1), c2(allocator_, 1);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT
@@ -403,7 +408,7 @@ namespace micro_profiler
 			test( ReturnAddressesAreStoredByValue )
 			{
 				// INIT
-				calls_collector_thread c1(1), c2(1);
+				calls_collector_thread c1(allocator_, 1), c2(allocator_, 1);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				on_enter(c1, return_address + 0, 0, 0);
@@ -563,6 +568,31 @@ namespace micro_profiler
 				};
 
 				assert_equal(reference2, a.collected[1]);
+			}
+
+
+			test( AllocationsAreMadeViaAllocatorProvided )
+			{
+				mocks::allocator a2;
+
+				{
+				// INIT / ACT
+					calls_collector_thread c(a2, 50000);
+
+				// ASSERT
+					assert_equal(buffers_required(50000), a2.allocated_blocks);
+
+				// ACT (destroying collector)
+				}
+
+				// ASSERT
+				assert_equal(0u, a2.allocated_blocks);
+
+				// INIT / ACT
+				calls_collector_thread c(a2, 10000);
+
+				// ASSERT
+				assert_equal(buffers_required(10000), a2.allocated_blocks);
 			}
 
 		end_test_suite

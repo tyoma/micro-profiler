@@ -20,6 +20,7 @@
 
 #include "main.h"
 
+#include <collector/allocator.h>
 #include <collector/calibration.h>
 #include <collector/calls_collector.h>
 #include <collector/collector_app.h>
@@ -75,7 +76,8 @@ namespace
 
 const size_t c_trace_limit = 5000000;
 const auto g_thread_monitor = make_shared<thread_monitor>(mt::get_thread_callbacks());
-const shared_ptr<calls_collector> g_collector(new calls_collector(c_trace_limit, *g_thread_monitor,
+micro_profiler::allocator g_allocator;
+const shared_ptr<calls_collector> g_collector(new calls_collector(g_allocator, c_trace_limit, *g_thread_monitor,
 	mt::get_thread_callbacks()));
 extern "C" calls_collector *g_collector_ptr = g_collector.get();
 const auto c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);

@@ -97,7 +97,7 @@ namespace micro_profiler
 
 
 			tracer::tracer()
-				: calls_collector(10000, *this, *this)
+				: calls_collector(*this, 10000, *this, *this)
 			{	}
 
 			void tracer::read_collected(acceptor &a)

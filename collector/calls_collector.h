@@ -35,6 +35,7 @@ namespace mt
 
 namespace micro_profiler
 {
+	struct allocator;
 	class calls_collector_thread;
 	class thread_monitor;
 
@@ -55,7 +56,7 @@ namespace micro_profiler
 	class calls_collector : public calls_collector_i, noncopyable
 	{
 	public:
-		calls_collector(size_t trace_limit, thread_monitor &thread_monitor_, mt::thread_callbacks &thread_callbacks);
+		calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &thread_monitor_, mt::thread_callbacks &thread_callbacks);
 
 		virtual void read_collected(acceptor &a);
 
@@ -84,5 +85,6 @@ namespace micro_profiler
 		const size_t _trace_limit;
 		call_traces_t _call_traces;
 		mt::mutex _thread_blocks_mtx;
+		allocator &_allocator;
 	};
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mocks_allocator.h"
+
 #include <collector/calls_collector.h>
 #include <collector/thread_monitor.h>
 
@@ -54,7 +56,7 @@ namespace micro_profiler
 			};
 
 
-			class tracer : public thread_monitor, public thread_callbacks, public calls_collector
+			class tracer : public thread_monitor, public thread_callbacks, public allocator, public calls_collector
 			{
 			public:
 				tracer();

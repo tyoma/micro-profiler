@@ -34,6 +34,9 @@
     <ClCompile Include="process_explorer_macos.cpp">
       <Filter>src\macos</Filter>
     </ClCompile>
+    <ClCompile Include="allocator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -65,5 +68,6 @@
     <ClInclude Include="process_explorer.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\allocator.h" />
   </ItemGroup>
 </Project>

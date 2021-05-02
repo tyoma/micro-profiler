@@ -38,6 +38,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="allocator.cpp" />
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="calls_collector.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
@@ -61,6 +62,7 @@
     <ClCompile Include="thread_monitor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\calls_collector_thread.h" />

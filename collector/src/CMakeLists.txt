@@ -28,6 +28,7 @@ if(MSVC)
 endif()
 
 set(COLLECTOR_LIB_SOURCES
+	allocator.cpp
 	analyzer.cpp
 	calls_collector.cpp
 	calls_collector_thread.cpp

@@ -32,6 +32,8 @@
 
 namespace micro_profiler
 {
+	struct allocator;
+
 	class calls_collector_thread : noncopyable
 	{
 	public:
@@ -43,8 +45,10 @@ namespace micro_profiler
 
 		typedef std::function<void (const call_record *calls, size_t count)> reader_t;
 
+		struct buffer;
+
 	public:
-		explicit calls_collector_thread(size_t trace_limit);
+		explicit calls_collector_thread(allocator &allocator_, size_t trace_limit);
 		~calls_collector_thread();
 
 		void on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw();
@@ -56,14 +60,25 @@ namespace micro_profiler
 		void read_collected(const reader_t &reader);
 
 	private:
-		struct buffer;
+		class buffer_deleter
+		{
+		public:
+			buffer_deleter();
+			explicit buffer_deleter(allocator &allocator_);
 
-		typedef std::unique_ptr<buffer> buffer_ptr;
+			void operator ()(buffer *object) throw();
+
+		private:
+			allocator *_allocator;
+		};
+
+		typedef std::unique_ptr<buffer, buffer_deleter> buffer_ptr;
 		typedef polyq::circular_buffer< buffer_ptr, polyq::static_entry<buffer_ptr> > buffers_queue_t;
 		typedef pod_vector<return_entry> return_stack_t;
 
 	private:
-		void start_buffer(buffer_ptr &new_buffer) throw();
+		void create_buffer(buffer_ptr &new_buffer);
+		void start_buffer(buffer_ptr &&ready_buffer) throw();
 		static size_t buffers_required(size_t trace_limit) throw();
 
 	private:
@@ -73,7 +88,14 @@ namespace micro_profiler
 		buffer_ptr _active_buffer;
 		const size_t _max_buffers;
 		buffers_queue_t _ready_buffers, _empty_buffers;
+		allocator &_allocator;
 		mt::event _continue;
+	};
+
+	struct calls_collector_thread::buffer
+	{
+		call_record data[calls_collector_thread::buffer_size];
+		unsigned size;
 	};
 
 

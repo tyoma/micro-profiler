@@ -73,11 +73,12 @@ namespace micro_profiler
 			virtual_stack vstack;
 			mocks::thread_monitor threads;
 			mocks::thread_callbacks tcallbacks;
+			mocks::allocator allocator_;
 			auto_ptr<calls_collector> collector;
 
 			init( ConstructCollector )
 			{
-				collector.reset(new calls_collector(1000, threads, tcallbacks));
+				collector.reset(new calls_collector(allocator_, 1000, threads, tcallbacks));
 			}
 
 			test( CollectNothingOnNoCalls )
@@ -325,8 +326,8 @@ namespace micro_profiler
 			test( MaxTraceLengthIsLimited )
 			{
 				// INIT
-				calls_collector c1(3000, threads, mt::get_thread_callbacks()),
-					c2(10000, threads, mt::get_thread_callbacks());
+				calls_collector c1(allocator_, 3000, threads, mt::get_thread_callbacks()),
+					c2(allocator_, 10000, threads, mt::get_thread_callbacks());
 				collection_acceptor a1, a2;
 				unsigned n1 = 0, n2 = 0;
 
@@ -356,7 +357,7 @@ namespace micro_profiler
 			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
 			{
 				// INIT
-				calls_collector c1(1000, threads, tcallbacks), c2(1000, threads, tcallbacks);
+				calls_collector c1(allocator_, 1000, threads, tcallbacks), c2(allocator_, 1000, threads, tcallbacks);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT

@@ -32,6 +32,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( CollectorAppTests )
+			mocks::allocator allocator_;
 			shared_ptr<mocks::frontend_state> state;
 			collector_app::frontend_factory_t factory;
 			shared_ptr<mocks::tracer> collector;
@@ -366,7 +367,7 @@ namespace micro_profiler
 				// INIT
 				mocks::thread_monitor threads;
 				mocks::thread_callbacks tcallbacks;
-				shared_ptr<calls_collector> collector2(new calls_collector(100000, threads, tcallbacks));
+				shared_ptr<calls_collector> collector2(new calls_collector(allocator_, 100000, threads, tcallbacks));
 				mt::event updated;
 				vector<mocks::thread_statistics_map> updates;
 

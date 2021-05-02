@@ -255,8 +255,9 @@ namespace micro_profiler
 
 				if (-1 == s)
 					throw initialization_failed("aux socket creation failed");
+				if (::connect(s, (sockaddr *)&service, sizeof(service)))
+					throw (::close(s), initialization_failed("aux socket connection failed"));
 				::ioctl(s, O_NONBLOCK, &arg);
-				::connect(s, (sockaddr *)&service, sizeof(service));
 				send_scalar(s, init_magic);
 				return s;
 			}

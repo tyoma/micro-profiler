@@ -154,15 +154,21 @@ namespace micro_profiler
 				ctx.hModule = hmodule;
 				ctx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
 				ctx.dwFlags = ACTCTX_FLAG_HMODULE_VALID | ACTCTX_FLAG_RESOURCE_NAME_VALID;
-				return shared_ptr<void>(::CreateActCtx(&ctx), &::ReleaseActCtx);
+
+				HANDLE hcontext = ::CreateActCtx(&ctx);
+
+				return INVALID_HANDLE_VALUE == hcontext
+					? shared_ptr<void>()
+					: shared_ptr<void>(hcontext, &::ReleaseActCtx);
 			}
 
 			shared_ptr<void> client_session::lock_activation_context(const shared_ptr<void> &ctx)
 			{
 				ULONG_PTR cookie;
 
-				::ActivateActCtx(ctx.get(), &cookie);
-				return shared_ptr<void>(reinterpret_cast<void*>(cookie), bind(&::DeactivateActCtx, 0, cookie));
+				return ctx && ::ActivateActCtx(ctx.get(), &cookie)
+					? shared_ptr<void>(reinterpret_cast<void*>(cookie), bind(&::DeactivateActCtx, 0, cookie))
+					: shared_ptr<void>();
 			}
 
 

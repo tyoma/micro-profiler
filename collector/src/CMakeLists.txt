@@ -69,6 +69,9 @@ if(UNIX)
 		main_unix.cpp
 	)
 elseif(WIN32)
+	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		calls_collector_msvc.asm
+	)
 	set(COLLECTOR_SOURCES ${COLLECTOR_SOURCES}
 		collector.rc
 		hooks.asm

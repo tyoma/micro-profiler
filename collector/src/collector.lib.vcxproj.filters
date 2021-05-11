@@ -70,4 +70,9 @@
     </ClInclude>
     <ClInclude Include="..\allocator.h" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="calls_collector_msvc.asm">
+      <Filter>src</Filter>
+    </MASM>
+  </ItemGroup>
 </Project>

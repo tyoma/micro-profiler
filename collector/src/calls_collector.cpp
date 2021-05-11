@@ -51,23 +51,19 @@ namespace micro_profiler
 
 	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void **stack_ptr,
 		timestamp_t timestamp, const void *callee)
-	{
-		instance->get_current_thread_trace()
-			.on_enter(stack_ptr, timestamp, callee);
-	}
+	{	instance->get_current_thread_trace().on_enter(stack_ptr, timestamp, callee);	}
 
 	const void *CC_(fastcall) calls_collector::on_exit(calls_collector *instance, const void **stack_ptr,
 		timestamp_t timestamp)
-	{
-		return instance->get_current_thread_trace_guaranteed()
-			.on_exit(stack_ptr, timestamp);
-	}
+	{	return instance->get_current_thread_trace_guaranteed().on_exit(stack_ptr, timestamp);	}
 
+#if !defined(_M_X64)
 	void calls_collector::on_enter_nostack(timestamp_t timestamp, const void *callee)
 	{	get_current_thread_trace().track(callee, timestamp);	}
 
 	void calls_collector::on_exit_nostack(timestamp_t timestamp)
 	{	get_current_thread_trace_guaranteed().track(0, timestamp);	}
+#endif
 
 	void calls_collector::flush()
 	{

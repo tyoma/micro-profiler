@@ -39,8 +39,7 @@ namespace micro_profiler
 	public:
 		enum
 		{
-			page_byte_size = 4096,
-			buffer_size = (page_byte_size - sizeof(void *)) / sizeof(call_record),
+			buffer_size = 384,
 		};
 
 		typedef std::function<void (const call_record *calls, size_t count)> reader_t;

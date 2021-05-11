@@ -26,10 +26,17 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
   <ItemDefinitionGroup>
+    <MASM>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_X64=1</PreprocessorDefinitions>
+    </MASM>
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -42,9 +49,11 @@
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="calls_collector.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="calls_collector_thread.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
+      <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="collector_app.cpp" />
     <ClCompile Include="image_patch.cpp" />
@@ -77,5 +86,13 @@
     <ClInclude Include="..\types.h" />
     <ClInclude Include="process_explorer.h" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="calls_collector_msvc.asm">
+      <FileType>Document</FileType>
+    </MASM>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
 </Project>

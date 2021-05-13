@@ -24,9 +24,8 @@ IFDEF _M_IX86
 	.code
 
 	extrn ?on_enter@calls_collector@micro_profiler@@SIXPAV12@PAPBX_JPBX@Z:near
-	extrn ?on_enter_nostack@calls_collector@micro_profiler@@QAEX_JPBX@Z:near
+	extrn ?track@calls_collector@micro_profiler@@QAEX_JPBX@Z:near
 	extrn ?on_exit@calls_collector@micro_profiler@@SIPBXPAV12@PAPBX_J@Z:near
-	extrn ?on_exit_nostack@calls_collector@micro_profiler@@QAEX_J@Z:near
 	extrn _g_collector_ptr:dword
 
 	PUSHREGS	macro
@@ -54,7 +53,7 @@ IFDEF _M_IX86
 		mov	edx, [esp + 0Ch]
 		push	edx
 		PUSHRDTSC
-		call	?on_enter_nostack@calls_collector@micro_profiler@@QAEX_JPBX@Z
+		call	?track@calls_collector@micro_profiler@@QAEX_JPBX@Z
 
 		POPREGS
 		ret
@@ -64,8 +63,9 @@ IFDEF _M_IX86
 		PUSHREGS
 
 		mov	ecx, [_g_collector_ptr]
+		push	0
 		PUSHRDTSC
-		call	?on_exit_nostack@calls_collector@micro_profiler@@QAEX_J@Z
+		call	?track@calls_collector@micro_profiler@@QAEX_JPBX@Z
 
 		POPREGS
 		ret
@@ -74,9 +74,8 @@ ELSEIFDEF _M_X64
 	.code
 
 	extrn ?on_enter@calls_collector@micro_profiler@@SAXPEAV12@PEAPEBX_JPEBX@Z:near
-	extrn ?on_enter_nostack@calls_collector@micro_profiler@@QEAAX_JPEBX@Z:near
+	extrn ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z:near
 	extrn ?on_exit@calls_collector@micro_profiler@@SAPEBXPEAV12@PEAPEBX_J@Z:near
-	extrn ?on_exit_nostack@calls_collector@micro_profiler@@QEAAX_J@Z:near
 	extrn g_collector_ptr:qword
 
 	PUSHREGS	macro
@@ -86,15 +85,9 @@ ELSEIFDEF _M_X64
 		push	rcx
 		push	rdx
 		push	r8
-		push	r9
-		push	r10
-		push	r11
 	endm
 
 	POPREGS	macro
-		pop	r11
-		pop	r10
-		pop	r9
 		pop	r8
 		pop	rdx
 		pop	rcx
@@ -111,29 +104,24 @@ ELSEIFDEF _M_X64
 
 	_penter	proc
 		PUSHREGS
-		sub	rsp, 28h
 
 		mov	rcx, [g_collector_ptr]
-		mov	r8, qword ptr [rsp + 68h]
+		mov	r8, qword ptr [rsp + 28h]
 		RDTSC64
-		call ?on_enter_nostack@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
+		call ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
-		add	rsp, 28h
 		POPREGS
 		ret
 	_penter	endp
 
 	_pexit	proc
 		PUSHREGS
-		movdqu	[rsp - 10h], xmm0
-		sub	rsp, 30h
 
 		mov	rcx, [g_collector_ptr]
+		xor	r8, r8
 		RDTSC64
-		call	?on_exit_nostack@calls_collector@micro_profiler@@QEAAX_J@Z
+		call ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
-		add	rsp, 30h
-		movdqu	xmm0, [rsp - 10h]
 		POPREGS
 		ret
 	_pexit	endp

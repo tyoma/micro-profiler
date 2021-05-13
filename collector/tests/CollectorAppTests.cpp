@@ -380,8 +380,8 @@ namespace micro_profiler
 				mt::thread worker([&] {
 					collector_app app(factory, collector2, c_overhead, tmonitor);
 
-					collector2->on_enter_nostack(123456, addr(0x1234567));
-					collector2->on_exit_nostack(123460);
+					collector2->track(123456, addr(0x1234567));
+					collector2->track(123460, 0);
 				});
 				worker.join();
 

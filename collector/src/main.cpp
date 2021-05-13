@@ -91,7 +91,7 @@ const platform_initializer g_intializer(g_profiler_app);
 #endif
 
 extern "C" PUBLIC void __cyg_profile_func_enter(void *callee, void * /*call_site*/)
-{	g_collector_ptr->on_enter_nostack(read_tick_counter(), callee);	}
+{	g_collector_ptr->track(read_tick_counter(), callee);	}
 
 extern "C" PUBLIC void __cyg_profile_func_exit(void * /*callee*/, void * /*call_site*/)
-{	g_collector_ptr->on_exit_nostack(read_tick_counter());	}
+{	g_collector_ptr->track(read_tick_counter(), 0);	}

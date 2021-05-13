@@ -25,8 +25,37 @@ ELSEIFDEF _M_X64
 	extrn ?construct_thread_trace@calls_collector@micro_profiler@@AEAAAEAVcalls_collector_thread@2@XZ:near
 	extrn ?flush@calls_collector_thread@micro_profiler@@QEAAXXZ:near
 
+	FRAME_IN macro
+		push	r9
+		push	r10
+		push	r11
+		push	rbp
+		mov	rbp, rsp
+		and	sp, 0FFF0h
+		lea	rsp, [rsp - 80h]
+		movaps	[rsp + 20h], xmm0
+		movaps	[rsp + 30h], xmm1
+		movaps	[rsp + 40h], xmm2
+		movaps	[rsp + 50h], xmm3
+		movaps	[rsp + 60h], xmm4
+		movaps	[rsp + 70h], xmm5
+	endm
+
+	FRAME_OUT macro
+		movaps	xmm0, [rsp + 20h]
+		movaps	xmm1, [rsp + 30h]
+		movaps	xmm2, [rsp + 40h]
+		movaps	xmm3, [rsp + 50h]
+		movaps	xmm4, [rsp + 60h]
+		movaps	xmm5, [rsp + 70h]
+		mov	rsp, rbp
+		pop	rbp
+		pop	r11
+		pop	r10
+		pop	r9
+	endm
+
 	READ_TLS macro
-;		mov	rax, qword ptr gs:[eax * 8 + 1480h]
 		cmp	eax, 40h
 		cmovl	rax, qword ptr gs:[eax * 8 + 1480h]
 		jl		short done
@@ -39,67 +68,44 @@ ELSEIFDEF _M_X64
 		exitm
 	endm
 
-	?on_enter_nostack@calls_collector@micro_profiler@@QEAAX_JPEBX@Z PROC ; micro_profiler::calls_collector::on_enter_nostack
+	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z PROC ; micro_profiler::calls_collector::track
 		; rcx: micro_profiler::calls_collector *this
 		; rdx: timestamp
-		; r8: calee
+		; r8: calee (or nullptr for exit)
 
 		mov	eax, dword ptr [rcx + 08h]
 		READ_TLS
 		test	rax, rax
-		je		short construct_trace
-	proceed_store:
+		jz		short track$construct_trace
+
+	track$proceed_store:
 		mov	rcx, qword ptr [rax]				; ptr = calls_collector_thread::_ptr;
 		mov	qword ptr [rcx], rdx				; *ptr = {	timestamp, callee }...
 		mov	qword ptr [rcx + 08h], r8		;	...;
 		lea	rcx, qword ptr [rcx + 10h]		; ptr++;
 		mov	qword ptr [rax], rcx				; calls_collector_thread::_ptr = ptr;
 		dec	dword ptr [rax + 08h]			; --calls_collector_thread::_n_left;
-		je		flush
+		jz		short track$flush
 		ret
 
-	construct_trace:
-		mov	qword ptr [rsp + 18h], rdx		; timestamp
-		mov	qword ptr [rsp + 20h], r8		; callee
-		sub	rsp, 28h
+	track$flush:
+		FRAME_IN
+		mov	rcx, rax
+		call	?flush@calls_collector_thread@micro_profiler@@QEAAXXZ ; micro_profiler::calls_collector_thread::flush
+		FRAME_OUT
+		ret
+
+	track$construct_trace:
+		push	rdx	; timestamp
+		push	r8		; callee
+		FRAME_IN
 		call	?construct_thread_trace@calls_collector@micro_profiler@@AEAAAEAVcalls_collector_thread@2@XZ ; micro_profiler::calls_collector::construct_thread_trace
-		add	rsp, 28h
-		mov	rdx, qword ptr [rsp + 18h]
-		mov	r8, qword ptr [rsp + 20h]
-		jmp	short proceed_store
+		FRAME_OUT
+		pop	r8
+		pop	rdx
+		jmp	track$proceed_store
 
-	flush:
-		sub	rsp, 28h
-		mov	rcx, rax
-		call	?flush@calls_collector_thread@micro_profiler@@QEAAXXZ ; micro_profiler::calls_collector_thread::flush
-		add	rsp, 28h
-		ret
-	?on_enter_nostack@calls_collector@micro_profiler@@QEAAX_JPEBX@Z ENDP ; micro_profiler::calls_collector::on_enter_nostack
-
-
-	?on_exit_nostack@calls_collector@micro_profiler@@QEAAX_J@Z PROC ; micro_profiler::calls_collector::on_exit_nostack
-		; rcx: micro_profiler::calls_collector *this
-		; rdx: timestamp
-
-		mov	eax, dword ptr [rcx + 08h]
-		READ_TLS
-		mov	rcx, qword ptr [rax]				; ptr = calls_collector_thread::_ptr;
-		mov	qword ptr [rcx], rdx				; *ptr = {	timestamp, 0 }...
-		mov	qword ptr [rcx + 08h], 0		;	...;
-		lea	rcx, qword ptr [rcx + 10h]		; ptr++;
-		mov	qword ptr [rax], rcx				; calls_collector_thread::_ptr = ptr;
-		dec	dword ptr [rax + 08h]			; --calls_collector_thread::_n_left;
-		je		flush
-		ret
-
-	flush:
-		sub	rsp, 28h
-		mov	rcx, rax
-		call	?flush@calls_collector_thread@micro_profiler@@QEAAXXZ ; micro_profiler::calls_collector_thread::flush
-		add	rsp, 28h
-		ret
-	?on_exit_nostack@calls_collector@micro_profiler@@QEAAX_J@Z ENDP ; micro_profiler::calls_collector::on_exit_nostack
-
+	?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z ENDP ; micro_profiler::calls_collector::track
 ENDIF
 
 end

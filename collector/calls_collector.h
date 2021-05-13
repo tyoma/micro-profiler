@@ -65,8 +65,7 @@ namespace micro_profiler
 		static const void *CC_(fastcall) on_exit(calls_collector *instance, const void **stack_ptr,
 			timestamp_t timestamp) _CC(fastcall);
 
-		void on_enter_nostack(timestamp_t timestamp, const void *callee);
-		void on_exit_nostack(timestamp_t timestamp);
+		void track(timestamp_t timestamp, const void *callee);
 
 		void flush();
 
@@ -75,7 +74,6 @@ namespace micro_profiler
 
 	private:
 		calls_collector_thread &get_current_thread_trace();
-		calls_collector_thread &get_current_thread_trace_guaranteed();
 		calls_collector_thread &construct_thread_trace();
 
 	private:

@@ -60,8 +60,8 @@ namespace micro_profiler
 
 				for (size_t i = 0; i != calls_number; ++i)
 				{
-					collector.on_enter_nostack(timestamp++, callee);
-					collector.on_exit_nostack(timestamp++);
+					collector.track(timestamp++, callee);
+					collector.track(timestamp++, 0);
 				}
 				collector.flush();
 			}
@@ -129,8 +129,8 @@ namespace micro_profiler
 				collection_acceptor a;
 
 				// ACT
-				collector->on_enter_nostack(100, (void *)0x12345678);
-				collector->on_exit_nostack(10010);
+				collector->track(100, (void *)0x12345678);
+				collector->track(10010, 0);
 				collector->flush();
 				collector->read_collected(a);
 
@@ -144,10 +144,10 @@ namespace micro_profiler
 				assert_equal(reference1, a.collected[0].second);
 
 				// ACT
-				collector->on_enter_nostack(100000, (void *)0x1100000);
-				collector->on_exit_nostack(100001);
-				collector->on_enter_nostack(110000, (void *)0x1100001);
-				collector->on_exit_nostack(110002000000);
+				collector->track(100000, (void *)0x1100000);
+				collector->track(100001, 0);
+				collector->track(110000, (void *)0x1100001);
+				collector->track(110002000000, 0);
 				collector->flush();
 				collector->read_collected(a);
 

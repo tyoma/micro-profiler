@@ -44,7 +44,7 @@ namespace micro_profiler
 			inline void serialize(ArchiveT &a, frontend_state &state, unsigned int /*version*/)
 			{
 				unsigned metadata_id;
-				commands c;
+				messages_id c;
 				initialization_data id;
 				loaded_modules lm;
 				thread_statistics_map u;
@@ -65,7 +65,7 @@ namespace micro_profiler
 						a(lm), state.modules_loaded(lm);
 					break;
 
-				case update_statistics_threaded:
+				case response_statistics_update:
 					if (state.updated)
 						a(u), state.updated(u);
 					break;
@@ -75,12 +75,12 @@ namespace micro_profiler
 						a(um), state.modules_unloaded(um);
 					break;
 
-				case module_metadata:
+				case response_module_metadata:
 					if (state.metadata_received)
 						a(metadata_id), a(md), state.metadata_received(metadata_id, md);
 					break;
 
-				case threads_info:
+				case response_threads_info:
 					if (state.threads_received)
 						a(threads), state.threads_received(threads);
 					break;

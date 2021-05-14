@@ -67,13 +67,13 @@ namespace micro_profiler
 	{
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> d(reader);
-		commands c;
+		messages_id c;
 		unsigned int persistent_id;
 		vector<thread_monitor::thread_id> thread_ids;
 
 		switch (d(c), c)
 		{
-		case request_metadata:
+		case request_module_metadata:
 			d(persistent_id);
 			_queue.schedule([this, persistent_id] {	_bridge->send_module_metadata(persistent_id);	});
 			break;

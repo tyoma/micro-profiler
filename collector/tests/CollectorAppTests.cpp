@@ -666,7 +666,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ser(request_metadata);
+				ser(request_module_metadata);
 				ser(mmi[1].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 				md_ready.wait();
@@ -682,7 +682,7 @@ namespace micro_profiler
 				message_buffer.buffer.clear();
 
 				// ACT
-				ser(request_metadata);
+				ser(request_module_metadata);
 				ser(mmi[0].persistent_id);
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 				md_ready.wait();

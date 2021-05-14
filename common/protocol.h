@@ -28,16 +28,21 @@
 
 namespace micro_profiler
 {
-	enum commands {
+	enum messages_id {
+		// Notifications...
 		init = 0,
 		modules_loaded = 1,
 		update_statistics = 2,
 		modules_unloaded = 3,
-		module_metadata = 4,
-		request_metadata = 5, // + instance_id
-		update_statistics_threaded = 6,
+
+		// Requests...
+		request_module_metadata = 5, // + instance_id
 		request_threads_info = 7,
-		threads_info = 8,
+
+		// Responses...
+		response_module_metadata = 4,
+		response_threads_info = 8,
+		response_statistics_update = 6,
 	};
 
 	// init
@@ -53,7 +58,7 @@ namespace micro_profiler
 	// modules_unloaded
 	typedef std::vector<unsigned int> unloaded_modules;
 
-	// module_metadata
+	// response_module_metadata
 	struct module_info_metadata
 	{
 		std::vector<symbol_info> symbols;

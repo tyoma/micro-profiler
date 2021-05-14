@@ -56,7 +56,7 @@ namespace micro_profiler
 		if (!loaded.empty())
 			send(modules_loaded, loaded);
 		if (_analyzer.has_data())
-			send(update_statistics_threaded, _analyzer);
+			send(response_statistics_update, _analyzer);
 		if (!unloaded.empty())
 			send(modules_unloaded, unloaded);
 		_analyzer.clear();
@@ -73,18 +73,18 @@ namespace micro_profiler
 		metadata->enumerate_files([&] (const pair<unsigned, string> &file) {
 			md.second.source_files.push_back(file);
 		});
-		send(module_metadata, md);
+		send(response_module_metadata, md);
 	}
 
 	void statistics_bridge::send_thread_info(const vector<thread_monitor::thread_id> &ids)
 	{
 		_threads_buffer.resize(ids.size());
 		_thread_monitor->get_info(_threads_buffer.begin(), ids.begin(), ids.end());
-		send(threads_info, _threads_buffer);
+		send(response_threads_info, _threads_buffer);
 	}
 
 	template <typename DataT>
-	void statistics_bridge::send(commands command, const DataT &data)
+	void statistics_bridge::send(messages_id command, const DataT &data)
 	{
 		buffer_writer< pod_vector<byte> > writer(_buffer);
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);

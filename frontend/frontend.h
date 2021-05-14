@@ -51,7 +51,7 @@ namespace micro_profiler
 		virtual void message(const_byte_range payload) override;
 
 		template <typename DataT>
-		void send(commands command, const DataT &data);
+		void send(messages_id command, const DataT &data);
 
 		std::shared_ptr<symbol_resolver> get_resolver();
 		std::shared_ptr<threads_model> get_threads();

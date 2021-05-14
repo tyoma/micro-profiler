@@ -51,7 +51,7 @@ namespace micro_profiler
 
 	void headers_model::store(hive &configuration) const
 	{
-		configuration.store(c_order_by, _sort_column != npos() ? _sort_column : -1);
+		configuration.store(c_order_by, _sort_column != npos() ? static_cast<int>(_sort_column) : -1);
 		configuration.store(c_order_direction, _sort_ascending ? 1 : 0);
 		for (vector<column>::const_iterator i = _columns.begin(); i != _columns.end(); ++i)
 		{

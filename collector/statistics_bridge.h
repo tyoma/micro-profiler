@@ -50,7 +50,7 @@ namespace micro_profiler
 
 	private:
 		template <typename DataT>
-		void send(commands command, const DataT &data);
+		void send(messages_id command, const DataT &data);
 
 	public:
 		pod_vector<byte> _buffer;

@@ -61,7 +61,7 @@ namespace micro_profiler
 		initialization_data idata;
 		loaded_modules lmodules;
 		module_info_metadata mmetadata;
-		commands c;
+		messages_id c;
 
 		switch (archive(c), c)
 		{
@@ -82,20 +82,20 @@ namespace micro_profiler
 			LOG(PREAMBLE "non-threaded update_statistics is no longer supported. Are you using older version of the collector library?");
 			break;
 
-		case update_statistics_threaded:
+		case response_statistics_update:
 			if (_model)
 				archive(*_model, _serialization_context);
 			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
 			break;
 
-		case module_metadata:
+		case response_module_metadata:
 			archive(persistent_id);
 			archive(mmetadata);
 			LOG(PREAMBLE "received metadata...") % A(this) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
 			get_resolver()->add_metadata(persistent_id, mmetadata);
 			break;
 
-		case threads_info:
+		case response_threads_info:
 			archive(*_threads);
 			break;
 
@@ -105,7 +105,7 @@ namespace micro_profiler
 	}
 
 	template <typename DataT>
-	void frontend::send(commands command, const DataT &data)
+	void frontend::send(messages_id command, const DataT &data)
 	{
 		buffer_writer< pod_vector<byte> > writer(_buffer);
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
@@ -124,7 +124,7 @@ namespace micro_profiler
 			_resolver.reset(new symbol_resolver([wself] (unsigned int persistent_id) {
 				if (shared_ptr<frontend> self = wself.lock())
 				{
-					self->send(request_metadata, persistent_id);
+					self->send(request_module_metadata, persistent_id);
 					LOG(PREAMBLE "requested metadata from remote...") % A(self.get()) % A(persistent_id);
 				}
 			}));

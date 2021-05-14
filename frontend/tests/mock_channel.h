@@ -33,11 +33,11 @@ namespace micro_profiler
 				{
 					buffer_reader reader(payload);
 					strmd::deserializer<buffer_reader, packer> d(reader);
-					commands c;
+					messages_id c;
 
 					switch (d(c), c)
 					{
-					case request_metadata:
+					case request_module_metadata:
 						requested_metadata.push_back(0), d(requested_metadata.back());
 						break;
 

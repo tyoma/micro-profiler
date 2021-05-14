@@ -29,7 +29,7 @@ namespace micro_profiler
 			{	return frontend_ui::ptr();	}
 
 			template <typename CommandDataT>
-			void write(ipc::channel &channel, commands c, const CommandDataT &data)
+			void write(ipc::channel &channel, messages_id c, const CommandDataT &data)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter, packer> archive(b);
@@ -40,7 +40,7 @@ namespace micro_profiler
 			}
 
 			template <typename Data1T, typename Data2T>
-			void write(ipc::channel &channel, commands c, const Data1T &data1, const Data2T &data2)
+			void write(ipc::channel &channel, messages_id c, const Data1T &data1, const Data2T &data2)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter, packer> archive(b);
@@ -192,19 +192,19 @@ namespace micro_profiler
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, update_statistics_threaded, make_single_threaded(data1));
+				write(*c, response_statistics_update, make_single_threaded(data1));
 
 				// ASSERT
 				assert_equal(2u, model->get_count());
 
 				// ACT
-				write(*c, update_statistics_threaded, make_single_threaded(data2));
+				write(*c, response_statistics_update, make_single_threaded(data2));
 
 				// ASSERT
 				assert_equal(3u, model->get_count());
 
 				// ACT
-				write(*c, update_statistics_threaded, make_single_threaded(data1));
+				write(*c, response_statistics_update, make_single_threaded(data1));
 
 				// ASSERT
 				assert_equal(3u, model->get_count());
@@ -279,8 +279,8 @@ namespace micro_profiler
 				shared_ptr<functions_list> model2 = _ui_creation_log[1]->model;
 
 				// ACT
-				write(*c1, update_statistics_threaded, make_single_threaded(data));
-				write(*c2, update_statistics_threaded, make_single_threaded(data));
+				write(*c1, response_statistics_update, make_single_threaded(data));
+				write(*c2, response_statistics_update, make_single_threaded(data));
 
 				// ASSERT
 				columns::main ordering[] = {	columns::inclusive,	};
@@ -317,8 +317,8 @@ namespace micro_profiler
 
 				// ACT
 				write(*c, modules_loaded, mkvector(basic1));
-				write(*c, module_metadata, basic1[0].persistent_id, metadata[0]);
-				write(*c, update_statistics_threaded, make_single_threaded(data1));
+				write(*c, response_module_metadata, basic1[0].persistent_id, metadata[0]);
+				write(*c, response_statistics_update, make_single_threaded(data1));
 
 				// ASSERT
 				model->set_order(columns::name, true);
@@ -330,8 +330,8 @@ namespace micro_profiler
 
 				// ACT
 				write(*c, modules_loaded, mkvector(basic2));
-				write(*c, module_metadata, basic2[0].persistent_id, metadata[1]);
-				write(*c, update_statistics_threaded, make_single_threaded(data2));
+				write(*c, response_module_metadata, basic2[0].persistent_id, metadata[1]);
+				write(*c, response_statistics_update, make_single_threaded(data2));
 
 				// ASSERT
 				assert_equal("BAR", get_text(*model, 0, columns::name));
@@ -838,7 +838,7 @@ namespace micro_profiler
 				};
 
 				// ACT / ASSERT (must not crash)
-				write(*c, update_statistics_threaded, make_single_threaded(data));
+				write(*c, response_statistics_update, make_single_threaded(data));
 			}
 
 
@@ -909,7 +909,7 @@ namespace micro_profiler
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
 				write(*c, modules_loaded, mkvector(mi));
-				write(*c, update_statistics_threaded, make_single_threaded(data));
+				write(*c, response_statistics_update, make_single_threaded(data));
 
 				// ACT
 				get_text(fl, fl.get_index(addr(0x1100)), columns::name);
@@ -952,7 +952,7 @@ namespace micro_profiler
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
 				write(*c, modules_loaded, mkvector(mi));
-				write(*c, update_statistics_threaded, make_single_threaded(data));
+				write(*c, response_statistics_update, make_single_threaded(data));
 
 				// ACT
 				c.reset();
@@ -984,7 +984,7 @@ namespace micro_profiler
 				const shared_ptr<threads_model> threads = _ui_creation_log[0]->model->get_threads();
 
 				// ACT
-				write(*c, threads_info, mkvector(data1));
+				write(*c, response_threads_info, mkvector(data1));
 
 				// ASSERT
 				unsigned int native_id;
@@ -996,7 +996,7 @@ namespace micro_profiler
 				assert_equal(11717u, native_id);
 
 				// ACT
-				write(*c, threads_info, mkvector(data2));
+				write(*c, response_threads_info, mkvector(data2));
 
 				// ASSERT
 				assert_equal(3u, threads->get_count());

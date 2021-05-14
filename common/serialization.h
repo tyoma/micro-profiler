@@ -84,7 +84,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, commands &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, messages_id &data, unsigned int /*version*/)
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>

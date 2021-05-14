@@ -18,7 +18,7 @@ namespace micro_profiler
 			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
 
 			template <typename CommandDataT>
-			void write(ipc::channel &channel, commands c, const CommandDataT &data)
+			void write(ipc::channel &channel, messages_id c, const CommandDataT &data)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter, packer> archive(b);
@@ -53,7 +53,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				write(*frontend_, update_statistics_threaded, make_single_threaded(data1, 12));
+				write(*frontend_, response_statistics_update, make_single_threaded(data1, 12));
 
 				// ASSERT
 				unsigned reference1[] = { 12, };
@@ -62,7 +62,7 @@ namespace micro_profiler
 				assert_equivalent(reference1, outbound.requested_threads[0]);
 
 				// ACT
-				write(*frontend_, update_statistics_threaded, make_single_threaded(data1, 17));
+				write(*frontend_, response_statistics_update, make_single_threaded(data1, 17));
 
 				// ASSERT
 				unsigned reference2[] = { 12, 17, };

@@ -53,6 +53,16 @@ namespace micro_profiler
 				tmonitor.reset(new mocks::thread_monitor);
 			}
 
+			template <typename FormatterT>
+			void request(const FormatterT &formatter)
+			{
+				vector_adapter message_buffer;
+				strmd::serializer<vector_adapter, packer> ser(message_buffer);
+
+				formatter(ser);
+				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+			}
+
 
 			test( FrontendIsConstructedInASeparateThreadWhenProfilerHandleObtained )
 			{
@@ -568,8 +578,6 @@ namespace micro_profiler
 			}
 
 
-
-
 			test( ChildrenStatisticsIsPassedAlongWithTopLevels )
 			{
 				// INIT
@@ -626,8 +634,6 @@ namespace micro_profiler
 				// INIT
 				mt::mutex mtx;
 				mt::event ready, md_ready;
-				vector_adapter message_buffer;
-				strmd::serializer<vector_adapter, packer> ser(message_buffer);
 				loaded_modules l;
 				unsigned persistent_id;
 				module_info_metadata md;
@@ -666,9 +672,10 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ser(request_module_metadata);
-				ser(mmi[1].persistent_id);
-				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_module_metadata);
+					ser(mmi[1].persistent_id);
+				});
 				md_ready.wait();
 
 				// ASSERT
@@ -678,13 +685,11 @@ namespace micro_profiler
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
 
-				// INIT
-				message_buffer.buffer.clear();
-
 				// ACT
-				ser(request_module_metadata);
-				ser(mmi[0].persistent_id);
-				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_module_metadata);
+					ser(mmi[0].persistent_id);
+				});
 				md_ready.wait();
 
 				// ASSERT
@@ -700,8 +705,6 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready;
-				vector_adapter message_buffer;
-				strmd::serializer<vector_adapter, packer> ser(message_buffer);
 				vector< pair<unsigned /*thread_id*/, thread_info> > threads;
 				thread_info ti[] = {
 					{ 1221, "thread 1", mt::milliseconds(190212), mt::milliseconds(0), mt::milliseconds(1902), false },
@@ -727,9 +730,10 @@ namespace micro_profiler
 				ready.wait();
 
 				// ACT
-				ser(request_threads_info);
-				ser(mkvector(request1));
-				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_threads_info);
+					ser(mkvector(request1));
+				});
 				ready.wait();
 
 				// ASSERT
@@ -739,13 +743,11 @@ namespace micro_profiler
 
 				assert_equal(reference1, threads);
 
-				// INIT
-				message_buffer.buffer.clear();
-
 				// ACT
-				ser(request_threads_info);
-				ser(mkvector(request2));
-				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_threads_info);
+					ser(mkvector(request2));
+				});
 				ready.wait();
 
 				// ASSERT

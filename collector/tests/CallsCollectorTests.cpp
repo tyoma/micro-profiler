@@ -327,7 +327,7 @@ namespace micro_profiler
 			{
 				// INIT
 				calls_collector c1(allocator_, 3000, threads, mt::get_thread_callbacks()),
-					c2(allocator_, 10000, threads, mt::get_thread_callbacks());
+					c2(allocator_, 30000, threads, mt::get_thread_callbacks());
 				collection_acceptor a1, a2;
 				unsigned n1 = 0, n2 = 0;
 

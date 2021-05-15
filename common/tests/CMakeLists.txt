@@ -12,6 +12,7 @@ set(COMMON_TEST_SOURCES
 	SerializationTests.cpp
 	TextConversionTests.cpp
 	TextFormattingServicesTests.cpp
+	TypesTests.cpp
 	UnorderedMapTests.cpp
 )
 

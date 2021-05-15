@@ -60,6 +60,22 @@ namespace micro_profiler
 		bool complete;
 	};
 
+	class buffering_policy
+	{
+	public:
+		enum {	buffer_size = 384 /*entries*/,	};
+
+	public:
+		buffering_policy(size_t max_allocation, double max_empty_factor, double min_empty_factor);
+
+		size_t max_buffers() const;
+		size_t max_empty() const;
+		size_t min_empty() const;
+
+	private:
+		size_t _max_buffers, _max_empty, _min_empty;
+	};
+
 
 
 	inline guid_t::operator const GUID &() const
@@ -69,4 +85,14 @@ namespace micro_profiler
 	inline overhead::overhead(timestamp_t inner_, timestamp_t outer_)
 		: inner(inner_), outer(outer_)
 	{	}
+
+
+	inline size_t buffering_policy::max_buffers() const
+	{	return _max_buffers;	}
+
+	inline size_t buffering_policy::max_empty() const
+	{	return _max_empty;	}
+
+	inline size_t buffering_policy::min_empty() const
+	{	return _min_empty;	}
 }

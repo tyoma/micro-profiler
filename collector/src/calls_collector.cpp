@@ -78,7 +78,8 @@ namespace micro_profiler
 
 	calls_collector_thread &calls_collector::construct_thread_trace()
 	{
-		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_allocator, _trace_limit));
+		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_allocator,
+			buffering_policy(_trace_limit, 1, 1)));
 		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
 
 		_thread_callbacks.at_thread_exit([trace] {	trace->flush();	});

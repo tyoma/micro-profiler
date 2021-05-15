@@ -67,6 +67,9 @@
     <ClCompile Include="module_macos.cpp">
       <Filter>src\macos</Filter>
     </ClCompile>
+    <ClCompile Include="types.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

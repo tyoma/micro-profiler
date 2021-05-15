@@ -26,9 +26,9 @@
 #include <common/pod_vector.h>
 #include <functional>
 #include <mt/event.h>
+#include <mt/mutex.h>
 #include <polyq/circular.h>
 #include <polyq/static_entry.h>
-#include <vector>
 
 namespace micro_profiler
 {
@@ -37,17 +37,10 @@ namespace micro_profiler
 	class calls_collector_thread : noncopyable
 	{
 	public:
-		enum
-		{
-			buffer_size = 384,
-		};
-
 		typedef std::function<void (const call_record *calls, size_t count)> reader_t;
 
-		struct buffer;
-
 	public:
-		explicit calls_collector_thread(allocator &allocator_, size_t trace_limit);
+		explicit calls_collector_thread(allocator &allocator_, const buffering_policy &policy);
 		~calls_collector_thread();
 
 		void on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw();
@@ -59,41 +52,46 @@ namespace micro_profiler
 		void read_collected(const reader_t &reader);
 
 	private:
+		struct buffer;
+
 		class buffer_deleter
 		{
 		public:
 			buffer_deleter();
-			explicit buffer_deleter(allocator &allocator_);
+			explicit buffer_deleter(allocator &allocator_, int &allocated_buffers);
 
 			void operator ()(buffer *object) throw();
 
 		private:
 			allocator *_allocator;
+			int *_allocated_buffers;
 		};
 
 		typedef std::unique_ptr<buffer, buffer_deleter> buffer_ptr;
-		typedef polyq::circular_buffer< buffer_ptr, polyq::static_entry<buffer_ptr> > buffers_queue_t;
-		typedef pod_vector<return_entry> return_stack_t;
 
 	private:
 		void create_buffer(buffer_ptr &new_buffer);
-		void start_buffer(buffer_ptr &&ready_buffer) throw();
-		static size_t buffers_required(size_t trace_limit) throw();
+		void start_buffer(buffer_ptr &ready_buffer) throw();
 
 	private:
 		call_record *_ptr;
 		unsigned int _n_left;
-		return_stack_t _return_stack;
+
+		pod_vector<return_entry> _return_stack;
 		buffer_ptr _active_buffer;
-		const size_t _max_buffers;
-		buffers_queue_t _ready_buffers, _empty_buffers;
+		buffering_policy _policy;
+		int _allocated_buffers;
+		polyq::circular_buffer< buffer_ptr, polyq::static_entry<buffer_ptr> > _ready_buffers;
+		std::unique_ptr<buffer_ptr[]> _empty_buffers;
+		buffer_ptr *_empty_buffers_top;
 		allocator &_allocator;
 		mt::event _continue;
+		mt::mutex _mtx;
 	};
 
 	struct calls_collector_thread::buffer
 	{
-		call_record data[calls_collector_thread::buffer_size];
+		call_record data[buffering_policy::buffer_size];
 		unsigned size;
 	};
 

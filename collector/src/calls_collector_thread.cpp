@@ -27,22 +27,24 @@ using namespace std;
 namespace micro_profiler
 {
 	calls_collector_thread::buffer_deleter::buffer_deleter()
-		: _allocator(nullptr)
+		: _allocator(nullptr), _allocated_buffers(nullptr)
 	{	}
 
-	calls_collector_thread::buffer_deleter::buffer_deleter(allocator &allocator_)
-		: _allocator(&allocator_)
+	calls_collector_thread::buffer_deleter::buffer_deleter(allocator &allocator_, int &allocated_buffers)
+		: _allocator(&allocator_), _allocated_buffers(&allocated_buffers)
 	{	}
 
 	void calls_collector_thread::buffer_deleter::operator ()(buffer *object) throw()
 	{
 		object->~buffer();
 		_allocator->deallocate(object);
+		--*_allocated_buffers;
 	}
 
 
-	calls_collector_thread::calls_collector_thread(allocator &allocator_, size_t trace_limit)
-		: _max_buffers(buffers_required(trace_limit)), _ready_buffers(_max_buffers), _empty_buffers(_max_buffers),
+	calls_collector_thread::calls_collector_thread(allocator &allocator_, const buffering_policy &policy)
+		: _policy(policy), _allocated_buffers(0), _ready_buffers(policy.max_buffers()),
+			_empty_buffers(new buffer_ptr[policy.max_buffers()]), _empty_buffers_top(_empty_buffers.get()),
 			_allocator(allocator_)
 	{
 		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };
@@ -50,13 +52,10 @@ namespace micro_profiler
 
 		buffer_ptr b;
 
-		for (size_t n = _max_buffers - 1; n--; )
-		{
-			create_buffer(b);
-			_empty_buffers.produce(move(b), [] (int) {});
-		}
+		for (size_t n = _policy.max_buffers() - 1; n--; )
+			create_buffer(*_empty_buffers_top++);
 		create_buffer(b);
-		start_buffer(move(b));
+		start_buffer(b);
 	}
 
 	calls_collector_thread::~calls_collector_thread()
@@ -98,49 +97,50 @@ namespace micro_profiler
 
 	FORCE_NOINLINE void calls_collector_thread::flush()
 	{
-		_active_buffer->size = buffer_size - _n_left;
+		_active_buffer->size = buffering_policy::buffer_size - _n_left;
 		_ready_buffers.produce(move(_active_buffer), [] (int) {});
-		_empty_buffers.consume([this] (buffer_ptr &ready_buffer) {
-			start_buffer(move(ready_buffer));
-		}, [this] (int n) -> bool {
-			if (!n)
-				_continue.wait();
-			return true;
-		});
+		for (;; _continue.wait())
+		{
+			mt::lock_guard<mt::mutex> l(_mtx);
+
+			if (_empty_buffers_top == _empty_buffers.get())
+				continue;
+			start_buffer(*--_empty_buffers_top);
+			break;
+		}
 	}
 
 	void calls_collector_thread::read_collected(const reader_t &reader)
 	{
-		size_t n = _max_buffers; // Untested: even under a heavy load, analyzer thread shall be responsible.
-		buffer_ptr ready;
+		auto n = _policy.max_buffers(); // Untested: even under a heavy load, analyzer thread shall be responsible.
 
-		for (; n-- && _ready_buffers.consume([&ready] (buffer_ptr &ready_) {
-			ready = move(ready_);
+		for (buffer_ptr ready; n-- && _ready_buffers.consume([&ready] (buffer_ptr &b) {
+			swap(ready, b);
 		}, [] (int n) {
 			return !!n;
 		}); )
 		{
 			reader(ready->data, ready->size);
-			_empty_buffers.produce(move(ready), [this] (int n) {
-				if (!n)
-					_continue.set();
-			});
+			_mtx.lock();
+				const bool notify_continue = _empty_buffers_top == _empty_buffers.get();
+				swap(*_empty_buffers_top++, ready);
+			_mtx.unlock();
+			if (notify_continue)
+				_continue.set();
 		}
 	}
 
 	void calls_collector_thread::create_buffer(buffer_ptr &new_buffer)
 	{
-		buffer_ptr b(new (_allocator.allocate(sizeof(buffer))) buffer, buffer_deleter(_allocator));
+		buffer_ptr b(new (_allocator.allocate(sizeof(buffer))) buffer, buffer_deleter(_allocator, _allocated_buffers));
+		++_allocated_buffers;
 		new_buffer = move(b);
 	}
 
-	void calls_collector_thread::start_buffer(buffer_ptr &&new_buffer) throw()
+	void calls_collector_thread::start_buffer(buffer_ptr &new_buffer) throw()
 	{
-		_active_buffer = move(new_buffer);
+		swap(_active_buffer, new_buffer);
 		_ptr = _active_buffer->data;
-		_n_left = buffer_size;
+		_n_left = buffering_policy::buffer_size;
 	}
-
-	size_t calls_collector_thread::buffers_required(size_t trace_limit) throw()
-	{	return 1u + (max<size_t>)((trace_limit - 1u) / buffer_size, 1u);	}
 }

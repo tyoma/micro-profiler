@@ -9,6 +9,7 @@ set(COMMON_SOURCES
 	serialization.cpp
 	string.cpp
 	time.cpp
+	types.cpp
 )
 
 if (WIN32)

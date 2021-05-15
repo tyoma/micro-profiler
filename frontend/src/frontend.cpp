@@ -72,14 +72,14 @@ namespace micro_profiler
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			break;
 
-		case modules_loaded:
+		case response_modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
 				get_resolver()->add_mapping(*i);
 			break;
 
-		case update_statistics:
-			LOG(PREAMBLE "non-threaded update_statistics is no longer supported. Are you using older version of the collector library?");
+		case legacy_update_statistics:
+			LOG(PREAMBLE "non-threaded legacy_update_statistics is no longer supported. Are you using older version of the collector library?");
 			break;
 
 		case response_statistics_update:

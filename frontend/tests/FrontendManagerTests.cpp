@@ -316,7 +316,7 @@ namespace micro_profiler
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, modules_loaded, mkvector(basic1));
+				write(*c, response_modules_loaded, mkvector(basic1));
 				write(*c, response_module_metadata, basic1[0].persistent_id, metadata[0]);
 				write(*c, response_statistics_update, make_single_threaded(data1));
 
@@ -329,7 +329,7 @@ namespace micro_profiler
 				assert_equal(addr(0x10100), model->get_key(1));
 
 				// ACT
-				write(*c, modules_loaded, mkvector(basic2));
+				write(*c, response_modules_loaded, mkvector(basic2));
 				write(*c, response_module_metadata, basic2[0].persistent_id, metadata[1]);
 				write(*c, response_statistics_update, make_single_threaded(data2));
 
@@ -908,7 +908,7 @@ namespace micro_profiler
 
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
-				write(*c, modules_loaded, mkvector(mi));
+				write(*c, response_modules_loaded, mkvector(mi));
 				write(*c, response_statistics_update, make_single_threaded(data));
 
 				// ACT
@@ -951,7 +951,7 @@ namespace micro_profiler
 
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
-				write(*c, modules_loaded, mkvector(mi));
+				write(*c, response_modules_loaded, mkvector(mi));
 				write(*c, response_statistics_update, make_single_threaded(data));
 
 				// ACT

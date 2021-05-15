@@ -60,7 +60,7 @@ namespace micro_profiler
 						a(id), state.initialized(id);
 					break;
 
-				case modules_loaded:
+				case response_modules_loaded:
 					if (state.modules_loaded)
 						a(lm), state.modules_loaded(lm);
 					break;
@@ -70,7 +70,7 @@ namespace micro_profiler
 						a(u), state.updated(u);
 					break;
 
-				case modules_unloaded:
+				case response_modules_unloaded:
 					if (state.modules_unloaded)
 						a(um), state.modules_unloaded(um);
 					break;

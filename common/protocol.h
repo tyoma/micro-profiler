@@ -31,18 +31,19 @@ namespace micro_profiler
 	enum messages_id {
 		// Notifications...
 		init = 0,
-		modules_loaded = 1,
-		update_statistics = 2,
-		modules_unloaded = 3,
+		legacy_update_statistics = 2,
 
 		// Requests...
-		request_module_metadata = 5, // + instance_id
-		request_threads_info = 7,
-
-		// Responses...
-		response_module_metadata = 4,
-		response_threads_info = 8,
+		request_update = 0x100, // responded with [modules_loaded, ]statistics_update[, modules_unloaded] sequence.
+		response_modules_loaded = 1,
 		response_statistics_update = 6,
+		response_modules_unloaded = 3,
+
+		request_module_metadata = 5, // + instance_id
+		response_module_metadata = 4,
+
+		request_threads_info = 7,
+		response_threads_info = 8,
 	};
 
 	// init
@@ -52,10 +53,10 @@ namespace micro_profiler
 		timestamp_t ticks_per_second;
 	};
 
-	// modules_loaded
+	// response_modules_loaded
 	typedef std::vector<mapped_module_identified> loaded_modules;
 
-	// modules_unloaded
+	// response_modules_unloaded
 	typedef std::vector<unsigned int> unloaded_modules;
 
 	// response_module_metadata

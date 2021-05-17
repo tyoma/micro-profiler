@@ -18,6 +18,18 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			struct counting_acceptor : calls_collector_i::acceptor, noncopyable
+			{
+				counting_acceptor(size_t &read_)
+					: read(read_)
+				{	}
+
+				virtual void accept_calls(unsigned /*threadid*/, const call_record * /*calls*/, size_t count)
+				{	read += count;	}
+
+				size_t &read;
+			};
+
 			struct collection_acceptor : calls_collector_i::acceptor
 			{
 				collection_acceptor()
@@ -402,6 +414,67 @@ namespace micro_profiler
 				assert_equal(return_address[0], on_exit(*collector, return_address + 0, 0));
 				assert_equal(return_address[1], on_exit(*collector, return_address + 1, 0));
 				assert_equal(return_address[4], on_exit(*collector, return_address + 4, 0));
+			}
+
+
+			test( VolumesLargerThanMaxTraceCanBePumpedThroughBuffers )
+			{
+				// INIT
+				const auto n = 371 * buffering_policy::buffer_size;
+				size_t read = 0u;
+				counting_acceptor a(read);
+				calls_collector c(allocator_, buffering_policy::buffer_size, threads, tcallbacks);
+				mt::thread t([&] {
+
+				// ACT
+					for (auto i = n; i--; )
+					{
+						c.track(123, (void *)123412345);
+						c.track(124, 0);
+					}
+				});
+
+				while (read != 2 * n)
+					c.read_collected(a);
+
+				// ACT / ASSERT (must exit)
+				t.join();
+			}
+
+
+			test( SettingPolicyIsAppliedToNewlyCreatedTraces )
+			{
+				// INIT
+				calls_collector c1(allocator_, 100u * buffering_policy::buffer_size, threads, tcallbacks);
+				calls_collector c2(allocator_, 100u * buffering_policy::buffer_size, threads, tcallbacks);
+
+				// ACT
+				c1.set_buffering_policy(buffering_policy(100u * buffering_policy::buffer_size, 1, 0.19001));
+				c1.track(123, (void *)123412345);
+
+				// ASSERT
+				assert_equal(20u, allocator_.allocated);
+
+				// ACT
+				c2.set_buffering_policy(buffering_policy(100u * buffering_policy::buffer_size, 1, 0.37001));
+				c2.track(123, (void *)123412345);
+
+				// ASSERT
+				assert_equal(58u, allocator_.allocated);
+			}
+
+
+			test( SettingPolicyIsAppliedToExistedTraces )
+			{
+				// INIT
+				calls_collector c(allocator_, 1000u * buffering_policy::buffer_size, threads, tcallbacks);
+
+				// ACT
+				c.track(123, (void *)123412345);
+				c.set_buffering_policy(buffering_policy(100u * buffering_policy::buffer_size, 0.10001, 0));
+
+				// ASSERT
+				assert_equal(11u, allocator_.allocated);
 			}
 
 		end_test_suite

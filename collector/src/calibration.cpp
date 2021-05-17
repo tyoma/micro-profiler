@@ -42,8 +42,10 @@ namespace micro_profiler
 		}
 	}
 
-	overhead calibrate_overhead(calls_collector &collector, size_t iterations)
+	overhead calibrate_overhead(calls_collector &collector, size_t trace_limit)
 	{
+		const auto iterations = trace_limit / 10;
+
 		for (int warmup_rounds = 10; warmup_rounds--; )
 		{
 			null_reader nr;
@@ -61,7 +63,8 @@ namespace micro_profiler
 		run_load(&empty_call_instrumented, iterations);
 		timestamp_t end = read_tick_counter();
 
-		analyzer a(overhead(0, 0));
+		overhead o(0, 0);
+		analyzer a(o);
 
 		collector.flush();
 		collector.read_collected(a);
@@ -78,10 +81,11 @@ namespace micro_profiler
 
 				printf("MicroProfiler overhead (ticks): inner=%lld, total_original=%lld, total=%lld\n",
 					inner, (end_ref - start_ref) / f.times_called, total);
-				return overhead(inner, total - inner);
+				o = overhead(inner, total - inner);
 			}
 		}
-		return overhead(0, 0);
+		collector.set_buffering_policy(buffering_policy(trace_limit, 0.1, 0.01));
+		return o;
 	}
 
 	void empty_call()

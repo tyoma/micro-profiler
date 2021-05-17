@@ -33,15 +33,24 @@ namespace micro_profiler
 {
 	calls_collector::calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &thread_monitor_,
 			mt::thread_callbacks &thread_callbacks)
-		: _thread_monitor(thread_monitor_), _thread_callbacks(thread_callbacks), _trace_limit(trace_limit),
-			_allocator(allocator_)
+		: _thread_monitor(thread_monitor_), _thread_callbacks(thread_callbacks), _allocator(allocator_),
+			_policy(trace_limit, 1, 1)
 	{	}
+
+	void calls_collector::set_buffering_policy(const buffering_policy &policy)
+	{
+		mt::lock_guard<mt::mutex> l(_mtx);
+
+		for (auto i = _call_traces.begin(); i != _call_traces.end(); ++i)
+			i->second->set_buffering_policy(policy);
+		_policy = policy;
+	}
 
 	void calls_collector::read_collected(acceptor &a)
 	{
-		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
+		mt::lock_guard<mt::mutex> l(_mtx);
 
-		for (call_traces_t::iterator i = _call_traces.begin(); i != _call_traces.end(); ++i)
+		for (auto i = _call_traces.begin(); i != _call_traces.end(); ++i)
 		{
 			i->second->read_collected([&a, i] (const call_record *calls, size_t count)	{
 				a.accept_calls(i->first, calls, count);
@@ -70,7 +79,7 @@ namespace micro_profiler
 
 	calls_collector_thread &calls_collector::get_current_thread_trace()
 	{
-		if (calls_collector_thread *trace = _trace_pointers_tls.get())
+		if (auto *trace = _trace_pointers_tls.get())
 			return *trace;
 		else
 			return construct_thread_trace();
@@ -78,9 +87,10 @@ namespace micro_profiler
 
 	calls_collector_thread &calls_collector::construct_thread_trace()
 	{
-		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_allocator,
-			buffering_policy(_trace_limit, 1, 1)));
-		mt::lock_guard<mt::mutex> l(_thread_blocks_mtx);
+		buffering_policy policy(0, 0, 0);
+		{	mt::lock_guard<mt::mutex> l(_mtx);	policy = _policy;	}
+		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_allocator, policy));
+		mt::lock_guard<mt::mutex> l(_mtx);
 
 		_thread_callbacks.at_thread_exit([trace] {	trace->flush();	});
 		_call_traces.push_back(make_pair(_thread_monitor.register_self(), trace));

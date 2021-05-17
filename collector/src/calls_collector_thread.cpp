@@ -131,8 +131,11 @@ namespace micro_profiler
 		}
 
 		mt::lock_guard<mt::mutex> l(_mtx);
+		const bool notify_continue = _empty_buffers_top == _empty_buffers.get();
 
 		adjust_empty_buffers(_policy, static_cast<size_t>(ready_n));
+		if (notify_continue)
+			_continue.set();
 	}
 
 	void calls_collector_thread::set_buffering_policy(const buffering_policy &policy)

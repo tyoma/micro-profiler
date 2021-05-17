@@ -58,6 +58,8 @@ namespace micro_profiler
 	public:
 		calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &thread_monitor_, mt::thread_callbacks &thread_callbacks);
 
+		void set_buffering_policy(const buffering_policy &policy);
+
 		virtual void read_collected(acceptor &a);
 
 		static void CC_(fastcall) on_enter(calls_collector *instance, const void **stack_ptr,
@@ -78,11 +80,12 @@ namespace micro_profiler
 
 	private:
 		mt::tls<calls_collector_thread> _trace_pointers_tls;
+
+		call_traces_t _call_traces;
 		thread_monitor &_thread_monitor;
 		mt::thread_callbacks &_thread_callbacks;
-		const size_t _trace_limit;
-		call_traces_t _call_traces;
-		mt::mutex _thread_blocks_mtx;
 		allocator &_allocator;
+		mt::mutex _mtx;
+		buffering_policy _policy;
 	};
 }

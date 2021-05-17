@@ -80,7 +80,7 @@ micro_profiler::allocator g_allocator;
 const shared_ptr<calls_collector> g_collector(new calls_collector(g_allocator, c_trace_limit, *g_thread_monitor,
 	mt::get_thread_callbacks()));
 extern "C" calls_collector *g_collector_ptr = g_collector.get();
-const auto c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit / 10);
+const auto c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit);
 collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead, g_thread_monitor);
 const platform_initializer g_intializer(g_profiler_app);
 

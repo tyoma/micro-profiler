@@ -32,7 +32,7 @@ namespace micro_profiler
 		if (max_empty_factor < 0 || max_empty_factor > 1 || min_empty_factor < 0 || min_empty_factor > 1
 				|| min_empty_factor > max_empty_factor)
 			throw invalid_argument("");
-		_min_empty = (max<size_t>)(static_cast<size_t>(min_empty_factor * _max_buffers), 0u);
+		_min_empty = (min<size_t>)(static_cast<size_t>(min_empty_factor * _max_buffers), _max_buffers - 1u);
 		_max_empty = (max<size_t>)(static_cast<size_t>(max_empty_factor * _max_buffers), 1u);
 	}
 }

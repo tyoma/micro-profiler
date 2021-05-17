@@ -17,11 +17,12 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			buffering_policy policy(size_t max_buffers)
+			size_t required_size(size_t n_buffers)
+			{	return buffering_policy::buffer_size * n_buffers;	}
+
+			buffering_policy bp(size_t max_buffers)
 			{	return buffering_policy(buffering_policy::buffer_size * max_buffers, 1, 1);	}
 
-			size_t actual_limit(size_t trace_limit)
-			{	return buffering_policy::buffer_size * buffering_policy(trace_limit, 1, 1).max_buffers();	}
 
 			struct collection_acceptor
 			{
@@ -61,7 +62,7 @@ namespace micro_profiler
 			}
 		}
 
-		begin_test_suite( CallsCollectorThreadMBTests )
+		begin_test_suite( CallsCollectorThreadTests )
 
 			collection_acceptor acceptor_object;
 			calls_collector_thread::reader_t acceptor;
@@ -74,7 +75,7 @@ namespace micro_profiler
 			test( NoCallsReadIfNoneWereMade )
 			{
 				// INIT
-				calls_collector_thread cc(allocator_, policy(2u));
+				calls_collector_thread cc(allocator_, bp(2u));
 
 				// ACT
 				cc.read_collected(acceptor);
@@ -88,7 +89,7 @@ namespace micro_profiler
 			test( UpToBufferSizeMinusOneCallsDoNotLeadToReadCalls )
 			{
 				// INIT
-				calls_collector_thread cc(allocator_, policy(2u));
+				calls_collector_thread cc(allocator_, bp(2u));
 
 				for (unsigned i = 0; i != buffering_policy::buffer_size - 1; ++i)
 				{
@@ -107,7 +108,7 @@ namespace micro_profiler
 			{
 				// INIT
 				call_record r;
-				calls_collector_thread cc(allocator_, policy(2u));
+				calls_collector_thread cc(allocator_, bp(2u));
 				vector<call_record> reference;
 
 				for (unsigned i = 0; i != buffering_policy::buffer_size - 1; ++i)
@@ -132,7 +133,7 @@ namespace micro_profiler
 			{
 				// INIT
 				call_record r;
-				calls_collector_thread cc(allocator_, policy(3u));
+				calls_collector_thread cc(allocator_, bp(3u));
 				vector<call_record> reference[2];
 
 				for (unsigned i = 0; i != 2 * buffering_policy::buffer_size - 1; ++i)
@@ -154,9 +155,9 @@ namespace micro_profiler
 			test( BuffersAreRecycledAfterReading )
 			{
 				// INIT
-				calls_collector_thread cc1(allocator_, policy(2u));
-				calls_collector_thread cc2(allocator_, policy(3u));
-				calls_collector_thread cc3(allocator_, policy(5u));
+				calls_collector_thread cc1(allocator_, bp(2u));
+				calls_collector_thread cc2(allocator_, bp(3u));
+				calls_collector_thread cc3(allocator_, bp(5u));
 				vector<const call_record *> reference;
 
 				fill(cc1, buffering_policy::buffer_size);
@@ -230,7 +231,7 @@ namespace micro_profiler
 			test( FlushingIncompleteBufferMakesItAvailable )
 			{
 				// INIT
-				calls_collector_thread cc(allocator_, policy(2u));
+				calls_collector_thread cc(allocator_, bp(2u));
 				vector<call_record> reference;
 
 				// ACT
@@ -272,7 +273,7 @@ namespace micro_profiler
 				// INIT
 				unsigned n = 371 * buffering_policy::buffer_size + 123;
 				mt::event done;
-				calls_collector_thread cc1(allocator_, policy(5u));
+				calls_collector_thread cc1(allocator_, bp(5u));
 				vector<call_record> reference, actual;
 				calls_collector_thread::reader_t r = [&actual] (const call_record *calls, size_t count) {
 					actual.insert(actual.end(), calls, calls + count);
@@ -300,7 +301,7 @@ namespace micro_profiler
 				actual.clear();
 				done.reset();
 				n = 5 * buffering_policy::buffer_size;
-				calls_collector_thread cc2(allocator_, policy(2u));
+				calls_collector_thread cc2(allocator_, bp(2u));
 				mt::thread t2([&] {
 
 				// ACT
@@ -327,7 +328,7 @@ namespace micro_profiler
 			init( InitCollector )
 			{
 				acceptor = acceptor_object.get_reader();
-				collector.reset(new calls_collector_thread(allocator_, policy(2u)));
+				collector.reset(new calls_collector_thread(allocator_, bp(2u)));
 			}
 
 
@@ -395,7 +396,7 @@ namespace micro_profiler
 			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
 			{
 				// INIT
-				calls_collector_thread c1(allocator_, policy(2u)), c2(allocator_, policy(2u));
+				calls_collector_thread c1(allocator_, bp(2u)), c2(allocator_, bp(2u));
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT
@@ -411,7 +412,7 @@ namespace micro_profiler
 			test( ReturnAddressesAreStoredByValue )
 			{
 				// INIT
-				calls_collector_thread c1(allocator_, policy(2u)), c2(allocator_, policy(2u));
+				calls_collector_thread c1(allocator_, bp(2u)), c2(allocator_, bp(2u));
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				on_enter(c1, return_address + 0, 0, 0);
@@ -581,7 +582,7 @@ namespace micro_profiler
 
 				{
 				// INIT / ACT
-					calls_collector_thread c(a2, policy(13u));
+					calls_collector_thread c(a2, bp(13u));
 
 				// ASSERT
 					assert_equal(13u, a2.allocated);
@@ -593,59 +594,209 @@ namespace micro_profiler
 				assert_equal(0u, a2.allocated);
 
 				// INIT / ACT
-				calls_collector_thread c(a2, policy(17u));
+				calls_collector_thread c(a2, bp(17u));
 
 				// ASSERT
 				assert_equal(17u, a2.allocated);
 			}
 
 
-			// TODO: implement dynamic buffering
-			ignored_test( ReadingCollectedFreesBuffersDownToHighWatermark )
+			test( AllocationsArePreservedAcrossReadings )
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, buffering_policy(100u, 0.11, 0)), c2(al2, buffering_policy(100u, 0.31, 0));
-				vector<size_t> f1, f2;
-
-				fill(c1, 100u * buffering_policy::buffer_size - 1);
-				fill(c2, 100u * buffering_policy::buffer_size - 1);
+				calls_collector_thread c1(al1, bp(13u)), c2(al2, bp(1319u));
 
 				// ACT
 				c1.read_collected([] (...) {});
 				c2.read_collected([] (...) {});
 
 				// ASSERT
-				assert_equal(11u + 1u, al1.allocated);
-				assert_equal(31u + 1u, al2.allocated);
+				assert_equal(13u, al1.allocated);
+				assert_equal(1319u, al2.allocated);
 			}
 
 
-			ignored_test( ConstantRateFeedingKeepsFreeBuffersAmountAtLowWater )
+			test( SettingPolicyFreesExtraBuffersForEmptyReadyBuffers )
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, buffering_policy(1000u, 0.5, 0.13)),
-					c2(al2, buffering_policy(1000u, 0.5, 0.293));
+				calls_collector_thread c1(al1, bp(100u)), c2(al2, bp(100u));
 
-				fill(c1, 1000u * buffering_policy::buffer_size - 1);
-				fill(c2, 1000u * buffering_policy::buffer_size - 1);
-				c1.read_collected([] (...) {}); // leave 501 buffer in total..
-				c2.read_collected([] (...) {}); // ...
-				fill(c1, 499u * buffering_policy::buffer_size);
-				fill(c2, 499u * buffering_policy::buffer_size);
-
-				// ACT (positive feedback - push one new buffer for every buffer read)
-				c1.read_collected([&] (...) {
-					fill(c1, buffering_policy::buffer_size);
-				});
-				c2.read_collected([&] (...) {
-					fill(c2, buffering_policy::buffer_size);
-				});
+				// ACT
+				c1.set_buffering_policy(buffering_policy(required_size(100u), 0.31001, 0));
+				c2.set_buffering_policy(buffering_policy(required_size(100u), 0.78001, 0));
 
 				// ASSERT
-				assert_equal(500u + 130u, al1.allocated);
-				assert_equal(500u + 293u, al2.allocated);
+				assert_equal(32u, al1.allocated);
+				assert_equal(79u, al2.allocated);
+			}
+
+
+			test( SettingPolicyFreesExtraBuffersForNonEmptyReadyBuffers )
+			{
+				// INIT
+				mocks::allocator al;
+				calls_collector_thread c(al, bp(100u));
+
+				fill(c, buffering_policy::buffer_size * 7);
+
+				// ACT
+				c.set_buffering_policy(buffering_policy(required_size(100u), 0.31001, 0));
+
+				// ASSERT
+				assert_equal(46u, al.allocated);
+			}
+
+
+			test( SettingPolicyCreatesNewExtraBuffersIfNecessary )
+			{
+				// INIT
+				mocks::allocator al1, al2;
+				calls_collector_thread c1(al1, bp(100u)), c2(al2, bp(100u));
+
+				fill(c2, 17 * buffering_policy::buffer_size);
+
+				c1.set_buffering_policy(buffering_policy(required_size(100u), 0, 0));
+				c2.set_buffering_policy(buffering_policy(required_size(100u), 0, 0));
+
+				// ACT
+				c1.set_buffering_policy(buffering_policy(required_size(100u), 0.31001, 0.11001));
+				c2.set_buffering_policy(buffering_policy(required_size(100u), 0.78001, 0.4001));
+
+				// ASSERT
+				assert_equal(12u, al1.allocated);
+				assert_equal(75u, al2.allocated);
+			}
+
+
+			test( LowWaterFreeBuffersAreCreatedOnConstructions )
+			{
+				// INIT
+				mocks::allocator al1, al2;
+
+				// INIT / ACT
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001)),
+					c2(al2, buffering_policy(required_size(100u), 1, 0.31001));
+
+				// ASSERT
+				assert_equal(1u + 11u, al1.allocated);
+				assert_equal(1u + 31u, al2.allocated);
+			}
+
+
+			test( ReadingNoCollectedDoesNotModifyBufferSetIfNoBuffersWereReady )
+			{
+				// INIT
+				mocks::allocator al1, al2;
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001)),
+					c2(al2, buffering_policy(required_size(100u), 1, 0.31001));
+
+				al1.operations = al2.operations = 0u;
+
+				// ACT
+				c1.read_collected([] (...) {});
+				c2.read_collected([] (...) {});
+
+				// ASSERT
+				assert_equal(0, al1.operations);
+				assert_equal(0, al2.operations);
+			}
+
+
+			test( ReadingCollectedAddsBuffersToAdjustForLowWater )
+			{
+				// INIT
+				mocks::allocator al1, al2;
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001)),
+					c2(al2, buffering_policy(required_size(100u), 1, 0.31001));
+
+				al1.operations = al2.operations = 0u;
+				fill(c1, 3u * buffering_policy::buffer_size);
+				fill(c2, 7u * buffering_policy::buffer_size);
+
+				// ACT
+				c1.read_collected([] (...) {});
+				c2.read_collected([] (...) {});
+
+				// ASSERT
+				assert_equal(15u, al1.allocated);
+				assert_equal(3u, al1.operations);
+				assert_equal(39u, al2.allocated);
+				assert_equal(7u, al2.operations);
+			}
+
+
+			test( ReadingCollectedFreesBuffersDownToHighWatermark )
+			{
+				// INIT
+				mocks::allocator al1, al2;
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 0.09001, 0.07001)),
+					c2(al2, buffering_policy(required_size(100u), 0.37001, 0.25001));
+
+				fill(c1, 7u * buffering_policy::buffer_size);
+				fill(c2, 25u * buffering_policy::buffer_size);
+				c1.read_collected([] (...) {});
+				c2.read_collected([] (...) {});
+				al1.operations = al2.operations = 0u;
+
+				fill(c2, 3u * buffering_policy::buffer_size);
+
+				// ACT
+				c1.read_collected([] (...) {});
+				c2.read_collected([] (...) {});
+
+				// ASSERT
+				assert_equal(9u + 1u, al1.allocated);
+				assert_equal(37u + 3u + 1u, al2.allocated);
+			}
+
+
+			test( NoMoreThanMaxBuffersIsAllowedForCreation )
+			{
+				// INIT
+				mocks::allocator al;
+				calls_collector_thread c(al, buffering_policy(required_size(1000u), 0, 0));
+
+				c.set_buffering_policy(buffering_policy(required_size(1000u), 1, 0.071001));
+				fill(c, 71u * buffering_policy::buffer_size);
+
+				// ACT
+				c.set_buffering_policy(buffering_policy(required_size(100u), 1, 0.71001));
+
+				// ASSERT
+				assert_equal(100u, al.allocated);
+				assert_equal(100u, al.operations);
+			}
+
+
+			test( SettingPolicySticksForFollowingReads )
+			{
+				// INIT
+				mocks::allocator al;
+				calls_collector_thread c(al, buffering_policy(required_size(1000u), 0, 0));
+
+				c.set_buffering_policy(buffering_policy(required_size(100u), 1, 0.71001)); // new buffers created
+				fill(c, 71u * buffering_policy::buffer_size);
+				al.operations = 0;
+
+				// ACT
+				c.set_buffering_policy(buffering_policy(required_size(100u), 0.18001, 0));
+
+				// ASSERT
+				assert_equal(100u, al.allocated);
+
+				// ACT
+				c.read_collected([] (...) {});
+
+				// ASSERT
+				assert_equal(90u, al.allocated);
+
+				// ACT
+				c.read_collected([] (...) {});
+
+				// ASSERT
+				assert_equal(19u, al.allocated);
 			}
 
 		end_test_suite

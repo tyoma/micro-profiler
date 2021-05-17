@@ -50,6 +50,7 @@ namespace micro_profiler
 
 		void flush();
 		void read_collected(const reader_t &reader);
+		void set_buffering_policy(const buffering_policy &policy);
 
 	private:
 		struct buffer;
@@ -58,13 +59,12 @@ namespace micro_profiler
 		{
 		public:
 			buffer_deleter();
-			explicit buffer_deleter(allocator &allocator_, int &allocated_buffers);
+			explicit buffer_deleter(allocator &allocator_);
 
 			void operator ()(buffer *object) throw();
 
 		private:
 			allocator *_allocator;
-			int *_allocated_buffers;
 		};
 
 		typedef std::unique_ptr<buffer, buffer_deleter> buffer_ptr;
@@ -72,6 +72,7 @@ namespace micro_profiler
 	private:
 		void create_buffer(buffer_ptr &new_buffer);
 		void start_buffer(buffer_ptr &ready_buffer) throw();
+		void adjust_empty_buffers(const buffering_policy &policy, size_t base_n);
 
 	private:
 		call_record *_ptr;
@@ -80,7 +81,7 @@ namespace micro_profiler
 		pod_vector<return_entry> _return_stack;
 		buffer_ptr _active_buffer;
 		buffering_policy _policy;
-		int _allocated_buffers;
+		size_t _allocated_buffers;
 		polyq::circular_buffer< buffer_ptr, polyq::static_entry<buffer_ptr> > _ready_buffers;
 		std::unique_ptr<buffer_ptr[]> _empty_buffers;
 		buffer_ptr *_empty_buffers_top;

@@ -14,7 +14,7 @@ namespace micro_profiler
 				allocator();
 
 			public:
-				size_t allocated;
+				size_t allocated, operations;
 
 			private:
 				virtual void *allocate(size_t length) override;
@@ -24,19 +24,21 @@ namespace micro_profiler
 
 
 			inline allocator::allocator()
-				: allocated(0)
+				: allocated(0), operations(0)
 			{	}
 
 			inline void *allocator::allocate(size_t length)
 			{
 				auto memory = micro_profiler::allocator::allocate(length);
 
+				operations++;
 				return allocated++, memory;
 			}
 
 			inline void allocator::deallocate(void *memory) throw()
 			{
 				micro_profiler::allocator::deallocate(memory);
+				operations++;
 				allocated--;
 			}
 		}

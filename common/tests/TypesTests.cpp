@@ -61,6 +61,15 @@ namespace micro_profiler
 				assert_equal(0u, buffering_policy(1000 * buffering_policy::buffer_size, 0, 0).min_empty());
 				assert_equal(1u, buffering_policy(1000 * buffering_policy::buffer_size, 0, 0).max_empty());
 			}
+
+
+			test( MinEmptyBuffersAreLimitedFromAbove )
+			{
+				// INIT / ACT / ASSERT
+				assert_equal(999u, buffering_policy(1000 * buffering_policy::buffer_size, 1, 1).min_empty());
+				assert_equal(96u, buffering_policy(97 * buffering_policy::buffer_size, 1, 1).min_empty());
+				assert_equal(0u, buffering_policy(0, 1, 1).min_empty());
+			}
 		end_test_suite
 	}
 }

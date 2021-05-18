@@ -699,8 +699,8 @@ namespace micro_profiler
 				c2.read_collected([] (...) {});
 
 				// ASSERT
-				assert_equal(0, al1.operations);
-				assert_equal(0, al2.operations);
+				assert_equal(0u, al1.operations);
+				assert_equal(0u, al2.operations);
 			}
 
 

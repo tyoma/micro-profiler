@@ -1,4 +1,4 @@
-MicroProfiler [![Build Status](https://travis-ci.org/tyoma/micro-profiler.svg?branch=master)](https://travis-ci.org/tyoma/micro-profiler/)
+MicroProfiler [![Build Status](https://travis-ci.org/tyoma/micro-profiler.svg?branch=master)](https://travis-ci.com/tyoma/micro-profiler/)
 ====
 
 # Want to locate the bottlenecks of your app right when it suffers them?
@@ -74,6 +74,14 @@ The steps are much like the ones above.
 4. Run the application.
 
 # Revision History
+
+## v1.9.632
+
+* Issue [#72](https://github.com/tyoma/micro-profiler/issues/72) fixed - aux socket handshake is sent asnychronously only after the socket is synchronously connected;
+* Issue/request [#73](https://github.com/tyoma/micro-profiler/issues/73) implemented - trace buffers are now allocated/freed in an adaptive manner - traces for threads that don't generate any traffic are trimmed, while others get expanded if necessary;
+* A pesky bug of crashing on closing profiler's pane in Visual Studio from keyboard is fixed;
+* Text rendition improved - strings abridged in the list views are now appended with ellipsis;
+* 10-25% performance improvement in Windows x64 due to critical collection part reimplemented in optimized assembler code and better buffering.
 
 ## v1.8.631
 

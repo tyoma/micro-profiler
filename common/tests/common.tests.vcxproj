@@ -48,7 +48,9 @@
     <ClCompile Include="TextConversionTests.cpp" />
     <ClCompile Include="TextFormattingServicesTests.cpp" />
     <ClCompile Include="TypesTests.cpp" />
-    <ClCompile Include="UnorderedMapTests.cpp" />
+    <ClCompile Include="UnorderedMapTests.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

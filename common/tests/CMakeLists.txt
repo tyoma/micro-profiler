@@ -13,7 +13,7 @@ set(COMMON_TEST_SOURCES
 	TextConversionTests.cpp
 	TextFormattingServicesTests.cpp
 	TypesTests.cpp
-	UnorderedMapTests.cpp
+#	UnorderedMapTests.cpp
 )
 
 add_library(common.tests SHARED ${COMMON_TEST_SOURCES})

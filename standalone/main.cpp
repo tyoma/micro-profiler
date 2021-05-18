@@ -86,6 +86,7 @@ namespace micro_profiler
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 			&constants::standalone_frontend_id);
 
+		ipc_manager.enable_remote_sockets(true);
 		main_form->set_visible(true);
 		app.run();
 	}

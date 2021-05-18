@@ -25,11 +25,15 @@
 #include <functional>
 #include <list>
 #include <vector>
+#include <unordered_map>
 
 namespace micro_profiler
 {
 	namespace containers
 	{
+#if 1
+		using std::unordered_map;
+#else
 		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT>, typename Comparer = std::equal_to<KeyT> >
 		class unordered_map : std::list< std::pair<const KeyT, ValueT> >
 		{
@@ -237,5 +241,6 @@ namespace micro_profiler
 			buckets _buckets;
 			Hasher _hasher;
 		};
+#endif
 	}
 }

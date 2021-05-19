@@ -46,27 +46,17 @@ namespace scheduler
 
 	task_queue::wake_up task_queue::execute_ready(mt::milliseconds max_duration)
 	{
-		mt::unique_lock<mt::mutex> lock(_mutex);
 		auto now = _clock();
+		mt::unique_lock<mt::mutex> lock(_mutex);
 
-		for (const auto deadline = now + max_duration; now < deadline; now = _clock())
+		for (const auto deadline = now + max_duration; now < deadline && !_tasks.empty() && _tasks.top().deadline <= now;
+			now = _clock(), lock.lock())
 		{
-			if (!_tasks.empty())
-			{
-				auto &dt = _tasks.top();
+			auto task = move(_tasks.top().task);
 
-				if (dt.deadline <= now)
-				{
-					auto task = move(dt.task);
-
-					_tasks.pop();
-					lock.unlock();
-					task();
-					lock.lock();
-					continue;
-				}
-			}
-			break;
+			_tasks.pop();
+			lock.unlock();
+			task();
 		}
 
 		if (_tasks.empty())

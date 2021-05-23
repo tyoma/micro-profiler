@@ -96,18 +96,14 @@ ELSEIFDEF _M_X64
 		pop	rax
 	endm
 
-	RDTSC64	macro
-		rdtsc
-		shl	rdx, 20h
-		or		rdx, rax
-	endm
-
 	_penter	proc
 		PUSHREGS
 
+		rdtsc
 		mov	rcx, [g_collector_ptr]
 		mov	r8, qword ptr [rsp + 28h]
-		RDTSC64
+		shl	rdx, 20h
+		or		rdx, rax
 		call ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
 		POPREGS
@@ -117,9 +113,11 @@ ELSEIFDEF _M_X64
 	_pexit	proc
 		PUSHREGS
 
+		rdtsc
 		mov	rcx, [g_collector_ptr]
 		xor	r8, r8
-		RDTSC64
+		shl	rdx, 20h
+		or		rdx, rax
 		call ?track@calls_collector@micro_profiler@@QEAAX_JPEBX@Z
 
 		POPREGS

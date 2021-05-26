@@ -44,8 +44,8 @@ namespace micro_profiler
 		send(init, idata);
 	}
 
-	void statistics_bridge::analyze()
-	{	_collector.read_collected(_analyzer);	}
+	bool statistics_bridge::analyze()
+	{	return _collector.read_collected(_analyzer);	}
 
 	void statistics_bridge::update_frontend()
 	{

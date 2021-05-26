@@ -44,7 +44,7 @@ namespace micro_profiler
 		struct acceptor;
 
 		virtual ~calls_collector_i() {	}
-		virtual void read_collected(acceptor &a) = 0;
+		virtual bool read_collected(acceptor &a) = 0;
 	};
 
 	struct calls_collector_i::acceptor
@@ -60,7 +60,7 @@ namespace micro_profiler
 
 		void set_buffering_policy(const buffering_policy &policy);
 
-		virtual void read_collected(acceptor &a);
+		virtual bool read_collected(acceptor &a) override;
 
 		static void CC_(fastcall) on_enter(calls_collector *instance, const void **stack_ptr,
 			timestamp_t timestamp, const void *callee) _CC(fastcall);

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <agge/hybrid_event.h>
 #include <collector/types.h>
 #include <common/noncopyable.h>
 #include <common/platform.h>
@@ -49,7 +50,7 @@ namespace micro_profiler
 		void track(const void *callee, timestamp_t timestamp) throw();
 
 		void flush();
-		void read_collected(const reader_t &reader);
+		bool read_collected(const reader_t &reader);
 		void set_buffering_policy(const buffering_policy &policy);
 
 	private:
@@ -86,7 +87,7 @@ namespace micro_profiler
 		std::unique_ptr<buffer_ptr[]> _empty_buffers;
 		buffer_ptr *_empty_buffers_top;
 		allocator &_allocator;
-		mt::event _continue;
+		agge::hybrid_event _continue;
 		mt::mutex _mtx;
 	};
 

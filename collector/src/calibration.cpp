@@ -52,7 +52,8 @@ namespace micro_profiler
 
 			run_load(&empty_call_instrumented, iterations);
 			collector.flush();
-			collector.read_collected(nr);
+			while (collector.read_collected(nr))
+			{	}
 		}
 
 		timestamp_t start_ref = read_tick_counter();
@@ -67,7 +68,8 @@ namespace micro_profiler
 		analyzer a(o);
 
 		collector.flush();
-		collector.read_collected(a);
+		while (collector.read_collected(a))
+		{	}
 
 		if (1u == a.size())
 		{

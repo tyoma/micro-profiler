@@ -46,16 +46,18 @@ namespace micro_profiler
 		_policy = policy;
 	}
 
-	void calls_collector::read_collected(acceptor &a)
+	bool calls_collector::read_collected(acceptor &a)
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
+		auto keep_reading = false;
 
 		for (auto i = _call_traces.begin(); i != _call_traces.end(); ++i)
 		{
-			i->second->read_collected([&a, i] (const call_record *calls, size_t count)	{
+			keep_reading |= i->second->read_collected([&a, i] (const call_record *calls, size_t count)	{
 				a.accept_calls(i->first, calls, count);
 			});
 		}
+		return keep_reading;
 	}
 
 	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void **stack_ptr,

@@ -43,7 +43,7 @@ namespace micro_profiler
 			const std::shared_ptr<module_tracker> &module_tracker_,
 			const std::shared_ptr<thread_monitor> &thread_monitor_);
 
-		void analyze();
+		bool analyze();
 		void update_frontend();
 		void send_module_metadata(unsigned int persistent_id);
 		void send_thread_info(const std::vector<thread_monitor::thread_id> &ids);

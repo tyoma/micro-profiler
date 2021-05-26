@@ -102,11 +102,10 @@ namespace micro_profiler
 		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker, _thread_monitor));
 		function<void ()> analyze;
 		const auto analyze_ = [&] {
-			_bridge->analyze();
-			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
+			_queue.schedule(function<void ()>(analyze), _bridge->analyze() ? mt::milliseconds(0) : mt::milliseconds(1));
 		};
 
-		_queue.schedule(function<void ()>(analyze = analyze_), mt::milliseconds(10));
+		_queue.schedule(function<void ()>(analyze = analyze_));
 		while (!_exit)
 		{
 			_queue.wait();

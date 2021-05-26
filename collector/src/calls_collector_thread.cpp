@@ -108,34 +108,36 @@ namespace micro_profiler
 		}
 	}
 
-	void calls_collector_thread::read_collected(const reader_t &reader)
+	bool calls_collector_thread::read_collected(const reader_t &reader)
 	{
-		auto n = _policy.max_buffers(); // Untested: even under a heavy load, analyzer thread shall be responsible.
 		auto ready_n = 0;
+		buffer_ptr ready;
 
-		for (buffer_ptr ready; n-- && _ready_buffers.consume([&ready] (buffer_ptr &b) {
+		if (_ready_buffers.consume([&ready] (buffer_ptr &b) {
 			swap(ready, b);
 		}, [&ready_n] (int n) -> bool {
-			if (n > ready_n)
-				ready_n = n;
+			ready_n = n;
 			return !!n;
-		}); )
+		}))
 		{
 			reader(ready->data, ready->size);
-			_mtx.lock();
-				const bool notify_continue = _empty_buffers_top == _empty_buffers.get();
-				swap(*_empty_buffers_top++, ready);
-			_mtx.unlock();
-			if (notify_continue)
-				_continue.set();
 		}
 
-		mt::lock_guard<mt::mutex> l(_mtx);
-		const bool notify_continue = _empty_buffers_top == _empty_buffers.get();
+		bool notify_continue = false;
 
-		adjust_empty_buffers(_policy, static_cast<size_t>(ready_n));
+		{
+			mt::lock_guard<mt::mutex> l(_mtx);
+
+			if (ready)
+			{
+				notify_continue = _empty_buffers_top == _empty_buffers.get();
+				swap(*_empty_buffers_top++, ready);
+			}
+			adjust_empty_buffers(_policy, static_cast<size_t>(ready_n));
+		}
 		if (notify_continue)
-			_continue.set();
+			_continue.signal();
+		return !!ready_n;
 	}
 
 	void calls_collector_thread::set_buffering_policy(const buffering_policy &policy)
@@ -165,7 +167,7 @@ namespace micro_profiler
 	{
 		auto empty_n = static_cast<size_t>(_empty_buffers_top - _empty_buffers.get());
 		const auto high_water = policy.max_empty() + base_n;
-		const auto low_water = policy.min_empty() + base_n;
+		const auto low_water = policy.min_empty();
 
 		for (; empty_n > high_water; empty_n--)
 			(--_empty_buffers_top)->reset(), --_allocated_buffers;

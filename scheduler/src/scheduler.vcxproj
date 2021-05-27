@@ -34,11 +34,13 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\private_queue.h" />
     <ClInclude Include="..\scheduler.h" />
     <ClInclude Include="..\task_queue.h" />
     <ClInclude Include="..\ui_queue.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="private_queue.cpp" />
     <ClCompile Include="task_queue.cpp" />
     <ClCompile Include="ui_queue_android.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>

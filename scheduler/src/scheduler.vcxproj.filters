@@ -4,6 +4,7 @@
     <ClInclude Include="..\task_queue.h" />
     <ClInclude Include="..\scheduler.h" />
     <ClInclude Include="..\ui_queue.h" />
+    <ClInclude Include="..\private_queue.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -18,6 +19,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="ui_queue_android.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="private_queue.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

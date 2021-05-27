@@ -54,6 +54,7 @@
     <ClCompile Include="helpers_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="TaskQueueTests.cpp" />
     <ClCompile Include="UIQueueTests.cpp" />
   </ItemGroup>

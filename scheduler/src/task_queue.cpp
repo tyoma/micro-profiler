@@ -24,18 +24,38 @@ using namespace std;
 
 namespace scheduler
 {
+	namespace
+	{
+		class scope_guard
+		{
+		public:
+			scope_guard(bool &in_scope)
+				: _in_scope(in_scope)
+			{	_in_scope = true;	}
+
+			~scope_guard()
+			{	_in_scope = false;	}
+
+		private:
+			void operator =(const scope_guard &rhs);
+
+		private:
+			bool &_in_scope;
+		};
+	}
+
 	bool task_queue::deadlined_task::operator <(const deadlined_task &rhs) const
 	{	return deadline > rhs.deadline ? true : deadline < rhs.deadline ? false : order > rhs.order;	}
 
 	task_queue::task_queue(const clock &clock_)
-		: _clock(clock_), _order(0)
+		: _clock(clock_), _order(0), _omit_notify(false)
 	{	}
 
 	task_queue::wake_up task_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
 	{
 		mt::lock_guard<mt::mutex> lock(_mutex);
 		deadlined_task t = {	move(task), _clock() + defer_by, _order++	};
-		const auto notify = _tasks.empty() || t.deadline < _tasks.top().deadline;
+		const auto notify = !_omit_notify && (_tasks.empty() || t.deadline < _tasks.top().deadline);
 
 #if _MSC_VER && _MSC_VER == 1600 // MSVC 10.0
 		task = function<void ()>();
@@ -48,6 +68,7 @@ namespace scheduler
 	{
 		auto now = _clock();
 		mt::unique_lock<mt::mutex> lock(_mutex);
+		scope_guard inhibit_notifications(_omit_notify);
 
 		for (const auto deadline = now + max_duration; now < deadline && !_tasks.empty() && _tasks.top().deadline <= now;
 			now = _clock(), lock.lock())

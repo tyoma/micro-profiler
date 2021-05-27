@@ -241,6 +241,48 @@ namespace scheduler
 				queue->schedule(move(ft));
 			}
 
+
+			test( SchedulingFromATaskDoesRequireWakeUp )
+			{
+				// INIT
+				queue_ptr queue(create_queue());
+				task_queue::wake_up wu(mt::milliseconds(123), true);
+
+				queue->schedule([&] {
+					wu = queue->schedule([] {});
+				});
+
+				// ACT
+				queue->execute_ready(mt::milliseconds(10));
+
+				// ASSERT
+				assert_equal(task_queue::wake_up(mt::milliseconds(0), false), wu);
+
+				// ACT / ASSERT (restores notifications)
+				assert_equal(task_queue::wake_up(mt::milliseconds(12), true), queue->schedule([] {}, mt::milliseconds(12)));
+				assert_equal(task_queue::wake_up(mt::milliseconds(0), true), queue->schedule([] {}));
+			}
+
+
+			test( NotificationsAreRestoredAfterTheException )
+			{
+				// INIT
+				queue_ptr queue(create_queue());
+				auto flag = false;
+
+				queue->schedule([] {	throw 0;	});
+				queue->schedule([&] {	flag = true;	}, mt::milliseconds(100));
+
+				// ACT / ASSERT
+				assert_throws(queue->execute_ready(mt::milliseconds(10)), int);
+
+				// ASSERT
+				assert_is_false(flag);
+
+				// ACT / ASSERT
+				assert_equal(task_queue::wake_up(mt::milliseconds(0), true), queue->schedule([] {}, mt::milliseconds(0)));
+			}
+
 		end_test_suite
 
 

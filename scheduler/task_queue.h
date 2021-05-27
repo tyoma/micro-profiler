@@ -57,5 +57,6 @@ namespace scheduler
 		mt::event _ready;
 		mt::mutex _mutex;
 		unsigned long long _order;
+		bool _omit_notify;
 	};
 }

@@ -28,6 +28,11 @@
 #include <functional>
 #include <ipc/endpoint.h>
 
+namespace scheduler
+{
+	struct queue;
+}
+
 namespace micro_profiler
 {
 	class functions_list;
@@ -37,7 +42,7 @@ namespace micro_profiler
 	class frontend : public ipc::channel, noncopyable, public std::enable_shared_from_this<frontend>
 	{
 	public:
-		frontend(ipc::channel &outbound);
+		frontend(ipc::channel &outbound, std::shared_ptr<scheduler::queue> queue);
 		~frontend();
 
 		void disconnect_session() throw();
@@ -53,15 +58,19 @@ namespace micro_profiler
 		template <typename DataT>
 		void send(messages_id command, const DataT &data);
 
+		void update_and_schedule(std::shared_ptr<bool> alive);
+
 		std::shared_ptr<symbol_resolver> get_resolver();
 		std::shared_ptr<threads_model> get_threads();
 
 	private:
 		ipc::channel &_outbound;
+		std::shared_ptr<scheduler::queue> _queue;
 		std::shared_ptr<symbol_resolver> _resolver;
 		std::shared_ptr<threads_model> _threads;
 		std::shared_ptr<functions_list> _model;
 		pod_vector<byte> _buffer;
 		scontext::wire _serialization_context;
+		std::shared_ptr<bool> _alive;
 	};
 }

@@ -26,6 +26,7 @@
 
 #include <common/memory.h>
 #include <logger/log.h>
+#include <scheduler/scheduler.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 
@@ -35,12 +36,13 @@ using namespace std;
 
 namespace micro_profiler
 {
-	frontend::frontend(ipc::channel &outbound)
-		: _outbound(outbound)
+	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
+		: _outbound(outbound), _queue(queue), _alive(make_shared<bool>(true))
 	{	LOG(PREAMBLE "constructed...") % A(this);	}
 
 	frontend::~frontend()
 	{
+		*_alive = false;
 		LOG(PREAMBLE "destroyed...") % A(this);
 	}
 
@@ -69,6 +71,7 @@ namespace micro_profiler
 			archive(idata);
 			_model = functions_list::create(idata.ticks_per_second, get_resolver(), get_threads());
 			initialized(idata.executable, _model);
+			update_and_schedule(_alive);
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			break;
 
@@ -113,6 +116,15 @@ namespace micro_profiler
 		archive(command);
 		archive(data);
 		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
+	}
+
+	void frontend::update_and_schedule(shared_ptr<bool> alive)
+	{
+		if (*alive)
+		{
+			send(request_update, 0 /*not being used yet*/);
+			_queue->schedule([this, alive] {	update_and_schedule(alive);	}, mt::milliseconds(33));
+		}
 	}
 
 	shared_ptr<symbol_resolver> frontend::get_resolver()

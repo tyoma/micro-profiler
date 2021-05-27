@@ -73,6 +73,10 @@ namespace micro_profiler
 
 		switch (d(c), c)
 		{
+		case request_update:
+			_queue.schedule([this] {	_bridge->update_frontend();	});
+			break;
+
 		case request_module_metadata:
 			d(persistent_id);
 			_queue.schedule([this, persistent_id] {	_bridge->send_module_metadata(persistent_id);	});
@@ -100,14 +104,8 @@ namespace micro_profiler
 		const auto analyze_ = [&] {
 			_queue.schedule(function<void ()>(analyze), _bridge->analyze() ? mt::milliseconds(0) : mt::milliseconds(1));
 		};
-		function<void ()> update_frontend;
-		const auto update_frontend_ = [&] {
-			_bridge->update_frontend();
-			_queue.schedule(function<void ()>(update_frontend), mt::milliseconds(25));
-		};
 
 		_queue.schedule(function<void ()>(analyze = analyze_));
-		_queue.schedule(function<void ()>(update_frontend = update_frontend_), mt::milliseconds(25));
 		while (!_exit)
 		{
 			_queue.wait();

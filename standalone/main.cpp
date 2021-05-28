@@ -81,7 +81,7 @@ namespace micro_profiler
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};
-		auto frontend_manager_ = make_shared<frontend_manager>(ui_factory);
+		auto frontend_manager_ = make_shared<frontend_manager>(ui_factory, app.get_ui_queue());
 		ipc_manager ipc_manager(frontend_manager_, app.get_ui_queue(),
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 			&constants::standalone_frontend_id);

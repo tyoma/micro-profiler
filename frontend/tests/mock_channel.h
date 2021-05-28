@@ -17,13 +17,14 @@ namespace micro_profiler
 			{
 			public:
 				outbound_channel()
-					: disconnected(false)
+					: disconnected(false), requested_upadtes(0u)
 				{	}
 
 			public:
 				bool disconnected;
 				std::vector<unsigned int /*persistent_id*/> requested_metadata;
 				std::vector< std::vector<unsigned int /*thread_id*/> > requested_threads;
+				unsigned requested_upadtes;
 
 			private:
 				virtual void disconnect() throw()
@@ -37,6 +38,10 @@ namespace micro_profiler
 
 					switch (d(c), c)
 					{
+					case request_update:
+						requested_upadtes++;
+						break;
+
 					case request_module_metadata:
 						requested_metadata.push_back(0), d(requested_metadata.back());
 						break;

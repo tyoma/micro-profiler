@@ -27,6 +27,7 @@
 #include <common/protocol.h>
 #include <functional>
 #include <ipc/endpoint.h>
+#include <scheduler/private_queue.h>
 
 namespace micro_profiler
 {
@@ -37,18 +38,20 @@ namespace micro_profiler
 	class frontend : public ipc::channel, noncopyable, public std::enable_shared_from_this<frontend>
 	{
 	public:
-		frontend(ipc::channel &outbound);
+		frontend(ipc::channel &outbound, std::shared_ptr<scheduler::queue> queue);
 		~frontend();
 
 		void disconnect_session() throw();
 
 	public:
-		std::function<void(const std::string &process_name, const std::shared_ptr<functions_list> &model)> initialized;
+		std::function<void (const std::string &process_name, const std::shared_ptr<functions_list> &model)> initialized;
 
 	private:
 		// ipc::channel methods
 		virtual void disconnect() throw() override;
 		virtual void message(const_byte_range payload) override;
+
+		void schedule_update_request();
 
 		template <typename DataT>
 		void send(messages_id command, const DataT &data);
@@ -63,5 +66,6 @@ namespace micro_profiler
 		std::shared_ptr<functions_list> _model;
 		pod_vector<byte> _buffer;
 		scontext::wire _serialization_context;
+		scheduler::private_queue _queue;
 	};
 }

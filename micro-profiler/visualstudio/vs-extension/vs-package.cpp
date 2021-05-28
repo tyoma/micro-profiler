@@ -142,7 +142,7 @@ namespace micro_profiler
 			});
 			setup_factory(factory);
 			register_path(false);
-			_frontend_manager.reset(new frontend_manager(bind(&profiler_package::create_ui, this, _1, _2)));
+			_frontend_manager.reset(new frontend_manager(bind(&profiler_package::create_ui, this, _1, _2), _ui_queue));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
 				_ui_queue,
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),

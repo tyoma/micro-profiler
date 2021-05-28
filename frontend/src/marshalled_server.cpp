@@ -49,14 +49,14 @@ namespace micro_profiler
 	{
 	public:
 		lifetime()
-			: _alive(make_shared<bool>(true))
+			: _alive(true)
 		{	}
 
 		void mark_destroyed()
 		{
 			mt::lock_guard<mt::mutex> l(_mtx);
 
-			*_alive = false;
+			_alive = false;
 		}
 
 		template <typename F>
@@ -64,7 +64,7 @@ namespace micro_profiler
 		{
 			mt::lock_guard<mt::mutex> l(_mtx);
 
-			if (*_alive)
+			if (_alive)
 				f();
 		}
 
@@ -74,7 +74,7 @@ namespace micro_profiler
 
 	private:
 		mt::mutex _mtx;
-		shared_ptr<bool> _alive;
+		bool _alive;
 	};
 
 	marshalled_server::outbound_wrapper::outbound_wrapper(ipc::channel &underlying)

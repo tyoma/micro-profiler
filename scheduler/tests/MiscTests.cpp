@@ -34,11 +34,10 @@ namespace scheduler
 
 				// INIT / ACT
 				private_queue pq(u);
-				queue &q = pq;
 
 				// ACT
-				q.schedule([&] { a = true;	});
-				q.schedule([&] { b = true;	}, mt::milliseconds(121));
+				pq.schedule([&] { a = true;	});
+				pq.schedule([&] { b = true;	}, mt::milliseconds(121));
 
 				// ASSERT
 				assert_equal(2u, u->tasks.size());
@@ -90,7 +89,7 @@ namespace scheduler
 				x = nullptr;
 
 				// ACT
-				pq.schedule(move(f), mt::milliseconds(0));
+				pq.schedule(move(f));
 				u->tasks[0].first();
 
 				// ASSERT

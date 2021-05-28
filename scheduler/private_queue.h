@@ -24,13 +24,15 @@
 
 namespace scheduler
 {
-	class private_queue : public queue
+	struct queue;
+
+	class private_queue
 	{
 	public:
 		explicit private_queue(std::shared_ptr<queue> underlying);
 		~private_queue();
 
-		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by) override;
+		void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0));
 
 	private:
 		struct control_block;

@@ -4,6 +4,7 @@
 #include "mock_channel.h"
 
 #include <strmd/serializer.h>
+#include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -16,6 +17,12 @@ namespace micro_profiler
 		namespace
 		{
 			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
+
+			initialization_data make_initialization_data(const string &executable, timestamp_t ticks_per_second)
+			{
+				initialization_data idata = {	executable, ticks_per_second };
+				return idata;
+			}
 
 			template <typename CommandDataT>
 			void write(ipc::channel &channel, messages_id c, const CommandDataT &data)
@@ -31,17 +38,25 @@ namespace micro_profiler
 
 		begin_test_suite( FrontendTests )
 
+			shared_ptr<mocks::queue> queue;
 			mocks::outbound_channel outbound;
 			shared_ptr<frontend> frontend_;
 			shared_ptr<functions_list> model;
 
 			init( Init )
 			{
-				initialization_data idata = {	string(), 1000	};
-
-				frontend_.reset(new frontend(outbound));
+				queue = make_shared<mocks::queue>();
+				frontend_.reset(new frontend(outbound, queue));
 				frontend_->initialized = [&] (string, shared_ptr<functions_list> model_) { model = model_; };
-				write(*frontend_, (init), idata);
+			}
+
+
+			test( NewlyCreatedFrontendSchedulesNothing )
+			{
+				// INIT/ ACT (done in Init)
+
+				// ASSERT
+				assert_is_empty(queue->tasks);
 			}
 
 
@@ -51,6 +66,8 @@ namespace micro_profiler
 				pair< unsigned, unthreaded_statistic_types::function_detailed > data1[] = {
 					make_pair(1321222, unthreaded_statistic_types::function_detailed()),
 				};
+
+				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
 
 				// ACT
 				write(*frontend_, response_statistics_update, make_single_threaded(data1, 12));
@@ -69,6 +86,64 @@ namespace micro_profiler
 
 				assert_equal(2u, outbound.requested_threads.size());
 				assert_equivalent(reference2, outbound.requested_threads[1]);
+			}
+
+
+			test( NewlyCreatedFrontendSchedulesAnUpdateRequest )
+			{
+				// ACT
+				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
+
+				// ASSERT
+				assert_equal(1u, queue->tasks.size());
+				assert_equal(mt::milliseconds(25), queue->tasks[0].second);
+				assert_equal(0u, outbound.requested_upadtes);
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_is_empty(queue->tasks);
+				assert_equal(1u, outbound.requested_upadtes);
+			}
+
+
+			test( UpdateCompletionTriggersSchedulingNextRequest )
+			{
+				// INIT
+				pair< unsigned, unthreaded_statistic_types::function_detailed > data1[] = {
+					make_pair(1321222, unthreaded_statistic_types::function_detailed()),
+				};
+
+				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
+
+				// ACT
+				write(*frontend_, response_statistics_update, make_single_threaded(data1, 12));
+
+				// ASSERT
+				assert_equal(2u, queue->tasks.size());
+				assert_equal(mt::milliseconds(25), queue->tasks[1].second);
+				assert_equal(0u, outbound.requested_upadtes);
+
+				// ACT
+				queue->run_till_end();
+
+				// ASSERT
+				assert_equal(2u, outbound.requested_upadtes);
+			}
+
+
+			test( ScheduledTaskDoesNothingAfterTheFrontendIsDestroyed )
+			{
+				// INIT
+				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
+
+				// ACT
+				frontend_.reset();
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(0u, outbound.requested_upadtes);
 			}
 		end_test_suite
 	}

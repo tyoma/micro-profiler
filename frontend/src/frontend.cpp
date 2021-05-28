@@ -35,14 +35,17 @@ using namespace std;
 
 namespace micro_profiler
 {
-	frontend::frontend(ipc::channel &outbound)
-		: _outbound(outbound)
+	namespace
+	{
+		const mt::milliseconds c_updateInterval(25);
+	}
+
+	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
+		: _outbound(outbound), _queue(queue)
 	{	LOG(PREAMBLE "constructed...") % A(this);	}
 
 	frontend::~frontend()
-	{
-		LOG(PREAMBLE "destroyed...") % A(this);
-	}
+	{	LOG(PREAMBLE "destroyed...") % A(this);	}
 
 	void frontend::disconnect_session() throw()
 	{
@@ -69,6 +72,7 @@ namespace micro_profiler
 			archive(idata);
 			_model = functions_list::create(idata.ticks_per_second, get_resolver(), get_threads());
 			initialized(idata.executable, _model);
+			schedule_update_request();
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			break;
 
@@ -86,6 +90,7 @@ namespace micro_profiler
 			if (_model)
 				archive(*_model, _serialization_context);
 			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
+			schedule_update_request();
 			break;
 
 		case response_module_metadata:
@@ -103,6 +108,9 @@ namespace micro_profiler
 			break;
 		}
 	}
+
+	void frontend::schedule_update_request()
+	{	_queue.schedule([this] {	send(request_update, 0);	}, c_updateInterval);	}
 
 	template <typename DataT>
 	void frontend::send(messages_id command, const DataT &data)

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "mocks_allocator.h"
-
 #include <collector/calls_collector.h>
 #include <collector/thread_monitor.h>
 
@@ -24,7 +22,7 @@ namespace micro_profiler
 				unsigned invoke_destructors(mt::thread::id thread_id);
 
 			private:
-				virtual void at_thread_exit(const atexit_t &handler);
+				virtual void at_thread_exit(const atexit_t &handler) override;
 
 			private:
 				mt::mutex _mutex;
@@ -46,8 +44,7 @@ namespace micro_profiler
 				thread_id provide_this_id;
 
 			private:
-				virtual thread_id register_self();
-				virtual void update_live_info(thread_info &info, thread_monitor::thread_id native_id) const;
+				virtual thread_id register_self() override;
 
 			private:
 				unsigned _next_id;
@@ -56,30 +53,29 @@ namespace micro_profiler
 			};
 
 
-			class tracer : public thread_monitor, public thread_callbacks, public allocator, public calls_collector
+			class tracer : public calls_collector_i
 			{
 			public:
-				tracer();
+				virtual void read_collected(acceptor &a) override;
+				virtual void flush() override;
 
-				template <size_t size>
-				void Add(unsigned int threadid, call_record (&array_ptr)[size]);
-
-				virtual void read_collected(acceptor &a);
-
-			private:
-				typedef containers::unordered_map< unsigned int, std::vector<call_record> > TracesMap;
-
-				TracesMap _traces;
-				mt::mutex _mutex;
+			public:
+				std::function<void (acceptor &a)> on_read_collected;
+				std::function<void ()> on_flush;
 			};
 
 
 
-			template <size_t size>
-			inline void tracer::Add(unsigned int threadid, call_record (&trace_chunk)[size])
+			inline void tracer::read_collected(acceptor &a)
 			{
-				mt::lock_guard<mt::mutex> l(_mutex);
-				_traces[threadid].insert(_traces[threadid].end(), trace_chunk, trace_chunk + size);
+				if (on_read_collected)
+					on_read_collected(a);
+			}
+
+			inline void tracer::flush()
+			{
+				if (on_flush)
+					on_flush();
 			}
 		}
 	}

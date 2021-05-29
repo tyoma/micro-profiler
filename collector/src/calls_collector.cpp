@@ -58,6 +58,12 @@ namespace micro_profiler
 		}
 	}
 
+	void calls_collector::flush()
+	{
+		if (auto *trace = _trace_pointers_tls.get())
+			trace->flush();
+	}
+
 	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void **stack_ptr,
 		timestamp_t timestamp, const void *callee)
 	{	instance->get_current_thread_trace().on_enter(stack_ptr, timestamp, callee);	}
@@ -70,12 +76,6 @@ namespace micro_profiler
 	void calls_collector::track(timestamp_t timestamp, const void *callee)
 	{	get_current_thread_trace().track(callee, timestamp);	}
 #endif
-
-	void calls_collector::flush()
-	{
-		if (calls_collector_thread *trace = _trace_pointers_tls.get())
-			trace->flush();
-	}
 
 	calls_collector_thread &calls_collector::get_current_thread_trace()
 	{

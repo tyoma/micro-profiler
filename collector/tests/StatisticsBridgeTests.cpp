@@ -109,12 +109,8 @@ namespace micro_profiler
 			{
 				// INIT
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
-				call_record trace[] = {
-					{	0, addr(0x1223)	},
-					{	10 + c_overhead.inner, addr(0)	},
-				};
 
-				cc->Add(1221, trace);
+				cc->on_read_collected = [] (calls_collector_i::acceptor &/*a*/) {	assert_is_false(true);	};
 
 				// ACT
 				b.update_frontend();
@@ -133,7 +129,9 @@ namespace micro_profiler
 					{	10 + c_overhead.inner, addr(0)	},
 				};
 
-				cc->Add(141, trace);
+				cc->on_read_collected = [&] (calls_collector_i::acceptor &a) {	
+					a.accept_calls(141, trace, 2);
+				};
 
 				b.analyze();
 				b.update_frontend();
@@ -174,8 +172,8 @@ namespace micro_profiler
 				state1->updated = [&] (const mocks::thread_statistics_map &u) { update_log1.push_back(u); };
 				state2->updated = [&] (const mocks::thread_statistics_map &u) { update_log2.push_back(u); };
 
-				cc1.Add(18, trace1);
-				cc2.Add(18881, trace2);
+				cc1.on_read_collected = [&] (calls_collector_i::acceptor &a) {	a.accept_calls(18, trace1, 4);	};
+				cc2.on_read_collected = [&] (calls_collector_i::acceptor &a) {	a.accept_calls(18881, trace2, 6);	};
 
 				// ACT
 				b1.analyze();

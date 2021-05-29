@@ -1,5 +1,6 @@
 #include <micro-profiler.tests/guineapigs/guinea_runner.h>
 
+#include <collector/serialization.h>
 #include <common/constants.h>
 #include <ipc/endpoint.h>
 #include <ipc/misc.h>
@@ -68,8 +69,30 @@ namespace micro_profiler
 
 			struct frontend_factory : mocks::frontend_state, ipc::server
 			{
-				virtual shared_ptr<ipc::channel> create_session(ipc::channel &/*outbound*/)
-				{	return create();	}
+				frontend_factory()
+					: ready(false, false)
+				{	}
+
+				virtual shared_ptr<ipc::channel> create_session(ipc::channel &outbound_)
+				{
+					outbound = &outbound_;
+					ready.set();
+					return create();
+				}
+
+				template <typename FormatterT>
+				void request(const FormatterT &formatter)
+				{
+					vector_adapter message_buffer;
+					strmd::serializer<vector_adapter, packer> ser(message_buffer);
+
+					formatter(ser);
+					ready.wait();
+					outbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				}
+
+				mt::event ready;
+				ipc::channel *outbound;
 			};
 
 			shared_ptr<frontend_factory> frontend_state;
@@ -105,6 +128,7 @@ namespace micro_profiler
 
 				// ACT
 				controller->sessions[0]->load_module("symbol_container_2_instrumented");
+				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 
 				// ASSERT
 				ready.wait();
@@ -114,19 +138,25 @@ namespace micro_profiler
 			test( ModuleUnloadedIsPostOnProfileeUnload )
 			{
 				// INIT
-				mt::event ready;
+				mt::event ready, ready2;
 
 				frontend_state->modules_loaded = bind(&mt::event::set, &ready);
-				frontend_state->modules_unloaded = bind(&mt::event::set, &ready);
+				frontend_state->modules_unloaded = bind(&mt::event::set, &ready2);
 				controller->sessions[0]->load_module("symbol_container_2_instrumented");
+				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_update);
+				});
 
 				ready.wait();
 
 				// ACT
 				controller->sessions[0]->unload_module("symbol_container_2_instrumented");
+				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_update);
+				});
 
 				// ASSERT
-				ready.wait();
+				ready2.wait();
 			}
 
 

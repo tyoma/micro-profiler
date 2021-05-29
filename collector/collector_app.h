@@ -28,7 +28,7 @@
 
 namespace micro_profiler
 {
-	class calls_collector;
+	struct calls_collector_i;
 	class module_tracker;
 	struct overhead;
 	class statistics_bridge;
@@ -41,22 +41,22 @@ namespace micro_profiler
 		typedef std::function<channel_t (ipc::channel &inbound)> frontend_factory_t;
 
 	public:
-		collector_app(const frontend_factory_t &factory, const std::shared_ptr<calls_collector> &collector,
+		collector_app(const frontend_factory_t &factory, const std::shared_ptr<calls_collector_i> &collector,
 			const overhead &overhead_, const std::shared_ptr<thread_monitor> &thread_monitor_);
 		~collector_app();
 
 		void stop();
 
 		// ipc::channel methods
-		virtual void disconnect() throw();
-		virtual void message(const_byte_range command_payload);
+		virtual void disconnect() throw() override;
+		virtual void message(const_byte_range command_payload) override;
 
 	private:
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
 
 	private:
 		scheduler::task_queue _queue;
-		const std::shared_ptr<calls_collector> _collector;
+		const std::shared_ptr<calls_collector_i> _collector;
 		const std::shared_ptr<module_tracker> _module_tracker;
 		const std::shared_ptr<thread_monitor> _thread_monitor;
 		std::unique_ptr<statistics_bridge> _bridge;

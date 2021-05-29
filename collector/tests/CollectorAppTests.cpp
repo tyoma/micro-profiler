@@ -4,6 +4,7 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "mocks_allocator.h"
 
 #include <common/module.h>
 #include <common/time.h>
@@ -38,10 +39,17 @@ namespace micro_profiler
 			shared_ptr<mocks::tracer> collector;
 			shared_ptr<mocks::thread_monitor> tmonitor;
 			ipc::channel *inbound;
+			mt::event inbound_ready;
+
+			CollectorAppTests()
+				: inbound_ready(false, false)
+			{	}
+
 
 			shared_ptr<ipc::channel> create_frontned(ipc::channel &inbound_)
 			{
 				inbound = &inbound_;
+				inbound_ready.set();
 				return state->create();
 			}
 
@@ -60,6 +68,7 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> ser(message_buffer);
 
 				formatter(ser);
+				inbound_ready.wait();
 				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 			}
 
@@ -231,10 +240,12 @@ namespace micro_profiler
 
 				collector_app app(factory, collector, c_overhead, tmonitor);
 
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				ready.wait(); // Guarantee that the load below leads to an individual notification.
 
 				// ACT
 				image image0(c_symbol_container_1);
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				ready.wait();
 
 				// ASSERT
@@ -243,6 +254,7 @@ namespace micro_profiler
 
 				// ACT
 				image image1(c_symbol_container_2);
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				ready.wait();
 
 				// ASSERT
@@ -276,6 +288,7 @@ namespace micro_profiler
 				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				ready.wait();
 
 				// ASSERT
@@ -292,6 +305,7 @@ namespace micro_profiler
 
 				// ACT
 				image1.reset();
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				ready.wait();
 
 				// ASSERT
@@ -306,14 +320,8 @@ namespace micro_profiler
 				// ACT
 				image0.reset();
 				image2.reset();
-
-				for (;;)
-				{
-					ready.wait();
-					mt::lock_guard<mt::mutex> lock(mtx);
-					if (u.size() == 2u)
-						break;
-				}
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				ready.wait();
 
 				// ASSERT
 				unsigned reference2[] = { mmi[0].instance_id, mmi[2].instance_id, };
@@ -323,91 +331,108 @@ namespace micro_profiler
 			}
 
 
-			test( LastBatchIsReportedToFrontend )
-			{
-				// INIT
-				mt::event exit_collector(false, false), ready, update_lock(false, false), updated;
-				vector<mocks::thread_statistics_map> updates;
-
-				state->modules_loaded = bind(&mt::event::set, &ready);
-				state->updated = [&] (const mocks::thread_statistics_map &u) {
-					updates.push_back(u);
-					updated.set();
-					update_lock.wait();
-				};
-
-				mt::thread worker([&] {
-					collector_app app(factory, collector, c_overhead, tmonitor);
-
-					exit_collector.wait();
-				});
-
-				call_record trace1[] = { { 0, (void *)0x1223 }, { 1000, (void *)0 }, };
-				call_record trace2[] = { { 0, (void *)0x12230 }, { 545, (void *)0 }, };
-
-				ready.wait();
-
-				// ACT
-				collector->Add(11710u, trace1);
-				updated.wait();
-				collector->Add(11710u, trace2); // this will be the last batch
-				exit_collector.set();
-				mt::this_thread::sleep_for(mt::milliseconds(100));
-				update_lock.set();	// resume
-				worker.join();
-
-				// ASSERT
-				addressed_statistics reference1[] = {
-					make_statistics(0x1223u, 1, 0, 1000, 1000, 1000),
-				};
-				addressed_statistics reference2[] = {
-					make_statistics(0x12230u, 1, 0, 545, 545, 545),
-				};
-
-				assert_equal(2u, updates.size());
-				assert_not_null(find_by_first(updates[0], 11710u));
-				assert_equivalent(reference1, *find_by_first(updates[0], 11710u));
-				assert_not_null(find_by_first(updates[1], 11710u));
-				assert_equivalent(reference2, *find_by_first(updates[1], 11710u));
-			}
-
-
 			test( CollectorIsFlushedOnDestroy )
 			{
 				// INIT
-				mocks::thread_monitor threads;
-				mocks::thread_callbacks tcallbacks;
-				shared_ptr<calls_collector> collector2(new calls_collector(allocator_, 100000, threads, tcallbacks));
+				auto flushed = false;
+				auto reads_after_flush = 0;
+
+				collector->on_read_collected = [&] (calls_collector_i::acceptor &/*a*/) {
+					if (flushed)
+						reads_after_flush++;
+				};
+				collector->on_flush = [&] {	flushed = true;	};
+
+				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor));
+
+				// ACT
+				app.reset();
+
+				// ASSERT
+				assert_equal(1, reads_after_flush);
+			}
+
+
+			test( LastBatchIsReportedToFrontend )
+			{
+				// INIT
 				mt::event updated;
+				auto flushed = false;
 				vector<mocks::thread_statistics_map> updates;
+
+				collector->on_read_collected = [&] (calls_collector_i::acceptor &a) {
+					call_record trace[] = { { 0, (void *)0x1223 }, { 1001, (void *)0 }, };
+
+					if (flushed)
+						a.accept_calls(11710u, trace, 2);
+				};
+				collector->on_flush = [&] {	flushed = true;	};
 
 				state->updated = [&] (const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
 					updated.set();
 				};
 
-				// ACT
-				mt::thread worker([&] {
-					collector_app app(factory, collector2, c_overhead, tmonitor);
+				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor));
 
-					collector2->track(123456, addr(0x1234567));
-					collector2->track(123460, 0);
-				});
-				worker.join();
+				// ACT
+				app.reset();
 
 				// ASSERT
+				addressed_statistics reference[] = {
+					make_statistics(0x1223u, 1, 0, 1001, 1001, 1001),
+				};
+
 				assert_equal(1u, updates.size());
-				assert_equal(1u, updates[0].size());
-				assert_equal(1u, updates[0].begin()->second.size());
-				assert_equal(0x1234567u, updates[0].begin()->second.begin()->first);
+				assert_not_null(find_by_first(updates[0], 11710u));
+				assert_equivalent(reference, *find_by_first(updates[0], 11710u));
 			}
 
 
-			test( MakeACallAndWaitForDataPost )
+			test( CollectorTracesArePeriodicallyAnalyzed )
 			{
 				// INIT
-				mt::event updated;
+				auto reads = 0;
+				mt::event done;
+
+				collector->on_read_collected = [&] (calls_collector_i::acceptor &/*a*/) {
+					if (++reads == 10)
+						done.set();
+				};
+
+				collector_app app(factory, collector, c_overhead, tmonitor);
+
+				// ACT / ASSERT (must exit)
+				done.wait();
+			}
+
+
+			test( AnalyzedStatisticsIsAvailableOnRequest ) // ex: MakeACallAndWaitForDataPost
+			{
+				// INIT
+				mt::event ready, updated;
 				vector<mocks::thread_statistics_map> updates;
+				mt::mutex mtx;
+				unsigned int tid;
+				vector<call_record> trace;
+				call_record trace1[] = {
+					{	0, (void *)0x1223	},
+					{	1000 + c_overhead.inner, (void *)0	},
+				};
+				call_record trace2[] = {
+					{	10000, (void *)0x31223	},
+					{	14000 + c_overhead.inner, (void *)0	},
+				};
+
+				collector->on_read_collected = [&] (calls_collector_i::acceptor &a) {
+					mt::lock_guard<mt::mutex> l(mtx);
+
+					if (trace.empty())
+						return;
+					a.accept_calls(tid, &trace[0], trace.size());
+					trace.clear();
+					ready.set();
+				};
 
 				state->updated = [&] (const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
@@ -417,16 +442,12 @@ namespace micro_profiler
 				collector_app app(factory, collector, c_overhead, tmonitor);
 
 				// ACT
-				call_record trace1[] = {
-					{	0, (void *)0x1223	},
-					{	1000 + c_overhead.inner, (void *)0	},
-				};
-
-				collector->Add(11710u, trace1);
-
+				{	mt::lock_guard<mt::mutex> l(mtx);	tid = 11710u, trace.assign(trace1, trace1 + 2);	}
+				ready.wait();
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				updated.wait();
 
-				// ASERT
+				// ASSERT
 				addressed_statistics reference1[] = {
 					make_statistics(0x1223u, 1, 0, 1000, 1000, 1000),
 				};
@@ -436,13 +457,9 @@ namespace micro_profiler
 				assert_equivalent(reference1, *find_by_first(updates[0], 11710u));
 
 				// ACT
-				call_record trace2[] = {
-					{	10000, (void *)0x31223	},
-					{	14000 + c_overhead.inner, (void *)0	},
-				};
-
-				collector->Add(11710u, trace2);
-
+				{	mt::lock_guard<mt::mutex> l(mtx);	tid = 11713u, trace.assign(trace2, trace2 + 2);	}
+				ready.wait();
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				updated.wait();
 
 				// ASERT
@@ -452,118 +469,49 @@ namespace micro_profiler
 
 				assert_equal(2u, updates.size());
 				assert_not_null(find_by_first(updates[1], 11710u));
-				assert_equivalent(reference2, *find_by_first(updates[1], 11710u));
-			}
-
-
-			test( PassReentranceCountToFrontend )
-			{
-				// INIT
-				mt::event updated;
-				vector<mocks::thread_statistics_map> updates;
-
-				state->updated = [&] (const mocks::thread_statistics_map &u) {
-					updates.push_back(u);
-					updated.set();
-				};
-
-				collector_app app(factory, collector, c_overhead, tmonitor);
-
-				// ACT
-				call_record trace1[] = {
-					{	1, (void *)0x31000	},
-						{	2, (void *)0x31000	},
-							{	3, (void *)0x31000	},
-								{	4, (void *)0x31000	},
-								{	5, (void *)0	},
-							{	6, (void *)0	},
-						{	7, (void *)0	},
-					{	8, (void *)0	},
-					{	9, (void *)0x31000	},
-						{	10, (void *)0x31000	},
-							{	11, (void *)0x31000	},
-							{	12, (void *)0	},
-						{	13, (void *)0	},
-					{	14, (void *)0	},
-				};
-
-				collector->Add(11710u, trace1);
-
-				updated.wait();
-
-				// ASERT
-				addressed_statistics reference1[] = {
-					make_statistics(0x31000u, 7, 3, 12, 12, 7,
-						make_statistics_base(0x31000u, 5, 0, 13, 8, 5)),
-				};
-
-				assert_equal(1u, updates.size());
-				assert_not_null(find_by_first(updates[0], 11710u));
-				assert_equivalent(reference1, *find_by_first(updates[0], 11710u));
-
-				// ACT
-				call_record trace2[] = {
-					{	1, (void *)0x31000	},
-						{	2, (void *)0x31000	},
-							{	3, (void *)0x31000	},
-								{	4, (void *)0x31000	},
-									{	5, (void *)0x31000	},
-									{	6, (void *)0	},
-								{	7, (void *)0	},
-							{	8, (void *)0	},
-						{	9, (void *)0	},
-					{	10, (void *)0	},
-				};
-
-				collector->Add(11710u, trace2);
-
-				updated.wait();
-
-				// ASERT
-				addressed_statistics reference2[] = {
-					make_statistics(0x31000u, 5, 4, 9, 9, 9,
-						make_statistics_base(0x31000u, 4, 0, 16, 7, 7)),
-				};
-
-				assert_equal(2u, updates.size());
-				assert_not_null(find_by_first(updates[1], 11710u));
-				assert_equivalent(reference2, *find_by_first(updates[1], 11710u));
+				assert_not_null(find_by_first(updates[1], 11713u));
+				assert_is_empty(*find_by_first(updates[1], 11710u));
+				assert_equivalent(reference2, *find_by_first(updates[1], 11713u));
 			}
 
 
 			test( PerformanceDataTakesProfilerLatencyIntoAccount )
 			{
 				// INIT
-				mt::event updated1, updated2;
+				auto reads1 = 0;
+				auto reads2 = 0;
 				mocks::thread_statistics_map u1, u2;
 				overhead o1(13, 0), o2(29, 0);
 				shared_ptr<mocks::tracer> tracer1(new mocks::tracer), tracer2(new mocks::tracer);
 				shared_ptr<mocks::frontend_state> state1(new mocks::frontend_state(tracer1)),
 					state2(new mocks::frontend_state(tracer2));
-
-				state1->updated = [&] (const mocks::thread_statistics_map &u) {
-					u1 = u;
-					updated1.set();
-				};
-				state2->updated = [&] (const mocks::thread_statistics_map &u) {
-					u2 = u;
-					updated2.set();
-				};
-
-				collector_app app1(bind(&mocks::frontend_state::create, state1), tracer1, o1, tmonitor);
-				collector_app app2(bind(&mocks::frontend_state::create, state2), tracer2, o2, tmonitor);
-
-				// ACT
 				call_record trace[] = {
 					{	10000, (void *)0x3171717	},
 					{	14000, (void *)0	},
 				};
 
-				tracer1->Add(11710u, trace);
-				updated1.wait();
+				tracer1->on_read_collected = [&] (calls_collector_i::acceptor &a) {
+					if (!reads1++)
+						a.accept_calls(11710u, trace, 2);
+				};
+				tracer2->on_read_collected = [&] (calls_collector_i::acceptor &a) {
+					if (!reads2++)
+						a.accept_calls(11710u, trace, 2);
+				};
 
-				tracer2->Add(11710u, trace);
-				updated2.wait();
+				state1->updated = [&] (const mocks::thread_statistics_map &u) {
+					u1 = u;
+				};
+				state2->updated = [&] (const mocks::thread_statistics_map &u) {
+					u2 = u;
+				};
+
+				unique_ptr<collector_app> app1(new collector_app(bind(&mocks::frontend_state::create, state1), tracer1, o1, tmonitor));
+				unique_ptr<collector_app> app2(new collector_app(bind(&mocks::frontend_state::create, state2), tracer2, o2, tmonitor));
+
+				// ACT
+				app1.reset();
+				app2.reset();
 
 				// ASSERT
 				addressed_statistics reference1[] = {
@@ -575,57 +523,6 @@ namespace micro_profiler
 
 				assert_equivalent(reference1, *find_by_first(u1, 11710u));
 				assert_equivalent(reference2, *find_by_first(u2, 11710u));
-			}
-
-
-			test( ChildrenStatisticsIsPassedAlongWithTopLevels )
-			{
-				// INIT
-				mt::event updated;
-				mocks::thread_statistics_map u;
-
-				state->updated = [&] (const mocks::thread_statistics_map &u_) {
-					u = u_;
-					updated.set();
-				};
-
-				collector_app app(factory, collector, overhead(7, 10), tmonitor);
-
-				// ACT
-				call_record trace[] = {
-					{	1, (void *)0x31000	},
-						{	20, (void *)0x37000	},
-						{	50, (void *)0	},
-						{	51, (void *)0x41000	},
-						{	70, (void *)0	},
-						{	72, (void *)0x37000	},
-						{	90, (void *)0	},
-					{	120, (void *)0	},
-					{	1000, (void *)0x11000	},
-						{	1010, (void *)0x13000	},
-						{	1100, (void *)0	},
-					{	1400, (void *)0	},
-					{	1420, (void *)0x13000	},
-					{	1490, (void *)0	},
-				};
-
-				collector->Add(11710u, trace);
-
-				updated.wait();
-
-				// ASSERT
-				addressed_statistics reference[] = {
-					make_statistics(0x11000u, 1, 0, 376, 293, 376,
-						make_statistics_base(0x13000u, 1, 0, 83, 83, 83)),
-					make_statistics(0x13000u, 2, 0, 146, 146, 83),
-					make_statistics(0x31000u, 1, 0, 61, 15, 61,
-						make_statistics_base(0x37000u, 2, 0, 34, 34, 23),
-						make_statistics_base(0x41000u, 1, 0, 12, 12, 12)),
-					make_statistics(0x37000u, 2, 0, 34, 34, 23),
-					make_statistics(0x41000u, 1, 0, 12, 12, 12),
-				};
-
-				assert_equivalent(reference, *find_by_first(u, 11710u));
 			}
 
 
@@ -652,19 +549,11 @@ namespace micro_profiler
 
 				collector_app app(factory, collector, c_overhead, tmonitor);
 
-				ready.wait();
-				l.clear();
-
 				image image0(c_symbol_container_1);
 				image image1(c_symbol_container_2);
 
-				for (;;)
-				{
-					ready.wait();
-					mt::lock_guard<mt::mutex> lock(mtx);
-					if (l.size() == 2u)
-						break;
-				}
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				ready.wait();
 
 				const mapped_module_identified mmi[] = {
 					*find_module(l, image0.absolute_path()),
@@ -717,17 +606,12 @@ namespace micro_profiler
 				tmonitor->add_info(2 /*thread_id*/, ti[1]);
 				tmonitor->add_info(19 /*thread_id*/, ti[2]);
 
-				state->modules_loaded = [&] (const loaded_modules &) {
-					ready.set();
-				};
 				state->threads_received = [&] (const vector< pair<unsigned /*thread_id*/, thread_info> > &threads_) {
 					threads = threads_;
 					ready.set();
 				};
 
 				collector_app app(factory, collector, c_overhead, tmonitor);
-
-				ready.wait();
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {

@@ -17,7 +17,7 @@ namespace micro_profiler
 				void add_function(F *f);
 
 			private:
-				virtual void enumerate_functions(const symbol_callback_t &callback) const;
+				virtual void enumerate_functions(const symbol_callback_t &callback) const override;
 
 				void add_function(void *f);
 

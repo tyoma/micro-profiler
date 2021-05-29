@@ -91,25 +91,6 @@ namespace micro_profiler
 				mt::lock_guard<mt::mutex> lock(_mtx);
 				return _ids.insert(make_pair(mt::this_thread::get_id(), _next_id++)).first->second;
 			}
-
-			void thread_monitor::update_live_info(thread_info &/*info*/, unsigned int /*native_id*/) const
-			{	}
-
-
-			tracer::tracer()
-				: calls_collector(*this, 10000, *this, *this)
-			{	}
-
-			void tracer::read_collected(acceptor &a)
-			{
-				mt::lock_guard<mt::mutex> l(_mutex);
-
-				for (TracesMap::const_iterator i = _traces.begin(); i != _traces.end(); ++i)
-				{
-					a.accept_calls(i->first, &i->second[0], i->second.size());
-				}
-				_traces.clear();
-			}
 		}
 	}
 }

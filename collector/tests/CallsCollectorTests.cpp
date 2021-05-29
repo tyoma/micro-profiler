@@ -2,6 +2,7 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "mocks_allocator.h"
 
 #include <algorithm>
 #include <test-helpers/helpers.h>
@@ -24,7 +25,7 @@ namespace micro_profiler
 					: read(read_)
 				{	}
 
-				virtual void accept_calls(unsigned /*threadid*/, const call_record * /*calls*/, size_t count)
+				virtual void accept_calls(unsigned /*threadid*/, const call_record * /*calls*/, size_t count) override
 				{	read += count;	}
 
 				size_t &read;
@@ -36,7 +37,7 @@ namespace micro_profiler
 					: total_entries(0)
 				{	}
 
-				virtual void accept_calls(unsigned threadid, const call_record *calls, size_t count)
+				virtual void accept_calls(unsigned threadid, const call_record *calls, size_t count) override
 				{
 					collected.push_back(make_pair(threadid, vector<call_record>()));
 					collected.back().second.assign(calls, calls + count);

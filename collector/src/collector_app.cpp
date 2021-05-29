@@ -35,7 +35,7 @@ using namespace std;
 
 namespace micro_profiler
 {
-	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector> &collector,
+	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector_i> &collector,
 			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_)
 		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _module_tracker(new module_tracker),
 			_thread_monitor(thread_monitor_), _exit(false)
@@ -73,6 +73,10 @@ namespace micro_profiler
 
 		switch (d(c), c)
 		{
+		case request_update:
+			_queue.schedule([this, persistent_id] {	_bridge->update_frontend();	});
+			break;
+
 		case request_module_metadata:
 			d(persistent_id);
 			_queue.schedule([this, persistent_id] {	_bridge->send_module_metadata(persistent_id);	});
@@ -101,14 +105,8 @@ namespace micro_profiler
 			_bridge->analyze();
 			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
 		};
-		function<void ()> update_frontend;
-		const auto update_frontend_ = [&] {
-			_bridge->update_frontend();
-			_queue.schedule(function<void ()>(update_frontend), mt::milliseconds(25));
-		};
 
 		_queue.schedule(function<void ()>(analyze = analyze_), mt::milliseconds(10));
-		_queue.schedule(function<void ()>(update_frontend = update_frontend_), mt::milliseconds(25));
 		while (!_exit)
 		{
 			_queue.wait();

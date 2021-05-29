@@ -68,7 +68,7 @@ namespace micro_profiler
 		const_iterator end() const throw();
 		bool has_data() const throw();
 
-		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count);
+		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count) override;
 
 	private:
 		const overhead _overhead;

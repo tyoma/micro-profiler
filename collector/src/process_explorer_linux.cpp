@@ -36,7 +36,7 @@ namespace micro_profiler
 	{
 		string read_file_string(const string &path)
 		{
-			if (FILE *f = fopen(path.c_str(), "r"))
+			if (auto *f = fopen(path.c_str(), "r"))
 			{
 				char buffer[1000];
 				shared_ptr<FILE> f2(f, &fclose);

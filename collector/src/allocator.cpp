@@ -27,7 +27,7 @@ namespace micro_profiler
 {
 	void *allocator::allocate(size_t length)
 	{
-		if (void *memory = malloc(length))
+		if (auto *memory = malloc(length))
 			return memory;
 		throw std::bad_alloc();
 	}

@@ -45,6 +45,7 @@ namespace micro_profiler
 
 		virtual ~calls_collector_i() {	}
 		virtual void read_collected(acceptor &a) = 0;
+		virtual void flush() = 0;
 	};
 
 	struct calls_collector_i::acceptor
@@ -60,7 +61,8 @@ namespace micro_profiler
 
 		void set_buffering_policy(const buffering_policy &policy);
 
-		virtual void read_collected(acceptor &a);
+		virtual void read_collected(acceptor &a) override;
+		virtual void flush() override;
 
 		static void CC_(fastcall) on_enter(calls_collector *instance, const void **stack_ptr,
 			timestamp_t timestamp, const void *callee) _CC(fastcall);
@@ -68,8 +70,6 @@ namespace micro_profiler
 			timestamp_t timestamp) _CC(fastcall);
 
 		void track(timestamp_t timestamp, const void *callee);
-
-		void flush();
 
 	private:
 		typedef std::vector< std::pair< unsigned int, std::shared_ptr<calls_collector_thread> > > call_traces_t;

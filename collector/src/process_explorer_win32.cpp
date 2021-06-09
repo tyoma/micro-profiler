@@ -78,14 +78,15 @@ namespace micro_profiler
 	{
 		FILETIME thread_start, dummy;
 		const auto handle = get_current_thread();
+		const auto native_id = ::GetCurrentThreadId();
 		const auto start_time = milliseconds((::GetThreadTimes(handle.get(), &thread_start, &dummy, &dummy, &dummy),
 			thread_start)) - get_process_start_time();
 
-		return [handle, start_time] (thread_info &info) {
+		return [handle, native_id, start_time] (thread_info &info) {
 			FILETIME dummy, user;
 			PWSTR description;
 
-			info.native_id = ::GetThreadId(handle.get());
+			info.native_id = native_id;
 			if (_GetThreadDescription && SUCCEEDED(_GetThreadDescription(handle.get(), &description)))
 				info.description = unicode(description), ::LocalFree(description);
 			::GetThreadTimes(handle.get(), &dummy, &dummy, &dummy, &user);

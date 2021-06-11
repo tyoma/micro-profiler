@@ -20,20 +20,31 @@
 
 #include "application.h"
 #include "ProfilerMainDialog.h"
-
+	
 #include <common/constants.h>
+#include <common/path.h>
 #include <frontend/about_ui.h>
 #include <frontend/ipc_manager.h>
+#include <logger/log.h>
+#include <logger/multithreaded_logger.h>
+#include <logger/writer.h>
 #include <wpl/factory.h>
 #include <wpl/form.h>
 #include <wpl/helpers.h>
 #include <wpl/layout.h>
+
+extern "C" int mkdir(const char *pathname, int mode);
 
 using namespace std;
 using namespace wpl;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		const string c_logname = "micro-profiler_standalone.log";
+	}
+
 	struct ui_composite
 	{
 		shared_ptr<standalone_ui> ui;
@@ -48,6 +59,12 @@ namespace micro_profiler
 
 	void main(application &app)
 	{
+		mkdir(constants::data_directory().c_str(), 0777);
+		log::g_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
+			&get_datetime));
+
+		LOG("MicroProfiler standalone frontend started...");
+
 		about_composite about_composite_;
 		auto &factory = app.get_factory();
 		const auto show_about = [&] (agge::point<int> center, const shared_ptr<form> &new_form) {

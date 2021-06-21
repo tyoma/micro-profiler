@@ -55,8 +55,7 @@ namespace micro_profiler
 		_module_tracker->get_changes(loaded, unloaded);
 		if (!loaded.empty())
 			send(response_modules_loaded, loaded);
-		if (_analyzer.has_data())
-			send(response_statistics_update, _analyzer);
+		send(response_statistics_update, _analyzer);
 		if (!unloaded.empty())
 			send(response_modules_unloaded, unloaded);
 		_analyzer.clear();

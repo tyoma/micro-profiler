@@ -217,7 +217,7 @@ namespace micro_profiler
 				// INIT
 				mt::event updated;
 
-				state->updated = [&] (const mocks::thread_statistics_map &) { updated.wait(); };
+				state->updated = [&] (const mocks::thread_statistics_map &) { updated.set(); };
 
 				// ACT
 				collector_app app(factory, collector, c_overhead, tmonitor);

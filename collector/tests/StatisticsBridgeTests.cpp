@@ -91,32 +91,25 @@ namespace micro_profiler
 			}
 
 
-			test( FrontendUpdateIsNotCalledIfNoUpdates )
+			test( EmptyUpdateIsSentIfNoAnalysisHasBeenDoneOrAnalysisResultIsEmpty )
 			{
 				// INIT
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+
+				// ACT
+				b.update_frontend();
+
+				// ASSERT
+				assert_equal(1u, update_log.size());
+				assert_is_empty(update_log[0]);
 
 				// ACT
 				b.analyze();
 				b.update_frontend();
 
 				// ASSERT
-				assert_is_empty(update_log);
-			}
-
-
-			test( FrontendUpdateIsNotCalledIfNoAnalysisInvoked )
-			{
-				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
-
-				cc->on_read_collected = [] (calls_collector_i::acceptor &/*a*/) {	assert_is_false(true);	};
-
-				// ACT
-				b.update_frontend();
-
-				// ASSERT
-				assert_is_empty(update_log);
+				assert_equal(2u, update_log.size());
+				assert_is_empty(update_log[1]);
 			}
 
 
@@ -140,7 +133,10 @@ namespace micro_profiler
 				b.update_frontend();
 
 				// ASSERT
-				assert_equal(1u, update_log.size());
+				assert_equal(2u, update_log.size());
+				assert_equal(1u, update_log[1].size());
+				assert_equal(141u, update_log[1].begin()->first);
+				assert_is_empty(update_log[1].begin()->second);
 			}
 
 

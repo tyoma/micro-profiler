@@ -21,6 +21,7 @@
 #include <collector/calls_collector_thread.h>
 
 #include <collector/allocator.h>
+#include <common/time.h>
 
 using namespace std;
 
@@ -95,6 +96,8 @@ namespace micro_profiler
 
 	FORCE_NOINLINE void calls_collector_thread::flush()
 	{
+		const auto flush_start = read_tick_counter();
+
 		_active_buffer->size = buffering_policy::buffer_size - _n_left;
 		_ready_buffers.produce(move(_active_buffer), [] (int) {});
 		for (;; _continue.wait())
@@ -106,6 +109,7 @@ namespace micro_profiler
 			start_buffer(*--_empty_buffers_top);
 			break;
 		}
+		_active_buffer->previous_flush_time = read_tick_counter() - flush_start;
 	}
 
 	void calls_collector_thread::read_collected(const reader_t &reader)

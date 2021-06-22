@@ -94,6 +94,7 @@ namespace micro_profiler
 	{
 		call_record data[buffering_policy::buffer_size];
 		unsigned size;
+		timestamp_t previous_flush_time;
 	};
 
 

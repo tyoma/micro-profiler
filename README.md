@@ -75,7 +75,7 @@ The steps are much like the ones above.
 
 # Revision History
 
-## v1.9.633
+## v1.9.634
 
 * VisualStudio 2022 support - 64-bit version of VS extension added to the vsix;
 * Values are now right-aligned;

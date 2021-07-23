@@ -83,7 +83,8 @@ namespace micro_profiler
 				DWORD exit_code;
 
 				::WaitForSingleObject(hthread.get(), INFINITE);
-				return ::GetExitCodeThread(hthread.get(), &exit_code), (void *)exit_code;
+				return ::GetExitCodeThread(hthread.get(), &exit_code),
+					reinterpret_cast<void *>(static_cast<size_t>(exit_code));
 			}
 
 			shared_ptr<byte> foreign_allocate(size_t size)

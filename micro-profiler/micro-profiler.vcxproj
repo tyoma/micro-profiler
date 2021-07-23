@@ -114,7 +114,7 @@
       <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(Platform)'=='Win32'">
+  <ItemGroup>
     <ProjectReference Include="..\injector\src\injector.lib.vcxproj">
       <Project>{b0596b9d-8303-4fd1-8a0a-5db7882f6f89}</Project>
     </ProjectReference>

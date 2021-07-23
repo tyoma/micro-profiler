@@ -12,8 +12,8 @@ using namespace std::placeholders;
 
 namespace agge
 {
-	bool operator ==(const full_alignment &lhs, const full_alignment &rhs)
-	{	return lhs.halign == rhs.halign && lhs.valign == lhs.valign;	}
+	inline bool operator ==(const full_alignment &lhs, const full_alignment &rhs)
+	{	return lhs.halign == rhs.halign && lhs.valign == rhs.valign;	}
 }
 
 namespace micro_profiler

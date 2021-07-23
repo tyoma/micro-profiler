@@ -5,6 +5,7 @@ wsl bash ./build-linux.sh
 call build-windows
 call build-install
 call build-vsix
+call build-vsix.x64
 
 call make-version.cmd VERSION version.h
 

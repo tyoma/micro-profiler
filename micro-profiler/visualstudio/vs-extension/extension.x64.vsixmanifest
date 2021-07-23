@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+	<Metadata>
+		<Identity Id="128DD1BD-1E9E-4B70-984E-F638A5BD7E24" Version="!version!" Language="en-US" Publisher="Artem Gevorkyan" />
+		<DisplayName>MicroProfiler</DisplayName>
+		<Description>A low-overhead instrumenting profiler with realtime statistics display for native applications.</Description>
+		<Icon>logo.ico</Icon>
+		<PreviewImage>micro-profiler_preview.png</PreviewImage>
+		<License>license.rtf</License>
+	</Metadata>
+	<Installation InstalledByMsi="false" AllUsers="false" SystemComponent="false" Scope="ProductExtension">
+		<InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.0, 18.0)">
+			<ProductArchitecture>amd64</ProductArchitecture>
+		</InstallationTarget>
+		<InstallationTarget Id="Microsoft.VisualStudio.Premium" Version="[17.0, 18.0)">
+			<ProductArchitecture>amd64</ProductArchitecture>
+		</InstallationTarget>
+		<InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[17.0, 18.0)">
+			<ProductArchitecture>amd64</ProductArchitecture>
+		</InstallationTarget>
+		<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+			<ProductArchitecture>amd64</ProductArchitecture>
+		</InstallationTarget>
+	</Installation>
+	<Assets>
+		<Asset Type="Microsoft.VisualStudio.VsPackage" Path="micro-profiler.pkgdef" />
+	</Assets>
+	<Prerequisites>
+		<Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+	</Prerequisites>
+</PackageManifest>

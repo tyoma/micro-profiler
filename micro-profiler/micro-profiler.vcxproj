@@ -69,14 +69,12 @@
     <ClInclude Include="visualstudio\vs-extension\vs-package.h" />
     <None Include="logo.ico" />
     <None Include="module\micro-profiler.def" />
-    <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="visualstudio\vs-extension\extension.vs10.vsixmanifest" />
     <Fix Include="visualstudio\vs-extension\extension.vs10.vsixmanifest" />
-    <None Include="visualstudio\vs-extension\extension.vsixmanifest">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="visualstudio\vs-extension\extension.vsixmanifest" />
     <Fix Include="visualstudio\vs-extension\extension.vsixmanifest" />
+    <None Include="visualstudio\vs-extension\extension.x64.vsixmanifest" />
+    <Fix Include="visualstudio\vs-extension\extension.x64.vsixmanifest" />
     <None Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
     <Fix Include="visualstudio\vs-extension\micro-profiler.pkgdef" />
     <Content Include="logo.ico">
@@ -119,8 +117,11 @@
       <Project>{b0596b9d-8303-4fd1-8a0a-5db7882f6f89}</Project>
     </ProjectReference>
   </ItemGroup>
-  <Target Name="CopyFixed" AfterTargets="Midl">
-    <Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;&#xD;&#xA;		 replace &quot;%(Fix.Identity)&quot; &gt; &quot;$(OutDir)%(Fix.Filename)%(Fix.Extension)&quot;" />
+  <Target Name="CopyFixed" AfterTargets="Midl" Condition="'$(Platform)'=='Win32'">
+    <Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;&#xD;&#xA;set VSIXID=A42F6081-855F-41CB-8C89-9488AA847290&#xD;&#xA;replace &quot;%(Fix.Identity)&quot; &gt; &quot;$(OutDir)%(Fix.Filename)%(Fix.Extension)&quot;" />
+  </Target>
+  <Target Name="CopyFixed" AfterTargets="Midl" Condition="'$(Platform)'=='x64'">
+    <Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;&#xD;&#xA;set VSIXID=24EB3F53-8909-4D6E-859B-58837349F59F&#xD;&#xA;replace &quot;%(Fix.Identity)&quot; &gt; &quot;$(OutDir)%(Fix.Filename)%(Fix.Extension)&quot;" />
   </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

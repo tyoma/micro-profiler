@@ -75,6 +75,13 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v1.9.633
+
+* VisualStudio 2022 support - 64-bit version of VS extension added to the vsix;
+* Values are now right-aligned;
+* Frontend does not go behind on large updates - updates are now requested by the frontend explicitely, rather than sent by the collector on timer;
+* Performance updates.
+
 ## v1.9.632
 
 * Issue [#72](https://github.com/tyoma/micro-profiler/issues/72) fixed - aux socket handshake is sent asnychronously only after the socket is synchronously connected;

@@ -23,6 +23,7 @@ add_custom_command(OUTPUT ${MP_INTDIR}/commands.vs10.cto
 add_custom_command(OUTPUT micro-profiler.pkgdef
 	COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/..
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/make-version.cmd VERSION version.h
+	COMMAND set VSIXID=${VSIXID}
 	COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/replace.cmd micro-profiler.pkgdef > ${MP_OUTDIR}/micro-profiler.pkgdef
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/replace.cmd extension.vsixmanifest > ${MP_OUTDIR}/extension.vsixmanifest

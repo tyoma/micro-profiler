@@ -5,6 +5,8 @@ call make-version.cmd VERSION version.h
 mkdir "%~dp0_setup/"
 set OUTPUT="%~dp0_setup\micro-profiler.v%VERSION%.vsix"
 
+set VSIXID=A42F6081-855F-41CB-8C89-9488AA847290
+
 pushd "%~dp0content"
 	call sha256 hashpreview micro-profiler_preview.png
 popd

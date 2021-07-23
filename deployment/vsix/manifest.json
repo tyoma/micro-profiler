@@ -1,8 +1,8 @@
 {
-	"id":"A42F6081-855F-41CB-8C89-9488AA847290",
+	"id":"!vsixid!",
 	"version":"!version!",
 	"type":"Vsix",
-	"vsixId":"A42F6081-855F-41CB-8C89-9488AA847290",
+	"vsixId":"!vsixid!",
 	"extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\micro-profiler",
 	"files": [
 		{"fileName":"/extension.vsixmanifest","sha256":"!hashmanifest!"},
@@ -26,5 +26,5 @@
 		{"fileName":"/windows7+/x86/api-ms-win-downlevel-kernel32-l2-1-0.dll","sha256":"!hashkernel32downlevelapix86!"},
 		{"fileName":"/windows7+/x86/dbghelp.dll","sha256":"!hashdbghelpx86!"}
 	],
-	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,17.0)"}
+	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,25.0)"}
 }

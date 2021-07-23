@@ -23,20 +23,28 @@ include_directories($<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/compat/wi
 set(AGGE_NO_TESTS 1)
 set(UTEE_NO_TESTS 1)
 set(WPL_NO_TESTS 1)
-if(UNIX)
+
+if (UNIX)
 	set(MP_MT_GENERIC 1)
 	add_definitions(-DMP_MT_GENERIC)
 	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
 	add_definitions(-D_FILE_OFFSET_BITS=64) # Fixes problems 32-bit app on 64-bit Ubuntu
-	if(APPLE)
+	if (APPLE)
 		add_definitions(-DMSG_NOSIGNAL=0)
-	endif()
-endif()
+	endif ()
+endif ()
+
 if (MSVC)
 	include_directories($<$<VERSION_LESS_EQUAL:${MSVC_VERSION},1600>:${CMAKE_CURRENT_LIST_DIR}/compat/msvc10->)
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 	add_definitions(-DUNICODE -D_UNICODE)
-endif()
+endif ()
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+	set(VSIXID "A42F6081-855F-41CB-8C89-9488AA847290")
+else()
+	set(VSIXID "24EB3F53-8909-4D6E-859B-58837349F59F")
+endif ()
 
 
 # Setup global compiler/linker settings
@@ -44,9 +52,9 @@ set(GCC_CLANG_COMPILER_OPTIONS_C
 	-ggdb -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
 	-Wall -Wno-deprecated-declarations -Wno-unknown-pragmas
 )
-if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
+if (NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
 	set(GCC_CLANG_COMPILER_OPTIONS_C ${GCC_CLANG_COMPILER_OPTIONS_C} -msse2)
-endif()
+endif ()
 set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-std=c++11 -fexceptions -fno-rtti
 	-Wno-delete-non-virtual-dtor
@@ -76,19 +84,19 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
 		"$<$<CXX_COMPILER_ID:Clang>:$<$<OR:$<PLATFORM_ID:Apple>,$<PLATFORM_ID:Android>>:$<$<CONFIG:Release>:-Wl,-strip-debug>>>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--gc-sections>>"
 	)
-endif()
+endif ()
 
-if(MSVC)
+if (MSVC)
 	add_link_options(/INCREMENTAL:NO /SAFESEH:NO)
 	add_link_options($<$<NOT:$<CONFIG:Debug>>:/LTCG>)
 	add_link_options($<$<NOT:$<CONFIG:Debug>>:/OPT:REF>)
 	set(CMAKE_STATIC_LINKER_FLAGS_RELEASE ${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /LTCG)
 	set(CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO ${CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO} /LTCG)
-endif()
+endif ()
 
 if (UNIX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-endif()
+endif ()
 
 
 # Add subdirectories
@@ -114,9 +122,9 @@ add_subdirectory(logger/tests)
 add_subdirectory(micro-profiler.tests/guineapigs)
 add_subdirectory(micro-profiler.tests)
 add_subdirectory(mt/tests)
-if((NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86") AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+if ((NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86") AND CMAKE_SIZEOF_VOID_P EQUAL 4)
 	add_subdirectory(patcher/tests)
-endif()
+endif ()
 add_subdirectory(scheduler/tests)
 add_subdirectory(test-helpers/src)
 
@@ -132,5 +140,5 @@ if (WIN32 OR APPLE)
 		add_subdirectory(micro-profiler)
 
 		add_subdirectory(injector/tests)
-	endif()
-endif()
+	endif ()
+endif ()

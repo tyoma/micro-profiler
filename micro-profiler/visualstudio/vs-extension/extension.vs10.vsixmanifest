@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-	<Identifier Id="A42F6081-855F-41CB-8C89-9488AA847290">
+	<Identifier Id="!vsixid!">
 		<Name>MicroProfiler</Name>
 		<Author>gevorkyan.org</Author>
 		<Version>!version!</Version>

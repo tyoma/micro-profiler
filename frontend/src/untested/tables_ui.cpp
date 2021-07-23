@@ -24,36 +24,36 @@ namespace micro_profiler
 		const auto secondary = style::height_scale(0.85);
 
 		const headers_model::column c_columns_statistics[] = {
-			{	"Index", "#" + secondary, 28, headers_model::dir_none	},
-			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending	},
-			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending	},
-			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending	},
-			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
-			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
-			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
-			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
-			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, headers_model::dir_descending	},
-			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, headers_model::dir_descending	},
+			{	"Index", "#" + secondary, 28, headers_model::dir_none, agge::align_far	},
+			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
+			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending, agge::align_far	},
+			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending, agge::align_far	},
+			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, headers_model::dir_descending, agge::align_far	},
+			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, headers_model::dir_descending, agge::align_far	},
+			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, headers_model::dir_descending, agge::align_far	},
+			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, headers_model::dir_descending, agge::align_far	},
+			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, headers_model::dir_descending, agge::align_far	},
+			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, headers_model::dir_descending, agge::align_far	},
 		};
 
 		const headers_model::column c_columns_statistics_children[] = {
-			{	"Index", "#" + secondary, 28, headers_model::dir_none	},
-			{	"Function", "Called Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending	},
-			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending	},
-			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending	},
-			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
-			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, headers_model::dir_descending	},
-			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
-			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, headers_model::dir_descending	},
-			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, headers_model::dir_descending	},
-			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, headers_model::dir_descending	},
+			{	"Index", "#" + secondary, 28, headers_model::dir_none, agge::align_far	},
+			{	"Function", "Called Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
+			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending, agge::align_far	},
+			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending, agge::align_far	},
+			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, headers_model::dir_descending, agge::align_far	},
+			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, headers_model::dir_descending, agge::align_far	},
+			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, headers_model::dir_descending, agge::align_far	},
+			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, headers_model::dir_descending, agge::align_far	},
+			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, headers_model::dir_descending, agge::align_far	},
+			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, headers_model::dir_descending, agge::align_far	},
 		};
 
 		const headers_model::column c_columns_statistics_parents[] = {
-			{	"Index", "#" + secondary, 28, headers_model::dir_none	},
-			{	"Function", "Calling Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending	},
-			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending	},
-			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending	},
+			{	"Index", "#" + secondary, 28, headers_model::dir_none, agge::align_far	},
+			{	"Function", "Calling Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
+			{	"ThreadID", "Thread\n" + secondary + "id", 64, headers_model::dir_ascending, agge::align_far	},
+			{	"TimesCalled", "Called\n" + secondary + "times", 64, headers_model::dir_descending, agge::align_far	},
 		};
 	}
 

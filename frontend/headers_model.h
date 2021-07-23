@@ -44,6 +44,8 @@ namespace micro_profiler
 		virtual void get_value(index_type index, short int &width) const throw() override;
 		virtual std::pair<index_type, bool> get_sort_order() const throw() override;
 		virtual void set_width(index_type index, short int width) override;
+		virtual agge::full_alignment get_alignment(index_type index) const override;
+		virtual agge::full_alignment get_header_alignment(index_type index) const override;
 		virtual void get_caption(index_type index, agge::richtext_t &caption) const override;
 		virtual void activate_column(index_type column) override;
 
@@ -60,6 +62,7 @@ namespace micro_profiler
 		agge::richtext_modifier_t caption;
 		short int width;
 		headers_model::sort_direction default_sort_direction;
+		agge::text_alignment alignment;
 	};
 
 

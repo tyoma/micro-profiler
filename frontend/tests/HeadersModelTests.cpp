@@ -10,6 +10,12 @@ using namespace agge;
 using namespace std;
 using namespace std::placeholders;
 
+namespace agge
+{
+	bool operator ==(const full_alignment &lhs, const full_alignment &rhs)
+	{	return lhs.halign == rhs.halign && lhs.valign == lhs.valign;	}
+}
+
 namespace micro_profiler
 {
 	namespace tests
@@ -251,9 +257,9 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns1[] = {
-					{	"id1", "first" + style::weight(regular), 0, headers_model::dir_none	},
-					{	"id2", "second" + style::weight(semi_bold) + "appendix", 0, headers_model::dir_descending	},
-					{	"id3", "third" + style::weight(regular), 0, headers_model::dir_ascending	},
+					{	"id1", "first" + style::weight(regular), 0, headers_model::dir_none, agge::align_near	},
+					{	"id2", "second" + style::weight(semi_bold) + "appendix", 0, headers_model::dir_descending, agge::align_far	},
+					{	"id3", "third" + style::weight(regular), 0, headers_model::dir_ascending, agge::align_center	},
 				};
 				headers_model::column columns2[] = {
 					{	"id1", "a first " + style::family("verdana") + "column", 0, headers_model::dir_none	},
@@ -277,6 +283,13 @@ namespace micro_profiler
 				richtext_t::const_iterator i = caption.ranges_begin();
 				assert_equal("first", string(i->begin(), i->end()));
 				assert_equal(a.basic, i->get_annotation().basic);
+
+				assert_equal(agge::full_alignment::create(agge::align_near, agge::align_near), cm1->get_header_alignment(0));
+				assert_equal(agge::full_alignment::create(agge::align_near, agge::align_center), cm1->get_alignment(0));
+				assert_equal(agge::full_alignment::create(agge::align_far, agge::align_near), cm1->get_header_alignment(1));
+				assert_equal(agge::full_alignment::create(agge::align_far, agge::align_center), cm1->get_alignment(1));
+				assert_equal(agge::full_alignment::create(agge::align_center, agge::align_near), cm1->get_header_alignment(2));
+				assert_equal(agge::full_alignment::create(agge::align_center, agge::align_center), cm1->get_alignment(2));
 
 				// ACT
 				caption.clear();

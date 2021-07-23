@@ -93,6 +93,12 @@ namespace micro_profiler
 		invalidate(item);
 	}
 
+	agge::full_alignment headers_model::get_alignment(index_type index) const
+	{	return agge::full_alignment::create(_columns[index].alignment, agge::align_center);	}
+
+	agge::full_alignment headers_model::get_header_alignment(index_type index) const
+	{	return agge::full_alignment::create(_columns[index].alignment, agge::align_near);	}
+
 	void headers_model::get_caption(index_type item, agge::richtext_t &caption) const
 	{	caption << _columns[item].caption;	}
 

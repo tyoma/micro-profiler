@@ -1,0 +1,3 @@
+Linux:
+	- patchable_function_entries makes ld 2.34- failing to link;
+	

@@ -32,8 +32,18 @@
   <PropertyGroup>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">MP_NO_EXCEPTIONS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Link>
+      <AdditionalOptions>/functionpadmin:10 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src.x86\patcher.lib.vcxproj">
+    <ProjectReference Include="..\src\patcher.lib.vcxproj">
       <Project>{84891947-5BFB-45F2-B495-20B93AAB1B44}</Project>
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">

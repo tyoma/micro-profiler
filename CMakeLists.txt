@@ -27,12 +27,15 @@ set(WPL_NO_TESTS 1)
 if (UNIX)
 	set(MP_MT_GENERIC 1)
 	add_definitions(-DMP_MT_GENERIC)
-	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
 	add_definitions(-D_FILE_OFFSET_BITS=64) # Fixes problems 32-bit app on 64-bit Ubuntu
 	if (APPLE)
 		add_definitions(-DMSG_NOSIGNAL=0)
 	endif ()
 endif ()
+
+if (UNIX OR (MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8))
+	add_definitions(-DMP_NO_EXCEPTIONS) # Before DWARF exception model is supported...
+endif()
 
 if (MSVC)
 	include_directories($<$<VERSION_LESS_EQUAL:${MSVC_VERSION},1600>:${CMAKE_CURRENT_LIST_DIR}/compat/msvc10->)
@@ -82,7 +85,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
 		"$<$<CXX_COMPILER_ID:Clang>:-Wl,-undefined,error>"
 		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--strip-debug>>"
 		"$<$<CXX_COMPILER_ID:Clang>:$<$<OR:$<PLATFORM_ID:Apple>,$<PLATFORM_ID:Android>>:$<$<CONFIG:Release>:-Wl,-strip-debug>>>"
-		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--gc-sections>>"
+		"$<$<CXX_COMPILER_ID:GNU>:-Wl,--gc-sections>"
 	)
 endif ()
 
@@ -110,7 +113,7 @@ add_subdirectory(frontend/src)
 add_subdirectory(ipc/src)
 add_subdirectory(logger/src)
 add_subdirectory(mt/src)
-add_subdirectory(patcher/src.x86)
+add_subdirectory(patcher/src)
 add_subdirectory(playground)
 add_subdirectory(scheduler/src)
 
@@ -122,9 +125,7 @@ add_subdirectory(logger/tests)
 add_subdirectory(micro-profiler.tests/guineapigs)
 add_subdirectory(micro-profiler.tests)
 add_subdirectory(mt/tests)
-if ((NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86") AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-	add_subdirectory(patcher/tests)
-endif ()
+add_subdirectory(patcher/tests)
 add_subdirectory(scheduler/tests)
 add_subdirectory(test-helpers/src)
 

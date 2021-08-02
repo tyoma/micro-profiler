@@ -195,13 +195,6 @@ namespace micro_profiler
 			}
 
 
-			test( ThunkSizeIsMultipleOf10h )
-			{
-				// ASSERT
-				assert_equal(0u, 0xF & c_thunk_size);
-			}
-
-
 			test( CalleeIsInvokedOnCallingThunk1 )
 			{
 				typedef int (fn_t)(int *value);

@@ -1,0 +1,67 @@
+#	Copyright (c) 2011-2021 by Artem A. Gevorkyan (gevorkyan.org)
+#
+#	Permission is hereby granted, free of charge, to any person obtaining a copy
+#	of this software and associated documentation files (the "Software"), to deal
+#	in the Software without restriction, including without limitation the rights
+#	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#	copies of the Software, and to permit persons to whom the Software is
+#	furnished to do so, subject to the following conditions:
+#
+#	The above copyright notice and this permission notice shall be included in
+#	all copies or substantial portions of the Software.
+#
+#	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#	THE SOFTWARE.
+
+.text
+	trampoline_proto:	# argument passing: RDI, RSI, RDX, RCX, R8, and R9, <stack>
+		push	%ecx
+		push	%edx
+		rdtsc
+		mov	$0x31415901, %ecx # 1st argument, interceptor
+		push	$0x31415902 # 4th argument, callee
+		push	%edx
+		push	%eax # 3rd argument, timestamp
+		lea	0x14(%esp), %edx # 2nd argument, stack_ptr
+		mov	$0x31415903, %eax # on_enter address
+		call	*%eax
+		pop	%edx
+		pop	%ecx
+
+		lea	0x04(%esp), %esp
+		mov	$0x31415905, %eax # target_function address
+		call	*%eax
+		lea	-0x04(%esp), %esp
+
+		push	%eax
+		rdtsc
+		mov	$0x31415901, %ecx # 1st argument, interceptor
+		push	%edx
+		push	%eax # 3rd argument, timestamp
+		lea	0x0C(%esp), %edx # 2nd argument, stack_ptr
+		mov	$0x31415904, %eax # on_exit address
+		call	*%eax
+		mov	%eax, 0x04(%esp) # restore return address
+		pop	%eax
+		ret
+	trampoline_proto_end:
+
+	jumper:
+		mov	$0x31415901, %eax # trampoline address
+		jmp	*%eax
+		.byte	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 17 bytes for max instruction length and a short jump
+	jumper_end:
+
+.data
+	c_trampoline_proto: .int trampoline_proto
+	c_trampoline_size: .byte (trampoline_proto_end - trampoline_proto)
+	c_jumper_proto: .int jumper
+	c_jumper_size: .byte (jumper_end - jumper)
+
+	.global c_trampoline_proto, c_trampoline_size
+	.global c_jumper_proto, c_jumper_size

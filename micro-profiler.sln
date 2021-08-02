@@ -93,7 +93,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc", "ipc\src\ipc.vcxproj"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests.common", "libraries\agge\tests\common\src\tests.common.vcxproj", "{01F120A2-7E71-4C3A-B4A8-1F396DA7A0AD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "patcher.lib", "patcher\src.x86\patcher.lib.vcxproj", "{84891947-5BFB-45F2-B495-20B93AAB1B44}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "patcher.lib", "patcher\src\patcher.lib.vcxproj", "{84891947-5BFB-45F2-B495-20B93AAB1B44}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "patcher.tests", "patcher\tests\patcher.tests.vcxproj", "{C051C262-E929-4A27-B8A6-1BC5345747B6}"
 EndProject

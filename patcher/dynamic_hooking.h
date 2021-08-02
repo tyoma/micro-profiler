@@ -45,6 +45,10 @@ namespace micro_profiler
 		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit);	}
 	};
 
+	struct injector
+	{
+	};
+
 	extern const size_t c_thunk_size;
 
 

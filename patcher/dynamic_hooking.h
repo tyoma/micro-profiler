@@ -45,17 +45,30 @@ namespace micro_profiler
 		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit);	}
 	};
 
-	struct injector
+	class redirector
 	{
+	public:
+		redirector(void *target, const void *trampoline);
+		~redirector();
+
+		const void *entry() const;
+		void activate();
+		void cancel();
+
+	private:
+		byte *_target;
+		byte _fuse_revert[8];
+		bool _active : 1, _cancelled : 1;
 	};
 
-	extern const size_t c_thunk_size;
+
+	extern const size_t c_trampoline_size;
 
 
-	void initialize_hooks(void *thunk_location, const void *target_function, const void *id, void *interceptor,
+	void initialize_trampoline(void *trampoline, const void *target, const void *id, void *interceptor,
 		hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 
 	template <typename T>
-	inline void initialize_hooks(void *thunk_location, const void *target_function, const void *id, T *interceptor)
-	{	initialize_hooks(thunk_location, target_function, id, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
+	inline void initialize_trampoline(void *trampoline, const void *target, const void *id, T *interceptor)
+	{	initialize_trampoline(trampoline, target, id, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
 }

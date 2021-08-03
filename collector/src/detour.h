@@ -24,5 +24,5 @@
 
 namespace micro_profiler
 {
-	std::shared_ptr<void> detour(void *target_function, void *where_to);
+	std::shared_ptr<void> detour(void *target, void *where_to);
 }

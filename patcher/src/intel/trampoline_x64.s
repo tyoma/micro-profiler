@@ -44,7 +44,7 @@
 		pop	%rdi
 
 		add	$0x08, %rsp
-		mov	$0x3141592600000005, %rax # target_function address
+		mov	$0x3141592600000005, %rax # target address
 		call	*%rax
 		sub	$0x08, %rsp
 
@@ -63,17 +63,16 @@
 		ret
 	trampoline_proto_end:
 
-	jumper:
+	jumper_proto:
 		mov	$0x3141592600000001, %rax # trampoline address
 		jmp	*%rax
-		.byte	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 17 bytes for max instruction length and a short jump
-	jumper_end:
+	jumper_proto_end:
 
 .data
 	c_trampoline_proto: .quad trampoline_proto
 	c_trampoline_size: .byte (trampoline_proto_end - trampoline_proto)
-	c_jumper_proto: .quad jumper
-	c_jumper_size: .byte (jumper_end - jumper)
+	c_jumper_proto: .quad jumper_proto
+	c_jumper_size: .byte (jumper_proto_end - jumper_proto)
 
 	.global c_trampoline_proto, c_trampoline_size
 	.global c_jumper_proto, c_jumper_size

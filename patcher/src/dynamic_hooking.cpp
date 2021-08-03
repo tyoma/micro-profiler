@@ -20,6 +20,8 @@
 
 #include <patcher/dynamic_hooking.h>
 
+#include "intel/jump.h"
+
 #include <algorithm>
 #include <common/memory.h>
 #include <limits>
@@ -27,12 +29,16 @@
 
 using namespace std;
 
-extern "C" const void *c_trampoline_proto;
-extern "C" micro_profiler::byte c_trampoline_size;
+extern "C" {
+	extern const void *c_trampoline_proto;
+	extern micro_profiler::byte c_trampoline_size;
+	extern const void *c_jumper_proto;
+	extern micro_profiler::byte c_jumper_size;
+}
 
 namespace micro_profiler
 {
-	const size_t c_thunk_size = c_trampoline_size;
+	const size_t c_trampoline_size = ::c_trampoline_size;
 
 	namespace
 	{
@@ -66,16 +72,62 @@ namespace micro_profiler
 		}
 	}
 
-	void initialize_hooks(void *thunk_location, const void *target_function, const void *id,
+
+	redirector::redirector(void *target, const void *trampoline)
+		: _target(static_cast<byte *>(target)), _active(false), _cancelled(false)
+	{
+		if (!(_target[0] == 0x90 && _target[1] == 0x90 || _target[0] == 0x8B && _target[1] == 0xFF))
+			throw runtime_error("the function is not hotpatchable!");
+		byte_range jumper(_target - c_jumper_size, c_jumper_size);
+		scoped_unprotect u(jumper);
+
+		mem_copy(jumper.begin(), c_jumper_proto, jumper.length());
+		replace(jumper, 1, [trampoline] (...) {	return reinterpret_cast<size_t>(trampoline);	});
+		replace(jumper, 0x81, [trampoline] (ptrdiff_t address) {
+			return reinterpret_cast<ptrdiff_t>(trampoline) - address;
+		});
+	}
+
+	redirector::~redirector()
+	{
+		byte_range fuse(_target, sizeof(assembler::short_jump));
+		scoped_unprotect u(fuse);
+
+		*reinterpret_cast<assembler::short_jump *>(_target) = *reinterpret_cast<assembler::short_jump *>(_fuse_revert);
+	}
+
+	const void *redirector::entry() const
+	{	return static_cast<byte *>(_target) + 2;	}
+
+	void redirector::activate()
+	{
+		byte_range fuse(_target, sizeof(assembler::short_jump));
+		scoped_unprotect u(fuse);
+
+		*reinterpret_cast<assembler::short_jump *>(_fuse_revert) = *reinterpret_cast<assembler::short_jump *>(_target);
+		reinterpret_cast<assembler::short_jump *>(_target)->init(_target - c_jumper_size);
+	}
+
+
+	void initialize_trampoline(void *trampoline_address, const void *target, const void *id,
 		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
-		byte_range thunk(static_cast<byte *>(thunk_location), c_trampoline_size);
+		byte_range trampoline(static_cast<byte *>(trampoline_address), c_trampoline_size);
 
-		mem_copy(thunk.begin(), c_trampoline_proto, thunk.length());
-		replace(thunk, 1, [interceptor] (...) {	return reinterpret_cast<size_t>(interceptor);	});
-		replace(thunk, 2, [id] (...) {	return reinterpret_cast<size_t>(id);	});
-		replace(thunk, 3, [on_enter] (...) {	return reinterpret_cast<size_t>(on_enter);	});
-		replace(thunk, 4, [on_exit] (...) {	return reinterpret_cast<size_t>(on_exit);	});
-		replace(thunk, 5, [target_function] (...) {	return reinterpret_cast<size_t>(target_function);	});
+		mem_copy(trampoline.begin(), c_trampoline_proto, trampoline.length());
+		replace(trampoline, 1, [interceptor] (...) {	return reinterpret_cast<size_t>(interceptor);	});
+		replace(trampoline, 2, [id] (...) {	return reinterpret_cast<size_t>(id);	});
+		replace(trampoline, 3, [on_enter] (...) {	return reinterpret_cast<size_t>(on_enter);	});
+		replace(trampoline, 0x83, [on_enter] (ptrdiff_t address) {
+			return reinterpret_cast<ptrdiff_t>(on_enter) - address;
+		});
+		replace(trampoline, 4, [on_exit] (...) {	return reinterpret_cast<size_t>(on_exit);	});
+		replace(trampoline, 0x84, [on_exit] (ptrdiff_t address) {
+			return reinterpret_cast<ptrdiff_t>(on_exit) - address;
+		});
+		replace(trampoline, 5, [target] (...) {	return reinterpret_cast<size_t>(target);	});
+		replace(trampoline, 0x85, [target] (ptrdiff_t address) {
+			return reinterpret_cast<ptrdiff_t>(target) - address;
+		});
 	}
 }

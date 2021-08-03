@@ -29,14 +29,14 @@
 		push	edx
 		push	eax ; 3rd argument, timestamp
 		lea	edx, dword ptr [esp + 14h] ; 2nd argument, stack_ptr
-		mov	eax, 31415903h ; on_enter address
-		call	eax
+		call	on_enter + 31415983h ; on_enter address (displacement)
+	on_enter:
 		pop	edx
 		pop	ecx
 
 		lea	esp, dword ptr [esp + 04h]		
-		mov	eax, 31415905h ; target_function address
-		call	eax
+		call	target + 31415985h ; target address
+	target:
 		lea	esp, dword ptr [esp - 04h]
 
 		push	eax
@@ -45,28 +45,24 @@
 		push	edx
 		push	eax ; 3rd argument, timestamp
 		lea	edx, dword ptr [esp + 0Ch] ; 2nd argument, stack_ptr
-		mov	eax, 31415904h ; on_exit address
-		call	eax
+		call	on_exit + 31415984h ; on_exit address (displacement)
+	on_exit:
 		mov	dword ptr [esp + 04h], eax ; restore return address
 		pop	eax
 		ret
 	trampoline_proto_end:
 
-	jumper:
-		mov	eax, 31415901h ; trampoline address
-		jmp	eax
-		db		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; 17 bytes for max instruction length and a short jump
-	jumper_end:
+	jumper_proto:
+		jmp	jumper_proto_end + 31415981h ; trampoline address (displacement)
+	jumper_proto_end:
 
 .data
 	_c_trampoline_proto	dd	trampoline_proto
 	_c_trampoline_size	db	(trampoline_proto_end - trampoline_proto)
-	_c_jumper_proto		dd	jumper
-	_c_jumper_size			dd	(jumper_end - jumper)
+	_c_jumper_proto		dd	jumper_proto
+	_c_jumper_size			dd	(jumper_proto_end - jumper_proto)
 
-	PUBLIC _c_trampoline_proto
-	PUBLIC _c_trampoline_size
-	PUBLIC _c_jumper_proto
-	PUBLIC _c_jumper_size
+	PUBLIC _c_trampoline_proto, _c_trampoline_size
+	PUBLIC _c_jumper_proto, _c_jumper_size
 
 end

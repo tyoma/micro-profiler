@@ -23,11 +23,11 @@
     <ClInclude Include="..\..\libraries\lend\ld32.h">
       <Filter>libraries\lend</Filter>
     </ClInclude>
-    <ClInclude Include="..\revert_buffer.h" />
     <ClInclude Include="intel\jump.h">
       <Filter>src\intel</Filter>
     </ClInclude>
     <ClInclude Include="..\binary_translation.h" />
+    <ClInclude Include="..\revert_buffer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

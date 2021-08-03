@@ -29,5 +29,15 @@ namespace micro_profiler
 			opcode = 0xE9;
 			displacement = static_cast<dword>(reinterpret_cast<size_t>(address) - reinterpret_cast<size_t>(this + 1));
 		}
+
+		void short_jump::init(const void *address)
+		{
+			short_jump j = {
+				0xEB,
+				static_cast<byte>(reinterpret_cast<size_t>(address) - reinterpret_cast<size_t>(this + 1))
+			};
+
+			*this = j;
+		}
 	}
 }

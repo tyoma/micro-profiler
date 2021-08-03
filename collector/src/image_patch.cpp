@@ -18,8 +18,7 @@ namespace micro_profiler
 			{
 				if (_patches.find(symbol.body.begin()) == _patches.end() && symbol.body.length() >= 5 && filter(symbol))
 				{
-					shared_ptr<function_patch> p(new function_patch(_allocator, symbol.body,
-						_interceptor, _on_enter, _on_exit));
+					auto p = _intercept(symbol.body);
 
 					_patches.insert(make_pair(symbol.body.begin(), image_patch::patch_entry(symbol, p)));
 				}

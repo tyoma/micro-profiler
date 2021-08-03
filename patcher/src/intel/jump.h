@@ -37,6 +37,14 @@ namespace micro_profiler
 			byte opcode;
 			dword displacement;
 		};
+
+		struct short_jump
+		{
+			void init(const void *address);
+
+			byte opcode;
+			byte displacement;
+		};
 	}
 }
 

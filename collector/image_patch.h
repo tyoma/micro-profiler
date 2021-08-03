@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/image_info.h>
+#include <memory>
 #include <patcher/function_patch.h>
 #include <unordered_map>
 
@@ -54,9 +55,7 @@ namespace micro_profiler
 
 	private:
 		const std::shared_ptr< image_info<symbol_info_mapped> > _image;
-		void * const _interceptor;
-		hooks<void>::on_enter_t * const _on_enter;
-		hooks<void>::on_exit_t * const _on_exit;
+		std::function<std::shared_ptr<function_patch> (byte_range body)> _intercept;
 		patches_container_t _patches;
 		executable_memory_allocator _allocator;
 	};
@@ -66,7 +65,10 @@ namespace micro_profiler
 	template <typename InterceptorT>
 	inline image_patch::image_patch(const std::shared_ptr< image_info<symbol_info_mapped> > &image,
 			InterceptorT *interceptor)
-		: _image(image), _interceptor(interceptor),
-			_on_enter(hooks<InterceptorT>::on_enter()), _on_exit(hooks<InterceptorT>::on_exit())
-	{	}
+		: _image(image)
+	{
+		_intercept = [this, interceptor] (byte_range body) {
+			return std::shared_ptr<function_patch>(new function_patch(_allocator, body, interceptor));
+		};
+	}
 }

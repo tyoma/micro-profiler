@@ -41,7 +41,7 @@
 		pop	rcx
 
 		add	rsp, 08h
-		mov	rax, 3141592600000005h ; target_function address
+		mov	rax, 3141592600000005h ; target address
 		call	rax
 		sub	rsp, 08h
 
@@ -61,17 +61,16 @@
 		ret
 	trampoline_proto_end:
 
-	jumper:
+	jumper_proto:
 		mov	rax, 3141592600000001h ; trampoline address
 		jmp	rax
-		db		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; 17 bytes for max instruction length and a short jump
-	jumper_end:
+	jumper_proto_end:
 
 .data
 	c_trampoline_proto	dq	trampoline_proto
 	c_trampoline_size		db	(trampoline_proto_end - trampoline_proto)
-	c_jumper_proto			dd	jumper
-	c_jumper_size			dd	(jumper_end - jumper)
+	c_jumper_proto			dq	jumper_proto
+	c_jumper_size			dd	(jumper_proto_end - jumper_proto)
 
 	PUBLIC c_trampoline_proto, c_trampoline_size
 	PUBLIC c_jumper_proto, c_jumper_size

@@ -6,7 +6,6 @@ set(PATCHER_TEST_SOURCES
 	BinaryTranslationTestsX86.cpp
 	DynamicHookingTests.cpp
 	FunctionPatchTests.cpp
-	FunctionPatchTestsX86.cpp
 	guineapigs.cpp
 	helpers.cpp
 	OffsetDisplacedReferencesTestsX86.cpp
@@ -15,13 +14,12 @@ set(PATCHER_TEST_SOURCES
 if (GNU OR CLANG)
 	set(PATCHER_TEST_SOURCES
 		FunctionPatchTests.cpp
-#		FunctionPatchTestsX86.cpp
 	)
 endif()
 
 add_compile_options(
-	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:$<$<COMPILE_LANGUAGE:C>:-fpatchable-function-entry=5>>"
-	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:$<$<COMPILE_LANGUAGE:CXX>:-fpatchable-function-entry=5>>"
+	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:$<$<COMPILE_LANGUAGE:C>:-fpatchable-function-entry=14,12>>"
+	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:$<$<COMPILE_LANGUAGE:CXX>:-fpatchable-function-entry=14,12>>"
 )
 
 set_property(SOURCE guineapigs.cpp APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-O0>")

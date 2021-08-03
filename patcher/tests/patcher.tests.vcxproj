@@ -35,11 +35,10 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">MP_NO_EXCEPTIONS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(Platform)'=='Win32'">/hotpatch %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
-      <AdditionalOptions>/functionpadmin:10 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/functionpadmin:12 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -54,7 +53,6 @@
     <ClCompile Include="BinaryTranslationTestsX86.cpp" />
     <ClCompile Include="DynamicHookingTests.cpp" />
     <ClCompile Include="FunctionPatchTests.cpp" />
-    <ClCompile Include="FunctionPatchTestsX86.cpp" />
     <ClCompile Include="guineapigs.cpp">
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>

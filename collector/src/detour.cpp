@@ -68,17 +68,17 @@ namespace micro_profiler
 #pragma pack(pop)
 
 
-	shared_ptr<void> detour(void *target_function, void *where_to)
+	shared_ptr<void> detour(void *target, void *where_to)
 	{
 		shared_ptr<byte> backup(new byte[sizeof(jmp)], [] (byte *p) { delete []p; });
 
 		{
-			scoped_unprotect u(byte_range(static_cast<byte *>(target_function), sizeof(jmp)));
-			mem_copy(backup.get(), target_function, sizeof(jmp));
-			static_cast<jmp *>(target_function)->init(where_to);
+			scoped_unprotect u(byte_range(static_cast<byte *>(target), sizeof(jmp)));
+			mem_copy(backup.get(), target, sizeof(jmp));
+			static_cast<jmp *>(target)->init(where_to);
 		}
 
-		return shared_ptr<void>(target_function, [backup] (void *p) {
+		return shared_ptr<void>(target, [backup] (void *p) {
 			scoped_unprotect u(byte_range(static_cast<byte *>(p), sizeof(jmp)));
 			mem_copy(p, backup.get(), sizeof(jmp));
 		});

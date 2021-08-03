@@ -20,8 +20,9 @@
 
 #pragma once
 
-#include "revert_buffer.h"
 #include "dynamic_hooking.h"
+
+#include <common/memory.h>
 
 namespace micro_profiler
 {
@@ -30,28 +31,19 @@ namespace micro_profiler
 	public:
 		template <typename T>
 		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
-		function_patch(executable_memory_allocator &allocator, byte_range body, void *interceptor,
-			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
-		~function_patch();
 
 	private:
-		typedef revert_entry<24> revert_entry_t;
-
-	private:
-		void init(executable_memory_allocator &allocator, byte_range body, void *interceptor,
-			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
-
-	private:
-		std::shared_ptr<void> _thunk;
-		byte_range _patched_fragment;
-		revert_entry_t _original_fragment;
-		revert_buffer _revert_buffer;
+		std::shared_ptr<void> _trampoline;
+		redirector _redirector;
 	};
 
 
 
 	template <typename T>
 	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
-		: _patched_fragment(0, 0), _original_fragment(0, 0)
-	{	init(allocator, body, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
+		: _trampoline(allocator.allocate(c_trampoline_size)), _redirector(body.begin(), _trampoline.get())
+	{
+		initialize_trampoline(_trampoline.get(), _redirector.entry(), body.begin(), interceptor);
+		_redirector.activate();
+	}
 }

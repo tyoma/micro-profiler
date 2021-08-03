@@ -20,51 +20,23 @@
 
 #pragma once
 
-#include "range.h"
-
-#include <functional>
-#include <memory>
-#include <string>
+#include <common/range.h>
+#include <vector>
 
 namespace micro_profiler
 {
-	struct symbol_info
-	{
-		std::string name;
-		unsigned int rva, size;
-		unsigned int file_id, line;
-	};
+	class module_tracker;
 
-	struct symbol_info_mapped
-	{
-		symbol_info_mapped(const char *name_, byte_range body_);
-
-		std::string name;
-		byte_range body;
-	};
-
-	template <typename SymbolT>
-	struct image_info
-	{
-		typedef std::function<void (const SymbolT &symbol)> symbol_callback_t;
-		typedef std::function<void (const std::pair<unsigned int /*file_id*/, std::string /*path*/> &file)> file_callback_t;
-
-		virtual ~image_info() {	}
-		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
-		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
-	};
-
-	std::shared_ptr< image_info<symbol_info> > load_image_info(const std::string &image_path);
-
-	class offset_image_info : public image_info<symbol_info_mapped>
+	class image_patch_manager
 	{
 	public:
-		offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base);
+		template <typename InterceptorT>
+		image_patch_manager(InterceptorT &interceptor, module_tracker &modules);
 
-		virtual void enumerate_functions(const symbol_callback_t &callback) const;
-
-	private:
-		std::shared_ptr< image_info<symbol_info> > _underlying;
-		byte *_base;
+		void query(std::vector<unsigned int /*currently installed*/> &result, unsigned int persistent_id);
+		void apply(std::vector<unsigned int /*installed successfully*/> &result, unsigned int persistent_id,
+			range<const unsigned int /*rva*/, size_t> functions);
+		void remove(std::vector<unsigned int /*removed successfully*/> &result, unsigned int persistent_id,
+			range<const unsigned int /*rva*/, size_t> functions);
 	};
 }

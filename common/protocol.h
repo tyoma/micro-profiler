@@ -44,6 +44,17 @@ namespace micro_profiler
 
 		request_threads_info = 7,
 		response_threads_info = 8,
+
+		request_patch = 10,
+		response_patched = 11,
+	};
+
+	template <typename PayloadT>
+	struct message_envelope
+	{
+		messages_id type;
+		unsigned int token;
+		PayloadT data;
 	};
 
 	// init
@@ -64,5 +75,25 @@ namespace micro_profiler
 	{
 		std::vector<symbol_info> symbols;
 		std::vector< std::pair<unsigned int /*file_id*/, std::string /*file*/> > source_files;
+	};
+
+	// request_patch
+	struct patch_request
+	{
+		enum verb {
+			query,	// patch_response::result will contain RVAs of the functions currently patched in this image
+			apply,	// patch_response::result will RVAs of the functions successfully patched
+			remove,	// patch_response::result will RVAs of the functions having patches successfully removed
+		};
+
+		unsigned int image_persistent_id;
+		verb action;
+		std::vector<unsigned int> functions_rva;
+	};
+
+	// response_patched
+	struct patch_response
+	{
+		std::vector<unsigned int> result;
 	};
 }

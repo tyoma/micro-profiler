@@ -167,10 +167,10 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module_identified basic = { };
 				symbol_info symbols[] = {
-					{ "a", 0x010, 3, 0, 11, 121 },
-					{ "b", 0x101, 5, 0, 1, 1 },
-					{ "c", 0x158, 5, 0, 7, 71 },
-					{ "d", 0x188, 5, 0, 7, 713 },
+					{ "a", 0x010, 3, 11, 121 },
+					{ "b", 0x101, 5, 1, 1 },
+					{ "c", 0x158, 5, 7, 71 },
+					{ "d", 0x188, 5, 7, 713 },
 				};
 				pair<unsigned, string> files[] = {
 					make_pair(11, "zoo.cpp"), make_pair(7, "c:/umi.cpp"), make_pair(1, "d:\\dev\\kloo.cpp"),
@@ -205,16 +205,16 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module_identified basic = { };
 				symbol_info symbols1[] = {
-					{ "a", 0x010, 3, 0, 11, 121 },
-					{ "b", 0x101, 5, 0, 1, 1 },
-					{ "c", 0x158, 5, 0, 7, 71 },
-					{ "d", 0x188, 5, 0, 7, 713 },
+					{ "a", 0x010, 3, 11, 121 },
+					{ "b", 0x101, 5, 1, 1 },
+					{ "c", 0x158, 5, 7, 71 },
+					{ "d", 0x188, 5, 7, 713 },
 				};
 				symbol_info symbols2[] = {
-					{ "a", 0x010, 3, 0, 1, 121 },
-					{ "b", 0x101, 5, 0, 1, 1 },
-					{ "c", 0x158, 5, 0, 7, 71 },
-					{ "d", 0x180, 5, 0, 50, 71 },
+					{ "a", 0x010, 3, 1, 121 },
+					{ "b", 0x101, 5, 1, 1 },
+					{ "c", 0x158, 5, 7, 71 },
+					{ "d", 0x180, 5, 50, 71 },
 				};
 				pair<unsigned, string> files1[] = {
 					make_pair(11, "zoo.cpp"), make_pair(1, "c:/umi.cpp"), make_pair(7, "d:\\dev\\kloo.cpp"),
@@ -272,10 +272,10 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
 				mapped_module_identified basic = { };
 				symbol_info symbols[] = {
-					{ "a", 0x010, 3, 0, 11, 121 },
-					{ "b", 0x101, 5, 0, 1, 1 },
-					{ "cccc", 0x158, 5, 0, 7, 71 },
-					{ "ddd", 0x188, 5, 0, 7, 713 },
+					{ "a", 0x010, 3, 11, 121 },
+					{ "b", 0x101, 5, 1, 1 },
+					{ "cccc", 0x158, 5, 7, 71 },
+					{ "ddd", 0x188, 5, 7, 713 },
 				};
 				pair<unsigned, string> files[] = {
 					make_pair(11, "zoo.cpp"), make_pair(1, "c:/umi.cpp"), make_pair(7, "d:\\dev\\kloo.cpp"),
@@ -330,10 +330,10 @@ namespace micro_profiler
 				// INIT
 				symbol_resolver r(get_requestor());
 				symbol_info symbols[] = {
-					{ "a", 0x010, 3, 0, 11, 121 },
-					{ "b", 0x101, 5, 0, 1, 1 },
-					{ "cccc", 0x158, 5, 0, 0, 71 },
-					{ "ddd", 0x188, 5, 0, 0, 713 },
+					{ "a", 0x010, 3, 11, 121 },
+					{ "b", 0x101, 5, 1, 1 },
+					{ "cccc", 0x158, 5, 0, 71 },
+					{ "ddd", 0x188, 5, 0, 713 },
 				};
 				mapped_module_identified basic = { };
 				module_info_metadata metadata = { mkvector(symbols), };

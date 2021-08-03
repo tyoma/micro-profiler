@@ -99,7 +99,9 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, symbol_info &data, unsigned int /*version*/)
 	{
-		archive(data.id);
+		unsigned int id = 0;
+
+		archive(id);
 		archive(data.name);
 		archive(data.rva);
 		archive(data.size);

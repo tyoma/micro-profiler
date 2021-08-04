@@ -23,6 +23,7 @@
 #include "range.h"
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -48,6 +49,7 @@ namespace micro_profiler
 
 	typedef std::function<void (const mapped_module &module)> module_callback_t;
 
+	std::shared_ptr<void> load_library(const std::string &path);
 	std::string get_current_executable();
 	mapped_module get_module_info(const void *address);
 	void enumerate_process_modules(const module_callback_t &callback);

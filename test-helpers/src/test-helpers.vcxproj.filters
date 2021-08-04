@@ -31,6 +31,9 @@
     <ClCompile Include="thread.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="temporary_copy.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\com.h" />
@@ -43,6 +46,7 @@
     <ClInclude Include="..\primitive_helpers.h" />
     <ClInclude Include="..\mock_queue.h" />
     <ClInclude Include="..\richtext.h" />
+    <ClInclude Include="..\temporary_copy.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

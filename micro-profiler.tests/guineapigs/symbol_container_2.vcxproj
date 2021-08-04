@@ -44,6 +44,7 @@
   <ItemGroup>
     <ClCompile Include="symbol_container_2.cpp" />
     <ClCompile Include="symbol_container_2_internal.cpp" />
+    <ClCompile Include="unload_tracker.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

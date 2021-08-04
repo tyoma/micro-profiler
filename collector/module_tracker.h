@@ -43,8 +43,7 @@ namespace micro_profiler
 		module_tracker();
 
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-
-		std::shared_ptr<void> lock_image(unsigned int persistent_id); // TODO: implement module lock here to stick it to the specific mapping
+		std::shared_ptr<void> lock_image(unsigned int persistent_id);
 		metadata_ptr get_metadata(unsigned int persistent_id) const;
 
 	private:

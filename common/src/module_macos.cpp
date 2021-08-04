@@ -28,6 +28,14 @@ using namespace std;
 
 namespace micro_profiler
 {
+	shared_ptr<void> load_library(const string &path)
+	{
+		return shared_ptr<void>(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
+			if (h)
+				::dlclose(h);
+		});
+	}
+
 	string get_current_executable()
 	{
 		char dummy;

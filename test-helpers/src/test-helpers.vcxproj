@@ -37,6 +37,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="com.cpp" />
+    <ClCompile Include="temporary_copy.cpp" />
     <ClCompile Include="test_constants.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="helpers_unix.cpp">
@@ -61,6 +62,7 @@
     <ClInclude Include="..\primitive_helpers.h" />
     <ClInclude Include="..\process.h" />
     <ClInclude Include="..\richtext.h" />
+    <ClInclude Include="..\temporary_copy.h" />
     <ClInclude Include="..\thread.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

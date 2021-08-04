@@ -6,6 +6,7 @@ set(TEST_HELPERS_SOURCES
 	helpers.cpp
 	mock_frontend.cpp
 	test_constants.cpp
+	temporary_copy.cpp
 	thread.cpp
 )
 

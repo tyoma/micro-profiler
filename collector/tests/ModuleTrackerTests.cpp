@@ -7,6 +7,7 @@
 
 #include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
+#include <test-helpers/temporary_copy.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -31,9 +32,26 @@ namespace micro_profiler
 				});
 				return symbol;
 			}
+
+			const mapped_module_identified *get_loaded(const loaded_modules &loaded, const string &path)
+			{
+				for (auto i = loaded.begin(); i != loaded.end(); ++i)
+					if (file_id(path) == file_id(i->path))
+						return &*i;
+				return nullptr;
+			}
 		}
 
 		begin_test_suite( ModuleTrackerTests )
+
+			unique_ptr<temporary_copy> module1, module2;
+
+			init( Init )
+			{
+				module1.reset(new temporary_copy(c_symbol_container_1));
+				module2.reset(new temporary_copy(c_symbol_container_2));
+			}
+
 
 			test( NoChangesIfNoLoadsUnloadsOccured )
 			{
@@ -361,6 +379,71 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_not_null(t.get_metadata(mmi.persistent_id));
+			}
+
+
+			test( LockingImagePreventsItFromUnloading )
+			{
+				// INIT
+				auto unloaded1 = false;
+				auto unloaded2 = false;
+				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
+				unique_ptr<image> image1(new image(module1->path()));
+				unique_ptr<image> image2(new image(module2->path()));
+
+				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
+				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
+
+				t.get_changes(l, u);
+
+				const auto lm1 = *get_loaded(l, module1->path());
+				const auto lm2 = *get_loaded(l, module2->path());
+
+				// ACT
+				auto lock1 = t.lock_image(lm1.persistent_id);
+				auto lock2 = t.lock_image(lm2.persistent_id);
+
+				// ASSERT
+				assert_not_null(lock1);
+				assert_not_null(lock2);
+				assert_not_equal(lock1, lock2);
+
+				// ACT
+				image1.reset();
+				image2.reset();
+
+				// ASSERT
+				assert_is_false(unloaded1);
+				assert_is_false(unloaded2);
+
+				// ACT
+				lock1.reset();
+
+				// ASSERT
+				assert_is_true(unloaded1);
+				assert_is_false(unloaded2);
+
+				// ACT
+				lock2.reset();
+
+				// ASSERT
+				assert_is_true(unloaded2);
+			}
+
+
+			test( AttemptToLockWithInvalidIDFails )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
+
+				t.get_changes(l, u);
+
+				// ACT / ASSERT
+				assert_throws(t.lock_image(1500), invalid_argument);
 			}
 		end_test_suite
 	}

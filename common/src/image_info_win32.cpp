@@ -103,7 +103,7 @@ namespace micro_profiler
 			for (auto i = begin(c_dbghelps); !_module && i != end(c_dbghelps); ++i)
 			{
 				::SetEnvironmentVariableW(L"PATH", (wstring(path_env) + L";" + unicode(~*i)).c_str());
-				_module.reset(::LoadLibraryW(unicode(*i).c_str()), &FreeLibrary);
+				_module = load_library(*i);
 			}
 			::SetEnvironmentVariableW(L"PATH", path_env);
 

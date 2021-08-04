@@ -60,7 +60,7 @@ namespace micro_profiler
 				const size_t payload_size = payload.length();
 				const shared_ptr<byte> fpayload = foreign_allocate(sizeof(injection_offset) + sizeof(payload_size)
 					+ payload.length());
-				const shared_ptr<void> hkernel(::LoadLibraryA("kernel32"), &::FreeLibrary);
+				const auto hkernel = load_library("kernel32");
 
 				::WriteProcessMemory(_hprocess.get(), fpath.get(), m.path.c_str(), m.path.size() + 1, NULL);
 				byte *fbase = static_cast<byte *>(foreign_execute((PTHREAD_START_ROUTINE)::GetProcAddress(

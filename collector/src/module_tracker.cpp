@@ -21,6 +21,7 @@
 #include <collector/module_tracker.h>
 
 #include <common/module.h>
+#include <stdexcept>
 #include <unordered_set>
 
 using namespace std;
@@ -69,6 +70,15 @@ namespace micro_profiler
 		unloaded_modules_.clear();
 		swap(loaded_modules_, _lqueue);
 		swap(unloaded_modules_, _uqueue);
+	}
+
+	shared_ptr<void> module_tracker::lock_image(unsigned int persistent_id)
+	{
+		const auto i = _modules_registry.find(persistent_id);
+
+		if (_modules_registry.end() == i)
+			throw invalid_argument("invalid persistent id");
+		return load_library(i->second.path);
 	}
 
 	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int persistent_id) const

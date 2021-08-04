@@ -15,8 +15,8 @@ add_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:/hotpatch>"
 )
 
-add_library(symbol_container_1 SHARED symbol_container_1.cpp)
-add_library(symbol_container_2 SHARED symbol_container_2.cpp symbol_container_2_internal.cpp)
+add_library(symbol_container_1 SHARED symbol_container_1.cpp unload_tracker.cpp)
+add_library(symbol_container_2 SHARED symbol_container_2.cpp symbol_container_2_internal.cpp unload_tracker.cpp)
 add_library(symbol_container_2_instrumented SHARED symbol_container_2.cpp symbol_container_2_internal.cpp)
 add_library(symbol_container_3_nosymbols SHARED symbol_container_3.cpp)
 add_executable(guinea_runner guinea_runner.cpp)

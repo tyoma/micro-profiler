@@ -69,7 +69,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\allocator.h" />
-    <ClInclude Include="..\image_patch_manager.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="calls_collector_msvc.asm">

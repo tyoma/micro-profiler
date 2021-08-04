@@ -20,23 +20,48 @@
 
 #pragma once
 
+#include <common/noncopyable.h>
 #include <common/range.h>
+#include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace micro_profiler
 {
-	class module_tracker;
+	class executable_memory_allocator;
 
-	class image_patch_manager
+	class image_patch_manager : noncopyable
 	{
 	public:
 		template <typename InterceptorT>
-		image_patch_manager(InterceptorT &interceptor, module_tracker &modules);
+		image_patch_manager(executable_memory_allocator &allocator, InterceptorT &interceptor);
 
-		void query(std::vector<unsigned int /*currently installed*/> &result, unsigned int persistent_id);
-		void apply(std::vector<unsigned int /*installed successfully*/> &result, unsigned int persistent_id,
+		void query(std::vector<unsigned int /*rva currently installed*/> &result, unsigned int persistent_id);
+		void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
+			std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions);
+		void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
 			range<const unsigned int /*rva*/, size_t> functions);
-		void remove(std::vector<unsigned int /*removed successfully*/> &result, unsigned int persistent_id,
-			range<const unsigned int /*rva*/, size_t> functions);
+
+	private:
+		struct image_patch
+		{
+			image_patch();
+
+			std::shared_ptr<void> lock;
+			std::unordered_map<unsigned int /*rva*/, bool> patched;
+			unsigned int patches_applied;
+		};
+
+		typedef std::unordered_map<unsigned int /*persistent_id*/, image_patch> patched_images_t;
+
+	private:
+		patched_images_t _patched_images;
 	};
+
+
+
+	template <typename InterceptorT>
+	inline image_patch_manager::image_patch_manager(executable_memory_allocator &/*allocator*/,
+		InterceptorT &/*interceptor*/)
+	{	}
 }

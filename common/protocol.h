@@ -92,8 +92,5 @@ namespace micro_profiler
 	};
 
 	// response_patched
-	struct patch_response
-	{
-		std::vector<unsigned int> result;
-	};
+	typedef std::vector<unsigned int> patched_functions;
 }

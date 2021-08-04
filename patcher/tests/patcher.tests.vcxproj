@@ -57,6 +57,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="ImagePatchManagerTests.cpp" />
     <ClCompile Include="OffsetDisplacedReferencesTestsX86.cpp" />
   </ItemGroup>
   <ItemGroup>

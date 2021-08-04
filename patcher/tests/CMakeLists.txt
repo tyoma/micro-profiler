@@ -8,14 +8,9 @@ set(PATCHER_TEST_SOURCES
 	FunctionPatchTests.cpp
 	guineapigs.cpp
 	helpers.cpp
+	ImagePatchManagerTests.cpp
 	OffsetDisplacedReferencesTestsX86.cpp
 )
-
-if (GNU OR CLANG)
-	set(PATCHER_TEST_SOURCES
-		FunctionPatchTests.cpp
-	)
-endif()
 
 add_compile_options(
 	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:$<$<COMPILE_LANGUAGE:C>:-fpatchable-function-entry=14,12>>"

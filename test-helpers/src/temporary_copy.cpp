@@ -11,11 +11,19 @@
 #if WIN32
 	#include <io.h>
 	#include <sys/stat.h>
+
 	#define O_EX _S_IREAD|_S_IWRITE
+	#define open _open
+	#define close _close
+	#define write _write
+	#define unlink _unlink
+
 #else
 	#include <unistd.h>
+
 	#define O_EX 0
 	#define O_BINARY 0
+
 #endif
 
 using namespace std;

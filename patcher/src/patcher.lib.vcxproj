@@ -44,6 +44,7 @@
     <ClCompile Include="..\..\libraries\lend\ld32.c" />
     <ClCompile Include="dynamic_hooking.cpp" />
     <ClCompile Include="function_patch.cpp" />
+    <ClCompile Include="image_patch_manager.cpp" />
     <ClCompile Include="intel\binary_translation_x86.cpp" />
     <ClCompile Include="intel\jump.cpp" />
     <MASM Include="intel\trampoline_x86.asm">
@@ -62,6 +63,7 @@
     <ClInclude Include="..\binary_translation.h" />
     <ClInclude Include="..\dynamic_hooking.h" />
     <ClInclude Include="..\function_patch.h" />
+    <ClInclude Include="..\image_patch_manager.h" />
     <ClInclude Include="..\revert_buffer.h" />
     <ClInclude Include="intel\jump.h" />
   </ItemGroup>

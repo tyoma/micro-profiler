@@ -77,7 +77,6 @@
     <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\collector_app.h" />
     <ClInclude Include="..\image_patch.h" />
-    <ClInclude Include="..\image_patch_manager.h" />
     <ClInclude Include="..\module_tracker.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\serialization.h" />

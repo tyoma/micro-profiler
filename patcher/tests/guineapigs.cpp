@@ -1,5 +1,9 @@
+#include <common/platform.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string>
+
+using namespace std;
 
 namespace micro_profiler
 {
@@ -18,5 +22,17 @@ namespace micro_profiler
 
 			return n;
 		}
+
+		FORCE_NOINLINE string one()
+		{	return "one";	}
+
+		FORCE_NOINLINE string two()
+		{	return "two";	}
+
+		FORCE_NOINLINE string three()
+		{	return "three";	}
+
+		FORCE_NOINLINE string four()
+		{	return "four";	}
 	}
 }

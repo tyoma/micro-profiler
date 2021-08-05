@@ -9,6 +9,7 @@ set(PATCHER_TEST_SOURCES
 	guineapigs.cpp
 	helpers.cpp
 	ImagePatchManagerTests.cpp
+	JumperIntelTests.cpp
 	OffsetDisplacedReferencesTestsX86.cpp
 )
 
@@ -19,6 +20,10 @@ add_compile_options(
 
 set_property(SOURCE guineapigs.cpp APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-O0>")
 set_property(SOURCE guineapigs.cpp APPEND_STRING PROPERTY COMPILE_FLAGS "$<$<CXX_COMPILER_ID:MSVC>:/Od>")
+
+if (MSVC)
+	set_target_properties(symbol_container_1 symbol_container_2 PROPERTIES LINK_FLAGS "/functionpadmin:24")
+endif()
 
 add_library(patcher.tests SHARED ${PATCHER_TEST_SOURCES})
 

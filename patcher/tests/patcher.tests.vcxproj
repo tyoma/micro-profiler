@@ -38,7 +38,7 @@
       <AdditionalOptions Condition="'$(Platform)'=='Win32'">/hotpatch %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalOptions>/functionpadmin:12 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/functionpadmin:24 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -58,6 +58,7 @@
     </ClCompile>
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ImagePatchManagerTests.cpp" />
+    <ClCompile Include="JumperIntelTests.cpp" />
     <ClCompile Include="OffsetDisplacedReferencesTestsX86.cpp" />
   </ItemGroup>
   <ItemGroup>

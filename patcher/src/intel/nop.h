@@ -18,33 +18,19 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
-#include "dynamic_hooking.h"
-#include "jumper.h"
-
-#include <common/memory.h>
-
 namespace micro_profiler
 {
-	class function_patch : noncopyable
+	namespace assembler
 	{
-	public:
-		template <typename T>
-		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
+		inline bool is_nop(byte *address)
+		{
+			return (address[0] == 0x90 && address[1] == 0x90)
+				|| (address[0] == 0x8B && address[1] == 0xFF)
+				|| (address[0] == 0x66 && address[1] == 0x90)
+				|| (address[0] == 0x0F && address[1] == 0x1F);
+		}
 
-	private:
-		std::shared_ptr<void> _trampoline;
-		jumper _jumper;
-	};
-
-
-
-	template <typename T>
-	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
-		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(body.begin(), _trampoline.get())
-	{
-		initialize_trampoline(_trampoline.get(), _jumper.entry(), body.begin(), interceptor);
-		_jumper.activate(true);
+		inline bool is_nop(byte opcode)
+		{	return opcode == 0x90;	}
 	}
 }

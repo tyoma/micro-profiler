@@ -18,33 +18,11 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
-#include "dynamic_hooking.h"
-#include "jumper.h"
-
-#include <common/memory.h>
+#include <patcher/exceptions.h>
 
 namespace micro_profiler
 {
-	class function_patch : noncopyable
-	{
-	public:
-		template <typename T>
-		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
-
-	private:
-		std::shared_ptr<void> _trampoline;
-		jumper _jumper;
-	};
-
-
-
-	template <typename T>
-	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
-		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(body.begin(), _trampoline.get())
-	{
-		initialize_trampoline(_trampoline.get(), _jumper.entry(), body.begin(), interceptor);
-		_jumper.activate(true);
-	}
+	patch_exception::patch_exception()
+		: std::runtime_error("")
+	{	}
 }

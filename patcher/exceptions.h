@@ -20,31 +20,24 @@
 
 #pragma once
 
-#include "dynamic_hooking.h"
-#include "jumper.h"
-
-#include <common/memory.h>
+#include <stdexcept>
 
 namespace micro_profiler
 {
-	class function_patch : noncopyable
+	struct patch_exception : std::runtime_error
 	{
-	public:
-		template <typename T>
-		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
-
-	private:
-		std::shared_ptr<void> _trampoline;
-		jumper _jumper;
+		patch_exception();
 	};
 
-
-
-	template <typename T>
-	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
-		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(body.begin(), _trampoline.get())
+	struct padding_insufficient : patch_exception
 	{
-		initialize_trampoline(_trampoline.get(), _jumper.entry(), body.begin(), interceptor);
-		_jumper.activate(true);
-	}
+	};
+
+	struct leading_too_short : patch_exception
+	{
+	};
+
+	struct currently_prohibited : patch_exception
+	{
+	};
 }

@@ -21,6 +21,7 @@
 .model flat
 .code
 	trampoline_proto: ; fastcall argument passing: ECX, EDX, <stack>
+		push	eax ; some MS CRT functions accept arguments in EAX register...
 		push	ecx
 		push	edx
 		rdtsc
@@ -28,11 +29,12 @@
 		push	31415902h ; 4th argument, callee
 		push	edx
 		push	eax ; 3rd argument, timestamp
-		lea	edx, dword ptr [esp + 14h] ; 2nd argument, stack_ptr
+		lea	edx, dword ptr [esp + 18h] ; 2nd argument, stack_ptr
 		call	on_enter + 31415983h ; on_enter address (displacement)
 	on_enter:
 		pop	edx
 		pop	ecx
+		pop	eax
 
 		lea	esp, dword ptr [esp + 04h]		
 		call	target + 31415985h ; target address

@@ -48,7 +48,7 @@ namespace scheduler
 			};
 		}
 
-		begin_test_suite( AUIQueueTests )
+		begin_test_suite( UIQueueTests )
 			test( ScheduledUndeferredTasksAreExecutedInHostingThreads )
 			{
 				// INIT

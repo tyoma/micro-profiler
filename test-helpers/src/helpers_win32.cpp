@@ -51,6 +51,20 @@ namespace micro_profiler
 				::VirtualFree(p, 0, MEM_RELEASE);
 			});
 		}
+
+		shared_ptr<void> allocate_edge()
+		{
+			enum {	page_size = 4096	};
+
+			shared_ptr<void> m(::VirtualAlloc(0, 2 * page_size, MEM_RESERVE, PAGE_EXECUTE_READ), 
+				[] (void *p) {
+				::VirtualFree(p, 0, MEM_RELEASE);
+			});
+			auto address = static_cast<byte *>(m.get()) + page_size;
+
+			::VirtualAlloc(address, page_size, MEM_COMMIT, PAGE_EXECUTE);
+			return shared_ptr<void>(m, static_cast<byte *>(m.get()) + page_size);
+		}
 	}
 }
 

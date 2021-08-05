@@ -28,16 +28,29 @@ namespace micro_profiler
 	class jumper
 	{
 	public:
-		jumper(void *target, const void *trampoline);
+		jumper(void *target, const void *divert_to);
 		~jumper();
 
+		bool active() const;
 		const void *entry() const;
-		void activate();
-		void cancel();
+		bool activate(bool atomic);
+		bool revert(bool atomic);
+
+	private:
+		byte *prologue() const;
+		byte prologue_size() const;
 
 	private:
 		byte *_target;
-		byte _fuse_revert[8];
-		bool _active : 1, _cancelled : 1;
+		byte _fuse_revert[8], _fill;
+		int _entry : 6, _active : 1;
 	};
+
+
+
+	inline bool jumper::active() const
+	{	return !!_active;	}
+
+	inline const void *jumper::entry() const
+	{	return _target + _entry;	}
 }

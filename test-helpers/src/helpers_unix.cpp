@@ -124,5 +124,15 @@ namespace micro_profiler
 				::munmap(p, l);
 			});
 		}
+
+		shared_ptr<void> allocate_edge()
+		{
+			enum {	page_size = 4096	};
+
+			return shared_ptr<void>(::mmap(0, page_size, PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0),
+				[] (void *p) {
+				::munmap(p, page_size);
+			});
+		}
 	}
 }

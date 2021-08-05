@@ -28,7 +28,7 @@ target_compile_options(symbol_container_2_instrumented PUBLIC $<$<CXX_COMPILER_I
 #set_target_properties(symbol_container_3_nosymbols PROPERTIES LINK_FLAGS "/DEBUG:NONE")
 
 if (MSVC)
-	set_target_properties(symbol_container_1 symbol_container_2 PROPERTIES LINK_FLAGS "/functionpadmin:12")
+	set_target_properties(symbol_container_1 symbol_container_2 PROPERTIES LINK_FLAGS "/functionpadmin:24")
 endif()
 
 target_link_libraries(symbol_container_2_instrumented micro-profiler)

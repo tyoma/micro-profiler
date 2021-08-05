@@ -22,6 +22,9 @@
     <ClCompile Include="jumper.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="exceptions.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dynamic_hooking.h" />
@@ -39,6 +42,13 @@
     <ClInclude Include="replace.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="intel\nop.h">
+      <Filter>src\intel</Filter>
+    </ClInclude>
+    <ClInclude Include="intel\ldisasm.h">
+      <Filter>src\intel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\exceptions.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

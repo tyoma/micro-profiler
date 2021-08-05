@@ -59,9 +59,7 @@
     <ClCompile Include="CollectorAppTests.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ModuleTrackerTests.cpp" />
-    <ClCompile Include="ImagePatchTests.cpp">
-      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="ImagePatchTests.cpp" />
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="mocks_image_info.cpp" />
     <ClCompile Include="SerializationTests.cpp" />

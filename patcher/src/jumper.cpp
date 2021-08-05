@@ -21,9 +21,12 @@
 #include <patcher/jumper.h>
 
 #include "intel/jump.h"
+#include "intel/ldisasm.h"
+#include "intel/nop.h"
 #include "replace.h"
 
 #include <common/memory.h>
+#include <patcher/exceptions.h>
 #include <stdexcept>
 
 using namespace std;
@@ -35,38 +38,120 @@ extern "C" {
 
 namespace micro_profiler
 {
-	jumper::jumper(void *target, const void *trampoline)
-		: _target(static_cast<byte *>(target)), _active(false), _cancelled(false)
+	namespace
 	{
-		if (!(_target[0] == 0x90 && _target[1] == 0x90 || _target[0] == 0x8B && _target[1] == 0xFF))
-			throw runtime_error("the function is not hotpatchable!");
-		byte_range jumper(_target - c_jumper_size, c_jumper_size);
-		scoped_unprotect u(jumper);
+		const auto c_short_jump_size = static_cast<signed char>(sizeof(assembler::short_jump));
 
-		mem_copy(jumper.begin(), c_jumper_proto, jumper.length());
-		replace(jumper, 1, [trampoline] (...) {	return reinterpret_cast<size_t>(trampoline);	});
-		replace(jumper, 0x81, [trampoline] (ptrdiff_t address) {
-			return reinterpret_cast<ptrdiff_t>(trampoline) - address;
+		template <typename T>
+		bool is_uniform(T *ptr, size_t n)
+		{
+			for (auto i = ptr; n--; ++i)
+			{
+				if (*i != *ptr)
+					return false;
+			}
+			return true;
+		}
+
+		void VALIDATION_OVERRIDE(byte* instruction)
+		{
+			// Relative displacement operands at the start of the function are not supported yet.
+			switch (*instruction++)
+			{
+			case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
+			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
+			case 0xEB:
+			case 0xE8: case 0xE9:
+				throw currently_prohibited();
+
+			case 0x0F:
+				switch (*instruction++)
+				{
+				case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+				case 0x88: case 0x89: case 0x8a: case 0x8b: case 0x8c: case 0x8d: case 0x8e: case 0x8f:
+					throw currently_prohibited();
+				}
+			}
+		}
+	}
+
+	jumper::jumper(void *target, const void *divert_to)
+	try
+		: _target(static_cast<byte *>(target)), _active(0)
+	{
+		VALIDATION_OVERRIDE(_target);
+
+		const auto extra = static_cast<signed char>(ldisasm(target, sizeof(void*) == 8));
+		
+		if (extra < c_short_jump_size && !assembler::is_nop(*_target))
+			throw leading_too_short();
+		_entry = assembler::is_nop(_target) ? (max)(extra, c_short_jump_size) : -(c_short_jump_size + extra);
+
+		byte_range j(prologue(), c_jumper_size);
+		scoped_unprotect u(byte_range(prologue(), prologue_size()));
+
+		if (!is_uniform(prologue(), prologue_size()))
+			throw padding_insufficient();
+		_fill = *prologue();
+		mem_copy(j.begin(), c_jumper_proto, j.length());
+		replace(j, 1, [divert_to] (...) {	return reinterpret_cast<size_t>(divert_to);	});
+		replace(j, 0x81, [divert_to] (ptrdiff_t address) {
+			return reinterpret_cast<ptrdiff_t>(divert_to) - address;
 		});
+		if (_entry < 0)
+		{
+			mem_copy(_target + _entry, _target, extra);
+			reinterpret_cast<assembler::short_jump *>(_target - c_short_jump_size)->init(_target + extra);
+		}
+	}
+	catch (const patch_exception &)
+	{
+		throw;
+	}
+	catch (const runtime_error &)
+	{
+		throw padding_insufficient();
 	}
 
 	jumper::~jumper()
 	{
-		byte_range fuse(_target, sizeof(assembler::short_jump));
-		scoped_unprotect u(fuse);
+		scoped_unprotect u(byte_range(prologue(), prologue_size() + c_short_jump_size));
 
-		*reinterpret_cast<assembler::short_jump *>(_target) = *reinterpret_cast<assembler::short_jump *>(_fuse_revert);
+		if (_active)
+			*reinterpret_cast<assembler::short_jump *>(_target) = *reinterpret_cast<assembler::short_jump *>(_fuse_revert);
+		fill_n(prologue(), prologue_size(), _fill);
 	}
 
-	const void *jumper::entry() const
-	{	return static_cast<byte *>(_target) + 2;	}
-
-	void jumper::activate()
+	bool jumper::activate(bool /*atomic*/)
 	{
-		byte_range fuse(_target, sizeof(assembler::short_jump));
+		if (_active)
+			return false;
+
+		byte_range fuse(_target, c_short_jump_size);
 		scoped_unprotect u(fuse);
 
 		*reinterpret_cast<assembler::short_jump *>(_fuse_revert) = *reinterpret_cast<assembler::short_jump *>(_target);
-		reinterpret_cast<assembler::short_jump *>(_target)->init(_target - c_jumper_size);
+		reinterpret_cast<assembler::short_jump *>(_target)->init(prologue());
+		_active = -1;
+		return true;
 	}
+
+	bool jumper::revert(bool /*atomic*/)
+	{
+		if (!_active)
+			return false;
+
+		byte_range fuse(_target, c_short_jump_size);
+		scoped_unprotect u(fuse);
+
+		*reinterpret_cast<assembler::short_jump *>(_target) = *reinterpret_cast<assembler::short_jump *>(_fuse_revert);
+		_active = 0;
+		return true;
+	}
+
+	byte *jumper::prologue() const
+	{	return _target - prologue_size();	}
+
+	byte jumper::prologue_size() const
+	{	return static_cast<byte>(c_jumper_size + (_entry < 0 ? -_entry : 0));	}
 }

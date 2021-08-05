@@ -20,31 +20,24 @@
 
 #pragma once
 
-#include "dynamic_hooking.h"
-#include "jumper.h"
-
-#include <common/memory.h>
+#include <common/platform.h>
+#include <common/types.h>
 
 namespace micro_profiler
 {
-	class function_patch : noncopyable
+	class jumper
 	{
 	public:
-		template <typename T>
-		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
+		jumper(void *target, const void *trampoline);
+		~jumper();
+
+		const void *entry() const;
+		void activate();
+		void cancel();
 
 	private:
-		std::shared_ptr<void> _trampoline;
-		jumper _jumper;
+		byte *_target;
+		byte _fuse_revert[8];
+		bool _active : 1, _cancelled : 1;
 	};
-
-
-
-	template <typename T>
-	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
-		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(body.begin(), _trampoline.get())
-	{
-		initialize_trampoline(_trampoline.get(), _jumper.entry(), body.begin(), interceptor);
-		_jumper.activate();
-	}
 }

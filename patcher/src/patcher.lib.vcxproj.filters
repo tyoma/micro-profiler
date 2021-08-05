@@ -19,6 +19,9 @@
     <ClCompile Include="image_patch_manager.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="jumper.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dynamic_hooking.h" />
@@ -32,6 +35,10 @@
     <ClInclude Include="..\binary_translation.h" />
     <ClInclude Include="..\revert_buffer.h" />
     <ClInclude Include="..\image_patch_manager.h" />
+    <ClInclude Include="..\jumper.h" />
+    <ClInclude Include="replace.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

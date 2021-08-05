@@ -45,21 +45,6 @@ namespace micro_profiler
 		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit);	}
 	};
 
-	class redirector
-	{
-	public:
-		redirector(void *target, const void *trampoline);
-		~redirector();
-
-		const void *entry() const;
-		void activate();
-		void cancel();
-
-	private:
-		byte *_target;
-		byte _fuse_revert[8];
-		bool _active : 1, _cancelled : 1;
-	};
 
 
 	extern const size_t c_trampoline_size;

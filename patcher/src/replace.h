@@ -20,31 +20,37 @@
 
 #pragma once
 
-#include "dynamic_hooking.h"
-#include "jumper.h"
-
+#include <algorithm>
 #include <common/memory.h>
 
 namespace micro_profiler
 {
-	class function_patch : noncopyable
-	{
-	public:
-		template <typename T>
-		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
-
-	private:
-		std::shared_ptr<void> _trampoline;
-		jumper _jumper;
-	};
-
-
+	const unsigned int c_signature = 0x31415926;
 
 	template <typename T>
-	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
-		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(body.begin(), _trampoline.get())
+	T construct_replace_seq(byte index)
 	{
-		initialize_trampoline(_trampoline.get(), _jumper.entry(), body.begin(), interceptor);
-		_jumper.activate();
+		auto mask = (static_cast<T>(0) - 1) & ~0xFF;
+		auto signature = static_cast<T>(c_signature) << 8 * (sizeof(T) - 4);
+
+		return (signature & mask) | index;
+	}
+
+	template <typename WriterT>
+	void replace(byte_range range_, byte index, const WriterT &writer)
+	{
+		typedef decltype(writer(0)) value_type;
+
+		const auto seq = construct_replace_seq<value_type>(index);
+		const auto sbegin = reinterpret_cast<const byte *>(&seq);
+		const auto send = sbegin + sizeof(seq);
+			
+		for (byte *i = range_.begin(), *end = range_.end(); i = std::search(i, end, sbegin, send), i != end; )
+		{
+			const auto replacement = writer(reinterpret_cast<size_t>(i + sizeof(value_type)));
+
+			mem_copy(i, reinterpret_cast<const byte *>(&replacement), sizeof(replacement));
+			i += sizeof(replacement);
+		}
 	}
 }

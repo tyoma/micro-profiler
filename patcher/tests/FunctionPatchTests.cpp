@@ -69,7 +69,7 @@ namespace micro_profiler
 				patch.activate(false);
 
 				// ACT / ASSERT
-				assert_is_true(patch.revert(false));
+				assert_is_true(patch.revert());
 
 				// ACT
 				recursive_factorial(3);
@@ -78,7 +78,7 @@ namespace micro_profiler
 				assert_is_empty(trace.call_log);
 
 				// ACT / ASSERT
-				assert_is_false(patch.revert(false));
+				assert_is_false(patch.revert());
 			}
 
 

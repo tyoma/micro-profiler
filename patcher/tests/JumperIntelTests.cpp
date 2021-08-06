@@ -360,8 +360,8 @@ namespace micro_profiler
 				j2.activate(true);
 
 				// ACT
-				assert_is_true(j1.revert(true));
-				assert_is_true(j2.revert(true));
+				assert_is_true(j1.revert());
+				assert_is_true(j2.revert());
 
 				// ACT / ASSERT
 				assert_equal("one", one());
@@ -415,7 +415,7 @@ namespace micro_profiler
 					jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
 
 				// ACT / ASSERT
-					assert_is_false(j.revert(true));
+					assert_is_false(j.revert());
 
 				// ACT
 				}
@@ -504,7 +504,7 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_throws(j.activate(false), logic_error);
-				assert_throws(j.revert(false), logic_error);
+				assert_throws(j.revert(), logic_error);
 			}
 
 		end_test_suite

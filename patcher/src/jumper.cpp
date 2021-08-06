@@ -141,7 +141,7 @@ namespace micro_profiler
 		return true;
 	}
 
-	bool jumper::revert(bool /*atomic*/)
+	bool jumper::revert()
 	{
 		if (_detached)
 			throw logic_error("jumper detached");

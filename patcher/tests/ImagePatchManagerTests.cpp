@@ -438,6 +438,48 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(trace.call_log);
 			}
+
+
+			test( FailureToActivateAPatchIsReported )
+			{
+				// INIT
+				image image2(module2->path());
+				mocks::trace_events trace2;
+				image_patch_manager m1(trace, allocator), m2(trace2, allocator);
+				detacher dd1(m1), dd2(m2);
+				unsigned int functions1[] = {
+					image2.get_symbol_rva("guinea_snprintf"),
+					image2.get_symbol_rva("bubble_sort2"),
+				};
+				unsigned int functions2[] = {
+					image2.get_symbol_rva("get_function_addresses_2"),
+					image2.get_symbol_rva("guinea_snprintf"),
+					image2.get_symbol_rva("function_with_a_nested_call_2"),
+					image2.get_symbol_rva("bubble_sort_expose"),
+					image2.get_symbol_rva("bubble_sort2"),
+				};
+
+				m1.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions1));
+
+				// ACT
+				m2.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions2));
+
+				// ASSERT
+				assert_equivalent(functions1, result);
+
+				// INIT
+				unsigned int functions3[] = {
+					image2.get_symbol_rva("get_function_addresses_2"),
+				};
+
+				result.clear();
+
+				// ACT
+				m1.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions3));
+
+				// ASSERT
+				assert_equivalent(functions3, result);
+			}
 		end_test_suite
 	}
 }

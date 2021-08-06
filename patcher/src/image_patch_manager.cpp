@@ -20,6 +20,8 @@
 
 #include <patcher/image_patch_manager.h>
 
+#include <patcher/exceptions.h>
+
 using namespace std;
 
 namespace micro_profiler
@@ -46,15 +48,21 @@ namespace micro_profiler
 		{
 			auto e = image.patched.find(*i);
 
-			if (image.patched.end() == e)
-				e = image.patched.insert(make_pair(*i, _create_patch(static_cast<byte *>(base) + *i))).first;
-
-			auto &patch = *e->second;
-
-			if (patch.activate(false))
+			try
 			{
-				image.patches_applied++;
-				continue;
+				if (image.patched.end() == e)
+					e = image.patched.insert(make_pair(*i, _create_patch(static_cast<byte *>(base) + *i))).first;
+
+				auto &patch = *e->second;
+
+				if (patch.activate(false))
+				{
+					image.patches_applied++;
+					continue;
+				}
+			}
+			catch (patch_exception &)
+			{
 			}
 			failures.push_back(*i);
 		}
@@ -75,7 +83,7 @@ namespace micro_profiler
 			{
 				auto &patch = *e->second;
 
-				if (patch.revert(false))
+				if (patch.revert())
 				{
 					image.patches_applied--;
 					continue;

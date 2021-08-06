@@ -35,7 +35,7 @@ namespace micro_profiler
 		const void *entry() const;
 		const void *target() const;
 		bool activate(bool atomic);
-		bool revert(bool atomic);
+		bool revert();
 		void detach();
 
 	private:

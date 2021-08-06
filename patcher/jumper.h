@@ -33,8 +33,10 @@ namespace micro_profiler
 
 		bool active() const;
 		const void *entry() const;
+		const void *target() const;
 		bool activate(bool atomic);
 		bool revert(bool atomic);
+		void detach();
 
 	private:
 		byte *prologue() const;
@@ -43,14 +45,17 @@ namespace micro_profiler
 	private:
 		byte *_target;
 		byte _fuse_revert[8], _fill;
-		int _entry : 6, _active : 1;
+		int _entry : 6, _active : 1, _detached : 1;
 	};
 
 
 
 	inline bool jumper::active() const
-	{	return !!_active;	}
+	{	return !_detached && !!_active;	}
 
 	inline const void *jumper::entry() const
 	{	return _target + _entry;	}
+
+	inline const void *jumper::target() const
+	{	return _target;	}
 }

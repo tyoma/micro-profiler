@@ -55,7 +55,7 @@ namespace micro_profiler
 
 	private:
 		const std::shared_ptr< image_info<symbol_info_mapped> > _image;
-		std::function<std::shared_ptr<function_patch> (byte_range body)> _intercept;
+		std::function<std::shared_ptr<function_patch> (void *target)> _intercept;
 		patches_container_t _patches;
 		executable_memory_allocator _allocator;
 	};
@@ -67,8 +67,8 @@ namespace micro_profiler
 			InterceptorT *interceptor)
 		: _image(image)
 	{
-		_intercept = [this, interceptor] (byte_range body) {
-			return std::shared_ptr<function_patch>(new function_patch(_allocator, body, interceptor));
+		_intercept = [this, interceptor] (void *target) {
+			return std::shared_ptr<function_patch>(new function_patch(target, interceptor, _allocator));
 		};
 	}
 }

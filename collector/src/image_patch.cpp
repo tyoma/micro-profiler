@@ -18,9 +18,10 @@ namespace micro_profiler
 			{
 				if (_patches.find(symbol.body.begin()) == _patches.end() && symbol.body.length() >= 5 && filter(symbol))
 				{
-					auto p = _intercept(symbol.body);
+					auto p = _intercept(symbol.body.begin());
 
 					_patches.insert(make_pair(symbol.body.begin(), image_patch::patch_entry(symbol, p)));
+					p->activate(false);
 				}
 			}
 			catch (exception &/*e*/)

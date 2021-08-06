@@ -28,18 +28,31 @@ namespace micro_profiler
 		: patches_applied(0)
 	{	}
 
-	void image_patch_manager::apply(vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
+	void image_patch_manager::detach_all()
+	{
+		for (auto i = _patched_images.begin(); i != _patched_images.end(); ++i)
+		{
+			for (auto j = i->second.patched.begin(); j != i->second.patched.end(); ++j)
+				j->second->detach();
+		}
+	}
+
+	void image_patch_manager::apply(vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
 		shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions)
 	{
 		auto &image = _patched_images[persistent_id];
 
 		for (auto i = functions.begin(); i != functions.end(); ++i)
 		{
-			auto &patch = image.patched[*i];
+			auto e = image.patched.find(*i);
 
-			if (!patch)
+			if (image.patched.end() == e)
+				e = image.patched.insert(make_pair(*i, _create_patch(static_cast<byte *>(base) + *i))).first;
+
+			auto &patch = *e->second;
+
+			if (patch.activate(false))
 			{
-				patch = true;
 				image.patches_applied++;
 				continue;
 			}
@@ -56,13 +69,17 @@ namespace micro_profiler
 
 		for (auto i = functions.begin(); i != functions.end(); ++i)
 		{
-			auto &patch = image.patched[*i];
+			const auto e = image.patched.find(*i);
 
-			if (patch)
+			if (image.patched.end() != e)
 			{
-				patch = false;
-				image.patches_applied--;
-				continue;
+				auto &patch = *e->second;
+
+				if (patch.revert(false))
+				{
+					image.patches_applied--;
+					continue;
+				}
 			}
 			failures.push_back(*i);
 		}

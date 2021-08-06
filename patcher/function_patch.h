@@ -31,7 +31,13 @@ namespace micro_profiler
 	{
 	public:
 		template <typename T>
-		function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor);
+		function_patch(void *target, T *interceptor, executable_memory_allocator &allocator);
+
+		const void *target() const;
+		bool active() const;
+		bool activate(bool atomic);
+		bool revert(bool atomic);
+		void detach();
 
 	private:
 		std::shared_ptr<void> _trampoline;
@@ -41,10 +47,22 @@ namespace micro_profiler
 
 
 	template <typename T>
-	inline function_patch::function_patch(executable_memory_allocator &allocator, byte_range body, T *interceptor)
-		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(body.begin(), _trampoline.get())
-	{
-		initialize_trampoline(_trampoline.get(), _jumper.entry(), body.begin(), interceptor);
-		_jumper.activate(true);
-	}
+	inline function_patch::function_patch(void *target, T *interceptor, executable_memory_allocator &allocator)
+		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(target, _trampoline.get())
+	{	initialize_trampoline(_trampoline.get(), _jumper.entry(), target, interceptor);	}
+
+	inline const void *function_patch::target() const
+	{	return _jumper.target();	}
+
+	inline bool function_patch::active() const
+	{	return _jumper.active();	}
+
+	inline bool function_patch::activate(bool atomic)
+	{	return _jumper.activate(atomic);	}
+
+	inline bool function_patch::revert(bool atomic)
+	{	return _jumper.revert(atomic);	}
+
+	inline void function_patch::detach()
+	{	_jumper.detach();	}
 }

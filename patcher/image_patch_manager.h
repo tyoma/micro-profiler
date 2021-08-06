@@ -20,8 +20,11 @@
 
 #pragma once
 
+#include "function_patch.h"
+
 #include <common/noncopyable.h>
 #include <common/range.h>
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -34,10 +37,12 @@ namespace micro_profiler
 	{
 	public:
 		template <typename InterceptorT>
-		image_patch_manager(executable_memory_allocator &allocator, InterceptorT &interceptor);
+		image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator);
+
+		void detach_all();
 
 		void query(std::vector<unsigned int /*rva currently installed*/> &result, unsigned int persistent_id);
-		void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
+		void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
 			std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions);
 		void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
 			range<const unsigned int /*rva*/, size_t> functions);
@@ -48,7 +53,7 @@ namespace micro_profiler
 			image_patch();
 
 			std::shared_ptr<void> lock;
-			std::unordered_map<unsigned int /*rva*/, bool> patched;
+			std::unordered_map< unsigned int /*rva*/, std::shared_ptr<function_patch> > patched; // TODO: should be unique_ptr, but MSVC 10.0 fails with it.
 			unsigned int patches_applied;
 		};
 
@@ -56,12 +61,19 @@ namespace micro_profiler
 
 	private:
 		patched_images_t _patched_images;
+		std::function<std::shared_ptr<function_patch> (void *target)> _create_patch;
 	};
 
 
 
 	template <typename InterceptorT>
-	inline image_patch_manager::image_patch_manager(executable_memory_allocator &/*allocator*/,
-		InterceptorT &/*interceptor*/)
+	inline std::shared_ptr<function_patch> construct_function_patch(void *target, InterceptorT &interceptor, executable_memory_allocator &allocator)
+	{	return std::make_shared<function_patch>(target, &interceptor, allocator);	}
+
+	template <typename InterceptorT>
+	inline image_patch_manager::image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator)
+		: _create_patch([&interceptor, &allocator] (void *target) {
+			return construct_function_patch(target, interceptor, allocator);
+		})
 	{	}
 }

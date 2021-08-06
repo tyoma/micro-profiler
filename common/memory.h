@@ -31,7 +31,7 @@ namespace micro_profiler
 	public:
 		executable_memory_allocator();
 
-		std::shared_ptr<void> allocate(size_t size);
+		virtual std::shared_ptr<void> allocate(size_t size);
 
 	private:
 		class block;

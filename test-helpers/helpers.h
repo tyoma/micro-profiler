@@ -28,6 +28,25 @@ namespace micro_profiler
 			return assertion[0];
 		}
 
+		template <typename V>
+		struct hack_caster
+		{
+			hack_caster(V v)
+				: _v(v)
+			{	}
+
+			template <typename U>
+			operator U() const
+			{	return address_cast_hack<U>(_v);	}
+
+		private:
+			V _v;
+		};
+
+		template <typename V>
+		inline hack_caster<V> address_cast_hack2(V v)
+		{	return hack_caster<V>(v);	}
+
 		guid_t generate_id();
 
 		class image : private std::shared_ptr<void>

@@ -77,7 +77,7 @@ namespace micro_profiler
 
 	jumper::jumper(void *target, const void *divert_to)
 	try
-		: _target(static_cast<byte *>(target)), _active(0)
+		: _target(static_cast<byte *>(target)), _active(0), _detached(0)
 	{
 		VALIDATION_OVERRIDE(_target);
 
@@ -115,6 +115,9 @@ namespace micro_profiler
 
 	jumper::~jumper()
 	{
+		if (_detached)
+			return;
+
 		scoped_unprotect u(byte_range(prologue(), prologue_size() + c_short_jump_size));
 
 		if (_active)
@@ -124,6 +127,8 @@ namespace micro_profiler
 
 	bool jumper::activate(bool /*atomic*/)
 	{
+		if (_detached)
+			throw logic_error("jumper detached");
 		if (_active)
 			return false;
 
@@ -138,6 +143,8 @@ namespace micro_profiler
 
 	bool jumper::revert(bool /*atomic*/)
 	{
+		if (_detached)
+			throw logic_error("jumper detached");
 		if (!_active)
 			return false;
 
@@ -148,6 +155,9 @@ namespace micro_profiler
 		_active = 0;
 		return true;
 	}
+
+	void jumper::detach()
+	{	_detached = -1;	}
 
 	byte *jumper::prologue() const
 	{	return _target - prologue_size();	}

@@ -3,6 +3,7 @@
 #include <patcher/exceptions.h>
 
 #include <common/memory.h>
+#include <iterator>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -322,6 +323,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_equal("one", address_cast_hack<string (*)()>(j1.entry())());
 				assert_equal("two", address_cast_hack<string (*)()>(j2.entry())());
+
+				// ASSERT
+				assert_equal(address_cast_hack<void *>(&one), j1.target());
+				assert_equal(address_cast_hack<void *>(&two), j2.target());
 			}
 
 
@@ -430,6 +435,76 @@ namespace micro_profiler
 				assert_throws(jumper(target, 0), leading_too_short);
 				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0xC3, target[1] = 0x52;	} // ret, push ...
 				assert_throws(jumper(target, 0), leading_too_short);
+			}
+
+
+			test( NoRestorationTakesPlaceAfterDetachingJumper )
+			{
+				// INIT
+				auto target = edge.get() + c_jumper_size + 5;
+				vector<byte> before_detach;
+				{
+					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
+					fill(target - c_jumper_size - 5, target, (byte)0xFD);
+					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
+				}
+				unique_ptr<jumper> j(new jumper(target, 0));
+
+				j->activate(false);
+				copy(target - c_jumper_size - 5, target + 2, back_inserter(before_detach));
+
+				// ACT
+				j->detach();
+
+				// ASSERT
+				assert_is_false(j->active());
+
+				// ACT
+				j.reset();
+
+				// ASSERT
+				assert_equal(before_detach, vector<byte>(target - c_jumper_size - 5, target + 2));
+			}
+
+
+			test( NoMemoryLockOnDestroyAfterDetach )
+			{
+				// INIT
+				auto target = edge.get() + c_jumper_size + 5;
+				{
+					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
+					fill(target - c_jumper_size - 5, target, (byte)0xFD);
+					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
+				}
+				unique_ptr<jumper> j(new jumper(target, 0));
+
+				j->activate(false);
+				j->detach();
+
+				// ACT
+				edge.reset(); // release memory
+
+				// ACT / ASSERT (must not crash)
+				j.reset();
+			}
+
+
+			test( ActivationAndRevertFailForADetachedJumper )
+			{
+				// INIT
+				auto target = edge.get() + c_jumper_size + 5;
+				{
+					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
+					fill(target - c_jumper_size - 5, target, (byte)0xFD);
+					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
+				}
+				jumper j(target, 0);
+
+				j.detach();
+
+				// ACT / ASSERT
+				assert_throws(j.activate(false), logic_error);
+				assert_throws(j.revert(false), logic_error);
 			}
 
 		end_test_suite

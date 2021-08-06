@@ -3,6 +3,8 @@
 #include "helpers.h"
 #include "mocks.h"
 
+#include <test-helpers/constants.h>
+#include <test-helpers/temporary_copy.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -19,14 +21,88 @@ namespace micro_profiler
 		begin_test_suite( FunctionPatchTests )
 			executable_memory_allocator allocator;
 			mocks::trace_events trace;
+			unique_ptr<temporary_copy> module1;
+
+			init( PrepareGuinies )
+			{
+				module1.reset(new temporary_copy(c_symbol_container_1));
+			}
+
+
+			test( PatchIsNotActiveActiveAtConstruction )
+			{
+				// INIT / ACT
+				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
+
+				// ACT
+				recursive_factorial(2);
+
+				// ACT / ASSERT
+				assert_is_false(patch.active());
+				assert_equal(address_cast_hack<void *>(&recursive_factorial), patch.target());
+
+				// ASSERT
+				assert_is_empty(trace.call_log);
+
+				// ACT / ASSERT
+				assert_is_true(patch.activate(false));
+
+				// ACT
+				recursive_factorial(2);
+
+				// ACT / ASSERT
+				assert_is_true(patch.active());
+
+				// ASSERT
+				assert_is_false(trace.call_log.empty());
+
+				// ACT / ASSERT
+				assert_is_false(patch.activate(false)); // repeated activation
+			}
+
+
+			test( RevertingStopsTracing )
+			{
+				// INIT / ACT
+				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
+
+				patch.activate(false);
+
+				// ACT / ASSERT
+				assert_is_true(patch.revert(false));
+
+				// ACT
+				recursive_factorial(3);
+
+				// ASSERT
+				assert_is_empty(trace.call_log);
+
+				// ACT / ASSERT
+				assert_is_false(patch.revert(false));
+			}
+
+
+			test( DetachingIsDelegatedToJumper )
+			{
+				// INIT
+				unique_ptr<image> image1(new image(module1->path()));
+				unique_ptr<function_patch> patch(new function_patch(image1->get_symbol_address("get_function_addresses_1"), &trace, allocator));
+
+				// ACT
+				image1.reset();
+				patch->detach();
+
+				// ACT / ASSERT (must not crash)
+				patch.reset();
+			}
+
 
 			test( PatchedFunctionCallsHookCallbacks )
 			{
-				// INIT
-				byte_range b = get_function_body(&recursive_factorial);
-
 				// INIT / ACT
-				function_patch patch(allocator, b, &trace);
+				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
+
+				patch.activate(true);
 
 				// ACT
 				assert_equal(6, recursive_factorial(3));
@@ -83,10 +159,11 @@ namespace micro_profiler
 				// INIT
 				fn_t *f = &guinea_snprintf;
 				char buffer[1000] = { 0 };
-				byte_range b = get_function_body(f);
 
 				// INIT / ACT
-				function_patch patch(allocator, b, &trace);
+				function_patch patch(address_cast_hack<void *>(f), &trace, allocator);
+
+				patch.activate(true);
 
 				// ACT
 				f(buffer, 10, "%X", 132214);
@@ -105,8 +182,9 @@ namespace micro_profiler
 			test( DestructionOfPatchCancelsHooking )
 			{
 				// INIT
-				byte_range b = get_function_body(&recursive_factorial);
-				auto_ptr<function_patch> patch(new function_patch(allocator, b, &trace));
+				unique_ptr<function_patch> patch(new function_patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator));
+
+				patch->activate(true);
 
 				// ACT / ASSERT
 				patch.reset();

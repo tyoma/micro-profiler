@@ -10,7 +10,6 @@ set(FRONTEND_TESTS_SOURCES
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
 	HeadersModelTests.cpp
-	MarshalledServerTests.cpp
 	mocks.cpp
 	OrderedViewTests.cpp
 	ProcessListTests.cpp

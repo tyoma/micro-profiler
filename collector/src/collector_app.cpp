@@ -36,9 +36,9 @@ using namespace std;
 namespace micro_profiler
 {
 	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector_i> &collector,
-			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_)
+			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_, patch_manager &patch_manager_)
 		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _module_tracker(new module_tracker),
-			_thread_monitor(thread_monitor_), _exit(false)
+			_thread_monitor(thread_monitor_), _patch_manager(patch_manager_), _exit(false)
 	{
 		_frontend_thread.reset(new mt::thread([this, factory, overhead_] {
 			worker(factory, overhead_);
@@ -99,7 +99,8 @@ namespace micro_profiler
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
 		shared_ptr<ipc::channel> frontend = factory(*this);
-		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker, _thread_monitor));
+		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker, _thread_monitor,
+			_patch_manager));
 		function<void ()> analyze;
 		const auto analyze_ = [&] {
 			_bridge->analyze();

@@ -31,6 +31,7 @@ namespace micro_profiler
 	struct calls_collector_i;
 	class module_tracker;
 	struct overhead;
+	struct patch_manager;
 	class statistics_bridge;
 	class thread_monitor;
 
@@ -42,7 +43,8 @@ namespace micro_profiler
 
 	public:
 		collector_app(const frontend_factory_t &factory, const std::shared_ptr<calls_collector_i> &collector,
-			const overhead &overhead_, const std::shared_ptr<thread_monitor> &thread_monitor_);
+			const overhead &overhead_, const std::shared_ptr<thread_monitor> &thread_monitor_,
+			patch_manager &patch_manager_);
 		~collector_app();
 
 		void stop();
@@ -59,6 +61,7 @@ namespace micro_profiler
 		const std::shared_ptr<calls_collector_i> _collector;
 		const std::shared_ptr<module_tracker> _module_tracker;
 		const std::shared_ptr<thread_monitor> _thread_monitor;
+		patch_manager &_patch_manager;
 		std::unique_ptr<statistics_bridge> _bridge;
 		bool _exit;
 		std::unique_ptr<mt::thread> _frontend_thread;

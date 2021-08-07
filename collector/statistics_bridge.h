@@ -30,6 +30,7 @@ namespace micro_profiler
 	struct calls_collector_i;
 	class module_tracker;
 	struct overhead;
+	struct patch_manager;
 
 	namespace ipc
 	{
@@ -40,17 +41,20 @@ namespace micro_profiler
 	{
 	public:
 		statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
-			const std::shared_ptr<module_tracker> &module_tracker_,
-			const std::shared_ptr<thread_monitor> &thread_monitor_);
+			std::shared_ptr<module_tracker> module_tracker_, std::shared_ptr<thread_monitor> thread_monitor_,
+			patch_manager &patch_manager_);
 
 		void analyze();
 		void update_frontend();
 		void send_module_metadata(unsigned int persistent_id);
 		void send_thread_info(const std::vector<thread_monitor::thread_id> &ids);
 
+		void activate_patches(unsigned int token, unsigned int persistent_id, const std::vector<unsigned int> &rva);
+		void revert_patches(unsigned int token, unsigned int persistent_id, const std::vector<unsigned int> &rva);
+
 	private:
 		template <typename DataT>
-		void send(messages_id command, const DataT &data);
+		void send(messages_id command, const unsigned int *token, const DataT &data);
 
 	public:
 		pod_vector<byte> _buffer;
@@ -60,5 +64,6 @@ namespace micro_profiler
 		ipc::channel &_frontend;
 		const std::shared_ptr<module_tracker> _module_tracker;
 		const std::shared_ptr<thread_monitor> _thread_monitor;
+		patch_manager &_patch_manager;
 	};
 }

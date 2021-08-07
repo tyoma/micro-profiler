@@ -18,49 +18,34 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <ipc/server_session.h>
 
-#include <common/file_id.h>
-#include <common/module.h>
-#include <common/primitives.h>
-#include <common/protocol.h>
-#include <memory>
+using namespace std;
 
 namespace micro_profiler
 {
-	struct symbol_info;
-
-	template <typename SymbolT>
-	struct image_info;
-
-	class module_tracker
+	namespace ipc
 	{
-	public:
-		typedef image_info<symbol_info> metadata_t;
-		typedef std::shared_ptr<const metadata_t> metadata_ptr;
+		server_session::server_session(channel &/*outbound*/)
+		{	}
 
-	public:
-		module_tracker();
-
-		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-		std::shared_ptr<mapped_module_identified> lock_mapping(unsigned int persistent_id);
-		metadata_ptr get_metadata(unsigned int persistent_id) const;
-
-	private:
-		struct module_info
+		void server_session::disconnect() throw()
 		{
-			std::string path;
-			std::shared_ptr<mapped_module_identified> mapping;
-		};
+		}
 
-		typedef containers::unordered_map<file_id, unsigned int /*persistent_id*/> files_registry_t;
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
+		void server_session::message(const_byte_range payload)
+		{
+			buffer_reader r(payload);
+			deserializer d(r);
+			unsigned int request_id, token;
 
-	private:
-		files_registry_t _files_registry;
-		modules_registry_t _modules_registry;
-		loaded_modules _lqueue;
-		unloaded_modules _uqueue;
-		unsigned int _next_instance_id, _next_persistent_id;
-	};
+			d(request_id);
+			d(token);
+
+			const auto h = _handlers.find(request_id);
+
+			if (h != _handlers.end())
+				_handlers[request_id](*(request *)0, d);
+		}
+	}
 }

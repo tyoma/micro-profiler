@@ -73,6 +73,7 @@
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mocks_allocator.h" />
     <ClInclude Include="mocks_image_info.h" />
+    <ClInclude Include="mocks_patch_manager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

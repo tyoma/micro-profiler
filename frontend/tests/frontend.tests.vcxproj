@@ -56,7 +56,6 @@
     <ClCompile Include="FunctionListPersistence.cpp" />
     <ClCompile Include="FunctionListPiechartTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
-    <ClCompile Include="MarshalledServerTests.cpp" />
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="ProcessListTests.cpp" />

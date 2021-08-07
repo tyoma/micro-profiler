@@ -26,6 +26,7 @@
 #include <common/module.h>
 #include <common/time.h>
 #include <ipc/endpoint.h>
+#include <patcher/interface.h>
 #include <strmd/serializer.h>
 
 using namespace std;
@@ -33,15 +34,16 @@ using namespace std;
 namespace micro_profiler
 {
 	statistics_bridge::statistics_bridge(calls_collector_i &collector, const overhead &overhead_, ipc::channel &frontend,
-			const shared_ptr<module_tracker> &module_tracker_, const shared_ptr<thread_monitor> &thread_monitor_)
+			shared_ptr<module_tracker> module_tracker_, shared_ptr<thread_monitor> thread_monitor_,
+			patch_manager &patch_manager_)
 		: _analyzer(overhead_), _collector(collector), _frontend(frontend), _module_tracker(module_tracker_),
-			_thread_monitor(thread_monitor_)
+			_thread_monitor(thread_monitor_), _patch_manager(patch_manager_)
 	{
 		initialization_data idata = {
 			get_current_executable(),
 			ticks_per_second()
 		};
-		send(init, idata);
+		send(init, nullptr, idata);
 	}
 
 	void statistics_bridge::analyze()
@@ -54,10 +56,10 @@ namespace micro_profiler
 		
 		_module_tracker->get_changes(loaded, unloaded);
 		if (!loaded.empty())
-			send(response_modules_loaded, loaded);
-		send(response_statistics_update, _analyzer);
+			send(response_modules_loaded, nullptr, loaded);
+		send(response_statistics_update, nullptr, _analyzer);
 		if (!unloaded.empty())
-			send(response_modules_unloaded, unloaded);
+			send(response_modules_unloaded, nullptr, unloaded);
 		_analyzer.clear();
 	}
 
@@ -72,23 +74,45 @@ namespace micro_profiler
 		metadata->enumerate_files([&] (const pair<unsigned, string> &file) {
 			md.second.source_files.push_back(file);
 		});
-		send(response_module_metadata, md);
+		send(response_module_metadata, nullptr, md);
 	}
 
 	void statistics_bridge::send_thread_info(const vector<thread_monitor::thread_id> &ids)
 	{
 		_threads_buffer.resize(ids.size());
 		_thread_monitor->get_info(_threads_buffer.begin(), ids.begin(), ids.end());
-		send(response_threads_info, _threads_buffer);
+		send(response_threads_info, nullptr, _threads_buffer);
+	}
+
+	void statistics_bridge::activate_patches(unsigned int token, unsigned int persistent_id,
+		const vector<unsigned int> &rva)
+	{
+		vector<unsigned int> failures;
+		const auto l = _module_tracker->lock_mapping(persistent_id);
+
+		_patch_manager.apply(failures, persistent_id, reinterpret_cast<void *>(static_cast<size_t>(l->base)), l,
+			range<const unsigned int, size_t>(rva.data(), rva.size()));
+		send(response_patched, &token, failures);
+	}
+
+	void statistics_bridge::revert_patches(unsigned int token, unsigned int persistent_id,
+		const vector<unsigned int> &rva)
+	{
+		vector<unsigned int> failures;
+
+		_patch_manager.revert(failures, persistent_id, range<const unsigned int, size_t>(rva.data(), rva.size()));
+		send(response_reverted, &token, failures);
 	}
 
 	template <typename DataT>
-	void statistics_bridge::send(messages_id command, const DataT &data)
+	void statistics_bridge::send(messages_id command, const unsigned int *token, const DataT &data)
 	{
 		buffer_writer< pod_vector<byte> > writer(_buffer);
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
 
 		archive(command);
+		if (token)
+			archive(*token);
 		archive(data);
 		_frontend.message(const_byte_range(_buffer.data(), _buffer.size()));
 	}

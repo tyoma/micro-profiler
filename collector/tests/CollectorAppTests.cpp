@@ -5,6 +5,7 @@
 #include "helpers.h"
 #include "mocks.h"
 #include "mocks_allocator.h"
+#include "mocks_patch_manager.h"
 
 #include <common/module.h>
 #include <common/time.h>
@@ -38,6 +39,7 @@ namespace micro_profiler
 			collector_app::frontend_factory_t factory;
 			shared_ptr<mocks::tracer> collector;
 			shared_ptr<mocks::thread_monitor> tmonitor;
+			mocks::patch_manager pmanager;
 			ipc::channel *inbound;
 			mt::event inbound_ready;
 
@@ -85,7 +87,7 @@ namespace micro_profiler
 				};
 
 				// INIT / ACT
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT / ASSERT (must not hang)
 				ready.wait();
@@ -106,7 +108,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				ready.wait();
 
@@ -129,7 +131,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				auto_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor));
+				auto_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
 
 				ready.wait();
 
@@ -155,7 +157,7 @@ namespace micro_profiler
 					destroyed_ok = thread_id == mt::this_thread::get_id();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT
 				app.stop();
@@ -181,8 +183,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app1(factory, collector, c_overhead, tmonitor);
-				collector_app app2(factory, collector, c_overhead, tmonitor);
+				collector_app app1(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app2(factory, collector, c_overhead, tmonitor, pmanager);
 
 				go.wait();
 
@@ -203,7 +205,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 				initialized.wait();
 
 				// ASERT
@@ -220,7 +222,7 @@ namespace micro_profiler
 				state->updated = [&] (const mocks::thread_statistics_map &) { updated.set(); };
 
 				// ACT
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT / ASSERT
 				assert_is_false(updated.wait(mt::milliseconds(500)));
@@ -238,7 +240,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
 				ready.wait(); // Guarantee that the load below leads to an individual notification.
@@ -285,7 +287,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
@@ -343,7 +345,7 @@ namespace micro_profiler
 				};
 				collector->on_flush = [&] {	flushed = true;	};
 
-				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor));
+				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
 
 				// ACT
 				app.reset();
@@ -373,7 +375,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor));
+				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
 
 				// ACT
 				app.reset();
@@ -400,7 +402,7 @@ namespace micro_profiler
 						done.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT / ASSERT (must exit)
 				done.wait();
@@ -439,7 +441,7 @@ namespace micro_profiler
 					updated.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT
 				{	mt::lock_guard<mt::mutex> l(mtx);	tid = 11710u, trace.assign(trace1, trace1 + 2);	}
@@ -506,8 +508,8 @@ namespace micro_profiler
 					u2 = u;
 				};
 
-				unique_ptr<collector_app> app1(new collector_app(bind(&mocks::frontend_state::create, state1), tracer1, o1, tmonitor));
-				unique_ptr<collector_app> app2(new collector_app(bind(&mocks::frontend_state::create, state2), tracer2, o2, tmonitor));
+				unique_ptr<collector_app> app1(new collector_app(bind(&mocks::frontend_state::create, state1), tracer1, o1, tmonitor, pmanager));
+				unique_ptr<collector_app> app2(new collector_app(bind(&mocks::frontend_state::create, state2), tracer2, o2, tmonitor, pmanager));
 
 				// ACT
 				app1.reset();
@@ -547,7 +549,7 @@ namespace micro_profiler
 					md_ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				image image0(c_symbol_container_1);
 				image image1(c_symbol_container_2);
@@ -611,7 +613,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor);
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {

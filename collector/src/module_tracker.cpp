@@ -28,6 +28,15 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		struct locked_mapping
+		{
+			mapped_module_identified module_;
+			shared_ptr<void> lock;
+		};
+	}
+
 	module_tracker::module_tracker()
 		: _next_instance_id(0u), _next_persistent_id(1u)
 	{	}
@@ -72,13 +81,17 @@ namespace micro_profiler
 		swap(unloaded_modules_, _uqueue);
 	}
 
-	shared_ptr<void> module_tracker::lock_image(unsigned int persistent_id)
+	shared_ptr<mapped_module_identified> module_tracker::lock_mapping(unsigned int persistent_id)
 	{
 		const auto i = _modules_registry.find(persistent_id);
 
 		if (_modules_registry.end() == i)
 			throw invalid_argument("invalid persistent id");
-		return load_library(i->second.path);
+		auto l = make_shared<locked_mapping>();
+
+		l->module_ = *i->second.mapping;
+		l->lock = load_library(i->second.path);
+		return shared_ptr<mapped_module_identified>(l, &l->module_);
 	}
 
 	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int persistent_id) const

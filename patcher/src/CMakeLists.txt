@@ -7,7 +7,6 @@ include_directories(../../libraries/lend)
 set(PATCHER_SOURCES
 	dynamic_hooking.cpp
 	exceptions.cpp
-	function_patch.cpp
 	image_patch_manager.cpp
 	intel/binary_translation_x86.cpp
 	intel/jump.cpp

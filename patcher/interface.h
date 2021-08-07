@@ -20,47 +20,27 @@
 
 #pragma once
 
-#include <common/file_id.h>
-#include <common/module.h>
-#include <common/primitives.h>
-#include <common/protocol.h>
+#include <common/range.h>
 #include <memory>
+#include <vector>
 
 namespace micro_profiler
 {
-	struct symbol_info;
-
-	template <typename SymbolT>
-	struct image_info;
-
-	class module_tracker
+	struct patch_failure
 	{
-	public:
-		typedef image_info<symbol_info> metadata_t;
-		typedef std::shared_ptr<const metadata_t> metadata_ptr;
+		unsigned int rva;
+		int failure_code;
+	};
 
-	public:
-		module_tracker();
+	struct patch_manager
+	{
+		patch_manager()
+		{	}
 
-		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-		std::shared_ptr<mapped_module_identified> lock_mapping(unsigned int persistent_id);
-		metadata_ptr get_metadata(unsigned int persistent_id) const;
-
-	private:
-		struct module_info
-		{
-			std::string path;
-			std::shared_ptr<mapped_module_identified> mapping;
-		};
-
-		typedef containers::unordered_map<file_id, unsigned int /*persistent_id*/> files_registry_t;
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
-
-	private:
-		files_registry_t _files_registry;
-		modules_registry_t _modules_registry;
-		loaded_modules _lqueue;
-		unloaded_modules _uqueue;
-		unsigned int _next_instance_id, _next_persistent_id;
+		virtual void query(std::vector<unsigned int /*rva of installed*/> &result, unsigned int persistent_id) = 0;
+		virtual void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
+			std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions) = 0;
+		virtual void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
+			range<const unsigned int /*rva*/, size_t> functions) = 0;
 	};
 }

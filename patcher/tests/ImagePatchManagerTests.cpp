@@ -75,8 +75,9 @@ namespace micro_profiler
 				// INIT / ACT
 				auto unloaded1 = false;
 				auto unloaded2 = false;
-				image_patch_manager m(trace, allocator);
-				detacher dd(m);
+				image_patch_manager m_(trace, allocator);
+				detacher dd(m_);
+				auto &m = static_cast<patch_manager &>(m_);
 				unique_ptr<image> image1(new image(module1->path()));
 				unique_ptr<image> image2(new image(module2->path()));
 
@@ -115,8 +116,9 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				auto unloaded = false;
-				image_patch_manager m(trace, allocator);
-				detacher dd(m);
+				image_patch_manager m_(trace, allocator);
+				detacher dd(m_);
+				auto &m = static_cast<patch_manager &>(m_);
 				unique_ptr<image> image1(new image(module1->path()));
 
 				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
@@ -136,8 +138,9 @@ namespace micro_profiler
 				// INIT
 				auto unloaded1 = false;
 				auto unloaded2 = false;
-				image_patch_manager m(trace, allocator);
-				detacher dd(m);
+				image_patch_manager m_(trace, allocator);
+				detacher dd(m_);
+				auto &m = static_cast<patch_manager &>(m_);
 				unique_ptr<image> image1(new image(module1->path()));
 				unique_ptr<image> image2(new image(module2->path()));
 
@@ -207,8 +210,9 @@ namespace micro_profiler
 			{
 				// INIT
 				auto unloaded = false;
-				image_patch_manager m(trace, allocator);
-				detacher dd(m);
+				image_patch_manager m_(trace, allocator);
+				detacher dd(m_);
+				auto &m = static_cast<patch_manager &>(m_);
 				unique_ptr<image> image2(new image(module2->path()));
 				auto image2_ptr = image2->base_ptr();
 				unsigned int functions1[] = {
@@ -246,8 +250,9 @@ namespace micro_profiler
 			{
 				// INIT
 				auto unloaded = false;
-				image_patch_manager m(trace, allocator);
-				detacher dd(m);
+				image_patch_manager m_(trace, allocator);
+				detacher dd(m_);
+				auto &m = static_cast<patch_manager &>(m_);
 				unique_ptr<image> image2(new image(module2->path()));
 				auto image2_ptr = image2->base_ptr();
 				unsigned int functions1[] = {
@@ -308,8 +313,9 @@ namespace micro_profiler
 			{
 				// INIT
 				auto unloaded = false;
-				image_patch_manager m(trace, allocator);
-				detacher dd(m);
+				image_patch_manager m_(trace, allocator);
+				detacher dd(m_);
+				auto &m = static_cast<patch_manager &>(m_);
 				unique_ptr<image> image2(new image(module2->path()));
 				auto image2_ptr = image2->base_ptr();
 				unsigned int functions1[] = {
@@ -357,8 +363,9 @@ namespace micro_profiler
 			{
 				// INIT
 				image image2(module2->path());
-				image_patch_manager m(trace, allocator);
-				detacher dd(m);
+				image_patch_manager m_(trace, allocator);
+				detacher dd(m_);
+				auto &m = static_cast<patch_manager &>(m_);
 				void (*ff[3])();
 				char buffer[100];
 				int digits[] = {	14, 3233, 1, 19,	};

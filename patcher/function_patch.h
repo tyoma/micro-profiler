@@ -31,7 +31,7 @@ namespace micro_profiler
 	{
 	public:
 		template <typename T>
-		function_patch(void *target, T *interceptor, executable_memory_allocator &allocator);
+		function_patch(void *target, T *interceptor, executable_memory_allocator &allocator_);
 
 		const void *target() const;
 		bool active() const;
@@ -47,8 +47,8 @@ namespace micro_profiler
 
 
 	template <typename T>
-	inline function_patch::function_patch(void *target, T *interceptor, executable_memory_allocator &allocator)
-		: _trampoline(allocator.allocate(c_trampoline_size)), _jumper(target, _trampoline.get())
+	inline function_patch::function_patch(void *target, T *interceptor, executable_memory_allocator &allocator_)
+		: _trampoline(allocator_.allocate(c_trampoline_size)), _jumper(target, _trampoline.get())
 	{	initialize_trampoline(_trampoline.get(), _jumper.entry(), target, interceptor);	}
 
 	inline const void *function_patch::target() const

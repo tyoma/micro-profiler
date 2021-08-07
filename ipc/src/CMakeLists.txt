@@ -3,9 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 set(IPC_SOURCES
 	client_endpoint.cpp
 	client_endpoint_sockets.cpp
+	marshalled_server.cpp
+	marshalled_session.cpp
 	misc.cpp
 	server_endpoint.cpp
 	server_endpoint_sockets.cpp
+	server_session.cpp
 )
 
 if (WIN32)

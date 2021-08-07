@@ -15,6 +15,9 @@ using namespace std;
 
 namespace micro_profiler
 {
+	inline bool operator ==(const mapped_module_identified &lhs, const mapped_module_identified &rhs)
+	{	return lhs.persistent_id == rhs.persistent_id && lhs.path == rhs.path && lhs.base == rhs.base;	}
+
 	namespace tests
 	{
 		namespace
@@ -295,6 +298,24 @@ namespace micro_profiler
 			}
 
 
+			test( ModuleInfoCanBeRetrievedByPersistentID )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l;
+				unloaded_modules u;
+				auto_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
+				auto_ptr<image> image1(new image(c_symbol_container_2));
+				t.get_changes(l, u);
+				auto found1 = find_module(l, c_symbol_container_1);
+				auto found2 = find_module(l, c_symbol_container_2);
+
+				// ACT / ASSERT
+				assert_equal(*found1, *t.lock_mapping(found1->persistent_id));
+				assert_equal(*found2, *t.lock_mapping(found2->persistent_id));
+			}
+
+
 			test( ModuleMetadataCanBeRetrievedByPersistentID )
 			{
 				// INIT
@@ -402,8 +423,8 @@ namespace micro_profiler
 				const auto lm2 = *get_loaded(l, module2->path());
 
 				// ACT
-				auto lock1 = t.lock_image(lm1.persistent_id);
-				auto lock2 = t.lock_image(lm2.persistent_id);
+				auto lock1 = t.lock_mapping(lm1.persistent_id);
+				auto lock2 = t.lock_mapping(lm2.persistent_id);
 
 				// ASSERT
 				assert_not_null(lock1);
@@ -443,7 +464,7 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				// ACT / ASSERT
-				assert_throws(t.lock_image(1500), invalid_argument);
+				assert_throws(t.lock_mapping(1500), invalid_argument);
 			}
 		end_test_suite
 	}

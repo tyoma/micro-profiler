@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="function_patch.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\libraries\lend\ld32.c">
       <Filter>libraries\lend</Filter>
     </ClCompile>
@@ -49,6 +46,7 @@
       <Filter>src\intel</Filter>
     </ClInclude>
     <ClInclude Include="..\exceptions.h" />
+    <ClInclude Include="..\interface.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

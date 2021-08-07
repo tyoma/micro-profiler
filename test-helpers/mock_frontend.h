@@ -33,6 +33,8 @@ namespace micro_profiler
 				std::function<void (const unloaded_modules &m)> modules_unloaded;
 				std::function<void (unsigned id, const module_info_metadata &md)> metadata_received;
 				std::function<void (const std::vector< std::pair<unsigned /*thread_id*/, thread_info> > &threads)> threads_received;
+				std::function<void (unsigned token, const std::vector<unsigned /*rva*/> &failures)> activation_errors_received;
+				std::function<void (unsigned token, const std::vector<unsigned /*rva*/> &failures)> revert_errors_received;
 
 			private:
 				std::shared_ptr<void> _ownee;
@@ -51,6 +53,9 @@ namespace micro_profiler
 				unloaded_modules um;
 				module_info_metadata md;
 				std::vector< std::pair<unsigned /*thread_id*/, thread_info> > threads;
+
+				unsigned token;
+				std::vector<unsigned /*rva*/> rva;
 
 				a(c);
 				switch (c)
@@ -83,6 +88,16 @@ namespace micro_profiler
 				case response_threads_info:
 					if (state.threads_received)
 						a(threads), state.threads_received(threads);
+					break;
+
+				case response_patched:
+					if (state.activation_errors_received)
+						a(token), a(rva), state.activation_errors_received(token, rva);
+					break;
+
+				case response_reverted:
+					if (state.revert_errors_received)
+						a(token), a(rva), state.revert_errors_received(token, rva);
 					break;
 
 				default:

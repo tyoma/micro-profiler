@@ -45,10 +45,13 @@
     <ClCompile Include="client_endpoint.cpp" />
     <ClCompile Include="client_endpoint_com.cpp" />
     <ClCompile Include="client_endpoint_sockets.cpp" />
+    <ClCompile Include="marshalled_server.cpp" />
+    <ClCompile Include="marshalled_session.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="server_endpoint.cpp" />
     <ClCompile Include="server_endpoint_com.cpp" />
     <ClCompile Include="server_endpoint_sockets.cpp" />
+    <ClCompile Include="server_session.cpp" />
     <ClCompile Include="socket_helpers_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -59,9 +62,13 @@
     <ClInclude Include="..\endpoint_com.h" />
     <ClInclude Include="..\endpoint_sockets.h" />
     <ClInclude Include="..\endpoint.h" />
+    <ClInclude Include="..\marshalled_server.h" />
+    <ClInclude Include="..\marshalled_session.h" />
     <ClInclude Include="..\misc.h" />
+    <ClInclude Include="..\server_session.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="helpers.h" />
+    <ClInclude Include="lifetime.h" />
     <ClInclude Include="server_endpoint_sockets.h" />
     <ClInclude Include="socket_helpers.h" />
   </ItemGroup>

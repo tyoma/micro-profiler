@@ -25,11 +25,13 @@
 #include <collector/calls_collector.h>
 #include <collector/collector_app.h>
 #include <collector/thread_monitor.h>
-#include <common/time.h>
 #include <common/constants.h>
+#include <common/memory.h>
+#include <common/time.h>
 #include <ipc/endpoint.h>
 #include <ipc/misc.h>
 #include <mt/thread_callbacks.h>
+#include <patcher/image_patch_manager.h>
 
 using namespace micro_profiler;
 using namespace std;
@@ -81,7 +83,9 @@ const shared_ptr<calls_collector> g_collector(new calls_collector(g_allocator, c
 	mt::get_thread_callbacks()));
 extern "C" calls_collector *g_collector_ptr = g_collector.get();
 const auto c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit);
-collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead, g_thread_monitor);
+executable_memory_allocator g_eallocator;
+image_patch_manager g_patch_manager(*g_collector, g_eallocator);
+collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead, g_thread_monitor, g_patch_manager);
 const platform_initializer g_intializer(g_profiler_app);
 
 #if defined(__clang__) || defined(__GNUC__)

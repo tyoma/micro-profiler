@@ -31,7 +31,10 @@ namespace scheduler
 
 namespace micro_profiler
 {
-	class marshalled_server;
+	namespace ipc
+	{
+		class marshalled_server;
+	}
 
 	class ipc_manager : noncopyable
 	{
@@ -56,7 +59,7 @@ namespace micro_profiler
 
 	private:
 		std::shared_ptr<void> _sockets_server_handle;
-		const std::shared_ptr<marshalled_server> _server;
+		const std::shared_ptr<ipc::marshalled_server> _server;
 		const port_range _range;
 		bool _remote_enabled;
 		unsigned short _port;

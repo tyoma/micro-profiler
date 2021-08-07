@@ -45,8 +45,14 @@ namespace micro_profiler
 		request_threads_info = 7,
 		response_threads_info = 8,
 
-		request_patch = 10,
+		request_apply_patches = 10,
 		response_patched = 11,
+
+		request_revert_patches = 15,
+		response_reverted = 16,
+
+		request_query_patches = 20,
+		response_patches_state = 21,
 	};
 
 	template <typename PayloadT>
@@ -77,20 +83,14 @@ namespace micro_profiler
 		std::vector< std::pair<unsigned int /*file_id*/, std::string /*file*/> > source_files;
 	};
 
-	// request_patch
+	// request_apply_patches, request_revert_patches
 	struct patch_request
 	{
-		enum verb {
-			query,	// patch_response::result will contain RVAs of the functions currently patched in this image
-			apply,	// patch_response::result will RVAs of the functions successfully patched
-			remove,	// patch_response::result will RVAs of the functions having patches successfully removed
-		};
-
 		unsigned int image_persistent_id;
-		verb action;
 		std::vector<unsigned int> functions_rva;
 	};
 
-	// response_patched
-	typedef std::vector<unsigned int> patched_functions;
+	// response_patched, response_reverted
+	struct patch_failure;
+	typedef std::vector<patch_failure> patch_failures;
 }

@@ -21,6 +21,7 @@
 #pragma once
 
 #include "function_patch.h"
+#include "interface.h"
 
 #include <common/noncopyable.h>
 #include <common/range.h>
@@ -33,19 +34,19 @@ namespace micro_profiler
 {
 	class executable_memory_allocator;
 
-	class image_patch_manager : noncopyable
+	class image_patch_manager : public patch_manager, noncopyable
 	{
 	public:
 		template <typename InterceptorT>
-		image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator);
+		image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator_);
 
 		void detach_all();
 
-		void query(std::vector<unsigned int /*rva currently installed*/> &result, unsigned int persistent_id);
-		void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
-			std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions);
-		void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
-			range<const unsigned int /*rva*/, size_t> functions);
+		virtual void query(std::vector<unsigned int /*rva of installed*/> &result, unsigned int persistent_id) override;
+		virtual void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
+			std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions) override;
+		virtual void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
+			range<const unsigned int /*rva*/, size_t> functions) override;
 
 	private:
 		struct image_patch
@@ -53,7 +54,7 @@ namespace micro_profiler
 			image_patch();
 
 			std::shared_ptr<void> lock;
-			std::unordered_map< unsigned int /*rva*/, std::shared_ptr<function_patch> > patched; // TODO: should be unique_ptr, but MSVC 10.0 fails with it.
+			std::unordered_map< unsigned int /*rva*/, std::shared_ptr<function_patch> > patched;
 			unsigned int patches_applied;
 		};
 
@@ -67,13 +68,13 @@ namespace micro_profiler
 
 
 	template <typename InterceptorT>
-	inline std::shared_ptr<function_patch> construct_function_patch(void *target, InterceptorT &interceptor, executable_memory_allocator &allocator)
-	{	return std::make_shared<function_patch>(target, &interceptor, allocator);	}
+	inline std::shared_ptr<function_patch> construct_function_patch(void *target, InterceptorT &interceptor, executable_memory_allocator &allocator_)
+	{	return std::make_shared<function_patch>(target, &interceptor, allocator_);	}
 
 	template <typename InterceptorT>
-	inline image_patch_manager::image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator)
-		: _create_patch([&interceptor, &allocator] (void *target) {
-			return construct_function_patch(target, interceptor, allocator);
+	inline image_patch_manager::image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator_)
+		: _create_patch([&interceptor, &allocator_] (void *target) {
+			return construct_function_patch(target, interceptor, allocator_);
 		})
 	{	}
 }

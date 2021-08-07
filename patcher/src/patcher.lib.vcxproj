@@ -44,7 +44,6 @@
     <ClCompile Include="..\..\libraries\lend\ld32.c" />
     <ClCompile Include="dynamic_hooking.cpp" />
     <ClCompile Include="exceptions.cpp" />
-    <ClCompile Include="function_patch.cpp" />
     <ClCompile Include="image_patch_manager.cpp" />
     <ClCompile Include="intel\binary_translation_x86.cpp" />
     <ClCompile Include="intel\jump.cpp" />
@@ -67,6 +66,7 @@
     <ClInclude Include="..\exceptions.h" />
     <ClInclude Include="..\function_patch.h" />
     <ClInclude Include="..\image_patch_manager.h" />
+    <ClInclude Include="..\interface.h" />
     <ClInclude Include="..\jumper.h" />
     <ClInclude Include="..\revert_buffer.h" />
     <ClInclude Include="intel\jump.h" />

@@ -64,6 +64,8 @@
     <ClCompile Include="helpers_sockets.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="MarshalledServerTests.cpp" />
+    <ClCompile Include="ServerSessionTests.cpp" />
     <ClCompile Include="SocketsEndpointClientTests.cpp" />
     <ClCompile Include="SocketsEndpointServerTests.cpp" />
   </ItemGroup>

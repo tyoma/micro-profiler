@@ -4,6 +4,7 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "mocks_patch_manager.h"
 
 #include <algorithm>
 #include <common/module.h>
@@ -57,16 +58,12 @@ namespace micro_profiler
 			shared_ptr<module_tracker> mtracker;
 			shared_ptr<mocks::thread_monitor> tmonitor;
 			unsigned int ref_count;
+			mocks::patch_manager pmanager;
 
-			init( CreateQueue )
+			init( Init )
 			{
 				mtracker.reset(new module_tracker);
 				tmonitor.reset(new mocks::thread_monitor);
-			}
-
-
-			init( InitializeFrontendMock )
-			{
 				ref_count = 0;
 				cc.reset(new mocks::tracer);
 				state.reset(new mocks::frontend_state(cc));
@@ -83,7 +80,7 @@ namespace micro_profiler
 				state->initialized = [&] (const initialization_data &id) { process_init = id; };
 
 				// ACT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 
 				// ASSERT
 				assert_equal(get_current_executable(), process_init.executable);
@@ -94,7 +91,7 @@ namespace micro_profiler
 			test( EmptyUpdateIsSentIfNoAnalysisHasBeenDoneOrAnalysisResultIsEmpty )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 
 				// ACT
 				b.update_frontend();
@@ -116,7 +113,7 @@ namespace micro_profiler
 			test( FrontendUpdateClearsTheAnalyzer )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 				call_record trace[] = {
 					{	0, addr(0x1223)	},
 					{	10 + c_overhead.inner, addr(0)	},
@@ -149,8 +146,8 @@ namespace micro_profiler
 				shared_ptr<mocks::frontend_state> state1(state),
 					state2(new mocks::frontend_state(shared_ptr<void>()));
 				shared_ptr<ipc::channel> frontend2 = state2->create();
-				statistics_bridge b1(cc1, o1, *frontend, mtracker, tmonitor),
-					b2(cc2, o2, *frontend2, mtracker, tmonitor);
+				statistics_bridge b1(cc1, o1, *frontend, mtracker, tmonitor, pmanager),
+					b2(cc2, o2, *frontend2, mtracker, tmonitor, pmanager);
 				call_record trace1[] = {
 					{	0, addr(0x1223)	},
 					{	10 + o1.inner, addr(0)	},
@@ -203,7 +200,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<loaded_modules> loads;
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 
 				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
 
@@ -233,7 +230,7 @@ namespace micro_profiler
 				// INIT
 				loaded_modules l;
 				vector<unloaded_modules> unloads;
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 
 				state->modules_loaded = [&] (const loaded_modules &m) { l = m; };
 				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
@@ -277,7 +274,7 @@ namespace micro_profiler
 				// INIT
 				unsigned persistent_id;
 				module_info_metadata md;
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 				loaded_modules l;
 				unloaded_modules u;
 
@@ -333,7 +330,7 @@ namespace micro_profiler
 			test( ThreadInfoIsSerializedOnRequest )
 			{
 				// INIT
-				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor);
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 				thread_info ti[] = {
 					{ 1221, "thread 1", mt::milliseconds(190212), mt::milliseconds(0), mt::milliseconds(1902), false },
 					{ 171717, "thread 2", mt::milliseconds(112), mt::milliseconds(0), mt::milliseconds(2900), false },
@@ -370,6 +367,211 @@ namespace micro_profiler
 
 				assert_equal(reference2, threads);
 			}
+
+
+			test( PatchActivationIsMadeOnRequest )
+			{
+				// INIT
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				vector<unsigned> ids_log;
+				vector<void *> bases_log;
+				vector< vector<unsigned> > rva_log;
+				loaded_modules l;
+				unloaded_modules u;
+
+				mtracker->get_changes(l, u);
+
+				assert_is_true(3u < l.size());
+
+				pmanager.on_apply = [&] (vector<unsigned int> &/*failures*/, unsigned int persistent_id, void *base,
+					shared_ptr<void> lock, range<const unsigned int, size_t> functions) {
+
+					ids_log.push_back(persistent_id);
+					bases_log.push_back(base);
+					assert_not_null(lock);
+					rva_log.push_back(vector<unsigned>(functions.begin(), functions.end()));
+				};
+
+				// ACT
+				b.activate_patches(11, 3, mkvector(rva1));
+
+				// ASSERT
+				unsigned reference1_ids[] = {	3,	};
+				void *reference1_bases[] = {	reinterpret_cast<void *>(static_cast<size_t>(mtracker->lock_mapping(3)->base)),	};
+
+				assert_equal(reference1_ids, ids_log);
+				assert_equal(reference1_bases, bases_log);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
+
+				// ACT
+				b.activate_patches(119, 1, mkvector(rva2));
+
+				// ASSERT
+				unsigned reference2_ids[] = {	3, 1,	};
+				void *reference2_bases[] = {
+					reinterpret_cast<void *>(static_cast<size_t>(mtracker->lock_mapping(3)->base)),
+					reinterpret_cast<void *>(static_cast<size_t>(mtracker->lock_mapping(1)->base)),
+				};
+
+				assert_equal(reference2_ids, ids_log);
+				assert_equal(reference2_bases, bases_log);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
+			}
+
+
+			test( PatchActivationFailuresAreReturned )
+			{
+				// INIT
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
+				loaded_modules l;
+				unloaded_modules u;
+				vector<unsigned> tokens;
+				vector< vector<unsigned> > rva_log;
+
+				mtracker->get_changes(l, u);
+
+				pmanager.on_apply = [&] (vector<unsigned int> &failures, unsigned int, void *,
+					shared_ptr<void>, range<const unsigned int, size_t>) {
+
+					failures = mkvector(rva1);
+				};
+				state->activation_errors_received = [&] (unsigned token, vector<unsigned> failures) {
+
+					tokens.push_back(token);
+					rva_log.push_back(failures);
+				};
+
+				// ACT
+				b.activate_patches(1191, 3, mkvector(rva1));
+
+				// ASSERT
+				unsigned reference1[] = {	1191,	};
+
+				assert_equal(reference1, tokens);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				pmanager.on_apply = [&] (vector<unsigned int> &failures, unsigned int, void *,
+					shared_ptr<void>, range<const unsigned int, size_t>) {
+
+					failures = mkvector(rva2);
+				};
+
+				// ACT
+				b.activate_patches(11910, 2, mkvector(rva1));
+
+				// ASSERT
+				unsigned reference2[] = {	1191, 11910,	};
+
+				assert_equal(reference2, tokens);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
+			}
+
+
+			test( PatchRevertIsMadeOnRequest )
+			{
+				// INIT
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				vector<unsigned> ids_log;
+				vector< vector<unsigned> > rva_log;
+				loaded_modules l;
+				unloaded_modules u;
+
+				mtracker->get_changes(l, u);
+
+				assert_is_true(3u < l.size());
+
+				pmanager.on_revert = [&] (vector<unsigned int> &/*failures*/, unsigned int persistent_id,
+					range<const unsigned int, size_t> functions) {
+
+					ids_log.push_back(persistent_id);
+					rva_log.push_back(vector<unsigned>(functions.begin(), functions.end()));
+				};
+
+				// ACT
+				b.revert_patches(11, 3, mkvector(rva1));
+
+				// ASSERT
+				unsigned reference1_ids[] = {	3,	};
+
+				assert_equal(reference1_ids, ids_log);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
+
+				// ACT
+				b.revert_patches(119, 1, mkvector(rva2));
+
+				// ASSERT
+				unsigned reference2_ids[] = {	3, 1,	};
+
+				assert_equal(reference2_ids, ids_log);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
+			}
+
+
+			test( PatchRevertFailuresAreReturned )
+			{
+				// INIT
+				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
+				loaded_modules l;
+				unloaded_modules u;
+				vector<unsigned> tokens;
+				vector< vector<unsigned> > rva_log;
+
+				mtracker->get_changes(l, u);
+
+				pmanager.on_revert = [&] (vector<unsigned int> &failures, unsigned int, range<const unsigned int, size_t>) {
+					failures = mkvector(rva1);
+				};
+				state->revert_errors_received = [&] (unsigned token, vector<unsigned> failures) {
+
+					tokens.push_back(token);
+					rva_log.push_back(failures);
+				};
+
+				// ACT
+				b.revert_patches(1191, 3, mkvector(rva1));
+
+				// ASSERT
+				unsigned reference1[] = {	1191,	};
+
+				assert_equal(reference1, tokens);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				pmanager.on_revert = [&] (vector<unsigned int> &failures, unsigned int,  range<const unsigned int, size_t>) {
+					failures = mkvector(rva2);
+				};
+
+				// ACT
+				b.revert_patches(11910, 2, mkvector(rva1));
+
+				// ASSERT
+				unsigned reference2[] = {	1191, 11910,	};
+
+				assert_equal(reference2, tokens);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
+			}
+
 		end_test_suite
 	}
 }

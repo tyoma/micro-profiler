@@ -43,7 +43,6 @@
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="headers_model.cpp" />
-    <ClCompile Include="marshalled_server.cpp" />
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
@@ -69,7 +68,6 @@
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\function_hint.h" />
     <ClInclude Include="..\ipc_manager.h" />
-    <ClInclude Include="..\marshalled_server.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\headers_model.h" />

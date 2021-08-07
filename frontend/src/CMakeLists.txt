@@ -5,7 +5,6 @@ set(FRONTEND_LIB_SOURCES
 	frontend_manager.cpp
 	function_list.cpp
 	headers_model.cpp
-	marshalled_server.cpp
 	process_list.cpp
 	symbol_resolver.cpp
 	threads_model.cpp

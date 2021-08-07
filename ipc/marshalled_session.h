@@ -20,47 +20,57 @@
 
 #pragma once
 
-#include <common/file_id.h>
-#include <common/module.h>
-#include <common/primitives.h>
-#include <common/protocol.h>
-#include <memory>
+#include "endpoint.h"
+
+#include <common/noncopyable.h>
+
+namespace scheduler
+{
+	struct queue;
+}
 
 namespace micro_profiler
 {
-	struct symbol_info;
-
-	template <typename SymbolT>
-	struct image_info;
-
-	class module_tracker
+	namespace ipc
 	{
-	public:
-		typedef image_info<symbol_info> metadata_t;
-		typedef std::shared_ptr<const metadata_t> metadata_ptr;
+		class lifetime;
 
-	public:
-		module_tracker();
-
-		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-		std::shared_ptr<mapped_module_identified> lock_mapping(unsigned int persistent_id);
-		metadata_ptr get_metadata(unsigned int persistent_id) const;
-
-	private:
-		struct module_info
+		class marshalled_session : public channel, noncopyable
 		{
-			std::string path;
-			std::shared_ptr<mapped_module_identified> mapping;
+		public:
+			marshalled_session(std::shared_ptr<scheduler::queue> queue, channel &outbound);
+			~marshalled_session();
+
+			void create_underlying(std::shared_ptr<server> underlying_server);
+
+		private:
+			class outbound_wrapper;
+
+		private:
+			virtual void disconnect() throw() override;
+			virtual void message(const_byte_range payload) override;
+
+		private:
+			const std::shared_ptr<lifetime> _lifetime;
+			const std::shared_ptr<scheduler::queue> _queue;
+			std::shared_ptr<channel> _underlying;
+			std::shared_ptr<outbound_wrapper> _outbound;
 		};
 
-		typedef containers::unordered_map<file_id, unsigned int /*persistent_id*/> files_registry_t;
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
+		class marshalled_session::outbound_wrapper : public channel, noncopyable
+		{
+		public:
+			outbound_wrapper(channel &underlying);
 
-	private:
-		files_registry_t _files_registry;
-		modules_registry_t _modules_registry;
-		loaded_modules _lqueue;
-		unloaded_modules _uqueue;
-		unsigned int _next_instance_id, _next_persistent_id;
-	};
+			void stop();
+
+		private:
+			virtual void disconnect() throw() override;
+			virtual void message(const_byte_range payload) override;
+
+		private:
+			const std::shared_ptr<lifetime> _lifetime;
+			channel &_underlying;
+		};
+	}
 }

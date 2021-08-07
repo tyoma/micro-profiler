@@ -3,8 +3,10 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(IPC_TESTS_SOURCES
-	helpers_sockets.cpp
 	EndpointSelectorTests.cpp
+	helpers_sockets.cpp
+	MarshalledServerTests.cpp
+	ServerSessionTests.cpp
 	SocketsEndpointClientTests.cpp
 	SocketsEndpointServerTests.cpp
 )

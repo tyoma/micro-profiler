@@ -39,6 +39,9 @@ namespace micro_profiler
 		}
 	}
 
+	void image_patch_manager::query(vector<unsigned int /*rva of installed*/> &/*result*/, unsigned int /*persistent_id*/)
+	{	}
+
 	void image_patch_manager::apply(vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
 		shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions)
 	{

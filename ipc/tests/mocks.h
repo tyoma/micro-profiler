@@ -14,6 +14,17 @@ namespace micro_profiler
 		{
 			namespace mocks
 			{
+				class channel : public ipc::channel
+				{
+				public:
+					std::function<void (const_byte_range payload)> on_message;
+					std::function<void ()> on_disconnect;
+
+				private:
+					virtual void disconnect() throw();
+					virtual void message(const_byte_range payload);
+				};
+
 				class session : public ipc::channel
 				{
 				public:
@@ -38,12 +49,25 @@ namespace micro_profiler
 					std::function<void (const std::shared_ptr<session> &new_session)> session_created;
 
 				private:
-					virtual std::shared_ptr<channel> create_session(channel &outbound);
+					virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
 
 				private:
 					mt::mutex _mutex;
 				};
 
+
+
+				inline void channel::disconnect() throw()
+				{
+					if (on_disconnect)
+						on_disconnect();
+				}
+
+				inline void channel::message(const_byte_range payload)
+				{
+					if (on_message)
+						on_message(payload);
+				}
 
 
 				inline session::session()
@@ -65,7 +89,7 @@ namespace micro_profiler
 				}
 
 
-				inline std::shared_ptr<channel> server::create_session(channel &outbound)
+				inline std::shared_ptr<ipc::channel> server::create_session(ipc::channel &outbound)
 				{
 					std::shared_ptr<session> s(new session);
 					mt::lock_guard<mt::mutex> lock(_mutex);

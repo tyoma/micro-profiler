@@ -41,7 +41,7 @@ namespace micro_profiler
 				{	archive(data.ivalue), archive(data.svalue);	}
 
 				template <typename PayloadT>
-				void send_request(ipc::channel &c, unsigned id, unsigned long long token, const PayloadT &payload)
+				void send_request(ipc::channel &c, int id, unsigned long long token, const PayloadT &payload)
 				{
 					pod_vector<byte> data;
 					buffer_writer< pod_vector<byte> > w(data);
@@ -173,12 +173,12 @@ namespace micro_profiler
 				{
 					// INIT
 					server_session s(outbound);
-					vector< pair<unsigned, unsigned long long> > log;
+					vector< pair<int, unsigned long long> > log;
 
 					outbound.on_message = [&] (const_byte_range r) {
 						buffer_reader b(r);
 						strmd::deserializer<buffer_reader, packer> d(b);
-						unsigned id;
+						int id;
 						unsigned long long token;
 
 						d(id), d(token);
@@ -203,7 +203,7 @@ namespace micro_profiler
 					send_request(s, 1, 0x100010001000ull, 0);
 
 					// ASSERT
-					pair<unsigned, unsigned long long> reference1[] = {
+					pair<int, unsigned long long> reference1[] = {
 						make_pair(193817, 0x100010001000ull),
 					};
 
@@ -214,7 +214,7 @@ namespace micro_profiler
 					send_request(s, 2, 0xF00010001000ull, 0);
 
 					// ASSERT
-					pair<unsigned, unsigned long long> reference2[] = {
+					pair<int, unsigned long long> reference2[] = {
 						make_pair(193817, 0x100010001000ull),
 						make_pair(193817, 0x10001),
 						make_pair(1311310, 0xF00010001000ull),
@@ -234,7 +234,8 @@ namespace micro_profiler
 					outbound.on_message = [&] (const_byte_range r) {
 						buffer_reader b(r);
 						strmd::deserializer<buffer_reader, packer> d(b);
-						unsigned id, token;
+						int id;
+						unsigned token;
 						string v1;
 						int v2;
 
@@ -319,7 +320,7 @@ namespace micro_profiler
 					outbound.on_message = [&] (const_byte_range r) {
 						buffer_reader b(r);
 						strmd::deserializer<buffer_reader, packer> d(b);
-						unsigned id;
+						int id;
 						string v1;
 						int v2;
 

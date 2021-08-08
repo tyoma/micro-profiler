@@ -12,7 +12,6 @@ set(COLLECTOR_TESTS_SOURCES
 	ModuleTrackerTests.cpp
 	SerializationTests.cpp
 	ShadowStackTests.cpp
-	StatisticsBridgeTests.cpp
 	ThreadAnalyzerTests.cpp
 	ThreadMonitorTests.cpp
 	mocks.cpp

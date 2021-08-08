@@ -22,12 +22,12 @@
 
 #include <common/noncopyable.h>
 #include <functional>
-#include <ipc/endpoint.h>
 #include <mt/thread.h>
 #include <scheduler/task_queue.h>
 
 namespace micro_profiler
 {
+	class analyzer;
 	struct calls_collector_i;
 	class module_tracker;
 	struct overhead;
@@ -35,7 +35,12 @@ namespace micro_profiler
 	class statistics_bridge;
 	class thread_monitor;
 
-	class collector_app : ipc::channel, noncopyable
+	namespace ipc
+	{
+		struct channel;
+	}
+
+	class collector_app : noncopyable
 	{
 	public:
 		typedef std::shared_ptr<ipc::channel> channel_t;
@@ -50,12 +55,8 @@ namespace micro_profiler
 		void stop();
 
 	private:
-		// ipc::channel methods
-		virtual void disconnect() throw() override;
-		virtual void message(const_byte_range command_payload) override;
-
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
-		std::shared_ptr<ipc::channel> init_server(ipc::channel &outbound, const overhead &overhead_);
+		std::shared_ptr<ipc::channel> init_server(ipc::channel &outbound, std::shared_ptr<analyzer> analyzer_);
 
 	private:
 		scheduler::task_queue _queue;
@@ -63,7 +64,6 @@ namespace micro_profiler
 		const std::shared_ptr<module_tracker> _module_tracker;
 		const std::shared_ptr<thread_monitor> _thread_monitor;
 		patch_manager &_patch_manager;
-		std::shared_ptr<statistics_bridge> _bridge;
 		bool _exit;
 		std::unique_ptr<mt::thread> _frontend_thread;
 	};

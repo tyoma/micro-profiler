@@ -38,7 +38,7 @@ namespace micro_profiler
 		{
 			buffer_reader r(payload);
 			deserializer d(r);
-			unsigned int request_id;
+			int request_id;
 			token_t token;
 
 			d(request_id);

@@ -33,9 +33,9 @@ set(COLLECTOR_LIB_SOURCES
 	calls_collector.cpp
 	calls_collector_thread.cpp
 	collector_app.cpp
+	collector_app_server.cpp
 	image_patch.cpp
 	module_tracker.cpp
-	statistics_bridge.cpp
 	thread_monitor.cpp
 )
 

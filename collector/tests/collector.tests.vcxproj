@@ -67,7 +67,6 @@
     <ClCompile Include="mocks_image_info.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
-    <ClCompile Include="StatisticsBridgeTests.cpp" />
     <ClCompile Include="ThreadAnalyzerTests.cpp" />
     <ClCompile Include="ThreadMonitorTests.cpp" />
   </ItemGroup>

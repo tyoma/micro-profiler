@@ -20,15 +20,15 @@
 
 #include <collector/collector_app.h>
 
+#include <collector/analyzer.h>
 #include <collector/module_tracker.h>
-#include <collector/statistics_bridge.h>
 #include <collector/serialization.h>
 #include <collector/thread_monitor.h>
 
 #include <common/time.h>
 #include <ipc/marshalled_session.h>
+#include <ipc/server_session.h>
 #include <logger/log.h>
-#include <strmd/deserializer.h>
 
 #define PREAMBLE "Collector app: "
 
@@ -77,70 +77,17 @@ namespace micro_profiler
 		}
 	}
 
-	void collector_app::disconnect() throw()
-	{	}
-
-	void collector_app::message(const_byte_range payload)
-	try
-	{
-		buffer_reader reader(payload);
-		strmd::deserializer<buffer_reader, packer> d(reader);
-		messages_id c;
-		unsigned int token;
-		unsigned int persistent_id;
-		vector<thread_monitor::thread_id> thread_ids;
-		vector<unsigned> rva;
-
-		switch (d(c), d(token), c)
-		{
-		case request_update:
-			_bridge->update_frontend();
-			break;
-
-		case request_module_metadata:
-			d(persistent_id);
-			_bridge->send_module_metadata(persistent_id);
-			break;
-
-		case request_threads_info:
-			d(thread_ids);
-			_bridge->send_thread_info(thread_ids);
-			break;
-
-		case request_apply_patches:
-			d(persistent_id);
-			d(rva);
-			_bridge->activate_patches(token, persistent_id, rva);
-			break;
-
-		case request_revert_patches:
-			d(persistent_id);
-			d(rva);
-			_bridge->revert_patches(token, persistent_id, rva);
-			break;
-
-		default:
-			break;
-		}
-	}
-	catch (const exception &/*e*/)
-	{
-//		LOG(PREAMBLE "caught an exception while processing frontend request...") % A(e.what());
-	}
-
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
 		shared_ptr<scheduler::queue> qw(new queue_wrapper(_queue));
-		ipc::channel *self = this;
-		ipc::marshalled_active_session s(factory, qw, [&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
-			_bridge.reset(new statistics_bridge(*_collector, overhead_, outbound, _module_tracker, _thread_monitor,
-				_patch_manager));
-			return shared_ptr<ipc::channel>(self, [] (...) {	});
+		auto analyzer_ = make_shared<analyzer>(overhead_);
+		shared_ptr<ipc::channel> inbound;
+		ipc::marshalled_active_session s(factory, qw, [&] (ipc::channel &outbound) {
+			return inbound = init_server(outbound, analyzer_);
 		});
-		shared_ptr<ipc::channel> frontend = factory(*this);
 		function<void ()> analyze;
 		const auto analyze_ = [&] {
-			_bridge->analyze();
+			_collector->read_collected(*analyzer_);
 			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
 		};
 
@@ -150,7 +97,14 @@ namespace micro_profiler
 			_queue.wait();
 			_queue.execute_ready(mt::milliseconds(100));
 		}
-		_bridge->analyze();
-		_bridge->update_frontend();
+
+		// A hack to retrieve last chunk of updates. Must be replaced with graceful disconnect logic.
+		pod_vector<byte> data;
+		buffer_writer< pod_vector<byte> > bw(data);
+		ipc::server_session::serializer ser(bw);
+
+		ser(request_update), ser(0u), ser(0u);
+		_collector->read_collected(*analyzer_);
+		inbound->message(const_byte_range(data.data(), data.size()));
 	}
 }

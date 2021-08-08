@@ -45,11 +45,11 @@ namespace micro_profiler
 			server_session(channel &outbound);
 
 			template <typename PayloadT>
-			void add_handler(unsigned int request_id,
+			void add_handler(int request_id,
 				const std::function<void (request &context, const PayloadT &payload)> &handler);
 
 			template <typename FormatterT>
-			void message(unsigned int message_id, const FormatterT &message_formatter);
+			void message(int message_id, const FormatterT &message_formatter);
 
 		private:
 			typedef strmd::deserializer<buffer_reader, packer> deserializer;
@@ -63,14 +63,14 @@ namespace micro_profiler
 		private:
 			channel &_outbound;
 			pod_vector<byte> _outbound_buffer;
-			std::unordered_map<unsigned int /*request_id*/, handler_t> _handlers;
+			std::unordered_map<int /*request_id*/, handler_t> _handlers;
 		};
 
 		class server_session::request : noncopyable
 		{
 		public:
 			template <typename FormatterT>
-			void respond(unsigned int response_id, const FormatterT &response_formatter);
+			void respond(int response_id, const FormatterT &response_formatter);
 
 		public:
 			std::function<void (request &context)> continuation;
@@ -92,7 +92,7 @@ namespace micro_profiler
 
 
 		template <typename PayloadT>
-		inline void server_session::add_handler(unsigned int request_id,
+		inline void server_session::add_handler(int request_id,
 			const std::function<void (request &context, const PayloadT &payload)> &handler)
 		{
 			auto payload_buffer = std::make_shared<PayloadT>();
@@ -104,7 +104,7 @@ namespace micro_profiler
 		}
 
 		template <typename FormatterT>
-		inline void server_session::message(unsigned int message_id, const FormatterT &message_formatter)
+		inline void server_session::message(int message_id, const FormatterT &message_formatter)
 		{
 			{
 				buffer_writer< pod_vector<byte> > bw(_outbound_buffer);
@@ -118,7 +118,7 @@ namespace micro_profiler
 
 
 		template <typename FormatterT>
-		inline void server_session::request::respond(unsigned int response_id, const FormatterT &response_formatter)
+		inline void server_session::request::respond(int response_id, const FormatterT &response_formatter)
 		{
 			_owner.message(response_id, [&] (serializer &ser) {
 				ser(_token);

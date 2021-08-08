@@ -68,7 +68,6 @@
     <ClCompile Include="process_explorer_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="statistics_bridge.cpp" />
     <ClCompile Include="thread_monitor.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -82,7 +81,6 @@
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\shadow_stack.h" />
-    <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\thread_monitor.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="process_explorer.h" />

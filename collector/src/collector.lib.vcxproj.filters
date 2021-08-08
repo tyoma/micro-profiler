@@ -7,9 +7,6 @@
     <ClCompile Include="calls_collector.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="statistics_bridge.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="image_patch.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -59,7 +56,6 @@
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\primitives.h" />
-    <ClInclude Include="..\statistics_bridge.h" />
     <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\collector_app.h" />

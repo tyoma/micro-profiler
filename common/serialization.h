@@ -127,6 +127,13 @@ namespace micro_profiler
 		archive(reinterpret_cast<unsigned char &>(data.complete));
 	}
 
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, patch_request &data, unsigned int /*version*/)
+	{
+		archive(data.image_persistent_id);
+		archive(data.functions_rva);
+	}
+
 
 	template <typename BufferT>
 	inline buffer_writer<BufferT>::buffer_writer(BufferT &buffer)

@@ -28,11 +28,13 @@
     <ClCompile Include="misc.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="server_session.cpp" />
     <ClCompile Include="marshalled_server.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="marshalled_session.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="server_session.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

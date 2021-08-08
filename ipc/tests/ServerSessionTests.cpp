@@ -173,15 +173,191 @@ namespace micro_profiler
 				{
 					// INIT
 					server_session s(outbound);
-					vector<const void *> log;
+					vector< pair<unsigned, unsigned long long> > log;
 
-					s.add_handler<int>(1, [&] (server_session::request &/*req*/, int) {
+					outbound.on_message = [&] (const_byte_range r) {
+						buffer_reader b(r);
+						strmd::deserializer<buffer_reader, packer> d(b);
+						unsigned id;
+						unsigned long long token;
+
+						d(id), d(token);
+						log.push_back(make_pair(id, token));
+					};
+
+					s.add_handler<int>(1, [&] (server_session::request &req, int) {
+
 					// ACT
-//						req.respond(
+						req.respond(193817, [&] (server_session::serializer &/*ser*/) {
+						});
 					});
 
-					send_request(s, 1, 100, 0);
+					s.add_handler<int>(2, [&] (server_session::request &req, int) {
 
+					// ACT
+						req.respond(1311310, [&] (server_session::serializer &/*ser*/) {
+						});
+					});
+
+					// ACT
+					send_request(s, 1, 0x100010001000ull, 0);
+
+					// ASSERT
+					pair<unsigned, unsigned long long> reference1[] = {
+						make_pair(193817, 0x100010001000ull),
+					};
+
+					assert_equal(reference1, log);
+
+					// ACT
+					send_request(s, 1, 0x10001, 0);
+					send_request(s, 2, 0xF00010001000ull, 0);
+
+					// ASSERT
+					pair<unsigned, unsigned long long> reference2[] = {
+						make_pair(193817, 0x100010001000ull),
+						make_pair(193817, 0x10001),
+						make_pair(1311310, 0xF00010001000ull),
+					};
+
+					assert_equal(reference2, log);
+				}
+
+
+				test( DataSerializedInResponseAreReadable )
+				{
+					// INIT
+					server_session s(outbound);
+					vector<string> log1;
+					vector<int> log2;
+
+					outbound.on_message = [&] (const_byte_range r) {
+						buffer_reader b(r);
+						strmd::deserializer<buffer_reader, packer> d(b);
+						unsigned id, token;
+						string v1;
+						int v2;
+
+						switch (d(id), d(token), id)
+						{
+						case 100:
+							d(v1);
+							log1.push_back(v1);
+							break;
+
+						case 101:
+							d(v2);
+							log2.push_back(v2);
+							break;
+
+						}
+					};
+
+					s.add_handler<int>(1, [&] (server_session::request &req, int) {
+
+					// ACT
+						req.respond(100, [&] (server_session::serializer &ser) {
+							ser(string("Lorem ipsum amet dolor"));
+						});
+					});
+
+					s.add_handler<int>(2, [&] (server_session::request &req, int) {
+
+					// ACT
+						req.respond(100, [&] (server_session::serializer &ser) {
+							ser(string("Whoa!"));
+						});
+					});
+
+					s.add_handler<int>(3, [&] (server_session::request &req, int) {
+
+					// ACT
+						req.respond(101, [&] (server_session::serializer &ser) {
+							ser(99183);
+						});
+					});
+
+					s.add_handler<int>(4, [&] (server_session::request &req, int) {
+
+					// ACT
+						req.respond(101, [&] (server_session::serializer &ser) {
+							ser(91919191);
+						});
+					});
+
+					// ACT
+					send_request(s, 1, 12, 0);
+
+					// ASSERT
+					string reference1[] = {	"Lorem ipsum amet dolor",	};
+
+					assert_equal(reference1, log1);
+					assert_is_empty(log2);
+
+					// ACT
+					send_request(s, 2, 12, 0);
+					send_request(s, 2, 12, 0);
+					send_request(s, 3, 12, 0);
+					send_request(s, 4, 12, 0);
+
+					// ASSERT
+					string reference2[] = {	"Lorem ipsum amet dolor", "Whoa!", "Whoa!",	};
+					int reference3[] = {	99183, 91919191,	};
+
+					assert_equal(reference2, log1);
+					assert_equal(reference3, log2);
+				}
+
+
+				test( MessagesAreSerializedWithoutTokens )
+				{
+					// INIT
+					server_session s(outbound);
+					vector<string> log1;
+					vector<int> log2;
+
+					outbound.on_message = [&] (const_byte_range r) {
+						buffer_reader b(r);
+						strmd::deserializer<buffer_reader, packer> d(b);
+						unsigned id;
+						string v1;
+						int v2;
+
+						switch (d(id), id)
+						{
+						case 100:
+							d(v1);
+							log1.push_back(v1);
+							break;
+
+						case 101:
+							d(v2);
+							log2.push_back(v2);
+							break;
+
+						}
+					};
+
+					// ACT
+					s.message(101, [&] (server_session::serializer &ser) {	ser(1919191);	});
+
+					// ASSERT
+					int reference1[] = {	1919191,	};
+
+					assert_is_empty(log1);
+					assert_equal(reference1, log2);
+
+					// ACT
+					s.message(101, [&] (server_session::serializer &ser) {	ser(1);	});
+					s.message(101, [&] (server_session::serializer &ser) {	ser(2);	});
+					s.message(100, [&] (server_session::serializer &ser) {	ser(string("Hello!"));	});
+
+					// ASSERT
+					string reference2[] = {	"Hello!",	};
+					int reference3[] = {	1919191, 1, 2,	};
+
+					assert_equal(reference2, log1);
+					assert_equal(reference3, log2);
 				}
 			end_test_suite
 		}

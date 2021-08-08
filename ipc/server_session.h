@@ -39,6 +39,7 @@ namespace micro_profiler
 		public:
 			class request;
 			typedef strmd::serializer<buffer_writer< pod_vector<byte> >, packer> serializer;
+			typedef unsigned long long token_t;
 
 		public:
 			server_session(channel &outbound);
@@ -60,6 +61,8 @@ namespace micro_profiler
 			virtual void message(const_byte_range payload) override;
 
 		private:
+			channel &_outbound;
+			pod_vector<byte> _outbound_buffer;
 			std::unordered_map<unsigned int /*request_id*/, handler_t> _handlers;
 		};
 
@@ -73,7 +76,14 @@ namespace micro_profiler
 			std::function<void (request &context)> continuation;
 
 		private:
-			request();
+			request(server_session &owner, token_t token);
+
+			void operator &();
+			void operator &() const;
+
+		private:
+			server_session &_owner;
+			token_t _token;
 
 		private:
 			friend class server_session;
@@ -91,6 +101,29 @@ namespace micro_profiler
 				payload_deserializer(*payload_buffer);
 				handler(context, *payload_buffer);
 			};
+		}
+
+		template <typename FormatterT>
+		inline void server_session::message(unsigned int message_id, const FormatterT &message_formatter)
+		{
+			{
+				buffer_writer< pod_vector<byte> > bw(_outbound_buffer);
+				serializer ser(bw);
+
+				ser(message_id);
+				message_formatter(ser);
+			}
+			_outbound.message(const_byte_range(_outbound_buffer.data(), _outbound_buffer.size()));
+		}
+
+
+		template <typename FormatterT>
+		inline void server_session::request::respond(unsigned int response_id, const FormatterT &response_formatter)
+		{
+			_owner.message(response_id, [&] (serializer &ser) {
+				ser(_token);
+				response_formatter(ser);
+			});
 		}
 	}
 }

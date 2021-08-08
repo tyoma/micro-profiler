@@ -49,11 +49,11 @@ namespace micro_profiler
 
 		void stop();
 
+	private:
 		// ipc::channel methods
 		virtual void disconnect() throw() override;
 		virtual void message(const_byte_range command_payload) override;
 
-	private:
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
 		std::shared_ptr<ipc::channel> init_server(ipc::channel &outbound, const overhead &overhead_);
 

@@ -17,7 +17,7 @@ namespace micro_profiler
 		{
 			using namespace micro_profiler::tests;
 
-			begin_test_suite( AMarshalledActiveSessionTests )
+			begin_test_suite( MarshalledActiveSessionTests )
 				shared_ptr<micro_profiler::tests::mocks::queue> queue;
 
 				init( Init )

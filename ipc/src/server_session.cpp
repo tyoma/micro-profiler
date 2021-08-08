@@ -26,7 +26,8 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		server_session::server_session(channel &/*outbound*/)
+		server_session::server_session(channel &outbound)
+			: _outbound(outbound)
 		{	}
 
 		void server_session::disconnect() throw()
@@ -37,7 +38,8 @@ namespace micro_profiler
 		{
 			buffer_reader r(payload);
 			deserializer d(r);
-			unsigned int request_id, token;
+			unsigned int request_id;
+			token_t token;
 
 			d(request_id);
 			d(token);
@@ -45,7 +47,16 @@ namespace micro_profiler
 			const auto h = _handlers.find(request_id);
 
 			if (h != _handlers.end())
-				_handlers[request_id](*(request *)0, d);
+			{
+				request req(*this, token);
+
+				h->second(req, d);
+			}
 		}
+
+
+		server_session::request::request(server_session &owner, token_t token)
+			: _owner(owner), _token(token)
+		{	}
 	}
 }

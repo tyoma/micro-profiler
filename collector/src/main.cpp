@@ -79,13 +79,12 @@ namespace
 const size_t c_trace_limit = 5000000;
 const auto g_thread_monitor = make_shared<thread_monitor>(mt::get_thread_callbacks());
 micro_profiler::allocator g_allocator;
-const shared_ptr<calls_collector> g_collector(new calls_collector(g_allocator, c_trace_limit, *g_thread_monitor,
-	mt::get_thread_callbacks()));
-extern "C" calls_collector *g_collector_ptr = g_collector.get();
+calls_collector g_collector(g_allocator, c_trace_limit, *g_thread_monitor, mt::get_thread_callbacks());
+extern "C" calls_collector *g_collector_ptr = &g_collector;
 const auto c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit);
 executable_memory_allocator g_eallocator;
-image_patch_manager g_patch_manager(*g_collector, g_eallocator);
-collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead, g_thread_monitor, g_patch_manager);
+image_patch_manager g_patch_manager(g_collector, g_eallocator);
+collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead, *g_thread_monitor, g_patch_manager);
 const platform_initializer g_intializer(g_profiler_app);
 
 #if defined(__clang__) || defined(__GNUC__)

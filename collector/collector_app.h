@@ -32,7 +32,6 @@ namespace micro_profiler
 	class module_tracker;
 	struct overhead;
 	struct patch_manager;
-	class statistics_bridge;
 	class thread_monitor;
 
 	namespace ipc
@@ -47,23 +46,22 @@ namespace micro_profiler
 		typedef std::function<channel_t (ipc::channel &inbound)> frontend_factory_t;
 
 	public:
-		collector_app(const frontend_factory_t &factory, const std::shared_ptr<calls_collector_i> &collector,
-			const overhead &overhead_, const std::shared_ptr<thread_monitor> &thread_monitor_,
-			patch_manager &patch_manager_);
+		collector_app(const frontend_factory_t &factory, calls_collector_i &collector, const overhead &overhead_,
+			thread_monitor &thread_monitor_, patch_manager &patch_manager_);
 		~collector_app();
 
 		void stop();
 
 	private:
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
-		std::shared_ptr<ipc::channel> init_server(ipc::channel &outbound, std::shared_ptr<analyzer> analyzer_);
+		std::shared_ptr<ipc::channel> init_server(ipc::channel &outbound, analyzer &analyzer_);
 
 	private:
 		scheduler::task_queue _queue;
-		const std::shared_ptr<calls_collector_i> _collector;
-		const std::shared_ptr<module_tracker> _module_tracker;
-		const std::shared_ptr<thread_monitor> _thread_monitor;
+		calls_collector_i &_collector;
+		thread_monitor &_thread_monitor;
 		patch_manager &_patch_manager;
+		const std::shared_ptr<module_tracker> _module_tracker;
 		bool _exit;
 		std::unique_ptr<mt::thread> _frontend_thread;
 	};

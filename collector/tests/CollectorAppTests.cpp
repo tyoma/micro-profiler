@@ -37,8 +37,8 @@ namespace micro_profiler
 			mocks::allocator allocator_;
 			shared_ptr<mocks::frontend_state> state;
 			collector_app::frontend_factory_t factory;
-			shared_ptr<mocks::tracer> collector;
-			shared_ptr<mocks::thread_monitor> tmonitor;
+			mocks::tracer collector;
+			mocks::thread_monitor tmonitor;
 			mocks::patch_manager pmanager;
 			ipc::channel *inbound;
 			mt::event inbound_ready;
@@ -59,8 +59,6 @@ namespace micro_profiler
 			{
 				state.reset(new mocks::frontend_state(shared_ptr<void>()));
 				factory = bind(&CollectorAppTests::create_frontned, this, _1);
-				collector.reset(new mocks::tracer);
-				tmonitor.reset(new mocks::thread_monitor);
 			}
 
 			template <typename FormatterT>
@@ -339,11 +337,11 @@ namespace micro_profiler
 				auto flushed = false;
 				auto reads_after_flush = 0;
 
-				collector->on_read_collected = [&] (calls_collector_i::acceptor &/*a*/) {
+				collector.on_read_collected = [&] (calls_collector_i::acceptor &/*a*/) {
 					if (flushed)
 						reads_after_flush++;
 				};
-				collector->on_flush = [&] {	flushed = true;	};
+				collector.on_flush = [&] {	flushed = true;	};
 
 				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
 
@@ -362,13 +360,13 @@ namespace micro_profiler
 				auto flushed = false;
 				vector<mocks::thread_statistics_map> updates;
 
-				collector->on_read_collected = [&] (calls_collector_i::acceptor &a) {
+				collector.on_read_collected = [&] (calls_collector_i::acceptor &a) {
 					call_record trace[] = { { 0, (void *)0x1223 }, { 1001, (void *)0 }, };
 
 					if (flushed)
 						a.accept_calls(11710u, trace, 2);
 				};
-				collector->on_flush = [&] {	flushed = true;	};
+				collector.on_flush = [&] {	flushed = true;	};
 
 				state->updated = [&] (unsigned, const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
@@ -397,7 +395,7 @@ namespace micro_profiler
 				auto reads = 0;
 				mt::event done;
 
-				collector->on_read_collected = [&] (calls_collector_i::acceptor &/*a*/) {
+				collector.on_read_collected = [&] (calls_collector_i::acceptor &/*a*/) {
 					if (++reads == 10)
 						done.set();
 				};
@@ -426,7 +424,7 @@ namespace micro_profiler
 					{	14000 + c_overhead.inner, (void *)0	},
 				};
 
-				collector->on_read_collected = [&] (calls_collector_i::acceptor &a) {
+				collector.on_read_collected = [&] (calls_collector_i::acceptor &a) {
 					mt::lock_guard<mt::mutex> l(mtx);
 
 					if (trace.empty())
@@ -484,7 +482,8 @@ namespace micro_profiler
 				auto reads2 = 0;
 				mocks::thread_statistics_map u1, u2;
 				overhead o1(13, 0), o2(29, 0);
-				shared_ptr<mocks::tracer> tracer1(new mocks::tracer), tracer2(new mocks::tracer);
+				auto tracer1 = make_shared<mocks::tracer>();
+				auto tracer2 = make_shared<mocks::tracer>();
 				shared_ptr<mocks::frontend_state> state1(new mocks::frontend_state(tracer1)),
 					state2(new mocks::frontend_state(tracer2));
 				call_record trace[] = {
@@ -508,8 +507,8 @@ namespace micro_profiler
 					u2 = u;
 				};
 
-				unique_ptr<collector_app> app1(new collector_app(bind(&mocks::frontend_state::create, state1), tracer1, o1, tmonitor, pmanager));
-				unique_ptr<collector_app> app2(new collector_app(bind(&mocks::frontend_state::create, state2), tracer2, o2, tmonitor, pmanager));
+				unique_ptr<collector_app> app1(new collector_app(bind(&mocks::frontend_state::create, state1), *tracer1, o1, tmonitor, pmanager));
+				unique_ptr<collector_app> app2(new collector_app(bind(&mocks::frontend_state::create, state2), *tracer2, o2, tmonitor, pmanager));
 
 				// ACT
 				app1.reset();
@@ -604,9 +603,9 @@ namespace micro_profiler
 				};
 				thread_monitor::thread_id request1[] = { 1, }, request2[] = { 1, 19, 2, };
 
-				tmonitor->add_info(1 /*thread_id*/, ti[0]);
-				tmonitor->add_info(2 /*thread_id*/, ti[1]);
-				tmonitor->add_info(19 /*thread_id*/, ti[2]);
+				tmonitor.add_info(1 /*thread_id*/, ti[0]);
+				tmonitor.add_info(2 /*thread_id*/, ti[1]);
+				tmonitor.add_info(19 /*thread_id*/, ti[2]);
 
 				state->threads_received = [&] (unsigned, const vector< pair<unsigned /*thread_id*/, thread_info> > &threads_) {
 					threads = threads_;

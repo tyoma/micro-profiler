@@ -53,10 +53,10 @@ namespace micro_profiler
 		};
 	}
 
-	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector_i> &collector,
-			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_, patch_manager &patch_manager_)
-		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _module_tracker(new module_tracker),
-			_thread_monitor(thread_monitor_), _patch_manager(patch_manager_), _exit(false)
+	collector_app::collector_app(const frontend_factory_t &factory, calls_collector_i &collector,
+			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_)
+		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _thread_monitor(thread_monitor_),
+			_patch_manager(patch_manager_), _module_tracker(new module_tracker), _exit(false)
 	{
 		_frontend_thread.reset(new mt::thread([this, factory, overhead_] {
 			worker(factory, overhead_);
@@ -70,7 +70,7 @@ namespace micro_profiler
 	{
 		if (_frontend_thread.get())
 		{
-			_collector->flush();
+			_collector.flush();
 			_queue.schedule([this] {	this->_exit = true;	});
 			_frontend_thread->join();
 			_frontend_thread.reset();
@@ -80,14 +80,14 @@ namespace micro_profiler
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
 		shared_ptr<scheduler::queue> qw(new queue_wrapper(_queue));
-		auto analyzer_ = make_shared<analyzer>(overhead_);
+		analyzer analyzer_(overhead_);
 		shared_ptr<ipc::channel> inbound;
 		ipc::marshalled_active_session s(factory, qw, [&] (ipc::channel &outbound) {
 			return inbound = init_server(outbound, analyzer_);
 		});
 		function<void ()> analyze;
 		const auto analyze_ = [&] {
-			_collector->read_collected(*analyzer_);
+			_collector.read_collected(analyzer_);
 			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
 		};
 
@@ -104,7 +104,7 @@ namespace micro_profiler
 		ipc::server_session::serializer ser(bw);
 
 		ser(request_update), ser(0u), ser(0u);
-		_collector->read_collected(*analyzer_);
+		_collector.read_collected(analyzer_);
 		inbound->message(const_byte_range(data.data(), data.size()));
 	}
 }

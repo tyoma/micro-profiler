@@ -128,7 +128,9 @@ namespace micro_profiler
 
 				// ACT
 				controller->sessions[0]->load_module("symbol_container_2_instrumented");
-				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_update), ser(0u);
+				});
 
 				// ASSERT
 				ready.wait();
@@ -144,7 +146,7 @@ namespace micro_profiler
 				frontend_state->modules_unloaded = bind(&mt::event::set, &ready2);
 				controller->sessions[0]->load_module("symbol_container_2_instrumented");
 				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_update);
+					ser(request_update), ser(0u);
 				});
 
 				ready.wait();
@@ -152,7 +154,7 @@ namespace micro_profiler
 				// ACT
 				controller->sessions[0]->unload_module("symbol_container_2_instrumented");
 				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_update);
+					ser(request_update), ser(0u);
 				});
 
 				// ASSERT
@@ -175,7 +177,7 @@ namespace micro_profiler
 				char buffer[100];
 				int data[10];
 
-				frontend_state->updated = [&, statistics] (const mocks::thread_statistics_map &u) {
+				frontend_state->updated = [&, statistics] (unsigned, const mocks::thread_statistics_map &u) {
 					statistics->push_back(u);
 					ready.set();
 				};

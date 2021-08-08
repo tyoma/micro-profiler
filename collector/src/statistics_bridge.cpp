@@ -51,20 +51,22 @@ namespace micro_profiler
 
 	void statistics_bridge::update_frontend()
 	{
+		auto token = 0u;
 		loaded_modules loaded;
 		unloaded_modules unloaded;
 		
 		_module_tracker->get_changes(loaded, unloaded);
 		if (!loaded.empty())
-			send(response_modules_loaded, nullptr, loaded);
-		send(response_statistics_update, nullptr, _analyzer);
+			send(response_modules_loaded, &token, loaded);
+		send(response_statistics_update, &token, _analyzer);
 		if (!unloaded.empty())
-			send(response_modules_unloaded, nullptr, unloaded);
+			send(response_modules_unloaded, &token, unloaded);
 		_analyzer.clear();
 	}
 
 	void statistics_bridge::send_module_metadata(unsigned int persistent_id)
 	{
+		auto token = 0u;
 		const auto metadata = _module_tracker->get_metadata(persistent_id);
 		auto md = make_pair(persistent_id, module_info_metadata());
 
@@ -74,14 +76,16 @@ namespace micro_profiler
 		metadata->enumerate_files([&] (const pair<unsigned, string> &file) {
 			md.second.source_files.push_back(file);
 		});
-		send(response_module_metadata, nullptr, md);
+		send(response_module_metadata, &token, md);
 	}
 
 	void statistics_bridge::send_thread_info(const vector<thread_monitor::thread_id> &ids)
 	{
+		auto token = 0u;
+
 		_threads_buffer.resize(ids.size());
 		_thread_monitor->get_info(_threads_buffer.begin(), ids.begin(), ids.end());
-		send(response_threads_info, nullptr, _threads_buffer);
+		send(response_threads_info, &token, _threads_buffer);
 	}
 
 	void statistics_bridge::activate_patches(unsigned int token, unsigned int persistent_id,

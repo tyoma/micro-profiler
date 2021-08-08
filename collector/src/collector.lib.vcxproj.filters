@@ -37,6 +37,9 @@
     <ClCompile Include="allocator.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="collector_app_server.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

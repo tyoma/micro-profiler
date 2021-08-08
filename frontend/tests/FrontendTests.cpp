@@ -25,12 +25,24 @@ namespace micro_profiler
 			}
 
 			template <typename CommandDataT>
-			void write(ipc::channel &channel, messages_id c, const CommandDataT &data)
+			void message(ipc::channel &channel, messages_id c, const CommandDataT &data)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter, packer> archive(b);
 
 				archive(c);
+				archive(data);
+				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
+			}
+
+			template <typename CommandDataT>
+			void response(ipc::channel &channel, messages_id c, unsigned token, const CommandDataT &data)
+			{
+				vector_adapter b;
+				strmd::serializer<vector_adapter, packer> archive(b);
+
+				archive(c);
+				archive(token);
 				archive(data);
 				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
 			}
@@ -67,10 +79,10 @@ namespace micro_profiler
 					make_pair(1321222, unthreaded_statistic_types::function_detailed()),
 				};
 
-				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
+				message(*frontend_, (init), make_initialization_data("abcabc", 1000101));
 
 				// ACT
-				write(*frontend_, response_statistics_update, make_single_threaded(data1, 12));
+				response(*frontend_, response_statistics_update, 0u, make_single_threaded(data1, 12));
 
 				// ASSERT
 				unsigned reference1[] = { 12, };
@@ -79,7 +91,7 @@ namespace micro_profiler
 				assert_equivalent(reference1, outbound.requested_threads[0]);
 
 				// ACT
-				write(*frontend_, response_statistics_update, make_single_threaded(data1, 17));
+				response(*frontend_, response_statistics_update, 1u, make_single_threaded(data1, 17));
 
 				// ASSERT
 				unsigned reference2[] = { 12, 17, };
@@ -92,7 +104,7 @@ namespace micro_profiler
 			test( NewlyCreatedFrontendSchedulesAnUpdateRequest )
 			{
 				// ACT
-				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
+				message(*frontend_, (init), make_initialization_data("abcabc", 1000101));
 
 				// ASSERT
 				assert_equal(1u, queue->tasks.size());
@@ -115,10 +127,10 @@ namespace micro_profiler
 					make_pair(1321222, unthreaded_statistic_types::function_detailed()),
 				};
 
-				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
+				message(*frontend_, (init), make_initialization_data("abcabc", 1000101));
 
 				// ACT
-				write(*frontend_, response_statistics_update, make_single_threaded(data1, 12));
+				response(*frontend_, response_statistics_update, 1u, make_single_threaded(data1, 12));
 
 				// ASSERT
 				assert_equal(2u, queue->tasks.size());
@@ -136,7 +148,7 @@ namespace micro_profiler
 			test( ScheduledTaskDoesNothingAfterTheFrontendIsDestroyed )
 			{
 				// INIT
-				write(*frontend_, (init), make_initialization_data("abcabc", 1000101));
+				message(*frontend_, (init), make_initialization_data("abcabc", 1000101));
 
 				// ACT
 				frontend_.reset();

@@ -28,7 +28,7 @@
 #include <scheduler/scheduler.h>
 #include <vector>
 
-#define PREAMBLE "Marshalled Server: "
+#define PREAMBLE "Marshalled Session: "
 
 using namespace std;
 
@@ -49,11 +49,28 @@ namespace micro_profiler
 		}
 
 
-		marshalled_session::marshalled_session(shared_ptr<scheduler::queue> queue, ipc::channel &outbound)
+		void marshalled_active_session::disconnect() throw()
+		{
+			_queue.schedule([this] {
+				_server_inbound->disconnect();
+			});
+		}
+
+		void marshalled_active_session::message(const_byte_range payload)
+		{
+			const auto data = make_shared< vector<byte> >(payload.begin(), payload.end());
+
+			_queue.schedule([this, data]	{
+				_server_inbound->message(const_byte_range(data->data(), data->size()));
+			});
+		}
+
+
+		marshalled_passive_session::marshalled_passive_session(shared_ptr<scheduler::queue> queue, ipc::channel &outbound)
 			: _lifetime(make_shared<lifetime>()), _queue(queue), _outbound(make_shared<outbound_wrapper>(outbound))
 		{	}
 
-		marshalled_session::~marshalled_session()
+		marshalled_passive_session::~marshalled_passive_session()
 		{
 			LOG(PREAMBLE "destroying marshalled session and scheduling an underlying session destruction...")
 				% A(this) % A(_underlying.get());
@@ -62,7 +79,7 @@ namespace micro_profiler
 			schedule_destroy(*_queue, _underlying);
 		}
 
-		void marshalled_session::create_underlying(shared_ptr<ipc::server> underlying_server)
+		void marshalled_passive_session::create_underlying(shared_ptr<ipc::server> underlying_server)
 		{
 			LOG(PREAMBLE "scheduling an underlying session creation...") % A(this) % A(underlying_server.get());
 			lifetime::schedule_safe(_lifetime, *_queue, [this, underlying_server] {
@@ -74,10 +91,10 @@ namespace micro_profiler
 			});
 		}
 
-		void marshalled_session::disconnect() throw()
+		void marshalled_passive_session::disconnect() throw()
 		{	lifetime::schedule_safe(_lifetime, *_queue, [this]	{	_underlying->disconnect();	});	}
 
-		void marshalled_session::message(const_byte_range payload)
+		void marshalled_passive_session::message(const_byte_range payload)
 		{
 			const auto data = make_shared< vector<byte> >(payload.begin(), payload.end());
 
@@ -87,17 +104,17 @@ namespace micro_profiler
 		}
 
 
-		marshalled_session::outbound_wrapper::outbound_wrapper(ipc::channel &underlying)
+		marshalled_passive_session::outbound_wrapper::outbound_wrapper(ipc::channel &underlying)
 			: _lifetime(make_shared<lifetime>()), _underlying(underlying)
 		{	}
 
-		void marshalled_session::outbound_wrapper::stop()
+		void marshalled_passive_session::outbound_wrapper::stop()
 		{	_lifetime->mark_destroyed();	}
 
-		void marshalled_session::outbound_wrapper::disconnect() throw()
+		void marshalled_passive_session::outbound_wrapper::disconnect() throw()
 		{	_lifetime->execute_safe([this] {	_underlying.disconnect();	});	}
 
-		void marshalled_session::outbound_wrapper::message(const_byte_range payload)
+		void marshalled_passive_session::outbound_wrapper::message(const_byte_range payload)
 		{	_lifetime->execute_safe([this, payload] {	_underlying.message(payload);	});	}
 	}
 }

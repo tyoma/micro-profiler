@@ -35,8 +35,9 @@ namespace micro_profiler
 					buffer_reader reader(payload);
 					strmd::deserializer<buffer_reader, packer> d(reader);
 					messages_id c;
+					unsigned token;
 
-					switch (d(c), c)
+					switch (d(c), d(token), c)
 					{
 					case request_update:
 						requested_upadtes++;

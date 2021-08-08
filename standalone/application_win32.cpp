@@ -50,7 +50,7 @@ namespace micro_profiler
 	struct com_initialize
 	{
 		com_initialize()
-		{	::CoInitialize(NULL);	}
+		{	::CoInitializeEx(NULL, COINIT_MULTITHREADED);	}
 
 		~com_initialize()
 		{	::CoUninitialize();	}

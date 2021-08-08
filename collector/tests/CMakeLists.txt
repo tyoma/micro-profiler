@@ -20,4 +20,4 @@ set(COLLECTOR_TESTS_SOURCES
 )
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
-target_link_libraries(collector.tests collector.lib common patcher scheduler mt logger test-helpers)
+target_link_libraries(collector.tests collector.lib common ipc patcher scheduler mt logger test-helpers)

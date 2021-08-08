@@ -219,7 +219,7 @@ namespace micro_profiler
 				// INIT
 				mt::event updated;
 
-				state->updated = [&] (const mocks::thread_statistics_map &) { updated.set(); };
+				state->updated = [&] (unsigned, const mocks::thread_statistics_map &) { updated.set(); };
 
 				// ACT
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
@@ -235,19 +235,19 @@ namespace micro_profiler
 				mt::event ready;
 				loaded_modules l;
 
-				state->modules_loaded = [&] (const loaded_modules &m) {
+				state->modules_loaded = [&] (unsigned, const loaded_modules &m) {
 					l = m;
 					ready.set();
 				};
 
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				ready.wait(); // Guarantee that the load below leads to an individual notification.
 
 				// ACT
 				image image0(c_symbol_container_1);
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				ready.wait();
 
 				// ASSERT
@@ -256,7 +256,7 @@ namespace micro_profiler
 
 				// ACT
 				image image1(c_symbol_container_2);
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				ready.wait();
 
 				// ASSERT
@@ -276,11 +276,11 @@ namespace micro_profiler
 				auto_ptr<image> image1(new image(c_symbol_container_2));
 				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 
-				state->modules_loaded = [&] (const loaded_modules &m) {
+				state->modules_loaded = [&] (unsigned, const loaded_modules &m) {
 					l.insert(l.end(), m.begin(), m.end());
 					ready.set();
 				};
-				state->modules_unloaded = [&] (const unloaded_modules &m) {
+				state->modules_unloaded = [&] (unsigned, const unloaded_modules &m) {
 					mt::lock_guard<mt::mutex> lock(mtx);
 
 					u.insert(u.end(), m.begin(), m.end());
@@ -290,7 +290,7 @@ namespace micro_profiler
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				ready.wait();
 
 				// ASSERT
@@ -307,7 +307,7 @@ namespace micro_profiler
 
 				// ACT
 				image1.reset();
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				ready.wait();
 
 				// ASSERT
@@ -322,7 +322,7 @@ namespace micro_profiler
 				// ACT
 				image0.reset();
 				image2.reset();
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				ready.wait();
 
 				// ASSERT
@@ -370,7 +370,7 @@ namespace micro_profiler
 				};
 				collector->on_flush = [&] {	flushed = true;	};
 
-				state->updated = [&] (const mocks::thread_statistics_map &u) {
+				state->updated = [&] (unsigned, const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
 					updated.set();
 				};
@@ -436,7 +436,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				state->updated = [&] (const mocks::thread_statistics_map &u) {
+				state->updated = [&] (unsigned, const mocks::thread_statistics_map &u) {
 					updates.push_back(u);
 					updated.set();
 				};
@@ -446,7 +446,7 @@ namespace micro_profiler
 				// ACT
 				{	mt::lock_guard<mt::mutex> l(mtx);	tid = 11710u, trace.assign(trace1, trace1 + 2);	}
 				ready.wait();
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				updated.wait();
 
 				// ASSERT
@@ -461,7 +461,7 @@ namespace micro_profiler
 				// ACT
 				{	mt::lock_guard<mt::mutex> l(mtx);	tid = 11713u, trace.assign(trace2, trace2 + 2);	}
 				ready.wait();
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				updated.wait();
 
 				// ASERT
@@ -501,10 +501,10 @@ namespace micro_profiler
 						a.accept_calls(11710u, trace, 2);
 				};
 
-				state1->updated = [&] (const mocks::thread_statistics_map &u) {
+				state1->updated = [&] (unsigned, const mocks::thread_statistics_map &u) {
 					u1 = u;
 				};
-				state2->updated = [&] (const mocks::thread_statistics_map &u) {
+				state2->updated = [&] (unsigned, const mocks::thread_statistics_map &u) {
 					u2 = u;
 				};
 
@@ -537,13 +537,13 @@ namespace micro_profiler
 				unsigned persistent_id;
 				module_info_metadata md;
 
-				state->modules_loaded = [&] (const loaded_modules &m) {
+				state->modules_loaded = [&] (unsigned, const loaded_modules &m) {
 					mt::lock_guard<mt::mutex> lock(mtx);
 
 					l.insert(l.end(), m.begin(), m.end());
 					ready.set();
 				};
-				state->metadata_received = [&] (unsigned id, const module_info_metadata &m) {
+				state->metadata_received = [&] (unsigned, unsigned id, const module_info_metadata &m) {
 					persistent_id = id;
 					md = m;
 					md_ready.set();
@@ -554,7 +554,7 @@ namespace micro_profiler
 				image image0(c_symbol_container_1);
 				image image1(c_symbol_container_2);
 
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update);	});
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
 				ready.wait();
 
 				const mapped_module_identified mmi[] = {
@@ -564,7 +564,7 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_module_metadata);
+					ser(request_module_metadata), ser(0u);
 					ser(mmi[1].persistent_id);
 				});
 				md_ready.wait();
@@ -578,7 +578,7 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_module_metadata);
+					ser(request_module_metadata), ser(0u);
 					ser(mmi[0].persistent_id);
 				});
 				md_ready.wait();
@@ -608,7 +608,7 @@ namespace micro_profiler
 				tmonitor->add_info(2 /*thread_id*/, ti[1]);
 				tmonitor->add_info(19 /*thread_id*/, ti[2]);
 
-				state->threads_received = [&] (const vector< pair<unsigned /*thread_id*/, thread_info> > &threads_) {
+				state->threads_received = [&] (unsigned, const vector< pair<unsigned /*thread_id*/, thread_info> > &threads_) {
 					threads = threads_;
 					ready.set();
 				};
@@ -617,7 +617,7 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_threads_info);
+					ser(request_threads_info), ser(0u);
 					ser(mkvector(request1));
 				});
 				ready.wait();
@@ -631,7 +631,7 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_threads_info);
+					ser(request_threads_info), ser(0u);
 					ser(mkvector(request2));
 				});
 				ready.wait();
@@ -642,6 +642,247 @@ namespace micro_profiler
 				};
 
 				assert_equal(reference2, threads);
+			}
+
+
+			test( PatchActivationIsMadeOnRequest )
+			{
+				// INIT
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				vector<unsigned> ids_log;
+				vector<void *> bases_log;
+				vector< vector<unsigned> > rva_log;
+				loaded_modules l;
+				unloaded_modules u;
+				mt::event ready;
+
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+
+				pmanager.on_apply = [&] (vector<unsigned int> &, unsigned int persistent_id, void *base,
+					shared_ptr<void> lock, range<const unsigned int, size_t> functions) {
+
+					ids_log.push_back(persistent_id);
+					bases_log.push_back(base);
+					assert_not_null(lock);
+					rva_log.push_back(vector<unsigned>(functions.begin(), functions.end()));
+					ready.set();
+				};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_apply_patches), ser(0u);
+					ser(3u);
+					ser(mkvector(rva1));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference1_ids[] = {	3,	};
+
+				assert_equal(reference1_ids, ids_log);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_apply_patches), ser(0u);
+					ser(1u);
+					ser(mkvector(rva2));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference2_ids[] = {	3, 1,	};
+
+				assert_equal(reference2_ids, ids_log);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
+			}
+
+
+			test( PatchActivationFailuresAreReturned )
+			{
+				// INIT
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
+				loaded_modules l;
+				unloaded_modules u;
+				vector<unsigned> tokens;
+				vector< vector<unsigned> > rva_log;
+				mt::event ready;
+
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+
+				pmanager.on_apply = [&] (vector<unsigned int> &failures, unsigned int, void *,
+					shared_ptr<void>, range<const unsigned int, size_t>) {
+
+					failures = mkvector(rva1);
+				};
+				state->activation_errors_received = [&] (unsigned token, vector<unsigned> failures) {
+
+					tokens.push_back(token);
+					rva_log.push_back(failures);
+					ready.set();
+				};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_apply_patches), ser(1110320u);
+					ser(3u);
+					ser(mkvector(rva1));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference1[] = {	1110320u,	};
+
+				assert_equal(reference1, tokens);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				pmanager.on_apply = [&] (vector<unsigned int> &failures, unsigned int, void *,
+					shared_ptr<void>, range<const unsigned int, size_t>) {
+
+					failures = mkvector(rva2);
+				};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_apply_patches), ser(91110320u);
+					ser(2u);
+					ser(mkvector(rva1));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference2[] = {	1110320u, 91110320u,	};
+
+				assert_equal(reference2, tokens);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
+			}
+
+
+			test( PatchRevertIsMadeOnRequest )
+			{
+				// INIT
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				vector<unsigned> ids_log;
+				vector< vector<unsigned> > rva_log;
+				loaded_modules l;
+				unloaded_modules u;
+				mt::event ready;
+
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+
+				pmanager.on_revert = [&] (vector<unsigned int> &, unsigned int persistent_id,
+					range<const unsigned int, size_t> functions) {
+
+					ids_log.push_back(persistent_id);
+					rva_log.push_back(vector<unsigned>(functions.begin(), functions.end()));
+					ready.set();
+				};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_revert_patches), ser(1110320u);
+					ser(3u);
+					ser(mkvector(rva1));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference1_ids[] = {	3,	};
+
+				assert_equal(reference1_ids, ids_log);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_revert_patches), ser(1110320u);
+					ser(1u);
+					ser(mkvector(rva2));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference2_ids[] = {	3, 1,	};
+
+				assert_equal(reference2_ids, ids_log);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
+			}
+
+
+			test( PatchRevertFailuresAreReturned )
+			{
+				// INIT
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
+				loaded_modules l;
+				unloaded_modules u;
+				vector<unsigned> tokens;
+				vector< vector<unsigned> > rva_log;
+				mt::event ready;
+
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+
+				pmanager.on_revert = [&] (vector<unsigned int> &failures, unsigned int, range<const unsigned int, size_t>) {
+					failures = mkvector(rva1);
+				};
+				state->revert_errors_received = [&] (unsigned token, vector<unsigned> failures) {
+
+					tokens.push_back(token);
+					rva_log.push_back(failures);
+					ready.set();
+				};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_revert_patches), ser(1110321u);
+					ser(3u);
+					ser(mkvector(rva1));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference1[] = {	1110321u,	};
+
+				assert_equal(reference1, tokens);
+				assert_equal(1u, rva_log.size());
+				assert_equal(rva1, rva_log.back());
+
+				// INIT
+				pmanager.on_revert = [&] (vector<unsigned int> &failures, unsigned int,  range<const unsigned int, size_t>) {
+					failures = mkvector(rva2);
+				};
+
+				// ACT
+				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					ser(request_revert_patches), ser(11910u);
+					ser(2u);
+					ser(mkvector(rva1));
+				});
+				ready.wait();
+
+				// ASSERT
+				unsigned reference2[] = {	1110321u, 11910,	};
+
+				assert_equal(reference2, tokens);
+				assert_equal(2u, rva_log.size());
+				assert_equal(rva2, rva_log.back());
 			}
 
 		end_test_suite

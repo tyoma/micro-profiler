@@ -67,10 +67,10 @@ namespace micro_profiler
 
 		shared_ptr<ipc::channel> marshalled_server::create_session(ipc::channel &outbound)
 		{
-			shared_ptr<marshalled_session> msession;
+			shared_ptr<marshalled_passive_session> msession;
 
 			_lifetime->execute_safe([&] {
-				msession = make_shared<marshalled_session>(_queue, outbound);
+				msession = make_shared<marshalled_passive_session>(_queue, outbound);
 				msession->create_underlying(_underlying);
 			});
 			return msession;

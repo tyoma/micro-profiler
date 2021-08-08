@@ -105,7 +105,7 @@
 
 		<Component Id="compFrontend" Directory="TARGETDIR" Guid="BC5669B7-BF54-40BB-A169-E20B16357D45" KeyPath="yes">
 			<File Id="fileFrontendDLL" Source="$(var.SOURCEDIR)/micro-profiler_standalone.exe" Vital="yes" />
-			<Class Id="0ED7654C-DE8A-4964-9661-0B0C391BE15E" Description="MicroProfiler Frontend Class" Context="LocalServer32" ThreadingModel="apartment" ForeignServer="[#fileFrontendDLL]" Version="1.0"/>
+			<Class Id="0ED7654C-DE8A-4964-9661-0B0C391BE15E" Description="MicroProfiler Frontend Class" Context="LocalServer32" ThreadingModel="free" ForeignServer="[#fileFrontendDLL]" Version="1.0"/>
 		</Component>
 
 		<Component Id="compVSPackage" Directory="TARGETDIR" Guid="57A2000C-A414-4F8F-A3A3-92DA925C6D11" KeyPath="yes">

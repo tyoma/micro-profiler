@@ -55,6 +55,7 @@ namespace micro_profiler
 
 	private:
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
+		std::shared_ptr<ipc::channel> init_server(ipc::channel &outbound, const overhead &overhead_);
 
 	private:
 		scheduler::task_queue _queue;
@@ -62,7 +63,7 @@ namespace micro_profiler
 		const std::shared_ptr<module_tracker> _module_tracker;
 		const std::shared_ptr<thread_monitor> _thread_monitor;
 		patch_manager &_patch_manager;
-		std::unique_ptr<statistics_bridge> _bridge;
+		std::shared_ptr<statistics_bridge> _bridge;
 		bool _exit;
 		std::unique_ptr<mt::thread> _frontend_thread;
 	};

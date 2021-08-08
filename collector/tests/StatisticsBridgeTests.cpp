@@ -67,7 +67,7 @@ namespace micro_profiler
 				ref_count = 0;
 				cc.reset(new mocks::tracer);
 				state.reset(new mocks::frontend_state(cc));
-				state->updated = [this] (const mocks::thread_statistics_map &u) { update_log.push_back(u); };
+				state->updated = [this] (unsigned, const mocks::thread_statistics_map &u) { update_log.push_back(u); };
 				frontend = state->create();
 			}
 
@@ -162,8 +162,8 @@ namespace micro_profiler
 					{	2000, addr(0x4223)	},
 					{	2019 + o2.inner, addr(0)	},
 				};
-				state1->updated = [&] (const mocks::thread_statistics_map &u) { update_log1.push_back(u); };
-				state2->updated = [&] (const mocks::thread_statistics_map &u) { update_log2.push_back(u); };
+				state1->updated = [&] (unsigned, const mocks::thread_statistics_map &u) { update_log1.push_back(u); };
+				state2->updated = [&] (unsigned, const mocks::thread_statistics_map &u) { update_log2.push_back(u); };
 
 				cc1.on_read_collected = [&] (calls_collector_i::acceptor &a) {	a.accept_calls(18, trace1, 4);	};
 				cc2.on_read_collected = [&] (calls_collector_i::acceptor &a) {	a.accept_calls(18881, trace2, 6);	};
@@ -202,7 +202,7 @@ namespace micro_profiler
 				vector<loaded_modules> loads;
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 
-				state->modules_loaded = [&] (const loaded_modules &m) { loads.push_back(m); };
+				state->modules_loaded = [&] (unsigned, const loaded_modules &m) { loads.push_back(m); };
 
 				// ACT
 				image image0(c_symbol_container_1);
@@ -232,8 +232,8 @@ namespace micro_profiler
 				vector<unloaded_modules> unloads;
 				statistics_bridge b(*cc, c_overhead, *frontend, mtracker, tmonitor, pmanager);
 
-				state->modules_loaded = [&] (const loaded_modules &m) { l = m; };
-				state->modules_unloaded = [&] (const unloaded_modules &m) { unloads.push_back(m); };
+				state->modules_loaded = [&] (unsigned, const loaded_modules &m) { l = m; };
+				state->modules_unloaded = [&] (unsigned, const unloaded_modules &m) { unloads.push_back(m); };
 
 				auto_ptr<image> image0(new image(c_symbol_container_1));
 				auto_ptr<image> image1(new image(c_symbol_container_2));
@@ -278,7 +278,7 @@ namespace micro_profiler
 				loaded_modules l;
 				unloaded_modules u;
 
-				state->metadata_received = [&] (unsigned id, const module_info_metadata &md_) {
+				state->metadata_received = [&] (unsigned, unsigned id, const module_info_metadata &md_) {
 					persistent_id = id, md = md_;
 				};
 
@@ -339,7 +339,7 @@ namespace micro_profiler
 				thread_monitor::thread_id request1[] = { 1, 19, }, request2[] = { 1, 19, 2, };
 				vector< pair<unsigned /*thread_id*/, thread_info> > threads;
 
-				state->threads_received = [&] (const vector< pair<thread_monitor::thread_id, thread_info> > &threads_) {
+				state->threads_received = [&] (unsigned, const vector< pair<thread_monitor::thread_id, thread_info> > &threads_) {
 					threads = threads_;
 				};
 

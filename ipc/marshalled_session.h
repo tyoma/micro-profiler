@@ -23,6 +23,7 @@
 #include "endpoint.h"
 
 #include <common/noncopyable.h>
+#include <scheduler/private_queue.h>
 
 namespace scheduler
 {
@@ -35,11 +36,28 @@ namespace micro_profiler
 	{
 		class lifetime;
 
-		class marshalled_session : public channel, noncopyable
+		class marshalled_active_session : channel, noncopyable
 		{
 		public:
-			marshalled_session(std::shared_ptr<scheduler::queue> queue, channel &outbound);
-			~marshalled_session();
+			template <typename ConnectionFactoryT, typename ServerSessionFactoryT>
+			marshalled_active_session(const ConnectionFactoryT &connection_factory,
+				std::shared_ptr<scheduler::queue> queue, const ServerSessionFactoryT &server_session_factory);
+
+		private:
+			virtual void disconnect() throw() override;
+			virtual void message(const_byte_range payload) override;
+
+		private:
+			std::shared_ptr<channel> _connection_outbound, _server_inbound;
+			scheduler::private_queue _queue;
+		};
+
+
+		class marshalled_passive_session : public channel, noncopyable
+		{
+		public:
+			marshalled_passive_session(std::shared_ptr<scheduler::queue> queue, channel &outbound);
+			~marshalled_passive_session();
 
 			void create_underlying(std::shared_ptr<server> underlying_server);
 
@@ -57,7 +75,7 @@ namespace micro_profiler
 			std::shared_ptr<outbound_wrapper> _outbound;
 		};
 
-		class marshalled_session::outbound_wrapper : public channel, noncopyable
+		class marshalled_passive_session::outbound_wrapper : public channel, noncopyable
 		{
 		public:
 			outbound_wrapper(channel &underlying);
@@ -72,5 +90,17 @@ namespace micro_profiler
 			const std::shared_ptr<lifetime> _lifetime;
 			channel &_underlying;
 		};
+
+
+
+		template <typename ConnectionFactoryT, typename ServerSessionFactoryT>
+		inline marshalled_active_session::marshalled_active_session(const ConnectionFactoryT &connection_factory,
+				std::shared_ptr<scheduler::queue> queue, const ServerSessionFactoryT &server_session_factory)
+			: _queue(queue)
+		{
+			_connection_outbound = connection_factory(*this);
+			_server_inbound = server_session_factory(*_connection_outbound);
+		}
+
 	}
 }

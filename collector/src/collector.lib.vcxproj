@@ -56,6 +56,7 @@
       <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="collector_app.cpp" />
+    <ClCompile Include="collector_app_server.cpp" />
     <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="module_tracker.cpp" />
     <ClCompile Include="process_explorer_linux.cpp">

@@ -8,6 +8,7 @@ HKCR
 			LocalServer32 = s '%MODULE%'
 			{
 				val ServerExecutable = s '%MODULE_RAW%'
+				var ThreadingModel = s 'Free'
 			}
 			Version = s '1.0'
 		}

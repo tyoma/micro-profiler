@@ -75,6 +75,9 @@
     <ProjectReference Include="$(SolutionDir)patcher\src\patcher.lib.vcxproj">
       <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\logger\src\logger.vcxproj">
+      <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>

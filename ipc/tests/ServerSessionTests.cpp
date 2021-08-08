@@ -54,7 +54,7 @@ namespace micro_profiler
 				}
 			}
 
-			begin_test_suite( AServerSessionTests )
+			begin_test_suite( ServerSessionTests )
 				mocks::channel outbound;
 				
 				test( AppropriateHandlerIsCalledOnInboundMessage )

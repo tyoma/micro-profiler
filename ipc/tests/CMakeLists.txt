@@ -5,6 +5,7 @@ include(test)
 set(IPC_TESTS_SOURCES
 	EndpointSelectorTests.cpp
 	helpers_sockets.cpp
+	MarshalledActiveSessionTests.cpp
 	MarshalledServerTests.cpp
 	ServerSessionTests.cpp
 	SocketsEndpointClientTests.cpp
@@ -21,4 +22,4 @@ endif()
 
 add_library(ipc.tests SHARED ${IPC_TESTS_SOURCES})
 
-target_link_libraries(ipc.tests ipc logger common test-helpers)
+target_link_libraries(ipc.tests ipc logger common test-helpers scheduler)

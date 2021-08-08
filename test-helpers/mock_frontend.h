@@ -28,11 +28,11 @@ namespace micro_profiler
 				std::function<void ()> destroyed;
 
 				std::function<void (const initialization_data &id)> initialized;
-				std::function<void (const loaded_modules &m)> modules_loaded;
-				std::function<void (const thread_statistics_map &u)> updated;
-				std::function<void (const unloaded_modules &m)> modules_unloaded;
-				std::function<void (unsigned id, const module_info_metadata &md)> metadata_received;
-				std::function<void (const std::vector< std::pair<unsigned /*thread_id*/, thread_info> > &threads)> threads_received;
+				std::function<void (unsigned token, const loaded_modules &m)> modules_loaded;
+				std::function<void (unsigned token, const thread_statistics_map &u)> updated;
+				std::function<void (unsigned token, const unloaded_modules &m)> modules_unloaded;
+				std::function<void (unsigned token, unsigned id, const module_info_metadata &md)> metadata_received;
+				std::function<void (unsigned token, const std::vector< std::pair<unsigned /*thread_id*/, thread_info> > &threads)> threads_received;
 				std::function<void (unsigned token, const std::vector<unsigned /*rva*/> &failures)> activation_errors_received;
 				std::function<void (unsigned token, const std::vector<unsigned /*rva*/> &failures)> revert_errors_received;
 
@@ -57,47 +57,49 @@ namespace micro_profiler
 				unsigned token;
 				std::vector<unsigned /*rva*/> rva;
 
-				a(c);
-				switch (c)
+				switch (a(c), c)
 				{
 				case init:
 					if (state.initialized)
 						a(id), state.initialized(id);
-					break;
+					return;
+				}
 
+				switch (a(token), c)
+				{
 				case response_modules_loaded:
 					if (state.modules_loaded)
-						a(lm), state.modules_loaded(lm);
+						a(lm), state.modules_loaded(token, lm);
 					break;
 
 				case response_statistics_update:
 					if (state.updated)
-						a(u), state.updated(u);
+						a(u), state.updated(token, u);
 					break;
 
 				case response_modules_unloaded:
 					if (state.modules_unloaded)
-						a(um), state.modules_unloaded(um);
+						a(um), state.modules_unloaded(token, um);
 					break;
 
 				case response_module_metadata:
 					if (state.metadata_received)
-						a(metadata_id), a(md), state.metadata_received(metadata_id, md);
+						a(metadata_id), a(md), state.metadata_received(token, metadata_id, md);
 					break;
 
 				case response_threads_info:
 					if (state.threads_received)
-						a(threads), state.threads_received(threads);
+						a(threads), state.threads_received(token, threads);
 					break;
 
 				case response_patched:
 					if (state.activation_errors_received)
-						a(token), a(rva), state.activation_errors_received(token, rva);
+						a(rva), state.activation_errors_received(token, rva);
 					break;
 
 				case response_reverted:
 					if (state.revert_errors_received)
-						a(token), a(rva), state.revert_errors_received(token, rva);
+						a(rva), state.revert_errors_received(token, rva);
 					break;
 
 				default:

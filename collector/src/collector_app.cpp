@@ -26,6 +26,7 @@
 #include <collector/thread_monitor.h>
 
 #include <common/time.h>
+#include <ipc/marshalled_session.h>
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 
@@ -35,6 +36,23 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		class queue_wrapper : public scheduler::queue
+		{
+		public:
+			queue_wrapper(scheduler::task_queue &q)
+				: _queue(q)
+			{	}
+
+			virtual void schedule(function<void ()> &&task, mt::milliseconds defer_by) override
+			{	_queue.schedule(move(task), defer_by);	}
+
+		private:
+			scheduler::task_queue &_queue;
+		};
+	}
+
 	collector_app::collector_app(const frontend_factory_t &factory, const shared_ptr<calls_collector_i> &collector,
 			const overhead &overhead_, const shared_ptr<thread_monitor> &thread_monitor_, patch_manager &patch_manager_)
 		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _module_tracker(new module_tracker),
@@ -68,23 +86,37 @@ namespace micro_profiler
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> d(reader);
 		messages_id c;
+		unsigned int token;
 		unsigned int persistent_id;
 		vector<thread_monitor::thread_id> thread_ids;
+		vector<unsigned> rva;
 
-		switch (d(c), c)
+		switch (d(c), d(token), c)
 		{
 		case request_update:
-			_queue.schedule([this, persistent_id] {	_bridge->update_frontend();	});
+			_bridge->update_frontend();
 			break;
 
 		case request_module_metadata:
 			d(persistent_id);
-			_queue.schedule([this, persistent_id] {	_bridge->send_module_metadata(persistent_id);	});
+			_bridge->send_module_metadata(persistent_id);
 			break;
 
 		case request_threads_info:
 			d(thread_ids);
-			_queue.schedule([this, thread_ids] {	_bridge->send_thread_info(thread_ids);	});
+			_bridge->send_thread_info(thread_ids);
+			break;
+
+		case request_apply_patches:
+			d(persistent_id);
+			d(rva);
+			_bridge->activate_patches(token, persistent_id, rva);
+			break;
+
+		case request_revert_patches:
+			d(persistent_id);
+			d(rva);
+			_bridge->revert_patches(token, persistent_id, rva);
 			break;
 
 		default:
@@ -98,9 +130,14 @@ namespace micro_profiler
 
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
+		shared_ptr<scheduler::queue> qw(new queue_wrapper(_queue));
+		ipc::channel *self = this;
+		ipc::marshalled_active_session s(factory, qw, [&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+			_bridge.reset(new statistics_bridge(*_collector, overhead_, outbound, _module_tracker, _thread_monitor,
+				_patch_manager));
+			return shared_ptr<ipc::channel>(self, [] (...) {	});
+		});
 		shared_ptr<ipc::channel> frontend = factory(*this);
-		_bridge.reset(new statistics_bridge(*_collector, overhead_, *frontend, _module_tracker, _thread_monitor,
-			_patch_manager));
 		function<void ()> analyze;
 		const auto analyze_ = [&] {
 			_bridge->analyze();

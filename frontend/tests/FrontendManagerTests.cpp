@@ -30,7 +30,7 @@ namespace micro_profiler
 			{	return frontend_ui::ptr();	}
 
 			template <typename CommandDataT>
-			void write(ipc::channel &channel, messages_id c, const CommandDataT &data)
+			void message(ipc::channel &channel, messages_id c, const CommandDataT &data)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter, packer> archive(b);
@@ -40,13 +40,26 @@ namespace micro_profiler
 				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
 			}
 
-			template <typename Data1T, typename Data2T>
-			void write(ipc::channel &channel, messages_id c, const Data1T &data1, const Data2T &data2)
+			template <typename CommandDataT>
+			void response(ipc::channel &channel, messages_id c, unsigned token, const CommandDataT &data)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter, packer> archive(b);
 
 				archive(c);
+				archive(token);
+				archive(data);
+				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
+			}
+
+			template <typename Data1T, typename Data2T>
+			void response(ipc::channel &channel, messages_id c, unsigned token, const Data1T &data1, const Data2T &data2)
+			{
+				vector_adapter b;
+				strmd::serializer<vector_adapter, packer> archive(b);
+
+				archive(c);
+				archive(token);
 				archive(data1);
 				archive(data2);
 				channel.message(const_byte_range(&b.buffer[0], static_cast<unsigned>(b.buffer.size())));
@@ -155,7 +168,7 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
 
 				// ACT
-				write(*c1, init, make_initialization_data("c:\\test\\some.exe", 12332));
+				message(*c1, init, make_initialization_data("c:\\test\\some.exe", 12332));
 
 				// ASSERT
 				assert_equal(1u, _ui_creation_log.size());
@@ -166,7 +179,7 @@ namespace micro_profiler
 				assert_equal("c:\\test\\some.exe", _ui_creation_log[0]->process_name);
 
 				// ACT
-				write(*c2, init, make_initialization_data("kernel.exe", 12332));
+				message(*c2, init, make_initialization_data("kernel.exe", 12332));
 
 				// ASSERT
 				assert_equal(2u, _ui_creation_log.size());
@@ -194,24 +207,24 @@ namespace micro_profiler
 					make_pair(13, unthreaded_statistic_types::function_detailed()),
 				};
 
-				write(*c, init, make_initialization_data("", 11));
+				message(*c, init, make_initialization_data("", 11));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, response_statistics_update, make_single_threaded(data1));
+				response(*c, response_statistics_update, 0u, make_single_threaded(data1));
 
 				// ASSERT
 				assert_equal(2u, model->get_count());
 
 				// ACT
-				write(*c, response_statistics_update, make_single_threaded(data2));
+				response(*c, response_statistics_update, 0u, make_single_threaded(data2));
 
 				// ASSERT
 				assert_equal(3u, model->get_count());
 
 				// ACT
-				write(*c, response_statistics_update, make_single_threaded(data1));
+				response(*c, response_statistics_update, 0u, make_single_threaded(data1));
 
 				// ASSERT
 				assert_equal(3u, model->get_count());
@@ -249,8 +262,8 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
 				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
 
-				write(*c1, init, make_initialization_data("", 10));
-				write(*c2, init, make_initialization_data("", 15));
+				message(*c1, init, make_initialization_data("", 10));
+				message(*c2, init, make_initialization_data("", 15));
 
 				// ACT
 				m.close_all();
@@ -279,15 +292,15 @@ namespace micro_profiler
 
 				data[0].second.inclusive_time = 150;
 
-				write(*c1, init, make_initialization_data("", 10));
-				write(*c2, init, make_initialization_data("", 15));
+				message(*c1, init, make_initialization_data("", 10));
+				message(*c2, init, make_initialization_data("", 15));
 
 				shared_ptr<functions_list> model1 = _ui_creation_log[0]->model;
 				shared_ptr<functions_list> model2 = _ui_creation_log[1]->model;
 
 				// ACT
-				write(*c1, response_statistics_update, make_single_threaded(data));
-				write(*c2, response_statistics_update, make_single_threaded(data));
+				response(*c1, response_statistics_update, 0u, make_single_threaded(data));
+				response(*c2, response_statistics_update, 0u, make_single_threaded(data));
 
 				// ASSERT
 				columns::main ordering[] = {	columns::inclusive,	};
@@ -318,14 +331,14 @@ namespace micro_profiler
 					make_pair(0x102000, unthreaded_statistic_types::function_detailed()),
 				};
 
-				write(*c, init, make_initialization_data("", 10));
+				message(*c, init, make_initialization_data("", 10));
 
 				shared_ptr<functions_list> model = _ui_creation_log[0]->model;
 
 				// ACT
-				write(*c, response_modules_loaded, mkvector(basic1));
-				write(*c, response_module_metadata, basic1[0].persistent_id, metadata[0]);
-				write(*c, response_statistics_update, make_single_threaded(data1));
+				response(*c, response_modules_loaded, 0u, mkvector(basic1));
+				response(*c, response_module_metadata, 0u, basic1[0].persistent_id, metadata[0]);
+				response(*c, response_statistics_update, 0u, make_single_threaded(data1));
 
 				// ASSERT
 				model->set_order(columns::name, true);
@@ -336,9 +349,9 @@ namespace micro_profiler
 				assert_equal(addr(0x10100), model->get_key(1));
 
 				// ACT
-				write(*c, response_modules_loaded, mkvector(basic2));
-				write(*c, response_module_metadata, basic2[0].persistent_id, metadata[1]);
-				write(*c, response_statistics_update, make_single_threaded(data2));
+				response(*c, response_modules_loaded, 0u, mkvector(basic2));
+				response(*c, response_module_metadata, 0u, basic2[0].persistent_id, metadata[1]);
+				response(*c, response_statistics_update, 0u, make_single_threaded(data2));
 
 				// ASSERT
 				assert_equal("BAR", get_text(*model, 0, columns::name));
@@ -378,9 +391,9 @@ namespace micro_profiler
 					m.create_session(outbound_channels[2]),
 				};
 
-				write(*c[0], init, make_initialization_data("", 1));
-				write(*c[1], init, make_initialization_data("", 1));
-				write(*c[2], init, make_initialization_data("", 1));
+				message(*c[0], init, make_initialization_data("", 1));
+				message(*c[1], init, make_initialization_data("", 1));
+				message(*c[2], init, make_initialization_data("", 1));
 
 				// ACT
 				_ui_creation_log[0]->emulate_close();
@@ -415,7 +428,7 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
 				// ACT
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 
 				// ASSERT
 				assert_equal(1u, _ui_creation_log_w.size());
@@ -431,8 +444,8 @@ namespace micro_profiler
 					m.create_session(outbound), m.create_session(outbound),
 				};
 
-				write(*c[0], init, initialization_data());
-				write(*c[1], init, initialization_data());
+				message(*c[0], init, initialization_data());
+				message(*c[1], init, initialization_data());
 
 				// ACT
 				c[0].reset();
@@ -452,9 +465,9 @@ namespace micro_profiler
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
-				write(*c[0], init, initialization_data());
-				write(*c[1], init, initialization_data());
-				write(*c[2], init, initialization_data());
+				message(*c[0], init, initialization_data());
+				message(*c[1], init, initialization_data());
+				message(*c[2], init, initialization_data());
 
 				// ACT
 				reset_all(c);
@@ -483,7 +496,7 @@ namespace micro_profiler
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1, _2), queue);
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 
 				// ACT
 				_ui_creation_log_w[0].lock()->emulate_close();
@@ -500,7 +513,7 @@ namespace micro_profiler
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1, _2), queue);
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 
 				// ACT (must not crash - make sure even doubled close doesn't blow things up)
 				m.get_instance(0)->ui->closed();
@@ -518,7 +531,7 @@ namespace micro_profiler
 					_1, _2), queue));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 
 				// ACT
 				m.reset();
@@ -535,7 +548,7 @@ namespace micro_profiler
 					_1, _2), queue));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 				c.reset();
 
 				// ACT
@@ -555,9 +568,9 @@ namespace micro_profiler
 					m->create_session(outbound), m->create_session(outbound), m->create_session(outbound),
 				};
 
-				write(*c[0], init, initialization_data());
-				write(*c[1], init, initialization_data());
-				write(*c[2], init, initialization_data());
+				message(*c[0], init, initialization_data());
+				message(*c[1], init, initialization_data());
+				message(*c[2], init, initialization_data());
 				reset_all(c);
 
 				shared_ptr<frontend_ui> ui = _ui_creation_log_w[2].lock();
@@ -613,7 +626,7 @@ namespace micro_profiler
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
 				// ACT
-				write(*c, init, make_initialization_data("c:\\dev\\micro-profiler", 1));
+				message(*c, init, make_initialization_data("c:\\dev\\micro-profiler", 1));
 
 				// ACT / ASSERT
 				assert_not_null(m.get_instance(0));
@@ -632,9 +645,9 @@ namespace micro_profiler
 					m.create_session(outbound_channels[0]), m.create_session(outbound_channels[1]), m.create_session(outbound_channels[2]),
 				};
 
-				write(*c[0], init, make_initialization_data("", 1));
-				write(*c[1], init, make_initialization_data("", 1));
-				write(*c[2], init, make_initialization_data("", 1));
+				message(*c[0], init, make_initialization_data("", 1));
+				message(*c[1], init, make_initialization_data("", 1));
+				message(*c[2], init, make_initialization_data("", 1));
 				
 				// ACT
 				m.close_all();
@@ -674,7 +687,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				write(*c[0], init, initialization_data());
+				message(*c[0], init, initialization_data());
 
 				// ASSERT
 				assert_null(m.get_active());
@@ -690,14 +703,14 @@ namespace micro_profiler
 				};
 
 				// ACT
-				write(*c[0], init, initialization_data());
+				message(*c[0], init, initialization_data());
 
 				// ASSERT
 				assert_not_null(m.get_active());
 				assert_equal(m.get_instance(0), m.get_active());
 
 				// ACT
-				write(*c[1], init, initialization_data());
+				message(*c[1], init, initialization_data());
 
 				// ASSERT
 				assert_equal(m.get_instance(1), m.get_active());
@@ -710,7 +723,7 @@ namespace micro_profiler
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1, _2), queue);
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
-				write(*c, init, initialization_data()); // make it active
+				message(*c, init, initialization_data()); // make it active
 				_ui_creation_log[0]->close_on_destroy = false;
 
 				// ACT
@@ -728,12 +741,12 @@ namespace micro_profiler
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1, _2), queue);
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
 
-				write(*c1, init, initialization_data());
+				message(*c1, init, initialization_data());
 				_ui_creation_log[0]->close_on_destroy = false;
 
 				// ACT
 				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
-				write(*c2, init, initialization_data());
+				message(*c2, init, initialization_data());
 				c1.reset();
 
 				// ASSERT
@@ -749,9 +762,9 @@ namespace micro_profiler
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
-				write(*c[0], init, initialization_data());
-				write(*c[1], init, initialization_data());
-				write(*c[2], init, initialization_data());
+				message(*c[0], init, initialization_data());
+				message(*c[1], init, initialization_data());
+				message(*c[2], init, initialization_data());
 
 				// ACT
 				_ui_creation_log[1]->activated();
@@ -782,8 +795,8 @@ namespace micro_profiler
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
-				write(*c[0], init, initialization_data());
-				write(*c[1], init, initialization_data());
+				message(*c[0], init, initialization_data());
+				message(*c[1], init, initialization_data());
 				_ui_creation_log_w[0].lock()->activated();
 
 				// ACT
@@ -802,8 +815,8 @@ namespace micro_profiler
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
-				write(*c[0], init, initialization_data());
-				write(*c[1], init, initialization_data());
+				message(*c[0], init, initialization_data());
+				message(*c[1], init, initialization_data());
 				_ui_creation_log[0]->activated();
 
 				// ACT
@@ -822,8 +835,8 @@ namespace micro_profiler
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
-				write(*c[0], init, initialization_data());
-				write(*c[1], init, initialization_data());
+				message(*c[0], init, initialization_data());
+				message(*c[1], init, initialization_data());
 				_ui_creation_log[0]->activated();
 
 				// ACT
@@ -845,7 +858,7 @@ namespace micro_profiler
 				};
 
 				// ACT / ASSERT (must not crash)
-				write(*c, response_statistics_update, make_single_threaded(data));
+				response(*c, response_statistics_update, 0u, make_single_threaded(data));
 			}
 
 
@@ -911,12 +924,12 @@ namespace micro_profiler
 					make_pair(0x1910, unthreaded_statistic_types::function_detailed()),
 				};
 
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
-				write(*c, response_modules_loaded, mkvector(mi));
-				write(*c, response_statistics_update, make_single_threaded(data));
+				response(*c, response_modules_loaded, 0u, mkvector(mi));
+				response(*c, response_statistics_update, 0u, make_single_threaded(data));
 
 				// ACT
 				get_text(fl, fl.get_index(addr(0x1100)), columns::name);
@@ -954,12 +967,12 @@ namespace micro_profiler
 				};
 				string text;
 
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 
 				const functions_list &fl = *_ui_creation_log[0]->model;
 
-				write(*c, response_modules_loaded, mkvector(mi));
-				write(*c, response_statistics_update, make_single_threaded(data));
+				response(*c, response_modules_loaded, 0u, mkvector(mi));
+				response(*c, response_statistics_update, 0u, make_single_threaded(data));
 
 				// ACT
 				c.reset();
@@ -986,12 +999,12 @@ namespace micro_profiler
 						mt::milliseconds(), true)),
 				};
 
-				write(*c, init, initialization_data());
+				message(*c, init, initialization_data());
 
 				const shared_ptr<threads_model> threads = _ui_creation_log[0]->model->get_threads();
 
 				// ACT
-				write(*c, response_threads_info, mkvector(data1));
+				response(*c, response_threads_info, 0u, mkvector(data1));
 
 				// ASSERT
 				unsigned int native_id;
@@ -1003,7 +1016,7 @@ namespace micro_profiler
 				assert_equal(11717u, native_id);
 
 				// ACT
-				write(*c, response_threads_info, mkvector(data2));
+				response(*c, response_threads_info, 0u, mkvector(data2));
 
 				// ASSERT
 				assert_equal(3u, threads->get_count());

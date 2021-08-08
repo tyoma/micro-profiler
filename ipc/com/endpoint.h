@@ -30,7 +30,7 @@ namespace micro_profiler
 		namespace com
 		{
 			class session : public ISequentialStream, public IConnectionPoint, public /*outbound*/ ipc::channel,
-				public CComObjectRootEx<CComSingleThreadModel>
+				public CComObjectRoot
 			{
 			public:
 				BEGIN_COM_MAP(session)

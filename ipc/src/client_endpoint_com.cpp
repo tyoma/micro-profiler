@@ -81,7 +81,7 @@ namespace micro_profiler
 
 
 			com_initialize::com_initialize()
-			{	::CoInitialize(NULL);	}
+			{	::CoInitializeEx(NULL, COINIT_MULTITHREADED);	}
 
 			com_initialize::~com_initialize()
 			{	::CoUninitialize();	}

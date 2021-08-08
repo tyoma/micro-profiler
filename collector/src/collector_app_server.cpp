@@ -18,44 +18,13 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
-#include <mt/mutex.h>
+#include <collector/collector_app.h>
 
 namespace micro_profiler
 {
-	namespace ipc
+	std::shared_ptr<ipc::channel> collector_app::init_server(ipc::channel &/*outbound*/, const overhead &/*overhead_*/)
 	{
-		class lifetime
-		{
-		public:
-			lifetime()
-				: _alive(true)
-			{	}
-
-			void mark_destroyed()
-			{
-				mt::lock_guard<mt::mutex> l(_mtx);
-
-				_alive = false;
-			}
-
-			template <typename F>
-			void execute_safe(const F &f)
-			{
-				mt::lock_guard<mt::mutex> l(_mtx);
-
-				if (_alive)
-					f();
-			}
-
-			template <typename QueueT, typename T>
-			static void schedule_safe(const std::shared_ptr<lifetime> &self, QueueT &queue, const T &task)
-			{	queue.schedule([self, task] {	self->execute_safe(task);	});	}
-
-		private:
-			mt::mutex _mtx;
-			bool _alive;
-		};
+		return nullptr;
 	}
 }
+

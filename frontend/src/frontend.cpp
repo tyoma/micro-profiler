@@ -65,6 +65,7 @@ namespace micro_profiler
 		loaded_modules lmodules;
 		module_info_metadata mmetadata;
 		messages_id c;
+		unsigned int token;
 
 		switch (archive(c), c)
 		{
@@ -74,8 +75,11 @@ namespace micro_profiler
 			initialized(idata.executable, _model);
 			schedule_update_request();
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
-			break;
+			return;
+		}
 
+		switch (archive(token), c)
+		{
 		case response_modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
@@ -117,8 +121,10 @@ namespace micro_profiler
 	{
 		buffer_writer< pod_vector<byte> > writer(_buffer);
 		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
+		unsigned token = 0u;
 
 		archive(command);
+		archive(token);
 		archive(data);
 		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
 	}

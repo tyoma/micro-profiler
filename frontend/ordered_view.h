@@ -34,6 +34,7 @@ namespace micro_profiler
 	{
 	public:
 		typedef typename ContainerT::value_type value_type;
+		typedef typename ContainerT::const_reference const_reference;
 		typedef typename value_type::first_type key_type;
 		typedef typename value_type::second_type mapped_type;
 
@@ -48,7 +49,7 @@ namespace micro_profiler
 		template <typename PredicateT>
 		void set_order(PredicateT predicate, bool ascending);
 
-		const value_type &operator [](index_type index) const;
+		const_reference operator [](index_type index) const;
 		index_type find_by_key(const key_type &key) const;
 
 		// wpl::series<...> model support
@@ -66,7 +67,7 @@ namespace micro_profiler
 		template <typename PredicateT> class predicate_wrap_d;
 		class trackable;
 
-		typedef std::vector<const value_type *> ordered_container;
+		typedef std::vector<typename ContainerT::const_iterator> ordered_container;
 		typedef std::list<trackable> trackables_t;
 
 	private:
@@ -101,7 +102,7 @@ namespace micro_profiler
 
 		template <typename ArgT>
 		bool operator ()(ArgT lhs, ArgT rhs) const
-		{	return _predicate(lhs->first, lhs->second, rhs->first, rhs->second);	}
+		{	return _predicate((*lhs).first, (*lhs).second, (*rhs).first, (*rhs).second);	}
 
 	private:
 		mutable PredicateT _predicate;
@@ -119,7 +120,7 @@ namespace micro_profiler
 
 		template <typename ArgT>
 		bool operator ()(ArgT lhs, ArgT rhs) const
-		{	return _predicate(rhs->first, rhs->second, lhs->first, lhs->second);	}
+		{	return _predicate((*rhs).first, (*rhs).second, (*lhs).first, (*lhs).second);	}
 
 	private:
 		mutable PredicateT _predicate;
@@ -178,7 +179,7 @@ namespace micro_profiler
 	}
 
 	template <class ContainerT>
-	inline const typename ordered_view<ContainerT>::value_type &ordered_view<ContainerT>::operator [](index_type index) const
+	inline typename ordered_view<ContainerT>::const_reference ordered_view<ContainerT>::operator [](index_type index) const
 	{	return *_ordered_data[index];	}
 
 	template <class ContainerT>
@@ -227,7 +228,7 @@ namespace micro_profiler
 	{
 		_ordered_data.clear();
 		for (typename ContainerT::const_iterator i = _underlying.begin(), end = _underlying.end(); i != end; ++i)
-			_ordered_data.push_back(&*i);
+			_ordered_data.push_back(i);
 	}
 
 	template <typename ContainerT>

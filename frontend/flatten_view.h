@@ -27,6 +27,7 @@ namespace micro_profiler
 	{
 	public:
 		typedef typename AccessT::value_type value_type;
+		typedef typename AccessT::value_type const_reference;
 
 		class const_iterator
 		{
@@ -98,7 +99,7 @@ namespace micro_profiler
 		};
 
 	public:
-		flatten_view(U &underlying)
+		flatten_view(const U &underlying)
 			: _underlying(underlying)
 		{	}
 
@@ -109,6 +110,6 @@ namespace micro_profiler
 		{	return const_iterator(_underlying.end());	}
 
 	private:
-		U &_underlying;
+		const U &_underlying;
 	};
 }

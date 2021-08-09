@@ -83,14 +83,14 @@ namespace micro_profiler
 
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const module_info *&module) const
 	{
-		mappings_map::iterator i = _mappings.upper_bound(address);
+		auto i = _mappings.upper_bound(address);
 
 		if (i != _mappings.begin())
 			--i;
 		else if (i == _mappings.end())
 			return 0;
 
-		const modules_map::const_iterator m = _modules.find(i->second.persistent_id);
+		const auto m = _modules.find(i->second.persistent_id);
 
 		if (m == _modules.end())
 		{

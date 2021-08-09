@@ -79,6 +79,8 @@ namespace micro_profiler
 				mapped_module_identified basic = { };
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
 				module_info_metadata metadata = { mkvector(symbols), };
+				auto invalidated = 0;
+				auto conn = r->invalidate += [&] {	invalidated++;	};
 
 				// ACT
 				r->add_mapping(basic);
@@ -89,6 +91,14 @@ namespace micro_profiler
 				assert_equal("foo", r->symbol_name_by_va(0x1012));
 				assert_equal("bar_2", r->symbol_name_by_va(0x1101));
 				assert_equal("bar_2", r->symbol_name_by_va(0x1105));
+				assert_equal(1, invalidated);
+
+				// ACT
+				r->add_metadata(5, metadata);
+				r->add_metadata(6, metadata);
+
+				// ASSERT
+				assert_equal(3, invalidated);
 			}
 
 			test( FunctionsLoadedThroughAsMetadataAreOffsetAccordingly )

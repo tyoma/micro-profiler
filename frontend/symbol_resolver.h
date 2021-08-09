@@ -26,6 +26,7 @@
 
 #include <functional>
 #include <map>
+#include <wpl/signal.h>
 
 namespace micro_profiler
 {
@@ -41,6 +42,9 @@ namespace micro_profiler
 		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
 		void add_mapping(const mapped_module_identified &mapping);
 		void add_metadata(unsigned persistent_id, module_info_metadata &metadata);
+
+	public:
+		wpl::signal<void ()> invalidate;
 
 	private:
 		struct mapped_module_ex : mapped_module_identified

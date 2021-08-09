@@ -78,6 +78,7 @@ namespace micro_profiler
 		for (vector< pair<unsigned int, string> >::const_iterator i = metadata.source_files.begin(); i != metadata.source_files.end(); ++i)
 			m.files.insert(make_pair(i->first, i->second));
 		swap(m.symbols, metadata.symbols);
+		invalidate();
 	}
 
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const module_info *&module) const

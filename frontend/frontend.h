@@ -32,10 +32,7 @@
 
 namespace micro_profiler
 {
-	class symbol_resolver;
-	class threads_model;
-
-	class frontend : public ipc::channel, noncopyable, public std::enable_shared_from_this<frontend>
+	class frontend : public ipc::channel, noncopyable
 	{
 	public:
 		frontend(ipc::channel &outbound, std::shared_ptr<scheduler::queue> queue);
@@ -56,16 +53,15 @@ namespace micro_profiler
 		template <typename DataT>
 		void send(messages_id command, const DataT &data);
 
-		std::shared_ptr<symbol_resolver> get_resolver();
-		std::shared_ptr<threads_model> get_threads();
+		template <typename Data1T, typename Data2T>
+		void send(messages_id command, const Data1T &data1, const Data2T &data2);
 
 	private:
 		ipc::channel &_outbound;
 		frontend_ui_context _ui_context;
-		std::shared_ptr<symbol_resolver> _resolver;
-		std::shared_ptr<threads_model> _threads;
 		pod_vector<byte> _buffer;
 		scontext::wire _serialization_context;
 		scheduler::private_queue _queue;
+		std::shared_ptr<bool> _alive;
 	};
 }

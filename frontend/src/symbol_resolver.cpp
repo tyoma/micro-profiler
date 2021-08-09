@@ -81,6 +81,15 @@ namespace micro_profiler
 		invalidate();
 	}
 
+	void symbol_resolver::request_all_symbols()
+	{
+		for (auto i = _mappings.begin(); i != _mappings.end(); ++i)
+		{
+			if (!i->second.requested)
+				_requestor(i->second.persistent_id);
+		}
+	}
+
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const module_info *&module) const
 	{
 		auto i = _mappings.upper_bound(address);

@@ -21,6 +21,7 @@
 #include <frontend/frontend.h>
 
 #include <frontend/function_list.h>
+#include <frontend/image_patch_model.h>
 #include <frontend/serialization.h>
 #include <frontend/symbol_resolver.h>
 
@@ -41,11 +42,32 @@ namespace micro_profiler
 	}
 
 	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
-		: _outbound(outbound), _queue(queue)
-	{	LOG(PREAMBLE "constructed...") % A(this);	}
+		: _outbound(outbound), _queue(queue), _alive(make_shared<bool>(true))
+	{
+		auto alive = _alive;
+
+		_ui_context.symbols = make_shared<symbol_resolver>([this, alive] (unsigned int persistent_id) {
+			if (*alive)
+			{
+				send(request_module_metadata, persistent_id);
+				LOG(PREAMBLE "requested metadata from remote...") % A(this) % A(persistent_id);
+			}
+		});
+		_ui_context.threads = make_shared<threads_model>([this] (const vector<unsigned int> &threads) {
+			send(request_threads_info, threads);
+		});
+		_ui_context.patches = make_shared<image_patch_model>(_ui_context.symbols, [this] (unsigned int persistent_id, const vector<unsigned int> &rva, bool apply) {
+			send(apply ? request_apply_patches : request_revert_patches, persistent_id, rva);
+		});
+
+		LOG(PREAMBLE "constructed...") % A(this);
+	}
 
 	frontend::~frontend()
-	{	LOG(PREAMBLE "destroyed...") % A(this);	}
+	{
+		*_alive = false;
+		LOG(PREAMBLE "destroyed...") % A(this);
+	}
 
 	void frontend::disconnect_session() throw()
 	{
@@ -72,7 +94,7 @@ namespace micro_profiler
 		case init:
 			archive(idata);
 			_ui_context.executable = idata.executable;
-			_ui_context.model = functions_list::create(idata.ticks_per_second, get_resolver(), get_threads());
+			_ui_context.model = functions_list::create(idata.ticks_per_second, _ui_context.symbols, _ui_context.threads);
 			initialized(_ui_context);
 			schedule_update_request();
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
@@ -84,7 +106,7 @@ namespace micro_profiler
 		case response_modules_loaded:
 			archive(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				get_resolver()->add_mapping(*i);
+				_ui_context.symbols->add_mapping(*i);
 			break;
 
 		case legacy_update_statistics:
@@ -94,7 +116,7 @@ namespace micro_profiler
 		case response_statistics_update:
 			if (_ui_context.model)
 				archive(*_ui_context.model, _serialization_context);
-			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
+			_ui_context.threads->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
 			schedule_update_request();
 			break;
 
@@ -102,11 +124,11 @@ namespace micro_profiler
 			archive(persistent_id);
 			archive(mmetadata);
 			LOG(PREAMBLE "received metadata...") % A(this) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
-			get_resolver()->add_metadata(persistent_id, mmetadata);
+			_ui_context.symbols->add_metadata(persistent_id, mmetadata);
 			break;
 
 		case response_threads_info:
-			archive(*_threads);
+			archive(*_ui_context.threads);
 			break;
 
 		default:
@@ -130,31 +152,17 @@ namespace micro_profiler
 		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
 	}
 
-	shared_ptr<symbol_resolver> frontend::get_resolver()
+	template <typename Data1T, typename Data2T>
+	void frontend::send(messages_id command, const Data1T &data1, const Data2T &data2)
 	{
-		if (!_resolver)
-		{
-			weak_ptr<frontend> wself = shared_from_this();
+		buffer_writer< pod_vector<byte> > writer(_buffer);
+		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
+		unsigned token = 0u;
 
-			_resolver.reset(new symbol_resolver([wself] (unsigned int persistent_id) {
-				if (shared_ptr<frontend> self = wself.lock())
-				{
-					self->send(request_module_metadata, persistent_id);
-					LOG(PREAMBLE "requested metadata from remote...") % A(self.get()) % A(persistent_id);
-				}
-			}));
-		}
-		return _resolver;
-	}
-
-	shared_ptr<threads_model> frontend::get_threads()
-	{
-		if (!_threads)
-		{
-			_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
-				send(request_threads_info, threads);
-			}));
-		}
-		return _threads;
+		archive(command);
+		archive(token);
+		archive(data1);
+		archive(data2);
+		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
 	}
 }

@@ -33,27 +33,6 @@ namespace micro_profiler
 	class symbol_resolver
 	{
 	public:
-		typedef std::pair<std::string, unsigned> fileline_t;
-		typedef std::function<void (unsigned persistent_id)> request_metadata_t;
-
-	public:
-		symbol_resolver(const request_metadata_t &requestor);
-		virtual const std::string &symbol_name_by_va(long_address_t address) const;
-		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
-		void add_mapping(const mapped_module_identified &mapping);
-		void add_metadata(unsigned persistent_id, module_info_metadata &metadata);
-
-	public:
-		wpl::signal<void ()> invalidate;
-
-	private:
-		struct mapped_module_ex : mapped_module_identified
-		{
-			mapped_module_ex(const mapped_module_identified &mm = mapped_module_identified());
-
-			bool requested;
-		};
-
 		struct module_info
 		{
 			typedef std::map<unsigned int /*rva*/, const symbol_info * /*symbol*/> addressed_symbols;
@@ -66,8 +45,34 @@ namespace micro_profiler
 			mutable addressed_symbols symbol_index;
 		};
 
+		typedef std::pair<std::string, unsigned> fileline_t;
+		typedef std::function<void (unsigned persistent_id)> request_metadata_t;
+		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_map_t;
+
+	public:
+		symbol_resolver(const request_metadata_t &requestor);
+		virtual const std::string &symbol_name_by_va(long_address_t address) const;
+		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
+		void add_mapping(const mapped_module_identified &mapping);
+		void add_metadata(unsigned persistent_id, module_info_metadata &metadata);
+
+		void request_all_symbols();
+
+		const modules_map_t &get_metadata_map() const;
+
+	public:
+		wpl::signal<void ()> invalidate;
+
+	private:
+		struct mapped_module_ex : mapped_module_identified
+		{
+			mapped_module_ex(const mapped_module_identified &mm = mapped_module_identified());
+
+			bool requested;
+		};
+
+
 		typedef std::map<long_address_t /*base*/, mapped_module_ex> mappings_map;
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_map;
 
 	private:
 		const symbol_info *find_symbol_by_va(long_address_t address, const module_info *&module) const;
@@ -76,7 +81,7 @@ namespace micro_profiler
 		request_metadata_t _requestor;
 		std::string _empty;
 		mutable mappings_map _mappings;
-		modules_map _modules;
+		modules_map_t _modules;
 
 	private:
 		template <typename ArchiveT>
@@ -86,6 +91,10 @@ namespace micro_profiler
 		friend void serialize(ArchiveT &archive, module_info &data, unsigned int /*version*/);
 	};
 
+
+
+	inline const symbol_resolver::modules_map_t &symbol_resolver::get_metadata_map() const
+	{	return _modules;	}
 
 
 	inline symbol_resolver::mapped_module_ex::mapped_module_ex(const mapped_module_identified &mmi)

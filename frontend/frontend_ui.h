@@ -26,11 +26,17 @@
 namespace micro_profiler
 {
 	class functions_list;
+	class image_patch_model;
+	class symbol_resolver;
+	class threads_model;
 
 	struct frontend_ui_context
 	{
 		std::string executable;
 		std::shared_ptr<functions_list> model;
+		std::shared_ptr<symbol_resolver> symbols;
+		std::shared_ptr<threads_model> threads;
+		std::shared_ptr<image_patch_model> patches;
 	};
 
 	struct frontend_ui

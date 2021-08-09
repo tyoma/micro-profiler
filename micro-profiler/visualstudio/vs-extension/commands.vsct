@@ -175,6 +175,13 @@
 					<ButtonText>Clear</ButtonText>
 				</Strings>
 			</Button>
+			<Button guid="guidInstanceCmdSet" id="cmdidProfileScope" priority="0x0215" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<Strings>
+					<ButtonText>Profile Scope...</ButtonText>
+				</Strings>
+			</Button>
 			<Button guid="guidGlobalCmdSet" id="cmdidSupportDeveloper" priority="0x0010" type="Button">
 				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_MISC_COMMANDS" />
 				<CommandFlag>TextOnly</CommandFlag>

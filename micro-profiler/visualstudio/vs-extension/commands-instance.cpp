@@ -3,11 +3,16 @@
 
 #include <common/string.h>
 #include <frontend/file.h>
+#include <frontend/frontend_ui.h>
 #include <frontend/function_list.h>
+#include <frontend/image_patch_ui.h>
 #include <frontend/persistence.h>
 #include <strmd/serializer.h>
 #include <windows.h>
+#include <wpl/form.h>
+#include <wpl/layout.h>
 #include <wpl/vs/command-target.h>
+#include <wpl/vs/factory.h>
 
 using namespace std;
 using namespace wpl::vs;
@@ -16,8 +21,12 @@ namespace micro_profiler
 {
 	namespace integration
 	{
-		void init_instance_menu(command_target &target, const shared_ptr<functions_list> &model, const string &executable)
+		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
+			command_target &target, const frontend_ui_context &context)
 		{
+			auto model = context.model;
+			auto executable = context.executable;
+
 			target.add_command(cmdidPauseUpdates, [model] (unsigned) {
 				model->updates_enabled = false;
 			}, false, [model] (unsigned, unsigned &state) {
@@ -69,6 +78,32 @@ namespace micro_profiler
 					}
 					::CloseClipboard();
 				}
+			}, false, [] (unsigned, unsigned &state) {
+				return state = command_target::visible | command_target::supported | command_target::enabled, true;
+			});
+
+			target.add_command(cmdidProfileScope, [&running_objects, &factory, context] (unsigned) {
+
+				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center about form.
+				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
+				auto &running_objects_ = running_objects;
+				const auto i = running_objects.insert(running_objects.end(), o);
+				const auto onclose = [i, &running_objects_/*, hshell*/] {
+					running_objects_.erase(i);
+				};
+				const auto root = make_shared<wpl::overlay>();
+					root->add(factory.create_control<wpl::control>("background"));
+					const auto about = make_shared<image_patch_ui>(factory, context.patches, *context.symbols);
+					root->add(wpl::pad_control(about, 5, 5));
+
+				o->first = factory.create_modal();
+				o->second.push_back(o->first->close += onclose);
+
+				o->first->set_root(root);
+				o->first->set_location(l);
+				o->first->set_visible(true);
+
+
 			}, false, [] (unsigned, unsigned &state) {
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
 			});

@@ -90,6 +90,15 @@ namespace micro_profiler
 							copy_to_buffer(text);
 						});
 
+					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
+						btn->set_text(agge::style_modifier::empty + "Profile Scope...");
+						_connections.push_back(btn->clicked += [this, model] {
+							const auto l = _form->get_location();
+							const agge::point<int> center = { (l.x1 + l.x2) / 2, (l.y1 + l.y2) / 2 };
+
+							show_patcher(center, _form->create_child());
+						});
+
 					toolbar->add(make_shared< controls::integrated_control<control> >(), percents(100), false);
 					toolbar->add(lnk = factory_.create_control<link>("link"), pixels(200), false);
 						lnk->set_halign(agge::align_far);

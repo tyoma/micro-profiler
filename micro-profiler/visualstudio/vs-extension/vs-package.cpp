@@ -52,8 +52,8 @@ namespace micro_profiler
 	{
 		extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
 
-		void init_instance_menu(wpl::vs::command_target &target, const shared_ptr<functions_list> &model,
-			const string &executable);
+		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
+			wpl::vs::command_target &target, const frontend_ui_context &context);
 
 		namespace
 		{
@@ -65,10 +65,10 @@ namespace micro_profiler
 			class frontend_pane : public frontend_ui, noncopyable
 			{
 			public:
-				frontend_pane(const wpl::vs::factory &factory, shared_ptr<functions_list> model,
-						const string &executable, shared_ptr<hive> configuration_)
+				frontend_pane(const wpl::vs::factory &factory, const frontend_ui_context &ui_context,
+						shared_ptr<hive> configuration_)
 					: _pane(factory.create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR)),
-						_tables_ui(make_shared<tables_ui>(factory, model, *configuration_)), _configuration(configuration_)
+						_tables_ui(make_shared<tables_ui>(factory, ui_context.model, *configuration_)), _configuration(configuration_)
 				{
 					const auto root = make_shared<wpl::overlay>();
 						root->add(factory.create_control("background"));
@@ -81,8 +81,8 @@ namespace micro_profiler
 					_connections.push_back(_pane->activated += [this] {
 						activated();
 					});
-					init_instance_menu(*_pane, model, executable);
-					_pane->set_caption("MicroProfiler - " + executable);
+					init_instance_menu(_running_objects, factory, *_pane, ui_context);
+					_pane->set_caption("MicroProfiler - " + ui_context.executable);
 					_pane->set_root(root);
 					_pane->set_visible(true);
 				}
@@ -100,6 +100,7 @@ namespace micro_profiler
 				const shared_ptr<tables_ui> _tables_ui;
 				const shared_ptr<hive> _configuration;
 				vector<wpl::slot_connection> _connections;
+				list< shared_ptr<void> > _running_objects;
 			};
 		}
 
@@ -146,8 +147,7 @@ namespace micro_profiler
 			setup_factory(factory);
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager([this] (const frontend_ui_context &context) -> frontend_ui::ptr {
-				const auto ui = make_shared<frontend_pane>(get_factory(), context.model, context.executable,
-					_configuration);
+				const auto ui = make_shared<frontend_pane>(get_factory(), context, _configuration);
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
 				return ui;

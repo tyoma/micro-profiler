@@ -69,6 +69,8 @@
 #define cmdidClearStatistics 0x400
 #define cmdidCopyStatistics 0x401
 
+#define cmdidProfileScope 0x501
+
 #define cmdidSupportDeveloper 0x1000
 
 #define cmdidWindowActivateDynamic 0x2000

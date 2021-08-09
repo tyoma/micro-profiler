@@ -29,6 +29,6 @@ namespace micro_profiler
 	{
 		const auto dir = ~get_module_info(&inject_profiler).path;
 
-		::LoadLibraryA((dir & "micro-profiler_x86.dll").c_str());
+		::LoadLibraryA((dir & "micro-profiler_Win32.dll").c_str());
 	}
 }

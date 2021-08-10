@@ -142,7 +142,13 @@ namespace micro_profiler
 			});
 			setup_factory(factory);
 			register_path(false);
-			_frontend_manager.reset(new frontend_manager(bind(&profiler_package::create_ui, this, _1, _2), _ui_queue));
+			_frontend_manager.reset(new frontend_manager([this] (const frontend_ui_context &context) -> frontend_ui::ptr {
+				const auto ui = make_shared<frontend_pane>(get_factory(), context.model, context.executable,
+					_configuration);
+
+				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
+				return ui;
+			}, _ui_queue));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
 				_ui_queue,
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
@@ -170,15 +176,6 @@ namespace micro_profiler
 				});
 			}
 			return selected_items;
-		}
-
-		shared_ptr<frontend_ui> profiler_package::create_ui(const shared_ptr<functions_list> &model,
-			const string &executable)
-		{
-			const auto ui = make_shared<frontend_pane>(get_factory(), model, executable, _configuration);
-
-			ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
-			return ui;
 		}
 
 		void profiler_package::on_open_source(const string &file, unsigned line)

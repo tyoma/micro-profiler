@@ -20,13 +20,12 @@
 
 #pragma once
 
+#include "frontend_ui.h"
+
 #include <common/noncopyable.h>
 #include <common/types.h>
 #include <ipc/endpoint.h>
-#include <memory>
 #include <list>
-#include <string>
-#include <wpl/signal.h>
 
 namespace scheduler
 {
@@ -36,30 +35,14 @@ namespace scheduler
 namespace micro_profiler
 {
 	class frontend;
-	class functions_list;
-
-	struct frontend_ui
-	{
-		typedef std::shared_ptr<frontend_ui> ptr;
-
-		virtual void activate() = 0;
-
-		wpl::signal<void()> activated;
-		wpl::signal<void()> closed;
-	};
 
 	class frontend_manager : public ipc::server, noncopyable
 	{
 	public:
-		struct instance
+		struct instance : frontend_ui_context
 		{
-			std::string executable;
-			std::shared_ptr<functions_list> model;
 			frontend_ui::ptr ui;
 		};
-
-		typedef std::function<frontend_ui::ptr(const std::shared_ptr<functions_list> &model,
-			const std::string &executable)> frontend_ui_factory;
 
 	public:
 		frontend_manager(const frontend_ui_factory &ui_factory, std::shared_ptr<scheduler::queue> queue);
@@ -70,7 +53,7 @@ namespace micro_profiler
 		size_t instances_count() const throw();
 		const instance *get_instance(unsigned index) const throw();
 		const instance *get_active() const throw();
-		void load_session(const std::string &executable, const std::shared_ptr<functions_list> &model);
+		void load_session(const frontend_ui_context &ui_context);
 
 		// ipc::server methods
 		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound) override;
@@ -90,8 +73,7 @@ namespace micro_profiler
 
 	private:
 		void on_frontend_released(instance_container::iterator i) throw();
-		void on_ready_for_ui(instance_container::iterator i, const std::string &executable,
-			const std::shared_ptr<functions_list> &model);
+		void on_ready_for_ui(instance_container::iterator i, const frontend_ui_context &ui_context);
 
 		void on_ui_activated(instance_container::iterator i);
 		void on_ui_closed(instance_container::iterator i) throw();

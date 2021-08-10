@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "frontend_ui.h"
 #include "serialization_context.h"
 
 #include <common/noncopyable.h>
@@ -31,7 +32,6 @@
 
 namespace micro_profiler
 {
-	class functions_list;
 	class symbol_resolver;
 	class threads_model;
 
@@ -44,7 +44,7 @@ namespace micro_profiler
 		void disconnect_session() throw();
 
 	public:
-		std::function<void (const std::string &process_name, const std::shared_ptr<functions_list> &model)> initialized;
+		std::function<void (const frontend_ui_context &ui_context)> initialized;
 
 	private:
 		// ipc::channel methods
@@ -61,9 +61,9 @@ namespace micro_profiler
 
 	private:
 		ipc::channel &_outbound;
+		frontend_ui_context _ui_context;
 		std::shared_ptr<symbol_resolver> _resolver;
 		std::shared_ptr<threads_model> _threads;
-		std::shared_ptr<functions_list> _model;
 		pod_vector<byte> _buffer;
 		scontext::wire _serialization_context;
 		scheduler::private_queue _queue;

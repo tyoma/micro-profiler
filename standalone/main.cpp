@@ -24,6 +24,7 @@
 #include <common/constants.h>
 #include <common/path.h>
 #include <frontend/about_ui.h>
+#include <frontend/frontend_manager.h>
 #include <frontend/ipc_manager.h>
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
@@ -85,16 +86,16 @@ namespace micro_profiler
 			about_composite_.connections.push_back(about->close += on_close);
 			about_composite_.about_form = new_form;
 		};
-		auto ui_factory = [&app, &factory, show_about] (const shared_ptr<functions_list> &model, const string &executable) -> shared_ptr<frontend_ui>	{
+		auto ui_factory = [&app, &factory, show_about] (const frontend_ui_context &context) -> frontend_ui::ptr	{
 			auto &app2 = app;
 			auto composite = make_shared<ui_composite>();
 
-			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, model, executable);
+			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, context);
 			composite->connections.push_back(composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
 				app2.clipboard_copy(text_utf8);
 			});
 			composite->connections.push_back(composite->ui->show_about += show_about);
-			return shared_ptr<frontend_ui>(composite, composite->ui.get());
+			return frontend_ui::ptr(composite, composite->ui.get());
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};

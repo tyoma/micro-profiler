@@ -20,40 +20,28 @@
 
 #pragma once
 
-#include <frontend/frontend_ui.h>
-
-#include <agge/types.h>
-#include <functional>
 #include <string>
-#include <vector>
-#include <wpl/concepts.h>
-
-namespace wpl
-{
-	class factory;
-	struct form;
-}
+#include <wpl/signal.h>
 
 namespace micro_profiler
 {
-	struct hive;
-	class tables_ui;
+	class functions_list;
 
-	class standalone_ui : public frontend_ui, wpl::noncopyable
+	struct frontend_ui_context
 	{
-	public:
-		standalone_ui(std::shared_ptr<hive> configuration, const wpl::factory &factory, const frontend_ui_context &ctx);
-
-		wpl::signal<void (const std::string &text)> copy_to_buffer;
-		wpl::signal<void (agge::point<int> center, const std::shared_ptr<wpl::form> &new_form)> show_about;
-
-	private:
-		virtual void activate();
-
-	private:
-		const std::shared_ptr<hive> _configuration;
-		std::shared_ptr<tables_ui> _statistics_display;
-		std::vector<wpl::slot_connection> _connections;
-		std::shared_ptr<wpl::form> _form;
+		std::string executable;
+		std::shared_ptr<functions_list> model;
 	};
+
+	struct frontend_ui
+	{
+		typedef std::shared_ptr<frontend_ui> ptr;
+
+		virtual void activate() = 0;
+
+		wpl::signal<void ()> activated;
+		wpl::signal<void ()> closed;
+	};
+
+	typedef std::function<frontend_ui::ptr (const frontend_ui_context &context)> frontend_ui_factory;
 }

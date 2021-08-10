@@ -316,10 +316,13 @@ namespace micro_profiler
 				{
 					const string ext = extension(*path);
 					strmd::deserializer<read_stream, packer> dser(*s);
-					shared_ptr<functions_list> model = !stricmp(ext.c_str(), ".mpstat3")
-						? snapshot_load<scontext::file_v3>(dser) : snapshot_load<scontext::file_v4>(dser);
+					frontend_ui_context ui_context = {
+						*path,
+						!stricmp(ext.c_str(), ".mpstat3")
+							? snapshot_load<scontext::file_v3>(dser) : snapshot_load<scontext::file_v4>(dser)
+					};
 
-					_frontend_manager->load_session(*path, model);
+					_frontend_manager->load_session(ui_context);
 				}
 			}, false, [this] (unsigned, unsigned &state) -> bool {
 				return state = enabled | visible | supported, true;

@@ -71,8 +71,9 @@ namespace micro_profiler
 		{
 		case init:
 			archive(idata);
-			_model = functions_list::create(idata.ticks_per_second, get_resolver(), get_threads());
-			initialized(idata.executable, _model);
+			_ui_context.executable = idata.executable;
+			_ui_context.model = functions_list::create(idata.ticks_per_second, get_resolver(), get_threads());
+			initialized(_ui_context);
 			schedule_update_request();
 			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
 			return;
@@ -91,8 +92,8 @@ namespace micro_profiler
 			break;
 
 		case response_statistics_update:
-			if (_model)
-				archive(*_model, _serialization_context);
+			if (_ui_context.model)
+				archive(*_ui_context.model, _serialization_context);
 			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
 			schedule_update_request();
 			break;

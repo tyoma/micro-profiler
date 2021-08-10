@@ -70,8 +70,8 @@ namespace micro_profiler
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
 	{	return *_active_instance;	}
 
-	void frontend_manager::load_session(const string &executable, const shared_ptr<functions_list> &model)
-	{	on_ready_for_ui(_instances->insert(_instances->end(), instance_impl(nullptr)), executable, model);	}
+	void frontend_manager::load_session(const frontend_ui_context &ui_context)
+	{	on_ready_for_ui(_instances->insert(_instances->end(), instance_impl(nullptr)), ui_context);	}
 
 	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
 	{
@@ -91,16 +91,14 @@ namespace micro_profiler
 			}
 		});
 
-		f->initialized = bind(&frontend_manager::on_ready_for_ui, this, i, _1, _2);
+		f->initialized = [this, i] (const frontend_ui_context &ui_context) {	on_ready_for_ui(i, ui_context);	};
 		return f;
 	}
 
-	void frontend_manager::on_ready_for_ui(instance_container::iterator i, const string &executable,
-		const shared_ptr<functions_list> &model)
+	void frontend_manager::on_ready_for_ui(instance_container::iterator i, const frontend_ui_context &ui_context)
 	{
-		i->executable = executable;
-		i->model = model;
-		if (const auto ui = _ui_factory(model, executable))
+		static_cast<frontend_ui_context &>(*i) = ui_context;
+		if (const auto ui = _ui_factory(ui_context))
 		{
 			i->ui_activated_connection = ui->activated += bind(&frontend_manager::on_ui_activated, this, i);
 			i->ui_closed_connection = ui->closed += bind(&frontend_manager::on_ui_closed, this, i);

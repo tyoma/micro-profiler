@@ -59,32 +59,34 @@ namespace micro_profiler
 		}
 	}
 
-	standalone_ui::standalone_ui(shared_ptr<hive> configuration, const factory &factory_, shared_ptr<functions_list> s,
-			const string &executable)
-		: _configuration(configuration), _statistics(s), _executable(executable)
+	standalone_ui::standalone_ui(shared_ptr<hive> configuration, const factory &factory_,
+			const frontend_ui_context &ui_context)
+		: _configuration(configuration)
 	{
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
+		auto model = ui_context.model;
 
 		const auto root = make_shared<overlay>();
 			root->add(factory_.create_control<control>("background"));
 			const auto stk = factory_.create_control<stack>("vstack");
 			stk->set_spacing(5);
 			root->add(pad_control(stk, 5, 5));
-				stk->add(_statistics_display = make_shared<tables_ui>(factory_, s, *_configuration), percents(100), false);
+				stk->add(_statistics_display = make_shared<tables_ui>(factory_, model, *_configuration),
+					percents(100), false);
 				const auto toolbar = factory_.create_control<stack>("hstack");
 				toolbar->set_spacing(5);
 				stk->add(toolbar, pixels(24), false);
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
 						btn->set_text(agge::style_modifier::empty + "Clear Statistics");
-						_connections.push_back(btn->clicked += [this] {	_statistics->clear();	});
+						_connections.push_back(btn->clicked += [model] {	model->clear();	});
 
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
 						btn->set_text(agge::style_modifier::empty + "Copy All");
-						_connections.push_back(btn->clicked += [this] {
+						_connections.push_back(btn->clicked += [this, model] {
 							string text;
 
-							_statistics->print(text);
+							model->print(text);
 							copy_to_buffer(text);
 						});
 
@@ -105,7 +107,7 @@ namespace micro_profiler
 		_form->set_root(root);
 		if (load(*_configuration, "Placement", l))
 			_form->set_location(l);
-		_form->set_caption("MicroProfiler - " + _executable);
+		_form->set_caption("MicroProfiler - " + ui_context.executable);
 		_form->set_visible(true);
 
 		_connections.push_back(_form->close += [this] {

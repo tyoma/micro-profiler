@@ -53,13 +53,13 @@ namespace micro_profiler
 			shared_ptr<mocks::queue> queue;
 			mocks::outbound_channel outbound;
 			shared_ptr<frontend> frontend_;
-			shared_ptr<functions_list> model;
+			frontend_ui_context context;
 
 			init( Init )
 			{
 				queue = make_shared<mocks::queue>();
 				frontend_.reset(new frontend(outbound, queue));
-				frontend_->initialized = [&] (string, shared_ptr<functions_list> model_) { model = model_; };
+				frontend_->initialized = [&] (const frontend_ui_context &context_) { context = context_; };
 			}
 
 

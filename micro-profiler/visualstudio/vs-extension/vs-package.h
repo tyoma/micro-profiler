@@ -31,8 +31,6 @@
 namespace micro_profiler
 {
 	class frontend_manager;
-	struct frontend_ui;
-	class functions_list;
 	struct hive;
 	class ipc_manager;
 
@@ -71,7 +69,6 @@ namespace micro_profiler
 
 			void init_menu();
 			std::vector<IDispatchPtr> get_selected_items() const;
-			std::shared_ptr<frontend_ui> create_ui(const std::shared_ptr<functions_list> &model, const std::string &executable);
 			void on_open_source(const std::string &file, unsigned line);
 
 		private:
@@ -80,7 +77,7 @@ namespace micro_profiler
 			CComPtr<_DTE> _dte;
 			std::shared_ptr<hive> _configuration;
 			std::shared_ptr<frontend_manager> _frontend_manager;
-			std::shared_ptr<ipc_manager> _ipc_manager;
+			std::unique_ptr<ipc_manager> _ipc_manager;
 			running_objects_t _running_objects;
 		};
 	}

@@ -192,4 +192,7 @@ namespace scheduler
 
 	void ui_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
 	{	_impl->schedule_wakeup(_tasks.schedule(move(task), defer_by));	}
+
+	void ui_queue::stop()
+	{	_tasks.stop();	}
 }

@@ -123,7 +123,10 @@ namespace micro_profiler
 	}
 
 	application::~application()
-	{	}
+	{	_queue->stop();	}
+
+	shared_ptr<scheduler::queue> application::get_ui_queue()
+	{	return _queue;	}
 
 	shared_ptr<hive> application::get_configuration()
 	{	return registry_hive::open_user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}

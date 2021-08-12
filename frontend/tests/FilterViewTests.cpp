@@ -100,24 +100,22 @@ namespace micro_profiler
 			}
 
 
-			test( IteratorsPreservePredicateWhenItChangesInView )
+			test( PredicateIsOnlyHeldByTheFilterView )
 			{
 				// INIT
-				string data[] = { "foo", "bar", "doog", "baz", "boog", "Lorem", "Ipsum" };
-				vector<string> source(data, array_end(data));
-				filter_view< vector<string> > v(source);
+				auto x = make_shared<bool>();
+				vector<string> source(3);
+				unique_ptr< filter_view< vector<string> > > v(new filter_view< vector<string> >(source));
 
-				v.set_filter([] (const string &v) { return v.size() == 3; });
+				v->set_filter([x] (const string &) {	return true;	});
 
-				// ACT
-				auto b = v.begin();
-				auto e = v.end();
-				v.set_filter();
+				// ACT (must not take a reference)
+				auto i = v->begin();
+				auto j = v->end();
+				v.reset();
 
 				// ASSERT
-				string reference[] = { "foo", "bar", "baz", };
-
-				assert_equal(reference, (vector<string>(b, e)));
+				assert_equal(1, x.use_count());
 			}
 		end_test_suite
 	}

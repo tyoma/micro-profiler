@@ -48,9 +48,14 @@ namespace micro_profiler
 	private:
 		void operator =(const filter_view &rhs);
 
+		bool match(const value_type &value) const;
+
 	private:
 		const U &_underlying;
 		predicate_t _predicate;
+
+	private:
+		friend class const_iterator;
 	};
 
 	template <class U>
@@ -76,15 +81,13 @@ namespace micro_profiler
 		typedef typename U::const_iterator underlying_iterator_t;
 
 	private:
-		explicit const_iterator(const U &underlying_container, underlying_iterator_t underlying,
-			const typename filter_view<U>::predicate_t &predicate);
+		explicit const_iterator(const filter_view<U> &owner, underlying_iterator_t underlying);
 
 		void find_next();
 
 	private:
-		const U *_underlying_container;
+		const filter_view<U> *_owner;
 		underlying_iterator_t _underlying;
-		typename filter_view<U>::predicate_t _predicate;
 
 	private:
 		friend class filter_view;
@@ -108,19 +111,22 @@ namespace micro_profiler
 
 	template <class U>
 	inline typename filter_view<U>::const_iterator filter_view<U>::begin() const throw()
-	{	return const_iterator(_underlying, _underlying.begin(), _predicate);	}
+	{	return const_iterator(*this, _underlying.begin());	}
 
 	template <class U>
 	inline typename filter_view<U>::const_iterator filter_view<U>::end() const throw()
-	{	return const_iterator(_underlying, _underlying.end(), _predicate);	}
+	{	return const_iterator(*this, _underlying.end());	}
+
+	template <class U>
+	inline bool filter_view<U>::match(const value_type &value) const
+	{	return !_predicate || _predicate(value);	}
 
 
 	template <class U>
-	inline filter_view<U>::const_iterator::const_iterator(const U &underlying_container,
-			underlying_iterator_t underlying, const typename filter_view<U>::predicate_t &predicate)
-		: _underlying_container(&underlying_container), _underlying(underlying), _predicate(predicate)
+	inline filter_view<U>::const_iterator::const_iterator(const filter_view<U> &owner, underlying_iterator_t underlying)
+		: _owner(&owner), _underlying(underlying)
 	{
-		if (_underlying != _underlying_container->end() && _predicate && !_predicate(*_underlying))
+		if (_underlying != _owner->_underlying.end() && !_owner->match(*_underlying))
 			find_next();
 	}
 
@@ -145,6 +151,6 @@ namespace micro_profiler
 	{
 		do
 			++_underlying;
-		while (_underlying != _underlying_container->end() && _predicate && !_predicate(*_underlying));
+		while (_underlying != _owner->_underlying.end() && !_owner->match(*_underlying));
 	}
 }

@@ -110,7 +110,10 @@ namespace micro_profiler
 		{	LOG(PREAMBLE "constructed...") % A(this);	}
 
 		profiler_package::~profiler_package()
-		{	LOG(PREAMBLE "destroyed.");	}
+		{
+			_ui_queue->stop();
+			LOG(PREAMBLE "destroyed.");
+		}
 
 		wpl::clock profiler_package::get_clock() const
 		{

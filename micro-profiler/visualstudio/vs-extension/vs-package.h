@@ -24,9 +24,14 @@
 #include <comdef.h>
 #include <dte.h>
 #include <list>
-#include <scheduler/scheduler.h>
+#include <mt/chrono.h>
 #include <wpl/vs/ole-command-target.h>
 #include <wpl/vs/package.h>
+
+namespace scheduler
+{
+	class ui_queue;
+}
 
 namespace micro_profiler
 {
@@ -76,7 +81,7 @@ namespace micro_profiler
 
 		private:
 			std::function<mt::milliseconds ()> _clock;
-			std::shared_ptr<scheduler::queue> _ui_queue;
+			std::shared_ptr<scheduler::ui_queue> _ui_queue;
 			CComPtr<_DTE> _dte;
 			std::shared_ptr<hive> _configuration;
 			std::shared_ptr<frontend_manager> _frontend_manager;

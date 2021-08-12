@@ -82,7 +82,9 @@ namespace micro_profiler
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
 			});
 
-			target.add_command(cmdidProfileScope, [&running_objects, &factory, context] (unsigned) {
+			auto symbols_requested = make_shared<bool>(false);
+
+			target.add_command(cmdidProfileScope, [&running_objects, &factory, context, symbols_requested] (unsigned) {
 
 				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center about form.
 				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
@@ -93,7 +95,7 @@ namespace micro_profiler
 				};
 				const auto root = make_shared<wpl::overlay>();
 					root->add(factory.create_control<wpl::control>("background"));
-					const auto about = make_shared<image_patch_ui>(factory, context.patches, *context.symbols);
+					const auto about = make_shared<image_patch_ui>(factory, context.patches);
 					root->add(wpl::pad_control(about, 5, 5));
 
 				o->first = factory.create_modal();
@@ -103,6 +105,8 @@ namespace micro_profiler
 				o->first->set_location(l);
 				o->first->set_visible(true);
 
+				if (!*symbols_requested)
+					context.symbols->request_all_symbols(), *symbols_requested = true;
 
 			}, false, [] (unsigned, unsigned &state) {
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;

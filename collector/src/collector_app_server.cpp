@@ -64,6 +64,9 @@ namespace micro_profiler
 		session->add_handler<unsigned int>(request_module_metadata,
 			[this, metadata_] (server_session::request &req, unsigned int persistent_id) {
 
+			try
+			{
+			
 			const auto metadata = _module_tracker->get_metadata(persistent_id);
 			auto &md = *metadata_;
 
@@ -77,6 +80,11 @@ namespace micro_profiler
 				md.second.source_files.push_back(file);
 			});
 			req.respond(response_module_metadata, [&] (server_session::serializer &ser) {	ser(md);	});
+			}
+			catch (const exception &)
+			{
+			}
+			
 		});
 
 		session->add_handler< vector<thread_monitor::thread_id> >(request_threads_info,

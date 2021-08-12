@@ -23,7 +23,7 @@ namespace micro_profiler
 		};
 	}
 
-	image_patch_ui::image_patch_ui(const factory &factory_, shared_ptr<image_patch_model> model, symbol_resolver &resolver)
+	image_patch_ui::image_patch_ui(const factory &factory_, shared_ptr<image_patch_model> model)
 		: stack(false, factory_.context.cursor_manager_)
 	{
 		shared_ptr<button> btn;
@@ -103,8 +103,5 @@ namespace micro_profiler
 				btn->set_text(agge::style_modifier::empty + "Close");
 				_connections.push_back(btn->clicked += [this, model] {
 				});
-
-
-		resolver.request_all_symbols();
 	}
 }

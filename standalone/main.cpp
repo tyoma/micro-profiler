@@ -87,11 +87,11 @@ namespace micro_profiler
 			about_composite_.connections.push_back(about->close += on_close);
 			about_composite_.form_ = new_form;
 		};
-		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, shared_ptr<image_patch_model> patches, symbol_resolver &resolver) {
+		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, shared_ptr<image_patch_model> patches) {
 			auto on_close = [&] {	patcher_composite_.form_.reset();	};
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
-				auto patcher = make_shared<image_patch_ui>(factory, patches, resolver);
+				auto patcher = make_shared<image_patch_ui>(factory, patches);
 				root->add(pad_control(patcher, 5, 5));
 
 			new_form->set_root(root);
@@ -105,15 +105,14 @@ namespace micro_profiler
 			auto show_patcher2 = show_patcher;
 			auto composite = make_shared<ui_composite>();
 			auto patches = context.patches;
-			auto &resolver = *context.symbols;
 
 			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, context);
 			composite->connections.push_back(composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
 				app2.clipboard_copy(text_utf8);
 			});
 			composite->connections.push_back(composite->ui->show_about += show_about);
-			composite->connections.push_back(composite->ui->show_patcher += [show_patcher2, patches, &resolver] (agge::point<int> center, shared_ptr<form> new_form) {
-				show_patcher2(center, new_form, patches, resolver);
+			composite->connections.push_back(composite->ui->show_patcher += [show_patcher2, patches] (agge::point<int> center, shared_ptr<form> new_form) {
+				show_patcher2(center, new_form, patches);
 			});
 			return frontend_ui::ptr(composite, composite->ui.get());
 		};

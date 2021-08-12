@@ -16,7 +16,7 @@ namespace micro_profiler
 	class image_patch_ui : public wpl::stack
 	{
 	public:
-		image_patch_ui(const wpl::factory &factory_, std::shared_ptr<image_patch_model> model, symbol_resolver &resolver);
+		image_patch_ui(const wpl::factory &factory_, std::shared_ptr<image_patch_model> model);
 
 	private:
 		std::shared_ptr<image_patch_model> _model;

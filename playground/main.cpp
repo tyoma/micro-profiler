@@ -28,11 +28,14 @@ int main()
 	vector<double> v(500);
 #endif
 
+for (int i = 300; i; --i)
+{
 	generate_n(v.begin(), v.size(), &my_random);
 	sort(v.begin(), v.end());
 	sort(v.rbegin(), v.rend());
 	sort(v.begin(), v.end());
 	sort(v.rbegin(), v.rend());
+	}
 
 	return 0;
 }

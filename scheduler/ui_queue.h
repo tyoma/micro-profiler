@@ -32,7 +32,9 @@ namespace scheduler
 		~ui_queue();
 
 		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by) override;
-		
+
+		void stop();
+
 	private:
 		struct impl;
 

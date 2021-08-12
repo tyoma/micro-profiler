@@ -48,7 +48,7 @@ namespace scheduler
 			};
 		}
 
-		begin_test_suite( AUIQueueTests )
+		begin_test_suite( UIQueueTests )
 			test( ScheduledUndeferredTasksAreExecutedInHostingThreads )
 			{
 				// INIT
@@ -164,6 +164,45 @@ namespace scheduler
 				queue_->schedule([&] {	done.set();	}, mt::milliseconds(100));
 				done.wait();
 			}
+
+
+			test( ScheduledTasksAreDestroyedOnStop )
+			{
+				// INIT
+				auto x = make_shared<int>();
+				shared_ptr<ui_queue> queue_;
+				threaded_message_loop tl([&] {
+					queue_.reset(new ui_queue(get_clock()));
+				}, [&] {	queue_.reset();	});
+
+				queue_->schedule([x] {}, mt::milliseconds(0));
+
+				// ACT
+				queue_->stop();
+
+				// ASSERT
+				assert_equal(1, x.use_count());
+			}
+
+
+			test( TaskCannotBeScheduledOnceQueueIsStopped )
+			{
+				// INIT
+				auto x = make_shared<int>();
+				shared_ptr<ui_queue> queue_;
+				threaded_message_loop tl([&] {
+					queue_.reset(new ui_queue(get_clock()));
+				}, [&] {	queue_.reset();	});
+
+				queue_->stop();
+
+				// ACT
+				queue_->schedule([x] {}, mt::milliseconds(0));
+
+				// ASSERT
+				assert_equal(1, x.use_count());
+			}
+
 		end_test_suite
 	}
 }

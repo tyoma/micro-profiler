@@ -48,12 +48,16 @@ namespace scheduler
 	{	return deadline > rhs.deadline ? true : deadline < rhs.deadline ? false : order > rhs.order;	}
 
 	task_queue::task_queue(const clock &clock_)
-		: _clock(clock_), _order(0), _omit_notify(false)
+		: _clock(clock_), _order(0), _omit_notify(false), _stopped(false)
 	{	}
 
 	task_queue::wake_up task_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
 	{
 		mt::lock_guard<mt::mutex> lock(_mutex);
+
+		if (_stopped)
+			return make_pair(mt::milliseconds(0), false);
+
 		deadlined_task t = {	move(task), _clock() + defer_by, _order++	};
 		const auto notify = !_omit_notify && (_tasks.empty() || t.deadline < _tasks.top().deadline);
 
@@ -107,5 +111,14 @@ namespace scheduler
 				_ready.wait();
 			}
 		}
+	}
+
+	void task_queue::stop()
+	{
+		mt::unique_lock<mt::mutex> lock(_mutex);
+		priority_queue<deadlined_task> tmp;
+
+		_tasks.swap(tmp);
+		_stopped = true;
 	}
 }

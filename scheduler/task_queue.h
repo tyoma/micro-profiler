@@ -40,6 +40,7 @@ namespace scheduler
 		wake_up schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0));
 		wake_up execute_ready(mt::milliseconds max_duration);
 		void wait();
+		void stop();
 
 	private:
 		struct deadlined_task
@@ -57,6 +58,6 @@ namespace scheduler
 		mt::event _ready;
 		mt::mutex _mutex;
 		unsigned long long _order;
-		bool _omit_notify;
+		bool _omit_notify, _stopped;
 	};
 }

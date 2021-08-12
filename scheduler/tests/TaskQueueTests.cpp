@@ -283,6 +283,38 @@ namespace scheduler
 				assert_equal(task_queue::wake_up(mt::milliseconds(0), true), queue->schedule([] {}, mt::milliseconds(0)));
 			}
 
+
+			test( ScheduledTasksAreDestroyedOnStop )
+			{
+				// INIT
+				auto x = make_shared<int>();
+				queue_ptr queue(create_queue());
+
+				queue->schedule([x] {}, mt::milliseconds(0));
+
+				// ACT
+				queue->stop();
+
+				// ASSERT
+				assert_equal(1, x.use_count());
+			}
+
+
+			test( TaskCannotBeScheduledOnceQueueIsStopped )
+			{
+				// INIT
+				auto x = make_shared<int>();
+				queue_ptr queue(create_queue());
+
+				queue->stop();
+
+				// ACT / ASSERT
+				assert_equal(make_pair(mt::milliseconds(0), false), queue->schedule([x] {}, mt::milliseconds(0)));
+
+				// ASSERT
+				assert_equal(1, x.use_count());
+			}
+
 		end_test_suite
 
 

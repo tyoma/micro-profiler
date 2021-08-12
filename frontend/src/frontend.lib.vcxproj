@@ -65,6 +65,7 @@
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\file.h" />
     <ClInclude Include="..\filter_view.h" />
+    <ClInclude Include="..\flatten_view.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\function_hint.h" />

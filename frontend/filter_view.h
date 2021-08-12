@@ -31,6 +31,8 @@ namespace micro_profiler
 	public:
 		class const_iterator;
 		typedef typename U::value_type value_type;
+		typedef typename U::const_reference const_reference;
+		typedef const_reference reference;
 		typedef std::function<bool (const value_type &value)> predicate_t;
 
 	public:
@@ -58,13 +60,14 @@ namespace micro_profiler
 		typedef std::forward_iterator_tag iterator_category;
 		typedef typename filter_view<U>::value_type value_type;
 		typedef std::ptrdiff_t difference_type;
+		typedef typename filter_view<U>::const_reference const_reference;
+		typedef typename filter_view<U>::reference reference;
 		typedef const value_type *pointer;
-		typedef const value_type &reference;
 
 	public:
 		const_iterator();
 
-		const typename U::value_type &operator *() const throw();
+		typename U::const_reference operator *() const throw();
 		const const_iterator &operator ++();
 		bool operator ==(const const_iterator &rhs) const;
 		bool operator !=(const const_iterator &rhs) const;
@@ -122,7 +125,7 @@ namespace micro_profiler
 	}
 
 	template <class U>
-	inline const typename U::value_type &filter_view<U>::const_iterator::operator *() const throw()
+	inline typename U::const_reference filter_view<U>::const_iterator::operator *() const throw()
 	{	return *_underlying;	}
 
 	template <class U>

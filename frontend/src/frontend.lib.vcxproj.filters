@@ -78,6 +78,7 @@
     <ClInclude Include="..\marshalled_server.h" />
     <ClInclude Include="..\function_hint.h" />
     <ClInclude Include="..\headers_model.h" />
+    <ClInclude Include="..\flatten_view.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

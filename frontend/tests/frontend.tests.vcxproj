@@ -49,6 +49,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="HeadersModelTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="FrontendManagerTests.cpp" />

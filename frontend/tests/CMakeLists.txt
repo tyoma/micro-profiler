@@ -4,6 +4,7 @@ include(test)
 
 set(FRONTEND_TESTS_SOURCES
 	FilterViewTests.cpp
+	FlattenViewTests.cpp
 	FrontendManagerTests.cpp
 	FrontendTests.cpp
 	FunctionListPersistence.cpp

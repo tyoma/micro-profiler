@@ -37,6 +37,9 @@
     <ClCompile Include="server_session.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="client_session.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -64,6 +67,7 @@
     <ClInclude Include="lifetime.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\client_session.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

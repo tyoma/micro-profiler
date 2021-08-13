@@ -1,5 +1,6 @@
 #include <ipc/server_session.h>
 
+#include "helpers.h"
 #include "mocks.h"
 
 #ifndef _MSC_VER
@@ -39,19 +40,6 @@ namespace micro_profiler
 				template <typename ArchiveT>
 				void serialize(ArchiveT &archive, sneaky_type &data, unsigned int /*version*/)
 				{	archive(data.ivalue), archive(data.svalue);	}
-
-				template <typename PayloadT>
-				void send_request(ipc::channel &c, int id, unsigned long long token, const PayloadT &payload)
-				{
-					pod_vector<byte> data;
-					buffer_writer< pod_vector<byte> > w(data);
-					server_session::serializer s(w);
-
-					s(id);
-					s(token);
-					s(payload);
-					c.message(const_byte_range(data.data(), data.size()));
-				}
 			}
 
 			begin_test_suite( ServerSessionTests )
@@ -69,7 +57,7 @@ namespace micro_profiler
 					s.add_handler<int>(1991, [&] (server_session::request &, int) {	log.push_back(11991);	});
 
 					// ACT
-					send_request(s, 171, 19193, 1);
+					send_standard(s, 171, 19193, 1);
 
 					// ASSERT
 					int reference1[] = {	1171,	};
@@ -77,9 +65,9 @@ namespace micro_profiler
 					assert_equal(reference1, log);
 
 					// ACT
-					send_request(s, 1991, 19194, 1);
-					send_request(s, 171, 19195, 1);
-					send_request(s, 13, 19196, 1);
+					send_standard(s, 1991, 19194, 1);
+					send_standard(s, 171, 19195, 1);
+					send_standard(s, 13, 19196, 1);
 
 					// ASSERT
 					int reference2[] = {	1171, 11991, 1171, 113,	};
@@ -97,7 +85,7 @@ namespace micro_profiler
 					s.add_handler<int>(13, [&] (server_session::request &, int) {	log.push_back(113);	});
 
 					// ACT / ASSERT (must not throw)
-					send_request(s, 12314, 0, 1);
+					send_standard(s, 12314, 0, 1);
 
 					// ASSERT
 					assert_is_empty(log);
@@ -122,7 +110,7 @@ namespace micro_profiler
 					// ACT
 					int ints1[] = {	3, 1, 4, 1, 5, 9, 26,	};
 
-					send_request(s, 1, 100, mkvector(ints1));
+					send_standard(s, 1, 100, mkvector(ints1));
 
 					// ASSERT
 					assert_equal(1u, log1.size());
@@ -132,9 +120,9 @@ namespace micro_profiler
 					// ACT
 					int ints2[] = {	100, 3, 1, 4, 1, 5, 9, -26, 919191	};
 
-					send_request(s, 1, 101, mkvector(ints2));
-					send_request(s, 2, 102, sneaky_type::create(19, "one"));
-					send_request(s, 2, 103, sneaky_type::create(191, "two"));
+					send_standard(s, 1, 101, mkvector(ints2));
+					send_standard(s, 2, 102, sneaky_type::create(19, "one"));
+					send_standard(s, 2, 103, sneaky_type::create(191, "two"));
 
 					// ASSERT
 					sneaky_type reference[] = {
@@ -160,9 +148,9 @@ namespace micro_profiler
 					});
 
 					//ACT
-					send_request(s, 1, 100, mkvector(data));
+					send_standard(s, 1, 100, mkvector(data));
 					alloca(1000);
-					send_request(s, 1, 100, mkvector(data));
+					send_standard(s, 1, 100, mkvector(data));
 
 					// ASSERT
 					assert_equal(log[0], log[1]);
@@ -200,7 +188,7 @@ namespace micro_profiler
 					});
 
 					// ACT
-					send_request(s, 1, 0x100010001000ull, 0);
+					send_standard(s, 1, 0x100010001000ull, 0);
 
 					// ASSERT
 					pair<int, unsigned long long> reference1[] = {
@@ -210,8 +198,8 @@ namespace micro_profiler
 					assert_equal(reference1, log);
 
 					// ACT
-					send_request(s, 1, 0x10001, 0);
-					send_request(s, 2, 0xF00010001000ull, 0);
+					send_standard(s, 1, 0x10001, 0);
+					send_standard(s, 2, 0xF00010001000ull, 0);
 
 					// ASSERT
 					pair<int, unsigned long long> reference2[] = {
@@ -287,7 +275,7 @@ namespace micro_profiler
 					});
 
 					// ACT
-					send_request(s, 1, 12, 0);
+					send_standard(s, 1, 12, 0);
 
 					// ASSERT
 					string reference1[] = {	"Lorem ipsum amet dolor",	};
@@ -296,10 +284,10 @@ namespace micro_profiler
 					assert_is_empty(log2);
 
 					// ACT
-					send_request(s, 2, 12, 0);
-					send_request(s, 2, 12, 0);
-					send_request(s, 3, 12, 0);
-					send_request(s, 4, 12, 0);
+					send_standard(s, 2, 12, 0);
+					send_standard(s, 2, 12, 0);
+					send_standard(s, 3, 12, 0);
+					send_standard(s, 4, 12, 0);
 
 					// ASSERT
 					string reference2[] = {	"Lorem ipsum amet dolor", "Whoa!", "Whoa!",	};

@@ -55,6 +55,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ClientSessionTests.cpp" />
     <ClCompile Include="COMEndpointClientTests.cpp" />
     <ClCompile Include="COMEndpointServerDuplexTests.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -74,6 +75,7 @@
     <ClCompile Include="SocketsEndpointServerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="helpers.h" />
     <ClInclude Include="helpers_com.h" />
     <ClInclude Include="helpers_sockets.h" />
     <ClInclude Include="mocks.h" />

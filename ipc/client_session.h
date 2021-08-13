@@ -42,6 +42,9 @@ namespace micro_profiler
 			template <typename ChannelFactoryT>
 			client_session(const ChannelFactoryT &connection_factory);
 
+			template <typename MessageCallbackT>
+			void subscribe(std::shared_ptr<void> &handle, int message_id, const MessageCallbackT &callback);
+
 			template <typename RequestT, typename ResponseCallbackT>
 			void request(std::shared_ptr<void> &handle, int id, const RequestT &payload, int response_id,
 				const ResponseCallbackT &callback);
@@ -53,6 +56,7 @@ namespace micro_profiler
 		private:
 			typedef unsigned long long token_t;
 			typedef std::map<std::pair<int, token_t>, callback_t> callbacks_t;
+			typedef std::map<int, callback_t> message_callbacks_t;
 			typedef strmd::serializer<buffer_writer< pod_vector<byte> >, packer> serializer;
 
 		private:
@@ -68,14 +72,26 @@ namespace micro_profiler
 			token_t _token;
 			std::shared_ptr<channel> _outbound;
 			std::shared_ptr<callbacks_t> _callbacks;
+			std::shared_ptr<message_callbacks_t> _message_callbacks;
 		};
 
 
 
 		template <typename ChannelFactoryT>
 		inline client_session::client_session(const ChannelFactoryT &connection_factory)
-			: _token(1), _callbacks(make_shared<callbacks_t>())
+			: _token(1), _callbacks(std::make_shared<callbacks_t>()),
+				_message_callbacks(std::make_shared<message_callbacks_t>())
 		{	_outbound = connection_factory(*this);	}
+
+		template <typename MessageCallbackT>
+		inline void client_session::subscribe(std::shared_ptr<void> &handle, int message_id,
+			const MessageCallbackT &callback)
+		{
+			auto callbacks = _message_callbacks;
+			auto i = callbacks->insert(std::make_pair(message_id, callback)).first;
+
+			handle.reset(&*i, [callbacks, i] (...) {	callbacks->erase(i);	});
+		}
 
 		template <typename RequestT, typename ResponseCallbackT>
 		inline void client_session::request(std::shared_ptr<void> &handle, int id, const RequestT &payload,
@@ -104,12 +120,10 @@ namespace micro_profiler
 					{
 						auto h2 = handle;
 
-						handle = shared_ptr<void>(&*j, [h2, callbacks, j] (...) {	callbacks->erase(j);	});
+						handle = std::shared_ptr<void>(&*j, [h2, callbacks, j] (...) {	callbacks->erase(j);	});
+						continue;
 					}
-					else
-					{
-						handle.reset(&*j, [callbacks, j] (...) {	callbacks->erase(j);	});
-					}
+					handle.reset(&*j, [callbacks, j] (...) {	callbacks->erase(j);	});
 				}
 			});
 		}
@@ -126,9 +140,8 @@ namespace micro_profiler
 			s(id);
 			s(token);
 			s(payload);
-			_outbound->message(const_byte_range(_buffer.data(), _buffer.size()));
 			callback_ctor(token);
+			_outbound->message(const_byte_range(_buffer.data(), _buffer.size()));
 		}
-
 	}
 }

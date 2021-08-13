@@ -33,15 +33,26 @@ namespace micro_profiler
 			buffer_reader r(payload);
 			deserializer d(r);
 			int response_id;
-			token_t token;
 
 			d(response_id);
-			d(token);
 
-			auto i = _callbacks->find(std::make_pair(response_id, token));
+			auto m = _message_callbacks->find(response_id);
 
-			if (_callbacks->end() != i)
-				i->second(d);
+			if (_message_callbacks->end() != m)
+			{
+				m->second(d);
+			}
+			else
+			{
+				token_t token;
+
+				d(token);
+
+				auto i = _callbacks->find(std::make_pair(response_id, token));
+
+				if (_callbacks->end() != i)
+					i->second(d);
+			}
 		}
 	}
 }

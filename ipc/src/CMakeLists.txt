@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 set(IPC_SOURCES
 	client_endpoint.cpp
 	client_endpoint_sockets.cpp
+	client_session.cpp
 	marshalled_server.cpp
 	marshalled_session.cpp
 	misc.cpp

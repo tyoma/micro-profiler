@@ -62,6 +62,7 @@ namespace micro_profiler
 					assert_not_null(outbound);
 				}
 
+
 				test( SendingARequestSerializesRequestPayload )
 				{
 					// INIT / ACT
@@ -69,7 +70,7 @@ namespace micro_profiler
 					auto messages = 0;
 
 					// ACT
-					outbound->on_message = [&] (const_byte_range &payload) {
+					outbound->on_message = [&] (const_byte_range payload) {
 						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
 
 					// ASSERT
@@ -84,7 +85,7 @@ namespace micro_profiler
 					assert_equal(1, messages);
 
 					// ACT
-					outbound->on_message = [&] (const_byte_range &payload) {
+					outbound->on_message = [&] (const_byte_range payload) {
 						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
 
 					// ASSERT
@@ -98,7 +99,7 @@ namespace micro_profiler
 					assert_equal(2, messages);
 
 					// ACT
-					outbound->on_message = [&] (const_byte_range &payload) {
+					outbound->on_message = [&] (const_byte_range payload) {
 						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
 
 					// ASSERT
@@ -112,7 +113,7 @@ namespace micro_profiler
 					assert_equal(3, messages);
 
 					// ACT
-					outbound->on_message = [&] (const_byte_range &payload) {
+					outbound->on_message = [&] (const_byte_range payload) {
 						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
 
 					// ASSERT
@@ -157,6 +158,83 @@ namespace micro_profiler
 
 					// ACT
 					s.request(req[3], 1, 1, 1, [alive4] (client_session::deserializer &) {});
+					req[0].reset();
+
+					// ASSERT
+					assert_equal(1, alive1.use_count());
+					assert_equal(1, alive2.use_count());
+					assert_not_equal(1, alive3.use_count());
+					assert_not_equal(1, alive4.use_count());
+
+					// ACT
+					req[2].reset();
+					req[3].reset();
+
+					// ASSERT
+					assert_equal(1, alive1.use_count());
+					assert_equal(1, alive2.use_count());
+					assert_equal(1, alive3.use_count());
+					assert_equal(1, alive4.use_count());
+				}
+
+
+				test( AMessageIsOnlySentAfterTheRequestIsRegistered )
+				{
+					// INIT / ACT
+					channel *inbound;
+					client_session s([&] (channel &inbound_) -> shared_ptr<channel> {
+						inbound = &inbound_;
+						outbound = make_shared<mocks::channel>();
+						return outbound;
+					});
+					auto called = 0;
+
+					// ACT
+					outbound->on_message = [&] (const_byte_range) {
+						send_standard(*inbound, 1021, 1, 1);
+					};
+					s.request(req[0], 121, 3918344u, 1021, [&] (client_session::deserializer &) {
+						called++;
+					});
+
+					// ASSERT
+					assert_equal(1, called);
+				}
+
+
+				test( MessageCallbacksAreHeldAsLongAsSubscriptionHandlesAreAlive )
+				{
+					// INIT
+					shared_ptr<bool> alive1 = make_shared<bool>();
+					shared_ptr<bool> alive2 = make_shared<bool>();
+					shared_ptr<bool> alive3 = make_shared<bool>();
+					shared_ptr<bool> alive4 = make_shared<bool>();
+					client_session s([&] (channel &/*inbound*/)	{	return outbound = make_shared<mocks::channel>();	});
+
+					// ACT
+					s.subscribe(req[0], 1, [alive1] (client_session::deserializer &) {});
+					s.subscribe(req[1], 2, [alive2] (client_session::deserializer &) {});
+					s.subscribe(req[2], 3, [alive3] (client_session::deserializer &) {});
+
+					// ASSERT
+					assert_not_null(req[0]);
+					assert_not_null(req[1]);
+					assert_not_null(req[2]);
+
+					assert_not_equal(1, alive1.use_count());
+					assert_not_equal(1, alive2.use_count());
+					assert_not_equal(1, alive3.use_count());
+
+					// ACT
+					req[1].reset();
+
+					// ASSERT
+					assert_not_equal(1, alive1.use_count());
+					assert_equal(1, alive2.use_count());
+					assert_not_equal(1, alive3.use_count());
+
+					// ACT
+					s.subscribe(req[3], 10, [alive4] (client_session::deserializer &) {});
 					req[0].reset();
 
 					// ASSERT
@@ -329,6 +407,59 @@ namespace micro_profiler
 					assert_equal(1, alive4.use_count());
 					assert_equal(1, alive5.use_count());
 				}
+
+
+				test( MessagePayloadIsDeliveredToMessageCallback )
+				{
+					// INIT
+					channel *inbound;
+					client_session s([&] (channel &inbound_) -> shared_ptr<channel>	{
+						inbound = &inbound_;
+						outbound = make_shared<mocks::channel>();
+						return outbound;
+					});
+					int calls[4] = { 0 };
+
+					s.subscribe(req[0], 13, [&] (client_session::deserializer &d) {
+						calls[0]++;
+
+					// ASSERT
+						assert_equal(191983, read<int>(d));
+					});
+					s.request(req[1], 1, 1, 13, [&] (client_session::deserializer &) {
+						assert_is_false(true);
+					});
+					s.subscribe(req[2], 14, [&] (client_session::deserializer &d) {
+						calls[2]++;
+
+					// ASSERT
+						assert_equal("moonlight", read<string>(d));
+					});
+					s.subscribe(req[3], 15, [&] (client_session::deserializer &d) {
+						calls[3]++;
+
+					// ASSERT
+						assert_equal("A long, long road", read<string>(d));
+					});
+
+					// ACT
+					send_message(*inbound, 13, 191983);
+
+					// ASSERT
+					int reference1[] = {	1, 0, 0, 0,	};
+
+					assert_equal(reference1, calls);
+
+					// ACT
+					send_message(*inbound, 14, string("moonlight"));
+					send_message(*inbound, 15, string("A long, long road"));
+
+					// ASSERT
+					int reference2[] = {	1, 0, 1, 1,	};
+
+					assert_equal(reference2, calls);
+				}
+
 			end_test_suite
 		}
 	}

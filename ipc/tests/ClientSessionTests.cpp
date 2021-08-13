@@ -53,12 +53,15 @@ namespace micro_profiler
 				test( SessionIsCreatedOnConstruction )
 				{
 					// INIT / ACT
-					client_session s([&] (channel &/*inbound*/) -> shared_ptr<channel>	{
+					channel *inbound = nullptr;
+					client_session s([&] (channel &inbound_) -> shared_ptr<channel>	{
+						inbound = &inbound_;
 						assert_null(outbound);
 						return outbound = make_shared<mocks::channel>();
 					});
 
 					// ASSERT
+					assert_equal(inbound, &s);
 					assert_not_null(outbound);
 				}
 
@@ -122,6 +125,44 @@ namespace micro_profiler
 						assert_equal(sneaky_type::create(31415926, "amet dolor"), read<sneaky_type>(ser));
 					};
 					s.request(req[3], 11, sneaky_type::create(31415926, "amet dolor"), 1, [] (client_session::deserializer &) {});
+				}
+
+
+				test( SendingARequestInPassiveSessionSerializesRequestPayload )
+				{
+					// INIT / ACT
+					outbound = make_shared<mocks::channel>();
+					client_session s(static_cast<channel &>(*outbound));
+					auto messages = 0;
+
+					// ACT
+					outbound->on_message = [&] (const_byte_range payload) {
+						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+
+					// ASSERT
+						assert_equal(121, read<int>(ser));
+						assert_equal(1u, read<unsigned>(ser));
+						assert_equal(3918344u, read<unsigned>(ser));
+
+					};
+					s.request(req[0], 121, 3918344u, 1, [] (client_session::deserializer &) {});
+
+					// ASSERT
+					assert_equal(1, messages);
+
+					// ACT
+					outbound->on_message = [&] (const_byte_range payload) {
+						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+
+					// ASSERT
+						assert_equal(1001, read<int>(ser));
+						assert_equal(2u, read<unsigned>(ser));
+						assert_equal(sneaky_type::create(3141, "pi"), read<sneaky_type>(ser));
+					};
+					s.request(req[1], 1001, sneaky_type::create(3141, "pi"), 1, [] (client_session::deserializer &) {});
+
+					// ASSERT
+					assert_equal(2, messages);
 				}
 
 
@@ -252,6 +293,23 @@ namespace micro_profiler
 					assert_equal(1, alive2.use_count());
 					assert_equal(1, alive3.use_count());
 					assert_equal(1, alive4.use_count());
+				}
+
+
+				test( MessageCallbacksAreHeldAsLongAsSubscriptionHandlesAreAliveInPassiveSession )
+				{
+					// INIT
+					outbound = make_shared<mocks::channel>();
+					shared_ptr<bool> alive = make_shared<bool>();
+					client_session s(static_cast<channel &>(*outbound));
+
+					// ACT
+					s.subscribe(req[0], 1, [alive] (client_session::deserializer &) {});
+
+					// ASSERT
+					assert_not_null(req[0]);
+
+					assert_not_equal(1, alive.use_count());
 				}
 
 
@@ -458,6 +516,31 @@ namespace micro_profiler
 					int reference2[] = {	1, 0, 1, 1,	};
 
 					assert_equal(reference2, calls);
+				}
+
+
+				test( DisconnectingSessionDisconnectsOutbound )
+				{
+					// INIT
+					client_session s([&] (channel &) {
+						return outbound = make_shared<mocks::channel>();
+					});
+					auto disconnected = 0;
+
+					outbound->on_disconnect = [&] {	disconnected++;	};
+
+					// ACT
+					s.disconnect_session();
+
+					// ASSERT
+					assert_equal(1, disconnected);
+
+					// ACT (to consider: maybe reject further requests, including disconnections?)
+					s.disconnect_session();
+					s.disconnect_session();
+
+					// ASSERT
+					assert_equal(3, disconnected);
 				}
 
 			end_test_suite

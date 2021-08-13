@@ -20,10 +20,20 @@
 
 #include <ipc/client_session.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
 	namespace ipc
 	{
+		client_session::client_session(channel &outbound)
+			: _token(1), _outbound(&outbound), _callbacks(make_shared<callbacks_t>()),
+				_message_callbacks(make_shared<message_callbacks_t>())
+		{	}
+
+		void client_session::disconnect_session() throw()
+		{	_outbound->disconnect();	}
+
 		void client_session::disconnect() throw()
 		{
 		}
@@ -48,7 +58,7 @@ namespace micro_profiler
 
 				d(token);
 
-				auto i = _callbacks->find(std::make_pair(response_id, token));
+				auto i = _callbacks->find(make_pair(response_id, token));
 
 				if (_callbacks->end() != i)
 					i->second(d);

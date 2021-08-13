@@ -32,15 +32,21 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		class client_session : channel
+		class client_session : public channel
 		{
 		public:
 			typedef strmd::deserializer<buffer_reader, packer> deserializer;
 			typedef std::function<void (deserializer &payload_deserializer)> callback_t;
 
 		public:
+			// User establishes and controls the connection.
 			template <typename ChannelFactoryT>
 			client_session(const ChannelFactoryT &connection_factory);
+
+			// Connection is established and controlled by an outside entity.
+			client_session(channel &outbound);
+
+			void disconnect_session() throw();
 
 			template <typename MessageCallbackT>
 			void subscribe(std::shared_ptr<void> &handle, int message_id, const MessageCallbackT &callback);
@@ -70,7 +76,8 @@ namespace micro_profiler
 		private:
 			pod_vector<byte> _buffer;
 			token_t _token;
-			std::shared_ptr<channel> _outbound;
+			std::shared_ptr<channel> _outbound_active;
+			channel *_outbound;
 			std::shared_ptr<callbacks_t> _callbacks;
 			std::shared_ptr<message_callbacks_t> _message_callbacks;
 		};
@@ -81,7 +88,7 @@ namespace micro_profiler
 		inline client_session::client_session(const ChannelFactoryT &connection_factory)
 			: _token(1), _callbacks(std::make_shared<callbacks_t>()),
 				_message_callbacks(std::make_shared<message_callbacks_t>())
-		{	_outbound = connection_factory(*this);	}
+		{	_outbound = (_outbound_active = connection_factory(*this)).get();	}
 
 		template <typename MessageCallbackT>
 		inline void client_session::subscribe(std::shared_ptr<void> &handle, int message_id,

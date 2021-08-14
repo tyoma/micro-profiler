@@ -59,6 +59,10 @@ namespace micro_profiler
 			void request(std::shared_ptr<void> &handle, int id, const RequestT &payload,
 				const MultiResponseCallbackT &callback);
 
+			// channel methods
+			virtual void disconnect() throw() override;
+			virtual void message(const_byte_range payload) override;
+
 		private:
 			typedef unsigned long long token_t;
 			typedef std::map<std::pair<int, token_t>, callback_t> callbacks_t;
@@ -66,9 +70,6 @@ namespace micro_profiler
 			typedef strmd::serializer<buffer_writer< pod_vector<byte> >, packer> serializer;
 
 		private:
-			virtual void disconnect() throw() override;
-			virtual void message(const_byte_range payload) override;
-
 			template <typename RequestT, typename CallbackConstructorT>
 			void request_internal(int id, const RequestT &payload,
 				const CallbackConstructorT &callback_ctor);

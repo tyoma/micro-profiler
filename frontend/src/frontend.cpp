@@ -41,98 +41,56 @@ namespace micro_profiler
 	}
 
 	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
-		: _outbound(outbound), _queue(queue)
-	{	LOG(PREAMBLE "constructed...") % A(this);	}
-
-	frontend::~frontend()
-	{	LOG(PREAMBLE "destroyed...") % A(this);	}
-
-	void frontend::disconnect_session() throw()
+		: client_session(outbound), _queue(queue)
 	{
-		_outbound.disconnect();
-		LOG(PREAMBLE "disconnect requested locally...") % A(this);
-	}
-
-	void frontend::disconnect() throw()
-	{	LOG(PREAMBLE "disconnected by remote...") % A(this);	}
-
-	void frontend::message(const_byte_range payload)
-	{
-		unsigned persistent_id;
-		buffer_reader reader(payload);
-		strmd::deserializer<buffer_reader, packer> archive(reader);
-		loaded_modules lmodules;
-		module_info_metadata mmetadata;
-		messages_id c;
-		unsigned int token;
-
-		switch (archive(c), c)
-		{
-		case init:
+		subscribe(_requests[0], init, [this] (client_session::deserializer &d) {
 			if (_ui_context.model)
+			{
+				LOG(PREAMBLE "repeated initialization message - ignoring...");
 				return;
-			archive(_ui_context.process_info);
+			}
+			d(_ui_context.process_info);
 			_ui_context.model = functions_list::create(_ui_context.process_info.ticks_per_second, get_resolver(),
 				get_threads());
 			initialized(_ui_context);
 			request_full_update();
 			LOG(PREAMBLE "initialized...")
 				% A(this) % A(_ui_context.process_info.executable) % A(_ui_context.process_info.ticks_per_second);
-			return;
-		}
+		});
+		LOG(PREAMBLE "constructed...") % A(this);
+	}
 
-		switch (archive(token), c)
-		{
-		case response_modules_loaded:
-			archive(lmodules);
-			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				get_resolver()->add_mapping(*i);
-			break;
+	frontend::~frontend()
+	{	LOG(PREAMBLE "destroyed...") % A(this);	}
 
-		case legacy_update_statistics:
-			LOG(PREAMBLE "non-threaded legacy_update_statistics is no longer supported. Are you using older version of the collector library?");
-			break;
-
-		case response_statistics_update:
-			if (_ui_context.model)
-				archive(*_ui_context.model, _serialization_context);
-			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
-			schedule_update_request();
-			break;
-
-		case response_module_metadata:
-			archive(persistent_id);
-			archive(mmetadata);
-			LOG(PREAMBLE "received metadata...") % A(this) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
-			get_resolver()->add_metadata(persistent_id, mmetadata);
-			break;
-
-		case response_threads_info:
-			archive(*_threads);
-			break;
-
-		default:
-			break;
-		}
+	void frontend::disconnect() throw()
+	{
+		ipc::client_session::disconnect();
+		LOG(PREAMBLE "disconnected by remote...") % A(this);
 	}
 
 	void frontend::request_full_update()
-	{	send(request_update, 0);	}
-
-	void frontend::schedule_update_request()
-	{	_queue.schedule([this] {	request_full_update();	}, c_updateInterval);	}
-
-	template <typename DataT>
-	void frontend::send(messages_id command, const DataT &data)
 	{
-		buffer_writer< pod_vector<byte> > writer(_buffer);
-		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
-		unsigned token = 0u;
+		auto modules_callback = [this] (client_session::deserializer &d) {
+			loaded_modules lmodules;
 
-		archive(command);
-		archive(token);
-		archive(data);
-		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
+			d(lmodules);
+			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
+				get_resolver()->add_mapping(*i);
+		};
+		auto update_callback = [this] (client_session::deserializer &d) {
+			auto self = this;
+
+			d(*_ui_context.model, _serialization_context);
+			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
+			_queue.schedule([self] {	self->request_full_update();	}, c_updateInterval);
+		};
+		pair<int, ipc::client_session::callback_t> callbacks[] = {
+			make_pair(response_modules_loaded, modules_callback),
+			make_pair(response_statistics_update, update_callback),
+		};
+
+		request(_requests[1], request_update, 0, callbacks);
 	}
 
 	shared_ptr<symbol_resolver> frontend::get_resolver()
@@ -141,11 +99,25 @@ namespace micro_profiler
 		{
 			weak_ptr<frontend> wself = shared_from_this();
 
-			_resolver.reset(new symbol_resolver([wself] (unsigned int persistent_id) {
-				if (shared_ptr<frontend> self = wself.lock())
+			_resolver.reset(new symbol_resolver([this, wself] (unsigned int persistent_id) {
+				if (auto self_ = wself.lock())
 				{
-					self->send(request_module_metadata, persistent_id);
-					LOG(PREAMBLE "requested metadata from remote...") % A(self.get()) % A(persistent_id);
+					auto self = this;
+					auto req = _dynamic_requests.insert(_dynamic_requests.end(), shared_ptr<void>());
+
+					request(*req, request_module_metadata, persistent_id, response_module_metadata,
+						[persistent_id, self, req] (ipc::client_session::deserializer &d) {
+
+						unsigned int dummy;
+						module_info_metadata mmetadata;
+
+						d(dummy);
+						d(mmetadata);
+						LOG(PREAMBLE "received metadata...") % A(self) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
+						self->_resolver->add_metadata(persistent_id, mmetadata);
+						self->_dynamic_requests.erase(req);
+					});
+					LOG(PREAMBLE "requested metadata from remote...") % A(self) % A(persistent_id);
 				}
 			}));
 		}
@@ -157,7 +129,15 @@ namespace micro_profiler
 		if (!_threads)
 		{
 			_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
-				send(request_threads_info, threads);
+				auto self = this;
+				auto req = _dynamic_requests.insert(_dynamic_requests.end(), shared_ptr<void>());
+
+				request(*req, request_threads_info, threads, response_threads_info,
+					[self, req] (ipc::client_session::deserializer &d) {
+
+					d(*self->_threads);
+					self->_dynamic_requests.erase(req);
+				});
 			}));
 		}
 		return _threads;

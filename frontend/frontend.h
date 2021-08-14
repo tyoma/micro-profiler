@@ -27,7 +27,8 @@
 #include <common/pod_vector.h>
 #include <common/protocol.h>
 #include <functional>
-#include <ipc/endpoint.h>
+#include <ipc/client_session.h>
+#include <list>
 #include <scheduler/private_queue.h>
 
 namespace micro_profiler
@@ -35,13 +36,11 @@ namespace micro_profiler
 	class symbol_resolver;
 	class threads_model;
 
-	class frontend : public ipc::channel, noncopyable, public std::enable_shared_from_this<frontend>
+	class frontend : public ipc::client_session, noncopyable, public std::enable_shared_from_this<frontend>
 	{
 	public:
 		frontend(ipc::channel &outbound, std::shared_ptr<scheduler::queue> queue);
 		~frontend();
-
-		void disconnect_session() throw();
 
 	public:
 		std::function<void (const frontend_ui_context &ui_context)> initialized;
@@ -49,24 +48,20 @@ namespace micro_profiler
 	private:
 		// ipc::channel methods
 		virtual void disconnect() throw() override;
-		virtual void message(const_byte_range payload) override;
 
 		void request_full_update();
-		void schedule_update_request();
-
-		template <typename DataT>
-		void send(messages_id command, const DataT &data);
 
 		std::shared_ptr<symbol_resolver> get_resolver();
 		std::shared_ptr<threads_model> get_threads();
 
 	private:
-		ipc::channel &_outbound;
 		frontend_ui_context _ui_context;
 		std::shared_ptr<symbol_resolver> _resolver;
 		std::shared_ptr<threads_model> _threads;
-		pod_vector<byte> _buffer;
+		std::shared_ptr<void> _requests[5];
 		scontext::wire _serialization_context;
 		scheduler::private_queue _queue;
+
+		std::list< std::shared_ptr<void> > _dynamic_requests;
 	};
 }

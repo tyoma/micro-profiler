@@ -317,7 +317,7 @@ namespace micro_profiler
 					const string ext = extension(*path);
 					strmd::deserializer<read_stream, packer> dser(*s);
 					frontend_ui_context ui_context = {
-						*path,
+						{	*path, 1u	},
 						!stricmp(ext.c_str(), ".mpstat3")
 							? snapshot_load<scontext::file_v3>(dser) : snapshot_load<scontext::file_v4>(dser)
 					};
@@ -333,7 +333,7 @@ namespace micro_profiler
 				if (const frontend_manager::instance *i = _frontend_manager->get_active())
 				{
 					shared_ptr<functions_list> model = i->model;
-					auto_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), i->executable);
+					auto_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), i->process_info.executable);
 
 					if (s.get())
 					{
@@ -346,7 +346,7 @@ namespace micro_profiler
 			}, [this] (unsigned /**/, string &caption) -> bool {
 				if (_frontend_manager->instances_count())
 					if (const frontend_manager::instance *i = _frontend_manager->get_active())
-						return caption = "Save " + i->executable + " Statistics As...", true;
+						return caption = "Save " + i->process_info.executable + " Statistics As...", true;
 				return false;
 			});
 
@@ -405,7 +405,7 @@ namespace micro_profiler
 				return true;
 			}, [this] (unsigned item, string &caption) -> bool {
 				const frontend_manager::instance *i = _frontend_manager->get_instance(item);
-				return i ? caption = *i->executable, true : false;
+				return i ? caption = *i->process_info.executable, true : false;
 			});
 
 

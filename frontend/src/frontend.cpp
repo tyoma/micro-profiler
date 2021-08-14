@@ -61,7 +61,6 @@ namespace micro_profiler
 		unsigned persistent_id;
 		buffer_reader reader(payload);
 		strmd::deserializer<buffer_reader, packer> archive(reader);
-		initialization_data idata;
 		loaded_modules lmodules;
 		module_info_metadata mmetadata;
 		messages_id c;
@@ -70,12 +69,15 @@ namespace micro_profiler
 		switch (archive(c), c)
 		{
 		case init:
-			archive(idata);
-			_ui_context.executable = idata.executable;
-			_ui_context.model = functions_list::create(idata.ticks_per_second, get_resolver(), get_threads());
+			if (_ui_context.model)
+				return;
+			archive(_ui_context.process_info);
+			_ui_context.model = functions_list::create(_ui_context.process_info.ticks_per_second, get_resolver(),
+				get_threads());
 			initialized(_ui_context);
-			schedule_update_request();
-			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
+			request_full_update();
+			LOG(PREAMBLE "initialized...")
+				% A(this) % A(_ui_context.process_info.executable) % A(_ui_context.process_info.ticks_per_second);
 			return;
 		}
 
@@ -114,8 +116,11 @@ namespace micro_profiler
 		}
 	}
 
+	void frontend::request_full_update()
+	{	send(request_update, 0);	}
+
 	void frontend::schedule_update_request()
-	{	_queue.schedule([this] {	send(request_update, 0);	}, c_updateInterval);	}
+	{	_queue.schedule([this] {	request_full_update();	}, c_updateInterval);	}
 
 	template <typename DataT>
 	void frontend::send(messages_id command, const DataT &data)

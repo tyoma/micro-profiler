@@ -51,6 +51,7 @@ namespace micro_profiler
 		virtual void disconnect() throw() override;
 		virtual void message(const_byte_range payload) override;
 
+		void request_full_update();
 		void schedule_update_request();
 
 		template <typename DataT>

@@ -146,7 +146,7 @@ namespace micro_profiler
 			setup_factory(factory);
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager([this] (const frontend_ui_context &context) -> frontend_ui::ptr {
-				const auto ui = make_shared<frontend_pane>(get_factory(), context.model, context.executable,
+				const auto ui = make_shared<frontend_pane>(get_factory(), context.model, context.process_info.executable,
 					_configuration);
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));

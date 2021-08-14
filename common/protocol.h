@@ -63,13 +63,6 @@ namespace micro_profiler
 		PayloadT data;
 	};
 
-	// init
-	struct initialization_data
-	{
-		std::string executable;
-		timestamp_t ticks_per_second;
-	};
-
 	// response_modules_loaded
 	typedef std::vector<mapped_module_identified> loaded_modules;
 

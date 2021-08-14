@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/types.h>
 #include <string>
 #include <wpl/signal.h>
 
@@ -29,7 +30,7 @@ namespace micro_profiler
 
 	struct frontend_ui_context
 	{
-		std::string executable;
+		initialization_data process_info;
 		std::shared_ptr<functions_list> model;
 	};
 

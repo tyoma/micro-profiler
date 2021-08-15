@@ -409,14 +409,17 @@ namespace micro_profiler
 				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &req, unsigned persistent_id) {
 					log.push_back(persistent_id);
 					req.respond(response_module_metadata, [persistent_id] (ipc::server_session::serializer &s) {
-						symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	};
-						symbol_info symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, };
-						symbol_info symbols1000[] = {	{	"baz", 0x0010, 1	},	};
+						symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
+							symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
+							symbols1000[] = {	{	"baz", 0x0010, 1	},	};
+						module_info_metadata md17 = {	mkvector(symbols17),	},
+							md99 = {	mkvector(symbols99),	},
+							md1000 = {	mkvector(symbols1000),	};
 						switch (persistent_id)
 						{
-						case 17:	s(17u), s(mkvector(symbols17));	break;
-						case 99:	s(99u), s(mkvector(symbols99));	break;
-						case 1000:	s(1000u), s(mkvector(symbols1000));	break;
+						case 17:	s(17u), s(md17);	break;
+						case 99:	s(99u), s(md99);	break;
+						case 1000:	s(1000u), s(md1000);	break;
 						}
 					});
 				});

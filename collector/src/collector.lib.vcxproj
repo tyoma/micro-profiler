@@ -57,7 +57,6 @@
     </ClCompile>
     <ClCompile Include="collector_app.cpp" />
     <ClCompile Include="collector_app_server.cpp" />
-    <ClCompile Include="image_patch.cpp" />
     <ClCompile Include="module_tracker.cpp" />
     <ClCompile Include="process_explorer_linux.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -76,7 +75,6 @@
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\collector_app.h" />
-    <ClInclude Include="..\image_patch.h" />
     <ClInclude Include="..\module_tracker.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\serialization.h" />

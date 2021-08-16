@@ -14,7 +14,6 @@ set(COLLECTOR_TESTS_SOURCES
 	ThreadAnalyzerTests.cpp
 	ThreadMonitorTests.cpp
 	mocks.cpp
-	mocks_image_info.cpp
 )
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)

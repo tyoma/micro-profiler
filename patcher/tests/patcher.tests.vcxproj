@@ -56,7 +56,6 @@
     <ClCompile Include="guineapigs.cpp">
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ImagePatchManagerTests.cpp" />
     <ClCompile Include="JumperIntelTests.cpp" />
     <ClCompile Include="OffsetDisplacedReferencesTestsX86.cpp" />

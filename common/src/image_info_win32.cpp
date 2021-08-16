@@ -78,7 +78,7 @@ namespace micro_profiler
 		};
 
 
-		class dbghelp_image_info : public image_info<symbol_info>
+		class dbghelp_image_info : public image_info
 		{
 		public:
 			dbghelp_image_info(const shared_ptr<dbghelp> &dbghelp_, const string &path);
@@ -239,10 +239,10 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr< image_info<symbol_info> > load_image_info(const string &image_path)
+	shared_ptr<image_info> load_image_info(const string &image_path)
 	{
 		shared_ptr<dbghelp> dh(new dbghelp);
 
-		return shared_ptr< image_info<symbol_info> >(new dbghelp_image_info(dh, image_path));
+		return shared_ptr<image_info>(new dbghelp_image_info(dh, image_path));
 	}
 }

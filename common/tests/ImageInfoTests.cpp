@@ -25,9 +25,6 @@ namespace micro_profiler
 			void add_function(map<string, symbol_info> &functions, const symbol_info &si)
 			{	functions.insert(make_pair(si.name, si));	}
 
-			void add_function_mapped(map<string, symbol_info_mapped> &functions, const symbol_info_mapped &si)
-			{	functions.insert(make_pair(si.name, si));	}
-
 			bool has_function_containing(const map<string, symbol_info> &functions, const char *substring)
 			{
 				for (map<string, symbol_info>::const_iterator i = functions.begin(); i != functions.end(); ++i)
@@ -70,7 +67,7 @@ namespace micro_profiler
 			test( EnumerationReturnsKnownFunctions )
 			{
 				// INIT
-				shared_ptr< image_info<symbol_info> > ii[] = {
+				shared_ptr< image_info > ii[] = {
 					load_image_info(c_symbol_container_1),
 					load_image_info(c_symbol_container_2),
 				};
@@ -95,7 +92,7 @@ namespace micro_profiler
 			test( DataSymbolsAreSkipped )
 			{
 				// INIT
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
+				shared_ptr< image_info > ii = load_image_info(c_symbol_container_2);
 				map<string, symbol_info> functions;
 
 				// ACT
@@ -123,7 +120,7 @@ namespace micro_profiler
 					images[1].get_symbol_rva("bubble_sort_expose"),
 					images[1].get_symbol_rva("guinea_snprintf"),
 				};
-				shared_ptr< image_info<symbol_info> > ii[] = {
+				shared_ptr< image_info > ii[] = {
 					load_image_info(c_symbol_container_1),
 					load_image_info(c_symbol_container_2),
 				};
@@ -150,7 +147,7 @@ namespace micro_profiler
 				// This test may not pass on all platoforms/compilers. Need a better one.
 
 				// INIT
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
+				shared_ptr< image_info > ii = load_image_info(c_symbol_container_2);
 				map<string, symbol_info> functions;
 
 				// ACT
@@ -170,7 +167,7 @@ namespace micro_profiler
 			test( FilesAreEnumeratedOnDemand )
 			{
 				// INIT
-				shared_ptr< image_info<symbol_info> > ii[] = {
+				shared_ptr< image_info > ii[] = {
 					load_image_info(c_symbol_container_1),
 					load_image_info(c_symbol_container_2),
 				};
@@ -194,7 +191,7 @@ namespace micro_profiler
 			test( EnumeratedFilesHaveUniqueIDs )
 			{
 				// INIT
-				shared_ptr< image_info<symbol_info> > ii[] = {
+				shared_ptr< image_info > ii[] = {
 					load_image_info(c_this_module),
 					load_image_info(c_symbol_container_2),
 				};
@@ -221,7 +218,7 @@ namespace micro_profiler
 				// INIT
 				map<string, unsigned> files;
 				map<string, symbol_info> functions;
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
+				shared_ptr< image_info > ii = load_image_info(c_symbol_container_2);
 
 				// ACT
 				ii->enumerate_functions(bind(&add_function, ref(functions), _1));
@@ -240,7 +237,7 @@ namespace micro_profiler
 			{
 				// INIT
 				map<string, symbol_info> functions;
-				shared_ptr< image_info<symbol_info> > ii[] = {
+				shared_ptr< image_info > ii[] = {
 					load_image_info(c_symbol_container_1),
 					load_image_info(c_symbol_container_2),
 				};
@@ -262,56 +259,6 @@ namespace micro_profiler
 				assert_is_true(has_function_containing(functions, "vale_of_mean_creatures::this_one_for_the_birds"));
 				assert_is_true(has_function_containing(functions, "vale_of_mean_creatures::this_one_for_the_whales"));
 				assert_is_true(has_function_containing(functions, "vale_of_mean_creatures::the_abyss::bubble_sort"));
-			}
-		end_test_suite
-
-
-		begin_test_suite( OffsetImageInfoTests )
-			test( SymbolsEnumeratedAreOffsetAccordinglyToBase )
-			{
-				// INIT
-				shared_ptr< image_info<symbol_info> > ii = load_image_info(c_symbol_container_2);
-				map<string, symbol_info> functions_original;
-				map<string, symbol_info_mapped> functions_offset;
-
-				ii->enumerate_functions(bind(&add_function, ref(functions_original), _1));
-
-				// INIT / ACT
-				offset_image_info oii1(ii, 0x123);
-
-				oii1.enumerate_functions(bind(&add_function_mapped, ref(functions_offset), _1));
-
-				// ASSERT
-				assert_equal(functions_original.find("get_function_addresses_2")->second.rva + (byte *)0x123,
-					functions_offset.find("get_function_addresses_2")->second.body.begin());
-				assert_equal(functions_original.find("get_function_addresses_2")->second.size,
-					functions_offset.find("get_function_addresses_2")->second.body.length());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.rva + (byte *)0x123,
-					functions_offset.find("function_with_a_nested_call_2")->second.body.begin());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.size,
-					functions_offset.find("function_with_a_nested_call_2")->second.body.length());
-				assert_equal(functions_original.find("bubble_sort_expose")->second.rva + (byte *)0x123,
-					functions_offset.find("bubble_sort_expose")->second.body.begin());
-				assert_equal(functions_original.find("bubble_sort_expose")->second.size,
-					functions_offset.find("bubble_sort_expose")->second.body.length());
-
-				// INIT
-				functions_offset.clear();
-
-				// INIT / ACT
-				offset_image_info oii2(ii, 0x12345678);
-
-				oii2.enumerate_functions(bind(&add_function_mapped, ref(functions_offset), _1));
-
-				// ASSERT
-				assert_equal(functions_original.find("get_function_addresses_2")->second.rva + (byte *)0x12345678,
-					functions_offset.find("get_function_addresses_2")->second.body.begin());
-				assert_equal(functions_original.find("get_function_addresses_2")->second.size,
-					functions_offset.find("get_function_addresses_2")->second.body.length());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.rva + (byte *)0x12345678,
-					functions_offset.find("function_with_a_nested_call_2")->second.body.begin());
-				assert_equal(functions_original.find("function_with_a_nested_call_2")->second.size,
-					functions_offset.find("function_with_a_nested_call_2")->second.body.length());
 			}
 		end_test_suite
 	}

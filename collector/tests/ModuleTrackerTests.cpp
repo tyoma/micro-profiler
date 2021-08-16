@@ -22,7 +22,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef const image_info<symbol_info> metadata_t;
+			typedef const image_info metadata_t;
 			typedef shared_ptr<metadata_t> metadata_ptr;
 
 			shared_ptr<symbol_info> get_function_containing(metadata_t &ii, const char *name_part)

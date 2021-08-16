@@ -7,7 +7,6 @@ set(PATCHER_TEST_SOURCES
 	DynamicHookingTests.cpp
 	FunctionPatchTests.cpp
 	guineapigs.cpp
-	helpers.cpp
 	ImagePatchManagerTests.cpp
 	JumperIntelTests.cpp
 	OffsetDisplacedReferencesTestsX86.cpp

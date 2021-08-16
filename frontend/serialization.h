@@ -23,6 +23,7 @@
 #include "function_list.h"
 #include "serialization_context.h"
 #include "symbol_resolver.h"
+#include "tables.h"
 #include "threads_model.h"
 
 #include <common/serialization.h>
@@ -197,18 +198,24 @@ namespace micro_profiler
 		archive(data.callees, context);
 	}
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_resolver &data, unsigned int /*version*/)
+	namespace tables
 	{
-		archive(data._mappings);
-		archive(data._modules);
+		template <typename ArchiveT>
+		inline void serialize(ArchiveT &archive, module_info &data, unsigned int /*version*/)
+		{
+			archive(data.symbols);
+			archive(data.files);
+		}
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_resolver::module_info &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, symbol_resolver &data, unsigned int /*version*/)
 	{
-		archive(data.symbols);
-		archive(data.files);
+		archive(static_cast<containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> &>(*data._mappings));
+		archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::module_info> &>(*data._modules));
+
+		data._modules->invalidated();
+		data._mappings->invalidated();
 	}
 }
 

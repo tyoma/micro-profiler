@@ -89,10 +89,14 @@ namespace micro_profiler
 
 			shared_ptr<mocks::queue> queue;
 			mocks::outbound_channel outbound;
+			std::shared_ptr<tables::modules> modules;
+			std::shared_ptr<tables::module_mappings> mappings;
 
-			init( CreateQueue )
+			init( Init )
 			{
 				queue = make_shared<mocks::queue>();
+				modules = make_shared<tables::modules>();
+				mappings = make_shared<tables::module_mappings>();
 			}
 
 
@@ -181,7 +185,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1), queue);
-				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver);
+				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
 				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
 				shared_ptr<functions_list> fl1 = functions_list::create(123, sr, tmodel),
 					fl2 = functions_list::create(123, sr, tmodel);
@@ -711,7 +715,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1), queue);
-				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver);
+				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
 				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
 				shared_ptr<functions_list> fl1 = functions_list::create(123, sr, tmodel),
 					fl2 = functions_list::create(123, sr, tmodel);
@@ -740,7 +744,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1), queue);
-				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver);
+				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
 				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
 				shared_ptr<functions_list> fl1 = functions_list::create(123, sr, tmodel),
 					fl2 = functions_list::create(123, sr, tmodel);

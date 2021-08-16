@@ -2,6 +2,7 @@
 
 #include <common/protocol.h>
 #include <frontend/symbol_resolver.h>
+#include <frontend/tables.h>
 #include <frontend/threads_model.h>
 
 namespace micro_profiler
@@ -13,7 +14,7 @@ namespace micro_profiler
 			class symbol_resolver : public micro_profiler::symbol_resolver
 			{
 			public:
-				symbol_resolver();
+				symbol_resolver(std::shared_ptr<tables::modules> modules, std::shared_ptr<tables::module_mappings> mappings);
 
 				virtual const std::string &symbol_name_by_va(long_address_t address) const;
 
@@ -39,20 +40,21 @@ namespace micro_profiler
 			template <typename T, size_t n>
 			inline std::shared_ptr<symbol_resolver> symbol_resolver::create(T (&symbols)[n])
 			{
-				std::shared_ptr<symbol_resolver> r(new symbol_resolver);
-				mapped_module_identified basic = { };
-				module_info_metadata metadata;
+				auto modules = std::make_shared<tables::modules>();
+				auto &m1 = (*modules)[static_cast<unsigned>(-1)];
+				auto mappings = std::make_shared<tables::module_mappings>();
 
 				for (size_t i = 0; i != n; ++i)
 				{
 					symbol_info symbol = { symbols[i].second, static_cast<unsigned>(symbols[i].first), 1, };
 
-					metadata.symbols.push_back(symbol);
+					m1.symbols.push_back(symbol);
 				}
-				basic.persistent_id = static_cast<unsigned>(-1);
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata);
-				return r;
+
+				(*mappings)[0u].instance_id = 0;
+				(*mappings)[0u].persistent_id = static_cast<unsigned>(-1);
+				(*mappings)[0u].base = 0;
+				return std::make_shared<mocks::symbol_resolver>(modules, mappings);
 			}
 		}
 	}

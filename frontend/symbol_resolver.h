@@ -30,6 +30,13 @@
 
 namespace micro_profiler
 {
+	namespace tables
+	{
+		struct module_info;
+		struct module_mappings;
+		struct modules;
+	}
+
 	class symbol_resolver
 	{
 	public:
@@ -37,58 +44,32 @@ namespace micro_profiler
 		typedef std::function<void (unsigned persistent_id)> request_metadata_t;
 
 	public:
-		symbol_resolver(const request_metadata_t &requestor);
+		symbol_resolver(std::shared_ptr<const tables::modules> modules,
+			std::shared_ptr<const tables::module_mappings> mappings);
+
 		virtual const std::string &symbol_name_by_va(long_address_t address) const;
 		virtual bool symbol_fileline_by_va(long_address_t address, fileline_t &result) const;
-		void add_mapping(const mapped_module_identified &mapping);
-		void add_metadata(unsigned persistent_id, module_info_metadata &metadata);
 
 	public:
 		wpl::signal<void ()> invalidate;
 
 	private:
-		struct mapped_module_ex : mapped_module_identified
-		{
-			mapped_module_ex(const mapped_module_identified &mm = mapped_module_identified());
-
-			bool requested;
-		};
-
-		struct module_info
-		{
-			typedef std::map<unsigned int /*rva*/, const symbol_info * /*symbol*/> addressed_symbols;
-			typedef containers::unordered_map<unsigned int, std::string> files_map;
-
-			const symbol_info *find_symbol_by_va(unsigned address) const;
-
-			std::vector<symbol_info> symbols;
-			files_map files;
-			mutable addressed_symbols symbol_index;
-		};
-
-		typedef std::map<long_address_t /*base*/, mapped_module_ex> mappings_map;
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_map;
+		const symbol_info *find_symbol_by_va(long_address_t address, const tables::module_info *&module) const;
+		const symbol_info *find_symbol_by_rva(unsigned int persistent_id, unsigned int instance_id, unsigned int rva,
+			const tables::module_info *&module) const;
 
 	private:
-		const symbol_info *find_symbol_by_va(long_address_t address, const module_info *&module) const;
-
-	private:
-		request_metadata_t _requestor;
 		std::string _empty;
-		mutable mappings_map _mappings;
-		modules_map _modules;
+		const std::shared_ptr</*const*/ tables::modules> _modules;
+		const std::shared_ptr</*const*/ tables::module_mappings> _mappings;
 
+		std::vector<mapped_module_identified> _mappings_ordered;
+		mutable std::unordered_map< unsigned int /*instance_id*/, std::map<unsigned int /*rva*/, const symbol_info *> >
+			_symbols_ordered;
+		wpl::slot_connection _modules_invalidation, _mappings_invalidation;
+		
 	private:
 		template <typename ArchiveT>
 		friend void serialize(ArchiveT &archive, symbol_resolver &data, unsigned int /*version*/);
-
-		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, module_info &data, unsigned int /*version*/);
 	};
-
-
-
-	inline symbol_resolver::mapped_module_ex::mapped_module_ex(const mapped_module_identified &mmi)
-		: mapped_module_identified(mmi), requested(false)
-	{ }
 }

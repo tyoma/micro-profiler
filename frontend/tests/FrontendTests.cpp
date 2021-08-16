@@ -5,6 +5,7 @@
 
 #include <common/serialization.h>
 #include <frontend/function_list.h>
+#include <frontend/tables.h>
 #include <frontend/threads_model.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
@@ -22,7 +23,10 @@ namespace micro_profiler
 	{	return lhs.executable == rhs.executable && lhs.ticks_per_second == rhs.ticks_per_second;	}
 
 	inline bool operator ==(const frontend_ui_context &lhs, const frontend_ui_context &rhs)
-	{	return lhs.process_info == rhs.process_info && lhs.model == rhs.model;	}
+	{
+		return lhs.process_info == rhs.process_info && lhs.model == rhs.model
+			&& lhs.modules == rhs.modules && lhs.module_mappings == rhs.module_mappings;
+	}
 
 	namespace tests
 	{
@@ -55,10 +59,30 @@ namespace micro_profiler
 			template <typename T>
 			function<void (ipc::server_session::serializer &s)> format(const T &v)
 			{	return [v] (ipc::server_session::serializer &s) {	s(v);	};	}
+
+			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
+			module_info_metadata create_metadata_info(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
+			{
+				module_info_metadata mi;
+
+				mi.symbols = mkvector(symbols);
+				mi.source_files = mkvector(files);
+				return mi;
+			}
+
+			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
+			tables::module_info create_module_info(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
+			{
+				tables::module_info mi;
+
+				mi.symbols = mkvector(symbols);
+				mi.files = unordered_map<unsigned, string>(begin(files), end(files));
+				return mi;
+			}
 		}
 
-		begin_test_suite( FrontendTests )
 
+		begin_test_suite( FrontendTests )
 			shared_ptr<mocks::queue> queue;
 			frontend_ui_context context;
 			shared_ptr<ipc::server_session> emulator;
@@ -106,6 +130,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(make_initialization_data("krnl386.exe", 0xF00000000ull), context2.process_info);
 				assert_not_null(context2.model);
+				assert_not_null(context2.modules);
+				assert_not_null(context2.module_mappings);
 
 				// INIT
 				const auto reference = context2;
@@ -396,7 +422,7 @@ namespace micro_profiler
 
 				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
 					req.respond(response_modules_loaded, [] (ipc::server_session::serializer &s) {
-						s(plural + create_mapping(17u, 0u) + create_mapping(99u, 0x1000) + create_mapping(1000u, 0x1900));
+						s(plural + create_mapping(0, 17u, 0u) + create_mapping(1, 99u, 0x1000) + create_mapping(2, 1000u, 0x1900));
 					});
 					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
 						s(make_single_threaded(plural
@@ -465,7 +491,7 @@ namespace micro_profiler
 
 				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
 					req.respond(response_modules_loaded, [] (ipc::server_session::serializer &s) {
-						s(plural + create_mapping(17u, 0u));
+						s(plural + create_mapping(0, 17u, 0u));
 					});
 					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
 						pair< unsigned, unthreaded_statistic_types::function_detailed > data[] = {
@@ -489,6 +515,153 @@ namespace micro_profiler
 				assert_equal(0, called);
 			}
 
+
+			test( ModuleMetadataIsRequestViaModulesTable )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector<unsigned> log;
+
+				emulator->message(init, format(make_initialization_data("", 1)));
+				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &, unsigned persistent_id) {
+					log.push_back(persistent_id);
+				});
+
+				auto conn1 = context.modules->invalidated += [] {	assert_is_false(true);	};
+				auto conn2 = context.modules->ready += [] (unsigned) {	assert_is_false(true);	};
+
+				// ACT
+				context.modules->request_presence(11u);
+
+				// ASSERT
+				unsigned reference1[] = {	11u,	};
+
+				assert_equal(reference1, log);
+
+				// ACT
+				context.modules->request_presence(17u);
+				context.modules->request_presence(191u);
+				context.modules->request_presence(13u);
+
+				// ASSERT
+				unsigned reference2[] = {	11u, 17u, 191u, 13u,	};
+
+				assert_equal(reference2, log);
+			}
+
+
+			test( ModuleMetadataIsNotRequestAfterTheFrontendIsDestructed )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector<unsigned> log;
+
+				emulator->message(init, format(make_initialization_data("", 1)));
+				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &, unsigned) {
+
+				// ASSERT
+					assert_is_false(true);
+				});
+
+				// ACT / ASSERT
+				frontend_.reset();
+				context.modules->request_presence(11u);
+			}
+
+
+			test( MetadataIsRequestedOncePerModule )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector<unsigned> log;
+
+				emulator->message(init, format(make_initialization_data("", 1)));
+				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &, unsigned persistent_id) {
+					log.push_back(persistent_id);
+				});
+
+				// ACT
+				context.modules->request_presence(11u);
+				context.modules->request_presence(17u);
+				context.modules->request_presence(19u);
+
+				context.modules->request_presence(17u);
+				context.modules->request_presence(19u);
+				context.modules->request_presence(17u);
+				context.modules->request_presence(11u);
+
+				// ASSERT
+				unsigned reference[] = {	11u, 17u, 19u,	};
+
+				assert_equal(reference, log);
+			}
+
+
+			test( MetadataResponseIsProperlyDeserialized )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				auto invalidations = 0;
+				vector<unsigned> log;
+				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &req, unsigned persistent_id) {
+					req.respond(response_module_metadata, [persistent_id] (ipc::server_session::serializer &s) {
+						symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
+							symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
+							symbols1000[] = {	{	"baz", 0x0010, 1	},	};
+						pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
+							files99[] = {	make_pair(3, "main.cpp"),	},
+							files1000[] = {	make_pair(7, "local.cpp"),	};
+
+						switch (persistent_id)
+						{
+						case 17:	s(17u), s(create_metadata_info(symbols17, files17));	break;
+						case 99:	s(99u), s(create_metadata_info(symbols99, files99));	break;
+						case 1000:	s(1000u), s(create_metadata_info(symbols1000, files1000));	break;
+						}
+					});
+				});
+
+				emulator->message(init, format(make_initialization_data("", 1)));
+
+				auto conn1 = context.modules->invalidated += [&] {	invalidations++;	};
+				auto conn2 = context.modules->ready += [&] (unsigned persistent_id) {	log.push_back(persistent_id);	};
+
+				// ACT
+				context.modules->request_presence(1000);
+
+				// ASSERT
+				unsigned reference1[] = {	1000u,	};
+
+				assert_equal(1, invalidations);
+				assert_equal(reference1, log);
+				assert_equal(1u, context.modules->size());
+
+				const auto i1000 = context.modules->find(1000);
+				assert_not_equal(context.modules->end(), i1000);
+				assert_equal(1u, i1000->second.symbols.size());
+				assert_equal(1u, i1000->second.files.size());
+
+				// ACT
+				context.modules->request_presence(17);
+				context.modules->request_presence(99);
+
+				// ASSERT
+				unsigned reference2[] = {	1000u, 17u, 99u,	};
+
+				assert_equal(3, invalidations);
+				assert_equal(reference2, log);
+				assert_equal(3u, context.modules->size());
+
+				const auto i17 = context.modules->find(17);
+				assert_not_equal(context.modules->end(), i17);
+				assert_equal(1u, i17->second.symbols.size());
+				assert_equal(2u, i17->second.files.size());
+
+				const auto i99 = context.modules->find(99);
+				assert_not_equal(context.modules->end(), i99);
+				assert_equal(2u, i99->second.symbols.size());
+				assert_equal(1u, i99->second.files.size());
+			}
 		end_test_suite
 	}
 }

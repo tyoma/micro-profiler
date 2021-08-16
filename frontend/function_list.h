@@ -24,6 +24,12 @@
 
 namespace micro_profiler
 {
+	namespace tables
+	{
+		struct statistics;
+	}
+
+
 	struct serialization_context_file_v3;
 	class threads_model;
 
@@ -47,6 +53,8 @@ namespace micro_profiler
 		typedef statistic_types::map_detailed::value_type value_type;
 
 	public:
+		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval,
+			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);
 		virtual ~functions_list();
 
 		void clear();
@@ -74,6 +82,7 @@ namespace micro_profiler
 		using base::_tick_interval;
 		std::shared_ptr<statistic_types::map_detailed> _statistics;
 		std::shared_ptr<linked_statistics_list_t> _linked;
+		wpl::slot_connection _connection;
 
 	private:
 		template <typename ArchiveT, typename ContextT>

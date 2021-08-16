@@ -85,6 +85,7 @@
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\system_stylesheet.h" />
+    <ClInclude Include="..\tables.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
   </ItemGroup>

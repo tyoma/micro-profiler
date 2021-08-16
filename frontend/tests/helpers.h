@@ -1,6 +1,7 @@
 #pragma once
 
 #include <frontend/primitives.h>
+#include <frontend/tables.h>
 
 #include <common/module.h>
 #include <test-helpers/helpers.h>
@@ -93,9 +94,9 @@ namespace micro_profiler
 			ut::are_equivalent(reference_rows, actual_rows, location);
 		}
 
-		inline mapped_module_identified create_mapping(unsigned peristent_id, long_address_t base)
+		inline mapped_module_identified create_mapping(unsigned instance_id, unsigned peristent_id, long_address_t base)
 		{
-			mapped_module_identified mmi = { 0u, peristent_id, std::string(), base, };
+			mapped_module_identified mmi = { instance_id, peristent_id, std::string(), base, };
 			return mmi;
 		}
 

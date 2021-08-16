@@ -23,6 +23,7 @@
 #include <frontend/function_list.h>
 #include <frontend/serialization.h>
 #include <frontend/symbol_resolver.h>
+#include <frontend/tables.h>
 
 #include <common/memory.h>
 #include <logger/log.h>
@@ -38,25 +39,68 @@ namespace micro_profiler
 	namespace
 	{
 		const mt::milliseconds c_updateInterval(25);
+
+		template <typename ContainerT>
+		typename ContainerT::iterator push_new(ContainerT &container)
+		{	return container.insert(container.end(), typename ContainerT::value_type());	}
 	}
 
 	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
-		: client_session(outbound), _queue(queue)
+		: client_session(outbound), _modules(make_shared<tables::modules>()),
+			_mappings(make_shared<tables::module_mappings>()), _queue(queue)
 	{
-		subscribe(_requests[0], init, [this] (client_session::deserializer &d) {
-			if (_ui_context.model)
+		subscribe(*push_new(_requests), init, [this] (client_session::deserializer &d) {
+			if (_model)
 			{
 				LOG(PREAMBLE "repeated initialization message - ignoring...");
 				return;
 			}
-			d(_ui_context.process_info);
-			_ui_context.model = functions_list::create(_ui_context.process_info.ticks_per_second, get_resolver(),
+			d(_process_info);
+			_model = functions_list::create(_process_info.ticks_per_second, make_shared<symbol_resolver>(_modules, _mappings),
 				get_threads());
-			initialized(_ui_context);
+
+			frontend_ui_context ctx = {
+				_process_info,
+				_model = functions_list::create(_process_info.ticks_per_second, make_shared<symbol_resolver>(_modules, _mappings),
+					get_threads()),
+				_mappings,
+				_modules,
+			};
+
+			initialized(ctx);
 			request_full_update();
 			LOG(PREAMBLE "initialized...")
-				% A(this) % A(_ui_context.process_info.executable) % A(_ui_context.process_info.ticks_per_second);
+				% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
 		});
+
+		_presence_request = _modules->request_presence += [this] (unsigned int persistent_id_) {
+			auto self = this;
+			auto persistent_id = persistent_id_;
+
+			if (_module_requests.find(persistent_id) != _module_requests.end())
+				return;
+
+			request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
+				[persistent_id, self] (ipc::client_session::deserializer &d) {
+
+				unsigned int dummy;
+				module_info_metadata mmetadata;
+
+				d(dummy);
+				d(mmetadata);
+
+				auto &m = (*self->_modules)[persistent_id];
+
+				swap(m.symbols, mmetadata.symbols);
+				m.files = unordered_map<unsigned int, string>(mmetadata.source_files.begin(), mmetadata.source_files.end());
+
+				self->_modules->invalidated();
+				self->_modules->ready(persistent_id);
+
+				LOG(PREAMBLE "received metadata...") % A(self) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
+			});
+			LOG(PREAMBLE "requested metadata from remote...") % A(self) % A(persistent_id);
+		};
 		LOG(PREAMBLE "constructed...") % A(this);
 	}
 
@@ -76,12 +120,13 @@ namespace micro_profiler
 
 			d(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				get_resolver()->add_mapping(*i);
+				(*_mappings)[i->instance_id] = *i;
+			_mappings->invalidated();
 		};
 		auto update_callback = [this] (client_session::deserializer &d) {
 			auto self = this;
 
-			d(*_ui_context.model, _serialization_context);
+			d(*_model, _serialization_context);
 			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
 			_queue.schedule([self] {	self->request_full_update();	}, c_updateInterval);
 		};
@@ -90,38 +135,7 @@ namespace micro_profiler
 			make_pair(response_statistics_update, update_callback),
 		};
 
-		request(_requests[1], request_update, 0, callbacks);
-	}
-
-	shared_ptr<symbol_resolver> frontend::get_resolver()
-	{
-		if (!_resolver)
-		{
-			weak_ptr<frontend> wself = shared_from_this();
-
-			_resolver.reset(new symbol_resolver([this, wself] (unsigned int persistent_id) {
-				if (auto self_ = wself.lock())
-				{
-					auto self = this;
-					auto req = _dynamic_requests.insert(_dynamic_requests.end(), shared_ptr<void>());
-
-					request(*req, request_module_metadata, persistent_id, response_module_metadata,
-						[persistent_id, self, req] (ipc::client_session::deserializer &d) {
-
-						unsigned int dummy;
-						module_info_metadata mmetadata;
-
-						d(dummy);
-						d(mmetadata);
-						LOG(PREAMBLE "received metadata...") % A(self) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
-						self->_resolver->add_metadata(persistent_id, mmetadata);
-						self->_dynamic_requests.erase(req);
-					});
-					LOG(PREAMBLE "requested metadata from remote...") % A(self) % A(persistent_id);
-				}
-			}));
-		}
-		return _resolver;
+		request(_update_request, request_update, 0, callbacks);
 	}
 
 	shared_ptr<threads_model> frontend::get_threads()
@@ -130,13 +144,13 @@ namespace micro_profiler
 		{
 			_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
 				auto self = this;
-				auto req = _dynamic_requests.insert(_dynamic_requests.end(), shared_ptr<void>());
+				auto req = push_new(_requests);
 
 				request(*req, request_threads_info, threads, response_threads_info,
 					[self, req] (ipc::client_session::deserializer &d) {
 
 					d(*self->_threads);
-					self->_dynamic_requests.erase(req);
+					self->_requests.erase(req);
 				});
 			}));
 		}

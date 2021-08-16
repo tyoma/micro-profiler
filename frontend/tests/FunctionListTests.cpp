@@ -112,12 +112,11 @@ namespace micro_profiler
 			vector_adapter _buffer;
 			strmd::serializer<vector_adapter, packer> ser;
 			strmd::deserializer<vector_adapter, packer> dser;
+			std::shared_ptr<tables::modules> modules;
+			std::shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
 			scontext::wire dummy_context;
-
-			function<void (unsigned persistent_id)> get_requestor()
-			{	return [] (unsigned /*persistent_id*/) { };	}
 
 			FunctionListTests()
 				: ser(_buffer), dser(_buffer)
@@ -125,7 +124,9 @@ namespace micro_profiler
 
 			init( CreatePrerequisites )
 			{
-				resolver.reset(new mocks::symbol_resolver);
+				modules = make_shared<tables::modules>();
+				mappings = make_shared<tables::module_mappings>();
+				resolver.reset(new mocks::symbol_resolver(modules, mappings));
 				tmodel.reset(new mocks::threads_model);
 			}
 

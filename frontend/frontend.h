@@ -24,8 +24,8 @@
 #include "serialization_context.h"
 
 #include <common/noncopyable.h>
-#include <common/pod_vector.h>
 #include <common/protocol.h>
+#include <common/unordered_map.h>
 #include <functional>
 #include <ipc/client_session.h>
 #include <list>
@@ -33,10 +33,16 @@
 
 namespace micro_profiler
 {
+	namespace tables
+	{
+		struct module_mappings;
+		struct modules;
+	}
+
 	class symbol_resolver;
 	class threads_model;
 
-	class frontend : public ipc::client_session, noncopyable, public std::enable_shared_from_this<frontend>
+	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
 		frontend(ipc::channel &outbound, std::shared_ptr<scheduler::queue> queue);
@@ -51,17 +57,20 @@ namespace micro_profiler
 
 		void request_full_update();
 
-		std::shared_ptr<symbol_resolver> get_resolver();
 		std::shared_ptr<threads_model> get_threads();
 
 	private:
-		frontend_ui_context _ui_context;
-		std::shared_ptr<symbol_resolver> _resolver;
+		initialization_data _process_info;
+		std::shared_ptr<tables::modules> _modules;
+		std::shared_ptr<tables::module_mappings> _mappings;
+		std::shared_ptr<functions_list> _model;
 		std::shared_ptr<threads_model> _threads;
-		std::shared_ptr<void> _requests[5];
 		scontext::wire _serialization_context;
 		scheduler::private_queue _queue;
 
-		std::list< std::shared_ptr<void> > _dynamic_requests;
+		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;
+		std::list< std::shared_ptr<void> > _requests;
+		std::shared_ptr<void> _update_request;
+		wpl::slot_connection _presence_request;
 	};
 }

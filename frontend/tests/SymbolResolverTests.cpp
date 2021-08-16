@@ -2,11 +2,8 @@
 
 #include "helpers.h"
 
-#include <frontend/serialization.h>
-
 #include <common/protocol.h>
-#include <strmd/deserializer.h>
-#include <strmd/serializer.h>
+#include <frontend/tables.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -18,19 +15,47 @@ namespace micro_profiler
 	namespace tests
 	{
 		begin_test_suite( SymbolResolverTests )
+			std::shared_ptr<tables::modules> modules;
+			std::shared_ptr<tables::module_mappings> mappings;
 			vector<unsigned> _requested;
+			wpl::slot_connection request_issued;
 
-			function<void (unsigned persistent_id)> get_requestor()
+			init( Init )
 			{
-				return [this] (unsigned persistent_id) {
+				modules = make_shared<tables::modules>();
+				mappings = make_shared<tables::module_mappings>();
+				request_issued = modules->request_presence += [this] (unsigned persistent_id) {
 					_requested.push_back(persistent_id);
 				};
+			}
+
+			void add_mapping(const mapped_module_identified &mapping)
+			{
+				assert_is_true(mappings->insert(make_pair(mapping.instance_id, mapping)).second);
+				mappings->invalidated();
+			}
+
+			template <typename SymbolT, size_t symbols_size>
+			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size])
+			{
+				(*modules)[persistent_id].symbols = mkvector(symbols);
+				(*modules)[persistent_id].files.clear();
+				modules->invalidated();
+			}
+
+			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
+			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
+			{
+				(*modules)[persistent_id].symbols = mkvector(symbols);
+				(*modules)[persistent_id].files = containers::unordered_map<unsigned int /*file_id*/, std::string>(
+					begin(files), end(files));
+				modules->invalidated();
 			}
 
 			test( EmptyNameIsReturnedWhenNoMetadataIsLoaded )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x00F));
@@ -41,13 +66,11 @@ namespace micro_profiler
 			test( EmptyNameIsReturnedForFunctionsBeforeTheirBegining )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = { };
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
-				module_info_metadata metadata = { mkvector(symbols), };
 
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata);
+				add_mapping(create_mapping(0, 1u, 0));
+				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x00F));
@@ -58,13 +81,11 @@ namespace micro_profiler
 			test( EmptyNameIsReturnedForFunctionsPassTheEnd )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = { };
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
-				module_info_metadata metadata = { mkvector(symbols), };
 
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata);
+				add_mapping(create_mapping(0, 1u, 0));
+				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x013));
@@ -75,16 +96,14 @@ namespace micro_profiler
 			test( FunctionsLoadedThroughAsMetadataAreSearchableByAbsoluteAddress )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = { };
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
-				module_info_metadata metadata = { mkvector(symbols), };
 				auto invalidated = 0;
 				auto conn = r->invalidate += [&] {	invalidated++;	};
 
 				// ACT
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata);
+				add_mapping(create_mapping(0, 1u, 0));
+				add_metadata(1u, symbols);
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1010));
@@ -94,8 +113,8 @@ namespace micro_profiler
 				assert_equal(1, invalidated);
 
 				// ACT
-				r->add_metadata(5, metadata);
-				r->add_metadata(6, metadata);
+				add_metadata(5, symbols);
+				add_metadata(6, symbols);
 
 				// ASSERT
 				assert_equal(3, invalidated);
@@ -104,25 +123,20 @@ namespace micro_profiler
 			test( FunctionsLoadedThroughAsMetadataAreOffsetAccordingly )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = create_mapping(1u, 0x1100000);
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
-				module_info_metadata metadata = { mkvector(symbols), };
-
-				r->add_metadata(1, metadata);
+				
+				add_metadata(1, symbols);
 
 				// ACT
-				r->add_mapping(basic);
+				add_mapping(create_mapping(0, 1u, 0x1100000));
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
 				assert_equal("bar", r->symbol_name_by_va(0x1100101));
 
-				// INIT
-				basic.base = 0x1100501;
-
 				// ACT
-				r->add_mapping(basic);
+				add_mapping(create_mapping(1, 1u, 0x1100501));
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
@@ -136,13 +150,11 @@ namespace micro_profiler
 			test( ConstantReferenceFromResolverIsTheSame )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = { };
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
-				module_info_metadata metadata = { mkvector(symbols), };
 
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata);
+				add_mapping(create_mapping(0, 1u, 0));
+				add_metadata(1u, symbols);
 
 				// ACT
 				const string *name1_1 = &r->symbol_name_by_va(0x0010);
@@ -163,7 +175,7 @@ namespace micro_profiler
 			test( NoFileLineInformationIsReturnedForInvalidAddress )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_resolver::fileline_t dummy;
 
 				// ACT / ASSERT
@@ -174,8 +186,7 @@ namespace micro_profiler
 			test( FileLineInformationIsReturnedBySymolProvider )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = { };
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 11, 121 },
 					{ "b", 0x101, 5, 1, 1 },
@@ -185,11 +196,10 @@ namespace micro_profiler
 				pair<unsigned, string> files[] = {
 					make_pair(11, "zoo.cpp"), make_pair(7, "c:/umi.cpp"), make_pair(1, "d:\\dev\\kloo.cpp"),
 				};
-				module_info_metadata metadata = { mkvector(symbols), mkvector(files) };
 				symbol_resolver::fileline_t results[4];
 
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata);
+				add_mapping(create_mapping(0, 1u, 0));
+				add_metadata(1u, symbols, files);
 
 				// ACT / ASSERT
 				assert_is_true(r->symbol_fileline_by_va(0x010, results[0]));
@@ -212,8 +222,7 @@ namespace micro_profiler
 			test( FileLineInformationIsRebasedForNewMetadata )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = { };
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols1[] = {
 					{ "a", 0x010, 3, 11, 121 },
 					{ "b", 0x101, 5, 1, 1 },
@@ -232,22 +241,15 @@ namespace micro_profiler
 				pair<unsigned, string> files2[] = {
 					make_pair(1, "ZOO.cpp"), make_pair(7, "/projects/umi.cpp"), make_pair(50, "d:\\dev\\abc.cpp"),
 				};
-				module_info_metadata metadata[] = { 
-					{ mkvector(symbols1), mkvector(files1) },
-					{ mkvector(symbols2), mkvector(files2) },
-				};
 				symbol_resolver::fileline_t results[8];
 
-				basic.persistent_id = 1;
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata[0]);
-
-				basic.persistent_id = 2;
-				basic.base = 0x8000;
+				add_mapping(create_mapping(0, 1u, 0));
+				add_metadata(1u, symbols1, files1);
 
 				// ACT / ASSERT
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata[1]);
+				add_mapping(create_mapping(1, 2u, 0x8000));
+				add_metadata(2u, symbols2, files2);
+
 				r->symbol_fileline_by_va(0x010, results[0]);
 				r->symbol_fileline_by_va(0x101, results[1]);
 				r->symbol_fileline_by_va(0x158, results[2]);
@@ -273,61 +275,61 @@ namespace micro_profiler
 			}
 
 
-			test( SymbolResolverIsSerializable )
-			{
-				// INIT
-				vector_adapter buffer;
-				strmd::serializer<vector_adapter, packer> ser(buffer);
-				strmd::deserializer<vector_adapter, packer> dser(buffer);
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				mapped_module_identified basic = { };
-				symbol_info symbols[] = {
-					{ "a", 0x010, 3, 11, 121 },
-					{ "b", 0x101, 5, 1, 1 },
-					{ "cccc", 0x158, 5, 7, 71 },
-					{ "ddd", 0x188, 5, 7, 713 },
-				};
-				pair<unsigned, string> files[] = {
-					make_pair(11, "zoo.cpp"), make_pair(1, "c:/umi.cpp"), make_pair(7, "d:\\dev\\kloo.cpp"),
-				};
-				module_info_metadata metadata = { mkvector(symbols), mkvector(files) };
-				symbol_resolver::fileline_t results[4];
+			//test( SymbolResolverIsSerializable )
+			//{
+			//	// INIT
+			//	vector_adapter buffer;
+			//	strmd::serializer<vector_adapter, packer> ser(buffer);
+			//	strmd::deserializer<vector_adapter, packer> dser(buffer);
+			//	shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
+			//	mapped_module_identified basic = { };
+			//	symbol_info symbols[] = {
+			//		{ "a", 0x010, 3, 11, 121 },
+			//		{ "b", 0x101, 5, 1, 1 },
+			//		{ "cccc", 0x158, 5, 7, 71 },
+			//		{ "ddd", 0x188, 5, 7, 713 },
+			//	};
+			//	pair<unsigned, string> files[] = {
+			//		make_pair(11, "zoo.cpp"), make_pair(1, "c:/umi.cpp"), make_pair(7, "d:\\dev\\kloo.cpp"),
+			//	};
+			//	module_info_metadata metadata = { mkvector(symbols), mkvector(files) };
+			//	symbol_resolver::fileline_t results[4];
 
-				r->add_mapping(basic);
-				r->add_metadata(basic.persistent_id, metadata);
+			//	add_mapping(basic);
+			//	add_metadata(basic.persistent_id, metadata);
 
-				// ACT
-				shared_ptr<symbol_resolver> r2(new symbol_resolver(get_requestor()));
+			//	// ACT
+			//	shared_ptr<symbol_resolver> r2(new symbol_resolver(modules, mappings));
 
-				ser(*r);
-				dser(*r2);
+			//	ser(*r);
+			//	dser(*r2);
 
-				// ASSERT
-				assert_equal("a", r2->symbol_name_by_va(0x010));
-				assert_equal("b", r2->symbol_name_by_va(0x101));
-				assert_equal("cccc", r2->symbol_name_by_va(0x158));
-				assert_equal("ddd", r2->symbol_name_by_va(0x188));
+			//	// ASSERT
+			//	assert_equal("a", r2->symbol_name_by_va(0x010));
+			//	assert_equal("b", r2->symbol_name_by_va(0x101));
+			//	assert_equal("cccc", r2->symbol_name_by_va(0x158));
+			//	assert_equal("ddd", r2->symbol_name_by_va(0x188));
 
-				assert_is_true(r2->symbol_fileline_by_va(0x010, results[0]));
-				assert_is_true(r2->symbol_fileline_by_va(0x101, results[1]));
-				assert_is_true(r2->symbol_fileline_by_va(0x158, results[2]));
-				assert_is_true(r2->symbol_fileline_by_va(0x188, results[3]));
+			//	assert_is_true(r2->symbol_fileline_by_va(0x010, results[0]));
+			//	assert_is_true(r2->symbol_fileline_by_va(0x101, results[1]));
+			//	assert_is_true(r2->symbol_fileline_by_va(0x158, results[2]));
+			//	assert_is_true(r2->symbol_fileline_by_va(0x188, results[3]));
 
-				symbol_resolver::fileline_t reference[] = {
-					make_pair("zoo.cpp", 121),
-					make_pair("c:/umi.cpp", 1),
-					make_pair("d:\\dev\\kloo.cpp", 71),
-					make_pair("d:\\dev\\kloo.cpp", 713),
-				};
+			//	symbol_resolver::fileline_t reference[] = {
+			//		make_pair("zoo.cpp", 121),
+			//		make_pair("c:/umi.cpp", 1),
+			//		make_pair("d:\\dev\\kloo.cpp", 71),
+			//		make_pair("d:\\dev\\kloo.cpp", 713),
+			//	};
 
-				assert_equal(reference, results);
-			}
+			//	assert_equal(reference, results);
+			//}
 
 
 			test( FilelineIsNotAvailableForMissingFunctions )
 			{
 				// INIT
-				symbol_resolver r(get_requestor());
+				symbol_resolver r(modules, mappings);
 				symbol_resolver::fileline_t result;
 
 				// ACT / ASSERT
@@ -338,19 +340,17 @@ namespace micro_profiler
 			test( FilelineIsNotAvailableForFunctionsWithMissingFiles )
 			{
 				// INIT
-				symbol_resolver r(get_requestor());
+				symbol_resolver r(modules, mappings);
 				symbol_info symbols[] = {
 					{ "a", 0x010, 3, 11, 121 },
 					{ "b", 0x101, 5, 1, 1 },
 					{ "cccc", 0x158, 5, 0, 71 },
 					{ "ddd", 0x188, 5, 0, 713 },
 				};
-				mapped_module_identified basic = { };
-				module_info_metadata metadata = { mkvector(symbols), };
 				symbol_resolver::fileline_t result;
 
-				r.add_mapping(basic);
-				r.add_metadata(basic.persistent_id, metadata);
+				add_mapping(create_mapping(0, 1u, 0));
+				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
 				assert_is_false(r.symbol_fileline_by_va(0x010, result));
@@ -364,12 +364,12 @@ namespace micro_profiler
 			{
 				// INIT
 				vector_adapter buffer;
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 
-				r->add_mapping(create_mapping(11, 0x120050));
-				r->add_mapping(create_mapping(12, 0x120100));
-				r->add_mapping(create_mapping(11711, 0x200000));
-				r->add_mapping(create_mapping(100, 0x310000));
+				add_mapping(create_mapping(0, 11, 0x120050));
+				add_mapping(create_mapping(1, 12, 0x120100));
+				add_mapping(create_mapping(2, 11711, 0x200000));
+				add_mapping(create_mapping(3, 100, 0x310000));
 
 				// ACT
 				r->symbol_name_by_va(0x120060);
@@ -388,51 +388,6 @@ namespace micro_profiler
 
 				assert_equal(reference2, _requested);
 			}
-
-
-			test( MetadataIsNotRequestedIfAlreadyPresent )
-			{
-				// INIT
-				vector_adapter buffer;
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				module_info_metadata metadata;
-
-				r->add_mapping(create_mapping(100, 0x120050));
-				r->add_mapping(create_mapping(2, 0x120100));
-
-				r->add_metadata(100, metadata);
-
-				// ACT
-				r->symbol_name_by_va(0x1200A0);
-
-				// ASSERT
-				assert_is_empty(_requested);
-			}
-
-
-			test( MetadataIsOnlyRequestedOncePerModule )
-			{
-				// INIT
-				vector_adapter buffer;
-				shared_ptr<symbol_resolver> r(new symbol_resolver(get_requestor()));
-				module_info_metadata metadata;
-
-				r->add_mapping(create_mapping(100, 0x120050));
-				r->add_mapping(create_mapping(2, 0x120100));
-
-				// ACT
-				r->symbol_name_by_va(0x120100);
-				r->symbol_name_by_va(0x120050);
-				r->symbol_name_by_va(0x1200A0);
-				r->symbol_name_by_va(0x1200A0);
-				r->symbol_name_by_va(0x120101);
-
-				// ASSERT
-				unsigned reference[] = { 2, 100, };
-
-				assert_equal(reference, _requested);
-			}
-
 
 		end_test_suite
 	}

@@ -1,12 +1,8 @@
 #include <frontend/function_list.h>
 
-#include <frontend/persistence.h>
-
 #include "helpers.h"
 #include "mocks.h"
 
-#include <strmd/serializer.h>
-#include <strmd/deserializer.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -15,6 +11,14 @@ using namespace std;
 
 namespace micro_profiler
 {
+	template <typename T>
+	inline void operator +=(tables::statistics &s, const T &delta)
+	{
+		for (auto i = begin(delta); i != end(delta); ++i)
+			s[i->first] += i->second;
+		s.invalidated();
+	}
+
 	namespace tests
 	{
 		namespace
@@ -28,20 +32,26 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( FunctionListPiechartTests )
-			vector_adapter _buffer;
-			strmd::serializer<vector_adapter, packer> ser;
-			strmd::deserializer<vector_adapter, packer> dser;
+			std::shared_ptr<tables::statistics> statistics;
+			std::shared_ptr<tables::modules> modules;
+			std::shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
-			scontext::wire dummy_context;
 
-			FunctionListPiechartTests()
-				: ser(_buffer), dser(_buffer)
-			{	}
+			shared_ptr<functions_list> create_functions_list(const statistic_types::map_detailed &s,
+				timestamp_t ticks_per_second = 500)
+			{
+				static_cast<statistic_types::map_detailed &>(*statistics) = s;
+				return make_shared<functions_list>(statistics, 1.0 / ticks_per_second,
+					make_shared<symbol_resolver>(modules, mappings), tmodel);
+			}
 
 			init( CreatePrerequisites )
 			{
-				resolver.reset(new mocks::symbol_resolver);
+				statistics = make_shared<tables::statistics>();
+				modules = make_shared<tables::modules>();
+				mappings = make_shared<tables::module_mappings>();
+				resolver.reset(new mocks::symbol_resolver(modules, mappings));
 				tmodel.reset(new mocks::threads_model);
 			}
 
@@ -49,10 +59,7 @@ namespace micro_profiler
 			test( NonNullPiechartModelIsReturnedFromFunctionsList )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				shared_ptr<functions_list> fl(functions_list::create(1, mocks::symbol_resolver::create(symbols), tmodel));
+				auto fl = create_functions_list((statistic_types::map_detailed()));
 
 				// ACT
 				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
@@ -65,17 +72,12 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForTimesCalled )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
 				statistic_types::map_detailed s;
 
 				s[addr(5)].times_called = 123, s[addr(17)].times_called = 127, s[addr(13)].times_called = 12, s[addr(123)].times_called = 12000;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-
-				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
+				auto fl = create_functions_list(s);
+				auto m = fl->get_column_series();
 
 				// ACT
 				fl->set_order(columns::times_called, false);
@@ -102,28 +104,21 @@ namespace micro_profiler
 			test( FunctionListUpdateLeadsToPiechartModelUpdateAndSignal )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
-				shared_ptr<functions_list> fl(functions_list::create(500, mocks::symbol_resolver::create(symbols), tmodel));
-				unthreaded_statistic_types::map_detailed s;
-				int invalidated_count = 0;
+				statistic_types::map_detailed s;
+				auto invalidated_count = 0;
 
-				s[5].times_called = 123, s[17].times_called = 127, s[13].times_called = 12, s[123].times_called = 12000;
+				s[addr(5)].times_called = 123, s[addr(17)].times_called = 127, s[addr(13)].times_called = 12, s[addr(123)].times_called = 12000;
 
-				serialize_single_threaded(ser, s);
-				dser(*fl, dummy_context);
-				s.clear();
-
-				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
+				auto fl = create_functions_list(s);
+				auto m = fl->get_column_series();
 
 				fl->set_order(columns::times_called, false);
+				s.clear(), s[addr(120)].times_called = 11001;
 
-				s[120].times_called = 11001;
-				serialize_single_threaded(ser, s);
-
-				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);
+				auto conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT
-				dser(*fl, dummy_context);
+				*statistics += s;
 
 				// ASSERT
 				assert_equal(1, invalidated_count);
@@ -139,19 +134,18 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForExclusiveTime )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
 				statistic_types::map_detailed s;
 
 				s[addr(5)].exclusive_time = 13, s[addr(17)].exclusive_time = 127, s[addr(13)].exclusive_time = 12;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl1 = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m1 = fl1->get_column_series();
-				
+				auto fl1 = create_functions_list(s, 500);
+				auto m1 = fl1->get_column_series();
+
+				auto statistics2 = make_shared<tables::statistics>();
 				s[addr(123)].exclusive_time = 12000;
-				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl2 = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m2 = fl2->get_column_series();
+				static_cast<statistic_types::map_detailed &>(*statistics2) = s;
+				auto fl2 = make_shared<functions_list>(statistics2, 0.01, make_shared<symbol_resolver>(modules, mappings), tmodel);
+				auto m2 = fl2->get_column_series();
 
 				// ACT
 				fl1->set_order(columns::exclusive, false);
@@ -173,7 +167,6 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForTheRestOfTheFields )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
 				statistic_types::map_detailed s;
 
 				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
@@ -181,13 +174,13 @@ namespace micro_profiler
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
 				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl1 = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m1 = fl1->get_column_series();
-				
-				emulate_save(ser, 1000, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl2 = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m2 = fl2->get_column_series();
+				auto fl1 = create_functions_list(s, 500);
+				auto m1 = fl1->get_column_series();
+
+				auto statistics2 = make_shared<tables::statistics>();
+				static_cast<statistic_types::map_detailed &>(*statistics2) = s;
+				auto fl2 = make_shared<functions_list>(statistics2, 0.001, make_shared<symbol_resolver>(modules, mappings), tmodel);
+				auto m2 = fl2->get_column_series();
 
 				// ACT
 				fl1->set_order(columns::inclusive, false);
@@ -234,7 +227,6 @@ namespace micro_profiler
 			test( PiechartForUnsupportedColumnsIsSimplyZero )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
 				statistic_types::map_detailed s;
 
 				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
@@ -242,9 +234,8 @@ namespace micro_profiler
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
 				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
+				auto fl = create_functions_list(s, 500);
+				auto m = fl->get_column_series();
 
 				// ACT / ASSERT
 				fl->set_order(columns::times_called, true);
@@ -265,9 +256,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsProvideColumnSeries )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
 				statistic_types::map_detailed s;
-				shared_ptr< wpl::list_model<double> > m;
 
 				s[addr(5)].times_called = 2000;
 				s[addr(5)].callees[addr(11)].times_called = 29, s[addr(5)].callees[addr(13)].times_called = 31;
@@ -277,8 +266,9 @@ namespace micro_profiler
 				s[addr(17)].callees[addr(11)].times_called = 101, s[addr(17)].callees[addr(19)].times_called = 103, s[addr(17)].callees[addr(23)].times_called = 1100;
 				s[addr(17)].callees[addr(11)].exclusive_time = 3, s[addr(17)].callees[addr(19)].exclusive_time = 112, s[addr(17)].callees[addr(23)].exclusive_time = 9;
 
-				emulate_save(ser, 100, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
+				auto fl = create_functions_list(s, 100);
+				auto m = fl->get_column_series();
+
 				shared_ptr<linked_statistics> ls;
 
 				fl->set_order(columns::times_called, false);
@@ -309,16 +299,14 @@ namespace micro_profiler
 			test( PiechartModelReturnsZeroesAverageValuesForUncalledFunctions )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
 				statistic_types::map_detailed s;
 
 				s[addr(5)].times_called = 0, s[addr(17)].times_called = 0;
 				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 0;
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 0;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
+				auto fl = create_functions_list(s);
+				auto m = fl->get_column_series();
 
 				// ACT
 				fl->set_order(columns::exclusive_avg, false);
@@ -339,7 +327,6 @@ namespace micro_profiler
 			test( SwitchingSortOrderLeadsToPiechartModelUpdate )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = { make_pair(0, ""), };
 				statistic_types::map_detailed s;
 				int invalidated_count = 0;
 
@@ -348,9 +335,8 @@ namespace micro_profiler
 				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
 				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
 
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), s, *tmodel);
-				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
-				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
+				auto fl = create_functions_list(s);
+				auto m = fl->get_column_series();
 				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT

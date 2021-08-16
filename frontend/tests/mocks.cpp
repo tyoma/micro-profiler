@@ -15,8 +15,8 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			symbol_resolver::symbol_resolver()
-				: micro_profiler::symbol_resolver([] (unsigned) {})
+			symbol_resolver::symbol_resolver(std::shared_ptr<tables::modules> modules, std::shared_ptr<tables::module_mappings> mappings)
+				: micro_profiler::symbol_resolver(modules, mappings)
 			{	}
 
 			const string &symbol_resolver::symbol_name_by_va(long_address_t address) const

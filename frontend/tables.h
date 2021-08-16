@@ -20,37 +20,55 @@
 
 #pragma once
 
-#include <common/types.h>
-#include <string>
+#include "primitives.h"
+
+#include <common/image_info.h>
+#include <common/module.h>
+#include <common/primitives.h>
 #include <wpl/signal.h>
 
 namespace micro_profiler
 {
-	class functions_list;
-	
 	namespace tables
 	{
-		struct module_mappings;
-		struct modules;
+		template <typename BaseT>
+		struct table : BaseT
+		{
+			mutable wpl::signal<void ()> invalidated;
+		};
+
+
+		//struct statistics : table< containers::unordered_map<unsigned int /*treadid*/,
+		//	statistic_types_t<long_address_t>::map_detailed > >
+		struct statistics : table<statistic_types::map_detailed>
+		{
+			wpl::signal<void ()> request_update;
+		};
+
+
+		struct threads : table< containers::unordered_map<unsigned int /*threadid*/, thread_info, knuth_hash> >
+		{
+			wpl::signal<void ()> request_update;
+		};
+
+
+		struct module_mappings : table< containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> >
+		{
+			wpl::signal<void ()> updated;
+		};
+
+
+		struct module_info
+		{
+			std::string path;
+			std::vector<symbol_info> symbols;
+			containers::unordered_map<unsigned int /*file_id*/, std::string> files;
+		};
+
+		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info> >
+		{
+			wpl::signal<void (unsigned int persistent_id)> request_presence;
+			mutable wpl::signal<void (unsigned int persistent_id)> ready;
+		};
 	}
-
-	struct frontend_ui_context
-	{
-		initialization_data process_info;
-		std::shared_ptr<functions_list> model;
-		std::shared_ptr<const tables::module_mappings> module_mappings;
-		std::shared_ptr<const tables::modules> modules;
-	};
-
-	struct frontend_ui
-	{
-		typedef std::shared_ptr<frontend_ui> ptr;
-
-		virtual void activate() = 0;
-
-		wpl::signal<void ()> activated;
-		wpl::signal<void ()> closed;
-	};
-
-	typedef std::function<frontend_ui::ptr (const frontend_ui_context &context)> frontend_ui_factory;
 }

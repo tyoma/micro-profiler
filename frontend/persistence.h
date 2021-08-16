@@ -23,6 +23,7 @@
 #include "function_list.h"
 #include "serialization.h"
 #include "symbol_resolver.h"
+#include "tables.h"
 
 namespace micro_profiler
 {
@@ -38,15 +39,14 @@ namespace micro_profiler
 	{
 		struct dummy_
 		{
-			static void dummy_request(unsigned int)
-			{	}
-
 			static void dummy_threads_request(const std::vector<unsigned int> &)
 			{	}
 		};
 
 		ContextT context;
-		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver(&dummy_::dummy_request));
+		auto modules = std::make_shared<tables::modules>();
+		auto mappings = std::make_shared<tables::module_mappings>();
+		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver(modules, mappings));
 		std::shared_ptr<threads_model> threads(new threads_model(&dummy_::dummy_threads_request));
 		std::shared_ptr<functions_list> fl(functions_list::create(1, resolver, threads));
 

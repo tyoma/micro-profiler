@@ -39,9 +39,21 @@ namespace micro_profiler
 	void frontend::apply(unsigned int persistent_id, range<const unsigned int, size_t> rva)
 	{
 		auto req = new_request_handle();
+		auto &image_patches = (*_patches)[persistent_id];
+		auto &targets = _patch_request_payload.functions_rva;
 
 		_patch_request_payload.image_persistent_id = persistent_id;
-		_patch_request_payload.functions_rva.assign(rva.begin(), rva.end());
+		targets.clear();
+		targets.reserve(rva.length());
+		for_each(rva.begin(), rva.end(), [&] (unsigned int rva) {
+			auto &state = image_patches[rva].state;
+
+			if (!state.active && !state.error && !state.requested)
+				targets.push_back(rva), state.requested = true;
+		});
+		if (targets.empty())
+			return;
+		_patches->invalidated();
 		request(*req, request_apply_patches, _patch_request_payload, response_patched,
 			[this, persistent_id, req] (deserializer &d) {
 
@@ -50,8 +62,7 @@ namespace micro_profiler
 			d(_patched_buffer);
 			for (auto i = _patched_buffer.begin(); i != _patched_buffer.end(); ++i)
 			{
-				auto j = image_patches.find(i->first /*rva*/);
-				auto &patch = j->second;
+				auto &patch = image_patches[i->first /*rva*/];
 
 				patch.id = i->second.id;
 				patch.state.requested = false;
@@ -60,11 +71,9 @@ namespace micro_profiler
 				else
 					patch.state.active = true;
 			}
+			_patches->invalidated();
 			_requests.erase(req);
 		});
-
-		for (auto i = rva.begin(); i != rva.end(); ++i)
-			(*_patches)[persistent_id][*i].state.requested = true;
 	}
 
 	void frontend::revert(unsigned int persistent_id, range<const unsigned int, size_t> rva)
@@ -76,7 +85,7 @@ namespace micro_profiler
 		request(*req, request_revert_patches, _patch_request_payload, response_reverted,
 			[this, req] (deserializer &) {
 
-			_requests.erase(req);
+//			_requests.erase(req);
 		});
 	}
 }

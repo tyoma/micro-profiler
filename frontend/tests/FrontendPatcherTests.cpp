@@ -25,6 +25,9 @@ namespace micro_profiler
 				lhs.state.error < rhs.state.error ? true :
 				lhs.state.active < rhs.state.active;
 		}
+
+		inline bool operator ==(const patch &lhs, const patch &rhs)
+		{	return !(lhs < rhs) && !(rhs < lhs);	}
 	}
 
 	namespace tests
@@ -59,8 +62,9 @@ namespace micro_profiler
 
 			pair<unsigned, tables::patch> mkpatch(unsigned rva, unsigned id, bool requested, bool error, bool active)
 			{
-				tables::patch p = {	id,	};
+				tables::patch p;
 
+				p.id = id;
 				p.state.requested = !!requested, p.state.error = !!error, p.state.active = !!active;
 				return make_pair(rva, p);
 			}
@@ -170,6 +174,22 @@ namespace micro_profiler
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
 
+				emulator->add_handler<patch_request>(request_revert_patches,
+					[&] (ipc::server_session::request &, const patch_request &payload) {
+
+					auto image_patches = patches->find(payload.image_persistent_id);
+
+					assert_not_equal(patches->end(), image_patches);
+
+					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
+					{
+						auto p = image_patches->second.find(*i);
+
+						assert_not_equal(image_patches->second.end(), p);
+						assert_equal(mkpatch(*i, 0, true, false, false).second, p->second);
+					}
+				});
+
 				// ACT
 				patches->apply(11, mkrange(rva1));
 
@@ -276,6 +296,131 @@ namespace micro_profiler
 					patches->find(31)->second);
 			}
 
+
+			test( PatchingErroredOrActiveOrRequestedFunctionsDoesNotInvokeARequest )
+			{
+				// INIT
+				unsigned rva1[] = {	2, 3,	};
+				unsigned rva12[] = {	1, 2, 3,	};
+				unsigned rva2[] = {	2, 5,	};
+				unsigned rva22[] = {	2, 4, 5, 6, 7, 100,	};
+				vector<patch_request> log;
+
+				emulator->add_handler<patch_request>(request_apply_patches, [] (ipc::server_session::request &req, const patch_request &payload) {
+					req.respond(response_patched, [&payload] (ipc::server_session::serializer &s) {
+						switch (payload.image_persistent_id)
+						{
+						case 19:
+							s(plural + mkpatch_apply(3, patch_result::error, 0) + mkpatch_apply(2, patch_result::error, 0));
+							break;
+
+						case 20:
+							s(plural + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(5, patch_result::error, 0));
+							break;
+						}
+					});
+				});
+
+				patches->apply(19, mkrange(rva1));
+				patches->apply(20, mkrange(rva2));
+
+				emulator->add_handler<patch_request>(request_apply_patches, [&] (ipc::server_session::request &, const patch_request &payload) {
+					log.push_back(payload);
+				});
+
+				// ACT
+				patches->apply(19, mkrange(rva12));
+
+				// ASSERT
+				unsigned reference1[] = {	1u,	};
+
+				assert_equal(1u, log.size());
+				assert_equal(19u, log.back().image_persistent_id);
+				assert_equal(reference1, log.back().functions_rva);
+
+				// ACT
+				patches->apply(20, mkrange(rva22));
+
+				// ASSERT
+				unsigned reference2[] = {	4u, 6u, 7u, 100u	};
+
+				assert_equal(2u, log.size());
+				assert_equal(20u, log.back().image_persistent_id);
+				assert_equal(reference2, log.back().functions_rva);
+
+				// ACT
+				patches->apply(20, mkrange(rva2));
+				patches->apply(19, mkrange(rva12)); // '1' is in 'requested' state
+
+				// ASSERT
+				assert_equal(2u, log.size());
+			}
+
+
+			test( RequestIsReleasedOnceResponsed )
+			{
+				// INIT
+				unsigned rva[] = {	1, 2, 3,	};
+
+				emulator->add_handler<patch_request>(request_apply_patches, [] (ipc::server_session::request &req, const patch_request &payload) {
+					req.respond(response_patched, [&payload] (ipc::server_session::serializer &s) {
+						s(plural + mkpatch_apply(1, patch_result::ok, 1) + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(3, patch_result::ok, 2));
+					});
+					req.defer([] (ipc::server_session::request &req) {
+						req.respond(response_patched, [] (ipc::server_session::serializer &s) {
+							s(plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
+						});
+					});
+				});
+
+				patches->apply(19, mkrange(rva));
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(1u, patches->size());
+				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
+					+ mkpatch(2, 0, false, true, false)
+					+ mkpatch(3, 2, false, false, true),
+					patches->find(19)->second);
+			}
+
+
+			test( TableIsInvalidatedOnApplyRequestSendingAndOnReceival )
+			{
+				// INIT
+				vector< unordered_map<unsigned, tables::patch> > log;
+				auto conn = patches->invalidated += [&] {
+					log.push_back(patches->find(19)->second);
+				};
+				unsigned rva[] = {	1, 2, 3,	};
+
+				emulator->add_handler<patch_request>(request_apply_patches, [&] (ipc::server_session::request &req, const patch_request &) {
+					// ACT
+					assert_is_false(log.empty());
+
+					req.defer([] (ipc::server_session::request &req) {
+						req.respond(response_patched, [] (ipc::server_session::serializer &s) {
+							s(plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
+						});
+					});
+				});
+
+				// ACT / ASSERT
+				patches->apply(19, mkrange(rva));
+
+				// ASSERT
+				assert_equal(1u, log.size());
+				assert_equivalent(patches->find(19)->second, log.back());
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(2u, log.size());
+				assert_equivalent(patches->find(19)->second, log.back());
+			}
 		end_test_suite
 	}
 }

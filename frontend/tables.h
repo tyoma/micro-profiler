@@ -72,6 +72,10 @@ namespace micro_profiler
 
 		struct patch
 		{
+			patch()
+				: id(0u)
+			{	state.requested = state.error = state.active = 0;	}
+
 			unsigned int id;
 			struct
 			{

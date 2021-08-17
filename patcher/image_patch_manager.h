@@ -42,11 +42,10 @@ namespace micro_profiler
 
 		void detach_all();
 
-		virtual void query(std::vector<unsigned int /*rva of installed*/> &result, unsigned int persistent_id) override;
-		virtual void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
-			std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions) override;
-		virtual void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
-			range<const unsigned int /*rva*/, size_t> functions) override;
+		virtual void query(patch_state &states, unsigned int persistent_id) override;
+		virtual void apply(apply_results &results, unsigned int persistent_id, void *base, std::shared_ptr<void> lock,
+			request_range targets) override;
+		virtual void revert(revert_results &results, unsigned int persistent_id, request_range targets) override;
 
 	private:
 		struct image_patch

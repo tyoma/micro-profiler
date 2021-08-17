@@ -14,6 +14,9 @@ using namespace std;
 
 namespace micro_profiler
 {
+	inline bool operator ==(const patch_apply &lhs, const patch_apply &rhs)
+	{	return lhs.id == rhs.id && lhs.result == rhs.result;	}
+
 	namespace tests
 	{
 		namespace
@@ -31,6 +34,12 @@ namespace micro_profiler
 			private:
 				image_patch_manager &_manager;
 			};
+
+			pair<unsigned /*rva*/, patch_apply> mkpatch_apply(unsigned rva, patch_result::errors status, unsigned id)
+			{
+				patch_apply pa = {	status, id	};
+				return make_pair(rva, pa);
+			}
 		}
 
 		namespace mocks
@@ -61,7 +70,9 @@ namespace micro_profiler
 			mocks::executable_memory_allocator allocator;
 			mocks::trace_events trace;
 			unique_ptr<temporary_copy> module1, module2;
-			vector<unsigned int> result;
+
+			patch_manager::apply_results aresult;
+			patch_manager::revert_results rresult;
 
 			init( PrepareGuinies )
 			{
@@ -93,15 +104,22 @@ namespace micro_profiler
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
 
 				// ACT
-				m.apply(result, 13, image1->base_ptr(), load_library(module1->path()), mkrange(functions1));
-				m.apply(result, 17, image2->base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 13, image1->base_ptr(), load_library(module1->path()), mkrange(functions1));
+				m.apply(aresult, 17, image2->base_ptr(), load_library(module2->path()), mkrange(functions2));
 				image1.reset();
 
 				// ASSERT
-				assert_is_empty(result);
 				assert_is_false(unloaded1);
 				assert_is_false(unloaded2);
 				assert_equal(3u, allocator.allocated);
+
+				pair<unsigned, patch_apply> reference[] = {
+					mkpatch_apply(functions1[0], patch_result::ok, 0),
+					mkpatch_apply(functions2[0], patch_result::ok, 0),
+					mkpatch_apply(functions2[1], patch_result::ok, 0),
+				};
+
+				assert_equal(reference, aresult);
 
 				// ACT
 				image2.reset();
@@ -124,7 +142,7 @@ namespace micro_profiler
 				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
 
 				// ACT
-				m.apply(result, 13, image1->base_ptr(), load_library(module1->path()), range<unsigned, size_t>(0, 0));
+				m.apply(aresult, 13, image1->base_ptr(), load_library(module1->path()), range<unsigned, size_t>(0, 0));
 				image1.reset();
 
 				// ASSERT
@@ -159,8 +177,8 @@ namespace micro_profiler
 				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
 
-				m.apply(result, 13, image1->base_ptr(), load_library(module1->path()), mkrange(functions1));
-				m.apply(result, 19, image2->base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 13, image1->base_ptr(), load_library(module1->path()), mkrange(functions1));
+				m.apply(aresult, 19, image2->base_ptr(), load_library(module2->path()), mkrange(functions2));
 				image1.reset();
 				image2.reset();
 
@@ -169,12 +187,19 @@ namespace micro_profiler
 				};
 
 				// ACT
-				m.revert(result, 19, mkrange(remove21));
+				m.revert(rresult, 19, mkrange(remove21));
 
 				// ASSERT
 				assert_is_false(unloaded1);
 				assert_is_false(unloaded2);
 				assert_equal(7u, allocator.allocated);
+
+				pair<unsigned, patch_result::errors> reference1[] = {
+					make_pair(functions2[0], patch_result::ok),
+					make_pair(functions2[3], patch_result::ok),
+				};
+
+				assert_equal(reference1, rresult);
 
 				// INIT
 				unsigned int remove11[] = {
@@ -185,12 +210,24 @@ namespace micro_profiler
 				};
 
 				// ACT
-				m.revert(result, 13, mkrange(remove11));
-				m.revert(result, 19, mkrange(remove22));
+				m.revert(rresult, 13, mkrange(remove11));
+				m.revert(rresult, 19, mkrange(remove22));
 
 				// ASSERT
 				assert_is_false(unloaded1);
 				assert_is_true(unloaded2);
+
+				pair<unsigned, patch_result::errors> reference2[] = {
+					make_pair(functions2[0], patch_result::ok),
+					make_pair(functions2[3], patch_result::ok),
+
+					make_pair(functions1[1], patch_result::ok),
+					make_pair(functions2[1], patch_result::ok),
+					make_pair(functions2[2], patch_result::ok),
+					make_pair(functions2[4], patch_result::ok),
+				};
+
+				assert_equal(reference2, rresult);
 
 				// INIT
 				unsigned int remove12[] = {
@@ -198,11 +235,25 @@ namespace micro_profiler
 				};
 
 				// ACT
-				m.revert(result, 13, mkrange(remove12));
+				m.revert(rresult, 13, mkrange(remove12));
 
 				// ASSERT
 				assert_is_true(unloaded1);
 				assert_equal(7u, allocator.allocated);
+
+				pair<unsigned, patch_result::errors> reference3[] = {
+					make_pair(functions2[0], patch_result::ok),
+					make_pair(functions2[3], patch_result::ok),
+
+					make_pair(functions1[1], patch_result::ok),
+					make_pair(functions2[1], patch_result::ok),
+					make_pair(functions2[2], patch_result::ok),
+					make_pair(functions2[4], patch_result::ok),
+
+					make_pair(functions1[0], patch_result::ok),
+				};
+
+				assert_equal(reference3, rresult);
 			}
 
 
@@ -232,16 +283,15 @@ namespace micro_profiler
 
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
 
-				m.apply(result, 190, image2_ptr, load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 190, image2_ptr, load_library(module2->path()), mkrange(functions1));
 				image2.reset();
-				m.revert(result, 190, mkrange(remove1));
+				m.revert(rresult, 190, mkrange(remove1));
 
 				// ACT
-				m.apply(result, 190, image2_ptr, load_library(module2->path()), mkrange(functions2));
-				m.revert(result, 190, mkrange(remove2));
+				m.apply(aresult, 190, image2_ptr, load_library(module2->path()), mkrange(functions2));
+				m.revert(rresult, 190, mkrange(remove2));
 
 				// ASSERT
-				assert_is_empty(result);
 				assert_is_false(unloaded);
 			}
 
@@ -265,22 +315,25 @@ namespace micro_profiler
 					functions1[0], functions1[1],
 				};
 
-				result.push_back(1717123); // just to make sure, results are appended
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
 
-				m.apply(result, 190, image2_ptr, load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 190, image2_ptr, load_library(module2->path()), mkrange(functions1));
 				image2.reset();
-				m.revert(result, 190, mkrange(remove1));
+				m.revert(rresult, 190, mkrange(remove1));
+				rresult.clear();
 
 				// ACT
-				m.revert(result, 190, mkrange(remove1));
+				m.revert(rresult, 190, mkrange(remove1));
 
 				// ASSERT
-				unsigned int reference1[] = {
-					1717123, functions1[0], functions1[1],
-				};
 				assert_is_false(unloaded);
-				assert_equivalent(reference1, result);
+
+				pair<unsigned, patch_result::errors> reference1[] = {
+					make_pair(functions1[0], patch_result::unchanged),
+					make_pair(functions1[1], patch_result::unchanged),
+				};
+
+				assert_equal(reference1, rresult);
 
 				// INIT
 				unsigned int remove2[] = {
@@ -288,24 +341,39 @@ namespace micro_profiler
 				};
 
 				// ACT
-				m.revert(result, 190, mkrange(remove2));
+				m.revert(rresult, 190, mkrange(remove2));
 
 				// ASSERT
-				unsigned int reference2[] = {
-					1717123, functions1[0], functions1[1], functions1[1],
+				pair<unsigned, patch_result::errors> reference2[] = {
+					make_pair(functions1[0], patch_result::unchanged),
+					make_pair(functions1[1], patch_result::unchanged),
+
+					make_pair(functions1[1], patch_result::unchanged),
+					make_pair(functions1[3], patch_result::ok),
 				};
+
 				assert_is_false(unloaded);
-				assert_equivalent(reference2, result);
+				assert_equal(reference2, rresult);
 
 				// ACT
-				m.revert(result, 190, mkrange(functions1));
+				m.revert(rresult, 190, mkrange(functions1));
 
 				// ASSERT
-				unsigned int reference3[] = {
-					1717123, functions1[0], functions1[1], functions1[1], functions1[0], functions1[1], functions1[3],
+				pair<unsigned, patch_result::errors> reference3[] = {
+					make_pair(functions1[0], patch_result::unchanged),
+					make_pair(functions1[1], patch_result::unchanged),
+
+					make_pair(functions1[1], patch_result::unchanged),
+					make_pair(functions1[3], patch_result::ok),
+
+					make_pair(functions1[0], patch_result::unchanged),
+					make_pair(functions1[1], patch_result::unchanged),
+					make_pair(functions1[2], patch_result::ok),
+					make_pair(functions1[3], patch_result::unchanged),
 				};
+
 				assert_is_true(unloaded);
-				assert_equivalent(reference3, result);
+				assert_equal(reference3, rresult);
 			}
 
 
@@ -334,27 +402,38 @@ namespace micro_profiler
 					functions1[0], functions1[1], functions1[2], functions1[3], functions2[1],
 				};
 
-				result.push_back(17123); // just to make sure, results are appended
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
-				m.apply(result, 179, image2->base_ptr(), load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 179, image2->base_ptr(), load_library(module2->path()), mkrange(functions1));
 				image2.reset();
+				aresult.clear();
 
 				// ACT
-				m.apply(result, 179, image2_ptr, load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 179, image2_ptr, load_library(module2->path()), mkrange(functions2));
 
 				// ASSERT
-				unsigned int reference[] = {
-					17123, functions2[0], functions2[2], functions2[3],
+				pair<unsigned, patch_apply> reference1[] = {
+					mkpatch_apply(functions2[0], patch_result::unchanged, 0),
+					mkpatch_apply(functions2[1], patch_result::ok, 0),
+					mkpatch_apply(functions2[2], patch_result::unchanged, 0),
+					mkpatch_apply(functions2[3], patch_result::unchanged, 0),
 				};
 
-				assert_equivalent(reference, result);
+				assert_equal(reference1, aresult);
 				assert_is_false(unloaded);
 
 				// ACT
-				m.revert(result, 179, mkrange(remove1));
+				m.revert(rresult, 179, mkrange(remove1));
 
 				// ASSERT
-				assert_equivalent(reference, result);
+				pair<unsigned, patch_result::errors> reference2[] = {
+					make_pair(functions1[0], patch_result::ok),
+					make_pair(functions1[1], patch_result::ok),
+					make_pair(functions1[2], patch_result::ok),
+					make_pair(functions1[3], patch_result::ok),
+					make_pair(functions2[1], patch_result::ok),
+				};
+
+				assert_equal(reference2, rresult);
 				assert_is_true(unloaded);
 			}
 
@@ -379,7 +458,7 @@ namespace micro_profiler
 					image2.get_symbol_rva("bubble_sort2"),
 				};
 
-				m.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions1));
 
 				// ACT
 				get_function_addresses_2(ff[0], ff[1], ff[2]);
@@ -420,7 +499,7 @@ namespace micro_profiler
 				};
 
 				trace.call_log.clear();
-				m.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions2));
 
 				// ACT
 				function_with_a_nested_call_2();
@@ -436,7 +515,7 @@ namespace micro_profiler
 				trace.call_log.clear();
 
 				// ACT
-				m.revert(result, 11, mkrange(remove1));
+				m.revert(rresult, 11, mkrange(remove1));
 
 				// ACT
 				guinea_snprintf(buffer, sizeof(buffer), "%d", 1318);
@@ -466,26 +545,39 @@ namespace micro_profiler
 					image2.get_symbol_rva("bubble_sort2"),
 				};
 
-				m1.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions1));
+				m1.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions1));
+				aresult.clear();
 
 				// ACT
-				m2.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m2.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions2));
 
 				// ASSERT
-				assert_equivalent(functions1, result);
+				pair<unsigned, patch_apply> reference1[] = {
+					mkpatch_apply(functions2[0], patch_result::ok, 0),
+					mkpatch_apply(functions2[1], patch_result::error, 0),
+					mkpatch_apply(functions2[2], patch_result::ok, 0),
+					mkpatch_apply(functions2[3], patch_result::ok, 0),
+					mkpatch_apply(functions2[4], patch_result::error, 0),
+				};
+
+				assert_equal(reference1, aresult);
 
 				// INIT
 				unsigned int functions3[] = {
 					image2.get_symbol_rva("get_function_addresses_2"),
 				};
 
-				result.clear();
+				aresult.clear();
 
 				// ACT
-				m1.apply(result, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions3));
+				m1.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions3));
 
 				// ASSERT
-				assert_equivalent(functions3, result);
+				pair<unsigned, patch_apply> reference2[] = {
+					mkpatch_apply(functions3[0], patch_result::error, 0),
+				};
+
+				assert_equal(reference2, aresult);
 			}
 		end_test_suite
 	}

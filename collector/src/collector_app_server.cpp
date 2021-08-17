@@ -43,7 +43,8 @@ namespace micro_profiler
 		auto unloaded_ = make_shared<unloaded_modules>();
 		auto metadata_ = make_shared< pair<unsigned int, module_info_metadata> >();
 		auto threads_buffer_ = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
-		auto patch_failures_ = make_shared< vector<unsigned int> >();
+		auto apply_results_ = make_shared<patch_manager::apply_results>();
+		auto revert_results_ = make_shared<patch_manager::revert_results>();
 
 		session->add_handler<int>(request_update,
 			[this, &analyzer_, loaded_, unloaded_] (server_session::request &req, int) {
@@ -90,27 +91,27 @@ namespace micro_profiler
 		});
 
 		session->add_handler<patch_request>(request_apply_patches,
-			[this, patch_failures_] (server_session::request &req, const patch_request &payload) {
+			[this, apply_results_] (server_session::request &req, const patch_request &payload) {
 
-			auto &failures = *patch_failures_;
+			auto &results = *apply_results_;
 			const auto l = _module_tracker->lock_mapping(payload.image_persistent_id);
 
-			failures.clear();
-			_patch_manager.apply(failures, payload.image_persistent_id,
+			results.clear();
+			_patch_manager.apply(results, payload.image_persistent_id,
 				reinterpret_cast<void *>(static_cast<size_t>(l->base)), l,
 				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
-			req.respond(response_patched, [&] (server_session::serializer &ser) {	ser(failures);	});
+			req.respond(response_patched, [&] (server_session::serializer &ser) {	ser(results);	});
 		});
 
 		session->add_handler<patch_request>(request_revert_patches,
-			[this, patch_failures_] (server_session::request &req, const patch_request &payload) {
+			[this, revert_results_] (server_session::request &req, const patch_request &payload) {
 
-			auto &failures = *patch_failures_;
+			auto &results = *revert_results_;
 
-			failures.clear();
-			_patch_manager.revert(failures, payload.image_persistent_id,
+			results.clear();
+			_patch_manager.revert(results, payload.image_persistent_id,
 				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
-			req.respond(response_reverted, [&] (server_session::serializer &ser) {	ser(failures);	});
+			req.respond(response_reverted, [&] (server_session::serializer &ser) {	ser(results);	});
 		});
 
 

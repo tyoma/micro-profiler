@@ -26,6 +26,7 @@
 #include "protocol.h"
 #include "range.h"
 
+#include <patcher/interface.h>
 #include <strmd/container.h>
 #include <strmd/packer.h>
 
@@ -132,6 +133,17 @@ namespace micro_profiler
 	{
 		archive(data.image_persistent_id);
 		archive(data.functions_rva);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, patch_result::errors &data, unsigned int /*version*/)
+	{	archive(reinterpret_cast<int &>(data));	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, patch_apply &data, unsigned int /*version*/)
+	{
+		archive(data.result);
+		archive(data.id);
 	}
 
 

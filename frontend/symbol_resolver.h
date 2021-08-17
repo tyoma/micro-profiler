@@ -21,7 +21,7 @@
 #pragma once
 
 #include <common/image_info.h>
-#include <common/protocol.h>
+#include <common/module.h>
 #include <common/unordered_map.h>
 
 #include <functional>

@@ -20,7 +20,9 @@
 
 #pragma once
 
-#include "scheduler.h"
+#include <functional>
+#include <memory>
+#include <mt/chrono.h>
 
 namespace scheduler
 {

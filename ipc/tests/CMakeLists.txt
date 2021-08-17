@@ -8,6 +8,7 @@ set(IPC_TESTS_SOURCES
 	helpers_sockets.cpp
 	MarshalledActiveSessionTests.cpp
 	MarshalledServerTests.cpp
+	ServerSessionContinuationTests.cpp
 	ServerSessionTests.cpp
 	SocketsEndpointClientTests.cpp
 	SocketsEndpointServerTests.cpp

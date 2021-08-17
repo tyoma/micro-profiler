@@ -70,6 +70,7 @@
     </ClCompile>
     <ClCompile Include="MarshalledActiveSessionTests.cpp" />
     <ClCompile Include="MarshalledServerTests.cpp" />
+    <ClCompile Include="ServerSessionContinuationTests.cpp" />
     <ClCompile Include="ServerSessionTests.cpp" />
     <ClCompile Include="SocketsEndpointClientTests.cpp" />
     <ClCompile Include="SocketsEndpointServerTests.cpp" />

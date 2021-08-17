@@ -43,8 +43,8 @@ namespace micro_profiler
 		auto unloaded_ = make_shared<unloaded_modules>();
 		auto metadata_ = make_shared< pair<unsigned int, module_info_metadata> >();
 		auto threads_buffer_ = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
-		auto apply_results_ = make_shared<patch_manager::apply_results>();
-		auto revert_results_ = make_shared<patch_manager::revert_results>();
+		auto apply_results_ = make_shared<response_patched_data>();
+		auto revert_results_ = make_shared<response_reverted_data>();
 
 		session->add_handler<int>(request_update,
 			[this, &analyzer_, loaded_, unloaded_] (server_session::request &req, int) {

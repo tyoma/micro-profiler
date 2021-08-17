@@ -32,6 +32,7 @@ namespace micro_profiler
 	{
 		struct module_mappings;
 		struct modules;
+		struct patches;
 	}
 
 	struct frontend_ui_context
@@ -40,6 +41,7 @@ namespace micro_profiler
 		std::shared_ptr<functions_list> model;
 		std::shared_ptr<const tables::module_mappings> module_mappings;
 		std::shared_ptr<const tables::modules> modules;
+		std::shared_ptr<const tables::patches> patches;
 	};
 
 	struct frontend_ui

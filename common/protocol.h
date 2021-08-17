@@ -24,6 +24,7 @@
 #include "image_info.h"
 #include "types.h"
 
+#include <patcher/interface.h>
 #include <vector>
 
 namespace micro_profiler
@@ -55,14 +56,6 @@ namespace micro_profiler
 		response_patches_state = 21,
 	};
 
-	template <typename PayloadT>
-	struct message_envelope
-	{
-		messages_id type;
-		unsigned int token;
-		PayloadT data;
-	};
-
 	// response_modules_loaded
 	typedef std::vector<mapped_module_identified> loaded_modules;
 
@@ -83,7 +76,9 @@ namespace micro_profiler
 		std::vector<unsigned int> functions_rva;
 	};
 
-	// response_patched, response_reverted
-	struct patch_failure;
-	typedef std::vector<patch_failure> patch_failures;
+	// response_patched
+	typedef patch_manager::apply_results response_patched_data;
+
+	// response_reverted
+	typedef patch_manager::revert_results response_reverted_data;
 }

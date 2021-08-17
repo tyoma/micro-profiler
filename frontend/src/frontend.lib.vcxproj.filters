@@ -49,6 +49,9 @@
     <ClCompile Include="headers_model.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="frontend_patcher.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />

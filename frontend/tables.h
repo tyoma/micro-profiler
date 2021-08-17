@@ -38,17 +38,15 @@ namespace micro_profiler
 		};
 
 
-		//struct statistics : table< containers::unordered_map<unsigned int /*treadid*/,
-		//	statistic_types_t<long_address_t>::map_detailed > >
 		struct statistics : table<statistic_types::map_detailed>
 		{
-			wpl::signal<void ()> request_update;
+			std::function<void ()> request_update;
 		};
 
 
 		struct threads : table< containers::unordered_map<unsigned int /*threadid*/, thread_info, knuth_hash> >
 		{
-			wpl::signal<void ()> request_update;
+			std::function<void ()> request_update;
 		};
 
 
@@ -67,8 +65,28 @@ namespace micro_profiler
 
 		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info> >
 		{
-			wpl::signal<void (unsigned int persistent_id)> request_presence;
+			std::function<void (unsigned int persistent_id)> request_presence;
 			mutable wpl::signal<void (unsigned int persistent_id)> ready;
+		};
+
+
+		struct patch
+		{
+			unsigned int id;
+			struct
+			{
+				unsigned int requested : 1,
+					error : 1,
+					active : 1;
+			} state;
+		};
+
+		typedef containers::unordered_map<unsigned int /*rva*/, patch> image_patches;
+
+		struct patches : table< containers::unordered_map<unsigned int /*persistent_id*/, image_patches> >
+		{
+			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
+			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;
 		};
 	}
 }

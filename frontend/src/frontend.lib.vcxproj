@@ -41,6 +41,7 @@
   <ItemGroup>
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="frontend_manager.cpp" />
+    <ClCompile Include="frontend_patcher.cpp" />
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="headers_model.cpp" />
     <ClCompile Include="process_list.cpp" />

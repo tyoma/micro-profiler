@@ -114,6 +114,24 @@ namespace micro_profiler
 			}
 
 
+			test( TableRequestsAreIgnoredAfterTheFrontendIsDestroyed )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				unsigned dummy[] = {	1, 2, 3,	};
+
+				emulator->message(init, format(make_initialization_data("", 1)));
+
+				// ACT
+				frontend_.reset();
+
+				// ACT / ASSERT (must not throw)
+				context.modules->request_presence(123);
+				context.patches->apply(123, mkrange(dummy));
+				context.patches->revert(123, mkrange(dummy));
+			}
+
+
 			test( ArrivalOfInitMessageInvokesInitializationOnce )
 			{
 				// INIT
@@ -483,39 +501,6 @@ namespace micro_profiler
 			}
 
 
-			test( MetadataIsNoLongerRequestedAfterFrontendDestruction )
-			{
-				// INIT
-				auto frontend_ = create_frontend();
-				auto called = 0;
-
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_modules_loaded, [] (ipc::server_session::serializer &s) {
-						s(plural + create_mapping(0, 17u, 0u));
-					});
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						pair< unsigned, unthreaded_statistic_types::function_detailed > data[] = {
-							make_pair(0x1100, unthreaded_statistic_types::function_detailed()),
-						};
-
-						s(make_single_threaded(data));
-					});
-				});
-				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &, unsigned) {
-					called++;
-				});
-
-				emulator->message(init, format(make_initialization_data("", 1)));
-
-				// ACT
-				frontend_.reset();
-				get_text(*context.model, context.model->get_index(addr(0x1100)), columns::name);
-
-				// ASSERT
-				assert_equal(0, called);
-			}
-
-
 			test( ModuleMetadataIsRequestViaModulesTable )
 			{
 				// INIT
@@ -547,25 +532,6 @@ namespace micro_profiler
 				unsigned reference2[] = {	11u, 17u, 191u, 13u,	};
 
 				assert_equal(reference2, log);
-			}
-
-
-			test( ModuleMetadataIsNotRequestAfterTheFrontendIsDestructed )
-			{
-				// INIT
-				auto frontend_ = create_frontend();
-				vector<unsigned> log;
-
-				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &, unsigned) {
-
-				// ASSERT
-					assert_is_false(true);
-				});
-
-				// ACT / ASSERT
-				frontend_.reset();
-				context.modules->request_presence(11u);
 			}
 
 

@@ -40,16 +40,18 @@ namespace micro_profiler
 	{
 		const mt::milliseconds c_updateInterval(25);
 
-		template <typename ContainerT>
-		typename ContainerT::iterator push_new(ContainerT &container)
-		{	return container.insert(container.end(), typename ContainerT::value_type());	}
+		void detached_frontend()
+		{	LOG(PREAMBLE "attempt to interact with a detached profilee - ignoring...");	}
+
+		const auto detached_frontend_stub = bind(&detached_frontend);
 	}
 
 	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
 		: client_session(outbound), _modules(make_shared<tables::modules>()),
-			_mappings(make_shared<tables::module_mappings>()), _queue(queue)
+			_mappings(make_shared<tables::module_mappings>()), _patches(make_shared<tables::patches>()),
+			_queue(queue)
 	{
-		subscribe(*push_new(_requests), init, [this] (client_session::deserializer &d) {
+		subscribe(*new_request_handle(), init, [this] (deserializer &d) {
 			if (_model)
 			{
 				LOG(PREAMBLE "repeated initialization message - ignoring...");
@@ -65,6 +67,7 @@ namespace micro_profiler
 					get_threads()),
 				_mappings,
 				_modules,
+				_patches,
 			};
 
 			initialized(ctx);
@@ -73,7 +76,7 @@ namespace micro_profiler
 				% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
 		});
 
-		_presence_request = _modules->request_presence += [this] (unsigned int persistent_id_) {
+		_modules->request_presence = [this] (unsigned int persistent_id_) {
 			auto self = this;
 			auto persistent_id = persistent_id_;
 
@@ -81,7 +84,7 @@ namespace micro_profiler
 				return;
 
 			request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
-				[persistent_id, self] (ipc::client_session::deserializer &d) {
+				[persistent_id, self] (deserializer &d) {
 
 				unsigned int dummy;
 				module_info_metadata mmetadata;
@@ -101,11 +104,20 @@ namespace micro_profiler
 			});
 			LOG(PREAMBLE "requested metadata from remote...") % A(self) % A(persistent_id);
 		};
+
+		init_patcher();
+
 		LOG(PREAMBLE "constructed...") % A(this);
 	}
 
 	frontend::~frontend()
-	{	LOG(PREAMBLE "destroyed...") % A(this);	}
+	{
+		_modules->request_presence = detached_frontend_stub;
+		_patches->apply = detached_frontend_stub;
+		_patches->revert = detached_frontend_stub;
+
+		LOG(PREAMBLE "destroyed...") % A(this);
+	}
 
 	void frontend::disconnect() throw()
 	{
@@ -115,7 +127,7 @@ namespace micro_profiler
 
 	void frontend::request_full_update()
 	{
-		auto modules_callback = [this] (client_session::deserializer &d) {
+		auto modules_callback = [this] (deserializer &d) {
 			loaded_modules lmodules;
 
 			d(lmodules);
@@ -123,14 +135,14 @@ namespace micro_profiler
 				(*_mappings)[i->instance_id] = *i;
 			_mappings->invalidated();
 		};
-		auto update_callback = [this] (client_session::deserializer &d) {
+		auto update_callback = [this] (deserializer &d) {
 			auto self = this;
 
 			d(*_model, _serialization_context);
 			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
 			_queue.schedule([self] {	self->request_full_update();	}, c_updateInterval);
 		};
-		pair<int, ipc::client_session::callback_t> callbacks[] = {
+		pair<int, callback_t> callbacks[] = {
 			make_pair(response_modules_loaded, modules_callback),
 			make_pair(response_statistics_update, update_callback),
 		};
@@ -144,10 +156,10 @@ namespace micro_profiler
 		{
 			_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
 				auto self = this;
-				auto req = push_new(_requests);
+				auto req = new_request_handle();
 
 				request(*req, request_threads_info, threads, response_threads_info,
-					[self, req] (ipc::client_session::deserializer &d) {
+					[self, req] (deserializer &d) {
 
 					d(*self->_threads);
 					self->_requests.erase(req);
@@ -156,4 +168,7 @@ namespace micro_profiler
 		}
 		return _threads;
 	}
+
+	frontend::requests_t::iterator frontend::new_request_handle()
+	{	return _requests.insert(_requests.end(), shared_ptr<void>());	}
 }

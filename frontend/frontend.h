@@ -37,6 +37,7 @@ namespace micro_profiler
 	{
 		struct module_mappings;
 		struct modules;
+		struct patches;
 	}
 
 	class symbol_resolver;
@@ -52,17 +53,27 @@ namespace micro_profiler
 		std::function<void (const frontend_ui_context &ui_context)> initialized;
 
 	private:
+		typedef std::list< std::shared_ptr<void> > requests_t;
+
+	private:
 		// ipc::channel methods
 		virtual void disconnect() throw() override;
+
+		void init_patcher();
+		void apply(unsigned int persistent_id, range<const unsigned int, size_t> rva);
+		void revert(unsigned int persistent_id, range<const unsigned int, size_t> rva);
 
 		void request_full_update();
 
 		std::shared_ptr<threads_model> get_threads();
 
+		requests_t::iterator new_request_handle();
+
 	private:
 		initialization_data _process_info;
 		std::shared_ptr<tables::modules> _modules;
 		std::shared_ptr<tables::module_mappings> _mappings;
+		std::shared_ptr<tables::patches> _patches;
 		std::shared_ptr<functions_list> _model;
 		std::shared_ptr<threads_model> _threads;
 		scontext::wire _serialization_context;
@@ -71,6 +82,12 @@ namespace micro_profiler
 		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;
 		std::list< std::shared_ptr<void> > _requests;
 		std::shared_ptr<void> _update_request;
-		wpl::slot_connection _presence_request;
+
+		// request_apply_patches buffers
+		patch_request _patch_request_payload;
+		response_patched_data _patched_buffer;
+
+		// request_revert_patches buffers
+		response_reverted_data _reverted_buffer;
 	};
 }

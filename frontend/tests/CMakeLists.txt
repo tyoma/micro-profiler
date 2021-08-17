@@ -6,6 +6,7 @@ set(FRONTEND_TESTS_SOURCES
 	FilterViewTests.cpp
 	FlattenViewTests.cpp
 	FrontendManagerTests.cpp
+	FrontendPatcherTests.cpp
 	FrontendTests.cpp
 	FunctionListPersistence.cpp
 	FunctionListPiechartTests.cpp

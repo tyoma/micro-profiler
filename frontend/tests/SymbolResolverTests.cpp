@@ -18,13 +18,12 @@ namespace micro_profiler
 			std::shared_ptr<tables::modules> modules;
 			std::shared_ptr<tables::module_mappings> mappings;
 			vector<unsigned> _requested;
-			wpl::slot_connection request_issued;
 
 			init( Init )
 			{
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
-				request_issued = modules->request_presence += [this] (unsigned persistent_id) {
+				modules->request_presence = [this] (unsigned persistent_id) {
 					_requested.push_back(persistent_id);
 				};
 			}

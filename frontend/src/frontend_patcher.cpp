@@ -26,6 +26,24 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		bool set_requested(tables::patch &p, bool for_active)
+		{
+			return !!p.state.active == for_active && !p.state.error && !p.state.requested
+				? p.state.requested = true, true : false;
+		}
+
+		void set_complete(tables::patch &p, patch_result::errors error, bool active)
+		{
+			p.state.requested = false;
+			if (error != patch_result::ok)
+				p.state.error = true;
+			else
+				p.state.active = active;
+		}
+	}
+
 	void frontend::init_patcher()
 	{
 		_patches->apply = [this] (unsigned int persistent_id, range<const unsigned int, size_t> rva) {
@@ -46,10 +64,8 @@ namespace micro_profiler
 		targets.clear();
 		targets.reserve(rva.length());
 		for_each(rva.begin(), rva.end(), [&] (unsigned int rva) {
-			auto &state = image_patches[rva].state;
-
-			if (!state.active && !state.error && !state.requested)
-				targets.push_back(rva), state.requested = true;
+			if (set_requested(image_patches[rva], false))
+				targets.push_back(rva);
 		});
 		if (targets.empty())
 			return;
@@ -65,11 +81,7 @@ namespace micro_profiler
 				auto &patch = image_patches[i->first /*rva*/];
 
 				patch.id = i->second.id;
-				patch.state.requested = false;
-				if (i->second.result != patch_result::ok)
-					patch.state.error = true;
-				else
-					patch.state.active = true;
+				set_complete(patch, i->second.result, true);
 			}
 			_patches->invalidated();
 			_requests.erase(req);
@@ -79,13 +91,31 @@ namespace micro_profiler
 	void frontend::revert(unsigned int persistent_id, range<const unsigned int, size_t> rva)
 	{
 		auto req = new_request_handle();
+		auto &image_patches = (*_patches)[persistent_id];
+		auto &targets = _patch_request_payload.functions_rva;
 
 		_patch_request_payload.image_persistent_id = persistent_id;
-		_patch_request_payload.functions_rva.assign(rva.begin(), rva.end());
-		request(*req, request_revert_patches, _patch_request_payload, response_reverted,
-			[this, req] (deserializer &) {
+		targets.clear();
+		targets.reserve(rva.length());
+		for_each(rva.begin(), rva.end(), [&] (unsigned int rva) {
+			const auto i = image_patches.find(rva);
 
-//			_requests.erase(req);
+			if (i != image_patches.end() && set_requested(i->second, true))
+				targets.push_back(rva);
+		});
+		if (targets.empty())
+			return;
+		_patches->invalidated();
+		request(*req, request_revert_patches, _patch_request_payload, response_reverted,
+			[this, persistent_id, req] (deserializer &d) {
+
+			auto &image_patches = (*_patches)[persistent_id];
+
+			d(_reverted_buffer);
+			for (auto i = _reverted_buffer.begin(); i != _reverted_buffer.end(); ++i)
+				set_complete(image_patches[i->first /*rva*/], i->second, false);
+			_patches->invalidated();
+			_requests.erase(req);
 		});
 	}
 }

@@ -13,6 +13,7 @@
 #pragma warning(disable: 4355)
 
 using namespace std;
+using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -126,40 +127,6 @@ namespace micro_profiler
 
 				// ACT
 				patches->apply(191, mkrange(rva2));
-
-				// ASSERT
-				assert_equal(2u, log.size());
-				assert_equal(191u, log.back().image_persistent_id);
-				assert_equal(rva2, log.back().functions_rva);
-			}
-
-
-			test( RevertingPatchFromActiveFunctionsSendsCorrespondingRequest )
-			{
-				// INIT
-				vector<patch_request> log;
-				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
-				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
-
-				emulator->add_handler<patch_request>(request_revert_patches,
-					[&] (ipc::server_session::request &, const patch_request &payload) {
-
-					log.push_back(payload);
-				});
-
-				patches->apply(101, mkrange(rva1));
-				patches->apply(191, mkrange(rva2));
-
-				// ACT
-				patches->revert(101, mkrange(rva1));
-
-				// ASSERT
-				assert_equal(1u, log.size());
-				assert_equal(101u, log.back().image_persistent_id);
-				assert_equal(rva1, log.back().functions_rva);
-
-				// ACT
-				patches->revert(191, mkrange(rva2));
 
 				// ASSERT
 				assert_equal(2u, log.size());
@@ -421,6 +388,328 @@ namespace micro_profiler
 				assert_equal(2u, log.size());
 				assert_equivalent(patches->find(19)->second, log.back());
 			}
+
+
+			test( RevertingPatchFromActiveFunctionsSendsCorrespondingRequest )
+			{
+				// INIT
+				vector<patch_request> log;
+				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
+				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
+
+				emulator->add_handler<patch_request>(request_apply_patches,
+					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+
+				patches->apply(101, mkrange(rva1));
+				patches->apply(191, mkrange(rva2));
+
+				emulator->add_handler<patch_request>(request_revert_patches,
+					[&] (ipc::server_session::request &, const patch_request &payload) {
+
+					log.push_back(payload);
+				});
+
+				// ACT
+				patches->revert(101, mkrange(rva1));
+
+				// ASSERT
+				assert_equal(1u, log.size());
+				assert_equal(101u, log.back().image_persistent_id);
+				assert_equal(rva1, log.back().functions_rva);
+
+				// ACT
+				patches->revert(191, mkrange(rva2));
+
+				// ASSERT
+				assert_equal(2u, log.size());
+				assert_equal(191u, log.back().image_persistent_id);
+				assert_equal(rva2, log.back().functions_rva);
+			}
+
+
+			unsigned next_id;
+			unordered_map<unsigned, patch_result::errors> apply_results;
+
+			init( SetNextID )
+			{	next_id = 1;	}
+
+			void emulate_apply(ipc::server_session::request &req, const patch_request &payload)
+			{
+				vector< pair<unsigned, patch_apply> > aresults;
+
+				for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
+				{
+					auto j = apply_results.find(*i);
+
+					aresults.push_back(mkpatch_apply(*i, j != apply_results.end() ? j->second : patch_result::ok, next_id++));
+				}
+				req.respond(response_patched, [aresults] (ipc::server_session::serializer &s) {	s(aresults);	});
+			}
+
+
+			test( PatchRevertSetsTableToRequestedState )
+			{
+				// INIT
+				unsigned rva10[] = {	1, 1000129u, 100100u, 0x10000u,	};
+				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
+				unsigned rva20[] = {	3u, 13u, 1000u, 0x10000u, 100u, 0x8000091u,	};
+				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
+				vector< unordered_map<unsigned, tables::patch> > log;
+
+				emulator->add_handler<patch_request>(request_apply_patches,
+					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+
+				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &, const patch_request &payload) {
+					const auto image_patches = patches->find(payload.image_persistent_id);
+
+					assert_not_equal(patches->end(), image_patches);
+					log.push_back(image_patches->second);
+				});
+
+				patches->apply(11, mkrange(rva10));
+				patches->apply(191, mkrange(rva20));
+
+				// ACT
+				patches->revert(11, mkrange(rva1));
+
+				// ASSERT
+				assert_equal(1u, log.size());
+				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
+					+ mkpatch(1000129, 2, true, false, true)
+					+ mkpatch(100100u, 3, true, false, true)
+					+ mkpatch(0x10000u, 4, true, false, true),
+					log.back());
+
+				// ACT
+				patches->revert(191, mkrange(rva2));
+
+				// ASSERT
+				assert_equal(2u, log.size());
+				assert_equivalent(plural + mkpatch(3, 5, false, false, true)
+					+ mkpatch(13, 6, true, false, true)
+					+ mkpatch(1000, 7, true, false, true)
+					+ mkpatch(0x10000, 8, true, false, true)
+					+ mkpatch(100, 9, false, false, true)
+					+ mkpatch(0x8000091u, 10, true, false, true),
+					log.back());
+			}
+
+
+			test( RevertResponseSetsActiveAndErrorStates )
+			{
+				// INIT
+				unsigned rva10[] = {	1, 2, 20, 3, 100,	};
+				unsigned rva1[] = {	1, 2, 3,	};
+				unsigned rva20[] = {	2, 4, 5, 50, 6, 7, 100, 1001,	};
+				unsigned rva2[] = {	2, 4, 5, 6, 7, 100,	};
+
+				emulator->add_handler<patch_request>(request_apply_patches,
+					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+
+				patches->apply(19, mkrange(rva10));
+				patches->apply(31, mkrange(rva20));
+
+				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &req, const patch_request &payload) {
+					switch (payload.image_persistent_id)
+					{
+					case 19:
+						req.defer([] (ipc::server_session::request &req) {
+							req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
+								s(plural
+									// Succeeded...
+									+ mkpatch_revert(1, patch_result::ok)
+
+									// Failed...
+									+ mkpatch_revert(3, patch_result::error)
+									+ mkpatch_revert(2, patch_result::error));
+							});
+						});
+						break;
+
+					case 31:
+						req.defer([] (ipc::server_session::request &req) {
+							req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
+								s(plural
+									// Succeeded...
+									+ mkpatch_revert(2, patch_result::ok)
+									+ mkpatch_revert(6, patch_result::ok)
+									+ mkpatch_revert(100, patch_result::ok)
+
+									// Failed...
+									+ mkpatch_revert(7, patch_result::error)
+									+ mkpatch_revert(4, patch_result::error)
+									+ mkpatch_revert(5, patch_result::error));
+							});
+						});
+						break;
+					}
+				});
+
+				patches->revert(19, mkrange(rva1));
+				patches->revert(31, mkrange(rva2));
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(1u, queue->tasks.size());
+				assert_equal(2u, patches->size());
+				assert_equivalent(plural + mkpatch(1, 1, false, false, false)
+					+ mkpatch(2, 2, false, true, true)
+					+ mkpatch(20, 3, false, false, true)
+					+ mkpatch(3, 4, false, true, true)
+					+ mkpatch(100, 5, false, false, true),
+					patches->find(19)->second);
+				assert_equivalent(plural + mkpatch(2, 6, true, false, true)
+					+ mkpatch(4, 7, true, false, true)
+					+ mkpatch(5, 8, true, false, true)
+					+ mkpatch(50, 9, false, false, true)
+					+ mkpatch(6, 10, true, false, true)
+					+ mkpatch(7, 11, true, false, true)
+					+ mkpatch(100, 12, true, false, true)
+					+ mkpatch(1001, 13, false, false, true),
+					patches->find(31)->second);
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_is_empty(queue->tasks);
+				assert_equivalent(plural + mkpatch(1, 1, false, false, false)
+					+ mkpatch(2, 2, false, true, true)
+					+ mkpatch(20, 3, false, false, true)
+					+ mkpatch(3, 4, false, true, true)
+					+ mkpatch(100, 5, false, false, true),
+					patches->find(19)->second);
+				assert_equivalent(plural + mkpatch(2, 6, false, false, false)
+					+ mkpatch(4, 7, false, true, true)
+					+ mkpatch(5, 8, false, true, true)
+					+ mkpatch(50, 9, false, false, true)
+					+ mkpatch(6, 10, false, false, false)
+					+ mkpatch(7, 11, false, true, true)
+					+ mkpatch(100, 12, false, false, false)
+					+ mkpatch(1001, 13, false, false, true),
+					patches->find(31)->second);
+			}
+
+
+			test( RevertingNotInstalledOrErroredOrInactiveOrRequestedFunctionsDoesNotInvokeARequest )
+			{
+				// INIT
+				unsigned rva0[] = {	2, 4, 5, 6, 7, 100,	};
+				unsigned rva_initial_revert[] = {	2,	};
+				unsigned rva_initial_requested[] = {	6,	};
+				unsigned rva[] = {	2 /*inactive*/, 5, 6, 7, 100 /*error*/, 193 /*missing*/,	};
+				vector<patch_request> log;
+
+				emulator->add_handler<patch_request>(request_apply_patches,
+					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				apply_results[100] = patch_result::error;
+				patches->apply(99, mkrange(rva0));
+
+				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &req, const patch_request &) {
+					req.respond(response_reverted, [] (ipc::server_session::serializer &s) {	s(plural + mkpatch_revert(2, patch_result::ok)); });
+				});
+				patches->revert(99, mkrange(rva_initial_revert));
+
+				emulator->add_handler<patch_request>(request_revert_patches, [] (ipc::server_session::request &, const patch_request &) {	});
+				patches->revert(99, mkrange(rva_initial_requested));
+
+				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &, const patch_request &payload) {
+					log.push_back(payload);
+				});
+
+				// ACT
+				patches->revert(99, mkrange(rva));
+
+				// ASSERT
+				unsigned reference[] = {	5u, 7u,	};
+
+				assert_equal(1u, log.size());
+				assert_equal(99u, log.back().image_persistent_id);
+				assert_equal(reference, log.back().functions_rva);
+				assert_equal(6u, patches->find(99)->second.size());
+
+				// ACT
+				patches->revert(99, mkrange(rva));
+
+				// ASSERT
+				assert_equal(1u, log.size());
+			}
+
+
+			test( RevertRequestIsReleasedOnceResponsed )
+			{
+				// INIT
+				unsigned rva[] = {	1,	};
+
+				emulator->add_handler<patch_request>(request_apply_patches,
+					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				patches->apply(99, mkrange(rva));
+
+				emulator->add_handler<patch_request>(request_revert_patches, [] (ipc::server_session::request &req, const patch_request &) {
+					req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
+						s(plural + mkpatch_revert(1, patch_result::ok));
+					});
+					req.defer([] (ipc::server_session::request &req) {
+						req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
+							s(plural + mkpatch_revert(1, patch_result::error));
+						});
+					});
+				});
+
+				patches->revert(99, mkrange(rva));
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(1u, patches->size());
+				assert_equivalent(plural + mkpatch(1, 1, false, false, false),
+					patches->find(99)->second);
+			}
+
+
+			test( TableIsInvalidatedOnRevertRequestSendingAndOnReceival )
+			{
+				// INIT
+				vector< unordered_map<unsigned, tables::patch> > log;
+				unsigned rva[] = {	1, 2, 3,	};
+
+				emulator->add_handler<patch_request>(request_apply_patches,
+					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				patches->apply(19, mkrange(rva));
+
+				auto conn = patches->invalidated += [&] {
+					log.push_back(patches->find(19)->second);
+				};
+
+				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &req, const patch_request &) {
+					// ACT
+					assert_is_false(log.empty());
+
+					req.defer([] (ipc::server_session::request &req) {
+						req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
+							s(plural + mkpatch_revert(1, patch_result::error) + mkpatch_revert(2, patch_result::ok) + mkpatch_revert(3, patch_result::error));
+						});
+					});
+				});
+
+				// ACT / ASSERT
+				patches->revert(19, mkrange(rva));
+
+				// ASSERT
+				assert_equal(1u, log.size());
+				assert_equivalent(patches->find(19)->second, log.back());
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(2u, log.size());
+				assert_equivalent(patches->find(19)->second, log.back());
+			}
+
 		end_test_suite
 	}
 }

@@ -116,7 +116,7 @@ namespace micro_profiler
 		_form->set_root(root);
 		if (load(*_configuration, "Placement", l))
 			_form->set_location(l);
-		_form->set_caption("MicroProfiler - " + ui_context.executable);
+		_form->set_caption("MicroProfiler - " + ui_context.process_info.executable);
 		_form->set_visible(true);
 
 		_connections.push_back(_form->close += [this] {

@@ -21,36 +21,64 @@
 #include <frontend/symbol_resolver.h>
 
 #include <algorithm>
-#include <common/module.h>
-#include <map>
+#include <frontend/tables.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	const symbol_info *symbol_resolver::module_info::find_symbol_by_va(unsigned address) const
+	namespace
 	{
-		if (symbol_index.empty())
-			for (vector<symbol_info>::const_iterator i = symbols.begin(); i != symbols.end(); ++i)
-				symbol_index.insert(make_pair(i->rva, &*i));
+		struct by_address
+		{
+			bool operator ()(const mapped_module_identified &lhs, const mapped_module_identified &rhs) const
+			{	return lhs.base < rhs.base;	}
 
-		module_info::addressed_symbols::const_iterator j = symbol_index.upper_bound(address);
+			bool operator ()(const mapped_module_identified &lhs, long_address_t rhs) const
+			{	return lhs.base < rhs;	}
 
-		if (j != symbol_index.begin())
-			--j;
-		else if (j == symbol_index.end())
-			return 0;
-		return (j->first <= address) & (address < j->second->size + j->first) ? j->second : 0;
+			bool operator ()(long_address_t lhs, const mapped_module_identified &rhs) const
+			{	return lhs < rhs.base;	}
+		};
+
+		template <typename T, typename V>
+		const typename T::value_type *find_range(const T &container, const V &value)
+		{
+			auto i = container.upper_bound(value);
+
+			return i != container.begin() ? &*--i : nullptr;
+		}
+
+		template <typename T, typename V, typename PredicateT>
+		const typename T::value_type *find_range(const T &container, const V &value, const PredicateT &predicate)
+		{
+			auto i = upper_bound(container.begin(), container.end(), value, predicate);
+
+			return i != container.begin() ? &*--i : nullptr;
+		}
 	}
 
 
-	symbol_resolver::symbol_resolver(const request_metadata_t &requestor)
-		: _requestor(requestor)
-	{	}
+	symbol_resolver::symbol_resolver(shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
+		: _modules(const_pointer_cast<tables::modules>(modules)), _mappings(const_pointer_cast<tables::module_mappings>(mappings))
+	{
+		_modules_invalidation = _modules->invalidated += [this] {
+			invalidate();
+		};
+		_mappings_invalidation = _mappings->invalidated += [this] {
+			_mappings_ordered.clear();
+			for (auto i = _mappings->begin(); i != _mappings->end(); ++i)
+			{
+				_mappings_ordered.push_back(i->second);
+				_symbols_ordered[i->first].clear();
+			}
+			sort(_mappings_ordered.begin(), _mappings_ordered.end(), by_address());
+		};
+	}
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
 	{
-		const module_info *m;
+		const tables::module_info *m;
 		const symbol_info *i = find_symbol_by_va(address, m);
 
 		return i ? i->name : _empty;
@@ -58,56 +86,50 @@ namespace micro_profiler
 
 	bool symbol_resolver::symbol_fileline_by_va(long_address_t address, fileline_t &result) const
 	{
-		const module_info *m;
-		const symbol_info *i = find_symbol_by_va(address, m);
-
-		if (!i)
-			return false;
-		module_info::files_map::const_iterator j = m->files.find(i->file_id);
-
-		return j != m->files.end() ? result.first = j->second, result.second = i->line, true : false;
-	}
-
-	void symbol_resolver::add_mapping(const mapped_module_identified &mapping)
-	{	_mappings.insert(make_pair(mapping.base, mapping));	}
-
-	void symbol_resolver::add_metadata(unsigned persistent_id, module_info_metadata &metadata)
-	{
-		module_info &m = _modules[persistent_id];
-
-		for (vector< pair<unsigned int, string> >::const_iterator i = metadata.source_files.begin(); i != metadata.source_files.end(); ++i)
-			m.files.insert(make_pair(i->first, i->second));
-		swap(m.symbols, metadata.symbols);
-		invalidate();
-	}
-
-	void symbol_resolver::request_all_symbols()
-	{
-		for (auto i = _mappings.begin(); i != _mappings.end(); ++i)
+		const tables::module_info *m;
+		
+		if (const auto symbol = find_symbol_by_va(address, m))
 		{
-			if (!i->second.requested)
-				_requestor(i->second.persistent_id);
+			const auto file = m->files.find(symbol->file_id);
+
+			if (file != m->files.end())
+				return result.first = file->second, result.second = symbol->line, true;
 		}
+		return false;
 	}
 
-	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const module_info *&module) const
+	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const tables::module_info *&module) const
 	{
-		auto i = _mappings.upper_bound(address);
-
-		if (i != _mappings.begin())
-			--i;
-		else if (i == _mappings.end())
-			return 0;
-
-		const auto m = _modules.find(i->second.persistent_id);
-
-		if (m == _modules.end())
+		if (const auto mapping = find_range(_mappings_ordered, address, by_address()))
 		{
-			if (!i->second.requested)
-				_requestor(i->second.persistent_id), i->second.requested = true;
-			return 0;
+			if (const auto symbol = find_symbol_by_rva(mapping->persistent_id, mapping->instance_id, static_cast<unsigned int>(address - mapping->base), module))
+				return symbol;
+			_modules->request_presence(mapping->persistent_id);
 		}
-		module = &m->second;
-		return module->find_symbol_by_va(static_cast<unsigned>(address - i->second.base));
+		return nullptr;
+	}
+
+	const symbol_info *symbol_resolver::find_symbol_by_rva(unsigned int persistent_id, unsigned int instance_id,
+		unsigned int rva, const tables::module_info *&module) const
+	{
+		const auto i = _modules->find(persistent_id);
+
+		if (i != _modules->end())
+		{
+			auto &cached_symbols = _symbols_ordered[instance_id];
+
+			if (cached_symbols.empty())
+			{
+				for (auto j = i->second.symbols.begin(); j != i->second.symbols.end(); ++j)
+					cached_symbols[j->rva] = &*j;
+			}
+
+			if (const auto r = find_range(cached_symbols, rva))
+			{
+				if (rva - r->second->rva < r->second->size)
+					return module = &i->second, r->second;
+			}
+		}
+		return nullptr;
 	}
 }

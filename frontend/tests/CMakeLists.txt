@@ -6,6 +6,7 @@ set(FRONTEND_TESTS_SOURCES
 	FilterViewTests.cpp
 	FlattenViewTests.cpp
 	FrontendManagerTests.cpp
+	FrontendPatcherTests.cpp
 	FrontendTests.cpp
 	FunctionListPersistence.cpp
 	FunctionListPiechartTests.cpp
@@ -21,4 +22,4 @@ set(FRONTEND_TESTS_SOURCES
 
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})
 
-target_link_libraries(frontend.tests frontend.lib test-helpers logger common scheduler mt agge.text)
+target_link_libraries(frontend.tests frontend.lib test-helpers ipc logger common scheduler mt agge.text)

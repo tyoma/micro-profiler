@@ -21,6 +21,7 @@
 #include <scheduler/private_queue.h>
 
 #include <mt/mutex.h>
+#include <scheduler/scheduler.h>
 
 using namespace std;
 

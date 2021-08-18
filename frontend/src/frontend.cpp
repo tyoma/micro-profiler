@@ -21,9 +21,9 @@
 #include <frontend/frontend.h>
 
 #include <frontend/function_list.h>
-#include <frontend/image_patch_model.h>
 #include <frontend/serialization.h>
 #include <frontend/symbol_resolver.h>
+#include <frontend/tables.h>
 
 #include <common/memory.h>
 #include <logger/log.h>
@@ -39,130 +39,136 @@ namespace micro_profiler
 	namespace
 	{
 		const mt::milliseconds c_updateInterval(25);
+
+		void detached_frontend()
+		{	LOG(PREAMBLE "attempt to interact with a detached profilee - ignoring...");	}
+
+		const auto detached_frontend_stub = bind(&detached_frontend);
 	}
 
 	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
-		: _outbound(outbound), _queue(queue), _alive(make_shared<bool>(true))
+		: client_session(outbound), _modules(make_shared<tables::modules>()),
+			_mappings(make_shared<tables::module_mappings>()), _patches(make_shared<tables::patches>()),
+			_queue(queue)
 	{
-		auto alive = _alive;
-
-		_ui_context.symbols = make_shared<symbol_resolver>([this, alive] (unsigned int persistent_id) {
-			if (*alive)
+		subscribe(*new_request_handle(), init, [this] (deserializer &d) {
+			if (_model)
 			{
-				send(request_module_metadata, persistent_id);
-				LOG(PREAMBLE "requested metadata from remote...") % A(this) % A(persistent_id);
+				LOG(PREAMBLE "repeated initialization message - ignoring...");
+				return;
 			}
+			d(_process_info);
+			_model = functions_list::create(_process_info.ticks_per_second, make_shared<symbol_resolver>(_modules, _mappings),
+				get_threads());
+
+			frontend_ui_context ctx = {
+				_process_info,
+				_model = functions_list::create(_process_info.ticks_per_second, make_shared<symbol_resolver>(_modules, _mappings),
+					get_threads()),
+				_mappings,
+				_modules,
+				_patches,
+			};
+
+			initialized(ctx);
+			request_full_update();
+			LOG(PREAMBLE "initialized...")
+				% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
 		});
-		_ui_context.threads = make_shared<threads_model>([this] (const vector<unsigned int> &threads) {
-			send(request_threads_info, threads);
-		});
-		_ui_context.patches = make_shared<image_patch_model>(_ui_context.symbols, [this] (unsigned int persistent_id, const vector<unsigned int> &rva, bool apply) {
-			send(apply ? request_apply_patches : request_revert_patches, persistent_id, rva);
-		});
+
+		_modules->request_presence = [this] (unsigned int persistent_id_) {
+			auto self = this;
+			auto persistent_id = persistent_id_;
+
+			if (_module_requests.find(persistent_id) != _module_requests.end())
+				return;
+
+			request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
+				[persistent_id, self] (deserializer &d) {
+
+				unsigned int dummy;
+				module_info_metadata mmetadata;
+
+				d(dummy);
+				d(mmetadata);
+
+				auto &m = (*self->_modules)[persistent_id];
+
+				swap(m.symbols, mmetadata.symbols);
+				m.files = unordered_map<unsigned int, string>(mmetadata.source_files.begin(), mmetadata.source_files.end());
+
+				self->_modules->invalidated();
+				self->_modules->ready(persistent_id);
+
+				LOG(PREAMBLE "received metadata...") % A(self) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
+			});
+			LOG(PREAMBLE "requested metadata from remote...") % A(self) % A(persistent_id);
+		};
+
+		init_patcher();
 
 		LOG(PREAMBLE "constructed...") % A(this);
 	}
 
 	frontend::~frontend()
 	{
-		*_alive = false;
+		_modules->request_presence = detached_frontend_stub;
+		_patches->apply = detached_frontend_stub;
+		_patches->revert = detached_frontend_stub;
+
 		LOG(PREAMBLE "destroyed...") % A(this);
 	}
 
-	void frontend::disconnect_session() throw()
-	{
-		_outbound.disconnect();
-		LOG(PREAMBLE "disconnect requested locally...") % A(this);
-	}
-
 	void frontend::disconnect() throw()
-	{	LOG(PREAMBLE "disconnected by remote...") % A(this);	}
-
-	void frontend::message(const_byte_range payload)
 	{
-		unsigned persistent_id;
-		buffer_reader reader(payload);
-		strmd::deserializer<buffer_reader, packer> archive(reader);
-		initialization_data idata;
-		loaded_modules lmodules;
-		module_info_metadata mmetadata;
-		messages_id c;
-		unsigned int token;
+		ipc::client_session::disconnect();
+		LOG(PREAMBLE "disconnected by remote...") % A(this);
+	}
 
-		switch (archive(c), c)
-		{
-		case init:
-			archive(idata);
-			_ui_context.executable = idata.executable;
-			_ui_context.model = functions_list::create(idata.ticks_per_second, _ui_context.symbols, _ui_context.threads);
-			initialized(_ui_context);
-			schedule_update_request();
-			LOG(PREAMBLE "initialized...") % A(this) % A(idata.executable) % A(idata.ticks_per_second);
-			return;
-		}
+	void frontend::request_full_update()
+	{
+		auto modules_callback = [this] (deserializer &d) {
+			loaded_modules lmodules;
 
-		switch (archive(token), c)
-		{
-		case response_modules_loaded:
-			archive(lmodules);
+			d(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				_ui_context.symbols->add_mapping(*i);
-			break;
+				(*_mappings)[i->instance_id] = *i;
+			_mappings->invalidated();
+		};
+		auto update_callback = [this] (deserializer &d) {
+			auto self = this;
 
-		case legacy_update_statistics:
-			LOG(PREAMBLE "non-threaded legacy_update_statistics is no longer supported. Are you using older version of the collector library?");
-			break;
+			d(*_model, _serialization_context);
+			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
+			_queue.schedule([self] {	self->request_full_update();	}, c_updateInterval);
+		};
+		pair<int, callback_t> callbacks[] = {
+			make_pair(response_modules_loaded, modules_callback),
+			make_pair(response_statistics_update, update_callback),
+		};
 
-		case response_statistics_update:
-			if (_ui_context.model)
-				archive(*_ui_context.model, _serialization_context);
-			_ui_context.threads->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
-			schedule_update_request();
-			break;
+		request(_update_request, request_update, 0, callbacks);
+	}
 
-		case response_module_metadata:
-			archive(persistent_id);
-			archive(mmetadata);
-			LOG(PREAMBLE "received metadata...") % A(this) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
-			_ui_context.symbols->add_metadata(persistent_id, mmetadata);
-			break;
+	shared_ptr<threads_model> frontend::get_threads()
+	{
+		if (!_threads)
+		{
+			_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
+				auto self = this;
+				auto req = new_request_handle();
 
-		case response_threads_info:
-			archive(*_ui_context.threads);
-			break;
+				request(*req, request_threads_info, threads, response_threads_info,
+					[self, req] (deserializer &d) {
 
-		default:
-			break;
+					d(*self->_threads);
+					self->_requests.erase(req);
+				});
+			}));
 		}
+		return _threads;
 	}
 
-	void frontend::schedule_update_request()
-	{	_queue.schedule([this] {	send(request_update, 0);	}, c_updateInterval);	}
-
-	template <typename DataT>
-	void frontend::send(messages_id command, const DataT &data)
-	{
-		buffer_writer< pod_vector<byte> > writer(_buffer);
-		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
-		unsigned token = 0u;
-
-		archive(command);
-		archive(token);
-		archive(data);
-		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
-	}
-
-	template <typename Data1T, typename Data2T>
-	void frontend::send(messages_id command, const Data1T &data1, const Data2T &data2)
-	{
-		buffer_writer< pod_vector<byte> > writer(_buffer);
-		strmd::serializer<buffer_writer< pod_vector<byte> >, packer> archive(writer);
-		unsigned token = 0u;
-
-		archive(command);
-		archive(token);
-		archive(data1);
-		archive(data2);
-		_outbound.message(const_byte_range(_buffer.data(), _buffer.size()));
-	}
+	frontend::requests_t::iterator frontend::new_request_handle()
+	{	return _requests.insert(_requests.end(), shared_ptr<void>());	}
 }

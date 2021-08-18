@@ -21,6 +21,7 @@
 #include <frontend/function_list.h>
 
 #include <frontend/symbol_resolver.h>
+#include <frontend/tables.h>
 #include <frontend/threads_model.h>
 
 #include <common/formatting.h>
@@ -315,8 +316,19 @@ namespace micro_profiler
 	}
 
 
+	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval,
+			shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads)
+		: base(*statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
+			_linked(new linked_statistics_list_t)
+	{
+		_connection = statistics->invalidated += [this] {
+			if (updates_enabled)
+				on_updated();
+		};
+	}
+
 	functions_list::functions_list(shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
-			shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads)
+			shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads)
 		: base(*statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
 			_linked(new linked_statistics_list_t)
 	{	}

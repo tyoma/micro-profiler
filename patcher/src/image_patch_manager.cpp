@@ -39,17 +39,18 @@ namespace micro_profiler
 		}
 	}
 
-	void image_patch_manager::query(vector<unsigned int /*rva of installed*/> &/*result*/, unsigned int /*persistent_id*/)
+	void image_patch_manager::query(patch_state &/*states*/, unsigned int /*persistent_id*/)
 	{	}
 
-	void image_patch_manager::apply(vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
-		shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions)
+	void image_patch_manager::apply(apply_results &results, unsigned int persistent_id, void *base,
+		shared_ptr<void> lock, request_range targets)
 	{
 		auto &image = _patched_images[persistent_id];
 
-		for (auto i = functions.begin(); i != functions.end(); ++i)
+		for (auto i = targets.begin(); i != targets.end(); ++i)
 		{
 			auto e = image.patched.find(*i);
+			patch_apply result = {	patch_result::unchanged, 0u	};
 
 			try
 			{
@@ -61,26 +62,27 @@ namespace micro_profiler
 				if (patch.activate(false))
 				{
 					image.patches_applied++;
-					continue;
+					result.result = patch_result::ok;
 				}
 			}
 			catch (patch_exception &)
 			{
+				result.result = patch_result::error;
 			}
-			failures.push_back(*i);
+			results.push_back(make_pair(*i, result));
 		}
 		if (image.patches_applied)
 			image.lock = lock;
 	}
 
-	void image_patch_manager::revert(vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
-		range<const unsigned int /*rva*/, size_t> functions)
+	void image_patch_manager::revert(revert_results &results, unsigned int persistent_id, request_range targets)
 	{
 		auto &image = _patched_images[persistent_id];
 
-		for (auto i = functions.begin(); i != functions.end(); ++i)
+		for (auto i = targets.begin(); i != targets.end(); ++i)
 		{
 			const auto e = image.patched.find(*i);
+			patch_result::errors result = patch_result::unchanged;
 
 			if (image.patched.end() != e)
 			{
@@ -89,10 +91,10 @@ namespace micro_profiler
 				if (patch.revert())
 				{
 					image.patches_applied--;
-					continue;
+					result = patch_result::ok;
 				}
 			}
-			failures.push_back(*i);
+			results.push_back(make_pair(*i, result));
 		}
 		if (!image.patches_applied)
 			image.lock.reset();

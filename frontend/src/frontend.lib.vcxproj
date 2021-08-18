@@ -41,6 +41,7 @@
   <ItemGroup>
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="frontend_manager.cpp" />
+    <ClCompile Include="frontend_patcher.cpp" />
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="headers_model.cpp" />
     <ClCompile Include="image_patch_model.cpp" />
@@ -88,6 +89,7 @@
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\system_stylesheet.h" />
+    <ClInclude Include="..\tables.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
   </ItemGroup>

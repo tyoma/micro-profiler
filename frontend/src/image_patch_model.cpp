@@ -1,6 +1,8 @@
 #include <frontend/image_patch_model.h>
 
 #include <common/formatting.h>
+#include <common/path.h>
+#include <map>
 
 using namespace std;
 
@@ -41,14 +43,28 @@ namespace micro_profiler
 		};
 	}
 
-	image_patch_model::image_patch_model(shared_ptr<symbol_resolver> resolver, const request_patch_t &requestor)
-		: _resolver(resolver), _requestor(requestor), _flatten(resolver->get_metadata_map()), _filter(_flatten),
+	image_patch_model::image_patch_model(shared_ptr<const tables::patches> patches,
+			shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
+		: _patches(patches), _modules(modules), _mappings(mappings), _flatten(*modules), _filter(_flatten),
 			_ordered(_filter)
 	{
-		_uinvalidate = _resolver->invalidate += [this] {
+		auto on_invalidate = [this] {
 			_ordered.fetch();
 			invalidate(npos());
 		};
+		auto update_mapping_index = [this] {
+			_mappings_index.clear();
+			for (auto i = _mappings->begin(); i != _mappings->end(); ++i)
+				_mappings_index[i->second.persistent_id] = i, _modules->request_presence(i->second.persistent_id);
+		};
+
+		_connections.push_back(_patches->invalidated += on_invalidate);
+		_connections.push_back(_modules->invalidated += on_invalidate);
+		_connections.push_back(_mappings->invalidated += [on_invalidate, update_mapping_index] {
+			update_mapping_index();
+			on_invalidate();
+		});
+		update_mapping_index();
 	}
 
 	image_patch_model::index_type image_patch_model::get_count() const throw()
@@ -63,20 +79,25 @@ namespace micro_profiler
 
 		switch (column)
 		{
-		case 0:
+		case 0: // rva
 			itoa<16>(value, record.second.rva, 8);
 			break;
 
-		case 1:
+		case 1: // name
+			add_styles(value, record.first.first, record.first.second);
 			value.append(record.second.name.begin(), record.second.name.end());
 			break;
 
-		case 2:
+		case 2: // size
 			itoa<10>(value, record.second.size);
 			break;
 
-		case 3:
+		case 3: // module's persistent_id
 			itoa<10>(value, record.first.first);
+			break;
+
+		case 4: // module's name
+			get_module_name(value, record.first.first);
 			break;
 		}
 	}
@@ -104,9 +125,9 @@ namespace micro_profiler
 			_filter.set_filter([filter] (const flattener::value_type &e) {
 				return string::npos != e.second.name.find(filter);
 			});
-			_ordered.fetch();
-			invalidate(npos());
 		}
+		_ordered.fetch();
+		invalidate(npos());
 	}
 
 	void image_patch_model::patch(const vector<index_type> &items, bool apply)
@@ -120,6 +141,43 @@ namespace micro_profiler
 			s[record.first.first].push_back(record.first.second);
 		}
 		for (auto i = s.begin(); i != s.end(); ++i)
-			_requestor(i->first, i->second, apply);
+		{
+			if (apply)
+				_patches->apply(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
+			else
+				_patches->revert(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
+		}
+	}
+
+	void image_patch_model::get_module_name(agge::richtext_t &value, unsigned int persistent_id) const
+	{
+		const auto i = _mappings_index.find(persistent_id);
+
+		if (_mappings_index.end() != i)
+		{
+			auto name = *i->second->second.path;
+
+			value.append(name.begin(), name.end());
+		}
+	}
+
+	void image_patch_model::add_styles(agge::richtext_t &value, unsigned int persistent_id, unsigned int rva) const
+	{
+		const auto i = _patches->find(persistent_id);
+
+		if (i == _patches->end())
+			return;
+
+		const auto j = i->second.find(rva);
+
+		if (j == i->second.end())
+			return;
+
+		if (j->second.state.active)
+			value << agge::style::weight(agge::bold);
+		if (j->second.state.requested)
+			value << agge::style::italic(true);
+		if (j->second.state.error)
+			value << "(E) ";
 	}
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <frontend/primitives.h>
+#include <frontend/tables.h>
 
 #include <common/module.h>
 #include <test-helpers/helpers.h>
@@ -14,6 +15,17 @@ namespace micro_profiler
 
 	namespace tests
 	{
+		struct plural_
+		{
+			template <typename T>
+			std::vector<T> operator +(const T &rhs) const
+			{	return std::vector<T>(1, rhs);	}
+		} const plural;
+
+		template <typename T>
+		inline std::vector<T> operator +(std::vector<T> lhs, const T &rhs)
+		{	return lhs.push_back(rhs), lhs;	}
+
 		struct columns
 		{
 			enum main
@@ -82,9 +94,9 @@ namespace micro_profiler
 			ut::are_equivalent(reference_rows, actual_rows, location);
 		}
 
-		inline mapped_module_identified create_mapping(unsigned peristent_id, long_address_t base)
+		inline mapped_module_identified create_mapping(unsigned instance_id, unsigned peristent_id, long_address_t base)
 		{
-			mapped_module_identified mmi = { 0u, peristent_id, std::string(), base, };
+			mapped_module_identified mmi = { instance_id, peristent_id, std::string(), base, };
 			return mmi;
 		}
 
@@ -104,6 +116,14 @@ namespace micro_profiler
 		{
 			return std::vector< std::pair< unsigned /*threadid*/, std::vector<T> > >(1, std::make_pair(threadid,
 				mkvector(array_ptr)));
+		}
+
+		template <typename T>
+		std::vector< std::pair< unsigned /*threadid*/, std::vector<T> > > make_single_threaded(const std::vector<T> &data,
+			unsigned int threadid = 1u)
+		{
+			return std::vector< std::pair< unsigned /*threadid*/, std::vector<T> > >(1, std::make_pair(threadid,
+				data));
 		}
 
 		template <typename ArchiveT, typename ContainerT>

@@ -29,6 +29,7 @@
 #include <ipc/marshalled_session.h>
 #include <ipc/server_session.h>
 #include <logger/log.h>
+#include <scheduler/scheduler.h>
 
 #define PREAMBLE "Collector app: "
 

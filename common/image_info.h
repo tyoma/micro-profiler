@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include "range.h"
-
 #include <functional>
 #include <memory>
 #include <string>
@@ -35,18 +33,9 @@ namespace micro_profiler
 		unsigned int file_id, line;
 	};
 
-	struct symbol_info_mapped
-	{
-		symbol_info_mapped(const char *name_, byte_range body_);
-
-		std::string name;
-		byte_range body;
-	};
-
-	template <typename SymbolT>
 	struct image_info
 	{
-		typedef std::function<void (const SymbolT &symbol)> symbol_callback_t;
+		typedef std::function<void (const symbol_info &symbol)> symbol_callback_t;
 		typedef std::function<void (const std::pair<unsigned int /*file_id*/, std::string /*path*/> &file)> file_callback_t;
 
 		virtual ~image_info() {	}
@@ -54,17 +43,5 @@ namespace micro_profiler
 		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
 	};
 
-	std::shared_ptr< image_info<symbol_info> > load_image_info(const std::string &image_path);
-
-	class offset_image_info : public image_info<symbol_info_mapped>
-	{
-	public:
-		offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base);
-
-		virtual void enumerate_functions(const symbol_callback_t &callback) const;
-
-	private:
-		std::shared_ptr< image_info<symbol_info> > _underlying;
-		byte *_base;
-	};
+	std::shared_ptr<image_info> load_image_info(const std::string &image_path);
 }

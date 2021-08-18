@@ -26,6 +26,7 @@
 #include <common/pod_vector.h>
 #include <common/serialization.h>
 #include <functional>
+#include <scheduler/private_queue.h>
 #include <strmd/packer.h>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
@@ -42,7 +43,7 @@ namespace micro_profiler
 			typedef unsigned long long token_t;
 
 		public:
-			server_session(channel &outbound);
+			server_session(channel &outbound, std::shared_ptr<scheduler::queue> queue = std::shared_ptr<scheduler::queue>());
 
 			template <typename PayloadT>
 			void add_handler(int request_id,
@@ -60,10 +61,14 @@ namespace micro_profiler
 			virtual void disconnect() throw() override;
 			virtual void message(const_byte_range payload) override;
 
+			void schedule_continuation(token_t token, const std::function<void (request &context)> &continuation_handler);
+
 		private:
 			channel &_outbound;
 			pod_vector<byte> _outbound_buffer;
 			std::unordered_map<int /*request_id*/, handler_t> _handlers;
+			scheduler::private_queue _queue;
+			const bool _deferral_enabled;
 		};
 
 		class server_session::request : noncopyable
@@ -72,18 +77,21 @@ namespace micro_profiler
 			template <typename FormatterT>
 			void respond(int response_id, const FormatterT &response_formatter);
 
-		public:
-			std::function<void (request &context)> continuation;
+			void defer(const std::function<void (request &context)> &continuation_handler);
 
 		private:
-			request(server_session &owner, token_t token);
+			request(server_session &owner, token_t token, bool deferral_enabled);
 
 			void operator &();
 			void operator &() const;
 
 		private:
+			std::function<void (request &context)> continuation;
+
+		private:
 			server_session &_owner;
-			token_t _token;
+			const token_t _token;
+			const bool _deferral_enabled;
 
 		private:
 			friend class server_session;

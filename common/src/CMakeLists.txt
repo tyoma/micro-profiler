@@ -4,7 +4,6 @@ set(COMMON_SOURCES
 	configuration_file.cpp
 	constants.cpp
 	formatting.cpp
-	image_info.cpp
 	memory.cpp
 	serialization.cpp
 	string.cpp

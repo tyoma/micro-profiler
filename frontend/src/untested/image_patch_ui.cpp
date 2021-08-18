@@ -20,6 +20,7 @@ namespace micro_profiler
 			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
 			{	"Size", "Size" + secondary, 64, headers_model::dir_ascending, agge::align_far	},
 			{	"ModuleId", "Module\n" + secondary + "persistent id", 64, headers_model::dir_descending, agge::align_far	},
+			{	"Module", "Module\n" + secondary + "filename", 100, headers_model::dir_none, agge::align_near	},
 		};
 	}
 
@@ -103,5 +104,7 @@ namespace micro_profiler
 				btn->set_text(agge::style_modifier::empty + "Close");
 				_connections.push_back(btn->clicked += [this, model] {
 				});
+
+		model->set_filter(string());
 	}
 }

@@ -3,10 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(IPC_TESTS_SOURCES
+	ClientSessionTests.cpp
 	EndpointSelectorTests.cpp
 	helpers_sockets.cpp
 	MarshalledActiveSessionTests.cpp
 	MarshalledServerTests.cpp
+	ServerSessionContinuationTests.cpp
 	ServerSessionTests.cpp
 	SocketsEndpointClientTests.cpp
 	SocketsEndpointServerTests.cpp

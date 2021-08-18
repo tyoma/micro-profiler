@@ -18,33 +18,51 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/image_info.h>
+#include <ipc/client_session.h>
 
 using namespace std;
-using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	symbol_info_mapped::symbol_info_mapped(const char *name_, byte_range body_)
-		: name(name_), body(body_)
-	{	}
-
-
-	offset_image_info::offset_image_info(const std::shared_ptr< image_info<symbol_info> > &underlying, size_t base)
-		: _underlying(underlying), _base((byte *)base)
-	{	}
-
-	void offset_image_info::enumerate_functions(const symbol_callback_t &callback) const
+	namespace ipc
 	{
-		struct local
-		{
-			static void offset_symbol(const symbol_callback_t &callback, const symbol_info &si, byte *base)
-			{
-				symbol_info_mapped offset_si(si.name.c_str(), byte_range(base + si.rva, si.size));
+		client_session::client_session(channel &outbound)
+			: _token(1), _outbound(&outbound), _callbacks(make_shared<callbacks_t>()),
+				_message_callbacks(make_shared<message_callbacks_t>())
+		{	}
 
-				callback(offset_si);
+		void client_session::disconnect_session() throw()
+		{	_outbound->disconnect();	}
+
+		void client_session::disconnect() throw()
+		{
+		}
+
+		void client_session::message(const_byte_range payload)
+		{
+			buffer_reader r(payload);
+			deserializer d(r);
+			int response_id;
+
+			d(response_id);
+
+			auto m = _message_callbacks->find(response_id);
+
+			if (_message_callbacks->end() != m)
+			{
+				m->second(d);
 			}
-		};
-		_underlying->enumerate_functions(bind(&local::offset_symbol, callback, _1, _base));
+			else
+			{
+				token_t token;
+
+				d(token);
+
+				auto i = _callbacks->find(make_pair(response_id, token));
+
+				if (_callbacks->end() != i)
+					i->second(d);
+			}
+		}
 	}
 }

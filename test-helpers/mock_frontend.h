@@ -6,6 +6,7 @@
 #include <common/protocol.h>
 #include <functional>
 #include <ipc/endpoint.h>
+#include <patcher/interface.h>
 
 namespace micro_profiler
 {
@@ -33,8 +34,8 @@ namespace micro_profiler
 				std::function<void (unsigned token, const unloaded_modules &m)> modules_unloaded;
 				std::function<void (unsigned token, unsigned id, const module_info_metadata &md)> metadata_received;
 				std::function<void (unsigned token, const std::vector< std::pair<unsigned /*thread_id*/, thread_info> > &threads)> threads_received;
-				std::function<void (unsigned token, const std::vector<unsigned /*rva*/> &failures)> activation_errors_received;
-				std::function<void (unsigned token, const std::vector<unsigned /*rva*/> &failures)> revert_errors_received;
+				std::function<void (unsigned token, const patch_manager::apply_results &results)> activation_response_received;
+				std::function<void (unsigned token, const patch_manager::revert_results &results)> revert_response_received;
 
 			private:
 				std::shared_ptr<void> _ownee;
@@ -55,7 +56,8 @@ namespace micro_profiler
 				std::vector< std::pair<unsigned /*thread_id*/, thread_info> > threads;
 
 				unsigned token;
-				std::vector<unsigned /*rva*/> rva;
+				patch_manager::apply_results aresults;
+				patch_manager::revert_results rresults;
 
 				switch (a(c), c)
 				{
@@ -93,13 +95,13 @@ namespace micro_profiler
 					break;
 
 				case response_patched:
-					if (state.activation_errors_received)
-						a(rva), state.activation_errors_received(token, rva);
+					if (state.activation_response_received)
+						a(aresults), state.activation_response_received(token, aresults);
 					break;
 
 				case response_reverted:
-					if (state.revert_errors_received)
-						a(rva), state.revert_errors_received(token, rva);
+					if (state.revert_response_received)
+						a(rresults), state.revert_response_received(token, rresults);
 					break;
 
 				default:

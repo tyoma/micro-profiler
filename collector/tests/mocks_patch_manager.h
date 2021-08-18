@@ -11,32 +11,29 @@ namespace micro_profiler
 			class patch_manager : public micro_profiler::patch_manager
 			{
 			public:
-				std::function<void (std::vector<unsigned int /*rva of installed*/> &result, unsigned int persistent_id)> on_query;
-				std::function<void (std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
-					std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions)> on_apply;
-				std::function<void (std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
-					range<const unsigned int /*rva*/, size_t> functions)> on_revert;
+				std::function<void (patch_state &states, unsigned int persistent_id)> on_query;
+				std::function<void (apply_results &results, unsigned int persistent_id, void *base,
+					std::shared_ptr<void> lock, request_range targets)> on_apply;
+				std::function<void (revert_results &results, unsigned int persistent_id, request_range targets)> on_revert;
 
 			private:
-				virtual void query(std::vector<unsigned int /*rva of installed*/> &result, unsigned int persistent_id) override;
-				virtual void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
-					std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions) override;
-				virtual void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
-					range<const unsigned int /*rva*/, size_t> functions) override;
+				virtual void query(patch_state &states, unsigned int persistent_id) override;
+				virtual void apply(apply_results &results, unsigned int persistent_id, void *base,
+					std::shared_ptr<void> lock, request_range targets) override;
+				virtual void revert(revert_results &results, unsigned int persistent_id, request_range targets) override;
 			};
 
 
 
-			inline void patch_manager::query(std::vector<unsigned int> &result, unsigned int persistent_id)
-			{	on_query(result, persistent_id);	}
+			inline void patch_manager::query(patch_state &states, unsigned int persistent_id)
+			{	on_query(states, persistent_id);	}
 
-			inline void patch_manager::apply(std::vector<unsigned int> &failures, unsigned int persistent_id, void *base,
-				std::shared_ptr<void> lock, range<const unsigned int, size_t> functions)
-			{	on_apply(failures, persistent_id, base, lock, functions);	}
+			inline void patch_manager::apply(apply_results &results, unsigned int persistent_id, void *base,
+				std::shared_ptr<void> lock, request_range targets)
+			{	on_apply(results, persistent_id, base, lock, targets);	}
 
-			inline void patch_manager::revert(std::vector<unsigned int> &failures, unsigned int persistent_id,
-				range<const unsigned int, size_t> functions)
-			{	on_revert(failures, persistent_id, functions);	}
+			inline void patch_manager::revert(revert_results &results, unsigned int persistent_id, request_range targets)
+			{	on_revert(results, persistent_id, targets);	}
 		}
 	}
 }

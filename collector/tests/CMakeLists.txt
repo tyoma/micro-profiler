@@ -6,16 +6,15 @@ set(COLLECTOR_TESTS_SOURCES
 	AnalyzerTests.cpp
 	CallsCollectorTests.cpp
 	CallsCollectorThreadTests.cpp
+	CollectorAppPatcherTests.cpp
 	CollectorAppTests.cpp
 	helpers.cpp
-	ImagePatchTests.cpp
+	mocks.cpp
 	ModuleTrackerTests.cpp
 	SerializationTests.cpp
 	ShadowStackTests.cpp
 	ThreadAnalyzerTests.cpp
 	ThreadMonitorTests.cpp
-	mocks.cpp
-	mocks_image_info.cpp
 )
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)

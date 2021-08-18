@@ -50,7 +50,6 @@
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ClCompile Include="formatting.cpp" />
-    <ClCompile Include="image_info.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="memory_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>

@@ -26,8 +26,8 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		server_session::server_session(channel &outbound)
-			: _outbound(outbound)
+		server_session::server_session(channel &outbound, shared_ptr<scheduler::queue> queue)
+			: _outbound(outbound), _queue(queue), _deferral_enabled(queue)
 		{	}
 
 		void server_session::disconnect() throw()
@@ -48,15 +48,36 @@ namespace micro_profiler
 
 			if (h != _handlers.end())
 			{
-				request req(*this, token);
+				request req(*this, token, _deferral_enabled);
 
 				h->second(req, d);
+				if (req.continuation)
+					schedule_continuation(token, req.continuation);
 			}
 		}
 
+		void server_session::schedule_continuation(token_t token,
+			const function<void (request &context)> &continuation_handler)
+		{
+			_queue.schedule([this, token, continuation_handler] {
+				request req(*this, token, true);
 
-		server_session::request::request(server_session &owner, token_t token)
-			: _owner(owner), _token(token)
+				continuation_handler(req);
+				if (req.continuation)
+					schedule_continuation(token, req.continuation);
+			});
+		}
+
+
+		server_session::request::request(server_session &owner, token_t token, bool deferral_enabled)
+			: _owner(owner), _token(token), _deferral_enabled(deferral_enabled)
 		{	}
+
+		void server_session::request::defer(const function<void (request &context)> &continuation_handler)
+		{
+			if (!_deferral_enabled)
+				throw logic_error("deferring is disabled - no queue");
+			continuation = continuation_handler;
+		}
 	}
 }

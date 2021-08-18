@@ -50,6 +50,12 @@ namespace micro_profiler
 		timestamp_t outer; // The overhead observed by a parent function (in addition to inner) when making a call.
 	};
 
+	struct initialization_data
+	{
+		std::string executable;
+		timestamp_t ticks_per_second;
+	};
+
 	struct thread_info
 	{
 		unsigned long long native_id;

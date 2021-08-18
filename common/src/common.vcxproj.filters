@@ -40,9 +40,6 @@
     <ClCompile Include="serialization.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="image_info.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="image_info_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>

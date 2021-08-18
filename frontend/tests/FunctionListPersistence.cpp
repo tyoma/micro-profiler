@@ -26,12 +26,11 @@ namespace micro_profiler
 			vector_adapter _buffer;
 			strmd::serializer<vector_adapter, packer> ser;
 			strmd::deserializer<vector_adapter, packer> dser;
+			std::shared_ptr<tables::modules> modules;
+			std::shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<mocks::threads_model> tmodel;
 			scontext::wire dummy_context;
 			
-			function<void (unsigned persistent_id)> get_requestor()
-			{	return [] (unsigned /*persistent_id*/) { };	}
-
 			function<void (const vector<unsigned> &)> get_requestor_threads()
 			{	return [] (const vector<unsigned> &) { };	}
 
@@ -41,6 +40,8 @@ namespace micro_profiler
 
 			init( CreatePrerequisites )
 			{
+				modules = make_shared<tables::modules>();
+				mappings = make_shared<tables::module_mappings>();
 				tmodel.reset(new mocks::threads_model);
 			}
 
@@ -74,7 +75,7 @@ namespace micro_profiler
 				snapshot_save<scontext::file_v4>(ser, *fl1);
 
 				// ASSERT
-				symbol_resolver r(get_requestor());
+				symbol_resolver r(modules, mappings);
 
 				dser(ticks_per_second);
 				dser(r);
@@ -124,7 +125,7 @@ namespace micro_profiler
 
 				// ASSERT
 				long long dummy_frequency;
-				symbol_resolver dummy_resolver(get_requestor());
+				symbol_resolver dummy_resolver(modules, mappings);
 				statistic_types::map_detailed dummy_data;
 				threads_model threads1(get_requestor_threads());
 				threads_model threads2(get_requestor_threads());
@@ -179,7 +180,7 @@ namespace micro_profiler
 				snapshot_save<scontext::file_v4>(ser, *fl);
 
 				// ASSERT
-				symbol_resolver r(get_requestor());
+				symbol_resolver r(modules, mappings);
 				statistic_types::map_detailed stats_read;
 
 				dser(ticks_per_second);
@@ -225,6 +226,7 @@ namespace micro_profiler
 
 				assert_table_equivalent(ordering, reference, *fl);
 			}
+
 
 			test( FunctionListIsCompletelyRestoredWithSymbolsV3 )
 			{

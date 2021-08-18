@@ -32,7 +32,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		class elf_image_info : public image_info<symbol_info>
+		class elf_image_info : public image_info
 		{
 		public:
 			elf_image_info(const string &path);
@@ -78,6 +78,6 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr< image_info<symbol_info> > load_image_info(const string &image_path)
-	{	return shared_ptr< image_info<symbol_info> >(new elf_image_info(image_path));	}
+	shared_ptr< image_info > load_image_info(const string &image_path)
+	{	return shared_ptr< image_info >(new elf_image_info(image_path));	}
 }

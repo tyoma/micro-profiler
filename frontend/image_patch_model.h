@@ -23,7 +23,7 @@
 #include "flatten_view.h"
 #include "filter_view.h"
 #include "ordered_view.h"
-#include "symbol_resolver.h"
+#include "tables.h"
 
 #include <wpl/models.h>
 
@@ -34,10 +34,8 @@ namespace micro_profiler
 	class image_patch_model : public wpl::richtext_table_model
 	{
 	public:
-		typedef std::function<void (unsigned int persistent_id, const std::vector<unsigned int> &rva, bool apply)> request_patch_t;
-
-	public:
-		image_patch_model(std::shared_ptr<symbol_resolver> resolver, const request_patch_t &requestor);
+		image_patch_model(std::shared_ptr<const tables::patches> patches, std::shared_ptr<const tables::modules> modules,
+			std::shared_ptr<const tables::module_mappings> mappings);
 
 		virtual index_type get_count() const throw() override;
 		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const override;
@@ -83,12 +81,20 @@ namespace micro_profiler
 		};
 
 	private:
-		std::shared_ptr<symbol_resolver> _resolver;
-		request_patch_t _requestor;
-		flatten_view<symbol_resolver::modules_map_t, flattener> _flatten;
-		filter_view< flatten_view<symbol_resolver::modules_map_t, flattener> > _filter;
-		ordered_view< filter_view< flatten_view<symbol_resolver::modules_map_t, flattener> > > _ordered;
+		void get_module_name(agge::richtext_t &value, unsigned int persistent_id) const;
+		void add_styles(agge::richtext_t &value, unsigned int persistent_id, unsigned int rva) const;
 
-		wpl::slot_connection _uinvalidate;
+	private:
+		std::shared_ptr<const tables::patches> _patches;
+		std::shared_ptr<const tables::modules> _modules;
+		std::shared_ptr<const tables::module_mappings> _mappings;
+
+		flatten_view<tables::modules, flattener> _flatten;
+		filter_view< flatten_view<tables::modules, flattener> > _filter;
+		ordered_view< filter_view< flatten_view<tables::modules, flattener> > > _ordered;
+
+		std::unordered_map<unsigned int /*persistent_id*/, tables::module_mappings::const_iterator> _mappings_index;
+
+		std::vector<wpl::slot_connection> _connections;
 	};
 }

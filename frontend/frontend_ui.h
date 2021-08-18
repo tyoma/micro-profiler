@@ -20,23 +20,28 @@
 
 #pragma once
 
+#include <common/types.h>
 #include <string>
 #include <wpl/signal.h>
 
 namespace micro_profiler
 {
 	class functions_list;
-	class image_patch_model;
-	class symbol_resolver;
-	class threads_model;
+	
+	namespace tables
+	{
+		struct module_mappings;
+		struct modules;
+		struct patches;
+	}
 
 	struct frontend_ui_context
 	{
-		std::string executable;
+		initialization_data process_info;
 		std::shared_ptr<functions_list> model;
-		std::shared_ptr<symbol_resolver> symbols;
-		std::shared_ptr<threads_model> threads;
-		std::shared_ptr<image_patch_model> patches;
+		std::shared_ptr<const tables::module_mappings> module_mappings;
+		std::shared_ptr<const tables::modules> modules;
+		std::shared_ptr<const tables::patches> patches;
 	};
 
 	struct frontend_ui

@@ -24,44 +24,70 @@
 #include "serialization_context.h"
 
 #include <common/noncopyable.h>
-#include <common/pod_vector.h>
 #include <common/protocol.h>
+#include <common/unordered_map.h>
 #include <functional>
-#include <ipc/endpoint.h>
+#include <ipc/client_session.h>
+#include <list>
 #include <scheduler/private_queue.h>
 
 namespace micro_profiler
 {
-	class frontend : public ipc::channel, noncopyable
+	namespace tables
+	{
+		struct module_mappings;
+		struct modules;
+		struct patches;
+	}
+
+	class symbol_resolver;
+	class threads_model;
+
+	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
 		frontend(ipc::channel &outbound, std::shared_ptr<scheduler::queue> queue);
 		~frontend();
 
-		void disconnect_session() throw();
-
 	public:
 		std::function<void (const frontend_ui_context &ui_context)> initialized;
 
 	private:
-		// ipc::channel methods
-		virtual void disconnect() throw() override;
-		virtual void message(const_byte_range payload) override;
-
-		void schedule_update_request();
-
-		template <typename DataT>
-		void send(messages_id command, const DataT &data);
-
-		template <typename Data1T, typename Data2T>
-		void send(messages_id command, const Data1T &data1, const Data2T &data2);
+		typedef std::list< std::shared_ptr<void> > requests_t;
 
 	private:
-		ipc::channel &_outbound;
-		frontend_ui_context _ui_context;
-		pod_vector<byte> _buffer;
+		// ipc::channel methods
+		virtual void disconnect() throw() override;
+
+		void init_patcher();
+		void apply(unsigned int persistent_id, range<const unsigned int, size_t> rva);
+		void revert(unsigned int persistent_id, range<const unsigned int, size_t> rva);
+
+		void request_full_update();
+
+		std::shared_ptr<threads_model> get_threads();
+
+		requests_t::iterator new_request_handle();
+
+	private:
+		initialization_data _process_info;
+		std::shared_ptr<tables::modules> _modules;
+		std::shared_ptr<tables::module_mappings> _mappings;
+		std::shared_ptr<tables::patches> _patches;
+		std::shared_ptr<functions_list> _model;
+		std::shared_ptr<threads_model> _threads;
 		scontext::wire _serialization_context;
 		scheduler::private_queue _queue;
-		std::shared_ptr<bool> _alive;
+
+		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;
+		std::list< std::shared_ptr<void> > _requests;
+		std::shared_ptr<void> _update_request;
+
+		// request_apply_patches buffers
+		patch_request _patch_request_payload;
+		response_patched_data _patched_buffer;
+
+		// request_revert_patches buffers
+		response_reverted_data _reverted_buffer;
 	};
 }

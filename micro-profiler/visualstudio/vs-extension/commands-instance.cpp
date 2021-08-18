@@ -5,6 +5,7 @@
 #include <frontend/file.h>
 #include <frontend/frontend_ui.h>
 #include <frontend/function_list.h>
+#include <frontend/image_patch_model.h>
 #include <frontend/image_patch_ui.h>
 #include <frontend/persistence.h>
 #include <strmd/serializer.h>
@@ -25,7 +26,7 @@ namespace micro_profiler
 			command_target &target, const frontend_ui_context &context)
 		{
 			auto model = context.model;
-			auto executable = context.executable;
+			auto executable = context.process_info.executable;
 
 			target.add_command(cmdidPauseUpdates, [model] (unsigned) {
 				model->updates_enabled = false;
@@ -82,10 +83,7 @@ namespace micro_profiler
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
 			});
 
-			auto symbols_requested = make_shared<bool>(false);
-
-			target.add_command(cmdidProfileScope, [&running_objects, &factory, context, symbols_requested] (unsigned) {
-
+			target.add_command(cmdidProfileScope, [&running_objects, &factory, context] (unsigned) {
 				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center about form.
 				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
 				auto &running_objects_ = running_objects;
@@ -95,8 +93,9 @@ namespace micro_profiler
 				};
 				const auto root = make_shared<wpl::overlay>();
 					root->add(factory.create_control<wpl::control>("background"));
-					const auto about = make_shared<image_patch_ui>(factory, context.patches);
-					root->add(wpl::pad_control(about, 5, 5));
+					const auto patch_ui = make_shared<image_patch_ui>(factory,
+						make_shared<image_patch_model>(context.patches, context.modules, context.module_mappings));
+					root->add(wpl::pad_control(patch_ui, 5, 5));
 
 				o->first = factory.create_modal();
 				o->second.push_back(o->first->close += onclose);
@@ -104,10 +103,6 @@ namespace micro_profiler
 				o->first->set_root(root);
 				o->first->set_location(l);
 				o->first->set_visible(true);
-
-				if (!*symbols_requested)
-					context.symbols->request_all_symbols(), *symbols_requested = true;
-
 			}, false, [] (unsigned, unsigned &state) {
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
 			});

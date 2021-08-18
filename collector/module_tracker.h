@@ -30,13 +30,12 @@ namespace micro_profiler
 {
 	struct symbol_info;
 
-	template <typename SymbolT>
 	struct image_info;
 
 	class module_tracker
 	{
 	public:
-		typedef image_info<symbol_info> metadata_t;
+		typedef image_info metadata_t;
 		typedef std::shared_ptr<const metadata_t> metadata_ptr;
 
 	public:

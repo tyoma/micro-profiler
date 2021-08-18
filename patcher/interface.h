@@ -26,21 +26,35 @@
 
 namespace micro_profiler
 {
-	struct patch_failure
+	struct patch_result
 	{
-		unsigned int rva;
-		int failure_code;
+		enum errors {	ok, error, unchanged,	};
+	};
+
+	struct patch_state
+	{
+		enum states {	active, dormant, orphaned,	} state;
+		unsigned int id;
+	};
+
+	struct patch_apply
+	{
+		patch_result::errors result;
+		unsigned int id; // Identifier assigned or existed before for a dormant patch.
 	};
 
 	struct patch_manager
 	{
-		patch_manager()
-		{	}
+		typedef std::vector< std::pair<unsigned int /*rva*/, patch_apply> > apply_results;
+		typedef std::vector< std::pair<unsigned int /*rva*/, patch_result::errors> > revert_results;
+		typedef std::vector< std::pair<unsigned int /*rva*/, patch_state> > patch_states;
+		typedef range<const unsigned int /*rva*/, size_t> request_range;
 
-		virtual void query(std::vector<unsigned int /*rva of installed*/> &result, unsigned int persistent_id) = 0;
-		virtual void apply(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id, void *base,
-			std::shared_ptr<void> lock, range<const unsigned int /*rva*/, size_t> functions) = 0;
-		virtual void revert(std::vector<unsigned int /*rva*/> &failures, unsigned int persistent_id,
-			range<const unsigned int /*rva*/, size_t> functions) = 0;
+		patch_manager() {	}
+
+		virtual void query(patch_state &states, unsigned int persistent_id) = 0;
+		virtual void apply(apply_results &results, unsigned int persistent_id, void *base, std::shared_ptr<void> lock,
+			request_range targets) = 0;
+		virtual void revert(revert_results &results, unsigned int persistent_id, request_range targets) = 0;
 	};
 }

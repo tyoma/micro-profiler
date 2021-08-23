@@ -61,12 +61,20 @@
     <ClCompile Include="FunctionListPersistence.cpp" />
     <ClCompile Include="FunctionListPiechartTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
+    <ClCompile Include="ImagePatchModelTests.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="ProcessListTests.cpp" />
+    <ClCompile Include="ProjectionViewTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
     <ClCompile Include="ThreadsModelTests.cpp" />
+    <ClCompile Include="TrackablesProviderTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

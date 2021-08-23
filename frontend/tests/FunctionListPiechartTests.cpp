@@ -343,7 +343,7 @@ namespace micro_profiler
 				fl->set_order(columns::times_called, false);
 
 				// ASSERT
-				assert_equal(1, invalidated_count);
+				assert_equal(2, invalidated_count);
 
 				// ACT
 				fl->set_order(columns::times_called, true);
@@ -354,7 +354,7 @@ namespace micro_profiler
 				fl->set_order(columns::max_time, false);
 
 				// ASSERT
-				assert_equal(7, invalidated_count);
+				assert_equal(14, invalidated_count);
 			}
 		end_test_suite
 	}

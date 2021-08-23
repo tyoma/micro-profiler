@@ -25,6 +25,7 @@
 #include <common/types.h>
 #include <common/unordered_map.h>
 #include <frontend/ordered_view.h>
+#include <frontend/projection_view.h>
 #include <wpl/models.h>
 
 namespace strmd
@@ -58,8 +59,12 @@ namespace micro_profiler
 		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const override;
 
 	private:
+		typedef containers::unordered_map<unsigned int, thread_info, knuth_hash> map_type;
+
+	private:
 		const request_threads_t _requestor;
-		ordered_view< containers::unordered_map<unsigned int, thread_info, knuth_hash> > _view;
+		ordered_view<map_type> _view;
+		trackables_provider< ordered_view<map_type> > _trackables;
 		std::vector<unsigned int> _ids_buffer;
 
 	private:

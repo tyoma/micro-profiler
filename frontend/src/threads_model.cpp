@@ -28,10 +28,10 @@ namespace micro_profiler
 	}
 
 	threads_model::threads_model(const request_threads_t &requestor)
-		: _requestor(requestor), _view(*this)
+		: _requestor(requestor), _view(*this), _trackables(_view)
 	{
-		_view.set_order([] (unsigned int, const thread_info &lhs, unsigned int, const thread_info &rhs) {
-			return lhs.cpu_time < rhs.cpu_time;
+		_view.set_order([] (const map_type::value_type &lhs, const map_type::value_type &rhs) {
+			return lhs.second.cpu_time < rhs.second.cpu_time;
 		}, false);
 	}
 
@@ -46,7 +46,7 @@ namespace micro_profiler
 	{	return index >= 1 && index < get_count() ? thread_id = _view[index - 1].first, true : false;	}
 
 	threads_model::index_type threads_model::get_count() const throw()
-	{	return _view.get_count() + 1;	}
+	{	return _view.size() + 1;	}
 
 	void threads_model::get_value(index_type index, string &text) const
 	{
@@ -69,5 +69,5 @@ namespace micro_profiler
 	}
 
 	shared_ptr<const wpl::trackable> threads_model::track(index_type index) const
-	{	return shared_ptr<trackable>(new trackable(_view, index));	}
+	{	return make_shared<trackable>(_trackables, index);	}
 }

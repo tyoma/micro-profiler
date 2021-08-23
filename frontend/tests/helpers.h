@@ -63,6 +63,23 @@ namespace micro_profiler
 				static_cast<wpl::table_model_base::index_type>(column), text), text.underlying();
 		}
 
+		template <size_t columns_n>
+		inline std::vector< std::vector<std::string> > get_text(const wpl::richtext_table_model &model,
+			unsigned (&columns_)[columns_n])
+		{
+			using namespace std;
+
+			vector< vector<string> > values;
+
+			for (size_t i = 0, count = model.get_count(); i != count; ++i)
+			{
+				values.resize(values.size() + 1);
+				for (auto j = begin(columns_); j != end(columns_); ++j)
+					values.back().push_back(get_text(model, i, *j));
+			}
+			return values;
+		}
+
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equal(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
 			const wpl::richtext_table_model &actual, const ut::LocationInfo &location)

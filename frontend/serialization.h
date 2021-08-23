@@ -120,6 +120,7 @@ namespace micro_profiler
 		void complete(threads_model &container)
 		{
 			container._view.fetch();
+			container._trackables.fetch();
 			container.invalidate(threads_model::npos());
 		}
 	};

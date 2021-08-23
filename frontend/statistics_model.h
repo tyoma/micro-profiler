@@ -23,6 +23,8 @@
 #include "filter_view.h"
 #include "ordered_view.h"
 #include "primitives.h"
+#include "projection_view.h"
+#include "trackables_provider.h"
 
 #include <common/noncopyable.h>
 
@@ -63,7 +65,8 @@ namespace micro_profiler
 		index_type get_index(function_key address) const;
 
 	protected:
-		typedef ordered_view<MapT> view_type;
+		typedef filter_view<MapT> filter_view_type;
+		typedef ordered_view<filter_view_type> view_type;
 
 	protected:
 		const typename MapT::value_type &get_entry(index_type row) const;
@@ -73,8 +76,10 @@ namespace micro_profiler
 		double _tick_interval;
 
 	private:
-		filter_view<MapT> _filter;
-		std::shared_ptr< ordered_view< filter_view<MapT> > > _view;
+		filter_view_type _filter;
+		std::shared_ptr<view_type> _view;
+		std::shared_ptr< trackables_provider<view_type> > _trackables;
+		std::shared_ptr< projection_view<view_type, double> > _projection;
 		const std::shared_ptr<symbol_resolver> _resolver;
 		const std::shared_ptr<threads_model> _threads;
 	};
@@ -85,7 +90,9 @@ namespace micro_profiler
 	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(const MapT &statistics, double tick_interval,
 			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads)
 		: _tick_interval(tick_interval), _filter(statistics), _view(new ordered_view< filter_view<MapT> >(_filter)),
-			_resolver(resolver), _threads(threads)
+			_trackables(std::make_shared< trackables_provider<view_type> >(*_view)),
+			_projection(std::make_shared< projection_view<view_type, double> >(*_view)), _resolver(resolver),
+			_threads(threads)
 	{ }
 
 	template <typename BaseT, typename MapT>
@@ -98,7 +105,7 @@ namespace micro_profiler
 
 	template <typename BaseT, typename MapT>
 	std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
-	{	return _view;	}
+	{	return _projection;	}
 
 	template <typename BaseT, typename MapT>
 	template <typename PredicateT>
@@ -124,11 +131,11 @@ namespace micro_profiler
 
 	template <typename BaseT, typename MapT>
 	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_count() const throw()
-	{ return _view ? _view->get_count() : 0u; }
+	{ return _view ? _view->size() : 0u; }
 
 	template <typename BaseT, typename MapT>
 	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
-	{	return _view->track(row);	}
+	{	return _trackables->track(row);	}
 
 	template <typename BaseT, typename MapT>
 	inline function_key statistics_model_impl<BaseT, MapT>::get_key(index_type item) const
@@ -136,7 +143,14 @@ namespace micro_profiler
 
 	template <typename BaseT, typename MapT>
 	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(function_key key) const
-	{	return _view->find_by_key(key);	}
+	{
+		for (size_t i = 0, count = _view->size(); i != count; ++i)
+		{
+			if ((*_view)[i].first == key)
+				return i;
+		}
+		return this->npos();
+	}
 
 	template <typename BaseT, typename MapT>
 	inline const typename MapT::value_type &statistics_model_impl<BaseT, MapT>::get_entry(index_type row) const
@@ -148,6 +162,8 @@ namespace micro_profiler
 		if (!_view)
 			return;
 		_view->fetch();
+		_trackables->fetch();
+		_projection->fetch();
 		this->invalidate(this->npos());
 	}
 }

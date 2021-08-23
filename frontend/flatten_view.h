@@ -26,13 +26,12 @@ namespace micro_profiler
 	class flatten_view
 	{
 	public:
-		typedef typename AccessT::value_type value_type;
-		typedef typename AccessT::value_type const_reference;
+		typedef typename AccessT::const_reference const_reference;
 
 		class const_iterator
 		{
 		public:
-			value_type operator *() const throw()
+			const_reference operator *() const throw()
 			{	return AccessT::get(*_l1, *_l2);	}
 
 			const const_iterator &operator ++()

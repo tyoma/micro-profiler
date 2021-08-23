@@ -52,6 +52,9 @@
     <ClCompile Include="frontend_patcher.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="image_patch_model.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -81,6 +84,8 @@
     <ClInclude Include="..\flatten_view.h" />
     <ClInclude Include="..\frontend_ui.h" />
     <ClInclude Include="..\tables.h" />
+    <ClInclude Include="..\projection_view.h" />
+    <ClInclude Include="..\trackables_provider.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

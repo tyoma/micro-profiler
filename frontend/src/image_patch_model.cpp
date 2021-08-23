@@ -18,45 +18,28 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <frontend/image_patch_model.h>
 
-#include "flatten_view.h"
-#include "ordered_view.h"
-
-#include <wpl/models.h>
+using namespace std;
 
 namespace micro_profiler
 {
-	namespace tables
+	struct image_patch_model::flattener::const_reference
 	{
-		struct module_mappings;
-		struct modules;
-		struct patches;
-	}
-
-	class image_patch_model : public wpl::richtext_table_model
-	{
-	public:
-//		typedef record_type;
-
-	public:
-		image_patch_model(std::shared_ptr<const tables::patches> patches, std::shared_ptr<const tables::modules> modules,
-			std::shared_ptr<const tables::module_mappings> mappings);
-
-		virtual index_type get_count() const throw() override;
-		virtual void get_text(index_type row, index_type column, agge::richtext_t &value) const override;
-
-	private:
-		struct flattener
-		{
-			struct const_reference;
-		};
-
-		typedef flatten_view<tables::modules, flattener> flatten_view_t;
-		typedef ordered_view<flatten_view_t> ordered_view_t;
-
-	private:
-//		flatten_view_t _flatten_view;
-//		ordered_view_t _ordered_view;
 	};
+
+	//image_patch_model::image_patch_model(shared_ptr<const tables::patches> /*patches*/,
+	//	shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> /*mappings*/)
+	//	: _flatten_view(*modules), _ordered_view(_flatten_view)
+	//{
+	//}
+
+	//image_patch_model::index_type image_patch_model::get_count() const throw()
+	//{
+	//	return 0;
+	//}
+
+	//void image_patch_model::get_text(index_type /*row*/, index_type /*column*/, agge::richtext_t &/*value*/) const
+	//{
+	//}
 }

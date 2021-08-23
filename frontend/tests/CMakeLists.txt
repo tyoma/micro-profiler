@@ -12,12 +12,15 @@ set(FRONTEND_TESTS_SOURCES
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
 	HeadersModelTests.cpp
+#	ImagePatchModelTests.cpp
 	mocks.cpp
 	OrderedViewTests.cpp
 	ProcessListTests.cpp
+	ProjectionViewTests.cpp
 	SerializationTests.cpp
 	SymbolResolverTests.cpp
 	ThreadsModelTests.cpp
+	TrackablesProviderTests.cpp
 )
 
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})

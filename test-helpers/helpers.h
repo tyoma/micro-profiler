@@ -102,6 +102,16 @@ namespace micro_profiler
 		inline std::vector<T> mkvector(T (&array_ptr)[size])
 		{	return std::vector<T>(array_ptr, array_ptr + size);	}
 
+		template <typename T, size_t l, size_t m>
+		inline std::vector< std::vector<T> > mkvector(T (&array_ptr)[l][m])
+		{
+			std::vector< std::vector<T> > result;
+
+			for (auto i = std::begin(array_ptr); i != std::end(array_ptr); ++i)
+				result.push_back(mkvector(*i));
+			return result;
+		}
+
 		template <typename T, size_t size>
 		inline range<T, size_t> mkrange(T (&array_ptr)[size])
 		{	return range<T, size_t>(array_ptr, size);	}

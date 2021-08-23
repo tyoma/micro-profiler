@@ -25,9 +25,10 @@ namespace micro_profiler
 			struct access_x
 			{
 				typedef vector<string>::const_iterator nested_const_iterator;
-				struct value_type
+
+				struct const_reference
 				{
-					value_type(const int &key_, const string &group_name_, const string &entry_)
+					const_reference(const int &key_, const string &group_name_, const string &entry_)
 						: key(key_), group_name(group_name_), inner_entry(entry_)
 					{	}
 
@@ -36,12 +37,12 @@ namespace micro_profiler
 					const string &inner_entry;
 
 				private:
-					void operator =(const value_type &rhs);
+					void operator =(const const_reference &rhs);
 				};
 
 				template <typename T1, typename T2>
-				static value_type get(const T1 &v1, const T2 &v2)
-				{	return value_type(v1.first, v1.second.group_name, v2);	}
+				static const_reference get(const T1 &v1, const T2 &v2)
+				{	return const_reference(v1.first, v1.second.group_name, v2);	}
 
 				template <typename Type>
 				static nested_const_iterator begin(const Type &v)

@@ -44,6 +44,7 @@
     <ClCompile Include="frontend_patcher.cpp" />
     <ClCompile Include="function_list.cpp" />
     <ClCompile Include="headers_model.cpp" />
+    <ClCompile Include="image_patch_model.cpp" />
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
@@ -78,6 +79,7 @@
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
+    <ClInclude Include="..\projection_view.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\primitives.h" />
@@ -89,6 +91,7 @@
     <ClInclude Include="..\tables.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
+    <ClInclude Include="..\trackables_provider.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

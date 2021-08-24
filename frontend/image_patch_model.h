@@ -47,6 +47,8 @@ namespace micro_profiler
 		image_patch_model(std::shared_ptr<const tables::patches> patches, std::shared_ptr<const tables::modules> modules,
 			std::shared_ptr<const tables::module_mappings> mappings);
 
+		void set_order(index_type column, bool ascending);
+
 		virtual index_type get_count() const throw() override;
 		virtual void get_text(index_type row, index_type column, agge::richtext_t &value) const override;
 

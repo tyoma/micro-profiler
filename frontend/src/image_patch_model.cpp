@@ -27,6 +27,23 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		struct nocase_compare
+		{
+			bool operator ()(char lhs, char rhs) const
+			{	return ::toupper(lhs) < ::toupper(rhs);	}
+		};
+
+		unsigned int encode_state(const tables::patch &p)
+		{	return (p.state.error << 2) + (p.state.active << 1) + (p.state.requested << 0);	}
+
+		const char *c_patch_states[8] = {
+			"inactive", "applying", "active", "removing", "error", "error", "error", "error",
+		};
+	}
+
+
 	image_patch_model::flattener::nested_const_iterator image_patch_model::flattener::begin(const tables::modules::value_type &from)
 	{	return from.second.symbols.begin();	}
 
@@ -52,6 +69,52 @@ namespace micro_profiler
 		_connections[0] = patches->invalidated += invalidate_me;
 		_connections[1] = modules->invalidated += invalidate_me;
 		_connections[2] = mappings->invalidated += invalidate_me;
+
+		for (auto i = mappings->begin(); i != mappings->end(); ++i)
+			modules->request_presence(i->second.persistent_id);
+	}
+
+	void image_patch_model::set_order(index_type column, bool ascending)
+	{
+		switch (column)
+		{
+		case 0:
+			_ordered_view.set_order([] (const record_type &lhs, const record_type &rhs) {
+				return lhs.first.rva < rhs.first.rva;
+			}, ascending);
+			break;
+
+		case 1:
+			_ordered_view.set_order([] (const record_type &lhs_, const record_type &rhs_) -> bool {
+				auto &lhs = lhs_.symbol->name;
+				auto &rhs = rhs_.symbol->name;
+
+				return lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), nocase_compare());
+			}, ascending);
+			break;
+
+		case 2:
+			_ordered_view.set_order([this] (const record_type &lhs_, const record_type &rhs_) -> bool {
+				const auto lhs = find_patch(lhs_.first);
+				const auto rhs = find_patch(rhs_.first);
+
+				if (!lhs & !rhs)
+					return false;
+				else if (!lhs & !!rhs)
+					return true;
+				else if (!!lhs & !rhs)
+					return false;
+				return encode_state(*lhs) < encode_state(*rhs);
+			}, ascending);
+			break;
+
+		case 3:
+			_ordered_view.set_order([] (const record_type &lhs, const record_type &rhs) {
+				return lhs.symbol->size < rhs.symbol->size;
+			}, ascending);
+			break;
+		}
+		invalidate(npos());
 	}
 
 	image_patch_model::index_type image_patch_model::get_count() const throw()
@@ -89,19 +152,6 @@ namespace micro_profiler
 	void image_patch_model::format_state(agge::richtext_t &value, const KeyT &key) const
 	{
 		if (const auto patch = find_patch(key))
-		{
-			auto &state = patch->state;
-
-			if (state.error)
-				value << "error";
-			else if (state.requested && state.active)
-				value << "removing";
-			else if (state.requested && !state.active)
-				value << "applying";
-			else if (state.active)
-				value << "active";
-			else
-				value << "inactive";
-		}
+			value << c_patch_states[encode_state(*patch)];
 	}
 }

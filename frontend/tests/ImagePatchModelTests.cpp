@@ -41,6 +41,8 @@ namespace micro_profiler
 				patches = make_shared<tables::patches>();
 				mappings = make_shared<tables::module_mappings>();
 				modules = make_shared<tables::modules>();
+
+				modules->request_presence = [] (...) {	};
 			}
 
 
@@ -272,6 +274,174 @@ namespace micro_profiler
 
 				assert_equal(2u, log.size());
 				assert_equivalent(mkvector(reference2), log.back());
+			}
+
+
+			test( SortingByColumnsChangesDisplayOrder )
+			{
+				// INIT
+				unsigned columns[] = {	0, 1, 3,	};
+				symbol_info data1[] = {
+					{	"Gc_collect", 0x901A9010, 15,	},
+					{	"malloc", 0x00001234, 150,	},
+					{	"free", 0x00000001, 115,	},
+				};
+				symbol_info data2[] = {
+					{	"string::String", 0x901A9011, 11,	},
+					{	"string::~string", 0x00001230, 12,	},
+					{	"string::operator []", 0x00000011, 13,	},
+					{	"string::clear", 0x00000021, 14,	},
+					{	"string::Find", 0x00000031, 17,	},
+				};
+
+				(*modules)[1].symbols = mkvector(data1);
+				(*modules)[2].symbols = mkvector(data2);
+
+				image_patch_model model(patches, modules, mappings);
+				vector< vector< vector<string> > > log;
+				auto conn = model.invalidate += [&] (image_patch_model::index_type item) {
+					log.push_back(get_text(model, columns));
+					assert_equal(image_patch_model::npos(), item);
+				};
+
+				// ACT
+				model.set_order(0, true);
+
+				// ASSERT
+				string reference1[][3] = {
+					{	"00000001", "free", "115", 	},
+					{	"00000011", "string::operator []", "13", 	},
+					{	"00000021", "string::clear", "14", 	},
+					{	"00000031", "string::Find", "17", 	},
+					{	"00001230", "string::~string", "12", 	},
+					{	"00001234", "malloc", "150", 	},
+					{	"901A9010", "Gc_collect", "15", 	},
+					{	"901A9011", "string::String", "11", 	},
+				};
+
+				assert_equal(1u, log.size());
+				assert_equal(mkvector(reference1), log.back());
+
+				// ACT
+				model.set_order(0, false);
+
+				// ASSERT
+				string reference2[][3] = {
+					{	"901A9011", "string::String", "11", 	},
+					{	"901A9010", "Gc_collect", "15", 	},
+					{	"00001234", "malloc", "150", 	},
+					{	"00001230", "string::~string", "12", 	},
+					{	"00000031", "string::Find", "17", 	},
+					{	"00000021", "string::clear", "14", 	},
+					{	"00000011", "string::operator []", "13", 	},
+					{	"00000001", "free", "115", 	},
+				};
+
+				assert_equal(2u, log.size());
+				assert_equal(mkvector(reference2), log.back());
+
+				// ACT
+				model.set_order(1, true);
+
+				// ASSERT
+				string reference3[][3] = {
+					{	"00000001", "free", "115", 	},
+					{	"901A9010", "Gc_collect", "15", 	},
+					{	"00001234", "malloc", "150", 	},
+					{	"00000021", "string::clear", "14", 	},
+					{	"00000031", "string::Find", "17", 	},
+					{	"00000011", "string::operator []", "13", 	},
+					{	"901A9011", "string::String", "11", 	},
+					{	"00001230", "string::~string", "12", 	},
+				};
+
+				assert_equal(3u, log.size());
+				assert_equal(mkvector(reference3), log.back());
+
+				// ACT
+				model.set_order(3, true);
+
+				// ASSERT
+				string reference4[][3] = {
+					{	"901A9011", "string::String", "11", 	},
+					{	"00001230", "string::~string", "12", 	},
+					{	"00000011", "string::operator []", "13", 	},
+					{	"00000021", "string::clear", "14", 	},
+					{	"901A9010", "Gc_collect", "15", 	},
+					{	"00000031", "string::Find", "17", 	},
+					{	"00000001", "free", "115", 	},
+					{	"00001234", "malloc", "150", 	},
+				};
+
+				assert_equal(4u, log.size());
+				assert_equal(mkvector(reference4), log.back());
+			}
+
+			test( SortingByStateColumnChangesDisplayOrder )
+			{
+				// INIT
+				unsigned columns[] = {	1, 2,	};
+				symbol_info data[] = {
+					{	"Gc_collect", 0x901A9010, 15,	},
+					{	"string::String", 0x901A9011, 11,	},
+					{	"string::~string", 0x00001230, 12,	},
+					{	"string::operator []", 0x00000011, 13,	},
+					{	"string::clear", 0x00000021, 14,	},
+					{	"string::Find", 0x00000031, 17,	},
+				};
+
+				(*modules)[1].symbols = mkvector(data);
+				(*patches)[1][0x901A9010] = mkpatch(1, false, true, false);
+				(*patches)[1][0x901A9011] = mkpatch(2, false, false, false);
+				(*patches)[1][0x00000011] = mkpatch(3, true, false, false);
+				(*patches)[1][0x00000021] = mkpatch(4, false, false, true);
+				(*patches)[1][0x00000031] = mkpatch(5, true, false, true);
+
+				image_patch_model model(patches, modules, mappings);
+
+				// ACT
+				model.set_order(2, true);
+
+				// ASSERT
+				string reference[][2] = {
+					{	"string::~string", "", 	},
+					{	"string::String", "inactive", 	},
+					{	"string::operator []", "applying", 	},
+					{	"string::clear", "active", 	},
+					{	"string::Find", "removing", 	},
+					{	"Gc_collect", "error", 	},
+				};
+
+				assert_equal(mkvector(reference), get_text(model, columns));
+			}
+
+
+			test( ConstructionOfTheModelRequestsAllMappedModules )
+			{
+				// INIT
+				vector<unsigned int> log;
+				modules->request_presence = [&] (unsigned int persistent_id) {	log.push_back(persistent_id);	};
+
+				mappings->insert(mkmapping(0, 1, 0x1299100));
+				mappings->insert(mkmapping(1, 13, 0x1299100));
+				mappings->insert(mkmapping(2, 7, 0x1299100));
+
+				// INIT / ACT
+				image_patch_model model1(patches, modules, mappings);
+
+				// ASSERT
+				assert_equivalent(plural + 1u + 13u + 7u, log);
+
+				// INIT
+				mappings->insert(mkmapping(4, 11, 0x1299100));
+				mappings->insert(mkmapping(5, 9, 0x1299100));
+				log.clear();
+
+				// INIT / ACT
+				image_patch_model model2(patches, modules, mappings);
+
+				// ASSERT
+				assert_equivalent(plural + 1u + 13u + 7u  + 11u + 9u, log);
 			}
 		end_test_suite
 	}

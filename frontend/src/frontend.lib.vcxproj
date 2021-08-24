@@ -80,6 +80,7 @@
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\projection_view.h" />
+    <ClInclude Include="..\selection_model.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\primitives.h" />

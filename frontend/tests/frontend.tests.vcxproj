@@ -66,6 +66,7 @@
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="ProcessListTests.cpp" />
     <ClCompile Include="ProjectionViewTests.cpp" />
+    <ClCompile Include="SelectionModelTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />
     <ClCompile Include="ThreadsModelTests.cpp" />

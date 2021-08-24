@@ -17,6 +17,7 @@ set(FRONTEND_TESTS_SOURCES
 	OrderedViewTests.cpp
 	ProcessListTests.cpp
 	ProjectionViewTests.cpp
+	SelectionModelTests.cpp
 	SerializationTests.cpp
 	SymbolResolverTests.cpp
 	ThreadsModelTests.cpp

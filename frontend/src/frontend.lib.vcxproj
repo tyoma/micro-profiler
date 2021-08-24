@@ -73,6 +73,7 @@
     <ClInclude Include="..\function_hint.h" />
     <ClInclude Include="..\image_patch_model.h" />
     <ClInclude Include="..\ipc_manager.h" />
+    <ClInclude Include="..\key.h" />
     <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\headers_model.h" />

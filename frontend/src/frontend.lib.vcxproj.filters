@@ -87,6 +87,7 @@
     <ClInclude Include="..\projection_view.h" />
     <ClInclude Include="..\trackables_provider.h" />
     <ClInclude Include="..\selection_model.h" />
+    <ClInclude Include="..\key.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

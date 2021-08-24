@@ -33,6 +33,8 @@ namespace micro_profiler
 		std::size_t operator ()(unsigned long long int key) const throw();
 		std::size_t operator ()(const void *key) const throw();
 		template <typename T1, typename T2> std::size_t operator ()(const std::pair<T1, T2> &key) const throw();
+
+		std::size_t operator ()(std::size_t lhs, std::size_t rhs) const throw();
 	};
 
 
@@ -58,10 +60,8 @@ namespace micro_profiler
 
 	template <typename T1, typename T2>
 	inline std::size_t knuth_hash::operator ()(const std::pair<T1, T2> &key) const throw()
-	{
-		std::size_t seed = (*this)(key.first);
+	{	return (*this)((*this)(key.first), (*this)(key.second));	}
 
-		seed ^= (*this)(key.second) + 0x9e3779b9u + (seed << 6) + (seed >> 2);
-		return seed;
-	}
+	inline std::size_t knuth_hash::operator ()(std::size_t lhs, std::size_t rhs) const throw()
+	{	return lhs ^ (rhs + 0x9e3779b9u + (lhs << 6) + (lhs >> 2));	}
 }

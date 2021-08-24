@@ -20,52 +20,42 @@
 
 #pragma once
 
+#include "key.h"
+
 #include <common/noncopyable.h>
-#include <type_traits>
 #include <unordered_set>
 #include <wpl/models.h>
 
 namespace micro_profiler
 {
 	template <typename KeyT>
-	struct selection
+	struct selection : wpl::dynamic_set_model
 	{
-		typedef KeyT key_type;
-
-		virtual void enumerate(const std::function<void (const key_type &key)> &callback) const = 0;
-		wpl::signal<void (wpl::index_traits::index_type item)> invalidate;
-	};
-
-	template <typename T>
-	struct selection_key;
-
-	template <typename T1, typename T2>
-	struct selection_key< std::pair<T1, T2> >
-	{
-		typedef typename std::remove_const<T1>::type key_type;
-
-		template <typename T>
-		static key_type get_key(const T &item)
-		{	return item.first;	}
+		virtual void enumerate(const std::function<void (const KeyT &key)> &callback) const = 0;
 	};
 
 	template <typename UnderlyingT>
-	class selection_model : public selection<typename selection_key<typename UnderlyingT::value_type>::key_type>,
+	class selection_model : public selection<typename key_traits<typename UnderlyingT::value_type>::key_type>,
 		noncopyable
 	{
 	public:
-		typedef selection_key<typename UnderlyingT::value_type> selection_key_type;
+		typedef wpl::dynamic_set_model::index_type index_type;
+		typedef key_traits<typename UnderlyingT::value_type> selection_key_type;
 		typedef typename selection_key_type::key_type key_type;
 
 	public:
 		selection_model(const UnderlyingT &underlying);
 
+		// wpl::dynamic_set_model methods
+		virtual void clear() throw() override;
+		virtual void add(index_type item) override;
+		virtual void remove(index_type item) override;
+		virtual bool contains(index_type item) const throw() override;
+
+		// selection<...> methods
 		virtual void enumerate(const std::function<void (const key_type &key)> &callback) const override;
 
-		virtual void clear() throw() /*override*/;
-		virtual void add(wpl::index_traits::index_type item) /*override*/;
-		virtual void remove(wpl::index_traits::index_type item) /*override*/;
-		virtual bool contains(wpl::index_traits::index_type item) const throw() /*override*/;
+		using wpl::dynamic_set_model::npos;
 
 	private:
 		key_type get_key(size_t item) const;
@@ -83,36 +73,36 @@ namespace micro_profiler
 	{	}
 
 	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::enumerate(const std::function<void (const key_type &key)> &callback) const
-	{
-		for (auto i = _selection.begin(); i != _selection.end(); ++i)
-			callback(*i);
-	}
-
-	template <typename UnderlyingT>
 	inline void selection_model<UnderlyingT>::clear() throw()
 	{
 		_selection.clear();
-		this->invalidate(wpl::index_traits::npos());
+		this->invalidate(npos());
 	}
 
 	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::add(wpl::index_traits::index_type item)
+	inline void selection_model<UnderlyingT>::add(index_type item)
 	{
 		_selection.insert(get_key(item));
 		this->invalidate(item);
 	}
 
 	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::remove(wpl::index_traits::index_type item)
+	inline void selection_model<UnderlyingT>::remove(index_type item)
 	{
 		_selection.erase(get_key(item));
 		this->invalidate(item);
 	}
 
 	template <typename UnderlyingT>
-	inline bool selection_model<UnderlyingT>::contains(wpl::index_traits::index_type item) const throw()
+	inline bool selection_model<UnderlyingT>::contains(index_type item) const throw()
 	{	return !!_selection.count(get_key(item));	}
+
+	template <typename UnderlyingT>
+	inline void selection_model<UnderlyingT>::enumerate(const std::function<void (const key_type &key)> &callback) const
+	{
+		for (auto i = _selection.begin(); i != _selection.end(); ++i)
+			callback(*i);
+	}
 
 	template <typename UnderlyingT>
 	inline typename selection_model<UnderlyingT>::key_type selection_model<UnderlyingT>::get_key(size_t item) const

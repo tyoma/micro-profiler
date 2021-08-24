@@ -21,12 +21,23 @@
 #include <frontend/image_patch_model.h>
 
 #include <common/formatting.h>
-#include <frontend/tables.h>
+#include <frontend/selection_model.h>
+#include <frontend/trackables_provider.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
+	template <>
+	struct key_traits<image_patch_model::record_type>
+	{
+		typedef symbol_key key_type;
+
+		template <typename T>
+		static key_type get_key(const T &item)
+		{	return item.first;	}
+	};
+
 	namespace
 	{
 		struct nocase_compare
@@ -59,10 +70,12 @@ namespace micro_profiler
 
 	image_patch_model::image_patch_model(shared_ptr<const tables::patches> patches,
 		shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
-		: _patches(patches), _modules(modules), _flatten_view(*modules), _ordered_view(_flatten_view)
+		: _patches(patches), _modules(modules), _flatten_view(*modules), _ordered_view(_flatten_view),
+			_trackables(new trackables_provider<ordered_view_t>(_ordered_view))
 	{
 		auto invalidate_me = [this] {
 			_ordered_view.fetch();
+			_trackables->fetch();
 			invalidate(npos());
 		};
 
@@ -73,6 +86,9 @@ namespace micro_profiler
 		for (auto i = mappings->begin(); i != mappings->end(); ++i)
 			modules->request_presence(i->second.persistent_id);
 	}
+
+	image_patch_model::~image_patch_model()
+	{	}
 
 	void image_patch_model::set_order(index_type column, bool ascending)
 	{
@@ -114,11 +130,21 @@ namespace micro_profiler
 			}, ascending);
 			break;
 		}
+		_trackables->fetch();
 		invalidate(npos());
+	}
+
+	shared_ptr< selection<symbol_key> > image_patch_model::create_selection() const
+	{
+		// TODO: possibly requires ownership of _ordered_view (and inners)
+		return make_shared< selection_model<ordered_view_t> >(_ordered_view);
 	}
 
 	image_patch_model::index_type image_patch_model::get_count() const throw()
 	{	return _ordered_view.size();	}
+
+	shared_ptr<const wpl::trackable> image_patch_model::track(index_type row) const
+	{	return _trackables->track(row);	}
 
 	void image_patch_model::get_text(index_type row, index_type column, agge::richtext_t &value) const
 	{

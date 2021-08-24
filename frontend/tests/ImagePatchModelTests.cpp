@@ -2,6 +2,7 @@
 
 #include "helpers.h"
 
+#include <frontend/selection_model.h>
 #include <frontend/tables.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -10,6 +11,9 @@ using namespace std;
 
 namespace micro_profiler
 {
+	inline bool operator <(const symbol_key &lhs, const symbol_key &rhs)
+	{	return make_pair(lhs.persistent_id, lhs.rva) < make_pair(rhs.persistent_id, rhs.rva);	}
+
 	namespace tests
 	{
 		namespace
@@ -28,6 +32,15 @@ namespace micro_profiler
 				p.id = id;
 				p.state.requested = !!requested, p.state.error = !!error, p.state.active = !!active;
 				return p;
+			}
+
+			template <typename KeyT>
+			vector<KeyT> get_selected(const selection<KeyT> &selection_)
+			{
+				vector<KeyT> r;
+
+				selection_.enumerate([&r] (const KeyT &key) {	r.push_back(key);	});
+				return r;
 			}
 		}
 
@@ -442,6 +455,131 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural + 1u + 13u + 7u  + 11u + 9u, log);
+			}
+
+
+			test( ImagePatchModelProvidesSelection )
+			{
+				// INIT
+				image_patch_model model(patches, modules, mappings);
+
+				// INIT / ACT
+				auto sel = model.create_selection();
+
+				// ASSERT
+				assert_not_null(sel);
+				assert_is_empty(get_selected(*sel));
+			}
+
+
+			test( SelectionOperatesOnModuleSymbols )
+			{
+				// INIT
+				symbol_info data1[] = {
+					{	"Gc_collect", 0x901A9010, 15,	},
+					{	"malloc", 0x00001234, 150,	},
+					{	"free", 0x00000001, 115,	},
+				};
+				symbol_info data2[] = {
+					{	"string::String", 0x901A9010, 11,	},
+					{	"string::~string", 0x00001230, 12,	},
+					{	"string::operator []", 0x00000011, 13,	},
+					{	"string::clear", 0x00000021, 14,	},
+					{	"string::Find", 0x00000031, 17,	},
+				};
+
+				(*modules)[1].symbols = mkvector(data1);
+				(*modules)[3].symbols = mkvector(data2);
+
+				image_patch_model model(patches, modules, mappings);
+				auto sel = model.create_selection();
+
+				model.set_order(1, true);
+
+				// ACT
+				sel->add(1);
+				sel->add(3);
+
+				// ASSERT
+				symbol_key reference1[] = {
+					{	1, 0x901A9010	}, {	3, 0x00000021	},
+				};
+
+				assert_equivalent(reference1, get_selected(*sel));
+				assert_is_false(sel->contains(0));
+				assert_is_true(sel->contains(1));
+				assert_is_false(sel->contains(2));
+				assert_is_true(sel->contains(3));
+				assert_is_false(sel->contains(4));
+				assert_is_false(sel->contains(5));
+				assert_is_false(sel->contains(6));
+				assert_is_false(sel->contains(7));
+
+				// ACT
+				model.set_order(1, false);
+
+				// ASSERT
+				assert_equivalent(reference1, get_selected(*sel));
+				assert_is_false(sel->contains(0));
+				assert_is_false(sel->contains(1));
+				assert_is_false(sel->contains(2));
+				assert_is_false(sel->contains(3));
+				assert_is_true(sel->contains(4));
+				assert_is_false(sel->contains(5));
+				assert_is_true(sel->contains(6));
+				assert_is_false(sel->contains(7));
+			}
+
+
+			test( ImagePatchModelProvidesTrackables )
+			{
+				// INIT
+				symbol_info data1[] = {
+					{	"Gc_collect", 0x901A9010, 15,	},
+					{	"malloc", 0x00001234, 150,	},
+					{	"free", 0x00000001, 115,	},
+				};
+				symbol_info data12[] = {
+					{	"z::compress", 0x901A9013, 15,	},
+				};
+				symbol_info data2[] = {
+					{	"string::String", 0x901A9010, 11,	},
+					{	"string::~string", 0x00001230, 12,	},
+					{	"string::operator []", 0x00000011, 13,	},
+					{	"string::clear", 0x00000021, 14,	},
+					{	"string::Find", 0x00000031, 17,	},
+				};
+
+				(*modules)[1].symbols = mkvector(data1);
+				(*modules)[3].symbols = mkvector(data2);
+
+				image_patch_model model(patches, modules, mappings);
+				auto sel = model.create_selection();
+
+				model.set_order(1, true);
+
+				// INIT / ACT
+				auto t1 = model.track(1);
+				auto t2 = model.track(3);
+
+				// ACT / ASSERT
+				assert_equal(1u, t1->index());
+				assert_equal(3u, t2->index());
+
+				// ACT
+				model.set_order(1, false);
+
+				// ACT / ASSERT
+				assert_equal(6u, t1->index());
+				assert_equal(4u, t2->index());
+
+				// INIT / ACT
+				(*modules)[1].symbols.insert((*modules)[1].symbols.end(), begin(data12), end(data12));
+				modules->invalidated();
+
+				// ACT / ASSERT
+				assert_equal(7u, t1->index());
+				assert_equal(5u, t2->index());
 			}
 		end_test_suite
 	}

@@ -38,9 +38,6 @@ namespace micro_profiler
 			bool sort_by_a(const pod_map::value_type &left, const pod_map::value_type &right)
 			{	return left.second.a > right.second.a;	}
 
-			bool sort_by_a_less(const pod_map::value_type &left, const pod_map::value_type &right)
-			{	return left.second.a < right.second.a;	}
-
 			struct sort_by_b
 			{
 				bool operator()(const pod_map::value_type &left, const pod_map::value_type &right) const
@@ -49,9 +46,6 @@ namespace micro_profiler
 
 			bool sort_by_c(const pod_map::value_type &left, const pod_map::value_type &right)
 			{	return left.second.c > right.second.c;	}
-
-			bool sort_by_c_less(const pod_map::value_type &left, const pod_map::value_type &right)
-			{	return left.second.c < right.second.c;	}
 		}
 
 

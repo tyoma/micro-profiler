@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "key.h"
+
 #include <list>
 #include <wpl/models.h>
 
@@ -40,7 +42,7 @@ namespace micro_profiler
 		class trackable;
 
 		typedef typename UnderlyingT::value_type value_type;
-		typedef typename value_type::first_type key_type;
+		typedef typename key_traits<value_type>::key_type key_type;
 		typedef std::list<trackable> trackables_t;
 
 	private:

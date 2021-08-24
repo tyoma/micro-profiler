@@ -39,8 +39,10 @@ namespace micro_profiler
 				const auto data2 = mkvector(data2_);
 
 				// INIT / ACT
-				selection_model<u1_t> selection1(data1);
-				selection_model<u2_t> selection2(data2);
+				selection_model<u1_t> selection1_(data1);
+				selection<int> &selection1 = selection1_;
+				selection_model<u2_t> selection2_(data2);
+				selection<string> &selection2 = selection2_;
 
 				// ACT / ASSERT
 				assert_is_empty(get_selected(selection1));
@@ -63,7 +65,8 @@ namespace micro_profiler
 					make_pair(12, "z"), make_pair(12211, "b"), make_pair(1, "a"), make_pair(192, "e"),
 				};
 				auto data = mkvector(data_);
-				selection_model<underlying_t> selection_(data);
+				selection_model<underlying_t> selection_impl(data);
+				wpl::dynamic_set_model &selection_ = selection_impl;
 
 				// ACT
 				selection_.add(1);
@@ -71,7 +74,7 @@ namespace micro_profiler
 				// ASSERT
 				int reference1[] = {	12211,	};
 
-				assert_equivalent(reference1, get_selected(selection_));
+				assert_equivalent(reference1, get_selected(selection_impl));
 				assert_is_true(selection_.contains(1));
 
 				// ACT
@@ -81,7 +84,7 @@ namespace micro_profiler
 				// ASSERT
 				int reference2[] = {	12, 12211, 192,	};
 
-				assert_equivalent(reference2, get_selected(selection_));
+				assert_equivalent(reference2, get_selected(selection_impl));
 				assert_is_true(selection_.contains(0));
 				assert_is_true(selection_.contains(1));
 				assert_is_true(selection_.contains(3));
@@ -92,7 +95,7 @@ namespace micro_profiler
 				// ASSERT
 				int reference3[] = {	12, 12211,	};
 
-				assert_equivalent(reference3, get_selected(selection_));
+				assert_equivalent(reference3, get_selected(selection_impl));
 				assert_is_true(selection_.contains(0));
 				assert_is_true(selection_.contains(1));
 				assert_is_false(selection_.contains(3));
@@ -101,7 +104,7 @@ namespace micro_profiler
 				selection_.clear();
 
 				// ASSERT
-				assert_is_empty(get_selected(selection_));
+				assert_is_empty(get_selected(selection_impl));
 				assert_is_false(selection_.contains(0));
 				assert_is_false(selection_.contains(1));
 			}
@@ -117,9 +120,9 @@ namespace micro_profiler
 				};
 				auto data = mkvector(data_);
 				selection_model<underlying_t> selection_(data);
-				vector<int> log1;
+				vector<selection_model<underlying_t>::index_type> log1;
 				vector< vector<int> > log2;
-				auto conn = selection_.invalidate += [&] (int key)	{
+				auto conn = selection_.invalidate += [&] (selection_model<underlying_t>::index_type key)	{
 					log1.push_back(key);
 					log2.push_back(get_selected(selection_));
 				};
@@ -128,7 +131,7 @@ namespace micro_profiler
 				selection_.add(1);
 
 				// ASSERT
-				int reference11[] = {	1,	};
+				selection_model<underlying_t>::index_type reference11[] = {	1,	};
 				int reference12[] = {	12,	};
 
 				assert_equivalent(reference11, log1);
@@ -138,7 +141,7 @@ namespace micro_profiler
 				selection_.add(3);
 
 				// ASSERT
-				int reference21[] = {	1, 3,	};
+				selection_model<underlying_t>::index_type reference21[] = {	1, 3,	};
 				int reference22[] = {	12, 14,	};
 
 				assert_equivalent(reference21, log1);
@@ -148,7 +151,7 @@ namespace micro_profiler
 				selection_.remove(1);
 
 				// ASSERT
-				int reference31[] = {	1, 3, 1,	};
+				selection_model<underlying_t>::index_type reference31[] = {	1, 3, 1,	};
 				int reference32[] = {	14,	};
 
 				assert_equivalent(reference31, log1);
@@ -158,7 +161,7 @@ namespace micro_profiler
 				selection_.clear();
 
 				// ASSERT
-				int reference4[] = {	1, 3, 1, wpl::index_traits::npos(),	};
+				selection_model<underlying_t>::index_type reference4[] = {	1, 3, 1, wpl::index_traits::npos(),	};
 
 				assert_equivalent(reference4, log1);
 				assert_is_empty(log2.back());

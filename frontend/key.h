@@ -20,34 +20,21 @@
 
 #pragma once
 
-#include <common/hash.h>
-#include <common/primitives.h>
+#include <type_traits>
+#include <utility>
 
 namespace micro_profiler
 {
-	typedef std::pair<long_address_t, unsigned int /*threadid*/> function_key;
-	typedef statistic_types_t<function_key> statistic_types;
+	template <typename T>
+	struct key_traits;
 
-	struct symbol_key
+	template <typename T1, typename T2>
+	struct key_traits< std::pair<T1, T2> >
 	{
-		unsigned int persistent_id;
-		unsigned int rva;
-	};
+		typedef typename std::remove_const<T1>::type key_type;
 
-
-
-	inline bool operator ==(const symbol_key &lhs, const symbol_key &rhs)
-	{	return !((lhs.persistent_id - rhs.persistent_id) | (lhs.rva - rhs.rva));	}
-}
-
-namespace std
-{
-	template <>
-	struct hash<micro_profiler::symbol_key> : micro_profiler::knuth_hash
-	{
-		using micro_profiler::knuth_hash::operator ();
-
-		size_t operator ()(const micro_profiler::symbol_key &value) const
-		{	return (*this)((*this)(value.persistent_id), (*this)(value.rva));	}
+		template <typename T>
+		static key_type get_key(const T &item)
+		{	return item.first;	}
 	};
 }

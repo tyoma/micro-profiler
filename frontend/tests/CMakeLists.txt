@@ -12,7 +12,7 @@ set(FRONTEND_TESTS_SOURCES
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
 	HeadersModelTests.cpp
-#	ImagePatchModelTests.cpp
+	ImagePatchModelTests.cpp
 	mocks.cpp
 	OrderedViewTests.cpp
 	ProcessListTests.cpp

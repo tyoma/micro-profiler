@@ -27,6 +27,7 @@ namespace micro_profiler
 	{
 	public:
 		typedef typename AccessT::const_reference const_reference;
+		typedef typename AccessT::value_type value_type;
 
 		class const_iterator
 		{

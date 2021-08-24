@@ -6,6 +6,7 @@ set(FRONTEND_LIB_SOURCES
 	frontend_patcher.cpp
 	function_list.cpp
 	headers_model.cpp
+	image_patch_model.cpp
 	process_list.cpp
 	symbol_resolver.cpp
 	threads_model.cpp

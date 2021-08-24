@@ -40,6 +40,8 @@ namespace micro_profiler
 					void operator =(const const_reference &rhs);
 				};
 
+				typedef const_reference value_type;
+
 				template <typename T1, typename T2>
 				static const_reference get(const T1 &v1, const T2 &v2)
 				{	return const_reference(v1.first, v1.second.group_name, v2);	}

@@ -493,10 +493,27 @@ namespace micro_profiler
 			}
 
 
+			test( FunctionListProvidesSelectionModel )
+			{
+				// INIT
+				const auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
+
+				// INIT / ACT
+				const shared_ptr< selection<function_key> > s1 = fl->create_selection();
+				const shared_ptr< selection<function_key> > s2 = fl->create_selection();
+
+				// ASSERT
+				assert_not_null(s1);
+				assert_not_null(s2);
+				assert_not_equal(s2, s1);
+			}
+
+
 			test( FunctionListSorting )
 			{
 				// INIT
 				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				const auto s = fl->create_selection();
 				invalidation_tracer ih;
 				const size_t data_size = 4;
 				unthreaded_addressed_function functions[data_size] = {
@@ -522,7 +539,14 @@ namespace micro_profiler
 
 				// ACT (times called, ascending)
 				fl->set_order(columns::times_called, true);
-				
+				s->add(1);
+
+				// ACT / ASSERT
+				assert_is_false(s->contains(0));
+				assert_is_true(s->contains(1));
+				assert_is_false(s->contains(2));
+				assert_is_false(s->contains(3));
+
 				// ASSERT
 				assert_equal(2u, ih.counts.size());
 				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
@@ -543,6 +567,12 @@ namespace micro_profiler
 
 				// ACT (times called, descending)
 				fl->set_order(columns::times_called, false);
+
+				// ACT / ASSERT
+				assert_is_false(s->contains(0));
+				assert_is_false(s->contains(1));
+				assert_is_true(s->contains(2));
+				assert_is_false(s->contains(3));
 
 				// ASSERT
 				assert_equal(3u, ih.counts.size());

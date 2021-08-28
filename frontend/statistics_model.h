@@ -24,6 +24,7 @@
 #include "ordered_view.h"
 #include "primitives.h"
 #include "projection_view.h"
+#include "selection_model.h"
 #include "trackables_provider.h"
 
 #include <common/noncopyable.h>
@@ -38,6 +39,7 @@ namespace micro_profiler
 	{
 	public:
 		typedef typename BaseT::index_type index_type;
+		typedef typename MapT::key_type key_type;
 
 	public:
 		statistics_model_impl(const MapT &statistics, double tick_interval,
@@ -46,6 +48,7 @@ namespace micro_profiler
 		std::shared_ptr<symbol_resolver> get_resolver() const throw();
 		std::shared_ptr<threads_model> get_threads() const throw();
 		std::shared_ptr< wpl::list_model<double> > get_column_series() const throw();
+		std::shared_ptr< selection<typename MapT::key_type> > create_selection() const;
 
 		template <typename PredicateT>
 		void set_filter(const PredicateT &predicate);
@@ -60,9 +63,9 @@ namespace micro_profiler
 
 		// linked_statistics methods
 		virtual void set_order(index_type column, bool ascending) /*override*/;
-		virtual function_key get_key(index_type item) const;
+		virtual key_type get_key(index_type item) const;
 
-		index_type get_index(function_key address) const;
+		index_type get_index(key_type address) const;
 
 	protected:
 		typedef filter_view<MapT> filter_view_type;
@@ -104,8 +107,12 @@ namespace micro_profiler
 	{	return _threads;	}
 
 	template <typename BaseT, typename MapT>
-	std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
+	inline std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
 	{	return _projection;	}
+
+	template <typename BaseT, typename MapT>
+	inline std::shared_ptr< selection<typename MapT::key_type> > statistics_model_impl<BaseT, MapT>::create_selection() const
+	{	return std::make_shared< selection_model<view_type> >(*_view);	}
 
 	template <typename BaseT, typename MapT>
 	template <typename PredicateT>
@@ -138,11 +145,11 @@ namespace micro_profiler
 	{	return _trackables->track(row);	}
 
 	template <typename BaseT, typename MapT>
-	inline function_key statistics_model_impl<BaseT, MapT>::get_key(index_type item) const
+	inline typename statistics_model_impl<BaseT, MapT>::key_type statistics_model_impl<BaseT, MapT>::get_key(index_type item) const
 	{	return get_entry(item).first;	}
 
 	template <typename BaseT, typename MapT>
-	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(function_key key) const
+	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(key_type key) const
 	{
 		for (size_t i = 0, count = _view->size(); i != count; ++i)
 		{

@@ -50,4 +50,8 @@ namespace std
 		size_t operator ()(const micro_profiler::symbol_key &value) const
 		{	return (*this)((*this)(value.persistent_id), (*this)(value.rva));	}
 	};
+
+	template <typename T1, typename T2>
+	struct hash< pair<T1, T2> > : micro_profiler::knuth_hash
+	{	};
 }

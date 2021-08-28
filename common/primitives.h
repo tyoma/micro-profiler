@@ -33,6 +33,7 @@ namespace micro_profiler
 	template <typename KeyT>
 	struct statistic_types_t
 	{
+		typedef KeyT key;
 		typedef function_statistics function;
 		typedef function_statistics_detailed_t<KeyT> function_detailed;
 

@@ -67,25 +67,25 @@ namespace micro_profiler
 			scontext::detailed_threaded new_context = { &data, 0, context.threadid };
 
 			archive(new_context.caller);
-			archive(data[function_key(new_context.caller, new_context.threadid)], new_context);
+			archive(data[statistic_types::key(new_context.caller, new_context.threadid)], new_context);
 		}
 
 		template <typename ArchiveT>
 		void read_item(ArchiveT &archive, statistic_types::map &data, const scontext::detailed_threaded &context)
 		{
-			function_key callee_key(0, context.threadid);
+			statistic_types::key callee_key(0, context.threadid);
 
 			archive(callee_key.first);
 			statistic_types::function &callee = data[callee_key];
 			archive(callee, context);
-			(*context.map)[callee_key].callers[function_key(context.caller, context.threadid)] = callee.times_called;
+			(*context.map)[callee_key].callers[statistic_types::key(context.caller, context.threadid)] = callee.times_called;
 		}
 
 
 		template <typename ArchiveT>
 		void read_item(ArchiveT &archive, statistic_types::map_detailed &data)
 		{
-			std::pair<statistic_types::map_detailed *, function_key> caller_context;
+			std::pair<statistic_types::map_detailed *, statistic_types::key> caller_context;
 
 			caller_context.first = &data;
 			archive(caller_context.second);
@@ -93,9 +93,9 @@ namespace micro_profiler
 		}
 
 		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, statistic_types::map &data, std::pair<statistic_types::map_detailed *, function_key> &caller)
+		void read_item(ArchiveT &archive, statistic_types::map &data, std::pair<statistic_types::map_detailed *, statistic_types::key> &caller)
 		{
-			function_key callee_key;
+			statistic_types::key callee_key;
 
 			archive(callee_key);
 			statistic_types::function &callee = data[callee_key];

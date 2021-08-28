@@ -161,7 +161,7 @@ namespace micro_profiler
 
 	void tables_ui::on_activate(wpl::index_traits::index_type index)
 	{
-		const function_key key = _m_main->get_key(index);
+		const auto key = _m_main->get_key(index);
 		symbol_resolver::fileline_t fileline;
 
 		if (_m_main->get_resolver()->symbol_fileline_by_va(key.first, fileline))

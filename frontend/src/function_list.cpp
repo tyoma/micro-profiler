@@ -399,28 +399,30 @@ namespace micro_profiler
 			::setlocale(LC_NUMERIC, old_locale);
 	}
 
-	shared_ptr<linked_statistics> functions_list::watch_children(index_type item) const
+	shared_ptr<linked_statistics> functions_list::watch_children(key_type item) const
 	{
-		if (item >= get_count())
+		const auto e = _statistics->find(item);
+
+		if (e == _statistics->end())
 			throw out_of_range("");
 
-		const statistic_types::map_detailed::value_type &s = get_entry(item);
-		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<children_statistics> children(new children_statistics(s.second.callees, _tick_interval, get_resolver(),
+		auto i = _linked->insert(_linked->end(), nullptr);
+		shared_ptr<children_statistics> children(new children_statistics(e->second.callees, _tick_interval, get_resolver(),
 			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = children.get();
 		return children;
 	}
 
-	shared_ptr<linked_statistics> functions_list::watch_parents(index_type item) const
+	shared_ptr<linked_statistics> functions_list::watch_parents(key_type item) const
 	{
-		if (item >= get_count())
+		const auto e = _statistics->find(item);
+
+		if (e == _statistics->end())
 			throw out_of_range("");
 
-		const statistic_types::map_detailed::value_type &s = get_entry(item);
-		linked_statistics_list_t::iterator i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<parents_statistics> parents(new parents_statistics(s.second.callers, _tick_interval, get_resolver(),
+		auto i = _linked->insert(_linked->end(), nullptr);
+		shared_ptr<parents_statistics> parents(new parents_statistics(e->second.callers, _tick_interval, get_resolver(),
 			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = parents.get();

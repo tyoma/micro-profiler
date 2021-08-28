@@ -186,10 +186,12 @@ namespace micro_profiler
 
 	void tables_ui::switch_linked(wpl::table_model_base::index_type index)
 	{
+		auto key = _m_main->get_key(index);
+
 		set_model(*_lv_children, _pc_children.get(), _hint_children.get(), _conn_sort_children, *_cm_children,
-			_m_children = index != wpl::table_model_base::npos() ? _m_main->watch_children(index) : nullptr);
+			_m_children = index != wpl::table_model_base::npos() ? _m_main->watch_children(key) : nullptr);
 		set_model(*_lv_parents, nullptr, nullptr, _conn_sort_parents, *_cm_parents,
-			_m_parents = index != wpl::table_model_base::npos() ? _m_main->watch_parents(index) : nullptr);
+			_m_parents = index != wpl::table_model_base::npos() ? _m_main->watch_parents(key) : nullptr);
 	}
 
 	template <typename ModelT>

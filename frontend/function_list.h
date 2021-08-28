@@ -60,8 +60,8 @@ namespace micro_profiler
 
 		void clear();
 		void print(std::string &content) const;
-		std::shared_ptr<linked_statistics> watch_children(index_type item) const;
-		std::shared_ptr<linked_statistics> watch_parents(index_type item) const;
+		std::shared_ptr<linked_statistics> watch_children(key_type item) const;
+		std::shared_ptr<linked_statistics> watch_parents(key_type item) const;
 
 		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
 			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);

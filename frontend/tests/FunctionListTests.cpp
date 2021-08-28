@@ -252,9 +252,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 				dser(*fl, dummy_context);
 
-				fl->set_order(columns::name, true);
-
-				shared_ptr<linked_statistics> children[] = {	fl->watch_children(0), fl->watch_children(1),	};
+				shared_ptr<linked_statistics> children[] = {	fl->watch_children(addr(1123)), fl->watch_children(addr(1124)),	};
 
 				it1.bind_to_model(*children[0]);
 				it2.bind_to_model(*children[1]);
@@ -285,9 +283,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 				dser(*fl, dummy_context);
 
-				fl->set_order(columns::name, true);
-
-				shared_ptr<linked_statistics> parents[] = {	fl->watch_parents(2), fl->watch_parents(2),	};
+				shared_ptr<linked_statistics> parents[] = {	fl->watch_parents(addr(1123)), fl->watch_parents(addr(1124)),	};
 
 				it1.bind_to_model(*parents[0]);
 				it2.bind_to_model(*parents[1]);
@@ -1061,12 +1057,9 @@ namespace micro_profiler
 				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
-				assert_throws(fl1->watch_children(2), out_of_range);
-				assert_throws(fl1->watch_children(20), out_of_range);
-				assert_throws(fl1->watch_children(table_model_base::npos()), out_of_range);
-				assert_throws(fl2->watch_children(3), out_of_range);
-				assert_throws(fl2->watch_children(30), out_of_range);
-				assert_throws(fl2->watch_children(table_model_base::npos()), out_of_range);
+				assert_throws(fl1->watch_children(addr(1979)), out_of_range);
+				assert_throws(fl1->watch_children(addr(1994)), out_of_range);
+				assert_throws(fl2->watch_children(addr(2002)), out_of_range);
 			}
 
 
@@ -1089,11 +1082,11 @@ namespace micro_profiler
 				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
-				assert_not_null(fl1->watch_children(0));
-				assert_not_null(fl1->watch_children(1));
-				assert_not_null(fl2->watch_children(0));
-				assert_not_null(fl2->watch_children(1));
-				assert_not_null(fl2->watch_children(2));
+				assert_not_null(fl1->watch_children(addr(1978)));
+				assert_not_null(fl1->watch_children(addr(1995)));
+				assert_not_null(fl2->watch_children(addr(2001)));
+				assert_not_null(fl2->watch_children(addr(2004)));
+				assert_not_null(fl2->watch_children(addr(2011)));
 			}
 
 
@@ -1110,7 +1103,7 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 
 				// ACT
-				shared_ptr<linked_statistics> ls = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls = fl->watch_children(addr(1973));
 
 				// ASSERT
 				assert_not_null(ls);
@@ -1133,8 +1126,8 @@ namespace micro_profiler
 				dser(*fl, dummy_context);
 				
 				// ACT
-				shared_ptr<linked_statistics> ls_0 = fl->watch_children(find_row(*fl, "00001978"));
-				shared_ptr<linked_statistics> ls_1 = fl->watch_children(find_row(*fl, "00001995"));
+				shared_ptr<linked_statistics> ls_0 = fl->watch_children(addr(0x1978));
+				shared_ptr<linked_statistics> ls_1 = fl->watch_children(addr(0x1995));
 
 				// ACT / ASSERT
 				assert_equal(1u, ls_0->get_count());
@@ -1162,9 +1155,8 @@ namespace micro_profiler
 
 				dser(*fl, dummy_context);
 				dser(*fl, dummy_context);
-				fl->set_order(columns::name, true);
 
-				shared_ptr<linked_statistics> ls = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
 
 				// ACT
 				ls->set_order(columns::name, false);
@@ -1205,9 +1197,8 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 
 				dser(*fl, dummy_context);
-				fl->set_order(columns::name, true);
 
-				shared_ptr<linked_statistics> ls = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
 				ls->set_order(columns::name, true);
 
 				// ACT / ASSERT
@@ -1235,8 +1226,8 @@ namespace micro_profiler
 
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> ls1 = fl->watch_children(0);
-				shared_ptr<linked_statistics> ls2 = fl->watch_parents(0);
+				shared_ptr<linked_statistics> ls1 = fl->watch_children(addr(0x1978));
+				shared_ptr<linked_statistics> ls2 = fl->watch_parents(addr(0x1978));
 
 				fl->clear();
 				t1.bind_to_model(*ls1);
@@ -1264,8 +1255,8 @@ namespace micro_profiler
 
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> ls1 = fl->watch_children(0);
-				shared_ptr<linked_statistics> ls2 = fl->watch_parents(0);
+				shared_ptr<linked_statistics> ls1 = fl->watch_children(addr(0x1978));
+				shared_ptr<linked_statistics> ls2 = fl->watch_parents(addr(0x1978));
 
 				t1.bind_to_model(*ls1);
 				t2.bind_to_model(*ls2);
@@ -1297,9 +1288,8 @@ namespace micro_profiler
 
 				dser(*fl, dummy_context);
 				_buffer.rewind();
-				fl->set_order(columns::name, true);
 
-				shared_ptr<linked_statistics> ls = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
 
 				t.bind_to_model(*ls);
 
@@ -1345,9 +1335,8 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 
 				dser(*fl, dummy_context);
-				fl->set_order(columns::name, true);
 
-				shared_ptr<linked_statistics> ls = fl->watch_children(0);
+				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
 
 				ls->set_order(columns::name, true);
 
@@ -1401,12 +1390,9 @@ namespace micro_profiler
 				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
-				assert_throws(fl1->watch_parents(2), out_of_range);
-				assert_throws(fl1->watch_parents(20), out_of_range);
-				assert_throws(fl1->watch_parents(table_model_base::npos()), out_of_range);
-				assert_throws(fl2->watch_parents(3), out_of_range);
-				assert_throws(fl2->watch_parents(30), out_of_range);
-				assert_throws(fl2->watch_parents(table_model_base::npos()), out_of_range);
+				assert_throws(fl1->watch_parents(addr(0x1977)), out_of_range);
+				assert_throws(fl1->watch_parents(addr(0x1996)), out_of_range);
+				assert_throws(fl2->watch_parents(addr(0x2000)), out_of_range);
 			}
 
 
@@ -1429,11 +1415,11 @@ namespace micro_profiler
 				dser(*fl2, dummy_context);
 
 				// ACT / ASSERT
-				assert_not_null(fl1->watch_parents(0));
-				assert_not_null(fl1->watch_parents(1));
-				assert_not_null(fl2->watch_parents(0));
-				assert_not_null(fl2->watch_parents(1));
-				assert_not_null(fl2->watch_parents(2));
+				assert_not_null(fl1->watch_parents(addr(0x1978)));
+				assert_not_null(fl1->watch_parents(addr(0x1995)));
+				assert_not_null(fl2->watch_parents(addr(0x2001)));
+				assert_not_null(fl2->watch_parents(addr(0x2004)));
+				assert_not_null(fl2->watch_parents(addr(0x2008)));
 			}
 
 
@@ -1449,14 +1435,12 @@ namespace micro_profiler
 				s[3001].callees[3001];
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(columns::name, true);
-
 				// ACT
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
-				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
-				shared_ptr<linked_statistics> p2 = fl->watch_parents(2);
+				shared_ptr<linked_statistics> p0 = fl->watch_parents(addr(2978));
+				shared_ptr<linked_statistics> p1 = fl->watch_parents(addr(2995));
+				shared_ptr<linked_statistics> p2 = fl->watch_parents(addr(3001));
 
 				// ASSERT
 				assert_equal(0u, p0->get_count());
@@ -1478,12 +1462,10 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s1);
 				serialize_single_threaded(ser, s2);
 
-				fl->set_order(columns::name, true);
-
 				// ACT
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> p = fl->watch_parents(0);
+				shared_ptr<linked_statistics> p = fl->watch_parents(addr(2978));
 
 				// ASSERT
 				assert_equal(3u, p->get_count());
@@ -1510,13 +1492,11 @@ namespace micro_profiler
 				s[0x3451].callees[0x122F] = function_statistics(1);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(columns::name, true);
-
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> p0 = fl->watch_parents(0);
-				shared_ptr<linked_statistics> p1 = fl->watch_parents(1);
-				shared_ptr<linked_statistics> p2 = fl->watch_parents(2);
+				shared_ptr<linked_statistics> p0 = fl->watch_parents(addr(0x122F));
+				shared_ptr<linked_statistics> p1 = fl->watch_parents(addr(0x2340));
+				shared_ptr<linked_statistics> p2 = fl->watch_parents(addr(0x3451));
 
 				// ACT / ASSERT
 				string reference1[][2] = {	{	"00003451", "1",	},	};
@@ -1540,11 +1520,9 @@ namespace micro_profiler
 				s[0x3001].callees[0x3001] = function_statistics(30);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(columns::name, true);
-
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
 
 				// ACT
 				p->set_order(columns::name, true);
@@ -1610,9 +1588,8 @@ namespace micro_profiler
 				s2[0x3002].callees[0x3001];
 				serialize_single_threaded(ser, s2);
 
-				fl->set_order(columns::name, true);
 				dser(*fl, dummy_context);
-				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
 
 				t.bind_to_model(*p);
 
@@ -1646,11 +1623,9 @@ namespace micro_profiler
 				s[0x3001].callees[0x3001] = function_statistics(30);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(columns::name, true);
-
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
 
 				p->set_order(columns::times_called, true);
 
@@ -1684,11 +1659,9 @@ namespace micro_profiler
 				serialize_single_threaded(ser, mkvector(batch1));
 				serialize_single_threaded(ser, mkvector(batch2));
 
-				fl->set_order(columns::name, true);
-
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
 
 				p->set_order(columns::times_called, true);
 
@@ -1726,11 +1699,9 @@ namespace micro_profiler
 				s[0x3001].callees[0x3001] = function_statistics(50);
 				serialize_single_threaded(ser, s);
 
-				fl->set_order(columns::name, true);
-
 				dser(*fl, dummy_context);
 
-				shared_ptr<linked_statistics> p = fl->watch_parents(2);
+				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
 
 				p->set_order(columns::times_called, true);
 

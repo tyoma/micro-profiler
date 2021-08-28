@@ -271,10 +271,8 @@ namespace micro_profiler
 
 				shared_ptr<linked_statistics> ls;
 
-				fl->set_order(columns::times_called, false);
-
 				// ACT
-				ls = fl->watch_children(0);
+				ls = fl->watch_children(addr(5));
 				ls->set_order(columns::times_called, true);
 				m = ls->get_column_series();
 
@@ -284,7 +282,7 @@ namespace micro_profiler
 				assert_approx_equal(31.0, get_value(*m, 1), c_tolerance);
 
 				// ACT
-				ls = fl->watch_children(1);
+				ls = fl->watch_children(addr(17));
 				m = ls->get_column_series();
 				ls->set_order(columns::exclusive, false);
 

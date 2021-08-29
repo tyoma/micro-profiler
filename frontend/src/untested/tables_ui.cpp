@@ -86,7 +86,7 @@ namespace micro_profiler
 		_pc_children->set_hint(_hint_children);
 		_lv_children->set_columns_model(_cm_children);
 
-		set_model(*_lv_main, _pc_main.get(), _hint_main.get(), _conn_sort_main, *_cm_main, _m_main);
+		const auto sel = set_model(*_lv_main, _pc_main.get(), _hint_main.get(), _conn_sort_main, *_cm_main, _m_main);
 
 		_cb_threads->set_model(_m_main->get_threads());
 		_cb_threads->select(0u);
@@ -99,26 +99,8 @@ namespace micro_profiler
 				model->set_filter();
 		});
 
-		_connections.push_back(_lv_main->selection_changed
-			+= bind(&tables_ui::on_selection_change, this, _1, _2));
-		_connections.push_back(_lv_main->item_activate
-			+= bind(&tables_ui::on_activate, this, _1));
-		_connections.push_back(_pc_main->selection_changed
-			+= bind(&tables_ui::on_piechart_selection_change, this, _1));
-		_connections.push_back(_pc_main->item_activate
-			+= bind(&tables_ui::on_activate, this, _1));
-
-		_connections.push_back(_lv_parents->item_activate
-			+= bind(&tables_ui::on_drilldown, this, cref(_m_parents), _1));
-
-		_connections.push_back(_lv_children->item_activate
-			+= bind(&tables_ui::on_drilldown, this, cref(_m_children), _1));
-		_connections.push_back(_lv_children->selection_changed
-			+= bind(&tables_ui::on_children_selection_change, this, _1, _2));
-		_connections.push_back(_pc_children->item_activate
-			+= bind(&tables_ui::on_drilldown, this, cref(_m_children), _1));
-		_connections.push_back(_pc_children->selection_changed
-			+= bind(&tables_ui::on_children_piechart_selection_change, this, _1));
+		_connections.push_back(_lv_main->item_activate += [this, sel] (...) {	on_activate(*sel);	});
+		_connections.push_back(_pc_main->item_activate += [this, sel] (...) {	on_activate(*sel);	});
 
 		shared_ptr<stack> panel[2];
 
@@ -136,6 +118,8 @@ namespace micro_profiler
 			panel[0]->set_spacing(5);
 			panel[0]->add(_pc_children, wpl::pixels(150), false);
 			panel[0]->add(_lv_children, wpl::percents(100), false, 2);
+
+		_connections.push_back(sel->invalidate += [this, sel] (...) {	switch_linked(*sel);	});
 	}
 
 	void tables_ui::save(hive &configuration)
@@ -145,59 +129,55 @@ namespace micro_profiler
 		_cm_children->store(*configuration.create("ChildrenColumns"));
 	}
 
-	void tables_ui::on_selection_change(wpl::table_model_base::index_type index, bool selected)
+	void tables_ui::on_activate(const selection<statistic_types::key> &selection_)
 	{
-		index = selected ? index : wpl::table_model_base::npos();
-		switch_linked(index);
-		_pc_main->select(index);
-	}
-
-	void tables_ui::on_piechart_selection_change(piechart::model_t::index_type index)
-	{
-		switch_linked(index);
-		_lv_main->select(index, true);
-		_lv_main->focus(index);
-	}
-
-	void tables_ui::on_activate(wpl::index_traits::index_type index)
-	{
-		const auto key = _m_main->get_key(index);
+		auto key = get_first_item(selection_);
 		symbol_resolver::fileline_t fileline;
 
-		if (_m_main->get_resolver()->symbol_fileline_by_va(key.first, fileline))
+		if (key.second && _m_main->get_resolver()->symbol_fileline_by_va(key.first.first, fileline))
 			open_source(fileline.first, fileline.second);
 	}
 
-	void tables_ui::on_drilldown(const shared_ptr<linked_statistics> &view_, wpl::table_model_base::index_type index)
+	void tables_ui::on_drilldown(selection<statistic_types::key> &selection_,
+		const selection<statistic_types::key> &selection_linked)
 	{
-		index = _m_main->get_index(view_->get_key(index));
-		_lv_main->select(index, true);
-		_lv_main->focus(index);
+		auto key = get_first_item(selection_linked);
+
+		if (key.second)
+		{
+			const auto index = _m_main->get_index(key.first);
+
+			selection_.clear();
+			selection_.add(index);
+			_lv_main->focus(index);
+		}
 	}
 
-	void tables_ui::on_children_selection_change(wpl::table_model_base::index_type index, bool selected)
-	{	_pc_children->select(selected ? index : wpl::table_model_base::npos());	}
-
-	void tables_ui::on_children_piechart_selection_change(piechart::model_t::index_type index)
+	void tables_ui::switch_linked(selection<statistic_types::key> &sm)
 	{
-		_lv_children->select(index, true);
-		_lv_children->focus(index);
+		auto key = get_first_item(sm);
+		auto sc = set_model(*_lv_children, _pc_children.get(), _hint_children.get(), _conn_sort_children,
+			*_cm_children, _m_children = key.second ? _m_main->watch_children(key.first) : nullptr);
+		auto sp = set_model(*_lv_parents, nullptr, nullptr, _conn_sort_parents, *_cm_parents,
+			_m_parents = key.second ? _m_main->watch_parents(key.first) : nullptr);
+
+		_connections_linked[0] = _lv_children->item_activate += [this, &sm, sc] (...) {	on_drilldown(sm, *sc);	};
+		_connections_linked[1] = _lv_parents->item_activate += [this, &sm, sp] (...) {	on_drilldown(sm, *sp);	};
 	}
 
-	void tables_ui::switch_linked(wpl::table_model_base::index_type index)
+	pair<statistic_types::key, bool> tables_ui::get_first_item(const selection<statistic_types::key> &selection_)
 	{
-		auto key = _m_main->get_key(index);
+		auto key = make_pair(statistic_types::key(), false);
 
-		set_model(*_lv_children, _pc_children.get(), _hint_children.get(), _conn_sort_children, *_cm_children,
-			_m_children = index != wpl::table_model_base::npos() ? _m_main->watch_children(key) : nullptr);
-		set_model(*_lv_parents, nullptr, nullptr, _conn_sort_parents, *_cm_parents,
-			_m_parents = index != wpl::table_model_base::npos() ? _m_main->watch_parents(key) : nullptr);
+		selection_.enumerate([&] (const function_key &key_) {	key = make_pair(key_, true);	});
+		return key;
 	}
 
 	template <typename ModelT>
-	void tables_ui::set_model(wpl::listview &lv, piechart *pc, function_hint *hint, wpl::slot_connection &conn_sorted,
-		headers_model &cm, const std::shared_ptr<ModelT> &m)
+	shared_ptr< selection<statistic_types::key> > tables_ui::set_model(wpl::listview &lv, piechart *pc,
+		function_hint *hint, wpl::slot_connection &conn_sorted, headers_model &cm, const shared_ptr<ModelT> &m)
 	{
+		const auto selection = m ? m->create_selection() : nullptr;
 		const auto order = cm.get_sort_order();
 		const auto set_order = [m] (headers_model::index_type column, bool ascending) {
 			if (m)
@@ -207,9 +187,11 @@ namespace micro_profiler
 		conn_sorted = cm.sort_order_changed += set_order;
 		set_order(order.first, order.second);
 		lv.set_model(m);
+		lv.set_selection_model(selection);
 		if (pc)
-			pc->set_model(m ? m->get_column_series() : nullptr);
+			pc->set_model(m ? m->get_column_series() : nullptr), pc->set_selection_model(selection);
 		if (hint)
 			hint->set_model(m);
+		return selection;
 	}
 }

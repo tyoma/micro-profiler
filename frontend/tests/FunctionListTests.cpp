@@ -134,7 +134,7 @@ namespace micro_profiler
 			test( CanCreateEmptyFunctionList )
 			{
 				// INIT / ACT
-				shared_ptr<functions_list> sp_fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto sp_fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				const functions_list &fl = *sp_fl;
 
 				// ACT / ASSERT
@@ -154,7 +154,7 @@ namespace micro_profiler
 				serialize_single_threaded(ser, s);
 
 				// ACT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				dser(*fl, dummy_context);
 
 				// ASSERT
@@ -167,7 +167,7 @@ namespace micro_profiler
 				// INIT
 				int invalidated_count = 0;
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				wpl::slot_connection conn = fl->invalidate += bind(&increment, &invalidated_count);
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(1, 0, 30, 20);
@@ -195,7 +195,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 
 				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
 				serialize_single_threaded(ser, s);
@@ -243,7 +243,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				invalidation_tracer it1, it2;
 
 				s[1123].callees[11000];
@@ -274,7 +274,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				invalidation_tracer it1, it2;
 
 				s[1123].callees[11000];
@@ -305,7 +305,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				vector<functions_list::index_type> expected;
 
 				static_cast<function_statistics &>(s[1118]) = function_statistics(19, 0, 31, 29);
@@ -357,7 +357,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s2[5550]) = function_statistics(15, 1024, 1011, 723, 215);
 				static_cast<function_statistics &>(s3[1118]) = function_statistics(100111222333, 0, 17000, 14000, 4);
 
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				fl->set_order(columns::times_called, true);
 				
 				invalidation_tracer ih;
@@ -456,7 +456,7 @@ namespace micro_profiler
 					make_statistics(6000u, 1, 0, 99999031030567, 99999030000987, 99999030000987),
 					make_statistics(6661u, 1, 0, 65450031030567000, 23470030000987000, 23470030000987000),
 				};
-				shared_ptr<functions_list> fl(functions_list::create(10000000000, resolver, tmodel)); // 10 * billion ticks per second
+				auto fl = functions_list::create(10000000000, resolver, tmodel); // 10 * billion ticks per second
 
 				serialize_single_threaded(ser, mkvector(functions));
 
@@ -505,10 +505,41 @@ namespace micro_profiler
 			}
 
 
+			test( SelectionModelIsFunctionalAfterParentModelIsDestroyed )
+			{
+				// INIT
+				unthreaded_addressed_function functions[] = {
+					make_statistics(1990u, 15, 0, 31, 29, 3),
+					make_statistics(2000u, 35, 1, 453, 366, 4),
+					make_statistics(2990u, 2, 2, 33450030, 32333333, 5),
+					make_statistics(3000u, 15233, 3, 65460, 13470, 6),
+				};
+
+				serialize_single_threaded(ser, mkvector(functions));
+
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
+
+				dser(*fl, dummy_context);
+
+				// INIT / ACT
+				auto sel = fl->create_selection();
+
+				// ACT
+				sel->add(1);
+				fl.reset();
+
+				// ASSERT
+				assert_is_false(sel->contains(0));
+				assert_is_true(sel->contains(1));
+				assert_is_false(sel->contains(2));
+				assert_is_false(sel->contains(3));
+			}
+
+
 			test( FunctionListSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				const auto s = fl->create_selection();
 				invalidation_tracer ih;
 				const size_t data_size = 4;
@@ -887,7 +918,7 @@ namespace micro_profiler
 			test( FunctionListTakesNativeIDFromThreadModel )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_addressed_function functions[][1] = {
 					{ make_statistics(0x1000u, 1, 0, 0, 0, 0), },
 					{ make_statistics(0x1010u, 1, 0, 0, 0, 0), },
@@ -938,7 +969,7 @@ namespace micro_profiler
 			test( FunctionListCanBeSortedByThreadID )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				invalidation_tracer ih;
 				const size_t data_size = 5;
 				unthreaded_addressed_function functions[data_size][1] = {
@@ -995,7 +1026,7 @@ namespace micro_profiler
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				string result;
 
 				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 2);
@@ -1041,8 +1072,8 @@ namespace micro_profiler
 			test( FailOnGettingChildrenListFromNonEmptyRootList )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
+				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[1978];
@@ -1066,8 +1097,8 @@ namespace micro_profiler
 			test( ReturnChildrenModelForAValidRecord )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
+				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[1978];
@@ -1093,7 +1124,7 @@ namespace micro_profiler
 			test( LinkedStatisticsObjectIsReturnedForChildren )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				s[1973];
@@ -1114,7 +1145,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsForNonEmptyChildren )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x1978].callees[0x2001];
@@ -1142,7 +1173,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[0x1978].callees[0x2001] = function_statistics(11);
@@ -1189,7 +1220,7 @@ namespace micro_profiler
 			test( ChildrenStatisticsGetText )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(10, resolver, tmodel));
+				auto  fl = functions_list::create(10, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
@@ -1214,7 +1245,7 @@ namespace micro_profiler
 			test( IncomingDetailStatisticsUpdateNoLinkedStatisticsAfterClear )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				invalidation_tracer t1, t2;
 				unthreaded_statistic_types::map_detailed s;
 
@@ -1245,7 +1276,7 @@ namespace micro_profiler
 			test( LinkedStatisticsInvalidatedToEmptyOnMasterDestruction )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				invalidation_tracer t1, t2;
 				unthreaded_statistic_types::map_detailed s;
 
@@ -1275,7 +1306,7 @@ namespace micro_profiler
 			test( IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				invalidation_tracer t;
 				unthreaded_statistic_types::map_detailed s1, s2;
 
@@ -1322,36 +1353,10 @@ namespace micro_profiler
 			}
 
 
-			test( GetFunctionAddressFromLinkedChildrenStatistics )
-			{
-				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x1978].callees[0x2001] = function_statistics(11);
-				s[0x1978].callees[0x2004] = function_statistics(17);
-				s[0x1978].callees[0x2008] = function_statistics(18);
-				s[0x1978].callees[0x2011] = function_statistics(29);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
-
-				ls->set_order(columns::name, true);
-
-				// ACT / ASSERT
-				assert_equal(addr(0x2001u), ls->get_key(0));
-				assert_equal(addr(0x2004u), ls->get_key(1));
-				assert_equal(addr(0x2008u), ls->get_key(2));
-				assert_equal(addr(0x2011u), ls->get_key(3));
-			}
-
-
 			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				static_cast<function_statistics &>(s[0x2001]) = function_statistics(11);
@@ -1374,8 +1379,8 @@ namespace micro_profiler
 			test( FailOnGettingParentsListFromNonEmptyRootList )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
+				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[0x1978];
@@ -1399,8 +1404,8 @@ namespace micro_profiler
 			test( ReturnParentsModelForAValidRecord )
 			{
 				// INIT
-				shared_ptr<functions_list> fl1(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				shared_ptr<functions_list> fl2(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
+				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[0x1978];
@@ -1426,7 +1431,7 @@ namespace micro_profiler
 			test( SizeOfParentsListIsReturnedFromParentsModel )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				s[2978].callees[3001];
@@ -1452,7 +1457,7 @@ namespace micro_profiler
 			test( ParentStatisticsIsUpdatedOnGlobalUpdates1 )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s1, s2;
 
 				s1[2978].callees[2978];
@@ -1481,7 +1486,7 @@ namespace micro_profiler
 			test( ParentStatisticsValuesAreFormatted )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				static_cast<function_statistics &>(s[0x122F]) = function_statistics(1);
@@ -1512,7 +1517,7 @@ namespace micro_profiler
 			test( ParentStatisticsSorting )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1577,7 +1582,7 @@ namespace micro_profiler
 			test( ParentStatisticsResortingCausesInvalidation )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				invalidation_tracer t;
 				unthreaded_statistic_types::map_detailed s1, s2;
 
@@ -1615,7 +1620,7 @@ namespace micro_profiler
 			test( ParentStatisticsCausesInvalidationAfterTheSort )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_statistic_types::map_detailed s;
 
 				s[0x2978].callees[0x3001] = function_statistics(3);
@@ -1639,7 +1644,7 @@ namespace micro_profiler
 			test( ParentStatisticsIsUpdatedOnGlobalUpdates2 )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 
 				unthreaded_addressed_function batch1[] = {
 					make_statistics(0x2978u, 0, 0, 0, 0, 0,
@@ -1688,34 +1693,10 @@ namespace micro_profiler
 			}
 
 
-			test( GettingAddressOfParentStatisticsItem )
-			{
-				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x2978].callees[0x3001] = function_statistics(3);
-				s[0x2995].callees[0x3001] = function_statistics(30);
-				s[0x3001].callees[0x3001] = function_statistics(50);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
-
-				p->set_order(columns::times_called, true);
-
-				// ACT / ASSERT
-				assert_equal(addr(0x2978), p->get_key(0));
-				assert_equal(addr(0x2995), p->get_key(1));
-				assert_equal(addr(0x3001), p->get_key(2));
-			}
-
-
 			test( ThreadsAreAccumulatedInTheContext )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_addressed_function functions[] = { make_statistics(0x1000u, 1, 0, 0, 0, 0), };
 				pair< unsigned, vector<unthreaded_addressed_function> > data1[] = {
 					make_pair(3, mkvector(functions)), make_pair(2, mkvector(functions)),
@@ -1749,7 +1730,7 @@ namespace micro_profiler
 			test( OnlyAllowedItemsAreExposedByTheModelAfterFilterApplication )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_addressed_function functions[][2] = {
 					{ make_statistics(0x1000u, 1, 0, 0, 0, 0), make_statistics(0x1010u, 2, 0, 0, 0, 0), },
 					{ make_statistics(0x1020u, 3, 0, 0, 0, 0), make_statistics(0x1030u, 4, 0, 0, 0, 0), },
@@ -1818,7 +1799,7 @@ namespace micro_profiler
 			test( InvalidationIsEmittedOnFilterChange )
 			{
 				// INIT
-				shared_ptr<functions_list> fl(functions_list::create(test_ticks_per_second, resolver, tmodel));
+				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
 				unthreaded_addressed_function functions[] = {
 					make_statistics(0x1000u, 1, 0, 0, 0, 0), make_statistics(0x1010u, 2, 0, 0, 0, 0),
 				};

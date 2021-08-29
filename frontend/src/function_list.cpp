@@ -262,52 +262,52 @@ namespace micro_profiler
 		switch (column)
 		{
 		case 0:
-			_projection->project();
+			_view->projection.project();
 			break;
 
 		case 1:
-			_view->set_order(by_name(_resolver), ascending);
-			_projection->project();
+			_view->ordered.set_order(by_name(_resolver), ascending);
+			_view->projection.project();
 			break;
 
 		case 2:
-			_view->set_order(by_threadid(get_threads()), ascending);
-			_projection->project();
+			_view->ordered.set_order(by_threadid(get_threads()), ascending);
+			_view->projection.project();
 			break;
 
 		case 3:
-			_view->set_order(by_times_called(), ascending);
-			_projection->project(get_times_called());
+			_view->ordered.set_order(by_times_called(), ascending);
+			_view->projection.project(get_times_called());
 			break;
 
 		case 4:
-			_view->set_order(by_exclusive_time(), ascending);
-			_projection->project(exclusive_time(_tick_interval));
+			_view->ordered.set_order(by_exclusive_time(), ascending);
+			_view->projection.project(exclusive_time(_tick_interval));
 			break;
 
 		case 5:
-			_view->set_order(by_inclusive_time(), ascending);
-			_projection->project(inclusive_time(_tick_interval));
+			_view->ordered.set_order(by_inclusive_time(), ascending);
+			_view->projection.project(inclusive_time(_tick_interval));
 			break;
 
 		case 6:
-			_view->set_order(by_avg_exclusive_call_time(), ascending);
-			_projection->project(exclusive_time_avg(_tick_interval));
+			_view->ordered.set_order(by_avg_exclusive_call_time(), ascending);
+			_view->projection.project(exclusive_time_avg(_tick_interval));
 			break;
 
 		case 7:
-			_view->set_order(by_avg_inclusive_call_time(), ascending);
-			_projection->project(inclusive_time_avg(_tick_interval));
+			_view->ordered.set_order(by_avg_inclusive_call_time(), ascending);
+			_view->projection.project(inclusive_time_avg(_tick_interval));
 			break;
 
 		case 8:
-			_view->set_order(by_max_reentrance(), ascending);
-			_projection->project();
+			_view->ordered.set_order(by_max_reentrance(), ascending);
+			_view->projection.project();
 			break;
 
 		case 9:
-			_view->set_order(by_max_call_time(), ascending);
-			_projection->project(max_call_time(_tick_interval));
+			_view->ordered.set_order(by_max_call_time(), ascending);
+			_view->projection.project(max_call_time(_tick_interval));
 			break;
 		}
 		on_updated();
@@ -334,8 +334,8 @@ namespace micro_profiler
 	{
 		switch (column)
 		{
-		case 1:	_view->set_order(by_name(_resolver), ascending);	break;
-		case 3:	_view->set_order(by_times_called_parents(), ascending);	break;
+		case 1:	_view->ordered.set_order(by_name(_resolver), ascending);	break;
+		case 3:	_view->ordered.set_order(by_times_called_parents(), ascending);	break;
 		}
 		this->invalidate(this->npos());
 	}
@@ -343,7 +343,7 @@ namespace micro_profiler
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads)
-		: base(*statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
+		: base(statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
 			_linked(new linked_statistics_list_t)
 	{
 		_connection = statistics->invalidated += [this] {
@@ -354,7 +354,7 @@ namespace micro_profiler
 
 	functions_list::functions_list(shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads)
-		: base(*statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
+		: base(statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
 			_linked(new linked_statistics_list_t)
 	{	}
 
@@ -406,8 +406,9 @@ namespace micro_profiler
 		if (e == _statistics->end())
 			throw out_of_range("");
 
+		shared_ptr<decltype(e->second.callees)> callees(_statistics, &e->second.callees);
 		auto i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<children_statistics> children(new children_statistics(e->second.callees, _tick_interval, get_resolver(),
+		shared_ptr<children_statistics> children(new children_statistics(callees, _tick_interval, get_resolver(),
 			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = children.get();
@@ -421,8 +422,9 @@ namespace micro_profiler
 		if (e == _statistics->end())
 			throw out_of_range("");
 
+		shared_ptr<decltype(e->second.callers)> callers(_statistics, &e->second.callers);
 		auto i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<parents_statistics> parents(new parents_statistics(e->second.callers, _tick_interval, get_resolver(),
+		shared_ptr<parents_statistics> parents(new parents_statistics(callers, _tick_interval, get_resolver(),
 			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
 
 		*i = parents.get();

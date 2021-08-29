@@ -49,14 +49,17 @@ namespace micro_profiler
 	void piechart::set_model(shared_ptr<model_t> m)
 	{
 		_model = m;
-		_invalidate_connection = _model ? _model->invalidate += bind(&piechart::on_invalidated, this) : slot_connection();
+		_invalidate_connection = _model
+			? _model->invalidate += bind(&piechart::on_invalidated, this) : slot_connection();
 		on_invalidated();
 	}
 
-	void piechart::select(index_type item)
+	void piechart::set_selection_model(std::shared_ptr<wpl::dynamic_set_model> m)
 	{
-		_selection = item != npos() && _model ? _model->track(item) : shared_ptr<trackable>();
-		invalidate(nullptr);
+		_selection = m;
+		_selection_invalidate_connection = _selection
+			? _selection->invalidate += bind(&piechart::on_invalidated, this) : slot_connection();
+		on_invalidated();
 	}
 
 	void piechart::draw(gcontext &ctx, gcontext::rasterizer_ptr &rasterizer_) const
@@ -64,12 +67,11 @@ namespace micro_profiler
 		typedef blender_solid_color<simd::blender_solid_color, platform_pixel_order> blender;
 
 		real_t start = -pi * 0.5f;
-		const index_type selection = _selection ? _selection->index() : npos();
 
 		for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
 		{
 			real_t end = start + i->share_angle;
-			real_t outer_r = _outer_r * ((selection != npos()) & (selection == i->index) ? _selection_emphasis_k + 1.0f : 1.0f);
+			real_t outer_r = _outer_r * (is_selected(i->index) ? _selection_emphasis_k + 1.0f : 1.0f);
 
 			if (i->share_angle > 0.005)
 			{
@@ -128,9 +130,8 @@ namespace micro_profiler
 	{
 		const auto idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
 
-		_selection = _model && idx != npos() ? _model->track(idx) : shared_ptr<const trackable>();
-		invalidate(nullptr);
-		selection_changed(idx);
+		if (_selection)
+			idx != npos() ? _selection->add(idx) : _selection->clear();
 	}
 
 	void piechart::mouse_double_click(mouse_buttons /*button*/, int /*depressed*/, int x, int y)
@@ -149,8 +150,6 @@ namespace micro_profiler
 		vector<color>::const_iterator j;
 
 		_segments.clear();
-		if (_selection && _selection->index() == npos())
-			_selection.reset();
 		for (i = 0, j = _palette.begin(), count = _model ? _model->get_count() : 0; i != count; ++i)
 		{
 			double value;
@@ -187,14 +186,13 @@ namespace micro_profiler
 		if (r >= _inner_r)
 		{
 			real_t start = -pi * 0.5f;
-			const index_type selection = _selection ? _selection->index() : npos();
 
 			for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
 			{
 				real_t end = start + i->share_angle;
 
 				if (((start <= a) & (a < end))
-					&& r < _outer_r * ((selection != npos()) & (selection == i->index) ? (_selection_emphasis_k + 1.0f) : 1.0f))
+					&& r < _outer_r * (is_selected(i->index) ? (_selection_emphasis_k + 1.0f) : 1.0f))
 				{
 					return i->index;
 				}
@@ -203,4 +201,7 @@ namespace micro_profiler
 		}
 		return npos();
 	}
+
+	bool piechart::is_selected(index_type index) const
+	{	return index != npos() && _selection && _selection->contains(index);	}
 }

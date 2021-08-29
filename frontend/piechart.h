@@ -42,10 +42,9 @@ namespace micro_profiler
 
 		void set_hint(std::shared_ptr<function_hint> hint);
 		void set_model(std::shared_ptr<model_t> m);
-		void select(model_t::index_type item);
+		void set_selection_model(std::shared_ptr<wpl::dynamic_set_model> m);
 
 	public:
-		wpl::signal<void(model_t::index_type item)> selection_changed;
 		wpl::signal<void(model_t::index_type item)> item_activate;
 
 	private:
@@ -73,14 +72,15 @@ namespace micro_profiler
 
 		void on_invalidated();
 		model_t::index_type find_sector(agge::real_t x, agge::real_t y);
+		bool is_selected(index_type index) const;
 
 	private:
 		segments_t _segments;
 		agge::point_r _center;
 		agge::real_t _outer_r, _inner_r, _selection_emphasis_k;
-		wpl::slot_connection _invalidate_connection;
+		wpl::slot_connection _invalidate_connection, _selection_invalidate_connection;
 		std::shared_ptr<model_t> _model;
-		std::shared_ptr<const wpl::trackable> _selection;
+		std::shared_ptr<wpl::dynamic_set_model> _selection;
 		std::vector<agge::color> _palette;
 		agge::color _color_rest;
 		std::shared_ptr<function_hint> _hint;

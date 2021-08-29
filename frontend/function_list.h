@@ -37,7 +37,6 @@ namespace micro_profiler
 	{
 		virtual ~linked_statistics() {	}
 		virtual void set_order(index_type column, bool ascending) = 0;
-		virtual statistic_types::key get_key(index_type item) const = 0;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const = 0;
 		virtual std::shared_ptr< selection<statistic_types::key> > create_selection() const = 0;
 	};

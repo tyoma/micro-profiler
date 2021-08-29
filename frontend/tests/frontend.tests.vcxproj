@@ -52,10 +52,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FrontendPatcherTests.cpp" />
     <ClCompile Include="HeadersModelTests.cpp" />
-    <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FrontendTests.cpp" />
     <ClCompile Include="FunctionListPersistence.cpp" />
@@ -63,7 +61,6 @@
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="ImagePatchModelTests.cpp" />
     <ClCompile Include="mocks.cpp" />
-    <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="ProcessListTests.cpp" />
     <ClCompile Include="ProjectionViewTests.cpp" />
     <ClCompile Include="SelectionModelTests.cpp" />

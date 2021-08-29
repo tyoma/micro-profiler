@@ -20,11 +20,11 @@
 
 #pragma once
 
-#include "flatten_view.h"
-#include "ordered_view.h"
 #include "tables.h"
 
 #include <common/noncopyable.h>
+#include <views/flatten.h>
+#include <views/ordered.h>
 #include <wpl/models.h>
 
 namespace micro_profiler
@@ -69,8 +69,8 @@ namespace micro_profiler
 			static const_reference get(const tables::modules::value_type &l1, const symbol_info &l2);
 		};
 
-		typedef flatten_view<tables::modules, flattener> flatten_view_t;
-		typedef ordered_view<flatten_view_t> ordered_view_t;
+		typedef views::flatten<tables::modules, flattener> flatten_view_t;
+		typedef views::ordered<flatten_view_t> ordered_view_t;
 
 	private:
 		template <typename KeyT>

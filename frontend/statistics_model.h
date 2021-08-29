@@ -20,14 +20,14 @@
 
 #pragma once
 
-#include "filter_view.h"
-#include "ordered_view.h"
 #include "primitives.h"
 #include "projection_view.h"
 #include "selection_model.h"
 #include "trackables_provider.h"
 
 #include <common/noncopyable.h>
+#include <views/filter.h>
+#include <views/ordered.h>
 
 namespace micro_profiler
 {
@@ -67,8 +67,8 @@ namespace micro_profiler
 		index_type get_index(key_type address) const;
 
 	protected:
-		typedef filter_view<MapT> filter_view_type;
-		typedef ordered_view<filter_view_type> view_type;
+		typedef views::filter<MapT> filter_view_type;
+		typedef views::ordered<filter_view_type> view_type;
 
 	protected:
 		const typename MapT::value_type &get_entry(index_type row) const;
@@ -92,10 +92,10 @@ namespace micro_profiler
 		view_complex(std::shared_ptr<const MapT> underlying_);
 
 		std::shared_ptr<const MapT> underlying;
-		filter_view<MapT> filter;
-		ordered_view< filter_view<MapT> > ordered;
-		trackables_provider< ordered_view< filter_view<MapT> > > trackables;
-		projection_view<ordered_view< filter_view<MapT> >, double> projection;
+		views::filter<MapT> filter;
+		views::ordered< views::filter<MapT> > ordered;
+		trackables_provider< views::ordered< views::filter<MapT> > > trackables;
+		projection_view<views::ordered< views::filter<MapT> >, double> projection;
 	};
 
 

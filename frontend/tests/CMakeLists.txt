@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(FRONTEND_TESTS_SOURCES
-	FilterViewTests.cpp
-	FlattenViewTests.cpp
 	FrontendManagerTests.cpp
 	FrontendPatcherTests.cpp
 	FrontendTests.cpp
@@ -14,7 +12,6 @@ set(FRONTEND_TESTS_SOURCES
 	HeadersModelTests.cpp
 	ImagePatchModelTests.cpp
 	mocks.cpp
-	OrderedViewTests.cpp
 	ProcessListTests.cpp
 	ProjectionViewTests.cpp
 	SelectionModelTests.cpp

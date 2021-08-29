@@ -128,6 +128,7 @@ add_subdirectory(mt/tests)
 add_subdirectory(patcher/tests)
 add_subdirectory(scheduler/tests)
 add_subdirectory(test-helpers/src)
+add_subdirectory(views/tests)
 
 if (WIN32 OR APPLE)
 	add_subdirectory(libraries/wpl)

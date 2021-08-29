@@ -20,12 +20,13 @@
 
 #pragma once
 
+#include "projection_view.h"
+
 #include <common/noncopyable.h>
 #include <common/hash.h>
 #include <common/types.h>
 #include <common/unordered_map.h>
-#include <frontend/ordered_view.h>
-#include <frontend/projection_view.h>
+#include <views/ordered.h>
 #include <wpl/models.h>
 
 namespace strmd
@@ -63,8 +64,8 @@ namespace micro_profiler
 
 	private:
 		const request_threads_t _requestor;
-		ordered_view<map_type> _view;
-		trackables_provider< ordered_view<map_type> > _trackables;
+		views::ordered<map_type> _view;
+		trackables_provider< views::ordered<map_type> > _trackables;
 		std::vector<unsigned int> _ids_buffer;
 
 	private:

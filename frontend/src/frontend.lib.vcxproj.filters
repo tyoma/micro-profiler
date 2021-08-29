@@ -58,7 +58,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
-    <ClInclude Include="..\ordered_view.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
@@ -74,14 +73,12 @@
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\persistence.h" />
-    <ClInclude Include="..\filter_view.h" />
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\system_stylesheet.h" />
     <ClInclude Include="..\function_hint.h" />
     <ClInclude Include="..\headers_model.h" />
     <ClInclude Include="..\image_patch_model.h" />
-    <ClInclude Include="..\flatten_view.h" />
     <ClInclude Include="..\frontend_ui.h" />
     <ClInclude Include="..\tables.h" />
     <ClInclude Include="..\projection_view.h" />

@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="FlattenViewTests.cpp" />
+    <ClCompile Include="FilterViewTests.cpp" />
+    <ClCompile Include="OrderedViewTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Library Headers">
+      <UniqueIdentifier>{76673e85-5d08-4309-9036-cead590d1556}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\filter.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\flatten.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ordered.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

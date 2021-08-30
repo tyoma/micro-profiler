@@ -93,6 +93,27 @@ namespace micro_profiler
 				}
 
 
+				test( IteratorsAreCopyable )
+				{
+					// INIT
+					hierarchy1_t h1;
+					flatten<hierarchy1_t, access_x> v(h1);
+
+					// INIT / ACT
+					auto b = v.begin();
+					auto e = v.end();
+
+					// ACT / ASSERT
+					assert_equal(e, b);
+
+					// ACT
+					b = e;
+
+					// ASSERT
+					assert_equal(e, b);
+				}
+
+
 				test( ViewForEmptySubcontainersIsAlsoEmpty )
 				{
 					// INIT
@@ -117,7 +138,6 @@ namespace micro_profiler
 				{
 					// INIT
 					hierarchy1_t h;
-					vector<x_compound> vv;
 					string data1[] = {	"one",	}, data2[] = {	"One", "Two",	},
 						data3[] = {	"foo", "bar", "baz",	};
 
@@ -129,26 +149,17 @@ namespace micro_profiler
 					// INIT / ACT
 					flatten<hierarchy1_t, access_x> v(h);
 
-					// ACT
-					for (auto i = v.begin(); i != v.end(); ++i)
-						vv.push_back(*i);
-
 					// ACT / ASSERT
 					x_compound reference1[] = {
 						x_compound(1, "x", "one"),
 						x_compound(3, "z", "One"), x_compound(3, "z", "Two"),
 					};
 
-					assert_equal(reference1, vv);
+					assert_equal(reference1, v);
 
 					// INIT
-					vv.clear();
 					h[2].group_name = "y";
 					h[2].inner = mkvector(data3);
-
-					// ACT
-					for (auto i = v.begin(); i != v.end(); ++i)
-						vv.push_back(*i);
 
 					// ACT / ASSERT
 					x_compound reference2[] = {
@@ -157,7 +168,7 @@ namespace micro_profiler
 						x_compound(3, "z", "One"), x_compound(3, "z", "Two"),
 					};
 
-					assert_equal(reference2, vv);
+					assert_equal(reference2, v);
 				}
 
 
@@ -165,7 +176,6 @@ namespace micro_profiler
 				{
 					// INIT
 					hierarchy1_t h;
-					vector<x_compound> vv;
 					string data1[] = {	"one",	}, data2[] = {	"One", "Two",	},
 						data3[] = {	"foo", "bar", "baz",	};
 
@@ -180,10 +190,6 @@ namespace micro_profiler
 					// INIT / ACT
 					flatten<hierarchy1_t, access_x> v(h);
 
-					// ACT
-					for (auto i = v.begin(); i != v.end(); ++i)
-						vv.push_back(*i);
-
 					// ACT / ASSERT
 					x_compound reference[] = {
 						x_compound(10, "x", "one"),
@@ -191,20 +197,88 @@ namespace micro_profiler
 						x_compound(30, "z", "One"), x_compound(30, "z", "Two"),
 					};
 
-					assert_equal(reference, vv);
+					assert_equal(reference, v);
 
 					// INIT
 					h[15];
 					h[25];
 					h[35];
-					vv.clear();
-
-					// ACT
-					for (auto i = v.begin(); i != v.end(); ++i)
-						vv.push_back(*i);
 
 					// ACT / ASSERT
-					assert_equal(reference, vv);
+					assert_equal(reference, v);
+				}
+
+
+				struct xform_external
+				{
+					typedef vector<int>::const_iterator nested_const_iterator;
+					typedef vector<int>::const_reference const_reference;
+					typedef int value_type;
+
+					template <typename T1, typename T2>
+					const_reference get(const T1 &/*v1*/, const T2 &v2) const
+					{	return v2;	}
+
+					template <typename Type>
+					nested_const_iterator begin(const Type &v) const
+					{	return source[v].begin();	}
+
+					template <typename Type>
+					nested_const_iterator end(const Type &v) const
+					{	return source[v].end();	}
+
+					map< int, vector<int> > &source;
+				};
+
+				test( ViewIsEmtpyForEmptyL1WithStatefulTransform )
+				{
+					// INIT / ACT
+					vector<int> l1;
+					map< int, vector<int> > source;
+					xform_external xform = {	source	};
+					flatten<vector<int>, xform_external> f(l1, xform);
+
+					// ACT / ASSERT
+					assert_equal(f.end(), f.begin());
+				}
+
+
+				test( EnumerateElementsWithStatefulTransform )
+				{
+					// INIT / ACT
+					int l1_data[] = {	314, 15, 92,	};
+					auto l1 = mkvector(l1_data);
+					int data314[] = {	1, 2, 3, 4,	};
+					int data15[] = {	10, 11, 12,	};
+					int data92[] = {	100, 101, 102, 103,	};
+					map< int, vector<int> > source;
+					xform_external xform = {	source	};
+					flatten<vector<int>, xform_external> f(l1, xform);
+
+					source[l1[0]] = mkvector(data314);
+					source[l1[1]] = mkvector(data15);
+					source[l1[2]] = mkvector(data92);
+
+					// ACT / ASSERT
+					int reference1[] = {	1, 2, 3, 4, 10, 11, 12, 100, 101, 102, 103,	};
+
+					assert_equal(reference1, f);
+
+					// INIT
+					l1.erase(l1.begin() + 1);
+
+					// ACT / ASSERT
+					int reference2[] = {	1, 2, 3, 4, 100, 101, 102, 103,	};
+
+					assert_equal(reference2, f);
+
+					// INIT
+					l1.push_back(15);
+
+					// ACT / ASSERT
+					int reference3[] = {	1, 2, 3, 4, 100, 101, 102, 103, 10, 11, 12,	};
+
+					assert_equal(reference3, f);
 				}
 
 			end_test_suite

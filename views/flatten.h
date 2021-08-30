@@ -20,99 +20,125 @@
 
 #pragma once
 
+#include <iterator>
+
 namespace micro_profiler
 {
 	namespace views
 	{
-		template <class U, class AccessT>
+		template <class U, class X>
 		class flatten
 		{
 		public:
-			typedef typename AccessT::const_reference const_reference;
-			typedef typename AccessT::value_type value_type;
-
-			class const_iterator
-			{
-			public:
-				const_reference operator *() const throw()
-				{	return AccessT::get(*_l1, *_l2);	}
-
-				const const_iterator &operator ++()
-				{
-					if (is_end() || ++_l2 == AccessT::end(*_l1))
-					{
-						++_l1;
-						if (!is_end())
-							_l2 = AccessT::begin(*_l1);
-					}
-					while (!is_end() && _l2 == AccessT::end(*_l1))
-					{
-						++_l1;
-						if (!is_end())
-							_l2 = AccessT::begin(*_l1);
-					}
-					return *this;
-				}
-
-				const_iterator operator ++(int)
-				{
-					auto prev = *this;
-
-					++*this;
-					return prev;
-				}
-
-				bool operator ==(const const_iterator &rhs) const
-				{	return _l1 == rhs._l1 && (is_end() || _l2 == rhs._l2);	}
-
-				bool operator !=(const const_iterator &rhs) const
-				{	return !(*this == rhs);	}
-
-			private:
-				typedef typename U::const_iterator const_iterator_l1;
-				typedef typename AccessT::nested_const_iterator const_iterator_l2;
-
-			private:
-				const_iterator(const_iterator_l1 l1, const_iterator_l1 l1_end)
-					: _l1(l1), _l1_end(l1_end)
-				{
-					do
-					{
-						if (!is_end())
-							_l2 = AccessT::begin(*_l1);
-						else
-							break;
-					} while (_l2 == AccessT::end(*_l1) ? ++_l1, true : false);
-				}
-
-				const_iterator(const_iterator_l1 l1_end)
-					: _l1(l1_end), _l1_end(l1_end)
-				{	}
-
-				bool is_end() const
-				{	return _l1 == _l1_end;	}
-
-			private:
-				const_iterator_l1 _l1, _l1_end;
-				const_iterator_l2 _l2;
-
-			private:
-				friend flatten;
-			};
+			class const_iterator;
+			typedef typename X::const_reference const_reference;
+			typedef const_iterator iterator;
+			typedef typename X::const_reference reference;
+			typedef typename X::value_type value_type;
 
 		public:
-			flatten(const U &underlying)
-				: _underlying(underlying)
-			{	}
+			flatten(const U &underlying_, const X &transform_ = X());
 
-			const_iterator begin() const throw()
-			{	return const_iterator(_underlying.begin(), _underlying.end());	}
+			const_iterator begin() const;
+			const_iterator end() const;
 
-			const_iterator end() const throw()
-			{	return const_iterator(_underlying.end());	}
+		public:
+			const U &underlying;
+			const X transform;
 
 		private:
-			const U &_underlying;
+			void operator =(const flatten &rhs);
 		};
+
+		template <class U, class X>
+		class flatten<U, X>::const_iterator
+		{
+		public:
+			typedef typename X::const_reference const_reference;
+			typedef const_reference reference;
+			typedef ptrdiff_t difference_type;
+			typedef std::forward_iterator_tag iterator_category;
+			typedef void pointer;
+			typedef typename X::value_type value_type;
+
+		public:
+			const_reference operator *() const;
+			const const_iterator &operator ++();
+			bool operator ==(const const_iterator &rhs) const;
+			bool operator !=(const const_iterator &rhs) const;
+
+		private:
+			typedef typename U::const_iterator const_iterator_l1;
+			typedef typename X::nested_const_iterator const_iterator_l2;
+
+		private:
+			const_iterator(const flatten<U, X> &owner, const_iterator_l1 l1);
+
+			bool fetch();
+
+		private:
+			const flatten<U, X> *_owner;
+			const_iterator_l1 _l1;
+			const_iterator_l2 _l2, _l2_end;
+
+		private:
+			friend flatten;
+		};
+
+
+
+		template <class U, class X>
+		inline flatten<U, X>::flatten(const U &underlying_, const X &transform_)
+			: underlying(underlying_), transform(transform_)
+		{	}
+
+		template <class U, class X>
+		inline typename flatten<U, X>::const_iterator flatten<U, X>::begin() const
+		{	return const_iterator(*this, underlying.begin());	}
+
+		template <class U, class X>
+		inline typename flatten<U, X>::const_iterator flatten<U, X>::end() const
+		{	return const_iterator(*this, underlying.end());	}
+
+
+		template <class U, class X>
+		inline flatten<U, X>::const_iterator::const_iterator(const flatten<U, X> &owner, const_iterator_l1 l1)
+			: _owner(&owner), _l1(l1)
+		{
+			while (!fetch())
+				++_l1;
+		}
+
+		template <class U, class X>
+		inline typename flatten<U, X>::const_reference flatten<U, X>::const_iterator::operator *() const
+		{	return _owner->transform.get(*_l1, *_l2);	}
+
+		template <class U, class X>
+		inline const typename flatten<U, X>::const_iterator &flatten<U, X>::const_iterator::operator ++()
+		{
+			if (++_l2 != _l2_end)
+				return *this;
+			while (++_l1, !fetch())
+			{	}
+			return *this;
+		}
+
+		template <class U, class X>
+		inline bool flatten<U, X>::const_iterator::operator ==(const const_iterator &rhs) const
+		{	return _l1 == rhs._l1 && (_l1 == _owner->underlying.end() || _l2 == rhs._l2);	}
+
+		template <class U, class X>
+		inline bool flatten<U, X>::const_iterator::operator !=(const const_iterator &rhs) const
+		{	return !(*this == rhs);	}
+
+		template <class U, class X>
+		inline bool flatten<U, X>::const_iterator::fetch()
+		{
+			if (_l1 == _owner->underlying.end())
+				return true;
+			_l2 = _owner->transform.begin(*_l1);
+			_l2_end = _owner->transform.end(*_l1);
+			return _l2 != _l2_end;
+		}
 	}
 }

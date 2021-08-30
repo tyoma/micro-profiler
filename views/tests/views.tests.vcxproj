@@ -34,5 +34,10 @@
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\filter.h" />
+    <ClInclude Include="..\flatten.h" />
+    <ClInclude Include="..\ordered.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

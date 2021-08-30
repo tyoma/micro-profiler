@@ -12,6 +12,7 @@ set(FRONTEND_TESTS_SOURCES
 	HeadersModelTests.cpp
 	ImagePatchModelTests.cpp
 	mocks.cpp
+	NestedTransformTests.cpp
 	ProcessListTests.cpp
 	ProjectionViewTests.cpp
 	SelectionModelTests.cpp

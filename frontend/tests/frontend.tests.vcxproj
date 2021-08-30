@@ -60,6 +60,7 @@
     <ClCompile Include="FunctionListPiechartTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="ImagePatchModelTests.cpp" />
+    <ClCompile Include="NestedTransformTests.cpp" />
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="ProcessListTests.cpp" />
     <ClCompile Include="ProjectionViewTests.cpp" />

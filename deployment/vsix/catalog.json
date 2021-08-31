@@ -22,7 +22,7 @@
 			"id":"!vsixid!",
 			"version":"!version!",
 			"type":"Vsix",
-			"payloads":[ {"fileName":"micro-profiler.v!version!.vsix"} ],
+			"payloads":[ {"fileName":"micro-profiler_x86.v!version!.vsix"} ],
 			"vsixId":"!vsixid!",
 			"extensionDir":"[installdir]\\Common7\\IDE\\Extensions\\micro-profiler",
 		}

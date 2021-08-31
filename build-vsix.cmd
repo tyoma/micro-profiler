@@ -3,7 +3,7 @@ set PATH=%PATH%;%~dp0scripts;%WIX%bin
 call make-version.cmd VERSION version.h
 
 mkdir "%~dp0_setup/"
-set OUTPUT="%~dp0_setup\micro-profiler.v%VERSION%.vsix"
+set OUTPUT="%~dp0_setup\micro-profiler_x86.v%VERSION%.vsix"
 
 set VSIXID=A42F6081-855F-41CB-8C89-9488AA847290
 

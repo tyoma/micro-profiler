@@ -40,6 +40,8 @@ namespace micro_profiler
 
 		struct statistics : table<statistic_types::map_detailed>
 		{
+			void clear();
+
 			std::function<void ()> request_update;
 		};
 
@@ -92,5 +94,13 @@ namespace micro_profiler
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;
 		};
+
+
+
+		inline void statistics::clear()
+		{
+			statistic_types::map_detailed::clear();
+			invalidated();
+		}
 	}
 }

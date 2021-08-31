@@ -22,6 +22,8 @@
 
 #include "statistics_model.h"
 
+#include <views/filter.h>
+
 namespace micro_profiler
 {
 	namespace tables
@@ -41,13 +43,7 @@ namespace micro_profiler
 		virtual std::shared_ptr< selection<statistic_types::key> > create_selection() const = 0;
 	};
 
-	struct linked_statistics_ex : linked_statistics
-	{
-		virtual void on_updated() = 0;
-		virtual void detach() = 0;
-	};
-
-	class functions_list : public statistics_model_impl<wpl::richtext_table_model, statistic_types::map_detailed>
+	class functions_list : public statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> >
 	{
 	public:
 		typedef statistic_types::map_detailed::value_type value_type;
@@ -56,6 +52,10 @@ namespace micro_profiler
 		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval,
 			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);
 		virtual ~functions_list();
+
+		template <typename PredicateT>
+		void set_filter(const PredicateT &predicate);
+		void set_filter();
 
 		void clear();
 		void print(std::string &content) const;
@@ -69,23 +69,30 @@ namespace micro_profiler
 		bool updates_enabled;
 
 	private:
-		typedef statistics_model_impl<wpl::richtext_table_model, statistic_types::map_detailed> base;
-		typedef std::list<linked_statistics_ex *> linked_statistics_list_t;
-
-	private:
-		functions_list(std::shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
-			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);
-
-		void on_updated();
+		typedef statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> > base;
 
 	private:
 		using base::_tick_interval;
-		std::shared_ptr<statistic_types::map_detailed> _statistics;
-		std::shared_ptr<linked_statistics_list_t> _linked;
+		std::shared_ptr<tables::statistics> _statistics;
 		wpl::slot_connection _connection;
 
 	private:
 		template <typename ArchiveT, typename ContextT>
 		friend void serialize(ArchiveT &archive, functions_list &model, unsigned int version, ContextT &context);
 	};
+
+
+
+	template <typename PredicateT>
+	inline void functions_list::set_filter(const PredicateT &predicate)
+	{
+		get_underlying()->set_filter(predicate);
+		fetch();
+	}
+
+	inline void functions_list::set_filter()
+	{
+		get_underlying()->set_filter();
+		fetch();
+	}
 }

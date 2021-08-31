@@ -162,7 +162,8 @@ namespace micro_profiler
 			_m_parents = key.second ? _m_main->watch_parents(key.first) : nullptr);
 
 		_connections_linked[0] = _lv_children->item_activate += [this, &sm, sc] (...) {	on_drilldown(sm, *sc);	};
-		_connections_linked[1] = _lv_parents->item_activate += [this, &sm, sp] (...) {	on_drilldown(sm, *sp);	};
+		_connections_linked[1] = _pc_children->item_activate += [this, &sm, sc] (...) {	on_drilldown(sm, *sc);	};
+		_connections_linked[2] = _lv_parents->item_activate += [this, &sm, sp] (...) {	on_drilldown(sm, *sp);	};
 	}
 
 	pair<statistic_types::key, bool> tables_ui::get_first_item(const selection<statistic_types::key> &selection_)

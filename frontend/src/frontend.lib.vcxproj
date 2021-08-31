@@ -74,6 +74,7 @@
     <ClInclude Include="..\key.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\headers_model.h" />
+    <ClInclude Include="..\nested_statistics_model.h" />
     <ClInclude Include="..\nested_transform.h" />
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />

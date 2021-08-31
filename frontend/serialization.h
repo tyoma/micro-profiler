@@ -140,7 +140,7 @@ namespace micro_profiler
 
 		archive(proxy, context);
 		if (data.updates_enabled)
-			data.on_updated();
+			data._statistics->invalidated();
 	}
 
 	template <typename ArchiveT>

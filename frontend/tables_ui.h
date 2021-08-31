@@ -66,6 +66,6 @@ namespace micro_profiler
 
 		std::vector<wpl::slot_connection> _connections;
 		wpl::slot_connection _conn_sort_main, _conn_sort_children, _conn_sort_parents;
-		wpl::slot_connection _connections_linked[2];
+		wpl::slot_connection _connections_linked[3];
 	};
 }

@@ -26,6 +26,8 @@ namespace micro_profiler
 		{
 			typedef statistic_types_t<long_address_t> unthreaded_statistic_types;
 			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> unthreaded_addressed_function;
+			typedef pair<statistic_types::key, statistic_types::function_detailed> threaded_addressed_function;
+			typedef pair<statistic_types::key, count_t> caller_function;
 
 			const columns::main name_times_inc_exc_iavg_eavg_reent_minc[] = {
 				columns::name, columns::times_called, columns::inclusive, columns::exclusive,
@@ -270,7 +272,7 @@ namespace micro_profiler
 			}
 
 
-			test( ClearingTheListResetsWatchedParents )
+			ignored_test( ClearingTheListResetsWatchedParents )
 			{
 				// INIT
 				unthreaded_statistic_types::map_detailed s;
@@ -1069,31 +1071,6 @@ namespace micro_profiler
 			}
 
 
-			test( FailOnGettingChildrenListFromNonEmptyRootList )
-			{
-				// INIT
-				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[1978];
-				s1[1995];
-				s2[2001];
-				s2[2004];
-				s2[2011];
-				serialize_single_threaded(ser, s1);
-				serialize_single_threaded(ser, s2);
-
-				dser(*fl1, dummy_context);
-				dser(*fl2, dummy_context);
-
-				// ACT / ASSERT
-				assert_throws(fl1->watch_children(addr(1979)), out_of_range);
-				assert_throws(fl1->watch_children(addr(1994)), out_of_range);
-				assert_throws(fl2->watch_children(addr(2002)), out_of_range);
-			}
-
-
 			test( ReturnChildrenModelForAValidRecord )
 			{
 				// INIT
@@ -1242,67 +1219,6 @@ namespace micro_profiler
 			}
 
 
-			test( IncomingDetailStatisticsUpdateNoLinkedStatisticsAfterClear )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				invalidation_tracer t1, t2;
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
-				serialize_single_threaded(ser, s);
-				s[0x1978].callees.clear();
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> ls1 = fl->watch_children(addr(0x1978));
-				shared_ptr<linked_statistics> ls2 = fl->watch_parents(addr(0x1978));
-
-				fl->clear();
-				t1.bind_to_model(*ls1);
-				t2.bind_to_model(*ls2);
-
-				// ACT (linked statistics are detached)
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				assert_is_empty(t1.counts);
-				assert_is_empty(t2.counts);
-			}
-
-
-			test( LinkedStatisticsInvalidatedToEmptyOnMasterDestruction )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				invalidation_tracer t1, t2;
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> ls1 = fl->watch_children(addr(0x1978));
-				shared_ptr<linked_statistics> ls2 = fl->watch_parents(addr(0x1978));
-
-				t1.bind_to_model(*ls1);
-				t2.bind_to_model(*ls2);
-
-				// ACT
-				fl.reset();
-
-				// ASSERT
-				table_model_base::index_type reference[] = { 0u, };
-
-				assert_equal(reference, t1.counts);
-				assert_equal(reference, t2.counts);
-			}
-
-
 			test( IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios )
 			{
 				// INIT
@@ -1373,31 +1289,6 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equal(trackable::npos(), t->index());
-			}
-
-
-			test( FailOnGettingParentsListFromNonEmptyRootList )
-			{
-				// INIT
-				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[0x1978];
-				s1[0x1995];
-				serialize_single_threaded(ser, s1);
-				s2[0x2001];
-				s2[0x2004];
-				s2[0x2008];
-				serialize_single_threaded(ser, s2);
-
-				dser(*fl1, dummy_context);
-				dser(*fl2, dummy_context);
-
-				// ACT / ASSERT
-				assert_throws(fl1->watch_parents(addr(0x1977)), out_of_range);
-				assert_throws(fl1->watch_parents(addr(0x1996)), out_of_range);
-				assert_throws(fl2->watch_parents(addr(0x2000)), out_of_range);
 			}
 
 
@@ -1836,6 +1727,97 @@ namespace micro_profiler
 				assert_equal(reference3, it.counts);
 			}
 
+
+			test( DependentModelsAreAutonoumousFromTheParent )
+			{
+				// INIT
+				threaded_addressed_function functions[] = {
+					make_statistics(addr(0x1001), 1, 0, 0, 0, 0,
+						plural
+							+ make_statistics_base(addr(0x2001), 100, 1, 0, 0, 0)
+							+ make_statistics_base(addr(0x2002), 109, 1, 0, 0, 0),
+						plural
+							+ caller_function(addr(0x3001), 1u)
+							+ caller_function(addr(0x3003), 1u)
+							+ caller_function(addr(0x3009), 51u)
+					),
+				};
+				auto s = make_shared<tables::statistics>();
+
+				static_cast<statistic_types::map_detailed &>(*s) = statistic_types::map_detailed(begin(functions), end(functions));
+
+				unique_ptr<functions_list> fl(new functions_list(s, 1, resolver, tmodel));
+
+				// INIT / ACT
+				auto msel = fl->create_selection();
+				msel->add(0);
+				auto callers = fl->watch_parents(addr(0x1001));
+				auto psel = callers->create_selection();
+				psel->add(2);
+				auto callees = fl->watch_children(addr(0x1001));
+				auto csel = callees->create_selection();
+				csel->add(0), csel->add(1);
+
+				// ACT
+				fl.reset();
+				s.reset();
+
+				// ACT / ASSERT
+				assert_is_true(msel->contains(0));
+				msel->remove(0);
+				assert_is_false(msel->contains(0));
+
+				assert_equal(3u, callers->get_count());
+				assert_is_true(psel->contains(2));
+				psel->remove(2);
+				assert_is_false(psel->contains(2));
+				psel->add(1);
+				assert_is_true(psel->contains(1));
+
+				assert_equal(2u, callees->get_count());
+				assert_is_true(csel->contains(0));
+				assert_is_true(csel->contains(1));
+				csel->remove(0);
+				assert_is_false(csel->contains(0));
+				assert_is_true(csel->contains(1));
+			}
+
+
+			test( DependentModelsAreAcquiredOnTableInvalidation )
+			{
+				// INIT
+				threaded_addressed_function functions[] = {
+					make_statistics(addr(0x1001), 1, 0, 0, 0, 0,
+						plural
+							+ make_statistics_base(addr(0x2001), 100, 1, 0, 0, 0)
+							+ make_statistics_base(addr(0x2002), 109, 1, 0, 0, 0),
+						plural
+							+ caller_function(addr(0x3001), 1u)
+							+ caller_function(addr(0x3003), 1u)
+							+ caller_function(addr(0x3009), 51u)
+					),
+				};
+				auto s = make_shared<tables::statistics>();
+				functions_list fl(s, 1, resolver, tmodel);
+
+				// INIT / ACT
+				auto callers = fl.watch_parents(addr(0x1001));
+				auto callees = fl.watch_children(addr(0x1001));
+
+				// ACT / ASSERT
+				assert_not_null(callers);
+				assert_equal(0u, callers->get_count());
+				assert_not_null(callees);
+				assert_equal(0u, callees->get_count());
+
+				// ACT
+				static_cast<statistic_types::map_detailed &>(*s) = statistic_types::map_detailed(begin(functions), end(functions));
+				s->invalidated();
+
+				// ASSERT
+				assert_equal(3u, callers->get_count());
+				assert_equal(2u, callees->get_count());
+			}
 		end_test_suite
 	}
 }

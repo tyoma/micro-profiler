@@ -20,6 +20,8 @@
 
 #include <frontend/function_list.h>
 
+#include <frontend/nested_statistics_model.h>
+#include <frontend/nested_transform.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
 #include <frontend/threads_model.h>
@@ -40,6 +42,14 @@ namespace micro_profiler
 {
 	namespace
 	{
+		template <typename T, typename U>
+		std::shared_ptr<T> make_bound(std::shared_ptr<U> underlying)
+		{
+			typedef pair<shared_ptr<U>, T> pair_t;
+			auto p = make_shared<pair_t>(underlying, T(*underlying));
+			return std::shared_ptr<T>(p, &p->second);
+		}
+
 		template <typename ContainerT>
 		void gcvt(ContainerT &destination, double value)
 		{
@@ -54,7 +64,7 @@ namespace micro_profiler
 		class by_name
 		{
 		public:
-			by_name(const shared_ptr<symbol_resolver> &resolver)
+			by_name(shared_ptr<const symbol_resolver> resolver)
 				: _resolver(resolver)
 			{	}
 
@@ -63,13 +73,13 @@ namespace micro_profiler
 			{	return _resolver->symbol_name_by_va(lhs.first.first) < _resolver->symbol_name_by_va(rhs.first.first);	}
 
 		private:
-			shared_ptr<symbol_resolver> _resolver;
+			shared_ptr<const symbol_resolver> _resolver;
 		};
 
 		struct by_threadid
 		{
 		public:
-			by_threadid(const shared_ptr<threads_model> &threads)
+			by_threadid(shared_ptr<const threads_model> threads)
 				: _threads(threads)
 			{	}
 
@@ -82,7 +92,7 @@ namespace micro_profiler
 			}
 
 		private:
-			shared_ptr<threads_model> _threads;
+			shared_ptr<const threads_model> _threads;
 		};
 
 		struct by_times_called
@@ -221,156 +231,137 @@ namespace micro_profiler
 			double _inv_tick_count;
 		};
 
-		template <typename T>
-		void erase_entry(linked_statistics_ex *p, const shared_ptr<T> &container, typename T::iterator i)
+
+		template <typename ItemT>
+		void get_column_text(agge::richtext_t &text, size_t index, const ItemT &item, size_t column, double tick_interval,
+			const symbol_resolver &resolver, const threads_model &threads)
 		{
-			container->erase(i);
-			delete p;
+			unsigned int tmp;
+
+			switch (column)
+			{
+			case 0:	itoa<10>(text, index + 1);	break;
+			case 1:	text << resolver.symbol_name_by_va(item.first.first).c_str();	break;
+			case 2:	threads.get_native_id(tmp, item.first.second) ? itoa<10>(text, tmp), 0 : 0;	break;
+			case 3:	itoa<10>(text, item.second.times_called);	break;
+			case 4:	format_interval(text, exclusive_time(tick_interval)(item));	break;
+			case 5:	format_interval(text, inclusive_time(tick_interval)(item));	break;
+			case 6:	format_interval(text, exclusive_time_avg(tick_interval)(item));	break;
+			case 7:	format_interval(text, inclusive_time_avg(tick_interval)(item));	break;
+			case 8:	itoa<10>(text, item.second.max_reentrance);	break;
+			case 9:	format_interval(text, max_call_time(tick_interval)(item));	break;
+			}
+		}
+
+		template <typename ViewT>
+		void set_column_order(void *, ViewT &view, size_t column, bool ascending, double tick_interval,
+			shared_ptr<const symbol_resolver> resolver, shared_ptr<const threads_model> threads)
+		{
+			switch (column)
+			{
+			case 0:
+				view.projection.project();
+				break;
+
+			case 1:
+				view.ordered.set_order(by_name(resolver), ascending);
+				view.projection.project();
+				break;
+
+			case 2:
+				view.ordered.set_order(by_threadid(threads), ascending);
+				view.projection.project();
+				break;
+
+			case 3:
+				view.ordered.set_order(by_times_called(), ascending);
+				view.projection.project(get_times_called());
+				break;
+
+			case 4:
+				view.ordered.set_order(by_exclusive_time(), ascending);
+				view.projection.project(exclusive_time(tick_interval));
+				break;
+
+			case 5:
+				view.ordered.set_order(by_inclusive_time(), ascending);
+				view.projection.project(inclusive_time(tick_interval));
+				break;
+
+			case 6:
+				view.ordered.set_order(by_avg_exclusive_call_time(), ascending);
+				view.projection.project(exclusive_time_avg(tick_interval));
+				break;
+
+			case 7:
+				view.ordered.set_order(by_avg_inclusive_call_time(), ascending);
+				view.projection.project(inclusive_time_avg(tick_interval));
+				break;
+
+			case 8:
+				view.ordered.set_order(by_max_reentrance(), ascending);
+				view.projection.project();
+				break;
+
+			case 9:
+				view.ordered.set_order(by_max_call_time(), ascending);
+				view.projection.project(max_call_time(tick_interval));
+				break;
+			}
+		}
+
+		template <>
+		void get_column_text<statistic_types::map_callers::value_type>(agge::richtext_t &text, size_t index,
+			const statistic_types::map_callers::value_type &item, size_t column, double /*tick_interval*/,
+			const symbol_resolver &resolver, const threads_model &/*threads*/)
+		{
+			switch (column)
+			{
+			case 0:	itoa<10>(text, index + 1);	break;
+			case 1:	text << resolver.symbol_name_by_va(item.first.first).c_str();	break;
+			case 3:	itoa<10>(text, item.second);	break;
+			}
+		}
+
+		template <typename ViewT>
+		void set_column_order(statistic_types::map_callers::value_type *, ViewT &view, size_t column, bool ascending,
+			double /*tick_interval*/, shared_ptr<const symbol_resolver> resolver, shared_ptr<const threads_model> /*threads*/)
+		{
+			switch (column)
+			{
+			case 1:	view.ordered.set_order(by_name(resolver), ascending);	break;
+			case 3:	view.ordered.set_order(by_times_called_parents(), ascending);	break;
+			}
 		}
 	}
 
 
-	typedef statistics_model_impl<linked_statistics_ex, statistic_types::map> children_statistics;
-	typedef statistics_model_impl<linked_statistics_ex, statistic_types::map_callers> parents_statistics;
+	template <typename BaseT, typename U>
+	void statistics_model_impl<BaseT, U>::get_text(index_type row, index_type column, agge::richtext_t &text) const
+	{	get_column_text(text, row, _view->ordered[row], column, _tick_interval, *_resolver, *_threads);	}
 
-
-
-	template <typename BaseT, typename MapT>
-	void statistics_model_impl<BaseT, MapT>::get_text(index_type item, index_type subitem, agge::richtext_t &text) const
+	template <typename BaseT, typename U>
+	void statistics_model_impl<BaseT, U>::set_order(index_type column, bool ascending)
 	{
-		unsigned int tmp;
-		const typename view_type::value_type &row = get_entry(item);
-
-		switch (subitem)
-		{
-		case 0:	itoa<10>(text, item + 1);	break;
-		case 1:	text << _resolver->symbol_name_by_va(row.first.first).c_str();	break;
-		case 2:	_threads->get_native_id(tmp, row.first.second) ? itoa<10>(text, tmp), 0 : 0;	break;
-		case 3:	itoa<10>(text, row.second.times_called);	break;
-		case 4:	format_interval(text, exclusive_time(_tick_interval)(row));	break;
-		case 5:	format_interval(text, inclusive_time(_tick_interval)(row));	break;
-		case 6:	format_interval(text, exclusive_time_avg(_tick_interval)(row));	break;
-		case 7:	format_interval(text, inclusive_time_avg(_tick_interval)(row));	break;
-		case 8:	itoa<10>(text, row.second.max_reentrance);	break;
-		case 9:	format_interval(text, max_call_time(_tick_interval)(row));	break;
-		}
-	}
-
-	template <typename BaseT, typename MapT>
-	void statistics_model_impl<BaseT, MapT>::set_order(index_type column, bool ascending)
-	{
-		switch (column)
-		{
-		case 0:
-			_view->projection.project();
-			break;
-
-		case 1:
-			_view->ordered.set_order(by_name(_resolver), ascending);
-			_view->projection.project();
-			break;
-
-		case 2:
-			_view->ordered.set_order(by_threadid(get_threads()), ascending);
-			_view->projection.project();
-			break;
-
-		case 3:
-			_view->ordered.set_order(by_times_called(), ascending);
-			_view->projection.project(get_times_called());
-			break;
-
-		case 4:
-			_view->ordered.set_order(by_exclusive_time(), ascending);
-			_view->projection.project(exclusive_time(_tick_interval));
-			break;
-
-		case 5:
-			_view->ordered.set_order(by_inclusive_time(), ascending);
-			_view->projection.project(inclusive_time(_tick_interval));
-			break;
-
-		case 6:
-			_view->ordered.set_order(by_avg_exclusive_call_time(), ascending);
-			_view->projection.project(exclusive_time_avg(_tick_interval));
-			break;
-
-		case 7:
-			_view->ordered.set_order(by_avg_inclusive_call_time(), ascending);
-			_view->projection.project(inclusive_time_avg(_tick_interval));
-			break;
-
-		case 8:
-			_view->ordered.set_order(by_max_reentrance(), ascending);
-			_view->projection.project();
-			break;
-
-		case 9:
-			_view->ordered.set_order(by_max_call_time(), ascending);
-			_view->projection.project(max_call_time(_tick_interval));
-			break;
-		}
-		on_updated();
-	}
-
-
-	template <>
-	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::get_text(index_type item,
-		index_type subitem, agge::richtext_t &text) const
-	{
-		const statistic_types::map_callers::value_type &row = get_entry(item);
-
-		switch (subitem)
-		{
-		case 0:	itoa<10>(text, item + 1);	break;
-		case 1:	text << _resolver->symbol_name_by_va(row.first.first).c_str();	break;
-		case 3:	itoa<10>(text, row.second);	break;
-		}
-	}
-
-	template <>
-	void statistics_model_impl<linked_statistics_ex, statistic_types::map_callers>::set_order(index_type column,
-		bool ascending)
-	{
-		switch (column)
-		{
-		case 1:	_view->ordered.set_order(by_name(_resolver), ascending);	break;
-		case 3:	_view->ordered.set_order(by_times_called_parents(), ascending);	break;
-		}
+		set_column_order(static_cast<typename U::value_type *>(nullptr), *_view, column, ascending, _tick_interval,
+			_resolver, _threads);
+		_view->trackables.fetch();
+		_view->projection.fetch();
 		this->invalidate(this->npos());
 	}
 
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads)
-		: base(statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
-			_linked(new linked_statistics_list_t)
-	{
-		_connection = statistics->invalidated += [this] {
-			if (updates_enabled)
-				on_updated();
-		};
-	}
-
-	functions_list::functions_list(shared_ptr<statistic_types::map_detailed> statistics, double tick_interval,
-			shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads)
-		: base(statistics, tick_interval, resolver, threads), updates_enabled(true), _statistics(statistics),
-			_linked(new linked_statistics_list_t)
-	{	}
+		: base(make_bound< views::filter<statistic_types::map_detailed> >(statistics), tick_interval, resolver, threads),
+			updates_enabled(true), _statistics(statistics)
+	{	_connection = statistics->invalidated += [this] {	fetch();	};	}
 
 	functions_list::~functions_list()
-	{
-		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
-			(*i)->detach();
-	}
+	{	}
 
 	void functions_list::clear()
-	{
-		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
-			(*i)->detach();
-		_statistics->clear();
-		base::on_updated();
-	}
+	{	_statistics->clear();	}
 
 	void functions_list::print(string &content) const
 	{
@@ -401,48 +392,25 @@ namespace micro_profiler
 
 	shared_ptr<linked_statistics> functions_list::watch_children(key_type item) const
 	{
-		const auto e = _statistics->find(item);
+		auto scope = make_shared< vector<key_type> >(1, item);
 
-		if (e == _statistics->end())
-			throw out_of_range("");
-
-		shared_ptr<decltype(e->second.callees)> callees(_statistics, &e->second.callees);
-		auto i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<children_statistics> children(new children_statistics(callees, _tick_interval, get_resolver(),
-			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
-
-		*i = children.get();
-		return children;
+		return construct_nested< callees_transform<tables::statistics> >(_statistics, _tick_interval, get_resolver(),
+			get_threads(), scope);
 	}
 
 	shared_ptr<linked_statistics> functions_list::watch_parents(key_type item) const
 	{
-		const auto e = _statistics->find(item);
+		auto scope = make_shared< vector<key_type> >(1, item);
 
-		if (e == _statistics->end())
-			throw out_of_range("");
-
-		shared_ptr<decltype(e->second.callers)> callers(_statistics, &e->second.callers);
-		auto i = _linked->insert(_linked->end(), nullptr);
-		shared_ptr<parents_statistics> parents(new parents_statistics(callers, _tick_interval, get_resolver(),
-			get_threads()), bind(&erase_entry<linked_statistics_list_t>, _1, _linked, i));
-
-		*i = parents.get();
-		return parents;
+		return construct_nested< callers_transform<tables::statistics> >(_statistics, _tick_interval, get_resolver(),
+			get_threads(), scope);
 	}
 
 	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver,
 		shared_ptr<threads_model> threads)
 	{
-		shared_ptr<statistic_types::map_detailed> base_map(new statistic_types::map_detailed);
+		auto base_map = make_shared<tables::statistics>();
 
 		return shared_ptr<functions_list>(new functions_list(base_map, 1.0 / ticks_per_second, resolver, threads));
-	}
-
-	void functions_list::on_updated()
-	{
-		for (linked_statistics_list_t::const_iterator i = _linked->begin(); i != _linked->end(); ++i)
-			(*i)->on_updated();
-		base::on_updated();
 	}
 }

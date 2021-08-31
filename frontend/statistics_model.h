@@ -26,7 +26,6 @@
 #include "trackables_provider.h"
 
 #include <common/noncopyable.h>
-#include <views/filter.h>
 #include <views/ordered.h>
 
 namespace micro_profiler
@@ -34,27 +33,25 @@ namespace micro_profiler
 	class symbol_resolver;
 	class threads_model;
 
-	template <typename BaseT, typename MapT>
+	template <typename BaseT, typename U>
 	class statistics_model_impl : public BaseT, noncopyable
 	{
 	public:
 		typedef typename BaseT::index_type index_type;
-		typedef typename MapT::key_type key_type;
+		typedef typename key_traits<typename U::value_type>::key_type key_type;
 
 	public:
-		statistics_model_impl(std::shared_ptr<const MapT> statistics, double tick_interval,
+		statistics_model_impl(std::shared_ptr<U> underlying, double tick_interval,
 			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads);
+
+		void fetch();
+
+		std::shared_ptr<U> get_underlying() const;
 
 		std::shared_ptr<symbol_resolver> get_resolver() const throw();
 		std::shared_ptr<threads_model> get_threads() const throw();
 		std::shared_ptr< wpl::list_model<double> > get_column_series() const throw();
-		std::shared_ptr< selection<typename MapT::key_type> > create_selection() const;
-
-		template <typename PredicateT>
-		void set_filter(const PredicateT &predicate);
-		void set_filter();
-
-		virtual void detach() throw();
+		std::shared_ptr< selection<key_type> > create_selection() const;
 
 		// wpl::richtext_table_model methods
 		virtual index_type get_count() const throw() override;
@@ -67,12 +64,10 @@ namespace micro_profiler
 		index_type get_index(key_type address) const;
 
 	protected:
-		typedef views::filter<MapT> filter_view_type;
-		typedef views::ordered<filter_view_type> view_type;
+		typedef views::ordered<U> view_type;
 
 	protected:
-		const typename MapT::value_type &get_entry(index_type row) const;
-		virtual void on_updated();
+		const typename U::value_type &get_entry(index_type row) const;
 
 	protected:
 		double _tick_interval;
@@ -81,92 +76,82 @@ namespace micro_profiler
 		struct view_complex;
 
 	private:
-		std::shared_ptr<view_complex> _view;
+		const std::shared_ptr<view_complex> _view;
 		const std::shared_ptr<symbol_resolver> _resolver;
 		const std::shared_ptr<threads_model> _threads;
 	};
 
-	template <typename BaseT, typename MapT>
-	struct statistics_model_impl<BaseT, MapT>::view_complex
+	template <typename BaseT, typename U>
+	struct statistics_model_impl<BaseT, U>::view_complex
 	{
-		view_complex(std::shared_ptr<const MapT> underlying_);
+		view_complex(std::shared_ptr<U> underlying_);
 
-		std::shared_ptr<const MapT> underlying;
-		views::filter<MapT> filter;
-		views::ordered< views::filter<MapT> > ordered;
-		trackables_provider< views::ordered< views::filter<MapT> > > trackables;
-		projection_view<views::ordered< views::filter<MapT> >, double> projection;
+		std::shared_ptr<U> underlying;
+		views::ordered<U> ordered;
+		trackables_provider< views::ordered<U> > trackables;
+		projection_view<views::ordered<U>, double> projection;
 	};
 
 
 
-	template <typename BaseT, typename MapT>
-	inline statistics_model_impl<BaseT, MapT>::view_complex::view_complex(std::shared_ptr<const MapT> underlying_)
-		: underlying(underlying_), filter(*underlying), ordered(filter), trackables(ordered), projection(ordered)
+	template <typename BaseT, typename U>
+	inline statistics_model_impl<BaseT, U>::view_complex::view_complex(std::shared_ptr<U> underlying_)
+		: underlying(underlying_), ordered(*underlying), trackables(ordered), projection(ordered)
 	{	}
 
 
-	template <typename BaseT, typename MapT>
-	inline statistics_model_impl<BaseT, MapT>::statistics_model_impl(std::shared_ptr<const MapT> statistics_,
+	template <typename BaseT, typename U>
+	inline statistics_model_impl<BaseT, U>::statistics_model_impl(std::shared_ptr<U> statistics_,
 			double tick_interval, const std::shared_ptr<symbol_resolver> &resolver,
 			const std::shared_ptr<threads_model> &threads)
 		: _tick_interval(tick_interval), _view(std::make_shared<view_complex>(statistics_)), _resolver(resolver),
 			_threads(threads)
 	{	}
 
-	template <typename BaseT, typename MapT>
-	inline std::shared_ptr<symbol_resolver> statistics_model_impl<BaseT, MapT>::get_resolver() const throw()
+	template <typename BaseT, typename U>
+	inline void statistics_model_impl<BaseT, U>::fetch()
+	{
+		_view->ordered.fetch();
+		_view->trackables.fetch();
+		_view->projection.fetch();
+		this->invalidate(this->npos());
+	}
+
+	template <typename BaseT, typename U>
+	inline std::shared_ptr<U> statistics_model_impl<BaseT, U>::get_underlying() const
+	{	return _view->underlying;	}
+
+	template <typename BaseT, typename U>
+	inline std::shared_ptr<symbol_resolver> statistics_model_impl<BaseT, U>::get_resolver() const throw()
 	{	return _resolver;	}
 
-	template <typename BaseT, typename MapT>
-	inline std::shared_ptr<threads_model> statistics_model_impl<BaseT, MapT>::get_threads() const throw()
+	template <typename BaseT, typename U>
+	inline std::shared_ptr<threads_model> statistics_model_impl<BaseT, U>::get_threads() const throw()
 	{	return _threads;	}
 
-	template <typename BaseT, typename MapT>
-	inline std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, MapT>::get_column_series() const throw()
+	template <typename BaseT, typename U>
+	inline std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, U>::get_column_series() const throw()
 	{	return std::shared_ptr< wpl::list_model<double> >(_view, &_view->projection);	}
 
-	template <typename BaseT, typename MapT>
-	inline std::shared_ptr< selection<typename MapT::key_type> > statistics_model_impl<BaseT, MapT>::create_selection() const
+	template <typename BaseT, typename U>
+	inline std::shared_ptr< selection<typename statistics_model_impl<BaseT, U>::key_type> > statistics_model_impl<BaseT, U>::create_selection() const
 	{
 		auto s = std::make_pair(_view, std::make_shared< selection_model<view_type> >(_view->ordered));
 		auto ss = std::make_shared<decltype(s)>(s);
 
-		return std::shared_ptr< selection<typename MapT::key_type> >(ss, ss->second.get());
+		return std::shared_ptr< selection<key_type> >(ss, ss->second.get());
 	}
 
-	template <typename BaseT, typename MapT>
-	template <typename PredicateT>
-	inline void statistics_model_impl<BaseT, MapT>::set_filter(const PredicateT &predicate)
-	{
-		_view->filter.set_filter(predicate);
-		on_updated();
-	}
-
-	template <typename BaseT, typename MapT>
-	inline void statistics_model_impl<BaseT, MapT>::set_filter()
-	{
-		_view->filter.set_filter();
-		on_updated();
-	}
-
-	template <typename BaseT, typename MapT>
-	inline void statistics_model_impl<BaseT, MapT>::detach() throw()
-	{
-		_view.reset();
-		this->invalidate(this->npos());
-	}
-
-	template <typename BaseT, typename MapT>
-	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_count() const throw()
+	template <typename BaseT, typename U>
+	inline typename statistics_model_impl<BaseT, U>::index_type statistics_model_impl<BaseT, U>::get_count() const throw()
 	{ return _view ? _view->ordered.size() : 0u; }
 
-	template <typename BaseT, typename MapT>
-	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, MapT>::track(index_type row) const
+	template <typename BaseT, typename U>
+	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, U>::track(index_type row) const
 	{	return _view->trackables.track(row);	}
 
-	template <typename BaseT, typename MapT>
-	inline typename statistics_model_impl<BaseT, MapT>::index_type statistics_model_impl<BaseT, MapT>::get_index(key_type key) const
+	template <typename BaseT, typename U>
+	inline typename statistics_model_impl<BaseT, U>::index_type statistics_model_impl<BaseT, U>::get_index(key_type key) const
 	{
 		for (size_t i = 0, count = _view->ordered.size(); i != count; ++i)
 		{
@@ -176,18 +161,7 @@ namespace micro_profiler
 		return this->npos();
 	}
 
-	template <typename BaseT, typename MapT>
-	inline const typename MapT::value_type &statistics_model_impl<BaseT, MapT>::get_entry(index_type row) const
+	template <typename BaseT, typename U>
+	inline const typename U::value_type &statistics_model_impl<BaseT, U>::get_entry(index_type row) const
 	{	return _view->ordered[row];	}
-
-	template <typename BaseT, typename MapT>
-	inline void statistics_model_impl<BaseT, MapT>::on_updated()
-	{
-		if (!_view)
-			return;
-		_view->ordered.fetch();
-		_view->trackables.fetch();
-		_view->projection.fetch();
-		this->invalidate(this->npos());
-	}
 }

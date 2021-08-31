@@ -68,6 +68,8 @@ namespace micro_profiler
 				update_text_and_calculate_locations(_selected);
 		} : nullptr;
 		_model = model;
+		_selected = table_model_base::npos();
+		invalidate(nullptr);
 	}
 
 	bool function_hint::select(table_model_base::index_type item)

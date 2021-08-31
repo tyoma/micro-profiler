@@ -28,20 +28,22 @@ namespace micro_profiler
 	public:
 		typedef typename U::key_type key_type;
 		typedef decltype(static_cast<typename U::mapped_type *>(0)->callees) nested_container_type;
-		typedef typename nested_container_type::const_iterator nested_iterator_type;
+		typedef typename nested_container_type::const_iterator nested_const_iterator;
+		typedef typename nested_container_type::const_reference const_reference;
+		typedef typename nested_container_type::value_type value_type;
 
 	public:
 		callees_transform(const U &underlying)
 			: _underlying(underlying)
 		{	}
 
-		nested_iterator_type begin(const key_type &key) const
+		nested_const_iterator begin(const key_type &key) const
 		{
 			auto i = _underlying.find(key);
 			return i != _underlying.end() ? i->second.callees.begin() : _empty_nested.end();
 		}
 
-		nested_iterator_type end(const key_type &key) const
+		nested_const_iterator end(const key_type &key) const
 		{
 			auto i = _underlying.find(key);
 			return i != _underlying.end() ? i->second.callees.end() : _empty_nested.end();
@@ -66,20 +68,22 @@ namespace micro_profiler
 	public:
 		typedef typename U::key_type key_type;
 		typedef decltype(static_cast<typename U::mapped_type *>(0)->callers) nested_container_type;
-		typedef typename nested_container_type::const_iterator nested_iterator_type;
+		typedef typename nested_container_type::const_iterator nested_const_iterator;
+		typedef typename nested_container_type::const_reference const_reference;
+		typedef typename nested_container_type::value_type value_type;
 
 	public:
 		callers_transform(const U &underlying)
 			: _underlying(underlying)
 		{	}
 
-		nested_iterator_type begin(const key_type &key) const
+		nested_const_iterator begin(const key_type &key) const
 		{
 			auto i = _underlying.find(key);
 			return i != _underlying.end() ? i->second.callers.begin() : _empty_nested.end();
 		}
 
-		nested_iterator_type end(const key_type &key) const
+		nested_const_iterator end(const key_type &key) const
 		{
 			auto i = _underlying.find(key);
 			return i != _underlying.end() ? i->second.callers.end() : _empty_nested.end();

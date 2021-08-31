@@ -126,17 +126,21 @@ namespace micro_profiler
 		}
 	}
 
-	void piechart::mouse_down(mouse_buttons /*button*/, int /*depressed*/, int x, int y)
+	void piechart::mouse_down(mouse_buttons /*button*/, int depressed, int x, int y)
 	{
 		const auto idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
 
-		if (_selection)
-			idx != npos() ? _selection->add(idx) : _selection->clear();
+		if (!_selection)
+			return;
+		if (!(depressed & keyboard_input::control))
+			_selection->clear();
+		if (npos() != idx)
+			_selection->add(idx);
 	}
 
 	void piechart::mouse_double_click(mouse_buttons /*button*/, int /*depressed*/, int x, int y)
 	{
-		index_type idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
+		const auto idx = find_sector(static_cast<real_t>(x), static_cast<real_t>(y));
 
 		if (npos() != idx)
 			item_activate(idx);

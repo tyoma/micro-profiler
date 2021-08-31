@@ -13,7 +13,6 @@ candle^
  -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
  -dSOURCEDIRLINUXX86="%~dp0_build.linux.x86\_bin"^
  -dSOURCEDIRLINUXX64="%~dp0_build.linux.x64\_bin"^
- -dSOURCEDIRANDROIDARM="%~dp0_build.android.arm\_bin"^
  -arch x86^
  -ext "%WIX%bin\WixUIExtension.dll"^
  -ext "%WIX%bin\WixVSExtension.dll"^
@@ -34,7 +33,6 @@ candle^
  -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
  -dSOURCEDIRLINUXX86="%~dp0_build.linux.x86\_bin"^
  -dSOURCEDIRLINUXX64="%~dp0_build.linux.x64\_bin"^
- -dSOURCEDIRANDROIDARM="%~dp0_build.android.arm\_bin"^
  -arch x64^
  -ext "%WIX%bin\WixUIExtension.dll"^
  -ext "%WIX%bin\WixVSExtension.dll"^

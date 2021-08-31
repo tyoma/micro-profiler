@@ -19,7 +19,6 @@
 		{"fileName":"/logo.ico","sha256":"!hashappicon!"},
 		{"fileName":"/libmicro-profiler_x86.so","sha256":"!hashlinuxmpx86!"},
 		{"fileName":"/libmicro-profiler_x64.so","sha256":"!hashlinuxmpx64!"},
-		{"fileName":"/libmicro-profiler_arm.so","sha256":"!hashandroidarm!"},
 
 		{"fileName":"/windows7+/x64/api-ms-win-downlevel-kernel32-l2-1-0.dll","sha256":"!hashkernel32downlevelapix64!"},
 		{"fileName":"/windows7+/x64/dbghelp.dll","sha256":"!hashdbghelpx64!"},

@@ -39,9 +39,9 @@ popd
 pushd "%~dp0_build.linux.x64\_bin"
 	call sha256 hashlinuxmpx64 libmicro-profiler_x64.so
 popd
-pushd "%~dp0_build.android.arm\_bin"
-	call sha256 hashandroidarm libmicro-profiler_arm.so
-popd
+rem pushd "%~dp0_build.android.arm\_bin"
+rem call sha256 hashandroidarm libmicro-profiler_arm.so
+rem popd
 pushd "%~dp0redist\dbghelp"
 	call sha256 hashkernel32downlevelapix64 windows7+\x64\api-ms-win-downlevel-kernel32-l2-1-0.dll
 	call sha256 hashdbghelpx64 windows7+\x64\dbghelp.dll
@@ -79,9 +79,9 @@ popd
 pushd "%~dp0_build.linux.x64\_bin"
 	call mkzip libmicro-profiler_x64.so "%OUTPUT%"
 popd
-pushd "%~dp0_build.android.arm\_bin"
-	call mkzip libmicro-profiler_arm.so "%OUTPUT%"
-popd
+rem pushd "%~dp0_build.android.arm\_bin"
+rem 	call mkzip libmicro-profiler_arm.so "%OUTPUT%"
+rem popd
 pushd "%~dp0redist\dbghelp"
 	call mkzip * "%OUTPUT%"
 popd

@@ -49,6 +49,12 @@
     <ClCompile Include="headers_model.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="image_patch_model.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="untested\image_patch_ui.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
     <ClCompile Include="frontend_patcher.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -80,6 +86,7 @@
     <ClInclude Include="..\headers_model.h" />
     <ClInclude Include="..\image_patch_model.h" />
     <ClInclude Include="..\frontend_ui.h" />
+    <ClInclude Include="..\image_patch_ui.h" />
     <ClInclude Include="..\tables.h" />
     <ClInclude Include="..\projection_view.h" />
     <ClInclude Include="..\trackables_provider.h" />

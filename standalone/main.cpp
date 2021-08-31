@@ -25,6 +25,8 @@
 #include <common/path.h>
 #include <frontend/about_ui.h>
 #include <frontend/frontend_manager.h>
+#include <frontend/image_patch_model.h>
+#include <frontend/image_patch_ui.h>
 #include <frontend/ipc_manager.h>
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
@@ -52,9 +54,9 @@ namespace micro_profiler
 		vector<slot_connection> connections;
 	};
 
-	struct about_composite
+	struct child_composite
 	{
-		shared_ptr<form> about_form;
+		shared_ptr<form> form_;
 		vector<slot_connection> connections;
 	};
 
@@ -66,10 +68,10 @@ namespace micro_profiler
 
 		LOG("MicroProfiler standalone frontend started...");
 
-		about_composite about_composite_;
+		child_composite about_composite_, patcher_composite_;
 		auto &factory = app.get_factory();
-		const auto show_about = [&] (agge::point<int> center, const shared_ptr<form> &new_form) {
-			auto on_close = [&] {	about_composite_.about_form.reset();	};
+		const auto show_about = [&] (agge::point<int> center, shared_ptr<form> new_form) {
+			auto on_close = [&] {	about_composite_.form_.reset();	};
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
 				auto about = make_shared<about_ui>(factory);
@@ -84,17 +86,37 @@ namespace micro_profiler
 				app.open_link(address);
 			});
 			about_composite_.connections.push_back(about->close += on_close);
-			about_composite_.about_form = new_form;
+			about_composite_.form_ = new_form;
 		};
-		auto ui_factory = [&app, &factory, show_about] (const frontend_ui_context &context) -> frontend_ui::ptr	{
+		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, const frontend_ui_context &context) {
+			auto model = make_shared<image_patch_model>(context.patches, context.modules, context.module_mappings);
+			auto on_close = [&] {	patcher_composite_.form_.reset();	};
+
+			const auto root = make_shared<overlay>();
+				root->add(factory.create_control<control>("background"));
+				auto patcher = make_shared<image_patch_ui>(factory, model, context.patches);
+				root->add(pad_control(patcher, 5, 5));
+
+			new_form->set_root(root);
+			new_form->set_location(create_rect(center.x - 300, center.y - 200, center.x + 300, center.y + 200));
+			new_form->set_visible(true);
+			patcher_composite_.connections.push_back(new_form->close += on_close);
+			patcher_composite_.form_ = new_form;
+		};
+		auto ui_factory = [&app, &factory, show_about, show_patcher] (const frontend_ui_context &context) -> frontend_ui::ptr	{
 			auto &app2 = app;
+			auto show_patcher2 = show_patcher;
 			auto composite = make_shared<ui_composite>();
+			auto patches = context.patches;
 
 			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, context);
 			composite->connections.push_back(composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
 				app2.clipboard_copy(text_utf8);
 			});
 			composite->connections.push_back(composite->ui->show_about += show_about);
+			composite->connections.push_back(composite->ui->show_patcher += [show_patcher2, context] (agge::point<int> center, shared_ptr<form> new_form) {
+				show_patcher2(center, new_form, context);
+			});
 			return frontend_ui::ptr(composite, composite->ui.get());
 		};
 		auto main_form = factory.create_form();

@@ -87,9 +87,6 @@ namespace micro_profiler
 			modules->request_presence(i->second.persistent_id);
 	}
 
-	image_patch_model::~image_patch_model()
-	{	}
-
 	void image_patch_model::set_order(index_type column, bool ascending)
 	{
 		switch (column)

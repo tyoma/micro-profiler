@@ -46,6 +46,7 @@ namespace micro_profiler
 
 		wpl::signal<void (const std::string &text)> copy_to_buffer;
 		wpl::signal<void (agge::point<int> center, const std::shared_ptr<wpl::form> &new_form)> show_about;
+		wpl::signal<void (agge::point<int> center, const std::shared_ptr<wpl::form> &new_form)> show_patcher;
 
 	private:
 		virtual void activate();

@@ -48,7 +48,6 @@ namespace micro_profiler
 	public:
 		image_patch_model(std::shared_ptr<const tables::patches> patches, std::shared_ptr<const tables::modules> modules,
 			std::shared_ptr<const tables::module_mappings> mappings);
-		~image_patch_model();
 
 		void set_order(index_type column, bool ascending);
 		std::shared_ptr< selection<symbol_key> > create_selection() const;
@@ -84,7 +83,7 @@ namespace micro_profiler
 		const std::shared_ptr<const tables::modules> _modules;
 		flatten_view_t _flatten_view;
 		ordered_view_t _ordered_view;
-		const std::unique_ptr< trackables_provider<ordered_view_t> > _trackables;
+		const std::shared_ptr< trackables_provider<ordered_view_t> > _trackables;
 		wpl::slot_connection _connections[3];
 	};
 }

@@ -49,6 +49,7 @@
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
     <ClCompile Include="untested\function_hint.cpp" />
+    <ClCompile Include="untested\image_patch_ui.cpp" />
     <ClCompile Include="untested\system_stylesheet.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
@@ -70,6 +71,7 @@
     <ClInclude Include="..\frontend_ui.h" />
     <ClInclude Include="..\function_hint.h" />
     <ClInclude Include="..\image_patch_model.h" />
+    <ClInclude Include="..\image_patch_ui.h" />
     <ClInclude Include="..\ipc_manager.h" />
     <ClInclude Include="..\key.h" />
     <ClInclude Include="..\function_list.h" />

@@ -21,6 +21,8 @@ namespace micro_profiler
 			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
 			{	"Status", "Profiling\n" + secondary + "status", 64, headers_model::dir_ascending, agge::align_near	},
 			{	"Size", "Size\n" + secondary + "bytes", 64, headers_model::dir_descending, agge::align_far	},
+			{	"ModuleName", "Module\n" + secondary + "name", 120, headers_model::dir_ascending, agge::align_near	},
+			{	"ModulePath", "Module\n" + secondary + "path", 150, headers_model::dir_ascending, agge::align_near	},
 		};
 	}
 

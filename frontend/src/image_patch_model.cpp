@@ -21,6 +21,7 @@
 #include <frontend/image_patch_model.h>
 
 #include <common/formatting.h>
+#include <common/path.h>
 #include <frontend/selection_model.h>
 #include <frontend/trackables_provider.h>
 
@@ -81,10 +82,17 @@ namespace micro_profiler
 			_trackables->fetch();
 			invalidate(npos());
 		};
+		auto update_paths = [this, mappings, invalidate_me] {
+			for (auto i = mappings->begin(); i != mappings->end(); ++i)
+				_module_paths[i->second.persistent_id] = i->second.path;
+			invalidate_me();
+		};
 
 		_connections[0] = patches->invalidated += invalidate_me;
 		_connections[1] = modules->invalidated += invalidate_me;
-		_connections[2] = mappings->invalidated += invalidate_me;
+		_connections[2] = mappings->invalidated += update_paths;
+
+		update_paths();
 
 		for (auto i = mappings->begin(); i != mappings->end(); ++i)
 			modules->request_presence(i->second.persistent_id);
@@ -150,6 +158,8 @@ namespace micro_profiler
 		case 1:	value.append(record.symbol->name.begin(), record.symbol->name.end());	break;
 		case 2:	format_state(value, record.first);	break;
 		case 3:	itoa<10>(value, record.symbol->size);	break;
+		case 4:	format_module_name(value, record.first.persistent_id);	break;
+		case 5:	format_module_path(value, record.first.persistent_id);	break;
 		}
 	}
 
@@ -173,5 +183,21 @@ namespace micro_profiler
 	{
 		if (const auto patch = find_patch(key))
 			value << c_patch_states[encode_state(*patch)];
+	}
+
+	void image_patch_model::format_module_name(agge::richtext_t &value, unsigned int persistent_id) const
+	{
+		const auto m = _module_paths.find(persistent_id);
+
+		if (m != _module_paths.end())
+			value << *m->second;
+	}
+
+	void image_patch_model::format_module_path(agge::richtext_t &value, unsigned int persistent_id) const
+	{
+		const auto m = _module_paths.find(persistent_id);
+
+		if (m != _module_paths.end())
+			value << m->second.c_str();
 	}
 }

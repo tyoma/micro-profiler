@@ -78,9 +78,13 @@ namespace micro_profiler
 		template <typename KeyT>
 		void format_state(agge::richtext_t &value, const KeyT &key) const;
 
+		void format_module_name(agge::richtext_t &value, unsigned int persistent_id) const;
+		void format_module_path(agge::richtext_t &value, unsigned int persistent_id) const;
+
 	private:
 		const std::shared_ptr<const tables::patches> _patches;
 		const std::shared_ptr<const tables::modules> _modules;
+		containers::unordered_map<unsigned int /*persistent_id*/, std::string> _module_paths;
 		flatten_view_t _flatten_view;
 		ordered_view_t _ordered_view;
 		const std::shared_ptr< trackables_provider<ordered_view_t> > _trackables;

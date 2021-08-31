@@ -603,9 +603,16 @@ namespace micro_profiler
 			test( StarLeavesOnlyFilespec )
 			{
 				// ACT / ASSERT
-				assert_equal("somemodule.so", *string("/test/somemodule.so"));
-				assert_equal("testmodule.dll", *string("c:\\anotherdir\\testmodule.dll"));
-				assert_equal("testmodule.dll", *string("testmodule.dll"));
+				assert_equal("somemodule.so", (string)*string("/test/somemodule.so"));
+				assert_equal("testmodule.dll", (string)*string("c:\\anotherdir\\testmodule.dll"));
+				assert_equal("testmodule.dll", (string)*string("testmodule.dll"));
+
+				// INIT
+				string somepath1 = "/usr/bin/profiler";
+				string somepath2 = "/bin/kernel";
+
+				assert_equal(somepath1.c_str() + 9, *somepath1);
+				assert_equal(somepath2.c_str() + 5, *somepath2);
 			}
 		end_test_suite
 	}

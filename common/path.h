@@ -46,7 +46,7 @@ namespace micro_profiler
 	inline std::basic_string<T> operator ~(const std::basic_string<T> &value)
 	{
 		const T separators[] = { '\\', '/', '\0' };
-		const size_t pos = value.find_last_of(separators);
+		const auto pos = value.find_last_of(separators);
 
 		if (pos != std::basic_string<T>::npos)
 			return value.substr(0, pos);
@@ -54,13 +54,11 @@ namespace micro_profiler
 	}
 
 	template <typename T>
-	inline std::basic_string<T> operator *(const std::basic_string<T> &value)
+	inline const T *operator *(const std::basic_string<T> &value)
 	{
 		const T separators[] = { '\\', '/', '\0' };
-		const size_t pos = value.find_last_of(separators);
+		const auto pos = value.find_last_of(separators);
 
-		if (pos != std::basic_string<T>::npos)
-			return value.substr(pos + 1);
-		return value;
+		return value.c_str() + (pos != std::basic_string<T>::npos ? pos + 1 : 0u);
 	}
 }

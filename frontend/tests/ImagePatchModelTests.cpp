@@ -290,6 +290,66 @@ namespace micro_profiler
 			}
 
 
+			test( ModuleNameAndPathAreReflectedInModel )
+			{
+				// INIT
+				unsigned columns[] = {	1, 4, 5,	};
+				symbol_info data1[] = {
+					{	"f1",	},
+					{	"f2",	},
+				};
+				symbol_info data2[] = {
+					{	"f3",	},
+				};
+				symbol_info data3[] = {
+					{	"f4",	},
+				};
+
+				(*modules)[11].symbols = mkvector(data1);
+				(*modules)[13].symbols = mkvector(data2);
+				(*modules)[17].symbols = mkvector(data3);
+				(*mappings)[0].persistent_id = 11, (*mappings)[0].path = "/usr/bin/module.so";
+				(*mappings)[1].persistent_id = 17, (*mappings)[1].path = "/bin/Profiler";
+
+				image_patch_model model(patches, modules, mappings);
+
+				// ACT
+				auto text = get_text(model, columns);
+
+				// ASSERT
+				string reference1[][3] = {
+					{	"f1", "module.so", "/usr/bin/module.so", 	},
+					{	"f2", "module.so", "/usr/bin/module.so",	},
+					{	"f3", "", "",	},
+					{	"f4", "Profiler", "/bin/Profiler",	},
+				};
+
+				assert_equivalent(mkvector(reference1), text);
+
+				// INIT
+				vector< vector< vector<string> > > log;
+				auto conn = model.invalidate += [&] (...) {
+					log.push_back(get_text(model, columns));
+				};
+
+				// ACT
+				(*mappings)[2].persistent_id = 13, (*mappings)[2].path = "c:\\KERNEL32.exe";
+				mappings->erase(1);
+				mappings->invalidated();
+
+				// ASSERT
+				string reference2[][3] = {
+					{	"f1", "module.so", "/usr/bin/module.so", 	},
+					{	"f2", "module.so", "/usr/bin/module.so",	},
+					{	"f3", "KERNEL32.exe", "c:\\KERNEL32.exe",	},
+					{	"f4", "Profiler", "/bin/Profiler",	},
+				};
+
+				assert_equal(1u, log.size());
+				assert_equivalent(mkvector(reference2), log.back());
+			}
+
+
 			test( SortingByColumnsChangesDisplayOrder )
 			{
 				// INIT

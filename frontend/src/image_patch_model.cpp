@@ -42,8 +42,11 @@ namespace micro_profiler
 	{
 		struct nocase_compare
 		{
+			static char toupper(char c)
+			{	return ((97 <= c) & (c <= 122)) ? c - 32 : c;	}
+
 			bool operator ()(char lhs, char rhs) const
-			{	return ::toupper(lhs) < ::toupper(rhs);	}
+			{	return toupper(lhs) < toupper(rhs);	}
 		};
 
 		unsigned int encode_state(const tables::patch &p)
@@ -111,13 +114,7 @@ namespace micro_profiler
 				const auto lhs = find_patch(lhs_.first);
 				const auto rhs = find_patch(rhs_.first);
 
-				if (!lhs & !rhs)
-					return false;
-				else if (!lhs & !!rhs)
-					return true;
-				else if (!!lhs & !rhs)
-					return false;
-				return encode_state(*lhs) < encode_state(*rhs);
+				return (!lhs & !rhs) ? false : !lhs ? true : !rhs ? false : encode_state(*lhs) < encode_state(*rhs);
 			}, ascending);
 			break;
 

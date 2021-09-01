@@ -72,6 +72,7 @@
   <ItemGroup>
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\analyzer.h" />
+    <ClInclude Include="..\buffers_queue.h" />
     <ClInclude Include="..\calls_collector.h" />
     <ClInclude Include="..\calls_collector_thread.h" />
     <ClInclude Include="..\collector_app.h" />

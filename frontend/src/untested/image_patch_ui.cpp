@@ -17,12 +17,12 @@ namespace micro_profiler
 		const auto secondary = style::height_scale(0.85);
 
 		const headers_model::column c_columns_symbols[] = {
-			{	"Rva", "RVA" + secondary, 28, headers_model::dir_none, agge::align_far	},
+			{	"Rva", "RVA" + secondary, 28, headers_model::dir_ascending, agge::align_far	},
 			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
-			{	"Status", "Profiling\n" + secondary + "status", 64, headers_model::dir_ascending, agge::align_near	},
+			{	"Status", "Profiling\n" + secondary + "status", 64, headers_model::dir_descending, agge::align_near	},
 			{	"Size", "Size\n" + secondary + "bytes", 64, headers_model::dir_descending, agge::align_far	},
-			{	"ModuleName", "Module\n" + secondary + "name", 120, headers_model::dir_none, agge::align_near	},
-			{	"ModulePath", "Module\n" + secondary + "path", 150, headers_model::dir_none, agge::align_near	},
+			{	"ModuleName", "Module\n" + secondary + "name", 120, headers_model::dir_ascending, agge::align_near	},
+			{	"ModulePath", "Module\n" + secondary + "path", 150, headers_model::dir_ascending, agge::align_near	},
 		};
 
 		struct nocase_equal

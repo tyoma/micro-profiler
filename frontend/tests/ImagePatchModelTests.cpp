@@ -450,6 +450,7 @@ namespace micro_profiler
 				assert_equal(mkvector(reference4), log.back());
 			}
 
+
 			test( SortingByStateColumnChangesDisplayOrder )
 			{
 				// INIT
@@ -486,6 +487,88 @@ namespace micro_profiler
 				};
 
 				assert_equal(mkvector(reference), get_text(model, columns));
+			}
+
+
+			test( SortingByModuleAndPathColumnsChangesDisplayOrder )
+			{
+				// INIT
+				unsigned columns[] = {	1, 4, 5,	};
+				symbol_info data1[] = {
+					{	"f1",	},
+					{	"f1",	},
+					{	"f1",	},
+				};
+				symbol_info data2[] = {
+					{	"f3",	},
+				};
+				symbol_info data3[] = {
+					{	"f4",	},
+				};
+				symbol_info data4[] = {
+					{	"f5",	},
+					{	"f5",	},
+				};
+
+				(*modules)[11].symbols = mkvector(data1);
+				(*modules)[13].symbols = mkvector(data2);
+				(*modules)[17].symbols = mkvector(data3);
+				(*modules)[19].symbols = mkvector(data4);
+				(*mappings)[0].persistent_id = 11, (*mappings)[0].path = "/usr/bin/module.so";
+				(*mappings)[1].persistent_id = 17, (*mappings)[1].path = "d:\\bin\\Profiler";
+				(*mappings)[3].persistent_id = 19, (*mappings)[3].path = "c:\\dev\\micro-profiler.exe";
+
+				image_patch_model model(patches, modules, mappings);
+
+				// ACT
+				model.set_order(4, true);
+				auto t = get_text(model, columns);
+
+				// ASSERT (13 -> 19 -> 11 -> 17)
+				string reference1[][3] = {
+					{	"f3", "", "", 	},
+					{	"f5", "micro-profiler.exe", "c:\\dev\\micro-profiler.exe", 	},
+					{	"f5", "micro-profiler.exe", "c:\\dev\\micro-profiler.exe", 	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f4", "Profiler", "d:\\bin\\Profiler",	},
+				};
+
+				assert_equal(mkvector(reference1), get_text(model, columns));
+
+				// ACT
+				(*mappings)[2].persistent_id = 13, (*mappings)[2].path = "/bin/mmapping";
+				mappings->invalidated();
+
+				// ASSERT (19 -> 13 -> 11 -> 17)
+				string reference2[][3] = {
+					{	"f5", "micro-profiler.exe", "c:\\dev\\micro-profiler.exe", 	},
+					{	"f5", "micro-profiler.exe", "c:\\dev\\micro-profiler.exe", 	},
+					{	"f3", "mmapping", "/bin/mmapping", 	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f4", "Profiler", "d:\\bin\\Profiler",	},
+				};
+
+				assert_equal(mkvector(reference2), get_text(model, columns));
+
+				// ACT
+				model.set_order(5, true);
+
+				// ASSERT (19 -> 13 -> 11 -> 17)
+				string reference3[][3] = {
+					{	"f3", "mmapping", "/bin/mmapping", 	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f1", "module.so", "/usr/bin/module.so",	},
+					{	"f5", "micro-profiler.exe", "c:\\dev\\micro-profiler.exe", 	},
+					{	"f5", "micro-profiler.exe", "c:\\dev\\micro-profiler.exe", 	},
+					{	"f4", "Profiler", "d:\\bin\\Profiler",	},
+				};
+
+				assert_equal(mkvector(reference3), get_text(model, columns));
 			}
 
 

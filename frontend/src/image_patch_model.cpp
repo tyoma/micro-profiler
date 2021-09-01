@@ -130,6 +130,50 @@ namespace micro_profiler
 				return lhs.symbol->size < rhs.symbol->size;
 			}, ascending);
 			break;
+
+		case 4:
+			_ordered_view.set_order([this] (const record_type &lhs_, const record_type &rhs_) -> bool {
+				const auto e = _module_paths.end();
+				const auto lhs = _module_paths.find(lhs_.first.persistent_id);
+				const auto rhs = _module_paths.find(rhs_.first.persistent_id);
+
+				if ((lhs == e) & (rhs == e))
+					return false;
+				if (lhs == e)
+					return true;
+				if (rhs == e)
+					return false;
+
+				auto &path_lhs = lhs->second;
+				const auto module_lhs = *path_lhs;
+				auto &path_rhs = rhs->second;
+				const auto module_rhs = *path_rhs;
+
+				return lexicographical_compare(module_lhs, path_lhs.c_str() + path_lhs.size(),
+					module_rhs, path_rhs.c_str() + path_rhs.size(), nocase_compare());
+			}, ascending);
+			break;
+
+		case 5:
+			_ordered_view.set_order([this] (const record_type &lhs_, const record_type &rhs_) -> bool {
+				const auto e = _module_paths.end();
+				const auto lhs = _module_paths.find(lhs_.first.persistent_id);
+				const auto rhs = _module_paths.find(rhs_.first.persistent_id);
+
+				if ((lhs == e) & (rhs == e))
+					return false;
+				if (lhs == e)
+					return true;
+				if (rhs == e)
+					return false;
+
+				auto &path_lhs = lhs->second;
+				auto &path_rhs = rhs->second;
+
+				return lexicographical_compare(path_lhs.begin(), path_lhs.end(), path_rhs.begin(), path_rhs.end(),
+					nocase_compare());
+			}, ascending);
+			break;
 		}
 		fetch();
 	}

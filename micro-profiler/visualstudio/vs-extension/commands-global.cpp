@@ -87,7 +87,7 @@ namespace micro_profiler
 				vcmodel::file_ptr file;
 
 				project.enum_files([&] (vcmodel::file_ptr f) {
-					if (!file && wcsicmp((*f->unexpanded_relative_path()).c_str(), filename.c_str()) == 0)
+					if (!file && wcsicmp(*f->unexpanded_relative_path(), filename.c_str()) == 0)
 						file = f;
 				});
 				return file;

@@ -641,6 +641,101 @@ namespace micro_profiler
 				assert_equal(7u, t1->index());
 				assert_equal(5u, t2->index());
 			}
+
+
+			test( OnlyMatchingRecordsAreShownWhenFilterIsApplied )
+			{
+				// INIT
+				image_patch_model model(patches, modules, mappings);
+				unsigned columns[] = {	1, 3,	};
+				symbol_info data1[] = {
+					{	"Gc_collect", 1, 15,	},
+					{	"malloc", 2, 150,	},
+					{	"free", 3, 115,	},
+				};
+				symbol_info data2[] = {
+					{	"z::compress", 4, 15,	},
+				};
+				symbol_info data3[] = {
+					{	"string::String", 5, 11,	},
+					{	"string::~string", 6, 12,	},
+					{	"string::operator []", 7, 13,	},
+					{	"string::clear", 8, 14,	},
+					{	"string::Find", 9, 17,	},
+				};
+
+				(*modules)[1].symbols = mkvector(data1);
+				(*modules)[3].symbols = mkvector(data2);
+				(*modules)[4].symbols = mkvector(data3);
+				modules->invalidated();
+
+				model.set_order(0, true);
+				auto t_compress = model.track(3);
+				auto t_clear = model.track(7);
+
+				vector< vector< vector<string> > > log;
+				auto conn = model.invalidate += [&] (image_patch_model::index_type index) {
+					log.push_back(get_text(model, columns));
+					assert_equal(image_patch_model::npos(), index);
+				};
+
+				// ACT
+				model.set_filter([] (const image_patch_model::record_type &r) {
+					return string::npos != r.symbol->name.find("::");
+				});
+
+				// ASSERT
+				string reference1[][2] = {
+					{	"z::compress", "15",	},
+					{	"string::String", "11",	},
+					{	"string::~string", "12",	},
+					{	"string::operator []", "13",	},
+					{	"string::clear", "14",	},
+					{	"string::Find", "17",	},
+				};
+
+				assert_equal(1u, log.size());
+				assert_equivalent(mkvector(reference1), log.back());
+				assert_equal(0u, t_compress->index());
+				assert_equal(4u, t_clear->index());
+
+				// ACT
+				model.set_filter([] (const image_patch_model::record_type &r) {
+					return string::npos != r.symbol->name.find("z::");
+				});
+
+				// ASSERT
+				string reference2[][2] = {
+					{	"z::compress", "15",	},
+				};
+
+				assert_equal(2u, log.size());
+				assert_equivalent(mkvector(reference2), log.back());
+				assert_equal(0u, t_compress->index());
+				assert_equal(image_patch_model::npos(), t_clear->index());
+
+				// ACT
+				model.set_filter();
+
+				// ASSERT
+				string reference3[][2] = {
+					{	"Gc_collect", "15",	},
+					{	"malloc", "150",	},
+					{	"free", "115",	},
+					{	"z::compress", "15",	},
+					{	"string::String", "11",	},
+					{	"string::~string", "12",	},
+					{	"string::operator []", "13",	},
+					{	"string::clear", "14",	},
+					{	"string::Find", "17",	},
+				};
+
+				assert_equal(3u, log.size());
+				assert_equivalent(mkvector(reference3), log.back());
+				assert_equal(3u, t_compress->index());
+				assert_equal(7u, t_clear->index());
+
+			}
 		end_test_suite
 	}
 }

@@ -21,9 +21,19 @@ namespace micro_profiler
 			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
 			{	"Status", "Profiling\n" + secondary + "status", 64, headers_model::dir_ascending, agge::align_near	},
 			{	"Size", "Size\n" + secondary + "bytes", 64, headers_model::dir_descending, agge::align_far	},
-			{	"ModuleName", "Module\n" + secondary + "name", 120, headers_model::dir_ascending, agge::align_near	},
-			{	"ModulePath", "Module\n" + secondary + "path", 150, headers_model::dir_ascending, agge::align_near	},
+			{	"ModuleName", "Module\n" + secondary + "name", 120, headers_model::dir_none, agge::align_near	},
+			{	"ModulePath", "Module\n" + secondary + "path", 150, headers_model::dir_none, agge::align_near	},
 		};
+
+		struct nocase_equal
+		{
+			static char toupper(char c)
+			{	return ((97 <= c) & (c <= 122)) ? c - 32 : c;	}
+
+			bool operator ()(char lhs, char rhs) const
+			{	return toupper(lhs) == toupper(rhs);	}
+		};
+
 	}
 
 	image_patch_ui::image_patch_ui(const factory &factory_, shared_ptr<image_patch_model> model,
@@ -40,7 +50,7 @@ namespace micro_profiler
 
 		set_spacing(5);
 
-		add(toolbar = factory_.create_control<stack>("hstack"), pixels(24), false);
+		add(toolbar = factory_.create_control<stack>("hstack"), pixels(23), false);
 			toolbar->set_spacing(5);
 			toolbar->add(lbl = factory_.create_control<label>("label"), pixels(0));
 				lbl->set_text(agge::style_modifier::empty + "Filter:");
@@ -50,7 +60,12 @@ namespace micro_profiler
 					string filter;
 
 					eb->get_value(filter);
-					//model->set_filter(filter);
+					model->set_filter([filter] (const image_patch_model::record_type &r) -> bool {
+						const auto b = r.symbol->name.begin();
+						const auto e = r.symbol->name.end();
+
+						return e != search(b, e, filter.begin(), filter.end(), nocase_equal());
+					});
 				});
 
 		add(lvsymbols = factory_.create_control<listview>("listview"), percents(100), false, 1);

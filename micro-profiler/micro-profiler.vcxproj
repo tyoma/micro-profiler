@@ -22,8 +22,8 @@
     <ProjectGuid>{D5D49128-2510-4A14-9A0F-9F8F0ABAD700}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Label="Build Constants">
-	  <VSIXID Condition="'$(Platform)'=='Win32'">A42F6081-855F-41CB-8C89-9488AA847290</VSIXID>
-	  <VSIXID Condition="'$(Platform)'=='x64'">24EB3F53-8909-4D6E-859B-58837349F59F</VSIXID>
+    <VSIXID Condition="'$(Platform)'=='Win32'">A42F6081-855F-41CB-8C89-9488AA847290</VSIXID>
+    <VSIXID Condition="'$(Platform)'=='x64'">24EB3F53-8909-4D6E-859B-58837349F59F</VSIXID>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
@@ -124,10 +124,5 @@
   <Target Name="CopyFixed" AfterTargets="Midl">
     <Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;&#xD;&#xA;	set VSIXID=$(VSIXID)&#xD;&#xA;	replace &quot;%(Fix.Identity)&quot; &gt; &quot;$(OutDir)%(Fix.Filename)%(Fix.Extension)&quot;" />
   </Target>
-  <!-- Target Name="CopyFixed" AfterTargets="Midl" Condition="'$(Platform)'=='x64'">
-    <Exec Command="call make-version VERSION &quot;$(SolutionDir)version.h&quot;&#xD;&#xA;	set VSIXID=24EB3F53-8909-4D6E-859B-58837349F59F&#xD;&#xA;	replace &quot;%(Fix.Identity)&quot; &gt; &quot;$(OutDir)%(Fix.Filename)%(Fix.Extension)&quot;"
-      Outputs="%(Fix.Filename)%(Fix.Extension)" />
-  </Target -->
-  
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

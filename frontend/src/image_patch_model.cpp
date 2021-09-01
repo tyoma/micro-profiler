@@ -73,14 +73,13 @@ namespace micro_profiler
 
 
 	image_patch_model::image_patch_model(shared_ptr<const tables::patches> patches,
-		shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
-		: _patches(patches), _modules(modules), _flatten_view(*modules), _ordered_view(_flatten_view),
-			_trackables(new trackables_provider<ordered_view_t>(_ordered_view))
+			shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
+		: _patches(patches), _modules(modules), _flatten_view(*modules), _filter_view(_flatten_view),
+			_ordered_view(_filter_view), _trackables(new trackables_provider<ordered_view_t>(_ordered_view))
 	{
 		auto invalidate_me = [this] {
 			_ordered_view.fetch();
-			_trackables->fetch();
-			invalidate(npos());
+			fetch();
 		};
 		auto update_paths = [this, mappings, invalidate_me] {
 			for (auto i = mappings->begin(); i != mappings->end(); ++i)
@@ -132,8 +131,7 @@ namespace micro_profiler
 			}, ascending);
 			break;
 		}
-		_trackables->fetch();
-		invalidate(npos());
+		fetch();
 	}
 
 	shared_ptr< selection<symbol_key> > image_patch_model::create_selection() const
@@ -161,6 +159,12 @@ namespace micro_profiler
 		case 4:	format_module_name(value, record.first.persistent_id);	break;
 		case 5:	format_module_path(value, record.first.persistent_id);	break;
 		}
+	}
+
+	void image_patch_model::fetch()
+	{
+		_trackables->fetch();
+		invalidate(npos());
 	}
 
 	template <typename KeyT>

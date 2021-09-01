@@ -126,7 +126,8 @@ namespace micro_profiler
 			// border: VSCOLOR_ACCENT_BORDER, -5;
 			// text: VSCOLOR_PANEL_TEXT, -106;
 
-			set_color("background", get_syscolor(vsshell, VSCOLOR_ENVIRONMENT_BACKGROUND));
+			set_color("background", interpolate(get_syscolor(vsshell, VSCOLOR_PANEL_GRADIENTDARK),
+				get_syscolor(vsshell, VSCOLOR_PANEL_GRADIENTLIGHT), 0.03));
 			set_color("background.selected", get_syscolor(vsshell, VSCOLOR_HIGHLIGHT));
 			set_color("background.header", get_syscolor(vsshell, VSCOLOR_LIGHT));
 			set_color("background.hint", get_syscolor(vsshell, VSCOLOR_DEBUGGER_DATATIP_ACTIVE_BACKGROUND));

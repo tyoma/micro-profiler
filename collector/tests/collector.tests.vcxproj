@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AnalyzerTests.cpp" />
+    <ClCompile Include="BuffersQueueTests.cpp" />
     <ClCompile Include="CallsCollectorTests.cpp" />
     <ClCompile Include="CallsCollectorThreadTests.cpp" />
     <ClCompile Include="CollectorAppPatcherTests.cpp" />
@@ -68,6 +69,7 @@
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="ThreadAnalyzerTests.cpp" />
     <ClCompile Include="ThreadMonitorTests.cpp" />
+    <ClCompile Include="ThreadQueueManagerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

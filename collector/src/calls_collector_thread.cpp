@@ -24,7 +24,8 @@ using namespace std;
 
 namespace micro_profiler
 {
-	calls_collector_thread::calls_collector_thread(allocator &allocator_, const buffering_policy &policy)
+	calls_collector_thread::calls_collector_thread(allocator &allocator_, const buffering_policy &policy,
+			const sequence_number_gen_t &)
 		: buffers_queue<call_record>(allocator_, policy)
 	{
 		return_entry re = { reinterpret_cast<const void **>(static_cast<size_t>(-1)), };

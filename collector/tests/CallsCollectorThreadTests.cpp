@@ -38,7 +38,7 @@ namespace micro_profiler
 				}
 
 				calls_collector_thread::reader_t get_reader()
-				{	return bind(&collection_acceptor::accept_calls, this, _1, _2);	}
+				{	return bind(&collection_acceptor::accept_calls, this, _2, _3);	}
 
 				size_t total_entries;
 				vector< vector<call_record> > collected;
@@ -275,7 +275,7 @@ namespace micro_profiler
 				mt::event done;
 				calls_collector_thread cc1(allocator_, bp(5u));
 				vector<call_record> reference, actual;
-				calls_collector_thread::reader_t r = [&actual] (const call_record *calls, size_t count) {
+				calls_collector_thread::reader_t r = [&actual] (unsigned long long, const call_record *calls, size_t count) {
 					actual.insert(actual.end(), calls, calls + count);
 				};
 				mt::thread t1([&] {

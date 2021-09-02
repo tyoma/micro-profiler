@@ -4,6 +4,7 @@ include(test)
 
 set(COLLECTOR_TESTS_SOURCES
 	AnalyzerTests.cpp
+	BuffersQueueTests.cpp
 	CallsCollectorTests.cpp
 	CallsCollectorThreadTests.cpp
 	CollectorAppPatcherTests.cpp
@@ -15,6 +16,7 @@ set(COLLECTOR_TESTS_SOURCES
 	ShadowStackTests.cpp
 	ThreadAnalyzerTests.cpp
 	ThreadMonitorTests.cpp
+	ThreadQueueManagerTests.cpp
 )
 
 add_library(collector.tests SHARED ${COLLECTOR_TESTS_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)

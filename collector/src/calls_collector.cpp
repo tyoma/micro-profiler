@@ -36,7 +36,7 @@ namespace micro_profiler
 
 	void calls_collector::read_collected(acceptor &a)
 	{
-		base_t::read_collected([&a] (unsigned int thread_id, const call_record *calls, size_t count)	{
+		base_t::read_collected([&a] (unsigned long long, unsigned int thread_id, const call_record *calls, size_t count)	{
 			a.accept_calls(thread_id, calls, count);
 		});
 	}

@@ -24,6 +24,7 @@
 #include "types.h"
 
 #include <common/platform.h>
+#include <functional>
 #include <mt/event.h>
 #include <mt/mutex.h>
 #include <polyq/circular.h>
@@ -35,7 +36,12 @@ namespace micro_profiler
 	class buffers_queue
 	{
 	public:
-		buffers_queue(allocator &allocator_, const buffering_policy &policy);
+		typedef std::function<unsigned long long ()> sequence_number_gen_t;
+		typedef E value_type;
+
+	public:
+		buffers_queue(allocator &allocator_, const buffering_policy &policy,
+			const sequence_number_gen_t &sequence_gen = [] {	return 0ull;	});
 
 		E &current() throw();
 		void push() throw();
@@ -71,13 +77,15 @@ namespace micro_profiler
 		allocator &_allocator;
 		mt::event _continue;
 		mt::mutex _mtx;
+		const sequence_number_gen_t _sequence_gen;
 	};
 
 	template <typename E>
 	struct buffers_queue<E>::buffer
 	{
-		call_record data[buffering_policy::buffer_size];
+		E data[buffering_policy::buffer_size];
 		unsigned size;
+		unsigned long long sequence_number;
 	};
 
 	template <typename E>
@@ -96,9 +104,10 @@ namespace micro_profiler
 
 
 	template <typename E>
-	inline buffers_queue<E>::buffers_queue(allocator &allocator_, const buffering_policy &policy)
+	inline buffers_queue<E>::buffers_queue(allocator &allocator_, const buffering_policy &policy,
+			const sequence_number_gen_t &sequence_gen)
 		: _ready_buffers(policy.max_buffers()), _allocated_buffers(0), _policy(policy),
-			_empty_buffers(new buffer_ptr[policy.max_buffers()]), _allocator(allocator_)
+			_empty_buffers(new buffer_ptr[policy.max_buffers()]), _allocator(allocator_), _sequence_gen(sequence_gen)
 	{
 		buffer_ptr b;
 
@@ -150,7 +159,7 @@ namespace micro_profiler
 			return !!n;
 		}); )
 		{
-			reader(ready->data, ready->size);
+			reader(ready->sequence_number, ready->data, ready->size);
 			_mtx.lock();
 				const bool notify_continue = _empty_buffers_top == _empty_buffers.get();
 				std::swap(*_empty_buffers_top++, ready);
@@ -189,6 +198,7 @@ namespace micro_profiler
 	inline void buffers_queue<E>::start_buffer(buffer_ptr &new_buffer) throw()
 	{
 		std::swap(_active_buffer, new_buffer);
+		_active_buffer->sequence_number = _sequence_gen();
 		_ptr = _active_buffer->data;
 		_n_left = buffering_policy::buffer_size;
 	}

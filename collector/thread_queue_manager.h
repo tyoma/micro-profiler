@@ -38,10 +38,11 @@ namespace micro_profiler
 	{
 	public:
 		typedef std::function<unsigned int ()> this_thread_id_cb;
+		typedef std::function<unsigned long long ()> sequence_number_gen_t;
 
 	public:
 		thread_queue_manager(allocator &allocator_, const buffering_policy &policy, mt::thread_callbacks &callbacks,
-			const this_thread_id_cb &this_thread_id);
+			const this_thread_id_cb &this_thread_id, const sequence_number_gen_t &sequence_gen = [] {	return 0ull;	});
 
 		void set_buffering_policy(const buffering_policy &policy);
 		template <typename ReaderT>
@@ -64,14 +65,17 @@ namespace micro_profiler
 		mt::mutex _mtx;
 		buffering_policy _policy;
 		const this_thread_id_cb _this_thread_id;
+		const sequence_number_gen_t _sequence_gen;
 	};
 
 
 
 	template <typename Q>
 	inline thread_queue_manager<Q>::thread_queue_manager(allocator &allocator_, const buffering_policy &policy,
-			mt::thread_callbacks &callbacks, const this_thread_id_cb &this_thread_id)
-		: _thread_callbacks(callbacks), _allocator(allocator_), _policy(policy), _this_thread_id(this_thread_id)
+			mt::thread_callbacks &callbacks, const this_thread_id_cb &this_thread_id,
+			const sequence_number_gen_t &sequence_gen)
+		: _thread_callbacks(callbacks), _allocator(allocator_), _policy(policy), _this_thread_id(this_thread_id),
+			_sequence_gen(sequence_gen)
 	{	}
 
 	template <typename Q>
@@ -88,12 +92,13 @@ namespace micro_profiler
 	template <typename ReaderT>
 	inline void thread_queue_manager<Q>::read_collected(const ReaderT &reader)
 	{
+		typedef typename Q::value_type type;
 		mt::lock_guard<mt::mutex> l(_mtx);
 
 		for (auto i = _queues.begin(); i != _queues.end(); ++i)
 		{
-			i->second->read_collected([&reader, i] (const call_record *calls, size_t count)	{
-				reader(i->first, calls, count);
+			i->second->read_collected([&reader, i] (unsigned long long sequence, const type *calls, size_t count)	{
+				reader(sequence, i->first, calls, count);
 			});
 		}
 	}
@@ -118,7 +123,7 @@ namespace micro_profiler
 	{
 		buffering_policy policy(0, 0, 0);
 		{	mt::lock_guard<mt::mutex> l(_mtx);	policy = _policy;	}
-		const auto trace = std::make_shared<Q>(_allocator, policy);
+		const auto trace = std::make_shared<Q>(_allocator, policy, _sequence_gen);
 		mt::lock_guard<mt::mutex> l(_mtx);
 
 		_thread_callbacks.at_thread_exit([trace] {	trace->flush();	});

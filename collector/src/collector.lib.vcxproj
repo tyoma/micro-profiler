@@ -81,6 +81,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\shadow_stack.h" />
     <ClInclude Include="..\thread_monitor.h" />
+    <ClInclude Include="..\thread_queue_manager.h" />
     <ClInclude Include="..\types.h" />
     <ClInclude Include="process_explorer.h" />
   </ItemGroup>

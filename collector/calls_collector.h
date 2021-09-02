@@ -20,23 +20,11 @@
 
 #pragma once
 
-#include <collector/types.h>
-#include <common/noncopyable.h>
-#include <common/platform.h>
-#include <memory>
-#include <mt/mutex.h>
-#include <mt/tls.h>
-#include <vector>
-
-namespace mt
-{
-	struct thread_callbacks;
-}
+#include "calls_collector_thread.h"
+#include "thread_queue_manager.h"
 
 namespace micro_profiler
 {
-	struct allocator;
-	class calls_collector_thread;
 	class thread_monitor;
 
 	struct calls_collector_i
@@ -54,12 +42,11 @@ namespace micro_profiler
 	};
 
 
-	class calls_collector : public calls_collector_i, noncopyable
+	class calls_collector : public calls_collector_i, public thread_queue_manager<calls_collector_thread>
 	{
 	public:
-		calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &thread_monitor_, mt::thread_callbacks &thread_callbacks);
-
-		void set_buffering_policy(const buffering_policy &policy);
+		calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &thread_monitor_,
+			mt::thread_callbacks &thread_callbacks);
 
 		virtual void read_collected(acceptor &a) override;
 		virtual void flush() override;
@@ -72,20 +59,9 @@ namespace micro_profiler
 		void track(timestamp_t timestamp, const void *callee);
 
 	private:
-		typedef std::vector< std::pair< unsigned int, std::shared_ptr<calls_collector_thread> > > call_traces_t;
+		typedef thread_queue_manager<calls_collector_thread> base_t;
 
 	private:
-		calls_collector_thread &get_current_thread_trace();
 		calls_collector_thread &construct_thread_trace();
-
-	private:
-		mt::tls<calls_collector_thread> _trace_pointers_tls;
-
-		call_traces_t _call_traces;
-		thread_monitor &_thread_monitor;
-		mt::thread_callbacks &_thread_callbacks;
-		allocator &_allocator;
-		mt::mutex _mtx;
-		buffering_policy _policy;
 	};
 }

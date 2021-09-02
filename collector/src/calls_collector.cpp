@@ -23,78 +23,40 @@
 
 #include <collector/calls_collector.h>
 
-#include <collector/calls_collector_thread.h>
 #include <collector/thread_monitor.h>
-#include <mt/thread_callbacks.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	calls_collector::calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &thread_monitor_,
-			mt::thread_callbacks &thread_callbacks)
-		: _thread_monitor(thread_monitor_), _thread_callbacks(thread_callbacks), _allocator(allocator_),
-			_policy(trace_limit, 1, 1)
+	calls_collector::calls_collector(allocator &allocator_, size_t trace_limit, thread_monitor &m,
+			mt::thread_callbacks &callbacks)
+		: base_t(allocator_, buffering_policy(trace_limit, 1, 1), callbacks, [&m] {	return m.register_self();	})
 	{	}
-
-	void calls_collector::set_buffering_policy(const buffering_policy &policy)
-	{
-		mt::lock_guard<mt::mutex> l(_mtx);
-
-		for (auto i = _call_traces.begin(); i != _call_traces.end(); ++i)
-			i->second->set_buffering_policy(policy);
-		_policy = policy;
-	}
 
 	void calls_collector::read_collected(acceptor &a)
 	{
-		mt::lock_guard<mt::mutex> l(_mtx);
-
-		for (auto i = _call_traces.begin(); i != _call_traces.end(); ++i)
-		{
-			i->second->read_collected([&a, i] (const call_record *calls, size_t count)	{
-				a.accept_calls(i->first, calls, count);
-			});
-		}
+		base_t::read_collected([&a] (unsigned int thread_id, const call_record *calls, size_t count)	{
+			a.accept_calls(thread_id, calls, count);
+		});
 	}
 
 	void calls_collector::flush()
-	{
-		if (auto *trace = _trace_pointers_tls.get())
-			trace->flush();
-	}
+	{	base_t::flush();	}
 
 	void CC_(fastcall) calls_collector::on_enter(calls_collector *instance, const void **stack_ptr,
 		timestamp_t timestamp, const void *callee)
-	{	instance->get_current_thread_trace().on_enter(stack_ptr, timestamp, callee);	}
+	{	instance->get_queue().on_enter(stack_ptr, timestamp, callee);	}
 
 	const void *CC_(fastcall) calls_collector::on_exit(calls_collector *instance, const void **stack_ptr,
 		timestamp_t timestamp)
-	{	return instance->get_current_thread_trace().on_exit(stack_ptr, timestamp);	}
+	{	return instance->get_queue().on_exit(stack_ptr, timestamp);	}
 
 #if !defined(_M_X64)
 	void calls_collector::track(timestamp_t timestamp, const void *callee)
-	{	get_current_thread_trace().track(callee, timestamp);	}
+	{	get_queue().track(callee, timestamp);	}
 #endif
 
-	calls_collector_thread &calls_collector::get_current_thread_trace()
-	{
-		if (auto *trace = _trace_pointers_tls.get())
-			return *trace;
-		else
-			return construct_thread_trace();
-	}
-
 	calls_collector_thread &calls_collector::construct_thread_trace()
-	{
-		buffering_policy policy(0, 0, 0);
-		{	mt::lock_guard<mt::mutex> l(_mtx);	policy = _policy;	}
-		shared_ptr<calls_collector_thread> trace(new calls_collector_thread(_allocator, policy));
-		mt::lock_guard<mt::mutex> l(_mtx);
-
-		_thread_callbacks.at_thread_exit([trace] {	trace->flush();	});
-		_call_traces.push_back(make_pair(_thread_monitor.register_self(), trace));
-		_trace_pointers_tls.set(trace.get());
-		return *trace;
-	}
+	{	return construct_queue();	}
 }

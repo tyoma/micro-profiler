@@ -65,6 +65,7 @@
     </ClInclude>
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\buffers_queue.h" />
+    <ClInclude Include="..\thread_queue_manager.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="calls_collector_msvc.asm">

@@ -20,13 +20,18 @@
 
 #pragma once
 
-#include <agge.text/annotated_string.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <limits>
 #include <string>
+
+namespace agge
+{
+	template <typename CharT, typename AnnotationT>
+	class annotated_string;
+}
 
 namespace micro_profiler
 {

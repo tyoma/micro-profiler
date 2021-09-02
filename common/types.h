@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <mt/chrono.h>
+#include <stdexcept>
 #include <string>
 
 typedef struct _GUID GUID;
@@ -93,6 +94,16 @@ namespace micro_profiler
 	{	}
 
 
+	inline buffering_policy::buffering_policy(size_t max_allocation, double max_empty_factor, double min_empty_factor)
+		: _max_buffers((std::max<size_t>)(max_allocation / buffer_size + !!(max_allocation % buffer_size), 1u))
+	{
+		if (max_empty_factor < 0 || max_empty_factor > 1 || min_empty_factor < 0 || min_empty_factor > 1
+				|| min_empty_factor > max_empty_factor)
+			throw std::invalid_argument("");
+		_min_empty = (std::min<size_t>)(static_cast<size_t>(min_empty_factor * _max_buffers), _max_buffers - 1u);
+		_max_empty = (std::max<size_t>)(static_cast<size_t>(max_empty_factor * _max_buffers), 1u);
+	}
+	
 	inline size_t buffering_policy::max_buffers() const
 	{	return _max_buffers;	}
 

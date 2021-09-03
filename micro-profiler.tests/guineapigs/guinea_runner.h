@@ -13,7 +13,7 @@ namespace micro_profiler
 		};
 
 		template <typename ArchiveT>
-		void serialize(ArchiveT &archive, runner_commands &data, unsigned int /*version*/)
+		void serialize(ArchiveT &archive, runner_commands &data)
 		{	archive(reinterpret_cast<int &>(data));	}
 	}
 }

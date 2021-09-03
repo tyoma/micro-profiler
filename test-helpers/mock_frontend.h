@@ -44,7 +44,7 @@ namespace micro_profiler
 
 
 			template <typename ArchiveT>
-			inline void serialize(ArchiveT &a, frontend_state &state, unsigned int /*version*/)
+			inline void serialize(ArchiveT &a, frontend_state &state)
 			{
 				unsigned metadata_id;
 				messages_id c;

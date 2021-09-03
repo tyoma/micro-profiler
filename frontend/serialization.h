@@ -128,7 +128,7 @@ namespace micro_profiler
 
 
 	template <typename ArchiveT, typename ContextT>
-	void serialize(ArchiveT &archive, functions_list &data, unsigned int/*version*/, ContextT &context)
+	void serialize(ArchiveT &archive, functions_list &data, ContextT &context)
 	{
 		function_list_serialization_proxy proxy = {
 			data,
@@ -144,8 +144,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
-		scontext::wire &context)
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, scontext::wire &context)
 	{
 		if (data.self.updates_enabled)
 			archive(data.statistics, context);
@@ -161,8 +160,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
-		const scontext::file_v3 &/*context*/)
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v3 &/*context*/)
 	{
 		scontext::detailed_threaded context = { &data.statistics, 0, 0 };
 
@@ -172,8 +170,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, unsigned int/*version*/,
-		const scontext::file_v4 &/*context*/)
+	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v4 &/*context*/)
 	{
 		reciprocal(archive, data.tick_interval);
 		archive(data.resolver);
@@ -182,8 +179,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename ContextT>
-	inline void serialize(ArchiveT &archive, statistic_types::function &data, unsigned int/*version*/,
-		const ContextT &/*context*/)
+	inline void serialize(ArchiveT &archive, statistic_types::function &data, const ContextT &/*context*/)
 	{
 		function_statistics v;
 
@@ -192,8 +188,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename ContextT>
-	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, unsigned int/*version*/,
-		ContextT &context)
+	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, ContextT &context)
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
@@ -202,7 +197,7 @@ namespace micro_profiler
 	namespace tables
 	{
 		template <typename ArchiveT>
-		inline void serialize(ArchiveT &archive, module_info &data, unsigned int /*version*/)
+		inline void serialize(ArchiveT &archive, module_info &data)
 		{
 			archive(data.symbols);
 			archive(data.files);
@@ -210,7 +205,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_resolver &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, symbol_resolver &data)
 	{
 		archive(static_cast<containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> &>(*data._mappings));
 		archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::module_info> &>(*data._modules));

@@ -61,14 +61,14 @@ namespace micro_profiler
 
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, initialization_data &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, initialization_data &data)
 	{
 		archive(data.executable);
 		archive(data.ticks_per_second);
 	}	
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, function_statistics &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, function_statistics &data)
 	{
 		archive(data.times_called);
 		archive(data.max_reentrance);
@@ -78,18 +78,18 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename AddressT>
-	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data)
 	{
 		archive(static_cast<function_statistics &>(data));
 		archive(data.callees);
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, messages_id &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, messages_id &data)
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, mapped_module_identified &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, mapped_module_identified &data)
 	{
 		archive(data.instance_id);
 		archive(data.persistent_id);
@@ -98,7 +98,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_info &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, symbol_info &data)
 	{
 		unsigned int id = 0;
 
@@ -111,14 +111,14 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, module_info_metadata &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, module_info_metadata &data)
 	{
 		archive(data.symbols);
 		archive(data.source_files);
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, thread_info &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, thread_info &data)
 	{
 		archive(data.native_id);
 		archive(data.description);
@@ -129,18 +129,18 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, patch_request &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, patch_request &data)
 	{
 		archive(data.image_persistent_id);
 		archive(data.functions_rva);
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, patch_result::errors &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, patch_result::errors &data)
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, patch_apply &data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, patch_apply &data)
 	{
 		archive(data.result);
 		archive(data.id);
@@ -174,6 +174,6 @@ namespace strmd
 	};
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, const void *&data, unsigned int /*version*/)
+	inline void serialize(ArchiveT &archive, const void *&data)
 	{	archive(reinterpret_cast<size_t &>(data));	}
 }

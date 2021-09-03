@@ -38,7 +38,7 @@ namespace micro_profiler
 				};
 
 				template <typename ArchiveT>
-				void serialize(ArchiveT &archive, sneaky_type &data, unsigned int /*version*/)
+				void serialize(ArchiveT &archive, sneaky_type &data)
 				{	archive(data.ivalue), archive(data.svalue);	}
 			}
 

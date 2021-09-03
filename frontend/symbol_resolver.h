@@ -70,6 +70,6 @@ namespace micro_profiler
 		
 	private:
 		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, symbol_resolver &data, unsigned int /*version*/);
+		friend void serialize(ArchiveT &archive, symbol_resolver &data);
 	};
 }

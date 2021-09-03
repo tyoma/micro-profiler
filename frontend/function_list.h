@@ -78,7 +78,7 @@ namespace micro_profiler
 
 	private:
 		template <typename ArchiveT, typename ContextT>
-		friend void serialize(ArchiveT &archive, functions_list &model, unsigned int version, ContextT &context);
+		friend void serialize(ArchiveT &archive, functions_list &model, ContextT &context);
 	};
 
 

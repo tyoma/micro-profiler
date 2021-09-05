@@ -21,31 +21,33 @@
 #pragma once
 
 #include <common/noncopyable.h>
-#include <common/types.h>
-#include <memory>
-#include <string>
+#include <scheduler/private_queue.h>
+#include <wpl/signal.h>
 
 namespace micro_profiler
 {
-	class write_stream : noncopyable
+	namespace tables
+	{
+		struct statistics;
+	}
+
+	class statistics_poll : noncopyable
 	{
 	public:
-		write_stream(const std::wstring &path);
+		statistics_poll(std::shared_ptr<const tables::statistics> statistics, std::shared_ptr<scheduler::queue> queue);
 
-		void write(const byte *buffer, size_t size);
-
-	private:
-		const std::shared_ptr<void> _file;
-	};
-
-	class read_stream : noncopyable
-	{
-	public:
-		read_stream(const std::wstring &path);
-
-		void read(byte *buffer, size_t size);
+		void enable(bool value);
+		bool enabled() const throw();
 
 	private:
-		const std::shared_ptr<void> _file;
+		void on_invalidate();
+
+	private:
+		const std::shared_ptr<const tables::statistics> _statistics;
+		scheduler::private_queue _queue;
+		wpl::slot_connection _invalidation;
 	};
+
+	inline bool statistics_poll::enabled() const throw()
+	{	return !!_invalidation;	}
 }

@@ -27,11 +27,6 @@
 #include <ipc/endpoint.h>
 #include <list>
 
-namespace scheduler
-{
-	struct queue;
-}
-
 namespace micro_profiler
 {
 	class frontend;
@@ -45,7 +40,7 @@ namespace micro_profiler
 		};
 
 	public:
-		frontend_manager(const frontend_ui_factory &ui_factory, std::shared_ptr<scheduler::queue> queue);
+		frontend_manager(const frontend_ui_factory &ui_factory);
 		~frontend_manager();
 
 		void close_all() throw();
@@ -82,7 +77,6 @@ namespace micro_profiler
 
 	private:
 		frontend_ui_factory _ui_factory;
-		std::shared_ptr<scheduler::queue> _queue;
 		instance_container_ptr _instances;
 		std::shared_ptr<const instance_impl *> _active_instance;
 	};

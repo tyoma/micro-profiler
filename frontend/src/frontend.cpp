@@ -22,6 +22,7 @@
 
 #include <frontend/function_list.h>
 #include <frontend/serialization.h>
+#include <frontend/persistence.h> // TODO: remove persistence.h, leave only serialization.h
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
 
@@ -38,33 +39,34 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const mt::milliseconds c_updateInterval(25);
-
-		void detached_frontend()
-		{	LOG(PREAMBLE "attempt to interact with a detached profilee - ignoring...");	}
-
-		const auto detached_frontend_stub = bind(&detached_frontend);
+		const auto detached_frontend_stub = bind([] {
+			LOG(PREAMBLE "attempt to interact with a detached profilee - ignoring...");
+		});
+		const auto detached_frontend_stub2 = bind([] {});
 	}
 
-	frontend::frontend(ipc::channel &outbound, shared_ptr<scheduler::queue> queue)
-		: client_session(outbound), _modules(make_shared<tables::modules>()),
-			_mappings(make_shared<tables::module_mappings>()), _patches(make_shared<tables::patches>()),
-			_queue(queue)
+	frontend::frontend(ipc::channel &outbound)
+		: client_session(outbound), _statistics(make_shared<tables::statistics>()),
+			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
+			_patches(make_shared<tables::patches>())
 	{
 		subscribe(*new_request_handle(), init, [this] (deserializer &d) {
+			auto self = this;
+
 			if (_model)
 			{
 				LOG(PREAMBLE "repeated initialization message - ignoring...");
 				return;
 			}
 			d(_process_info);
-			_model = functions_list::create(_process_info.ticks_per_second, make_shared<symbol_resolver>(_modules, _mappings),
-				get_threads());
+			_statistics->request_update = [self] {	self->request_full_update();	};
+			_model = make_shared<functions_list>(_statistics, 1.0 / _process_info.ticks_per_second,
+				make_shared<symbol_resolver>(_modules, _mappings), get_threads());
 
 			frontend_ui_context ctx = {
 				_process_info,
-				_model = functions_list::create(_process_info.ticks_per_second, make_shared<symbol_resolver>(_modules, _mappings),
-					get_threads()),
+				_model,
+				_statistics,
 				_mappings,
 				_modules,
 				_patches,
@@ -97,7 +99,7 @@ namespace micro_profiler
 				swap(m.symbols, mmetadata.symbols);
 				m.files = unordered_map<unsigned int, string>(mmetadata.source_files.begin(), mmetadata.source_files.end());
 
-				self->_modules->invalidated();
+				self->_modules->invalidate();
 				self->_modules->ready(persistent_id);
 
 				LOG(PREAMBLE "received metadata...") % A(self) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
@@ -112,6 +114,7 @@ namespace micro_profiler
 
 	frontend::~frontend()
 	{
+		_statistics->request_update = detached_frontend_stub2;
 		_modules->request_presence = detached_frontend_stub;
 		_patches->apply = detached_frontend_stub;
 		_patches->revert = detached_frontend_stub;
@@ -127,20 +130,21 @@ namespace micro_profiler
 
 	void frontend::request_full_update()
 	{
+		if (_update_request)
+			return;
+
 		auto modules_callback = [this] (deserializer &d) {
 			loaded_modules lmodules;
 
 			d(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
 				(*_mappings)[i->instance_id] = *i;
-			_mappings->invalidated();
+			_mappings->invalidate();
 		};
 		auto update_callback = [this] (deserializer &d) {
-			auto self = this;
-
-			d(*_model, _serialization_context);
+			d(*_statistics, _serialization_context);
 			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
-			_queue.schedule([self] {	self->request_full_update();	}, c_updateInterval);
+			_update_request.reset();
 		};
 		pair<int, callback_t> callbacks[] = {
 			make_pair(response_modules_loaded, modules_callback),

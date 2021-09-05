@@ -32,6 +32,7 @@ namespace micro_profiler
 	{
 		struct module_mappings;
 		struct modules;
+		struct statistics;
 		struct patches;
 	}
 
@@ -39,6 +40,7 @@ namespace micro_profiler
 	{
 		initialization_data process_info;
 		std::shared_ptr<functions_list> model;
+		std::shared_ptr<tables::statistics> statistics;
 		std::shared_ptr<const tables::module_mappings> module_mappings;
 		std::shared_ptr<const tables::modules> modules;
 		std::shared_ptr<const tables::patches> patches;

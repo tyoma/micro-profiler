@@ -27,6 +27,60 @@
 
 namespace micro_profiler
 {
+	struct function_list_serialization_proxy
+	{
+		functions_list &self;
+		double &tick_interval;
+		symbol_resolver &resolver;
+		statistic_types::map_detailed &statistics;
+		threads_model &threads;
+	};
+
+
+
+	template <typename ArchiveT>
+	inline void reciprocal(ArchiveT &archive, double &value)
+	{
+		long long rv = static_cast<long long>(value ? 1 / value : 1);
+
+		archive(rv);
+		value = 1.0 / rv;
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v3 &/*context*/)
+	{
+		scontext::detailed_threaded context = { &data.statistics, 0, 0 };
+
+		reciprocal(archive, data.tick_interval);
+		archive(data.resolver);
+		archive(data.statistics, context);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v4 &/*context*/)
+	{
+		reciprocal(archive, data.tick_interval);
+		archive(data.resolver);
+		archive(data.statistics);
+		archive(data.threads);
+	}
+
+	template <typename ArchiveT, typename ContextT>
+	inline void serialize(ArchiveT &archive, functions_list &data, ContextT &context)
+	{
+		function_list_serialization_proxy proxy = {
+			data,
+			data._tick_interval,
+			*data.get_resolver(),
+			*data._statistics,
+			*data.get_threads()
+		};
+
+		archive(proxy, context);
+		data._statistics->invalidate();
+	}
+
 	template <typename ContextT, typename ArchiveT>
 	inline void snapshot_save(ArchiveT &archive, const functions_list &model)
 	{
@@ -44,13 +98,24 @@ namespace micro_profiler
 		};
 
 		ContextT context;
+		auto statistics = std::make_shared<tables::statistics>();
 		auto modules = std::make_shared<tables::modules>();
 		auto mappings = std::make_shared<tables::module_mappings>();
-		std::shared_ptr<symbol_resolver> resolver(new symbol_resolver(modules, mappings));
-		std::shared_ptr<threads_model> threads(new threads_model(&dummy_::dummy_threads_request));
-		std::shared_ptr<functions_list> fl(functions_list::create(1, resolver, threads));
+		auto resolver = std::make_shared<symbol_resolver>(modules, mappings);
+		auto threads = std::make_shared<threads_model>(&dummy_::dummy_threads_request);
+		auto fl = std::make_shared<functions_list>(statistics, 1, resolver, threads);
 
 		archive(*fl, context);
 		return fl;
+	}
+
+	namespace tables
+	{
+		template <typename ArchiveT, typename ContextT, typename BaseT>
+		inline void serialize(ArchiveT &archive, table<BaseT> &data, ContextT &context)
+		{
+			archive(static_cast<BaseT &>(data), context);
+			data.invalidate();
+		}
 	}
 }

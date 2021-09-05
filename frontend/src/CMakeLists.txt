@@ -15,6 +15,7 @@ set(FRONTEND_LIB_SOURCES
 	untested/factory.cpp
 	untested/image_patch_ui.cpp
 	untested/ipc_manager.cpp
+	untested/statistics_poll.cpp
 	untested/tables_ui.cpp
 )
 

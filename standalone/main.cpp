@@ -28,6 +28,7 @@
 #include <frontend/image_patch_model.h>
 #include <frontend/image_patch_ui.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/statistics_poll.h>
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>
@@ -51,7 +52,7 @@ namespace micro_profiler
 	struct ui_composite
 	{
 		shared_ptr<standalone_ui> ui;
-		vector<slot_connection> connections;
+		vector< shared_ptr<void> > connections;
 	};
 
 	struct child_composite
@@ -108,6 +109,7 @@ namespace micro_profiler
 			auto show_patcher2 = show_patcher;
 			auto composite = make_shared<ui_composite>();
 			auto patches = context.patches;
+			auto poller = make_shared<statistics_poll>(context.statistics, app.get_ui_queue());
 
 			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, context);
 			composite->connections.push_back(composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
@@ -117,11 +119,14 @@ namespace micro_profiler
 			composite->connections.push_back(composite->ui->show_patcher += [show_patcher2, context] (agge::point<int> center, shared_ptr<form> new_form) {
 				show_patcher2(center, new_form, context);
 			});
+			composite->connections.push_back(poller);
+
+			poller->enable(true);
 			return frontend_ui::ptr(composite, composite->ui.get());
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};
-		auto frontend_manager_ = make_shared<frontend_manager>(ui_factory, app.get_ui_queue());
+		auto frontend_manager_ = make_shared<frontend_manager>(ui_factory);
 		ipc_manager ipc_manager(frontend_manager_, app.get_ui_queue(),
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 			&constants::standalone_frontend_id);

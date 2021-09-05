@@ -87,9 +87,9 @@ namespace micro_profiler
 			invalidate_me();
 		};
 
-		_connections[0] = patches->invalidated += invalidate_me;
-		_connections[1] = modules->invalidated += invalidate_me;
-		_connections[2] = mappings->invalidated += update_paths;
+		_connections[0] = patches->invalidate += invalidate_me;
+		_connections[1] = modules->invalidate += invalidate_me;
+		_connections[2] = mappings->invalidate += update_paths;
 
 		update_paths();
 

@@ -84,7 +84,7 @@ namespace micro_profiler
 				auto e = make_shared<emulator_>(queue);
 				frontend_ui_context context;
 
-				frontend_ = make_shared<frontend>(e->server_session, make_shared<mocks::queue>() /*ignore these tasks*/);
+				frontend_ = make_shared<frontend>(e->server_session);
 				e->outbound = frontend_.get();
 				frontend_->initialized = [&] (const frontend_ui_context &ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e, &e->server_session);
@@ -358,7 +358,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector< unordered_map<unsigned, tables::patch> > log;
-				auto conn = patches->invalidated += [&] {
+				auto conn = patches->invalidate += [&] {
 					log.push_back(patches->find(19)->second);
 				};
 				unsigned rva[] = {	1, 2, 3,	};
@@ -680,7 +680,7 @@ namespace micro_profiler
 					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
 				patches->apply(19, mkrange(rva));
 
-				auto conn = patches->invalidated += [&] {
+				auto conn = patches->invalidate += [&] {
 					log.push_back(patches->find(19)->second);
 				};
 

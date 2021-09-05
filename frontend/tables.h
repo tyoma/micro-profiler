@@ -34,7 +34,7 @@ namespace micro_profiler
 		template <typename BaseT>
 		struct table : BaseT
 		{
-			mutable wpl::signal<void ()> invalidated;
+			mutable wpl::signal<void ()> invalidate;
 		};
 
 
@@ -100,7 +100,7 @@ namespace micro_profiler
 		inline void statistics::clear()
 		{
 			statistic_types::map_detailed::clear();
-			invalidated();
+			invalidate();
 		}
 	}
 }

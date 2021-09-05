@@ -80,6 +80,10 @@ namespace micro_profiler
 			return values;
 		}
 
+		template <typename DestT, typename SrcT>
+		inline void assign(tables::table<DestT> &dest, const SrcT &src)
+		{	static_cast<DestT &>(dest) = DestT(std::begin(src), std::end(src));	}
+
 		template <typename T1, size_t columns_n, typename T2, size_t rows_n>
 		inline void are_rows_equal(T1 (&ordering)[columns_n], T2 (&expected)[rows_n][columns_n],
 			const wpl::richtext_table_model &actual, const ut::LocationInfo &location)

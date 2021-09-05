@@ -38,10 +38,19 @@ namespace micro_profiler
 	struct linked_statistics : wpl::richtext_table_model
 	{
 		virtual ~linked_statistics() {	}
+		virtual void fetch() = 0;
 		virtual void set_order(index_type column, bool ascending) = 0;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const = 0;
 		virtual std::shared_ptr< selection<statistic_types::key> > create_selection() const = 0;
 	};
+
+	std::shared_ptr<linked_statistics> create_callees_model(std::shared_ptr<const tables::statistics> underlying,
+		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads,
+		std::shared_ptr< std::vector<statistic_types::key> > scope);
+
+	std::shared_ptr<linked_statistics> create_callers_model(std::shared_ptr<const tables::statistics> underlying,
+		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads,
+		std::shared_ptr< std::vector<statistic_types::key> > scope);
 
 	class functions_list : public statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> >
 	{
@@ -59,14 +68,6 @@ namespace micro_profiler
 
 		void clear();
 		void print(std::string &content) const;
-		std::shared_ptr<linked_statistics> watch_children(key_type item) const;
-		std::shared_ptr<linked_statistics> watch_parents(key_type item) const;
-
-		static std::shared_ptr<functions_list> create(timestamp_t ticks_per_second,
-			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);
-
-	public:
-		bool updates_enabled;
 
 	private:
 		typedef statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> > base;

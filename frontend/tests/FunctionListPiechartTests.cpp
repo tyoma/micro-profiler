@@ -16,7 +16,7 @@ namespace micro_profiler
 	{
 		for (auto i = begin(delta); i != end(delta); ++i)
 			s[i->first] += i->second;
-		s.invalidated();
+		s.invalidate();
 	}
 
 	namespace tests
@@ -250,47 +250,6 @@ namespace micro_profiler
 				fl->set_order(columns::max_reentrance, true);
 				assert_approx_equal(0.0, get_value(*m, 0), c_tolerance);
 				assert_approx_equal(0.0, get_value(*m, 3), c_tolerance);
-			}
-
-
-			test( ChildrenStatisticsProvideColumnSeries )
-			{
-				// INIT
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 2000;
-				s[addr(5)].callees[addr(11)].times_called = 29, s[addr(5)].callees[addr(13)].times_called = 31;
-				s[addr(5)].callees[addr(11)].exclusive_time = 16, s[addr(5)].callees[addr(13)].exclusive_time = 10;
-
-				s[addr(17)].times_called = 1999;
-				s[addr(17)].callees[addr(11)].times_called = 101, s[addr(17)].callees[addr(19)].times_called = 103, s[addr(17)].callees[addr(23)].times_called = 1100;
-				s[addr(17)].callees[addr(11)].exclusive_time = 3, s[addr(17)].callees[addr(19)].exclusive_time = 112, s[addr(17)].callees[addr(23)].exclusive_time = 9;
-
-				auto fl = create_functions_list(s, 100);
-				auto m = fl->get_column_series();
-
-				shared_ptr<linked_statistics> ls;
-
-				// ACT
-				ls = fl->watch_children(addr(5));
-				ls->set_order(columns::times_called, true);
-				m = ls->get_column_series();
-
-				// ASSERT
-				assert_equal(2u, m->get_count());
-				assert_approx_equal(29.0, get_value(*m, 0), c_tolerance);
-				assert_approx_equal(31.0, get_value(*m, 1), c_tolerance);
-
-				// ACT
-				ls = fl->watch_children(addr(17));
-				m = ls->get_column_series();
-				ls->set_order(columns::exclusive, false);
-
-				// ASSERT
-				assert_equal(3u, m->get_count());
-				assert_approx_equal(1.12, get_value(*m, 0), c_tolerance);
-				assert_approx_equal(0.09, get_value(*m, 1), c_tolerance);
-				assert_approx_equal(0.03, get_value(*m, 2), c_tolerance);
 			}
 
 

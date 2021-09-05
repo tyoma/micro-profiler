@@ -1,13 +1,9 @@
 #include <frontend/function_list.h>
 
-#include <frontend/serialization.h>
-
 #include "helpers.h"
 #include "mocks.h"
 
 #include <iomanip>
-#include <strmd/serializer.h>
-#include <strmd/deserializer.h>
 #include <sstream>
 #include <test-helpers/helpers.h>
 #include <test-helpers/primitive_helpers.h>
@@ -24,11 +20,6 @@ namespace micro_profiler
 	{
 		namespace 
 		{
-			typedef statistic_types_t<long_address_t> unthreaded_statistic_types;
-			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> unthreaded_addressed_function;
-			typedef pair<statistic_types::key, statistic_types::function_detailed> threaded_addressed_function;
-			typedef pair<statistic_types::key, count_t> caller_function;
-
 			const columns::main name_times_inc_exc_iavg_eavg_reent_minc[] = {
 				columns::name, columns::times_called, columns::inclusive, columns::exclusive,
 				columns::inclusive_avg, columns::exclusive_avg, columns::max_reentrance, columns::max_time
@@ -37,11 +28,6 @@ namespace micro_profiler
 			const columns::main name_times[] = {	columns::name, columns::times_called,	};
 
 			const columns::main name_threadid[] = {	columns::name, columns::threadid,	};
-
-			const timestamp_t test_ticks_per_second = 1;
-
-			void increment(int *value)
-			{	++*value;	}
 
 			class invalidation_tracer
 			{
@@ -110,22 +96,15 @@ namespace micro_profiler
 
 
 		begin_test_suite( FunctionListTests )
-
-			vector_adapter _buffer;
-			strmd::serializer<vector_adapter, packer> ser;
-			strmd::deserializer<vector_adapter, packer> dser;
+			std::shared_ptr<tables::statistics> statistics;
 			std::shared_ptr<tables::modules> modules;
 			std::shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<mocks::threads_model> tmodel;
-			scontext::wire dummy_context;
-
-			FunctionListTests()
-				: ser(_buffer), dser(_buffer)
-			{	}
 
 			init( CreatePrerequisites )
 			{
+				statistics = make_shared<tables::statistics>();
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
 				resolver.reset(new mocks::symbol_resolver(modules, mappings));
@@ -133,368 +112,119 @@ namespace micro_profiler
 			}
 
 
-			test( CanCreateEmptyFunctionList )
+			test( ConstructedFunctionListIsEmpty )
 			{
 				// INIT / ACT
-				auto sp_fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				const functions_list &fl = *sp_fl;
+				auto fl = make_shared<functions_list>(statistics, 1.0 , resolver, tmodel);
 
 				// ACT / ASSERT
-				assert_equal(0u, fl.get_count());
-				assert_equal(resolver, fl.get_resolver());
-				assert_is_true(fl.updates_enabled);
+				assert_equal(0u, fl->get_count());
 			}
 
 
 			test( FunctionListAcceptsUpdates )
 			{
 				// INIT
-				unthreaded_statistic_types::map_detailed s;
+				auto fl = make_shared<functions_list>(statistics, 1.0, resolver, tmodel);
 
-				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
-				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
-				serialize_single_threaded(ser, s);
+				assign(*statistics, plural
+					+ make_statistics(addr(1123), 19, 0, 0, 0, 1)
+					+ make_statistics(addr(2234), 29, 0, 0, 0, 1));
+
+				// ACT / ASSERT
+				assert_equal(0u, fl->get_count());
 
 				// ACT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				dser(*fl, dummy_context);
+				statistics->invalidate();
 
 				// ASSERT
 				assert_equal(2u, fl->get_count());
-			}
-
-
-			test( FunctionListDoesNotAcceptUpdatesIfNotEnabled )
-			{
-				// INIT
-				int invalidated_count = 0;
-				unthreaded_statistic_types::map_detailed s;
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				wpl::slot_connection conn = fl->invalidate += bind(&increment, &invalidated_count);
-
-				static_cast<function_statistics &>(s[1123]) = function_statistics(1, 0, 30, 20);
-				serialize_single_threaded(ser, s);
-
-				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
-				static_cast<function_statistics &>(s[2234]) = function_statistics(10, 3, 7, 5);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-				invalidated_count = 0;
 
 				// ACT
-				fl->updates_enabled = false;
-				dser(*fl, dummy_context);
+				static_cast<function_statistics &>((*statistics)[addr(7234)]) = function_statistics(10, 1, 1, 1);
+				statistics->invalidate();
 
-				// ASSERT
-				assert_equal(1u, fl->get_count());
-				assert_equal("1", get_text(*fl, 0, 3));
-				assert_equal(0, invalidated_count);
-			}
-
-
-			test( FunctionListCanBeClearedAndUsedAgain )
-			{
-				// INIT
-				unthreaded_statistic_types::map_detailed s;
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-
-				static_cast<function_statistics &>(s[1123]) = function_statistics(19, 0, 31, 29);
-				serialize_single_threaded(ser, s);
-
-				// ACT
-				invalidation_tracer ih;
-				ih.bind_to_model(*fl);
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				assert_equal(1u, fl->get_count());
-				assert_equal(1u, ih.counts.size());
-				assert_equal(1u, ih.counts.back()); //check what's coming as event arg
-
-				// ACT
-				shared_ptr<const trackable> first = fl->track(0); // 2229
-
-				// ASSERT
-				assert_equal(0u, first->index());
-
-				// ACT
-				fl->clear();
-
-				// ASSERT
-				assert_equal(0u, fl->get_count());
-				assert_equal(2u, ih.counts.size());
-				assert_equal(0u, ih.counts.back()); //check what's coming as event arg
-				assert_equal(table_model_base::npos(), first->index());
-
-				// INIT
-				_buffer.rewind();
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				assert_equal(1u, fl->get_count());
-				assert_equal(3u, ih.counts.size());
-				assert_equal(1u, ih.counts.back()); //check what's coming as event arg
-				assert_equal(0u, first->index()); // kind of side effect
-			}
-
-
-			test( ClearingTheListResetsWatchedChildren )
-			{
-				// INIT
-				unthreaded_statistic_types::map_detailed s;
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				invalidation_tracer it1, it2;
-
-				s[1123].callees[11000];
-				s[1123].callees[11001];
-				s[1124].callees[11100];
-				serialize_single_threaded(ser, s);
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> children[] = {	fl->watch_children(addr(1123)), fl->watch_children(addr(1124)),	};
-
-				it1.bind_to_model(*children[0]);
-				it2.bind_to_model(*children[1]);
-
-				// ACT
-				fl->clear();
-
-				// ASSERT
-				table_model_base::index_type reference[] = { 0, };
-
-				assert_equal(0u, children[0]->get_count());
-				assert_equal(reference, it1.counts);
-				assert_equal(0u, children[1]->get_count());
-				assert_equal(reference, it2.counts);
-			}
-
-
-			ignored_test( ClearingTheListResetsWatchedParents )
-			{
-				// INIT
-				unthreaded_statistic_types::map_detailed s;
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				invalidation_tracer it1, it2;
-
-				s[1123].callees[11000];
-				s[1123].callees[11001];
-				s[1124].callees[11000];
-				serialize_single_threaded(ser, s);
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> parents[] = {	fl->watch_parents(addr(1123)), fl->watch_parents(addr(1124)),	};
-
-				it1.bind_to_model(*parents[0]);
-				it2.bind_to_model(*parents[1]);
-
-				// ACT
-				fl->clear();
-
-				// ASSERT
-				table_model_base::index_type reference[] = { 0, };
-
-				assert_equal(0u, parents[0]->get_count());
-				assert_equal(reference, it1.counts);
-				assert_equal(0u, parents[1]->get_count());
-				assert_equal(reference, it2.counts);
-			}
-
-
-			test( FunctionListGetByAddress )
-			{
-				// INIT
-				unthreaded_statistic_types::map_detailed s;
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				vector<functions_list::index_type> expected;
-
-				static_cast<function_statistics &>(s[1118]) = function_statistics(19, 0, 31, 29);
-				static_cast<function_statistics &>(s[2229]) = function_statistics(10, 3, 7, 5);
-				static_cast<function_statistics &>(s[5550]) = function_statistics(5, 0, 10, 7);
-				serialize_single_threaded(ser, s);
-				
-				// ACT
-				dser(*fl, dummy_context);
-
-				functions_list::index_type idx1118 = fl->get_index(addr(1118));
-				functions_list::index_type idx2229 = fl->get_index(addr(2229));
-				functions_list::index_type idx5550 = fl->get_index(addr(5550));
-
-				expected.push_back(idx1118);
-				expected.push_back(idx2229);
-				expected.push_back(idx5550);
-				sort(expected.begin(), expected.end());
-				
 				// ASSERT
 				assert_equal(3u, fl->get_count());
 
-				for (table_model_base::index_type i = 0; i < expected.size(); ++i)
-					assert_equal(expected[i], i);
-
-				assert_not_equal(table_model_base::npos(), idx1118);
-				assert_not_equal(table_model_base::npos(), idx2229);
-				assert_not_equal(table_model_base::npos(), idx5550);
-				assert_equal(table_model_base::npos(), fl->get_index(addr(1234)));
-
-				//Check twice. Kind of regularity check.
-				assert_equal(fl->get_index(addr(1118)), idx1118);
-				assert_equal(fl->get_index(addr(2229)), idx2229);
-				assert_equal(fl->get_index(addr(5550)), idx5550);
-			}
-
-
-			test( FunctionListCollectsUpdates )
-			{
-				//TODO: add 2 entries of same function in one burst
-				//TODO: possibly trackable on update tests should see that it works with every sorting given.
-
-				// INIT
-				unthreaded_statistic_types::map_detailed s1, s2, s3;
-
-				static_cast<function_statistics &>(s1[1118]) = function_statistics(19, 0, 31, 29, 3);
-				static_cast<function_statistics &>(s1[2229]) = function_statistics(10, 3, 7, 5, 4);
-				static_cast<function_statistics &>(s2[1118]) = function_statistics(5, 0, 10, 7, 6);
-				static_cast<function_statistics &>(s2[5550]) = function_statistics(15, 1024, 1011, 723, 215);
-				static_cast<function_statistics &>(s3[1118]) = function_statistics(100111222333, 0, 17000, 14000, 4);
-
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				fl->set_order(columns::times_called, true);
-				
-				invalidation_tracer ih;
-				ih.bind_to_model(*fl);
-
-				serialize_single_threaded(ser, s1);
-				serialize_single_threaded(ser, s2);
-				serialize_single_threaded(ser, s3);
-
 				// ACT
-				dser(*fl, dummy_context);
-				shared_ptr<const trackable> first = fl->track(0); // 2229
-				shared_ptr<const trackable> second = fl->track(1); // 1118
+				statistics->clear();
 
 				// ASSERT
-				assert_equal(1u, ih.counts.size());
-				assert_equal(2u, ih.counts.back()); //check what's coming as event arg
-		
-				string reference1[][8] = {
-					{	"0000045E", "19", "31s", "29s", "1.63s", "1.53s", "0", "3s"	},
-					{	"000008B5", "10", "7s", "5s", "700ms", "500ms", "3", "4s"	},
-				};
-
-				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *fl);
-
-				assert_equal(0u, first->index());
-				assert_equal(1u, second->index());
-
-				// ACT
-				dser(*fl, dummy_context);
-				
-				// ASSERT
-				assert_equal(2u, ih.counts.size());
-				assert_equal(3u, ih.counts.back()); //check what's coming as event arg
-
-				string reference2[][8] = {
-					{	"0000045E", "24", "41s", "36s", "1.71s", "1.5s", "0", "6s",	},
-					{	"000008B5", "10", "7s", "5s", "700ms", "500ms", "3", "4s",	},
-					{	"000015AE", "15", "1011s", "723s", "67.4s", "48.2s", "1024", "215s",	},
-				};
-
-				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *fl);
-
-				assert_equal(0u, first->index());
-				assert_equal(2u, second->index()); // kind of moved down
-
-				// ACT
-				dser(*fl, dummy_context);
-				
-				// ASSERT
-				assert_equal(3u, ih.counts.size());
-				assert_equal(3u, ih.counts.back()); //check what's coming as event arg
-
-				string reference3[][8] = {
-					{	"0000045E", "100111222357", "1.7e+04s", "1.4e+04s", "170ns", "140ns", "0", "6s",	},
-					{	"000008B5", "10", "7s", "5s", "700ms", "500ms", "3", "4s",	},
-					{	"000015AE", "15", "1011s", "723s", "67.4s", "48.2s", "1024", "215s",	},
-				};
-
-				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference3, *fl);
-
-				assert_equal(0u, first->index());
-				assert_equal(2u, second->index()); // stand still
+				assert_equal(0u, fl->get_count());
 			}
 
 
 			test( FunctionListTimeFormatter )
 			{
 				// INIT
-				unthreaded_addressed_function functions[] = {
+				unsigned columns[] = {	1, 5, 4, 7, 6, 9,};
+				auto functions = plural
 					// ~ ns
-					make_statistics(1118u, 1, 0, 31, 29, 29),
-					make_statistics(1990u, 1, 0, 9994, 9994, 9994),
+					+ make_statistics(addr(0x45Eu), 1, 0, 31, 29, 29)
+					+ make_statistics(addr(0x7C6u), 1, 0, 9994, 9994, 9994)
 
 					// >= 1us
-					make_statistics(2000u, 1, 0, 9996, 9996, 9996),
-					make_statistics(2229u, 1, 0, 45340, 36666, 36666),
-					make_statistics(2990u, 1, 0, 9994000, 9994000, 9994000),
+					+ make_statistics(addr(0x7D0u), 1, 0, 9996, 9996, 9996)
+					+ make_statistics(addr(0x8B5u), 1, 0, 45340, 36666, 36666)
+					+ make_statistics(addr(0xBAEu), 1, 0, 9994000, 9994000, 9994000)
 
 					// >= 1ms
-					make_statistics(3000u, 1, 0, 9996000, 9996000, 9996000),
-					make_statistics(3118u, 1, 0, 33450030, 32333333, 32333333),
-					make_statistics(3990u, 1, 0, 9994000000, 9994000000, 9994000000),
+					+ make_statistics(addr(0xBB8u), 1, 0, 9996000, 9996000, 9996000)
+					+ make_statistics(addr(0xC2Eu), 1, 0, 33450030, 32333333, 32333333)
+					+ make_statistics(addr(0xF96u), 1, 0, 9994000000, 9994000000, 9994000000)
 
 					// >= 1s
-					make_statistics(4000u, 1, 0, 9996000000, 9996000000, 9996000000),
-					make_statistics(5550u, 1, 0, 65450031030, 23470030000, 23470030000),
-					make_statistics(4990u, 1, 0, 9994000000000, 9994000000000, 9994000000000),
+					+ make_statistics(addr(0xFA0u), 1, 0, 9996000000, 9996000000, 9996000000)
+					+ make_statistics(addr(0x15AEu), 1, 0, 65450031030, 23470030000, 23470030000)
+					+ make_statistics(addr(0x137Eu), 1, 0, 9994000000000, 9994000000000, 9994000000000)
 
 					// >= 1000s
-					make_statistics(5000u, 1, 0, 9996000000000, 9996000000000, 9996000000000),
-					make_statistics(4550u, 1, 0, 65450031030567, 23470030000987, 23470030000987),
-					make_statistics(5990u, 1, 0, 99990031030567, 99990030000987, 99990030000987),
+					+ make_statistics(addr(0x1388u), 1, 0, 9996000000000, 9996000000000, 9996000000000)
+					+ make_statistics(addr(0x11C6u), 1, 0, 65450031030567, 23470030000987, 23470030000987)
+					+ make_statistics(addr(0x1766u), 1, 0, 99990031030567, 99990030000987, 99990030000987)
 				
 					// >= 10000s
-					make_statistics(6000u, 1, 0, 99999031030567, 99999030000987, 99999030000987),
-					make_statistics(6661u, 1, 0, 65450031030567000, 23470030000987000, 23470030000987000),
-				};
-				auto fl = functions_list::create(10000000000, resolver, tmodel); // 10 * billion ticks per second
+					+ make_statistics(addr(0x1770u), 1, 0, 99999031030567, 99999030000987, 99999030000987)
+					+ make_statistics(addr(0x1A05u), 1, 0, 65450031030567000, 23470030000987000, 23470030000987000);
 
-				serialize_single_threaded(ser, mkvector(functions));
+				assign(*statistics, functions);
+
+				auto fl = make_shared<functions_list>(statistics, 1e-10, resolver, tmodel);
 
 				// ACT
-				dser(*fl, dummy_context);
+				auto text = get_text(*fl, columns);
 
 				// ASSERT
-				string reference[][8] = {
-					{	"0000045E", "1", "3.1ns", "2.9ns", "3.1ns", "2.9ns", "0", "2.9ns",	},
-					{	"000008B5", "1", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "0", "3.67\xCE\xBCs",	},
-					{	"00000C2E", "1", "3.35ms", "3.23ms", "3.35ms", "3.23ms", "0", "3.23ms",	},
-					{	"000015AE", "1", "6.55s", "2.35s", "6.55s", "2.35s", "0", "2.35s",	},
-					{	"000011C6", "1", "6545s", "2347s", "6545s", "2347s", "0", "2347s",	},
-					{	"00001A05", "1", "6.55e+06s", "2.35e+06s", "6.55e+06s", "2.35e+06s", "0", "2.35e+06s",	},
+				string reference[][6] = {
+					{	"0000045E", "3.1ns", "2.9ns", "3.1ns", "2.9ns", "2.9ns",	},
+					{	"000008B5", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "3.67\xCE\xBCs",	},
+					{	"00000C2E", "3.35ms", "3.23ms", "3.35ms", "3.23ms", "3.23ms",	},
+					{	"000015AE", "6.55s", "2.35s", "6.55s", "2.35s", "2.35s",	},
+					{	"000011C6", "6545s", "2347s", "6545s", "2347s", "2347s",	},
+					{	"00001A05", "6.55e+06s", "2.35e+06s", "6.55e+06s", "2.35e+06s", "2.35e+06s",	},
 
 					// boundary cases
-					{	"000007C6", "1", "999ns", "999ns", "999ns", "999ns", "0", "999ns",	},
-					{	"000007D0", "1", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "0", "1\xCE\xBCs",	},
-					{	"00000BAE", "1", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "0", "999\xCE\xBCs",	},
-					{	"00000BB8", "1", "1ms", "1ms", "1ms", "1ms", "0", "1ms",	},
-					{	"00000F96", "1", "999ms", "999ms", "999ms", "999ms", "0", "999ms",	},
-					{	"00000FA0", "1", "1s", "1s", "1s", "1s", "0", "1s",	},
-					{	"0000137E", "1", "999s", "999s", "999s", "999s", "0", "999s",	},
-					{	"00001388", "1", "999.6s", "999.6s", "999.6s", "999.6s", "0", "999.6s",	},
-					{	"00001766", "1", "9999s", "9999s", "9999s", "9999s", "0", "9999s",	},
-					{	"00001770", "1", "1e+04s", "1e+04s", "1e+04s", "1e+04s", "0", "1e+04s",	},
+					{	"000007C6", "999ns", "999ns", "999ns", "999ns", "999ns",	},
+					{	"000007D0", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs",	},
+					{	"00000BAE", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs",	},
+					{	"00000BB8", "1ms", "1ms", "1ms", "1ms", "1ms",	},
+					{	"00000F96", "999ms", "999ms", "999ms", "999ms", "999ms",	},
+					{	"00000FA0", "1s", "1s", "1s", "1s", "1s",	},
+					{	"0000137E", "999s", "999s", "999s", "999s", "999s",	},
+					{	"00001388", "999.6s", "999.6s", "999.6s", "999.6s", "999.6s",	},
+					{	"00001766", "9999s", "9999s", "9999s", "9999s", "9999s",	},
+					{	"00001770", "1e+04s", "1e+04s", "1e+04s", "1e+04s", "1e+04s",	},
 				};
 
-				assert_table_equivalent(name_times_inc_exc_iavg_eavg_reent_minc, reference, *fl);
+				assert_equivalent(mkvector(reference), text);
 			}
 
 
 			test( FunctionListProvidesSelectionModel )
 			{
 				// INIT
-				const auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				// INIT / ACT
 				const shared_ptr< selection<function_key> > s1 = fl->create_selection();
@@ -510,18 +240,15 @@ namespace micro_profiler
 			test( SelectionModelIsFunctionalAfterParentModelIsDestroyed )
 			{
 				// INIT
-				unthreaded_addressed_function functions[] = {
-					make_statistics(1990u, 15, 0, 31, 29, 3),
-					make_statistics(2000u, 35, 1, 453, 366, 4),
-					make_statistics(2990u, 2, 2, 33450030, 32333333, 5),
-					make_statistics(3000u, 15233, 3, 65460, 13470, 6),
-				};
+				auto functions = plural
+					+ make_statistics(addr(1990u), 15, 0, 31, 29, 3)
+					+ make_statistics(addr(2000u), 35, 1, 453, 366, 4)
+					+ make_statistics(addr(2990u), 2, 2, 33450030, 32333333, 5)
+					+ make_statistics(addr(3000u), 15233, 3, 65460, 13470, 6);
 
-				serialize_single_threaded(ser, mkvector(functions));
+				assign(*statistics, functions);
 
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-
-				dser(*fl, dummy_context);
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				// INIT / ACT
 				auto sel = fl->create_selection();
@@ -541,20 +268,19 @@ namespace micro_profiler
 			test( FunctionListSorting )
 			{
 				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				const auto s = fl->create_selection();
 				invalidation_tracer ih;
-				const size_t data_size = 4;
-				unthreaded_addressed_function functions[data_size] = {
-					make_statistics(1990u, 15, 0, 31, 29, 3),
-					make_statistics(2000u, 35, 1, 453, 366, 4),
-					make_statistics(2990u, 2, 2, 33450030, 32333333, 5),
-					make_statistics(3000u, 15233, 3, 65460, 13470, 6),
-				};
+				auto functions = plural
+					+ make_statistics(addr(1990u), 15, 0, 31, 29, 3)
+					+ make_statistics(addr(2000u), 35, 1, 453, 366, 4)
+					+ make_statistics(addr(2990u), 2, 2, 33450030, 32333333, 5)
+					+ make_statistics(addr(3000u), 15233, 3, 65460, 13470, 6);
 
-				serialize_single_threaded(ser, mkvector(functions));
+				assign(*statistics, functions);
+
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				const auto s = fl->create_selection();
+
 				ih.bind_to_model(*fl);
-				dser(*fl, dummy_context);
 
 				shared_ptr<const trackable> pt0 = fl->track(fl->get_index(addr(1990)));
 				shared_ptr<const trackable> pt1 = fl->track(fl->get_index(addr(2000)));
@@ -577,8 +303,8 @@ namespace micro_profiler
 				assert_is_false(s->contains(3));
 
 				// ASSERT
-				assert_equal(2u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(1u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference1[][8] = {
 					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "2", "5s",	},
@@ -604,8 +330,8 @@ namespace micro_profiler
 				assert_is_false(s->contains(3));
 
 				// ASSERT
-				assert_equal(3u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(2u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference2[][8] = {
 					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s"	},
@@ -625,8 +351,8 @@ namespace micro_profiler
 				fl->set_order(columns::name, true);
 
 				// ASSERT
-				assert_equal(4u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(3u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference3[][8] = {
 					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "0", "3s"	},
@@ -646,8 +372,8 @@ namespace micro_profiler
 				fl->set_order(columns::name, false);
 
 				// ASSERT
-				assert_equal(5u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference4[][8] = {
 					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "3", "6s"	},
@@ -667,8 +393,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive, true);
 
 				// ASSERT
-				assert_equal(6u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(5u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference5[][2] = {
 					{	"000007C6", "15",	},
@@ -688,8 +414,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive, false);
 
 				// ASSERT
-				assert_equal(7u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(6u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference6[][2] = {
 					{	"00000BAE", "2",	},
@@ -709,8 +435,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive, true);
 
 				// ASSERT
-				assert_equal(8u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(7u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference7[][2] = {
 					{	"000007C6", "15",	},
@@ -730,8 +456,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive, false);
 
 				// ASSERT
-				assert_equal(9u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(8u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference8[][2] = {
 					{	"00000BAE", "2",	},
@@ -751,8 +477,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive_avg, true);
 				
 				// ASSERT
-				assert_equal(10u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(9u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference9[][2] = {
 					{	"00000BB8", "15233",	},
@@ -772,8 +498,8 @@ namespace micro_profiler
 				fl->set_order(columns::exclusive_avg, false);
 				
 				// ASSERT
-				assert_equal(11u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(10u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference10[][2] = {
 					{	"00000BAE", "2",	},
@@ -793,8 +519,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive_avg, true);
 				
 				// ASSERT
-				assert_equal(12u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(11u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference11[][2] = {
 					{	"000007C6", "15",	},
@@ -814,8 +540,8 @@ namespace micro_profiler
 				fl->set_order(columns::inclusive_avg, false);
 				
 				// ASSERT
-				assert_equal(13u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(12u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference12[][2] = {
 					{	"00000BAE", "2",	},
@@ -835,8 +561,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_reentrance, true);
 				
 				// ASSERT
-				assert_equal(14u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(13u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference13[][2] = {
 					{	"000007C6", "15",	},
@@ -856,8 +582,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_reentrance, false);
 				
 				// ASSERT
-				assert_equal(15u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(14u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference14[][2] = {
 					{	"00000BB8", "15233",	},
@@ -877,8 +603,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_time, true);
 				
 				// ASSERT
-				assert_equal(16u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(15u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference15[][2] = {
 					{	"000007C6", "15",	},
@@ -898,8 +624,8 @@ namespace micro_profiler
 				fl->set_order(columns::max_time, false);
 				
 				// ASSERT
-				assert_equal(17u, ih.counts.size());
-				assert_equal(data_size, ih.counts.back()); //check what's coming as event arg
+				assert_equal(16u, ih.counts.size());
+				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
 
 				string reference16[][2] = {
 					{	"00000BB8", "15233",	},
@@ -920,30 +646,25 @@ namespace micro_profiler
 			test( FunctionListTakesNativeIDFromThreadModel )
 			{
 				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_addressed_function functions[][1] = {
-					{ make_statistics(0x1000u, 1, 0, 0, 0, 0), },
-					{ make_statistics(0x1010u, 1, 0, 0, 0, 0), },
-					{ make_statistics(0x1020u, 1, 0, 0, 0, 0), },
-					{ make_statistics(0x1030u, 1, 0, 0, 0, 0), },
-				};
-				pair< unsigned, vector<unthreaded_addressed_function> > data[] = {
-					make_pair(3, mkvector(functions[0])),
-					make_pair(2, mkvector(functions[1])),
-					make_pair(7, mkvector(functions[2])),
-					make_pair(9, mkvector(functions[3])),
-				};
+				unsigned columns[] = {	1, 2,	};
+				auto functions = plural
+					+ make_statistics(addr(0x1000u, 3), 1, 0, 0, 0, 0)
+					+ make_statistics(addr(0x1010u, 2), 1, 0, 0, 0, 0)
+					+ make_statistics(addr(0x1020u, 7), 1, 0, 0, 0, 0)
+					+ make_statistics(addr(0x1030u, 9), 1, 0, 0, 0, 0);
 
-				ser(mkvector(data));
-				dser(*fl, dummy_context);
+				assign(*statistics, functions);
+
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				tmodel->add(3, 100, string());
 				tmodel->add(2, 1000, string());
 				tmodel->add(7, 900, string());
 
-				fl->set_order(columns::name, true);
+				// ACT
+				auto text = get_text(*fl, columns);
 
-				// ACT / ASSERT
+				// ASSERT
 				string reference1[][2] = {
 					{	"00001000", "100",	},
 					{	"00001010", "1000",	},
@@ -951,10 +672,13 @@ namespace micro_profiler
 					{	"00001030", "",	},
 				};
 
-				assert_table_equivalent(name_threadid, reference1, *fl);
+				assert_equivalent(mkvector(reference1), text);
 
 				// INIT
 				tmodel->add(9, 90, string());
+
+				// ACT
+				text = get_text(*fl, columns);
 
 				// ACT / ASSERT
 				string reference2[][2] = {
@@ -964,30 +688,25 @@ namespace micro_profiler
 					{	"00001030", "90",	},
 				};
 
-				assert_table_equivalent(name_threadid, reference2, *fl);
+				assert_equivalent(mkvector(reference2), text);
 			}
 
 
 			test( FunctionListCanBeSortedByThreadID )
 			{
 				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
+				unsigned columns[] = {	columns::times_called,	};
 				invalidation_tracer ih;
-				const size_t data_size = 5;
-				unthreaded_addressed_function functions[data_size][1] = {
-					{	make_statistics(10000u, 1, 0, 1, 1, 1),	},
-					{	make_statistics(10000u, 2, 0, 1, 1, 1),	},
-					{	make_statistics(10000u, 3, 0, 1, 1, 1),	},
-					{	make_statistics(10000u, 4, 0, 1, 1, 1),	},
-					{	make_statistics(10000u, 5, 0, 1, 1, 1),	},
-				};
-				pair< unsigned, vector<unthreaded_addressed_function> > data[] = {
-					make_pair(0, mkvector(functions[0])),
-					make_pair(1, mkvector(functions[1])),
-					make_pair(2, mkvector(functions[2])),
-					make_pair(3, mkvector(functions[3])),
-					make_pair(4, mkvector(functions[4])),
-				};
+				auto functions = plural
+					+ make_statistics(addr(0x10000u, 0), 1, 0, 0, 0, 0)
+					+ make_statistics(addr(0x10000u, 1), 2, 0, 0, 0, 0)
+					+ make_statistics(addr(0x10000u, 2), 3, 0, 0, 0, 0)
+					+ make_statistics(addr(0x10000u, 3), 4, 0, 0, 0, 0)
+					+ make_statistics(addr(0x10000u, 4), 5, 0, 0, 0, 0);
+
+				assign(*statistics, functions);
+
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				tmodel->add(0, 18, string());
 				tmodel->add(1, 1, string());
@@ -995,46 +714,39 @@ namespace micro_profiler
 				tmodel->add(3, 179, string());
 				tmodel->add(4, 17900, string());
 
-				ser(mkvector(data));
-
 				ih.bind_to_model(*fl);
-				dser(*fl, dummy_context);
-				ih.counts.clear();
 
 				// ACT (times called, ascending)
 				fl->set_order(columns::threadid, true);
+				auto text = get_text(*fl, columns);
 
 				// ASSERT
-				columns::main ordering[] = {	columns::times_called,	};
-				size_t reference_updates1[] = {	data_size,	};
 				string reference1[][1] = {	{	"2",	}, {	"1",	}, {	"4",	}, {	"3",	}, {	"5",	},	};
 
-				assert_table_equal(ordering, reference1, *fl);
-				assert_equal(reference_updates1, ih.counts);
+				assert_equivalent(mkvector(reference1), text);
+				assert_equal(plural + (size_t)5u, ih.counts);
 
 				// ACT (times called, ascending)
 				fl->set_order(columns::threadid, false);
 
 				// ASSERT
-				size_t reference_updates2[] = {	data_size, data_size,	};
 				string reference2[][1] = {	{	"5",	}, {	"3",	},{	"4",	},{	"1",	},  {	"2",	}, 	};
 
-				assert_table_equal(ordering, reference2, *fl);
-				assert_equal(reference_updates2, ih.counts);
+				assert_equivalent(mkvector(reference2), text);
+				assert_equal(plural + (size_t)5u + (size_t)5u, ih.counts);
 			}
 
 
 			test( FunctionListPrintItsContent )
 			{
 				// INIT
-				unthreaded_statistic_types::map_detailed s;
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				string result;
+				auto functions = plural
+					+ make_statistics(addr(1990), 15, 0, 31, 29, 2)
+					+ make_statistics(addr(2000), 35, 1, 453, 366, 3)
+					+ make_statistics(addr(2990), 2, 2, 33450030, 32333333, 4);
 
-				static_cast<function_statistics &>(s[1990]) = function_statistics(15, 0, 31, 29, 2);
-				static_cast<function_statistics &>(s[2000]) = function_statistics(35, 1, 453, 366, 3);
-				static_cast<function_statistics &>(s[2990]) = function_statistics(2, 2, 33450030, 32333333, 4);
-				serialize_single_threaded(ser, s);
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				string result;
 
 				// ACT
 				fl->print(result);
@@ -1044,13 +756,16 @@ namespace micro_profiler
 				assert_equal("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 					"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
 
+				// INIT
+				assign(*statistics, functions);
+				statistics->invalidate();
+
 				// ACT
-				dser(*fl, dummy_context);
 				fl->set_order(columns::times_called, true);
 				fl->print(result);
 
 				// ASSERT
-				assert_equal(s.size(), fl->get_count());
+				assert_equal(3u, fl->get_count());
 				assert_equal(dp2cl("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
 										"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"
@@ -1062,7 +777,7 @@ namespace micro_profiler
 				fl->print(result);
 
 				// ASSERT
-				assert_equal(s.size(), fl->get_count());
+				assert_equal(3u, fl->get_count());
 				assert_equal(dp2cl("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
 										"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
 										"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
@@ -1071,570 +786,35 @@ namespace micro_profiler
 			}
 
 
-			test( ReturnChildrenModelForAValidRecord )
-			{
-				// INIT
-				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[1978];
-				s1[1995];
-				s2[2001];
-				s2[2004];
-				s2[2011];
-				serialize_single_threaded(ser, s1);
-				serialize_single_threaded(ser, s2);
-
-				dser(*fl1, dummy_context);
-				dser(*fl2, dummy_context);
-
-				// ACT / ASSERT
-				assert_not_null(fl1->watch_children(addr(1978)));
-				assert_not_null(fl1->watch_children(addr(1995)));
-				assert_not_null(fl2->watch_children(addr(2001)));
-				assert_not_null(fl2->watch_children(addr(2004)));
-				assert_not_null(fl2->watch_children(addr(2011)));
-			}
-
-
-			test( LinkedStatisticsObjectIsReturnedForChildren )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
-
-				s[1973];
-				s[1990];
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				// ACT
-				shared_ptr<linked_statistics> ls = fl->watch_children(addr(1973));
-
-				// ASSERT
-				assert_not_null(ls);
-				assert_equal(0u, ls->get_count());
-			}
-
-
-			test( ChildrenStatisticsForNonEmptyChildren )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x1978].callees[0x2001];
-				s[0x1995].callees[0x2004];
-				s[0x1995].callees[0x2008];
-				s[0x1995].callees[0x2011];
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-				
-				// ACT
-				shared_ptr<linked_statistics> ls_0 = fl->watch_children(addr(0x1978));
-				shared_ptr<linked_statistics> ls_1 = fl->watch_children(addr(0x1995));
-
-				// ACT / ASSERT
-				assert_equal(1u, ls_0->get_count());
-				assert_not_equal(table_model_base::npos(), find_row(*ls_0, "00002001"));
-				assert_equal(3u, ls_1->get_count());
-				assert_not_equal(table_model_base::npos(), find_row(*ls_1, "00002004"));
-				assert_not_equal(table_model_base::npos(), find_row(*ls_1, "00002008"));
-				assert_not_equal(table_model_base::npos(), find_row(*ls_1, "00002011"));
-			}
-
-
-			test( ChildrenStatisticsSorting )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[0x1978].callees[0x2001] = function_statistics(11);
-				s2[0x1978].callees[0x2001] = function_statistics(11);
-				s2[0x1978].callees[0x2004] = function_statistics(17);
-				s2[0x1978].callees[0x2008] = function_statistics(18);
-				s2[0x1978].callees[0x2011] = function_statistics(29);
-				serialize_single_threaded(ser, s1);
-				serialize_single_threaded(ser, s2);
-
-				dser(*fl, dummy_context);
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
-
-				// ACT
-				ls->set_order(columns::name, false);
-
-				// ASSERT
-				string reference1[][8] = {
-					{	"00002011", "29", "0s", "0s", "0s", "0s", "0", "0s",	},
-					{	"00002008", "18", "0s", "0s", "0s", "0s", "0", "0s",	},
-					{	"00002004", "17", "0s", "0s", "0s", "0s", "0", "0s",	},
-					{	"00002001", "22", "0s", "0s", "0s", "0s", "0", "0s",	},
-				};
-
-				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *ls);
-
-				// ACT
-				ls->set_order(columns::times_called, true);
-
-				// ASSERT
-				string reference2[][8] = {
-					{	"00002004", "17", "0s", "0s", "0s", "0s", "0", "0s",	},
-					{	"00002008", "18", "0s", "0s", "0s", "0s", "0", "0s",	},
-					{	"00002001", "22", "0s", "0s", "0s", "0s", "0", "0s",	},
-					{	"00002011", "29", "0s", "0s", "0s", "0s", "0", "0s",	},
-				};
-
-				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *ls);
-			}
-
-
-			test( ChildrenStatisticsGetText )
-			{
-				// INIT
-				auto  fl = functions_list::create(10, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
-				ls->set_order(columns::name, true);
-
-				// ACT / ASSERT
-				string reference[][8] = {
-					{	"00002001", "11", "100ms", "700ms", "9.09ms", "63.6ms", "0", "9.1s",	},
-					{	"00002004", "17", "200ms", "800ms", "11.8ms", "47.1ms", "5", "9.7s",	},
-				};
-
-				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference, *ls);
-			}
-
-
-			test( IncomingDetailStatisticsUpdatenoChildrenStatisticsUpdatesScenarios )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				invalidation_tracer t;
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
-				s1[0x1978].callees[0x2004] = function_statistics(17, 5, 2, 8, 97);
-				s2[0x1978].callees[0x2004] = function_statistics(11, 0, 1, 7, 91);
-				s2[0x1978].callees[0x2007] = function_statistics(17, 5, 2, 8, 97);
-				serialize_single_threaded(ser, s1);
-				serialize_single_threaded(ser, s2);
-
-				dser(*fl, dummy_context);
-				_buffer.rewind();
-
-				shared_ptr<linked_statistics> ls = fl->watch_children(addr(0x1978));
-
-				t.bind_to_model(*ls);
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				assert_equal(1u, t.counts.size());
-				assert_equal(2u, t.counts.back());
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				assert_equal(2u, t.counts.size());
-				assert_equal(3u, t.counts.back());
-
-				// INIT
-				unthreaded_statistic_types::map_detailed s3;
-
-				s3[0x1978].callees[0x2001] = function_statistics(11, 0, 1, 7, 91);
-				serialize_single_threaded(ser, s3);
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				assert_equal(3u, t.counts.size());
-				assert_equal(3u, t.counts.back());
-			}
-
-
 			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
+				assign(*statistics, plural
+					+ make_statistics(addr(0x2001), 11, 0, 0, 0, 0)
+					+ make_statistics(addr(0x2004), 17, 0, 0, 0, 0)
+					+ make_statistics(addr(0x2008), 18, 0, 0, 0, 0));
 
-				static_cast<function_statistics &>(s[0x2001]) = function_statistics(11);
-				static_cast<function_statistics &>(s[0x2004]) = function_statistics(17);
-				static_cast<function_statistics &>(s[0x2008]) = function_statistics(18);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				// ACT
 				shared_ptr<const trackable> t(fl->track(1));
 
-				fl = shared_ptr<functions_list>();
+				fl.reset();
 
 				// ACT / ASSERT
 				assert_equal(trackable::npos(), t->index());
 			}
 
 
-			test( ReturnParentsModelForAValidRecord )
-			{
-				// INIT
-				auto fl1 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				auto fl2 = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[0x1978];
-				s1[0x1995];
-				serialize_single_threaded(ser, s1);
-				s2[0x2001];
-				s2[0x2004];
-				s2[0x2008];
-				serialize_single_threaded(ser, s2);
-
-				dser(*fl1, dummy_context);
-				dser(*fl2, dummy_context);
-
-				// ACT / ASSERT
-				assert_not_null(fl1->watch_parents(addr(0x1978)));
-				assert_not_null(fl1->watch_parents(addr(0x1995)));
-				assert_not_null(fl2->watch_parents(addr(0x2001)));
-				assert_not_null(fl2->watch_parents(addr(0x2004)));
-				assert_not_null(fl2->watch_parents(addr(0x2008)));
-			}
-
-
-			test( SizeOfParentsListIsReturnedFromParentsModel )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
-
-				s[2978].callees[3001];
-				s[2995].callees[3001];
-				s[3001].callees[2995];
-				s[3001].callees[3001];
-				serialize_single_threaded(ser, s);
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> p0 = fl->watch_parents(addr(2978));
-				shared_ptr<linked_statistics> p1 = fl->watch_parents(addr(2995));
-				shared_ptr<linked_statistics> p2 = fl->watch_parents(addr(3001));
-
-				// ASSERT
-				assert_equal(0u, p0->get_count());
-				assert_equal(1u, p1->get_count());
-				assert_equal(3u, p2->get_count());
-			}
-
-
-			test( ParentStatisticsIsUpdatedOnGlobalUpdates1 )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[2978].callees[2978];
-				s1[2995].callees[2978];
-				s1[3001].callees[2978];
-				s2[3002].callees[2978];
-				serialize_single_threaded(ser, s1);
-				serialize_single_threaded(ser, s2);
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> p = fl->watch_parents(addr(2978));
-
-				// ASSERT
-				assert_equal(3u, p->get_count());
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				assert_equal(4u, p->get_count());
-			}
-
-
-			test( ParentStatisticsValuesAreFormatted )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
-
-				static_cast<function_statistics &>(s[0x122F]) = function_statistics(1);
-				s[0x122F].callees[0x2340] = function_statistics(3);
-				static_cast<function_statistics &>(s[0x2340]) = function_statistics(3);
-				s[0x2340].callees[0x3451] = function_statistics(5000000000);
-				static_cast<function_statistics &>(s[0x3451]) = function_statistics(5000000000);
-				s[0x3451].callees[0x122F] = function_statistics(1);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> p0 = fl->watch_parents(addr(0x122F));
-				shared_ptr<linked_statistics> p1 = fl->watch_parents(addr(0x2340));
-				shared_ptr<linked_statistics> p2 = fl->watch_parents(addr(0x3451));
-
-				// ACT / ASSERT
-				string reference1[][2] = {	{	"00003451", "1",	},	};
-				string reference2[][2] = {	{	"0000122F", "3",	},	};
-				string reference3[][2] = {	{	"00002340", "5000000000",	},	};
-
-				assert_table_equal(name_times, reference1, *p0);
-				assert_table_equal(name_times, reference2, *p1);
-				assert_table_equal(name_times, reference3, *p2);
-			}
-
-
-			test( ParentStatisticsSorting )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x2978].callees[0x3001] = function_statistics(3);
-				s[0x2995].callees[0x3001] = function_statistics(700);
-				s[0x3001].callees[0x3001] = function_statistics(30);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
-
-				// ACT
-				p->set_order(columns::name, true);
-
-				// ASSERT
-				string reference1[][2] = {
-					{	"00002978", "3",	},
-					{	"00002995", "700",	},
-					{	"00003001", "30",	},
-				};
-
-				assert_table_equal(name_times, reference1, *p);
-
-				// ACT
-				p->set_order(columns::name, false);
-
-				// ASSERT
-				string reference2[][2] = {
-					{	"00003001", "30",	},
-					{	"00002995", "700",	},
-					{	"00002978", "3",	},
-				};
-
-				assert_table_equal(name_times, reference2, *p);
-
-				// ACT
-				p->set_order(columns::times_called, true);
-
-				// ASSERT
-				string reference3[][2] = {
-					{	"00002978", "3",	},
-					{	"00003001", "30",	},
-					{	"00002995", "700",	},
-				};
-
-				assert_table_equal(name_times, reference3, *p);
-
-				// ACT
-				p->set_order(columns::times_called, false);
-
-				// ASSERT
-				string reference4[][2] = {
-					{	"00002995", "700",	},
-					{	"00003001", "30",	},
-					{	"00002978", "3",	},
-				};
-
-				assert_table_equal(name_times, reference4, *p);
-			}
-
-
-			test( ParentStatisticsResortingCausesInvalidation )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				invalidation_tracer t;
-				unthreaded_statistic_types::map_detailed s1, s2;
-
-				s1[0x2978].callees[0x3001];
-				s1[0x2995].callees[0x3001];
-				s1[0x3001].callees[0x3001];
-				serialize_single_threaded(ser, s1);
-				s2[0x3002].callees[0x3001];
-				serialize_single_threaded(ser, s2);
-
-				dser(*fl, dummy_context);
-				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
-
-				t.bind_to_model(*p);
-
-				// ACT
-				p->set_order(columns::name, true);
-
-				// ASSERT
-				table_model_base::index_type reference1[] = { 3u, };
-
-				assert_equal(reference1, t.counts);
-
-				// ACT
-				dser(*fl, dummy_context);
-				p->set_order(columns::times_called, false);
-
-				// ASSERT
-				table_model_base::index_type reference2[] = { 3u, 4u, 4u, };
-
-				assert_equal(reference2, t.counts);
-			}
-
-
-			test( ParentStatisticsCausesInvalidationAfterTheSort )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_statistic_types::map_detailed s;
-
-				s[0x2978].callees[0x3001] = function_statistics(3);
-				s[0x2995].callees[0x3001] = function_statistics(700);
-				s[0x3001].callees[0x3001] = function_statistics(30);
-				serialize_single_threaded(ser, s);
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
-
-				p->set_order(columns::times_called, true);
-
-				wpl::slot_connection c = p->invalidate += invalidation_at_sorting_check1(*p);
-
-				// ACT / ASSERT
-				p->set_order(columns::times_called, false);
-			}
-
-
-			test( ParentStatisticsIsUpdatedOnGlobalUpdates2 )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-
-				unthreaded_addressed_function batch1[] = {
-					make_statistics(0x2978u, 0, 0, 0, 0, 0,
-						make_statistics_base(0x3001u, 3, 0, 0, 0, 0)),
-					make_statistics(0x2995u, 0, 0, 0, 0, 0,
-						make_statistics_base(0x3001u, 30, 0, 0, 0, 0)),
-					make_statistics(0x3001u, 0, 0, 0, 0, 0,
-						make_statistics_base(0x3001u, 50, 0, 0, 0, 0)),
-				};
-				unthreaded_addressed_function batch2[] = {
-					make_statistics(0x2978u, 0, 0, 0, 0, 0,
-						make_statistics_base(0x3001u, 3, 0, 0, 0, 0)),
-					make_statistics(0x2995u, 0, 0, 0, 0, 0,
-						make_statistics_base(0x3001u, 30, 0, 0, 0, 0)),
-				};
-
-				serialize_single_threaded(ser, mkvector(batch1));
-				serialize_single_threaded(ser, mkvector(batch2));
-
-				dser(*fl, dummy_context);
-
-				shared_ptr<linked_statistics> p = fl->watch_parents(addr(0x3001));
-
-				p->set_order(columns::times_called, true);
-
-				// pre-ASSERT
-				string reference1[][2] = {
-					{	"00002978", "3",	},
-					{	"00002995", "30",	},
-					{	"00003001", "50",	},
-				};
-
-				assert_table_equal(name_times, reference1, *p);
-
-				// ACT
-				dser(*fl, dummy_context);
-
-				// ASSERT
-				string reference2[][2] = {
-					{	"00002978", "6",	},
-					{	"00003001", "50",	},
-					{	"00002995", "60",	},
-				};
-
-				assert_table_equal(name_times, reference2, *p);
-			}
-
-
-			test( ThreadsAreAccumulatedInTheContext )
-			{
-				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_addressed_function functions[] = { make_statistics(0x1000u, 1, 0, 0, 0, 0), };
-				pair< unsigned, vector<unthreaded_addressed_function> > data1[] = {
-					make_pair(3, mkvector(functions)), make_pair(2, mkvector(functions)),
-				};
-				pair< unsigned, vector<unthreaded_addressed_function> > data2[] = {
-					make_pair(3, mkvector(functions)), make_pair(2, mkvector(functions)), make_pair(9112, mkvector(functions)),
-				};
-				scontext::wire collected_ids;
-
-				ser(mkvector(data1));
-				ser(mkvector(data2));
-
-				// ACT
-				dser(*fl, collected_ids);
-
-				// ASSERT
-				unsigned reference1[] = { 2u, 3u, };
-
-				assert_equivalent(reference1, collected_ids.threads);
-
-				// ACT
-				dser(*fl, collected_ids);
-
-				// ASSERT
-				unsigned reference2[] = { 2u, 3u, 9112u, };
-
-				assert_equivalent(reference2, collected_ids.threads);
-			}
-
-
 			test( OnlyAllowedItemsAreExposedByTheModelAfterFilterApplication )
 			{
 				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_addressed_function functions[][2] = {
-					{ make_statistics(0x1000u, 1, 0, 0, 0, 0), make_statistics(0x1010u, 2, 0, 0, 0, 0), },
-					{ make_statistics(0x1020u, 3, 0, 0, 0, 0), make_statistics(0x1030u, 4, 0, 0, 0, 0), },
-					{ make_statistics(0x1040u, 5, 0, 0, 0, 0), make_statistics(0x1050u, 6, 0, 0, 0, 0), },
-				};
-				pair< unsigned, vector<unthreaded_addressed_function> > data[] = {
-					make_pair(0, mkvector(functions[0])),
-					make_pair(2, mkvector(functions[1])),
-					make_pair(3, mkvector(functions[2])),
-				};
+				assign(*statistics, plural
+					+ make_statistics(addr(0x1000u, 0), 1, 0, 0, 0, 0) + make_statistics(addr(0x1010u, 0), 2, 0, 0, 0, 0)
+					+ make_statistics(addr(0x1020u, 2), 3, 0, 0, 0, 0) + make_statistics(addr(0x1030u, 2), 4, 0, 0, 0, 0)
+					+ make_statistics(addr(0x1040u, 3), 5, 0, 0, 0, 0) + make_statistics(addr(0x1050u, 3), 6, 0, 0, 0, 0));
 
-				ser(mkvector(data));
-				dser(*fl, dummy_context);
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				// ACT
 				fl->set_filter([] (const functions_list::value_type &v) { return v.first.second == 3; });
@@ -1690,17 +870,13 @@ namespace micro_profiler
 			test( InvalidationIsEmittedOnFilterChange )
 			{
 				// INIT
-				auto fl = functions_list::create(test_ticks_per_second, resolver, tmodel);
-				unthreaded_addressed_function functions[] = {
-					make_statistics(0x1000u, 1, 0, 0, 0, 0), make_statistics(0x1010u, 2, 0, 0, 0, 0),
-				};
+				assign(*statistics, plural
+					+ make_statistics(addr(0x1000u), 1, 0, 0, 0, 0) + make_statistics(addr(0x1010u), 2, 0, 0, 0, 0));
+
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 				invalidation_tracer it;
 
 				it.bind_to_model(*fl);
-
-				serialize_single_threaded(ser, mkvector(functions));
-				dser(*fl, dummy_context);
-				it.counts.clear();
 
 				// ACT
 				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 1; });
@@ -1725,98 +901,6 @@ namespace micro_profiler
 				table_model_base::index_type reference3[] = { 1u, 0u, 2u, };
 
 				assert_equal(reference3, it.counts);
-			}
-
-
-			test( DependentModelsAreAutonoumousFromTheParent )
-			{
-				// INIT
-				threaded_addressed_function functions[] = {
-					make_statistics(addr(0x1001), 1, 0, 0, 0, 0,
-						plural
-							+ make_statistics_base(addr(0x2001), 100, 1, 0, 0, 0)
-							+ make_statistics_base(addr(0x2002), 109, 1, 0, 0, 0),
-						plural
-							+ caller_function(addr(0x3001), 1u)
-							+ caller_function(addr(0x3003), 1u)
-							+ caller_function(addr(0x3009), 51u)
-					),
-				};
-				auto s = make_shared<tables::statistics>();
-
-				static_cast<statistic_types::map_detailed &>(*s) = statistic_types::map_detailed(begin(functions), end(functions));
-
-				unique_ptr<functions_list> fl(new functions_list(s, 1, resolver, tmodel));
-
-				// INIT / ACT
-				auto msel = fl->create_selection();
-				msel->add(0);
-				auto callers = fl->watch_parents(addr(0x1001));
-				auto psel = callers->create_selection();
-				psel->add(2);
-				auto callees = fl->watch_children(addr(0x1001));
-				auto csel = callees->create_selection();
-				csel->add(0), csel->add(1);
-
-				// ACT
-				fl.reset();
-				s.reset();
-
-				// ACT / ASSERT
-				assert_is_true(msel->contains(0));
-				msel->remove(0);
-				assert_is_false(msel->contains(0));
-
-				assert_equal(3u, callers->get_count());
-				assert_is_true(psel->contains(2));
-				psel->remove(2);
-				assert_is_false(psel->contains(2));
-				psel->add(1);
-				assert_is_true(psel->contains(1));
-
-				assert_equal(2u, callees->get_count());
-				assert_is_true(csel->contains(0));
-				assert_is_true(csel->contains(1));
-				csel->remove(0);
-				assert_is_false(csel->contains(0));
-				assert_is_true(csel->contains(1));
-			}
-
-
-			test( DependentModelsAreAcquiredOnTableInvalidation )
-			{
-				// INIT
-				threaded_addressed_function functions[] = {
-					make_statistics(addr(0x1001), 1, 0, 0, 0, 0,
-						plural
-							+ make_statistics_base(addr(0x2001), 100, 1, 0, 0, 0)
-							+ make_statistics_base(addr(0x2002), 109, 1, 0, 0, 0),
-						plural
-							+ caller_function(addr(0x3001), 1u)
-							+ caller_function(addr(0x3003), 1u)
-							+ caller_function(addr(0x3009), 51u)
-					),
-				};
-				auto s = make_shared<tables::statistics>();
-				functions_list fl(s, 1, resolver, tmodel);
-
-				// INIT / ACT
-				auto callers = fl.watch_parents(addr(0x1001));
-				auto callees = fl.watch_children(addr(0x1001));
-
-				// ACT / ASSERT
-				assert_not_null(callers);
-				assert_equal(0u, callers->get_count());
-				assert_not_null(callees);
-				assert_equal(0u, callees->get_count());
-
-				// ACT
-				static_cast<statistic_types::map_detailed &>(*s) = statistic_types::map_detailed(begin(functions), end(functions));
-				s->invalidated();
-
-				// ASSERT
-				assert_equal(3u, callers->get_count());
-				assert_equal(2u, callees->get_count());
 			}
 		end_test_suite
 	}

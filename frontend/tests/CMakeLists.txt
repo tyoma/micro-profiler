@@ -5,6 +5,7 @@ include(test)
 set(FRONTEND_TESTS_SOURCES
 	FrontendManagerTests.cpp
 	FrontendPatcherTests.cpp
+	FrontendStatisticsTests.cpp
 	FrontendTests.cpp
 	FunctionListPersistence.cpp
 	FunctionListPiechartTests.cpp
@@ -12,6 +13,7 @@ set(FRONTEND_TESTS_SOURCES
 	HeadersModelTests.cpp
 	ImagePatchModelTests.cpp
 	mocks.cpp
+	NestedStatisticModelsTests.cpp
 	NestedTransformTests.cpp
 	ProcessListTests.cpp
 	ProjectionViewTests.cpp

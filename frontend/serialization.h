@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "function_list.h"
 #include "serialization_context.h"
 #include "symbol_resolver.h"
 #include "tables.h"
@@ -32,16 +31,6 @@
 
 namespace micro_profiler
 {
-	struct function_list_serialization_proxy
-	{
-		functions_list &self;
-		double &tick_interval;
-		symbol_resolver &resolver;
-		statistic_types::map_detailed &statistics;
-		threads_model &threads;
-	};
-
-
 	struct statistics_map_reader : strmd::indexed_associative_container_reader
 	{
 		template <typename ContainerT>
@@ -128,57 +117,6 @@ namespace micro_profiler
 
 
 	template <typename ArchiveT, typename ContextT>
-	void serialize(ArchiveT &archive, functions_list &data, ContextT &context)
-	{
-		function_list_serialization_proxy proxy = {
-			data,
-			data._tick_interval,
-			*data.get_resolver(),
-			*data._statistics,
-			*data.get_threads()
-		};
-
-		archive(proxy, context);
-		if (data.updates_enabled)
-			data._statistics->invalidated();
-	}
-
-	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, scontext::wire &context)
-	{
-		if (data.self.updates_enabled)
-			archive(data.statistics, context);
-	}
-
-	template <typename ArchiveT>
-	void reciprocal(ArchiveT &archive, double &value)
-	{
-		long long rv = static_cast<long long>(value ? 1 / value : 1);
-
-		archive(rv);
-		value = 1.0 / rv;
-	}
-
-	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v3 &/*context*/)
-	{
-		scontext::detailed_threaded context = { &data.statistics, 0, 0 };
-
-		reciprocal(archive, data.tick_interval);
-		archive(data.resolver);
-		archive(data.statistics, context);
-	}
-
-	template <typename ArchiveT>
-	void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v4 &/*context*/)
-	{
-		reciprocal(archive, data.tick_interval);
-		archive(data.resolver);
-		archive(data.statistics);
-		archive(data.threads);
-	}
-
-	template <typename ArchiveT, typename ContextT>
 	inline void serialize(ArchiveT &archive, statistic_types::function &data, const ContextT &/*context*/)
 	{
 		function_statistics v;
@@ -210,8 +148,8 @@ namespace micro_profiler
 		archive(static_cast<containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> &>(*data._mappings));
 		archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::module_info> &>(*data._modules));
 
-		data._modules->invalidated();
-		data._mappings->invalidated();
+		data._modules->invalidate();
+		data._mappings->invalidate();
 	}
 }
 

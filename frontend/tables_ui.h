@@ -18,6 +18,7 @@ namespace wpl
 namespace micro_profiler
 {
 	class headers_model;
+	struct frontend_ui_context;
 	class functions_list;
 	struct hive;
 	struct linked_statistics;
@@ -28,7 +29,7 @@ namespace micro_profiler
 	class tables_ui : public wpl::stack
 	{
 	public:
-		tables_ui(const wpl::factory &factory_, std::shared_ptr<functions_list> model, hive &configuration);
+		tables_ui(const wpl::factory &factory_, const frontend_ui_context &context, hive &configuration);
 
 		void save(hive &configuration);
 
@@ -36,36 +37,19 @@ namespace micro_profiler
 		wpl::signal<void(const std::string &file, unsigned line)> open_source;
 
 	private:
-		void on_activate(const selection<statistic_types::key> &selection_);
-		void on_drilldown(selection<statistic_types::key> &selection_, const selection<statistic_types::key> &linked);
-		void switch_linked(selection<statistic_types::key> &selection_);
 		static std::pair<statistic_types::key, bool> get_first_item(const selection<statistic_types::key> &selection_);
 
-		template <typename ModelT>
-		std::shared_ptr< selection<statistic_types::key> > set_model(wpl::listview &lv, piechart *pc, function_hint *hint,
-			wpl::slot_connection &conn_sorted, headers_model &cm, const std::shared_ptr<ModelT> &m);
-
+		template <typename ModelT, typename SelectionModelT>
+		void attach_section(wpl::listview &lv, piechart *pc, function_hint *hint, std::shared_ptr<headers_model> cm,
+			std::shared_ptr<ModelT> model, std::shared_ptr<SelectionModelT> selection_);
 
 	private:
 		const std::shared_ptr<headers_model> _cm_main;
 		const std::shared_ptr<headers_model> _cm_parents;
 		const std::shared_ptr<headers_model> _cm_children;
 
-		const std::shared_ptr<functions_list> _m_main;
-		std::shared_ptr<linked_statistics> _m_parents;
-		std::shared_ptr<linked_statistics> _m_children;
-
-		const std::shared_ptr<wpl::listview> _lv_main;
-		const std::shared_ptr<piechart> _pc_main;
-		const std::shared_ptr<function_hint> _hint_main;
-		const std::shared_ptr<wpl::listview> _lv_parents;
-		const std::shared_ptr<wpl::listview> _lv_children;
-		const std::shared_ptr<piechart> _pc_children;
-		const std::shared_ptr<function_hint> _hint_children;
-		const std::shared_ptr<wpl::combobox> _cb_threads;
+		std::shared_ptr<wpl::listview> _lv_main;
 
 		std::vector<wpl::slot_connection> _connections;
-		wpl::slot_connection _conn_sort_main, _conn_sort_children, _conn_sort_parents;
-		wpl::slot_connection _connections_linked[3];
 	};
 }

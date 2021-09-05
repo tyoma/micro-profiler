@@ -1,8 +1,11 @@
 #include <frontend/tables_ui.h>
 
 #include <frontend/headers_model.h>
+#include <frontend/frontend_ui.h>
 #include <frontend/function_hint.h>
 #include <frontend/function_list.h>
+#include <frontend/nested_statistics_model.h>
+#include <frontend/nested_transform.h>
 #include <frontend/piechart.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
@@ -57,69 +60,112 @@ namespace micro_profiler
 		};
 	}
 
-	tables_ui::tables_ui(const wpl::factory &factory_, shared_ptr<functions_list> model, hive &configuration)
+	tables_ui::tables_ui(const wpl::factory &factory_, const frontend_ui_context &context, hive &configuration)
 		: wpl::stack(false, factory_.context.cursor_manager_),
 			_cm_main(new headers_model(c_columns_statistics, 3, false)),
 			_cm_parents(new headers_model(c_columns_statistics_parents, 2, false)),
-			_cm_children(new headers_model(c_columns_statistics_children, 4, false)),
-			_m_main(model),
-			_lv_main(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
-			_pc_main(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
-			_hint_main(wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine),
-				*factory_.context.stylesheet_)),
-			_lv_parents(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
-			_lv_children(static_pointer_cast<wpl::listview>(factory_.create_control("listview"))),
-			_pc_children(static_pointer_cast<piechart>(factory_.create_control("piechart"))),
-			_hint_children(wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine),
-				*factory_.context.stylesheet_)),
-			_cb_threads(static_pointer_cast<wpl::combobox>(factory_.create_control("combobox")))
+			_cm_children(new headers_model(c_columns_statistics_children, 4, false))
 	{
-		set_spacing(5);
+		auto m_main = context.model;
+		auto m_selection = m_main->create_selection();
+		auto m_selected_items = make_shared< vector<statistic_types::key> >();
+
+		auto m_parents = create_callers_model(context.statistics,
+			1.0 / context.process_info.ticks_per_second, m_main->get_resolver(), m_main->get_threads(), m_selected_items);
+		auto m_selection_parents = m_parents->create_selection();
+		auto m_children = create_callees_model(context.statistics,
+			1.0 / context.process_info.ticks_per_second, m_main->get_resolver(), m_main->get_threads(), m_selected_items);
+		auto m_selection_children = m_children->create_selection();
+
+		_connections.push_back(m_selection->invalidate += [=] (size_t) {
+			auto main_selected_items_ = m_selected_items;
+
+			main_selected_items_->clear();
+			m_selection->enumerate([main_selected_items_] (const statistic_types::key &key) {
+				main_selected_items_->push_back(key);
+			});
+			m_parents->fetch();
+			m_children->fetch();
+		});
 
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
-		_pc_main->set_hint(_hint_main);
-		_lv_main->set_columns_model(_cm_main);
-		_lv_parents->set_columns_model(_cm_parents);
-		_pc_children->set_hint(_hint_children);
-		_lv_children->set_columns_model(_cm_children);
+		auto on_activate = [this, m_main, m_selected_items] {
+			symbol_resolver::fileline_t fileline;
 
-		const auto sel = set_model(*_lv_main, _pc_main.get(), _hint_main.get(), _conn_sort_main, *_cm_main, _m_main);
+			if (m_selected_items->size() > 0u && m_main->get_resolver()->symbol_fileline_by_va(m_selected_items->front().first, fileline))
+				open_source(fileline.first, fileline.second);
+		};
 
-		_cb_threads->set_model(_m_main->get_threads());
-		_cb_threads->select(0u);
-		_connections.push_back(_cb_threads->selection_changed += [model] (wpl::combobox::model_t::index_type index) {
-			unsigned id;
+		auto on_drilldown = [this, m_main, m_selection] (const selection<statistic_types::key> &selection_) {
+			auto key = get_first_item(selection_);
 
-			if (model->get_threads()->get_key(id, index))
-				model->set_filter([id] (const functions_list::value_type &v) { return id == v.first.second;	});
-			else
-				model->set_filter();
-		});
+			if (key.second)
+			{
+				const auto index = m_main->get_index(key.first);
 
-		_connections.push_back(_lv_main->item_activate += [this, sel] (...) {	on_activate(*sel);	});
-		_connections.push_back(_pc_main->item_activate += [this, sel] (...) {	on_activate(*sel);	});
+				m_selection->clear();
+				m_selection->add(index);
+				_lv_main->focus(index);
+			}
+		};
 
 		shared_ptr<stack> panel[2];
+		shared_ptr<wpl::listview> lv;
+		shared_ptr<piechart> pc;
+		shared_ptr<wpl::combobox> cb;
 
-		add(_lv_parents, wpl::percents(20), true, 3);
+		set_spacing(5);
+		add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(20), true, 3);
+			_connections.push_back(lv->item_activate += [m_selection_parents, on_drilldown] (...) {
+				on_drilldown(*m_selection_parents);
+			});
+			attach_section(*lv, nullptr, nullptr, _cm_parents, m_parents, m_selection_parents);
 
+		auto hint = wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine), *factory_.context.stylesheet_);
 		add(panel[0] = factory_.create_control<stack>("vstack"), wpl::percents(60), true);
 			panel[0]->set_spacing(5);
-			panel[0]->add(_cb_threads, wpl::pixels(24), false, 4);
+			panel[0]->add(cb = factory_.create_control<wpl::combobox>("combobox"), wpl::pixels(24), false, 4);
+				cb->set_model(m_main->get_threads());
+				cb->select(0u);
+				_connections.push_back(cb->selection_changed += [this, m_main] (wpl::combobox::model_t::index_type index) {
+					unsigned id;
+
+					if (m_main->get_threads()->get_key(id, index))
+						m_main->set_filter([id] (const functions_list::value_type &v) { return id == v.first.second;	});
+					else
+						m_main->set_filter();
+				});
+
 			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), wpl::percents(100), false);
 				panel[1]->set_spacing(5);
-				panel[1]->add(_pc_main, wpl::pixels(150), false);
-				panel[1]->add(_lv_main, wpl::percents(100), false, 1);
+				panel[1]->add(pc = factory_.create_control<piechart>("piechart"), wpl::pixels(150), false);
+					_connections.push_back(pc->item_activate += [on_activate] (...) {	on_activate();	});
+					pc->set_hint(hint);
 
+				panel[1]->add(_lv_main= factory_.create_control<wpl::listview>("listview"), wpl::percents(100), false, 1);
+					_connections.push_back(_lv_main->item_activate += [on_activate] (...) {	on_activate();	});
+
+			attach_section(*_lv_main, pc.get(), hint.get(), _cm_main, m_main, m_selection);
+
+		hint = wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine), *factory_.context.stylesheet_);
 		add(panel[0] = factory_.create_control<stack>("hstack"), wpl::percents(20), true);
 			panel[0]->set_spacing(5);
-			panel[0]->add(_pc_children, wpl::pixels(150), false);
-			panel[0]->add(_lv_children, wpl::percents(100), false, 2);
+			panel[0]->add(pc = factory_.create_control<piechart>("piechart"), wpl::pixels(150), false);
+				_connections.push_back(pc->item_activate += [m_selection_children, on_drilldown] (...) {
+					on_drilldown(*m_selection_children);
+				});
+				pc->set_hint(hint);
 
-		_connections.push_back(sel->invalidate += [this, sel] (...) {	switch_linked(*sel);	});
+			panel[0]->add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(100), false, 2);
+				_connections.push_back(lv->item_activate += [m_selection_children, on_drilldown] (...) {
+					on_drilldown(*m_selection_children);
+				});
+
+			attach_section(*lv, pc.get(), hint.get(), _cm_children, m_children, m_selection_children);
+
 	}
 
 	void tables_ui::save(hive &configuration)
@@ -127,43 +173,6 @@ namespace micro_profiler
 		_cm_parents->store(*configuration.create("ParentsColumns"));
 		_cm_main->store(*configuration.create("MainColumns"));
 		_cm_children->store(*configuration.create("ChildrenColumns"));
-	}
-
-	void tables_ui::on_activate(const selection<statistic_types::key> &selection_)
-	{
-		auto key = get_first_item(selection_);
-		symbol_resolver::fileline_t fileline;
-
-		if (key.second && _m_main->get_resolver()->symbol_fileline_by_va(key.first.first, fileline))
-			open_source(fileline.first, fileline.second);
-	}
-
-	void tables_ui::on_drilldown(selection<statistic_types::key> &selection_,
-		const selection<statistic_types::key> &selection_linked)
-	{
-		auto key = get_first_item(selection_linked);
-
-		if (key.second)
-		{
-			const auto index = _m_main->get_index(key.first);
-
-			selection_.clear();
-			selection_.add(index);
-			_lv_main->focus(index);
-		}
-	}
-
-	void tables_ui::switch_linked(selection<statistic_types::key> &sm)
-	{
-		auto key = get_first_item(sm);
-		auto sc = set_model(*_lv_children, _pc_children.get(), _hint_children.get(), _conn_sort_children,
-			*_cm_children, _m_children = key.second ? _m_main->watch_children(key.first) : nullptr);
-		auto sp = set_model(*_lv_parents, nullptr, nullptr, _conn_sort_parents, *_cm_parents,
-			_m_parents = key.second ? _m_main->watch_parents(key.first) : nullptr);
-
-		_connections_linked[0] = _lv_children->item_activate += [this, &sm, sc] (...) {	on_drilldown(sm, *sc);	};
-		_connections_linked[1] = _pc_children->item_activate += [this, &sm, sc] (...) {	on_drilldown(sm, *sc);	};
-		_connections_linked[2] = _lv_parents->item_activate += [this, &sm, sp] (...) {	on_drilldown(sm, *sp);	};
 	}
 
 	pair<statistic_types::key, bool> tables_ui::get_first_item(const selection<statistic_types::key> &selection_)
@@ -174,25 +183,29 @@ namespace micro_profiler
 		return key;
 	}
 
-	template <typename ModelT>
-	shared_ptr< selection<statistic_types::key> > tables_ui::set_model(wpl::listview &lv, piechart *pc,
-		function_hint *hint, wpl::slot_connection &conn_sorted, headers_model &cm, const shared_ptr<ModelT> &m)
+	template <typename ModelT, typename SelectionModelT>
+	void tables_ui::attach_section(wpl::listview &lv, piechart *pc, function_hint *hint, shared_ptr<headers_model> cm,
+		shared_ptr<ModelT> model, shared_ptr<SelectionModelT> selection_)
 	{
-		const auto selection = m ? m->create_selection() : nullptr;
-		const auto order = cm.get_sort_order();
-		const auto set_order = [m] (headers_model::index_type column, bool ascending) {
-			if (m)
-				m->set_order(column, ascending);
+		const auto order = cm->get_sort_order();
+		const auto set_order = [model] (headers_model::index_type column, bool ascending) {
+			model->set_order(column, ascending);
 		};
 
-		conn_sorted = cm.sort_order_changed += set_order;
+		_connections.push_back(cm->sort_order_changed += set_order);
 		set_order(order.first, order.second);
-		lv.set_model(m);
-		lv.set_selection_model(selection);
+		lv.set_columns_model(cm);
+		lv.set_model(model);
+		lv.set_selection_model(selection_);
 		if (pc)
-			pc->set_model(m ? m->get_column_series() : nullptr), pc->set_selection_model(selection);
+		{
+			pc->set_model(model->get_column_series());
+			pc->set_selection_model(selection_);
+		}
 		if (hint)
-			hint->set_model(m);
-		return selection;
+		{
+			hint->set_model(model);
+			_connections.push_back(selection_->invalidate += [hint] (...) {	hint->select(wpl::index_traits::npos());	});
+		}
 	}
 }

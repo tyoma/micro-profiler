@@ -22,6 +22,8 @@ namespace micro_profiler
 		{
 			typedef std::pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
 			typedef std::pair<function_key, statistic_types_t<function_key>::function_detailed> threaded_addressed_statistics;
+
+			const vector< pair<long_address_t, statistic_types_t<long_address_t>::function_detailed> > empty_functions;
 		}
 
 		begin_test_suite( SerializationTests )
@@ -368,6 +370,36 @@ namespace micro_profiler
 				assert_equal(17u, m[addr(0x0023)].callers[addr(0x0191)]);
 				assert_equal(88u, m[addr(0x0023)].callers[addr(0x0791)]);
 				assert_equal(0x1000000000u, m[addr(0x0027)].callers[addr(0x0191)]);
+			}
+
+
+			test( ThreadsAreAccumulatedInTheContext )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				scontext::wire collected_ids;
+				statistic_types::map_detailed m;
+
+				ser(plural + make_pair(3u, empty_functions) + make_pair(2u, empty_functions));
+				ser(plural + make_pair(3u, empty_functions) + make_pair(2u, empty_functions) + make_pair(9112u, empty_functions));
+
+				// ACT
+				dser(m, collected_ids);
+
+				// ASSERT
+				unsigned reference1[] = { 2u, 3u, };
+
+				assert_equivalent(reference1, collected_ids.threads);
+
+				// ACT
+				dser(m, collected_ids);
+
+				// ASSERT
+				unsigned reference2[] = { 2u, 3u, 9112u, };
+
+				assert_equivalent(reference2, collected_ids.threads);
 			}
 
 		end_test_suite

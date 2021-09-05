@@ -18,34 +18,28 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <frontend/statistics_poll.h>
 
-#include <common/noncopyable.h>
-#include <common/types.h>
-#include <memory>
-#include <string>
+#include <frontend/tables.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	class write_stream : noncopyable
+	statistics_poll::statistics_poll(shared_ptr<const tables::statistics> statistics, shared_ptr<scheduler::queue> queue)
+		: _statistics(statistics), _queue(queue)
+	{	}
+
+	void statistics_poll::enable(bool value)
 	{
-	public:
-		write_stream(const std::wstring &path);
+		if (value == enabled())
+			return;
+		if (value)
+			_invalidation = _statistics->invalidate += [this] {	on_invalidate();	}, on_invalidate();
+		else
+			_invalidation.reset();
+	}
 
-		void write(const byte *buffer, size_t size);
-
-	private:
-		const std::shared_ptr<void> _file;
-	};
-
-	class read_stream : noncopyable
-	{
-	public:
-		read_stream(const std::wstring &path);
-
-		void read(byte *buffer, size_t size);
-
-	private:
-		const std::shared_ptr<void> _file;
-	};
+	void statistics_poll::on_invalidate()
+	{	_queue.schedule([this] {	_statistics->request_update();	}, mt::milliseconds(25));	}
 }

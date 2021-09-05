@@ -117,6 +117,9 @@ namespace micro_profiler
 		_name.clear();
 		_item_values.clear();
 
+		if (item >= _model->get_count())
+			return;
+
 		_model->get_text(item, 1, _name);
 		_item_values << style::weight(bold);
 		_model->get_text(item, 4, _item_values), _item_values << "\n";

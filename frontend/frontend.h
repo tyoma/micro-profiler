@@ -29,7 +29,6 @@
 #include <functional>
 #include <ipc/client_session.h>
 #include <list>
-#include <scheduler/private_queue.h>
 
 namespace micro_profiler
 {
@@ -46,7 +45,7 @@ namespace micro_profiler
 	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
-		frontend(ipc::channel &outbound, std::shared_ptr<scheduler::queue> queue);
+		frontend(ipc::channel &outbound);
 		~frontend();
 
 	public:
@@ -71,13 +70,13 @@ namespace micro_profiler
 
 	private:
 		initialization_data _process_info;
-		std::shared_ptr<tables::modules> _modules;
-		std::shared_ptr<tables::module_mappings> _mappings;
-		std::shared_ptr<tables::patches> _patches;
+		const std::shared_ptr<tables::statistics> _statistics;
+		const std::shared_ptr<tables::modules> _modules;
+		const std::shared_ptr<tables::module_mappings> _mappings;
+		const std::shared_ptr<tables::patches> _patches;
 		std::shared_ptr<functions_list> _model;
 		std::shared_ptr<threads_model> _threads;
 		scontext::wire _serialization_context;
-		scheduler::private_queue _queue;
 
 		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;
 		std::list< std::shared_ptr<void> > _requests;

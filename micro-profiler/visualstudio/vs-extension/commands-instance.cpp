@@ -8,6 +8,7 @@
 #include <frontend/image_patch_model.h>
 #include <frontend/image_patch_ui.h>
 #include <frontend/persistence.h>
+#include <frontend/statistics_poll.h>
 #include <strmd/serializer.h>
 #include <windows.h>
 #include <wpl/form.h>
@@ -23,21 +24,24 @@ namespace micro_profiler
 	namespace integration
 	{
 		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
-			command_target &target, const frontend_ui_context &context)
+			command_target &target, const frontend_ui_context &context, shared_ptr<scheduler::queue> queue)
 		{
 			auto model = context.model;
 			auto executable = context.process_info.executable;
+			auto poller = make_shared<statistics_poll>(context.statistics, queue);
 
-			target.add_command(cmdidPauseUpdates, [model] (unsigned) {
-				model->updates_enabled = false;
-			}, false, [model] (unsigned, unsigned &state) {
-				return state = (model->updates_enabled ? command_target::enabled : 0) | command_target::supported | command_target::visible, true;
+			poller->enable(true);
+
+			target.add_command(cmdidPauseUpdates, [poller] (unsigned) {
+				poller->enable(false);
+			}, false, [poller] (unsigned, unsigned &state) {
+				return state = (poller->enabled() ? command_target::enabled : 0) | command_target::supported | command_target::visible, true;
 			});
 
-			target.add_command(cmdidResumeUpdates, [model] (unsigned) {
-				model->updates_enabled = true;
-			}, false, [model] (unsigned, unsigned &state) {
-				return state = (model->updates_enabled ? 0 : command_target::enabled) | command_target::supported | command_target::visible, true;
+			target.add_command(cmdidResumeUpdates, [poller] (unsigned) {
+				poller->enable(true);
+			}, false, [poller] (unsigned, unsigned &state) {
+				return state = (poller->enabled() ? 0 : command_target::enabled) | command_target::supported | command_target::visible, true;
 			});
 
 			target.add_command(cmdidSaveStatistics, [model, executable] (unsigned) {

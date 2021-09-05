@@ -53,7 +53,7 @@ namespace micro_profiler
 		extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
 
 		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
-			wpl::vs::command_target &target, const frontend_ui_context &context);
+			wpl::vs::command_target &target, const frontend_ui_context &context, shared_ptr<scheduler::queue> queue);
 
 		namespace
 		{
@@ -66,9 +66,9 @@ namespace micro_profiler
 			{
 			public:
 				frontend_pane(const wpl::vs::factory &factory, const frontend_ui_context &ui_context,
-						shared_ptr<hive> configuration_)
+						shared_ptr<hive> configuration_, shared_ptr<scheduler::queue> queue)
 					: _pane(factory.create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR)),
-						_tables_ui(make_shared<tables_ui>(factory, ui_context.model, *configuration_)), _configuration(configuration_)
+						_tables_ui(make_shared<tables_ui>(factory, ui_context, *configuration_)), _configuration(configuration_)
 				{
 					const auto root = make_shared<wpl::overlay>();
 						root->add(factory.create_control("background"));
@@ -81,7 +81,7 @@ namespace micro_profiler
 					_connections.push_back(_pane->activated += [this] {
 						activated();
 					});
-					init_instance_menu(_running_objects, factory, *_pane, ui_context);
+					init_instance_menu(_running_objects, factory, *_pane, ui_context, queue);
 					_pane->set_caption("MicroProfiler - " + ui_context.process_info.executable);
 					_pane->set_root(root);
 					_pane->set_visible(true);
@@ -147,11 +147,11 @@ namespace micro_profiler
 			setup_factory(factory);
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager([this] (const frontend_ui_context &context) -> frontend_ui::ptr {
-				const auto ui = make_shared<frontend_pane>(get_factory(), context, _configuration);
+				const auto ui = make_shared<frontend_pane>(get_factory(), context, _configuration, _ui_queue);
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
 				return ui;
-			}, _ui_queue));
+			}));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
 				_ui_queue,
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),

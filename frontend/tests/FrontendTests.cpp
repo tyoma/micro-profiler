@@ -9,7 +9,6 @@
 #include <frontend/threads_model.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
-#include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -24,7 +23,7 @@ namespace micro_profiler
 
 	inline bool operator ==(const frontend_ui_context &lhs, const frontend_ui_context &rhs)
 	{
-		return lhs.process_info == rhs.process_info && lhs.model == rhs.model
+		return lhs.process_info == rhs.process_info && lhs.model == rhs.model && lhs.statistics == rhs.statistics
 			&& lhs.modules == rhs.modules && lhs.module_mappings == rhs.module_mappings;
 	}
 
@@ -83,34 +82,18 @@ namespace micro_profiler
 
 
 		begin_test_suite( FrontendTests )
-			shared_ptr<mocks::queue> queue;
 			frontend_ui_context context;
 			shared_ptr<ipc::server_session> emulator;
 
 			shared_ptr<frontend> create_frontend()
 			{
 				auto e2 = make_shared<emulator_>();
-				auto f = make_shared<frontend>(e2->server_session, queue);
+				auto f = make_shared<frontend>(e2->server_session);
 
 				e2->outbound = f.get();
 				f->initialized = [this] (const frontend_ui_context &ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
 				return f;
-			}
-
-			init( Init )
-			{
-				queue = make_shared<mocks::queue>();
-			}
-
-
-			test( NewlyCreatedFrontendSchedulesNothing )
-			{
-				// INIT/ ACT
-				auto frontend_ = create_frontend();
-
-				// ASSERT
-				assert_is_empty(queue->tasks);
 			}
 
 
@@ -148,6 +131,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(make_initialization_data("krnl386.exe", 0xF00000000ull), context2.process_info);
 				assert_not_null(context2.model);
+				assert_not_null(context2.statistics);
 				assert_not_null(context2.modules);
 				assert_not_null(context2.module_mappings);
 
@@ -175,7 +159,7 @@ namespace micro_profiler
 			}
 
 
-			test( FullUpdateRequestIsMadeAndTaskIsScheduledOnInit )
+			test( FullUpdateRequestIsMadeOnInit )
 			{
 				// INIT
 				auto frontend_ = create_frontend();
@@ -190,14 +174,12 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1, update_requests);
-				assert_is_empty(queue->tasks);
 
 				// ACT
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 
 				// ASSERT
 				assert_equal(1, update_requests);
-				assert_is_empty(queue->tasks);
 			}
 
 
@@ -234,7 +216,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				queue->run_one();
+				context.statistics->request_update();
 
 				// ASSERT
 				unsigned reference2[] = {	12, 12, 17,	};
@@ -284,7 +266,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				queue->run_one();
+				context.statistics->request_update();
 
 				// ASSERT
 				assert_equal(3u, threads->get_count());
@@ -312,14 +294,12 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1, update_requests);
-				assert_equal(1u, queue->tasks.size());
 
 				// ACT
-				queue->run_one();
+				context.statistics->request_update();
 
 				// ASSERT
 				assert_equal(2, update_requests);
-				assert_equal(1u, queue->tasks.size());
 			}
 
 
@@ -343,7 +323,7 @@ namespace micro_profiler
 				assert_equal(2u, context.model->get_count());
 
 				// ACT
-				queue->run_one();
+				context.statistics->request_update();
 
 				// ASSERT
 				assert_equal(2u, context.model->get_count());
@@ -357,7 +337,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				queue->run_one();
+				context.statistics->request_update();
 
 				// ASSERT
 				assert_equal(3u, context.model->get_count());
@@ -408,7 +388,7 @@ namespace micro_profiler
 			}
 
 
-			test( ScheduledTaskDoesNothingAfterTheFrontendIsDestroyed )
+			test( RequestingUpdateDoesNothingAfterTheFrontendIsDestroyed )
 			{
 				// INIT
 				auto frontend_ = create_frontend();
@@ -425,7 +405,7 @@ namespace micro_profiler
 
 				// ACT
 				frontend_.reset();
-				queue->run_one();
+				context.statistics->request_update();
 
 				// ASSERT
 				assert_equal(1, called);
@@ -512,7 +492,7 @@ namespace micro_profiler
 					log.push_back(persistent_id);
 				});
 
-				auto conn1 = context.modules->invalidated += [] {	assert_is_false(true);	};
+				auto conn1 = context.modules->invalidate += [] {	assert_is_false(true);	};
 				auto conn2 = context.modules->ready += [] (unsigned) {	assert_is_false(true);	};
 
 				// ACT
@@ -589,7 +569,7 @@ namespace micro_profiler
 
 				emulator->message(init, format(make_initialization_data("", 1)));
 
-				auto conn1 = context.modules->invalidated += [&] {	invalidations++;	};
+				auto conn1 = context.modules->invalidate += [&] {	invalidations++;	};
 				auto conn2 = context.modules->ready += [&] (unsigned persistent_id) {	log.push_back(persistent_id);	};
 
 				// ACT

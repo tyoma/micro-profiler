@@ -31,7 +31,7 @@ namespace micro_profiler
 			void add_mapping(const mapped_module_identified &mapping)
 			{
 				assert_is_true(mappings->insert(make_pair(mapping.instance_id, mapping)).second);
-				mappings->invalidated();
+				mappings->invalidate();
 			}
 
 			template <typename SymbolT, size_t symbols_size>
@@ -39,7 +39,7 @@ namespace micro_profiler
 			{
 				(*modules)[persistent_id].symbols = mkvector(symbols);
 				(*modules)[persistent_id].files.clear();
-				modules->invalidated();
+				modules->invalidate();
 			}
 
 			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
@@ -48,7 +48,7 @@ namespace micro_profiler
 				(*modules)[persistent_id].symbols = mkvector(symbols);
 				(*modules)[persistent_id].files = containers::unordered_map<unsigned int /*file_id*/, std::string>(
 					begin(files), end(files));
-				modules->invalidated();
+				modules->invalidate();
 			}
 
 			test( EmptyNameIsReturnedWhenNoMetadataIsLoaded )

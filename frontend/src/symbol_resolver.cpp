@@ -62,10 +62,10 @@ namespace micro_profiler
 	symbol_resolver::symbol_resolver(shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
 		: _modules(const_pointer_cast<tables::modules>(modules)), _mappings(const_pointer_cast<tables::module_mappings>(mappings))
 	{
-		_modules_invalidation = _modules->invalidated += [this] {
+		_modules_invalidation = _modules->invalidate += [this] {
 			invalidate();
 		};
-		_mappings_invalidation = _mappings->invalidated += [this] {
+		_mappings_invalidation = _mappings->invalidate += [this] {
 			_mappings_ordered.clear();
 			for (auto i = _mappings->begin(); i != _mappings->end(); ++i)
 			{

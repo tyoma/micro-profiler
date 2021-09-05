@@ -69,7 +69,7 @@ namespace micro_profiler
 		});
 		if (targets.empty())
 			return;
-		_patches->invalidated();
+		_patches->invalidate();
 		request(*req, request_apply_patches, _patch_request_payload, response_patched,
 			[this, persistent_id, req] (deserializer &d) {
 
@@ -83,7 +83,7 @@ namespace micro_profiler
 				patch.id = i->second.id;
 				set_complete(patch, i->second.result, true);
 			}
-			_patches->invalidated();
+			_patches->invalidate();
 			_requests.erase(req);
 		});
 	}
@@ -105,7 +105,7 @@ namespace micro_profiler
 		});
 		if (targets.empty())
 			return;
-		_patches->invalidated();
+		_patches->invalidate();
 		request(*req, request_revert_patches, _patch_request_payload, response_reverted,
 			[this, persistent_id, req] (deserializer &d) {
 
@@ -114,7 +114,7 @@ namespace micro_profiler
 			d(_reverted_buffer);
 			for (auto i = _reverted_buffer.begin(); i != _reverted_buffer.end(); ++i)
 				set_complete(image_patches[i->first /*rva*/], i->second, false);
-			_patches->invalidated();
+			_patches->invalidate();
 			_requests.erase(req);
 		});
 	}

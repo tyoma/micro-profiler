@@ -44,8 +44,6 @@ namespace micro_profiler
 		statistics_model_impl(std::shared_ptr<U> underlying, double tick_interval,
 			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads);
 
-		void fetch();
-
 		std::shared_ptr<U> get_underlying() const;
 
 		std::shared_ptr<symbol_resolver> get_resolver() const throw();
@@ -59,6 +57,7 @@ namespace micro_profiler
 		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const override;
 
 		// linked_statistics methods
+		virtual void fetch() /*override*/;
 		virtual void set_order(index_type column, bool ascending) /*override*/;
 
 		index_type get_index(key_type address) const;
@@ -109,15 +108,6 @@ namespace micro_profiler
 	{	}
 
 	template <typename BaseT, typename U>
-	inline void statistics_model_impl<BaseT, U>::fetch()
-	{
-		_view->ordered.fetch();
-		_view->trackables.fetch();
-		_view->projection.fetch();
-		this->invalidate(this->npos());
-	}
-
-	template <typename BaseT, typename U>
 	inline std::shared_ptr<U> statistics_model_impl<BaseT, U>::get_underlying() const
 	{	return _view->underlying;	}
 
@@ -149,6 +139,15 @@ namespace micro_profiler
 	template <typename BaseT, typename U>
 	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, U>::track(index_type row) const
 	{	return _view->trackables.track(row);	}
+
+	template <typename BaseT, typename U>
+	inline void statistics_model_impl<BaseT, U>::fetch()
+	{
+		_view->ordered.fetch();
+		_view->trackables.fetch();
+		_view->projection.fetch();
+		this->invalidate(this->npos());
+	}
 
 	template <typename BaseT, typename U>
 	inline typename statistics_model_impl<BaseT, U>::index_type statistics_model_impl<BaseT, U>::get_index(key_type key) const

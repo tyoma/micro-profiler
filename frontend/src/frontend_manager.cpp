@@ -35,9 +35,8 @@ namespace micro_profiler
 	{	}
 
 
-	frontend_manager::frontend_manager(const frontend_ui_factory &ui_factory, shared_ptr<scheduler::queue> queue)
-		: _ui_factory(ui_factory), _queue(queue), _instances(new instance_container),
-			_active_instance(new const instance_impl *())
+	frontend_manager::frontend_manager(const frontend_ui_factory &ui_factory)
+		: _ui_factory(ui_factory), _instances(new instance_container), _active_instance(new const instance_impl *())
 	{	LOG(PREAMBLE "constructed.");	}
 
 	frontend_manager::~frontend_manager()
@@ -75,7 +74,7 @@ namespace micro_profiler
 
 	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
 	{
-		unique_ptr<frontend> uf(new frontend(outbound, _queue));
+		unique_ptr<frontend> uf(new frontend(outbound));
 		const auto instances = _instances;
 		const auto active_instance = _active_instance;
 		const auto i = _instances->insert(_instances->end(), instance_impl(uf.get()));

@@ -43,11 +43,11 @@ namespace micro_profiler
 	namespace
 	{
 		template <typename T, typename U>
-		std::shared_ptr<T> make_bound(std::shared_ptr<U> underlying)
+		shared_ptr<T> make_bound(shared_ptr<U> underlying)
 		{
 			typedef pair<shared_ptr<U>, T> pair_t;
 			auto p = make_shared<pair_t>(underlying, T(*underlying));
-			return std::shared_ptr<T>(p, &p->second);
+			return shared_ptr<T>(p, &p->second);
 		}
 
 		template <typename ContainerT>
@@ -351,11 +351,28 @@ namespace micro_profiler
 	}
 
 
+	shared_ptr<linked_statistics> create_callees_model(shared_ptr<const tables::statistics> underlying,
+		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads,
+		shared_ptr< vector<statistic_types::key> > scope)
+	{
+		return construct_nested< callees_transform<tables::statistics> >(underlying, tick_interval, resolver, threads,
+			scope);
+	}
+
+	shared_ptr<linked_statistics> create_callers_model(shared_ptr<const tables::statistics> underlying,
+		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads,
+		shared_ptr< vector<statistic_types::key> > scope)
+	{
+		return construct_nested< callers_transform<tables::statistics> >(underlying, tick_interval, resolver, threads,
+			scope);
+	}
+
+
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads)
 		: base(make_bound< views::filter<statistic_types::map_detailed> >(statistics), tick_interval, resolver, threads),
-			updates_enabled(true), _statistics(statistics)
-	{	_connection = statistics->invalidated += [this] {	fetch();	};	}
+			_statistics(statistics)
+	{	_connection = statistics->invalidate += [this] {	fetch();	};	}
 
 	functions_list::~functions_list()
 	{	}
@@ -388,29 +405,5 @@ namespace micro_profiler
 
 		if (locale_ok)
 			::setlocale(LC_NUMERIC, old_locale);
-	}
-
-	shared_ptr<linked_statistics> functions_list::watch_children(key_type item) const
-	{
-		auto scope = make_shared< vector<key_type> >(1, item);
-
-		return construct_nested< callees_transform<tables::statistics> >(_statistics, _tick_interval, get_resolver(),
-			get_threads(), scope);
-	}
-
-	shared_ptr<linked_statistics> functions_list::watch_parents(key_type item) const
-	{
-		auto scope = make_shared< vector<key_type> >(1, item);
-
-		return construct_nested< callers_transform<tables::statistics> >(_statistics, _tick_interval, get_resolver(),
-			get_threads(), scope);
-	}
-
-	shared_ptr<functions_list> functions_list::create(timestamp_t ticks_per_second, shared_ptr<symbol_resolver> resolver,
-		shared_ptr<threads_model> threads)
-	{
-		auto base_map = make_shared<tables::statistics>();
-
-		return shared_ptr<functions_list>(new functions_list(base_map, 1.0 / ticks_per_second, resolver, threads));
 	}
 }

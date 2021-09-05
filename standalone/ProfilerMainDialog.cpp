@@ -72,7 +72,7 @@ namespace micro_profiler
 			const auto stk = factory_.create_control<stack>("vstack");
 			stk->set_spacing(5);
 			root->add(pad_control(stk, 5, 5));
-				stk->add(_statistics_display = make_shared<tables_ui>(factory_, model, *_configuration),
+				stk->add(_statistics_display = make_shared<tables_ui>(factory_, ui_context, *_configuration),
 					percents(100), false);
 				const auto toolbar = factory_.create_control<stack>("hstack");
 				toolbar->set_spacing(5);

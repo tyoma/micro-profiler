@@ -52,24 +52,22 @@ namespace micro_profiler
 				pair<long_address_t, string> symbols1[] = {
 					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
-				shared_ptr<functions_list> fl1(functions_list::create(16, mocks::symbol_resolver::create(symbols1), tmodel));
+				auto s1 = make_shared<tables::statistics>();
+				auto fl1 = make_shared<functions_list>(s1, 1.0 / 16, mocks::symbol_resolver::create(symbols1), tmodel);
 				pair<long_address_t, string> symbols2[] = {
 					make_pair(7, "A"), make_pair(11, "B"), make_pair(19, "C"), make_pair(131, "D"), make_pair(113, "E"),
 				};
-				shared_ptr<functions_list> fl2(functions_list::create(25000000000, mocks::symbol_resolver::create(symbols2), tmodel));
-				unthreaded_statistic_types::map_detailed s;
+				auto s2 = make_shared<tables::statistics>();
+				auto fl2 = make_shared<functions_list>(s2, 1.0 / 25000000000, mocks::symbol_resolver::create(symbols2), tmodel);
 				statistic_types::map_detailed read;
 				timestamp_t ticks_per_second;
 				threads_model dummy_threads(get_requestor_threads());
 
-				s[1], s[17];
-				serialize_single_threaded(ser, s);
-				dser(*fl1, dummy_context);
+				(*s1)[addr(1)], (*s1)[addr(17)];
+				s1->invalidate();
 
-				s.clear();
-				s[7], s[11], s[131], s[113];
-				serialize_single_threaded(ser, s);
-				dser(*fl2, dummy_context);
+				(*s2)[addr(7)], (*s2)[addr(11)], (*s2)[addr(131)], (*s2)[addr(113)];
+				s1->invalidate();
 
 				// ACT
 				snapshot_save<scontext::file_v4>(ser, *fl1);
@@ -111,8 +109,10 @@ namespace micro_profiler
 				};
 				shared_ptr<mocks::threads_model> tmodel1(new mocks::threads_model());
 				shared_ptr<mocks::threads_model> tmodel2(new mocks::threads_model());
-				shared_ptr<functions_list> fl1(functions_list::create(16, mocks::symbol_resolver::create(symbols), tmodel1));
-				shared_ptr<functions_list> fl2(functions_list::create(16, mocks::symbol_resolver::create(symbols), tmodel2));
+				auto s1 = make_shared<tables::statistics>();
+				auto fl1 = make_shared<functions_list>(s1, 1.0 / 16, mocks::symbol_resolver::create(symbols), tmodel1);
+				auto s2 = make_shared<tables::statistics>();
+				auto fl2 = make_shared<functions_list>(s2, 1.0 / 16, mocks::symbol_resolver::create(symbols), tmodel2);
 
 				tmodel1->add(0, 1211, "thread A");
 				tmodel1->add(1, 1212, "thread B");
@@ -167,14 +167,13 @@ namespace micro_profiler
 				pair<long_address_t, string> symbols[] = {
 					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
-				shared_ptr<functions_list> fl(functions_list::create(1, mocks::symbol_resolver::create(symbols), tmodel));
-				unthreaded_statistic_types::map_detailed s;
+				auto s = make_shared<tables::statistics>();
+				auto fl = make_shared<functions_list>(s, 1.0, mocks::symbol_resolver::create(symbols), tmodel);
 				timestamp_t ticks_per_second;
 				threads_model dummy_threads(get_requestor_threads());
 
-				s[1], s[17], s[13];
-				serialize_single_threaded(ser, s);
-				dser(*fl, dummy_context);
+				(*s)[addr(1)], (*s)[addr(17)], (*s)[addr(13)];
+				s->invalidate();
 
 				// ACT
 				snapshot_save<scontext::file_v4>(ser, *fl);
@@ -230,22 +229,19 @@ namespace micro_profiler
 
 			test( FunctionListIsCompletelyRestoredWithSymbolsV3 )
 			{
-				typedef pair<long_address_t, unthreaded_statistic_types::function_detailed> addressed_function2;
-
 				// INIT
 				pair<long_address_t, string> symbols[] = {
 					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
 				};
-				addressed_function2 s[] = {
-					make_statistics(5ull, 123, 0, 1000, 0, 0),
-					make_statistics(13ull, 12, 0, 0, 0, 0),
-					make_statistics(17ull, 127, 0, 0, 0, 0),
-					make_statistics(123ull, 12000, 0, 250, 0, 0),
-				};
+				auto s = plural
+					+ make_statistics(5u, 123, 0, 1000, 0, 0)
+					+ make_statistics(13u, 12, 0, 0, 0, 0)
+					+ make_statistics(17u, 127, 0, 0, 0, 0)
+					+ make_statistics(123u, 12000, 0, 250, 0, 0);
 
 				ser(500);
 				ser(*mocks::symbol_resolver::create(symbols));
-				ser(mkvector(s));
+				ser(s);
 
 				// ACT
 				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v3>(dser);

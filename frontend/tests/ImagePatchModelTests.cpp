@@ -72,7 +72,7 @@ namespace micro_profiler
 
 				// INIT
 				mappings->insert(mkmapping(1, 10, 0x10000));
-				mappings->invalidated();
+				mappings->invalidate();
 
 				// ACT / ASSERT
 				assert_equal(0u, model.get_count());
@@ -170,7 +170,7 @@ namespace micro_profiler
 				assert_is_empty(log);
 
 				// ACT
-				modules->invalidated();
+				modules->invalidate();
 
 				// ASSERT
 				string reference1[][3] = {
@@ -185,7 +185,7 @@ namespace micro_profiler
 
 				// ACT
 				(*modules)[140].symbols.insert((*modules)[140].symbols.end(), begin(data12), end(data12));
-				mappings->invalidated();
+				mappings->invalidate();
 
 				// ASSERT
 				string reference2[][3] = {
@@ -201,7 +201,7 @@ namespace micro_profiler
 
 				// ACT
 				(*modules)[141].symbols.insert((*modules)[141].symbols.end(), begin(data22), end(data22));
-				patches->invalidated();
+				patches->invalidate();
 
 				// ASSERT
 				string reference3[][3] = {
@@ -251,7 +251,7 @@ namespace micro_profiler
 				(*patches)[11][0x901A9010] = mkpatch(3, false, true, false);
 				(*patches)[11][0x00000011] = mkpatch(4, false, false, false);
 				(*patches)[11][0x00000031] = mkpatch(5, false, false, true);
-				patches->invalidated();
+				patches->invalidate();
 
 				// ASSERT
 				string reference1[][2] = {
@@ -271,7 +271,7 @@ namespace micro_profiler
 				// ACT
 				(*patches)[140][0x00001234] = mkpatch(1, false, false, true);
 				(*patches)[140][0x00000001] = mkpatch(2, false, false, false);
-				patches->invalidated();
+				patches->invalidate();
 
 				// ASSERT
 				string reference2[][2] = {
@@ -335,7 +335,7 @@ namespace micro_profiler
 				// ACT
 				(*mappings)[2].persistent_id = 13, (*mappings)[2].path = "c:\\KERNEL32.exe";
 				mappings->erase(1);
-				mappings->invalidated();
+				mappings->invalidate();
 
 				// ASSERT
 				string reference2[][3] = {
@@ -539,7 +539,7 @@ namespace micro_profiler
 
 				// ACT
 				(*mappings)[2].persistent_id = 13, (*mappings)[2].path = "/bin/mmapping";
-				mappings->invalidated();
+				mappings->invalidate();
 
 				// ASSERT (19 -> 13 -> 11 -> 17)
 				string reference2[][3] = {
@@ -718,7 +718,7 @@ namespace micro_profiler
 
 				// INIT / ACT
 				(*modules)[1].symbols.insert((*modules)[1].symbols.end(), begin(data12), end(data12));
-				modules->invalidated();
+				modules->invalidate();
 
 				// ACT / ASSERT
 				assert_equal(7u, t1->index());
@@ -750,7 +750,7 @@ namespace micro_profiler
 				(*modules)[1].symbols = mkvector(data1);
 				(*modules)[3].symbols = mkvector(data2);
 				(*modules)[4].symbols = mkvector(data3);
-				modules->invalidated();
+				modules->invalidate();
 
 				model.set_order(0, true);
 				auto t_compress = model.track(3);

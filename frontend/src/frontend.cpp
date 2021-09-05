@@ -22,7 +22,6 @@
 
 #include <frontend/function_list.h>
 #include <frontend/serialization.h>
-#include <frontend/persistence.h> // TODO: remove persistence.h, leave only serialization.h
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
 

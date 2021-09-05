@@ -24,6 +24,7 @@
 
 #include <common/pod_vector.h>
 #include <common/serialization.h>
+#include <common/stream.h>
 #include <map>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>

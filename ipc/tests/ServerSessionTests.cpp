@@ -55,6 +55,8 @@ namespace micro_profiler
 					s.add_handler<int>(13, [&] (server_session::request &, int) {	log.push_back(113);	});
 					s.add_handler<int>(171, [&] (server_session::request &, int) {	log.push_back(1171);	});
 					s.add_handler<int>(1991, [&] (server_session::request &, int) {	log.push_back(11991);	});
+					s.add_handler(19911, [&] (server_session::request &) {	log.push_back(21991);	});
+					s.add_handler(19912, [&] (server_session::request &) {	log.push_back(21992);	});
 
 					// ACT
 					send_standard(s, 171, 19193, 1);
@@ -73,6 +75,10 @@ namespace micro_profiler
 					int reference2[] = {	1171, 11991, 1171, 113,	};
 
 					assert_equal(reference2, log);
+
+					// ACT
+					send_standard(s, 19911, 19196);
+					send_standard(s, 19912, 19196);
 				}
 
 

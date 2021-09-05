@@ -18,21 +18,63 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <common/serialization.h>
+#pragma once
 
 #include <common/memory.h>
+#include <common/noncopyable.h>
+#include <stdexcept>
 
 namespace micro_profiler
 {
-	buffer_reader::buffer_reader(const_byte_range payload)
-		: _ptr(payload.begin()), _remaining(payload.length())
-	{	}
-
-	void buffer_reader::read(void *data, size_t size)
+	struct insufficient_buffer_error : std::runtime_error
 	{
-		// TODO: add exhaustion check here!
-		mem_copy(data, _ptr, size);
-		_ptr += size;
-		_remaining -= size;
+		insufficient_buffer_error(size_t requested_, size_t available_);
+
+		size_t requested, available;
+	};
+
+	class buffer_reader : noncopyable
+	{
+	public:
+		buffer_reader(const_byte_range payload);
+
+		void read(void *data, size_t size);
+
+	private:
+		void raise(size_t size);
+
+	private:
+		const byte *_ptr;
+		size_t _remaining;
+	};
+
+	template <typename BufferT>
+	class buffer_writer : noncopyable
+	{
+	public:
+		buffer_writer(BufferT &buffer);
+
+		void write(const void *data, size_t size);
+
+	private:
+		BufferT &_buffer;
+	};
+
+
+
+	template <typename BufferT>
+	inline buffer_writer<BufferT>::buffer_writer(BufferT &buffer)
+		: _buffer(buffer)
+	{	_buffer.clear();	}
+
+	template <typename BufferT>
+	inline void buffer_writer<BufferT>::write(const void *data, size_t size)
+	{
+		const auto data_ = static_cast<const byte *>(data);
+
+		if (size == 1)
+			_buffer.push_back(*data_);
+		else
+			_buffer.append(data_, data_ + size);
 	}
 }

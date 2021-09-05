@@ -10,6 +10,7 @@ set(COMMON_TEST_SOURCES
 	MiscTests.cpp
 	PrimitivesTests.cpp
 	SerializationTests.cpp
+	StreamingTests.cpp
 	TextConversionTests.cpp
 	TextFormattingServicesTests.cpp
 	TypesTests.cpp

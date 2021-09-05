@@ -50,7 +50,7 @@ namespace micro_profiler
 	mapped_module get_module_info(const void *address)
 	{
 		HMODULE base = 0;
-		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCWSTR>(address), &base);
+		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &base);
 		shared_ptr<void> h(base, &::FreeLibrary);
 		mapped_module info = { string(), static_cast<byte *>(static_cast<void *>(base)), };
 

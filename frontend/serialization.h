@@ -132,16 +132,6 @@ namespace micro_profiler
 		archive(data.callees, context);
 	}
 
-	namespace tables
-	{
-		template <typename ArchiveT>
-		inline void serialize(ArchiveT &archive, module_info &data)
-		{
-			archive(data.symbols);
-			archive(data.files);
-		}
-	}
-
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, symbol_resolver &data)
 	{
@@ -150,6 +140,23 @@ namespace micro_profiler
 
 		data._modules->invalidate();
 		data._mappings->invalidate();
+	}
+
+	namespace tables
+	{
+		template <typename ArchiveT>
+		inline void serialize(ArchiveT &archive, module_info &data)
+		{
+			archive(data.symbols);
+			archive(data.files);
+		}
+
+		template <typename ArchiveT, typename ContextT, typename BaseT>
+		inline void serialize(ArchiveT &archive, table<BaseT> &data, ContextT &context)
+		{
+			archive(static_cast<BaseT &>(data), context);
+			data.invalidate();
+		}
 	}
 }
 

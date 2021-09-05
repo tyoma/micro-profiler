@@ -61,6 +61,7 @@
     <ClCompile Include="FunctionListPiechartTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="ImagePatchModelTests.cpp" />
+    <ClCompile Include="mock_channel.cpp" />
     <ClCompile Include="NestedStatisticModelsTests.cpp" />
     <ClCompile Include="NestedTransformTests.cpp" />
     <ClCompile Include="mocks.cpp" />

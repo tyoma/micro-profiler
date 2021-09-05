@@ -25,9 +25,9 @@
 #include <common/noncopyable.h>
 #include <common/pod_vector.h>
 #include <common/serialization.h>
+#include <common/stream.h>
 #include <functional>
 #include <scheduler/private_queue.h>
-#include <strmd/packer.h>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
 
@@ -44,6 +44,8 @@ namespace micro_profiler
 
 		public:
 			server_session(channel &outbound, std::shared_ptr<scheduler::queue> queue = std::shared_ptr<scheduler::queue>());
+
+			void add_handler(int request_id, const std::function<void (request &context)> &handler);
 
 			template <typename PayloadT>
 			void add_handler(int request_id,

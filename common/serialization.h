@@ -21,7 +21,6 @@
 #pragma once
 
 #include "module.h"
-#include "noncopyable.h"
 #include "primitives.h"
 #include "protocol.h"
 #include "range.h"
@@ -33,31 +32,6 @@
 namespace micro_profiler
 {
 	typedef strmd::varint packer;
-
-	class buffer_reader : noncopyable
-	{
-	public:
-		buffer_reader(const_byte_range payload);
-
-		void read(void *data, size_t size);
-
-	private:
-		const byte *_ptr;
-		size_t _remaining;
-	};
-
-	template <typename BufferT>
-	class buffer_writer : noncopyable
-	{
-	public:
-		buffer_writer(BufferT &buffer);
-
-		void write(const void *data, size_t size);
-
-	private:
-		BufferT &_buffer;
-	};
-
 
 
 	template <typename ArchiveT>
@@ -144,23 +118,6 @@ namespace micro_profiler
 	{
 		archive(data.result);
 		archive(data.id);
-	}
-
-
-	template <typename BufferT>
-	inline buffer_writer<BufferT>::buffer_writer(BufferT &buffer)
-		: _buffer(buffer)
-	{	_buffer.clear();	}
-
-	template <typename BufferT>
-	inline void buffer_writer<BufferT>::write(const void *data, size_t size)
-	{
-		const byte *data_ = static_cast<const byte *>(data);
-
-		if (size == 1)
-			_buffer.push_back(*data_);
-		else
-			_buffer.append(data_, data_ + size);
 	}
 }
 

@@ -5,7 +5,7 @@ set(COMMON_SOURCES
 	constants.cpp
 	formatting.cpp
 	memory.cpp
-	serialization.cpp
+	stream.cpp
 	string.cpp
 	time.cpp
 )

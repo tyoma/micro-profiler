@@ -45,6 +45,7 @@
     <ClCompile Include="MiscTests.cpp" />
     <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
+    <ClCompile Include="StreamingTests.cpp" />
     <ClCompile Include="TextConversionTests.cpp" />
     <ClCompile Include="TextFormattingServicesTests.cpp" />
     <ClCompile Include="TypesTests.cpp" />

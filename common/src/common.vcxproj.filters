@@ -37,9 +37,6 @@
     <ClCompile Include="module_linux.cpp">
       <Filter>src\unix</Filter>
     </ClCompile>
-    <ClCompile Include="serialization.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="image_info_win32.cpp">
       <Filter>src\win32</Filter>
     </ClCompile>
@@ -64,7 +61,7 @@
     <ClCompile Include="module_macos.cpp">
       <Filter>src\macos</Filter>
     </ClCompile>
-    <ClCompile Include="types.cpp">
+    <ClCompile Include="stream.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -117,5 +114,6 @@
       <Filter>win32</Filter>
     </ClInclude>
     <ClInclude Include="..\configuration_file.h" />
+    <ClInclude Include="..\stream.h" />
   </ItemGroup>
 </Project>

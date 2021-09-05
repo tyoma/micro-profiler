@@ -69,7 +69,7 @@
     <ClCompile Include="configuration_registry.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
-    <ClCompile Include="serialization.cpp" />
+    <ClCompile Include="stream.cpp" />
     <ClCompile Include="image_info_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -101,6 +101,7 @@
     <ClInclude Include="..\protocol.h" />
     <ClInclude Include="..\range.h" />
     <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\time.h" />
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />

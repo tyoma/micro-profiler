@@ -240,5 +240,6 @@ namespace micro_profiler
 			}
 
 		end_test_suite
+
 	}
 }

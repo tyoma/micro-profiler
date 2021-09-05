@@ -7,6 +7,7 @@
 #include "mock_channel.h"
 
 #include <algorithm>
+#include <common/serialization.h>
 #include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_queue.h>

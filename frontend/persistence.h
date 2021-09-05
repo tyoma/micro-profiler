@@ -108,14 +108,4 @@ namespace micro_profiler
 		archive(*fl, context);
 		return fl;
 	}
-
-	namespace tables
-	{
-		template <typename ArchiveT, typename ContextT, typename BaseT>
-		inline void serialize(ArchiveT &archive, table<BaseT> &data, ContextT &context)
-		{
-			archive(static_cast<BaseT &>(data), context);
-			data.invalidate();
-		}
-	}
 }

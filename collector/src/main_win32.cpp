@@ -24,6 +24,7 @@
 #include "main.h"
 
 #include <collector/collector_app.h>
+#include <tchar.h>
 #include <windows.h>
 
 using namespace std;
@@ -40,7 +41,7 @@ namespace micro_profiler
 		{
 			HMODULE hkernel;
 
-			::GetModuleHandleExA(0, "kernel32", &hkernel);
+			::GetModuleHandleEx(0, _T("kernel32"), &hkernel);
 			return shared_ptr<void>(::GetProcAddress(hkernel, "ExitProcess"), [hkernel] (void *) {
 				::FreeLibrary(hkernel);
 			});

@@ -9,6 +9,17 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
+		inline void send_standard(ipc::channel &c, int id, unsigned long long token)
+		{
+			pod_vector<byte> data;
+			buffer_writer< pod_vector<byte> > w(data);
+			strmd::serializer<buffer_writer< pod_vector<byte> >, packer> s(w);
+
+			s(id);
+			s(token);
+			c.message(const_byte_range(data.data(), data.size()));
+		}
+
 		template <typename PayloadT>
 		inline void send_standard(ipc::channel &c, int id, unsigned long long token, const PayloadT &payload)
 		{

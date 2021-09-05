@@ -46,8 +46,8 @@ namespace micro_profiler
 		auto apply_results_ = make_shared<response_patched_data>();
 		auto revert_results_ = make_shared<response_reverted_data>();
 
-		session->add_handler<int>(request_update,
-			[this, &analyzer_, loaded_, unloaded_] (server_session::request &req, int) {
+		session->add_handler(request_update,
+			[this, &analyzer_, loaded_, unloaded_] (server_session::request &req) {
 
 			auto &a = analyzer_;
 			auto &loaded = *loaded_;

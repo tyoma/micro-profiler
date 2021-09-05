@@ -71,10 +71,10 @@ namespace micro_profiler
 	{
 		function_list_serialization_proxy proxy = {
 			data,
-			data._tick_interval,
-			*data.get_resolver(),
+			data.tick_interval,
+			*data.resolver,
 			*data._statistics,
-			*data.get_threads()
+			*data.threads
 		};
 
 		archive(proxy, context);

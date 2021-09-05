@@ -30,6 +30,7 @@ namespace micro_profiler
 
 	void buffer_reader::read(void *data, size_t size)
 	{
+		// TODO: add exhaustion check here!
 		mem_copy(data, _ptr, size);
 		_ptr += size;
 		_remaining -= size;

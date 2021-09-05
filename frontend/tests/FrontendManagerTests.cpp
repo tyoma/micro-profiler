@@ -158,8 +158,8 @@ namespace micro_profiler
 				assert_equal(1u, _ui_creation_log.size());
 
 				assert_not_null(_ui_creation_log[0]->ui_context.model);
-				assert_not_null(_ui_creation_log[0]->ui_context.model->get_resolver());
-				assert_not_null(_ui_creation_log[0]->ui_context.model->get_threads());
+				assert_not_null(_ui_creation_log[0]->ui_context.model->resolver);
+				assert_not_null(_ui_creation_log[0]->ui_context.model->threads);
 				assert_equal("c:\\test\\some.exe", _ui_creation_log[0]->ui_context.process_info.executable);
 
 				// ACT
@@ -169,12 +169,12 @@ namespace micro_profiler
 				assert_equal(2u, _ui_creation_log.size());
 
 				assert_not_null(_ui_creation_log[1]->ui_context.model);
-				assert_not_null(_ui_creation_log[1]->ui_context.model->get_resolver());
-				assert_not_null(_ui_creation_log[1]->ui_context.model->get_threads());
+				assert_not_null(_ui_creation_log[1]->ui_context.model->resolver);
+				assert_not_null(_ui_creation_log[1]->ui_context.model->threads);
 				assert_equal("kernel.exe", _ui_creation_log[1]->ui_context.process_info.executable);
 				assert_not_equal(_ui_creation_log[0]->ui_context.model, _ui_creation_log[1]->ui_context.model);
-				assert_not_equal(_ui_creation_log[0]->ui_context.model->get_resolver(), _ui_creation_log[1]->ui_context.model->get_resolver());
-				assert_not_equal(_ui_creation_log[0]->ui_context.model->get_threads(), _ui_creation_log[1]->ui_context.model->get_threads());
+				assert_not_equal(_ui_creation_log[0]->ui_context.model->resolver, _ui_creation_log[1]->ui_context.model->resolver);
+				assert_not_equal(_ui_creation_log[0]->ui_context.model->threads, _ui_creation_log[1]->ui_context.model->threads);
 			}
 
 

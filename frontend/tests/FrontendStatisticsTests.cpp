@@ -48,21 +48,17 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( FrontendStatisticsTests )
-			vector_adapter buffer;
-			strmd::serializer<vector_adapter, packer> ser;
-
 			shared_ptr<mocks::queue> queue;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<const tables::statistics> statistics;
 
-			FrontendStatisticsTests()
-				: ser(buffer)
-			{	}
-
 			shared_ptr<frontend> create_frontend()
 			{
+				typedef pair< shared_ptr<emulator_>, shared_ptr<frontend> > complex_t;
+
 				auto e2 = make_shared<emulator_>(queue);
-				auto f = make_shared<frontend>(e2->server_session);
+				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session));
+				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();
 				f->initialized = [this] (const frontend_ui_context &ctx) {	this->statistics = ctx.statistics;	};
@@ -145,7 +141,9 @@ namespace micro_profiler
 					update_requests++;
 					req.defer([] (ipc::server_session::request &req) {
 						req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-							s(make_single_threaded(plural + statistic_types_t<unsigned>::map_detailed()));
+							statistic_types_t<unsigned>::map_detailed x;
+							x[1];
+							s(make_single_threaded(plural + x));
 						});
 					});
 				});

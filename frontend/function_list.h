@@ -58,8 +58,8 @@ namespace micro_profiler
 		typedef statistic_types::map_detailed::value_type value_type;
 
 	public:
-		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval,
-			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads);
+		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval_,
+			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<threads_model> threads_);
 		virtual ~functions_list();
 
 		template <typename PredicateT>
@@ -73,7 +73,6 @@ namespace micro_profiler
 		typedef statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> > base;
 
 	private:
-		using base::_tick_interval;
 		std::shared_ptr<tables::statistics> _statistics;
 		wpl::slot_connection _connection;
 

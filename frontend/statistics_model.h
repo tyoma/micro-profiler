@@ -41,15 +41,10 @@ namespace micro_profiler
 		typedef typename key_traits<typename U::value_type>::key_type key_type;
 
 	public:
-		statistics_model_impl(std::shared_ptr<U> underlying, double tick_interval,
-			const std::shared_ptr<symbol_resolver> &resolver, const std::shared_ptr<threads_model> &threads);
+		statistics_model_impl(std::shared_ptr<U> underlying, double tick_interval_,
+			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<threads_model> threads_);
 
 		std::shared_ptr<U> get_underlying() const;
-
-		std::shared_ptr<symbol_resolver> get_resolver() const throw();
-		std::shared_ptr<threads_model> get_threads() const throw();
-		std::shared_ptr< wpl::list_model<double> > get_column_series() const throw();
-		std::shared_ptr< selection<key_type> > create_selection() const;
 
 		// wpl::richtext_table_model methods
 		virtual index_type get_count() const throw() override;
@@ -59,25 +54,24 @@ namespace micro_profiler
 		// linked_statistics methods
 		virtual void fetch() /*override*/;
 		virtual void set_order(index_type column, bool ascending) /*override*/;
+		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const /*override*/;
+		virtual std::shared_ptr< selection<key_type> > create_selection() const /*override*/;
 
 		index_type get_index(key_type address) const;
 
-	protected:
-		typedef views::ordered<U> view_type;
+	public:
+		/*const*/ double tick_interval;
+		const std::shared_ptr<symbol_resolver> resolver;
+		const std::shared_ptr<threads_model> threads;
 
 	protected:
 		const typename U::value_type &get_entry(index_type row) const;
-
-	protected:
-		double _tick_interval;
 
 	private:
 		struct view_complex;
 
 	private:
 		const std::shared_ptr<view_complex> _view;
-		const std::shared_ptr<symbol_resolver> _resolver;
-		const std::shared_ptr<threads_model> _threads;
 	};
 
 	template <typename BaseT, typename U>
@@ -100,37 +94,15 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename U>
-	inline statistics_model_impl<BaseT, U>::statistics_model_impl(std::shared_ptr<U> statistics_,
-			double tick_interval, const std::shared_ptr<symbol_resolver> &resolver,
-			const std::shared_ptr<threads_model> &threads)
-		: _tick_interval(tick_interval), _view(std::make_shared<view_complex>(statistics_)), _resolver(resolver),
-			_threads(threads)
+	inline statistics_model_impl<BaseT, U>::statistics_model_impl(std::shared_ptr<U> statistics_, double tick_interval_,
+			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<threads_model> threads_)
+		: tick_interval(tick_interval_), resolver(resolver_), threads(threads_),
+			_view(std::make_shared<view_complex>(statistics_))
 	{	}
 
 	template <typename BaseT, typename U>
 	inline std::shared_ptr<U> statistics_model_impl<BaseT, U>::get_underlying() const
 	{	return _view->underlying;	}
-
-	template <typename BaseT, typename U>
-	inline std::shared_ptr<symbol_resolver> statistics_model_impl<BaseT, U>::get_resolver() const throw()
-	{	return _resolver;	}
-
-	template <typename BaseT, typename U>
-	inline std::shared_ptr<threads_model> statistics_model_impl<BaseT, U>::get_threads() const throw()
-	{	return _threads;	}
-
-	template <typename BaseT, typename U>
-	inline std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, U>::get_column_series() const throw()
-	{	return std::shared_ptr< wpl::list_model<double> >(_view, &_view->projection);	}
-
-	template <typename BaseT, typename U>
-	inline std::shared_ptr< selection<typename statistics_model_impl<BaseT, U>::key_type> > statistics_model_impl<BaseT, U>::create_selection() const
-	{
-		auto s = std::make_pair(_view, std::make_shared< selection_model<view_type> >(_view->ordered));
-		auto ss = std::make_shared<decltype(s)>(s);
-
-		return std::shared_ptr< selection<key_type> >(ss, ss->second.get());
-	}
 
 	template <typename BaseT, typename U>
 	inline typename statistics_model_impl<BaseT, U>::index_type statistics_model_impl<BaseT, U>::get_count() const throw()
@@ -147,6 +119,21 @@ namespace micro_profiler
 		_view->trackables.fetch();
 		_view->projection.fetch();
 		this->invalidate(this->npos());
+	}
+
+	template <typename BaseT, typename U>
+	inline std::shared_ptr< wpl::list_model<double> > statistics_model_impl<BaseT, U>::get_column_series() const
+	{	return std::shared_ptr< wpl::list_model<double> >(_view, &_view->projection);	}
+
+	template <typename BaseT, typename U>
+	inline std::shared_ptr< selection<typename statistics_model_impl<BaseT, U>::key_type> > statistics_model_impl<BaseT, U>::create_selection() const
+	{
+		typedef std::pair< std::shared_ptr<view_complex>, std::shared_ptr< selection<key_type> > > selection_complex_t;
+
+		auto complex = std::make_shared<selection_complex_t>(_view,
+			std::make_shared< selection_model< views::ordered<U> > >(_view->ordered));
+
+		return std::shared_ptr< selection<key_type> >(complex, complex->second.get());
 	}
 
 	template <typename BaseT, typename U>

@@ -246,7 +246,7 @@ namespace micro_profiler
 
 				// ACT
 				emulator->message(init, format(make_initialization_data("/test", 1)));
-				const auto threads = context.model->get_threads();
+				const auto threads = context.model->threads;
 
 				// ASSERT
 				unsigned int native_id;

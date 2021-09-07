@@ -29,6 +29,11 @@
 
 #pragma warning(disable: 4510; disable: 4610)
 
+namespace strmd
+{
+	template <> struct version<micro_profiler::tables::module_info> {	enum {	value = 4	};	};
+}
+
 namespace micro_profiler
 {
 	struct statistics_map_reader : strmd::indexed_associative_container_reader
@@ -117,35 +122,25 @@ namespace micro_profiler
 
 
 	template <typename ArchiveT, typename ContextT>
-	inline void serialize(ArchiveT &archive, statistic_types::function &data, const ContextT &/*context*/)
+	inline void serialize(ArchiveT &archive, statistic_types::function &data, const ContextT &/*context*/, unsigned int ver)
 	{
 		function_statistics v;
 
-		archive(v);
+		serialize(archive, v, ver);
 		data += v;
 	}
 
 	template <typename ArchiveT, typename ContextT>
-	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, ContextT &context)
+	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, ContextT &context, unsigned int /*ver*/)
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
 	}
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_resolver &data)
-	{
-		archive(static_cast<containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> &>(*data._mappings));
-		archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::module_info> &>(*data._modules));
-
-		data._modules->invalidate();
-		data._mappings->invalidate();
-	}
-
 	namespace tables
 	{
 		template <typename ArchiveT>
-		inline void serialize(ArchiveT &archive, module_info &data)
+		inline void serialize(ArchiveT &archive, module_info &data, unsigned int /*ver*/)
 		{
 			archive(data.symbols);
 			archive(data.files);

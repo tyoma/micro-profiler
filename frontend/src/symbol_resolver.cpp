@@ -31,14 +31,16 @@ namespace micro_profiler
 	{
 		struct by_address
 		{
-			bool operator ()(const mapped_module_identified &lhs, const mapped_module_identified &rhs) const
-			{	return lhs.base < rhs.base;	}
+			typedef pair<unsigned, mapped_module_identified> value_type;
 
-			bool operator ()(const mapped_module_identified &lhs, long_address_t rhs) const
-			{	return lhs.base < rhs;	}
+			bool operator ()(const value_type &lhs, const value_type &rhs) const
+			{	return lhs.second.base < rhs.second.base;	}
 
-			bool operator ()(long_address_t lhs, const mapped_module_identified &rhs) const
-			{	return lhs < rhs.base;	}
+			bool operator ()(const value_type &lhs, long_address_t rhs) const
+			{	return lhs.second.base < rhs;	}
+
+			bool operator ()(long_address_t lhs, const value_type &rhs) const
+			{	return lhs < rhs.second.base;	}
 		};
 
 		template <typename T, typename V>
@@ -60,20 +62,21 @@ namespace micro_profiler
 
 
 	symbol_resolver::symbol_resolver(shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
-		: _modules(const_pointer_cast<tables::modules>(modules)), _mappings(const_pointer_cast<tables::module_mappings>(mappings))
+		: _modules(modules), _mappings(mappings)
 	{
-		_modules_invalidation = _modules->invalidate += [this] {
-			invalidate();
-		};
-		_mappings_invalidation = _mappings->invalidate += [this] {
+		auto on_invalidate_mappings = [this] {
 			_mappings_ordered.clear();
 			for (auto i = _mappings->begin(); i != _mappings->end(); ++i)
 			{
-				_mappings_ordered.push_back(i->second);
+				_mappings_ordered.push_back(*i);
 				_symbols_ordered[i->first].clear();
 			}
 			sort(_mappings_ordered.begin(), _mappings_ordered.end(), by_address());
 		};
+
+		_modules_invalidation = _modules->invalidate += [this] {	invalidate();	};
+		_mappings_invalidation = _mappings->invalidate += on_invalidate_mappings;
+		on_invalidate_mappings();
 	}
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
@@ -100,11 +103,11 @@ namespace micro_profiler
 
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const tables::module_info *&module) const
 	{
-		if (const auto mapping = find_range(_mappings_ordered, address, by_address()))
+		if (const auto m = find_range(_mappings_ordered, address, by_address()))
 		{
-			if (const auto symbol = find_symbol_by_rva(mapping->persistent_id, mapping->instance_id, static_cast<unsigned int>(address - mapping->base), module))
+			if (const auto symbol = find_symbol_by_rva(m->second.persistent_id, m->first, static_cast<unsigned int>(address - m->second.base), module))
 				return symbol;
-			_modules->request_presence(mapping->persistent_id);
+			_modules->request_presence(m->second.persistent_id);
 		}
 		return nullptr;
 	}

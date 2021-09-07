@@ -26,7 +26,8 @@ namespace micro_profiler
 		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
 			command_target &target, const frontend_ui_context &context, shared_ptr<scheduler::queue> queue)
 		{
-			auto model = context.model;
+			auto model = make_shared<functions_list>(context.statistics, 1.0 / context.process_info.ticks_per_second,
+				make_shared<symbol_resolver>(context.modules, context.module_mappings), context.threads);
 			auto executable = context.process_info.executable;
 			auto poller = make_shared<statistics_poll>(context.statistics, queue);
 
@@ -44,14 +45,13 @@ namespace micro_profiler
 				return state = (poller->enabled() ? 0 : command_target::enabled) | command_target::supported | command_target::visible, true;
 			});
 
-			target.add_command(cmdidSaveStatistics, [model, executable] (unsigned) {
-				shared_ptr<functions_list> model2 = model;
+			target.add_command(cmdidSaveStatistics, [context, executable] (unsigned) {
 				auto_ptr<write_stream> s = create_file(NULL/*get_frame_hwnd(ctx.shell)*/, executable);
 
 				if (s.get())
 				{
 					strmd::serializer<write_stream, packer> ser(*s);
-					snapshot_save<scontext::file_v4>(ser, *model2);
+					ser(context);
 				}
 			}, false, [] (unsigned, unsigned &state) {
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;

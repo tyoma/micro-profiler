@@ -102,9 +102,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	3u, mkvector(rva1)	};
+
 					ser(request_apply_patches), ser(0u);
-					ser(3u);
-					ser(mkvector(rva1));
+					ser(req);
 				});
 				ready.wait();
 
@@ -120,9 +121,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	1u, mkvector(rva2)	};
+
 					ser(request_apply_patches), ser(0u);
-					ser(1u);
-					ser(mkvector(rva2));
+					ser(req);
 				});
 				ready.wait();
 
@@ -174,9 +176,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	3u, mkvector(rva1)	};
+
 					ser(request_apply_patches), ser(1110320u);
-					ser(3u);
-					ser(mkvector(rva1));
+					ser(req);
 				});
 				ready.wait();
 
@@ -195,9 +198,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	2u, mkvector(rva1)	};
+
 					ser(request_apply_patches), ser(91110320u);
-					ser(2u);
-					ser(mkvector(rva1));
+					ser(req);
 				});
 				ready.wait();
 
@@ -233,9 +237,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	3u, mkvector(rva1)	};
+
 					ser(request_revert_patches), ser(1110320u);
-					ser(3u);
-					ser(mkvector(rva1));
+					ser(req);
 				});
 				ready.wait();
 
@@ -251,9 +256,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	1u, mkvector(rva2)	};
+
 					ser(request_revert_patches), ser(1110320u);
-					ser(1u);
-					ser(mkvector(rva2));
+					ser(req);
 				});
 				ready.wait();
 
@@ -296,7 +302,6 @@ namespace micro_profiler
 					results = mkvector(rresults1);
 				};
 				state->revert_response_received = [&] (unsigned token, patch_manager::revert_results results) {
-
 					tokens.push_back(token);
 					log.push_back(results);
 					ready.set();
@@ -304,9 +309,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	3u, mkvector(rva1)	};
+
 					ser(request_revert_patches), ser(1110321u);
-					ser(3u);
-					ser(mkvector(rva1));
+					ser(req);
 				});
 				ready.wait();
 
@@ -324,9 +330,10 @@ namespace micro_profiler
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
+					patch_request req = {	2u, mkvector(rva2)	};
+
 					ser(request_revert_patches), ser(11910u);
-					ser(2u);
-					ser(mkvector(rva2));
+					ser(req);
 				});
 				ready.wait();
 

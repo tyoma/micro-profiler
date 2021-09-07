@@ -1,7 +1,5 @@
 #include <frontend/frontend_manager.h>
 
-#include <frontend/function_list.h>
-
 #include "helpers.h"
 #include "mocks.h"
 #include "mock_channel.h"
@@ -28,13 +26,19 @@ namespace micro_profiler
 			frontend_ui::ptr dummy_ui_factory(const frontend_ui_context &)
 			{	return frontend_ui::ptr();	}
 
-			frontend_ui_context create_ui_context(string executable, shared_ptr<functions_list> model)
+			frontend_ui_context create_ui_context(string executable)
 			{
-				frontend_ui_context ctx = {	{	executable, 123	}, model	};
+				frontend_ui_context ctx = {
+					{	executable, 1	},
+					make_shared<tables::statistics>(),
+					make_shared<tables::module_mappings>(),
+					make_shared<tables::modules>(),
+					make_shared<tables::patches>(),
+					make_shared<threads_model>([] (vector<unsigned>) {}),
+				};
 
 				return ctx;
 			}
-
 
 			template <typename CommandDataT>
 			void message(ipc::channel &channel, messages_id c, const CommandDataT &data)
@@ -158,43 +162,48 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, _ui_creation_log.size());
 
-				assert_not_null(_ui_creation_log[0]->ui_context.model);
-				assert_not_null(_ui_creation_log[0]->ui_context.model->resolver);
-				assert_not_null(_ui_creation_log[0]->ui_context.model->threads);
 				assert_equal("c:\\test\\some.exe", _ui_creation_log[0]->ui_context.process_info.executable);
+				assert_equal(12332, _ui_creation_log[0]->ui_context.process_info.ticks_per_second);
 
 				// ACT
-				message(*c2, init, make_initialization_data("kernel.exe", 12332));
+				message(*c2, init, make_initialization_data("kernel.exe", 12333));
 
 				// ASSERT
 				assert_equal(2u, _ui_creation_log.size());
 
-				assert_not_null(_ui_creation_log[1]->ui_context.model);
-				assert_not_null(_ui_creation_log[1]->ui_context.model->resolver);
-				assert_not_null(_ui_creation_log[1]->ui_context.model->threads);
 				assert_equal("kernel.exe", _ui_creation_log[1]->ui_context.process_info.executable);
-				assert_not_equal(_ui_creation_log[0]->ui_context.model, _ui_creation_log[1]->ui_context.model);
-				assert_not_equal(_ui_creation_log[0]->ui_context.model->resolver, _ui_creation_log[1]->ui_context.model->resolver);
-				assert_not_equal(_ui_creation_log[0]->ui_context.model->threads, _ui_creation_log[1]->ui_context.model->threads);
+				assert_equal(12333, _ui_creation_log[1]->ui_context.process_info.ticks_per_second);
 			}
 
 
 			obsolete_test( FrontendManagerIsHeldByFrontendsAlive )
 
 
+			struct mock_ui : frontend_ui
+			{
+				mock_ui(const frontend_ui_context &ctx)
+					: hold(ctx.statistics)
+				{	}
+
+				virtual void activate() override
+				{	}
+
+				shared_ptr<tables::statistics> hold;
+			};
+
 			test( ThereAreNoInstancesAfterCloseAll )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m([] (frontend_ui_context ctx) {
+					return make_shared<mock_ui>(ctx);
+				});
 				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
 				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
-				auto s1 = make_shared<tables::statistics>();
-				auto fl1 = make_shared<functions_list>(statistics, 1.0 / 123, sr, tmodel);
-				auto s2 = make_shared<tables::statistics>();
-				auto fl2 = make_shared<functions_list>(statistics, 1.0 / 123, sr, tmodel);
+				auto ctx1 = create_ui_context("somefile.exe");
+				auto ctx2 = create_ui_context("somefile.exe");
 
-				m.load_session(create_ui_context("somefile.exe", fl1));
-				m.load_session(create_ui_context("other", fl1));
+				m.load_session(ctx1);
+				m.load_session(ctx2);
 
 				// ACT
 				m.close_all();
@@ -202,6 +211,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0u, m.instances_count());
 				assert_null(m.get_active());
+				assert_equal(1, ctx1.statistics.use_count());
+				assert_equal(1, ctx2.statistics.use_count());
 			}
 
 
@@ -479,7 +490,7 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(m.get_instance(0));
 				assert_is_empty(m.get_instance(0)->process_info.executable);
-				assert_null(m.get_instance(0)->model);
+				assert_null(m.get_instance(0)->statistics);
 				assert_not_null(m.get_instance(1));
 				assert_not_null(m.get_instance(2));
 				assert_null(m.get_instance(3));
@@ -498,7 +509,8 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(m.get_instance(0));
 				assert_equal("c:\\dev\\micro-profiler", m.get_instance(0)->process_info.executable);
-				assert_equal(_ui_creation_log[0]->ui_context.model, m.get_instance(0)->model);
+				assert_not_null(m.get_instance(0)->statistics);
+				assert_equal(_ui_creation_log[0]->ui_context.statistics, m.get_instance(0)->statistics);
 				assert_equal(_ui_creation_log[0], m.get_instance(0)->ui);
 			}
 
@@ -720,27 +732,25 @@ namespace micro_profiler
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
 				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
 				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
-				auto s1 = make_shared<tables::statistics>();
-				auto fl1 = make_shared<functions_list>(statistics, 1.0 / 123, sr, tmodel);
-				auto s2 = make_shared<tables::statistics>();
-				auto fl2 = make_shared<functions_list>(statistics, 1.0 / 123, sr, tmodel);
+				auto ctx1 = create_ui_context("somefile.exe");
+				auto ctx2 = create_ui_context("/usr/bin/grep");
 
 				// ACT
-				m.load_session(create_ui_context("somefile.exe", fl1));
+				m.load_session(ctx1);
 
 				// ASSERT
 				assert_equal(1u, m.instances_count());
 				assert_equal("somefile.exe", m.get_instance(0)->process_info.executable);
-				assert_equal(fl1, m.get_instance(0)->model);
+				assert_equal(ctx1.statistics, m.get_instance(0)->statistics);
 				assert_equal(_ui_creation_log[0], m.get_instance(0)->ui);
 
 				// ACT
-				m.load_session(create_ui_context("jump.exe", fl2));
+				m.load_session(ctx2);
 
 				// ASSERT
 				assert_equal(2u, m.instances_count());
-				assert_equal("jump.exe", m.get_instance(1)->process_info.executable);
-				assert_equal(fl2, m.get_instance(1)->model);
+				assert_equal("/usr/bin/grep", m.get_instance(1)->process_info.executable);
+				assert_equal(ctx2.statistics, m.get_instance(1)->statistics);
 				assert_equal(_ui_creation_log[1], m.get_instance(1)->ui);
 			}
 
@@ -751,13 +761,9 @@ namespace micro_profiler
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
 				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
 				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
-				auto s1 = make_shared<tables::statistics>();
-				auto fl1 = make_shared<functions_list>(statistics, 1.0 / 123, sr, tmodel);
-				auto s2 = make_shared<tables::statistics>();
-				auto fl2 = make_shared<functions_list>(statistics, 1.0 / 123, sr, tmodel);
 
 				// ACT
-				m.load_session(create_ui_context("somefile.exe", fl1));
+				m.load_session(create_ui_context("somefile.exe"));
 
 				// ACT / ASSERT (does not crash)
 				m.close_all();

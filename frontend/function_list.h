@@ -75,10 +75,6 @@ namespace micro_profiler
 	private:
 		std::shared_ptr<tables::statistics> _statistics;
 		wpl::slot_connection _connection;
-
-	private:
-		template <typename ArchiveT, typename ContextT>
-		friend void serialize(ArchiveT &archive, functions_list &model, ContextT &context);
 	};
 
 

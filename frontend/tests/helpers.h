@@ -81,6 +81,10 @@ namespace micro_profiler
 		}
 
 		template <typename DestT, typename SrcT>
+		inline void assign_basic(DestT &dest, const SrcT &src)
+		{	dest = DestT(std::begin(src), std::end(src));	}
+
+		template <typename DestT, typename SrcT>
 		inline void assign(tables::table<DestT> &dest, const SrcT &src)
 		{	static_cast<DestT &>(dest) = DestT(std::begin(src), std::end(src));	}
 
@@ -113,22 +117,6 @@ namespace micro_profiler
 				}
 			}
 			ut::are_equivalent(reference_rows, actual_rows, location);
-		}
-
-		inline mapped_module_identified create_mapping(unsigned instance_id, unsigned peristent_id, long_address_t base)
-		{
-			mapped_module_identified mmi = { instance_id, peristent_id, std::string(), base, };
-			return mmi;
-		}
-
-		template <typename ArchiveT, typename DataT>
-		inline void emulate_save(ArchiveT &archive, signed long long ticks_per_second, const symbol_resolver &resolver,
-			const DataT &data, const threads_model &threads)
-		{
-			archive(ticks_per_second);
-			archive(resolver);
-			archive(data);
-			archive(threads);
 		}
 
 		template <typename T, size_t size>

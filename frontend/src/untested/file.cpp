@@ -27,9 +27,9 @@ using namespace std;
 
 namespace micro_profiler
 {
-	const wchar_t c_microProfilerDefaultExtension[] = L"mpstat4";
-	const wchar_t c_microProfilerFilesSave[] = L"MicroProfiler Statistics\0*.mpstat4\0\0";
-	const wchar_t c_microProfilerFilesOpen[] = L"MicroProfiler Statistics\0*.mpstat3;*.mpstat4\0\0";
+	const wchar_t c_microProfilerDefaultExtension[] = L"mpstat";
+	const wchar_t c_microProfilerFilesSave[] = L"MicroProfiler Statistics\0*.mpstat\0\0";
+	const wchar_t c_microProfilerFilesOpen[] = L"MicroProfiler Statistics\0*.mpstat3;*.mpstat4;*.mpstat\0\0";
 
 	auto_ptr<write_stream> create_file(HWND hparent, const string &default_name)
 	{

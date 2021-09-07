@@ -22,6 +22,7 @@
 
 #include <common/configuration.h>
 #include <frontend/function_list.h>
+#include <frontend/symbol_resolver.h>
 #include <frontend/tables_ui.h>
 
 #include <algorithm>
@@ -65,7 +66,8 @@ namespace micro_profiler
 	{
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
-		auto model = ui_context.model;
+		auto model = make_shared<functions_list>(ui_context.statistics, 1.0 / ui_context.process_info.ticks_per_second,
+			make_shared<symbol_resolver>(ui_context.modules, ui_context.module_mappings), ui_context.threads);
 
 		const auto root = make_shared<overlay>();
 			root->add(factory_.create_control<control>("background"));

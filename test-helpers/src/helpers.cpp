@@ -51,6 +51,12 @@ namespace micro_profiler
 			ptr += size;
 		}
 
+		void vector_adapter::skip(size_t size)
+		{
+			assert_is_true(size <= buffer.size() - ptr);
+			ptr += size;
+		}
+
 		void vector_adapter::rewind(size_t pos)
 		{	ptr = pos;	}
 

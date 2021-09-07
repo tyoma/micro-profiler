@@ -12,6 +12,7 @@ set(FRONTEND_TESTS_SOURCES
 	FunctionListTests.cpp
 	HeadersModelTests.cpp
 	ImagePatchModelTests.cpp
+	legacy_serialization.cpp
 	mock_channel.cpp
 	mocks.cpp
 	NestedStatisticModelsTests.cpp

@@ -75,6 +75,8 @@ namespace micro_profiler
 
 			void write(const void *buffer, size_t size);
 			void read(void *buffer, size_t size);
+			void skip(size_t size);
+
 			void rewind(size_t pos = 0);
 			size_t end_position() const;
 

@@ -36,6 +36,7 @@
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
 #include <frontend/persistence.h>
+#include <frontend/threads_model.h>
 #include <logger/log.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
@@ -315,12 +316,26 @@ namespace micro_profiler
 				if (s.get())
 				{
 					const string ext = extension(*path);
+					strmd::deserializer<read_stream, packer, 3> dser_v3(*s);
+					strmd::deserializer<read_stream, packer, 4> dser_v4(*s);
 					strmd::deserializer<read_stream, packer> dser(*s);
 					frontend_ui_context ui_context = {
-						{	*path, 1u	},
-						!stricmp(ext.c_str(), ".mpstat3")
-							? snapshot_load<scontext::file_v3>(dser) : snapshot_load<scontext::file_v4>(dser)
+						{},
+						make_shared<tables::statistics>(),
+						make_shared<tables::module_mappings>(),
+						make_shared<tables::modules>(),
+						make_shared<tables::patches>(),
+						make_shared<threads_model>([] (...) {})
 					};
+
+					if (!stricmp(ext.c_str(), ".mpstat"))
+						dser(ui_context);
+					else if (!stricmp(ext.c_str(), ".mpstat4"))
+						dser_v4(ui_context);
+					else if (!stricmp(ext.c_str(), ".mpstat3"))
+						dser_v3(ui_context);
+					else
+						dser(ui_context);
 
 					_frontend_manager->load_session(ui_context);
 				}
@@ -332,13 +347,13 @@ namespace micro_profiler
 			add_command(cmdidSaveStatistics, [this] (unsigned) {
 				if (const frontend_manager::instance *i = _frontend_manager->get_active())
 				{
-					shared_ptr<functions_list> model = i->model;
+					frontend_ui_context contents = *i;
 					auto_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), i->process_info.executable);
 
 					if (s.get())
 					{
 						strmd::serializer<write_stream, packer> ser(*s);
-						snapshot_save<scontext::file_v4>(ser, *model);
+						ser(contents);
 					}
 				}
 			}, false, [this] (unsigned, unsigned &state) -> bool {

@@ -88,15 +88,18 @@
 
 namespace strmd
 {
-	template <typename StreamT, typename PackerT> class serializer;
-	template <typename StreamT, typename PackerT> class deserializer;
+	template <typename, typename>
+	class serializer;
+
+	template <typename, typename, int>
+	class deserializer;
 
 	template <typename StreamT, typename PackerT, typename RepT, typename RatioT>
 	inline void serialize(serializer<StreamT, PackerT> &archive, mt::duration<RepT, RatioT> data)
 	{	archive(data.count());	}
 
-	template <typename StreamT, typename PackerT, typename RepT, typename RatioT>
-	inline void serialize(deserializer<StreamT, PackerT> &archive, mt::duration<RepT, RatioT> &data)
+	template <typename StreamT, typename PackerT, int static_version, typename RepT, typename RatioT>
+	inline void serialize(deserializer<StreamT, PackerT, static_version> &archive, mt::duration<RepT, RatioT> &data)
 	{
 		RepT v;
 

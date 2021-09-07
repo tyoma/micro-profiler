@@ -39,13 +39,5 @@ namespace micro_profiler
 		{
 			std::vector<unsigned int> threads;
 		};
-
-		struct file_v3
-		{
-		};
-
-		struct file_v4
-		{
-		};
 	}
 }

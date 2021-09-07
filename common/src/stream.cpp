@@ -43,6 +43,14 @@ namespace micro_profiler
 		_remaining -= size;
 	}
 
+	void buffer_reader::skip(size_t size)
+	{
+		if (size > _remaining)
+			raise(size);
+		_ptr += size;
+		_remaining -= size;
+	}
+
 	FORCE_NOINLINE void buffer_reader::raise(size_t size)
 	{	throw insufficient_buffer_error(size, _remaining);	}
 }

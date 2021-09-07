@@ -30,16 +30,23 @@ namespace micro_profiler
 		: _file(_wfopen(path.c_str(), L"wb+"), &::fclose)
 	{	}
 
-	void write_stream::write(const byte *buffer, size_t size)
+	void write_stream::write(const void *buffer, size_t size)
 	{	fwrite(buffer, 1, size, static_cast<FILE *>(_file.get()));	}
+
 
 	read_stream::read_stream(const wstring &path)
 		: _file(_wfopen(path.c_str(), L"rb"), &::fclose)
 	{	}
 
-	void read_stream::read(byte *buffer, size_t size)
+	void read_stream::read(void *buffer, size_t size)
 	{
 		if (size != fread(buffer, 1, size, static_cast<FILE *>(_file.get())))
 			throw runtime_error("Reading past end the file!");
+	}
+
+	void read_stream::skip(size_t size)
+	{
+		if (fseek(static_cast<FILE *>(_file.get()), size, SEEK_CUR))
+			throw runtime_error("Seeking past end the file!");
 	}
 }

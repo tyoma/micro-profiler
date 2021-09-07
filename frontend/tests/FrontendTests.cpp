@@ -4,7 +4,6 @@
 #include "mock_channel.h"
 
 #include <common/serialization.h>
-#include <frontend/function_list.h>
 #include <frontend/tables.h>
 #include <frontend/threads_model.h>
 #include <ipc/server_session.h>
@@ -23,8 +22,9 @@ namespace micro_profiler
 
 	inline bool operator ==(const frontend_ui_context &lhs, const frontend_ui_context &rhs)
 	{
-		return lhs.process_info == rhs.process_info && lhs.model == rhs.model && lhs.statistics == rhs.statistics
-			&& lhs.modules == rhs.modules && lhs.module_mappings == rhs.module_mappings;
+		return lhs.process_info == rhs.process_info && lhs.statistics == rhs.statistics
+			&& lhs.module_mappings == rhs.module_mappings && lhs.modules == rhs.modules
+			&& lhs.patches == rhs.patches && lhs.threads == rhs.threads;
 	}
 
 	namespace tests
@@ -130,10 +130,12 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(make_initialization_data("krnl386.exe", 0xF00000000ull), context2.process_info);
-				assert_not_null(context2.model);
 				assert_not_null(context2.statistics);
 				assert_not_null(context2.modules);
 				assert_not_null(context2.module_mappings);
+				assert_not_null(context2.modules);
+				assert_not_null(context2.patches);
+				assert_not_null(context2.threads);
 
 				// INIT
 				const auto reference = context2;
@@ -155,7 +157,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(make_initialization_data("user.exe", 0x900000000ull), context2.process_info);
-				assert_not_null(context2.model);
+				assert_not_null(context2.statistics);
 			}
 
 
@@ -246,7 +248,7 @@ namespace micro_profiler
 
 				// ACT
 				emulator->message(init, format(make_initialization_data("/test", 1)));
-				const auto threads = context.model->threads;
+				const auto threads = context.threads;
 
 				// ASSERT
 				unsigned int native_id;
@@ -320,13 +322,13 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 
 				// ASSERT
-				assert_equal(2u, context.model->get_count());
+				assert_equal(2u, context.statistics->size());
 
 				// ACT
 				context.statistics->request_update();
 
 				// ASSERT
-				assert_equal(2u, context.model->get_count());
+				assert_equal(2u, context.statistics->size());
 
 				// INIT
 				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
@@ -340,51 +342,7 @@ namespace micro_profiler
 				context.statistics->request_update();
 
 				// ASSERT
-				assert_equal(3u, context.model->get_count());
-			}
-
-
-			test( FunctionListIsInitializedWithTicksPerSecond )
-			{
-				// INIT
-				auto frontend_ = create_frontend();
-
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						auto f = make_pair(1321222u, unthreaded_statistic_types::function_detailed());
-						f.second.inclusive_time = 150;
-						s(make_single_threaded(plural + f));
-					});
-				});
-
-				// ACT
-				emulator->message(init, format(make_initialization_data("", 10)));
-				auto model1 = context.model;
-
-				// ASSERT
-				columns::main ordering[] = {	columns::inclusive,	};
-				string reference1[][1] = {	{	"15s",	},	};
-
-				assert_table_equivalent(ordering, reference1, *model1);
-
-				// INIT
-				frontend_ = create_frontend();
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						auto f = make_pair(1321222u, unthreaded_statistic_types::function_detailed());
-						f.second.inclusive_time = 150;
-						s(make_single_threaded(plural + f));
-					});
-				});
-
-				// ACT
-				emulator->message(init, format(make_initialization_data("", 15)));
-				auto model2 = context.model;
-
-				// ASSERT
-				string reference2[][1] = {	{	"10s",	},	};
-
-				assert_table_equivalent(ordering, reference2, *model2);
+				assert_equal(3u, context.statistics->size());
 			}
 
 
@@ -409,75 +367,6 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1, called);
-			}
-
-
-			test( MetadataRequestOnAttemptingToResolveMissingFunction )
-			{
-				// INIT
-				auto frontend_ = create_frontend();
-				vector<unsigned /*persistent_id*/> log;
-
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_modules_loaded, [] (ipc::server_session::serializer &s) {
-						s(plural + create_mapping(0, 17u, 0u) + create_mapping(1, 99u, 0x1000) + create_mapping(2, 1000u, 0x1900));
-					});
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(0x0100u, unthreaded_statistic_types::function_detailed())
-							+ make_pair(0x1001u, unthreaded_statistic_types::function_detailed())
-							+ make_pair(0x1100u, unthreaded_statistic_types::function_detailed())
-							+ make_pair(0x1910u, unthreaded_statistic_types::function_detailed())));
-					});
-				});
-				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &req, unsigned persistent_id) {
-					log.push_back(persistent_id);
-					req.respond(response_module_metadata, [persistent_id] (ipc::server_session::serializer &s) {
-						symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
-							symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
-							symbols1000[] = {	{	"baz", 0x0010, 1	},	};
-						module_info_metadata md17 = {	mkvector(symbols17),	},
-							md99 = {	mkvector(symbols99),	},
-							md1000 = {	mkvector(symbols1000),	};
-						switch (persistent_id)
-						{
-						case 17:	s(17u), s(md17);	break;
-						case 99:	s(99u), s(md99);	break;
-						case 1000:	s(1000u), s(md1000);	break;
-						}
-					});
-				});
-
-				emulator->message(init, format(make_initialization_data("", 1)));
-
-				// ACT
-				get_text(*context.model, context.model->get_index(addr(0x1100)), columns::name);
-
-				// ASSERT
-				unsigned int reference1[] = { 99u, };
-
-				assert_equal(reference1, log);
-
-				// ACT / ASSERT
-				assert_equal("BAR", get_text(*context.model, context.model->get_index(addr(0x1100)), columns::name));
-
-				// INIT
-				log.clear();
-
-				// ACT
-				get_text(*context.model, context.model->get_index(addr(0x1001)), columns::name);
-				get_text(*context.model, context.model->get_index(addr(0x0100)), columns::name);
-				get_text(*context.model, context.model->get_index(addr(0x1910)), columns::name);
-
-				// ASSERT
-				unsigned int reference2[] = { 17u, 1000u, };
-
-				assert_equal(reference2, log);
-
-				// ACT / ASSERT
-				assert_equal("FOO", get_text(*context.model, context.model->get_index(addr(0x1001)), columns::name));
-				assert_equal("foo", get_text(*context.model, context.model->get_index(addr(0x0100)), columns::name));
-				assert_equal("baz", get_text(*context.model, context.model->get_index(addr(0x1910)), columns::name));
 			}
 
 

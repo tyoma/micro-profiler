@@ -64,8 +64,6 @@ namespace micro_profiler
 
 		void request_full_update();
 
-		std::shared_ptr<threads_model> get_threads();
-
 		requests_t::iterator new_request_handle();
 
 	private:
@@ -74,9 +72,9 @@ namespace micro_profiler
 		const std::shared_ptr<tables::modules> _modules;
 		const std::shared_ptr<tables::module_mappings> _mappings;
 		const std::shared_ptr<tables::patches> _patches;
-		std::shared_ptr<functions_list> _model;
 		std::shared_ptr<threads_model> _threads;
 		scontext::wire _serialization_context;
+		bool _initialized;
 
 		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;
 		std::list< std::shared_ptr<void> > _requests;

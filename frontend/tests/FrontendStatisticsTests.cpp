@@ -131,7 +131,7 @@ namespace micro_profiler
 			}
 
 
-			test( NoAdditionalRequestIsEarlierRequestIsNotCompletedSentIfFirstIsNotCompleted )
+			test( NoAdditionalRequestIsSentIfTheCurrentIsNotCompleted )
 			{
 				// INIT
 				auto frontend_ = create_frontend();
@@ -141,9 +141,10 @@ namespace micro_profiler
 					update_requests++;
 					req.defer([] (ipc::server_session::request &req) {
 						req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-							statistic_types_t<unsigned>::map_detailed x;
-							x[1];
-							s(make_single_threaded(plural + x));
+							auto dummy = plural
+								+ make_pair(1u, plural
+									+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000));
+							s(dummy);
 						});
 					});
 				});

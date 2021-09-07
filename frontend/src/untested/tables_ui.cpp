@@ -66,7 +66,8 @@ namespace micro_profiler
 			_cm_parents(new headers_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new headers_model(c_columns_statistics_children, 4, false))
 	{
-		auto m_main = context.model;
+		auto m_main = make_shared<functions_list>(context.statistics, 1.0 / context.process_info.ticks_per_second,
+			make_shared<symbol_resolver>(context.modules, context.module_mappings), context.threads);
 		auto m_selection = m_main->create_selection();
 		auto m_selected_items = make_shared< vector<statistic_types::key> >();
 

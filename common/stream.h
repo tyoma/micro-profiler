@@ -39,6 +39,7 @@ namespace micro_profiler
 		buffer_reader(const_byte_range payload);
 
 		void read(void *data, size_t size);
+		void skip(size_t size);
 
 	private:
 		void raise(size_t size);

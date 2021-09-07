@@ -1,10 +1,12 @@
 #include <frontend/persistence.h>
 
 #include "helpers.h"
+#include "legacy_serialization.h"
 #include "mocks.h"
 
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
+#include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
@@ -12,251 +14,375 @@
 
 using namespace std;
 
+namespace strmd
+{
+	template <> struct version<micro_profiler::tests::file_components> {
+		enum {	value = version<micro_profiler::frontend_ui_context>::value	};
+	};
+}
+
 namespace micro_profiler
 {
+	inline bool operator <(const symbol_info &lhs, const symbol_info &rhs)
+	{
+		return make_pair(lhs.name, make_pair(lhs.rva, make_pair(lhs.size, make_pair(lhs.file_id, lhs.line))))
+			< make_pair(rhs.name, make_pair(rhs.rva, make_pair(rhs.size, make_pair(rhs.file_id, rhs.line))));
+	}
+
+	inline bool operator <(const mapped_module_identified &lhs, const mapped_module_identified &rhs)
+	{
+		return make_pair(lhs.persistent_id, make_pair(lhs.path, lhs.base))
+			< make_pair(rhs.persistent_id, make_pair(rhs.path, rhs.base));
+	}
+
+	inline bool operator <(const thread_info &lhs, const thread_info &rhs)
+	{	return make_pair(lhs.native_id, lhs.description) < make_pair(rhs.native_id, rhs.description);	}
+
+	inline bool operator ==(const initialization_data &lhs, const initialization_data &rhs)
+	{	return make_pair(lhs.executable, lhs.ticks_per_second) == make_pair(rhs.executable, rhs.ticks_per_second);	}
+
+	namespace tables
+	{
+		inline bool operator <(const module_info &lhs, const module_info &rhs)
+		{
+			return make_pair(lhs.path, lhs.symbols) < make_pair(rhs.path, rhs.symbols);
+		}
+	}
+
 	namespace tests
 	{
-		namespace
+		template <typename ArchiveT>
+		void serialize(ArchiveT &a, file_components &d, unsigned /*ver*/)
 		{
-			typedef statistic_types_t<long_address_t> unthreaded_statistic_types;
-			typedef pair<function_key, statistic_types::function_detailed> addressed_function;
+			a(d.process_info);
+			a(d.mappings);
+			a(d.modules);
+			a(d.statistics);
+			a(d.threads);
+	//		a(d.patches);
 		}
 
-		begin_test_suite( FunctionListPersistenceTests )
+		namespace
+		{
+			frontend_ui_context create_context()
+			{
+				frontend_ui_context ctx = {
+					{},
+					make_shared<tables::statistics>(),
+					make_shared<tables::module_mappings>(),
+					make_shared<tables::modules>(),
+					make_shared<tables::patches>(),
+					make_shared<threads_model>([] (vector<unsigned>) {}),
+				};
+				return ctx;
+			};
+		}
+
+		begin_test_suite( FilePersistenceTests )
 			vector_adapter _buffer;
 			strmd::serializer<vector_adapter, packer> ser;
 			strmd::deserializer<vector_adapter, packer> dser;
-			std::shared_ptr<tables::modules> modules;
-			std::shared_ptr<tables::module_mappings> mappings;
-			shared_ptr<mocks::threads_model> tmodel;
-			scontext::wire dummy_context;
-			
-			function<void (const vector<unsigned> &)> get_requestor_threads()
-			{	return [] (const vector<unsigned> &) { };	}
+			strmd::deserializer<vector_adapter, packer, 3> dser3;
+			strmd::deserializer<vector_adapter, packer, 4> dser4;
 
-			FunctionListPersistenceTests()
-				: ser(_buffer), dser(_buffer)
+			tables::module_info modules[3];
+			mapped_module_identified mappings[3];
+			vector< pair<statistic_types::key, statistic_types::function_detailed> > statistics[4];
+			vector< pair<statistic_types_t<long_address_t>::key, statistic_types_t<long_address_t>::function_detailed> > ustatistics[2];
+			shared_ptr<mocks::threads_model> threads[2];
+
+			
+			FilePersistenceTests()
+				: ser(_buffer), dser(_buffer), dser3(_buffer), dser4(_buffer)
 			{	}
 
 			init( CreatePrerequisites )
 			{
-				modules = make_shared<tables::modules>();
-				mappings = make_shared<tables::module_mappings>();
-				tmodel.reset(new mocks::threads_model);
+				symbol_info symbols1[] = {
+					{	"free", 0x005, 10,	}, {	"malloc", 0x013, 11,	}, {	"realloc", 0x017, 12,	},
+				};
+				symbol_info symbols2[] = {
+					{	"qsort", 0x105, 23,	}, {	"min", 0x013, 29,	}, {	"max", 0x170, 31,	}, {	"nth_element", 0x123, 37,	},
+				};
+				symbol_info symbols3[] = {
+					{	"stable_sort", 0xFFF, 97,	},
+				};
+				mapped_module_identified mappings_[] = {
+					{	0u, 10u, "c:\\windows\\kernel32.exe", 0x100000 },
+					{	0u, 4u, "/usr/bin/TEST", 0xF00010 },
+					{	0u, 2u, "c:\\Program File\\test\\test.exe", 0x9000000 },
+				};
+
+				modules[0].symbols = mkvector(symbols1);
+				modules[1].symbols = mkvector(symbols2);
+				modules[2].symbols = mkvector(symbols3);
+
+				copy_n(mappings_, 3, mappings);
+
+				statistics[0] = plural
+					+ make_statistics(addr(0x100005), 123, 0, 1000, 0, 0)
+					+ make_statistics(addr(0x100017, 3), 12, 0, 0, 0, 0)
+					+ make_statistics(addr(0xF00115, 4), 127, 0, 0, 0, 0)
+					+ make_statistics(addr(0xF00133, 3), 12000, 0, 250, 0, 0);
+				statistics[1] = plural
+					+ make_statistics(addr(0xF00115), 123, 0, 1000, 0, 0)
+					+ make_statistics(addr(0xF00023), 12, 0, 9, 0, 0)
+					+ make_statistics(addr(0xF00180), 127, 0, 10, 0, 0)
+					+ make_statistics(addr(0xF00133), 127, 0, 8, 0, 0)
+					+ make_statistics(addr(0x9000FFF), 12000, 0, 250, 0, 0)
+					+ make_statistics(addr(0x9000FFF, 17), 12000, 0, 250, 0, 0);
+
+				statistics[2] = plural
+					+ make_statistics(addr(0x100005, 0), 123, 0, 1000, 0, 0)
+					+ make_statistics(addr(0x100017, 0), 12, 0, 0, 0, 0)
+					+ make_statistics(addr(0xF00115, 0), 127, 0, 0, 0, 0)
+					+ make_statistics(addr(0xF00133, 0), 12000, 0, 250, 0, 0);
+				statistics[3] = plural
+					+ make_statistics(addr(0xF00115, 0), 123, 0, 1000, 0, 0)
+					+ make_statistics(addr(0xF00023, 0), 12, 0, 9, 0, 0)
+					+ make_statistics(addr(0xF00180, 0), 127, 0, 10, 0, 0)
+					+ make_statistics(addr(0xF00133, 0), 127, 0, 8, 0, 0)
+					+ make_statistics(addr(0x9000FFF, 0), 12000, 0, 250, 0, 0);
+
+				ustatistics[0] = plural
+					+ make_statistics(0x100005ull, 123, 0, 1000, 0, 0)
+					+ make_statistics(0x100017ull, 12, 0, 0, 0, 0)
+					+ make_statistics(0xF00115ull, 127, 0, 0, 0, 0)
+					+ make_statistics(0xF00133ull, 12000, 0, 250, 0, 0);
+				ustatistics[1] = plural
+					+ make_statistics(0xF00115ull, 123, 0, 1000, 0, 0)
+					+ make_statistics(0xF00023ull, 12, 0, 9, 0, 0)
+					+ make_statistics(0xF00180ull, 127, 0, 10, 0, 0)
+					+ make_statistics(0xF00133ull, 127, 0, 8, 0, 0)
+					+ make_statistics(0x9000FFFull, 12000, 0, 250, 0, 0);
+
+				threads[0] = make_shared<mocks::threads_model>();
+				threads[0]->add(1, 111, "#1");
+				threads[0]->add(3, 112, "#2");
+				threads[0]->add(4, 113, "#3");
+				threads[1] = make_shared<mocks::threads_model>();
+				threads[1]->add(1, 1211, "thread A");
+				threads[1]->add(17, 1212, "thread B");
 			}
 
 
-			test( SymbolsRequiredAndTicksPerSecondAreSerializedForFile )
+			test( ContentIsFullySerialized )
 			{
 				// INIT
-				pair<long_address_t, string> symbols1[] = {
-					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				auto s1 = make_shared<tables::statistics>();
-				auto fl1 = make_shared<functions_list>(s1, 1.0 / 16, mocks::symbol_resolver::create(symbols1), tmodel);
-				pair<long_address_t, string> symbols2[] = {
-					make_pair(7, "A"), make_pair(11, "B"), make_pair(19, "C"), make_pair(131, "D"), make_pair(113, "E"),
-				};
-				auto s2 = make_shared<tables::statistics>();
-				auto fl2 = make_shared<functions_list>(s2, 1.0 / 25000000000, mocks::symbol_resolver::create(symbols2), tmodel);
-				statistic_types::map_detailed read;
-				timestamp_t ticks_per_second;
-				threads_model dummy_threads(get_requestor_threads());
-
-				(*s1)[addr(1)], (*s1)[addr(17)];
-				s1->invalidate();
-
-				(*s2)[addr(7)], (*s2)[addr(11)], (*s2)[addr(131)], (*s2)[addr(113)];
-				s1->invalidate();
+				auto ctx = create_context();
+				ctx.process_info.executable = "kjsdhgkjsdwwp.exe";
+				ctx.process_info.ticks_per_second = 0xF00000000ull;
+				assign(*ctx.statistics, statistics[0]);
+				assign(*ctx.module_mappings, plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]));
+				assign(*ctx.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
+				ctx.threads = threads[0];
 
 				// ACT
-				snapshot_save<scontext::file_v4>(ser, *fl1);
+				ser(ctx);
 
 				// ASSERT
-				symbol_resolver r(modules, mappings);
+				file_components components1;
+				dser(components1);
 
-				dser(ticks_per_second);
-				dser(r);
-				dser(read);
-				dser(dummy_threads);
+				assert_equal(ctx.process_info, components1.process_info);
+				assert_equivalent(*ctx.module_mappings, components1.mappings);
+				assert_equivalent(*ctx.modules, components1.modules);
+				assert_equivalent(*ctx.statistics, components1.statistics);
 
-				assert_equal(16, ticks_per_second);
-				assert_equal("Lorem", r.symbol_name_by_va(1));
-				assert_equal("Amet", r.symbol_name_by_va(17));
+				thread_info reference1[] = {
+					{	111, "#1",	}, {	112, "#2",	}, {	113, "#3",	},
+				};
+
+				assert_equivalent(plural
+					+ make_pair(1u, reference1[0]) + make_pair(3u, reference1[1]) + make_pair(4u, reference1[2]),
+					components1.threads);
+				
+				// INIT
+				ctx = create_context();
+				ctx.process_info.executable = "/usr/bin/grep";
+				ctx.process_info.ticks_per_second = 0x1000ull;
+				assign(*ctx.statistics, statistics[1]);
+				assign(*ctx.module_mappings, plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]));
+				assign(*ctx.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
+				ctx.threads = threads[1];
 
 				// ACT
-				snapshot_save<scontext::file_v4>(ser, *fl2);
+				ser(ctx);
 
 				// ASSERT
-				dser(ticks_per_second);
-				dser(r);
-				dser(read);
-				dser(dummy_threads);
+				file_components components2;
+				dser(components2);
 
-				assert_equal(25000000000, ticks_per_second);
-				assert_equal("A", r.symbol_name_by_va(7));
-				assert_equal("B", r.symbol_name_by_va(11));
-				assert_equal("D", r.symbol_name_by_va(131));
-				assert_equal("E", r.symbol_name_by_va(113));
+				assert_equal(ctx.process_info, components2.process_info);
+				assert_equivalent(*ctx.module_mappings, components2.mappings);
+				assert_equivalent(*ctx.modules, components2.modules);
+				assert_equivalent(*ctx.statistics, components2.statistics);
+
+				thread_info reference2[] = {
+					{	1211, "thread A",	}, {	1212, "thread B",	},
+				};
+
+				assert_equivalent(plural
+					+ make_pair(1u, reference2[0]) + make_pair(17u, reference2[1]),
+					components2.threads);
 			}
 
 
-			test( ThreadsModelIsSerializedForFile )
+			test( ContentIsFullyDeserialized )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
+				file_components components1;
+				auto ctx1 = create_context();
+				thread_info threads1[] = {
+					{	111, "#1",	}, {	112, "#2",	}, {	113, "#3",	},
 				};
-				shared_ptr<mocks::threads_model> tmodel1(new mocks::threads_model());
-				shared_ptr<mocks::threads_model> tmodel2(new mocks::threads_model());
-				auto s1 = make_shared<tables::statistics>();
-				auto fl1 = make_shared<functions_list>(s1, 1.0 / 16, mocks::symbol_resolver::create(symbols), tmodel1);
-				auto s2 = make_shared<tables::statistics>();
-				auto fl2 = make_shared<functions_list>(s2, 1.0 / 16, mocks::symbol_resolver::create(symbols), tmodel2);
 
-				tmodel1->add(0, 1211, "thread A");
-				tmodel1->add(1, 1212, "thread B");
-				tmodel2->add(1, 111, "#1");
-				tmodel2->add(21, 112, "#2");
-				tmodel2->add(14, 113, "#3");
+				components1.process_info.executable = "kjsdhgkjsdwwp.exe";
+				components1.process_info.ticks_per_second = 0xF00000000ull;
+				assign_basic(components1.statistics, statistics[0]);
+				assign_basic(components1.mappings, plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]));
+				assign_basic(components1.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
+				assign_basic(components1.threads, plural
+					+ make_pair(1u, threads1[0]) + make_pair(3u, threads1[1]) + make_pair(4u, threads1[2]));
+				ser(components1);
 
 				// ACT
-				snapshot_save<scontext::file_v4>(ser, *fl1);
+				dser(ctx1);
 
 				// ASSERT
-				long long dummy_frequency;
-				symbol_resolver dummy_resolver(modules, mappings);
-				statistic_types::map_detailed dummy_data;
-				threads_model threads1(get_requestor_threads());
-				threads_model threads2(get_requestor_threads());
-				unsigned int native_id;
+				assert_equal(components1.process_info, ctx1.process_info);
+				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
+				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
+				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx1.modules);
+				assert_equal(4u, ctx1.threads->get_count());
 
-				dser(dummy_frequency);
-				dser(dummy_resolver);
-				dser(dummy_data);
-				dser(threads1);
+				// INIT
+				file_components components2;
+				auto ctx2 = create_context();
+				thread_info threads2[] = {
+					{	1211, "thread A",	}, {	1212, "thread ABC",	},
+				};
 
-				assert_equal(3u, threads1.get_count());
-				assert_is_true(threads1.get_native_id(native_id, 0));
-				assert_equal(1211u, native_id);
-				assert_is_true(threads1.get_native_id(native_id, 1));
-				assert_equal(1212u, native_id);
+				components2.process_info.executable = "/usr/bin/grep";
+				components2.process_info.ticks_per_second = 0x1000ull;
+				assign_basic(components2.statistics, statistics[1]);
+				assign_basic(components2.mappings, plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]));
+				assign_basic(components2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
+				assign_basic(components2.threads, plural
+					+ make_pair(1u, threads2[0]) + make_pair(17u, threads2[1]));
+				ser(components2);
 
 				// ACT
-				snapshot_save<scontext::file_v4>(ser, *fl2);
+				dser(ctx2);
 
 				// ASSERT
-				dser(dummy_frequency);
-				dser(dummy_resolver);
-				dser(dummy_data);
-				dser(threads2);
-
-				assert_equal(4u, threads2.get_count());
-				assert_is_true(threads2.get_native_id(native_id, 1));
-				assert_equal(111u, native_id);
-				assert_is_true(threads2.get_native_id(native_id, 21));
-				assert_equal(112u, native_id);
-				assert_is_true(threads2.get_native_id(native_id, 14));
-				assert_equal(113u, native_id);
+				assert_equal(components2.process_info, ctx2.process_info);
+				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
+				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
+				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx2.modules);
+				assert_equal(3u, ctx2.threads->get_count());
 			}
 
 
-			test( StatisticsFollowsTheSymbolsInFileSerialization )
+			test( FileV3ContentIsFullyDeserialized )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(1, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
-				};
-				auto s = make_shared<tables::statistics>();
-				auto fl = make_shared<functions_list>(s, 1.0, mocks::symbol_resolver::create(symbols), tmodel);
-				timestamp_t ticks_per_second;
-				threads_model dummy_threads(get_requestor_threads());
+				file_v3_components components1;
+				auto ctx1 = create_context();
 
-				(*s)[addr(1)], (*s)[addr(17)], (*s)[addr(13)];
-				s->invalidate();
+				components1.ticks_per_second = 0xF00000000ull;
+				assign_basic(components1.statistics, ustatistics[0]);
+				assign_basic(components1.mappings, plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]));
+				assign_basic(components1.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
+				serialize_legacy(_buffer, components1);
 
 				// ACT
-				snapshot_save<scontext::file_v4>(ser, *fl);
+				dser3(ctx1);
 
 				// ASSERT
-				symbol_resolver r(modules, mappings);
-				statistic_types::map_detailed stats_read;
+				assert_equal(0xF00000000ll, ctx1.process_info.ticks_per_second);
+				assert_is_empty(ctx1.process_info.executable);
+				assert_equivalent(statistics[2], (statistic_types::map_detailed &)*ctx1.statistics);
+				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
+				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx1.modules);
+				assert_equal(1u, ctx1.threads->get_count());
 
-				dser(ticks_per_second);
-				dser(r);
-				dser(stats_read);
-				dser(dummy_threads);
+				// INIT
+				file_v3_components components2;
+				auto ctx2 = create_context();
 
-				assert_equal(3u, stats_read.size());
+				components2.ticks_per_second = 0x1000ull;
+				assign_basic(components2.statistics, ustatistics[1]);
+				assign_basic(components2.mappings, plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]));
+				assign_basic(components2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
+				serialize_legacy(_buffer, components2);
+
+				// ACT
+				dser3(ctx2);
+
+				// ASSERT
+				assert_equal(0x1000ll, ctx2.process_info.ticks_per_second);
+				assert_is_empty(ctx2.process_info.executable);
+				assert_equivalent(statistics[3], (statistic_types::map_detailed &)*ctx2.statistics);
+				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
+				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx2.modules);
+				assert_equal(1u, ctx2.threads->get_count());
 			}
 
 
-			test( FunctionListIsCompletelyRestoredWithSymbols )
+			test( FileV4ContentIsFullyDeserialized )
 			{
 				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
+				file_v4_components components1;
+				auto ctx1 = create_context();
+				thread_info threads1[] = {
+					{	111, "#1",	}, {	112, "#2",	}, {	113, "#3",	},
 				};
-				addressed_function s[] = {
-					make_statistics(addr(5), 123, 0, 1000, 0, 0),
-					make_statistics(addr(13, 3), 12, 0, 0, 0, 0),
-					make_statistics(addr(17, 5), 127, 0, 0, 0, 0),
-					make_statistics(addr(123), 12000, 0, 250, 0, 0),
-				};
-				mocks::threads_model threads;
 
-				threads.add(5, 17000, "abc");
-				threads.add(3, 19001, "zee");
-
-				emulate_save(ser, 500, *mocks::symbol_resolver::create(symbols), mkvector(s), threads);
+				components1.ticks_per_second = 0xF00000000ull;
+				assign_basic(components1.statistics, statistics[0]);
+				assign_basic(components1.mappings, plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]));
+				assign_basic(components1.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
+				assign_basic(components1.threads, plural
+					+ make_pair(1u, threads1[0]) + make_pair(3u, threads1[1]) + make_pair(4u, threads1[2]));
+				serialize_legacy(_buffer, components1);
 
 				// ACT
-				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v4>(dser);
-				fl->set_order(columns::name, true);
+				dser4(ctx1);
 
 				// ASSERT
-				columns::main ordering[] = {	columns::name, columns::threadid, columns::times_called, columns::inclusive,	};
-				string reference[][4] = {
-					{	"Amet", "17000", "127", "0s",	},
-					{	"Ipsum", "19001", "12", "0s",	},
-					{	"Lorem", "", "123", "2s",	},
-					{	"dolor", "", "12000", "500ms",	},
-				};
+				assert_equal(0xF00000000ll, ctx1.process_info.ticks_per_second);
+				assert_is_empty(ctx1.process_info.executable);
+				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
+				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
+				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx1.modules);
+				assert_equal(4u, ctx1.threads->get_count());
 
-				assert_table_equivalent(ordering, reference, *fl);
-			}
-
-
-			test( FunctionListIsCompletelyRestoredWithSymbolsV3 )
-			{
 				// INIT
-				pair<long_address_t, string> symbols[] = {
-					make_pair(5, "Lorem"), make_pair(13, "Ipsum"), make_pair(17, "Amet"), make_pair(123, "dolor"),
+				file_v4_components components2;
+				auto ctx2 = create_context();
+				thread_info threads2[] = {
+					{	1211, "thread A",	}, {	1212, "thread ABC",	},
 				};
-				auto s = plural
-					+ make_statistics(5u, 123, 0, 1000, 0, 0)
-					+ make_statistics(13u, 12, 0, 0, 0, 0)
-					+ make_statistics(17u, 127, 0, 0, 0, 0)
-					+ make_statistics(123u, 12000, 0, 250, 0, 0);
 
-				ser(500);
-				ser(*mocks::symbol_resolver::create(symbols));
-				ser(s);
+				components2.ticks_per_second = 0x1000ull;
+				assign_basic(components2.statistics, statistics[1]);
+				assign_basic(components2.mappings, plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]));
+				assign_basic(components2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
+				assign_basic(components2.threads, plural
+					+ make_pair(1u, threads2[0]) + make_pair(17u, threads2[1]));
+				serialize_legacy(_buffer, components2);
 
 				// ACT
-				shared_ptr<functions_list> fl = snapshot_load<scontext::file_v3>(dser);
-				fl->set_order(columns::name, true);
+				dser4(ctx2);
 
 				// ASSERT
-				columns::main ordering[] = {	columns::name, columns::threadid, columns::times_called, columns::inclusive,	};
-				string reference[][4] = {
-					{	"Amet", "", "127", "0s",	},
-					{	"Ipsum", "", "12", "0s",	},
-					{	"Lorem", "", "123", "2s",	},
-					{	"dolor", "", "12000", "500ms",	},
-				};
-
-				assert_table_equivalent(ordering, reference, *fl);
+				assert_equal(0x1000ll, ctx2.process_info.ticks_per_second);
+				assert_is_empty(ctx2.process_info.executable);
+				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
+				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
+				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx2.modules);
+				assert_equal(3u, ctx2.threads->get_count());
 			}
 
 		end_test_suite

@@ -28,9 +28,15 @@ namespace micro_profiler
 				};
 			}
 
-			void add_mapping(const mapped_module_identified &mapping)
+			pair<unsigned, mapped_module_identified> create_mapping(unsigned instance_id, unsigned peristent_id, long_address_t base)
 			{
-				assert_is_true(mappings->insert(make_pair(mapping.instance_id, mapping)).second);
+				mapped_module_identified mmi = { 0, peristent_id, std::string(), base, };
+				return make_pair(instance_id, mmi);
+			}
+
+			void add_mapping(const pair<unsigned, mapped_module_identified> &mapping)
+			{
+				assert_is_true(mappings->insert(make_pair(mapping.first, mapping.second)).second);
 				mappings->invalidate();
 			}
 
@@ -386,6 +392,28 @@ namespace micro_profiler
 				unsigned reference2[] = { 11, 100, 11711, };
 
 				assert_equal(reference2, _requested);
+			}
+
+
+			test( ExistingFunctionsAreLoadedOnConstruction )
+			{
+				// INIT
+				symbol_info symbols1[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
+				symbol_info symbols2[] = { { "FOO", 0x1010, 3 }, { "BAR", 0x1101, 5 }, { "BAZ", 0x1111, 5 }, };
+
+				assign(*mappings, plural + create_mapping(0, 1u, 0x000000) + create_mapping(1, 7u, 0x100000));
+				(*modules)[1].symbols = mkvector(symbols1);
+				(*modules)[7].symbols = mkvector(symbols2);
+
+				// INIT / ACT
+				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
+
+				// ASSERT
+				assert_equal("foo", r->symbol_name_by_va(0x1010));
+				assert_equal("bar_2", r->symbol_name_by_va(0x1101));
+				assert_equal("FOO", r->symbol_name_by_va(0x101010));
+				assert_equal("BAR", r->symbol_name_by_va(0x101101));
+				assert_equal("BAZ", r->symbol_name_by_va(0x101111));
 			}
 
 		end_test_suite

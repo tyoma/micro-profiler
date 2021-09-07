@@ -20,92 +20,39 @@
 
 #pragma once
 
-#include "function_list.h"
+#include "frontend_ui.h"
 #include "serialization.h"
-#include "symbol_resolver.h"
 #include "tables.h"
+#include "threads_model.h"
+
+namespace strmd
+{
+	template <> struct version<micro_profiler::frontend_ui_context> {	enum {	value = 4	};	};
+}
 
 namespace micro_profiler
 {
-	struct function_list_serialization_proxy
-	{
-		functions_list &self;
-		double &tick_interval;
-		symbol_resolver &resolver;
-		statistic_types::map_detailed &statistics;
-		threads_model &threads;
-	};
-
-
-
 	template <typename ArchiveT>
-	inline void reciprocal(ArchiveT &archive, double &value)
+	inline void serialize(ArchiveT &archive, frontend_ui_context &data, unsigned int ver)
 	{
-		long long rv = static_cast<long long>(value ? 1 / value : 1);
+		archive(data.process_info);
+		archive(static_cast<containers::unordered_map<unsigned int, mapped_module_identified> &>(*data.module_mappings));
+		archive(static_cast<containers::unordered_map<unsigned int, tables::module_info> &>(*data.modules));
 
-		archive(rv);
-		value = 1.0 / rv;
-	}
-
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v3 &/*context*/)
-	{
-		scontext::detailed_threaded context = { &data.statistics, 0, 0 };
-
-		reciprocal(archive, data.tick_interval);
-		archive(data.resolver);
-		archive(data.statistics, context);
-	}
-
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, function_list_serialization_proxy &data, const scontext::file_v4 &/*context*/)
-	{
-		reciprocal(archive, data.tick_interval);
-		archive(data.resolver);
-		archive(data.statistics);
-		archive(data.threads);
-	}
-
-	template <typename ArchiveT, typename ContextT>
-	inline void serialize(ArchiveT &archive, functions_list &data, ContextT &context)
-	{
-		function_list_serialization_proxy proxy = {
-			data,
-			data.tick_interval,
-			*data.resolver,
-			*data._statistics,
-			*data.threads
-		};
-
-		archive(proxy, context);
-		data._statistics->invalidate();
-	}
-
-	template <typename ContextT, typename ArchiveT>
-	inline void snapshot_save(ArchiveT &archive, const functions_list &model)
-	{
-		ContextT context;
-		archive(model, context);
-	}
-
-	template <typename ContextT, typename ArchiveT>
-	inline std::shared_ptr<functions_list> snapshot_load(ArchiveT &archive)
-	{
-		struct dummy_
+		if (ver >= 4)
 		{
-			static void dummy_threads_request(const std::vector<unsigned int> &)
-			{	}
-		};
+			archive(static_cast<statistic_types::map_detailed &>(*data.statistics));
+		}
+		else if (ver >= 3)
+		{
+			scontext::detailed_threaded context = { data.statistics.get(), 0, 0 };
+			archive(static_cast<statistic_types::map_detailed &>(*data.statistics), context);
+		}
 
-		ContextT context;
-		auto statistics = std::make_shared<tables::statistics>();
-		auto modules = std::make_shared<tables::modules>();
-		auto mappings = std::make_shared<tables::module_mappings>();
-		auto resolver = std::make_shared<symbol_resolver>(modules, mappings);
-		auto threads = std::make_shared<threads_model>(&dummy_::dummy_threads_request);
-		auto fl = std::make_shared<functions_list>(statistics, 1, resolver, threads);
+		if (ver >= 4)
+			archive(*data.threads);
 
-		archive(*fl, context);
-		return fl;
+		//if (ver >= 5)
+		//	archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::image_patches> &>(const_cast<tables::patches &>(*data.patches)));
 	}
 }

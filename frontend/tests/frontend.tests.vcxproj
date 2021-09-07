@@ -61,6 +61,7 @@
     <ClCompile Include="FunctionListPiechartTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="ImagePatchModelTests.cpp" />
+    <ClCompile Include="legacy_serialization.cpp" />
     <ClCompile Include="mock_channel.cpp" />
     <ClCompile Include="NestedStatisticModelsTests.cpp" />
     <ClCompile Include="NestedTransformTests.cpp" />
@@ -75,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />
+    <ClInclude Include="legacy_serialization.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mock_channel.h" />
   </ItemGroup>

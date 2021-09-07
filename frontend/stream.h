@@ -32,7 +32,7 @@ namespace micro_profiler
 	public:
 		write_stream(const std::wstring &path);
 
-		void write(const byte *buffer, size_t size);
+		void write(const void *buffer, size_t size);
 
 	private:
 		const std::shared_ptr<void> _file;
@@ -43,7 +43,8 @@ namespace micro_profiler
 	public:
 		read_stream(const std::wstring &path);
 
-		void read(byte *buffer, size_t size);
+		void read(void *buffer, size_t size);
+		void skip(size_t size);
 
 	private:
 		const std::shared_ptr<void> _file;

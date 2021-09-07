@@ -20,7 +20,6 @@
 
 #include <frontend/frontend.h>
 
-#include <frontend/function_list.h>
 #include <frontend/serialization.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
@@ -47,32 +46,43 @@ namespace micro_profiler
 	frontend::frontend(ipc::channel &outbound)
 		: client_session(outbound), _statistics(make_shared<tables::statistics>()),
 			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
-			_patches(make_shared<tables::patches>())
+			_patches(make_shared<tables::patches>()), _initialized(false)
 	{
+		_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
+			auto self = this;
+			auto req = new_request_handle();
+
+			request(*req, request_threads_info, threads, response_threads_info,
+				[self, req] (deserializer &d) {
+
+				d(*self->_threads);
+				self->_requests.erase(req);
+			});
+		}));
+
 		subscribe(*new_request_handle(), init, [this] (deserializer &d) {
 			auto self = this;
 
-			if (_model)
+			if (_initialized)
 			{
 				LOG(PREAMBLE "repeated initialization message - ignoring...");
 				return;
 			}
 			d(_process_info);
 			_statistics->request_update = [self] {	self->request_full_update();	};
-			_model = make_shared<functions_list>(_statistics, 1.0 / _process_info.ticks_per_second,
-				make_shared<symbol_resolver>(_modules, _mappings), get_threads());
 
 			frontend_ui_context ctx = {
 				_process_info,
-				_model,
 				_statistics,
 				_mappings,
 				_modules,
 				_patches,
+				_threads,
 			};
 
 			initialized(ctx);
 			request_full_update();
+			_initialized = true;
 			LOG(PREAMBLE "initialized...")
 				% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
 		});
@@ -142,7 +152,7 @@ namespace micro_profiler
 		};
 		auto update_callback = [this] (deserializer &d) {
 			d(*_statistics, _serialization_context);
-			get_threads()->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
+			_threads->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
 			_update_request.reset();
 		};
 		pair<int, callback_t> callbacks[] = {
@@ -151,25 +161,6 @@ namespace micro_profiler
 		};
 
 		request(_update_request, request_update, 0, callbacks);
-	}
-
-	shared_ptr<threads_model> frontend::get_threads()
-	{
-		if (!_threads)
-		{
-			_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
-				auto self = this;
-				auto req = new_request_handle();
-
-				request(*req, request_threads_info, threads, response_threads_info,
-					[self, req] (deserializer &d) {
-
-					d(*self->_threads);
-					self->_requests.erase(req);
-				});
-			}));
-		}
-		return _threads;
 	}
 
 	frontend::requests_t::iterator frontend::new_request_handle()

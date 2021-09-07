@@ -29,20 +29,33 @@
 #include <strmd/container.h>
 #include <strmd/packer.h>
 
+namespace strmd
+{
+	template <> struct version<micro_profiler::initialization_data> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::function_statistics> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::mapped_module_identified> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::symbol_info> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::module_info_metadata> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
+	template <typename KeyT> struct version< micro_profiler::function_statistics_detailed_t<KeyT> > {	enum {	value = 4	};	};
+}
+
 namespace micro_profiler
 {
 	typedef strmd::varint packer;
 
-
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, initialization_data &data)
+	inline void serialize(ArchiveT &archive, initialization_data &data, unsigned int ver)
 	{
-		archive(data.executable);
 		archive(data.ticks_per_second);
+		if (ver >= 5)
+			archive(data.executable);
 	}	
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, function_statistics &data)
+	inline void serialize(ArchiveT &archive, function_statistics &data, unsigned int /*ver*/)
 	{
 		archive(data.times_called);
 		archive(data.max_reentrance);
@@ -52,7 +65,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename AddressT>
-	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data)
+	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data, unsigned int /*ver*/)
 	{
 		archive(static_cast<function_statistics &>(data));
 		archive(data.callees);
@@ -63,7 +76,7 @@ namespace micro_profiler
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, mapped_module_identified &data)
+	inline void serialize(ArchiveT &archive, mapped_module_identified &data, unsigned int /*ver*/)
 	{
 		archive(data.instance_id);
 		archive(data.persistent_id);
@@ -72,7 +85,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, symbol_info &data)
+	inline void serialize(ArchiveT &archive, symbol_info &data, unsigned int /*ver*/)
 	{
 		unsigned int id = 0;
 
@@ -85,14 +98,14 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, module_info_metadata &data)
+	inline void serialize(ArchiveT &archive, module_info_metadata &data, unsigned int /*ver*/)
 	{
 		archive(data.symbols);
 		archive(data.source_files);
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, thread_info &data)
+	inline void serialize(ArchiveT &archive, thread_info &data, unsigned int /*ver*/)
 	{
 		archive(data.native_id);
 		archive(data.description);
@@ -103,7 +116,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, patch_request &data)
+	inline void serialize(ArchiveT &archive, patch_request &data, unsigned int /*ver*/)
 	{
 		archive(data.image_persistent_id);
 		archive(data.functions_rva);
@@ -114,7 +127,7 @@ namespace micro_profiler
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, patch_apply &data)
+	inline void serialize(ArchiveT &archive, patch_apply &data, unsigned int /*ver*/)
 	{
 		archive(data.result);
 		archive(data.id);

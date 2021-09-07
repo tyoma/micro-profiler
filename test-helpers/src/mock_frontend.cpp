@@ -2,6 +2,7 @@
 
 #include <common/memory.h>
 #include <common/serialization.h>
+#include <common/stream.h>
 #include <strmd/deserializer.h>
 #include <ut/assert.h>
 
@@ -14,30 +15,6 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			namespace
-			{
-				class buffer_reader
-				{
-				public:
-					buffer_reader(const void *message, size_t size)
-						: _ptr(static_cast<const byte *>(message)), _remaining(size)
-					{	}
-
-					void read(void *data, size_t size)
-					{
-						assert_is_true(size <= _remaining);
-						mem_copy(data, _ptr, size);
-						_ptr += size;
-						_remaining -= size;
-					}
-
-				private:
-					const byte *_ptr;
-					size_t _remaining;
-				};
-			}
-
-
 			class frontend : public ipc::channel
 			{
 			public:
@@ -81,7 +58,7 @@ namespace micro_profiler
 
 			void frontend::message(const_byte_range payload)
 			{
-				buffer_reader reader(payload.begin(), payload.length());
+				buffer_reader reader(payload);
 				strmd::deserializer<buffer_reader, packer> a(reader);
 
 				a(*_state);

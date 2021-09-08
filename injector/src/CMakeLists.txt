@@ -5,3 +5,5 @@ set(INJECTOR_SOURCES
 )
 
 add_library(injector STATIC ${INJECTOR_SOURCES})
+
+target_link_libraries(injector psapi.lib)

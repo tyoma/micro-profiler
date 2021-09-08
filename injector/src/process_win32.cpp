@@ -20,11 +20,13 @@
 
 #include <injector/process.h>
 
+#include <common/file_id.h>
 #include <common/module.h>
 #include <common/path.h>
 #include <common/string.h>
 #include <stdexcept>
 #include <windows.h>
+#include <psapi.h>
 #include <tlhelp32.h>
 
 using namespace std;
@@ -63,8 +65,10 @@ namespace micro_profiler
 				const auto hkernel = load_library("kernel32");
 
 				::WriteProcessMemory(_hprocess.get(), fpath.get(), m.path.c_str(), m.path.size() + 1, NULL);
-				byte *fbase = static_cast<byte *>(foreign_execute((PTHREAD_START_ROUTINE)::GetProcAddress(
-					static_cast<HMODULE>(hkernel.get()), "LoadLibraryA"), fpath.get()));
+				foreign_execute((PTHREAD_START_ROUTINE)::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "LoadLibraryA"),
+					fpath.get());
+
+				auto fbase = static_cast<byte *>(find_loaded_module(m.path));
 
 				::WriteProcessMemory(_hprocess.get(), fpayload.get(), &injection_offset, sizeof(injection_offset),
 					NULL);
@@ -74,6 +78,12 @@ namespace micro_profiler
 					payload.begin(), payload.length(), NULL);
 				foreign_execute((PTHREAD_START_ROUTINE)(fbase + ((byte *)&foreign_worker - m.base)), fpayload.get());
 			}
+
+		private:
+			enum {
+				rights = PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE
+					| PROCESS_VM_READ,
+			};
 
 		private:
 			void *foreign_execute(PTHREAD_START_ROUTINE thread_routine, void *data)
@@ -90,7 +100,7 @@ namespace micro_profiler
 			shared_ptr<byte> foreign_allocate(size_t size)
 			{
 				return shared_ptr<byte>(static_cast<byte *>(::VirtualAllocEx(_hprocess.get(), 0, size, MEM_COMMIT,
-					PAGE_READWRITE)), bind(&::VirtualFreeEx, _hprocess.get(), _1, 0, MEM_RELEASE));
+					PAGE_EXECUTE_READWRITE)), bind(&::VirtualFreeEx, _hprocess.get(), _1, 0, MEM_RELEASE));
 			}
 
 			static void __stdcall foreign_worker(void *data_)
@@ -104,11 +114,26 @@ namespace micro_profiler
 				(*injection)(const_byte_range(data, *size));
 			};
 
-		private:
-			enum {
-				rights = PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE
-					| PROCESS_VM_READ,
-			};
+			void *find_loaded_module(const string &path)
+			{
+				file_id fid(path);
+				DWORD needed;
+				vector<HMODULE> buffer;
+
+				if (!::EnumProcessModules(_hprocess.get(), 0, 0, &needed))
+					throw runtime_error("Cannot enumerate modules in the target process!");
+				buffer.resize(needed / sizeof(HMODULE));
+				::EnumProcessModules(_hprocess.get(), buffer.data(), needed, &needed);
+				for (auto i = buffer.begin(); i != buffer.end(); ++i)
+				{
+					wchar_t path_buffer[MAX_PATH + 1] = { 0 };
+
+					::GetModuleFileNameExW(_hprocess.get(), *i, path_buffer, sizeof(path_buffer) / sizeof(wchar_t));
+					if (file_id(unicode(path_buffer)) == fid)
+						return *i;
+				}
+				return 0;
+			}
 
 		private:
 			unsigned _pid;

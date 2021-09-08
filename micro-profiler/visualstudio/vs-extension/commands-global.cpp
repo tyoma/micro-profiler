@@ -325,7 +325,7 @@ namespace micro_profiler
 						make_shared<tables::module_mappings>(),
 						make_shared<tables::modules>(),
 						make_shared<tables::patches>(),
-						make_shared<threads_model>([] (...) {})
+						make_shared<threads_model>([] (vector<unsigned>) {})
 					};
 
 					if (!stricmp(ext.c_str(), ".mpstat"))

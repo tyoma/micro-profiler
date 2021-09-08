@@ -35,19 +35,14 @@ namespace micro_profiler
 			< make_pair(rhs.persistent_id, make_pair(rhs.path, rhs.base));
 	}
 
+	inline bool operator <(const module_info_metadata &lhs, const module_info_metadata &rhs)
+	{	return make_pair(lhs.path, lhs.symbols) < make_pair(rhs.path, rhs.symbols);	}
+
 	inline bool operator <(const thread_info &lhs, const thread_info &rhs)
 	{	return make_pair(lhs.native_id, lhs.description) < make_pair(rhs.native_id, rhs.description);	}
 
 	inline bool operator ==(const initialization_data &lhs, const initialization_data &rhs)
 	{	return make_pair(lhs.executable, lhs.ticks_per_second) == make_pair(rhs.executable, rhs.ticks_per_second);	}
-
-	namespace tables
-	{
-		inline bool operator <(const module_info &lhs, const module_info &rhs)
-		{
-			return make_pair(lhs.path, lhs.symbols) < make_pair(rhs.path, rhs.symbols);
-		}
-	}
 
 	namespace tests
 	{
@@ -85,7 +80,7 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer, 3> dser3;
 			strmd::deserializer<vector_adapter, packer, 4> dser4;
 
-			tables::module_info modules[3];
+			module_info_metadata modules[3];
 			mapped_module_identified mappings[3];
 			vector< pair<statistic_types::key, statistic_types::function_detailed> > statistics[4];
 			vector< pair<statistic_types_t<long_address_t>::key, statistic_types_t<long_address_t>::function_detailed> > ustatistics[2];
@@ -253,7 +248,7 @@ namespace micro_profiler
 				assert_equal(components1.process_info, ctx1.process_info);
 				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
-				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx1.modules);
+				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
 				assert_equal(4u, ctx1.threads->get_count());
 
 				// INIT
@@ -279,7 +274,7 @@ namespace micro_profiler
 				assert_equal(components2.process_info, ctx2.process_info);
 				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
-				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx2.modules);
+				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
 				assert_equal(3u, ctx2.threads->get_count());
 			}
 
@@ -304,7 +299,7 @@ namespace micro_profiler
 				assert_is_empty(ctx1.process_info.executable);
 				assert_equivalent(statistics[2], (statistic_types::map_detailed &)*ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
-				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx1.modules);
+				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
 				assert_equal(1u, ctx1.threads->get_count());
 
 				// INIT
@@ -325,7 +320,7 @@ namespace micro_profiler
 				assert_is_empty(ctx2.process_info.executable);
 				assert_equivalent(statistics[3], (statistic_types::map_detailed &)*ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
-				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx2.modules);
+				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
 				assert_equal(1u, ctx2.threads->get_count());
 			}
 
@@ -355,7 +350,7 @@ namespace micro_profiler
 				assert_is_empty(ctx1.process_info.executable);
 				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
-				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx1.modules);
+				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
 				assert_equal(4u, ctx1.threads->get_count());
 
 				// INIT
@@ -381,7 +376,7 @@ namespace micro_profiler
 				assert_is_empty(ctx2.process_info.executable);
 				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
-				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, tables::module_info> &)*ctx2.modules);
+				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
 				assert_equal(3u, ctx2.threads->get_count());
 			}
 

@@ -25,6 +25,7 @@
 #include <common/image_info.h>
 #include <common/module.h>
 #include <common/primitives.h>
+#include <common/protocol.h>
 #include <wpl/signal.h>
 
 namespace micro_profiler
@@ -58,14 +59,7 @@ namespace micro_profiler
 		};
 
 
-		struct module_info
-		{
-			std::string path;
-			std::vector<symbol_info> symbols;
-			containers::unordered_map<unsigned int /*file_id*/, std::string> files;
-		};
-
-		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info> >
+		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >
 		{
 			std::function<void (unsigned int persistent_id)> request_presence;
 			mutable wpl::signal<void (unsigned int persistent_id)> ready;

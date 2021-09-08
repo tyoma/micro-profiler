@@ -48,15 +48,19 @@ namespace micro_profiler
 	private:
 		struct module_info
 		{
-			std::string path;
+			module_info(const std::string &path_);
+
+			const std::string path;
 			std::shared_ptr<mapped_module_identified> mapping;
 		};
 
-		typedef containers::unordered_map<file_id, unsigned int /*persistent_id*/> files_registry_t;
 		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
 
 	private:
-		files_registry_t _files_registry;
+		unsigned int /*persistent_id*/ register_path(const std::string &path);
+
+	private:
+		containers::unordered_map<file_id, unsigned int /*persistent_id*/> _files_registry;
 		modules_registry_t _modules_registry;
 		loaded_modules _lqueue;
 		unloaded_modules _uqueue;

@@ -29,11 +29,6 @@
 
 #pragma warning(disable: 4510; disable: 4610)
 
-namespace strmd
-{
-	template <> struct version<micro_profiler::tables::module_info> {	enum {	value = 4	};	};
-}
-
 namespace micro_profiler
 {
 	struct statistics_map_reader : strmd::indexed_associative_container_reader
@@ -139,13 +134,6 @@ namespace micro_profiler
 
 	namespace tables
 	{
-		template <typename ArchiveT>
-		inline void serialize(ArchiveT &archive, module_info &data, unsigned int /*ver*/)
-		{
-			archive(data.symbols);
-			archive(data.files);
-		}
-
 		template <typename ArchiveT, typename ContextT, typename BaseT>
 		inline void serialize(ArchiveT &archive, table<BaseT> &data, ContextT &context)
 		{

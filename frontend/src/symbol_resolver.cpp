@@ -61,7 +61,8 @@ namespace micro_profiler
 	}
 
 
-	symbol_resolver::symbol_resolver(shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
+	symbol_resolver::symbol_resolver(shared_ptr<const tables::modules> modules,
+			shared_ptr<const tables::module_mappings> mappings)
 		: _modules(modules), _mappings(mappings)
 	{
 		auto on_invalidate_mappings = [this] {
@@ -81,7 +82,7 @@ namespace micro_profiler
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
 	{
-		const tables::module_info *m;
+		const module_info_metadata *m;
 		const symbol_info *i = find_symbol_by_va(address, m);
 
 		return i ? i->name : _empty;
@@ -89,19 +90,20 @@ namespace micro_profiler
 
 	bool symbol_resolver::symbol_fileline_by_va(long_address_t address, fileline_t &result) const
 	{
-		const tables::module_info *m;
+		const module_info_metadata *m;
 		
 		if (const auto symbol = find_symbol_by_va(address, m))
 		{
-			const auto file = m->files.find(symbol->file_id);
+			const auto file = m->source_files.find(symbol->file_id);
 
-			if (file != m->files.end())
+			if (file != m->source_files.end())
 				return result.first = file->second, result.second = symbol->line, true;
 		}
 		return false;
 	}
 
-	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, const tables::module_info *&module) const
+	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address,
+		const module_info_metadata *&module) const
 	{
 		if (const auto m = find_range(_mappings_ordered, address, by_address()))
 		{
@@ -113,7 +115,7 @@ namespace micro_profiler
 	}
 
 	const symbol_info *symbol_resolver::find_symbol_by_rva(unsigned int persistent_id, unsigned int instance_id,
-		unsigned int rva, const tables::module_info *&module) const
+		unsigned int rva, const module_info_metadata *&module) const
 	{
 		const auto i = _modules->find(persistent_id);
 

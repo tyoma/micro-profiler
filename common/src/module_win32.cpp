@@ -39,22 +39,25 @@ namespace micro_profiler
 			::GetModuleFileNameW(hmodule, buffer, sizeof(buffer));
 			path = unicode(buffer);
 		}
+
+		shared_ptr<void> library_handle(HMODULE hmodule)
+		{	return shared_ptr<void>(hmodule, &::FreeLibrary);	}
 	}
 
 	shared_ptr<void> load_library(const string &path)
-	{	return shared_ptr<void>(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);	}
+	{	return library_handle(LoadLibraryW(unicode(path).c_str()));	}
 
 	string get_current_executable()
 	{	return get_module_info(0).path;	}
 
 	mapped_module get_module_info(const void *address)
 	{
-		HMODULE base = 0;
-		::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &base);
-		shared_ptr<void> h(base, &::FreeLibrary);
-		mapped_module info = { string(), static_cast<byte *>(static_cast<void *>(base)), };
+		HMODULE hmodule = 0;
+		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &hmodule);
+		auto h = library_handle(hmodule);
+		mapped_module info = { string(), static_cast<byte *>(static_cast<void *>(hmodule)), };
 
-		get_module_path(info.path, base);
+		get_module_path(info.path, hmodule);
 		return info;
 	}
 

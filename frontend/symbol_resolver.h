@@ -30,9 +30,10 @@
 
 namespace micro_profiler
 {
+	struct module_info_metadata;
+
 	namespace tables
 	{
-		struct module_info;
 		struct module_mappings;
 		struct modules;
 	}
@@ -54,9 +55,9 @@ namespace micro_profiler
 		wpl::signal<void ()> invalidate;
 
 	private:
-		const symbol_info *find_symbol_by_va(long_address_t address, const tables::module_info *&module) const;
+		const symbol_info *find_symbol_by_va(long_address_t address, const module_info_metadata *&module) const;
 		const symbol_info *find_symbol_by_rva(unsigned int persistent_id, unsigned int instance_id, unsigned int rva,
-			const tables::module_info *&module) const;
+			const module_info_metadata *&module) const;
 
 	private:
 		std::string _empty;

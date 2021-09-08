@@ -533,7 +533,6 @@ namespace micro_profiler
 				mt::mutex mtx;
 				mt::event ready, md_ready;
 				loaded_modules l;
-				unsigned persistent_id;
 				module_info_metadata md;
 
 				state->modules_loaded = [&] (unsigned, const loaded_modules &m) {
@@ -542,8 +541,7 @@ namespace micro_profiler
 					l.insert(l.end(), m.begin(), m.end());
 					ready.set();
 				};
-				state->metadata_received = [&] (unsigned, unsigned id, const module_info_metadata &m) {
-					persistent_id = id;
+				state->metadata_received = [&] (unsigned, const module_info_metadata &m) {
 					md = m;
 					md_ready.set();
 				};
@@ -569,11 +567,11 @@ namespace micro_profiler
 				md_ready.wait();
 
 				// ASSERT
-				assert_equal(mmi[1].persistent_id, persistent_id);
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
+				assert_equal((string)c_symbol_container_2, md.path);
 
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
@@ -583,11 +581,11 @@ namespace micro_profiler
 				md_ready.wait();
 
 				// ASSERT
-				assert_equal(mmi[0].persistent_id, persistent_id);
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
+				assert_equal((string)c_symbol_container_1, md.path);
 			}
 
 

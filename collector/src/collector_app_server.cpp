@@ -41,7 +41,7 @@ namespace micro_profiler
 
 		auto loaded_ = make_shared<loaded_modules>();
 		auto unloaded_ = make_shared<unloaded_modules>();
-		auto metadata_ = make_shared< pair<unsigned int, module_info_metadata> >();
+		auto metadata_ = make_shared<module_info_metadata>();
 		auto threads_buffer_ = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
 		auto apply_results_ = make_shared<response_patched_data>();
 		auto revert_results_ = make_shared<response_reverted_data>();
@@ -68,14 +68,14 @@ namespace micro_profiler
 			const auto metadata = _module_tracker->get_metadata(persistent_id);
 			auto &md = *metadata_;
 
-			md.first = persistent_id;
-			md.second.symbols.clear();
-			md.second.source_files.clear();
+			md.path = metadata->get_path();
+			md.symbols.clear();
+			md.source_files.clear();
 			metadata->enumerate_functions([&] (const symbol_info &symbol) {
-				md.second.symbols.push_back(symbol);
+				md.symbols.push_back(symbol);
 			});
 			metadata->enumerate_files([&] (const pair<unsigned, string> &file) {
-				md.second.source_files.push_back(file);
+				md.source_files.insert(file);
 			});
 			req.respond(response_module_metadata, [&] (server_session::serializer &ser) {	ser(md);	});
 		});

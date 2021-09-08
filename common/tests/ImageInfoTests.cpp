@@ -64,6 +64,22 @@ namespace micro_profiler
 			}
 
 
+			test( ImagePathIsReturned )
+			{
+				// INIT
+				auto image1 = load_image_info(c_this_module);
+				auto image2 = load_image_info(c_symbol_container_1);
+				auto image3 = load_image_info(c_symbol_container_2);
+				auto image4 = load_image_info(c_symbol_container_3_nosymbols);
+
+				// ACT / ASSERT
+				assert_equal((string)c_this_module, image1->get_path());
+				assert_equal((string)c_symbol_container_1, image2->get_path());
+				assert_equal((string)c_symbol_container_2, image3->get_path());
+				assert_equal((string)c_symbol_container_3_nosymbols, image4->get_path());
+			}
+
+
 			test( EnumerationReturnsKnownFunctions )
 			{
 				// INIT

@@ -32,7 +32,7 @@ namespace micro_profiler
 				std::function<void (unsigned token, const loaded_modules &m)> modules_loaded;
 				std::function<void (unsigned token, const thread_statistics_map &u)> updated;
 				std::function<void (unsigned token, const unloaded_modules &m)> modules_unloaded;
-				std::function<void (unsigned token, unsigned id, const module_info_metadata &md)> metadata_received;
+				std::function<void (unsigned token, const module_info_metadata &md)> metadata_received;
 				std::function<void (unsigned token, const std::vector< std::pair<unsigned /*thread_id*/, thread_info> > &threads)> threads_received;
 				std::function<void (unsigned token, const patch_manager::apply_results &results)> activation_response_received;
 				std::function<void (unsigned token, const patch_manager::revert_results &results)> revert_response_received;
@@ -46,7 +46,6 @@ namespace micro_profiler
 			template <typename ArchiveT>
 			inline void serialize(ArchiveT &a, frontend_state &state)
 			{
-				unsigned metadata_id;
 				messages_id c;
 				initialization_data id;
 				loaded_modules lm;
@@ -86,7 +85,7 @@ namespace micro_profiler
 
 				case response_module_metadata:
 					if (state.metadata_received)
-						a(metadata_id), a(md), state.metadata_received(token, metadata_id, md);
+						a(md), state.metadata_received(token, md);
 					break;
 
 				case response_threads_info:

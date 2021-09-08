@@ -84,8 +84,9 @@ namespace micro_profiler
 			dbghelp_image_info(const shared_ptr<dbghelp> &dbghelp_, const string &path);
 
 		private:
-			virtual void enumerate_functions(const symbol_callback_t &callback) const;
-			virtual void enumerate_files(const file_callback_t &callback) const;
+			virtual string get_path() const override;
+			virtual void enumerate_functions(const symbol_callback_t &callback) const override;
+			virtual void enumerate_files(const file_callback_t &callback) const override;
 
 		private:
 			string _path;
@@ -145,6 +146,9 @@ namespace micro_profiler
 		dbghelp_image_info::dbghelp_image_info(const shared_ptr<dbghelp> &dbghelp_, const string &path)
 			: _path(path), _dbghelp(dbghelp_), _base(dbghelp_->load_image(path))
 		{	}
+
+		string dbghelp_image_info::get_path() const
+		{	return _path;	}
 
 		void dbghelp_image_info::enumerate_functions(const symbol_callback_t &callback) const
 		{

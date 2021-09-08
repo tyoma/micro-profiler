@@ -39,6 +39,7 @@ namespace micro_profiler
 		typedef std::function<void (const std::pair<unsigned int /*file_id*/, std::string /*path*/> &file)> file_callback_t;
 
 		virtual ~image_info() {	}
+		virtual std::string get_path() const = 0;
 		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
 		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
 	};

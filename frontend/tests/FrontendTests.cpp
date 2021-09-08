@@ -65,17 +65,17 @@ namespace micro_profiler
 				module_info_metadata mi;
 
 				mi.symbols = mkvector(symbols);
-				mi.source_files = mkvector(files);
+				mi.source_files = containers::unordered_map<unsigned int, string>(begin(files), end(files));
 				return mi;
 			}
 
 			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
-			tables::module_info create_module_info(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
+			module_info_metadata create_module_info(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
 			{
-				tables::module_info mi;
+				module_info_metadata mi;
 
 				mi.symbols = mkvector(symbols);
-				mi.files = unordered_map<unsigned, string>(begin(files), end(files));
+				mi.source_files = unordered_map<unsigned, string>(begin(files), end(files));
 				return mi;
 			}
 		}
@@ -449,9 +449,9 @@ namespace micro_profiler
 
 						switch (persistent_id)
 						{
-						case 17:	s(17u), s(create_metadata_info(symbols17, files17));	break;
-						case 99:	s(99u), s(create_metadata_info(symbols99, files99));	break;
-						case 1000:	s(1000u), s(create_metadata_info(symbols1000, files1000));	break;
+						case 17:	s(create_metadata_info(symbols17, files17));	break;
+						case 99:	s(create_metadata_info(symbols99, files99));	break;
+						case 1000:	s(create_metadata_info(symbols1000, files1000));	break;
 						}
 					});
 				});
@@ -474,7 +474,7 @@ namespace micro_profiler
 				const auto i1000 = context.modules->find(1000);
 				assert_not_equal(context.modules->end(), i1000);
 				assert_equal(1u, i1000->second.symbols.size());
-				assert_equal(1u, i1000->second.files.size());
+				assert_equal(1u, i1000->second.source_files.size());
 
 				// ACT
 				context.modules->request_presence(17);
@@ -490,12 +490,12 @@ namespace micro_profiler
 				const auto i17 = context.modules->find(17);
 				assert_not_equal(context.modules->end(), i17);
 				assert_equal(1u, i17->second.symbols.size());
-				assert_equal(2u, i17->second.files.size());
+				assert_equal(2u, i17->second.source_files.size());
 
 				const auto i99 = context.modules->find(99);
 				assert_not_equal(context.modules->end(), i99);
 				assert_equal(2u, i99->second.symbols.size());
-				assert_equal(1u, i99->second.files.size());
+				assert_equal(1u, i99->second.source_files.size());
 			}
 		end_test_suite
 	}

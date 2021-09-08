@@ -32,9 +32,9 @@ namespace micro_profiler
 
 		struct mi
 		{
-			mi(const tables::module_info &from)
+			mi(const module_info_metadata &from)
 				: path(from.path), symbols(from.symbols.begin(), from.symbols.end()),
-					files(from.files.begin(), from.files.end())
+					files(from.source_files.begin(), from.source_files.end())
 			{	}
 
 			string path;

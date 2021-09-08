@@ -37,6 +37,10 @@ namespace micro_profiler
 		};
 	}
 
+	module_tracker::module_info::module_info(const string &path_)
+		: path(path_)
+	{	}
+
 	module_tracker::module_tracker()
 		: _next_instance_id(0u), _next_persistent_id(1u)
 	{	}
@@ -46,27 +50,20 @@ namespace micro_profiler
 		unordered_set<unsigned> in_snapshot;
 
 		enumerate_process_modules([&] (const mapped_module &mm) {
-			file_id fid(mm.path);
-			const unsigned int &persistent_id = _files_registry[fid];
-			const bool is_new = !persistent_id;
-
-			if (is_new)
-				_files_registry[fid] = _next_persistent_id++;
-
-			module_info &mi = _modules_registry[persistent_id];
+			const auto persistent_id = register_path(mm.path);
+			auto &mi = _modules_registry.find(persistent_id)->second; // Guaranteed to present after register_path().
 
 			if (!mi.mapping)
 			{
 				mapped_module_identified mmi = mapped_module_identified::from(_next_instance_id++, persistent_id, mm);
 
-				mi.path = mm.path;
 				mi.mapping.reset(new mapped_module_identified(mmi));
 				_lqueue.push_back(mmi);
 			}
 			in_snapshot.insert(persistent_id);
 		});
 
-		for (modules_registry_t::iterator i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
+		for (auto i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
 		{
 			if (i->second.mapping && !in_snapshot.count(i->first))
 			{
@@ -99,5 +96,20 @@ namespace micro_profiler
 		modules_registry_t::const_iterator i = _modules_registry.find(persistent_id);
 
 		return i != _modules_registry.end() ? load_image_info(i->second.path.c_str()) : 0;
+	}
+
+	unsigned int module_tracker::register_path(const string &path)
+	{
+		file_id fid(path);
+		auto i = _files_registry.find(fid);
+
+		if (_files_registry.end() == i)
+		{
+			auto persistent_id = _next_persistent_id++;
+
+			i = _files_registry.insert(make_pair(fid, persistent_id)).first;
+			_modules_registry.insert(make_pair(persistent_id, path));
+		}
+		return i->second;
 	}
 }

@@ -97,21 +97,14 @@ namespace micro_profiler
 			request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
 				[persistent_id, self] (deserializer &d) {
 
-				unsigned int dummy;
-				module_info_metadata mmetadata;
+				auto &metadata = (*self->_modules)[persistent_id];
 
-				d(dummy);
-				d(mmetadata);
-
-				auto &m = (*self->_modules)[persistent_id];
-
-				swap(m.symbols, mmetadata.symbols);
-				m.files = unordered_map<unsigned int, string>(mmetadata.source_files.begin(), mmetadata.source_files.end());
-
+				d(metadata);
 				self->_modules->invalidate();
 				self->_modules->ready(persistent_id);
 
-				LOG(PREAMBLE "received metadata...") % A(self) % A(persistent_id) % A(mmetadata.symbols.size()) % A(mmetadata.source_files.size());
+				LOG(PREAMBLE "received metadata...")
+					% A(self) % A(persistent_id) % A(metadata.symbols.size()) % A(metadata.source_files.size());
 			});
 			LOG(PREAMBLE "requested metadata from remote...") % A(self) % A(persistent_id);
 		};

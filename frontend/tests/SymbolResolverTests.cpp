@@ -44,7 +44,7 @@ namespace micro_profiler
 			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size])
 			{
 				(*modules)[persistent_id].symbols = mkvector(symbols);
-				(*modules)[persistent_id].files.clear();
+				(*modules)[persistent_id].source_files.clear();
 				modules->invalidate();
 			}
 
@@ -52,7 +52,7 @@ namespace micro_profiler
 			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
 			{
 				(*modules)[persistent_id].symbols = mkvector(symbols);
-				(*modules)[persistent_id].files = containers::unordered_map<unsigned int /*file_id*/, std::string>(
+				(*modules)[persistent_id].source_files = containers::unordered_map<unsigned int /*file_id*/, std::string>(
 					begin(files), end(files));
 				modules->invalidate();
 			}

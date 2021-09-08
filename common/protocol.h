@@ -23,6 +23,7 @@
 #include "module.h"
 #include "image_info.h"
 #include "types.h"
+#include "unordered_map.h"
 
 #include <patcher/interface.h>
 #include <vector>
@@ -65,8 +66,9 @@ namespace micro_profiler
 	// response_module_metadata
 	struct module_info_metadata
 	{
+		std::string path;
 		std::vector<symbol_info> symbols;
-		std::vector< std::pair<unsigned int /*file_id*/, std::string /*file*/> > source_files;
+		containers::unordered_map<unsigned int /*file_id*/, std::string /*file*/> source_files;
 	};
 
 	// request_apply_patches, request_revert_patches

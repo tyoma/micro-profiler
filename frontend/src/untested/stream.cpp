@@ -46,7 +46,7 @@ namespace micro_profiler
 
 	void read_stream::skip(size_t size)
 	{
-		if (fseek(static_cast<FILE *>(_file.get()), size, SEEK_CUR))
+		if (fseek(static_cast<FILE *>(_file.get()), static_cast<long>(size), SEEK_CUR))
 			throw runtime_error("Seeking past end the file!");
 	}
 }

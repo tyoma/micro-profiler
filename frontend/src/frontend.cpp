@@ -60,6 +60,11 @@ namespace micro_profiler
 			});
 		}));
 
+		subscribe(*new_request_handle(), init_v1, [this] (deserializer &) {
+			LOGE(PREAMBLE "attempt to connect from an older collector - disconnecting!");
+			disconnect_session();
+		});
+
 		subscribe(*new_request_handle(), init, [this] (deserializer &d) {
 			auto self = this;
 

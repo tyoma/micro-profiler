@@ -32,7 +32,8 @@ namespace micro_profiler
 {
 	enum messages_id {
 		// Notifications...
-		init = 0,
+		init_v1 = 0,
+		init = 0x101,
 		legacy_update_statistics = 2,
 
 		// Requests...

@@ -75,6 +75,13 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v2.0.635
+
+* First (very beta) version with working "Profile Process..." menu - requires binary to be compiled with ```/hotpach``` (on x86, compiler settings) and ```/functionpadmin:XX``` (linker settings) on Windows (msvc) or ```-fpatchable-function-entry=N,M``` on Linux (gcc, clang);
+* Versioned file format - serialization of every data unit is versioned, so that backward (and sometimes forward) compatibility is supported. Compatibility  with .mpstat3/.mpstat4 is preserved;
+* Multi-selection is now supported in main statistics list;
+* Some of the selection-related defects fixed - selection in all lists is restored after the 'Clear' is clicked;
+
 ## v1.9.634
 
 * VisualStudio 2022 support - 64-bit version of VS extension added to the vsix;

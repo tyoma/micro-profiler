@@ -26,6 +26,10 @@
 
 namespace micro_profiler
 {
+	void unicode(std::string &destination, const char *ansi_value);
+	void unicode(std::string &destination, const std::string &ansi_value);
+	void unicode(std::string &destination, const wchar_t *value);
+	void unicode(std::string &destination, const std::wstring &value);
 	std::string unicode(const std::wstring &value);
 	std::wstring unicode(const std::string &value);
 
@@ -44,5 +48,19 @@ namespace micro_profiler
 			return true;
 		}
 		return false;
+	}
+
+	inline void unicode(std::string &destination, const std::string &ansi_value)
+	{	unicode(destination, ansi_value.c_str());	}
+
+	inline void unicode(std::string &destination, const std::wstring &value)
+	{	unicode(destination, value.c_str());	}
+
+	inline std::string unicode(const std::wstring &value)
+	{
+		std::string result;
+
+		unicode(result, value);
+		return result;
 	}
 }

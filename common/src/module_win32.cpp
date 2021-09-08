@@ -20,6 +20,7 @@
 
 #include <common/module.h>
 
+#include <common/noncopyable.h>
 #include <common/string.h>
 #include <memory>
 #include <windows.h>
@@ -31,33 +32,50 @@ namespace micro_profiler
 {
 	namespace
 	{
+		class module_lock : noncopyable
+		{
+		public:
+			explicit module_lock(const void *address)
+				: _handle(0)
+			{	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &_handle);	}
+
+			~module_lock()
+			{	::FreeLibrary(_handle);	}
+
+			operator HMODULE() const
+			{	return _handle;	}
+
+		private:
+			HMODULE _handle;
+		};
+
 		void get_module_path(string &path, HMODULE hmodule)
 		{
-			wchar_t buffer[MAX_PATH + 1];
+			enum {	length = 32768,	};
+			TCHAR buffer[length + 1];
 
-			buffer[MAX_PATH] = L'\0';
-			::GetModuleFileNameW(hmodule, buffer, sizeof(buffer));
-			path = unicode(buffer);
+			buffer[length] = 0;
+			::GetModuleFileName(hmodule, buffer, length);
+			unicode(path, buffer);
 		}
-
-		shared_ptr<void> library_handle(HMODULE hmodule)
-		{	return shared_ptr<void>(hmodule, &::FreeLibrary);	}
 	}
 
 	shared_ptr<void> load_library(const string &path)
-	{	return library_handle(LoadLibraryW(unicode(path).c_str()));	}
+	{	return shared_ptr<void>(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);	}
 
 	string get_current_executable()
 	{	return get_module_info(0).path;	}
 
 	mapped_module get_module_info(const void *address)
 	{
-		HMODULE hmodule = 0;
-		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &hmodule);
-		auto h = library_handle(hmodule);
-		mapped_module info = { string(), static_cast<byte *>(static_cast<void *>(hmodule)), };
+		mapped_module info = {};
+		module_lock h(address);
 
-		get_module_path(info.path, hmodule);
+		if (h)
+		{
+			info.base = static_cast<byte *>(static_cast<void *>(h));
+			get_module_path(info.path, h);
+		}
 		return info;
 	}
 
@@ -65,13 +83,17 @@ namespace micro_profiler
 	{
 		mapped_module module;
 		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0), &::CloseHandle);
-		MODULEENTRY32W entry = { sizeof(MODULEENTRY32W), };
+		MODULEENTRY32 entry = { sizeof(MODULEENTRY32), };
 
-		for (auto lister = &::Module32FirstW;
+		for (auto lister = &::Module32First;
 			lister(snapshot.get(), &entry);
-			lister = &::Module32NextW, module.addresses.clear())
+			lister = &::Module32Next, module.addresses.clear())
 		{
-			get_module_path(module.path, entry.hModule);
+			module_lock h(entry.modBaseAddr);
+
+			if (entry.hModule != h)
+				continue;
+			unicode(module.path, entry.szExePath);
 			module.base = entry.modBaseAddr;
 			module.addresses.push_back(byte_range(entry.modBaseAddr, entry.modBaseSize));
 			callback(module);

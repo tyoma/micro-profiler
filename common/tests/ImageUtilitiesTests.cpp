@@ -3,10 +3,18 @@
 #include <common/file_id.h>
 
 #include <iterator>
+#include <mt/thread.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
+
+#ifdef WIN32
+	#include <io.h>
+	#define access _access
+#else
+	#include <unistd.h>
+#endif
 
 using namespace std;
 using namespace std::placeholders;
@@ -149,6 +157,40 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, modules.size());
+			}
+
+
+			test( EnumeratingModulesSuppliesOnlyValidModulesToCallback )
+			{
+				// INIT
+				auto error = false;
+				auto exit = false;
+				mt::thread t1([&] {
+					while (!exit)
+					{
+						auto m1 = load_library(c_symbol_container_1);
+						auto m2 = load_library(c_symbol_container_2);
+						auto m3 = load_library(c_symbol_container_3_nosymbols);
+					}
+				});
+				mt::thread t2([&] {
+					while (!exit)
+					{
+						auto &error_ = error;
+						enumerate_process_modules([&] (const mapped_module &module) {
+							error_ |= !!access(module.path.c_str(), 0);
+						});
+					}
+				});
+
+				// ACT
+				mt::this_thread::sleep_for(mt::milliseconds(200));
+				exit = true;
+				t1.join();
+				t2.join();
+
+				// ASSERT
+				assert_is_false(error);
 			}
 		end_test_suite
 	}

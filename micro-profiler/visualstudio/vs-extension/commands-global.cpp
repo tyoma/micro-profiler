@@ -367,7 +367,7 @@ namespace micro_profiler
 
 
 			add_command(cmdidProfileProcess, [this] (unsigned) {
-				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center attach form.
+				wpl::rect_i l = { 0, 0, 600, 400 }; // TODO: Center attach form.
 				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
 				auto &running_objects = _running_objects;
 				const auto i = running_objects.insert(running_objects.end(), o);
@@ -386,6 +386,7 @@ namespace micro_profiler
 
 				o->first->set_root(root);
 				o->first->set_location(l);
+				o->first->center_parent();
 				o->first->set_visible(true);
 			}, false, [this] (unsigned, unsigned &state) -> bool {
 				return state = visible | supported | enabled, true;
@@ -454,6 +455,7 @@ namespace micro_profiler
 
 				o->first->set_root(root);
 				o->first->set_location(l);
+				o->first->center_parent();
 				o->first->set_visible(true);
 			}, false, [this] (unsigned, unsigned &state) -> bool {
 				return state = enabled | visible | supported, true;

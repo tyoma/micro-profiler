@@ -88,7 +88,7 @@ namespace micro_profiler
 			});
 
 			target.add_command(cmdidProfileScope, [&running_objects, &factory, context] (unsigned) {
-				wpl::rect_i l = { 0, 0, 400, 300 };
+				wpl::rect_i l = { 0, 0, 800, 530 };
 				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
 				auto &running_objects_ = running_objects;
 				const auto i = running_objects.insert(running_objects.end(), o);
@@ -107,6 +107,7 @@ namespace micro_profiler
 
 				o->first->set_root(root);
 				o->first->set_location(l);
+				o->first->center_parent();
 				o->first->set_visible(true);
 			}, false, [] (unsigned, unsigned &state) {
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;

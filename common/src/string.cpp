@@ -31,32 +31,40 @@ using namespace std;
 
 namespace micro_profiler
 {
-	string unicode(const wstring &value)
-	{
-		string result;
+	void unicode(string &destination, const char *ansi_value)
+	{	destination = ansi_value;	} // TODO: must convert from ANSI-string to UTF-8
 
-		for (wstring::const_iterator i = value.begin(); i != value.end(); ++i)
+	void unicode(string &destination, const wchar_t *i)
+	{
+		destination.clear();
+		for (; *i; ++i)
 		{
+			unsigned char l;
+			char buffer[3];
+
 			if (*i <= 0x007F)
 			{
 				// Plain single-byte ASCII.
-				result.push_back(static_cast<char>(*i));
+				buffer[0] = static_cast<char>(*i);
+				l = 1;
 			}
 			else if (*i <= 0x07FF)
 			{
 				// Two bytes.
-				result.push_back(static_cast<char>(0xC0 | (*i >> 6)));
-				result.push_back(static_cast<char>(0x80 | ((*i >> 0) & 0x3F)));
+				buffer[0] = static_cast<char>(0xC0 | (*i >> 6));
+				buffer[1] = static_cast<char>(0x80 | ((*i >> 0) & 0x3F));
+				l = 2;
 			}
 			else
 			{
 				// Three bytes.
-				result.push_back(static_cast<char>(0xE0 | (*i >> 12)));
-				result.push_back(static_cast<char>(0x80 | ((*i >> 6) & 0x3F)));
-				result.push_back(static_cast<char>(0x80 | ((*i >> 0) & 0x3F)));
+				buffer[0] = static_cast<char>(0xE0 | (*i >> 12));
+				buffer[1] = static_cast<char>(0x80 | ((*i >> 6) & 0x3F));
+				buffer[2] = static_cast<char>(0x80 | ((*i >> 0) & 0x3F));
+				l = 2;
 			}
+			destination.append(buffer, buffer + l);
 		}
-		return result;
 	}
 
 	wstring unicode(const string &utf8)

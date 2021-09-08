@@ -75,7 +75,8 @@ namespace micro_profiler
 				for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
 					if (segment->p_type == PT_LOAD)
 						m.addresses.push_back(byte_range(m.base + segment->p_vaddr, segment->p_memsz));
-				callback(m);
+				if (!access(m.path.c_str(), 0))
+					callback(m);
 				return 0;
 			}
 		};

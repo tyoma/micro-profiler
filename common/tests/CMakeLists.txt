@@ -19,4 +19,4 @@ set(COMMON_TEST_SOURCES
 
 add_library(common.tests SHARED ${COMMON_TEST_SOURCES})
 
-target_link_libraries(common.tests common test-helpers)
+target_link_libraries(common.tests common mt test-helpers)

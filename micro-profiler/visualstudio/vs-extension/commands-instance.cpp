@@ -1,6 +1,7 @@
 #include "command-ids.h"
 #include "helpers.h"
 
+#include <common/path.h>
 #include <common/string.h>
 #include <frontend/file.h>
 #include <frontend/frontend_ui.h>
@@ -105,6 +106,7 @@ namespace micro_profiler
 				o->first = factory.create_modal();
 				o->second.push_back(o->first->close += onclose);
 
+				o->first->set_caption("Select Profiled Scope - " + (string)*context.process_info.executable);
 				o->first->set_root(root);
 				o->first->set_location(l);
 				o->first->center_parent();

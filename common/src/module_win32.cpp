@@ -64,7 +64,12 @@ namespace micro_profiler
 	{	return shared_ptr<void>(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);	}
 
 	string get_current_executable()
-	{	return get_module_info(0).path;	}
+	{
+		string path;
+
+		get_module_path(path, 0);
+		return path;
+	}
 
 	mapped_module get_module_info(const void *address)
 	{

@@ -384,6 +384,7 @@ namespace micro_profiler
 				o->second.push_back(o->first->close += onclose);
 				o->second.push_back(attach->close += onclose);
 
+				o->first->set_caption("MicroProfiler - Select a Process to Profile");
 				o->first->set_root(root);
 				o->first->set_location(l);
 				o->first->center_parent();

@@ -25,6 +25,7 @@
 #include "stylesheet.h"
 
 #include <common/constants.h>
+#include <common/path.h>
 #include <common/string.h>
 #include <common/time.h>
 #include <common/win32/configuration_registry.h>
@@ -82,7 +83,7 @@ namespace micro_profiler
 						activated();
 					});
 					init_instance_menu(_running_objects, factory, *_pane, ui_context, queue);
-					_pane->set_caption("MicroProfiler - " + ui_context.process_info.executable);
+					_pane->set_caption("MicroProfiler - " + (string)*ui_context.process_info.executable);
 					_pane->set_root(root);
 					_pane->set_visible(true);
 				}

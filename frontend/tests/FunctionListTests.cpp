@@ -100,15 +100,15 @@ namespace micro_profiler
 			std::shared_ptr<tables::modules> modules;
 			std::shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<symbol_resolver> resolver;
-			shared_ptr<mocks::threads_model> tmodel;
+			shared_ptr<tables::threads> tmodel;
 
 			init( CreatePrerequisites )
 			{
 				statistics = make_shared<tables::statistics>();
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
-				resolver.reset(new mocks::symbol_resolver(modules, mappings));
-				tmodel.reset(new mocks::threads_model);
+				resolver = make_shared<mocks::symbol_resolver>(modules, mappings);
+				tmodel = make_shared<tables::threads>();
 			}
 
 
@@ -158,7 +158,7 @@ namespace micro_profiler
 			test( FunctionListTimeFormatter )
 			{
 				// INIT
-				unsigned columns[] = {	1, 5, 4, 7, 6, 9,};
+				unsigned columns[] = {	columns::name, columns::inclusive, columns::exclusive, columns::inclusive_avg, columns::exclusive_avg, columns::max_time,	};
 				auto functions = plural
 					// ~ ns
 					+ make_statistics(addr(0x45Eu), 1, 0, 31, 29, 29)
@@ -646,7 +646,7 @@ namespace micro_profiler
 			test( FunctionListTakesNativeIDFromThreadModel )
 			{
 				// INIT
-				unsigned columns[] = {	1, 2,	};
+				unsigned columns[] = {	columns::name, columns::threadid,	};
 				auto functions = plural
 					+ make_statistics(addr(0x1000u, 3), 1, 0, 0, 0, 0)
 					+ make_statistics(addr(0x1010u, 2), 1, 0, 0, 0, 0)
@@ -657,9 +657,9 @@ namespace micro_profiler
 
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
-				tmodel->add(3, 100, string());
-				tmodel->add(2, 1000, string());
-				tmodel->add(7, 900, string());
+				tmodel->insert(make_thread_info(3, 100, string()));
+				tmodel->insert(make_thread_info(2, 1000, string()));
+				tmodel->insert(make_thread_info(7, 900, string()));
 
 				// ACT
 				auto text = get_text(*fl, columns);
@@ -675,7 +675,7 @@ namespace micro_profiler
 				assert_equivalent(mkvector(reference1), text);
 
 				// INIT
-				tmodel->add(9, 90, string());
+				tmodel->insert(make_thread_info(9, 90, string()));
 
 				// ACT
 				text = get_text(*fl, columns);
@@ -708,11 +708,11 @@ namespace micro_profiler
 
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
-				tmodel->add(0, 18, string());
-				tmodel->add(1, 1, string());
-				tmodel->add(2, 180, string());
-				tmodel->add(3, 179, string());
-				tmodel->add(4, 17900, string());
+				tmodel->insert(make_thread_info(0, 18, string()));
+				tmodel->insert(make_thread_info(1, 1, string()));
+				tmodel->insert(make_thread_info(2, 180, string()));
+				tmodel->insert(make_thread_info(3, 179, string()));
+				tmodel->insert(make_thread_info(4, 17900, string()));
 
 				ih.bind_to_model(*fl);
 

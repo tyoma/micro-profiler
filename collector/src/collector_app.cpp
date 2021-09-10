@@ -80,19 +80,18 @@ namespace micro_profiler
 
 	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
 	{
-		shared_ptr<scheduler::queue> qw(new queue_wrapper(_queue));
+		const auto qw = make_shared<queue_wrapper>(_queue);
 		analyzer analyzer_(overhead_);
-		shared_ptr<ipc::channel> inbound;
+		channel_ptr_t inbound;
 		ipc::marshalled_active_session s(factory, qw, [&] (ipc::channel &outbound) {
 			return inbound = init_server(outbound, analyzer_);
 		});
-		function<void ()> analyze;
-		const auto analyze_ = [&] {
+		const function<void ()> analyze = [&] {
 			_collector.read_collected(analyzer_);
 			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
 		};
 
-		_queue.schedule(function<void ()>(analyze = analyze_), mt::milliseconds(10));
+		_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
 		while (!_exit)
 		{
 			_queue.wait();

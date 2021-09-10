@@ -10,9 +10,6 @@
 
 namespace micro_profiler
 {
-	class symbol_resolver;
-	class threads_model;
-
 	namespace tests
 	{
 		struct plural_
@@ -61,6 +58,21 @@ namespace micro_profiler
 
 			return fl.get_text(static_cast<wpl::table_model_base::index_type>(row),
 				static_cast<wpl::table_model_base::index_type>(column), text), text.underlying();
+		}
+
+		template <typename T>
+		inline std::vector<T> get_values(const wpl::list_model<T> &model)
+		{
+			using namespace std;
+
+			vector<T> values;
+
+			for (size_t i = 0, count = model.get_count(); i != count; ++i)
+			{
+				values.resize(values.size() + 1);
+				model.get_value(i, values.back());
+			}
+			return values;
 		}
 
 		template <size_t columns_n>
@@ -141,6 +153,16 @@ namespace micro_profiler
 			std::vector< std::pair< unsigned /*threadid*/, ContainerT > > data(1, std::make_pair(threadid, container));
 
 			archive(data);
+		}
+
+		inline std::pair<unsigned, thread_info> make_thread_info(unsigned id, unsigned native_id,
+			const std::string &description, bool complete = false)
+		{
+			thread_info t = {};
+			t.native_id = native_id;
+			t.description = description;
+			t.complete = complete;
+			return std::make_pair(id, t);
 		}
 
 		inline thread_info make_thread_info(unsigned native_id, std::string description, mt::milliseconds start_time,

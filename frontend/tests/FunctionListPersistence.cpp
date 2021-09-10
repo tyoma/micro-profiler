@@ -67,7 +67,7 @@ namespace micro_profiler
 					make_shared<tables::module_mappings>(),
 					make_shared<tables::modules>(),
 					make_shared<tables::patches>(),
-					make_shared<threads_model>([] (vector<unsigned>) {}),
+					make_shared<tables::threads>(),
 				};
 				return ctx;
 			};
@@ -84,7 +84,7 @@ namespace micro_profiler
 			mapped_module_identified mappings[3];
 			vector< pair<statistic_types::key, statistic_types::function_detailed> > statistics[4];
 			vector< pair<statistic_types_t<long_address_t>::key, statistic_types_t<long_address_t>::function_detailed> > ustatistics[2];
-			shared_ptr<mocks::threads_model> threads[2];
+			vector< pair<unsigned, thread_info> > threads[2];
 
 			
 			FilePersistenceTests()
@@ -151,13 +151,13 @@ namespace micro_profiler
 					+ make_statistics(0xF00133ull, 127, 0, 8, 0, 0)
 					+ make_statistics(0x9000FFFull, 12000, 0, 250, 0, 0);
 
-				threads[0] = make_shared<mocks::threads_model>();
-				threads[0]->add(1, 111, "#1");
-				threads[0]->add(3, 112, "#2");
-				threads[0]->add(4, 113, "#3");
-				threads[1] = make_shared<mocks::threads_model>();
-				threads[1]->add(1, 1211, "thread A");
-				threads[1]->add(17, 1212, "thread B");
+				threads[0] = plural
+					+ make_thread_info(1, 111, "#1")
+					+ make_thread_info(3, 112, "#2")
+					+ make_thread_info(4, 113, "#3");
+				threads[1] = plural
+					+ make_thread_info(1, 1211, "thread A")
+					+ make_thread_info(17, 1212, "thread B");
 			}
 
 
@@ -170,7 +170,7 @@ namespace micro_profiler
 				assign(*ctx.statistics, statistics[0]);
 				assign(*ctx.module_mappings, plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]));
 				assign(*ctx.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
-				ctx.threads = threads[0];
+				assign(*ctx.threads, threads[0]);
 
 				// ACT
 				ser(ctx);
@@ -199,7 +199,7 @@ namespace micro_profiler
 				assign(*ctx.statistics, statistics[1]);
 				assign(*ctx.module_mappings, plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]));
 				assign(*ctx.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
-				ctx.threads = threads[1];
+				assign(*ctx.threads, threads[1]);
 
 				// ACT
 				ser(ctx);
@@ -249,7 +249,8 @@ namespace micro_profiler
 				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
 				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
-				assert_equal(4u, ctx1.threads->get_count());
+				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
+				assert_equivalent(plural + make_pair(1u, threads1[0]) + make_pair(3u, threads1[1]) + make_pair(4u, threads1[2]), (containers::unordered_map<unsigned int, thread_info> &)*ctx1.threads);
 
 				// INIT
 				file_components components2;
@@ -275,7 +276,7 @@ namespace micro_profiler
 				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
 				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
-				assert_equal(3u, ctx2.threads->get_count());
+				assert_equivalent(plural + make_pair(1u, threads2[0]) + make_pair(17u, threads2[1]), (containers::unordered_map<unsigned int, thread_info> &)*ctx2.threads);
 			}
 
 
@@ -300,7 +301,7 @@ namespace micro_profiler
 				assert_equivalent(statistics[2], (statistic_types::map_detailed &)*ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
 				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
-				assert_equal(1u, ctx1.threads->get_count());
+				assert_is_empty(*ctx1.threads);
 
 				// INIT
 				file_v3_components components2;
@@ -321,7 +322,7 @@ namespace micro_profiler
 				assert_equivalent(statistics[3], (statistic_types::map_detailed &)*ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
 				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
-				assert_equal(1u, ctx2.threads->get_count());
+				assert_is_empty(*ctx2.threads);
 			}
 
 
@@ -351,7 +352,7 @@ namespace micro_profiler
 				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx1.module_mappings);
 				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
-				assert_equal(4u, ctx1.threads->get_count());
+				assert_equivalent(plural + make_pair(1u, threads1[0]) + make_pair(3u, threads1[1]) + make_pair(4u, threads1[2]), (containers::unordered_map<unsigned int, thread_info> &)*ctx1.threads);
 
 				// INIT
 				file_v4_components components2;
@@ -377,7 +378,7 @@ namespace micro_profiler
 				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_identified> &)*ctx2.module_mappings);
 				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
-				assert_equal(3u, ctx2.threads->get_count());
+				assert_equivalent(plural + make_pair(1u, threads2[0]) + make_pair(17u, threads2[1]), (containers::unordered_map<unsigned int, thread_info> &)*ctx2.threads);
 			}
 
 		end_test_suite

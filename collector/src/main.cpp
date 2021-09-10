@@ -54,7 +54,7 @@ namespace
 		{	}
 	};
 
-	collector_app::channel_t probe_create_channel(ipc::channel &inbound)
+	collector_app::channel_ptr_t probe_create_channel(ipc::channel &inbound)
 	{
 		vector<string> candidate_endpoints(c_candidate_endpoints, c_candidate_endpoints
 			+ sizeof(c_candidate_endpoints) / sizeof(c_candidate_endpoints[0]));
@@ -72,7 +72,7 @@ namespace
 			{
 			}
 		}
-		return collector_app::channel_t(new null_channel);
+		return collector_app::channel_ptr_t(new null_channel);
 	}
 }
 

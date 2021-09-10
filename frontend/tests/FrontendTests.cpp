@@ -5,7 +5,6 @@
 
 #include <common/serialization.h>
 #include <frontend/tables.h>
-#include <frontend/threads_model.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
 #include <ut/assert.h>
@@ -26,6 +25,9 @@ namespace micro_profiler
 			&& lhs.module_mappings == rhs.module_mappings && lhs.modules == rhs.modules
 			&& lhs.patches == rhs.patches && lhs.threads == rhs.threads;
 	}
+
+	inline bool operator <(const thread_info &lhs, const thread_info &rhs)
+	{	return make_pair(lhs.native_id, lhs.description) < make_pair(rhs.native_id, rhs.description);	}
 
 	namespace tests
 	{
@@ -185,7 +187,7 @@ namespace micro_profiler
 			}
 
 
-			test( StatisticsUpdateLeadsToALiveThreadsRequest )
+			test( UpdateForExistedAndNewThreadsIsRequestedOnStatisticsUpdate )
 			{
 				// INIT
 				auto frontend_ = create_frontend();
@@ -224,6 +226,23 @@ namespace micro_profiler
 				unsigned reference2[] = {	12, 12, 17,	};
 
 				assert_equivalent(reference2, log);
+
+				// INIT (replace handler)
+				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
+					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
+						s(plural
+							+ make_pair(17u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed()))
+							+ make_pair(135u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
+					});
+				});
+
+				// ACT
+				context.statistics->request_update();
+
+				// ASSERT
+				unsigned reference3[] = {	12, 12, 17, 12, 17, 135	};
+
+				assert_equivalent(reference3, log);
 			}
 
 
@@ -241,8 +260,8 @@ namespace micro_profiler
 				emulator->add_handler< vector<unsigned int> >(request_threads_info, [&] (ipc::server_session::request &req, const vector<unsigned int> &) {
 					req.respond(response_threads_info, [] (ipc::server_session::serializer &s) {
 						s(plural
-							+ make_pair(0u, make_thread_info(1717, "thread 1", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(), true))
-							+ make_pair(1u, make_thread_info(11717, "thread 2", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(), false)));
+							+ make_thread_info(0u, 1717, "thread 1", false)
+							+ make_thread_info(1u, 11717, "thread 2", false));
 					});
 				});
 
@@ -251,13 +270,10 @@ namespace micro_profiler
 				const auto threads = context.threads;
 
 				// ASSERT
-				unsigned int native_id;
-
-				assert_equal(3u, threads->get_count());
-				assert_is_true(threads->get_native_id(native_id, 0));
-				assert_equal(1717u, native_id);
-				assert_is_true(threads->get_native_id(native_id, 1));
-				assert_equal(11717u, native_id);
+				assert_equivalent(plural
+					+ make_thread_info(0u, 1717, "thread 1", false)
+					+ make_thread_info(1u, 11717, "thread 2", false),
+					(containers::unordered_map<unsigned int, thread_info> &)*threads);
 
 				// INIT
 				emulator->add_handler< vector<unsigned int> >(request_threads_info, [&] (ipc::server_session::request &req, const vector<unsigned int> &) {
@@ -271,9 +287,48 @@ namespace micro_profiler
 				context.statistics->request_update();
 
 				// ASSERT
-				assert_equal(3u, threads->get_count());
-				assert_is_true(threads->get_native_id(native_id, 1));
-				assert_equal(117u, native_id);
+				assert_equivalent(plural
+					+ make_thread_info(0u, 1717, "thread 1", false)
+					+ make_thread_info(1u, 117, "", true),
+					(containers::unordered_map<unsigned int, thread_info> &)*threads);
+			}
+
+
+			test( UpdateIsRequestedOnlyForRunningThreads )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector< vector<unsigned> > log;
+
+				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
+					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
+						s(make_single_threaded(plural
+							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 0));
+					});
+				});
+				emulator->add_handler< vector<unsigned int> >(request_threads_info, [&] (ipc::server_session::request &req, const vector<unsigned int> &ids) {
+					log.push_back(ids);
+					req.respond(response_threads_info, [] (ipc::server_session::serializer &s) {
+						s(plural
+							+ make_thread_info(0u, 1717, "thread 1", false)
+							+ make_thread_info(1u, 11717, "thread 2", true)
+							+ make_thread_info(2u, 1717, "thread 1", false));
+					});
+				});
+
+				emulator->message(init, format(make_initialization_data("/test", 1)));
+				log.clear();
+
+				// ACT
+				context.statistics->request_update();
+
+				// ASSERT
+				unsigned reference[] = {
+					0u, 2u,
+				};
+
+				assert_equal(1u, log.size());
+				assert_equivalent(reference, log.back());
 			}
 
 
@@ -382,7 +437,6 @@ namespace micro_profiler
 				});
 
 				auto conn1 = context.modules->invalidate += [] {	assert_is_false(true);	};
-				auto conn2 = context.modules->ready += [] (unsigned) {	assert_is_false(true);	};
 
 				// ACT
 				context.modules->request_presence(11u);
@@ -437,7 +491,6 @@ namespace micro_profiler
 				// INIT
 				auto frontend_ = create_frontend();
 				auto invalidations = 0;
-				vector<unsigned> log;
 				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &req, unsigned persistent_id) {
 					req.respond(response_module_metadata, [persistent_id] (ipc::server_session::serializer &s) {
 						symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
@@ -459,16 +512,12 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("", 1)));
 
 				auto conn1 = context.modules->invalidate += [&] {	invalidations++;	};
-				auto conn2 = context.modules->ready += [&] (unsigned persistent_id) {	log.push_back(persistent_id);	};
 
 				// ACT
 				context.modules->request_presence(1000);
 
 				// ASSERT
-				unsigned reference1[] = {	1000u,	};
-
 				assert_equal(1, invalidations);
-				assert_equal(reference1, log);
 				assert_equal(1u, context.modules->size());
 
 				const auto i1000 = context.modules->find(1000);
@@ -481,10 +530,7 @@ namespace micro_profiler
 				context.modules->request_presence(99);
 
 				// ASSERT
-				unsigned reference2[] = {	1000u, 17u, 99u,	};
-
 				assert_equal(3, invalidations);
-				assert_equal(reference2, log);
 				assert_equal(3u, context.modules->size());
 
 				const auto i17 = context.modules->find(17);

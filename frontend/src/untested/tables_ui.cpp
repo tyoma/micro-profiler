@@ -70,6 +70,7 @@ namespace micro_profiler
 			make_shared<symbol_resolver>(context.modules, context.module_mappings), context.threads);
 		auto m_selection = m_main->create_selection();
 		auto m_selected_items = make_shared< vector<statistic_types::key> >();
+		auto threads = make_shared<threads_model>(context.threads);
 
 		auto m_parents = create_callers_model(context.statistics,
 			1.0 / context.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
@@ -129,12 +130,12 @@ namespace micro_profiler
 		add(panel[0] = factory_.create_control<stack>("vstack"), wpl::percents(60), true);
 			panel[0]->set_spacing(5);
 			panel[0]->add(cb = factory_.create_control<wpl::combobox>("combobox"), wpl::pixels(24), false, 4);
-				cb->set_model(m_main->threads);
+				cb->set_model(threads);
 				cb->select(0u);
-				_connections.push_back(cb->selection_changed += [this, m_main] (wpl::combobox::model_t::index_type index) {
+				_connections.push_back(cb->selection_changed += [this, m_main, threads] (wpl::combobox::model_t::index_type index) {
 					unsigned id;
 
-					if (m_main->threads->get_key(id, index))
+					if (threads->get_key(id, index))
 						m_main->set_filter([id] (const functions_list::value_type &v) { return id == v.first.second;	});
 					else
 						m_main->set_filter();

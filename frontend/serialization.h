@@ -21,9 +21,7 @@
 #pragma once
 
 #include "serialization_context.h"
-#include "symbol_resolver.h"
 #include "tables.h"
-#include "threads_model.h"
 
 #include <common/serialization.h>
 
@@ -103,15 +101,9 @@ namespace micro_profiler
 
 	struct threads_model_reader : strmd::indexed_associative_container_reader
 	{
-		void prepare(threads_model &/*container*/, size_t /*count*/)
+		template <typename ContainerT>
+		void prepare(ContainerT &/*data*/, size_t /*count*/)
 		{	}
-
-		void complete(threads_model &container)
-		{
-			container._view.fetch();
-			container._trackables.fetch();
-			container.invalidate(threads_model::npos());
-		}
 	};
 
 
@@ -134,6 +126,13 @@ namespace micro_profiler
 
 	namespace tables
 	{
+		template <typename ArchiveT, typename BaseT>
+		inline void serialize(ArchiveT &archive, table<BaseT> &data)
+		{
+			archive(static_cast<BaseT &>(data));
+			data.invalidate();
+		}
+
 		template <typename ArchiveT, typename ContextT, typename BaseT>
 		inline void serialize(ArchiveT &archive, table<BaseT> &data, ContextT &context)
 		{
@@ -153,8 +152,8 @@ namespace strmd
 		typedef micro_profiler::statistics_map_reader item_reader_type;
 	};
 
-	template <>
-	struct type_traits<micro_profiler::threads_model>
+	template <typename T, typename H>
+	struct type_traits< micro_profiler::containers::unordered_map<T, micro_profiler::thread_info, H> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::threads_model_reader item_reader_type;

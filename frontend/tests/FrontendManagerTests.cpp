@@ -34,7 +34,7 @@ namespace micro_profiler
 					make_shared<tables::module_mappings>(),
 					make_shared<tables::modules>(),
 					make_shared<tables::patches>(),
-					make_shared<threads_model>([] (vector<unsigned>) {}),
+					make_shared<tables::threads>(),
 				};
 
 				return ctx;
@@ -197,8 +197,6 @@ namespace micro_profiler
 				frontend_manager m([] (frontend_ui_context ctx) {
 					return make_shared<mock_ui>(ctx);
 				});
-				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
-				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
 				auto ctx1 = create_ui_context("somefile.exe");
 				auto ctx2 = create_ui_context("somefile.exe");
 
@@ -730,8 +728,6 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
-				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
-				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
 				auto ctx1 = create_ui_context("somefile.exe");
 				auto ctx2 = create_ui_context("/usr/bin/grep");
 
@@ -759,8 +755,6 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
-				shared_ptr<mocks::symbol_resolver> sr(new mocks::symbol_resolver(modules, mappings));
-				shared_ptr<mocks::threads_model> tmodel(new mocks::threads_model);
 
 				// ACT
 				m.load_session(create_ui_context("somefile.exe"));

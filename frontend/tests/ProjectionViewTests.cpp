@@ -26,17 +26,6 @@ namespace micro_profiler
 				POD v = {	a,b ,c	};
 				return v;
 			}
-
-			template <typename T>
-			vector<T> get_values(const wpl::list_model<T> &model)
-			{
-				vector<T> result;
-				const auto l = model.get_count();
-
-				for (auto i = l - l; i != l; ++i)
-					result.resize(result.size() + 1), model.get_value(i, result.back());
-				return result;
-			}
 		}
 
 		begin_test_suite( ProjectionViewTests )

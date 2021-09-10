@@ -1,6 +1,9 @@
 #include <frontend/threads_model.h>
 
 #include <common/formatting.h>
+#include <frontend/tables.h>
+#include <frontend/trackables_provider.h>
+#include <views/ordered.h>
 
 #pragma warning(disable: 4355)
 
@@ -27,26 +30,25 @@ namespace micro_profiler
 		};
 	}
 
-	threads_model::threads_model(const request_threads_t &requestor)
-		: _requestor(requestor), _view(*this), _trackables(_view)
+	threads_model::threads_model(shared_ptr<const tables::threads> threads)
+		: _underlying(threads), _view(make_shared<view_type>(*_underlying)),
+			_trackables(make_shared<trackables_type>(*_view))
 	{
-		_view.set_order([] (const map_type::value_type &lhs, const map_type::value_type &rhs) {
+		_invalidation = threads->invalidate += [this] (...) {
+			_view->fetch();
+			_trackables->fetch();
+			invalidate(npos());
+		};
+		_view->set_order([] (const tables::threads::value_type &lhs, const tables::threads::value_type &rhs) {
 			return lhs.second.cpu_time < rhs.second.cpu_time;
 		}, false);
 	}
 
-	bool threads_model::get_native_id(unsigned int &native_id, unsigned int thread_id) const throw()
-	{
-		const const_iterator i = find(thread_id);
-
-		return end() != i ? native_id = static_cast<unsigned int>(i->second.native_id), true : false;
-	}
-
 	bool threads_model::get_key(unsigned int &thread_id, index_type index) const throw()
-	{	return index >= 1 && index < get_count() ? thread_id = _view[index - 1].first, true : false;	}
+	{	return index >= 1 && index < get_count() ? thread_id = (*_view)[index - 1].first, true : false;	}
 
 	threads_model::index_type threads_model::get_count() const throw()
-	{	return _view.size() + 1;	}
+	{	return _view->size() + 1;	}
 
 	void threads_model::get_value(index_type index, string &text) const
 	{
@@ -56,7 +58,7 @@ namespace micro_profiler
 		}
 		else
 		{
-			const thread_info &v = _view[index - 1].second;
+			const thread_info &v = (*_view)[index - 1].second;
 
 			text = "#", itoa<10>(text, v.native_id);
 			if (!v.description.empty())
@@ -69,5 +71,5 @@ namespace micro_profiler
 	}
 
 	shared_ptr<const wpl::trackable> threads_model::track(index_type index) const
-	{	return make_shared<trackable>(_trackables, index);	}
+	{	return make_shared<trackable>(*_trackables, index);	}
 }

@@ -42,8 +42,8 @@ namespace micro_profiler
 	class collector_app : noncopyable
 	{
 	public:
-		typedef std::shared_ptr<ipc::channel> channel_t;
-		typedef std::function<channel_t (ipc::channel &inbound)> frontend_factory_t;
+		typedef std::shared_ptr<ipc::channel> channel_ptr_t;
+		typedef std::function<channel_ptr_t (ipc::channel &inbound)> frontend_factory_t;
 
 	public:
 		collector_app(const frontend_factory_t &factory, calls_collector_i &collector, const overhead &overhead_,
@@ -54,7 +54,7 @@ namespace micro_profiler
 
 	private:
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
-		std::shared_ptr<ipc::channel> init_server(ipc::channel &outbound, analyzer &analyzer_);
+		channel_ptr_t init_server(ipc::channel &outbound, analyzer &analyzer_);
 
 	private:
 		scheduler::task_queue _queue;

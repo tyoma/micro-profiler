@@ -32,16 +32,6 @@
 
 namespace micro_profiler
 {
-	namespace tables
-	{
-		struct module_mappings;
-		struct modules;
-		struct patches;
-	}
-
-	class symbol_resolver;
-	class threads_model;
-
 	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
@@ -63,6 +53,7 @@ namespace micro_profiler
 		void revert(unsigned int persistent_id, range<const unsigned int, size_t> rva);
 
 		void request_full_update();
+		void update_threads(std::vector<unsigned int> &thread_ids);
 
 		requests_t::iterator new_request_handle();
 
@@ -72,7 +63,7 @@ namespace micro_profiler
 		const std::shared_ptr<tables::modules> _modules;
 		const std::shared_ptr<tables::module_mappings> _mappings;
 		const std::shared_ptr<tables::patches> _patches;
-		std::shared_ptr<threads_model> _threads;
+		const std::shared_ptr<tables::threads> _threads;
 		scontext::wire _serialization_context;
 		bool _initialized;
 

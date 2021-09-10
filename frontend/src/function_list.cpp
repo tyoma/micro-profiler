@@ -24,7 +24,6 @@
 #include <frontend/nested_transform.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
-#include <frontend/threads_model.h>
 
 #include <common/formatting.h>
 #include <cmath>
@@ -61,6 +60,22 @@ namespace micro_profiler
 				destination.append(buffer, buffer + l);
 		}
 
+		bool get_thread_native_id(unsigned int &destination, unsigned int id, const tables::threads &threads)
+		{
+			const auto i = threads.find(id);
+
+			return i != threads.end() ? destination = i->second.native_id, true : false;
+		}
+
+		template <typename T>
+		void get_thread_native_id(T &destination, unsigned int id, const tables::threads &threads)
+		{
+			unsigned int native_id;
+
+			if (get_thread_native_id(native_id, id, threads))
+				itoa<10>(destination, native_id);
+		}
+
 		class by_name
 		{
 		public:
@@ -79,20 +94,22 @@ namespace micro_profiler
 		struct by_threadid
 		{
 		public:
-			by_threadid(shared_ptr<const threads_model> threads)
-				: threads(threads)
+			by_threadid(shared_ptr<const tables::threads> threads_)
+				: threads(threads_)
 			{	}
 
 			template <typename T>
 			bool operator ()(const T &lhs_, const T &rhs_) const
 			{
 				unsigned int lhs = 0u, rhs = 0u;
+				const auto lhs_valid = get_thread_native_id(lhs, lhs_.first.second, *threads);
+				const auto rhs_valid = get_thread_native_id(rhs, rhs_.first.second, *threads);
 
-				return (threads->get_native_id(lhs, lhs_.first.second), lhs) < (threads->get_native_id(rhs, rhs_.first.second), rhs);
+				return !lhs_valid && !rhs_valid ? false : !lhs_valid ? true : !rhs_valid ? false : lhs < rhs;
 			}
 
 		private:
-			shared_ptr<const threads_model> threads;
+			shared_ptr<const tables::threads> threads;
 		};
 
 		struct by_times_called
@@ -234,15 +251,13 @@ namespace micro_profiler
 
 		template <typename ItemT>
 		void get_column_text(agge::richtext_t &text, size_t index, const ItemT &item, size_t column, double tick_interval,
-			const symbol_resolver &resolver, const threads_model &threads)
+			const symbol_resolver &resolver, const tables::threads &threads)
 		{
-			unsigned int tmp;
-
 			switch (column)
 			{
 			case 0:	itoa<10>(text, index + 1);	break;
 			case 1:	text << resolver.symbol_name_by_va(item.first.first).c_str();	break;
-			case 2:	threads.get_native_id(tmp, item.first.second) ? itoa<10>(text, tmp), 0 : 0;	break;
+			case 2:	get_thread_native_id(text, item.first.second, threads);	break;
 			case 3:	itoa<10>(text, item.second.times_called);	break;
 			case 4:	format_interval(text, exclusive_time(tick_interval)(item));	break;
 			case 5:	format_interval(text, inclusive_time(tick_interval)(item));	break;
@@ -255,7 +270,7 @@ namespace micro_profiler
 
 		template <typename ViewT>
 		void set_column_order(void *, ViewT &view, size_t column, bool ascending, double tick_interval,
-			shared_ptr<const symbol_resolver> resolver, shared_ptr<const threads_model> threads)
+			shared_ptr<const symbol_resolver> resolver, shared_ptr<const tables::threads> threads)
 		{
 			switch (column)
 			{
@@ -313,7 +328,7 @@ namespace micro_profiler
 		template <>
 		void get_column_text<statistic_types::map_callers::value_type>(agge::richtext_t &text, size_t index,
 			const statistic_types::map_callers::value_type &item, size_t column, double /*tick_interval*/,
-			const symbol_resolver &resolver, const threads_model &/*threads*/)
+			const symbol_resolver &resolver, const tables::threads &/*threads*/)
 		{
 			switch (column)
 			{
@@ -325,7 +340,7 @@ namespace micro_profiler
 
 		template <typename ViewT>
 		void set_column_order(statistic_types::map_callers::value_type *, ViewT &view, size_t column, bool ascending,
-			double /*tick_interval*/, shared_ptr<const symbol_resolver> resolver, shared_ptr<const threads_model> /*threads*/)
+			double /*tick_interval*/, shared_ptr<const symbol_resolver> resolver, shared_ptr<const tables::threads> /*threads*/)
 		{
 			switch (column)
 			{
@@ -352,18 +367,18 @@ namespace micro_profiler
 
 
 	shared_ptr<linked_statistics> create_callees_model(shared_ptr<const tables::statistics> underlying,
-		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads,
+		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
 		shared_ptr< vector<statistic_types::key> > scope)
 	{	return construct_nested<callees_transform>(underlying, tick_interval, resolver, threads, scope);	}
 
 	shared_ptr<linked_statistics> create_callers_model(shared_ptr<const tables::statistics> underlying,
-		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<threads_model> threads,
+		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
 		shared_ptr< vector<statistic_types::key> > scope)
 	{	return construct_nested<callers_transform>(underlying, tick_interval, resolver, threads, scope);	}
 
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval_,
-			shared_ptr<symbol_resolver> resolver_, shared_ptr<threads_model> threads_)
+			shared_ptr<symbol_resolver> resolver_, shared_ptr<const tables::threads> threads_)
 		: base(make_bound< views::filter<statistic_types::map_detailed> >(statistics), tick_interval_, resolver_,
 			threads_), _statistics(statistics)
 	{	_connection = statistics->invalidate += [this] {	fetch();	};	}

@@ -35,8 +35,7 @@ namespace micro_profiler
 			std::shared_ptr<tables::statistics> statistics;
 			std::shared_ptr<tables::modules> modules;
 			std::shared_ptr<tables::module_mappings> mappings;
-			shared_ptr<symbol_resolver> resolver;
-			shared_ptr<mocks::threads_model> tmodel;
+			shared_ptr<tables::threads> tmodel;
 
 			shared_ptr<functions_list> create_functions_list(const statistic_types::map_detailed &s,
 				timestamp_t ticks_per_second = 500)
@@ -51,8 +50,7 @@ namespace micro_profiler
 				statistics = make_shared<tables::statistics>();
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
-				resolver.reset(new mocks::symbol_resolver(modules, mappings));
-				tmodel.reset(new mocks::threads_model);
+				tmodel = make_shared<tables::threads>();
 			}
 
 

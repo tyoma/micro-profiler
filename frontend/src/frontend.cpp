@@ -46,20 +46,8 @@ namespace micro_profiler
 	frontend::frontend(ipc::channel &outbound)
 		: client_session(outbound), _statistics(make_shared<tables::statistics>()),
 			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
-			_patches(make_shared<tables::patches>()), _initialized(false)
+			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false)
 	{
-		_threads.reset(new threads_model([this] (const vector<unsigned int> &threads) {
-			auto self = this;
-			auto req = new_request_handle();
-
-			request(*req, request_threads_info, threads, response_threads_info,
-				[self, req] (deserializer &d) {
-
-				d(*self->_threads);
-				self->_requests.erase(req);
-			});
-		}));
-
 		subscribe(*new_request_handle(), init_v1, [this] (deserializer &) {
 			LOGE(PREAMBLE "attempt to connect from an older collector - disconnecting!");
 			disconnect_session();
@@ -106,7 +94,6 @@ namespace micro_profiler
 
 				d(metadata);
 				self->_modules->invalidate();
-				self->_modules->ready(persistent_id);
 
 				LOG(PREAMBLE "received metadata...")
 					% A(self) % A(persistent_id) % A(metadata.symbols.size()) % A(metadata.source_files.size());
@@ -150,7 +137,7 @@ namespace micro_profiler
 		};
 		auto update_callback = [this] (deserializer &d) {
 			d(*_statistics, _serialization_context);
-			_threads->notify_threads(_serialization_context.threads.begin(), _serialization_context.threads.end());
+			update_threads(_serialization_context.threads);
 			_update_request.reset();
 		};
 		pair<int, callback_t> callbacks[] = {
@@ -159,6 +146,25 @@ namespace micro_profiler
 		};
 
 		request(_update_request, request_update, 0, callbacks);
+	}
+
+	void frontend::update_threads(vector<unsigned int> &thread_ids)
+	{
+		auto req = new_request_handle();
+
+		for (auto i = thread_ids.begin(); i != thread_ids.end(); i++)
+			(*_threads)[*i].complete = false;
+		thread_ids.clear();
+		for (auto i = _threads->begin(); i != _threads->end(); ++i)
+		{
+			if (!i->second.complete)
+				thread_ids.push_back(i->first);
+		}
+
+		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (deserializer &d) {
+			d(*_threads);
+			_requests.erase(req);
+		});
 	}
 
 	frontend::requests_t::iterator frontend::new_request_handle()

@@ -29,11 +29,8 @@ namespace micro_profiler
 	namespace tables
 	{
 		struct statistics;
+		struct threads;
 	}
-
-
-	struct serialization_context_file_v3;
-	class threads_model;
 
 	struct linked_statistics : wpl::richtext_table_model
 	{
@@ -45,11 +42,11 @@ namespace micro_profiler
 	};
 
 	std::shared_ptr<linked_statistics> create_callees_model(std::shared_ptr<const tables::statistics> underlying,
-		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads,
+		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
 		std::shared_ptr< std::vector<statistic_types::key> > scope);
 
 	std::shared_ptr<linked_statistics> create_callers_model(std::shared_ptr<const tables::statistics> underlying,
-		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<threads_model> threads,
+		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
 		std::shared_ptr< std::vector<statistic_types::key> > scope);
 
 	class functions_list : public statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> >
@@ -59,7 +56,7 @@ namespace micro_profiler
 
 	public:
 		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval_,
-			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<threads_model> threads_);
+			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<const tables::threads> threads_);
 		virtual ~functions_list();
 
 		template <typename PredicateT>

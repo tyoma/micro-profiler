@@ -1,12 +1,8 @@
 #include <frontend/threads_model.h>
 
-#include <frontend/serialization.h>
-
 #include "helpers.h"
 
 #include <common/types.h>
-#include <strmd/deserializer.h>
-#include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -18,271 +14,132 @@ namespace micro_profiler
 	namespace tests
 	{
 		begin_test_suite( ThreadsModelTests )
-
-			vector_adapter _buffer;
-			strmd::serializer<vector_adapter, packer> ser;
-			strmd::deserializer<vector_adapter, packer> dser;
-			vector< vector<unsigned> > _requested;
-
-			function<void (const vector<unsigned> &threads)> get_requestor()
-			{
-				return [this] (const vector<unsigned> &threads) {
-					_requested.push_back(threads);
-				};
-			}
-
-			ThreadsModelTests()
-				: ser(_buffer), dser(_buffer)
-			{	}
-
-
-			test( ThreadModelIsAListModel )
-			{
-				// INIT / ACT / ASSERT
-				shared_ptr< wpl::list_model<string> > m(new threads_model(get_requestor()));
-
-				// ASSERT
-				assert_is_empty(_requested);
-			}
-
-
-			test( ThreadModelCanBeDeserializedFromContainerData )
+			test( PseudoThreadsArePresentForEmptyThreadsTable )
 			{
 				// INIT
-				shared_ptr<threads_model> m1(new threads_model(get_requestor()));
-				shared_ptr<threads_model> m2(new threads_model(get_requestor()));
-				pair<unsigned int, thread_info> data1[] = {
-					make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
-						mt::milliseconds(100), true)),
-					make_pair(110, make_thread_info(11717, "thread 2", mt::milliseconds(10001), mt::milliseconds(0),
-						mt::milliseconds(20003), false)),
-				};
-				pair<unsigned int, thread_info> data2[] = {
-					make_pair(10, make_thread_info(1718, "thread #7", mt::milliseconds(1), mt::milliseconds(0),
-						mt::milliseconds(180), false)),
-					make_pair(110, make_thread_info(11717, "thread #2", mt::milliseconds(10001), mt::milliseconds(4),
-						mt::milliseconds(10000), true)),
-					make_pair(111, make_thread_info(22717, "thread #3", mt::milliseconds(5), mt::milliseconds(0),
-						mt::milliseconds(1001), false)),
-					make_pair(112, make_thread_info(32717, "thread #4", mt::milliseconds(20001), mt::milliseconds(0),
-						mt::milliseconds(1002), false)),
-				};
+				auto t = make_shared<tables::threads>();
 
-				ser(mkvector(data1));
-				ser(mkvector(data2));
+				// INIT / ACT
+				auto m_ = make_shared<threads_model>(t);
+				wpl::list_model<string> &m = *m_;
+
+				// ASSERT
+				assert_equal(1u, m.get_count());
+				assert_equal("All Threads", get_value(m, 0));
+			}
+
+
+			test( ThreadDataIsConvertedToTextOnConstruction )
+			{
+				// INIT
+				auto t1 = make_shared<tables::threads>();
+				auto t2 = make_shared<tables::threads>();
+
+				assign(*t1, plural
+					+ make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
+						mt::milliseconds(100), true))
+					+ make_pair(110, make_thread_info(11717, "thread 2", mt::milliseconds(10001), mt::milliseconds(0),
+						mt::milliseconds(20003), false)));
+
+				assign(*t2, plural
+					+ make_pair(10, make_thread_info(1718, "thread #7", mt::milliseconds(1), mt::milliseconds(0),
+						mt::milliseconds(180), false))
+					+ make_pair(110, make_thread_info(11717, "thread #2", mt::milliseconds(10001), mt::milliseconds(4),
+						mt::milliseconds(10000), true))
+					+ make_pair(111, make_thread_info(22717, "", mt::milliseconds(5), mt::milliseconds(0),
+						mt::milliseconds(1001), false))
+					+ make_pair(112, make_thread_info(32717, "thread #4", mt::milliseconds(20001), mt::milliseconds(0),
+						mt::milliseconds(1002), false)));
+
+				// INIT / ACT
+				shared_ptr<threads_model> m1(new threads_model(t1));
 
 				// ACT
-				dser(*m1);
+				auto values = get_values(*m1);
 
 				// ASSERT
-				assert_equal(3u, m1->get_count());
-				assert_equal("All Threads", get_text(*m1, 0));
-				assert_equal("#11717 - thread 2 - CPU: 20s, started: +10s", get_text(*m1, 1));
-				assert_equal("#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m1, 2));
+				assert_equal(plural
+					+ (string)"All Threads"
+					+ (string)"#11717 - thread 2 - CPU: 20s, started: +10s"
+					+ (string)"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", values);
+
+				// INIT / ACT
+				shared_ptr<threads_model> m2(new threads_model(t2));
 
 				// ACT
-				dser(*m2);
+				values = get_values(*m2);
 
 				// ASSERT
-				assert_equal(5u, m2->get_count());
-				assert_equal("All Threads", get_text(*m2, 0));
-				assert_equal("#11717 - thread #2 - CPU: 10s, started: +10s, ended: +4ms", get_text(*m2, 1));
-				assert_equal("#32717 - thread #4 - CPU: 1s, started: +20s", get_text(*m2, 2));
-				assert_equal("#22717 - thread #3 - CPU: 1s, started: +5ms", get_text(*m2, 3));
-				assert_equal("#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m2, 4));
+				assert_equal(plural
+					+ (string)"All Threads"
+					+ (string)"#11717 - thread #2 - CPU: 10s, started: +10s, ended: +4ms"
+					+ (string)"#32717 - thread #4 - CPU: 1s, started: +20s"
+					+ (string)"#22717 - CPU: 1s, started: +5ms"
+					+ (string)"#1718 - thread #7 - CPU: 180ms, started: +1ms", values);
 			}
 
 
-			test( DeserializationKeepsEntriesAndUpdatesExisting )
+			test( ThreadDataIsConvertedToTextOnInvalidation )
 			{
 				// INIT
-				shared_ptr<threads_model> m(new threads_model(get_requestor()));
-				pair<unsigned int, thread_info> data1[] = {
-					make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
-						mt::milliseconds(100), true)),
-					make_pair(110, make_thread_info(11717, "thread 2", mt::milliseconds(10001), mt::milliseconds(0),
-						mt::milliseconds(20003), false)),
+				vector< vector<string> > log;
+				auto t = make_shared<tables::threads>();
+				auto m = make_shared<threads_model>(t);
+				auto conn = m->invalidate += [&] (threads_model::index_type index) {
+					log.push_back(get_values(*m));
+					assert_equal(threads_model::npos(), index);
 				};
-				pair<unsigned int, thread_info> data2[] = {
-					make_pair(10, make_thread_info(1718, "thread #7", mt::milliseconds(1), mt::milliseconds(0),
-						mt::milliseconds(180), false)),
-					make_pair(110, make_thread_info(11717, string(), mt::milliseconds(10001), mt::milliseconds(4),
-						mt::milliseconds(10), true)),
-				};
-
-				ser(mkvector(data1));
-				ser(mkvector(data2));
-				dser(*m);
 
 				// ACT
-				dser(*m);
+				assign(*t, plural
+					+ make_pair(1, make_thread_info(17, "producer", mt::milliseconds(5001), mt::milliseconds(0),
+						mt::milliseconds(100), false))
+					+ make_pair(3, make_thread_info(19, "consumer", mt::milliseconds(10001), mt::milliseconds(0),
+						mt::milliseconds(20003), false)));
+				t->invalidate();
 
 				// ASSERT
-				assert_equal(4u, m->get_count());
-				assert_equal("#1718 - thread #7 - CPU: 180ms, started: +1ms", get_text(*m, 1));
-				assert_equal("#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", get_text(*m, 2));
-				assert_equal("#11717 - CPU: 10ms, started: +10s, ended: +4ms", get_text(*m, 3));
-			}
-
-
-			test( ModelIsInvalidatedOnDeserialize )
-			{
-				// INIT
-				shared_ptr<threads_model> m(new threads_model(get_requestor()));
-				pair<unsigned int, thread_info> data[] = {
-					make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
-						mt::milliseconds(100), true)),
-					make_pair(110, make_thread_info(11717, "thread 2", mt::milliseconds(10001), mt::milliseconds(0),
-						mt::milliseconds(20003), false)),
-				};
-				bool invalidated = false;
-				wpl::slot_connection c = m->invalidate += [&] (threads_model::index_type item) {
-					assert_equal(3u, m->get_count());
-					assert_equal(threads_model::npos(), item);
-					invalidated = true;
-				};
-
-				ser(mkvector(data));
+				assert_equal(1u, log.size());
+				assert_equal(plural
+					+ (string)"All Threads"
+					+ (string)"#19 - consumer - CPU: 20s, started: +10s"
+					+ (string)"#17 - producer - CPU: 100ms, started: +5s", log.back());
 
 				// ACT
-				dser(*m);
+				assign(*t, plural
+					+ make_pair(1, make_thread_info(17, "producer", mt::milliseconds(5001), mt::milliseconds(57000),
+						mt::milliseconds(25370), true))
+					+ make_pair(70, make_thread_info(1701, "", mt::milliseconds(5151), mt::milliseconds(0),
+						mt::milliseconds(130), false))
+					+ make_pair(3, make_thread_info(19, "consumer", mt::milliseconds(10001), mt::milliseconds(0),
+						mt::milliseconds(20003), false)));
+				t->invalidate();
 
 				// ASSERT
-				assert_is_true(invalidated);
-			}
-
-
-			test( NativeIDIsRetrievedByThreadID )
-			{
-				// INIT
-				shared_ptr<threads_model> m(new threads_model(get_requestor()));
-				pair<unsigned int, thread_info> data1[] = {
-					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						true)),
-					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						false)),
-				};
-				pair<unsigned int, thread_info> data2[] = {
-					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						true)),
-					make_pair(1, make_thread_info(100, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						false)),
-				};
-				unsigned native_id;
-
-				ser(mkvector(data1));
-				ser(mkvector(data2));
-				dser(*m);
-
-				// ACT / ASSERT
-				assert_is_true(m->get_native_id(native_id, 11));
-				assert_equal(1717u, native_id);
-				assert_is_true(m->get_native_id(native_id, 110));
-				assert_equal(11717u, native_id);
-				assert_is_false(m->get_native_id(native_id, 1));
-
-				// INIT
-				dser(*m);
-
-				// ACT / ASSERT
-				assert_is_true(m->get_native_id(native_id, 11));
-				assert_is_true(m->get_native_id(native_id, 110));
-				assert_is_true(m->get_native_id(native_id, 1));
-				assert_equal(100u, native_id);
-			}
-
-
-			test( NewThreadsAreRequestedOnNotify )
-			{
-				// INIT
-				shared_ptr<threads_model> m(new threads_model(get_requestor()));
-				unsigned threads[] = { 10, 17, 100, 11, };
-
-				// ACT
-				m->notify_threads(threads, array_end(threads));
-
-				// ASSERT
-				assert_equal(1u, _requested.size());
-				assert_equivalent(threads, _requested[0]);
-			}
-
-
-			test( NewAndExistingRunningThreadsAreRequestedOnNotify )
-			{
-				// INIT
-				shared_ptr<threads_model> m(new threads_model(get_requestor()));
-				unsigned threads[] = { 10, 17, 100, 11, };
-				unsigned native_id;
-				pair<unsigned int, thread_info> data1[] = {
-					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						false)),
-					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						true)),
-					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						false)),
-				};
-
-				ser(mkvector(data1));
-				dser(*m);
-
-				// ACT
-				m->notify_threads(threads, array_end(threads));
-
-				// ASSERT
-				unsigned reference1[] = { 10, 17, 100, 11, 111, };
-
-				assert_equal(1u, _requested.size());
-				assert_equivalent(reference1, _requested[0]);
-
-				assert_is_true(m->get_native_id(native_id, 10));
-				assert_equal(0u, native_id);
-				assert_is_true(m->get_native_id(native_id, 17));
-				assert_equal(0u, native_id);
-				assert_is_true(m->get_native_id(native_id, 100));
-				assert_equal(0u, native_id);
-
-				assert_equal(4u, m->get_count()); // Still '3' - the view shall not be updated.
-
-				// INIT
-				pair<unsigned int, thread_info> data2[] = {
-					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						true)),
-					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						true)),
-					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(),
-						true)),
-				};
-
-				ser(mkvector(data2));
-				dser(*m);
-
-				// ACT (no threads - just referesh all alive ones)
-				m->notify_threads(threads, threads);
-
-				// ASSERT
-				unsigned reference2[] = { 10, 17, 100, };
-
-				assert_equal(2u, _requested.size());
-				assert_equivalent(reference2, _requested[1]);
+				assert_equal(2u, log.size());
+				assert_equal(plural
+					+ (string)"All Threads"
+					+ (string)"#17 - producer - CPU: 25.4s, started: +5s, ended: +57s"
+					+ (string)"#19 - consumer - CPU: 20s, started: +10s"
+					+ (string)"#1701 - CPU: 130ms, started: +5.15s", log.back());
 			}
 
 
 			test( ThreadIDCanBeRetrievedFromIndex )
 			{
 				// INIT
-				shared_ptr<threads_model> m(new threads_model(get_requestor()));
+				auto t = make_shared<tables::threads>();
+				auto m = make_shared<threads_model>(t);
 				unsigned thread_id;
-				pair<unsigned int, thread_info> data1[] = {
-					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
-						false)),
-					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
-						true)),
-					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
-						false)),
-				};
 
-				ser(mkvector(data1));
-				dser(*m);
+				assign(*t, plural
+					+ make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
+						false))
+					+ make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
+						true))
+					+ make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
+						false)));
+				t->invalidate();
 
 				// ACT / ASSERT
 				assert_is_false(m->get_key(thread_id, 0));
@@ -295,13 +152,9 @@ namespace micro_profiler
 				assert_is_false(m->get_key(thread_id, 4));
 
 				// INIT
-				pair<unsigned int, thread_info> data2[] = {
-					make_pair(12, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(3),
-						false)),
-				};
-
-				ser(mkvector(data2));
-				dser(*m);
+				(*t)[12] = make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(3),
+						false);
+				t->invalidate();
 
 				// ACT / ASSERT
 				assert_is_true(m->get_key(thread_id, 4));
@@ -313,18 +166,17 @@ namespace micro_profiler
 			test( TrackableObtainedFromModelFollowsTheItemPosition )
 			{
 				// INIT
-				shared_ptr<threads_model> m(new threads_model(get_requestor()));
-				pair<unsigned int, thread_info> data1[] = {
-					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
-						false)),
-					make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
-						true)),
-					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
-						false)),
-				};
+				auto t = make_shared<tables::threads>();
+				auto m = make_shared<threads_model>(t);
 
-				ser(mkvector(data1));
-				dser(*m);
+				assign(*t, plural
+					+ make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
+						false))
+					+ make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
+						true))
+					+ make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
+						false)));
+				t->invalidate();
 
 				// ACT
 				shared_ptr<const wpl::trackable> t0 = m->track(0); // 'All Threads'
@@ -340,15 +192,11 @@ namespace micro_profiler
 				assert_equal(1u, t2->index());
 
 				// INIT
-				pair<unsigned int, thread_info> data2[] = {
-					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(18),
-						false)),
-				};
-
-				ser(mkvector(data2));
+				(*t)[111] = make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(18),
+						false);
 
 				// ACT
-				dser(*m);
+				t->invalidate();
 
 				// ASSERT
 				assert_equal(0u, t0->index());
@@ -356,17 +204,13 @@ namespace micro_profiler
 				assert_equal(1u, t2->index());
 
 				// INIT
-				pair<unsigned int, thread_info> data3[] = {
-					make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(21),
-						false)),
-					make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(27),
-						false)),
-				};
-
-				ser(mkvector(data3));
+				(*t)[11] = make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(21),
+						false);
+				(*t)[111] = make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(27),
+						false);
 
 				// ACT
-				dser(*m);
+				t->invalidate();
 
 				// ASSERT
 				assert_equal(0u, t0->index());
@@ -374,6 +218,28 @@ namespace micro_profiler
 				assert_equal(3u, t2->index());
 			}
 
+
+			test( TrackablesCanBeObtainedBeforeInvalidations )
+			{
+				// INIT
+				auto t = make_shared<tables::threads>();
+
+				assign(*t, plural
+					+ make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
+						false))
+					+ make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
+						true))
+					+ make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
+						false)));
+
+				auto m = make_shared<threads_model>(t);
+
+				// ACT / ASSERT
+				assert_equal(0u, m->track(0)->index());
+				assert_equal(1u, m->track(1)->index());
+				assert_equal(2u, m->track(2)->index());
+				assert_equal(3u, m->track(3)->index());
+			}
 		end_test_suite
 	}
 }

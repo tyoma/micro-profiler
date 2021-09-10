@@ -65,9 +65,6 @@ namespace micro_profiler
 	public:
 		key_type key;
 		size_t current_index;
-
-	private:
-		const trackable &operator =(const trackable &rhs);
 	};
 
 

@@ -23,7 +23,6 @@
 #include "frontend_ui.h"
 #include "serialization.h"
 #include "tables.h"
-#include "threads_model.h"
 
 namespace strmd
 {

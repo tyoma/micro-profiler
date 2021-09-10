@@ -26,14 +26,13 @@
 
 namespace micro_profiler
 {
-	class threads_model;
-	
 	namespace tables
 	{
 		struct module_mappings;
 		struct modules;
-		struct statistics;
 		struct patches;
+		struct statistics;
+		struct threads;
 	}
 
 	struct frontend_ui_context
@@ -43,7 +42,7 @@ namespace micro_profiler
 		std::shared_ptr<tables::module_mappings> module_mappings;
 		std::shared_ptr<tables::modules> modules;
 		std::shared_ptr<tables::patches> patches;
-		std::shared_ptr<threads_model> threads;
+		std::shared_ptr<tables::threads> threads;
 	};
 
 	struct frontend_ui

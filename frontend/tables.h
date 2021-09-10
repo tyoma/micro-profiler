@@ -49,7 +49,6 @@ namespace micro_profiler
 
 		struct threads : table< containers::unordered_map<unsigned int /*threadid*/, thread_info, knuth_hash> >
 		{
-			std::function<void ()> request_update;
 		};
 
 
@@ -62,7 +61,6 @@ namespace micro_profiler
 		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >
 		{
 			std::function<void (unsigned int persistent_id)> request_presence;
-			mutable wpl::signal<void (unsigned int persistent_id)> ready;
 		};
 
 

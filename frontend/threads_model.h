@@ -20,39 +20,31 @@
 
 #pragma once
 
-#include "projection_view.h"
-
 #include <common/noncopyable.h>
-#include <common/hash.h>
 #include <common/types.h>
-#include <common/unordered_map.h>
-#include <views/ordered.h>
 #include <wpl/models.h>
-
-namespace strmd
-{
-	template <typename StreamT, typename PackerT>
-	class serializer;
-	struct indexed_associative_container_reader;
-}
 
 namespace micro_profiler
 {
-	struct threads_model_reader;
+	template <typename UnderlyingT>
+	class trackables_provider;
 
-	class threads_model : public wpl::list_model<std::string>,
-		containers::unordered_map<unsigned int, thread_info, knuth_hash>, noncopyable
+	namespace tables
+	{
+		struct threads;
+	}
+
+	namespace views
+	{
+		template <typename U>
+		class ordered;
+	}
+
+	class threads_model : public wpl::list_model<std::string>, noncopyable
 	{
 	public:
-		typedef std::function<void (const std::vector<unsigned int> &threads)> request_threads_t;
+		threads_model(std::shared_ptr<const tables::threads> threads);
 
-	public:
-		threads_model(const request_threads_t &requestor);
-
-		template <typename IteratorT>
-		void notify_threads(IteratorT begin_, IteratorT end_);
-
-		bool get_native_id(unsigned int &native_id, unsigned int thread_id) const throw();
 		bool get_key(unsigned int &thread_id, index_type index) const throw();
 
 		virtual index_type get_count() const throw() override;
@@ -60,42 +52,13 @@ namespace micro_profiler
 		virtual std::shared_ptr<const wpl::trackable> track(index_type index) const override;
 
 	private:
-		typedef containers::unordered_map<unsigned int, thread_info, knuth_hash> map_type;
+		typedef views::ordered<tables::threads> view_type;
+		typedef trackables_provider<view_type> trackables_type;
 
 	private:
-		const request_threads_t _requestor;
-		views::ordered<map_type> _view;
-		trackables_provider< views::ordered<map_type> > _trackables;
-		std::vector<unsigned int> _ids_buffer;
-
-	private:
-		template <typename StreamT, typename PackerT>
-		friend class strmd::serializer;
-		friend struct strmd::indexed_associative_container_reader;
-		friend struct threads_model_reader;
+		const std::shared_ptr<const tables::threads> _underlying;
+		const std::shared_ptr<view_type> _view;
+		const std::shared_ptr<trackables_type> _trackables;
+		wpl::slot_connection _invalidation;
 	};
-
-
-
-	template <typename IteratorT>
-	inline void threads_model::notify_threads(IteratorT begin_, IteratorT end_)
-	{
-		for (; begin_ != end_; ++begin_)
-		{
-			if (end() != find(*begin_))
-				continue;
-
-			thread_info &ti = operator [](*begin_);
-
-			ti.native_id = 0u;
-			ti.complete = false;
-		}
-		_ids_buffer.clear();
-		for (const_iterator i = begin(); i != end(); ++i)
-		{
-			if (!i->second.complete)
-				_ids_buffer.push_back(i->first);
-		}
-		_requestor(_ids_buffer);
-	}
 }

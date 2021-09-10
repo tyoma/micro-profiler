@@ -10,6 +10,7 @@
 #include <frontend/image_patch_ui.h>
 #include <frontend/persistence.h>
 #include <frontend/statistics_poll.h>
+#include <frontend/symbol_resolver.h>
 #include <strmd/serializer.h>
 #include <windows.h>
 #include <wpl/form.h>

@@ -35,7 +35,7 @@ namespace micro_profiler
 {
 	using namespace ipc;
 
-	shared_ptr<channel> collector_app::init_server(channel &outbound, analyzer &analyzer_)
+	shared_ptr<server_session> collector_app::init_server(channel &outbound, analyzer &analyzer_)
 	{
 		auto session = make_shared<server_session>(outbound);
 

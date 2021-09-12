@@ -48,10 +48,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CollectorIntegrationTests.cpp" />
+    <ClCompile Include="mock_frontend.cpp" />
     <Content Include="$(OutDir)..\micro-profiler_$(PlatformName).dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>true</Visible>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mock_frontend.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

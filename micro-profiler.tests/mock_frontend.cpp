@@ -1,4 +1,4 @@
-#include <test-helpers/mock_frontend.h>
+#include "mock_frontend.h"
 
 #include <common/memory.h>
 #include <common/serialization.h>

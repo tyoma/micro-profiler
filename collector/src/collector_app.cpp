@@ -72,7 +72,7 @@ namespace micro_profiler
 		if (_frontend_thread.get())
 		{
 			_collector.flush();
-			_queue.schedule([this] {	this->_exit = true;	});
+			_queue.schedule([this] {	notify_exiting();	});
 			_frontend_thread->join();
 			_frontend_thread.reset();
 		}
@@ -82,9 +82,9 @@ namespace micro_profiler
 	{
 		const auto qw = make_shared<queue_wrapper>(_queue);
 		analyzer analyzer_(overhead_);
-		channel_ptr_t inbound;
+		shared_ptr<ipc::server_session> session;
 		ipc::marshalled_active_session s(factory, qw, [&] (ipc::channel &outbound) {
-			return inbound = init_server(outbound, analyzer_);
+			return session = init_server(outbound, analyzer_);
 		});
 		const function<void ()> analyze = [&] {
 			_collector.read_collected(analyzer_);
@@ -97,6 +97,7 @@ namespace micro_profiler
 			_queue.wait();
 			_queue.execute_ready(mt::milliseconds(100));
 		}
+		session->message(exiting, [] (ipc::server_session::serializer &ser) {	ser(0u);	});
 
 		// A hack to retrieve last chunk of updates. Must be replaced with graceful disconnect logic.
 		pod_vector<byte> data;
@@ -105,6 +106,11 @@ namespace micro_profiler
 
 		ser(request_update), ser(0u), ser(0u);
 		_collector.read_collected(analyzer_);
-		inbound->message(const_byte_range(data.data(), data.size()));
+		static_cast<ipc::channel &>(*session).message(const_byte_range(data.data(), data.size()));
+	}
+
+	void collector_app::notify_exiting()
+	{
+		_exit = true;
 	}
 }

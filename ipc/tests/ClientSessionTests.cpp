@@ -543,6 +543,19 @@ namespace micro_profiler
 					assert_equal(3, disconnected);
 				}
 
+
+				test( MessagesToMissingHandlersAreInhibited )
+				{
+					// INIT
+					client_session s([&] (channel &) {
+						return outbound = make_shared<mocks::channel>();
+					});
+
+					// ACT / ASSERT (no throw)
+					send_message(s, 14);
+					send_message(s, 154);
+				}
+
 			end_test_suite
 		}
 	}

@@ -1,5 +1,7 @@
 #include <micro-profiler.tests/guineapigs/guinea_runner.h>
 
+#include "mock_frontend.h"
+
 #include <collector/serialization.h>
 #include <common/constants.h>
 #include <ipc/endpoint.h>
@@ -9,7 +11,6 @@
 #include <stdlib.h>
 #include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
-#include <test-helpers/mock_frontend.h>
 #include <test-helpers/process.h>
 #include <ut/assert.h>
 #include <ut/test.h>

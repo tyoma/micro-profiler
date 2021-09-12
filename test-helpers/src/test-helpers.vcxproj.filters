@@ -13,9 +13,6 @@
     <ClCompile Include="helpers_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="mock_frontend.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="process_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -38,7 +35,6 @@
   <ItemGroup>
     <ClInclude Include="..\com.h" />
     <ClInclude Include="..\helpers.h" />
-    <ClInclude Include="..\mock_frontend.h" />
     <ClInclude Include="..\process.h" />
     <ClInclude Include="..\thread.h" />
     <ClInclude Include="..\constants.h" />

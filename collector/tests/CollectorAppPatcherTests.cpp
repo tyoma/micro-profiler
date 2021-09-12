@@ -1,14 +1,13 @@
 #include <collector/collector_app.h>
 
-#include <collector/serialization.h>
-
 #include "helpers.h"
 #include "mocks.h"
 #include "mocks_allocator.h"
 #include "mocks_patch_manager.h"
 
+#include <collector/serialization.h>
+#include <ipc/client_session.h>
 #include <mt/event.h>
-#include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -25,7 +24,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
+			typedef ipc::client_session::deserializer deserializer;
 
 			const overhead c_overhead(0, 0);
 
@@ -38,41 +37,21 @@ namespace micro_profiler
 
 		begin_test_suite( CollectorAppPatcherTests )
 			mocks::allocator allocator_;
-			shared_ptr<mocks::frontend_state> state;
 			collector_app::frontend_factory_t factory;
+			shared_ptr<ipc::client_session> client;
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;
 			mocks::patch_manager pmanager;
-			ipc::channel *inbound;
-			mt::event inbound_ready;
-
-			CollectorAppPatcherTests()
-				: inbound_ready(false, false)
-			{	}
+			mt::event client_ready;
 
 
-			shared_ptr<ipc::channel> create_frontned(ipc::channel &inbound_)
+			init( Init )
 			{
-				inbound = &inbound_;
-				inbound_ready.set();
-				return state->create();
-			}
-
-			init( CreateMocks )
-			{
-				state.reset(new mocks::frontend_state(shared_ptr<void>()));
-				factory = bind(&CollectorAppPatcherTests::create_frontned, this, _1);
-			}
-
-			template <typename FormatterT>
-			void request(const FormatterT &formatter)
-			{
-				vector_adapter message_buffer;
-				strmd::serializer<vector_adapter, packer> ser(message_buffer);
-
-				formatter(ser);
-				inbound_ready.wait();
-				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				factory = [this] (ipc::channel &outbound_) -> shared_ptr<ipc::channel> {
+					client = make_shared<ipc::client_session>(outbound_);
+					client_ready.set();
+					return client;
+				};
 			}
 
 
@@ -80,15 +59,15 @@ namespace micro_profiler
 			{
 				// INIT
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
 				vector<void *> bases_log;
 				vector< vector<unsigned> > rva_log;
-				loaded_modules l;
-				unloaded_modules u;
 				mt::event ready;
 
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+				client_ready.wait();
+				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
 
 				pmanager.on_apply = [&] (patch_manager::apply_results &, unsigned persistent_id, void *base,
 					shared_ptr<void> lock, patch_manager::request_range targets) {
@@ -101,38 +80,28 @@ namespace micro_profiler
 				};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	3u, mkvector(rva1)	};
-
-					ser(request_apply_patches), ser(0u);
-					ser(req);
-				});
+				const patch_request preq1 = {	3u, mkvector(rva1)	};
+				client->request(rq, request_apply_patches, preq1, response_patched, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
 				unsigned reference1_ids[] = {	3,	};
 
 				assert_equal(reference1_ids, ids_log);
-				assert_equal(1u, rva_log.size());
 				assert_equal(rva1, rva_log.back());
 
 				// INIT
 				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	1u, mkvector(rva2)	};
-
-					ser(request_apply_patches), ser(0u);
-					ser(req);
-				});
+				const patch_request preq2 = {	1u, mkvector(rva2)	};
+				client->request(rq, request_apply_patches, preq2, response_patched, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
 				unsigned reference2_ids[] = {	3, 1,	};
 
 				assert_equal(reference2_ids, ids_log);
-				assert_equal(2u, rva_log.size());
 				assert_equal(rva2, rva_log.back());
 			}
 
@@ -141,6 +110,7 @@ namespace micro_profiler
 			{
 				// INIT
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				pair<unsigned, patch_apply> aresults1[] = {
 					mkpatch_apply(rva1[0], patch_result::ok, 0),
@@ -155,38 +125,27 @@ namespace micro_profiler
 					mkpatch_apply(rva2[3], patch_result::ok, 100000),
 					mkpatch_apply(rva2[4], patch_result::error, 0),
 				};
-				loaded_modules l;
-				unloaded_modules u;
-				vector<unsigned> tokens;
 				vector<patch_manager::apply_results> log;
 				mt::event ready;
 
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+				client_ready.wait();
+				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
 
 				pmanager.on_apply = [&] (patch_manager::apply_results &results, unsigned, void *, shared_ptr<void>,
 					patch_manager::request_range) {
 					results = mkvector(aresults1);
 				};
-				state->activation_response_received = [&] (unsigned token, patch_manager::apply_results results) {
-
-					tokens.push_back(token);
-					log.push_back(results);
-					ready.set();
-				};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	3u, mkvector(rva1)	};
-
-					ser(request_apply_patches), ser(1110320u);
-					ser(req);
+				const patch_request preq1 = {	3u, mkvector(rva1)	};
+				client->request(rq, request_apply_patches, preq1, response_patched, [&] (deserializer &d) {
+					log.resize(log.size() + 1);
+					d(log.back());
+					ready.set();
 				});
 				ready.wait();
 
 				// ASSERT
-				unsigned reference1[] = {	1110320u,	};
-
-				assert_equal(reference1, tokens);
 				assert_equal(1u, log.size());
 				assert_equal(aresults1, log.back());
 
@@ -197,18 +156,15 @@ namespace micro_profiler
 				};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	2u, mkvector(rva1)	};
-
-					ser(request_apply_patches), ser(91110320u);
-					ser(req);
+				const patch_request preq2 = {	2u, mkvector(rva2)	};
+				client->request(rq, request_apply_patches, preq2, response_patched, [&] (deserializer &d) {
+					log.resize(log.size() + 1);
+					d(log.back());
+					ready.set();
 				});
 				ready.wait();
 
 				// ASSERT
-				unsigned reference2[] = {	1110320u, 91110320u,	};
-
-				assert_equal(reference2, tokens);
 				assert_equal(2u, log.size());
 				assert_equal(aresults2, log.back());
 			}
@@ -218,14 +174,14 @@ namespace micro_profiler
 			{
 				// INIT
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
 				vector< vector<unsigned> > rva_log;
-				loaded_modules l;
-				unloaded_modules u;
 				mt::event ready;
 
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+				client_ready.wait();
+				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
 
 				pmanager.on_revert = [&] (patch_manager::revert_results &, unsigned persistent_id,
 					patch_manager::request_range targets) {
@@ -236,38 +192,28 @@ namespace micro_profiler
 				};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	3u, mkvector(rva1)	};
-
-					ser(request_revert_patches), ser(1110320u);
-					ser(req);
-				});
+				patch_request preq1 = {	3u, mkvector(rva1)	};
+				client->request(rq, request_revert_patches, preq1, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
 				unsigned reference1_ids[] = {	3,	};
 
 				assert_equal(reference1_ids, ids_log);
-				assert_equal(1u, rva_log.size());
 				assert_equal(rva1, rva_log.back());
 
 				// INIT
 				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	1u, mkvector(rva2)	};
-
-					ser(request_revert_patches), ser(1110320u);
-					ser(req);
-				});
+				patch_request preq2 = {	1u, mkvector(rva2)	};
+				client->request(rq, request_revert_patches, preq2, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
 				unsigned reference2_ids[] = {	3, 1,	};
 
 				assert_equal(reference2_ids, ids_log);
-				assert_equal(2u, rva_log.size());
 				assert_equal(rva2, rva_log.back());
 			}
 
@@ -276,6 +222,7 @@ namespace micro_profiler
 			{
 				// INIT
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				pair<unsigned, patch_result::errors> rresults1[] = {
 					make_pair(rva1[0], patch_result::ok),
@@ -290,36 +237,26 @@ namespace micro_profiler
 					make_pair(rva2[3], patch_result::error),
 					make_pair(rva2[4], patch_result::ok),
 				};
-				loaded_modules l;
-				unloaded_modules u;
-				vector<unsigned> tokens;
 				vector<patch_manager::revert_results> log;
 				mt::event ready;
 
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+				client_ready.wait();
+				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
 
 				pmanager.on_revert = [&] (patch_manager::revert_results &results, unsigned, patch_manager::request_range) {
 					results = mkvector(rresults1);
 				};
-				state->revert_response_received = [&] (unsigned token, patch_manager::revert_results results) {
-					tokens.push_back(token);
-					log.push_back(results);
-					ready.set();
-				};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	3u, mkvector(rva1)	};
-
-					ser(request_revert_patches), ser(1110321u);
-					ser(req);
+				const patch_request preq1 = {	3u, mkvector(rva1)	};
+				client->request(rq, request_revert_patches, preq1, response_reverted, [&] (deserializer &d) {
+					log.resize(log.size() + 1);
+					d(log.back());
+					ready.set();
 				});
 				ready.wait();
 
 				// ASSERT
-				unsigned reference1[] = {	1110321u,	};
-
-				assert_equal(reference1, tokens);
 				assert_equal(1u, log.size());
 				assert_equal(rresults1, log.back());
 
@@ -329,18 +266,15 @@ namespace micro_profiler
 				};
 
 				// ACT
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					patch_request req = {	2u, mkvector(rva2)	};
-
-					ser(request_revert_patches), ser(11910u);
-					ser(req);
+				const patch_request preq2 = {	1u, mkvector(rva2)	};
+				client->request(rq, request_revert_patches, preq2, response_reverted, [&] (deserializer &d) {
+					log.resize(log.size() + 1);
+					d(log.back());
+					ready.set();
 				});
 				ready.wait();
 
 				// ASSERT
-				unsigned reference2[] = {	1110321u, 11910,	};
-
-				assert_equal(reference2, tokens);
 				assert_equal(2u, log.size());
 				assert_equal(rresults2, log.back());
 			}

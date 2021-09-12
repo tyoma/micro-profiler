@@ -44,5 +44,15 @@ namespace micro_profiler
 			s(payload);
 			c.message(const_byte_range(data.data(), data.size()));
 		}
+
+		inline void send_message(ipc::channel &c, int id)
+		{
+			pod_vector<byte> data;
+			buffer_writer< pod_vector<byte> > w(data);
+			strmd::serializer<buffer_writer< pod_vector<byte> >, packer> s(w);
+
+			s(id);
+			c.message(const_byte_range(data.data(), data.size()));
+		}
 	}
 }

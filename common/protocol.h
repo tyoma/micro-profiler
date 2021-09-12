@@ -31,11 +31,6 @@
 namespace micro_profiler
 {
 	enum messages_id {
-		// Notifications...
-		init_v1 = 0,
-		init = 0x101,
-		legacy_update_statistics = 2,
-
 		// Requests...
 		request_update = 0x100, // responded with [modules_loaded, ]statistics_update[, modules_unloaded] sequence.
 		response_modules_loaded = 1,
@@ -56,6 +51,13 @@ namespace micro_profiler
 
 		request_query_patches = 20,
 		response_patches_state = 21,
+
+		// Notifications...
+		init_v1 = 0,
+		legacy_update_statistics = 2,
+
+		init = 0x101,
+		exiting = 0x102,
 	};
 
 	// response_modules_loaded

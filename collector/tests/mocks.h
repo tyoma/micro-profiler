@@ -7,7 +7,6 @@
 #include <mt/mutex.h>
 #include <mt/thread.h>
 #include <mt/thread_callbacks.h>
-#include <test-helpers/mock_frontend.h>
 
 namespace micro_profiler
 {

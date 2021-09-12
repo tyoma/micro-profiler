@@ -37,6 +37,7 @@ namespace micro_profiler
 	namespace ipc
 	{
 		struct channel;
+		class server_session;
 	}
 
 	class collector_app : noncopyable
@@ -54,7 +55,8 @@ namespace micro_profiler
 
 	private:
 		void worker(const frontend_factory_t &factory, const overhead &overhead_);
-		channel_ptr_t init_server(ipc::channel &outbound, analyzer &analyzer_);
+		std::shared_ptr<ipc::server_session> init_server(ipc::channel &outbound, analyzer &analyzer_);
+		void notify_exiting();
 
 	private:
 		scheduler::task_queue _queue;

@@ -64,6 +64,9 @@ namespace micro_profiler
 					if (state.initialized)
 						a(id), state.initialized(id);
 					return;
+
+				case exiting:
+					return;
 				}
 
 				switch (a(token), c)

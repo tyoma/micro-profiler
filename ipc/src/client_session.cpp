@@ -20,6 +20,8 @@
 
 #include <ipc/client_session.h>
 
+#include <numeric>
+
 using namespace std;
 
 namespace micro_profiler
@@ -52,7 +54,8 @@ namespace micro_profiler
 			{
 				m->second(d);
 			}
-			else
+			else if (_callbacks->lower_bound(make_pair(response_id, numeric_limits<token_t>::min()))
+				!= _callbacks->upper_bound(make_pair(response_id, numeric_limits<token_t>::max())))
 			{
 				token_t token;
 

@@ -55,7 +55,7 @@ namespace micro_profiler
 
 			if (!mi.mapping)
 			{
-				mapped_module_identified mmi = mapped_module_identified::from(_next_instance_id++, persistent_id, mm);
+				auto mmi = mapped_module_ex::from(_next_instance_id++, persistent_id, mm);
 
 				mi.mapping.reset(new mapped_module_identified(mmi));
 				_lqueue.push_back(mmi);
@@ -67,7 +67,7 @@ namespace micro_profiler
 		{
 			if (i->second.mapping && !in_snapshot.count(i->first))
 			{
-				_uqueue.push_back(i->second.mapping->instance_id);
+				_uqueue.push_back(i->second.mapping->first);
 				i->second.mapping.reset();
 			}
 		}

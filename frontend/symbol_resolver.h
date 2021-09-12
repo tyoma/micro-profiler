@@ -64,7 +64,7 @@ namespace micro_profiler
 		const std::shared_ptr<const tables::modules> _modules;
 		const std::shared_ptr<const tables::module_mappings> _mappings;
 
-		std::vector< std::pair<unsigned int /*instance_id*/, mapped_module_identified> > _mappings_ordered;
+		std::vector<mapped_module_identified> _mappings_ordered;
 		mutable containers::unordered_map< unsigned int /*instance_id*/, std::map<unsigned int /*rva*/, const symbol_info *> >
 			_symbols_ordered;
 		wpl::slot_connection _modules_invalidation, _mappings_invalidation;

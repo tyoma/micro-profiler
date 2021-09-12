@@ -31,7 +31,7 @@ namespace micro_profiler
 	{
 		struct by_address
 		{
-			typedef pair<unsigned, mapped_module_identified> value_type;
+			typedef mapped_module_identified value_type;
 
 			bool operator ()(const value_type &lhs, const value_type &rhs) const
 			{	return lhs.second.base < rhs.second.base;	}

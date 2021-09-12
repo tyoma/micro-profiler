@@ -98,7 +98,7 @@ namespace micro_profiler
 
 			results.clear();
 			_patch_manager.apply(results, payload.image_persistent_id,
-				reinterpret_cast<void *>(static_cast<size_t>(l->base)), l,
+				reinterpret_cast<void *>(static_cast<size_t>(l->second.base)), l,
 				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
 			req.respond(response_patched, [&] (server_session::serializer &ser) {	ser(results);	});
 		});

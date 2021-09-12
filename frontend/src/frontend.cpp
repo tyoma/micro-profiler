@@ -132,7 +132,7 @@ namespace micro_profiler
 
 			d(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				(*_mappings)[i->instance_id] = *i;
+				(*_mappings)[i->first] = i->second;
 			_mappings->invalidate();
 		};
 		auto update_callback = [this] (deserializer &d) {

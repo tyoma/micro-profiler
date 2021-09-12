@@ -18,10 +18,10 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			pair<unsigned, mapped_module_identified> mkmapping(unsigned instance_id, unsigned persistence_id,
+			mapped_module_identified mkmapping(unsigned instance_id, unsigned persistence_id,
 				long_address_t base)
 			{
-				mapped_module_identified m = {	0, persistence_id, string(), base	};
+				mapped_module_ex m = {	persistence_id, string(), base	};
 				return make_pair(instance_id, m);
 			}
 

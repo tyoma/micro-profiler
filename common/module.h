@@ -29,6 +29,9 @@
 
 namespace micro_profiler
 {
+	struct mapped_module_ex;
+	typedef std::pair<unsigned int /*instance_id*/, mapped_module_ex> mapped_module_identified;
+
 	struct mapped_module
 	{
 		std::string path;
@@ -36,12 +39,11 @@ namespace micro_profiler
 		std::vector<byte_range> addresses;
 	};
 
-	struct mapped_module_identified
+	struct mapped_module_ex
 	{
 		static mapped_module_identified from(unsigned int instance_id_, unsigned int persistent_id_,
 			const mapped_module &mm);
 
-		unsigned int instance_id; // Zero-based instance ID of this mapping to identify it among loaded.
 		unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
 		std::string path;
 		long_address_t base;
@@ -56,16 +58,15 @@ namespace micro_profiler
 
 
 
-	inline mapped_module_identified mapped_module_identified::from(unsigned int instance_id_,
+	inline mapped_module_identified mapped_module_ex::from(unsigned int instance_id_,
 		unsigned int persistent_id_, const mapped_module &mm)
 	{
-		mapped_module_identified mmi = {
-			instance_id_,
+		mapped_module_ex mmi = {
 			persistent_id_,
 			mm.path,
 			reinterpret_cast<size_t>(mm.base),
 		};
 
-		return mmi;
+		return mapped_module_identified(instance_id_, mmi);
 	}
 }

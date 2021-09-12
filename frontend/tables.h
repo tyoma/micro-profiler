@@ -52,7 +52,7 @@ namespace micro_profiler
 		};
 
 
-		struct module_mappings : table< containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> >
+		struct module_mappings : table< containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> >
 		{
 			wpl::signal<void ()> updated;
 		};

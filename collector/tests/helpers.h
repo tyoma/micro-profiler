@@ -42,7 +42,7 @@ namespace micro_profiler
 		inline const typename T::value_type *find_module(T &m, const std::string &path)
 		{
 			for (typename T::const_iterator i = m.begin(); i != m.end(); ++i)
-				if (file_id(i->path) == file_id(path))
+				if (file_id(i->second.path) == file_id(path))
 					return &*i;
 			return 0;
 		}

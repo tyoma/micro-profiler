@@ -26,7 +26,7 @@ namespace micro_profiler
 		{	serialize(a, d.contained, 4);	}
 
 		typedef unversion<function_statistics> fs;
-		typedef unversion<mapped_module_identified> mm;
+		typedef unversion<mapped_module_ex> mm;
 		typedef unversion<symbol_info> si;
 		typedef unversion<thread_info> ti;
 

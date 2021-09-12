@@ -13,7 +13,7 @@ namespace micro_profiler
 			typedef statistic_types_t<long_address_t> statistic_types;
 
 			timestamp_t ticks_per_second;
-			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> mappings;
+			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> mappings;
 			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
 			containers::unordered_map<statistic_types::key, statistic_types::function_detailed> statistics;
 		};
@@ -21,7 +21,7 @@ namespace micro_profiler
 		struct file_v4_components
 		{
 			timestamp_t ticks_per_second;
-			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> mappings;
+			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> mappings;
 			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
 			containers::unordered_map<statistic_types::key, statistic_types::function_detailed> statistics;
 			containers::unordered_map<unsigned int, thread_info> threads;
@@ -31,7 +31,7 @@ namespace micro_profiler
 		struct file_components
 		{
 			initialization_data process_info;
-			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_identified> mappings;
+			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> mappings;
 			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
 			containers::unordered_map<statistic_types::key, statistic_types::function_detailed> statistics;
 			containers::unordered_map<unsigned int, thread_info> threads;

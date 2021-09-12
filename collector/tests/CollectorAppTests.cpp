@@ -9,6 +9,7 @@
 
 #include <common/module.h>
 #include <common/time.h>
+#include <ipc/client_session.h>
 #include <mt/event.h>
 #include <strmd/serializer.h>
 #include <test-helpers/constants.h>
@@ -36,22 +37,24 @@ namespace micro_profiler
 		begin_test_suite( CollectorAppTests )
 			mocks::allocator allocator_;
 			shared_ptr<mocks::frontend_state> state;
-			collector_app::frontend_factory_t factory;
+			collector_app::frontend_factory_t factory, client_factory;
+			shared_ptr<ipc::client_session> client;
+			function<void (ipc::client_session &client_)> initialize_client;
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;
 			mocks::patch_manager pmanager;
-			ipc::channel *inbound;
-			mt::event inbound_ready;
+			ipc::channel *outbound;
+			mt::event client_ready;
 
 			CollectorAppTests()
-				: inbound_ready(false, false)
+				: client_ready(false, false)
 			{	}
 
 
-			shared_ptr<ipc::channel> create_frontned(ipc::channel &inbound_)
+			shared_ptr<ipc::channel> create_frontned(ipc::channel &outbound_)
 			{
-				inbound = &inbound_;
-				inbound_ready.set();
+				outbound = &outbound_;
+				client_ready.set();
 				return state->create();
 			}
 
@@ -59,6 +62,15 @@ namespace micro_profiler
 			{
 				state.reset(new mocks::frontend_state(shared_ptr<void>()));
 				factory = bind(&CollectorAppTests::create_frontned, this, _1);
+
+				client_factory = [this] (ipc::channel &outbound_) -> shared_ptr<ipc::channel> {
+					outbound = &outbound_;
+					client = make_shared<ipc::client_session>(outbound_);
+					if (initialize_client)
+						initialize_client(*client);
+					client_ready.set();
+					return client;
+				};
 			}
 
 			template <typename FormatterT>
@@ -68,8 +80,8 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> ser(message_buffer);
 
 				formatter(ser);
-				inbound_ready.wait();
-				inbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
+				client_ready.wait();
+				outbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
 			}
 
 
@@ -79,13 +91,13 @@ namespace micro_profiler
 				mt::thread::id tid = mt::this_thread::get_id();
 				mt::event ready;
 
-				state->constructed = [&] {
+				initialize_client = [&] (ipc::client_session &) {
 					tid = mt::this_thread::get_id();
 					ready.set();
 				};
 
 				// INIT / ACT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(client_factory, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT / ASSERT (must not hang)
 				ready.wait();
@@ -101,12 +113,12 @@ namespace micro_profiler
 				mt::event ready;
 				shared_ptr<mt::event> hthread;
 
-				state->constructed = [&] {
+				initialize_client = [&] (ipc::client_session &) {
 					hthread = this_thread::open();
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(client_factory, collector, c_overhead, tmonitor, pmanager);
 
 				ready.wait();
 
@@ -124,12 +136,12 @@ namespace micro_profiler
 				mt::event ready;
 				shared_ptr<mt::event> hthread;
 
-				state->constructed = [&] {
+				initialize_client = [&] (ipc::client_session &) {
 					hthread = this_thread::open();
 					ready.set();
 				};
 
-				auto_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
+				auto_ptr<collector_app> app(new collector_app(client_factory, collector, c_overhead, tmonitor, pmanager));
 
 				ready.wait();
 
@@ -147,15 +159,22 @@ namespace micro_profiler
 				mt::thread::id thread_id;
 				bool destroyed_ok = false;
 				mt::event ready;
+				auto factory_ = [&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
+					auto &thread_id_ = thread_id;
+					auto &destroyed_ok_ = destroyed_ok;
 
-				state->constructed = [&] {
 					thread_id = mt::this_thread::get_id();
-				};
-				state->destroyed = [&] {
-					destroyed_ok = thread_id == mt::this_thread::get_id();
+					ready.set();
+					return shared_ptr<ipc::client_session>(new ipc::client_session(c),
+						[&thread_id_, &destroyed_ok_] (ipc::client_session *p) {
+						destroyed_ok_ = thread_id_ == mt::this_thread::get_id();
+						delete p;
+					});
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(factory_, collector, c_overhead, tmonitor, pmanager);
+
+				ready.wait();
 
 				// ACT
 				app.stop();
@@ -173,7 +192,7 @@ namespace micro_profiler
 				mt::event go;
 				mt::mutex mtx;
 
-				state->constructed = [&] {
+				initialize_client = [&] (ipc::client_session &) {
 					mt::lock_guard<mt::mutex> l(mtx);
 					tids_.push_back(mt::this_thread::get_id());
 					if (2u == tids_.size())
@@ -181,8 +200,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app1(factory, collector, c_overhead, tmonitor, pmanager);
-				collector_app app2(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app1(client_factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app2(client_factory, collector, c_overhead, tmonitor, pmanager);
 
 				go.wait();
 
@@ -196,14 +215,18 @@ namespace micro_profiler
 				// INIT
 				mt::event initialized;
 				initialization_data id;
-
-				state->initialized = [&] (const initialization_data &id_) {
-					id = id_;
+				auto on_init = [&] (ipc::client_session::deserializer &d) {
+					d(id);
 					initialized.set();
+				};
+				shared_ptr<void> subscription;
+
+				initialize_client = [&] (ipc::client_session &c) {
+					c.subscribe(subscription, init, on_init);
 				};
 
 				// ACT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(client_factory, collector, c_overhead, tmonitor, pmanager);
 				initialized.wait();
 
 				// ASERT
@@ -212,40 +235,28 @@ namespace micro_profiler
 			}
 
 
-			test( FrontendIsNotBotheredWithEmptyDataUpdates )
-			{
-				// INIT
-				mt::event updated;
-
-				state->updated = [&] (unsigned, const mocks::thread_statistics_map &) { updated.set(); };
-
-				// ACT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
-
-				// ACT / ASSERT
-				assert_is_false(updated.wait(mt::milliseconds(500)));
-			}
-
-
 			test( ImageLoadEventArrivesWhenModuleLoads )
 			{
 				// INIT
 				mt::event ready;
 				loaded_modules l;
+				shared_ptr<void> rq;
 
-				state->modules_loaded = [&] (unsigned, const loaded_modules &m) {
-					l = m;
+				collector_app app(client_factory, collector, c_overhead, tmonitor, pmanager);
+
+				client_ready.wait();
+
+				client->request(rq, request_update, 0, response_modules_loaded, [&] (ipc::client_session::deserializer &) {
 					ready.set();
-				};
-
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
-
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
-				ready.wait(); // Guarantee that the load below leads to an individual notification.
+				});
+				ready.wait();
 
 				// ACT
 				image image0(c_symbol_container_1);
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+				client->request(rq, request_update, 0, response_modules_loaded, [&] (ipc::client_session::deserializer &d) {
+					d(l);
+					ready.set();
+				});
 				ready.wait();
 
 				// ASSERT
@@ -254,7 +265,10 @@ namespace micro_profiler
 
 				// ACT
 				image image1(c_symbol_container_2);
-				request([&] (strmd::serializer<vector_adapter, packer> &ser) {	ser(request_update), ser(0u);	});
+				client->request(rq, request_update, 0, response_modules_loaded, [&] (ipc::client_session::deserializer &d) {
+					d(l);
+					ready.set();
+				});
 				ready.wait();
 
 				// ASSERT
@@ -309,7 +323,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				unsigned reference1[] = { mmi[1].instance_id, };
+				unsigned reference1[] = { mmi[1].first, };
 
 				assert_is_empty(l);
 				assert_equivalent(reference1, u);
@@ -324,7 +338,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				unsigned reference2[] = { mmi[0].instance_id, mmi[2].instance_id, };
+				unsigned reference2[] = { mmi[0].first, mmi[2].first, };
 
 				assert_is_empty(l);
 				assert_equivalent(reference2, u);
@@ -562,7 +576,7 @@ namespace micro_profiler
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
 					ser(request_module_metadata), ser(0u);
-					ser(mmi[1].persistent_id);
+					ser(mmi[1].second.persistent_id);
 				});
 				md_ready.wait();
 
@@ -576,7 +590,7 @@ namespace micro_profiler
 				// ACT
 				request([&] (strmd::serializer<vector_adapter, packer> &ser) {
 					ser(request_module_metadata), ser(0u);
-					ser(mmi[0].persistent_id);
+					ser(mmi[0].second.persistent_id);
 				});
 				md_ready.wait();
 

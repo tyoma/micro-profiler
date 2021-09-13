@@ -45,6 +45,8 @@ namespace micro_profiler
 		public:
 			server_session(channel &outbound, std::shared_ptr<scheduler::queue> queue = std::shared_ptr<scheduler::queue>());
 
+			void set_disconnect_handler(const std::function<void () throw()> &handler);
+
 			void add_handler(int request_id, const std::function<void (request &context)> &handler);
 
 			template <typename PayloadT>
@@ -68,6 +70,7 @@ namespace micro_profiler
 		private:
 			channel &_outbound;
 			pod_vector<byte> _outbound_buffer;
+			std::function<void () throw()> _disconnect_handler;
 			std::unordered_map<int /*request_id*/, handler_t> _handlers;
 			scheduler::private_queue _queue;
 			const bool _deferral_enabled;

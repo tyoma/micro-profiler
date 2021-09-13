@@ -29,7 +29,6 @@ namespace micro_profiler
 {
 	class analyzer;
 	struct calls_collector_i;
-	class module_tracker;
 	struct overhead;
 	struct patch_manager;
 	class thread_monitor;
@@ -54,17 +53,17 @@ namespace micro_profiler
 		void stop();
 
 	private:
-		void worker(const frontend_factory_t &factory, const overhead &overhead_);
-		std::shared_ptr<ipc::server_session> init_server(ipc::channel &outbound, analyzer &analyzer_);
-		void notify_exiting();
+		void worker(const frontend_factory_t &factory);
+		std::shared_ptr<ipc::server_session> init_server(ipc::channel &outbound);
 
 	private:
 		scheduler::task_queue _queue;
 		calls_collector_i &_collector;
+		const std::unique_ptr<analyzer> _analyzer;
 		thread_monitor &_thread_monitor;
 		patch_manager &_patch_manager;
-		const std::shared_ptr<module_tracker> _module_tracker;
-		bool _exit;
+		ipc::server_session *_session;
+		bool _exit_requested, _exit_confirmed;
 		std::unique_ptr<mt::thread> _frontend_thread;
 	};
 }

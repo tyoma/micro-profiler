@@ -43,12 +43,17 @@ namespace micro_profiler
 			mocks::thread_monitor tmonitor;
 			mocks::patch_manager pmanager;
 			mt::event client_ready;
+			vector< shared_ptr<void> > subscriptions;
 
+			shared_ptr<void> &new_subscription()
+			{	return *subscriptions.insert(subscriptions.end(), shared_ptr<void>());	}
 
 			init( Init )
 			{
 				factory = [this] (ipc::channel &outbound_) -> shared_ptr<ipc::channel> {
 					client = make_shared<ipc::client_session>(outbound_);
+					auto p = client.get();
+					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
 					client_ready.set();
 					return client;
 				};

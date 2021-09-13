@@ -10,6 +10,7 @@
 #include <common/time.h>
 #include <ipc/client_session.h>
 #include <mt/event.h>
+#include <mt/thread.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
@@ -44,16 +45,28 @@ namespace micro_profiler
 			mocks::thread_monitor tmonitor;
 			mocks::patch_manager pmanager;
 			mt::event client_ready;
+			vector< shared_ptr<void> > subscriptions;
+
+			shared_ptr<void> &new_subscription()
+			{	return *subscriptions.insert(subscriptions.end(), shared_ptr<void>());	}
 
 			init( Init )
 			{
-				factory = [this] (ipc::channel &outbound_) -> shared_ptr<ipc::channel> {
-					client = make_shared<ipc::client_session>(outbound_);
+				factory = [this] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+					client = make_shared<ipc::client_session>(outbound);
+					auto p = client.get();
+					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
 					if (initialize_client)
 						initialize_client(*client);
 					client_ready.set();
 					return client;
 				};
+			}
+
+			teardown( Term )
+			{
+				subscriptions.clear();
+				client.reset();
 			}
 
 
@@ -79,7 +92,7 @@ namespace micro_profiler
 			}
 
 
-			test( FrontendStopsImmediatelyAtForceStopRequest )
+			test( FrontendStopsAtForceStopRequest )
 			{
 				// INIT
 				mt::event ready;
@@ -131,20 +144,22 @@ namespace micro_profiler
 				mt::thread::id thread_id;
 				bool destroyed_ok = false;
 				mt::event ready;
-				auto factory_ = [&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
+				collector_app app([&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
 					auto &thread_id_ = thread_id;
 					auto &destroyed_ok_ = destroyed_ok;
 
 					thread_id = mt::this_thread::get_id();
 					ready.set();
-					return shared_ptr<ipc::client_session>(new ipc::client_session(c),
+					shared_ptr<ipc::client_session> client_(new ipc::client_session(c),
 						[&thread_id_, &destroyed_ok_] (ipc::client_session *p) {
 						destroyed_ok_ = thread_id_ == mt::this_thread::get_id();
 						delete p;
 					});
-				};
+					auto p = client_.get();
 
-				collector_app app(factory_, collector, c_overhead, tmonitor, pmanager);
+					client_->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
+					return client_;
+				}, collector, c_overhead, tmonitor, pmanager);
 
 				ready.wait();
 
@@ -154,7 +169,6 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_true(destroyed_ok);
 			}
-
 
 
 			test( TwoCoexistingAppsHaveDifferentWorkerThreads )
@@ -211,13 +225,20 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event stopping;
-				shared_ptr<void> subscription;
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				shared_ptr<void> subs;
+				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+					auto &stopping_ = stopping;
+					auto client_ = make_shared<ipc::client_session>(outbound);
+
+					client_->subscribe(subs, exiting, [client_, &stopping_] (deserializer &) {
+						stopping_.set();
+						client_->disconnect_session();
+					});
+					client_ready.set();
+					return client_;
+				}, collector, c_overhead, tmonitor, pmanager);
 
 				client_ready.wait();
-				client->subscribe(subscription, exiting, [&] (deserializer &) {
-					stopping.set();
-				});
 
 				// ACT
 				app.stop();
@@ -232,20 +253,20 @@ namespace micro_profiler
 				// INIT
 				mt::event ready;
 				loaded_modules l;
-				shared_ptr<void> rq;
+				shared_ptr<void> req;
 
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
 				client_ready.wait();
 
-				client->request(rq, request_update, 0, response_modules_loaded, [&] (deserializer &) {
+				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &) {
 					ready.set();
 				});
 				ready.wait();
 
 				// ACT
 				image image0(c_symbol_container_1);
-				client->request(rq, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
 					d(l);
 					ready.set();
 				});
@@ -257,7 +278,7 @@ namespace micro_profiler
 
 				// ACT
 				image image1(c_symbol_container_2);
-				client->request(rq, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
 					d(l);
 					ready.set();
 				});
@@ -274,7 +295,7 @@ namespace micro_profiler
 				// INIT
 				mt::mutex mtx;
 				mt::event ready;
-				shared_ptr<void> rq;
+				shared_ptr<void> req;
 				unordered_map<unsigned, mapped_module_ex> l;
 				unloaded_modules u;
 				auto_ptr<image> image0(new image(c_symbol_container_1));
@@ -285,7 +306,7 @@ namespace micro_profiler
 
 				client_ready.wait();
 
-				client->request(rq, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
 					d(l);
 					ready.set();
 				});
@@ -293,7 +314,7 @@ namespace micro_profiler
 
 				// ACT
 				image1.reset();
-				client->request(rq, request_update, 0, response_modules_unloaded, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_modules_unloaded, [&] (deserializer &d) {
 					d(u);
 					ready.set();
 				});
@@ -310,7 +331,7 @@ namespace micro_profiler
 				// ACT
 				image0.reset();
 				image2.reset();
-				client->request(rq, request_update, 0, response_modules_unloaded, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_modules_unloaded, [&] (deserializer &d) {
 					d(u);
 					ready.set();
 				});
@@ -326,62 +347,92 @@ namespace micro_profiler
 			}
 
 
-			test( CollectorIsFlushedOnDestroy )
+			test( CollectorIsFlushedOnStop )
 			{
 				// INIT
 				auto flushed = false;
-				auto reads_after_flush = 0;
+				auto flushed_at_exit = false;
+				vector<mt::thread::id> tids;
 
-				collector.on_read_collected = [&] (calls_collector_i::acceptor &/*a*/) {
-					if (flushed)
-						reads_after_flush++;
+				collector.on_flush = [&] {
+					tids.push_back(mt::this_thread::get_id());
+					flushed = true;
 				};
-				collector.on_flush = [&] {	flushed = true;	};
 
-				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
+				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+					auto client_ = make_shared<ipc::client_session>(outbound);
+					auto &flushed_ = flushed;
+					auto &flushed_at_exit_ = flushed_at_exit;
+
+					client_->subscribe(new_subscription(), exiting, [&, client_] (deserializer &) {
+						flushed_at_exit_ = flushed_;
+						client_->disconnect_session();
+					});
+					return client_;
+				}, collector, c_overhead, tmonitor, pmanager);
 
 				// ACT
-				app.reset();
+				app.stop();
 
 				// ASSERT
-				assert_equal(1, reads_after_flush);
+				mt::thread::id reference[] = {	mt::this_thread::get_id(),	};
+
+				assert_is_true(flushed_at_exit);
+				assert_equal(reference, tids);
 			}
 
 
-			//test( LastBatchIsReportedToFrontend )
-			//{
-			//	// INIT
-			//	mt::event updated;
-			//	auto flushed = false;
-			//	vector<thread_statistics_map> updates;
+			test( LastBatchIsReportedToFrontend )
+			{
+				// INIT
+				mt::event ready;
+				call_record trace1[] = {
+					{	0, (void *)0x1223	},
+					{	700, (void *)0x4321 },
+					{	1000 + c_overhead.inner, (void *)0	},
+					{	1010 + c_overhead.inner, (void *)0	},
+				};
+				auto trace = mkvector(trace1);
+				thread_statistics_map u;
+				shared_ptr<void> req;
+				ipc::client_session *pclient = nullptr;
 
-			//	collector.on_read_collected = [&] (calls_collector_i::acceptor &a) {
-			//		call_record trace[] = { { 0, (void *)0x1223 }, { 1001, (void *)0 }, };
+				collector.on_read_collected = [&] (calls_collector_i::acceptor &a) {
+					if (trace.empty())
+						return;
+					a.accept_calls(11, &trace[0], trace.size());
+					trace.clear();
+				};
 
-			//		if (flushed)
-			//			a.accept_calls(11710u, trace, 2);
-			//	};
-			//	collector.on_flush = [&] {	flushed = true;	};
+				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+					auto client_ = make_shared<ipc::client_session>(outbound);
+					auto &ready_ = ready;
 
-			//	state->updated = [&] (unsigned, const thread_statistics_map &u) {
-			//		updates.push_back(u);
-			//		updated.set();
-			//	};
+					pclient = client_.get();
+					client_->subscribe(new_subscription(), exiting, [&ready_] (deserializer &) {
+						ready_.set();
+					});
+					return client_;
+				}, collector, c_overhead, tmonitor, pmanager);
+				mt::thread t([&] {
+					app.stop();
+				});
 
-			//	unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
+				// ACT
+				ready.wait();
+				pclient->request(req, request_update, 0, response_statistics_update, [&] (deserializer &d) {
+					d(u);
+					ready.set();
+				});
+				ready.wait();
+				pclient->disconnect_session();
+				t.join();
 
-			//	// ACT
-			//	app.reset();
-
-			//	// ASSERT
-			//	addressed_statistics reference[] = {
-			//		make_statistics(0x1223u, 1, 0, 1001, 1001, 1001),
-			//	};
-
-			//	assert_equal(1u, updates.size());
-			//	assert_not_null(find_by_first(updates[0], 11710u));
-			//	assert_equivalent(reference, *find_by_first(updates[0], 11710u));
-			//}
+				// ASSERT
+				assert_equal(2u, u[11].size());
+				assert_equal(1u, u[11].count(0x1223));
+				assert_equal(1u, u[11].count(0x4321));
+			}
 
 
 			test( CollectorTracesArePeriodicallyAnalyzed )
@@ -410,7 +461,7 @@ namespace micro_profiler
 				mt::mutex mtx;
 				unsigned int tid;
 				vector<call_record> trace;
-				shared_ptr<void> rq;
+				shared_ptr<void> req;
 				call_record trace1[] = {
 					{	0, (void *)0x1223	},
 					{	1000 + c_overhead.inner, (void *)0	},
@@ -437,7 +488,7 @@ namespace micro_profiler
 				// ACT
 				{	mt::lock_guard<mt::mutex> l(mtx);	tid = 11710u, trace.assign(trace1, trace1 + 2);	}
 				ready.wait();
-				client->request(rq, request_update, 0, response_statistics_update, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_statistics_update, [&] (deserializer &d) {
 					thread_statistics_map s;
 
 					d(s);
@@ -458,7 +509,7 @@ namespace micro_profiler
 				// ACT
 				{	mt::lock_guard<mt::mutex> l(mtx);	tid = 11713u, trace.assign(trace2, trace2 + 2);	}
 				ready.wait();
-				client->request(rq, request_update, 0, response_statistics_update, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_statistics_update, [&] (deserializer &d) {
 					thread_statistics_map s;
 
 					d(s);
@@ -480,13 +531,73 @@ namespace micro_profiler
 			}
 
 
+			test( ClientIsDestroyedIfDisconnected )
+			{
+				// INIT
+				mt::event client_destroyed;
+				ipc::client_session *pclient = nullptr;
+				const auto destroy_client = [&] (ipc::client_session *p) {
+					delete p;
+					client_destroyed.set();
+				};
+
+				collector_app app([&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
+					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
+
+					pclient = client_.get();
+					client_ready.set();
+					return client_;
+				}, collector, c_overhead, tmonitor, pmanager);
+
+				client_ready.wait();
+
+				// ACT
+				pclient->disconnect_session();
+
+				// ACT / ASSERT (must not block)
+				client_destroyed.wait();
+			}
+
+
+			test( AnalysisLoopKeepsOnSpinningAfterClientIsDisconnected )
+			{
+				// INIT
+				mt::event ready, client_destroyed;
+				ipc::client_session *pclient = nullptr;
+				const auto destroy_client = [&] (ipc::client_session *p) {
+					delete p;
+					client_destroyed.set();
+				};
+
+				collector.on_read_collected = [&] (calls_collector_i::acceptor &) {	ready.set();	};
+
+				collector_app app([&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
+					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
+
+					pclient = client_.get();
+					client_ready.set();
+					return client_;
+				}, collector, c_overhead, tmonitor, pmanager);
+
+				client_ready.wait();
+				pclient->disconnect_session();
+				client_destroyed.wait();
+
+				// ACT / ASSERT (on_read_collected gets called)
+				ready.wait();
+				ready.wait();
+				ready.wait();
+				ready.wait();
+			}
+
+
 			test( PerformanceDataTakesProfilerLatencyIntoAccount )
 			{
 				// INIT
 				auto reads1 = 0;
 				auto reads2 = 0;
 				thread_statistics_map u1, u2;
-				shared_ptr<void> rq;
+				shared_ptr<void> req;
 				mt::event ready[2], updated;
 				overhead o1(13, 0), o2(29, 0);
 				auto tracer1 = make_shared<mocks::tracer>();
@@ -516,12 +627,12 @@ namespace micro_profiler
 				ready[1].wait();
 
 				// ACT
-				client1->request(rq, request_update, 0, response_statistics_update, [&] (deserializer &d) {
+				client1->request(req, request_update, 0, response_statistics_update, [&] (deserializer &d) {
 					d(u1);
 					updated.set();
 				});
 				updated.wait();
-				client2->request(rq, request_update, 0, response_statistics_update, [&] (deserializer &d) {
+				client2->request(req, request_update, 0, response_statistics_update, [&] (deserializer &d) {
 					d(u2);
 					updated.set();
 				});
@@ -546,7 +657,7 @@ namespace micro_profiler
 			test( ModuleMetadataRequestLeadsToMetadataSending )
 			{
 				// INIT
-				shared_ptr<void> rq;
+				shared_ptr<void> req;
 				mt::event ready;
 				unordered_map<unsigned, mapped_module_ex> l;
 				module_info_metadata md;
@@ -558,7 +669,7 @@ namespace micro_profiler
 				image image0(c_symbol_container_1);
 				image image1(c_symbol_container_2);
 
-				client->request(rq, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
+				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
 					d(l);
 					ready.set();
 				});
@@ -570,7 +681,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				client->request(rq, request_module_metadata, mmi[1].second.persistent_id, response_module_metadata,
+				client->request(req, request_module_metadata, mmi[1].second.persistent_id, response_module_metadata,
 					[&] (deserializer &d) {
 
 					d(md);
@@ -586,7 +697,7 @@ namespace micro_profiler
 				assert_equal((string)c_symbol_container_2, md.path);
 
 				// ACT
-				client->request(rq, request_module_metadata, mmi[0].second.persistent_id, response_module_metadata,
+				client->request(req, request_module_metadata, mmi[0].second.persistent_id, response_module_metadata,
 					[&] (deserializer &d) {
 
 					d(md);
@@ -606,7 +717,7 @@ namespace micro_profiler
 			test( ThreadInfoRequestLeadsToThreadInfoSending )
 			{
 				// INIT
-				shared_ptr<void> rq;
+				shared_ptr<void> req;
 				mt::event ready;
 				vector< pair<unsigned /*thread_id*/, thread_info> > threads;
 				thread_info ti[] = {
@@ -625,7 +736,7 @@ namespace micro_profiler
 				client_ready.wait();
 
 				// ACT
-				client->request(rq, request_threads_info, mkvector(request1), response_threads_info, [&] (deserializer &d) {
+				client->request(req, request_threads_info, mkvector(request1), response_threads_info, [&] (deserializer &d) {
 					d(threads);
 					ready.set();
 				});
@@ -639,7 +750,7 @@ namespace micro_profiler
 				assert_equal(reference1, threads);
 
 				// ACT
-				client->request(rq, request_threads_info, mkvector(request2), response_threads_info, [&] (deserializer &d) {
+				client->request(req, request_threads_info, mkvector(request2), response_threads_info, [&] (deserializer &d) {
 					d(threads);
 					ready.set();
 				});
@@ -651,6 +762,119 @@ namespace micro_profiler
 				};
 
 				assert_equal(reference2, threads);
+			}
+
+
+			test( StopWaitsForClientDisconnection )
+			{
+				// INIT
+				shared_ptr<void> subs;
+				mt::event exit_requested;
+				ipc::client_session *pclient = nullptr;
+				auto factory_ = [&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+					auto client_ = make_shared<ipc::client_session>(outbound);
+					auto &exit_requested_ = exit_requested;
+
+					pclient = client_.get();
+					client_->subscribe(subs, exiting, [&exit_requested_] (deserializer &) {	exit_requested_.set();	});
+					client_ready.set();
+					return client_;
+				};
+				counter_t c;
+
+				// INIT / ACT
+				unique_ptr<mt::thread> t(new mt::thread([&] {
+					exit_requested.wait();
+					mt::this_thread::sleep_for(mt::milliseconds(600));
+					pclient->disconnect_session();
+				}));
+				unique_ptr<collector_app> app(new collector_app(factory_, collector, c_overhead, tmonitor, pmanager));
+
+				client_ready.wait();
+
+				// ACT
+				stopwatch(c);
+				app->stop();
+				const auto t1 = stopwatch(c);
+				t->join();
+
+				// INIT / ACT
+				t.reset(new mt::thread([&] {
+					exit_requested.wait();
+					mt::this_thread::sleep_for(mt::milliseconds(100));
+					pclient->disconnect_session();
+				}));
+				app.reset(new collector_app(factory_, collector, c_overhead, tmonitor, pmanager));
+
+				client_ready.wait();
+
+				// ACT
+				stopwatch(c);
+				app->stop();
+				auto t2 = stopwatch(c);
+				t->join();
+
+				// ASSERT
+				assert_approx_equal(6.0, t1 / t2, 0.2);
+			}
+
+
+			test( RequestsAreProcessedWhileStopping )
+			{
+				// INIT
+				shared_ptr<void> subs;
+				mt::event ready, exit_requested;
+				mt::mutex mtx;
+				vector<call_record> trace;
+				shared_ptr<void> req;
+				thread_statistics_map u;
+				call_record trace1[] = {
+					{	0, (void *)0x1223	},
+					{	1000 + c_overhead.inner, (void *)0	},
+				};
+				ipc::client_session *pclient = nullptr;
+
+				collector.on_read_collected = [&] (calls_collector_i::acceptor &a) {
+					mt::lock_guard<mt::mutex> l(mtx);
+
+					if (trace.empty())
+						return;
+					a.accept_calls(1753, &trace[0], trace.size());
+					trace.clear();
+					ready.set();
+				};
+
+				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+					auto client_ = make_shared<ipc::client_session>(outbound);
+					auto &exit_requested_ = exit_requested;
+
+					pclient = client_.get();
+					client_->subscribe(subs, exiting, [&exit_requested_] (deserializer &) {	exit_requested_.set();	});
+					client_ready.set();
+					return client_;
+				}, collector, c_overhead, tmonitor, pmanager);
+
+				client_ready.wait();
+
+				mt::thread t([&] {
+					app.stop();
+				});
+
+				exit_requested.wait();
+
+				// ACT
+				{	mt::lock_guard<mt::mutex> l(mtx);	trace = mkvector(trace1);	}
+				ready.wait();
+				pclient->request(req, request_update, 0, response_statistics_update, [&] (deserializer &d) {
+					d(u);
+					ready.set();
+				});
+				ready.wait();
+				pclient->disconnect_session();
+				t.join();
+
+				// ASSERT
+				assert_equal(1u, u[1753].count(0x1223));
 			}
 
 		end_test_suite

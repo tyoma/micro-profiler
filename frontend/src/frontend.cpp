@@ -80,6 +80,11 @@ namespace micro_profiler
 				% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
 		});
 
+		subscribe(*new_request_handle(), exiting, [this] (deserializer &) {
+			// TODO: request last updates and on their completion disconnect the session.
+			disconnect_session();
+		});
+
 		_modules->request_presence = [this] (unsigned int persistent_id_) {
 			auto self = this;
 			auto persistent_id = persistent_id_;

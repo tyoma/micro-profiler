@@ -354,6 +354,28 @@ namespace micro_profiler
 					assert_equal(reference2, log1);
 					assert_equal(reference3, log2);
 				}
+
+
+				test( DisconnectHandlerIsCalledIfPresentOnDisconnect )
+				{
+					// INIT
+					server_session s1(outbound), s2(outbound);
+					auto called = 0;
+
+					s1.set_disconnect_handler([&] {	called++;	});
+
+					// ASSERT
+					assert_equal(0, called);
+
+					// ACT
+					static_cast<channel &>(s1).disconnect();
+
+					// ASSERT
+					assert_equal(1, called);
+
+					// ACT / ASSERT (no exception)
+					static_cast<channel &>(s2).disconnect();
+				}
 			end_test_suite
 		}
 	}

@@ -21,9 +21,6 @@
 #include <collector/collector_app.h>
 
 #include <collector/analyzer.h>
-#include <collector/module_tracker.h>
-#include <collector/serialization.h>
-#include <collector/thread_monitor.h>
 
 #include <common/time.h>
 #include <ipc/marshalled_session.h>
@@ -37,6 +34,8 @@ using namespace std;
 
 namespace micro_profiler
 {
+	using namespace ipc;
+
 	namespace
 	{
 		class queue_wrapper : public scheduler::queue
@@ -56,13 +55,10 @@ namespace micro_profiler
 
 	collector_app::collector_app(const frontend_factory_t &factory, calls_collector_i &collector,
 			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_)
-		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _thread_monitor(thread_monitor_),
-			_patch_manager(patch_manager_), _module_tracker(new module_tracker), _exit(false)
-	{
-		_frontend_thread.reset(new mt::thread([this, factory, overhead_] {
-			worker(factory, overhead_);
-		}));
-	}
+		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _analyzer(new analyzer(overhead_)),
+			_thread_monitor(thread_monitor_), _patch_manager(patch_manager_), _session(nullptr), _exit_requested(false),
+			_exit_confirmed(false)
+	{	_frontend_thread.reset(new mt::thread([this, factory] {	worker(factory);	}));	}
 
 	collector_app::~collector_app()
 	{	stop();	}
@@ -72,45 +68,50 @@ namespace micro_profiler
 		if (_frontend_thread.get())
 		{
 			_collector.flush();
-			_queue.schedule([this] {	notify_exiting();	});
+			_queue.schedule([this] {
+				_collector.read_collected(*_analyzer);
+				if (_session)
+					_exit_requested = true, _session->message(exiting, [] (server_session::serializer &) {	});
+				else
+					_exit_confirmed = true;
+			});
 			_frontend_thread->join();
 			_frontend_thread.reset();
 		}
 	}
 
-	void collector_app::worker(const frontend_factory_t &factory, const overhead &overhead_)
+	void collector_app::worker(const frontend_factory_t &factory)
 	{
 		const auto qw = make_shared<queue_wrapper>(_queue);
-		analyzer analyzer_(overhead_);
-		shared_ptr<ipc::server_session> session;
-		ipc::marshalled_active_session s(factory, qw, [&] (ipc::channel &outbound) {
-			return session = init_server(outbound, analyzer_);
-		});
+		unique_ptr<marshalled_active_session> s;
+		auto reset_connection = [&] {
+			_session = nullptr;
+			s.reset();
+		};
+		const auto frontend_disconnected = [&] {
+			if (_exit_requested)
+				_exit_confirmed = true;
+			_queue.schedule(move(reset_connection));
+		};
 		const function<void ()> analyze = [&] {
-			_collector.read_collected(analyzer_);
+			_collector.read_collected(*_analyzer);
 			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
 		};
 
+		s.reset(new marshalled_active_session(factory, qw, [&] (channel &outbound) -> channel_ptr_t {
+			const auto session = init_server(outbound);
+
+			session->set_disconnect_handler(frontend_disconnected);
+			_session = session.get();
+			return session;
+		}));
+
 		_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
-		while (!_exit)
+
+		do
 		{
 			_queue.wait();
 			_queue.execute_ready(mt::milliseconds(100));
-		}
-		session->message(exiting, [] (ipc::server_session::serializer &ser) {	ser(0u);	});
-
-		// A hack to retrieve last chunk of updates. Must be replaced with graceful disconnect logic.
-		pod_vector<byte> data;
-		buffer_writer< pod_vector<byte> > bw(data);
-		ipc::server_session::serializer ser(bw);
-
-		ser(request_update), ser(0u), ser(0u);
-		_collector.read_collected(analyzer_);
-		static_cast<ipc::channel &>(*session).message(const_byte_range(data.data(), data.size()));
-	}
-
-	void collector_app::notify_exiting()
-	{
-		_exit = true;
+		} while (!_exit_confirmed);
 	}
 }

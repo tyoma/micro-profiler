@@ -35,10 +35,11 @@ namespace micro_profiler
 {
 	using namespace ipc;
 
-	shared_ptr<server_session> collector_app::init_server(channel &outbound, analyzer &analyzer_)
+	shared_ptr<server_session> collector_app::init_server(channel &outbound)
 	{
 		auto session = make_shared<server_session>(outbound);
 
+		auto module_tracker_ = make_shared<module_tracker>();
 		auto loaded_ = make_shared<loaded_modules>();
 		auto unloaded_ = make_shared<unloaded_modules>();
 		auto metadata_ = make_shared<module_info_metadata>();
@@ -46,26 +47,24 @@ namespace micro_profiler
 		auto apply_results_ = make_shared<response_patched_data>();
 		auto revert_results_ = make_shared<response_reverted_data>();
 
-		session->add_handler(request_update,
-			[this, &analyzer_, loaded_, unloaded_] (server_session::request &req) {
-
-			auto &a = analyzer_;
+		session->add_handler(request_update, [this, module_tracker_, loaded_, unloaded_] (server_session::request &req) {
+			auto &a = *_analyzer;
 			auto &loaded = *loaded_;
 			auto &unloaded = *unloaded_;
-		
-			_module_tracker->get_changes(loaded, unloaded);
+
+			module_tracker_->get_changes(loaded, unloaded);
 			if (!loaded.empty())
 				req.respond(response_modules_loaded, [&] (server_session::serializer &ser) {	ser(loaded);	});
 			req.respond(response_statistics_update, [&] (server_session::serializer &ser) {	ser(a);	});
 			if (!unloaded.empty())
 				req.respond(response_modules_unloaded, [&] (server_session::serializer &ser) {	ser(unloaded);	});
-			analyzer_.clear();
+			_analyzer->clear();
 		});
 
 		session->add_handler<unsigned int>(request_module_metadata,
-			[this, metadata_] (server_session::request &req, unsigned int persistent_id) {
+			[this, module_tracker_, metadata_] (server_session::request &req, unsigned int persistent_id) {
 
-			const auto metadata = _module_tracker->get_metadata(persistent_id);
+			const auto metadata = module_tracker_->get_metadata(persistent_id);
 			auto &md = *metadata_;
 
 			md.path = metadata->get_path();
@@ -91,10 +90,10 @@ namespace micro_profiler
 		});
 
 		session->add_handler<patch_request>(request_apply_patches,
-			[this, apply_results_] (server_session::request &req, const patch_request &payload) {
+			[this, module_tracker_, apply_results_] (server_session::request &req, const patch_request &payload) {
 
 			auto &results = *apply_results_;
-			const auto l = _module_tracker->lock_mapping(payload.image_persistent_id);
+			const auto l = module_tracker_->lock_mapping(payload.image_persistent_id);
 
 			results.clear();
 			_patch_manager.apply(results, payload.image_persistent_id,

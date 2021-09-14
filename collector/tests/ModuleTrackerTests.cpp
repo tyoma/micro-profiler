@@ -174,9 +174,9 @@ namespace micro_profiler
 				loaded_modules l[2];
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(c_symbol_container_1));
-				auto_ptr<image> image1(new image(c_symbol_container_2));
-				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
+				unique_ptr<image> image0(new image(c_symbol_container_1));
+				unique_ptr<image> image1(new image(c_symbol_container_2));
+				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 				t.get_changes(l[0], u);
 
 				const mapped_module_identified *mmi[] = {
@@ -213,8 +213,8 @@ namespace micro_profiler
 				loaded_modules l[2];
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(c_symbol_container_1));
-				auto_ptr<image> image1(new image(c_symbol_container_2));
+				unique_ptr<image> image0(new image(c_symbol_container_1));
+				unique_ptr<image> image1(new image(c_symbol_container_2));
 				t.get_changes(l[0], u);
 
 				const mapped_module_identified *mmi[] = { find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), };
@@ -242,9 +242,9 @@ namespace micro_profiler
 				loaded_modules l[5];
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(c_symbol_container_1));
-				auto_ptr<image> image1(new image(c_symbol_container_2));
-				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
+				unique_ptr<image> image0(new image(c_symbol_container_1));
+				unique_ptr<image> image1(new image(c_symbol_container_2));
+				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 				t.get_changes(l[0], u);
 				image0.reset();
 				image1.reset();
@@ -304,8 +304,8 @@ namespace micro_profiler
 				module_tracker t;
 				loaded_modules l;
 				unloaded_modules u;
-				auto_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
-				auto_ptr<image> image1(new image(c_symbol_container_2));
+				unique_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
+				unique_ptr<image> image1(new image(c_symbol_container_2));
 				t.get_changes(l, u);
 				auto found1 = find_module(l, c_symbol_container_1);
 				auto found2 = find_module(l, c_symbol_container_2);
@@ -323,8 +323,8 @@ namespace micro_profiler
 				loaded_modules l;
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
-				auto_ptr<image> image1(new image(c_symbol_container_2));
+				unique_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
+				unique_ptr<image> image1(new image(c_symbol_container_2));
 				t.get_changes(l, u);
 
 				// ACT / ASSERT
@@ -390,7 +390,7 @@ namespace micro_profiler
 				loaded_modules l;
 				unloaded_modules u;
 
-				auto_ptr<image> image0(new image(c_symbol_container_1));
+				unique_ptr<image> image0(new image(c_symbol_container_1));
 				t.get_changes(l, u);
 				const mapped_module_identified mmi = *find_module(l, c_symbol_container_1);
 

@@ -22,7 +22,7 @@ namespace micro_profiler
 		{
 			begin_test_suite( COMEndpointClientTests )
 				mocks::session inbound;
-				auto_ptr<com_initialize> initializer;
+				unique_ptr<com_initialize> initializer;
 
 				init( InitCOM )
 				{	initializer.reset(new com_initialize);	}

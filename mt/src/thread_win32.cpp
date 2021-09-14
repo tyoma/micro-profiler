@@ -17,14 +17,14 @@ namespace mt
 		{
 			static unsigned int __stdcall proxy(void *f_)
 			{
-				auto_ptr<action> f(static_cast<action *>(f_));
+				unique_ptr<action> f(static_cast<action *>(f_));
 
 				(*f)();
 				return 0;
 			}
 		};
 
-		auto_ptr<action> f(new action(f_));
+		unique_ptr<action> f(new action(f_));
 
 		if (_thread = reinterpret_cast<void *>(_beginthreadex(0, 0, &local::proxy, f.get(), 0, &_id)), _thread)
 			f.release();

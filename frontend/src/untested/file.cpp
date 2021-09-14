@@ -31,9 +31,9 @@ namespace micro_profiler
 	const wchar_t c_microProfilerFilesSave[] = L"MicroProfiler Statistics\0*.mpstat\0\0";
 	const wchar_t c_microProfilerFilesOpen[] = L"MicroProfiler Statistics\0*.mpstat3;*.mpstat4;*.mpstat\0\0";
 
-	auto_ptr<write_stream> create_file(HWND hparent, const string &default_name)
+	unique_ptr<write_stream> create_file(HWND hparent, const string &default_name)
 	{
-		auto_ptr<write_stream> r;
+		unique_ptr<write_stream> r;
 		OPENFILENAMEW ofn = {};
 		wchar_t buffer[1000] = { 0 };
 		wstring default_name2 = unicode(default_name);
@@ -52,9 +52,9 @@ namespace micro_profiler
 		return r;
 	}
 
-	auto_ptr<read_stream> open_file(HWND hparent, string& path)
+	unique_ptr<read_stream> open_file(HWND hparent, string& path)
 	{
-		auto_ptr<read_stream> r;
+		unique_ptr<read_stream> r;
 		OPENFILENAMEW ofn = {};
 		wchar_t buffer[1000] = { 0 };
 

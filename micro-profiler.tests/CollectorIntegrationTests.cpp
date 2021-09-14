@@ -172,7 +172,7 @@ namespace micro_profiler
 				typedef void (f2F_t)(void (*&f)(int * volatile begin, int * volatile end));
 
 				mt::event ready;
-				auto_ptr<image> guineapig;
+				unique_ptr<image> guineapig;
 				shared_ptr< vector<mocks::thread_statistics_map> >
 					statistics(new vector<mocks::thread_statistics_map>);
 				char buffer[100];

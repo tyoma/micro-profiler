@@ -87,7 +87,7 @@ namespace micro_profiler
 			mocks::thread_monitor threads;
 			mocks::thread_callbacks tcallbacks;
 			mocks::allocator allocator_;
-			auto_ptr<calls_collector> collector;
+			unique_ptr<calls_collector> collector;
 
 			init( ConstructCollector )
 			{

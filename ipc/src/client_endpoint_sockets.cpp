@@ -52,7 +52,7 @@ namespace micro_profiler
 			private:
 				sockets_initializer _initializer;
 				socket_handle _socket;
-				auto_ptr<mt::thread> _thread;
+				unique_ptr<mt::thread> _thread;
 			};
 
 

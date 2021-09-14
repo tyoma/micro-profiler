@@ -48,7 +48,7 @@ namespace micro_profiler
 			});
 
 			target.add_command(cmdidSaveStatistics, [context, executable] (unsigned) {
-				auto_ptr<write_stream> s = create_file(NULL/*get_frame_hwnd(ctx.shell)*/, executable);
+				unique_ptr<write_stream> s = create_file(NULL/*get_frame_hwnd(ctx.shell)*/, executable);
 
 				if (s.get())
 				{

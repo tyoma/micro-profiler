@@ -51,7 +51,7 @@ namespace micro_profiler
 			test( AllocatedMemoryIsReadableWritableAfterAllocatorIsDeleted )
 			{
 				// INIT
-				auto_ptr<executable_memory_allocator> a(new executable_memory_allocator);
+				unique_ptr<executable_memory_allocator> a(new executable_memory_allocator);
 				const byte sample1[] = "this is a string to be written";
 				const byte sample2[] = "Are you the new person drawn toward me?\n"
 					"To begin with, take warning, I am surely far different from what you suppose; ";

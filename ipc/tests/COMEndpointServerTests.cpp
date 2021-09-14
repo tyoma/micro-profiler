@@ -26,7 +26,7 @@ namespace micro_profiler
 		{
 			begin_test_suite( COMEndpointServerTests )
 				guid_t ids[2];
-				auto_ptr<com_initialize> initializer;
+				unique_ptr<com_initialize> initializer;
 
 				init( GenerateIDs )
 				{

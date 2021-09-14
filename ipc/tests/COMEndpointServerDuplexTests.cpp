@@ -84,7 +84,7 @@ namespace micro_profiler
 
 			begin_test_suite( COMEndpointServerDuplexTests )
 				guid_t ids[2];
-				auto_ptr<com_initialize> initializer;
+				unique_ptr<com_initialize> initializer;
 				shared_ptr<mocks::server> server_factory;
 
 				init( Initialize )

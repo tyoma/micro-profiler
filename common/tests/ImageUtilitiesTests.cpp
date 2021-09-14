@@ -146,7 +146,7 @@ namespace micro_profiler
 				vector<mapped_module> modules;
 
 				image img1(c_symbol_container_1);
-				auto_ptr<image> img2(new image(c_symbol_container_2));
+				unique_ptr<image> img2(new image(c_symbol_container_2));
 				image img3(c_symbol_container_3_nosymbols);
 
 				string unloaded = img2->absolute_path();

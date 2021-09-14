@@ -323,7 +323,7 @@ namespace micro_profiler
 
 
 			virtual_stack vstack;
-			auto_ptr<calls_collector_thread> collector;
+			unique_ptr<calls_collector_thread> collector;
 
 			init( InitCollector )
 			{

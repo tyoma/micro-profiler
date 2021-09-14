@@ -23,7 +23,7 @@ namespace symreader
 		}
 
 		template <typename ElfHeaderT, typename SectionHeaderT, typename CallbackT>
-		void read_sections(const void *image, size_t size, const CallbackT &callback)
+		void read_sections(const void *image, size_t /*size*/, const CallbackT &callback)
 		{
 			const ElfHeaderT *ehdr = static_cast<const ElfHeaderT *>(image);
 			const SectionHeaderT *shdrs = (const SectionHeaderT *)((const uint8_t *)image + ehdr->e_shoff);

@@ -126,7 +126,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				auto_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
+				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
 
 				ready.wait();
 
@@ -298,9 +298,9 @@ namespace micro_profiler
 				shared_ptr<void> req;
 				unordered_map<unsigned, mapped_module_ex> l;
 				unloaded_modules u;
-				auto_ptr<image> image0(new image(c_symbol_container_1));
-				auto_ptr<image> image1(new image(c_symbol_container_2));
-				auto_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
+				unique_ptr<image> image0(new image(c_symbol_container_1));
+				unique_ptr<image> image1(new image(c_symbol_container_2));
+				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 

@@ -91,7 +91,7 @@ namespace micro_profiler
 				socket_handle _aux_socket;
 				unsigned _next_id;
 				handlers_t _handlers;
-				std::auto_ptr<mt::thread> _server_thread;
+				std::unique_ptr<mt::thread> _server_thread;
 				std::vector<byte> _buffer;
 			};
 		}

@@ -55,7 +55,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( LogEventTests )
-			auto_ptr<mocks::logger> logger;
+			unique_ptr<mocks::logger> logger;
 
 			init( Init )
 			{

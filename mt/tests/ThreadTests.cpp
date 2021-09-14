@@ -124,7 +124,7 @@ namespace mt
 				shared_ptr<void> hthread;
 				shared_ptr<void> ready(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
 				shared_ptr<void> go(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
-				auto_ptr<thread> t(new thread(bind(&thread_handle_capture_and_wait, ref(hthread), ready, go)));
+				unique_ptr<thread> t(new thread(bind(&thread_handle_capture_and_wait, ref(hthread), ready, go)));
 				DWORD exit_code = 0;
 
 				::WaitForSingleObject(ready.get(), INFINITE);
@@ -155,7 +155,7 @@ namespace mt
 				shared_ptr<void> hthread;
 				shared_ptr<void> ready(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
 				shared_ptr<void> go(::CreateEvent(NULL, TRUE, FALSE, NULL), &::CloseHandle);
-				auto_ptr<thread> t(new thread(bind(&thread_handle_capture_and_wait, ref(hthread), ready, go)));
+				unique_ptr<thread> t(new thread(bind(&thread_handle_capture_and_wait, ref(hthread), ready, go)));
 				DWORD exit_code = STILL_ACTIVE;
 
 				::WaitForSingleObject(ready.get(), INFINITE);

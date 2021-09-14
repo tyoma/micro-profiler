@@ -311,7 +311,7 @@ namespace micro_profiler
 
 			add_command(cmdidLoadStatistics, [this] (unsigned) {
 				string path;
-				auto_ptr<read_stream> s = open_file(get_frame_hwnd(get_shell()), path);
+				unique_ptr<read_stream> s = open_file(get_frame_hwnd(get_shell()), path);
 
 				if (s.get())
 				{
@@ -348,7 +348,7 @@ namespace micro_profiler
 				if (const frontend_manager::instance *i = _frontend_manager->get_active())
 				{
 					frontend_ui_context contents = *i;
-					auto_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), i->process_info.executable);
+					unique_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), i->process_info.executable);
 
 					if (s.get())
 					{

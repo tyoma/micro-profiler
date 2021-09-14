@@ -42,6 +42,6 @@ namespace mt
 		class impl;
 
 	private:
-		std::auto_ptr<impl> _impl;
+		std::unique_ptr<impl> _impl;
 	};
 }

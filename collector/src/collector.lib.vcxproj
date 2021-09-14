@@ -45,6 +45,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="active_server_base.cpp" />
     <ClCompile Include="allocator.cpp" />
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="calls_collector.cpp">
@@ -56,7 +57,6 @@
       <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="collector_app.cpp" />
-    <ClCompile Include="collector_app_server.cpp" />
     <ClCompile Include="module_tracker.cpp" />
     <ClCompile Include="process_explorer_linux.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -70,6 +70,7 @@
     <ClCompile Include="thread_monitor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\active_server_base.h" />
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\buffers_queue.h" />

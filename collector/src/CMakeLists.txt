@@ -28,12 +28,12 @@ if(MSVC)
 endif()
 
 set(COLLECTOR_LIB_SOURCES
+	active_server_base.cpp
 	allocator.cpp
 	analyzer.cpp
 	calls_collector.cpp
 	calls_collector_thread.cpp
 	collector_app.cpp
-	collector_app_server.cpp
 	module_tracker.cpp
 	thread_monitor.cpp
 )

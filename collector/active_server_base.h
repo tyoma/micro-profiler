@@ -20,35 +20,45 @@
 
 #pragma once
 
-#include "active_server_base.h"
+#include <common/noncopyable.h>
+#include <functional>
+#include <mt/thread.h>
+#include <scheduler/task_queue.h>
 
 namespace micro_profiler
 {
-	class analyzer;
-	struct calls_collector_i;
-	struct overhead;
-	struct patch_manager;
-	class thread_monitor;
+	namespace ipc
+	{
+		struct channel;
+		class server_session;
+	}
 
-	class collector_app : public active_server_base
+	class active_server_base : noncopyable
 	{
 	public:
-		collector_app(const frontend_factory_t &factory, calls_collector_i &collector, const overhead &overhead_,
-			thread_monitor &thread_monitor_, patch_manager &patch_manager_);
-		~collector_app();
+		typedef std::shared_ptr<ipc::channel> channel_ptr_t;
+		typedef std::function<channel_ptr_t (ipc::channel &inbound)> frontend_factory_t;
 
-		void stop();
+	public:
+		active_server_base();
+		~active_server_base();
+
+	protected:
+		void start(const frontend_factory_t &factory);
+		void stop(int exiting_message_id);
+
+	protected:
+		scheduler::task_queue queue;
 
 	private:
-		virtual void initialize_session(ipc::server_session &session) override;
-		virtual void on_exiting() override;
+		void worker(const frontend_factory_t &factory);
 
-		void collect_and_reschedule();
+		virtual void initialize_session(ipc::server_session &session) = 0;
+		virtual void on_exiting() {	}
 
 	private:
-		calls_collector_i &_collector;
-		const std::unique_ptr<analyzer> _analyzer;
-		thread_monitor &_thread_monitor;
-		patch_manager &_patch_manager;
+		ipc::server_session *_session;
+		bool _exit_requested, _exit_confirmed;
+		std::unique_ptr<mt::thread> _frontend_thread;
 	};
 }

@@ -21,12 +21,15 @@
 #include <collector/collector_app.h>
 
 #include <collector/analyzer.h>
+#include <collector/module_tracker.h>
+#include <collector/serialization.h>
+#include <collector/thread_monitor.h>
 
+#include <common/protocol.h>
 #include <common/time.h>
-#include <ipc/marshalled_session.h>
 #include <ipc/server_session.h>
 #include <logger/log.h>
-#include <scheduler/scheduler.h>
+#include <patcher/interface.h>
 
 #define PREAMBLE "Collector app: "
 
@@ -34,81 +37,109 @@ using namespace std;
 
 namespace micro_profiler
 {
-	using namespace ipc;
-
-	namespace
-	{
-		class queue_wrapper : public scheduler::queue
-		{
-		public:
-			queue_wrapper(scheduler::task_queue &q)
-				: _queue(q)
-			{	}
-
-			virtual void schedule(function<void ()> &&task, mt::milliseconds defer_by) override
-			{	_queue.schedule(move(task), defer_by);	}
-
-		private:
-			scheduler::task_queue &_queue;
-		};
-	}
-
 	collector_app::collector_app(const frontend_factory_t &factory, calls_collector_i &collector,
 			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_)
-		: _queue([] {	return mt::milliseconds(clock());	}), _collector(collector), _analyzer(new analyzer(overhead_)),
-			_thread_monitor(thread_monitor_), _patch_manager(patch_manager_), _session(nullptr), _exit_requested(false),
-			_exit_confirmed(false)
-	{	_frontend_thread.reset(new mt::thread([this, factory] {	worker(factory);	}));	}
+		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(thread_monitor_),
+			_patch_manager(patch_manager_)
+	{	start(factory);	}
 
 	collector_app::~collector_app()
 	{	stop();	}
 
 	void collector_app::stop()
 	{
-		if (_frontend_thread.get())
-		{
-			_collector.flush();
-			_queue.schedule([this] {
-				_collector.read_collected(*_analyzer);
-				if (_session)
-					_exit_requested = true, _session->message(exiting, [] (server_session::serializer &) {	});
-				else
-					_exit_confirmed = true;
-			});
-			_frontend_thread->join();
-			_frontend_thread.reset();
-		}
+		_collector.flush();
+		active_server_base::stop(exiting);
 	}
 
-	void collector_app::worker(const frontend_factory_t &factory)
+	void collector_app::initialize_session(ipc::server_session &session)
 	{
-		const auto qw = make_shared<queue_wrapper>(_queue);
-		unique_ptr<marshalled_active_session> s;
-		const auto frontend_disconnected = [&] {
-			if (_exit_requested)
-				_exit_confirmed = true;
-			_session = nullptr;
-			s.reset();
-		};
-		const function<void ()> analyze = [&] {
-			_collector.read_collected(*_analyzer);
-			_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
-		};
+		typedef ipc::server_session::response response;
 
-		s.reset(new marshalled_active_session(factory, qw, [&] (channel &outbound) -> channel_ptr_t {
-			const auto session = init_server(outbound);
+		auto module_tracker_ = make_shared<module_tracker>();
+		auto loaded = make_shared<loaded_modules>();
+		auto unloaded = make_shared<unloaded_modules>();
+		auto metadata = make_shared<module_info_metadata>();
+		auto threads_buffer = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
+		auto apply_results = make_shared<response_patched_data>();
+		auto revert_results = make_shared<response_reverted_data>();
 
-			session->set_disconnect_handler(frontend_disconnected);
-			_session = session.get();
-			return session;
-		}));
+		session.add_handler(request_update, [this, module_tracker_, loaded, unloaded] (response &resp) {
+			module_tracker_->get_changes(*loaded, *unloaded);
+			if (!loaded->empty())
+				resp(response_modules_loaded, *loaded);
+			resp(response_statistics_update, *_analyzer);
+			if (!unloaded->empty())
+				resp(response_modules_unloaded, *unloaded);
+			_analyzer->clear();
+		});
 
-		_queue.schedule(function<void ()>(analyze), mt::milliseconds(10));
+		session.add_handler(request_module_metadata,
+			[this, module_tracker_, metadata] (response &resp, unsigned int persistent_id) {
 
-		do
-		{
-			_queue.wait();
-			_queue.execute_ready(mt::milliseconds(100));
-		} while (!_exit_confirmed);
+			const auto metadata_ = module_tracker_->get_metadata(persistent_id);
+			auto &md = *metadata;
+
+			metadata->path = metadata_->get_path();
+			metadata->symbols.clear();
+			metadata->source_files.clear();
+			metadata_->enumerate_functions([&] (const symbol_info &symbol) {
+				md.symbols.push_back(symbol);
+			});
+			metadata_->enumerate_files([&] (const pair<unsigned, string> &file) {
+				md.source_files.insert(file);
+			});
+			resp(response_module_metadata, *metadata);
+		});
+
+		session.add_handler(request_threads_info,
+			[this, threads_buffer] (response &resp, const vector<thread_monitor::thread_id> &ids) {
+
+			threads_buffer->resize(ids.size());
+			_thread_monitor.get_info(threads_buffer->begin(), ids.begin(), ids.end());
+			resp(response_threads_info, *threads_buffer);
+		});
+
+		session.add_handler(request_apply_patches,
+			[this, module_tracker_, apply_results] (response &resp, const patch_request &payload) {
+
+			const auto l = module_tracker_->lock_mapping(payload.image_persistent_id);
+
+			apply_results->clear();
+			_patch_manager.apply(*apply_results, payload.image_persistent_id,
+				reinterpret_cast<void *>(static_cast<size_t>(l->second.base)), l,
+				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
+			resp(response_patched, *apply_results);
+		});
+
+		session.add_handler(request_revert_patches,
+			[this, revert_results] (response &resp, const patch_request &payload) {
+
+			revert_results->clear();
+			_patch_manager.revert(*revert_results, payload.image_persistent_id,
+				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
+			resp(response_reverted, *revert_results);
+		});
+
+
+		session.message(init, [] (ipc::server_session::serializer &ser) {
+			initialization_data idata = {
+				get_current_executable(),
+				ticks_per_second()
+			};
+
+			ser(idata);
+		});
+
+		queue.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
+	}
+
+	void collector_app::on_exiting()
+	{	_collector.read_collected(*_analyzer);	}
+
+	void collector_app::collect_and_reschedule()
+	{
+		_collector.read_collected(*_analyzer);
+		queue.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
 	}
 }

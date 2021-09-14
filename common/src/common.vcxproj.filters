@@ -115,5 +115,7 @@
     </ClInclude>
     <ClInclude Include="..\configuration_file.h" />
     <ClInclude Include="..\stream.h" />
+    <ClInclude Include="..\argument_traits.h" />
+    <ClInclude Include="..\callback_monitor.h" />
   </ItemGroup>
 </Project>

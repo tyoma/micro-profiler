@@ -33,9 +33,6 @@ namespace micro_profiler
 		void server_session::set_disconnect_handler(const std::function<void () throw()> &handler)
 		{	_disconnect_handler = handler;	}
 
-		void server_session::add_handler(int request_id, const std::function<void (request &context)> &handler)
-		{	_handlers[request_id] = [handler] (request &context, deserializer &) {	handler(context);	};	}
-
 		void server_session::disconnect() throw()
 		{
 			if (_disconnect_handler)
@@ -56,32 +53,32 @@ namespace micro_profiler
 
 			if (h != _handlers.end())
 			{
-				request req(*this, token, _deferral_enabled);
+				response resp(*this, token, _deferral_enabled);
 
-				h->second(req, d);
-				if (req.continuation)
-					schedule_continuation(token, req.continuation);
+				h->second(resp, d);
+				if (resp.continuation)
+					schedule_continuation(token, resp.continuation);
 			}
 		}
 
 		void server_session::schedule_continuation(token_t token,
-			const function<void (request &context)> &continuation_handler)
+			const function<void (response &response_)> &continuation_handler)
 		{
 			_queue.schedule([this, token, continuation_handler] {
-				request req(*this, token, true);
+				response resp(*this, token, true);
 
-				continuation_handler(req);
-				if (req.continuation)
-					schedule_continuation(token, req.continuation);
+				continuation_handler(resp);
+				if (resp.continuation)
+					schedule_continuation(token, resp.continuation);
 			});
 		}
 
 
-		server_session::request::request(server_session &owner, token_t token, bool deferral_enabled)
+		server_session::response::response(server_session &owner, token_t token, bool deferral_enabled)
 			: _owner(owner), _token(token), _deferral_enabled(deferral_enabled)
 		{	}
 
-		void server_session::request::defer(const function<void (request &context)> &continuation_handler)
+		void server_session::response::defer(const function<void (response &response_)> &continuation_handler)
 		{
 			if (!_deferral_enabled)
 				throw logic_error("deferring is disabled - no queue");

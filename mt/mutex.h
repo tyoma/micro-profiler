@@ -5,7 +5,8 @@
 
 	namespace mt
 	{
-		using std::mutex;
+		using mutex = std::mutex;
+		using recursive_mutex = std::recursive_mutex;
 		using std::lock_guard;
 		using std::unique_lock;
 	}
@@ -26,6 +27,8 @@
 		private:
 			unsigned char _mtx_buffer[6 * sizeof(void*)];
 		};
+
+		typedef mutex recursive_mutex;
 
 
 		template <typename MutexT>

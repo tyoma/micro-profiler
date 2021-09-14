@@ -157,7 +157,9 @@ namespace micro_profiler
 					});
 					auto p = client_.get();
 
-					client_->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
+					client_->subscribe(new_subscription(), exiting, [p] (deserializer &) {
+						p->disconnect_session();
+					});
 					return client_;
 				}, collector, c_overhead, tmonitor, pmanager);
 

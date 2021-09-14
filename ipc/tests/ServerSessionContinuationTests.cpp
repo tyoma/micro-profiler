@@ -33,10 +33,10 @@ namespace micro_profiler
 					// INIT
 					server_session s(outbound);
 
-					s.add_handler<int>(13, [&] (server_session::request &req, int) {
+					s.add_handler(13, [&] (server_session::response &resp, int) {
 
 					// ACT / ASSERT
-						assert_throws(req.defer([] (server_session::request &) {}), logic_error);
+						assert_throws(resp.defer([] (server_session::response &) {}), logic_error);
 					});
 
 					// ACT / ASSERT
@@ -50,8 +50,8 @@ namespace micro_profiler
 					server_session s(outbound, queue);
 
 					outbound.on_message = [] (const_byte_range) {	assert_is_false(true);	};
-					s.add_handler<int>(1, [&] (server_session::request &req, int) {
-						req.defer([] (server_session::request &) {});
+					s.add_handler(1, [&] (server_session::response &resp, int) {
+						resp.defer([] (server_session::response &) {});
 					});
 
 					// ACT
@@ -74,8 +74,8 @@ namespace micro_profiler
 					// INIT
 					server_session s(outbound, queue);
 
-					s.add_handler<int>(1, [&] (server_session::request &req, int) {
-						req.defer([] (server_session::request &) {});
+					s.add_handler(1, [&] (server_session::response &resp, int) {
+						resp.defer([] (server_session::response &) {});
 
 					// ASSERT
 						assert_is_empty(queue->tasks);
@@ -91,11 +91,11 @@ namespace micro_profiler
 					// INIT
 					unique_ptr<server_session> s(new server_session(outbound, queue));
 					auto called = 0;
-					auto cb = [&] (server_session::request &) {	called++;	};
+					auto cb = [&] (server_session::response &) {	called++;	};
 
 					outbound.on_message = [] (const_byte_range) {	assert_is_false(true);	};
-					s->add_handler<int>(1, [cb] (server_session::request &req, int) {
-						req.defer(cb);
+					s->add_handler(1, [cb] (server_session::response &resp, int) {
+						resp.defer(cb);
 					});
 					send_standard(*s, 1, 1, 0);
 
@@ -123,14 +123,14 @@ namespace micro_profiler
 						d(log.back().first);
 						d(log.back().second);
 					};
-					s.add_handler<int>(1, [] (server_session::request &req, int) {
-						req.defer([] (server_session::request &req) {
-							req.respond(1001, [] (server_session::serializer &) {});
+					s.add_handler(1, [] (server_session::response &resp, int) {
+						resp.defer([] (server_session::response &resp) {
+							resp(1001);
 						});
 					});
-					s.add_handler<int>(13, [] (server_session::request &req, int) {
-						req.defer([] (server_session::request &req) {
-							req.respond(1013, [] (server_session::serializer &) {});
+					s.add_handler(13, [] (server_session::response &resp, int) {
+						resp.defer([] (server_session::response &resp) {
+							resp(1013);
 						});
 					});
 
@@ -173,15 +173,15 @@ namespace micro_profiler
 						d(log.back().first);
 						d(log.back().second);
 					};
-					s.add_handler<int>(1, [] (server_session::request &req, int) {
-						req.defer([] (server_session::request &req) {
-							req.defer([] (server_session::request &req) {
-								req.respond(1002, [] (server_session::serializer &) {});
-								req.defer([] (server_session::request &req) {
-									req.respond(1003, [] (server_session::serializer &) {});
+					s.add_handler(1, [] (server_session::response &resp, int) {
+						resp.defer([] (server_session::response &resp) {
+							resp.defer([] (server_session::response &resp) {
+								resp(1002);
+								resp.defer([] (server_session::response &resp) {
+									resp(1003);
 								});
 							});
-							req.respond(1001, [] (server_session::serializer &) {});
+							resp(1001);
 						});
 					});
 

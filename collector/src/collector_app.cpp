@@ -84,14 +84,11 @@ namespace micro_profiler
 	{
 		const auto qw = make_shared<queue_wrapper>(_queue);
 		unique_ptr<marshalled_active_session> s;
-		auto reset_connection = [&] {
-			_session = nullptr;
-			s.reset();
-		};
 		const auto frontend_disconnected = [&] {
 			if (_exit_requested)
 				_exit_confirmed = true;
-			_queue.schedule(move(reset_connection));
+			_session = nullptr;
+			s.reset();
 		};
 		const function<void ()> analyze = [&] {
 			_collector.read_collected(*_analyzer);

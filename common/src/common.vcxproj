@@ -86,6 +86,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\argument_traits.h" />
+    <ClInclude Include="..\callback_monitor.h" />
     <ClInclude Include="..\configuration.h" />
     <ClInclude Include="..\configuration_file.h" />
     <ClInclude Include="..\constants.h" />

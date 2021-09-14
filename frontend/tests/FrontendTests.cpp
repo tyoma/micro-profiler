@@ -169,7 +169,7 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				auto update_requests = 0;
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &, int) {
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &) {
 					update_requests++;
 				});
 
@@ -193,13 +193,11 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector<unsigned int> log;
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 12));
-					});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 12));
 				});
-				emulator->add_handler< vector<unsigned int> >(request_threads_info, [&] (ipc::server_session::request &, const vector<unsigned int> &ids) {
+				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &, const vector<unsigned int> &ids) {
 					log.insert(log.end(), ids.begin(), ids.end());
 				});
 
@@ -212,11 +210,9 @@ namespace micro_profiler
 				assert_equal(reference1, log);
 
 				// INIT (replace handler)
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 17));
-					});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 17));
 				});
 
 				// ACT
@@ -228,12 +224,10 @@ namespace micro_profiler
 				assert_equivalent(reference2, log);
 
 				// INIT (replace handler)
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(plural
-							+ make_pair(17u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed()))
-							+ make_pair(135u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
-					});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, plural
+						+ make_pair(17u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed()))
+						+ make_pair(135u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
 				});
 
 				// ACT
@@ -251,18 +245,14 @@ namespace micro_profiler
 				// INIT
 				auto frontend_ = create_frontend();
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 0));
-					});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 0));
 				});
-				emulator->add_handler< vector<unsigned int> >(request_threads_info, [&] (ipc::server_session::request &req, const vector<unsigned int> &) {
-					req.respond(response_threads_info, [] (ipc::server_session::serializer &s) {
-						s(plural
-							+ make_thread_info(0u, 1717, "thread 1", false)
-							+ make_thread_info(1u, 11717, "thread 2", false));
-					});
+				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
+					resp(response_threads_info, plural
+						+ make_thread_info(0u, 1717, "thread 1", false)
+						+ make_thread_info(1u, 11717, "thread 2", false));
 				});
 
 				// ACT
@@ -276,11 +266,9 @@ namespace micro_profiler
 					(containers::unordered_map<unsigned int, thread_info> &)*threads);
 
 				// INIT
-				emulator->add_handler< vector<unsigned int> >(request_threads_info, [&] (ipc::server_session::request &req, const vector<unsigned int> &) {
-					req.respond(response_threads_info, [] (ipc::server_session::serializer &s) {
-						s(plural
-							+ make_pair(1u, make_thread_info(117, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(), true)));
-					});
+				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
+					resp(response_threads_info, plural
+						+ make_pair(1u, make_thread_info(117, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(), true)));
 				});
 
 				// ACT
@@ -300,20 +288,16 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector< vector<unsigned> > log;
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 0));
-					});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 0));
 				});
-				emulator->add_handler< vector<unsigned int> >(request_threads_info, [&] (ipc::server_session::request &req, const vector<unsigned int> &ids) {
+				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &ids) {
 					log.push_back(ids);
-					req.respond(response_threads_info, [] (ipc::server_session::serializer &s) {
-						s(plural
-							+ make_thread_info(0u, 1717, "thread 1", false)
-							+ make_thread_info(1u, 11717, "thread 2", true)
-							+ make_thread_info(2u, 1717, "thread 1", false));
-					});
+					resp(response_threads_info, plural
+						+ make_thread_info(0u, 1717, "thread 1", false)
+						+ make_thread_info(1u, 11717, "thread 2", true)
+						+ make_thread_info(2u, 1717, "thread 1", false));
 				});
 
 				emulator->message(init, format(make_initialization_data("/test", 1)));
@@ -338,14 +322,12 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				auto update_requests = 0;
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					update_requests++;
 
 				// ACT
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
-					});
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
 				});
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 
@@ -365,12 +347,10 @@ namespace micro_profiler
 				// INIT
 				auto frontend_ = create_frontend();
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())
-							+ make_pair(1321221u, unthreaded_statistic_types::function_detailed())));
-					});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())
+						+ make_pair(1321221u, unthreaded_statistic_types::function_detailed())));
 				});
 
 				// ACT
@@ -386,11 +366,9 @@ namespace micro_profiler
 				assert_equal(2u, context.statistics->size());
 
 				// INIT
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(13u, unthreaded_statistic_types::function_detailed())));
-					});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(13u, unthreaded_statistic_types::function_detailed())));
 				});
 
 				// ACT
@@ -407,12 +385,10 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				auto called = 0;
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					called++;
-					req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-						s(make_single_threaded(plural
-							+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
-					});
+					resp(response_statistics_update, make_single_threaded(plural
+						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
 				});
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 
@@ -432,7 +408,7 @@ namespace micro_profiler
 				vector<unsigned> log;
 
 				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &, unsigned persistent_id) {
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
 					log.push_back(persistent_id);
 				});
 
@@ -465,7 +441,7 @@ namespace micro_profiler
 				vector<unsigned> log;
 
 				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &, unsigned persistent_id) {
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
 					log.push_back(persistent_id);
 				});
 
@@ -491,22 +467,20 @@ namespace micro_profiler
 				// INIT
 				auto frontend_ = create_frontend();
 				auto invalidations = 0;
-				emulator->add_handler<unsigned>(request_module_metadata, [&] (ipc::server_session::request &req, unsigned persistent_id) {
-					req.respond(response_module_metadata, [persistent_id] (ipc::server_session::serializer &s) {
-						symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
-							symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
-							symbols1000[] = {	{	"baz", 0x0010, 1	},	};
-						pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
-							files99[] = {	make_pair(3, "main.cpp"),	},
-							files1000[] = {	make_pair(7, "local.cpp"),	};
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned persistent_id) {
+					symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
+						symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
+						symbols1000[] = {	{	"baz", 0x0010, 1	},	};
+					pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
+						files99[] = {	make_pair(3, "main.cpp"),	},
+						files1000[] = {	make_pair(7, "local.cpp"),	};
 
-						switch (persistent_id)
-						{
-						case 17:	s(create_metadata_info(symbols17, files17));	break;
-						case 99:	s(create_metadata_info(symbols99, files99));	break;
-						case 1000:	s(create_metadata_info(symbols1000, files1000));	break;
-						}
-					});
+					switch (persistent_id)
+					{
+					case 17:	resp(response_module_metadata, create_metadata_info(symbols17, files17));	break;
+					case 99:	resp(response_module_metadata, create_metadata_info(symbols99, files99));	break;
+					case 1000:	resp(response_module_metadata, create_metadata_info(symbols1000, files1000));	break;
+					}
 				});
 
 				emulator->message(init, format(make_initialization_data("", 1)));

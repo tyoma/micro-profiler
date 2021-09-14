@@ -111,9 +111,7 @@ namespace micro_profiler
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches,
-					[&] (ipc::server_session::request &, const patch_request &payload) {
-
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -141,9 +139,7 @@ namespace micro_profiler
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
 
-				emulator->add_handler<patch_request>(request_revert_patches,
-					[&] (ipc::server_session::request &, const patch_request &payload) {
-
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					auto image_patches = patches->find(payload.image_persistent_id);
 
 					assert_not_equal(patches->end(), image_patches);
@@ -188,37 +184,33 @@ namespace micro_profiler
 				unsigned rva1[] = {	1, 2, 3,	};
 				unsigned rva2[] = {	2, 4, 5, 6, 7, 100,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches, [&] (ipc::server_session::request &req, const patch_request &payload) {
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_request &payload) {
 					switch (payload.image_persistent_id)
 					{
 					case 19:
-						req.defer([] (ipc::server_session::request &req) {
-							req.respond(response_patched, [] (ipc::server_session::serializer &s) {
-								s(plural
-									// Succeeded...
-									+ mkpatch_apply(1, patch_result::ok, 1)
+						resp.defer([] (ipc::server_session::response &resp) {
+							resp(response_patched, plural
+								// Succeeded...
+								+ mkpatch_apply(1, patch_result::ok, 1)
 
-									// Failed...
-									+ mkpatch_apply(3, patch_result::error, 0)
-									+ mkpatch_apply(2, patch_result::error, 0));
-							});
+								// Failed...
+								+ mkpatch_apply(3, patch_result::error, 0)
+								+ mkpatch_apply(2, patch_result::error, 0));
 						});
 						break;
 
 					case 31:
-						req.defer([] (ipc::server_session::request &req) {
-							req.respond(response_patched, [] (ipc::server_session::serializer &s) {
-								s(plural
-									// Succeeded...
-									+ mkpatch_apply(2, patch_result::ok, 2)
-									+ mkpatch_apply(6, patch_result::ok, 3)
-									+ mkpatch_apply(100, patch_result::ok, 4)
+						resp.defer([] (ipc::server_session::response &resp) {
+							resp(response_patched, plural
+								// Succeeded...
+								+ mkpatch_apply(2, patch_result::ok, 2)
+								+ mkpatch_apply(6, patch_result::ok, 3)
+								+ mkpatch_apply(100, patch_result::ok, 4)
 
-									// Failed...
-									+ mkpatch_apply(7, patch_result::error, 0)
-									+ mkpatch_apply(4, patch_result::error, 0)
-									+ mkpatch_apply(5, patch_result::error, 0));
-							});
+								// Failed...
+								+ mkpatch_apply(7, patch_result::error, 0)
+								+ mkpatch_apply(4, patch_result::error, 0)
+								+ mkpatch_apply(5, patch_result::error, 0));
 						});
 						break;
 					}
@@ -273,25 +265,23 @@ namespace micro_profiler
 				unsigned rva22[] = {	2, 4, 5, 6, 7, 100,	};
 				vector<patch_request> log;
 
-				emulator->add_handler<patch_request>(request_apply_patches, [] (ipc::server_session::request &req, const patch_request &payload) {
-					req.respond(response_patched, [&payload] (ipc::server_session::serializer &s) {
-						switch (payload.image_persistent_id)
-						{
-						case 19:
-							s(plural + mkpatch_apply(3, patch_result::error, 0) + mkpatch_apply(2, patch_result::error, 0));
-							break;
+				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_request &payload) {
+					switch (payload.image_persistent_id)
+					{
+					case 19:
+						resp(response_patched, plural + mkpatch_apply(3, patch_result::error, 0) + mkpatch_apply(2, patch_result::error, 0));
+						break;
 
-						case 20:
-							s(plural + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(5, patch_result::error, 0));
-							break;
-						}
-					});
+					case 20:
+						resp(response_patched, plural + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(5, patch_result::error, 0));
+						break;
+					}
 				});
 
 				patches->apply(19, mkrange(rva1));
 				patches->apply(20, mkrange(rva2));
 
-				emulator->add_handler<patch_request>(request_apply_patches, [&] (ipc::server_session::request &, const patch_request &payload) {
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -329,14 +319,10 @@ namespace micro_profiler
 				// INIT
 				unsigned rva[] = {	1, 2, 3,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches, [] (ipc::server_session::request &req, const patch_request &payload) {
-					req.respond(response_patched, [&payload] (ipc::server_session::serializer &s) {
-						s(plural + mkpatch_apply(1, patch_result::ok, 1) + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(3, patch_result::ok, 2));
-					});
-					req.defer([] (ipc::server_session::request &req) {
-						req.respond(response_patched, [] (ipc::server_session::serializer &s) {
-							s(plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
-						});
+				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_request &/*payload*/) {
+					resp(response_patched, plural + mkpatch_apply(1, patch_result::ok, 1) + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(3, patch_result::ok, 2));
+					resp.defer([] (ipc::server_session::response &resp) {
+						resp(response_patched, plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
 					});
 				});
 
@@ -363,14 +349,12 @@ namespace micro_profiler
 				};
 				unsigned rva[] = {	1, 2, 3,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches, [&] (ipc::server_session::request &req, const patch_request &) {
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
 					// ACT
 					assert_is_false(log.empty());
 
-					req.defer([] (ipc::server_session::request &req) {
-						req.respond(response_patched, [] (ipc::server_session::serializer &s) {
-							s(plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
-						});
+					resp.defer([] (ipc::server_session::response &resp) {
+						resp(response_patched, plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
 					});
 				});
 
@@ -397,15 +381,12 @@ namespace micro_profiler
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches,
-					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				patches->apply(101, mkrange(rva1));
 				patches->apply(191, mkrange(rva2));
 
-				emulator->add_handler<patch_request>(request_revert_patches,
-					[&] (ipc::server_session::request &, const patch_request &payload) {
-
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -433,17 +414,19 @@ namespace micro_profiler
 			init( SetNextID )
 			{	next_id = 1;	}
 
-			void emulate_apply(ipc::server_session::request &req, const patch_request &payload)
+			function<void (ipc::server_session::response &resp, const patch_request &payload)> emulate_apply_fn()
 			{
-				vector< pair<unsigned, patch_apply> > aresults;
+				return [this] (ipc::server_session::response &resp, const patch_request &payload) {
+					vector< pair<unsigned, patch_apply> > aresults;
 
-				for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
-				{
-					auto j = apply_results.find(*i);
+					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
+					{
+						auto j = apply_results.find(*i);
 
-					aresults.push_back(mkpatch_apply(*i, j != apply_results.end() ? j->second : patch_result::ok, next_id++));
-				}
-				req.respond(response_patched, [aresults] (ipc::server_session::serializer &s) {	s(aresults);	});
+						aresults.push_back(mkpatch_apply(*i, j != apply_results.end() ? j->second : patch_result::ok, next_id++));
+					}
+					resp(response_patched, aresults);
+				};
 			}
 
 
@@ -456,10 +439,9 @@ namespace micro_profiler
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
 				vector< unordered_map<unsigned, tables::patch> > log;
 
-				emulator->add_handler<patch_request>(request_apply_patches,
-					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
-				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &, const patch_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					const auto image_patches = patches->find(payload.image_persistent_id);
 
 					assert_not_equal(patches->end(), image_patches);
@@ -503,43 +485,38 @@ namespace micro_profiler
 				unsigned rva20[] = {	2, 4, 5, 50, 6, 7, 100, 1001,	};
 				unsigned rva2[] = {	2, 4, 5, 6, 7, 100,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches,
-					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				patches->apply(19, mkrange(rva10));
 				patches->apply(31, mkrange(rva20));
 
-				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &req, const patch_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &payload) {
 					switch (payload.image_persistent_id)
 					{
 					case 19:
-						req.defer([] (ipc::server_session::request &req) {
-							req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
-								s(plural
-									// Succeeded...
-									+ mkpatch_revert(1, patch_result::ok)
+						resp.defer([] (ipc::server_session::response &resp) {
+							resp(response_reverted, plural
+								// Succeeded...
+								+ mkpatch_revert(1, patch_result::ok)
 
-									// Failed...
-									+ mkpatch_revert(3, patch_result::error)
-									+ mkpatch_revert(2, patch_result::error));
-							});
+								// Failed...
+								+ mkpatch_revert(3, patch_result::error)
+								+ mkpatch_revert(2, patch_result::error));
 						});
 						break;
 
 					case 31:
-						req.defer([] (ipc::server_session::request &req) {
-							req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
-								s(plural
-									// Succeeded...
-									+ mkpatch_revert(2, patch_result::ok)
-									+ mkpatch_revert(6, patch_result::ok)
-									+ mkpatch_revert(100, patch_result::ok)
-
-									// Failed...
-									+ mkpatch_revert(7, patch_result::error)
-									+ mkpatch_revert(4, patch_result::error)
-									+ mkpatch_revert(5, patch_result::error));
-							});
+						resp.defer([] (ipc::server_session::response &resp) {
+							resp(response_reverted, plural
+								// Succeeded...
+								+ mkpatch_revert(2, patch_result::ok)
+								+ mkpatch_revert(6, patch_result::ok)
+								+ mkpatch_revert(100, patch_result::ok)
+								
+								// Failed...
+								+ mkpatch_revert(7, patch_result::error)
+								+ mkpatch_revert(4, patch_result::error)
+								+ mkpatch_revert(5, patch_result::error));
 						});
 						break;
 					}
@@ -602,20 +579,19 @@ namespace micro_profiler
 				unsigned rva[] = {	2 /*inactive*/, 5, 6, 7, 100 /*error*/, 193 /*missing*/,	};
 				vector<patch_request> log;
 
-				emulator->add_handler<patch_request>(request_apply_patches,
-					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				apply_results[100] = patch_result::error;
 				patches->apply(99, mkrange(rva0));
 
-				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &req, const patch_request &) {
-					req.respond(response_reverted, [] (ipc::server_session::serializer &s) {	s(plural + mkpatch_revert(2, patch_result::ok)); });
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
+					resp(response_reverted, plural + mkpatch_revert(2, patch_result::ok));
 				});
 				patches->revert(99, mkrange(rva_initial_revert));
 
-				emulator->add_handler<patch_request>(request_revert_patches, [] (ipc::server_session::request &, const patch_request &) {	});
+				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &, const patch_request &) {	});
 				patches->revert(99, mkrange(rva_initial_requested));
 
-				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &, const patch_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -643,18 +619,13 @@ namespace micro_profiler
 				// INIT
 				unsigned rva[] = {	1,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches,
-					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				patches->apply(99, mkrange(rva));
 
-				emulator->add_handler<patch_request>(request_revert_patches, [] (ipc::server_session::request &req, const patch_request &) {
-					req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
-						s(plural + mkpatch_revert(1, patch_result::ok));
-					});
-					req.defer([] (ipc::server_session::request &req) {
-						req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
-							s(plural + mkpatch_revert(1, patch_result::error));
-						});
+				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &resp, const patch_request &) {
+					resp(response_reverted, plural + mkpatch_revert(1, patch_result::ok));
+					resp.defer([] (ipc::server_session::response &resp) {
+						resp(response_reverted, plural + mkpatch_revert(1, patch_result::error));
 					});
 				});
 
@@ -676,22 +647,19 @@ namespace micro_profiler
 				vector< unordered_map<unsigned, tables::patch> > log;
 				unsigned rva[] = {	1, 2, 3,	};
 
-				emulator->add_handler<patch_request>(request_apply_patches,
-					bind(&FrontendPatcherTests::emulate_apply, this, _1, _2));
+				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				patches->apply(19, mkrange(rva));
 
 				auto conn = patches->invalidate += [&] {
 					log.push_back(patches->find(19)->second);
 				};
 
-				emulator->add_handler<patch_request>(request_revert_patches, [&] (ipc::server_session::request &req, const patch_request &) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
 					// ACT
 					assert_is_false(log.empty());
 
-					req.defer([] (ipc::server_session::request &req) {
-						req.respond(response_reverted, [] (ipc::server_session::serializer &s) {
-							s(plural + mkpatch_revert(1, patch_result::error) + mkpatch_revert(2, patch_result::ok) + mkpatch_revert(3, patch_result::error));
-						});
+					resp.defer([] (ipc::server_session::response &resp) {
+						resp(response_reverted, plural + mkpatch_revert(1, patch_result::error) + mkpatch_revert(2, patch_result::ok) + mkpatch_revert(3, patch_result::error));
 					});
 				});
 

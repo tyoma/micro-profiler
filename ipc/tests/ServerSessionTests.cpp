@@ -52,11 +52,11 @@ namespace micro_profiler
 					vector<int> log;
 
 					// INIT / ACT
-					s.add_handler<int>(13, [&] (server_session::request &, int) {	log.push_back(113);	});
-					s.add_handler<int>(171, [&] (server_session::request &, int) {	log.push_back(1171);	});
-					s.add_handler<int>(1991, [&] (server_session::request &, int) {	log.push_back(11991);	});
-					s.add_handler(19911, [&] (server_session::request &) {	log.push_back(21991);	});
-					s.add_handler(19912, [&] (server_session::request &) {	log.push_back(21992);	});
+					s.add_handler(13, [&] (server_session::response &, int) {	log.push_back(113);	});
+					s.add_handler(171, [&] (server_session::response &, int) {	log.push_back(1171);	});
+					s.add_handler(1991, [&] (server_session::response &, int) {	log.push_back(11991);	});
+					s.add_handler(19911, [&] (server_session::response &) {	log.push_back(21991);	});
+					s.add_handler(19912, [&] (server_session::response &) {	log.push_back(21992);	});
 
 					// ACT
 					send_standard(s, 171, 19193, 1);
@@ -88,7 +88,7 @@ namespace micro_profiler
 					server_session s(outbound);
 					vector<int> log;
 
-					s.add_handler<int>(13, [&] (server_session::request &, int) {	log.push_back(113);	});
+					s.add_handler(13, [&] (server_session::response &, int) {	log.push_back(113);	});
 
 					// ACT / ASSERT (must not throw)
 					send_standard(s, 12314, 0, 1);
@@ -106,10 +106,10 @@ namespace micro_profiler
 					vector<sneaky_type> log2;
 
 					// INIT / ACT
-					s.add_handler< vector<int> >(1, [&] (server_session::request &, const vector<int> &payload) {
+					s.add_handler(1, [&] (server_session::response &, const vector<int> &payload) {
 						log1.push_back(payload);
 					});
-					s.add_handler<sneaky_type>(2, [&] (server_session::request &, const sneaky_type &payload) {
+					s.add_handler(2, [&] (server_session::response &, const sneaky_type &payload) {
 						log2.push_back(payload);
 					});
 
@@ -149,7 +149,7 @@ namespace micro_profiler
 					int data[] = {	3, 1, 4, 1, 5, 9, 26,	};
 
 					// INIT / ACT
-					s.add_handler< vector<int> >(1, [&] (server_session::request &, const vector<int> &payload) {
+					s.add_handler(1, [&] (server_session::response &, const vector<int> &payload) {
 						log.push_back(&payload);
 					});
 
@@ -179,18 +179,16 @@ namespace micro_profiler
 						log.push_back(make_pair(id, token));
 					};
 
-					s.add_handler<int>(1, [&] (server_session::request &req, int) {
+					s.add_handler(1, [&] (server_session::response &resp, int) {
 
 					// ACT
-						req.respond(193817, [&] (server_session::serializer &/*ser*/) {
-						});
+						resp(193817);
 					});
 
-					s.add_handler<int>(2, [&] (server_session::request &req, int) {
+					s.add_handler(2, [&] (server_session::response &resp, int) {
 
 					// ACT
-						req.respond(1311310, [&] (server_session::serializer &/*ser*/) {
-						});
+						resp(1311310);
 					});
 
 					// ACT
@@ -248,36 +246,28 @@ namespace micro_profiler
 						}
 					};
 
-					s.add_handler<int>(1, [&] (server_session::request &req, int) {
+					s.add_handler(1, [&] (server_session::response &resp, int) {
 
 					// ACT
-						req.respond(100, [&] (server_session::serializer &ser) {
-							ser(string("Lorem ipsum amet dolor"));
-						});
+						resp(100, string("Lorem ipsum amet dolor"));
 					});
 
-					s.add_handler<int>(2, [&] (server_session::request &req, int) {
+					s.add_handler(2, [&] (server_session::response &resp, int) {
 
 					// ACT
-						req.respond(100, [&] (server_session::serializer &ser) {
-							ser(string("Whoa!"));
-						});
+						resp(100, string("Whoa!"));
 					});
 
-					s.add_handler<int>(3, [&] (server_session::request &req, int) {
+					s.add_handler(3, [&] (server_session::response &resp, int) {
 
 					// ACT
-						req.respond(101, [&] (server_session::serializer &ser) {
-							ser(99183);
-						});
+						resp(101, 99183);
 					});
 
-					s.add_handler<int>(4, [&] (server_session::request &req, int) {
+					s.add_handler(4, [&] (server_session::response &resp, int) {
 
 					// ACT
-						req.respond(101, [&] (server_session::serializer &ser) {
-							ser(91919191);
-						});
+						resp(101, 91919191);
 					});
 
 					// ACT

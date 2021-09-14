@@ -18,49 +18,26 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <scheduler/private_queue.h>
+#pragma once
 
-#include <mt/mutex.h>
-#include <mt/thread.h>
-#include <scheduler/scheduler.h>
+#include "argument_traits.h"
+#include "noncopyable.h"
 
-using namespace std;
-
-namespace scheduler
+namespace micro_profiler
 {
-	struct private_queue::control_block
+	class callback_monitor : noncopyable
 	{
-		control_block()
-			: alive(true)
-		{	}
+	public:
+		template <typename ArgumentsT>
+		struct thunk;
 
-		mt::recursive_mutex mutex;
-		mt::thread::id current_thread;
-		bool alive;
+	public:
+		template <typename F>
+		thunk<typename argument_traits<F>::types> operator ()(const F &function) const;
 	};
 
-
-	private_queue::private_queue(shared_ptr<queue> underlying)
-		: _underlying(underlying), _control_block(make_shared<control_block>())
-	{	}
-
-	private_queue::~private_queue()
+	template <typename T1>
+	struct callback_monitor::thunk< arguments_pack<void (T1)> >
 	{
-		mt::lock_guard<mt::recursive_mutex> l(_control_block->mutex);
-		_control_block->alive = false;
-	}
-
-	void private_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
-	{
-		auto cb = _control_block;
-		function<void ()> captured([task, cb] {
-			mt::lock_guard<mt::recursive_mutex> l(cb->mutex);
-
-			if (cb->alive)
-				task();
-		});
-
-		task = function<void ()>();
-		_underlying->schedule(move(captured), defer_by);
-	}
+	};
 }

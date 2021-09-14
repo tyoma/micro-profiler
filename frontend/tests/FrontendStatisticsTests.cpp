@@ -77,20 +77,16 @@ namespace micro_profiler
 				// INIT
 				auto frontend_ = create_frontend();
 				scontext::wire w;
-				auto s1 = plural
-					+ make_pair(1u, plural
-						+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
-						+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91, 13012))
-					+ make_pair(2u, plural
-						+ make_statistics(0x01100093u, 71u, 0, 199999, 901, 13030)
-						+ make_statistics(0x01103093u, 92u, 0, 139999, 981, 10100)
-						+ make_statistics(0x01A00091u, 31u, 0, 197999, 91, 13002));
 
-				auto s = s1;
-
-				emulator->add_handler<unsigned>(request_update, [&s] (ipc::server_session::request &req, unsigned) {
-					auto s_ = s;
-					req.respond(response_statistics_update, [s_] (ipc::server_session::serializer &s) {	s(s_);	});
+				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, plural
+						+ make_pair(1u, plural
+							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
+							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91, 13012))
+						+ make_pair(2u, plural
+							+ make_statistics(0x01100093u, 71u, 0, 199999, 901, 13030)
+							+ make_statistics(0x01103093u, 92u, 0, 139999, 981, 10100)
+							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91, 13002)));
 				});
 
 				// ACT
@@ -114,7 +110,15 @@ namespace micro_profiler
 					+ make_pair(31u, plural
 						+ make_statistics(0x91A00091u, 731u, 0, 17999, 91, 13002));
 
-				s = s2;
+				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {
+					resp(response_statistics_update, plural
+						+ make_pair(1u, plural
+							+ make_statistics(0x0FA00091u, 1001u, 2, 1000, 91, 13012))
+						+ make_pair(2u, plural
+							+ make_statistics(0x01A00091u, 31u, 7, 100, 91, 13002))
+						+ make_pair(31u, plural
+							+ make_statistics(0x91A00091u, 731u, 0, 17999, 91, 13002)));
+				});
 
 				// ACT
 				statistics->request_update();
@@ -137,15 +141,12 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				auto update_requests = 0;
 
-				emulator->add_handler<int>(request_update, [&] (ipc::server_session::request &req, int) {
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					update_requests++;
-					req.defer([] (ipc::server_session::request &req) {
-						req.respond(response_statistics_update, [] (ipc::server_session::serializer &s) {
-							auto dummy = plural
+					resp.defer([] (ipc::server_session::response &resp) {
+						resp(response_statistics_update, plural
 								+ make_pair(1u, plural
-									+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000));
-							s(dummy);
-						});
+									+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)));
 					});
 				});
 

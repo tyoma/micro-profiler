@@ -22,6 +22,7 @@
 
 #include "endpoint.h"
 
+#include <common/argument_traits.h>
 #include <common/noncopyable.h>
 #include <common/pod_vector.h>
 #include <common/serialization.h>
@@ -38,7 +39,7 @@ namespace micro_profiler
 		class server_session : public channel, noncopyable
 		{
 		public:
-			class request;
+			class response;
 			typedef strmd::serializer<buffer_writer< pod_vector<byte> >, packer> serializer;
 			typedef unsigned long long token_t;
 
@@ -47,25 +48,24 @@ namespace micro_profiler
 
 			void set_disconnect_handler(const std::function<void () throw()> &handler);
 
-			void add_handler(int request_id, const std::function<void (request &context)> &handler);
-
-			template <typename PayloadT>
-			void add_handler(int request_id,
-				const std::function<void (request &context, const PayloadT &payload)> &handler);
+			template <typename F>
+			void add_handler(int request_id, const F &handler);
 
 			template <typename FormatterT>
 			void message(int message_id, const FormatterT &message_formatter);
 
 		private:
+			template <typename ArgumentsT, typename U>
+			struct handler_thunk;
 			typedef strmd::deserializer<buffer_reader, packer> deserializer;
-			typedef std::function<void (request &context, deserializer &payload)> handler_t;
+			typedef std::function<void (response &response_, deserializer &payload)> handler_t;
 
 		private:
 			// channel methods
 			virtual void disconnect() throw() override;
 			virtual void message(const_byte_range payload) override;
 
-			void schedule_continuation(token_t token, const std::function<void (request &context)> &continuation_handler);
+			void schedule_continuation(token_t token, const std::function<void (response &response_)> &continuation_handler);
 
 		private:
 			channel &_outbound;
@@ -76,22 +76,48 @@ namespace micro_profiler
 			const bool _deferral_enabled;
 		};
 
-		class server_session::request : noncopyable
+		template <typename U>
+		struct server_session::handler_thunk<arguments_pack<void (server_session::response &response_)>, U>
+		{
+			void operator ()(response &response_, deserializer &) const
+			{	underlying(response_);	}
+
+			U underlying;
+		};
+
+		template <typename T1, typename U>
+		struct server_session::handler_thunk<arguments_pack<void (server_session::response &response_, T1 arg1)>, U>
+		{
+			void operator ()(response &response_, deserializer &payload) const
+			{
+				payload(arg1);
+				underlying(response_, arg1);
+			}
+
+			U underlying;
+			mutable typename std::remove_const<typename std::remove_reference<T1>::type>::type arg1;
+		};
+
+		class server_session::response : noncopyable
 		{
 		public:
+			void operator ()(int response_id);
+			template <typename ResultT>
+			void operator ()(int response_id, const ResultT &result);
+
 			template <typename FormatterT>
 			void respond(int response_id, const FormatterT &response_formatter);
 
-			void defer(const std::function<void (request &context)> &continuation_handler);
+			void defer(const std::function<void (response &response_)> &continuation_handler);
 
 		private:
-			request(server_session &owner, token_t token, bool deferral_enabled);
+			response(server_session &owner, token_t token, bool deferral_enabled);
 
 			void operator &();
 			void operator &() const;
 
 		private:
-			std::function<void (request &context)> continuation;
+			std::function<void (response &response_)> continuation;
 
 		private:
 			server_session &_owner;
@@ -104,16 +130,11 @@ namespace micro_profiler
 
 
 
-		template <typename PayloadT>
-		inline void server_session::add_handler(int request_id,
-			const std::function<void (request &context, const PayloadT &payload)> &handler)
+		template <typename F>
+		inline void server_session::add_handler(int request_id, const F &handler)
 		{
-			auto payload_buffer = std::make_shared<PayloadT>();
-
-			_handlers[request_id] = [handler, payload_buffer] (request &context, deserializer &payload_deserializer) {
-				payload_deserializer(*payload_buffer);
-				handler(context, *payload_buffer);
-			};
+			handler_thunk<typename argument_traits<F>::types, F> thunk = {	handler,	};
+			_handlers[request_id] = thunk;
 		}
 
 		template <typename FormatterT>
@@ -130,8 +151,15 @@ namespace micro_profiler
 		}
 
 
+		inline void server_session::response::operator ()(int response_id)
+		{	respond(response_id, [] (serializer &) {	});	}
+
+		template <typename ResultT>
+		inline void server_session::response::operator ()(int response_id, const ResultT &result)
+		{	respond(response_id, [&result] (serializer &ser) {	ser(result);	});	}
+
 		template <typename FormatterT>
-		inline void server_session::request::respond(int response_id, const FormatterT &response_formatter)
+		inline void server_session::response::respond(int response_id, const FormatterT &response_formatter)
 		{
 			_owner.message(response_id, [&] (serializer &ser) {
 				ser(_token);

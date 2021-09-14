@@ -40,77 +40,68 @@ namespace micro_profiler
 		auto session = make_shared<server_session>(outbound);
 
 		auto module_tracker_ = make_shared<module_tracker>();
-		auto loaded_ = make_shared<loaded_modules>();
-		auto unloaded_ = make_shared<unloaded_modules>();
-		auto metadata_ = make_shared<module_info_metadata>();
-		auto threads_buffer_ = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
-		auto apply_results_ = make_shared<response_patched_data>();
-		auto revert_results_ = make_shared<response_reverted_data>();
+		auto loaded = make_shared<loaded_modules>();
+		auto unloaded = make_shared<unloaded_modules>();
+		auto metadata = make_shared<module_info_metadata>();
+		auto threads_buffer = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
+		auto apply_results = make_shared<response_patched_data>();
+		auto revert_results = make_shared<response_reverted_data>();
 
-		session->add_handler(request_update, [this, module_tracker_, loaded_, unloaded_] (server_session::request &req) {
-			auto &a = *_analyzer;
-			auto &loaded = *loaded_;
-			auto &unloaded = *unloaded_;
-
-			module_tracker_->get_changes(loaded, unloaded);
-			if (!loaded.empty())
-				req.respond(response_modules_loaded, [&] (server_session::serializer &ser) {	ser(loaded);	});
-			req.respond(response_statistics_update, [&] (server_session::serializer &ser) {	ser(a);	});
-			if (!unloaded.empty())
-				req.respond(response_modules_unloaded, [&] (server_session::serializer &ser) {	ser(unloaded);	});
+		session->add_handler(request_update, [this, module_tracker_, loaded, unloaded] (server_session::response &resp) {
+			module_tracker_->get_changes(*loaded, *unloaded);
+			if (!loaded->empty())
+				resp(response_modules_loaded, *loaded);
+			resp(response_statistics_update, *_analyzer);
+			if (!unloaded->empty())
+				resp(response_modules_unloaded, *unloaded);
 			_analyzer->clear();
 		});
 
-		session->add_handler<unsigned int>(request_module_metadata,
-			[this, module_tracker_, metadata_] (server_session::request &req, unsigned int persistent_id) {
+		session->add_handler(request_module_metadata,
+			[this, module_tracker_, metadata] (server_session::response &resp, unsigned int persistent_id) {
 
-			const auto metadata = module_tracker_->get_metadata(persistent_id);
-			auto &md = *metadata_;
+			const auto metadata_ = module_tracker_->get_metadata(persistent_id);
+			auto &md = *metadata;
 
-			md.path = metadata->get_path();
-			md.symbols.clear();
-			md.source_files.clear();
-			metadata->enumerate_functions([&] (const symbol_info &symbol) {
+			metadata->path = metadata_->get_path();
+			metadata->symbols.clear();
+			metadata->source_files.clear();
+			metadata_->enumerate_functions([&] (const symbol_info &symbol) {
 				md.symbols.push_back(symbol);
 			});
-			metadata->enumerate_files([&] (const pair<unsigned, string> &file) {
+			metadata_->enumerate_files([&] (const pair<unsigned, string> &file) {
 				md.source_files.insert(file);
 			});
-			req.respond(response_module_metadata, [&] (server_session::serializer &ser) {	ser(md);	});
+			resp(response_module_metadata, *metadata);
 		});
 
-		session->add_handler< vector<thread_monitor::thread_id> >(request_threads_info,
-			[this, threads_buffer_] (server_session::request &req, const vector<thread_monitor::thread_id> &ids) {
+		session->add_handler(request_threads_info,
+			[this, threads_buffer] (server_session::response &resp, const vector<thread_monitor::thread_id> &ids) {
 
-			auto &threads_buffer = *threads_buffer_;
-
-			threads_buffer.resize(ids.size());
-			_thread_monitor.get_info(threads_buffer.begin(), ids.begin(), ids.end());
-			req.respond(response_threads_info, [&] (server_session::serializer &ser) {	ser(threads_buffer);	});
+			threads_buffer->resize(ids.size());
+			_thread_monitor.get_info(threads_buffer->begin(), ids.begin(), ids.end());
+			resp(response_threads_info, *threads_buffer);
 		});
 
-		session->add_handler<patch_request>(request_apply_patches,
-			[this, module_tracker_, apply_results_] (server_session::request &req, const patch_request &payload) {
+		session->add_handler(request_apply_patches,
+			[this, module_tracker_, apply_results] (server_session::response &resp, const patch_request &payload) {
 
-			auto &results = *apply_results_;
 			const auto l = module_tracker_->lock_mapping(payload.image_persistent_id);
 
-			results.clear();
-			_patch_manager.apply(results, payload.image_persistent_id,
+			apply_results->clear();
+			_patch_manager.apply(*apply_results, payload.image_persistent_id,
 				reinterpret_cast<void *>(static_cast<size_t>(l->second.base)), l,
 				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
-			req.respond(response_patched, [&] (server_session::serializer &ser) {	ser(results);	});
+			resp(response_patched, *apply_results);
 		});
 
-		session->add_handler<patch_request>(request_revert_patches,
-			[this, revert_results_] (server_session::request &req, const patch_request &payload) {
+		session->add_handler(request_revert_patches,
+			[this, revert_results] (server_session::response &resp, const patch_request &payload) {
 
-			auto &results = *revert_results_;
-
-			results.clear();
-			_patch_manager.revert(results, payload.image_persistent_id,
+			revert_results->clear();
+			_patch_manager.revert(*revert_results, payload.image_persistent_id,
 				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
-			req.respond(response_reverted, [&] (server_session::serializer &ser) {	ser(results);	});
+			resp(response_reverted, *revert_results);
 		});
 
 

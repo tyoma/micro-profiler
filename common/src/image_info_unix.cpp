@@ -62,6 +62,7 @@ namespace micro_profiler
 		{
 			char *demangled = 0;
 			size_t length = 0;
+			symbol_info symbol = { };
 
 			symreader::read_symbols(_image->first, _image->second, [&] (const symreader::symbol &elf_symbol) {
 				int status = 0;
@@ -70,12 +71,9 @@ namespace micro_profiler
 				if (demangled2 && !status)
 					demangled = demangled2;
 
-				symbol_info symbol = {
-					demangled2 ? demangled2 : elf_symbol.name,
-					static_cast<unsigned>(elf_symbol.virtual_address),
-					static_cast<unsigned>(elf_symbol.size)
-				};
-
+				symbol.name = demangled2 ? demangled2 : elf_symbol.name;
+				symbol.rva = static_cast<unsigned int>(elf_symbol.virtual_address);
+				symbol.size = static_cast<unsigned>(elf_symbol.size);
 				callback(symbol);
 			});
 			free(demangled);

@@ -43,7 +43,7 @@ namespace micro_profiler
 					shared_ptr<mocks::server> s1(new mocks::server), s2(new mocks::server);
 					shared_ptr<void> hs1 = sockets::run_server("6131", s1), hs2 = sockets::run_server("6132", s2);
 
-					s1->session_created = s2->session_created = [&] (shared_ptr<mocks::session> session) {
+					s1->session_created = s2->session_created = [&] (shared_ptr<mocks::session>) {
 						ready.set();
 					};
 

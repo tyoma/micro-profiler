@@ -85,7 +85,7 @@ namespace micro_profiler
 			{	reset(static_cast<int>(s));	}
 
 			inline socket_handle::socket_handle(socket_handle &other)
-				: _socket(other._socket)
+				: noncopyable(), _socket(other._socket)
 			{	other._socket = 0;	}
 
 			inline socket_handle::~socket_handle()

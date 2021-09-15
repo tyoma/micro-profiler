@@ -54,6 +54,7 @@ namespace micro_profiler
 		mapped_module info = {
 			di.dli_fname && *di.dli_fname ? di.dli_fname : get_current_executable(),
 			static_cast<byte *>(di.dli_fbase),
+			std::vector<byte_range>()
 		};
 
 		return info;
@@ -70,6 +71,7 @@ namespace micro_profiler
 				mapped_module m = {
 					phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : get_current_executable(),
 					reinterpret_cast<byte *>(phdr->dlpi_addr),
+					std::vector<byte_range>()
 				};
 
 				for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)

@@ -45,9 +45,6 @@ namespace micro_profiler
 		void accept_calls(const call_record *calls, size_t count);
 
 	private:
-		const thread_analyzer &operator =(const thread_analyzer &rhs);
-
-	private:
 		statistics_t _statistics;
 		shadow_stack<statistics_t> _stack;
 	};

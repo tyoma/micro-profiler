@@ -38,7 +38,7 @@ inline void parseModRM(uint8_t** b, const bool addressPrefix)
 	}
 	else if (addressPrefix && modrm == 0x26)
 		*b += 2;
-};
+}
 
 inline size_t ldisasm(const void* const address, const bool x86_64_mode)
 {

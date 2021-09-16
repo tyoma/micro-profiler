@@ -30,7 +30,7 @@ namespace micro_profiler
 			: _outbound(outbound), _queue(queue), _deferral_enabled(queue)
 		{	}
 
-		void server_session::set_disconnect_handler(const std::function<void () throw()> &handler)
+		void server_session::set_disconnect_handler(const function<void ()> &handler)
 		{	_disconnect_handler = handler;	}
 
 		void server_session::disconnect() throw()

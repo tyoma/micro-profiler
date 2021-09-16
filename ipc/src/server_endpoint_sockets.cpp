@@ -53,7 +53,7 @@ namespace micro_profiler
 					l.l_onoff = 1;
 					if (::setsockopt(s, SOL_SOCKET, SO_LINGER, (const char*)&l, sizeof(l)) < 0)
 						throw initialization_failed("setsockopt(..., SO_LINGER, ...) failed");
-				};
+				}
 
 				template <typename SocketT, typename T>
 				int send_scalar(const SocketT &s, T value)

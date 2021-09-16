@@ -41,7 +41,7 @@ namespace micro_profiler
 
 	private:
 		virtual void initialize_session(ipc::server_session &session) override;
-		virtual void on_exiting() override;
+		virtual bool on_exiting() override;
 
 		void collect_and_reschedule();
 

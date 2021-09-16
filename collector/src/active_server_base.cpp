@@ -64,8 +64,7 @@ namespace micro_profiler
 		if (_frontend_thread.get())
 		{
 			queue.schedule([this, exiting_message_id] {
-				on_exiting();
-				if (_session)
+				if (on_exiting() /* TODO: untested! */ && _session)
 					_exit_requested = true, _session->message(exiting_message_id, [] (server_session::serializer &) {	});
 				else
 					_exit_confirmed = true;

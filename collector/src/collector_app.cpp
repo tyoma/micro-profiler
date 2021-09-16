@@ -134,8 +134,11 @@ namespace micro_profiler
 		queue.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
 	}
 
-	void collector_app::on_exiting()
-	{	_collector.read_collected(*_analyzer);	}
+	bool collector_app::on_exiting()
+	{
+		_collector.read_collected(*_analyzer);
+		return true;
+	}
 
 	void collector_app::collect_and_reschedule()
 	{

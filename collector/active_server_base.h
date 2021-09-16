@@ -54,7 +54,7 @@ namespace micro_profiler
 		void worker(const frontend_factory_t &factory);
 
 		virtual void initialize_session(ipc::server_session &session) = 0;
-		virtual void on_exiting() {	}
+		virtual bool /*wait for disconnection*/ on_exiting() {	return false;	}
 
 	private:
 		ipc::server_session *_session;

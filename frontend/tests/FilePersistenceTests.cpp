@@ -70,7 +70,7 @@ namespace micro_profiler
 					make_shared<tables::threads>(),
 				};
 				return ctx;
-			};
+			}
 		}
 
 		begin_test_suite( FilePersistenceTests )

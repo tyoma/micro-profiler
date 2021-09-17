@@ -32,16 +32,7 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <ProjectReference>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
-  </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\libraries\lend\ld32.c" />
     <ClCompile Include="dynamic_hooking.cpp" />
     <ClCompile Include="exceptions.cpp" />
     <ClCompile Include="image_patch_manager.cpp" />
@@ -60,7 +51,6 @@
     <None Include="intel\trampoline_x86.s" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libraries\lend\ld32.h" />
     <ClInclude Include="..\binary_translation.h" />
     <ClInclude Include="..\dynamic_hooking.h" />
     <ClInclude Include="..\exceptions.h" />

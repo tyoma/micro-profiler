@@ -37,12 +37,6 @@
       <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">_M_IX86=1</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_M_X64=1</PreprocessorDefinitions>
     </MASM>
-    <ClCompile>
-      <AdditionalIncludeDirectories>..\..\libraries\lend;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <ProjectReference>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="active_server_base.cpp" />

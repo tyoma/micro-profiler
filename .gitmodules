@@ -14,10 +14,6 @@
 	path = libraries/strmd
 	url = ../strmd.git
 	branch = origin/master
-[submodule "libraries/lend"]
-	path = libraries/lend
-	url = ../lend.git
-	branch = origin/master
 [submodule "libraries/polyq"]
 	path = libraries/polyq
 	url = ../polyq.git

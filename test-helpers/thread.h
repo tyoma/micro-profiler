@@ -13,6 +13,6 @@ namespace micro_profiler
 			unsigned int get_native_id();
 			mt::milliseconds get_cpu_time();
 			bool set_description(const wchar_t *description);
-		};
+		}
 	}
 }

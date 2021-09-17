@@ -32,15 +32,16 @@ namespace micro_profiler
 
 					while (fgets(line, sizeof(line) - 1, f.get()))
 					{
-						void *from, *to, *offset;
+						uintptr_t from, to, offset;
 						char rights[10], path[1000] = { 0 };
 						unsigned dummy;
+						int dummy_int;
 
 						if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR " %s %" SCNxPTR " %x:%x %d %s\n",
-							&from, &to, rights, &offset, &dummy, &dummy, &dummy, path) > 0 && path[0])
+							&from, &to, rights, &offset, &dummy, &dummy, &dummy_int, path) > 0 && path[0])
 						{
 							if (string(path).find(name) != string::npos)
-								return from;
+								return reinterpret_cast<void *>(from);
 						}
 					}
 				}

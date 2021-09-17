@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(FRONTEND_TESTS_SOURCES
+	FilePersistenceTests
 	FrontendManagerTests.cpp
 	FrontendPatcherTests.cpp
 	FrontendStatisticsTests.cpp
 	FrontendTests.cpp
-	FunctionListPersistence.cpp
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
 	HeadersModelTests.cpp

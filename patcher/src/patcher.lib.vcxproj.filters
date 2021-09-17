@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\libraries\lend\ld32.c">
-      <Filter>libraries\lend</Filter>
-    </ClCompile>
     <ClCompile Include="dynamic_hooking.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -26,9 +23,6 @@
   <ItemGroup>
     <ClInclude Include="..\dynamic_hooking.h" />
     <ClInclude Include="..\function_patch.h" />
-    <ClInclude Include="..\..\libraries\lend\ld32.h">
-      <Filter>libraries\lend</Filter>
-    </ClInclude>
     <ClInclude Include="intel\jump.h">
       <Filter>src\intel</Filter>
     </ClInclude>
@@ -51,12 +45,6 @@
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{66e32c89-4487-46f2-ab26-cc9348c5bef4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="libraries">
-      <UniqueIdentifier>{ab5c2bbe-d124-4cd6-bf54-b057d96a319d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="libraries\lend">
-      <UniqueIdentifier>{63f44d78-a7a9-4bf1-bf28-95a8f553a4d4}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\intel">
       <UniqueIdentifier>{060a8699-17e5-47be-adbb-7c05eaf28a9f}</UniqueIdentifier>

@@ -57,7 +57,7 @@
     <ClCompile Include="HeadersModelTests.cpp" />
     <ClCompile Include="FrontendManagerTests.cpp" />
     <ClCompile Include="FrontendTests.cpp" />
-    <ClCompile Include="FunctionListPersistence.cpp" />
+    <ClCompile Include="FilePersistenceTests.cpp" />
     <ClCompile Include="FunctionListPiechartTests.cpp" />
     <ClCompile Include="FunctionListTests.cpp" />
     <ClCompile Include="ImagePatchModelTests.cpp" />

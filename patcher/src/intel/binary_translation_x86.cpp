@@ -1,12 +1,10 @@
 #include <patcher/binary_translation.h>
 
+#include "ldisasm.h"
+
 #include <common/memory.h>
 #include <common/noncopyable.h>
 #include <stddef.h>
-
-extern "C" {
-	#include <ld32.h>
-}
 
 using namespace std;
 
@@ -42,7 +40,7 @@ namespace micro_profiler
 					return false;
 				_ptr += _current_length;
 				_remaining_length -= _current_length;
-				_current_length = static_cast<byte>(length_disasm((void *)_ptr));
+				_current_length = static_cast<byte>(ldisasm(_ptr, sizeof(void*) == 8));
 				if (_current_length > _remaining_length)
 					throw inconsistent_function_range_exception("attempt to read past the function body"); // TODO: test!
 				return true;

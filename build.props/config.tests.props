@@ -2,6 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets">
     <Import Project="config.props" />
+    <Import Project="utee.include.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
     <TestRunnerExe>$(OutDir)utee-runner.exe</TestRunnerExe>
@@ -11,14 +12,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)libraries/utee;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4312;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)libraries\utee\make\utee.vcxproj">
-      <Project>{4db73ace-2d47-4a6c-8213-2be191dd921f}</Project>
-    </ProjectReference>
     <ProjectReference Include="$(SolutionDir)test-helpers\src\test-helpers.vcxproj">
       <Project>{3b56b4a3-f4f6-44ec-a7f5-e9045a3c3394}</Project>
     </ProjectReference>

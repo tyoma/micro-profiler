@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <algorithm> // for std::max/min
 #include <cstddef>
 #include <mt/chrono.h>
 #include <stdexcept>

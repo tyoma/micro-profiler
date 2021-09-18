@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "histogram.h"
 #include "module.h"
 #include "primitives.h"
 #include "protocol.h"
@@ -40,6 +41,8 @@ namespace strmd
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
 	template <typename KeyT> struct version< micro_profiler::function_statistics_detailed_t<KeyT> > {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::scale> {	enum {	value = 1	};	};
+	template <> struct version<micro_profiler::histogram> {	enum {	value = 1	};	};
 }
 
 namespace micro_profiler
@@ -136,6 +139,25 @@ namespace micro_profiler
 	{
 		archive(data.result);
 		archive(data.id);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, scale &data, unsigned int /*ver*/)
+	{
+		auto tmp = data;
+
+		archive(tmp._near);
+		archive(tmp._far);
+		archive(tmp._segments);
+		if (tmp != data)
+			tmp.reset(), data = tmp;
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, histogram &data, unsigned int /*ver*/)
+	{
+		archive(data._scale);
+		archive(static_cast<std::vector<value_t> &>(data));
 	}
 }
 

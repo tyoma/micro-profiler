@@ -117,5 +117,6 @@
     <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\argument_traits.h" />
     <ClInclude Include="..\callback_monitor.h" />
+    <ClInclude Include="..\histogram.h" />
   </ItemGroup>
 </Project>

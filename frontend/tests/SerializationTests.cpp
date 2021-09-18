@@ -402,6 +402,97 @@ namespace micro_profiler
 				assert_equivalent(reference2, collected_ids.threads);
 			}
 
+
+			test( HistogramIsDeserializedOneToOneWhenWritingOverNew )
+			{
+				// INIT
+				scontext::wire w;
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				histogram h1;
+				histogram h2;
+				histogram v;
+
+				h1.set_scale(scale(100, 1100, 21));
+				h1.add(640);
+				h1.add(640);
+				h1.add(140);
+
+				h2.set_scale(scale(200, 1000, 6));
+				h2.add(712);
+				h2.add(512);
+				h2.add(212);
+
+				// ACT
+				s(h1);
+				s(h2);
+				ds(v, w);
+
+				// ASSERT
+				unsigned reference1[] = {	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,	};
+
+				assert_equal(scale(100, 1100, 21), v.get_scale());
+				assert_equal(reference1, v);
+
+				// ACT
+				ds(v, w);
+
+				// ASSERT
+				unsigned reference2[] = {	1, 0, 1, 1, 0, 0,	};
+
+				assert_equal(scale(200, 1000, 6), v.get_scale());
+				assert_equal(reference2, v);
+			}
+
+
+			test( DeserializedValueIsAddedToAHistogram )
+			{
+				// INIT
+				scontext::wire w;
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				histogram h1;
+				histogram h2;
+				histogram v;
+
+				v.set_scale(scale(10, 20, 11));
+				v.add(13), v.add(13);
+				v.add(17);
+				v.add(19), v.add(19), v.add(19);
+				h1.set_scale(scale(10, 20, 11));
+				h1.add(10), h1.add(10);
+				h1.add(17), h1.add(17);
+
+				h2.set_scale(scale(10, 20, 11));
+				h2.add(12);
+				h2.add(14);
+				h2.add(16), h2.add(16);
+
+				// ACT
+				s(h1);
+				s(h2);
+				ds(v, w);
+
+				// ASSERT
+				unsigned reference1a[] = {	2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,	};
+				unsigned reference1[] = {	2, 0, 0, 2, 0, 0, 0, 3, 0, 3, 0,	};
+
+				assert_equal(reference1a, w.histogram_buffer);
+				assert_equal(reference1, v);
+
+				// ACT
+				ds(v, w);
+
+				// ASSERT
+				unsigned reference2a[] = {	0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0,	};
+				unsigned reference2[] = {	2, 0, 1, 2, 1, 0, 2, 3, 0, 3, 0,	};
+
+				assert_equal(reference2a, w.histogram_buffer);
+				assert_equal(reference2, v);
+			}
+
 		end_test_suite
 	}
 }

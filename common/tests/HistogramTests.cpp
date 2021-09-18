@@ -164,6 +164,77 @@ namespace micro_profiler
 
 				assert_equal(reference, h);
 			}
+
+
+			test( HistogramIsResetOnAddingDifferentlyScaledRhs )
+			{
+				// INIT
+				histogram h, addition;
+
+				h.set_scale(scale(0, 900, 5));
+				addition.set_scale(scale(10, 900, 5));
+
+				h.add(10), h.add(11), h.add(9), h.add(800);
+
+				// ACT
+				assert_equal(&h, &(h += addition));
+
+				// ASSERT
+				unsigned reference1[] = {	0, 0, 0, 0, 0,	};
+
+				assert_equal(reference1, h);
+				assert_equal(scale(10, 900, 5), h.get_scale());
+
+				// INIT
+				h.add(190);
+				addition.set_scale(scale(10, 900, 12));
+				addition.add(50);
+				addition.add(750);
+
+				// ACT
+				h += addition;
+
+				// ASSERT
+				unsigned reference2[] = {	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,	};
+
+				assert_equal(reference2, h);
+				assert_equal(scale(10, 900, 12), h.get_scale());
+			}
+
+
+			test( HistogramIsAddedToTheEquallyScaledValue )
+			{
+				// INIT
+				histogram h, addition;
+
+				h.set_scale(scale(0, 10, 11));
+				addition.set_scale(scale(0, 10, 11));
+
+				h.add(2);
+				h.add(7);
+				addition.add(1), addition.add(1);
+				addition.add(7), addition.add(7), addition.add(7);
+				addition.add(8);
+
+				// ACT
+				h += addition;
+
+				// ASSERT
+				unsigned reference[] = {	0, 2, 1, 0, 0, 0, 0, 4, 1, 0, 0	};
+
+				assert_equal(reference, h);
+			}
+
+
+			test( DefaultConstructedHistogramIsWorkable )
+			{
+				// INIT / ACT
+				histogram h;
+
+				// ASSERT
+				assert_equal(scale(0, 1, 2), h.get_scale());
+				assert_equal(2u, h.size());
+			}
 		end_test_suite
 	}
 }

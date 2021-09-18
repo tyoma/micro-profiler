@@ -67,6 +67,8 @@ namespace micro_profiler
 		using std::vector<value_t>::begin;
 		using std::vector<value_t>::end;
 
+		histogram &operator +=(const histogram &rhs);
+
 	private:
 		scale _scale;
 
@@ -105,7 +107,7 @@ namespace micro_profiler
 
 
 	inline histogram::histogram()
-		: _scale(0, 1, 2)
+		: std::vector<value_t>(2), _scale(0, 1, 2)
 	{	}
 
 	inline void histogram::set_scale(const scale &scale_)
@@ -119,4 +121,22 @@ namespace micro_profiler
 
 	inline void histogram::add(value_t value)
 	{	(*this)[_scale(value)]++;	}
+
+	inline histogram &histogram::operator +=(const histogram &rhs)
+	{
+		if (_scale != rhs.get_scale())
+		{
+			assign(rhs.begin(), rhs.end());
+			_scale = rhs.get_scale();
+		}
+		else
+		{
+			auto l = begin();
+			auto r = rhs.begin();
+
+			for (; l != end(); ++l, ++r)
+				*l += *r;
+		}
+		return *this;
+	}
 }

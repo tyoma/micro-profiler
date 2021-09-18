@@ -124,6 +124,13 @@ namespace micro_profiler
 		archive(data.callees, context);
 	}
 
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, histogram &data, scontext::wire &context, unsigned int ver)
+	{
+		serialize(archive, context.histogram_buffer, ver);
+		data += context.histogram_buffer;
+	}
+
 	namespace tables
 	{
 		template <typename ArchiveT, typename BaseT>

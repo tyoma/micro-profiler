@@ -22,6 +22,7 @@
 
 #include "primitives.h"
 
+#include <common/histogram.h>
 #include <vector>
 
 namespace micro_profiler
@@ -38,6 +39,7 @@ namespace micro_profiler
 		struct wire
 		{
 			std::vector<unsigned int> threads;
+			histogram histogram_buffer;
 		};
 	}
 }

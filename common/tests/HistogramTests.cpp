@@ -9,7 +9,48 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			template <typename ScaleT>
+			index_t cvt(const ScaleT &scale_, value_t value)
+			{
+				index_t index;
+
+				scale_(index, value);
+				return index;
+			}
+		}
+
 		begin_test_suite( ScaleTests )
+			test( DefaultScaleIsEmpty )
+			{
+				// INIT / ACT
+				scale s;
+				index_t index;
+
+				// ACT / ASSERT
+				assert_equal(0u, s.samples());
+				assert_is_false(s(index, 0));
+				assert_is_false(s(index, 0xFFFFFFF));
+				assert_equal(scale(0, 0, 0), s);
+			}
+
+
+			test( ASingleSampledScaleAlwaysEvaluatesToZero )
+			{
+				// INIT / ACT
+				scale s1(100, 101, 1);
+				scale s2(0, 0, 1);
+
+				// ACT / ASSERT
+				assert_equal(0u, cvt(s1, 0));
+				assert_equal(0u, cvt(s1, 100));
+				assert_equal(0u, cvt(s1, 100000000));
+				assert_equal(0u, cvt(s2, 0));
+				assert_equal(0u, cvt(s2, 100000000));
+			}
+
+
 			test( LinearScaleGivesBoundariesForOutOfDomainValues )
 			{
 				// INIT
@@ -17,21 +58,21 @@ namespace micro_profiler
 				scale s2(9000, 10000, 10);
 
 				// ACT / ASSERT
-				assert_equal(3u, s1.segments());
-				assert_equal(0u, s1(0));
-				assert_equal(0u, s1(15900));
-				assert_equal(0u, s1(15901));
-				assert_equal(2u, s1(1000000));
-				assert_equal(2u, s1(1000001));
-				assert_equal(2u, s1(2010001));
+				assert_equal(3u, s1.samples());
+				assert_equal(0u, cvt(s1, 0));
+				assert_equal(0u, cvt(s1, 15900));
+				assert_equal(0u, cvt(s1, 15901));
+				assert_equal(2u, cvt(s1, 1000000));
+				assert_equal(2u, cvt(s1, 1000001));
+				assert_equal(2u, cvt(s1, 2010001));
 
-				assert_equal(10u, s2.segments());
-				assert_equal(0u, s2(0));
-				assert_equal(0u, s2(8000));
-				assert_equal(0u, s2(9000));
-				assert_equal(9u, s2(10000));
-				assert_equal(9u, s2(10001));
-				assert_equal(9u, s2(2010001));
+				assert_equal(10u, s2.samples());
+				assert_equal(0u, cvt(s2, 0));
+				assert_equal(0u, cvt(s2, 8000));
+				assert_equal(0u, cvt(s2, 9000));
+				assert_equal(9u, cvt(s2, 10000));
+				assert_equal(9u, cvt(s2, 10001));
+				assert_equal(9u, cvt(s2, 2010001));
 			}
 
 
@@ -42,17 +83,17 @@ namespace micro_profiler
 				scale s2(10, 710, 10);
 
 				// ACT / ASSERT
-				assert_equal(0u, s1(1499));
-				assert_equal(1u, s1(1500));
-				assert_equal(1u, s1(2499));
-				assert_equal(2u, s1(2500));
+				assert_equal(0u, cvt(s1, 1499));
+				assert_equal(1u, cvt(s1, 1500));
+				assert_equal(1u, cvt(s1, 2499));
+				assert_equal(2u, cvt(s1, 2500));
 
-				assert_equal(0u, s2(48));
-				assert_equal(1u, s2(49));
-				assert_equal(3u, s2(282));
-				assert_equal(4u, s2(283));
-				assert_equal(8u, s2(671));
-				assert_equal(9u, s2(672));
+				assert_equal(0u, cvt(s2, 49));
+				assert_equal(1u, cvt(s2, 50));
+				assert_equal(3u, cvt(s2, 283));
+				assert_equal(4u, cvt(s2, 284));
+				assert_equal(8u, cvt(s2, 671));
+				assert_equal(9u, cvt(s2, 672));
 			}
 
 
@@ -134,9 +175,7 @@ namespace micro_profiler
 				// ACT
 				h.add(50);
 				h.add(51);
-				h.add(81);
-				h.add(81);
-				h.add(81);
+				h.add(81, 3);
 
 				// ASSERT
 				unsigned reference2[] = {	2, 1, 0, 0, 0, 2, 0, 0, 3, 1,	};
@@ -212,8 +251,8 @@ namespace micro_profiler
 
 				h.add(2);
 				h.add(7);
-				addition.add(1), addition.add(1);
-				addition.add(7), addition.add(7), addition.add(7);
+				addition.add(1, 2);
+				addition.add(7, 3);
 				addition.add(8);
 
 				// ACT
@@ -226,14 +265,37 @@ namespace micro_profiler
 			}
 
 
-			test( DefaultConstructedHistogramIsWorkable )
+			test( DefaultConstructedHistogramEmptyButAcceptsValues )
 			{
 				// INIT / ACT
 				histogram h;
 
+				// ACT / ASSERT
+				assert_equal(scale(), h.get_scale());
+				assert_equal(0u, h.size());
+
+				// ACT / ASSERT
+				h.add(0);
+				h.add(1000000);
+			}
+
+
+			test( ResettingHistogramPreservesScaleAndSizeButSetsValuesToZeroes )
+			{
+				// INIT / ACT
+				histogram h;
+
+				h.set_scale(scale(0, 9, 10));
+				h.add(2, 9);
+				h.add(7, 3);
+
+				// ACT
+				h.reset();
+
 				// ASSERT
-				assert_equal(scale(0, 1, 2), h.get_scale());
-				assert_equal(2u, h.size());
+				unsigned reference[] = {	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	};
+
+				assert_equal(reference, h);
 			}
 		end_test_suite
 	}

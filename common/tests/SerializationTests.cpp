@@ -272,6 +272,7 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
 				scale ref(10, 1710, 51);
 				scale v(1, 1, 2);
+				index_t index;
 
 				// ACT
 				s(ref);
@@ -279,10 +280,10 @@ namespace micro_profiler
 				// ASSERT
 				ds(v);
 
-				assert_equal(0u, v(26));
-				assert_equal(1u, v(27));
-				assert_equal(5u, v(26 + 5 * 34));
-				assert_equal(6u, v(27 + 5 * 34));
+				assert_equal(0u, (v(index, 26), index));
+				assert_equal(1u, (v(index, 27), index));
+				assert_equal(5u, (v(index, 26 + 5 * 34), index));
+				assert_equal(6u, (v(index, 27 + 5 * 34), index));
 			}
 
 
@@ -297,8 +298,7 @@ namespace micro_profiler
 				histogram v;
 
 				h1.set_scale(scale(100, 1100, 21));
-				h1.add(640);
-				h1.add(640);
+				h1.add(640, 2);
 				h1.add(140);
 
 				h2.set_scale(scale(200, 1000, 6));

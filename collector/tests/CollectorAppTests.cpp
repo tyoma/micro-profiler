@@ -141,18 +141,14 @@ namespace micro_profiler
 			test( FrontendIsDestroyedFromTheConstructingThread )
 			{
 				// INIT
-				mt::thread::id thread_id;
-				bool destroyed_ok = false;
+				auto destroyed_ok = false;
 				mt::event ready;
 				collector_app app([&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
-					auto &thread_id_ = thread_id;
 					auto &destroyed_ok_ = destroyed_ok;
-
-					thread_id = mt::this_thread::get_id();
-					ready.set();
+					auto thread_id = mt::this_thread::get_id();
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c),
-						[&thread_id_, &destroyed_ok_] (ipc::client_session *p) {
-						destroyed_ok_ = thread_id_ == mt::this_thread::get_id();
+						[thread_id, &destroyed_ok_] (ipc::client_session *p) {
+						destroyed_ok_ = thread_id == mt::this_thread::get_id();
 						delete p;
 					});
 					auto p = client_.get();
@@ -160,6 +156,7 @@ namespace micro_profiler
 					client_->subscribe(new_subscription(), exiting, [p] (deserializer &) {
 						p->disconnect_session();
 					});
+					ready.set();
 					return client_;
 				}, collector, c_overhead, tmonitor, pmanager);
 

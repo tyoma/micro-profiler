@@ -4,6 +4,7 @@ set(COMMON_SOURCES
 	configuration_file.cpp
 	constants.cpp
 	formatting.cpp
+	histogram.cpp
 	memory.cpp
 	stream.cpp
 	string.cpp

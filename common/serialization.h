@@ -148,7 +148,7 @@ namespace micro_profiler
 
 		archive(tmp._near);
 		archive(tmp._far);
-		archive(tmp._segments);
+		archive(tmp._samples);
 		if (tmp != data)
 			tmp.reset(), data = tmp;
 	}

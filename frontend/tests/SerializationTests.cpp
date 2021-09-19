@@ -458,17 +458,17 @@ namespace micro_profiler
 				histogram v;
 
 				v.set_scale(scale(10, 20, 11));
-				v.add(13), v.add(13);
-				v.add(17);
-				v.add(19), v.add(19), v.add(19);
+				v.add(13, 2);
+				v.add(17, 1);
+				v.add(19, 3);
 				h1.set_scale(scale(10, 20, 11));
-				h1.add(10), h1.add(10);
-				h1.add(17), h1.add(17);
+				h1.add(10, 2);
+				h1.add(17, 2);
 
 				h2.set_scale(scale(10, 20, 11));
 				h2.add(12);
 				h2.add(14);
-				h2.add(16), h2.add(16);
+				h2.add(16, 2);
 
 				// ACT
 				s(h1);

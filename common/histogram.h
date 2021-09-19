@@ -25,15 +25,16 @@
 namespace micro_profiler
 {
 	typedef unsigned int index_t;
-	typedef long long value_t;
+	typedef long long int value_t;
 
 	class scale
 	{
 	public:
-		scale(value_t near_value, value_t far_value, unsigned int segments);
+		scale();
+		scale(value_t near_value, value_t far_value, unsigned int samples_);
 
-		index_t segments() const;
-		index_t operator ()(value_t value) const;
+		index_t samples() const;
+		bool operator ()(index_t &index, value_t value) const;
 
 		bool operator ==(const scale &rhs) const;
 		bool operator !=(const scale &rhs) const;
@@ -42,9 +43,11 @@ namespace micro_profiler
 		void reset();
 
 	private:
+		value_t _base;
+		float _scale;
+		unsigned int _samples;
+
 		value_t _near, _far;
-		unsigned int _segments;
-		float _scale, _base;
 
 	private:
 		template <typename ArchiveT>
@@ -57,16 +60,19 @@ namespace micro_profiler
 	class histogram : std::vector<value_t>
 	{
 	public:
-		histogram();
+		typedef std::vector<value_t> base_t;
 
+	public:
 		void set_scale(const scale &scale_);
 		const scale &get_scale() const;
-		void add(value_t value);
 
-		using std::vector<value_t>::size;
-		using std::vector<value_t>::begin;
-		using std::vector<value_t>::end;
+		using base_t::size;
+		using base_t::begin;
+		using base_t::end;
 
+		void add(value_t value, value_t d = 1);
+
+		void reset();
 		histogram &operator +=(const histogram &rhs);
 
 	private:
@@ -79,64 +85,42 @@ namespace micro_profiler
 
 
 
-	inline scale::scale(value_t near, value_t far, unsigned int segments)
-		: _near(near), _far(far), _segments(segments - 1)
-	{	reset();	}
+	inline scale::scale()
+		: _samples(0), _near(0), _far(0)
+	{	}
 
-	inline index_t scale::segments() const
-	{	return _segments + 1;	}
+	inline index_t scale::samples() const
+	{	return _samples;	}
 
-	inline index_t scale::operator ()(value_t value) const
+	inline bool scale::operator ()(index_t &index, value_t value) const
 	{
-		return value >= _far ? _segments : value < _near ? 0u
-			: static_cast<unsigned int>((static_cast<float>(value) - _base) * _scale);
+		auto samples_ = _samples;
+
+		if (!samples_)
+			return false;
+
+		const auto index_ = static_cast<int>((value - _base) * _scale);
+
+		samples_--;
+		index = index_ < 0 ? 0u : index_ > static_cast<int>(samples_) ? samples_ : static_cast<index_t>(index_);
+		return true;
 	}
 
 	inline bool scale::operator ==(const scale &rhs) const
 	{	return !(*this != rhs);	}
 
 	inline bool scale::operator !=(const scale &rhs) const
-	{	return !!((_near - rhs._near) | (_far - rhs._far) | (_segments - rhs._segments));	}
+	{	return !!((_near - rhs._near) | (_far - rhs._far) | (_samples - rhs._samples));	}
 
-	inline void scale::reset()
-	{
-		_scale = static_cast<float>(_far - _near) / _segments;
-		_base = static_cast<float>(_near) - 0.5f * _scale;
-		_scale = 1.0f / _scale;
-	}
-
-
-	inline histogram::histogram()
-		: std::vector<value_t>(2), _scale(0, 1, 2)
-	{	}
-
-	inline void histogram::set_scale(const scale &scale_)
-	{
-		assign(scale_.segments(), value_t());
-		_scale = scale_;
-	}
 
 	inline const scale &histogram::get_scale() const
 	{	return _scale;	}
 
-	inline void histogram::add(value_t value)
-	{	(*this)[_scale(value)]++;	}
-
-	inline histogram &histogram::operator +=(const histogram &rhs)
+	inline void histogram::add(value_t at, value_t d)
 	{
-		if (_scale != rhs.get_scale())
-		{
-			assign(rhs.begin(), rhs.end());
-			_scale = rhs.get_scale();
-		}
-		else
-		{
-			auto l = begin();
-			auto r = rhs.begin();
+		index_t index = 0;
 
-			for (; l != end(); ++l, ++r)
-				*l += *r;
-		}
-		return *this;
+		if (_scale(index, at))
+			(*this)[index] += d;
 	}
 }

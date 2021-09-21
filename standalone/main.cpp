@@ -24,6 +24,7 @@
 #include <common/constants.h>
 #include <common/path.h>
 #include <frontend/about_ui.h>
+#include <frontend/frontend.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/image_patch_model.h>
 #include <frontend/image_patch_ui.h>
@@ -104,7 +105,7 @@ namespace micro_profiler
 			patcher_composite_.connections.push_back(new_form->close += on_close);
 			patcher_composite_.form_ = new_form;
 		};
-		auto ui_factory = [&app, &factory, show_about, show_patcher] (const frontend_ui_context &context) -> frontend_ui::ptr	{
+		auto ui_factory = [&app, &factory, show_about, show_patcher] (const frontend_ui_context &context) -> shared_ptr<frontend_ui> {
 			auto &app2 = app;
 			auto show_patcher2 = show_patcher;
 			auto composite = make_shared<ui_composite>();
@@ -122,11 +123,11 @@ namespace micro_profiler
 			composite->connections.push_back(poller);
 
 			poller->enable(true);
-			return frontend_ui::ptr(composite, composite->ui.get());
+			return shared_ptr<frontend_ui>(composite, composite->ui.get());
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};
-		auto frontend_manager_ = make_shared<frontend_manager>(ui_factory);
+		auto frontend_manager_ = make_shared<frontend_manager>([] (ipc::channel &outbound) {	return new frontend(outbound);	}, ui_factory);
 		ipc_manager ipc_manager(frontend_manager_, app.get_ui_queue(),
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 			&constants::standalone_frontend_id);

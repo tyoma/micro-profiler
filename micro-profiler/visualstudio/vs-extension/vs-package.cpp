@@ -31,8 +31,11 @@
 #include <common/win32/configuration_registry.h>
 #include <frontend/system_stylesheet.h>
 #include <frontend/factory.h>
+#include <frontend/frontend.h>
 #include <frontend/frontend_manager.h>
+#include <frontend/frontend_ui.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/profiling_session.h>
 #include <frontend/tables_ui.h>
 #include <logger/log.h>
 #include <scheduler/ui_queue.h>
@@ -147,7 +150,8 @@ namespace micro_profiler
 			});
 			setup_factory(factory);
 			register_path(false);
-			_frontend_manager.reset(new frontend_manager([this] (const frontend_ui_context &context) -> frontend_ui::ptr {
+			_frontend_manager.reset(new frontend_manager([] (ipc::channel &outbound) {	return new frontend(outbound);	},
+				[this] (const frontend_ui_context &context) -> shared_ptr<frontend_ui> {
 				const auto ui = make_shared<frontend_pane>(get_factory(), context, _configuration, _ui_queue);
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));

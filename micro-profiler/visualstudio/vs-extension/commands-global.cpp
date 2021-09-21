@@ -33,6 +33,7 @@
 #include <frontend/attach_ui.h>
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
+#include <frontend/frontend_ui.h>
 #include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
 #include <frontend/persistence.h>
@@ -347,21 +348,23 @@ namespace micro_profiler
 			add_command(cmdidSaveStatistics, [this] (unsigned) {
 				if (const frontend_manager::instance *i = _frontend_manager->get_active())
 				{
-					frontend_ui_context contents = *i;
-					unique_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), i->process_info.executable);
+					// TODO: implement via frontend_ui::save signal.
 
-					if (s.get())
-					{
-						strmd::serializer<write_stream, packer> ser(*s);
-						ser(contents);
-					}
+//					frontend_ui_context contents = *i;
+					unique_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), *i->title);
+
+					//if (s.get())
+					//{
+					//	strmd::serializer<write_stream, packer> ser(*s);
+					//	ser(contents);
+					//}
 				}
 			}, false, [this] (unsigned, unsigned &state) -> bool {
 				return state = visible | supported | (_frontend_manager->get_active() ? enabled : 0), true;
 			}, [this] (unsigned /**/, string &caption) -> bool {
 				if (_frontend_manager->instances_count())
 					if (const frontend_manager::instance *i = _frontend_manager->get_active())
-						return caption = "Save " + i->process_info.executable + " Statistics As...", true;
+						return caption = "Save " + i->title + " Statistics As...", true;
 				return false;
 			});
 
@@ -422,7 +425,7 @@ namespace micro_profiler
 				return true;
 			}, [this] (unsigned item, string &caption) -> bool {
 				const frontend_manager::instance *i = _frontend_manager->get_instance(item);
-				return i ? caption = *i->process_info.executable, true : false;
+				return i ? caption = *i->title, true : false;
 			});
 
 

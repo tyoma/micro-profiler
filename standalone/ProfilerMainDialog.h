@@ -36,6 +36,7 @@ namespace wpl
 
 namespace micro_profiler
 {
+	struct frontend_ui_context;
 	struct hive;
 	class tables_ui;
 

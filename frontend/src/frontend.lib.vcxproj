@@ -82,6 +82,7 @@
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
+    <ClInclude Include="..\profiling_session.h" />
     <ClInclude Include="..\projection_view.h" />
     <ClInclude Include="..\selection_model.h" />
     <ClInclude Include="..\serialization.h" />

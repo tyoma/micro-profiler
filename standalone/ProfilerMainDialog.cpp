@@ -22,6 +22,7 @@
 
 #include <common/configuration.h>
 #include <frontend/function_list.h>
+#include <frontend/profiling_session.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables_ui.h>
 

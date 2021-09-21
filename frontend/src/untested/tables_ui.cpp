@@ -1,12 +1,12 @@
 #include <frontend/tables_ui.h>
 
 #include <frontend/headers_model.h>
-#include <frontend/frontend_ui.h>
 #include <frontend/function_hint.h>
 #include <frontend/function_list.h>
 #include <frontend/nested_statistics_model.h>
 #include <frontend/nested_transform.h>
 #include <frontend/piechart.h>
+#include <frontend/profiling_session.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
 

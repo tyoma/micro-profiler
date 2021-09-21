@@ -20,38 +20,35 @@
 
 #pragma once
 
-#include "profiling_session.h"
-#include "serialization.h"
-#include "tables.h"
-
-namespace strmd
-{
-	template <> struct version<micro_profiler::frontend_ui_context> {	enum {	value = 4	};	};
-}
+#include <common/types.h>
+#include <memory>
+#include <string>
 
 namespace micro_profiler
 {
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, frontend_ui_context &data, unsigned int ver)
+	namespace tables
 	{
-		archive(data.process_info);
-		archive(static_cast<containers::unordered_map<unsigned int, mapped_module_ex> &>(*data.module_mappings));
-		archive(static_cast<containers::unordered_map<unsigned int, module_info_metadata> &>(*data.modules));
-
-		if (ver >= 4)
-		{
-			archive(static_cast<statistic_types::map_detailed &>(*data.statistics));
-		}
-		else if (ver >= 3)
-		{
-			scontext::detailed_threaded context = { data.statistics.get(), 0, 0 };
-			archive(static_cast<statistic_types::map_detailed &>(*data.statistics), context);
-		}
-
-		if (ver >= 4)
-			archive(*data.threads);
-
-		//if (ver >= 5)
-		//	archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::image_patches> &>(const_cast<tables::patches &>(*data.patches)));
+		struct module_mappings;
+		struct modules;
+		struct patches;
+		struct statistics;
+		struct threads;
 	}
+
+	struct frontend_ui_context
+	{
+		initialization_data process_info;
+		std::shared_ptr<tables::statistics> statistics;
+		std::shared_ptr<tables::module_mappings> module_mappings;
+		std::shared_ptr<tables::modules> modules;
+		std::shared_ptr<tables::patches> patches;
+		std::shared_ptr<tables::threads> threads;
+
+		std::string get_title() const;
+	};
+
+
+
+	inline std::string frontend_ui_context::get_title() const
+	{	return process_info.executable;	}
 }

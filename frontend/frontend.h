@@ -20,11 +20,10 @@
 
 #pragma once
 
-#include "frontend_ui.h"
+#include "profiling_session.h"
 #include "serialization_context.h"
 
 #include <common/noncopyable.h>
-#include <common/protocol.h>
 #include <common/unordered_map.h>
 #include <functional>
 #include <ipc/client_session.h>
@@ -32,14 +31,19 @@
 
 namespace micro_profiler
 {
+	struct frontend_ui_context;
+
 	class frontend : public ipc::client_session, noncopyable
 	{
+	public:
+		typedef frontend_ui_context session_type;
+
 	public:
 		frontend(ipc::channel &outbound);
 		~frontend();
 
 	public:
-		std::function<void (const frontend_ui_context &ui_context)> initialized;
+		std::function<void (const session_type &ui_context)> initialized;
 
 	private:
 		typedef std::list< std::shared_ptr<void> > requests_t;

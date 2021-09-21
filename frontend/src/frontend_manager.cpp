@@ -20,30 +20,25 @@
 
 #include <frontend/frontend_manager.h>
 
-#include <frontend/frontend.h>
-#include <logger/log.h>
+#include <frontend/frontend_ui.h>
+#include <ipc/client_session.h>
 
 using namespace std;
-using namespace placeholders;
 
 #define PREAMBLE "Frontend manager: "
 
 namespace micro_profiler
 {
-	frontend_manager::instance_impl::instance_impl(micro_profiler::frontend *frontend_)
+	frontend_manager::instance_impl::instance_impl(ipc::client_session *frontend_)
 		: frontend(frontend_)
 	{	}
 
-
-	frontend_manager::frontend_manager(const frontend_ui_factory &ui_factory)
-		: _ui_factory(ui_factory), _instances(new instance_container), _active_instance(new const instance_impl *())
-	{	LOG(PREAMBLE "constructed.");	}
 
 	frontend_manager::~frontend_manager()
 	{
 		for (auto i = _instances->begin(); i != _instances->end(); )
 			reset_entry(*_instances, i++);
-		LOG(PREAMBLE "destroyed.");
+		LOG(PREAMBLE "destroyed.") % A(this);
 	}
 
 	void frontend_manager::close_all() throw()
@@ -69,16 +64,17 @@ namespace micro_profiler
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
 	{	return *_active_instance;	}
 
-	void frontend_manager::load_session(const frontend_ui_context &ui_context)
-	{	on_ready_for_ui(_instances->insert(_instances->end(), instance_impl(nullptr)), ui_context);	}
-
 	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
+	{	return _frontend_factory(outbound);	}
+
+	pair<shared_ptr<ipc::channel>, frontend_manager::instance_container::iterator> frontend_manager::attach(ipc::client_session *pfrontend)
 	{
-		unique_ptr<frontend> uf(new frontend(outbound));
+		unique_ptr<ipc::client_session> uf(pfrontend);
 		const auto instances = _instances;
 		const auto active_instance = _active_instance;
 		const auto i = _instances->insert(_instances->end(), instance_impl(uf.get()));
-		shared_ptr<frontend> f(uf.release(), [instances, active_instance, i] (frontend *p) {
+
+		return make_pair(shared_ptr<ipc::client_session>(uf.release(),  [instances, active_instance, i] (ipc::client_session *p) {
 			if (*active_instance == &*i)
 				*active_instance = nullptr;
 			delete p;
@@ -88,22 +84,15 @@ namespace micro_profiler
 				instances->erase(i);
 				LOG(PREAMBLE "no UI controller - instance removed.") % A(instances->size());
 			}
-		});
-
-		f->initialized = [this, i] (const frontend_ui_context &ui_context) {	on_ready_for_ui(i, ui_context);	};
-		return f;
+		}), i);
 	}
 
-	void frontend_manager::on_ready_for_ui(instance_container::iterator i, const frontend_ui_context &ui_context)
+	void frontend_manager::set_ui(instance_container::iterator i, shared_ptr<frontend_ui> ui)
 	{
-		static_cast<frontend_ui_context &>(*i) = ui_context;
-		if (const auto ui = _ui_factory(ui_context))
-		{
-			i->ui_activated_connection = ui->activated += bind(&frontend_manager::on_ui_activated, this, i);
-			i->ui_closed_connection = ui->closed += bind(&frontend_manager::on_ui_closed, this, i);
-			i->ui = ui;
-			*_active_instance = &*i;
-		}
+		i->ui_activated_connection = ui->activated += [this, i] {	on_ui_activated(i);	};
+		i->ui_closed_connection = ui->closed += [this, i] {	on_ui_closed(i);	};
+		i->ui = ui;
+		*_active_instance = &*i;
 	}
 
 	void frontend_manager::on_ui_activated(instance_container::iterator i)

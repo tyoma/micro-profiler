@@ -6,6 +6,9 @@
 
 #include <algorithm>
 #include <common/serialization.h>
+#include <frontend/frontend.h>
+#include <frontend/frontend_ui.h>
+#include <frontend/profiling_session.h>
 #include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_queue.h>
@@ -13,7 +16,6 @@
 #include <ut/test.h>
 
 using namespace std;
-using namespace placeholders;
 
 namespace micro_profiler
 {
@@ -23,8 +25,8 @@ namespace micro_profiler
 		{
 			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
 
-			frontend_ui::ptr dummy_ui_factory(const frontend_ui_context &)
-			{	return frontend_ui::ptr();	}
+			const auto new_frontend = [] (ipc::channel &outbound) {	return new micro_profiler::frontend(outbound);	};
+			const auto null_ui_factory = [] (const frontend_ui_context &) {	return shared_ptr<micro_profiler::frontend_ui>();	};
 
 			frontend_ui_context create_ui_context(string executable)
 			{
@@ -108,7 +110,7 @@ namespace micro_profiler
 			test( OpeningFrontendChannelIncrementsInstanceCount )
 			{
 				// INIT
-				frontend_manager m(&dummy_ui_factory);
+				frontend_manager m(new_frontend, null_ui_factory);
 
 				// ACT / ASSERT (must not throw)
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
@@ -127,7 +129,7 @@ namespace micro_profiler
 			test( ClosingFrontendChannelsDecrementsInstanceCount )
 			{
 				// INIT
-				frontend_manager m(&dummy_ui_factory);
+				frontend_manager m(new_frontend, null_ui_factory);
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
 				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
 
@@ -141,18 +143,20 @@ namespace micro_profiler
 
 			vector< shared_ptr<mocks::frontend_ui> > _ui_creation_log;
 
-			frontend_ui::ptr log_ui_creation(const frontend_ui_context &ui_context)
+			function<shared_ptr<frontend_ui> (const frontend_ui_context &ui_context)> logging_ui_factory()
 			{
-				shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(ui_context));
+				return [this] (const frontend_ui_context &ui_context) -> shared_ptr<frontend_ui> {
+					shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(ui_context));
 
-				_ui_creation_log.push_back(ui);
-				return ui;
+					_ui_creation_log.push_back(ui);
+					return ui;
+				};
 			}
 
 			test( FrontendInitializaionLeadsToUICreation )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
 				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
 
@@ -194,7 +198,7 @@ namespace micro_profiler
 			test( ThereAreNoInstancesAfterCloseAll )
 			{
 				// INIT
-				frontend_manager m([] (frontend_ui_context ctx) {
+				frontend_manager m(new_frontend, [] (frontend_ui_context ctx) {
 					return make_shared<mock_ui>(ctx);
 				});
 				auto ctx1 = create_ui_context("somefile.exe");
@@ -217,7 +221,7 @@ namespace micro_profiler
 			test( UIEventsAreIgnoredAfterCloseAll )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
 				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
 
@@ -243,7 +247,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::outbound_channel outbound_channels[2];
-				shared_ptr<frontend_manager> m(new frontend_manager(&dummy_ui_factory));
+				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, null_ui_factory));
 				shared_ptr<ipc::channel> c1 = m->create_session(outbound_channels[0]);
 				shared_ptr<ipc::channel> c2 = m->create_session(outbound_channels[1]);
 
@@ -260,7 +264,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::outbound_channel outbound_channels[3];
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound_channels[0]),
 					m.create_session(outbound_channels[1]),
@@ -289,18 +293,20 @@ namespace micro_profiler
 
 			vector< weak_ptr<mocks::frontend_ui> > _ui_creation_log_w;
 
-			frontend_ui::ptr log_ui_creation_w(const frontend_ui_context &ui_context)
+			function<shared_ptr<frontend_ui> (const frontend_ui_context &ui_context)> logging_ui_factory_weak()
 			{
-				shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(ui_context));
+				return [this] (const frontend_ui_context &ui_context) -> shared_ptr<frontend_ui> {
+					shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(ui_context));
 
-				_ui_creation_log_w.push_back(ui);
-				return ui;
+					_ui_creation_log_w.push_back(ui);
+					return ui;
+				};
 			}
 
 			test( FrontendUIIsHeldAfterCreation )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory_weak());
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
 				// ACT
@@ -315,7 +321,7 @@ namespace micro_profiler
 			test( UIIsHeldEvenAfterFrontendReleased )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory_weak());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound),
 				};
@@ -336,7 +342,7 @@ namespace micro_profiler
 			test( InstancesAreManagedByOpenedUIsAfterFrontendsReleased )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
@@ -369,7 +375,7 @@ namespace micro_profiler
 			test( InstanceLingersWhenUIIsClosedButFrontendIsStillReferenced )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory_weak());
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
 				message(*c, init, initialization_data());
@@ -386,7 +392,7 @@ namespace micro_profiler
 			test( InstanceLingersWhenUIIsClosedButFrontendIsStillReferencedNoExternalUIReference )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory_weak());
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
 				message(*c, init, initialization_data());
@@ -403,8 +409,7 @@ namespace micro_profiler
 			test( UIIsDestroyedOnManagerDestructionWhenFrontendIsHeld )
 			{
 				// INIT
-				shared_ptr<frontend_manager> m(new frontend_manager(bind(&FrontendManagerTests::log_ui_creation_w, this,
-					_1)));
+				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, logging_ui_factory_weak()));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 
 				message(*c, init, initialization_data());
@@ -420,8 +425,7 @@ namespace micro_profiler
 			test( UIIsDestroyedOnManagerDestructionWhenFrontendIsReleased )
 			{
 				// INIT
-				shared_ptr<frontend_manager> m(new frontend_manager(bind(&FrontendManagerTests::log_ui_creation_w, this,
-					_1)));
+				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, logging_ui_factory_weak()));
 				shared_ptr<ipc::channel> c = m->create_session(outbound);
 
 				message(*c, init, initialization_data());
@@ -438,8 +442,7 @@ namespace micro_profiler
 			test( OnlyExternallyHeldUISurvivesManagerDestruction )
 			{
 				// INIT
-				shared_ptr<frontend_manager> m(new frontend_manager(bind(&FrontendManagerTests::log_ui_creation_w, this,
-					_1)));
+				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, logging_ui_factory_weak()));
 				shared_ptr<ipc::channel> c[] = {
 					m->create_session(outbound), m->create_session(outbound), m->create_session(outbound),
 				};
@@ -467,7 +470,7 @@ namespace micro_profiler
 			test( NoInstanceIsReturnedForEmptyManager )
 			{
 				// INIT
-				frontend_manager m(&dummy_ui_factory);
+				frontend_manager m(new_frontend, null_ui_factory);
 
 				// ACT / ASSERT
 				assert_null(m.get_instance(0));
@@ -478,7 +481,7 @@ namespace micro_profiler
 			test( InstancesAreReturned )
 			{
 				// INIT
-				frontend_manager m(&dummy_ui_factory);
+				frontend_manager m(new_frontend, null_ui_factory);
 
 				// ACT
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
@@ -487,8 +490,7 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_not_null(m.get_instance(0));
-				assert_is_empty(m.get_instance(0)->process_info.executable);
-				assert_null(m.get_instance(0)->statistics);
+				assert_is_empty(m.get_instance(0)->title);
 				assert_not_null(m.get_instance(1));
 				assert_not_null(m.get_instance(2));
 				assert_null(m.get_instance(3));
@@ -498,7 +500,7 @@ namespace micro_profiler
 			test( InstanceContainsExecutableNameModelAndUIAfterInitialization )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
 				// ACT
@@ -506,9 +508,7 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_not_null(m.get_instance(0));
-				assert_equal("c:\\dev\\micro-profiler", m.get_instance(0)->process_info.executable);
-				assert_not_null(m.get_instance(0)->statistics);
-				assert_equal(_ui_creation_log[0]->ui_context.statistics, m.get_instance(0)->statistics);
+				assert_equal("c:\\dev\\micro-profiler", m.get_instance(0)->title);
 				assert_equal(_ui_creation_log[0], m.get_instance(0)->ui);
 			}
 
@@ -516,7 +516,7 @@ namespace micro_profiler
 			test( ClosingAllInstancesDisconnectsAllFrontendsAndDestroysAllUI )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory_weak());
 				mocks::outbound_channel outbound_channels[3];
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound_channels[0]), m.create_session(outbound_channels[1]), m.create_session(outbound_channels[2]),
@@ -548,7 +548,7 @@ namespace micro_profiler
 			test( NoActiveInstanceInEmptyManager )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 
 				// ACT / ASSERT
 				assert_null(m.get_active());
@@ -558,7 +558,7 @@ namespace micro_profiler
 			test( NoInstanceConsideredActiveIfNoUICreated )
 			{
 				// INIT
-				frontend_manager m(&dummy_ui_factory);
+				frontend_manager m(new_frontend, null_ui_factory);
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
@@ -574,7 +574,7 @@ namespace micro_profiler
 			test( LastInitializedInstanceConsideredActive )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
@@ -597,7 +597,7 @@ namespace micro_profiler
 			test( ActiveInstanceIsResetOnFrontendReleaseEvenIfUIDidNotSignalledOfClose )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c = m.create_session(outbound);
 
 				message(*c, init, initialization_data()); // make it active
@@ -615,7 +615,7 @@ namespace micro_profiler
 			test( ActiveInstanceIsNotResetOnFrontendReleaseWhenOtherAliveInstanceIsActive )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
 
 				message(*c1, init, initialization_data());
@@ -634,7 +634,7 @@ namespace micro_profiler
 			test( UIActivationSwitchesActiveInstanceInManager )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
@@ -667,7 +667,7 @@ namespace micro_profiler
 			test( NoInstanceIsActiveAfterCloseAll )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation_w, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory_weak());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
@@ -687,7 +687,7 @@ namespace micro_profiler
 			test( NoInstanceIsActiveAfterActiveInstanceIsClosed )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
@@ -707,7 +707,7 @@ namespace micro_profiler
 			test( ActiveInstancetIsIntactAfterInactiveInstanceIsClosed )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				shared_ptr<ipc::channel> c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
@@ -727,7 +727,7 @@ namespace micro_profiler
 			test( CreatingInstanceFromModelAddsNewInstanceToTheListAndConstructsUI )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 				auto ctx1 = create_ui_context("somefile.exe");
 				auto ctx2 = create_ui_context("/usr/bin/grep");
 
@@ -736,8 +736,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, m.instances_count());
-				assert_equal("somefile.exe", m.get_instance(0)->process_info.executable);
-				assert_equal(ctx1.statistics, m.get_instance(0)->statistics);
+				assert_equal("somefile.exe", m.get_instance(0)->title);
 				assert_equal(_ui_creation_log[0], m.get_instance(0)->ui);
 
 				// ACT
@@ -745,8 +744,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, m.instances_count());
-				assert_equal("/usr/bin/grep", m.get_instance(1)->process_info.executable);
-				assert_equal(ctx2.statistics, m.get_instance(1)->statistics);
+				assert_equal("/usr/bin/grep", m.get_instance(1)->title);
 				assert_equal(_ui_creation_log[1], m.get_instance(1)->ui);
 			}
 
@@ -754,7 +752,7 @@ namespace micro_profiler
 			test( NoAttemptToDisconnectFrontendIsMadeIfNoFrontendExistsOnCloseAll )
 			{
 				// INIT
-				frontend_manager m(bind(&FrontendManagerTests::log_ui_creation, this, _1));
+				frontend_manager m(new_frontend, logging_ui_factory());
 
 				// ACT
 				m.load_session(create_ui_context("somefile.exe"));

@@ -98,6 +98,7 @@
     <ClInclude Include="..\nested_statistics_model.h" />
     <ClInclude Include="..\statistics_poll.h" />
     <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\profiling_session.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

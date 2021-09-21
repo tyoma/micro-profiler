@@ -93,7 +93,7 @@ namespace micro_profiler
 				assert_equal(3u, cvt(s2, 283));
 				assert_equal(4u, cvt(s2, 284));
 				assert_equal(8u, cvt(s2, 671));
-				assert_equal(9u, cvt(s2, 672));
+				assert_equal(9u, cvt(s2, 673));
 			}
 
 

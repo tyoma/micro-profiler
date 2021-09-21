@@ -20,27 +20,38 @@
 
 #pragma once
 
-#include "frontend_ui.h"
-
+#include <common/argument_traits.h>
 #include <common/noncopyable.h>
 #include <common/types.h>
 #include <ipc/endpoint.h>
 #include <list>
+#include <logger/log.h>
+#include <type_traits>
+#include <wpl/signal.h>
+
+#define PREAMBLE "Frontend manager: "
 
 namespace micro_profiler
 {
-	class frontend;
+	struct frontend_ui;
+
+	namespace ipc
+	{
+		class client_session;
+	}
 
 	class frontend_manager : public ipc::server, noncopyable
 	{
 	public:
-		struct instance : frontend_ui_context
+		struct instance
 		{
-			frontend_ui::ptr ui;
+			std::string title;
+			std::shared_ptr<frontend_ui> ui;
 		};
 
 	public:
-		frontend_manager(const frontend_ui_factory &ui_factory);
+		template <typename FrontendFactoryT, typename FrontendUIFactoryT>
+		frontend_manager(FrontendFactoryT frontend_factory, FrontendUIFactoryT ui_factory);
 		~frontend_manager();
 
 		void close_all() throw();
@@ -48,7 +59,9 @@ namespace micro_profiler
 		size_t instances_count() const throw();
 		const instance *get_instance(unsigned index) const throw();
 		const instance *get_active() const throw();
-		void load_session(const frontend_ui_context &ui_context);
+
+		template <typename ContextT>
+		void load_session(const ContextT &ui_context);
 
 		// ipc::server methods
 		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound) override;
@@ -56,19 +69,19 @@ namespace micro_profiler
 	private:
 		struct instance_impl : instance
 		{
-			instance_impl(micro_profiler::frontend *frontend_);
+			instance_impl(ipc::client_session *frontend_);
 
-			micro_profiler::frontend *frontend;
+			ipc::client_session *frontend;
 			wpl::slot_connection ui_activated_connection;
 			wpl::slot_connection ui_closed_connection;
 		};
 
 		typedef std::list<instance_impl> instance_container;
-		typedef std::shared_ptr<instance_container> instance_container_ptr;
 
 	private:
+		std::pair<std::shared_ptr<ipc::channel>, instance_container::iterator> attach(ipc::client_session *session);
 		void on_frontend_released(instance_container::iterator i) throw();
-		void on_ready_for_ui(instance_container::iterator i, const frontend_ui_context &ui_context);
+		void set_ui(instance_container::iterator i, std::shared_ptr<frontend_ui> ui);
 
 		void on_ui_activated(instance_container::iterator i);
 		void on_ui_closed(instance_container::iterator i) throw();
@@ -76,8 +89,49 @@ namespace micro_profiler
 		static void reset_entry(instance_container &instances, instance_container::iterator i);
 
 	private:
-		frontend_ui_factory _ui_factory;
-		instance_container_ptr _instances;
-		std::shared_ptr<const instance_impl *> _active_instance;
+		const std::shared_ptr<instance_container> _instances;
+		const std::shared_ptr<const instance_impl *> _active_instance;
+		std::function<std::shared_ptr<ipc::channel> (ipc::channel &outbound)> _frontend_factory;
+		std::function<void (const void *)> _load_session;
 	};
+
+
+
+	template <typename FrontendFactoryT, typename FrontendUIFactoryT>
+	inline frontend_manager::frontend_manager(FrontendFactoryT frontend_factory, FrontendUIFactoryT ui_factory)
+		: _instances(new instance_container), _active_instance(new const instance_impl *())
+	{
+		typedef typename argument_traits<FrontendFactoryT>::types prototype_types;
+		typedef typename std::remove_pointer<typename prototype_types::return_type>::type frontend_type;
+		typedef typename frontend_type::session_type session_type;
+
+		const auto prepare_ui = [this, ui_factory] (instance_container::iterator i, const session_type &context) {
+			i->title = context.get_title();
+			if (auto ui = ui_factory(context))
+				set_ui(i, ui);
+		};
+
+		_frontend_factory = [this, frontend_factory, prepare_ui] (ipc::channel &o) -> std::shared_ptr<ipc::channel> {
+			const auto prepare_ui_ = prepare_ui;
+			const auto frontend = frontend_factory(o);
+			const auto channel_instance = attach(frontend);
+			const auto i = channel_instance.second;
+
+			frontend->initialized = [prepare_ui_, i] (const session_type &context) {	prepare_ui_(i, context);	};
+			return channel_instance.first;
+		};
+
+		_load_session = [this, prepare_ui] (const void *p) {
+			prepare_ui(_instances->insert(_instances->end(), frontend_manager::instance_impl(nullptr)),
+				*static_cast<const session_type *>(p)); // TODO: rather implement load directly from here.
+		};
+
+		LOG(PREAMBLE "constructed.") % A(this);
+	}
+
+	template <typename ContextT>
+	inline void frontend_manager::load_session(const ContextT &ui_context)
+	{	_load_session(&ui_context);	}
 }
+
+#undef PREAMBLE

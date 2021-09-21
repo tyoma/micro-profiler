@@ -20,40 +20,15 @@
 
 #pragma once
 
-#include <common/types.h>
-#include <string>
 #include <wpl/signal.h>
 
 namespace micro_profiler
 {
-	namespace tables
-	{
-		struct module_mappings;
-		struct modules;
-		struct patches;
-		struct statistics;
-		struct threads;
-	}
-
-	struct frontend_ui_context
-	{
-		initialization_data process_info;
-		std::shared_ptr<tables::statistics> statistics;
-		std::shared_ptr<tables::module_mappings> module_mappings;
-		std::shared_ptr<tables::modules> modules;
-		std::shared_ptr<tables::patches> patches;
-		std::shared_ptr<tables::threads> threads;
-	};
-
 	struct frontend_ui
 	{
-		typedef std::shared_ptr<frontend_ui> ptr;
-
 		virtual void activate() = 0;
 
 		wpl::signal<void ()> activated;
 		wpl::signal<void ()> closed;
 	};
-
-	typedef std::function<frontend_ui::ptr (const frontend_ui_context &context)> frontend_ui_factory;
 }

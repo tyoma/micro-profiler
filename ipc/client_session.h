@@ -47,6 +47,8 @@ namespace micro_profiler
 			// Connection is established and controlled by an outside entity.
 			client_session(channel &outbound);
 
+			virtual ~client_session();
+
 			void disconnect_session() throw();
 
 			template <typename MessageCallbackT>

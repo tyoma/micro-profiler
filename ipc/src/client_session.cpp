@@ -33,6 +33,9 @@ namespace micro_profiler
 				_message_callbacks(make_shared<message_callbacks_t>())
 		{	}
 
+		client_session::~client_session()
+		{	}
+
 		void client_session::disconnect_session() throw()
 		{	_outbound->disconnect();	}
 

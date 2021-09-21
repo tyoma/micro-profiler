@@ -94,23 +94,21 @@ namespace micro_profiler
 
 	inline bool scale::operator ()(index_t &index, value_t value) const
 	{
-		auto samples_ = _samples;
+		if (auto samples_ = _samples)
+		{
+			const auto index_ = static_cast<int>((value - _base) * _scale);
 
-		if (!samples_)
-			return false;
-
-		const auto index_ = static_cast<int>((value - _base) * _scale);
-
-		samples_--;
-		index = index_ < 0 ? 0u : index_ > static_cast<int>(samples_) ? samples_ : static_cast<index_t>(index_);
-		return true;
+			index = index_ < 0 ? 0u : index_ > static_cast<int>(--samples_) ? samples_ : static_cast<index_t>(index_);
+			return true;
+		}
+		return false;
 	}
 
 	inline bool scale::operator ==(const scale &rhs) const
 	{	return !(*this != rhs);	}
 
 	inline bool scale::operator !=(const scale &rhs) const
-	{	return !!((_near - rhs._near) | (_far - rhs._far) | (_samples - rhs._samples));	}
+	{	return !!((_samples - rhs._samples) | (_near - rhs._near) | (_far - rhs._far));	}
 
 
 	inline const scale &histogram::get_scale() const

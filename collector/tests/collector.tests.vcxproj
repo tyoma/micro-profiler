@@ -28,6 +28,8 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\polyq.include.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
   <PropertyGroup>
     <LinkIncremental>false</LinkIncremental>

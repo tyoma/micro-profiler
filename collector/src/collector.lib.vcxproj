@@ -31,6 +31,8 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
+    <Import Project="$(SolutionDir)build.props\polyq.include.props" />
   </ImportGroup>
   <ItemDefinitionGroup>
     <MASM>

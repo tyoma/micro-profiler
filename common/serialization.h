@@ -29,6 +29,7 @@
 #include <patcher/interface.h>
 #include <strmd/container.h>
 #include <strmd/packer.h>
+#include <strmd/version.h>
 
 namespace strmd
 {

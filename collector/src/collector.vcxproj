@@ -31,6 +31,7 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
+    <Import Project="$(SolutionDir)build.props\polyq.include.props" />
   </ImportGroup>
   <PropertyGroup>
     <TargetName>micro-profiler_$(PlatformName)</TargetName>

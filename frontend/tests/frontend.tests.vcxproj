@@ -28,7 +28,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
-    <Import Project="$(SolutionDir)build.props\agge.include.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
     <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
   <ItemGroup>

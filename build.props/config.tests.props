@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ImportGroup Label="PropertySheets">
-    <Import Project="config.props" />
-    <Import Project="utee.include.props" />
-  </ImportGroup>
+  <Import Project="config.props" />
+  <Import Project="utee.include.props" />
   <PropertyGroup Label="UserMacros">
     <TestRunnerExe>$(OutDir)utee-runner.exe</TestRunnerExe>
   </PropertyGroup>

@@ -99,7 +99,9 @@
     <ClInclude Include="..\image_info.h" />
     <ClInclude Include="..\memory.h" />
     <ClInclude Include="..\module.h" />
+    <ClInclude Include="..\noncopyable.h" />
     <ClInclude Include="..\path.h" />
+    <ClInclude Include="..\compiler.h" />
     <ClInclude Include="..\pod_vector.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\protocol.h" />

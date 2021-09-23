@@ -75,7 +75,7 @@ namespace micro_profiler
 		});
 
 		session.add_handler(request_module_metadata,
-			[this, module_tracker_, metadata] (response &resp, unsigned int persistent_id) {
+			[module_tracker_, metadata] (response &resp, unsigned int persistent_id) {
 
 			const auto metadata_ = module_tracker_->get_metadata(persistent_id);
 			auto &md = *metadata;

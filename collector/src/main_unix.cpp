@@ -20,8 +20,6 @@
 
 #include "main.h"
 
-using namespace std;
-
 namespace micro_profiler
 {
 	platform_initializer::platform_initializer(collector_app &app)

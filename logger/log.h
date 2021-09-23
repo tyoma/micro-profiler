@@ -51,7 +51,6 @@ namespace micro_profiler
 			ref_attribute_impl(const char *name_, const T &value);
 
 		private:
-			const ref_attribute_impl &operator =(const ref_attribute_impl &rhs);
 			virtual void format_value(buffer_t &buffer) const;
 
 		private:

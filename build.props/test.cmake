@@ -1,7 +1,7 @@
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../libraries/utee)
 
 set(GCC_CLANG_COMPILER_OPTIONS_C
-	-Wno-pedantic -Wno-all -Wno-extra
+	-Wno-pedantic -Wno-extra
 )
 set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 )

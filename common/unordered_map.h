@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "platform.h"
+#include "compiler.h"
 
 #include <functional>
 #include <list>

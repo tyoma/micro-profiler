@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/platform.h>
+#include <common/compiler.h>
 #include <common/types.h>
 #include <vector>
 

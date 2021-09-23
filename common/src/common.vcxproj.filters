@@ -121,5 +121,7 @@
     <ClInclude Include="..\argument_traits.h" />
     <ClInclude Include="..\callback_monitor.h" />
     <ClInclude Include="..\histogram.h" />
+    <ClInclude Include="..\noncopyable.h" />
+    <ClInclude Include="..\compiler.h" />
   </ItemGroup>
 </Project>

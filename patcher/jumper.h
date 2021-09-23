@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <common/platform.h>
+#include <common/compiler.h>
 #include <common/types.h>
 
 namespace micro_profiler

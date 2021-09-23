@@ -21,7 +21,7 @@
 #pragma once
 
 #include "hash.h"
-#include "platform.h"
+#include "compiler.h"
 #include "types.h"
 #include "unordered_map.h"
 

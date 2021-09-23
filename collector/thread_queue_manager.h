@@ -24,7 +24,7 @@
 #include "types.h"
 
 #include <common/noncopyable.h>
-#include <common/platform.h>
+#include <common/compiler.h>
 #include <memory>
 #include <mt/mutex.h>
 #include <mt/thread_callbacks.h>

@@ -56,7 +56,7 @@ namespace micro_profiler
 				lbl->set_text(agge::style_modifier::empty + "Filter:");
 
 			toolbar->add(eb = factory_.create_control<editbox>("editbox"), percents(100));
-				_connections.push_back(eb->changed += [this, model, eb] {
+				_connections.push_back(eb->changed += [model, eb] {
 					string filter;
 
 					eb->get_value(filter);
@@ -78,7 +78,7 @@ namespace micro_profiler
 			toolbar->add(make_shared<overlay>(), percents(100));
 			toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
 				btn->set_text(agge::style_modifier::empty + "Patch Selected");
-				_connections.push_back(btn->clicked += [this, model, patches, selection_] {
+				_connections.push_back(btn->clicked += [model, patches, selection_] {
 					unordered_map< unsigned int, vector<unsigned int> > s;
 
 					selection_->enumerate([&s] (const symbol_key &key) {	s[key.persistent_id].push_back(key.rva);	});
@@ -89,7 +89,7 @@ namespace micro_profiler
 
 			toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 101);
 				btn->set_text(agge::style_modifier::empty + "Revert Selected");
-					_connections.push_back(btn->clicked += [this, model, patches, selection_] {
+					_connections.push_back(btn->clicked += [model, patches, selection_] {
 						unordered_map< unsigned int, vector<unsigned int> > s;
 
 						selection_->enumerate([&s] (const symbol_key &key) {	s[key.persistent_id].push_back(key.rva);	});
@@ -100,7 +100,7 @@ namespace micro_profiler
 
 			toolbar->add(btn = factory_.create_control<button>("button"), pixels(80), false, 102);
 				btn->set_text(agge::style_modifier::empty + "Close");
-				_connections.push_back(btn->clicked += [this, model] {
+				_connections.push_back(btn->clicked += [model] {
 				});
 
 		_connections.push_back(header_model->sort_order_changed += [model] (size_t column, bool ascending) {

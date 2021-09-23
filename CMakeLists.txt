@@ -53,7 +53,12 @@ endif ()
 # Setup global compiler/linker settings
 set(GCC_CLANG_COMPILER_OPTIONS_C
 	-ggdb -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
-	-Wpedantic -Wall -Wextra -Wno-deprecated-declarations -Wno-unknown-pragmas -Wno-missing-field-initializers
+	-Wpedantic -Wall -Wextra
+	-Wno-error
+	-Wno-deprecated-declarations
+	-Wno-unknown-pragmas
+	-Wno-missing-field-initializers
+	-Wno-error
 )
 if (NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
 	set(GCC_CLANG_COMPILER_OPTIONS_C ${GCC_CLANG_COMPILER_OPTIONS_C} -msse2)

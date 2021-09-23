@@ -31,7 +31,7 @@ namespace micro_profiler
 		const char c_order_by[] = "OrderBy";
 		const char c_order_direction[] = "OrderDirection";
 		const char c_width[] = "Width";
-		const char c_caption[] = "Caption";
+//		const char c_caption[] = "Caption";
 
 		template <typename T>
 		bool load_int(const hive &configuration, const char *name, T &value)

@@ -132,7 +132,7 @@ namespace micro_profiler
 			panel[0]->add(cb = factory_.create_control<wpl::combobox>("combobox"), wpl::pixels(24), false, 4);
 				cb->set_model(threads);
 				cb->select(0u);
-				_connections.push_back(cb->selection_changed += [this, m_main, threads] (wpl::combobox::model_t::index_type index) {
+				_connections.push_back(cb->selection_changed += [m_main, threads] (wpl::combobox::model_t::index_type index) {
 					unsigned id;
 
 					if (threads->get_key(id, index))

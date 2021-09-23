@@ -23,7 +23,7 @@
 #include "allocator.h"
 #include "types.h"
 
-#include <common/platform.h>
+#include <common/compiler.h>
 #include <functional>
 #include <mt/event.h>
 #include <mt/mutex.h>

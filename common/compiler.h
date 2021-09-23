@@ -20,24 +20,46 @@
 
 #pragma once
 
-#if defined(_MSC_VER)
-	#if defined(_M_IX86)
-		#define CC_(cc) __ ## cc
-		#define _CC(cc)
-	#else
-		#define CC_(cc)
-		#define _CC(cc)
-	#endif
-	#define FORCE_INLINE __forceinline
-	#define FORCE_NOINLINE __declspec(noinline)
-#elif defined(__GNUC__) && defined(__i386)
+#if defined(_MSC_VER) && defined(_M_IX86)
+	#define CC_(cc) __ ## cc
+	#define _CC(cc)
+
+#elif (defined(__GNUC__) || defined(__clang__)) && defined(__i386)
 	#define CC_(cc)
 	#define _CC(cc) __attribute__((cc))
-	#define FORCE_INLINE __attribute__((always_inline)) inline
-	#define FORCE_NOINLINE __attribute__((noinline))
+
 #else
 	#define CC_(cc)
 	#define _CC(cc)
+
+#endif
+
+#if defined(_MSC_VER)
+	#define FORCE_INLINE __forceinline
+	#define FORCE_NOINLINE __declspec(noinline)
+
+#elif defined(__GNUC__) || defined(__clang__)
+	#define FORCE_INLINE __attribute__((always_inline)) inline
+	#define FORCE_NOINLINE __attribute__((noinline))
+
+#else
 	#define FORCE_INLINE inline
 	#define FORCE_NOINLINE
+
+#endif
+
+#if defined(_MSC_VER)
+	#define DISABLE_CCTOR_DEPRECATION
+	#define RESTORE_CCTOR_DEPRECATION
+
+#elif defined(__GNUC__)
+	#define DISABLE_CCTOR_DEPRECATION \
+		#pragma GCC diagnostic ignored "-Wdeprecated-"
+	#define FORCE_INLINE __attribute__((always_inline)) inline
+	#define FORCE_NOINLINE __attribute__((noinline))
+
+#else
+	#define DISABLE_CCTOR_DEPRECATION
+	#define RESTORE_CCTOR_DEPRECATION
+
 #endif

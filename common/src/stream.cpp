@@ -20,7 +20,7 @@
 
 #include <common/stream.h>
 
-#include <common/platform.h>
+#include <common/compiler.h>
 
 namespace micro_profiler
 {

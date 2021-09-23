@@ -48,8 +48,6 @@ namespace micro_profiler
 			const_iterator end() const throw();
 
 		private:
-			void operator =(const filter &rhs);
-
 			bool match(const value_type &value) const;
 
 		private:

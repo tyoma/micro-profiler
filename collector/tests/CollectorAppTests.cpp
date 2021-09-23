@@ -292,7 +292,6 @@ namespace micro_profiler
 			test( ImageUnloadEventArrivesWhenModuleIsReleased )
 			{
 				// INIT
-				mt::mutex mtx;
 				mt::event ready;
 				shared_ptr<void> req;
 				unordered_map<unsigned, mapped_module_ex> l;

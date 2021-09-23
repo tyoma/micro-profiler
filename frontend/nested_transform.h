@@ -54,9 +54,6 @@ namespace micro_profiler
 		{	return value;	}
 
 	private:
-		void operator =(const callees_transform &rhs);
-
-	private:
 		const U &_underlying;
 		const nested_container_type _empty_nested;
 	};
@@ -92,9 +89,6 @@ namespace micro_profiler
 		template <typename T1, typename T2>
 		static const T2 &get(const T1 &, const T2 &value)
 		{	return value;	}
-
-	private:
-		void operator =(const callers_transform &rhs);
 
 	private:
 		const U &_underlying;

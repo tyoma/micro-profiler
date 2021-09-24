@@ -23,53 +23,44 @@
 #include "detour.h"
 #include "main.h"
 
-#include <collector/collector_app.h>
 #include <tchar.h>
 #include <windows.h>
 
 using namespace std;
 
-extern micro_profiler::collector_app g_profiler_app;
-
 namespace micro_profiler
 {
 	namespace
 	{
-		shared_ptr<void> *g_exit_process_detour = 0;
-
-		shared_ptr<void> get_exit_process()
-		{
-			HMODULE hkernel;
-
-			::GetModuleHandleEx(0, _T("kernel32"), &hkernel);
-			return shared_ptr<void>(::GetProcAddress(hkernel, "ExitProcess"), [hkernel] (void *) {
-				::FreeLibrary(hkernel);
-			});
-		}
+		collector_app_instance *g_instance_singleton = nullptr;
+		shared_ptr<void> *g_exit_process_detour = nullptr;
 
 		void WINAPI ExitProcessHooked(UINT exit_code)
 		{
 			if (g_exit_process_detour)
 				g_exit_process_detour->reset();
-			g_profiler_app.stop();
+			g_instance_singleton->terminate();
 			::ExitProcess(exit_code);
 		}
 	}
 
-	platform_initializer::platform_initializer(collector_app &app)
-		: _app(app)
+	void collector_app_instance::platform_specific_init()
 	{
-		HMODULE dummy;
-
 		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
-			reinterpret_cast<LPCTSTR>(&ExitProcessHooked), &dummy);
 
-		static shared_ptr<void> exit_process_detour = detour(get_exit_process().get(), &ExitProcessHooked);
+		static shared_ptr<void> exit_process_detour;
 
+		g_instance_singleton = this;
 		g_exit_process_detour = &exit_process_detour;
-	}
 
-	platform_initializer::~platform_initializer()
-	{	}
+		HMODULE hmodule;
+
+		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, _T("kernel32"), &hmodule);
+
+		const auto exit_process = ::GetProcAddress(hmodule, "ExitProcess");
+
+		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
+			reinterpret_cast<LPCTSTR>(&ExitProcessHooked), &hmodule);
+		exit_process_detour = detour(exit_process, &ExitProcessHooked);
+	}
 }

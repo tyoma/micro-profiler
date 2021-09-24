@@ -20,72 +20,89 @@
 
 #include "main.h"
 
-#include <collector/allocator.h>
 #include <collector/calibration.h>
-#include <collector/calls_collector.h>
-#include <collector/collector_app.h>
 #include <collector/thread_monitor.h>
 #include <common/constants.h>
-#include <common/memory.h>
 #include <common/time.h>
 #include <ipc/endpoint.h>
 #include <ipc/misc.h>
 #include <mt/thread_callbacks.h>
-#include <patcher/image_patch_manager.h>
 
-using namespace micro_profiler;
 using namespace std;
-using namespace std::placeholders;
 
-namespace
+namespace micro_profiler
 {
-	const string c_candidate_endpoints[] = {
-		ipc::sockets_endpoint_id(ipc::localhost, 6100),
-		ipc::com_endpoint_id(constants::integrated_frontend_id),
-		ipc::com_endpoint_id(constants::standalone_frontend_id),
-	};
-
-	struct null_channel : ipc::channel
+	namespace
 	{
-		virtual void disconnect() throw()
-		{	}
-
-		virtual void message(const_byte_range /*payload*/)
-		{	}
-	};
-
-	collector_app::channel_ptr_t probe_create_channel(ipc::channel &inbound)
-	{
-		vector<string> candidate_endpoints(c_candidate_endpoints, c_candidate_endpoints
-			+ sizeof(c_candidate_endpoints) / sizeof(c_candidate_endpoints[0]));
-
-		if (const char *env_id = getenv(constants::frontend_id_ev))
-			candidate_endpoints.insert(candidate_endpoints.begin(), env_id);
-
-		for (vector<string>::const_iterator i = candidate_endpoints.begin(); i != candidate_endpoints.end(); ++i)
+		struct null_channel : ipc::channel
 		{
-			try
+			null_channel(ipc::channel &inbound)
+				: _inbound(inbound)
+			{	}
+
+			virtual void disconnect() throw()
+			{	}
+
+			virtual void message(const_byte_range /*payload*/)
+			{	_inbound.disconnect();	}
+
+			ipc::channel &_inbound;
+		};
+
+		collector_app::channel_ptr_t probe_create_channel(ipc::channel &inbound)
+		{
+			const string c_candidate_endpoints[] = {
+				ipc::sockets_endpoint_id(ipc::localhost, 6100),
+				ipc::com_endpoint_id(constants::integrated_frontend_id),
+				ipc::com_endpoint_id(constants::standalone_frontend_id),
+			};
+
+			vector<string> candidate_endpoints(c_candidate_endpoints, c_candidate_endpoints
+				+ sizeof(c_candidate_endpoints) / sizeof(c_candidate_endpoints[0]));
+
+			if (const char *env_id = getenv(constants::frontend_id_ev))
+				candidate_endpoints.insert(candidate_endpoints.begin(), env_id);
+
+			for (vector<string>::const_iterator i = candidate_endpoints.begin(); i != candidate_endpoints.end(); ++i)
 			{
-				return ipc::connect_client(i->c_str(), inbound);
+				try
+				{
+					return ipc::connect_client(i->c_str(), inbound);
+				}
+				catch (const exception &)
+				{
+				}
 			}
-			catch (const exception &)
-			{
-			}
+			return collector_app::channel_ptr_t(new null_channel(inbound));
 		}
-		return collector_app::channel_ptr_t(new null_channel);
 	}
+
+	collector_app_instance::collector_app_instance(const collector_app::frontend_factory_t &frontend_factory,
+			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)
+		: _thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
+			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks),
+			_patch_manager(_collector, _eallocator)
+	{
+		collector_ptr = &_collector;
+		_app.reset(new collector_app(frontend_factory, _collector, calibrate_overhead(_collector, trace_limit),
+			*_thread_monitor, _patch_manager));
+		platform_specific_init();
+	}
+
+	collector_app_instance::~collector_app_instance()
+	{	terminate();	}
+
+	void collector_app_instance::terminate() throw()
+	{	_app.reset();	}
 }
 
+#ifdef _MSC_VER
+	extern "C"
+#endif
+	micro_profiler::calls_collector *g_collector_ptr = nullptr;
 const size_t c_trace_limit = 5000000;
-const auto g_thread_monitor = make_shared<thread_monitor>(mt::get_thread_callbacks());
-micro_profiler::allocator g_allocator;
-calls_collector g_collector(g_allocator, c_trace_limit, *g_thread_monitor, mt::get_thread_callbacks());
-extern "C" calls_collector *g_collector_ptr = &g_collector;
-const auto c_overhead = calibrate_overhead(*g_collector_ptr, c_trace_limit);
-executable_memory_allocator g_eallocator;
-image_patch_manager g_patch_manager(g_collector, g_eallocator);
-collector_app g_profiler_app(&probe_create_channel, g_collector, c_overhead, *g_thread_monitor, g_patch_manager);
-const platform_initializer g_intializer(g_profiler_app);
+micro_profiler::collector_app_instance g_instance(&micro_profiler::probe_create_channel, mt::get_thread_callbacks(),
+	c_trace_limit, g_collector_ptr);
 
 #if defined(__clang__) || defined(__GNUC__)
 	#define PUBLIC __attribute__ ((visibility ("default")))
@@ -96,11 +113,11 @@ const platform_initializer g_intializer(g_profiler_app);
 extern "C" PUBLIC void __cyg_profile_func_enter(void *callee, void * /*call_site*/)
 {
 	if (g_collector_ptr)
-		g_collector_ptr->track(read_tick_counter(), callee);
+		g_collector_ptr->track(micro_profiler::read_tick_counter(), callee);
 }
 
 extern "C" PUBLIC void __cyg_profile_func_exit(void * /*callee*/, void * /*call_site*/)
 {
 	if (g_collector_ptr)
-		g_collector_ptr->track(read_tick_counter(), 0);
+		g_collector_ptr->track(micro_profiler::read_tick_counter(), 0);
 }

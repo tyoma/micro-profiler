@@ -22,10 +22,6 @@
 
 namespace micro_profiler
 {
-	platform_initializer::platform_initializer(collector_app &app)
-		: _app(app)
-	{	}
-
-	platform_initializer::~platform_initializer()
+	void collector_app_instance::platform_specific_init()
 	{	}
 }

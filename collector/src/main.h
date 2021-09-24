@@ -20,19 +20,33 @@
 
 #pragma once
 
+#include <collector/allocator.h>
+#include <collector/calls_collector.h>
+#include <collector/collector_app.h>
+#include <common/memory.h>
 #include <common/noncopyable.h>
+#include <patcher/image_patch_manager.h>
 
 namespace micro_profiler
 {
-	class collector_app;
-
-	class platform_initializer : noncopyable
+	class collector_app_instance : noncopyable
 	{
 	public:
-		platform_initializer(collector_app &app);
-		~platform_initializer();
+		collector_app_instance(const collector_app::frontend_factory_t &frontend_factory,
+			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr);
+		~collector_app_instance();
+
+		void terminate() throw();
 
 	private:
-		collector_app &_app;
+		void platform_specific_init();
+
+	private:
+		std::shared_ptr<thread_monitor> _thread_monitor;
+		allocator _allocator;
+		executable_memory_allocator _eallocator;
+		calls_collector _collector;
+		image_patch_manager _patch_manager;
+		std::unique_ptr<collector_app> _app;
 	};
 }

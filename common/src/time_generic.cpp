@@ -21,22 +21,51 @@
 #include <common/time.h>
 
 #include <chrono>
+#include <time.h>
 
-using namespace std;
+using namespace std::chrono;
 
 namespace micro_profiler
 {
-	timestamp_t clock()
-	{
-		return chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now().time_since_epoch()).count();
-	}
-	
-	double stopwatch(counter_t &counter)
-	{
-		counter_t now = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now().time_since_epoch()).count();
-		double d = 1e-9 * (now - counter);
+	stopwatch::stopwatch()
+		: _period(1e-9), _last(duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count())
+	{	}
 
-		counter = now;
-		return d;
+	double stopwatch::operator ()() throw()
+	{
+		const auto current = duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
+		const auto elapsed = _period * (current - _last);
+
+		_last = current;
+		return elapsed;
+	}
+
+
+	timestamp_t clock()
+	{	return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();	}
+
+	datetime get_datetime()
+	{
+		time_t t = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		auto ms = t % 1000;
+
+		t /= 1000;
+		if (const auto dt_ = gmtime(&t))
+		{
+			datetime dt = {
+				static_cast<unsigned int>(dt_->tm_year),
+				static_cast<unsigned int>(dt_->tm_mon + 1),
+				static_cast<unsigned int>(dt_->tm_mday),
+				static_cast<unsigned int>(dt_->tm_hour),
+				static_cast<unsigned int>(dt_->tm_min),
+				static_cast<unsigned int>(dt_->tm_sec),
+				static_cast<unsigned int>(ms)
+			};
+			return dt;
+		}
+		else
+		{
+			return datetime {};
+		}
 	}
 }

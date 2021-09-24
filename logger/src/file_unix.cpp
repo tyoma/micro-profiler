@@ -30,13 +30,16 @@ namespace micro_profiler
 	{
 		shared_ptr<FILE> fopen_exclusive(const string &path, const string &mode)
 		{
-			if (FILE *file = fopen(path.c_str(), mode.c_str()))
+			if (FILE *pfile = fopen(path.c_str(), mode.c_str()))
 			{
-				if (!flock(fileno(file), LOCK_EX | LOCK_NB))
-					return shared_ptr<FILE>(file, &fclose);
-				fclose(file);
+				shared_ptr<FILE> file(pfile, &fclose);
+
+				if (!flock(fileno(pfile), LOCK_EX | LOCK_NB))
+					return file;
+				if (EWOULDBLOCK == errno)
+					return nullptr;
 			}
-			return shared_ptr<FILE>();
+			return shared_ptr<FILE>(stderr, [] (...) {});
 		}
 	}
 }

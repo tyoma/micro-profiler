@@ -29,6 +29,7 @@ namespace micro_profiler
 	struct constants
 	{
 		// C-style constants - safe to access anytime
+		static const char *home_ev;
 		static const char *profiler_name;
 		static const char *profilerdir_ev;
 		static const char *frontend_id_ev;

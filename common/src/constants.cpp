@@ -28,7 +28,12 @@ using namespace std;
 
 namespace micro_profiler
 {
-	const char *constants::profiler_name = ".MicroProfiler";
+#ifdef _WIN32
+	const char *constants::home_ev = "LOCALAPPDATA";
+#else
+	const char *constants::home_ev = "HOME";
+#endif
+	const char *constants::profiler_name = ".microprofiler";
 	const char *constants::profilerdir_ev = "MICROPROFILERDIR";
 	const char *constants::frontend_id_ev = "MICROPROFILERFRONTEND";
 
@@ -44,10 +49,8 @@ namespace micro_profiler
 
 	string constants::data_directory()
 	{
-		using namespace micro_profiler;
+		const char *localdata = getenv(home_ev);
 
-		const char *localdata = getenv("LOCALAPPDATA");
-
-		return string(localdata ? localdata : "") & string(profiler_name);
+		return string(localdata ? localdata : ".") & string(profiler_name);
 	}
 }

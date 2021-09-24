@@ -25,30 +25,33 @@
 
 namespace micro_profiler
 {
-	namespace
+	stopwatch::stopwatch()
 	{
-		LARGE_INTEGER c_dummy;
-		const long long c_high_perf_counter_frequency = (::QueryPerformanceFrequency(&c_dummy), c_dummy.QuadPart);
-		const double c_high_perf_counter_period = 1.0 / c_high_perf_counter_frequency;
+		LARGE_INTEGER v;
+
+		_period = (::QueryPerformanceFrequency(&v), 1.0 / v.QuadPart);
+		_last = (::QueryPerformanceCounter(&v), v.QuadPart);
 	}
+
+	double stopwatch::operator ()() throw()
+	{
+		LARGE_INTEGER v;
+		const auto current = (::QueryPerformanceCounter(&v), v.QuadPart);
+		const auto elapsed = _period * (current - _last);
+
+		_last = current;
+		return elapsed;
+	}
+
 
 	timestamp_t clock()
 	{
-		LARGE_INTEGER v = {};
+		LARGE_INTEGER v;
+		static const auto period = (::QueryPerformanceFrequency(&v), 1000.0 / v.QuadPart);
+		static const auto initial = (::QueryPerformanceCounter(&v), v.QuadPart);
 
 		::QueryPerformanceCounter(&v);
-		return 1000 * v.QuadPart / c_high_perf_counter_frequency;
-	}
-
-	double stopwatch(counter_t &counter)
-	{
-		LARGE_INTEGER c;
-		double period;
-
-		::QueryPerformanceCounter(&c);
-		period = c_high_perf_counter_period * (c.QuadPart - counter);
-		counter = c.QuadPart;
-		return period;
+		return static_cast<timestamp_t>(period * (v.QuadPart - initial));
 	}
 
 	datetime get_datetime()

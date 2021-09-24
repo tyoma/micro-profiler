@@ -48,6 +48,26 @@ namespace micro_profiler
 	namespace
 	{
 		const string c_logname = "micro-profiler_standalone.log";
+
+		class logger_instance
+		{
+		public:
+			logger_instance()
+			{
+				mkdir(constants::data_directory().c_str(), 0777);
+				_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
+					&get_datetime));
+				log::g_logger = _logger.get();
+			}
+
+			~logger_instance()
+			{
+				log::g_logger = nullptr;
+			}
+
+		private:
+			unique_ptr<log::multithreaded_logger> _logger;
+		};
 	}
 
 	struct ui_composite
@@ -64,9 +84,7 @@ namespace micro_profiler
 
 	void main(application &app)
 	{
-		mkdir(constants::data_directory().c_str(), 0777);
-		log::g_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
-			&get_datetime));
+		logger_instance logger;
 
 		LOG("MicroProfiler standalone frontend started...");
 

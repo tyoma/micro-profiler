@@ -28,17 +28,7 @@ namespace micro_profiler
 {
 	namespace log
 	{
-		namespace
-		{
-			struct nil_logger : logger
-			{
-				virtual void begin(const char* /*message*/, level /*level_*/) throw() {	}
-				virtual void add_attribute(const attribute&/*a*/) throw() {	}
-				virtual void commit() throw() {	}
-			};
-		}
-
-		logger_ptr g_logger(new nil_logger);
+		logger *g_logger;
 
 		void to_string(buffer_t &buffer, bool value)
 		{	to_string(buffer, value ? "true" : "false");	}

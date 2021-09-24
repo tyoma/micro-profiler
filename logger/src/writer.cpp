@@ -42,7 +42,8 @@ namespace micro_profiler
 			const string ext = dot != string::npos ? filename.substr(dot) : string();
 			unsigned int u = 2;
 
-			filename.resize(dot);
+			if (string::npos != dot)
+				filename.resize(dot);
 			for (string candidate = base_path; file = fopen_exclusive(candidate, "at"), !file; ++u)
 			{
 				candidate = path & filename;
@@ -51,7 +52,7 @@ namespace micro_profiler
 				candidate += ext;
 			}
 			setbuf(file.get(), NULL);
-			return [file] (const char *message) { fputs(message, file.get()); };
+			return [file] (const char *message) {	fputs(message, file.get());	};
 		}
 	}
 }

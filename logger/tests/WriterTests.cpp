@@ -199,6 +199,19 @@ namespace micro_profiler
 					assert_equal("session #2\n", read_line(*f).first);
 				}
 
+
+				test( AttemptToCreateWriterOverInvalidPathReturnsNullWriter )
+				{
+					// ACT
+					auto w = create_writer("wer/\\wer?r");
+
+					// ASSERT
+					assert_is_true(!!w);
+
+					// ACT / ASSERT (nothing happens)
+					w("");
+				}
+
 			end_test_suite
 		}
 	}

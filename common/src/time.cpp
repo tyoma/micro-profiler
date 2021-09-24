@@ -45,13 +45,12 @@ namespace micro_profiler
 	timestamp_t ticks_per_second()
 	{
 		timestamp_t tsc_start, tsc_end;
-		counter_t c;
+		stopwatch sw;
 
-		stopwatch(c);
 		tsc_start = read_tick_counter();
 		for (volatile int i = 0; i < 1000000; ++i)
 		{	}
 		tsc_end = read_tick_counter();
-		return static_cast<timestamp_t>((tsc_end - tsc_start) / stopwatch(c));
+		return static_cast<timestamp_t>((tsc_end - tsc_start) / sw());
 	}
 }

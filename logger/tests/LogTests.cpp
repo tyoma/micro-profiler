@@ -63,16 +63,23 @@ namespace micro_profiler
 			}
 
 
+			test( LogEventIsOkWithNullLogger )
+			{
+				// INIT / ACT / ASSERT
+				log::e(nullptr, "a couple of ints") % 11 % -159;
+			}
+
+
 			test( PlainMessagesArePutToSinkInBeginCommitOrder )
 			{
 				// ACT
-				log::e(*logger, "Lorem ipsum");
+				log::e(logger.get(), "Lorem ipsum");
 
 				// ASSERT
 				assert_equal("+i Lorem ipsum-", logger->buffer);
 
 				// ACT
-				log::e(*logger, "dolor amet", log::severe);
+				log::e(logger.get(), "dolor amet", log::severe);
 
 				// ASSERT
 				assert_equal("+i Lorem ipsum-+S dolor amet-", logger->buffer);
@@ -82,7 +89,7 @@ namespace micro_profiler
 			test( AnnonymousAttributesAreAddedToSink )
 			{
 				// ACT
-				log::e(*logger, "a couple of ints") % 11 % -159;
+				log::e(logger.get(), "a couple of ints") % 11 % -159;
 
 				// ASSERT
 				assert_equal("+i a couple of ints (:11,:-159)-", logger->buffer);
@@ -91,7 +98,7 @@ namespace micro_profiler
 				logger->buffer.clear();
 
 				// ACT
-				log::e(*logger, "a couple of strings") % string("some string") % "some string literal";
+				log::e(logger.get(), "a couple of strings") % string("some string") % "some string literal";
 
 				// ASSERT
 				assert_equal("+i a couple of strings (:some string,:some string literal)-", logger->buffer);
@@ -100,7 +107,7 @@ namespace micro_profiler
 				logger->buffer.clear();
 
 				// ACT
-				log::e(*logger, "another couple of strings") % string("abcdef") % "";
+				log::e(logger.get(), "another couple of strings") % string("abcdef") % "";
 
 				// ASSERT
 				assert_equal("+i another couple of strings (:abcdef,:)-", logger->buffer);
@@ -109,7 +116,7 @@ namespace micro_profiler
 				logger->buffer.clear();
 
 				// ACT
-				log::e(*logger, "empty string") % (const char *)0;
+				log::e(logger.get(), "empty string") % (const char *)0;
 
 				// ASSERT
 				assert_equal("+i empty string (:<null>)-", logger->buffer);

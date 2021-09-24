@@ -54,10 +54,10 @@ namespace micro_profiler
 
 		multithreaded_logger::multithreaded_logger(const writer_t &writer, const time_provider_t &time_provider)
 			: _writer(writer), _time_provider(time_provider)
-		{	e(*this, "---------- Application logging started.", info);	}
+		{	e(this, "---------- Application logging started.", info);	}
 
 		multithreaded_logger::~multithreaded_logger()
-		{	e(*this, "---------- Application logging complete. Bye!", info);	}
+		{	e(this, "---------- Application logging complete. Bye!", info);	}
 
 		void multithreaded_logger::begin(const char *message, level level_) throw()
 		try

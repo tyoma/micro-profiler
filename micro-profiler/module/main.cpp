@@ -31,6 +31,8 @@
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>
 
+#define PREAMBLE "VSPackage Module: "
+
 using namespace std;
 
 namespace micro_profiler
@@ -39,6 +41,7 @@ namespace micro_profiler
 
 	const string c_logname = "micro-profiler_vspackage.log";
 	HINSTANCE g_instance;
+	unique_ptr<log::multithreaded_logger> g_logger;
 
 	shared_ptr<ipc::server> ipc::com::server::create_default_session_factory()
 	{	return shared_ptr<ipc::server>();	}
@@ -91,19 +94,28 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 
 		g_instance = hinstance;
 		mkdir(constants::data_directory().c_str());
-		log::g_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
+		g_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
 			&get_datetime));
+		log::g_logger = g_logger.get();
 
 		const string self = get_module_info(&c_logname).path;
-		const string exe = get_module_info(0).path;
+		const string exe = get_current_executable();
 		const file_version vs = get_file_version(exe);
 
-		LOG("MicroProfiler vspackage module loaded...")
+		LOG(PREAMBLE "loaded...")
 			% A(getpid()) % A(self) % A(exe)
 			% A(vs.major) % A(vs.minor) % A(vs.build) % A(vs.patch);
 	}
 
-	return g_module.DllMain(reason, reserved);
+	auto result = g_module.DllMain(reason, reserved);
+
+	if (DLL_PROCESS_DETACH == reason)
+	{
+		LOG(PREAMBLE "unloaded.");
+		log::g_logger = nullptr;
+	}
+
+	return result;
 }
 
 STDAPI DllCanUnloadNow()

@@ -23,17 +23,45 @@
 #include <collector/calibration.h>
 #include <collector/thread_monitor.h>
 #include <common/constants.h>
+#include <common/module.h>
+#include <common/path.h>
 #include <common/time.h>
 #include <ipc/endpoint.h>
 #include <ipc/misc.h>
+#include <logger/writer.h>
 #include <mt/thread_callbacks.h>
 
+#ifdef _WIN32
+	#include <process.h>
+	
+	#define getpid _getpid
+	#define mkdir _mkdir
+
+	extern "C" int _mkdir(const char *pathname, int mode);
+
+#else
+	#include <sys/stat.h>
+	#include <sys/types.h>
+	#include <unistd.h>
+
+#endif
+
+#define PREAMBLE "Profiler Instance: "
+
 using namespace std;
+
+#ifdef _MSC_VER
+	extern "C"
+#endif
+	micro_profiler::calls_collector *g_collector_ptr = nullptr;
 
 namespace micro_profiler
 {
 	namespace
 	{
+		const size_t c_trace_limit = 5000000;
+
+
 		struct null_channel : ipc::channel
 		{
 			null_channel(ipc::channel &inbound)
@@ -48,6 +76,8 @@ namespace micro_profiler
 
 			ipc::channel &_inbound;
 		};
+
+
 
 		collector_app::channel_ptr_t probe_create_channel(ipc::channel &inbound)
 		{
@@ -67,42 +97,63 @@ namespace micro_profiler
 			{
 				try
 				{
-					return ipc::connect_client(i->c_str(), inbound);
+					LOG(PREAMBLE "connecting...") % A(*i);
+					const auto channel = ipc::connect_client(i->c_str(), inbound);
+					LOG(PREAMBLE "connected...") % A(channel.get());
+					return channel;
 				}
-				catch (const exception &)
+				catch (const exception &e)
 				{
+					LOG(PREAMBLE "failed.") % A(e.what());
 				}
 			}
+			LOG(PREAMBLE "using null channel.");
 			return collector_app::channel_ptr_t(new null_channel(inbound));
 		}
+
+		log::writer_t create_writer()
+		{
+			const auto logname = (string)"micro-profiler." + *get_current_executable() + ".log";
+
+			mkdir(constants::data_directory().c_str(), 0777);
+			return log::create_writer(constants::data_directory() & logname);
+		}
+
+
+		collector_app_instance g_instance(&probe_create_channel, mt::get_thread_callbacks(), c_trace_limit,
+			g_collector_ptr);
 	}
 
 	collector_app_instance::collector_app_instance(const collector_app::frontend_factory_t &frontend_factory,
 			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)
-		: _thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
+		: _logger(create_writer(), (log::g_logger = &_logger, &get_datetime)),
+			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks),
 			_patch_manager(_collector, _eallocator)
 	{
 		collector_ptr = &_collector;
-		_app.reset(new collector_app(frontend_factory, _collector, calibrate_overhead(_collector, trace_limit),
-			*_thread_monitor, _patch_manager));
+
+		const auto oh = calibrate_overhead(_collector, trace_limit);
+		const auto period = 1e9 / ticks_per_second();
+		const auto inner_ns = static_cast<int>(oh.inner * period);
+		const auto total_ns = static_cast<int>((oh.inner + oh.outer) * period);
+
+		LOG(PREAMBLE "overhead calibrated...") % A(inner_ns) % A(total_ns);
+		_app.reset(new collector_app(frontend_factory, _collector, oh, *_thread_monitor, _patch_manager));
 		platform_specific_init();
+		LOG(PREAMBLE "initialized...")
+			% A(get_current_executable()) % A(getpid()) % A(get_module_info(&g_collector_ptr).path);
 	}
 
 	collector_app_instance::~collector_app_instance()
-	{	terminate();	}
+	{
+		terminate();
+		log::g_logger = nullptr;
+	}
 
 	void collector_app_instance::terminate() throw()
 	{	_app.reset();	}
 }
-
-#ifdef _MSC_VER
-	extern "C"
-#endif
-	micro_profiler::calls_collector *g_collector_ptr = nullptr;
-const size_t c_trace_limit = 5000000;
-micro_profiler::collector_app_instance g_instance(&micro_profiler::probe_create_channel, mt::get_thread_callbacks(),
-	c_trace_limit, g_collector_ptr);
 
 #if defined(__clang__) || defined(__GNUC__)
 	#define PUBLIC __attribute__ ((visibility ("default")))

@@ -24,8 +24,6 @@
 
 namespace micro_profiler
 {
-	typedef unsigned long long counter_t;
-
 	struct datetime
 	{
 		unsigned int year : 8; // zero is 1900
@@ -37,8 +35,19 @@ namespace micro_profiler
 		unsigned int millisecond : 10; // 0-999
 	};
 
+	class stopwatch
+	{
+	public:
+		stopwatch();
+
+		double operator ()() throw();
+
+	private:
+		double _period;
+		timestamp_t _last;
+	};
+
 	timestamp_t clock(); // monotonic clock in milliseconds
-	double stopwatch(counter_t &counter);
 	timestamp_t read_tick_counter();
 	timestamp_t ticks_per_second();
 	datetime get_datetime(); // Zulu date/time

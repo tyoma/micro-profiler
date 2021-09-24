@@ -778,7 +778,7 @@ namespace micro_profiler
 					client_ready.set();
 					return client_;
 				};
-				counter_t c;
+				stopwatch sw;
 
 				// INIT / ACT
 				unique_ptr<mt::thread> t(new mt::thread([&] {
@@ -791,9 +791,9 @@ namespace micro_profiler
 				client_ready.wait();
 
 				// ACT
-				stopwatch(c);
+				sw();
 				app->stop();
-				const auto t1 = stopwatch(c);
+				const auto t1 = sw();
 				t->join();
 
 				// INIT / ACT
@@ -807,9 +807,9 @@ namespace micro_profiler
 				client_ready.wait();
 
 				// ACT
-				stopwatch(c);
+				sw();
 				app->stop();
-				auto t2 = stopwatch(c);
+				auto t2 = sw();
 				t->join();
 
 				// ASSERT

@@ -25,6 +25,7 @@
 #include <collector/collector_app.h>
 #include <common/memory.h>
 #include <common/noncopyable.h>
+#include <logger/multithreaded_logger.h>
 #include <patcher/image_patch_manager.h>
 
 namespace micro_profiler
@@ -42,6 +43,7 @@ namespace micro_profiler
 		void platform_specific_init();
 
 	private:
+		log::multithreaded_logger _logger;
 		std::shared_ptr<thread_monitor> _thread_monitor;
 		allocator _allocator;
 		executable_memory_allocator _eallocator;

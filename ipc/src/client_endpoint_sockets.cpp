@@ -23,10 +23,13 @@
 #include "socket_helpers.h"
 
 #include <arpa/inet.h>
+#include <logger/log.h>
 #include <mt/thread.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <vector>
+
+#define PREAMBLE "IPC socket client: "
 
 using namespace std;
 
@@ -87,6 +90,7 @@ namespace micro_profiler
 				byte_representation<unsigned int> size;
 				vector<byte> buffer;
 
+				LOG(PREAMBLE "processing thread started...") % A(inbound);
 				while (::recv(_socket, size.bytes, sizeof(size), MSG_WAITALL) == (int)sizeof(size))
 				{
 					size.reorder();
@@ -94,7 +98,9 @@ namespace micro_profiler
 					::recv(_socket, (char *)&buffer[0], size.value, MSG_WAITALL);
 					inbound->message(const_byte_range(&buffer[0], buffer.size()));
 				}
+				LOG(PREAMBLE "disconnecting from the server...") % A(inbound);
 				inbound->disconnect();
+				LOG(PREAMBLE "processing thread ended.");
 			}
 
 			int client_session::open(const host_port &hp)

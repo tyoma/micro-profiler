@@ -502,18 +502,18 @@ namespace micro_profiler
 				vector<int> buffer3(3000), buffer4(4000);
 				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&bubble_sort), "test", &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
-				counter_t c;
+				stopwatch sw;
 
 				// ACT
 				stopwatch(c);
 				f(&buffer1[0], &buffer1[0] + buffer1.size());
-				const double rd1 = stopwatch(c);
+				const double rd1 = sw();
 				f(&buffer2[0], &buffer2[0] + buffer2.size());
-				const double rd2 = stopwatch(c);
+				const double rd2 = sw();
 				f(&buffer3[0], &buffer3[0] + buffer3.size());
-				const double rd3 = stopwatch(c);
+				const double rd3 = sw();
 				f(&buffer4[0], &buffer4[0] + buffer4.size());
-				const double rd4 = stopwatch(c);
+				const double rd4 = sw();
 
 				// ASSERT
 				assert_equal(8u, trace.call_log.size());

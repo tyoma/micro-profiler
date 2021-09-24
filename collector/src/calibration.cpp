@@ -79,8 +79,6 @@ namespace micro_profiler
 				const timestamp_t inner = f.inclusive_time / f.times_called;
 				const timestamp_t total = ((end - start) - (end_ref - start_ref)) / f.times_called;
 
-				printf("MicroProfiler overhead (ticks): inner=%lld, total_original=%lld, total=%lld\n",
-					inner, (end_ref - start_ref) / f.times_called, total);
 				o = overhead(inner, total - inner);
 			}
 		}

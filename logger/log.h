@@ -34,7 +34,6 @@ namespace micro_profiler
 		struct logger;
 
 		typedef std::vector<char> buffer_t;
-		typedef std::shared_ptr<logger> logger_ptr;
 
 		enum level { severe, info };
 
@@ -60,7 +59,7 @@ namespace micro_profiler
 		class e/*vent*/ : noncopyable
 		{
 		public:
-			e/*vent*/(logger &l, const char *message, level level_ = info);
+			e/*vent*/(logger *l, const char *message, level level_ = info);
 			~e/*vent*/();
 
 			template <typename T>
@@ -68,7 +67,7 @@ namespace micro_profiler
 			const e/*vent*/ &operator %(const attribute &a) const;
 
 		private:
-			logger &_logger;
+			logger *_logger;
 		};
 
 		struct logger
@@ -111,12 +110,18 @@ namespace micro_profiler
 		{	log::to_string(buffer, _value);	}
 
 
-		inline e/*vent*/::e(logger &l, const char *message, level level_)
+		inline e/*vent*/::e(logger *l, const char *message, level level_)
 			: _logger(l)
-		{	_logger.begin(message, level_);	}
+		{
+			if (_logger)
+				_logger->begin(message, level_);
+		}
 
 		inline e/*vent*/::~e()
-		{	_logger.commit();	}
+		{
+			if (_logger)
+				_logger->commit();
+		}
 
 		template <typename T>
 		inline const e/*vent*/ &e/*vent*/::operator %(const T &value) const
@@ -126,13 +131,17 @@ namespace micro_profiler
 		}
 
 		inline const e/*vent*/ &e/*vent*/::operator %(const attribute &a_) const
-		{	return _logger.add_attribute(a_), *this;	}
+		{
+			if (_logger)
+				_logger->add_attribute(a_);
+			return *this;
+		}
 
 
-		extern logger_ptr g_logger;
+		extern logger *g_logger;
 	}
 }
 
 #define A(__a) static_cast<const micro_profiler::log::attribute &>(micro_profiler::log::a(#__a, __a))
-#define LOG(__message) micro_profiler::log::e(*micro_profiler::log::g_logger, (__message), micro_profiler::log::info)
-#define LOGE(__message) micro_profiler::log::e(*micro_profiler::log::g_logger, (__message), micro_profiler::log::severe)
+#define LOG(__message) micro_profiler::log::e(micro_profiler::log::g_logger, (__message), micro_profiler::log::info)
+#define LOGE(__message) micro_profiler::log::e(micro_profiler::log::g_logger, (__message), micro_profiler::log::severe)

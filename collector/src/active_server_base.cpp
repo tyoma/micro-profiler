@@ -23,7 +23,10 @@
 #include <common/time.h>
 #include <ipc/marshalled_session.h>
 #include <ipc/server_session.h>
+#include <logger/log.h>
 #include <scheduler/scheduler.h>
+
+#define PREAMBLE "Active server: "
 
 using namespace std;
 
@@ -57,20 +60,26 @@ namespace micro_profiler
 	{	stop(0);	}
 
 	void active_server_base::start(const frontend_factory_t &factory)
-	{	_frontend_thread.reset(new mt::thread([this, factory] {	worker(factory);	}));	}
+	{
+		LOG(PREAMBLE "starting worker thread.");
+		_frontend_thread.reset(new mt::thread([this, factory] {	worker(factory);	}));
+	}
 
 	void active_server_base::stop(int exiting_message_id)
 	{
 		if (_frontend_thread.get())
 		{
+			LOG(PREAMBLE "stop request received...") % A(exiting_message_id);
 			queue.schedule([this, exiting_message_id] {
 				if (on_exiting() /* TODO: untested! */ && _session)
 					_exit_requested = true, _session->message(exiting_message_id, [] (server_session::serializer &) {	});
 				else
 					_exit_confirmed = true;
+				LOG(PREAMBLE "processing stop request...") % A(_exit_confirmed);
 			});
 			_frontend_thread->join();
 			_frontend_thread.reset();
+			LOG(PREAMBLE "worker thread exited.");
 		}
 	}
 
@@ -83,6 +92,7 @@ namespace micro_profiler
 				_exit_confirmed = true;
 			_session = nullptr;
 			s.reset();
+			LOG(PREAMBLE "remote session disconnected...") % A(_exit_confirmed);
 		};
 
 		s.reset(new marshalled_active_session(factory, qw, [&] (channel &outbound) -> channel_ptr_t {
@@ -94,10 +104,12 @@ namespace micro_profiler
 			return session;
 		}));
 
+		LOG(PREAMBLE "worker started!");
 		do
 		{
 			queue.wait();
 			queue.execute_ready(mt::milliseconds(100));
 		} while (!_exit_confirmed);
+		LOG(PREAMBLE "worker thread ending...");
 	}
 }

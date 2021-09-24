@@ -21,6 +21,7 @@
 #include "file.h"
 
 #include <common/string.h>
+#include <errno.h>
 
 using namespace std;
 
@@ -32,7 +33,7 @@ namespace micro_profiler
 		{
 			if (FILE *file = _wfsopen(unicode(path).c_str(), unicode(mode).c_str(), _SH_DENYWR))
 				return shared_ptr<FILE>(file, &fclose);
-			return shared_ptr<FILE>();
+			return EACCES == errno ? shared_ptr<FILE>() : shared_ptr<FILE>(stderr, [] (...) {});
 		}
 	}
 }

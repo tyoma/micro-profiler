@@ -76,7 +76,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				scontext::wire w;
+				scontext::additive w;
 
 				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, plural

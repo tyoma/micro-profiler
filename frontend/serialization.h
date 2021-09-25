@@ -37,7 +37,7 @@ namespace micro_profiler
 
 
 		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, scontext::wire &context)
+		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, scontext::additive &context)
 		{
 			scontext::detailed_threaded inner_context;
 
@@ -125,10 +125,17 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, histogram &data, scontext::wire &context, unsigned int ver)
+	inline void serialize(ArchiveT &archive, histogram &data, scontext::additive &context, unsigned int ver)
 	{
 		serialize(archive, context.histogram_buffer, ver);
 		data += context.histogram_buffer;
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, histogram &data, scontext::interpolating &context, unsigned int ver)
+	{
+		serialize(archive, context.histogram_buffer, ver);
+		interpolate(data, context.histogram_buffer, context.alpha);
 	}
 
 	namespace tables

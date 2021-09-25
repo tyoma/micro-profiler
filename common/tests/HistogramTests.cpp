@@ -215,7 +215,7 @@ namespace micro_profiler
 
 				h.add(10), h.add(11), h.add(9), h.add(800);
 
-				// ACT
+				// ACT / ASSERT
 				assert_equal(&h, &(h += addition));
 
 				// ASSERT
@@ -232,6 +232,42 @@ namespace micro_profiler
 
 				// ACT
 				h += addition;
+
+				// ASSERT
+				unsigned reference2[] = {	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,	};
+
+				assert_equal(reference2, h);
+				assert_equal(scale(10, 900, 12), h.get_scale());
+			}
+
+
+			test( HistogramIsResetOnInterpolatingWithADifferentlyScaledOne )
+			{
+				// INIT
+				histogram h, addition;
+
+				h.set_scale(scale(0, 900, 5));
+				addition.set_scale(scale(10, 900, 5));
+
+				h.add(10), h.add(11), h.add(9), h.add(800);
+
+				// ACT
+				interpolate(h, addition, 1.0f);
+
+				// ASSERT
+				unsigned reference1[] = {	0, 0, 0, 0, 0,	};
+
+				assert_equal(reference1, h);
+				assert_equal(scale(10, 900, 5), h.get_scale());
+
+				// INIT
+				h.add(190);
+				addition.set_scale(scale(10, 900, 12));
+				addition.add(50);
+				addition.add(750);
+
+				// ACT
+				interpolate(h, addition, 1.0f);
 
 				// ASSERT
 				unsigned reference2[] = {	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,	};
@@ -262,6 +298,47 @@ namespace micro_profiler
 				unsigned reference[] = {	0, 2, 1, 0, 0, 0, 0, 4, 1, 0, 0	};
 
 				assert_equal(reference, h);
+			}
+
+
+			test( HistogramValuesAreInterpolatedAsRequested )
+			{
+				// INIT
+				histogram h, addition;
+
+				h.set_scale(scale(0, 5, 6));
+				addition.set_scale(scale(0, 5, 6));
+
+				addition.add(0, 100);
+				addition.add(2, 51);
+				addition.add(3, 117);
+
+				// ACT
+				interpolate(h, addition, 7.0f / 256);
+
+				// ASSERT
+				unsigned reference1[] = {	2, 0, 1, 3, 0, 0,	};
+
+				assert_equal(reference1, h);
+
+				// INIT
+				const auto addition2 = h;
+
+				// ACT
+				interpolate(h, addition, 1.0f);
+
+				// ASSERT
+				unsigned reference2[] = {	100, 0, 51, 117, 0, 0,	};
+
+				assert_equal(reference2, h);
+
+				// ACT
+				interpolate(h, addition2, 0.5f);
+
+				// ASSERT
+				unsigned reference3[] = {	51, 0, 26, 60, 0, 0,	};
+
+				assert_equal(reference3, h);
 			}
 
 

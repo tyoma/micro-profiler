@@ -26,7 +26,7 @@ namespace micro_profiler
 			const vector< pair<long_address_t, statistic_types_t<long_address_t>::function_detailed> > empty_functions;
 		}
 
-		begin_test_suite( SerializationTests )
+		begin_test_suite( AdditiveDeSerializationTests )
 			test( ContextDeserializationFillsThreadIDFromContext )
 			{
 				// INIT
@@ -68,6 +68,7 @@ namespace micro_profiler
 				assert_equivalent(reference1, s1);
 				assert_equivalent(reference2, s2);
 			}
+
 
 			test( DeserializationIntoExistingValuesAddsValuesBase )
 			{
@@ -379,7 +380,7 @@ namespace micro_profiler
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> ser(buffer);
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
-				scontext::wire collected_ids;
+				scontext::additive collected_ids;
 				statistic_types::map_detailed m;
 
 				ser(plural + make_pair(3u, empty_functions) + make_pair(2u, empty_functions));
@@ -406,7 +407,7 @@ namespace micro_profiler
 			test( HistogramIsDeserializedOneToOneWhenWritingOverNew )
 			{
 				// INIT
-				scontext::wire w;
+				scontext::additive w;
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
@@ -449,7 +450,7 @@ namespace micro_profiler
 			test( DeserializedValueIsAddedToAHistogram )
 			{
 				// INIT
-				scontext::wire w;
+				scontext::additive w;
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
@@ -488,6 +489,55 @@ namespace micro_profiler
 				// ASSERT
 				unsigned reference2a[] = {	0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0,	};
 				unsigned reference2[] = {	2, 0, 1, 2, 1, 0, 2, 3, 0, 3, 0,	};
+
+				assert_equal(reference2a, w.histogram_buffer);
+				assert_equal(reference2, v);
+			}
+
+		end_test_suite
+
+		begin_test_suite( InterpolatingDeSerializationTests )
+			test( DeserializedValueIsInterpolatedWithExisting )
+			{
+				// INIT
+				scontext::interpolating w = {	75.0f / 256,	};
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				histogram h1;
+				histogram h2;
+				histogram v;
+
+				v.set_scale(scale(10, 20, 11));
+				v.add(13, 200);
+				v.add(17, 100);
+				v.add(19, 300);
+				h1.set_scale(scale(10, 20, 11));
+				h1.add(10, 240);
+				h1.add(17, 1800);
+				h2.set_scale(scale(10, 20, 11));
+				h2.add(12, 10);
+				h2.add(14, 130);
+				h2.add(16, 73);
+
+				// ACT
+				s(h1);
+				s(h2);
+				ds(v, w);
+
+				// ASSERT
+				unsigned reference1a[] = {	240, 0, 0, 0, 0, 0, 0, 1800, 0, 0, 0,	};
+				unsigned reference1[] = {	70, 0, 0, 141, 0, 0, 0, 598, 0, 212, 0,	};
+
+				assert_equal(reference1a, w.histogram_buffer);
+				assert_equal(reference1, v);
+
+				// ACT
+				ds(v, w);
+
+				// ASSERT
+				unsigned reference2a[] = {	0, 0, 10, 0, 130, 0, 73, 0, 0, 0, 0,	};
+				unsigned reference2[] = {	49, 0, 2, 99, 38, 0, 21, 422, 0, 149, 0,	};
 
 				assert_equal(reference2a, w.histogram_buffer);
 				assert_equal(reference2, v);

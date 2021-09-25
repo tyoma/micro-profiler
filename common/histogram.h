@@ -73,7 +73,6 @@ namespace micro_profiler
 		void add(value_t value, value_t d = 1);
 
 		void reset();
-		histogram &operator +=(const histogram &rhs);
 
 	private:
 		scale _scale;
@@ -83,6 +82,10 @@ namespace micro_profiler
 		friend void serialize(ArchiveT &archive, histogram &data, unsigned int ver);
 	};
 
+
+
+	histogram &operator +=(histogram &lhs, const histogram &rhs);
+	void interpolate(histogram &lhs, const histogram &rhs, float alpha);
 
 
 	inline scale::scale()

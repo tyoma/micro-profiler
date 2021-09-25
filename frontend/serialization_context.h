@@ -36,9 +36,15 @@ namespace micro_profiler
 			unsigned int threadid;
 		};
 
-		struct wire
+		struct additive
 		{
 			std::vector<unsigned int> threads;
+			histogram histogram_buffer;
+		};
+
+		struct interpolating
+		{
+			float alpha;
 			histogram histogram_buffer;
 		};
 	}

@@ -51,20 +51,34 @@ namespace micro_profiler
 	void histogram::reset()
 	{	assign(size(), value_t());	}
 
-	histogram &histogram::operator +=(const histogram &rhs)
+
+	histogram &operator +=(histogram &lhs, const histogram &rhs)
 	{
-		if (_scale != rhs.get_scale())
+		if (lhs.get_scale() != rhs.get_scale())
 		{
-			*this = rhs;
+			lhs = rhs;
 		}
 		else
 		{
-			auto l = begin();
+			auto l = lhs.begin();
 			auto r = rhs.begin();
 
-			for (; l != end(); ++l, ++r)
+			for (auto e = lhs.end(); l != e; ++l, ++r)
 				*l += *r;
 		}
-		return *this;
+		return lhs;
+	}
+
+	void interpolate(histogram &lhs, const histogram &rhs, float alpha)
+	{
+		if (lhs.get_scale() != rhs.get_scale())
+			lhs.set_scale(rhs.get_scale());
+
+		auto l = lhs.begin();
+		auto r = rhs.begin();
+		const auto ialpha = static_cast<int>(256.0f * alpha);
+
+		for (auto e = lhs.end(); l != e; ++l, ++r)
+			*l += (*r - *l) * ialpha >> 8;
 	}
 }

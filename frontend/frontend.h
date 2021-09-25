@@ -68,7 +68,7 @@ namespace micro_profiler
 		const std::shared_ptr<tables::module_mappings> _mappings;
 		const std::shared_ptr<tables::patches> _patches;
 		const std::shared_ptr<tables::threads> _threads;
-		scontext::wire _serialization_context;
+		scontext::additive _serialization_context;
 		bool _initialized;
 
 		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;

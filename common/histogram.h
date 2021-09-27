@@ -33,6 +33,8 @@ namespace micro_profiler
 		scale();
 		scale(value_t near_value, value_t far_value, unsigned int samples_);
 
+		value_t near_value() const;
+		value_t far_value() const;
 		index_t samples() const;
 		bool operator ()(index_t &index, value_t value) const;
 
@@ -91,6 +93,12 @@ namespace micro_profiler
 	inline scale::scale()
 		: _samples(0), _near(0), _far(0)
 	{	}
+
+	inline value_t scale::near_value() const
+	{	return _near;	}
+
+	inline value_t scale::far_value() const
+	{	return _far;	}
 
 	inline index_t scale::samples() const
 	{	return _samples;	}

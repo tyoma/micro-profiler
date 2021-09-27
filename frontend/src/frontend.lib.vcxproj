@@ -40,6 +40,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="display_scale.cpp" />
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="frontend_patcher.cpp" />
@@ -66,6 +67,7 @@
     <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\display_scale.h" />
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\file.h" />
     <ClInclude Include="..\frontend.h" />

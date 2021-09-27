@@ -52,6 +52,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DisplayScaleTests.cpp" />
     <ClCompile Include="FrontendPatcherTests.cpp" />
     <ClCompile Include="FrontendStatisticsTests.cpp" />
     <ClCompile Include="HeadersModelTests.cpp" />

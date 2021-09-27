@@ -87,7 +87,7 @@ namespace micro_profiler
 		invalidate_trackables();
 		for (size_t i = 0, count = _underlying.size(); i != count; ++i)
 		{
-			const auto &key = _underlying[i].first;
+			const auto key = key_traits<value_type>::get_key(_underlying[i]);
 
 			for (auto j = b; j != e; ++j)
 				if (j->key == key)
@@ -99,7 +99,7 @@ namespace micro_profiler
 	inline std::shared_ptr<wpl::trackable> trackables_provider<UnderlyingT>::track(size_t index) const
 	{
 		auto trackables = _trackables;
-		auto i = trackables->insert(trackables->end(), trackable(_underlying[index].first, index));
+		auto i = trackables->insert(trackables->end(), trackable(key_traits<value_type>::get_key(_underlying[index]), index));
 
 		return std::shared_ptr<wpl::trackable>(&*i, [trackables, i] (void *) {	trackables->erase(i);	});
 	}

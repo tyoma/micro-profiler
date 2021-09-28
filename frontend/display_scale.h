@@ -21,9 +21,10 @@ namespace micro_profiler
 		const_iterator begin() const;
 		const_iterator end() const;
 		std::pair<float, float> at(unsigned int index) const;
+		float operator [](float value) const;
 
 	private:
-		float _near, _far, _major, _bin_width;
+		float _near, _far, _major, _bin_width, _base, _display_k;
 	};
 
 	struct display_scale::tick

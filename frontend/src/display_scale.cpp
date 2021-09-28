@@ -7,11 +7,23 @@ using namespace std;
 
 namespace micro_profiler
 {
-	display_scale::display_scale(const scale &scale_, value_t divisor, int pixel_size)
+	display_scale::display_scale(const scale &scale_, value_t divisor, int pixel_size_)
 		: _near(static_cast<float>(scale_.near_value()) / divisor), _far(static_cast<float>(scale_.far_value()) / divisor)
 	{
-		_major = _far > _near ? major_tick(_far - _near) : 0.0f;
-		_bin_width = static_cast<float>(pixel_size) / scale_.samples();
+		const auto pixel_size = static_cast<float>(pixel_size_);
+
+		_bin_width = pixel_size / scale_.samples();
+		if (_far > _near)
+		{
+			const auto range_delta = _far - _near;
+
+			_major = major_tick(range_delta);
+			_display_k = (pixel_size - _bin_width) / range_delta;
+		}
+		else
+		{
+			_display_k = _major = 0.0f;
+		}
 	}
 
 	FORCE_NOINLINE float display_scale::next_tick(float value, float tick)
@@ -44,6 +56,9 @@ namespace micro_profiler
 		float v = index * _bin_width;
 		return make_pair(v, v + _bin_width);
 	}
+
+	float display_scale::operator [](float value) const
+	{	return _display_k * (value - _near) + 0.5f * _bin_width;	}
 
 
 	display_scale::const_iterator::const_iterator(float major_, float far, tick tick_)

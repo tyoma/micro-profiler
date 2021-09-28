@@ -156,6 +156,24 @@ namespace micro_profiler
 				assert_equal_pred(make_pair(8.4212f, 10.5265f), ds2.at(4), eq());
 				assert_equal_pred(make_pair(37.8947f, 40.0f), ds2.at(18), eq());
 			}
+
+
+			test( ValueIsConvertedToDisplayCoordinateAccordinglyToScale )
+			{
+				// INIT
+				scale s(110, 340, 19); // bin width: 12.(7)
+				display_scale ds1(s, 1, 100);
+				display_scale ds2(s, 1, 40);
+
+				// ACT / ASSERT
+				assert_approx_equal(2.6316f, ds1[110.f], 0.001);
+				assert_approx_equal(44.2334f, ds1[211.f], 0.001);
+				assert_approx_equal(97.3684f, ds1[340.f], 0.001);
+
+				assert_approx_equal(1.0526f, ds2[110.f], 0.001);
+				assert_approx_equal(17.6934f, ds2[211.f], 0.001);
+				assert_approx_equal(38.9474f, ds2[340.f], 0.001);
+			}
 		end_test_suite
 	}
 }

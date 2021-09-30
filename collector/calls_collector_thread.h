@@ -32,11 +32,10 @@ namespace micro_profiler
 	class calls_collector_thread : public buffers_queue<call_record>
 	{
 	public:
-		typedef std::function<void (unsigned long long, const call_record *calls, size_t count)> reader_t;
+		typedef std::function<void (unsigned int id, const call_record *calls, size_t count)> reader_t;
 
 	public:
-		explicit calls_collector_thread(allocator &allocator_, const buffering_policy &policy,
-			const sequence_number_gen_t & = [] {	return 0;	});
+		explicit calls_collector_thread(allocator &allocator_, const buffering_policy &policy, unsigned int id);
 
 		void on_enter(const void **stack_ptr, timestamp_t timestamp, const void *callee) throw();
 		const void *on_exit(const void **stack_ptr, timestamp_t timestamp) throw();

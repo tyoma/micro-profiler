@@ -27,42 +27,24 @@ namespace micro_profiler
 		begin_test_suite( BuffersQueueTests )
 			allocator al;
 
-			test( BlockSequenceNumberIsSuppliedToAReader )
+			test( CollectorIdIsSuppliedToAReadCall )
 			{
-				// INIT
-				unsigned long long seqnums_[] = {	1001, 0x310000001ull, 1, 2, 5, 9, 17, 7	};
-				auto seqnums = mkvector(seqnums_);
-				vector<unsigned long long> seqnums_result;
-				buffers_queue<int> q(al, big_policy, [&] () -> unsigned long long {
-					auto seq = seqnums.back();
+				// INIT / ACT
+				buffers_queue<int> q1(al, big_policy, 1177);
+				buffers_queue<int> q2(al, big_policy, 1977);
 
-					seqnums.pop_back();
-					return seq;
+				// ACT / ASSERT
+				fill_buffer(q1, buffering_policy::buffer_size);
+				q1.read_collected([&] (unsigned id, ...) {
+					assert_equal(1177u, id);
+				});
+				fill_buffer(q2, 2 * buffering_policy::buffer_size);
+				q2.read_collected([&] (unsigned id, ...) {
+					assert_equal(1977u, id);
 				});
 
-				// ACT
-				fill_buffer(q, 3 * buffering_policy::buffer_size);
-				q.read_collected([&] (unsigned long long seq, ...) {
-					seqnums_result.push_back(seq);
-				});
-
-				// ASSERT
-				unsigned long long reference1[] = {	7, 17, 9,	};
-
-				assert_equal(reference1, seqnums_result);
-
-				// ACT
-				fill_buffer(q, 4 * buffering_policy::buffer_size);
-				q.read_collected([&] (unsigned long long seq, ...) {
-					seqnums_result.push_back(seq);
-				});
-
-				// ASSERT
-				unsigned long long reference2[] = {	7, 17, 9, 5, 2, 1, 0x310000001ull,	};
-
-				assert_equal(reference2, seqnums_result);
-
-
+				assert_equal(1177u, q1.get_id());
+				assert_equal(1977u, q2.get_id());
 			}
 		end_test_suite
 	}

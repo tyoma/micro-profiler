@@ -37,12 +37,11 @@ namespace micro_profiler
 	class thread_queue_manager : noncopyable
 	{
 	public:
-		typedef std::function<unsigned int ()> this_thread_id_cb;
-		typedef std::function<unsigned long long ()> sequence_number_gen_t;
+		typedef std::function<unsigned int ()> id_gen_cb;
 
 	public:
 		thread_queue_manager(allocator &allocator_, const buffering_policy &policy, mt::thread_callbacks &callbacks,
-			const this_thread_id_cb &this_thread_id, const sequence_number_gen_t &sequence_gen = [] {	return 0ull;	});
+			const id_gen_cb &id_gen);
 
 		void set_buffering_policy(const buffering_policy &policy);
 		template <typename ReaderT>
@@ -54,7 +53,7 @@ namespace micro_profiler
 		Q &construct_queue();
 
 	private:
-		typedef std::vector< std::pair< unsigned int, std::shared_ptr<Q> > > queues_t;
+		typedef std::vector< std::shared_ptr<Q> > queues_t;
 
 	private:
 		mt::tls<Q> _queue_pointers_tls;
@@ -64,18 +63,15 @@ namespace micro_profiler
 		allocator &_allocator;
 		mt::mutex _mtx;
 		buffering_policy _policy;
-		const this_thread_id_cb _this_thread_id;
-		const sequence_number_gen_t _sequence_gen;
+		const id_gen_cb _id_gen;
 	};
 
 
 
 	template <typename Q>
 	inline thread_queue_manager<Q>::thread_queue_manager(allocator &allocator_, const buffering_policy &policy,
-			mt::thread_callbacks &callbacks, const this_thread_id_cb &this_thread_id,
-			const sequence_number_gen_t &sequence_gen)
-		: _thread_callbacks(callbacks), _allocator(allocator_), _policy(policy), _this_thread_id(this_thread_id),
-			_sequence_gen(sequence_gen)
+			mt::thread_callbacks &callbacks, const id_gen_cb &id_gen)
+		: _thread_callbacks(callbacks), _allocator(allocator_), _policy(policy), _id_gen(id_gen)
 	{	}
 
 	template <typename Q>
@@ -84,7 +80,7 @@ namespace micro_profiler
 		mt::lock_guard<mt::mutex> l(_mtx);
 
 		for (auto i = _queues.begin(); i != _queues.end(); ++i)
-			i->second->set_buffering_policy(policy);
+			(*i)->set_buffering_policy(policy);
 		_policy = policy;
 	}
 
@@ -92,15 +88,10 @@ namespace micro_profiler
 	template <typename ReaderT>
 	inline void thread_queue_manager<Q>::read_collected(const ReaderT &reader)
 	{
-		typedef typename Q::value_type type;
 		mt::lock_guard<mt::mutex> l(_mtx);
 
 		for (auto i = _queues.begin(); i != _queues.end(); ++i)
-		{
-			i->second->read_collected([&reader, i] (unsigned long long sequence, const type *calls, size_t count)	{
-				reader(sequence, i->first, calls, count);
-			});
-		}
+			(*i)->read_collected(reader);
 	}
 
 	template <typename Q>
@@ -121,14 +112,26 @@ namespace micro_profiler
 	template <typename Q>
 	FORCE_NOINLINE inline Q &thread_queue_manager<Q>::construct_queue()
 	{
+		unsigned int id;
 		buffering_policy policy(0, 0, 0);
-		{	mt::lock_guard<mt::mutex> l(_mtx);	policy = _policy;	}
-		const auto trace = std::make_shared<Q>(_allocator, policy, _sequence_gen);
-		mt::lock_guard<mt::mutex> l(_mtx);
+
+		{
+			mt::lock_guard<mt::mutex> l(_mtx);
+			
+			id = _id_gen();
+			policy = _policy;
+		}
+
+		const auto trace = std::make_shared<Q>(_allocator, policy, id);
 
 		_thread_callbacks.at_thread_exit([trace] {	trace->flush();	});
-		_queues.push_back(std::make_pair(_this_thread_id(), trace));
 		_queue_pointers_tls.set(trace.get());
+
+		{
+			mt::lock_guard<mt::mutex> l(_mtx);
+
+			_queues.push_back(trace);
+		}
 		return *trace;
 	}
 }

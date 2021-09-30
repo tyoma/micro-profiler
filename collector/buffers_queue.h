@@ -36,12 +36,12 @@ namespace micro_profiler
 	class buffers_queue
 	{
 	public:
-		typedef std::function<unsigned long long ()> sequence_number_gen_t;
 		typedef E value_type;
 
 	public:
-		buffers_queue(allocator &allocator_, const buffering_policy &policy,
-			const sequence_number_gen_t &sequence_gen = [] {	return 0ull;	});
+		buffers_queue(allocator &allocator_, const buffering_policy &policy, unsigned int id);
+
+		unsigned int get_id() throw();
 
 		E &current() throw();
 		void push() throw();
@@ -67,6 +67,7 @@ namespace micro_profiler
 		E *_ptr;
 		unsigned int _n_left;
 
+		unsigned int _id;
 		buffer_ptr _active_buffer;
 		polyq::circular_buffer< buffer_ptr, polyq::static_entry<buffer_ptr> > _ready_buffers;
 		buffer_ptr *_empty_buffers_top;
@@ -77,7 +78,6 @@ namespace micro_profiler
 		allocator &_allocator;
 		mt::event _continue;
 		mt::mutex _mtx;
-		const sequence_number_gen_t _sequence_gen;
 	};
 
 	template <typename E>
@@ -85,7 +85,6 @@ namespace micro_profiler
 	{
 		E data[buffering_policy::buffer_size];
 		unsigned size;
-		unsigned long long sequence_number;
 	};
 
 	template <typename E>
@@ -104,10 +103,9 @@ namespace micro_profiler
 
 
 	template <typename E>
-	inline buffers_queue<E>::buffers_queue(allocator &allocator_, const buffering_policy &policy,
-			const sequence_number_gen_t &sequence_gen)
-		: _ready_buffers(policy.max_buffers()), _allocated_buffers(0), _policy(policy),
-			_empty_buffers(new buffer_ptr[policy.max_buffers()]), _allocator(allocator_), _sequence_gen(sequence_gen)
+	inline buffers_queue<E>::buffers_queue(allocator &allocator_, const buffering_policy &policy, unsigned int id)
+		: _id(id), _ready_buffers(policy.max_buffers()), _allocated_buffers(0), _policy(policy),
+			_empty_buffers(new buffer_ptr[policy.max_buffers()]), _allocator(allocator_)
 	{
 		buffer_ptr b;
 
@@ -116,6 +114,10 @@ namespace micro_profiler
 		start_buffer(b);
 		adjust_empty_buffers(policy, 0u);
 	}
+
+	template <typename E>
+	inline unsigned int buffers_queue<E>::get_id() throw()
+	{	return _id;	}
 
 	template <typename E>
 	inline E &buffers_queue<E>::current() throw()
@@ -159,7 +161,7 @@ namespace micro_profiler
 			return !!n;
 		}); )
 		{
-			reader(ready->sequence_number, ready->data, ready->size);
+			reader(_id, ready->data, ready->size);
 			_mtx.lock();
 				const bool notify_continue = _empty_buffers_top == _empty_buffers.get();
 				std::swap(*_empty_buffers_top++, ready);
@@ -198,7 +200,6 @@ namespace micro_profiler
 	inline void buffers_queue<E>::start_buffer(buffer_ptr &new_buffer) throw()
 	{
 		std::swap(_active_buffer, new_buffer);
-		_active_buffer->sequence_number = _sequence_gen();
 		_ptr = _active_buffer->data;
 		_n_left = buffering_policy::buffer_size;
 	}

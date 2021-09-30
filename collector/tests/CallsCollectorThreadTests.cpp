@@ -75,7 +75,7 @@ namespace micro_profiler
 			test( NoCallsReadIfNoneWereMade )
 			{
 				// INIT
-				calls_collector_thread cc(allocator_, bp(2u));
+				calls_collector_thread cc(allocator_, bp(2u), 1u);
 
 				// ACT
 				cc.read_collected(acceptor);
@@ -89,7 +89,7 @@ namespace micro_profiler
 			test( UpToBufferSizeMinusOneCallsDoNotLeadToReadCalls )
 			{
 				// INIT
-				calls_collector_thread cc(allocator_, bp(2u));
+				calls_collector_thread cc(allocator_, bp(2u), 1u);
 
 				for (unsigned i = 0; i != buffering_policy::buffer_size - 1; ++i)
 				{
@@ -108,7 +108,7 @@ namespace micro_profiler
 			{
 				// INIT
 				call_record r;
-				calls_collector_thread cc(allocator_, bp(2u));
+				calls_collector_thread cc(allocator_, bp(2u), 1u);
 				vector<call_record> reference;
 
 				for (unsigned i = 0; i != buffering_policy::buffer_size - 1; ++i)
@@ -133,7 +133,7 @@ namespace micro_profiler
 			{
 				// INIT
 				call_record r;
-				calls_collector_thread cc(allocator_, bp(3u));
+				calls_collector_thread cc(allocator_, bp(3u), 1u);
 				vector<call_record> reference[2];
 
 				for (unsigned i = 0; i != 2 * buffering_policy::buffer_size - 1; ++i)
@@ -155,9 +155,9 @@ namespace micro_profiler
 			test( BuffersAreRecycledAfterReading )
 			{
 				// INIT
-				calls_collector_thread cc1(allocator_, bp(2u));
-				calls_collector_thread cc2(allocator_, bp(3u));
-				calls_collector_thread cc3(allocator_, bp(5u));
+				calls_collector_thread cc1(allocator_, bp(2u), 1u);
+				calls_collector_thread cc2(allocator_, bp(3u), 1u);
+				calls_collector_thread cc3(allocator_, bp(5u), 1u);
 				vector<const call_record *> reference;
 
 				fill(cc1, buffering_policy::buffer_size);
@@ -231,7 +231,7 @@ namespace micro_profiler
 			test( FlushingIncompleteBufferMakesItAvailable )
 			{
 				// INIT
-				calls_collector_thread cc(allocator_, bp(2u));
+				calls_collector_thread cc(allocator_, bp(2u), 1u);
 				vector<call_record> reference;
 
 				// ACT
@@ -273,7 +273,7 @@ namespace micro_profiler
 				// INIT
 				unsigned n = 371 * buffering_policy::buffer_size + 123;
 				mt::event done;
-				calls_collector_thread cc1(allocator_, bp(5u));
+				calls_collector_thread cc1(allocator_, bp(5u), 1u);
 				vector<call_record> reference, actual;
 				calls_collector_thread::reader_t r = [&actual] (unsigned long long, const call_record *calls, size_t count) {
 					actual.insert(actual.end(), calls, calls + count);
@@ -301,7 +301,7 @@ namespace micro_profiler
 				actual.clear();
 				done.reset();
 				n = 5 * buffering_policy::buffer_size;
-				calls_collector_thread cc2(allocator_, bp(2u));
+				calls_collector_thread cc2(allocator_, bp(2u), 1u);
 				mt::thread t2([&] {
 
 				// ACT
@@ -328,7 +328,7 @@ namespace micro_profiler
 			init( InitCollector )
 			{
 				acceptor = acceptor_object.get_reader();
-				collector.reset(new calls_collector_thread(allocator_, bp(2u)));
+				collector.reset(new calls_collector_thread(allocator_, bp(2u), 1u));
 			}
 
 
@@ -396,7 +396,7 @@ namespace micro_profiler
 			test( PreviousReturnAddressIsReturnedOnSingleDepthCalls )
 			{
 				// INIT
-				calls_collector_thread c1(allocator_, bp(2u)), c2(allocator_, bp(2u));
+				calls_collector_thread c1(allocator_, bp(2u), 1u), c2(allocator_, bp(2u), 1u);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				// ACT
@@ -412,7 +412,7 @@ namespace micro_profiler
 			test( ReturnAddressesAreStoredByValue )
 			{
 				// INIT
-				calls_collector_thread c1(allocator_, bp(2u)), c2(allocator_, bp(2u));
+				calls_collector_thread c1(allocator_, bp(2u), 1u), c2(allocator_, bp(2u), 1u);
 				const void *return_address[] = { (const void *)0x122211, (const void *)0xFF00FF00, };
 
 				on_enter(c1, return_address + 0, 0, 0);
@@ -582,7 +582,7 @@ namespace micro_profiler
 
 				{
 				// INIT / ACT
-					calls_collector_thread c(a2, bp(13u));
+					calls_collector_thread c(a2, bp(13u), 1u);
 
 				// ASSERT
 					assert_equal(13u, a2.allocated);
@@ -594,7 +594,7 @@ namespace micro_profiler
 				assert_equal(0u, a2.allocated);
 
 				// INIT / ACT
-				calls_collector_thread c(a2, bp(17u));
+				calls_collector_thread c(a2, bp(17u), 1u);
 
 				// ASSERT
 				assert_equal(17u, a2.allocated);
@@ -605,7 +605,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, bp(13u)), c2(al2, bp(1319u));
+				calls_collector_thread c1(al1, bp(13u), 1u), c2(al2, bp(1319u), 1u);
 
 				// ACT
 				c1.read_collected([] (...) {});
@@ -621,7 +621,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, bp(100u)), c2(al2, bp(100u));
+				calls_collector_thread c1(al1, bp(100u), 1u), c2(al2, bp(100u), 1u);
 
 				// ACT
 				c1.set_buffering_policy(buffering_policy(required_size(100u), 0.31001, 0));
@@ -637,7 +637,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al;
-				calls_collector_thread c(al, bp(100u));
+				calls_collector_thread c(al, bp(100u), 1u);
 
 				fill(c, buffering_policy::buffer_size * 7);
 
@@ -653,7 +653,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, bp(100u)), c2(al2, bp(100u));
+				calls_collector_thread c1(al1, bp(100u), 1u), c2(al2, bp(100u), 1u);
 
 				fill(c2, 17 * buffering_policy::buffer_size);
 
@@ -676,8 +676,8 @@ namespace micro_profiler
 				mocks::allocator al1, al2;
 
 				// INIT / ACT
-				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001)),
-					c2(al2, buffering_policy(required_size(100u), 1, 0.31001));
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001), 1u),
+					c2(al2, buffering_policy(required_size(100u), 1, 0.31001), 1u);
 
 				// ASSERT
 				assert_equal(1u + 11u, al1.allocated);
@@ -689,8 +689,8 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001)),
-					c2(al2, buffering_policy(required_size(100u), 1, 0.31001));
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001), 1u),
+					c2(al2, buffering_policy(required_size(100u), 1, 0.31001), 1u);
 
 				al1.operations = al2.operations = 0u;
 
@@ -708,8 +708,8 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001)),
-					c2(al2, buffering_policy(required_size(100u), 1, 0.31001));
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 1, 0.11001), 1u),
+					c2(al2, buffering_policy(required_size(100u), 1, 0.31001), 1u);
 
 				al1.operations = al2.operations = 0u;
 				fill(c1, 3u * buffering_policy::buffer_size);
@@ -731,8 +731,8 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al1, al2;
-				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 0.09001, 0.07001)),
-					c2(al2, buffering_policy(required_size(100u), 0.37001, 0.25001));
+				calls_collector_thread c1(al1, buffering_policy(required_size(100u), 0.09001, 0.07001), 1u),
+					c2(al2, buffering_policy(required_size(100u), 0.37001, 0.25001), 1u);
 
 				fill(c1, 7u * buffering_policy::buffer_size);
 				fill(c2, 25u * buffering_policy::buffer_size);
@@ -756,7 +756,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al;
-				calls_collector_thread c(al, buffering_policy(required_size(1000u), 0, 0));
+				calls_collector_thread c(al, buffering_policy(required_size(1000u), 0, 0), 1u);
 
 				c.set_buffering_policy(buffering_policy(required_size(1000u), 1, 0.071001));
 				fill(c, 71u * buffering_policy::buffer_size);
@@ -774,7 +774,7 @@ namespace micro_profiler
 			{
 				// INIT
 				mocks::allocator al;
-				calls_collector_thread c(al, buffering_policy(required_size(1000u), 0, 0));
+				calls_collector_thread c(al, buffering_policy(required_size(1000u), 0, 0), 1u);
 
 				c.set_buffering_policy(buffering_policy(required_size(100u), 1, 0.71001)); // new buffers created
 				fill(c, 71u * buffering_policy::buffer_size);

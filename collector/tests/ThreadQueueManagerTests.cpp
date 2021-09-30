@@ -4,6 +4,7 @@
 #include "mocks_allocator.h"
 
 #include <collector/buffers_queue.h>
+#include <mt/thread.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -17,58 +18,46 @@ namespace micro_profiler
 		namespace
 		{
 			const buffering_policy big_policy(10 * buffering_policy::buffer_size, 1, 1);
-
-			template <typename T>
-			void fill_buffer(buffers_queue<T> &q, unsigned n)
-			{
-				while (n--)
-					q.push();
-			}
 		}
 
 		begin_test_suite( ThreadQueueManagerTests )
 			allocator al;
 			mocks::thread_callbacks thread_callbacks_;
 
-			test( BlockSequenceNumberIsSuppliedToAReader )
+			test( ThreadIdIsAssignedToIndividualQueuesOnCreation )
 			{
 				// INIT
-				unsigned long long seqnums_[] = {	1001, 0x310000001ull, 1, 2, 5, 9, 17, 7	};
-				auto seqnums = mkvector(seqnums_);
-				vector<unsigned long long> seqnums_result;
+				auto id = 0u;
+				vector<unsigned> log;
+				thread_queue_manager< buffers_queue<int> > qm(al, big_policy, thread_callbacks_, [&id] () -> unsigned {
+					auto id_ = id;
 
-				thread_queue_manager< buffers_queue<int> > qm(al, big_policy, thread_callbacks_, [] {	return 0;	},
-					[&] () -> unsigned long long {
-
-					auto seq = seqnums.back();
-
-					seqnums.pop_back();
-					return seq;
+					id = 0;
+					return id_;
 				});
 
 				// ACT
-				fill_buffer(qm.get_queue(), 3 * buffering_policy::buffer_size);
-				qm.read_collected([&] (unsigned long long seq, ...) {
-					seqnums_result.push_back(seq);
-				});
+				id = 191831u;
+				mt::thread t1([&] { log.push_back(qm.get_queue().get_id());	});
+				t1.join();
+				id = 991831u;
+				mt::thread t2([&] { log.push_back(qm.get_queue().get_id());	});
+				t2.join();
 
-				// ASSERT
-				unsigned long long reference1[] = {	7, 17, 9,	};
+				// ACT / ASSERT
+				unsigned reference1[] = {	191831u, 991831u,	};
 
-				assert_equal(reference1, seqnums_result);
+				assert_equal(reference1, log);
 
 				// ACT
-				fill_buffer(qm.get_queue(), 4 * buffering_policy::buffer_size);
-				qm.read_collected([&] (unsigned long long seq, ...) {
-					seqnums_result.push_back(seq);
-				});
+				id = 777u;
+				mt::thread t3([&] { log.push_back(qm.get_queue().get_id());	});
+				t3.join();
 
-				// ASSERT
-				unsigned long long reference2[] = {	7, 17, 9, 5, 2, 1, 0x310000001ull,	};
+				// ACT / ASSERT
+				unsigned reference2[] = {	191831u, 991831u, 777u,	};
 
-				assert_equal(reference2, seqnums_result);
-
-
+				assert_equal(reference2, log);
 			}
 		end_test_suite
 	}

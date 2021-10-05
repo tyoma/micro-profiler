@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(FRONTEND_TESTS_SOURCES
-	FilePersistenceTests
+	DeSerializationTests.cpp 
+	FilePersistenceTests.cpp
 	FrontendManagerTests.cpp
 	FrontendPatcherTests.cpp
 	FrontendStatisticsTests.cpp
@@ -20,7 +21,6 @@ set(FRONTEND_TESTS_SOURCES
 	ProcessListTests.cpp
 	ProjectionViewTests.cpp
 	SelectionModelTests.cpp
-	SerializationTests.cpp
 	SymbolResolverTests.cpp
 	ThreadsModelTests.cpp
 	TrackablesProviderTests.cpp

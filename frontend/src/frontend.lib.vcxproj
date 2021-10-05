@@ -40,7 +40,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="display_scale.cpp" />
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="frontend_patcher.cpp" />

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(FRONTEND_LIB_SOURCES
-	display_scale.cpp
 	frontend.cpp
 	frontend_manager.cpp
 	frontend_patcher.cpp

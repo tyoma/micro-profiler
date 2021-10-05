@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="HistogramTests.cpp" />
+    <ClCompile Include="ScaleTests.cpp" />
+    <ClCompile Include="SerializationTests.cpp" />
+    <ClCompile Include="DisplayScaleTests.cpp" />
+    <ClCompile Include="DeSerializationTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Library Headers">
+      <UniqueIdentifier>{5136425b-285a-4d25-9a1b-dd06ecebd09a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\histogram.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scale.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\serialization.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\display_scale.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

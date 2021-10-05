@@ -20,9 +20,7 @@
 
 #pragma once
 
-#include <vector>
-
-namespace micro_profiler
+namespace math
 {
 	typedef unsigned int index_t;
 	typedef long long int value_t;
@@ -59,40 +57,14 @@ namespace micro_profiler
 	};
 
 
-	class histogram : std::vector<value_t>
-	{
-	public:
-		typedef std::vector<value_t> base_t;
-
-	public:
-		void set_scale(const scale &scale_);
-		const scale &get_scale() const;
-
-		using base_t::size;
-		using base_t::begin;
-		using base_t::end;
-
-		void add(value_t value, value_t d = 1);
-
-		void reset();
-
-	private:
-		scale _scale;
-
-	private:
-		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, histogram &data, unsigned int ver);
-	};
-
-
-
-	histogram &operator +=(histogram &lhs, const histogram &rhs);
-	void interpolate(histogram &lhs, const histogram &rhs, float alpha);
-
 
 	inline scale::scale()
 		: _samples(0), _near(0), _far(0)
 	{	}
+
+	inline scale::scale(value_t near, value_t far, unsigned int samples_)
+		: _samples(samples_), _near(near), _far(far)
+	{	reset();	}
 
 	inline value_t scale::near_value() const
 	{	return _near;	}
@@ -115,21 +87,25 @@ namespace micro_profiler
 		return false;
 	}
 
+	inline void scale::reset()
+	{
+		if (_samples > 1.00000012)
+		{
+			_scale = static_cast<float>(_far - _near) / (_samples - 1);
+			_base = _near - static_cast<value_t>(0.5f * _scale);
+			_scale = 1.0f / _scale;
+		}
+		else
+		{
+			_base = 0;
+			_scale = 0.0f;
+		}
+	}
+
+
 	inline bool scale::operator ==(const scale &rhs) const
 	{	return !(*this != rhs);	}
 
 	inline bool scale::operator !=(const scale &rhs) const
 	{	return !!((_samples - rhs._samples) | (_near - rhs._near) | (_far - rhs._far));	}
-
-
-	inline const scale &histogram::get_scale() const
-	{	return _scale;	}
-
-	inline void histogram::add(value_t at, value_t d)
-	{
-		index_t index = 0;
-
-		if (_scale(index, at))
-			(*this)[index] += d;
-	}
 }

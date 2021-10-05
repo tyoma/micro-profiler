@@ -1,12 +1,11 @@
-#include <frontend/display_scale.h>
+#include <math/display_scale.h>
 
-#include <common/histogram.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
 using namespace std;
 
-namespace micro_profiler
+namespace math
 {
 	namespace tests
 	{

@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0FCF8B72-B1A4-48E8-A938-8631174ACFC7}</ProjectGuid>
+    <ProjectGuid>{E00E7A03-E0B0-4F9B-82A1-1448CC321BBD}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
@@ -31,28 +31,22 @@
     <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\mt\src\mt.vcxproj">
-      <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\src\common.vcxproj">
-      <Project>{69508827-452F-479E-A28F-AF300C5C1633}</Project>
-    </ProjectReference>
+    <ClCompile Include="DeSerializationTests.cpp" />
+    <ClCompile Include="DisplayScaleTests.cpp" />
+    <ClCompile Include="HistogramTests.cpp" />
+    <ClCompile Include="ScaleTests.cpp" />
+    <ClCompile Include="SerializationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AllocatorTests.cpp" />
-    <ClCompile Include="FileUtilitiesTests.cpp" />
-    <ClCompile Include="ImageInfoTests.cpp" />
-    <ClCompile Include="ImageUtilitiesTests.cpp" />
-    <ClCompile Include="MiscTests.cpp" />
-    <ClCompile Include="PrimitivesTests.cpp" />
-    <ClCompile Include="SerializationTests.cpp" />
-    <ClCompile Include="StreamingTests.cpp" />
-    <ClCompile Include="TextConversionTests.cpp" />
-    <ClCompile Include="TextFormattingServicesTests.cpp" />
-    <ClCompile Include="TypesTests.cpp" />
-    <ClCompile Include="UnorderedMapTests.cpp">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-    </ClCompile>
+    <ClInclude Include="..\display_scale.h" />
+    <ClInclude Include="..\histogram.h" />
+    <ClInclude Include="..\scale.h" />
+    <ClInclude Include="..\serialization.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -24,6 +24,7 @@
 #include "tables.h"
 
 #include <common/serialization.h>
+#include <math/serialization.h>
 
 #pragma warning(disable: 4510; disable: 4610)
 
@@ -122,20 +123,6 @@ namespace micro_profiler
 	{
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
-	}
-
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, histogram &data, scontext::additive &context, unsigned int ver)
-	{
-		serialize(archive, context.histogram_buffer, ver);
-		data += context.histogram_buffer;
-	}
-
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, histogram &data, scontext::interpolating &context, unsigned int ver)
-	{
-		serialize(archive, context.histogram_buffer, ver);
-		interpolate(data, context.histogram_buffer, context.alpha);
 	}
 
 	namespace tables

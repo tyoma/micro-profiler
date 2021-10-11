@@ -1,5 +1,6 @@
 #include <math/display_scale.h>
 
+#include <math/scale.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -14,7 +15,7 @@ namespace math
 			struct eq
 			{
 				bool operator ()(float lhs, float rhs, float tolerance = 0.001) const
-				{	return !lhs && !rhs || fabs((lhs - rhs) / (lhs + rhs)) < tolerance;	}
+				{	return (!lhs && !rhs) || (fabs((lhs - rhs) / (lhs + rhs)) < tolerance);	}
 
 				bool operator ()(display_scale::tick lhs, display_scale::tick rhs) const
 				{	return (*this)(lhs.value, rhs.value) && lhs.type == rhs.type;	}
@@ -41,17 +42,20 @@ namespace math
 			test( MajorTickValueIsLargestPowerOfTenMetAtLeastTwiceInDelta )
 			{
 				// ACT / ASSERT
-				assert_approx_equal(1000.0f, display_scale::major_tick(17123.0f), 0.001);
+				assert_approx_equal(10000.0f, display_scale::major_tick(17123.0f), 0.001);
 				assert_approx_equal(10000.0f, display_scale::major_tick(27123.0f), 0.001);
 				assert_approx_equal(0.001f, display_scale::major_tick(0.003f), 0.001);
 				assert_approx_equal(0.001f, display_scale::major_tick(0.0033f), 0.001);
+				assert_approx_equal(0.001f, display_scale::major_tick(0.0010001f), 0.001);
+				assert_approx_equal(0.01f, display_scale::major_tick(0.099999f), 0.001);
+				assert_equal(0.0f, display_scale::major_tick(0.0f));
 			}
 
 
 			test( LinearScaleTicksAreListedAccordinglyToTheRange )
 			{
 				// INIT
-				scale s1(7, 37, 100);
+				linear_scale<int> s1(7, 37, 100);
 
 				// INIT / ACT
 				display_scale ds1(s1, 1, 200);
@@ -68,7 +72,7 @@ namespace math
 				assert_equal_pred(reference1, ds1, eq());
 
 				// INIT
-				scale s2(70030, 70650, 100);
+				linear_scale<int> s2(70030, 70650, 100);
 
 				// INIT / ACT
 				display_scale ds2(s2, 1, 1000);
@@ -89,10 +93,10 @@ namespace math
 			}
 
 
-			test( InvalidScaleIteratesAsEmpty )
+			test( EmptyScaleIteratesAsEmpty )
 			{
 				// INIT
-				scale s1(7110, 7110, 100);
+				linear_scale<int> s1;
 
 				// INIT / ACT
 				display_scale ds1(s1, 1, 100);
@@ -101,7 +105,7 @@ namespace math
 				assert_equal(ds1.end(), ds1.begin());
 
 				// INIT
-				scale s2(7110, -1, 100);
+				linear_scale<int> s2(7110, 17111, 0);
 
 				// INIT / ACT
 				display_scale ds2(s2, 1, 100);
@@ -114,7 +118,7 @@ namespace math
 			test( MultiplierIsAppliedToRange )
 			{
 				// INIT
-				scale s(110, 340, 100);
+				linear_scale<int> s(110, 340, 100);
 
 				// INIT / ACT
 				display_scale ds(s, 450, 100); // [0.2(4), 0.7(5)]
@@ -137,7 +141,7 @@ namespace math
 			test( SamplePositionsAreConvertedToDisplayRange )
 			{
 				// INIT
-				scale s(110, 340, 19); // bin width: 12.(7)
+				linear_scale<int> s(110, 340, 19); // bin width: 12.(7)
 
 				// INIT / ACT
 				display_scale ds1(s, 1, 100); // bin pixel width: ~5.2632
@@ -160,7 +164,7 @@ namespace math
 			test( ValueIsConvertedToDisplayCoordinateAccordinglyToScale )
 			{
 				// INIT
-				scale s(110, 340, 19); // bin width: 12.(7)
+				linear_scale<int> s(110, 340, 19); // bin width: 12.(7)
 				display_scale ds1(s, 1, 100);
 				display_scale ds2(s, 1, 40);
 
@@ -173,6 +177,56 @@ namespace math
 				assert_approx_equal(17.6934f, ds2[211.f], 0.001);
 				assert_approx_equal(38.9474f, ds2[340.f], 0.001);
 			}
+
+
+			test( SpecialSingleSampledScaleIsSupported )
+			{
+				// INIT / ACT
+				linear_scale<int> s(117, 345, 1);
+				display_scale ds1(s, 1, 50);
+				display_scale ds2(s, 1, 26);
+
+				// ACT / ASSERT
+				display_scale::tick reference[] = {
+					{	117.0f, display_scale::first	},
+					{	200.0f, display_scale::major	},
+					{	300.0f, display_scale::major	},
+					{	345.0f, display_scale::last	},
+				};
+
+				assert_equal_pred(reference, ds1, eq());
+				assert_equal_pred(reference, ds2, eq());
+
+				// ACT / ASSERT
+				assert_approx_equal(25.0f, ds1[0.0f], 0.001f);
+				assert_approx_equal(25.0f, ds1[200.0f], 0.001f);
+				assert_approx_equal(25.0f, ds1[1000.0f], 0.001f);
+				assert_equal(make_pair(0.0f, 50.0f), ds1.at(0));
+				assert_approx_equal(13.0f, ds2[0.0f], 0.001f);
+				assert_approx_equal(13.0f, ds2[200.0f], 0.001f);
+				assert_approx_equal(13.0f, ds2[1000.0f], 0.001f);
+				assert_equal(make_pair(0.0f, 26.0f), ds2.at(0));
+			}
+
+
+			test( DisplayScaleForEmptyScaleIsEmpty )
+			{
+				// INIT / ACT
+				linear_scale<int> s;
+				display_scale ds1(s, 1, 50);
+				display_scale ds2(s, 1, 26);
+
+				// ASSERT
+				assert_equal(ds1.end(), ds1.begin());
+				assert_equal(0.0f, ds1[0.0f]);
+				assert_equal(0.0f, ds1[200.0f]);
+				assert_equal(0.0f, ds1[1000.0f]);
+				assert_equal(ds2.end(), ds2.begin());
+				assert_equal(0.0f, ds2[0.0f]);
+				assert_equal(0.0f, ds2[200.0f]);
+				assert_equal(0.0f, ds2[1000.0f]);
+			}
+
 		end_test_suite
 	}
 }

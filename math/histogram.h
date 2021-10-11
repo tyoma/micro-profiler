@@ -26,43 +26,50 @@
 
 namespace math
 {
-	class histogram : std::vector<value_t>
+	template <typename ScaleT, typename Y>
+	class histogram : std::vector<Y>
 	{
 	public:
-		typedef std::vector<value_t> base_t;
+		typedef std::vector<Y> base_t;
+		typedef ScaleT scale_type;
+		typedef typename scale_type::value_type x_type;
+		typedef Y y_type;
 
 	public:
-		void set_scale(const scale &scale_);
-		const scale &get_scale() const;
+		void set_scale(const scale_type &scale_);
+		const scale_type &get_scale() const;
 
 		using base_t::size;
 		using base_t::begin;
 		using base_t::end;
 
-		void add(value_t value, value_t d = 1);
+		void add(x_type value, y_type d = 1);
 
 		void reset();
 
 	private:
-		scale _scale;
+		scale_type _scale;
 
 	private:
-		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, histogram &data, unsigned int ver);
+		template <typename ArchiveT, typename ScaleT_, typename Y_>
+		friend void serialize(ArchiveT &archive, histogram<ScaleT_, Y_> &data, unsigned int ver);
 	};
 
 
 
-	inline const scale &histogram::get_scale() const
+	template <typename S, typename Y>
+	inline const S &histogram<S, Y>::get_scale() const
 	{	return _scale;	}
 
-	inline void histogram::set_scale(const scale &scale_)
+	template <typename S, typename Y>
+	inline void histogram<S, Y>::set_scale(const scale_type &scale_)
 	{
-		assign(scale_.samples(), value_t());
+		base_t::assign(scale_.samples(), y_type());
 		_scale = scale_;
 	}
 
-	inline void histogram::add(value_t at, value_t d)
+	template <typename S, typename Y>
+	inline void histogram<S, Y>::add(x_type at, y_type d)
 	{
 		index_t index = 0;
 
@@ -70,11 +77,13 @@ namespace math
 			(*this)[index] += d;
 	}
 
-	inline void histogram::reset()
-	{	assign(size(), value_t());	}
+	template <typename S, typename Y>
+	inline void histogram<S, Y>::reset()
+	{	base_t::assign(size(), y_type());	}
 
 
-	inline histogram &operator +=(histogram &lhs, const histogram &rhs)
+	template <typename S, typename Y>
+	inline histogram<S, Y> &operator +=(histogram<S, Y> &lhs, const histogram<S, Y> &rhs)
 	{
 		if (lhs.get_scale() != rhs.get_scale())
 		{
@@ -91,16 +100,16 @@ namespace math
 		return lhs;
 	}
 
-	inline void interpolate(histogram &lhs, const histogram &rhs, float alpha)
+	template <typename S, typename Y>
+	inline void interpolate(histogram<S, Y> &lhs, const histogram<S, Y> &rhs, float alpha)
 	{
 		if (lhs.get_scale() != rhs.get_scale())
 			lhs.set_scale(rhs.get_scale());
 
 		auto l = lhs.begin();
 		auto r = rhs.begin();
-		const auto ialpha = static_cast<int>(256.0f * alpha);
 
 		for (auto e = lhs.end(); l != e; ++l, ++r)
-			*l += (*r - *l) * ialpha >> 8;
+			*l += static_cast<Y>((*r - *l) * alpha);
 	}
 }

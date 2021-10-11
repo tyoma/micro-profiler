@@ -34,7 +34,8 @@
     <ClCompile Include="DeSerializationTests.cpp" />
     <ClCompile Include="DisplayScaleTests.cpp" />
     <ClCompile Include="HistogramTests.cpp" />
-    <ClCompile Include="ScaleTests.cpp" />
+    <ClCompile Include="LogScaleTests.cpp" />
+    <ClCompile Include="LinearScaleTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
   </ItemGroup>
   <ItemGroup>

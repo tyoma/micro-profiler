@@ -26,57 +26,70 @@
 
 namespace strmd
 {
-	template <> struct version<math::scale> {	enum {	value = 1	};	};
-	template <> struct version<math::histogram> {	enum {	value = 1	};	};
+	template <typename T> struct version< math::linear_scale<T> > {	enum {	value = 1	};	};
+	template <typename T> struct version< math::log_scale<T> > {	enum {	value = 1	};	};
+	template <typename S, typename Y> struct version< math::histogram<S, Y> > {	enum {	value = 1	};	};
 }
 
 namespace math
 {
 	namespace scontext
 	{
+		template <typename BufferT>
 		struct additive
 		{
-			histogram histogram_buffer;
+			BufferT buffer;
 		};
 
+		template <typename BufferT>
 		struct interpolating
 		{
 			float alpha;
-			histogram histogram_buffer;
+			BufferT buffer;
 		};
 	}
 
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, scale &data, unsigned int /*ver*/)
+	template <typename ArchiveT, typename ScaleT>
+	inline void serialize_scale(ArchiveT &archive, ScaleT &data, unsigned int /*ver*/)
 	{
-		auto tmp = data;
+		auto near_ = data.near_value();
+		auto far_ = data.far_value();
+		auto samples = data.samples();
 
-		archive(tmp._near);
-		archive(tmp._far);
-		archive(tmp._samples);
-		if (tmp != data)
-			tmp.reset(), data = tmp;
+		archive(near_);
+		archive(far_);
+		archive(samples);
+		if ((near_ != data.near_value()) | (far_ != data.far_value()) | (samples != data.samples()))
+			data = ScaleT(near_, far_, samples);
 	}
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, histogram &data, unsigned int /*ver*/)
+	template <typename ArchiveT, typename T>
+	inline void serialize(ArchiveT &archive, linear_scale<T> &data, unsigned int ver)
+	{	serialize_scale(archive, data, ver);	}
+
+	template <typename ArchiveT, typename T>
+	inline void serialize(ArchiveT &archive, log_scale<T> &data, unsigned int ver)
+	{	serialize_scale(archive, data, ver);	}
+
+	template <typename ArchiveT, typename ScaleT, typename Y>
+	inline void serialize(ArchiveT &archive, histogram<ScaleT, Y> &data, unsigned int /*ver*/)
 	{
 		archive(data._scale);
-		archive(static_cast<std::vector<value_t> &>(data));
+		archive(static_cast< std::vector<Y> &>(data));
 	}
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, histogram &data, scontext::additive &context, unsigned int ver)
+	template <typename ArchiveT, typename T>
+	inline void serialize(ArchiveT &archive, T &data, scontext::additive<T> &context, unsigned int ver)
 	{
-		serialize(archive, context.histogram_buffer, ver);
-		data += context.histogram_buffer;
+		serialize(archive, context.buffer, ver);
+		data += context.buffer;
 	}
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, histogram &data, scontext::interpolating &context, unsigned int ver)
+	template <typename ArchiveT, typename T>
+	inline void serialize(ArchiveT &archive, T &data, scontext::interpolating<T> &context, unsigned int ver)
 	{
-		serialize(archive, context.histogram_buffer, ver);
-		interpolate(data, context.histogram_buffer, context.alpha);
+		serialize(archive, context.buffer, ver);
+		interpolate(data, context.buffer, context.alpha);
 	}
 }

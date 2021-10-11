@@ -9,36 +9,39 @@ namespace math
 {
 	namespace tests
 	{
+		typedef linear_scale<long long> scale_;
+		typedef histogram<scale_, long long> histogram_;
+
 		begin_test_suite( HistogramTests )
 			test( HistogramIsResizedOnSettingScale )
 			{
 				// INIT
-				histogram h;
+				histogram_ h;
 
 				// INIT / ACT
-				h.set_scale(scale(0, 90, 10));
+				h.set_scale(scale_(0, 90, 10));
 
 				// ACT / ASSERT
 				assert_equal(10u, h.size());
 				assert_equal(10, distance(h.begin(), h.end()));
-				assert_equal(scale(0, 90, 10), h.get_scale());
+				assert_equal(scale_(0, 90, 10), h.get_scale());
 
 				// INIT / ACT
-				h.set_scale(scale(3, 91, 17));
+				h.set_scale(scale_(3, 91, 17));
 
 				// ACT / ASSERT
 				assert_equal(17u, h.size());
 				assert_equal(17, distance(h.begin(), h.end()));
-				assert_equal(scale(3, 91, 17), h.get_scale());
+				assert_equal(scale_(3, 91, 17), h.get_scale());
 			}
 
 
 			test( CountsAreIncrementedAtExpectedBins )
 			{
 				// INIT
-				histogram h;
+				histogram_ h;
 
-				h.set_scale(scale(0, 90, 10));
+				h.set_scale(scale_(0, 90, 10));
 
 				// ACT
 				h.add(4);
@@ -66,8 +69,8 @@ namespace math
 			test( HistogramIsResetAtRescale )
 			{
 				// INIT
-				histogram h;
-				h.set_scale(scale(0, 900, 5));
+				histogram_ h;
+				h.set_scale(scale_(0, 900, 5));
 
 				h.add(10);
 				h.add(11);
@@ -75,7 +78,7 @@ namespace math
 				h.add(800);
 
 				// ACT
-				h.set_scale(scale(0, 90, 7));
+				h.set_scale(scale_(0, 90, 7));
 
 				// ASSERT
 				unsigned reference[] = {	0, 0, 0, 0, 0, 0, 0,	};
@@ -87,10 +90,10 @@ namespace math
 			test( HistogramIsResetOnAddingDifferentlyScaledRhs )
 			{
 				// INIT
-				histogram h, addition;
+				histogram_ h, addition;
 
-				h.set_scale(scale(0, 900, 5));
-				addition.set_scale(scale(10, 900, 5));
+				h.set_scale(scale_(0, 900, 5));
+				addition.set_scale(scale_(10, 900, 5));
 
 				h.add(10), h.add(11), h.add(9), h.add(800);
 
@@ -101,11 +104,11 @@ namespace math
 				unsigned reference1[] = {	0, 0, 0, 0, 0,	};
 
 				assert_equal(reference1, h);
-				assert_equal(scale(10, 900, 5), h.get_scale());
+				assert_equal(scale_(10, 900, 5), h.get_scale());
 
 				// INIT
 				h.add(190);
-				addition.set_scale(scale(10, 900, 12));
+				addition.set_scale(scale_(10, 900, 12));
 				addition.add(50);
 				addition.add(750);
 
@@ -116,17 +119,17 @@ namespace math
 				unsigned reference2[] = {	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,	};
 
 				assert_equal(reference2, h);
-				assert_equal(scale(10, 900, 12), h.get_scale());
+				assert_equal(scale_(10, 900, 12), h.get_scale());
 			}
 
 
 			test( HistogramIsResetOnInterpolatingWithADifferentlyScaledOne )
 			{
 				// INIT
-				histogram h, addition;
+				histogram_ h, addition;
 
-				h.set_scale(scale(0, 900, 5));
-				addition.set_scale(scale(10, 900, 5));
+				h.set_scale(scale_(0, 900, 5));
+				addition.set_scale(scale_(10, 900, 5));
 
 				h.add(10), h.add(11), h.add(9), h.add(800);
 
@@ -137,11 +140,11 @@ namespace math
 				unsigned reference1[] = {	0, 0, 0, 0, 0,	};
 
 				assert_equal(reference1, h);
-				assert_equal(scale(10, 900, 5), h.get_scale());
+				assert_equal(scale_(10, 900, 5), h.get_scale());
 
 				// INIT
 				h.add(190);
-				addition.set_scale(scale(10, 900, 12));
+				addition.set_scale(scale_(10, 900, 12));
 				addition.add(50);
 				addition.add(750);
 
@@ -152,17 +155,17 @@ namespace math
 				unsigned reference2[] = {	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,	};
 
 				assert_equal(reference2, h);
-				assert_equal(scale(10, 900, 12), h.get_scale());
+				assert_equal(scale_(10, 900, 12), h.get_scale());
 			}
 
 
 			test( HistogramIsAddedToTheEquallyScaledValue )
 			{
 				// INIT
-				histogram h, addition;
+				histogram_ h, addition;
 
-				h.set_scale(scale(0, 10, 11));
-				addition.set_scale(scale(0, 10, 11));
+				h.set_scale(scale_(0, 10, 11));
+				addition.set_scale(scale_(0, 10, 11));
 
 				h.add(2);
 				h.add(7);
@@ -183,10 +186,10 @@ namespace math
 			test( HistogramValuesAreInterpolatedAsRequested )
 			{
 				// INIT
-				histogram h, addition;
+				histogram_ h, addition;
 
-				h.set_scale(scale(0, 5, 6));
-				addition.set_scale(scale(0, 5, 6));
+				h.set_scale(scale_(0, 5, 6));
+				addition.set_scale(scale_(0, 5, 6));
 
 				addition.add(0, 100);
 				addition.add(2, 51);
@@ -224,10 +227,10 @@ namespace math
 			test( DefaultConstructedHistogramEmptyButAcceptsValues )
 			{
 				// INIT / ACT
-				histogram h;
+				histogram_ h;
 
 				// ACT / ASSERT
-				assert_equal(scale(), h.get_scale());
+				assert_equal(scale_(), h.get_scale());
 				assert_equal(0u, h.size());
 
 				// ACT / ASSERT
@@ -239,9 +242,9 @@ namespace math
 			test( ResettingHistogramPreservesScaleAndSizeButSetsValuesToZeroes )
 			{
 				// INIT / ACT
-				histogram h;
+				histogram_ h;
 
-				h.set_scale(scale(0, 9, 10));
+				h.set_scale(scale_(0, 9, 10));
 				h.add(2, 9);
 				h.add(7, 3);
 

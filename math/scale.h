@@ -20,66 +20,111 @@
 
 #pragma once
 
+#include <cmath>
+#include <stdexcept>
+
 namespace math
 {
 	typedef unsigned int index_t;
-	typedef long long int value_t;
 
-	class scale
+	template <typename T>
+	class linear_scale
 	{
 	public:
-		scale();
-		scale(value_t near_value, value_t far_value, unsigned int samples_);
+		typedef T value_type;
 
-		value_t near_value() const;
-		value_t far_value() const;
+	public:
+		linear_scale();
+		linear_scale(value_type near_value, value_type far_value, unsigned int samples_);
+
+		value_type near_value() const;
+		value_type far_value() const;
 		index_t samples() const;
-		bool operator ()(index_t &index, value_t value) const;
-
-		bool operator ==(const scale &rhs) const;
-		bool operator !=(const scale &rhs) const;
+		bool operator ()(index_t &index, value_type value) const;
 
 	private:
-		void reset();
-
-	private:
-		value_t _base;
-		float _scale;
+		value_type _base;
+		float _factor;
 		unsigned int _samples;
 
-		value_t _near, _far;
+		value_type _near, _far;
+	};
+
+	template <typename T>
+	class log_scale
+	{
+	public:
+		typedef T value_type;
+
+	public:
+		log_scale();
+		log_scale(value_type near_value, value_type far_value, unsigned int samples_);
+
+		value_type near_value() const;
+		value_type far_value() const;
+		index_t samples() const;
+		bool operator ()(index_t &index, value_type value) const;
 
 	private:
-		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, scale &data, unsigned int ver);
+		static float lg(value_type value);
 
-		// TODO: implement logarithmic scaling
+	private:
+		linear_scale<float> _inner;
+
+		value_type _near, _far;
 	};
 
 
 
-	inline scale::scale()
+	template <typename T>
+	inline linear_scale<T>::linear_scale()
 		: _samples(0), _near(0), _far(0)
 	{	}
 
-	inline scale::scale(value_t near, value_t far, unsigned int samples_)
+	template <typename T>
+	inline linear_scale<T>::linear_scale(value_type near, value_type far, unsigned int samples_)
 		: _samples(samples_), _near(near), _far(far)
-	{	reset();	}
+	{
+		if (!samples_)
+		{
+			_near = value_type();
+			_far = value_type();
+		}
+		else if (far <= near)
+		{
+			throw std::invalid_argument("invalid closed-open interval is specified");
+		}
+		else if (_samples > 1)
+		{
+			_factor = static_cast<float>(_far - _near) / (_samples - 1);
+			_base = _near - static_cast<value_type>(0.5f * _factor);
+			_factor = 1.0f / _factor;
+		}
+		else
+		{
+			_base = 0;
+			_factor = 0.0f;
+		}
+	}
 
-	inline value_t scale::near_value() const
+	template <typename T>
+	inline T linear_scale<T>::near_value() const
 	{	return _near;	}
 
-	inline value_t scale::far_value() const
+	template <typename T>
+	inline T linear_scale<T>::far_value() const
 	{	return _far;	}
 
-	inline index_t scale::samples() const
+	template <typename T>
+	inline index_t linear_scale<T>::samples() const
 	{	return _samples;	}
 
-	inline bool scale::operator ()(index_t &index, value_t value) const
+	template <typename T>
+	inline bool linear_scale<T>::operator ()(index_t &index, value_type value) const
 	{
 		if (auto samples_ = _samples)
 		{
-			const auto index_ = static_cast<int>((value - _base) * _scale);
+			const auto index_ = static_cast<int>((value - _base) * _factor);
 
 			index = index_ < 0 ? 0u : index_ > static_cast<int>(--samples_) ? samples_ : static_cast<index_t>(index_);
 			return true;
@@ -87,25 +132,58 @@ namespace math
 		return false;
 	}
 
-	inline void scale::reset()
-	{
-		if (_samples > 1.00000012)
-		{
-			_scale = static_cast<float>(_far - _near) / (_samples - 1);
-			_base = _near - static_cast<value_t>(0.5f * _scale);
-			_scale = 1.0f / _scale;
-		}
-		else
-		{
-			_base = 0;
-			_scale = 0.0f;
-		}
-	}
+
+	template <typename T>
+	inline log_scale<T>::log_scale()
+		: _near(0), _far(0)
+	{	}
+
+	template <typename T>
+	inline log_scale<T>::log_scale(value_type near_, value_type far_, unsigned int samples_)
+		: _inner(lg(near_), lg(far_), samples_), _near(near_), _far(far_)
+	{	}
+
+	template <typename T>
+	inline T log_scale<T>::near_value() const
+	{	return _near;	}
+	
+	template <typename T>
+	inline T log_scale<T>::far_value() const
+	{	return _far;	}
+
+	template <typename T>
+	inline index_t log_scale<T>::samples() const
+	{	return _inner.samples();	}
+
+	template <typename T>
+	inline bool log_scale<T>::operator ()(index_t &index, value_type value) const
+	{	return value <= value_type() ? false : _inner(index, lg(value));	}
+
+	template <typename T>
+	float log_scale<T>::lg(value_type value)
+	{	return std::log10(static_cast<float>(value));	}
 
 
-	inline bool scale::operator ==(const scale &rhs) const
-	{	return !(*this != rhs);	}
 
-	inline bool scale::operator !=(const scale &rhs) const
-	{	return !!((_samples - rhs._samples) | (_near - rhs._near) | (_far - rhs._far));	}
+	template <typename ScaleT>
+	inline bool scale_eq(const ScaleT &lhs, const ScaleT &rhs)
+	{	return (lhs.samples() == rhs.samples()) & (lhs.near_value() == rhs.near_value()) & (lhs.far_value() == rhs.far_value());	}
+
+
+	template <typename T>
+	inline bool operator ==(const linear_scale<T> &lhs, const linear_scale<T> &rhs)
+	{	return scale_eq(lhs, rhs);	}
+
+	template <typename T>
+	inline bool operator !=(const linear_scale<T> &lhs, const linear_scale<T> &rhs)
+	{	return !(lhs == rhs);	}
+
+
+	template <typename T>
+	inline bool operator ==(const log_scale<T> &lhs, const log_scale<T> &rhs)
+	{	return scale_eq(lhs, rhs);	}
+
+	template <typename T>
+	inline bool operator !=(const log_scale<T> &lhs, const log_scale<T> &rhs)
+	{	return !(lhs == rhs);	}
 }

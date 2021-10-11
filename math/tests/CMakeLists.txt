@@ -6,7 +6,8 @@ set(MATH_TEST_SOURCES
 	DeSerializationTests.cpp
 	DisplayScaleTests.cpp
 	HistogramTests.cpp
-	ScaleTests.cpp
+	LinearScaleTests.cpp
+	LogScaleTests.cpp
 	SerializationTests.cpp
 )
 

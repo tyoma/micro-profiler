@@ -1,6 +1,24 @@
-#pragma once
+//	Copyright (c) 2011-2021 by Artem A. Gevorkyan (gevorkyan.org)
+//
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights
+//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//	copies of the Software, and to permit persons to whom the Software is
+//	furnished to do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in
+//	all copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//	THE SOFTWARE.
 
-#include "scale.h"
+#pragma once
 
 #include <cmath>
 #include <common/compiler.h>
@@ -12,13 +30,14 @@ namespace math
 	class display_scale
 	{
 	public:
-		enum tick_type {	first, last, major, minor, _complete /*not used externally*/,	};
+		enum tick_type {	first, last, major, minor, _complete /*never exposed*/,	};
 		struct tick;
 		typedef tick value_type;
 		class const_iterator;
 
 	public:
-		display_scale(const scale &scale_, value_t divisor, int pixel_size);
+		template <typename ScaleT>
+		display_scale(const ScaleT &scale_, typename ScaleT::value_type divisor, int pixel_size);
 
 		static float next_tick(float value, float tick);
 		static float major_tick(float delta);
@@ -29,7 +48,7 @@ namespace math
 		float operator [](float value) const;
 
 	private:
-		float _near, _far, _major, _bin_width, _base, _display_k;
+		float _near, _far, _major, _bin_width, _display_k;
 	};
 
 	struct display_scale::tick
@@ -53,22 +72,24 @@ namespace math
 
 
 
-	inline display_scale::display_scale(const scale &scale_, value_t divisor, int pixel_size_)
+	template <typename S>
+	inline display_scale::display_scale(const S &scale_, typename S::value_type divisor, int pixel_size_)
 		: _near(static_cast<float>(scale_.near_value()) / divisor), _far(static_cast<float>(scale_.far_value()) / divisor)
 	{
-		const auto pixel_size = static_cast<float>(pixel_size_);
-
-		_bin_width = pixel_size / scale_.samples();
-		if (_far > _near)
+		if (scale_.samples())
 		{
+			const auto pixel_size = static_cast<float>(pixel_size_);
 			const auto range_delta = _far - _near;
 
 			_major = major_tick(range_delta);
+			_bin_width = pixel_size / scale_.samples();
 			_display_k = (pixel_size - _bin_width) / range_delta;
 		}
 		else
 		{
-			_display_k = _major = 0.0f;
+			_major = 0.0f;
+			_bin_width = 0.0f;
+			_display_k = 0.0f;
 		}
 	}
 
@@ -76,10 +97,7 @@ namespace math
 	{	return std::ceil(value / tick) * tick;	}
 
 	inline float display_scale::major_tick(float delta)
-	{
-		auto tick_size = powf(10.0f, floorf(log10f(delta)));
-		return std::floor(delta / tick_size) < 2 ? 0.1f * tick_size : tick_size;
-	}
+	{	return delta ? powf(10.0f, floorf(log10f(delta))) : 0.0f;	}
 
 	inline display_scale::const_iterator display_scale::begin() const
 	{

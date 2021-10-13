@@ -134,6 +134,29 @@ namespace math
 			}
 
 
+			test( VariantScaleIsFunctionalAfterDeserialization )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				variant_scale<int> scale1(log_scale<int>(10, 132112, 311));
+				variant_scale<long long> scale2(linear_scale<long long>(1040, 1321120033, 111));
+				variant_scale<int> v1((linear_scale<int>()));
+				variant_scale<long long> v2((linear_scale<long long>()));
+
+				// ACT
+				s(scale1);
+				s(scale2);
+
+				// ACT / ASSERT
+				ds(v1);
+				assert_equal(scale1, v1);
+				ds(v2);
+				assert_equal(scale2, v2);
+			}
+
+
 			test( HistogramIsSerialized )
 			{
 				// INIT
@@ -159,7 +182,7 @@ namespace math
 				ds(v);
 
 				// ASSERT
-				unsigned reference1[] = {	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,	};
+				int reference1[] = {	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,	};
 
 				assert_equal(linear_scale<int>(100, 1100, 21), v.get_scale());
 				assert_equal(reference1, v);
@@ -168,7 +191,7 @@ namespace math
 				ds(v);
 
 				// ASSERT
-				unsigned reference2[] = {	1, 0, 1, 1, 0, 0,	};
+				int reference2[] = {	1, 0, 1, 1, 0, 0,	};
 
 				assert_equal(linear_scale<int>(200, 1000, 6), v.get_scale());
 				assert_equal(reference2, v);

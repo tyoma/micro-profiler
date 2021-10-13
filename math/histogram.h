@@ -20,12 +20,12 @@
 
 #pragma once
 
-#include "scale.h"
-
 #include <vector>
 
 namespace math
 {
+	typedef unsigned int index_t;
+
 	template <typename ScaleT, typename Y>
 	class histogram : std::vector<Y>
 	{

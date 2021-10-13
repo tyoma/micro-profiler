@@ -21,6 +21,7 @@
 #pragma once
 
 #include "histogram.h"
+#include "variant_scale.h"
 
 #include <strmd/version.h>
 
@@ -28,6 +29,7 @@ namespace strmd
 {
 	template <typename T> struct version< math::linear_scale<T> > {	enum {	value = 1	};	};
 	template <typename T> struct version< math::log_scale<T> > {	enum {	value = 1	};	};
+	template <typename T> struct version< math::variant_scale<T> > {	enum {	value = 1	};	};
 	template <typename S, typename Y> struct version< math::histogram<S, Y> > {	enum {	value = 1	};	};
 }
 
@@ -71,6 +73,10 @@ namespace math
 	template <typename ArchiveT, typename T>
 	inline void serialize(ArchiveT &archive, log_scale<T> &data, unsigned int ver)
 	{	serialize_scale(archive, data, ver);	}
+
+	template <typename ArchiveT, typename T>
+	inline void serialize(ArchiveT &archive, variant_scale<T> &data, unsigned int /*ver*/)
+	{	archive(static_cast<typename variant_scale<T>::base_t &>(data));	}
 
 	template <typename ArchiveT, typename ScaleT, typename Y>
 	inline void serialize(ArchiveT &archive, histogram<ScaleT, Y> &data, unsigned int /*ver*/)

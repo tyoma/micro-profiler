@@ -1,5 +1,6 @@
 #include <math/histogram.h>
 
+#include <math/scale.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 

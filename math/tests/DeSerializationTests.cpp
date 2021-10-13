@@ -47,7 +47,7 @@ namespace math
 				ds(v, w);
 
 				// ASSERT
-				unsigned reference1[] = {	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,	};
+				int reference1[] = {	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,	};
 
 				assert_equal(linear_scale_(100, 1100, 21), v.get_scale());
 				assert_equal(reference1, v);
@@ -56,7 +56,7 @@ namespace math
 				ds(v, w);
 
 				// ASSERT
-				unsigned reference2[] = {	1, 0, 1, 1, 0, 0,	};
+				int reference2[] = {	1, 0, 1, 1, 0, 0,	};
 
 				assert_equal(linear_scale_(200, 1000, 6), v.get_scale());
 				assert_equal(reference2, v);
@@ -93,8 +93,8 @@ namespace math
 				ds(v, w);
 
 				// ASSERT
-				unsigned reference1a[] = {	2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,	};
-				unsigned reference1[] = {	2, 0, 0, 2, 0, 0, 0, 3, 0, 3, 0,	};
+				int reference1a[] = {	2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,	};
+				int reference1[] = {	2, 0, 0, 2, 0, 0, 0, 3, 0, 3, 0,	};
 
 				assert_equal(reference1a, w.buffer);
 				assert_equal(reference1, v);
@@ -103,8 +103,8 @@ namespace math
 				ds(v, w);
 
 				// ASSERT
-				unsigned reference2a[] = {	0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0,	};
-				unsigned reference2[] = {	2, 0, 1, 2, 1, 0, 2, 3, 0, 3, 0,	};
+				int reference2a[] = {	0, 0, 1, 0, 1, 0, 2, 0, 0, 0, 0,	};
+				int reference2[] = {	2, 0, 1, 2, 1, 0, 2, 3, 0, 3, 0,	};
 
 				assert_equal(reference2a, w.buffer);
 				assert_equal(reference2, v);
@@ -142,8 +142,8 @@ namespace math
 				ds(v, w);
 
 				// ASSERT
-				unsigned reference1a[] = {	240, 0, 0, 0, 0, 0, 0, 1800, 0, 0, 0,	};
-				unsigned reference1[] = {	70, 0, 0, 142, 0, 0, 0, 598, 0, 213, 0,	};
+				int reference1a[] = {	240, 0, 0, 0, 0, 0, 0, 1800, 0, 0, 0,	};
+				int reference1[] = {	70, 0, 0, 142, 0, 0, 0, 598, 0, 213, 0,	};
 
 				assert_equal(reference1a, w.buffer);
 				assert_equal(reference1, v);
@@ -152,8 +152,8 @@ namespace math
 				ds(v, w);
 
 				// ASSERT
-				unsigned reference2a[] = {	0, 0, 10, 0, 130, 0, 73, 0, 0, 0, 0,	};
-				unsigned reference2[] = {	50, 0, 2, 101, 38, 0, 21, 423, 0, 151, 0,	};
+				int reference2a[] = {	0, 0, 10, 0, 130, 0, 73, 0, 0, 0, 0,	};
+				int reference2[] = {	50, 0, 2, 101, 38, 0, 21, 423, 0, 151, 0,	};
 
 				assert_equal(reference2a, w.buffer);
 				assert_equal(reference2, v);

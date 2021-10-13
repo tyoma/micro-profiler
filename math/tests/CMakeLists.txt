@@ -9,6 +9,7 @@ set(MATH_TEST_SOURCES
 	LinearScaleTests.cpp
 	LogScaleTests.cpp
 	SerializationTests.cpp
+	VariantScaleTests.cpp
 	VariantSerializationTests.cpp
 	VariantTests.cpp
 )

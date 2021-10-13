@@ -37,12 +37,15 @@
     <ClCompile Include="LogScaleTests.cpp" />
     <ClCompile Include="LinearScaleTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
+    <ClCompile Include="VariantSerializationTests.cpp" />
+    <ClCompile Include="VariantTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\display_scale.h" />
     <ClInclude Include="..\histogram.h" />
     <ClInclude Include="..\scale.h" />
     <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\variant.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\common\src\common.vcxproj">

@@ -7,6 +7,8 @@
     <ClCompile Include="DeSerializationTests.cpp" />
     <ClCompile Include="LogScaleTests.cpp" />
     <ClCompile Include="LinearScaleTests.cpp" />
+    <ClCompile Include="VariantTests.cpp" />
+    <ClCompile Include="VariantSerializationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -24,6 +26,9 @@
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\display_scale.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\variant.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
   </ItemGroup>

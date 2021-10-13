@@ -9,6 +9,8 @@ set(MATH_TEST_SOURCES
 	LinearScaleTests.cpp
 	LogScaleTests.cpp
 	SerializationTests.cpp
+	VariantSerializationTests.cpp
+	VariantTests.cpp
 )
 
 add_library(math.tests SHARED ${MATH_TEST_SOURCES})

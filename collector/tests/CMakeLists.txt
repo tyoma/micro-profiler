@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(COLLECTOR_TESTS_SOURCES
+	ActiveServerBaseTests.cpp
 	AnalyzerTests.cpp
 	BuffersQueueTests.cpp
 	CallsCollectorTests.cpp

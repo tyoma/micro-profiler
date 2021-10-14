@@ -58,6 +58,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ActiveServerBaseTests.cpp" />
     <ClCompile Include="AnalyzerTests.cpp" />
     <ClCompile Include="BuffersQueueTests.cpp" />
     <ClCompile Include="CallsCollectorTests.cpp" />

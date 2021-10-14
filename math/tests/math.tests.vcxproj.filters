@@ -10,6 +10,7 @@
     <ClCompile Include="VariantTests.cpp" />
     <ClCompile Include="VariantSerializationTests.cpp" />
     <ClCompile Include="VariantScaleTests.cpp" />
+    <ClCompile Include="LinearScaleRulerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -33,6 +34,9 @@
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\variant_scale.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scale_ruler.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
   </ItemGroup>

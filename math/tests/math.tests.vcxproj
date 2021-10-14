@@ -34,6 +34,7 @@
     <ClCompile Include="DeSerializationTests.cpp" />
     <ClCompile Include="DisplayScaleTests.cpp" />
     <ClCompile Include="HistogramTests.cpp" />
+    <ClCompile Include="LinearScaleRulerTests.cpp" />
     <ClCompile Include="LogScaleTests.cpp" />
     <ClCompile Include="LinearScaleTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
@@ -45,6 +46,7 @@
     <ClInclude Include="..\display_scale.h" />
     <ClInclude Include="..\histogram.h" />
     <ClInclude Include="..\scale.h" />
+    <ClInclude Include="..\scale_ruler.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\variant.h" />
     <ClInclude Include="..\variant_scale.h" />

@@ -17,127 +17,12 @@ namespace math
 				bool operator ()(float lhs, float rhs, float tolerance = 0.001) const
 				{	return (!lhs && !rhs) || (fabs((lhs - rhs) / (lhs + rhs)) < tolerance);	}
 
-				bool operator ()(display_scale::tick lhs, display_scale::tick rhs) const
-				{	return (*this)(lhs.value, rhs.value) && lhs.type == rhs.type;	}
-
 				bool operator ()(pair<float, float> lhs, pair<float, float> rhs) const
 				{	return (*this)(lhs.first, rhs.first) && (*this)(lhs.second, rhs.second);	}
 			};
 		}
 
 		begin_test_suite( DisplayScaleTests )
-			test( RoundTickValueIsCalculatedForNextTickPosition )
-			{
-				// ACT / ASSERT
-				assert_approx_equal(17200.0f, display_scale::next_tick(17123.0f, 100.0f), 0.001);
-				assert_approx_equal(18000.0f, display_scale::next_tick(17123.0f, 1000.0f), 0.001);
-				assert_approx_equal(71.10f, display_scale::next_tick(71.05f, 0.1f), 0.001);
-				assert_approx_equal(71.20f, display_scale::next_tick(71.20f, 0.1f), 0.001);
-				assert_approx_equal(-0.017f, display_scale::next_tick(-0.0171f, 0.001f), 0.001);
-				assert_approx_equal(-0.016f, display_scale::next_tick(-0.0169f, 0.001f), 0.001);
-				assert_approx_equal(0.0f, display_scale::next_tick(0.0f, 0.01f), 0.001);
-			}
-
-
-			test( MajorTickValueIsLargestPowerOfTenMetAtLeastTwiceInDelta )
-			{
-				// ACT / ASSERT
-				assert_approx_equal(10000.0f, display_scale::major_tick(17123.0f), 0.001);
-				assert_approx_equal(10000.0f, display_scale::major_tick(27123.0f), 0.001);
-				assert_approx_equal(0.001f, display_scale::major_tick(0.003f), 0.001);
-				assert_approx_equal(0.001f, display_scale::major_tick(0.0033f), 0.001);
-				assert_approx_equal(0.001f, display_scale::major_tick(0.0010001f), 0.001);
-				assert_approx_equal(0.01f, display_scale::major_tick(0.099999f), 0.001);
-				assert_equal(0.0f, display_scale::major_tick(0.0f));
-			}
-
-
-			test( LinearScaleTicksAreListedAccordinglyToTheRange )
-			{
-				// INIT
-				linear_scale<int> s1(7, 37, 100);
-
-				// INIT / ACT
-				display_scale ds1(s1, 1, 200);
-
-				// ACT / ASSERT
-				display_scale::tick reference1[] = {
-					{	7.0f, display_scale::first	},
-					{	10.0f, display_scale::major	},
-					{	20.0f, display_scale::major	},
-					{	30.0f, display_scale::major	},
-					{	37.0f, display_scale::last	},
-				};
-
-				assert_equal_pred(reference1, ds1, eq());
-
-				// INIT
-				linear_scale<int> s2(70030, 70650, 100);
-
-				// INIT / ACT
-				display_scale ds2(s2, 1, 1000);
-
-				// ACT / ASSERT
-				display_scale::tick reference2[] = {
-					{	70030.0f, display_scale::first	},
-					{	70100.0f, display_scale::major	},
-					{	70200.0f, display_scale::major	},
-					{	70300.0f, display_scale::major	},
-					{	70400.0f, display_scale::major	},
-					{	70500.0f, display_scale::major	},
-					{	70600.0f, display_scale::major	},
-					{	70650.0f, display_scale::last	},
-				};
-
-				assert_equal_pred(reference2, ds2, eq());
-			}
-
-
-			test( EmptyScaleIteratesAsEmpty )
-			{
-				// INIT
-				linear_scale<int> s1;
-
-				// INIT / ACT
-				display_scale ds1(s1, 1, 100);
-
-				// ACT / ASSERT
-				assert_equal(ds1.end(), ds1.begin());
-
-				// INIT
-				linear_scale<int> s2(7110, 17111, 0);
-
-				// INIT / ACT
-				display_scale ds2(s2, 1, 100);
-
-				// ACT / ASSERT
-				assert_equal(ds2.end(), ds2.begin());
-			}
-
-
-			test( MultiplierIsAppliedToRange )
-			{
-				// INIT
-				linear_scale<int> s(110, 340, 100);
-
-				// INIT / ACT
-				display_scale ds(s, 450, 100); // [0.2(4), 0.7(5)]
-
-				// ACT / ASSERT
-				display_scale::tick reference[] = {
-					{	110.0f / 450, display_scale::first	},
-					{	0.3f, display_scale::major	},
-					{	0.4f, display_scale::major	},
-					{	0.5f, display_scale::major	},
-					{	0.6f, display_scale::major	},
-					{	0.7f, display_scale::major	},
-					{	340.0f / 450, display_scale::last	},
-				};
-
-				assert_equal_pred(reference, ds, eq());
-			}
-
-
 			test( SamplePositionsAreConvertedToDisplayRange )
 			{
 				// INIT
@@ -187,17 +72,6 @@ namespace math
 				display_scale ds2(s, 1, 26);
 
 				// ACT / ASSERT
-				display_scale::tick reference[] = {
-					{	117.0f, display_scale::first	},
-					{	200.0f, display_scale::major	},
-					{	300.0f, display_scale::major	},
-					{	345.0f, display_scale::last	},
-				};
-
-				assert_equal_pred(reference, ds1, eq());
-				assert_equal_pred(reference, ds2, eq());
-
-				// ACT / ASSERT
 				assert_approx_equal(25.0f, ds1[0.0f], 0.001f);
 				assert_approx_equal(25.0f, ds1[200.0f], 0.001f);
 				assert_approx_equal(25.0f, ds1[1000.0f], 0.001f);
@@ -217,11 +91,9 @@ namespace math
 				display_scale ds2(s, 1, 26);
 
 				// ASSERT
-				assert_equal(ds1.end(), ds1.begin());
 				assert_equal(0.0f, ds1[0.0f]);
 				assert_equal(0.0f, ds1[200.0f]);
 				assert_equal(0.0f, ds1[1000.0f]);
-				assert_equal(ds2.end(), ds2.begin());
 				assert_equal(0.0f, ds2[0.0f]);
 				assert_equal(0.0f, ds2[200.0f]);
 				assert_equal(0.0f, ds2[1000.0f]);

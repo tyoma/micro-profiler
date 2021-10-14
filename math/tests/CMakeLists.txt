@@ -8,6 +8,7 @@ set(MATH_TEST_SOURCES
 	HistogramTests.cpp
 	LinearScaleRulerTests.cpp
 	LinearScaleTests.cpp
+	LogScaleRulerTests.cpp
 	LogScaleTests.cpp
 	SerializationTests.cpp
 	VariantScaleTests.cpp
@@ -17,4 +18,4 @@ set(MATH_TEST_SOURCES
 
 add_library(math.tests SHARED ${MATH_TEST_SOURCES})
 
-target_link_libraries(math.tests test-helpers common)
+target_link_libraries(math.tests math test-helpers common)

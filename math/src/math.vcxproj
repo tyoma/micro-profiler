@@ -19,37 +19,28 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E00E7A03-E0B0-4F9B-82A1-1448CC321BBD}</ProjectGuid>
+    <ProjectGuid>{096504A2-764C-494A-805C-D16815AC0DC5}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(SolutionDir)build.props\platform.props" />
   <PropertyGroup Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(SolutionDir)build.props\config.tests.props" />
-    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
+    <Import Project="$(SolutionDir)build.props\config.props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="DeSerializationTests.cpp" />
-    <ClCompile Include="DisplayScaleTests.cpp" />
-    <ClCompile Include="HistogramTests.cpp" />
-    <ClCompile Include="LinearScaleRulerTests.cpp" />
-    <ClCompile Include="LogScaleRulerTests.cpp" />
-    <ClCompile Include="LogScaleTests.cpp" />
-    <ClCompile Include="LinearScaleTests.cpp" />
-    <ClCompile Include="SerializationTests.cpp" />
-    <ClCompile Include="VariantScaleTests.cpp" />
-    <ClCompile Include="VariantSerializationTests.cpp" />
-    <ClCompile Include="VariantTests.cpp" />
+    <ClCompile Include="linear_scale_ruler.cpp" />
+    <ClCompile Include="log_scale_ruler.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\common\src\common.vcxproj">
-      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\src\math.vcxproj">
-      <Project>{096504a2-764c-494a-805c-d16815ac0dc5}</Project>
-    </ProjectReference>
+    <ClInclude Include="..\display_scale.h" />
+    <ClInclude Include="..\histogram.h" />
+    <ClInclude Include="..\scale.h" />
+    <ClInclude Include="..\scale_ruler.h" />
+    <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\variant.h" />
+    <ClInclude Include="..\variant_scale.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

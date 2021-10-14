@@ -11,33 +11,6 @@
     <ClCompile Include="VariantSerializationTests.cpp" />
     <ClCompile Include="VariantScaleTests.cpp" />
     <ClCompile Include="LinearScaleRulerTests.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Library Headers">
-      <UniqueIdentifier>{5136425b-285a-4d25-9a1b-dd06ecebd09a}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\histogram.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\scale.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\serialization.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\display_scale.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\variant.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\variant_scale.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\scale_ruler.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
+    <ClCompile Include="LogScaleRulerTests.cpp" />
   </ItemGroup>
 </Project>

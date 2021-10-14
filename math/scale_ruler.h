@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <common/compiler.h>
 #include <math/scale.h>
 
 namespace math
@@ -68,76 +67,97 @@ namespace math
 	};
 
 
+	class log_scale_ruler
+	{
+	public:
+		struct tick_index;
+		typedef ruler_tick value_type;
+		class const_iterator;
+
+	public:
+		template <typename T>
+		log_scale_ruler(const log_scale<T> &scale, T divisor);
+
+		const_iterator begin() const;
+		const_iterator end() const;
+
+	private:
+		float _near, _far;
+	};
+
+	struct log_scale_ruler::tick_index
+	{
+		static tick_index next(float value);
+
+		float value() const;
+		tick_index &operator ++();
+
+		signed char order;
+		unsigned char minor;
+	};
+
+	class log_scale_ruler::const_iterator
+	{
+	public:
+		const_iterator(float far, ruler_tick tick_);
+
+		const ruler_tick &operator *() const;
+		const_iterator &operator ++();
+
+	private:
+		float _far;
+		ruler_tick _tick;
+		tick_index _index;
+	};
+
+
 
 	template <typename T>
-	inline linear_scale_ruler::linear_scale_ruler(const linear_scale<T> &scale, typename T divisor)
-		: _near(static_cast<float>(scale.near_value()) / divisor), _far(static_cast<float>(scale.far_value()) / divisor)
-	{
-		const auto range_delta = _far - _near;
-
-		_major = scale.samples() ? major_tick(range_delta) : 0.0f;
-	}
-
-	FORCE_NOINLINE float linear_scale_ruler::next_tick(float value, float ruler_tick_)
-	{	return std::ceil(value / ruler_tick_) * ruler_tick_;	}
-
-	inline float linear_scale_ruler::major_tick(float delta)
-	{	return delta ? powf(10.0f, floorf(log10f(delta))) : 0.0f;	}
-
-	inline linear_scale_ruler::const_iterator linear_scale_ruler::begin() const
-	{
-		if (_major)
-		{
-			ruler_tick t = {	_near, ruler_tick::first	};
-			return const_iterator(_major, _far, t);
-		}
-		return end();
-	}
-
-	inline linear_scale_ruler::const_iterator linear_scale_ruler::end() const
-	{
-		ruler_tick t = {	_far, ruler_tick::_complete	};
-		return const_iterator(_major, _far, t);
-	}
-
-	inline linear_scale_ruler::const_iterator::const_iterator(float major_, float far, ruler_tick tick_)
-		: _major(major_), _far(far), _tick(tick_)
+	inline linear_scale_ruler::linear_scale_ruler(const linear_scale<T> &scale, T divisor)
+		: _near(static_cast<float>(scale.near_value()) / divisor), _far(static_cast<float>(scale.far_value()) / divisor),
+			_major(scale.samples() ? major_tick(_far - _near) : 0.0f)
 	{	}
 
-	inline const ruler_tick &linear_scale_ruler::const_iterator::operator *() const
-	{	return _tick;	}
 
-	inline linear_scale_ruler::const_iterator &linear_scale_ruler::const_iterator::operator ++()
-	{
-		auto value = _tick.value;
-		auto type = _tick.type;
-
-		switch (type)
-		{
-		case ruler_tick::first:	value = linear_scale_ruler::next_tick(value, _major), type = ruler_tick::major;	break;
-		case ruler_tick::major:	value += _major;	if (value >= _far) type = ruler_tick::last, value = _far;	break;
-		case ruler_tick::last:	type = ruler_tick::_complete; break;
-		}
-		_tick.value = value;
-		_tick.type = type;
-		return *this;
-	}
+	template <typename T>
+	inline log_scale_ruler::log_scale_ruler(const log_scale<T> &scale, T divisor)
+		: _near(static_cast<float>(scale.near_value()) / divisor),
+			_far(scale.samples() ? static_cast<float>(scale.far_value()) / divisor : _near)
+	{	}
 
 
 	inline bool operator ==(ruler_tick lhs, ruler_tick rhs)
-	{	return lhs.value == rhs.value && lhs.type == rhs.type;	}
+	{	return (lhs.value == rhs.value) & (lhs.type == rhs.type);	}
 
 	inline bool operator ==(const linear_scale_ruler::const_iterator &lhs, const linear_scale_ruler::const_iterator &rhs)
 	{	return *lhs == *rhs;	}
 
 	inline bool operator !=(const linear_scale_ruler::const_iterator &lhs, const linear_scale_ruler::const_iterator &rhs)
 	{	return !(lhs == rhs);	}
+
+	inline bool operator ==(const log_scale_ruler::const_iterator &lhs, const log_scale_ruler::const_iterator &rhs)
+	{	return *lhs == *rhs;	}
+
+	inline bool operator !=(const log_scale_ruler::const_iterator &lhs, const log_scale_ruler::const_iterator &rhs)
+	{	return !(lhs == rhs);	}
+
+	inline bool operator ==(log_scale_ruler::tick_index lhs, log_scale_ruler::tick_index rhs)
+	{	return (lhs.order == rhs.order) & (lhs.minor == rhs.minor);	}
 }
 
 namespace std
 {
 	template<>
 	struct iterator_traits<math::linear_scale_ruler::const_iterator>
+	{
+		typedef forward_iterator_tag iterator_category;
+		typedef math::ruler_tick value_type;
+		typedef int difference_type;
+		typedef value_type reference;
+	};
+
+	template<>
+	struct iterator_traits<math::log_scale_ruler::const_iterator>
 	{
 		typedef forward_iterator_tag iterator_category;
 		typedef math::ruler_tick value_type;

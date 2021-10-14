@@ -58,7 +58,7 @@ set(GCC_CLANG_COMPILER_OPTIONS_C
 	-Wno-deprecated-declarations
 	-Wno-unknown-pragmas
 	-Wno-missing-field-initializers
-	-Wno-error
+	-Wno-implicit-fallthrough
 )
 if (NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86")
 	set(GCC_CLANG_COMPILER_OPTIONS_C ${GCC_CLANG_COMPILER_OPTIONS_C} -msse2)
@@ -117,6 +117,7 @@ add_subdirectory(common/src)
 add_subdirectory(frontend/src)
 add_subdirectory(ipc/src)
 add_subdirectory(logger/src)
+add_subdirectory(math/src)
 add_subdirectory(mt/src)
 add_subdirectory(patcher/src)
 add_subdirectory(playground)

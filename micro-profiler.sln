@@ -145,6 +145,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "views.tests", "views\tests\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math.tests", "math\tests\math.tests.vcxproj", "{E00E7A03-E0B0-4F9B-82A1-1448CC321BBD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "math\src\math.vcxproj", "{096504A2-764C-494A-805C-D16815AC0DC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -539,6 +541,14 @@ Global
 		{E00E7A03-E0B0-4F9B-82A1-1448CC321BBD}.Release|Win32.Build.0 = Release|Win32
 		{E00E7A03-E0B0-4F9B-82A1-1448CC321BBD}.Release|x64.ActiveCfg = Release|x64
 		{E00E7A03-E0B0-4F9B-82A1-1448CC321BBD}.Release|x64.Build.0 = Release|x64
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Debug|Win32.Build.0 = Debug|Win32
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Debug|x64.ActiveCfg = Debug|x64
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Debug|x64.Build.0 = Debug|x64
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Release|Win32.ActiveCfg = Release|Win32
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Release|Win32.Build.0 = Release|Win32
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Release|x64.ActiveCfg = Release|x64
+		{096504A2-764C-494A-805C-D16815AC0DC5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -50,7 +50,7 @@ namespace math
 		const_iterator end() const;
 
 	private:
-		float _near, _far, _major;
+		const float _near, _far, _major;
 	};
 
 	class linear_scale_ruler::const_iterator
@@ -62,7 +62,7 @@ namespace math
 		const_iterator &operator ++();
 
 	private:
-		float _major, _far;
+		const float _major, _far;
 		ruler_tick _tick;
 	};
 
@@ -82,7 +82,7 @@ namespace math
 		const_iterator end() const;
 
 	private:
-		float _near, _far;
+		const float _near, _far;
 	};
 
 	struct log_scale_ruler::tick_index
@@ -105,7 +105,7 @@ namespace math
 		const_iterator &operator ++();
 
 	private:
-		float _far;
+		const float _far;
 		ruler_tick _tick;
 		tick_index _index;
 	};
@@ -115,14 +115,13 @@ namespace math
 	template <typename T>
 	inline linear_scale_ruler::linear_scale_ruler(const linear_scale<T> &scale, T divisor)
 		: _near(static_cast<float>(scale.near_value()) / divisor), _far(static_cast<float>(scale.far_value()) / divisor),
-			_major(scale.samples() ? major_tick(_far - _near) : 0.0f)
+			_major(major_tick(_far - _near))
 	{	}
 
 
 	template <typename T>
 	inline log_scale_ruler::log_scale_ruler(const log_scale<T> &scale, T divisor)
-		: _near(static_cast<float>(scale.near_value()) / divisor),
-			_far(scale.samples() ? static_cast<float>(scale.far_value()) / divisor : _near)
+		: _near(static_cast<float>(scale.near_value()) / divisor), _far(static_cast<float>(scale.far_value()) / divisor)
 	{	}
 
 

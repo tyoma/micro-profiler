@@ -20,50 +20,78 @@
 
 #pragma once
 
+#include "scale.h"
+
 #include <utility>
 
 namespace math
 {
-	class display_scale
+	class display_scale_base
 	{
 	public:
-		template <typename ScaleT>
-		display_scale(const ScaleT &scale_, typename ScaleT::value_type divisor, int pixel_size);
+		display_scale_base(unsigned samples, int pixel_size);
 
 		std::pair<float, float> at(unsigned int index) const;
+
+	protected:
+		const float _bin_width;
+	};
+
+
+	class linear_display_scale : public display_scale_base
+	{
+	public:
+		template <typename T>
+		linear_display_scale(const linear_scale<T> &scale, T divisor, int pixel_size);
+
 		float operator [](float value) const;
 
 	private:
-		float _near, _bin_width, _display_k;
+		const float _near, _display_k;
+	};
+
+
+	class log_display_scale : public display_scale_base
+	{
+	public:
+		template <typename T>
+		log_display_scale(const log_scale<T> &scale, T divisor, int pixel_size);
+
+		float operator [](float value) const;
+
+	private:
+		const float _near, _display_k;
 	};
 
 
 
-	template <typename S>
-	inline display_scale::display_scale(const S &scale_, typename S::value_type divisor, int pixel_size_)
-		: _near(static_cast<float>(scale_.near_value()) / divisor)
-	{
-		if (scale_.samples())
-		{
-			const auto pixel_size = static_cast<float>(pixel_size_);
-			const auto range_delta = static_cast<float>(scale_.far_value()) / divisor - _near;
+	inline display_scale_base::display_scale_base(unsigned samples, int pixel_size)
+		: _bin_width(static_cast<float>(pixel_size) / samples)
+	{	}
 
-			_bin_width = pixel_size / scale_.samples();
-			_display_k = (pixel_size - _bin_width) / range_delta;
-		}
-		else
-		{
-			_bin_width = 0.0f;
-			_display_k = 0.0f;
-		}
-	}
-
-	inline std::pair<float, float> display_scale::at(unsigned int index) const
+	inline std::pair<float, float> display_scale_base::at(unsigned int index) const
 	{
 		float v = index * _bin_width;
 		return std::make_pair(v, v + _bin_width);
 	}
 
-	inline float display_scale::operator [](float value) const
+
+	template <typename T>
+	inline linear_display_scale::linear_display_scale(const linear_scale<T> &scale, T divisor, int pixel_size)
+		: display_scale_base(scale.samples(), pixel_size), _near(static_cast<float>(scale.near_value()) / divisor),
+			_display_k((static_cast<float>(pixel_size) - _bin_width) / (static_cast<float>(scale.far_value()) / divisor - _near))
+	{	}
+
+	inline float linear_display_scale::operator [](float value) const
 	{	return _display_k * (value - _near) + 0.5f * _bin_width;	}
+
+
+	template <typename T>
+	inline log_display_scale::log_display_scale(const log_scale<T> &scale, T divisor, int pixel_size)
+		: display_scale_base(scale.samples(), pixel_size), _near(std::log10(static_cast<float>(scale.near_value()) / divisor)),
+			_display_k((static_cast<float>(pixel_size) - _bin_width) / (std::log10(static_cast<float>(scale.far_value()) / divisor) - _near))
+	{	}
+
+	inline float log_display_scale::operator [](float value) const
+	{	return _display_k * (std::log10(value) - _near) + 0.5f * _bin_width;	}
 }

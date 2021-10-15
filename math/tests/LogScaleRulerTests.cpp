@@ -189,28 +189,6 @@ namespace math
 				assert_equal_pred(reference2, ds2, eq());
 			}
 
-
-			test( EmptyScaleIteratesAsEmpty )
-			{
-				// INIT
-				log_scale<int> s1;
-
-				// INIT / ACT
-				log_scale_ruler ds1(s1, 1);
-
-				// ACT / ASSERT
-				assert_equal(ds1.end(), ds1.begin());
-
-				// INIT
-				log_scale<int> s2(7110, 17111, 0);
-
-				// INIT / ACT
-				log_scale_ruler ds2(s2, 1);
-
-				// ACT / ASSERT
-				assert_equal(ds2.end(), ds2.begin());
-			}
-
 		end_test_suite
 	}
 }

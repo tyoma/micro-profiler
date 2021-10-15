@@ -89,28 +89,6 @@ namespace math
 			}
 
 
-			test( EmptyScaleIteratesAsEmpty )
-			{
-				// INIT
-				linear_scale<int> s1;
-
-				// INIT / ACT
-				linear_scale_ruler ds1(s1, 1);
-
-				// ACT / ASSERT
-				assert_equal(ds1.end(), ds1.begin());
-
-				// INIT
-				linear_scale<int> s2(7110, 17111, 0);
-
-				// INIT / ACT
-				linear_scale_ruler ds2(s2, 1);
-
-				// ACT / ASSERT
-				assert_equal(ds2.end(), ds2.begin());
-			}
-
-
 			test( MultiplierIsAppliedToRange )
 			{
 				// INIT
@@ -151,19 +129,6 @@ namespace math
 
 				assert_equal_pred(reference, ds1, eq());
 				assert_equal_pred(reference, ds2, eq());
-			}
-
-
-			test( DisplayScaleForEmptyScaleIsEmpty )
-			{
-				// INIT / ACT
-				linear_scale<int> s;
-				linear_scale_ruler ds1(s, 1);
-				linear_scale_ruler ds2(s, 1);
-
-				// ASSERT
-				assert_equal(ds1.end(), ds1.begin());
-				assert_equal(ds2.end(), ds2.begin());
 			}
 
 		end_test_suite

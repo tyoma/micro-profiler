@@ -26,7 +26,7 @@ namespace math
 {
 	log_scale_ruler::const_iterator log_scale_ruler::begin() const
 	{
-		ruler_tick t = {	_near, _near == _far ? ruler_tick::_complete : ruler_tick::first	};
+		ruler_tick t = {	_near, ruler_tick::first	};
 		return const_iterator(_far, t);
 	}
 

@@ -22,7 +22,7 @@ namespace micro_profiler
 			public:
 				explicit frontend_state(const std::shared_ptr<void> &ownee = std::shared_ptr<void>());
 
-				std::shared_ptr<ipc::channel> create();
+				ipc::channel_ptr_t create();
 
 			public:
 				std::function<void ()> constructed;

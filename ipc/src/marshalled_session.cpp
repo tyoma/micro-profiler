@@ -83,11 +83,11 @@ namespace micro_profiler
 		{
 			LOG(PREAMBLE "scheduling an underlying session creation...") % A(this) % A(underlying_server.get());
 			lifetime::schedule_safe(_lifetime, *_queue, [this, underlying_server] {
-				typedef pair< shared_ptr<ipc::channel>, shared_ptr<ipc::channel> > composite_t;
+				typedef pair< ipc::channel_ptr_t, ipc::channel_ptr_t > composite_t;
 
 				const auto composite = make_shared<composite_t>(_outbound, underlying_server->create_session(*_outbound));
 
-				_underlying = shared_ptr<ipc::channel>(composite, composite->second.get());
+				_underlying = ipc::channel_ptr_t(composite, composite->second.get());
 			});
 		}
 

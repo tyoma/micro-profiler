@@ -79,7 +79,7 @@ namespace micro_profiler
 
 
 
-		collector_app::channel_ptr_t probe_create_channel(ipc::channel &inbound)
+		ipc::channel_ptr_t probe_create_channel(ipc::channel &inbound)
 		{
 			const string c_candidate_endpoints[] = {
 				ipc::sockets_endpoint_id(ipc::localhost, 6100),
@@ -108,7 +108,7 @@ namespace micro_profiler
 				}
 			}
 			LOG(PREAMBLE "using null channel.");
-			return collector_app::channel_ptr_t(new null_channel(inbound));
+			return ipc::channel_ptr_t(new null_channel(inbound));
 		}
 
 		log::writer_t create_writer()

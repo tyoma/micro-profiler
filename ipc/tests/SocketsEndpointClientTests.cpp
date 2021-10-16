@@ -48,7 +48,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = sockets::connect_client("127.0.0.1:6131", inbound);
+					channel_ptr_t c1 = sockets::connect_client("127.0.0.1:6131", inbound);
 					ready.wait();
 
 					// ASSERT
@@ -57,9 +57,9 @@ namespace micro_profiler
 					assert_equal(0u, s2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = sockets::connect_client("127.0.0.1:6131", inbound);
+					channel_ptr_t c2 = sockets::connect_client("127.0.0.1:6131", inbound);
 					ready.wait();
-					shared_ptr<channel> c3 = sockets::connect_client("127.0.0.1:6132", inbound);
+					channel_ptr_t c3 = sockets::connect_client("127.0.0.1:6132", inbound);
 					ready.wait();
 
 					// ASSERT
@@ -86,7 +86,7 @@ namespace micro_profiler
 						};
 					};
 
-					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
+					channel_ptr_t c = sockets::connect_client("127.0.0.1:6131", inbound);
 
 					// ACT
 					c->message(mkrange(data1));
@@ -126,7 +126,7 @@ namespace micro_profiler
 						ready.set();
 					};
 
-					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
+					channel_ptr_t c = sockets::connect_client("127.0.0.1:6131", inbound);
 
 					ready.wait();
 
@@ -165,7 +165,7 @@ namespace micro_profiler
 						ready.set();
 					};
 
-					shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
+					channel_ptr_t c = sockets::connect_client("127.0.0.1:6131", inbound);
 
 					ready.wait();
 
@@ -193,7 +193,7 @@ namespace micro_profiler
 				//		disconnected = true;
 				//	};
 
-				//	shared_ptr<channel> c = sockets::connect_client("127.0.0.1:6131", inbound);
+				//	channel_ptr_t c = sockets::connect_client("127.0.0.1:6131", inbound);
 
 				//	// ACT
 				//	exit.set();

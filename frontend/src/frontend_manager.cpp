@@ -64,10 +64,10 @@ namespace micro_profiler
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
 	{	return *_active_instance;	}
 
-	shared_ptr<ipc::channel> frontend_manager::create_session(ipc::channel &outbound)
+	ipc::channel_ptr_t frontend_manager::create_session(ipc::channel &outbound)
 	{	return _frontend_factory(outbound);	}
 
-	pair<shared_ptr<ipc::channel>, frontend_manager::instance_container::iterator> frontend_manager::attach(ipc::client_session *pfrontend)
+	pair<ipc::channel_ptr_t, frontend_manager::instance_container::iterator> frontend_manager::attach(ipc::client_session *pfrontend)
 	{
 		unique_ptr<ipc::client_session> uf(pfrontend);
 		const auto instances = _instances;

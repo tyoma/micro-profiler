@@ -2,6 +2,7 @@
 
 #include "helpers.h"
 
+#include <common/serialization.h>
 #include <frontend/tables.h>
 #include <ipc/server_session.h>
 #include <patcher/interface.h>
@@ -92,7 +93,7 @@ namespace micro_profiler
 				frontend_->initialized = [&] (const frontend_ui_context &context_) {
 					context = context_;
 				};
-				emulator->message(init, [] (ipc::server_session::serializer &s) {
+				emulator->message(init, [] (ipc::serializer &s) {
 					initialization_data idata = {	"", 1	};
 					s(idata);
 				});

@@ -24,6 +24,7 @@
 #include "serialization_context.h"
 
 #include <common/noncopyable.h>
+#include <common/protocol.h>
 #include <common/unordered_map.h>
 #include <functional>
 #include <ipc/client_session.h>

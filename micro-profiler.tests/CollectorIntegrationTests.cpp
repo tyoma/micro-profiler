@@ -74,7 +74,7 @@ namespace micro_profiler
 					: ready(false, false)
 				{	}
 
-				virtual shared_ptr<ipc::channel> create_session(ipc::channel &outbound_)
+				virtual ipc::channel_ptr_t create_session(ipc::channel &outbound_)
 				{
 					outbound = &outbound_;
 					ready.set();

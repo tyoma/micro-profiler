@@ -20,6 +20,7 @@
 
 #include <frontend/frontend.h>
 
+#include <common/serialization.h>
 #include <frontend/tables.h>
 
 using namespace std;
@@ -71,7 +72,7 @@ namespace micro_profiler
 			return;
 		_patches->invalidate();
 		request(*req, request_apply_patches, _patch_request_payload, response_patched,
-			[this, persistent_id, req] (deserializer &d) {
+			[this, persistent_id, req] (ipc::deserializer &d) {
 
 			auto &image_patches = (*_patches)[persistent_id];
 
@@ -107,7 +108,7 @@ namespace micro_profiler
 			return;
 		_patches->invalidate();
 		request(*req, request_revert_patches, _patch_request_payload, response_reverted,
-			[this, persistent_id, req] (deserializer &d) {
+			[this, persistent_id, req] (ipc::deserializer &d) {
 
 			auto &image_patches = (*_patches)[persistent_id];
 

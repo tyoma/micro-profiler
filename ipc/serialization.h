@@ -20,35 +20,17 @@
 
 #pragma once
 
-#include "active_server_app.h"
+#include <common/pod_vector.h>
+#include <common/stream.h>
+#include <strmd/deserializer.h>
+#include <strmd/packer.h>
+#include <strmd/serializer.h>
 
 namespace micro_profiler
 {
-	class analyzer;
-	struct calls_collector_i;
-	struct overhead;
-	struct patch_manager;
-	class thread_monitor;
-
-	class collector_app : public active_server_app
+	namespace ipc
 	{
-	public:
-		collector_app(const frontend_factory_t &factory, calls_collector_i &collector, const overhead &overhead_,
-			thread_monitor &thread_monitor_, patch_manager &patch_manager_);
-		~collector_app();
-
-		void stop();
-
-	private:
-		virtual void initialize_session(ipc::server_session &session) override;
-		virtual bool finalize_session(ipc::server_session &session) override;
-
-		void collect_and_reschedule();
-
-	private:
-		calls_collector_i &_collector;
-		const std::unique_ptr<analyzer> _analyzer;
-		thread_monitor &_thread_monitor;
-		patch_manager &_patch_manager;
-	};
+		typedef strmd::serializer<buffer_writer< pod_vector<byte> >, strmd::varint> serializer;
+		typedef strmd::deserializer<buffer_reader, strmd::varint> deserializer;
+	}
 }

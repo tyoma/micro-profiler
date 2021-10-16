@@ -43,8 +43,8 @@ namespace micro_profiler
 			const vector< pair<long_address_t, count_t> > empty_callers;
 
 			template <typename T>
-			function<void (ipc::server_session::serializer &s)> format(const T &v)
-			{	return [v] (ipc::server_session::serializer &s) {	s(v);	};	}
+			function<void (ipc::serializer &s)> format(const T &v)
+			{	return [v] (ipc::serializer &s) {	s(v);	};	}
 		}
 
 		begin_test_suite( FrontendStatisticsTests )

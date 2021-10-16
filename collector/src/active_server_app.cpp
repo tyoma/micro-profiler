@@ -18,13 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/active_server_base.h>
+#include <collector/active_server_app.h>
 
 #include <common/time.h>
 #include <ipc/marshalled_session.h>
 #include <ipc/server_session.h>
 #include <logger/log.h>
 #include <scheduler/scheduler.h>
+#include <scheduler/task_queue.h>
 
 #define PREAMBLE "Active server: "
 
@@ -51,30 +52,30 @@ namespace micro_profiler
 		};
 	}
 
-	active_server_base::active_server_base()
-		: queue([] {	return mt::milliseconds(clock());	}), _session(nullptr), _exit_requested(false),
-			_exit_confirmed(false)
+	active_server_app::active_server_app()
+		: _session(nullptr), _exit_requested(false), _exit_confirmed(false),
+			_queue(new scheduler::task_queue([] {	return mt::milliseconds(clock());	}))
 	{	}
 
-	active_server_base::~active_server_base()
-	{	stop(0);	}
+	active_server_app::~active_server_app()
+	{	stop();	}
 
-	void active_server_base::start(const frontend_factory_t &factory)
+	void active_server_app::schedule(function<void ()> &&task, mt::milliseconds defer_by)
+	{	_queue->schedule(move(task), defer_by);	}
+
+	void active_server_app::start(const frontend_factory_t &factory)
 	{
 		LOG(PREAMBLE "starting worker thread.");
 		_frontend_thread.reset(new mt::thread([this, factory] {	worker(factory);	}));
 	}
 
-	void active_server_base::stop(int exiting_message_id)
+	void active_server_app::stop()
 	{
 		if (_frontend_thread.get())
 		{
-			LOG(PREAMBLE "stop request received...") % A(exiting_message_id);
-			queue.schedule([this, exiting_message_id] {
-				if (on_exiting() /* TODO: untested! */ && _session)
-					_exit_requested = true, _session->message(exiting_message_id, [] (server_session::serializer &) {	});
-				else
-					_exit_confirmed = true;
+			LOG(PREAMBLE "stop request received...") % A(this);
+			_queue->schedule([this] {
+				(_session && finalize_session(*_session) ? _exit_requested : _exit_confirmed) = true;
 				LOG(PREAMBLE "processing stop request...") % A(_exit_confirmed);
 			});
 			_frontend_thread->join();
@@ -83,16 +84,19 @@ namespace micro_profiler
 		}
 	}
 
-	void active_server_base::worker(const frontend_factory_t &factory)
+	void active_server_app::worker(const frontend_factory_t &factory)
 	{
-		const auto qw = make_shared<queue_wrapper>(queue);
+		const auto qw = make_shared<queue_wrapper>(*_queue);
 		unique_ptr<marshalled_active_session> s;
 		const auto frontend_disconnected = [&] {
+			auto exit_confirmed = false;
+
 			if (_exit_requested)
-				_exit_confirmed = true;
+				exit_confirmed = _exit_confirmed = true;
 			_session = nullptr;
 			s.reset();
-			LOG(PREAMBLE "remote session disconnected...") % A(_exit_confirmed);
+
+			LOG(PREAMBLE "remote session disconnected...") % A(exit_confirmed);
 		};
 
 		s.reset(new marshalled_active_session(factory, qw, [&] (channel &outbound) -> channel_ptr_t {
@@ -107,9 +111,12 @@ namespace micro_profiler
 		LOG(PREAMBLE "worker started!");
 		do
 		{
-			queue.wait();
-			queue.execute_ready(mt::milliseconds(100));
+			_queue->wait();
+			_queue->execute_ready(mt::milliseconds(100));
 		} while (!_exit_confirmed);
-		LOG(PREAMBLE "worker thread ending...");
+		LOG(PREAMBLE "worker thread exiting...");
 	}
+
+	bool active_server_app::finalize_session(ipc::server_session &/*session*/)
+	{	return false;	}
 }

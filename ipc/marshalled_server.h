@@ -44,7 +44,7 @@ namespace micro_profiler
 			void stop();
 
 		private:
-			virtual std::shared_ptr<channel> create_session(channel &outbound) override;
+			virtual channel_ptr_t create_session(channel &outbound) override;
 
 		private:
 			const std::shared_ptr<lifetime> _lifetime;

@@ -28,7 +28,7 @@ if(MSVC)
 endif()
 
 set(COLLECTOR_LIB_SOURCES
-	active_server_base.cpp
+	active_server_app.cpp
 	allocator.cpp
 	analyzer.cpp
 	calls_collector.cpp

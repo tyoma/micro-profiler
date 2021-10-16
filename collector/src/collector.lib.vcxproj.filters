@@ -31,7 +31,7 @@
     <ClCompile Include="allocator.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="active_server_base.cpp">
+    <ClCompile Include="active_server_app.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -66,7 +66,7 @@
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\buffers_queue.h" />
     <ClInclude Include="..\thread_queue_manager.h" />
-    <ClInclude Include="..\active_server_base.h" />
+    <ClInclude Include="..\active_server_app.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="calls_collector_msvc.asm">

@@ -21,13 +21,10 @@
 #pragma once
 
 #include "endpoint.h"
+#include "serialization.h"
 
-#include <common/pod_vector.h>
-#include <common/serialization.h>
-#include <common/stream.h>
+#include <functional>
 #include <map>
-#include <strmd/deserializer.h>
-#include <strmd/serializer.h>
 
 namespace micro_profiler
 {
@@ -36,7 +33,6 @@ namespace micro_profiler
 		class client_session : public channel
 		{
 		public:
-			typedef strmd::deserializer<buffer_reader, packer> deserializer;
 			typedef std::function<void (deserializer &payload_deserializer)> callback_t;
 
 		public:
@@ -70,7 +66,6 @@ namespace micro_profiler
 			typedef unsigned long long token_t;
 			typedef std::map<std::pair<int, token_t>, callback_t> callbacks_t;
 			typedef std::map<int, callback_t> message_callbacks_t;
-			typedef strmd::serializer<buffer_writer< pod_vector<byte> >, packer> serializer;
 
 		private:
 			template <typename RequestT, typename CallbackConstructorT>
@@ -80,7 +75,7 @@ namespace micro_profiler
 		private:
 			pod_vector<byte> _buffer;
 			token_t _token;
-			std::shared_ptr<channel> _outbound_active;
+			channel_ptr_t _outbound_active;
 			channel *_outbound;
 			std::shared_ptr<callbacks_t> _callbacks;
 			std::shared_ptr<message_callbacks_t> _message_callbacks;
@@ -145,7 +140,7 @@ namespace micro_profiler
 		{
 			_buffer.clear();
 			buffer_writer< pod_vector<byte> > w(_buffer);
-			serializer s(w);
+			ipc::serializer s(w);
 			auto token = _token++;
 
 			s(id);

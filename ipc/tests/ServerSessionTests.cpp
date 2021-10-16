@@ -324,7 +324,7 @@ namespace micro_profiler
 					};
 
 					// ACT
-					s.message(101, [&] (server_session::serializer &ser) {	ser(1919191);	});
+					s.message(101, [&] (serializer &ser) {	ser(1919191);	});
 
 					// ASSERT
 					int reference1[] = {	1919191,	};
@@ -333,9 +333,9 @@ namespace micro_profiler
 					assert_equal(reference1, log2);
 
 					// ACT
-					s.message(101, [&] (server_session::serializer &ser) {	ser(1);	});
-					s.message(101, [&] (server_session::serializer &ser) {	ser(2);	});
-					s.message(100, [&] (server_session::serializer &ser) {	ser(string("Hello!"));	});
+					s.message(101, [&] (serializer &ser) {	ser(1);	});
+					s.message(101, [&] (serializer &ser) {	ser(2);	});
+					s.message(100, [&] (serializer &ser) {	ser(string("Hello!"));	});
 
 					// ASSERT
 					string reference2[] = {	"Hello!",	};

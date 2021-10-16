@@ -68,6 +68,7 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\client_session.h" />
+    <ClInclude Include="..\serialization.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

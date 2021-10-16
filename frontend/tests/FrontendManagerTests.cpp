@@ -113,13 +113,13 @@ namespace micro_profiler
 				frontend_manager m(new_frontend, null_ui_factory);
 
 				// ACT / ASSERT (must not throw)
-				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
+				ipc::channel_ptr_t c1 = m.create_session(outbound);
 
 				// ACT / ASSERT
 				assert_equal(1u, m.instances_count());
 
 				// ACT
-				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
+				ipc::channel_ptr_t c2 = m.create_session(outbound);
 
 				// ACT / ASSERT
 				assert_equal(2u, m.instances_count());
@@ -130,8 +130,8 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, null_ui_factory);
-				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
-				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
+				ipc::channel_ptr_t c1 = m.create_session(outbound);
+				ipc::channel_ptr_t c2 = m.create_session(outbound);
 
 				// ACT
 				c2.reset();
@@ -157,8 +157,8 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
-				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
+				ipc::channel_ptr_t c1 = m.create_session(outbound);
+				ipc::channel_ptr_t c2 = m.create_session(outbound);
 
 				// ACT
 				message(*c1, init, make_initialization_data("c:\\test\\some.exe", 12332));
@@ -222,8 +222,8 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
-				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
+				ipc::channel_ptr_t c1 = m.create_session(outbound);
+				ipc::channel_ptr_t c2 = m.create_session(outbound);
 
 				message(*c1, init, make_initialization_data("", 10));
 				message(*c2, init, make_initialization_data("", 15));
@@ -248,8 +248,8 @@ namespace micro_profiler
 				// INIT
 				mocks::outbound_channel outbound_channels[2];
 				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, null_ui_factory));
-				shared_ptr<ipc::channel> c1 = m->create_session(outbound_channels[0]);
-				shared_ptr<ipc::channel> c2 = m->create_session(outbound_channels[1]);
+				ipc::channel_ptr_t c1 = m->create_session(outbound_channels[0]);
+				ipc::channel_ptr_t c2 = m->create_session(outbound_channels[1]);
 
 				// ACT
 				m.reset();
@@ -265,7 +265,7 @@ namespace micro_profiler
 				// INIT
 				mocks::outbound_channel outbound_channels[3];
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound_channels[0]),
 					m.create_session(outbound_channels[1]),
 					m.create_session(outbound_channels[2]),
@@ -307,7 +307,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory_weak());
-				shared_ptr<ipc::channel> c = m.create_session(outbound);
+				ipc::channel_ptr_t c = m.create_session(outbound);
 
 				// ACT
 				message(*c, init, initialization_data());
@@ -322,7 +322,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory_weak());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound),
 				};
 
@@ -343,7 +343,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
@@ -376,7 +376,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory_weak());
-				shared_ptr<ipc::channel> c = m.create_session(outbound);
+				ipc::channel_ptr_t c = m.create_session(outbound);
 
 				message(*c, init, initialization_data());
 
@@ -393,7 +393,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory_weak());
-				shared_ptr<ipc::channel> c = m.create_session(outbound);
+				ipc::channel_ptr_t c = m.create_session(outbound);
 
 				message(*c, init, initialization_data());
 
@@ -410,7 +410,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, logging_ui_factory_weak()));
-				shared_ptr<ipc::channel> c = m->create_session(outbound);
+				ipc::channel_ptr_t c = m->create_session(outbound);
 
 				message(*c, init, initialization_data());
 
@@ -426,7 +426,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, logging_ui_factory_weak()));
-				shared_ptr<ipc::channel> c = m->create_session(outbound);
+				ipc::channel_ptr_t c = m->create_session(outbound);
 
 				message(*c, init, initialization_data());
 				c.reset();
@@ -443,7 +443,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shared_ptr<frontend_manager> m(new frontend_manager(new_frontend, logging_ui_factory_weak()));
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m->create_session(outbound), m->create_session(outbound), m->create_session(outbound),
 				};
 
@@ -484,9 +484,9 @@ namespace micro_profiler
 				frontend_manager m(new_frontend, null_ui_factory);
 
 				// ACT
-				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
-				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
-				shared_ptr<ipc::channel> c3 = m.create_session(outbound);
+				ipc::channel_ptr_t c1 = m.create_session(outbound);
+				ipc::channel_ptr_t c2 = m.create_session(outbound);
+				ipc::channel_ptr_t c3 = m.create_session(outbound);
 
 				// ACT / ASSERT
 				assert_not_null(m.get_instance(0));
@@ -501,7 +501,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c = m.create_session(outbound);
+				ipc::channel_ptr_t c = m.create_session(outbound);
 
 				// ACT
 				message(*c, init, make_initialization_data("c:\\dev\\micro-profiler", 1));
@@ -518,7 +518,7 @@ namespace micro_profiler
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory_weak());
 				mocks::outbound_channel outbound_channels[3];
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound_channels[0]), m.create_session(outbound_channels[1]), m.create_session(outbound_channels[2]),
 				};
 
@@ -559,7 +559,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, null_ui_factory);
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
@@ -575,7 +575,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
@@ -598,7 +598,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c = m.create_session(outbound);
+				ipc::channel_ptr_t c = m.create_session(outbound);
 
 				message(*c, init, initialization_data()); // make it active
 				_ui_creation_log[0]->close_on_destroy = false;
@@ -616,13 +616,13 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c1 = m.create_session(outbound);
+				ipc::channel_ptr_t c1 = m.create_session(outbound);
 
 				message(*c1, init, initialization_data());
 				_ui_creation_log[0]->close_on_destroy = false;
 
 				// ACT
-				shared_ptr<ipc::channel> c2 = m.create_session(outbound);
+				ipc::channel_ptr_t c2 = m.create_session(outbound);
 				message(*c2, init, initialization_data());
 				c1.reset();
 
@@ -635,7 +635,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
@@ -668,7 +668,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory_weak());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
@@ -688,7 +688,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 
@@ -708,7 +708,7 @@ namespace micro_profiler
 			{
 				// INIT
 				frontend_manager m(new_frontend, logging_ui_factory());
-				shared_ptr<ipc::channel> c[] = {
+				ipc::channel_ptr_t c[] = {
 					m.create_session(outbound), m.create_session(outbound), m.create_session(outbound),
 				};
 

@@ -31,9 +31,9 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		shared_ptr<channel> connect_client(const string &typed_destination_endpoint_id, channel &inbound)
+		channel_ptr_t connect_client(const string &typed_destination_endpoint_id, channel &inbound)
 		{
-			typedef function<shared_ptr<channel> (const char *destination_endpoint_id, channel &inbound)>
+			typedef function<channel_ptr_t (const char *destination_endpoint_id, channel &inbound)>
 				client_endpoint_factory_t;
 
 			constructor<client_endpoint_factory_t> c_constructors[] = {

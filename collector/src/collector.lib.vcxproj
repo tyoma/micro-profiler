@@ -41,7 +41,7 @@
     </MASM>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="active_server_base.cpp" />
+    <ClCompile Include="active_server_app.cpp" />
     <ClCompile Include="allocator.cpp" />
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="calls_collector.cpp">
@@ -66,7 +66,7 @@
     <ClCompile Include="thread_monitor.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\active_server_base.h" />
+    <ClInclude Include="..\active_server_app.h" />
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\buffers_queue.h" />

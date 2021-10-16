@@ -80,7 +80,7 @@ namespace micro_profiler
 				socket_handler::status handle_preinit(socket_handler &h, const socket_handle &s);
 				socket_handler::status accept_preinit(const socket_handle &s);
 				socket_handler::status accept_regular(const socket_handle &s);
-				socket_handler::status handle_session(const socket_handle &s, const std::shared_ptr<channel> &inbound);
+				socket_handler::status handle_session(const socket_handle &s, const channel_ptr_t &inbound);
 				socket_handler::status handle_aux(const socket_handle &s);
 
 				static int connect_aux(unsigned short port);

@@ -99,7 +99,6 @@
     <ClInclude Include="..\statistics_poll.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\profiling_session.h" />
-    <ClInclude Include="..\display_scale.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

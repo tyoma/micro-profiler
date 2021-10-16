@@ -29,6 +29,11 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
+		struct channel;
+
+		typedef std::shared_ptr<channel> channel_ptr_t;
+
+
 		struct initialization_failed : std::runtime_error
 		{
 			initialization_failed(const char *message);
@@ -53,12 +58,12 @@ namespace micro_profiler
 
 		struct server
 		{
-			virtual std::shared_ptr<channel> create_session(channel &outbound) = 0;
+			virtual channel_ptr_t create_session(channel &outbound) = 0;
 		};
 
 
 
-		std::shared_ptr<channel> connect_client(const std::string &typed_destination_endpoint_id, channel &inbound);
+		channel_ptr_t connect_client(const std::string &typed_destination_endpoint_id, channel &inbound);
 		std::shared_ptr<void> run_server(const std::string &typed_endpoint_id, const std::shared_ptr<server> &factory);
 
 

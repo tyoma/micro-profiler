@@ -58,8 +58,8 @@ namespace micro_profiler
 			}
 
 			template <typename T>
-			function<void (ipc::server_session::serializer &s)> format(const T &v)
-			{	return [v] (ipc::server_session::serializer &s) {	s(v);	};	}
+			function<void (ipc::serializer &s)> format(const T &v)
+			{	return [v] (ipc::serializer &s) {	s(v);	};	}
 
 			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
 			module_info_metadata create_metadata_info(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])

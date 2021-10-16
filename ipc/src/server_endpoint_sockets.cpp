@@ -215,7 +215,7 @@ namespace micro_profiler
 				return socket_handler::proceed;
 			}
 
-			socket_handler::status server::handle_session(const socket_handle &s, const shared_ptr<channel> &inbound)
+			socket_handler::status server::handle_session(const socket_handle &s, const channel_ptr_t &inbound)
 			{
 				unsigned int size;
 

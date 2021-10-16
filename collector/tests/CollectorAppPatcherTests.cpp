@@ -24,7 +24,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef ipc::client_session::deserializer deserializer;
+			using ipc::deserializer;
 
 			const overhead c_overhead(0, 0);
 
@@ -50,7 +50,7 @@ namespace micro_profiler
 
 			init( Init )
 			{
-				factory = [this] (ipc::channel &outbound_) -> shared_ptr<ipc::channel> {
+				factory = [this] (ipc::channel &outbound_) -> ipc::channel_ptr_t {
 					client = make_shared<ipc::client_session>(outbound_);
 					auto p = client.get();
 					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});

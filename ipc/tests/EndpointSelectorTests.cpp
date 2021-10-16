@@ -113,7 +113,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = connect_client(sockets_endpoint_id(localhost, 6123), dummy);
+					channel_ptr_t c1 = connect_client(sockets_endpoint_id(localhost, 6123), dummy);
 					ready.wait();
 
 					// ASSERT
@@ -121,9 +121,9 @@ namespace micro_profiler
 					assert_equal(1u, session_factory2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = connect_client(sockets_endpoint_id(localhost, 6121), dummy);
+					channel_ptr_t c2 = connect_client(sockets_endpoint_id(localhost, 6121), dummy);
 					ready.wait();
-					shared_ptr<channel> c3 = connect_client(sockets_endpoint_id(localhost, 6123), dummy);
+					channel_ptr_t c3 = connect_client(sockets_endpoint_id(localhost, 6123), dummy);
 					ready.wait();
 
 					// ASSERT
@@ -144,15 +144,15 @@ namespace micro_profiler
 					shared_ptr<void> hs2 = run_server(com_endpoint_id(ids[1]), session_factory2);
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = connect_client(com_endpoint_id(ids[1]), dummy);
+					channel_ptr_t c1 = connect_client(com_endpoint_id(ids[1]), dummy);
 
 					// ASSERT
 					assert_equal(0u, session_factory->sessions.size());
 					assert_equal(1u, session_factory2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = connect_client(com_endpoint_id(ids[0]), dummy);
-					shared_ptr<channel> c3 = connect_client(com_endpoint_id(ids[1]), dummy);
+					channel_ptr_t c2 = connect_client(com_endpoint_id(ids[0]), dummy);
+					channel_ptr_t c3 = connect_client(com_endpoint_id(ids[1]), dummy);
 
 					// ASSERT
 					assert_equal(1u, session_factory->sessions.size());

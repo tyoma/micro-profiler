@@ -54,7 +54,7 @@ namespace micro_profiler
 				{
 					// INIT / ACT
 					channel *inbound = nullptr;
-					client_session s([&] (channel &inbound_) -> shared_ptr<channel>	{
+					client_session s([&] (channel &inbound_) -> channel_ptr_t	{
 						inbound = &inbound_;
 						assert_null(outbound);
 						return outbound = make_shared<mocks::channel>();
@@ -74,7 +74,7 @@ namespace micro_profiler
 
 					// ACT
 					outbound->on_message = [&] (const_byte_range payload) {
-						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+						buffer_reader br(payload); deserializer ser(br); messages++;
 
 					// ASSERT
 						assert_equal(121, read<int>(ser));
@@ -82,49 +82,49 @@ namespace micro_profiler
 						assert_equal(3918344u, read<unsigned>(ser));
 
 					};
-					s.request(req[0], 121, 3918344u, 1, [] (client_session::deserializer &) {});
+					s.request(req[0], 121, 3918344u, 1, [] (deserializer &) {});
 
 					// ASSERT
 					assert_equal(1, messages);
 
 					// ACT
 					outbound->on_message = [&] (const_byte_range payload) {
-						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+						buffer_reader br(payload); deserializer ser(br); messages++;
 
 					// ASSERT
 						assert_equal(1001, read<int>(ser));
 						assert_equal(2u, read<unsigned>(ser));
 						assert_equal(sneaky_type::create(3141, "pi"), read<sneaky_type>(ser));
 					};
-					s.request(req[1], 1001, sneaky_type::create(3141, "pi"), 1, [] (client_session::deserializer &) {});
+					s.request(req[1], 1001, sneaky_type::create(3141, "pi"), 1, [] (deserializer &) {});
 
 					// ASSERT
 					assert_equal(2, messages);
 
 					// ACT
 					outbound->on_message = [&] (const_byte_range payload) {
-						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+						buffer_reader br(payload); deserializer ser(br); messages++;
 
 					// ASSERT
 						assert_equal(10001, read<int>(ser));
 						assert_equal(3u, read<unsigned>(ser));
 						assert_equal("Lorem ipsum", read<string>(ser));
 					};
-					s.request(req[2], 10001, string("Lorem ipsum"), 1, [] (client_session::deserializer &) {});
+					s.request(req[2], 10001, string("Lorem ipsum"), 1, [] (deserializer &) {});
 
 					// ASSERT
 					assert_equal(3, messages);
 
 					// ACT
 					outbound->on_message = [&] (const_byte_range payload) {
-						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+						buffer_reader br(payload); deserializer ser(br); messages++;
 
 					// ASSERT
 						assert_equal(11, read<int>(ser));
 						assert_equal(4u, read<unsigned>(ser));
 						assert_equal(sneaky_type::create(31415926, "amet dolor"), read<sneaky_type>(ser));
 					};
-					s.request(req[3], 11, sneaky_type::create(31415926, "amet dolor"), 1, [] (client_session::deserializer &) {});
+					s.request(req[3], 11, sneaky_type::create(31415926, "amet dolor"), 1, [] (deserializer &) {});
 				}
 
 
@@ -137,7 +137,7 @@ namespace micro_profiler
 
 					// ACT
 					outbound->on_message = [&] (const_byte_range payload) {
-						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+						buffer_reader br(payload); deserializer ser(br); messages++;
 
 					// ASSERT
 						assert_equal(121, read<int>(ser));
@@ -145,21 +145,21 @@ namespace micro_profiler
 						assert_equal(3918344u, read<unsigned>(ser));
 
 					};
-					s.request(req[0], 121, 3918344u, 1, [] (client_session::deserializer &) {});
+					s.request(req[0], 121, 3918344u, 1, [] (deserializer &) {});
 
 					// ASSERT
 					assert_equal(1, messages);
 
 					// ACT
 					outbound->on_message = [&] (const_byte_range payload) {
-						buffer_reader br(payload); client_session::deserializer ser(br); messages++;
+						buffer_reader br(payload); deserializer ser(br); messages++;
 
 					// ASSERT
 						assert_equal(1001, read<int>(ser));
 						assert_equal(2u, read<unsigned>(ser));
 						assert_equal(sneaky_type::create(3141, "pi"), read<sneaky_type>(ser));
 					};
-					s.request(req[1], 1001, sneaky_type::create(3141, "pi"), 1, [] (client_session::deserializer &) {});
+					s.request(req[1], 1001, sneaky_type::create(3141, "pi"), 1, [] (deserializer &) {});
 
 					// ASSERT
 					assert_equal(2, messages);
@@ -176,9 +176,9 @@ namespace micro_profiler
 					client_session s([&] (channel &/*inbound*/)	{	return outbound = make_shared<mocks::channel>();	});
 
 					// ACT
-					s.request(req[0], 1, 1, 1, [alive1] (client_session::deserializer &) {});
-					s.request(req[1], 1, 1, 1, [alive2] (client_session::deserializer &) {});
-					s.request(req[2], 1, 1, 1, [alive3] (client_session::deserializer &) {});
+					s.request(req[0], 1, 1, 1, [alive1] (deserializer &) {});
+					s.request(req[1], 1, 1, 1, [alive2] (deserializer &) {});
+					s.request(req[2], 1, 1, 1, [alive3] (deserializer &) {});
 
 					// ASSERT
 					assert_not_null(req[0]);
@@ -198,7 +198,7 @@ namespace micro_profiler
 					assert_not_equal(1, alive3.use_count());
 
 					// ACT
-					s.request(req[3], 1, 1, 1, [alive4] (client_session::deserializer &) {});
+					s.request(req[3], 1, 1, 1, [alive4] (deserializer &) {});
 					req[0].reset();
 
 					// ASSERT
@@ -223,7 +223,7 @@ namespace micro_profiler
 				{
 					// INIT / ACT
 					channel *inbound;
-					client_session s([&] (channel &inbound_) -> shared_ptr<channel> {
+					client_session s([&] (channel &inbound_) -> channel_ptr_t {
 						inbound = &inbound_;
 						outbound = make_shared<mocks::channel>();
 						return outbound;
@@ -234,7 +234,7 @@ namespace micro_profiler
 					outbound->on_message = [&] (const_byte_range) {
 						send_standard(*inbound, 1021, 1, 1);
 					};
-					s.request(req[0], 121, 3918344u, 1021, [&] (client_session::deserializer &) {
+					s.request(req[0], 121, 3918344u, 1021, [&] (deserializer &) {
 						called++;
 					});
 
@@ -253,9 +253,9 @@ namespace micro_profiler
 					client_session s([&] (channel &/*inbound*/)	{	return outbound = make_shared<mocks::channel>();	});
 
 					// ACT
-					s.subscribe(req[0], 1, [alive1] (client_session::deserializer &) {});
-					s.subscribe(req[1], 2, [alive2] (client_session::deserializer &) {});
-					s.subscribe(req[2], 3, [alive3] (client_session::deserializer &) {});
+					s.subscribe(req[0], 1, [alive1] (deserializer &) {});
+					s.subscribe(req[1], 2, [alive2] (deserializer &) {});
+					s.subscribe(req[2], 3, [alive3] (deserializer &) {});
 
 					// ASSERT
 					assert_not_null(req[0]);
@@ -275,7 +275,7 @@ namespace micro_profiler
 					assert_not_equal(1, alive3.use_count());
 
 					// ACT
-					s.subscribe(req[3], 10, [alive4] (client_session::deserializer &) {});
+					s.subscribe(req[3], 10, [alive4] (deserializer &) {});
 					req[0].reset();
 
 					// ASSERT
@@ -304,7 +304,7 @@ namespace micro_profiler
 					client_session s(static_cast<channel &>(*outbound));
 
 					// ACT
-					s.subscribe(req[0], 1, [alive] (client_session::deserializer &) {});
+					s.subscribe(req[0], 1, [alive] (deserializer &) {});
 
 					// ASSERT
 					assert_not_null(req[0]);
@@ -317,17 +317,17 @@ namespace micro_profiler
 				{
 					// INIT
 					channel *inbound;
-					client_session s([&] (channel &inbound_) -> shared_ptr<channel>	{
+					client_session s([&] (channel &inbound_) -> channel_ptr_t	{
 						inbound = &inbound_;
 						outbound = make_shared<mocks::channel>();
 						return outbound;
 					});
 					int calls[4] = { 0 };
 
-					s.request(req[0], 1, 1, 1, [&] (client_session::deserializer &) {	calls[0]++;	});
-					s.request(req[1], 1, 1, 1, [&] (client_session::deserializer &) {	calls[1]++;	});
-					s.request(req[2], 1, 1, 1, [&] (client_session::deserializer &) {	calls[2]++;	});
-					s.request(req[3], 1, 1, 1, [&] (client_session::deserializer &) {	calls[3]++;	});
+					s.request(req[0], 1, 1, 1, [&] (deserializer &) {	calls[0]++;	});
+					s.request(req[1], 1, 1, 1, [&] (deserializer &) {	calls[1]++;	});
+					s.request(req[2], 1, 1, 1, [&] (deserializer &) {	calls[2]++;	});
+					s.request(req[3], 1, 1, 1, [&] (deserializer &) {	calls[3]++;	});
 
 					// ACT
 					send_standard(*inbound, 1, 2, 1);
@@ -363,17 +363,17 @@ namespace micro_profiler
 				{
 					// INIT
 					channel *inbound;
-					client_session s([&] (channel &inbound_) -> shared_ptr<channel>	{
+					client_session s([&] (channel &inbound_) -> channel_ptr_t	{
 						inbound = &inbound_;
 						outbound = make_shared<mocks::channel>();
 						return outbound;
 					});
 					int calls[4] = { 0 };
 
-					s.request(req[0], 1, 1, 101, [&] (client_session::deserializer &) {	calls[0]++;	});
-					s.request(req[1], 1, 1, 102, [&] (client_session::deserializer &) {	calls[1]++;	});
-					s.request(req[2], 1, 1, 103, [&] (client_session::deserializer &) {	calls[2]++;	});
-					s.request(req[3], 1, 1, 104, [&] (client_session::deserializer &) {	calls[3]++;	});
+					s.request(req[0], 1, 1, 101, [&] (deserializer &) {	calls[0]++;	});
+					s.request(req[1], 1, 1, 102, [&] (deserializer &) {	calls[1]++;	});
+					s.request(req[2], 1, 1, 103, [&] (deserializer &) {	calls[2]++;	});
+					s.request(req[3], 1, 1, 104, [&] (deserializer &) {	calls[3]++;	});
 
 					// ACT
 					send_standard(*inbound, 104, 1, 0);
@@ -416,13 +416,13 @@ namespace micro_profiler
 					shared_ptr<bool> alive4 = make_shared<bool>();
 					shared_ptr<bool> alive5 = make_shared<bool>();
 					pair<int, client_session::callback_t> mcb1[] = {
-						make_pair(1, [alive1] (client_session::deserializer &) {	}),
-						make_pair(2, [alive2] (client_session::deserializer &) {	}),
+						make_pair(1, [alive1] (deserializer &) {	}),
+						make_pair(2, [alive2] (deserializer &) {	}),
 					};
 					pair<int, client_session::callback_t> mcb2[] = {
-						make_pair(1, [alive3] (client_session::deserializer &) {	}),
-						make_pair(21, [alive4] (client_session::deserializer &) {	}),
-						make_pair(30, [alive5] (client_session::deserializer &) {	}),
+						make_pair(1, [alive3] (deserializer &) {	}),
+						make_pair(21, [alive4] (deserializer &) {	}),
+						make_pair(30, [alive5] (deserializer &) {	}),
 					};
 					client_session s([&] (channel &/*inbound*/)	{	return outbound = make_shared<mocks::channel>();	});
 
@@ -471,29 +471,29 @@ namespace micro_profiler
 				{
 					// INIT
 					channel *inbound;
-					client_session s([&] (channel &inbound_) -> shared_ptr<channel>	{
+					client_session s([&] (channel &inbound_) -> channel_ptr_t	{
 						inbound = &inbound_;
 						outbound = make_shared<mocks::channel>();
 						return outbound;
 					});
 					int calls[4] = { 0 };
 
-					s.subscribe(req[0], 13, [&] (client_session::deserializer &d) {
+					s.subscribe(req[0], 13, [&] (deserializer &d) {
 						calls[0]++;
 
 					// ASSERT
 						assert_equal(191983, read<int>(d));
 					});
-					s.request(req[1], 1, 1, 13, [&] (client_session::deserializer &) {
+					s.request(req[1], 1, 1, 13, [&] (deserializer &) {
 						assert_is_false(true);
 					});
-					s.subscribe(req[2], 14, [&] (client_session::deserializer &d) {
+					s.subscribe(req[2], 14, [&] (deserializer &d) {
 						calls[2]++;
 
 					// ASSERT
 						assert_equal("moonlight", read<string>(d));
 					});
-					s.subscribe(req[3], 15, [&] (client_session::deserializer &d) {
+					s.subscribe(req[3], 15, [&] (deserializer &d) {
 						calls[3]++;
 
 					// ASSERT

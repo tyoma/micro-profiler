@@ -52,7 +52,7 @@ namespace micro_profiler
 		private:
 			mt::event &_exit;
 			map<string, image> images;
-			shared_ptr<ipc::channel> _commander_channel;
+			ipc::channel_ptr_t _commander_channel;
 		};
 	}
 }

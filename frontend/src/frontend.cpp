@@ -48,12 +48,12 @@ namespace micro_profiler
 			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
 			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false)
 	{
-		subscribe(*new_request_handle(), init_v1, [this] (deserializer &) {
+		subscribe(*new_request_handle(), init_v1, [this] (ipc::deserializer &) {
 			LOGE(PREAMBLE "attempt to connect from an older collector - disconnecting!");
 			disconnect_session();
 		});
 
-		subscribe(*new_request_handle(), init, [this] (deserializer &d) {
+		subscribe(*new_request_handle(), init, [this] (ipc::deserializer &d) {
 			auto self = this;
 
 			if (_initialized)
@@ -80,7 +80,7 @@ namespace micro_profiler
 				% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
 		});
 
-		subscribe(*new_request_handle(), exiting, [this] (deserializer &) {
+		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {
 			// TODO: request last updates and on their completion disconnect the session.
 			disconnect_session();
 		});
@@ -93,7 +93,7 @@ namespace micro_profiler
 				return;
 
 			request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
-				[persistent_id, self] (deserializer &d) {
+				[persistent_id, self] (ipc::deserializer &d) {
 
 				auto &metadata = (*self->_modules)[persistent_id];
 
@@ -132,7 +132,7 @@ namespace micro_profiler
 		if (_update_request)
 			return;
 
-		auto modules_callback = [this] (deserializer &d) {
+		auto modules_callback = [this] (ipc::deserializer &d) {
 			loaded_modules lmodules;
 
 			d(lmodules);
@@ -140,7 +140,7 @@ namespace micro_profiler
 				(*_mappings)[i->first] = i->second;
 			_mappings->invalidate();
 		};
-		auto update_callback = [this] (deserializer &d) {
+		auto update_callback = [this] (ipc::deserializer &d) {
 			d(*_statistics, _serialization_context);
 			update_threads(_serialization_context.threads);
 			_update_request.reset();
@@ -166,7 +166,7 @@ namespace micro_profiler
 				thread_ids.push_back(i->first);
 		}
 
-		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (deserializer &d) {
+		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (ipc::deserializer &d) {
 			d(*_threads);
 			_requests.erase(req);
 		});

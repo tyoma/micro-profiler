@@ -21,16 +21,13 @@
 #pragma once
 
 #include "endpoint.h"
+#include "serialization.h"
 
 #include <common/argument_traits.h>
 #include <common/noncopyable.h>
-#include <common/pod_vector.h>
-#include <common/serialization.h>
-#include <common/stream.h>
 #include <functional>
 #include <scheduler/private_queue.h>
-#include <strmd/serializer.h>
-#include <strmd/deserializer.h>
+#include <unordered_map>
 
 namespace micro_profiler
 {
@@ -40,7 +37,6 @@ namespace micro_profiler
 		{
 		public:
 			class response;
-			typedef strmd::serializer<buffer_writer< pod_vector<byte> >, packer> serializer;
 			typedef unsigned long long token_t;
 
 		public:
@@ -57,7 +53,6 @@ namespace micro_profiler
 		private:
 			template <typename ArgumentsT, typename U>
 			struct handler_thunk;
-			typedef strmd::deserializer<buffer_reader, packer> deserializer;
 			typedef std::function<void (response &response_, deserializer &payload)> handler_t;
 
 		private:

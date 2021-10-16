@@ -49,7 +49,7 @@ namespace micro_profiler
 	void collector_app::stop()
 	{
 		_collector.flush();
-		active_server_base::stop(exiting);
+		active_server_app::stop();
 	}
 
 	void collector_app::initialize_session(ipc::server_session &session)
@@ -122,7 +122,7 @@ namespace micro_profiler
 		});
 
 
-		session.message(init, [] (ipc::server_session::serializer &ser) {
+		session.message(init, [] (ipc::serializer &ser) {
 			initialization_data idata = {
 				get_current_executable(),
 				ticks_per_second()
@@ -131,18 +131,19 @@ namespace micro_profiler
 			ser(idata);
 		});
 
-		queue.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
+		schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
 	}
 
-	bool collector_app::on_exiting()
+	bool collector_app::finalize_session(ipc::server_session &session)
 	{
 		_collector.read_collected(*_analyzer);
+		session.message(exiting, [] (ipc::serializer &) {	});
 		return true;
 	}
 
 	void collector_app::collect_and_reschedule()
 	{
 		_collector.read_collected(*_analyzer);
-		queue.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
+		schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
 	}
 }

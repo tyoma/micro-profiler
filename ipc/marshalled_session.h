@@ -48,7 +48,7 @@ namespace micro_profiler
 			virtual void message(const_byte_range payload) override;
 
 		private:
-			std::shared_ptr<channel> _connection_outbound, _server_inbound;
+			channel_ptr_t _connection_outbound, _server_inbound;
 			scheduler::private_queue _queue;
 		};
 
@@ -71,7 +71,7 @@ namespace micro_profiler
 		private:
 			const std::shared_ptr<lifetime> _lifetime;
 			const std::shared_ptr<scheduler::queue> _queue;
-			std::shared_ptr<channel> _underlying;
+			channel_ptr_t _underlying;
 			std::shared_ptr<outbound_wrapper> _outbound;
 		};
 

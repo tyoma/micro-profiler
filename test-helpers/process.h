@@ -49,7 +49,7 @@ namespace micro_profiler
 
 		private:
 			// ipc::server methods
-			virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound);
+			virtual ipc::channel_ptr_t create_session(ipc::channel &outbound);
 
 		private:
 			mt::event _ready;
@@ -86,7 +86,7 @@ namespace micro_profiler
 		{	return _ready.wait(mt::milliseconds(10000));	}
 
 		template <typename SessionT>
-		inline std::shared_ptr<ipc::channel> runner_controller<SessionT>::create_session(ipc::channel &outbound)
+		inline ipc::channel_ptr_t runner_controller<SessionT>::create_session(ipc::channel &outbound)
 		{
 			std::shared_ptr<SessionT> s(new SessionT(outbound));
 

@@ -40,7 +40,7 @@ namespace micro_profiler
 				: _server(server), _endpoint_id(endpoint_id)
 			{	}
 
-			virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound) override
+			virtual ipc::channel_ptr_t create_session(ipc::channel &outbound) override
 			{
 				LOG(PREAMBLE "creating frontend server session...") % A(_endpoint_id);
 				return _server->create_session(outbound);

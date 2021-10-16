@@ -28,7 +28,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef ipc::client_session::deserializer deserializer;
+			using ipc::deserializer;
 			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
 			typedef containers::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed>
 				thread_statistics_map;
@@ -52,7 +52,7 @@ namespace micro_profiler
 
 			init( Init )
 			{
-				factory = [this] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+				factory = [this] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					client = make_shared<ipc::client_session>(outbound);
 					auto p = client.get();
 					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
@@ -67,131 +67,6 @@ namespace micro_profiler
 			{
 				subscriptions.clear();
 				client.reset();
-			}
-
-
-			test( FrontendIsConstructedInASeparateThreadWhenProfilerHandleObtained )
-			{
-				// INIT
-				mt::thread::id tid = mt::this_thread::get_id();
-				mt::event ready;
-
-				initialize_client = [&] (ipc::client_session &) {
-					tid = mt::this_thread::get_id();
-					ready.set();
-				};
-
-				// INIT / ACT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
-
-				// ACT / ASSERT (must not hang)
-				ready.wait();
-
-				// ASSERT
-				assert_not_equal(mt::this_thread::get_id(), tid);
-			}
-
-
-			test( FrontendStopsAtForceStopRequest )
-			{
-				// INIT
-				mt::event ready;
-				shared_ptr<mt::event> hthread;
-
-				initialize_client = [&] (ipc::client_session &) {
-					hthread = this_thread::open();
-					ready.set();
-				};
-
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
-
-				ready.wait();
-
-				// ACT
-				app.stop();
-
-				// ASSERT
-				assert_is_true(hthread->wait(mt::milliseconds(0)));
-			}
-
-
-			test( WorkerThreadIsStoppedOnDestruction )
-			{
-				// INIT
-				mt::event ready;
-				shared_ptr<mt::event> hthread;
-
-				initialize_client = [&] (ipc::client_session &) {
-					hthread = this_thread::open();
-					ready.set();
-				};
-
-				unique_ptr<collector_app> app(new collector_app(factory, collector, c_overhead, tmonitor, pmanager));
-
-				ready.wait();
-
-				// ACT
-				app.reset();
-
-				// ASSERT
-				assert_is_true(hthread->wait(mt::milliseconds(0)));
-			}
-
-
-			test( FrontendIsDestroyedFromTheConstructingThread )
-			{
-				// INIT
-				auto destroyed_ok = false;
-				mt::event ready;
-				collector_app app([&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
-					auto &destroyed_ok_ = destroyed_ok;
-					auto thread_id = mt::this_thread::get_id();
-					shared_ptr<ipc::client_session> client_(new ipc::client_session(c),
-						[thread_id, &destroyed_ok_] (ipc::client_session *p) {
-						destroyed_ok_ = thread_id == mt::this_thread::get_id();
-						delete p;
-					});
-					auto p = client_.get();
-
-					client_->subscribe(new_subscription(), exiting, [p] (deserializer &) {
-						p->disconnect_session();
-					});
-					ready.set();
-					return client_;
-				}, collector, c_overhead, tmonitor, pmanager);
-
-				ready.wait();
-
-				// ACT
-				app.stop();
-
-				// ASSERT
-				assert_is_true(destroyed_ok);
-			}
-
-
-			test( TwoCoexistingAppsHaveDifferentWorkerThreads )
-			{
-				// INIT
-				vector<mt::thread::id> tids_;
-				mt::event go;
-				mt::mutex mtx;
-
-				initialize_client = [&] (ipc::client_session &) {
-					mt::lock_guard<mt::mutex> l(mtx);
-					tids_.push_back(mt::this_thread::get_id());
-					if (2u == tids_.size())
-						go.set();
-				};
-
-				// ACT
-				collector_app app1(factory, collector, c_overhead, tmonitor, pmanager);
-				collector_app app2(factory, collector, c_overhead, tmonitor, pmanager);
-
-				go.wait();
-
-				// ASSERT
-				assert_not_equal(tids_[1], tids_[0]);
 			}
 
 
@@ -225,7 +100,7 @@ namespace micro_profiler
 				// INIT
 				mt::event stopping;
 				shared_ptr<void> subs;
-				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+				collector_app app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto &stopping_ = stopping;
 					auto client_ = make_shared<ipc::client_session>(outbound);
 
@@ -357,7 +232,7 @@ namespace micro_profiler
 					flushed = true;
 				};
 
-				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+				collector_app app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &flushed_ = flushed;
 					auto &flushed_at_exit_ = flushed_at_exit;
@@ -402,7 +277,7 @@ namespace micro_profiler
 					trace.clear();
 				};
 
-				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
+				collector_app app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &ready_ = ready;
 
@@ -529,34 +404,6 @@ namespace micro_profiler
 			}
 
 
-			test( ClientIsDestroyedIfDisconnected )
-			{
-				// INIT
-				mt::event client_destroyed;
-				ipc::client_session *pclient = nullptr;
-				const auto destroy_client = [&] (ipc::client_session *p) {
-					delete p;
-					client_destroyed.set();
-				};
-
-				collector_app app([&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
-					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
-
-					pclient = client_.get();
-					client_ready.set();
-					return client_;
-				}, collector, c_overhead, tmonitor, pmanager);
-
-				client_ready.wait();
-
-				// ACT
-				pclient->disconnect_session();
-
-				// ACT / ASSERT (must not block)
-				client_destroyed.wait();
-			}
-
-
 			test( AnalysisLoopKeepsOnSpinningAfterClientIsDisconnected )
 			{
 				// INIT
@@ -569,7 +416,7 @@ namespace micro_profiler
 
 				collector.on_read_collected = [&] (calls_collector_i::acceptor &) {	ready.set();	};
 
-				collector_app app([&] (ipc::channel &c) -> shared_ptr<ipc::channel> {
+				collector_app app([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
 
 					pclient = client_.get();
@@ -760,119 +607,6 @@ namespace micro_profiler
 				};
 
 				assert_equal(reference2, threads);
-			}
-
-
-			test( StopWaitsForClientDisconnection )
-			{
-				// INIT
-				shared_ptr<void> subs;
-				mt::event exit_requested;
-				ipc::client_session *pclient = nullptr;
-				auto factory_ = [&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
-					auto client_ = make_shared<ipc::client_session>(outbound);
-					auto &exit_requested_ = exit_requested;
-
-					pclient = client_.get();
-					client_->subscribe(subs, exiting, [&exit_requested_] (deserializer &) {	exit_requested_.set();	});
-					client_ready.set();
-					return client_;
-				};
-				stopwatch sw;
-
-				// INIT / ACT
-				unique_ptr<mt::thread> t(new mt::thread([&] {
-					exit_requested.wait();
-					mt::this_thread::sleep_for(mt::milliseconds(600));
-					pclient->disconnect_session();
-				}));
-				unique_ptr<collector_app> app(new collector_app(factory_, collector, c_overhead, tmonitor, pmanager));
-
-				client_ready.wait();
-
-				// ACT
-				sw();
-				app->stop();
-				const auto t1 = sw();
-				t->join();
-
-				// INIT / ACT
-				t.reset(new mt::thread([&] {
-					exit_requested.wait();
-					mt::this_thread::sleep_for(mt::milliseconds(100));
-					pclient->disconnect_session();
-				}));
-				app.reset(new collector_app(factory_, collector, c_overhead, tmonitor, pmanager));
-
-				client_ready.wait();
-
-				// ACT
-				sw();
-				app->stop();
-				auto t2 = sw();
-				t->join();
-
-				// ASSERT
-				assert_approx_equal(6.0, t1 / t2, 0.2);
-			}
-
-
-			test( RequestsAreProcessedWhileStopping )
-			{
-				// INIT
-				shared_ptr<void> subs;
-				mt::event ready, exit_requested;
-				mt::mutex mtx;
-				vector<call_record> trace;
-				shared_ptr<void> req;
-				thread_statistics_map u;
-				call_record trace1[] = {
-					{	0, (void *)0x1223	},
-					{	1000 + c_overhead.inner, (void *)0	},
-				};
-				ipc::client_session *pclient = nullptr;
-
-				collector.on_read_collected = [&] (calls_collector_i::acceptor &a) {
-					mt::lock_guard<mt::mutex> l(mtx);
-
-					if (trace.empty())
-						return;
-					a.accept_calls(1753, &trace[0], trace.size());
-					trace.clear();
-					ready.set();
-				};
-
-				collector_app app([&] (ipc::channel &outbound) -> shared_ptr<ipc::channel> {
-					auto client_ = make_shared<ipc::client_session>(outbound);
-					auto &exit_requested_ = exit_requested;
-
-					pclient = client_.get();
-					client_->subscribe(subs, exiting, [&exit_requested_] (deserializer &) {	exit_requested_.set();	});
-					client_ready.set();
-					return client_;
-				}, collector, c_overhead, tmonitor, pmanager);
-
-				client_ready.wait();
-
-				mt::thread t([&] {
-					app.stop();
-				});
-
-				exit_requested.wait();
-
-				// ACT
-				{	mt::lock_guard<mt::mutex> l(mtx);	trace = mkvector(trace1);	}
-				ready.wait();
-				pclient->request(req, request_update, 0, response_statistics_update, [&] (deserializer &d) {
-					d(u);
-					ready.set();
-				});
-				ready.wait();
-				pclient->disconnect_session();
-				t.join();
-
-				// ASSERT
-				assert_equal(1u, u[1753].count(0x1223));
 			}
 
 		end_test_suite

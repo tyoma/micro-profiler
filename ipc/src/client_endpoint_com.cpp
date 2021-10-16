@@ -172,8 +172,8 @@ namespace micro_profiler
 			}
 
 
-			shared_ptr<channel> connect_client(const char *destination_endpoint_id, channel &inbound)
-			{	return shared_ptr<channel>(new client_session(destination_endpoint_id, inbound));	}
+			channel_ptr_t connect_client(const char *destination_endpoint_id, channel &inbound)
+			{	return channel_ptr_t(new client_session(destination_endpoint_id, inbound));	}
 		}
 	}
 }

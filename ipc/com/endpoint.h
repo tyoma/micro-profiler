@@ -41,7 +41,7 @@ namespace micro_profiler
 				void FinalRelease();
 
 			public:
-				std::shared_ptr<ipc::channel> inbound;
+				ipc::channel_ptr_t inbound;
 
 			private:
 				// ISequentialStream methods

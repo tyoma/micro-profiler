@@ -64,7 +64,7 @@ namespace micro_profiler
 		void load_session(const ContextT &ui_context);
 
 		// ipc::server methods
-		virtual std::shared_ptr<ipc::channel> create_session(ipc::channel &outbound) override;
+		virtual ipc::channel_ptr_t create_session(ipc::channel &outbound) override;
 
 	private:
 		struct instance_impl : instance
@@ -79,7 +79,7 @@ namespace micro_profiler
 		typedef std::list<instance_impl> instance_container;
 
 	private:
-		std::pair<std::shared_ptr<ipc::channel>, instance_container::iterator> attach(ipc::client_session *session);
+		std::pair<ipc::channel_ptr_t, instance_container::iterator> attach(ipc::client_session *session);
 		void on_frontend_released(instance_container::iterator i) throw();
 		void set_ui(instance_container::iterator i, std::shared_ptr<frontend_ui> ui);
 
@@ -91,7 +91,7 @@ namespace micro_profiler
 	private:
 		const std::shared_ptr<instance_container> _instances;
 		const std::shared_ptr<const instance_impl *> _active_instance;
-		std::function<std::shared_ptr<ipc::channel> (ipc::channel &outbound)> _frontend_factory;
+		std::function<ipc::channel_ptr_t (ipc::channel &outbound)> _frontend_factory;
 		std::function<void (const void *)> _load_session;
 	};
 
@@ -111,7 +111,7 @@ namespace micro_profiler
 				set_ui(i, ui);
 		};
 
-		_frontend_factory = [this, frontend_factory, prepare_ui] (ipc::channel &o) -> std::shared_ptr<ipc::channel> {
+		_frontend_factory = [this, frontend_factory, prepare_ui] (ipc::channel &o) -> ipc::channel_ptr_t {
 			const auto prepare_ui_ = prepare_ui;
 			const auto frontend = frontend_factory(o);
 			const auto channel_instance = attach(frontend);

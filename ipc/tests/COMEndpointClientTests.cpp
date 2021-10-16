@@ -43,7 +43,7 @@ namespace micro_profiler
 					shared_ptr<void> hs1 = com::run_server(id1.c_str(), s1), hs2 = com::run_server(id2.c_str(), s2);
 
 					// INIT / ACT
-					shared_ptr<channel> c1 = com::connect_client(id1.c_str(), inbound);
+					channel_ptr_t c1 = com::connect_client(id1.c_str(), inbound);
 
 					// ASSERT
 					assert_not_null(c1);
@@ -51,8 +51,8 @@ namespace micro_profiler
 					assert_equal(0u, s2->sessions.size());
 
 					// INIT / ACT
-					shared_ptr<channel> c2 = com::connect_client(id1.c_str(), inbound);
-					shared_ptr<channel> c3 = com::connect_client(id2.c_str(), inbound);
+					channel_ptr_t c2 = com::connect_client(id1.c_str(), inbound);
+					channel_ptr_t c3 = com::connect_client(id2.c_str(), inbound);
 
 					// ASSERT
 					assert_not_null(c2);
@@ -68,7 +68,7 @@ namespace micro_profiler
 					string id = to_string(generate_id());
 					shared_ptr<mocks::server> s(new mocks::server);
 					shared_ptr<void> hs = com::run_server(id.c_str(), s);
-					shared_ptr<channel> c = com::connect_client(id.c_str(), inbound);
+					channel_ptr_t c = com::connect_client(id.c_str(), inbound);
 					byte data1[] = "I celebrate myself, and sing myself,";
 					byte data2[] = "And what I assume you shall assume,";
 					byte data3[] = "For every atom belonging to me as good belongs to you.";
@@ -117,7 +117,7 @@ namespace micro_profiler
 						disconnected = true;
 					};
 
-					shared_ptr<channel> c = com::connect_client(id.c_str(), inbound);
+					channel_ptr_t c = com::connect_client(id.c_str(), inbound);
 
 					// ACT
 					exit.set();
@@ -135,7 +135,7 @@ namespace micro_profiler
 					string id = to_string(generate_id());
 					shared_ptr<mocks::server> s(new mocks::server);
 					shared_ptr<void> hs = com::run_server(id.c_str(), s);
-					shared_ptr<channel> c = com::connect_client(id.c_str(), inbound);
+					channel_ptr_t c = com::connect_client(id.c_str(), inbound);
 					byte data1[] = "I celebrate myself, and sing myself,";
 					byte data2[] = "And what I assume you shall assume,";
 					byte data3[] = "For every atom belonging to me as good belongs to you.";

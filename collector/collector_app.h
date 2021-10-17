@@ -30,14 +30,12 @@ namespace micro_profiler
 	struct patch_manager;
 	class thread_monitor;
 
-	class collector_app : public active_server_app
+	class collector_app : active_server_app::events
 	{
 	public:
-		collector_app(const frontend_factory_t &factory, calls_collector_i &collector, const overhead &overhead_,
-			thread_monitor &thread_monitor_, patch_manager &patch_manager_);
+		collector_app(const active_server_app::frontend_factory_t &factory, calls_collector_i &collector,
+			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_);
 		~collector_app();
-
-		void stop();
 
 	private:
 		virtual void initialize_session(ipc::server_session &session) override;
@@ -50,5 +48,6 @@ namespace micro_profiler
 		const std::unique_ptr<analyzer> _analyzer;
 		thread_monitor &_thread_monitor;
 		patch_manager &_patch_manager;
+		active_server_app _server;
 	};
 }

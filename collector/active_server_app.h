@@ -21,15 +21,10 @@
 #pragma once
 
 #include <common/noncopyable.h>
-#include <functional>
 #include <memory>
 #include <mt/chrono.h>
 #include <mt/thread.h>
-
-namespace scheduler
-{
-	class task_queue;
-}
+#include <scheduler/task_queue.h>
 
 namespace micro_profiler
 {
@@ -44,28 +39,30 @@ namespace micro_profiler
 	class active_server_app : noncopyable
 	{
 	public:
+		struct events;
+
 		typedef std::function<ipc::channel_ptr_t (ipc::channel &inbound)> frontend_factory_t;
 
 	public:
-		active_server_app();
+		active_server_app(events &events_, const frontend_factory_t &factory);
 		~active_server_app();
 
 		void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0));
 
-	protected:
-		void start(const frontend_factory_t &factory);
-		void stop();
-
 	private:
 		void worker(const frontend_factory_t &factory);
 
-		virtual void initialize_session(ipc::server_session &session) = 0;
-		virtual bool /*wait for disconnection*/ finalize_session(ipc::server_session &session);
-
 	private:
+		events &_events;
 		ipc::server_session *_session;
 		bool _exit_requested, _exit_confirmed;
-		std::unique_ptr<scheduler::task_queue> _queue;
-		std::unique_ptr<mt::thread> _frontend_thread;
+		scheduler::task_queue _queue;
+		mt::thread _frontend_thread;
+	};
+
+	struct active_server_app::events
+	{
+		virtual void initialize_session(ipc::server_session &session) = 0;
+		virtual bool finalize_session(ipc::server_session &session) = 0;
 	};
 }

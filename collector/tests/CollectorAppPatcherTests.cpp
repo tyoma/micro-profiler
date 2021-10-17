@@ -37,7 +37,7 @@ namespace micro_profiler
 
 		begin_test_suite( CollectorAppPatcherTests )
 			mocks::allocator allocator_;
-			collector_app::frontend_factory_t factory;
+			active_server_app::frontend_factory_t factory;
 			shared_ptr<ipc::client_session> client;
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;

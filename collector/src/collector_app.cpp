@@ -37,20 +37,14 @@ using namespace std;
 
 namespace micro_profiler
 {
-	collector_app::collector_app(const frontend_factory_t &factory, calls_collector_i &collector,
+	collector_app::collector_app(const active_server_app::frontend_factory_t &factory, calls_collector_i &collector,
 			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_)
 		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(thread_monitor_),
-			_patch_manager(patch_manager_)
-	{	start(factory);	}
+			_patch_manager(patch_manager_), _server(*this, factory)
+	{	}
 
 	collector_app::~collector_app()
-	{	stop();	}
-
-	void collector_app::stop()
-	{
-		_collector.flush();
-		active_server_app::stop();
-	}
+	{	_collector.flush();	}
 
 	void collector_app::initialize_session(ipc::server_session &session)
 	{
@@ -131,7 +125,7 @@ namespace micro_profiler
 			ser(idata);
 		});
 
-		schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
+		_server.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
 	}
 
 	bool collector_app::finalize_session(ipc::server_session &session)
@@ -144,6 +138,6 @@ namespace micro_profiler
 	void collector_app::collect_and_reschedule()
 	{
 		_collector.read_collected(*_analyzer);
-		schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
+		_server.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
 	}
 }

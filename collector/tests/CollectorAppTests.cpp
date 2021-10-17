@@ -38,7 +38,7 @@ namespace micro_profiler
 
 		begin_test_suite( CollectorAppTests )
 			mocks::allocator allocator_;
-			collector_app::frontend_factory_t factory;
+			active_server_app::frontend_factory_t factory;
 			shared_ptr<ipc::client_session> client;
 			function<void (ipc::client_session &client_)> initialize_client;
 			mocks::tracer collector;
@@ -95,12 +95,12 @@ namespace micro_profiler
 			}
 
 
-			test( ProcessExitIsSentOnStopping )
+			test( ProcessExitIsSentOnDestruction )
 			{
 				// INIT
 				mt::event stopping;
 				shared_ptr<void> subs;
-				collector_app app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				unique_ptr<collector_app> app(new collector_app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto &stopping_ = stopping;
 					auto client_ = make_shared<ipc::client_session>(outbound);
 
@@ -110,12 +110,12 @@ namespace micro_profiler
 					});
 					client_ready.set();
 					return client_;
-				}, collector, c_overhead, tmonitor, pmanager);
+				}, collector, c_overhead, tmonitor, pmanager));
 
 				client_ready.wait();
 
 				// ACT
-				app.stop();
+				app.reset();
 
 				// ACT / ASSERT (must unblock)
 				assert_is_true(stopping.wait(mt::milliseconds(0)));
@@ -232,7 +232,7 @@ namespace micro_profiler
 					flushed = true;
 				};
 
-				collector_app app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				unique_ptr<collector_app> app(new collector_app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &flushed_ = flushed;
 					auto &flushed_at_exit_ = flushed_at_exit;
@@ -242,10 +242,10 @@ namespace micro_profiler
 						client_->disconnect_session();
 					});
 					return client_;
-				}, collector, c_overhead, tmonitor, pmanager);
+				}, collector, c_overhead, tmonitor, pmanager));
 
 				// ACT
-				app.stop();
+				app.reset();
 
 				// ASSERT
 				mt::thread::id reference[] = {	mt::this_thread::get_id(),	};
@@ -277,7 +277,7 @@ namespace micro_profiler
 					trace.clear();
 				};
 
-				collector_app app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				unique_ptr<collector_app> app(new collector_app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &ready_ = ready;
 
@@ -286,10 +286,8 @@ namespace micro_profiler
 						ready_.set();
 					});
 					return client_;
-				}, collector, c_overhead, tmonitor, pmanager);
-				mt::thread t([&] {
-					app.stop();
-				});
+				}, collector, c_overhead, tmonitor, pmanager));
+				mt::thread t([&] {	app.reset();	});
 
 				// ACT
 				ready.wait();

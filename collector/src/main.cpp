@@ -124,7 +124,7 @@ namespace micro_profiler
 			g_collector_ptr);
 	}
 
-	collector_app_instance::collector_app_instance(const collector_app::frontend_factory_t &frontend_factory,
+	collector_app_instance::collector_app_instance(const active_server_app::frontend_factory_t &frontend_factory,
 			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)
 		: _logger(create_writer(), (log::g_logger = &_logger, &get_datetime)),
 			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)),

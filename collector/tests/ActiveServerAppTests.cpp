@@ -19,15 +19,8 @@ namespace micro_profiler
 			using ipc::serializer;
 			using ipc::deserializer;
 
-			class test_active_server : public active_server_app
+			class test_app_events : public active_server_app::events
 			{
-			public:
-				~test_active_server()
-				{	stop();	}
-
-				using active_server_app::start;
-				using active_server_app::stop;
-
 			public:
 				function<void (ipc::server_session &session)> initializing;
 				function<bool (ipc::server_session &session)> finalizing;
@@ -40,11 +33,7 @@ namespace micro_profiler
 				}
 
 				virtual bool finalize_session(ipc::server_session &session) override
-				{
-					if (finalizing)
-						return finalizing(session);
-					return false;
-				}
+				{	return finalizing ? finalizing(session) : false;	}
 			};
 
 			template <typename T>
@@ -57,6 +46,7 @@ namespace micro_profiler
 			shared_ptr<ipc::client_session> client;
 			function<void (ipc::client_session &client_)> initialize_client;
 			mt::event client_ready;
+			test_app_events app_events;
 
 			init( Init )
 			{
@@ -80,7 +70,6 @@ namespace micro_profiler
 				// INIT
 				mt::thread::id tid = mt::this_thread::get_id();
 				mt::event ready;
-				test_active_server app;
 
 				initialize_client = [&] (ipc::client_session &) {
 					tid = mt::this_thread::get_id();
@@ -88,7 +77,7 @@ namespace micro_profiler
 				};
 
 				// INIT / ACT
-				app.start(factory);
+				active_server_app app(app_events, factory);
 
 				// ACT / ASSERT (must not hang)
 				ready.wait();
@@ -109,9 +98,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				unique_ptr<test_active_server> app(new test_active_server);
-
-				app->start(factory);
+				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
 
 				ready.wait();
 
@@ -128,9 +115,10 @@ namespace micro_profiler
 				// INIT
 				auto destroyed_ok = false;
 				mt::event ready;
-				unique_ptr<test_active_server> app(new test_active_server);
 
-				app->start([&] (ipc::channel &c) -> ipc::channel_ptr_t {
+				unique_ptr<active_server_app> app(new active_server_app(app_events,
+					[&] (ipc::channel &c) -> ipc::channel_ptr_t {
+
 					auto &destroyed_ok_ = destroyed_ok;
 					auto thread_id = mt::this_thread::get_id();
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c),
@@ -141,7 +129,7 @@ namespace micro_profiler
 
 					ready.set();
 					return client_;
-				});
+				}));
 
 				ready.wait();
 
@@ -168,10 +156,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				test_active_server app[2];
-
-				app[0].start(factory);
-				app[1].start(factory);
+				active_server_app app1(app_events, factory);
+				active_server_app app2(app_events, factory);
 
 				go.wait();
 
@@ -186,7 +172,6 @@ namespace micro_profiler
 				mt::event received;
 				vector<int> log;
 				shared_ptr<void> subscription;
-				test_active_server app1, app2;
 
 				initialize_client = [&] (ipc::client_session &c) {
 					auto &received_ = received;
@@ -202,8 +187,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				app1.initializing = [] (ipc::server_session &session) {	send(session, 181923, 314159);	};
-				app1.start(factory);
+				app_events.initializing = [] (ipc::server_session &session) {	send(session, 181923, 314159);	};
+				
+				active_server_app app1(app_events, factory);
 
 				received.wait();
 
@@ -213,8 +199,9 @@ namespace micro_profiler
 				assert_equal(reference1, log);
 
 				// ACT
-				app2.initializing = [] (ipc::server_session &session) {	send(session, 181923, 27);	};
-				app2.start(factory);
+				app_events.initializing = [] (ipc::server_session &session) {	send(session, 181923, 27);	};
+				
+				active_server_app app2(app_events, factory);
 
 				received.wait();
 
@@ -225,19 +212,19 @@ namespace micro_profiler
 			}
 
 
-			test( ExistingSessionIsFinalizedOnDestruction ) // currently on stop()
+			test( ExistingSessionIsFinalizedOnDestruction )
 			{
 				// INIT
-				unique_ptr<test_active_server> app(new test_active_server);
 				auto finalized = false;
 				mt::event ready;
 
-				app->finalizing = [&finalized] (ipc::server_session &/*session*/) -> bool {
+				app_events.finalizing = [&finalized] (ipc::server_session &/*session*/) -> bool {
 					finalized = true;
 					return false;
 				};
 
-				app->start(factory);
+				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+
 				client_ready.wait();
 
 				// ACT
@@ -247,7 +234,6 @@ namespace micro_profiler
 				assert_is_false(finalized);
 
 				// ACT
-				app->stop();
 				app.reset();
 
 				// ASSERT
@@ -258,20 +244,19 @@ namespace micro_profiler
 			test( NoFinalizationIsMadeIfSessionGetsDisconnected )
 			{
 				// INIT
-				unique_ptr<test_active_server> app(new test_active_server);
 				auto finalized = false;
 
-				app->finalizing = [&finalized] (ipc::server_session &/*session*/) -> bool {
+				app_events.finalizing = [&finalized] (ipc::server_session &/*session*/) -> bool {
 					finalized = true;
 					return false;
 				};
 
-				app->start(factory);
+				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+
 				client_ready.wait();
 
 				// ACT
 				client->disconnect_session();
-				app->stop();
 				app.reset();
 
 				// ASSERT
@@ -282,27 +267,24 @@ namespace micro_profiler
 			test( StoppingServerKeepsOperatingUntilClientDisconnectsIfFinalizationRequiresIt )
 			{
 				// INIT
-				unique_ptr<test_active_server> app(new test_active_server);
 				mt::event ready;
 				shared_ptr<void> req;
 				auto result = 0;
 
-				app->initializing = [] (ipc::server_session &s) {
+				app_events.initializing = [] (ipc::server_session &s) {
 					s.add_handler(1717, [] (ipc::server_session::response &resp, int value) {	resp(1718, 17 * value);	});
 				};
-				app->finalizing = [&ready] (ipc::server_session &/*session*/) -> bool {
+				app_events.finalizing = [&ready] (ipc::server_session &/*session*/) -> bool {
 					ready.set();
 					return true; // require session disconnection to stop
 				};
 
-				app->start(factory);
+				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+
 				client_ready.wait();
 
 				// ACT
-				mt::thread t([&app] {
-					app->stop();
-					app.reset();
-				});
+				mt::thread t([&app] {	app.reset();	});
 				ready.wait();
 
 				client->request(req, 1717, 19, 1718, [&] (deserializer &d) {	d(result),	ready.set();	});
@@ -319,12 +301,6 @@ namespace micro_profiler
 				assert_equal(170, result);
 
 				// ACT
-				app->schedule([&] {	ready.set();	}, mt::milliseconds(100));
-
-				// ASSERT (shall satisfy)
-				ready.wait();
-
-				// ACT
 				client->disconnect_session();
 
 				// ASSERT (shall exit)
@@ -335,7 +311,7 @@ namespace micro_profiler
 			test( ClientGetsDestroyedOnDisconnection )
 			{
 				// INIT
-				test_active_server app;
+				test_app_events events;
 				mt::event client_destroyed;
 				ipc::client_session *pclient = nullptr;
 				const auto destroy_client = [&] (ipc::client_session *p) {
@@ -343,13 +319,14 @@ namespace micro_profiler
 					client_destroyed.set();
 				};
 
-				app.start([&] (ipc::channel &c) -> ipc::channel_ptr_t {
+				unique_ptr<active_server_app> app(new active_server_app(app_events,
+					[&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
 
 					pclient = client_.get();
 					client_ready.set();
 					return client_;
-				});
+				}));
 
 				client_ready.wait();
 
@@ -364,13 +341,13 @@ namespace micro_profiler
 			test( RequestsAreProcessedInWorkerThread )
 			{
 				// INIT
-				test_active_server app;
+				test_app_events events;
 				mt::thread::id thread_id;
 				vector<mt::thread::id> log;
 				mt::event ready;
 				shared_ptr<void> req;
 
-				app.initializing = [&] (ipc::server_session &s) {
+				app_events.initializing = [&] (ipc::server_session &s) {
 					auto &log_ = log;
 					auto &ready_ = ready;
 
@@ -381,7 +358,8 @@ namespace micro_profiler
 					});
 				};
 
-				app.start(factory);
+				active_server_app app(app_events, factory);
+
 				client_ready.wait();
 
 				// ACT
@@ -398,7 +376,7 @@ namespace micro_profiler
 			test( HandlersAreDestroyedInWorkerThreadOnClientDisconnection )
 			{
 				// INIT
-				test_active_server app;
+				test_app_events events;
 				mt::thread::id thread_id;
 				vector<mt::thread::id> log;
 				mt::event ready;
@@ -408,7 +386,7 @@ namespace micro_profiler
 					delete p;
 				});
 
-				app.initializing = [&] (ipc::server_session &s) {
+				app_events.initializing = [&] (ipc::server_session &s) {
 					auto p_ = move(p);
 
 					thread_id = mt::this_thread::get_id();
@@ -416,7 +394,8 @@ namespace micro_profiler
 					p_.reset();
 				};
 
-				app.start(factory);
+				active_server_app app(app_events, factory);
+
 				client_ready.wait();
 
 				// ACT
@@ -432,10 +411,9 @@ namespace micro_profiler
 			}
 
 
-			test( MessageSentFromFinalizationIsDeliveredToClient ) // currently on stop()
+			test( MessageSentFromFinalizationIsDeliveredToClient )
 			{
 				// INIT
-				unique_ptr<test_active_server> app(new test_active_server);
 				mt::event ready;
 				shared_ptr<void> subscription;
 
@@ -444,19 +422,17 @@ namespace micro_profiler
 
 					c.subscribe(subscription, 1122, [&] (deserializer &) {	ready_.set();	});
 				};
-				app->finalizing = [] (ipc::server_session &session) -> bool {
+				app_events.finalizing = [] (ipc::server_session &session) -> bool {
 					send(session, 1122, 0);
 					return false;
 				};
 
-				app->start(factory);
+				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+
 				client_ready.wait();
 
 				// ACT
-				mt::thread t([&app] {
-					app->stop();
-					app.reset();
-				});
+				mt::thread t([&app] {	app.reset();	});
 
 				// ACT / ASSERT (shall satisfy)
 				ready.wait();

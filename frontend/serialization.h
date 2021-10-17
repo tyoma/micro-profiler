@@ -145,16 +145,17 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <typename T>
+	template <typename T, typename A>
 	struct type_traits< micro_profiler::containers::unordered_map<micro_profiler::function_key, T,
-		micro_profiler::knuth_hash> >
+		micro_profiler::knuth_hash, std::equal_to<micro_profiler::function_key>, A> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::statistics_map_reader item_reader_type;
 	};
 
-	template <typename T, typename H>
-	struct type_traits< micro_profiler::containers::unordered_map<T, micro_profiler::thread_info, H> >
+	template <typename T, typename H, typename A>
+	struct type_traits< micro_profiler::containers::unordered_map<T, micro_profiler::thread_info, H,
+		std::equal_to<T>, A> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::threads_model_reader item_reader_type;

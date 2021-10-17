@@ -18,20 +18,43 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <collector/allocator.h>
+#pragma once
 
-#include <new>
-#include <stdlib.h>
+#include "allocator.h"
+#include "hash.h"
+
+#include <unordered_map>
+#include <vector>
 
 namespace micro_profiler
 {
-	void *allocator::allocate(size_t length)
+	class pool_allocator : public allocator
 	{
-		if (auto *memory = malloc(length))
-			return memory;
-		throw std::bad_alloc();
-	}
+	private:
+		struct entry
+		{
+			std::size_t size;
+		};
 
-	void allocator::deallocate(void *memory) throw()
-	{	free(memory);	}
+	public:
+		enum {	overhead = sizeof(entry)	};
+
+	public:
+		pool_allocator(allocator &underlying);
+		~pool_allocator();
+
+		virtual void *allocate(std::size_t length) override;
+		virtual void deallocate(void *memory) throw() override;
+
+	private:
+		typedef std::vector<entry *> free_bin_t;
+		typedef std::unordered_map< size_t, free_bin_t, knuth_hash_fixed<sizeof(std::size_t)> > free_bins_t;
+
+	private:
+		void *allocate_slow(free_bins_t::iterator bin, std::size_t length);
+
+	private:
+		free_bins_t _free;
+		allocator &_underlying;
+	};
 }

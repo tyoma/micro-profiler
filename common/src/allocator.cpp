@@ -18,15 +18,22 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/allocator.h>
 
-#include <stddef.h>
+#include <new>
+#include <stdlib.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	struct allocator
+	void *default_allocator::allocate(size_t length)
 	{
-		virtual void *allocate(size_t length);
-		virtual void deallocate(void *memory) throw();
-	};
+		if (auto *memory = malloc(length))
+			return memory;
+		throw bad_alloc();
+	}
+
+	void default_allocator::deallocate(void *memory) throw()
+	{	free(memory);	}
 }

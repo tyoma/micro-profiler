@@ -64,6 +64,12 @@
     <ClCompile Include="stream.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="allocator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="pool_allocator.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -119,5 +125,7 @@
     <ClInclude Include="..\callback_monitor.h" />
     <ClInclude Include="..\noncopyable.h" />
     <ClInclude Include="..\compiler.h" />
+    <ClInclude Include="..\allocator.h" />
+    <ClInclude Include="..\pool_allocator.h" />
   </ItemGroup>
 </Project>

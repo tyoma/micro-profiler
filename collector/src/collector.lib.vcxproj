@@ -42,7 +42,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="active_server_app.cpp" />
-    <ClCompile Include="allocator.cpp" />
     <ClCompile Include="analyzer.cpp" />
     <ClCompile Include="calls_collector.cpp">
       <EnableEnhancedInstructionSet Condition="'$(Platform)'=='Win32'">NotSet</EnableEnhancedInstructionSet>
@@ -67,7 +66,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\active_server_app.h" />
-    <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\analyzer.h" />
     <ClInclude Include="..\buffers_queue.h" />
     <ClInclude Include="..\calls_collector.h" />

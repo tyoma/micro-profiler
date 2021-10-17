@@ -29,7 +29,6 @@ endif()
 
 set(COLLECTOR_LIB_SOURCES
 	active_server_app.cpp
-	allocator.cpp
 	analyzer.cpp
 	calls_collector.cpp
 	calls_collector_thread.cpp

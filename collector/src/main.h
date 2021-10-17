@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include <collector/allocator.h>
 #include <collector/calls_collector.h>
 #include <collector/collector_app.h>
+#include <common/allocator.h>
 #include <common/memory.h>
 #include <common/noncopyable.h>
 #include <logger/multithreaded_logger.h>
@@ -45,7 +45,7 @@ namespace micro_profiler
 	private:
 		log::multithreaded_logger _logger;
 		std::shared_ptr<thread_monitor> _thread_monitor;
-		allocator _allocator;
+		default_allocator _allocator;
 		executable_memory_allocator _eallocator;
 		calls_collector _collector;
 		image_patch_manager _patch_manager;

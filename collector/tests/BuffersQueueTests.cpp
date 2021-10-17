@@ -25,7 +25,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( BuffersQueueTests )
-			allocator al;
+			default_allocator al;
 
 			test( CollectorIdIsSuppliedToAReadCall )
 			{

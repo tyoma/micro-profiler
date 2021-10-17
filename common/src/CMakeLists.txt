@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(COMMON_SOURCES
+	allocator.cpp
 	configuration_file.cpp
 	constants.cpp
 	formatting.cpp
 	memory.cpp
+	pool_allocator.cpp
 	stream.cpp
 	string.cpp
 	time.cpp

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <collector/allocator.h>
+#include <common/allocator.h>
 
 namespace micro_profiler
 {
@@ -19,6 +19,9 @@ namespace micro_profiler
 			private:
 				virtual void *allocate(size_t length) override;
 				virtual void deallocate(void *memory) throw() override;
+
+			private:
+				default_allocator _underlying;
 			};
 
 
@@ -29,7 +32,7 @@ namespace micro_profiler
 
 			inline void *allocator::allocate(size_t length)
 			{
-				auto memory = micro_profiler::allocator::allocate(length);
+				auto memory = _underlying.allocate(length);
 
 				operations++;
 				return allocated++, memory;
@@ -37,7 +40,7 @@ namespace micro_profiler
 
 			inline void allocator::deallocate(void *memory) throw()
 			{
-				micro_profiler::allocator::deallocate(memory);
+				_underlying.deallocate(memory);
 				operations++;
 				allocated--;
 			}

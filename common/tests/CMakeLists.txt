@@ -8,6 +8,7 @@ set(COMMON_TEST_SOURCES
 	ImageInfoTests.cpp
 	ImageUtilitiesTests.cpp
 	MiscTests.cpp
+	PoolAllocatorTests.cpp
 	PrimitivesTests.cpp
 	SerializationTests.cpp
 	StreamingTests.cpp

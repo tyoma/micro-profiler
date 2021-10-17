@@ -21,7 +21,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( ThreadQueueManagerTests )
-			allocator al;
+			default_allocator al;
 			mocks::thread_callbacks thread_callbacks_;
 
 			test( ThreadIdIsAssignedToIndividualQueuesOnCreation )

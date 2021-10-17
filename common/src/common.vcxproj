@@ -35,6 +35,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="allocator.cpp" />
     <ClCompile Include="configuration_file.cpp" />
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="elf\filemapping_unix.cpp">
@@ -69,6 +70,7 @@
     <ClCompile Include="configuration_registry.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="pool_allocator.cpp" />
     <ClCompile Include="stream.cpp" />
     <ClCompile Include="image_info_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -86,6 +88,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\argument_traits.h" />
     <ClInclude Include="..\callback_monitor.h" />
     <ClInclude Include="..\configuration.h" />
@@ -101,6 +104,7 @@
     <ClInclude Include="..\path.h" />
     <ClInclude Include="..\compiler.h" />
     <ClInclude Include="..\pod_vector.h" />
+    <ClInclude Include="..\pool_allocator.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\protocol.h" />
     <ClInclude Include="..\range.h" />

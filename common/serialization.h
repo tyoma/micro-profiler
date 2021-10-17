@@ -26,7 +26,7 @@
 #include "range.h"
 
 #include <patcher/interface.h>
-#include <strmd/container.h>
+#include <strmd/container_ex.h>
 #include <strmd/packer.h>
 #include <strmd/version.h>
 
@@ -142,13 +142,6 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <typename KeyT, typename ValueT, typename HashT, typename CompT>
-	struct type_traits< micro_profiler::containers::unordered_map<KeyT, ValueT, HashT, CompT> >
-	{
-		typedef container_type_tag category;
-		typedef indexed_associative_container_reader item_reader_type;
-	};
-
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, const void *&data)
 	{	archive(reinterpret_cast<size_t &>(data));	}

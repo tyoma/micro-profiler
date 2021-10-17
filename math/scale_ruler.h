@@ -20,7 +20,9 @@
 
 #pragma once
 
-#include <math/scale.h>
+#include "scale.h"
+
+#include <iterator>
 
 namespace math
 {

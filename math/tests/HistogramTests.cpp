@@ -509,6 +509,25 @@ namespace math
 
 				assert_equal_pred(reference, mkvector(p), eq());
 			}
+
+
+			test( PartitionsOfAResetHistogramAreAllEqualToFarBoundary )
+			{
+				// INIT
+				histogram<linear_scale<float>, int> h;
+
+				h.set_scale(linear_scale<float>(10.0f, 100.0f, 10));
+
+				// ACT
+				partition<float, int> p[] = {	{	30,	}, {	25,	},	};
+
+				h.find_partitions(p, p + 2);
+
+				// ASSERT
+				partition<float, int> reference[] = {	{	25, 100.0f	}, {	30, 100.0f	},	};
+
+				assert_equal_pred(reference, mkvector(p), eq());
+			}
 		end_test_suite
 	}
 }

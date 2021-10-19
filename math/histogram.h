@@ -95,17 +95,21 @@ namespace math
 	{
 		std::sort(first, last, partition_less());
 
-		auto j = index_t();
-		Y sum;
+		const auto n = _scale.samples();
+		auto j = n - n;
+		auto sum = Y();
 
-		do
+		for (; j + 1 < n; ++j)
+		{
 			sum = (*this)[j];
-		while (!sum ? ++j, true : false);
+			if (sum)
+				break;
+		}
 
 		for (; first != last && first->midvalue <= sum; ++first)
 			first->location = _scale[j];
 
-		for (index_t i = j + 1, n = _scale.samples(); i < n; ++i)
+		for (index_t i = j + 1; i < n; ++i)
 		{
 			auto d = (*this)[i];
 			auto new_sum = sum + d;

@@ -1,6 +1,7 @@
 #include <math/histogram.h>
 
 #include <math/scale.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -10,6 +11,28 @@ namespace math
 {
 	namespace tests
 	{
+		namespace
+		{
+			using namespace micro_profiler::tests;
+
+			template <typename T, typename Y>
+			struct partition
+			{
+				Y midvalue;
+				T location;
+			};
+
+			struct eq
+			{
+				bool operator ()(float lhs, float rhs, float tolerance = 0.001) const
+				{	return (!lhs && !rhs) || (fabs((lhs - rhs) / (lhs + rhs)) < tolerance);	}
+
+				template <typename T, typename Y>
+				bool operator ()(partition<T, Y> lhs, partition<T, Y> rhs) const
+				{	return lhs.midvalue == rhs.midvalue && (*this)(lhs.location, rhs.location);	}
+			};
+		}
+
 		typedef linear_scale<long long> scale_;
 		typedef histogram<scale_, long long> histogram_;
 
@@ -256,6 +279,235 @@ namespace math
 				unsigned reference[] = {	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	};
 
 				assert_equal(reference, h);
+			}
+
+
+			test( EvenPartitionsAreFoundAtExactLocations )
+			{
+				// INIT
+				histogram<linear_scale<float>, int> h;
+				partition<float, int> p;
+
+				h.set_scale(linear_scale<float>(0.0f, 10.0f, 11));
+				h.add(0.0f), h.add(1.0f), h.add(2.0f), h.add(3.0f), h.add(4.0f);
+				h.add(5.0f), h.add(6.0f), h.add(7.0f), h.add(8.0f), h.add(9.0f), h.add(10.0f);
+
+				// ACT
+				p.midvalue = 1;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(0.0f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 7;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(6.0f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 11;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(10.0f, p.location, 0.001);
+
+				// INIT
+				h.add(3.0f, 5);
+				h.add(5.0f, 7);
+
+				// ACT
+				p.midvalue = 9;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(3.0f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 10;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(4.0f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 18;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(5.0f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 19;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(6.0f, p.location, 0.001);
+			}
+
+
+			test( PartitionPositionsAreInterpolatedWhenInBetweenTwoBins )
+			{
+				// INIT
+				histogram<linear_scale<float>, int> h;
+				partition<float, int> p;
+
+				h.set_scale(linear_scale<float>(10.0f, 100.0f, 10));
+
+				h.add(20.0f, 14);
+				h.add(30.0f, 17);
+
+				// ACT
+				p.midvalue = 15;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(20.59f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 25;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(26.47f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 30;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(29.41f, p.location, 0.001);
+			}
+
+
+			test( PartitionPositionsAreInterpolatedWhenInBetweenTwoDistantBins )
+			{
+				// INIT
+				histogram<linear_scale<float>, int> h;
+				partition<float, int> p;
+
+				h.set_scale(linear_scale<float>(10.0f, 100.0f, 10));
+
+				h.add(30.0f, 14);
+				h.add(90.0f, 17);
+
+				// ACT
+				p.midvalue = 15;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(33.53f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 25;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(68.82f, p.location, 0.001);
+
+				// ACT
+				p.midvalue = 30;
+				h.find_partitions(&p, &p + 1);
+
+				// ASSERT
+				assert_approx_equal(86.47f, p.location, 0.001);
+			}
+
+
+			test( MultipleSortedPartitionsAreProcessedDuringASingleCall )
+			{
+				// INIT
+				histogram<linear_scale<float>, int> h;
+
+				h.set_scale(linear_scale<float>(10.0f, 100.0f, 10));
+
+				h.add(30.0f, 14);
+				h.add(90.0f, 17);
+
+				// ACT
+				partition<float, int> p1[] = {	{	15,	}, {	25,	},	};
+
+				h.find_partitions(p1, p1 + 2);
+
+				// ASSERT
+				partition<float, int> reference1[] = {	{	15, 33.53f	}, {	25, 68.82f	},	};
+
+				assert_equal_pred(reference1, mkvector(p1), eq());
+
+				// ACT
+				partition<float, int> p2[] = {	{	15,	}, {	25,	}, {	30,	},	};
+
+				h.find_partitions(p2, p2 + 3);
+
+				// ASSERT
+				partition<float, int> reference2[] = {	{	15, 33.53f	}, {	25, 68.82f	}, {	30, 86.47f	},	};
+
+				assert_equal_pred(reference2, mkvector(p2), eq());
+
+				// ACT
+				partition<float, int> p3[] = {	{	15,	}, {	25,	}, {	25,	}, {	29,	}, {	30,	},	};
+
+				h.find_partitions(p3, p3 + 5);
+
+				// ASSERT
+				partition<float, int> reference3[] = {	{	15, 33.53f	}, {	25, 68.82f	}, {	25, 68.82f	}, {	29, 82.94f	}, {	30, 86.47f	},	};
+
+				assert_equal_pred(reference3, mkvector(p3), eq());
+			}
+
+
+			test( PartitionsOutsideRangeAreReportedOnBoundary )
+			{
+				// INIT
+				histogram<linear_scale<float>, int> h;
+
+				h.set_scale(linear_scale<float>(10.0f, 100.0f, 10));
+
+				h.add(30.0f, 14);
+				h.add(90.0f, 17);
+
+				// ACT
+				partition<float, int> p1[] = {	{	11,	}, {	14,	},	};
+
+				h.find_partitions(p1, p1 + 2);
+
+				// ASSERT
+				partition<float, int> reference1[] = {	{	11, 30.00f	}, {	14, 30.00f	},	};
+
+				assert_equal_pred(reference1, mkvector(p1), eq());
+
+				// ACT
+				partition<float, int> p2[] = {	{	11,	}, {	15,	}, {	31,	}, {	100,	},	};
+
+				h.find_partitions(p2, p2 + 4);
+
+				// ASSERT
+				partition<float, int> reference2[] = {	{	11, 30.00f	}, {	15, 33.53f	}, {	31, 90.00f	}, {	100, 90.00f	},	};
+
+				assert_equal_pred(reference2, mkvector(p2), eq());
+			}
+
+
+			test( UnsortedParitionsAreSortedAndLocationsAreReturned )
+			{
+				// INIT
+				histogram<linear_scale<float>, int> h;
+
+				h.set_scale(linear_scale<float>(10.0f, 100.0f, 10));
+
+				h.add(30.0f, 14);
+				h.add(90.0f, 17);
+
+				// ACT
+				partition<float, int> p[] = {	{	30,	}, {	25,	}, {	29,	}, {	25,	}, {	15,	},	};
+
+				h.find_partitions(p, p + 5);
+
+				// ASSERT
+				partition<float, int> reference[] = {	{	15, 33.53f	}, {	25, 68.82f	}, {	25, 68.82f	}, {	29, 82.94f	}, {	30, 86.47f	},	};
+
+				assert_equal_pred(reference, mkvector(p), eq());
 			}
 		end_test_suite
 	}

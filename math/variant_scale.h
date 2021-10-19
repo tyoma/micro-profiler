@@ -41,6 +41,7 @@ namespace math
 		value_type far_value() const;
 		index_t samples() const;
 		bool operator ()(index_t &index, value_type value) const;
+		value_type operator [](index_t index) const;
 
 	private:
 		struct get_near : static_visitor<value_type>
@@ -62,6 +63,14 @@ namespace math
 			value_type value;
 		};
 
+		struct get_centervalue
+		{
+			typedef value_type return_type;
+
+			template <typename U> value_type operator ()(const U &u) const {	return u[index];	}
+
+			index_t index;
+		};
 	};
 
 
@@ -93,6 +102,13 @@ namespace math
 	inline bool variant_scale<T>::operator ()(index_t &index, value_type value) const
 	{
 		convert v = {	index, value	};
+		return base_t::visit(v);
+	}
+
+	template <typename T>
+	inline T variant_scale<T>::operator [](index_t index) const
+	{
+		get_centervalue v = {	index	};
 		return base_t::visit(v);
 	}
 

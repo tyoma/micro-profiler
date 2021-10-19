@@ -41,12 +41,16 @@ namespace math
 		value_type far_value() const;
 		index_t samples() const;
 		bool operator ()(index_t &index, value_type value) const;
+		value_type operator [](index_t index) const;
 
 	private:
+		// fast
 		value_type _base;
 		float _factor;
 		unsigned int _samples;
 
+		// slow
+		float _step;
 		value_type _near, _far;
 	};
 
@@ -64,6 +68,7 @@ namespace math
 		value_type far_value() const;
 		index_t samples() const;
 		bool operator ()(index_t &index, value_type value) const;
+		value_type operator [](index_t index) const;
 
 	private:
 		static float lg(value_type value);
@@ -96,9 +101,9 @@ namespace math
 		}
 		else if (_samples > 1)
 		{
-			_factor = static_cast<float>(_far - _near) / (_samples - 1);
-			_base = _near - static_cast<value_type>(0.5f * _factor);
-			_factor = 1.0f / _factor;
+			_step = static_cast<float>(_far - _near) / (_samples - 1);
+			_base = _near - static_cast<value_type>(0.5f * _step);
+			_factor = 1.0f / _step;
 		}
 		else
 		{
@@ -132,6 +137,10 @@ namespace math
 		return false;
 	}
 
+	template <typename T>
+	inline T linear_scale<T>::operator [](index_t index) const
+	{	return _near + static_cast<value_type>(_step * index);	}
+
 
 	template <typename T>
 	inline log_scale<T>::log_scale()
@@ -158,6 +167,10 @@ namespace math
 	template <typename T>
 	inline bool log_scale<T>::operator ()(index_t &index, value_type value) const
 	{	return value <= value_type() ? false : _inner(index, lg(value));	}
+
+	template <typename T>
+	inline T log_scale<T>::operator [](index_t index) const
+	{	return static_cast<T>(std::pow(10.0f, _inner[index]));	}
 
 	template <typename T>
 	float log_scale<T>::lg(value_type value)

@@ -146,6 +146,25 @@ namespace math
 				assert_equal(linear_scale<int>(), linear_scale<int>(-10, 0, 0));
 				assert_equal(linear_scale<int>(), linear_scale<int>(0, 10, 0));
 			}
+
+
+			test( CenterValueIsCalculatedAccordinglyToRangeAndSampling )
+			{
+				// INIT
+				linear_scale<int> s1(10, 100, 91);
+				linear_scale<float> s2(10.9f, 32.3f, 13);
+
+				// ACT / ASSERT
+				assert_equal(10, s1[0u]);
+				assert_equal(62, s1[52u]);
+				assert_equal(83, s1[73u]);
+				assert_equal(100, s1[90u]);
+
+				assert_approx_equal(10.90f, s2[0u], 0.001f);
+				assert_approx_equal(16.25f, s2[3u], 0.001f);
+				assert_approx_equal(30.52f, s2[11u], 0.001f);
+				assert_approx_equal(32.30f, s2[12u], 0.001f);
+			}
 		end_test_suite
 	}
 }

@@ -130,6 +130,26 @@ namespace math
 				assert_is_false(s1(index, -1000));
 				assert_is_false(s2(index, -10));
 			}
+
+
+			test( CenterValueIsCalculatedAccordinglyToRangeAndSampling )
+			{
+				// INIT
+				log_scale<int> s1(10, 100, 91);
+				log_scale<float> s2(10.9f, 32.3f, 13);
+
+				// ACT / ASSERT
+				assert_equal(10, s1[0u]);
+				assert_equal(37, s1[52u]);
+				assert_equal(64, s1[73u]);
+				assert_equal(100, s1[90u]);
+
+				assert_approx_equal(10.90f, s2[0u], 0.001f);
+				assert_approx_equal(14.30f, s2[3u], 0.001f);
+				assert_approx_equal(18.76f, s2[6u], 0.001f);
+				assert_approx_equal(29.50f, s2[11u], 0.001f);
+				assert_approx_equal(32.30f, s2[12u], 0.001f);
+			}
 		end_test_suite
 	}
 }

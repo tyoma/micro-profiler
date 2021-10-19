@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <vector>
 
 namespace math
@@ -45,6 +46,9 @@ namespace math
 
 		void add(x_type value, y_type d = 1);
 
+		template <typename IteratorT /*partition*/>
+		void find_partitions(IteratorT first, IteratorT last) const;
+
 		void reset();
 
 	private:
@@ -54,6 +58,14 @@ namespace math
 		template <typename ArchiveT, typename ScaleT_, typename Y_>
 		friend void serialize(ArchiveT &archive, histogram<ScaleT_, Y_> &data, unsigned int ver);
 	};
+
+	struct partition_less
+	{
+		template <typename T>
+		bool operator ()(const T &lhs, const T &rhs) const
+		{	return lhs.midvalue < rhs.midvalue;	}
+	};
+
 
 
 
@@ -75,6 +87,42 @@ namespace math
 
 		if (_scale(index, at))
 			(*this)[index] += d;
+	}
+
+	template <typename S, typename Y>
+	template <typename I>
+	inline void histogram<S, Y>::find_partitions(I first, I last) const
+	{
+		std::sort(first, last, partition_less());
+
+		auto j = index_t();
+		Y sum;
+
+		do
+			sum = (*this)[j];
+		while (!sum ? ++j, true : false);
+
+		for (; first != last && first->midvalue <= sum; ++first)
+			first->location = _scale[j];
+
+		for (index_t i = j + 1, n = _scale.samples(); i < n; ++i)
+		{
+			auto d = (*this)[i];
+			auto new_sum = sum + d;
+
+			for (; first != last && first->midvalue <= new_sum; ++first)
+			{
+				const auto previous = _scale[j];
+
+				first->location = previous + (_scale[i] - previous) * (first->midvalue - sum) / d;
+			}
+			if (d)
+				j = i;
+			sum = new_sum;
+		}
+
+		for (; first != last; ++first)
+			first->location = _scale[j];
 	}
 
 	template <typename S, typename Y>

@@ -34,11 +34,11 @@ namespace math
 				assert_equal(make_tick_index(4, 2), log_scale_ruler::tick_index::next(17123.0f));
 				assert_equal(make_tick_index(1, 8), log_scale_ruler::tick_index::next(71.05f));
 				assert_equal(make_tick_index(2, 2), log_scale_ruler::tick_index::next(150.0f));
-				assert_equal(make_tick_index(-3, 4), log_scale_ruler::tick_index::next(0.003f));
-				assert_equal(make_tick_index(-4, 2), log_scale_ruler::tick_index::next(0.0001f));
-				assert_equal(make_tick_index(0, 2), log_scale_ruler::tick_index::next(1.0f));
+				assert_equal(make_tick_index(-3, 4), log_scale_ruler::tick_index::next(0.003001f));
+				assert_equal(make_tick_index(-4, 2), log_scale_ruler::tick_index::next(0.0001001f));
+				assert_equal(make_tick_index(0, 2), log_scale_ruler::tick_index::next(1.001f));
 				assert_equal(make_tick_index(0, 9), log_scale_ruler::tick_index::next(8.99f));
-				assert_equal(make_tick_index(1, 1), log_scale_ruler::tick_index::next(9.0f));
+				assert_equal(make_tick_index(1, 1), log_scale_ruler::tick_index::next(9.001f));
 				assert_equal(make_tick_index(2, 1), log_scale_ruler::tick_index::next(99.99f));
 			}
 

@@ -71,6 +71,26 @@ namespace math
 				assert_equal(96u, cvt(vs2, 120));
 			}
 
+
+			test( CenterValueIsCalculatedAccordinglyToRangeAndSampling )
+			{
+				// INIT
+				variant_scale<int> s1(linear_scale<int>(10, 100, 91));
+				variant_scale<float> s2(log_scale<float>(10.9f, 32.3f, 13));
+
+				// ACT / ASSERT
+				assert_equal(10, s1[0u]);
+				assert_equal(62, s1[52u]);
+				assert_equal(83, s1[73u]);
+				assert_equal(100, s1[90u]);
+
+				assert_approx_equal(10.90f, s2[0u], 0.001f);
+				assert_approx_equal(14.30f, s2[3u], 0.001f);
+				assert_approx_equal(18.76f, s2[6u], 0.001f);
+				assert_approx_equal(29.50f, s2[11u], 0.001f);
+				assert_approx_equal(32.30f, s2[12u], 0.001f);
+			}
+
 		end_test_suite
 	}
 }

@@ -43,9 +43,6 @@ namespace micro_profiler
 	HINSTANCE g_instance;
 	unique_ptr<log::multithreaded_logger> g_logger;
 
-	shared_ptr<ipc::server> ipc::com::server::create_default_session_factory()
-	{	return shared_ptr<ipc::server>();	}
-
 
 	struct file_version
 	{

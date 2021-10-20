@@ -65,7 +65,7 @@ namespace micro_profiler
 			_underlying = nullptr;
 		}
 
-		ipc::channel_ptr_t marshalled_server::create_session(ipc::channel &outbound)
+		channel_ptr_t marshalled_server::create_session(ipc::channel &outbound)
 		{
 			shared_ptr<marshalled_passive_session> msession;
 

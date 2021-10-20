@@ -32,7 +32,7 @@
 #include <common/win32/configuration_registry.h>
 #include <frontend/factory.h>
 #include <frontend/system_stylesheet.h>
-#include <ipc/com/endpoint.h>
+#include <ipc/com/init.h>
 #include <scheduler/ui_queue.h>
 #include <ShellAPI.h>
 #include <wpl/factory.h>
@@ -46,58 +46,57 @@ namespace micro_profiler
 {
 	class application::impl	{	};
 
-
-	struct com_initialize
+	namespace
 	{
-		com_initialize()
-		{	::CoInitializeEx(NULL, COINIT_MULTITHREADED);	}
-
-		~com_initialize()
-		{	::CoUninitialize();	}
-	};
-
-
-	class Module : public CAtlExeModuleT<Module>
-	{
-	public:
-		Module()
+		class Module : public CAtlExeModuleT<Module>
 		{
-			if (::AttachConsole(ATTACH_PARENT_PROCESS))
+		public:
+			Module()
 			{
-				_stdout.reset(freopen("CONOUT$", "wt", stdout), [] (FILE *f) {
-					fclose(f);
-					::FreeConsole();
-				});
+				if (::AttachConsole(ATTACH_PARENT_PROCESS))
+				{
+					_stdout.reset(freopen("CONOUT$", "wt", stdout), [] (FILE *f) {
+						fclose(f);
+						::FreeConsole();
+					});
+				}
 			}
+
+			HRESULT RegisterServer(BOOL /*bRegTypeLib*/ = FALSE, const CLSID* pCLSID = NULL) throw()
+			{	return CAtlExeModuleT<Module>::RegisterServer(FALSE, pCLSID);	}
+
+			HRESULT UnregisterServer(BOOL /*bRegTypeLib*/ = FALSE, const CLSID* pCLSID = NULL) throw()
+			{	return CAtlExeModuleT<Module>::UnregisterServer(FALSE, pCLSID);	}
+
+		private:
+			shared_ptr<FILE> _stdout;
+		};
+
+
+		class FauxFrontend : public IUnknown, public CComObjectRoot, public CComCoClass<FauxFrontend>
+		{
+		public:
+			DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
+			BEGIN_COM_MAP(FauxFrontend)
+				COM_INTERFACE_ENTRY(IUnknown)
+			END_COM_MAP()
+		};
+
+
+
+		shared_ptr<hive> open_configuration(const vector<string> &configuration_path)
+		{
+			auto h = registry_hive::open_user_settings("Software");
+
+			for (auto i = configuration_path.begin(); i != configuration_path.end(); ++i)
+				h = h->create(i->c_str());
+			return h;
 		}
-
-		HRESULT RegisterServer(BOOL /*bRegTypeLib*/ = FALSE, const CLSID* pCLSID = NULL) throw()
-		{	return CAtlExeModuleT<Module>::RegisterServer(FALSE, pCLSID);	}
-
-		HRESULT UnregisterServer(BOOL /*bRegTypeLib*/ = FALSE, const CLSID* pCLSID = NULL) throw()
-		{	return CAtlExeModuleT<Module>::UnregisterServer(FALSE, pCLSID);	}
-
-	private:
-		shared_ptr<FILE> _stdout;
-	};
-
-
-	class FauxFrontend : public IUnknown, public CComObjectRoot, public CComCoClass<FauxFrontend>
-	{
-	public:
-		DECLARE_REGISTRY_RESOURCEID(IDR_PROFILER_FRONTEND)
-		BEGIN_COM_MAP(FauxFrontend)
-			COM_INTERFACE_ENTRY(IUnknown)
-		END_COM_MAP()
-	};
+	}
 
 
 	OBJECT_ENTRY_NON_CREATEABLE_EX_AUTO(static_cast<const GUID &>(constants::standalone_frontend_id),
 		FauxFrontend);
-
-
-	shared_ptr<ipc::server> ipc::com::server::create_default_session_factory()
-	{	return shared_ptr<ipc::server>();	}
 
 
 	application::application()
@@ -119,6 +118,7 @@ namespace micro_profiler
 
 		_factory = wpl::factory::create_default(context);
 		_queue = queue;
+		_config = open_configuration(c_configuration_path);
 		setup_factory(*_factory);
 	}
 
@@ -127,9 +127,6 @@ namespace micro_profiler
 
 	shared_ptr<scheduler::queue> application::get_ui_queue()
 	{	return _queue;	}
-
-	shared_ptr<hive> application::get_configuration()
-	{	return registry_hive::open_user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler");	}
 
 	void application::run()
 	{
@@ -185,7 +182,7 @@ try
 	}
 	else
 	{
-		com_initialize ci;
+		ipc::com::com_initialize ci;
 		application app;
 
 		main(app);

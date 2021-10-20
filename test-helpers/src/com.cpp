@@ -1,20 +1,11 @@
 #include <test-helpers/com.h>
 
-#include <ipc/com/endpoint.h>
+#include <atlbase.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	namespace ipc
-	{
-		namespace com
-		{
-			shared_ptr<ipc::server> server::create_default_session_factory()
-			{	return shared_ptr<ipc::server>();	}
-		}
-	}
-
 	namespace tests
 	{
 		namespace

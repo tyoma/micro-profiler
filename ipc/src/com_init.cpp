@@ -18,64 +18,26 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <ipc/com/init.h>
 
-#include <memory>
-#include <string>
-#include <vector>
-
-namespace scheduler
-{
-	struct queue;
-	class ui_queue;
-}
-
-namespace wpl
-{
-	class factory;
-}
+#include <windows.h>
 
 namespace micro_profiler
 {
-	struct hive;
-
-	class application
+	namespace ipc
 	{
-	public:
-		application();
-		~application();
+		namespace com
+		{
+			com_initialize::com_initialize()
+			{
+				// TODO: need to check apartment model and fail if impossible to initialize with MT-model.
+				::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+			}
 
-		wpl::factory &get_factory();
-		std::shared_ptr<scheduler::queue> get_ui_queue();
-		std::shared_ptr<hive> get_configuration();
-
-		void run();
-		void stop();
-
-		void clipboard_copy(const std::string &text);
-		void open_link(const std::string &address);
-
-	private:
-		class impl;
-
-	private:
-		static const std::vector<std::string> c_configuration_path;
-
-	private:
-		std::shared_ptr<wpl::factory> _factory;
-		std::shared_ptr<scheduler::ui_queue> _queue;
-		std::unique_ptr<impl> _impl;
-		std::shared_ptr<hive> _config;
-	};
-
-
-
-	inline wpl::factory &application::get_factory()
-	{	return *_factory;	}
-
-	inline std::shared_ptr<hive> application::get_configuration()
-	{	return _config;	}
-
-
-	void main(application &app);
+			com_initialize::~com_initialize()
+			{
+				::CoUninitialize();
+			}
+		}
+	}
 }

@@ -41,7 +41,7 @@ namespace micro_profiler
 				void FinalRelease();
 
 			public:
-				ipc::channel_ptr_t inbound;
+				channel_ptr_t inbound;
 
 			private:
 				// ISequentialStream methods
@@ -66,11 +66,7 @@ namespace micro_profiler
 			class server : public CComClassFactory
 			{
 			public:
-				server(const std::shared_ptr<ipc::server> &factory = create_default_session_factory());
-
 				void set_server(const std::shared_ptr<ipc::server> &factory);
-
-				static std::shared_ptr<ipc::server> create_default_session_factory();
 
 			private:
 				STDMETHODIMP CreateInstance(IUnknown *outer, REFIID riid, void **object);

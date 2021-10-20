@@ -23,6 +23,7 @@
 #include <atlbase.h>
 #include <common/module.h>
 #include <common/string.h>
+#include <ipc/com/init.h>
 #include <functional>
 
 using namespace std;
@@ -33,12 +34,6 @@ namespace micro_profiler
 	{
 		namespace com
 		{
-			struct com_initialize
-			{
-				com_initialize();
-				~com_initialize();
-			};
-
 			class inbound_stream : public ISequentialStream
 			{
 			public:
@@ -78,13 +73,6 @@ namespace micro_profiler
 				DWORD _sink_cookie;
 			};
 
-
-
-			com_initialize::com_initialize()
-			{	::CoInitializeEx(NULL, COINIT_MULTITHREADED);	}
-
-			com_initialize::~com_initialize()
-			{	::CoUninitialize();	}
 
 
 			inbound_stream::inbound_stream(channel &underlying)

@@ -49,7 +49,7 @@ namespace micro_profiler
 					std::function<void (const std::shared_ptr<session> &new_session)> session_created;
 
 				private:
-					virtual ipc::channel_ptr_t create_session(ipc::channel &outbound);
+					virtual channel_ptr_t create_session(ipc::channel &outbound);
 
 				private:
 					mt::mutex _mutex;
@@ -89,7 +89,7 @@ namespace micro_profiler
 				}
 
 
-				inline ipc::channel_ptr_t server::create_session(ipc::channel &outbound)
+				inline channel_ptr_t server::create_session(ipc::channel &outbound)
 				{
 					std::shared_ptr<session> s(new session);
 					mt::lock_guard<mt::mutex> lock(_mutex);

@@ -15,6 +15,7 @@ set(IPC_SOURCES
 if (WIN32)
 	set(IPC_SOURCES ${IPC_SOURCES}
 		client_endpoint_com.cpp
+		com_init.cpp
 		server_endpoint_com.cpp
 		socket_helpers_win32.cpp
 	)

@@ -40,6 +40,9 @@
     <ClCompile Include="client_session.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="com_init.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -69,6 +72,9 @@
     </ClInclude>
     <ClInclude Include="..\client_session.h" />
     <ClInclude Include="..\serialization.h" />
+    <ClInclude Include="..\com\init.h">
+      <Filter>com</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

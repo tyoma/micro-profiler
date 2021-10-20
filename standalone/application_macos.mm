@@ -73,9 +73,6 @@ namespace micro_profiler
 	application::impl::~impl()
 	{	[_pool drain];	}
 
-	shared_ptr<hive> application::get_configuration()
-	{	return file_hive::open_ini("~/.MicroProfiler/settings.ini");	}
-
 	void application::impl::run()
 	{	[_application run];	}
 
@@ -103,6 +100,7 @@ namespace micro_profiler
 
 		_factory = wpl::factory::create_default(context);
 		_queue = queue;
+		_config = file_hive::open_ini("~/.MicroProfiler/settings.ini");
 		setup_factory(*_factory);
 	}
 

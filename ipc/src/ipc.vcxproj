@@ -47,6 +47,7 @@
     <ClCompile Include="client_endpoint_com.cpp" />
     <ClCompile Include="client_endpoint_sockets.cpp" />
     <ClCompile Include="client_session.cpp" />
+    <ClCompile Include="com_init.cpp" />
     <ClCompile Include="marshalled_server.cpp" />
     <ClCompile Include="marshalled_session.cpp" />
     <ClCompile Include="misc.cpp" />
@@ -62,6 +63,7 @@
   <ItemGroup>
     <ClInclude Include="..\client_session.h" />
     <ClInclude Include="..\com\endpoint.h" />
+    <ClInclude Include="..\com\init.h" />
     <ClInclude Include="..\endpoint_com.h" />
     <ClInclude Include="..\endpoint_sockets.h" />
     <ClInclude Include="..\endpoint.h" />

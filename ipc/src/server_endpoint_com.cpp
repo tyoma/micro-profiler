@@ -99,10 +99,6 @@ namespace micro_profiler
 			}
 
 
-			server::server(const shared_ptr<ipc::server> &factory)
-				: _session_factory(factory)
-			{	}
-
 			void server::set_server(const shared_ptr<ipc::server> &factory)
 			{	_session_factory = factory;	}
 
@@ -122,14 +118,13 @@ namespace micro_profiler
 
 			shared_ptr<void> run_server(const char *endpoint_id, const shared_ptr<ipc::server> &sf)
 			{
-				guid_t id = from_string(endpoint_id);
-				const CLSID &clsid = reinterpret_cast<const CLSID &>(id);
-				CComPtr< CComObject<server> > p = construct<server>();
+				const auto id = from_string(endpoint_id);
+				const auto p = construct<server>();
 				DWORD cookie;
 
 				p->set_server(sf);
-				if (S_OK == ::CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
-					return shared_ptr<void>((IUnknown *)p, bind(&::CoRevokeClassObject, cookie));
+				if (S_OK == ::CoRegisterClassObject(id, p, CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie))
+					return shared_ptr<void>(static_cast<IUnknown *>(p), bind(&::CoRevokeClassObject, cookie));
 				throw initialization_failed(endpoint_id);
 			}
 		}

@@ -47,6 +47,7 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const string c_configuration_path_[] = {	"gevorkyan.org", "MicroProfiler",	};
 		const string c_logname = "micro-profiler_standalone.log";
 
 		class logger_instance
@@ -69,6 +70,8 @@ namespace micro_profiler
 			unique_ptr<log::multithreaded_logger> _logger;
 		};
 	}
+
+	const vector<string> application::c_configuration_path(begin(c_configuration_path_), end(c_configuration_path_));
 
 	struct ui_composite
 	{

@@ -902,6 +902,24 @@ namespace micro_profiler
 
 				assert_equal(reference3, it.counts);
 			}
+
+
+			test( SymbolResolverInvalidationIsForwarded )
+			{
+				// INIT
+				auto invalidations = 0;
+				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto c = fl->invalidate += [&] (functions_list::index_type i) {
+					invalidations++;
+					assert_equal(functions_list::npos(), i);
+				};
+
+				// ACT
+				resolver->invalidate();
+
+				// ASSERT
+				assert_equal(1, invalidations);
+			}
 		end_test_suite
 	}
 }

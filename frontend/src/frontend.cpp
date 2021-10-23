@@ -23,11 +23,10 @@
 #include <frontend/serialization.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
+#include <frontend/helpers.h>
 
 #include <common/memory.h>
 #include <logger/log.h>
-#include <strmd/deserializer.h>
-#include <strmd/serializer.h>
 
 #define PREAMBLE "Frontend: "
 
@@ -46,65 +45,55 @@ namespace micro_profiler
 	frontend::frontend(ipc::channel &outbound)
 		: client_session(outbound), _statistics(make_shared<tables::statistics>()),
 			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
-			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false)
+			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false),
+			_metadata_complete([] {	})
 	{
+		_statistics->request_update = [this] {
+			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
+		};
+
+		_modules->request_presence = [this] (unsigned int persistent_id) {
+			request_metadata(persistent_id);
+		};
+
 		subscribe(*new_request_handle(), init_v1, [this] (ipc::deserializer &) {
 			LOGE(PREAMBLE "attempt to connect from an older collector - disconnecting!");
 			disconnect_session();
 		});
 
 		subscribe(*new_request_handle(), init, [this] (ipc::deserializer &d) {
-			auto self = this;
+			if (!_initialized)
+			{
+				d(_process_info);
 
-			if (_initialized)
+				frontend_ui_context ctx = {
+					_process_info,
+					_statistics,
+					_mappings,
+					_modules,
+					_patches,
+					_threads,
+				};
+
+				initialized(ctx);
+				_statistics->request_update();
+				_initialized = true;
+				LOG(PREAMBLE "initialized...")
+					% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
+			}
+			else
 			{
 				LOG(PREAMBLE "repeated initialization message - ignoring...");
-				return;
 			}
-			d(_process_info);
-			_statistics->request_update = [self] {	self->request_full_update();	};
-
-			frontend_ui_context ctx = {
-				_process_info,
-				_statistics,
-				_mappings,
-				_modules,
-				_patches,
-				_threads,
-			};
-
-			initialized(ctx);
-			request_full_update();
-			_initialized = true;
-			LOG(PREAMBLE "initialized...")
-				% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
 		});
 
 		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {
-			// TODO: request last updates and on their completion disconnect the session.
-			disconnect_session();
-		});
+			const auto self = this;
 
-		_modules->request_presence = [this] (unsigned int persistent_id_) {
-			auto self = this;
-			auto persistent_id = persistent_id_;
-
-			if (_module_requests.find(persistent_id) != _module_requests.end())
-				return;
-
-			request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
-				[persistent_id, self] (ipc::deserializer &d) {
-
-				auto &metadata = (*self->_modules)[persistent_id];
-
-				d(metadata);
-				self->_modules->invalidate();
-
-				LOG(PREAMBLE "received metadata...")
-					% A(self) % A(persistent_id) % A(metadata.symbols.size()) % A(metadata.source_files.size());
+			request_full_update(*new_request_handle(), [self] (shared_ptr<void> &) {
+				self->request_missing_modules();
 			});
-			LOG(PREAMBLE "requested metadata from remote...") % A(self) % A(persistent_id);
-		};
+		});
 
 		init_patcher();
 
@@ -127,9 +116,10 @@ namespace micro_profiler
 		LOG(PREAMBLE "disconnected by remote...") % A(this);
 	}
 
-	void frontend::request_full_update()
+	template <typename OnUpdate>
+	void frontend::request_full_update(shared_ptr<void> &request_, const OnUpdate &on_update)
 	{
-		if (_update_request)
+		if (request_)
 			return;
 
 		auto modules_callback = [this] (ipc::deserializer &d) {
@@ -137,20 +127,24 @@ namespace micro_profiler
 
 			d(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
-				(*_mappings)[i->first] = i->second;
+			{
+				_mappings->insert(*i);
+				_mappings->layout.insert(lower_bound(_mappings->layout.begin(), _mappings->layout.end(), *i,
+					mapping_less()), *i);
+			}
 			_mappings->invalidate();
 		};
-		auto update_callback = [this] (ipc::deserializer &d) {
+		auto update_callback = [this, &request_, on_update] (ipc::deserializer &d) {
 			d(*_statistics, _serialization_context);
 			update_threads(_serialization_context.threads);
-			_update_request.reset();
+			on_update(request_);
 		};
 		pair<int, callback_t> callbacks[] = {
 			make_pair(response_modules_loaded, modules_callback),
 			make_pair(response_statistics_update, update_callback),
 		};
 
-		request(_update_request, request_update, 0, callbacks);
+		request(request_, request_update, 0, callbacks);
 	}
 
 	void frontend::update_threads(vector<unsigned int> &thread_ids)
@@ -170,6 +164,42 @@ namespace micro_profiler
 			d(*_threads);
 			_requests.erase(req);
 		});
+	}
+
+	void frontend::request_missing_modules()
+	{
+		_metadata_complete = [this] {	disconnect_session();	};
+		for (auto i = _statistics->begin(); i != _statistics->end(); ++i)
+		{
+			if (auto m = find_range(_mappings->layout, i->first.first, mapping_less()))
+				request_metadata(m->second.persistent_id);
+		}
+	}
+
+	void frontend::request_metadata(unsigned int persistent_id)
+	{
+		if (!_modules->count(persistent_id))
+		{
+			auto i = _module_requests.insert(make_pair(persistent_id, shared_ptr<void>()));
+
+			if (i.second)
+			{
+				request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
+					[this, i] (ipc::deserializer &d) {
+
+					auto &metadata = (*_modules)[i.first->first];
+
+					d(metadata);
+					_modules->invalidate();
+					if (1u == _module_requests.size())
+						_metadata_complete();
+					LOG(PREAMBLE "received metadata...")
+						% A(this) % A(i.first->first) % A(metadata.symbols.size()) % A(metadata.source_files.size());
+					_module_requests.erase(i.first);
+				});
+				LOG(PREAMBLE "requested metadata from remote...") % A(this) % A(persistent_id);
+			}
+		}
 	}
 
 	frontend::requests_t::iterator frontend::new_request_handle()

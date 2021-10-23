@@ -72,6 +72,7 @@
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\frontend_ui.h" />
     <ClInclude Include="..\function_hint.h" />
+    <ClInclude Include="..\helpers.h" />
     <ClInclude Include="..\image_patch_model.h" />
     <ClInclude Include="..\image_patch_ui.h" />
     <ClInclude Include="..\ipc_manager.h" />

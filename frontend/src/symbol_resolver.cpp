@@ -21,6 +21,7 @@
 #include <frontend/symbol_resolver.h>
 
 #include <algorithm>
+#include <frontend/helpers.h>
 #include <frontend/tables.h>
 
 using namespace std;
@@ -29,32 +30,10 @@ namespace micro_profiler
 {
 	namespace
 	{
-		struct by_address
-		{
-			typedef mapped_module_identified value_type;
-
-			bool operator ()(const value_type &lhs, const value_type &rhs) const
-			{	return lhs.second.base < rhs.second.base;	}
-
-			bool operator ()(const value_type &lhs, long_address_t rhs) const
-			{	return lhs.second.base < rhs;	}
-
-			bool operator ()(long_address_t lhs, const value_type &rhs) const
-			{	return lhs < rhs.second.base;	}
-		};
-
 		template <typename T, typename V>
 		const typename T::value_type *find_range(const T &container, const V &value)
 		{
 			auto i = container.upper_bound(value);
-
-			return i != container.begin() ? &*--i : nullptr;
-		}
-
-		template <typename T, typename V, typename PredicateT>
-		const typename T::value_type *find_range(const T &container, const V &value, const PredicateT &predicate)
-		{
-			auto i = upper_bound(container.begin(), container.end(), value, predicate);
 
 			return i != container.begin() ? &*--i : nullptr;
 		}
@@ -65,19 +44,9 @@ namespace micro_profiler
 			shared_ptr<const tables::module_mappings> mappings)
 		: _modules(modules), _mappings(mappings)
 	{
-		auto on_invalidate_mappings = [this] {
-			_mappings_ordered.clear();
-			for (auto i = _mappings->begin(); i != _mappings->end(); ++i)
-			{
-				_mappings_ordered.push_back(*i);
-				_symbols_ordered[i->first].clear();
-			}
-			sort(_mappings_ordered.begin(), _mappings_ordered.end(), by_address());
+		_modules_invalidation = _modules->invalidate += [this] {
+			invalidate();
 		};
-
-		_modules_invalidation = _modules->invalidate += [this] {	invalidate();	};
-		_mappings_invalidation = _mappings->invalidate += on_invalidate_mappings;
-		on_invalidate_mappings();
 	}
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
@@ -105,7 +74,7 @@ namespace micro_profiler
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address,
 		const module_info_metadata *&module) const
 	{
-		if (const auto m = find_range(_mappings_ordered, address, by_address()))
+		if (const auto m = find_range(_mappings->layout, address, mapping_less()))
 		{
 			if (const auto symbol = find_symbol_by_rva(m->second.persistent_id, m->first, static_cast<unsigned int>(address - m->second.base), module))
 				return symbol;

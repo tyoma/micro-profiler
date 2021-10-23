@@ -76,6 +76,7 @@ namespace micro_profiler
 
 	private:
 		const std::shared_ptr<view_complex> _view;
+		wpl::slot_connection _symbols_invalidation;
 	};
 
 	template <typename BaseT, typename U>
@@ -101,7 +102,8 @@ namespace micro_profiler
 	inline statistics_model_impl<BaseT, U>::statistics_model_impl(std::shared_ptr<U> statistics_, double tick_interval_,
 			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<const tables::threads> threads_)
 		: tick_interval(tick_interval_), resolver(resolver_), threads(threads_),
-			_view(std::make_shared<view_complex>(statistics_))
+			_view(std::make_shared<view_complex>(statistics_)),
+			_symbols_invalidation(resolver_->invalidate += [this] {	this->invalidate(this->npos());	})
 	{	}
 
 	template <typename BaseT, typename U>

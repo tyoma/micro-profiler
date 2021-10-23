@@ -54,6 +54,7 @@ namespace micro_profiler
 
 		struct module_mappings : table< containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> >
 		{
+			std::vector< std::pair<unsigned int, mapped_module_ex> > layout;
 			wpl::signal<void ()> updated;
 		};
 

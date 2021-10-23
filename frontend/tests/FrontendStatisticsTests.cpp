@@ -18,6 +18,9 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
+	inline bool operator ==(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
+	{	return lhs.persistent_id == rhs.persistent_id && lhs.path == rhs.path && lhs.base == rhs.base;	}
+
 	namespace tests
 	{
 		namespace
@@ -45,12 +48,28 @@ namespace micro_profiler
 			template <typename T>
 			function<void (ipc::serializer &s)> format(const T &v)
 			{	return [v] (ipc::serializer &s) {	s(v);	};	}
+
+			mapped_module_identified mkmapping(unsigned instance_id, unsigned persistence_id,
+				long_address_t base)
+			{
+				mapped_module_ex m = {	persistence_id, string(), base	};
+				return make_pair(instance_id, m);
+			}
+
+			void empty_update(ipc::server_session::response &resp)
+			{
+				resp(response_statistics_update, plural
+					+ make_pair(1u, vector<statistic_types_t<unsigned>::function_detailed>()));
+			}
+
 		}
 
 		begin_test_suite( FrontendStatisticsTests )
 			shared_ptr<mocks::queue> queue;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<const tables::statistics> statistics;
+			shared_ptr<const tables::module_mappings> mappings;
+			shared_ptr<const tables::modules> modules;
 
 			shared_ptr<frontend> create_frontend()
 			{
@@ -61,7 +80,11 @@ namespace micro_profiler
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();
-				f->initialized = [this] (const frontend_ui_context &ctx) {	this->statistics = ctx.statistics;	};
+				f->initialized = [this] (const frontend_ui_context &ctx) {
+					this->statistics = ctx.statistics;
+					this->mappings = ctx.module_mappings;
+					this->modules = ctx.modules;
+				};
 				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
 				return f;
 			}
@@ -173,6 +196,188 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2, update_requests);
+			}
+
+
+			test( FinalStatisticsRequestIsSentOnReceivingExitNotification )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				auto update_requests = 0;
+
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &) {
+					update_requests++;
+				});
+				emulator->message(init, format(idata));
+
+				// ACT (this request is not blocked by already sent one)
+				emulator->message(exiting, [] (ipc::serializer &) {});
+
+				// ASSERT
+				assert_equal(2, update_requests);
+			}
+
+
+			test( AllMappedModulesWithStatisticsAreRequestedForMetadata )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector<unsigned> persistent_ids;
+
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &/*resp*/, unsigned id) {
+					persistent_ids.push_back(id);
+				});
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ mkmapping(7, 19, 0x0FA00000u) + mkmapping(3, 17, 0x00010000u));
+					empty_update(resp);
+				});
+
+				emulator->message(init, format(idata));
+
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ mkmapping(1, 12, 0x00100000u) + mkmapping(2, 13, 0x01100000u));
+					resp(response_statistics_update, plural
+						+ make_pair(1u, plural
+							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
+							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91, 13012))
+						+ make_pair(2u, plural
+							+ make_statistics(0x01100093u, 71u, 0, 199999, 901, 13030)
+							+ make_statistics(0x01103093u, 92u, 0, 139999, 981, 10100)
+							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91, 13002)));
+				});
+
+				// ACT
+				emulator->message(exiting, [] (ipc::serializer &) {});
+
+				// ASSERT
+				unsigned reference[] = {	12, 13, 19,	};
+
+				assert_equivalent(reference, persistent_ids);
+			}
+
+
+			test( ModuleMappingsIsUpdatedOnLoadedModuleResponse )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector< vector<mapped_module_identified> > log;
+
+				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {	empty_update(resp);	});
+				emulator->message(init, format(idata));
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ mkmapping(7, 19, 0x0FA00000u) + mkmapping(3, 17, 0x00010000u));
+					empty_update(resp);
+				});
+				const auto c = mappings->invalidate += [&] {	log.push_back(mappings->layout);	};
+
+				// ACT
+				statistics->request_update();
+
+				// ASSERT
+				mapped_module_identified reference1[] = {
+					mkmapping(3, 17, 0x00010000u),
+					mkmapping(7, 19, 0x0FA00000u),
+				};
+
+				assert_equal(1u, log.size());
+				assert_equal(reference1, log.back());
+
+				// INIT
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ mkmapping(8, 18, 0x00A00000u) + mkmapping(9, 13, 0x00020000u) + mkmapping(5, 11, 0x00001000u));
+					empty_update(resp);
+				});
+
+				// ACT
+				statistics->request_update();
+
+				// ASSERT
+				mapped_module_identified reference2[] = {
+					mkmapping(5, 11, 0x00001000u),
+					mkmapping(3, 17, 0x00010000u),
+					mkmapping(9, 13, 0x00020000u),
+					mkmapping(8, 18, 0x00A00000u),
+					mkmapping(7, 19, 0x0FA00000u),
+				};
+
+				assert_equal(2u, log.size());
+				assert_equal(reference2, log.back());
+			}
+
+
+			test( SessionIsDisconnectedAfterAllMetadataFinallyRequestedIsResponded )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector< vector<mapped_module_identified> > log;
+				auto disconnections = 0;
+
+				emulator->set_disconnect_handler([&] {	disconnections++;	});
+				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {	empty_update(resp);	});
+				emulator->message(init, format(idata));
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ mkmapping(7, 19, 0x0FA00000u) + mkmapping(1, 12, 0x00100000u) + mkmapping(2, 13, 0x01100000u));
+					resp(response_statistics_update, plural
+						+ make_pair(1u, plural
+							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
+							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91, 13012))
+						+ make_pair(2u, plural
+							+ make_statistics(0x01100093u, 71u, 0, 199999, 901, 13030)
+							+ make_statistics(0x01103093u, 92u, 0, 139999, 981, 10100)
+							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91, 13002)));
+				});
+
+				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {
+					resp.defer([] (ipc::server_session::response &resp) {
+						resp(response_module_metadata, module_info_metadata());
+					});
+				});
+
+				// ACT
+				emulator->message(exiting, [] (ipc::serializer &) {});
+
+				// ASSERT
+				assert_equal(0, disconnections);
+
+				// ACT
+				queue->run_one();
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(0, disconnections);
+
+				// ACT
+				queue->run_one();
+
+				// ASSERT
+				assert_equal(1, disconnections);
+			}
+
+
+			test( SessionIsNotDisconnectedOnRegularMetadataResponse )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector< vector<mapped_module_identified> > log;
+				auto disconnections = 0;
+
+				emulator->set_disconnect_handler([&] {	disconnections++;	});
+				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {	empty_update(resp);	});
+				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {
+					resp(response_module_metadata, module_info_metadata());
+				});
+				emulator->message(init, format(idata));
+
+				// ACT
+				modules->request_presence(123);
+
+				// ASSERT
+				assert_equal(0, disconnections);
 			}
 		end_test_suite
 	}

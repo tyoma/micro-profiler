@@ -32,6 +32,13 @@ namespace micro_profiler
 	struct mapped_module_ex;
 	typedef std::pair<unsigned int /*instance_id*/, mapped_module_ex> mapped_module_identified;
 
+	struct mapping_less
+	{
+		bool operator ()(const mapped_module_identified &lhs, const mapped_module_identified &rhs) const;
+		bool operator ()(const mapped_module_identified &lhs, long_address_t rhs) const;
+		bool operator ()(long_address_t lhs, const mapped_module_identified &rhs) const;
+	};
+
 	struct mapped_module
 	{
 		std::string path;
@@ -57,6 +64,15 @@ namespace micro_profiler
 	void enumerate_process_modules(const module_callback_t &callback);
 
 
+
+	inline bool mapping_less::operator ()(const mapped_module_identified &lhs, const mapped_module_identified &rhs) const
+	{	return lhs.second.base < rhs.second.base;	}
+
+	inline bool mapping_less::operator ()(const mapped_module_identified &lhs, long_address_t rhs) const
+	{	return lhs.second.base < rhs;	}
+
+	inline bool mapping_less::operator ()(long_address_t lhs, const mapped_module_identified &rhs) const
+	{	return lhs < rhs.second.base;	}
 
 	inline mapped_module_identified mapped_module_ex::from(unsigned int instance_id_,
 		unsigned int persistent_id_, const mapped_module &mm)

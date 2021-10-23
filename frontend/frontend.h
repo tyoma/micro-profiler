@@ -32,8 +32,6 @@
 
 namespace micro_profiler
 {
-	struct frontend_ui_context;
-
 	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
@@ -57,8 +55,11 @@ namespace micro_profiler
 		void apply(unsigned int persistent_id, range<const unsigned int, size_t> rva);
 		void revert(unsigned int persistent_id, range<const unsigned int, size_t> rva);
 
-		void request_full_update();
+		template <typename OnUpdate>
+		void request_full_update(std::shared_ptr<void> &request_, const OnUpdate &on_update);
 		void update_threads(std::vector<unsigned int> &thread_ids);
+		void request_missing_modules();
+		void request_metadata(unsigned int persistent_id);
 
 		requests_t::iterator new_request_handle();
 
@@ -71,9 +72,10 @@ namespace micro_profiler
 		const std::shared_ptr<tables::threads> _threads;
 		scontext::additive _serialization_context;
 		bool _initialized;
+		std::function<void ()> _metadata_complete;
 
 		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;
-		std::list< std::shared_ptr<void> > _requests;
+		requests_t _requests;
 		std::shared_ptr<void> _update_request;
 
 		// request_apply_patches buffers

@@ -15,8 +15,8 @@
   <PropertyGroup>
     <OutputPath>$(SolutionDir)_setup\</OutputPath>
     <IntermediateOutputPath>$(SolutionDir)_obj\installer_$(Configuration)_$(Platform)\</IntermediateOutputPath>
-    <DefineConstants Condition="'$(Platform)'=='x86'">SOURCEDIR=$(SolutionDir)_bin\$(Configuration)_$(Platform);SOURCEDIRWX86=$(SolutionDir)_bin\$(Configuration)_x86</DefineConstants>
-    <DefineConstants Condition="'$(Platform)'=='x64'">SOURCEDIR=$(SolutionDir)_bin\$(Configuration)_$(Platform);SOURCEDIRWX86=$(SolutionDir)_bin\$(Configuration)_x86;SOURCEDIRWX64=$(SolutionDir)_bin\$(Configuration)_x64</DefineConstants>
+    <DefineConstants Condition="'$(Platform)'=='x86'">ROOTDIR=$(SolutionDir);SOURCEDIR=$(SolutionDir)_bin\$(Configuration)_$(Platform);SOURCEDIRWX86=$(SolutionDir)_bin\$(Configuration)_x86</DefineConstants>
+    <DefineConstants Condition="'$(Platform)'=='x64'">ROOTDIR=$(SolutionDir);SOURCEDIR=$(SolutionDir)_bin\$(Configuration)_$(Platform);SOURCEDIRWX86=$(SolutionDir)_bin\$(Configuration)_x86;SOURCEDIRWX64=$(SolutionDir)_bin\$(Configuration)_x64</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="micro-profiler.wxs" />

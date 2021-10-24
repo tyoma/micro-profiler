@@ -27,6 +27,10 @@
 			<ComponentRef Id="compCollectorWindows" />
 			<ComponentRef Id="compSystemEnvironmentSetup" />
 			<ComponentRef Id="compUserEnvironmentSetup" />
+			<ComponentRef Id="compDbgHlp_x64" />
+			<ComponentRef Id="compDbgHlp2_x64" />
+			<ComponentRef Id="compDbgHlp_x86" />
+			<ComponentRef Id="compDbgHlp2_x86" />
 			<?ifdef SOURCEDIRLINUXX86?>
 				<ComponentRef Id="compCollectorLinuxX86" />
 			<?endif?>
@@ -79,6 +83,24 @@
 				</Directory>
 			<?endforeach?>
 			<?undef VSVERSION?>
+			<Directory Name="windows7+" Id="REDIST_W7P">
+				<Directory Name="x64" Id="REDIST_W7P_x64">
+					<Component Id="compDbgHlp_x64" Guid="AB261FBB-FC95-42EE-836C-58FEC0072E44" KeyPath="yes">
+						<File Id="fileDbgHlp_x64" Source="$(var.ROOTDIR)/redist/dbghelp/windows7+/x64/dbghelp.dll" Vital="yes" />
+					</Component>
+					<Component Id="compDbgHlp2_x64" Guid="3CF57152-07F2-4ED2-886E-01CAB5FB07BB" KeyPath="yes">
+						<File Id="fileDbgHlp2_x64" Source="$(var.ROOTDIR)/redist/dbghelp/windows7+/x64/api-ms-win-downlevel-kernel32-l2-1-0.dll" Vital="yes" />
+					</Component>
+				</Directory>
+				<Directory Name="x86" Id="REDIST_W7P_x86">
+					<Component Id="compDbgHlp_x86" Guid="E73209CE-C72E-4869-9E06-24FBE177445B" KeyPath="yes">
+						<File Id="fileDbgHlp_x86" Source="$(var.ROOTDIR)/redist/dbghelp/windows7+/x86/dbghelp.dll" Vital="yes" />
+					</Component>
+					<Component Id="compDbgHlp2_x86" Guid="D2BDD791-9527-4ACD-B8CD-1B0E24E4AF1B" KeyPath="yes">
+						<File Id="fileDbgHlp2_x86" Source="$(var.ROOTDIR)/redist/dbghelp/windows7+/x86/api-ms-win-downlevel-kernel32-l2-1-0.dll" Vital="yes" />
+					</Component>
+				</Directory>
+			</Directory>
 		</Directory>
 
 

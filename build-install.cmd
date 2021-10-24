@@ -8,6 +8,7 @@ pushd deployment\wix
 set OBJDIR=%~dp0_obj\installer.x86/
 candle^
  *.wxs^
+ -dROOTDIR="%~dp0\"^
  -dSOURCEDIR="%~dp0_build.windows.x86\_bin\RelWithDebInfo"^
  -dSOURCEDIRWX86="%~dp0_build.windows.x86\_bin\RelWithDebInfo"^
  -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
@@ -19,8 +20,8 @@ candle^
  -o "%OBJDIR%"
 light^
  "%OBJDIR%*.wixobj"^
- -out "%OUTDIR%micro-proifler_x86.v%VERSION%.msi"^
- -pdbout "%OUTDIR%micro-proifler_x86.pdbout"^
+ -out "%OUTDIR%micro-profiler_x86.v%VERSION%.msi"^
+ -pdbout "%OUTDIR%micro-profiler_x86.pdbout"^
  -cultures:null^
  -ext "%WIX%bin\WixUIExtension.dll"^
  -ext "%WIX%bin\WixVSExtension.dll"
@@ -28,6 +29,7 @@ light^
 set OBJDIR=%~dp0_obj\installer.x64/
 candle^
  *.wxs^
+ -dROOTDIR="%~dp0\"^
  -dSOURCEDIR="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
  -dSOURCEDIRWX86="%~dp0_build.windows.x86\_bin\RelWithDebInfo"^
  -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
@@ -39,8 +41,8 @@ candle^
  -o "%OBJDIR%"
 light^
  "%OBJDIR%*.wixobj"^
- -out "%OUTDIR%micro-proifler_x64.v%VERSION%.msi"^
- -pdbout "%OUTDIR%micro-proifler_x64.pdbout"^
+ -out "%OUTDIR%micro-profiler_x64.v%VERSION%.msi"^
+ -pdbout "%OUTDIR%micro-profiler_x64.pdbout"^
  -cultures:null^
  -ext "%WIX%bin\WixUIExtension.dll"^
  -ext "%WIX%bin\WixVSExtension.dll"

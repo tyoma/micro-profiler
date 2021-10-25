@@ -32,7 +32,7 @@
 
 namespace strmd
 {
-	template <> struct version<micro_profiler::initialization_data> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::initialization_data> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::function_statistics> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::mapped_module_ex> {	enum {	value = 5	};	};
 	template <> struct version<micro_profiler::symbol_info> {	enum {	value = 4	};	};
@@ -53,6 +53,8 @@ namespace micro_profiler
 		archive(data.ticks_per_second);
 		if (ver >= 5)
 			archive(data.executable);
+		if (ver >= 6)
+			archive(data.injected);
 	}	
 
 	template <typename ArchiveT>

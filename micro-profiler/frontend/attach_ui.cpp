@@ -19,6 +19,7 @@
 //	THE SOFTWARE.
 
 #include "attach_ui.h"
+#include "inject_profiler.h"
 
 #include <frontend/headers_model.h>
 #include <frontend/process_list.h>
@@ -32,8 +33,6 @@ using namespace wpl;
 
 namespace micro_profiler
 {
-	void inject_profiler(const_byte_range payload);
-
 	namespace
 	{
 		const auto secondary = agge::style::height(10);
@@ -44,7 +43,7 @@ namespace micro_profiler
 		};
 	}
 
-	attach_ui::attach_ui(const factory &factory_, const wpl::queue &queue_)
+	attach_ui::attach_ui(const factory &factory_, const wpl::queue &queue_, const string &frontend_id)
 		: wpl::stack(false, factory_.context.cursor_manager_), _processes_lv(factory_.create_control<listview>("listview")),
 			_model(new process_list), _queue(queue_), _alive(make_shared<bool>(true))
 	{
@@ -70,10 +69,8 @@ namespace micro_profiler
 
 		_processes_lv->set_model(_model);
 		_processes_lv->set_columns_model(shared_ptr<wpl::headers_model>(new headers_model(c_columns_processes, 0, true)));
-		_connections.push_back(_processes_lv->item_activate += [this] (table_model_base::index_type item) {
-			auto process = _model->get_process(item);
-
-			process->remote_execute(&inject_profiler, const_byte_range(0, 0));
+		_connections.push_back(_processes_lv->item_activate += [this, frontend_id] (table_model_base::index_type item) {
+			inject_profiler(*_model->get_process(item), frontend_id);
 			close();
 		});
 

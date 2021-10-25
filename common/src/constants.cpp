@@ -35,6 +35,7 @@ namespace micro_profiler
 #endif
 	const char *constants::profiler_name = ".microprofiler";
 	const char *constants::profilerdir_ev = "MICROPROFILERDIR";
+	const char *constants::profiler_injected_ev = "MICROPROFILERINJECTED";
 	const char *constants::frontend_id_ev = "MICROPROFILERFRONTEND";
 
 	// {0ED7654C-DE8A-4964-9661-0B0C391BE15E}

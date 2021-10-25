@@ -6,6 +6,7 @@
 #include "mocks_patch_manager.h"
 
 #include <collector/serialization.h>
+#include <common/constants.h>
 #include <common/module.h>
 #include <common/time.h>
 #include <ipc/client_session.h>
@@ -67,6 +68,7 @@ namespace micro_profiler
 			{
 				subscriptions.clear();
 				client.reset();
+				unsetenv(constants::profiler_injected_ev);
 			}
 
 
@@ -90,8 +92,35 @@ namespace micro_profiler
 				initialized.wait();
 
 				// ASERT
+				assert_is_false(!!id.injected);
 				assert_equal(get_current_executable(), id.executable);
 				assert_approx_equal(ticks_per_second(), id.ticks_per_second, 0.05);
+			}
+
+
+			test( InjectionFlagIsSetIfCorrespondingEnvironmentVarIsSet )
+			{
+				// INIT
+				mt::event initialized;
+				initialization_data id;
+				auto on_init = [&] (deserializer &d) {
+					d(id);
+					initialized.set();
+				};
+				shared_ptr<void> subscription;
+
+				initialize_client = [&] (ipc::client_session &c) {
+					c.subscribe(subscription, init, on_init);
+				};
+
+				setenv(constants::profiler_injected_ev, "1", 1);
+
+				// ACT
+				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				initialized.wait();
+
+				// ASERT
+				assert_is_true(!!id.injected);
 			}
 
 

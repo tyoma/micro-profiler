@@ -56,6 +56,7 @@ namespace micro_profiler
 	{
 		std::string executable;
 		timestamp_t ticks_per_second;
+		unsigned int injected;
 	};
 
 	struct thread_info

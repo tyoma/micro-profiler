@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/noncopyable.h>
+#include <string>
 #include <wpl/layout.h>
 #include <wpl/queue.h>
 
@@ -38,7 +39,7 @@ namespace micro_profiler
 	class attach_ui : public wpl::stack, noncopyable
 	{
 	public:
-		attach_ui(const wpl::factory &factory, const wpl::queue &queue);
+		attach_ui(const wpl::factory &factory, const wpl::queue &queue, const std::string &frontend_id);
 		~attach_ui();
 
 		wpl::signal<void()> close;

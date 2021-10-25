@@ -25,6 +25,7 @@
 #include <collector/serialization.h>
 #include <collector/thread_monitor.h>
 
+#include <common/constants.h>
 #include <common/protocol.h>
 #include <common/time.h>
 #include <ipc/server_session.h>
@@ -119,7 +120,8 @@ namespace micro_profiler
 		session.message(init, [] (ipc::serializer &ser) {
 			initialization_data idata = {
 				get_current_executable(),
-				ticks_per_second()
+				ticks_per_second(),
+				!!getenv(constants::profiler_injected_ev),
 			};
 
 			ser(idata);

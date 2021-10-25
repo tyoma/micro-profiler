@@ -101,6 +101,9 @@
     <ClInclude Include="visualstudio\vs-extension\stylesheet.h">
       <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
+    <ClInclude Include="frontend\inject_profiler.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\micro-profiler_vspackage.rc">

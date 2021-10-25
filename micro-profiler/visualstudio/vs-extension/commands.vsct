@@ -178,6 +178,9 @@
 			<Button guid="guidInstanceCmdSet" id="cmdidProfileScope" priority="0x0215" type="Button">
 				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
 				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
 				<Strings>
 					<ButtonText>Profile Scope...</ButtonText>
 				</Strings>

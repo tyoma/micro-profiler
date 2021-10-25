@@ -66,6 +66,7 @@
     <ClCompile Include="visualstudio\vs-extension\stylesheet.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vcmodel-impl.cpp" />
     <ClInclude Include="frontend\attach_ui.h" />
+    <ClInclude Include="frontend\inject_profiler.h" />
     <ClInclude Include="visualstudio\dispatch.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\stylesheet.h" />

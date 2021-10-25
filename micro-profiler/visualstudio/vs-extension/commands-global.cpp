@@ -380,7 +380,8 @@ namespace micro_profiler
 				const auto &f = get_factory();
 				const auto root = make_shared<wpl::overlay>();
 					root->add(f.create_control<wpl::control>("background"));
-					const auto attach = make_shared<attach_ui>(f, f.context.queue_);
+					const auto attach = make_shared<attach_ui>(f, f.context.queue_,
+						ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()));
 					root->add(wpl::pad_control(attach, 5, 5));
 
 				o->first = f.create_modal();

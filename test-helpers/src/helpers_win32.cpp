@@ -71,6 +71,9 @@ namespace micro_profiler
 extern "C" int setenv(const char *name, const char *value, int overwrite)
 {
 	if (overwrite || !GetEnvironmentVariableA(name, NULL, 0))
-		::SetEnvironmentVariableA(name, value);
+		_putenv((string(name) + "=" + value).c_str());
 	return 0;
 }
+
+extern "C" int unsetenv(const char *name)
+{	return _putenv((string(name) + "=").c_str()), 0;	}

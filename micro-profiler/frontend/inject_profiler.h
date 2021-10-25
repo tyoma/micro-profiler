@@ -20,24 +20,11 @@
 
 #pragma once
 
-#include "types.h"
-
 #include <string>
 
 namespace micro_profiler
 {
-	struct constants
-	{
-		// C-style constants - safe to access anytime
-		static const char *home_ev;
-		static const char *profiler_name;
-		static const char *profilerdir_ev;
-		static const char *profiler_injected_ev;
-		static const char *frontend_id_ev;
-		static const guid_t standalone_frontend_id;
-		static const guid_t integrated_frontend_id;
+	struct process;
 
-		// C++-style constants - made functions to be safe for access
-		static std::string data_directory();
-	};
+	void inject_profiler(process &process_, const std::string &frontend_id);
 }

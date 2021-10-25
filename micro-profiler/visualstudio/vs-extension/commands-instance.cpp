@@ -28,10 +28,11 @@ namespace micro_profiler
 		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
 			command_target &target, const frontend_ui_context &context, shared_ptr<scheduler::queue> queue)
 		{
-			auto model = make_shared<functions_list>(context.statistics, 1.0 / context.process_info.ticks_per_second,
+			const auto model = make_shared<functions_list>(context.statistics, 1.0 / context.process_info.ticks_per_second,
 				make_shared<symbol_resolver>(context.modules, context.module_mappings), context.threads);
-			auto executable = context.process_info.executable;
-			auto poller = make_shared<statistics_poll>(context.statistics, queue);
+			const auto injected = !!context.process_info.injected;
+			const auto executable = context.process_info.executable;
+			const auto poller = make_shared<statistics_poll>(context.statistics, queue);
 
 			poller->enable(true);
 
@@ -112,8 +113,8 @@ namespace micro_profiler
 				o->first->set_location(l);
 				o->first->center_parent();
 				o->first->set_visible(true);
-			}, false, [] (unsigned, unsigned &state) {
-				return state = command_target::visible | command_target::supported | command_target::enabled, true;
+			}, false, [injected] (unsigned, unsigned &state) {
+				return state = injected ? command_target::visible | command_target::supported | command_target::enabled : 0, true;
 			});
 		}
 	}

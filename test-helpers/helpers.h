@@ -148,3 +148,4 @@ namespace micro_profiler
 }
 
 extern "C" int setenv(const char *name, const char *value, int overwrite);
+extern "C" int unsetenv(const char *name);

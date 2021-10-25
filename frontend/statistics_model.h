@@ -23,6 +23,7 @@
 #include "primitives.h"
 #include "projection_view.h"
 #include "selection_model.h"
+#include "symbol_resolver.h"
 #include "trackables_provider.h"
 
 #include <common/noncopyable.h>

@@ -349,6 +349,44 @@ namespace micro_profiler
 			}
 
 
+			test( SessionIsDisconnectedUponLastUpdateIfAllMetadataIsAlreadyPresent )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				vector< vector<mapped_module_identified> > log;
+				auto disconnections = 0;
+
+				emulator->set_disconnect_handler([&] {	disconnections++;	});
+				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {	empty_update(resp);	});
+				emulator->message(init, format(idata));
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(1, 12, 0x00100000u) + make_mapping(2, 13, 0x01100000u));
+					resp(response_statistics_update, plural
+						+ make_pair(1u, plural
+							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
+							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91, 13012))
+						+ make_pair(2u, plural
+							+ make_statistics(0x01100093u, 71u, 0, 199999, 901, 13030)
+							+ make_statistics(0x01103093u, 92u, 0, 139999, 981, 10100)
+							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91, 13002)));
+				});
+
+				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {
+					resp(response_module_metadata, module_info_metadata());
+				});
+				modules->request_presence(19);
+				modules->request_presence(12);
+				modules->request_presence(13);
+
+				// ACT
+				emulator->message(exiting, [] (ipc::serializer &) {});
+
+				// ASSERT
+				assert_equal(1, disconnections);
+			}
+
+
 			test( SessionIsNotDisconnectedOnRegularMetadataResponse )
 			{
 				// INIT

@@ -58,7 +58,7 @@ namespace micro_profiler
 		template <typename OnUpdate>
 		void request_full_update(std::shared_ptr<void> &request_, const OnUpdate &on_update);
 		void update_threads(std::vector<unsigned int> &thread_ids);
-		void request_missing_modules();
+		void finalize();
 		void request_metadata(unsigned int persistent_id);
 
 		requests_t::iterator new_request_handle();

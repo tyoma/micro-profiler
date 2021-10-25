@@ -87,13 +87,7 @@ namespace micro_profiler
 			}
 		});
 
-		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {
-			const auto self = this;
-
-			request_full_update(*new_request_handle(), [self] (shared_ptr<void> &) {
-				self->request_missing_modules();
-			});
-		});
+		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {	finalize();	});
 
 		init_patcher();
 
@@ -166,14 +160,23 @@ namespace micro_profiler
 		});
 	}
 
-	void frontend::request_missing_modules()
+	void frontend::finalize()
 	{
-		_metadata_complete = [this] {	disconnect_session();	};
-		for (auto i = _statistics->begin(); i != _statistics->end(); ++i)
-		{
-			if (auto m = find_range(_mappings->layout, i->first.first, mapping_less()))
-				request_metadata(m->second.persistent_id);
-		}
+		LOG(PREAMBLE "finalizing...") % A(this);
+		request_full_update(*new_request_handle(), [this] (shared_ptr<void> &) {
+			const auto self = this;
+
+			for (auto i = _statistics->begin(); i != _statistics->end(); ++i)
+			{
+				if (auto m = find_range(_mappings->layout, i->first.first, mapping_less()))
+					request_metadata(m->second.persistent_id);
+			}
+			LOG(PREAMBLE "finalizing - requested necessary metadata...") % A(this) % (_module_requests.size());
+			if (_module_requests.empty())
+				disconnect_session();
+			else
+				_metadata_complete = [self] {	self->disconnect_session();	};
+		});
 	}
 
 	void frontend::request_metadata(unsigned int persistent_id)

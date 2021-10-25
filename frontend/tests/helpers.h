@@ -172,6 +172,12 @@ namespace micro_profiler
 			return ti;
 		}
 
+		inline mapped_module_identified make_mapping(unsigned instance_id, unsigned persistence_id, long_address_t base)
+		{
+			mapped_module_ex m = {	persistence_id, std::string(), base	};
+			return std::make_pair(instance_id, m);
+		}
+
 		template <typename T>
 		inline T get_value(const wpl::list_model<T> &m, size_t index)
 		{

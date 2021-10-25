@@ -22,7 +22,6 @@
 
 #include "profiling_session.h"
 #include "serialization.h"
-#include "tables.h"
 
 namespace strmd
 {
@@ -35,8 +34,8 @@ namespace micro_profiler
 	inline void serialize(ArchiveT &archive, frontend_ui_context &data, unsigned int ver)
 	{
 		archive(data.process_info);
-		archive(static_cast<containers::unordered_map<unsigned int, mapped_module_ex> &>(*data.module_mappings));
-		archive(static_cast<containers::unordered_map<unsigned int, module_info_metadata> &>(*data.modules));
+		archive(*data.module_mappings);
+		archive(*data.modules);
 
 		if (ver >= 4)
 		{

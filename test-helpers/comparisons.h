@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <common/image_info.h>
+#include <common/module.h>
 #include <common/primitives.h>
 #include <set>
 
@@ -37,4 +39,13 @@ namespace micro_profiler
 	inline bool operator ==(const function_statistics_detailed_t<AddressT> &lhs,
 		const function_statistics_detailed_t<AddressT> &rhs)
 	{	return !(lhs < rhs) && !(rhs < lhs);	}
+
+	inline bool operator ==(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
+	{	return lhs.persistent_id == rhs.persistent_id && lhs.path == rhs.path && lhs.base == rhs.base;	}
+
+	inline bool operator ==(const symbol_info &lhs, const symbol_info &rhs)
+	{
+		return lhs.name == rhs.name && lhs.rva == rhs.rva && lhs.size == rhs.size
+			&& lhs.file_id == rhs.file_id && lhs.line == rhs.line;
+	}
 }

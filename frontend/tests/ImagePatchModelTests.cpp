@@ -18,13 +18,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			mapped_module_identified mkmapping(unsigned instance_id, unsigned persistence_id,
-				long_address_t base)
-			{
-				mapped_module_ex m = {	persistence_id, string(), base	};
-				return make_pair(instance_id, m);
-			}
-
 			tables::patch mkpatch(unsigned id, bool requested, bool error, bool active)
 			{
 				tables::patch p;
@@ -62,7 +55,7 @@ namespace micro_profiler
 			test( ModelIsEmptyIfNoModulesAreLoaded )
 			{
 				// INIT
-				mappings->insert(mkmapping(0, 1, 0x1299100));
+				mappings->insert(make_mapping(0, 1, 0x1299100));
 
 				// INIT / ACT
 				image_patch_model model(patches, modules, mappings);
@@ -71,7 +64,7 @@ namespace micro_profiler
 				assert_equal(0u, model.get_count());
 
 				// INIT
-				mappings->insert(mkmapping(1, 10, 0x10000));
+				mappings->insert(make_mapping(1, 10, 0x10000));
 				mappings->invalidate();
 
 				// ACT / ASSERT
@@ -578,9 +571,9 @@ namespace micro_profiler
 				vector<unsigned int> log;
 				modules->request_presence = [&] (unsigned int persistent_id) {	log.push_back(persistent_id);	};
 
-				mappings->insert(mkmapping(0, 1, 0x1299100));
-				mappings->insert(mkmapping(1, 13, 0x1299100));
-				mappings->insert(mkmapping(2, 7, 0x1299100));
+				mappings->insert(make_mapping(0, 1, 0x1299100));
+				mappings->insert(make_mapping(1, 13, 0x1299100));
+				mappings->insert(make_mapping(2, 7, 0x1299100));
 
 				// INIT / ACT
 				image_patch_model model1(patches, modules, mappings);
@@ -589,8 +582,8 @@ namespace micro_profiler
 				assert_equivalent(plural + 1u + 13u + 7u, log);
 
 				// INIT
-				mappings->insert(mkmapping(4, 11, 0x1299100));
-				mappings->insert(mkmapping(5, 9, 0x1299100));
+				mappings->insert(make_mapping(4, 11, 0x1299100));
+				mappings->insert(make_mapping(5, 9, 0x1299100));
 				log.clear();
 
 				// INIT / ACT

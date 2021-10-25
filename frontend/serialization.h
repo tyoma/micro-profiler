@@ -28,6 +28,12 @@
 
 #pragma warning(disable: 4510; disable: 4610)
 
+namespace strmd
+{
+	template <typename StreamT, typename PackerT, int static_version>
+	class deserializer;
+}
+
 namespace micro_profiler
 {
 	struct statistics_map_reader : strmd::indexed_associative_container_reader
@@ -139,6 +145,14 @@ namespace micro_profiler
 		{
 			archive(static_cast<BaseT &>(data), context);
 			data.invalidate();
+		}
+
+		template <typename S, typename P, int v>
+		inline void serialize(strmd::deserializer<S, P, v> &archive, module_mappings &data)
+		{
+			archive(static_cast<module_mappings::base_t &>(data));
+			data.layout.assign(data.begin(), data.end());
+			std::sort(data.layout.begin(), data.layout.end(), mapping_less());
 		}
 	}
 }

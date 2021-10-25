@@ -75,6 +75,10 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v2.0.637
+
+* Quickfix: functions names were empty on loading existed statistics.
+
 ## v2.0.636
 
 * Issue [#59](https://github.com/tyoma/micro-profiler/issues/59) fixed - profiled application keeps running until the last batch of updates and all the symbols are loaded into frontend;

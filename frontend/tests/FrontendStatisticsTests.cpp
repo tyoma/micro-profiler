@@ -18,9 +18,6 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
-	{	return lhs.persistent_id == rhs.persistent_id && lhs.path == rhs.path && lhs.base == rhs.base;	}
-
 	namespace tests
 	{
 		namespace
@@ -48,13 +45,6 @@ namespace micro_profiler
 			template <typename T>
 			function<void (ipc::serializer &s)> format(const T &v)
 			{	return [v] (ipc::serializer &s) {	s(v);	};	}
-
-			mapped_module_identified mkmapping(unsigned instance_id, unsigned persistence_id,
-				long_address_t base)
-			{
-				mapped_module_ex m = {	persistence_id, string(), base	};
-				return make_pair(instance_id, m);
-			}
 
 			void empty_update(ipc::server_session::response &resp)
 			{
@@ -229,7 +219,7 @@ namespace micro_profiler
 				});
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ mkmapping(7, 19, 0x0FA00000u) + mkmapping(3, 17, 0x00010000u));
+						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(3, 17, 0x00010000u));
 					empty_update(resp);
 				});
 
@@ -237,7 +227,7 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ mkmapping(1, 12, 0x00100000u) + mkmapping(2, 13, 0x01100000u));
+						+ make_mapping(1, 12, 0x00100000u) + make_mapping(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
 							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
@@ -268,7 +258,7 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ mkmapping(7, 19, 0x0FA00000u) + mkmapping(3, 17, 0x00010000u));
+						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(3, 17, 0x00010000u));
 					empty_update(resp);
 				});
 				const auto c = mappings->invalidate += [&] {	log.push_back(mappings->layout);	};
@@ -278,8 +268,8 @@ namespace micro_profiler
 
 				// ASSERT
 				mapped_module_identified reference1[] = {
-					mkmapping(3, 17, 0x00010000u),
-					mkmapping(7, 19, 0x0FA00000u),
+					make_mapping(3, 17, 0x00010000u),
+					make_mapping(7, 19, 0x0FA00000u),
 				};
 
 				assert_equal(1u, log.size());
@@ -288,7 +278,7 @@ namespace micro_profiler
 				// INIT
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ mkmapping(8, 18, 0x00A00000u) + mkmapping(9, 13, 0x00020000u) + mkmapping(5, 11, 0x00001000u));
+						+ make_mapping(8, 18, 0x00A00000u) + make_mapping(9, 13, 0x00020000u) + make_mapping(5, 11, 0x00001000u));
 					empty_update(resp);
 				});
 
@@ -297,11 +287,11 @@ namespace micro_profiler
 
 				// ASSERT
 				mapped_module_identified reference2[] = {
-					mkmapping(5, 11, 0x00001000u),
-					mkmapping(3, 17, 0x00010000u),
-					mkmapping(9, 13, 0x00020000u),
-					mkmapping(8, 18, 0x00A00000u),
-					mkmapping(7, 19, 0x0FA00000u),
+					make_mapping(5, 11, 0x00001000u),
+					make_mapping(3, 17, 0x00010000u),
+					make_mapping(9, 13, 0x00020000u),
+					make_mapping(8, 18, 0x00A00000u),
+					make_mapping(7, 19, 0x0FA00000u),
 				};
 
 				assert_equal(2u, log.size());
@@ -321,7 +311,7 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ mkmapping(7, 19, 0x0FA00000u) + mkmapping(1, 12, 0x00100000u) + mkmapping(2, 13, 0x01100000u));
+						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(1, 12, 0x00100000u) + make_mapping(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
 							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)

@@ -5,6 +5,7 @@
 
 #include "helpers.h"
 
+#include <test-helpers/comparisons.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/temporary_copy.h>
@@ -15,9 +16,6 @@ using namespace std;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
-	{	return lhs.persistent_id == rhs.persistent_id && lhs.path == rhs.path && lhs.base == rhs.base;	}
-
 	namespace tests
 	{
 		namespace

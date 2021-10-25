@@ -403,6 +403,40 @@ namespace micro_profiler
 				assert_equivalent(reference2, collected_ids.threads);
 			}
 
+
+			test( MappingLayoutIsUpdatedOnDeserialization )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> ser(buffer);
+				strmd::deserializer<vector_adapter, packer> dser(buffer);
+				tables::module_mappings m;
+
+				ser(plural + make_mapping(0, 12, 10000) + make_mapping(1, 13, 1000) + make_mapping(2, 14, 200) + make_mapping(3, 19, 100000));
+				ser(plural + make_mapping(7, 120, 20000) + make_mapping(8, 121, 1000) + make_mapping(9, 122, 900));
+
+				// ACT
+				dser(m);
+
+				// ASSERT
+				assert_equal(plural
+					+ make_mapping(2, 14, 200)
+					+ make_mapping(1, 13, 1000)
+					+ make_mapping(0, 12, 10000)
+					+ make_mapping(3, 19, 100000),
+					m.layout);
+
+				// ACT
+				dser(m);
+
+				// ASSERT
+				assert_equal(plural
+					+ make_mapping(9, 122, 900)
+					+ make_mapping(8, 121, 1000)
+					+ make_mapping(7, 120, 20000),
+					m.layout);
+			}
+
 		end_test_suite
 	}
 }

@@ -14,12 +14,6 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const symbol_info &lhs, const symbol_info &rhs)
-	{
-		return lhs.name == rhs.name && lhs.rva == rhs.rva && lhs.size == rhs.size
-			&& lhs.file_id == rhs.file_id && lhs.line == rhs.line;
-	}
-
 	namespace tests
 	{
 		namespace

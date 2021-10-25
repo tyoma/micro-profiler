@@ -45,6 +45,8 @@ pushd "%~dp0redist\dbghelp"
 	call sha256 hashdbghelpx64 windows7+\x64\dbghelp.dll
 	call sha256 hashkernel32downlevelapix86 windows7+\x86\api-ms-win-downlevel-kernel32-l2-1-0.dll
 	call sha256 hashdbghelpx86 windows7+\x86\dbghelp.dll
+	call sha256 hashdbghelpxpx64 windowsxp+\x64\dbghelp.dll
+	call sha256 hashdbghelpxpx86 windowsxp+\x86\dbghelp.dll
 popd
 
 pushd "%~dp0legacy"

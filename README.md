@@ -75,6 +75,12 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v2.0.636
+
+* Issue [#59](https://github.com/tyoma/micro-profiler/issues/59) fixed - profiled application keeps running until the last batch of updates and all the symbols are loaded into frontend;
+* Issue [#67](https://github.com/tyoma/micro-profiler/issues/67) implemented - collector is now writing its logs;
+* Issue [#66](https://github.com/tyoma/micro-profiler/issues/67) fixed - installer now contains dbghelp.dll redistributable to run on Windows 7+ w/o requiring Visual Studio to be installed.
+
 ## v2.0.635
 
 * First (very beta) version with working "Profile Process..." menu - requires binary to be compiled with ```/hotpach``` (on x86, compiler settings) and ```/functionpadmin:XX``` (linker settings) on Windows (msvc) or ```-fpatchable-function-entry=N,M``` on Linux (gcc, clang);

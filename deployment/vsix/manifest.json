@@ -23,7 +23,10 @@
 		{"fileName":"/windows7+/x64/api-ms-win-downlevel-kernel32-l2-1-0.dll","sha256":"!hashkernel32downlevelapix64!"},
 		{"fileName":"/windows7+/x64/dbghelp.dll","sha256":"!hashdbghelpx64!"},
 		{"fileName":"/windows7+/x86/api-ms-win-downlevel-kernel32-l2-1-0.dll","sha256":"!hashkernel32downlevelapix86!"},
-		{"fileName":"/windows7+/x86/dbghelp.dll","sha256":"!hashdbghelpx86!"}
+		{"fileName":"/windows7+/x86/dbghelp.dll","sha256":"!hashdbghelpx86!"},
+
+		{"fileName":"/windowsxp+/x64/dbghelp.dll","sha256":"!hashdbghelpxpx64!"},
+		{"fileName":"/windowsxp+/x86/dbghelp.dll","sha256":"!hashdbghelpxpx86!"}
 	],
 	"dependencies":{"Microsoft.VisualStudio.Component.CoreEditor":"[11.0,25.0)"}
 }

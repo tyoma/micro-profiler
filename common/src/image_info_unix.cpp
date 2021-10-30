@@ -38,25 +38,20 @@ namespace micro_profiler
 			elf_image_info(const string &path);
 
 		private:
-			virtual string get_path() const override;
 			virtual void enumerate_functions(const symbol_callback_t &callback) const override;
 
 		private:
-			string _path;
 			shared_ptr<const symreader::mapped_region> _image;
 		};
 
 
 
 		elf_image_info::elf_image_info(const string &path)
-			: _path(path), _image(symreader::map_file(path.c_str()))
+			: _image(symreader::map_file(path.c_str()))
 		{
 			if (!_image->first)
 				throw invalid_argument("");
 		}
-
-		string elf_image_info::get_path() const
-		{	return _path;	}
 
 		void elf_image_info::enumerate_functions(const symbol_callback_t &callback) const
 		{

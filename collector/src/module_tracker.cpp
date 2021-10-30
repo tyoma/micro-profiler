@@ -20,6 +20,9 @@
 
 #include <collector/module_tracker.h>
 
+#include "xxhash32.h"
+
+#include <common/file_stream.h>
 #include <common/module.h>
 #include <stdexcept>
 #include <unordered_set>
@@ -38,8 +41,25 @@ namespace micro_profiler
 	}
 
 	module_tracker::module_info::module_info(const string &path_)
-		: path(path_)
+		: path(path_), hash(calculate_hash(path_))
 	{	}
+
+	uint32_t module_tracker::module_info::calculate_hash(const string &path_)
+	{
+		enum {	n = 1024	};
+
+		XXHash32 h(0);
+		byte buffer[n];
+		read_file_stream s(path_);
+
+		for (size_t read = n; read == n; )
+		{
+			read = s.read_l(buffer, n);
+			h.add(buffer, read);
+		}
+		return h.hash();
+	}
+
 
 	module_tracker::module_tracker()
 		: _next_instance_id(0u), _next_persistent_id(1u)
@@ -57,6 +77,7 @@ namespace micro_profiler
 			{
 				auto mmi = mapped_module_ex::from(_next_instance_id++, persistent_id, mm);
 
+				mmi.second.hash = mi.hash;
 				mi.mapping.reset(new mapped_module_identified(mmi));
 				_lqueue.push_back(mmi);
 			}

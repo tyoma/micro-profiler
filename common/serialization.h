@@ -34,9 +34,9 @@ namespace strmd
 {
 	template <> struct version<micro_profiler::initialization_data> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::function_statistics> {	enum {	value = 4	};	};
-	template <> struct version<micro_profiler::mapped_module_ex> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::mapped_module_ex> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::symbol_info> {	enum {	value = 4	};	};
-	template <> struct version<micro_profiler::module_info_metadata> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::module_info_metadata> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
@@ -88,6 +88,8 @@ namespace micro_profiler
 		archive(data.persistent_id);
 		archive(data.base);
 		archive(data.path);
+		if (ver >= 6)
+			archive(data.hash);
 	}
 
 	template <typename ArchiveT>
@@ -110,6 +112,8 @@ namespace micro_profiler
 		archive(data.source_files);
 		if (ver >= 5)
 			archive(data.path);
+		if (ver >= 6)
+			archive(data.hash);
 	}
 
 	template <typename ArchiveT>

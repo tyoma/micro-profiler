@@ -52,9 +52,9 @@ namespace micro_profiler
 		return r;
 	}
 
-	unique_ptr<read_stream> open_file(HWND hparent, string& path)
+	unique_ptr<read_file_stream> open_file(HWND hparent, string& path)
 	{
-		unique_ptr<read_stream> r;
+		unique_ptr<read_file_stream> r;
 		OPENFILENAMEW ofn = {};
 		wchar_t buffer[1000] = { 0 };
 
@@ -65,7 +65,10 @@ namespace micro_profiler
 		ofn.nMaxFile = _countof(buffer);
 		ofn.lpstrDefExt = c_microProfilerDefaultExtension;
 		if (::GetOpenFileNameW(&ofn))
-			r.reset(new read_stream(ofn.lpstrFile)), path = unicode(ofn.lpstrFile);
+		{
+			path = unicode(ofn.lpstrFile);
+			r.reset(new read_file_stream(path));
+		}
 		return r;
 	}
 }

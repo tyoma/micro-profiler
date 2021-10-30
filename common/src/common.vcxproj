@@ -50,6 +50,7 @@
     <ClCompile Include="file_id_win32.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="file_stream.cpp" />
     <ClCompile Include="formatting.cpp" />
     <ClCompile Include="memory.cpp" />
     <ClCompile Include="memory_unix.cpp">
@@ -95,6 +96,7 @@
     <ClInclude Include="..\configuration_file.h" />
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\file_id.h" />
+    <ClInclude Include="..\file_stream.h" />
     <ClInclude Include="..\formatting.h" />
     <ClInclude Include="..\hash.h" />
     <ClInclude Include="..\image_info.h" />
@@ -117,6 +119,7 @@
     <ClInclude Include="..\win32\configuration_registry.h" />
     <ClInclude Include="elf\filemapping.h" />
     <ClInclude Include="elf\sym-elf.h" />
+    <ClInclude Include="xxhash32.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

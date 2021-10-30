@@ -70,6 +70,9 @@
     <ClCompile Include="pool_allocator.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="file_stream.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -127,5 +130,9 @@
     <ClInclude Include="..\compiler.h" />
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\pool_allocator.h" />
+    <ClInclude Include="..\file_stream.h" />
+    <ClInclude Include="xxhash32.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

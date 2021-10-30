@@ -70,6 +70,7 @@ namespace micro_profiler
 	struct module_info_metadata
 	{
 		std::string path;
+		std::uint32_t hash;
 		std::vector<symbol_info> symbols;
 		containers::unordered_map<unsigned int /*file_id*/, std::string /*file*/> source_files;
 	};

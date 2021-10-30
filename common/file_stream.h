@@ -20,28 +20,23 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
+#include "noncopyable.h"
+
 #include <string>
 
 namespace micro_profiler
 {
-	struct symbol_info
+	class read_file_stream : noncopyable
 	{
-		std::string name;
-		unsigned int rva, size;
-		unsigned int file_id, line;
+	public:
+		read_file_stream(const std::string &path);
+		~read_file_stream();
+
+		std::size_t read_l(void *buffer, std::size_t buffer_length);
+		void read(void *buffer, std::size_t buffer_length);
+		void skip(std::size_t n);
+
+	private:
+		void *_stream;
 	};
-
-	struct image_info
-	{
-		typedef std::function<void (const symbol_info &symbol)> symbol_callback_t;
-		typedef std::function<void (const std::pair<unsigned int /*file_id*/, std::string /*path*/> &file)> file_callback_t;
-
-		virtual ~image_info() {	}
-		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
-		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
-	};
-
-	std::shared_ptr<image_info> load_image_info(const std::string &image_path);
 }

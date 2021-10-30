@@ -22,6 +22,7 @@
 
 #include "range.h"
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -54,6 +55,7 @@ namespace micro_profiler
 		unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
 		std::string path;
 		long_address_t base;
+		std::uint32_t hash;
 	};
 
 	typedef std::function<void (const mapped_module &module)> module_callback_t;

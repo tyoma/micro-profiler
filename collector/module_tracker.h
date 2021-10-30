@@ -50,7 +50,10 @@ namespace micro_profiler
 		{
 			module_info(const std::string &path_);
 
+			static std::uint32_t calculate_hash(const std::string &path_);
+
 			const std::string path;
+			const std::uint32_t hash;
 			std::shared_ptr<mapped_module_identified> mapping;
 		};
 

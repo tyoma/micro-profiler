@@ -312,14 +312,14 @@ namespace micro_profiler
 
 			add_command(cmdidLoadStatistics, [this] (unsigned) {
 				string path;
-				unique_ptr<read_stream> s = open_file(get_frame_hwnd(get_shell()), path);
+				unique_ptr<read_file_stream> s = open_file(get_frame_hwnd(get_shell()), path);
 
 				if (s.get())
 				{
 					const string ext = extension(*path);
-					strmd::deserializer<read_stream, packer, 3> dser_v3(*s);
-					strmd::deserializer<read_stream, packer, 4> dser_v4(*s);
-					strmd::deserializer<read_stream, packer> dser(*s);
+					strmd::deserializer<read_file_stream, packer, 3> dser_v3(*s);
+					strmd::deserializer<read_file_stream, packer, 4> dser_v4(*s);
+					strmd::deserializer<read_file_stream, packer> dser(*s);
 					frontend_ui_context ui_context = {
 						{},
 						make_shared<tables::statistics>(),

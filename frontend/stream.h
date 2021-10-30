@@ -21,6 +21,7 @@
 #pragma once
 
 #include <common/noncopyable.h>
+#include <common/file_stream.h>
 #include <common/types.h>
 #include <memory>
 #include <string>
@@ -33,18 +34,6 @@ namespace micro_profiler
 		write_stream(const std::wstring &path);
 
 		void write(const void *buffer, size_t size);
-
-	private:
-		const std::shared_ptr<void> _file;
-	};
-
-	class read_stream : noncopyable
-	{
-	public:
-		read_stream(const std::wstring &path);
-
-		void read(void *buffer, size_t size);
-		void skip(size_t size);
 
 	private:
 		const std::shared_ptr<void> _file;

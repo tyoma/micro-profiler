@@ -170,8 +170,8 @@ namespace micro_profiler
 					make_pair(11, "fourrier.cpp"),
 					make_pair(23, "sort.c"),
 				};
-				module_info_metadata m1 = { "kernel",  mkvector(symbols1), containers::unordered_map<unsigned int, string>(begin(files1), end(files1)) };
-				module_info_metadata m2 = { "user", mkvector(symbols2), containers::unordered_map<unsigned int, string>(begin(files2), end(files2)) };
+				module_info_metadata m1 = { "kernel",  182213u, mkvector(symbols1), containers::unordered_map<unsigned int, string>(begin(files1), end(files1)) };
+				module_info_metadata m2 = { "user", 10101011u, mkvector(symbols2), containers::unordered_map<unsigned int, string>(begin(files2), end(files2)) };
 				module_info_metadata read;
 
 				// ACT
@@ -180,6 +180,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal("kernel", read.path);
+				assert_equal(182213u, read.hash);
 				assert_equal(symbols1, read.symbols);
 				assert_equivalent(files1, read.source_files);
 
@@ -189,6 +190,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal("user", read.path);
+				assert_equal(10101011u, read.hash);
 				assert_equal(symbols2, read.symbols);
 				assert_equivalent(files2, read.source_files);
 			}

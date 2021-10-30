@@ -5,6 +5,7 @@
 #include "mocks_allocator.h"
 #include "mocks_patch_manager.h"
 
+#include <collector/module_tracker.h>
 #include <collector/serialization.h>
 #include <common/constants.h>
 #include <common/module.h>
@@ -155,8 +156,10 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready;
-				loaded_modules l;
+				loaded_modules l, lref;
+				unloaded_modules u;
 				shared_ptr<void> req;
+				module_tracker tracker;
 
 				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
 
@@ -167,6 +170,8 @@ namespace micro_profiler
 				});
 				ready.wait();
 
+				lref.clear(), tracker.get_changes(lref, u);
+
 				// ACT
 				image image0(c_symbol_container_1);
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
@@ -174,10 +179,11 @@ namespace micro_profiler
 					ready.set();
 				});
 				ready.wait();
+				lref.clear(), tracker.get_changes(lref, u);
 
 				// ASSERT
 				assert_equal(1u, l.size());
-				assert_not_null(find_module(l, image0.absolute_path()));
+				assert_equal(lref[0].second, l[0].second);
 
 				// ACT
 				image image1(c_symbol_container_2);
@@ -186,10 +192,11 @@ namespace micro_profiler
 					ready.set();
 				});
 				ready.wait();
+				lref.clear(), tracker.get_changes(lref, u);
 
 				// ASSERT
 				assert_equal(1u, l.size());
-				assert_not_null(find_module(l, image1.absolute_path()));
+				assert_equal(lref[0].second, l[0].second);
 			}
 
 
@@ -562,6 +569,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
+				assert_equal(mmi[1].second.hash, md.hash);
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
@@ -578,6 +586,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
+				assert_equal(mmi[0].second.hash, md.hash);
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),

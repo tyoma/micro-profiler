@@ -72,10 +72,12 @@ namespace micro_profiler
 		session.add_handler(request_module_metadata,
 			[module_tracker_, metadata] (response &resp, unsigned int persistent_id) {
 
+			const auto l = module_tracker_->lock_mapping(persistent_id);
 			const auto metadata_ = module_tracker_->get_metadata(persistent_id);
 			auto &md = *metadata;
 
-			metadata->path = metadata_->get_path();
+			metadata->path = l->second.path;
+			metadata->hash = l->second.hash;
 			metadata->symbols.clear();
 			metadata->source_files.clear();
 			metadata_->enumerate_functions([&] (const symbol_info &symbol) {

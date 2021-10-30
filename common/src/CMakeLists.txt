@@ -4,6 +4,7 @@ set(COMMON_SOURCES
 	allocator.cpp
 	configuration_file.cpp
 	constants.cpp
+	file_stream.cpp
 	formatting.cpp
 	memory.cpp
 	pool_allocator.cpp

@@ -18,30 +18,42 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <common/file_stream.h>
 
-#include <functional>
-#include <memory>
-#include <string>
+#include <common/string.h>
+#include <stdio.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	struct symbol_info
+	namespace
 	{
-		std::string name;
-		unsigned int rva, size;
-		unsigned int file_id, line;
-	};
+#ifdef _WIN32
+		FILE *fopen(const string &path, const string &mode)
+		{	return ::_wfopen(unicode(path).c_str(), unicode(mode).c_str());	}
+#else
+		FILE *fopen(const string &path, const string &mode)
+		{	return ::fopen(path.c_str(), mode.c_str());	}
+#endif
+	}
 
-	struct image_info
+	read_file_stream::read_file_stream(const string &path)
+		: _stream(fopen(path, "rb"))
+	{	}
+
+	read_file_stream::~read_file_stream()
+	{	fclose(static_cast<FILE *>(_stream));	}
+
+	size_t read_file_stream::read_l(void *buffer, size_t buffer_length)
+	{	return fread(buffer, 1, buffer_length, static_cast<FILE *>(_stream));	}
+
+	void read_file_stream::read(void *buffer, size_t buffer_length)
 	{
-		typedef std::function<void (const symbol_info &symbol)> symbol_callback_t;
-		typedef std::function<void (const std::pair<unsigned int /*file_id*/, std::string /*path*/> &file)> file_callback_t;
+		if (read_l(buffer, buffer_length) < buffer_length)
+			throw runtime_error("reading past end of file");
+	}
 
-		virtual ~image_info() {	}
-		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;
-		virtual void enumerate_files(const file_callback_t &/*callback*/) const {	}
-	};
-
-	std::shared_ptr<image_info> load_image_info(const std::string &image_path);
+	void read_file_stream::skip(size_t n)
+	{	fseek(static_cast<FILE *>(_stream), static_cast<int>(n), SEEK_CUR);	}
 }

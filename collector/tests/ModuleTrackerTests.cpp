@@ -136,6 +136,35 @@ namespace micro_profiler
 			}
 
 
+			test( ModulesLoadedHaveTheirHashesSet )
+			{
+				// INIT
+				module_tracker t;
+				loaded_modules l[4];
+				unloaded_modules u;
+				temporary_copy symbol_container_3(c_symbol_container_3_nosymbols);
+
+				t.get_changes(l[0], u);
+				l[0].clear();
+
+				// ACT
+				image image0(c_symbol_container_1);
+				t.get_changes(l[0], u);
+				image image1(c_symbol_container_2);
+				t.get_changes(l[1], u);
+				image image2(c_symbol_container_3_nosymbols);
+				t.get_changes(l[2], u);
+				image image3(symbol_container_3.path());
+				t.get_changes(l[3], u);
+
+				// ASSERT
+				assert_not_equal(l[0][0].second.hash, l[1][0].second.hash);
+				assert_not_equal(l[1][0].second.hash, l[2][0].second.hash);
+				assert_not_equal(l[2][0].second.hash, l[0][0].second.hash);
+				assert_equal(l[2][0].second.hash, l[3][0].second.hash);
+			}
+
+
 			test( ModulesLoadedGetTheirUniquePersistentIDs )
 			{
 				// INIT

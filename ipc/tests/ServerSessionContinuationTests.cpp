@@ -20,11 +20,11 @@ namespace micro_profiler
 
 			begin_test_suite( ServerSessionContinuationTests )
 				mocks::channel outbound;
-				shared_ptr<micro_profiler::tests::mocks::queue> queue;
+				shared_ptr<micro_profiler::tests::mocks::queue> apartment_queue;
 
 				init( Init )
 				{
-					queue = make_shared<micro_profiler::tests::mocks::queue>();
+					apartment_queue = make_shared<micro_profiler::tests::mocks::queue>();
 				}
 
 
@@ -47,7 +47,7 @@ namespace micro_profiler
 				test( DeferringAResponsePlacesTasksInQueueProvided )
 				{
 					// INIT
-					server_session s(outbound, queue);
+					server_session s(outbound, apartment_queue.get());
 
 					outbound.on_message = [] (const_byte_range) {	assert_is_false(true);	};
 					s.add_handler(1, [&] (server_session::response &resp, int) {
@@ -58,27 +58,27 @@ namespace micro_profiler
 					send_standard(s, 1, 1, 0);
 
 					// ASSERT
-					assert_equal(1u, queue->tasks.size());
+					assert_equal(1u, apartment_queue->tasks.size());
 
 					// ACT
 					send_standard(s, 1, 14, 0);
 					send_standard(s, 1, 13, 0);
 
 					// ASSERT
-					assert_equal(3u, queue->tasks.size());
+					assert_equal(3u, apartment_queue->tasks.size());
 				}
 
 
 				test( TaskIsNotQueuedUntilAfterHandlerExits )
 				{
 					// INIT
-					server_session s(outbound, queue);
+					server_session s(outbound, apartment_queue.get());
 
 					s.add_handler(1, [&] (server_session::response &resp, int) {
 						resp.defer([] (server_session::response &) {});
 
 					// ASSERT
-						assert_is_empty(queue->tasks);
+						assert_is_empty(apartment_queue->tasks);
 					});
 
 					// ACT
@@ -89,7 +89,7 @@ namespace micro_profiler
 				test( ExecutionOfADeferredResponseTaskDoesNothingAfterSessionIsDestroyed )
 				{
 					// INIT
-					unique_ptr<server_session> s(new server_session(outbound, queue));
+					unique_ptr<server_session> s(new server_session(outbound, apartment_queue.get()));
 					auto called = 0;
 					auto cb = [&] (server_session::response &) {	called++;	};
 
@@ -101,7 +101,7 @@ namespace micro_profiler
 
 					// ACT / ASSERT
 					s.reset();
-					queue->run_one();
+					apartment_queue->run_one();
 
 					// ASSERT
 					assert_equal(0, called);
@@ -112,7 +112,7 @@ namespace micro_profiler
 				test( ResponsesSentFromContinuationCarryTokensOfTheOriginalRequests )
 				{
 					// INIT
-					server_session s(outbound, queue);
+					server_session s(outbound, apartment_queue.get());
 					vector< pair<int, unsigned> > log;
 
 					outbound.on_message = [&] (const_byte_range payload) {
@@ -139,7 +139,7 @@ namespace micro_profiler
 					send_standard(s, 1, 91, 0);
 
 					// ACT / ASSERT
-					queue->run_one();
+					apartment_queue->run_one();
 
 					// ASSERT
 					pair<int, unsigned> reference1[] = {	make_pair(1001, 81),	};
@@ -148,7 +148,7 @@ namespace micro_profiler
 
 					// ACT / ASSERT
 					send_standard(s, 1, 90, 0);
-					queue->run_till_end();
+					apartment_queue->run_till_end();
 
 					// ASSERT
 					pair<int, unsigned> reference2[] = {
@@ -162,7 +162,7 @@ namespace micro_profiler
 				test( DeferralsCanBeChained )
 				{
 					// INIT
-					server_session s(outbound, queue);
+					server_session s(outbound, apartment_queue.get());
 					vector< pair<int, unsigned> > log;
 
 					outbound.on_message = [&] (const_byte_range payload) {
@@ -188,24 +188,24 @@ namespace micro_profiler
 					send_standard(s, 1, 81, 0);
 
 					// ACT
-					queue->run_one();
+					apartment_queue->run_one();
 
 					// ASSERT
-					assert_equal(1u, queue->tasks.size());
+					assert_equal(1u, apartment_queue->tasks.size());
 					assert_equal(1u, log.size());
 
 					// ACT
-					queue->run_one();
+					apartment_queue->run_one();
 
 					// ASSERT
-					assert_equal(1u, queue->tasks.size());
+					assert_equal(1u, apartment_queue->tasks.size());
 					assert_equal(2u, log.size());
 
 					// ACT
-					queue->run_one();
+					apartment_queue->run_one();
 
 					// ASSERT
-					assert_equal(0u, queue->tasks.size());
+					assert_equal(0u, apartment_queue->tasks.size());
 
 					pair<int, unsigned> reference[] = {
 						make_pair(1001, 81u), make_pair(1002, 81u), make_pair(1003, 81u),

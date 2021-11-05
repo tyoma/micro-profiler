@@ -49,8 +49,8 @@ namespace micro_profiler
 			}
 		}
 
-		marshalled_server::marshalled_server(shared_ptr<ipc::server> underlying, shared_ptr<scheduler::queue> queue)
-			: _lifetime(make_shared<lifetime>()), _underlying(underlying), _queue(queue)
+		marshalled_server::marshalled_server(shared_ptr<ipc::server> underlying, scheduler::queue &apartment_queue)
+			: _lifetime(make_shared<lifetime>()), _underlying(underlying), _apartment_queue(apartment_queue)
 		{	}
 
 		marshalled_server::~marshalled_server()
@@ -70,7 +70,7 @@ namespace micro_profiler
 			shared_ptr<marshalled_passive_session> msession;
 
 			_lifetime->execute_safe([&] {
-				msession = make_shared<marshalled_passive_session>(_queue, outbound);
+				msession = make_shared<marshalled_passive_session>(_apartment_queue, outbound);
 				msession->create_underlying(_underlying);
 			});
 			return msession;

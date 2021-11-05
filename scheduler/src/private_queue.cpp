@@ -35,13 +35,22 @@ namespace scheduler
 		{	}
 
 		mt::recursive_mutex mutex;
-		mt::thread::id current_thread;
+		bool alive;
+	};
+
+	struct private_worker_queue::control_block
+	{
+		control_block()
+			: alive(true)
+		{	}
+
+		mt::mutex mutex;
 		bool alive;
 	};
 
 
-	private_queue::private_queue(shared_ptr<queue> underlying)
-		: _underlying(underlying), _control_block(make_shared<control_block>())
+	private_queue::private_queue(queue &apartment_queue)
+		: _apartment_queue(apartment_queue), _control_block(make_shared<control_block>())
 	{	}
 
 	private_queue::~private_queue()
@@ -61,6 +70,54 @@ namespace scheduler
 		});
 
 		task = function<void ()>();
-		_underlying->schedule(move(captured), defer_by);
+		_apartment_queue.schedule(move(captured), defer_by);
 	}
+
+
+	private_worker_queue::private_worker_queue(queue &worker_queue, queue &apartment_queue)
+		: _worker_queue(worker_queue), _apartment_queue(apartment_queue), _control_block(make_shared<control_block>())
+	{	}
+
+	private_worker_queue::~private_worker_queue()
+	{
+		mt::lock_guard<mt::mutex> lock(_control_block->mutex);
+
+		_control_block->alive = false;
+	}
+
+	void private_worker_queue::schedule(async_task &&task)
+	{
+		auto cb = _control_block;
+		function<void ()> wrapped_task([this, task, cb] {
+			mt::lock_guard<mt::mutex> lock(cb->mutex);
+
+			if (cb->alive)
+			{
+				completion c(*this);
+
+				task(c);
+			}
+		});
+
+		_worker_queue.schedule(move(wrapped_task));
+	}
+
+	void private_worker_queue::deliver(function<void ()> &&progress)
+	{
+		auto cb = _control_block;
+		function<void ()> wrapped_progress([this, progress, cb] {
+			if (cb->alive)
+				progress();
+		});
+
+		_apartment_queue.schedule(move(wrapped_progress));
+	}
+
+
+	private_worker_queue::completion::completion(private_worker_queue &owner)
+		: _owner(owner)
+	{	}
+
+	void private_worker_queue::completion::deliver(function<void ()> &&progress)
+	{	_owner.deliver(move(progress));	}
 }

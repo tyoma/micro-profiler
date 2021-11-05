@@ -24,8 +24,8 @@ namespace micro_profiler
 		{
 			struct emulator_ : ipc::channel, noncopyable
 			{
-				emulator_(shared_ptr<scheduler::queue> queue)
-					: server_session(*this, queue), outbound(nullptr)
+				emulator_(scheduler::queue &queue)
+					: server_session(*this, &queue), outbound(nullptr)
 				{	}
 
 				virtual void disconnect() throw() override
@@ -66,7 +66,7 @@ namespace micro_profiler
 			{
 				typedef pair< shared_ptr<emulator_>, shared_ptr<frontend> > complex_t;
 
-				auto e2 = make_shared<emulator_>(queue);
+				auto e2 = make_shared<emulator_>(*queue);
 				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session));
 				auto f = shared_ptr<frontend>(c, c->second.get());
 

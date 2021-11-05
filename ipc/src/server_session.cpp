@@ -26,8 +26,8 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		server_session::server_session(channel &outbound, shared_ptr<scheduler::queue> queue)
-			: _outbound(outbound), _queue(queue), _deferral_enabled(queue)
+		server_session::server_session(channel &outbound, scheduler::queue *apartment)
+			: _outbound(outbound), _apartment_queue(apartment ? new scheduler::private_queue(*apartment) : nullptr)
 		{	}
 
 		void server_session::set_disconnect_handler(const function<void ()> &handler)
@@ -53,7 +53,7 @@ namespace micro_profiler
 
 			if (h != _handlers.end())
 			{
-				response resp(*this, token, _deferral_enabled);
+				response resp(*this, token, !!_apartment_queue.get());
 
 				h->second(resp, d);
 				if (resp.continuation)
@@ -64,7 +64,7 @@ namespace micro_profiler
 		void server_session::schedule_continuation(token_t token,
 			const function<void (response &response_)> &continuation_handler)
 		{
-			_queue.schedule([this, token, continuation_handler] {
+			_apartment_queue->schedule([this, token, continuation_handler] {
 				response resp(*this, token, true);
 
 				continuation_handler(resp);

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(SCHEDULER_TEST_SOURCES
-	MiscTests.cpp
+	PrivateQueueTests.cpp
 	TaskQueueTests.cpp
 )
 

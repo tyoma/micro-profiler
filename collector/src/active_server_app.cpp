@@ -75,7 +75,7 @@ namespace micro_profiler
 
 	void active_server_app::worker(const frontend_factory_t &factory)
 	{
-		const auto qw = make_shared<queue_wrapper>(_queue);
+		queue_wrapper qw(_queue);
 		unique_ptr<marshalled_active_session> s;
 		const auto frontend_disconnected = [&] {
 			auto exit_confirmed = false;

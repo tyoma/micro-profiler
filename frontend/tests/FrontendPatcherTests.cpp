@@ -38,8 +38,8 @@ namespace micro_profiler
 		{
 			struct emulator_ : ipc::channel, noncopyable
 			{
-				emulator_(shared_ptr<scheduler::queue> queue)
-					: server_session(*this, queue), outbound(nullptr)
+				emulator_(scheduler::queue &queue)
+					: server_session(*this, &queue), outbound(nullptr)
 				{	}
 
 				virtual void disconnect() throw() override
@@ -82,7 +82,7 @@ namespace micro_profiler
 			{
 				queue = make_shared<mocks::queue>();
 
-				auto e = make_shared<emulator_>(queue);
+				auto e = make_shared<emulator_>(*queue);
 				frontend_ui_context context;
 
 				frontend_ = make_shared<frontend>(e->server_session);

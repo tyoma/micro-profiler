@@ -32,7 +32,7 @@ namespace micro_profiler
 				make_shared<symbol_resolver>(context.modules, context.module_mappings), context.threads);
 			const auto injected = !!context.process_info.injected;
 			const auto executable = context.process_info.executable;
-			const auto poller = make_shared<statistics_poll>(context.statistics, queue);
+			const auto poller = make_shared<statistics_poll>(context.statistics, *queue);
 
 			poller->enable(true);
 

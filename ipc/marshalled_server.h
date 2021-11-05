@@ -38,7 +38,7 @@ namespace micro_profiler
 		class marshalled_server : public server, noncopyable
 		{
 		public:
-			marshalled_server(std::shared_ptr<server> underlying, std::shared_ptr<scheduler::queue> queue);
+			marshalled_server(std::shared_ptr<server> underlying, scheduler::queue &apartment_queue);
 			~marshalled_server();
 
 			void stop();
@@ -49,7 +49,7 @@ namespace micro_profiler
 		private:
 			const std::shared_ptr<lifetime> _lifetime;
 			std::shared_ptr<server> _underlying;
-			const std::shared_ptr<scheduler::queue> _queue;
+			scheduler::queue &_apartment_queue;
 		};
 	}
 }

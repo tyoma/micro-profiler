@@ -26,8 +26,8 @@ using namespace std;
 
 namespace micro_profiler
 {
-	statistics_poll::statistics_poll(shared_ptr<const tables::statistics> statistics, shared_ptr<scheduler::queue> queue)
-		: _statistics(statistics), _queue(queue)
+	statistics_poll::statistics_poll(shared_ptr<const tables::statistics> statistics, scheduler::queue &apartment_queue)
+		: _statistics(statistics), _apartment_queue(apartment_queue)
 	{	}
 
 	void statistics_poll::enable(bool value)
@@ -41,5 +41,5 @@ namespace micro_profiler
 	}
 
 	void statistics_poll::on_invalidate()
-	{	_queue.schedule([this] {	_statistics->request_update();	}, mt::milliseconds(25));	}
+	{	_apartment_queue.schedule([this] {	_statistics->request_update();	}, mt::milliseconds(25));	}
 }

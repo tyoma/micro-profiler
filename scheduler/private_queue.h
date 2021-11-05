@@ -31,7 +31,7 @@ namespace scheduler
 	class private_queue
 	{
 	public:
-		explicit private_queue(std::shared_ptr<queue> underlying);
+		explicit private_queue(queue &apartment_queue);
 		~private_queue();
 
 		void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0));
@@ -44,7 +44,56 @@ namespace scheduler
 		void operator =(const private_queue &rhs);
 
 	private:
-		std::shared_ptr<queue> _underlying;
+		queue &_apartment_queue;
 		std::shared_ptr<control_block> _control_block;
+	};
+
+
+	class private_worker_queue
+	{
+	public:
+		class completion;
+
+		typedef std::function<void (completion &completion_)> async_task;
+
+	public:
+		private_worker_queue(queue &worker_queue, queue &apartment_queue);
+		~private_worker_queue();
+
+		void schedule(async_task &&task);
+
+	private:
+		struct control_block;
+
+	private:
+		private_worker_queue(const private_worker_queue &other);
+		void operator =(const private_worker_queue &rhs);
+
+		void deliver(std::function<void ()> &&progress);
+
+	private:
+		queue &_worker_queue, &_apartment_queue;
+		const std::shared_ptr<control_block> _control_block;
+
+	private:
+		friend class completion;
+	};
+
+	class private_worker_queue::completion
+	{
+	public:
+		void deliver(std::function<void ()> &&progress);
+
+	private:
+		completion(private_worker_queue &owner);
+
+		completion(const completion &other);
+		void operator =(const completion &rhs);
+
+	private:
+		private_worker_queue &_owner;
+
+	private:
+		friend class private_worker_queue;
 	};
 }

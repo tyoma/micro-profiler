@@ -158,7 +158,7 @@ namespace micro_profiler
 				return ui;
 			}));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
-				_ui_queue,
+				*_ui_queue,
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 				&constants::integrated_frontend_id));
 			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),

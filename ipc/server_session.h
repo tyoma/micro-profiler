@@ -40,7 +40,7 @@ namespace micro_profiler
 			typedef unsigned long long token_t;
 
 		public:
-			server_session(channel &outbound, std::shared_ptr<scheduler::queue> queue = std::shared_ptr<scheduler::queue>());
+			server_session(channel &outbound, scheduler::queue *apartment_queue = nullptr);
 
 			void set_disconnect_handler(const std::function<void ()> &handler);
 
@@ -67,8 +67,7 @@ namespace micro_profiler
 			pod_vector<byte> _outbound_buffer;
 			std::function<void ()> _disconnect_handler;
 			std::unordered_map<int /*request_id*/, handler_t> _handlers;
-			scheduler::private_queue _queue;
-			const bool _deferral_enabled;
+			std::unique_ptr<scheduler::private_queue> _apartment_queue;
 		};
 
 		template <typename U>

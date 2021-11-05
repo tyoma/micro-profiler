@@ -39,7 +39,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					unique_ptr<marshalled_active_session> m(new marshalled_active_session(connection_factory, queue,
+					unique_ptr<marshalled_active_session> m(new marshalled_active_session(connection_factory, *queue,
 						server_session_factory));
 
 					// ASSERT
@@ -68,7 +68,7 @@ namespace micro_profiler
 					auto server_session_factory = [&] (channel &/*outbound*/) {
 						return ss = make_shared<mocks::channel>();
 					};
-					marshalled_active_session m(connection_factory, queue, server_session_factory);
+					marshalled_active_session m(connection_factory, *queue, server_session_factory);
 					byte message1[] = "hello, client!";
 					byte message2[] = "give me some symbols!";
 					vector< vector<byte> > log;
@@ -133,7 +133,7 @@ namespace micro_profiler
 					auto server_session_factory = [&] (channel &/*outbound*/) {
 						return ss = make_shared<mocks::channel>();
 					};
-					auto m = make_shared<marshalled_active_session>(connection_factory, queue, server_session_factory);
+					auto m = make_shared<marshalled_active_session>(connection_factory, *queue, server_session_factory);
 					auto zero = 0;
 					byte data[1];
 
@@ -168,7 +168,7 @@ namespace micro_profiler
 					auto server_session_factory = [&] (channel &outbound_) {
 						return outbound = &outbound_, make_shared<mocks::channel>();
 					};
-					auto m = make_shared<marshalled_active_session>(connection_factory, queue, server_session_factory);
+					auto m = make_shared<marshalled_active_session>(connection_factory, *queue, server_session_factory);
 					vector< vector<byte> > log;
 					byte message1[] = "hello, client!";
 					byte message2[] = "give me some symbols!";

@@ -32,7 +32,7 @@ namespace micro_profiler
 				test( SessionGetsCreatedOnTaskProcessing )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 
 					// ACT
@@ -62,7 +62,7 @@ namespace micro_profiler
 				test( SessionGetsMessagesOnTaskProcessing )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data1[] = "I celebrate myself, and sing myself,";
@@ -105,7 +105,7 @@ namespace micro_profiler
 				test( MessagesGetToUnderlyingEvenIfComeBeforeTheSessionGetsCreated )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data1[] = "foo";
@@ -134,7 +134,7 @@ namespace micro_profiler
 				test( SessionGetsDisconnectionOnTaskProcessing )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
@@ -158,7 +158,7 @@ namespace micro_profiler
 				test( SessionGetsDisconnectionEvenIfComesBeforeTheSessionGetsCreated )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
@@ -174,7 +174,7 @@ namespace micro_profiler
 				test( UnderlyingSessionIsNotCreatedIfMarshalledSessionGetsDestroyedBefore )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
@@ -190,7 +190,7 @@ namespace micro_profiler
 				test( UnderlyingSessionDoesNotGetMessagesIfMarshalledSessionGetsDestroyedBefore )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data[] = "zzzaaabbb";
@@ -210,7 +210,7 @@ namespace micro_profiler
 				test( UnderlyingSessionDoesNotGetDisconnectionsIfMarshalledSessionGetsDestroyedBefore )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
@@ -229,7 +229,7 @@ namespace micro_profiler
 				test( UnderlyingGetsDestroyedOnlyOnTaskProcessing )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
@@ -257,7 +257,7 @@ namespace micro_profiler
 					// Since we're explicitly resetting marshalled server - this logic is not necessary.
 
 					// INIT
-					unique_ptr<marshalled_server> ms(new marshalled_server(server, queue));
+					unique_ptr<marshalled_server> ms(new marshalled_server(server, *queue));
 
 					// ACT
 					ms.reset();
@@ -277,7 +277,7 @@ namespace micro_profiler
 				test( UnderlyingServerGetsDestroyedImmediatelyOnStop )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 
 					// ACT
 					ms.stop();
@@ -291,7 +291,7 @@ namespace micro_profiler
 				test( NoSessionGetsCreatedAfterStop )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 
 					ms.stop();
@@ -307,7 +307,7 @@ namespace micro_profiler
 				test( MessagesSentImmediatelyToOutbound )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data1[] = "zzzaaabbb";
@@ -336,7 +336,7 @@ namespace micro_profiler
 				test( DisconnectionIsSentImmediatelyToOutbound )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
@@ -353,7 +353,7 @@ namespace micro_profiler
 				test( MessagesAndDisconnectionsAreNotSentAfterMarshalledSessionDestroyed )
 				{
 					// INIT
-					marshalled_server ms(server, queue);
+					marshalled_server ms(server, *queue);
 					ipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data[] = "zzz";

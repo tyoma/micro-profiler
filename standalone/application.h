@@ -46,7 +46,7 @@ namespace micro_profiler
 		~application();
 
 		wpl::factory &get_factory();
-		std::shared_ptr<scheduler::queue> get_ui_queue();
+		scheduler::queue &get_ui_queue();
 		std::shared_ptr<hive> get_configuration();
 
 		void run();

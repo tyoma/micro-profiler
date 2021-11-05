@@ -51,7 +51,7 @@ namespace micro_profiler
 
 		void marshalled_active_session::disconnect() throw()
 		{
-			_queue.schedule([this] {
+			_apartment_queue.schedule([this] {
 				_server_inbound->disconnect();
 			});
 		}
@@ -60,14 +60,15 @@ namespace micro_profiler
 		{
 			const auto data = make_shared< vector<byte> >(payload.begin(), payload.end());
 
-			_queue.schedule([this, data]	{
+			_apartment_queue.schedule([this, data]	{
 				_server_inbound->message(const_byte_range(data->data(), data->size()));
 			});
 		}
 
 
-		marshalled_passive_session::marshalled_passive_session(shared_ptr<scheduler::queue> queue, ipc::channel &outbound)
-			: _lifetime(make_shared<lifetime>()), _queue(queue), _outbound(make_shared<outbound_wrapper>(outbound))
+		marshalled_passive_session::marshalled_passive_session(scheduler::queue &apartment_queue, ipc::channel &outbound)
+			: _lifetime(make_shared<lifetime>()), _apartment_queue(apartment_queue),
+				_outbound(make_shared<outbound_wrapper>(outbound))
 		{	}
 
 		marshalled_passive_session::~marshalled_passive_session()
@@ -76,13 +77,13 @@ namespace micro_profiler
 				% A(this) % A(_underlying.get());
 			_lifetime->mark_destroyed();
 			_outbound->stop();
-			schedule_destroy(*_queue, _underlying);
+			schedule_destroy(_apartment_queue, _underlying);
 		}
 
 		void marshalled_passive_session::create_underlying(shared_ptr<ipc::server> underlying_server)
 		{
 			LOG(PREAMBLE "scheduling an underlying session creation...") % A(this) % A(underlying_server.get());
-			lifetime::schedule_safe(_lifetime, *_queue, [this, underlying_server] {
+			lifetime::schedule_safe(_lifetime, _apartment_queue, [this, underlying_server] {
 				typedef pair<channel_ptr_t, channel_ptr_t> composite_t;
 
 				const auto composite = make_shared<composite_t>(_outbound, underlying_server->create_session(*_outbound));
@@ -92,13 +93,13 @@ namespace micro_profiler
 		}
 
 		void marshalled_passive_session::disconnect() throw()
-		{	lifetime::schedule_safe(_lifetime, *_queue, [this]	{	_underlying->disconnect();	});	}
+		{	lifetime::schedule_safe(_lifetime, _apartment_queue, [this]	{	_underlying->disconnect();	});	}
 
 		void marshalled_passive_session::message(const_byte_range payload)
 		{
 			const auto data = make_shared< vector<byte> >(payload.begin(), payload.end());
 
-			lifetime::schedule_safe(_lifetime, *_queue, [this, data]	{
+			lifetime::schedule_safe(_lifetime, _apartment_queue, [this, data]	{
 				_underlying->message(const_byte_range(data->data(), data->size()));
 			});
 		}

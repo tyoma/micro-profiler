@@ -42,7 +42,7 @@ namespace micro_profiler
 		typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
 
 	public:
-		ipc_manager(std::shared_ptr<ipc::server> server, std::shared_ptr<scheduler::queue> queue, port_range range_,
+		ipc_manager(std::shared_ptr<ipc::server> server, scheduler::queue &apartment_queue, port_range range_,
 			const guid_t *com_server_id);
 		~ipc_manager();
 

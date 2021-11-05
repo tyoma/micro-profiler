@@ -34,7 +34,7 @@ namespace micro_profiler
 	class statistics_poll : noncopyable
 	{
 	public:
-		statistics_poll(std::shared_ptr<const tables::statistics> statistics, std::shared_ptr<scheduler::queue> queue);
+		statistics_poll(std::shared_ptr<const tables::statistics> statistics, scheduler::queue &apartment_queue);
 
 		void enable(bool value);
 		bool enabled() const throw();
@@ -44,7 +44,7 @@ namespace micro_profiler
 
 	private:
 		const std::shared_ptr<const tables::statistics> _statistics;
-		scheduler::private_queue _queue;
+		scheduler::private_queue _apartment_queue;
 		wpl::slot_connection _invalidation;
 	};
 

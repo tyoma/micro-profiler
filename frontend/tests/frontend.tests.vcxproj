@@ -63,6 +63,7 @@
     <ClCompile Include="ImagePatchModelTests.cpp" />
     <ClCompile Include="legacy_serialization.cpp" />
     <ClCompile Include="mock_channel.cpp" />
+    <ClCompile Include="MultiplexingRequestTests.cpp" />
     <ClCompile Include="NestedStatisticModelsTests.cpp" />
     <ClCompile Include="NestedTransformTests.cpp" />
     <ClCompile Include="mocks.cpp" />

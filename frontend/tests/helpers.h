@@ -23,6 +23,24 @@ namespace micro_profiler
 		inline std::vector<T> operator +(std::vector<T> lhs, const T &rhs)
 		{	return lhs.push_back(rhs), lhs;	}
 
+		struct module_id
+		{
+			module_id(unsigned persistent_id_, std::string path_, unsigned hash_)
+				: persistent_id(persistent_id_), path(path_), hash(hash_)
+			{	}
+
+			bool operator <(const module_id &rhs) const
+			{
+				return persistent_id < rhs.persistent_id ? true : persistent_id > rhs.persistent_id ? false :
+					path < rhs.path ? true : path > rhs.path ? false :
+					hash < rhs.hash;
+			}
+		
+			unsigned persistent_id;
+			std::string path;
+			unsigned hash;
+		};
+
 		struct columns
 		{
 			enum main
@@ -172,9 +190,10 @@ namespace micro_profiler
 			return ti;
 		}
 
-		inline mapped_module_identified make_mapping(unsigned instance_id, unsigned persistence_id, long_address_t base)
+		inline mapped_module_identified make_mapping(unsigned instance_id, unsigned persistence_id, long_address_t base,
+			const char *path = "", unsigned hash_ = 0)
 		{
-			mapped_module_ex m = {	persistence_id, std::string(), base	};
+			mapped_module_ex m = {	persistence_id, path, base, hash_	};
 			return std::make_pair(instance_id, m);
 		}
 

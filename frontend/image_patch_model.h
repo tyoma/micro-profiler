@@ -22,6 +22,7 @@
 
 #include "tables.h"
 
+#include <common/unordered_map.h>
 #include <common/noncopyable.h>
 #include <views/filter.h>
 #include <views/flatten.h>
@@ -77,6 +78,8 @@ namespace micro_profiler
 		typedef views::ordered<filter_view_t> ordered_view_t;
 
 	private:
+		void request_missing(const tables::module_mappings &mappings);
+
 		void fetch();
 
 		template <typename KeyT>
@@ -96,7 +99,8 @@ namespace micro_profiler
 		filter_view_t _filter_view;
 		ordered_view_t _ordered_view;
 		const std::shared_ptr< trackables_provider<ordered_view_t> > _trackables;
-		wpl::slot_connection _connections[3];
+		wpl::slot_connection _connections[2];
+		containers::unordered_map< unsigned int, std::shared_ptr<void> > _requests;
 	};
 
 

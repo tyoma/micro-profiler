@@ -15,24 +15,21 @@ namespace micro_profiler
 	namespace tests
 	{
 		begin_test_suite( SymbolResolverTests )
-			std::shared_ptr<tables::modules> modules;
-			std::shared_ptr<tables::module_mappings> mappings;
-			vector<unsigned> _requested;
+			shared_ptr<tables::modules> modules;
+			shared_ptr<tables::module_mappings> mappings;
+			vector<module_id> _requested;
 
 			init( Init )
 			{
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
-				modules->request_presence = [this] (unsigned persistent_id) {
-					_requested.push_back(persistent_id);
-				};
-			}
+				modules->request_presence = [this] (shared_ptr<void> &, string path, unsigned hash, unsigned persistent_id, tables::modules::metadata_ready_cb cb) {
+					const auto i = modules->find(persistent_id);
 
-			mapped_module_identified create_mapping(unsigned instance_id, unsigned persistence_id,
-				long_address_t base)
-			{
-				mapped_module_ex m = {	persistence_id, string(), base	};
-				return make_pair(instance_id, m);
+					if (i != modules->end())
+						cb(i->second);
+					_requested.push_back(module_id(persistent_id, path, hash));
+				};
 			}
 
 			void add_mapping(const mapped_module_identified &mapping)
@@ -44,21 +41,31 @@ namespace micro_profiler
 			}
 
 			template <typename SymbolT, size_t symbols_size>
-			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size])
+			module_info_metadata create_metadata(SymbolT (&symbols)[symbols_size])
 			{
-				(*modules)[persistent_id].symbols = mkvector(symbols);
-				(*modules)[persistent_id].source_files.clear();
-				modules->invalidate();
+				module_info_metadata m;
+
+				m.symbols = mkvector(symbols);
+				return m;
 			}
 
 			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
-			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
+			module_info_metadata create_metadata(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
 			{
-				(*modules)[persistent_id].symbols = mkvector(symbols);
-				(*modules)[persistent_id].source_files = containers::unordered_map<unsigned int /*file_id*/, std::string>(
-					begin(files), end(files));
-				modules->invalidate();
+				auto m = create_metadata(symbols);
+
+				m.source_files = containers::unordered_map<unsigned int /*file_id*/, string>(begin(files), end(files));
+				return m;
 			}
+
+			template <typename SymbolT, size_t symbols_size>
+			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size])
+			{	(*modules)[persistent_id] = create_metadata(symbols);	}
+
+			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
+			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
+			{	(*modules)[persistent_id] = create_metadata(symbols, files);	}
+
 
 			test( EmptyNameIsReturnedWhenNoMetadataIsLoaded )
 			{
@@ -77,7 +84,7 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 
-				add_mapping(create_mapping(0, 1u, 0));
+				add_mapping(make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
@@ -92,7 +99,7 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 
-				add_mapping(create_mapping(0, 1u, 0));
+				add_mapping(make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
@@ -104,29 +111,52 @@ namespace micro_profiler
 			test( FunctionsLoadedThroughAsMetadataAreSearchableByAbsoluteAddress )
 			{
 				// INIT
-				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
-				auto invalidated = 0;
-				auto conn = r->invalidate += [&] {	invalidated++;	};
 
-				// ACT
-				add_mapping(create_mapping(0, 1u, 0));
+				add_mapping(make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
+				// ACT
+				symbol_resolver r(modules, mappings);
+
 				// ASSERT
-				assert_equal("foo", r->symbol_name_by_va(0x1010));
-				assert_equal("foo", r->symbol_name_by_va(0x1012));
-				assert_equal("bar_2", r->symbol_name_by_va(0x1101));
-				assert_equal("bar_2", r->symbol_name_by_va(0x1105));
-				assert_equal(1, invalidated);
+				assert_equal("foo", r.symbol_name_by_va(0x1010));
+				assert_equal("foo", r.symbol_name_by_va(0x1012));
+				assert_equal("bar_2", r.symbol_name_by_va(0x1101));
+				assert_equal("bar_2", r.symbol_name_by_va(0x1105));
+			}
+
+
+			test( SymbolsAreAvailableDuringInvalidation )
+			{
+				// INIT
+				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
+				auto cb = make_shared<tables::modules::metadata_ready_cb>();
+
+				modules->request_presence = [&cb] (shared_ptr<void> &req, string, unsigned, unsigned, tables::modules::metadata_ready_cb cb_) {
+					cb = make_shared<tables::modules::metadata_ready_cb>(cb_);
+					req = cb;
+				};
+
+				symbol_resolver r(modules, mappings);
+				auto invalidations = 0;
+				auto conn = r.invalidate += [&] {
+					assert_equal("foo", r.symbol_name_by_va(0x1010));
+					assert_equal("bar_2", r.symbol_name_by_va(0x1101));
+					invalidations++;
+				};
+
+				add_mapping(make_mapping(0, 1u, 0));
+
+				r.symbol_name_by_va(0x1010);
 
 				// ACT
-				add_metadata(5, symbols);
-				add_metadata(6, symbols);
+				(*cb)(create_metadata(symbols));
 
 				// ASSERT
-				assert_equal(3, invalidated);
+				assert_equal(1, invalidations);
 			}
+
 
 			test( FunctionsLoadedThroughAsMetadataAreOffsetAccordingly )
 			{
@@ -137,14 +167,14 @@ namespace micro_profiler
 				add_metadata(1, symbols);
 
 				// ACT
-				add_mapping(create_mapping(0, 1u, 0x1100000));
+				add_mapping(make_mapping(0, 1u, 0x1100000));
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
 				assert_equal("bar", r->symbol_name_by_va(0x1100101));
 
 				// ACT
-				add_mapping(create_mapping(1, 1u, 0x1100501));
+				add_mapping(make_mapping(1, 1u, 0x1100501));
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
@@ -161,7 +191,7 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
 
-				add_mapping(create_mapping(0, 1u, 0));
+				add_mapping(make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT
@@ -206,7 +236,7 @@ namespace micro_profiler
 				};
 				symbol_resolver::fileline_t results[4];
 
-				add_mapping(create_mapping(0, 1u, 0));
+				add_mapping(make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols, files);
 
 				// ACT / ASSERT
@@ -251,11 +281,11 @@ namespace micro_profiler
 				};
 				symbol_resolver::fileline_t results[8];
 
-				add_mapping(create_mapping(0, 1u, 0));
+				add_mapping(make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols1, files1);
 
 				// ACT / ASSERT
-				add_mapping(create_mapping(1, 2u, 0x8000));
+				add_mapping(make_mapping(1, 2u, 0x8000));
 				add_metadata(2u, symbols2, files2);
 
 				r->symbol_fileline_by_va(0x010, results[0]);
@@ -357,7 +387,7 @@ namespace micro_profiler
 				};
 				symbol_resolver::fileline_t result;
 
-				add_mapping(create_mapping(0, 1u, 0));
+				add_mapping(make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
@@ -371,30 +401,120 @@ namespace micro_profiler
 			test( SymbolResolverRequestsMetadataOnFindSymbolHits )
 			{
 				// INIT
-				vector_adapter buffer;
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 
-				add_mapping(create_mapping(0, 11, 0x120050));
-				add_mapping(create_mapping(1, 12, 0x120100));
-				add_mapping(create_mapping(2, 11711, 0x200000));
-				add_mapping(create_mapping(3, 100, 0x310000));
+				add_mapping(make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191));
+				add_mapping(make_mapping(1, 12, 0x120100, "nonono", 17));
+				add_mapping(make_mapping(2, 11711, 0x200000, "agge.tests.dll", 117000001));
+				add_mapping(make_mapping(3, 100, 0x310000, "/bin/bash", 100));
 
 				// ACT
 				r->symbol_name_by_va(0x120060);
 
 				// ASSERT
-				unsigned reference1[] = { 11, };
+				module_id reference1[] = {
+					module_id(11, "c:\\dev\\test.exe", 1919191),
+				};
 
-				assert_equal(reference1, _requested);
+				assert_equivalent(reference1, _requested);
 
 				// ACT
 				r->symbol_name_by_va(0x311000);
 				r->symbol_name_by_va(0x210000);
 
 				// ASSERT
-				unsigned reference2[] = { 11, 100, 11711, };
+				module_id reference2[] = {
+					module_id(11, "c:\\dev\\test.exe", 1919191),
+					module_id(100, "/bin/bash", 100),
+					module_id(11711, "agge.tests.dll", 117000001),
+				};
 
-				assert_equal(reference2, _requested);
+				assert_equivalent(reference2, _requested);
+			}
+
+
+			test( NewRequestHandlesArePassedForModuleRequests )
+			{
+				// INIT
+				auto r = make_shared<symbol_resolver>(modules, mappings);
+				vector< weak_ptr<void> > requests;
+
+				modules->request_presence = [&] (shared_ptr<void> &req, string, unsigned, unsigned,
+					tables::modules::metadata_ready_cb) {
+
+					req = make_shared<bool>();
+					requests.push_back(req);
+				};
+
+				add_mapping(make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191));
+				add_mapping(make_mapping(1, 12, 0x120100, "nonono", 17));
+				add_mapping(make_mapping(2, 11711, 0x200000, "agge.tests.dll", 117000001));
+				add_mapping(make_mapping(3, 100, 0x310000, "/bin/bash", 100));
+
+				// ACT
+				r->symbol_name_by_va(0x120060);
+
+				// ASSERT
+				assert_equal(1u, requests.size());
+				assert_is_false(requests[0].expired());
+
+				// ACT
+				r->symbol_name_by_va(0x311000);
+				r->symbol_name_by_va(0x210000);
+
+				// ASSERT
+				assert_equal(3u, requests.size());
+				assert_is_false(requests[0].expired());
+				assert_is_false(requests[1].expired());
+				assert_is_false(requests[2].expired());
+				assert_not_equal(requests[0].lock(), requests[1].lock());
+				assert_not_equal(requests[1].lock(), requests[2].lock());
+				assert_not_equal(requests[0].lock(), requests[2].lock());
+
+				// ACT (no new request is generated)
+				r->symbol_name_by_va(0x210050);
+
+				// ASSERT
+				assert_equal(3u, requests.size());
+
+				// ACT
+				r.reset();
+
+				// ASSERT
+				assert_equal(3u, requests.size());
+				assert_is_true(requests[0].expired());
+				assert_is_true(requests[1].expired());
+				assert_is_true(requests[2].expired());
+			}
+
+
+			test( RequestHandleIsReleasedWhenCallbackIsInvoked )
+			{
+				// INIT
+				auto r = make_shared<symbol_resolver>(modules, mappings);
+				vector< weak_ptr<void> > requests;
+				vector<tables::modules::metadata_ready_cb> callbacks;
+				symbol_info symbols[] = {
+					{ "a", 0x010, 3, 11, 121 },
+				};
+
+				modules->request_presence = [&] (shared_ptr<void> &req, string, unsigned, unsigned,
+					tables::modules::metadata_ready_cb cb) {
+
+					req = make_shared<bool>();
+					requests.push_back(req);
+					callbacks.push_back(cb);
+				};
+
+				add_mapping(make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191));
+				add_mapping(make_mapping(1, 12, 0x120100, "nonono", 17));
+				r->symbol_name_by_va(0x120060);
+
+				// ACT
+				callbacks.back()(create_metadata(symbols));
+
+				// ASSERT
+				assert_is_true(requests.back().expired());
 			}
 
 		end_test_suite

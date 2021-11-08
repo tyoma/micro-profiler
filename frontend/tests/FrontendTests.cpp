@@ -86,6 +86,7 @@ namespace micro_profiler
 		begin_test_suite( FrontendTests )
 			frontend_ui_context context;
 			shared_ptr<ipc::server_session> emulator;
+			shared_ptr<void> req[10];
 
 			shared_ptr<frontend> create_frontend()
 			{
@@ -111,7 +112,7 @@ namespace micro_profiler
 				frontend_.reset();
 
 				// ACT / ASSERT (must not throw)
-				context.modules->request_presence(123);
+				context.modules->request_presence(req[0], "", 0, 123, [] (module_info_metadata) {});
 				context.patches->apply(123, mkrange(dummy));
 				context.patches->revert(123, mkrange(dummy));
 			}
@@ -412,25 +413,27 @@ namespace micro_profiler
 					log.push_back(persistent_id);
 				});
 
-				auto conn1 = context.modules->invalidate += [] {	assert_is_false(true);	};
-
 				// ACT
-				context.modules->request_presence(11u);
+				context.modules->request_presence(req[0], "", 0, 11u, [] (module_info_metadata) {});
 
 				// ASSERT
 				unsigned reference1[] = {	11u,	};
 
 				assert_equal(reference1, log);
+				assert_not_null(req[0]);
 
 				// ACT
-				context.modules->request_presence(17u);
-				context.modules->request_presence(191u);
-				context.modules->request_presence(13u);
+				context.modules->request_presence(req[1], "", 0, 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[2], "", 0, 191u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[3], "", 0, 13u, [] (module_info_metadata) {});
 
 				// ASSERT
 				unsigned reference2[] = {	11u, 17u, 191u, 13u,	};
 
 				assert_equal(reference2, log);
+				assert_not_equal(req[0], req[1]);
+				assert_not_equal(req[1], req[2]);
+				assert_not_equal(req[0], req[2]);
 			}
 
 
@@ -446,19 +449,26 @@ namespace micro_profiler
 				});
 
 				// ACT
-				context.modules->request_presence(11u);
-				context.modules->request_presence(17u);
-				context.modules->request_presence(19u);
+				context.modules->request_presence(req[0], "", 0, 11u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[1], "", 0, 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[2], "", 0, 19u, [] (module_info_metadata) {});
 
-				context.modules->request_presence(17u);
-				context.modules->request_presence(19u);
-				context.modules->request_presence(17u);
-				context.modules->request_presence(11u);
+				context.modules->request_presence(req[3], "", 0, 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[4], "", 0, 19u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[5], "", 0, 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[6], "", 0, 11u, [] (module_info_metadata) {});
 
 				// ASSERT
 				unsigned reference[] = {	11u, 17u, 19u,	};
 
 				assert_equal(reference, log);
+				assert_not_null(req[3]);
+				assert_not_equal(req[1], req[3]);
+				assert_not_null(req[4]);
+				assert_not_equal(req[2], req[4]);
+				assert_not_null(req[5]);
+				assert_not_null(req[6]);
+				assert_not_equal(req[0], req[6]);
 			}
 
 
@@ -466,7 +476,6 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				auto invalidations = 0;
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned persistent_id) {
 					symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
 						symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
@@ -485,13 +494,10 @@ namespace micro_profiler
 
 				emulator->message(init, format(make_initialization_data("", 1)));
 
-				auto conn1 = context.modules->invalidate += [&] {	invalidations++;	};
-
 				// ACT
-				context.modules->request_presence(1000);
+				context.modules->request_presence(req[0], "", 0, 1000, [] (module_info_metadata) {});
 
 				// ASSERT
-				assert_equal(1, invalidations);
 				assert_equal(1u, context.modules->size());
 
 				const auto i1000 = context.modules->find(1000);
@@ -500,11 +506,10 @@ namespace micro_profiler
 				assert_equal(1u, i1000->second.source_files.size());
 
 				// ACT
-				context.modules->request_presence(17);
-				context.modules->request_presence(99);
+				context.modules->request_presence(req[1], "", 0, 17, [] (module_info_metadata) {});
+				context.modules->request_presence(req[2], "", 0, 99, [] (module_info_metadata) {});
 
 				// ASSERT
-				assert_equal(3, invalidations);
 				assert_equal(3u, context.modules->size());
 
 				const auto i17 = context.modules->find(17);

@@ -81,20 +81,17 @@ namespace micro_profiler
 			_ordered_view.fetch();
 			fetch();
 		};
-		auto update_paths = [this, mappings, invalidate_me] {
+		auto refresh = [this, mappings, invalidate_me] {
 			for (auto i = mappings->begin(); i != mappings->end(); ++i)
 				_module_paths[i->second.persistent_id] = i->second.path;
+			request_missing(*mappings);
 			invalidate_me();
 		};
 
 		_connections[0] = patches->invalidate += invalidate_me;
-		_connections[1] = modules->invalidate += invalidate_me;
-		_connections[2] = mappings->invalidate += update_paths;
+		_connections[1] = mappings->invalidate += refresh;
 
-		update_paths();
-
-		for (auto i = mappings->begin(); i != mappings->end(); ++i)
-			modules->request_presence(i->second.persistent_id);
+		refresh();
 	}
 
 	void image_patch_model::set_order(index_type column, bool ascending)
@@ -202,6 +199,23 @@ namespace micro_profiler
 		case 3:	itoa<10>(value, record.symbol->size);	break;
 		case 4:	format_module_name(value, record.first.persistent_id);	break;
 		case 5:	format_module_path(value, record.first.persistent_id);	break;
+		}
+	}
+
+	void image_patch_model::request_missing(const tables::module_mappings &mappings)
+	{
+		for (auto i = mappings.begin(); i != mappings.end(); ++i)
+		{
+			auto req = _requests.insert(make_pair(i->second.persistent_id, shared_ptr<void>()));
+
+			if (!req.second)
+				continue;
+			_modules->request_presence(req.first->second, i->second.path, i->second.hash, i->second.persistent_id,
+				[this] (const module_info_metadata &/*metadata*/) {
+
+				_ordered_view.fetch();
+				fetch();
+			});
 		}
 	}
 

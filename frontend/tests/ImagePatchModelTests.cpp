@@ -41,6 +41,20 @@ namespace micro_profiler
 			shared_ptr<tables::patches> patches;
 			shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<tables::modules> modules;
+			map<unsigned, tables::modules::metadata_ready_cb> requests;
+
+			void emulate_response(unsigned persistent_id, const vector<symbol_info> &symbols_)
+			{
+				auto i = requests.find(persistent_id);
+					
+				assert_not_equal(requests.end(), i);
+
+				auto &m = (*modules)[persistent_id];
+				auto &symbols = m.symbols;
+
+				symbols.insert(symbols.end(), symbols_.begin(), symbols_.end());
+				i->second(m);
+			}
 
 			init( CreateTables )
 			{
@@ -48,7 +62,18 @@ namespace micro_profiler
 				mappings = make_shared<tables::module_mappings>();
 				modules = make_shared<tables::modules>();
 
-				modules->request_presence = [] (...) {	};
+				modules->request_presence = [this] (shared_ptr<void> &req, string, unsigned, unsigned id,
+					tables::modules::metadata_ready_cb ready) {
+
+					auto &r = requests;
+					auto i = requests.insert(make_pair(id, ready));
+
+					assert_is_true(i.second);
+
+					req.reset(&*i.first, [&r, i] (void *) {
+						r.erase(i.first);
+					});
+				};
 			}
 
 
@@ -129,10 +154,15 @@ namespace micro_profiler
 			}
 
 
-			test( DataIsReloadedOnModelsInvalidation )
+			test( DataIsReloadedOnMetadataResponses )
 			{
 				// INIT
 				unsigned columns[] = {	0, 1, 3,	};
+
+				modules->clear();
+				(*mappings)[0].persistent_id = 140;
+				(*mappings)[1].persistent_id = 141;
+
 				image_patch_model model(patches, modules, mappings);
 				symbol_info data1[] = {
 					{	"gc_collect", 0x901A9010, 15,	},
@@ -156,35 +186,24 @@ namespace micro_profiler
 				};
 
 				// ACT
-				(*modules)[140].symbols = mkvector(data1);
-				(*modules)[141].symbols = mkvector(data2);
-
-				// ASSERT
-				assert_is_empty(log);
-
-				// ACT
-				modules->invalidate();
+				emulate_response(140, mkvector(data1));
 
 				// ASSERT
 				string reference1[][3] = {
 					{	"901A9010", "gc_collect", "15", 	},
 					{	"00001234", "malloc", "150", 	},
-					{	"901A9010", "string::string", "11", 	},
-					{	"00000031", "string::find", "15", 	},
 				};
 
 				assert_equal(1u, log.size());
 				assert_equivalent(mkvector(reference1), log.back());
 
 				// ACT
-				(*modules)[140].symbols.insert((*modules)[140].symbols.end(), begin(data12), end(data12));
-				mappings->invalidate();
+				emulate_response(141, mkvector(data2));
 
 				// ASSERT
 				string reference2[][3] = {
 					{	"901A9010", "gc_collect", "15", 	},
 					{	"00001234", "malloc", "150", 	},
-					{	"00001237", "free", "153", 	},
 					{	"901A9010", "string::string", "11", 	},
 					{	"00000031", "string::find", "15", 	},
 				};
@@ -193,11 +212,25 @@ namespace micro_profiler
 				assert_equivalent(mkvector(reference2), log.back());
 
 				// ACT
-				(*modules)[141].symbols.insert((*modules)[141].symbols.end(), begin(data22), end(data22));
-				patches->invalidate();
+				emulate_response(140, mkvector(data12));
 
 				// ASSERT
 				string reference3[][3] = {
+					{	"901A9010", "gc_collect", "15", 	},
+					{	"00001234", "malloc", "150", 	},
+					{	"00001237", "free", "153", 	},
+					{	"901A9010", "string::string", "11", 	},
+					{	"00000031", "string::find", "15", 	},
+				};
+
+				assert_equal(3u, log.size());
+				assert_equivalent(mkvector(reference3), log.back());
+
+				// ACT
+				emulate_response(141, mkvector(data22));
+
+				// ASSERT
+				string reference4[][3] = {
 					{	"901A9010", "gc_collect", "15", 	},
 					{	"00001234", "malloc", "150", 	},
 					{	"00001237", "free", "153", 	},
@@ -207,8 +240,8 @@ namespace micro_profiler
 					{	"00000021", "string::clear", "14",	},
 				};
 
-				assert_equal(3u, log.size());
-				assert_equivalent(mkvector(reference3), log.back());
+				assert_equal(4u, log.size());
+				assert_equivalent(mkvector(reference4), log.back());
 			}
 
 
@@ -568,18 +601,25 @@ namespace micro_profiler
 			test( ConstructionOfTheModelRequestsAllMappedModules )
 			{
 				// INIT
-				vector<unsigned int> log;
-				modules->request_presence = [&] (unsigned int persistent_id) {	log.push_back(persistent_id);	};
+				vector<module_id> log;
+				modules->request_presence = [&] (shared_ptr<void> &, string path, unsigned hash, unsigned persistent_id, tables::modules::metadata_ready_cb) {
+					log.push_back(module_id(persistent_id, path, hash));
+				};
 
-				mappings->insert(make_mapping(0, 1, 0x1299100));
-				mappings->insert(make_mapping(1, 13, 0x1299100));
-				mappings->insert(make_mapping(2, 7, 0x1299100));
+				mappings->insert(make_mapping(0, 1, 0x1299100, "a", 12));
+				mappings->insert(make_mapping(1, 13, 0x1299100, "/test/b", 123));
+				mappings->insert(make_mapping(2, 7, 0x1299100, "c:\\dev\\app.exe", 1123));
 
 				// INIT / ACT
 				image_patch_model model1(patches, modules, mappings);
 
 				// ASSERT
-				assert_equivalent(plural + 1u + 13u + 7u, log);
+				module_id reference1[] = {
+					module_id(1, "a", 12),
+					module_id(13, "/test/b", 123),
+					module_id(7, "c:\\dev\\app.exe", 1123),
+				};
+				assert_equivalent(reference1, log);
 
 				// INIT
 				mappings->insert(make_mapping(4, 11, 0x1299100));
@@ -590,7 +630,14 @@ namespace micro_profiler
 				image_patch_model model2(patches, modules, mappings);
 
 				// ASSERT
-				assert_equivalent(plural + 1u + 13u + 7u  + 11u + 9u, log);
+				module_id reference2[] = {
+					module_id(1, "a", 12),
+					module_id(13, "/test/b", 123),
+					module_id(7, "c:\\dev\\app.exe", 1123),
+					module_id(11, "", 0),
+					module_id(9, "", 0),
+				};
+				assert_equivalent(reference2, log);
 			}
 
 
@@ -688,6 +735,8 @@ namespace micro_profiler
 
 				(*modules)[1].symbols = mkvector(data1);
 				(*modules)[3].symbols = mkvector(data2);
+				(*mappings)[0].persistent_id = 1;
+				(*mappings)[1].persistent_id = 3;
 
 				image_patch_model model(patches, modules, mappings);
 				auto sel = model.create_selection();
@@ -710,8 +759,7 @@ namespace micro_profiler
 				assert_equal(4u, t2->index());
 
 				// INIT / ACT
-				(*modules)[1].symbols.insert((*modules)[1].symbols.end(), begin(data12), end(data12));
-				modules->invalidate();
+				emulate_response(1, mkvector(data12));
 
 				// ACT / ASSERT
 				assert_equal(7u, t1->index());
@@ -722,6 +770,10 @@ namespace micro_profiler
 			test( OnlyMatchingRecordsAreShownWhenFilterIsApplied )
 			{
 				// INIT
+				(*mappings)[0].persistent_id = 1;
+				(*mappings)[1].persistent_id = 3;
+				(*mappings)[2].persistent_id = 4;
+
 				image_patch_model model(patches, modules, mappings);
 				unsigned columns[] = {	1, 3,	};
 				symbol_info data1[] = {
@@ -740,10 +792,9 @@ namespace micro_profiler
 					{	"string::Find", 9, 17,	},
 				};
 
-				(*modules)[1].symbols = mkvector(data1);
-				(*modules)[3].symbols = mkvector(data2);
-				(*modules)[4].symbols = mkvector(data3);
-				modules->invalidate();
+				emulate_response(1, mkvector(data1));
+				emulate_response(3, mkvector(data2));
+				emulate_response(4, mkvector(data3));
 
 				model.set_order(0, true);
 				auto t_compress = model.track(3);
@@ -810,7 +861,42 @@ namespace micro_profiler
 				assert_equivalent(mkvector(reference3), log.back());
 				assert_equal(3u, t_compress->index());
 				assert_equal(7u, t_clear->index());
+			}
 
+
+			test( NewModulesAreRequestedOnMappingInvalidation )
+			{
+				// INIT
+				(*mappings)[0].persistent_id = 1;
+				(*mappings)[1].persistent_id = 3;
+				(*mappings)[2].persistent_id = 4;
+
+				// INIT / ACT
+				image_patch_model model(patches, modules, mappings);
+
+				// ASSERT
+				assert_equal(3u, requests.size());
+				assert_equal(1u, requests.count(1));
+				assert_equal(1u, requests.count(3));
+				assert_equal(1u, requests.count(4));
+
+				// ACT / ASSERT (in emulation)
+				mappings->invalidate();
+
+				// ASSERT
+				assert_equal(3u, requests.size());
+
+				// INIT
+				(*mappings)[3].persistent_id = 7;
+				(*mappings)[4].persistent_id = 13;
+
+				// ACT
+				mappings->invalidate();
+
+				// ASSERT
+				assert_equal(5u, requests.size());
+				assert_equal(1u, requests.count(7));
+				assert_equal(1u, requests.count(13));
 			}
 		end_test_suite
 	}

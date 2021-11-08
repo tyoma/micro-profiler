@@ -119,7 +119,6 @@
     <ClInclude Include="..\win32\configuration_registry.h" />
     <ClInclude Include="elf\filemapping.h" />
     <ClInclude Include="elf\sym-elf.h" />
-    <ClInclude Include="xxhash32.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

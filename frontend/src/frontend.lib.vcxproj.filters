@@ -100,6 +100,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\profiling_session.h" />
     <ClInclude Include="..\helpers.h" />
+    <ClInclude Include="..\multiplexing_request.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

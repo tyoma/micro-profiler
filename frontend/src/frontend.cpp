@@ -46,14 +46,16 @@ namespace micro_profiler
 		: client_session(outbound), _statistics(make_shared<tables::statistics>()),
 			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
 			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false),
-			_metadata_complete([] {	})
+			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
 		_statistics->request_update = [this] {
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
 		};
 
-		_modules->request_presence = [this] (unsigned int persistent_id) {
-			request_metadata(persistent_id);
+		_modules->request_presence = [this] (shared_ptr<void> &request, const string &path, unsigned int hash,
+			unsigned int persistent_id, const tables::modules::metadata_ready_cb &ready) {
+
+			request_metadata(request, path, hash, persistent_id, ready);
 		};
 
 		subscribe(*new_request_handle(), init_v1, [this] (ipc::deserializer &) {
@@ -163,46 +165,72 @@ namespace micro_profiler
 	void frontend::finalize()
 	{
 		LOG(PREAMBLE "finalizing...") % A(this);
+
 		request_full_update(*new_request_handle(), [this] (shared_ptr<void> &) {
 			const auto self = this;
+			const auto remaining = make_shared<unsigned int>(0);
+			const auto enable = make_shared<bool>(false);
 
 			for (auto i = _statistics->begin(); i != _statistics->end(); ++i)
 			{
 				if (auto m = find_range(_mappings->layout, i->first.first, mapping_less()))
-					request_metadata(m->second.persistent_id);
+				{
+					const auto id = m->second.persistent_id;
+
+					if (!_final_metadata_requests.count(id))
+					{
+						++*remaining;
+						request_metadata(_final_metadata_requests[id], "", 0, id,
+							[self, remaining, enable] (const module_info_metadata &) {
+
+							if (!--*remaining && *enable)
+								self->disconnect_session();
+						});
+					}
+				}
 			}
-			LOG(PREAMBLE "finalizing - requested necessary metadata...") % A(this) % (_module_requests.size());
-			if (_module_requests.empty())
+			LOG(PREAMBLE "finalizing - necessary metadata requested...") % A(this) % (*remaining);
+			if (!*remaining)
 				disconnect_session();
 			else
-				_metadata_complete = [self] {	self->disconnect_session();	};
+				*enable = true;
 		});
 	}
 
-	void frontend::request_metadata(unsigned int persistent_id)
+	void frontend::request_metadata(shared_ptr<void> &request_, const string &/*path*/, unsigned int /*hash_*/,
+		unsigned int persistent_id, const tables::modules::metadata_ready_cb &ready)
 	{
-		if (!_modules->count(persistent_id))
+		const auto init = mx_metadata_requests_t::create(request_, _mx_metadata_requests, persistent_id, ready);
+		const auto m = _modules->find(persistent_id);
+
+		if (m != _modules->end())
 		{
-			auto i = _module_requests.insert(make_pair(persistent_id, shared_ptr<void>()));
-
-			if (i.second)
-			{
-				request(_module_requests[persistent_id], request_module_metadata, persistent_id, response_module_metadata,
-					[this, i] (ipc::deserializer &d) {
-
-					auto &metadata = (*_modules)[i.first->first];
-
-					d(metadata);
-					_modules->invalidate();
-					if (1u == _module_requests.size())
-						_metadata_complete();
-					LOG(PREAMBLE "received metadata...")
-						% A(this) % A(i.first->first) % A(metadata.symbols.size()) % A(metadata.source_files.size());
-					_module_requests.erase(i.first);
-				});
-				LOG(PREAMBLE "requested metadata from remote...") % A(this) % A(persistent_id);
-			}
+			ready(m->second);
 		}
+		else if (init.underlying)
+		{
+			auto &mx = init.multiplexed;
+
+			request_metadata_nw(*init.underlying, persistent_id, [&mx] (const module_info_metadata &metadata) {
+				mx.invoke([&metadata] (const tables::modules::metadata_ready_cb &ready) {	ready(metadata);	});
+			});
+		}
+	}
+
+	void frontend::request_metadata_nw(shared_ptr<void> &request_, unsigned int persistent_id,
+		const tables::modules::metadata_ready_cb &ready)
+	{
+		LOG(PREAMBLE "requesting metadata from remote...") % A(this) % A(persistent_id);
+		request(request_, request_module_metadata, persistent_id, response_module_metadata,
+			[this, persistent_id, ready] (ipc::deserializer &d) {
+
+			auto &m = (*_modules)[persistent_id];
+
+			d(m);
+
+			LOG(PREAMBLE "received metadata...") % A(persistent_id) % A(m.symbols.size()) % A(m.source_files.size());
+			ready(m);
+		});
 	}
 
 	frontend::requests_t::iterator frontend::new_request_handle()

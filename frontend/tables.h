@@ -62,7 +62,14 @@ namespace micro_profiler
 
 		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >
 		{
-			std::function<void (unsigned int persistent_id)> request_presence;
+			typedef std::shared_ptr<void> handle_t;
+
+			typedef std::function<void (const module_info_metadata &metadata)> metadata_ready_cb;
+			std::function<void (handle_t &request, const std::string &path, unsigned int hash, unsigned int persistent_id,
+				const metadata_ready_cb &ready)> request_presence;
+
+		private:
+			using table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >::invalidate;
 		};
 
 

@@ -43,65 +43,74 @@ namespace micro_profiler
 	symbol_resolver::symbol_resolver(shared_ptr<const tables::modules> modules,
 			shared_ptr<const tables::module_mappings> mappings)
 		: _modules(modules), _mappings(mappings)
-	{
-		_modules_invalidation = _modules->invalidate += [this] {
-			invalidate();
-		};
-	}
+	{	}
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
 	{
-		const module_info_metadata *m;
-		const symbol_info *i = find_symbol_by_va(address, m);
+		unsigned int persistent_id;
 
-		return i ? i->name : _empty;
+		if (const auto symbol = find_symbol_by_va(address, persistent_id))
+			return symbol->name;
+		return _empty;
 	}
 
 	bool symbol_resolver::symbol_fileline_by_va(long_address_t address, fileline_t &result) const
 	{
-		const module_info_metadata *m;
-		
-		if (const auto symbol = find_symbol_by_va(address, m))
-		{
-			const auto file = m->source_files.find(symbol->file_id);
+		unsigned int persistent_id;
 
-			if (file != m->source_files.end())
-				return result.first = file->second, result.second = symbol->line, true;
+		if (const auto symbol = find_symbol_by_va(address, persistent_id))
+		{
+			const auto i = _file_lines.find(persistent_id);
+
+			if (_file_lines.end() != i)
+			{
+				const auto j = i->second->find(symbol->file_id);
+
+				if (i->second->end() != j)
+					return result.first = j->second, result.second = symbol->line, true;
+			}
 		}
 		return false;
 	}
 
-	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address,
-		const module_info_metadata *&module) const
+	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, unsigned int &persistent_id) const
 	{
-		if (const auto m = find_range(_mappings->layout, address, mapping_less()))
+		if (const auto r = find_range(_mappings->layout, address, mapping_less()))
 		{
-			if (const auto symbol = find_symbol_by_rva(m->second.persistent_id, m->first, static_cast<unsigned int>(address - m->second.base), module))
-				return symbol;
-			_modules->request_presence(m->second.persistent_id);
-		}
-		return nullptr;
-	}
+			const auto &mapping = r->second;
+			auto m = _symbols_ordered.find(persistent_id = mapping.persistent_id);
 
-	const symbol_info *symbol_resolver::find_symbol_by_rva(unsigned int persistent_id, unsigned int instance_id,
-		unsigned int rva, const module_info_metadata *&module) const
-	{
-		const auto i = _modules->find(persistent_id);
-
-		if (i != _modules->end())
-		{
-			auto &cached_symbols = _symbols_ordered[instance_id];
-
-			if (cached_symbols.empty())
+			if (_symbols_ordered.end() == m)
 			{
-				for (auto j = i->second.symbols.begin(); j != i->second.symbols.end(); ++j)
-					cached_symbols[j->rva] = &*j;
+				const auto i = _requests.insert(make_pair(r->second.persistent_id, shared_ptr<void>()));
+
+				if (i.second)
+				{
+					_modules->request_presence(i.first->second, mapping.path, mapping.hash, mapping.persistent_id,
+						[this, i] (const module_info_metadata &metadata) {
+
+						auto &cached_symbols = _symbols_ordered[i.first->first];
+
+						for (auto j = metadata.symbols.begin(); j != metadata.symbols.end(); ++j)
+							cached_symbols[j->rva] = &*j;
+						_file_lines[i.first->first] = &metadata.source_files;
+						invalidate();
+						_requests.erase(i.first);
+					});
+					m = _symbols_ordered.find(mapping.persistent_id);
+				}
 			}
 
-			if (const auto r = find_range(cached_symbols, rva))
+			if (_symbols_ordered.end() != m)
 			{
-				if (rva - r->second->rva < r->second->size)
-					return module = &i->second, r->second;
+				auto &cached_symbols = m->second;
+				const auto rva = static_cast<unsigned int>(address - mapping.base);
+
+				if (const auto candidate = find_range(cached_symbols, rva))
+				{
+					if (rva - candidate->second->rva < candidate->second->size)
+						return candidate->second;
+				}
 			}
 		}
 		return nullptr;

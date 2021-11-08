@@ -16,6 +16,7 @@ set(FRONTEND_TESTS_SOURCES
 	legacy_serialization.cpp
 	mock_channel.cpp
 	mocks.cpp
+	MultiplexingRequestTests.cpp
 	NestedStatisticModelsTests.cpp
 	NestedTransformTests.cpp
 	ProcessListTests.cpp

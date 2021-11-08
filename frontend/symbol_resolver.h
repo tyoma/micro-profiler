@@ -54,18 +54,20 @@ namespace micro_profiler
 	public:
 		wpl::signal<void ()> invalidate;
 
+	public:
+		typedef std::map<unsigned int /*rva*/, const symbol_info *> ordered_symbols_map_t;
+		typedef containers::unordered_map<unsigned int /*file_id*/, std::string /*file*/> file_lines_map_t;
+
 	private:
-		const symbol_info *find_symbol_by_va(long_address_t address, const module_info_metadata *&module) const;
-		const symbol_info *find_symbol_by_rva(unsigned int persistent_id, unsigned int instance_id, unsigned int rva,
-			const module_info_metadata *&module) const;
+		const symbol_info *find_symbol_by_va(long_address_t address, unsigned int &persistent_id) const;
 
 	private:
 		std::string _empty;
 		const std::shared_ptr<const tables::modules> _modules;
 		const std::shared_ptr<const tables::module_mappings> _mappings;
 
-		mutable containers::unordered_map< unsigned int /*instance_id*/, std::map<unsigned int /*rva*/, const symbol_info *> >
-			_symbols_ordered;
-		wpl::slot_connection _modules_invalidation;
+		mutable containers::unordered_map<unsigned int /*persistent_id*/, ordered_symbols_map_t> _symbols_ordered;
+		mutable containers::unordered_map<unsigned int /*persistent_id*/, const file_lines_map_t *> _file_lines;
+		mutable containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _requests;
 	};
 }

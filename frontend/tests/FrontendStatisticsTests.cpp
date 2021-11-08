@@ -60,6 +60,7 @@ namespace micro_profiler
 			shared_ptr<const tables::statistics> statistics;
 			shared_ptr<const tables::module_mappings> mappings;
 			shared_ptr<const tables::modules> modules;
+			shared_ptr<void> req[5];
 
 			shared_ptr<frontend> create_frontend()
 			{
@@ -375,9 +376,9 @@ namespace micro_profiler
 				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {
 					resp(response_module_metadata, module_info_metadata());
 				});
-				modules->request_presence(19);
-				modules->request_presence(12);
-				modules->request_presence(13);
+				modules->request_presence(req[0], "", 0, 19, [] (module_info_metadata) {});
+				modules->request_presence(req[1], "", 0, 12, [] (module_info_metadata) {});
+				modules->request_presence(req[2], "", 0, 13, [] (module_info_metadata) {});
 
 				// ACT
 				emulator->message(exiting, [] (ipc::serializer &) {});
@@ -402,7 +403,7 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 
 				// ACT
-				modules->request_presence(123);
+				modules->request_presence(req[0], "", 0, 123, [] (module_info_metadata) {});
 
 				// ASSERT
 				assert_equal(0, disconnections);

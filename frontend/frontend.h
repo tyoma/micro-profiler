@@ -20,8 +20,10 @@
 
 #pragma once
 
+#include "multiplexing_request.h"
 #include "profiling_session.h"
 #include "serialization_context.h"
+#include "tables.h"
 
 #include <common/noncopyable.h>
 #include <common/protocol.h>
@@ -45,6 +47,7 @@ namespace micro_profiler
 		std::function<void (const session_type &ui_context)> initialized;
 
 	private:
+		typedef multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
 		typedef std::list< std::shared_ptr<void> > requests_t;
 
 	private:
@@ -59,7 +62,12 @@ namespace micro_profiler
 		void request_full_update(std::shared_ptr<void> &request_, const OnUpdate &on_update);
 		void update_threads(std::vector<unsigned int> &thread_ids);
 		void finalize();
-		void request_metadata(unsigned int persistent_id);
+
+		void request_metadata(std::shared_ptr<void> &request_, const std::string &path, unsigned int hash,
+			unsigned int persistent_id, const tables::modules::metadata_ready_cb &ready);
+
+		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int persistent_id,
+			const tables::modules::metadata_ready_cb &ready);
 
 		requests_t::iterator new_request_handle();
 
@@ -72,9 +80,9 @@ namespace micro_profiler
 		const std::shared_ptr<tables::threads> _threads;
 		scontext::additive _serialization_context;
 		bool _initialized;
-		std::function<void ()> _metadata_complete;
 
-		containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _module_requests;
+		mx_metadata_requests_t::map_type_ptr _mx_metadata_requests;
+		containers::unordered_map< unsigned int /*id*/, std::shared_ptr<void> > _final_metadata_requests;
 		requests_t _requests;
 		std::shared_ptr<void> _update_request;
 

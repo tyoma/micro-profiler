@@ -49,11 +49,11 @@ namespace micro_profiler
 			});
 
 			target.add_command(cmdidSaveStatistics, [context, executable] (unsigned) {
-				unique_ptr<write_stream> s = create_file(NULL/*get_frame_hwnd(ctx.shell)*/, executable);
+				auto s = create_file(NULL/*get_frame_hwnd(ctx.shell)*/, executable);
 
 				if (s.get())
 				{
-					strmd::serializer<write_stream, packer> ser(*s);
+					strmd::serializer<write_file_stream, packer> ser(*s);
 					ser(context);
 				}
 			}, false, [] (unsigned, unsigned &state) {

@@ -7,8 +7,8 @@
 
 #include <test-helpers/comparisons.h>
 #include <test-helpers/constants.h>
+#include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
-#include <test-helpers/temporary_copy.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -44,13 +44,13 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( ModuleTrackerTests )
-
-			unique_ptr<temporary_copy> module1, module2;
+			temporary_directory dir;
+			string module1_path, module2_path;
 
 			init( Init )
 			{
-				module1.reset(new temporary_copy(c_symbol_container_1));
-				module2.reset(new temporary_copy(c_symbol_container_2));
+				module1_path = dir.copy_file(c_symbol_container_1);
+				module2_path = dir.copy_file(c_symbol_container_2);
 			}
 
 
@@ -142,7 +142,7 @@ namespace micro_profiler
 				module_tracker t;
 				loaded_modules l[4];
 				unloaded_modules u;
-				temporary_copy symbol_container_3(c_symbol_container_3_nosymbols);
+				const auto symbol_container_3_path = dir.copy_file(c_symbol_container_3_nosymbols);
 
 				t.get_changes(l[0], u);
 				l[0].clear();
@@ -154,7 +154,7 @@ namespace micro_profiler
 				t.get_changes(l[1], u);
 				image image2(c_symbol_container_3_nosymbols);
 				t.get_changes(l[2], u);
-				image image3(symbol_container_3.path());
+				image image3(symbol_container_3_path);
 				t.get_changes(l[3], u);
 
 				// ASSERT
@@ -438,16 +438,16 @@ namespace micro_profiler
 				module_tracker t;
 				loaded_modules l;
 				unloaded_modules u;
-				unique_ptr<image> image1(new image(module1->path()));
-				unique_ptr<image> image2(new image(module2->path()));
+				unique_ptr<image> image1(new image(module1_path));
+				unique_ptr<image> image2(new image(module2_path));
 
 				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
 
 				t.get_changes(l, u);
 
-				const auto lm1 = *get_loaded(l, module1->path());
-				const auto lm2 = *get_loaded(l, module2->path());
+				const auto lm1 = *get_loaded(l, module1_path);
+				const auto lm2 = *get_loaded(l, module2_path);
 
 				// ACT
 				auto lock1 = t.lock_mapping(lm1.second.persistent_id);

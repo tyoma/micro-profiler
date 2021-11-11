@@ -3,8 +3,9 @@
 #include <common/types.h>
 #include <cstdio>
 #include <memory>
-#include <stdexcept>
 #include <test-helpers/constants.h>
+#include <test-helpers/file_helpers.h>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -16,15 +17,18 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			int dummy;
+
 			size_t get_file_length(const string &path)
 			{
-				shared_ptr<FILE> f(fopen(path.c_str(), "rb"), &fclose);
-				byte b[100];
-				size_t length = 0;
+				auto raw = fopen(path.c_str(), "rb");
 
-				for (auto n = sizeof(b); n == sizeof(b); )
-					length += (n = fread(b, 1, sizeof(b), f.get()));
-				return length;
+				assert_not_null(raw);
+
+				shared_ptr<FILE> f(raw, &fclose);
+
+				fseek(f.get(), 0, SEEK_END);
+				return ftell(f.get());
 			}
 		}
 
@@ -116,6 +120,75 @@ namespace micro_profiler
 				assert_throws(s1.read(tmp, 10), runtime_error);
 				assert_throws(s2.read(tmp, 74), runtime_error);
 			}
+
+
+			test( OpeningAMissingFileThrowsFileNotFoundException )
+			{
+				// ACT / ACT
+				assert_throws(read_file_stream("wjkwjkwjrr.wddd"), runtime_error);
+				assert_throws(read_file_stream("wjkwjkwjrr.wddd"), file_not_found_exception);
+			}
+
 		end_test_suite
+
+
+		begin_test_suite( WriteFileStreamTests )
+			temporary_directory dir;
+
+
+			test( ConstructionCreatesAFile )
+			{
+				// INIT / ACT
+				const auto f1 = dir.track_file("test1-abcdef.dll");
+				const auto f2 = dir.track_file("test2-abcdef.so");
+				write_file_stream s1(f1);
+				write_file_stream s2(f2);
+
+				// ASSERT
+				read_file_stream r1(f1);
+				read_file_stream r2(f2);
+			}
+
+
+			test( WritingToAFileCanBeRead )
+			{
+				// INIT
+				const auto f1 = dir.track_file("test1-abcdef.dll");
+				const auto f2 = dir.track_file("test2-abcdef.so");
+
+				unique_ptr<write_file_stream> s1(new write_file_stream(f1));
+				unique_ptr<write_file_stream> s2(new write_file_stream(f2));
+				char data1[] = "Lorem Ipsum";
+				char data2[] = "zz";
+				char data3[] = "Lorem Ipsum Amet Dolor";
+
+				// ACT
+				s1->write(data1, sizeof data1);
+				s1->write(data2, sizeof data2);
+				s1.reset();
+				s2->write(data3, sizeof data3);
+				s2.reset();
+
+				// ASSERT
+				char buffer1[sizeof data1 + sizeof data2] = { 0 };
+				read_file_stream r1(f1);
+
+				char buffer2[sizeof data3] = { 0 };
+				read_file_stream r2(f2);
+
+				r1.read(buffer1, sizeof buffer1);
+				r2.read(buffer2, sizeof buffer2);
+
+				const char reference1[] = "Lorem Ipsum\0zz";
+
+				assert_equal(reference1, mkvector(buffer1));
+				assert_equal(mkvector(data3), mkvector(buffer2));
+
+				// ACT / ASSERT
+				assert_equal(0u, r1.read_l(buffer1, 1));
+				assert_equal(0u, r2.read_l(buffer1, 1));
+			}
+		end_test_suite
+
 	}
 }

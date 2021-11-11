@@ -351,7 +351,7 @@ namespace micro_profiler
 					// TODO: implement via frontend_ui::save signal.
 
 //					frontend_ui_context contents = *i;
-					unique_ptr<write_stream> s = create_file(get_frame_hwnd(get_shell()), *i->title);
+					unique_ptr<write_file_stream> s = create_file(get_frame_hwnd(get_shell()), *i->title);
 
 					//if (s.get())
 					//{

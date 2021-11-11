@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(FRONTEND_TESTS_SOURCES
-	DeSerializationTests.cpp 
+	AsyncFileTests.cpp
+	DeSerializationTests.cpp
 	FilePersistenceTests.cpp
 	FrontendManagerTests.cpp
 	FrontendPatcherTests.cpp

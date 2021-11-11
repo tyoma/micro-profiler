@@ -22,10 +22,16 @@
 
 #include "noncopyable.h"
 
+#include <stdexcept>
 #include <string>
 
 namespace micro_profiler
 {
+	struct file_not_found_exception : std::runtime_error
+	{
+		file_not_found_exception(const std::string &path);
+	};
+
 	class read_file_stream : noncopyable
 	{
 	public:
@@ -35,6 +41,18 @@ namespace micro_profiler
 		std::size_t read_l(void *buffer, std::size_t buffer_length);
 		void read(void *buffer, std::size_t buffer_length);
 		void skip(std::size_t n);
+
+	private:
+		void *_stream;
+	};
+
+	class write_file_stream : noncopyable
+	{
+	public:
+		write_file_stream(const std::string &path);
+		~write_file_stream();
+
+		void write(const void *buffer, std::size_t buffer_length);
 
 	private:
 		void *_stream;

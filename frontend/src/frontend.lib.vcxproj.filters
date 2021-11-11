@@ -22,9 +22,6 @@
     <ClCompile Include="untested\piechart.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
-    <ClCompile Include="untested\stream.cpp">
-      <Filter>src\untested</Filter>
-    </ClCompile>
     <ClCompile Include="untested\tables_ui.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
@@ -75,7 +72,6 @@
     <ClInclude Include="..\file.h" />
     <ClInclude Include="..\ipc_manager.h" />
     <ClInclude Include="..\piechart.h" />
-    <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />
@@ -101,6 +97,7 @@
     <ClInclude Include="..\profiling_session.h" />
     <ClInclude Include="..\helpers.h" />
     <ClInclude Include="..\multiplexing_request.h" />
+    <ClInclude Include="..\async_file.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

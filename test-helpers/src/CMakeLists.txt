@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(TEST_HELPERS_SOURCES
+	file_helpers.cpp
 	helpers.cpp
 	test_constants.cpp
-	temporary_copy.cpp
 	thread.cpp
 )
 

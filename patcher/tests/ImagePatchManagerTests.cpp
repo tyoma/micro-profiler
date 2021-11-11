@@ -5,8 +5,8 @@
 #include <common/memory.h>
 #include <common/module.h>
 #include <test-helpers/constants.h>
+#include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
-#include <test-helpers/temporary_copy.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -69,15 +69,16 @@ namespace micro_profiler
 		begin_test_suite( ImagePatchManagerTests )
 			mocks::executable_memory_allocator allocator;
 			mocks::trace_events trace;
-			unique_ptr<temporary_copy> module1, module2;
+			temporary_directory dir;
+			string module1_path, module2_path;
 
 			patch_manager::apply_results aresult;
 			patch_manager::revert_results rresult;
 
 			init( PrepareGuinies )
 			{
-				module1.reset(new temporary_copy(c_symbol_container_1));
-				module2.reset(new temporary_copy(c_symbol_container_2));
+				module1_path = dir.copy_file(c_symbol_container_1);
+				module2_path = dir.copy_file(c_symbol_container_2);
 			}
 
 
@@ -89,8 +90,8 @@ namespace micro_profiler
 				image_patch_manager m_(trace, allocator);
 				detacher dd(m_);
 				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image1(new image(module1->path()));
-				unique_ptr<image> image2(new image(module2->path()));
+				unique_ptr<image> image1(new image(module1_path));
+				unique_ptr<image> image2(new image(module2_path));
 
 				unsigned int functions1[] = {
 					image1->get_symbol_rva("get_function_addresses_1"),
@@ -104,8 +105,8 @@ namespace micro_profiler
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
 
 				// ACT
-				m.apply(aresult, 13, image1->base_ptr(), load_library(module1->path()), mkrange(functions1));
-				m.apply(aresult, 17, image2->base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 13, image1->base_ptr(), load_library(module1_path), mkrange(functions1));
+				m.apply(aresult, 17, image2->base_ptr(), load_library(module2_path), mkrange(functions2));
 				image1.reset();
 
 				// ASSERT
@@ -137,12 +138,12 @@ namespace micro_profiler
 				image_patch_manager m_(trace, allocator);
 				detacher dd(m_);
 				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image1(new image(module1->path()));
+				unique_ptr<image> image1(new image(module1_path));
 
 				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
 
 				// ACT
-				m.apply(aresult, 13, image1->base_ptr(), load_library(module1->path()), range<unsigned, size_t>(0, 0));
+				m.apply(aresult, 13, image1->base_ptr(), load_library(module1_path), range<unsigned, size_t>(0, 0));
 				image1.reset();
 
 				// ASSERT
@@ -159,8 +160,8 @@ namespace micro_profiler
 				image_patch_manager m_(trace, allocator);
 				detacher dd(m_);
 				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image1(new image(module1->path()));
-				unique_ptr<image> image2(new image(module2->path()));
+				unique_ptr<image> image1(new image(module1_path));
+				unique_ptr<image> image2(new image(module2_path));
 
 				unsigned int functions1[] = {
 					image1->get_symbol_rva("get_function_addresses_1"),
@@ -177,8 +178,8 @@ namespace micro_profiler
 				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
 
-				m.apply(aresult, 13, image1->base_ptr(), load_library(module1->path()), mkrange(functions1));
-				m.apply(aresult, 19, image2->base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 13, image1->base_ptr(), load_library(module1_path), mkrange(functions1));
+				m.apply(aresult, 19, image2->base_ptr(), load_library(module2_path), mkrange(functions2));
 				image1.reset();
 				image2.reset();
 
@@ -264,7 +265,7 @@ namespace micro_profiler
 				image_patch_manager m_(trace, allocator);
 				detacher dd(m_);
 				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image2(new image(module2->path()));
+				unique_ptr<image> image2(new image(module2_path));
 				auto image2_ptr = image2->base_ptr();
 				unsigned int functions1[] = {
 					image2->get_symbol_rva("get_function_addresses_2"),
@@ -283,12 +284,12 @@ namespace micro_profiler
 
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
 
-				m.apply(aresult, 190, image2_ptr, load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 190, image2_ptr, load_library(module2_path), mkrange(functions1));
 				image2.reset();
 				m.revert(rresult, 190, mkrange(remove1));
 
 				// ACT
-				m.apply(aresult, 190, image2_ptr, load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 190, image2_ptr, load_library(module2_path), mkrange(functions2));
 				m.revert(rresult, 190, mkrange(remove2));
 
 				// ASSERT
@@ -303,7 +304,7 @@ namespace micro_profiler
 				image_patch_manager m_(trace, allocator);
 				detacher dd(m_);
 				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image2(new image(module2->path()));
+				unique_ptr<image> image2(new image(module2_path));
 				auto image2_ptr = image2->base_ptr();
 				unsigned int functions1[] = {
 					image2->get_symbol_rva("get_function_addresses_2"),
@@ -317,7 +318,7 @@ namespace micro_profiler
 
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
 
-				m.apply(aresult, 190, image2_ptr, load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 190, image2_ptr, load_library(module2_path), mkrange(functions1));
 				image2.reset();
 				m.revert(rresult, 190, mkrange(remove1));
 				rresult.clear();
@@ -384,7 +385,7 @@ namespace micro_profiler
 				image_patch_manager m_(trace, allocator);
 				detacher dd(m_);
 				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image2(new image(module2->path()));
+				unique_ptr<image> image2(new image(module2_path));
 				auto image2_ptr = image2->base_ptr();
 				unsigned int functions1[] = {
 					image2->get_symbol_rva("get_function_addresses_2"),
@@ -403,12 +404,12 @@ namespace micro_profiler
 				};
 
 				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
-				m.apply(aresult, 179, image2->base_ptr(), load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 179, image2->base_ptr(), load_library(module2_path), mkrange(functions1));
 				image2.reset();
 				aresult.clear();
 
 				// ACT
-				m.apply(aresult, 179, image2_ptr, load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 179, image2_ptr, load_library(module2_path), mkrange(functions2));
 
 				// ASSERT
 				pair<unsigned, patch_apply> reference1[] = {
@@ -441,7 +442,7 @@ namespace micro_profiler
 			test( CallsToPatchedFunctionsLeaveTrace )
 			{
 				// INIT
-				image image2(module2->path());
+				image image2(module2_path);
 				image_patch_manager m_(trace, allocator);
 				detacher dd(m_);
 				auto &m = static_cast<patch_manager &>(m_);
@@ -458,7 +459,7 @@ namespace micro_profiler
 					image2.get_symbol_rva("bubble_sort2"),
 				};
 
-				m.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions1));
+				m.apply(aresult, 11, image2.base_ptr(), load_library(module2_path), mkrange(functions1));
 
 				// ACT
 				get_function_addresses_2(ff[0], ff[1], ff[2]);
@@ -499,7 +500,7 @@ namespace micro_profiler
 				};
 
 				trace.call_log.clear();
-				m.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m.apply(aresult, 11, image2.base_ptr(), load_library(module2_path), mkrange(functions2));
 
 				// ACT
 				function_with_a_nested_call_2();
@@ -529,7 +530,7 @@ namespace micro_profiler
 			test( FailureToActivateAPatchIsReported )
 			{
 				// INIT
-				image image2(module2->path());
+				image image2(module2_path);
 				mocks::trace_events trace2;
 				image_patch_manager m1(trace, allocator), m2(trace2, allocator);
 				detacher dd1(m1), dd2(m2);
@@ -545,11 +546,11 @@ namespace micro_profiler
 					image2.get_symbol_rva("bubble_sort2"),
 				};
 
-				m1.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions1));
+				m1.apply(aresult, 11, image2.base_ptr(), load_library(module2_path), mkrange(functions1));
 				aresult.clear();
 
 				// ACT
-				m2.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions2));
+				m2.apply(aresult, 11, image2.base_ptr(), load_library(module2_path), mkrange(functions2));
 
 				// ASSERT
 				pair<unsigned, patch_apply> reference1[] = {
@@ -570,7 +571,7 @@ namespace micro_profiler
 				aresult.clear();
 
 				// ACT
-				m1.apply(aresult, 11, image2.base_ptr(), load_library(module2->path()), mkrange(functions3));
+				m1.apply(aresult, 11, image2.base_ptr(), load_library(module2_path), mkrange(functions3));
 
 				// ASSERT
 				pair<unsigned, patch_apply> reference2[] = {

@@ -4,7 +4,7 @@
 #include "mocks.h"
 
 #include <test-helpers/constants.h>
-#include <test-helpers/temporary_copy.h>
+#include <test-helpers/file_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -21,12 +21,7 @@ namespace micro_profiler
 		begin_test_suite( FunctionPatchTests )
 			executable_memory_allocator allocator;
 			mocks::trace_events trace;
-			unique_ptr<temporary_copy> module1;
-
-			init( PrepareGuinies )
-			{
-				module1.reset(new temporary_copy(c_symbol_container_1));
-			}
+			temporary_directory dir;
 
 
 			test( PatchIsNotActiveActiveAtConstruction )
@@ -85,7 +80,7 @@ namespace micro_profiler
 			test( DetachingIsDelegatedToJumper )
 			{
 				// INIT
-				unique_ptr<image> image1(new image(module1->path()));
+				unique_ptr<image> image1(new image(dir.copy_file(c_symbol_container_1)));
 				unique_ptr<function_patch> patch(new function_patch(image1->get_symbol_address("get_function_addresses_1"), &trace, allocator));
 
 				// ACT

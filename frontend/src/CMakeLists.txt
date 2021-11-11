@@ -29,7 +29,6 @@ endif()
 if(WIN32)
 	set(FRONTEND_LIB_SOURCES ${FRONTEND_LIB_SOURCES}
 		untested/file.cpp
-		untested/stream.cpp
 		untested/system_stylesheet.cpp
 	)
 endif()

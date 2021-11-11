@@ -20,22 +20,41 @@
 
 #pragma once
 
-#include <common/noncopyable.h>
 #include <common/file_stream.h>
-#include <common/types.h>
-#include <memory>
-#include <string>
+#include <scheduler/private_queue.h>
+#include <strmd/serializer.h>
+#include <strmd/deserializer.h>
+#include <strmd/packer.h>
 
 namespace micro_profiler
 {
-	class write_stream : noncopyable
+	typedef strmd::deserializer<read_file_stream, strmd::varint> file_deserializer;
+
+	template <typename T, typename DeserializerCB, typename ReadyCB>
+	inline void async_file_read(std::shared_ptr<void> &request, scheduler::queue &worker, scheduler::queue &apartment,
+		const std::string &path, const DeserializerCB &deserializer, const ReadyCB &ready)
 	{
-	public:
-		write_stream(const std::wstring &path);
+		using namespace scheduler;
 
-		void write(const void *buffer, size_t size);
+		auto req = std::make_shared<private_worker_queue>(worker, apartment);
 
-	private:
-		const std::shared_ptr<void> _file;
-	};
+		request = req;
+		req->schedule([path, deserializer, ready] (private_worker_queue::completion &completion) {
+			auto data = std::make_shared<T>();
+			auto ready_ = ready;
+
+			try
+			{
+				read_file_stream r(path);
+				file_deserializer d(r);
+
+				deserializer(*data, d);
+			}
+			catch (...)
+			{
+				data.reset();
+			}
+			completion.deliver([ready_, data] {	ready_(data);	});
+		});
+	}
 }

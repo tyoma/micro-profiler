@@ -61,13 +61,13 @@
     </ClCompile>
     <ClCompile Include="untested\ipc_manager.cpp" />
     <ClCompile Include="untested\piechart.cpp" />
-    <ClCompile Include="untested\stream.cpp" />
     <ClCompile Include="untested\about_ui.cpp" />
     <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\file.h" />
+    <ClInclude Include="..\async_file.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\frontend_ui.h" />
@@ -93,7 +93,6 @@
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\statistics_poll.h" />
-    <ClInclude Include="..\stream.h" />
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />
     <ClInclude Include="..\system_stylesheet.h" />

@@ -38,9 +38,18 @@ namespace micro_profiler
 #endif
 	}
 
+
+	file_not_found_exception::file_not_found_exception(const string &path)
+		: runtime_error("File '" + path + "' not found!")
+	{	}
+
+
 	read_file_stream::read_file_stream(const string &path)
 		: _stream(fopen(path, "rb"))
-	{	}
+	{
+		if (!_stream)
+			throw file_not_found_exception(path);
+	}
 
 	read_file_stream::~read_file_stream()
 	{	fclose(static_cast<FILE *>(_stream));	}
@@ -56,4 +65,16 @@ namespace micro_profiler
 
 	void read_file_stream::skip(size_t n)
 	{	fseek(static_cast<FILE *>(_stream), static_cast<int>(n), SEEK_CUR);	}
+
+
+	write_file_stream::write_file_stream(const string &path)
+		: _stream(fopen(path, "wb"))
+	{
+	}
+
+	write_file_stream::~write_file_stream()
+	{	fclose(static_cast<FILE *>(_stream));	}
+
+	void write_file_stream::write(const void *buffer, size_t buffer_length)
+	{	fwrite(buffer, 1, buffer_length, static_cast<FILE *>(_stream));	}
 }

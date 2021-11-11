@@ -31,9 +31,9 @@ namespace micro_profiler
 	const wchar_t c_microProfilerFilesSave[] = L"MicroProfiler Statistics\0*.mpstat\0\0";
 	const wchar_t c_microProfilerFilesOpen[] = L"MicroProfiler Statistics\0*.mpstat3;*.mpstat4;*.mpstat\0\0";
 
-	unique_ptr<write_stream> create_file(HWND hparent, const string &default_name)
+	unique_ptr<write_file_stream> create_file(HWND hparent, const string &default_name)
 	{
-		unique_ptr<write_stream> r;
+		unique_ptr<write_file_stream> r;
 		OPENFILENAMEW ofn = {};
 		wchar_t buffer[1000] = { 0 };
 		wstring default_name2 = unicode(default_name);
@@ -48,7 +48,7 @@ namespace micro_profiler
 		ofn.nMaxFile = _countof(buffer);
 		ofn.lpstrDefExt = c_microProfilerDefaultExtension;
 		if (::GetSaveFileNameW(&ofn))
-			r.reset(new write_stream(ofn.lpstrFile));
+			r.reset(new write_file_stream(unicode(ofn.lpstrFile).c_str()));
 		return r;
 	}
 

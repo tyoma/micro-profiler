@@ -35,7 +35,7 @@ namespace micro_profiler
 		struct threads;
 	}
 
-	struct frontend_ui_context
+	struct profiling_session
 	{
 		initialization_data process_info;
 		std::shared_ptr<tables::statistics> statistics;
@@ -49,6 +49,6 @@ namespace micro_profiler
 
 
 
-	inline std::string frontend_ui_context::get_title() const
+	inline std::string profiling_session::get_title() const
 	{	return process_info.executable;	}
 }

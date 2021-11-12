@@ -19,7 +19,7 @@ namespace micro_profiler
 	inline bool operator ==(const initialization_data &lhs, const initialization_data &rhs)
 	{	return lhs.executable == rhs.executable && lhs.ticks_per_second == rhs.ticks_per_second;	}
 
-	inline bool operator ==(const frontend_ui_context &lhs, const frontend_ui_context &rhs)
+	inline bool operator ==(const profiling_session &lhs, const profiling_session &rhs)
 	{
 		return lhs.process_info == rhs.process_info && lhs.statistics == rhs.statistics
 			&& lhs.module_mappings == rhs.module_mappings && lhs.modules == rhs.modules
@@ -84,7 +84,7 @@ namespace micro_profiler
 
 
 		begin_test_suite( FrontendTests )
-			frontend_ui_context context;
+			profiling_session context;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<void> req[10];
 
@@ -94,7 +94,7 @@ namespace micro_profiler
 				auto f = make_shared<frontend>(e2->server_session);
 
 				e2->outbound = f.get();
-				f->initialized = [this] (const frontend_ui_context &ctx) {	context = ctx;	};
+				f->initialized = [this] (const profiling_session &ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
 				return f;
 			}
@@ -121,10 +121,10 @@ namespace micro_profiler
 			test( ArrivalOfInitMessageInvokesInitializationOnce )
 			{
 				// INIT
-				frontend_ui_context context2;
+				profiling_session context2;
 				auto frontend_ = create_frontend();
 
-				frontend_->initialized = [&] (const frontend_ui_context &context_) {
+				frontend_->initialized = [&] (const profiling_session &context_) {
 					context2 = context_;
 				};
 
@@ -151,7 +151,7 @@ namespace micro_profiler
 
 				// INIT
 				frontend_ = create_frontend();
-				frontend_->initialized = [&] (const frontend_ui_context &context_) {
+				frontend_->initialized = [&] (const profiling_session &context_) {
 					context2 = context_;
 				};
 

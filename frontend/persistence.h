@@ -25,13 +25,13 @@
 
 namespace strmd
 {
-	template <> struct version<micro_profiler::frontend_ui_context> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 4	};	};
 }
 
 namespace micro_profiler
 {
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, frontend_ui_context &data, unsigned int ver)
+	inline void serialize(ArchiveT &archive, profiling_session &data, unsigned int ver)
 	{
 		archive(data.process_info);
 		archive(*data.module_mappings);

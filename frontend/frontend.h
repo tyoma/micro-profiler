@@ -37,7 +37,7 @@ namespace micro_profiler
 	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
-		typedef frontend_ui_context session_type;
+		typedef profiling_session session_type;
 
 	public:
 		frontend(ipc::channel &outbound);

@@ -90,9 +90,9 @@ namespace micro_profiler
 
 			try
 			{
-				write_file_stream r(req.path);
+				write_file_stream w(req.path);
 
-				req.operation(r);
+				req.operation(w);
 			}
 			catch (...)
 			{

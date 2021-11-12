@@ -62,20 +62,20 @@ namespace micro_profiler
 	}
 
 	standalone_ui::standalone_ui(shared_ptr<hive> configuration, const factory &factory_,
-			const frontend_ui_context &ui_context)
+			const profiling_session &session)
 		: _configuration(configuration)
 	{
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
-		auto model = make_shared<functions_list>(ui_context.statistics, 1.0 / ui_context.process_info.ticks_per_second,
-			make_shared<symbol_resolver>(ui_context.modules, ui_context.module_mappings), ui_context.threads);
+		auto model = make_shared<functions_list>(session.statistics, 1.0 / session.process_info.ticks_per_second,
+			make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
 
 		const auto root = make_shared<overlay>();
 			root->add(factory_.create_control<control>("background"));
 			const auto stk = factory_.create_control<stack>("vstack");
 			stk->set_spacing(5);
 			root->add(pad_control(stk, 5, 5));
-				stk->add(_statistics_display = make_shared<tables_ui>(factory_, ui_context, *_configuration),
+				stk->add(_statistics_display = make_shared<tables_ui>(factory_, session, *_configuration),
 					percents(100), false);
 				const auto toolbar = factory_.create_control<stack>("hstack");
 				toolbar->set_spacing(5);
@@ -119,7 +119,7 @@ namespace micro_profiler
 		_form->set_root(root);
 		if (load(*_configuration, "Placement", l))
 			_form->set_location(l);
-		_form->set_caption("MicroProfiler - " + ui_context.process_info.executable);
+		_form->set_caption("MicroProfiler - " + session.process_info.executable);
 		_form->set_visible(true);
 
 		_connections.push_back(_form->close += [this] {

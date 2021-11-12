@@ -111,13 +111,13 @@ namespace micro_profiler
 			about_composite_.connections.push_back(about->close += on_close);
 			about_composite_.form_ = new_form;
 		};
-		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, const frontend_ui_context &context) {
-			auto model = make_shared<image_patch_model>(context.patches, context.modules, context.module_mappings);
+		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, const profiling_session &session) {
+			auto model = make_shared<image_patch_model>(session.patches, session.modules, session.module_mappings);
 			auto on_close = [&] {	patcher_composite_.form_.reset();	};
 
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
-				auto patcher = make_shared<image_patch_ui>(factory, model, context.patches);
+				auto patcher = make_shared<image_patch_ui>(factory, model, session.patches);
 				root->add(pad_control(patcher, 5, 5));
 
 			new_form->set_root(root);
@@ -126,20 +126,20 @@ namespace micro_profiler
 			patcher_composite_.connections.push_back(new_form->close += on_close);
 			patcher_composite_.form_ = new_form;
 		};
-		auto ui_factory = [&app, &factory, show_about, show_patcher] (const frontend_ui_context &context) -> shared_ptr<frontend_ui> {
+		auto ui_factory = [&app, &factory, show_about, show_patcher] (const profiling_session &session) -> shared_ptr<frontend_ui> {
 			auto &app2 = app;
 			auto show_patcher2 = show_patcher;
 			auto composite = make_shared<ui_composite>();
-			auto patches = context.patches;
-			auto poller = make_shared<statistics_poll>(context.statistics, app.get_ui_queue());
+			auto patches = session.patches;
+			auto poller = make_shared<statistics_poll>(session.statistics, app.get_ui_queue());
 
-			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, context);
+			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, session);
 			composite->connections.push_back(composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
 				app2.clipboard_copy(text_utf8);
 			});
 			composite->connections.push_back(composite->ui->show_about += show_about);
-			composite->connections.push_back(composite->ui->show_patcher += [show_patcher2, context] (agge::point<int> center, shared_ptr<form> new_form) {
-				show_patcher2(center, new_form, context);
+			composite->connections.push_back(composite->ui->show_patcher += [show_patcher2, session] (agge::point<int> center, shared_ptr<form> new_form) {
+				show_patcher2(center, new_form, session);
 			});
 			composite->connections.push_back(poller);
 

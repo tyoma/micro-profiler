@@ -60,23 +60,23 @@ namespace micro_profiler
 		};
 	}
 
-	tables_ui::tables_ui(const wpl::factory &factory_, const frontend_ui_context &context, hive &configuration)
+	tables_ui::tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration)
 		: wpl::stack(false, factory_.context.cursor_manager_),
 			_cm_main(new headers_model(c_columns_statistics, 3, false)),
 			_cm_parents(new headers_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new headers_model(c_columns_statistics_children, 4, false))
 	{
-		auto m_main = make_shared<functions_list>(context.statistics, 1.0 / context.process_info.ticks_per_second,
-			make_shared<symbol_resolver>(context.modules, context.module_mappings), context.threads);
+		auto m_main = make_shared<functions_list>(session.statistics, 1.0 / session.process_info.ticks_per_second,
+			make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
 		auto m_selection = m_main->create_selection();
 		auto m_selected_items = make_shared< vector<statistic_types::key> >();
-		auto threads = make_shared<threads_model>(context.threads);
+		auto threads = make_shared<threads_model>(session.threads);
 
-		auto m_parents = create_callers_model(context.statistics,
-			1.0 / context.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
+		auto m_parents = create_callers_model(session.statistics,
+			1.0 / session.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
 		auto m_selection_parents = m_parents->create_selection();
-		auto m_children = create_callees_model(context.statistics,
-			1.0 / context.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
+		auto m_children = create_callees_model(session.statistics,
+			1.0 / session.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
 		auto m_selection_children = m_children->create_selection();
 
 		_connections.push_back(m_selection->invalidate += [=] (size_t) {

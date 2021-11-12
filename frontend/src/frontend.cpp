@@ -68,7 +68,7 @@ namespace micro_profiler
 			{
 				d(_process_info);
 
-				frontend_ui_context ctx = {
+				profiling_session session = {
 					_process_info,
 					_statistics,
 					_mappings,
@@ -77,7 +77,7 @@ namespace micro_profiler
 					_threads,
 				};
 
-				initialized(ctx);
+				initialized(session);
 				_statistics->request_update();
 				_initialized = true;
 				LOG(PREAMBLE "initialized...")

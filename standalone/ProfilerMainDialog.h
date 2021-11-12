@@ -36,14 +36,14 @@ namespace wpl
 
 namespace micro_profiler
 {
-	struct frontend_ui_context;
 	struct hive;
+	struct profiling_session;
 	class tables_ui;
 
 	class standalone_ui : public frontend_ui, wpl::noncopyable
 	{
 	public:
-		standalone_ui(std::shared_ptr<hive> configuration, const wpl::factory &factory, const frontend_ui_context &ctx);
+		standalone_ui(std::shared_ptr<hive> configuration, const wpl::factory &factory, const profiling_session &session);
 
 		wpl::signal<void (const std::string &text)> copy_to_buffer;
 		wpl::signal<void (agge::point<int> center, const std::shared_ptr<wpl::form> &new_form)> show_about;

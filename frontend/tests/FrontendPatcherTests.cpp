@@ -83,14 +83,14 @@ namespace micro_profiler
 				queue = make_shared<mocks::queue>();
 
 				auto e = make_shared<emulator_>(*queue);
-				frontend_ui_context context;
+				profiling_session context;
 
 				frontend_ = make_shared<frontend>(e->server_session);
 				e->outbound = frontend_.get();
-				frontend_->initialized = [&] (const frontend_ui_context &ctx) {	context = ctx;	};
+				frontend_->initialized = [&] (const profiling_session &ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e, &e->server_session);
 
-				frontend_->initialized = [&] (const frontend_ui_context &context_) {
+				frontend_->initialized = [&] (const profiling_session &context_) {
 					context = context_;
 				};
 				emulator->message(init, [] (ipc::serializer &s) {

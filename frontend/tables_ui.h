@@ -18,10 +18,10 @@ namespace wpl
 namespace micro_profiler
 {
 	class headers_model;
-	struct frontend_ui_context;
 	class functions_list;
 	struct hive;
 	struct linked_statistics;
+	struct profiling_session;
 
 	template <typename KeyT>
 	struct selection;
@@ -29,7 +29,7 @@ namespace micro_profiler
 	class tables_ui : public wpl::stack
 	{
 	public:
-		tables_ui(const wpl::factory &factory_, const frontend_ui_context &context, hive &configuration);
+		tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration);
 
 		void save(hive &configuration);
 

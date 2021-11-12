@@ -320,7 +320,7 @@ namespace micro_profiler
 					strmd::deserializer<read_file_stream, packer, 3> dser_v3(*s);
 					strmd::deserializer<read_file_stream, packer, 4> dser_v4(*s);
 					strmd::deserializer<read_file_stream, packer> dser(*s);
-					frontend_ui_context ui_context = {
+					profiling_session ui_context = {
 						{},
 						make_shared<tables::statistics>(),
 						make_shared<tables::module_mappings>(),
@@ -350,7 +350,7 @@ namespace micro_profiler
 				{
 					// TODO: implement via frontend_ui::save signal.
 
-//					frontend_ui_context contents = *i;
+//					profiling_session contents = *i;
 					unique_ptr<write_file_stream> s = create_file(get_frame_hwnd(get_shell()), *i->title);
 
 					//if (s.get())

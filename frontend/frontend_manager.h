@@ -105,9 +105,9 @@ namespace micro_profiler
 		typedef typename std::remove_pointer<typename prototype_types::return_type>::type frontend_type;
 		typedef typename frontend_type::session_type session_type;
 
-		const auto prepare_ui = [this, ui_factory] (instance_container::iterator i, const session_type &context) {
-			i->title = context.get_title();
-			if (auto ui = ui_factory(context))
+		const auto prepare_ui = [this, ui_factory] (instance_container::iterator i, const session_type &session) {
+			i->title = session.get_title();
+			if (auto ui = ui_factory(session))
 				set_ui(i, ui);
 		};
 
@@ -117,7 +117,7 @@ namespace micro_profiler
 			const auto channel_instance = attach(frontend);
 			const auto i = channel_instance.second;
 
-			frontend->initialized = [prepare_ui_, i] (const session_type &context) {	prepare_ui_(i, context);	};
+			frontend->initialized = [prepare_ui_, i] (const session_type &session) {	prepare_ui_(i, session);	};
 			return channel_instance.first;
 		};
 

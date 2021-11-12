@@ -26,11 +26,11 @@ namespace micro_profiler
 			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
 
 			const auto new_frontend = [] (ipc::channel &outbound) {	return new micro_profiler::frontend(outbound);	};
-			const auto null_ui_factory = [] (const frontend_ui_context &) {	return shared_ptr<micro_profiler::frontend_ui>();	};
+			const auto null_ui_factory = [] (const profiling_session &) {	return shared_ptr<micro_profiler::frontend_ui>();	};
 
-			frontend_ui_context create_ui_context(string executable)
+			profiling_session create_ui_context(string executable)
 			{
-				frontend_ui_context ctx = {
+				profiling_session ctx = {
 					{	executable, 1	},
 					make_shared<tables::statistics>(),
 					make_shared<tables::module_mappings>(),
@@ -69,7 +69,7 @@ namespace micro_profiler
 			class frontend_ui : public micro_profiler::frontend_ui
 			{		
 			public:
-				frontend_ui(const frontend_ui_context &ui_context_)
+				frontend_ui(const profiling_session &ui_context_)
 					: ui_context(ui_context_), close_on_destroy(true)
 				{	}
 
@@ -83,7 +83,7 @@ namespace micro_profiler
 				{	closed();	}
 
 			public:
-				frontend_ui_context ui_context;
+				profiling_session ui_context;
 				bool close_on_destroy;
 
 			private:
@@ -143,9 +143,9 @@ namespace micro_profiler
 
 			vector< shared_ptr<mocks::frontend_ui> > _ui_creation_log;
 
-			function<shared_ptr<frontend_ui> (const frontend_ui_context &ui_context)> logging_ui_factory()
+			function<shared_ptr<frontend_ui> (const profiling_session &ui_context)> logging_ui_factory()
 			{
-				return [this] (const frontend_ui_context &ui_context) -> shared_ptr<frontend_ui> {
+				return [this] (const profiling_session &ui_context) -> shared_ptr<frontend_ui> {
 					shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(ui_context));
 
 					_ui_creation_log.push_back(ui);
@@ -185,7 +185,7 @@ namespace micro_profiler
 
 			struct mock_ui : frontend_ui
 			{
-				mock_ui(const frontend_ui_context &ctx)
+				mock_ui(const profiling_session &ctx)
 					: hold(ctx.statistics)
 				{	}
 
@@ -198,7 +198,7 @@ namespace micro_profiler
 			test( ThereAreNoInstancesAfterCloseAll )
 			{
 				// INIT
-				frontend_manager m(new_frontend, [] (frontend_ui_context ctx) {
+				frontend_manager m(new_frontend, [] (profiling_session ctx) {
 					return make_shared<mock_ui>(ctx);
 				});
 				auto ctx1 = create_ui_context("somefile.exe");
@@ -293,9 +293,9 @@ namespace micro_profiler
 
 			vector< weak_ptr<mocks::frontend_ui> > _ui_creation_log_w;
 
-			function<shared_ptr<frontend_ui> (const frontend_ui_context &ui_context)> logging_ui_factory_weak()
+			function<shared_ptr<frontend_ui> (const profiling_session &ui_context)> logging_ui_factory_weak()
 			{
-				return [this] (const frontend_ui_context &ui_context) -> shared_ptr<frontend_ui> {
+				return [this] (const profiling_session &ui_context) -> shared_ptr<frontend_ui> {
 					shared_ptr<mocks::frontend_ui> ui(new mocks::frontend_ui(ui_context));
 
 					_ui_creation_log_w.push_back(ui);

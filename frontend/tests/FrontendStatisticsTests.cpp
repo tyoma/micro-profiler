@@ -71,7 +71,7 @@ namespace micro_profiler
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();
-				f->initialized = [this] (const frontend_ui_context &ctx) {
+				f->initialized = [this] (const profiling_session &ctx) {
 					this->statistics = ctx.statistics;
 					this->mappings = ctx.module_mappings;
 					this->modules = ctx.modules;

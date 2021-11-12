@@ -17,7 +17,7 @@ using namespace std;
 namespace strmd
 {
 	template <> struct version<micro_profiler::tests::file_components> {
-		enum {	value = version<micro_profiler::frontend_ui_context>::value	};
+		enum {	value = version<micro_profiler::profiling_session>::value	};
 	};
 }
 
@@ -59,9 +59,9 @@ namespace micro_profiler
 
 		namespace
 		{
-			frontend_ui_context create_context()
+			profiling_session create_context()
 			{
-				frontend_ui_context ctx = {
+				profiling_session ctx = {
 					{},
 					make_shared<tables::statistics>(),
 					make_shared<tables::module_mappings>(),

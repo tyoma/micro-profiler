@@ -26,13 +26,13 @@ namespace micro_profiler
 	namespace integration
 	{
 		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
-			command_target &target, const frontend_ui_context &context, shared_ptr<scheduler::queue> queue)
+			command_target &target, const profiling_session &session, shared_ptr<scheduler::queue> queue)
 		{
-			const auto model = make_shared<functions_list>(context.statistics, 1.0 / context.process_info.ticks_per_second,
-				make_shared<symbol_resolver>(context.modules, context.module_mappings), context.threads);
-			const auto injected = !!context.process_info.injected;
-			const auto executable = context.process_info.executable;
-			const auto poller = make_shared<statistics_poll>(context.statistics, *queue);
+			const auto model = make_shared<functions_list>(session.statistics, 1.0 / session.process_info.ticks_per_second,
+				make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
+			const auto injected = !!session.process_info.injected;
+			const auto executable = session.process_info.executable;
+			const auto poller = make_shared<statistics_poll>(session.statistics, *queue);
 
 			poller->enable(true);
 
@@ -48,13 +48,13 @@ namespace micro_profiler
 				return state = (poller->enabled() ? 0 : command_target::enabled) | command_target::supported | command_target::visible, true;
 			});
 
-			target.add_command(cmdidSaveStatistics, [context, executable] (unsigned) {
+			target.add_command(cmdidSaveStatistics, [session, executable] (unsigned) {
 				auto s = create_file(NULL/*get_frame_hwnd(ctx.shell)*/, executable);
 
 				if (s.get())
 				{
 					strmd::serializer<write_file_stream, packer> ser(*s);
-					ser(context);
+					ser(session);
 				}
 			}, false, [] (unsigned, unsigned &state) {
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
@@ -90,7 +90,7 @@ namespace micro_profiler
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
 			});
 
-			target.add_command(cmdidProfileScope, [&running_objects, &factory, context] (unsigned) {
+			target.add_command(cmdidProfileScope, [&running_objects, &factory, session] (unsigned) {
 				wpl::rect_i l = { 0, 0, 800, 530 };
 				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
 				auto &running_objects_ = running_objects;
@@ -101,14 +101,14 @@ namespace micro_profiler
 				const auto root = make_shared<wpl::overlay>();
 					root->add(factory.create_control<wpl::control>("background"));
 					const auto patch_ui = make_shared<image_patch_ui>(factory,
-						make_shared<image_patch_model>(context.patches, context.modules, context.module_mappings),
-							context.patches);
+						make_shared<image_patch_model>(session.patches, session.modules, session.module_mappings),
+							session.patches);
 					root->add(wpl::pad_control(patch_ui, 5, 5));
 
 				o->first = factory.create_modal();
 				o->second.push_back(o->first->close += onclose);
 
-				o->first->set_caption("Select Profiled Scope - " + (string)*context.process_info.executable);
+				o->first->set_caption("Select Profiled Scope - " + (string)*session.process_info.executable);
 				o->first->set_root(root);
 				o->first->set_location(l);
 				o->first->center_parent();

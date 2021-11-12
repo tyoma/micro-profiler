@@ -150,6 +150,14 @@ namespace micro_profiler
 			}
 
 
+			test( ConstructionFailsForANonExistentPath )
+			{
+				// ACT / ASSERT
+				assert_throws(write_file_stream s1(dir.track_file("missing/test1-abcdef.dll")), runtime_error);
+				assert_throws(write_file_stream s2(dir.track_file("mi??ing/test1-abcdef.dll")), runtime_error);
+			}
+
+
 			test( WritingToAFileCanBeRead )
 			{
 				// INIT

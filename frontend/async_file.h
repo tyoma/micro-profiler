@@ -22,39 +22,83 @@
 
 #include <common/file_stream.h>
 #include <scheduler/private_queue.h>
-#include <strmd/serializer.h>
-#include <strmd/deserializer.h>
-#include <strmd/packer.h>
 
 namespace micro_profiler
 {
-	typedef strmd::deserializer<read_file_stream, strmd::varint> file_deserializer;
+	template <typename OperationCB, typename ReadyCB>
+	struct async_file_request
+	{
+		async_file_request(const std::string &path, const OperationCB &operation_, const ReadyCB &ready_,
+			scheduler::queue &worker, scheduler::queue &apartment);
 
-	template <typename T, typename DeserializerCB, typename ReadyCB>
+		const std::string path;
+		const OperationCB operation;
+		const ReadyCB ready;
+		scheduler::private_worker_queue queue;
+	};
+
+
+
+	template <typename O, typename R>
+	inline async_file_request<O, R>::async_file_request(const std::string &path_, const O &operation_, const R &ready_,
+			scheduler::queue &worker, scheduler::queue &apartment)
+		: path(path_), operation(operation_), ready(ready_), queue(worker, apartment)
+	{	}
+
+
+	template <typename T, typename ReaderCB, typename ReadyCB>
 	inline void async_file_read(std::shared_ptr<void> &request, scheduler::queue &worker, scheduler::queue &apartment,
-		const std::string &path, const DeserializerCB &deserializer, const ReadyCB &ready)
+		const std::string &path, const ReaderCB &reader, const ReadyCB &ready)
 	{
 		using namespace scheduler;
 
-		auto req = std::make_shared<private_worker_queue>(worker, apartment);
+		auto req = std::make_shared< async_file_request<ReaderCB, ReadyCB> >(path, reader, ready, worker, apartment);
+		auto &rreq = *req;
 
 		request = req;
-		req->schedule([path, deserializer, ready] (private_worker_queue::completion &completion) {
+		req->queue.schedule([&rreq] (private_worker_queue::completion &completion) {
+			auto &req = rreq;
 			auto data = std::make_shared<T>();
-			auto ready_ = ready;
 
 			try
 			{
-				read_file_stream r(path);
-				file_deserializer d(r);
+				read_file_stream r(req.path);
 
-				deserializer(*data, d);
+				req.operation(*data, r);
 			}
 			catch (...)
 			{
 				data.reset();
 			}
-			completion.deliver([ready_, data] {	ready_(data);	});
+			completion.deliver([&req, data] {	req.ready(data);	});
+		});
+	}
+
+	template <typename WriterCB, typename ReadyCB>
+	inline void async_file_write(std::shared_ptr<void> &request, scheduler::queue &worker, scheduler::queue &apartment,
+		const std::string &path, const WriterCB &writer, const ReadyCB &ready)
+	{
+		using namespace scheduler;
+
+		auto req = std::make_shared< async_file_request<WriterCB, ReadyCB> >(path, writer, ready, worker, apartment);
+		auto &rreq = *req;
+
+		request = req;
+		req->queue.schedule([&rreq] (private_worker_queue::completion &completion) {
+			auto &req = rreq;
+			auto success = true;
+
+			try
+			{
+				write_file_stream r(req.path);
+
+				req.operation(r);
+			}
+			catch (...)
+			{
+				success = false;
+			}
+			completion.deliver([&req, success] {	req.ready(success);	});
 		});
 	}
 }

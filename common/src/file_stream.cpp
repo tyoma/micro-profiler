@@ -70,6 +70,8 @@ namespace micro_profiler
 	write_file_stream::write_file_stream(const string &path)
 		: _stream(fopen(path, "wb"))
 	{
+		if (!_stream)
+			throw runtime_error("Can't create a file at '" + path + "'!");
 	}
 
 	write_file_stream::~write_file_stream()

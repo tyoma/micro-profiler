@@ -96,7 +96,7 @@ namespace micro_profiler
 				frontend_.reset();
 
 				// ACT / ASSERT (must not throw)
-				context.modules->request_presence(req[0], "", 0, 123, [] (module_info_metadata) {});
+				context.modules->request_presence(req[0], 123, [] (module_info_metadata) {});
 				context.patches->apply(123, mkrange(dummy));
 				context.patches->revert(123, mkrange(dummy));
 			}
@@ -190,9 +190,7 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 
 				// ASSERT
-				unsigned reference1[] = { 12, };
-
-				assert_equal(reference1, log);
+				assert_equal(plural + 12u, log);
 
 				// INIT (replace handler)
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
@@ -204,9 +202,7 @@ namespace micro_profiler
 				context.statistics->request_update();
 
 				// ASSERT
-				unsigned reference2[] = {	12, 12, 17,	};
-
-				assert_equivalent(reference2, log);
+				assert_equivalent(plural + 12u + 12u + 17u, log);
 
 				// INIT (replace handler)
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
@@ -219,9 +215,7 @@ namespace micro_profiler
 				context.statistics->request_update();
 
 				// ASSERT
-				unsigned reference3[] = {	12, 12, 17, 12, 17, 135	};
-
-				assert_equivalent(reference3, log);
+				assert_equivalent(plural + 12u + 12u + 17u + 12u + 17u + 135u, log);
 			}
 
 
@@ -292,12 +286,8 @@ namespace micro_profiler
 				context.statistics->request_update();
 
 				// ASSERT
-				unsigned reference[] = {
-					0u, 2u,
-				};
-
 				assert_equal(1u, log.size());
-				assert_equivalent(reference, log.back());
+				assert_equivalent(plural + 0u + 2u, log.back());
 			}
 
 

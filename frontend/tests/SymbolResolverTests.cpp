@@ -17,18 +17,18 @@ namespace micro_profiler
 		begin_test_suite( SymbolResolverTests )
 			shared_ptr<tables::modules> modules;
 			shared_ptr<tables::module_mappings> mappings;
-			vector<module_id> _requested;
+			vector<unsigned> _requested;
 
 			init( Init )
 			{
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
-				modules->request_presence = [this] (shared_ptr<void> &, string path, unsigned hash, unsigned persistent_id, tables::modules::metadata_ready_cb cb) {
+				modules->request_presence = [this] (shared_ptr<void> &, unsigned persistent_id, tables::modules::metadata_ready_cb cb) {
 					const auto i = modules->find(persistent_id);
 
 					if (i != modules->end())
 						cb(i->second);
-					_requested.push_back(module_id(persistent_id, path, hash));
+					_requested.push_back(persistent_id);
 				};
 			}
 
@@ -133,7 +133,7 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
 				auto cb = make_shared<tables::modules::metadata_ready_cb>();
 
-				modules->request_presence = [&cb] (shared_ptr<void> &req, string, unsigned, unsigned, tables::modules::metadata_ready_cb cb_) {
+				modules->request_presence = [&cb] (shared_ptr<void> &req, unsigned, tables::modules::metadata_ready_cb cb_) {
 					cb = make_shared<tables::modules::metadata_ready_cb>(cb_);
 					req = cb;
 				};
@@ -412,24 +412,14 @@ namespace micro_profiler
 				r->symbol_name_by_va(0x120060);
 
 				// ASSERT
-				module_id reference1[] = {
-					module_id(11, "c:\\dev\\test.exe", 1919191),
-				};
-
-				assert_equivalent(reference1, _requested);
+				assert_equivalent(plural + 11u, _requested);
 
 				// ACT
 				r->symbol_name_by_va(0x311000);
 				r->symbol_name_by_va(0x210000);
 
 				// ASSERT
-				module_id reference2[] = {
-					module_id(11, "c:\\dev\\test.exe", 1919191),
-					module_id(100, "/bin/bash", 100),
-					module_id(11711, "agge.tests.dll", 117000001),
-				};
-
-				assert_equivalent(reference2, _requested);
+				assert_equivalent(plural + 11u + 100u + 11711u, _requested);
 			}
 
 
@@ -439,9 +429,7 @@ namespace micro_profiler
 				auto r = make_shared<symbol_resolver>(modules, mappings);
 				vector< weak_ptr<void> > requests;
 
-				modules->request_presence = [&] (shared_ptr<void> &req, string, unsigned, unsigned,
-					tables::modules::metadata_ready_cb) {
-
+				modules->request_presence = [&] (shared_ptr<void> &req, unsigned, tables::modules::metadata_ready_cb) {
 					req = make_shared<bool>();
 					requests.push_back(req);
 				};
@@ -498,9 +486,7 @@ namespace micro_profiler
 					{ "a", 0x010, 3, 11, 121 },
 				};
 
-				modules->request_presence = [&] (shared_ptr<void> &req, string, unsigned, unsigned,
-					tables::modules::metadata_ready_cb cb) {
-
+				modules->request_presence = [&] (shared_ptr<void> &req, unsigned, tables::modules::metadata_ready_cb cb) {
 					req = make_shared<bool>();
 					requests.push_back(req);
 					callbacks.push_back(cb);

@@ -3,10 +3,12 @@
 #include "helpers.h"
 #include "mock_channel.h"
 
+#include <common/file_stream.h>
 #include <common/serialization.h>
 #include <frontend/tables.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
+#include <test-helpers/comparisons.h>
 #include <test-helpers/file_helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
@@ -18,11 +20,15 @@ using namespace std;
 
 namespace micro_profiler
 {
+	inline bool operator ==(const module_info_metadata &lhs, const module_info_metadata &rhs)
+	{	return lhs.symbols == rhs.symbols && lhs.source_files == rhs.source_files;	}
+
 	namespace tests
 	{
 		namespace
 		{
-			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
+			typedef strmd::serializer<write_file_stream, strmd::varint> file_serializer;
+			typedef strmd::deserializer<read_file_stream, strmd::varint> file_deserializer;
 
 			struct emulator_ : ipc::channel, noncopyable
 			{
@@ -69,6 +75,26 @@ namespace micro_profiler
 				mi.source_files = unordered_map<unsigned, string>(begin(files), end(files));
 				return mi;
 			}
+
+			template <typename T>
+			void write(const string &path, const T &object)
+			{
+				write_file_stream w(path);
+				file_serializer s(w);
+
+				s(object);
+			}
+
+			template <typename T>
+			T read(const string &path)
+			{
+				read_file_stream r(path);
+				T object;
+				file_deserializer s(r);
+
+				s(object);
+				return object;
+			}
 		}
 
 
@@ -97,32 +123,65 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector<unsigned> log;
 
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ make_mapping(1, 11, 0x00100000u, "a", 1)
+						+ make_mapping(2, 13, 0x00100000u, "b", 1)
+						+ make_mapping(3, 17, 0x00100000u, "c", 1)
+						+ make_mapping(5, 191, 0x01100000u, "d", 1));
+				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
 					log.push_back(persistent_id);
 				});
 
 				// ACT
-				context.modules->request_presence(req[0], "", 0, 11u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[0], 11u, [] (module_info_metadata) {});
 
 				// ASSERT
-				unsigned reference1[] = {	11u,	};
-
-				assert_equal(reference1, log);
 				assert_not_null(req[0]);
+				assert_equal(1u, worker.tasks.size());
+				assert_equal(0u, apartment.tasks.size());
 
 				// ACT
-				context.modules->request_presence(req[1], "", 0, 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[2], "", 0, 191u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[3], "", 0, 13u, [] (module_info_metadata) {});
+				worker.run_one();
 
 				// ASSERT
-				unsigned reference2[] = {	11u, 17u, 191u, 13u,	};
+				assert_equal(0u, worker.tasks.size());
+				assert_equal(1u, apartment.tasks.size());
 
-				assert_equal(reference2, log);
+				//ACT
+				apartment.run_one();
+
+				//ASSERT
+				assert_equal(plural + 11u, log);
+
+				// ACT
+				context.modules->request_presence(req[1], 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[2], 191u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[3], 13u, [] (module_info_metadata) {});
+				worker.run_till_end();
+				apartment.run_one();
+				req[2].reset();
+				apartment.run_till_end();
+
+				// ASSERT
+				assert_equal(plural + 11u + 17u + 13u, log);
 				assert_not_equal(req[0], req[1]);
-				assert_not_equal(req[1], req[2]);
-				assert_not_equal(req[0], req[2]);
+				assert_not_equal(req[1], req[3]);
+				assert_not_equal(req[0], req[3]);
+
+				// INIT
+				log.clear();
+
+				// ACT (request of unknown modules bypasses cache)
+				context.modules->request_presence(req[4], 179u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[5], 119u, [] (module_info_metadata) {});
+
+				// ASSERT
+				assert_equal(plural + 179u + 119u, log);
+				assert_is_empty(worker.tasks);
+				assert_is_empty(apartment.tasks);
 			}
 
 
@@ -132,25 +191,36 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector<unsigned> log;
 
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ make_mapping(1, 11, 0x00100000u, "a", 1)
+						+ make_mapping(2, 17, 0x00100000u, "b", 1)
+						+ make_mapping(3, 19, 0x00100000u, "c", 1));
+				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
 					log.push_back(persistent_id);
 				});
 
 				// ACT
-				context.modules->request_presence(req[0], "", 0, 11u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[1], "", 0, 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[2], "", 0, 19u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[0], 11u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[1], 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[2], 19u, [] (module_info_metadata) {});
 
-				context.modules->request_presence(req[3], "", 0, 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[4], "", 0, 19u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[5], "", 0, 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[6], "", 0, 11u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[3], 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[4], 19u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[5], 17u, [] (module_info_metadata) {});
+				context.modules->request_presence(req[6], 11u, [] (module_info_metadata) {});
 
 				// ASSERT
-				unsigned reference[] = {	11u, 17u, 19u,	};
+				assert_equal(3u, worker.tasks.size());
 
-				assert_equal(reference, log);
+				// ACT
+				worker.run_till_end();
+				apartment.run_till_end();
+
+				// ASSERT
+				assert_equal(plural + 11u + 17u + 19u, log);
 				assert_not_null(req[3]);
 				assert_not_equal(req[1], req[3]);
 				assert_not_null(req[4]);
@@ -181,10 +251,20 @@ namespace micro_profiler
 					}
 				});
 
+				dir.track_file("a-00000000.symcache");
+				dir.track_file("b-00000000.symcache");
+				dir.track_file("c-00000000.symcache");
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ make_mapping(1, 17, 0x00100000u, "a", 0)
+						+ make_mapping(2, 99, 0x00100000u, "b", 0)
+						+ make_mapping(3, 1000, 0x00100000u, "c", 0));
+				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 
 				// ACT
-				context.modules->request_presence(req[0], "", 0, 1000, [] (module_info_metadata) {});
+				context.modules->request_presence(req[0], 1000, [] (module_info_metadata) {});
+				worker.run_till_end(), apartment.run_till_end();
 
 				// ASSERT
 				assert_equal(1u, context.modules->size());
@@ -195,8 +275,9 @@ namespace micro_profiler
 				assert_equal(1u, i1000->second.source_files.size());
 
 				// ACT
-				context.modules->request_presence(req[1], "", 0, 17, [] (module_info_metadata) {});
-				context.modules->request_presence(req[2], "", 0, 99, [] (module_info_metadata) {});
+				context.modules->request_presence(req[1], 17, [] (module_info_metadata) {});
+				context.modules->request_presence(req[2], 99, [] (module_info_metadata) {});
+				worker.run_till_end(), apartment.run_till_end();
 
 				// ASSERT
 				assert_equal(3u, context.modules->size());
@@ -210,6 +291,133 @@ namespace micro_profiler
 				assert_not_equal(context.modules->end(), i99);
 				assert_equal(2u, i99->second.symbols.size());
 				assert_equal(1u, i99->second.source_files.size());
+			}
+
+
+			test( ModuleMetadataIsNotRequestFromRemoteIfFoundLocally )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
+					symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
+					symbols1000[] = {	{	"baz", 0x0010, 1	},	};
+				pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
+					files99[] = {	make_pair(3, "main.cpp"),	},
+					files1000[] = {	make_pair(7, "local.cpp"),	};
+				vector<const module_info_metadata *> log;
+
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ make_mapping(1, 17, 0x00100000u, "foo.dll", 0x00100201)
+						+ make_mapping(2, 99, 0x00100000u, "/lib/some_long_name.so", 0x10100201)
+						+ make_mapping(3, 1000, 0x00100000u, "/lib64/test/libc.so", 1));
+				});
+				emulator->message(init, format(make_initialization_data("", 1)));
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned) {	assert_is_false(true);	});
+
+				// ACT
+				context.modules->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				write(dir.track_file("foo.dll-00100201.symcache"), create_metadata_info(symbols17, files17));
+				worker.run_one(), apartment.run_one();
+
+				// ASSERT
+				assert_equal(0u, worker.tasks.size());
+				assert_equal(0u, apartment.tasks.size());
+				assert_equal(1u, log.size());
+				assert_equal(create_metadata_info(symbols17, files17), *log.back());
+				assert_equal(&(*context.modules)[17], log.back());
+
+				// INIT
+				write(dir.track_file("some_long_name.so-10100201.symcache"), create_metadata_info(symbols99, files99));
+				write(dir.track_file("libc.so-00000001.symcache"), create_metadata_info(symbols1000, files1000));
+
+				// ACT
+				context.modules->request_presence(req[1], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				context.modules->request_presence(req[2], 99u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				context.modules->request_presence(req[3], 1000u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				worker.run_till_end(), apartment.run_till_end();
+
+				// ASSERT
+				assert_equal(4u, log.size());
+				assert_equal(&(*context.modules)[17], log[1]);
+				assert_equal(create_metadata_info(symbols99, files99), *log[2]);
+				assert_equal(create_metadata_info(symbols1000, files1000), *log[3]);
+			}
+
+
+			test( MetadataIsWrittenUponReception )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
+					symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, };
+				pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
+					files99[] = {	make_pair(3, "main.cpp"),	};
+				vector<const module_info_metadata *> log;
+				auto f1 = dir.track_file("foo.dll-90100201.symcache");
+				auto f2 = dir.track_file("kernel32.dll-00000001.symcache");
+
+				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+					resp(response_modules_loaded, plural
+						+ make_mapping(1, 17, 0x00100000u, "foo.dll", 0x90100201)
+						+ make_mapping(3, 170, 0x00100000u, "c:\\windows\\kernel32.dll", 0x1));
+				});
+				emulator->message(init, format(make_initialization_data("", 1)));
+
+				// ACT
+				context.modules->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				worker.run_one();
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
+					resp(response_module_metadata, create_metadata_info(symbols17, files17));
+				});
+				apartment.run_one();
+
+				// ASSERT
+				assert_equal(1u, worker.tasks.size());
+				assert_equal(1u, log.size());
+
+				// ACT
+				worker.run_one();
+
+				// ASSERT
+				assert_is_empty(worker.tasks);
+				assert_equal(create_metadata_info(symbols17, files17), read<module_info_metadata>(f1));
+
+				// ACT
+				context.modules->request_presence(req[1], 170u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				worker.run_one();
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
+					resp(response_module_metadata, create_metadata_info(symbols99, files99));
+				});
+				apartment.run_till_end();
+				worker.run_one();
+
+				// ASSERT
+				assert_is_empty(worker.tasks);
+				assert_equal(create_metadata_info(symbols99, files99), read<module_info_metadata>(f2));
+			}
+
+
+			test( MetadataIsNotWrittenIfNotRegisteredViaPathAndHash )
+			{
+				// INIT
+				auto frontend_ = create_frontend();
+				symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	};
+				pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	};
+				vector<const module_info_metadata *> log;
+
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
+					resp(response_module_metadata, create_metadata_info(symbols17, files17));
+				});
+				emulator->message(init, format(make_initialization_data("", 1)));
+
+				// ACT
+				context.modules->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+
+				// ASSERT
+				assert_equal(1u, log.size());
+				assert_is_empty(worker.tasks);
+				assert_is_empty(apartment.tasks);
 			}
 		end_test_suite
 	}

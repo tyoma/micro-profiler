@@ -62,7 +62,7 @@ namespace micro_profiler
 				mappings = make_shared<tables::module_mappings>();
 				modules = make_shared<tables::modules>();
 
-				modules->request_presence = [this] (shared_ptr<void> &req, string, unsigned, unsigned id,
+				modules->request_presence = [this] (shared_ptr<void> &req, unsigned id,
 					tables::modules::metadata_ready_cb ready) {
 
 					auto &r = requests;
@@ -601,9 +601,9 @@ namespace micro_profiler
 			test( ConstructionOfTheModelRequestsAllMappedModules )
 			{
 				// INIT
-				vector<module_id> log;
-				modules->request_presence = [&] (shared_ptr<void> &, string path, unsigned hash, unsigned persistent_id, tables::modules::metadata_ready_cb) {
-					log.push_back(module_id(persistent_id, path, hash));
+				vector<unsigned> log;
+				modules->request_presence = [&] (shared_ptr<void> &, unsigned persistent_id, tables::modules::metadata_ready_cb) {
+					log.push_back(persistent_id);
 				};
 
 				mappings->insert(make_mapping(0, 1, 0x1299100, "a", 12));
@@ -614,12 +614,7 @@ namespace micro_profiler
 				image_patch_model model1(patches, modules, mappings);
 
 				// ASSERT
-				module_id reference1[] = {
-					module_id(1, "a", 12),
-					module_id(13, "/test/b", 123),
-					module_id(7, "c:\\dev\\app.exe", 1123),
-				};
-				assert_equivalent(reference1, log);
+				assert_equivalent(plural + 1u + 13u + 7u, log);
 
 				// INIT
 				mappings->insert(make_mapping(4, 11, 0x1299100));
@@ -630,14 +625,7 @@ namespace micro_profiler
 				image_patch_model model2(patches, modules, mappings);
 
 				// ASSERT
-				module_id reference2[] = {
-					module_id(1, "a", 12),
-					module_id(13, "/test/b", 123),
-					module_id(7, "c:\\dev\\app.exe", 1123),
-					module_id(11, "", 0),
-					module_id(9, "", 0),
-				};
-				assert_equivalent(reference2, log);
+				assert_equivalent(plural + 1u + 13u + 7u + 11u + 9u, log);
 			}
 
 

@@ -61,6 +61,9 @@
     <ClCompile Include="untested\statistics_poll.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
+    <ClCompile Include="frontend_metadata.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />

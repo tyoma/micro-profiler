@@ -290,21 +290,17 @@ namespace micro_profiler
 				patches->apply(19, mkrange(rva12));
 
 				// ASSERT
-				unsigned reference1[] = {	1u,	};
-
 				assert_equal(1u, log.size());
 				assert_equal(19u, log.back().image_persistent_id);
-				assert_equal(reference1, log.back().functions_rva);
+				assert_equal(plural + 1u, log.back().functions_rva);
 
 				// ACT
 				patches->apply(20, mkrange(rva22));
 
 				// ASSERT
-				unsigned reference2[] = {	4u, 6u, 7u, 100u	};
-
 				assert_equal(2u, log.size());
 				assert_equal(20u, log.back().image_persistent_id);
-				assert_equal(reference2, log.back().functions_rva);
+				assert_equal(plural + 4u + 6u + 7u + 100u, log.back().functions_rva);
 
 				// ACT
 				patches->apply(20, mkrange(rva2));
@@ -600,11 +596,9 @@ namespace micro_profiler
 				patches->revert(99, mkrange(rva));
 
 				// ASSERT
-				unsigned reference[] = {	5u, 7u,	};
-
 				assert_equal(1u, log.size());
 				assert_equal(99u, log.back().image_persistent_id);
-				assert_equal(reference, log.back().functions_rva);
+				assert_equal(plural + 5u + 7u, log.back().functions_rva);
 				assert_equal(6u, patches->find(99)->second.size());
 
 				// ACT

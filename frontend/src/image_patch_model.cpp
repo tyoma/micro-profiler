@@ -210,7 +210,7 @@ namespace micro_profiler
 
 			if (!req.second)
 				continue;
-			_modules->request_presence(req.first->second, i->second.path, i->second.hash, i->second.persistent_id,
+			_modules->request_presence(req.first->second, i->second.persistent_id,
 				[this] (const module_info_metadata &/*metadata*/) {
 
 				_ordered_view.fetch();

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 set(FRONTEND_LIB_SOURCES
 	frontend.cpp
 	frontend_manager.cpp
+	frontend_metadata.cpp
 	frontend_patcher.cpp
 	function_list.cpp
 	headers_model.cpp

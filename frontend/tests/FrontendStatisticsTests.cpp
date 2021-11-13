@@ -56,7 +56,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( FrontendStatisticsTests )
-			mocks::queue queue, worker;
+			mocks::queue queue, worker, apartment;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<const tables::statistics> statistics;
 			shared_ptr<const tables::module_mappings> mappings;
@@ -69,7 +69,7 @@ namespace micro_profiler
 				typedef pair< shared_ptr<emulator_>, shared_ptr<frontend> > complex_t;
 
 				auto e2 = make_shared<emulator_>(queue);
-				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session, dir.path(), worker, queue));
+				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session, dir.path(), worker, apartment));
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();
@@ -238,11 +238,10 @@ namespace micro_profiler
 
 				// ACT
 				emulator->message(exiting, [] (ipc::serializer &) {});
+				worker.run_till_end(), apartment.run_till_end();
 
 				// ASSERT
-				unsigned reference[] = {	12, 13, 19,	};
-
-				assert_equivalent(reference, persistent_ids);
+				assert_equivalent(plural + 12u + 13u + 19u, persistent_ids);
 			}
 
 
@@ -328,6 +327,7 @@ namespace micro_profiler
 
 				// ACT
 				emulator->message(exiting, [] (ipc::serializer &) {});
+				worker.run_till_end(), apartment.run_till_end();
 
 				// ASSERT
 				assert_equal(0, disconnections);
@@ -373,9 +373,10 @@ namespace micro_profiler
 				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {
 					resp(response_module_metadata, module_info_metadata());
 				});
-				modules->request_presence(req[0], "", 0, 19, [] (module_info_metadata) {});
-				modules->request_presence(req[1], "", 0, 12, [] (module_info_metadata) {});
-				modules->request_presence(req[2], "", 0, 13, [] (module_info_metadata) {});
+				modules->request_presence(req[0], 19, [] (module_info_metadata) {});
+				modules->request_presence(req[1], 12, [] (module_info_metadata) {});
+				modules->request_presence(req[2], 13, [] (module_info_metadata) {});
+				worker.run_till_end(), apartment.run_till_end();
 
 				// ACT
 				emulator->message(exiting, [] (ipc::serializer &) {});
@@ -400,7 +401,7 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 
 				// ACT
-				modules->request_presence(req[0], "", 0, 123, [] (module_info_metadata) {});
+				modules->request_presence(req[0], 123, [] (module_info_metadata) {});
 
 				// ASSERT
 				assert_equal(0, disconnections);

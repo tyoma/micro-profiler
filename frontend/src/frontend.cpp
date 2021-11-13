@@ -20,12 +20,10 @@
 
 #include <frontend/frontend.h>
 
-#include <frontend/serialization.h>
-#include <frontend/symbol_resolver.h>
-#include <frontend/tables.h>
 #include <frontend/helpers.h>
+#include <frontend/serialization.h>
 
-#include <common/memory.h>
+#include <common/unordered_map.h>
 #include <logger/log.h>
 
 #define PREAMBLE "Frontend: "
@@ -42,21 +40,22 @@ namespace micro_profiler
 		const auto detached_frontend_stub2 = bind([] {});
 	}
 
-	frontend::frontend(ipc::channel &outbound, const std::string &/*cache_directory*/,
-			scheduler::queue &/*worker*/, scheduler::queue &/*apartment*/)
-		: client_session(outbound), _statistics(make_shared<tables::statistics>()),
-			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
-			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false),
+	frontend::frontend(ipc::channel &outbound, const string &cache_directory,
+			scheduler::queue &worker, scheduler::queue &apartment)
+		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment),
+			_statistics(make_shared<tables::statistics>()), _modules(make_shared<tables::modules>()),
+			_mappings(make_shared<tables::module_mappings>()), _patches(make_shared<tables::patches>()),
+			_threads(make_shared<tables::threads>()), _initialized(false),
 			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
 		_statistics->request_update = [this] {
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
 		};
 
-		_modules->request_presence = [this] (shared_ptr<void> &request, const string &path, unsigned int hash,
-			unsigned int persistent_id, const tables::modules::metadata_ready_cb &ready) {
+		_modules->request_presence = [this] (shared_ptr<void> &request, unsigned int persistent_id,
+			const tables::modules::metadata_ready_cb &ready) {
 
-			request_metadata(request, path, hash, persistent_id, ready);
+			request_metadata(request, persistent_id, ready);
 		};
 
 		subscribe(*new_request_handle(), init_v1, [this] (ipc::deserializer &) {
@@ -125,6 +124,8 @@ namespace micro_profiler
 			d(lmodules);
 			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
 			{
+				if (_symbol_cache_paths.find(i->second.persistent_id) == _symbol_cache_paths.end())
+					_symbol_cache_paths[i->second.persistent_id] = construct_cache_path(i->second.path, i->second.hash);
 				_mappings->insert(*i);
 				_mappings->layout.insert(lower_bound(_mappings->layout.begin(), _mappings->layout.end(), *i,
 					mapping_less()), *i);
@@ -171,66 +172,27 @@ namespace micro_profiler
 			const auto self = this;
 			const auto remaining = make_shared<unsigned int>(0);
 			const auto enable = make_shared<bool>(false);
+			containers::unordered_map<unsigned int, int> requested;
 
 			for (auto i = _statistics->begin(); i != _statistics->end(); ++i)
 			{
-				if (auto m = find_range(_mappings->layout, i->first.first, mapping_less()))
-				{
-					const auto id = m->second.persistent_id;
+				const auto m = find_range(_mappings->layout, i->first.first, mapping_less());
 
-					if (!_final_metadata_requests.count(id))
-					{
-						++*remaining;
-						request_metadata(_final_metadata_requests[id], "", 0, id,
-							[self, remaining, enable] (const module_info_metadata &) {
+				if (!m || requested[m->second.persistent_id]++)
+					continue;
+				++*remaining;
+				request_metadata(*new_request_handle(), m->second.persistent_id,
+					[self, remaining, enable] (const module_info_metadata &) {
 
-							if (!--*remaining && *enable)
-								self->disconnect_session();
-						});
-					}
-				}
+					if (!--*remaining && *enable)
+						self->disconnect_session();
+				});
 			}
 			LOG(PREAMBLE "finalizing - necessary metadata requested...") % A(this) % (*remaining);
 			if (!*remaining)
 				disconnect_session();
 			else
 				*enable = true;
-		});
-	}
-
-	void frontend::request_metadata(shared_ptr<void> &request_, const string &/*path*/, unsigned int /*hash_*/,
-		unsigned int persistent_id, const tables::modules::metadata_ready_cb &ready)
-	{
-		const auto init = mx_metadata_requests_t::create(request_, _mx_metadata_requests, persistent_id, ready);
-		const auto m = _modules->find(persistent_id);
-
-		if (m != _modules->end())
-		{
-			ready(m->second);
-		}
-		else if (init.underlying)
-		{
-			auto &mx = init.multiplexed;
-
-			request_metadata_nw(*init.underlying, persistent_id, [&mx] (const module_info_metadata &metadata) {
-				mx.invoke([&metadata] (const tables::modules::metadata_ready_cb &ready) {	ready(metadata);	});
-			});
-		}
-	}
-
-	void frontend::request_metadata_nw(shared_ptr<void> &request_, unsigned int persistent_id,
-		const tables::modules::metadata_ready_cb &ready)
-	{
-		LOG(PREAMBLE "requesting metadata from remote...") % A(this) % A(persistent_id);
-		request(request_, request_module_metadata, persistent_id, response_module_metadata,
-			[this, persistent_id, ready] (ipc::deserializer &d) {
-
-			auto &m = (*_modules)[persistent_id];
-
-			d(m);
-
-			LOG(PREAMBLE "received metadata...") % A(persistent_id) % A(m.symbols.size()) % A(m.source_files.size());
-			ready(m);
 		});
 	}
 

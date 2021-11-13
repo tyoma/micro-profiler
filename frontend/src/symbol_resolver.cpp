@@ -86,7 +86,7 @@ namespace micro_profiler
 
 				if (i.second)
 				{
-					_modules->request_presence(i.first->second, mapping.path, mapping.hash, mapping.persistent_id,
+					_modules->request_presence(i.first->second, mapping.persistent_id,
 						[this, i] (const module_info_metadata &metadata) {
 
 						auto &cached_symbols = _symbols_ordered[i.first->first];

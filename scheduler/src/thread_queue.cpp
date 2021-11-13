@@ -18,67 +18,31 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <scheduler/thread_queue.h>
 
-#include <memory>
-#include <string>
-#include <vector>
+using namespace std;
 
 namespace scheduler
 {
-	struct queue;
-	class thread_queue;
-	class ui_queue;
-}
+	thread_queue::thread_queue(const clock &clock_)
+		: _underlying(clock_), _stop_requested(false), _thread([this] {	run();	})
+	{	}
 
-namespace wpl
-{
-	class factory;
-}
-
-namespace micro_profiler
-{
-	struct hive;
-
-	class application
+	thread_queue::~thread_queue()
 	{
-	public:
-		application();
-		~application();
+		_underlying.schedule([this] {	_stop_requested = true;	});
+		_thread.join();
+	}
 
-		wpl::factory &get_factory();
-		scheduler::queue &get_ui_queue();
-		scheduler::queue &get_worker_queue();
-		std::shared_ptr<hive> get_configuration();
+	void thread_queue::schedule(function<void ()> &&task, mt::milliseconds defer_by)
+	{	_underlying.schedule(move(task), defer_by);	}
 
-		void run();
-		void stop();
-
-		void clipboard_copy(const std::string &text);
-		void open_link(const std::string &address);
-
-	private:
-		class impl;
-
-	private:
-		static const std::vector<std::string> c_configuration_path;
-
-	private:
-		std::shared_ptr<wpl::factory> _factory;
-		std::unique_ptr<impl> _impl;
-		std::shared_ptr<hive> _config;
-		std::shared_ptr<scheduler::ui_queue> _queue;
-		std::shared_ptr<scheduler::thread_queue> _worker_queue;
-	};
-
-
-
-	inline wpl::factory &application::get_factory()
-	{	return *_factory;	}
-
-	inline std::shared_ptr<hive> application::get_configuration()
-	{	return _config;	}
-
-
-	void main(application &app);
+	void thread_queue::run()
+	{
+		while (!_stop_requested)
+		{
+			_underlying.wait();
+			_underlying.execute_ready(mt::milliseconds(10));
+		}
+	}
 }

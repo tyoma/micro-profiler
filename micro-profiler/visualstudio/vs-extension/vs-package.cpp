@@ -38,6 +38,7 @@
 #include <frontend/profiling_session.h>
 #include <frontend/tables_ui.h>
 #include <logger/log.h>
+#include <scheduler/thread_queue.h>
 #include <scheduler/ui_queue.h>
 #include <setup/environment.h>
 #include <visualstudio/dispatch.h>
@@ -52,6 +53,8 @@ using namespace placeholders;
 
 namespace micro_profiler
 {
+	extern const string c_cache_directory;
+
 	namespace integration
 	{
 		extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
@@ -130,6 +133,7 @@ namespace micro_profiler
 		{
 			auto q = _ui_queue = make_shared<scheduler::ui_queue>(_clock);
 
+			_worker_queue = make_shared<scheduler::thread_queue>(_clock);
 			return [q] (wpl::queue_task t, wpl::timespan defer_by) {
 				return q->schedule(move(t), mt::milliseconds(defer_by)), true;
 			};
@@ -150,8 +154,9 @@ namespace micro_profiler
 			});
 			setup_factory(factory);
 			register_path(false);
-			_frontend_manager.reset(new frontend_manager([] (ipc::channel &outbound) {	return new frontend(outbound);	},
-				[this] (const profiling_session &session) -> shared_ptr<frontend_ui> {
+			_frontend_manager.reset(new frontend_manager([this] (ipc::channel &outbound) {
+				return new frontend(outbound, c_cache_directory, *_worker_queue, *_ui_queue);
+			}, [this] (const profiling_session &session) -> shared_ptr<frontend_ui> {
 				const auto ui = make_shared<frontend_pane>(get_factory(), session, _configuration, _ui_queue);
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));

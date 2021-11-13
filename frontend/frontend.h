@@ -31,6 +31,7 @@
 #include <functional>
 #include <ipc/client_session.h>
 #include <list>
+#include <scheduler/private_queue.h>
 
 namespace micro_profiler
 {
@@ -40,7 +41,8 @@ namespace micro_profiler
 		typedef profiling_session session_type;
 
 	public:
-		frontend(ipc::channel &outbound);
+		frontend(ipc::channel &outbound, const std::string &cache_directory,
+			scheduler::queue &worker, scheduler::queue &apartment);
 		~frontend();
 
 	public:

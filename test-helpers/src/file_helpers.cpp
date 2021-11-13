@@ -62,6 +62,9 @@ namespace micro_profiler
 			::rmdir(_temp_path.c_str());
 		}
 
+		string temporary_directory::path() const
+		{	return _temp_path;	}
+
 		string temporary_directory::track_file(const string &filename)
 		{
 			_tracked.push_back(filename);

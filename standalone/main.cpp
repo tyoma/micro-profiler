@@ -33,6 +33,7 @@
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>
+#include <scheduler/thread_queue.h>
 #include <wpl/factory.h>
 #include <wpl/form.h>
 #include <wpl/helpers.h>
@@ -49,13 +50,13 @@ namespace micro_profiler
 	{
 		const string c_configuration_path_[] = {	"gevorkyan.org", "MicroProfiler",	};
 		const string c_logname = "micro-profiler_standalone.log";
+		const string c_cache_directory = constants::data_directory() & "cache";
 
 		class logger_instance
 		{
 		public:
 			logger_instance()
 			{
-				mkdir(constants::data_directory().c_str(), 0777);
 				_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
 					&get_datetime));
 				log::g_logger = _logger.get();
@@ -87,6 +88,9 @@ namespace micro_profiler
 
 	void main(application &app)
 	{
+		mkdir(constants::data_directory().c_str(), 0777);
+		mkdir(c_cache_directory.c_str(), 0777);
+
 		logger_instance logger;
 
 		LOG("MicroProfiler standalone frontend started...");
@@ -148,7 +152,9 @@ namespace micro_profiler
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};
-		auto frontend_manager_ = make_shared<frontend_manager>([] (ipc::channel &outbound) {	return new frontend(outbound);	}, ui_factory);
+		auto frontend_manager_ = make_shared<frontend_manager>([&app] (ipc::channel &outbound) {
+			return new frontend(outbound, c_cache_directory, app.get_worker_queue(), app.get_ui_queue());
+		}, ui_factory);
 		ipc_manager ipc_manager(frontend_manager_, app.get_ui_queue(),
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 			&constants::standalone_frontend_id);

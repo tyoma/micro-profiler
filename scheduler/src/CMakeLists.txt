@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 set(SCHEDULER_SOURCES
 	private_queue.cpp
 	task_queue.cpp
+	thread_queue.cpp
 )
 
 if (WIN32)

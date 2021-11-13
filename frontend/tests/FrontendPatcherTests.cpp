@@ -6,6 +6,7 @@
 #include <frontend/tables.h>
 #include <ipc/server_session.h>
 #include <patcher/interface.h>
+#include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
@@ -73,19 +74,18 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( FrontendPatcherTests )
-			shared_ptr<mocks::queue> queue;
+			mocks::queue queue, worker_queue;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<frontend> frontend_;
 			shared_ptr<const tables::patches> patches;
+			temporary_directory dir;
 
 			init( Init )
 			{
-				queue = make_shared<mocks::queue>();
-
-				auto e = make_shared<emulator_>(*queue);
+				auto e = make_shared<emulator_>(queue);
 				profiling_session context;
 
-				frontend_ = make_shared<frontend>(e->server_session);
+				frontend_ = make_shared<frontend>(e->server_session, dir.path(), worker_queue, queue);
 				e->outbound = frontend_.get();
 				frontend_->initialized = [&] (const profiling_session &ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e, &e->server_session);
@@ -221,10 +221,10 @@ namespace micro_profiler
 				patches->apply(31, mkrange(rva2));
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
-				assert_equal(1u, queue->tasks.size());
+				assert_equal(1u, queue.tasks.size());
 				assert_equal(2u, patches->size());
 				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
 					+ mkpatch(2, 0, false, true, false)
@@ -239,10 +239,10 @@ namespace micro_profiler
 					patches->find(31)->second);
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
-				assert_is_empty(queue->tasks);
+				assert_is_empty(queue.tasks);
 				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
 					+ mkpatch(2, 0, false, true, false)
 					+ mkpatch(3, 0, false, true, false),
@@ -330,7 +330,7 @@ namespace micro_profiler
 				patches->apply(19, mkrange(rva));
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
 				assert_equal(1u, patches->size());
@@ -367,7 +367,7 @@ namespace micro_profiler
 				assert_equivalent(patches->find(19)->second, log.back());
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
 				assert_equal(2u, log.size());
@@ -527,10 +527,10 @@ namespace micro_profiler
 				patches->revert(31, mkrange(rva2));
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
-				assert_equal(1u, queue->tasks.size());
+				assert_equal(1u, queue.tasks.size());
 				assert_equal(2u, patches->size());
 				assert_equivalent(plural + mkpatch(1, 1, false, false, false)
 					+ mkpatch(2, 2, false, true, true)
@@ -549,10 +549,10 @@ namespace micro_profiler
 					patches->find(31)->second);
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
-				assert_is_empty(queue->tasks);
+				assert_is_empty(queue.tasks);
 				assert_equivalent(plural + mkpatch(1, 1, false, false, false)
 					+ mkpatch(2, 2, false, true, true)
 					+ mkpatch(20, 3, false, false, true)
@@ -633,7 +633,7 @@ namespace micro_profiler
 				patches->revert(99, mkrange(rva));
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
 				assert_equal(1u, patches->size());
@@ -672,7 +672,7 @@ namespace micro_profiler
 				assert_equivalent(patches->find(19)->second, log.back());
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
 				assert_equal(2u, log.size());

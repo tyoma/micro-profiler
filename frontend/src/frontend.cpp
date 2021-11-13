@@ -42,7 +42,8 @@ namespace micro_profiler
 		const auto detached_frontend_stub2 = bind([] {});
 	}
 
-	frontend::frontend(ipc::channel &outbound)
+	frontend::frontend(ipc::channel &outbound, const std::string &/*cache_directory*/,
+			scheduler::queue &/*worker*/, scheduler::queue &/*apartment*/)
 		: client_session(outbound), _statistics(make_shared<tables::statistics>()),
 			_modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
 			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false),

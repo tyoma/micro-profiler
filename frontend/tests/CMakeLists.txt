@@ -7,6 +7,7 @@ set(FRONTEND_TESTS_SOURCES
 	DeSerializationTests.cpp
 	FilePersistenceTests.cpp
 	FrontendManagerTests.cpp
+	FrontendMetadataTests.cpp
 	FrontendPatcherTests.cpp
 	FrontendStatisticsTests.cpp
 	FrontendTests.cpp

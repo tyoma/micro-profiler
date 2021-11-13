@@ -30,6 +30,7 @@
 
 namespace scheduler
 {
+	class thread_queue;
 	class ui_queue;
 }
 
@@ -79,6 +80,7 @@ namespace micro_profiler
 		private:
 			std::function<mt::milliseconds ()> _clock;
 			std::shared_ptr<scheduler::ui_queue> _ui_queue;
+			std::shared_ptr<scheduler::thread_queue> _worker_queue;
 			CComPtr<_DTE> _dte;
 			std::shared_ptr<hive> _configuration;
 			std::shared_ptr<frontend_manager> _frontend_manager;

@@ -83,8 +83,9 @@ namespace micro_profiler
 	application::application()
 		: _impl(new impl)
 	{
-		const auto clock_ = &micro_profiler::clock;
-		const auto queue = make_shared<scheduler::ui_queue>([clock_] {	return mt::milliseconds(clock_());	});
+		const auto clock_raw = &clock;
+		const auto clock_mt = [clock_raw] {	return mt::milliseconds(clock_raw());	};
+		const auto queue = make_shared<scheduler::ui_queue>(clock_mt);
 		const auto text_engine = create_text_engine();
 		const factory_context context = {
 			make_shared<gcontext::surface_type>(1, 1, 16),
@@ -92,7 +93,7 @@ namespace micro_profiler
 			text_engine,
 			create_static_stylesheet(*text_engine),
 			make_shared<macos::cursor_manager>(),
-			clock_,
+			clock_raw,
 			[queue] (wpl::queue_task t, wpl::timespan defer_by) {
 				return queue->schedule(move(t), mt::milliseconds(defer_by)), true;
 			},
@@ -100,6 +101,7 @@ namespace micro_profiler
 
 		_factory = wpl::factory::create_default(context);
 		_queue = queue;
+		_worker_queue.reset(new scheduler::thread_queue(clock_mt));
 		_config = file_hive::open_ini("~/.MicroProfiler/settings.ini");
 		setup_factory(*_factory);
 	}
@@ -109,6 +111,9 @@ namespace micro_profiler
 
 	scheduler::queue &application::get_ui_queue()
 	{	return *_queue;	}
+
+	scheduler::queue &application::get_worker_queue()
+	{	return *_worker_queue;	}
 
 	void application::run()
 	{	_impl->run();	}

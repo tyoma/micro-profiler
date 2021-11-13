@@ -13,6 +13,8 @@ namespace micro_profiler
 			temporary_directory();
 			~temporary_directory();
 
+			std::string path() const;
+
 			std::string track_file(const std::string &filename);
 			std::string copy_file(const std::string &source);
 

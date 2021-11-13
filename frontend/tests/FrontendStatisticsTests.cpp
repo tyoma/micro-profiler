@@ -6,6 +6,7 @@
 #include <frontend/serialization_context.h>
 #include <ipc/server_session.h>
 #include <test-helpers/comparisons.h>
+#include <test-helpers/file_helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
@@ -55,19 +56,20 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( FrontendStatisticsTests )
-			shared_ptr<mocks::queue> queue;
+			mocks::queue queue, worker;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<const tables::statistics> statistics;
 			shared_ptr<const tables::module_mappings> mappings;
 			shared_ptr<const tables::modules> modules;
 			shared_ptr<void> req[5];
+			temporary_directory dir;
 
 			shared_ptr<frontend> create_frontend()
 			{
 				typedef pair< shared_ptr<emulator_>, shared_ptr<frontend> > complex_t;
 
-				auto e2 = make_shared<emulator_>(*queue);
-				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session));
+				auto e2 = make_shared<emulator_>(queue);
+				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session, dir.path(), worker, queue));
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();
@@ -78,11 +80,6 @@ namespace micro_profiler
 				};
 				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
 				return f;
-			}
-
-			init( Init )
-			{
-				queue = make_shared<mocks::queue>();
 			}
 
 
@@ -177,7 +174,7 @@ namespace micro_profiler
 				assert_equal(1, update_requests);
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
 				assert_equal(1, update_requests);
@@ -336,14 +333,14 @@ namespace micro_profiler
 				assert_equal(0, disconnections);
 
 				// ACT
-				queue->run_one();
-				queue->run_one();
+				queue.run_one();
+				queue.run_one();
 
 				// ASSERT
 				assert_equal(0, disconnections);
 
 				// ACT
-				queue->run_one();
+				queue.run_one();
 
 				// ASSERT
 				assert_equal(1, disconnections);

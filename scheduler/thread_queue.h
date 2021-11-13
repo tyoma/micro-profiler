@@ -20,65 +20,27 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
+#include "scheduler.h"
+#include "task_queue.h"
+
+#include <mt/thread.h>
 
 namespace scheduler
 {
-	struct queue;
-	class thread_queue;
-	class ui_queue;
-}
-
-namespace wpl
-{
-	class factory;
-}
-
-namespace micro_profiler
-{
-	struct hive;
-
-	class application
+	class thread_queue : public queue
 	{
 	public:
-		application();
-		~application();
+		thread_queue(const clock &clock_);
+		~thread_queue();
 
-		wpl::factory &get_factory();
-		scheduler::queue &get_ui_queue();
-		scheduler::queue &get_worker_queue();
-		std::shared_ptr<hive> get_configuration();
+		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by) override;
 
+	private:
 		void run();
-		void stop();
-
-		void clipboard_copy(const std::string &text);
-		void open_link(const std::string &address);
 
 	private:
-		class impl;
-
-	private:
-		static const std::vector<std::string> c_configuration_path;
-
-	private:
-		std::shared_ptr<wpl::factory> _factory;
-		std::unique_ptr<impl> _impl;
-		std::shared_ptr<hive> _config;
-		std::shared_ptr<scheduler::ui_queue> _queue;
-		std::shared_ptr<scheduler::thread_queue> _worker_queue;
+		task_queue _underlying;
+		bool _stop_requested;
+		mt::thread _thread;
 	};
-
-
-
-	inline wpl::factory &application::get_factory()
-	{	return *_factory;	}
-
-	inline std::shared_ptr<hive> application::get_configuration()
-	{	return _config;	}
-
-
-	void main(application &app);
 }

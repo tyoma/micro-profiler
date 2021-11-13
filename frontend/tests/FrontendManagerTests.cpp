@@ -10,6 +10,7 @@
 #include <frontend/frontend_ui.h>
 #include <frontend/profiling_session.h>
 #include <strmd/serializer.h>
+#include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
@@ -25,7 +26,6 @@ namespace micro_profiler
 		{
 			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
 
-			const auto new_frontend = [] (ipc::channel &outbound) {	return new micro_profiler::frontend(outbound);	};
 			const auto null_ui_factory = [] (const profiling_session &) {	return shared_ptr<micro_profiler::frontend_ui>();	};
 
 			profiling_session create_ui_context(string executable)
@@ -98,12 +98,18 @@ namespace micro_profiler
 			shared_ptr<tables::statistics> statistics;
 			shared_ptr<tables::modules> modules;
 			shared_ptr<tables::module_mappings> mappings;
+			temporary_directory dir;
+			mocks::queue worker, apartment;
+			function<frontend *(ipc::channel &outbound)> new_frontend;
 
 			init( Init )
 			{
 				statistics = make_shared<tables::statistics>();
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
+				new_frontend = [this] (ipc::channel &outbound) {
+					return new frontend(outbound, dir.path(), worker, apartment);
+				};
 			}
 
 

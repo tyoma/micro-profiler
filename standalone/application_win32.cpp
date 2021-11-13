@@ -33,6 +33,7 @@
 #include <frontend/factory.h>
 #include <frontend/system_stylesheet.h>
 #include <ipc/com/init.h>
+#include <scheduler/thread_queue.h>
 #include <scheduler/ui_queue.h>
 #include <ShellAPI.h>
 #include <wpl/factory.h>
@@ -82,6 +83,7 @@ namespace micro_profiler
 			END_COM_MAP()
 		};
 
+		OBJECT_ENTRY_NON_CREATEABLE_EX_AUTO(static_cast<const GUID &>(constants::standalone_frontend_id), FauxFrontend);
 
 
 		shared_ptr<hive> open_configuration(const vector<string> &configuration_path)
@@ -95,14 +97,11 @@ namespace micro_profiler
 	}
 
 
-	OBJECT_ENTRY_NON_CREATEABLE_EX_AUTO(static_cast<const GUID &>(constants::standalone_frontend_id),
-		FauxFrontend);
-
-
 	application::application()
 	{
-		const auto clock_ = &clock;
-		const auto queue = make_shared<scheduler::ui_queue>([] {	return mt::milliseconds(clock());	});
+		const auto clock_raw = &clock;
+		const auto clock_mt = [clock_raw] {	return mt::milliseconds(clock_raw());	};
+		const auto queue = make_shared<scheduler::ui_queue>(clock_mt);
 		const auto text_engine = create_text_engine();
 		const factory_context context = {
 			make_shared<gcontext::surface_type>(1, 1, 16),
@@ -110,7 +109,7 @@ namespace micro_profiler
 			text_engine,
 			make_shared<system_stylesheet>(text_engine),
 			make_shared<wpl::win32::cursor_manager>(),
-			clock_,
+			clock_raw,
 			[queue] (wpl::queue_task t, wpl::timespan defer_by) {
 				return queue->schedule(move(t), mt::milliseconds(defer_by)), true;
 			},
@@ -118,6 +117,7 @@ namespace micro_profiler
 
 		_factory = wpl::factory::create_default(context);
 		_queue = queue;
+		_worker_queue.reset(new scheduler::thread_queue(clock_mt));
 		_config = open_configuration(c_configuration_path);
 		setup_factory(*_factory);
 	}
@@ -127,6 +127,9 @@ namespace micro_profiler
 
 	scheduler::queue &application::get_ui_queue()
 	{	return *_queue;	}
+
+	scheduler::queue &application::get_worker_queue()
+	{	return *_worker_queue;	}
 
 	void application::run()
 	{

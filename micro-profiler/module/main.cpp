@@ -40,6 +40,7 @@ namespace micro_profiler
 	class Module : public CAtlDllModuleT<Module> { } g_module;
 
 	const string c_logname = "micro-profiler_vspackage.log";
+	extern const string c_cache_directory = constants::data_directory() & "cache";
 	HINSTANCE g_instance;
 	unique_ptr<log::multithreaded_logger> g_logger;
 
@@ -91,6 +92,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 
 		g_instance = hinstance;
 		mkdir(constants::data_directory().c_str());
+		mkdir(c_cache_directory.c_str());
 		g_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
 			&get_datetime));
 		log::g_logger = g_logger.get();

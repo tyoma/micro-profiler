@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "multiplexing_request.h"
 #include "profiling_session.h"
 #include "serialization_context.h"
 #include "tables.h"
@@ -30,6 +29,7 @@
 #include <functional>
 #include <ipc/client_session.h>
 #include <list>
+#include <reqm/multiplexing_request.h>
 #include <scheduler/private_queue.h>
 
 namespace micro_profiler
@@ -49,7 +49,7 @@ namespace micro_profiler
 
 	private:
 		typedef containers::unordered_map<unsigned int /*persistent_id*/, std::string> symbol_cache_paths_t;
-		typedef multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
+		typedef reqm::multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
 		typedef std::list< std::shared_ptr<void> > requests_t;
 
 	private:

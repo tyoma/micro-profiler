@@ -1,4 +1,4 @@
-#include <frontend/multiplexing_request.h>
+#include <reqm/multiplexing_request.h>
 
 #include <functional>
 #include <test-helpers/helpers.h>
@@ -7,12 +7,14 @@
 
 using namespace std;
 
-namespace micro_profiler
+namespace reqm
 {
 	namespace tests
 	{
 		namespace
 		{
+			using namespace micro_profiler::tests;
+
 			typedef multiplexing_request< int, function<void ()> > request_a;
 			typedef multiplexing_request< string, function<void ()> > request_b;
 

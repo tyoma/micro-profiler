@@ -24,7 +24,7 @@
 #include <map>
 #include <memory>
 
-namespace micro_profiler
+namespace reqm
 {
 	template <typename KeyT, typename CallbackT>
 	class multiplexing_request

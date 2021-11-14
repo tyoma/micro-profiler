@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(micro-profiler)
 
+option(MP_BUILD_VSPACKAGE "Build Visual Studio Package." ON)
+
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/build.props)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_lib)
@@ -133,6 +135,7 @@ add_subdirectory(micro-profiler.tests/guineapigs)
 add_subdirectory(micro-profiler.tests)
 add_subdirectory(mt/tests)
 add_subdirectory(patcher/tests)
+add_subdirectory(reqm/tests)
 add_subdirectory(scheduler/tests)
 add_subdirectory(test-helpers/src)
 add_subdirectory(views/tests)
@@ -143,10 +146,12 @@ if (WIN32 OR APPLE)
 	add_subdirectory(standalone)
 
 	if (WIN32)
-		add_subdirectory(libraries/wpl.vs)
-
 		add_subdirectory(injector/src)
-		add_subdirectory(micro-profiler)
+		
+		if (MB_BUILD_VSPACKAGE)
+			add_subdirectory(libraries/wpl.vs)
+			add_subdirectory(micro-profiler)
+		endif()
 
 		add_subdirectory(injector/tests)
 	endif ()

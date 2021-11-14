@@ -148,7 +148,7 @@ if (WIN32 OR APPLE)
 	if (WIN32)
 		add_subdirectory(injector/src)
 		
-		if (MB_BUILD_VSPACKAGE)
+		if (MP_BUILD_VSPACKAGE)
 			add_subdirectory(libraries/wpl.vs)
 			add_subdirectory(micro-profiler)
 		endif()

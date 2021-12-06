@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 include(test)
 
 set(FRONTEND_TESTS_SOURCES
+	AggregateViewTests.cpp
+	AnyKeyTests.cpp
 	FilterViewTests.cpp
 	FlattenViewTests.cpp
 	OrderedViewTests.cpp

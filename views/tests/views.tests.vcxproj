@@ -30,11 +30,15 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="AggregateViewTests.cpp" />
+    <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\aggregate.h" />
+    <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\flatten.h" />
     <ClInclude Include="..\ordered.h" />

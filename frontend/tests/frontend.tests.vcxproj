@@ -68,6 +68,9 @@
     <ClCompile Include="NestedStatisticModelsTests.cpp" />
     <ClCompile Include="NestedTransformTests.cpp" />
     <ClCompile Include="mocks.cpp" />
+    <ClCompile Include="ProfilingPreferencesTests.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ProcessListTests.cpp" />
     <ClCompile Include="ProjectionViewTests.cpp" />
     <ClCompile Include="SelectionModelTests.cpp" />

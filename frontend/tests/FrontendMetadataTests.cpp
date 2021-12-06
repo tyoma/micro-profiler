@@ -66,16 +66,6 @@ namespace micro_profiler
 				return mi;
 			}
 
-			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
-			module_info_metadata create_module_info(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
-			{
-				module_info_metadata mi;
-
-				mi.symbols = mkvector(symbols);
-				mi.source_files = unordered_map<unsigned, string>(begin(files), end(files));
-				return mi;
-			}
-
 			template <typename T>
 			void write(const string &path, const T &object)
 			{

@@ -64,6 +64,9 @@
     <ClCompile Include="frontend_metadata.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="profiling_preferences.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -99,8 +102,8 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\profiling_session.h" />
     <ClInclude Include="..\helpers.h" />
-    <ClInclude Include="..\multiplexing_request.h" />
     <ClInclude Include="..\async_file.h" />
+    <ClInclude Include="..\profiling_preferences.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

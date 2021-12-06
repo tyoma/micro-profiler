@@ -21,6 +21,7 @@ set(FRONTEND_TESTS_SOURCES
 	NestedStatisticModelsTests.cpp
 	NestedTransformTests.cpp
 	ProcessListTests.cpp
+#	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp
 	SelectionModelTests.cpp
 	SymbolResolverTests.cpp

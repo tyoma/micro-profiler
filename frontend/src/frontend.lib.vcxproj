@@ -48,6 +48,7 @@
     <ClCompile Include="headers_model.cpp" />
     <ClCompile Include="image_patch_model.cpp" />
     <ClCompile Include="process_list.cpp" />
+    <ClCompile Include="profiling_preferences.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
     <ClCompile Include="untested\function_hint.cpp" />
@@ -80,12 +81,12 @@
     <ClInclude Include="..\key.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\headers_model.h" />
-    <ClInclude Include="..\multiplexing_request.h" />
     <ClInclude Include="..\nested_statistics_model.h" />
     <ClInclude Include="..\nested_transform.h" />
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
+    <ClInclude Include="..\profiling_preferences.h" />
     <ClInclude Include="..\profiling_session.h" />
     <ClInclude Include="..\projection_view.h" />
     <ClInclude Include="..\selection_model.h" />

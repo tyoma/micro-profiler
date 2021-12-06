@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "profiling_preferences.h"
 #include "serialization_context.h"
 #include "tables.h"
 
@@ -130,6 +131,9 @@ namespace micro_profiler
 		archive(static_cast<function_statistics &>(data), context);
 		archive(data.callees, context);
 	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, module_profiling_preferences &data, unsigned int /*ver*/);
 
 	namespace tables
 	{

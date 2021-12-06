@@ -4,6 +4,8 @@
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
+    <ClCompile Include="AnyKeyTests.cpp" />
+    <ClCompile Include="AggregateViewTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -18,6 +20,12 @@
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\ordered.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\aggregate.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\any_key.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
   </ItemGroup>

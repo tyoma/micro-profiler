@@ -9,6 +9,7 @@ set(FRONTEND_LIB_SOURCES
 	headers_model.cpp
 	image_patch_model.cpp
 	process_list.cpp
+	profiling_preferences.cpp
 	symbol_resolver.cpp
 	threads_model.cpp
 

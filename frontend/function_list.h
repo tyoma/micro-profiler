@@ -22,6 +22,7 @@
 
 #include "statistics_model.h"
 
+#include <views/aggregate.h>
 #include <views/filter.h>
 
 namespace micro_profiler
@@ -49,7 +50,34 @@ namespace micro_profiler
 		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
 		std::shared_ptr< std::vector<statistic_types::key> > scope);
 
-	class functions_list : public statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> >
+	struct functions_list_provider
+	{
+		struct sum
+		{
+			typedef std::pair<statistic_types::key, statistic_types::function_detailed> aggregated_type;
+
+			aggregated_type operator ()(const statistic_types::map_detailed::value_type &value) const;
+			void operator ()(aggregated_type &group, const statistic_types::map_detailed::value_type &value) const;
+		};
+
+		typedef views::filter<statistic_types::map_detailed> filter_type;
+		typedef views::aggregate<filter_type, sum> aggregate_type;
+		typedef aggregate_type::value_type value_type;
+		typedef aggregate_type::const_iterator const_iterator;
+		typedef aggregate_type::const_reference const_reference;
+
+		functions_list_provider(std::shared_ptr<tables::statistics> statistics_);
+
+		const_iterator begin() const;
+		const_iterator end() const;
+
+		std::shared_ptr<const tables::statistics> statistics;
+		filter_type filter;
+		aggregate_type aggregate;
+		wpl::slot_connection connection;
+	};
+
+	class functions_list : public statistics_model_impl<wpl::richtext_table_model, functions_list_provider>
 	{
 	public:
 		typedef statistic_types::map_detailed::value_type value_type;
@@ -67,7 +95,7 @@ namespace micro_profiler
 		void print(std::string &content) const;
 
 	private:
-		typedef statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> > base;
+		typedef statistics_model_impl<wpl::richtext_table_model, functions_list_provider> base;
 
 	private:
 		std::shared_ptr<tables::statistics> _statistics;
@@ -79,13 +107,15 @@ namespace micro_profiler
 	template <typename PredicateT>
 	inline void functions_list::set_filter(const PredicateT &predicate)
 	{
-		get_underlying()->set_filter(predicate);
+		get_underlying()->filter.set_filter(predicate);
+		get_underlying()->aggregate.fetch();
 		fetch();
 	}
 
 	inline void functions_list::set_filter()
 	{
-		get_underlying()->set_filter();
+		get_underlying()->filter.set_filter();
+		get_underlying()->aggregate.fetch();
 		fetch();
 	}
 }

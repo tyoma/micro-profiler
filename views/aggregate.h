@@ -35,6 +35,8 @@ namespace micro_profiler
 		public:
 			class const_iterator;
 			typedef typename X::aggregated_type value_type;
+			typedef const value_type &const_reference;
+			typedef const value_type &reference;
 
 		public:
 			aggregate(const U &underlying, const X &transform);

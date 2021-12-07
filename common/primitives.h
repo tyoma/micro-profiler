@@ -62,8 +62,17 @@ namespace micro_profiler
 	template <typename AddressT>
 	struct function_statistics_detailed_t : function_statistics
 	{
-		typename statistic_types_t<AddressT>::map callees;
-		typename statistic_types_t<AddressT>::map_callers callers;
+		typedef typename statistic_types_t<AddressT>::map callees_type;
+		typedef typename statistic_types_t<AddressT>::map_callers callers_type;
+
+		function_statistics_detailed_t();
+		function_statistics_detailed_t(const function_statistics_detailed_t &rhs);
+		~function_statistics_detailed_t();
+
+		const function_statistics_detailed_t &operator =(const function_statistics_detailed_t &rhs);
+
+		callees_type &callees;
+		callers_type &callers;
 	};
 
 
@@ -98,7 +107,34 @@ namespace micro_profiler
 		if (rhs.max_call_time > max_call_time)
 			max_call_time = rhs.max_call_time;
 	}
-	
+
+
+	template <typename A>
+	inline function_statistics_detailed_t<A>::function_statistics_detailed_t()
+		: callees(*new callees_type), callers(*new callers_type)
+	{	}
+
+	template <typename A>
+	inline function_statistics_detailed_t<A>::function_statistics_detailed_t(const function_statistics_detailed_t &rhs)
+		: function_statistics(rhs), callees(*new callees_type(rhs.callees)), callers(*new callers_type(rhs.callers))
+	{	}
+
+	template <typename A>
+	inline function_statistics_detailed_t<A>::~function_statistics_detailed_t()
+	{
+		delete &callers;
+		delete &callees;
+	}
+
+	template <typename AddressT>
+	inline const function_statistics_detailed_t<AddressT> &function_statistics_detailed_t<AddressT>::operator =(const function_statistics_detailed_t &rhs)
+	{
+		static_cast<function_statistics &>(*this) = rhs;
+		callees = rhs.callees;
+		callers = rhs.callers;
+		return *this;
+	}
+
 
 	// helper methods - inline definitions
 	template <typename AddressT>

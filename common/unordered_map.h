@@ -20,11 +20,9 @@
 
 #pragma once
 
+#include "allocator.h"
 #include "compiler.h"
 
-#include <functional>
-#include <list>
-#include <vector>
 #include <unordered_map>
 
 namespace micro_profiler
@@ -32,7 +30,25 @@ namespace micro_profiler
 	namespace containers
 	{
 #if 1
-		using std::unordered_map;
+		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT>, typename Comparer = std::equal_to<KeyT> >
+		class unordered_map : public std::unordered_map< KeyT, ValueT, Hasher, Comparer/*, allocators::adaptor< std::pair<const KeyT, ValueT> >*/ >
+		{
+		public:
+			typedef std::unordered_map< KeyT, ValueT, Hasher, Comparer/*, allocators::adaptor< std::pair<const KeyT, ValueT> >*/ > base_t;
+
+		public:
+			unordered_map()
+			{	}
+
+			template <typename I>
+			unordered_map(I first, I last)
+				: base_t(first, last)
+			{	}
+
+			ValueT &operator [](const KeyT &key)
+			{	return base_t::operator [](key);	}
+		};
+
 #else
 		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT>, typename Comparer = std::equal_to<KeyT> >
 		class unordered_map : std::list< std::pair<const KeyT, ValueT> >

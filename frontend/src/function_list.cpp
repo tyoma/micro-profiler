@@ -377,11 +377,34 @@ namespace micro_profiler
 	{	return construct_nested<callers_transform>(underlying, tick_interval, resolver, threads, scope);	}
 
 
+	functions_list_provider::sum::aggregated_type functions_list_provider::sum::operator ()(const statistic_types::map_detailed::value_type &value) const
+	{	return value;	}
+
+	void functions_list_provider::sum::operator ()(aggregated_type &group, const statistic_types::map_detailed::value_type &value) const
+	{	group.second += value.second;	}
+
+	functions_list_provider::functions_list_provider(shared_ptr<tables::statistics> statistics_)
+		: statistics(statistics_), filter(*statistics_), aggregate(filter, sum())
+	{	connection = statistics->invalidate += [this] {	this->aggregate.fetch();	};	}
+
+	functions_list_provider::const_iterator functions_list_provider::begin() const
+	{	return aggregate.begin();	}
+
+	functions_list_provider::const_iterator functions_list_provider::end() const
+	{	return aggregate.end();	}
+
+
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval_,
 			shared_ptr<symbol_resolver> resolver_, shared_ptr<const tables::threads> threads_)
-		: base(make_bound< views::filter<statistic_types::map_detailed> >(statistics), tick_interval_, resolver_,
+		: base(make_shared<functions_list_provider>(statistics), tick_interval_, resolver_,
 			threads_), _statistics(statistics)
-	{	_connection = statistics->invalidate += [this] {	fetch();	};	}
+	{
+		_connection = statistics->invalidate += [this] {	fetch();	};
+		get_underlying()->aggregate.group_by([] (const statistic_types::map_detailed::value_type &v) {
+			return views::any_key(v.first, knuth_hash());
+		});
+		fetch();
+	}
 
 	functions_list::~functions_list()
 	{	}

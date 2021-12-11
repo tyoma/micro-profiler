@@ -63,8 +63,9 @@ namespace micro_profiler
 		run_load(&empty_call_instrumented, iterations);
 		timestamp_t end = read_tick_counter();
 
+		default_allocator al;
 		overhead o(0, 0);
-		analyzer a(o);
+		analyzer a(o, al);
 
 		collector.flush();
 		collector.read_collected(a);

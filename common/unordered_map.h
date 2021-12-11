@@ -30,23 +30,42 @@ namespace micro_profiler
 	namespace containers
 	{
 #if 1
-		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT>, typename Comparer = std::equal_to<KeyT> >
-		class unordered_map : public std::unordered_map< KeyT, ValueT, Hasher, Comparer/*, allocators::adaptor< std::pair<const KeyT, ValueT> >*/ >
+		template <typename T>
+		struct default_constructor
+		{
+			T operator ()() const
+			{	return T();	}
+		};
+
+		template < typename KeyT, typename ValueT, typename Hasher = std::hash<KeyT>,
+			typename Comparer = std::equal_to<KeyT>, typename Constructor = default_constructor<ValueT> >
+		class unordered_map : public std::unordered_map< KeyT, ValueT, Hasher, Comparer,
+			allocators::adaptor< std::pair<const KeyT, ValueT> > >
 		{
 		public:
-			typedef std::unordered_map< KeyT, ValueT, Hasher, Comparer/*, allocators::adaptor< std::pair<const KeyT, ValueT> >*/ > base_t;
+			typedef Constructor constructor_type;
+			typedef std::unordered_map< KeyT, ValueT, Hasher, Comparer,
+				allocators::adaptor< std::pair<const KeyT, ValueT> > > base_t;
 
 		public:
-			unordered_map()
-			{	}
-
-			template <typename I>
-			unordered_map(I first, I last)
-				: base_t(first, last)
+			unordered_map(allocator &allocator_, const constructor_type &constructor = constructor_type())
+				: base_t(8u, Hasher(), Comparer(), allocators::adaptor< std::pair<const KeyT, ValueT> >(allocator_)),
+					_constructor(constructor)
 			{	}
 
 			ValueT &operator [](const KeyT &key)
-			{	return base_t::operator [](key);	}
+			{
+				auto i = base_t::find(key);
+
+				return i != base_t::end() ? i->second : insert_default(key);
+			}
+
+		private:
+			FORCE_NOINLINE ValueT &insert_default(const KeyT &key)
+			{	return base_t::insert(std::make_pair(key, _constructor())).first->second;	}
+
+		private:
+			const constructor_type _constructor;
 		};
 
 #else

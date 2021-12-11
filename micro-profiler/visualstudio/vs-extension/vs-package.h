@@ -22,6 +22,7 @@
 
 #include <atlbase.h>
 #include <comdef.h>
+#include <common/pool_allocator.h>
 #include <dte.h>
 #include <list>
 #include <mt/chrono.h>
@@ -78,6 +79,8 @@ namespace micro_profiler
 			void on_open_source(const std::string &file, unsigned line);
 
 		private:
+			default_allocator _allocator_base;
+			pool_allocator _allocator;
 			std::function<mt::milliseconds ()> _clock;
 			std::shared_ptr<scheduler::ui_queue> _ui_queue;
 			std::shared_ptr<scheduler::thread_queue> _worker_queue;

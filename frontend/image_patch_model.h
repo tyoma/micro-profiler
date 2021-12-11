@@ -94,13 +94,13 @@ namespace micro_profiler
 	private:
 		const std::shared_ptr<const tables::patches> _patches;
 		const std::shared_ptr<const tables::modules> _modules;
-		containers::unordered_map<unsigned int /*persistent_id*/, std::string> _module_paths;
+		std::unordered_map<unsigned int /*persistent_id*/, std::string> _module_paths;
 		flatten_view_t _flatten_view;
 		filter_view_t _filter_view;
 		ordered_view_t _ordered_view;
 		const std::shared_ptr< trackables_provider<ordered_view_t> > _trackables;
 		wpl::slot_connection _connections[2];
-		containers::unordered_map< unsigned int, std::shared_ptr<void> > _requests;
+		std::unordered_map< unsigned int, std::shared_ptr<void> > _requests;
 	};
 
 

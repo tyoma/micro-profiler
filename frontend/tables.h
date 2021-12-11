@@ -37,30 +37,42 @@ namespace micro_profiler
 		{
 			typedef BaseT base_t;
 
+			table()
+			{	}
+
+			template <typename T, typename CtorT>
+			table(T &param, const CtorT &constructor)
+				: base_t(param, constructor)
+			{	}
+
 			mutable wpl::signal<void ()> invalidate;
 		};
 
 
 		struct statistics : table<statistic_types::map_detailed>
 		{
+			statistics(allocator &allocator_)
+				: table(allocator_, [&allocator_] {	return statistic_types::function_detailed(allocator_);	})
+			{	}
+
 			void clear();
 
 			std::function<void ()> request_update;
 		};
 
 
-		struct threads : table< containers::unordered_map<unsigned int /*threadid*/, thread_info, knuth_hash> >
+		struct threads : table< std::unordered_map<unsigned int /*threadid*/, thread_info, knuth_hash> >
 		{
 		};
 
 
-		struct module_mappings : table< containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> >
+		struct module_mappings : table< std::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> >
 		{
 			std::vector< std::pair<unsigned int, mapped_module_ex> > layout;
 		};
 
 
-		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >
+		struct modules : table< std::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >
 		{
 			typedef std::shared_ptr<void> handle_t;
 
@@ -69,7 +81,7 @@ namespace micro_profiler
 				request_presence;
 
 		private:
-			using table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >::invalidate;
+			using table< std::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >::invalidate;
 		};
 
 
@@ -88,9 +100,9 @@ namespace micro_profiler
 			} state;
 		};
 
-		typedef containers::unordered_map<unsigned int /*rva*/, patch> image_patches;
+		typedef std::unordered_map<unsigned int /*rva*/, patch> image_patches;
 
-		struct patches : table< containers::unordered_map<unsigned int /*persistent_id*/, image_patches> >
+		struct patches : table< std::unordered_map<unsigned int /*persistent_id*/, image_patches> >
 		{
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;

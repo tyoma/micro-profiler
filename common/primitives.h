@@ -25,8 +25,11 @@
 #include "types.h"
 #include "unordered_map.h"
 
+#include <functional>
+
 namespace micro_profiler
 {
+	struct allocator;
 	struct function_statistics;
 	template <typename KeyT> struct function_statistics_detailed_t;
 
@@ -36,8 +39,9 @@ namespace micro_profiler
 		typedef KeyT key;
 		typedef function_statistics function;
 		typedef function_statistics_detailed_t<KeyT> function_detailed;
+		typedef std::function<function_detailed ()> constructor_type;
 
-		typedef containers::unordered_map<KeyT, function_detailed, knuth_hash> map_detailed;
+		typedef containers::unordered_map<KeyT, function_detailed, knuth_hash, std::equal_to<KeyT>, constructor_type> map_detailed;
 		typedef containers::unordered_map<KeyT, function, knuth_hash> map;
 		typedef containers::unordered_map<KeyT, count_t, knuth_hash> map_callers;
 	};
@@ -65,7 +69,7 @@ namespace micro_profiler
 		typedef typename statistic_types_t<AddressT>::map callees_type;
 		typedef typename statistic_types_t<AddressT>::map_callers callers_type;
 
-		function_statistics_detailed_t();
+		function_statistics_detailed_t(allocator &allocator_);
 		function_statistics_detailed_t(const function_statistics_detailed_t &rhs);
 		~function_statistics_detailed_t();
 
@@ -73,6 +77,9 @@ namespace micro_profiler
 
 		callees_type &callees;
 		callers_type &callers;
+
+	private:
+		allocator &_allocator;
 	};
 
 
@@ -109,21 +116,28 @@ namespace micro_profiler
 	}
 
 
+	// function_statistics_detailed_t<...> - inline definitions
 	template <typename A>
-	inline function_statistics_detailed_t<A>::function_statistics_detailed_t()
-		: callees(*new callees_type), callers(*new callers_type)
+	inline function_statistics_detailed_t<A>::function_statistics_detailed_t(allocator &allocator_)
+		: callees(*new (allocator_.allocate(sizeof(callees_type))) callees_type(allocator_)),
+			callers(*new (allocator_.allocate(sizeof(callers_type))) callers_type(allocator_)),
+			_allocator(allocator_)
 	{	}
 
 	template <typename A>
 	inline function_statistics_detailed_t<A>::function_statistics_detailed_t(const function_statistics_detailed_t &rhs)
-		: function_statistics(rhs), callees(*new callees_type(rhs.callees)), callers(*new callers_type(rhs.callers))
+		: function_statistics(rhs), callees(*new (rhs._allocator.allocate(sizeof(callees_type))) callees_type(rhs.callees)),
+			callers(*new (rhs._allocator.allocate(sizeof(callers_type))) callers_type(rhs.callers)),
+			_allocator(rhs._allocator)
 	{	}
 
 	template <typename A>
 	inline function_statistics_detailed_t<A>::~function_statistics_detailed_t()
 	{
-		delete &callers;
-		delete &callees;
+		callers.~callers_type();
+		_allocator.deallocate(&callers);
+		callees.~callees_type();
+		_allocator.deallocate(&callees);
 	}
 
 	template <typename AddressT>

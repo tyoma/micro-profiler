@@ -12,4 +12,4 @@ set(FRONTEND_TESTS_SOURCES
 
 add_library(views.tests SHARED ${FRONTEND_TESTS_SOURCES})
 
-target_link_libraries(views.tests)
+target_link_libraries(views.tests common)

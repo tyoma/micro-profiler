@@ -34,7 +34,7 @@ namespace micro_profiler
 
 	public:
 		callees_transform(const U &underlying)
-			: _underlying(underlying)
+			: _underlying(underlying), _empty_nested(_allocator)
 		{	}
 
 		nested_const_iterator begin(const key_type &key) const
@@ -55,6 +55,7 @@ namespace micro_profiler
 
 	private:
 		const U &_underlying;
+		default_allocator _allocator;
 		const nested_container_type _empty_nested;
 	};
 
@@ -71,7 +72,7 @@ namespace micro_profiler
 
 	public:
 		callers_transform(const U &underlying)
-			: _underlying(underlying)
+			: _underlying(underlying), _empty_nested(_allocator)
 		{	}
 
 		nested_const_iterator begin(const key_type &key) const
@@ -92,6 +93,7 @@ namespace micro_profiler
 
 	private:
 		const U &_underlying;
+		default_allocator _allocator;
 		const nested_container_type _empty_nested;
 	};
 }

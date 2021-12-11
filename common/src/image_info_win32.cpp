@@ -167,8 +167,7 @@ namespace micro_profiler
 
 						if (self->_dbghelp->SymGetLineFromAddr64(self->_dbghelp.get(), symbol->Address, &displacement, &info))
 						{
-							pair<containers::unordered_map<string, unsigned int>::iterator, bool> r
-								= self->files.insert(make_pair(info.FileName, 0));
+							auto r = self->files.insert(make_pair(info.FileName, 0));
 
 							if (r.second)
 								r.first->second = self->_file_id++;
@@ -188,7 +187,7 @@ namespace micro_profiler
 
 			private:
 				unsigned int _file_id;
-				containers::unordered_map<string, unsigned int> files;
+				std::unordered_map<string, unsigned int> files;
 				shared_ptr<dbghelp> _dbghelp;
 				symbol_callback_t _callback;
 				symbol_info _si;

@@ -322,7 +322,7 @@ namespace micro_profiler
 					strmd::deserializer<read_file_stream, packer> dser(*s);
 					profiling_session ui_context = {
 						{},
-						make_shared<tables::statistics>(),
+						make_shared<tables::statistics>(_allocator),
 						make_shared<tables::module_mappings>(),
 						make_shared<tables::modules>(),
 						make_shared<tables::patches>(),

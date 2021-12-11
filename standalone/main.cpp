@@ -20,9 +20,11 @@
 
 #include "application.h"
 #include "ProfilerMainDialog.h"
-	
+
+#include <common/allocator.h>
 #include <common/constants.h>
 #include <common/path.h>
+#include <common/pool_allocator.h>
 #include <frontend/about_ui.h>
 #include <frontend/frontend.h>
 #include <frontend/frontend_manager.h>
@@ -91,6 +93,8 @@ namespace micro_profiler
 		mkdir(constants::data_directory().c_str(), 0777);
 		mkdir(c_cache_directory.c_str(), 0777);
 
+		default_allocator al_base;
+		pool_allocator al(al_base);
 		logger_instance logger;
 
 		LOG("MicroProfiler standalone frontend started...");
@@ -152,8 +156,8 @@ namespace micro_profiler
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};
-		auto frontend_manager_ = make_shared<frontend_manager>([&app] (ipc::channel &outbound) {
-			return new frontend(outbound, c_cache_directory, app.get_worker_queue(), app.get_ui_queue());
+		auto frontend_manager_ = make_shared<frontend_manager>([&app, &al] (ipc::channel &outbound) {
+			return new frontend(outbound, c_cache_directory, app.get_worker_queue(), app.get_ui_queue(), al);
 		}, ui_factory);
 		ipc_manager ipc_manager(frontend_manager_, app.get_ui_queue(),
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),

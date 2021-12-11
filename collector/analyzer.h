@@ -35,7 +35,7 @@ namespace micro_profiler
 		typedef std::pair<statistics_t::key_type, statistics_t::mapped_type> value_type;
 
 	public:
-		thread_analyzer(const overhead& overhead_);
+		thread_analyzer(const overhead& overhead_, allocator &allocator_);
 
 		void clear() throw();
 		size_t size() const throw();
@@ -52,12 +52,12 @@ namespace micro_profiler
 	class analyzer : public calls_collector_i::acceptor, noncopyable
 	{
 	public:
-		typedef containers::unordered_map<unsigned int, thread_analyzer> thread_analyzers;
+		typedef std::unordered_map<unsigned int, thread_analyzer> thread_analyzers;
 		typedef thread_analyzers::const_iterator const_iterator;
 		typedef std::pair<unsigned int, thread_analyzer> value_type;
 
 	public:
-		analyzer(const overhead& overhead_);
+		analyzer(const overhead& overhead_, allocator &allocator_);
 
 		void clear() throw();
 		size_t size() const throw();
@@ -69,6 +69,7 @@ namespace micro_profiler
 
 	private:
 		const overhead _overhead;
+		allocator &_allocator;
 		thread_analyzers _thread_analyzers;
 	};
 }

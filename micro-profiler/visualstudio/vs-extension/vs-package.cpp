@@ -113,7 +113,8 @@ namespace micro_profiler
 
 
 		profiler_package::profiler_package()
-			: wpl::vs::ole_command_target(c_guidGlobalCmdSet), _clock([] {	return mt::milliseconds(clock());	}),
+			: wpl::vs::ole_command_target(c_guidGlobalCmdSet), _allocator(_allocator_base),
+				_clock([] {	return mt::milliseconds(clock());	}),
 				_configuration(registry_hive::open_user_settings("Software")->create("gevorkyan.org")->create("MicroProfiler"))
 		{	LOG(PREAMBLE "constructed...") % A(this);	}
 
@@ -155,7 +156,7 @@ namespace micro_profiler
 			setup_factory(factory);
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager([this] (ipc::channel &outbound) {
-				return new frontend(outbound, c_cache_directory, *_worker_queue, *_ui_queue);
+				return new frontend(outbound, c_cache_directory, *_worker_queue, *_ui_queue, _allocator);
 			}, [this] (const profiling_session &session) -> shared_ptr<frontend_ui> {
 				const auto ui = make_shared<frontend_pane>(get_factory(), session, _configuration, _ui_queue);
 

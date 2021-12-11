@@ -384,7 +384,7 @@ namespace micro_profiler
 	{	group.second += value.second;	}
 
 	functions_list_provider::functions_list_provider(shared_ptr<tables::statistics> statistics_)
-		: statistics(statistics_), filter(*statistics_), aggregate(filter, sum())
+		: statistics(statistics_), filter(*statistics_), allocator(allocator_base), aggregate(filter, sum(), allocator)
 	{	connection = statistics->invalidate += [this] {	this->aggregate.fetch();	};	}
 
 	functions_list_provider::const_iterator functions_list_provider::begin() const
@@ -396,8 +396,8 @@ namespace micro_profiler
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval_,
 			shared_ptr<symbol_resolver> resolver_, shared_ptr<const tables::threads> threads_)
-		: base(make_shared<functions_list_provider>(statistics), tick_interval_, resolver_,
-			threads_), _statistics(statistics)
+		: base(make_shared<functions_list_provider>(statistics), tick_interval_, resolver_, threads_),
+			_statistics(statistics)
 	{
 		_connection = statistics->invalidate += [this] {	fetch();	};
 		get_underlying()->aggregate.group_by([] (const statistic_types::map_detailed::value_type &v) {

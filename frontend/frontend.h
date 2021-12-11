@@ -41,14 +41,14 @@ namespace micro_profiler
 
 	public:
 		frontend(ipc::channel &outbound, const std::string &cache_directory,
-			scheduler::queue &worker, scheduler::queue &apartment);
+			scheduler::queue &worker, scheduler::queue &apartment, allocator &allocator_);
 		~frontend();
 
 	public:
 		std::function<void (const session_type &ui_context)> initialized;
 
 	private:
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, std::string> symbol_cache_paths_t;
+		typedef std::unordered_map<unsigned int /*persistent_id*/, std::string> symbol_cache_paths_t;
 		typedef reqm::multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
 		typedef std::list< std::shared_ptr<void> > requests_t;
 

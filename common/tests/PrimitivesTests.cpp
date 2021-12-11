@@ -15,6 +15,8 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( PrimitivesTests )
+			default_allocator a;
+
 			test( NewFunctionStatisticsInitializedToZeroes )
 			{
 				// INIT / ACT
@@ -149,7 +151,7 @@ namespace micro_profiler
 			test( DetailedStatisticsAddChildCallFollowsAddCallRules )
 			{
 				// INIT
-				statistic_types::function_detailed s1, s2;
+				statistic_types::function_detailed s1(a), s2(a);
 
 				// ACT
 				add_child_statistics(s1, (const void *)1, 0, 1, 3);

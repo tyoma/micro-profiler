@@ -41,11 +41,10 @@ namespace micro_profiler
 	}
 
 	frontend::frontend(ipc::channel &outbound, const string &cache_directory,
-			scheduler::queue &worker, scheduler::queue &apartment)
+			scheduler::queue &worker, scheduler::queue &apartment, allocator &allocator_)
 		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment),
-			_statistics(make_shared<tables::statistics>()), _modules(make_shared<tables::modules>()),
-			_mappings(make_shared<tables::module_mappings>()), _patches(make_shared<tables::patches>()),
-			_threads(make_shared<tables::threads>()), _initialized(false),
+			_statistics(make_shared<tables::statistics>(allocator_)), _modules(make_shared<tables::modules>()), _mappings(make_shared<tables::module_mappings>()),
+			_patches(make_shared<tables::patches>()), _threads(make_shared<tables::threads>()), _initialized(false),
 			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
 		_statistics->request_update = [this] {
@@ -172,7 +171,7 @@ namespace micro_profiler
 			const auto self = this;
 			const auto remaining = make_shared<unsigned int>(0);
 			const auto enable = make_shared<bool>(false);
-			containers::unordered_map<unsigned int, int> requested;
+			std::unordered_map<unsigned int, int> requested;
 
 			for (auto i = _statistics->begin(); i != _statistics->end(); ++i)
 			{

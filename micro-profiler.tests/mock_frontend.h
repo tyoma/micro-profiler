@@ -14,7 +14,8 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			typedef containers::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed>
+			typedef containers::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed,
+				std::hash<unsigned>, std::equal_to<unsigned>, std::function<statistic_types_t<unsigned>::map_detailed ()> >
 				thread_statistics_map;
 
 			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>
@@ -49,7 +50,14 @@ namespace micro_profiler
 				messages_id c;
 				initialization_data id;
 				loaded_modules lm;
-				thread_statistics_map u;
+				default_allocator al;
+				thread_statistics_map u(al, [&al] () -> statistic_types_t<unsigned>::map_detailed {
+					auto &al2 = al;
+
+					return statistic_types_t<unsigned>::map_detailed(al, [&al2] () -> statistic_types_t<unsigned>::function_detailed {
+						return statistic_types_t<unsigned>::function_detailed(al2);
+					});
+				});
 				unloaded_modules um;
 				module_info_metadata md;
 				std::vector< std::pair<unsigned /*thread_id*/, thread_info> > threads;

@@ -51,8 +51,8 @@ namespace micro_profiler
 	protected:
 		struct live_thread_info;
 
-		typedef containers::unordered_map<native_thread_id, live_thread_info> running_threads_map;
-		typedef containers::unordered_map<thread_id, thread_info> threads_map;
+		typedef std::unordered_map<native_thread_id, live_thread_info> running_threads_map;
+		typedef std::unordered_map<thread_id, thread_info> threads_map;
 
 		struct live_thread_info
 		{

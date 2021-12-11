@@ -152,5 +152,6 @@ namespace strmd
 	inline void serialize(ArchiveT &archive, const void *&data)
 	{	archive(reinterpret_cast<size_t &>(data));	}
 
-	template <typename KeyT, typename T, typename HashT, typename CompT> struct type_traits< micro_profiler::containers::unordered_map<KeyT, T, HashT, CompT> > : indexed_associative_container_traits { };
+	template <typename K, typename T, typename H, typename E, typename C>
+	struct type_traits< micro_profiler::containers::unordered_map<K, T, H, E, C> > : indexed_associative_container_traits {	};
 }

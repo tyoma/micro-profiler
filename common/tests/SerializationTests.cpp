@@ -25,6 +25,9 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( SerializationTests )
+			default_allocator a;
+
+
 			test( SerializedStatisticsAreDeserialized )
 			{
 				// INIT
@@ -55,8 +58,8 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistic_types::map s1, s2;
-				statistic_types::map ds1, ds2;
+				statistic_types::map s1(a), s2(a);
+				statistic_types::map ds1(a), ds2(a);
 
 				s1[addr(123441)] = function_statistics(17, 2012, 123123123, 32123, 2213);
 				s1[addr(71341)] = function_statistics(1117, 212, 1231123, 3213, 112213);
@@ -86,7 +89,7 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistic_types::function_detailed s1;
+				statistic_types::function_detailed s1(a);
 
 				static_cast<function_statistics &>(s1) = function_statistics(17, 2012, 123123123, 32123, 2213);
 				s1.callees[addr(7741)] = function_statistics(1117, 212, 1231123, 3213, 112213);
@@ -100,7 +103,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				statistic_types::function_detailed ds1;
+				statistic_types::function_detailed ds1(a);
 				vector< pair<const void *, function_statistics> > callees;
 				vector< pair<const void *, count_t> > callers;
 
@@ -170,8 +173,8 @@ namespace micro_profiler
 					make_pair(11, "fourrier.cpp"),
 					make_pair(23, "sort.c"),
 				};
-				module_info_metadata m1 = { "kernel",  182213u, mkvector(symbols1), containers::unordered_map<unsigned int, string>(begin(files1), end(files1)) };
-				module_info_metadata m2 = { "user", 10101011u, mkvector(symbols2), containers::unordered_map<unsigned int, string>(begin(files2), end(files2)) };
+				module_info_metadata m1 = { "kernel",  182213u, mkvector(symbols1), unordered_map<unsigned int, string>(begin(files1), end(files1)) };
+				module_info_metadata m2 = { "user", 10101011u, mkvector(symbols2), unordered_map<unsigned int, string>(begin(files2), end(files2)) };
 				module_info_metadata read;
 
 				// ACT

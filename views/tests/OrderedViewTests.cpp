@@ -26,7 +26,7 @@ namespace micro_profiler
 				bool operator == (const POD &left, const POD &right)
 				{	return left.a == right.a && left.b == right.b && left.c == right.c;	}
 
-				typedef containers::unordered_map<void *, POD> pod_map;
+				typedef unordered_map<void *, POD> pod_map;
 				typedef ordered<pod_map> sorted_pods;
 
 				pair<void *const, POD> make_pod(const POD &pod)

@@ -22,6 +22,7 @@
 
 #include "any_key.h"
 
+#include <common/unordered_map.h>
 #include <functional>
 #include <unordered_map>
 
@@ -39,7 +40,7 @@ namespace micro_profiler
 			typedef const value_type &reference;
 
 		public:
-			aggregate(const U &underlying, const X &transform);
+			aggregate(const U &underlying, const X &transform, allocator &allocator_);
 
 			template <typename GroupBy>
 			void group_by(const GroupBy &g);
@@ -53,7 +54,7 @@ namespace micro_profiler
 			const_iterator end() const throw();
 
 		private:
-			typedef std::unordered_map<any_key, typename X::aggregated_type> map_t;
+			typedef containers::unordered_map<any_key, typename X::aggregated_type> map_t;
 
 		private:
 			const U &_underlying;
@@ -85,8 +86,8 @@ namespace micro_profiler
 
 
 		template <typename U, class X>
-		inline aggregate<U, X>::aggregate(const U &underlying, const X &transform)
-			: _underlying(underlying), _transform(transform)
+		inline aggregate<U, X>::aggregate(const U &underlying, const X &transform, allocator &allocator_)
+			: _underlying(underlying), _transform(transform), _groups(allocator_)
 		{	}
 
 		template <typename U, class X>

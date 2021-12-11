@@ -22,6 +22,7 @@
 
 #include "statistics_model.h"
 
+#include <common/pool_allocator.h>
 #include <views/aggregate.h>
 #include <views/filter.h>
 
@@ -73,6 +74,8 @@ namespace micro_profiler
 
 		std::shared_ptr<const tables::statistics> statistics;
 		filter_type filter;
+		default_allocator allocator_base;
+		pool_allocator allocator;
 		aggregate_type aggregate;
 		wpl::slot_connection connection;
 	};

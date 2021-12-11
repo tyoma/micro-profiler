@@ -47,13 +47,15 @@ namespace micro_profiler
 			}
 
 			begin_test_suite( AggregateViewTests )
+				default_allocator al;
+
 				test( AggregateOfEmptyUnderlyingIsEmpty )
 				{
 					// INIT
 					vector<A> data;
 
 					// INIT / ACT
-					aggregate<vector<A>, transform> a(data, transform());
+					aggregate<vector<A>, transform> a(data, transform(), al);
 
 					// ASSERT
 					assert_is_true(a.empty());
@@ -68,7 +70,7 @@ namespace micro_profiler
 					vector<A> data = mkvector(c_data1);
 
 					// INIT / ACT
-					aggregate<vector<A>, transform> a(data, transform());
+					aggregate<vector<A>, transform> a(data, transform(), al);
 
 					// ASSERT
 					assert_is_true(a.empty());
@@ -91,7 +93,7 @@ namespace micro_profiler
 					vector<A> data = mkvector(c_data1);
 
 					// INIT / ACT
-					aggregate<vector<A>, transform> a(data, transform());
+					aggregate<vector<A>, transform> a(data, transform(), al);
 
 					// ACT
 					a.group_by([] (A v) {	return any_key(v.a, hash<int>());	});
@@ -117,7 +119,7 @@ namespace micro_profiler
 					vector<A> data = mkvector(c_data1);
 
 					// INIT / ACT
-					aggregate<vector<A>, transform> a(data, transform());
+					aggregate<vector<A>, transform> a(data, transform(), al);
 
 					// ACT
 					a.group_by([] (A v) {	return any_key(v.a, hash<int>());	});

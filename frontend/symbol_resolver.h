@@ -56,7 +56,7 @@ namespace micro_profiler
 
 	public:
 		typedef std::map<unsigned int /*rva*/, const symbol_info *> ordered_symbols_map_t;
-		typedef containers::unordered_map<unsigned int /*file_id*/, std::string /*file*/> file_lines_map_t;
+		typedef std::unordered_map<unsigned int /*file_id*/, std::string /*file*/> file_lines_map_t;
 
 	private:
 		const symbol_info *find_symbol_by_va(long_address_t address, unsigned int &persistent_id) const;
@@ -66,8 +66,8 @@ namespace micro_profiler
 		const std::shared_ptr<const tables::modules> _modules;
 		const std::shared_ptr<const tables::module_mappings> _mappings;
 
-		mutable containers::unordered_map<unsigned int /*persistent_id*/, ordered_symbols_map_t> _symbols_ordered;
-		mutable containers::unordered_map<unsigned int /*persistent_id*/, const file_lines_map_t *> _file_lines;
-		mutable containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _requests;
+		mutable std::unordered_map<unsigned int /*persistent_id*/, ordered_symbols_map_t> _symbols_ordered;
+		mutable std::unordered_map<unsigned int /*persistent_id*/, const file_lines_map_t *> _file_lines;
+		mutable std::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _requests;
 	};
 }

@@ -22,8 +22,9 @@
 
 namespace micro_profiler
 {
-	thread_analyzer::thread_analyzer(const overhead &overhead_)
-		: _stack(overhead_)
+	thread_analyzer::thread_analyzer(const overhead &overhead_, allocator &allocator_)
+		: _statistics(allocator_, [&allocator_] {	return statistic_types::function_detailed(allocator_);	}),
+			_stack(overhead_)
 	{	}
 
 	void thread_analyzer::clear() throw()
@@ -42,8 +43,8 @@ namespace micro_profiler
 	{	_stack.update(calls, calls + count, _statistics);	}
 
 
-	analyzer::analyzer(const overhead &overhead_)
-		: _overhead(overhead_)
+	analyzer::analyzer(const overhead &overhead_, allocator &allocator_)
+		: _overhead(overhead_), _allocator(allocator_)
 	{	}
 
 	void analyzer::clear() throw()
@@ -76,7 +77,7 @@ namespace micro_profiler
 		thread_analyzers::iterator i = _thread_analyzers.find(threadid);
 
 		if (i == _thread_analyzers.end())
-			i = _thread_analyzers.insert(std::make_pair(threadid, thread_analyzer(_overhead))).first;
+			i = _thread_analyzers.insert(std::make_pair(threadid, thread_analyzer(_overhead, _allocator))).first;
 		i->second.accept_calls(calls, count);
 	}
 }

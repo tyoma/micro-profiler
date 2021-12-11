@@ -22,6 +22,8 @@
 
 #include "active_server_app.h"
 
+#include <common/pool_allocator.h>
+
 namespace micro_profiler
 {
 	class analyzer;
@@ -45,6 +47,8 @@ namespace micro_profiler
 
 	private:
 		calls_collector_i &_collector;
+		default_allocator _allocator_base;
+		pool_allocator _allocator;
 		const std::unique_ptr<analyzer> _analyzer;
 		thread_monitor &_thread_monitor;
 		patch_manager &_patch_manager;

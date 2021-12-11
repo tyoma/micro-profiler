@@ -40,8 +40,8 @@ namespace micro_profiler
 {
 	collector_app::collector_app(const active_server_app::frontend_factory_t &factory, calls_collector_i &collector,
 			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_)
-		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(thread_monitor_),
-			_patch_manager(patch_manager_), _server(*this, factory)
+		: _collector(collector), _allocator(_allocator_base), _analyzer(new analyzer(overhead_, _allocator)),
+			_thread_monitor(thread_monitor_), _patch_manager(patch_manager_), _server(*this, factory)
 	{	}
 
 	collector_app::~collector_app()

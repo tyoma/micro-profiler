@@ -43,5 +43,10 @@
     <ClInclude Include="..\flatten.h" />
     <ClInclude Include="..\ordered.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

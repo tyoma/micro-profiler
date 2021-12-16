@@ -43,24 +43,21 @@ namespace
 	};
 }
 
-namespace std
+template <>
+class std::hash<controlled>
 {
-	template <>
-	class hash<controlled>
-	{
-	public:
-		size_t operator ()(const controlled &/*rhs*/) const
-		{	return 0;	}
-	};
+public:
+	size_t operator ()(const controlled &/*rhs*/) const
+	{	return 0;	}
+};
 
-	template <size_t n>
-	class hash< filler<n> >
-	{
-	public:
-		size_t operator ()(const filler<n> &/*rhs*/) const
-		{	return 0;	}
-	};
-}
+template <size_t n>
+class std::hash< filler<n> >
+{
+public:
+	size_t operator ()(const filler<n> &/*rhs*/) const
+	{	return 0;	}
+};
 
 namespace micro_profiler
 {

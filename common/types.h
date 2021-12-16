@@ -34,6 +34,7 @@ namespace micro_profiler
 	typedef unsigned long long int count_t;
 	typedef long long timestamp_t;
 	typedef unsigned long long int long_address_t;
+	typedef unsigned int id_t;
 
 #pragma pack(push, 1)
 	struct guid_t

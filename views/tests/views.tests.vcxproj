@@ -27,6 +27,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
+    <Import Project="$(SolutionDir)build.props\wpl.include.props" />
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
   </ImportGroup>
   <ItemGroup>
@@ -34,13 +35,17 @@
     <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
+    <ClCompile Include="IndexTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
+    <ClCompile Include="TableTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\aggregate.h" />
     <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\flatten.h" />
+    <ClInclude Include="..\table.h" />
+    <ClInclude Include="..\index.h" />
     <ClInclude Include="..\ordered.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

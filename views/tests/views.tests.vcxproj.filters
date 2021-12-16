@@ -6,6 +6,8 @@
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="AggregateViewTests.cpp" />
+    <ClCompile Include="TableTests.cpp" />
+    <ClCompile Include="IndexTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -26,6 +28,12 @@
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\any_key.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\table.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\index.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
   </ItemGroup>

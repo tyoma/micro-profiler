@@ -7,7 +7,9 @@ set(FRONTEND_TESTS_SOURCES
 	AnyKeyTests.cpp
 	FilterViewTests.cpp
 	FlattenViewTests.cpp
+	IndexTests.cpp
 	OrderedViewTests.cpp
+	TableTests.cpp
 )
 
 add_library(views.tests SHARED ${FRONTEND_TESTS_SOURCES})

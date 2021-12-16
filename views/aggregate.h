@@ -51,7 +51,12 @@ namespace micro_profiler
 			const_iterator end() const throw();
 
 		private:
-			typedef std::unordered_map<any_key, typename X::aggregated_type> map_t;
+			struct any_key_hash
+			{
+				std::size_t operator ()(const any_key &value) const
+				{	return value.hash();	}
+			};
+			typedef std::unordered_map<any_key, typename X::aggregated_type, any_key_hash> map_t;
 
 		private:
 			const U &_underlying;

@@ -25,12 +25,6 @@
 
 #pragma warning(disable: 4127)
 
-namespace std
-{
-	template <typename T>
-	class hash;
-}
-
 namespace micro_profiler
 {
 	namespace views
@@ -114,20 +108,6 @@ namespace micro_profiler
 		inline const any_key::box &any_key::get_box() const
 		{	return *static_cast<const any_key::box *>(static_cast<const void *>(_storage));	}
 	}
-}
-
-namespace std
-{
-	template <typename T>
-	class hash;
-
-	template <>
-	class hash<micro_profiler::views::any_key>
-	{
-	public:
-		size_t operator ()(const micro_profiler::views::any_key &from) const
-		{	return from.hash();	}
-	};
 }
 
 #pragma warning(default: 4127)

@@ -28,6 +28,14 @@ namespace micro_profiler
 	typedef std::pair<long_address_t, unsigned int /*threadid*/> function_key;
 	typedef statistic_types_t<function_key> statistic_types;
 
+	struct call_statistics : function_statistics
+	{
+		id_t id;
+		id_t thread_id;
+		id_t parent_call_id;
+		long_address_t address;
+	};
+
 	struct symbol_key
 	{
 		unsigned int persistent_id;

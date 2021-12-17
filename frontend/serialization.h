@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "db.h"
 #include "profiling_preferences.h"
 #include "serialization_context.h"
 #include "tables.h"
@@ -33,6 +34,8 @@ namespace strmd
 {
 	template <typename StreamT, typename PackerT, int static_version>
 	class deserializer;
+
+	template <> struct version<micro_profiler::call_statistics> {	enum {	value = 4	};	};
 }
 
 namespace micro_profiler
@@ -114,7 +117,58 @@ namespace micro_profiler
 		{	}
 	};
 
+	struct call_nodes_reader : strmd::container_reader_base
+	{
+		template <typename ContainerT>
+		void prepare(ContainerT &/*data*/, size_t /*count*/)
+		{	}
 
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, call_nodes_index &container, scontext::hierarchy_root &/*context*/) const
+		{
+			scontext::hierarchy_node inner;
+
+			archive(inner.thread_id);
+			archive(container, inner);
+		}
+
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, call_nodes_index &container, scontext::hierarchy_node &context) const
+		{
+			long_address_t address;
+
+			archive(address);
+
+			auto r = container[call_node_key(context.thread_id, 0, address)];
+
+			archive(*r, container);
+			r.commit();
+		}
+
+		template <typename ArchiveT>
+		void read_item(ArchiveT &archive, call_nodes_index &container, scontext::hierarchy_node_1 &context) const
+		{
+			long_address_t address;
+
+			archive(address);
+
+			auto r = container[call_node_key(context.thread_id, context.parent_id, address)];
+
+			archive(static_cast<function_statistics &>(*r), context);
+			r.commit();
+		}
+	};
+
+
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, call_statistics &data, call_nodes_index &context, unsigned int /*ver*/)
+	{
+		scontext::hierarchy_node_1 inner = {	data.thread_id, data.id	};
+
+		archive(static_cast<function_statistics &>(data), context);
+		archive(context, inner);
+	}
 
 	template <typename ArchiveT, typename ContextT>
 	inline void serialize(ArchiveT &archive, statistic_types::function &data, const ContextT &/*context*/, unsigned int ver)
@@ -177,5 +231,12 @@ namespace strmd
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::threads_model_reader item_reader_type;
+	};
+
+	template <>
+	struct type_traits<micro_profiler::call_nodes_index>
+	{
+		typedef container_type_tag category;
+		typedef micro_profiler::call_nodes_reader item_reader_type;
 	};
 }

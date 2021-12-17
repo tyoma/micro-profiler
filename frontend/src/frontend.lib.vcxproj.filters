@@ -104,6 +104,7 @@
     <ClInclude Include="..\helpers.h" />
     <ClInclude Include="..\async_file.h" />
     <ClInclude Include="..\profiling_preferences.h" />
+    <ClInclude Include="..\db.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

@@ -45,7 +45,7 @@ namespace micro_profiler
 			typename U::transacted_record operator [](const key_type &key);
 
 		private:
-			std::unordered_map<key_type, typename U::iterator> _index;
+			std::unordered_map< key_type, typename U::iterator, hash<key_type> > _index;
 			U &_underlying;
 			const K _keyer;
 			wpl::slot_connection _on_changed;

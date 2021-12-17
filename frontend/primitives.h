@@ -32,7 +32,7 @@ namespace micro_profiler
 	{
 		id_t id;
 		id_t thread_id;
-		id_t parent_call_id;
+		id_t parent_id;
 		long_address_t address;
 	};
 

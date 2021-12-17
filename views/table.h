@@ -37,7 +37,7 @@ namespace micro_profiler
 			typedef T value_type;
 
 		public:
-			table(const ConstructorT &constructor);
+			table(const ConstructorT &constructor = ConstructorT());
 
 			const_iterator begin() const;
 			const_iterator end() const;

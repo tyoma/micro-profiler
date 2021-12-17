@@ -1,13 +1,12 @@
 #include <frontend/serialization.h>
 
+#include "comparisons.h"
 #include "helpers.h"
+#include "primitive_helpers.h"
 
 #include <functional>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
-#include <test-helpers/comparisons.h>
-#include <test-helpers/helpers.h>
-#include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -437,6 +436,166 @@ namespace micro_profiler
 					m.layout);
 			}
 
+		end_test_suite
+
+
+		begin_test_suite( FlattenDeSerializationTests )
+			vector_adapter buffer;
+			strmd::serializer<vector_adapter, packer> ser;
+			strmd::deserializer<vector_adapter, packer> dser;
+			scontext::hierarchy_root ctx;
+
+			FlattenDeSerializationTests()
+				: ser(buffer), dser(buffer)
+			{	}
+
+
+			test( PlainCallsAreDeserializedFromWithinASingleThread )
+			{
+				// INIT
+				calls_statistics_table tbl;
+				call_nodes_index idx(tbl);
+
+				ser(plural + make_pair(13u, plural
+					+ make_statistics(1010u, 11, 0, 1002, 32, 2000)
+					+ make_statistics(1110u, 110, 2, 2002, 12, 2200)));
+
+				// ACT
+				dser(idx, ctx);
+
+				// ASSERT
+				call_statistics reference1[] = {
+					make_call_statistics(1, 13, 0, 1010u, 11, 0, 1002, 32, 2000),
+					make_call_statistics(2, 13, 0, 1110u, 110, 2, 2002, 12, 2200),
+				};
+
+				assert_equal_pred(reference1, tbl, eq());
+
+				// INIT
+				ser(plural + make_pair(17u, plural
+					+ make_statistics(1u, 1, 0, 1002, 32, 2000)
+					+ make_statistics(1010u, 2, 0, 1002, 32, 2000)
+					+ make_statistics(1110u, 3, 2, 2002, 12, 2200)));
+
+				// ACT
+				dser(idx, ctx);
+
+				// ASSERT
+				call_statistics reference2[] = {
+					make_call_statistics(1, 13, 0, 1010u, 11, 0, 1002, 32, 2000),
+					make_call_statistics(2, 13, 0, 1110u, 110, 2, 2002, 12, 2200),
+
+					make_call_statistics(3, 17, 0, 1u, 1, 0, 1002, 32, 2000),
+					make_call_statistics(4, 17, 0, 1010u, 2, 0, 1002, 32, 2000),
+					make_call_statistics(5, 17, 0, 1110u, 3, 2, 2002, 12, 2200),
+				};
+
+				assert_equal_pred(reference2, tbl, eq());
+			}
+
+
+			test( PlainCallsAreDeserializedFromWithinMultipleThreads )
+			{
+				// INIT
+				calls_statistics_table tbl;
+				call_nodes_index idx(tbl);
+
+				ser(plural
+					+ make_pair(13u, plural
+						+ make_statistics(1010u, 11, 0, 1002, 32, 2000)
+						+ make_statistics(1110u, 110, 2, 2002, 12, 2200))
+					+ make_pair(130u, plural
+						+ make_statistics(1010u, 9, 0, 1002, 32, 2000))
+					+ make_pair(131u, plural
+						+ make_statistics(7u, 1, 0, 10, 11, 12)));
+
+				// ACT
+				dser(idx, ctx);
+
+				// ASSERT
+				call_statistics reference[] = {
+					make_call_statistics(1, 13, 0, 1010u, 11, 0, 1002, 32, 2000),
+					make_call_statistics(2, 13, 0, 1110u, 110, 2, 2002, 12, 2200),
+					make_call_statistics(3, 130, 0, 1010u, 9, 0, 1002, 32, 2000),
+					make_call_statistics(4, 131, 0, 7u, 1, 0, 10, 11, 12),
+				};
+
+				assert_equal_pred(reference, tbl, eq());
+			}
+
+
+			test( PlainCallsAreAccumulatedOnDeserialization )
+			{
+				// INIT
+				calls_statistics_table tbl;
+				call_nodes_index idx(tbl);
+
+				ser(plural
+					+ make_pair(7u, plural
+						+ make_statistics(1u, 1, 100, 100, 32, 2000)
+						+ make_statistics(2u, 1, 2, 101, 12, 200)
+						+ make_statistics(3u, 1, 0, 102, 32, 2500)
+						+ make_statistics(5u, 2, 0, 103, 11, 1211)));
+				dser(idx, ctx);
+				ser(plural
+					+ make_pair(7u, plural
+						+ make_statistics(9u, 1, 0, 102, 32, 2500)
+						+ make_statistics(1u, 10, 71, 10, 2, 2)
+						+ make_statistics(2u, 10, 72, 11, 2, 2)
+						+ make_statistics(5u, 20, 70, 13, 1, 5)));
+
+				// ACT
+				dser(idx, ctx);
+
+				// ASSERT
+				call_statistics reference[] = {
+					make_call_statistics(1, 7, 0, 1, 11, 100, 110, 34, 2000),
+					make_call_statistics(2, 7, 0, 2, 11, 72, 112, 14, 200),
+					make_call_statistics(3, 7, 0, 3, 1, 0, 102, 32, 2500),
+					make_call_statistics(4, 7, 0, 5, 22, 70, 116, 12, 1211),
+					make_call_statistics(5, 7, 0, 9, 1, 0, 102, 32, 2500),
+				};
+
+				assert_equal_pred(reference, tbl, eq());
+			}
+
+
+			test( HierarchicalCallsAreDeserializedFromWithinASingleThread )
+			{
+				// INIT
+				calls_statistics_table tbl;
+				call_nodes_index idx(tbl);
+
+				ser(plural
+					+ make_pair(7u, plural
+						+ make_statistics(1u, 1, 100, 100, 32, 2000,
+							make_statistics_base(2u, 1, 2, 101, 12, 200))
+						+ make_statistics(3u, 1, 0, 102, 32, 2500,
+							make_statistics_base(5u, 2, 0, 103, 11, 1211),
+							make_statistics_base(9u, 1, 0, 102, 32, 2500),
+							make_statistics_base(1u, 10, 71, 10, 2, 2))
+						+ make_statistics(2u, 10, 72, 11, 2, 2,
+							make_statistics_base(5u, 20, 70, 13, 1, 5),
+							make_statistics_base(9u, 1, 1, 1, 1, 1))));
+
+				// ACT
+				dser(idx, ctx);
+
+				// ASSERT
+				call_statistics reference[] = {
+					make_call_statistics(0, 7, 0, 1u, 1, 100, 100, 32, 2000),
+					make_call_statistics(0, 7, 1, 2u, 1, 2, 101, 12, 200),
+					make_call_statistics(0, 7, 0, 3u, 1, 0, 102, 32, 2500),
+					make_call_statistics(0, 7, 3, 5u, 2, 0, 103, 11, 1211),
+					make_call_statistics(0, 7, 3, 9u, 1, 0, 102, 32, 2500),
+					make_call_statistics(0, 7, 3, 1u, 10, 71, 10, 2, 2),
+					make_call_statistics(0, 7, 0, 2u, 10, 72, 11, 2, 2),
+					make_call_statistics(0, 7, 7, 5u, 20, 70, 13, 1, 5),
+					make_call_statistics(0, 7, 7, 9u, 1, 1, 1, 1, 1),
+				};
+
+				assert_equivalent(reference, tbl);
+			}
 		end_test_suite
 	}
 }

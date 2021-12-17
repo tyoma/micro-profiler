@@ -39,5 +39,21 @@ namespace micro_profiler
 		{
 			std::vector<unsigned int> threads;
 		};
+
+		struct hierarchy_root
+		{
+		};
+
+		struct hierarchy_node
+		{
+			id_t thread_id;
+			id_t parent_id;
+		};
+
+		struct hierarchy_node_1 // TODO: temporarily, before fully hierarchical call statistics is implemented.
+		{
+			id_t thread_id;
+			id_t parent_id;
+		};
 	}
 }

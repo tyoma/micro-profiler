@@ -57,13 +57,15 @@ ELSEIFDEF _M_X64
 
 	READ_TLS macro
 		cmp	eax, 40h
-		cmovl	rax, qword ptr gs:[eax * 8 + 1480h]
-		jl		short done
+		jl		short shorter
 		push	rbx
 		movzx	rax, ax
 		mov	rbx, qword ptr gs:[1780h]
 		mov	rax, qword ptr [rbx + 8 * rax - 200h]
 		pop	rbx
+		jmp	done
+	shorter:
+		mov	rax, qword ptr gs:[eax * 8 + 1480h]
 	done:
 		exitm
 	endm

@@ -108,7 +108,7 @@ namespace micro_profiler
 				ds(ds1);
 
 				// ASSERT
-				pair<const void *, function_statistics> reference[] = {
+				pair<const void *, statistic_types::function_detailed> reference[] = {
 					make_pair(addr(7741), function_statistics(1117, 212, 1231123, 3213, 112213)),
 					make_pair(addr(141), function_statistics(17, 12012, 11293123, 132123, 12213)),
 				};

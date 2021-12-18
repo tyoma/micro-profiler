@@ -62,8 +62,18 @@ namespace micro_profiler
 	template <typename AddressT>
 	struct function_statistics_detailed_t : function_statistics
 	{
-		typename statistic_types_t<AddressT>::map callees;
-		typename statistic_types_t<AddressT>::map_callers callers;
+		typedef typename statistic_types_t<AddressT>::map_detailed callees_type;
+		typedef typename statistic_types_t<AddressT>::map_callers callers_type;
+
+		function_statistics_detailed_t();
+		function_statistics_detailed_t(const function_statistics &other);
+		function_statistics_detailed_t(const function_statistics_detailed_t &other);
+		~function_statistics_detailed_t();
+
+		void operator =(const function_statistics_detailed_t &rhs);
+
+		callees_type &callees;
+		callers_type callers;
 	};
 
 
@@ -98,7 +108,37 @@ namespace micro_profiler
 		if (rhs.max_call_time > max_call_time)
 			max_call_time = rhs.max_call_time;
 	}
-	
+
+
+	// function_statistics_detailed_t - inline definitions
+	template <typename AddressT>
+	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t()
+		: callees(*new callees_type)
+	{	}
+
+	template <typename AddressT>
+	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t(const function_statistics &other)
+		: function_statistics(other), callees(*new callees_type)
+	{	}
+
+	template <typename AddressT>
+	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t(const function_statistics_detailed_t &other)
+		: function_statistics(other), callees(*new callees_type(other.callees)),
+			callers(other.callers)
+	{	}
+
+	template <typename AddressT>
+	inline function_statistics_detailed_t<AddressT>::~function_statistics_detailed_t()
+	{	delete &callees;	}
+
+	template <typename AddressT>
+	inline void function_statistics_detailed_t<AddressT>::operator =(const function_statistics_detailed_t &rhs)
+	{
+		static_cast<function_statistics &>(*this) = rhs;
+		callees = rhs.callees;
+		callers = rhs.callers;
+	}
+
 
 	// helper methods - inline definitions
 	template <typename AddressT>

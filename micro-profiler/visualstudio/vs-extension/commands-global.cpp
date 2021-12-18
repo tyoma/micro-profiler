@@ -328,6 +328,7 @@ namespace micro_profiler
 						make_shared<tables::patches>(),
 						make_shared<tables::threads>(),
 					};
+					auto &rmodules = *ui_context.modules;
 
 					if (!stricmp(ext.c_str(), ".mpstat"))
 						dser(ui_context);
@@ -338,6 +339,12 @@ namespace micro_profiler
 					else
 						dser(ui_context);
 
+					rmodules.request_presence = [rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
+						const auto i = rmodules.find(id);
+
+						if (i != rmodules.end())
+							cb(i->second);
+					};
 					_frontend_manager->load_session(ui_context);
 				}
 			}, false, [this] (unsigned, unsigned &state) -> bool {

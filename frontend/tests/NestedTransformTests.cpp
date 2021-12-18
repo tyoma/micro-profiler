@@ -16,12 +16,18 @@ namespace micro_profiler
 		{
 			struct statistics1_t
 			{
-				map<int, string> callees;
-				vector<double> callers;
+				typedef map<int, string> callees_type;
+				typedef vector<double> callers_type;
+
+				callees_type callees;
+				callers_type callers;
 			};
 
 			struct statistics2_t
 			{
+				typedef list<int> callees_type;
+				typedef unordered_map<int, int> callers_type;
+
 				list<int> callees;
 				unordered_map<int, int> callers;
 			};

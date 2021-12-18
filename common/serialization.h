@@ -40,7 +40,7 @@ namespace strmd
 	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
-	template <typename KeyT> struct version< micro_profiler::function_statistics_detailed_t<KeyT> > {	enum {	value = 4	};	};
+	template <typename KeyT> struct version< micro_profiler::function_statistics_detailed_t<KeyT> > {	enum {	value = 5	};	};
 }
 
 namespace micro_profiler

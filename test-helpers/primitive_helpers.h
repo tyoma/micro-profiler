@@ -36,7 +36,7 @@ namespace micro_profiler
 		{
 			auto r = make_statistics(address, times_called, max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
-			r.second.callees = typename statistic_types_t<AddressT>::map(callees.begin(), callees.end());
+			r.second.callees = typename statistic_types_t<AddressT>::map_detailed(callees.begin(), callees.end());
 			r.second.callers = typename statistic_types_t<AddressT>::map_callers(callers.begin(), callers.end());
 			return r;
 		}
@@ -49,7 +49,7 @@ namespace micro_profiler
 			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result = make_statistics(address, times_called,
 				max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
-			result.second.callees.insert(callee1);
+			static_cast<function_statistics &>(result.second.callees[callee1.first]) = callee1.second;
 			return result;
 		}
 
@@ -62,8 +62,8 @@ namespace micro_profiler
 			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result = make_statistics(address, times_called,
 				max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
-			result.second.callees.insert(callee1);
-			result.second.callees.insert(callee2);
+			static_cast<function_statistics &>(result.second.callees[callee1.first]) = callee1.second;
+			static_cast<function_statistics &>(result.second.callees[callee2.first]) = callee2.second;
 			return result;
 		}
 
@@ -77,9 +77,9 @@ namespace micro_profiler
 			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result = make_statistics(address, times_called,
 				max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
-			result.second.callees.insert(callee1);
-			result.second.callees.insert(callee2);
-			result.second.callees.insert(callee3);
+			static_cast<function_statistics &>(result.second.callees[callee1.first]) = callee1.second;
+			static_cast<function_statistics &>(result.second.callees[callee2.first]) = callee2.second;
+			static_cast<function_statistics &>(result.second.callees[callee3.first]) = callee3.second;
 			return result;
 		}
 
@@ -94,10 +94,10 @@ namespace micro_profiler
 			std::pair< AddressT, typename statistic_types_t<AddressT>::function_detailed > result = make_statistics(address, times_called,
 				max_reentrance, inclusive_time, exclusive_time, max_call_time);
 
-			result.second.callees.insert(callee1);
-			result.second.callees.insert(callee2);
-			result.second.callees.insert(callee3);
-			result.second.callees.insert(callee4);
+			static_cast<function_statistics &>(result.second.callees[callee1.first]) = callee1.second;
+			static_cast<function_statistics &>(result.second.callees[callee2.first]) = callee2.second;
+			static_cast<function_statistics &>(result.second.callees[callee3.first]) = callee3.second;
+			static_cast<function_statistics &>(result.second.callees[callee4.first]) = callee4.second;
 			return result;
 		}
 	}

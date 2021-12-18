@@ -35,7 +35,7 @@ namespace strmd
 	template <typename StreamT, typename PackerT, int static_version>
 	class deserializer;
 
-	template <> struct version<micro_profiler::call_statistics> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::call_statistics> {	enum {	value = 5	};	};
 }
 
 namespace micro_profiler
@@ -50,7 +50,7 @@ namespace micro_profiler
 		template <typename ArchiveT>
 		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, scontext::additive &context)
 		{
-			scontext::detailed_threaded inner_context;
+			scontext::detailed_threaded inner_context = {	&data,	};
 
 			archive(inner_context.threadid); // key: thread_id
 			archive(data, inner_context); // value: per-thread statistics
@@ -62,10 +62,16 @@ namespace micro_profiler
 		template <typename ArchiveT>
 		void read_item(ArchiveT &archive, statistic_types::map_detailed &data, const scontext::detailed_threaded &context)
 		{
-			scontext::detailed_threaded new_context = { &data, 0, context.threadid };
+			statistic_types::key callee_key(0, context.threadid);
 
-			archive(new_context.caller);
-			archive(data[statistic_types::key(new_context.caller, new_context.threadid)], new_context);
+			archive(callee_key.first);
+
+			auto &callee = data[callee_key];
+			scontext::detailed_threaded inner = {	&data, callee_key.first, context.threadid	};
+
+			archive(callee, inner);
+			if (context.caller)
+				(*context.map)[callee_key].callers[statistic_types::key(context.caller, context.threadid)] = callee.times_called;
 		}
 
 		template <typename ArchiveT>
@@ -90,13 +96,14 @@ namespace micro_profiler
 			archive(data[caller_context.second], caller_context);
 		}
 
-		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, statistic_types::map &data, std::pair<statistic_types::map_detailed *, statistic_types::key> &caller)
+		template <typename ArchiveT, typename ContainerT>
+		void read_item(ArchiveT &archive, ContainerT &data, std::pair<statistic_types::map_detailed *,
+			statistic_types::key> &caller)
 		{
 			statistic_types::key callee_key;
 
 			archive(callee_key);
-			statistic_types::function &callee = data[callee_key];
+			auto &callee = data[callee_key];
 			archive(callee);
 			(*caller.first)[callee_key].callers[caller.second] = callee.times_called;
 		}
@@ -121,53 +128,60 @@ namespace micro_profiler
 	{
 		template <typename ContainerT>
 		void prepare(ContainerT &/*data*/, size_t /*count*/)
-		{	}
+		{	_first = true;	}
 
 		template <typename ArchiveT>
-		void read_item(ArchiveT &archive, call_nodes_index &container, scontext::hierarchy_root &/*context*/) const
+		void read_item(ArchiveT &archive, call_nodes_index &container, scontext::additive &context)
 		{
-			scontext::hierarchy_node inner;
+			scontext::hierarchy_node inner = {};
 
 			archive(inner.thread_id);
 			archive(container, inner);
+			if (_first)
+				context.threads.clear(), _first = false;
+			context.threads.push_back(inner.thread_id);
 		}
 
 		template <typename ArchiveT>
 		void read_item(ArchiveT &archive, call_nodes_index &container, scontext::hierarchy_node &context) const
-		{
-			long_address_t address;
-
-			archive(address);
-
-			auto r = container[call_node_key(context.thread_id, 0, address)];
-
-			archive(*r, container);
-			r.commit();
-		}
+		{	read_item_internal<call_statistics>(archive, container, context);	}
 
 		template <typename ArchiveT>
 		void read_item(ArchiveT &archive, call_nodes_index &container, scontext::hierarchy_node_1 &context) const
+		{	read_item_internal<function_statistics>(archive, container, context);	}
+
+	private:
+		template <typename AsT, typename ArchiveT, typename ContextT>
+		void read_item_internal(ArchiveT &archive, call_nodes_index &container, ContextT &context) const
 		{
-			long_address_t address;
+			call_node_key key(context.thread_id, context.parent_id, 0);
 
-			archive(address);
-
-			auto r = container[call_node_key(context.thread_id, context.parent_id, address)];
-
-			archive(static_cast<function_statistics &>(*r), context);
+			archive(std::get<2>(key));
+			auto r = container[key];
+			archive(static_cast<AsT &>(*r), container);
 			r.commit();
 		}
+
+	private:
+		bool _first;
 	};
 
 
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, call_statistics &data, call_nodes_index &context, unsigned int /*ver*/)
+	inline void serialize(ArchiveT &archive, call_statistics &data, call_nodes_index &context, unsigned int ver)
 	{
-		scontext::hierarchy_node_1 inner = {	data.thread_id, data.id	};
-
+		scontext::hierarchy_node inner = {	data.thread_id, data.id	};
+		
 		archive(static_cast<function_statistics &>(data), context);
-		archive(context, inner);
+		if (ver < 5)
+		{
+			scontext::hierarchy_node_1 inner1 = {	data.thread_id, data.id	};
+			
+			archive(context, inner1); // callees
+			return;
+		}
+		archive(context, inner); // callees
 	}
 
 	template <typename ArchiveT, typename ContextT>
@@ -180,9 +194,18 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename ContextT>
-	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, ContextT &context, unsigned int /*ver*/)
+	inline void serialize(ArchiveT &archive, statistic_types::function_detailed &data, ContextT &context, unsigned int ver)
 	{
 		archive(static_cast<function_statistics &>(data), context);
+		if (ver < 5)
+		{
+			statistic_types::map callees;
+
+			archive(callees, context);
+			for (auto i = callees.begin(); i != callees.end(); ++i)
+				static_cast<statistic_types::function &>(data.callees[i->first]) = i->second;
+			return;
+		}
 		archive(data.callees, context);
 	}
 

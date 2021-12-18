@@ -27,7 +27,8 @@ namespace micro_profiler
 	{
 	public:
 		typedef typename U::key_type key_type;
-		typedef decltype(static_cast<typename U::mapped_type *>(0)->callees) nested_container_type;
+		typedef typename U::mapped_type mapped_type;
+		typedef typename mapped_type::callees_type nested_container_type;
 		typedef typename nested_container_type::const_iterator nested_const_iterator;
 		typedef typename nested_container_type::const_reference const_reference;
 		typedef typename nested_container_type::value_type value_type;
@@ -64,7 +65,8 @@ namespace micro_profiler
 	{
 	public:
 		typedef typename U::key_type key_type;
-		typedef decltype(static_cast<typename U::mapped_type *>(0)->callers) nested_container_type;
+		typedef typename U::mapped_type mapped_type;
+		typedef typename mapped_type::callers_type nested_container_type;
 		typedef typename nested_container_type::const_iterator nested_const_iterator;
 		typedef typename nested_container_type::const_reference const_reference;
 		typedef typename nested_container_type::value_type value_type;

@@ -443,7 +443,7 @@ namespace micro_profiler
 			vector_adapter buffer;
 			strmd::serializer<vector_adapter, packer> ser;
 			strmd::deserializer<vector_adapter, packer> dser;
-			scontext::hierarchy_root ctx;
+			scontext::additive ctx;
 
 			FlattenDeSerializationTests()
 				: ser(buffer), dser(buffer)
@@ -595,6 +595,43 @@ namespace micro_profiler
 				};
 
 				assert_equivalent(reference, tbl);
+			}
+
+
+			test( ThreadsAreAccumulatedInTheContext )
+			{
+				// INIT
+				calls_statistics_table tbl;
+				call_nodes_index idx(tbl);
+
+				ser(plural
+					+ make_pair(7u, plural
+						+ make_statistics(1u, 1, 0, 0, 0, 0))
+					+ make_pair(171u, plural
+						+ make_statistics(1u, 1, 0, 0, 0, 0))
+					+ make_pair(733u, plural
+						+ make_statistics(1u, 1, 0, 0, 0, 0)));
+				ser(plural
+					+ make_pair(7u, plural
+						+ make_statistics(1u, 1, 0, 0, 0, 0))
+					+ make_pair(3u, plural
+						+ make_statistics(1u, 1, 0, 0, 0, 0)));
+
+				// ACT
+				dser(idx, ctx);
+
+				// ASSERT
+				unsigned reference1[] = {	7u, 171u, 733u,	};
+
+				assert_equivalent(reference1, ctx.threads);
+
+				// ACT
+				dser(idx, ctx);
+
+				// ASSERT
+				unsigned reference2[] = {	7u, 3u,	};
+
+				assert_equivalent(reference2, ctx.threads);
 			}
 		end_test_suite
 	}

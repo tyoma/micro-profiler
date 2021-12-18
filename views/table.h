@@ -183,7 +183,7 @@ namespace micro_profiler
 
 		template <typename T, typename C>
 		inline typename table<T, C>::const_iterator table<T, C>::end() const
-		{	return const_iterator(_records, _records.size());	}
+		{	return const_iterator(_records, static_cast<index_type>(_records.size()));	}
 
 		template <typename T, typename C>
 		inline typename table<T, C>::iterator table<T, C>::begin()
@@ -191,7 +191,7 @@ namespace micro_profiler
 
 		template <typename T, typename C>
 		inline typename table<T, C>::iterator table<T, C>::end()
-		{	return iterator(*this, _records.size());	}
+		{	return iterator(*this, static_cast<index_type>(_records.size()));	}
 
 		template <typename T, typename C>
 		inline typename table<T, C>::transacted_record table<T, C>::create()

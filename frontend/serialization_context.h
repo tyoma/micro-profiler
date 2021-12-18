@@ -40,10 +40,6 @@ namespace micro_profiler
 			std::vector<unsigned int> threads;
 		};
 
-		struct hierarchy_root
-		{
-		};
-
 		struct hierarchy_node
 		{
 			id_t thread_id;

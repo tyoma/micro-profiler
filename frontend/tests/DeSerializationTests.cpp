@@ -177,16 +177,16 @@ namespace micro_profiler
 				scontext::detailed_threaded context = { &s, 0, 1 };
 
 				addressed_statistics initial[] = {
-					make_statistics(1221u, 0, 0, 0, 0, 0,
-						make_statistics_base(1221u, 17, 2012, 123123123, 32124, 2213),
-						make_statistics_base(1231u, 18, 2011, 123123122, 32125, 2211),
-						make_statistics_base(1241u, 19, 2010, 123123121, 32126, 2209)),
+					make_statistics(1221u, 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(1221u, 17, 2012, 123123123, 32124, 2213)
+						+ make_statistics_base(1231u, 18, 2011, 123123122, 32125, 2211)
+						+ make_statistics_base(1241u, 19, 2010, 123123121, 32126, 2209)),
 				};
 				addressed_statistics addition[] = {
-					make_statistics(1221u, 0, 0, 0, 0, 0,
-						make_statistics_base(1231u, 28, 1011, 23123122, 72125, 3211),
-						make_statistics_base(1241u, 29, 3013, 23123121, 72126, 1209),
-						make_statistics_base(12211u, 97, 2012, 123123123, 32124, 2213)),
+					make_statistics(1221u, 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(1231u, 28, 1011, 23123122, 72125, 3211)
+						+ make_statistics_base(1241u, 29, 3013, 23123121, 72126, 1209)
+						+ make_statistics_base(12211u, 97, 2012, 123123123, 32124, 2213)),
 				};
 
 				ser(mkvector(initial));
@@ -199,11 +199,11 @@ namespace micro_profiler
 
 				// ASSERT
 				threaded_addressed_statistics reference[] = {
-					make_statistics(addr(1221), 0, 0, 0, 0, 0,
-						make_statistics_base(addr(1221), 17, 2012, 123123123, 32124, 2213),
-						make_statistics_base(addr(1231), 18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211),
-						make_statistics_base(addr(1241), 19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209),
-						make_statistics_base(addr(12211), 97, 2012, 123123123, 32124, 2213)),
+					make_statistics(addr(1221), 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(addr(1221), 17, 2012, 123123123, 32124, 2213)
+						+ make_statistics_base(addr(1231), 18 + 28, 2011, 123123122 + 23123122, 32125 + 72125, 3211)
+						+ make_statistics_base(addr(1241), 19 + 29, 3013, 123123121 + 23123121, 32126 + 72126, 2209)
+						+ make_statistics_base(addr(12211), 97, 2012, 123123123, 32124, 2213)),
 					make_statistics(addr(1231), 0, 0, 0, 0, 0),
 					make_statistics(addr(1241), 0, 0, 0, 0, 0),
 					make_statistics(addr(12211), 0, 0, 0, 0, 0),
@@ -220,18 +220,18 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> ser(buffer);
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
 				addressed_statistics batch1[] = {
-					make_statistics(1221u, 0, 0, 0, 0, 0,
-						make_statistics_base(1221u, 17, 0, 0, 0, 0),
-						make_statistics_base(1231u, 18, 0, 0, 0, 0),
-						make_statistics_base(1241u, 19, 0, 0, 0, 0)),
-					make_statistics(1222u, 0, 0, 0, 0, 0,
-						make_statistics_base(1221u, 8, 0, 0, 0, 0),
-						make_statistics_base(1251u, 9, 0, 0, 0, 0)),
+					make_statistics(1221u, 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(1221u, 17, 0, 0, 0, 0)
+						+ make_statistics_base(1231u, 18, 0, 0, 0, 0)
+						+ make_statistics_base(1241u, 19, 0, 0, 0, 0)),
+					make_statistics(1222u, 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(1221u, 8, 0, 0, 0, 0)
+						+ make_statistics_base(1251u, 9, 0, 0, 0, 0)),
 				};
 				addressed_statistics batch2[] = {
-					make_statistics(12210u, 1, 0, 0, 0, 0,
-						make_statistics_base(12211u, 107, 0, 0, 0, 0),
-						make_statistics_base(1221u, 8, 0, 0, 0, 0)),
+					make_statistics(12210u, 1, 0, 0, 0, 0, plural
+						+ make_statistics_base(12211u, 107, 0, 0, 0, 0)
+						+ make_statistics_base(1221u, 8, 0, 0, 0, 0)),
 				};
 
 				statistic_types::map_detailed s;
@@ -299,15 +299,15 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
 				statistic_types::map_detailed m1, m2;
 				threaded_addressed_statistics batch1[] = {
-					make_statistics(addr(0x7011), 0, 0, 0, 0, 0,
-						make_statistics_base(addr(0x0011), 10, 0, 0, 0, 0),
-						make_statistics_base(addr(0x0013), 11, 0, 0, 0, 0)),
+					make_statistics(addr(0x7011), 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(addr(0x0011), 10, 0, 0, 0, 0)
+						+ make_statistics_base(addr(0x0013), 11, 0, 0, 0, 0)),
 				};
 				threaded_addressed_statistics batch2[] = {
-					make_statistics(addr(0x5011), 0, 0, 0, 0, 0,
-						make_statistics_base(addr(0x0021), 13, 0, 0, 0, 0),
-						make_statistics_base(addr(0x0023), 17, 0, 0, 0, 0),
-						make_statistics_base(addr(0x0027), 0x1000000000, 0, 0, 0, 0)),
+					make_statistics(addr(0x5011), 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(addr(0x0021), 13, 0, 0, 0, 0)
+						+ make_statistics_base(addr(0x0023), 17, 0, 0, 0, 0)
+						+ make_statistics_base(addr(0x0027), 0x1000000000, 0, 0, 0, 0)),
 				};
 
 				ser(mkvector(batch1));
@@ -344,10 +344,10 @@ namespace micro_profiler
 				strmd::deserializer<vector_adapter, packer> dser(buffer);
 				statistic_types::map_detailed m;
 				threaded_addressed_statistics batch[] = {
-					make_statistics(addr(0x0191), 0, 0, 0, 0, 0,
-						make_statistics_base(addr(0x0021), 13, 0, 0, 0, 0),
-						make_statistics_base(addr(0x0023), 17, 0, 0, 0, 0),
-						make_statistics_base(addr(0x0027), 0x1000000000, 0, 0, 0, 0)),
+					make_statistics(addr(0x0191), 0, 0, 0, 0, 0, plural
+						+ make_statistics_base(addr(0x0021), 13, 0, 0, 0, 0)
+						+ make_statistics_base(addr(0x0023), 17, 0, 0, 0, 0)
+						+ make_statistics_base(addr(0x0027), 0x1000000000, 0, 0, 0, 0)),
 				};
 
 				(function_statistics &)m[addr(0x0021)] = function_statistics(10, 0, 17, 11, 30);
@@ -568,15 +568,15 @@ namespace micro_profiler
 
 				ser(plural
 					+ make_pair(7u, plural
-						+ make_statistics(1u, 1, 100, 100, 32, 2000,
-							make_statistics_base(2u, 1, 2, 101, 12, 200))
-						+ make_statistics(3u, 1, 0, 102, 32, 2500,
-							make_statistics_base(5u, 2, 0, 103, 11, 1211),
-							make_statistics_base(9u, 1, 0, 102, 32, 2500),
-							make_statistics_base(1u, 10, 71, 10, 2, 2))
-						+ make_statistics(2u, 10, 72, 11, 2, 2,
-							make_statistics_base(5u, 20, 70, 13, 1, 5),
-							make_statistics_base(9u, 1, 1, 1, 1, 1))));
+						+ make_statistics(1u, 1, 100, 100, 32, 2000, plural
+							+ make_statistics_base(2u, 1, 2, 101, 12, 200))
+						+ make_statistics(3u, 1, 0, 102, 32, 2500, plural
+							+ make_statistics_base(5u, 2, 0, 103, 11, 1211)
+							+ make_statistics_base(9u, 1, 0, 102, 32, 2500)
+							+ make_statistics_base(1u, 10, 71, 10, 2, 2))
+						+ make_statistics(2u, 10, 72, 11, 2, 2, plural
+							+ make_statistics_base(5u, 20, 70, 13, 1, 5)
+							+ make_statistics_base(9u, 1, 1, 1, 1, 1))));
 
 				// ACT
 				dser(idx, ctx);

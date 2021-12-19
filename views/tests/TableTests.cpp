@@ -287,6 +287,46 @@ namespace micro_profiler
 					assert_equal("testtest", (**l[1]).value);
 					assert_equal("testtest", (*table_t::const_iterator(l[1])).value);
 				}
+
+
+				test( TableIteratorsAreAssignable )
+				{
+					typedef table< int, function<int ()> > table1_t;
+					typedef table< string, function<string ()> > table2_t;
+
+					// INIT
+					table1_t t1([] {	return 0;	});
+					table2_t t2([] {	return "";	});
+					const table1_t &ct1 = t1;
+					const table2_t &ct2 = t2;
+
+					auto r1 = t1.create(); *r1 = 1211, r1.commit();
+					auto r2 = t1.create(); *r2 = 1, r2.commit();
+					auto r3 = t1.create(); *r3 = 17, r3.commit();
+					auto r4 = t2.create(); *r4 = "1211", r4.commit();
+					auto r5 = t2.create(); *r5 = "1", r5.commit();
+					auto r6 = t2.create(); *r6 = "17", r6.commit();
+
+					auto i1 = t1.begin();
+					auto ci1 = ct1.begin();
+					auto i2 = t2.begin();
+					auto ci2 = ct2.begin();
+
+					++i1, ++ci1;
+					++i2, ++ci2;
+
+					// ACT
+					i1 = t1.begin();
+					ci1 = ct1.begin();
+					i2 = t2.begin();
+					ci2 = ct2.begin();
+
+					// ASSERT
+					assert_equal(1211, (table1_t::reference)**i1);
+					assert_equal(1211, (table1_t::const_reference)*ci1);
+					assert_equal("1211", (table2_t::reference)**i2);
+					assert_equal("1211", (table2_t::const_reference)*ci2);
+				}
 			end_test_suite
 		}
 	}

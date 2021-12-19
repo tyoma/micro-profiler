@@ -32,7 +32,9 @@ namespace micro_profiler
 		{
 		public:
 			class const_iterator;
+			typedef const T &const_reference;
 			class iterator;
+			typedef T &reference;
 			class transacted_record;
 			typedef T value_type;
 
@@ -98,16 +100,16 @@ namespace micro_profiler
 			typedef const T &reference;
 
 		public:
-			const T &operator *() const
-			{	return _container[this->get_index()];	}
+			reference operator *() const
+			{	return (*_container)[this->get_index()];	}
 
 		private:
 			const_iterator(const container_type &container, index_type index)
-				: iterator_base(index), _container(container)
+				: iterator_base(index), _container(&container)
 			{	}
 
 		private:
-			const container_type &_container;
+			const container_type *_container;
 
 		private:
 			friend class table;
@@ -117,22 +119,18 @@ namespace micro_profiler
 		class table<T, C>::iterator : public iterator_base
 		{
 		public:
-//			typedef const T *pointer;
-//			typedef transacted_record reference;
-
-		public:
 			transacted_record operator *() const;
 
 			operator const_iterator() const
-			{	return const_iterator(_owner._records, this->get_index());	}
+			{	return const_iterator(_owner->_records, this->get_index());	}
 
 		private:
 			iterator(table &owner, index_type index)
-				: iterator_base(index), _owner(owner)
+				: iterator_base(index), _owner(&owner)
 			{	}
 
 		private:
-			table &_owner;
+			table *_owner;
 
 		private:
 			friend class table;
@@ -205,6 +203,6 @@ namespace micro_profiler
 
 		template <typename T, typename C>
 		inline typename table<T, C>::transacted_record table<T, C>::iterator::operator *() const
-		{	return transacted_record(_owner, this->get_index(), false);	}
+		{	return transacted_record(*_owner, this->get_index(), false);	}
 	}
 }

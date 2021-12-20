@@ -7,7 +7,7 @@ set(FRONTEND_TESTS_SOURCES
 	AnyKeyTests.cpp
 	FilterViewTests.cpp
 	FlattenViewTests.cpp
-	IndexTests.cpp
+	ImmutableIndexTests.cpp
 	OrderedViewTests.cpp
 	TableTests.cpp
 )

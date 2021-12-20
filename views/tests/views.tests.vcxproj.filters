@@ -7,7 +7,7 @@
     <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="AggregateViewTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
-    <ClCompile Include="IndexTests.cpp" />
+    <ClCompile Include="ImmutableIndexTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">

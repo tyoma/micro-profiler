@@ -51,17 +51,49 @@ namespace micro_profiler
 			wpl::slot_connection _on_changed;
 		};
 
+
 		template <typename U, typename K>
 		class immutable_index
 		{
 		public:
 			class const_iterator;
 			typedef typename K::key_type key_type;
+			typedef std::pair<const_iterator, const_iterator> range_type;
 
 		public:
-			immutable_index(U &underlying, const K &keyer);
+			immutable_index(U &underlying, const K &keyer = K());
 
-			std::pair<const_iterator, const_iterator> operator [](const key_type &key) const;
+			range_type operator [](const key_type &key) const;
+
+		private:
+			typedef std::unordered_multimap< key_type, typename U::const_iterator, hash<key_type> > index_t;
+
+		private:
+			index_t _index;
+			const K _keyer;
+			wpl::slot_connection _on_changed;
+		};
+
+		template <typename U, typename K>
+		class immutable_index<U, K>::const_iterator : public index_t::const_iterator
+		{
+			typedef typename index_t::const_iterator base;
+
+		public:
+			typedef const typename U::value_type &const_reference;
+			typedef const typename U::value_type *pointer;
+			typedef const_reference reference;
+
+		public:
+			const_iterator(base from)
+				: base(from)
+			{	}
+
+			const_reference operator *() const
+			{	return *static_cast<const base &>(*this)->second;	}
+
+			pointer operator ->() const
+			{	return &*static_cast<const base &>(*this)->second;	}
 		};
 
 
@@ -105,5 +137,24 @@ namespace micro_profiler
 			_keyer(*tr, key);
 			return tr;
 		}
+
+
+		template <typename U, typename K>
+		inline immutable_index<U, K>::immutable_index(U &underlying, const K &keyer)
+			: _keyer(keyer)
+		{
+			auto on_changed = [this] (typename U::const_iterator record, bool new_) {
+				if (new_)
+					_index.insert(std::make_pair(_keyer(*record), record));
+			};
+
+			for (auto i = underlying.begin(); i != underlying.end(); ++i)
+				on_changed(i, true);
+			_on_changed = underlying.changed += on_changed;
+		}
+
+		template <typename U, typename K>
+		inline typename immutable_index<U, K>::range_type immutable_index<U, K>::operator [](const key_type &key) const
+		{	return _index.equal_range(key);	}
 	}
 }

@@ -35,7 +35,7 @@
     <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
-    <ClCompile Include="IndexTests.cpp" />
+    <ClCompile Include="ImmutableIndexTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
   </ItemGroup>

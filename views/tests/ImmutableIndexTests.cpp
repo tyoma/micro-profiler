@@ -1,10 +1,12 @@
 #include <views/index.h>
 
 #include <list>
+#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 #include <views/table.h>
 
+using namespace micro_profiler::tests;
 using namespace std;
 
 namespace micro_profiler
@@ -57,9 +59,21 @@ namespace micro_profiler
 					void operator ()(T &/*value*/, const key_type &/*key*/) const
 					{	throw 0;	}
 				};
+
+				template <typename T, typename C, typename SrcT>
+				void populate(table<T, C> &destination, const SrcT &source)
+				{
+					for (auto i = begin(source); i != end(source); ++i)
+					{
+						auto r = destination.create();
+
+						*r = *i;
+						r.commit();
+					}
+				}
 			}
 
-			begin_test_suite( UniqueIndexTests )
+			begin_test_suite( ImmutableUniqueIndexTests )
 				test( IndexIsBuiltOnConstruction )
 				{
 					// INIT
@@ -192,6 +206,146 @@ namespace micro_profiler
 					assert_equal("foo", cidx[2].second);
 					assert_equal("bar", (*rr3).second);
 					assert_equal("bar", cidx[3].second);
+				}
+			end_test_suite
+
+
+			begin_test_suite( ImmutableIndexTests )
+				test( IndexIsPopulatedOnConstruction )
+				{
+					typedef table< pair<int, string> > table_t;
+					typedef immutable_index< table_t, key_first<table_t::value_type> > index1_t;
+					typedef immutable_index< table_t, key_second<table_t::value_type> > index2_t;
+
+					// INIT
+					table_t t;
+
+					populate(t, plural
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(13, (string)"zoo")
+						+ make_pair(11, (string)"foo")
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(13, (string)"bar")
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(19, (string)"bar")
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(19, (string)"foo"));
+
+					// INIT / ACT
+					index1_t idx1(t);
+					index2_t idx2(t);
+
+					// ACT
+					auto r1 = idx1[11];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(11, (string)"foo")
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(11, (string)"zoo"), (vector< pair<int, string> >(r1.first, r1.second)));
+
+					// ACT
+					r1 = idx1[13];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(13, (string)"zoo")
+						+ make_pair(13, (string)"bar"), (vector< pair<int, string> >(r1.first, r1.second)));
+
+					// ACT
+					r1 = idx1[19];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(19, (string)"bar")
+						+ make_pair(19, (string)"foo"), (vector< pair<int, string> >(r1.first, r1.second)));
+
+					// ACT
+					r1 = idx1[111];
+
+					// ASSERT
+					assert_equal(r1.first, r1.second);
+
+					// ACT
+					auto r2 = idx2["zoo"];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(13, (string)"zoo")
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(11, (string)"zoo"), (vector< pair<int, string> >(r2.first, r2.second)));
+
+					// ACT
+					r2 = idx2["foo"];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(11, (string)"foo")
+						+ make_pair(19, (string)"foo"), (vector< pair<int, string> >(r2.first, r2.second)));
+
+					// ACT
+					r2 = idx2["bar"];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(13, (string)"bar")
+						+ make_pair(19, (string)"bar"), (vector< pair<int, string> >(r2.first, r2.second)));
+
+					// ACT
+					r2 = idx2[""];
+
+					// ASSERT
+					assert_equal(r2.first, r2.second);
+				}
+
+
+				test( DynamicallyAddedRecordsBecomeIndexed )
+				{
+					typedef table< pair<int, string> > table_t;
+					typedef immutable_index< table_t, key_first<table_t::value_type> > index_t;
+
+					// INIT
+					table_t t;
+					index_t idx(t);
+
+					// ACT
+					populate(t, plural + make_pair(11, (string)"zoo"));
+					auto r = idx[11];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(11, (string)"zoo"), (vector< pair<int, string> >(r.first, r.second)));
+					assert_equal(11, r.first->first);
+					assert_equal("zoo", r.first->second);
+
+					// ACT
+					populate(t, plural + make_pair(19, (string)"bar") + make_pair(11, (string)"foo"));
+					r = idx[11];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(11, (string)"foo"), (vector< pair<int, string> >(r.first, r.second)));
+
+					// ACT
+					r = idx[19];
+
+					// ASSERT
+					assert_equivalent(plural
+						+ make_pair(19, (string)"bar"), (vector< pair<int, string> >(r.first, r.second)));
+
+					// ACT
+					auto tr = *t.begin();
+					(*tr).first = 1910;
+					tr.commit();
+					r = idx[1910];
+
+					// ASSERT
+					assert_equal(r.first, r.second);
 				}
 			end_test_suite
 		}

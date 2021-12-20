@@ -27,7 +27,14 @@ namespace micro_profiler
 {
 	namespace views
 	{
-		template <typename T, typename ConstructorT>
+		template <typename T>
+		struct default_constructor
+		{
+			T operator ()() const
+			{	return T();	}
+		};
+
+		template < typename T, typename ConstructorT = default_constructor<T> >
 		class table
 		{
 		public:

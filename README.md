@@ -75,7 +75,7 @@ The steps are much like the ones above.
 
 # Revision History
 
-## v2.0.638
+## v2.0.639
 
 * Issue [#77](https://github.com/tyoma/micro-profiler/issues/77) fixed - crash in applications with profiled DLL being loaded after more than 64 TLSes allocated.
 

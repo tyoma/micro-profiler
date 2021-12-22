@@ -478,6 +478,32 @@ namespace micro_profiler
 				assert_equal(11u, allocator_.allocated);
 			}
 
+
+			test( CollectorCanWithstandOverallocatedTLSes )
+			{
+				// INIT
+				mt::tls<void> occupied[0x40]; // Occupy 64 directly addressed TLS slots (Win32)
+				calls_collector c(allocator_, 1000u * buffering_policy::buffer_size, threads, mt::get_thread_callbacks());
+				mt::thread t([&c] {
+					c.track(12345, (void *)12345);
+				});
+				collection_acceptor a;
+
+				occupied[0].get();
+
+				// ACT
+				t.join();
+
+				// ASSERT
+				c.read_collected(a);
+				call_record reference[] = {
+					{	12345, (void *)12345	},
+				};
+
+				assert_equal(1u, a.collected.size());
+				assert_equal(reference, a.collected[0].second);
+			}
+
 		end_test_suite
 	}
 }

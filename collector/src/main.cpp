@@ -118,11 +118,9 @@ namespace micro_profiler
 			mkdir(constants::data_directory().c_str(), 0777);
 			return log::create_writer(constants::data_directory() & logname);
 		}
-
-
-		collector_app_instance g_instance(&probe_create_channel, mt::get_thread_callbacks(), c_trace_limit,
-			g_collector_ptr);
 	}
+
+	collector_app_instance g_instance(&probe_create_channel, mt::get_thread_callbacks(), c_trace_limit, g_collector_ptr);
 
 	collector_app_instance::collector_app_instance(const active_server_app::frontend_factory_t &frontend_factory,
 			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)

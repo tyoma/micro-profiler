@@ -56,16 +56,20 @@ ELSEIFDEF _M_X64
 	endm
 
 	READ_TLS macro
-		cmp	eax, 40h
-		jl		short shorter
+		cmp	ax, 40h
+		jae	dynamic_tls
+		mov	rax, qword ptr gs:[eax * 8 + 1480h]
+		jmp	done
+	dynamic_tls:
 		push	rbx
-		movzx	rax, ax
-		mov	rbx, qword ptr gs:[1780h]
-		mov	rax, qword ptr [rbx + 8 * rax - 200h]
+		movzx	rbx, ax
+		xor	rax, rax
+		or		rax, qword ptr gs:[1780h] ; load a pointer to a dynamically allocated TLS array from TIB.
+		jz		uninitialized ; as a result of a non-allocated dynamic TLS page, rax holds zero, as a never written TLS value.
+		mov	rax, qword ptr [rax + 8 * rbx - 200h]
+	uninitialized:
 		pop	rbx
 		jmp	done
-	shorter:
-		mov	rax, qword ptr gs:[eax * 8 + 1480h]
 	done:
 		exitm
 	endm

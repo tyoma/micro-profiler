@@ -66,24 +66,25 @@ namespace micro_profiler
 			_cm_parents(new headers_model(c_columns_statistics_parents, 2, false)),
 			_cm_children(new headers_model(c_columns_statistics_children, 4, false))
 	{
-		auto m_main = make_shared<functions_list>(session.statistics, 1.0 / session.process_info.ticks_per_second,
+		const auto statistics = session.statistics;
+		const auto m_main = make_shared<functions_list>(statistics, 1.0 / session.process_info.ticks_per_second,
 			make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
-		auto m_selection = m_main->create_selection();
-		auto m_selected_items = make_shared< vector<statistic_types::key> >();
-		auto threads = make_shared<threads_model>(session.threads);
+		const auto m_selection = m_main->create_selection();
+		const auto m_selected_items = make_shared< vector<id_t> >();
+		const auto threads = make_shared<threads_model>(session.threads);
 
-		auto m_parents = create_callers_model(session.statistics,
+		const auto m_parents = create_callers_model(statistics,
 			1.0 / session.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
-		auto m_selection_parents = m_parents->create_selection();
-		auto m_children = create_callees_model(session.statistics,
+		const auto m_selection_parents = m_parents->create_selection();
+		const auto m_children = create_callees_model(statistics,
 			1.0 / session.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
-		auto m_selection_children = m_children->create_selection();
+		const auto m_selection_children = m_children->create_selection();
 
 		_connections.push_back(m_selection->invalidate += [=] (size_t) {
 			auto main_selected_items_ = m_selected_items;
 
 			main_selected_items_->clear();
-			m_selection->enumerate([main_selected_items_] (const statistic_types::key &key) {
+			m_selection->enumerate([main_selected_items_] (id_t key) {
 				main_selected_items_->push_back(key);
 			});
 			m_parents->fetch();
@@ -97,20 +98,20 @@ namespace micro_profiler
 		auto on_activate = [this, m_main, m_selected_items] {
 			symbol_resolver::fileline_t fileline;
 
-			if (m_selected_items->size() > 0u && m_main->resolver->symbol_fileline_by_va(m_selected_items->front().first, fileline))
+			if (m_selected_items->size() > 0u && m_main->resolver->symbol_fileline_by_va(m_selected_items->front(), fileline))
 				open_source(fileline.first, fileline.second);
 		};
 
-		auto on_drilldown = [this, m_main, m_selection] (const selection<statistic_types::key> &selection_) {
-			auto key = get_first_item(selection_);
+		auto on_drilldown_child = [statistics, m_main, m_selection] (const selection<id_t> &selection_) {
+			const auto key = get_first_item(selection_);
 
-			if (key.second)
+			if (const auto item = key.second ? statistics->by_id.find(key.first) : nullptr)
 			{
-				const auto index = m_main->get_index(key.first);
-
-				m_selection->clear();
-				m_selection->add(index);
-				_lv_main->focus(index);
+				if (const auto child = statistics->by_node.find(call_node_key(item->thread_id, 0, item->address)))
+				{
+					m_selection->clear();
+					m_selection->add_key(child->id);
+				}
 			}
 		};
 
@@ -121,8 +122,14 @@ namespace micro_profiler
 
 		set_spacing(5);
 		add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(20), true, 3);
-			_connections.push_back(lv->item_activate += [m_selection_parents, on_drilldown] (...) {
-				on_drilldown(*m_selection_parents);
+			_connections.push_back(lv->item_activate += [statistics, m_main, m_selection, m_selection_parents] (...) {
+				const auto key = get_first_item(*m_selection_parents);
+
+				if (const auto item = key.second ? statistics->by_id.find(key.first) : nullptr)
+				{
+					m_selection->clear();
+					m_selection->add_key(item->parent_id);
+				}
 			});
 			attach_section(*lv, nullptr, nullptr, _cm_parents, m_parents, m_selection_parents);
 
@@ -136,10 +143,11 @@ namespace micro_profiler
 					unsigned id;
 
 					if (threads->get_key(id, index))
-						m_main->set_filter([id] (const functions_list::value_type &v) { return id == v.first.second;	});
+						m_main->set_filter([id] (const functions_list::value_type &v) { return (id == v.thread_id) && !v.parent_id;	});
 					else
-						m_main->set_filter();
+						m_main->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	});
 				});
+				m_main->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	}); // TODO: temporary solution, until hierarchical view is there
 
 			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), wpl::percents(100), false);
 				panel[1]->set_spacing(5);
@@ -156,17 +164,16 @@ namespace micro_profiler
 		add(panel[0] = factory_.create_control<stack>("hstack"), wpl::percents(20), true);
 			panel[0]->set_spacing(5);
 			panel[0]->add(pc = factory_.create_control<piechart>("piechart"), wpl::pixels(150), false);
-				_connections.push_back(pc->item_activate += [m_selection_children, on_drilldown] (...) {
-					on_drilldown(*m_selection_children);
+				_connections.push_back(pc->item_activate += [m_selection_children, on_drilldown_child] (...) {
+					on_drilldown_child(*m_selection_children);
 				});
 				pc->set_hint(hint);
 
 			panel[0]->add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(100), false, 2);
-				_connections.push_back(lv->item_activate += [m_selection_children, on_drilldown] (...) {
-					on_drilldown(*m_selection_children);
+				_connections.push_back(lv->item_activate += [m_selection_children, on_drilldown_child] (...) {
+					on_drilldown_child(*m_selection_children);
 				});
-
-			attach_section(*lv, pc.get(), hint.get(), _cm_children, m_children, m_selection_children);
+				attach_section(*lv, pc.get(), hint.get(), _cm_children, m_children, m_selection_children);
 
 	}
 
@@ -177,11 +184,11 @@ namespace micro_profiler
 		_cm_children->store(*configuration.create("ChildrenColumns"));
 	}
 
-	pair<statistic_types::key, bool> tables_ui::get_first_item(const selection<statistic_types::key> &selection_)
+	pair<id_t, bool> tables_ui::get_first_item(const selection<id_t> &selection_)
 	{
-		auto key = make_pair(statistic_types::key(), false);
+		auto key = make_pair(id_t(), false);
 
-		selection_.enumerate([&] (const function_key &key_) {	key = make_pair(key_, true);	});
+		selection_.enumerate([&] (id_t key_) {	key = make_pair(key_, true);	});
 		return key;
 	}
 

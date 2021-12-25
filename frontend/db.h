@@ -71,6 +71,15 @@ namespace micro_profiler
 		{	value.thread_id = std::get<0>(key), value.parent_id = std::get<1>(key), value.address = std::get<2>(key);	}
 	};
 
+	struct id_keyer
+	{
+		typedef id_t key_type;
+
+		key_type operator ()(const call_statistics &value) const
+		{	return value.id;	}
+	};
+
 	typedef views::table<call_statistics, call_statistics_constructor> calls_statistics_table;
 	typedef views::immutable_unique_index<calls_statistics_table, call_path_keyer> call_nodes_index;
+	typedef views::immutable_unique_index<calls_statistics_table, id_keyer> primary_id_index;
 }

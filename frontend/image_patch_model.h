@@ -66,10 +66,9 @@ namespace micro_profiler
 		{
 			typedef record_type const_reference;
 			typedef record_type value_type;
-			typedef std::vector<symbol_info>::const_iterator nested_const_iterator;
+			typedef std::vector<symbol_info>::const_iterator const_iterator;
 
-			static nested_const_iterator begin(const tables::modules::value_type &from);
-			static nested_const_iterator end(const tables::modules::value_type &from);
+			static std::pair<const_iterator, const_iterator> equal_range(const tables::modules::value_type &from);
 			static const_reference get(const tables::modules::value_type &l1, const symbol_info &l2);
 		};
 

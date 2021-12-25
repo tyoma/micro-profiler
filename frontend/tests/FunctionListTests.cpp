@@ -2,11 +2,11 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "primitive_helpers.h"
 
 #include <iomanip>
 #include <sstream>
 #include <test-helpers/helpers.h>
-#include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -92,6 +92,18 @@ namespace micro_profiler
 						return i;
 				return table_model_base::npos();
 			}
+
+			template <typename ContainerT>
+			void append(tables::statistics &statistics, const ContainerT &items, id_t parent_id = 0)
+			{
+				for (auto i = begin(items); i != end(items); ++i)
+				{
+					auto r = statistics.by_node[call_node_key(i->first.second, parent_id, i->first.first)];
+
+					static_cast<function_statistics &>(*r) = i->second;
+					r.commit();
+				}
+			}
 		}
 
 
@@ -127,7 +139,7 @@ namespace micro_profiler
 				// INIT
 				auto fl = make_shared<functions_list>(statistics, 1.0, resolver, tmodel);
 
-				assign(*statistics, plural
+				append(*statistics, plural
 					+ make_statistics(addr(1123), 19, 0, 0, 0, 1)
 					+ make_statistics(addr(2234), 29, 0, 0, 0, 1));
 
@@ -141,7 +153,8 @@ namespace micro_profiler
 				assert_equal(2u, fl->get_count());
 
 				// ACT
-				static_cast<function_statistics &>((*statistics)[addr(7234)]) = function_statistics(10, 1, 1, 1);
+				append(*statistics, plural
+					+ make_statistics(addr(7234), 10, 1, 1, 1, 2));
 				statistics->invalidate();
 
 				// ASSERT
@@ -188,7 +201,7 @@ namespace micro_profiler
 					+ make_statistics(addr(0x1770u), 1, 0, 99999031030567, 99999030000987, 99999030000987)
 					+ make_statistics(addr(0x1A05u), 1, 0, 65450031030567000, 23470030000987000, 23470030000987000);
 
-				assign(*statistics, functions);
+				append(*statistics, functions);
 
 				auto fl = make_shared<functions_list>(statistics, 1e-10, resolver, tmodel);
 
@@ -227,8 +240,8 @@ namespace micro_profiler
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				// INIT / ACT
-				const shared_ptr< selection<function_key> > s1 = fl->create_selection();
-				const shared_ptr< selection<function_key> > s2 = fl->create_selection();
+				const auto s1 = fl->create_selection();
+				const auto s2 = fl->create_selection();
 
 				// ASSERT
 				assert_not_null(s1);
@@ -246,7 +259,7 @@ namespace micro_profiler
 					+ make_statistics(addr(2990u), 2, 2, 33450030, 32333333, 5)
 					+ make_statistics(addr(3000u), 15233, 3, 65460, 13470, 6);
 
-				assign(*statistics, functions);
+				append(*statistics, functions);
 
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
@@ -275,17 +288,17 @@ namespace micro_profiler
 					+ make_statistics(addr(2990u), 2, 2, 33450030, 32333333, 5)
 					+ make_statistics(addr(3000u), 15233, 3, 65460, 13470, 6);
 
-				assign(*statistics, functions);
+				append(*statistics, functions);
 
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 				const auto s = fl->create_selection();
 
 				ih.bind_to_model(*fl);
 
-				shared_ptr<const trackable> pt0 = fl->track(fl->get_index(addr(1990)));
-				shared_ptr<const trackable> pt1 = fl->track(fl->get_index(addr(2000)));
-				shared_ptr<const trackable> pt2 = fl->track(fl->get_index(addr(2990)));
-				shared_ptr<const trackable> pt3 = fl->track(fl->get_index(addr(3000)));
+				shared_ptr<const trackable> pt0 = fl->track(0);
+				shared_ptr<const trackable> pt1 = fl->track(1);
+				shared_ptr<const trackable> pt2 = fl->track(2);
+				shared_ptr<const trackable> pt3 = fl->track(3);
 
 				const trackable &t0 = *pt0;
 				const trackable &t1 = *pt1;
@@ -653,7 +666,7 @@ namespace micro_profiler
 					+ make_statistics(addr(0x1020u, 7), 1, 0, 0, 0, 0)
 					+ make_statistics(addr(0x1030u, 9), 1, 0, 0, 0, 0);
 
-				assign(*statistics, functions);
+				append(*statistics, functions);
 
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
@@ -704,7 +717,7 @@ namespace micro_profiler
 					+ make_statistics(addr(0x10000u, 3), 4, 0, 0, 0, 0)
 					+ make_statistics(addr(0x10000u, 4), 5, 0, 0, 0, 0);
 
-				assign(*statistics, functions);
+				append(*statistics, functions);
 
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
@@ -757,7 +770,7 @@ namespace micro_profiler
 					"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
 
 				// INIT
-				assign(*statistics, functions);
+				append(*statistics, functions);
 				statistics->invalidate();
 
 				// ACT
@@ -789,7 +802,7 @@ namespace micro_profiler
 			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
-				assign(*statistics, plural
+				append(*statistics, plural
 					+ make_statistics(addr(0x2001), 11, 0, 0, 0, 0)
 					+ make_statistics(addr(0x2004), 17, 0, 0, 0, 0)
 					+ make_statistics(addr(0x2008), 18, 0, 0, 0, 0));
@@ -809,7 +822,7 @@ namespace micro_profiler
 			test( OnlyAllowedItemsAreExposedByTheModelAfterFilterApplication )
 			{
 				// INIT
-				assign(*statistics, plural
+				append(*statistics, plural
 					+ make_statistics(addr(0x1000u, 0), 1, 0, 0, 0, 0) + make_statistics(addr(0x1010u, 0), 2, 0, 0, 0, 0)
 					+ make_statistics(addr(0x1020u, 2), 3, 0, 0, 0, 0) + make_statistics(addr(0x1030u, 2), 4, 0, 0, 0, 0)
 					+ make_statistics(addr(0x1040u, 3), 5, 0, 0, 0, 0) + make_statistics(addr(0x1050u, 3), 6, 0, 0, 0, 0));
@@ -817,7 +830,7 @@ namespace micro_profiler
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 
 				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.first.second == 3; });
+				fl->set_filter([] (const functions_list::value_type &v) { return v.thread_id == 3; });
 
 				// ASSERT
 				string reference1[][2] = {
@@ -828,7 +841,7 @@ namespace micro_profiler
 				assert_table_equivalent(name_times, reference1, *fl);
 
 				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.first.second == 0; });
+				fl->set_filter([] (const functions_list::value_type &v) { return v.thread_id == 0; });
 
 				// ASSERT
 				string reference2[][2] = {
@@ -839,7 +852,7 @@ namespace micro_profiler
 				assert_table_equivalent(name_times, reference2, *fl);
 
 				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 3; });
+				fl->set_filter([] (const functions_list::value_type &v) { return v.times_called > 3; });
 
 				// ASSERT
 				string reference3[][2] = {
@@ -870,7 +883,7 @@ namespace micro_profiler
 			test( InvalidationIsEmittedOnFilterChange )
 			{
 				// INIT
-				assign(*statistics, plural
+				append(*statistics, plural
 					+ make_statistics(addr(0x1000u), 1, 0, 0, 0, 0) + make_statistics(addr(0x1010u), 2, 0, 0, 0, 0));
 
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
@@ -879,7 +892,7 @@ namespace micro_profiler
 				it.bind_to_model(*fl);
 
 				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 1; });
+				fl->set_filter([] (const functions_list::value_type &v) { return v.times_called > 1; });
 
 				// ASSERT
 				table_model_base::index_type reference1[] = { 1u, };
@@ -887,7 +900,7 @@ namespace micro_profiler
 				assert_equal(reference1, it.counts);
 
 				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.second.times_called > 2; });
+				fl->set_filter([] (const functions_list::value_type &v) { return v.times_called > 2; });
 
 				// ASSERT
 				table_model_base::index_type reference2[] = { 1u, 0u, };

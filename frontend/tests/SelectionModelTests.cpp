@@ -107,6 +107,22 @@ namespace micro_profiler
 				assert_is_empty(get_selected(selection_impl));
 				assert_is_false(selection_.contains(0));
 				assert_is_false(selection_.contains(1));
+
+				// ACT
+				selection_impl.add_key(12211);
+
+				// ASSERT
+				int reference4[] = {	12211,	};
+
+				assert_equivalent(reference4, get_selected(selection_impl));
+
+				// ACT
+				selection_impl.add_key(192);
+
+				// ASSERT
+				int reference5[] = {	12211, 192,	};
+
+				assert_equivalent(reference5, get_selected(selection_impl));
 			}
 
 
@@ -165,6 +181,20 @@ namespace micro_profiler
 
 				assert_equivalent(reference4, log1);
 				assert_is_empty(log2.back());
+
+				// INIT
+				log1.clear();
+				log2.clear();
+
+				// ACT
+				static_cast<selection<int> &>(selection_).add_key(12);
+
+				// ASSERT
+				selection_model<underlying_t>::index_type reference51[] = {	wpl::index_traits::npos(),	};
+
+				assert_equivalent(reference51, log1);
+				assert_equal(1u, log2.size());
+				assert_equivalent(reference12, log2.back());
 			}
 		end_test_suite
 	}

@@ -85,7 +85,7 @@ namespace micro_profiler
 
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return resolver->symbol_name_by_va(lhs.first.first) < resolver->symbol_name_by_va(rhs.first.first);	}
+			{	return resolver->symbol_name_by_va(lhs.address) < resolver->symbol_name_by_va(rhs.address);	}
 
 		private:
 			shared_ptr<const symbol_resolver> resolver;
@@ -102,8 +102,8 @@ namespace micro_profiler
 			bool operator ()(const T &lhs_, const T &rhs_) const
 			{
 				unsigned int lhs = 0u, rhs = 0u;
-				const auto lhs_valid = get_thread_native_id(lhs, lhs_.first.second, *threads);
-				const auto rhs_valid = get_thread_native_id(rhs, rhs_.first.second, *threads);
+				const auto lhs_valid = get_thread_native_id(lhs, lhs_.thread_id, *threads);
+				const auto rhs_valid = get_thread_native_id(rhs, rhs_.thread_id, *threads);
 
 				return !lhs_valid && !rhs_valid ? false : !lhs_valid ? true : !rhs_valid ? false : lhs < rhs;
 			}
@@ -116,7 +116,7 @@ namespace micro_profiler
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.times_called < rhs.second.times_called;	}
+			{	return lhs.times_called < rhs.times_called;	}
 		};
 
 		struct by_times_called_parents
@@ -130,14 +130,14 @@ namespace micro_profiler
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.exclusive_time < rhs.second.exclusive_time;	}
+			{	return lhs.exclusive_time < rhs.exclusive_time;	}
 		};
 
 		struct by_inclusive_time
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.inclusive_time < rhs.second.inclusive_time;	}
+			{	return lhs.inclusive_time < rhs.inclusive_time;	}
 		};
 
 		struct by_avg_exclusive_call_time
@@ -145,9 +145,9 @@ namespace micro_profiler
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
 			{
-				return lhs.second.times_called && rhs.second.times_called
-					? lhs.second.exclusive_time * rhs.second.times_called < rhs.second.exclusive_time * lhs.second.times_called
-					: lhs.second.times_called < rhs.second.times_called;
+				return lhs.times_called && rhs.times_called
+					? lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called
+					: lhs.times_called < rhs.times_called;
 			}
 		};
 
@@ -156,9 +156,9 @@ namespace micro_profiler
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
 			{
-				return lhs.second.times_called && rhs.second.times_called
-					? lhs.second.inclusive_time * rhs.second.times_called < rhs.second.inclusive_time * lhs.second.times_called
-					: lhs.second.times_called < rhs.second.times_called;
+				return lhs.times_called && rhs.times_called
+					? lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called
+					: lhs.times_called < rhs.times_called;
 			}
 		};
 
@@ -166,21 +166,21 @@ namespace micro_profiler
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.max_reentrance < rhs.second.max_reentrance;	}
+			{	return lhs.max_reentrance < rhs.max_reentrance;	}
 		};
 
 		struct by_max_call_time
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.max_call_time < rhs.second.max_call_time;	}
+			{	return lhs.max_call_time < rhs.max_call_time;	}
 		};
 
 		struct get_times_called
 		{
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return static_cast<double>(value.second.times_called);	}
+			{	return static_cast<double>(value.times_called);	}
 		};
 
 		struct exclusive_time
@@ -191,7 +191,7 @@ namespace micro_profiler
 
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return _inv_tick_count * value.second.exclusive_time;	}
+			{	return _inv_tick_count * value.exclusive_time;	}
 
 			double _inv_tick_count;
 		};
@@ -204,7 +204,7 @@ namespace micro_profiler
 
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return _inv_tick_count * value.second.inclusive_time;	}
+			{	return _inv_tick_count * value.inclusive_time;	}
 
 			double _inv_tick_count;
 		};
@@ -217,7 +217,7 @@ namespace micro_profiler
 
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return value.second.times_called ? _inv_tick_count * value.second.exclusive_time / value.second.times_called : 0.0;	}
+			{	return value.times_called ? _inv_tick_count * value.exclusive_time / value.times_called : 0.0;	}
 
 			double _inv_tick_count;
 		};
@@ -230,7 +230,7 @@ namespace micro_profiler
 
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return value.second.times_called ? _inv_tick_count * value.second.inclusive_time / value.second.times_called : 0.0;	}
+			{	return value.times_called ? _inv_tick_count * value.inclusive_time / value.times_called : 0.0;	}
 
 			double _inv_tick_count;
 		};
@@ -243,7 +243,7 @@ namespace micro_profiler
 
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return _inv_tick_count * value.second.max_call_time;	}
+			{	return _inv_tick_count * value.max_call_time;	}
 
 			double _inv_tick_count;
 		};
@@ -256,14 +256,14 @@ namespace micro_profiler
 			switch (column)
 			{
 			case 0:	itoa<10>(text, index + 1);	break;
-			case 1:	text << resolver.symbol_name_by_va(item.first.first).c_str();	break;
-			case 2:	get_thread_native_id(text, item.first.second, threads);	break;
-			case 3:	itoa<10>(text, item.second.times_called);	break;
+			case 1:	text << resolver.symbol_name_by_va(item.address).c_str();	break;
+			case 2:	get_thread_native_id(text, item.thread_id, threads);	break;
+			case 3:	itoa<10>(text, item.times_called);	break;
 			case 4:	format_interval(text, exclusive_time(tick_interval)(item));	break;
 			case 5:	format_interval(text, inclusive_time(tick_interval)(item));	break;
 			case 6:	format_interval(text, exclusive_time_avg(tick_interval)(item));	break;
 			case 7:	format_interval(text, inclusive_time_avg(tick_interval)(item));	break;
-			case 8:	itoa<10>(text, item.second.max_reentrance);	break;
+			case 8:	itoa<10>(text, item.max_reentrance);	break;
 			case 9:	format_interval(text, max_call_time(tick_interval)(item));	break;
 			}
 		}
@@ -368,18 +368,18 @@ namespace micro_profiler
 
 	shared_ptr<linked_statistics> create_callees_model(shared_ptr<const tables::statistics> underlying,
 		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
-		shared_ptr< vector<statistic_types::key> > scope)
+		shared_ptr< vector<id_t> > scope)
 	{	return construct_nested<callees_transform>(underlying, tick_interval, resolver, threads, scope);	}
 
 	shared_ptr<linked_statistics> create_callers_model(shared_ptr<const tables::statistics> underlying,
 		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
-		shared_ptr< vector<statistic_types::key> > scope)
+		shared_ptr< vector<id_t> > scope)
 	{	return construct_nested<callers_transform>(underlying, tick_interval, resolver, threads, scope);	}
 
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval_,
 			shared_ptr<symbol_resolver> resolver_, shared_ptr<const tables::threads> threads_)
-		: base(make_bound< views::filter<statistic_types::map_detailed> >(statistics), tick_interval_, resolver_,
+		: base(make_bound< views::filter<tables::statistics> >(statistics), tick_interval_, resolver_,
 			threads_), _statistics(statistics)
 	{	_connection = statistics->invalidate += [this] {	fetch();	};	}
 
@@ -401,13 +401,13 @@ namespace micro_profiler
 		{
 			const auto &row = get_entry(i);
 
-			content += resolver->symbol_name_by_va(row.first.first) + "\t";
-			itoa<10>(content, row.second.times_called), content += "\t";
+			content += resolver->symbol_name_by_va(row.address) + "\t";
+			itoa<10>(content, row.times_called), content += "\t";
 			gcvt(content, exclusive_time(tick_interval)(row)), content += "\t";
 			gcvt(content, inclusive_time(tick_interval)(row)), content += "\t";
 			gcvt(content, exclusive_time_avg(tick_interval)(row)), content += "\t";
 			gcvt(content, inclusive_time_avg(tick_interval)(row)), content += "\t";
-			itoa<10>(content, row.second.max_reentrance), content += "\t";
+			itoa<10>(content, row.max_reentrance), content += "\t";
 			gcvt(content, max_call_time(tick_interval)(row)), content += "\r\n";
 		}
 

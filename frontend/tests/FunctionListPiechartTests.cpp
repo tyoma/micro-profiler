@@ -2,6 +2,7 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "primitive_helpers.h"
 
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
@@ -37,11 +38,37 @@ namespace micro_profiler
 			std::shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<tables::threads> tmodel;
 
-			shared_ptr<functions_list> create_functions_list(const statistic_types::map_detailed &s,
-				timestamp_t ticks_per_second = 500)
+			template <typename ContainerT>
+			shared_ptr<functions_list> create_functions_list(const ContainerT &s, timestamp_t ticks_per_second = 500)
 			{
-				static_cast<statistic_types::map_detailed &>(*statistics) = s;
+				for (auto i = begin(s); i != end(s); ++i)
+				{
+					auto r = statistics->create();
+
+					(*r).address = i->first.first;
+					(*r).thread_id = i->first.second;
+					static_cast<function_statistics &>(*r) = i->second;
+					r.commit();
+				}
 				return make_shared<functions_list>(statistics, 1.0 / ticks_per_second,
+					make_shared<symbol_resolver>(modules, mappings), tmodel);
+			}
+
+			template <typename ContainerT>
+			shared_ptr<functions_list> create_functions_list_detached(const ContainerT &s, timestamp_t ticks_per_second = 500)
+			{
+				auto local_statistics = make_shared<tables::statistics>();
+
+				for (auto i = begin(s); i != end(s); ++i)
+				{
+					auto r = local_statistics->create();
+
+					(*r).address = i->first.first;
+					(*r).thread_id = i->first.second;
+					static_cast<function_statistics &>(*r) = i->second;
+					r.commit();
+				}
+				return make_shared<functions_list>(local_statistics, 1.0 / ticks_per_second,
 					make_shared<symbol_resolver>(modules, mappings), tmodel);
 			}
 
@@ -57,7 +84,7 @@ namespace micro_profiler
 			test( NonNullPiechartModelIsReturnedFromFunctionsList )
 			{
 				// INIT
-				auto fl = create_functions_list((statistic_types::map_detailed()));
+				auto fl = create_functions_list(vector< pair<statistic_types::key, function_statistics> >());
 
 				// ACT
 				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
@@ -70,11 +97,11 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForTimesCalled )
 			{
 				// INIT
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 123, s[addr(17)].times_called = 127, s[addr(13)].times_called = 12, s[addr(123)].times_called = 12000;
-
-				auto fl = create_functions_list(s);
+				auto fl = create_functions_list(plural
+					+ make_statistics(addr(5), 123, 0, 0, 0, 0)
+					+ make_statistics(addr(17), 127, 0, 0, 0, 0)
+					+ make_statistics(addr(13), 12, 0, 0, 0, 0)
+					+ make_statistics(addr(123), 12000, 0, 0, 0, 0));
 				auto m = fl->get_column_series();
 
 				// ACT
@@ -102,21 +129,25 @@ namespace micro_profiler
 			test( FunctionListUpdateLeadsToPiechartModelUpdateAndSignal )
 			{
 				// INIT
-				statistic_types::map_detailed s;
 				auto invalidated_count = 0;
 
-				s[addr(5)].times_called = 123, s[addr(17)].times_called = 127, s[addr(13)].times_called = 12, s[addr(123)].times_called = 12000;
-
-				auto fl = create_functions_list(s);
+				auto fl = create_functions_list(plural
+					+ make_statistics(addr(5), 123, 0, 0, 0, 0)
+					+ make_statistics(addr(17), 127, 0, 0, 0, 0)
+					+ make_statistics(addr(13), 12, 0, 0, 0, 0)
+					+ make_statistics(addr(123), 12000, 0, 0, 0, 0));
 				auto m = fl->get_column_series();
 
 				fl->set_order(columns::times_called, false);
-				s.clear(), s[addr(120)].times_called = 11001;
 
 				auto conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT
-				*statistics += s;
+				auto r = statistics->by_node[call_node_key(1, 0, 120)];
+
+				(*r).times_called = 11001;
+				r.commit();
+				statistics->invalidate();
 
 				// ASSERT
 				assert_equal(1, invalidated_count);
@@ -132,17 +163,17 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForExclusiveTime )
 			{
 				// INIT
-				statistic_types::map_detailed s;
+				auto fl1 = create_functions_list(plural
+					+ make_statistics(addr(5), 0, 0, 0, 13, 0)
+					+ make_statistics(addr(17), 0, 0, 0, 127, 0)
+					+ make_statistics(addr(13), 0, 0, 0, 12, 0), 500);
+				auto fl2 = create_functions_list_detached(plural
+					+ make_statistics(addr(5), 0, 0, 0, 13, 0)
+					+ make_statistics(addr(17), 0, 0, 0, 127, 0)
+					+ make_statistics(addr(13), 0, 0, 0, 12, 0)
+					+ make_statistics(addr(123), 0, 0, 0, 12000, 0), 100);
 
-				s[addr(5)].exclusive_time = 13, s[addr(17)].exclusive_time = 127, s[addr(13)].exclusive_time = 12;
-
-				auto fl1 = create_functions_list(s, 500);
 				auto m1 = fl1->get_column_series();
-
-				auto statistics2 = make_shared<tables::statistics>();
-				s[addr(123)].exclusive_time = 12000;
-				static_cast<statistic_types::map_detailed &>(*statistics2) = s;
-				auto fl2 = make_shared<functions_list>(statistics2, 0.01, make_shared<symbol_resolver>(modules, mappings), tmodel);
 				auto m2 = fl2->get_column_series();
 
 				// ACT
@@ -165,19 +196,14 @@ namespace micro_profiler
 			test( PiechartModelReturnsConvertedValuesForTheRestOfTheFields )
 			{
 				// INIT
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 130;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
-				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
-
-				auto fl1 = create_functions_list(s, 500);
+				auto fl1 = create_functions_list_detached(plural
+					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
+					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 500);
 				auto m1 = fl1->get_column_series();
 
-				auto statistics2 = make_shared<tables::statistics>();
-				static_cast<statistic_types::map_detailed &>(*statistics2) = s;
-				auto fl2 = make_shared<functions_list>(statistics2, 0.001, make_shared<symbol_resolver>(modules, mappings), tmodel);
+				auto fl2 = create_functions_list_detached(plural
+					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
+					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 1000);
 				auto m2 = fl2->get_column_series();
 
 				// ACT
@@ -225,14 +251,9 @@ namespace micro_profiler
 			test( PiechartForUnsupportedColumnsIsSimplyZero )
 			{
 				// INIT
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 130;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
-				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
-
-				auto fl = create_functions_list(s, 500);
+				auto fl = create_functions_list_detached(plural
+					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
+					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 500);
 				auto m = fl->get_column_series();
 
 				// ACT / ASSERT
@@ -254,13 +275,9 @@ namespace micro_profiler
 			test( PiechartModelReturnsZeroesAverageValuesForUncalledFunctions )
 			{
 				// INIT
-				statistic_types::map_detailed s;
-
-				s[addr(5)].times_called = 0, s[addr(17)].times_called = 0;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 0;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 0;
-
-				auto fl = create_functions_list(s);
+				auto fl = create_functions_list_detached(plural
+					+ make_statistics(addr(5), 0, 0, 15, 16, 0)
+					+ make_statistics(addr(17), 0, 0, 0, 0, 0));
 				auto m = fl->get_column_series();
 
 				// ACT
@@ -282,16 +299,11 @@ namespace micro_profiler
 			test( SwitchingSortOrderLeadsToPiechartModelUpdate )
 			{
 				// INIT
-				statistic_types::map_detailed s;
-				int invalidated_count = 0;
-
-				s[addr(5)].times_called = 100, s[addr(17)].times_called = 1000;
-				s[addr(5)].exclusive_time = 16, s[addr(17)].exclusive_time = 130;
-				s[addr(5)].inclusive_time = 15, s[addr(17)].inclusive_time = 120;
-				s[addr(5)].max_call_time = 14, s[addr(17)].max_call_time = 128;
-
-				auto fl = create_functions_list(s);
+				auto fl = create_functions_list_detached(plural
+					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
+					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 500);
 				auto m = fl->get_column_series();
+				auto invalidated_count = 0;
 				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT

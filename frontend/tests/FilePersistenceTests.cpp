@@ -1,12 +1,13 @@
 #include <frontend/persistence.h>
 
+#include "comparisons.h"
 #include "helpers.h"
 #include "legacy_serialization.h"
 #include "mocks.h"
+#include "primitive_helpers.h"
 
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
-#include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
@@ -70,6 +71,21 @@ namespace micro_profiler
 					make_shared<tables::threads>(),
 				};
 				return ctx;
+			}
+
+			template <typename ContainerT>
+			void append(calls_statistics_table &statistics, const ContainerT &items, id_t parent_id = 0)
+			{
+				for (auto i = begin(items); i != end(items); ++i)
+				{
+					auto r = statistics.create();
+
+					(*r).thread_id = i->first.second;
+					(*r).parent_id = parent_id;
+					(*r).address = i->first.first;
+					static_cast<function_statistics &>(*r) = i->second;
+					r.commit();
+				}
 			}
 		}
 
@@ -167,7 +183,7 @@ namespace micro_profiler
 				auto ctx = create_context();
 				ctx.process_info.executable = "kjsdhgkjsdwwp.exe";
 				ctx.process_info.ticks_per_second = 0xF00000000ull;
-				assign(*ctx.statistics, statistics[0]);
+				append(*ctx.statistics, statistics[0]);
 				assign(*ctx.module_mappings, plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]));
 				assign(*ctx.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
 				assign(*ctx.threads, threads[0]);
@@ -196,7 +212,7 @@ namespace micro_profiler
 				ctx = create_context();
 				ctx.process_info.executable = "/usr/bin/grep";
 				ctx.process_info.ticks_per_second = 0x1000ull;
-				assign(*ctx.statistics, statistics[1]);
+				append(*ctx.statistics, statistics[1]);
 				assign(*ctx.module_mappings, plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]));
 				assign(*ctx.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
 				assign(*ctx.threads, threads[1]);
@@ -234,7 +250,7 @@ namespace micro_profiler
 
 				components1.process_info.executable = "kjsdhgkjsdwwp.exe";
 				components1.process_info.ticks_per_second = 0xF00000000ull;
-				assign_basic(components1.statistics, statistics[0]);
+				append(components1.statistics, statistics[0]);
 				assign_basic(components1.mappings, plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]));
 				assign_basic(components1.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
 				assign_basic(components1.threads, plural
@@ -246,7 +262,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(components1.process_info, ctx1.process_info);
-				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0, 0)
+					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0, 0), *ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_ex> &)*ctx1.module_mappings);
 				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
 				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
@@ -261,7 +281,7 @@ namespace micro_profiler
 
 				components2.process_info.executable = "/usr/bin/grep";
 				components2.process_info.ticks_per_second = 0x1000ull;
-				assign_basic(components2.statistics, statistics[1]);
+				append(components2.statistics, statistics[1]);
 				assign_basic(components2.mappings, plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]));
 				assign_basic(components2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
 				assign_basic(components2.threads, plural
@@ -273,7 +293,13 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(components2.process_info, ctx2.process_info);
-				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 0, 9, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 0, 10, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 0, 8, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0, 0)
+					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0, 0), *ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_ex> &)*ctx2.module_mappings);
 				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
 				assert_equivalent(plural + make_pair(1u, threads2[0]) + make_pair(17u, threads2[1]), (containers::unordered_map<unsigned int, thread_info> &)*ctx2.threads);
@@ -298,7 +324,11 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0xF00000000ll, ctx1.process_info.ticks_per_second);
 				assert_is_empty(ctx1.process_info.executable);
-				assert_equivalent(statistics[2], (statistic_types::map_detailed &)*ctx1.statistics);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 0, 0, 0x100005, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0x100017, 12, 0, 0, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00115, 127, 0, 0, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00133, 12000, 0, 250, 0, 0), *ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_ex> &)*ctx1.module_mappings);
 				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
 				assert_is_empty(*ctx1.threads);
@@ -319,7 +349,12 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0x1000ll, ctx2.process_info.ticks_per_second);
 				assert_is_empty(ctx2.process_info.executable);
-				assert_equivalent(statistics[3], (statistic_types::map_detailed &)*ctx2.statistics);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 0, 0, 0xF00115, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00023, 12, 0, 9, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00180, 127, 0, 10, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00133, 127, 0, 8, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0x9000FFF, 12000, 0, 250, 0, 0), *ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_ex> &)*ctx2.module_mappings);
 				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
 				assert_is_empty(*ctx2.threads);
@@ -349,7 +384,11 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0xF00000000ll, ctx1.process_info.ticks_per_second);
 				assert_is_empty(ctx1.process_info.executable);
-				assert_equivalent(statistics[0], (statistic_types::map_detailed &)*ctx1.statistics);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0, 0)
+					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0, 0), *ctx1.statistics);
 				assert_equivalent(plural + make_pair(10u, mappings[0]) + make_pair(11u, mappings[1]), (containers::unordered_map<unsigned int, mapped_module_ex> &)*ctx1.module_mappings);
 				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx1.modules);
 				assert_equivalent(plural + make_pair(1u, threads1[0]) + make_pair(3u, threads1[1]) + make_pair(4u, threads1[2]), (containers::unordered_map<unsigned int, thread_info> &)*ctx1.threads);
@@ -375,7 +414,13 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(0x1000ll, ctx2.process_info.ticks_per_second);
 				assert_is_empty(ctx2.process_info.executable);
-				assert_equivalent(statistics[1], (statistic_types::map_detailed &)*ctx2.statistics);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 0, 9, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 0, 10, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 0, 8, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0, 0)
+					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0, 0), *ctx2.statistics);
 				assert_equivalent(plural + make_pair(0u, mappings[1]) + make_pair(1u, mappings[2]), (containers::unordered_map<unsigned int, mapped_module_ex> &)*ctx2.module_mappings);
 				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)*ctx2.modules);
 				assert_equivalent(plural + make_pair(1u, threads2[0]) + make_pair(17u, threads2[1]), (containers::unordered_map<unsigned int, thread_info> &)*ctx2.threads);

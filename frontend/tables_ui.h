@@ -37,7 +37,7 @@ namespace micro_profiler
 		wpl::signal<void(const std::string &file, unsigned line)> open_source;
 
 	private:
-		static std::pair<statistic_types::key, bool> get_first_item(const selection<statistic_types::key> &selection_);
+		static std::pair<id_t, bool> get_first_item(const selection<id_t> &selection_);
 
 		template <typename ModelT, typename SelectionModelT>
 		void attach_section(wpl::listview &lv, piechart *pc, function_hint *hint, std::shared_ptr<headers_model> cm,

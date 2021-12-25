@@ -28,7 +28,7 @@ namespace micro_profiler
 
 				struct access_x
 				{
-					typedef vector<string>::const_iterator nested_const_iterator;
+					typedef vector<string>::const_iterator const_iterator;
 
 					struct const_reference
 					{
@@ -51,12 +51,10 @@ namespace micro_profiler
 					{	return const_reference(v1.first, v1.second.group_name, v2);	}
 
 					template <typename Type>
-					static nested_const_iterator begin(const Type &v)
-					{	return v.second.inner.begin();	}
-
-					template <typename Type>
-					static nested_const_iterator end(const Type &v)
-					{	return v.second.inner.end();	}
+					static pair<const_iterator, const_iterator> equal_range(const Type &key)
+					{
+						return make_pair(key.second.inner.begin(), key.second.inner.end());
+					}
 				};
 
 				struct x_compound
@@ -211,7 +209,7 @@ namespace micro_profiler
 
 				struct xform_external
 				{
-					typedef vector<int>::const_iterator nested_const_iterator;
+					typedef vector<int>::const_iterator const_iterator;
 					typedef vector<int>::const_reference const_reference;
 					typedef int value_type;
 
@@ -220,12 +218,8 @@ namespace micro_profiler
 					{	return v2;	}
 
 					template <typename Type>
-					nested_const_iterator begin(const Type &v) const
-					{	return source[v].begin();	}
-
-					template <typename Type>
-					nested_const_iterator end(const Type &v) const
-					{	return source[v].end();	}
+					pair<const_iterator, const_iterator> equal_range(const Type &v) const
+					{	return make_pair(source[v].begin(), source[v].end());	}
 
 					map< int, vector<int> > &source;
 				};
@@ -236,7 +230,7 @@ namespace micro_profiler
 					vector<int> l1;
 					map< int, vector<int> > source;
 					xform_external xform = {	source	};
-					flatten<vector<int>, xform_external> f(l1, xform);
+					flatten<vector<int>, xform_external> f(l1, move(xform));
 
 					// ACT / ASSERT
 					assert_equal(f.end(), f.begin());
@@ -253,7 +247,7 @@ namespace micro_profiler
 					int data92[] = {	100, 101, 102, 103,	};
 					map< int, vector<int> > source;
 					xform_external xform = {	source	};
-					flatten<vector<int>, xform_external> f(l1, xform);
+					flatten<vector<int>, xform_external> f(l1, move(xform));
 
 					source[l1[0]] = mkvector(data314);
 					source[l1[1]] = mkvector(data15);

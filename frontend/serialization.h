@@ -27,6 +27,7 @@
 
 #include <common/serialization.h>
 #include <math/serialization.h>
+#include <views/serialization.h>
 
 #pragma warning(disable: 4510; disable: 4610)
 
@@ -167,6 +168,15 @@ namespace micro_profiler
 	};
 
 
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, call_statistics &data, unsigned int /*ver*/)
+	{
+		archive(data.id);
+		archive(data.thread_id);
+		archive(data.parent_id);
+		archive(data.address);
+		archive(static_cast<function_statistics &>(data));
+	}
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, call_statistics &data, call_nodes_index &context, unsigned int ver)
@@ -225,6 +235,13 @@ namespace micro_profiler
 		inline void serialize(ArchiveT &archive, table<BaseT> &data, ContextT &context)
 		{
 			archive(static_cast<BaseT &>(data), context);
+			data.invalidate();
+		}
+
+		template <typename ArchiveT, typename ContextT>
+		inline void serialize(ArchiveT &archive, statistics &data, ContextT &context)
+		{
+			archive(data.by_node, context);
 			data.invalidate();
 		}
 

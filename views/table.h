@@ -48,6 +48,7 @@ namespace micro_profiler
 		public:
 			table(const ConstructorT &constructor = ConstructorT());
 
+			unsigned size() const;
 			const_iterator begin() const;
 			const_iterator end() const;
 			iterator begin();
@@ -56,7 +57,7 @@ namespace micro_profiler
 			transacted_record create();
 
 		public:
-			wpl::signal<void (iterator irecord, bool new_)> changed;
+			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
 
 		private:
 			typedef std::vector<T> container_type;
@@ -111,8 +112,8 @@ namespace micro_profiler
 			{	return (*_container)[this->get_index()];	}
 
 		private:
-			const_iterator(const container_type &container, index_type index)
-				: iterator_base(index), _container(&container)
+			const_iterator(const container_type &container_, index_type index)
+				: iterator_base(index), _container(&container_)
 			{	}
 
 		private:
@@ -181,6 +182,10 @@ namespace micro_profiler
 		inline table<T, C>::table(const C &constructor)
 			: _constructor(constructor)
 		{	}
+
+		template <typename T, typename C>
+		inline unsigned table<T, C>::size() const
+		{	return _records.size();	}
 
 		template <typename T, typename C>
 		inline typename table<T, C>::const_iterator table<T, C>::begin() const

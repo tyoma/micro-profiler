@@ -37,7 +37,6 @@ namespace micro_profiler
 
 		const std::shared_ptr<U> underlying;
 		const std::shared_ptr<scope_type> scope;
-		X transform;
 		view_type flattened;
 		wpl::slot_connection fetch_connection;
 	};
@@ -47,16 +46,16 @@ namespace micro_profiler
 	template <typename U, typename X>
 	inline nested_statistics_model_complex<U, X>::nested_statistics_model_complex(std::shared_ptr<U> underlying_,
 			std::shared_ptr<scope_type> scope_)
-		: underlying(underlying_), scope(scope_), transform(*underlying), flattened(*scope, transform)
+		: underlying(underlying_), scope(scope_), flattened(*scope, X(*underlying))
 	{	}
 
 
-	template <template<typename> class X, typename U>
+	template <class X, typename U>
 	inline std::shared_ptr<linked_statistics> construct_nested(std::shared_ptr<U> underlying, double tick_interval,
 		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
-		std::shared_ptr< std::vector<typename key_traits<typename U::value_type>::key_type> > scope)
+		std::shared_ptr< std::vector<id_t> > scope)
 	{
-		typedef nested_statistics_model_complex< U, X<U> > complex_type;
+		typedef nested_statistics_model_complex<U, X> complex_type;
 		typedef typename complex_type::view_type view_type;
 
 		const auto complex = std::make_shared<complex_type>(underlying, scope);

@@ -2,6 +2,7 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "primitive_helpers.h"
 
 #include <frontend/nested_transform.h>
 #include <frontend/tables.h>
@@ -26,6 +27,18 @@ namespace micro_profiler
 
 			const double c_tolerance = 0.000001;
 			const vector< pair<statistic_types::key, statistic_types::function> > empty;
+
+			template <typename T>
+			void append(tables::statistics &statistics, const T &items)
+			{
+				for (auto i = begin(items); i != end(items); ++i)
+				{
+					auto r = statistics.create();
+
+					*r = *i;
+					r.commit();
+				}
+			}
 		}
 
 		begin_test_suite( NestedStatisticModelsTests )
@@ -43,33 +56,20 @@ namespace micro_profiler
 			}
 
 
-			test( DependentModelsPickNestedMaps )
+			test( DependentModelsAreEmptyForFlatTopLevelCalls )
 			{
 				// INIT
-				threaded_addressed_function functions[] = {
-					make_statistics(addr(0x1000), 1, 0, 0, 0, 0),
-					make_statistics(addr(0x1001), 1, 0, 0, 0, 0,
-						plural
-							+ make_statistics_base(addr(0x2001), 100, 1, 0, 0, 0)
-							+ make_statistics_base(addr(0x2002), 109, 1, 0, 0, 0),
-						plural
-							+ caller_function(addr(0x3001), 1u)
-							+ caller_function(addr(0x3003), 1u)
-							+ caller_function(addr(0x3009), 51u)
-					),
-					make_statistics(addr(0x1002), 1, 0, 0, 0, 0,
-						plural
-							+ make_statistics_base(addr(0x2007), 109, 1, 0, 0, 0),
-						plural
-							+ caller_function(addr(0x3007), 1u)
-							+ caller_function(addr(0x3009), 1u)
-					),
+				call_statistics functions[] = {
+					make_call_statistics(1, 101, 0, 0x1000, 1, 0, 0, 0, 0),
+					make_call_statistics(2, 101, 0, 0x1001, 1, 0, 0, 0, 0),
+					make_call_statistics(3, 101, 0, 0x2001, 100, 0, 0, 0, 0),
+					make_call_statistics(4, 101, 2, 0x2002, 109, 0, 0, 0, 0),
 				};
 				auto s = make_shared<tables::statistics>();
 
 				// INIT / ACT
-				auto callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + addr(0x1001)));
-				auto callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural + addr(0x1001)));
+				auto callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 1u + 3u));
+				auto callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural + 1u + 3u));
 
 				// ACT / ASSERT
 				assert_not_null(callers);
@@ -78,7 +78,44 @@ namespace micro_profiler
 				assert_equal(0u, callees->get_count());
 
 				// ACT
-				assign(*s, functions);
+				append(*s, functions);
+				s->invalidate();
+
+				// ASSERT
+				assert_equal(0u, callers->get_count());
+				assert_equal(0u, callees->get_count());
+			}
+
+
+			test( DependentModelsPickNestedMaps )
+			{
+				// INIT
+				call_statistics functions[] = {
+					make_call_statistics(1, 101, 0, 0x1000, 1, 0, 0, 0, 0),
+					make_call_statistics(2, 101, 1, 0x1001, 1, 0, 0, 0, 0),
+					make_call_statistics(3, 101, 2, 0x2001, 100, 0, 0, 0, 0),
+					make_call_statistics(4, 101, 2, 0x2002, 109, 0, 0, 0, 0),
+					make_call_statistics(5, 101, 0, 0x1002, 1, 0, 0, 0, 0),
+					make_call_statistics(6, 101, 5, 0x2007, 109, 0, 0, 0, 0),
+					make_call_statistics(7, 101, 0, 0x1015, 1, 0, 0, 0, 0),
+					make_call_statistics(8, 101, 0, 0x1016, 1, 0, 0, 0, 0),
+					make_call_statistics(9, 101, 7, 0x1001, 1, 0, 0, 0, 0),
+					make_call_statistics(10, 101, 8, 0x1001, 1, 0, 0, 0, 0),
+				};
+				auto s = make_shared<tables::statistics>();
+
+				// INIT / ACT
+				auto callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 2u + 1171u /*missing*/));
+				auto callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural + 2u + 1171u /*missing*/));
+
+				// ACT / ASSERT
+				assert_not_null(callers);
+				assert_equal(0u, callers->get_count());
+				assert_not_null(callees);
+				assert_equal(0u, callees->get_count());
+
+				// ACT
+				append(*s, functions);
 				s->invalidate();
 
 				// ASSERT
@@ -86,28 +123,25 @@ namespace micro_profiler
 				assert_equal(2u, callees->get_count());
 
 				// INIT / ACT
-				callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural
-					+ addr(0x1002) + addr(0x1000)));
-				callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural
-					+ addr(0x1002) + addr(0x1000) + addr(0x1001)));
+				callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 6u + 2u));
+				callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural + 5u + 3u + 2u));
 
 				// ASSERT
-				assert_equal(2u, callers->get_count());
+				assert_equal(4u, callers->get_count());
 				assert_equal(3u, callees->get_count());
 
 				// INIT / ACT
-				callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural
-					+ addr(0x1001) + addr(0x1002) + addr(0x1000)));
+				callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 2u));
 
 				// ASSERT
-				assert_equal(5u, callers->get_count());
+				assert_equal(3u, callers->get_count());
 
 				// ACT
 				s->clear();
 
 				// ASSERT
 				assert_equal(0u, callees->get_count());
-				assert_equal(0u, callers->get_count());
+//				assert_equal(0u, callers->get_count());
 			}
 
 
@@ -115,21 +149,17 @@ namespace micro_profiler
 			{
 				// INIT
 				unsigned columns[] = {	1, 3, 4, 5, 6, 7, 8, 9,	};
-				threaded_addressed_function functions[] = {
-					make_statistics(addr(0x1001), 1, 0, 0, 0, 0,
-						plural
-							+ make_statistics_base(addr(0x2001), 100, 1, 109, 17, 19190)
-							+ make_statistics_base(addr(0x2002), 109, 3, 1090, 11711, 0),
-						vector<caller_function>()),
-					make_statistics(addr(0x1002), 1, 0, 0, 0, 0,
-						plural
-							+ make_statistics_base(addr(0x2001), 9318, 123, 2, 3, 4),
-						vector<caller_function>()),
+				call_statistics functions[] = {
+					make_call_statistics(1, 101, 0, 0x1001, 1, 0, 0, 0, 0),
+					make_call_statistics(2, 101, 1, 0x2001, 100, 1, 109, 17, 19190),
+					make_call_statistics(3, 101, 1, 0x2002, 109, 3, 1090, 11711, 0),
+					make_call_statistics(4, 101, 0, 0x1002, 1, 0, 0, 0, 0),
+					make_call_statistics(5, 101, 4, 0x2001, 9318, 123, 2, 3, 4),
 				};
 				auto s = make_shared<tables::statistics>();
-				auto sel = make_shared_copy(plural + addr(0x1001));
+				auto sel = make_shared_copy(plural + 1u);
 
-				assign(*s, functions);
+				append(*s, functions);
 
 				auto callees = create_callees_model(s, 0.01, resolver, tmodel, sel);
 
@@ -145,7 +175,7 @@ namespace micro_profiler
 				assert_equivalent(mkvector(reference1), text);
 
 				// INIT
-				*sel = plural + addr(0x1001) + addr(0x1002);
+				*sel = plural + 1u + 4u;
 				s->invalidate();
 
 				// ACT
@@ -166,19 +196,22 @@ namespace micro_profiler
 			{
 				// INIT
 				unsigned columns[] = {	1, 3,	};
-				threaded_addressed_function functions[] = {
-					make_statistics(addr(0x1001), 1, 0, 0, 0, 0, empty, plural
-						+ caller_function(addr(0x2001), 19190)
-						+ caller_function(addr(0x2002), 179)),
-					make_statistics(addr(0x1003), 1, 0, 0, 0, 0, empty, plural
-						+ caller_function(addr(0x2001), 11000)
-						+ caller_function(addr(0x2007), 10700)
-						+ caller_function(addr(0x2003), 10090)),
+				call_statistics functions[] = {
+					make_call_statistics(1, 101, 0, 0x2001, 1, 0, 0, 0, 0),
+					make_call_statistics(2, 101, 0, 0x2002, 1, 0, 0, 0, 0),
+					make_call_statistics(3, 101, 1, 0x1001, 19190, 3, 1000, 11711, 0),
+					make_call_statistics(4, 101, 2, 0x1001, 179, 5, 1390, 1111, 0),
+
+					make_call_statistics(5, 101, 0, 0x2007, 1, 0, 0, 0, 0),
+					make_call_statistics(6, 101, 0, 0x2003, 1, 0, 0, 0, 0),
+					make_call_statistics(7, 101, 1, 0x1003, 11000, 13, 1000, 11711, 0),
+					make_call_statistics(8, 101, 5, 0x1003, 10700, 5, 1390, 1111, 0),
+					make_call_statistics(9, 101, 6, 0x1003, 10090, 1115, 31390, 31111, 0),
 				};
 				auto s = make_shared<tables::statistics>();
-				auto sel = make_shared_copy(plural + addr(0x1001));
+				auto sel = make_shared_copy(plural + 3u);
 
-				assign(*s, functions);
+				append(*s, functions);
 
 				shared_ptr<linked_statistics> callers = create_callers_model(s, 0.01, resolver, tmodel, sel);
 
@@ -194,7 +227,7 @@ namespace micro_profiler
 				assert_equivalent(mkvector(reference1), text);
 
 				// INIT
-				*sel = plural + addr(0x1001) + addr(0x1003);
+				*sel = plural + 3u + 9u;
 				callers->fetch();
 
 				// ACT
@@ -217,17 +250,20 @@ namespace micro_profiler
 			test( CalleesStatisticsProvideColumnSeries )
 			{
 				// INIT
+				call_statistics functions[] = {
+					make_call_statistics(1, 101, 0, 5, 2000, 0, 0, 0, 0),
+					make_call_statistics(2, 101, 1, 11, 29, 0, 0, 16, 0),
+					make_call_statistics(3, 101, 1, 13, 31, 0, 0, 10, 0),
+					make_call_statistics(4, 101, 0, 17, 1999, 0, 0, 0, 0),
+					make_call_statistics(5, 101, 4, 11, 101, 0, 0, 3, 0),
+					make_call_statistics(6, 101, 4, 19, 103, 0, 0, 112, 0),
+					make_call_statistics(7, 101, 4, 23, 1100, 0, 0, 9, 0),
+				};
+
 				auto s = make_shared<tables::statistics>();
-				auto sel = make_shared_copy(plural + addr(5));
+				auto sel = make_shared_copy(plural + 1u);
 
-				(*s)[addr(5)].times_called = 2000;
-				(*s)[addr(5)].callees[addr(11)].times_called = 29, (*s)[addr(5)].callees[addr(13)].times_called = 31;
-				(*s)[addr(5)].callees[addr(11)].exclusive_time = 16, (*s)[addr(5)].callees[addr(13)].exclusive_time = 10;
-
-				(*s)[addr(17)].times_called = 1999;
-				(*s)[addr(17)].callees[addr(11)].times_called = 101, (*s)[addr(17)].callees[addr(19)].times_called = 103, (*s)[addr(17)].callees[addr(23)].times_called = 1100;
-				(*s)[addr(17)].callees[addr(11)].exclusive_time = 3, (*s)[addr(17)].callees[addr(19)].exclusive_time = 112, (*s)[addr(17)].callees[addr(23)].exclusive_time = 9;
-
+				append(*s, functions);
 
 				auto ls = create_callees_model(s, 0.01, resolver, tmodel, sel);
 				auto m = ls->get_column_series();
@@ -249,7 +285,7 @@ namespace micro_profiler
 				assert_approx_equal(29.0, get_value(*m, 1), c_tolerance);
 
 				// ACT
-				(*sel)[0] = addr(17);
+				(*sel)[0] = 4u;
 				ls->fetch();
 
 				// ASSERT
@@ -268,7 +304,7 @@ namespace micro_profiler
 				assert_approx_equal(0.03, get_value(*m, 2), c_tolerance);
 
 				// ACT
-				sel->push_back(addr(5));
+				sel->push_back(1u);
 				ls->fetch();
 
 				// ASSERT

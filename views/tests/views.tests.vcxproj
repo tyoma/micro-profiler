@@ -44,6 +44,7 @@
     <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\flatten.h" />
+    <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\table.h" />
     <ClInclude Include="..\index.h" />
     <ClInclude Include="..\ordered.h" />

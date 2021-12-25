@@ -41,6 +41,8 @@ namespace micro_profiler
 		public:
 			explicit immutable_unique_index(U &underlying, const K &keyer = K());
 
+			const typename U::value_type *find(const key_type &key) const;
+
 			const typename U::value_type &operator [](const key_type &key) const;
 			typename U::transacted_record operator [](const key_type &key);
 
@@ -59,16 +61,23 @@ namespace micro_profiler
 			class const_iterator;
 			typedef typename K::key_type key_type;
 			typedef std::pair<const_iterator, const_iterator> range_type;
+			typedef typename U::value_type value_type;
+			typedef const value_type &const_reference;
 
 		public:
-			immutable_index(U &underlying, const K &keyer = K());
+			immutable_index(const U &underlying, const K &keyer = K());
+			immutable_index(immutable_index &&other);
 
-			range_type operator [](const key_type &key) const;
+			range_type equal_range(const key_type &key) const;
 
 		private:
 			typedef std::unordered_multimap< key_type, typename U::const_iterator, hash<key_type> > index_t;
 
 		private:
+			void operator =(immutable_index &&rhs);
+
+		private:
+			const U &_underlying;
 			index_t _index;
 			const K _keyer;
 			wpl::slot_connection _on_changed;
@@ -85,6 +94,9 @@ namespace micro_profiler
 			typedef const_reference reference;
 
 		public:
+			const_iterator()
+			{	}
+
 			const_iterator(base from)
 				: base(from)
 			{	}
@@ -115,12 +127,17 @@ namespace micro_profiler
 		}
 
 		template <typename U, typename K>
-		inline const typename U::value_type &immutable_unique_index<U, K>::operator [](const key_type &key) const
+		inline const typename U::value_type *immutable_unique_index<U, K>::find(const key_type &key) const
 		{
 			const auto i = _index.find(key);
+			return i != _index.end() ? &*typename U::const_iterator(i->second) : nullptr;
+		}
 
-			if (i != _index.end())
-				return *typename U::const_iterator(i->second);
+		template <typename U, typename K>
+		inline const typename U::value_type &immutable_unique_index<U, K>::operator [](const key_type &key) const
+		{
+			if (auto r = find(key))
+				return *r;
 			throw std::invalid_argument("key not found");
 		}
 
@@ -140,8 +157,8 @@ namespace micro_profiler
 
 
 		template <typename U, typename K>
-		inline immutable_index<U, K>::immutable_index(U &underlying, const K &keyer)
-			: _keyer(keyer)
+		inline immutable_index<U, K>::immutable_index(const U &underlying, const K &keyer)
+			: _underlying(underlying), _keyer(keyer)
 		{
 			auto on_changed = [this] (typename U::const_iterator record, bool new_) {
 				if (new_)
@@ -154,7 +171,18 @@ namespace micro_profiler
 		}
 
 		template <typename U, typename K>
-		inline typename immutable_index<U, K>::range_type immutable_index<U, K>::operator [](const key_type &key) const
+		inline immutable_index<U, K>::immutable_index(immutable_index &&other)
+			: _underlying(other._underlying), _index(std::move(other._index)), _keyer(std::move(other._keyer))
+		{
+			other._on_changed.reset();
+			_on_changed = _underlying.changed += [this] (typename U::const_iterator record, bool new_) {
+				if (new_)
+					_index.insert(std::make_pair(_keyer(*record), record));
+			};
+		}
+
+		template <typename U, typename K>
+		inline typename immutable_index<U, K>::range_type immutable_index<U, K>::equal_range(const key_type &key) const
 		{	return _index.equal_range(key);	}
 	}
 }

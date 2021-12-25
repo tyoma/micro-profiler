@@ -32,7 +32,6 @@
 namespace micro_profiler
 {
 	class symbol_resolver;
-
 	namespace tables
 	{
 		struct threads;
@@ -61,8 +60,6 @@ namespace micro_profiler
 		virtual void set_order(index_type column, bool ascending) /*override*/;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const /*override*/;
 		virtual std::shared_ptr< selection<key_type> > create_selection() const /*override*/;
-
-		index_type get_index(key_type address) const;
 
 	public:
 		const double tick_interval;
@@ -113,7 +110,7 @@ namespace micro_profiler
 
 	template <typename BaseT, typename U>
 	inline typename statistics_model_impl<BaseT, U>::index_type statistics_model_impl<BaseT, U>::get_count() const throw()
-	{ return _view ? _view->ordered.size() : 0u; }
+	{	return _view ? _view->ordered.size() : 0u;	}
 
 	template <typename BaseT, typename U>
 	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, U>::track(index_type row) const
@@ -141,17 +138,6 @@ namespace micro_profiler
 			std::make_shared< selection_model< views::ordered<U> > >(_view->ordered));
 
 		return std::shared_ptr< selection<key_type> >(complex, complex->second.get());
-	}
-
-	template <typename BaseT, typename U>
-	inline typename statistics_model_impl<BaseT, U>::index_type statistics_model_impl<BaseT, U>::get_index(key_type key) const
-	{
-		for (size_t i = 0, count = _view->ordered.size(); i != count; ++i)
-		{
-			if (_view->ordered[i].first == key)
-				return i;
-		}
-		return this->npos();
 	}
 
 	template <typename BaseT, typename U>

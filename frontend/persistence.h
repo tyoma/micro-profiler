@@ -23,9 +23,11 @@
 #include "profiling_session.h"
 #include "serialization.h"
 
+#include <views/serialization.h>
+
 namespace strmd
 {
-	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 5	};	};
 }
 
 namespace micro_profiler
@@ -33,18 +35,44 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, profiling_session &data, unsigned int ver)
 	{
+		statistic_types::map_detailed s;
+		auto read_legacy_statistics = [&data, &s] {
+			for (auto i = s.begin(); i != s.end(); ++i)
+			{
+				auto r0 = data.statistics->by_node[call_node_key(i->first.second, 0, i->first.first)];
+				const auto parent_id = (*r0).id;
+
+				static_cast<function_statistics &>(*r0) = i->second;
+				r0.commit();
+				for (auto j = i->second.callees.begin(); j != i->second.callees.end(); ++j)
+				{
+					auto r1 = data.statistics->by_node[call_node_key(j->first.second, parent_id, j->first.first)];
+
+					static_cast<function_statistics &>(*r1) = j->second;
+					r1.commit();
+				}
+			}
+		};
+
 		archive(data.process_info);
 		archive(*data.module_mappings);
 		archive(*data.modules);
 
-		if (ver >= 4)
+		if (ver >= 5)
 		{
-			archive(static_cast<statistic_types::map_detailed &>(*data.statistics));
+			archive(*data.statistics);
+		}
+		else if (ver >= 4)
+		{
+			archive(s);
+			read_legacy_statistics();
 		}
 		else if (ver >= 3)
 		{
-			scontext::detailed_threaded context = { data.statistics.get(), 0, 0 };
-			archive(static_cast<statistic_types::map_detailed &>(*data.statistics), context);
+			scontext::detailed_threaded context = { &s, 0, 0 };
+
+			archive(s, context);
+			read_legacy_statistics();
 		}
 
 		if (ver >= 4)

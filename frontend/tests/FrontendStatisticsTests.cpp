@@ -1,7 +1,9 @@
 #include <frontend/frontend.h>
 #include <frontend/serialization.h>
 
+#include "comparisons.h"
 #include "helpers.h"
+#include "primitive_helpers.h"
 
 #include <frontend/serialization_context.h>
 #include <ipc/server_session.h>
@@ -104,23 +106,17 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 
 				// ASSERT
-				assert_equivalent(plural
-					+ make_statistics(addr(0x00100093u, 1), 11001u, 1, 11913, 901, 13000)
-					+ make_statistics(addr(0x0FA00091u, 1), 1100001u, 3, 1913, 91, 13012)
-					+ make_statistics(addr(0x01100093u, 2), 71u, 0, 199999, 901, 13030)
-					+ make_statistics(addr(0x01103093u, 2), 92u, 0, 139999, 981, 10100)
-					+ make_statistics(addr(0x01A00091u, 2), 31u, 0, 197999, 91, 13002),
-					*statistics);
+				call_statistics reference1[] = {
+					make_call_statistics(1, 1, 0, 0x00100093u, 11001u, 1, 11913, 901, 13000),
+					make_call_statistics(2, 1, 0, 0x0FA00091u, 1100001u, 3, 1913, 91, 13012),
+					make_call_statistics(3, 2, 0, 0x01100093u, 71u, 0, 199999, 901, 13030),
+					make_call_statistics(4, 2, 0, 0x01103093u, 92u, 0, 139999, 981, 10100),
+					make_call_statistics(5, 2, 0, 0x01A00091u, 31u, 0, 197999, 91, 13002),
+				};
+
+				assert_equal_pred(reference1, *statistics, eq());
 
 				// INIT
-				auto s2 = plural
-					+ make_pair(1u, plural
-						+ make_statistics(0x0FA00091u, 1001u, 2, 1000, 91, 13012))
-					+ make_pair(2u, plural
-						+ make_statistics(0x01A00091u, 31u, 7, 100, 91, 13002))
-					+ make_pair(31u, plural
-						+ make_statistics(0x91A00091u, 731u, 0, 17999, 91, 13002));
-
 				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
@@ -135,14 +131,15 @@ namespace micro_profiler
 				statistics->request_update();
 
 				// ASSERT
-				assert_equivalent(plural
-					+ make_statistics(addr(0x00100093u, 1), 11001u, 1, 11913, 901, 13000)
-					+ make_statistics(addr(0x0FA00091u, 1), 1101002u, 3, 2913, 182, 13012)
-					+ make_statistics(addr(0x01100093u, 2), 71u, 0, 199999, 901, 13030)
-					+ make_statistics(addr(0x01103093u, 2), 92u, 0, 139999, 981, 10100)
-					+ make_statistics(addr(0x01A00091u, 2), 62u, 7, 198099, 182, 13002)
-					+ make_statistics(addr(0x91A00091u, 31u), 731u, 0, 17999, 91, 13002),
-					*statistics);
+				call_statistics reference2[] = {
+					make_call_statistics(1, 1, 0, 0x00100093u, 11001u, 1, 11913, 901, 13000),
+					make_call_statistics(2, 1, 0, 0x0FA00091u, 1101002u, 3, 2913, 182, 13012),
+					make_call_statistics(3, 2, 0, 0x01100093u, 71u, 0, 199999, 901, 13030),
+					make_call_statistics(4, 2, 0, 0x01103093u, 92u, 0, 139999, 981, 10100),
+					make_call_statistics(5, 2, 0, 0x01A00091u, 62u, 7, 198099, 182, 13002),
+					make_call_statistics(6, 31, 0, 0x91A00091u, 731u, 0, 17999, 91, 13002),
+				};
+				assert_equal_pred(reference2, *statistics, eq());
 			}
 
 

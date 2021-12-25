@@ -37,7 +37,7 @@ namespace micro_profiler
 			typedef typename X::value_type value_type;
 
 		public:
-			flatten(const U &underlying_, const X &transform_ = X());
+			flatten(const U &underlying_, X &&transform_ = X());
 
 			const_iterator begin() const;
 			const_iterator end() const;
@@ -69,7 +69,7 @@ namespace micro_profiler
 
 		private:
 			typedef typename U::const_iterator const_iterator_l1;
-			typedef typename X::nested_const_iterator const_iterator_l2;
+			typedef typename X::const_iterator const_iterator_l2;
 
 		private:
 			const_iterator(const flatten<U, X> &owner, const_iterator_l1 l1);
@@ -88,8 +88,8 @@ namespace micro_profiler
 
 
 		template <class U, class X>
-		inline flatten<U, X>::flatten(const U &underlying_, const X &transform_)
-			: underlying(underlying_), transform(transform_)
+		inline flatten<U, X>::flatten(const U &underlying_, X &&transform_)
+			: underlying(underlying_), transform(std::move(transform_))
 		{	}
 
 		template <class U, class X>
@@ -136,8 +136,9 @@ namespace micro_profiler
 		{
 			if (_l1 == _owner->underlying.end())
 				return true;
-			_l2 = _owner->transform.begin(*_l1);
-			_l2_end = _owner->transform.end(*_l1);
+			auto r = _owner->transform.equal_range(*_l1);
+			_l2 = r.first;
+			_l2_end = r.second;
 			return _l2 != _l2_end;
 		}
 	}

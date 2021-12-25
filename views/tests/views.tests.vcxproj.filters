@@ -36,5 +36,8 @@
     <ClInclude Include="..\index.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\serialization.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

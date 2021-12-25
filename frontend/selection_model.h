@@ -31,6 +31,7 @@ namespace micro_profiler
 	template <typename KeyT>
 	struct selection : wpl::dynamic_set_model
 	{
+		virtual void add_key(const KeyT &key) = 0;
 		virtual void enumerate(const std::function<void (const KeyT &key)> &callback) const = 0;
 	};
 
@@ -53,6 +54,7 @@ namespace micro_profiler
 		virtual bool contains(index_type item) const throw() override;
 
 		// selection<...> methods
+		virtual void add_key(const key_type &key) override;
 		virtual void enumerate(const std::function<void (const key_type &key)> &callback) const override;
 
 		using wpl::dynamic_set_model::npos;
@@ -96,6 +98,13 @@ namespace micro_profiler
 	template <typename UnderlyingT>
 	inline bool selection_model<UnderlyingT>::contains(index_type item) const throw()
 	{	return !!_selection.count(get_key(item));	}
+
+	template <typename UnderlyingT>
+	inline void selection_model<UnderlyingT>::add_key(const key_type &key)
+	{
+		_selection.insert(key);
+		this->invalidate(npos());
+	}
 
 	template <typename UnderlyingT>
 	inline void selection_model<UnderlyingT>::enumerate(const std::function<void (const key_type &key)> &callback) const

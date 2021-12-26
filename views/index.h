@@ -50,7 +50,7 @@ namespace micro_profiler
 			std::unordered_map< key_type, typename U::iterator, hash<key_type> > _index;
 			U &_underlying;
 			const K _keyer;
-			wpl::slot_connection _on_changed;
+			wpl::slot_connection _connections[2];
 		};
 
 
@@ -80,7 +80,7 @@ namespace micro_profiler
 			const U &_underlying;
 			index_t _index;
 			const K _keyer;
-			wpl::slot_connection _on_changed;
+			wpl::slot_connection _connections[2];
 		};
 
 		template <typename U, typename K>
@@ -123,7 +123,8 @@ namespace micro_profiler
 
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				on_changed(i, true);
-			_on_changed = underlying.changed += on_changed;
+			_connections[0] = underlying.changed += on_changed;
+			_connections[1] = underlying.cleared += [this] {	_index.clear();	};
 		}
 
 		template <typename U, typename K>
@@ -167,18 +168,20 @@ namespace micro_profiler
 
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				on_changed(i, true);
-			_on_changed = underlying.changed += on_changed;
+			_connections[0] = underlying.changed += on_changed;
+			_connections[1] = underlying.cleared += [this] {	_index.clear();	};
 		}
 
 		template <typename U, typename K>
 		inline immutable_index<U, K>::immutable_index(immutable_index &&other)
 			: _underlying(other._underlying), _index(std::move(other._index)), _keyer(std::move(other._keyer))
 		{
-			other._on_changed.reset();
-			_on_changed = _underlying.changed += [this] (typename U::const_iterator record, bool new_) {
+			other._connections[0].reset();
+			_connections[0] = _underlying.changed += [this] (typename U::const_iterator record, bool new_) {
 				if (new_)
 					_index.insert(std::make_pair(_keyer(*record), record));
 			};
+			_connections[1] = _underlying.cleared += [this] {	_index.clear();	};
 		}
 
 		template <typename U, typename K>

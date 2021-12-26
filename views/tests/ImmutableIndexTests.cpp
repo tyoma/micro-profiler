@@ -21,7 +21,8 @@ namespace micro_profiler
 				{
 					typedef void transacted_record;
 
-					wpl::signal<void (iterator record, bool new_)> changed;
+					mutable wpl::signal<void (iterator record, bool new_)> changed;
+					mutable wpl::signal<void ()> cleared;
 				};
 
 				template <typename T>
@@ -229,6 +230,29 @@ namespace micro_profiler
 					assert_equal("bar", (*rr3).second);
 					assert_equal("bar", cidx[3].second);
 				}
+
+
+				test( IndexIsClearedUponTableClear )
+				{
+					// INIT
+					container1 data;
+
+					data.push_back(make_pair(3, "lorem"));
+					data.push_back(make_pair(14, "ipsum"));
+					data.push_back(make_pair(159, "amet"));
+
+					const immutable_unique_index< container1, key_first<container1::value_type> > idx(data);
+
+					// ACT
+					data.cleared();
+
+					// ASSERT
+					assert_null(idx.find(3));
+					assert_throws(idx[3], invalid_argument);
+					assert_null(idx.find(159));
+					assert_throws(idx[159], invalid_argument);
+				}
+
 			end_test_suite
 
 
@@ -407,6 +431,36 @@ namespace micro_profiler
 						+ make_pair(13, (string)"z")
 						+ make_pair(13, (string)"Boo"), (vector< pair<int, string> >(r.first, r.second)));
 					r = idx.equal_range(13);
+					assert_equal(r.first, r.second);
+
+					// ACT
+					t.clear();
+
+					// ASSERT
+					r = idx2.equal_range(13);
+					assert_equal(r.first, r.second);
+				}
+
+
+				test( IndexIsClearedUponTableClear )
+				{
+					// INIT
+					container1 data;
+
+					data.push_back(make_pair(3, "lorem"));
+					data.push_back(make_pair(14, "ipsum"));
+					data.push_back(make_pair(159, "amet"));
+					data.push_back(make_pair(3, "test"));
+
+					const immutable_index< container1, key_first<container1::value_type> > idx(data);
+
+					// ACT
+					data.cleared();
+
+					// ASSERT
+					auto r = idx.equal_range(3);
+					assert_equal(r.first, r.second);
+					r = idx.equal_range(14);
 					assert_equal(r.first, r.second);
 				}
 			end_test_suite

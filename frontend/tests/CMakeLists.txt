@@ -19,7 +19,6 @@ set(FRONTEND_TESTS_SOURCES
 	mock_channel.cpp
 	mocks.cpp
 	NestedStatisticModelsTests.cpp
-#	NestedTransformTests.cpp
 	ProcessListTests.cpp
 #	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp

@@ -48,6 +48,8 @@ namespace micro_profiler
 		public:
 			table(const ConstructorT &constructor = ConstructorT());
 
+			void clear();
+
 			unsigned size() const;
 			const_iterator begin() const;
 			const_iterator end() const;
@@ -58,6 +60,7 @@ namespace micro_profiler
 
 		public:
 			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
+			mutable wpl::signal<void ()> cleared;
 
 		private:
 			typedef std::vector<T> container_type;
@@ -182,6 +185,13 @@ namespace micro_profiler
 		inline table<T, C>::table(const C &constructor)
 			: _constructor(constructor)
 		{	}
+
+		template <typename T, typename C>
+		inline void table<T, C>::clear()
+		{
+			_records.clear();
+			cleared();
+		}
 
 		template <typename T, typename C>
 		inline unsigned table<T, C>::size() const

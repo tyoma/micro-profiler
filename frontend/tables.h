@@ -108,6 +108,7 @@ namespace micro_profiler
 
 		inline void statistics::clear()
 		{
+			base_t::clear();
 			invalidate();
 		}
 	}

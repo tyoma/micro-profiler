@@ -141,7 +141,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0u, callees->get_count());
-//				assert_equal(0u, callers->get_count());
+				assert_equal(0u, callers->get_count());
 			}
 
 

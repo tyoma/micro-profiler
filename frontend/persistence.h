@@ -69,7 +69,7 @@ namespace micro_profiler
 		}
 		else if (ver >= 3)
 		{
-			scontext::detailed_threaded context = { &s, 0, 0 };
+			scontext::detailed_threaded context = {	&s, 0, 0	};
 
 			archive(s, context);
 			read_legacy_statistics();

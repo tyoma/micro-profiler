@@ -8,6 +8,7 @@
     <ClCompile Include="AggregateViewTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
+    <ClCompile Include="TableSerializationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">

@@ -37,6 +37,7 @@ namespace strmd
 	class deserializer;
 
 	template <> struct version<micro_profiler::call_statistics> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::call_statistics_constructor> {	enum {	value = 0	};	};
 }
 
 namespace micro_profiler
@@ -167,6 +168,11 @@ namespace micro_profiler
 		bool _first;
 	};
 
+
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, call_statistics_constructor &data, unsigned int /*ver*/)
+	{	archive(data._next_id);	}
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, call_statistics &data, unsigned int /*ver*/)

@@ -30,7 +30,7 @@ namespace micro_profiler
 		template <typename T>
 		struct default_constructor
 		{
-			T operator ()() const
+			T operator ()()
 			{	return T();	}
 		};
 
@@ -68,8 +68,12 @@ namespace micro_profiler
 			class iterator_base;
 
 		private:
-			const ConstructorT _constructor;
+			ConstructorT _constructor;
 			container_type _records;
+
+		private:
+			template <typename ArchiveT, typename T2, typename ConstructorT2>
+			friend void serialize(ArchiveT &archive, table<T2, ConstructorT2> &data);
 		};
 
 		template <typename T, typename C>

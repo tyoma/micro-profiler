@@ -29,7 +29,13 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\wpl.include.props" />
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AggregateViewTests.cpp" />
     <ClCompile Include="AnyKeyTests.cpp" />
@@ -37,6 +43,7 @@
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
+    <ClCompile Include="TableSerializationTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
   </ItemGroup>
   <ItemGroup>

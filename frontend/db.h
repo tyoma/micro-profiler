@@ -48,7 +48,7 @@ namespace micro_profiler
 			: _next_id(1)
 		{	}
 
-		call_statistics operator ()() const
+		call_statistics operator ()()
 		{
 			call_statistics s;
 
@@ -57,7 +57,11 @@ namespace micro_profiler
 		}
 
 	private:
-		mutable id_t _next_id;
+		id_t _next_id;
+
+	private:
+		template <typename ArchiveT>
+		friend void serialize(ArchiveT &archive, call_statistics_constructor &data, unsigned int ver);
 	};
 
 	struct call_path_keyer

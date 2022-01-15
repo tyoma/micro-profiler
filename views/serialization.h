@@ -28,23 +28,42 @@ namespace micro_profiler
 {
 	namespace views
 	{
+		template <typename T, typename ConstructorT>
+		struct table_wrapper
+		{
+			typedef table<T, ConstructorT> table_type;
+			typedef typename table_type::const_iterator const_iterator;
+			typedef typename table_type::const_reference const_reference;
+
+			size_t size() const
+			{	return table_.size();	}
+
+			const_iterator begin() const
+			{	return table_.begin();	}
+
+			const_iterator end() const
+			{	return table_.end();	}
+
+			table_type &table_;
+		};
+
 		struct table_items_reader
 		{
-			template <typename T, typename K>
-			void prepare(table<T, K> &/*container*/, unsigned int /*count*/) const
+			template <typename T, typename ConstructorT>
+			void prepare(table_wrapper<T, ConstructorT> &/*w*/, unsigned int /*count*/) const
 			{	}
 
-			template <typename ArchiveT, typename T, typename K>
-			void read_item(ArchiveT &archive, table<T, K> &container) const
+			template <typename ArchiveT, typename T, typename ConstructorT>
+			void read_item(ArchiveT &archive, table_wrapper<T, ConstructorT> &w) const
 			{
-				auto r = container.create();
+				auto r = w.table_.create();
 
 				archive(*r);
 				r.commit();
 			}
 
-			template <typename T, typename K>
-			void complete(table<T, K> &/*container*/) const
+			template <typename T, typename ConstructorT>
+			void complete(table_wrapper<T, ConstructorT> &/*w*/) const
 			{	}
 		};
 	}
@@ -53,9 +72,28 @@ namespace micro_profiler
 namespace strmd
 {
 	template <typename T, typename ConstructorT>
-	struct type_traits< micro_profiler::views::table<T, ConstructorT> >
+	struct type_traits< micro_profiler::views::table_wrapper<T, ConstructorT> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::views::table_items_reader item_reader_type;
 	};
+}
+
+namespace micro_profiler
+{
+	namespace views
+	{
+		template <typename ArchiveT, typename T, typename ConstructorT>
+		void serialize(ArchiveT &archive, table<T, ConstructorT> &data)
+		{
+			table_wrapper<T, ConstructorT> w = {	data	};
+
+			archive(w);
+			archive(data._constructor);
+		}
+
+		template <typename ArchiveT, typename T>
+		void serialize(ArchiveT &/*archive*/, default_constructor<T> &/*data*/)
+		{	}
+	}
 }

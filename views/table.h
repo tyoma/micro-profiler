@@ -50,7 +50,7 @@ namespace micro_profiler
 
 			void clear();
 
-			unsigned size() const;
+			std::size_t size() const;
 			const_iterator begin() const;
 			const_iterator end() const;
 			iterator begin();
@@ -198,7 +198,7 @@ namespace micro_profiler
 		}
 
 		template <typename T, typename C>
-		inline unsigned table<T, C>::size() const
+		inline std::size_t table<T, C>::size() const
 		{	return _records.size();	}
 
 		template <typename T, typename C>
@@ -215,7 +215,7 @@ namespace micro_profiler
 
 		template <typename T, typename C>
 		inline typename table<T, C>::iterator table<T, C>::end()
-		{	return iterator(*this, static_cast<index_type>(_records.size()));	}
+		{	return iterator(*this, static_cast<index_type>(size()));	}
 
 		template <typename T, typename C>
 		inline typename table<T, C>::transacted_record table<T, C>::create()

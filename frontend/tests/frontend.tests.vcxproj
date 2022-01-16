@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncFileTests.cpp" />
+    <ClCompile Include="DataSchemeTests.cpp" />
     <ClCompile Include="FrontendMetadataTests.cpp" />
     <ClCompile Include="FrontendPatcherTests.cpp" />
     <ClCompile Include="FrontendStatisticsTests.cpp" />

@@ -31,6 +31,15 @@ namespace micro_profiler
 
 				int operator [](id_t); // Shall not be accessed altogether.
 			};
+
+			template <typename T, typename ConstructorT>
+			void add(views::table<T, ConstructorT> &table, const T &item)
+			{
+				auto r = table.create();
+
+				*r = item;
+				r.commit();
+			}
 		}
 
 		begin_test_suite( StackIDBuilderTests )
@@ -84,12 +93,7 @@ namespace micro_profiler
 				const callstack_keyer< views::immutable_unique_index<views::table<fake_call>, id_keyer> > keyer(by_id);
 
 				for (auto i = begin(data_); i != end(data_); ++i)
-				{
-					auto r = tbl.create();
-
-					(*r) = *i;
-					r.commit();
-				}
+					add(tbl, *i);
 
 				// ACT
 				auto key = keyer(q[0]);
@@ -126,12 +130,7 @@ namespace micro_profiler
 				primary_id_index by_id(tbl, id_keyer());
 
 				for (auto i = begin(data_); i != end(data_); ++i)
-				{
-					auto r = tbl.create();
-
-					(*r) = *i;
-					r.commit();
-				}
+					add(tbl, *i);
 
 				// INIT / ACT
 				callstack_index by_callstack(tbl, callstack_keyer<primary_id_index>(by_id));

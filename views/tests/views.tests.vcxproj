@@ -37,7 +37,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AggregateViewTests.cpp" />
+    <ClCompile Include="AggregatedTableTests.cpp" />
     <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
@@ -47,7 +47,7 @@
     <ClCompile Include="TableTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\aggregate.h" />
+    <ClInclude Include="..\aggregated_table.h" />
     <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\flatten.h" />

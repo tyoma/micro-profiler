@@ -75,12 +75,8 @@ add_library(micro-profiler.ui.vs10 SHARED ${MICROPROFILER_UI_VS10_SOURCES})
 
 target_link_libraries(micro-profiler_frontend frontend.lib ipc injector logger scheduler common wpl.vs wpl version)
 
-set_target_properties(micro-profiler.ui PROPERTIES
-	LINK_OPTIONS /NOENTRY
-	RUNTIME_OUTPUT_DIRECTORY ${MP_OUTDIR}/1033
-)
-
-set_target_properties(micro-profiler.ui.vs10 PROPERTIES
-	LINK_OPTIONS /NOENTRY
-	RUNTIME_OUTPUT_DIRECTORY ${MP_OUTDIR}/1033
-)
+set_target_properties(micro-profiler.ui micro-profiler.ui.vs10 PROPERTIES LINK_OPTIONS /NOENTRY RUNTIME_OUTPUT_DIRECTORY ${MP_OUTDIR}/1033)
+foreach(CFG ${CMAKE_CONFIGURATION_TYPES})
+	string(TOUPPER ${CFG} CFG)
+	set_target_properties(micro-profiler.ui micro-profiler.ui.vs10 PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${CFG} ${MP_OUTDIR}/1033)
+endforeach()

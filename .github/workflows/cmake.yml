@@ -11,6 +11,7 @@ env:
 
 jobs:
   build:
+    permissions: write-all
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
@@ -31,4 +32,4 @@ jobs:
 
 #    - name: Test
 #      working-directory: ${{github.workspace}}/_build
-#      run: ctest -C ${{env.BUILD_TYPE}}
+#      run: ctest -C ${{env.BUILD_TYPE}} -VV

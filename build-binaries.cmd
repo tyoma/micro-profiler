@@ -12,11 +12,11 @@ call make-version.cmd VERSION version.h
 mkdir "%~dp0_setup/"
 set OUTPUT="%~dp0_setup\micro-profiler_symbols.v%VERSION%.zip"
 
-pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
+pushd "%~dp0_build.windows.x86\_bin"
 	call mkzip micro-profiler_frontend.pdb "%OUTPUT%"
 	call mkzip micro-profiler_Win32.pdb "%OUTPUT%"
 popd
-pushd "%~dp0_build.windows.x64\_bin\RelWithDebInfo"
+pushd "%~dp0_build.windows.x64\_bin"
 	call mkzip micro-profiler_standalone.pdb "%OUTPUT%"
 	call mkzip micro-profiler_x64.pdb "%OUTPUT%"
 popd

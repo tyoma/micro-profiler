@@ -9,9 +9,9 @@ set OBJDIR=%~dp0_obj\installer.x86/
 candle^
  *.wxs^
  -dROOTDIR="%~dp0\"^
- -dSOURCEDIR="%~dp0_build.windows.x86\_bin\RelWithDebInfo"^
- -dSOURCEDIRWX86="%~dp0_build.windows.x86\_bin\RelWithDebInfo"^
- -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
+ -dSOURCEDIR="%~dp0_build.windows.x86\_bin"^
+ -dSOURCEDIRWX86="%~dp0_build.windows.x86\_bin"^
+ -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin"^
  -dSOURCEDIRLINUXX86="%~dp0_build.linux.x86\_bin"^
  -dSOURCEDIRLINUXX64="%~dp0_build.linux.x64\_bin"^
  -arch x86^
@@ -30,9 +30,9 @@ set OBJDIR=%~dp0_obj\installer.x64/
 candle^
  *.wxs^
  -dROOTDIR="%~dp0\"^
- -dSOURCEDIR="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
- -dSOURCEDIRWX86="%~dp0_build.windows.x86\_bin\RelWithDebInfo"^
- -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin\RelWithDebInfo"^
+ -dSOURCEDIR="%~dp0_build.windows.x64\_bin"^
+ -dSOURCEDIRWX86="%~dp0_build.windows.x86\_bin"^
+ -dSOURCEDIRWX64="%~dp0_build.windows.x64\_bin"^
  -dSOURCEDIRLINUXX86="%~dp0_build.linux.x86\_bin"^
  -dSOURCEDIRLINUXX64="%~dp0_build.linux.x64\_bin"^
  -arch x64^

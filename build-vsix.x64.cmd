@@ -16,11 +16,11 @@ popd
 pushd "%~dp0legacy"
 	call sha256 hashinit micro-profiler.initializer.cpp
 popd
-pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
+pushd "%~dp0_build.windows.x86\_bin"
 	call sha256 hashmpx86 micro-profiler_Win32.dll
 	call sha256 hashmpx86lib micro-profiler_Win32.lib
 popd
-pushd "%~dp0_build.windows.x64\_bin\RelWithDebInfo"
+pushd "%~dp0_build.windows.x64\_bin"
 	copy /y extension.x64.vsixmanifest extension.vsixmanifest
 	
 	call sha256 hashmpfrontend micro-profiler_frontend.dll
@@ -60,11 +60,11 @@ popd
 pushd "%~dp0deployment\wix"
 	call mkzip license.rtf "%OUTPUT%"
 popd
-pushd "%~dp0_build.windows.x86\_bin\RelWithDebInfo"
+pushd "%~dp0_build.windows.x86\_bin"
 	call mkzip micro-profiler_Win32.dll "%OUTPUT%"
 	call mkzip micro-profiler_Win32.lib "%OUTPUT%"
 popd
-pushd "%~dp0_build.windows.x64\_bin\RelWithDebInfo"
+pushd "%~dp0_build.windows.x64\_bin"
 	call mkzip micro-profiler_frontend.dll "%OUTPUT%"
 	call mkzip 1033\micro-profiler.ui.dll "%OUTPUT%"
 	

@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 2.8)
 
 project(micro-profiler)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/build.props)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/_bin)
+include(unipath)
+
+enable_testing()
 
 
 # Setup include directories
@@ -151,3 +151,19 @@ if (WIN32 OR APPLE)
 		add_subdirectory(injector/tests)
 	endif ()
 endif ()
+
+add_test(NAME collector.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:collector.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:collector.tests>)
+add_test(NAME common.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:common.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:common.tests>)
+add_test(NAME frontend.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:frontend.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:frontend.tests>)
+add_test(NAME ipc.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:ipc.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:ipc.tests>)
+add_test(NAME logger.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:logger.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:logger.tests>)
+add_test(NAME math.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:math.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:math.tests>)
+add_test(NAME micro-profiler.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:micro-profiler.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:micro-profiler.tests>)
+add_test(NAME mt.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:mt.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:mt.tests>)
+# add_test(NAME patcher.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:patcher.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:patcher.tests>)
+# add_test(NAME reqm.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:reqm.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:reqm.tests>)
+add_test(NAME scheduler.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:scheduler.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:scheduler.tests>)
+add_test(NAME views.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:views.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:views.tests>)
+if (WIN32)
+	add_test(NAME injector.tests COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:injector.tests> WORKING_DIRECTORY $<TARGET_FILE_DIR:injector.tests>)
+endif()

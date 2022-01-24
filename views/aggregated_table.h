@@ -48,8 +48,8 @@ namespace micro_profiler
 			const_iterator begin() const;
 			const_iterator end() const;
 
-			template <typename KeyerT>
-			void group_by(const KeyerT &keyer);
+			template <typename UnderlyingKeyerT, typename AggregatedKeyerT, typename AggregatorT>
+			void group_by(const UnderlyingKeyerT&ukeyer, const AggregatedKeyerT &akeyer, const AggregatorT &aggregator);
 
 		public:
 			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
@@ -80,25 +80,27 @@ namespace micro_profiler
 		{	return _aggregated.end();	}
 
 		template <typename U, typename C>
-		template <typename KeyerT>
-		inline void aggregated_table<U, C>::group_by(const KeyerT &keyer)
+		template <typename UnderlyingKeyerT, typename AggregatedKeyerT, typename AggregatorT>
+		inline void aggregated_table<U, C>::group_by(const UnderlyingKeyerT &ukeyer, const AggregatedKeyerT &akeyer,
+			const AggregatorT& aggregator)
 		{
-			auto uindex = std::make_shared< immutable_index<U, KeyerT> >(_underlying, keyer);
-			auto aindex = std::make_shared< immutable_unique_index<aggregated_items_type, KeyerT> >(_aggregated, keyer);
-			auto update_record = [keyer, uindex, aindex] (const typename KeyerT::key_type &key) {
+			auto uindex = std::make_shared< immutable_index<U, UnderlyingKeyerT> >(_underlying, ukeyer);
+			auto aindex = std::make_shared< immutable_unique_index<aggregated_items_type, AggregatedKeyerT> >(_aggregated,
+				akeyer);
+			auto update_record = [aggregator, uindex, aindex] (const typename UnderlyingKeyerT::key_type &key) {
 				auto uitems = uindex->equal_range(key);
 				auto aggregated_record = (*aindex)[key];
 
-				keyer.aggregate(*aggregated_record, uitems.first, uitems.second);
+				aggregator(*aggregated_record, uitems.first, uitems.second);
 				aggregated_record.commit();
 			};
 
-			_on_changed = _underlying.changed += [keyer, update_record] (typename U::const_iterator r, bool /*new_*/) {
-				update_record(keyer(*r));
+			_on_changed = _underlying.changed += [ukeyer, update_record] (typename U::const_iterator r, bool /*new_*/) {
+				update_record(ukeyer(*r));
 			};
 			_aggregated.clear();
 			for (auto i = _underlying.begin(); i != _underlying.end(); ++i)
-				update_record(keyer(*i));
+				update_record(ukeyer(*i));
 		}
 	}
 }

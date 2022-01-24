@@ -152,7 +152,7 @@ namespace micro_profiler
 
 			auto tr = _underlying.create();
 
-			_keyer(*tr, key);
+			_keyer(*this, *tr, key);
 			return tr;
 		}
 

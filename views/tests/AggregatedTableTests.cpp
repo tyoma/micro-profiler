@@ -22,16 +22,9 @@ namespace micro_profiler
 					int operator ()(const A &item) const
 					{	return item.first;	}
 
-					void operator ()(A &aggregated, int key) const
+					template <typename IndexT>
+					void operator ()(IndexT &, A &aggregated, int key) const
 					{	aggregated.first = key;	}
-
-					template <typename I>
-					void aggregate(A &aggregated, I group_begin, I group_end) const
-					{
-						aggregated.second = 0;
-						for (auto i = group_begin; i != group_end; ++i)
-							aggregated.second += i->second;
-					}
 				};
 
 				struct Y
@@ -41,15 +34,30 @@ namespace micro_profiler
 					int operator ()(const A &item) const
 					{	return item.second;	}
 
-					void operator ()(A &aggregated, int key) const
+					template <typename IndexT>
+					void operator ()(IndexT &, A &aggregated, int key) const
 					{	aggregated.second = key;	}
+				};
 
+				struct aggregate_first
+				{
 					template <typename I>
-					void aggregate(A &aggregated, I group_begin, I group_end) const
+					void operator ()(A &aggregated, I group_begin, I group_end) const
 					{
 						aggregated.first = 0;
 						for (auto i = group_begin; i != group_end; ++i)
 							aggregated.first += i->first;
+					}
+				};
+
+				struct aggregate_second
+				{
+					template <typename I>
+					void operator ()(A& aggregated, I group_begin, I group_end) const
+					{
+						aggregated.second = 0;
+						for (auto i = group_begin; i != group_end; ++i)
+							aggregated.second += i->second;
 					}
 				};
 
@@ -95,7 +103,7 @@ namespace micro_profiler
 					// INIT / ACT
 					aggregated_table<table<A, ctor>, ctor> a(u);
 
-					a.group_by(X());
+					a.group_by(X(), X(), aggregate_second());
 
 					// ACT
 					add(u, A(1, 3));
@@ -124,7 +132,7 @@ namespace micro_profiler
 					// INIT / ACT
 					aggregated_table<table<A, ctor>, ctor> a(u);
 
-					a.group_by(X());
+					a.group_by(X(), X(), aggregate_second());
 
 					// ACT
 					add(u, A(3, 9));
@@ -149,7 +157,7 @@ namespace micro_profiler
 					// INIT / ACT
 					aggregated_table<table<A, ctor>, ctor> a(u);
 
-					a.group_by(X());
+					a.group_by(X(), X(), aggregate_second());
 
 					add(u, A(3, 9));
 					add(u, A(1, 3));
@@ -159,7 +167,7 @@ namespace micro_profiler
 					add(u, A(3, 5));
 
 					// ACT
-					a.group_by(Y());
+					a.group_by(Y(), Y(), aggregate_first());
 
 					// ASSERT
 					A reference[] = {	A(4, 3), A(3, 5), A(4, 9), A(2, 141),	};
@@ -174,7 +182,7 @@ namespace micro_profiler
 					table<A, ctor> u;
 					aggregated_table<table<A, ctor>, ctor> a(u);
 
-					a.group_by(X());
+					a.group_by(X(), X(), aggregate_second());
 
 					add(u, A(3, 9));
 					add(u, A(1, 3));
@@ -193,7 +201,7 @@ namespace micro_profiler
 					table<A, ctor> u;
 					aggregated_table<table<A, ctor>, ctor> a(u);
 
-					a.group_by(X());
+					a.group_by(X(), X(), aggregate_second());
 
 					add(u, A(3, 9));
 					add(u, A(1, 3));
@@ -222,7 +230,7 @@ namespace micro_profiler
 					vector<bool> sequence;
 					vector<A> sequence_items;
 
-					a.group_by(X());
+					a.group_by(X(), X(), aggregate_second());
 
 					auto c = a.changed += [&] (aggregated_table_type::const_iterator i, bool new_) {
 						sequence.push_back(new_);
@@ -262,7 +270,7 @@ namespace micro_profiler
 					table<A, ctor> u;
 					aggregated_table_type a(u);
 
-					a.group_by(X());
+					a.group_by(X(), X(), aggregate_second());
 
 					// INIT / ACT
 					const immutable_unique_index<aggregated_table_type, Y> idx(a);

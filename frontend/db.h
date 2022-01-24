@@ -24,6 +24,7 @@
 
 #include <common/hash.h>
 #include <tuple>
+#include <views/aggregated_table.h>
 #include <views/table.h>
 #include <views/index.h>
 
@@ -89,7 +90,8 @@ namespace micro_profiler
 		key_type operator ()(const call_statistics &value) const
 		{	return key_type(value.thread_id, value.parent_id, value.address);	}
 
-		void operator ()(call_statistics &value, const key_type &key) const
+		template <typename IndexT>
+		void operator ()(IndexT &/*index*/, call_statistics &value, const key_type &key) const
 		{	value.thread_id = std::get<0>(key), value.parent_id = std::get<1>(key), value.address = std::get<2>(key);	}
 	};
 
@@ -114,20 +116,34 @@ namespace micro_profiler
 		{	}
 
 		template <typename T>
-		const key_type &operator ()(const T &value) const
+		const callstack_key &operator ()(const T &record) const
 		{
 			_key_buffer.clear();
-			key_append(value);
+			key_append(record);
 			return _key_buffer;
+		}
+
+		template <typename Index2T>
+		void operator ()(Index2T &index, call_statistics &record, callstack_key key) const
+		{
+			record.thread_id = 0;
+			record.address = key.back();
+			key.pop_back();
+			if (key.empty())
+				record.parent_id = 0;
+			else if (auto p = index.find(key))
+				record.parent_id = p->id;
+			else
+				throw 0;
 		}
 
 	private:
 		template <typename T>
-		inline void key_append(const T &entry) const
+		inline void key_append(const T &record) const
 		{
-			if (const auto parent_id = entry.parent_id)
+			if (const auto parent_id = record.parent_id)
 				key_append(_by_id[parent_id]);
-			_key_buffer.push_back(entry.address);
+			_key_buffer.push_back(record.address);
 		}
 
 	private:
@@ -139,4 +155,5 @@ namespace micro_profiler
 	typedef views::immutable_unique_index<calls_statistics_table, call_node_keyer> call_nodes_index;
 	typedef views::immutable_unique_index<calls_statistics_table, id_keyer> primary_id_index;
 	typedef views::immutable_index< calls_statistics_table, callstack_keyer<primary_id_index> > callstack_index;
+	typedef views::aggregated_table<calls_statistics_table, call_statistics_constructor> aggregated_statistics_table;
 }

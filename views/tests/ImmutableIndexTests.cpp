@@ -33,7 +33,8 @@ namespace micro_profiler
 					key_type operator ()(const T &value) const
 					{	return value.first;	}
 
-					void operator ()(T &value, const key_type &key) const
+					template <typename IndexT>
+					void operator ()(IndexT &, T &value, const key_type &key) const
 					{	value.first = key;	}
 				};
 
@@ -45,7 +46,8 @@ namespace micro_profiler
 					key_type operator ()(const T &value) const
 					{	return value.second;	}
 
-					void operator ()(T &value, const key_type &key) const
+					template <typename IndexT>
+					void operator ()(IndexT &, T &value, const key_type &key) const
 					{	value.second = key;	}
 				};
 
@@ -57,7 +59,8 @@ namespace micro_profiler
 					key_type operator ()(const T &value) const
 					{	return value.first;	}
 
-					void operator ()(T &/*value*/, const key_type &/*key*/) const
+					template <typename U, typename K>
+					void operator ()(immutable_unique_index<U, K> &, T &/*value*/, const key_type &/*key*/) const
 					{	throw 0;	}
 				};
 

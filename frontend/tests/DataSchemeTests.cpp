@@ -171,5 +171,116 @@ namespace micro_profiler
 			}
 
 		end_test_suite
+
+
+		begin_test_suite( AggregatedRepresentationTests )
+
+			struct aggregator
+			{
+				template <typename I>
+				void operator ()(function_statistics &record, I begin, I end) const
+				{
+					record = function_statistics();
+					for (auto i = begin; i != end; ++i)
+						record += *i;
+				}
+			};
+
+
+			test( ThreadAggregationWorksForPlainCalls )
+			{
+				typedef views::immutable_unique_index<aggregated_statistics_table, id_keyer> aggregated_primary_id_index;
+
+				// INIT
+				call_statistics data_[] = {
+					make_call_statistics(1, 0, 0, 29, 10, 0, 901, 0, 0),
+					make_call_statistics(2, 0, 0, 31, 11, 4, 911, 0, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
+
+					make_call_statistics(4, 1, 0, 29, 03, 0, 763, 0, 0),
+					make_call_statistics(5, 1, 0, 31, 07, 3, 765, 0, 0),
+					make_call_statistics(6, 1, 0, 37, 90, 0, 769, 0, 0),
+				};
+				calls_statistics_table tbl;
+				primary_id_index by_id(tbl, id_keyer());
+				aggregated_statistics_table aggregated(tbl);
+				aggregated_primary_id_index by_aggregated_id(aggregated, id_keyer());
+
+				aggregated.group_by(callstack_keyer<primary_id_index>(by_id),
+					callstack_keyer<aggregated_primary_id_index>(by_aggregated_id), aggregator());
+
+				// ACT
+				for (auto i = begin(data_); i != end(data_); ++i)
+					add(tbl, *i);
+
+				// ASSERT
+				call_statistics reference[] = {
+					make_call_statistics(1, 0, 0, 29, 13, 0, 1664, 0, 0),
+					make_call_statistics(2, 0, 0, 31, 18, 4, 1676, 0, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
+					make_call_statistics(4, 0, 0, 37, 90, 0, 769, 0, 0),
+				};
+
+				assert_equivalent(reference, aggregated);
+
+				// ACT
+				add(tbl, make_call_statistics(16, 70, 0, 37, 10, 2, 100, 3, 0));
+
+				// ASSERT
+				call_statistics reference2[] = {
+					make_call_statistics(1, 0, 0, 29, 13, 0, 1664, 0, 0),
+					make_call_statistics(2, 0, 0, 31, 18, 4, 1676, 0, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
+					make_call_statistics(4, 0, 0, 37, 100, 2, 869, 3, 0),
+				};
+
+				assert_equivalent(reference2, aggregated);
+			}
+
+
+			test( ThreadAggregationWorksForNestedCalls )
+			{
+				typedef views::immutable_unique_index<aggregated_statistics_table, id_keyer> aggregated_primary_id_index;
+
+				// INIT
+				call_statistics data_[] = {
+					make_call_statistics(10, 7, 00, 29, 10, 0, 901, 0, 0),
+					make_call_statistics(20, 7, 10, 31, 11, 4, 911, 0, 0),
+					make_call_statistics(30, 7, 00, 39, 15, 0, 931, 0, 0),
+
+					make_call_statistics(40, 7, 10, 29, 03, 0, 763, 0, 0),
+					make_call_statistics(50, 7, 20, 31, 07, 3, 765, 0, 0),
+					make_call_statistics(60, 7, 30, 37, 90, 0, 769, 0, 0),
+
+					make_call_statistics(91, 1, 00, 29, 100, 0, 1000, 0, 0),
+					make_call_statistics(92, 1, 91, 31, 200, 0, 3000, 0, 0),
+					make_call_statistics(95, 1, 92, 31, 300, 0, 7000, 0, 0),
+
+				};
+				calls_statistics_table tbl;
+				primary_id_index by_id(tbl, id_keyer());
+				aggregated_statistics_table aggregated(tbl);
+				aggregated_primary_id_index by_aggregated_id(aggregated, id_keyer());
+
+				aggregated.group_by(callstack_keyer<primary_id_index>(by_id),
+					callstack_keyer<aggregated_primary_id_index>(by_aggregated_id), aggregator());
+
+				// ACT
+				for (auto i = begin(data_); i != end(data_); ++i)
+					add(tbl, *i);
+
+				// ASSERT
+				call_statistics reference1[] = {
+					make_call_statistics(1, 0, 0, 29, 110, 0, 1901, 0, 0),
+					make_call_statistics(2, 0, 1, 31, 211, 4, 3911, 0, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
+					make_call_statistics(4, 0, 1, 29, 03, 0, 763, 0, 0),
+					make_call_statistics(5, 0, 2, 31, 307, 3, 7765, 0, 0),
+					make_call_statistics(6, 0, 3, 37, 90, 0, 769, 0, 0),
+				};
+
+				assert_equivalent(reference1, aggregated);
+			}
+		end_test_suite
 	}
 }

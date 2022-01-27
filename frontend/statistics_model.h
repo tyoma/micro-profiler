@@ -50,6 +50,15 @@ namespace micro_profiler
 
 		std::shared_ptr<U> get_underlying() const;
 
+		template <typename GetTextT>
+		void add_column(const GetTextT &get_text_);
+
+		template <typename GetTextT, typename CompareT>
+		void add_column(const GetTextT &get_text_, const CompareT &compare_);
+
+		template <typename GetTextT, typename CompareT, typename ProjectT>
+		void add_column(const GetTextT &get_text_, const CompareT &compare_, const ProjectT &series_project);
+
 		// wpl::richtext_table_model methods
 		virtual index_type get_count() const throw() override;
 		virtual void get_text(index_type item, index_type subitem, agge::richtext_t &text) const override;
@@ -71,10 +80,16 @@ namespace micro_profiler
 
 	private:
 		struct view_complex;
+		struct column_operators
+		{
+			std::function<void (agge::richtext_t &text, index_type row)> get_text;
+			std::function<void (bool ascending)> set_order;
+		};
 
 	private:
 		const std::shared_ptr<view_complex> _view;
 		wpl::slot_connection _symbols_invalidation;
+		std::vector<column_operators> _column_operators;
 	};
 
 	template <typename BaseT, typename U>
@@ -109,8 +124,55 @@ namespace micro_profiler
 	{	return _view->underlying;	}
 
 	template <typename BaseT, typename U>
+	template <typename GetTextT>
+	inline void statistics_model_impl<BaseT, U>::add_column(const GetTextT &get_text_)
+	{
+		column_operators ops = {
+			[this, get_text_] (agge::richtext_t &text, index_type row) {	get_text_(text, row, _view->ordered[row]);	},
+			std::function<void (bool ascending)>()
+		};
+		_column_operators.push_back(ops);
+	}
+
+	template <typename BaseT, typename U>
+	template <typename GetTextT, typename CompareT>
+	inline void statistics_model_impl<BaseT, U>::add_column(const GetTextT &get_text_, const CompareT &compare_)
+	{
+		column_operators ops = {
+			[this, get_text_] (agge::richtext_t &text, index_type row) {	get_text_(text, row, _view->ordered[row]);	},
+			[this, compare_] (bool ascending) {
+				_view->ordered.set_order(compare_, ascending);
+				_view->projection.project();
+			}
+		};
+		_column_operators.push_back(ops);
+	}
+
+	template <typename BaseT, typename U>
+	template <typename GetTextT, typename CompareT, typename ProjectT>
+	inline void statistics_model_impl<BaseT, U>::add_column(const GetTextT &get_text_, const CompareT &compare_,
+		const ProjectT &series_project)
+	{
+		column_operators ops = {
+			[this, get_text_] (agge::richtext_t &text, index_type row) {	get_text_(text, row, _view->ordered[row]);	},
+			[this, compare_, series_project] (bool ascending) {
+				_view->ordered.set_order(compare_, ascending);
+				_view->projection.project(series_project);
+			}
+		};
+		_column_operators.push_back(ops);
+	}
+
+	template <typename BaseT, typename U>
 	inline typename statistics_model_impl<BaseT, U>::index_type statistics_model_impl<BaseT, U>::get_count() const throw()
 	{	return _view ? _view->ordered.size() : 0u;	}
+
+	template <typename BaseT, typename U>
+	inline void statistics_model_impl<BaseT, U>::get_text(index_type row, index_type column, agge::richtext_t &text) const
+	{
+		if (column < _column_operators.size())
+			_column_operators[column].get_text(text, row);
+	}
 
 	template <typename BaseT, typename U>
 	inline std::shared_ptr<const wpl::trackable> statistics_model_impl<BaseT, U>::track(index_type row) const
@@ -120,6 +182,23 @@ namespace micro_profiler
 	inline void statistics_model_impl<BaseT, U>::fetch()
 	{
 		_view->ordered.fetch();
+		_view->trackables.fetch();
+		_view->projection.fetch();
+		this->invalidate(this->npos());
+	}
+
+	template <typename BaseT, typename U>
+	inline void statistics_model_impl<BaseT, U>::set_order(index_type column, bool ascending)
+	{
+		if (column >= _column_operators.size())
+			return;
+
+		const auto &op = _column_operators[column];
+
+		if (op.set_order)
+			op.set_order(ascending);
+		else
+			_view->projection.project();
 		_view->trackables.fetch();
 		_view->projection.fetch();
 		this->invalidate(this->npos());

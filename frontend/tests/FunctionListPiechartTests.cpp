@@ -248,7 +248,7 @@ namespace micro_profiler
 			}
 
 
-			test( PiechartForUnsupportedColumnsIsSimplyZero )
+			test( PiechartForUnsupportedColumnsIsEmpty )
 			{
 				// INIT
 				auto fl = create_functions_list_detached(plural
@@ -259,16 +259,10 @@ namespace micro_profiler
 				// ACT / ASSERT
 				fl->set_order(columns::times_called, true);
 				fl->set_order(columns::order, true);
-				assert_approx_equal(0.0, get_value(*m, 0), c_tolerance);
-				assert_approx_equal(0.0, get_value(*m, 3), c_tolerance);
+				assert_equal(0u, m->get_count());
 				fl->set_order(columns::times_called, true);
 				fl->set_order(columns::name, false);
-				assert_approx_equal(0.0, get_value(*m, 0), c_tolerance);
-				assert_approx_equal(0.0, get_value(*m, 3), c_tolerance);
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::max_reentrance, true);
-				assert_approx_equal(0.0, get_value(*m, 0), c_tolerance);
-				assert_approx_equal(0.0, get_value(*m, 3), c_tolerance);
+				assert_equal(0u, m->get_count());
 			}
 
 

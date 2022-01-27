@@ -50,10 +50,10 @@ namespace micro_profiler
 	{	}
 
 
-	template <class X, typename U>
+	template <class X, typename U, typename SetupT>
 	inline std::shared_ptr<linked_statistics> construct_nested(std::shared_ptr<U> underlying, double tick_interval,
 		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
-		std::shared_ptr< std::vector<id_t> > scope)
+		std::shared_ptr< std::vector<id_t> > scope, const SetupT &setup)
 	{
 		typedef nested_statistics_model_complex<U, X> complex_type;
 		typedef typename complex_type::view_type view_type;
@@ -64,6 +64,7 @@ namespace micro_profiler
 			threads);
 		const auto pnested = nested.get();
 
+		setup(*nested);
 		complex->fetch_connection = underlying->invalidate += [pnested] {
 			pnested->fetch();
 		};

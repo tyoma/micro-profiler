@@ -31,6 +31,11 @@
     <Import Project="$(SolutionDir)build.props\strmd.include.props" />
     <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <DisableSpecificWarnings>4702;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>

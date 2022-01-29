@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "primitives.h"
+#include "db.h"
 
 #include <common/image_info.h>
 #include <common/module.h>
@@ -41,10 +41,14 @@ namespace micro_profiler
 		};
 
 
-		struct statistics : table<statistic_types::map_detailed>
+		struct statistics : table<calls_statistics_table>
 		{
+			statistics();
+
 			void clear();
 
+			primary_id_index by_id;
+			call_nodes_index by_node;
 			std::function<void ()> request_update;
 		};
 
@@ -98,9 +102,13 @@ namespace micro_profiler
 
 
 
+		inline statistics::statistics()
+			: by_id(*this), by_node(*this)
+		{	}
+
 		inline void statistics::clear()
 		{
-			statistic_types::map_detailed::clear();
+			base_t::clear();
 			invalidate();
 		}
 	}

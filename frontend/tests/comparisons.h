@@ -22,6 +22,7 @@ namespace micro_profiler
 	inline bool operator <(const call_statistics &lhs, const call_statistics &rhs)
 	{
 		return lhs.thread_id < rhs.thread_id ? true : rhs.thread_id < lhs.thread_id ? false :
+			lhs.address < rhs.address ? true : rhs.address < lhs.address ? false :
 			lhs.parent_id < rhs.parent_id ? true : rhs.parent_id < lhs.parent_id ? false :
 			static_cast<const function_statistics &>(lhs) < static_cast<const function_statistics &>(rhs);
 	}

@@ -30,7 +30,7 @@ namespace micro_profiler
 		template <typename T>
 		struct default_constructor
 		{
-			T operator ()() const
+			T operator ()()
 			{	return T();	}
 		};
 
@@ -48,6 +48,9 @@ namespace micro_profiler
 		public:
 			table(const ConstructorT &constructor = ConstructorT());
 
+			void clear();
+
+			std::size_t size() const;
 			const_iterator begin() const;
 			const_iterator end() const;
 			iterator begin();
@@ -56,7 +59,8 @@ namespace micro_profiler
 			transacted_record create();
 
 		public:
-			wpl::signal<void (iterator irecord, bool new_)> changed;
+			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
+			mutable wpl::signal<void ()> cleared;
 
 		private:
 			typedef std::vector<T> container_type;
@@ -64,8 +68,12 @@ namespace micro_profiler
 			class iterator_base;
 
 		private:
-			const ConstructorT _constructor;
+			ConstructorT _constructor;
 			container_type _records;
+
+		private:
+			template <typename ArchiveT, typename T2, typename ConstructorT2>
+			friend void serialize(ArchiveT &archive, table<T2, ConstructorT2> &data);
 		};
 
 		template <typename T, typename C>
@@ -111,8 +119,8 @@ namespace micro_profiler
 			{	return (*_container)[this->get_index()];	}
 
 		private:
-			const_iterator(const container_type &container, index_type index)
-				: iterator_base(index), _container(&container)
+			const_iterator(const container_type &container_, index_type index)
+				: iterator_base(index), _container(&container_)
 			{	}
 
 		private:
@@ -183,6 +191,17 @@ namespace micro_profiler
 		{	}
 
 		template <typename T, typename C>
+		inline void table<T, C>::clear()
+		{
+			_records.clear();
+			cleared();
+		}
+
+		template <typename T, typename C>
+		inline std::size_t table<T, C>::size() const
+		{	return _records.size();	}
+
+		template <typename T, typename C>
 		inline typename table<T, C>::const_iterator table<T, C>::begin() const
 		{	return const_iterator(_records, 0);	}
 
@@ -196,7 +215,7 @@ namespace micro_profiler
 
 		template <typename T, typename C>
 		inline typename table<T, C>::iterator table<T, C>::end()
-		{	return iterator(*this, static_cast<index_type>(_records.size()));	}
+		{	return iterator(*this, static_cast<index_type>(size()));	}
 
 		template <typename T, typename C>
 		inline typename table<T, C>::transacted_record table<T, C>::create()

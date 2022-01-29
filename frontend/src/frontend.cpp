@@ -174,9 +174,9 @@ namespace micro_profiler
 			const auto enable = make_shared<bool>(false);
 			containers::unordered_map<unsigned int, int> requested;
 
-			for (auto i = _statistics->begin(); i != _statistics->end(); ++i)
+			for (tables::statistics::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
 			{
-				const auto m = find_range(_mappings->layout, i->first.first, mapping_less());
+				const auto m = find_range(_mappings->layout, (*i).address, mapping_less());
 
 				if (!m || requested[m->second.persistent_id]++)
 					continue;

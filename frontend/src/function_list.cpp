@@ -33,7 +33,6 @@
 
 using namespace std;
 using namespace placeholders;
-using namespace wpl;
 
 #pragma warning(disable: 4244)
 
@@ -41,12 +40,21 @@ namespace micro_profiler
 {
 	namespace
 	{
+		static const string c_empty;
+
 		template <typename T, typename U>
 		shared_ptr<T> make_bound(shared_ptr<U> underlying)
 		{
 			typedef pair<shared_ptr<U>, T> pair_t;
 			auto p = make_shared<pair_t>(underlying, T(*underlying));
 			return shared_ptr<T>(p, &p->second);
+		}
+
+		template <typename ResultT, typename T>
+		ResultT initialize(const T &value)
+		{
+			ResultT r = {	value	};
+			return r;
 		}
 
 		template <typename ContainerT>
@@ -76,19 +84,14 @@ namespace micro_profiler
 				itoa<10>(destination, native_id);
 		}
 
-		class by_name
+		template <typename ResolverT>
+		struct by_name
 		{
-		public:
-			by_name(shared_ptr<const symbol_resolver> resolver)
-				: resolver(resolver)
-			{	}
-
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return resolver->symbol_name_by_va(lhs.first.first) < resolver->symbol_name_by_va(rhs.first.first);	}
+			{	return resolver(lhs) < resolver(rhs);	}
 
-		private:
-			shared_ptr<const symbol_resolver> resolver;
+			ResolverT resolver;
 		};
 
 		struct by_threadid
@@ -102,8 +105,8 @@ namespace micro_profiler
 			bool operator ()(const T &lhs_, const T &rhs_) const
 			{
 				unsigned int lhs = 0u, rhs = 0u;
-				const auto lhs_valid = get_thread_native_id(lhs, lhs_.first.second, *threads);
-				const auto rhs_valid = get_thread_native_id(rhs, rhs_.first.second, *threads);
+				const auto lhs_valid = get_thread_native_id(lhs, lhs_.thread_id, *threads);
+				const auto rhs_valid = get_thread_native_id(rhs, rhs_.thread_id, *threads);
 
 				return !lhs_valid && !rhs_valid ? false : !lhs_valid ? true : !rhs_valid ? false : lhs < rhs;
 			}
@@ -116,7 +119,7 @@ namespace micro_profiler
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.times_called < rhs.second.times_called;	}
+			{	return lhs.times_called < rhs.times_called;	}
 		};
 
 		struct by_times_called_parents
@@ -130,14 +133,14 @@ namespace micro_profiler
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.exclusive_time < rhs.second.exclusive_time;	}
+			{	return lhs.exclusive_time < rhs.exclusive_time;	}
 		};
 
 		struct by_inclusive_time
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.inclusive_time < rhs.second.inclusive_time;	}
+			{	return lhs.inclusive_time < rhs.inclusive_time;	}
 		};
 
 		struct by_avg_exclusive_call_time
@@ -145,9 +148,9 @@ namespace micro_profiler
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
 			{
-				return lhs.second.times_called && rhs.second.times_called
-					? lhs.second.exclusive_time * rhs.second.times_called < rhs.second.exclusive_time * lhs.second.times_called
-					: lhs.second.times_called < rhs.second.times_called;
+				return lhs.times_called && rhs.times_called
+					? lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called
+					: lhs.times_called < rhs.times_called;
 			}
 		};
 
@@ -156,9 +159,9 @@ namespace micro_profiler
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
 			{
-				return lhs.second.times_called && rhs.second.times_called
-					? lhs.second.inclusive_time * rhs.second.times_called < rhs.second.inclusive_time * lhs.second.times_called
-					: lhs.second.times_called < rhs.second.times_called;
+				return lhs.times_called && rhs.times_called
+					? lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called
+					: lhs.times_called < rhs.times_called;
 			}
 		};
 
@@ -166,222 +169,170 @@ namespace micro_profiler
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.max_reentrance < rhs.second.max_reentrance;	}
+			{	return lhs.max_reentrance < rhs.max_reentrance;	}
 		};
 
 		struct by_max_call_time
 		{
 			template <typename T>
 			bool operator ()(const T &lhs, const T &rhs) const
-			{	return lhs.second.max_call_time < rhs.second.max_call_time;	}
+			{	return lhs.max_call_time < rhs.max_call_time;	}
 		};
 
 		struct get_times_called
 		{
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return static_cast<double>(value.second.times_called);	}
+			{	return static_cast<double>(value.times_called);	}
 		};
 
 		struct exclusive_time
 		{
-			exclusive_time(double inv_tick_count)
-				: _inv_tick_count(inv_tick_count)
-			{	}
-
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return _inv_tick_count * value.second.exclusive_time;	}
+			{	return tick_interval * value.exclusive_time;	}
 
-			double _inv_tick_count;
+			double tick_interval;
 		};
 
 		struct inclusive_time
 		{
-			inclusive_time(double inv_tick_count)
-				: _inv_tick_count(inv_tick_count)
-			{	}
-
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return _inv_tick_count * value.second.inclusive_time;	}
+			{	return tick_interval * value.inclusive_time;	}
 
-			double _inv_tick_count;
+			double tick_interval;
 		};
 
 		struct exclusive_time_avg
 		{
-			exclusive_time_avg(double inv_tick_count)
-				: _inv_tick_count(inv_tick_count)
-			{	}
-
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return value.second.times_called ? _inv_tick_count * value.second.exclusive_time / value.second.times_called : 0.0;	}
+			{	return value.times_called ? tick_interval * value.exclusive_time / value.times_called : 0.0;	}
 
-			double _inv_tick_count;
+			double tick_interval;
 		};
 
 		struct inclusive_time_avg
 		{
-			inclusive_time_avg(double inv_tick_count)
-				: _inv_tick_count(inv_tick_count)
-			{	}
-
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return value.second.times_called ? _inv_tick_count * value.second.inclusive_time / value.second.times_called : 0.0;	}
+			{	return value.times_called ? tick_interval * value.inclusive_time / value.times_called : 0.0;	}
 
-			double _inv_tick_count;
+			double tick_interval;
 		};
 
 		struct max_call_time
 		{
-			max_call_time(double inv_tick_count)
-				: _inv_tick_count(inv_tick_count)
-			{	}
-
 			template <typename T>
 			double operator ()(const T &value) const
-			{	return _inv_tick_count * value.second.max_call_time;	}
+			{	return tick_interval * value.max_call_time;	}
 
-			double _inv_tick_count;
+			double tick_interval;
 		};
 
-
-		template <typename ItemT>
-		void get_column_text(agge::richtext_t &text, size_t index, const ItemT &item, size_t column, double tick_interval,
-			const symbol_resolver &resolver, const tables::threads &threads)
+		template <typename T>
+		struct format_interval_
 		{
-			switch (column)
-			{
-			case 0:	itoa<10>(text, index + 1);	break;
-			case 1:	text << resolver.symbol_name_by_va(item.first.first).c_str();	break;
-			case 2:	get_thread_native_id(text, item.first.second, threads);	break;
-			case 3:	itoa<10>(text, item.second.times_called);	break;
-			case 4:	format_interval(text, exclusive_time(tick_interval)(item));	break;
-			case 5:	format_interval(text, inclusive_time(tick_interval)(item));	break;
-			case 6:	format_interval(text, exclusive_time_avg(tick_interval)(item));	break;
-			case 7:	format_interval(text, inclusive_time_avg(tick_interval)(item));	break;
-			case 8:	itoa<10>(text, item.second.max_reentrance);	break;
-			case 9:	format_interval(text, max_call_time(tick_interval)(item));	break;
-			}
-		}
+			template <typename I>
+			void operator ()(agge::richtext_t &text, size_t /*row*/, const I &item) const
+			{	format_interval(text, underlying(item));	}
 
-		template <typename ViewT>
-		void set_column_order(void *, ViewT &view, size_t column, bool ascending, double tick_interval,
-			shared_ptr<const symbol_resolver> resolver, shared_ptr<const tables::threads> threads)
+			T underlying;
+		};
+
+		template <typename T>
+		format_interval_<T> format_interval2(double tick_interval)
+		{	return initialize< format_interval_<T> >(initialize<T>(tick_interval));	}
+
+		template <typename ResolverT>
+		struct setup_columns_
 		{
-			switch (column)
+			template <typename ModelT>
+			void operator ()(ModelT &model) const
 			{
-			case 0:
-				view.projection.project();
-				break;
+				auto resolver = _resolver;
+				auto threads = _threads;
 
-			case 1:
-				view.ordered.set_order(by_name(resolver), ascending);
-				view.projection.project();
-				break;
-
-			case 2:
-				view.ordered.set_order(by_threadid(threads), ascending);
-				view.projection.project();
-				break;
-
-			case 3:
-				view.ordered.set_order(by_times_called(), ascending);
-				view.projection.project(get_times_called());
-				break;
-
-			case 4:
-				view.ordered.set_order(by_exclusive_time(), ascending);
-				view.projection.project(exclusive_time(tick_interval));
-				break;
-
-			case 5:
-				view.ordered.set_order(by_inclusive_time(), ascending);
-				view.projection.project(inclusive_time(tick_interval));
-				break;
-
-			case 6:
-				view.ordered.set_order(by_avg_exclusive_call_time(), ascending);
-				view.projection.project(exclusive_time_avg(tick_interval));
-				break;
-
-			case 7:
-				view.ordered.set_order(by_avg_inclusive_call_time(), ascending);
-				view.projection.project(inclusive_time_avg(tick_interval));
-				break;
-
-			case 8:
-				view.ordered.set_order(by_max_reentrance(), ascending);
-				view.projection.project();
-				break;
-
-			case 9:
-				view.ordered.set_order(by_max_call_time(), ascending);
-				view.projection.project(max_call_time(tick_interval));
-				break;
+				model.add_column([] (agge::richtext_t &text, size_t row, const call_statistics &/*item*/) {
+					itoa<10>(text, row + 1);
+				});
+				model.add_column([resolver] (agge::richtext_t &text, size_t /*row*/, const call_statistics &item) {
+					text << resolver(item).c_str();
+				}, initialize< by_name<ResolverT> >(resolver));
+				model.add_column([threads] (agge::richtext_t &text, size_t /*row*/, const call_statistics &item) {
+					get_thread_native_id(text, item.thread_id, *threads);
+				}, by_threadid(threads));
+				model.add_column([] (agge::richtext_t &text, size_t /*row*/, const call_statistics &item) {
+					itoa<10>(text, item.times_called);
+				}, by_times_called(), [] (const call_statistics &item) -> double {	return item.times_called;	});
+				model.add_column(format_interval2<exclusive_time>(tick_interval), by_exclusive_time(), initialize<exclusive_time>(tick_interval));
+				model.add_column(format_interval2<inclusive_time>(tick_interval), by_inclusive_time(), initialize<inclusive_time>(tick_interval));
+				model.add_column(format_interval2<exclusive_time_avg>(tick_interval), by_avg_exclusive_call_time(), initialize<exclusive_time_avg>(tick_interval));
+				model.add_column(format_interval2<inclusive_time_avg>(tick_interval), by_avg_inclusive_call_time(), initialize<inclusive_time_avg>(tick_interval));
+				model.add_column([] (agge::richtext_t &text, size_t /*row*/, const call_statistics &item) {
+					itoa<10>(text, item.max_reentrance);
+				}, by_max_reentrance(), [] (const call_statistics &item) -> double {	return item.max_reentrance;	});
+				model.add_column(format_interval2<max_call_time>(tick_interval), by_max_call_time(),
+					initialize<max_call_time>(tick_interval));
 			}
-		}
 
-		template <>
-		void get_column_text<statistic_types::map_callers::value_type>(agge::richtext_t &text, size_t index,
-			const statistic_types::map_callers::value_type &item, size_t column, double /*tick_interval*/,
-			const symbol_resolver &resolver, const tables::threads &/*threads*/)
+			double tick_interval;
+			ResolverT _resolver;
+			shared_ptr<const tables::threads> _threads;
+		};
+
+		template <typename ResolverT>
+		setup_columns_<ResolverT> setup_columns(double tick_interval, const ResolverT &resolver,
+			shared_ptr<const tables::threads> threads)
 		{
-			switch (column)
-			{
-			case 0:	itoa<10>(text, index + 1);	break;
-			case 1:	text << resolver.symbol_name_by_va(item.first.first).c_str();	break;
-			case 3:	itoa<10>(text, item.second);	break;
-			}
+			setup_columns_<ResolverT> s = {	tick_interval, resolver, threads	};
+			return s;
 		}
-
-		template <typename ViewT>
-		void set_column_order(statistic_types::map_callers::value_type *, ViewT &view, size_t column, bool ascending,
-			double /*tick_interval*/, shared_ptr<const symbol_resolver> resolver, shared_ptr<const tables::threads> /*threads*/)
-		{
-			switch (column)
-			{
-			case 1:	view.ordered.set_order(by_name(resolver), ascending);	break;
-			case 3:	view.ordered.set_order(by_times_called_parents(), ascending);	break;
-			}
-		}
-	}
-
-
-	template <typename BaseT, typename U>
-	void statistics_model_impl<BaseT, U>::get_text(index_type row, index_type column, agge::richtext_t &text) const
-	{	get_column_text(text, row, _view->ordered[row], column, tick_interval, *resolver, *threads);	}
-
-	template <typename BaseT, typename U>
-	void statistics_model_impl<BaseT, U>::set_order(index_type column, bool ascending)
-	{
-		set_column_order(static_cast<typename U::value_type *>(nullptr), *_view, column, ascending, tick_interval,
-			resolver, threads);
-		_view->trackables.fetch();
-		_view->projection.fetch();
-		this->invalidate(this->npos());
 	}
 
 
 	shared_ptr<linked_statistics> create_callees_model(shared_ptr<const tables::statistics> underlying,
 		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
-		shared_ptr< vector<statistic_types::key> > scope)
-	{	return construct_nested<callees_transform>(underlying, tick_interval, resolver, threads, scope);	}
+		shared_ptr< vector<id_t> > scope)
+	{
+		return construct_nested<callees_transform>(underlying, tick_interval, resolver, threads, scope, setup_columns(tick_interval,
+			[resolver] (const call_statistics &item) -> const string & {
+	
+			return resolver->symbol_name_by_va(item.address);
+		}, threads));
+	}
 
 	shared_ptr<linked_statistics> create_callers_model(shared_ptr<const tables::statistics> underlying,
 		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
-		shared_ptr< vector<statistic_types::key> > scope)
-	{	return construct_nested<callers_transform>(underlying, tick_interval, resolver, threads, scope);	}
+		shared_ptr< vector<id_t> > scope)
+	{
+		auto &by_id = underlying->by_id;
+
+		return construct_nested<callers_transform>(underlying, tick_interval, resolver, threads, scope,
+			setup_columns(tick_interval, [resolver, &by_id] (const call_statistics &item) -> const string & {
+
+			const auto parent = by_id.find(item.parent_id);
+
+			return parent ? resolver->symbol_name_by_va(parent->address) : c_empty;
+		}, threads));
+	}
 
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval_,
 			shared_ptr<symbol_resolver> resolver_, shared_ptr<const tables::threads> threads_)
-		: base(make_bound< views::filter<statistic_types::map_detailed> >(statistics), tick_interval_, resolver_,
-			threads_), _statistics(statistics)
-	{	_connection = statistics->invalidate += [this] {	fetch();	};	}
+		: base(make_bound< views::filter<tables::statistics> >(statistics), tick_interval_, resolver_, threads_),
+			_statistics(statistics)
+	{
+		auto setup = setup_columns(tick_interval,
+			[resolver_] (const call_statistics &item) -> const string & {
+	
+			return resolver_->symbol_name_by_va(item.address);
+		}, threads);
+
+		setup(*this);
+		_connection = statistics->invalidate += [this] {	fetch();	};
+	}
 
 	functions_list::~functions_list()
 	{	}
@@ -401,14 +352,14 @@ namespace micro_profiler
 		{
 			const auto &row = get_entry(i);
 
-			content += resolver->symbol_name_by_va(row.first.first) + "\t";
-			itoa<10>(content, row.second.times_called), content += "\t";
-			gcvt(content, exclusive_time(tick_interval)(row)), content += "\t";
-			gcvt(content, inclusive_time(tick_interval)(row)), content += "\t";
-			gcvt(content, exclusive_time_avg(tick_interval)(row)), content += "\t";
-			gcvt(content, inclusive_time_avg(tick_interval)(row)), content += "\t";
-			itoa<10>(content, row.second.max_reentrance), content += "\t";
-			gcvt(content, max_call_time(tick_interval)(row)), content += "\r\n";
+			content += resolver->symbol_name_by_va(row.address), content += "\t";
+			itoa<10>(content, row.times_called), content += "\t";
+			gcvt(content, initialize<exclusive_time>(tick_interval)(row)), content += "\t";
+			gcvt(content, initialize<inclusive_time>(tick_interval)(row)), content += "\t";
+			gcvt(content, initialize<exclusive_time_avg>(tick_interval)(row)), content += "\t";
+			gcvt(content, initialize<inclusive_time_avg>(tick_interval)(row)), content += "\t";
+			itoa<10>(content, row.max_reentrance), content += "\t";
+			gcvt(content, initialize<max_call_time>(tick_interval)(row)), content += "\r\n";
 		}
 
 		if (locale_ok)

@@ -327,6 +327,49 @@ namespace micro_profiler
 					assert_equal("1211", (table2_t::reference)**i2);
 					assert_equal("1211", (table2_t::const_reference)*ci2);
 				}
+
+
+				test( TableIsEmptyAfterClear )
+				{
+					typedef table< string, function<string ()> > table_t;
+
+					// INIT
+					table_t t([] {	return "";	});
+
+					auto r1 = t.create(); *r1 = "1211", r1.commit();
+					auto r2 = t.create(); *r2 = "1", r2.commit();
+					auto r3 = t.create(); *r3 = "17", r3.commit();
+
+					// ACT
+					t.clear();
+
+					// ASSERT
+					assert_equal(t.end(), t.begin());
+				}
+
+
+				test( NotificationIsSentOnClear )
+				{
+					typedef table< string, function<string ()> > table_t;
+
+					// INIT
+					table_t t([] {	return "";	});
+
+					auto r1 = t.create(); *r1 = "1211", r1.commit();
+					auto r2 = t.create(); *r2 = "1", r2.commit();
+					auto r3 = t.create(); *r3 = "17", r3.commit();
+					auto called = 0;
+					auto c = t.cleared += [&] {
+						assert_equal(t.end(), t.begin());
+						called++;
+					};
+
+					// ACT
+					t.clear();
+
+					// ASSERT
+					assert_equal(1, called);
+				}
 			end_test_suite
 		}
 	}

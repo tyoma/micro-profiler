@@ -20,80 +20,82 @@
 
 #pragma once
 
+#include "tables.h"
+
+#include <views/index.h>
+
 namespace micro_profiler
 {
-	template <typename U>
-	class callees_transform
+	struct parent_id_keyer
 	{
-	public:
-		typedef typename U::key_type key_type;
-		typedef typename U::mapped_type mapped_type;
-		typedef typename mapped_type::callees_type nested_container_type;
-		typedef typename nested_container_type::const_iterator nested_const_iterator;
-		typedef typename nested_container_type::const_reference const_reference;
-		typedef typename nested_container_type::value_type value_type;
+		typedef id_t key_type;
 
-	public:
-		callees_transform(const U &underlying)
-			: _underlying(underlying)
-		{	}
-
-		nested_const_iterator begin(const key_type &key) const
-		{
-			auto i = _underlying.find(key);
-			return i != _underlying.end() ? i->second.callees.begin() : _empty_nested.end();
-		}
-
-		nested_const_iterator end(const key_type &key) const
-		{
-			auto i = _underlying.find(key);
-			return i != _underlying.end() ? i->second.callees.end() : _empty_nested.end();
-		}
-
-		template <typename T1, typename T2>
-		static const T2 &get(const T1 &, const T2 &value)
-		{	return value;	}
-
-	private:
-		const U &_underlying;
-		const nested_container_type _empty_nested;
+		key_type operator ()(const call_statistics &v) const
+		{	return v.parent_id;	}
 	};
 
-
-	template <typename U>
-	class callers_transform
+	struct callees_transform : views::immutable_index<tables::statistics, parent_id_keyer>
 	{
-	public:
-		typedef typename U::key_type key_type;
-		typedef typename U::mapped_type mapped_type;
-		typedef typename mapped_type::callers_type nested_container_type;
-		typedef typename nested_container_type::const_iterator nested_const_iterator;
-		typedef typename nested_container_type::const_reference const_reference;
-		typedef typename nested_container_type::value_type value_type;
+		typedef views::immutable_index<tables::statistics, parent_id_keyer> base;
 
-	public:
-		callers_transform(const U &underlying)
-			: _underlying(underlying)
+		callees_transform(const tables::statistics &underlying)
+			: base(underlying)
 		{	}
 
-		nested_const_iterator begin(const key_type &key) const
-		{
-			auto i = _underlying.find(key);
-			return i != _underlying.end() ? i->second.callers.begin() : _empty_nested.end();
-		}
-
-		nested_const_iterator end(const key_type &key) const
-		{
-			auto i = _underlying.find(key);
-			return i != _underlying.end() ? i->second.callers.end() : _empty_nested.end();
-		}
+		callees_transform(callees_transform &&other)
+			: base(std::move(other))
+		{	}
 
 		template <typename T1, typename T2>
 		static const T2 &get(const T1 &, const T2 &value)
 		{	return value;	}
+	};
+
+	class callers_transform
+	{
+	private:
+		struct address_keyer
+		{
+			typedef std::pair<long_address_t, bool /*root*/> key_type;
+
+			key_type operator ()(const call_statistics &v) const
+			{	return std::make_pair(v.address, !v.parent_id);	}
+		};
+		typedef views::immutable_index<tables::statistics, address_keyer> by_address_index;
+
+	public:
+		typedef by_address_index::const_iterator const_iterator;
+		typedef by_address_index::value_type const_reference;
+		typedef by_address_index::key_type key_type;
+		typedef by_address_index::range_type range_type;
+		typedef by_address_index::value_type value_type;
+
+	public:
+		callers_transform(const tables::statistics &underlying)
+			: _underlying(underlying), _by_address(underlying)
+		{	}
+
+		callers_transform(callers_transform &&other)
+			: _underlying(other._underlying), _by_address(std::move(other._by_address))
+		{	}
+
+		range_type equal_range(id_t id) const
+		{
+			if (auto self = _underlying.by_id.find(id))
+				return _by_address.equal_range(std::make_pair(self->address, false));
+			auto empty = _by_address.equal_range(std::make_pair(0, false));
+			return empty.first = empty.second, empty;
+		}
+
+		template <typename T>
+		call_statistics get(const T &, call_statistics value) const
+		{
+			value.address = _underlying.by_id[value.parent_id].address;
+			return value;
+		}
 
 	private:
-		const U &_underlying;
-		const nested_container_type _empty_nested;
+		const tables::statistics &_underlying;
+		views::immutable_index<tables::statistics, address_keyer> _by_address;
 	};
 }

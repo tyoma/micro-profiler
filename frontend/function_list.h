@@ -20,7 +20,9 @@
 
 #pragma once
 
+#include "key.h"
 #include "statistics_model.h"
+#include "tables.h"
 
 #include <views/filter.h>
 
@@ -28,9 +30,17 @@ namespace micro_profiler
 {
 	namespace tables
 	{
-		struct statistics;
 		struct threads;
 	}
+
+	template <>
+	struct key_traits<call_statistics>
+	{
+		typedef id_t key_type;
+
+		static key_type get_key(const call_statistics &value)
+		{	return value.id;	}
+	};
 
 	struct linked_statistics : wpl::richtext_table_model
 	{
@@ -38,21 +48,21 @@ namespace micro_profiler
 		virtual void fetch() = 0;
 		virtual void set_order(index_type column, bool ascending) = 0;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const = 0;
-		virtual std::shared_ptr< selection<statistic_types::key> > create_selection() const = 0;
+		virtual std::shared_ptr< selection<id_t> > create_selection() const = 0;
 	};
 
 	std::shared_ptr<linked_statistics> create_callees_model(std::shared_ptr<const tables::statistics> underlying,
 		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
-		std::shared_ptr< std::vector<statistic_types::key> > scope);
+		std::shared_ptr< std::vector<id_t> > scope);
 
 	std::shared_ptr<linked_statistics> create_callers_model(std::shared_ptr<const tables::statistics> underlying,
 		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
-		std::shared_ptr< std::vector<statistic_types::key> > scope);
+		std::shared_ptr< std::vector<id_t> > scope);
 
-	class functions_list : public statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> >
+	class functions_list : public statistics_model_impl< wpl::richtext_table_model, views::filter<tables::statistics> >
 	{
 	public:
-		typedef statistic_types::map_detailed::value_type value_type;
+		typedef tables::statistics::value_type value_type;
 
 	public:
 		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval_,
@@ -67,7 +77,7 @@ namespace micro_profiler
 		void print(std::string &content) const;
 
 	private:
-		typedef statistics_model_impl< wpl::richtext_table_model, views::filter<statistic_types::map_detailed> > base;
+		typedef statistics_model_impl< wpl::richtext_table_model, views::filter<tables::statistics> > base;
 
 	private:
 		std::shared_ptr<tables::statistics> _statistics;

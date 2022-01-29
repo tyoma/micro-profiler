@@ -4,6 +4,7 @@ include(test)
 
 set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
+	DataSchemeTests.cpp
 	DeSerializationTests.cpp
 	FilePersistenceTests.cpp
 	FrontendManagerTests.cpp
@@ -19,7 +20,6 @@ set(FRONTEND_TESTS_SOURCES
 	mock_channel.cpp
 	mocks.cpp
 	NestedStatisticModelsTests.cpp
-	NestedTransformTests.cpp
 	ProcessListTests.cpp
 #	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp

@@ -41,6 +41,8 @@ namespace micro_profiler
 		public:
 			explicit immutable_unique_index(U &underlying, const K &keyer = K());
 
+			const typename U::value_type *find(const key_type &key) const;
+
 			const typename U::value_type &operator [](const key_type &key) const;
 			typename U::transacted_record operator [](const key_type &key);
 
@@ -48,7 +50,7 @@ namespace micro_profiler
 			std::unordered_map< key_type, typename U::iterator, hash<key_type> > _index;
 			U &_underlying;
 			const K _keyer;
-			wpl::slot_connection _on_changed;
+			wpl::slot_connection _connections[2];
 		};
 
 
@@ -59,19 +61,26 @@ namespace micro_profiler
 			class const_iterator;
 			typedef typename K::key_type key_type;
 			typedef std::pair<const_iterator, const_iterator> range_type;
+			typedef typename U::value_type value_type;
+			typedef const value_type &const_reference;
 
 		public:
-			immutable_index(U &underlying, const K &keyer = K());
+			immutable_index(const U &underlying, const K &keyer = K());
+			immutable_index(immutable_index &&other);
 
-			range_type operator [](const key_type &key) const;
+			range_type equal_range(const key_type &key) const;
 
 		private:
 			typedef std::unordered_multimap< key_type, typename U::const_iterator, hash<key_type> > index_t;
 
 		private:
+			void operator =(immutable_index &&rhs);
+
+		private:
+			const U &_underlying;
 			index_t _index;
 			const K _keyer;
-			wpl::slot_connection _on_changed;
+			wpl::slot_connection _connections[2];
 		};
 
 		template <typename U, typename K>
@@ -85,6 +94,9 @@ namespace micro_profiler
 			typedef const_reference reference;
 
 		public:
+			const_iterator()
+			{	}
+
 			const_iterator(base from)
 				: base(from)
 			{	}
@@ -111,16 +123,22 @@ namespace micro_profiler
 
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				on_changed(i, true);
-			_on_changed = underlying.changed += on_changed;
+			_connections[0] = underlying.changed += on_changed;
+			_connections[1] = underlying.cleared += [this] {	_index.clear();	};
+		}
+
+		template <typename U, typename K>
+		inline const typename U::value_type *immutable_unique_index<U, K>::find(const key_type &key) const
+		{
+			const auto i = _index.find(key);
+			return i != _index.end() ? &*typename U::const_iterator(i->second) : nullptr;
 		}
 
 		template <typename U, typename K>
 		inline const typename U::value_type &immutable_unique_index<U, K>::operator [](const key_type &key) const
 		{
-			const auto i = _index.find(key);
-
-			if (i != _index.end())
-				return *typename U::const_iterator(i->second);
+			if (auto r = find(key))
+				return *r;
 			throw std::invalid_argument("key not found");
 		}
 
@@ -134,14 +152,14 @@ namespace micro_profiler
 
 			auto tr = _underlying.create();
 
-			_keyer(*tr, key);
+			_keyer(*this, *tr, key);
 			return tr;
 		}
 
 
 		template <typename U, typename K>
-		inline immutable_index<U, K>::immutable_index(U &underlying, const K &keyer)
-			: _keyer(keyer)
+		inline immutable_index<U, K>::immutable_index(const U &underlying, const K &keyer)
+			: _underlying(underlying), _keyer(keyer)
 		{
 			auto on_changed = [this] (typename U::const_iterator record, bool new_) {
 				if (new_)
@@ -150,11 +168,24 @@ namespace micro_profiler
 
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				on_changed(i, true);
-			_on_changed = underlying.changed += on_changed;
+			_connections[0] = underlying.changed += on_changed;
+			_connections[1] = underlying.cleared += [this] {	_index.clear();	};
 		}
 
 		template <typename U, typename K>
-		inline typename immutable_index<U, K>::range_type immutable_index<U, K>::operator [](const key_type &key) const
+		inline immutable_index<U, K>::immutable_index(immutable_index &&other)
+			: _underlying(other._underlying), _index(std::move(other._index)), _keyer(std::move(other._keyer))
+		{
+			other._connections[0].reset();
+			_connections[0] = _underlying.changed += [this] (typename U::const_iterator record, bool new_) {
+				if (new_)
+					_index.insert(std::make_pair(_keyer(*record), record));
+			};
+			_connections[1] = _underlying.cleared += [this] {	_index.clear();	};
+		}
+
+		template <typename U, typename K>
+		inline typename immutable_index<U, K>::range_type immutable_index<U, K>::equal_range(const key_type &key) const
 		{	return _index.equal_range(key);	}
 	}
 }

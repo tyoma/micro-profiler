@@ -29,21 +29,29 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\wpl.include.props" />
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="AggregateViewTests.cpp" />
+    <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
+      <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AggregatedTableTests.cpp" />
     <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
+    <ClCompile Include="TableSerializationTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\aggregate.h" />
+    <ClInclude Include="..\aggregated_table.h" />
     <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\flatten.h" />
+    <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\table.h" />
     <ClInclude Include="..\index.h" />
     <ClInclude Include="..\ordered.h" />

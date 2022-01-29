@@ -5,9 +5,10 @@
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="AnyKeyTests.cpp" />
-    <ClCompile Include="AggregateViewTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
+    <ClCompile Include="TableSerializationTests.cpp" />
+    <ClCompile Include="AggregatedTableTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -24,9 +25,6 @@
     <ClInclude Include="..\ordered.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\aggregate.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\any_key.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
@@ -34,6 +32,12 @@
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\index.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\serialization.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\aggregated_table.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -21,7 +21,8 @@ namespace micro_profiler
 				{
 					typedef void transacted_record;
 
-					wpl::signal<void (iterator record, bool new_)> changed;
+					mutable wpl::signal<void (iterator record, bool new_)> changed;
+					mutable wpl::signal<void ()> cleared;
 				};
 
 				template <typename T>
@@ -32,7 +33,8 @@ namespace micro_profiler
 					key_type operator ()(const T &value) const
 					{	return value.first;	}
 
-					void operator ()(T &value, const key_type &key) const
+					template <typename IndexT>
+					void operator ()(IndexT &, T &value, const key_type &key) const
 					{	value.first = key;	}
 				};
 
@@ -44,7 +46,8 @@ namespace micro_profiler
 					key_type operator ()(const T &value) const
 					{	return value.second;	}
 
-					void operator ()(T &value, const key_type &key) const
+					template <typename IndexT>
+					void operator ()(IndexT &, T &value, const key_type &key) const
 					{	value.second = key;	}
 				};
 
@@ -56,7 +59,8 @@ namespace micro_profiler
 					key_type operator ()(const T &value) const
 					{	return value.first;	}
 
-					void operator ()(T &/*value*/, const key_type &/*key*/) const
+					template <typename U, typename K>
+					void operator ()(immutable_unique_index<U, K> &, T &/*value*/, const key_type &/*key*/) const
 					{	throw 0;	}
 				};
 
@@ -105,6 +109,28 @@ namespace micro_profiler
 
 					assert_throws(idx1[2611], invalid_argument);
 					assert_throws(idx2["amet-dolor"], invalid_argument);
+				}
+
+
+				test( FindingARecordReturnsPointerOrNullIfMissing )
+				{
+					// INIT
+					container1 data;
+
+					data.push_back(make_pair(3, "lorem"));
+					data.push_back(make_pair(14, "ipsum"));
+					data.push_back(make_pair(159, "amet"));
+
+					// INIT / ACT
+					const immutable_unique_index< container1, key_first<container1::value_type> > idx(data);
+
+					// ACT / ASSERT
+					assert_null(idx.find(2));
+					assert_null(idx.find(4));
+					assert_not_null(idx.find(3));
+					assert_equal("lorem", idx.find(3)->second);
+					assert_not_null(idx.find(14));
+					assert_equal("ipsum", idx.find(14)->second);
 				}
 
 
@@ -207,6 +233,29 @@ namespace micro_profiler
 					assert_equal("bar", (*rr3).second);
 					assert_equal("bar", cidx[3].second);
 				}
+
+
+				test( IndexIsClearedUponTableClear )
+				{
+					// INIT
+					container1 data;
+
+					data.push_back(make_pair(3, "lorem"));
+					data.push_back(make_pair(14, "ipsum"));
+					data.push_back(make_pair(159, "amet"));
+
+					const immutable_unique_index< container1, key_first<container1::value_type> > idx(data);
+
+					// ACT
+					data.cleared();
+
+					// ASSERT
+					assert_null(idx.find(3));
+					assert_throws(idx[3], invalid_argument);
+					assert_null(idx.find(159));
+					assert_throws(idx[159], invalid_argument);
+				}
+
 			end_test_suite
 
 
@@ -236,7 +285,7 @@ namespace micro_profiler
 					index2_t idx2(t);
 
 					// ACT
-					auto r1 = idx1[11];
+					auto r1 = idx1.equal_range(11);
 
 					// ASSERT
 					assert_equivalent(plural
@@ -247,7 +296,7 @@ namespace micro_profiler
 						+ make_pair(11, (string)"zoo"), (vector< pair<int, string> >(r1.first, r1.second)));
 
 					// ACT
-					r1 = idx1[13];
+					r1 = idx1.equal_range(13);
 
 					// ASSERT
 					assert_equivalent(plural
@@ -255,7 +304,7 @@ namespace micro_profiler
 						+ make_pair(13, (string)"bar"), (vector< pair<int, string> >(r1.first, r1.second)));
 
 					// ACT
-					r1 = idx1[19];
+					r1 = idx1.equal_range(19);
 
 					// ASSERT
 					assert_equivalent(plural
@@ -263,13 +312,13 @@ namespace micro_profiler
 						+ make_pair(19, (string)"foo"), (vector< pair<int, string> >(r1.first, r1.second)));
 
 					// ACT
-					r1 = idx1[111];
+					r1 = idx1.equal_range(111);
 
 					// ASSERT
 					assert_equal(r1.first, r1.second);
 
 					// ACT
-					auto r2 = idx2["zoo"];
+					auto r2 = idx2.equal_range("zoo");
 
 					// ASSERT
 					assert_equivalent(plural
@@ -280,7 +329,7 @@ namespace micro_profiler
 						+ make_pair(11, (string)"zoo"), (vector< pair<int, string> >(r2.first, r2.second)));
 
 					// ACT
-					r2 = idx2["foo"];
+					r2 = idx2.equal_range("foo");
 
 					// ASSERT
 					assert_equivalent(plural
@@ -288,7 +337,7 @@ namespace micro_profiler
 						+ make_pair(19, (string)"foo"), (vector< pair<int, string> >(r2.first, r2.second)));
 
 					// ACT
-					r2 = idx2["bar"];
+					r2 = idx2.equal_range("bar");
 
 					// ASSERT
 					assert_equivalent(plural
@@ -296,7 +345,7 @@ namespace micro_profiler
 						+ make_pair(19, (string)"bar"), (vector< pair<int, string> >(r2.first, r2.second)));
 
 					// ACT
-					r2 = idx2[""];
+					r2 = idx2.equal_range("");
 
 					// ASSERT
 					assert_equal(r2.first, r2.second);
@@ -314,7 +363,7 @@ namespace micro_profiler
 
 					// ACT
 					populate(t, plural + make_pair(11, (string)"zoo"));
-					auto r = idx[11];
+					auto r = idx.equal_range(11);
 
 					// ASSERT
 					assert_equivalent(plural
@@ -324,7 +373,7 @@ namespace micro_profiler
 
 					// ACT
 					populate(t, plural + make_pair(19, (string)"bar") + make_pair(11, (string)"foo"));
-					r = idx[11];
+					r = idx.equal_range(11);
 
 					// ASSERT
 					assert_equivalent(plural
@@ -332,7 +381,7 @@ namespace micro_profiler
 						+ make_pair(11, (string)"foo"), (vector< pair<int, string> >(r.first, r.second)));
 
 					// ACT
-					r = idx[19];
+					r = idx.equal_range(19);
 
 					// ASSERT
 					assert_equivalent(plural
@@ -342,9 +391,79 @@ namespace micro_profiler
 					auto tr = *t.begin();
 					(*tr).first = 1910;
 					tr.commit();
-					r = idx[1910];
+					r = idx.equal_range(1910);
 
 					// ASSERT
+					assert_equal(r.first, r.second);
+				}
+
+
+				test( MovedIndexHasItemsAndConnectionMoved )
+				{
+					typedef table< pair<int, string> > table_t;
+					typedef immutable_index< table_t, key_first<table_t::value_type> > index_t;
+
+					// INIT
+					table_t t;
+					index_t idx(t);
+
+					populate(t, plural + make_pair(11, (string)"zoo") + make_pair(13, (string)"Boo") + make_pair(11, (string)"foo"));
+
+					// ACT
+					index_t idx2(move(idx));
+
+					// ASSERT
+					auto r = idx2.equal_range(11);
+					assert_equivalent(plural
+						+ make_pair(11, (string)"zoo")
+						+ make_pair(11, (string)"foo"), (vector< pair<int, string> >(r.first, r.second)));
+					r = idx2.equal_range(13);
+					assert_equivalent(plural
+						+ make_pair(13, (string)"Boo"), (vector< pair<int, string> >(r.first, r.second)));
+					r = idx.equal_range(11);
+					assert_equal(r.first, r.second);
+					r = idx.equal_range(13);
+					assert_equal(r.first, r.second);
+
+					// INIT / ACT
+					populate(t, plural + make_pair(13, (string)"z"));
+
+					// ASSERT
+					r = idx2.equal_range(13);
+					assert_equivalent(plural
+						+ make_pair(13, (string)"z")
+						+ make_pair(13, (string)"Boo"), (vector< pair<int, string> >(r.first, r.second)));
+					r = idx.equal_range(13);
+					assert_equal(r.first, r.second);
+
+					// ACT
+					t.clear();
+
+					// ASSERT
+					r = idx2.equal_range(13);
+					assert_equal(r.first, r.second);
+				}
+
+
+				test( IndexIsClearedUponTableClear )
+				{
+					// INIT
+					container1 data;
+
+					data.push_back(make_pair(3, "lorem"));
+					data.push_back(make_pair(14, "ipsum"));
+					data.push_back(make_pair(159, "amet"));
+					data.push_back(make_pair(3, "test"));
+
+					const immutable_index< container1, key_first<container1::value_type> > idx(data);
+
+					// ACT
+					data.cleared();
+
+					// ASSERT
+					auto r = idx.equal_range(3);
+					assert_equal(r.first, r.second);
+					r = idx.equal_range(14);
 					assert_equal(r.first, r.second);
 				}
 			end_test_suite

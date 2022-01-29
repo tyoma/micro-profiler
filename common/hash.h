@@ -29,6 +29,7 @@ namespace micro_profiler
 
 	struct knuth_hash
 	{
+		std::size_t operator ()(bool key) const throw();
 		std::size_t operator ()(unsigned int key) const throw();
 		std::size_t operator ()(unsigned long long int key) const throw();
 		std::size_t operator ()(const void *key) const throw();
@@ -48,6 +49,9 @@ namespace micro_profiler
 	struct knuth_hash_fixed<8>
 	{	std::size_t operator ()(unsigned long long int key) const throw() {	return static_cast<std::size_t>(key * 0x7FFFFFFFFFFFFFFFull);	}	};
 
+
+	inline std::size_t knuth_hash::operator ()(bool key) const throw()
+	{	return !!key;	}
 
 	inline std::size_t knuth_hash::operator ()(unsigned int key) const throw()
 	{	return knuth_hash_fixed<sizeof(key)>()(key);	}

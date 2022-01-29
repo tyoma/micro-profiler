@@ -7,7 +7,7 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		call_statistics make_call_statistics(id_t id, id_t thread_id, id_t parent_id, long_address_t address,
+		inline call_statistics make_call_statistics(id_t id, id_t thread_id, id_t parent_id, long_address_t address,
 			count_t times, unsigned reentrance, timestamp_t inclusive, timestamp_t exclusive, timestamp_t max_call_time)
 		{
 			call_statistics s;

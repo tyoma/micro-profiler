@@ -59,11 +59,9 @@ namespace micro_profiler
 	}
 
 
-	image_patch_model::flattener::nested_const_iterator image_patch_model::flattener::begin(const tables::modules::value_type &from)
-	{	return from.second.symbols.begin();	}
-
-	image_patch_model::flattener::nested_const_iterator image_patch_model::flattener::end(const tables::modules::value_type &from)
-	{	return from.second.symbols.end();	}
+	pair<image_patch_model::flattener::const_iterator, image_patch_model::flattener::const_iterator>
+		image_patch_model::flattener::equal_range(const tables::modules::value_type &from)
+	{	return make_pair(from.second.symbols.begin(), from.second.symbols.end());	}
 
 	image_patch_model::flattener::const_reference image_patch_model::flattener::get(const tables::modules::value_type &l1, const symbol_info &l2)
 	{

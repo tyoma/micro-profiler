@@ -103,6 +103,7 @@
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\trackables_provider.h" />
+    <ClInclude Include="fields.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

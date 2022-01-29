@@ -74,10 +74,10 @@ namespace micro_profiler
 		const auto threads = make_shared<threads_model>(session.threads);
 
 		const auto m_parents = create_callers_model(statistics,
-			1.0 / session.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
+			1.0 / session.process_info.ticks_per_second, m_main->resolver, session.threads, m_selected_items);
 		const auto m_selection_parents = m_parents->create_selection();
 		const auto m_children = create_callees_model(statistics,
-			1.0 / session.process_info.ticks_per_second, m_main->resolver, m_main->threads, m_selected_items);
+			1.0 / session.process_info.ticks_per_second, m_main->resolver, session.threads, m_selected_items);
 		const auto m_selection_children = m_children->create_selection();
 
 		_connections.push_back(m_selection->invalidate += [=] (size_t) {

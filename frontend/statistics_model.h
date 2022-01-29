@@ -46,7 +46,7 @@ namespace micro_profiler
 
 	public:
 		statistics_model_impl(std::shared_ptr<U> underlying, double tick_interval_,
-			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<const tables::threads> threads_);
+			std::shared_ptr<symbol_resolver> resolver_);
 
 		std::shared_ptr<U> get_underlying() const;
 
@@ -73,7 +73,6 @@ namespace micro_profiler
 	public:
 		const double tick_interval;
 		const std::shared_ptr<symbol_resolver> resolver;
-		const std::shared_ptr<const tables::threads> threads;
 
 	protected:
 		const typename U::value_type &get_entry(index_type row) const;
@@ -113,9 +112,8 @@ namespace micro_profiler
 
 	template <typename BaseT, typename U>
 	inline statistics_model_impl<BaseT, U>::statistics_model_impl(std::shared_ptr<U> statistics_, double tick_interval_,
-			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<const tables::threads> threads_)
-		: tick_interval(tick_interval_), resolver(resolver_), threads(threads_),
-			_view(std::make_shared<view_complex>(statistics_)),
+			std::shared_ptr<symbol_resolver> resolver_)
+		: tick_interval(tick_interval_), resolver(resolver_), _view(std::make_shared<view_complex>(statistics_)),
 			_symbols_invalidation(resolver_->invalidate += [this] {	this->invalidate(this->npos());	})
 	{	}
 

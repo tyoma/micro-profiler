@@ -105,6 +105,9 @@
     <ClInclude Include="..\async_file.h" />
     <ClInclude Include="..\profiling_preferences.h" />
     <ClInclude Include="..\db.h" />
+    <ClInclude Include="fields.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

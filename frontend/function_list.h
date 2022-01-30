@@ -21,7 +21,7 @@
 #pragma once
 
 #include "key.h"
-#include "statistics_model.h"
+#include "container_view_model.h"
 #include "tables.h"
 
 #include <views/filter.h>
@@ -59,15 +59,14 @@ namespace micro_profiler
 		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
 		std::shared_ptr< std::vector<id_t> > scope);
 
-	class functions_list : public statistics_model_impl< wpl::richtext_table_model, views::filter<tables::statistics> >
+	class functions_list : public container_view_model< wpl::richtext_table_model, views::filter<tables::statistics> >
 	{
 	public:
 		typedef tables::statistics::value_type value_type;
 
 	public:
-		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval_,
-			std::shared_ptr<symbol_resolver> resolver_, std::shared_ptr<const tables::threads> threads_);
-		virtual ~functions_list();
+		functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval,
+			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads);
 
 		template <typename PredicateT>
 		void set_filter(const PredicateT &predicate);
@@ -76,11 +75,13 @@ namespace micro_profiler
 		void print(std::string &content) const;
 
 	private:
-		typedef statistics_model_impl< wpl::richtext_table_model, views::filter<tables::statistics> > base;
+		typedef container_view_model< wpl::richtext_table_model, views::filter<tables::statistics> > base;
 
 	private:
 		std::shared_ptr<tables::statistics> _statistics;
-		wpl::slot_connection _connection;
+		const double _tick_interval;
+		std::shared_ptr<symbol_resolver> _resolver;
+		wpl::slot_connection _invalidation_connections[2];
 	};
 
 

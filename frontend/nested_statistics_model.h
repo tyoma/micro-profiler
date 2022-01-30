@@ -38,7 +38,7 @@ namespace micro_profiler
 		const std::shared_ptr<U> underlying;
 		const std::shared_ptr<scope_type> scope;
 		view_type flattened;
-		wpl::slot_connection fetch_connection;
+		wpl::slot_connection fetch_connection, invalidate_connection;
 	};
 
 
@@ -51,21 +51,23 @@ namespace micro_profiler
 
 
 	template <class X, typename U, typename SetupT>
-	inline std::shared_ptr<linked_statistics> construct_nested(std::shared_ptr<U> underlying, double tick_interval,
-		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr< std::vector<id_t> > scope, const SetupT &setup)
+	inline std::shared_ptr<linked_statistics> construct_nested(std::shared_ptr<U> underlying, symbol_resolver &resolver,
+		std::shared_ptr< std::vector<id_t> > scope, const SetupT &setup)
 	{
 		typedef nested_statistics_model_complex<U, X> complex_type;
 		typedef typename complex_type::view_type view_type;
 
 		const auto complex = std::make_shared<complex_type>(underlying, scope);
 		const std::shared_ptr<view_type> v(complex, &complex->flattened);
-		const auto nested = std::make_shared< statistics_model_impl<linked_statistics, view_type> >(v, tick_interval,
-			resolver);
+		const auto nested = std::make_shared< container_view_model<linked_statistics, view_type> >(v);
 		const auto pnested = nested.get();
 
 		setup(*nested);
 		complex->fetch_connection = underlying->invalidate += [pnested] {
 			pnested->fetch();
+		};
+		complex->invalidate_connection = resolver.invalidate += [pnested] {
+			pnested->invalidate(pnested->npos());
 		};
 		return nested;
 	}

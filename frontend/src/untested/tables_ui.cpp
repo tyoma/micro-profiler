@@ -67,17 +67,18 @@ namespace micro_profiler
 			_cm_children(new headers_model(c_columns_statistics_children, 4, false))
 	{
 		const auto statistics = session.statistics;
-		const auto m_main = make_shared<functions_list>(statistics, 1.0 / session.process_info.ticks_per_second,
-			make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
+		const auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);
+		const auto m_main = make_shared<functions_list>(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+			session.threads);
 		const auto m_selection = m_main->create_selection();
 		const auto m_selected_items = make_shared< vector<id_t> >();
 		const auto threads = make_shared<threads_model>(session.threads);
 
-		const auto m_parents = create_callers_model(statistics,
-			1.0 / session.process_info.ticks_per_second, m_main->resolver, session.threads, m_selected_items);
+		const auto m_parents = create_callers_model(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+			session.threads, m_selected_items);
 		const auto m_selection_parents = m_parents->create_selection();
-		const auto m_children = create_callees_model(statistics,
-			1.0 / session.process_info.ticks_per_second, m_main->resolver, session.threads, m_selected_items);
+		const auto m_children = create_callees_model(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+			session.threads, m_selected_items);
 		const auto m_selection_children = m_children->create_selection();
 
 		_connections.push_back(m_selection->invalidate += [=] (size_t) {
@@ -95,10 +96,10 @@ namespace micro_profiler
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
-		auto on_activate = [this, m_main, m_selected_items] {
+		auto on_activate = [this, resolver, m_main, m_selected_items] {
 			symbol_resolver::fileline_t fileline;
 
-			if (m_selected_items->size() > 0u && m_main->resolver->symbol_fileline_by_va(m_selected_items->front(), fileline))
+			if (m_selected_items->size() > 0u && resolver->symbol_fileline_by_va(m_selected_items->front(), fileline))
 				open_source(fileline.first, fileline.second);
 		};
 

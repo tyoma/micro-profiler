@@ -72,7 +72,6 @@
     <ClInclude Include="..\frontend_manager.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\primitives.h" />
-    <ClInclude Include="..\statistics_model.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\process_list.h" />
     <ClInclude Include="..\file.h" />
@@ -108,6 +107,7 @@
     <ClInclude Include="fields.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\container_view_model.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

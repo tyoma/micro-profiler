@@ -94,7 +94,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\primitives.h" />
-    <ClInclude Include="..\statistics_model.h" />
+    <ClInclude Include="..\container_view_model.h" />
     <ClInclude Include="..\statistics_poll.h" />
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />

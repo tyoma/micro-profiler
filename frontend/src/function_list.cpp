@@ -56,25 +56,32 @@ namespace micro_profiler
 			{
 				auto resolver = _resolver;
 
-				model.add_column([] (agge::richtext_t &text, size_t row, const call_statistics &/*item*/) {
-					itoa<10>(text, row + 1);
-				});
-				model.add_column([resolver] (agge::richtext_t &text, size_t /*row*/, const call_statistics &item) {
-					text << resolver(item).c_str();
-				}, initialize< by_name<ResolverT> >(resolver));
-				model.add_column(initialize<thread_native_id>(_threads), initialize<by_threadid>(_threads));
-				model.add_column([] (agge::richtext_t &text, size_t /*row*/, const call_statistics &item) {
-					itoa<10>(text, item.times_called);
-				}, by_times_called(), [] (const call_statistics &item) {	return static_cast<double>(item.times_called);	});
-				model.add_column(format_interval2<exclusive_time>(tick_interval), by_exclusive_time(), initialize<exclusive_time>(tick_interval));
-				model.add_column(format_interval2<inclusive_time>(tick_interval), by_inclusive_time(), initialize<inclusive_time>(tick_interval));
-				model.add_column(format_interval2<exclusive_time_avg>(tick_interval), by_avg_exclusive_call_time(), initialize<exclusive_time_avg>(tick_interval));
-				model.add_column(format_interval2<inclusive_time_avg>(tick_interval), by_avg_inclusive_call_time(), initialize<inclusive_time_avg>(tick_interval));
-				model.add_column([] (agge::richtext_t &text, size_t /*row*/, const call_statistics &item) {
-					itoa<10>(text, item.max_reentrance);
-				}, by_max_reentrance(), [] (const call_statistics &item) {	return static_cast<double>(item.max_reentrance);	});
-				model.add_column(format_interval2<max_call_time>(tick_interval), by_max_call_time(),
-					initialize<max_call_time>(tick_interval));
+				model.add_column([] (agge::richtext_t &t, size_t row, const call_statistics &) {	itoa<10>(t, row + 1);	});
+				model.add_column([resolver] (agge::richtext_t &t, size_t, const call_statistics &r) {	t << resolver(r).c_str();	})
+					.on_set_order(initialize< by_name<ResolverT> >(resolver));
+				model.add_column(initialize<thread_native_id>(_threads))
+					.on_set_order(initialize<by_threadid>(_threads));
+				model.add_column([] (agge::richtext_t &t, size_t, const call_statistics &r) {	itoa<10>(t, r.times_called);	})
+					.on_set_order(by_times_called())
+					.on_project([] (const call_statistics &r) {	return static_cast<double>(r.times_called);	});
+				model.add_column(format_interval2<exclusive_time>(tick_interval))
+					.on_set_order(by_exclusive_time())
+					.on_project(initialize<exclusive_time>(tick_interval));
+				model.add_column(format_interval2<inclusive_time>(tick_interval))
+					.on_set_order(by_inclusive_time())
+					.on_project(initialize<inclusive_time>(tick_interval));
+				model.add_column(format_interval2<exclusive_time_avg>(tick_interval))
+					.on_set_order(by_avg_exclusive_call_time())
+					.on_project(initialize<exclusive_time_avg>(tick_interval));
+				model.add_column(format_interval2<inclusive_time_avg>(tick_interval))
+					.on_set_order(by_avg_inclusive_call_time())
+					.on_project(initialize<inclusive_time_avg>(tick_interval));
+				model.add_column([] (agge::richtext_t &t, size_t, const call_statistics &r) {	itoa<10>(t, r.max_reentrance);	})
+					.on_set_order(by_max_reentrance())
+					.on_project([] (const call_statistics &r) {	return static_cast<double>(r.max_reentrance);	});
+				model.add_column(format_interval2<max_call_time>(tick_interval))
+					.on_set_order(by_max_call_time())
+					.on_project(initialize<max_call_time>(tick_interval));
 			}
 
 			double tick_interval;
@@ -96,7 +103,7 @@ namespace micro_profiler
 		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
 		shared_ptr< vector<id_t> > scope)
 	{
-		return construct_nested<callees_transform>(underlying, tick_interval, resolver, scope,
+		return construct_nested<callees_transform>(underlying, *resolver, scope,
 			setup_columns(tick_interval, [resolver] (const call_statistics &item) -> const string & {
 
 			return resolver->symbol_name_by_va(item.address);
@@ -109,7 +116,7 @@ namespace micro_profiler
 	{
 		auto &by_id = underlying->by_id;
 
-		return construct_nested<callers_transform>(underlying, tick_interval, resolver, scope,
+		return construct_nested<callers_transform>(underlying, *resolver, scope,
 			setup_columns(tick_interval, [resolver, &by_id] (const call_statistics &item) -> const string & {
 
 			const auto parent = by_id.find(item.parent_id);
@@ -119,23 +126,19 @@ namespace micro_profiler
 	}
 
 
-	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval_,
-			shared_ptr<symbol_resolver> resolver_, shared_ptr<const tables::threads> threads)
-		: base(make_bound< views::filter<tables::statistics> >(statistics), tick_interval_, resolver_),
-			_statistics(statistics)
+	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval,
+			shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads)
+		: base(make_bound< views::filter<tables::statistics> >(statistics)), _statistics(statistics),
+			_tick_interval(tick_interval), _resolver(resolver)
 	{
-		auto setup = setup_columns(tick_interval,
-			[resolver_] (const call_statistics &item) -> const string & {
-	
-			return resolver_->symbol_name_by_va(item.address);
+		auto setup = setup_columns(tick_interval, [resolver] (const call_statistics &item) -> const string & {
+			return resolver->symbol_name_by_va(item.address);
 		}, threads);
 
 		setup(*this);
-		_connection = statistics->invalidate += [this] {	fetch();	};
+		_invalidation_connections[0] = statistics->invalidate += [this] {	fetch();	};
+		_invalidation_connections[1] = resolver->invalidate += [this] {	this->invalidate(this->npos());	};
 	}
-
-	functions_list::~functions_list()
-	{	}
 
 	void functions_list::print(string &content) const
 	{
@@ -157,14 +160,14 @@ namespace micro_profiler
 		{
 			const auto &row = get_entry(i);
 
-			content += resolver->symbol_name_by_va(row.address), content += "\t";
+			content += _resolver->symbol_name_by_va(row.address), content += "\t";
 			itoa<10>(content, row.times_called), content += "\t";
-			gcvt(initialize<exclusive_time>(tick_interval)(row)), content += "\t";
-			gcvt(initialize<inclusive_time>(tick_interval)(row)), content += "\t";
-			gcvt(initialize<exclusive_time_avg>(tick_interval)(row)), content += "\t";
-			gcvt(initialize<inclusive_time_avg>(tick_interval)(row)), content += "\t";
+			gcvt(initialize<exclusive_time>(_tick_interval)(row)), content += "\t";
+			gcvt(initialize<inclusive_time>(_tick_interval)(row)), content += "\t";
+			gcvt(initialize<exclusive_time_avg>(_tick_interval)(row)), content += "\t";
+			gcvt(initialize<inclusive_time_avg>(_tick_interval)(row)), content += "\t";
 			itoa<10>(content, row.max_reentrance), content += "\t";
-			gcvt(initialize<max_call_time>(tick_interval)(row)), content += "\r\n";
+			gcvt(initialize<max_call_time>(_tick_interval)(row)), content += "\r\n";
 		}
 
 		if (locale_ok)

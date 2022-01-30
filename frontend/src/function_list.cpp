@@ -137,9 +137,6 @@ namespace micro_profiler
 	functions_list::~functions_list()
 	{	}
 
-	void functions_list::clear()
-	{	_statistics->clear();	}
-
 	void functions_list::print(string &content) const
 	{
 		const char* old_locale = ::setlocale(LC_NUMERIC, NULL);

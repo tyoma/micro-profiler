@@ -67,7 +67,8 @@ namespace micro_profiler
 	{
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
-		auto model = make_shared<functions_list>(session.statistics, 1.0 / session.process_info.ticks_per_second,
+		const auto statistics = session.statistics;
+		const auto model = make_shared<functions_list>(statistics, 1.0 / session.process_info.ticks_per_second,
 			make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
 
 		const auto root = make_shared<overlay>();
@@ -82,7 +83,7 @@ namespace micro_profiler
 				stk->add(toolbar, pixels(24), false);
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
 						btn->set_text(agge::style_modifier::empty + "Clear Statistics");
-						_connections.push_back(btn->clicked += [model] {	model->clear();	});
+						_connections.push_back(btn->clicked += [statistics] {	statistics->clear();	});
 
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
 						btn->set_text(agge::style_modifier::empty + "Copy All");

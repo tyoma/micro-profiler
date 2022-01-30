@@ -73,7 +73,6 @@ namespace micro_profiler
 		void set_filter(const PredicateT &predicate);
 		void set_filter();
 
-		void clear();
 		void print(std::string &content) const;
 
 	private:

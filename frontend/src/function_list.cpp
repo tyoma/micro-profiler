@@ -21,6 +21,7 @@
 #include <frontend/function_list.h>
 
 #include "fields.h"
+#include "fields_setup.h"
 
 #include <frontend/nested_statistics_model.h>
 #include <frontend/nested_transform.h>
@@ -46,55 +47,6 @@ namespace micro_profiler
 			typedef pair<shared_ptr<U>, T> pair_t;
 			auto p = make_shared<pair_t>(underlying, T(*underlying));
 			return shared_ptr<T>(p, &p->second);
-		}
-
-		template <typename ResolverT>
-		struct setup_columns_
-		{
-			template <typename ModelT>
-			void operator ()(ModelT &model) const
-			{
-				auto resolver = _resolver;
-
-				model.add_column([] (agge::richtext_t &t, size_t row, const call_statistics &) {	itoa<10>(t, row + 1);	});
-				model.add_column([resolver] (agge::richtext_t &t, size_t, const call_statistics &r) {	t << resolver(r).c_str();	})
-					.on_set_order(initialize< by_name<ResolverT> >(resolver));
-				model.add_column(initialize<thread_native_id>(_threads))
-					.on_set_order(initialize<by_threadid>(_threads));
-				model.add_column([] (agge::richtext_t &t, size_t, const call_statistics &r) {	itoa<10>(t, r.times_called);	})
-					.on_set_order(by_times_called())
-					.on_project([] (const call_statistics &r) {	return static_cast<double>(r.times_called);	});
-				model.add_column(format_interval2<exclusive_time>(tick_interval))
-					.on_set_order(by_exclusive_time())
-					.on_project(initialize<exclusive_time>(tick_interval));
-				model.add_column(format_interval2<inclusive_time>(tick_interval))
-					.on_set_order(by_inclusive_time())
-					.on_project(initialize<inclusive_time>(tick_interval));
-				model.add_column(format_interval2<exclusive_time_avg>(tick_interval))
-					.on_set_order(by_avg_exclusive_call_time())
-					.on_project(initialize<exclusive_time_avg>(tick_interval));
-				model.add_column(format_interval2<inclusive_time_avg>(tick_interval))
-					.on_set_order(by_avg_inclusive_call_time())
-					.on_project(initialize<inclusive_time_avg>(tick_interval));
-				model.add_column([] (agge::richtext_t &t, size_t, const call_statistics &r) {	itoa<10>(t, r.max_reentrance);	})
-					.on_set_order(by_max_reentrance())
-					.on_project([] (const call_statistics &r) {	return static_cast<double>(r.max_reentrance);	});
-				model.add_column(format_interval2<max_call_time>(tick_interval))
-					.on_set_order(by_max_call_time())
-					.on_project(initialize<max_call_time>(tick_interval));
-			}
-
-			double tick_interval;
-			ResolverT _resolver;
-			shared_ptr<const tables::threads> _threads;
-		};
-
-		template <typename ResolverT>
-		setup_columns_<ResolverT> setup_columns(double tick_interval, const ResolverT &resolver,
-			shared_ptr<const tables::threads> threads)
-		{
-			setup_columns_<ResolverT> s = {	tick_interval, resolver, threads	};
-			return s;
 		}
 	}
 
@@ -128,8 +80,9 @@ namespace micro_profiler
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads)
-		: base(make_bound< views::filter<tables::statistics> >(statistics)), _statistics(statistics),
-			_tick_interval(tick_interval), _resolver(resolver)
+		: container_view_model< wpl::richtext_table_model, views::filter<tables::statistics> >(
+			make_bound< views::filter<tables::statistics> >(statistics)), _tick_interval(tick_interval),
+			_resolver(resolver)
 	{
 		auto setup = setup_columns(tick_interval, [resolver] (const call_statistics &item) -> const string & {
 			return resolver->symbol_name_by_va(item.address);
@@ -145,9 +98,9 @@ namespace micro_profiler
 		const char* old_locale = ::setlocale(LC_NUMERIC, NULL);
 		bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;
 		const auto gcvt = [&content] (double value) {
-			const size_t buffer_size = 100;
-			wchar_t buffer[buffer_size];
-			const int l = std::swprintf(buffer, buffer_size, L"%g", value);
+			const auto buffer_size = 100u;
+			char buffer[buffer_size];
+			const int l = std::sprintf(buffer, "%g", value);
 
 			if (l > 0)
 				content.append(buffer, buffer + l);

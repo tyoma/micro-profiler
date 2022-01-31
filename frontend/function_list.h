@@ -78,7 +78,6 @@ namespace micro_profiler
 		typedef container_view_model< wpl::richtext_table_model, views::filter<tables::statistics> > base;
 
 	private:
-		std::shared_ptr<tables::statistics> _statistics;
 		const double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;
 		wpl::slot_connection _invalidation_connections[2];

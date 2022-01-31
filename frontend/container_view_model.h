@@ -72,7 +72,7 @@ namespace micro_profiler
 		std::shared_ptr<U> get_underlying() const;
 
 		template <typename GetTextT>
-		column add_column(const GetTextT &get_text_);
+		column &add_column(const GetTextT &get_text_);
 
 		// wpl::richtext_table_model methods
 		virtual index_type get_count() const throw() override;
@@ -127,7 +127,7 @@ namespace micro_profiler
 
 	template <typename BaseT, typename U>
 	template <typename GetTextT>
-	inline typename container_view_model<BaseT, U>::column container_view_model<BaseT, U>::add_column(const GetTextT &get_text_)
+	inline typename container_view_model<BaseT, U>::column &container_view_model<BaseT, U>::add_column(const GetTextT &get_text_)
 	{
 		column ops = {
 			*this,

@@ -104,6 +104,7 @@
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\trackables_provider.h" />
     <ClInclude Include="fields.h" />
+    <ClInclude Include="fields_setup.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

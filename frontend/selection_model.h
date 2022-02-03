@@ -36,8 +36,7 @@ namespace micro_profiler
 	};
 
 	template <typename UnderlyingT>
-	class selection_model : public selection<typename key_traits<typename UnderlyingT::value_type>::key_type>,
-		noncopyable
+	class selection_model : public selection<typename key_traits<typename UnderlyingT::value_type>::key_type>
 	{
 	public:
 		typedef wpl::dynamic_set_model::index_type index_type;

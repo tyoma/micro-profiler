@@ -21,6 +21,7 @@
 #pragma once
 
 #include "function_list.h"
+#include "symbol_resolver.h"
 
 #include <views/flatten.h>
 

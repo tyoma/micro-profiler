@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "key.h"
 #include "container_view_model.h"
 #include "tables.h"
 
@@ -28,6 +27,7 @@
 
 namespace micro_profiler
 {
+	class symbol_resolver;
 	namespace tables
 	{
 		struct threads;
@@ -47,7 +47,7 @@ namespace micro_profiler
 		virtual ~linked_statistics() {	}
 		virtual void fetch() = 0;
 		virtual void set_order(index_type column, bool ascending) = 0;
-		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const = 0;
+		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() = 0;
 		virtual std::shared_ptr< selection<id_t> > create_selection() const = 0;
 	};
 
@@ -75,9 +75,6 @@ namespace micro_profiler
 		void print(std::string &content) const;
 
 	private:
-		typedef container_view_model< wpl::richtext_table_model, views::filter<tables::statistics> > base;
-
-	private:
 		const double _tick_interval;
 		std::shared_ptr<symbol_resolver> _resolver;
 		wpl::slot_connection _invalidation_connections[2];
@@ -88,13 +85,13 @@ namespace micro_profiler
 	template <typename PredicateT>
 	inline void functions_list::set_filter(const PredicateT &predicate)
 	{
-		get_underlying()->set_filter(predicate);
+		underlying().set_filter(predicate);
 		fetch();
 	}
 
 	inline void functions_list::set_filter()
 	{
-		get_underlying()->set_filter();
+		underlying().set_filter();
 		fetch();
 	}
 }

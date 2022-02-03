@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "primitives.h"
 #include "projection_view.h"
 #include "selection_model.h"
 #include "trackables_provider.h"
@@ -30,14 +29,9 @@
 
 namespace micro_profiler
 {
-	class symbol_resolver;
-	namespace tables
-	{
-		struct threads;
-	}
-
 	template <typename BaseT, typename U>
-	class container_view_model : public BaseT, noncopyable
+	class container_view_model : public BaseT, public std::enable_shared_from_this< container_view_model<BaseT, U> >,
+		noncopyable
 	{
 	public:
 		typedef typename BaseT::index_type index_type;
@@ -48,7 +42,7 @@ namespace micro_profiler
 			column &on_set_order(const CompareT &compare)
 			{
 				auto &owner_ = owner;
-				set_order = [&owner_, compare] (bool ascending) {	owner_._view->ordered.set_order(compare, ascending);	};
+				set_order = [&owner_, compare] (bool ascending) {	owner_._ordered.set_order(compare, ascending);	};
 				return *this;
 			}
 
@@ -56,11 +50,11 @@ namespace micro_profiler
 			column &on_project(const ProjectT &project)
 			{
 				auto &owner_ = owner;
-				set_projection = [&owner_, project] {	owner_._view->projection.project(project);	};
+				set_projection = [&owner_, project] {	owner_._projection.project(project);	};
 				return *this;
 			}
 
-			const container_view_model &owner;
+			container_view_model &owner;
 			std::function<void (agge::richtext_t &text, index_type row)> get_text;
 			std::function<void (bool ascending)> set_order;
 			std::function<void ()> set_projection;
@@ -69,7 +63,7 @@ namespace micro_profiler
 	public:
 		container_view_model(std::shared_ptr<U> underlying);
 
-		std::shared_ptr<U> get_underlying() const;
+		U &underlying();
 
 		template <typename GetTextT>
 		column &add_column(const GetTextT &get_text_);
@@ -82,48 +76,30 @@ namespace micro_profiler
 		// linked_statistics methods
 		virtual void fetch() /*override*/;
 		virtual void set_order(index_type column, bool ascending) /*override*/;
-		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() const /*override*/;
+		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() /*override*/;
 		virtual std::shared_ptr< selection<key_type> > create_selection() const /*override*/;
 
 	protected:
 		const typename U::value_type &get_entry(index_type row) const;
 
 	private:
-		struct view_complex;
-
-	private:
-		const std::shared_ptr<view_complex> _view;
-		wpl::slot_connection _symbols_invalidation;
+		const std::shared_ptr<U> _underlying;
+		views::ordered<U> _ordered;
+		trackables_provider< views::ordered<U> > _trackables;
+		projection_view<views::ordered<U>, double> _projection;
 		std::vector<column> _columns;
 	};
 
-	template <typename BaseT, typename U>
-	struct container_view_model<BaseT, U>::view_complex
-	{
-		view_complex(std::shared_ptr<U> underlying_);
-
-		std::shared_ptr<U> underlying;
-		views::ordered<U> ordered;
-		trackables_provider< views::ordered<U> > trackables;
-		projection_view<views::ordered<U>, double> projection;
-	};
-
 
 
 	template <typename BaseT, typename U>
-	inline container_view_model<BaseT, U>::view_complex::view_complex(std::shared_ptr<U> underlying_)
-		: underlying(underlying_), ordered(*underlying), trackables(ordered), projection(ordered)
-	{	}
-
-
-	template <typename BaseT, typename U>
-	inline container_view_model<BaseT, U>::container_view_model(std::shared_ptr<U> statistics_)
-		: _view(std::make_shared<view_complex>(statistics_))
+	inline container_view_model<BaseT, U>::container_view_model(std::shared_ptr<U> underlying)
+		: _underlying(underlying), _ordered(*_underlying), _trackables(_ordered), _projection(_ordered)
 	{	}
 
 	template <typename BaseT, typename U>
-	inline std::shared_ptr<U> container_view_model<BaseT, U>::get_underlying() const
-	{	return _view->underlying;	}
+	inline U &container_view_model<BaseT, U>::underlying()
+	{	return *_underlying;	}
 
 	template <typename BaseT, typename U>
 	template <typename GetTextT>
@@ -131,7 +107,7 @@ namespace micro_profiler
 	{
 		column ops = {
 			*this,
-			[this, get_text_] (agge::richtext_t &text, index_type row) {	get_text_(text, row, _view->ordered[row]);	},
+			[this, get_text_] (agge::richtext_t &text, index_type row) {	get_text_(text, row, _ordered[row]);	},
 		};
 
 		_columns.push_back(ops);
@@ -140,7 +116,7 @@ namespace micro_profiler
 
 	template <typename BaseT, typename U>
 	inline typename container_view_model<BaseT, U>::index_type container_view_model<BaseT, U>::get_count() const throw()
-	{	return _view ? _view->ordered.size() : 0u;	}
+	{	return _ordered.size();	}
 
 	template <typename BaseT, typename U>
 	inline void container_view_model<BaseT, U>::get_text(index_type row, index_type column, agge::richtext_t &text) const
@@ -151,14 +127,14 @@ namespace micro_profiler
 
 	template <typename BaseT, typename U>
 	inline std::shared_ptr<const wpl::trackable> container_view_model<BaseT, U>::track(index_type row) const
-	{	return _view->trackables.track(row);	}
+	{	return _trackables.track(row);	}
 
 	template <typename BaseT, typename U>
 	inline void container_view_model<BaseT, U>::fetch()
 	{
-		_view->ordered.fetch();
-		_view->trackables.fetch();
-		_view->projection.fetch();
+		_ordered.fetch();
+		_trackables.fetch();
+		_projection.fetch();
 		this->invalidate(this->npos());
 	}
 
@@ -175,28 +151,28 @@ namespace micro_profiler
 		if (c.set_projection)
 			c.set_projection();
 		else
-			_view->projection.project();
-		_view->trackables.fetch();
-		_view->projection.fetch();
+			_projection.project();
+		_trackables.fetch();
+		_projection.fetch();
 		this->invalidate(this->npos());
 	}
 
 	template <typename BaseT, typename U>
-	inline std::shared_ptr< wpl::list_model<double> > container_view_model<BaseT, U>::get_column_series() const
-	{	return std::shared_ptr< wpl::list_model<double> >(_view, &_view->projection);	}
+	inline std::shared_ptr< wpl::list_model<double> > container_view_model<BaseT, U>::get_column_series()
+	{	return std::shared_ptr< wpl::list_model<double> >(this->shared_from_this(), &_projection);	}
 
 	template <typename BaseT, typename U>
 	inline std::shared_ptr< selection<typename container_view_model<BaseT, U>::key_type> > container_view_model<BaseT, U>::create_selection() const
 	{
-		typedef std::pair< std::shared_ptr<view_complex>, std::shared_ptr< selection<key_type> > > selection_complex_t;
+		typedef std::pair< std::shared_ptr<const container_view_model>, selection_model< views::ordered<U> > > selection_complex_t;
 
-		auto complex = std::make_shared<selection_complex_t>(_view,
-			std::make_shared< selection_model< views::ordered<U> > >(_view->ordered));
+		auto complex = std::make_shared<selection_complex_t>(this->shared_from_this(),
+			selection_model< views::ordered<U> >(_ordered));
 
-		return std::shared_ptr< selection<key_type> >(complex, complex->second.get());
+		return std::shared_ptr< selection<key_type> >(complex, &complex->second);
 	}
 
 	template <typename BaseT, typename U>
 	inline const typename U::value_type &container_view_model<BaseT, U>::get_entry(index_type row) const
-	{	return _view->ordered[row];	}
+	{	return _ordered[row];	}
 }

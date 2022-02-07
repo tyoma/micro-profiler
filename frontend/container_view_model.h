@@ -38,21 +38,8 @@ namespace micro_profiler
 		typedef typename key_traits<typename U::value_type>::key_type key_type;
 		struct column
 		{
-			template <typename CompareT>
-			column &on_set_order(const CompareT &compare)
-			{
-				auto &owner_ = owner;
-				set_order = [&owner_, compare] (bool ascending) {	owner_._ordered.set_order(compare, ascending);	};
-				return *this;
-			}
-
-			template <typename ProjectT>
-			column &on_project(const ProjectT &project)
-			{
-				auto &owner_ = owner;
-				set_projection = [&owner_, project] {	owner_._projection.project(project);	};
-				return *this;
-			}
+			template <typename CompareT> column &on_set_order(const CompareT &compare);
+			template <typename ProjectT> column &on_project(const ProjectT &project);
 
 			container_view_model &owner;
 			std::function<void (agge::richtext_t &text, index_type row)> get_text;
@@ -90,6 +77,25 @@ namespace micro_profiler
 		std::vector<column> _columns;
 	};
 
+
+
+	template <typename BaseT, typename U>
+	template <typename CompareT>
+	inline typename container_view_model<BaseT, U>::column &container_view_model<BaseT, U>::column::on_set_order(const CompareT &compare)
+	{
+		auto &owner_ = owner;
+		set_order = [&owner_, compare] (bool ascending) {	owner_._ordered.set_order(compare, ascending);	};
+		return *this;
+	}
+
+	template <typename BaseT, typename U>
+	template <typename ProjectT>
+	inline typename container_view_model<BaseT, U>::column &container_view_model<BaseT, U>::column::on_project(const ProjectT &project)
+	{
+		auto &owner_ = owner;
+		set_projection = [&owner_, project] {	owner_._projection.project(project);	};
+		return *this;
+	}
 
 
 	template <typename BaseT, typename U>
@@ -141,20 +147,16 @@ namespace micro_profiler
 	template <typename BaseT, typename U>
 	inline void container_view_model<BaseT, U>::set_order(index_type column, bool ascending)
 	{
-		if (column >= _columns.size())
-			return;
-
-		const auto &c = _columns[column];
+		const auto &c = _columns.at(column);
 
 		if (c.set_order)
-			c.set_order(ascending);
+			c.set_order(ascending), this->invalidate(this->npos());
 		if (c.set_projection)
 			c.set_projection();
 		else
 			_projection.project();
 		_trackables.fetch();
 		_projection.fetch();
-		this->invalidate(this->npos());
 	}
 
 	template <typename BaseT, typename U>

@@ -96,11 +96,17 @@ namespace micro_profiler
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
-		auto on_activate = [this, resolver, m_main, m_selected_items] {
-			symbol_resolver::fileline_t fileline;
+		auto on_activate = [this, statistics, resolver, m_main, m_selected_items] {
+			if (!m_selected_items->empty())
+			{
+				symbol_resolver::fileline_t fileline;
 
-			if (m_selected_items->size() > 0u && resolver->symbol_fileline_by_va(m_selected_items->front(), fileline))
-				open_source(fileline.first, fileline.second);
+				if (const auto entry = statistics->by_id.find(m_selected_items->front()))
+				{
+					if (resolver->symbol_fileline_by_va(entry->address, fileline))
+						open_source(fileline.first, fileline.second);
+				}
+			}
 		};
 
 		auto on_drilldown_child = [statistics, m_main, m_selection] (const selection<id_t> &selection_) {

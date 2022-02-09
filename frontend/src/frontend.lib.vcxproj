@@ -67,6 +67,7 @@
     <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\column_definition.h" />
     <ClInclude Include="..\db.h" />
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\file.h" />

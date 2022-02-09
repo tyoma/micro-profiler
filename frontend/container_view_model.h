@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "column_definition.h"
 #include "projection_view.h"
 #include "selection_model.h"
 #include "trackables_provider.h"
@@ -34,26 +35,17 @@ namespace micro_profiler
 		noncopyable
 	{
 	public:
+		typedef column_definition<typename U::value_type> column_type;
 		typedef typename BaseT::index_type index_type;
 		typedef typename key_traits<typename U::value_type>::key_type key_type;
-		struct column
-		{
-			template <typename CompareT> column &on_set_order(const CompareT &compare);
-			template <typename ProjectT> column &on_project(const ProjectT &project);
-
-			container_view_model &owner;
-			std::function<void (agge::richtext_t &text, index_type row)> get_text;
-			std::function<void (bool ascending)> set_order;
-			std::function<void ()> set_projection;
-		};
 
 	public:
 		container_view_model(std::shared_ptr<U> underlying);
 
 		U &underlying();
 
-		template <typename GetTextT>
-		column &add_column(const GetTextT &get_text_);
+		template <typename ContainerT>
+		void add_columns(const ContainerT &columns);
 
 		// wpl::richtext_table_model methods
 		virtual index_type get_count() const throw() override;
@@ -74,28 +66,9 @@ namespace micro_profiler
 		views::ordered<U> _ordered;
 		trackables_provider< views::ordered<U> > _trackables;
 		projection_view<views::ordered<U>, double> _projection;
-		std::vector<column> _columns;
+		std::vector<column_type> _columns;
 	};
 
-
-
-	template <typename BaseT, typename U>
-	template <typename CompareT>
-	inline typename container_view_model<BaseT, U>::column &container_view_model<BaseT, U>::column::on_set_order(const CompareT &compare)
-	{
-		auto &owner_ = owner;
-		set_order = [&owner_, compare] (bool ascending) {	owner_._ordered.set_order(compare, ascending);	};
-		return *this;
-	}
-
-	template <typename BaseT, typename U>
-	template <typename ProjectT>
-	inline typename container_view_model<BaseT, U>::column &container_view_model<BaseT, U>::column::on_project(const ProjectT &project)
-	{
-		auto &owner_ = owner;
-		set_projection = [&owner_, project] {	owner_._projection.project(project);	};
-		return *this;
-	}
 
 
 	template <typename BaseT, typename U>
@@ -108,17 +81,9 @@ namespace micro_profiler
 	{	return *_underlying;	}
 
 	template <typename BaseT, typename U>
-	template <typename GetTextT>
-	inline typename container_view_model<BaseT, U>::column &container_view_model<BaseT, U>::add_column(const GetTextT &get_text_)
-	{
-		column ops = {
-			*this,
-			[this, get_text_] (agge::richtext_t &text, index_type row) {	get_text_(text, row, _ordered[row]);	},
-		};
-
-		_columns.push_back(ops);
-		return _columns.back();
-	}
+	template <typename ContainerT>
+	inline void container_view_model<BaseT, U>::add_columns(const ContainerT &columns)
+	{	_columns.insert(_columns.end(), std::begin(columns), std::end(columns));	}
 
 	template <typename BaseT, typename U>
 	inline typename container_view_model<BaseT, U>::index_type container_view_model<BaseT, U>::get_count() const throw()
@@ -128,7 +93,7 @@ namespace micro_profiler
 	inline void container_view_model<BaseT, U>::get_text(index_type row, index_type column, agge::richtext_t &text) const
 	{
 		if (column < _columns.size())
-			_columns[column].get_text(text, row);
+			_columns[column].get_text(text, row, _ordered[row]);
 	}
 
 	template <typename BaseT, typename U>
@@ -149,10 +114,10 @@ namespace micro_profiler
 	{
 		const auto &c = _columns.at(column);
 
-		if (c.set_order)
-			c.set_order(ascending), this->invalidate(this->npos());
-		if (c.set_projection)
-			c.set_projection();
+		if (c.less)
+			_ordered.set_order(c.less, ascending), this->invalidate(this->npos());
+		if (c.get_value)
+			_projection.project(c.get_value);
 		else
 			_projection.project();
 		_trackables.fetch();

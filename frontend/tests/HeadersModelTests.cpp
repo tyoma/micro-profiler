@@ -22,6 +22,9 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			const auto dummy_get = [] (agge::richtext_t &, size_t, const call_statistics &) {};
+			const auto dummy_compare = [] (const call_statistics &, const call_statistics &) {	return false;	};
+
 			typedef vector< pair<headers_model::index_type, bool> > log_t;
 
 			void append_log(log_t *log, headers_model::index_type sort_column, bool sort_ascending)
@@ -112,9 +115,9 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns[] = {
-					{	"id1", T(""), 0, headers_model::dir_none	},
-					{	"id2", T(""), 0, headers_model::dir_descending	},
-					{	"id3", T(""), 0, headers_model::dir_descending	},
+					{	"id1", T(""),	},
+					{	"id2", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
+					{	"id3", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 				};
 
 				// ACT
@@ -145,10 +148,10 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns[] = {
-					{	"id1", T(""), 0, headers_model::dir_none	},
-					{	"id2", T(""), 0, headers_model::dir_descending	},
-					{	"id3", T(""), 0, headers_model::dir_ascending	},
-					{	"id4", T(""), 0, headers_model::dir_descending	},
+					{	"id1", T(""),	},
+					{	"id2", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
+					{	"id3", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
+					{	"id4", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 				};
 				shared_ptr<headers_model> cm;
 				log_t log;
@@ -194,10 +197,10 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns[] = {
-					{	"id1", T(""), 0, headers_model::dir_none	},
-					{	"id2", T(""), 0, headers_model::dir_descending	},
-					{	"id3", T(""), 0, headers_model::dir_ascending	},
-					{	"id4", T(""), 0, headers_model::dir_descending	},
+					{	"id1", T(""),	},
+					{	"id2", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
+					{	"id3", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
+					{	"id4", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 				};
 				shared_ptr<headers_model> cm1(new headers_model(columns, headers_model::npos(),
 					false));
@@ -235,14 +238,14 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns1[] = {
-					{	"id1", T("first"), 0, headers_model::dir_none	},
-					{	"id2", T("second"), 0, headers_model::dir_descending	},
-					{	"id3", T("third"), 0, headers_model::dir_ascending	},
-					{	"id4", T("fourth"), 0, headers_model::dir_ascending	},
+					{	"id1", T("first"),	},
+					{	"id2", T("second"), 0, agge::align_near, dummy_get, dummy_compare, false,	},
+					{	"id3", T("third"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
+					{	"id4", T("fourth"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				headers_model::column columns2[] = {
-					{	"id1", T("a first column"), 0, headers_model::dir_none	},
-					{	"id2", T("a second column"), 0, headers_model::dir_ascending	},
+					{	"id1", T("a first column"),	},
+					{	"id2", T("a second column"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
 				shared_ptr<headers_model> cm2(new headers_model(columns2, 0, false));
@@ -257,13 +260,13 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns1[] = {
-					{	"id1", "first" + style::weight(regular), 0, headers_model::dir_none, agge::align_near	},
-					{	"id2", "second" + style::weight(semi_bold) + "appendix", 0, headers_model::dir_descending, agge::align_far	},
-					{	"id3", "third" + style::weight(regular), 0, headers_model::dir_ascending, agge::align_center	},
+					{	"id1", "first" + style::weight(regular), 0, agge::align_near,	},
+					{	"id2", "second" + style::weight(semi_bold) + "appendix", 0, agge::align_far, dummy_get, dummy_compare, false,	},
+					{	"id3", "third" + style::weight(regular), 0, agge::align_center, dummy_get, dummy_compare, true,	},
 				};
 				headers_model::column columns2[] = {
-					{	"id1", "a first " + style::family("verdana") + "column", 0, headers_model::dir_none	},
-					{	"id2", "a second column" + style::weight(regular), 0, headers_model::dir_ascending	},
+					{	"id1", "a first " + style::family("verdana") + "column",	},
+					{	"id2", "a second column" + style::weight(regular), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
 				shared_ptr<headers_model> cm2(new headers_model(columns2, 0, false));
@@ -343,9 +346,9 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns[] = {
-					{	"id1", T("first"), 0, headers_model::dir_none	},
-					{	"id2", T("second"), 0, headers_model::dir_descending	},
-					{	"id3", T("third"), 0, headers_model::dir_ascending	},
+					{	"id1", T("first"),	},
+					{	"id2", T("second"), 0, agge::align_near, dummy_get, dummy_compare, false,	},
+					{	"id3", T("third"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				shared_ptr<headers_model> cm(new headers_model(columns, 0, false));
 
@@ -372,9 +375,9 @@ namespace micro_profiler
 				// INIT
 				vector<headers_model::index_type> invalidations;
 				headers_model::column columns[] = {
-					{	"id1", T("first"), 0, headers_model::dir_none	},
-					{	"id2", T("second"), 0, headers_model::dir_descending	},
-					{	"id3", T("third"), 0, headers_model::dir_ascending	},
+					{	"id1", T("first"),	},
+					{	"id2", T("second"), 0, agge::align_near, dummy_get, dummy_compare, false,	},
+					{	"id3", T("third"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				shared_ptr<headers_model> cm(new headers_model(columns, 0, false));
 				auto c = cm->invalidate += [&] (headers_model::index_type item) {	invalidations.push_back(item);	};
@@ -402,14 +405,14 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns1[] = {
-					{	"id1", T("Index"), 1, headers_model::dir_none	},
-					{	"id2", T("Function"), 2, headers_model::dir_descending	},
-					{	"id3", T("Exclusive Time"), 3, headers_model::dir_ascending	},
-					{	"fourth", T("Inclusive Time"), 4, headers_model::dir_ascending	},
+					{	"id1", T("Index"), 1,	},
+					{	"id2", T("Function"), 2, agge::align_near, dummy_get, dummy_compare, false,	},
+					{	"id3", T("Exclusive Time"), 3, agge::align_near, dummy_get, dummy_compare, true,	},
+					{	"fourth", T("Inclusive Time"), 4, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				headers_model::column columns2[] = {
-					{	"id1", T("a first column"), 191, headers_model::dir_none	},
-					{	"id2", T("a second column"), 171, headers_model::dir_ascending	},
+					{	"id1", T("a first column"), 191,	},
+					{	"id2", T("a second column"), 171, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
 				shared_ptr<headers_model> cm2(new headers_model(columns2, headers_model::npos(), false));
@@ -487,13 +490,13 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns1[] = {
-					{	"id1", T(""), 1, headers_model::dir_none	},
-					{	"id2", T(""), 2, headers_model::dir_ascending	},
+					{	"id1", T(""), 1,	},
+					{	"id2", T(""), 2, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				headers_model::column columns2[] = {
-					{	"col1", T(""), 0, headers_model::dir_none	},
-					{	"col2", T(""), 0, headers_model::dir_ascending	},
-					{	"col3", T(""), 0, headers_model::dir_ascending	},
+					{	"col1", T(""),	},
+					{	"col2", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
+					{	"col3", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				shared_ptr<headers_model> cm1(new headers_model(columns1, 0, false));
 				shared_ptr<headers_model> cm2(new headers_model(columns2, 0, false));
@@ -542,9 +545,9 @@ namespace micro_profiler
 			{
 				// INIT
 				headers_model::column columns[] = {
-					{	"col1", T(""), 13, headers_model::dir_none	},
-					{	"col2", T(""), 17, headers_model::dir_ascending	},
-					{	"col3", T(""), 31, headers_model::dir_ascending	},
+					{	"col1", T(""), 13,	},
+					{	"col2", T(""), 17, agge::align_near, dummy_get, dummy_compare, true,	},
+					{	"col3", T(""), 31, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
 				shared_ptr<headers_model> cm(new headers_model(columns, 0, false));
 

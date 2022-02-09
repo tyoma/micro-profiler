@@ -20,18 +20,20 @@
 
 #pragma once
 
+#include "column_definition.h"
+
 #include <vector>
 #include <wpl/models.h>
 
 namespace micro_profiler
 {
+	struct call_statistics;
 	struct hive;
 
 	class headers_model : public wpl::headers_model
 	{
 	public:
-		struct column;
-		enum sort_direction	{	dir_none, dir_ascending, dir_descending	};
+		typedef column_definition<call_statistics> column;
 
 	public:
 		template <size_t N>
@@ -47,7 +49,7 @@ namespace micro_profiler
 		virtual agge::full_alignment get_alignment(index_type index) const override;
 		virtual agge::full_alignment get_header_alignment(index_type index) const override;
 		virtual void get_caption(index_type index, agge::richtext_t &caption) const override;
-		virtual void activate_column(index_type column) override;
+		virtual void activate_column(index_type column_) override;
 
 	private:
 		std::vector<column> _columns;
@@ -56,20 +58,9 @@ namespace micro_profiler
 	};
 
 
-	struct headers_model::column
-	{
-		std::string id;
-		agge::richtext_modifier_t caption;
-		short int width;
-		headers_model::sort_direction default_sort_direction;
-		agge::text_alignment alignment;
-	};
-
-
 
 	template <size_t N>
-	inline headers_model::headers_model(const column (&columns)[N], index_type sort_column,
-			bool sort_ascending)
+	inline headers_model::headers_model(const column (&columns)[N], index_type sort_column, bool sort_ascending)
 		: _columns(columns, columns + N), _sort_column(sort_column), _sort_ascending(sort_ascending)
 	{	}
 }

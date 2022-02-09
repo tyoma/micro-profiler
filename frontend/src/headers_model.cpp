@@ -53,9 +53,9 @@ namespace micro_profiler
 	{
 		configuration.store(c_order_by, _sort_column != npos() ? static_cast<int>(_sort_column) : -1);
 		configuration.store(c_order_direction, _sort_ascending ? 1 : 0);
-		for (vector<column>::const_iterator i = _columns.begin(); i != _columns.end(); ++i)
+		for (auto i = _columns.begin(); i != _columns.end(); ++i)
 		{
-			shared_ptr<hive> cc = configuration.create(i->id.c_str());
+			auto cc = configuration.create(i->id.c_str());
 
 			cc->store(c_width, i->width);
 //			cc->store(c_caption, unicode(i->caption).c_str());
@@ -69,8 +69,8 @@ namespace micro_profiler
 		load_int(configuration, c_order_by, _sort_column);
 		_sort_column = _sort_column < static_cast<index_type>(_columns.size()) ? _sort_column : npos();
 		load_int(configuration, c_order_direction, _sort_ascending);
-		for (vector<column>::iterator i = _columns.begin(); i != _columns.end(); ++i)
-			if (shared_ptr<const hive> cc = configuration.open(i->id.c_str()))
+		for (auto i = _columns.begin(); i != _columns.end(); ++i)
+			if (auto cc = configuration.open(i->id.c_str()))
 			{
 				load_int(*cc, c_width, i->width);
 //				if (cc->load(c_caption, tmp))
@@ -104,12 +104,11 @@ namespace micro_profiler
 
 	void headers_model::activate_column(index_type column_)
 	{
-		const column &activated = _columns[column_];
+		const auto &activated = _columns[column_];
 
-		if (activated.default_sort_direction != dir_none)
+		if (activated.less)
 		{
-			_sort_ascending = _sort_column == column_ ?
-				!_sort_ascending : activated.default_sort_direction == dir_ascending;
+			_sort_ascending = _sort_column == column_ ? !_sort_ascending : activated.ascending;
 			_sort_column = column_;
 			sort_order_changed(_sort_column, _sort_ascending);
 		}

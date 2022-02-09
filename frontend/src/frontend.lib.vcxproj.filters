@@ -111,6 +111,7 @@
     <ClInclude Include="fields_setup.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\column_definition.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

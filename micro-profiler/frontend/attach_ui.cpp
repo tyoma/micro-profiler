@@ -38,8 +38,8 @@ namespace micro_profiler
 		const auto secondary = agge::style::height(10);
 
 		const headers_model::column c_columns_processes[] = {
-			{	"ProcessExe", "Process\n" + secondary + "executable", 384, headers_model::dir_ascending	},
-			{	"ProcessID", "PID" + secondary, 384, headers_model::dir_ascending	},
+			{	"ProcessExe", "Process\n" + secondary + "executable", 384, agge::align_near,	},
+			{	"ProcessID", "PID" + secondary, 384, agge::align_far,	},
 		};
 	}
 

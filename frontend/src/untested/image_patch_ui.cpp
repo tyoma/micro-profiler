@@ -15,14 +15,16 @@ namespace micro_profiler
 	namespace
 	{
 		const auto secondary = style::height_scale(0.85);
+		const auto dummy_get = [] (agge::richtext_t &, size_t, const call_statistics &) {};
+		const auto dummy_compare = [] (const call_statistics &, const call_statistics &) {	return false;	};
 
 		const headers_model::column c_columns_symbols[] = {
-			{	"Rva", "RVA" + secondary, 28, headers_model::dir_ascending, agge::align_far	},
-			{	"Function", "Function\n" + secondary + "qualified name", 384, headers_model::dir_ascending, agge::align_near	},
-			{	"Status", "Profiling\n" + secondary + "status", 64, headers_model::dir_descending, agge::align_near	},
-			{	"Size", "Size\n" + secondary + "bytes", 64, headers_model::dir_descending, agge::align_far	},
-			{	"ModuleName", "Module\n" + secondary + "name", 120, headers_model::dir_ascending, agge::align_near	},
-			{	"ModulePath", "Module\n" + secondary + "path", 150, headers_model::dir_ascending, agge::align_near	},
+			{	"Rva", "RVA" + secondary, 28, agge::align_far, dummy_get, dummy_compare, true,	},
+			{	"Function", "Function\n" + secondary + "qualified name", 384, agge::align_near, dummy_get, dummy_compare, true,	},
+			{	"Status", "Profiling\n" + secondary + "status", 64, agge::align_near, dummy_get, dummy_compare, false,	},
+			{	"Size", "Size\n" + secondary + "bytes", 64, agge::align_far, dummy_get, dummy_compare, false,	},
+			{	"ModuleName", "Module\n" + secondary + "name", 120, agge::align_near, dummy_get, dummy_compare, true,	},
+			{	"ModulePath", "Module\n" + secondary + "path", 150, agge::align_near, dummy_get, dummy_compare, true,	},
 		};
 
 		struct nocase_equal

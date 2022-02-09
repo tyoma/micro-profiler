@@ -45,8 +45,24 @@ namespace micro_profiler
 			shared_ptr< container_view_model<wpl::richtext_table_model, T> > mkmodel(shared_ptr<T> underlying)
 			{	return make_shared< container_view_model<wpl::richtext_table_model, T> >(underlying);	}
 
-			typedef any_container< pair<unsigned, unsigned> > underlying1_t;
-			typedef any_container< pair<unsigned, string> > underlying2_t;
+			typedef pair<unsigned, unsigned> data1_t;
+			typedef pair<unsigned, string> data2_t;
+			typedef any_container<data1_t> underlying1_t;
+			typedef any_container<data2_t> underlying2_t;
+
+			template <typename T, typename GetTextT>
+			column_definition<T> column(const GetTextT &get_text)
+			{
+				column_definition<T> c = {	string(), agge::style_modifier::empty, 0, agge::align_near, get_text,	};
+				return c;
+			}
+
+			template <typename T, typename GetTextT, typename LessT>
+			column_definition<T> column(const GetTextT &get_text, const LessT &less_)
+			{
+				column_definition<T> c = {	string(), agge::style_modifier::empty, 0, agge::align_near, get_text, less_,	};
+				return c;
+			}
 		}
 
 		begin_test_suite( ContainerViewModelTests )
@@ -135,10 +151,10 @@ namespace micro_profiler
 			test( TextIsConvertedAccordinglyToAColumnConvertor )
 			{
 				// INIT
-				pair<unsigned, unsigned> data1[] = {
+				data1_t data1[] = {
 					make_pair(3, 1), make_pair(4, 1), make_pair(59, 26),
 				};
-				pair<unsigned, string> data2[] = {
+				data2_t data2[] = {
 					make_pair(3, "zoo"), make_pair(1, "Foo"), make_pair(41, "BAR"), make_pair(5, "z"),
 				};
 				auto underlying1 = make_shared<underlying1_t>();
@@ -152,10 +168,12 @@ namespace micro_profiler
 				v1->fetch();
 
 				// INIT / ACT
-				v1->add_column([] (agge::richtext_t &t, size_t, const pair<unsigned, unsigned> &v) {	itoa<10>(t, v.first);	});
-				v1->add_column([] (agge::richtext_t &t, size_t, const pair<unsigned, unsigned> &v) {	itoa<10>(t, v.second);	});
-				v2->add_column([] (agge::richtext_t &t, size_t, const pair<unsigned, string> &v) {	itoa<10>(t, v.first);	});
-				v2->add_column([] (agge::richtext_t &t, size_t, const pair<unsigned, string> &v) {	t << v.second.c_str();	});
+				v1->add_columns(plural
+					+ column<data1_t>([] (agge::richtext_t &t, size_t, const data1_t &v) {	itoa<10>(t, v.first);	})
+					+ column<data1_t>([] (agge::richtext_t &t, size_t, const data1_t &v) {	itoa<10>(t, v.second);	}));
+				v2->add_columns(plural
+					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	itoa<10>(t, v.first);	})
+					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	t << v.second.c_str();	}));
 
 				// ACT / ASSERT
 				assert_equal(3u, v1->get_count());
@@ -184,7 +202,8 @@ namespace micro_profiler
 				assert_equal(mkvector(reference2), t);
 
 				// INIT / ACT
-				v2->add_column([] (agge::richtext_t &t, size_t row, const pair<unsigned, string> &) {	itoa<10>(t, row);	});
+				v2->add_columns(plural
+					+ column<data2_t>([] (agge::richtext_t &t, size_t row, const data2_t &) {	itoa<10>(t, row);	}));
 
 				// ACT
 				t = get_text(*v2, columns2);
@@ -215,7 +234,7 @@ namespace micro_profiler
 			test( SortingIsAppliedAccordinglyToAColumnAndIsAvailableDuringInvalidation )
 			{
 				// INIT
-				pair<unsigned, string> data[] = {
+				data2_t data[] = {
 					make_pair(3, "zoo"), make_pair(1, "Foo"), make_pair(41, "BAR"), make_pair(5, "z"),
 				};
 				auto underlying = make_shared<underlying2_t>(data);
@@ -227,11 +246,12 @@ namespace micro_profiler
 				v->fetch();
 
 				// INIT / ACT
-				v->add_column([] (agge::richtext_t &t, size_t, const pair<unsigned, string> &v) {	itoa<10>(t, v.first);	})
-					.on_set_order([] (const pair<unsigned, string> &lhs, const pair<unsigned, string> &rhs) {	return lhs.first < rhs.first;	});
-				v->add_column([] (agge::richtext_t &t, size_t, const pair<unsigned, string> &v) {	t << v.second.c_str();	})
-					.on_set_order([] (const pair<unsigned, string> &lhs, const pair<unsigned, string> &rhs) {	return lhs.second < rhs.second;	});
-				v->add_column([] (agge::richtext_t &t, size_t row, const pair<unsigned, string> &) {	itoa<10>(t, row);	});
+				v->add_columns(plural
+					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	itoa<10>(t, v.first);	},
+						[] (const data2_t &lhs, const data2_t &rhs) {	return lhs.first < rhs.first;	})
+					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	t << v.second.c_str();	},
+						[] (const data2_t &lhs, const data2_t &rhs) {	return lhs.second < rhs.second;	})
+					+ column<data2_t>([] (agge::richtext_t &t, size_t row, const data2_t &) {	itoa<10>(t, row);	}));
 
 				auto conn = v->invalidate += [&] (wpl::richtext_table_model::index_type idx) {
 					log.push_back(get_text(*v, columns));
@@ -291,7 +311,7 @@ namespace micro_profiler
 			test( GettingTextForMissingFieldsLeavesTextUnmodified )
 			{
 				// INIT
-				pair<unsigned, string> data[] = {
+				data2_t data[] = {
 					make_pair(3, "zoo"), make_pair(1, "Foo"), make_pair(41, "BAR"), make_pair(5, "z"),
 				};
 				auto underlying = make_shared<underlying2_t>(data);
@@ -317,7 +337,8 @@ namespace micro_profiler
 				assert_equal("testz", text.underlying());
 
 				// INIT
-				v->add_column([] (agge::richtext_t &text, size_t, const pair<unsigned, string> &v) {	text << v.second.c_str();	});
+				v->add_columns(plural
+					+ column<data2_t>([] (agge::richtext_t &text, size_t, const data2_t &v) {	text << v.second.c_str();	}));
 
 				// ACT
 				v->get_text(1, 0, text);

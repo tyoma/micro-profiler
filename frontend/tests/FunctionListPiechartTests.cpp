@@ -105,7 +105,7 @@ namespace micro_profiler
 				auto m = fl->get_column_series();
 
 				// ACT
-				fl->set_order(columns::times_called, false);
+				fl->set_order(main_columns::times_called, false);
 
 				// ASSERT
 				assert_equal(4u, m->get_count());
@@ -115,7 +115,7 @@ namespace micro_profiler
 				assert_approx_equal(12.0, get_value(*m, 3), c_tolerance);
 
 				// ACT
-				fl->set_order(columns::times_called, true);
+				fl->set_order(main_columns::times_called, true);
 
 				// ASSERT
 				assert_equal(4u, m->get_count());
@@ -138,7 +138,7 @@ namespace micro_profiler
 					+ make_statistics(addr(123), 12000, 0, 0, 0, 0));
 				auto m = fl->get_column_series();
 
-				fl->set_order(columns::times_called, false);
+				fl->set_order(main_columns::times_called, false);
 
 				auto conn = m->invalidate += bind(&increment, &invalidated_count);
 
@@ -177,8 +177,8 @@ namespace micro_profiler
 				auto m2 = fl2->get_column_series();
 
 				// ACT
-				fl1->set_order(columns::exclusive, false);
-				fl2->set_order(columns::exclusive, false);
+				fl1->set_order(main_columns::exclusive, false);
+				fl2->set_order(main_columns::exclusive, false);
 
 				// ASSERT
 				assert_equal(3u, m1->get_count());
@@ -207,8 +207,8 @@ namespace micro_profiler
 				auto m2 = fl2->get_column_series();
 
 				// ACT
-				fl1->set_order(columns::inclusive, false);
-				fl2->set_order(columns::inclusive, true);
+				fl1->set_order(main_columns::inclusive, false);
+				fl2->set_order(main_columns::inclusive, true);
 
 				// ASSERT
 				assert_approx_equal(0.240, get_value(*m1, 0), c_tolerance);
@@ -217,8 +217,8 @@ namespace micro_profiler
 				assert_approx_equal(0.120, get_value(*m2, 1), c_tolerance);
 
 				// ACT
-				fl1->set_order(columns::exclusive_avg, false);
-				fl2->set_order(columns::exclusive_avg, true);
+				fl1->set_order(main_columns::exclusive_avg, false);
+				fl2->set_order(main_columns::exclusive_avg, true);
 
 				// ASSERT
 				assert_approx_equal(0.00032, get_value(*m1, 0), c_tolerance);
@@ -227,8 +227,8 @@ namespace micro_profiler
 				assert_approx_equal(0.00016, get_value(*m2, 1), c_tolerance);
 
 				// ACT
-				fl1->set_order(columns::inclusive_avg, false);
-				fl2->set_order(columns::inclusive_avg, true);
+				fl1->set_order(main_columns::inclusive_avg, false);
+				fl2->set_order(main_columns::inclusive_avg, true);
 
 				// ASSERT
 				assert_approx_equal(0.00030, get_value(*m1, 0), c_tolerance);
@@ -237,8 +237,8 @@ namespace micro_profiler
 				assert_approx_equal(0.00015, get_value(*m2, 1), c_tolerance);
 
 				// ACT
-				fl1->set_order(columns::max_time, false);
-				fl2->set_order(columns::max_time, true);
+				fl1->set_order(main_columns::max_time, false);
+				fl2->set_order(main_columns::max_time, true);
 
 				// ASSERT
 				assert_approx_equal(0.256, get_value(*m1, 0), c_tolerance);
@@ -257,11 +257,11 @@ namespace micro_profiler
 				auto m = fl->get_column_series();
 
 				// ACT / ASSERT
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::order, true);
+				fl->set_order(main_columns::times_called, true);
+				fl->set_order(main_columns::order, true);
 				assert_equal(0u, m->get_count());
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::name, false);
+				fl->set_order(main_columns::times_called, true);
+				fl->set_order(main_columns::name, false);
 				assert_equal(0u, m->get_count());
 			}
 
@@ -275,14 +275,14 @@ namespace micro_profiler
 				auto m = fl->get_column_series();
 
 				// ACT
-				fl->set_order(columns::exclusive_avg, false);
+				fl->set_order(main_columns::exclusive_avg, false);
 
 				// ASSERT
 				assert_approx_equal(0.0, get_value(*m, 0), c_tolerance);
 				assert_approx_equal(0.0, get_value(*m, 1), c_tolerance);
 
 				// ACT
-				fl->set_order(columns::inclusive_avg, false);
+				fl->set_order(main_columns::inclusive_avg, false);
 
 				// ASSERT
 				assert_approx_equal(0.0, get_value(*m, 0), c_tolerance);
@@ -301,18 +301,18 @@ namespace micro_profiler
 				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT
-				fl->set_order(columns::times_called, false);
+				fl->set_order(main_columns::times_called, false);
 
 				// ASSERT
 				assert_equal(2, invalidated_count);
 
 				// ACT
-				fl->set_order(columns::times_called, true);
-				fl->set_order(columns::exclusive, false);
-				fl->set_order(columns::inclusive, false);
-				fl->set_order(columns::exclusive_avg, false);
-				fl->set_order(columns::inclusive_avg, false);
-				fl->set_order(columns::max_time, false);
+				fl->set_order(main_columns::times_called, true);
+				fl->set_order(main_columns::exclusive, false);
+				fl->set_order(main_columns::inclusive, false);
+				fl->set_order(main_columns::exclusive_avg, false);
+				fl->set_order(main_columns::inclusive_avg, false);
+				fl->set_order(main_columns::max_time, false);
 
 				// ASSERT
 				assert_equal(14, invalidated_count);

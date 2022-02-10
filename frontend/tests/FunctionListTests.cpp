@@ -20,14 +20,14 @@ namespace micro_profiler
 	{
 		namespace 
 		{
-			const columns::main name_times_inc_exc_iavg_eavg_reent_minc[] = {
-				columns::name, columns::times_called, columns::inclusive, columns::exclusive,
-				columns::inclusive_avg, columns::exclusive_avg, columns::max_reentrance, columns::max_time
+			const main_columns::items name_times_inc_exc_iavg_eavg_reent_minc[] = {
+				main_columns::name, main_columns::times_called, main_columns::inclusive, main_columns::exclusive,
+				main_columns::inclusive_avg, main_columns::exclusive_avg, main_columns::max_reentrance, main_columns::max_time
 			};
 
-			const columns::main name_times[] = {	columns::name, columns::times_called,	};
+			const main_columns::items name_times[] = {	main_columns::name, main_columns::times_called,	};
 
-			const columns::main name_threadid[] = {	columns::name, columns::threadid,	};
+			const main_columns::items name_threadid[] = {	main_columns::name, main_columns::threadid,	};
 
 			class invalidation_tracer
 			{
@@ -88,7 +88,7 @@ namespace micro_profiler
 				string result;
 
 				for (table_model_base::index_type i = 0, c = m.get_count(); i != c; ++i)
-					if (get_text(m, i, columns::name) == name)
+					if (get_text(m, i, main_columns::name) == name)
 						return i;
 				return table_model_base::npos();
 			}
@@ -171,7 +171,7 @@ namespace micro_profiler
 			test( FunctionListTimeFormatter )
 			{
 				// INIT
-				unsigned columns[] = {	columns::name, columns::inclusive, columns::exclusive, columns::inclusive_avg, columns::exclusive_avg, columns::max_time,	};
+				unsigned columns[] = {	main_columns::name, main_columns::inclusive, main_columns::exclusive, main_columns::inclusive_avg, main_columns::exclusive_avg, main_columns::max_time,	};
 				auto functions = plural
 					// ~ ns
 					+ make_statistics(addr(0x45Eu), 1, 0, 31, 29, 29)
@@ -306,7 +306,7 @@ namespace micro_profiler
 				const trackable &t3 = *pt3;
 
 				// ACT (times called, ascending)
-				fl->set_order(columns::times_called, true);
+				fl->set_order(main_columns::times_called, true);
 				s->add(1);
 
 				// ACT / ASSERT
@@ -334,7 +334,7 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (times called, descending)
-				fl->set_order(columns::times_called, false);
+				fl->set_order(main_columns::times_called, false);
 
 				// ACT / ASSERT
 				assert_is_false(s->contains(0));
@@ -361,7 +361,7 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (name, ascending; after times called to see that sorting in asc direction works)
-				fl->set_order(columns::name, true);
+				fl->set_order(main_columns::name, true);
 
 				// ASSERT
 				assert_equal(3u, ih.counts.size());
@@ -382,7 +382,7 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (name, descending)
-				fl->set_order(columns::name, false);
+				fl->set_order(main_columns::name, false);
 
 				// ASSERT
 				assert_equal(4u, ih.counts.size());
@@ -403,7 +403,7 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (exclusive time, ascending)
-				fl->set_order(columns::exclusive, true);
+				fl->set_order(main_columns::exclusive, true);
 
 				// ASSERT
 				assert_equal(5u, ih.counts.size());
@@ -424,7 +424,7 @@ namespace micro_profiler
 				assert_equal(2u, t3.index());
 
 				// ACT (exclusive time, descending)
-				fl->set_order(columns::exclusive, false);
+				fl->set_order(main_columns::exclusive, false);
 
 				// ASSERT
 				assert_equal(6u, ih.counts.size());
@@ -445,7 +445,7 @@ namespace micro_profiler
 				assert_equal(1u, t3.index());
 
 				// ACT (inclusive time, ascending)
-				fl->set_order(columns::inclusive, true);
+				fl->set_order(main_columns::inclusive, true);
 
 				// ASSERT
 				assert_equal(7u, ih.counts.size());
@@ -466,7 +466,7 @@ namespace micro_profiler
 				assert_equal(2u, t3.index());
 
 				// ACT (inclusive time, descending)
-				fl->set_order(columns::inclusive, false);
+				fl->set_order(main_columns::inclusive, false);
 
 				// ASSERT
 				assert_equal(8u, ih.counts.size());
@@ -487,7 +487,7 @@ namespace micro_profiler
 				assert_equal(1u, t3.index());
 				
 				// ACT (avg. exclusive time, ascending)
-				fl->set_order(columns::exclusive_avg, true);
+				fl->set_order(main_columns::exclusive_avg, true);
 				
 				// ASSERT
 				assert_equal(9u, ih.counts.size());
@@ -508,7 +508,7 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (avg. exclusive time, descending)
-				fl->set_order(columns::exclusive_avg, false);
+				fl->set_order(main_columns::exclusive_avg, false);
 				
 				// ASSERT
 				assert_equal(10u, ih.counts.size());
@@ -529,7 +529,7 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (avg. inclusive time, ascending)
-				fl->set_order(columns::inclusive_avg, true);
+				fl->set_order(main_columns::inclusive_avg, true);
 				
 				// ASSERT
 				assert_equal(11u, ih.counts.size());
@@ -550,7 +550,7 @@ namespace micro_profiler
 				assert_equal(1u, t3.index());
 
 				// ACT (avg. inclusive time, descending)
-				fl->set_order(columns::inclusive_avg, false);
+				fl->set_order(main_columns::inclusive_avg, false);
 				
 				// ASSERT
 				assert_equal(12u, ih.counts.size());
@@ -571,7 +571,7 @@ namespace micro_profiler
 				assert_equal(2u, t3.index());
 
 				// ACT (max reentrance, ascending)
-				fl->set_order(columns::max_reentrance, true);
+				fl->set_order(main_columns::max_reentrance, true);
 				
 				// ASSERT
 				assert_equal(13u, ih.counts.size());
@@ -592,7 +592,7 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (max reentrance, descending)
-				fl->set_order(columns::max_reentrance, false);
+				fl->set_order(main_columns::max_reentrance, false);
 				
 				// ASSERT
 				assert_equal(14u, ih.counts.size());
@@ -613,7 +613,7 @@ namespace micro_profiler
 				assert_equal(0u, t3.index());
 
 				// ACT (max call time, ascending)
-				fl->set_order(columns::max_time, true);
+				fl->set_order(main_columns::max_time, true);
 				
 				// ASSERT
 				assert_equal(15u, ih.counts.size());
@@ -634,7 +634,7 @@ namespace micro_profiler
 				assert_equal(3u, t3.index());
 
 				// ACT (max call time, descending)
-				fl->set_order(columns::max_time, false);
+				fl->set_order(main_columns::max_time, false);
 				
 				// ASSERT
 				assert_equal(16u, ih.counts.size());
@@ -659,7 +659,7 @@ namespace micro_profiler
 			test( FunctionListTakesNativeIDFromThreadModel )
 			{
 				// INIT
-				unsigned columns[] = {	columns::name, columns::threadid,	};
+				unsigned columns[] = {	main_columns::name, main_columns::threadid,	};
 				auto functions = plural
 					+ make_statistics(addr(0x1000u, 3), 1, 0, 0, 0, 0)
 					+ make_statistics(addr(0x1010u, 2), 1, 0, 0, 0, 0)
@@ -708,7 +708,7 @@ namespace micro_profiler
 			test( FunctionListCanBeSortedByThreadID )
 			{
 				// INIT
-				unsigned columns[] = {	columns::times_called,	};
+				unsigned columns[] = {	main_columns::times_called,	};
 				invalidation_tracer ih;
 				auto functions = plural
 					+ make_statistics(addr(0x10000u, 0), 1, 0, 0, 0, 0)
@@ -730,7 +730,7 @@ namespace micro_profiler
 				ih.bind_to_model(*fl);
 
 				// ACT (times called, ascending)
-				fl->set_order(columns::threadid, true);
+				fl->set_order(main_columns::threadid, true);
 				auto text = get_text(*fl, columns);
 
 				// ASSERT
@@ -740,7 +740,7 @@ namespace micro_profiler
 				assert_equal(plural + (size_t)5u, ih.counts);
 
 				// ACT (times called, ascending)
-				fl->set_order(columns::threadid, false);
+				fl->set_order(main_columns::threadid, false);
 
 				// ASSERT
 				string reference2[][1] = {	{	"5",	}, {	"3",	},{	"4",	},{	"1",	},  {	"2",	}, 	};
@@ -774,7 +774,7 @@ namespace micro_profiler
 				statistics->invalidate();
 
 				// ACT
-				fl->set_order(columns::times_called, true);
+				fl->set_order(main_columns::times_called, true);
 				fl->print(result);
 
 				// ASSERT
@@ -786,7 +786,7 @@ namespace micro_profiler
 										"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
 
 				// ACT
-				fl->set_order(columns::exclusive_avg, true);
+				fl->set_order(main_columns::exclusive_avg, true);
 				fl->print(result);
 
 				// ASSERT

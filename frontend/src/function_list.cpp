@@ -20,9 +20,8 @@
 
 #include <frontend/function_list.h>
 
-#include "fields.h"
-#include "fields_setup.h"
-
+#include <common/formatting.h>
+#include <frontend/columns_layout.h>
 #include <frontend/nested_statistics_model.h>
 #include <frontend/nested_transform.h>
 #include <frontend/symbol_resolver.h>
@@ -48,6 +47,19 @@ namespace micro_profiler
 			auto p = make_shared<pair_t>(underlying, T(*underlying));
 			return shared_ptr<T>(p, &p->second);
 		}
+
+		statistics_model_context create_context(shared_ptr<const tables::statistics> underlying,
+			double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads)
+		{
+			statistics_model_context context = {
+				tick_interval,
+				[underlying] (id_t id) {	return underlying->by_id.find(id);	},
+				threads,
+				resolver,
+			};
+
+			return context;
+		}
 	}
 
 
@@ -55,40 +67,28 @@ namespace micro_profiler
 		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
 		shared_ptr< vector<id_t> > scope)
 	{
-		return construct_nested<callees_transform>(underlying, *resolver, scope,
-			setup_columns(tick_interval, [resolver] (const call_statistics &item) -> const string & {
-
-			return resolver->symbol_name_by_va(item.address);
-		}, threads));
+		return construct_nested<callees_transform>(create_context(underlying, tick_interval, resolver, threads),
+			underlying, scope, c_callee_statistics_columns);
 	}
 
 	shared_ptr<linked_statistics> create_callers_model(shared_ptr<const tables::statistics> underlying,
 		double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads,
 		shared_ptr< vector<id_t> > scope)
 	{
-		auto &by_id = underlying->by_id;
-
-		return construct_nested<callers_transform>(underlying, *resolver, scope,
-			setup_columns(tick_interval, [resolver, &by_id] (const call_statistics &item) -> const string & {
-
-			const auto parent = by_id.find(item.parent_id);
-
-			return parent ? resolver->symbol_name_by_va(parent->address) : c_empty;
-		}, threads));
+		return construct_nested<callers_transform>(create_context(underlying, tick_interval, resolver, threads),
+			underlying, scope, c_caller_statistics_columns);
 	}
 
 
 	functions_list::functions_list(shared_ptr<tables::statistics> statistics, double tick_interval,
 			shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads)
-		: container_view_model< wpl::richtext_table_model, views::filter<tables::statistics> >(
-			make_bound< views::filter<tables::statistics> >(statistics)), _tick_interval(tick_interval),
+		: container_view_model<wpl::richtext_table_model, views::filter<tables::statistics>, statistics_model_context>(
+			make_bound< views::filter<tables::statistics> >(statistics),
+			create_context(statistics, tick_interval, resolver, threads)), _tick_interval(tick_interval),
 			_resolver(resolver)
 	{
-		auto setup = setup_columns(tick_interval, [resolver] (const call_statistics &item) -> const string & {
-			return resolver->symbol_name_by_va(item.address);
-		}, threads);
+		add_columns(c_statistics_columns);
 
-		setup(*this);
 		_invalidation_connections[0] = statistics->invalidate += [this] {	fetch();	};
 		_invalidation_connections[1] = resolver->invalidate += [this] {	this->invalidate(this->npos());	};
 	}
@@ -115,12 +115,12 @@ namespace micro_profiler
 
 			content += _resolver->symbol_name_by_va(row.address), content += "\t";
 			itoa<10>(content, row.times_called), content += "\t";
-			gcvt(initialize<exclusive_time>(_tick_interval)(row)), content += "\t";
-			gcvt(initialize<inclusive_time>(_tick_interval)(row)), content += "\t";
-			gcvt(initialize<exclusive_time_avg>(_tick_interval)(row)), content += "\t";
-			gcvt(initialize<inclusive_time_avg>(_tick_interval)(row)), content += "\t";
+			gcvt(_tick_interval * row.exclusive_time), content += "\t";
+			gcvt(_tick_interval * row.inclusive_time), content += "\t";
+			gcvt(_tick_interval * row.exclusive_time / row.times_called), content += "\t";
+			gcvt(_tick_interval * row.inclusive_time / row.times_called), content += "\t";
 			itoa<10>(content, row.max_reentrance), content += "\t";
-			gcvt(initialize<max_call_time>(_tick_interval)(row)), content += "\r\n";
+			gcvt(_tick_interval * row.max_call_time), content += "\r\n";
 		}
 
 		if (locale_ok)

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(FRONTEND_LIB_SOURCES
+	columns_layout.cpp
 	frontend.cpp
 	frontend_manager.cpp
 	frontend_metadata.cpp

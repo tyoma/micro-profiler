@@ -42,25 +42,25 @@ namespace micro_profiler
 			};
 
 			template <typename T>
-			shared_ptr< container_view_model<wpl::richtext_table_model, T> > mkmodel(shared_ptr<T> underlying)
-			{	return make_shared< container_view_model<wpl::richtext_table_model, T> >(underlying);	}
+			shared_ptr< container_view_model<wpl::richtext_table_model, T, int> > mkmodel(shared_ptr<T> underlying)
+			{	return make_shared< container_view_model<wpl::richtext_table_model, T, int> >(underlying, 0);	}
 
 			typedef pair<unsigned, unsigned> data1_t;
 			typedef pair<unsigned, string> data2_t;
 			typedef any_container<data1_t> underlying1_t;
 			typedef any_container<data2_t> underlying2_t;
 
-			template <typename T, typename GetTextT>
-			column_definition<T> column(const GetTextT &get_text)
+			template <typename T, typename CtxT, typename GetTextT>
+			column_definition<T, CtxT> column(const GetTextT &get_text)
 			{
-				column_definition<T> c = {	string(), agge::style_modifier::empty, 0, agge::align_near, get_text,	};
+				column_definition<T, CtxT> c = {	string(), agge::style_modifier::empty, 0, agge::align_near, get_text,	};
 				return c;
 			}
 
-			template <typename T, typename GetTextT, typename LessT>
-			column_definition<T> column(const GetTextT &get_text, const LessT &less_)
+			template <typename T, typename CtxT, typename GetTextT, typename LessT>
+			column_definition<T, CtxT> column(const GetTextT &get_text, const LessT &less_)
 			{
-				column_definition<T> c = {	string(), agge::style_modifier::empty, 0, agge::align_near, get_text, less_,	};
+				column_definition<T, CtxT> c = {	string(), agge::style_modifier::empty, 0, agge::align_near, get_text, less_,	};
 				return c;
 			}
 		}
@@ -169,11 +169,11 @@ namespace micro_profiler
 
 				// INIT / ACT
 				v1->add_columns(plural
-					+ column<data1_t>([] (agge::richtext_t &t, size_t, const data1_t &v) {	itoa<10>(t, v.first);	})
-					+ column<data1_t>([] (agge::richtext_t &t, size_t, const data1_t &v) {	itoa<10>(t, v.second);	}));
+					+ column<data1_t, int>([] (agge::richtext_t &t, int, size_t, const data1_t &v) {	itoa<10>(t, v.first);	})
+					+ column<data1_t, int>([] (agge::richtext_t &t, int, size_t, const data1_t &v) {	itoa<10>(t, v.second);	}));
 				v2->add_columns(plural
-					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	itoa<10>(t, v.first);	})
-					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	t << v.second.c_str();	}));
+					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t, const data2_t &v) {	itoa<10>(t, v.first);	})
+					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t, const data2_t &v) {	t << v.second.c_str();	}));
 
 				// ACT / ASSERT
 				assert_equal(3u, v1->get_count());
@@ -203,7 +203,7 @@ namespace micro_profiler
 
 				// INIT / ACT
 				v2->add_columns(plural
-					+ column<data2_t>([] (agge::richtext_t &t, size_t row, const data2_t &) {	itoa<10>(t, row);	}));
+					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t row, const data2_t &) {	itoa<10>(t, row);	}));
 
 				// ACT
 				t = get_text(*v2, columns2);
@@ -247,11 +247,11 @@ namespace micro_profiler
 
 				// INIT / ACT
 				v->add_columns(plural
-					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	itoa<10>(t, v.first);	},
-						[] (const data2_t &lhs, const data2_t &rhs) {	return lhs.first < rhs.first;	})
-					+ column<data2_t>([] (agge::richtext_t &t, size_t, const data2_t &v) {	t << v.second.c_str();	},
-						[] (const data2_t &lhs, const data2_t &rhs) {	return lhs.second < rhs.second;	})
-					+ column<data2_t>([] (agge::richtext_t &t, size_t row, const data2_t &) {	itoa<10>(t, row);	}));
+					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t, const data2_t &v) {	itoa<10>(t, v.first);	},
+						[] (int, const data2_t &lhs, const data2_t &rhs) {	return lhs.first < rhs.first;	})
+					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t, const data2_t &v) {	t << v.second.c_str();	},
+						[] (int, const data2_t &lhs, const data2_t &rhs) {	return lhs.second < rhs.second;	})
+					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t row, const data2_t &) {	itoa<10>(t, row);	}));
 
 				auto conn = v->invalidate += [&] (wpl::richtext_table_model::index_type idx) {
 					log.push_back(get_text(*v, columns));
@@ -338,7 +338,7 @@ namespace micro_profiler
 
 				// INIT
 				v->add_columns(plural
-					+ column<data2_t>([] (agge::richtext_t &text, size_t, const data2_t &v) {	text << v.second.c_str();	}));
+					+ column<data2_t, int>([] (agge::richtext_t &text, int, size_t, const data2_t &v) {	text << v.second.c_str();	}));
 
 				// ACT
 				v->get_text(1, 0, text);
@@ -346,6 +346,62 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal("testzFoo", text.underlying());
+			}
+
+
+			test( ContextIsPassedToAccessorsAndPredicates )
+			{
+				// INIT
+				pair<int, int> data_[] = {	make_pair(3, 3), make_pair(3, 7),	};
+				auto u = make_shared<underlying1_t>(data_);
+				auto m1 = make_shared< container_view_model<wpl::richtext_table_model, underlying1_t, double> >(u, 0.1231);
+				auto m2 = make_shared< container_view_model<wpl::richtext_table_model, underlying1_t, double> >(u, 3.111891);
+				auto m3 = make_shared< container_view_model<wpl::richtext_table_model, underlying1_t, string> >(u, "lorem ipsum");
+				double ctx1;
+				string ctx2;
+				agge::richtext_t txt((agge::font_style_annotation()));
+
+				m1->add_columns(plural
+					+ column<data1_t, double>([&ctx1] (agge::richtext_t &, double c, size_t, data1_t) {	ctx1 = c;	},
+						[&ctx1] (double c, data1_t, data1_t) {	return ctx1 = c, false;	}));
+				m2->add_columns(plural
+					+ column<data1_t, double>([&ctx1] (agge::richtext_t &, double c, size_t, data1_t) {	ctx1 = c;	},
+						[&ctx1] (double c, data1_t, data1_t) {	return ctx1 = c, false;	}));
+				m3->add_columns(plural
+					+ column<data1_t, string>([&ctx2] (agge::richtext_t &, const string &c, size_t, data1_t) {	ctx2 = c;	},
+						[&ctx2] (const string &c, data1_t, data1_t) {	return ctx2 = c, false;	}));
+
+				// ACT
+				m1->get_text(0, 0, txt);
+				m3->get_text(0, 0, txt);
+
+				// ASSERT
+				assert_equal(0.1231, ctx1);
+				assert_equal("lorem ipsum", ctx2);
+
+				// ACT
+				m2->get_text(0, 0, txt);
+
+				// ASSERT
+				assert_equal(3.111891, ctx1);
+
+				// INIT
+				ctx1 = 0;
+				ctx2 = "";
+
+				// ACT
+				m1->set_order(0, true);
+				m3->set_order(0, true);
+
+				// ASSERT
+				assert_equal(0.1231, ctx1);
+				assert_equal("lorem ipsum", ctx2);
+
+				// ACT
+				m2->set_order(0, true);
+
+				// ASSERT
+				assert_equal(3.111891, ctx1);
 			}
 		end_test_suite
 	}

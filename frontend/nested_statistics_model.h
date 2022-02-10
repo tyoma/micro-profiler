@@ -22,6 +22,7 @@
 
 #include "function_list.h"
 #include "symbol_resolver.h"
+#include "model_context.h"
 
 #include <views/flatten.h>
 
@@ -51,23 +52,24 @@ namespace micro_profiler
 	{	}
 
 
-	template <class X, typename U, typename SetupT>
-	inline std::shared_ptr<linked_statistics> construct_nested(std::shared_ptr<U> underlying, symbol_resolver &resolver,
-		std::shared_ptr< std::vector<id_t> > scope, const SetupT &setup)
+	template <class X, typename U, typename ColumnsT>
+	inline std::shared_ptr<linked_statistics> construct_nested(const statistics_model_context &context,
+		std::shared_ptr<U> underlying, std::shared_ptr< std::vector<id_t> > scope, const ColumnsT &columns)
 	{
 		typedef nested_statistics_model_complex<U, X> complex_type;
 		typedef typename complex_type::view_type view_type;
+		typedef container_view_model<linked_statistics, view_type, statistics_model_context> model_type;
 
 		const auto complex = std::make_shared<complex_type>(underlying, scope);
 		const std::shared_ptr<view_type> v(complex, &complex->flattened);
-		const auto nested = std::make_shared< container_view_model<linked_statistics, view_type> >(v);
+		const auto nested = std::make_shared<model_type>(v, context);
 		const auto pnested = nested.get();
 
-		setup(*nested);
+		nested->add_columns(columns);
 		complex->fetch_connection = underlying->invalidate += [pnested] {
 			pnested->fetch();
 		};
-		complex->invalidate_connection = resolver.invalidate += [pnested] {
+		complex->invalidate_connection = context.resolver->invalidate += [pnested] {
 			pnested->invalidate(pnested->npos());
 		};
 		return nested;

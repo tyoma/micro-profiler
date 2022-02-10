@@ -20,21 +20,14 @@
 
 #pragma once
 
-#include <agge.text/richtext.h>
-#include <functional>
+#include "column_definition.h"
 
 namespace micro_profiler
 {
-	template <typename T, typename CtxT>
-	struct column_definition
-	{
-		std::string id;
-		agge::richtext_modifier_t caption;
-		short int width;
-		agge::text_alignment alignment;
-		std::function<void (agge::richtext_t &text, const CtxT &context, size_t row, const T &record)> get_text;
-		std::function<bool (const CtxT &context, const T &lhs, const T &rhs)> less;
-		bool ascending;
-		std::function<double (const CtxT &context, const T &record)> get_value;
-	};
+	struct call_statistics;
+	struct statistics_model_context;
+
+	extern const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[4];
+	extern const column_definition<call_statistics, statistics_model_context> c_statistics_columns[10];
+	extern const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[8];
 }

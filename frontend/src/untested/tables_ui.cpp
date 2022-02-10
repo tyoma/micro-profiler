@@ -1,7 +1,6 @@
 #include <frontend/tables_ui.h>
 
-#include "../fields.h"
-
+#include <frontend/columns_layout.h>
 #include <frontend/headers_model.h>
 #include <frontend/function_hint.h>
 #include <frontend/function_list.h>
@@ -24,51 +23,11 @@ using namespace placeholders;
 
 namespace micro_profiler
 {
-	namespace
-	{
-		const auto secondary = style::height_scale(0.85);
-		const auto dummy_get = [] (agge::richtext_t &, size_t, const call_statistics &) {};
-		const auto dummy_compare = [] (const call_statistics &, const call_statistics &) {	return false;	};
-
-		const headers_model::column c_columns_statistics[] = {
-			{	"Index", "#" + secondary, 28, agge::align_far,	},
-			{	"Function", "Function\n" + secondary + "qualified name", 384, agge::align_near, dummy_get, dummy_compare, true,	},
-			{	"ThreadID", "Thread\n" + secondary + "id", 64, agge::align_far, dummy_get, dummy_compare, true,	},
-			{	"TimesCalled", "Called\n" + secondary + "times", 64, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, agge::align_far, dummy_get, dummy_compare, false,	},
-		};
-
-		const headers_model::column c_columns_statistics_children[] = {
-			{	"Index", "#" + secondary, 28, agge::align_far	},
-			{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, dummy_get, dummy_compare, true,	},
-			{	"ThreadID", "Thread\n" + secondary + "id", 64, agge::align_far, dummy_get, dummy_compare, true,	},
-			{	"TimesCalled", "Called\n" + secondary + "times", 64, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"ExclusiveTime", "Exclusive\n" + secondary + "total", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, agge::align_far, dummy_get, dummy_compare, false,	},
-		};
-
-		const headers_model::column c_columns_statistics_parents[] = {
-			{	"Index", "#" + secondary, 28, agge::align_far	},
-			{	"Function", "Calling Function\n" + secondary + "qualified name", 384, agge::align_near, dummy_get, dummy_compare, true,	},
-			{	"ThreadID", "Thread\n" + secondary + "id", 64, agge::align_far, dummy_get, dummy_compare, true,	},
-			{	"TimesCalled", "Called\n" + secondary + "times", 64, agge::align_far, dummy_get, dummy_compare, false,	},
-		};
-	}
-
 	tables_ui::tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration)
 		: wpl::stack(false, factory_.context.cursor_manager_),
-			_cm_main(new headers_model(c_columns_statistics, 3, false)),
-			_cm_parents(new headers_model(c_columns_statistics_parents, 2, false)),
-			_cm_children(new headers_model(c_columns_statistics_children, 4, false))
+			_cm_main(new headers_model(c_statistics_columns, 3, false)),
+			_cm_parents(new headers_model(c_caller_statistics_columns, 2, false)),
+			_cm_children(new headers_model(c_callee_statistics_columns, 4, false))
 	{
 		const auto statistics = session.statistics;
 		const auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);

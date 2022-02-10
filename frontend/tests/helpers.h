@@ -30,9 +30,9 @@ namespace micro_profiler
 			unsigned hash;
 		};
 
-		struct columns
+		struct main_columns
 		{
-			enum main
+			enum items
 			{
 				order = 0,
 				name = 1,
@@ -44,6 +44,32 @@ namespace micro_profiler
 				inclusive_avg = 7,
 				max_reentrance = 8,
 				max_time = 9,
+			};
+		};
+
+		struct callers_columns
+		{
+			enum items
+			{
+				order = 0,
+				name = 1,
+				threadid = 2,
+				times_called = 3,
+			};
+		};
+
+		struct callee_columns
+		{
+			enum items
+			{
+				order = 0,
+				name = 1,
+				times_called = 2,
+				exclusive = 3,
+				inclusive = 4,
+				exclusive_avg = 5,
+				inclusive_avg = 6,
+				max_time = 7,
 			};
 		};
 

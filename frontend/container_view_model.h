@@ -30,17 +30,18 @@
 
 namespace micro_profiler
 {
-	template <typename BaseT, typename U>
-	class container_view_model : public BaseT, public std::enable_shared_from_this< container_view_model<BaseT, U> >,
+	template <typename BaseT, typename U, typename CtxT>
+	class container_view_model : public BaseT, public std::enable_shared_from_this< container_view_model<BaseT, U, CtxT> >,
 		noncopyable
 	{
 	public:
-		typedef column_definition<typename U::value_type> column_type;
+		typedef typename U::value_type value_type;
+		typedef column_definition<value_type, CtxT> column_type;
 		typedef typename BaseT::index_type index_type;
-		typedef typename key_traits<typename U::value_type>::key_type key_type;
+		typedef typename key_traits<value_type>::key_type key_type;
 
 	public:
-		container_view_model(std::shared_ptr<U> underlying);
+		container_view_model(std::shared_ptr<U> underlying, const CtxT &context);
 
 		U &underlying();
 
@@ -63,6 +64,7 @@ namespace micro_profiler
 
 	private:
 		const std::shared_ptr<U> _underlying;
+		const CtxT _context;
 		views::ordered<U> _ordered;
 		trackables_provider< views::ordered<U> > _trackables;
 		projection_view<views::ordered<U>, double> _projection;
@@ -71,37 +73,37 @@ namespace micro_profiler
 
 
 
-	template <typename BaseT, typename U>
-	inline container_view_model<BaseT, U>::container_view_model(std::shared_ptr<U> underlying)
-		: _underlying(underlying), _ordered(*_underlying), _trackables(_ordered), _projection(_ordered)
+	template <typename BaseT, typename U, typename CtxT>
+	inline container_view_model<BaseT, U, CtxT>::container_view_model(std::shared_ptr<U> underlying, const CtxT &context)
+		: _underlying(underlying), _context(context), _ordered(*_underlying), _trackables(_ordered), _projection(_ordered)
 	{	}
 
-	template <typename BaseT, typename U>
-	inline U &container_view_model<BaseT, U>::underlying()
+	template <typename BaseT, typename U, typename CtxT>
+	inline U &container_view_model<BaseT, U, CtxT>::underlying()
 	{	return *_underlying;	}
 
-	template <typename BaseT, typename U>
+	template <typename BaseT, typename U, typename CtxT>
 	template <typename ContainerT>
-	inline void container_view_model<BaseT, U>::add_columns(const ContainerT &columns)
+	inline void container_view_model<BaseT, U, CtxT>::add_columns(const ContainerT &columns)
 	{	_columns.insert(_columns.end(), std::begin(columns), std::end(columns));	}
 
-	template <typename BaseT, typename U>
-	inline typename container_view_model<BaseT, U>::index_type container_view_model<BaseT, U>::get_count() const throw()
+	template <typename BaseT, typename U, typename CtxT>
+	inline typename container_view_model<BaseT, U, CtxT>::index_type container_view_model<BaseT, U, CtxT>::get_count() const throw()
 	{	return _ordered.size();	}
 
-	template <typename BaseT, typename U>
-	inline void container_view_model<BaseT, U>::get_text(index_type row, index_type column, agge::richtext_t &text) const
+	template <typename BaseT, typename U, typename CtxT>
+	inline void container_view_model<BaseT, U, CtxT>::get_text(index_type row, index_type column, agge::richtext_t &text) const
 	{
 		if (column < _columns.size())
-			_columns[column].get_text(text, row, _ordered[row]);
+			_columns[column].get_text(text, _context, row, _ordered[row]);
 	}
 
-	template <typename BaseT, typename U>
-	inline std::shared_ptr<const wpl::trackable> container_view_model<BaseT, U>::track(index_type row) const
+	template <typename BaseT, typename U, typename CtxT>
+	inline std::shared_ptr<const wpl::trackable> container_view_model<BaseT, U, CtxT>::track(index_type row) const
 	{	return _trackables.track(row);	}
 
-	template <typename BaseT, typename U>
-	inline void container_view_model<BaseT, U>::fetch()
+	template <typename BaseT, typename U, typename CtxT>
+	inline void container_view_model<BaseT, U, CtxT>::fetch()
 	{
 		_ordered.fetch();
 		_trackables.fetch();
@@ -109,27 +111,35 @@ namespace micro_profiler
 		this->invalidate(this->npos());
 	}
 
-	template <typename BaseT, typename U>
-	inline void container_view_model<BaseT, U>::set_order(index_type column, bool ascending)
+	template <typename BaseT, typename U, typename CtxT>
+	inline void container_view_model<BaseT, U, CtxT>::set_order(index_type column, bool ascending)
 	{
+		const auto &context = _context;
 		const auto &c = _columns.at(column);
+		const auto &less = c.less;
+		const auto &get_value = c.get_value;
 
-		if (c.less)
-			_ordered.set_order(c.less, ascending), this->invalidate(this->npos());
-		if (c.get_value)
-			_projection.project(c.get_value);
+		if (less)
+		{
+			_ordered.set_order([&context, less] (const value_type &lhs, const value_type &rhs) {
+				return less(context, lhs, rhs);
+			}, ascending);
+			this->invalidate(this->npos());
+		}
+		if (get_value)
+			_projection.project([&context, get_value] (const value_type &item) {	return get_value(context, item);	});
 		else
 			_projection.project();
 		_trackables.fetch();
 		_projection.fetch();
 	}
 
-	template <typename BaseT, typename U>
-	inline std::shared_ptr< wpl::list_model<double> > container_view_model<BaseT, U>::get_column_series()
+	template <typename BaseT, typename U, typename CtxT>
+	inline std::shared_ptr< wpl::list_model<double> > container_view_model<BaseT, U, CtxT>::get_column_series()
 	{	return std::shared_ptr< wpl::list_model<double> >(this->shared_from_this(), &_projection);	}
 
-	template <typename BaseT, typename U>
-	inline std::shared_ptr< selection<typename container_view_model<BaseT, U>::key_type> > container_view_model<BaseT, U>::create_selection() const
+	template <typename BaseT, typename U, typename CtxT>
+	inline std::shared_ptr< selection<typename container_view_model<BaseT, U, CtxT>::key_type> > container_view_model<BaseT, U, CtxT>::create_selection() const
 	{
 		typedef std::pair< std::shared_ptr<const container_view_model>, selection_model< views::ordered<U> > > selection_complex_t;
 
@@ -139,7 +149,7 @@ namespace micro_profiler
 		return std::shared_ptr< selection<key_type> >(complex, &complex->second);
 	}
 
-	template <typename BaseT, typename U>
-	inline const typename U::value_type &container_view_model<BaseT, U>::get_entry(index_type row) const
+	template <typename BaseT, typename U, typename CtxT>
+	inline const typename U::value_type &container_view_model<BaseT, U, CtxT>::get_entry(index_type row) const
 	{	return _ordered[row];	}
 }

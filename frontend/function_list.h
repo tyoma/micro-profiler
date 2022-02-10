@@ -21,6 +21,7 @@
 #pragma once
 
 #include "container_view_model.h"
+#include "model_context.h"
 #include "tables.h"
 
 #include <views/filter.h>
@@ -59,7 +60,7 @@ namespace micro_profiler
 		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
 		std::shared_ptr< std::vector<id_t> > scope);
 
-	class functions_list : public container_view_model< wpl::richtext_table_model, views::filter<tables::statistics> >
+	class functions_list : public container_view_model<wpl::richtext_table_model, views::filter<tables::statistics>, statistics_model_context>
 	{
 	public:
 		typedef tables::statistics::value_type value_type;

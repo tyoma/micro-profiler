@@ -20,21 +20,25 @@
 
 #pragma once
 
-#include <agge.text/richtext.h>
+#include "primitives.h"
+
 #include <functional>
+#include <memory>
 
 namespace micro_profiler
 {
-	template <typename T, typename CtxT>
-	struct column_definition
+	class symbol_resolver;
+	namespace tables
 	{
-		std::string id;
-		agge::richtext_modifier_t caption;
-		short int width;
-		agge::text_alignment alignment;
-		std::function<void (agge::richtext_t &text, const CtxT &context, size_t row, const T &record)> get_text;
-		std::function<bool (const CtxT &context, const T &lhs, const T &rhs)> less;
-		bool ascending;
-		std::function<double (const CtxT &context, const T &record)> get_value;
+		struct statistics;
+		struct threads;
+	}
+
+	struct statistics_model_context
+	{
+		double tick_interval;
+		std::function<const call_statistics *(id_t id)> by_id;
+		std::shared_ptr<const tables::threads> threads;
+		std::shared_ptr<symbol_resolver> resolver;
 	};
 }

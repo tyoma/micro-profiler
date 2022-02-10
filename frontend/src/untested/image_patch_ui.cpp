@@ -15,8 +15,8 @@ namespace micro_profiler
 	namespace
 	{
 		const auto secondary = style::height_scale(0.85);
-		const auto dummy_get = [] (agge::richtext_t &, size_t, const call_statistics &) {};
-		const auto dummy_compare = [] (const call_statistics &, const call_statistics &) {	return false;	};
+		const auto dummy_get = [] (agge::richtext_t &, const statistics_model_context &, size_t, const call_statistics &) {};
+		const auto dummy_compare = [] (const statistics_model_context &, const call_statistics &, const call_statistics &) {	return false;	};
 
 		const headers_model::column c_columns_symbols[] = {
 			{	"Rva", "RVA" + secondary, 28, agge::align_far, dummy_get, dummy_compare, true,	},

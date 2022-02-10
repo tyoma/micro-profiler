@@ -22,8 +22,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const auto dummy_get = [] (agge::richtext_t &, size_t, const call_statistics &) {};
-			const auto dummy_compare = [] (const call_statistics &, const call_statistics &) {	return false;	};
+			const auto dummy_get = [] (agge::richtext_t &, const statistics_model_context &, size_t, const call_statistics &) {};
+			const auto dummy_compare = [] (const statistics_model_context &, const call_statistics &, const call_statistics &) {	return false;	};
 
 			typedef vector< pair<headers_model::index_type, bool> > log_t;
 

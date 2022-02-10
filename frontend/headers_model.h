@@ -21,6 +21,7 @@
 #pragma once
 
 #include "column_definition.h"
+#include "model_context.h"
 
 #include <vector>
 #include <wpl/models.h>
@@ -33,7 +34,7 @@ namespace micro_profiler
 	class headers_model : public wpl::headers_model
 	{
 	public:
-		typedef column_definition<call_statistics> column;
+		typedef column_definition<call_statistics, statistics_model_context> column;
 
 	public:
 		template <size_t N>

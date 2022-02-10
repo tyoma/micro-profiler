@@ -148,13 +148,16 @@ namespace micro_profiler
 			test( CalleesModelReturnsTextualValuesExpected )
 			{
 				// INIT
-				unsigned columns[] = {	1, 3, 4, 5, 6, 7, 8, 9,	};
+				unsigned columns[] = {
+					callee_columns::name, callee_columns::times_called, callee_columns::exclusive, callee_columns::inclusive,
+					callee_columns::exclusive_avg, callee_columns::inclusive_avg, callee_columns::max_time,
+				};
 				call_statistics functions[] = {
 					make_call_statistics(1, 101, 0, 0x1001, 1, 0, 0, 0, 0),
-					make_call_statistics(2, 101, 1, 0x2001, 100, 1, 109, 17, 19190),
-					make_call_statistics(3, 101, 1, 0x2002, 109, 3, 1090, 11711, 0),
+					make_call_statistics(2, 101, 1, 0x2001, 100, 0, 109, 17, 19190),
+					make_call_statistics(3, 101, 1, 0x2002, 109, 0, 1090, 11711, 0),
 					make_call_statistics(4, 101, 0, 0x1002, 1, 0, 0, 0, 0),
-					make_call_statistics(5, 101, 4, 0x2001, 9318, 123, 2, 3, 4),
+					make_call_statistics(5, 101, 4, 0x2001, 9318, 0, 2, 3, 4),
 				};
 				auto s = make_shared<tables::statistics>();
 				auto sel = make_shared_copy(plural + 1u);
@@ -167,9 +170,9 @@ namespace micro_profiler
 				auto text = get_text(*callees, columns);
 
 				// ASSERT
-				string reference1[][8] = {
-					{	"00002001", "100", "170ms", "1.09s", "1.7ms", "10.9ms", "1", "192s",	},
-					{	"00002002", "109", "117s", "10.9s", "1.07s", "100ms", "3", "0s",	},
+				string reference1[][7] = {
+					{	"00002001", "100", "170ms", "1.09s", "1.7ms", "10.9ms", "192s",	},
+					{	"00002002", "109", "117s", "10.9s", "1.07s", "100ms", "0s",	},
 				};
 
 				assert_equivalent(mkvector(reference1), text);
@@ -182,10 +185,10 @@ namespace micro_profiler
 				text = get_text(*callees, columns);
 
 				// ASSERT
-				string reference2[][8] = {
-					{	"00002001", "100", "170ms", "1.09s", "1.7ms", "10.9ms", "1", "192s",	},
-					{	"00002002", "109", "117s", "10.9s", "1.07s", "100ms", "3", "0s",	},
-					{	"00002001", "9318", "30ms", "20ms", "3.22\xCE\xBCs", "2.15\xCE\xBCs", "123", "40ms",	},
+				string reference2[][7] = {
+					{	"00002001", "100", "170ms", "1.09s", "1.7ms", "10.9ms", "192s",	},
+					{	"00002002", "109", "117s", "10.9s", "1.07s", "100ms", "0s",	},
+					{	"00002001", "9318", "30ms", "20ms", "3.22\xCE\xBCs", "2.15\xCE\xBCs", "40ms",	},
 				};
 
 				assert_equivalent(mkvector(reference2), text);
@@ -195,7 +198,7 @@ namespace micro_profiler
 			test( CallersModelReturnsTextualValuesExpected )
 			{
 				// INIT
-				unsigned columns[] = {	1, 3,	};
+				unsigned columns[] = {	callers_columns::name, callers_columns::times_called,	};
 				call_statistics functions[] = {
 					make_call_statistics(1, 101, 0, 0x2001, 1, 0, 0, 0, 0),
 					make_call_statistics(2, 101, 0, 0x2002, 1, 0, 0, 0, 0),
@@ -269,7 +272,7 @@ namespace micro_profiler
 				auto m = ls->get_column_series();
 
 				// ACT
-				ls->set_order(columns::times_called, true);
+				ls->set_order(callee_columns::times_called, true);
 
 				// ASSERT
 				assert_equal(2u, m->get_count());
@@ -277,7 +280,7 @@ namespace micro_profiler
 				assert_approx_equal(31.0, get_value(*m, 1), c_tolerance);
 
 				// ACT
-				ls->set_order(columns::times_called, false);
+				ls->set_order(callee_columns::times_called, false);
 
 				// ASSERT
 				assert_equal(2u, m->get_count());
@@ -295,7 +298,7 @@ namespace micro_profiler
 				assert_approx_equal(101.0, get_value(*m, 2), c_tolerance);
 
 				// ACT
-				ls->set_order(columns::exclusive, false);
+				ls->set_order(callee_columns::exclusive, false);
 
 				// ASSERT
 				assert_equal(3u, m->get_count());

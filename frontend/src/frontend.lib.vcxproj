@@ -40,6 +40,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="columns_layout.cpp" />
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="frontend_metadata.cpp" />
@@ -67,6 +68,7 @@
     <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\columns_layout.h" />
     <ClInclude Include="..\column_definition.h" />
     <ClInclude Include="..\db.h" />
     <ClInclude Include="..\factory.h" />
@@ -83,6 +85,7 @@
     <ClInclude Include="..\key.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\headers_model.h" />
+    <ClInclude Include="..\model_context.h" />
     <ClInclude Include="..\nested_statistics_model.h" />
     <ClInclude Include="..\nested_transform.h" />
     <ClInclude Include="..\persistence.h" />
@@ -104,8 +107,6 @@
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\trackables_provider.h" />
-    <ClInclude Include="fields.h" />
-    <ClInclude Include="fields_setup.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

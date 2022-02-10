@@ -67,6 +67,9 @@
     <ClCompile Include="profiling_preferences.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="columns_layout.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -104,14 +107,10 @@
     <ClInclude Include="..\async_file.h" />
     <ClInclude Include="..\profiling_preferences.h" />
     <ClInclude Include="..\db.h" />
-    <ClInclude Include="fields.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\container_view_model.h" />
-    <ClInclude Include="fields_setup.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\column_definition.h" />
+    <ClInclude Include="..\model_context.h" />
+    <ClInclude Include="..\columns_layout.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

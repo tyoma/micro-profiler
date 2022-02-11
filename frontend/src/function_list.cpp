@@ -21,6 +21,7 @@
 #include <frontend/function_list.h>
 
 #include <common/formatting.h>
+#include <common/string.h>
 #include <frontend/columns_layout.h>
 #include <frontend/nested_statistics_model.h>
 #include <frontend/nested_transform.h>
@@ -48,14 +49,15 @@ namespace micro_profiler
 			return shared_ptr<T>(p, &p->second);
 		}
 
-		statistics_model_context create_context(shared_ptr<const tables::statistics> underlying,
-			double tick_interval, shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads)
+		statistics_model_context create_context(shared_ptr<const tables::statistics> underlying, double tick_interval,
+			shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads, bool canonical = false)
 		{
 			statistics_model_context context = {
 				tick_interval,
 				[underlying] (id_t id) {	return underlying->by_id.find(id);	},
 				threads,
 				resolver,
+				canonical,
 			};
 
 			return context;
@@ -85,7 +87,7 @@ namespace micro_profiler
 		: container_view_model<wpl::richtext_table_model, views::filter<tables::statistics>, statistics_model_context>(
 			make_bound< views::filter<tables::statistics> >(statistics),
 			create_context(statistics, tick_interval, resolver, threads)), _tick_interval(tick_interval),
-			_resolver(resolver)
+			_resolver(resolver), _threads(threads)
 	{
 		add_columns(c_statistics_columns);
 
@@ -95,32 +97,37 @@ namespace micro_profiler
 
 	void functions_list::print(string &content) const
 	{
+		const string lf = "\n";
+		const string crlf = "\r\n";
 		const char* old_locale = ::setlocale(LC_NUMERIC, NULL);
 		bool locale_ok = ::setlocale(LC_NUMERIC, "") != NULL;
-		const auto gcvt = [&content] (double value) {
-			const auto buffer_size = 100u;
-			char buffer[buffer_size];
-			const int l = std::sprintf(buffer, "%g", value);
-
-			if (l > 0)
-				content.append(buffer, buffer + l);
-		};
+		agge::richtext_t rtext((agge::font_style_annotation()));
+		string text;
+		const auto b = columns().begin();
+		const auto e = columns().end();
+		const auto context = create_context(_statistics, _tick_interval, _resolver, _threads, true);
 
 		content.clear();
-		content.reserve(256 * (get_count() + 1)); // kind of magic number
-		content += "Function\tTimes Called\tExclusive Time\tInclusive Time\tAverage Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n";
-		for (index_type i = 0; i != get_count(); ++i)
+		for (auto i = b; i != e; ++i)
 		{
-			const auto &row = get_entry(i);
-
-			content += _resolver->symbol_name_by_va(row.address), content += "\t";
-			itoa<10>(content, row.times_called), content += "\t";
-			gcvt(_tick_interval * row.exclusive_time), content += "\t";
-			gcvt(_tick_interval * row.inclusive_time), content += "\t";
-			gcvt(_tick_interval * row.exclusive_time / row.times_called), content += "\t";
-			gcvt(_tick_interval * row.inclusive_time / row.times_called), content += "\t";
-			itoa<10>(content, row.max_reentrance), content += "\t";
-			gcvt(_tick_interval * row.max_call_time), content += "\r\n";
+			text = i->caption.underlying();
+			replace(text, lf, crlf);
+			if (i != b)
+				content += '\t';
+			content += '\"', content += text, content += '\"';
+		}
+		content += crlf;
+		for (auto row = 0u; row != get_count(); ++row)
+		{
+			for (auto j = b; j != e; ++j)
+			{
+				rtext.clear();
+				j->get_text(rtext, context, row, get_entry(row));
+				if (j != b)
+					content += '\t';
+				content += rtext.underlying();
+			}
+			content += crlf;
 		}
 
 		if (locale_ok)

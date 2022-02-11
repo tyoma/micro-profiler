@@ -40,5 +40,6 @@ namespace micro_profiler
 		std::function<const call_statistics *(id_t id)> by_id;
 		std::shared_ptr<const tables::threads> threads;
 		std::shared_ptr<symbol_resolver> resolver;
+		bool canonical;
 	};
 }

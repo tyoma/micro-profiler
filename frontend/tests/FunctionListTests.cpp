@@ -761,13 +761,23 @@ namespace micro_profiler
 				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
 				string result;
 
+				(*tmodel)[1].native_id = 1711;
+
 				// ACT
 				fl->print(result);
 
 				// ASSERT
 				assert_equal(0u, fl->get_count());
-				assert_equal("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
-					"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n", result);
+				assert_equal("\"#\"" "\t"
+					"\"Function\r\nqualified name\"" "\t"
+					"\"Thread\r\nid\"" "\t"
+					"\"Called\r\ntimes\"" "\t"
+					"\"Exclusive\r\ntotal\"" "\t"
+					"\"Inclusive\r\ntotal\"" "\t"
+					"\"Exclusive\r\naverage/call\"" "\t"
+					"\"Inclusive\r\naverage/call\"" "\t"
+					"\"Recursion\r\nmax depth\"" "\t"
+					"\"Inclusive\r\nmaximum/call\"" "\r\n", result);
 
 				// INIT
 				append(*statistics, functions);
@@ -779,11 +789,22 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, fl->get_count());
-				assert_equal(dp2cl("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
-										"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
-										"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"
-										"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
-										"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
+				assert_equal(dp2cl("\"#\"" "\t"
+					"\"Function\r\nqualified name\"" "\t"
+					"\"Thread\r\nid\"" "\t"
+					"\"Called\r\ntimes\"" "\t"
+					"\"Exclusive\r\ntotal\"" "\t"
+					"\"Inclusive\r\ntotal\"" "\t"
+					"\"Exclusive\r\naverage/call\"" "\t"
+					"\"Inclusive\r\naverage/call\"" "\t"
+					"\"Recursion\r\nmax depth\"" "\t"
+					"\"Inclusive\r\nmaximum/call\"" "\r\n"
+					"1\t00000BAE\t1711\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"
+					"2\t000007C6\t1711\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
+					"3\t000007D0\t1711\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"), result);
+
+				// INIT
+				(*tmodel)[1].native_id = 1713;
 
 				// ACT
 				fl->set_order(main_columns::exclusive_avg, true);
@@ -791,11 +812,19 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, fl->get_count());
-				assert_equal(dp2cl("Function\tTimes Called\tExclusive Time\tInclusive Time\t"
-										"Average Call Time (Exclusive)\tAverage Call Time (Inclusive)\tMax Recursion\tMax Call Time\r\n"
-										"000007C6\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
-										"000007D0\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
-										"00000BAE\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"), result);
+				assert_equal(dp2cl("\"#\"" "\t"
+					"\"Function\r\nqualified name\"" "\t"
+					"\"Thread\r\nid\"" "\t"
+					"\"Called\r\ntimes\"" "\t"
+					"\"Exclusive\r\ntotal\"" "\t"
+					"\"Inclusive\r\ntotal\"" "\t"
+					"\"Exclusive\r\naverage/call\"" "\t"
+					"\"Inclusive\r\naverage/call\"" "\t"
+					"\"Recursion\r\nmax depth\"" "\t"
+					"\"Inclusive\r\nmaximum/call\"" "\r\n"
+					"1\t000007C6\t1713\t15\t29\t31\t1.93333\t2.06667\t0\t2\r\n"
+					"2\t000007D0\t1713\t35\t366\t453\t10.4571\t12.9429\t1\t3\r\n"
+					"3\t00000BAE\t1713\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t2\t4\r\n"), result);
 			}
 
 

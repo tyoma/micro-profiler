@@ -76,8 +76,10 @@ namespace micro_profiler
 		void print(std::string &content) const;
 
 	private:
+		const std::shared_ptr<const tables::statistics> _statistics;
 		const double _tick_interval;
-		std::shared_ptr<symbol_resolver> _resolver;
+		const std::shared_ptr<symbol_resolver> _resolver;
+		const std::shared_ptr<const tables::threads> _threads;
 		wpl::slot_connection _invalidation_connections[2];
 	};
 

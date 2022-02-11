@@ -43,10 +43,11 @@ namespace micro_profiler
 	public:
 		container_view_model(std::shared_ptr<U> underlying, const CtxT &context);
 
-		U &underlying();
+		const std::vector<column_type> &columns() const throw();
+		U &underlying() throw();
 
 		template <typename ContainerT>
-		void add_columns(const ContainerT &columns);
+		void add_columns(const ContainerT &columns_);
 
 		// wpl::richtext_table_model methods
 		virtual index_type get_count() const throw() override;
@@ -79,13 +80,17 @@ namespace micro_profiler
 	{	}
 
 	template <typename BaseT, typename U, typename CtxT>
-	inline U &container_view_model<BaseT, U, CtxT>::underlying()
+	inline const std::vector<typename container_view_model<BaseT, U, CtxT>::column_type> &container_view_model<BaseT, U, CtxT>::columns() const throw()
+	{	return _columns;	}
+
+	template <typename BaseT, typename U, typename CtxT>
+	inline U &container_view_model<BaseT, U, CtxT>::underlying() throw()
 	{	return *_underlying;	}
 
 	template <typename BaseT, typename U, typename CtxT>
 	template <typename ContainerT>
-	inline void container_view_model<BaseT, U, CtxT>::add_columns(const ContainerT &columns)
-	{	_columns.insert(_columns.end(), std::begin(columns), std::end(columns));	}
+	inline void container_view_model<BaseT, U, CtxT>::add_columns(const ContainerT &columns_)
+	{	_columns.insert(_columns.end(), std::begin(columns_), std::end(columns_));	}
 
 	template <typename BaseT, typename U, typename CtxT>
 	inline typename container_view_model<BaseT, U, CtxT>::index_type container_view_model<BaseT, U, CtxT>::get_count() const throw()

@@ -60,7 +60,8 @@ namespace micro_profiler
 		extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
 
 		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
-			wpl::vs::command_target &target, const profiling_session &session, shared_ptr<scheduler::queue> queue);
+			wpl::vs::command_target &target, const profiling_session &session, shared_ptr<const functions_list> model,
+			shared_ptr<scheduler::queue> queue);
 
 		namespace
 		{
@@ -88,7 +89,7 @@ namespace micro_profiler
 					_connections.push_back(_pane->activated += [this] {
 						activated();
 					});
-					init_instance_menu(_running_objects, factory, *_pane, ui_context, queue);
+					init_instance_menu(_running_objects, factory, *_pane, ui_context, _tables_ui->get_model(), queue);
 					_pane->set_caption("MicroProfiler - " + (string)*ui_context.process_info.executable);
 					_pane->set_root(root);
 					_pane->set_visible(true);

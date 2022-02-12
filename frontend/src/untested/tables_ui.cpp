@@ -24,23 +24,22 @@ using namespace placeholders;
 namespace micro_profiler
 {
 	tables_ui::tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration)
-		: wpl::stack(false, factory_.context.cursor_manager_),
+		: wpl::stack(false, factory_.context.cursor_manager_), _tick_interval(1. / session.process_info.ticks_per_second),
+			_resolver(make_shared<symbol_resolver>(session.modules, session.module_mappings)),
+			_model(make_shared<functions_list>(session.statistics, 1.0 / session.process_info.ticks_per_second,
+				_resolver, session.threads)),
 			_cm_main(new headers_model(c_statistics_columns, 3, false)),
 			_cm_parents(new headers_model(c_caller_statistics_columns, 2, false)),
 			_cm_children(new headers_model(c_callee_statistics_columns, 4, false))
 	{
 		const auto statistics = session.statistics;
-		const auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);
-		const auto m_main = make_shared<functions_list>(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
-			session.threads);
-		const auto m_selection = m_main->create_selection();
+		const auto m_selection = _model->create_selection();
 		const auto m_selected_items = make_shared< vector<id_t> >();
 		const auto threads = make_shared<threads_model>(session.threads);
-
-		const auto m_parents = create_callers_model(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+		const auto m_parents = create_callers_model(statistics, 1.0 / session.process_info.ticks_per_second, _resolver,
 			session.threads, m_selected_items);
 		const auto m_selection_parents = m_parents->create_selection();
-		const auto m_children = create_callees_model(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+		const auto m_children = create_callees_model(statistics, 1.0 / session.process_info.ticks_per_second, _resolver,
 			session.threads, m_selected_items);
 		const auto m_selection_children = m_children->create_selection();
 
@@ -59,29 +58,25 @@ namespace micro_profiler
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
-		auto on_activate = [this, statistics, resolver, m_main, m_selected_items] {
+		auto on_activate = [this, statistics, m_selected_items] {
 			if (!m_selected_items->empty())
 			{
 				symbol_resolver::fileline_t fileline;
+				const auto entry = statistics->by_id.find(m_selected_items->front());
 
-				if (const auto entry = statistics->by_id.find(m_selected_items->front()))
-				{
-					if (resolver->symbol_fileline_by_va(entry->address, fileline))
-						open_source(fileline.first, fileline.second);
-				}
+				if (entry && _resolver->symbol_fileline_by_va(entry->address, fileline))
+					open_source(fileline.first, fileline.second);
 			}
 		};
 
-		auto on_drilldown_child = [statistics, m_main, m_selection] (const selection<id_t> &selection_) {
+		auto on_drilldown_child = [statistics, m_selection] (const selection<id_t> &selection_) {
 			const auto key = get_first_item(selection_);
+			const auto item = key.second ? statistics->by_id.find(key.first) : nullptr;
 
-			if (const auto item = key.second ? statistics->by_id.find(key.first) : nullptr)
+			if (auto child = item ? statistics->by_node.find(call_node_key(item->thread_id, 0, item->address)) : nullptr)
 			{
-				if (const auto child = statistics->by_node.find(call_node_key(item->thread_id, 0, item->address)))
-				{
-					m_selection->clear();
-					m_selection->add_key(child->id);
-				}
+				m_selection->clear();
+				m_selection->add_key(child->id);
 			}
 		};
 
@@ -92,7 +87,7 @@ namespace micro_profiler
 
 		set_spacing(5);
 		add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(20), true, 3);
-			_connections.push_back(lv->item_activate += [statistics, m_main, m_selection, m_selection_parents] (...) {
+			_connections.push_back(lv->item_activate += [statistics, m_selection, m_selection_parents] (...) {
 				const auto key = get_first_item(*m_selection_parents);
 
 				if (const auto item = key.second ? statistics->by_id.find(key.first) : nullptr)
@@ -109,15 +104,15 @@ namespace micro_profiler
 			panel[0]->add(cb = factory_.create_control<wpl::combobox>("combobox"), wpl::pixels(24), false, 4);
 				cb->set_model(threads);
 				cb->select(0u);
-				_connections.push_back(cb->selection_changed += [m_main, threads] (wpl::combobox::model_t::index_type index) {
+				_connections.push_back(cb->selection_changed += [this, threads] (wpl::combobox::model_t::index_type index) {
 					unsigned id;
 
 					if (threads->get_key(id, index))
-						m_main->set_filter([id] (const functions_list::value_type &v) { return (id == v.thread_id) && !v.parent_id;	});
+						_model->set_filter([id] (const functions_list::value_type &v) { return (id == v.thread_id) && !v.parent_id;	});
 					else
-						m_main->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	});
+						_model->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	});
 				});
-				m_main->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	}); // TODO: temporary solution, until hierarchical view is there
+				_model->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	}); // TODO: temporary solution, until hierarchical view is there
 
 			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), wpl::percents(100), false);
 				panel[1]->set_spacing(5);
@@ -128,7 +123,7 @@ namespace micro_profiler
 				panel[1]->add(_lv_main= factory_.create_control<wpl::listview>("listview"), wpl::percents(100), false, 1);
 					_connections.push_back(_lv_main->item_activate += [on_activate] (...) {	on_activate();	});
 
-			attach_section(*_lv_main, pc.get(), hint.get(), _cm_main, m_main, m_selection);
+			attach_section(*_lv_main, pc.get(), hint.get(), _cm_main, _model, m_selection);
 
 		hint = wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine), *factory_.context.stylesheet_);
 		add(panel[0] = factory_.create_control<stack>("hstack"), wpl::percents(20), true);
@@ -146,6 +141,9 @@ namespace micro_profiler
 				attach_section(*lv, pc.get(), hint.get(), _cm_children, m_children, m_selection_children);
 
 	}
+
+	shared_ptr<const functions_list> tables_ui::get_model() const
+	{	return _model;	}
 
 	void tables_ui::save(hive &configuration)
 	{

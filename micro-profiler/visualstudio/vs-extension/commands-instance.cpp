@@ -26,11 +26,10 @@ namespace micro_profiler
 	namespace integration
 	{
 		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
-			command_target &target, const profiling_session &session, shared_ptr<scheduler::queue> queue)
+			command_target &target, const profiling_session &session, shared_ptr<const functions_list> model,
+			shared_ptr<scheduler::queue> queue)
 		{
 			const auto statistics = session.statistics;
-			const auto model = make_shared<functions_list>(statistics, 1.0 / session.process_info.ticks_per_second,
-				make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
 			const auto injected = !!session.process_info.injected;
 			const auto executable = session.process_info.executable;
 			const auto poller = make_shared<statistics_poll>(statistics, *queue);

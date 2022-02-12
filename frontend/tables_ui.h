@@ -22,6 +22,7 @@ namespace micro_profiler
 	struct hive;
 	struct linked_statistics;
 	struct profiling_session;
+	class symbol_resolver;
 
 	template <typename KeyT>
 	struct selection;
@@ -31,6 +32,7 @@ namespace micro_profiler
 	public:
 		tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration);
 
+		std::shared_ptr<const functions_list> get_model() const;
 		void save(hive &configuration);
 
 	public:
@@ -44,6 +46,9 @@ namespace micro_profiler
 			std::shared_ptr<ModelT> model, std::shared_ptr<SelectionModelT> selection_);
 
 	private:
+		const double _tick_interval;
+		const std::shared_ptr<symbol_resolver> _resolver;
+		const std::shared_ptr<functions_list> _model;
 		const std::shared_ptr<headers_model> _cm_main;
 		const std::shared_ptr<headers_model> _cm_parents;
 		const std::shared_ptr<headers_model> _cm_children;

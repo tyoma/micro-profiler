@@ -68,8 +68,6 @@ namespace micro_profiler
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
 		const auto statistics = session.statistics;
-		const auto model = make_shared<functions_list>(statistics, 1.0 / session.process_info.ticks_per_second,
-			make_shared<symbol_resolver>(session.modules, session.module_mappings), session.threads);
 
 		const auto root = make_shared<overlay>();
 			root->add(factory_.create_control<control>("background"));
@@ -87,6 +85,7 @@ namespace micro_profiler
 
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
 						btn->set_text(agge::style_modifier::empty + "Copy All");
+						const auto model = _statistics_display->get_model();
 						_connections.push_back(btn->clicked += [this, model] {
 							string text;
 

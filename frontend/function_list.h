@@ -20,8 +20,13 @@
 
 #pragma once
 
+#include "columns_layout.h"
+#include "constructors.h"
 #include "container_view_model.h"
 #include "model_context.h"
+#include "models.h"
+#include "nested_statistics_model.h"
+#include "nested_transform.h"
 #include "tables.h"
 
 #include <views/filter.h>
@@ -29,10 +34,6 @@
 namespace micro_profiler
 {
 	class symbol_resolver;
-	namespace tables
-	{
-		struct threads;
-	}
 
 	template <>
 	struct key_traits<call_statistics>
@@ -42,23 +43,6 @@ namespace micro_profiler
 		static key_type get_key(const call_statistics &value)
 		{	return value.id;	}
 	};
-
-	struct linked_statistics : wpl::richtext_table_model
-	{
-		virtual ~linked_statistics() {	}
-		virtual void fetch() = 0;
-		virtual void set_order(index_type column, bool ascending) = 0;
-		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() = 0;
-		virtual std::shared_ptr< selection<id_t> > create_selection() const = 0;
-	};
-
-	std::shared_ptr<linked_statistics> create_callees_model(std::shared_ptr<const tables::statistics> underlying,
-		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
-		std::shared_ptr< std::vector<id_t> > scope);
-
-	std::shared_ptr<linked_statistics> create_callers_model(std::shared_ptr<const tables::statistics> underlying,
-		double tick_interval, std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
-		std::shared_ptr< std::vector<id_t> > scope);
 
 	class functions_list : public container_view_model<wpl::richtext_table_model, views::filter<tables::statistics>, statistics_model_context>
 	{
@@ -73,17 +57,52 @@ namespace micro_profiler
 		void set_filter(const PredicateT &predicate);
 		void set_filter();
 
-		void print(std::string &content) const;
-
 	private:
-		const std::shared_ptr<const tables::statistics> _statistics;
-		const double _tick_interval;
-		const std::shared_ptr<symbol_resolver> _resolver;
-		const std::shared_ptr<const tables::threads> _threads;
 		wpl::slot_connection _invalidation_connections[2];
 	};
 
 
+
+	template <typename U>
+	inline statistics_model_context create_context(std::shared_ptr<U> underlying, double tick_interval,
+		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads, bool canonical)
+	{
+		return initialize<statistics_model_context>(tick_interval,
+			[underlying] (id_t id) {	return underlying->by_id.find(id);	}, threads, resolver, canonical);
+	}
+
+
+	template <typename U>
+	inline std::shared_ptr<linked_statistics> create_callees_model(std::shared_ptr<U> underlying, double tick_interval,
+		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
+		std::shared_ptr< std::vector<id_t> > scope)
+	{
+		return construct_nested<callees_transform>(create_context(underlying, tick_interval, resolver, threads, false),
+			underlying, scope, c_callee_statistics_columns);
+	}
+
+
+	template <typename U>
+	inline std::shared_ptr<linked_statistics> create_callers_model(std::shared_ptr<U> underlying, double tick_interval,
+		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
+		std::shared_ptr< std::vector<id_t> > scope)
+	{
+		return construct_nested<callers_transform>(create_context(underlying, tick_interval, resolver, threads, false),
+			underlying, scope, c_caller_statistics_columns);
+	}
+
+
+	inline functions_list::functions_list(std::shared_ptr<tables::statistics> statistics, double tick_interval,
+			std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads)
+		: container_view_model<wpl::richtext_table_model, views::filter<tables::statistics>, statistics_model_context>(
+			make_bound< views::filter<tables::statistics> >(statistics),
+			create_context(statistics, tick_interval, resolver, threads, false))
+	{
+		add_columns(c_statistics_columns);
+
+		_invalidation_connections[0] = statistics->invalidate += [this] {	fetch();	};
+		_invalidation_connections[1] = resolver->invalidate += [this] {	this->invalidate(this->npos());	};
+	}
 
 	template <typename PredicateT>
 	inline void functions_list::set_filter(const PredicateT &predicate)

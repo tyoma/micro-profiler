@@ -41,8 +41,10 @@ namespace micro_profiler
 		typedef typename key_traits<value_type>::key_type key_type;
 
 	public:
-		container_view_model(std::shared_ptr<U> underlying, const CtxT &context);
+		container_view_model(std::shared_ptr<U> underlying, const CtxT &context_);
 
+		const views::ordered<U> &ordered() const throw();
+		const CtxT &context() const throw();
 		const std::vector<column_type> &columns() const throw();
 		U &underlying() throw();
 
@@ -75,9 +77,17 @@ namespace micro_profiler
 
 
 	template <typename BaseT, typename U, typename CtxT>
-	inline container_view_model<BaseT, U, CtxT>::container_view_model(std::shared_ptr<U> underlying, const CtxT &context)
-		: _underlying(underlying), _context(context), _ordered(*_underlying), _trackables(_ordered), _projection(_ordered)
+	inline container_view_model<BaseT, U, CtxT>::container_view_model(std::shared_ptr<U> underlying, const CtxT &context_)
+		: _underlying(underlying), _context(context_), _ordered(*_underlying), _trackables(_ordered), _projection(_ordered)
 	{	}
+
+	template <typename BaseT, typename U, typename CtxT>
+	inline const views::ordered<U> &container_view_model<BaseT, U, CtxT>::ordered() const throw()
+	{	return _ordered;	}
+
+	template <typename BaseT, typename U, typename CtxT>
+	inline const CtxT &container_view_model<BaseT, U, CtxT>::context() const throw()
+	{	return _context;	}
 
 	template <typename BaseT, typename U, typename CtxT>
 	inline const std::vector<typename container_view_model<BaseT, U, CtxT>::column_type> &container_view_model<BaseT, U, CtxT>::columns() const throw()
@@ -119,20 +129,20 @@ namespace micro_profiler
 	template <typename BaseT, typename U, typename CtxT>
 	inline void container_view_model<BaseT, U, CtxT>::set_order(index_type column, bool ascending)
 	{
-		const auto &context = _context;
+		const auto &context_ = _context;
 		const auto &c = _columns.at(column);
 		const auto &less = c.less;
 		const auto &get_value = c.get_value;
 
 		if (less)
 		{
-			_ordered.set_order([&context, less] (const value_type &lhs, const value_type &rhs) {
-				return less(context, lhs, rhs);
+			_ordered.set_order([&context_, less] (const value_type &lhs, const value_type &rhs) {
+				return less(context_, lhs, rhs);
 			}, ascending);
 			this->invalidate(this->npos());
 		}
 		if (get_value)
-			_projection.project([&context, get_value] (const value_type &item) {	return get_value(context, item);	});
+			_projection.project([&context_, get_value] (const value_type &item) {	return get_value(context_, item);	});
 		else
 			_projection.project();
 		_trackables.fetch();

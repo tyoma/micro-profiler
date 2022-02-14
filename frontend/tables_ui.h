@@ -20,7 +20,6 @@ namespace micro_profiler
 	class headers_model;
 	class functions_list;
 	struct hive;
-	struct linked_statistics;
 	struct profiling_session;
 	class symbol_resolver;
 

@@ -20,12 +20,24 @@
 
 #pragma once
 
+#include "noncopyable.h"
 #include "types.h"
 
 #include <string>
 
 namespace micro_profiler
 {
+	class locale_lock : noncopyable
+	{
+	public:
+		locale_lock(const char *locale_);
+		~locale_lock();
+
+	private:
+		std::string _previous;
+		bool _locked_ok;
+	};
+
 	void unicode(std::string &destination, const char *ansi_value);
 	void unicode(std::string &destination, const std::string &ansi_value);
 	void unicode(std::string &destination, const wchar_t *value);

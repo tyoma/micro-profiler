@@ -45,7 +45,6 @@
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="frontend_metadata.cpp" />
     <ClCompile Include="frontend_patcher.cpp" />
-    <ClCompile Include="function_list.cpp" />
     <ClCompile Include="headers_model.cpp" />
     <ClCompile Include="image_patch_model.cpp" />
     <ClCompile Include="process_list.cpp" />
@@ -70,6 +69,7 @@
   <ItemGroup>
     <ClInclude Include="..\columns_layout.h" />
     <ClInclude Include="..\column_definition.h" />
+    <ClInclude Include="..\constructors.h" />
     <ClInclude Include="..\db.h" />
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\file.h" />
@@ -85,6 +85,7 @@
     <ClInclude Include="..\key.h" />
     <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\headers_model.h" />
+    <ClInclude Include="..\models.h" />
     <ClInclude Include="..\model_context.h" />
     <ClInclude Include="..\nested_statistics_model.h" />
     <ClInclude Include="..\nested_transform.h" />
@@ -107,6 +108,7 @@
     <ClInclude Include="..\tables_ui.h" />
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\trackables_provider.h" />
+    <ClInclude Include="..\view_dump.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

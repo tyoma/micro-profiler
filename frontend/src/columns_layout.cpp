@@ -23,6 +23,7 @@
 #include <frontend/columns_layout.h>
 
 #include <common/formatting.h>
+#include <frontend/constructors.h>
 #include <frontend/model_context.h>
 #include <frontend/primitives.h>
 #include <frontend/symbol_resolver.h>
@@ -35,14 +36,6 @@ namespace micro_profiler
 	namespace
 	{
 		const auto secondary = style::height_scale(0.85);
-
-		template <typename ResultT, typename Field1T>
-		inline ResultT initialize(const Field1T &field1)
-		{
-			ResultT r = {	field1	};
-			return r;
-		}
-
 
 		auto by_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) {
 			return context.resolver->symbol_name_by_va(lhs.address) < context.resolver->symbol_name_by_va(rhs.address);

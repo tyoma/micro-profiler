@@ -11,6 +11,7 @@
 #include <frontend/persistence.h>
 #include <frontend/statistics_poll.h>
 #include <frontend/symbol_resolver.h>
+#include <frontend/view_dump.h>
 #include <strmd/serializer.h>
 #include <windows.h>
 #include <wpl/form.h>
@@ -69,7 +70,7 @@ namespace micro_profiler
 			target.add_command(cmdidCopyStatistics, [model] (unsigned) {
 				string result_utf8;
 
-				model->print(result_utf8);
+				dump::as_tab_separated(result_utf8, *model);
 
 				wstring result = unicode(result_utf8);
 

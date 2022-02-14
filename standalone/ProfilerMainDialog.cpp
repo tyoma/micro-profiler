@@ -25,6 +25,7 @@
 #include <frontend/profiling_session.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables_ui.h>
+#include <frontend/view_dump.h>
 
 #include <algorithm>
 #include <wpl/controls.h>
@@ -89,7 +90,7 @@ namespace micro_profiler
 						_connections.push_back(btn->clicked += [this, model] {
 							string text;
 
-							model->print(text);
+							dump::as_tab_separated(text, *model);
 							copy_to_buffer(text);
 						});
 

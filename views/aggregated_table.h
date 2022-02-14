@@ -49,7 +49,7 @@ namespace micro_profiler
 			const_iterator end() const;
 
 			template <typename UnderlyingKeyerT, typename AggregatedKeyerT, typename AggregatorT>
-			void group_by(const UnderlyingKeyerT&ukeyer, const AggregatedKeyerT &akeyer, const AggregatorT &aggregator);
+			void group_by(const UnderlyingKeyerT &ukeyer, const AggregatedKeyerT &akeyer, const AggregatorT &aggregator);
 
 		public:
 			mutable wpl::signal<void (iterator irecord, bool new_)> changed;

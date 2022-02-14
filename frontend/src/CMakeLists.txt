@@ -6,7 +6,6 @@ set(FRONTEND_LIB_SOURCES
 	frontend_manager.cpp
 	frontend_metadata.cpp
 	frontend_patcher.cpp
-	function_list.cpp
 	headers_model.cpp
 	image_patch_model.cpp
 	process_list.cpp

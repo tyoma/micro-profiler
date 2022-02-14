@@ -216,7 +216,7 @@ namespace micro_profiler
 
 				append(*s, functions);
 
-				shared_ptr<linked_statistics> callers = create_callers_model(s, 0.01, resolver, tmodel, sel);
+				auto callers = create_callers_model(s, 0.01, resolver, tmodel, sel);
 
 				// ACT
 				auto text = get_text(*callers, columns);

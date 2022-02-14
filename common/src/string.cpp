@@ -22,6 +22,7 @@
 
 #include <common/formatting.h>
 
+#include <clocale>
 #include <cstdlib>
 #include <stdexcept>
 #include <stdio.h>
@@ -31,6 +32,20 @@ using namespace std;
 
 namespace micro_profiler
 {
+	locale_lock::locale_lock(const char *locale_)
+		: _locked_ok(false)
+	{
+		if (const auto previous = ::setlocale(LC_NUMERIC, locale_))
+			_previous = previous, _locked_ok = true;
+	}
+
+	locale_lock::~locale_lock()
+	{
+		if (_locked_ok)
+			::setlocale(LC_NUMERIC, _previous.c_str());
+	}
+
+
 	void unicode(string &destination, const char *ansi_value)
 	{	destination = ansi_value;	} // TODO: must convert from ANSI-string to UTF-8
 

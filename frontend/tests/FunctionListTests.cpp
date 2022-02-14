@@ -1,4 +1,5 @@
 #include <frontend/function_list.h>
+#include <frontend/view_dump.h>
 
 #include "helpers.h"
 #include "mocks.h"
@@ -764,7 +765,7 @@ namespace micro_profiler
 				(*tmodel)[1].native_id = 1711;
 
 				// ACT
-				fl->print(result);
+				dump::as_tab_separated(result, *fl);
 
 				// ASSERT
 				assert_equal(0u, fl->get_count());
@@ -785,7 +786,7 @@ namespace micro_profiler
 
 				// ACT
 				fl->set_order(main_columns::times_called, true);
-				fl->print(result);
+				dump::as_tab_separated(result, *fl);
 
 				// ASSERT
 				assert_equal(3u, fl->get_count());
@@ -808,7 +809,7 @@ namespace micro_profiler
 
 				// ACT
 				fl->set_order(main_columns::exclusive_avg, true);
-				fl->print(result);
+				dump::as_tab_separated(result, *fl);
 
 				// ASSERT
 				assert_equal(3u, fl->get_count());

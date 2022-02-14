@@ -28,6 +28,8 @@
 
 namespace micro_profiler
 {
+	struct linked_statistics;
+
 	template <typename U, typename X>
 	struct nested_statistics_model_complex
 	{

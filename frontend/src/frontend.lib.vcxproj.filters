@@ -7,9 +7,6 @@
     <ClCompile Include="frontend_manager.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="function_list.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="process_list.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -111,6 +108,9 @@
     <ClInclude Include="..\column_definition.h" />
     <ClInclude Include="..\model_context.h" />
     <ClInclude Include="..\columns_layout.h" />
+    <ClInclude Include="..\view_dump.h" />
+    <ClInclude Include="..\constructors.h" />
+    <ClInclude Include="..\models.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

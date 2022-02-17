@@ -1,4 +1,4 @@
-#include <frontend/container_view_model.h>
+#include <frontend/table_model_impl.h>
 
 #include "helpers.h"
 
@@ -42,8 +42,8 @@ namespace micro_profiler
 			};
 
 			template <typename T>
-			shared_ptr< container_view_model<wpl::richtext_table_model, T, int> > mkmodel(shared_ptr<T> underlying)
-			{	return make_shared< container_view_model<wpl::richtext_table_model, T, int> >(underlying, 0);	}
+			shared_ptr< table_model_impl<wpl::richtext_table_model, T, int> > mkmodel(shared_ptr<T> underlying)
+			{	return make_shared< table_model_impl<wpl::richtext_table_model, T, int> >(underlying, 0);	}
 
 			typedef pair<unsigned, unsigned> data1_t;
 			typedef pair<unsigned, string> data2_t;
@@ -65,7 +65,7 @@ namespace micro_profiler
 			}
 		}
 
-		begin_test_suite( ContainerViewModelTests )
+		begin_test_suite( TableModelImplTests )
 			test( EmptyContainerMakesEmptyView )
 			{
 				// INIT
@@ -354,9 +354,9 @@ namespace micro_profiler
 				// INIT
 				pair<int, int> data_[] = {	make_pair(3, 3), make_pair(3, 7),	};
 				auto u = make_shared<underlying1_t>(data_);
-				auto m1 = make_shared< container_view_model<wpl::richtext_table_model, underlying1_t, double> >(u, 0.1231);
-				auto m2 = make_shared< container_view_model<wpl::richtext_table_model, underlying1_t, double> >(u, 3.111891);
-				auto m3 = make_shared< container_view_model<wpl::richtext_table_model, underlying1_t, string> >(u, "lorem ipsum");
+				auto m1 = make_shared< table_model_impl<wpl::richtext_table_model, underlying1_t, double> >(u, 0.1231);
+				auto m2 = make_shared< table_model_impl<wpl::richtext_table_model, underlying1_t, double> >(u, 3.111891);
+				auto m3 = make_shared< table_model_impl<wpl::richtext_table_model, underlying1_t, string> >(u, "lorem ipsum");
 				double ctx1;
 				string ctx2;
 				agge::richtext_t txt((agge::font_style_annotation()));

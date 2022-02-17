@@ -1,11 +1,11 @@
-#include <frontend/function_list.h>
+#include <frontend/statistic_models.h>
 
 #include "helpers.h"
 #include "mocks.h"
 #include "primitive_helpers.h"
 
-#include <frontend/nested_transform.h>
 #include <frontend/tables.h>
+#include <frontend/transforms.h>
 #include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -22,8 +22,18 @@ namespace micro_profiler
 			typedef pair<statistic_types::key, count_t> caller_function;
 
 			template <typename T>
-			shared_ptr<T> make_shared_copy(const T &other)
-			{	return make_shared<T>(other);	}
+			struct dynamic_vector : vector<T>
+			{
+				dynamic_vector(const vector<T> &other)
+					: vector<T>(other)
+				{	}
+
+				wpl::signal<void (size_t)> invalidate;
+			};
+
+			template <typename T>
+			shared_ptr< dynamic_vector<typename T::value_type> > make_shared_copy(const T &other)
+			{	return make_shared< dynamic_vector<typename T::value_type> >(other);	}
 
 			const double c_tolerance = 0.000001;
 			const vector< pair<statistic_types::key, statistic_types::function> > empty;
@@ -231,7 +241,7 @@ namespace micro_profiler
 
 				// INIT
 				*sel = plural + 3u + 9u;
-				callers->fetch();
+				sel->invalidate(123);
 
 				// ACT
 				text = get_text(*callers, columns);
@@ -289,7 +299,7 @@ namespace micro_profiler
 
 				// ACT
 				(*sel)[0] = 4u;
-				ls->fetch();
+				sel->invalidate(1);
 
 				// ASSERT
 				assert_equal(3u, m->get_count());
@@ -308,7 +318,7 @@ namespace micro_profiler
 
 				// ACT
 				sel->push_back(1u);
-				ls->fetch();
+				sel->invalidate(2);
 
 				// ASSERT
 				assert_equal(5u, m->get_count());

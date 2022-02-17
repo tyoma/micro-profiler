@@ -24,6 +24,8 @@
 
 #include <views/index.h>
 
+// TODO: replace tables::statistics with a template argument
+
 namespace micro_profiler
 {
 	struct parent_id_keyer
@@ -87,12 +89,9 @@ namespace micro_profiler
 			return empty.first = empty.second, empty;
 		}
 
-		template <typename T>
-		call_statistics get(const T &, call_statistics value) const
-		{
-			value.address = _underlying.by_id[value.parent_id].address;
-			return value;
-		}
+		template <typename T1, typename T2>
+		const T2 &get(const T1 &, const T2 &value) const
+		{	return value;	}
 
 	private:
 		const tables::statistics &_underlying;

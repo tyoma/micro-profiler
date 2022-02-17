@@ -1,4 +1,4 @@
-#include <frontend/function_list.h>
+#include <frontend/statistic_models.h>
 
 #include "helpers.h"
 #include "mocks.h"
@@ -39,7 +39,7 @@ namespace micro_profiler
 			shared_ptr<tables::threads> tmodel;
 
 			template <typename ContainerT>
-			shared_ptr<functions_list> create_functions_list(const ContainerT &s, timestamp_t ticks_per_second = 500)
+			shared_ptr< table_model<id_t> > create_functions_list(const ContainerT &s, timestamp_t ticks_per_second = 500)
 			{
 				for (auto i = begin(s); i != end(s); ++i)
 				{
@@ -50,12 +50,12 @@ namespace micro_profiler
 					static_cast<function_statistics &>(*r) = i->second;
 					r.commit();
 				}
-				return make_shared<functions_list>(statistics, 1.0 / ticks_per_second,
+				return create_statistics_model(statistics, 1.0 / ticks_per_second,
 					make_shared<symbol_resolver>(modules, mappings), tmodel);
 			}
 
 			template <typename ContainerT>
-			shared_ptr<functions_list> create_functions_list_detached(const ContainerT &s, timestamp_t ticks_per_second = 500)
+			shared_ptr< table_model<id_t> > create_functions_list_detached(const ContainerT &s, timestamp_t ticks_per_second = 500)
 			{
 				auto local_statistics = make_shared<tables::statistics>();
 
@@ -68,7 +68,7 @@ namespace micro_profiler
 					static_cast<function_statistics &>(*r) = i->second;
 					r.commit();
 				}
-				return make_shared<functions_list>(local_statistics, 1.0 / ticks_per_second,
+				return create_statistics_model(local_statistics, 1.0 / ticks_per_second,
 					make_shared<symbol_resolver>(modules, mappings), tmodel);
 			}
 

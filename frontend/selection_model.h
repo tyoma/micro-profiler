@@ -29,10 +29,28 @@
 namespace micro_profiler
 {
 	template <typename KeyT>
-	struct selection : wpl::dynamic_set_model
+	class selection : public wpl::dynamic_set_model, private std::unordered_set<KeyT>
 	{
-		virtual void add_key(const KeyT &key) = 0;
-		virtual void enumerate(const std::function<void (const KeyT &key)> &callback) const = 0;
+	public:
+		typedef typename std::unordered_set<KeyT>::const_iterator const_iterator;
+		typedef KeyT key_type;
+
+	public:
+		// wpl::dynamic_set_model methods
+		virtual void clear() throw() override;
+		virtual void add(index_type item) override;
+		virtual void remove(index_type item) override;
+		virtual bool contains(index_type item) const throw() override;
+
+		void add_key(const KeyT &key);
+		using std::unordered_set<KeyT>::begin;
+		using std::unordered_set<KeyT>::end;
+
+	private:
+		typedef std::unordered_set<key_type> base_t;
+
+	private:
+		virtual key_type get_key(size_t item) const = 0;
 	};
 
 	template <typename UnderlyingT>
@@ -46,71 +64,52 @@ namespace micro_profiler
 	public:
 		selection_model(const UnderlyingT &underlying);
 
-		// wpl::dynamic_set_model methods
-		virtual void clear() throw() override;
-		virtual void add(index_type item) override;
-		virtual void remove(index_type item) override;
-		virtual bool contains(index_type item) const throw() override;
-
-		// selection<...> methods
-		virtual void add_key(const key_type &key) override;
-		virtual void enumerate(const std::function<void (const key_type &key)> &callback) const override;
-
-		using wpl::dynamic_set_model::npos;
-
 	private:
-		key_type get_key(size_t item) const;
+		virtual key_type get_key(size_t item) const override;
 
 	private:
 		const UnderlyingT &_underlying;
-		std::unordered_set<key_type> _selection;
 	};
 
+
+
+	template <typename KeyT>
+	inline void selection<KeyT>::clear() throw()
+	{
+		base_t::clear();
+		this->invalidate(npos());
+	}
+
+	template <typename KeyT>
+	inline void selection<KeyT>::add(index_type item)
+	{
+		base_t::insert(get_key(item));
+		this->invalidate(item);
+	}
+
+	template <typename KeyT>
+	inline void selection<KeyT>::remove(index_type item)
+	{
+		base_t::erase(get_key(item));
+		this->invalidate(item);
+	}
+
+	template <typename KeyT>
+	inline bool selection<KeyT>::contains(index_type item) const throw()
+	{	return base_t::find(get_key(item)) != base_t::end();	}
+
+	template <typename KeyT>
+	inline void selection<KeyT>::add_key(const key_type &key)
+	{
+		base_t::insert(key);
+		this->invalidate(npos());
+	}
 
 
 	template <typename UnderlyingT>
 	inline selection_model<UnderlyingT>::selection_model(const UnderlyingT &underlying)
 		: _underlying(underlying)
 	{	}
-
-	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::clear() throw()
-	{
-		_selection.clear();
-		this->invalidate(npos());
-	}
-
-	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::add(index_type item)
-	{
-		_selection.insert(get_key(item));
-		this->invalidate(item);
-	}
-
-	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::remove(index_type item)
-	{
-		_selection.erase(get_key(item));
-		this->invalidate(item);
-	}
-
-	template <typename UnderlyingT>
-	inline bool selection_model<UnderlyingT>::contains(index_type item) const throw()
-	{	return !!_selection.count(get_key(item));	}
-
-	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::add_key(const key_type &key)
-	{
-		_selection.insert(key);
-		this->invalidate(npos());
-	}
-
-	template <typename UnderlyingT>
-	inline void selection_model<UnderlyingT>::enumerate(const std::function<void (const key_type &key)> &callback) const
-	{
-		for (auto i = _selection.begin(); i != _selection.end(); ++i)
-			callback(*i);
-	}
 
 	template <typename UnderlyingT>
 	inline typename selection_model<UnderlyingT>::key_type selection_model<UnderlyingT>::get_key(size_t item) const

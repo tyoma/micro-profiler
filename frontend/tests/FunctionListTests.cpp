@@ -1,4 +1,4 @@
-#include <frontend/function_list.h>
+#include <frontend/statistic_models.h>
 #include <frontend/view_dump.h>
 
 #include "helpers.h"
@@ -128,7 +128,7 @@ namespace micro_profiler
 			test( ConstructedFunctionListIsEmpty )
 			{
 				// INIT / ACT
-				auto fl = make_shared<functions_list>(statistics, 1.0 , resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1.0 , resolver, tmodel);
 
 				// ACT / ASSERT
 				assert_equal(0u, fl->get_count());
@@ -138,7 +138,7 @@ namespace micro_profiler
 			test( FunctionListAcceptsUpdates )
 			{
 				// INIT
-				auto fl = make_shared<functions_list>(statistics, 1.0, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1.0, resolver, tmodel);
 
 				append(*statistics, plural
 					+ make_statistics(addr(1123), 19, 0, 0, 0, 1)
@@ -204,7 +204,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = make_shared<functions_list>(statistics, 1e-10, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1e-10, resolver, tmodel);
 
 				// ACT
 				auto text = get_text(*fl, columns);
@@ -238,7 +238,7 @@ namespace micro_profiler
 			test( FunctionListProvidesSelectionModel )
 			{
 				// INIT
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
 
 				// INIT / ACT
 				const auto s1 = fl->create_selection();
@@ -262,7 +262,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
 
 				// INIT / ACT
 				auto sel = fl->create_selection();
@@ -291,7 +291,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
 				const auto s = fl->create_selection();
 
 				ih.bind_to_model(*fl);
@@ -669,7 +669,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
 
 				tmodel->insert(make_thread_info(3, 100, string()));
 				tmodel->insert(make_thread_info(2, 1000, string()));
@@ -720,7 +720,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
 
 				tmodel->insert(make_thread_info(0, 18, string()));
 				tmodel->insert(make_thread_info(1, 1, string()));
@@ -759,7 +759,7 @@ namespace micro_profiler
 					+ make_statistics(addr(2000), 35, 1, 453, 366, 3)
 					+ make_statistics(addr(2990), 2, 2, 33450030, 32333333, 4);
 
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
 				string result;
 
 				(*tmodel)[1].native_id = 1711;
@@ -837,7 +837,7 @@ namespace micro_profiler
 					+ make_statistics(addr(0x2004), 17, 0, 0, 0, 0)
 					+ make_statistics(addr(0x2008), 18, 0, 0, 0, 0));
 
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
 
 				// ACT
 				shared_ptr<const trackable> t(fl->track(1));
@@ -849,112 +849,14 @@ namespace micro_profiler
 			}
 
 
-			test( OnlyAllowedItemsAreExposedByTheModelAfterFilterApplication )
-			{
-				// INIT
-				append(*statistics, plural
-					+ make_statistics(addr(0x1000u, 0), 1, 0, 0, 0, 0) + make_statistics(addr(0x1010u, 0), 2, 0, 0, 0, 0)
-					+ make_statistics(addr(0x1020u, 2), 3, 0, 0, 0, 0) + make_statistics(addr(0x1030u, 2), 4, 0, 0, 0, 0)
-					+ make_statistics(addr(0x1040u, 3), 5, 0, 0, 0, 0) + make_statistics(addr(0x1050u, 3), 6, 0, 0, 0, 0));
-
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
-
-				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.thread_id == 3; });
-
-				// ASSERT
-				string reference1[][2] = {
-					{	"00001040", "5",	},
-					{	"00001050", "6",	},
-				};
-
-				assert_table_equivalent(name_times, reference1, *fl);
-
-				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.thread_id == 0; });
-
-				// ASSERT
-				string reference2[][2] = {
-					{	"00001000", "1",	},
-					{	"00001010", "2",	},
-				};
-
-				assert_table_equivalent(name_times, reference2, *fl);
-
-				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.times_called > 3; });
-
-				// ASSERT
-				string reference3[][2] = {
-					{	"00001030", "4",	},
-					{	"00001040", "5",	},
-					{	"00001050", "6",	},
-				};
-
-				assert_table_equivalent(name_times, reference3, *fl);
-
-				// ACT
-				fl->set_filter();
-
-				// ASSERT
-				string reference4[][2] = {
-					{	"00001000", "1",	},
-					{	"00001010", "2",	},
-					{	"00001020", "3",	},
-					{	"00001030", "4",	},
-					{	"00001040", "5",	},
-					{	"00001050", "6",	},
-				};
-
-				assert_table_equivalent(name_times, reference4, *fl);
-			}
-
-
-			test( InvalidationIsEmittedOnFilterChange )
-			{
-				// INIT
-				append(*statistics, plural
-					+ make_statistics(addr(0x1000u), 1, 0, 0, 0, 0) + make_statistics(addr(0x1010u), 2, 0, 0, 0, 0));
-
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
-				invalidation_tracer it;
-
-				it.bind_to_model(*fl);
-
-				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.times_called > 1; });
-
-				// ASSERT
-				table_model_base::index_type reference1[] = { 1u, };
-
-				assert_equal(reference1, it.counts);
-
-				// ACT
-				fl->set_filter([] (const functions_list::value_type &v) { return v.times_called > 2; });
-
-				// ASSERT
-				table_model_base::index_type reference2[] = { 1u, 0u, };
-
-				assert_equal(reference2, it.counts);
-
-				// ACT
-				fl->set_filter();
-
-				// ASSERT
-				table_model_base::index_type reference3[] = { 1u, 0u, 2u, };
-
-				assert_equal(reference3, it.counts);
-			}
-
-
 			test( SymbolResolverInvalidationIsForwarded )
 			{
 				// INIT
 				auto invalidations = 0;
-				auto fl = make_shared<functions_list>(statistics, 1, resolver, tmodel);
-				auto c = fl->invalidate += [&] (functions_list::index_type i) {
+				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto c = fl->invalidate += [&] (richtext_table_model::index_type i) {
 					invalidations++;
-					assert_equal(functions_list::npos(), i);
+					assert_equal(richtext_table_model::npos(), i);
 				};
 
 				// ACT

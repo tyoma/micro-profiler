@@ -4,9 +4,9 @@ include(test)
 
 set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
-	ContainerViewModelTests.cpp
 	DataSchemeTests.cpp
 	DeSerializationTests.cpp
+	DynamicViewTests.cpp
 	FilePersistenceTests.cpp
 	FrontendManagerTests.cpp
 	FrontendMetadataTests.cpp
@@ -26,6 +26,7 @@ set(FRONTEND_TESTS_SOURCES
 	ProjectionViewTests.cpp
 	SelectionModelTests.cpp
 	SymbolResolverTests.cpp
+	TableModelImplTests.cpp
 	ThreadsModelTests.cpp
 	TrackablesProviderTests.cpp
 )

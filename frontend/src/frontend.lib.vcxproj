@@ -83,12 +83,12 @@
     <ClInclude Include="..\image_patch_ui.h" />
     <ClInclude Include="..\ipc_manager.h" />
     <ClInclude Include="..\key.h" />
-    <ClInclude Include="..\function_list.h" />
+    <ClInclude Include="..\statistic_models.h" />
     <ClInclude Include="..\headers_model.h" />
     <ClInclude Include="..\models.h" />
     <ClInclude Include="..\model_context.h" />
-    <ClInclude Include="..\nested_statistics_model.h" />
-    <ClInclude Include="..\nested_transform.h" />
+    <ClInclude Include="..\dynamic_views.h" />
+    <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />
@@ -99,7 +99,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\primitives.h" />
-    <ClInclude Include="..\container_view_model.h" />
+    <ClInclude Include="..\table_model_impl.h" />
     <ClInclude Include="..\statistics_poll.h" />
     <ClInclude Include="..\about_ui.h" />
     <ClInclude Include="..\symbol_resolver.h" />

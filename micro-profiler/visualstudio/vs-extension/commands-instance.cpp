@@ -5,12 +5,13 @@
 #include <common/string.h>
 #include <frontend/file.h>
 #include <frontend/frontend_ui.h>
-#include <frontend/function_list.h>
 #include <frontend/image_patch_model.h>
 #include <frontend/image_patch_ui.h>
 #include <frontend/persistence.h>
+#include <frontend/statistic_models.h>
 #include <frontend/statistics_poll.h>
 #include <frontend/symbol_resolver.h>
+#include <frontend/tables_ui.h>
 #include <frontend/view_dump.h>
 #include <strmd/serializer.h>
 #include <windows.h>
@@ -26,8 +27,8 @@ namespace micro_profiler
 {
 	namespace integration
 	{
-		void init_instance_menu(list< shared_ptr<void> > &running_objects, const wpl::vs::factory &factory,
-			command_target &target, const profiling_session &session, shared_ptr<const functions_list> model,
+		void init_instance_menu(command_target &target, list< shared_ptr<void> > &running_objects,
+			const wpl::vs::factory &factory, const profiling_session &session, tables_ui &ui,
 			shared_ptr<scheduler::queue> queue)
 		{
 			const auto statistics = session.statistics;
@@ -67,10 +68,10 @@ namespace micro_profiler
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
 			});
 
-			target.add_command(cmdidCopyStatistics, [model] (unsigned) {
+			target.add_command(cmdidCopyStatistics, [&ui] (unsigned) {
 				string result_utf8;
 
-				dump::as_tab_separated(result_utf8, *model);
+				ui.dump(result_utf8);
 
 				wstring result = unicode(result_utf8);
 

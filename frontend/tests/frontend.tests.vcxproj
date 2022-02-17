@@ -58,7 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncFileTests.cpp" />
-    <ClCompile Include="ContainerViewModelTests.cpp" />
+    <ClCompile Include="TableModelImplTests.cpp" />
     <ClCompile Include="DataSchemeTests.cpp" />
     <ClCompile Include="FrontendMetadataTests.cpp" />
     <ClCompile Include="FrontendPatcherTests.cpp" />
@@ -79,6 +79,7 @@
     </ClCompile>
     <ClCompile Include="ProcessListTests.cpp" />
     <ClCompile Include="ProjectionViewTests.cpp" />
+    <ClCompile Include="DynamicViewTests.cpp" />
     <ClCompile Include="SelectionModelTests.cpp" />
     <ClCompile Include="DeSerializationTests.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />

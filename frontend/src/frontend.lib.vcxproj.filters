@@ -70,7 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
-    <ClInclude Include="..\function_list.h" />
     <ClInclude Include="..\primitives.h" />
     <ClInclude Include="..\frontend.h" />
     <ClInclude Include="..\process_list.h" />
@@ -95,8 +94,6 @@
     <ClInclude Include="..\trackables_provider.h" />
     <ClInclude Include="..\selection_model.h" />
     <ClInclude Include="..\key.h" />
-    <ClInclude Include="..\nested_transform.h" />
-    <ClInclude Include="..\nested_statistics_model.h" />
     <ClInclude Include="..\statistics_poll.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\profiling_session.h" />
@@ -104,13 +101,16 @@
     <ClInclude Include="..\async_file.h" />
     <ClInclude Include="..\profiling_preferences.h" />
     <ClInclude Include="..\db.h" />
-    <ClInclude Include="..\container_view_model.h" />
     <ClInclude Include="..\column_definition.h" />
     <ClInclude Include="..\model_context.h" />
     <ClInclude Include="..\columns_layout.h" />
     <ClInclude Include="..\view_dump.h" />
     <ClInclude Include="..\constructors.h" />
     <ClInclude Include="..\models.h" />
+    <ClInclude Include="..\table_model_impl.h" />
+    <ClInclude Include="..\transforms.h" />
+    <ClInclude Include="..\statistic_models.h" />
+    <ClInclude Include="..\dynamic_views.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

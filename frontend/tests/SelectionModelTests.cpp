@@ -14,12 +14,7 @@ namespace micro_profiler
 		{
 			template <typename KeyT>
 			vector<KeyT> get_selected(const selection<KeyT> &selection_)
-			{
-				vector<KeyT> r;
-
-				selection_.enumerate([&r] (const KeyT &key) {	r.push_back(key);	});
-				return r;
-			}
+			{	return vector<KeyT>(selection_.begin(), selection_.end());	}
 		}
 
 		begin_test_suite( SelectionModelTests )

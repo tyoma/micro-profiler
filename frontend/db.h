@@ -33,33 +33,30 @@ namespace micro_profiler
 	typedef std::tuple<id_t /*thread_id*/, id_t /*parent_id*/, long_address_t> call_node_key;
 	typedef std::vector<long_address_t> callstack_key;
 
-	namespace views
+	template <>
+	class views::hash<call_node_key>
 	{
-		template <>
-		class hash<call_node_key>
+	public:
+		std::size_t operator ()(const call_node_key &key) const
+		{	return knuth_hash()(std::get<0>(key)) ^ knuth_hash()(std::get<1>(key)) ^ knuth_hash()(std::get<2>(key));	}
+	};
+
+	template <typename T>
+	class views::hash< std::vector<T> >
+	{
+	public:
+		std::size_t operator ()(const std::vector<T> &key) const
 		{
-		public:
-			std::size_t operator ()(const call_node_key &key) const
-			{	return knuth_hash()(std::get<0>(key)) ^ knuth_hash()(std::get<1>(key)) ^ knuth_hash()(std::get<2>(key));	}
-		};
+			size_t v = h((T()));
 
-		template <typename T>
-		class hash< std::vector<T> >
-		{
-		public:
-			std::size_t operator ()(const std::vector<T> &key) const
-			{
-				size_t v = h((T()));
+			for (auto i = key.begin(); i != key.end(); ++i)
+				v = h(v, h(*i));
+			return v;
+		}
 
-				for (auto i = key.begin(); i != key.end(); ++i)
-					v = h(v, h(*i));
-				return v;
-			}
-
-		private:
-			knuth_hash h;
-		};
-	}
+	private:
+		knuth_hash h;
+	};
 
 	struct call_statistics_constructor
 	{

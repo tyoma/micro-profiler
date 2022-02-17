@@ -20,20 +20,18 @@
 
 #pragma once
 
-#include <common/types.h>
 #include <wpl/models.h>
 
 namespace micro_profiler
 {
 	template <typename KeyT>
-	struct selection;
+	class selection;
 
-	struct linked_statistics : wpl::richtext_table_model
+	template <typename KeyT>
+	struct table_model : wpl::richtext_table_model
 	{
-		virtual ~linked_statistics() {	}
-		virtual void fetch() = 0;
 		virtual void set_order(index_type column, bool ascending) = 0;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() = 0;
-		virtual std::shared_ptr< selection<id_t> > create_selection() const = 0;
+		virtual std::shared_ptr< selection<KeyT> > create_selection() const = 0;
 	};
 }

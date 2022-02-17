@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "container_view_model.h"
+#include "table_model_impl.h"
 
 #include <agge.text/richtext.h>
 #include <common/string.h>
@@ -30,7 +30,7 @@ namespace micro_profiler
 	struct dump
 	{
 		template <typename BaseT, typename U, typename CtxT>
-		static void as_tab_separated(std::string &content, const container_view_model<BaseT, U, CtxT> &view)
+		static void as_tab_separated(std::string &content, const table_model_impl<BaseT, U, CtxT> &view)
 		{
 			locale_lock ll("");
 			const std::string lf = "\n";

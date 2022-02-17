@@ -32,7 +32,7 @@
 namespace micro_profiler
 {
 	template <typename KeyT>
-	struct selection;
+	class selection;
 
 	template <typename UnderlyingT>
 	class trackables_provider;

@@ -1,15 +1,36 @@
+//	Copyright (c) 2011-2022 by Artem A. Gevorkyan (gevorkyan.org)
+//
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights
+//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//	copies of the Software, and to permit persons to whom the Software is
+//	furnished to do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in
+//	all copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//	THE SOFTWARE.
+
 #include <frontend/tables_ui.h>
 
 #include <frontend/columns_layout.h>
+#include <frontend/dynamic_views.h>
 #include <frontend/headers_model.h>
 #include <frontend/function_hint.h>
-#include <frontend/function_list.h>
-#include <frontend/nested_statistics_model.h>
-#include <frontend/nested_transform.h>
 #include <frontend/piechart.h>
 #include <frontend/profiling_session.h>
+#include <frontend/statistic_models.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
+#include <frontend/transforms.h>
+#include <frontend/view_dump.h>
 
 #include <common/configuration.h>
 #include <wpl/controls.h>
@@ -24,59 +45,55 @@ using namespace placeholders;
 namespace micro_profiler
 {
 	tables_ui::tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration)
-		: wpl::stack(false, factory_.context.cursor_manager_), _tick_interval(1. / session.process_info.ticks_per_second),
-			_resolver(make_shared<symbol_resolver>(session.modules, session.module_mappings)),
-			_model(make_shared<functions_list>(session.statistics, 1.0 / session.process_info.ticks_per_second,
-				_resolver, session.threads)),
+		: wpl::stack(false, factory_.context.cursor_manager_),
 			_cm_main(new headers_model(c_statistics_columns, 3, false)),
 			_cm_parents(new headers_model(c_caller_statistics_columns, 2, false)),
 			_cm_children(new headers_model(c_callee_statistics_columns, 4, false))
 	{
+		const auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);
 		const auto statistics = session.statistics;
-		const auto m_selection = _model->create_selection();
-		const auto m_selected_items = make_shared< vector<id_t> >();
+		const auto filtered_statistics = make_filter_view(statistics);
+		const auto context = create_context(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+			session.threads, false);
+		const auto m_main = make_table< table_model<id_t> >(filtered_statistics, context, c_statistics_columns);
+		const auto m_selection = m_main->create_selection();
 		const auto threads = make_shared<threads_model>(session.threads);
-		const auto m_parents = create_callers_model(statistics, 1.0 / session.process_info.ticks_per_second, _resolver,
-			session.threads, m_selected_items);
+		const auto m_parents = create_callers_model(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+			session.threads, m_selection);
 		const auto m_selection_parents = m_parents->create_selection();
-		const auto m_children = create_callees_model(statistics, 1.0 / session.process_info.ticks_per_second, _resolver,
-			session.threads, m_selected_items);
+		const auto m_children = create_callees_model(statistics, 1.0 / session.process_info.ticks_per_second, resolver,
+			session.threads, m_selection);
 		const auto m_selection_children = m_children->create_selection();
-
-		_connections.push_back(m_selection->invalidate += [=] (size_t) {
-			auto main_selected_items_ = m_selected_items;
-
-			main_selected_items_->clear();
-			m_selection->enumerate([main_selected_items_] (id_t key) {
-				main_selected_items_->push_back(key);
-			});
-			m_parents->fetch();
-			m_children->fetch();
-		});
 
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
-		auto on_activate = [this, statistics, m_selected_items] {
-			if (!m_selected_items->empty())
+		_dump_main = [m_main] (string &content) {
+			dump::as_tab_separated(content, *m_main);
+		};
+
+		auto on_activate = [this, resolver, statistics, m_selection] {
+			if (m_selection->begin() != m_selection->end())
 			{
 				symbol_resolver::fileline_t fileline;
-				const auto entry = statistics->by_id.find(m_selected_items->front());
+				const auto entry = statistics->by_id.find(*m_selection->begin());
 
-				if (entry && _resolver->symbol_fileline_by_va(entry->address, fileline))
+				if (entry && resolver->symbol_fileline_by_va(entry->address, fileline))
 					open_source(fileline.first, fileline.second);
 			}
 		};
 
-		auto on_drilldown_child = [statistics, m_selection] (const selection<id_t> &selection_) {
-			const auto key = get_first_item(selection_);
-			const auto item = key.second ? statistics->by_id.find(key.first) : nullptr;
-
-			if (auto child = item ? statistics->by_node.find(call_node_key(item->thread_id, 0, item->address)) : nullptr)
+		auto on_drilldown_child = [statistics, m_selection, m_selection_children] (...) {
+			if (m_selection_children->begin() != m_selection_children->end())
 			{
-				m_selection->clear();
-				m_selection->add_key(child->id);
+				const auto item = statistics->by_id.find(*m_selection_children->begin());
+
+				if (auto child = item ? statistics->by_node.find(call_node_key(item->thread_id, 0, item->address)) : nullptr)
+				{
+					m_selection->clear();
+					m_selection->add_key(child->id);
+				}
 			}
 		};
 
@@ -88,12 +105,13 @@ namespace micro_profiler
 		set_spacing(5);
 		add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(20), true, 3);
 			_connections.push_back(lv->item_activate += [statistics, m_selection, m_selection_parents] (...) {
-				const auto key = get_first_item(*m_selection_parents);
-
-				if (const auto item = key.second ? statistics->by_id.find(key.first) : nullptr)
+				if (m_selection_parents->begin() != m_selection_parents->end())
 				{
-					m_selection->clear();
-					m_selection->add_key(item->parent_id);
+					if (const auto item = statistics->by_id.find(*m_selection_parents->begin()))
+					{
+						m_selection->clear();
+						m_selection->add_key(item->parent_id);
+					}
 				}
 			});
 			attach_section(*lv, nullptr, nullptr, _cm_parents, m_parents, m_selection_parents);
@@ -104,15 +122,15 @@ namespace micro_profiler
 			panel[0]->add(cb = factory_.create_control<wpl::combobox>("combobox"), wpl::pixels(24), false, 4);
 				cb->set_model(threads);
 				cb->select(0u);
-				_connections.push_back(cb->selection_changed += [this, threads] (wpl::combobox::model_t::index_type index) {
+				_connections.push_back(cb->selection_changed += [filtered_statistics, threads] (wpl::combobox::model_t::index_type index) {
 					unsigned id;
 
 					if (threads->get_key(id, index))
-						_model->set_filter([id] (const functions_list::value_type &v) { return (id == v.thread_id) && !v.parent_id;	});
+						filtered_statistics->set_filter([id] (const call_statistics &v) { return (id == v.thread_id) && !v.parent_id;	});
 					else
-						_model->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	});
+						filtered_statistics->set_filter([] (const call_statistics &v) { return !v.parent_id;	});
 				});
-				_model->set_filter([] (const functions_list::value_type &v) { return !v.parent_id;	}); // TODO: temporary solution, until hierarchical view is there
+				filtered_statistics->set_filter([] (const call_statistics &v) { return !v.parent_id;	}); // TODO: temporary solution, until hierarchical view is there
 
 			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), wpl::percents(100), false);
 				panel[1]->set_spacing(5);
@@ -120,44 +138,32 @@ namespace micro_profiler
 					_connections.push_back(pc->item_activate += [on_activate] (...) {	on_activate();	});
 					pc->set_hint(hint);
 
-				panel[1]->add(_lv_main= factory_.create_control<wpl::listview>("listview"), wpl::percents(100), false, 1);
-					_connections.push_back(_lv_main->item_activate += [on_activate] (...) {	on_activate();	});
+				panel[1]->add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(100), false, 1);
+					_connections.push_back(lv->item_activate += [on_activate] (...) {	on_activate();	});
 
-			attach_section(*_lv_main, pc.get(), hint.get(), _cm_main, _model, m_selection);
+			attach_section(*lv, pc.get(), hint.get(), _cm_main, m_main, m_selection);
 
 		hint = wpl::apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine), *factory_.context.stylesheet_);
 		add(panel[0] = factory_.create_control<stack>("hstack"), wpl::percents(20), true);
 			panel[0]->set_spacing(5);
 			panel[0]->add(pc = factory_.create_control<piechart>("piechart"), wpl::pixels(150), false);
-				_connections.push_back(pc->item_activate += [m_selection_children, on_drilldown_child] (...) {
-					on_drilldown_child(*m_selection_children);
-				});
+				_connections.push_back(pc->item_activate += on_drilldown_child);
 				pc->set_hint(hint);
 
 			panel[0]->add(lv = factory_.create_control<wpl::listview>("listview"), wpl::percents(100), false, 2);
-				_connections.push_back(lv->item_activate += [m_selection_children, on_drilldown_child] (...) {
-					on_drilldown_child(*m_selection_children);
-				});
+				_connections.push_back(lv->item_activate += on_drilldown_child);
 				attach_section(*lv, pc.get(), hint.get(), _cm_children, m_children, m_selection_children);
 
 	}
 
-	shared_ptr<const functions_list> tables_ui::get_model() const
-	{	return _model;	}
+	void tables_ui::dump(std::string &content) const
+	{	_dump_main(content);	}
 
 	void tables_ui::save(hive &configuration)
 	{
 		_cm_parents->store(*configuration.create("ParentsColumns"));
 		_cm_main->store(*configuration.create("MainColumns"));
 		_cm_children->store(*configuration.create("ChildrenColumns"));
-	}
-
-	pair<id_t, bool> tables_ui::get_first_item(const selection<id_t> &selection_)
-	{
-		auto key = make_pair(id_t(), false);
-
-		selection_.enumerate([&] (id_t key_) {	key = make_pair(key_, true);	});
-		return key;
 	}
 
 	template <typename ModelT, typename SelectionModelT>

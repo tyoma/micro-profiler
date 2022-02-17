@@ -18,7 +18,7 @@ namespace micro_profiler
 	class symbol_resolver;
 
 	template <typename KeyT>
-	struct selection;
+	class selection;
 
 	namespace tables
 	{

@@ -21,13 +21,14 @@
 #include "ProfilerMainDialog.h"
 
 #include <common/configuration.h>
-#include <frontend/function_list.h>
 #include <frontend/profiling_session.h>
+#include <frontend/statistic_models.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables_ui.h>
 #include <frontend/view_dump.h>
 
 #include <algorithm>
+#include <wpl/controls/integrated.h>
 #include <wpl/controls.h>
 #include <wpl/factory.h>
 #include <wpl/form.h>
@@ -86,17 +87,16 @@ namespace micro_profiler
 
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
 						btn->set_text(agge::style_modifier::empty + "Copy All");
-						const auto model = _statistics_display->get_model();
-						_connections.push_back(btn->clicked += [this, model] {
-							string text;
+						_connections.push_back(btn->clicked += [this] {
+							string content;
 
-							dump::as_tab_separated(text, *model);
-							copy_to_buffer(text);
+							_statistics_display->dump(content);
+							copy_to_buffer(content);
 						});
 
 					toolbar->add(btn = factory_.create_control<button>("button"), pixels(100), false, 101);
 						btn->set_text(agge::style_modifier::empty + "Profile Scope...");
-						_connections.push_back(btn->clicked += [this, model] {
+						_connections.push_back(btn->clicked += [this] {
 							const auto l = _form->get_location();
 							const agge::point<int> center = { (l.x1 + l.x2) / 2, (l.y1 + l.y2) / 2 };
 

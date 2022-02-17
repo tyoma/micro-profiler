@@ -83,7 +83,8 @@ namespace micro_profiler
 				_connections.push_back(btn->clicked += [model, patches, selection_] {
 					unordered_map< unsigned int, vector<unsigned int> > s;
 
-					selection_->enumerate([&s] (const symbol_key &key) {	s[key.persistent_id].push_back(key.rva);	});
+					for (auto i = selection_->begin(); i != selection_->end(); ++i)
+						s[i->persistent_id].push_back(i->rva);
 					for (auto i = s.begin(); i != s.end(); ++i)
 						patches->apply(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
 					selection_->clear();
@@ -94,7 +95,8 @@ namespace micro_profiler
 					_connections.push_back(btn->clicked += [model, patches, selection_] {
 						unordered_map< unsigned int, vector<unsigned int> > s;
 
-						selection_->enumerate([&s] (const symbol_key &key) {	s[key.persistent_id].push_back(key.rva);	});
+						for (auto i = selection_->begin(); i != selection_->end(); ++i)
+							s[i->persistent_id].push_back(i->rva);
 						for (auto i = s.begin(); i != s.end(); ++i)
 							patches->revert(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
 						selection_->clear();

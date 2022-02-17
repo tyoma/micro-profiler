@@ -34,9 +34,9 @@
 #include <frontend/file.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/frontend_ui.h>
-#include <frontend/function_list.h>
 #include <frontend/ipc_manager.h>
 #include <frontend/persistence.h>
+#include <frontend/statistic_models.h>
 #include <frontend/threads_model.h>
 #include <logger/log.h>
 #include <strmd/deserializer.h>

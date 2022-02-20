@@ -20,15 +20,19 @@ namespace micro_profiler
 		{
 			template <typename U>
 			trackable(U &u, index_type index)
-				: _underlying(index ? u.track(index - 1) : shared_ptr<const wpl::trackable>())
+				: _underlying(index >= 2u ? u.track(index - 2) : shared_ptr<const wpl::trackable>()),
+					_fixed_index(index)
 			{	}
 
 			virtual index_type index() const override
-			{	return _underlying ? _underlying->index() + 1 : 0;	}
+			{	return _underlying ? _underlying->index() + 2 : _fixed_index;	}
 
 			shared_ptr<const wpl::trackable> _underlying;
+			const index_type _fixed_index;
 		};
 	}
+
+	const unsigned int threads_model::cumulative = static_cast<unsigned int>(-1);
 
 	threads_model::threads_model(shared_ptr<const tables::threads> threads)
 		: _underlying(threads), _view(make_shared<view_type>(*_underlying)),
@@ -45,20 +49,33 @@ namespace micro_profiler
 	}
 
 	bool threads_model::get_key(unsigned int &thread_id, index_type index) const throw()
-	{	return index >= 1 && index < get_count() ? thread_id = (*_view)[index - 1].first, true : false;	}
+	{
+		if (!index--)
+			return false;
+		else if (!index--)
+			return thread_id = cumulative, true;
+		else if (index < _view->size())
+			return thread_id = (*_view)[index].first, true;
+		else
+			return false;
+	}
 
 	threads_model::index_type threads_model::get_count() const throw()
-	{	return _view->size() + 1;	}
+	{	return _view->size() + 2;	}
 
 	void threads_model::get_value(index_type index, string &text) const
 	{
-		if (index == 0)
+		if (!index--)
 		{
 			text = "All Threads";
 		}
+		else if (!index--)
+		{
+			text = "All Threads [cumulative]";
+		}
 		else
 		{
-			const thread_info &v = (*_view)[index - 1].second;
+			const thread_info &v = (*_view)[index].second;
 
 			text = "#", itoa<10>(text, v.native_id);
 			if (!v.description.empty())

@@ -36,11 +36,12 @@ namespace micro_profiler
 		{	return v.parent_id;	}
 	};
 
-	struct callees_transform : views::immutable_index<tables::statistics, parent_id_keyer>
+	template <typename U>
+	struct callees_transform : views::immutable_index<U, parent_id_keyer>
 	{
-		typedef views::immutable_index<tables::statistics, parent_id_keyer> base;
+		typedef views::immutable_index<U, parent_id_keyer> base;
 
-		callees_transform(const tables::statistics &underlying)
+		callees_transform(const U &underlying)
 			: base(underlying)
 		{	}
 
@@ -53,6 +54,7 @@ namespace micro_profiler
 		{	return value;	}
 	};
 
+	template <typename U>
 	class callers_transform
 	{
 	private:
@@ -63,17 +65,17 @@ namespace micro_profiler
 			key_type operator ()(const call_statistics &v) const
 			{	return std::make_pair(v.address, !v.parent_id);	}
 		};
-		typedef views::immutable_index<tables::statistics, address_keyer> by_address_index;
+		typedef views::immutable_index<U, address_keyer> by_address_index;
 
 	public:
-		typedef by_address_index::const_iterator const_iterator;
-		typedef by_address_index::value_type const_reference;
-		typedef by_address_index::key_type key_type;
-		typedef by_address_index::range_type range_type;
-		typedef by_address_index::value_type value_type;
+		typedef typename by_address_index::const_iterator const_iterator;
+		typedef typename by_address_index::value_type const_reference;
+		typedef typename by_address_index::key_type key_type;
+		typedef typename by_address_index::range_type range_type;
+		typedef typename by_address_index::value_type value_type;
 
 	public:
-		callers_transform(const tables::statistics &underlying)
+		callers_transform(const U &underlying)
 			: _underlying(underlying), _by_address(underlying)
 		{	}
 
@@ -94,7 +96,7 @@ namespace micro_profiler
 		{	return value;	}
 
 	private:
-		const tables::statistics &_underlying;
-		views::immutable_index<tables::statistics, address_keyer> _by_address;
+		const U &_underlying;
+		views::immutable_index<U, address_keyer> _by_address;
 	};
 }

@@ -78,8 +78,8 @@ namespace micro_profiler
 				auto s = make_shared<tables::statistics>();
 
 				// INIT / ACT
-				auto callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 1u + 3u));
-				auto callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural + 1u + 3u));
+				auto callers = create_callers_model(s, create_context(s, 1, resolver, tmodel, false), make_shared_copy(plural + 1u + 3u));
+				auto callees = create_callees_model(s, create_context(s, 1, resolver, tmodel, false), make_shared_copy(plural + 1u + 3u));
 
 				// ACT / ASSERT
 				assert_not_null(callers);
@@ -115,8 +115,8 @@ namespace micro_profiler
 				auto s = make_shared<tables::statistics>();
 
 				// INIT / ACT
-				auto callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 2u + 1171u /*missing*/));
-				auto callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural + 2u + 1171u /*missing*/));
+				auto callers = create_callers_model(s, create_context(s, 1, resolver, tmodel, false), make_shared_copy(plural + 2u + 1171u /*missing*/));
+				auto callees = create_callees_model(s, create_context(s, 1, resolver, tmodel, false), make_shared_copy(plural + 2u + 1171u /*missing*/));
 
 				// ACT / ASSERT
 				assert_not_null(callers);
@@ -133,15 +133,15 @@ namespace micro_profiler
 				assert_equal(2u, callees->get_count());
 
 				// INIT / ACT
-				callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 6u + 2u));
-				callees = create_callees_model(s, 1, resolver, tmodel, make_shared_copy(plural + 5u + 3u + 2u));
+				callers = create_callers_model(s, create_context(s, 1, resolver, tmodel, false), make_shared_copy(plural + 6u + 2u));
+				callees = create_callees_model(s, create_context(s, 1, resolver, tmodel, false), make_shared_copy(plural + 5u + 3u + 2u));
 
 				// ASSERT
 				assert_equal(4u, callers->get_count());
 				assert_equal(3u, callees->get_count());
 
 				// INIT / ACT
-				callers = create_callers_model(s, 1, resolver, tmodel, make_shared_copy(plural + 2u));
+				callers = create_callers_model(s, create_context(s, 1, resolver, tmodel, false), make_shared_copy(plural + 2u));
 
 				// ASSERT
 				assert_equal(3u, callers->get_count());
@@ -174,7 +174,7 @@ namespace micro_profiler
 
 				append(*s, functions);
 
-				auto callees = create_callees_model(s, 0.01, resolver, tmodel, sel);
+				auto callees = create_callees_model(s, create_context(s, 0.01, resolver, tmodel, false), sel);
 
 				// ACT
 				auto text = get_text(*callees, columns);
@@ -226,7 +226,7 @@ namespace micro_profiler
 
 				append(*s, functions);
 
-				auto callers = create_callers_model(s, 0.01, resolver, tmodel, sel);
+				auto callers = create_callers_model(s, create_context(s, 0.01, resolver, tmodel, false), sel);
 
 				// ACT
 				auto text = get_text(*callers, columns);
@@ -278,7 +278,7 @@ namespace micro_profiler
 
 				append(*s, functions);
 
-				auto ls = create_callees_model(s, 0.01, resolver, tmodel, sel);
+				auto ls = create_callees_model(s, create_context(s, 0.01, resolver, tmodel, false), sel);
 				auto m = ls->get_column_series();
 
 				// ACT

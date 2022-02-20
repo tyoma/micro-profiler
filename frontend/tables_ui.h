@@ -29,6 +29,7 @@
 
 namespace wpl
 {
+	struct combobox;
 	class factory;
 	struct listview;
 }
@@ -40,6 +41,7 @@ namespace micro_profiler
 	struct hive;
 	class piechart;
 	struct profiling_session;
+	class symbol_resolver;
 
 	class tables_ui : public wpl::stack
 	{
@@ -53,17 +55,25 @@ namespace micro_profiler
 		wpl::signal<void(const std::string &file, unsigned line)> open_source;
 
 	private:
-		template <typename ModelT, typename SelectionModelT>
-		void attach_section(wpl::listview &lv, piechart *pc, function_hint *hint, std::shared_ptr<headers_model> cm,
-			std::shared_ptr<ModelT> model, std::shared_ptr<SelectionModelT> selection_);
+		struct models;
 
 	private:
+		void init_layout(const wpl::factory &factory_);
+		void attach(std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<models> m);
+
+	private:
+		const std::shared_ptr<wpl::combobox> _filter_selector;
+		const std::shared_ptr<piechart> _main_piechart, _callees_piechart;
+		const std::shared_ptr<function_hint> _main_hint, _callees_hint;
+		const std::shared_ptr<wpl::listview> _main_view, _callers_view, _callees_view;
+
 		const std::shared_ptr<headers_model> _cm_main;
 		const std::shared_ptr<headers_model> _cm_parents;
 		const std::shared_ptr<headers_model> _cm_children;
 
 		std::function<void (std::string &content)> _dump_main;
 
+		wpl::slot_connection _filter_connection;
 		std::vector<wpl::slot_connection> _connections;
 	};
 }

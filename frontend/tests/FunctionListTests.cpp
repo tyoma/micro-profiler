@@ -128,7 +128,7 @@ namespace micro_profiler
 			test( ConstructedFunctionListIsEmpty )
 			{
 				// INIT / ACT
-				auto fl = create_statistics_model(statistics, 1.0 , resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1.0 , resolver, tmodel, false));
 
 				// ACT / ASSERT
 				assert_equal(0u, fl->get_count());
@@ -138,7 +138,7 @@ namespace micro_profiler
 			test( FunctionListAcceptsUpdates )
 			{
 				// INIT
-				auto fl = create_statistics_model(statistics, 1.0, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1.0, resolver, tmodel, false));
 
 				append(*statistics, plural
 					+ make_statistics(addr(1123), 19, 0, 0, 0, 1)
@@ -204,7 +204,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = create_statistics_model(statistics, 1e-10, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1e-10, resolver, tmodel, false));
 
 				// ACT
 				auto text = get_text(*fl, columns);
@@ -238,7 +238,7 @@ namespace micro_profiler
 			test( FunctionListProvidesSelectionModel )
 			{
 				// INIT
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
 				// INIT / ACT
 				const auto s1 = fl->create_selection();
@@ -262,7 +262,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
 				// INIT / ACT
 				auto sel = fl->create_selection();
@@ -291,7 +291,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 				const auto s = fl->create_selection();
 
 				ih.bind_to_model(*fl);
@@ -669,7 +669,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
 				tmodel->insert(make_thread_info(3, 100, string()));
 				tmodel->insert(make_thread_info(2, 1000, string()));
@@ -720,7 +720,7 @@ namespace micro_profiler
 
 				append(*statistics, functions);
 
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
 				tmodel->insert(make_thread_info(0, 18, string()));
 				tmodel->insert(make_thread_info(1, 1, string()));
@@ -759,7 +759,7 @@ namespace micro_profiler
 					+ make_statistics(addr(2000), 35, 1, 453, 366, 3)
 					+ make_statistics(addr(2990), 2, 2, 33450030, 32333333, 4);
 
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 				string result;
 
 				(*tmodel)[1].native_id = 1711;
@@ -837,7 +837,7 @@ namespace micro_profiler
 					+ make_statistics(addr(0x2004), 17, 0, 0, 0, 0)
 					+ make_statistics(addr(0x2008), 18, 0, 0, 0, 0));
 
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
 				// ACT
 				shared_ptr<const trackable> t(fl->track(1));
@@ -853,7 +853,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto invalidations = 0;
-				auto fl = create_statistics_model(statistics, 1, resolver, tmodel);
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 				auto c = fl->invalidate += [&] (richtext_table_model::index_type i) {
 					invalidations++;
 					assert_equal(richtext_table_model::npos(), i);

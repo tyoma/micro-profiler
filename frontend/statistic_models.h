@@ -55,32 +55,24 @@ namespace micro_profiler
 	}
 
 
-	template <typename U>
-	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, statistics_model_context> >
-		create_statistics_model(std::shared_ptr<U> underlying, double tick_interval, std::shared_ptr<symbol_resolver> resolver,
-		std::shared_ptr<const tables::threads> threads)
-	{
-		return make_table< table_model<id_t> >(underlying, create_context(underlying, tick_interval, resolver, threads,
-			false), c_statistics_columns);
-	}
+	template <typename U, typename CtxT>
+	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, CtxT> >
+		create_statistics_model(std::shared_ptr<U> underlying, const CtxT &context)
+	{	return make_table< table_model<id_t> >(underlying, context, c_statistics_columns);	}
 
-
-	template <typename U, typename ScopeT>
-	inline std::shared_ptr< table_model<id_t> > create_callees_model(std::shared_ptr<U> underlying, double tick_interval,
-		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
+	template <typename U, typename CtxT, typename ScopeT>
+	inline std::shared_ptr< table_model<id_t> > create_callees_model(std::shared_ptr<U> underlying, const CtxT &context,
 		std::shared_ptr<ScopeT> scope)
 	{
-		return make_table< table_model<id_t> >(make_scoped_view<callees_transform>(underlying, scope),
-			create_context(underlying, tick_interval, resolver, threads, false), c_callee_statistics_columns);
+		return make_table< table_model<id_t> >(make_scoped_view< callees_transform<U> >(underlying, scope), context,
+			c_callee_statistics_columns);
 	}
 
-
-	template <typename U, typename ScopeT>
-	inline std::shared_ptr< table_model<id_t> > create_callers_model(std::shared_ptr<U> underlying, double tick_interval,
-		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads,
+	template <typename U, typename CtxT, typename ScopeT>
+	inline std::shared_ptr< table_model<id_t> > create_callers_model(std::shared_ptr<U> underlying, const CtxT &context,
 		std::shared_ptr<ScopeT> scope)
 	{
-		return make_table< table_model<id_t> >(make_scoped_view<callers_transform>(underlying, scope),
-			create_context(underlying, tick_interval, resolver, threads, false), c_caller_statistics_columns);
+		return make_table< table_model<id_t> >(make_scoped_view< callers_transform<U> >(underlying, scope), context,
+			c_caller_statistics_columns);
 	}
 }

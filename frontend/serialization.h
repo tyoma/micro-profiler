@@ -159,6 +159,7 @@ namespace micro_profiler
 			call_node_key key(context.thread_id, context.parent_id, 0);
 
 			archive(std::get<2>(key));
+			container[key].commit(); // TODO: come up with something better then committing records twice.
 			auto r = container[key];
 			archive(static_cast<AsT &>(*r), container);
 			r.commit();

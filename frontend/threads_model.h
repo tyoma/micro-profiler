@@ -43,6 +43,9 @@ namespace micro_profiler
 	class threads_model : public wpl::list_model<std::string>, noncopyable
 	{
 	public:
+		static const unsigned int cumulative;
+
+	public:
 		threads_model(std::shared_ptr<const tables::threads> threads);
 
 		bool get_key(unsigned int &thread_id, index_type index) const throw();

@@ -204,6 +204,7 @@ namespace micro_profiler
 	const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[] = {
 		c_statistics_columns[0],
 		{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, name, by_name, true,	},
+		c_statistics_columns[2],
 		c_statistics_columns[3],
 		c_statistics_columns[4],
 		c_statistics_columns[5],

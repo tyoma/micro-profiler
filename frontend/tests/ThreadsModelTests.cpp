@@ -24,8 +24,9 @@ namespace micro_profiler
 				wpl::list_model<string> &m = *m_;
 
 				// ASSERT
-				assert_equal(1u, m.get_count());
+				assert_equal(2u, m.get_count());
 				assert_equal("All Threads", get_value(m, 0));
+				assert_equal("All Threads [cumulative]", get_value(m, 1));
 			}
 
 
@@ -60,6 +61,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(plural
 					+ (string)"All Threads"
+					+ (string)"All Threads [cumulative]"
 					+ (string)"#11717 - thread 2 - CPU: 20s, started: +10s"
 					+ (string)"#1717 - thread 1 - CPU: 100ms, started: +5s, ended: +20.7s", values);
 
@@ -72,6 +74,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(plural
 					+ (string)"All Threads"
+					+ (string)"All Threads [cumulative]"
 					+ (string)"#11717 - thread #2 - CPU: 10s, started: +10s, ended: +4ms"
 					+ (string)"#32717 - thread #4 - CPU: 1s, started: +20s"
 					+ (string)"#22717 - CPU: 1s, started: +5ms"
@@ -102,6 +105,7 @@ namespace micro_profiler
 				assert_equal(1u, log.size());
 				assert_equal(plural
 					+ (string)"All Threads"
+					+ (string)"All Threads [cumulative]"
 					+ (string)"#19 - consumer - CPU: 20s, started: +10s"
 					+ (string)"#17 - producer - CPU: 100ms, started: +5s", log.back());
 
@@ -119,6 +123,7 @@ namespace micro_profiler
 				assert_equal(2u, log.size());
 				assert_equal(plural
 					+ (string)"All Threads"
+					+ (string)"All Threads [cumulative]"
 					+ (string)"#17 - producer - CPU: 25.4s, started: +5s, ended: +57s"
 					+ (string)"#19 - consumer - CPU: 20s, started: +10s"
 					+ (string)"#1701 - CPU: 130ms, started: +5.15s", log.back());
@@ -144,12 +149,14 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_is_false(m->get_key(thread_id, 0));
 				assert_is_true(m->get_key(thread_id, 1));
-				assert_equal(110u, thread_id);
+				assert_equal(threads_model::cumulative, thread_id);
 				assert_is_true(m->get_key(thread_id, 2));
-				assert_equal(11u, thread_id);
+				assert_equal(110u, thread_id);
 				assert_is_true(m->get_key(thread_id, 3));
+				assert_equal(11u, thread_id);
+				assert_is_true(m->get_key(thread_id, 4));
 				assert_equal(111u, thread_id);
-				assert_is_false(m->get_key(thread_id, 4));
+				assert_is_false(m->get_key(thread_id, 5));
 
 				// INIT
 				(*t)[12] = make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(3),
@@ -157,9 +164,9 @@ namespace micro_profiler
 				t->invalidate();
 
 				// ACT / ASSERT
-				assert_is_true(m->get_key(thread_id, 4));
+				assert_is_true(m->get_key(thread_id, 5));
 				assert_equal(12u, thread_id);
-				assert_is_false(m->get_key(thread_id, 5));
+				assert_is_false(m->get_key(thread_id, 6));
 			}
 
 
@@ -180,16 +187,16 @@ namespace micro_profiler
 
 				// ACT
 				shared_ptr<const wpl::trackable> t0 = m->track(0); // 'All Threads'
-				shared_ptr<const wpl::trackable> t1 = m->track(3); // thread_id: 111
-				shared_ptr<const wpl::trackable> t2 = m->track(1); // thread_id: 110
+				shared_ptr<const wpl::trackable> t1 = m->track(4); // thread_id: 111
+				shared_ptr<const wpl::trackable> t2 = m->track(2); // thread_id: 110
 
 				// ASSERT
 				assert_not_null(t0);
 				assert_not_null(t1);
 				assert_not_null(t2);
 				assert_equal(0u, t0->index());
-				assert_equal(3u, t1->index());
-				assert_equal(1u, t2->index());
+				assert_equal(4u, t1->index());
+				assert_equal(2u, t2->index());
 
 				// INIT
 				(*t)[111] = make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(18),
@@ -200,8 +207,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0u, t0->index());
-				assert_equal(2u, t1->index());
-				assert_equal(1u, t2->index());
+				assert_equal(3u, t1->index());
+				assert_equal(2u, t2->index());
 
 				// INIT
 				(*t)[11] = make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(21),
@@ -214,8 +221,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0u, t0->index());
-				assert_equal(1u, t1->index());
-				assert_equal(3u, t2->index());
+				assert_equal(2u, t1->index());
+				assert_equal(4u, t2->index());
 			}
 
 
@@ -239,6 +246,7 @@ namespace micro_profiler
 				assert_equal(1u, m->track(1)->index());
 				assert_equal(2u, m->track(2)->index());
 				assert_equal(3u, m->track(3)->index());
+				assert_equal(4u, m->track(4)->index());
 			}
 		end_test_suite
 	}

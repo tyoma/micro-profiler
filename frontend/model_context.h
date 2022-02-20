@@ -30,7 +30,6 @@ namespace micro_profiler
 	class symbol_resolver;
 	namespace tables
 	{
-		struct statistics;
 		struct threads;
 	}
 

@@ -152,5 +152,8 @@ namespace micro_profiler
 	typedef views::immutable_unique_index<calls_statistics_table, call_node_keyer> call_nodes_index;
 	typedef views::immutable_unique_index<calls_statistics_table, id_keyer> primary_id_index;
 	typedef views::immutable_index< calls_statistics_table, callstack_keyer<primary_id_index> > callstack_index;
+
 	typedef views::aggregated_table<calls_statistics_table, call_statistics_constructor> aggregated_statistics_table;
+	typedef views::immutable_unique_index<aggregated_statistics_table, call_node_keyer> aggregated_call_nodes_index;
+	typedef views::immutable_unique_index<aggregated_statistics_table, id_keyer> aggregated_primary_id_index;
 }

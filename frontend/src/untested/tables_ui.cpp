@@ -71,6 +71,8 @@ namespace micro_profiler
 					aggregated += *i;
 			}
 		};
+
+		enum view_mode {	mode_none, mode_regular, mode_aggregated,	};
 	}
 
 	struct tables_ui::models
@@ -133,30 +135,47 @@ namespace micro_profiler
 			_cm_children(new headers_model(c_callee_statistics_columns, 4, false))
 	{
 		const auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);
-		const auto threads = make_shared<threads_model>(session.threads);
-
-		const auto statistics = session.statistics;//make_shared<aggregated_statistics>(session.statistics);
-
-//		statistics->group_by(callstack_keyer<primary_id_index>(session.statistics->by_id),
-//			callstack_keyer<aggregated_primary_id_index>(statistics->by_id), sum_functions());
-
-		const auto m = make_shared<models>(statistics, resolver, session.threads, session.process_info.ticks_per_second);
+		const auto threads = session.threads;
+		const auto tmodel = make_shared<threads_model>(threads);
+		const auto ticks_per_second = session.process_info.ticks_per_second;
+		const auto statistics = session.statistics;
+		const auto vm = make_shared<view_mode>(mode_none);
 
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
 		_cm_children->update(*configuration.create("ChildrenColumns"));
 
 		init_layout(factory_);
-		attach(resolver, m);
 
-		_filter_selector->set_model(threads);
-		_filter_connection = _filter_selector->selection_changed += [threads, m] (combobox::model_t::index_type index) {
-			unsigned id;
+		_filter_selector->set_model(tmodel);
+		_filter_connection = _filter_selector->selection_changed += [this, resolver, threads, tmodel, ticks_per_second, statistics, vm] (combobox::model_t::index_type index) {
+			unsigned thread_id = 0;
+			const auto all_threads = !tmodel->get_key(thread_id, index);
 
-			threads->get_key(id, index) ? m->set_filter(id) : m->reset_filter();
+			if (threads_model::cumulative == thread_id && mode_aggregated != *vm)
+			{
+				const auto aggregated = make_shared<aggregated_statistics>(statistics);
+
+				aggregated->group_by(callstack_keyer<primary_id_index>(statistics->by_id),
+					callstack_keyer<aggregated_primary_id_index>(aggregated->by_id), sum_functions());
+				_models = make_shared<models>(aggregated, resolver, threads, ticks_per_second);
+				attach(resolver, _models);
+				*vm = mode_aggregated;
+			}
+			else if (threads_model::cumulative != thread_id && mode_regular != *vm)
+			{
+				_models = make_shared<models>(statistics, resolver, threads, ticks_per_second);
+				attach(resolver, _models);
+				*vm = mode_regular;
+			}
+
+			if (all_threads || threads_model::cumulative == thread_id)
+				_models->reset_filter();
+			else
+				_models->set_filter(thread_id);
 		};
-		m->reset_filter();
 		_filter_selector->select(0u);
+		_filter_selector->selection_changed(0u);
 	}
 
 	void tables_ui::dump(string &content) const

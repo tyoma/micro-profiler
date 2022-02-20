@@ -75,6 +75,10 @@ The steps are much like the ones above.
 
 # Revision History
 
+## v2.0.650
+
+* Issue [#71](https://github.com/tyoma/micro-profiler/issues/71) implemented - threads filter now allows for a _cumulative_ view - with the times summed up from all threads.
+
 ## v2.0.638
 
 * Issue [#77](https://github.com/tyoma/micro-profiler/issues/77) fixed - crash in applications with profiled DLL being loaded after more than 64 TLSes allocated.

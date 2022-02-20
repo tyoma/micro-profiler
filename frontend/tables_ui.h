@@ -71,6 +71,7 @@ namespace micro_profiler
 		const std::shared_ptr<headers_model> _cm_parents;
 		const std::shared_ptr<headers_model> _cm_children;
 
+		std::shared_ptr<models> _models;
 		std::function<void (std::string &content)> _dump_main;
 
 		wpl::slot_connection _filter_connection;

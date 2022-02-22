@@ -20,6 +20,10 @@
 
 #pragma once
 
+#include "table_events.h"
+
+#include <common/compiler.h>
+#include <unordered_map>
 #include <vector>
 #include <wpl/signal.h>
 
@@ -27,11 +31,27 @@ namespace micro_profiler
 {
 	namespace views
 	{
+		typedef const void *typeid_t;
+
+		template <typename T>
+		FORCE_NOINLINE typeid_t ctypeid() // Relies on function coalescing to avoid different id for the same type.
+		{
+			static T *dummy = nullptr;
+			return &dummy;
+		}
+
 		template <typename T>
 		struct default_constructor
 		{
 			T operator ()()
 			{	return T();	}
+		};
+
+		template <typename F>
+		struct component_type
+		{
+			typedef decltype((*static_cast<F *>(nullptr))()) type_;
+			typedef typename std::remove_pointer<type_>::type type;
 		};
 
 		template < typename T, typename ConstructorT = default_constructor<T> >
@@ -40,6 +60,7 @@ namespace micro_profiler
 		public:
 			class const_iterator;
 			typedef const T &const_reference;
+			typedef ConstructorT constructor_type;
 			class iterator;
 			typedef T &reference;
 			class transacted_record;
@@ -58,18 +79,27 @@ namespace micro_profiler
 
 			transacted_record create();
 
+			template <typename CompConstructorT>
+			const typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor) const;
+			template <typename CompConstructorT>
+			typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor);
+
 		public:
 			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
 			mutable wpl::signal<void ()> cleared;
 
 		private:
-			typedef std::vector<T> container_type;
 			typedef unsigned int index_type;
 			class iterator_base;
 
 		private:
+			template <typename CompConstructorT>
+			table_events &construct_component(const CompConstructorT &constructor) const;
+
+		private:
 			ConstructorT _constructor;
-			container_type _records;
+			std::vector<T> _records;
+			mutable std::unordered_map< typeid_t, std::unique_ptr<table_events> > _indices;
 
 		private:
 			template <typename ArchiveT, typename T2, typename ConstructorT2>
@@ -119,12 +149,12 @@ namespace micro_profiler
 			{	return (*_container)[this->get_index()];	}
 
 		private:
-			const_iterator(const container_type &container_, index_type index)
+			const_iterator(const std::vector<T> &container_, index_type index)
 				: iterator_base(index), _container(&container_)
 			{	}
 
 		private:
-			const container_type *_container;
+			const std::vector<T> *_container;
 
 		private:
 			friend class table;
@@ -224,6 +254,37 @@ namespace micro_profiler
 
 			_records.push_back(_constructor());
 			return transacted_record(*this, index, true);
+		}
+
+		template <typename T, typename C>
+		template <typename CC>
+		inline const typename component_type<CC>::type &table<T, C>::component(const CC &constructor) const
+		{
+			typedef typename component_type<CC>::type component_t;
+			const auto i = _indices.find(ctypeid<component_t>());
+
+			return static_cast<component_t &>(_indices.end() != i ? *i->second : construct_component(constructor));
+		}
+
+		template <typename T, typename C>
+		template <typename CC>
+		inline typename component_type<CC>::type &table<T, C>::component(const CC &constructor)
+		{
+			typedef typename component_type<CC>::type component_t;
+			const auto i = _indices.find(ctypeid<component_t>());
+
+			return static_cast<component_t &>(_indices.end() != i ? *i->second : construct_component(constructor));
+		}
+
+		template <typename T, typename C>
+		template <typename CC>
+		FORCE_NOINLINE inline table_events &table<T, C>::construct_component(const CC &constructor) const
+		{
+			typedef typename component_type<CC>::type component_t;
+			const auto inserted = _indices.emplace(std::make_pair(ctypeid<component_t>(), nullptr));
+
+			inserted.first->second.reset(constructor());
+			return *inserted.first->second;
 		}
 
 

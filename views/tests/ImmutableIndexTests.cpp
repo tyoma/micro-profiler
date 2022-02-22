@@ -398,53 +398,6 @@ namespace micro_profiler
 				}
 
 
-				test( MovedIndexHasItemsAndConnectionMoved )
-				{
-					typedef table< pair<int, string> > table_t;
-					typedef immutable_index< table_t, key_first<table_t::value_type> > index_t;
-
-					// INIT
-					table_t t;
-					index_t idx(t);
-
-					populate(t, plural + make_pair(11, (string)"zoo") + make_pair(13, (string)"Boo") + make_pair(11, (string)"foo"));
-
-					// ACT
-					index_t idx2(move(idx));
-
-					// ASSERT
-					auto r = idx2.equal_range(11);
-					assert_equivalent(plural
-						+ make_pair(11, (string)"zoo")
-						+ make_pair(11, (string)"foo"), (vector< pair<int, string> >(r.first, r.second)));
-					r = idx2.equal_range(13);
-					assert_equivalent(plural
-						+ make_pair(13, (string)"Boo"), (vector< pair<int, string> >(r.first, r.second)));
-					r = idx.equal_range(11);
-					assert_equal(r.first, r.second);
-					r = idx.equal_range(13);
-					assert_equal(r.first, r.second);
-
-					// INIT / ACT
-					populate(t, plural + make_pair(13, (string)"z"));
-
-					// ASSERT
-					r = idx2.equal_range(13);
-					assert_equivalent(plural
-						+ make_pair(13, (string)"z")
-						+ make_pair(13, (string)"Boo"), (vector< pair<int, string> >(r.first, r.second)));
-					r = idx.equal_range(13);
-					assert_equal(r.first, r.second);
-
-					// ACT
-					t.clear();
-
-					// ASSERT
-					r = idx2.equal_range(13);
-					assert_equal(r.first, r.second);
-				}
-
-
 				test( IndexIsClearedUponTableClear )
 				{
 					// INIT

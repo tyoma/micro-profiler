@@ -97,9 +97,11 @@ namespace micro_profiler
 			template <typename ContainerT>
 			void append(tables::statistics &statistics, const ContainerT &items, id_t parent_id = 0)
 			{
+				auto &by_node = views::unique_index<call_node_keyer>(statistics);
+
 				for (auto i = begin(items); i != end(items); ++i)
 				{
-					auto r = statistics.by_node[call_node_key(i->first.second, parent_id, i->first.first)];
+					auto r = by_node[call_node_key(i->first.second, parent_id, i->first.first)];
 
 					static_cast<function_statistics &>(*r) = i->second;
 					r.commit();

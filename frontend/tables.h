@@ -43,12 +43,8 @@ namespace micro_profiler
 
 		struct statistics : table<calls_statistics_table>
 		{
-			statistics();
-
 			void clear();
 
-			primary_id_index by_id;
-			call_nodes_index by_node;
 			std::function<void ()> request_update;
 		};
 
@@ -101,10 +97,6 @@ namespace micro_profiler
 		};
 
 
-
-		inline statistics::statistics()
-			: by_id(*this), by_node(*this)
-		{	}
 
 		inline void statistics::clear()
 		{

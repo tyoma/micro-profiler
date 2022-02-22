@@ -101,15 +101,15 @@ namespace micro_profiler
 		{	return value.id;	}
 	};
 
-	template <typename IndexT>
+	template <typename U>
 	class callstack_keyer
 	{
 	public:
 		typedef callstack_key key_type;
 
 	public:
-		callstack_keyer(const IndexT &by_id)
-			: _by_id(by_id)
+		callstack_keyer(const U &underlying)
+			: _by_id(views::unique_index<id_keyer>(underlying))
 		{	}
 
 		template <typename T>
@@ -135,6 +135,10 @@ namespace micro_profiler
 		}
 
 	private:
+		typedef views::table<typename U::value_type, typename U::constructor_type> table_type;
+		typedef views::immutable_unique_index<table_type, id_keyer> by_id_index_type;
+
+	private:
 		template <typename T>
 		inline void key_append(const T &record) const
 		{
@@ -144,16 +148,10 @@ namespace micro_profiler
 		}
 
 	private:
-		const IndexT &_by_id;
+		const by_id_index_type &_by_id;
 		mutable callstack_key _key_buffer;
 	};
 
 	typedef views::table<call_statistics, call_statistics_constructor> calls_statistics_table;
-	typedef views::immutable_unique_index<calls_statistics_table, call_node_keyer> call_nodes_index;
-	typedef views::immutable_unique_index<calls_statistics_table, id_keyer> primary_id_index;
-	typedef views::immutable_index< calls_statistics_table, callstack_keyer<primary_id_index> > callstack_index;
-
 	typedef views::aggregated_table<calls_statistics_table, call_statistics_constructor> aggregated_statistics_table;
-	typedef views::immutable_unique_index<aggregated_statistics_table, call_node_keyer> aggregated_call_nodes_index;
-	typedef views::immutable_unique_index<aggregated_statistics_table, id_keyer> aggregated_primary_id_index;
 }

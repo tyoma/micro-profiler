@@ -31,6 +31,7 @@
 #include "transforms.h"
 
 #include <views/filter.h>
+#include <views/integrated_index.h>
 
 namespace micro_profiler
 {
@@ -50,8 +51,10 @@ namespace micro_profiler
 	inline statistics_model_context create_context(std::shared_ptr<U> underlying, double tick_interval,
 		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads, bool canonical)
 	{
+		auto &by_id = views::unique_index<id_keyer>(*underlying);
+
 		return initialize<statistics_model_context>(tick_interval,
-			[underlying] (id_t id) {	return underlying->by_id.find(id);	}, threads, resolver, canonical);
+			[underlying, &by_id] (id_t id) {	return by_id.find(id);	}, threads, resolver, canonical);
 	}
 
 

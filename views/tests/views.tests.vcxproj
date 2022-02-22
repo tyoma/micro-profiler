@@ -42,6 +42,7 @@
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
+    <ClCompile Include="IntegratedIndexTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="TableSerializationTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
@@ -51,10 +52,12 @@
     <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\flatten.h" />
+    <ClInclude Include="..\integrated_index.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\table.h" />
     <ClInclude Include="..\index.h" />
     <ClInclude Include="..\ordered.h" />
+    <ClInclude Include="..\table_events.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

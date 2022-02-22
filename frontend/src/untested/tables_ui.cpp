@@ -33,6 +33,7 @@
 #include <frontend/view_dump.h>
 
 #include <common/configuration.h>
+#include <views/integrated_index.h>
 #include <wpl/controls.h>
 #include <wpl/factory.h>
 #include <wpl/layout.h>
@@ -46,21 +47,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		struct aggregated_statistics : aggregated_statistics_table
-		{
-			aggregated_statistics(shared_ptr<tables::statistics> underlying)
-				: aggregated_statistics_table(*underlying), by_id(*this), by_node(*this),
-					invalidate(underlying->invalidate), _underlying(underlying)
-			{	}
-
-			aggregated_primary_id_index by_id;
-			aggregated_call_nodes_index by_node;
-			signal<void ()> &invalidate;
-
-		private:
-			const shared_ptr<tables::statistics> _underlying;
-		};
-
 		struct sum_functions
 		{
 			template <typename I>
@@ -72,6 +58,22 @@ namespace micro_profiler
 			}
 		};
 
+		struct aggregated_statistics : aggregated_statistics_table
+		{
+			aggregated_statistics(shared_ptr<tables::statistics> underlying)
+				: aggregated_statistics_table(*underlying), invalidate(underlying->invalidate), _underlying(underlying)
+			{	group_by(*this, sum_functions());	}
+
+			template <typename TableT>
+			callstack_keyer<TableT> operator ()(const TableT &table_) const
+			{	return callstack_keyer<TableT>(table_);	}
+
+			signal<void ()> &invalidate;
+
+		private:
+			const shared_ptr<tables::statistics> _underlying;
+		};
+
 		enum view_mode {	mode_none, mode_regular, mode_aggregated,	};
 	}
 
@@ -80,9 +82,13 @@ namespace micro_profiler
 		template <typename StatisticsT>
 		models(shared_ptr<StatisticsT> statistics, shared_ptr<symbol_resolver> resolver,
 				shared_ptr<const tables::threads> threads, uint64_t ticks_per_second)
-			: by_id([statistics] (id_t key) {	return statistics->by_id.find(key);	}),
-				by_node([statistics] (const call_node_key &key) {	return statistics->by_node.find(key);	})
 		{
+			auto &by_id_idx = views::unique_index<id_keyer>(*statistics);
+			by_id = [&by_id_idx] (id_t key) {	return by_id_idx.find(key);	};
+
+			auto &by_node_idx = views::unique_index<call_node_keyer>(*statistics);
+			by_node = [&by_node_idx] (const call_node_key &key) {	return by_node_idx.find(key);	};
+
 			const auto filtered_statistics = make_filter_view(statistics);
 			const auto context = initialize<statistics_model_context>(1.0 / ticks_per_second, by_id, threads, resolver,
 				false);
@@ -111,8 +117,8 @@ namespace micro_profiler
 		function<void (string &content)> dump_main;
 		function<void ()> reset_filter;
 		function<void (id_t thread_id)> set_filter;
-		const function<const call_statistics *(id_t key)> by_id;
-		const function<const call_statistics *(const call_node_key &key)> by_node;
+		function<const call_statistics *(id_t key)> by_id;
+		function<const call_statistics *(const call_node_key &key)> by_node;
 		shared_ptr< table_model<id_t> > main, callers, callees;
 		shared_ptr< selection<id_t> > selection_main, selection_callers, selection_callees;
 	};
@@ -154,11 +160,8 @@ namespace micro_profiler
 
 			if (threads_model::cumulative == thread_id && mode_aggregated != *vm)
 			{
-				const auto aggregated = make_shared<aggregated_statistics>(statistics);
-
-				aggregated->group_by(callstack_keyer<primary_id_index>(statistics->by_id),
-					callstack_keyer<aggregated_primary_id_index>(aggregated->by_id), sum_functions());
-				_models = make_shared<models>(aggregated, resolver, threads, ticks_per_second);
+				_models = make_shared<models>(make_shared<aggregated_statistics>(statistics), resolver, threads,
+					ticks_per_second);
 				attach(resolver, _models);
 				*vm = mode_aggregated;
 			}

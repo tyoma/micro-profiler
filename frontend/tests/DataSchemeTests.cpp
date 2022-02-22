@@ -21,17 +21,6 @@ namespace micro_profiler
 				long_address_t address;
 			};
 
-			struct empty_index
-			{
-				const fake_call &operator [](id_t) const
-				{
-					assert_is_false(true);
-					throw 0;
-				}
-
-				int operator [](id_t); // Shall not be accessed altogether.
-			};
-
 			template <typename T, typename ConstructorT>
 			void add(views::table<T, ConstructorT> &table, const T &item)
 			{
@@ -51,8 +40,8 @@ namespace micro_profiler
 					{	0, 0, 0x7010000090	},
 					{	0, 0, 0xF960000010	},
 				};
-				empty_index ei;
-				const callstack_keyer<empty_index> keyer(ei);
+				views::table<fake_call> tbl;
+				const callstack_keyer< views::table<fake_call> > keyer(tbl);
 
 				// ACT
 				callstack_key key = keyer(data[0]);
@@ -89,8 +78,7 @@ namespace micro_profiler
 					{	97, 31, 41	},
 				};
 				views::table<fake_call> tbl;
-				views::immutable_unique_index<views::table<fake_call>, id_keyer> by_id(tbl, id_keyer());
-				const callstack_keyer< views::immutable_unique_index<views::table<fake_call>, id_keyer> > keyer(by_id);
+				auto keyer = callstack_keyer< views::table<fake_call> >(tbl);
 
 				for (auto i = begin(data_); i != end(data_); ++i)
 					add(tbl, *i);
@@ -127,13 +115,12 @@ namespace micro_profiler
 					make_call_statistics(99, 0, 11, 37, 0, 0, 0, 0, 0),
 				};
 				calls_statistics_table tbl;
-				primary_id_index by_id(tbl, id_keyer());
 
 				for (auto i = begin(data_); i != end(data_); ++i)
 					add(tbl, *i);
 
 				// INIT / ACT
-				callstack_index by_callstack(tbl, callstack_keyer<primary_id_index>(by_id));
+				auto &by_callstack = multi_index(tbl, callstack_keyer<calls_statistics_table>(tbl));
 
 				// ACT
 				auto r = by_callstack.equal_range(plural + (long_address_t)29);
@@ -187,6 +174,11 @@ namespace micro_profiler
 			};
 
 
+			template <typename TableT>
+			callstack_keyer<TableT> operator ()(const TableT &table_) const
+			{	return callstack_keyer<TableT>(table_);	}
+
+
 			test( ThreadAggregationWorksForPlainCalls )
 			{
 				typedef views::immutable_unique_index<aggregated_statistics_table, id_keyer> aggregated_primary_id_index;
@@ -202,12 +194,9 @@ namespace micro_profiler
 					make_call_statistics(6, 1, 0, 37, 90, 0, 769, 0, 0),
 				};
 				calls_statistics_table tbl;
-				primary_id_index by_id(tbl, id_keyer());
 				aggregated_statistics_table aggregated(tbl);
-				aggregated_primary_id_index by_aggregated_id(aggregated, id_keyer());
 
-				aggregated.group_by(callstack_keyer<primary_id_index>(by_id),
-					callstack_keyer<aggregated_primary_id_index>(by_aggregated_id), aggregator());
+				aggregated.group_by(*this, aggregator());
 
 				// ACT
 				for (auto i = begin(data_); i != end(data_); ++i)
@@ -258,12 +247,9 @@ namespace micro_profiler
 
 				};
 				calls_statistics_table tbl;
-				primary_id_index by_id(tbl, id_keyer());
 				aggregated_statistics_table aggregated(tbl);
-				aggregated_primary_id_index by_aggregated_id(aggregated, id_keyer());
 
-				aggregated.group_by(callstack_keyer<primary_id_index>(by_id),
-					callstack_keyer<aggregated_primary_id_index>(by_aggregated_id), aggregator());
+				aggregated.group_by(*this, aggregator());
 
 				// ACT
 				for (auto i = begin(data_); i != end(data_); ++i)

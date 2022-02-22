@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "table_events.h"
+
 #include <stdexcept>
 #include <unordered_map>
 #include <wpl/signal.h>
@@ -33,7 +35,7 @@ namespace micro_profiler
 		{	};
 
 		template <typename U, typename K>
-		class immutable_unique_index
+		class immutable_unique_index : public table_events
 		{
 		public:
 			typedef typename K::key_type key_type;
@@ -47,6 +49,10 @@ namespace micro_profiler
 			typename U::transacted_record operator [](const key_type &key);
 
 		private:
+			immutable_unique_index(const immutable_unique_index &other);
+			void operator =(const immutable_unique_index &rhs);
+
+		private:
 			std::unordered_map< key_type, typename U::iterator, hash<key_type> > _index;
 			U &_underlying;
 			const K _keyer;
@@ -55,7 +61,7 @@ namespace micro_profiler
 
 
 		template <typename U, typename K>
-		class immutable_index
+		class immutable_index : public table_events
 		{
 		public:
 			class const_iterator;
@@ -66,7 +72,6 @@ namespace micro_profiler
 
 		public:
 			immutable_index(const U &underlying, const K &keyer = K());
-			immutable_index(immutable_index &&other);
 
 			range_type equal_range(const key_type &key) const;
 
@@ -74,7 +79,8 @@ namespace micro_profiler
 			typedef std::unordered_multimap< key_type, typename U::const_iterator, hash<key_type> > index_t;
 
 		private:
-			void operator =(immutable_index &&rhs);
+			immutable_index(const immutable_index &other);
+			void operator =(const immutable_index &rhs);
 
 		private:
 			const U &_underlying;
@@ -170,18 +176,6 @@ namespace micro_profiler
 				on_changed(i, true);
 			_connections[0] = underlying.changed += on_changed;
 			_connections[1] = underlying.cleared += [this] {	_index.clear();	};
-		}
-
-		template <typename U, typename K>
-		inline immutable_index<U, K>::immutable_index(immutable_index &&other)
-			: _underlying(other._underlying), _index(std::move(other._index)), _keyer(std::move(other._keyer))
-		{
-			other._connections[0].reset();
-			_connections[0] = _underlying.changed += [this] (typename U::const_iterator record, bool new_) {
-				if (new_)
-					_index.insert(std::make_pair(_keyer(*record), record));
-			};
-			_connections[1] = _underlying.cleared += [this] {	_index.clear();	};
 		}
 
 		template <typename U, typename K>

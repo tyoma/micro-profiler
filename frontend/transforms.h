@@ -22,9 +22,7 @@
 
 #include "tables.h"
 
-#include <views/index.h>
-
-// TODO: replace tables::statistics with a template argument
+#include <views/integrated_index.h>
 
 namespace micro_profiler
 {
@@ -36,58 +34,68 @@ namespace micro_profiler
 		{	return v.parent_id;	}
 	};
 
-	template <typename U>
-	struct callees_transform : views::immutable_index<U, parent_id_keyer>
+	struct address_keyer
 	{
-		typedef views::immutable_index<U, parent_id_keyer> base;
+		typedef std::pair<long_address_t, bool /*root*/> key_type;
 
+		key_type operator ()(const call_statistics &v) const
+		{	return std::make_pair(v.address, !v.parent_id);	}
+	};
+
+
+	template <typename U>
+	class callees_transform
+	{
+	private:
+		typedef views::immutable_index<U, parent_id_keyer> index_t;
+
+	public:
+		typedef typename index_t::const_iterator const_iterator;
+		typedef typename index_t::const_reference const_reference;
+		typedef typename index_t::range_type range_type;
+		typedef typename index_t::value_type value_type;
+
+	public:
 		callees_transform(const U &underlying)
-			: base(underlying)
+			: _underlying(underlying)
 		{	}
 
-		callees_transform(callees_transform &&other)
-			: base(std::move(other))
-		{	}
+		range_type equal_range(id_t id) const
+		{	return views::multi_index<parent_id_keyer>(_underlying).equal_range(id);	}
 
 		template <typename T1, typename T2>
 		static const T2 &get(const T1 &, const T2 &value)
 		{	return value;	}
+
+	private:
+		const U &_underlying;
 	};
 
 	template <typename U>
 	class callers_transform
 	{
 	private:
-		struct address_keyer
-		{
-			typedef std::pair<long_address_t, bool /*root*/> key_type;
-
-			key_type operator ()(const call_statistics &v) const
-			{	return std::make_pair(v.address, !v.parent_id);	}
-		};
 		typedef views::immutable_index<U, address_keyer> by_address_index;
 
 	public:
 		typedef typename by_address_index::const_iterator const_iterator;
 		typedef typename by_address_index::value_type const_reference;
-		typedef typename by_address_index::key_type key_type;
 		typedef typename by_address_index::range_type range_type;
 		typedef typename by_address_index::value_type value_type;
 
 	public:
 		callers_transform(const U &underlying)
-			: _underlying(underlying), _by_address(underlying)
-		{	}
-
-		callers_transform(callers_transform &&other)
-			: _underlying(other._underlying), _by_address(std::move(other._by_address))
+			: _underlying(underlying)
 		{	}
 
 		range_type equal_range(id_t id) const
 		{
-			if (auto self = _underlying.by_id.find(id))
-				return _by_address.equal_range(std::make_pair(self->address, false));
-			auto empty = _by_address.equal_range(std::make_pair(0, false));
+			auto &by_id = views::unique_index<id_keyer>(_underlying);
+			auto &by_address = views::multi_index<address_keyer>(_underlying);
+
+			if (auto self = by_id.find(id))
+				return by_address.equal_range(std::make_pair(self->address, false));
+			auto empty = by_address.equal_range(std::make_pair(0, false));
 			return empty.first = empty.second, empty;
 		}
 
@@ -97,6 +105,5 @@ namespace micro_profiler
 
 	private:
 		const U &_underlying;
-		views::immutable_index<U, address_keyer> _by_address;
 	};
 }

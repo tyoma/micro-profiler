@@ -20,87 +20,57 @@
 
 #pragma once
 
-#include "index.h"
-#include "table.h"
+#include "integrated_index.h"
 
 namespace micro_profiler
 {
 	namespace views
 	{
 		template < typename U, typename ConstructorT = default_constructor<typename U::value_type> >
-		class aggregated_table
+		class aggregated_table : public table<typename U::value_type, ConstructorT>
 		{
-		private:
-			typedef table<typename U::value_type, ConstructorT> aggregated_items_type;
-
-		public:
-			typedef ConstructorT constructor_type;
-			typedef typename aggregated_items_type::const_iterator const_iterator;
-			typedef const_iterator iterator;
-			typedef typename U::value_type value_type;
-			typedef const value_type &const_reference;
-			typedef const_reference reference;
-			class transacted_record;
-
 		public:
 			aggregated_table(const U &underlying);
 
-			const_iterator begin() const;
-			const_iterator end() const;
-
-			template <typename UnderlyingKeyerT, typename AggregatedKeyerT, typename AggregatorT>
-			void group_by(const UnderlyingKeyerT &ukeyer, const AggregatedKeyerT &akeyer, const AggregatorT &aggregator);
-
-		public:
-			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
-			wpl::signal<void ()> &cleared;
+			template <typename KeyerFactoryT, typename AggregatorT>
+			void group_by(const KeyerFactoryT &keyer_factory, const AggregatorT &aggregator);
 
 		private:
 			const U &_underlying;
-			table<value_type, ConstructorT> _aggregated;
-			wpl::slot_connection _on_clear, _on_changed, _on_changed2;
+			wpl::slot_connection _on_underlying_cleared, _on_changed;
 		};
 
 
 
 		template <typename U, typename C>
 		inline aggregated_table<U, C>::aggregated_table(const U &underlying)
-			: cleared(_aggregated.cleared), _underlying(underlying)
+			: _underlying(underlying)
 		{
-			_on_clear = _underlying.cleared += [this] {	_aggregated.clear();	};
-			_on_changed2 = _aggregated.changed += [this] (const_iterator i, bool new_) {	changed(i, new_);	};
+			_on_underlying_cleared = underlying.cleared += [this] {	this->clear();	};
 		}
 
 		template <typename U, typename C>
-		typename aggregated_table<U, C>::const_iterator aggregated_table<U, C>::begin() const
-		{	return _aggregated.begin();	}
-
-		template <typename U, typename C>
-		typename aggregated_table<U, C>::const_iterator aggregated_table<U, C>::end() const
-		{	return _aggregated.end();	}
-
-		template <typename U, typename C>
-		template <typename UnderlyingKeyerT, typename AggregatedKeyerT, typename AggregatorT>
-		inline void aggregated_table<U, C>::group_by(const UnderlyingKeyerT &ukeyer, const AggregatedKeyerT &akeyer,
-			const AggregatorT& aggregator)
+		template <typename KeyerFactoryT, typename AggregatorT>
+		inline void aggregated_table<U, C>::group_by(const KeyerFactoryT &keyer_factory, const AggregatorT& aggregator)
 		{
-			auto uindex = std::make_shared< immutable_index<U, UnderlyingKeyerT> >(_underlying, ukeyer);
-			auto aindex = std::make_shared< immutable_unique_index<aggregated_items_type, AggregatedKeyerT> >(_aggregated,
-				akeyer);
-			auto update_record = [aggregator, uindex, aindex] (const typename UnderlyingKeyerT::key_type &key) {
-				auto uitems = uindex->equal_range(key);
-				auto aggregated_record = (*aindex)[key];
+			const auto ukeyer = keyer_factory(_underlying);
+			auto &uindex = multi_index(_underlying, ukeyer);
+			auto &aindex = unique_index(*this, keyer_factory(*this));
+			auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename U::const_reference value) {
+				const auto key = ukeyer(value);
+				auto uitems = uindex.equal_range(key);
+				auto aggregated_record = aindex[key];
 
 				aggregator(*aggregated_record, uitems.first, uitems.second);
 				aggregated_record.commit();
 			};
 
-			_on_changed = _underlying.changed += [ukeyer, update_record] (typename U::const_iterator r, bool /*new_*/) {
-				update_record(ukeyer(*r));
+			_on_changed = _underlying.changed += [update_record] (typename U::const_iterator r, bool /*new_*/) {
+				update_record(*r);
 			};
-			_aggregated.clear();
+			this->clear();
 			for (auto i = _underlying.begin(); i != _underlying.end(); ++i)
-				update_record(ukeyer(*i));
+				update_record(*i);
 		}
 	}
 }

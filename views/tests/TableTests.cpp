@@ -25,6 +25,13 @@ namespace micro_profiler
 					int id;
 					string value;
 				};
+
+				template <typename T>
+				struct component_constructor
+				{
+					T *operator ()() const
+					{	return new T;	}
+				};
 			}
 
 			begin_test_suite( TableTests )
@@ -369,6 +376,107 @@ namespace micro_profiler
 
 					// ASSERT
 					assert_equal(1, called);
+				}
+
+
+				template <typename TableT>
+				struct component_a : table_events
+				{
+					component_a() {	}
+					component_a(const component_a &) {	assert_is_false(true);	} // A component is always created in-place.
+				};
+
+				template <typename TableT>
+				struct component_b : table_events
+				{
+					component_b() {	}
+					component_b(const component_b &) {	assert_is_false(true);	} // A component is always created in-place.
+				};
+
+				test( TableComponentIsCreatedOnFirstAccessViaBypassConstructor )
+				{
+					typedef table<string> table1_t;
+					typedef table<int> table2_t;
+
+					// INIT
+					table1_t t1;
+					const table1_t t2;
+					table2_t t3;
+					const table2_t t4;
+
+					// ACT
+					component_a<table1_t> &c1 = t1.component(component_constructor< component_a<table1_t> >());
+					const component_a<const table1_t> &c2 = t2.component(component_constructor< component_a<const table1_t> >());
+					component_b<table1_t> &c3 = t1.component(component_constructor< component_b<table1_t> >());
+					const component_b<const table1_t> &c4 = t2.component(component_constructor< component_b<const table1_t> >());
+					component_a<table2_t> &c5 = t3.component(component_constructor< component_a<table2_t> >());
+					const component_a<const table2_t> &c6 = t4.component(component_constructor< component_a<const table2_t> >());
+
+					// ASSERT (basically a compile-time test)
+					assert_not_null(&c1);
+					assert_not_null(&c2);
+					assert_not_null(&c3);
+					assert_not_null(&c4);
+					assert_not_null(&c5);
+					assert_not_null(&c6);
+				}
+
+
+				test( SameComponentIsReturnedOnConsequentAccesses )
+				{
+					typedef table<string> table_t;
+
+					// INIT
+					table_t t1, t2;
+
+					// ACT
+					component_a<const table_t> &c1 = t1.component(component_constructor< component_a<const table_t> >());
+					component_a<const table_t> &c2 = t1.component(component_constructor< component_a<const table_t> >());
+					const component_a<const table_t> &c3 = static_cast<const table_t &>(t1).component(component_constructor< component_a<const table_t> >());
+					const component_a<const table_t> &c4 = static_cast<const table_t &>(t2).component(component_constructor< component_a<const table_t> >());
+					component_a<const table_t> &c5 = t2.component(component_constructor< component_a<const table_t> >());
+					const component_a<const table_t> &c6 = static_cast<const table_t &>(t2).component(component_constructor< component_a<const table_t> >());
+
+					// ASSERT
+					assert_equal(&c1, &c2);
+					assert_equal(&c1, &c3);
+					assert_equal(&c4, &c5);
+					assert_equal(&c4, &c6);
+				}
+
+
+				test( ConstructorIsOnlyCalledOnce )
+				{
+					typedef table<string> table_t;
+					typedef component_a<const table_t> comp;
+
+					// INIT
+					vector<int> log;
+					table_t t1, t2;
+
+					// ACT
+					t1.component([&] {	return log.push_back(1), new comp();	});
+					static_cast<const table_t &>(t1).component([&] {	return log.push_back(1), new comp();	});
+					t1.component([&] {	return log.push_back(1), new comp();	});
+
+					// ASSERT
+					int reference1[] = {	1,	};
+
+					assert_equal(reference1, log);
+
+					// ACT
+					t2.component([&] {	return log.push_back(2), new comp();	});
+
+					// ASSERT
+					int reference2[] = {	1, 2,	};
+
+					assert_equal(reference2, log);
+
+					// ACT
+					t2.component([&] {	return log.push_back(2), new comp();	});
+
+					// ASSERT
+					assert_equal(reference2, log);
 				}
 			end_test_suite
 		}

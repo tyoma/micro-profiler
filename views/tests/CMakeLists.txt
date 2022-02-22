@@ -8,6 +8,7 @@ set(FRONTEND_TESTS_SOURCES
 	FilterViewTests.cpp
 	FlattenViewTests.cpp
 	ImmutableIndexTests.cpp
+	IntegratedIndexTests.cpp
 	OrderedViewTests.cpp
 	TableSerializationTests.cpp
 	TableTests.cpp

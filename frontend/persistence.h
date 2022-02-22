@@ -37,16 +37,18 @@ namespace micro_profiler
 	{
 		statistic_types::map_detailed s;
 		auto read_legacy_statistics = [&data, &s] {
+			auto &by_node = views::unique_index<call_node_keyer>(*data.statistics);
+
 			for (auto i = s.begin(); i != s.end(); ++i)
 			{
-				auto r0 = data.statistics->by_node[call_node_key(i->first.second, 0, i->first.first)];
+				auto r0 = by_node[call_node_key(i->first.second, 0, i->first.first)];
 				const auto parent_id = (*r0).id;
 
 				static_cast<function_statistics &>(*r0) = i->second;
 				r0.commit();
 				for (auto j = i->second.callees.begin(); j != i->second.callees.end(); ++j)
 				{
-					auto r1 = data.statistics->by_node[call_node_key(j->first.second, parent_id, j->first.first)];
+					auto r1 = by_node[call_node_key(j->first.second, parent_id, j->first.first)];
 
 					static_cast<function_statistics &>(*r1) = j->second;
 					r1.commit();

@@ -7,6 +7,7 @@
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
+#include <views/integrated_index.h>
 
 using namespace std;
 
@@ -131,6 +132,7 @@ namespace micro_profiler
 				// INIT
 				auto invalidated_count = 0;
 
+				auto &by_node = views::unique_index<call_node_keyer>(*statistics);
 				auto fl = create_functions_list(plural
 					+ make_statistics(addr(5), 123, 0, 0, 0, 0)
 					+ make_statistics(addr(17), 127, 0, 0, 0, 0)
@@ -143,7 +145,7 @@ namespace micro_profiler
 				auto conn = m->invalidate += bind(&increment, &invalidated_count);
 
 				// ACT
-				auto r = statistics->by_node[call_node_key(1, 0, 120)];
+				auto r = by_node[call_node_key(1, 0, 120)];
 
 				(*r).times_called = 11001;
 				r.commit();

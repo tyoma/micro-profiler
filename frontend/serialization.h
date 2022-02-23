@@ -134,7 +134,7 @@ namespace micro_profiler
 		{	_first = true;	}
 
 		template <typename ArchiveT, typename TableT>
-		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, call_node_keyer> &container, scontext::additive &context)
+		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, keyer::callnode> &container, scontext::additive &context)
 		{
 			scontext::hierarchy_node inner = {};
 
@@ -146,16 +146,16 @@ namespace micro_profiler
 		}
 
 		template <typename ArchiveT, typename TableT>
-		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, call_node_keyer> &container, scontext::hierarchy_node &context) const
+		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, keyer::callnode> &container, scontext::hierarchy_node &context) const
 		{	read_item_internal<call_statistics>(archive, container, context);	}
 
 		template <typename ArchiveT, typename TableT>
-		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, call_node_keyer> &container, scontext::hierarchy_node_1 &context) const
+		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, keyer::callnode> &container, scontext::hierarchy_node_1 &context) const
 		{	read_item_internal<function_statistics>(archive, container, context);	}
 
 	private:
 		template <typename AsT, typename ArchiveT, typename TableT, typename ContextT>
-		void read_item_internal(ArchiveT &archive, views::immutable_unique_index<TableT, call_node_keyer> &container, ContextT &context) const
+		void read_item_internal(ArchiveT &archive, views::immutable_unique_index<TableT, keyer::callnode> &container, ContextT &context) const
 		{
 			call_node_key key(context.thread_id, context.parent_id, 0);
 
@@ -187,7 +187,7 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT, typename TableT>
-	inline void serialize(ArchiveT &archive, call_statistics &data, views::immutable_unique_index<TableT, call_node_keyer> &context, unsigned int ver)
+	inline void serialize(ArchiveT &archive, call_statistics &data, views::immutable_unique_index<TableT, keyer::callnode> &context, unsigned int ver)
 	{
 		scontext::hierarchy_node inner = {	data.thread_id, data.id	};
 		
@@ -249,7 +249,7 @@ namespace micro_profiler
 		template <typename ArchiveT, typename ContextT>
 		inline void serialize(ArchiveT &archive, statistics &data, ContextT &context)
 		{
-			archive(views::unique_index<call_node_keyer>(data), context);
+			archive(views::unique_index<keyer::callnode>(data), context);
 			data.invalidate();
 		}
 
@@ -282,7 +282,7 @@ namespace strmd
 	};
 
 	template <typename TableT>
-	struct type_traits< micro_profiler::views::immutable_unique_index<TableT, micro_profiler::call_node_keyer> >
+	struct type_traits< micro_profiler::views::immutable_unique_index<TableT, micro_profiler::keyer::callnode> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::call_nodes_reader item_reader_type;

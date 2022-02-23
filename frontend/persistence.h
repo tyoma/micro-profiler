@@ -37,7 +37,7 @@ namespace micro_profiler
 	{
 		statistic_types::map_detailed s;
 		auto read_legacy_statistics = [&data, &s] {
-			auto &by_node = views::unique_index<call_node_keyer>(*data.statistics);
+			auto &by_node = views::unique_index<keyer::callnode>(*data.statistics);
 
 			for (auto i = s.begin(); i != s.end(); ++i)
 			{

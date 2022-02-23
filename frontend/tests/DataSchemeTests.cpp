@@ -41,7 +41,7 @@ namespace micro_profiler
 					{	0, 0, 0xF960000010	},
 				};
 				views::table<fake_call> tbl;
-				const callstack_keyer< views::table<fake_call> > keyer(tbl);
+				const keyer::callstack< views::table<fake_call> > keyer(tbl);
 
 				// ACT
 				callstack_key key = keyer(data[0]);
@@ -78,7 +78,7 @@ namespace micro_profiler
 					{	97, 31, 41	},
 				};
 				views::table<fake_call> tbl;
-				auto keyer = callstack_keyer< views::table<fake_call> >(tbl);
+				auto keyer = keyer::callstack< views::table<fake_call> >(tbl);
 
 				for (auto i = begin(data_); i != end(data_); ++i)
 					add(tbl, *i);
@@ -120,7 +120,7 @@ namespace micro_profiler
 					add(tbl, *i);
 
 				// INIT / ACT
-				auto &by_callstack = multi_index(tbl, callstack_keyer<calls_statistics_table>(tbl));
+				auto &by_callstack = multi_index(tbl, keyer::callstack<calls_statistics_table>(tbl));
 
 				// ACT
 				auto r = by_callstack.equal_range(plural + (long_address_t)29);
@@ -175,13 +175,13 @@ namespace micro_profiler
 
 
 			template <typename TableT>
-			callstack_keyer<TableT> operator ()(const TableT &table_) const
-			{	return callstack_keyer<TableT>(table_);	}
+			keyer::callstack<TableT> operator ()(const TableT &table_) const
+			{	return keyer::callstack<TableT>(table_);	}
 
 
 			test( ThreadAggregationWorksForPlainCalls )
 			{
-				typedef views::immutable_unique_index<aggregated_statistics_table, id_keyer> aggregated_primary_id_index;
+				typedef views::immutable_unique_index<aggregated_statistics_table, keyer::id> aggregated_primary_id_index;
 
 				// INIT
 				call_statistics data_[] = {
@@ -229,7 +229,7 @@ namespace micro_profiler
 
 			test( ThreadAggregationWorksForNestedCalls )
 			{
-				typedef views::immutable_unique_index<aggregated_statistics_table, id_keyer> aggregated_primary_id_index;
+				typedef views::immutable_unique_index<aggregated_statistics_table, keyer::id> aggregated_primary_id_index;
 
 				// INIT
 				call_statistics data_[] = {

@@ -38,7 +38,10 @@ namespace micro_profiler
 	{
 	public:
 		std::size_t operator ()(const call_node_key &key) const
-		{	return knuth_hash()(std::get<0>(key)) ^ knuth_hash()(std::get<1>(key)) ^ knuth_hash()(std::get<2>(key));	}
+		{	return h(h(h(std::get<0>(key)), h(std::get<1>(key))), h(std::get<2>(key)));	}
+
+	private:
+		knuth_hash h;
 	};
 
 	template <typename T>
@@ -80,77 +83,96 @@ namespace micro_profiler
 		friend void serialize(ArchiveT &archive, call_statistics_constructor &data, unsigned int ver);
 	};
 
-	struct call_node_keyer
+	namespace keyer
 	{
-		typedef call_node_key key_type;
-
-		key_type operator ()(const call_statistics &value) const
-		{	return key_type(value.thread_id, value.parent_id, value.address);	}
-
-		template <typename IndexT>
-		void operator ()(IndexT &/*index*/, call_statistics &value, const key_type &key) const
-		{	value.thread_id = std::get<0>(key), value.parent_id = std::get<1>(key), value.address = std::get<2>(key);	}
-	};
-
-	struct id_keyer
-	{
-		typedef id_t key_type;
-
-		template <typename T>
-		key_type operator ()(const T &value) const
-		{	return value.id;	}
-	};
-
-	template <typename U>
-	class callstack_keyer
-	{
-	public:
-		typedef callstack_key key_type;
-
-	public:
-		callstack_keyer(const U &underlying)
-			: _by_id(views::unique_index<id_keyer>(underlying))
-		{	}
-
-		template <typename T>
-		const callstack_key &operator ()(const T &record) const
+		struct callnode
 		{
-			_key_buffer.clear();
-			key_append(record);
-			return _key_buffer;
-		}
+			typedef call_node_key key_type;
 
-		template <typename Index2T>
-		void operator ()(Index2T &index, call_statistics &record, callstack_key key) const
+			key_type operator ()(const call_statistics &value) const
+			{	return key_type(value.thread_id, value.parent_id, value.address);	}
+
+			template <typename IndexT>
+			void operator ()(IndexT &/*index*/, call_statistics &value, const key_type &key) const
+			{	value.thread_id = std::get<0>(key), value.parent_id = std::get<1>(key), value.address = std::get<2>(key);	}
+		};
+
+		struct id
 		{
-			record.thread_id = 0;
-			record.address = key.back();
-			key.pop_back();
-			if (key.empty())
-				record.parent_id = 0;
-			else if (auto p = index.find(key))
-				record.parent_id = p->id;
-			else
-				throw 0;
-		}
+			typedef id_t key_type;
 
-	private:
-		typedef views::table<typename U::value_type, typename U::constructor_type> table_type;
-		typedef views::immutable_unique_index<table_type, id_keyer> by_id_index_type;
+			template <typename T>
+			key_type operator ()(const T &value) const
+			{	return value.id;	}
+		};
 
-	private:
-		template <typename T>
-		inline void key_append(const T &record) const
+		struct parent_id
 		{
-			if (const auto parent_id = record.parent_id)
-				key_append(_by_id[parent_id]);
-			_key_buffer.push_back(record.address);
-		}
+			typedef id_t key_type;
 
-	private:
-		const by_id_index_type &_by_id;
-		mutable callstack_key _key_buffer;
-	};
+			key_type operator ()(const call_statistics &value) const
+			{	return value.parent_id;	}
+		};
+
+		struct address
+		{
+			typedef std::pair<long_address_t, bool /*root*/> key_type;
+
+			key_type operator ()(const call_statistics &value) const
+			{	return std::make_pair(value.address, !value.parent_id);	}
+		};
+
+		template <typename U>
+		class callstack
+		{
+		public:
+			typedef callstack_key key_type;
+
+		public:
+			callstack(const U &underlying)
+				: _by_id(views::unique_index<id>(underlying))
+			{	}
+
+			template <typename T>
+			const callstack_key &operator ()(const T &record) const
+			{
+				_key_buffer.clear();
+				key_append(record);
+				return _key_buffer;
+			}
+
+			template <typename Index2T>
+			void operator ()(Index2T &index, call_statistics &record, callstack_key key) const
+			{
+				record.thread_id = 0;
+				record.address = key.back();
+				key.pop_back();
+				if (key.empty())
+					record.parent_id = 0;
+				else if (auto p = index.find(key))
+					record.parent_id = p->id;
+				else
+					throw 0;
+			}
+
+		private:
+			typedef views::table<typename U::value_type, typename U::constructor_type> table_type;
+			typedef views::immutable_unique_index<table_type, id> by_id_index_type;
+
+		private:
+			template <typename T>
+			inline void key_append(const T &record) const
+			{
+				if (const auto parent_id = record.parent_id)
+					key_append(_by_id[parent_id]);
+				_key_buffer.push_back(record.address);
+			}
+
+		private:
+			const by_id_index_type &_by_id;
+			mutable callstack_key _key_buffer;
+		};
+	}
 
 	typedef views::table<call_statistics, call_statistics_constructor> calls_statistics_table;
 	typedef views::aggregated_table<calls_statistics_table, call_statistics_constructor> aggregated_statistics_table;

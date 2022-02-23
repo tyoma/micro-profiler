@@ -51,7 +51,7 @@ namespace micro_profiler
 	inline statistics_model_context create_context(std::shared_ptr<U> underlying, double tick_interval,
 		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads, bool canonical)
 	{
-		auto &by_id = views::unique_index<id_keyer>(*underlying);
+		auto &by_id = views::unique_index<keyer::id>(*underlying);
 
 		return initialize<statistics_model_context>(tick_interval,
 			[underlying, &by_id] (id_t id) {	return by_id.find(id);	}, threads, resolver, canonical);

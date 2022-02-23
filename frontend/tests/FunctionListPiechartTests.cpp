@@ -132,7 +132,7 @@ namespace micro_profiler
 				// INIT
 				auto invalidated_count = 0;
 
-				auto &by_node = views::unique_index<call_node_keyer>(*statistics);
+				auto &by_node = views::unique_index<keyer::callnode>(*statistics);
 				auto fl = create_functions_list(plural
 					+ make_statistics(addr(5), 123, 0, 0, 0, 0)
 					+ make_statistics(addr(17), 127, 0, 0, 0, 0)

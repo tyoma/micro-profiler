@@ -454,7 +454,7 @@ namespace micro_profiler
 			{
 				// INIT
 				calls_statistics_table tbl;
-				auto &idx = views::unique_index<call_node_keyer>(tbl);
+				auto &idx = views::unique_index<keyer::callnode>(tbl);
 
 				ser(plural + make_pair(13u, plural
 					+ make_statistics(1010u, 11, 0, 1002, 32, 2000)
@@ -498,7 +498,7 @@ namespace micro_profiler
 			{
 				// INIT
 				calls_statistics_table tbl;
-				auto &idx = views::unique_index<call_node_keyer>(tbl);
+				auto &idx = views::unique_index<keyer::callnode>(tbl);
 
 				ser(plural
 					+ make_pair(13u, plural
@@ -528,7 +528,7 @@ namespace micro_profiler
 			{
 				// INIT
 				calls_statistics_table tbl;
-				auto &idx = views::unique_index<call_node_keyer>(tbl);
+				auto &idx = views::unique_index<keyer::callnode>(tbl);
 
 				ser(plural
 					+ make_pair(7u, plural
@@ -564,7 +564,7 @@ namespace micro_profiler
 			{
 				// INIT
 				calls_statistics_table tbl;
-				auto &idx = views::unique_index<call_node_keyer>(tbl);
+				auto &idx = views::unique_index<keyer::callnode>(tbl);
 
 				ser(plural
 					+ make_pair(7u, plural
@@ -602,7 +602,7 @@ namespace micro_profiler
 			{
 				// INIT
 				calls_statistics_table tbl;
-				auto &idx = views::unique_index<call_node_keyer>(tbl);
+				auto &idx = views::unique_index<keyer::callnode>(tbl);
 
 				ser(plural
 					+ make_pair(7u, plural

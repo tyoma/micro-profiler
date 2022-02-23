@@ -65,8 +65,8 @@ namespace micro_profiler
 			{	group_by(*this, sum_functions());	}
 
 			template <typename TableT>
-			callstack_keyer<TableT> operator ()(const TableT &table_) const
-			{	return callstack_keyer<TableT>(table_);	}
+			keyer::callstack<TableT> operator ()(const TableT &table_) const
+			{	return keyer::callstack<TableT>(table_);	}
 
 			signal<void ()> &invalidate;
 
@@ -83,10 +83,10 @@ namespace micro_profiler
 		models(shared_ptr<StatisticsT> statistics, shared_ptr<symbol_resolver> resolver,
 				shared_ptr<const tables::threads> threads, uint64_t ticks_per_second)
 		{
-			auto &by_id_idx = views::unique_index<id_keyer>(*statistics);
+			auto &by_id_idx = views::unique_index<keyer::id>(*statistics);
 			by_id = [&by_id_idx] (id_t key) {	return by_id_idx.find(key);	};
 
-			auto &by_node_idx = views::unique_index<call_node_keyer>(*statistics);
+			auto &by_node_idx = views::unique_index<keyer::callnode>(*statistics);
 			by_node = [&by_node_idx] (const call_node_key &key) {	return by_node_idx.find(key);	};
 
 			const auto filtered_statistics = make_filter_view(statistics);

@@ -26,28 +26,11 @@
 
 namespace micro_profiler
 {
-	struct parent_id_keyer
-	{
-		typedef id_t key_type;
-
-		key_type operator ()(const call_statistics &v) const
-		{	return v.parent_id;	}
-	};
-
-	struct address_keyer
-	{
-		typedef std::pair<long_address_t, bool /*root*/> key_type;
-
-		key_type operator ()(const call_statistics &v) const
-		{	return std::make_pair(v.address, !v.parent_id);	}
-	};
-
-
 	template <typename U>
 	class callees_transform
 	{
 	private:
-		typedef views::immutable_index<U, parent_id_keyer> index_t;
+		typedef views::immutable_index<U, keyer::parent_id> index_t;
 
 	public:
 		typedef typename index_t::const_iterator const_iterator;
@@ -61,7 +44,7 @@ namespace micro_profiler
 		{	}
 
 		range_type equal_range(id_t id) const
-		{	return views::multi_index<parent_id_keyer>(_underlying).equal_range(id);	}
+		{	return views::multi_index<keyer::parent_id>(_underlying).equal_range(id);	}
 
 		template <typename T1, typename T2>
 		static const T2 &get(const T1 &, const T2 &value)
@@ -75,7 +58,7 @@ namespace micro_profiler
 	class callers_transform
 	{
 	private:
-		typedef views::immutable_index<U, address_keyer> by_address_index;
+		typedef views::immutable_index<U, keyer::address> by_address_index;
 
 	public:
 		typedef typename by_address_index::const_iterator const_iterator;
@@ -90,8 +73,8 @@ namespace micro_profiler
 
 		range_type equal_range(id_t id) const
 		{
-			auto &by_id = views::unique_index<id_keyer>(_underlying);
-			auto &by_address = views::multi_index<address_keyer>(_underlying);
+			auto &by_id = views::unique_index<keyer::id>(_underlying);
+			auto &by_address = views::multi_index<keyer::address>(_underlying);
 
 			if (auto self = by_id.find(id))
 				return by_address.equal_range(std::make_pair(self->address, false));

@@ -23,8 +23,6 @@
 #include "profiling_session.h"
 #include "serialization.h"
 
-#include <views/serialization.h>
-
 namespace strmd
 {
 	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 5	};	};
@@ -32,50 +30,31 @@ namespace strmd
 
 namespace micro_profiler
 {
+	namespace tables
+	{
+		template <typename S, typename P, int v>
+		inline void serialize(strmd::deserializer<S, P, v> &archive, statistics &data, bool address_and_thread)
+		{
+			scontext::additive dummy;
+			auto &index = views::unique_index<keyer::callnode>(data);
+
+			archive(index, scontext::nested_context(scontext::root_context(dummy, index, address_and_thread), 0u));
+		}
+	}
+
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, profiling_session &data, unsigned int ver)
 	{
-		statistic_types::map_detailed s;
-		auto read_legacy_statistics = [&data, &s] {
-			auto &by_node = views::unique_index<keyer::callnode>(*data.statistics);
-
-			for (auto i = s.begin(); i != s.end(); ++i)
-			{
-				auto r0 = by_node[call_node_key(i->first.second, 0, i->first.first)];
-				const auto parent_id = (*r0).id;
-
-				static_cast<function_statistics &>(*r0) = i->second;
-				r0.commit();
-				for (auto j = i->second.callees.begin(); j != i->second.callees.end(); ++j)
-				{
-					auto r1 = by_node[call_node_key(j->first.second, parent_id, j->first.first)];
-
-					static_cast<function_statistics &>(*r1) = j->second;
-					r1.commit();
-				}
-			}
-		};
-
 		archive(data.process_info);
 		archive(*data.module_mappings);
 		archive(*data.modules);
 
 		if (ver >= 5)
-		{
 			archive(*data.statistics);
-		}
 		else if (ver >= 4)
-		{
-			archive(s);
-			read_legacy_statistics();
-		}
+			archive(*data.statistics, static_cast<const bool &>(true));
 		else if (ver >= 3)
-		{
-			scontext::detailed_threaded context = {	&s, 0, 0	};
-
-			archive(s, context);
-			read_legacy_statistics();
-		}
+			archive(*data.statistics, static_cast<const bool &>(false));
 
 		if (ver >= 4)
 			archive(*data.threads);

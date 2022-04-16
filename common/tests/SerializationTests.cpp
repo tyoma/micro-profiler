@@ -91,9 +91,6 @@ namespace micro_profiler
 				static_cast<function_statistics &>(s1) = function_statistics(17, 2012, 123123123, 32123, 2213);
 				s1.callees[addr(7741)] = function_statistics(1117, 212, 1231123, 3213, 112213);
 				s1.callees[addr(141)] = function_statistics(17, 12012, 11293123, 132123, 12213);
-				s1.callers[addr(14100)] = 1232;
-				s1.callers[addr(14101)] = 12322;
-				s1.callers[addr(141000)] = 123221;
 
 				// ACT
 				s(s1);

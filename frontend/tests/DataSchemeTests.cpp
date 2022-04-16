@@ -181,8 +181,6 @@ namespace micro_profiler
 
 			test( ThreadAggregationWorksForPlainCalls )
 			{
-				typedef views::immutable_unique_index<aggregated_statistics_table, keyer::id> aggregated_primary_id_index;
-
 				// INIT
 				call_statistics data_[] = {
 					make_call_statistics(1, 0, 0, 29, 10, 0, 901, 0, 0),
@@ -229,8 +227,6 @@ namespace micro_profiler
 
 			test( ThreadAggregationWorksForNestedCalls )
 			{
-				typedef views::immutable_unique_index<aggregated_statistics_table, keyer::id> aggregated_primary_id_index;
-
 				// INIT
 				call_statistics data_[] = {
 					make_call_statistics(10, 7, 00, 29, 10, 0, 901, 0, 0),

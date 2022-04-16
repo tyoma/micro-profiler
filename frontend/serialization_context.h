@@ -28,28 +28,52 @@ namespace micro_profiler
 {
 	namespace scontext
 	{
-		struct detailed_threaded
-		{
-			statistic_types::map_detailed *map;
-			long_address_t caller;
-			unsigned int threadid;
-		};
-
 		struct additive
 		{
 			std::vector<unsigned int> threads;
 		};
 
+		template <typename U, typename C, int static_level>
 		struct hierarchy_node
 		{
+			U &underlying;
+			C &container;
+			bool address_and_thread;
 			id_t thread_id;
 			id_t parent_id;
 		};
 
-		struct hierarchy_node_1 // TODO: temporarily, before fully hierarchical call statistics is implemented.
+
+
+		template <typename U, typename C>
+		inline const hierarchy_node<U, C, -1> root_context(U &underlying, C &container, bool address_and_thread = false)
 		{
-			id_t thread_id;
-			id_t parent_id;
-		};
+			hierarchy_node<U, C, -1> ctx = {
+				underlying, container, address_and_thread, 0, 0
+			};
+
+			return ctx;
+		}
+
+		template <typename U, typename C>
+		inline const hierarchy_node<U, C, 0> nested_context(const hierarchy_node<U, C, -1> &from, id_t thread_id)
+		{
+			hierarchy_node<U, C, 0> ctx = {
+				from.underlying, from.container, from.address_and_thread, thread_id, 0
+			};
+
+			return ctx;
+		}
+
+		template <int static_level, typename U, typename C, int static_level2>
+		inline const hierarchy_node<U, C, static_level> nested_context(const hierarchy_node<U, C, static_level2> &from,
+			id_t parent_id)
+		{
+			hierarchy_node<U, C, static_level> ctx = {
+				from.underlying, from.container, from.address_and_thread, from.thread_id, parent_id
+			};
+
+			return ctx;
+		}
 	}
 }

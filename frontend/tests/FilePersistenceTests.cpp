@@ -131,7 +131,8 @@ namespace micro_profiler
 				copy_n(mappings_, 3, mappings);
 
 				statistics[0] = plural
-					+ make_statistics(addr(0x100005), 123, 0, 1000, 0, 0)
+					+ make_statistics(addr(0x100005), 123, 0, 1000, 0, 0, plural
+						+ make_statistics_base(addr(0x1ull), 1023, 0, 1000, 0, 0))
 					+ make_statistics(addr(0x100017, 3), 12, 0, 0, 0, 0)
 					+ make_statistics(addr(0xF00115, 4), 127, 0, 0, 0, 0)
 					+ make_statistics(addr(0xF00133, 3), 12000, 0, 250, 0, 0);
@@ -156,7 +157,8 @@ namespace micro_profiler
 					+ make_statistics(addr(0x9000FFF, 0), 12000, 0, 250, 0, 0);
 
 				ustatistics[0] = plural
-					+ make_statistics(0x100005ull, 123, 0, 1000, 0, 0)
+					+ make_statistics(0x100005ull, 123, 0, 1000, 0, 0, plural
+						+ make_statistics_base(0x1ull, 1023, 0, 1000, 0, 0))
 					+ make_statistics(0x100017ull, 12, 0, 0, 0, 0)
 					+ make_statistics(0xF00115ull, 127, 0, 0, 0, 0)
 					+ make_statistics(0xF00133ull, 12000, 0, 250, 0, 0);
@@ -326,6 +328,7 @@ namespace micro_profiler
 				assert_is_empty(ctx1.process_info.executable);
 				assert_equivalent(plural
 					+ make_call_statistics(0, 0, 0, 0x100005, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 0, 1, 0x1, 1023, 0, 1000, 0, 0)
 					+ make_call_statistics(0, 0, 0, 0x100017, 12, 0, 0, 0, 0)
 					+ make_call_statistics(0, 0, 0, 0xF00115, 127, 0, 0, 0, 0)
 					+ make_call_statistics(0, 0, 0, 0xF00133, 12000, 0, 250, 0, 0), *ctx1.statistics);
@@ -386,6 +389,7 @@ namespace micro_profiler
 				assert_is_empty(ctx1.process_info.executable);
 				assert_equivalent(plural
 					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 1, 1, 0x1, 1023, 0, 1000, 0, 0)
 					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0, 0)
 					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0, 0)
 					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0, 0), *ctx1.statistics);

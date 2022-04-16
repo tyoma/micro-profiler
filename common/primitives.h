@@ -39,7 +39,6 @@ namespace micro_profiler
 
 		typedef containers::unordered_map<KeyT, function_detailed, knuth_hash> map_detailed;
 		typedef containers::unordered_map<KeyT, function, knuth_hash> map;
-		typedef containers::unordered_map<KeyT, count_t, knuth_hash> map_callers;
 	};
 
 	struct function_statistics
@@ -63,7 +62,6 @@ namespace micro_profiler
 	struct function_statistics_detailed_t : function_statistics
 	{
 		typedef typename statistic_types_t<AddressT>::map_detailed callees_type;
-		typedef typename statistic_types_t<AddressT>::map_callers callers_type;
 
 		function_statistics_detailed_t();
 		function_statistics_detailed_t(const function_statistics &other);
@@ -73,7 +71,6 @@ namespace micro_profiler
 		void operator =(const function_statistics_detailed_t &rhs);
 
 		callees_type &callees;
-		callers_type callers;
 	};
 
 
@@ -123,8 +120,7 @@ namespace micro_profiler
 
 	template <typename AddressT>
 	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t(const function_statistics_detailed_t &other)
-		: function_statistics(other), callees(*new callees_type(other.callees)),
-			callers(other.callers)
+		: function_statistics(other), callees(*new callees_type(other.callees))
 	{	}
 
 	template <typename AddressT>
@@ -136,7 +132,6 @@ namespace micro_profiler
 	{
 		static_cast<function_statistics &>(*this) = rhs;
 		callees = rhs.callees;
-		callers = rhs.callers;
 	}
 
 

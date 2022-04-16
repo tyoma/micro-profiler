@@ -16,7 +16,7 @@ namespace micro_profiler
 			timestamp_t ticks_per_second;
 			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> mappings;
 			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
-			containers::unordered_map<statistic_types::key, statistic_types::function_detailed> statistics;
+			std::vector< std::pair<statistic_types::key, statistic_types::function_detailed> > statistics;
 		};
 
 		struct file_v4_components
@@ -24,7 +24,7 @@ namespace micro_profiler
 			timestamp_t ticks_per_second;
 			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> mappings;
 			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
-			containers::unordered_map<statistic_types::key, statistic_types::function_detailed> statistics;
+			std::vector< std::pair<statistic_types::key, statistic_types::function_detailed> > statistics;
 			containers::unordered_map<unsigned int, thread_info> threads;
 		};
 

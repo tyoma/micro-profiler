@@ -1,4 +1,5 @@
 #include <frontend/db.h>
+#include <frontend/helpers.h>
 
 #include "comparisons.h"
 #include "helpers.h"
@@ -262,6 +263,76 @@ namespace micro_profiler
 				};
 
 				assert_equivalent(reference1, aggregated);
+			}
+		end_test_suite
+
+
+		begin_test_suite( DataTypesTests )
+			test( CallStatisticsLevelIsCalculatedUponRetrieval )
+			{
+				// INIT
+				const call_statistics data[] = {
+					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 1, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 2, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 5, 0, 0, 0, 0, 0, 0),
+				};
+				auto lookup = [&] (id_t id) -> const call_statistics * {
+					assert_is_true(0 < id && id < 8);
+					return &(data[id - 1]);
+				};
+
+				// ACT / ASSERT
+				assert_equal(0u, data[0].nesting(lookup));
+				assert_equal(1u, data[1].nesting(lookup));
+				assert_equal(1u, data[2].nesting(lookup));
+				assert_equal(2u, data[3].nesting(lookup));
+				assert_equal(3u, data[4].nesting(lookup));
+				assert_equal(2u, data[5].nesting(lookup));
+				assert_equal(4u, data[6].nesting(lookup));
+			}
+
+
+			test( NestingLevelIsCachedAndNoLookupIsDone )
+			{
+				// INIT
+				const call_statistics data[] = {
+					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0, 0),
+				};
+				auto lookup = [&] (id_t id) {	return &(data[id - 1]);	};
+				auto lookup_fail = [] (id_t) -> const call_statistics * {
+					assert_is_false(true);
+					return nullptr;
+				};
+
+				data[0].nesting(lookup);
+				data[1].nesting(lookup);
+
+				// ACT / ASSERT
+				assert_equal(0u, data[0].nesting(lookup_fail));
+				assert_equal(1u, data[1].nesting(lookup_fail));
+			}
+
+
+			test( AttemptToGetNestingForAMissingParentThrows )
+			{
+				// INIT
+				const call_statistics data[] = {
+					make_call_statistics(1, 0, 10, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 2, 0, 0, 0, 0, 0, 0),
+				};
+				auto lookup = [&] (id_t id) -> const call_statistics * {
+					return 1u <= id && id <= 3u ? &(data[id - 1]) : nullptr;
+				};
+
+				// ACT / ASSERT
+				assert_throws(data[0].nesting(lookup), runtime_error);
+				assert_throws(data[2].nesting(lookup), runtime_error);
 			}
 		end_test_suite
 	}

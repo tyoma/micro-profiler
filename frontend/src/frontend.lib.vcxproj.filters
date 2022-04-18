@@ -111,6 +111,7 @@
     <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\statistic_models.h" />
     <ClInclude Include="..\dynamic_views.h" />
+    <ClInclude Include="..\hierarchy.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

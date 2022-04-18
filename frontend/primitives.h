@@ -20,8 +20,10 @@
 
 #pragma once
 
+#include <common/compiler.h>
 #include <common/hash.h>
 #include <common/primitives.h>
+#include <stdexcept>
 
 namespace micro_profiler
 {
@@ -30,10 +32,24 @@ namespace micro_profiler
 
 	struct call_statistics : function_statistics
 	{
+		call_statistics()
+			: _level(static_cast<unsigned short>(-1))
+		{	}
+
+		template <typename LookupT>
+		unsigned short nesting(const LookupT &lookup) const;
+
 		id_t id;
 		id_t thread_id;
 		id_t parent_id;
 		long_address_t address;
+
+	private:
+		template <typename LookupT>
+		unsigned short nesting_slow(const LookupT &lookup) const;
+
+	private:
+		mutable unsigned short _level;
 	};
 
 	struct symbol_key
@@ -42,6 +58,25 @@ namespace micro_profiler
 		unsigned int rva;
 	};
 
+
+
+	template <typename LookupT>
+	inline unsigned short call_statistics::nesting(const LookupT &lookup) const
+	{	return static_cast<unsigned short>(-1) == _level ? _level = nesting_slow(lookup) : _level;	}
+
+	template <typename LookupT>
+	FORCE_NOINLINE inline unsigned short call_statistics::nesting_slow(const LookupT &lookup) const
+	{
+		unsigned short level = 0;
+
+		for (auto item = this; item->parent_id; level++)
+		{
+			item = lookup(item->parent_id);
+			if (!item)
+				throw std::runtime_error("missing parent record");
+		}
+		return level;
+	}
 
 
 	inline bool operator ==(const symbol_key &lhs, const symbol_key &rhs)

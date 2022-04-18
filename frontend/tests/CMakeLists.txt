@@ -16,6 +16,7 @@ set(FRONTEND_TESTS_SOURCES
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
 	HeadersModelTests.cpp
+	HierarchyAlgorithmsTests.cpp
 	ImagePatchModelTests.cpp
 	legacy_serialization.cpp
 	mock_channel.cpp

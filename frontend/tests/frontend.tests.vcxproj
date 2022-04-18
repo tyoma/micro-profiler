@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncFileTests.cpp" />
+    <ClCompile Include="HierarchyAlgorithmsTests.cpp" />
     <ClCompile Include="TableModelImplTests.cpp" />
     <ClCompile Include="DataSchemeTests.cpp" />
     <ClCompile Include="FrontendMetadataTests.cpp" />

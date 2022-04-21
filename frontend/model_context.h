@@ -28,16 +28,12 @@
 namespace micro_profiler
 {
 	class symbol_resolver;
-	namespace tables
-	{
-		struct threads;
-	}
 
 	struct statistics_model_context
 	{
 		double tick_interval;
 		std::function<const call_statistics *(id_t id)> by_id;
-		std::shared_ptr<const tables::threads> threads;
+		std::function<const thread_info *(id_t id)> by_thread_id;
 		std::shared_ptr<symbol_resolver> resolver;
 		bool canonical;
 	};

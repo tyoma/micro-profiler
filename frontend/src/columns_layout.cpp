@@ -51,11 +51,10 @@ namespace micro_profiler
 		};
 
 		auto by_threadid = [] (const statistics_model_context &context, const call_statistics &lhs_, const call_statistics &rhs_) -> bool {
-			const auto lhs = context.threads->find(lhs_.thread_id);
-			const auto rhs = context.threads->find(rhs_.thread_id);
-			const auto e = context.threads->end();
+			const auto lhs = context.by_thread_id(lhs_.thread_id);
+			const auto rhs = context.by_thread_id(rhs_.thread_id);
 
-			return rhs != e && (lhs == e || (lhs->second.native_id < rhs->second.native_id));
+			return rhs && (!lhs || (lhs->native_id < rhs->native_id));
 		};
 
 		auto by_times_called = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
@@ -104,11 +103,11 @@ namespace micro_profiler
 				text << context.resolver->symbol_name_by_va(parent->address).c_str();
 		};
 
-		auto thread_native_id = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
-			const auto i = context.threads->find(item.thread_id);
+		auto thread_native_id = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item_) {
+			const auto item = context.by_thread_id(item_.thread_id);
 
-			if (i != context.threads->end())
-				micro_profiler::itoa<10>(text, i->second.native_id);
+			if (item)
+				micro_profiler::itoa<10>(text, item->native_id);
 		};
 
 		auto times_called = [] (const statistics_model_context &, const call_statistics &value) {

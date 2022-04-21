@@ -22,7 +22,7 @@ namespace micro_profiler
 				function<const node *(unsigned id)> by_id;
 			};
 
-			unsigned nesting(const context &ctx, const node &n)
+			unsigned hierarchy_nesting(const context &ctx, const node &n)
 			{
 				auto level = 0u;
 
@@ -31,10 +31,10 @@ namespace micro_profiler
 				return level;
 			}
 
-			unsigned parent_id(const node &n)
+			unsigned hierarchy_parent_id(const node &n)
 			{	return n.parent;	}
 
-			const node *lookup(const context &ctx, unsigned id)
+			const node *hierarchy_lookup(const context &ctx, unsigned id)
 			{	return ctx.by_id(id);	}
 		}
 

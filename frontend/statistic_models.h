@@ -53,8 +53,12 @@ namespace micro_profiler
 	{
 		auto &by_id = views::unique_index<keyer::id>(*underlying);
 
-		return initialize<statistics_model_context>(tick_interval,
-			[underlying, &by_id] (id_t id) {	return by_id.find(id);	}, threads, resolver, canonical);
+		return initialize<statistics_model_context>(tick_interval, [underlying, &by_id] (id_t id) {
+			return by_id.find(id);
+		}, [threads] (id_t id) -> const thread_info * {
+			auto i = threads->find(id);
+			return i != threads->end() ? &i->second : nullptr;
+		}, resolver, canonical);
 	}
 
 

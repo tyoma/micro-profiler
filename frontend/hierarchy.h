@@ -28,7 +28,7 @@ namespace micro_profiler
 	FORCE_INLINE void iterate_up(ContextT &context, T *&item, unsigned int n)
 	{
 		while (n--)
-			item = lookup(context, parent_id(*item));
+			item = hierarchy_lookup(context, hierarchy_parent_id(*item));
 	}
 
 	// normalize_levels updates compared sides, which may be nodes of a tree, so that they are compared at the same level
@@ -47,13 +47,13 @@ namespace micro_profiler
 	// it.
 	// The node type is arbitrary. The access to the properties necessary for this algorithm is done via the following
 	// set of functions:
-	//		unsigned short nesting(CtxT &context, const T &node)
+	//		unsigned short hierarchy_nesting(CtxT &context, const T &node)
 	//			provides the depth at which this node is located;
 	//
-	//		id_t parent_id(const T &node)
+	//		id_t hierarchy_parent_id(const T &node)
 	//			provides an id of the parent, zero means it's a top-level node;
 	//
-	//		const T *lookup(CtxT &context, id_t id)
+	//		const T *hierarchy_lookup(CtxT &context, id_t id)
 	//			returns a pointer to a node identified by id.
 	// For a tree to be formed by a sorting with such comparison, the non-leaf nodes must form TOTAL ORDER (i.e. no
 	// elements are equivalent). Otherwise children nodes may 'spill' under nodes, compared equivalent to their
@@ -65,11 +65,11 @@ namespace micro_profiler
 	inline int normalize_levels(ContextT &context, const T *&lhs, const T *&rhs)
 	{
 		// Shortcut for the sides residing within the same parent already.
-		if (parent_id(*lhs) == parent_id(*rhs))
+		if (hierarchy_parent_id(*lhs) == hierarchy_parent_id(*rhs))
 			return 0;
 
-		const auto lhs_level = nesting(context, *lhs);
-		const auto rhs_level = nesting(context, *rhs);
+		const auto lhs_level = hierarchy_nesting(context, *lhs);
+		const auto rhs_level = hierarchy_nesting(context, *rhs);
 
 		// Move the side that is deeper in the hierarchy to the same level.
 		if (lhs_level < rhs_level)
@@ -82,10 +82,10 @@ namespace micro_profiler
 			return static_cast<int>(lhs_level) - static_cast<int>(rhs_level);
 
 		// Move sides up, until the common parent is met.
-		while (parent_id(*lhs) != parent_id(*rhs))
+		while (hierarchy_parent_id(*lhs) != hierarchy_parent_id(*rhs))
 		{
-			lhs = lookup(context, parent_id(*lhs));
-			rhs = lookup(context, parent_id(*rhs));
+			lhs = hierarchy_lookup(context, hierarchy_parent_id(*lhs));
+			rhs = hierarchy_lookup(context, hierarchy_parent_id(*rhs));
 		}
 		return 0;
 	}

@@ -86,12 +86,17 @@ namespace micro_profiler
 			auto &by_id_idx = views::unique_index<keyer::id>(*statistics);
 			by_id = [&by_id_idx] (id_t key) {	return by_id_idx.find(key);	};
 
+			auto by_thread_id = [threads] (id_t key) -> const thread_info * {
+				const auto i = threads->find(key);
+				return i != threads->end() ? &i->second : nullptr;
+			};
+
 			auto &by_node_idx = views::unique_index<keyer::callnode>(*statistics);
 			by_node = [&by_node_idx] (const call_node_key &key) {	return by_node_idx.find(key);	};
 
 			const auto filtered_statistics = make_filter_view(statistics);
-			const auto context = initialize<statistics_model_context>(1.0 / ticks_per_second, by_id, threads, resolver,
-				false);
+			const auto context = initialize<statistics_model_context>(1.0 / ticks_per_second, by_id, by_thread_id,
+				resolver, false);
 			const auto model_impl = create_statistics_model(filtered_statistics, context);
 
 			main = model_impl;

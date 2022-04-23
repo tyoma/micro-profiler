@@ -22,23 +22,36 @@ namespace micro_profiler
 				function<const node *(unsigned id)> by_id;
 			};
 
-			unsigned hierarchy_nesting(const context &ctx, const node &n)
+			vector<unsigned> hierarchy_path(const context &ctx, const node &n)
 			{
-				auto level = 0u;
-
-				for (auto next = &n; next->parent; level++)
-					next = ctx.by_id(next->parent);
-				return level;
+				vector<unsigned> path;
+				for (auto item = &n; item; item = ctx.by_id(item->parent))
+					path.push_back(item->id);
+				reverse(path.begin(), path.end());
+				return path;
 			}
 
-			unsigned hierarchy_parent_id(const node &n)
-			{	return n.parent;	}
+			bool hierarchy_same_parent(const node &lhs, const node &rhs)
+			{	return lhs.parent == rhs.parent;	}
 
 			const node *hierarchy_lookup(const context &ctx, unsigned id)
 			{	return ctx.by_id(id);	}
 		}
 
 		begin_test_suite( HierarchyAlgorithmsTests )
+			typedef pair<const node *, const node *> log_entry;
+
+			vector<log_entry> log;
+			bool result;
+
+			function<bool (const node &lhs, const node &rhs)> less()
+			{
+				return [this] (const node &lhs, const node &rhs) -> bool {
+					this->log.push_back(make_pair(&lhs, &rhs));
+					return result;
+				};
+			}
+
 			test( NormalizingRecordsAtTheSameParentLeavesThemTheSame )
 			{
 				// INIT
@@ -54,53 +67,55 @@ namespace micro_profiler
 					{	9, 2	},
 				};
 
-				auto lhs = data + 0;
-				auto rhs = data + 1;
 				auto lookup_fail = [] (unsigned) -> const node * {
 					assert_is_false(true);
 					return nullptr;
 				};
 				context ctx = {	lookup_fail	};
 
+				result = false;
+
 				// ACT / ASSERT
-				assert_equal(0, normalize_levels(ctx, lhs, rhs));
+				assert_is_false(hierarchical_compare(ctx, less(), data[0], data[1]));
 
 				// ASSERT
-				assert_equal(data + 0, lhs);
-				assert_equal(data + 1, rhs);
+				log_entry reference1[] = {	make_pair(data + 0, data + 1),	};
+
+				assert_equal(reference1, log);
 
 				// INIT
-				lhs = data + 2;
-				rhs = data + 3;
+				result = true;
+				log.clear();
 
 				// ACT
-				assert_equal(0, normalize_levels(ctx, lhs, rhs));
+				assert_is_true(hierarchical_compare(ctx, less(), data[2], data[3]));
 
 				// ASSERT
-				assert_equal(data + 2, lhs);
-				assert_equal(data + 3, rhs);
+				log_entry reference2[] = {	make_pair(data + 2, data + 3),	};
+
+				assert_equal(reference2, log);
 
 				// INIT
-				lhs = data + 2;
-				rhs = data + 8;
+				log.clear();
 
 				// ACT
-				normalize_levels(ctx, lhs, rhs);
+				assert_is_true(hierarchical_compare(ctx, less(), data[2], data[8]));
 
 				// ASSERT
-				assert_equal(data + 2, lhs);
-				assert_equal(data + 8, rhs);
+				log_entry reference3[] = {	make_pair(data + 2, data + 8),	};
+
+				assert_equal(reference3, log);
 
 				// INIT
-				lhs = data + 4;
-				rhs = data + 6;
+				log.clear();
 
 				// ACT
-				normalize_levels(ctx, lhs, rhs);
+				hierarchical_compare(ctx, less(), data[4], data[6]);
 
 				// ASSERT
-				assert_equal(data + 4, lhs);
-				assert_equal(data + 6, rhs);
+				log_entry reference4[] = {	make_pair(data + 4, data + 6),	};
+
+				assert_equal(reference4, log);
 			}
 
 
@@ -119,50 +134,52 @@ namespace micro_profiler
 					{	9, 2	},
 				};
 
-				auto lhs = data + 2;
-				auto rhs = data + 7;
-				auto lookup_ = [&] (unsigned id) -> const node * {	return data + (id - 1);	};
+				auto lookup_ = [&] (unsigned id) -> const node * {	return id ? data + (id - 1) : nullptr;	};
 				context ctx = {	lookup_	};
 
+				result = true;
+
 				// ACT
-				assert_equal(0, normalize_levels(ctx, lhs, rhs));
+				assert_is_true(hierarchical_compare(ctx, less(), data[2], data[7]));
 
 				// ASSERT
-				assert_equal(data + 2, lhs);
-				assert_equal(data + 3, rhs);
+				log_entry reference1[] = {	make_pair(data + 2, data + 3),	};
+
+				assert_equal(reference1, log);
 
 				// INIT
-				lhs = data + 7;
-				rhs = data + 2;
+				result = false;
+				log.clear();
 
 				// ACT
-				assert_equal(0, normalize_levels(ctx, lhs, rhs));
+				assert_is_false(hierarchical_compare(ctx, less(), data[7], data[2]));
 
 				// ASSERT
-				assert_equal(data + 3, lhs);
-				assert_equal(data + 2, rhs);
+				log_entry reference2[] = {	make_pair(data + 3, data + 2),	};
+
+				assert_equal(reference2, log);
 
 				// INIT
-				lhs = data + 0;
-				rhs = data + 2;
+				log.clear();
 
 				// ACT
-				normalize_levels(ctx, lhs, rhs);
+				assert_is_false(hierarchical_compare(ctx, less(), data[0], data[2]));
 
 				// ASSERT
-				assert_equal(data + 0, lhs);
-				assert_equal(data + 1, rhs);
+				log_entry reference3[] = {	make_pair(data + 0, data + 1),	};
+
+				assert_equal(reference3, log);
 
 				// INIT
-				lhs = data + 2;
-				rhs = data + 0;
+				log.clear();
 
 				// ACT
-				normalize_levels(ctx, lhs, rhs);
+				assert_is_false(hierarchical_compare(ctx, less(), data[2], data[0]));
 
 				// ASSERT
-				assert_equal(data + 1, lhs);
-				assert_equal(data + 0, rhs);
+				log_entry reference4[] = {	make_pair(data + 1, data + 0),	};
+
+				assert_equal(reference4, log);
 			}
 
 
@@ -181,28 +198,29 @@ namespace micro_profiler
 					{	9, 6	},
 				};
 
-				auto lhs = data + 4;
-				auto rhs = data + 5;
-				auto lookup_ = [&] (unsigned id) -> const node * {	return data + (id - 1);	};
+				auto lookup_ = [&] (unsigned id) -> const node * {	return id ? data + (id - 1) : nullptr;	};
 				context ctx = {	lookup_	};
 
+				result = true;
+
 				// ACT
-				assert_equal(0, normalize_levels(ctx, lhs, rhs));
+				assert_is_true(hierarchical_compare(ctx, less(), data[4], data[5]));
 
 				// ASSERT
-				assert_equal(data + 2, lhs);
-				assert_equal(data + 3, rhs);
+				log_entry reference1[] = {	make_pair(data + 2, data + 3),	};
+
+				assert_equal(reference1, log);
 
 				// INIT
-				lhs = data + 8;
-				rhs = data + 7;
+				log.clear();
 
 				// ACT
-				assert_equal(0, normalize_levels(ctx, lhs, rhs));
+				assert_is_true(hierarchical_compare(ctx, less(), data[8], data[7]));
 
 				// ASSERT
-				assert_equal(data + 3, lhs);
-				assert_equal(data + 2, rhs);
+				log_entry reference2[] = {	make_pair(data + 3, data + 2),	};
+
+				assert_equal(reference2, log);
 			}
 
 
@@ -216,34 +234,17 @@ namespace micro_profiler
 					{	4, 3	},
 				};
 
-				auto lhs = data + 0;
-				auto rhs = data + 3;
-				auto lookup_ = [&] (unsigned id) -> const node * {	return data + (id - 1);	};
+				auto lookup_ = [&] (unsigned id) -> const node * {	return id ? data + (id - 1) : nullptr;	};
 				context ctx = {	lookup_	};
 
 				// ACT / ASSERT
-				assert_is_true(0 > normalize_levels(ctx, lhs, rhs));
+				assert_is_true(hierarchical_compare(ctx, less(), data[0], data[3]));
+				assert_is_false(hierarchical_compare(ctx, less(), data[3], data[0]));
+				assert_is_true(hierarchical_compare(ctx, less(), data[1], data[2]));
+				assert_is_false(hierarchical_compare(ctx, less(), data[2], data[0]));
 
-				// INIT
-				lhs = data + 3;
-				rhs = data + 0;
-
-				// ACT / ASSERT
-				assert_is_true(0 < normalize_levels(ctx, lhs, rhs));
-
-				// INIT
-				lhs = data + 1;
-				rhs = data + 2;
-
-				// ACT / ASSERT
-				assert_is_true(0 > normalize_levels(ctx, lhs, rhs));
-
-				// INIT
-				lhs = data + 2;
-				rhs = data + 0;
-
-				// ACT / ASSERT
-				assert_is_true(0 < normalize_levels(ctx, lhs, rhs));
+				// ASSERT
+				assert_is_empty(log);
 			}
 		end_test_suite
 	}

@@ -32,12 +32,10 @@ namespace micro_profiler
 
 	struct call_statistics : function_statistics
 	{
-		call_statistics()
-			: _level(static_cast<unsigned short>(-1))
-		{	}
+		typedef std::vector<id_t> path_t;
 
 		template <typename LookupT>
-		unsigned short nesting(const LookupT &lookup) const;
+		const path_t &path(const LookupT &lookup) const;
 
 		id_t id;
 		id_t thread_id;
@@ -46,10 +44,10 @@ namespace micro_profiler
 
 	private:
 		template <typename LookupT>
-		unsigned short nesting_slow(const LookupT &lookup) const;
+		void initialize_path(const LookupT &lookup) const;
 
 	private:
-		mutable unsigned short _level;
+		mutable path_t _path;
 	};
 
 	struct symbol_key
@@ -61,21 +59,19 @@ namespace micro_profiler
 
 
 	template <typename LookupT>
-	inline unsigned short call_statistics::nesting(const LookupT &lookup) const
-	{	return static_cast<unsigned short>(-1) == _level ? _level = nesting_slow(lookup) : _level;	}
+	inline const call_statistics::path_t &call_statistics::path(const LookupT &lookup) const
+	{
+		if (_path.empty())
+			initialize_path(lookup);
+		return _path;
+	}
 
 	template <typename LookupT>
-	FORCE_NOINLINE inline unsigned short call_statistics::nesting_slow(const LookupT &lookup) const
+	FORCE_NOINLINE inline void call_statistics::initialize_path(const LookupT &lookup) const
 	{
-		unsigned short level = 0;
-
-		for (auto item = this; item->parent_id; level++)
-		{
-			item = lookup(item->parent_id);
-			if (!item)
-				throw std::runtime_error("missing parent record");
-		}
-		return level;
+		for (auto item = this; item; item = lookup(item->parent_id))
+			_path.push_back(item->id);
+		std::reverse(_path.begin(), _path.end());
 	}
 
 

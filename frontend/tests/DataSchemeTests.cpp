@@ -268,7 +268,7 @@ namespace micro_profiler
 
 
 		begin_test_suite( DataTypesTests )
-			test( CallStatisticsLevelIsCalculatedUponRetrieval )
+			test( CallStatisticsPathIsCalculatedUponRetrieval )
 			{
 				// INIT
 				const call_statistics data[] = {
@@ -281,44 +281,51 @@ namespace micro_profiler
 					make_call_statistics(7, 0, 5, 0, 0, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) -> const call_statistics * {
-					assert_is_true(0 < id && id < 8);
-					return &(data[id - 1]);
+					assert_is_true(0 <= id && id < 6); // allowed range of parents
+					return id ? &(data[id - 1]) : nullptr;
 				};
 
 				// ACT / ASSERT
-				assert_equal(0u, data[0].nesting(lookup));
-				assert_equal(1u, data[1].nesting(lookup));
-				assert_equal(1u, data[2].nesting(lookup));
-				assert_equal(2u, data[3].nesting(lookup));
-				assert_equal(3u, data[4].nesting(lookup));
-				assert_equal(2u, data[5].nesting(lookup));
-				assert_equal(4u, data[6].nesting(lookup));
+				assert_equal(plural + 1u, data[0].path(lookup));
+				assert_equal(plural + 1u + 2u, data[1].path(lookup));
+				assert_equal(plural + 1u + 3u, data[2].path(lookup));
+				assert_equal(plural + 1u + 2u + 4u, data[3].path(lookup));
+				assert_equal(plural + 1u + 2u + 4u + 5u, data[4].path(lookup));
+				assert_equal(plural + 1u + 3u + 6u, data[5].path(lookup));
+				assert_equal(plural + 1u + 2u + 4u + 5u + 7u, data[6].path(lookup));
 			}
 
 
-			test( NestingLevelIsCachedAndNoLookupIsDone )
+			test( PathIsCachedAndNoLookupIsDone )
 			{
 				// INIT
 				const call_statistics data[] = {
 					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0, 0),
 					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0, 0),
 				};
-				auto lookup = [&] (id_t id) {	return &(data[id - 1]);	};
+				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
 				auto lookup_fail = [] (id_t) -> const call_statistics * {
 					assert_is_false(true);
 					return nullptr;
 				};
 
-				data[0].nesting(lookup);
-				data[1].nesting(lookup);
+				data[0].path(lookup);
+				data[1].path(lookup);
 
 				// ACT / ASSERT
-				assert_equal(0u, data[0].nesting(lookup_fail));
-				assert_equal(1u, data[1].nesting(lookup_fail));
+				assert_equal(1u, data[0].path(lookup_fail).size());
+				assert_equal(2u, data[1].path(lookup_fail).size());
+
+				// INIT / ACT (reference is returned)
+				const auto &p1 = data[0].path(lookup);
+				const auto &p2 = data[0].path(lookup);
+
+				// ASSERT
+				assert_equal(&p1, &p2);
 			}
 
 
-			test( AttemptToGetNestingForAMissingParentThrows )
+			test( AttemptToGetPathForAMissingParentAbridgesPath )
 			{
 				// INIT
 				const call_statistics data[] = {
@@ -327,12 +334,13 @@ namespace micro_profiler
 					make_call_statistics(3, 0, 2, 0, 0, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) -> const call_statistics * {
-					return 1u <= id && id <= 3u ? &(data[id - 1]) : nullptr;
+					return 1u <= id && id < 3u ? &(data[id - 1]) : nullptr;
 				};
 
 				// ACT / ASSERT
-				assert_throws(data[0].nesting(lookup), runtime_error);
-				assert_throws(data[2].nesting(lookup), runtime_error);
+				assert_equal(plural + 1u, data[0].path(lookup));
+				assert_equal(plural + 1u + 2u, data[1].path(lookup));
+				assert_equal(plural + 1u + 2u + 3u, data[2].path(lookup));
 			}
 		end_test_suite
 	}

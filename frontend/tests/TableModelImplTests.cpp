@@ -3,6 +3,7 @@
 #include "helpers.h"
 
 #include <common/formatting.h>
+#include <frontend/helpers.h>
 #include <wpl/models.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -248,9 +249,9 @@ namespace micro_profiler
 				// INIT / ACT
 				v->add_columns(plural
 					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t, const data2_t &v) {	itoa<10>(t, v.first);	},
-						[] (int, const data2_t &lhs, const data2_t &rhs) {	return lhs.first < rhs.first;	})
+						[] (int, const data2_t &lhs, const data2_t &rhs) {	return compare(lhs.first, rhs.first);	})
 					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t, const data2_t &v) {	t << v.second.c_str();	},
-						[] (int, const data2_t &lhs, const data2_t &rhs) {	return lhs.second < rhs.second;	})
+						[] (int, const data2_t &lhs, const data2_t &rhs) {	return compare(lhs.second, rhs.second);	})
 					+ column<data2_t, int>([] (agge::richtext_t &t, int, size_t row, const data2_t &) {	itoa<10>(t, row);	}));
 
 				auto conn = v->invalidate += [&] (wpl::richtext_table_model::index_type idx) {
@@ -363,13 +364,13 @@ namespace micro_profiler
 
 				m1->add_columns(plural
 					+ column<data1_t, double>([&ctx1] (agge::richtext_t &, double c, size_t, data1_t) {	ctx1 = c;	},
-						[&ctx1] (double c, data1_t, data1_t) {	return ctx1 = c, false;	}));
+						[&ctx1] (double c, data1_t, data1_t) {	return ctx1 = c, 0;	}));
 				m2->add_columns(plural
 					+ column<data1_t, double>([&ctx1] (agge::richtext_t &, double c, size_t, data1_t) {	ctx1 = c;	},
-						[&ctx1] (double c, data1_t, data1_t) {	return ctx1 = c, false;	}));
+						[&ctx1] (double c, data1_t, data1_t) {	return ctx1 = c, 0;	}));
 				m3->add_columns(plural
 					+ column<data1_t, string>([&ctx2] (agge::richtext_t &, const string &c, size_t, data1_t) {	ctx2 = c;	},
-						[&ctx2] (const string &c, data1_t, data1_t) {	return ctx2 = c, false;	}));
+						[&ctx2] (const string &c, data1_t, data1_t) {	return ctx2 = c, 0;	}));
 
 				// ACT
 				m1->get_text(0, 0, txt);

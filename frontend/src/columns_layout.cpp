@@ -24,6 +24,7 @@
 
 #include <common/formatting.h>
 #include <frontend/constructors.h>
+#include <frontend/helpers.h>
 #include <frontend/model_context.h>
 #include <frontend/primitives.h>
 #include <frontend/symbol_resolver.h>
@@ -38,55 +39,55 @@ namespace micro_profiler
 		const auto secondary = style::height_scale(0.85);
 
 		auto by_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) {
-			return context.resolver->symbol_name_by_va(lhs.address) < context.resolver->symbol_name_by_va(rhs.address);
+			return strcmp(context.resolver->symbol_name_by_va(lhs.address).c_str(), context.resolver->symbol_name_by_va(rhs.address).c_str());
 		};
 
-		auto by_caller_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) -> bool {
+		auto by_caller_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) -> int {
 			const auto lhs_parent = context.by_id(lhs.parent_id);
 			const auto rhs_parent = context.by_id(rhs.parent_id);
 
-			if (lhs_parent && rhs_parent)
-				return context.resolver->symbol_name_by_va(lhs_parent->address) < context.resolver->symbol_name_by_va(rhs_parent->address);
-			return lhs_parent < rhs_parent;
+			if (auto r = compare(lhs_parent, rhs_parent))
+				return r;
+			return lhs_parent
+				? strcmp(context.resolver->symbol_name_by_va(lhs_parent->address).c_str(), context.resolver->symbol_name_by_va(rhs_parent->address).c_str())
+				: 0;
 		};
 
-		auto by_threadid = [] (const statistics_model_context &context, const call_statistics &lhs_, const call_statistics &rhs_) -> bool {
+		auto by_threadid = [] (const statistics_model_context &context, const call_statistics &lhs_, const call_statistics &rhs_) -> int {
 			const auto lhs = context.by_thread_id(lhs_.thread_id);
 			const auto rhs = context.by_thread_id(rhs_.thread_id);
 
-			return rhs && (!lhs || (lhs->native_id < rhs->native_id));
+			if (auto r = micro_profiler::compare(lhs, rhs))
+				return r;
+			return lhs ? micro_profiler::compare(lhs->native_id, rhs->native_id) : 0;
 		};
 
 		auto by_times_called = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return lhs.times_called < rhs.times_called;
+			return micro_profiler::compare(lhs.times_called, rhs.times_called);
 		};
 
 		auto by_exclusive_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return lhs.exclusive_time < rhs.exclusive_time;
+			return micro_profiler::compare(lhs.exclusive_time, rhs.exclusive_time);
 		};
 
 		auto by_inclusive_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return lhs.inclusive_time < rhs.inclusive_time;
+			return micro_profiler::compare(lhs.inclusive_time, rhs.inclusive_time);
 		};
 
 		auto by_avg_exclusive_call_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return rhs.times_called
-				&& (!lhs.times_called
-					|| (lhs.exclusive_time * rhs.times_called < rhs.exclusive_time * lhs.times_called));
+			return micro_profiler::compare(lhs.exclusive_time, lhs.times_called, rhs.exclusive_time, rhs.times_called);
 		};
 
 		auto by_avg_inclusive_call_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return rhs.times_called
-				&& (!lhs.times_called
-					|| (lhs.inclusive_time * rhs.times_called < rhs.inclusive_time * lhs.times_called));
+			return micro_profiler::compare(lhs.inclusive_time, lhs.times_called, rhs.inclusive_time, rhs.times_called);
 		};
 
 		auto by_max_reentrance = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return lhs.max_reentrance < rhs.max_reentrance;
+			return micro_profiler::compare(lhs.max_reentrance, rhs.max_reentrance);
 		};
 
 		auto by_max_call_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return lhs.max_call_time < rhs.max_call_time;
+			return micro_profiler::compare(lhs.max_call_time, rhs.max_call_time);
 		};
 
 

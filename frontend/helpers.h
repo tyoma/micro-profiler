@@ -21,6 +21,7 @@
 #pragma once
 
 #include <algorithm>
+#include <common/compiler.h>
 
 namespace micro_profiler
 {
@@ -31,4 +32,16 @@ namespace micro_profiler
 
 		return i != container.begin() ? &*--i : nullptr;
 	}
+
+	template <typename T>
+	FORCE_INLINE int compare(T lhs, T rhs)
+	{	return lhs == rhs ? 0 : lhs < rhs ? -1 : +1;	}
+
+	template <typename T>
+	FORCE_INLINE int compare(T *lhs, T *rhs)
+	{	return !!lhs == !!rhs ? 0 : !lhs ? -1 : +1;	}
+
+	template <typename T1, typename T2>
+	FORCE_INLINE int compare(T1 lhs, T2 lhs_denominator, T1 rhs, T2 rhs_denominator)
+	{	return !lhs_denominator == !rhs_denominator ? compare(lhs * rhs_denominator, rhs * lhs_denominator) : !rhs_denominator ? -1 : +1;	}
 }

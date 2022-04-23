@@ -33,7 +33,7 @@ namespace micro_profiler
 		short int width;
 		agge::text_alignment alignment;
 		std::function<void (agge::richtext_t &text, const CtxT &context, size_t row, const T &record)> get_text;
-		std::function<bool (const CtxT &context, const T &lhs, const T &rhs)> less;
+		std::function<int (const CtxT &context, const T &lhs, const T &rhs)> compare;
 		bool ascending;
 		std::function<double (const CtxT &context, const T &record)> get_value;
 	};

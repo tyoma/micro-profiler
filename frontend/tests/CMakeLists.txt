@@ -4,6 +4,7 @@ include(test)
 
 set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
+	ColumnsDefinitionTests.cpp
 	DataSchemeTests.cpp
 	DeSerializationTests.cpp
 	DynamicViewTests.cpp

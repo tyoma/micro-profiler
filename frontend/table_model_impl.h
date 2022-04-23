@@ -131,13 +131,13 @@ namespace micro_profiler
 	{
 		const auto &context_ = _context;
 		const auto &c = _columns.at(column);
-		const auto &less = c.less;
+		const auto &compare = c.compare;
 		const auto &get_value = c.get_value;
 
-		if (less)
+		if (compare)
 		{
-			_ordered.set_order([&context_, less] (const value_type &lhs, const value_type &rhs) {
-				return less(context_, lhs, rhs);
+			_ordered.set_order([&context_, compare] (const value_type &lhs, const value_type &rhs) {
+				return compare(context_, lhs, rhs) < 0;
 			}, ascending);
 			this->invalidate(this->npos());
 		}

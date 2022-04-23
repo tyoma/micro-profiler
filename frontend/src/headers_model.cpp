@@ -106,7 +106,7 @@ namespace micro_profiler
 	{
 		const auto &activated = _columns[column_];
 
-		if (activated.less)
+		if (activated.compare)
 		{
 			_sort_ascending = _sort_column == column_ ? !_sort_ascending : activated.ascending;
 			_sort_column = column_;

@@ -18,9 +18,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef pair<statistic_types::key, statistic_types::function_detailed> threaded_addressed_function;
-			typedef pair<statistic_types::key, count_t> caller_function;
-
 			template <typename T>
 			struct dynamic_vector : vector<T>
 			{

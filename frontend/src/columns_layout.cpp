@@ -96,6 +96,10 @@ namespace micro_profiler
 		};
 
 		auto name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
+			//auto n = item.path([&context] (micro_profiler::id_t id) {	return context.by_id(id);	}).size();
+
+			//while (n--)
+			//	text << "   ";
 			text << context.resolver->symbol_name_by_va(item.address).c_str();
 		};
 

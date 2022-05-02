@@ -21,9 +21,9 @@
 #pragma once
 
 #include "column_definition.h"
+#include "hierarchy.h"
 #include "projection_view.h"
 #include "selection_model.h"
-#include "symbol_resolver.h" // TODO: remove dependency from symbol_resolver
 #include "trackables_provider.h"
 
 #include <common/noncopyable.h>
@@ -32,6 +32,10 @@
 
 namespace micro_profiler
 {
+	template <typename T, typename ContextT>
+	inline hierarchy_plain<T> access_hierarchy(const ContextT &/*context*/, const T * /*type tag*/)
+	{	return hierarchy_plain<T>();	}
+
 	template <typename BaseT, typename U, typename CtxT>
 	class table_model_impl : public BaseT, public std::enable_shared_from_this< table_model_impl<BaseT, U, CtxT> >,
 		noncopyable
@@ -79,7 +83,13 @@ namespace micro_profiler
 	template <typename BaseT, typename U, typename CtxT>
 	inline table_model_impl<BaseT, U, CtxT>::table_model_impl(std::shared_ptr<U> underlying, const CtxT &context_)
 		: _underlying(underlying), _context(context_), _ordered(*_underlying), _trackables(_ordered), _projection(_ordered)
-	{	}
+	{
+		const auto access = access_hierarchy(context_, static_cast<const value_type *>(nullptr));
+
+		_ordered.set_order([access] (const value_type &lhs, const value_type &rhs) {
+			return hierarchical_less(access, [] (const value_type &, const value_type &) {	return 0;	}, lhs, rhs);
+		}, true);
+	}
 
 	template <typename BaseT, typename U, typename CtxT>
 	inline const views::ordered<U> &table_model_impl<BaseT, U, CtxT>::ordered() const throw()
@@ -136,9 +146,28 @@ namespace micro_profiler
 
 		if (compare)
 		{
-			_ordered.set_order([&context_, compare] (const value_type &lhs, const value_type &rhs) {
-				return compare(context_, lhs, rhs) < 0;
-			}, ascending);
+			const auto access = access_hierarchy(context_, static_cast<const value_type *>(nullptr));
+
+			if (ascending)
+			{
+				const auto compare_bound = [&context_, compare] (const value_type &lhs, const value_type &rhs) {
+					return compare(context_, lhs, rhs);
+				};
+
+				_ordered.set_order([access, compare_bound] (const value_type &lhs, const value_type &rhs) {
+					return hierarchical_less(access, compare_bound, lhs, rhs);
+				}, true);
+			}
+			else
+			{
+				const auto compare_bound = [&context_, compare] (const value_type &lhs, const value_type &rhs) {
+					return compare(context_, rhs, lhs);
+				};
+
+				_ordered.set_order([access, compare_bound] (const value_type &lhs, const value_type &rhs) {
+					return hierarchical_less(access, compare_bound, lhs, rhs);
+				}, true);
+			}
 			this->invalidate(this->npos());
 		}
 		if (get_value)
@@ -162,25 +191,5 @@ namespace micro_profiler
 			selection_model< views::ordered<U> >(_ordered));
 
 		return std::shared_ptr< selection<key_type> >(complex, &complex->second);
-	}
-
-
-	template <typename BaseT, typename U, typename CtxT, typename ColumnsT>
-	inline std::shared_ptr< table_model_impl<BaseT, U, CtxT> > make_table(std::shared_ptr<U> underlying,
-		const CtxT &context, const ColumnsT &columns)
-	{
-		typedef table_model_impl<BaseT, U, CtxT> model_type;
-		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> complex_type;
-
-		const auto m = std::make_shared<model_type>(underlying, context);
-		const auto p = m.get();
-		const auto c = std::make_shared<complex_type>(m, underlying->invalidate += [p] {
-			p->fetch();
-		}, context.resolver->invalidate += [p] {
-			p->invalidate(p->npos());
-		});
-
-		m->add_columns(columns);
-		return std::shared_ptr<model_type>(c, std::get<0>(*c).get());
 	}
 }

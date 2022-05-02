@@ -46,6 +46,32 @@ namespace micro_profiler
 		{	return value.id;	}
 	};
 
+	struct stack_hierarchy_access
+	{
+		stack_hierarchy_access(const statistics_model_context &ctx)
+			: _by_id(ctx.by_id)
+		{	}
+
+		static bool same_parent(const call_statistics &lhs, const call_statistics &rhs)
+		{	return lhs.parent_id == rhs.parent_id;	}
+
+		const std::vector<id_t> &path(const call_statistics &item) const
+		{	return item.path(_by_id);	}
+
+		const call_statistics &lookup(id_t id) const
+		{	return *_by_id(id);	}
+
+		static bool total_less(const call_statistics &lhs, const call_statistics &rhs)
+		{	return lhs.id < rhs.id;	}
+
+	private:
+		std::function<const call_statistics *(id_t id)> _by_id;
+	};
+
+
+
+	inline stack_hierarchy_access access_hierarchy(const statistics_model_context &ctx, const call_statistics * /*tag*/)
+	{	return stack_hierarchy_access(ctx);	}
 
 	template <typename U>
 	inline statistics_model_context create_context(std::shared_ptr<U> underlying, double tick_interval,
@@ -61,6 +87,24 @@ namespace micro_profiler
 		}, resolver, canonical);
 	}
 
+	template <typename BaseT, typename U, typename ColumnsT>
+	inline std::shared_ptr< table_model_impl<BaseT, U, statistics_model_context> > make_table(std::shared_ptr<U> underlying,
+		const statistics_model_context &context, const ColumnsT &columns)
+	{
+		typedef table_model_impl<BaseT, U, statistics_model_context> model_type;
+		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> complex_type;
+
+		const auto m = std::make_shared<model_type>(underlying, context);
+		const auto p = m.get();
+		const auto c = std::make_shared<complex_type>(m, underlying->invalidate += [p] {
+			p->fetch();
+		}, context.resolver->invalidate += [p] {
+			p->invalidate(p->npos());
+		});
+
+		m->add_columns(columns);
+		return std::shared_ptr<model_type>(c, std::get<0>(*c).get());
+	}
 
 	template <typename U, typename CtxT>
 	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, CtxT> >

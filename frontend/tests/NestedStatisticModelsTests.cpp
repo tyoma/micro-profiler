@@ -319,9 +319,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(5u, m->get_count());
-				assert_approx_equal(1.12, get_value(*m, 0), c_tolerance);
-				assert_approx_equal(0.16, get_value(*m, 1), c_tolerance);
-				assert_approx_equal(0.1, get_value(*m, 2), c_tolerance);
+				assert_approx_equal(0.16, get_value(*m, 0), c_tolerance);
+				assert_approx_equal(0.1, get_value(*m, 1), c_tolerance);
+				assert_approx_equal(1.12, get_value(*m, 2), c_tolerance);
 				assert_approx_equal(0.09, get_value(*m, 3), c_tolerance);
 				assert_approx_equal(0.03, get_value(*m, 4), c_tolerance);
 			}

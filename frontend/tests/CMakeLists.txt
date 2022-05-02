@@ -17,6 +17,7 @@ set(FRONTEND_TESTS_SOURCES
 	FunctionListPiechartTests.cpp
 	FunctionListTests.cpp
 	HeadersModelTests.cpp
+	HierarchicalTableModelImplTests.cpp
 	HierarchyAlgorithmsTests.cpp
 	ImagePatchModelTests.cpp
 	legacy_serialization.cpp
@@ -27,6 +28,7 @@ set(FRONTEND_TESTS_SOURCES
 #	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp
 	SelectionModelTests.cpp
+	StatisticsHierarchyAccessTests.cpp
 	SymbolResolverTests.cpp
 	TableModelImplTests.cpp
 	ThreadsModelTests.cpp

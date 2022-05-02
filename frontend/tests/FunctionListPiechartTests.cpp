@@ -69,7 +69,7 @@ namespace micro_profiler
 					static_cast<function_statistics &>(*r) = i->second;
 					r.commit();
 				}
-				return create_statistics_model(local_statistics, create_context(statistics, 1.0 / ticks_per_second,
+				return create_statistics_model(local_statistics, create_context(local_statistics, 1.0 / ticks_per_second,
 					make_shared<symbol_resolver>(modules, mappings), tmodel, false));
 			}
 

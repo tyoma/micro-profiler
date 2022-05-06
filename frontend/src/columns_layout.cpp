@@ -34,10 +34,11 @@ using namespace agge;
 
 namespace micro_profiler
 {
+	const auto secondary = style::height_scale(0.85);
+	const auto indent_spaces = "    ";
+
 	namespace
 	{
-		const auto secondary = style::height_scale(0.85);
-
 		auto by_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) {
 			return strcmp(context.resolver->symbol_name_by_va(lhs.address).c_str(), context.resolver->symbol_name_by_va(rhs.address).c_str());
 		};
@@ -96,10 +97,14 @@ namespace micro_profiler
 		};
 
 		auto name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
-			//auto n = item.path([&context] (micro_profiler::id_t id) {	return context.by_id(id);	}).size();
+			auto n = item.path([&context] (micro_profiler::id_t id) {	return context.by_id(id);	}).size() - 1u;
 
-			//while (n--)
-			//	text << "   ";
+			while (n--)
+				text << micro_profiler::indent_spaces;
+			text << context.resolver->symbol_name_by_va(item.address).c_str();
+		};
+
+		auto callee_name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
 			text << context.resolver->symbol_name_by_va(item.address).c_str();
 		};
 
@@ -207,7 +212,7 @@ namespace micro_profiler
 
 	const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[] = {
 		c_statistics_columns[0],
-		{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, name, by_name, true,	},
+		{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, callee_name, by_name, true,	},
 		c_statistics_columns[2],
 		c_statistics_columns[3],
 		c_statistics_columns[4],

@@ -107,6 +107,20 @@ namespace micro_profiler
 					r.commit();
 				}
 			}
+
+			shared_ptr<tables::statistics> make_table(const vector<call_statistics> &from)
+			{
+				const auto table = make_shared<tables::statistics>();
+
+				for (auto i = from.begin(); i != from.end(); ++i)
+				{
+					auto r = table->create();
+
+					*r = *i;
+					r.commit();
+				}
+				return table;
+			}
 		}
 
 
@@ -234,6 +248,36 @@ namespace micro_profiler
 				};
 
 				assert_equivalent(mkvector(reference), text);
+			}
+
+
+			test( HierarchicalTableIsFormedFromHierarchicalData )
+			{
+				// INIT
+				auto statistics = make_table(plural
+					+ make_call_statistics(1, 0, 5, 0x00001122, 0, 0, 0, 0, 0)
+					+ make_call_statistics(2, 0, 3, 0x00001123, 0, 0, 0, 0, 0)
+					+ make_call_statistics(3, 0, 0, 0x00001124, 0, 0, 0, 0, 0)
+					+ make_call_statistics(4, 0, 3, 0x00001125, 0, 0, 0, 0, 0)
+					+ make_call_statistics(5, 0, 0, 0x00001126, 0, 0, 0, 0, 0)
+					+ make_call_statistics(6, 0, 2, 0x00001127, 0, 0, 0, 0, 0));
+				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
+				unsigned columns[] = {	main_columns::name,	};
+
+				// ACT
+				auto text = get_text(*fl, columns);
+
+				// ASSERT
+				string reference[][1] = {
+					{	"00001124",	},
+					{	"    00001123",	},
+					{	"        00001127",	},
+					{	"    00001125",	},
+					{	"00001126",	},
+					{	"    00001122",	},
+				};
+
+				assert_equal(mkvector(reference), text);
 			}
 
 

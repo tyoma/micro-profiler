@@ -27,21 +27,24 @@
 
 namespace micro_profiler
 {
-	template <typename OutputMapType>
+	template <typename KeyT>
 	class shadow_stack
 	{
 	public:
+		typedef typename statistic_types_t<KeyT>::map_detailed map_type;
+
+	public:
 		shadow_stack(const overhead & overhead_);
 
-		template <typename ForwardConstIterator>
-		void update(ForwardConstIterator trace_begin, ForwardConstIterator trace_end, OutputMapType &statistics);
+		template <typename IteratorT>
+		void update(IteratorT trace_begin, IteratorT trace_end, map_type &statistics);
 
 	private:
 		struct call_record_ex;
-		typedef containers::unordered_map<const void *, unsigned int, knuth_hash> entrance_counter_map;
+		typedef containers::unordered_map<KeyT, unsigned int, knuth_hash> entrance_counter_map;
 
 	private:
-		void restore_state(OutputMapType &statistics);
+		void restore_state(map_type &statistics);
 
 	private:
 		const timestamp_t _inner_overhead, _total_overhead;
@@ -49,42 +52,41 @@ namespace micro_profiler
 		entrance_counter_map _entrance_counters;
 	};
 
-	template <typename OutputMapType>
-	struct shadow_stack<OutputMapType>::call_record_ex
+	template <typename KeyT>
+	struct shadow_stack<KeyT>::call_record_ex
 	{
-		void set(const call_record &from, unsigned int &level, typename OutputMapType::mapped_type &entry);
+		void set(const call_record &from, unsigned int &level, typename map_type::mapped_type &entry);
 
 		call_record call;
 		timestamp_t children_time_observed, children_overhead;
 		unsigned int *level;
-		typename OutputMapType::mapped_type *entry;
+		typename map_type::mapped_type *entry;
 	};
 
 
 
-	template <typename OutputMapType>
-	inline shadow_stack<OutputMapType>::shadow_stack(const overhead &overhead_)
+	template <typename KeyT>
+	inline shadow_stack<KeyT>::shadow_stack(const overhead &overhead_)
 		: _inner_overhead(overhead_.inner), _total_overhead(overhead_.inner + overhead_.outer)
 	{	}
 
-	template <typename OutputMapType>
-	inline void shadow_stack<OutputMapType>::restore_state(OutputMapType &statistics)
+	template <typename KeyT>
+	inline void shadow_stack<KeyT>::restore_state(map_type &statistics)
 	{
-		for (typename pod_vector<call_record_ex>::iterator i = _stack.begin(); i != _stack.end(); ++i)
+		for (auto i = _stack.begin(); i != _stack.end(); ++i)
 			i->entry = &statistics[i->call.callee];
 	}
 
-	template <typename OutputMapType>
-	template <typename ForwardConstIterator>
-	inline void shadow_stack<OutputMapType>::update(ForwardConstIterator i, ForwardConstIterator end,
-		OutputMapType &statistics)
+	template <typename KeyT>
+	template <typename IteratorT>
+	inline void shadow_stack<KeyT>::update(IteratorT i, IteratorT end, map_type &statistics)
 	{
 		restore_state(statistics);
 		for (; i != end; ++i)
 		{
 			if (i->callee)
 			{
-				typename OutputMapType::mapped_type &entry = statistics[i->callee];
+				auto &entry = statistics[i->callee];
 
 				if (!entry.entrance_counter)
 					entry.entrance_counter = &_entrance_counters[i->callee];
@@ -116,9 +118,9 @@ namespace micro_profiler
 	}
 
 
-	template <typename OutputMapType>
-	inline void shadow_stack<OutputMapType>::call_record_ex::set(const call_record &from, unsigned int &level_,
-		typename OutputMapType::mapped_type &entry_)
+	template <typename KeyT>
+	inline void shadow_stack<KeyT>::call_record_ex::set(const call_record &from, unsigned int &level_,
+		typename map_type::mapped_type &entry_)
 	{
 		call = from;
 		children_time_observed = children_overhead = 0;

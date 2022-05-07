@@ -50,37 +50,6 @@ namespace micro_profiler
 			}
 
 
-			test( SerializationDeserializationOfContainersOfFunctionStaticsProducesTheSameResults )
-			{
-				// INIT
-				vector_adapter buffer;
-				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistic_types::map s1, s2;
-				statistic_types::map ds1, ds2;
-
-				s1[addr(123441)] = function_statistics(17, 2012, 123123123, 32123, 2213);
-				s1[addr(71341)] = function_statistics(1117, 212, 1231123, 3213, 112213);
-				s2[addr(141)] = function_statistics(17, 12012, 1123123123, 132123, 12213);
-				s2[addr(7341)] = function_statistics(21117, 2212, 21231123, 23213, 2112213);
-				s2[addr(7741)] = function_statistics(31117, 3212, 31231123, 33213, 3112213);
-
-				// ACT
-				s(s1);
-				s(s2);
-
-				// INIT
-				strmd::deserializer<vector_adapter, packer> ds(buffer);
-
-				// ACT (deserialization)
-				ds(ds1);
-				ds(ds2);
-
-				// ASSERT
-				assert_equivalent(ds1, s1);
-				assert_equivalent(ds2, s2);
-			}
-
-
 			test( DetailedStatisticsIsSerializedAsExpected )
 			{
 				// INIT

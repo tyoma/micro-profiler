@@ -24,7 +24,7 @@ namespace micro_profiler
 
 			guid_t id;
 
-			generate(id.values, array_end(id.values), &rand);
+			generate(begin(id.values), end(id.values), &rand);
 			return id;
 		}
 

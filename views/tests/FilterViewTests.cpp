@@ -21,8 +21,8 @@ namespace micro_profiler
 					// INIT
 					int data1[] = { 17, 19, 123, 100, 1000, };
 					string data2[] = { "foo", "bar", "doog", "boog", };
-					vector<int> source1(data1, array_end(data1));
-					list<string> source2(data2, array_end(data2));
+					vector<int> source1(begin(data1), end(data1));
+					list<string> source2(begin(data2), end(data2));
 
 					// INIT / ACT
 					filter< vector<int> > v1(source1);
@@ -39,8 +39,8 @@ namespace micro_profiler
 					// INIT
 					int data1[] = { 17, 19, 123, 100, 1000, };
 					string data2[] = { "foo", "bar", "doog", "boog", };
-					vector<int> source1(data1, array_end(data1));
-					list<string> source2(data2, array_end(data2));
+					vector<int> source1(begin(data1), end(data1));
+					list<string> source2(begin(data2), end(data2));
 					filter< vector<int> > v1(source1);
 					filter< list<string> > v2(source2);
 
@@ -58,7 +58,7 @@ namespace micro_profiler
 				{
 					// INIT
 					string data[] = { "foo", "bar", "doog", "baz", "boog", "Lorem", "Ipsum" };
-					vector<string> source(data, array_end(data));
+					vector<string> source(begin(data), end(data));
 					filter< vector<string> > v(source);
 
 					// ACT
@@ -91,7 +91,7 @@ namespace micro_profiler
 				{
 					// INIT
 					string data[] = { "foo", "bar", "doog", "baz", "boog", "Lorem", "Ipsum" };
-					vector<string> source(data, array_end(data));
+					vector<string> source(begin(data), end(data));
 					filter< vector<string> > v(source);
 
 					v.set_filter([] (const string &v) { return v.size() == 3; });

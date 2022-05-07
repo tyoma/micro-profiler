@@ -326,7 +326,7 @@ namespace micro_profiler
 				t3.join();
 
 				// ACT
-				monitor->get_info(back_inserter(v1), tids, array_end(tids));
+				monitor->get_info(back_inserter(v1), begin(tids), end(tids));
 
 				// ASSERT
 				assert_equal(3u, v1.size());
@@ -339,7 +339,7 @@ namespace micro_profiler
 				map<thread_monitor::thread_id, thread_info> v2;
 
 				// ACT
-				monitor->get_info(inserter(v2, v2.end()), tids2, array_end(tids2));
+				monitor->get_info(inserter(v2, v2.end()), begin(tids2), end(tids2));
 
 				// ASSERT
 				assert_equal(2u, v2.size());
@@ -392,7 +392,7 @@ namespace micro_profiler
 				t3.join();
 
 				// ACT
-				monitor->get_info(back_inserter(infos), tids, array_end(tids));
+				monitor->get_info(back_inserter(infos), begin(tids), end(tids));
 
 				// ASSERT
 				assert_approx_equal(400, static_cast<int>((infos[1].second.end_time - infos[1].second.start_time).count()), 0.10);

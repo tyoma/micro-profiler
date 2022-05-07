@@ -38,7 +38,6 @@ namespace micro_profiler
 		typedef function_statistics_detailed_t<KeyT> function_detailed;
 
 		typedef containers::unordered_map<KeyT, function_detailed, knuth_hash> map_detailed;
-		typedef containers::unordered_map<KeyT, function, knuth_hash> map;
 	};
 
 	struct function_statistics
@@ -63,8 +62,7 @@ namespace micro_profiler
 	{
 		typedef typename statistic_types_t<AddressT>::map_detailed callees_type;
 
-		function_statistics_detailed_t();
-		function_statistics_detailed_t(const function_statistics &other);
+		function_statistics_detailed_t(const function_statistics &from = function_statistics());
 		function_statistics_detailed_t(const function_statistics_detailed_t &other);
 		~function_statistics_detailed_t();
 
@@ -109,13 +107,8 @@ namespace micro_profiler
 
 	// function_statistics_detailed_t - inline definitions
 	template <typename AddressT>
-	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t()
-		: callees(*new callees_type)
-	{	}
-
-	template <typename AddressT>
-	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t(const function_statistics &other)
-		: function_statistics(other), callees(*new callees_type)
+	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t(const function_statistics &from)
+		: function_statistics(from), callees(*new callees_type())
 	{	}
 
 	template <typename AddressT>

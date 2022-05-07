@@ -132,7 +132,7 @@ namespace micro_profiler
 
 				statistics[0] = plural
 					+ make_statistics(addr(0x100005), 123, 0, 1000, 0, 0, plural
-						+ make_statistics_base(addr(0x1ull), 1023, 0, 1000, 0, 0))
+						+ make_statistics(addr(0x1ull), 1023, 0, 1000, 0, 0))
 					+ make_statistics(addr(0x100017, 3), 12, 0, 0, 0, 0)
 					+ make_statistics(addr(0xF00115, 4), 127, 0, 0, 0, 0)
 					+ make_statistics(addr(0xF00133, 3), 12000, 0, 250, 0, 0);
@@ -158,7 +158,7 @@ namespace micro_profiler
 
 				ustatistics[0] = plural
 					+ make_statistics(0x100005ull, 123, 0, 1000, 0, 0, plural
-						+ make_statistics_base(0x1ull, 1023, 0, 1000, 0, 0))
+						+ make_statistics(0x1ull, 1023, 0, 1000, 0, 0))
 					+ make_statistics(0x100017ull, 12, 0, 0, 0, 0)
 					+ make_statistics(0xF00115ull, 127, 0, 0, 0, 0)
 					+ make_statistics(0xF00133ull, 12000, 0, 250, 0, 0);

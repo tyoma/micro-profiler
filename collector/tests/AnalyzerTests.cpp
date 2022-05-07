@@ -93,13 +93,13 @@ namespace micro_profiler
 				addressed_statistics reference1[] = {
 					make_statistics(addr(1234), 1, 0, 4, 4, 4),
 					make_statistics(addr(2234), 2, 0, 9, 7, 6, plural
-						+ make_statistics_base(addr(12234), 1, 0, 2, 2, 2)),
+						+ make_statistics(addr(12234), 1, 0, 2, 2, 2)),
 					make_statistics(addr(12234), 1, 0, 2, 2, 2),
 				};
 				addressed_statistics reference2[] = {
 					make_statistics(addr(1234), 1, 0, 3, 3, 3),
 					make_statistics(addr(2234), 2, 0, 7, 6, 5, plural
-						+ make_statistics_base(addr(12234), 1, 0, 1, 1, 1)),
+						+ make_statistics(addr(12234), 1, 0, 1, 1, 1)),
 					make_statistics(addr(12234), 1, 0, 1, 1, 1),
 				};
 
@@ -134,7 +134,7 @@ namespace micro_profiler
 				};
 				addressed_statistics reference2[] = {
 					make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
-						+ make_statistics_base(addr(2234), 1, 0, 5, 5, 5)),
+						+ make_statistics(addr(2234), 1, 0, 5, 5, 5)),
 					make_statistics(addr(2234), 1, 0, 5, 5, 5),
 				};
 
@@ -153,7 +153,7 @@ namespace micro_profiler
 				// ASSERT
 				addressed_statistics reference3[] = {
 					make_statistics(addr(1234), 1, 0, 40, 25, 40, plural
-						+ make_statistics_base(addr(2234), 1, 0, 15, 15, 15)),
+						+ make_statistics(addr(2234), 1, 0, 15, 15, 15)),
 					make_statistics(addr(2234), 1, 0, 15, 15, 15),
 				};
 

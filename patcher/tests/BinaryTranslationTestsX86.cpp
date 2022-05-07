@@ -40,7 +40,7 @@ namespace micro_profiler
 					0xE9, 0x1F, 0x00, 0x00, 0x00, 0xE9, 0x2F, 0x00, 0x10, 0x00,
 				};
 
-				assert_is_true(equal(reference1, array_end(reference1), instructions1 + 1));
+				assert_is_true(equal(begin(reference1), end(reference1), instructions1 + 1));
 
 				// ACT
 				move_function(instructions1 + 17, const_byte_range(instructions1 + 48, 10));
@@ -50,7 +50,7 @@ namespace micro_profiler
 					0xE9, 0x0F, 0x00, 0x00, 0x00, 0xE9, 0x1F, 0x00, 0x10, 0x00,
 				};
 
-				assert_is_true(equal(reference2, array_end(reference2), instructions1 + 17));
+				assert_is_true(equal(begin(reference2), end(reference2), instructions1 + 17));
 
 				// INIT
 				byte instructions2[0x1000] = {
@@ -65,7 +65,7 @@ namespace micro_profiler
 					0xE9, 0x0F, 0x01, 0x00, 0x10, 0xE9, 0xEE, 0xEF, 0xFF, 0xFF, 0xE9, 0xED, 0xF1, 0xFF, 0xFF,
 				};
 
-				assert_is_true(equal(reference3, array_end(reference3), instructions2 + 0x0F12));
+				assert_is_true(equal(begin(reference3), end(reference3), instructions2 + 0x0F12));
 			}
 
 
@@ -90,7 +90,7 @@ namespace micro_profiler
 					0xE8, 0x1F, 0x00, 0x00, 0x00, 0xE8, 0x2F, 0x00, 0x10, 0x00, 0xE8, 0x2F, 0x00, 0x00, 0x00,
 				};
 
-				assert_is_true(equal(reference1, array_end(reference1), instructions1 + 1));
+				assert_is_true(equal(begin(reference1), end(reference1), instructions1 + 1));
 
 				// ACT
 				move_function(instructions1 + 17, const_byte_range(instructions1 + 48, 15));
@@ -100,7 +100,7 @@ namespace micro_profiler
 					0xE8, 0x0F, 0x00, 0x00, 0x00, 0xE8, 0x1F, 0x00, 0x10, 0x00, 0xE8, 0x1F, 0x00, 0x00, 0x00,
 				};
 
-				assert_is_true(equal(reference2, array_end(reference2), instructions1 + 17));
+				assert_is_true(equal(begin(reference2), end(reference2), instructions1 + 17));
 
 				// INIT
 				byte instructions2[0x1000] = {
@@ -117,7 +117,7 @@ namespace micro_profiler
 					0xE8, 0xEF, 0xF0, 0xFF, 0xFF,
 				};
 
-				assert_is_true(equal(reference3, array_end(reference3), instructions2 + 0x0F11));
+				assert_is_true(equal(begin(reference3), end(reference3), instructions2 + 0x0F11));
 			}
 
 
@@ -143,8 +143,8 @@ namespace micro_profiler
 					0xE9, 0xF6, 0xFF, 0xFF, 0xFF
 				};
 
-				assert_is_true(equal(reference, array_end(reference), instructions));
-				assert_is_true(equal(reference, array_end(reference), instructions + 0x40));
+				assert_is_true(equal(begin(reference), end(reference), instructions));
+				assert_is_true(equal(begin(reference), end(reference), instructions + 0x40));
 			}
 
 
@@ -170,8 +170,8 @@ namespace micro_profiler
 					0xE8, 0xF6, 0xFF, 0xFF, 0xFF,
 				};
 
-				assert_is_true(equal(reference, array_end(reference), instructions));
-				assert_is_true(equal(reference, array_end(reference), instructions + 0x40));
+				assert_is_true(equal(begin(reference), end(reference), instructions));
+				assert_is_true(equal(begin(reference), end(reference), instructions + 0x40));
 			}
 
 
@@ -209,7 +209,7 @@ namespace micro_profiler
 					0xE9, 0xEF, 0x32, 0x56, 0x78,
 				};
 
-				assert_is_true(equal(reference1, array_end(reference1), translated));
+				assert_is_true(equal(begin(reference1), end(reference1), translated));
 			}
 
 

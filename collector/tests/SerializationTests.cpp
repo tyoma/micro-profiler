@@ -55,7 +55,7 @@ namespace micro_profiler
 				// ASSERT
 				addressed_statistics reference[] = {
 					make_statistics(1234u, 1, 0, 11, 9, 11, plural
-						+ make_statistics_base(2234u, 1, 0, 2, 2, 2)),
+						+ make_statistics(2234u, 1, 0, 2, 2, 2)),
 					make_statistics(2234u, 1, 0, 2, 2, 2),
 				};
 

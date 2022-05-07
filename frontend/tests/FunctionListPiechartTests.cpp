@@ -48,6 +48,7 @@ namespace micro_profiler
 
 					(*r).address = i->first.first;
 					(*r).thread_id = i->first.second;
+					(*r).parent_id = 0;
 					static_cast<function_statistics &>(*r) = i->second;
 					r.commit();
 				}

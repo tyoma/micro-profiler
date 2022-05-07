@@ -489,7 +489,7 @@ namespace micro_profiler
 				trace.call_log.clear();
 
 				// ACT
-				bubble_sort2(digits, array_end(digits));
+				bubble_sort2(begin(digits), end(digits));
 
 				// ASSERT
 				assert_is_true(2u <= trace.call_log.size());
@@ -520,7 +520,7 @@ namespace micro_profiler
 
 				// ACT
 				guinea_snprintf(buffer, sizeof(buffer), "%d", 1318);
-				bubble_sort2(digits, array_end(digits));
+				bubble_sort2(begin(digits), end(digits));
 
 				// ASSERT
 				assert_is_empty(trace.call_log);

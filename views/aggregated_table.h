@@ -51,14 +51,14 @@ namespace micro_profiler
 
 		template <typename U, typename C>
 		template <typename KeyerFactoryT, typename AggregatorT>
-		inline void aggregated_table<U, C>::group_by(const KeyerFactoryT &keyer_factory, const AggregatorT& aggregator)
+		inline void aggregated_table<U, C>::group_by(const KeyerFactoryT &keyer_factory, const AggregatorT &aggregator)
 		{
 			const auto ukeyer = keyer_factory(_underlying);
-			auto &uindex = multi_index(_underlying, ukeyer);
+			const auto &uindex = multi_index(_underlying, ukeyer);
 			auto &aindex = unique_index(*this, keyer_factory(*this));
-			auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename U::const_reference value) {
-				const auto key = ukeyer(value);
-				auto uitems = uindex.equal_range(key);
+			const auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename U::const_reference value) {
+				const auto &key = ukeyer(value);
+				const auto uitems = uindex.equal_range(key);
 				auto aggregated_record = aindex[key];
 
 				aggregator(*aggregated_record, uitems.first, uitems.second);

@@ -22,6 +22,7 @@
 
 #include "table_events.h"
 
+#include <common/compiler.h>
 #include <stdexcept>
 #include <unordered_map>
 #include <wpl/signal.h>
@@ -51,6 +52,8 @@ namespace micro_profiler
 		private:
 			immutable_unique_index(const immutable_unique_index &other);
 			void operator =(const immutable_unique_index &rhs);
+
+			typename U::transacted_record create_record(const key_type &key);
 
 		private:
 			std::unordered_map< key_type, typename U::iterator, hash<key_type> > _index;
@@ -153,9 +156,12 @@ namespace micro_profiler
 		{
 			const auto i = _index.find(key);
 
-			if (i != _index.end())
-				return *i->second;
+			return i != _index.end() ? *i->second : create_record(key);
+		}
 
+		template <typename U, typename K>
+		FORCE_NOINLINE inline typename U::transacted_record immutable_unique_index<U, K>::create_record(const key_type &key)
+		{
 			auto tr = _underlying.create();
 
 			_keyer(*this, *tr, key);

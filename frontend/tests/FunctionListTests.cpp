@@ -254,21 +254,21 @@ namespace micro_profiler
 			test( HierarchicalTableIsFormedFromHierarchicalData )
 			{
 				// INIT
-				auto statistics = make_table(plural
+				auto statistics_ = make_table(plural
 					+ make_call_statistics(1, 0, 5, 0x00001122, 0, 0, 0, 0, 0)
 					+ make_call_statistics(2, 0, 3, 0x00001123, 0, 0, 0, 0, 0)
 					+ make_call_statistics(3, 0, 0, 0x00001124, 0, 0, 0, 0, 0)
 					+ make_call_statistics(4, 0, 3, 0x00001125, 0, 0, 0, 0, 0)
 					+ make_call_statistics(5, 0, 0, 0x00001126, 0, 0, 0, 0, 0)
 					+ make_call_statistics(6, 0, 2, 0x00001127, 0, 0, 0, 0, 0));
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
+				auto fl = create_statistics_model(statistics_, create_context(statistics_, 1, resolver, tmodel, false));
 				unsigned columns[] = {	main_columns::name,	};
 
 				// ACT
 				auto text = get_text(*fl, columns);
 
 				// ASSERT
-				string reference[][1] = {
+				string reference1[][1] = {
 					{	"00001124",	},
 					{	"    00001123",	},
 					{	"        00001127",	},
@@ -277,7 +277,30 @@ namespace micro_profiler
 					{	"    00001122",	},
 				};
 
-				assert_equal(mkvector(reference), text);
+				assert_equal(mkvector(reference1), text);
+
+				// INIT
+				auto r = statistics_->create();
+
+				*r = make_call_statistics(7, 0, 2, 0x0000F12F, 0, 0, 0, 0, 0);
+				r.commit();
+
+				// ACT
+				statistics_->invalidate();
+				text = get_text(*fl, columns);
+
+				// ASSERT
+				string reference2[][1] = {
+					{	"00001124",	},
+					{	"    00001123",	},
+					{	"        00001127",	},
+					{	"        0000F12F",	},
+					{	"    00001125",	},
+					{	"00001126",	},
+					{	"    00001122",	},
+				};
+
+				assert_equal(mkvector(reference2), text);
 			}
 
 

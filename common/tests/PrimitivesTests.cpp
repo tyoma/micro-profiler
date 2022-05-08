@@ -144,57 +144,6 @@ namespace micro_profiler
 				assert_equal(10u, s2.max_reentrance);
 				assert_equal(5, s2.max_call_time);
 			}
-
-
-			test( DetailedStatisticsAddChildCallFollowsAddCallRules )
-			{
-				// INIT
-				statistic_types::function_detailed s1, s2;
-
-				// ACT
-				add_child_statistics(s1, (const void *)1, 0, 1, 3);
-				add_child_statistics(s1, (const void *)1, 0, 2, 5);
-				add_child_statistics(s1, (const void *)2, 2, 3, 7);
-				add_child_statistics(s1, (const void *)3, 3, 4, 2);
-				add_child_statistics(s1, (const void *)3, 0, 5, 11);
-				add_child_statistics(s2, (const void *)20, 1, 6, 13);
-				add_child_statistics(s2, (const void *)30, 2, 7, 17);
-
-				// ASSERT
-				assert_equal(3u, s1.callees.size());
-
-				assert_equal(2u, s1.callees[(const void *)1].times_called);
-				assert_equal(0u, s1.callees[(const void *)1].max_reentrance);
-				assert_equal(3, s1.callees[(const void *)1].inclusive_time);
-				assert_equal(8, s1.callees[(const void *)1].exclusive_time);
-				assert_equal(2, s1.callees[(const void *)1].max_call_time);
-
-				assert_equal(1u, s1.callees[(const void *)2].times_called);
-				assert_equal(2u, s1.callees[(const void *)2].max_reentrance);
-				assert_equal(0, s1.callees[(const void *)2].inclusive_time);
-				assert_equal(7, s1.callees[(const void *)2].exclusive_time);
-				assert_equal(3, s1.callees[(const void *)2].max_call_time);
-
-				assert_equal(2u, s1.callees[(const void *)3].times_called);
-				assert_equal(3u, s1.callees[(const void *)3].max_reentrance);
-				assert_equal(5, s1.callees[(const void *)3].inclusive_time);
-				assert_equal(13, s1.callees[(const void *)3].exclusive_time);
-				assert_equal(5, s1.callees[(const void *)3].max_call_time);
-
-				assert_equal(2u, s2.callees.size());
-
-				assert_equal(1u, s2.callees[(const void *)20].times_called);
-				assert_equal(1u, s2.callees[(const void *)20].max_reentrance);
-				assert_equal(0, s2.callees[(const void *)20].inclusive_time);
-				assert_equal(13, s2.callees[(const void *)20].exclusive_time);
-				assert_equal(6, s2.callees[(const void *)20].max_call_time);
-
-				assert_equal(1u, s2.callees[(const void *)30].times_called);
-				assert_equal(2u, s2.callees[(const void *)30].max_reentrance);
-				assert_equal(0, s2.callees[(const void *)30].inclusive_time);
-				assert_equal(17, s2.callees[(const void *)30].exclusive_time);
-				assert_equal(7, s2.callees[(const void *)30].max_call_time);
-			}
 		end_test_suite
 	}
 }

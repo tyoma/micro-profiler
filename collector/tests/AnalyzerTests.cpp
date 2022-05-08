@@ -46,15 +46,13 @@ namespace micro_profiler
 				as_acceptor.accept_calls(1177u, trace, array_size(trace));
 
 				// ASSERT
-				addressed_statistics reference[] = {
-					make_statistics(addr(1234), 0, 0, 0, 0, 0),
-					make_statistics(addr(2234), 0, 0, 0, 0, 0),
-				};
-
 				assert_equal(1, distance(a.begin(), a.end()));
 				assert_not_null(find_by_first(a, 1177u));
 				assert_null(find_by_first(a, 1317u));
-				assert_equivalent(reference, *find_by_first(a, 1177u));
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0, 0, 0)),
+					*find_by_first(a, 1177u));
 				assert_is_true(a.has_data());
 
 				// ACT
@@ -64,7 +62,10 @@ namespace micro_profiler
 				assert_equal(2, distance(a.begin(), a.end()));
 				assert_not_null(find_by_first(a, 1177u));
 				assert_not_null(find_by_first(a, 1317u));
-				assert_equivalent(reference, *find_by_first(a, 1317u));
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0, 0, 0)),
+					*find_by_first(a, 1317u));
 				assert_is_true(a.has_data());
 			}
 
@@ -90,21 +91,16 @@ namespace micro_profiler
 				a2.accept_calls(1177u, trace, array_size(trace));
 
 				// ASSERT
-				addressed_statistics reference1[] = {
-					make_statistics(addr(1234), 1, 0, 4, 4, 4),
-					make_statistics(addr(2234), 2, 0, 9, 7, 6, plural
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 1, 0, 4, 4, 4)
+					+ make_statistics(addr(2234), 2, 0, 9, 7, 6, plural
 						+ make_statistics(addr(12234), 1, 0, 2, 2, 2)),
-					make_statistics(addr(12234), 1, 0, 2, 2, 2),
-				};
-				addressed_statistics reference2[] = {
-					make_statistics(addr(1234), 1, 0, 3, 3, 3),
-					make_statistics(addr(2234), 2, 0, 7, 6, 5, plural
+					*find_by_first(a1, 1177u));
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 1, 0, 3, 3, 3)
+					+ make_statistics(addr(2234), 2, 0, 7, 6, 5, plural
 						+ make_statistics(addr(12234), 1, 0, 1, 1, 1)),
-					make_statistics(addr(12234), 1, 0, 1, 1, 1),
-				};
-
-				assert_equivalent(reference1, *find_by_first(a1, 1177u));
-				assert_equivalent(reference2, *find_by_first(a2, 1177u));
+					*find_by_first(a2, 1177u));
 			}
 
 
@@ -128,18 +124,14 @@ namespace micro_profiler
 				as_acceptor.accept_calls(1177u, trace1, array_size(trace1));
 
 				// ASSERT
-				addressed_statistics reference1[] = {
-					make_statistics(addr(1234), 0, 0, 0, 0, 0),
-					make_statistics(addr(2234), 0, 0, 0, 0, 0),
-				};
-				addressed_statistics reference2[] = {
-					make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0, 0, 0)),
+					*find_by_first(a, 1317u));
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
 						+ make_statistics(addr(2234), 1, 0, 5, 5, 5)),
-					make_statistics(addr(2234), 1, 0, 5, 5, 5),
-				};
-
-				assert_equivalent(reference2, *find_by_first(a, 1177u));
-				assert_equivalent(reference1, *find_by_first(a, 1317u));
+					*find_by_first(a, 1177u));
 
 				// INIT
 				call_record trace2[] = {
@@ -151,14 +143,15 @@ namespace micro_profiler
 				as_acceptor.accept_calls(1317u, trace2, array_size(trace2));
 
 				// ASSERT
-				addressed_statistics reference3[] = {
-					make_statistics(addr(1234), 1, 0, 40, 25, 40, plural
-						+ make_statistics(addr(2234), 1, 0, 15, 15, 15)),
-					make_statistics(addr(2234), 1, 0, 15, 15, 15),
-				};
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
+						+ make_statistics(addr(2234), 1, 0, 5, 5, 5)),
+					*find_by_first(a, 1177u));
 
-				assert_equivalent(reference2, *find_by_first(a, 1177u));
-				assert_equivalent(reference3, *find_by_first(a, 1317u));
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 1, 0, 40, 25, 40, plural
+						+ make_statistics(addr(2234), 1, 0, 15, 15, 15)),
+					*find_by_first(a, 1317u));
 			}
 
 
@@ -193,17 +186,14 @@ namespace micro_profiler
 				a.accept_calls(111889, trace3, array_size(trace3));
 
 				// ASSERT
-				addressed_statistics reference1[] = {
-					make_statistics(addr(2234), 1, 0, 20, 20, 20),
-				};
-				addressed_statistics reference2[] = {
-					make_statistics(addr(2234), 1, 0, 23, 23, 23),
-				};
-
 				assert_not_null(find_by_first(a, 111888u));
 				assert_not_null(find_by_first(a, 111889u));
-				assert_equivalent(reference1, *find_by_first(a, 111888u));
-				assert_equivalent(reference2, *find_by_first(a, 111889u));
+				assert_equivalent(plural
+					+ make_statistics(addr(2234), 1, 0, 20, 20, 20),
+					*find_by_first(a, 111888u));
+				assert_equivalent(plural
+					+ make_statistics(addr(2234), 1, 0, 23, 23, 23),
+					*find_by_first(a, 111889u));
 			}
 
 

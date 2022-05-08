@@ -336,9 +336,10 @@ namespace micro_profiler
 				t.join();
 
 				// ASSERT
-				assert_equal(2u, u[11].size());
-				assert_equal(1u, u[11].count(0x1223));
-				assert_equal(1u, u[11].count(0x4321));
+				assert_equivalent(plural
+					+ make_statistics(0x1223u, 1, 0, 1010, 710, 1010, plural
+						+ make_statistics(0x4321u, 1, 0, 300, 300, 300)),
+					u[11]);
 			}
 
 

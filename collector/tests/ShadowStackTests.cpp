@@ -136,15 +136,13 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)0x01234567, 0, 0, 0, 0, 0, plural
-						+ make_statistics((const void *)0x01234568, 1, 0, 6, 6, 6))
-					+ make_statistics((const void *)0x01234568, 1, 0, 6, 6, 6),
+						+ make_statistics((const void *)0x01234568, 1, 0, 6, 6, 6)),
 					statistics1);
 
 				assert_equivalent(plural
-					+ make_statistics((const void *)0x0bcdef12, 0, 0, 0, 0, 0)
-					+ make_statistics((const void *)0x0bcdef13, 0, 0, 0, 0, 0, plural
-						+ make_statistics((const void *)0x0bcdef14, 1, 0, 4, 4, 4))
-					+ make_statistics((const void *)0x0bcdef14, 1, 0, 4, 4, 4),
+					+ make_statistics((const void *)0x0bcdef12, 0, 0, 0, 0, 0, plural
+						+ make_statistics((const void *)0x0bcdef13, 0, 0, 0, 0, 0, plural
+							+ make_statistics((const void *)0x0bcdef14, 1, 0, 4, 4, 4))),
 					statistics2);
 			}
 
@@ -167,8 +165,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)0x01234567, 1, 0, 37, 31, 37, plural
-						+ make_statistics((const void *)0x0bcdef12, 1, 0, 6, 6, 6))
-					+ make_statistics((const void *)0x0bcdef12, 1, 0, 6, 6, 6),
+						+ make_statistics((const void *)0x0bcdef12, 1, 0, 6, 6, 6)),
 					statistics);
 			}
 
@@ -230,14 +227,11 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)0x00000010, 0, 0, 0, 0, 0, plural
-						+ make_statistics((const void *)0x01234560, 1, 0, 37, 31, 37)
-						+ make_statistics((const void *)0x11234560, 1, 0, 37, 25, 37))
-					+ make_statistics((const void *)0x01234560, 1, 0, 37, 31, 37, plural
-						+ make_statistics((const void *)0x0bcdef10, 1, 0, 6, 6, 6))
-					+ make_statistics((const void *)0x0bcdef10, 1, 0, 6, 6, 6)
-					+ make_statistics((const void *)0x11234560, 1, 0, 37, 25, 37, plural
-						+ make_statistics((const void *)0x1bcdef10, 1, 0, 12, 12, 12))
-					+ make_statistics((const void *)0x1bcdef10, 1, 0, 12, 12, 12),
+						+ make_statistics((const void *)0x00000010, 0, 0, 0, 0, 0, plural
+							+ make_statistics((const void *)0x11234560, 1, 0, 37, 25, 37, plural
+								+ make_statistics((const void *)0x1bcdef10, 1, 0, 12, 12, 12)))
+						+ make_statistics((const void *)0x01234560, 1, 0, 37, 31, 37, plural
+							+ make_statistics((const void *)0x0bcdef10, 1, 0, 6, 6, 6))),
 					statistics);
 			}
 
@@ -265,12 +259,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)0x00000010, 0, 0, 0, 0, 0, plural
-						+ make_statistics((const void *)0x01234560, 1, 0, 26, 16, 26))
-					+ make_statistics((const void *)0x01234560, 1, 0, 26, 16, 26, plural
-						+ make_statistics((const void *)0x0bcdef10, 2, 0, 10, 6, 8))
-					+ make_statistics((const void *)0x0bcdef10, 2, 0, 10, 6, 8, plural
-						+ make_statistics((const void *)0x0bcdef20, 1, 0, 4, 4, 4))
-					+ make_statistics((const void *)0x0bcdef20, 1, 0, 4, 4, 4),
+						+ make_statistics((const void *)0x01234560, 1, 0, 26, 16, 26, plural
+							+ make_statistics((const void *)0x0bcdef10, 2, 0, 10, 6, 8, plural
+								+ make_statistics((const void *)0x0bcdef20, 1, 0, 4, 4, 4)))),
 					statistics);
 			}
 
@@ -299,150 +290,16 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)0x00000010, 0, 0, 0, 0, 0, plural
-						+ make_statistics((const void *)0x01234560, 1, 0, 63, 29, 63))
-					+ make_statistics((const void *)0x01234560, 1, 0, 63, 29, 63, plural
-						+ make_statistics((const void *)0x0bcdef10, 2, 0, 34, 27, 21))
-					+ make_statistics((const void *)0x0bcdef10, 2, 0, 34, 27, 21, plural
-						+ make_statistics((const void *)0x0bcdef20, 1, 0, 7, 7, 7))
-					+ make_statistics((const void *)0x0bcdef20, 1, 0, 7, 7, 7),
+						+ make_statistics((const void *)0x01234560, 1, 0, 63, 29, 63, plural
+							+ make_statistics((const void *)0x0bcdef10, 2, 0, 34, 27, 21, plural
+								+ make_statistics((const void *)0x0bcdef20, 1, 0, 7, 7, 7)))),
 					statistics1);
-
 				assert_equivalent(plural
 					+ make_statistics((const void *)0x00000010, 0, 0, 0, 0, 0, plural
-						+ make_statistics((const void *)0x01234560, 1, 0, 47, 20, 47))
-					+ make_statistics((const void *)0x01234560, 1, 0, 47, 20, 47, plural
-						+ make_statistics((const void *)0x0bcdef10, 2, 0, 27, 21, 15))
-					+ make_statistics((const void *)0x0bcdef10, 2, 0, 27, 21, 15, plural
-						+ make_statistics((const void *)0x0bcdef20, 1, 0, 6, 6, 6))
-					+ make_statistics((const void *)0x0bcdef20, 1, 0, 6, 6, 6),
+						+ make_statistics((const void *)0x01234560, 1, 0, 47, 20, 47, plural
+							+ make_statistics((const void *)0x0bcdef10, 2, 0, 27, 21, 15, plural
+								+ make_statistics((const void *)0x0bcdef20, 1, 0, 6, 6, 6)))),
 					statistics2);
-			}
-
-
-			test( RecursionControlNoInterleave )
-			{
-				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
-				call_record trace[] = {
-					{	123450001, (void *)0x01234560	},
-						{	123450005, (void *)0x01234560	},
-						{	123450013, (void *)0	},
-					{	123450017, (void *)0	},
-					{	123450023, (void *)0x11234560	},
-						{	123450029, (void *)0x11234560	},
-							{	123450029, (void *)0x11234560	},
-							{	123450030, (void *)0	},
-						{	123450031, (void *)0	},
-					{	123450037, (void *)0	},
-				};
-
-				// ACT
-				ss.update(begin(trace), end(trace), statistics);
-
-				// ASSERT
-				assert_equivalent(plural
-					+ make_statistics((const void *)0x01234560, 2, 1, 16, 16, 16, plural
-						+ make_statistics((const void *)0x01234560, 1, 0, 8, 8, 8))
-					+ make_statistics((const void *)0x11234560, 3, 2, 14, 14, 14, plural
-						+ make_statistics((const void *)0x11234560, 2, 0, 3, 2, 2)),
-					statistics);
-			}
-
-
-			test( RecursionControlInterleaved )
-			{
-				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
-				call_record trace[] = {
-					{	123450001, (void *)0x01234560	},
-						{	123450005, (void *)0x01234565	},
-							{	123450007, (void *)0x01234560	},
-								{	123450011, (void *)0x01234565	},
-								{	123450013, (void *)0	},
-							{	123450017, (void *)0	},
-							{	123450019, (void *)0x01234560	},
-							{	123450023, (void *)0	},
-						{	123450029, (void *)0	},
-					{	123450031, (void *)0	},
-				};
-
-				// ACT
-				ss.update(begin(trace), end(trace), statistics);
-
-				// ASSERT
-				assert_equivalent(plural
-					+ make_statistics((const void *)0x01234560, 3, 1, 30, 18, 30, plural
-						+ make_statistics((const void *)0x01234565, 2, 0, 26, 12, 24))
-					+ make_statistics((const void *)0x01234565, 2, 1, 24, 12, 24, plural
-						+ make_statistics((const void *)0x01234560, 2, 0, 14, 12, 10)),
-					statistics);
-			}
-
-
-			test( CalculateMaxReentranceMetric )
-			{
-				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
-				call_record trace[] = {
-					{	123450001, (void *)0x01234560	},
-						{	123450002, (void *)0x01234565	},
-							{	123450003, (void *)0x01234560	},
-								{	123450004, (void *)0x01234565	},
-									{	123450005, (void *)0x01234570	},
-									{	123450006, (void *)0	},
-									{	123450007, (void *)0x01234565	},
-									{	123450008, (void *)0	},
-								{	123450009, (void *)0	},
-							{	123450010, (void *)0	},
-						{	123450011, (void *)0 },
-					{	123450012, (void *)0	},
-					{	123450013, (void *)0x01234560	},
-					{	123450014, (void *)0	},
-				};
-				call_record trace2[] = {
-					{	123450020, (void *)0x01234560	},
-						{	123450021, (void *)0x01234560	},
-							{	123450022, (void *)0x01234560	},
-								{	123450023, (void *)0x01234560	},
-								{	123450024, (void *)0	},
-							{	123450025, (void *)0	},
-						{	123450026, (void *)0	},
-					{	123450027, (void *)0	},
-					{	123450028, (void *)0x01234565	},
-					{	123450029, (void *)0	},
-				};
-
-				// ACT
-				ss.update(begin(trace), end(trace), statistics);
-
-				// ASSERT
-				assert_equivalent(plural
-					+ make_statistics((const void *)0x01234560, 3, 1, 12, 5, 11, plural
-						+ make_statistics((const void *)0x01234565, 2, 0, 14, 5, 9))
-					+ make_statistics((const void *)0x01234565, 3, 2, 9, 6, 9, plural
-						+ make_statistics((const void *)0x01234560, 1, 0, 7, 2, 7)
-						+ make_statistics((const void *)0x01234565, 1, 0, 1, 1, 1)
-						+ make_statistics((const void *)0x01234570, 1, 0, 1, 1, 1))
-					+ make_statistics((const void *)0x01234570, 1, 0, 1, 1, 1),
-					statistics);
-
-				// ACT
-				ss.update(begin(trace2), end(trace2), statistics);
-
-				// ASSERT
-				assert_equivalent(plural
-					+ make_statistics((const void *)0x01234560, 7, 3, 19, 12, 11, plural
-						+ make_statistics((const void *)0x01234560, 3, 0, 9, 5, 5)
-						+ make_statistics((const void *)0x01234565, 2, 0, 14, 5, 9))
-					+ make_statistics((const void *)0x01234565, 4, 2, 10, 7, 9, plural
-						+ make_statistics((const void *)0x01234560, 1, 0, 7, 2, 7)
-						+ make_statistics((const void *)0x01234565, 1, 0, 1, 1, 1)
-						+ make_statistics((const void *)0x01234570, 1, 0, 1, 1, 1))
-					+ make_statistics((const void *)0x01234570, 1, 0, 1, 1, 1),
-					statistics);
 			}
 
 
@@ -488,13 +345,7 @@ namespace micro_profiler
 					+ make_statistics((const void *)3, 1, 0, 30, 14, 30, plural
 						+ make_statistics((const void *)301, 1, 0, 6, 6, 6)
 						+ make_statistics((const void *)302, 1, 0, 2, 2, 2)
-						+ make_statistics((const void *)303, 2, 0, 8, 8, 6))
-					+ make_statistics((const void *)101, 1, 0, 1, 1, 1)
-					+ make_statistics((const void *)201, 1, 0, 2, 2, 2)
-					+ make_statistics((const void *)202, 1, 0, 2, 2, 2)
-					+ make_statistics((const void *)301, 1, 0, 6, 6, 6)
-					+ make_statistics((const void *)302, 1, 0, 2, 2, 2)
-					+ make_statistics((const void *)303, 2, 0, 8, 8, 6),
+						+ make_statistics((const void *)303, 2, 0, 8, 8, 6)),
 					statistics);
 
 				assert_equivalent(plural
@@ -506,13 +357,7 @@ namespace micro_profiler
 					+ make_statistics((const void *)3, 1, 0, 25, 13, 25, plural
 						+ make_statistics((const void *)301, 1, 0, 5, 5, 5)
 						+ make_statistics((const void *)302, 1, 0, 1, 1, 1)
-						+ make_statistics((const void *)303, 2, 0, 6, 6, 5))
-					+ make_statistics((const void *)101, 1, 0, 0, 0, 0)
-					+ make_statistics((const void *)201, 1, 0, 1, 1, 1)
-					+ make_statistics((const void *)202, 1, 0, 1, 1, 1)
-					+ make_statistics((const void *)301, 1, 0, 5, 5, 5)
-					+ make_statistics((const void *)302, 1, 0, 1, 1, 1)
-					+ make_statistics((const void *)303, 2, 0, 6, 6, 5),
+						+ make_statistics((const void *)303, 2, 0, 6, 6, 5)),
 					statistics_delayed);
 			}
 
@@ -543,16 +388,11 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)1, 1, 0, 30, 7, 30, plural
-						+ make_statistics((const void *)101, 1, 0, 5, 3, 5)
-						+ make_statistics((const void *)102, 1, 0, 18, 10, 18))
-					+ make_statistics((const void *)101, 1, 0, 5, 3, 5, plural
-						+ make_statistics((const void *)10101, 1, 0, 2, 2, 2))
-					+ make_statistics((const void *)102, 1, 0, 18, 10, 18, plural
-						+ make_statistics((const void *)10201, 1, 0, 4, 4, 4)
-						+ make_statistics((const void *)10202, 1, 0, 4, 4, 4))
-					+ make_statistics((const void *)10101, 1, 0, 2, 2, 2)
-					+ make_statistics((const void *)10201, 1, 0, 4, 4, 4)
-					+ make_statistics((const void *)10202, 1, 0, 4, 4, 4),
+						+ make_statistics((const void *)101, 1, 0, 5, 3, 5, plural
+							+ make_statistics((const void *)10101, 1, 0, 2, 2, 2))
+						+ make_statistics((const void *)102, 1, 0, 18, 10, 18, plural
+							+ make_statistics((const void *)10201, 1, 0, 4, 4, 4)
+							+ make_statistics((const void *)10202, 1, 0, 4, 4, 4))),
 					statistics);
 			}
 
@@ -595,18 +435,15 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)1, 1, 0, 50, 6, 50, plural
-						+ make_statistics((const void *)2, 1, 0, 13, 7, 13)
-						+ make_statistics((const void *)3, 1, 0, 16, 6, 16)
-						+ make_statistics((const void *)4, 1, 0, 15, 3, 15))
-					+ make_statistics((const void *)2, 3, 0, 20, 14, 13, plural
-						+ make_statistics((const void *)3, 1, 0, 3, 3, 3)
-						+ make_statistics((const void *)4, 1, 0, 3, 3, 3))
-					+ make_statistics((const void *)3, 5, 0, 27, 17, 16, plural
-						+ make_statistics((const void *)2, 1, 0, 3, 3, 3)
-						+ make_statistics((const void *)4, 1, 0, 7, 7, 7))
-					+ make_statistics((const void *)4, 3, 0, 25, 13, 15, plural
-						+ make_statistics((const void *)2, 1, 0, 4, 4, 4)
-						+ make_statistics((const void *)3, 3, 0, 8, 8, 4)),
+						+ make_statistics((const void *)2, 1, 0, 13, 7, 13, plural
+							+ make_statistics((const void *)3, 1, 0, 3, 3, 3)
+							+ make_statistics((const void *)4, 1, 0, 3, 3, 3))
+						+ make_statistics((const void *)3, 1, 0, 16, 6, 16, plural
+							+ make_statistics((const void *)2, 1, 0, 3, 3, 3)
+							+ make_statistics((const void *)4, 1, 0, 7, 7, 7))
+						+ make_statistics((const void *)4, 1, 0, 15, 3, 15, plural
+							+ make_statistics((const void *)2, 1, 0, 4, 4, 4)
+							+ make_statistics((const void *)3, 3, 0, 8,  8, 4))),
 					statistics);
 			}
 
@@ -647,10 +484,10 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics((const void *)1, 0, 0, 0, 0, 0)
-					+ make_statistics((const void *)2, 0, 0, 0, 0, 0)
-					+ make_statistics((const void *)3, 0, 0, 0, 0, 0)
-					+ make_statistics((const void *)7, 0, 0, 0, 0, 0),
+					+ make_statistics((const void *)1, 0, 0, 0, 0, 0, plural
+						+ make_statistics((const void *)2, 0, 0, 0, 0, 0, plural
+							+ make_statistics((const void *)3, 0, 0, 0, 0, 0, plural
+								+ make_statistics((const void *)7, 0, 0, 0, 0, 0)))),
 					statistics);
 
 				// INIT
@@ -661,12 +498,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics((const void *)1, 0, 0, 0, 0, 0)
-					+ make_statistics((const void *)2, 1, 1, 0, 15, 16, plural
-						+ make_statistics((const void *)7, 1, 0, 1, 1, 1))
-					+ make_statistics((const void *)3, 0, 0, 0, 0, 0, plural
-						+ make_statistics((const void *)2, 1, 0, 16, 15, 16))
-					+ make_statistics((const void *)7, 1, 0, 1, 1, 1),
+					+ make_statistics((const void *)1, 0, 0, 0, 0, 0, plural
+						+ make_statistics((const void *)2, 0, 0, 0, 0, 0, plural
+							+ make_statistics((const void *)3, 0, 0, 0, 0, 0, plural
+								+ make_statistics((const void *)2, 1, 0, 16, 15, 16, plural
+									+ make_statistics((const void *)7, 1, 0, 1, 1, 1))))),
 					statistics);
 
 				// INIT
@@ -677,8 +513,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics((const void *)5, 0, 0, 0, 0, 0)
-					+ make_statistics((const void *)11, 0, 0, 0, 0, 0),
+					+ make_statistics((const void *)5, 0, 0, 0, 0, 0, plural
+						+ make_statistics((const void *)11, 0, 0, 0, 0, 0)),
 					statistics);
 			}
 		end_test_suite

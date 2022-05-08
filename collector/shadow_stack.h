@@ -31,7 +31,8 @@ namespace micro_profiler
 	class shadow_stack
 	{
 	public:
-		typedef typename statistic_types_t<KeyT>::map_detailed map_type;
+		typedef statistic_types_t<KeyT> statistic_types;
+		typedef typename statistic_types::map_detailed map_type;
 
 	public:
 		shadow_stack(const overhead & overhead_);
@@ -40,27 +41,29 @@ namespace micro_profiler
 		void update(IteratorT trace_begin, IteratorT trace_end, map_type &statistics);
 
 	private:
-		struct call_record_ex;
-		typedef containers::unordered_map<KeyT, unsigned int, knuth_hash> entrance_counter_map;
+		struct stack_record;
+		typedef pod_vector<stack_record> stack;
 
 	private:
-		void restore_state(map_type &statistics);
+		void restore_state(typename statistic_types::function &root, map_type &callees);
 
 	private:
 		const timestamp_t _inner_overhead, _total_overhead;
-		pod_vector<call_record_ex> _stack;
-		entrance_counter_map _entrance_counters;
+		stack _stack;
 	};
 
 	template <typename KeyT>
-	struct shadow_stack<KeyT>::call_record_ex
+	struct shadow_stack<KeyT>::stack_record
 	{
-		void set(const call_record &from, unsigned int &level, typename map_type::mapped_type &entry);
+		static void exit(stack &stack_, const call_record &entry, timestamp_t inner_overhead, timestamp_t total_overhead);
+		static void reset_stack(stack &stack_, typename statistic_types::function &/*root*/, map_type &/*callees*/);
+		static void enter(stack &stack_, const call_record &entry);
 
-		call_record call;
+		typename statistic_types::key callee;
+		timestamp_t enter_at;
 		timestamp_t children_time_observed, children_overhead;
-		unsigned int *level;
-		typename map_type::mapped_type *entry;
+		typename statistic_types::function *function;
+		map_type *callees;
 	};
 
 
@@ -68,63 +71,76 @@ namespace micro_profiler
 	template <typename KeyT>
 	inline shadow_stack<KeyT>::shadow_stack(const overhead &overhead_)
 		: _inner_overhead(overhead_.inner), _total_overhead(overhead_.inner + overhead_.outer)
-	{	}
-
-	template <typename KeyT>
-	inline void shadow_stack<KeyT>::restore_state(map_type &statistics)
-	{
-		for (auto i = _stack.begin(); i != _stack.end(); ++i)
-			i->entry = &statistics[i->call.callee];
-	}
+	{	_stack.push_back();	}
 
 	template <typename KeyT>
 	template <typename IteratorT>
 	inline void shadow_stack<KeyT>::update(IteratorT i, IteratorT end, map_type &statistics)
 	{
-		restore_state(statistics);
+		typename statistic_types::function root;
+
+		stack_record::reset_stack(_stack, root, statistics);
 		for (; i != end; ++i)
 		{
 			if (i->callee)
-			{
-				auto &entry = statistics[i->callee];
-
-				if (!entry.entrance_counter)
-					entry.entrance_counter = &_entrance_counters[i->callee];
-				_stack.push_back();
-				_stack.back().set(*i, ++*entry.entrance_counter, entry);
-			}
+				stack_record::enter(_stack, *i);
 			else
-			{
-				const call_record_ex &current = _stack.back();
-				const void *callee = current.call.callee;
-				unsigned int level = --*current.level;
-				const timestamp_t inclusive_time_observed = i->timestamp - current.call.timestamp  - _inner_overhead;
-				const timestamp_t children_overhead = current.children_overhead;
-				const timestamp_t inclusive_time = inclusive_time_observed - children_overhead;
-				const timestamp_t exclusive_time = inclusive_time_observed - current.children_time_observed;
-
-				current.entry->add_call(level, inclusive_time, exclusive_time);
-				_stack.pop_back();
-				if (!_stack.empty())
-				{
-					call_record_ex &parent = _stack.back();
-
-					parent.children_time_observed += inclusive_time_observed + _total_overhead;
-					parent.children_overhead += _total_overhead + children_overhead;
-					add_child_statistics(*parent.entry, callee, 0, inclusive_time, exclusive_time);
-				}
-			}
+				stack_record::exit(_stack, *i, _inner_overhead, _total_overhead);
 		}
 	}
 
 
 	template <typename KeyT>
-	inline void shadow_stack<KeyT>::call_record_ex::set(const call_record &from, unsigned int &level_,
-		typename map_type::mapped_type &entry_)
+	inline void shadow_stack<KeyT>::stack_record::exit(stack &stack_, const call_record &entry,
+		timestamp_t inner_overhead, timestamp_t total_overhead)
 	{
-		call = from;
-		children_time_observed = children_overhead = 0;
-		level = &level_;
-		entry = &entry_;
+		const auto &current = stack_.back();
+		const timestamp_t inclusive_time_observed = (entry.timestamp - current.enter_at) - inner_overhead;
+		const timestamp_t children_overhead = current.children_overhead;
+		const timestamp_t inclusive_time = inclusive_time_observed - children_overhead;
+		const timestamp_t exclusive_time = inclusive_time_observed - current.children_time_observed;
+
+		current.function->add_call(0, inclusive_time, exclusive_time);
+		stack_.pop_back();
+
+		auto &parent = stack_.back();
+
+		parent.children_time_observed += inclusive_time_observed + total_overhead;
+		parent.children_overhead += total_overhead + children_overhead;
+	}
+
+
+	template <typename KeyT>
+	inline void shadow_stack<KeyT>::stack_record::reset_stack(stack &stack_, typename statistic_types::function &root,
+		map_type &callees)
+	{
+		auto i = stack_.begin();
+
+		i->function = &root;
+		i->callees = &callees;
+		for (auto previous = i++; i != stack_.end(); previous = i++)
+		{
+			auto &p = (*previous->callees)[i->callee];
+
+			i->function = &p;
+			i->callees = &p.callees;
+		}
+	}
+
+	template <typename KeyT>
+	inline void shadow_stack<KeyT>::stack_record::enter(stack &stack_, const call_record &entry)
+	{
+		stack_.push_back();
+
+		auto i = stack_.end();
+		auto &current = *--i;
+		auto &previous = *--i;
+		auto &in_previous = (*previous.callees)[entry.callee];
+
+		current.callee = entry.callee;
+		current.enter_at = entry.timestamp;
+		current.children_time_observed = current.children_overhead = 0;
+		current.function = &in_previous;
+		current.callees = &in_previous.callees;
 	}
 }

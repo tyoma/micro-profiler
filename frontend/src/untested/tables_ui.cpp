@@ -107,14 +107,10 @@ namespace micro_profiler
 			selection_callees = callees->create_selection();
 
 			dump_main = [model_impl] (string &content) {	dump::as_tab_separated(content, *model_impl);	};
-			reset_filter = [filtered_statistics] {
-				filtered_statistics->set_filter([] (const call_statistics &v) {
-					return !v.parent_id;
-				});
-			};
+			reset_filter = [filtered_statistics] {	filtered_statistics->set_filter();	};
 			set_filter = [filtered_statistics] (id_t thread_id) {
 				filtered_statistics->set_filter([thread_id] (const call_statistics &v) {
-					return (thread_id == v.thread_id) && !v.parent_id;
+					return thread_id == v.thread_id;
 				});
 			};
 		}

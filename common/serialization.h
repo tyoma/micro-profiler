@@ -33,7 +33,7 @@
 namespace strmd
 {
 	template <> struct version<micro_profiler::initialization_data> {	enum {	value = 6	};	};
-	template <> struct version<micro_profiler::function_statistics> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::function_statistics> {	enum {	value = 5	};	};
 	template <> struct version<micro_profiler::mapped_module_ex> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::symbol_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::module_info_metadata> {	enum {	value = 6	};	};
@@ -58,10 +58,13 @@ namespace micro_profiler
 	}	
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, function_statistics &data, unsigned int /*ver*/)
+	inline void serialize(ArchiveT &archive, function_statistics &data, unsigned int ver)
 	{
+		unsigned int _max_reentrance = 0;
+
 		archive(data.times_called);
-		archive(data.max_reentrance);
+		if (ver < 5)
+			archive(_max_reentrance);
 		archive(data.inclusive_time);
 		archive(data.exclusive_time);
 		archive(data.max_call_time);

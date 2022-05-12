@@ -22,7 +22,6 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0u, s.times_called);
-				assert_equal(0u, s.max_reentrance);
 				assert_equal(0, s.inclusive_time);
 				assert_equal(0, s.exclusive_time);
 				assert_equal(0, s.max_call_time);
@@ -32,86 +31,35 @@ namespace micro_profiler
 			test( AddSingleCallAtZeroLevel )
 			{
 				// INIT
-				function_statistics s1(1, 0, 3, 4, 5), s2(5, 2, 7, 8, 13);
+				function_statistics s1(1, 3, 4, 5), s2(5, 7, 8, 13);
 
 				// ACT
-				s1.add_call(0, 9, 10);
-				s2.add_call(0, 11, 12);
+				s1.add_call(9, 10);
+				s2.add_call(11, 12);
 
 				// ASSERT
 				assert_equal(2u, s1.times_called);
-				assert_equal(0u, s1.max_reentrance);
 				assert_equal(12, s1.inclusive_time);
 				assert_equal(14, s1.exclusive_time);
 				assert_equal(9, s1.max_call_time);
 
 				assert_equal(6u, s2.times_called);
-				assert_equal(2u, s2.max_reentrance);
 				assert_equal(18, s2.inclusive_time);
 				assert_equal(20, s2.exclusive_time);
 				assert_equal(13, s2.max_call_time);
 			}
 
 
-			test( AddSingleCallAtNonZeroLevelLowerThanCurrentDontAddInclusiveTime )
-			{
-				// INIT
-				function_statistics s1(1, 3, 3, 4, 5), s2(5, 4, 7, 8, 13);
-
-				// ACT
-				s1.add_call(3, 9, 10);
-				s2.add_call(2, 11, 12);
-
-				// ASSERT
-				assert_equal(2u, s1.times_called);
-				assert_equal(3u, s1.max_reentrance);
-				assert_equal(3, s1.inclusive_time);
-				assert_equal(14, s1.exclusive_time);
-				assert_equal(9, s1.max_call_time);
-
-				assert_equal(6u, s2.times_called);
-				assert_equal(4u, s2.max_reentrance);
-				assert_equal(7, s2.inclusive_time);
-				assert_equal(20, s2.exclusive_time);
-				assert_equal(13, s2.max_call_time);
-			}
-
-
-			test( AddSingleCallAtNonZeroLevelHigherThanCurrentRaisesMaxReentrance )
-			{
-				// INIT
-				function_statistics s1(3, 3, 3, 4, 10), s2(7, 4, 7, 8, 3);
-
-				// ACT
-				s1.add_call(6, 9, 11);
-				s2.add_call(5, 11, 13);
-
-				// ASSERT
-				assert_equal(4u, s1.times_called);
-				assert_equal(6u, s1.max_reentrance);
-				assert_equal(3, s1.inclusive_time);
-				assert_equal(15, s1.exclusive_time);
-				assert_equal(10, s1.max_call_time);
-
-				assert_equal(8u, s2.times_called);
-				assert_equal(5u, s2.max_reentrance);
-				assert_equal(7, s2.inclusive_time);
-				assert_equal(21, s2.exclusive_time);
-				assert_equal(11, s2.max_call_time);
-			}
-
-
 			test( AppendingStatisticsSumsTimesCalledExclusiveAndInclusiveTimes )
 			{
 				// INIT
-				function_statistics s1(3, 0, 4, 4, 0), s2(7, 0, 7, 8, 0);
+				function_statistics s1(3, 4, 4, 0), s2(7, 7, 8, 0);
 
 				// ACT
 				s1 += s2;
 
 				// ASSERT
 				assert_equal(10u, s1.times_called);
-				assert_equal(0u, s1.max_reentrance);
 				assert_equal(11, s1.inclusive_time);
 				assert_equal(12, s1.exclusive_time);
 				assert_equal(0, s1.max_call_time);
@@ -121,7 +69,6 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(17u, s2.times_called);
-				assert_equal(0u, s2.max_reentrance);
 				assert_equal(18, s2.inclusive_time);
 				assert_equal(20, s2.exclusive_time);
 				assert_equal(0, s2.max_call_time);
@@ -131,17 +78,15 @@ namespace micro_profiler
 			test( AppendingStatisticsSelectsMaximumOfMaxRecursionAndMaxCallTime )
 			{
 				// INIT
-				function_statistics s1(0, 1, 0, 0, 10), s2(0, 10, 0, 0, 1);
-				const function_statistics a(0, 5, 0, 0, 5);
+				function_statistics s1(0, 0, 0, 10), s2(0, 0, 0, 1);
+				const function_statistics a(0, 0, 0, 5);
 
 				// ACT
 				s1 += a;
 				s2 += a;
 
 				// ASSERT
-				assert_equal(5u, s1.max_reentrance);
 				assert_equal(10, s1.max_call_time);
-				assert_equal(10u, s2.max_reentrance);
 				assert_equal(5, s2.max_call_time);
 			}
 		end_test_suite

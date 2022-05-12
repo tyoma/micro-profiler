@@ -56,8 +56,10 @@ namespace micro_profiler
 	struct shadow_stack<KeyT>::stack_record
 	{
 		static void exit(stack &stack_, const call_record &entry, timestamp_t inner_overhead, timestamp_t total_overhead);
-		static void reset_stack(stack &stack_, typename statistic_types::function &/*root*/, map_type &/*callees*/);
+		static void reset_stack(stack &stack_, typename statistic_types::function &root, map_type &callees);
 		static void enter(stack &stack_, const call_record &entry);
+		static typename statistic_types::function_detailed &get(map_type &callees, typename statistic_types::key callee);
+		static typename statistic_types::function_detailed &get_slow(map_type &callees, typename statistic_types::key callee);
 
 		typename statistic_types::key callee;
 		timestamp_t enter_at;
@@ -100,7 +102,7 @@ namespace micro_profiler
 		const timestamp_t inclusive_time = inclusive_time_observed - children_overhead;
 		const timestamp_t exclusive_time = inclusive_time_observed - current.children_time_observed;
 
-		current.function->add_call(0, inclusive_time, exclusive_time);
+		current.function->add_call(inclusive_time, exclusive_time);
 		stack_.pop_back();
 
 		auto &parent = stack_.back();
@@ -135,12 +137,25 @@ namespace micro_profiler
 		auto i = stack_.end();
 		auto &current = *--i;
 		auto &previous = *--i;
-		auto &in_previous = (*previous.callees)[entry.callee];
+		auto &in_previous = get(*previous.callees, entry.callee);// (*previous.callees)[entry.callee];
 
 		current.callee = entry.callee;
 		current.enter_at = entry.timestamp;
 		current.children_time_observed = current.children_overhead = 0;
 		current.function = &in_previous;
 		current.callees = &in_previous.callees;
+	}
+
+	template <typename KeyT>
+	inline typename statistic_types_t<KeyT>::function_detailed &shadow_stack<KeyT>::stack_record::get(map_type &callees, typename statistic_types::key callee)
+	{
+		auto i = callees.find(callee);
+		return callees.end() != i ? i->second : get_slow(callees, callee);
+	}
+
+	template <typename KeyT>
+	FORCE_NOINLINE inline typename statistic_types_t<KeyT>::function_detailed &shadow_stack<KeyT>::stack_record::get_slow(map_type &callees, typename statistic_types::key callee)
+	{
+		return callees.insert(std::make_pair(callee, typename statistic_types_t<KeyT>::function_detailed())).first->second;
 	}
 }

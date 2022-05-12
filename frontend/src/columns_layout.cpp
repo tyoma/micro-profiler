@@ -83,10 +83,6 @@ namespace micro_profiler
 			return micro_profiler::compare(lhs.inclusive_time, lhs.times_called, rhs.inclusive_time, rhs.times_called);
 		};
 
-		auto by_max_reentrance = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return micro_profiler::compare(lhs.max_reentrance, rhs.max_reentrance);
-		};
-
 		auto by_max_call_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
 			return micro_profiler::compare(lhs.max_call_time, rhs.max_call_time);
 		};
@@ -138,10 +134,6 @@ namespace micro_profiler
 
 		auto inclusive_time_avg = [] (const statistics_model_context &context, const call_statistics &value) {
 			return value.times_called ? context.tick_interval * value.inclusive_time / value.times_called : 0.0;
-		};
-
-		auto max_reentrance = [] (const statistics_model_context &, const call_statistics &value) {
-			return value.max_reentrance;
 		};
 
 		auto max_call_time = [] (const statistics_model_context &context, const call_statistics &value) {
@@ -199,7 +191,6 @@ namespace micro_profiler
 		{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, agge::align_far, format_interval2(inclusive_time), by_inclusive_time, false, inclusive_time,	},
 		{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(exclusive_time_avg), by_avg_exclusive_call_time, false, exclusive_time_avg,	},
 		{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(inclusive_time_avg), by_avg_inclusive_call_time, false, inclusive_time_avg,	},
-		{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, agge::align_far, format_integer(max_reentrance), by_max_reentrance, false, max_reentrance,	},
 		{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, agge::align_far, format_interval2(max_call_time), by_max_call_time, false, max_call_time,	},
 	};
 
@@ -219,6 +210,6 @@ namespace micro_profiler
 		c_statistics_columns[5],
 		c_statistics_columns[6],
 		c_statistics_columns[7],
-		c_statistics_columns[9],
+		c_statistics_columns[8],
 	};
 }

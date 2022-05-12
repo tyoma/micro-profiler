@@ -42,15 +42,14 @@ namespace micro_profiler
 
 	struct function_statistics
 	{
-		explicit function_statistics(count_t times_called = 0, unsigned int max_reentrance = 0,
-			timestamp_t inclusive_time = 0, timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0);
+		explicit function_statistics(count_t times_called = 0, timestamp_t inclusive_time = 0,
+			timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0);
 
-		void add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time);
+		void add_call(timestamp_t inclusive_time, timestamp_t exclusive_time);
 
 		void operator +=(const function_statistics &rhs);
 
 		count_t times_called;
-		unsigned int max_reentrance;
 		timestamp_t inclusive_time;
 		timestamp_t exclusive_time;
 		timestamp_t max_call_time;
@@ -73,20 +72,16 @@ namespace micro_profiler
 
 
 	// function_statistics - inline definitions
-	inline function_statistics::function_statistics(count_t times_called_, unsigned int max_reentrance_,
-			timestamp_t inclusive_time_, timestamp_t exclusive_time_, timestamp_t max_call_time_)
-		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_),
-			exclusive_time(exclusive_time_), max_call_time(max_call_time_)
+	inline function_statistics::function_statistics(count_t times_called_, timestamp_t inclusive_time_,
+			timestamp_t exclusive_time_, timestamp_t max_call_time_)
+		: times_called(times_called_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_),
+			max_call_time(max_call_time_)
 	{	}
 
-	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time_,
-		timestamp_t exclusive_time_)
+	inline void function_statistics::add_call(timestamp_t inclusive_time_, timestamp_t exclusive_time_)
 	{
 		++times_called;
-		if (level > max_reentrance)
-			max_reentrance = level;
-		if (!level)
-			inclusive_time += inclusive_time_;
+		inclusive_time += inclusive_time_;
 		exclusive_time += exclusive_time_;
 		if (inclusive_time_ > max_call_time)
 			max_call_time = inclusive_time_;
@@ -95,8 +90,6 @@ namespace micro_profiler
 	inline void function_statistics::operator +=(const function_statistics &rhs)
 	{
 		times_called += rhs.times_called;
-		if (rhs.max_reentrance > max_reentrance)
-			max_reentrance = rhs.max_reentrance;
 		inclusive_time += rhs.inclusive_time;
 		exclusive_time += rhs.exclusive_time;
 		if (rhs.max_call_time > max_call_time)

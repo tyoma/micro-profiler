@@ -30,7 +30,7 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				function_statistics s1(17, 2012, 123123123, 32123, 2213), s2(1117, 212, 1231123, 3213, 112213);
+				function_statistics s1(17, 123123123, 32123, 2213), s2(1117, 1231123, 3213, 112213);
 				function_statistics ds1, ds2;
 
 				// ACT (serialization)
@@ -57,9 +57,9 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistic_types::function_detailed s1;
 
-				static_cast<function_statistics &>(s1) = function_statistics(17, 2012, 123123123, 32123, 2213);
-				s1.callees[addr(7741)] = function_statistics(1117, 212, 1231123, 3213, 112213);
-				s1.callees[addr(141)] = function_statistics(17, 12012, 11293123, 132123, 12213);
+				static_cast<function_statistics &>(s1) = function_statistics(17, 123123123, 32123, 2213);
+				s1.callees[addr(7741)] = function_statistics(1117, 1231123, 3213, 112213);
+				s1.callees[addr(141)] = function_statistics(17, 11293123, 132123, 12213);
 
 				// ACT
 				s(s1);
@@ -75,8 +75,8 @@ namespace micro_profiler
 
 				// ASSERT
 				pair<const void *, statistic_types::function_detailed> reference[] = {
-					make_pair(addr(7741), function_statistics(1117, 212, 1231123, 3213, 112213)),
-					make_pair(addr(141), function_statistics(17, 12012, 11293123, 132123, 12213)),
+					make_pair(addr(7741), function_statistics(1117, 1231123, 3213, 112213)),
+					make_pair(addr(141), function_statistics(17, 11293123, 132123, 12213)),
 				};
 
 				assert_equal(s1, ds1);

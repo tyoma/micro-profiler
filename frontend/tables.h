@@ -26,6 +26,8 @@
 #include <common/module.h>
 #include <common/primitives.h>
 #include <common/protocol.h>
+#include <common/telemetry.h>
+#include <deque>
 #include <wpl/signal.h>
 
 namespace micro_profiler
@@ -94,6 +96,11 @@ namespace micro_profiler
 		{
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;
+		};
+
+
+		struct telemetry_history : table< std::deque<telemetry> >
+		{
 		};
 
 

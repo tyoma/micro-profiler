@@ -24,6 +24,7 @@
 #include "primitives.h"
 #include "protocol.h"
 #include "range.h"
+#include "telemetry.h"
 
 #include <patcher/interface.h>
 #include <strmd/container_ex.h>
@@ -41,6 +42,7 @@ namespace strmd
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
 	template <typename KeyT> struct version< micro_profiler::function_statistics_detailed_t<KeyT> > {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::telemetry> {	enum {	value = 1	};	};
 }
 
 namespace micro_profiler
@@ -143,6 +145,14 @@ namespace micro_profiler
 	{
 		archive(data.result);
 		archive(data.id);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, telemetry &data, unsigned int /*ver*/)
+	{
+		archive(data.timestamp);
+		archive(data.total_analyzed);
+		archive(data.total_analysis_time);
 	}
 }
 

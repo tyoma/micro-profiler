@@ -131,5 +131,6 @@
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\pool_allocator.h" />
     <ClInclude Include="..\file_stream.h" />
+    <ClInclude Include="..\telemetry.h" />
   </ItemGroup>
 </Project>

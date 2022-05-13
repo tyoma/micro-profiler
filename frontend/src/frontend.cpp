@@ -38,11 +38,13 @@ namespace micro_profiler
 			LOG(PREAMBLE "attempt to interact with a detached profilee - ignoring...");
 		});
 		const auto detached_frontend_stub2 = bind([] {});
+		const auto c_telemetry_request_interval = mt::milliseconds(50);
+		const auto c_telemetry_history_length = 100;
 	}
 
 	frontend::frontend(ipc::channel &outbound, const string &cache_directory,
 			scheduler::queue &worker, scheduler::queue &apartment)
-		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment),
+		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment), _private_queue(apartment),
 			_statistics(make_shared<tables::statistics>()), _modules(make_shared<tables::modules>()),
 			_mappings(make_shared<tables::module_mappings>()), _patches(make_shared<tables::patches>()),
 			_threads(make_shared<tables::threads>()), _initialized(false),
@@ -68,6 +70,7 @@ namespace micro_profiler
 			{
 				d(_process_info);
 
+				auto telemetry = make_shared<tables::telemetry_history>();
 				profiling_session session = {
 					_process_info,
 					_statistics,
@@ -75,10 +78,12 @@ namespace micro_profiler
 					_modules,
 					_patches,
 					_threads,
+					telemetry,
 				};
 
 				initialized(session);
 				_statistics->request_update();
+				request_telemetry_chunk(telemetry);
 				_initialized = true;
 				LOG(PREAMBLE "initialized...")
 					% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
@@ -161,6 +166,21 @@ namespace micro_profiler
 		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (ipc::deserializer &d) {
 			d(*_threads);
 			_requests.erase(req);
+		});
+	}
+
+	void frontend::request_telemetry_chunk(shared_ptr<tables::telemetry_history> history)
+	{
+		request(_telemetry_request, request_telemetry, 0, response_telemetry, [this, history] (ipc::deserializer &d) {
+			auto self = this;
+			auto h = history;
+
+			h->push_back(telemetry());
+			d(h->back());
+			if (h->size() > c_telemetry_history_length)
+				h->pop_front();
+			h->invalidate();
+			_private_queue.schedule([self, h] {	self->request_telemetry_chunk(h);	}, c_telemetry_request_interval);
 		});
 	}
 

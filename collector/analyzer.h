@@ -27,6 +27,8 @@
 
 namespace micro_profiler
 {
+	struct telemetry;
+
 	class thread_analyzer
 	{
 	public:
@@ -67,8 +69,12 @@ namespace micro_profiler
 
 		virtual void accept_calls(unsigned int threadid, const call_record *calls, size_t count) override;
 
+		void get_telemetry(telemetry &telemetry_);
+
 	private:
 		const overhead _overhead;
 		thread_analyzers _thread_analyzers;
+		count_t _total_analyzed;
+		timestamp_t _total_analysis_time;
 	};
 }

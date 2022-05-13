@@ -20,6 +20,9 @@
 
 #include <collector/analyzer.h>
 
+#include <common/telemetry.h>
+#include <common/time.h>
+
 namespace micro_profiler
 {
 	thread_analyzer::thread_analyzer(const overhead &overhead_)
@@ -43,7 +46,7 @@ namespace micro_profiler
 
 
 	analyzer::analyzer(const overhead &overhead_)
-		: _overhead(overhead_)
+		: _overhead(overhead_), _total_analyzed(0), _total_analysis_time(0)
 	{	}
 
 	void analyzer::clear() throw()
@@ -73,10 +76,21 @@ namespace micro_profiler
 
 	void analyzer::accept_calls(unsigned int threadid, const call_record *calls, size_t count)
 	{
+		auto t0 = read_tick_counter();
+
 		thread_analyzers::iterator i = _thread_analyzers.find(threadid);
 
 		if (i == _thread_analyzers.end())
 			i = _thread_analyzers.insert(std::make_pair(threadid, thread_analyzer(_overhead))).first;
 		i->second.accept_calls(calls, count);
+
+		_total_analysis_time += read_tick_counter() - t0;
+		_total_analyzed += count;
+	}
+
+	void analyzer::get_telemetry(telemetry &telemetry_)
+	{
+		telemetry_.total_analyzed += _total_analyzed, _total_analyzed = 0;
+		telemetry_.total_analysis_time += _total_analysis_time, _total_analysis_time = 0;
 	}
 }

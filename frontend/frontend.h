@@ -76,12 +76,15 @@ namespace micro_profiler
 
 		void store_metadata(const std::string &cache_path, const module_info_metadata &metadata);
 
+		void request_telemetry_chunk(std::shared_ptr<tables::telemetry_history> telemetry_history);
+
 		std::string construct_cache_path(const std::string &path, unsigned int hash) const;
 		requests_t::iterator new_request_handle();
 
 	private:
 		const std::string _cache_directory;
 		scheduler::queue &_worker_queue, &_apartment_queue;
+		scheduler::private_queue _private_queue;
 		initialization_data _process_info;
 		const std::shared_ptr<tables::statistics> _statistics;
 		const std::shared_ptr<tables::modules> _modules;
@@ -94,7 +97,7 @@ namespace micro_profiler
 
 		mx_metadata_requests_t::map_type_ptr _mx_metadata_requests;
 		requests_t _requests;
-		std::shared_ptr<void> _update_request;
+		std::shared_ptr<void> _update_request, _telemetry_request;
 
 		// request_apply_patches buffers
 		patch_request _patch_request_payload;

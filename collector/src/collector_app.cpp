@@ -58,6 +58,7 @@ namespace micro_profiler
 		auto threads_buffer = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
 		auto apply_results = make_shared<response_patched_data>();
 		auto revert_results = make_shared<response_reverted_data>();
+		shared_ptr<telemetry> telemetry_results(new telemetry);
 
 		session.add_handler(request_update, [this, module_tracker_, loaded, unloaded] (response &resp) {
 			module_tracker_->get_changes(*loaded, *unloaded);
@@ -116,6 +117,15 @@ namespace micro_profiler
 			_patch_manager.revert(*revert_results, payload.image_persistent_id,
 				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
 			resp(response_reverted, *revert_results);
+		});
+
+		session.add_handler(request_telemetry,
+			[this, telemetry_results] (response &resp) {
+
+			telemetry_results->reset();
+			_analyzer->get_telemetry(*telemetry_results);
+			telemetry_results->timestamp = read_tick_counter();
+			resp(response_telemetry, *telemetry_results);
 		});
 
 

@@ -52,6 +52,9 @@ namespace micro_profiler
 		request_query_patches = 20,
 		response_patches_state = 21,
 
+		request_telemetry = 25,
+		response_telemetry = 26,
+
 		// Notifications...
 		init_v1 = 0,
 		legacy_update_statistics = 2,

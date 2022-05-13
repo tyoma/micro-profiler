@@ -20,37 +20,24 @@
 
 #pragma once
 
-#include <common/types.h>
-#include <memory>
-#include <string>
+#include "types.h"
 
 namespace micro_profiler
 {
-	namespace tables
+	struct telemetry
 	{
-		struct module_mappings;
-		struct modules;
-		struct patches;
-		struct statistics;
-		struct threads;
-		struct telemetry_history;
-	}
+		void reset();
 
-	struct profiling_session
-	{
-		initialization_data process_info;
-		std::shared_ptr<tables::statistics> statistics;
-		std::shared_ptr<tables::module_mappings> module_mappings;
-		std::shared_ptr<tables::modules> modules;
-		std::shared_ptr<tables::patches> patches;
-		std::shared_ptr<tables::threads> threads;
-		std::shared_ptr<tables::telemetry_history> telemetry_history;
-
-		std::string get_title() const;
+		timestamp_t timestamp;
+		count_t total_analyzed;
+		timestamp_t total_analysis_time;
 	};
 
 
 
-	inline std::string profiling_session::get_title() const
-	{	return process_info.executable;	}
+	inline void telemetry::reset()
+	{
+		telemetry clear = {};
+		*this = clear;
+	}
 }

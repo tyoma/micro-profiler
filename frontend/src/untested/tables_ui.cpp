@@ -68,7 +68,7 @@ namespace micro_profiler
 			keyer::callstack<TableT> operator ()(const TableT &table_) const
 			{	return keyer::callstack<TableT>(table_);	}
 
-			signal<void ()> &invalidate;
+			wpl::signal<void ()> &invalidate;
 
 		private:
 			const shared_ptr<tables::statistics> _underlying;

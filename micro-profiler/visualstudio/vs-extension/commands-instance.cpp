@@ -1,5 +1,6 @@
 #include "command-ids.h"
 #include "helpers.h"
+#include "ui_helpers.h"
 
 #include <common/path.h>
 #include <common/string.h>
@@ -93,28 +94,12 @@ namespace micro_profiler
 			});
 
 			target.add_command(cmdidProfileScope, [&running_objects, &factory, session] (unsigned) {
-				wpl::rect_i l = { 0, 0, 800, 530 };
-				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
-				auto &running_objects_ = running_objects;
-				const auto i = running_objects.insert(running_objects.end(), o);
-				const auto onclose = [i, &running_objects_/*, hshell*/] {
-					running_objects_.erase(i);
-				};
-				const auto root = make_shared<wpl::overlay>();
-					root->add(factory.create_control<wpl::control>("background"));
-					const auto patch_ui = make_shared<image_patch_ui>(factory,
-						make_shared<image_patch_model>(session.patches, session.modules, session.module_mappings),
-							session.patches);
-					root->add(wpl::pad_control(patch_ui, 5, 5));
+				const auto patch_ui = make_shared<image_patch_ui>(factory, make_shared<image_patch_model>(session.patches,
+					session.modules, session.module_mappings), session.patches);
 
-				o->first = factory.create_modal();
-				o->second.push_back(o->first->close += onclose);
-
-				o->first->set_caption("Select Profiled Scope - " + (string)*session.process_info.executable);
-				o->first->set_root(root);
-				o->first->set_location(l);
-				o->first->center_parent();
-				o->first->set_visible(true);
+				ui_helpers::show_dialog(running_objects, factory, patch_ui, 800, 530,
+					"Select Profiled Scope - " + (string)*session.process_info.executable,
+					[] (vector<wpl::slot_connection> &, function<void()>) {	});
 			}, false, [injected] (unsigned, unsigned &state) {
 				return state = injected ? command_target::visible | command_target::supported | command_target::enabled : 0, true;
 			});

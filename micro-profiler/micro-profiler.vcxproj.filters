@@ -72,6 +72,9 @@
     <Filter Include="setup">
       <UniqueIdentifier>{73c4545b-6201-4dac-9a42-346a65ea75aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="telemetry">
+      <UniqueIdentifier>{0f51b318-f035-4645-9111-e4af3491d271}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resources\resource.h">
@@ -103,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="frontend\inject_profiler.h">
       <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="visualstudio\vs-extension\ui_helpers.h">
+      <Filter>visualstudio\vs-extension</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

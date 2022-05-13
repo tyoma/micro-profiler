@@ -27,6 +27,7 @@
 #include <common/time.h>
 #include <frontend/factory.h>
 #include <logger/log.h>
+#include <scheduler/thread_queue.h>
 #include <scheduler/ui_queue.h>
 #include <stdexcept>
 #include <wpl/factory.h>

@@ -32,10 +32,10 @@ namespace micro_profiler
 	class filter_view : private views::filter<U>, noncopyable
 	{
 	public:
-		using views::filter<U>::const_iterator;
-		using views::filter<U>::value_type;
-		using views::filter<U>::const_reference;
-		using views::filter<U>::reference;
+		using typename views::filter<U>::const_iterator;
+		using typename views::filter<U>::value_type;
+		using typename views::filter<U>::const_reference;
+		using typename views::filter<U>::reference;
 
 	public:
 		filter_view(std::shared_ptr<U> underlying)

@@ -70,10 +70,10 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics2 reference1[] = {
-					make_statistics(141, 17, 12012, 11293123, 132123, 12213),
-					make_statistics(7341, 21117, 2212, 21231123, 23213, 2112213),
-					make_statistics(7741, 31117 + 1117, 3212, 31231123 + 1231123, 33213 + 3213, 3112213),
-					make_statistics(123441, 17, 2012, 123123123, 32123, 2213),
+					make_statistics(141u, 17, 12012, 11293123, 132123, 12213),
+					make_statistics(7341u, 21117, 2212, 21231123, 23213, 2112213),
+					make_statistics(7741u, 31117 + 1117, 3212, 31231123 + 1231123, 33213 + 3213, 3112213),
+					make_statistics(123441u, 17, 2012, 123123123, 32123, 2213),
 				};
 
 				assert_equivalent(reference1, s);
@@ -86,10 +86,10 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics2 reference2[] = {
-					make_statistics(141, 2 * 17, 12012, 2 * 11293123, 2 * 132123, 12213),
-					make_statistics(7341, 2 * 21117, 2212, 2 * 21231123, 2 * 23213, 2112213),
-					make_statistics(7741, 2 * 31117 + 1117, 3212, 2 * 31231123 + 1231123, 2 * 33213 + 3213, 3112213),
-					make_statistics(123441, 17, 2012, 123123123, 32123, 2213),
+					make_statistics(141u, 2 * 17, 12012, 2 * 11293123, 2 * 132123, 12213),
+					make_statistics(7341u, 2 * 21117, 2212, 2 * 21231123, 2 * 23213, 2112213),
+					make_statistics(7741u, 2 * 31117 + 1117, 3212, 2 * 31231123 + 1231123, 2 * 33213 + 3213, 3112213),
+					make_statistics(123441u, 17, 2012, 123123123, 32123, 2213),
 				};
 
 				assert_equivalent(reference2, s);

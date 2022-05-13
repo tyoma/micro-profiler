@@ -22,6 +22,7 @@
 
 #include "command-ids.h"
 #include "helpers.h"
+#include "ui_helpers.h"
 #include "vcmodel.h"
 
 #include <common/constants.h>
@@ -377,29 +378,15 @@ namespace micro_profiler
 
 
 			add_command(cmdidProfileProcess, [this] (unsigned) {
-				wpl::rect_i l = { 0, 0, 600, 400 }; // TODO: Center attach form.
-				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
-				auto &running_objects = _running_objects;
-				const auto i = running_objects.insert(running_objects.end(), o);
-				const auto onclose = [i, &running_objects] {
-					running_objects.erase(i);
-				};
 				const auto &f = get_factory();
-				const auto root = make_shared<wpl::overlay>();
-					root->add(f.create_control<wpl::control>("background"));
-					const auto attach = make_shared<attach_ui>(f, f.context.queue_,
+				const auto attach = make_shared<attach_ui>(f, f.context.queue_,
 						ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()));
-					root->add(wpl::pad_control(attach, 5, 5));
 
-				o->first = f.create_modal();
-				o->second.push_back(o->first->close += onclose);
-				o->second.push_back(attach->close += onclose);
+				ui_helpers::show_dialog(_running_objects, f, attach, 600, 400, "MicroProfiler - Select a Process to Profile",
+					[attach] (vector<wpl::slot_connection> &connections, function<void()> onclose) {
 
-				o->first->set_caption("MicroProfiler - Select a Process to Profile");
-				o->first->set_root(root);
-				o->first->set_location(l);
-				o->first->center_parent();
-				o->first->set_visible(true);
+					connections.push_back(attach->close += onclose);
+				});
 			}, false, [this] (unsigned, unsigned &state) -> bool {
 				return state = visible | supported | enabled, true;
 			});
@@ -445,30 +432,16 @@ namespace micro_profiler
 
 
 			add_command(cmdidSupportDeveloper, [this] (unsigned) {
-				wpl::rect_i l = { 0, 0, 400, 300 }; // TODO: Center about form.
-				const auto o = make_shared< pair< shared_ptr<wpl::form>, vector<wpl::slot_connection> > >();
-				auto &running_objects = _running_objects;
-				const auto i = running_objects.insert(running_objects.end(), o);
-				const auto onclose = [i, &running_objects/*, hshell*/] {
-					running_objects.erase(i);
-				};
-				const auto &f = get_factory();
-				const auto root = make_shared<wpl::overlay>();
-					root->add(f.create_control<wpl::control>("background"));
-					const auto about = make_shared<about_ui>(f);
-					root->add(wpl::pad_control(about, 5, 5));
+				auto about = make_shared<about_ui>(get_factory());
 
-				o->first = get_factory().create_modal();
-				o->second.push_back(o->first->close += onclose);
-				o->second.push_back(about->link += [] (const string &address) {
-					::ShellExecuteW(NULL, L"open", unicode(address).c_str(), NULL, NULL, SW_SHOWNORMAL);
+				ui_helpers::show_dialog(_running_objects, get_factory(), about, 400, 300, "Support Developer",
+					[about] (vector<wpl::slot_connection> &connections, function<void()> onclose) {
+
+					connections.push_back(about->close += onclose);
+					connections.push_back(about->link += [] (const string &address) {
+						::ShellExecuteW(NULL, L"open", unicode(address).c_str(), NULL, NULL, SW_SHOWNORMAL);
+					});
 				});
-				o->second.push_back(about->close += onclose);
-
-				o->first->set_root(root);
-				o->first->set_location(l);
-				o->first->center_parent();
-				o->first->set_visible(true);
 			}, false, [this] (unsigned, unsigned &state) -> bool {
 				return state = enabled | visible | supported, true;
 			});

@@ -370,12 +370,16 @@ namespace micro_profiler
 						assert_equal(t.end(), t.begin());
 						called++;
 					};
+					auto c2 = t.invalidate += [&] {
+						assert_equal(1, called); // 'invalidate' signal is raised after 'cleared'
+						called++;
+					};
 
 					// ACT
 					t.clear();
 
 					// ASSERT
-					assert_equal(1, called);
+					assert_equal(2, called);
 				}
 
 

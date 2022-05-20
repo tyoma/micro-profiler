@@ -7,6 +7,7 @@
 
 #include <ut/assert.h>
 #include <ut/test.h>
+#include <views/aggregated_table.h>
 
 using namespace std;
 
@@ -176,7 +177,7 @@ namespace micro_profiler
 
 
 			template <typename TableT>
-			keyer::callstack<TableT> operator ()(const TableT &table_) const
+			keyer::callstack<TableT> operator ()(const TableT &table_, views::agnostic_key_tag) const
 			{	return keyer::callstack<TableT>(table_);	}
 
 
@@ -193,9 +194,7 @@ namespace micro_profiler
 					make_call_statistics(6, 1, 0, 37, 90, 0, 769, 0, 0),
 				};
 				calls_statistics_table tbl;
-				aggregated_statistics_table aggregated(tbl);
-
-				aggregated.group_by(*this, aggregator());
+				auto aggregated = group_by(tbl, *this, aggregator());
 
 				// ACT
 				for (auto i = begin(data_); i != end(data_); ++i)
@@ -209,7 +208,7 @@ namespace micro_profiler
 					make_call_statistics(4, 0, 0, 37, 90, 0, 769, 0, 0),
 				};
 
-				assert_equivalent(reference, aggregated);
+				assert_equivalent(reference, *aggregated);
 
 				// ACT
 				add(tbl, make_call_statistics(16, 70, 0, 37, 10, 2, 100, 3, 0));
@@ -222,7 +221,7 @@ namespace micro_profiler
 					make_call_statistics(4, 0, 0, 37, 100, 2, 869, 3, 0),
 				};
 
-				assert_equivalent(reference2, aggregated);
+				assert_equivalent(reference2, *aggregated);
 			}
 
 
@@ -244,9 +243,7 @@ namespace micro_profiler
 
 				};
 				calls_statistics_table tbl;
-				aggregated_statistics_table aggregated(tbl);
-
-				aggregated.group_by(*this, aggregator());
+				auto aggregated = group_by(tbl, *this, aggregator());
 
 				// ACT
 				for (auto i = begin(data_); i != end(data_); ++i)
@@ -262,7 +259,7 @@ namespace micro_profiler
 					make_call_statistics(6, 0, 3, 37, 90, 0, 769, 0, 0),
 				};
 
-				assert_equivalent(reference1, aggregated);
+				assert_equivalent(reference1, *aggregated);
 			}
 		end_test_suite
 

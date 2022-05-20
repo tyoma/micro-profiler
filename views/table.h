@@ -87,6 +87,7 @@ namespace micro_profiler
 		public:
 			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
 			mutable wpl::signal<void ()> cleared;
+			mutable wpl::signal<void ()> invalidate;
 
 		private:
 			typedef unsigned int index_type;
@@ -225,6 +226,7 @@ namespace micro_profiler
 		{
 			_records.clear();
 			cleared();
+			invalidate();
 		}
 
 		template <typename T, typename C>

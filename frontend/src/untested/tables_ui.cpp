@@ -33,6 +33,7 @@
 #include <frontend/view_dump.h>
 
 #include <common/configuration.h>
+#include <views/aggregated_table.h>
 #include <views/integrated_index.h>
 #include <wpl/controls.h>
 #include <wpl/factory.h>
@@ -56,22 +57,6 @@ namespace micro_profiler
 				for (auto i = group_begin; i != group_end; ++i)
 					aggregated += *i;
 			}
-		};
-
-		struct aggregated_statistics : aggregated_statistics_table
-		{
-			aggregated_statistics(shared_ptr<tables::statistics> underlying)
-				: aggregated_statistics_table(*underlying), invalidate(underlying->invalidate), _underlying(underlying)
-			{	group_by(*this, sum_functions());	}
-
-			template <typename TableT>
-			keyer::callstack<TableT> operator ()(const TableT &table_) const
-			{	return keyer::callstack<TableT>(table_);	}
-
-			wpl::signal<void ()> &invalidate;
-
-		private:
-			const shared_ptr<tables::statistics> _underlying;
 		};
 
 		enum view_mode {	mode_none, mode_regular, mode_aggregated,	};
@@ -161,8 +146,11 @@ namespace micro_profiler
 
 			if (threads_model::cumulative == thread_id && mode_aggregated != *vm)
 			{
-				_models = make_shared<models>(make_shared<aggregated_statistics>(statistics), resolver, threads,
-					ticks_per_second);
+				const auto aggregated = views::group_by(*statistics, [] (const calls_statistics_table &table_, views::agnostic_key_tag) {
+					return keyer::callstack<calls_statistics_table>(table_);
+				}, sum_functions());
+
+				_models = make_shared<models>(aggregated, resolver, threads, ticks_per_second);
 				attach(resolver, _models);
 				*vm = mode_aggregated;
 			}

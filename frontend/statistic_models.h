@@ -92,14 +92,13 @@ namespace micro_profiler
 		const statistics_model_context &context, const ColumnsT &columns)
 	{
 		typedef table_model_impl<BaseT, U, statistics_model_context> model_type;
-		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> complex_type;
+		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> composite_t;
 
 		const auto m = std::make_shared<model_type>(underlying, context);
-		const auto p = m.get();
-		const auto c = std::make_shared<complex_type>(m, underlying->invalidate += [p] {
-			p->fetch();
-		}, context.resolver->invalidate += [p] {
-			p->invalidate(p->npos());
+		const auto c = std::make_shared<composite_t>(m, underlying->invalidate += [m] {
+			m->fetch();
+		}, context.resolver->invalidate += [m] {
+			m->invalidate(m->npos());
 		});
 
 		m->add_columns(columns);

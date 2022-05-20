@@ -13,14 +13,6 @@ using namespace std;
 
 namespace micro_profiler
 {
-	template <typename T>
-	inline void operator +=(tables::statistics &s, const T &delta)
-	{
-		for (auto i = begin(delta); i != end(delta); ++i)
-			s[i->first] += i->second;
-		s.invalidate();
-	}
-
 	namespace tests
 	{
 		namespace

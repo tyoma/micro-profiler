@@ -24,9 +24,7 @@
 
 #include <common/hash.h>
 #include <tuple>
-#include <views/aggregated_table.h>
-#include <views/table.h>
-#include <views/index.h>
+#include <views/integrated_index.h>
 
 namespace micro_profiler
 {
@@ -175,5 +173,4 @@ namespace micro_profiler
 	}
 
 	typedef views::table<call_statistics, call_statistics_constructor> calls_statistics_table;
-	typedef views::aggregated_table<calls_statistics_table, call_statistics_constructor> aggregated_statistics_table;
 }

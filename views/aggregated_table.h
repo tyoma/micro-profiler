@@ -22,41 +22,29 @@
 
 #include "integrated_index.h"
 
+#include <tuple>
+
 namespace micro_profiler
 {
 	namespace views
 	{
-		template < typename U, typename ConstructorT = default_constructor<typename U::value_type> >
-		class aggregated_table : public table<typename U::value_type, ConstructorT>
+		struct agnostic_key_tag {};
+		struct underlying_key_tag : agnostic_key_tag {};
+		struct aggregated_key_tag : agnostic_key_tag {};
+
+		template <typename U, typename C, typename KeyerFactoryT, typename AggregatorT>
+		inline std::shared_ptr< table<U, C> > group_by(const table<U, C> &underlying, const KeyerFactoryT &keyer_factory,
+			const AggregatorT &aggregator)
 		{
-		public:
-			aggregated_table(const U &underlying);
+			typedef table<U, C> table_t;
+			typedef std::tuple<table_t, wpl::slot_connection, wpl::slot_connection, wpl::slot_connection> composite_t;
 
-			template <typename KeyerFactoryT, typename AggregatorT>
-			void group_by(const KeyerFactoryT &keyer_factory, const AggregatorT &aggregator);
-
-		private:
-			const U &_underlying;
-			wpl::slot_connection _on_underlying_cleared, _on_changed;
-		};
-
-
-
-		template <typename U, typename C>
-		inline aggregated_table<U, C>::aggregated_table(const U &underlying)
-			: _underlying(underlying)
-		{
-			_on_underlying_cleared = underlying.cleared += [this] {	this->clear();	};
-		}
-
-		template <typename U, typename C>
-		template <typename KeyerFactoryT, typename AggregatorT>
-		inline void aggregated_table<U, C>::group_by(const KeyerFactoryT &keyer_factory, const AggregatorT &aggregator)
-		{
-			const auto ukeyer = keyer_factory(_underlying);
-			const auto &uindex = multi_index(_underlying, ukeyer);
-			auto &aindex = unique_index(*this, keyer_factory(*this));
-			const auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename U::const_reference value) {
+			const auto composite = std::make_shared<composite_t>();
+			auto &aggregate = std::get<0>(*composite);
+			const auto ukeyer = keyer_factory(underlying, underlying_key_tag());
+			const auto &uindex = multi_index(underlying, ukeyer);
+			auto &aindex = unique_index(aggregate, keyer_factory(aggregate, aggregated_key_tag()));
+			const auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename table_t::const_reference value) {
 				const auto &key = ukeyer(value);
 				const auto uitems = uindex.equal_range(key);
 				auto aggregated_record = aindex[key];
@@ -65,12 +53,14 @@ namespace micro_profiler
 				aggregated_record.commit();
 			};
 
-			_on_changed = _underlying.changed += [update_record] (typename U::const_iterator r, bool /*new_*/) {
+			std::get<1>(*composite) = underlying.cleared += [&aggregate] {	aggregate.clear();	};
+			std::get<2>(*composite) = underlying.changed += [update_record] (typename table_t::const_iterator r, bool) {
 				update_record(*r);
 			};
-			this->clear();
-			for (auto i = _underlying.begin(); i != _underlying.end(); ++i)
+			std::get<3>(*composite) = underlying.invalidate += [&aggregate] {	aggregate.invalidate();	};
+			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				update_record(*i);
+			return std::shared_ptr<table_t>(composite, &aggregate);
 		}
 	}
 }

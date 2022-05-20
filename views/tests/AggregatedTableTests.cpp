@@ -70,6 +70,13 @@ namespace micro_profiler
 					r.commit();
 				}
 
+				template <typename T, typename C, typename T2, size_t n>
+				void add(table<T, C> &table_, T2 (&objects)[n])
+				{
+					for (size_t i = 0; i != n; ++i)
+						add(table_, objects[i]);
+				}
+
 				struct ctor
 				{
 					A operator ()() const
@@ -80,38 +87,73 @@ namespace micro_profiler
 				struct key_factory
 				{
 					template <typename T>
-					K operator ()(const T &/*table_*/) const
+					K operator ()(const T &/*table_*/, agnostic_key_tag) const
 					{	return K();	}
+				};
+
+				template <typename K1, typename K2>
+				struct sided_key_factory
+				{
+					template <typename T>
+					K1 operator ()(const T &table_, underlying_key_tag) const
+					{	return logu.push_back(&table_), K1();	}
+
+					template <typename T>
+					K2 operator ()(const T &table_, aggregated_key_tag) const
+					{	return loga.push_back(&table_), K2();	}
+
+					mutable vector<const void *> logu, loga;
+				};
+
+				struct another_sneaky_type
+				{
+					int a, b, c;
+
+					bool operator <(const another_sneaky_type &rhs) const
+					{	return make_pair(make_pair(a, b), c) < make_pair(make_pair(rhs.a, rhs.b), rhs.c);	}
+				};
+
+				struct sneaky_keyer_a
+				{
+					typedef int key_type;
+
+					key_type operator ()(const another_sneaky_type &v) const
+					{	return v.a;	}
+				};
+
+				struct sneaky_keyer_b
+				{
+					typedef int key_type;
+
+					key_type operator ()(const another_sneaky_type &v) const
+					{	return v.b;	}
+
+					template <typename I>
+					void operator ()(I &, another_sneaky_type &v, int key) const
+					{	v.b = key;	}
+				};
+
+				struct sneaky_type_aggregator
+				{
+					template <typename I>
+					void operator ()(another_sneaky_type &aggregated, I group_begin, I group_end) const
+					{
+						aggregated.a = 0;
+						aggregated.c = 0;
+						for (auto i = group_begin; i != group_end; ++i)
+							aggregated.c += i->c;
+					}
 				};
 			}
 
 			begin_test_suite( AggregatedTableTests )
-				test( RecordsAddedToUnderlyingAreIgnoredByUngrouppedAggregatedTable )
-				{
-					// INIT
-					table<A, ctor> u;
-
-					// INIT / ACT
-					aggregated_table<table<A, ctor>, ctor> a(u);
-
-					// ACT
-					add(u, A(1, 31));
-					add(u, A(2, 415));
-
-					// ASSERT
-					assert_equal(a.end(), a.begin());
-				}
-
-
 				test( RecordsAddedToUnderlyingAppearInAnUngrouppedAggregatedTable )
 				{
 					// INIT
 					table<A, ctor> u;
 
 					// INIT / ACT
-					aggregated_table<table<A, ctor>, ctor> a(u);
-
-					a.group_by(key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<X>(), aggregate_second());
 
 					// ACT
 					add(u, A(1, 3));
@@ -120,7 +162,7 @@ namespace micro_profiler
 					// ACT / ASSERT
 					A reference1[] = {	A(1, 3), A(2, 141),	};
 
-					assert_equivalent(reference1, a);
+					assert_equivalent(reference1, *a);
 
 					// ACT
 					add(u, A(3, 5926));
@@ -128,7 +170,7 @@ namespace micro_profiler
 					// ACT / ASSERT
 					A reference2[] = {	A(1, 3), A(2, 141), A(3, 5926),	};
 
-					assert_equivalent(reference2, a);
+					assert_equivalent(reference2, *a);
 				}
 
 
@@ -138,9 +180,7 @@ namespace micro_profiler
 					table<A, ctor> u;
 
 					// INIT / ACT
-					aggregated_table<table<A, ctor>, ctor> a(u);
-
-					a.group_by(key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<X>(), aggregate_second());
 
 					// ACT
 					add(u, A(3, 9));
@@ -153,34 +193,7 @@ namespace micro_profiler
 					// ACT / ASSERT
 					A reference2[] = {	A(1, 10), A(2, 141), A(3, 15),	};
 
-					assert_equivalent(reference2, a);
-				}
-
-
-				test( ChangingGrouppingRereadsUnderlyingItems )
-				{
-					// INIT
-					table<A, ctor> u;
-
-					// INIT / ACT
-					aggregated_table<table<A, ctor>, ctor> a(u);
-
-					a.group_by(key_factory<X>(), aggregate_second());
-
-					add(u, A(3, 9));
-					add(u, A(1, 3));
-					add(u, A(2, 141));
-					add(u, A(1, 9));
-					add(u, A(3, 3));
-					add(u, A(3, 5));
-
-					// ACT
-					a.group_by(key_factory<Y>(), aggregate_first());
-
-					// ASSERT
-					A reference[] = {	A(4, 3), A(3, 5), A(4, 9), A(2, 141),	};
-
-					assert_equivalent(reference, a);
+					assert_equivalent(reference2, *a);
 				}
 
 
@@ -188,9 +201,8 @@ namespace micro_profiler
 				{
 					// INIT
 					table<A, ctor> u;
-					aggregated_table<table<A, ctor>, ctor> a(u);
 
-					a.group_by(key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<X>(), aggregate_second());
 
 					add(u, A(3, 9));
 					add(u, A(1, 3));
@@ -199,7 +211,7 @@ namespace micro_profiler
 					u.clear();
 
 					// ASSERT
-					assert_equal(a.end(), a.begin());
+					assert_equal(a->end(), a->begin());
 				}
 
 
@@ -207,17 +219,16 @@ namespace micro_profiler
 				{
 					// INIT
 					table<A, ctor> u;
-					aggregated_table<table<A, ctor>, ctor> a(u);
 
-					a.group_by(key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<X>(), aggregate_second());
 
 					add(u, A(3, 9));
 					add(u, A(1, 3));
 
 					auto notified = 0;
-					auto c = a.cleared += [&] {
+					auto c = a->cleared += [&] {
 						notified++;
-						assert_equal(a.end(), a.begin());
+						assert_equal(a->end(), a->begin());
 					};
 
 					// ACT
@@ -228,19 +239,39 @@ namespace micro_profiler
 				}
 
 
-				test( ChangedNotificationIsSentUponUnderlyingAddOrChange )
+				test( InvalidationIsPassedOnWithoutResettingTheAggregate )
 				{
-					typedef aggregated_table<table<A, ctor>, ctor> aggregated_table_type;
-
 					// INIT
 					table<A, ctor> u;
-					aggregated_table_type a(u);
+
+					auto a = group_by(u, key_factory<X>(), aggregate_second());
+
+					add(u, A(3, 9));
+					add(u, A(1, 3));
+
+					auto notified = 0;
+					auto c = a->invalidate += [&] {
+						notified++;
+					};
+
+					// ACT
+					u.invalidate();
+
+					// ASSERT
+					assert_equal(1, notified);
+					assert_not_equal(a->end(), a->begin());
+				}
+
+
+				test( ChangedNotificationIsSentUponUnderlyingAddOrChange )
+				{
+					// INIT
+					table<A, ctor> u;
 					vector<bool> sequence;
 					vector<A> sequence_items;
+					auto a = group_by(u, key_factory<X>(), aggregate_second());
 
-					a.group_by(key_factory<X>(), aggregate_second());
-
-					auto c = a.changed += [&] (aggregated_table_type::const_iterator i, bool new_) {
+					auto c = a->changed += [&] (table<A, ctor>::const_iterator i, bool new_) {
 						sequence.push_back(new_);
 						sequence_items.push_back(*i);
 					};
@@ -272,16 +303,12 @@ namespace micro_profiler
 
 				test( AggregatedTableSupportsIndexing )
 				{
-					typedef aggregated_table<table<A, ctor>, ctor> aggregated_table_type;
-
 					// INIT
 					table<A, ctor> u;
-					aggregated_table_type a(u);
-
-					a.group_by(key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<X>(), aggregate_second());
 
 					// INIT / ACT
-					const immutable_unique_index<aggregated_table_type, Y> idx(a);
+					const immutable_unique_index<table<A, ctor>, Y> idx(*a);
 
 					add(u, A(3, 9));
 					add(u, A(1, 3));
@@ -293,6 +320,53 @@ namespace micro_profiler
 					assert_equal(A(4, 5), idx[5]);
 					assert_equal(A(2, 7), idx[7]);
 					assert_equal(A(3, 9), idx[9]);
+				}
+
+
+				test( KeysAreCreatedWithADistinctiveTag )
+				{
+					// INIT
+					table<another_sneaky_type> u;
+					sided_key_factory<sneaky_keyer_a, sneaky_keyer_b> f;
+
+					// ACT
+					auto a = group_by(u, f, sneaky_type_aggregator());
+
+					// ASSERT
+					const void *reference1[] = {	&u,	};
+					const void *reference2[] = {	a.get(),	};
+
+					assert_equal(reference1, f.logu);
+					assert_equal(reference2, f.loga);
+				}
+
+
+				test( AssymetricAggregationUsesDifferentFields )
+				{
+					// INIT
+					table<another_sneaky_type> u;
+					sided_key_factory<sneaky_keyer_a, sneaky_keyer_b> f;
+					another_sneaky_type data[] = {
+						{	3, 2, 13	},
+						{	1, 2, 2	},
+						{	2, 2, 3	},
+						{	1, 2, 5	},
+						{	3, 2, 7	},
+					};
+
+					add(u, data);
+
+					// INIT / ACT
+					auto a = group_by(u, f, sneaky_type_aggregator());
+
+					// ASSERT
+					another_sneaky_type reference[] = {
+						{	0, 3, 20	},
+						{	0, 1, 7	},
+						{	0, 2, 3	},
+					};
+
+					assert_equivalent(reference, *a);
 				}
 			end_test_suite
 		}

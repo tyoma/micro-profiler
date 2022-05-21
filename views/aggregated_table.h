@@ -32,19 +32,20 @@ namespace micro_profiler
 		struct underlying_key_tag : agnostic_key_tag {};
 		struct aggregated_key_tag : agnostic_key_tag {};
 
-		template <typename U, typename C, typename KeyerFactoryT, typename AggregatorT>
-		inline std::shared_ptr< table<U, C> > group_by(const table<U, C> &underlying, const KeyerFactoryT &keyer_factory,
-			const AggregatorT &aggregator)
+		template <typename T, typename ConstructorT, typename U, typename KeyerFactoryT, typename AggregatorT>
+		inline std::shared_ptr< table<T, ConstructorT> > group_by(const U &underlying, const KeyerFactoryT &keyer_factory,
+			const ConstructorT &/*constructor*/, const AggregatorT &aggregator)
 		{
-			typedef table<U, C> table_t;
-			typedef std::tuple<table_t, wpl::slot_connection, wpl::slot_connection, wpl::slot_connection> composite_t;
+			typedef table<T, ConstructorT> aggregated_table_t;
+			typedef wpl::slot_connection slot_t;
+			typedef std::tuple<aggregated_table_t, slot_t, slot_t, slot_t> composite_t;
 
 			const auto composite = std::make_shared<composite_t>();
 			auto &aggregate = std::get<0>(*composite);
 			const auto ukeyer = keyer_factory(underlying, underlying_key_tag());
 			const auto &uindex = multi_index(underlying, ukeyer);
 			auto &aindex = unique_index(aggregate, keyer_factory(aggregate, aggregated_key_tag()));
-			const auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename table_t::const_reference value) {
+			const auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename U::const_reference value) {
 				const auto &key = ukeyer(value);
 				const auto uitems = uindex.equal_range(key);
 				auto aggregated_record = aindex[key];
@@ -54,13 +55,18 @@ namespace micro_profiler
 			};
 
 			std::get<1>(*composite) = underlying.cleared += [&aggregate] {	aggregate.clear();	};
-			std::get<2>(*composite) = underlying.changed += [update_record] (typename table_t::const_iterator r, bool) {
+			std::get<2>(*composite) = underlying.changed += [update_record] (typename U::const_iterator r, bool) {
 				update_record(*r);
 			};
 			std::get<3>(*composite) = underlying.invalidate += [&aggregate] {	aggregate.invalidate();	};
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				update_record(*i);
-			return std::shared_ptr<table_t>(composite, &aggregate);
+			return std::shared_ptr<aggregated_table_t>(composite, &aggregate);
 		}
+
+		template <typename T, typename C, typename KeyerFactoryT, typename AggregatorT>
+		inline std::shared_ptr< table<T, C> > group_by(const table<T, C> &underlying, const KeyerFactoryT &keyer_factory,
+			const AggregatorT &aggregator)
+		{	return group_by<T, C>(underlying, keyer_factory, C(), aggregator);	}
 	}
 }

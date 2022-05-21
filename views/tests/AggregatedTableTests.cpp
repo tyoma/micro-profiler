@@ -368,6 +368,61 @@ namespace micro_profiler
 
 					assert_equivalent(reference, *a);
 				}
+
+
+				struct assymetrical
+				{
+					template <typename I>
+					void operator ()(A& aggregated, I group_begin, I group_end) const
+					{
+						aggregated.second = 0;
+						for (auto i = group_begin; i != group_end; ++i)
+							aggregated.second += i->c;
+					}
+
+					template <typename T>
+					sneaky_keyer_a operator ()(const T &, underlying_key_tag) const
+					{	return sneaky_keyer_a();	}
+
+					template <typename T>
+					X operator ()(const T &, aggregated_key_tag) const
+					{	return X();	}
+				};
+
+				test( AssymetricalAggregationCombinesRecordsIntoADifferentRecordType )
+				{
+					// INIT
+					table<another_sneaky_type> u;
+					another_sneaky_type data[] = {
+						{	3, 2, 13	},
+						{	1, 4, 2	},
+						{	2, 6, 3	},
+						{	1, 7, 5	},
+						{	3, 9, 7	},
+						{	91, 9, 7	},
+					};
+
+					add(u, data);
+
+					// ACT
+					auto a = group_by<A>(u, assymetrical(), default_constructor<A>(), assymetrical());
+
+					// ASSERT
+					A reference1[] = {	A(1, 7), A(2, 3), A(3, 20), A(91, 7),	};
+
+					assert_equivalent(reference1, *a);
+
+					// INIT
+					another_sneaky_type v = {	91, 0, 93	};
+
+					// ACT
+					add(u, v);
+
+					// ASSERT
+					A reference2[] = {	A(1, 7), A(2, 3), A(3, 20), A(91, 100),	};
+
+					assert_equivalent(reference2, *a);
+				}
 			end_test_suite
 		}
 	}

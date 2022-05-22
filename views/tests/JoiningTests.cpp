@@ -102,6 +102,129 @@ namespace micro_profiler
 
 					assert_equivalent(reference2, *j2);
 				}
+
+
+				test( NewRecordInASourceTableGeneratesASetOfCombinationsInAJoinedTable )
+				{
+					typedef pair<int, string> type1_t;
+					typedef tuple<string, double, int> type2_t;
+					typedef table<type1_t> table1_t;
+					typedef table<type2_t> table2_t;
+
+					// INIT
+					table1_t t1;
+					table2_t t2;
+					type1_t data1[] = {
+						type1_t(9, "lorem"),
+						type1_t(19, "ipsum"),
+					};
+					type2_t data2[] = {
+						type2_t("lorem", 0.71, 4),
+						type2_t("ipsum", 0.72, 3),
+						type2_t("amet", 0.73, 7),
+						type2_t("dolor", 0.74, 3),
+						type2_t("ipsum", 0.75, 9),
+					};
+
+					add_records(t1, data1);
+					add_records(t2, data2);
+
+					auto j = join< key_second<type1_t>, key_n<string, 0> >(t1, t2);
+
+					// ACT
+					add_record(t1, type1_t(7, "lorem"));
+
+					// ASSERT
+					pair<type1_t, type2_t> reference1[] = {
+						make_pair(type1_t(9, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(7, "lorem"), type2_t("lorem", 0.71, 4)), // new
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.72, 3)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.75, 9)),
+					};
+
+					assert_equivalent(reference1, *j);
+
+					// ACT
+					add_record(t1, type1_t(7, "ipsum"));
+
+					// ASSERT
+					pair<type1_t, type2_t> reference2[] = {
+						make_pair(type1_t(9, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(7, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.72, 3)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.75, 9)),
+						make_pair(type1_t(7, "ipsum"), type2_t("ipsum", 0.72, 3)), // new
+						make_pair(type1_t(7, "ipsum"), type2_t("ipsum", 0.75, 9)), // new
+					};
+
+					assert_equivalent(reference2, *j);
+
+					// ACT
+					add_record(t2, type2_t("lorem", 0.92, 1));
+
+					// ASSERT
+					pair<type1_t, type2_t> reference3[] = {
+						make_pair(type1_t(9, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(7, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.72, 3)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.75, 9)),
+						make_pair(type1_t(7, "ipsum"), type2_t("ipsum", 0.72, 3)),
+						make_pair(type1_t(7, "ipsum"), type2_t("ipsum", 0.75, 9)),
+						make_pair(type1_t(9, "lorem"), type2_t("lorem", 0.92, 1)), // new
+						make_pair(type1_t(7, "lorem"), type2_t("lorem", 0.92, 1)), // new
+					};
+
+					assert_equivalent(reference3, *j);
+				}
+
+
+				test( ModificationOfASourceRecordDoesNotCreateNewJoinedRecords )
+				{
+					typedef pair<int, string> type1_t;
+					typedef tuple<string, double, int> type2_t;
+					typedef table<type1_t> table1_t;
+					typedef table<type2_t> table2_t;
+
+					// INIT
+					table1_t t1;
+					table2_t t2;
+					type1_t data1[] = {
+						type1_t(9, "lorem"),
+						type1_t(19, "ipsum"),
+					};
+					type2_t data2[] = {
+						type2_t("lorem", 0.71, 4),
+						type2_t("ipsum", 0.72, 3),
+						type2_t("amet", 0.73, 7),
+						type2_t("dolor", 0.74, 3),
+						type2_t("ipsum", 0.75, 9),
+					};
+
+					add_records(t1, data1);
+					add_records(t2, data2);
+
+					auto j = join< key_second<type1_t>, key_n<string, 0> >(t1, t2);
+					auto i1 = t1.begin();
+					auto i2 = t2.begin();
+
+					// ACT
+					auto r1 = *i1;
+					auto r2 = (++i2, *i2);
+
+					(*r1).first = 18;
+					r1.commit();
+					get<1>(*r2) = 1.0;
+					r2.commit();
+
+					// ASSERT
+					pair<type1_t, type2_t> reference[] = {
+						make_pair(type1_t(18, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 1, 3)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.75, 9)),
+					};
+
+					assert_equivalent(reference, *j);
+				}
 			end_test_suite
 		}
 	}

@@ -92,24 +92,46 @@ namespace micro_profiler
 		{
 			typedef joined_record<Table1T, Table2T> value_type;
 			typedef table<value_type> joined_table_t;
+			typedef wpl::slot_connection slot_t;
+			typedef std::tuple<joined_table_t, slot_t, slot_t> composite_t;
 
-			auto joined = std::make_shared<joined_table_t>();
-			auto lkeyer = Keyer1T();
-			auto rkeyer = Keyer2T();
+			const auto composite = std::make_shared<composite_t>();
+			auto &joined = std::get<0>(*composite);
+			const auto lkeyer = Keyer1T();
+			auto &lindex = multi_index(left, lkeyer);
+			const auto rkeyer = Keyer2T();
 			auto &rindex = multi_index(right, rkeyer);
 
-			for (auto i = left.begin(); i != left.end(); ++i)
-			{
+			auto add_from_left = [&joined, lkeyer, &rindex] (typename Table1T::const_iterator i, bool new_) {
+				if (!new_)
+					return;
 				for (auto j = rindex.equal_range(lkeyer(*i)); j.first != j.second; ++j.first)
 				{
-					auto r = joined->create();
+					auto r = joined.create();
 
 					*r = value_type(i, j.first.underlying());
 					r.commit();
 				}
-			}
+			};
+			auto add_from_right = [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i, bool new_) {
+				if (!new_)
+					return;
+				for (auto j = lindex.equal_range(rkeyer(*i)); j.first != j.second; ++j.first)
+				{
+					auto r = joined.create();
 
-			return joined;
+					*r = value_type(j.first.underlying(), i);
+					r.commit();
+				}
+			};
+
+			for (auto i = left.begin(); i != left.end(); ++i)
+				add_from_left(i, true);
+
+			std::get<1>(*composite) = left.changed += add_from_left;
+			std::get<2>(*composite) = right.changed += add_from_right;
+
+			return std::shared_ptr<joined_table_t>(composite, &joined);
 		}
 	}
 }

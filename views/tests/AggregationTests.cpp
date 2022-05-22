@@ -1,4 +1,6 @@
-#include <views/aggregated_table.h>
+#include <views/transforms.h>
+
+#include "helpers.h"
 
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -14,30 +16,6 @@ namespace micro_profiler
 			namespace
 			{
 				typedef pair<int, int> A;
-
-				struct X
-				{
-					typedef int key_type;
-
-					int operator ()(const A &item) const
-					{	return item.first;	}
-
-					template <typename IndexT>
-					void operator ()(IndexT &, A &aggregated, int key) const
-					{	aggregated.first = key;	}
-				};
-
-				struct Y
-				{
-					typedef int key_type;
-
-					int operator ()(const A &item) const
-					{	return item.second;	}
-
-					template <typename IndexT>
-					void operator ()(IndexT &, A &aggregated, int key) const
-					{	aggregated.second = key;	}
-				};
 
 				struct aggregate_first
 				{
@@ -61,21 +39,6 @@ namespace micro_profiler
 					}
 				};
 
-				template <typename T, typename C>
-				void add(table<T, C> &table_, const T &object)
-				{
-					auto r = table_.create();
-
-					*r = object;
-					r.commit();
-				}
-
-				template <typename T, typename C, typename T2, size_t n>
-				void add(table<T, C> &table_, T2 (&objects)[n])
-				{
-					for (size_t i = 0; i != n; ++i)
-						add(table_, objects[i]);
-				}
 
 				struct ctor
 				{
@@ -146,18 +109,18 @@ namespace micro_profiler
 				};
 			}
 
-			begin_test_suite( AggregatedTableTests )
+			begin_test_suite( AggregationTests )
 				test( RecordsAddedToUnderlyingAppearInAnUngrouppedAggregatedTable )
 				{
 					// INIT
 					table<A, ctor> u;
 
 					// INIT / ACT
-					auto a = group_by(u, key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
 					// ACT
-					add(u, A(1, 3));
-					add(u, A(2, 141));
+					add_record(u, A(1, 3));
+					add_record(u, A(2, 141));
 
 					// ACT / ASSERT
 					A reference1[] = {	A(1, 3), A(2, 141),	};
@@ -165,7 +128,7 @@ namespace micro_profiler
 					assert_equivalent(reference1, *a);
 
 					// ACT
-					add(u, A(3, 5926));
+					add_record(u, A(3, 5926));
 
 					// ACT / ASSERT
 					A reference2[] = {	A(1, 3), A(2, 141), A(3, 5926),	};
@@ -180,15 +143,15 @@ namespace micro_profiler
 					table<A, ctor> u;
 
 					// INIT / ACT
-					auto a = group_by(u, key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
 					// ACT
-					add(u, A(3, 9));
-					add(u, A(1, 3));
-					add(u, A(2, 141));
-					add(u, A(1, 7));
-					add(u, A(3, 1));
-					add(u, A(3, 5));
+					add_record(u, A(3, 9));
+					add_record(u, A(1, 3));
+					add_record(u, A(2, 141));
+					add_record(u, A(1, 7));
+					add_record(u, A(3, 1));
+					add_record(u, A(3, 5));
 
 					// ACT / ASSERT
 					A reference2[] = {	A(1, 10), A(2, 141), A(3, 15),	};
@@ -202,10 +165,10 @@ namespace micro_profiler
 					// INIT
 					table<A, ctor> u;
 
-					auto a = group_by(u, key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
-					add(u, A(3, 9));
-					add(u, A(1, 3));
+					add_record(u, A(3, 9));
+					add_record(u, A(1, 3));
 
 					// ACT
 					u.clear();
@@ -220,10 +183,10 @@ namespace micro_profiler
 					// INIT
 					table<A, ctor> u;
 
-					auto a = group_by(u, key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
-					add(u, A(3, 9));
-					add(u, A(1, 3));
+					add_record(u, A(3, 9));
+					add_record(u, A(1, 3));
 
 					auto notified = 0;
 					auto c = a->cleared += [&] {
@@ -244,10 +207,10 @@ namespace micro_profiler
 					// INIT
 					table<A, ctor> u;
 
-					auto a = group_by(u, key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
-					add(u, A(3, 9));
-					add(u, A(1, 3));
+					add_record(u, A(3, 9));
+					add_record(u, A(1, 3));
 
 					auto notified = 0;
 					auto c = a->invalidate += [&] {
@@ -269,7 +232,7 @@ namespace micro_profiler
 					table<A, ctor> u;
 					vector<bool> sequence;
 					vector<A> sequence_items;
-					auto a = group_by(u, key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
 					auto c = a->changed += [&] (table<A, ctor>::const_iterator i, bool new_) {
 						sequence.push_back(new_);
@@ -277,9 +240,9 @@ namespace micro_profiler
 					};
 
 					// ACT
-					add(u, A(3, 9));
-					add(u, A(1, 3));
-					add(u, A(3, 5));
+					add_record(u, A(3, 9));
+					add_record(u, A(1, 3));
+					add_record(u, A(3, 5));
 
 					// ASSERT
 					bool reference1[] = {	true, true, false,	};
@@ -289,8 +252,8 @@ namespace micro_profiler
 					assert_equal(reference1_items, sequence_items);
 
 					// ACT
-					add(u, A(5, 19));
-					add(u, A(5, 1));
+					add_record(u, A(5, 19));
+					add_record(u, A(5, 1));
 
 					// ASSERT
 					bool reference2[] = {	true, true, false, true, false,	};
@@ -305,15 +268,15 @@ namespace micro_profiler
 				{
 					// INIT
 					table<A, ctor> u;
-					auto a = group_by(u, key_factory<X>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
 					// INIT / ACT
-					const immutable_unique_index<table<A, ctor>, Y> idx(*a);
+					const auto &idx = unique_index<key_second<A>>(*a);
 
-					add(u, A(3, 9));
-					add(u, A(1, 3));
-					add(u, A(4, 5));
-					add(u, A(2, 7));
+					add_record(u, A(3, 9));
+					add_record(u, A(1, 3));
+					add_record(u, A(4, 5));
+					add_record(u, A(2, 7));
 
 					// ACT / ASSERT
 					assert_equal(A(1, 3), idx[3]);
@@ -354,7 +317,7 @@ namespace micro_profiler
 						{	3, 2, 7	},
 					};
 
-					add(u, data);
+					add_records(u, data);
 
 					// INIT / ACT
 					auto a = group_by(u, f, sneaky_type_aggregator());
@@ -385,8 +348,8 @@ namespace micro_profiler
 					{	return sneaky_keyer_a();	}
 
 					template <typename T>
-					X operator ()(const T &, aggregated_key_tag) const
-					{	return X();	}
+					key_first<A> operator ()(const T &, aggregated_key_tag) const
+					{	return key_first<A>();	}
 				};
 
 				test( AssymetricalAggregationCombinesRecordsIntoADifferentRecordType )
@@ -402,7 +365,7 @@ namespace micro_profiler
 						{	91, 9, 7	},
 					};
 
-					add(u, data);
+					add_records(u, data);
 
 					// ACT
 					auto a = group_by<A>(u, assymetrical(), default_constructor<A>(), assymetrical());
@@ -416,7 +379,7 @@ namespace micro_profiler
 					another_sneaky_type v = {	91, 0, 93	};
 
 					// ACT
-					add(u, v);
+					add_record(u, v);
 
 					// ASSERT
 					A reference2[] = {	A(1, 7), A(2, 3), A(3, 20), A(91, 100),	};

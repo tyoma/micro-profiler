@@ -7,7 +7,7 @@
 
 #include <ut/assert.h>
 #include <ut/test.h>
-#include <views/aggregated_table.h>
+#include <views/transforms.h>
 
 using namespace std;
 

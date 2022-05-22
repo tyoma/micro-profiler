@@ -37,18 +37,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AggregatedTableTests.cpp" />
+    <ClCompile Include="AggregationTests.cpp" />
     <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="FlattenViewTests.cpp" />
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
     <ClCompile Include="IntegratedIndexTests.cpp" />
+    <ClCompile Include="JoiningTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="TableSerializationTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\aggregated_table.h" />
+    <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />
     <ClInclude Include="..\flatten.h" />
@@ -58,6 +59,8 @@
     <ClInclude Include="..\index.h" />
     <ClInclude Include="..\ordered.h" />
     <ClInclude Include="..\table_events.h" />
+    <ClInclude Include="comparisons.h" />
+    <ClInclude Include="helpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -32,9 +32,26 @@ namespace micro_profiler
 		struct underlying_key_tag : agnostic_key_tag {};
 		struct aggregated_key_tag : agnostic_key_tag {};
 
+		template <typename Table1T, typename Table2T>
+		class joined_record
+		{
+		public:
+			joined_record() {	}
+			joined_record(typename Table1T::const_iterator left_, typename Table2T::const_iterator right_) : _left(left_), _right(right_) {	}
+
+			typename Table1T::const_reference left() const {	return *_left;	}
+			typename Table2T::const_reference right() const {	return *_right;	}
+
+		private:
+			typename Table1T::const_iterator _left;
+			typename Table2T::const_iterator _right;
+		};
+
+
+
 		template <typename T, typename ConstructorT, typename U, typename KeyerFactoryT, typename AggregatorT>
-		inline std::shared_ptr< table<T, ConstructorT> > group_by(const U &underlying, const KeyerFactoryT &keyer_factory,
-			const ConstructorT &/*constructor*/, const AggregatorT &aggregator)
+		inline std::shared_ptr< const table<T, ConstructorT> > group_by(const U &underlying,
+			const KeyerFactoryT &keyer_factory, const ConstructorT &/*constructor*/, const AggregatorT &aggregator)
 		{
 			typedef table<T, ConstructorT> aggregated_table_t;
 			typedef wpl::slot_connection slot_t;
@@ -65,8 +82,34 @@ namespace micro_profiler
 		}
 
 		template <typename T, typename C, typename KeyerFactoryT, typename AggregatorT>
-		inline std::shared_ptr< table<T, C> > group_by(const table<T, C> &underlying, const KeyerFactoryT &keyer_factory,
-			const AggregatorT &aggregator)
+		inline std::shared_ptr< const table<T, C> > group_by(const table<T, C> &underlying,
+			const KeyerFactoryT &keyer_factory, const AggregatorT &aggregator)
 		{	return group_by<T, C>(underlying, keyer_factory, C(), aggregator);	}
+
+
+		template <typename Keyer1T, typename Keyer2T, typename Table1T, typename Table2T>
+		std::shared_ptr< const table< joined_record<Table1T, Table2T> > > join(const Table1T &left, const Table2T &right)
+		{
+			typedef joined_record<Table1T, Table2T> value_type;
+			typedef table<value_type> joined_table_t;
+
+			auto joined = std::make_shared<joined_table_t>();
+			auto lkeyer = Keyer1T();
+			auto rkeyer = Keyer2T();
+			auto &rindex = multi_index(right, rkeyer);
+
+			for (auto i = left.begin(); i != left.end(); ++i)
+			{
+				for (auto j = rindex.equal_range(lkeyer(*i)); j.first != j.second; ++j.first)
+				{
+					auto r = joined->create();
+
+					*r = value_type(i, j.first.underlying());
+					r.commit();
+				}
+			}
+
+			return joined;
+		}
 	}
 }

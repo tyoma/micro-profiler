@@ -146,6 +146,10 @@ namespace micro_profiler
 			typedef const T &reference;
 
 		public:
+			const_iterator()
+				: iterator_base(0), _container(nullptr)
+			{	}
+
 			reference operator *() const
 			{	return (*_container)[this->get_index()];	}
 

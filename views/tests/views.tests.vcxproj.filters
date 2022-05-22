@@ -8,8 +8,9 @@
     <ClCompile Include="TableTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
     <ClCompile Include="TableSerializationTests.cpp" />
-    <ClCompile Include="AggregatedTableTests.cpp" />
     <ClCompile Include="IntegratedIndexTests.cpp" />
+    <ClCompile Include="AggregationTests.cpp" />
+    <ClCompile Include="JoiningTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -38,14 +39,16 @@
     <ClInclude Include="..\serialization.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\aggregated_table.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\table_events.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\integrated_index.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\transforms.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers.h" />
+    <ClInclude Include="comparisons.h" />
   </ItemGroup>
 </Project>

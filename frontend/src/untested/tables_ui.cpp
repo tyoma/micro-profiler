@@ -33,8 +33,8 @@
 #include <frontend/view_dump.h>
 
 #include <common/configuration.h>
-#include <views/aggregated_table.h>
 #include <views/integrated_index.h>
+#include <views/transforms.h>
 #include <wpl/controls.h>
 #include <wpl/factory.h>
 #include <wpl/layout.h>

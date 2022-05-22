@@ -115,6 +115,9 @@ namespace micro_profiler
 
 			pointer operator ->() const
 			{	return &*static_cast<const base &>(*this)->second;	}
+
+			typename U::const_iterator underlying() const
+			{	return static_cast<const base &>(*this)->second;	}
 		};
 
 

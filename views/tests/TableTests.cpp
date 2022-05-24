@@ -1,5 +1,7 @@
 #include <views/table.h>
 
+#include "helpers.h"
+
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -233,12 +235,16 @@ namespace micro_profiler
 					r3.commit();
 
 					// ACT / ASSERT
+					i = t.begin();
+					++i, ++i;
 					assert_not_equal(t.end(), i);
 					assert_equal(3, (**i).id);
 					assert_equal("amet-dolor", (**i).value);
 					++i;
 					assert_equal(t.end(), i);
 
+					ci = t.begin();
+					++ci, ++ci;
 					assert_not_equal(static_cast<const table_t &>(t).end(), ci);
 					assert_equal(3, (*ci).id);
 					assert_equal("amet-dolor", (*ci).value);
@@ -481,6 +487,133 @@ namespace micro_profiler
 
 					// ASSERT
 					assert_equal(reference2, log);
+				}
+
+
+				test( RemovingItemsSkipsTheFromEnumeration )
+				{
+					typedef table<string> table_t;
+
+					// INIT
+					table_t t;
+
+					add_record(t, "lorem");
+					add_record(t, "ipsum");
+					add_record(t, "amet");
+					add_record(t, "dolor");
+					add_record(t, "foo");
+					add_record(t, "bar");
+
+					auto i = t.begin();
+					auto i1 = (++i, i);
+					auto i3 = (++i, ++i, i);
+
+					// ACT
+					(*i3).remove();
+
+					// ASSERT
+					string reference1[] = {	"lorem", "ipsum", "amet", "foo", "bar",	};
+
+					assert_equal(reference1, t);
+
+					// ACT
+					(*i1).remove();
+
+					// ASSERT
+					string reference2[] = {	"lorem", "amet", "foo", "bar",	};
+
+					assert_equal(reference2, t);
+				}
+
+
+				test( IteratorsArePreservedAfterRemoval )
+				{
+					typedef table<string> table_t;
+					typedef table_t::const_iterator const_iterator;
+
+					// INIT
+					table_t t;
+
+					add_record(t, "lorem");
+					add_record(t, "ipsum");
+					add_record(t, "amet");
+					add_record(t, "dolor");
+					add_record(t, "foo");
+					add_record(t, "bar");
+
+					auto i = t.begin();
+					auto i0 = i;
+					auto i1 = (++i, i);
+					auto i2 = (++i, i);
+					auto i3 = (++i, i);
+					auto i4 = (++i, i);
+					auto i5 = (++i, i);
+
+					// ACT
+					auto r3 = *i3;
+					r3.remove();
+
+					// ASSERT
+					assert_equal("lorem", *(const_iterator)i0);
+					assert_equal("ipsum", *(const_iterator)i1);
+					assert_equal("amet", *(const_iterator)i2);
+					assert_equal("foo", *(const_iterator)i4);
+					assert_equal("bar", *(const_iterator)i5);
+
+					// ACT
+					auto r1 = *i1;
+					r1.remove();
+
+					// ASSERT
+					assert_equal("lorem", *(const_iterator)i0);
+					assert_equal("amet", *(const_iterator)i2);
+					assert_equal("foo", *(const_iterator)i4);
+					assert_equal("bar", *(const_iterator)i5);
+				}
+
+
+				test( RemovalNotificationIsSentBeforeTheRecordIsRemoved )
+				{
+					typedef table<string> table_t;
+					typedef table_t::const_iterator const_iterator;
+
+					// INIT
+					auto called = 0;
+					table_t t;
+					string data[] = {	"lorem", "ipsum", "amet", "dolor", "foo", "bar",	};
+
+					add_records(t, data);
+
+					auto i = t.begin();
+					auto i2 = (++i, ++i, i);
+					auto i5 = (++i, ++i, ++i, i);
+
+					auto c = t.removed += [&] (table_t::iterator i) {
+						assert_equal(i2, i);
+						assert_equal("amet", *(const_iterator)i);
+						called++;
+					};
+
+					// ACT
+					auto r2 = *i2;
+					r2.remove();
+
+					// ASSERT
+					assert_equal(1, called);
+
+					// INIT
+					c = t.removed += [&] (table_t::iterator i) {
+						assert_equal(i5, i);
+						assert_equal("bar", *(const_iterator)i);
+						called++;
+					};
+
+					// ACT
+					auto r5 = *i5;
+					r5.remove();
+
+					// ASSERT
+					assert_equal(2, called);
 				}
 			end_test_suite
 		}

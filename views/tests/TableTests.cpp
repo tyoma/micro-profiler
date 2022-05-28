@@ -62,8 +62,8 @@ namespace micro_profiler
 					// INIT
 					table_t t1([&] {	return AA(100);	}), t2([&] {	return AA(1231);	});
 
-					auto c1 = t1.changed += [] (table_t::iterator, bool) {	assert_is_false(true);	};
-					auto c2 = t2.changed += [] (table_t::iterator, bool) {	assert_is_false(true);	};
+					auto c1 = t1.changed += [] (table_t::const_iterator, bool) {	assert_is_false(true);	};
+					auto c2 = t2.changed += [] (table_t::const_iterator, bool) {	assert_is_false(true);	};
 
 					// ACT
 					auto r1 = t1.create();
@@ -114,10 +114,8 @@ namespace micro_profiler
 					auto idgen = 1;
 					table_t t([&] {	return AA(idgen++);	});
 					vector<table_t::const_iterator> cl;
-					vector<table_t::iterator> l;
-					auto c = t.changed += [&] (table_t::iterator i, bool new_) {
+					auto c = t.changed += [&] (table_t::const_iterator i, bool new_) {
 						cl.push_back(i);
-						l.push_back(i);
 						assert_is_true(new_);
 					};
 
@@ -131,24 +129,16 @@ namespace micro_profiler
 					r2.commit();
 
 					// ASSERT
-					assert_equal(1u, l.size());
+					assert_equal(1u, cl.size());
 					assert_equal(13, (*cl[0]).id);
 					assert_equal("loop", (*cl[0]).value);
-					assert_equal(13, (**l[0]).id);
-					assert_equal("loop", (**l[0]).value);
 
 					// ACT
 					r1.commit();
 					r3.commit();
 
 					// ASSERT
-					assert_equal(3u, l.size());
-					assert_equal(13, (**l[0]).id);
-					assert_equal("loop", (**l[0]).value);
-					assert_equal(17, (**l[1]).id);
-					assert_equal("zooma", (**l[1]).value);
-					assert_equal(19, (**l[2]).id);
-					assert_equal("lasso", (**l[2]).value);
+					assert_equal(3u, cl.size());
 					assert_equal(13, (*cl[0]).id);
 					assert_equal("loop", (*cl[0]).value);
 					assert_equal(17, (*cl[1]).id);
@@ -164,8 +154,8 @@ namespace micro_profiler
 
 					// INIT
 					table_t t([&] {	return AA(0);	});
-					vector<table_t::iterator> l;
-					auto c = t.changed += [&l] (table_t::iterator i, bool) {	l.push_back(i);	};
+					vector<table_t::const_iterator> l;
+					auto c = t.changed += [&l] (table_t::const_iterator i, bool) {	l.push_back(i);	};
 
 					// ACT
 					auto r1 = t.create();
@@ -210,12 +200,12 @@ namespace micro_profiler
 					auto ci = static_cast<const table_t &>(t).begin();
 
 					assert_not_equal(t.end(), i);
-					assert_equal(1, (**i).id);
-					assert_equal("lorem", (**i).value);
+					assert_equal(1, (*i).id);
+					assert_equal("lorem", (*i).value);
 					++i;
 					assert_not_equal(t.end(), i);
-					assert_equal(2, (**i).id);
-					assert_equal("ipsum", (**i).value);
+					assert_equal(2, (*i).id);
+					assert_equal("ipsum", (*i).value);
 					++i;
 					assert_equal(t.end(), i);
 
@@ -238,8 +228,8 @@ namespace micro_profiler
 					i = t.begin();
 					++i, ++i;
 					assert_not_equal(t.end(), i);
-					assert_equal(3, (**i).id);
-					assert_equal("amet-dolor", (**i).value);
+					assert_equal(3, (*i).id);
+					assert_equal("amet-dolor", (*i).value);
 					++i;
 					assert_equal(t.end(), i);
 
@@ -260,7 +250,7 @@ namespace micro_profiler
 					// INIT
 					int idgen = 1;
 					table_t t([&] {	return AA(idgen++);	});
-					vector<table_t::iterator> l;
+					vector<table_t::const_iterator> l;
 
 					auto r1= t.create();
 					r1.commit();
@@ -270,15 +260,15 @@ namespace micro_profiler
 					r3.commit();
 					auto i = t.begin();
 
-					auto c = t.changed += [&] (table_t::iterator i, bool new_) {
+					auto c = t.changed += [&] (table_t::const_iterator i, bool new_) {
 						l.push_back(i);
 						assert_is_false(new_);
 					};
 
 					// INIT / ACT
-					auto mr1 = *i;
+					auto mr1 = t.modify(i);
 					++i, ++i;
-					auto mr3 = *i;
+					auto mr3 = t.modify(i);
 
 					// ACT
 					(*mr3).value = "zubzub";
@@ -287,8 +277,7 @@ namespace micro_profiler
 					// ASSERT
 					assert_equal(1u, l.size());
 					assert_equal(i, l[0]);
-					assert_equal("zubzub", (**l[0]).value);
-					assert_equal("zubzub", (*table_t::const_iterator(l[0])).value);
+					assert_equal("zubzub", (*l[0]).value);
 
 					// ACT
 					(*mr1).value = "testtest";
@@ -297,8 +286,7 @@ namespace micro_profiler
 					// ASSERT
 					assert_equal(2u, l.size());
 					assert_equal(t.begin(), l[1]);
-					assert_equal("testtest", (**l[1]).value);
-					assert_equal("testtest", (*table_t::const_iterator(l[1])).value);
+					assert_equal("testtest", (*l[1]).value);
 				}
 
 
@@ -335,9 +323,7 @@ namespace micro_profiler
 					ci2 = ct2.begin();
 
 					// ASSERT
-					assert_equal(1211, (table1_t::reference)**i1);
 					assert_equal(1211, (table1_t::const_reference)*ci1);
-					assert_equal("1211", (table2_t::reference)**i2);
 					assert_equal("1211", (table2_t::const_reference)*ci2);
 				}
 
@@ -509,7 +495,8 @@ namespace micro_profiler
 					auto i3 = (++i, ++i, i);
 
 					// ACT
-					(*i3).remove();
+					auto r3 = t.modify(i3);
+					r3.remove();
 
 					// ASSERT
 					string reference1[] = {	"lorem", "ipsum", "amet", "foo", "bar",	};
@@ -517,7 +504,8 @@ namespace micro_profiler
 					assert_equal(reference1, t);
 
 					// ACT
-					(*i1).remove();
+					auto r1 = t.modify(i1);
+					r1.remove();
 
 					// ASSERT
 					string reference2[] = {	"lorem", "amet", "foo", "bar",	};
@@ -550,7 +538,7 @@ namespace micro_profiler
 					auto i5 = (++i, i);
 
 					// ACT
-					auto r3 = *i3;
+					auto r3 = t.modify(i3);
 					r3.remove();
 
 					// ASSERT
@@ -561,7 +549,7 @@ namespace micro_profiler
 					assert_equal("bar", *(const_iterator)i5);
 
 					// ACT
-					auto r1 = *i1;
+					auto r1 = t.modify(i1);
 					r1.remove();
 
 					// ASSERT
@@ -588,28 +576,28 @@ namespace micro_profiler
 					auto i2 = (++i, ++i, i);
 					auto i5 = (++i, ++i, ++i, i);
 
-					auto c = t.removed += [&] (table_t::iterator i) {
+					auto c = t.removed += [&] (table_t::const_iterator i) {
 						assert_equal(i2, i);
 						assert_equal("amet", *(const_iterator)i);
 						called++;
 					};
 
 					// ACT
-					auto r2 = *i2;
+					auto r2 = t.modify(i2);
 					r2.remove();
 
 					// ASSERT
 					assert_equal(1, called);
 
 					// INIT
-					c = t.removed += [&] (table_t::iterator i) {
+					c = t.removed += [&] (table_t::const_iterator i) {
 						assert_equal(i5, i);
 						assert_equal("bar", *(const_iterator)i);
 						called++;
 					};
 
 					// ACT
-					auto r5 = *i5;
+					auto r5 = t.modify(i5);
 					r5.remove();
 
 					// ASSERT

@@ -388,7 +388,7 @@ namespace micro_profiler
 						+ make_pair(19, (string)"bar"), (vector< pair<int, string> >(r.first, r.second)));
 
 					// ACT
-					auto tr = *t.begin();
+					auto tr = t.modify(t.begin());
 					(*tr).first = 1910;
 					tr.commit();
 					r = idx.equal_range(1910);

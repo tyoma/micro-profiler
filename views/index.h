@@ -56,7 +56,7 @@ namespace micro_profiler
 			typename U::transacted_record create_record(const key_type &key);
 
 		private:
-			std::unordered_map< key_type, typename U::iterator, hash<key_type> > _index;
+			std::unordered_map< key_type, typename U::const_iterator, hash<key_type> > _index;
 			U &_underlying;
 			const K _keyer;
 			wpl::slot_connection _connections[2];
@@ -126,11 +126,9 @@ namespace micro_profiler
 		inline immutable_unique_index<U, K>::immutable_unique_index(U &underlying, const K &keyer)
 			: _underlying(underlying), _keyer(keyer)
 		{
-			typedef typename U::const_iterator iterator_t;
-
-			auto on_changed = [this] (typename U::iterator record, bool new_) {
+			auto on_changed = [this] (typename U::const_iterator record, bool new_) {
 				if (new_)
-					_index.insert(std::make_pair(_keyer(*iterator_t(record)), record));
+					_index.insert(std::make_pair(_keyer(*record), record));
 			};
 
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
@@ -159,7 +157,7 @@ namespace micro_profiler
 		{
 			const auto i = _index.find(key);
 
-			return i != _index.end() ? *i->second : create_record(key);
+			return i != _index.end() ? _underlying.modify(i->second) : create_record(key);
 		}
 
 		template <typename U, typename K>

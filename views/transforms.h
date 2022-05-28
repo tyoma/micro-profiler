@@ -39,6 +39,9 @@ namespace micro_profiler
 			joined_record() {	}
 			joined_record(typename Table1T::const_iterator left_, typename Table2T::const_iterator right_) : _left(left_), _right(right_) {	}
 
+			typename Table1T::const_iterator left_iterator() const {	return _left;	}
+			typename Table2T::const_iterator right_iterator() const {	return _right;	}
+
 			typename Table1T::const_reference left() const {	return *_left;	}
 			typename Table2T::const_reference right() const {	return *_right;	}
 
@@ -87,13 +90,27 @@ namespace micro_profiler
 		{	return group_by<T, C>(underlying, keyer_factory, C(), aggregator);	}
 
 
+		template <typename IteratorT>
+		struct joined_left_keyer
+		{
+			typedef std::size_t key_type;
+			template <typename T1, typename T2> key_type operator ()(const joined_record<T1, T2> &value) const {	return reinterpret_cast<key_type>(&value.left());	}
+		};
+
+		template <typename IteratorT>
+		struct joined_right_keyer
+		{
+			typedef std::size_t key_type;
+			template <typename T1, typename T2> key_type operator ()(const joined_record<T1, T2> &value) const {	return reinterpret_cast<key_type>(&value.right());	}
+		};
+
 		template <typename Keyer1T, typename Keyer2T, typename Table1T, typename Table2T>
 		std::shared_ptr< const table< joined_record<Table1T, Table2T> > > join(const Table1T &left, const Table2T &right)
 		{
 			typedef joined_record<Table1T, Table2T> value_type;
 			typedef table<value_type> joined_table_t;
 			typedef wpl::slot_connection slot_t;
-			typedef std::tuple<joined_table_t, slot_t, slot_t> composite_t;
+			typedef std::tuple<joined_table_t, slot_t, slot_t, slot_t, slot_t> composite_t;
 
 			const auto composite = std::make_shared<composite_t>();
 			auto &joined = std::get<0>(*composite);
@@ -130,6 +147,26 @@ namespace micro_profiler
 
 			std::get<1>(*composite) = left.changed += add_from_left;
 			std::get<2>(*composite) = right.changed += add_from_right;
+			std::get<3>(*composite) = left.removed += [&joined] (typename Table1T::const_iterator i) {
+				for (auto j = joined.begin(); j != joined.end(); )
+				{
+					auto current = j;
+
+					++j;
+					if (i == (*current).left_iterator())
+						joined.modify(current).remove();
+				}
+			};
+			std::get<4>(*composite) = right.removed += [&joined] (typename Table2T::const_iterator i) {
+				for (auto j = joined.begin(); j != joined.end(); )
+				{
+					auto current = j;
+
+					++j;
+					if (i == (*current).right_iterator())
+						joined.modify(current).remove();
+				}
+			};
 
 			return std::shared_ptr<joined_table_t>(composite, &joined);
 		}

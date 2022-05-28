@@ -61,10 +61,9 @@ namespace micro_profiler
 			typedef typename container_t::iterator base_iterator_type;
 
 		public:
-			typedef typename container_t::const_iterator const_iterator;
+			class const_iterator;
 			typedef const T &const_reference;
 			typedef ConstructorT constructor_type;
-			class iterator;
 			typedef T &reference;
 			class transacted_record;
 			typedef T value_type;
@@ -77,10 +76,9 @@ namespace micro_profiler
 			std::size_t size() const;
 			const_iterator begin() const;
 			const_iterator end() const;
-			iterator begin();
-			iterator end();
 
 			transacted_record create();
+			transacted_record modify(const_iterator item);
 
 			template <typename CompConstructorT>
 			const typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor) const;
@@ -88,14 +86,10 @@ namespace micro_profiler
 			typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor);
 
 		public:
-			mutable wpl::signal<void (iterator irecord, bool new_)> changed;
-			mutable wpl::signal<void (iterator irecord)> removed;
+			mutable wpl::signal<void (const_iterator irecord, bool new_)> changed;
+			mutable wpl::signal<void (const_iterator irecord)> removed;
 			mutable wpl::signal<void ()> cleared;
 			mutable wpl::signal<void ()> invalidate;
-
-		private:
-			typedef unsigned int index_type;
-			class iterator_base;
 
 		private:
 			template <typename CompConstructorT>
@@ -103,32 +97,51 @@ namespace micro_profiler
 
 		private:
 			ConstructorT _constructor;
-			container_t _records;
+			mutable container_t _records;
 			mutable std::unordered_map< typeid_t, std::unique_ptr<table_events> > _indices;
 
 		private:
 			template <typename ArchiveT, typename T2, typename ConstructorT2>
 			friend void serialize(ArchiveT &archive, table<T2, ConstructorT2> &data);
-			friend class iterator;
 		};
 
 		template <typename T, typename C>
-		class table<T, C>::iterator : public base_iterator_type
+		class table<T, C>::const_iterator
 		{
 		public:
-			transacted_record operator *() const;
+			typedef typename table<T, C>::const_reference const_reference;
+			typedef typename base_iterator_type::difference_type difference_type;
+			typedef typename base_iterator_type::iterator_category iterator_category;
+			typedef const typename table<T, C>::value_type *pointer;
+			typedef const_reference reference;
+			typedef typename table<T, C>::value_type value_type;
+
+		public:
+			const_iterator()
+			{	}
+
+			const_reference operator *() const
+			{	return *_underlying;	}
+
+			bool operator !=(const const_iterator &rhs) const
+			{	return _underlying != rhs._underlying;	}
+
+			bool operator ==(const const_iterator &rhs) const
+			{	return _underlying == rhs._underlying;	}
+
+			void operator ++()
+			{	++_underlying;	}
 
 		private:
-			iterator(table &owner, base_iterator_type underlying)
-				: base_iterator_type(underlying), _owner(&owner)
+			const_iterator(base_iterator_type underlying)
+				: _underlying(underlying)
 			{	}
 
 		private:
-			table *_owner;
+			base_iterator_type _underlying;
 
 		private:
 			friend class table;
-			friend class transacted_record;
 		};
 
 		template <typename T, typename C>
@@ -140,7 +153,7 @@ namespace micro_profiler
 			{	}
 
 			T &operator *()
-			{	return *(base_iterator_type)_record;	}
+			{	return *_record;	}
 
 			void commit()
 			{	_table.changed(_record, _new);	}
@@ -152,7 +165,7 @@ namespace micro_profiler
 			}
 
 		private:
-			transacted_record(table &table_, iterator record, bool new_)
+			transacted_record(table &table_, base_iterator_type record, bool new_)
 				: _table(table_), _record(record), _new(new_)
 			{	}
 
@@ -160,11 +173,10 @@ namespace micro_profiler
 
 		private:
 			table &_table;
-			iterator _record;
+			base_iterator_type _record;
 			bool _new;
 
 		private:
-			friend class iterator;
 			friend class table;
 		};
 
@@ -196,19 +208,12 @@ namespace micro_profiler
 		{	return _records.end();	}
 
 		template <typename T, typename C>
-		inline typename table<T, C>::iterator table<T, C>::begin()
-		{	return iterator(*this, _records.begin());	}
-
-		template <typename T, typename C>
-		inline typename table<T, C>::iterator table<T, C>::end()
-		{	return iterator(*this, _records.end());	}
-
-		template <typename T, typename C>
 		inline typename table<T, C>::transacted_record table<T, C>::create()
-		{
-			iterator record(*this, _records.insert(_records.end(), _constructor()));
-			return transacted_record(*this, record, true);
-		}
+		{	return transacted_record(*this, _records.insert(_records.end(), _constructor()), true);	}
+
+		template <typename T, typename C>
+		inline typename table<T, C>::transacted_record table<T, C>::modify(const_iterator item)
+		{	return transacted_record(*this, item._underlying, false);	}
 
 		template <typename T, typename C>
 		template <typename CC>
@@ -240,10 +245,5 @@ namespace micro_profiler
 			inserted.first->second.reset(constructor());
 			return *inserted.first->second;
 		}
-
-
-		template <typename T, typename C>
-		inline typename table<T, C>::transacted_record table<T, C>::iterator::operator *() const
-		{	return transacted_record(*_owner, *this, false);	}
 	}
 }

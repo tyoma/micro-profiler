@@ -208,8 +208,8 @@ namespace micro_profiler
 					auto i2 = t2.begin();
 
 					// ACT
-					auto r1 = *i1;
-					auto r2 = (++i2, *i2);
+					auto r1 = t1.modify(i1);
+					auto r2 = t2.modify((++i2, i2));
 
 					(*r1).first = 18;
 					r1.commit();
@@ -224,6 +224,76 @@ namespace micro_profiler
 					};
 
 					assert_equivalent(reference, *j);
+				}
+
+
+				test( RemovingItemFromEitherSourceTableRemovesCorresponsingCombinations )
+				{
+					typedef pair<int, string> type1_t;
+					typedef tuple<string, double, int> type2_t;
+					typedef table<type1_t> table1_t;
+					typedef table<type2_t> table2_t;
+
+					// INIT
+					table1_t t1;
+					table2_t t2;
+					type1_t data1[] = {
+						type1_t(1, "lorem"),
+						type1_t(2, "lorem"),
+						type1_t(3, "ipsum"),
+						type1_t(4, "amet"),
+					};
+					type2_t data2[] = {
+						type2_t("lorem", 0.71, 11),
+						type2_t("lorem", 0.72, 12),
+						type2_t("dolor", 0.73, 13),
+						type2_t("ipsum", 0.74, 14),
+						type2_t("ipsum", 0.75, 15),
+						type2_t("ipsum", 0.76, 16),
+						type2_t("amet", 0.77, 17),
+					};
+
+					add_records(t1, data1);
+					add_records(t2, data2);
+
+					auto j = join< key_second<type1_t>, key_n<string, 0> >(t1, t2);
+
+					// ACT
+					auto left = t1.begin();
+
+					++left;
+					auto r1 = t1.modify(left);
+					r1.remove();
+
+					// ASSERT
+					pair<type1_t, type2_t> reference1[] = {
+						make_pair(type1_t(1, "lorem"), type2_t("lorem", 0.71, 11)),
+						make_pair(type1_t(1, "lorem"), type2_t("lorem", 0.72, 12)),
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.74, 14)),
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.75, 15)),
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.76, 16)),
+						make_pair(type1_t(4, "amet"), type2_t("amet", 0.77, 17)),
+					};
+
+					assert_equivalent(reference1, *j);
+
+					// ACT
+					auto right = t2.begin();
+
+					++right, ++right, ++right, ++right;
+					auto r2 = t2.modify(right);
+					r2.remove();
+
+					// ASSERT
+					pair<type1_t, type2_t> reference2[] = {
+						make_pair(type1_t(1, "lorem"), type2_t("lorem", 0.71, 11)),
+						make_pair(type1_t(1, "lorem"), type2_t("lorem", 0.72, 12)),
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.74, 14)),
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.76, 16)),
+						make_pair(type1_t(4, "amet"), type2_t("amet", 0.77, 17)),
+					};
+
+					assert_equivalent(reference2, *j);
 				}
 			end_test_suite
 		}

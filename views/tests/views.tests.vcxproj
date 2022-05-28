@@ -58,7 +58,7 @@
     <ClInclude Include="..\table.h" />
     <ClInclude Include="..\index.h" />
     <ClInclude Include="..\ordered.h" />
-    <ClInclude Include="..\table_events.h" />
+    <ClInclude Include="..\table_component.h" />
     <ClInclude Include="comparisons.h" />
     <ClInclude Include="helpers.h" />
   </ItemGroup>

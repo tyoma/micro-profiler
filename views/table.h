@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "table_events.h"
+#include "table_component.h"
 
 #include <common/compiler.h>
 #include <unordered_map>
@@ -78,7 +78,7 @@ namespace micro_profiler
 			const_iterator end() const;
 
 			transacted_record create();
-			transacted_record modify(const_iterator item);
+			transacted_record modify(const_iterator record);
 
 			template <typename CompConstructorT>
 			const typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor) const;
@@ -86,19 +86,19 @@ namespace micro_profiler
 			typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor);
 
 		public:
-			mutable wpl::signal<void (const_iterator irecord, bool new_)> changed;
-			mutable wpl::signal<void (const_iterator irecord)> removed;
+			mutable wpl::signal<void (const_iterator record, bool new_)> changed;
+			mutable wpl::signal<void (const_iterator record)> removed;
 			mutable wpl::signal<void ()> cleared;
 			mutable wpl::signal<void ()> invalidate;
 
 		private:
 			template <typename CompConstructorT>
-			table_events &construct_component(const CompConstructorT &constructor) const;
+			table_component &construct_component(const CompConstructorT &constructor) const;
 
 		private:
 			ConstructorT _constructor;
 			mutable container_t _records;
-			mutable std::unordered_map< typeid_t, std::unique_ptr<table_events> > _indices;
+			mutable std::unordered_map< typeid_t, std::unique_ptr<table_component> > _indices;
 
 		private:
 			template <typename ArchiveT, typename T2, typename ConstructorT2>
@@ -212,8 +212,8 @@ namespace micro_profiler
 		{	return transacted_record(*this, _records.insert(_records.end(), _constructor()), true);	}
 
 		template <typename T, typename C>
-		inline typename table<T, C>::transacted_record table<T, C>::modify(const_iterator item)
-		{	return transacted_record(*this, item._underlying, false);	}
+		inline typename table<T, C>::transacted_record table<T, C>::modify(const_iterator record)
+		{	return transacted_record(*this, record._underlying, false);	}
 
 		template <typename T, typename C>
 		template <typename CC>
@@ -237,7 +237,7 @@ namespace micro_profiler
 
 		template <typename T, typename C>
 		template <typename CC>
-		FORCE_NOINLINE inline table_events &table<T, C>::construct_component(const CC &constructor) const
+		FORCE_NOINLINE inline table_component &table<T, C>::construct_component(const CC &constructor) const
 		{
 			typedef typename component_type<CC>::type component_t;
 			const auto inserted = _indices.emplace(std::make_pair(ctypeid<component_t>(), nullptr));

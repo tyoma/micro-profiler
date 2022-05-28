@@ -39,9 +39,6 @@
     <ClInclude Include="..\serialization.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\table_events.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\integrated_index.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
@@ -50,5 +47,8 @@
     </ClInclude>
     <ClInclude Include="helpers.h" />
     <ClInclude Include="comparisons.h" />
+    <ClInclude Include="..\table_component.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

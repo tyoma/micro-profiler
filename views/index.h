@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "table_events.h"
+#include "table_component.h"
 
 #include <common/compiler.h>
 #include <stdexcept>
@@ -36,7 +36,7 @@ namespace micro_profiler
 		{	};
 
 		template <typename U, typename K>
-		class immutable_unique_index : public table_events
+		class immutable_unique_index : public table_component
 		{
 		public:
 			typedef typename K::key_type key_type;
@@ -64,7 +64,7 @@ namespace micro_profiler
 
 
 		template <typename U, typename K>
-		class immutable_index : public table_events
+		class immutable_index : public table_component
 		{
 		public:
 			class const_iterator;

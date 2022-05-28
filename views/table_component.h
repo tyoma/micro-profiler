@@ -24,9 +24,9 @@ namespace micro_profiler
 {
 	namespace views
 	{
-		struct table_events
+		struct table_component
 		{
-			virtual ~table_events() {	}
+			virtual ~table_component() {	}
 		};
 	}
 }

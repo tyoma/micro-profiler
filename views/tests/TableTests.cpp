@@ -376,14 +376,14 @@ namespace micro_profiler
 
 
 				template <typename TableT>
-				struct component_a : table_events
+				struct component_a : table_component
 				{
 					component_a() {	}
 					component_a(const component_a &) {	assert_is_false(true);	} // A component is always created in-place.
 				};
 
 				template <typename TableT>
-				struct component_b : table_events
+				struct component_b : table_component
 				{
 					component_b() {	}
 					component_b(const component_b &) {	assert_is_false(true);	} // A component is always created in-place.

@@ -93,12 +93,12 @@ namespace micro_profiler
 
 		private:
 			template <typename CompConstructorT>
-			table_component &construct_component(const CompConstructorT &constructor) const;
+			table_component<const_iterator> &construct_component(const CompConstructorT &constructor) const;
 
 		private:
 			ConstructorT _constructor;
 			mutable container_t _records;
-			mutable std::unordered_map< typeid_t, std::unique_ptr<table_component> > _components;
+			mutable std::unordered_map< typeid_t, std::unique_ptr< table_component<const_iterator> > > _components;
 
 		private:
 			template <typename ArchiveT, typename T2, typename ConstructorT2>
@@ -237,7 +237,7 @@ namespace micro_profiler
 
 		template <typename T, typename C>
 		template <typename CC>
-		FORCE_NOINLINE inline table_component &table<T, C>::construct_component(const CC &constructor) const
+		FORCE_NOINLINE inline table_component<typename table<T, C>::const_iterator> &table<T, C>::construct_component(const CC &constructor) const
 		{
 			typedef typename component_type<CC>::type component_t;
 			const auto inserted = _components.emplace(std::make_pair(ctypeid<component_t>(), nullptr));

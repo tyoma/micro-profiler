@@ -376,17 +376,25 @@ namespace micro_profiler
 
 
 				template <typename TableT>
-				struct component_a : table_component
+				struct component_a : table_component<typename TableT::const_iterator>
 				{
 					component_a() {	}
 					component_a(const component_a &) {	assert_is_false(true);	} // A component is always created in-place.
+
+					virtual void changed(typename TableT::const_iterator, bool) override {	}
+					virtual void removed(typename TableT::const_iterator) override {	}
+					virtual void cleared() override {	}
 				};
 
 				template <typename TableT>
-				struct component_b : table_component
+				struct component_b : table_component<typename TableT::const_iterator>
 				{
 					component_b() {	}
 					component_b(const component_b &) {	assert_is_false(true);	} // A component is always created in-place.
+
+					virtual void changed(typename TableT::const_iterator, bool) override {	}
+					virtual void removed(typename TableT::const_iterator) override {	}
+					virtual void cleared() override {	}
 				};
 
 				test( TableComponentIsCreatedOnFirstAccessViaBypassConstructor )

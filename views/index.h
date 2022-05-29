@@ -42,8 +42,23 @@ namespace micro_profiler
 			{	return reinterpret_cast<std::size_t>(&*value);	}
 		};
 
+
+		template <typename IteratorT>
+		class immutable_index_base : public table_component<IteratorT>
+		{
+			virtual void changed(IteratorT /*record*/, bool /*new_*/) override
+			{	}
+
+			virtual void removed(IteratorT /*record*/) override
+			{	}
+
+			virtual void cleared() override
+			{	}
+		};
+
+
 		template <typename U, typename K>
-		class immutable_unique_index : public table_component
+		class immutable_unique_index : public immutable_index_base<typename U::const_iterator>
 		{
 		public:
 			typedef typename K::key_type key_type;
@@ -77,7 +92,7 @@ namespace micro_profiler
 
 
 		template <typename U, typename K>
-		class immutable_index : public table_component
+		class immutable_index : public immutable_index_base<typename U::const_iterator>
 		{
 		public:
 			class const_iterator;

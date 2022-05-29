@@ -35,6 +35,13 @@ namespace micro_profiler
 		struct hash : std::hash<T>
 		{	};
 
+		template <typename T>
+		struct iterator_hash
+		{
+			std::size_t operator ()(T value) const
+			{	return reinterpret_cast<std::size_t>(&*value);	}
+		};
+
 		template <typename U, typename K>
 		class immutable_unique_index : public table_component
 		{
@@ -50,16 +57,22 @@ namespace micro_profiler
 			typename U::transacted_record operator [](const key_type &key);
 
 		private:
+			typedef typename U::const_iterator underlying_iterator;
+			typedef std::unordered_map< key_type, underlying_iterator, hash<key_type> > index_t;
+			typedef std::unordered_map< underlying_iterator, typename index_t::const_iterator, iterator_hash<underlying_iterator> > removal_index_t;
+
+		private:
 			immutable_unique_index(const immutable_unique_index &other);
 			void operator =(const immutable_unique_index &rhs);
 
 			typename U::transacted_record create_record(const key_type &key);
 
 		private:
-			std::unordered_map< key_type, typename U::const_iterator, hash<key_type> > _index;
+			index_t _index;
+			removal_index_t _removal_index;
 			U &_underlying;
 			const K _keyer;
-			wpl::slot_connection _connections[2];
+			wpl::slot_connection _connections[3];
 		};
 
 
@@ -71,7 +84,7 @@ namespace micro_profiler
 			typedef typename K::key_type key_type;
 			typedef std::pair<const_iterator, const_iterator> range_type;
 			typedef typename U::value_type value_type;
-			typedef const value_type &const_reference;
+			typedef typename U::const_reference const_reference;
 
 		public:
 			immutable_index(const U &underlying, const K &keyer = K());
@@ -79,17 +92,20 @@ namespace micro_profiler
 			range_type equal_range(const key_type &key) const;
 
 		private:
-			typedef std::unordered_multimap< key_type, typename U::const_iterator, hash<key_type> > index_t;
+			typedef typename U::const_iterator underlying_iterator;
+			typedef std::unordered_multimap< key_type, underlying_iterator, hash<key_type> > index_t;
+			typedef std::unordered_map< underlying_iterator, typename index_t::const_iterator, iterator_hash<underlying_iterator> > removal_index_t;
 
 		private:
 			immutable_index(const immutable_index &other);
 			void operator =(const immutable_index &rhs);
 
 		private:
-			const U &_underlying;
 			index_t _index;
+			removal_index_t _removal_index;
+			const U &_underlying;
 			const K _keyer;
-			wpl::slot_connection _connections[2];
+			wpl::slot_connection _connections[3];
 		};
 
 		template <typename U, typename K>
@@ -116,7 +132,7 @@ namespace micro_profiler
 			pointer operator ->() const
 			{	return &*static_cast<const base &>(*this)->second;	}
 
-			typename U::const_iterator underlying() const
+			underlying_iterator underlying() const
 			{	return static_cast<const base &>(*this)->second;	}
 		};
 
@@ -126,22 +142,35 @@ namespace micro_profiler
 		inline immutable_unique_index<U, K>::immutable_unique_index(U &underlying, const K &keyer)
 			: _underlying(underlying), _keyer(keyer)
 		{
-			auto on_changed = [this] (typename U::const_iterator record, bool new_) {
+			auto on_changed = [this] (underlying_iterator record, bool new_) {
 				if (new_)
-					_index.insert(std::make_pair(_keyer(*record), record));
+				{
+					auto i = _index.insert(std::make_pair(_keyer(*record), record)).first;
+
+					_removal_index.insert(std::make_pair(record, i));
+				}
 			};
 
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				on_changed(i, true);
 			_connections[0] = underlying.changed += on_changed;
 			_connections[1] = underlying.cleared += [this] {	_index.clear();	};
+			_connections[2] = underlying.removed += [this] (underlying_iterator record) {
+				const auto i = _removal_index.find(record);
+				
+				if (i != _removal_index.end())
+				{
+					_index.erase(i->second);
+					_removal_index.erase(i);
+				}
+			};
 		}
 
 		template <typename U, typename K>
 		inline const typename U::value_type *immutable_unique_index<U, K>::find(const key_type &key) const
 		{
 			const auto i = _index.find(key);
-			return i != _index.end() ? &*typename U::const_iterator(i->second) : nullptr;
+			return i != _index.end() ? &*i->second : nullptr;
 		}
 
 		template <typename U, typename K>
@@ -174,15 +203,28 @@ namespace micro_profiler
 		inline immutable_index<U, K>::immutable_index(const U &underlying, const K &keyer)
 			: _underlying(underlying), _keyer(keyer)
 		{
-			auto on_changed = [this] (typename U::const_iterator record, bool new_) {
+			auto on_changed = [this] (underlying_iterator record, bool new_) {
 				if (new_)
-					_index.insert(std::make_pair(_keyer(*record), record));
+				{
+					auto i = _index.insert(std::make_pair(_keyer(*record), record));
+
+					_removal_index.insert(std::make_pair(record, i));
+				}
 			};
 
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				on_changed(i, true);
 			_connections[0] = underlying.changed += on_changed;
 			_connections[1] = underlying.cleared += [this] {	_index.clear();	};
+			_connections[2] = underlying.removed += [this] (underlying_iterator record) {
+				const auto i = _removal_index.find(record);
+
+				if (i != _removal_index.end())
+				{
+					_index.erase(i->second);
+					_removal_index.erase(i);
+				}
+			};
 		}
 
 		template <typename U, typename K>

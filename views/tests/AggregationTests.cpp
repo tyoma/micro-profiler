@@ -140,7 +140,7 @@ namespace micro_profiler
 				test( OnlyAggregatedRecordsAppearInAggregatedTable )
 				{
 					// INIT
-					table<A, ctor> u;
+					table<A> u;
 
 					// INIT / ACT
 					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
@@ -163,7 +163,7 @@ namespace micro_profiler
 				test( ClearingAnUnderlyingClearsAggregation )
 				{
 					// INIT
-					table<A, ctor> u;
+					table<A> u;
 
 					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
@@ -181,7 +181,7 @@ namespace micro_profiler
 				test( ClearNotificationIsSentUponUnderlyingClear )
 				{
 					// INIT
-					table<A, ctor> u;
+					table<A> u;
 
 					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
@@ -205,7 +205,7 @@ namespace micro_profiler
 				test( InvalidationIsPassedOnWithoutResettingTheAggregate )
 				{
 					// INIT
-					table<A, ctor> u;
+					table<A> u;
 
 					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
@@ -229,12 +229,12 @@ namespace micro_profiler
 				test( ChangedNotificationIsSentUponUnderlyingAddOrChange )
 				{
 					// INIT
-					table<A, ctor> u;
+					table<A> u;
 					vector<bool> sequence;
 					vector<A> sequence_items;
 					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
-					auto c = a->changed += [&] (table<A, ctor>::const_iterator i, bool new_) {
+					auto c = a->changed += [&] (table<A>::const_iterator i, bool new_) {
 						sequence.push_back(new_);
 						sequence_items.push_back(*i);
 					};
@@ -267,7 +267,7 @@ namespace micro_profiler
 				test( AggregatedTableSupportsIndexing )
 				{
 					// INIT
-					table<A, ctor> u;
+					table<A> u;
 					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
 
 					// INIT / ACT

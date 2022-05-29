@@ -98,7 +98,7 @@ namespace micro_profiler
 		private:
 			ConstructorT _constructor;
 			mutable container_t _records;
-			mutable std::unordered_map< typeid_t, std::unique_ptr<table_component> > _indices;
+			mutable std::unordered_map< typeid_t, std::unique_ptr<table_component> > _components;
 
 		private:
 			template <typename ArchiveT, typename T2, typename ConstructorT2>
@@ -220,9 +220,9 @@ namespace micro_profiler
 		inline const typename component_type<CC>::type &table<T, C>::component(const CC &constructor) const
 		{
 			typedef typename component_type<CC>::type component_t;
-			const auto i = _indices.find(ctypeid<component_t>());
+			const auto i = _components.find(ctypeid<component_t>());
 
-			return static_cast<component_t &>(_indices.end() != i ? *i->second : construct_component(constructor));
+			return static_cast<component_t &>(_components.end() != i ? *i->second : construct_component(constructor));
 		}
 
 		template <typename T, typename C>
@@ -230,9 +230,9 @@ namespace micro_profiler
 		inline typename component_type<CC>::type &table<T, C>::component(const CC &constructor)
 		{
 			typedef typename component_type<CC>::type component_t;
-			const auto i = _indices.find(ctypeid<component_t>());
+			const auto i = _components.find(ctypeid<component_t>());
 
-			return static_cast<component_t &>(_indices.end() != i ? *i->second : construct_component(constructor));
+			return static_cast<component_t &>(_components.end() != i ? *i->second : construct_component(constructor));
 		}
 
 		template <typename T, typename C>
@@ -240,7 +240,7 @@ namespace micro_profiler
 		FORCE_NOINLINE inline table_component &table<T, C>::construct_component(const CC &constructor) const
 		{
 			typedef typename component_type<CC>::type component_t;
-			const auto inserted = _indices.emplace(std::make_pair(ctypeid<component_t>(), nullptr));
+			const auto inserted = _components.emplace(std::make_pair(ctypeid<component_t>(), nullptr));
 
 			inserted.first->second.reset(constructor());
 			return *inserted.first->second;

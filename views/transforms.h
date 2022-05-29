@@ -39,15 +39,24 @@ namespace micro_profiler
 			joined_record() {	}
 			joined_record(typename Table1T::const_iterator left_, typename Table2T::const_iterator right_) : _left(left_), _right(right_) {	}
 
-			typename Table1T::const_iterator left_iterator() const {	return _left;	}
-			typename Table2T::const_iterator right_iterator() const {	return _right;	}
-
 			typename Table1T::const_reference left() const {	return *_left;	}
 			typename Table2T::const_reference right() const {	return *_right;	}
 
 		private:
 			typename Table1T::const_iterator _left;
 			typename Table2T::const_iterator _right;
+		};
+
+		struct joined_left_keyer
+		{
+			typedef std::size_t key_type;
+			template <typename T> key_type operator ()(const T &value) const {	return reinterpret_cast<key_type>(&value.left());	}
+		};
+
+		struct joined_right_keyer
+		{
+			typedef std::size_t key_type;
+			template <typename T> key_type operator ()(const T &value) const {	return reinterpret_cast<key_type>(&value.right());	}
 		};
 
 
@@ -58,7 +67,7 @@ namespace micro_profiler
 		{
 			typedef table<T, ConstructorT> aggregated_table_t;
 			typedef wpl::slot_connection slot_t;
-			typedef std::tuple<aggregated_table_t, slot_t, slot_t, slot_t> composite_t;
+			typedef std::tuple<aggregated_table_t, slot_t, slot_t, slot_t, slot_t> composite_t;
 
 			const auto composite = std::make_shared<composite_t>();
 			auto &aggregate = std::get<0>(*composite);
@@ -78,7 +87,17 @@ namespace micro_profiler
 			std::get<2>(*composite) = underlying.changed += [update_record] (typename U::const_iterator r, bool) {
 				update_record(*r);
 			};
-			std::get<3>(*composite) = underlying.invalidate += [&aggregate] {	aggregate.invalidate();	};
+			std::get<3>(*composite) = underlying.removed += [aggregator, ukeyer, &uindex, &aindex] (typename U::const_iterator r) {
+				const auto &key = ukeyer(*r);
+				const auto uitems = uindex.equal_range(key);
+				auto aggregated_record = aindex[key];
+
+				if (uitems.first == uitems.second)
+					aggregated_record.remove();
+				else
+					aggregator(*aggregated_record, uitems.first, uitems.second), aggregated_record.commit();
+			};
+			std::get<4>(*composite) = underlying.invalidate += [&aggregate] {	aggregate.invalidate();	};
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				update_record(*i);
 			return std::shared_ptr<aggregated_table_t>(composite, &aggregate);
@@ -89,20 +108,6 @@ namespace micro_profiler
 			const KeyerFactoryT &keyer_factory, const AggregatorT &aggregator)
 		{	return group_by<T, C>(underlying, keyer_factory, C(), aggregator);	}
 
-
-		template <typename IteratorT>
-		struct joined_left_keyer
-		{
-			typedef std::size_t key_type;
-			template <typename T1, typename T2> key_type operator ()(const joined_record<T1, T2> &value) const {	return reinterpret_cast<key_type>(&value.left());	}
-		};
-
-		template <typename IteratorT>
-		struct joined_right_keyer
-		{
-			typedef std::size_t key_type;
-			template <typename T1, typename T2> key_type operator ()(const joined_record<T1, T2> &value) const {	return reinterpret_cast<key_type>(&value.right());	}
-		};
 
 		template <typename Keyer1T, typename Keyer2T, typename Table1T, typename Table2T>
 		std::shared_ptr< const table< joined_record<Table1T, Table2T> > > join(const Table1T &left, const Table2T &right)
@@ -118,6 +123,8 @@ namespace micro_profiler
 			auto &lindex = multi_index(left, lkeyer);
 			const auto rkeyer = Keyer2T();
 			auto &rindex = multi_index(right, rkeyer);
+			auto &literator_index = multi_index(joined, joined_left_keyer());
+			auto &riterator_index = multi_index(joined, joined_right_keyer());
 
 			auto add_from_left = [&joined, lkeyer, &rindex] (typename Table1T::const_iterator i, bool new_) {
 				if (!new_)
@@ -147,24 +154,22 @@ namespace micro_profiler
 
 			std::get<1>(*composite) = left.changed += add_from_left;
 			std::get<2>(*composite) = right.changed += add_from_right;
-			std::get<3>(*composite) = left.removed += [&joined] (typename Table1T::const_iterator i) {
-				for (auto j = joined.begin(); j != joined.end(); )
+			std::get<3>(*composite) = left.removed += [&joined, &literator_index] (typename Table1T::const_iterator i) {
+				for (auto j = literator_index.equal_range(reinterpret_cast<std::size_t>(&*i)); j.first != j.second; )
 				{
-					auto current = j;
+					auto r = joined.modify(j.first.underlying());
 
-					++j;
-					if (i == (*current).left_iterator())
-						joined.modify(current).remove();
+					++j.first;
+					r.remove();
 				}
 			};
-			std::get<4>(*composite) = right.removed += [&joined] (typename Table2T::const_iterator i) {
-				for (auto j = joined.begin(); j != joined.end(); )
+			std::get<4>(*composite) = right.removed += [&joined, &riterator_index] (typename Table2T::const_iterator i) {
+				for (auto j = riterator_index.equal_range(reinterpret_cast<std::size_t>(&*i)); j.first != j.second; )
 				{
-					auto current = j;
+					auto r = joined.modify(j.first.underlying());
 
-					++j;
-					if (i == (*current).right_iterator())
-						joined.modify(current).remove();
+					++j.first;
+					r.remove();
 				}
 			};
 

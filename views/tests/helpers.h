@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include <utility>
+#include <vector>
 
 namespace micro_profiler
 {
@@ -57,10 +58,15 @@ namespace micro_profiler
 			}
 
 			template <typename TableT, typename ContainerT>
-			inline void add_records(TableT &table_, const ContainerT &objects)
+			inline std::vector<typename TableT::const_iterator> add_records(TableT &table_, const ContainerT &objects)
 			{
+				std::vector<typename TableT::const_iterator> iterators;
+
 				for (auto i = std::begin(objects); i != std::end(objects); ++i)
 					add_record(table_, *i);
+				for (auto i = table_.begin(); i != table_.end(); ++i)
+					iterators.push_back(i);
+				return iterators;
 			}
 		}
 	}

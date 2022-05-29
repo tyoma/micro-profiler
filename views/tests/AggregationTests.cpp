@@ -386,6 +386,80 @@ namespace micro_profiler
 
 					assert_equivalent(reference2, *a);
 				}
+
+
+				test( RemovalOfUnderlyingRecordsUpdatesAggregatedOnes )
+				{
+					// INIT
+					table<another_sneaky_type> u;
+					another_sneaky_type data[] = {
+						{	3, 2, 13	},
+						{	1, 4, 2	},
+						{	2, 6, 3	},
+						{	1, 7, 5	},
+						{	3, 9, 7	},
+						{	91, 9, 7	},
+					};
+					auto a = group_by<A>(u, assymetrical(), default_constructor<A>(), assymetrical());
+					const auto iterators = add_records(u, data);
+
+					// ACT
+					auto r0 = u.modify(iterators[0]);
+					r0.remove();
+
+					// ASSERT
+					A reference1[] = {	A(1, 7), A(2, 3), A(3, 7), A(91, 7),	};
+
+					assert_equivalent(reference1, *a);
+
+					// ACT
+					auto r3 = u.modify(iterators[3]);
+					r3.remove();
+
+					// ASSERT
+					A reference2[] = {	A(1, 2), A(2, 3), A(3, 7), A(91, 7),	};
+
+					assert_equivalent(reference2, *a);
+				}
+
+
+				test( CompleteRemovalOfUnderlyingRecordsRemovesAggregatedOnes )
+				{
+					// INIT
+					table<another_sneaky_type> u;
+					another_sneaky_type data[] = {
+						{	3, 2, 13	},
+						{	1, 4, 2	},
+						{	2, 6, 3	},
+						{	1, 7, 5	},
+						{	3, 9, 7	},
+						{	91, 9, 7	},
+					};
+					auto a = group_by<A>(u, assymetrical(), default_constructor<A>(), assymetrical());
+					const auto iterators = add_records(u, data);
+
+					// ACT
+					auto r0 = u.modify(iterators[0]);
+					r0.remove();
+					auto r3 = u.modify(iterators[3]);
+					r3.remove();
+					auto r4 = u.modify(iterators[4]);
+					r4.remove();
+
+					// ASSERT
+					A reference1[] = {	A(1, 2), A(2, 3), A(91, 7),	};
+
+					assert_equivalent(reference1, *a);
+
+					// ACT
+					auto r1 = u.modify(iterators[1]);
+					r1.remove();
+
+					// ASSERT
+					A reference2[] = {	A(2, 3), A(91, 7),	};
+
+					assert_equivalent(reference2, *a);
+				}
 			end_test_suite
 		}
 	}

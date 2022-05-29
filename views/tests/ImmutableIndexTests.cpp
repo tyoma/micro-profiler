@@ -61,7 +61,7 @@ namespace micro_profiler
 					// INIT
 					unordered_map<int, string> m;
 					vector<unordered_map<int, string>::const_iterator> iterators;
-					const auto N = 16384;
+					const auto N = 4096;
 
 					for (auto n = N; n--; )
 						iterators.push_back(m.insert(make_pair(n, "some long-long string foobar foobar foobar")).first);
@@ -88,7 +88,7 @@ namespace micro_profiler
 					// INIT
 					unordered_multimap<int, string> m;
 					vector<unordered_multimap<int, string>::const_iterator> iterators;
-					const auto N = 16384;
+					const auto N = 4096;
 
 					for (auto n = N; n--; )
 						iterators.push_back(m.insert(make_pair(n, "some long-long string foobar foobar foobar")));

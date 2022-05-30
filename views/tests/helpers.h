@@ -46,15 +46,30 @@ namespace micro_profiler
 				{	return std::get<n>(item);	}
 			};
 
+			template <typename KeyT, int n>
+			struct key_n_gen
+			{
+				typedef KeyT key_type;
+
+				template <typename T>
+				key_type operator ()(const T &item) const
+				{	return std::get<n>(item);	}
+
+				template <typename IndexT, typename T>
+				void operator ()(IndexT &, T &item, const key_type &key) const
+				{	std::get<n>(item) = key;	}
+			};
+
 
 
 			template <typename TableT, typename T>
-			inline void add_record(TableT &table_, const T &object)
+			inline typename TableT::const_iterator add_record(TableT &table_, const T &object)
 			{
 				auto r = table_.create();
 
 				*r = object;
 				r.commit();
+				return r;
 			}
 
 			template <typename TableT, typename ContainerT>
@@ -63,9 +78,7 @@ namespace micro_profiler
 				std::vector<typename TableT::const_iterator> iterators;
 
 				for (auto i = std::begin(objects); i != std::end(objects); ++i)
-					add_record(table_, *i);
-				for (auto i = table_.begin(); i != table_.end(); ++i)
-					iterators.push_back(i);
+					iterators.push_back(add_record(table_, *i));
 				return iterators;
 			}
 		}

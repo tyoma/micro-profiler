@@ -29,9 +29,10 @@ namespace micro_profiler
 		{
 			virtual ~table_component() {	}
 
-			virtual void changed(RecordHandleT record, bool new_) = 0;
-			virtual void removed(RecordHandleT record) = 0;
-			virtual void cleared() = 0;
+			virtual void created(RecordHandleT /*record*/) {	}
+			virtual void modified(RecordHandleT /*record*/) {	}
+			virtual void removed(RecordHandleT /*record*/) {	}
+			virtual void cleared() {	}
 		};
 	}
 }

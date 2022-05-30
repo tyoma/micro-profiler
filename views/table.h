@@ -95,12 +95,23 @@ namespace micro_profiler
 			template <typename CompConstructorT>
 			table_component<const_iterator> &construct_component(const CompConstructorT &constructor) const;
 
+			template <typename CallbackT>
+			void for_each_component(const CallbackT &callback) const;
+			template <typename CallbackT>
+			void for_each_component_reversed(const CallbackT &callback) const;
+
+			void commit_creation(const_iterator record);
+			void commit_modification(const_iterator record);
+			void commit_removal(const_iterator record);
+
 		private:
 			ConstructorT _constructor;
 			mutable container_t _records;
 			mutable std::unordered_map< typeid_t, std::unique_ptr< table_component<const_iterator> > > _components;
+			mutable std::vector<table_component<const_iterator> *> _components_ordered;
 
 		private:
+			friend class transacted_record;
 			template <typename ArchiveT, typename T2, typename ConstructorT2>
 			friend void serialize(ArchiveT &archive, table<T2, ConstructorT2> &data);
 		};
@@ -142,6 +153,7 @@ namespace micro_profiler
 
 		private:
 			friend class table;
+			friend class transacted_record;
 		};
 
 		template <typename T, typename C>
@@ -156,13 +168,13 @@ namespace micro_profiler
 			{	return *_record;	}
 
 			void commit()
-			{	_table.changed(_record, _new);	}
+			{	_new ? _table.commit_creation(_record) : _table.commit_modification(_record);	}
 
 			void remove()
-			{
-				_table.removed(_record);
-				_table._records.erase(_record);
-			}
+			{	_table.commit_removal(_record);	}
+
+			operator typename table<T, C>::const_iterator() const
+			{	return typename table<T, C>::const_iterator(_record);	}
 
 		private:
 			transacted_record(table &table_, base_iterator_type record, bool new_)
@@ -192,6 +204,7 @@ namespace micro_profiler
 		{
 			_records.clear();
 			cleared();
+			for_each_component_reversed([] (table_component<const_iterator> &c) {	c.cleared();	});
 			invalidate();
 		}
 
@@ -240,10 +253,52 @@ namespace micro_profiler
 		FORCE_NOINLINE inline table_component<typename table<T, C>::const_iterator> &table<T, C>::construct_component(const CC &constructor) const
 		{
 			typedef typename component_type<CC>::type component_t;
-			const auto inserted = _components.emplace(std::make_pair(ctypeid<component_t>(), nullptr));
 
-			inserted.first->second.reset(constructor());
-			return *inserted.first->second;
+			const auto pcomponent = constructor();
+			std::unique_ptr<component_t> component(pcomponent);
+			
+			_components_ordered.reserve(_components_ordered.size() + 1u);
+			_components.emplace(std::make_pair(ctypeid<component_t>(), std::move(component)));
+			_components_ordered.push_back(pcomponent);
+			return *pcomponent;
+		}
+
+		template <typename T, typename C>
+		template <typename CallbackT>
+		inline void table<T, C>::for_each_component(const CallbackT &callback) const
+		{
+			for (auto i = _components_ordered.begin(); i != _components_ordered.end(); ++i)
+				callback(**i);
+		}
+
+		template <typename T, typename C>
+		template <typename CallbackT>
+		inline void table<T, C>::for_each_component_reversed(const CallbackT &callback) const
+		{
+			for (auto i = _components_ordered.rbegin(); i != _components_ordered.rend(); ++i)
+				callback(**i);
+		}
+
+		template <typename T, typename C>
+		inline void table<T, C>::commit_creation(const_iterator record)
+		{
+			for_each_component([record] (table_component<const_iterator> &c) {	c.created(record);	});
+			changed(record, true);
+		}
+
+		template <typename T, typename C>
+		inline void table<T, C>::commit_modification(const_iterator record)
+		{
+			for_each_component([record] (table_component<const_iterator> &c) {	c.modified(record);	});
+			changed(record, false);
+		}
+
+		template <typename T, typename C>
+		inline void table<T, C>::commit_removal(const_iterator record)
+		{
+			for_each_component_reversed([record] (table_component<const_iterator> &c) {	c.removed(record);	});
+			removed(record);
+			_records.erase(record._underlying);
 		}
 	}
 }

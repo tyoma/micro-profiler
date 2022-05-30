@@ -115,7 +115,7 @@ namespace micro_profiler
 			typedef joined_record<Table1T, Table2T> value_type;
 			typedef table<value_type> joined_table_t;
 			typedef wpl::slot_connection slot_t;
-			typedef std::tuple<joined_table_t, slot_t, slot_t, slot_t, slot_t> composite_t;
+			typedef std::tuple<joined_table_t, slot_t, slot_t, slot_t, slot_t, slot_t, slot_t> composite_t;
 
 			const auto composite = std::make_shared<composite_t>();
 			auto &joined = std::get<0>(*composite);
@@ -125,7 +125,6 @@ namespace micro_profiler
 			auto &rindex = multi_index(right, rkeyer);
 			auto &literator_index = multi_index(joined, joined_left_keyer());
 			auto &riterator_index = multi_index(joined, joined_right_keyer());
-
 			auto add_from_left = [&joined, lkeyer, &rindex] (typename Table1T::const_iterator i, bool new_) {
 				if (!new_)
 					return;
@@ -137,7 +136,9 @@ namespace micro_profiler
 					r.commit();
 				}
 			};
-			auto add_from_right = [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i, bool new_) {
+
+			std::get<1>(*composite) = left.changed += add_from_left;
+			std::get<2>(*composite) = right.changed += [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i, bool new_) {
 				if (!new_)
 					return;
 				for (auto j = lindex.equal_range(rkeyer(*i)); j.first != j.second; ++j.first)
@@ -148,12 +149,6 @@ namespace micro_profiler
 					r.commit();
 				}
 			};
-
-			for (auto i = left.begin(); i != left.end(); ++i)
-				add_from_left(i, true);
-
-			std::get<1>(*composite) = left.changed += add_from_left;
-			std::get<2>(*composite) = right.changed += add_from_right;
 			std::get<3>(*composite) = left.removed += [&joined, &literator_index] (typename Table1T::const_iterator i) {
 				for (auto j = literator_index.equal_range(reinterpret_cast<std::size_t>(&*i)); j.first != j.second; )
 				{
@@ -172,6 +167,11 @@ namespace micro_profiler
 					r.remove();
 				}
 			};
+			std::get<5>(*composite) = left.cleared += [&joined] {	joined.clear();	};
+			std::get<6>(*composite) = right.cleared += [&joined] {	joined.clear();	};
+
+			for (auto i = left.begin(); i != left.end(); ++i)
+				add_from_left(i, true);
 
 			return std::shared_ptr<joined_table_t>(composite, &joined);
 		}

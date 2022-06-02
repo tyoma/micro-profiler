@@ -69,7 +69,7 @@ namespace micro_profiler
 			typedef T value_type;
 
 		public:
-			table(const ConstructorT &constructor = ConstructorT());
+			explicit table(const ConstructorT &constructor = ConstructorT());
 
 			void clear();
 
@@ -92,6 +92,9 @@ namespace micro_profiler
 			mutable wpl::signal<void ()> invalidate;
 
 		private:
+			table(const table &other);
+			void operator =(const table &rhs);
+
 			template <typename CompConstructorT>
 			table_component<const_iterator> &construct_component(const CompConstructorT &constructor) const;
 
@@ -142,6 +145,9 @@ namespace micro_profiler
 
 			void operator ++()
 			{	++_underlying;	}
+
+			pointer operator ->() const
+			{	return &*_underlying;	}
 
 		private:
 			const_iterator(base_iterator_type underlying)

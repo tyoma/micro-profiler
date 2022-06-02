@@ -361,7 +361,7 @@ namespace micro_profiler
 					const auto i1 = data.insert(data.end(), make_pair(3, "lorem"));
 					const auto i2 = data.insert(data.end(), make_pair(14, "ipsum"));
 					const auto i3 = data.insert(data.end(), make_pair(159, "amet"));
-					const auto i4 = data.insert(data.end(), make_pair(31, "zzzzz"));
+					data.insert(data.end(), make_pair(31, "zzzzz"));
 
 					// ACT
 					idx.created(i3);

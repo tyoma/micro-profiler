@@ -127,9 +127,6 @@ namespace micro_profiler
 					// INIT
 					table_t t1([&] {	return AA(100);	}), t2([&] {	return AA(1231);	});
 
-					auto c1 = t1.changed += [] (table_t::const_iterator, bool) {	assert_is_false(true);	};
-					auto c2 = t2.changed += [] (table_t::const_iterator, bool) {	assert_is_false(true);	};
-
 					// ACT
 					auto r1 = t1.create();
 					auto r2 = t2.create();
@@ -179,10 +176,7 @@ namespace micro_profiler
 					auto idgen = 1;
 					table_t t([&] {	return AA(idgen++);	});
 					vector<table_t::const_iterator> cl;
-					auto c = t.changed += [&] (table_t::const_iterator i, bool new_) {
-						cl.push_back(i);
-						assert_is_true(new_);
-					};
+					auto c = t.created += [&] (table_t::const_iterator i) {	cl.push_back(i);	};
 
 					// ACT
 					auto r1 = t.create();
@@ -220,7 +214,7 @@ namespace micro_profiler
 					// INIT
 					table_t t([&] {	return AA(0);	});
 					vector<table_t::const_iterator> l;
-					auto c = t.changed += [&l] (table_t::const_iterator i, bool) {	l.push_back(i);	};
+					auto c = t.created += [&l] (table_t::const_iterator i) {	l.push_back(i);	};
 
 					// ACT
 					auto r1 = t.create();
@@ -325,10 +319,7 @@ namespace micro_profiler
 					r3.commit();
 					auto i = t.begin();
 
-					auto c = t.changed += [&] (table_t::const_iterator i, bool new_) {
-						l.push_back(i);
-						assert_is_false(new_);
-					};
+					auto c = t.modified += [&] (table_t::const_iterator i) {	l.push_back(i);	};
 
 					// INIT / ACT
 					auto mr1 = t.modify(i);
@@ -774,8 +765,8 @@ namespace micro_profiler
 					vector< tuple<table<string>::const_iterator, event_type, int> > log;
 					
 					// INIT / ACT
-					auto conn = t.changed += [&] (table<string>::const_iterator record, bool new_) {
-						log.push_back(make_tuple(record, new_ ? created_ : modified_, 100));
+					auto conn = t.created += [&] (table<string>::const_iterator record) {
+						log.push_back(make_tuple(record, created_, 100));
 					};
 
 					get_component(t, [&log] {	return new logging_component<table<string>, 0>(log);	});
@@ -813,8 +804,8 @@ namespace micro_profiler
 					auto i1 = add_record(t, "abc");
 
 					// INIT / ACT
-					auto conn = t.changed += [&] (table<string>::const_iterator record, bool new_) {
-						log.push_back(make_tuple(record, new_ ? created_ : modified_, 100));
+					auto conn = t.modified += [&] (table<string>::const_iterator record) {
+						log.push_back(make_tuple(record, modified_, 100));
 					};
 
 					get_component(t, [&log] {	return new logging_component<table<string>, 0>(log);	});

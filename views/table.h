@@ -86,7 +86,8 @@ namespace micro_profiler
 			typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor);
 
 		public:
-			mutable wpl::signal<void (const_iterator record, bool new_)> changed;
+			mutable wpl::signal<void (const_iterator record)> created;
+			mutable wpl::signal<void (const_iterator record)> modified;
 			mutable wpl::signal<void (const_iterator record)> removed;
 			mutable wpl::signal<void ()> cleared;
 			mutable wpl::signal<void ()> invalidate;
@@ -289,14 +290,14 @@ namespace micro_profiler
 		inline void table<T, C>::commit_creation(const_iterator record)
 		{
 			for_each_component([record] (table_component<const_iterator> &c) {	c.created(record);	});
-			changed(record, true);
+			created(record);
 		}
 
 		template <typename T, typename C>
 		inline void table<T, C>::commit_modification(const_iterator record)
 		{
 			for_each_component([record] (table_component<const_iterator> &c) {	c.modified(record);	});
-			changed(record, false);
+			modified(record);
 		}
 
 		template <typename T, typename C>

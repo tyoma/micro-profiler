@@ -63,8 +63,8 @@ namespace micro_profiler
 			const auto ukeyer = keyer_factory(underlying, underlying_key_tag());
 			const auto &uindex = multi_index(underlying, ukeyer);
 			auto &aindex = unique_index(aggregate, keyer_factory(aggregate, aggregated_key_tag()));
-			const auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename U::const_reference value) {
-				const auto &key = ukeyer(value);
+			const auto update_record = [aggregator, ukeyer, &uindex, &aindex] (typename U::const_iterator record) {
+				const auto &key = ukeyer(*record);
 				const auto uitems = uindex.equal_range(key);
 				auto aggregated_record = aindex[key];
 
@@ -73,9 +73,8 @@ namespace micro_profiler
 			};
 
 			connections.push_back(underlying.cleared += [&aggregate] {	aggregate.clear();	});
-			connections.push_back(underlying.changed += [update_record] (typename U::const_iterator r, bool) {
-				update_record(*r);
-			});
+			connections.push_back(underlying.created += update_record);
+			connections.push_back(underlying.modified += update_record);
 			connections.push_back(underlying.removed += [aggregator, ukeyer, &uindex, &aindex] (typename U::const_iterator r) {
 				const auto &key = ukeyer(*r);
 				const auto uitems = uindex.equal_range(key);
@@ -88,7 +87,7 @@ namespace micro_profiler
 			});
 			connections.push_back(underlying.invalidate += [&aggregate] {	aggregate.invalidate();	});
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
-				update_record(*i);
+				update_record(i);
 			return std::shared_ptr<aggregated_table_t>(composite, &aggregate);
 		}
 
@@ -117,9 +116,7 @@ namespace micro_profiler
 			auto &riterator_index = multi_index(joined, [] (const value_type &record) {
 				return reinterpret_cast<std::size_t>(&record.right());
 			});
-			auto add_from_left = [&joined, lkeyer, &rindex] (typename Table1T::const_iterator i, bool new_) {
-				if (!new_)
-					return;
+			auto add_from_left = [&joined, lkeyer, &rindex] (typename Table1T::const_iterator i) {
 				for (auto j = rindex.equal_range(lkeyer(*i)); j.first != j.second; ++j.first)
 				{
 					auto r = joined.create();
@@ -129,10 +126,8 @@ namespace micro_profiler
 				}
 			};
 
-			connections.push_back(left.changed += add_from_left);
-			connections.push_back(right.changed += [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i, bool new_) {
-				if (!new_)
-					return;
+			connections.push_back(left.created += add_from_left);
+			connections.push_back(right.created += [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i) {
 				for (auto j = lindex.equal_range(rkeyer(*i)); j.first != j.second; ++j.first)
 				{
 					auto r = joined.create();
@@ -165,7 +160,7 @@ namespace micro_profiler
 			connections.push_back(right.invalidate += [&joined] {	joined.invalidate();	});
 
 			for (auto i = left.begin(); i != left.end(); ++i)
-				add_from_left(i, true);
+				add_from_left(i);
 
 			return std::shared_ptr<joined_table_t>(composite, &joined);
 		}

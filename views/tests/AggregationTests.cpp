@@ -230,8 +230,12 @@ namespace micro_profiler
 					vector<A> sequence_items;
 					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
-					auto c = a->changed += [&] (table<A>::const_iterator i, bool new_) {
-						sequence.push_back(new_);
+					auto c1 = a->created += [&] (table<A>::const_iterator i) {
+						sequence.push_back(true);
+						sequence_items.push_back(*i);
+					};
+					auto c2 = a->modified += [&] (table<A>::const_iterator i) {
+						sequence.push_back(false);
 						sequence_items.push_back(*i);
 					};
 
@@ -379,6 +383,45 @@ namespace micro_profiler
 
 					// ASSERT
 					A reference2[] = {	A(1, 7), A(2, 3), A(3, 20), A(91, 100),	};
+
+					assert_equivalent(reference2, *a);
+				}
+
+
+				test( ModificationOfUnderlyingRecordsUpdatesAggregatedOnes )
+				{
+					// INIT
+					table<another_sneaky_type> u;
+					another_sneaky_type data[] = {
+						{	3, 2, 13	},
+						{	1, 4, 2	},
+						{	2, 6, 3	},
+						{	1, 7, 5	},
+						{	3, 9, 7	},
+						{	91, 9, 7	},
+					};
+					auto a = group_by<A>(u, assymetrical(), default_constructor<A>(), assymetrical());
+					const auto iterators = add_records(u, data);
+
+					// ACT
+					auto r0 = u.modify(iterators[0]);
+
+					(*r0).c = 10;
+					r0.commit();
+
+					// ASSERT
+					A reference1[] = {	A(1, 7), A(2, 3), A(3, 17), A(91, 7),	};
+
+					assert_equivalent(reference1, *a);
+
+					// ACT
+					auto r1 = u.modify(iterators[1]);
+
+					(*r1).c = 5;
+					r1.commit();
+
+					// ASSERT
+					A reference2[] = {	A(1, 10), A(2, 3), A(3, 17), A(91, 7),	};
 
 					assert_equivalent(reference2, *a);
 				}

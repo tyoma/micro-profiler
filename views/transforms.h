@@ -97,47 +97,28 @@ namespace micro_profiler
 		{	return group_by<T, C>(underlying, keyer_factory, C(), aggregator);	}
 
 
-		template <typename Keyer1T, typename Keyer2T, typename Table1T, typename Table2T>
-		std::shared_ptr< const table< joined_record<Table1T, Table2T> > > join(const Table1T &left, const Table2T &right)
+		template <typename JoinedTableT, typename SideTableT, typename KeyerT, typename IndexT, typename ComposerT,
+			typename JoinedHandleKeyerT, typename HandleKeyerT>
+		inline std::function<void (typename SideTableT::const_iterator record)> maintain_joined(JoinedTableT &joined,
+			std::vector<wpl::slot_connection> &connections, SideTableT &side, const KeyerT &keyer,
+			const IndexT &opposite_side_index, const ComposerT &composer, const JoinedHandleKeyerT &jhkeyer,
+			const HandleKeyerT &hkeyer)
 		{
-			typedef joined_record<Table1T, Table2T> value_type;
-			typedef table<value_type> joined_table_t;
-
-			const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<wpl::slot_connection> > >();
-			auto &joined = std::get<0>(*composite);
-			auto &connections = std::get<1>(*composite);
-			const auto lkeyer = Keyer1T();
-			auto &lindex = multi_index(left, lkeyer);
-			const auto rkeyer = Keyer2T();
-			auto &rindex = multi_index(right, rkeyer);
-			auto &literator_index = multi_index(joined, [] (const value_type &record) {
-				return reinterpret_cast<std::size_t>(&record.left());
-			});
-			auto &riterator_index = multi_index(joined, [] (const value_type &record) {
-				return reinterpret_cast<std::size_t>(&record.right());
-			});
-			auto add_from_left = [&joined, lkeyer, &rindex] (typename Table1T::const_iterator i) {
-				for (auto j = rindex.equal_range(lkeyer(*i)); j.first != j.second; ++j.first)
+			auto &hindex = multi_index(joined, jhkeyer);
+			auto on_create = [&joined, keyer, &opposite_side_index, composer] (typename SideTableT::const_iterator i) {
+				for (auto j = opposite_side_index.equal_range(keyer(*i)); j.first != j.second; ++j.first)
 				{
 					auto r = joined.create();
 
-					*r = value_type(i, j.first.underlying());
+					*r = composer(i, j.first.underlying());
 					r.commit();
 				}
 			};
 
-			connections.push_back(left.created += add_from_left);
-			connections.push_back(right.created += [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i) {
-				for (auto j = lindex.equal_range(rkeyer(*i)); j.first != j.second; ++j.first)
-				{
-					auto r = joined.create();
-
-					*r = value_type(j.first.underlying(), i);
-					r.commit();
-				}
-			});
-			connections.push_back(left.removed += [&joined, &literator_index] (typename Table1T::const_iterator i) {
-				for (auto j = literator_index.equal_range(reinterpret_cast<std::size_t>(&*i)); j.first != j.second; )
+			connections.push_back(side.created += on_create);
+			// TODO: add handling of 'side.modified' notification here
+			connections.push_back(side.removed += [&joined, hkeyer, &hindex] (typename SideTableT::const_iterator i) {
+				for (auto j = hindex.equal_range(hkeyer(i)); j.first != j.second; )
 				{
 					auto r = joined.modify(j.first.underlying());
 
@@ -145,19 +126,39 @@ namespace micro_profiler
 					r.remove();
 				}
 			});
-			connections.push_back(right.removed += [&joined, &riterator_index] (typename Table2T::const_iterator i) {
-				for (auto j = riterator_index.equal_range(reinterpret_cast<std::size_t>(&*i)); j.first != j.second; )
-				{
-					auto r = joined.modify(j.first.underlying());
+			connections.push_back(side.cleared += [&joined] {	joined.clear();	});
+			connections.push_back(side.invalidate += [&joined] {	joined.invalidate();	});
+			return on_create;
+		}
 
-					++j.first;
-					r.remove();
-				}
+		template <typename LeftKeyerT, typename RightKeyerT, typename LeftT, typename RightT>
+		inline std::shared_ptr< const table< joined_record<LeftT, RightT> > > join(const LeftT &left, const RightT &right)
+		{
+			typedef joined_record<LeftT, RightT> value_type;
+			typedef table<value_type> joined_table_t;
+
+			const auto lkeyer = LeftKeyerT();
+			const auto rkeyer = RightKeyerT();
+			const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<wpl::slot_connection> > >();
+			auto &joined = std::get<0>(*composite);
+			auto &connections = std::get<1>(*composite);
+			auto add_from_left = maintain_joined(joined, connections, left, lkeyer, multi_index(right, rkeyer),
+				[] (typename LeftT::const_iterator i, typename RightT::const_iterator j) {
+				return value_type(i, j);
+			}, [] (const value_type &jrecord) {
+				return reinterpret_cast<std::size_t>(&jrecord.left());
+			}, [] (typename LeftT::const_iterator record) {
+				return reinterpret_cast<std::size_t>(&*record);
 			});
-			connections.push_back(left.cleared += [&joined] {	joined.clear();	});
-			connections.push_back(right.cleared += [&joined] {	joined.clear();	});
-			connections.push_back(left.invalidate += [&joined] {	joined.invalidate();	});
-			connections.push_back(right.invalidate += [&joined] {	joined.invalidate();	});
+
+			maintain_joined(joined, connections, right, rkeyer, multi_index(left, lkeyer),
+				[] (typename RightT::const_iterator i, typename LeftT::const_iterator j) {
+				return value_type(j, i);
+			}, [] (const value_type &jrecord) {
+				return reinterpret_cast<std::size_t>(&jrecord.right());
+			}, [] (typename RightT::const_iterator record) {
+				return reinterpret_cast<std::size_t>(&*record);
+			});
 
 			for (auto i = left.begin(); i != left.end(); ++i)
 				add_from_left(i);

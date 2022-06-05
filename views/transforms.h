@@ -42,19 +42,11 @@ namespace micro_profiler
 			typename Table1T::const_reference left() const {	return *_left;	}
 			typename Table2T::const_reference right() const {	return *_right;	}
 
+			operator typename Table1T::const_reference() const {	return *_left;	}
+
 		private:
 			typename Table1T::const_iterator _left;
 			typename Table2T::const_iterator _right;
-		};
-
-		struct joined_left_keyer
-		{
-			template <typename T> std::size_t operator ()(const T &value) const {	return reinterpret_cast<std::size_t>(&value.left());	}
-		};
-
-		struct joined_right_keyer
-		{
-			template <typename T> std::size_t operator ()(const T &value) const {	return reinterpret_cast<std::size_t>(&value.right());	}
 		};
 
 
@@ -64,11 +56,10 @@ namespace micro_profiler
 			const KeyerFactoryT &keyer_factory, const ConstructorT &/*constructor*/, const AggregatorT &aggregator)
 		{
 			typedef table<T, ConstructorT> aggregated_table_t;
-			typedef wpl::slot_connection slot_t;
-			typedef std::tuple<aggregated_table_t, slot_t, slot_t, slot_t, slot_t> composite_t;
 
-			const auto composite = std::make_shared<composite_t>();
+			const auto composite = std::make_shared< std::tuple< aggregated_table_t, std::vector<wpl::slot_connection> > >();
 			auto &aggregate = std::get<0>(*composite);
+			auto &connections = std::get<1>(*composite);
 			const auto ukeyer = keyer_factory(underlying, underlying_key_tag());
 			const auto &uindex = multi_index(underlying, ukeyer);
 			auto &aindex = unique_index(aggregate, keyer_factory(aggregate, aggregated_key_tag()));
@@ -81,11 +72,11 @@ namespace micro_profiler
 				aggregated_record.commit();
 			};
 
-			std::get<1>(*composite) = underlying.cleared += [&aggregate] {	aggregate.clear();	};
-			std::get<2>(*composite) = underlying.changed += [update_record] (typename U::const_iterator r, bool) {
+			connections.push_back(underlying.cleared += [&aggregate] {	aggregate.clear();	});
+			connections.push_back(underlying.changed += [update_record] (typename U::const_iterator r, bool) {
 				update_record(*r);
-			};
-			std::get<3>(*composite) = underlying.removed += [aggregator, ukeyer, &uindex, &aindex] (typename U::const_iterator r) {
+			});
+			connections.push_back(underlying.removed += [aggregator, ukeyer, &uindex, &aindex] (typename U::const_iterator r) {
 				const auto &key = ukeyer(*r);
 				const auto uitems = uindex.equal_range(key);
 				auto aggregated_record = aindex[key];
@@ -94,8 +85,8 @@ namespace micro_profiler
 					aggregated_record.remove();
 				else
 					aggregator(*aggregated_record, uitems.first, uitems.second), aggregated_record.commit();
-			};
-			std::get<4>(*composite) = underlying.invalidate += [&aggregate] {	aggregate.invalidate();	};
+			});
+			connections.push_back(underlying.invalidate += [&aggregate] {	aggregate.invalidate();	});
 			for (auto i = underlying.begin(); i != underlying.end(); ++i)
 				update_record(*i);
 			return std::shared_ptr<aggregated_table_t>(composite, &aggregate);
@@ -112,17 +103,20 @@ namespace micro_profiler
 		{
 			typedef joined_record<Table1T, Table2T> value_type;
 			typedef table<value_type> joined_table_t;
-			typedef wpl::slot_connection slot_t;
-			typedef std::tuple<joined_table_t, slot_t, slot_t, slot_t, slot_t, slot_t, slot_t> composite_t;
 
-			const auto composite = std::make_shared<composite_t>();
+			const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<wpl::slot_connection> > >();
 			auto &joined = std::get<0>(*composite);
+			auto &connections = std::get<1>(*composite);
 			const auto lkeyer = Keyer1T();
 			auto &lindex = multi_index(left, lkeyer);
 			const auto rkeyer = Keyer2T();
 			auto &rindex = multi_index(right, rkeyer);
-			auto &literator_index = multi_index(joined, joined_left_keyer());
-			auto &riterator_index = multi_index(joined, joined_right_keyer());
+			auto &literator_index = multi_index(joined, [] (const value_type &record) {
+				return reinterpret_cast<std::size_t>(&record.left());
+			});
+			auto &riterator_index = multi_index(joined, [] (const value_type &record) {
+				return reinterpret_cast<std::size_t>(&record.right());
+			});
 			auto add_from_left = [&joined, lkeyer, &rindex] (typename Table1T::const_iterator i, bool new_) {
 				if (!new_)
 					return;
@@ -135,8 +129,8 @@ namespace micro_profiler
 				}
 			};
 
-			std::get<1>(*composite) = left.changed += add_from_left;
-			std::get<2>(*composite) = right.changed += [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i, bool new_) {
+			connections.push_back(left.changed += add_from_left);
+			connections.push_back(right.changed += [&joined, rkeyer, &lindex] (typename Table2T::const_iterator i, bool new_) {
 				if (!new_)
 					return;
 				for (auto j = lindex.equal_range(rkeyer(*i)); j.first != j.second; ++j.first)
@@ -146,8 +140,8 @@ namespace micro_profiler
 					*r = value_type(j.first.underlying(), i);
 					r.commit();
 				}
-			};
-			std::get<3>(*composite) = left.removed += [&joined, &literator_index] (typename Table1T::const_iterator i) {
+			});
+			connections.push_back(left.removed += [&joined, &literator_index] (typename Table1T::const_iterator i) {
 				for (auto j = literator_index.equal_range(reinterpret_cast<std::size_t>(&*i)); j.first != j.second; )
 				{
 					auto r = joined.modify(j.first.underlying());
@@ -155,8 +149,8 @@ namespace micro_profiler
 					++j.first;
 					r.remove();
 				}
-			};
-			std::get<4>(*composite) = right.removed += [&joined, &riterator_index] (typename Table2T::const_iterator i) {
+			});
+			connections.push_back(right.removed += [&joined, &riterator_index] (typename Table2T::const_iterator i) {
 				for (auto j = riterator_index.equal_range(reinterpret_cast<std::size_t>(&*i)); j.first != j.second; )
 				{
 					auto r = joined.modify(j.first.underlying());
@@ -164,9 +158,11 @@ namespace micro_profiler
 					++j.first;
 					r.remove();
 				}
-			};
-			std::get<5>(*composite) = left.cleared += [&joined] {	joined.clear();	};
-			std::get<6>(*composite) = right.cleared += [&joined] {	joined.clear();	};
+			});
+			connections.push_back(left.cleared += [&joined] {	joined.clear();	});
+			connections.push_back(right.cleared += [&joined] {	joined.clear();	});
+			connections.push_back(left.invalidate += [&joined] {	joined.invalidate();	});
+			connections.push_back(right.invalidate += [&joined] {	joined.invalidate();	});
 
 			for (auto i = left.begin(); i != left.end(); ++i)
 				add_from_left(i, true);

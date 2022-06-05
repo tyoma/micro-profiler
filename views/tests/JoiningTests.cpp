@@ -339,6 +339,85 @@ namespace micro_profiler
 					// ASSERT
 					assert_equal(j->end(), j->begin());
 				}
+
+
+				test( InvalidationsArePassedOnToAJoinedTable )
+				{
+					typedef tuple<string, double, int> type1_t;
+					typedef pair<int, string> type2_t;
+					typedef table<type1_t> table1_t;
+					typedef table<type2_t> table2_t;
+
+					// INIT
+					table1_t t1;
+					table2_t t2;
+					auto j = join<key_n<2>, key_first>(t1, t2);
+					auto invalidations = 0;
+					auto conn = j->invalidate += [&] {	invalidations++;	};
+
+					// ACT
+					t1.invalidate();
+
+					// ASSERT
+					assert_equal(1, invalidations);
+
+					// ACT
+					t2.invalidate();
+					t1.invalidate();
+
+					// ASSERT
+					assert_equal(3, invalidations);
+				}
+
+
+				test( JoinedTableValueCanBeCastedToLeftTableValue )
+				{
+					typedef tuple<string, double, int> type1_t;
+					typedef pair<int, string> type2_t;
+					typedef table<type1_t> table1_t;
+					typedef table<type2_t> table2_t;
+
+					// INIT
+					table1_t t1;
+					table2_t t2;
+					type1_t data1[] = {
+						type1_t("lorem", 0.71, 3),
+						type1_t("lorem", 0.72, 3),
+						type1_t("dolor", 0.73, 1),
+					};
+					type2_t data2[] = {
+						type2_t(1, "lorem"),
+						type2_t(1, "amet"),
+						type2_t(3, "ipsum"),
+						type2_t(0, "dolor"),
+					};
+					auto j1 = join<key_n<2>, key_first>(t1, t2);
+					auto j2 = join< key_first, key_n<2> >(t2, t1);
+
+					add_records(t1, data1);
+					add_records(t2, data2);
+
+					// ACT / ASSERT
+					type1_t reference1[] = {
+						type1_t("lorem", 0.71, 3),
+						type1_t("lorem", 0.72, 3),
+						type1_t("dolor", 0.73, 1),
+						type1_t("dolor", 0.73, 1),
+					};
+					type2_t reference2[] = {
+						type2_t(1, "lorem"),
+						type2_t(1, "amet"),
+						type2_t(3, "ipsum"),
+						type2_t(3, "ipsum"),
+					};
+
+					vector<type1_t> collected1;
+					for (auto i = j1->begin(); i != j1->end(); ++i)
+						collected1.push_back(*i);
+
+					assert_equivalent(reference1, collected1);
+					assert_equivalent(reference2, vector<type2_t>(j2->begin(), j2->end()));
+				}
 			end_test_suite
 		}
 	}

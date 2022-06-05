@@ -48,6 +48,7 @@ namespace micro_profiler
 		virtual bool contains(index_type item) const throw() override;
 
 		void add_key(const KeyT &key);
+		const base_t &get_table() const;
 		using base_t::begin;
 		using base_t::end;
 		using wpl::dynamic_set_model::invalidate;
@@ -99,6 +100,7 @@ namespace micro_profiler
 
 		r.commit();
 		this->invalidate(item);
+		base_t::invalidate();
 	}
 
 	template <typename KeyT>
@@ -108,6 +110,7 @@ namespace micro_profiler
 
 		r.remove();
 		this->invalidate(item);
+		base_t::invalidate();
 	}
 
 	template <typename KeyT>
@@ -121,7 +124,12 @@ namespace micro_profiler
 
 		r.commit();
 		this->invalidate(npos());
+		base_t::invalidate();
 	}
+
+	template <typename KeyT>
+	inline const views::table<KeyT> &selection<KeyT>::get_table() const
+	{	return *this;	}
 
 
 	template <typename UnderlyingT>

@@ -86,7 +86,7 @@ namespace micro_profiler
 			a(d.ticks_per_second);
 			a(vector< pair<unsigned, mm> >(d.mappings.begin(), d.mappings.end()));
 			a(vector< pair<unsigned, mi> >(d.modules.begin(), d.modules.end()));
-			a(vector< pair< statistic_types::key, fsd<statistic_types::key> > >(d.statistics.begin(), d.statistics.end()));
+			a(vector< pair< legacy_function_key, fsd<legacy_function_key> > >(d.statistics.begin(), d.statistics.end()));
 			a(vector< pair<unsigned, ti> >(d.threads.begin(), d.threads.end()));
 		}
 

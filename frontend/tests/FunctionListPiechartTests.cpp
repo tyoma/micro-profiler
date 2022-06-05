@@ -34,16 +34,7 @@ namespace micro_profiler
 			template <typename ContainerT>
 			shared_ptr< table_model<id_t> > create_functions_list(const ContainerT &s, timestamp_t ticks_per_second = 500)
 			{
-				for (auto i = begin(s); i != end(s); ++i)
-				{
-					auto r = statistics->create();
-
-					(*r).address = i->first.first;
-					(*r).thread_id = i->first.second;
-					(*r).parent_id = 0;
-					static_cast<function_statistics &>(*r) = i->second;
-					r.commit();
-				}
+				add_records(*statistics, s);
 				return create_statistics_model(statistics, create_context(statistics, 1.0 / ticks_per_second,
 					make_shared<symbol_resolver>(modules, mappings), tmodel, false));
 			}
@@ -53,15 +44,7 @@ namespace micro_profiler
 			{
 				auto local_statistics = make_shared<tables::statistics>();
 
-				for (auto i = begin(s); i != end(s); ++i)
-				{
-					auto r = local_statistics->create();
-
-					(*r).address = i->first.first;
-					(*r).thread_id = i->first.second;
-					static_cast<function_statistics &>(*r) = i->second;
-					r.commit();
-				}
+				add_records(*local_statistics, s);
 				return create_statistics_model(local_statistics, create_context(local_statistics, 1.0 / ticks_per_second,
 					make_shared<symbol_resolver>(modules, mappings), tmodel, false));
 			}
@@ -78,7 +61,7 @@ namespace micro_profiler
 			test( NonNullPiechartModelIsReturnedFromFunctionsList )
 			{
 				// INIT
-				auto fl = create_functions_list(vector< pair<statistic_types::key, function_statistics> >());
+				auto fl = create_functions_list_detached(vector<call_statistics>());
 
 				// ACT
 				shared_ptr< wpl::list_model<double> > m = fl->get_column_series();
@@ -92,10 +75,10 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list(plural
-					+ make_statistics(addr(5), 123, 0, 0, 0, 0)
-					+ make_statistics(addr(17), 127, 0, 0, 0, 0)
-					+ make_statistics(addr(13), 12, 0, 0, 0, 0)
-					+ make_statistics(addr(123), 12000, 0, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 5, 123, 0, 0, 0, 0)
+					+ make_call_statistics(2, 1, 0, 17, 127, 0, 0, 0, 0)
+					+ make_call_statistics(3, 1, 0, 13, 12, 0, 0, 0, 0)
+					+ make_call_statistics(4, 1, 0, 123, 12000, 0, 0, 0, 0));
 				auto m = fl->get_column_series();
 
 				// ACT
@@ -127,10 +110,10 @@ namespace micro_profiler
 
 				auto &by_node = views::unique_index<keyer::callnode>(*statistics);
 				auto fl = create_functions_list(plural
-					+ make_statistics(addr(5), 123, 0, 0, 0, 0)
-					+ make_statistics(addr(17), 127, 0, 0, 0, 0)
-					+ make_statistics(addr(13), 12, 0, 0, 0, 0)
-					+ make_statistics(addr(123), 12000, 0, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 5, 123, 0, 0, 0, 0)
+					+ make_call_statistics(2, 1, 0, 17, 127, 0, 0, 0, 0)
+					+ make_call_statistics(3, 1, 0, 13, 12, 0, 0, 0, 0)
+					+ make_call_statistics(4, 1, 0, 123, 12000, 0, 0, 0, 0));
 				auto m = fl->get_column_series();
 
 				fl->set_order(main_columns::times_called, false);
@@ -159,14 +142,14 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl1 = create_functions_list(plural
-					+ make_statistics(addr(5), 0, 0, 0, 13, 0)
-					+ make_statistics(addr(17), 0, 0, 0, 127, 0)
-					+ make_statistics(addr(13), 0, 0, 0, 12, 0), 500);
+					+ make_call_statistics(1, 1, 0, 5, 0, 0, 0, 13, 0)
+					+ make_call_statistics(2, 1, 0, 17, 0, 0, 0, 127, 0)
+					+ make_call_statistics(3, 1, 0, 13, 0, 0, 0, 12, 0), 500);
 				auto fl2 = create_functions_list_detached(plural
-					+ make_statistics(addr(5), 0, 0, 0, 13, 0)
-					+ make_statistics(addr(17), 0, 0, 0, 127, 0)
-					+ make_statistics(addr(13), 0, 0, 0, 12, 0)
-					+ make_statistics(addr(123), 0, 0, 0, 12000, 0), 100);
+					+ make_call_statistics(1, 1, 0, 5, 0, 0, 0, 13, 0)
+					+ make_call_statistics(2, 1, 0, 17, 0, 0, 0, 127, 0)
+					+ make_call_statistics(3, 1, 0, 13, 0, 0, 0, 12, 0)
+					+ make_call_statistics(4, 1, 0, 123, 0, 0, 0, 12000, 0), 100);
 
 				auto m1 = fl1->get_column_series();
 				auto m2 = fl2->get_column_series();
@@ -192,13 +175,13 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl1 = create_functions_list_detached(plural
-					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
-					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 500);
+					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16, 14)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130, 128), 500);
 				auto m1 = fl1->get_column_series();
 
 				auto fl2 = create_functions_list_detached(plural
-					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
-					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 1000);
+					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16, 14)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130, 128), 1000);
 				auto m2 = fl2->get_column_series();
 
 				// ACT
@@ -247,8 +230,8 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list_detached(plural
-					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
-					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 500);
+					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16, 14)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130, 128), 500);
 				auto m = fl->get_column_series();
 
 				// ACT / ASSERT
@@ -265,8 +248,8 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list_detached(plural
-					+ make_statistics(addr(5), 0, 0, 15, 16, 0)
-					+ make_statistics(addr(17), 0, 0, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 5, 0, 0, 15, 16, 0)
+					+ make_call_statistics(2, 1, 0, 17, 0, 0, 0, 0, 0));
 				auto m = fl->get_column_series();
 
 				// ACT
@@ -289,8 +272,8 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list_detached(plural
-					+ make_statistics(addr(5), 100, 0, 15, 16, 14)
-					+ make_statistics(addr(17), 1000, 0, 120, 130, 128), 500);
+					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16, 14)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130, 128), 500);
 				auto m = fl->get_column_series();
 				auto invalidated_count = 0;
 				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);

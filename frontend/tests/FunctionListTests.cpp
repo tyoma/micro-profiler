@@ -94,31 +94,11 @@ namespace micro_profiler
 				return table_model_base::npos();
 			}
 
-			template <typename ContainerT>
-			void append(tables::statistics &statistics, const ContainerT &items, id_t parent_id = 0)
-			{
-				auto &by_node = views::unique_index<keyer::callnode>(statistics);
-
-				for (auto i = begin(items); i != end(items); ++i)
-				{
-					auto r = by_node[call_node_key(i->first.second, parent_id, i->first.first)];
-
-					static_cast<function_statistics &>(*r) = i->second;
-					r.commit();
-				}
-			}
-
 			shared_ptr<tables::statistics> make_table(const vector<call_statistics> &from)
 			{
 				const auto table = make_shared<tables::statistics>();
 
-				for (auto i = from.begin(); i != from.end(); ++i)
-				{
-					auto r = table->create();
-
-					*r = *i;
-					r.commit();
-				}
+				add_records(*table, from);
 				return table;
 			}
 		}
@@ -156,9 +136,9 @@ namespace micro_profiler
 				// INIT
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1.0, resolver, tmodel, false));
 
-				append(*statistics, plural
-					+ make_statistics(addr(1123), 19, 0, 0, 0, 1)
-					+ make_statistics(addr(2234), 29, 0, 0, 0, 1));
+				add_records(*statistics, plural
+					+ make_call_statistics(1, 1, 0, 1123, 19, 0, 0, 0, 1)
+					+ make_call_statistics(2, 1, 0, 2234, 29, 0, 0, 0, 1));
 
 				// ACT / ASSERT
 				assert_equal(0u, fl->get_count());
@@ -170,8 +150,8 @@ namespace micro_profiler
 				assert_equal(2u, fl->get_count());
 
 				// ACT
-				append(*statistics, plural
-					+ make_statistics(addr(7234), 10, 1, 1, 1, 2));
+				add_records(*statistics, plural
+					+ make_call_statistics(3, 1, 0, 7234, 10, 1, 1, 1, 2));
 				statistics->invalidate();
 
 				// ASSERT
@@ -189,36 +169,35 @@ namespace micro_profiler
 			{
 				// INIT
 				unsigned columns[] = {	main_columns::name, main_columns::inclusive, main_columns::exclusive, main_columns::inclusive_avg, main_columns::exclusive_avg, main_columns::max_time,	};
-				auto functions = plural
+
+				add_records(*statistics, plural
 					// ~ ns
-					+ make_statistics(addr(0x45Eu), 1, 0, 31, 29, 29)
-					+ make_statistics(addr(0x7C6u), 1, 0, 9994, 9994, 9994)
+					+ make_call_statistics(1, 1, 0, 0x45Eu, 1, 0, 31, 29, 29)
+					+ make_call_statistics(2, 1, 0, 0x7C6u, 1, 0, 9994, 9994, 9994)
 
 					// >= 1us
-					+ make_statistics(addr(0x7D0u), 1, 0, 9996, 9996, 9996)
-					+ make_statistics(addr(0x8B5u), 1, 0, 45340, 36666, 36666)
-					+ make_statistics(addr(0xBAEu), 1, 0, 9994000, 9994000, 9994000)
+					+ make_call_statistics(3, 1, 0, 0x7D0u, 1, 0, 9996, 9996, 9996)
+					+ make_call_statistics(4, 1, 0, 0x8B5u, 1, 0, 45340, 36666, 36666)
+					+ make_call_statistics(5, 1, 0, 0xBAEu, 1, 0, 9994000, 9994000, 9994000)
 
 					// >= 1ms
-					+ make_statistics(addr(0xBB8u), 1, 0, 9996000, 9996000, 9996000)
-					+ make_statistics(addr(0xC2Eu), 1, 0, 33450030, 32333333, 32333333)
-					+ make_statistics(addr(0xF96u), 1, 0, 9994000000, 9994000000, 9994000000)
+					+ make_call_statistics(6, 1, 0, 0xBB8u, 1, 0, 9996000, 9996000, 9996000)
+					+ make_call_statistics(7, 1, 0, 0xC2Eu, 1, 0, 33450030, 32333333, 32333333)
+					+ make_call_statistics(8, 1, 0, 0xF96u, 1, 0, 9994000000, 9994000000, 9994000000)
 
 					// >= 1s
-					+ make_statistics(addr(0xFA0u), 1, 0, 9996000000, 9996000000, 9996000000)
-					+ make_statistics(addr(0x15AEu), 1, 0, 65450031030, 23470030000, 23470030000)
-					+ make_statistics(addr(0x137Eu), 1, 0, 9994000000000, 9994000000000, 9994000000000)
+					+ make_call_statistics(9, 1, 0, 0xFA0u, 1, 0, 9996000000, 9996000000, 9996000000)
+					+ make_call_statistics(10, 1, 0, 0x15AEu, 1, 0, 65450031030, 23470030000, 23470030000)
+					+ make_call_statistics(11, 1, 0, 0x137Eu, 1, 0, 9994000000000, 9994000000000, 9994000000000)
 
 					// >= 1000s
-					+ make_statistics(addr(0x1388u), 1, 0, 9996000000000, 9996000000000, 9996000000000)
-					+ make_statistics(addr(0x11C6u), 1, 0, 65450031030567, 23470030000987, 23470030000987)
-					+ make_statistics(addr(0x1766u), 1, 0, 99990031030567, 99990030000987, 99990030000987)
+					+ make_call_statistics(12, 1, 0, 0x1388u, 1, 0, 9996000000000, 9996000000000, 9996000000000)
+					+ make_call_statistics(13, 1, 0, 0x11C6u, 1, 0, 65450031030567, 23470030000987, 23470030000987)
+					+ make_call_statistics(14, 1, 0, 0x1766u, 1, 0, 99990031030567, 99990030000987, 99990030000987)
 				
 					// >= 10000s
-					+ make_statistics(addr(0x1770u), 1, 0, 99999031030567, 99999030000987, 99999030000987)
-					+ make_statistics(addr(0x1A05u), 1, 0, 65450031030567000, 23470030000987000, 23470030000987000);
-
-				append(*statistics, functions);
+					+ make_call_statistics(15, 1, 0, 0x1770u, 1, 0, 99999031030567, 99999030000987, 99999030000987)
+					+ make_call_statistics(16, 1, 0, 0x1A05u, 1, 0, 65450031030567000, 23470030000987000, 23470030000987000));
 
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1e-10, resolver, tmodel, false));
 
@@ -323,13 +302,11 @@ namespace micro_profiler
 			test( SelectionModelIsFunctionalAfterParentModelIsDestroyed )
 			{
 				// INIT
-				auto functions = plural
-					+ make_statistics(addr(1990u), 15, 0, 31, 29, 3)
-					+ make_statistics(addr(2000u), 35, 1, 453, 366, 4)
-					+ make_statistics(addr(2990u), 2, 2, 33450030, 32333333, 5)
-					+ make_statistics(addr(3000u), 15233, 3, 65460, 13470, 6);
-
-				append(*statistics, functions);
+				add_records(*statistics, plural
+					+ make_call_statistics(1, 1, 0, 1990u, 15, 0, 31, 29, 3)
+					+ make_call_statistics(2, 1, 0, 2000u, 35, 1, 453, 366, 4)
+					+ make_call_statistics(3, 1, 0, 2990u, 2, 2, 33450030, 32333333, 5)
+					+ make_call_statistics(4, 1, 0, 3000u, 15233, 3, 65460, 13470, 6));
 
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
@@ -352,13 +329,12 @@ namespace micro_profiler
 			{
 				// INIT
 				invalidation_tracer ih;
-				auto functions = plural
-					+ make_statistics(addr(1990u), 15, 0, 31, 29, 3)
-					+ make_statistics(addr(2000u), 35, 1, 453, 366, 4)
-					+ make_statistics(addr(2990u), 2, 2, 33450030, 32333333, 5)
-					+ make_statistics(addr(3000u), 15233, 3, 65460, 13470, 6);
 
-				append(*statistics, functions);
+				add_records(*statistics, plural
+					+ make_call_statistics(1, 1, 0, 1990u, 15, 0, 31, 29, 3)
+					+ make_call_statistics(2, 1, 0, 2000u, 35, 1, 453, 366, 4)
+					+ make_call_statistics(3, 1, 0, 2990u, 2, 2, 33450030, 32333333, 5)
+					+ make_call_statistics(4, 1, 0, 3000u, 15233, 3, 65460, 13470, 6));
 
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 				const auto s = fl->create_selection();
@@ -387,7 +363,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference1[][7] = {
 					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "5s",	},
@@ -414,7 +390,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(2u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference2[][7] = {
 					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "6s"	},
@@ -435,7 +411,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference3[][7] = {
 					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "3s"	},
@@ -456,7 +432,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(4u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference4[][7] = {
 					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "6s"	},
@@ -477,7 +453,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(5u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference5[][2] = {
 					{	"000007C6", "15",	},
@@ -498,7 +474,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(6u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference6[][2] = {
 					{	"00000BAE", "2",	},
@@ -519,7 +495,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(7u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference7[][2] = {
 					{	"000007C6", "15",	},
@@ -540,7 +516,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(8u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference8[][2] = {
 					{	"00000BAE", "2",	},
@@ -561,7 +537,7 @@ namespace micro_profiler
 				
 				// ASSERT
 				assert_equal(9u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference9[][2] = {
 					{	"00000BB8", "15233",	},
@@ -582,7 +558,7 @@ namespace micro_profiler
 				
 				// ASSERT
 				assert_equal(10u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference10[][2] = {
 					{	"00000BAE", "2",	},
@@ -603,7 +579,7 @@ namespace micro_profiler
 				
 				// ASSERT
 				assert_equal(11u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference11[][2] = {
 					{	"000007C6", "15",	},
@@ -624,7 +600,7 @@ namespace micro_profiler
 				
 				// ASSERT
 				assert_equal(12u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference12[][2] = {
 					{	"00000BAE", "2",	},
@@ -645,7 +621,7 @@ namespace micro_profiler
 				
 				// ASSERT
 				assert_equal(13u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference15[][2] = {
 					{	"000007C6", "15",	},
@@ -666,7 +642,7 @@ namespace micro_profiler
 				
 				// ASSERT
 				assert_equal(14u, ih.counts.size());
-				assert_equal(functions.size(), ih.counts.back()); //check what's coming as event arg
+				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
 				string reference16[][2] = {
 					{	"00000BB8", "15233",	},
@@ -688,13 +664,12 @@ namespace micro_profiler
 			{
 				// INIT
 				unsigned columns[] = {	main_columns::name, main_columns::threadid,	};
-				auto functions = plural
-					+ make_statistics(addr(0x1000u, 3), 1, 0, 0, 0, 0)
-					+ make_statistics(addr(0x1010u, 2), 1, 0, 0, 0, 0)
-					+ make_statistics(addr(0x1020u, 7), 1, 0, 0, 0, 0)
-					+ make_statistics(addr(0x1030u, 9), 1, 0, 0, 0, 0);
 
-				append(*statistics, functions);
+				add_records(*statistics, plural
+					+ make_call_statistics(1, 3, 0, 0x1000u, 1, 0, 0, 0, 0)
+					+ make_call_statistics(1, 2, 0, 0x1010u, 1, 0, 0, 0, 0)
+					+ make_call_statistics(1, 7, 0, 0x1020u, 1, 0, 0, 0, 0)
+					+ make_call_statistics(1, 9, 0, 0x1030u, 1, 0, 0, 0, 0));
 
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
@@ -738,14 +713,13 @@ namespace micro_profiler
 				// INIT
 				unsigned columns[] = {	main_columns::times_called,	};
 				invalidation_tracer ih;
-				auto functions = plural
-					+ make_statistics(addr(0x10000u, 0), 1, 0, 0, 0, 0)
-					+ make_statistics(addr(0x10000u, 1), 2, 0, 0, 0, 0)
-					+ make_statistics(addr(0x10000u, 2), 3, 0, 0, 0, 0)
-					+ make_statistics(addr(0x10000u, 3), 4, 0, 0, 0, 0)
-					+ make_statistics(addr(0x10000u, 4), 5, 0, 0, 0, 0);
 
-				append(*statistics, functions);
+				add_records(*statistics, plural
+					+ make_call_statistics(1, 0, 0, 0x10000u, 1, 0, 0, 0, 0)
+					+ make_call_statistics(2, 1, 0, 0x10000u, 2, 0, 0, 0, 0)
+					+ make_call_statistics(3, 2, 0, 0x10000u, 3, 0, 0, 0, 0)
+					+ make_call_statistics(4, 3, 0, 0x10000u, 4, 0, 0, 0, 0)
+					+ make_call_statistics(5, 4, 0, 0x10000u, 5, 0, 0, 0, 0));
 
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 
@@ -781,11 +755,6 @@ namespace micro_profiler
 			test( FunctionListPrintItsContent )
 			{
 				// INIT
-				auto functions = plural
-					+ make_statistics(addr(1990), 15, 0, 31, 29, 2)
-					+ make_statistics(addr(2000), 35, 1, 453, 366, 3)
-					+ make_statistics(addr(2990), 2, 2, 33450030, 32333333, 4);
-
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 				string result;
 
@@ -807,7 +776,10 @@ namespace micro_profiler
 					"\"Inclusive\r\nmaximum/call\"" "\r\n", result);
 
 				// INIT
-				append(*statistics, functions);
+				add_records(*statistics, plural
+					+ make_call_statistics(1, 1, 0, 1990, 15, 0, 31, 29, 2)
+					+ make_call_statistics(2, 1, 0, 2000, 35, 1, 453, 366, 3)
+					+ make_call_statistics(3, 1, 0, 2990, 2, 2, 33450030, 32333333, 4));
 				statistics->invalidate();
 
 				// ACT
@@ -856,10 +828,10 @@ namespace micro_profiler
 			test( TrackableIsUsableOnReleasingModel )
 			{
 				// INIT
-				append(*statistics, plural
-					+ make_statistics(addr(0x2001), 11, 0, 0, 0, 0)
-					+ make_statistics(addr(0x2004), 17, 0, 0, 0, 0)
-					+ make_statistics(addr(0x2008), 18, 0, 0, 0, 0));
+				add_records(*statistics, plural
+					+ make_call_statistics(1, 1, 0, 0x2001, 11, 0, 0, 0, 0)
+					+ make_call_statistics(2, 1, 0, 0x2004, 17, 0, 0, 0, 0)
+					+ make_call_statistics(3, 1, 0, 0x2008, 18, 0, 0, 0, 0));
 
 				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
 

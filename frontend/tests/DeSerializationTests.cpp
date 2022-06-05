@@ -7,6 +7,7 @@
 #include <functional>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
+#include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -32,14 +33,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			typedef std::pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
-			typedef std::pair<function_key, statistic_types_t<function_key>::function_detailed> threaded_addressed_statistics;
-
-			const vector< pair<long_address_t, statistic_types_t<long_address_t>::function_detailed> > empty_functions;
-		}
-
 		begin_test_suite( AdditiveDeSerializationTests )
 			test( DeserializationIntoExistingValuesAddsValuesBase )
 			{

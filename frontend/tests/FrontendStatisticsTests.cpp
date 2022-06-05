@@ -42,8 +42,6 @@ namespace micro_profiler
 			};
 
 			const initialization_data idata = {	"", 1	};
-			const vector< pair<long_address_t, statistic_types::function> > empty_callees;
-			const vector< pair<long_address_t, count_t> > empty_callers;
 
 			template <typename T>
 			function<void (ipc::serializer &s)> format(const T &v)

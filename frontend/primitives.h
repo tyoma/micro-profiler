@@ -27,9 +27,6 @@
 
 namespace micro_profiler
 {
-	typedef std::pair<long_address_t, unsigned int /*threadid*/> function_key;
-	typedef statistic_types_t<function_key> statistic_types;
-
 	struct call_statistics : function_statistics
 	{
 		typedef std::vector<id_t> path_t;

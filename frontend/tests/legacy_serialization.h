@@ -8,6 +8,8 @@ namespace micro_profiler
 	namespace tests
 	{
 		class vector_adapter;
+		typedef std::pair<long_address_t, unsigned> legacy_function_key;
+
 
 		struct file_v3_components
 		{
@@ -24,7 +26,7 @@ namespace micro_profiler
 			timestamp_t ticks_per_second;
 			containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> mappings;
 			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
-			std::vector< std::pair<statistic_types::key, statistic_types::function_detailed> > statistics;
+			std::vector< std::pair<legacy_function_key, statistic_types_t<legacy_function_key>::function_detailed> > statistics;
 			containers::unordered_map<unsigned int, thread_info> threads;
 		};
 

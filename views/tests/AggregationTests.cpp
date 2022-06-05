@@ -78,17 +78,13 @@ namespace micro_profiler
 
 				struct sneaky_keyer_a
 				{
-					typedef int key_type;
-
-					key_type operator ()(const another_sneaky_type &v) const
+					int operator ()(const another_sneaky_type &v) const
 					{	return v.a;	}
 				};
 
 				struct sneaky_keyer_b
 				{
-					typedef int key_type;
-
-					key_type operator ()(const another_sneaky_type &v) const
+					int operator ()(const another_sneaky_type &v) const
 					{	return v.b;	}
 
 					template <typename I>
@@ -116,7 +112,7 @@ namespace micro_profiler
 					table<A, ctor> u;
 
 					// INIT / ACT
-					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
 					// ACT
 					add_record(u, A(1, 3));
@@ -143,7 +139,7 @@ namespace micro_profiler
 					table<A> u;
 
 					// INIT / ACT
-					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
 					// ACT
 					add_record(u, A(3, 9));
@@ -165,7 +161,7 @@ namespace micro_profiler
 					// INIT
 					table<A> u;
 
-					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
 					add_record(u, A(3, 9));
 					add_record(u, A(1, 3));
@@ -183,7 +179,7 @@ namespace micro_profiler
 					// INIT
 					table<A> u;
 
-					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
 					add_record(u, A(3, 9));
 					add_record(u, A(1, 3));
@@ -207,7 +203,7 @@ namespace micro_profiler
 					// INIT
 					table<A> u;
 
-					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
 					add_record(u, A(3, 9));
 					add_record(u, A(1, 3));
@@ -232,7 +228,7 @@ namespace micro_profiler
 					table<A> u;
 					vector<bool> sequence;
 					vector<A> sequence_items;
-					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
 					auto c = a->changed += [&] (table<A>::const_iterator i, bool new_) {
 						sequence.push_back(new_);
@@ -268,10 +264,10 @@ namespace micro_profiler
 				{
 					// INIT
 					table<A> u;
-					auto a = group_by(u, key_factory<key_first<A>>(), aggregate_second());
+					auto a = group_by(u, key_factory<key_first>(), aggregate_second());
 
 					// INIT / ACT
-					const auto &idx = unique_index<key_second<A>>(*a);
+					const auto &idx = unique_index<key_second>(*a);
 
 					add_record(u, A(3, 9));
 					add_record(u, A(1, 3));
@@ -344,12 +340,12 @@ namespace micro_profiler
 					}
 
 					template <typename T>
-					sneaky_keyer_a operator ()(const T &, underlying_key_tag) const
+					sneaky_keyer_a operator ()(T &, underlying_key_tag) const
 					{	return sneaky_keyer_a();	}
 
 					template <typename T>
-					key_first<A> operator ()(const T &, aggregated_key_tag) const
-					{	return key_first<A>();	}
+					key_first operator ()(T &, aggregated_key_tag) const
+					{	return key_first();	}
 				};
 
 				test( AssymetricalAggregationCombinesRecordsIntoADifferentRecordType )

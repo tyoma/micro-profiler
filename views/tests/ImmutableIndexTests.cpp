@@ -124,8 +124,8 @@ namespace micro_profiler
 					data.push_back(make_pair(14, "dolor"));
 
 					// INIT / ACT
-					const index_base< container1, key_first<container1::value_type> > idx1(data, key_first<container1::value_type>());
-					const index_base< container1, key_second<container1::value_type> > idx2(data, key_second<container1::value_type>());
+					const index_base<container1, key_first> idx1(data, key_first());
+					const index_base<container1, key_second> idx2(data, key_second());
 
 					// ACT
 					auto r1 = idx1.equal_range(3);
@@ -173,8 +173,8 @@ namespace micro_profiler
 				{
 					// INIT
 					container1 data;
-					index_base< container1, key_first<container1::value_type> > idx1(data, key_first<container1::value_type>());
-					index_base< container1, key_second<container1::value_type> > idx2(data, key_second<container1::value_type>());
+					index_base<container1, key_first> idx1(data, key_first());
+					index_base<container1, key_second> idx2(data, key_second());
 					container1::const_iterator i[] = {
 						data.insert(data.end(), make_pair(3, "lorem")),
 						data.insert(data.end(), make_pair(14, "ipsum")),
@@ -235,7 +235,7 @@ namespace micro_profiler
 						data.insert(data.end(), make_pair(14, "dolor")),
 						data.insert(data.end(), make_pair(11, "ipsum")),
 					};
-					index_base< container1, key_second<container1::value_type> > idx(data, key_second<container1::value_type>());
+					index_base<container1, key_second> idx(data, key_second());
 
 					// ACT
 					idx.removed(i[3]);
@@ -271,8 +271,8 @@ namespace micro_profiler
 						data.insert(data.end(), make_pair(14, "dolor")),
 						data.insert(data.end(), make_pair(11, "ipsum")),
 					};
-					index_base< container1, key_first<container1::value_type> > idx1(data, key_first<container1::value_type>());
-					index_base< container1, key_second<container1::value_type> > idx2(data, key_second<container1::value_type>());
+					index_base<container1, key_first> idx1(data, key_first());
+					index_base<container1, key_second> idx2(data, key_second());
 
 					// ACT
 					idx1.cleared();
@@ -306,8 +306,8 @@ namespace micro_profiler
 					data.push_back(make_pair(159, "amet"));
 
 					// INIT / ACT
-					const immutable_unique_index< container1, key_first<container1::value_type> > idx1(data);
-					const immutable_unique_index< container1, key_second<container1::value_type> > idx2(data);
+					const immutable_unique_index<container1, key_first> idx1(data);
+					const immutable_unique_index<container1, key_second> idx2(data);
 
 					// ACT / ASSERT
 					assert_equal("lorem", idx1[3].second);
@@ -340,7 +340,7 @@ namespace micro_profiler
 					data.push_back(make_pair(159, "amet"));
 
 					// INIT / ACT
-					const immutable_unique_index< container1, key_first<container1::value_type> > idx(data);
+					const immutable_unique_index<container1, key_first> idx(data);
 
 					// ACT / ASSERT
 					assert_null(idx.find(2));
@@ -356,7 +356,7 @@ namespace micro_profiler
 				{
 					// INIT
 					container1 data;
-					immutable_unique_index< container1, key_first<container1::value_type> > idx(data);
+					immutable_unique_index<container1, key_first> idx(data);
 					const auto &cidx = idx;
 					const auto i1 = data.insert(data.end(), make_pair(3, "lorem"));
 					const auto i2 = data.insert(data.end(), make_pair(14, "ipsum"));
@@ -389,8 +389,8 @@ namespace micro_profiler
 					// INIT
 					table_t data([] {	return make_pair("", 0);	});
 					const table_t &cdata = data;
-					immutable_unique_index< table_t, key_first<table_t::value_type> > idx1(data);
-					immutable_unique_index< table_t, key_second<table_t::value_type> > idx2(data);
+					immutable_unique_index<table_t, key_first> idx1(data);
+					immutable_unique_index<table_t, key_second> idx2(data);
 
 					// ACT
 					table_t::transacted_record r1 = idx1["x"];
@@ -416,7 +416,7 @@ namespace micro_profiler
 				{
 					typedef tuple<int, int, string, int> type_t;
 					typedef table< type_t, function<type_t ()> > table_t;
-					typedef immutable_unique_index< table_t, key_n_gen<int, 1> > index_t;
+					typedef immutable_unique_index< table_t, key_n_gen<1> > index_t;
 
 					// INIT
 					table_t data([] {	return type_t();	});
@@ -446,8 +446,8 @@ namespace micro_profiler
 				test( IndexIsPopulatedOnConstruction )
 				{
 					typedef table< pair<int, string> > table_t;
-					typedef immutable_index< table_t, key_first<table_t::value_type> > index1_t;
-					typedef immutable_index< table_t, key_second<table_t::value_type> > index2_t;
+					typedef immutable_index<table_t, key_first> index1_t;
+					typedef immutable_index<table_t, key_second> index2_t;
 
 					// INIT
 					table_t t;

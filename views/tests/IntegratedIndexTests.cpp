@@ -24,15 +24,12 @@ namespace micro_profiler
 
 				struct key_a
 				{
-					typedef int key_type;
-
 					int operator ()(const A &value) const
 					{	return value.a;	}
 				};
 
 				struct key_c
 				{
-					typedef string key_type;
 					string operator ()(const A &value) const
 					{	return value.c;	}
 				};
@@ -49,8 +46,8 @@ namespace micro_profiler
 					table<A> t3;
 
 					// ACT
-					const immutable_unique_index< table<type_1>, key_first<type_1> > &idx1 = unique_index< key_first<type_1> >(t1);
-					const immutable_index< table<type_1>, key_first<type_1> > &idx2 = multi_index< key_first<type_1> >(t1);
+					const immutable_unique_index<table<type_1>, key_first> &idx1 = unique_index<key_first>(t1);
+					const immutable_index<table<type_1>, key_first> &idx2 = multi_index<key_first>(t1);
 					const immutable_unique_index<table<A>, key_a> &idx3 = unique_index<key_a>(t2);
 					const immutable_index<table<A>, key_a> &idx4 = multi_index<key_a>(t2);
 					const immutable_unique_index<table<A>, key_c> &idx5 = unique_index<key_c>(t2);
@@ -59,8 +56,8 @@ namespace micro_profiler
 					immutable_unique_index<table<A>, key_c> &idx8 = unique_index<key_c>(t3);
 
 					// ACT / ASSERT
-					assert_equal(&idx1, (&unique_index< key_first<type_1> >(t1)));
-					assert_equal(&idx2, (&multi_index< key_first<type_1> >(t1)));
+					assert_equal(&idx1, (&unique_index<key_first>(t1)));
+					assert_equal(&idx2, (&multi_index<key_first>(t1)));
 					assert_equal(&idx3, &unique_index<key_a>(t2));
 					assert_equal(&idx4, &multi_index<key_a>(t2));
 					assert_equal(&idx5, &unique_index<key_c>(t2));

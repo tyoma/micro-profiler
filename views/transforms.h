@@ -49,14 +49,12 @@ namespace micro_profiler
 
 		struct joined_left_keyer
 		{
-			typedef std::size_t key_type;
-			template <typename T> key_type operator ()(const T &value) const {	return reinterpret_cast<key_type>(&value.left());	}
+			template <typename T> std::size_t operator ()(const T &value) const {	return reinterpret_cast<std::size_t>(&value.left());	}
 		};
 
 		struct joined_right_keyer
 		{
-			typedef std::size_t key_type;
-			template <typename T> key_type operator ()(const T &value) const {	return reinterpret_cast<key_type>(&value.right());	}
+			template <typename T> std::size_t operator ()(const T &value) const {	return reinterpret_cast<std::size_t>(&value.right());	}
 		};
 
 

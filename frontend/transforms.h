@@ -58,7 +58,7 @@ namespace micro_profiler
 	class callers_transform
 	{
 	private:
-		typedef views::immutable_index<U, keyer::address> by_address_index;
+		typedef views::immutable_index<U, keyer::address_and_rootness> by_address_index;
 
 	public:
 		typedef typename by_address_index::const_iterator const_iterator;
@@ -74,7 +74,7 @@ namespace micro_profiler
 		range_type equal_range(id_t id) const
 		{
 			auto &by_id = views::unique_index<keyer::id>(_underlying);
-			auto &by_address = views::multi_index<keyer::address>(_underlying);
+			auto &by_address = views::multi_index<keyer::address_and_rootness>(_underlying);
 
 			if (auto self = by_id.find(id))
 				return by_address.equal_range(std::make_pair(self->address, false));

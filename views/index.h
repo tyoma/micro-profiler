@@ -42,12 +42,20 @@ namespace micro_profiler
 			{	return reinterpret_cast<std::size_t>(&*value);	}
 		};
 
+		template <typename F, typename Arg1T>
+		struct result
+		{
+			typedef decltype((*static_cast<F *>(nullptr))(*static_cast<Arg1T *>(nullptr))) type_rcv;
+			typedef typename std::remove_reference<type_rcv>::type type_cv;
+			typedef typename std::remove_cv<type_cv>::type type;
+		};
+
 
 		template <typename U, typename K>
 		class immutable_index_base : public table_component<typename U::const_iterator>
 		{
 		public:
-			typedef typename K::key_type key_type;
+			typedef typename result<K, typename U::value_type>::type key_type;
 			typedef typename U::const_iterator underlying_iterator;
 
 		public:

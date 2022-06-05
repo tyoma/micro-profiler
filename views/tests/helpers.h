@@ -10,54 +10,46 @@ namespace micro_profiler
 	{
 		namespace tests
 		{
-			template <typename PairT>
 			struct key_first
 			{
-				typedef typename PairT::first_type key_type;
+				template <typename P>
+				typename P::first_type operator ()(const P &record) const
+				{	return record.first;	}
 
-				key_type operator ()(const PairT &item) const
-				{	return item.first;	}
-
-				template <typename IndexT>
-				void operator ()(IndexT &, PairT &item, const key_type &key) const
-				{	item.first = key;	}
+				template <typename IndexT, typename P>
+				void operator ()(IndexT &, P &record, const typename P::first_type &key) const
+				{	record.first = key;	}
 			};
 
-			template <typename PairT>
 			struct key_second
 			{
-				typedef typename PairT::second_type key_type;
+				template <typename P>
+				typename P::second_type operator ()(const P &record) const
+				{	return record.second;	}
 
-				key_type operator ()(const PairT &item) const
-				{	return item.second;	}
-
-				template <typename IndexT>
-				void operator ()(IndexT &, PairT &item, const key_type &key) const
-				{	item.second = key;	}
+				template <typename IndexT, typename P>
+				void operator ()(IndexT &, P &record, const typename P::second_type &key) const
+				{	record.second = key;	}
 			};
 
-			template <typename KeyT, int n>
+			template <int n>
 			struct key_n
 			{
-				typedef KeyT key_type;
-
 				template <typename T>
-				key_type operator ()(const T &item) const
-				{	return std::get<n>(item);	}
+				typename std::tuple_element<n, T>::type operator ()(const T &record) const
+				{	return std::get<n>(record);	}
 			};
 
-			template <typename KeyT, int n>
+			template <int n>
 			struct key_n_gen
 			{
-				typedef KeyT key_type;
-
 				template <typename T>
-				key_type operator ()(const T &item) const
-				{	return std::get<n>(item);	}
+				typename std::tuple_element<n, T>::type operator ()(const T &record) const
+				{	return std::get<n>(record);	}
 
 				template <typename IndexT, typename T>
-				void operator ()(IndexT &, T &item, const key_type &key) const
-				{	std::get<n>(item) = key;	}
+				void operator ()(IndexT &, T &record, const typename std::tuple_element<n, T>::type &key) const
+				{	std::get<n>(record) = key;	}
 			};
 
 

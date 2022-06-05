@@ -37,4 +37,18 @@ namespace micro_profiler
 		static key_type get_key(const T &item)
 		{	return item.first;	}
 	};
+
+	namespace keyer
+	{
+		struct self
+		{
+			template <typename T>
+			T operator ()(const T &record) const
+			{	return record;	}
+
+			template <typename IndexT, typename T>
+			void operator ()(IndexT &, T &record, const T &key) const
+			{	record = key;	}
+		};
+	}
 }

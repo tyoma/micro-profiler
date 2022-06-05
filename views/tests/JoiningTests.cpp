@@ -33,9 +33,9 @@ namespace micro_profiler
 					table4_t t4;
 
 					// INIT / ACT / ASSERT
-					shared_ptr< const table< joined_record<table1_t, table2_t> > > j1 = join< key_second<type1_t>, key_first<type2_t> >(t1, t2);
-					shared_ptr< const table< joined_record<table2_t, table3_t> > > j2 = join< key_first<type2_t>, key_first<type3_t> >(t2, t3);
-					shared_ptr< const table< joined_record<table3_t, table4_t> > > j3 = join< key_second<type3_t>, key_first<type4_t> >(t3, t4);
+					shared_ptr< const table< joined_record<table1_t, table2_t> > > j1 = join<key_second, key_first>(t1, t2);
+					shared_ptr< const table< joined_record<table2_t, table3_t> > > j2 = join<key_first, key_first>(t2, t3);
+					shared_ptr< const table< joined_record<table3_t, table4_t> > > j3 = join<key_second, key_first>(t3, t4);
 				}
 
 
@@ -69,7 +69,7 @@ namespace micro_profiler
 					add_records(t2, data2);
 
 					// INIT / ACT
-					auto j1 = join< key_n<int, 2>, key_first<type2_t> >(t1, t2);
+					auto j1 = join<key_n<2>, key_first>(t1, t2);
 
 					// ASSERT
 					pair<type1_t, type2_t> reference1[] = {
@@ -87,7 +87,7 @@ namespace micro_profiler
 					assert_equivalent(reference1, *j1);
 
 					// INIT / ACT
-					auto j2 = join< key_first<type2_t>, key_first<type2_t> >(t2, t2);
+					auto j2 = join<key_first, key_first>(t2, t2);
 
 					// ASSERT
 					pair<type2_t, type2_t> reference2[] = {
@@ -129,7 +129,7 @@ namespace micro_profiler
 					add_records(t1, data1);
 					add_records(t2, data2);
 
-					auto j = join< key_second<type1_t>, key_n<string, 0> >(t1, t2);
+					auto j = join< key_second, key_n<0> >(t1, t2);
 
 					// ACT
 					add_record(t1, type1_t(7, "lorem"));
@@ -203,7 +203,7 @@ namespace micro_profiler
 					add_records(t1, data1);
 					add_records(t2, data2);
 
-					auto j = join< key_second<type1_t>, key_n<string, 0> >(t1, t2);
+					auto j = join< key_second, key_n<0> >(t1, t2);
 					auto i1 = t1.begin();
 					auto i2 = t2.begin();
 
@@ -256,7 +256,7 @@ namespace micro_profiler
 					add_records(t1, data1);
 					add_records(t2, data2);
 
-					auto j = join< key_second<type1_t>, key_n<string, 0> >(t1, t2);
+					auto j = join< key_second, key_n<0> >(t1, t2);
 
 					// ACT
 					auto left = t1.begin();
@@ -316,7 +316,7 @@ namespace micro_profiler
 						type2_t("lorem", 0.72, 3),
 						type2_t("dolor", 0.73, 1),
 					};
-					auto j = join< key_first<type1_t>, key_n<int, 2> >(t1, t2);
+					auto j = join< key_first, key_n<2> >(t1, t2);
 
 					add_records(t1, data1);
 					add_records(t2, data2);

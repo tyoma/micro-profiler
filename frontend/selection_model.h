@@ -53,23 +53,10 @@ namespace micro_profiler
 		using wpl::dynamic_set_model::invalidate;
 
 	private:
-		struct keyer
-		{
-			typedef KeyT key_type;
-
-			key_type operator ()(const KeyT &record) const
-			{	return record;	}
-
-			template <typename IndexT>
-			void operator ()(IndexT &, KeyT &record, const key_type &value) const
-			{	record = value;	}
-		};
-
-	private:
 		virtual key_type get_key(std::size_t item) const = 0;
 
 	private:
-		views::immutable_unique_index<base_t, keyer> &_index;
+		views::immutable_unique_index<base_t, keyer::self> &_index;
 	};
 
 
@@ -95,7 +82,7 @@ namespace micro_profiler
 
 	template <typename KeyT>
 	inline selection<KeyT>::selection()
-		: _index(views::unique_index(*this, keyer()))
+		: _index(views::unique_index(*this, keyer::self()))
 	{	}
 
 	template <typename KeyT>

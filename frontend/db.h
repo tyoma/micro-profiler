@@ -85,49 +85,38 @@ namespace micro_profiler
 	{
 		struct callnode
 		{
-			typedef call_node_key key_type;
-
-			key_type operator ()(const call_statistics &value) const
-			{	return key_type(value.thread_id, value.parent_id, value.address);	}
+			call_node_key operator ()(const call_statistics &record) const
+			{	return call_node_key(record.thread_id, record.parent_id, record.address);	}
 
 			template <typename IndexT>
-			void operator ()(IndexT &/*index*/, call_statistics &value, const key_type &key) const
-			{	value.thread_id = std::get<0>(key), value.parent_id = std::get<1>(key), value.address = std::get<2>(key);	}
+			void operator ()(IndexT &/*index*/, call_statistics &record, const call_node_key &key) const
+			{	record.thread_id = std::get<0>(key), record.parent_id = std::get<1>(key), record.address = std::get<2>(key);	}
 		};
 
 		struct id
 		{
-			typedef id_t key_type;
-
 			template <typename T>
-			key_type operator ()(const T &value) const
-			{	return value.id;	}
+			id_t operator ()(const T &record) const
+			{	return record.id;	}
 		};
 
 		struct parent_id
 		{
-			typedef id_t key_type;
-
-			key_type operator ()(const call_statistics &value) const
-			{	return value.parent_id;	}
+			id_t operator ()(const call_statistics &record) const
+			{	return record.parent_id;	}
 		};
 
-		struct address
+		struct address_and_rootness
 		{
-			typedef std::pair<long_address_t, bool /*root*/> key_type;
-
-			key_type operator ()(const call_statistics &value) const
-			{	return std::make_pair(value.address, !value.parent_id);	}
+			std::pair<long_address_t, bool /*root*/> operator ()(const call_statistics &record) const
+			{	return std::make_pair(record.address, !record.parent_id);	}
 		};
 
-		template <typename U>
+		template <typename TableT>
 		class callstack
 		{
 		public:
-			typedef callstack_key key_type;
-
-		public:
-			callstack(const U &underlying)
+			callstack(const TableT &underlying)
 				: _by_id(views::unique_index<id>(underlying))
 			{	}
 
@@ -139,23 +128,14 @@ namespace micro_profiler
 				return _key_buffer;
 			}
 
-			template <typename Index2T>
-			void operator ()(Index2T &index, call_statistics &record, callstack_key key) const
+			template <typename IndexT, typename T>
+			void operator ()(const IndexT &index, T &record, callstack_key key) const
 			{
 				record.thread_id = 0;
 				record.address = key.back();
 				key.pop_back();
-				if (key.empty())
-					record.parent_id = 0;
-				else if (auto p = index.find(key))
-					record.parent_id = p->id;
-				else
-					throw 0;
+				record.parent_id = key.empty() ? id_t() : index[key].id;
 			}
-
-		private:
-			typedef views::table<typename U::value_type, typename U::constructor_type> table_type;
-			typedef views::immutable_unique_index<table_type, id> by_id_index_type;
 
 		private:
 			template <typename T>
@@ -167,7 +147,7 @@ namespace micro_profiler
 			}
 
 		private:
-			const by_id_index_type &_by_id;
+			const views::immutable_unique_index<TableT, id> &_by_id;
 			mutable callstack_key _key_buffer;
 		};
 	}

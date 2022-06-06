@@ -116,15 +116,13 @@ namespace micro_profiler
 			};
 
 			connections.push_back(side.created += on_create);
-			// TODO: add handling of 'side.modified' notification here
+			connections.push_back(side.modified += [&joined, hkeyer, &hindex] (typename SideTableT::const_iterator i) {
+				for (auto j = hindex.equal_range(hkeyer(i)); j.first != j.second; ++j.first)
+					joined.modify(j.first.underlying()).commit();
+			});
 			connections.push_back(side.removed += [&joined, hkeyer, &hindex] (typename SideTableT::const_iterator i) {
 				for (auto j = hindex.equal_range(hkeyer(i)); j.first != j.second; )
-				{
-					auto r = joined.modify(j.first.underlying());
-
-					++j.first;
-					r.remove();
-				}
+					joined.modify(j.first++.underlying()).remove();
 			});
 			connections.push_back(side.cleared += [&joined] {	joined.clear();	});
 			connections.push_back(side.invalidate += [&joined] {	joined.invalidate();	});
@@ -146,18 +144,18 @@ namespace micro_profiler
 				[] (typename LeftT::const_iterator i, typename RightT::const_iterator j) {
 				return value_type(i, j);
 			}, [] (const value_type &jrecord) {
-				return reinterpret_cast<std::size_t>(&jrecord.left());
+				return &jrecord.left();
 			}, [] (typename LeftT::const_iterator record) {
-				return reinterpret_cast<std::size_t>(&*record);
+				return &*record;
 			});
 
 			maintain_joined(joined, connections, right, rkeyer, multi_index(left, lkeyer),
 				[] (typename RightT::const_iterator i, typename LeftT::const_iterator j) {
 				return value_type(j, i);
 			}, [] (const value_type &jrecord) {
-				return reinterpret_cast<std::size_t>(&jrecord.right());
+				return &jrecord.right();
 			}, [] (typename RightT::const_iterator record) {
-				return reinterpret_cast<std::size_t>(&*record);
+				return &*record;
 			});
 
 			for (auto i = left.begin(); i != left.end(); ++i)

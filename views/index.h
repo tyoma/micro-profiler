@@ -36,6 +36,13 @@ namespace micro_profiler
 		{	};
 
 		template <typename T>
+		struct hash<T *>
+		{
+			std::size_t operator ()(T *value) const
+			{	return reinterpret_cast<std::size_t>(value);	}
+		};
+
+		template <typename T>
 		struct iterator_hash
 		{
 			std::size_t operator ()(T value) const
@@ -174,6 +181,12 @@ namespace micro_profiler
 
 			typename U::const_iterator underlying() const
 			{	return static_cast<const base_iterator_t &>(*this)->second;	}
+
+			const_iterator &operator ++()
+			{	return ++static_cast<base_iterator_t &>(*this), *this;	}
+
+			const_iterator operator ++(int)
+			{	return const_iterator(static_cast<base_iterator_t &>(*this)++);	}
 		};
 
 

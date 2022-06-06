@@ -297,6 +297,70 @@ namespace micro_profiler
 				}
 
 
+				test( ModifyingItemInEitherSourceTableNotifyOnModificationsOfCorresponsingCombinations )
+				{
+					typedef pair<int, string> type1_t;
+					typedef tuple<string, double, int> type2_t;
+					typedef table<type1_t> table1_t;
+					typedef table<type2_t> table2_t;
+					typedef joined_record<table1_t, table2_t> joined_t;
+
+					// INIT
+					table1_t t1;
+					table2_t t2;
+					type1_t data1[] = {
+						type1_t(1, "lorem"),
+						type1_t(2, "lorem"),
+						type1_t(3, "ipsum"),
+						type1_t(4, "amet"),
+					};
+					type2_t data2[] = {
+						type2_t("lorem", 0.71, 11),
+						type2_t("lorem", 0.72, 12),
+						type2_t("dolor", 0.73, 13),
+						type2_t("ipsum", 0.74, 14),
+						type2_t("ipsum", 0.75, 15),
+						type2_t("ipsum", 0.76, 16),
+						type2_t("amet", 0.77, 17),
+					};
+					auto iterators1 = add_records(t1, data1);
+					auto iterators2 = add_records(t2, data2);
+					auto j = join< key_second, key_n<0> >(t1, t2);
+					vector<joined_t> log;
+					auto conn = j->modified += [&] (table<joined_t>::const_iterator record) {	log.push_back(*record);	};
+
+					// ACT
+					auto r2 = t1.modify(iterators1[2]);
+
+					r2.commit();
+
+					// ASSERT
+					pair<type1_t, type2_t> reference1[] = {
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.74, 14)),
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.75, 15)),
+						make_pair(type1_t(3, "ipsum"), type2_t("ipsum", 0.76, 16)),
+					};
+
+					assert_equivalent(reference1, log);
+
+					// INIT
+					log.clear();
+
+					// ACT
+					auto r1 = t2.modify(iterators2[1]);
+
+					r1.commit();
+
+					// ASSERT
+					pair<type1_t, type2_t> reference2[] = {
+						make_pair(type1_t(1, "lorem"), type2_t("lorem", 0.72, 12)),
+						make_pair(type1_t(2, "lorem"), type2_t("lorem", 0.72, 12)),
+					};
+
+					assert_equivalent(reference2, log);
+				}
+
+
 				test( ClearingOfTheEitherUnderlyingTableClearsTheJoinedOne )
 				{
 					typedef pair<int, string> type1_t;

@@ -6,6 +6,7 @@ set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
 	ColumnsDefinitionTests.cpp
 	DataSchemeTests.cpp
+	DerivedStatisticsTests.cpp
 	DeSerializationTests.cpp
 	DynamicViewTests.cpp
 	FilePersistenceTests.cpp

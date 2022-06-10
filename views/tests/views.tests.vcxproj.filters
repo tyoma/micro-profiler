@@ -50,5 +50,8 @@
     <ClInclude Include="..\table_component.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\hash.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

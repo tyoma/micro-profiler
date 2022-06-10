@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "hash.h"
 #include "table_component.h"
 
 #include <common/compiler.h>
@@ -31,24 +32,6 @@ namespace micro_profiler
 {
 	namespace views
 	{
-		template <typename T>
-		struct hash : std::hash<T>
-		{	};
-
-		template <typename T>
-		struct hash<T *>
-		{
-			std::size_t operator ()(T *value) const
-			{	return reinterpret_cast<std::size_t>(value);	}
-		};
-
-		template <typename T>
-		struct iterator_hash
-		{
-			std::size_t operator ()(T value) const
-			{	return reinterpret_cast<std::size_t>(&*value);	}
-		};
-
 		template <typename F, typename Arg1T>
 		struct result
 		{

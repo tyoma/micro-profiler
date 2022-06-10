@@ -49,6 +49,7 @@
     <ClCompile Include="TableTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\hash.h" />
     <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\any_key.h" />
     <ClInclude Include="..\filter.h" />

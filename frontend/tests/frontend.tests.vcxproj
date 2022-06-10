@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncFileTests.cpp" />
+    <ClCompile Include="DerivedStatisticsTests.cpp" />
     <ClCompile Include="ColumnsDefinitionTests.cpp" />
     <ClCompile Include="HierarchicalTableModelImplTests.cpp" />
     <ClCompile Include="HierarchyAlgorithmsTests.cpp" />

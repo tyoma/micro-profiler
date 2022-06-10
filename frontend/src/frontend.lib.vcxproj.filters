@@ -67,6 +67,9 @@
     <ClCompile Include="columns_layout.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="derived_statistics.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -112,6 +115,7 @@
     <ClInclude Include="..\statistic_models.h" />
     <ClInclude Include="..\dynamic_views.h" />
     <ClInclude Include="..\hierarchy.h" />
+    <ClInclude Include="..\derived_statistics.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

@@ -21,6 +21,7 @@
 #include <frontend/tables_ui.h>
 
 #include <frontend/columns_layout.h>
+#include <frontend/derived_statistics.h>
 #include <frontend/dynamic_views.h>
 #include <frontend/headers_model.h>
 #include <frontend/function_hint.h>
@@ -64,8 +65,7 @@ namespace micro_profiler
 
 	struct tables_ui::models
 	{
-		template <typename StatisticsT>
-		models(shared_ptr<StatisticsT> statistics, shared_ptr<symbol_resolver> resolver,
+		models(shared_ptr<const calls_statistics_table> statistics, shared_ptr<symbol_resolver> resolver,
 				shared_ptr<const tables::threads> threads, uint64_t ticks_per_second)
 		{
 			auto &by_id_idx = views::unique_index<keyer::id>(*statistics);
@@ -86,7 +86,8 @@ namespace micro_profiler
 
 			main = model_impl;
 			selection_main = main->create_selection();
-			callers = create_callers_model(statistics, context, selection_main);
+			callers = create_statistics_model(derived_statistics::callers(derived_statistics::addresses(selection_main,
+				statistics), statistics), context);
 			selection_callers = callers->create_selection();
 			callees = create_callees_model(statistics, context, selection_main);
 			selection_callees = callees->create_selection();

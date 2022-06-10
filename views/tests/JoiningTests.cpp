@@ -178,6 +178,63 @@ namespace micro_profiler
 				}
 
 
+				test( NonDefaultConstructibleKeyersCanBeUsed )
+				{
+					typedef pair<int, string> type1_t;
+					typedef tuple<string, double, int> type2_t;
+					typedef table<type1_t> table1_t;
+					typedef table<type2_t> table2_t;
+
+					// INIT
+					table1_t t1;
+					table2_t t2;
+					type1_t data1[] = {
+						type1_t(9, "lorem"),
+						type1_t(19, "ipsum"),
+					};
+					type2_t data2[] = {
+						type2_t("lorem", 0.71, 4),
+						type2_t("ipsum", 0.72, 3),
+						type2_t("amet", 0.73, 7),
+						type2_t("dolor", 0.74, 3),
+						type2_t("ipsum", 0.75, 9),
+					};
+
+					add_records(t1, data1);
+					add_records(t2, data2);
+
+					// INIT / ACT
+					auto j = join(t1, t2, [&] (type1_t record) {
+						return record.second;
+					}, [&] (type2_t record) {
+						return get<0>(record);
+					}); // lambdas are non-assignable and not default-constructible.
+
+					// ASSERT
+					pair<type1_t, type2_t> reference1[] = {
+						make_pair(type1_t(9, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.72, 3)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.75, 9)),
+					};
+
+					assert_equivalent(reference1, *j);
+
+					// ACT
+					add_record(t1, type1_t(7, "ipsum"));
+
+					// ASSERT
+					pair<type1_t, type2_t> reference2[] = {
+						make_pair(type1_t(9, "lorem"), type2_t("lorem", 0.71, 4)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.72, 3)),
+						make_pair(type1_t(19, "ipsum"), type2_t("ipsum", 0.75, 9)),
+						make_pair(type1_t(7, "ipsum"), type2_t("ipsum", 0.72, 3)),
+						make_pair(type1_t(7, "ipsum"), type2_t("ipsum", 0.75, 9)),
+					};
+
+					assert_equivalent(reference2, *j);
+				}
+
+
 				test( ModificationOfASourceRecordDoesNotCreateNewJoinedRecords )
 				{
 					typedef pair<int, string> type1_t;

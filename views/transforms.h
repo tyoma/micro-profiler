@@ -130,17 +130,16 @@ namespace micro_profiler
 		}
 
 		template <typename LeftKeyerT, typename RightKeyerT, typename LeftT, typename RightT>
-		inline std::shared_ptr< const table< joined_record<LeftT, RightT> > > join(const LeftT &left, const RightT &right)
+		inline std::shared_ptr< const table< joined_record<LeftT, RightT> > > join(const LeftT &left, const RightT &right,
+			const LeftKeyerT &left_by = LeftKeyerT(), const RightKeyerT &right_by = RightKeyerT())
 		{
 			typedef joined_record<LeftT, RightT> value_type;
 			typedef table<value_type> joined_table_t;
 
-			const auto lkeyer = LeftKeyerT();
-			const auto rkeyer = RightKeyerT();
 			const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<wpl::slot_connection> > >();
 			auto &joined = std::get<0>(*composite);
 			auto &connections = std::get<1>(*composite);
-			auto add_from_left = maintain_joined(joined, connections, left, lkeyer, multi_index(right, rkeyer),
+			auto add_from_left = maintain_joined(joined, connections, left, left_by, multi_index(right, right_by),
 				[] (typename LeftT::const_iterator i, typename RightT::const_iterator j) {
 				return value_type(i, j);
 			}, [] (const value_type &jrecord) {
@@ -149,7 +148,7 @@ namespace micro_profiler
 				return &*record;
 			});
 
-			maintain_joined(joined, connections, right, rkeyer, multi_index(left, lkeyer),
+			maintain_joined(joined, connections, right, right_by, multi_index(left, left_by),
 				[] (typename RightT::const_iterator i, typename LeftT::const_iterator j) {
 				return value_type(j, i);
 			}, [] (const value_type &jrecord) {

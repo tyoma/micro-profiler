@@ -43,17 +43,6 @@ namespace micro_profiler
 			return strcmp(context.resolver->symbol_name_by_va(lhs.address).c_str(), context.resolver->symbol_name_by_va(rhs.address).c_str());
 		};
 
-		auto by_caller_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) -> int {
-			const auto lhs_parent = context.by_id(lhs.parent_id);
-			const auto rhs_parent = context.by_id(rhs.parent_id);
-
-			if (auto r = compare(lhs_parent, rhs_parent))
-				return r;
-			return lhs_parent
-				? strcmp(context.resolver->symbol_name_by_va(lhs_parent->address).c_str(), context.resolver->symbol_name_by_va(rhs_parent->address).c_str())
-				: 0;
-		};
-
 		auto by_threadid = [] (const statistics_model_context &context, const call_statistics &lhs_, const call_statistics &rhs_) -> int {
 			const auto lhs = context.by_thread_id(lhs_.thread_id);
 			const auto rhs = context.by_thread_id(rhs_.thread_id);
@@ -98,15 +87,6 @@ namespace micro_profiler
 			while (n--)
 				text << micro_profiler::indent_spaces;
 			text << context.resolver->symbol_name_by_va(item.address).c_str();
-		};
-
-		auto callee_name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
-			text << context.resolver->symbol_name_by_va(item.address).c_str();
-		};
-
-		auto caller_name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
-			if (const auto parent = context.by_id(item.parent_id))
-				text << context.resolver->symbol_name_by_va(parent->address).c_str();
 		};
 
 		auto thread_native_id = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item_) {
@@ -196,14 +176,19 @@ namespace micro_profiler
 
 	const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[] = {
 		c_statistics_columns[0],
-		{	"Function", "Calling Function\n" + secondary + "qualified name", 384, agge::align_near, caller_name, by_caller_name, true,	},
+		{	"Function", "Calling Function\n" + secondary + "qualified name", 384, agge::align_near, name, by_name, true,	},
 		c_statistics_columns[2],
 		c_statistics_columns[3],
+		c_statistics_columns[4],
+		c_statistics_columns[5],
+		c_statistics_columns[6],
+		c_statistics_columns[7],
+		c_statistics_columns[8],
 	};
 
 	const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[] = {
 		c_statistics_columns[0],
-		{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, callee_name, by_name, true,	},
+		{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, name, by_name, true,	},
 		c_statistics_columns[2],
 		c_statistics_columns[3],
 		c_statistics_columns[4],

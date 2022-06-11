@@ -91,7 +91,6 @@
     <ClInclude Include="..\models.h" />
     <ClInclude Include="..\model_context.h" />
     <ClInclude Include="..\dynamic_views.h" />
-    <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />

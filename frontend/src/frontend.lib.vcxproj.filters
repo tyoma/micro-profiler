@@ -111,7 +111,6 @@
     <ClInclude Include="..\constructors.h" />
     <ClInclude Include="..\models.h" />
     <ClInclude Include="..\table_model_impl.h" />
-    <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\statistic_models.h" />
     <ClInclude Include="..\dynamic_views.h" />
     <ClInclude Include="..\hierarchy.h" />

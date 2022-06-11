@@ -83,7 +83,7 @@ namespace micro_profiler
 			const calls_statistics_table_cptr hierarchy;
 		};
 
-		struct address_keyer_factory
+		struct parent_to_address_keyer_factory
 		{
 			template <typename IgnoreT>
 			combine2<parent_address, thread_id> operator ()(IgnoreT &, underlying_key_tag) const
@@ -94,6 +94,13 @@ namespace micro_profiler
 			{	return combine2<address, thread_id>();	}
 
 			const calls_statistics_table_cptr hierarchy;
+		};
+
+		struct address_keyer_factory
+		{
+			template <typename IgnoreT>
+			combine2<address, thread_id> operator ()(IgnoreT &, agnostic_key_tag) const
+			{	return combine2<address, thread_id>();	}
 		};
 	}
 
@@ -126,8 +133,26 @@ namespace micro_profiler
 		others.push_back(callees);
 		others.push_back(hierarchy);
 		others.push_back(all_instances);
-		result = group_by<call_statistics>(*all_instances, initialize<address_keyer_factory>(hierarchy),
+		result = group_by<call_statistics>(*all_instances, initialize<parent_to_address_keyer_factory>(hierarchy),
 			call_statistics_constructor(), sum_functions_plain());
+		return calls_statistics_table_cptr(composite, &*result);
+	}
+
+	calls_statistics_table_cptr derived_statistics::callees(address_table_cptr callers,
+		calls_statistics_table_cptr hierarchy)
+	{
+		typedef tuple< calls_statistics_table_cptr, vector< shared_ptr<const void> > > composite_t;
+
+		const auto composite = make_shared<composite_t>();
+		auto &result = get<0>(*composite);
+		auto &others = get<1>(*composite);
+		const auto all_instances = join<parent_address, self>(*hierarchy, *callers, parent_address(*hierarchy));
+
+		others.push_back(callers);
+		others.push_back(hierarchy);
+		others.push_back(all_instances);
+		result = group_by<call_statistics>(*all_instances, address_keyer_factory(), call_statistics_constructor(),
+			sum_functions_plain());
 		return calls_statistics_table_cptr(composite, &*result);
 	}
 }

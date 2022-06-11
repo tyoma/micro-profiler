@@ -28,7 +28,6 @@
 #include "symbol_resolver.h"
 #include "table_model_impl.h"
 #include "tables.h"
-#include "transforms.h"
 
 #include <views/filter.h>
 #include <views/integrated_index.h>
@@ -109,20 +108,4 @@ namespace micro_profiler
 	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, CtxT> >
 		create_statistics_model(std::shared_ptr<U> underlying, const CtxT &context)
 	{	return make_table< table_model<id_t> >(underlying, context, c_statistics_columns);	}
-
-	template <typename U, typename CtxT, typename ScopeT>
-	inline std::shared_ptr< table_model<id_t> > create_callees_model(std::shared_ptr<U> underlying, const CtxT &context,
-		std::shared_ptr<ScopeT> scope)
-	{
-		return make_table< table_model<id_t> >(make_scoped_view< callees_transform<U> >(underlying, scope), context,
-			c_callee_statistics_columns);
-	}
-
-	template <typename U, typename CtxT, typename ScopeT>
-	inline std::shared_ptr< table_model<id_t> > create_callers_model(std::shared_ptr<U> underlying, const CtxT &context,
-		std::shared_ptr<ScopeT> scope)
-	{
-		return make_table< table_model<id_t> >(make_scoped_view< callers_transform<U> >(underlying, scope), context,
-			c_caller_statistics_columns);
-	}
 }

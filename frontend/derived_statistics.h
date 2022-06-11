@@ -35,5 +35,6 @@ namespace micro_profiler
 		static address_table_cptr addresses(std::shared_ptr<const selection<id_t> > selection_,
 			calls_statistics_table_cptr hierarchy);
 		static calls_statistics_table_cptr callers(address_table_cptr callees, calls_statistics_table_cptr hierarchy);
+		static calls_statistics_table_cptr callees(address_table_cptr callers, calls_statistics_table_cptr hierarchy);
 	};
 }

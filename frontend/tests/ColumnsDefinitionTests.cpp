@@ -48,8 +48,6 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_comparison_valid(c_statistics_columns[main_columns::times_called], data);
-				assert_comparison_valid(c_caller_statistics_columns[callee_columns::times_called], data);
-				assert_comparison_valid(c_callee_statistics_columns[callers_columns::times_called], data);
 			}
 
 
@@ -67,7 +65,6 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_comparison_valid(c_statistics_columns[main_columns::inclusive], data);
-				assert_comparison_valid(c_callee_statistics_columns[callee_columns::inclusive], data);
 			}
 
 
@@ -85,7 +82,6 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_comparison_valid(c_statistics_columns[main_columns::exclusive], data);
-				assert_comparison_valid(c_callee_statistics_columns[callee_columns::exclusive], data);
 			}
 
 		end_test_suite

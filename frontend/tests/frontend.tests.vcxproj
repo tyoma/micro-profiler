@@ -77,7 +77,6 @@
     <ClCompile Include="ImagePatchModelTests.cpp" />
     <ClCompile Include="legacy_serialization.cpp" />
     <ClCompile Include="mock_channel.cpp" />
-    <ClCompile Include="NestedStatisticModelsTests.cpp" />
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="ProfilingPreferencesTests.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>

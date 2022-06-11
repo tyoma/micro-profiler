@@ -292,5 +292,118 @@ namespace micro_profiler
 					+ make_call_statistics(0, 3, 0, 501, 107, 0, 0, 0, 0), *callers);
 			}
 		end_test_suite
+
+
+		begin_test_suite( CalleesStatisticTests )
+			test( UnderlyingModelsAreHeldByTheCalleesModel )
+			{
+				// INIT
+				auto hierarchy = make_shared<calls_statistics_table>();
+				auto selector = make_shared<address_table>();
+				weak_ptr<calls_statistics_table> whierarchy = hierarchy;
+				weak_ptr<address_table> wselector = selector;
+
+				// INIT / ACT
+				auto callers = derived_statistics::callees(selector, hierarchy);
+				hierarchy.reset();
+				selector.reset();
+
+				// ASSERT
+				assert_not_null(callers);
+				assert_is_false(whierarchy.expired());
+				assert_is_false(wselector.expired());
+
+				// ACT
+				callers.reset();
+
+				// ASSERT
+				assert_is_true(whierarchy.expired());
+				assert_is_true(wselector.expired());
+			}
+
+
+			test( CalleesAreEmptyWhenSelectorIsEmpty )
+			{
+				// INIT
+				auto hierarchy = make_shared<calls_statistics_table>();
+				auto selector = make_shared<address_table>();
+
+				add_records(*hierarchy, plural
+					+ make_call_statistics(1, 1, 0, 123, 0, 0, 0, 0, 0)
+					+ make_call_statistics(2, 1, 1, 501, 0, 0, 0, 0, 0)
+					+ make_call_statistics(3, 1, 1, 502, 0, 0, 0, 0, 0)
+					+ make_call_statistics(4, 1, 0, 124, 0, 0, 0, 0, 0)
+					+ make_call_statistics(5, 1, 4, 501, 0, 0, 0, 0, 0));
+
+				// INIT / ACT
+				auto callees = derived_statistics::callees(selector, hierarchy);
+
+				// ASSERT
+				assert_equal(callees->end(), callees->begin());
+			}
+
+
+			test( SelectedUniqueCalleesGetToTheResultTableNoAggregation )
+			{
+				// INIT
+				auto hierarchy = make_shared<calls_statistics_table>();
+				auto selector = make_shared<address_table>();
+
+				add_records(*hierarchy, plural
+					+ make_call_statistics(1, 1, 0, 123, 101, 0, 0, 0, 0)
+					+ make_call_statistics(2, 1, 1, 501, 102, 0, 0, 0, 0)
+					+ make_call_statistics(3, 1, 1, 502, 103, 0, 0, 0, 0)
+					+ make_call_statistics(4, 1, 0, 124, 104, 0, 0, 0, 0)
+					+ make_call_statistics(5, 1, 4, 123, 105, 0, 0, 0, 0)
+					+ make_call_statistics(6, 1, 4, 501, 106, 0, 0, 0, 0)
+					+ make_call_statistics(7, 1, 6, 503, 107, 0, 0, 0, 0));
+				add_records(*selector, plural + 123);
+
+				// INIT / ACT
+				auto callees = derived_statistics::callees(selector, hierarchy);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 501, 102, 0, 0, 0, 0)
+					+ make_call_statistics(0, 1, 0, 502, 103, 0, 0, 0, 0), *callees);
+
+				// ACT
+				add_records(*selector, plural + 501);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 501, 102, 0, 0, 0, 0)
+					+ make_call_statistics(0, 1, 0, 502, 103, 0, 0, 0, 0)
+					+ make_call_statistics(0, 1, 0, 503, 107, 0, 0, 0, 0), *callees);
+			}
+
+
+			test( SelectedCalleesGetToTheResultTableWithAggregation )
+			{
+				// INIT
+				auto hierarchy = make_shared<calls_statistics_table>();
+				auto selector = make_shared<address_table>();
+				auto callees = derived_statistics::callees(selector, hierarchy);
+
+				add_records(*hierarchy, plural
+					+ make_call_statistics(1, 9, 0, 123, 101, 0, 0, 0, 0)
+					+ make_call_statistics(2, 9, 1, 501, 112, 0, 0, 0, 0)
+					+ make_call_statistics(3, 9, 1, 502, 173, 0, 0, 0, 0)
+					+ make_call_statistics(4, 9, 0, 124, 104, 0, 0, 0, 0)
+					+ make_call_statistics(5, 9, 4, 123, 105, 0, 0, 0, 0)
+					+ make_call_statistics(6, 9, 4, 501, 106, 0, 0, 0, 0)
+					+ make_call_statistics(7, 9, 6, 503, 107, 0, 0, 0, 0));
+
+				// ACT
+				add_records(*selector, plural + 123 + 124);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 9, 0, 501, 218, 0, 0, 0, 0)
+					+ make_call_statistics(0, 9, 0, 502, 173, 0, 0, 0, 0)
+					+ make_call_statistics(0, 9, 0, 123, 105, 0, 0, 0, 0), *callees);
+			}
+
+		end_test_suite
 	}
 }

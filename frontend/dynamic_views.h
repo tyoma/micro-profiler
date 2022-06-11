@@ -23,7 +23,6 @@
 #include <common/noncopyable.h>
 #include <memory>
 #include <views/filter.h>
-#include <views/flatten.h>
 #include <wpl/signal.h>
 
 namespace micro_profiler
@@ -61,35 +60,8 @@ namespace micro_profiler
 	};
 
 
-	template <typename U, typename ScopeT, typename X>
-	class scoped_view : public views::flatten<ScopeT, X>, noncopyable
-	{
-	public:
-		scoped_view(std::shared_ptr<U> underlying, std::shared_ptr<ScopeT> scope)
-			: views::flatten<ScopeT, X>(*scope, X(*underlying)), _underlying(underlying), _scope(scope)
-		{
-			_connections[0] = underlying->invalidate += [this] (...) {	invalidate();	};
-			_connections[1] = scope->invalidate += [this] (...) {	invalidate();	};
-		}
-
-	public:
-		mutable wpl::signal<void ()> invalidate;
-
-	private:
-		const std::shared_ptr<U> _underlying;
-		const std::shared_ptr<ScopeT> _scope;
-		wpl::slot_connection _connections[2];
-	};
-
-
 
 	template <typename U>
 	inline std::shared_ptr< filter_view<U> > make_filter_view(std::shared_ptr<U> underlying)
 	{	return std::make_shared< filter_view<U> >(underlying);	}
-
-
-	template <typename X, typename U, typename ScopeT>
-	inline std::shared_ptr< scoped_view<U, ScopeT, X> > make_scoped_view(std::shared_ptr<U> underlying,
-		std::shared_ptr<ScopeT> scope)
-	{	return std::make_shared< scoped_view<U, ScopeT, X> >(underlying, scope);	}
 }

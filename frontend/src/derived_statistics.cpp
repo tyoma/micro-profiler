@@ -45,7 +45,7 @@ namespace micro_profiler
 				aggregated.parent_id = 0;
 				static_cast<function_statistics&>(aggregated) = function_statistics();
 				for (auto i = group_begin; i != group_end; ++i)
-					static_cast<function_statistics &>(aggregated) += *i;
+					add(aggregated, *i);
 			}
 		};
 

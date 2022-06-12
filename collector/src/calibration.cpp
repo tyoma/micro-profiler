@@ -75,7 +75,7 @@ namespace micro_profiler
 
 			if (1u == aa.size())
 			{
-				const statistic_types::function_detailed &f = aa.begin()->second;
+				const statistic_types::node &f = aa.begin()->second;
 				const timestamp_t inner = f.inclusive_time / f.times_called;
 				const timestamp_t total = ((end - start) - (end_ref - start_ref)) / f.times_called;
 

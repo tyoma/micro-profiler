@@ -24,8 +24,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
-
 			const auto null_ui_factory = [] (const profiling_session &) {	return shared_ptr<micro_profiler::frontend_ui>();	};
 
 			profiling_session create_ui_context(string executable)

@@ -14,7 +14,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef statistic_types_t<const void *> statistic_types;
+			typedef call_graph_types<const void *> statistic_types;
 		}
 
 		begin_test_suite( ShadowStackTests )
@@ -23,7 +23,7 @@ namespace micro_profiler
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
 				vector<call_record> trace;
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 
 				// ACT
 				ss.update(trace.begin(), trace.end(), statistics);
@@ -37,7 +37,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace1[] = {
 					{	123450000, (void *)0x01234567	},
 					{	123450013, (void *)0	},
@@ -70,7 +70,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace1[] = {	{	123450000, (void *)0x01234567	},	};
 				call_record trace2[] = {	{	123450013, (void *)0	},	};
 				call_record trace3[] = {	{	123450000, (void *)0x0bcdef12	},	};
@@ -116,7 +116,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss1(overhead(0, 0)), ss2(overhead(0, 0));
-				statistic_types::map_detailed statistics1, statistics2;
+				statistic_types::nodes_map statistics1, statistics2;
 				call_record trace1[] = {
 					{	123450000, (void *)0x01234567	},
 						{	123450013, (void *)0x01234568	},
@@ -151,7 +151,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	123450000, (void *)0x01234567	},
 						{	123450013, (void *)0x0bcdef12	},
@@ -174,7 +174,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	123450000, (void *)0x01234567	},
 					{	123450019, (void *)0	},
@@ -204,7 +204,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace1[] ={
 					{	123440000, (void *)0x00000010	},
 						{	123450000, (void *)0x01234560	},
@@ -240,7 +240,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	123440000, (void *)0x00000010	},
 						{	123450003, (void *)0x01234560	},
@@ -270,7 +270,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss1(overhead(1, 1)), ss2(overhead(2, 5));
-				statistic_types::map_detailed statistics1, statistics2;
+				statistic_types::nodes_map statistics1, statistics2;
 				call_record trace[] = {
 					{	123440000, (void *)0x00000010	},
 						{	123450013, (void *)0x01234560	},
@@ -307,7 +307,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0)), ss_delayed(overhead(1, 0));
-				statistic_types::map_detailed statistics, statistics_delayed;
+				statistic_types::nodes_map statistics, statistics_delayed;
 				call_record trace[] = {
 					{	1, (void *)1	},
 						{	2, (void *)101	},
@@ -366,7 +366,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	1, (void *)1	},
 						{	2, (void *)101	},
@@ -401,7 +401,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	1, (void *)0x1	},
 						{	2, (void *)0x2	},
@@ -452,7 +452,7 @@ namespace micro_profiler
 			{
 				// INIT
 				shadow_stack<statistic_types::key> ss1(overhead(0, 0)), ss2(overhead(0, 0));
-				statistic_types::map_detailed statistics;
+				statistic_types::nodes_map statistics;
 				call_record trace1[] = {
 					{	1, (void *)1	},
 						{	2, (void *)2	},

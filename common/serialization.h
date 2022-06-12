@@ -40,7 +40,6 @@ namespace strmd
 	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
-	template <typename KeyT> struct version< micro_profiler::function_statistics_detailed_t<KeyT> > {	enum {	value = 5	};	};
 }
 
 namespace micro_profiler
@@ -68,13 +67,6 @@ namespace micro_profiler
 		archive(data.inclusive_time);
 		archive(data.exclusive_time);
 		archive(data.max_call_time);
-	}
-
-	template <typename ArchiveT, typename AddressT>
-	inline void serialize(ArchiveT &archive, function_statistics_detailed_t<AddressT> &data, unsigned int /*ver*/)
-	{
-		archive(static_cast<function_statistics &>(data));
-		archive(data.callees);
 	}
 
 	template <typename ArchiveT>

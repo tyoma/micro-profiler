@@ -5,6 +5,7 @@
 #include "helpers.h"
 #include "primitive_helpers.h"
 
+#include <collector/serialization.h> // TODO: remove?
 #include <frontend/serialization_context.h>
 #include <ipc/server_session.h>
 #include <test-helpers/comparisons.h>
@@ -50,7 +51,7 @@ namespace micro_profiler
 			void empty_update(ipc::server_session::response &resp)
 			{
 				resp(response_statistics_update, plural
-					+ make_pair(1u, vector<statistic_types_t<unsigned>::function_detailed>()));
+					+ make_pair(1u, vector<call_graph_types<unsigned>::node>()));
 			}
 
 		}

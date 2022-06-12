@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "primitive_helpers.h"
 
+#include <collector/serialization.h> // TODO: remove?
 #include <functional>
 #include <strmd/serializer.h>
 #include <strmd/deserializer.h>
@@ -36,7 +37,7 @@ namespace micro_profiler
 		begin_test_suite( AdditiveDeSerializationTests )
 			test( DeserializationIntoExistingValuesAddsValuesBase )
 			{
-				typedef std::pair<unsigned, statistic_types_t<unsigned>::function> addressed_statistics2;
+				typedef std::pair<unsigned, function_statistics> addressed_statistics2;
 
 				// INIT
 				vector_adapter buffer;

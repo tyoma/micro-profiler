@@ -31,8 +31,8 @@ namespace micro_profiler
 	class shadow_stack
 	{
 	public:
-		typedef statistic_types_t<KeyT> statistic_types;
-		typedef typename statistic_types::map_detailed map_type;
+		typedef call_graph_types<KeyT> statistic_types;
+		typedef typename statistic_types::nodes_map map_type;
 
 	public:
 		shadow_stack(const overhead & overhead_);
@@ -45,7 +45,7 @@ namespace micro_profiler
 		typedef pod_vector<stack_record> stack;
 
 	private:
-		void restore_state(typename statistic_types::function &root, map_type &callees);
+		void restore_state(function_statistics &root, map_type &callees);
 
 	private:
 		const timestamp_t _inner_overhead, _total_overhead;
@@ -56,15 +56,15 @@ namespace micro_profiler
 	struct shadow_stack<KeyT>::stack_record
 	{
 		static void exit(stack &stack_, const call_record &entry, timestamp_t inner_overhead, timestamp_t total_overhead);
-		static void reset_stack(stack &stack_, typename statistic_types::function &root, map_type &callees);
+		static void reset_stack(stack &stack_, function_statistics &root, map_type &callees);
 		static void enter(stack &stack_, const call_record &entry);
-		static typename statistic_types::function_detailed &get(map_type &callees, typename statistic_types::key callee);
-		static typename statistic_types::function_detailed &get_slow(map_type &callees, typename statistic_types::key callee);
+		static typename statistic_types::node &get(map_type &callees, typename statistic_types::key callee);
+		static typename statistic_types::node &get_slow(map_type &callees, typename statistic_types::key callee);
 
 		typename statistic_types::key callee;
 		timestamp_t enter_at;
 		timestamp_t children_time_observed, children_overhead;
-		typename statistic_types::function *function;
+		function_statistics *function;
 		map_type *callees;
 	};
 
@@ -79,7 +79,7 @@ namespace micro_profiler
 	template <typename IteratorT>
 	inline void shadow_stack<KeyT>::update(IteratorT i, IteratorT end, map_type &statistics)
 	{
-		typename statistic_types::function root;
+		function_statistics root;
 
 		stack_record::reset_stack(_stack, root, statistics);
 		for (; i != end; ++i)
@@ -102,7 +102,7 @@ namespace micro_profiler
 		const timestamp_t inclusive_time = inclusive_time_observed - children_overhead;
 		const timestamp_t exclusive_time = inclusive_time_observed - current.children_time_observed;
 
-		current.function->add_call(inclusive_time, exclusive_time);
+		add(*current.function, inclusive_time, exclusive_time);
 		stack_.pop_back();
 
 		auto &parent = stack_.back();
@@ -113,7 +113,7 @@ namespace micro_profiler
 
 
 	template <typename KeyT>
-	inline void shadow_stack<KeyT>::stack_record::reset_stack(stack &stack_, typename statistic_types::function &root,
+	inline void shadow_stack<KeyT>::stack_record::reset_stack(stack &stack_, function_statistics &root,
 		map_type &callees)
 	{
 		auto i = stack_.begin();
@@ -147,15 +147,15 @@ namespace micro_profiler
 	}
 
 	template <typename KeyT>
-	inline typename statistic_types_t<KeyT>::function_detailed &shadow_stack<KeyT>::stack_record::get(map_type &callees, typename statistic_types::key callee)
+	inline typename call_graph_types<KeyT>::node &shadow_stack<KeyT>::stack_record::get(map_type &callees, typename statistic_types::key callee)
 	{
 		auto i = callees.find(callee);
 		return callees.end() != i ? i->second : get_slow(callees, callee);
 	}
 
 	template <typename KeyT>
-	FORCE_NOINLINE inline typename statistic_types_t<KeyT>::function_detailed &shadow_stack<KeyT>::stack_record::get_slow(map_type &callees, typename statistic_types::key callee)
+	FORCE_NOINLINE inline typename call_graph_types<KeyT>::node &shadow_stack<KeyT>::stack_record::get_slow(map_type &callees, typename statistic_types::key callee)
 	{
-		return callees.insert(std::make_pair(callee, typename statistic_types_t<KeyT>::function_detailed())).first->second;
+		return callees.insert(std::make_pair(callee, typename call_graph_types<KeyT>::node())).first->second;
 	}
 }

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <algorithm>
+#include <collector/primitives.h>
 #include <common/image_info.h>
 #include <common/module.h>
-#include <common/primitives.h>
 #include <set>
 
 namespace micro_profiler
@@ -17,8 +17,7 @@ namespace micro_profiler
 	}
 
 	template <typename AddressT>
-	inline bool operator <(const function_statistics_detailed_t<AddressT> &lhs,
-		const function_statistics_detailed_t<AddressT> &rhs)
+	inline bool operator <(const call_graph_node<AddressT> &lhs, const call_graph_node<AddressT> &rhs)
 	{
 		if (static_cast<const function_statistics &>(lhs) < static_cast<const function_statistics &>(rhs))
 			return true;
@@ -35,8 +34,7 @@ namespace micro_profiler
 	{	return !(lhs < rhs) && !(rhs < lhs);	}
 
 	template <typename AddressT>
-	inline bool operator ==(const function_statistics_detailed_t<AddressT> &lhs,
-		const function_statistics_detailed_t<AddressT> &rhs)
+	inline bool operator ==(const call_graph_node<AddressT> &lhs, const call_graph_node<AddressT> &rhs)
 	{	return !(lhs < rhs) && !(rhs < lhs);	}
 
 	inline bool operator ==(const mapped_module_ex &lhs, const mapped_module_ex &rhs)

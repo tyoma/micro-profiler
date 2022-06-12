@@ -16,14 +16,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			typedef statistic_types_t<const void *> statistic_types;
-
-			const void *addr(size_t value)
-			{	return reinterpret_cast<const void *>(value);	}
-		}
-
 		begin_test_suite( SerializationTests )
 			test( SerializedStatisticsAreDeserialized )
 			{
@@ -47,40 +39,6 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(s1, ds1);
 				assert_equal(s2, ds2);
-			}
-
-
-			test( DetailedStatisticsIsSerializedAsExpected )
-			{
-				// INIT
-				vector_adapter buffer;
-				strmd::serializer<vector_adapter, packer> s(buffer);
-				statistic_types::function_detailed s1;
-
-				static_cast<function_statistics &>(s1) = function_statistics(17, 123123123, 32123, 2213);
-				s1.callees[addr(7741)] = function_statistics(1117, 1231123, 3213, 112213);
-				s1.callees[addr(141)] = function_statistics(17, 11293123, 132123, 12213);
-
-				// ACT
-				s(s1);
-
-				// INIT
-				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				statistic_types::function_detailed ds1;
-				vector< pair<const void *, function_statistics> > callees;
-				vector< pair<const void *, count_t> > callers;
-
-				// ACT
-				ds(ds1);
-
-				// ASSERT
-				pair<const void *, statistic_types::function_detailed> reference[] = {
-					make_pair(addr(7741), function_statistics(1117, 1231123, 3213, 112213)),
-					make_pair(addr(141), function_statistics(17, 11293123, 132123, 12213)),
-				};
-
-				assert_equal(s1, ds1);
-				assert_equivalent(reference, ds1.callees);
 			}
 
 

@@ -23,7 +23,8 @@
 #include <common/compiler.h>
 #include <common/hash.h>
 #include <common/primitives.h>
-#include <stdexcept>
+#include <common/types.h>
+#include <vector>
 
 namespace micro_profiler
 {

@@ -55,7 +55,7 @@ namespace micro_profiler
 			{
 				aggregated = function_statistics();
 				for (auto i = group_begin; i != group_end; ++i)
-					aggregated += *i;
+					add(aggregated, *i);
 			}
 		};
 

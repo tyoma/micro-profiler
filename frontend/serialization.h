@@ -126,7 +126,7 @@ namespace micro_profiler
 		function_statistics v;
 
 		serialize(archive, v, ver);
-		data += v;
+		add(data, v);
 	}
 
 	template <typename ArchiveT, typename U, typename C, int sl>

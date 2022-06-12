@@ -1,6 +1,7 @@
 #include "legacy_serialization.h"
 
 #include <cstdint>
+#include <collector/primitives.h>
 #include <frontend/serialization.h>
 #include <strmd/serializer.h>
 #include <test-helpers/helpers.h>
@@ -45,7 +46,7 @@ namespace micro_profiler
 		template <typename T>
 		struct fsd
 		{
-			fsd(const function_statistics_detailed_t<T> &from)
+			fsd(const call_graph_node<T> &from)
 				: self(from), callees(from.callees.begin(), from.callees.end())
 			{	}
 

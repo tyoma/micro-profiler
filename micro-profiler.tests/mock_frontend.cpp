@@ -1,5 +1,6 @@
 #include "mock_frontend.h"
 
+#include <collector/primitives.h>
 #include <common/memory.h>
 #include <common/serialization.h>
 #include <common/stream.h>

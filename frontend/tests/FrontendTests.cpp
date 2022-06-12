@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "mock_channel.h"
 
+#include <collector/serialization.h> // TODO: remove?
 #include <common/serialization.h>
 #include <frontend/tables.h>
 #include <ipc/server_session.h>
@@ -35,7 +36,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef statistic_types_t<unsigned> unthreaded_statistic_types;
+			typedef call_graph_types<unsigned> unthreaded_statistic_types;
 
 			struct emulator_ : ipc::channel, noncopyable
 			{
@@ -180,7 +181,7 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 12));
+						+ make_pair(1321222u, unthreaded_statistic_types::node()), 12));
 				});
 				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &, const vector<unsigned int> &ids) {
 					log.insert(log.end(), ids.begin(), ids.end());
@@ -195,7 +196,7 @@ namespace micro_profiler
 				// INIT (replace handler)
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 17));
+						+ make_pair(1321222u, unthreaded_statistic_types::node()), 17));
 				});
 
 				// ACT
@@ -207,8 +208,8 @@ namespace micro_profiler
 				// INIT (replace handler)
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, plural
-						+ make_pair(17u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed()))
-						+ make_pair(135u, plural + make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
+						+ make_pair(17u, plural + make_pair(1321222u, unthreaded_statistic_types::node()))
+						+ make_pair(135u, plural + make_pair(1321222u, unthreaded_statistic_types::node())));
 				});
 
 				// ACT
@@ -226,7 +227,7 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 0));
+						+ make_pair(1321222u, unthreaded_statistic_types::node()), 0));
 				});
 				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
 					resp(response_threads_info, plural
@@ -269,7 +270,7 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed()), 0));
+						+ make_pair(1321222u, unthreaded_statistic_types::node()), 0));
 				});
 				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &ids) {
 					log.push_back(ids);
@@ -302,7 +303,7 @@ namespace micro_profiler
 
 				// ACT
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
+						+ make_pair(1321222u, unthreaded_statistic_types::node())));
 				});
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 
@@ -324,8 +325,8 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())
-						+ make_pair(1321221u, unthreaded_statistic_types::function_detailed())));
+						+ make_pair(1321222u, unthreaded_statistic_types::node())
+						+ make_pair(1321221u, unthreaded_statistic_types::node())));
 				});
 
 				// ACT
@@ -343,7 +344,7 @@ namespace micro_profiler
 				// INIT
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(13u, unthreaded_statistic_types::function_detailed())));
+						+ make_pair(13u, unthreaded_statistic_types::node())));
 				});
 
 				// ACT
@@ -363,7 +364,7 @@ namespace micro_profiler
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					called++;
 					resp(response_statistics_update, make_single_threaded(plural
-						+ make_pair(1321222u, unthreaded_statistic_types::function_detailed())));
+						+ make_pair(1321222u, unthreaded_statistic_types::node())));
 				});
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 

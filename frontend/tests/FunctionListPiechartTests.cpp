@@ -17,8 +17,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef statistic_types_t<long_address_t> unthreaded_statistic_types;
-
 			const double c_tolerance = 0.000001;
 
 			void increment(int *value)

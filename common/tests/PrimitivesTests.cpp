@@ -9,11 +9,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			typedef statistic_types_t<const void *> statistic_types;
-		}
-
 		begin_test_suite( PrimitivesTests )
 			test( NewFunctionStatisticsInitializedToZeroes )
 			{
@@ -34,8 +29,8 @@ namespace micro_profiler
 				function_statistics s1(1, 3, 4, 5), s2(5, 7, 8, 13);
 
 				// ACT
-				s1.add_call(9, 10);
-				s2.add_call(11, 12);
+				add(s1, 9, 10);
+				add(s2, 11, 12);
 
 				// ASSERT
 				assert_equal(2u, s1.times_called);
@@ -56,7 +51,7 @@ namespace micro_profiler
 				function_statistics s1(3, 4, 4, 0), s2(7, 7, 8, 0);
 
 				// ACT
-				s1 += s2;
+				add(s1, s2);
 
 				// ASSERT
 				assert_equal(10u, s1.times_called);
@@ -65,7 +60,7 @@ namespace micro_profiler
 				assert_equal(0, s1.max_call_time);
 
 				// ACT
-				s2 += s1;
+				add(s2, s1);
 
 				// ASSERT
 				assert_equal(17u, s2.times_called);
@@ -82,8 +77,8 @@ namespace micro_profiler
 				const function_statistics a(0, 0, 0, 5);
 
 				// ACT
-				s1 += a;
-				s2 += a;
+				add(s1, a);
+				add(s2, a);
 
 				// ASSERT
 				assert_equal(10, s1.max_call_time);

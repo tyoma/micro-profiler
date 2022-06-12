@@ -31,8 +31,8 @@ namespace micro_profiler
 		namespace
 		{
 			using ipc::deserializer;
-			typedef pair<unsigned, statistic_types_t<unsigned>::function_detailed> addressed_statistics;
-			typedef containers::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed>
+			typedef pair<unsigned, call_graph_types<unsigned>::node> addressed_statistics;
+			typedef containers::unordered_map<unsigned /*threadid*/, call_graph_types<unsigned>::nodes_map>
 				thread_statistics_map;
 
 			const overhead c_overhead(0, 0);

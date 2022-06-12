@@ -171,7 +171,7 @@ namespace micro_profiler
 				{
 					record = function_statistics();
 					for (auto i = begin; i != end; ++i)
-						record += *i;
+						add(record, *i);
 				}
 			};
 
@@ -387,6 +387,6 @@ namespace micro_profiler
 				assert_equal(1u, data[5].reentrance(lookup));
 				assert_equal(2u, data[6].reentrance(lookup));
 			}
-			end_test_suite
+		end_test_suite
 	}
 }

@@ -34,6 +34,9 @@ namespace micro_profiler
 		template <typename LookupT>
 		const path_t &path(const LookupT &lookup) const;
 
+		template <typename LookupT>
+		unsigned int reentrance(const LookupT &lookup) const;
+
 		id_t id;
 		id_t thread_id;
 		id_t parent_id;
@@ -45,6 +48,7 @@ namespace micro_profiler
 
 	private:
 		mutable path_t _path;
+		mutable unsigned int _reentrance;
 	};
 
 	struct symbol_key
@@ -57,17 +61,19 @@ namespace micro_profiler
 
 	template <typename LookupT>
 	inline const call_statistics::path_t &call_statistics::path(const LookupT &lookup) const
-	{
-		if (_path.empty())
-			initialize_path(lookup);
-		return _path;
-	}
+	{	return _path.empty() ? initialize_path(lookup), _path : _path;	}
+
+	template <typename LookupT>
+	inline unsigned int call_statistics::reentrance(const LookupT &lookup) const
+	{	return _path.empty() ? initialize_path(lookup), _reentrance : _reentrance;	}
 
 	template <typename LookupT>
 	FORCE_NOINLINE inline void call_statistics::initialize_path(const LookupT &lookup) const
 	{
-		for (auto item = this; item; item = lookup(item->parent_id))
-			_path.push_back(item->id);
+		auto item = this;
+
+		for(_path.push_back(item->id), _reentrance = 0; item = lookup(item->parent_id), item; )
+			_path.push_back(item->id), _reentrance += item->address == address;
 		std::reverse(_path.begin(), _path.end());
 	}
 

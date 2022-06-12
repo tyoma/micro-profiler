@@ -339,6 +339,54 @@ namespace micro_profiler
 				assert_equal(plural + 1u + 2u, data[1].path(lookup));
 				assert_equal(plural + 1u + 2u + 3u, data[2].path(lookup));
 			}
-		end_test_suite
+
+
+			test( NonRecurrentCallsHaveZeroReentranceLevel )
+			{
+				// INIT
+				const call_statistics data[] = {
+					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 1, 103, 0, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 2, 104, 0, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 105, 0, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 106, 0, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 5, 107, 0, 0, 0, 0, 0),
+				};
+				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
+
+				// ACT / ASSERT
+				assert_equal(0u, data[0].reentrance(lookup));
+				assert_equal(0u, data[1].reentrance(lookup));
+				assert_equal(0u, data[3].reentrance(lookup));
+				assert_equal(0u, data[4].reentrance(lookup));
+				assert_equal(0u, data[5].reentrance(lookup));
+			}
+
+
+			test( ReentranceLevelIsCalculatedBasedOnTheAddress )
+			{
+				// INIT
+				const call_statistics data[] = {
+					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 2, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 3, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 6, 101, 0, 0, 0, 0, 0),
+				};
+				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
+
+				// ACT / ASSERT
+				assert_equal(0u, data[0].reentrance(lookup));
+				assert_equal(1u, data[1].reentrance(lookup));
+				assert_equal(0u, data[2].reentrance(lookup));
+				assert_equal(1u, data[3].reentrance(lookup));
+				assert_equal(2u, data[4].reentrance(lookup));
+				assert_equal(1u, data[5].reentrance(lookup));
+				assert_equal(2u, data[6].reentrance(lookup));
+			}
+			end_test_suite
 	}
 }

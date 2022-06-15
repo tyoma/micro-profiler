@@ -40,6 +40,9 @@
 			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_RUN_COMMANDS" priority="0x0000">
 				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
 			</Group>
+			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" priority="0x0020">
+				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
+			</Group>
 			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" priority="0x0080">
 				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
 			</Group>
@@ -154,6 +157,24 @@
 					<ButtonText>Pause Updates</ButtonText>
 				</Strings>
 			</Button>
+
+			<Button guid="guidInstanceCmdSet" id="cmdidViewHierarchy" priority="0x000A" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" />
+				<!-- Icon guid="guidIconSet" id="iconidPlay"/ -->
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Hierarchy</ButtonText>
+				</Strings>
+			</Button>
+			<Button guid="guidInstanceCmdSet" id="cmdidViewFlat" priority="0x000B" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" />
+				<!-- Icon guid="guidIconSet" id="iconidPause"/ -->
+				<CommandFlag>DontCache</CommandFlag>
+				<Strings>
+					<ButtonText>Flat</ButtonText>
+				</Strings>
+			</Button>
+
 			<Button guid="guidInstanceCmdSet" id="cmdidSaveStatistics" priority="0x0010" type="Button">
 				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
 				<Icon guid="guidIconSet" id="iconidSave"/>

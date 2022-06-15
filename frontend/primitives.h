@@ -81,6 +81,19 @@ namespace micro_profiler
 
 	inline bool operator ==(const symbol_key &lhs, const symbol_key &rhs)
 	{	return !((lhs.persistent_id - rhs.persistent_id) | (lhs.rva - rhs.rva));	}
+
+	template <typename LookupT>
+	inline void add(call_statistics &lhs, const call_statistics &rhs, const LookupT &lookup)
+	{
+		lhs.times_called += rhs.times_called;
+		lhs.exclusive_time += rhs.exclusive_time;
+		if (!rhs.reentrance(lookup))
+		{
+			lhs.inclusive_time += rhs.inclusive_time;
+			if (rhs.max_call_time > lhs.max_call_time)
+				lhs.max_call_time = rhs.max_call_time;
+		}
+	}
 }
 
 namespace std

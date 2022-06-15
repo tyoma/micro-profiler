@@ -115,6 +115,7 @@
     <ClInclude Include="..\dynamic_views.h" />
     <ClInclude Include="..\hierarchy.h" />
     <ClInclude Include="..\derived_statistics.h" />
+    <ClInclude Include="..\aggregators.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

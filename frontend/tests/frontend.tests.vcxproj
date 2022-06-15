@@ -63,6 +63,7 @@
     <ClCompile Include="ColumnsDefinitionTests.cpp" />
     <ClCompile Include="HierarchicalTableModelImplTests.cpp" />
     <ClCompile Include="HierarchyAlgorithmsTests.cpp" />
+    <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="StatisticsHierarchyAccessTests.cpp" />
     <ClCompile Include="TableModelImplTests.cpp" />
     <ClCompile Include="DataSchemeTests.cpp" />

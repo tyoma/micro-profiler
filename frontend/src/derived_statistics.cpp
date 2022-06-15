@@ -22,7 +22,7 @@
 
 #include <frontend/derived_statistics.h>
 
-#include <frontend/db.h>
+#include <frontend/aggregators.h>
 #include <frontend/constructors.h>
 #include <frontend/key.h>
 #include <frontend/selection_model.h>
@@ -37,25 +37,6 @@ namespace micro_profiler
 
 	namespace
 	{
-		struct sum_functions_plain
-		{
-			template <typename I>
-			void operator ()(call_statistics &aggregated, I group_begin, I group_end) const
-			{
-				aggregated.parent_id = 0;
-				static_cast<function_statistics&>(aggregated) = function_statistics();
-				for (auto i = group_begin; i != group_end; ++i)
-					add(aggregated, *i);
-			}
-		};
-
-		struct void_aggregator
-		{
-			template <typename R, typename I>
-			void operator ()(R &, I, I) const
-			{	}
-		};
-
 		struct hierarchy_address
 		{
 			hierarchy_address(calls_statistics_table_cptr hierarchy)
@@ -116,7 +97,7 @@ namespace micro_profiler
 		others.push_back(selection_);
 		others.push_back(hierarchy);
 		result = group_by<long_address_t>(selection_->get_table(), initialize<selection_address_keyer_factory>(hierarchy),
-			views::default_constructor<long_address_t>(), void_aggregator());
+			views::default_constructor<long_address_t>(), aggregator::void_());
 		return address_table_cptr(composite, &*result);
 	}
 
@@ -134,7 +115,7 @@ namespace micro_profiler
 		others.push_back(hierarchy);
 		others.push_back(all_instances);
 		result = group_by<call_statistics>(*all_instances, initialize<parent_to_address_keyer_factory>(hierarchy),
-			call_statistics_constructor(), sum_functions_plain());
+			auto_increment_constructor<call_statistics>(), aggregator::sum_flat(*hierarchy));
 		return calls_statistics_table_cptr(composite, &*result);
 	}
 
@@ -151,8 +132,8 @@ namespace micro_profiler
 		others.push_back(callers);
 		others.push_back(hierarchy);
 		others.push_back(all_instances);
-		result = group_by<call_statistics>(*all_instances, address_keyer_factory(), call_statistics_constructor(),
-			sum_functions_plain());
+		result = group_by<call_statistics>(*all_instances, address_keyer_factory(),
+			auto_increment_constructor<call_statistics>(), aggregator::sum_flat(*hierarchy));
 		return calls_statistics_table_cptr(composite, &*result);
 	}
 }

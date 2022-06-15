@@ -31,6 +31,11 @@
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
     <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>

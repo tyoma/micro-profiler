@@ -291,6 +291,50 @@ namespace micro_profiler
 					+ make_call_statistics(0, 7, 0, 501, 113, 0, 0, 0, 0)
 					+ make_call_statistics(0, 3, 0, 501, 107, 0, 0, 0, 0), *callers);
 			}
+
+
+			test( CallersBorrowThreadIdAndAreAwareOfRecursion )
+			{
+				// INIT
+				auto hierarchy = make_shared<calls_statistics_table>();
+				auto selector = make_shared<address_table>();
+				auto callers = derived_statistics::callers(selector, hierarchy);
+
+				add_records(*hierarchy, plural
+					+ make_call_statistics(1, 9, 0, 123, 101, 0, 11, 13, 0)
+					+ make_call_statistics(2, 9, 1, 501, 112, 0, 17, 19, 0)
+					+ make_call_statistics(3, 9, 2, 501, 173, 0, 23, 29, 0)
+
+					+ make_call_statistics(4, 9, 0, 501, 104, 0, 31, 37, 0)
+					+ make_call_statistics(5, 9, 4, 123, 105, 0, 41, 43, 0)
+					+ make_call_statistics(6, 9, 5, 501, 106, 0, 47, 53, 0)
+					+ make_call_statistics(7, 9, 6, 123, 107, 0, 59, 67, 0)
+
+					+ make_call_statistics(8, 7, 0, 123, 207, 0, 71, 77, 0)
+					+ make_call_statistics(9, 7, 8, 123, 907, 0, 17, 97, 0)
+					+ make_call_statistics(10, 7, 9, 123, 003, 0, 1, 9, 0));
+
+				// ACT
+				add_records(*selector, plural + 501);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 9, 0, 123, 218, 0, 17, 72, 0)
+					+ make_call_statistics(0, 9, 0, 501, 173, 0, 0, 29, 0)
+					+ make_call_statistics(0, 9, 0, 0, 104, 0, 31, 37, 0), *callers);
+
+				// ACT
+				add_records(*selector, plural + 123);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 9, 0, 123, 218, 0, 17, 72, 0)
+					+ make_call_statistics(0, 9, 0, 501, 385, 0, 41, 139, 0)
+					+ make_call_statistics(0, 9, 0, 0, 205, 0, 42, 50, 0)
+					+ make_call_statistics(0, 7, 0, 0, 207, 0, 71, 77, 0)
+					+ make_call_statistics(0, 7, 0, 123, 910, 0, 0, 106, 0)
+					, *callers);
+			}
 		end_test_suite
 
 
@@ -402,6 +446,46 @@ namespace micro_profiler
 					+ make_call_statistics(0, 9, 0, 501, 218, 0, 0, 0, 0)
 					+ make_call_statistics(0, 9, 0, 502, 173, 0, 0, 0, 0)
 					+ make_call_statistics(0, 9, 0, 123, 105, 0, 0, 0, 0), *callees);
+			}
+
+
+			test( CalleesBorrowThreadIdAndAreAwareOfRecursion )
+			{
+				// INIT
+				auto hierarchy = make_shared<calls_statistics_table>();
+				auto selector = make_shared<address_table>();
+				auto callees = derived_statistics::callees(selector, hierarchy);
+
+				add_records(*hierarchy, plural
+					+ make_call_statistics(1, 9, 0, 123, 101, 0, 11, 13, 0)
+					+ make_call_statistics(2, 9, 1, 501, 112, 0, 17, 19, 0)
+					+ make_call_statistics(3, 9, 2, 501, 173, 0, 23, 29, 0)
+
+					+ make_call_statistics(4, 9, 0, 501, 104, 0, 31, 37, 0)
+					+ make_call_statistics(5, 9, 4, 123, 105, 0, 41, 43, 0)
+					+ make_call_statistics(6, 9, 5, 501, 106, 0, 47, 53, 0)
+					+ make_call_statistics(7, 9, 6, 123, 107, 0, 59, 67, 0)
+
+					+ make_call_statistics(8, 7, 0, 123, 207, 0, 71, 77, 0)
+					+ make_call_statistics(9, 7, 8, 123, 907, 0, 17, 97, 0)
+					+ make_call_statistics(10, 7, 9, 123, 003, 0, 1, 9, 0));
+
+				// ACT
+				add_records(*selector, plural + 501);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 9, 0, 123, 212, 0, 41, 110, 0)
+					+ make_call_statistics(0, 9, 0, 501, 173, 0, 0, 29, 0), *callees);
+
+				// ACT
+				add_records(*selector, plural + 123);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 9, 0, 123, 212, 0, 41, 110, 0)
+					+ make_call_statistics(0, 9, 0, 501, 391, 0, 17, 101, 0)
+					+ make_call_statistics(0, 7, 0, 123, 910, 0, 0, 106, 0), *callees);
 			}
 
 		end_test_suite

@@ -47,6 +47,10 @@ namespace micro_profiler
 	{
 	public:
 		tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration);
+		~tables_ui();
+
+		void set_hierarchical(bool enable);
+		bool get_hierarchical() const;
 
 		void dump(std::string &content) const;
 		void save(hive &configuration);
@@ -59,9 +63,15 @@ namespace micro_profiler
 
 	private:
 		void init_layout(const wpl::factory &factory_);
+		void set_mode(bool hierarchical, bool thread_cumulative);
 		void attach(std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<models> m);
 
 	private:
+		const std::unique_ptr<profiling_session> _session;
+		const std::shared_ptr<symbol_resolver> _resolver;
+
+		bool _hierarchical, _thread_cumulative;
+
 		const std::shared_ptr<wpl::combobox> _filter_selector;
 		const std::shared_ptr<piechart> _main_piechart, _callees_piechart;
 		const std::shared_ptr<function_hint> _main_hint, _callees_hint;

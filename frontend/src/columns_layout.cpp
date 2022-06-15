@@ -29,6 +29,7 @@
 #include <frontend/primitives.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
+#include <frontend/threads_model.h>
 
 using namespace agge;
 
@@ -82,6 +83,12 @@ namespace micro_profiler
 		};
 
 		auto name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
+			if (!item.address)
+			{
+				text << "<root>";
+				return;
+			}
+
 			auto n = item.path([&context] (micro_profiler::id_t id) {	return context.by_id(id);	}).size() - 1u;
 
 			while (n--)
@@ -90,6 +97,12 @@ namespace micro_profiler
 		};
 
 		auto thread_native_id = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item_) {
+			if (threads_model::cumulative == item_.thread_id)
+			{
+				text << "[cumulative]";
+				return;
+			}
+
 			const auto item = context.by_thread_id(item_.thread_id);
 
 			if (item)

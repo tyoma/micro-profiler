@@ -68,6 +68,7 @@
     <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\aggregators.h" />
     <ClInclude Include="..\derived_statistics.h" />
     <ClInclude Include="..\columns_layout.h" />
     <ClInclude Include="..\column_definition.h" />

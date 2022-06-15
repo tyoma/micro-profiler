@@ -28,10 +28,11 @@
 
 namespace micro_profiler
 {
-	struct call_statistics_constructor;
+	template <typename T>
+	struct auto_increment_constructor;
 
 	typedef std::tuple<id_t /*thread_id*/, id_t /*parent_id*/, long_address_t> call_node_key;
-	typedef views::table<call_statistics, call_statistics_constructor> calls_statistics_table;
+	typedef views::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
 	typedef std::shared_ptr<const calls_statistics_table> calls_statistics_table_cptr;
 	typedef std::vector<long_address_t> callstack_key;
 
@@ -52,26 +53,27 @@ namespace micro_profiler
 		knuth_hash h;
 	};
 
-	struct call_statistics_constructor
+	template <typename T>
+	struct auto_increment_constructor
 	{
-		call_statistics_constructor()
+		auto_increment_constructor()
 			: _next_id(1)
 		{	}
 
-		call_statistics operator ()()
+		T operator ()()
 		{
-			call_statistics s;
+			T record;
 
-			s.id = _next_id++;
-			return s;
+			record.id = _next_id++;
+			return record;
 		}
 
 	private:
 		id_t _next_id;
 
 	private:
-		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, call_statistics_constructor &data, unsigned int ver);
+		template <typename ArchiveT, typename T2>
+		friend void serialize(ArchiveT &archive, auto_increment_constructor<T2> &data, unsigned int ver);
 	};
 
 	namespace keyer

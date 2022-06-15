@@ -51,6 +51,7 @@
 #define IDG_MP_INSTANCE_COMMANDS 0x1034
 #define IDG_MP_INSTANCE_MISC_COMMANDS 0x1035
 #define IDG_MP_INSTANCE_RUN_COMMANDS 0x1036
+#define IDG_MP_INSTANCE_VIEW_COMMANDS 0x1037
 #define IDG_MP_IPC	0x1036
 
 
@@ -58,6 +59,8 @@
 // Command IDs
 #define cmdidToggleProfiling 0x101
 #define cmdidRemoveProfilingSupport 0x104
+#define cmdidViewHierarchy 0x105
+#define cmdidViewFlat 0x106
 #define cmdidPauseUpdates 0x108
 #define cmdidResumeUpdates 0x109
 #define cmdidSaveStatistics 0x110

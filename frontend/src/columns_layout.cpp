@@ -97,7 +97,7 @@ namespace micro_profiler
 		};
 
 		auto thread_native_id = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item_) {
-			if (threads_model::cumulative == item_.thread_id)
+			if (micro_profiler::threads_model::cumulative == item_.thread_id)
 			{
 				text << "[cumulative]";
 				return;

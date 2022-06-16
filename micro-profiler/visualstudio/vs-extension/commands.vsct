@@ -19,6 +19,15 @@
 					<ButtonText>MicroProfiler Instance Commands</ButtonText>
 				</Strings>
 			</Menu>
+			<Menu guid="guidInstanceCmdSet" id="IDM_MP_VIEWMODE_DROPDOWN" priority="0x000A" type="MenuController">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>TextIsAnchorCommand</CommandFlag>
+				<Strings>
+					<ButtonText>x</ButtonText>
+				</Strings>
+			</Menu>
 		</Menus>
 
 		<Groups>
@@ -41,7 +50,7 @@
 				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
 			</Group>
 			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" priority="0x0020">
-				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
+				<Parent guid="guidInstanceCmdSet" id="IDM_MP_VIEWMODE_DROPDOWN" />
 			</Group>
 			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" priority="0x0080">
 				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
@@ -158,20 +167,18 @@
 				</Strings>
 			</Button>
 
-			<Button guid="guidInstanceCmdSet" id="cmdidViewHierarchy" priority="0x000A" type="Button">
+			<Button guid="guidInstanceCmdSet" id="cmdidViewHierarchy" priority="0x000C" type="Button">
 				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" />
-				<!-- Icon guid="guidIconSet" id="iconidPlay"/ -->
-				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<ButtonText>Hierarchy</ButtonText>
+					<ToolTipText>Display main statistics as stacktraces</ToolTipText>
 				</Strings>
 			</Button>
-			<Button guid="guidInstanceCmdSet" id="cmdidViewFlat" priority="0x000B" type="Button">
+			<Button guid="guidInstanceCmdSet" id="cmdidViewFlat" priority="0x000D" type="Button">
 				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" />
-				<!-- Icon guid="guidIconSet" id="iconidPause"/ -->
-				<CommandFlag>DontCache</CommandFlag>
 				<Strings>
 					<ButtonText>Flat</ButtonText>
+					<ToolTipText>Display main statistics as a flat list</ToolTipText>
 				</Strings>
 			</Button>
 

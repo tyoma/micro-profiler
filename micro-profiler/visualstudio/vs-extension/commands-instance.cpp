@@ -54,13 +54,13 @@ namespace micro_profiler
 			target.add_command(cmdidViewHierarchy, [&ui] (unsigned) {
 				ui.set_hierarchical(true);
 			}, false, [&ui] (unsigned, unsigned &state) {
-				return state = (!ui.get_hierarchical() ? command_target::enabled : 0) | command_target::supported | command_target::visible, true;
+				return state = (ui.get_hierarchical() ? command_target::checked : 0) | command_target::enabled | command_target::supported | command_target::visible, true;
 			});
 
 			target.add_command(cmdidViewFlat, [&ui] (unsigned) {
 				ui.set_hierarchical(false);
 			}, false, [&ui] (unsigned, unsigned &state) {
-				return state = (ui.get_hierarchical() ? command_target::enabled : 0) | command_target::supported | command_target::visible, true;
+				return state = (!ui.get_hierarchical() ? command_target::checked : 0) | command_target::enabled | command_target::supported | command_target::visible, true;
 			});
 
 			target.add_command(cmdidSaveStatistics, [session, executable] (unsigned) {

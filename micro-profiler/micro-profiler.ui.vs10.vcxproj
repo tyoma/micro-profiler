@@ -43,6 +43,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="visualstudio\vs-extension\icon-ids.h" />
     <ResourceCompile Include="resources\micro-profiler_ui.rc" />
     <CustomBuild Include="visualstudio\vs-extension\commands.vsct">
       <FileType>Document</FileType>

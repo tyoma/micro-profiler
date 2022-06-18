@@ -41,6 +41,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="columns_layout.cpp" />
+    <ClCompile Include="derived_statistics.cpp" />
     <ClCompile Include="frontend.cpp" />
     <ClCompile Include="frontend_manager.cpp" />
     <ClCompile Include="frontend_metadata.cpp" />
@@ -67,6 +68,8 @@
     <ClCompile Include="untested\tables_ui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\aggregators.h" />
+    <ClInclude Include="..\derived_statistics.h" />
     <ClInclude Include="..\columns_layout.h" />
     <ClInclude Include="..\column_definition.h" />
     <ClInclude Include="..\constructors.h" />
@@ -89,7 +92,6 @@
     <ClInclude Include="..\models.h" />
     <ClInclude Include="..\model_context.h" />
     <ClInclude Include="..\dynamic_views.h" />
-    <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\persistence.h" />
     <ClInclude Include="..\piechart.h" />
     <ClInclude Include="..\process_list.h" />

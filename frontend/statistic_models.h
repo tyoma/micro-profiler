@@ -28,7 +28,6 @@
 #include "symbol_resolver.h"
 #include "table_model_impl.h"
 #include "tables.h"
-#include "transforms.h"
 
 #include <views/filter.h>
 #include <views/integrated_index.h>
@@ -92,14 +91,13 @@ namespace micro_profiler
 		const statistics_model_context &context, const ColumnsT &columns)
 	{
 		typedef table_model_impl<BaseT, U, statistics_model_context> model_type;
-		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> complex_type;
+		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> composite_t;
 
 		const auto m = std::make_shared<model_type>(underlying, context);
-		const auto p = m.get();
-		const auto c = std::make_shared<complex_type>(m, underlying->invalidate += [p] {
-			p->fetch();
-		}, context.resolver->invalidate += [p] {
-			p->invalidate(p->npos());
+		const auto c = std::make_shared<composite_t>(m, underlying->invalidate += [m] {
+			m->fetch();
+		}, context.resolver->invalidate += [m] {
+			m->invalidate(m->npos());
 		});
 
 		m->add_columns(columns);
@@ -110,20 +108,4 @@ namespace micro_profiler
 	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, CtxT> >
 		create_statistics_model(std::shared_ptr<U> underlying, const CtxT &context)
 	{	return make_table< table_model<id_t> >(underlying, context, c_statistics_columns);	}
-
-	template <typename U, typename CtxT, typename ScopeT>
-	inline std::shared_ptr< table_model<id_t> > create_callees_model(std::shared_ptr<U> underlying, const CtxT &context,
-		std::shared_ptr<ScopeT> scope)
-	{
-		return make_table< table_model<id_t> >(make_scoped_view< callees_transform<U> >(underlying, scope), context,
-			c_callee_statistics_columns);
-	}
-
-	template <typename U, typename CtxT, typename ScopeT>
-	inline std::shared_ptr< table_model<id_t> > create_callers_model(std::shared_ptr<U> underlying, const CtxT &context,
-		std::shared_ptr<ScopeT> scope)
-	{
-		return make_table< table_model<id_t> >(make_scoped_view< callers_transform<U> >(underlying, scope), context,
-			c_caller_statistics_columns);
-	}
 }

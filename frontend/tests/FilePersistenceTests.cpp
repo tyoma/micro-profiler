@@ -60,6 +60,9 @@ namespace micro_profiler
 
 		namespace
 		{
+			legacy_function_key addr(long_address_t address, unsigned thread_id = 1)
+			{	return legacy_function_key(address, thread_id);	}
+
 			profiling_session create_context()
 			{
 				profiling_session ctx = {
@@ -98,8 +101,8 @@ namespace micro_profiler
 
 			module_info_metadata modules[3];
 			mapped_module_ex mappings[3];
-			vector< pair<statistic_types::key, statistic_types::function_detailed> > statistics[4];
-			vector< pair<statistic_types_t<long_address_t>::key, statistic_types_t<long_address_t>::function_detailed> > ustatistics[2];
+			vector< pair<legacy_function_key, call_graph_types<legacy_function_key>::node> > statistics[4];
+			vector< pair<call_graph_types<long_address_t>::key, call_graph_types<long_address_t>::node> > ustatistics[2];
 			vector< pair<unsigned, thread_info> > threads[2];
 
 			

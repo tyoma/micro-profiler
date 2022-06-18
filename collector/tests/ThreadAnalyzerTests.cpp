@@ -16,7 +16,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef std::pair<const void *, statistic_types_t<const void *>::function_detailed> addressed_statistics;
+			typedef std::pair<const void *, call_graph_types<const void *>::node> addressed_statistics;
 		}
 
 		begin_test_suite( ThreadAnalyzerTests )
@@ -45,12 +45,10 @@ namespace micro_profiler
 				a.accept_calls(trace, array_size(trace));
 
 				// ASSERT
-				addressed_statistics reference[] = {
-					make_statistics(addr(1234), 0, 0, 0, 0, 0),
-					make_statistics(addr(2234), 0, 0, 0, 0, 0),
-				};
-
-				assert_equivalent(reference, a);
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0, 0, 0)),
+					a);
 			}
 
 
@@ -73,14 +71,11 @@ namespace micro_profiler
 				a.accept_calls(trace, array_size(trace));
 
 				// ASSERT
-				addressed_statistics reference[] = {
-					make_statistics(addr(1234), 1, 0, 5, 5, 5),
-					make_statistics(addr(2234), 2, 0, 14, 11, 7, plural
+				assert_equivalent(plural
+					+ make_statistics(addr(1234), 1, 0, 5, 5, 5)
+					+ make_statistics(addr(2234), 2, 0, 14, 11, 7, plural
 						+ make_statistics(addr(12234), 1, 0, 3, 3, 3)),
-					make_statistics(addr(12234), 1, 0, 3, 3, 3),
-				};
-
-				assert_equivalent(reference, a);
+					a);
 			}
 
 
@@ -111,9 +106,6 @@ namespace micro_profiler
 					make_statistics(addr(2), 1, 0, 18, 13, 18, plural
 						+ make_statistics(addr(21), 1, 0, 1, 1, 1)
 						+ make_statistics(addr(22), 1, 0, 4, 4, 4)),
-					make_statistics(addr(11), 1, 0, 1, 1, 1),
-					make_statistics(addr(21), 1, 0, 1, 1, 1),
-					make_statistics(addr(22), 1, 0, 4, 4, 4),
 				};
 
 				assert_equivalent(reference, a);
@@ -143,7 +135,6 @@ namespace micro_profiler
 					make_statistics(addr(1234), 1, 0, 4, 4, 4),
 					make_statistics(addr(2234), 2, 0, 9, 7, 6, plural
 						+ make_statistics(addr(12234), 1, 0, 2, 2, 2)),
-					make_statistics(addr(12234), 1, 0, 2, 2, 2),
 				};
 
 				assert_equivalent(reference, a);

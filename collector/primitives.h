@@ -20,9 +20,58 @@
 
 #pragma once
 
+#include <common/compiler.h>
+#include <common/hash.h>
 #include <common/primitives.h>
+#include <common/unordered_map.h>
 
 namespace micro_profiler
 {
-	typedef statistic_types_t<const void *> statistic_types;
+	template <typename LocationT>
+	struct call_graph_node : function_statistics
+	{
+		typedef containers::unordered_map<LocationT, call_graph_node, knuth_hash> callees_type;
+
+		call_graph_node(const function_statistics &from = function_statistics());
+		call_graph_node(const call_graph_node &other);
+		~call_graph_node();
+
+		void operator =(const call_graph_node &rhs);
+
+		callees_type &callees;
+	};
+
+	template <typename LocationT>
+	struct call_graph_types
+	{
+		typedef LocationT key;
+		typedef call_graph_node<LocationT> node;
+		typedef typename call_graph_node<LocationT>::callees_type nodes_map;
+	};
+
+	typedef call_graph_types<const void *> statistic_types;
+
+
+
+	// call_graph_node - inline definitions
+	template <typename LocationT>
+	inline call_graph_node<LocationT>::call_graph_node(const function_statistics &from)
+		: function_statistics(from), callees(*new callees_type())
+	{	}
+
+	template <typename LocationT>
+	inline call_graph_node<LocationT>::call_graph_node(const call_graph_node &other)
+		: function_statistics(other), callees(*new callees_type(other.callees))
+	{	}
+
+	template <typename LocationT>
+	inline call_graph_node<LocationT>::~call_graph_node()
+	{	delete &callees;	}
+
+	template <typename LocationT>
+	inline void call_graph_node<LocationT>::operator =(const call_graph_node &rhs)
+	{
+		static_cast<function_statistics &>(*this) = rhs;
+		callees = rhs.callees;
+	}
 }

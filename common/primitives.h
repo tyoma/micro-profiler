@@ -20,117 +20,48 @@
 
 #pragma once
 
-#include "hash.h"
-#include "compiler.h"
 #include "types.h"
-#include "unordered_map.h"
 
 namespace micro_profiler
 {
-	struct function_statistics;
-	template <typename KeyT> struct function_statistics_detailed_t;
-
-	template <typename KeyT>
-	struct statistic_types_t
-	{
-		typedef KeyT key;
-		typedef function_statistics function;
-		typedef function_statistics_detailed_t<KeyT> function_detailed;
-
-		typedef containers::unordered_map<KeyT, function_detailed, knuth_hash> map_detailed;
-	};
-
 	struct function_statistics
 	{
-		explicit function_statistics(count_t times_called = 0, unsigned int max_reentrance = 0,
-			timestamp_t inclusive_time = 0, timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0);
-
-		void add_call(unsigned int level, timestamp_t inclusive_time, timestamp_t exclusive_time);
-
-		void operator +=(const function_statistics &rhs);
+		explicit function_statistics(count_t times_called = 0, timestamp_t inclusive_time = 0,
+			timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0);
 
 		count_t times_called;
-		unsigned int max_reentrance;
 		timestamp_t inclusive_time;
 		timestamp_t exclusive_time;
 		timestamp_t max_call_time;
-		unsigned int *entrance_counter;
 	};
 
-	template <typename AddressT>
-	struct function_statistics_detailed_t : function_statistics
-	{
-		typedef typename statistic_types_t<AddressT>::map_detailed callees_type;
-
-		function_statistics_detailed_t(const function_statistics &from = function_statistics());
-		function_statistics_detailed_t(const function_statistics_detailed_t &other);
-		~function_statistics_detailed_t();
-
-		void operator =(const function_statistics_detailed_t &rhs);
-
-		callees_type &callees;
-	};
 
 
 
 	// function_statistics - inline definitions
-	inline function_statistics::function_statistics(count_t times_called_, unsigned int max_reentrance_,
-			timestamp_t inclusive_time_, timestamp_t exclusive_time_, timestamp_t max_call_time_)
-		: times_called(times_called_), max_reentrance(max_reentrance_), inclusive_time(inclusive_time_),
-			exclusive_time(exclusive_time_), max_call_time(max_call_time_), entrance_counter(0)
+	inline function_statistics::function_statistics(count_t times_called_, timestamp_t inclusive_time_,
+			timestamp_t exclusive_time_, timestamp_t max_call_time_)
+		: times_called(times_called_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_),
+			max_call_time(max_call_time_)
 	{	}
 
-	inline void function_statistics::add_call(unsigned int level, timestamp_t inclusive_time_,
-		timestamp_t exclusive_time_)
+
+	// function_statistics - inline helpers
+	inline void add(function_statistics &lhs, timestamp_t rhs_inclusive_time, timestamp_t rhs_exclusive_time)
 	{
-		++times_called;
-		if (level > max_reentrance)
-			max_reentrance = level;
-		if (!level)
-			inclusive_time += inclusive_time_;
-		exclusive_time += exclusive_time_;
-		if (inclusive_time_ > max_call_time)
-			max_call_time = inclusive_time_;
+		++lhs.times_called;
+		lhs.inclusive_time += rhs_inclusive_time;
+		lhs.exclusive_time += rhs_exclusive_time;
+		if (rhs_inclusive_time > lhs.max_call_time)
+			lhs.max_call_time = rhs_inclusive_time;
 	}
 
-	inline void function_statistics::operator +=(const function_statistics &rhs)
+	inline void add(function_statistics &lhs, const function_statistics &rhs)
 	{
-		times_called += rhs.times_called;
-		if (rhs.max_reentrance > max_reentrance)
-			max_reentrance = rhs.max_reentrance;
-		inclusive_time += rhs.inclusive_time;
-		exclusive_time += rhs.exclusive_time;
-		if (rhs.max_call_time > max_call_time)
-			max_call_time = rhs.max_call_time;
+		lhs.times_called += rhs.times_called;
+		lhs.inclusive_time += rhs.inclusive_time;
+		lhs.exclusive_time += rhs.exclusive_time;
+		if (rhs.max_call_time > lhs.max_call_time)
+			lhs.max_call_time = rhs.max_call_time;
 	}
-
-
-	// function_statistics_detailed_t - inline definitions
-	template <typename AddressT>
-	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t(const function_statistics &from)
-		: function_statistics(from), callees(*new callees_type())
-	{	}
-
-	template <typename AddressT>
-	inline function_statistics_detailed_t<AddressT>::function_statistics_detailed_t(const function_statistics_detailed_t &other)
-		: function_statistics(other), callees(*new callees_type(other.callees))
-	{	}
-
-	template <typename AddressT>
-	inline function_statistics_detailed_t<AddressT>::~function_statistics_detailed_t()
-	{	delete &callees;	}
-
-	template <typename AddressT>
-	inline void function_statistics_detailed_t<AddressT>::operator =(const function_statistics_detailed_t &rhs)
-	{
-		static_cast<function_statistics &>(*this) = rhs;
-		callees = rhs.callees;
-	}
-
-
-	// helper methods - inline definitions
-	template <typename AddressT>
-	FORCE_INLINE void add_child_statistics(function_statistics_detailed_t<AddressT> &s, AddressT function, unsigned int level,
-		timestamp_t inclusive_time, timestamp_t exclusive_time)
-	{	s.callees[function].add_call(level, inclusive_time, exclusive_time);	}
 }

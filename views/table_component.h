@@ -24,9 +24,15 @@ namespace micro_profiler
 {
 	namespace views
 	{
-		struct table_events
+		template <typename RecordHandleT>
+		struct table_component
 		{
-			virtual ~table_events() {	}
+			virtual ~table_component() {	}
+
+			virtual void created(RecordHandleT /*record*/) {	}
+			virtual void modified(RecordHandleT /*record*/) {	}
+			virtual void removed(RecordHandleT /*record*/) {	}
+			virtual void cleared() {	}
 		};
 	}
 }

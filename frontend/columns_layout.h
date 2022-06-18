@@ -27,7 +27,7 @@ namespace micro_profiler
 	struct call_statistics;
 	struct statistics_model_context;
 
-	extern const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[4];
-	extern const column_definition<call_statistics, statistics_model_context> c_statistics_columns[10];
+	extern const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[9];
+	extern const column_definition<call_statistics, statistics_model_context> c_statistics_columns[9];
 	extern const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[9];
 }

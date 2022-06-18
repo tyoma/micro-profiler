@@ -41,10 +41,8 @@ namespace micro_profiler
 		};
 
 
-		struct statistics : table<calls_statistics_table>
+		struct statistics : calls_statistics_table
 		{
-			void clear();
-
 			std::function<void ()> request_update;
 		};
 
@@ -95,13 +93,5 @@ namespace micro_profiler
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;
 		};
-
-
-
-		inline void statistics::clear()
-		{
-			base_t::clear();
-			invalidate();
-		}
 	}
 }

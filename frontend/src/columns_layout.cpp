@@ -29,6 +29,7 @@
 #include <frontend/primitives.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables.h>
+#include <frontend/threads_model.h>
 
 using namespace agge;
 
@@ -41,17 +42,6 @@ namespace micro_profiler
 	{
 		auto by_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) {
 			return strcmp(context.resolver->symbol_name_by_va(lhs.address).c_str(), context.resolver->symbol_name_by_va(rhs.address).c_str());
-		};
-
-		auto by_caller_name = [] (const statistics_model_context &context, const call_statistics &lhs, const call_statistics &rhs) -> int {
-			const auto lhs_parent = context.by_id(lhs.parent_id);
-			const auto rhs_parent = context.by_id(rhs.parent_id);
-
-			if (auto r = compare(lhs_parent, rhs_parent))
-				return r;
-			return lhs_parent
-				? strcmp(context.resolver->symbol_name_by_va(lhs_parent->address).c_str(), context.resolver->symbol_name_by_va(rhs_parent->address).c_str())
-				: 0;
 		};
 
 		auto by_threadid = [] (const statistics_model_context &context, const call_statistics &lhs_, const call_statistics &rhs_) -> int {
@@ -83,10 +73,6 @@ namespace micro_profiler
 			return micro_profiler::compare(lhs.inclusive_time, lhs.times_called, rhs.inclusive_time, rhs.times_called);
 		};
 
-		auto by_max_reentrance = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return micro_profiler::compare(lhs.max_reentrance, rhs.max_reentrance);
-		};
-
 		auto by_max_call_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
 			return micro_profiler::compare(lhs.max_call_time, rhs.max_call_time);
 		};
@@ -97,6 +83,12 @@ namespace micro_profiler
 		};
 
 		auto name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
+			if (!item.address)
+			{
+				text << "<root>";
+				return;
+			}
+
 			auto n = item.path([&context] (micro_profiler::id_t id) {	return context.by_id(id);	}).size() - 1u;
 
 			while (n--)
@@ -104,16 +96,13 @@ namespace micro_profiler
 			text << context.resolver->symbol_name_by_va(item.address).c_str();
 		};
 
-		auto callee_name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
-			text << context.resolver->symbol_name_by_va(item.address).c_str();
-		};
-
-		auto caller_name = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item) {
-			if (const auto parent = context.by_id(item.parent_id))
-				text << context.resolver->symbol_name_by_va(parent->address).c_str();
-		};
-
 		auto thread_native_id = [] (agge::richtext_t &text, const statistics_model_context &context, size_t, const call_statistics &item_) {
+			if (micro_profiler::threads_model::cumulative == item_.thread_id)
+			{
+				text << "[cumulative]";
+				return;
+			}
+
 			const auto item = context.by_thread_id(item_.thread_id);
 
 			if (item)
@@ -138,10 +127,6 @@ namespace micro_profiler
 
 		auto inclusive_time_avg = [] (const statistics_model_context &context, const call_statistics &value) {
 			return value.times_called ? context.tick_interval * value.inclusive_time / value.times_called : 0.0;
-		};
-
-		auto max_reentrance = [] (const statistics_model_context &, const call_statistics &value) {
-			return value.max_reentrance;
 		};
 
 		auto max_call_time = [] (const statistics_model_context &context, const call_statistics &value) {
@@ -199,26 +184,30 @@ namespace micro_profiler
 		{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, agge::align_far, format_interval2(inclusive_time), by_inclusive_time, false, inclusive_time,	},
 		{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(exclusive_time_avg), by_avg_exclusive_call_time, false, exclusive_time_avg,	},
 		{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(inclusive_time_avg), by_avg_inclusive_call_time, false, inclusive_time_avg,	},
-		{	"MaxRecursion", "Recursion\n" + secondary + "max depth", 25, agge::align_far, format_integer(max_reentrance), by_max_reentrance, false, max_reentrance,	},
 		{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, agge::align_far, format_interval2(max_call_time), by_max_call_time, false, max_call_time,	},
 	};
 
 	const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[] = {
 		c_statistics_columns[0],
-		{	"Function", "Calling Function\n" + secondary + "qualified name", 384, agge::align_near, caller_name, by_caller_name, true,	},
-		c_statistics_columns[2],
-		c_statistics_columns[3],
-	};
-
-	const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[] = {
-		c_statistics_columns[0],
-		{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, callee_name, by_name, true,	},
+		{	"Function", "Calling Function\n" + secondary + "qualified name", 384, agge::align_near, name, by_name, true,	},
 		c_statistics_columns[2],
 		c_statistics_columns[3],
 		c_statistics_columns[4],
 		c_statistics_columns[5],
 		c_statistics_columns[6],
 		c_statistics_columns[7],
-		c_statistics_columns[9],
+		c_statistics_columns[8],
+	};
+
+	const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[] = {
+		c_statistics_columns[0],
+		{	"Function", "Called Function\n" + secondary + "qualified name", 384, agge::align_near, name, by_name, true,	},
+		c_statistics_columns[2],
+		c_statistics_columns[3],
+		c_statistics_columns[4],
+		c_statistics_columns[5],
+		c_statistics_columns[6],
+		c_statistics_columns[7],
+		c_statistics_columns[8],
 	};
 }

@@ -24,25 +24,17 @@
 
 #include <common/hash.h>
 #include <tuple>
-#include <views/aggregated_table.h>
-#include <views/table.h>
-#include <views/index.h>
+#include <views/integrated_index.h>
 
 namespace micro_profiler
 {
+	template <typename T>
+	struct auto_increment_constructor;
+
 	typedef std::tuple<id_t /*thread_id*/, id_t /*parent_id*/, long_address_t> call_node_key;
+	typedef views::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
+	typedef std::shared_ptr<const calls_statistics_table> calls_statistics_table_cptr;
 	typedef std::vector<long_address_t> callstack_key;
-
-	template <>
-	class views::hash<call_node_key>
-	{
-	public:
-		std::size_t operator ()(const call_node_key &key) const
-		{	return h(h(h(std::get<0>(key)), h(std::get<1>(key))), h(std::get<2>(key)));	}
-
-	private:
-		knuth_hash h;
-	};
 
 	template <typename T>
 	class views::hash< std::vector<T> >
@@ -61,75 +53,136 @@ namespace micro_profiler
 		knuth_hash h;
 	};
 
-	struct call_statistics_constructor
+	template <typename T>
+	struct auto_increment_constructor
 	{
-		call_statistics_constructor()
+		auto_increment_constructor()
 			: _next_id(1)
 		{	}
 
-		call_statistics operator ()()
+		T operator ()()
 		{
-			call_statistics s;
+			T record;
 
-			s.id = _next_id++;
-			return s;
+			record.id = _next_id++;
+			return record;
 		}
 
 	private:
 		id_t _next_id;
 
 	private:
-		template <typename ArchiveT>
-		friend void serialize(ArchiveT &archive, call_statistics_constructor &data, unsigned int ver);
+		template <typename ArchiveT, typename T2>
+		friend void serialize(ArchiveT &archive, auto_increment_constructor<T2> &data, unsigned int ver);
 	};
 
 	namespace keyer
 	{
-		struct callnode
+		template <typename K1, typename K2>
+		struct combine2
 		{
-			typedef call_node_key key_type;
+			template <typename R>
+			std::tuple<
+				typename views::result<K1, R>::type,
+				typename views::result<K2, R>::type
+			> operator ()(const R &record) const
+			{	return std::make_tuple(keyer1(record), keyer2(record));	}
 
-			key_type operator ()(const call_statistics &value) const
-			{	return key_type(value.thread_id, value.parent_id, value.address);	}
+			template <typename IndexT, typename R, typename KeyT>
+			void operator ()(IndexT &index, R &record, const KeyT &key) const
+			{	keyer1(index, record, std::get<0>(key)), keyer2(index, record, std::get<1>(key));	}
 
-			template <typename IndexT>
-			void operator ()(IndexT &/*index*/, call_statistics &value, const key_type &key) const
-			{	value.thread_id = std::get<0>(key), value.parent_id = std::get<1>(key), value.address = std::get<2>(key);	}
+			K1 keyer1;
+			K2 keyer2;
+		};
+
+		template <typename K1, typename K2, typename K3>
+		struct combine3
+		{
+			template <typename R>
+			std::tuple<
+				typename views::result<K1, R>::type,
+				typename views::result<K2, R>::type,
+				typename views::result<K3, R>::type
+			> operator ()(const R &record) const
+			{	return std::make_tuple(keyer1(record), keyer2(record), keyer3(record));	}
+
+			template <typename IndexT, typename R, typename KeyT>
+			void operator ()(IndexT &index, R &record, const KeyT &key) const
+			{	keyer1(index, record, std::get<0>(key)), keyer2(index, record, std::get<1>(key)), keyer3(index, record, std::get<2>(key));	}
+
+			K1 keyer1;
+			K2 keyer2;
+			K3 keyer3;
 		};
 
 		struct id
 		{
-			typedef id_t key_type;
-
 			template <typename T>
-			key_type operator ()(const T &value) const
-			{	return value.id;	}
+			id_t operator ()(const T &record) const
+			{	return record.id;	}
 		};
 
 		struct parent_id
 		{
-			typedef id_t key_type;
+			id_t operator ()(const call_statistics &record) const
+			{	return record.parent_id;	}
 
-			key_type operator ()(const call_statistics &value) const
-			{	return value.parent_id;	}
+			template <typename IndexT>
+			void operator ()(IndexT &, call_statistics &record, id_t key) const
+			{	record.parent_id = key;	}
+		};
+
+		struct thread_id
+		{
+			id_t operator ()(const call_statistics &record) const
+			{	return record.thread_id;	}
+
+			template <typename IndexT>
+			void operator ()(IndexT &, call_statistics &record, id_t key) const
+			{	record.thread_id = key;	}
 		};
 
 		struct address
 		{
-			typedef std::pair<long_address_t, bool /*root*/> key_type;
+			long_address_t operator ()(const call_statistics &record) const
+			{	return record.address;	}
 
-			key_type operator ()(const call_statistics &value) const
-			{	return std::make_pair(value.address, !value.parent_id);	}
+			template <typename IndexT>
+			void operator ()(IndexT &, call_statistics &record, long_address_t key) const
+			{	record.address = key;	}
 		};
 
-		template <typename U>
+		typedef combine3<thread_id, parent_id, address> callnode;
+
+		struct parent_address
+		{
+			parent_address(const calls_statistics_table &hierarchy)
+				: _by_id(views::unique_index<id>(hierarchy))
+			{	}
+
+			long_address_t operator ()(const call_statistics& record) const
+			{
+				if (auto parent = _by_id.find(record.parent_id))
+					return parent->address;
+				return long_address_t();
+			}
+
+		private:
+			const views::immutable_unique_index<calls_statistics_table, id> &_by_id;
+		};
+
+		struct address_and_rootness
+		{
+			std::pair<long_address_t, bool /*root*/> operator ()(const call_statistics &record) const
+			{	return std::make_pair(record.address, !record.parent_id);	}
+		};
+
+		template <typename TableT>
 		class callstack
 		{
 		public:
-			typedef callstack_key key_type;
-
-		public:
-			callstack(const U &underlying)
+			callstack(const TableT &underlying)
 				: _by_id(views::unique_index<id>(underlying))
 			{	}
 
@@ -141,23 +194,14 @@ namespace micro_profiler
 				return _key_buffer;
 			}
 
-			template <typename Index2T>
-			void operator ()(Index2T &index, call_statistics &record, callstack_key key) const
+			template <typename IndexT, typename T>
+			void operator ()(const IndexT &index, T &record, callstack_key key) const
 			{
 				record.thread_id = 0;
 				record.address = key.back();
 				key.pop_back();
-				if (key.empty())
-					record.parent_id = 0;
-				else if (auto p = index.find(key))
-					record.parent_id = p->id;
-				else
-					throw 0;
+				record.parent_id = key.empty() ? id_t() : index[key].id;
 			}
-
-		private:
-			typedef views::table<typename U::value_type, typename U::constructor_type> table_type;
-			typedef views::immutable_unique_index<table_type, id> by_id_index_type;
 
 		private:
 			template <typename T>
@@ -169,11 +213,8 @@ namespace micro_profiler
 			}
 
 		private:
-			const by_id_index_type &_by_id;
+			const views::immutable_unique_index<TableT, id> &_by_id;
 			mutable callstack_key _key_buffer;
 		};
 	}
-
-	typedef views::table<call_statistics, call_statistics_constructor> calls_statistics_table;
-	typedef views::aggregated_table<calls_statistics_table, call_statistics_constructor> aggregated_statistics_table;
 }

@@ -28,6 +28,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\polyq.include.props" />
     <Import Project="$(SolutionDir)build.props\strmd.include.props" />
     <Import Project="$(SolutionDir)build.props\wpl.include.props" />
   </ImportGroup>
@@ -58,9 +59,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncFileTests.cpp" />
+    <ClCompile Include="DerivedStatisticsTests.cpp" />
     <ClCompile Include="ColumnsDefinitionTests.cpp" />
     <ClCompile Include="HierarchicalTableModelImplTests.cpp" />
     <ClCompile Include="HierarchyAlgorithmsTests.cpp" />
+    <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="StatisticsHierarchyAccessTests.cpp" />
     <ClCompile Include="TableModelImplTests.cpp" />
     <ClCompile Include="DataSchemeTests.cpp" />
@@ -76,7 +79,6 @@
     <ClCompile Include="ImagePatchModelTests.cpp" />
     <ClCompile Include="legacy_serialization.cpp" />
     <ClCompile Include="mock_channel.cpp" />
-    <ClCompile Include="NestedStatisticModelsTests.cpp" />
     <ClCompile Include="mocks.cpp" />
     <ClCompile Include="ProfilingPreferencesTests.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>

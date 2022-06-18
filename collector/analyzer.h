@@ -30,7 +30,7 @@ namespace micro_profiler
 	class thread_analyzer
 	{
 	public:
-		typedef statistic_types::map_detailed statistics_t;
+		typedef statistic_types::nodes_map statistics_t;
 		typedef statistics_t::const_iterator const_iterator;
 		typedef std::pair<statistics_t::key_type, statistics_t::mapped_type> value_type;
 

@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "compiler.h"
+
 #include <algorithm>
 #include <iterator>
 #include <new>
@@ -160,7 +162,7 @@ namespace micro_profiler
 	{	return _limit - _begin;	}
 
 	template <typename T>
-	inline bool pod_vector<T>::grow(size_t by) throw()
+	FORCE_NOINLINE inline bool pod_vector<T>::grow(size_t by) throw()
 	{
 		size_t size = this->size(), new_capacity = capacity();
 

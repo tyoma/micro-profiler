@@ -137,6 +137,9 @@ namespace micro_profiler
 					log1.push_back(key);
 					log2.push_back(get_selected(selection_));
 				};
+				const views::table<int> &t = static_cast<const selection<int> &>(selection_).get_table();
+				auto invalidations = 0;
+				const auto conn2 = t.invalidate += [&] {	invalidations++;	};
 
 				// ACT
 				selection_.add(1);
@@ -147,6 +150,7 @@ namespace micro_profiler
 
 				assert_equivalent(reference11, log1);
 				assert_equivalent(reference12, log2.back());
+				assert_equal(1, invalidations);
 
 				// ACT
 				selection_.add(3);
@@ -157,6 +161,7 @@ namespace micro_profiler
 
 				assert_equivalent(reference21, log1);
 				assert_equivalent(reference22, log2.back());
+				assert_equal(2, invalidations);
 
 				// ACT
 				selection_.remove(1);
@@ -167,6 +172,7 @@ namespace micro_profiler
 
 				assert_equivalent(reference31, log1);
 				assert_equivalent(reference32, log2.back());
+				assert_equal(3, invalidations);
 
 				// ACT
 				selection_.clear();
@@ -176,6 +182,7 @@ namespace micro_profiler
 
 				assert_equivalent(reference4, log1);
 				assert_is_empty(log2.back());
+				assert_equal(4, invalidations);
 
 				// INIT
 				log1.clear();
@@ -190,6 +197,7 @@ namespace micro_profiler
 				assert_equivalent(reference51, log1);
 				assert_equal(1u, log2.size());
 				assert_equivalent(reference12, log2.back());
+				assert_equal(5, invalidations);
 			}
 		end_test_suite
 	}

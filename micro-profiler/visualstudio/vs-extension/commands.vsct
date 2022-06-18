@@ -19,6 +19,15 @@
 					<ButtonText>MicroProfiler Instance Commands</ButtonText>
 				</Strings>
 			</Menu>
+			<Menu guid="guidInstanceCmdSet" id="IDM_MP_VIEWMODE_DROPDOWN" priority="0x000A" type="MenuControllerLatched">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
+				<CommandFlag>TextOnly</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>TextIsAnchorCommand</CommandFlag>
+				<Strings>
+					<ButtonText>x</ButtonText>
+				</Strings>
+			</Menu>
 		</Menus>
 
 		<Groups>
@@ -39,6 +48,9 @@
 			</Group>
 			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_RUN_COMMANDS" priority="0x0000">
 				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
+			</Group>
+			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" priority="0x0020">
+				<Parent guid="guidInstanceCmdSet" id="IDM_MP_VIEWMODE_DROPDOWN" />
 			</Group>
 			<Group guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" priority="0x0080">
 				<Parent guid="guidInstanceCmdSet" id="IDM_MP_PANE_TOOLBAR" />
@@ -154,6 +166,24 @@
 					<ButtonText>Pause Updates</ButtonText>
 				</Strings>
 			</Button>
+
+			<Button guid="guidInstanceCmdSet" id="cmdidViewHierarchy" priority="0x000C" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" />
+				<Icon guid="guidIconSet" id="iconidViewAsTree"/>
+				<Strings>
+					<ButtonText>Callstack Tree</ButtonText>
+					<ToolTipText>Display main statistics in a callstack tree</ToolTipText>
+				</Strings>
+			</Button>
+			<Button guid="guidInstanceCmdSet" id="cmdidViewFlat" priority="0x000D" type="Button">
+				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_VIEW_COMMANDS" />
+				<Icon guid="guidIconSet" id="iconidViewAsList"/>
+				<Strings>
+					<ButtonText>Functions List</ButtonText>
+					<ToolTipText>Display main statistics in a flat functions list</ToolTipText>
+				</Strings>
+			</Button>
+
 			<Button guid="guidInstanceCmdSet" id="cmdidSaveStatistics" priority="0x0010" type="Button">
 				<Parent guid="guidInstanceCmdSet" id="IDG_MP_INSTANCE_COMMANDS" />
 				<Icon guid="guidIconSet" id="iconidSave"/>

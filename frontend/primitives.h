@@ -23,19 +23,20 @@
 #include <common/compiler.h>
 #include <common/hash.h>
 #include <common/primitives.h>
-#include <stdexcept>
+#include <common/types.h>
+#include <vector>
 
 namespace micro_profiler
 {
-	typedef std::pair<long_address_t, unsigned int /*threadid*/> function_key;
-	typedef statistic_types_t<function_key> statistic_types;
-
 	struct call_statistics : function_statistics
 	{
 		typedef std::vector<id_t> path_t;
 
 		template <typename LookupT>
 		const path_t &path(const LookupT &lookup) const;
+
+		template <typename LookupT>
+		unsigned int reentrance(const LookupT &lookup) const;
 
 		id_t id;
 		id_t thread_id;
@@ -48,6 +49,7 @@ namespace micro_profiler
 
 	private:
 		mutable path_t _path;
+		mutable unsigned int _reentrance;
 	};
 
 	struct symbol_key
@@ -60,23 +62,38 @@ namespace micro_profiler
 
 	template <typename LookupT>
 	inline const call_statistics::path_t &call_statistics::path(const LookupT &lookup) const
-	{
-		if (_path.empty())
-			initialize_path(lookup);
-		return _path;
-	}
+	{	return _path.empty() ? initialize_path(lookup), _path : _path;	}
+
+	template <typename LookupT>
+	inline unsigned int call_statistics::reentrance(const LookupT &lookup) const
+	{	return _path.empty() ? initialize_path(lookup), _reentrance : _reentrance;	}
 
 	template <typename LookupT>
 	FORCE_NOINLINE inline void call_statistics::initialize_path(const LookupT &lookup) const
 	{
-		for (auto item = this; item; item = lookup(item->parent_id))
-			_path.push_back(item->id);
+		auto item = this;
+
+		for(_path.push_back(item->id), _reentrance = 0; item = lookup(item->parent_id), item; )
+			_path.push_back(item->id), _reentrance += item->address == address;
 		std::reverse(_path.begin(), _path.end());
 	}
 
 
 	inline bool operator ==(const symbol_key &lhs, const symbol_key &rhs)
 	{	return !((lhs.persistent_id - rhs.persistent_id) | (lhs.rva - rhs.rva));	}
+
+	template <typename LookupT>
+	inline void add(call_statistics &lhs, const call_statistics &rhs, const LookupT &lookup)
+	{
+		lhs.times_called += rhs.times_called;
+		lhs.exclusive_time += rhs.exclusive_time;
+		if (!rhs.reentrance(lookup))
+		{
+			lhs.inclusive_time += rhs.inclusive_time;
+			if (rhs.max_call_time > lhs.max_call_time)
+				lhs.max_call_time = rhs.max_call_time;
+		}
+	}
 }
 
 namespace std

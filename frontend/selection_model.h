@@ -25,17 +25,22 @@
 #include <common/noncopyable.h>
 #include <unordered_set>
 #include <wpl/models.h>
+#include <views/integrated_index.h>
 
 namespace micro_profiler
 {
 	template <typename KeyT>
-	class selection : public wpl::dynamic_set_model, private std::unordered_set<KeyT>
+	class selection : public wpl::dynamic_set_model, private views::table<KeyT>, noncopyable
 	{
+		typedef views::table<KeyT> base_t;
+
 	public:
-		typedef typename std::unordered_set<KeyT>::const_iterator const_iterator;
+		typedef typename base_t::const_iterator const_iterator;
 		typedef KeyT key_type;
 
 	public:
+		selection();
+
 		// wpl::dynamic_set_model methods
 		virtual void clear() throw() override;
 		virtual void add(index_type item) override;
@@ -43,15 +48,18 @@ namespace micro_profiler
 		virtual bool contains(index_type item) const throw() override;
 
 		void add_key(const KeyT &key);
-		using std::unordered_set<KeyT>::begin;
-		using std::unordered_set<KeyT>::end;
+		const base_t &get_table() const;
+		using base_t::begin;
+		using base_t::end;
+		using wpl::dynamic_set_model::invalidate;
 
 	private:
-		typedef std::unordered_set<key_type> base_t;
+		virtual key_type get_key(std::size_t item) const = 0;
 
 	private:
-		virtual key_type get_key(size_t item) const = 0;
+		views::immutable_unique_index<base_t, keyer::self> &_index;
 	};
+
 
 	template <typename UnderlyingT>
 	class selection_model : public selection<typename key_traits<typename UnderlyingT::value_type>::key_type>
@@ -65,13 +73,18 @@ namespace micro_profiler
 		selection_model(const UnderlyingT &underlying);
 
 	private:
-		virtual key_type get_key(size_t item) const override;
+		virtual key_type get_key(std::size_t item) const override;
 
 	private:
 		const UnderlyingT &_underlying;
 	};
 
 
+
+	template <typename KeyT>
+	inline selection<KeyT>::selection()
+		: _index(views::unique_index(*this, keyer::self()))
+	{	}
 
 	template <typename KeyT>
 	inline void selection<KeyT>::clear() throw()
@@ -83,27 +96,40 @@ namespace micro_profiler
 	template <typename KeyT>
 	inline void selection<KeyT>::add(index_type item)
 	{
-		base_t::insert(get_key(item));
+		auto r = _index[get_key(item)];
+
+		r.commit();
 		this->invalidate(item);
+		base_t::invalidate();
 	}
 
 	template <typename KeyT>
 	inline void selection<KeyT>::remove(index_type item)
 	{
-		base_t::erase(get_key(item));
+		auto r = _index[get_key(item)];
+
+		r.remove();
 		this->invalidate(item);
+		base_t::invalidate();
 	}
 
 	template <typename KeyT>
 	inline bool selection<KeyT>::contains(index_type item) const throw()
-	{	return base_t::find(get_key(item)) != base_t::end();	}
+	{	return !!_index.find(get_key(item));	}
 
 	template <typename KeyT>
 	inline void selection<KeyT>::add_key(const key_type &key)
 	{
-		base_t::insert(key);
+		auto r = _index[key];
+
+		r.commit();
 		this->invalidate(npos());
+		base_t::invalidate();
 	}
+
+	template <typename KeyT>
+	inline const views::table<KeyT> &selection<KeyT>::get_table() const
+	{	return *this;	}
 
 
 	template <typename UnderlyingT>
@@ -112,6 +138,6 @@ namespace micro_profiler
 	{	}
 
 	template <typename UnderlyingT>
-	inline typename selection_model<UnderlyingT>::key_type selection_model<UnderlyingT>::get_key(size_t item) const
+	inline typename selection_model<UnderlyingT>::key_type selection_model<UnderlyingT>::get_key(std::size_t item) const
 	{	return selection_key_type::get_key(_underlying[item]);	}
 }

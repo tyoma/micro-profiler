@@ -6,6 +6,7 @@ set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
 	ColumnsDefinitionTests.cpp
 	DataSchemeTests.cpp
+	DerivedStatisticsTests.cpp
 	DeSerializationTests.cpp
 	DynamicViewTests.cpp
 	FilePersistenceTests.cpp
@@ -23,7 +24,7 @@ set(FRONTEND_TESTS_SOURCES
 	legacy_serialization.cpp
 	mock_channel.cpp
 	mocks.cpp
-	NestedStatisticModelsTests.cpp
+	PrimitivesTests.cpp
 	ProcessListTests.cpp
 #	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp

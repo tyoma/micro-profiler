@@ -1,5 +1,7 @@
 #include <views/table.h>
 
+#include "helpers.h"
+
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -32,6 +34,71 @@ namespace micro_profiler
 					T *operator ()() const
 					{	return new T;	}
 				};
+
+				enum event_type {	created_, modified_, removed_, cleared_	};
+
+				template <typename TableT, int unique>
+				class logging_component : public table_component<typename TableT::const_iterator>
+				{
+				public:
+					explicit logging_component(vector< tuple<typename TableT::const_iterator, event_type, int> > &log)
+						: _log(log)
+					{	}
+
+				private:
+					virtual void created(typename TableT::const_iterator record) override
+					{	_log.push_back(make_tuple(record, created_, unique));	}
+
+					virtual void modified(typename TableT::const_iterator record) override
+					{	_log.push_back(make_tuple(record, modified_, unique));	}
+
+				private:
+					vector< tuple<typename TableT::const_iterator, event_type, int> > &_log;
+				};
+
+				template <typename TableT, int unique>
+				class removal_logging_component : public table_component<typename TableT::const_iterator>
+				{
+				public:
+					explicit removal_logging_component(function<void (typename TableT::const_iterator, int)> on_removed)
+						: _on_removed(on_removed)
+					{	}
+
+				private:
+					virtual void removed(typename TableT::const_iterator record) override {	_on_removed(record, unique);	}
+
+				private:
+					function<void (typename TableT::const_iterator, int)> _on_removed;
+				};
+
+				template <typename TableT, int unique>
+				class cleared_logging_component : public table_component<typename TableT::const_iterator>
+				{
+				public:
+					explicit cleared_logging_component(vector<int> &log)
+						: _log(log)
+					{	}
+
+				private:
+					virtual void cleared() override {	_log.push_back(unique);	}
+
+				private:
+					vector<int> &_log;
+				};
+
+
+
+				template <typename T, typename CC>
+				typename component_type<CC>::type &get_component(T &table_, CC factory)
+				{	return table_.component(factory);	}
+
+				template <int unique, typename T, typename OnRemovedT>
+				removal_logging_component<T, unique> &get_removal_component(T &table_, OnRemovedT on_removed)
+				{	return get_component(table_, [on_removed] {	return new removal_logging_component<T, unique>(on_removed);	});	}
+
+				template <int unique, typename T>
+				cleared_logging_component<T, unique> &get_cleared_component(T &table_, vector<int> &log)
+				{	return get_component(table_, [&log] {	return new cleared_logging_component<T, unique>(log);	});	}
 			}
 
 			begin_test_suite( TableTests )
@@ -59,9 +126,6 @@ namespace micro_profiler
 
 					// INIT
 					table_t t1([&] {	return AA(100);	}), t2([&] {	return AA(1231);	});
-
-					auto c1 = t1.changed += [] (table_t::iterator, bool) {	assert_is_false(true);	};
-					auto c2 = t2.changed += [] (table_t::iterator, bool) {	assert_is_false(true);	};
 
 					// ACT
 					auto r1 = t1.create();
@@ -112,12 +176,7 @@ namespace micro_profiler
 					auto idgen = 1;
 					table_t t([&] {	return AA(idgen++);	});
 					vector<table_t::const_iterator> cl;
-					vector<table_t::iterator> l;
-					auto c = t.changed += [&] (table_t::iterator i, bool new_) {
-						cl.push_back(i);
-						l.push_back(i);
-						assert_is_true(new_);
-					};
+					auto c = t.created += [&] (table_t::const_iterator i) {	cl.push_back(i);	};
 
 					// ACT
 					auto r1 = t.create();
@@ -129,24 +188,16 @@ namespace micro_profiler
 					r2.commit();
 
 					// ASSERT
-					assert_equal(1u, l.size());
+					assert_equal(1u, cl.size());
 					assert_equal(13, (*cl[0]).id);
 					assert_equal("loop", (*cl[0]).value);
-					assert_equal(13, (**l[0]).id);
-					assert_equal("loop", (**l[0]).value);
 
 					// ACT
 					r1.commit();
 					r3.commit();
 
 					// ASSERT
-					assert_equal(3u, l.size());
-					assert_equal(13, (**l[0]).id);
-					assert_equal("loop", (**l[0]).value);
-					assert_equal(17, (**l[1]).id);
-					assert_equal("zooma", (**l[1]).value);
-					assert_equal(19, (**l[2]).id);
-					assert_equal("lasso", (**l[2]).value);
+					assert_equal(3u, cl.size());
 					assert_equal(13, (*cl[0]).id);
 					assert_equal("loop", (*cl[0]).value);
 					assert_equal(17, (*cl[1]).id);
@@ -162,8 +213,8 @@ namespace micro_profiler
 
 					// INIT
 					table_t t([&] {	return AA(0);	});
-					vector<table_t::iterator> l;
-					auto c = t.changed += [&l] (table_t::iterator i, bool) {	l.push_back(i);	};
+					vector<table_t::const_iterator> l;
+					auto c = t.created += [&l] (table_t::const_iterator i) {	l.push_back(i);	};
 
 					// ACT
 					auto r1 = t.create();
@@ -208,12 +259,12 @@ namespace micro_profiler
 					auto ci = static_cast<const table_t &>(t).begin();
 
 					assert_not_equal(t.end(), i);
-					assert_equal(1, (**i).id);
-					assert_equal("lorem", (**i).value);
+					assert_equal(1, (*i).id);
+					assert_equal("lorem", (*i).value);
 					++i;
 					assert_not_equal(t.end(), i);
-					assert_equal(2, (**i).id);
-					assert_equal("ipsum", (**i).value);
+					assert_equal(2, (*i).id);
+					assert_equal("ipsum", (*i).value);
 					++i;
 					assert_equal(t.end(), i);
 
@@ -233,12 +284,16 @@ namespace micro_profiler
 					r3.commit();
 
 					// ACT / ASSERT
+					i = t.begin();
+					++i, ++i;
 					assert_not_equal(t.end(), i);
-					assert_equal(3, (**i).id);
-					assert_equal("amet-dolor", (**i).value);
+					assert_equal(3, (*i).id);
+					assert_equal("amet-dolor", (*i).value);
 					++i;
 					assert_equal(t.end(), i);
 
+					ci = t.begin();
+					++ci, ++ci;
 					assert_not_equal(static_cast<const table_t &>(t).end(), ci);
 					assert_equal(3, (*ci).id);
 					assert_equal("amet-dolor", (*ci).value);
@@ -254,7 +309,7 @@ namespace micro_profiler
 					// INIT
 					int idgen = 1;
 					table_t t([&] {	return AA(idgen++);	});
-					vector<table_t::iterator> l;
+					vector<table_t::const_iterator> l;
 
 					auto r1= t.create();
 					r1.commit();
@@ -264,15 +319,12 @@ namespace micro_profiler
 					r3.commit();
 					auto i = t.begin();
 
-					auto c = t.changed += [&] (table_t::iterator i, bool new_) {
-						l.push_back(i);
-						assert_is_false(new_);
-					};
+					auto c = t.modified += [&] (table_t::const_iterator i) {	l.push_back(i);	};
 
 					// INIT / ACT
-					auto mr1 = *i;
+					auto mr1 = t.modify(i);
 					++i, ++i;
-					auto mr3 = *i;
+					auto mr3 = t.modify(i);
 
 					// ACT
 					(*mr3).value = "zubzub";
@@ -281,8 +333,7 @@ namespace micro_profiler
 					// ASSERT
 					assert_equal(1u, l.size());
 					assert_equal(i, l[0]);
-					assert_equal("zubzub", (**l[0]).value);
-					assert_equal("zubzub", (*table_t::const_iterator(l[0])).value);
+					assert_equal("zubzub", (*l[0]).value);
 
 					// ACT
 					(*mr1).value = "testtest";
@@ -291,8 +342,7 @@ namespace micro_profiler
 					// ASSERT
 					assert_equal(2u, l.size());
 					assert_equal(t.begin(), l[1]);
-					assert_equal("testtest", (**l[1]).value);
-					assert_equal("testtest", (*table_t::const_iterator(l[1])).value);
+					assert_equal("testtest", (*l[1]).value);
 				}
 
 
@@ -329,9 +379,7 @@ namespace micro_profiler
 					ci2 = ct2.begin();
 
 					// ASSERT
-					assert_equal(1211, (table1_t::reference)**i1);
 					assert_equal(1211, (table1_t::const_reference)*ci1);
-					assert_equal("1211", (table2_t::reference)**i2);
 					assert_equal("1211", (table2_t::const_reference)*ci2);
 				}
 
@@ -370,27 +418,41 @@ namespace micro_profiler
 						assert_equal(t.end(), t.begin());
 						called++;
 					};
+					auto c2 = t.invalidate += [&] {
+						assert_equal(1, called); // 'invalidate' signal is raised after 'cleared'
+						called++;
+					};
 
 					// ACT
 					t.clear();
 
 					// ASSERT
-					assert_equal(1, called);
+					assert_equal(2, called);
 				}
 
 
 				template <typename TableT>
-				struct component_a : table_events
+				struct component_a : table_component<typename TableT::const_iterator>
 				{
 					component_a() {	}
 					component_a(const component_a &) {	assert_is_false(true);	} // A component is always created in-place.
+
+					virtual void created(typename TableT::const_iterator) override {	}
+					virtual void modified(typename TableT::const_iterator) override {	}
+					virtual void removed(typename TableT::const_iterator) override {	}
+					virtual void cleared() override {	}
 				};
 
 				template <typename TableT>
-				struct component_b : table_events
+				struct component_b : table_component<typename TableT::const_iterator>
 				{
 					component_b() {	}
 					component_b(const component_b &) {	assert_is_false(true);	} // A component is always created in-place.
+
+					virtual void created(typename TableT::const_iterator) override {	}
+					virtual void modified(typename TableT::const_iterator) override {	}
+					virtual void removed(typename TableT::const_iterator) override {	}
+					virtual void cleared() override {	}
 				};
 
 				test( TableComponentIsCreatedOnFirstAccessViaBypassConstructor )
@@ -478,6 +540,386 @@ namespace micro_profiler
 					// ASSERT
 					assert_equal(reference2, log);
 				}
+
+
+				test( RemovingItemsSkipsTheFromEnumeration )
+				{
+					typedef table<string> table_t;
+
+					// INIT
+					table_t t;
+
+					add_record(t, "lorem");
+					add_record(t, "ipsum");
+					add_record(t, "amet");
+					add_record(t, "dolor");
+					add_record(t, "foo");
+					add_record(t, "bar");
+
+					auto i = t.begin();
+					auto i1 = (++i, i);
+					auto i3 = (++i, ++i, i);
+
+					// ACT
+					auto r3 = t.modify(i3);
+					r3.remove();
+
+					// ASSERT
+					string reference1[] = {	"lorem", "ipsum", "amet", "foo", "bar",	};
+
+					assert_equal(reference1, t);
+
+					// ACT
+					auto r1 = t.modify(i1);
+					r1.remove();
+
+					// ASSERT
+					string reference2[] = {	"lorem", "amet", "foo", "bar",	};
+
+					assert_equal(reference2, t);
+				}
+
+
+				test( IteratorsArePreservedAfterRemoval )
+				{
+					typedef table<string> table_t;
+					typedef table_t::const_iterator const_iterator;
+
+					// INIT
+					table_t t;
+
+					add_record(t, "lorem");
+					add_record(t, "ipsum");
+					add_record(t, "amet");
+					add_record(t, "dolor");
+					add_record(t, "foo");
+					add_record(t, "bar");
+
+					auto i = t.begin();
+					auto i0 = i;
+					auto i1 = (++i, i);
+					auto i2 = (++i, i);
+					auto i3 = (++i, i);
+					auto i4 = (++i, i);
+					auto i5 = (++i, i);
+
+					// ACT
+					auto r3 = t.modify(i3);
+					r3.remove();
+
+					// ASSERT
+					assert_equal("lorem", *(const_iterator)i0);
+					assert_equal("ipsum", *(const_iterator)i1);
+					assert_equal("amet", *(const_iterator)i2);
+					assert_equal("foo", *(const_iterator)i4);
+					assert_equal("bar", *(const_iterator)i5);
+
+					// ACT
+					auto r1 = t.modify(i1);
+					r1.remove();
+
+					// ASSERT
+					assert_equal("lorem", *(const_iterator)i0);
+					assert_equal("amet", *(const_iterator)i2);
+					assert_equal("foo", *(const_iterator)i4);
+					assert_equal("bar", *(const_iterator)i5);
+				}
+
+
+				test( RemovalNotificationIsSentBeforeTheRecordIsRemoved )
+				{
+					typedef table<string> table_t;
+					typedef table_t::const_iterator const_iterator;
+
+					// INIT
+					auto called = 0;
+					table_t t;
+					string data[] = {	"lorem", "ipsum", "amet", "dolor", "foo", "bar",	};
+
+					add_records(t, data);
+
+					auto i = t.begin();
+					auto i2 = (++i, ++i, i);
+					auto i5 = (++i, ++i, ++i, i);
+
+					auto c = t.removed += [&] (table_t::const_iterator i) {
+						assert_equal(i2, i);
+						assert_equal("amet", *(const_iterator)i);
+						called++;
+					};
+
+					// ACT
+					auto r2 = t.modify(i2);
+					r2.remove();
+
+					// ASSERT
+					assert_equal(1, called);
+
+					// INIT
+					c = t.removed += [&] (table_t::const_iterator i) {
+						assert_equal(i5, i);
+						assert_equal("bar", *(const_iterator)i);
+						called++;
+					};
+
+					// ACT
+					auto r5 = t.modify(i5);
+					r5.remove();
+
+					// ASSERT
+					assert_equal(2, called);
+				}
+
+
+				test( ComponentsAreNotifiedOfTableEvents )
+				{
+					// INIT
+					string data1[] = {	"lorem", "ipsum", "amet", "dolor",	};
+					string data2[] = {	"foo", "bar",	};
+					table<string> t;
+					vector< tuple<table<string>::const_iterator, event_type, int> > log;
+					
+					// INIT / ACT
+					get_component(t, [&log] {	return new logging_component<table<string>, 0>(log);	});
+
+					auto iterators1 = add_records(t, data1);
+
+					// ASSERT
+					tuple<table<string>::const_iterator, event_type, int> reference1[] = {
+						make_tuple(iterators1[0], created_, 0),
+						make_tuple(iterators1[1], created_, 0),
+						make_tuple(iterators1[2], created_, 0),
+						make_tuple(iterators1[3], created_, 0),
+					};
+
+					assert_equal(reference1, log);
+
+					// INIT
+					log.clear();
+
+					// INIT / ACT
+					auto iterators2 = add_records(t, data2);
+
+					// ASSERT
+					tuple<table<string>::const_iterator, event_type, int> reference2[] = {
+						make_tuple(iterators2[0], created_, 0),
+						make_tuple(iterators2[1], created_, 0),
+					};
+
+					assert_equal(reference2, log);
+
+					// INIT
+					log.clear();
+
+					// ACT
+					auto r4 = t.modify(iterators2[0]);
+					auto r2 = t.modify(iterators1[2]);
+
+					*r2 = "yyy";
+					*r4 = "xxx";
+					r4.commit();
+					r2.commit();
+
+					// ASSERT
+					tuple<table<string>::const_iterator, event_type, int> reference3[] = {
+						make_tuple(iterators2[0], modified_, 0),
+						make_tuple(iterators1[2], modified_, 0),
+					};
+
+					assert_equal(reference3, log);
+
+					// INIT
+					auto removals = 0;
+					table<string>::const_iterator expected;
+
+					log.clear();
+					get_removal_component<0>(t, [&] (table<string>::const_iterator record, int) {
+						removals++;
+
+					// ASSERT
+						assert_equal(expected, record);
+					});
+
+					// ACT
+					auto r4_ = t.modify(iterators2[0]);
+					auto r3 = t.modify(iterators1[3]);
+
+					// ACT
+					expected = iterators1[3];
+					r3.remove();
+
+					// ACT
+					expected = iterators2[0];
+					r4_.remove();
+
+					// ASSERT
+					assert_is_empty(log);
+					assert_equal(2, removals);
+				}
+
+
+				test( CreationsAreCalledInTheOrderOfComponentAdditions )
+				{
+					// INIT
+					table<string> t;
+					vector< tuple<table<string>::const_iterator, event_type, int> > log;
+					
+					// INIT / ACT
+					auto conn = t.created += [&] (table<string>::const_iterator record) {
+						log.push_back(make_tuple(record, created_, 100));
+					};
+
+					get_component(t, [&log] {	return new logging_component<table<string>, 0>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 1>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 2>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 3>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 4>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 5>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 6>(log);	});
+
+					// ACT
+					auto i1 = add_record(t, "abc");
+
+					// ASSERT
+					tuple<table<string>::const_iterator, event_type, int> reference[] = {
+						make_tuple(i1, created_, 0),
+						make_tuple(i1, created_, 1),
+						make_tuple(i1, created_, 2),
+						make_tuple(i1, created_, 3),
+						make_tuple(i1, created_, 4),
+						make_tuple(i1, created_, 5),
+						make_tuple(i1, created_, 6),
+						make_tuple(i1, created_, 100),
+					};
+
+					assert_equal(reference, log);
+				}
+
+
+				test( ModificationsAreCalledInTheOrderOfComponentAdditions )
+				{
+					// INIT
+					table<string> t;
+					vector< tuple<table<string>::const_iterator, event_type, int> > log;
+					auto i1 = add_record(t, "abc");
+
+					// INIT / ACT
+					auto conn = t.modified += [&] (table<string>::const_iterator record) {
+						log.push_back(make_tuple(record, modified_, 100));
+					};
+
+					get_component(t, [&log] {	return new logging_component<table<string>, 0>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 1>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 2>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 3>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 4>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 5>(log);	});
+					get_component(t, [&log] {	return new logging_component<table<string>, 6>(log);	});
+
+					// ACT
+					auto r = t.modify(i1);
+
+					r.commit();
+
+					// ASSERT
+					tuple<table<string>::const_iterator, event_type, int> reference[] = {
+						make_tuple(i1, modified_, 0),
+						make_tuple(i1, modified_, 1),
+						make_tuple(i1, modified_, 2),
+						make_tuple(i1, modified_, 3),
+						make_tuple(i1, modified_, 4),
+						make_tuple(i1, modified_, 5),
+						make_tuple(i1, modified_, 6),
+						make_tuple(i1, modified_, 100),
+					};
+
+					assert_equal(reference, log);
+				}
+
+
+				test( RemovalsAreCalledInTheReversedOrderOfComponentAdditions )
+				{
+					// INIT
+					table<string> t;
+					vector< tuple<table<string>::const_iterator, event_type, int> > log;
+					auto removals = 0;
+					auto i1 = add_record(t, "abc");
+
+					// INIT / ACT
+					auto conn = t.removed += [&] (table<string>::const_iterator) {
+						assert_equal(7, removals++);
+					};
+
+					get_removal_component<0>(t, [&] (table<string>::const_iterator, int) {
+						assert_equal(6, removals++);
+					});
+					get_removal_component<1>(t, [&] (table<string>::const_iterator, int) {
+						assert_equal(5, removals++);
+					});
+					get_removal_component<2>(t, [&] (table<string>::const_iterator, int) {
+						assert_equal(4, removals++);
+					});
+					get_removal_component<3>(t, [&] (table<string>::const_iterator, int) {
+						assert_equal(3, removals++);
+					});
+					get_removal_component<4>(t, [&] (table<string>::const_iterator, int) {
+						assert_equal(2, removals++);
+					});
+					get_removal_component<5>(t, [&] (table<string>::const_iterator, int) {
+						assert_equal(1, removals++);
+					});
+					get_removal_component<6>(t, [&] (table<string>::const_iterator, int) {
+						assert_equal(0, removals++);
+					});
+
+					// ACT
+					auto r = t.modify(i1);
+
+					r.remove();
+
+					// ASSERT
+					assert_equal(8, removals);
+				}
+
+
+				test( ClearsAreCalledInTheReversedOrderOfComponentAdditions )
+				{
+					// INIT
+					table<string> t;
+					vector<int> log;
+					
+					add_record(t, "abc");
+
+					// INIT / ACT
+					auto conn = t.cleared += [&] {	log.push_back(100);	};
+
+					get_cleared_component<0>(t, log);
+					get_cleared_component<1>(t, log);
+					get_cleared_component<2>(t, log);
+					get_cleared_component<3>(t, log);
+					get_cleared_component<4>(t, log);
+					get_cleared_component<5>(t, log);
+
+					// ACT
+					t.clear();
+
+					// ASSERT
+					int reference1[] = {	100, 5, 4, 3, 2, 1, 0,	};
+
+					assert_equal(reference1, log);
+
+					// INIT
+					get_cleared_component<6>(t, log);
+
+					// ACT
+					t.clear();
+
+					// ASSERT
+					int reference2[] = {	100, 5, 4, 3, 2, 1, 0, 100, 6, 5, 4, 3, 2, 1, 0,	};
+
+					assert_equal(reference2, log);
+				}
+
 			end_test_suite
 		}
 	}

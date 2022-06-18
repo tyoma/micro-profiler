@@ -185,11 +185,10 @@ namespace micro_profiler
 	template <typename BaseT, typename U, typename CtxT>
 	inline std::shared_ptr< selection<typename table_model_impl<BaseT, U, CtxT>::key_type> > table_model_impl<BaseT, U, CtxT>::create_selection() const
 	{
-		typedef std::pair< std::shared_ptr<const table_model_impl>, selection_model< views::ordered<U> > > selection_complex_t;
+		typedef std::tuple< std::shared_ptr<const table_model_impl>, selection_model< views::ordered<U> > > composite_t;
 
-		auto complex = std::make_shared<selection_complex_t>(this->shared_from_this(),
-			selection_model< views::ordered<U> >(_ordered));
+		auto composite = std::make_shared<composite_t>(this->shared_from_this(), _ordered);
 
-		return std::shared_ptr< selection<key_type> >(complex, &complex->second);
+		return std::shared_ptr< selection<key_type> >(composite, &std::get<1>(*composite));
 	}
 }

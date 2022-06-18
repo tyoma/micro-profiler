@@ -1,5 +1,6 @@
 #pragma once
 
+#include <collector/serialization.h>
 #include <common/module.h>
 #include <common/noncopyable.h>
 #include <common/primitives.h>
@@ -14,7 +15,7 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			typedef containers::unordered_map<unsigned /*threadid*/, statistic_types_t<unsigned>::map_detailed>
+			typedef containers::unordered_map<unsigned /*threadid*/, call_graph_types<unsigned>::nodes_map>
 				thread_statistics_map;
 
 			class frontend_state : noncopyable, public std::enable_shared_from_this<frontend_state>

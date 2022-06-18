@@ -20,35 +20,21 @@
 
 #pragma once
 
-#include <type_traits>
-#include <utility>
+#include "db.h"
 
 namespace micro_profiler
 {
-	template <typename T>
-	struct key_traits;
+	typedef views::table<long_address_t> address_table;
+	typedef std::shared_ptr<const address_table> address_table_cptr;
 
-	template <typename T1, typename T2>
-	struct key_traits< std::pair<T1, T2> >
+	template <typename KeyT>
+	class selection;
+
+	struct derived_statistics
 	{
-		typedef typename std::remove_const<T1>::type key_type;
-
-		template <typename T>
-		static key_type get_key(const T &item)
-		{	return item.first;	}
+		static address_table_cptr addresses(std::shared_ptr<const selection<id_t> > selection_,
+			calls_statistics_table_cptr hierarchy);
+		static calls_statistics_table_cptr callers(address_table_cptr callees, calls_statistics_table_cptr hierarchy);
+		static calls_statistics_table_cptr callees(address_table_cptr callers, calls_statistics_table_cptr hierarchy);
 	};
-
-	namespace keyer
-	{
-		struct self
-		{
-			template <typename T>
-			T operator ()(const T &record) const
-			{	return record;	}
-
-			template <typename IndexT, typename T>
-			void operator ()(IndexT &, T &record, const T &key) const
-			{	record = key;	}
-		};
-	}
 }

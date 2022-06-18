@@ -22,11 +22,45 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			typedef statistic_types_t<unsigned> statistic_types;
-			typedef pair<unsigned, statistic_types::function_detailed> addressed_statistics;
+			typedef call_graph_types<unsigned> statistic_types;
+			typedef pair<unsigned, statistic_types::node> addressed_statistics;
 		}
 
 		begin_test_suite( SerializationTests )
+			test( DetailedStatisticsIsSerializedAsExpected )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				statistic_types::node s1;
+
+				static_cast<function_statistics &>(s1) = function_statistics(17, 123123123, 32123, 2213);
+				s1.callees[7741] = function_statistics(1117, 1231123, 3213, 112213);
+				s1.callees[141] = function_statistics(17, 11293123, 132123, 12213);
+
+				// ACT
+				s(s1);
+
+				// INIT
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+				statistic_types::node ds1;
+				vector< pair<unsigned, function_statistics> > callees;
+				vector< pair<unsigned, count_t> > callers;
+
+				// ACT
+				ds(ds1);
+
+				// ASSERT
+				addressed_statistics reference[] = {
+					make_pair(7741, function_statistics(1117, 1231123, 3213, 112213)),
+					make_pair(141, function_statistics(17, 11293123, 132123, 12213)),
+				};
+
+				assert_equal(s1, ds1);
+				assert_equivalent(reference, ds1.callees);
+			}
+
+
 			test( SingleThreadedAnalyzerDataIsSerializable )
 			{
 				// INIT
@@ -47,7 +81,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				containers::unordered_map<unsigned /*threadid*/, statistic_types::map_detailed> ss;
+				containers::unordered_map<unsigned /*threadid*/, statistic_types::nodes_map> ss;
 
 				// ACT
 				ds(ss);
@@ -56,7 +90,6 @@ namespace micro_profiler
 				addressed_statistics reference[] = {
 					make_statistics(1234u, 1, 0, 11, 9, 11, plural
 						+ make_statistics(2234u, 1, 0, 2, 2, 2)),
-					make_statistics(2234u, 1, 0, 2, 2, 2),
 				};
 
 				assert_equal(1u, ss.size());
@@ -89,7 +122,7 @@ namespace micro_profiler
 
 				// INIT
 				strmd::deserializer<vector_adapter, packer> ds(buffer);
-				containers::unordered_map<unsigned, statistic_types::map_detailed> ss;
+				containers::unordered_map<unsigned, statistic_types::nodes_map> ss;
 
 				// ACT
 				ds(ss);

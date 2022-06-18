@@ -26,6 +26,17 @@
 
 namespace strmd
 {
+	template <typename KeyT> struct version< micro_profiler::call_graph_node<KeyT> > {	enum {	value = 5	};	};
 	template <> struct type_traits<micro_profiler::thread_analyzer> { typedef container_type_tag category; };
 	template <> struct type_traits<micro_profiler::analyzer> { typedef container_type_tag category; };
+}
+
+namespace micro_profiler
+{
+	template <typename ArchiveT, typename AddressT>
+	inline void serialize(ArchiveT &archive, call_graph_node<AddressT> &data, unsigned int /*ver*/)
+	{
+		archive(static_cast<function_statistics &>(data));
+		archive(data.callees);
+	}
 }

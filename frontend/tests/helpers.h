@@ -42,8 +42,7 @@ namespace micro_profiler
 				inclusive = 5,
 				exclusive_avg = 6,
 				inclusive_avg = 7,
-				max_reentrance = 8,
-				max_time = 9,
+				max_time = 8,
 			};
 		};
 
@@ -74,8 +73,6 @@ namespace micro_profiler
 		};
 
 
-		inline function_key addr(size_t address, unsigned int threadid = 1)
-		{	return function_key(address, threadid);	}
 
 		inline std::string get_text(const wpl::list_model<std::string> &m, unsigned item)
 		{
@@ -219,6 +216,18 @@ namespace micro_profiler
 
 			m.get_value(index, value);
 			return value;
+		}
+
+		template <typename TableT, typename ContainerT>
+		inline void add_records(TableT &table_, const ContainerT &objects)
+		{
+			for (auto i = std::begin(objects); i != std::end(objects); ++i)
+			{
+				auto r = table_.create();
+
+				*r = *i;
+				r.commit();
+			}
 		}
 	}
 }

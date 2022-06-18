@@ -1,5 +1,7 @@
 #include <views/integrated_index.h>
 
+#include "helpers.h"
+
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -22,41 +24,30 @@ namespace micro_profiler
 
 				struct key_a
 				{
-					typedef int key_type;
-
 					int operator ()(const A &value) const
 					{	return value.a;	}
 				};
 
 				struct key_c
 				{
-					typedef string key_type;
 					string operator ()(const A &value) const
 					{	return value.c;	}
-				};
-
-				template <typename T1>
-				struct key_first
-				{
-					typedef T1 key_type;
-
-					template <typename T2>
-					const T1 &operator ()(const pair<T1, T2> &value) const
-					{	return value.first;	}
 				};
 			}
 
 			begin_test_suite( IntegratedIndexTests )
 				test( SameIndicesAreReturnedForTheSameKeyers )
 				{
+					typedef pair<int, string> type_1;
+
 					// INIT
-					const table< pair<int, string> > t1;
+					const table<type_1> t1;
 					const table<A> t2;
 					table<A> t3;
 
 					// ACT
-					const immutable_unique_index< table< pair<int, string> >, key_first<int> > &idx1 = unique_index< key_first<int> >(t1);
-					const immutable_index< table< pair<int, string> >, key_first<int> > &idx2 = multi_index< key_first<int> >(t1);
+					const immutable_unique_index<table<type_1>, key_first> &idx1 = unique_index<key_first>(t1);
+					const immutable_index<table<type_1>, key_first> &idx2 = multi_index<key_first>(t1);
 					const immutable_unique_index<table<A>, key_a> &idx3 = unique_index<key_a>(t2);
 					const immutable_index<table<A>, key_a> &idx4 = multi_index<key_a>(t2);
 					const immutable_unique_index<table<A>, key_c> &idx5 = unique_index<key_c>(t2);
@@ -65,8 +56,8 @@ namespace micro_profiler
 					immutable_unique_index<table<A>, key_c> &idx8 = unique_index<key_c>(t3);
 
 					// ACT / ASSERT
-					assert_equal(&idx1, &unique_index< key_first<int> >(t1));
-					assert_equal(&idx2, &multi_index< key_first<int> >(t1));
+					assert_equal(&idx1, (&unique_index<key_first>(t1)));
+					assert_equal(&idx2, (&multi_index<key_first>(t1)));
 					assert_equal(&idx3, &unique_index<key_a>(t2));
 					assert_equal(&idx4, &multi_index<key_a>(t2));
 					assert_equal(&idx5, &unique_index<key_c>(t2));

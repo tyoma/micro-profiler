@@ -7,6 +7,7 @@
 
 #include <ut/assert.h>
 #include <ut/test.h>
+#include <views/transforms.h>
 
 using namespace std;
 
@@ -170,13 +171,13 @@ namespace micro_profiler
 				{
 					record = function_statistics();
 					for (auto i = begin; i != end; ++i)
-						record += *i;
+						add(record, *i);
 				}
 			};
 
 
 			template <typename TableT>
-			keyer::callstack<TableT> operator ()(const TableT &table_) const
+			keyer::callstack<TableT> operator ()(const TableT &table_, views::agnostic_key_tag) const
 			{	return keyer::callstack<TableT>(table_);	}
 
 
@@ -193,9 +194,7 @@ namespace micro_profiler
 					make_call_statistics(6, 1, 0, 37, 90, 0, 769, 0, 0),
 				};
 				calls_statistics_table tbl;
-				aggregated_statistics_table aggregated(tbl);
-
-				aggregated.group_by(*this, aggregator());
+				auto aggregated = group_by(tbl, *this, aggregator());
 
 				// ACT
 				for (auto i = begin(data_); i != end(data_); ++i)
@@ -209,7 +208,7 @@ namespace micro_profiler
 					make_call_statistics(4, 0, 0, 37, 90, 0, 769, 0, 0),
 				};
 
-				assert_equivalent(reference, aggregated);
+				assert_equivalent(reference, *aggregated);
 
 				// ACT
 				add(tbl, make_call_statistics(16, 70, 0, 37, 10, 2, 100, 3, 0));
@@ -222,7 +221,7 @@ namespace micro_profiler
 					make_call_statistics(4, 0, 0, 37, 100, 2, 869, 3, 0),
 				};
 
-				assert_equivalent(reference2, aggregated);
+				assert_equivalent(reference2, *aggregated);
 			}
 
 
@@ -244,9 +243,7 @@ namespace micro_profiler
 
 				};
 				calls_statistics_table tbl;
-				aggregated_statistics_table aggregated(tbl);
-
-				aggregated.group_by(*this, aggregator());
+				auto aggregated = group_by(tbl, *this, aggregator());
 
 				// ACT
 				for (auto i = begin(data_); i != end(data_); ++i)
@@ -262,7 +259,7 @@ namespace micro_profiler
 					make_call_statistics(6, 0, 3, 37, 90, 0, 769, 0, 0),
 				};
 
-				assert_equivalent(reference1, aggregated);
+				assert_equivalent(reference1, *aggregated);
 			}
 		end_test_suite
 
@@ -341,6 +338,54 @@ namespace micro_profiler
 				assert_equal(plural + 1u, data[0].path(lookup));
 				assert_equal(plural + 1u + 2u, data[1].path(lookup));
 				assert_equal(plural + 1u + 2u + 3u, data[2].path(lookup));
+			}
+
+
+			test( NonRecurrentCallsHaveZeroReentranceLevel )
+			{
+				// INIT
+				const call_statistics data[] = {
+					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 1, 103, 0, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 2, 104, 0, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 105, 0, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 106, 0, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 5, 107, 0, 0, 0, 0, 0),
+				};
+				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
+
+				// ACT / ASSERT
+				assert_equal(0u, data[0].reentrance(lookup));
+				assert_equal(0u, data[1].reentrance(lookup));
+				assert_equal(0u, data[3].reentrance(lookup));
+				assert_equal(0u, data[4].reentrance(lookup));
+				assert_equal(0u, data[5].reentrance(lookup));
+			}
+
+
+			test( ReentranceLevelIsCalculatedBasedOnTheAddress )
+			{
+				// INIT
+				const call_statistics data[] = {
+					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 2, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 3, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 102, 0, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 6, 101, 0, 0, 0, 0, 0),
+				};
+				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
+
+				// ACT / ASSERT
+				assert_equal(0u, data[0].reentrance(lookup));
+				assert_equal(1u, data[1].reentrance(lookup));
+				assert_equal(0u, data[2].reentrance(lookup));
+				assert_equal(1u, data[3].reentrance(lookup));
+				assert_equal(2u, data[4].reentrance(lookup));
+				assert_equal(1u, data[5].reentrance(lookup));
+				assert_equal(2u, data[6].reentrance(lookup));
 			}
 		end_test_suite
 	}

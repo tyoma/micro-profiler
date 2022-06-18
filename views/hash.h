@@ -20,35 +20,43 @@
 
 #pragma once
 
-#include <type_traits>
-#include <utility>
+#include <tuple>
+#include <unordered_map>
 
 namespace micro_profiler
 {
-	template <typename T>
-	struct key_traits;
-
-	template <typename T1, typename T2>
-	struct key_traits< std::pair<T1, T2> >
+	namespace views
 	{
-		typedef typename std::remove_const<T1>::type key_type;
+		template <typename T>
+		struct hash : std::hash<T>
+		{	};
+
+		template <typename T1, typename T2>
+		struct hash< std::tuple<T1, T2> >
+		{
+			std::size_t operator ()(const std::tuple<T1, T2> &value) const
+			{	return hash<T1>()(std::get<0>(value)) ^ hash<T2>()(std::get<1>(value));	}
+		};
+
+		template <typename T1, typename T2, typename T3>
+		struct hash< std::tuple<T1, T2, T3> >
+		{
+			std::size_t operator ()(const std::tuple<T1, T2, T3> &value) const
+			{	return hash<T1>()(std::get<0>(value)) ^ hash<T2>()(std::get<1>(value)) ^ hash<T3>()(std::get<2>(value));	}
+		};
 
 		template <typename T>
-		static key_type get_key(const T &item)
-		{	return item.first;	}
-	};
-
-	namespace keyer
-	{
-		struct self
+		struct hash<T *>
 		{
-			template <typename T>
-			T operator ()(const T &record) const
-			{	return record;	}
+			std::size_t operator ()(T *value) const
+			{	return reinterpret_cast<std::size_t>(value);	}
+		};
 
-			template <typename IndexT, typename T>
-			void operator ()(IndexT &, T &record, const T &key) const
-			{	record = key;	}
+		template <typename T>
+		struct iterator_hash
+		{
+			std::size_t operator ()(T value) const
+			{	return reinterpret_cast<std::size_t>(&*value);	}
 		};
 	}
 }

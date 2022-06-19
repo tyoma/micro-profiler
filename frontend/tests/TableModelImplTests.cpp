@@ -12,6 +12,16 @@ using namespace std;
 
 namespace micro_profiler
 {
+	template <typename T1, typename T2, typename T3>
+	struct key_traits< tuple<T1, T2, T3> >
+	{
+		typedef T1 key_type;
+
+		template <typename  T>
+		static const T1 &get_key(const T &record)
+		{	return get<0>(record);	}
+	};
+
 	namespace tests
 	{
 		namespace
@@ -64,7 +74,23 @@ namespace micro_profiler
 				column_definition<T, CtxT> c = {	string(), agge::style_modifier::empty, 0, agge::align_near, get_text, less_,	};
 				return c;
 			}
+
+			class tuple_context
+			{
+			};
+
+			template <typename T>
+			struct tuple_context_hierarchy : hierarchy_plain<T>
+			{
+				bool total_less(const T &lhs, const T &rhs) const
+				{	return get<0>(lhs) < get<0>(rhs);	}
+			};
+
+			template <typename T>
+			inline tuple_context_hierarchy<T> access_hierarchy(const tuple_context &/*context*/, const T * /*type tag*/)
+			{	return tuple_context_hierarchy<T>();	}
 		}
+
 
 		begin_test_suite( TableModelImplTests )
 			test( EmptyContainerMakesEmptyView )
@@ -403,6 +429,39 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(3.111891, ctx1);
+			}
+
+
+			test( PassingNposToSetOrderResetsSortingToTotalOrder )
+			{
+				typedef tuple<int, string, string> type_t;
+				typedef vector<type_t> container_t;
+
+				// INIT
+				auto data = make_shared<container_t>(plural
+					+ type_t(17, "Laura", "Palmer")
+					+ type_t(19, "Bobby", "Briggs")
+					+ type_t(18, "Jimmy", "Johns")
+					+ type_t(16, "Donna", "Donna")
+					+ type_t(20, "Jake", "Gilbert"));
+				auto m = make_shared< table_model_impl<wpl::richtext_table_model, container_t, tuple_context> >(data, tuple_context());
+
+				m->add_columns(plural
+					+ column<type_t, tuple_context>([] (agge::richtext_t &t, tuple_context, size_t, type_t v) {	t << get<1>(v).c_str();	},
+						[] (tuple_context, type_t l, type_t r) {	return strcmp(get<1>(l).c_str(), get<1>(r).c_str());	}));
+
+				m->set_order(0, true);
+
+				// ACT
+				m->set_order(wpl::columns_model::npos(), false);
+
+				// ASSERT
+				unsigned columns[] = {	0,	};
+				string reference[][1] = {
+					{	"Donna",	}, {	"Laura",	}, {	"Jimmy",	}, {	"Bobby",	}, {	"Jake",	},
+				};
+
+				assert_equal(mkvector(reference), get_text(*m, columns));
 			}
 		end_test_suite
 	}

@@ -140,40 +140,49 @@ namespace micro_profiler
 	inline void table_model_impl<BaseT, U, CtxT>::set_order(index_type column, bool ascending)
 	{
 		const auto &context_ = _context;
-		const auto &c = _columns.at(column);
-		const auto &compare = c.compare;
-		const auto &get_value = c.get_value;
+		const auto access = access_hierarchy(context_, static_cast<const value_type *>(nullptr));
 
-		if (compare)
+		if (wpl::columns_model::npos() != column)
 		{
-			const auto access = access_hierarchy(context_, static_cast<const value_type *>(nullptr));
+			const auto &c = _columns.at(column);
+			const auto &compare = c.compare;
+			const auto &get_value = c.get_value;
 
-			if (ascending)
+			if (compare)
 			{
-				const auto compare_bound = [&context_, compare] (const value_type &lhs, const value_type &rhs) {
-					return compare(context_, lhs, rhs);
-				};
+				if (ascending)
+				{
+					const auto compare_bound = [&context_, compare] (const value_type &lhs, const value_type &rhs) {
+						return compare(context_, lhs, rhs);
+					};
 
-				_ordered.set_order([access, compare_bound] (const value_type &lhs, const value_type &rhs) {
-					return hierarchical_less(access, compare_bound, lhs, rhs);
-				}, true);
+					_ordered.set_order([access, compare_bound] (const value_type &lhs, const value_type &rhs) {
+						return hierarchical_less(access, compare_bound, lhs, rhs);
+					}, true);
+				}
+				else
+				{
+					const auto compare_bound = [&context_, compare] (const value_type &lhs, const value_type &rhs) {
+						return compare(context_, rhs, lhs);
+					};
+
+					_ordered.set_order([access, compare_bound] (const value_type &lhs, const value_type &rhs) {
+						return hierarchical_less(access, compare_bound, lhs, rhs);
+					}, true);
+				}
+				this->invalidate(this->npos());
 			}
+			if (get_value)
+				_projection.project([&context_, get_value] (const value_type &item) {	return get_value(context_, item);	});
 			else
-			{
-				const auto compare_bound = [&context_, compare] (const value_type &lhs, const value_type &rhs) {
-					return compare(context_, rhs, lhs);
-				};
-
-				_ordered.set_order([access, compare_bound] (const value_type &lhs, const value_type &rhs) {
-					return hierarchical_less(access, compare_bound, lhs, rhs);
-				}, true);
-			}
-			this->invalidate(this->npos());
+				_projection.project();
 		}
-		if (get_value)
-			_projection.project([&context_, get_value] (const value_type &item) {	return get_value(context_, item);	});
 		else
-			_projection.project();
+		{
+			_ordered.set_order([access] (const value_type &lhs, const value_type &rhs) {
+				return hierarchical_less(access, [] (const value_type &, const value_type &) {	return 0;	}, lhs, rhs);
+			}, true);
+		}
 		_trackables.fetch();
 		_projection.fetch();
 	}

@@ -26,11 +26,14 @@
 #include <common/module.h>
 #include <common/path.h>
 #include <common/string.h>
+#include <frontend/db.h>
 #include <functional>
 #include <io.h>
 #include <logger/log.h>
 #include <string>
+#include <tlhelp32.h>
 #include <vector>
+#include <views/integrated_index.h>
 
 #define PREAMBLE "Setup: "
 
@@ -47,6 +50,50 @@ namespace micro_profiler
 		const char c_path_separator_char = ';';
 		const string c_path_separator(1, c_path_separator_char);
 		const string c_profiler_directory = ~get_module_info(&c_profiler_directory).path;
+
+		struct process_info
+		{
+			id_t id, parent_id;
+			shared_ptr<void> handle;
+			string executable;
+		};
+
+		shared_ptr< const views::table<process_info> > get_processes()
+		{
+			shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
+			PROCESSENTRY32W entry = {	sizeof(PROCESSENTRY32W),	};
+			auto t = make_shared< views::table<process_info> >();
+
+			for (auto lister = &::Process32FirstW; lister(snapshot.get(), &entry); lister = &::Process32NextW)
+			{
+				if (auto h = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE, FALSE, entry.th32ProcessID))
+				{
+					auto r = t->create();
+
+					(*r).handle.reset(h, &::CloseHandle);
+					(*r).id = entry.th32ProcessID;
+					(*r).parent_id = entry.th32ParentProcessID;
+					(*r).executable = unicode(entry.szExeFile);
+					r.commit();
+				}
+			}
+			return t;
+		}
+
+		void terminate_children(const views::table<process_info> &table, id_t id, bool terminate_self = false)
+		{
+			auto &parent_index = views::multi_index(table, [] (const process_info &p) {	return p.parent_id;	});
+
+			for (auto r = parent_index.equal_range(id); r.first != r.second; ++r.first)
+				terminate_children(table, r.first->id, true);
+			if (terminate_self)
+			{
+				auto &process = views::unique_index<keyer::id>(table)[id];
+				auto result = ::TerminateProcess(process.handle.get(), static_cast<UINT>(-1));
+
+				LOG(PREAMBLE "Terminating child process...") % A(process.executable) % A(process.id) % A(process.parent_id) % A(result);
+			}
+		}
 
 
 		bool GetStringValue(CRegKey &key, const string &name, string &value)
@@ -105,78 +152,83 @@ namespace micro_profiler
 			return false;
 		}
 
-		template <typename GetF, typename SetF>
-		bool register_path(GetF get, SetF set)
+		struct register_path_op
 		{
-			bool changed = false;
-			string path;
-
-			if (get(c_path_ev, path),
-				path.find(c_profilerdir_ev_decorated) == string::npos
-				&& !find_in_path(path, c_profiler_directory))
+			template <typename GetF, typename SetF, typename RemoveF>
+			bool operator ()(GetF get, SetF set, RemoveF /*remove*/) const
 			{
-				string new_path = path;
+				bool changed = false;
+				string path;
 
-				if (!new_path.empty() && new_path[new_path.size() - 1] != c_path_separator_char)
-					new_path += c_path_separator;
-				new_path += c_profilerdir_ev_decorated;
-				set(c_path_ev, new_path, REG_EXPAND_SZ);
-				LOG(PREAMBLE "PATH environment variable changed...") % A(path) % A(new_path);
-				changed = true;
-			}
-			if (get(constants::profilerdir_ev, path),
-				!(file_id(path) == file_id(c_profiler_directory)))
-			{
-				set(constants::profilerdir_ev, c_profiler_directory, REG_SZ);
-				LOG(PREAMBLE "MICROPRPOFILERDIR environment variable changed...") % A(path) % A(c_profiler_directory);
-				changed = true;
-			}
-			return changed;
-		}
+				if (get(c_path_ev, path), path.find(c_profilerdir_ev_decorated) == string::npos
+					&& !find_in_path(path, c_profiler_directory))
+				{
+					string new_path = path;
 
-		template <typename GetF, typename SetF, typename RemoveF>
-		bool unregister_path(GetF get, SetF set, RemoveF remove)
+					if (!new_path.empty() && new_path[new_path.size() - 1] != c_path_separator_char)
+						new_path += c_path_separator;
+					new_path += c_profilerdir_ev_decorated;
+					set(c_path_ev, new_path, REG_EXPAND_SZ);
+					LOG(PREAMBLE "PATH environment variable changed...") % A(path) % A(new_path);
+					changed = true;
+				}
+				if (get(constants::profilerdir_ev, path), !(file_id(path) == file_id(c_profiler_directory)))
+				{
+					set(constants::profilerdir_ev, c_profiler_directory, REG_SZ);
+					LOG(PREAMBLE "MICROPRPOFILERDIR environment variable changed...") % A(path) % A(c_profiler_directory);
+					changed = true;
+				}
+				return changed;
+			}
+		};
+
+		struct unregister_path_op
 		{
-			string path;
-
-			get(c_path_ev, path);
-			if (path.find(c_profilerdir_ev_decorated) != string::npos)
+			template <typename GetF, typename SetF, typename RemoveF>
+			bool operator ()(GetF get, SetF set, RemoveF remove) const
 			{
-				replace(path, c_path_separator + c_profilerdir_ev_decorated + c_path_separator, c_path_separator);
-				replace(path, c_profilerdir_ev_decorated + c_path_separator, string());
-				replace(path, c_path_separator + c_profilerdir_ev_decorated, string());
-				replace(path, c_profilerdir_ev_decorated, string());
-				set(c_path_ev, path, REG_EXPAND_SZ);
-				remove(constants::profilerdir_ev);
-				return true;
+				string path;
+
+				get(c_path_ev, path);
+				if (path.find(c_profilerdir_ev_decorated) != string::npos)
+				{
+					replace(path, c_path_separator + c_profilerdir_ev_decorated + c_path_separator, c_path_separator);
+					replace(path, c_profilerdir_ev_decorated + c_path_separator, string());
+					replace(path, c_path_separator + c_profilerdir_ev_decorated, string());
+					replace(path, c_profilerdir_ev_decorated, string());
+					set(c_path_ev, path, REG_EXPAND_SZ);
+					remove(constants::profilerdir_ev);
+					return true;
+				}
+				return false;
 			}
-			return false;
+		};
+
+		template <typename OperationT>
+		void process(OperationT operation, bool global)
+		{
+			CRegKey e;
+
+			LOG(PREAMBLE "Configuring environment variables...") % A(global);
+			e.Open(global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, c_environment);
+			if (operation(bind(&GetStringValue, ref(e), _1, _2), bind(&SetStringValue, ref(e), _1, _2, _3), bind(&DeleteValue, ref(e), _1)))
+				::SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
+
+			LOG(PREAMBLE "Configuring application-level environment variables.");
+			if (operation(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2), bind(&RemoveEnvironment, _1)))
+				terminate_children(*get_processes(), ::GetCurrentProcessId());
 		}
 	}
 
 	void register_path(bool global)
 	{
-		CRegKey e;
-
-		LOG(PREAMBLE "Configuring environment variables...") % A(global);
-		e.Open(global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, c_environment);
-		if (register_path(bind(&GetStringValue, ref(e), _1, _2), bind(&SetStringValue, ref(e), _1, _2, _3)))
-			::SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-
-		LOG(PREAMBLE "Configuring application-level environment variables.");
-		register_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2));
+		LOG(PREAMBLE "Check/install...") % A(global);
+		process(register_path_op(), global);
 	}
 
 	void unregister_path(bool global)
 	{
-		CRegKey e;
-
-		LOG(PREAMBLE "Cleaning up environment variables...") % A(global);
-		e.Open(global ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER, c_environment);
-		if (unregister_path(bind(&GetStringValue, ref(e), _1, _2), bind(&SetStringValue, ref(e), _1, _2, _3), bind(&DeleteValue, ref(e), _1)))
-			::SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, reinterpret_cast<LPARAM>(c_environment));
-
-		LOG(PREAMBLE "Cleaning up application-level environment variables.");
-		unregister_path(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2), bind(&RemoveEnvironment, _1));
+		LOG(PREAMBLE "Check/uninstall...") % A(global);
+		process(unregister_path_op(), global);
 	}
 }

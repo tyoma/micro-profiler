@@ -75,9 +75,12 @@ The steps are much like the ones above.
 
 # Revision History
 
-## v2.0.650
+## v2.0.651
 
+* Callstack display is implemented in addition to the existing flat function list. The mode can be switched in the profiler's pane toolbar. The piechart for main list is a bit misleading as of now;
+* The performance of the analyzing thread is greatly improved (about 2x), which the profiler more capable of profiling greater loaded applications;
 * Issue [#71](https://github.com/tyoma/micro-profiler/issues/71) implemented - threads filter now allows for a _cumulative_ view - with the times summed up from all threads.
+* Issue [#69](https://github.com/tyoma/micro-profiler/issues/69) an attempt to fix has been made - building and running an application after upgrade fixes the environment variables, but that may not happen instantenously upon VS restart;
 
 ## v2.0.638
 

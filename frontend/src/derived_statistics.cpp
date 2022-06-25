@@ -85,8 +85,7 @@ namespace micro_profiler
 		};
 	}
 
-	address_table_cptr derived_statistics::addresses(shared_ptr<const selection<id_t> > selection_,
-			calls_statistics_table_cptr hierarchy)
+	address_table_cptr derived_statistics::addresses(selector_table_cptr sel, calls_statistics_table_cptr hierarchy)
 	{
 		typedef tuple< shared_ptr<const address_table>, vector< shared_ptr<const void> > > composite_t;
 
@@ -94,9 +93,9 @@ namespace micro_profiler
 		auto &result = get<0>(*composite);
 		auto &others = get<1>(*composite);
 
-		others.push_back(selection_);
+		others.push_back(sel);
 		others.push_back(hierarchy);
-		result = group_by<long_address_t>(selection_->get_table(), initialize<selection_address_keyer_factory>(hierarchy),
+		result = group_by<long_address_t>(*sel, initialize<selection_address_keyer_factory>(hierarchy),
 			views::default_constructor<long_address_t>(), aggregator::void_());
 		return address_table_cptr(composite, &*result);
 	}

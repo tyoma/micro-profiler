@@ -70,6 +70,9 @@
     <ClCompile Include="derived_statistics.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="representation.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -116,6 +119,7 @@
     <ClInclude Include="..\hierarchy.h" />
     <ClInclude Include="..\derived_statistics.h" />
     <ClInclude Include="..\aggregators.h" />
+    <ClInclude Include="..\representation.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

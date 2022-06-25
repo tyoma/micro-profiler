@@ -14,22 +14,13 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			struct wrapped_selection : selection<id_t>
-			{
-				virtual key_type get_key(size_t /*item*/) const override
-				{	throw 0;	}
-			};
-		}
-
 		begin_test_suite( DistinctAddressTableTests )
 			test( UnderlyingModelsAreHeldByTheAddressesModel )
 			{
 				// INIT
-				auto sel = make_shared<wrapped_selection>();
+				auto sel = make_shared<selector_table>();
 				auto hierarchy = make_shared<calls_statistics_table>();
-				weak_ptr< selection<id_t> > wsel = sel;
+				weak_ptr<selector_table> wsel = sel;
 				weak_ptr<calls_statistics_table> whierarchy = hierarchy;
 
 				// INIT / ACT
@@ -54,7 +45,7 @@ namespace micro_profiler
 			test( IDsAreTranslatedToAddressesAccordinglyToHierarchy )
 			{
 				// INIT
-				const auto sel = make_shared<wrapped_selection>();
+				const auto sel = make_shared<selector_table>();
 				const auto hierarchy = make_shared<calls_statistics_table>();
 				const auto addresses = derived_statistics::addresses(sel, hierarchy);
 
@@ -65,14 +56,13 @@ namespace micro_profiler
 					+ make_call_statistics(3, 0, 1, 502, 0, 0, 0, 0, 0)
 					+ make_call_statistics(4, 0, 0, 124, 0, 0, 0, 0, 0)
 					+ make_call_statistics(5, 0, 4, 503, 0, 0, 0, 0, 0));
-				sel->add_key(2);
+				add_records(*sel, plural + 2u);
 
 				// ASSERT
 				assert_equivalent(plural + 501u, *addresses);
 
 				// ACT
-				sel->add_key(5);
-				sel->add_key(4);
+				add_records(*sel, plural + 5u + 4u);
 
 				// ASSERT
 				assert_equivalent(plural + 501u + 503u + 124u, *addresses);
@@ -82,7 +72,7 @@ namespace micro_profiler
 			test( IDsAreTranslatedToUniqueAddresses )
 			{
 				// INIT
-				const auto sel = make_shared<wrapped_selection>();
+				const auto sel = make_shared<selector_table>();
 				const auto hierarchy = make_shared<calls_statistics_table>();
 				const auto addresses = derived_statistics::addresses(sel, hierarchy);
 
@@ -97,22 +87,19 @@ namespace micro_profiler
 					+ make_call_statistics(8, 0, 4, 503, 0, 0, 0, 0, 0));
 
 				// ACT
-				sel->add_key(2);
-				sel->add_key(3);
+				add_records(*sel, plural + 2u + 3u);
 
 				// ASSERT
 				assert_equivalent(plural + 501u, *addresses);
 
 				// ACT
-				sel->add_key(4);
+				add_records(*sel, plural + 4u);
 
 				// ASSERT
 				assert_equivalent(plural + 501u + 123u, *addresses);
 
 				// ACT
-				sel->add_key(1);
-				sel->add_key(6);
-				sel->add_key(8);
+				add_records(*sel, plural + 1u + 6u + 8u);
 
 				// ASSERT
 				assert_equivalent(plural + 501u + 123u + 503u, *addresses);
@@ -122,7 +109,7 @@ namespace micro_profiler
 			test( SelectionStartsHoldingHierarchy )
 			{
 				// INIT
-				auto sel = make_shared<wrapped_selection>();
+				auto sel = make_shared<selector_table>();
 				auto hierarchy = make_shared<calls_statistics_table>();
 				auto addresses = derived_statistics::addresses(sel, hierarchy);
 				weak_ptr<calls_statistics_table> whierarchy = hierarchy;

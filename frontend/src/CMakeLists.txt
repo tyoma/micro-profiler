@@ -11,6 +11,7 @@ set(FRONTEND_LIB_SOURCES
 	image_patch_model.cpp
 	process_list.cpp
 	profiling_preferences.cpp
+	representation.cpp
 	symbol_resolver.cpp
 	threads_model.cpp
 

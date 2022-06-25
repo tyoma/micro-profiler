@@ -218,16 +218,20 @@ namespace micro_profiler
 			return value;
 		}
 
-		template <typename TableT, typename ContainerT>
-		inline void add_records(TableT &table_, const ContainerT &objects)
+		template <typename TableT>
+		inline void add_record(TableT &table_, const typename TableT::value_type &record)
 		{
-			for (auto i = std::begin(objects); i != std::end(objects); ++i)
-			{
-				auto r = table_.create();
+			auto r = table_.create();
 
-				*r = *i;
-				r.commit();
-			}
+			*r = record;
+			r.commit();
+		}
+
+		template <typename TableT, typename ContainerT>
+		inline void add_records(TableT &table_, const ContainerT &records)
+		{
+			for (auto i = std::begin(records); i != std::end(records); ++i)
+				add_record(table_, *i);
 		}
 	}
 }

@@ -25,6 +25,7 @@
 
 #include <common/compiler.h>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 #include <wpl/signal.h>
 

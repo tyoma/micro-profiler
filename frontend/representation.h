@@ -22,17 +22,43 @@
 
 #include "db.h"
 
+#include <views/transforms.h>
+
 namespace micro_profiler
 {
-	typedef views::table<long_address_t> address_table;
-	typedef std::shared_ptr<const address_table> address_table_cptr;
 	typedef views::table<id_t> selector_table;
-	typedef std::shared_ptr<const selector_table> selector_table_cptr;
+	typedef std::shared_ptr<selector_table> selector_table_ptr;
+	typedef views::joined_record<calls_statistics_table, selector_table> filtered_entry;
+	typedef views::table<filtered_entry> filtered_calls_statistics_table;
+	typedef std::shared_ptr<const filtered_calls_statistics_table> filtered_calls_statistics_table_cptr;
 
-	struct derived_statistics
+	enum thread_mode {	threads_all, threads_cumulative, threads_filtered	};
+
+	template <bool callstacks, thread_mode mode>
+	struct representation
 	{
-		static address_table_cptr addresses(selector_table_cptr selection_, calls_statistics_table_cptr hierarchy);
-		static calls_statistics_table_cptr callers(address_table_cptr callees, calls_statistics_table_cptr hierarchy);
-		static calls_statistics_table_cptr callees(address_table_cptr callers, calls_statistics_table_cptr hierarchy);
+		static representation create(calls_statistics_table_cptr source);
+
+		calls_statistics_table_cptr main;
+		selector_table_ptr selection_main;
+
+		calls_statistics_table_cptr callers;
+
+		calls_statistics_table_cptr callees;
+	};
+
+	template <bool callstacks>
+	struct representation<callstacks, threads_filtered>
+	{
+		static representation create(calls_statistics_table_cptr source, id_t thread_id);
+
+		selector_table_ptr selection_threads;
+
+		filtered_calls_statistics_table_cptr main;
+		selector_table_ptr selection_main;
+
+		filtered_calls_statistics_table_cptr callers;
+
+		filtered_calls_statistics_table_cptr callees;
 	};
 }

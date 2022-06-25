@@ -50,6 +50,7 @@
     <ClCompile Include="image_patch_model.cpp" />
     <ClCompile Include="process_list.cpp" />
     <ClCompile Include="profiling_preferences.cpp" />
+    <ClCompile Include="representation.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
     <ClCompile Include="untested\function_hint.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\serialization_context.h" />
     <ClInclude Include="..\primitives.h" />
+    <ClInclude Include="..\representation.h" />
     <ClInclude Include="..\table_model_impl.h" />
     <ClInclude Include="..\statistics_poll.h" />
     <ClInclude Include="..\about_ui.h" />

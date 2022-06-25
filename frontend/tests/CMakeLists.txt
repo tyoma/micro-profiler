@@ -28,6 +28,7 @@ set(FRONTEND_TESTS_SOURCES
 	ProcessListTests.cpp
 #	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp
+	RepresentationTests.cpp
 	SelectionModelTests.cpp
 	StatisticsHierarchyAccessTests.cpp
 	SymbolResolverTests.cpp

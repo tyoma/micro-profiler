@@ -28,6 +28,7 @@
 #include <frontend/function_hint.h>
 #include <frontend/piechart.h>
 #include <frontend/profiling_session.h>
+#include <frontend/representation.h>
 #include <frontend/statistic_models.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
@@ -68,13 +69,6 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads, uint64_t ticks_per_second)
 			: statistics(statistics_)
 		{
-			auto &by_id_idx = views::unique_index<keyer::id>(*statistics);
-
-			auto by_thread_id = [threads] (id_t key) -> const thread_info * {
-				const auto i = threads->find(key);
-				return i != threads->end() ? &i->second : nullptr;
-			};
-
 			auto &by_node_idx = views::unique_index<keyer::callnode>(*statistics);
 			by_node = [&by_node_idx] (const call_node_key &key) {	return by_node_idx.find(key);	};
 
@@ -84,21 +78,20 @@ namespace micro_profiler
 				return keyer::combine2<keyer::address, keyer::thread_id>();
 			}, aggregator::sum_flat(*statistics_));
 			const auto filtered_statistics = make_filter_view(statistics_main);
-			const auto context = initialize<statistics_model_context>(1.0 / ticks_per_second,
-				[&by_id_idx] (id_t key) {	return by_id_idx.find(key);	}, by_thread_id, resolver, false);
+			const auto context = create_context(statistics, 1.0 / ticks_per_second, resolver, threads, false);
 			const auto model_impl = create_statistics_model(filtered_statistics, context);
 
 			main = model_impl;
 			selection_main = main->create_selection();
 
-			const auto selection_main_addresses = derived_statistics::addresses(selection_main, statistics_main);
+			const auto selection_table = selector_table_cptr(selection_main, &selection_main->get_table());
+			const auto selection_main_addresses = derived_statistics::addresses(selection_table, statistics_main);
 
 			statistics_callers = derived_statistics::callers(selection_main_addresses, statistics);
 			callers = create_statistics_model(statistics_callers, context);
-			selection_callers = callers->create_selection();
+
 			statistics_callees = derived_statistics::callees(selection_main_addresses, statistics);
 			callees = create_statistics_model(statistics_callees, context);
-			selection_callees = callees->create_selection();
 
 			dump_main = [model_impl] (string &content) {	dump::as_tab_separated(content, *model_impl);	};
 			reset_filter = [filtered_statistics] {	filtered_statistics->set_filter();	};
@@ -115,7 +108,7 @@ namespace micro_profiler
 		function<void (id_t thread_id)> set_filter;
 		function<const call_statistics *(const call_node_key &key)> by_node;
 		shared_ptr< table_model<id_t> > main, callers, callees;
-		shared_ptr< selection<id_t> > selection_main, selection_callers, selection_callees;
+		shared_ptr< selection<id_t> > selection_main;
 	};
 
 
@@ -268,11 +261,13 @@ namespace micro_profiler
 		_connections.clear();
 		_dump_main = m->dump_main;
 
-		_connections.push_back(_callers_view->item_activate += [m, select_matching] (...) {
-			if (m->selection_callers->begin() != m->selection_callers->end())
-				select_matching(*m->statistics_callers, *m->selection_callers->begin());
+		auto callers = m->statistics_callers;
+		auto selection_callers = m->callers->create_selection();
+		_connections.push_back(_callers_view->item_activate += [callers, selection_callers, select_matching] (...) {
+			if (selection_callers->begin() != selection_callers->end())
+				select_matching(*callers, *selection_callers->begin());
 		});
-		attach_listview(*_callers_view, _cm_parents, m->callers, m->selection_callers);
+		attach_listview(*_callers_view, _cm_parents, m->callers, selection_callers);
 
 		auto on_activate = [this, resolver, m] (...) {
 			symbol_resolver::fileline_t fileline;
@@ -287,13 +282,15 @@ namespace micro_profiler
 		attach_listview(*_main_view, _cm_main, m->main, m->selection_main);
 		attach_piechart(*_main_piechart, *_main_hint, m->main, m->selection_main);
 
-		auto on_drilldown_child = [m, select_matching] (...) {
-			if (m->selection_callees->begin() != m->selection_callees->end())
-				select_matching(*m->statistics_callees, *m->selection_callees->begin());
+		auto callees = m->statistics_callees;
+		auto selection_callees = m->callees->create_selection();
+		auto on_drilldown_child = [callees, selection_callees, select_matching] (...) {
+			if (selection_callees->begin() != selection_callees->end())
+				select_matching(*callees, *selection_callees->begin());
 		};
 		_connections.push_back(_callees_piechart->item_activate += on_drilldown_child);
 		_connections.push_back(_callees_view->item_activate += on_drilldown_child);
-		attach_listview(*_callees_view, _cm_children, m->callees, m->selection_callees);
-		attach_piechart(*_callees_piechart, *_callees_hint, m->callees, m->selection_callees);
+		attach_listview(*_callees_view, _cm_children, m->callees, selection_callees);
+		attach_piechart(*_callees_piechart, *_callees_hint, m->callees, selection_callees);
 	}
 }

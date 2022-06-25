@@ -317,6 +317,113 @@ namespace micro_profiler
 					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0, 0, 0)
 					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0, 0, 0), *rep.callees);
 			}
-			end_test_suite
+		end_test_suite
+
+
+		begin_test_suite( RepresentationFlatAllTests )
+			shared_ptr<calls_statistics_table> source;
+
+			init( CreateSourceTable )
+			{
+				source = make_shared<calls_statistics_table>();
+				add_records(*source, plural
+					+ make_call_statistics(1, 1, 0, 101, 1011, 0, 11, 0, 0)
+					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 13, 0, 0)
+					+ make_call_statistics(3, 1, 1, 103, 1003, 0, 17, 0, 0)
+					+ make_call_statistics(4, 1, 3, 102, 1004, 0, 19, 0, 0)
+					+ make_call_statistics(5, 1, 3, 101, 1005, 0, 23, 0, 0)
+					+ make_call_statistics(6, 5, 0, 101, 1006, 0, 29, 0, 0)
+					+ make_call_statistics(7, 5, 6, 102, 1007, 0, 31, 0, 0)
+					+ make_call_statistics(8, 5, 7, 102, 1008, 0, 37, 0, 0)
+					+ make_call_statistics(9, 5, 8, 102, 1009, 0, 41, 0, 0));
+			}
+
+
+			test( MainStatisticsIsRecursionAwareAggregationOfTheSource )
+			{
+				// INIT / ACT
+				auto rep = representation<false, threads_all>::create(source);
+
+				// ACT / ASSERT
+				assert_not_null(rep.main);
+				assert_equivalent(plural
+					+ make_call_statistics(1, 1, 0, 101, 2016, 0, 11, 0, 0)
+					+ make_call_statistics(2, 1, 0, 102, 2006, 0, 32, 0, 0)
+					+ make_call_statistics(3, 1, 0, 103, 1003, 0, 17, 0, 0)
+					+ make_call_statistics(4, 5, 0, 101, 1006, 0, 29, 0, 0)
+					+ make_call_statistics(5, 5, 0, 102, 3024, 0, 31, 0, 0), *rep.main);
+				assert_not_null(rep.selection_main);
+
+				// INIT
+				weak_ptr<calls_statistics_table> wsource = source;
+
+				// ACT
+				source.reset();
+
+				// ASSERT
+				assert_is_false(wsource.expired());
+			}
+
+
+			test( CallersAreListedAccordinglyToSelection )
+			{
+				// INIT / ACT
+				auto rep = representation<false, threads_all>::create(source);
+
+				// ACT / ASSERT
+				assert_not_null(rep.callers);
+				assert_equal(rep.callers->end(), rep.callers->begin());
+
+				// ACT
+				add_records(*rep.selection_main, plural + 1u);
+
+				// ACT / ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0, 1011, 0, 11, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1005, 0, 0, 0, 0)
+					+ make_call_statistics(0, 5, 0, 0, 1006, 0, 29, 0, 0), *rep.callers);
+
+				// ACT
+				add_records(*rep.selection_main, plural + 2u);
+
+				// ACT / ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0, 1011, 0, 11, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 2009, 0, 19, 0, 0)
+					+ make_call_statistics(0, 5, 0, 0, 1006, 0, 29, 0, 0)
+					+ make_call_statistics(0, 1, 0, 101, 1002, 0, 13, 0, 0)
+					+ make_call_statistics(0, 5, 0, 101, 1007, 0, 31, 0, 0)
+					+ make_call_statistics(0, 5, 0, 102, 2017, 0, 0, 0, 0), *rep.callers);
+			}
+
+
+			test( CalleesAreListedAccordinglyToSelection )
+			{
+				// INIT / ACT
+				auto rep = representation<false, threads_all>::create(source);
+
+				// ACT / ASSERT
+				assert_not_null(rep.callees);
+				assert_equal(rep.callees->end(), rep.callees->begin());
+
+				// ACT
+				add_records(*rep.selection_main, plural + 1u);
+
+				// ACT / ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 13, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 17, 0, 0)
+					+ make_call_statistics(0, 5, 0, 102, 1007, 0, 31, 0, 0), *rep.callees);
+
+				// ACT
+				add_records(*rep.selection_main, plural + 2u);
+
+				// ACT / ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 13, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 17, 0, 0)
+					+ make_call_statistics(0, 5, 0, 102, 3024, 0, 31, 0, 0), *rep.callees);
+			}
+		end_test_suite
 	}
 }

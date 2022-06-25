@@ -20,6 +20,7 @@
 
 #include <frontend/representation.h>
 
+#include <frontend/aggregators.h>
 #include <frontend/derived_statistics.h>
 #include <frontend/key.h>
 #include <frontend/threads_model.h>
@@ -117,4 +118,24 @@ namespace micro_profiler
 		rec.commit();
 		return r;
 	}
+
+	template <>
+	representation<false, threads_all> representation<false, threads_all>::create(calls_statistics_table_cptr source)
+	{
+		const auto selection_main = make_shared<selector_table>();
+		const auto selection_main_addresses = derived_statistics::addresses(selection_main, source);
+		const auto main_flat = views::group_by<call_statistics>(*source,
+			[] (const calls_statistics_table &, views::agnostic_key_tag) {
+
+			return keyer::combine2<keyer::address, keyer::thread_id>();
+		}, auto_increment_constructor<call_statistics>(), aggregator::sum_flat(*source));
+		representation<false, threads_all> r = {
+			main_flat, selection_main,
+			derived_statistics::callers(selection_main_addresses, source),
+			derived_statistics::callees(selection_main_addresses, source),
+		};
+
+		return r;
+	}
+
 }

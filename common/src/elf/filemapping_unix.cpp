@@ -1,6 +1,7 @@
 #include "filemapping.h"
 
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
 

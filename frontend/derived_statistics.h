@@ -28,6 +28,7 @@ namespace micro_profiler
 	typedef std::shared_ptr<const address_table> address_table_cptr;
 	typedef views::table<id_t> selector_table;
 	typedef std::shared_ptr<const selector_table> selector_table_cptr;
+	typedef std::shared_ptr<selector_table> selector_table_ptr;
 
 	struct derived_statistics
 	{

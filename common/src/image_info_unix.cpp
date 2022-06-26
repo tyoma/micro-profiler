@@ -24,6 +24,7 @@
 #include "elf/sym-elf.h"
 
 #include <cxxabi.h>
+#include <stdexcept>
 
 using namespace std;
 using namespace std::placeholders;

@@ -52,7 +52,6 @@ namespace micro_profiler
 		const views::ordered<U> &ordered() const throw();
 		const CtxT &context() const throw();
 		const std::vector<column_type> &columns() const throw();
-		U &underlying() throw();
 
 		template <typename ContainerT>
 		void add_columns(const ContainerT &columns_);
@@ -102,10 +101,6 @@ namespace micro_profiler
 	template <typename BaseT, typename U, typename CtxT>
 	inline const std::vector<typename table_model_impl<BaseT, U, CtxT>::column_type> &table_model_impl<BaseT, U, CtxT>::columns() const throw()
 	{	return _columns;	}
-
-	template <typename BaseT, typename U, typename CtxT>
-	inline U &table_model_impl<BaseT, U, CtxT>::underlying() throw()
-	{	return *_underlying;	}
 
 	template <typename BaseT, typename U, typename CtxT>
 	template <typename ContainerT>
@@ -194,10 +189,16 @@ namespace micro_profiler
 	template <typename BaseT, typename U, typename CtxT>
 	inline std::shared_ptr< selection<typename table_model_impl<BaseT, U, CtxT>::key_type> > table_model_impl<BaseT, U, CtxT>::create_selection() const
 	{
-		typedef std::tuple< std::shared_ptr<const table_model_impl>, selection_model< views::ordered<U> > > composite_t;
+		typedef typename table_model_impl<BaseT, U, CtxT>::key_type key_type;
 
-		auto composite = std::make_shared<composite_t>(this->shared_from_this(), _ordered);
+		std::shared_ptr< const views::ordered<U> > o(this->shared_from_this(), &_ordered);
 
-		return std::shared_ptr< selection<key_type> >(composite, &std::get<1>(*composite));
+		return std::make_shared< selection<key_type> >(std::make_shared< views::table<key_type> >(),
+			[o] (index_type item) -> key_type {	return key_traits<value_type>::get_key((*o)[item]);	});
 	}
+
+
+	template <typename BaseT, typename U, typename CtxT>
+	inline std::shared_ptr< const views::ordered<U> > get_ordered(std::shared_ptr< table_model_impl<BaseT, U, CtxT> > model)
+	{	return std::shared_ptr< const views::ordered<U> >(model, &model->ordered());	}
 }

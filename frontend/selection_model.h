@@ -23,6 +23,7 @@
 #include "key.h"
 
 #include <common/noncopyable.h>
+#include <functional>
 #include <unordered_set>
 #include <wpl/models.h>
 #include <views/integrated_index.h>
@@ -30,16 +31,17 @@
 namespace micro_profiler
 {
 	template <typename KeyT>
-	class selection : public wpl::dynamic_set_model, private views::table<KeyT>, noncopyable
+	class selection : public wpl::dynamic_set_model, noncopyable
 	{
 		typedef views::table<KeyT> base_t;
 
 	public:
 		typedef typename base_t::const_iterator const_iterator;
 		typedef KeyT key_type;
+		typedef std::function<key_type (index_type item)> get_key_cb;
 
 	public:
-		selection();
+		selection(std::shared_ptr<base_t> scope, const get_key_cb &get_key);
 
 		// wpl::dynamic_set_model methods
 		virtual void clear() throw() override;
@@ -49,73 +51,49 @@ namespace micro_profiler
 
 		void add_key(const KeyT &key);
 		const base_t &get_table() const;
-		using base_t::begin;
-		using base_t::end;
-		using wpl::dynamic_set_model::invalidate;
+		const_iterator begin() const;
+		const_iterator end() const;
 
 	private:
-		virtual key_type get_key(std::size_t item) const = 0;
-
-	private:
+		const std::shared_ptr<base_t> _scope;
 		views::immutable_unique_index<base_t, keyer::self> &_index;
-	};
-
-
-	template <typename UnderlyingT>
-	class selection_model : public selection<typename key_traits<typename UnderlyingT::value_type>::key_type>
-	{
-	public:
-		typedef wpl::dynamic_set_model::index_type index_type;
-		typedef key_traits<typename UnderlyingT::value_type> selection_key_type;
-		typedef typename selection_key_type::key_type key_type;
-
-	public:
-		selection_model(const UnderlyingT &underlying);
-
-	private:
-		virtual key_type get_key(std::size_t item) const override;
-
-	private:
-		const UnderlyingT &_underlying;
+		const get_key_cb _get_key;
+		const wpl::slot_connection _conn;
 	};
 
 
 
 	template <typename KeyT>
-	inline selection<KeyT>::selection()
-		: _index(views::unique_index(*this, keyer::self()))
+	inline selection<KeyT>::selection(std::shared_ptr<base_t> scope, const get_key_cb &get_key)
+		: _scope(scope), _index(views::unique_index(*scope, keyer::self())), _get_key(get_key),
+			_conn(scope->invalidate += [this] {	invalidate(npos());	})
 	{	}
 
 	template <typename KeyT>
 	inline void selection<KeyT>::clear() throw()
-	{
-		base_t::clear();
-		this->invalidate(npos());
-	}
+	{	_scope->clear();	}
 
 	template <typename KeyT>
 	inline void selection<KeyT>::add(index_type item)
 	{
-		auto r = _index[get_key(item)];
+		auto r = _index[_get_key(item)];
 
 		r.commit();
 		this->invalidate(item);
-		base_t::invalidate();
 	}
 
 	template <typename KeyT>
 	inline void selection<KeyT>::remove(index_type item)
 	{
-		auto r = _index[get_key(item)];
+		auto r = _index[_get_key(item)];
 
 		r.remove();
 		this->invalidate(item);
-		base_t::invalidate();
 	}
 
 	template <typename KeyT>
 	inline bool selection<KeyT>::contains(index_type item) const throw()
-	{	return !!_index.find(get_key(item));	}
+	{	return !!_index.find(_get_key(item));	}
 
 	template <typename KeyT>
 	inline void selection<KeyT>::add_key(const key_type &key)
@@ -123,21 +101,18 @@ namespace micro_profiler
 		auto r = _index[key];
 
 		r.commit();
-		this->invalidate(npos());
-		base_t::invalidate();
+		_scope->invalidate();
 	}
 
 	template <typename KeyT>
 	inline const views::table<KeyT> &selection<KeyT>::get_table() const
-	{	return *this;	}
+	{	return *_scope;	}
 
+	template <typename KeyT>
+	inline typename selection<KeyT>::const_iterator selection<KeyT>::begin() const
+	{	return _scope->begin();	}
 
-	template <typename UnderlyingT>
-	inline selection_model<UnderlyingT>::selection_model(const UnderlyingT &underlying)
-		: _underlying(underlying)
-	{	}
-
-	template <typename UnderlyingT>
-	inline typename selection_model<UnderlyingT>::key_type selection_model<UnderlyingT>::get_key(std::size_t item) const
-	{	return selection_key_type::get_key(_underlying[item]);	}
+	template <typename KeyT>
+	inline typename selection<KeyT>::const_iterator selection<KeyT>::end() const
+	{	return _scope->end();	}
 }

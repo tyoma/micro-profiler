@@ -175,8 +175,8 @@ namespace micro_profiler
 
 	shared_ptr< selection<symbol_key> > image_patch_model::create_selection() const
 	{
-		// TODO: possibly requires ownership of _ordered_view (and inners)
-		return make_shared< selection_model<ordered_view_t> >(_ordered_view);
+		return make_shared< selection<symbol_key> >(std::make_shared< views::table<symbol_key> >(),
+			[this] (index_type item) {	return _ordered_view[item].first;	});
 	}
 
 	image_patch_model::index_type image_patch_model::get_count() const throw()

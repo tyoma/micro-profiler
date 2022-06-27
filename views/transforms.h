@@ -33,6 +33,15 @@ namespace micro_profiler
 		struct aggregated_key_tag : agnostic_key_tag {};
 
 		template <typename Table1T, typename Table2T>
+		class joined_record;
+
+		template <typename TableT>
+		struct joined_prime {	typedef typename TableT::const_reference type;	};
+
+		template <typename Table1T, typename Table2T, typename C>
+		struct joined_prime< table<joined_record<Table1T, Table2T>, C> > {	typedef typename joined_prime<Table1T>::type type;	};
+
+		template <typename Table1T, typename Table2T>
 		class joined_record
 		{
 		public:
@@ -42,7 +51,7 @@ namespace micro_profiler
 			typename Table1T::const_reference left() const {	return *_left;	}
 			typename Table2T::const_reference right() const {	return *_right;	}
 
-			operator typename Table1T::const_reference() const {	return *_left;	}
+			operator typename joined_prime<Table1T>::type() const {	return *_left;	}
 
 		private:
 			typename Table1T::const_iterator _left;

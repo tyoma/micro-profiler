@@ -67,6 +67,11 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_equal(source, rep.main);
 				assert_not_null(rep.selection_main);
+				assert_not_null(rep.selection_callers);
+				assert_not_equal(rep.selection_main, rep.selection_callers);
+				assert_not_null(rep.selection_callees);
+				assert_not_equal(rep.selection_main, rep.selection_callees);
+				assert_not_equal(rep.selection_callers, rep.selection_callees);
 			}
 
 
@@ -128,6 +133,57 @@ namespace micro_profiler
 					+ make_call_statistics(0, 2, 0, 104, 1009, 0, 0, 0, 0)
 					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0, 0, 0), *rep.callees);
 			}
+
+
+			test( ActivationOfSelectedCallersSwitchesMainSelection )
+			{
+				// INIT
+				auto rep = representation<true, threads_all>::create(source);
+				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
+					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].id;
+				};
+
+				add_records(*rep.selection_main, plural + 3u);
+
+				// ACT
+				add_records(*rep.selection_callers, plural + get_id(105, 1));
+				rep.activate_callers();
+
+				// ASSERT
+				assert_equivalent(plural + 5u, *rep.selection_main);
+				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
+
+				// INIT
+				add_records(*rep.selection_main, plural + 6u);
+
+				// ACT
+				add_records(*rep.selection_callers, plural + get_id(102, 1) + get_id(105, 1));
+				rep.activate_callers();
+
+				// ASSERT
+				assert_equivalent(plural + 2u + 5u, *rep.selection_main);
+				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
+			}
+
+
+			test( ActivationOfSelectedCalleesSwitchesMainSelection )
+			{
+				// INIT
+				auto rep = representation<true, threads_all>::create(source);
+				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
+					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].id;
+				};
+
+				add_records(*rep.selection_main, plural + 1u);
+
+				// ACT
+				add_records(*rep.selection_callees, plural + get_id(102, 1));
+				rep.activate_callees();
+
+				// ASSERT
+				assert_equivalent(plural + 2u, *rep.selection_main);
+				assert_equal(rep.selection_callees->end(), rep.selection_callees->begin());
+			}
 		end_test_suite
 
 
@@ -154,6 +210,11 @@ namespace micro_profiler
 					+ make_call_statistics(0, threads_model::cumulative, 5, 106, 1006, 0, 0, 0, 0)
 					+ make_call_statistics(0, threads_model::cumulative, 5, 103, 1007, 0, 0, 0, 0), *rep.main);
 				assert_not_null(rep.selection_main);
+				assert_not_null(rep.selection_callers);
+				assert_not_equal(rep.selection_main, rep.selection_callers);
+				assert_not_null(rep.selection_callees);
+				assert_not_equal(rep.selection_main, rep.selection_callees);
+				assert_not_equal(rep.selection_callers, rep.selection_callees);
 			}
 
 
@@ -225,6 +286,57 @@ namespace micro_profiler
 					+ make_call_statistics(0, threads_model::cumulative, 0, 104, 2013, 0, 0, 0, 0)
 					+ make_call_statistics(0, threads_model::cumulative, 0, 106, 1006, 0, 0, 0, 0), *rep.callees);
 			}
+
+
+			test( ActivationOfSelectedCallersSwitchesMainSelection )
+			{
+				// INIT
+				auto rep = representation<true, threads_cumulative>::create(source);
+				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
+					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].id;
+				};
+
+				add_records(*rep.selection_main, plural + 3u);
+
+				// ACT
+				add_records(*rep.selection_callers, plural + get_id(105, threads_model::cumulative));
+				rep.activate_callers();
+
+				// ASSERT
+				assert_equivalent(plural + 5u, *rep.selection_main);
+				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
+
+				// INIT
+				add_records(*rep.selection_main, plural + 6u);
+
+				// ACT
+				add_records(*rep.selection_callers, plural + get_id(102, threads_model::cumulative) + get_id(105, threads_model::cumulative));
+				rep.activate_callers();
+
+				// ASSERT
+				assert_equivalent(plural + 2u + 5u, *rep.selection_main);
+				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
+			}
+
+
+			test( ActivationOfSelectedCalleesSwitchesMainSelection )
+			{
+				// INIT
+				auto rep = representation<true, threads_cumulative>::create(source);
+				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
+					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].id;
+				};
+
+				add_records(*rep.selection_main, plural + 1u);
+
+				// ACT
+				add_records(*rep.selection_callees, plural + get_id(102, threads_model::cumulative));
+				rep.activate_callees();
+
+				// ASSERT
+				assert_equivalent(plural + 2u, *rep.selection_main);
+				assert_equal(rep.selection_callees->end(), rep.selection_callees->begin());
+			}
 		end_test_suite
 
 
@@ -251,6 +363,11 @@ namespace micro_profiler
 					+ make_call_statistics(6, 1, 5, 106, 1006, 0, 0, 0, 0)
 					+ make_call_statistics(7, 1, 5, 103, 1007, 0, 0, 0, 0), *rep1.main);
 				assert_not_null(rep1.selection_main);
+				assert_not_null(rep1.selection_callers);
+				assert_not_equal(rep1.selection_main, rep1.selection_callers);
+				assert_not_null(rep1.selection_callees);
+				assert_not_equal(rep1.selection_main, rep1.selection_callees);
+				assert_not_equal(rep1.selection_callers, rep1.selection_callees);
 
 				// INIT / ACT
 				auto rep2 = representation<true, threads_filtered>::create(source, 2);
@@ -334,6 +451,57 @@ namespace micro_profiler
 					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0, 0, 0)
 					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0, 0, 0), *rep.callees);
 			}
+
+
+			test( ActivationOfSelectedCallersSwitchesMainSelection )
+			{
+				// INIT
+				auto rep = representation<true, threads_filtered>::create(source, 1);
+				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
+					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].left().id;
+				};
+
+				add_records(*rep.selection_main, plural + 3u);
+
+				// ACT
+				add_records(*rep.selection_callers, plural + get_id(105, 1));
+				rep.activate_callers();
+
+				// ASSERT
+				assert_equivalent(plural + 5u, *rep.selection_main);
+				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
+
+				// INIT
+				add_records(*rep.selection_main, plural + 6u);
+
+				// ACT
+				add_records(*rep.selection_callers, plural + get_id(102, 1) + get_id(105, 1));
+				rep.activate_callers();
+
+				// ASSERT
+				assert_equivalent(plural + 2u + 5u, *rep.selection_main);
+				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
+			}
+
+
+			test( ActivationOfSelectedCalleesSwitchesMainSelection )
+			{
+				// INIT
+				auto rep = representation<true, threads_filtered>::create(source, 1);
+				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
+					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].left().id;
+				};
+
+				add_records(*rep.selection_main, plural + 1u);
+
+				// ACT
+				add_records(*rep.selection_callees, plural + get_id(102, 1));
+				rep.activate_callees();
+
+				// ASSERT
+				assert_equivalent(plural + 2u, *rep.selection_main);
+				assert_equal(rep.selection_callees->end(), rep.selection_callees->begin());
+			}
 		end_test_suite
 
 
@@ -358,6 +526,11 @@ namespace micro_profiler
 					+ make_call_statistics(4, 5, 0, 101, 1006, 0, 29, 0, 0)
 					+ make_call_statistics(5, 5, 0, 102, 3024, 0, 31, 0, 0), *rep.main);
 				assert_not_null(rep.selection_main);
+				assert_not_null(rep.selection_callers);
+				assert_not_equal(rep.selection_main, rep.selection_callers);
+				assert_not_null(rep.selection_callees);
+				assert_not_equal(rep.selection_main, rep.selection_callees);
+				assert_not_equal(rep.selection_callers, rep.selection_callees);
 
 				// INIT
 				weak_ptr<calls_statistics_table> wsource = source;
@@ -451,6 +624,11 @@ namespace micro_profiler
 					+ make_call_statistics(2, threads_model::cumulative, 0, 102, 5030, 0, 63, 0, 0)
 					+ make_call_statistics(3, threads_model::cumulative, 0, 103, 1003, 0, 17, 0, 0), *rep.main);
 				assert_not_null(rep.selection_main);
+				assert_not_null(rep.selection_callers);
+				assert_not_equal(rep.selection_main, rep.selection_callers);
+				assert_not_null(rep.selection_callees);
+				assert_not_equal(rep.selection_main, rep.selection_callees);
+				assert_not_equal(rep.selection_callers, rep.selection_callees);
 
 				// INIT
 				weak_ptr<calls_statistics_table> wsource = source;
@@ -539,6 +717,11 @@ namespace micro_profiler
 					+ make_call_statistics(2, 1, 0, 102, 2006, 0, 32, 0, 0)
 					+ make_call_statistics(3, 1, 0, 103, 1003, 0, 17, 0, 0), *rep1.main);
 				assert_not_null(rep1.selection_main);
+				assert_not_null(rep1.selection_callers);
+				assert_not_equal(rep1.selection_main, rep1.selection_callers);
+				assert_not_null(rep1.selection_callees);
+				assert_not_equal(rep1.selection_main, rep1.selection_callees);
+				assert_not_equal(rep1.selection_callers, rep1.selection_callees);
 
 				// INIT / ACT
 				auto rep2 = representation<false, threads_filtered>::create(source, 5);

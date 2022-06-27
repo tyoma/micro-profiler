@@ -58,6 +58,16 @@ namespace micro_profiler
 			}
 		};
 
+		template <typename T, typename C, typename KeyerT>
+		vector< typename views::result<KeyerT, T>::type > collect_keys(const views::table<T, C> &table, const KeyerT &keyer_)
+		{
+			vector< typename views::result<KeyerT, T>::type > result;
+
+			for (auto i = table.begin(); i != table.end(); ++i)
+				result.push_back(keyer_(*i));
+			return result;
+		}
+
 		calls_statistics_table_cptr group_by_callstack(calls_statistics_table_cptr source)
 		{
 			const auto composite = make_shared_copy(make_tuple(source, views::group_by(*source,
@@ -78,6 +88,34 @@ namespace micro_profiler
 			return filtered_calls_statistics_table_cptr(composite, &*get<2>(*composite));
 		}
 
+		template <typename T, typename C, typename V>
+		void add_record(views::table<T, C> &table, const V &value)
+		{
+			auto rec = table.create();
+			*rec = value;
+			rec.commit();
+		}
+
+		template <typename M, typename D>
+		function<void ()> make_activate_derived(shared_ptr<const M> main, selector_table_ptr selection_main,
+			shared_ptr<const D> derived, selector_table_ptr selection_derived)
+		{
+			const auto selected_derived = views::join<keyer::id, keyer::self>(*derived, *selection_derived);
+
+			return [main, selection_main, selection_derived, selected_derived] {
+				typedef keyer::combine2<keyer::address, keyer::thread_id> match_keyer;
+
+				const auto jump = collect_keys(*selected_derived, match_keyer());
+				const auto &idx = views::multi_index<match_keyer>(*main);
+
+				selection_main->clear();
+				selection_derived->clear();
+				for (auto i = jump.begin(); i != jump.end(); ++i)
+					for (auto r = idx.equal_range(*i); r.first != r.second; ++r.first)
+						add_record(*selection_main, keyer::id()(*r.first));
+			};
+		}
+
 		template <bool callstacks>
 		representation<callstacks, threads_all> create_all(calls_statistics_table_cptr main,
 			calls_statistics_table_cptr source)
@@ -85,11 +123,15 @@ namespace micro_profiler
 			const auto selection_main = make_shared<selector_table>();
 			const auto selection_main_addresses = derived_statistics::addresses(selection_main, source);
 			representation<callstacks, threads_all> r = {
-				main, selection_main,
+				main,
 				derived_statistics::callers(selection_main_addresses, source),
 				derived_statistics::callees(selection_main_addresses, source),
+
+				selection_main, make_shared<selector_table>(), make_shared<selector_table>(),
 			};
 
+			r.activate_callers = make_activate_derived(r.main, r.selection_main, r.callers, r.selection_callers);
+			r.activate_callees = make_activate_derived(r.main, r.selection_main, r.callees, r.selection_callees);
 			return r;
 		}
 
@@ -97,7 +139,11 @@ namespace micro_profiler
 		representation<callstacks, threads_cumulative> create_cumulative(calls_statistics_table_cptr source)
 		{
 			auto from = representation<callstacks, threads_all>::create(group_by_callstack(source));
-			representation<callstacks, threads_cumulative> r = {	from.main, from.selection_main, from.callers, from.callees,	};
+			representation<callstacks, threads_cumulative> r = {
+				from.main, from.callers, from.callees,
+				from.selection_main, from.selection_callers, from.selection_callees,
+				from.activate_callers, from.activate_callees,
+			};
 
 			return r;
 		}
@@ -109,17 +155,18 @@ namespace micro_profiler
 			const auto selection_threads = make_shared<selector_table>();
 			representation<callstacks, threads_filtered> r = {
 				selection_threads,
-				join_by_thread(from.main, selection_threads), from.selection_main,
+				join_by_thread(from.main, selection_threads),
 				join_by_thread(from.callers, selection_threads),
-				join_by_thread(from.callees, selection_threads)
-			};
-			auto rec = selection_threads->create();
+				join_by_thread(from.callees, selection_threads),
 
-			*rec = thread_id;
-			rec.commit();
+				from.selection_main, from.selection_callers, from.selection_callees,
+			};
+
+			r.activate_callers = make_activate_derived(r.main, r.selection_main, r.callers, r.selection_callers);
+			r.activate_callees = make_activate_derived(r.main, r.selection_main, r.callees, r.selection_callees);
+			add_record(*selection_threads, thread_id);
 			return r;
 		}
-
 	}
 
 	template <>

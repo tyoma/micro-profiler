@@ -28,6 +28,12 @@
 
 namespace micro_profiler
 {
+	namespace views
+	{
+		template <typename Table1T, typename Table2T>
+		class joined_record;
+	}
+
 	template <typename T>
 	struct auto_increment_constructor;
 
@@ -121,6 +127,10 @@ namespace micro_profiler
 			template <typename T>
 			id_t operator ()(const T &record) const
 			{	return record.id;	}
+
+			template <typename Table1T, typename Table2T>
+			id_t operator ()(const views::joined_record<Table1T, Table2T> &record) const
+			{	return (*this)(record.left());	}
 		};
 
 		struct parent_id

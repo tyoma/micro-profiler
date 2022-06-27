@@ -39,12 +39,9 @@ namespace micro_profiler
 	{
 		static representation create(calls_statistics_table_cptr source);
 
-		calls_statistics_table_cptr main;
-		selector_table_ptr selection_main;
-
-		calls_statistics_table_cptr callers;
-
-		calls_statistics_table_cptr callees;
+		calls_statistics_table_cptr main, callers, callees;
+		selector_table_ptr selection_main, selection_callers, selection_callees;
+		std::function<void ()> activate_callers, activate_callees;
 	};
 
 	template <bool callstacks>
@@ -54,11 +51,8 @@ namespace micro_profiler
 
 		selector_table_ptr selection_threads;
 
-		filtered_calls_statistics_table_cptr main;
-		selector_table_ptr selection_main;
-
-		filtered_calls_statistics_table_cptr callers;
-
-		filtered_calls_statistics_table_cptr callees;
+		filtered_calls_statistics_table_cptr main, callers, callees;
+		selector_table_ptr selection_main, selection_callers, selection_callees;
+		std::function<void ()> activate_callers, activate_callees;
 	};
 }

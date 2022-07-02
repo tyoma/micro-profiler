@@ -97,7 +97,8 @@ namespace micro_profiler
 	}
 
 
-	application::application()
+	application::application(const char *argv[], size_t argc)
+		: _arguments(argv, argv + argc)
 	{
 		const auto clock_raw = &clock;
 		const auto clock_mt = [clock_raw] {	return mt::milliseconds(clock_raw());	};
@@ -186,10 +187,33 @@ try
 	else
 	{
 		ipc::com::com_initialize ci;
-		application app;
+		application app(nullptr, 0);
 
 		main(app);
 	}
+	return 0;
+}
+catch (const exception &e)
+{
+	printf("Caught exception: %s...\nExiting!\n", e.what());
+	return -1;
+}
+catch (...)
+{
+	printf("Caught an unknown exception...\nExiting!\n");
+	return -1;
+}
+
+int main(int argc, const char *argv[])
+try
+{
+	using namespace micro_profiler;
+
+	_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+	application app(argv, argc);
+
+	main(app);
 	return 0;
 }
 catch (const exception &e)

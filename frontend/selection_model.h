@@ -49,15 +49,17 @@ namespace micro_profiler
 		virtual void remove(index_type item) override;
 		virtual bool contains(index_type item) const throw() override;
 
-		void add_key(const KeyT &key);
-		const base_t &get_table() const;
 		const_iterator begin() const;
 		const_iterator end() const;
+
+	private:
+		void notify_invalidate(index_type item);
 
 	private:
 		const std::shared_ptr<base_t> _scope;
 		views::immutable_unique_index<base_t, keyer::self> &_index;
 		const get_key_cb _get_key;
+		unsigned int _omit_notify;
 		const wpl::slot_connection _conn;
 	};
 
@@ -65,8 +67,8 @@ namespace micro_profiler
 
 	template <typename KeyT>
 	inline selection<KeyT>::selection(std::shared_ptr<base_t> scope, const get_key_cb &get_key)
-		: _scope(scope), _index(views::unique_index(*scope, keyer::self())), _get_key(get_key),
-			_conn(scope->invalidate += [this] {	invalidate(npos());	})
+		: _scope(scope), _index(views::unique_index(*scope, keyer::self())), _get_key(get_key), _omit_notify(0),
+			_conn(scope->invalidate += [this] {	if (!_omit_notify) invalidate(npos());	})
 	{	}
 
 	template <typename KeyT>
@@ -79,7 +81,7 @@ namespace micro_profiler
 		auto r = _index[_get_key(item)];
 
 		r.commit();
-		this->invalidate(item);
+		notify_invalidate(item);
 	}
 
 	template <typename KeyT>
@@ -88,25 +90,12 @@ namespace micro_profiler
 		auto r = _index[_get_key(item)];
 
 		r.remove();
-		this->invalidate(item);
+		notify_invalidate(item);
 	}
 
 	template <typename KeyT>
 	inline bool selection<KeyT>::contains(index_type item) const throw()
 	{	return !!_index.find(_get_key(item));	}
-
-	template <typename KeyT>
-	inline void selection<KeyT>::add_key(const key_type &key)
-	{
-		auto r = _index[key];
-
-		r.commit();
-		_scope->invalidate();
-	}
-
-	template <typename KeyT>
-	inline const views::table<KeyT> &selection<KeyT>::get_table() const
-	{	return *_scope;	}
 
 	template <typename KeyT>
 	inline typename selection<KeyT>::const_iterator selection<KeyT>::begin() const
@@ -115,4 +104,15 @@ namespace micro_profiler
 	template <typename KeyT>
 	inline typename selection<KeyT>::const_iterator selection<KeyT>::end() const
 	{	return _scope->end();	}
+
+	template <typename KeyT>
+	inline void selection<KeyT>::notify_invalidate(index_type item)
+	{
+		if (!_omit_notify++)
+		{
+			_scope->invalidate();
+			invalidate(item);
+		}
+		_omit_notify--;
+	}
 }

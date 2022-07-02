@@ -82,10 +82,13 @@ namespace micro_profiler
 			const auto model_impl = create_statistics_model(filtered_statistics, context);
 
 			main = model_impl;
-			selection_main = main->create_selection();
 
-			const auto selection_table = selector_table_cptr(selection_main, &selection_main->get_table());
-			const auto selection_main_addresses = derived_statistics::addresses(selection_table, statistics_main);
+			selection_main_table = make_shared< views::table<id_t> >();
+			const auto selection_main_addresses = derived_statistics::addresses(selection_main_table, statistics_main);
+
+			selection_main = make_shared< selection<id_t> >(selection_main_table, [model_impl] (size_t index) -> id_t {
+				return model_impl->ordered()[index].id;
+			});
 
 			statistics_callers = derived_statistics::callers(selection_main_addresses, statistics);
 			callers = create_statistics_model(statistics_callers, context);
@@ -108,6 +111,7 @@ namespace micro_profiler
 		function<void (id_t thread_id)> set_filter;
 		function<const call_statistics *(const call_node_key &key)> by_node;
 		shared_ptr< table_model<id_t> > main, callers, callees;
+		shared_ptr< views::table<id_t> > selection_main_table;
 		shared_ptr< selection<id_t> > selection_main;
 	};
 
@@ -255,7 +259,13 @@ namespace micro_profiler
 			}
 			m->selection_main->clear();
 			for (auto i = matches.begin(); i != matches.end(); ++i)
-				m->selection_main->add_key(*i);
+			{
+				auto rec = m->selection_main_table->create();
+
+				*rec = *i;
+				rec.commit();
+			}
+			m->selection_main_table->invalidate();
 		};
 
 		_connections.clear();

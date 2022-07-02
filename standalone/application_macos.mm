@@ -81,8 +81,8 @@ namespace micro_profiler
 	{	[_application stop:nil];	}
 
 
-	application::application()
-		: _impl(new impl)
+	application::application(const char *argv[], size_t argc)
+		: _arguments(argv, argv + argc), _impl(new impl)
 	{
 		const auto clock_raw = &clock;
 		const auto clock_mt = [clock_raw] {	return mt::milliseconds(clock_raw());	};
@@ -129,10 +129,10 @@ namespace micro_profiler
 	{	}
 }
 
-int main()
+int main(int argc, const char *argv[])
 try
 {
-	micro_profiler::application app;
+	micro_profiler::application app(argv, argc);
 
 	micro_profiler::main(app);
 	return 0;

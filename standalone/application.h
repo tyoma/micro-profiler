@@ -43,9 +43,10 @@ namespace micro_profiler
 	class application
 	{
 	public:
-		application();
+		application(const char *argv[], std::size_t argc);
 		~application();
 
+		const std::vector<std::string> &get_arguments() const;
 		wpl::factory &get_factory();
 		scheduler::queue &get_ui_queue();
 		scheduler::queue &get_worker_queue();
@@ -69,9 +70,13 @@ namespace micro_profiler
 		std::shared_ptr<hive> _config;
 		std::shared_ptr<scheduler::ui_queue> _queue;
 		std::shared_ptr<scheduler::thread_queue> _worker_queue;
+		std::vector<std::string> _arguments;
 	};
 
 
+
+	inline const std::vector<std::string> &application::get_arguments() const
+	{	return _arguments;	}
 
 	inline wpl::factory &application::get_factory()
 	{	return *_factory;	}

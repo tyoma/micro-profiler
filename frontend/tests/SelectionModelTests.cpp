@@ -113,7 +113,8 @@ namespace micro_profiler
 				auto s = make_shared< selection<int> >(scope, [&] (size_t i) {	return data[i].first;	});
 				vector<wpl::dynamic_set_model::index_type> log1;
 				vector< vector<wpl::dynamic_set_model::index_type> > log2;
-				auto conn = s->invalidate += [&] (wpl::dynamic_set_model::index_type index)	{
+				vector< vector<id_t> > log3;
+				auto conn1 = s->invalidate += [&] (wpl::dynamic_set_model::index_type index)	{
 					log1.push_back(index);
 					log2.resize(log2.size() + 1);
 					for (auto i = 0u; i < 5u; ++i)
@@ -121,6 +122,9 @@ namespace micro_profiler
 						if (s->contains(i))
 							log2.back().push_back(i);
 					}
+				};
+				auto conn2 = scope->invalidate += [&] {
+					log3.push_back(vector<id_t>(scope->begin(), scope->end()));
 				};
 
 				// ACT
@@ -130,6 +134,8 @@ namespace micro_profiler
 				assert_equal(plural + (size_t)1u, log1);
 				assert_equal(1u, log2.size());
 				assert_equivalent(plural + 1u, log2.back());
+				assert_equal(1u, log3.size());
+				assert_equivalent(plural + 12u, log3.back());
 
 				// ACT
 				s->add(3);
@@ -138,32 +144,40 @@ namespace micro_profiler
 				assert_equal(plural + (size_t)1u + (size_t)3u, log1);
 				assert_equal(2u, log2.size());
 				assert_equivalent(plural + 1u + 3u, log2.back());
+				assert_equal(2u, log3.size());
+				assert_equivalent(plural + 12u + 14u, log3.back());
 
 				// ACT
 				s->remove(1);
 
 				// ASSERT
 				assert_equal(plural + (size_t)1u + (size_t)3u + (size_t)1u, log1);
+				assert_equal(3u, log2.size());
 				assert_equivalent(plural + 3u, log2.back());
+				assert_equal(3u, log3.size());
+				assert_equivalent(plural + 14u, log3.back());
 
 				// ACT
 				s->clear();
 
 				// ASSERT
 				assert_equal(plural + (size_t)1 + (size_t)3 + (size_t)1 + wpl::index_traits::npos(), log1);
+				assert_equal(4u, log2.size());
 				assert_is_empty(log2.back());
-
-				// INIT
-				log1.clear();
-				log2.clear();
+				assert_equal(4u, log3.size());
+				assert_is_empty(log3.back());
 
 				// ACT
 				add_records(*scope, plural + 11 + 15);
 				scope->invalidate();
 
 				// ASSERT
-				assert_equal(plural + wpl::index_traits::npos(), log1);
+				assert_equal(plural
+					+ (size_t)1 + (size_t)3 + (size_t)1 + wpl::index_traits::npos() + wpl::index_traits::npos(), log1);
+				assert_equal(5u, log2.size());
 				assert_equivalent(plural + 0u + 4u, log2.back());
+				assert_equal(5u, log3.size());
+				assert_equivalent(plural + 11u + 15u, log3.back());
 			}
 		end_test_suite
 	}

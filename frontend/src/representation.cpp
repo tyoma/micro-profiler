@@ -79,6 +79,17 @@ namespace micro_profiler
 			return calls_statistics_table_cptr(composite, &*get<1>(*composite));
 		}
 
+		calls_statistics_table_cptr group_by_thread_address(calls_statistics_table_cptr source)
+		{
+			const auto composite = make_shared_copy(make_tuple(source, views::group_by<call_statistics>(*source,
+				[] (const calls_statistics_table &, views::agnostic_key_tag) {
+
+				return keyer::combine2<keyer::address, keyer::thread_id>();
+			}, auto_increment_constructor<call_statistics>(), aggregator::sum_flat(*source))));
+
+			return calls_statistics_table_cptr(composite, &*get<1>(*composite));
+		}
+
 		filtered_calls_statistics_table_cptr join_by_thread(calls_statistics_table_cptr source,
 			selector_table_ptr threads)
 		{
@@ -149,17 +160,20 @@ namespace micro_profiler
 		}
 
 		template <bool callstacks>
-		representation<callstacks, threads_filtered> create_filtered(calls_statistics_table_cptr source, id_t thread_id)
+		representation<callstacks, threads_filtered> create_filtered(calls_statistics_table_cptr main_all,
+			calls_statistics_table_cptr source, id_t thread_id)
 		{
-			const auto from = representation<callstacks, threads_all>::create(source);
 			const auto selection_threads = make_shared<selector_table>();
+			const auto main = join_by_thread(main_all, selection_threads);
+			const auto selection_main = make_shared<selector_table>();
+			const auto selection_main_addresses = derived_statistics::addresses(selection_main, main_all);
 			representation<callstacks, threads_filtered> r = {
 				selection_threads,
-				join_by_thread(from.main, selection_threads),
-				join_by_thread(from.callers, selection_threads),
-				join_by_thread(from.callees, selection_threads),
+				main,
+				join_by_thread(derived_statistics::callers(selection_main_addresses, source), selection_threads),
+				join_by_thread(derived_statistics::callees(selection_main_addresses, source), selection_threads),
 
-				from.selection_main, from.selection_callers, from.selection_callees,
+				selection_main, make_shared<selector_table>(), make_shared<selector_table>(),
 			};
 
 			r.activate_callers = make_activate_derived(r.main, r.selection_main, r.callers, r.selection_callers);
@@ -179,17 +193,11 @@ namespace micro_profiler
 
 	template <>
 	representation<true, threads_filtered> representation<true, threads_filtered>::create(calls_statistics_table_cptr source, id_t thread_id)
-	{	return create_filtered<true>(source, thread_id);	}
+	{	return create_filtered<true>(source, source, thread_id);	}
 
 	template <>
 	representation<false, threads_all> representation<false, threads_all>::create(calls_statistics_table_cptr source)
-	{
-		return create_all<false>(views::group_by<call_statistics>(*source,
-			[] (const calls_statistics_table &, views::agnostic_key_tag) {
-
-			return keyer::combine2<keyer::address, keyer::thread_id>();
-		}, auto_increment_constructor<call_statistics>(), aggregator::sum_flat(*source)), source);
-	}
+	{	return create_all<false>(group_by_thread_address(source), source);	}
 
 	template <>
 	representation<false, threads_cumulative> representation<false, threads_cumulative>::create(calls_statistics_table_cptr source)
@@ -197,5 +205,5 @@ namespace micro_profiler
 
 	template <>
 	representation<false, threads_filtered> representation<false, threads_filtered>::create(calls_statistics_table_cptr source, id_t thread_id)
-	{	return create_filtered<false>(source, thread_id);	}
+	{	return create_filtered<false>(group_by_thread_address(source), source, thread_id);	}
 }

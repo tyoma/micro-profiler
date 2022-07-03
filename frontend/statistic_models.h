@@ -45,6 +45,15 @@ namespace micro_profiler
 		{	return value.id;	}
 	};
 
+	template <typename Table1T, typename Table2T>
+	struct key_traits< views::joined_record<Table1T, Table2T> >
+	{
+		typedef typename key_traits<typename Table1T::value_type>::key_type key_type;
+	
+		static key_type get_key(const views::joined_record<Table1T, Table2T> &value)
+		{	return key_traits<typename Table1T::value_type>::get_key(value);	}
+	};
+
 	struct stack_hierarchy_access
 	{
 		stack_hierarchy_access(const statistics_model_context &ctx)
@@ -78,8 +87,9 @@ namespace micro_profiler
 	{
 		auto &by_id = views::unique_index<keyer::id>(*underlying);
 
-		return initialize<statistics_model_context>(tick_interval, [underlying, &by_id] (id_t id) {
-			return by_id.find(id);
+		return initialize<statistics_model_context>(tick_interval, [underlying, &by_id] (id_t id) -> const call_statistics * {
+			auto r = by_id.find(id);
+			return r ? &(const call_statistics &)*r : nullptr;
 		}, [threads] (id_t id) -> const thread_info * {
 			auto i = threads->find(id);
 			return i != threads->end() ? &i->second : nullptr;
@@ -87,10 +97,10 @@ namespace micro_profiler
 	}
 
 	template <typename BaseT, typename U, typename ColumnsT>
-	inline std::shared_ptr< table_model_impl<BaseT, U, statistics_model_context> > make_table(std::shared_ptr<U> underlying,
-		const statistics_model_context &context, const ColumnsT &columns)
+	inline std::shared_ptr< table_model_impl<BaseT, U, statistics_model_context, call_statistics> > make_table(
+		std::shared_ptr<U> underlying, const statistics_model_context &context, const ColumnsT &columns)
 	{
-		typedef table_model_impl<BaseT, U, statistics_model_context> model_type;
+		typedef table_model_impl<BaseT, U, statistics_model_context, call_statistics> model_type;
 		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> composite_t;
 
 		const auto m = std::make_shared<model_type>(underlying, context);
@@ -105,7 +115,7 @@ namespace micro_profiler
 	}
 
 	template <typename U, typename CtxT>
-	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, CtxT> >
-		create_statistics_model(std::shared_ptr<U> underlying, const CtxT &context)
+	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, CtxT, call_statistics> > create_statistics_model(
+		std::shared_ptr<U> underlying, const CtxT &context)
 	{	return make_table< table_model<id_t> >(underlying, context, c_statistics_columns);	}
 }

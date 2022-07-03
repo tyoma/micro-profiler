@@ -36,12 +36,12 @@ namespace micro_profiler
 	inline hierarchy_plain<T> access_hierarchy(const ContextT &/*context*/, const T * /*type tag*/)
 	{	return hierarchy_plain<T>();	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	class table_model_impl : public BaseT, public std::enable_shared_from_this< table_model_impl<BaseT, U, CtxT> >,
+	template <typename BaseT, typename U, typename CtxT, typename T = typename U::value_type>
+	class table_model_impl : public BaseT, public std::enable_shared_from_this< table_model_impl<BaseT, U, CtxT, T> >,
 		noncopyable
 	{
 	public:
-		typedef typename U::value_type value_type;
+		typedef T value_type;
 		typedef column_definition<value_type, CtxT> column_type;
 		typedef typename BaseT::index_type index_type;
 		typedef typename key_traits<value_type>::key_type key_type;
@@ -79,8 +79,8 @@ namespace micro_profiler
 
 
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline table_model_impl<BaseT, U, CtxT>::table_model_impl(std::shared_ptr<U> underlying, const CtxT &context_)
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline table_model_impl<BaseT, U, CtxT, T>::table_model_impl(std::shared_ptr<U> underlying, const CtxT &context_)
 		: _underlying(underlying), _context(context_), _ordered(*_underlying), _trackables(_ordered), _projection(_ordered)
 	{
 		const auto access = access_hierarchy(context_, static_cast<const value_type *>(nullptr));
@@ -90,25 +90,25 @@ namespace micro_profiler
 		}, true);
 	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline const views::ordered<U> &table_model_impl<BaseT, U, CtxT>::ordered() const throw()
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline const views::ordered<U> &table_model_impl<BaseT, U, CtxT, T>::ordered() const throw()
 	{	return _ordered;	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline const CtxT &table_model_impl<BaseT, U, CtxT>::context() const throw()
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline const CtxT &table_model_impl<BaseT, U, CtxT, T>::context() const throw()
 	{	return _context;	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline const std::vector<typename table_model_impl<BaseT, U, CtxT>::column_type> &table_model_impl<BaseT, U, CtxT>::columns() const throw()
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline const std::vector<typename table_model_impl<BaseT, U, CtxT, T>::column_type> &table_model_impl<BaseT, U, CtxT, T>::columns() const throw()
 	{	return _columns;	}
 
-	template <typename BaseT, typename U, typename CtxT>
+	template <typename BaseT, typename U, typename CtxT, typename T>
 	template <typename ContainerT>
-	inline void table_model_impl<BaseT, U, CtxT>::add_columns(const ContainerT &columns_)
+	inline void table_model_impl<BaseT, U, CtxT, T>::add_columns(const ContainerT &columns_)
 	{	_columns.insert(_columns.end(), std::begin(columns_), std::end(columns_));	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline void table_model_impl<BaseT, U, CtxT>::fetch()
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline void table_model_impl<BaseT, U, CtxT, T>::fetch()
 	{
 		_ordered.fetch();
 		_trackables.fetch();
@@ -116,23 +116,23 @@ namespace micro_profiler
 		this->invalidate(this->npos());
 	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline typename table_model_impl<BaseT, U, CtxT>::index_type table_model_impl<BaseT, U, CtxT>::get_count() const throw()
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline typename table_model_impl<BaseT, U, CtxT, T>::index_type table_model_impl<BaseT, U, CtxT, T>::get_count() const throw()
 	{	return _ordered.size();	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline void table_model_impl<BaseT, U, CtxT>::get_text(index_type row, index_type column, agge::richtext_t &text) const
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline void table_model_impl<BaseT, U, CtxT, T>::get_text(index_type row, index_type column, agge::richtext_t &text) const
 	{
 		if (column < _columns.size())
 			_columns[column].get_text(text, _context, row, _ordered[row]);
 	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline std::shared_ptr<const wpl::trackable> table_model_impl<BaseT, U, CtxT>::track(index_type row) const
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline std::shared_ptr<const wpl::trackable> table_model_impl<BaseT, U, CtxT, T>::track(index_type row) const
 	{	return _trackables.track(row);	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline void table_model_impl<BaseT, U, CtxT>::set_order(index_type column, bool ascending)
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline void table_model_impl<BaseT, U, CtxT, T>::set_order(index_type column, bool ascending)
 	{
 		const auto &context_ = _context;
 		const auto access = access_hierarchy(context_, static_cast<const value_type *>(nullptr));
@@ -182,14 +182,14 @@ namespace micro_profiler
 		_projection.fetch();
 	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline std::shared_ptr< wpl::list_model<double> > table_model_impl<BaseT, U, CtxT>::get_column_series()
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline std::shared_ptr< wpl::list_model<double> > table_model_impl<BaseT, U, CtxT, T>::get_column_series()
 	{	return std::shared_ptr< wpl::list_model<double> >(this->shared_from_this(), &_projection);	}
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline std::shared_ptr< selection<typename table_model_impl<BaseT, U, CtxT>::key_type> > table_model_impl<BaseT, U, CtxT>::create_selection() const
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline std::shared_ptr< selection<typename table_model_impl<BaseT, U, CtxT, T>::key_type> > table_model_impl<BaseT, U, CtxT, T>::create_selection() const
 	{
-		typedef typename table_model_impl<BaseT, U, CtxT>::key_type key_type;
+		typedef typename table_model_impl<BaseT, U, CtxT, T>::key_type key_type;
 
 		std::shared_ptr< const views::ordered<U> > o(this->shared_from_this(), &_ordered);
 
@@ -198,7 +198,7 @@ namespace micro_profiler
 	}
 
 
-	template <typename BaseT, typename U, typename CtxT>
-	inline std::shared_ptr< const views::ordered<U> > get_ordered(std::shared_ptr< table_model_impl<BaseT, U, CtxT> > model)
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline std::shared_ptr< const views::ordered<U> > get_ordered(std::shared_ptr< table_model_impl<BaseT, U, CtxT, T> > model)
 	{	return std::shared_ptr< const views::ordered<U> >(model, &model->ordered());	}
 }

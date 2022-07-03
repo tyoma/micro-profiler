@@ -49,6 +49,28 @@ namespace micro_profiler
 					+ make_call_statistics(9, 5, 8, 102, 1009, 0, 41, 0, 0));
 				return source;
 			}
+
+			shared_ptr<calls_statistics_table> create_sample_multithreaded()
+			{
+				auto source = make_shared<calls_statistics_table>();
+
+				add_records(*source, plural
+					+ make_call_statistics(1, 1, 0, 101, 1001, 0, 0, 0, 0)
+					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 0, 0, 0)
+					+ make_call_statistics(3, 1, 2, 103, 1003, 0, 0, 0, 0)
+					+ make_call_statistics(4, 1, 2, 104, 1004, 0, 0, 0, 0)
+
+					+ make_call_statistics(5, 7, 0, 101, 1101, 0, 0, 0, 0)
+					+ make_call_statistics(6, 7, 5, 102, 1102, 0, 0, 0, 0)
+					+ make_call_statistics(7, 7, 5, 103, 1103, 0, 0, 0, 0)
+					+ make_call_statistics(8, 7, 6, 104, 1104, 0, 0, 0, 0)
+					+ make_call_statistics(9, 7, 7, 104, 1105, 0, 0, 0, 0)
+
+					+ make_call_statistics(10, 9, 00, 101, 1301, 0, 0, 0, 0)
+					+ make_call_statistics(11, 9, 10, 102, 1302, 0, 0, 0, 0)
+					+ make_call_statistics(12, 9, 11, 103, 1303, 0, 0, 0, 0));
+				return source;
+			}
 		}
 
 
@@ -756,28 +778,54 @@ namespace micro_profiler
 			test( CallersAreListedAccordinglyToSelection )
 			{
 				// INIT / ACT
-				auto rep = representation<false, threads_filtered>::create(source, 1);
+				auto source2 = create_sample_multithreaded();
+				auto rep = representation<false, threads_filtered>::create(source2, 7);
+				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
+					keyer::id id;
+					return id(views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.main)[make_tuple(address, thread_id)]);
+				};
 
 				// ACT / ASSERT
 				assert_not_null(rep.callers);
 				assert_equal(rep.callers->end(), rep.callers->begin());
 
 				// ACT
-				add_records(*rep.selection_main, plural + 1u);
+				add_records(*rep.selection_main, plural + get_id(104, 7));
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0, 1011, 0, 11, 0, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1005, 0, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0, 0), *rep.callers);
 
 				// ACT
-				add_records(*rep.selection_threads, plural + 5u);
+				add_records(*rep.selection_threads, plural + 1u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0, 1011, 0, 11, 0, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1005, 0, 0, 0, 0)
-					+ make_call_statistics(0, 5, 0, 0, 1006, 0, 29, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 102, 1004, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0, 0), *rep.callers);
+
+				// ACT
+				add_records(*rep.selection_main, plural + get_id(103, 1));
+
+				// ACT / ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 102, 2007, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 101, 1103, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0, 0), *rep.callers);
+
+				// ACT
+				add_records(*rep.selection_threads, plural + 9u);
+
+				// ACT / ASSERT
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 102, 2007, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 101, 1103, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0, 0)
+					+ make_call_statistics(0, 9, 0, 102, 1303, 0, 0, 0, 0), *rep.callers);
 			}
 
 

@@ -25,6 +25,7 @@
 #include <frontend/constructors.h>
 #include <frontend/derived_statistics.h>
 #include <frontend/headers_model.h>
+#include <frontend/representation.h>
 #include <frontend/persistence.h>
 #include <frontend/statistic_models.h>
 #include <iostream>
@@ -77,26 +78,21 @@ namespace micro_profiler
 				_cm_main(new headers_model(c_statistics_columns, 3, false)),
 				_cm_derived(new headers_model(c_caller_statistics_columns, 3, false))
 		{
-			auto main = session.statistics;
-			auto main_selection = make_shared< views::table<id_t> >();
-			auto main_selection_addresses = derived_statistics::addresses(main_selection, main);
-
-			auto derived = derived_statistics::callees(main_selection_addresses, main);
+			auto rep = representation<true, threads_filtered>::create(session.statistics, 1);
 
 			auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);
-			auto main_ctx = create_context(main, 1.0 / session.process_info.ticks_per_second, resolver,
-				session.threads, false);
-			auto main_model = create_statistics_model(main, main_ctx);
-			auto derived_ctx = create_context(derived, 1.0 / session.process_info.ticks_per_second, resolver,
-				session.threads, false);
-			auto derived_model = create_statistics_model(derived, derived_ctx);
+			auto main_ctx = create_context(rep.main, 1.0 / session.process_info.ticks_per_second, resolver, session.threads, false);
+			auto main_model = create_statistics_model(rep.main, main_ctx);
+			auto derived_ctx = create_context(rep.callers, 1.0 / session.process_info.ticks_per_second, resolver, session.threads, false);
+			auto derived_model = create_statistics_model(rep.callers, derived_ctx);
 
 			set_spacing(5);
 			add(_main_view, wpl::percents(70), true, 1);
 				_main_view->set_columns_model(_cm_main);
 				_main_view->set_model(main_model);
-				_main_view->set_selection_model(make_shared< selection<id_t> >(main_selection,
-					[main_model] (size_t index) {	return main_model->ordered()[index].id;	}));
+				_main_view->set_selection_model(make_shared< selection<id_t> >(rep.selection_main, [main_model] (size_t index) {
+					return keyer::id()(main_model->ordered()[index]);
+				}));
 
 			add(_derived_view, wpl::percents(30), true, 2);
 				_derived_view->set_columns_model(_cm_derived);

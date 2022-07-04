@@ -80,7 +80,6 @@ namespace micro_profiler
 
 	private:
 		std::pair<ipc::channel_ptr_t, instance_container::iterator> attach(ipc::client_session *session);
-		void on_frontend_released(instance_container::iterator i) throw();
 		void set_ui(instance_container::iterator i, std::shared_ptr<frontend_ui> ui);
 
 		void on_ui_activated(instance_container::iterator i);

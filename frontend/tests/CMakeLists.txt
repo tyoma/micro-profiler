@@ -8,7 +8,6 @@ set(FRONTEND_TESTS_SOURCES
 	DataSchemeTests.cpp
 	DerivedStatisticsTests.cpp
 	DeSerializationTests.cpp
-	DynamicViewTests.cpp
 	FilePersistenceTests.cpp
 	FrontendManagerTests.cpp
 	FrontendMetadataTests.cpp

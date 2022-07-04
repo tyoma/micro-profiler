@@ -86,7 +86,6 @@
     </ClCompile>
     <ClCompile Include="ProcessListTests.cpp" />
     <ClCompile Include="ProjectionViewTests.cpp" />
-    <ClCompile Include="DynamicViewTests.cpp" />
     <ClCompile Include="SelectionModelTests.cpp" />
     <ClCompile Include="DeSerializationTests.cpp" />
     <ClCompile Include="SymbolResolverTests.cpp" />

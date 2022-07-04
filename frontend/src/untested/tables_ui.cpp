@@ -23,7 +23,6 @@
 #include <frontend/aggregators.h>
 #include <frontend/columns_layout.h>
 #include <frontend/derived_statistics.h>
-#include <frontend/dynamic_views.h>
 #include <frontend/function_hint.h>
 #include <frontend/headers_model.h>
 #include <frontend/models.h>

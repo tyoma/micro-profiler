@@ -21,14 +21,10 @@
 #pragma once
 
 #include "constructors.h"
-#include "dynamic_views.h"
 #include "model_context.h"
 #include "symbol_resolver.h"
 #include "table_model_impl.h"
 #include "tables.h"
-
-#include <views/filter.h>
-#include <views/integrated_index.h>
 
 namespace micro_profiler
 {

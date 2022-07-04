@@ -115,7 +115,6 @@
     <ClInclude Include="..\models.h" />
     <ClInclude Include="..\table_model_impl.h" />
     <ClInclude Include="..\statistic_models.h" />
-    <ClInclude Include="..\dynamic_views.h" />
     <ClInclude Include="..\hierarchy.h" />
     <ClInclude Include="..\derived_statistics.h" />
     <ClInclude Include="..\aggregators.h" />

@@ -29,8 +29,8 @@ namespace micro_profiler
 {
 	struct dump
 	{
-		template <typename BaseT, typename U, typename CtxT>
-		static void as_tab_separated(std::string &content, const table_model_impl<BaseT, U, CtxT> &view)
+		template <typename BaseT, typename U, typename CtxT, typename T>
+		static void as_tab_separated(std::string &content, const table_model_impl<BaseT, U, CtxT, T> &view)
 		{
 			locale_lock ll("");
 			const std::string lf = "\n";

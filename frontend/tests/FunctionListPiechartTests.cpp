@@ -4,6 +4,8 @@
 #include "mocks.h"
 #include "primitive_helpers.h"
 
+#include <frontend/columns_layout.h>
+#include <frontend/models.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -30,21 +32,21 @@ namespace micro_profiler
 			shared_ptr<tables::threads> tmodel;
 
 			template <typename ContainerT>
-			shared_ptr< table_model<id_t> > create_functions_list(const ContainerT &s, timestamp_t ticks_per_second = 500)
+			shared_ptr<table_model> create_functions_list(const ContainerT &s, timestamp_t ticks_per_second = 500)
 			{
 				add_records(*statistics, s);
-				return create_statistics_model(statistics, create_context(statistics, 1.0 / ticks_per_second,
-					make_shared<symbol_resolver>(modules, mappings), tmodel, false));
+				return make_table<table_model>(statistics, create_context(statistics, 1.0 / ticks_per_second,
+					make_shared<symbol_resolver>(modules, mappings), tmodel, false), c_statistics_columns);
 			}
 
 			template <typename ContainerT>
-			shared_ptr< table_model<id_t> > create_functions_list_detached(const ContainerT &s, timestamp_t ticks_per_second = 500)
+			shared_ptr<table_model> create_functions_list_detached(const ContainerT &s, timestamp_t ticks_per_second = 500)
 			{
 				auto local_statistics = make_shared<tables::statistics>();
 
 				add_records(*local_statistics, s);
-				return create_statistics_model(local_statistics, create_context(local_statistics, 1.0 / ticks_per_second,
-					make_shared<symbol_resolver>(modules, mappings), tmodel, false));
+				return make_table<table_model>(local_statistics, create_context(local_statistics, 1.0 / ticks_per_second,
+					make_shared<symbol_resolver>(modules, mappings), tmodel, false), c_statistics_columns);
 			}
 
 			init( CreatePrerequisites )

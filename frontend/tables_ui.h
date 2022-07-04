@@ -21,6 +21,7 @@
 #pragma once
 
 #include "primitives.h"
+#include "representation.h"
 
 #include <memory>
 #include <vector>
@@ -52,25 +53,25 @@ namespace micro_profiler
 		void set_hierarchical(bool enable);
 		bool get_hierarchical() const;
 
-		void dump(std::string &content) const;
+		std::function<void (std::string &content)> dump;
 		void save(hive &configuration);
 
 	public:
 		wpl::signal<void(const std::string &file, unsigned line)> open_source;
 
 	private:
-		struct models;
-
-	private:
 		void init_layout(const wpl::factory &factory_);
-		void set_mode(bool hierarchical, bool thread_cumulative);
-		void attach(std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<models> m);
+		void set_mode(bool hierarchical, id_t thread_id);
+
+		template <bool callstacks, thread_mode mode>
+		void attach(const representation<callstacks, mode> &rep);
 
 	private:
 		const std::unique_ptr<profiling_session> _session;
 		const std::shared_ptr<symbol_resolver> _resolver;
 
-		bool _hierarchical, _thread_cumulative;
+		bool _initialized, _hierarchical;
+		id_t _thread_id;
 
 		const std::shared_ptr<wpl::combobox> _filter_selector;
 		const std::shared_ptr<piechart> _main_piechart, _callees_piechart;
@@ -80,9 +81,6 @@ namespace micro_profiler
 		const std::shared_ptr<headers_model> _cm_main;
 		const std::shared_ptr<headers_model> _cm_parents;
 		const std::shared_ptr<headers_model> _cm_children;
-
-		std::shared_ptr<models> _models;
-		std::function<void (std::string &content)> _dump_main;
 
 		wpl::slot_connection _filter_connection;
 		std::vector<wpl::slot_connection> _connections;

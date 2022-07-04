@@ -25,8 +25,10 @@
 #include <frontend/constructors.h>
 #include <frontend/derived_statistics.h>
 #include <frontend/headers_model.h>
-#include <frontend/representation.h>
+#include <frontend/models.h>
 #include <frontend/persistence.h>
+#include <frontend/representation.h>
+#include <frontend/selection_model.h>
 #include <frontend/statistic_models.h>
 #include <iostream>
 #include <micro-profiler/visualstudio/vs-extension/ui_helpers.h>
@@ -82,9 +84,9 @@ namespace micro_profiler
 
 			auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);
 			auto main_ctx = create_context(rep.main, 1.0 / session.process_info.ticks_per_second, resolver, session.threads, false);
-			auto main_model = create_statistics_model(rep.main, main_ctx);
+			auto main_model = make_table<table_model>(rep.main, main_ctx, c_statistics_columns);
 			auto derived_ctx = create_context(rep.callers, 1.0 / session.process_info.ticks_per_second, resolver, session.threads, false);
-			auto derived_model = create_statistics_model(rep.callers, derived_ctx);
+			auto derived_model = make_table<table_model>(rep.callers, derived_ctx, c_caller_statistics_columns);
 
 			set_spacing(5);
 			add(_main_view, wpl::percents(70), true, 1);

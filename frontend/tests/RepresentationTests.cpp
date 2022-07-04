@@ -38,15 +38,15 @@ namespace micro_profiler
 				auto source = make_shared<calls_statistics_table>();
 
 				add_records(*source, plural
-					+ make_call_statistics(1, 1, 0, 101, 1011, 0, 11, 0, 0)
-					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 13, 0, 0)
-					+ make_call_statistics(3, 1, 1, 103, 1003, 0, 17, 0, 0)
-					+ make_call_statistics(4, 1, 3, 102, 1004, 0, 19, 0, 0)
-					+ make_call_statistics(5, 1, 3, 101, 1005, 0, 23, 0, 0)
-					+ make_call_statistics(6, 5, 0, 101, 1006, 0, 29, 0, 0)
-					+ make_call_statistics(7, 5, 6, 102, 1007, 0, 31, 0, 0)
-					+ make_call_statistics(8, 5, 7, 102, 1008, 0, 37, 0, 0)
-					+ make_call_statistics(9, 5, 8, 102, 1009, 0, 41, 0, 0));
+					+ make_call_statistics(71, 1, 00, 101, 1011, 0, 11, 0, 0)
+					+ make_call_statistics(72, 1, 71, 102, 1002, 0, 13, 0, 0)
+					+ make_call_statistics(73, 1, 71, 103, 1003, 0, 17, 0, 0)
+					+ make_call_statistics(74, 1, 73, 102, 1004, 0, 19, 0, 0)
+					+ make_call_statistics(75, 1, 73, 101, 1005, 0, 23, 0, 0)
+					+ make_call_statistics(76, 5, 00, 101, 1006, 0, 29, 0, 0)
+					+ make_call_statistics(77, 5, 76, 102, 1007, 0, 31, 0, 0)
+					+ make_call_statistics(78, 5, 77, 102, 1008, 0, 37, 0, 0)
+					+ make_call_statistics(79, 5, 78, 102, 1009, 0, 41, 0, 0));
 				return source;
 			}
 
@@ -164,6 +164,10 @@ namespace micro_profiler
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
 					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].id;
 				};
+				vector< vector<id_t> > log;
+				auto conn = rep.selection_main->invalidate += [&] {
+					log.push_back(vector<id_t>(rep.selection_main->begin(), rep.selection_main->end()));
+				};
 
 				add_records(*rep.selection_main, plural + 3u);
 
@@ -172,6 +176,8 @@ namespace micro_profiler
 				rep.activate_callers();
 
 				// ASSERT
+				assert_equal(2u /*clear + explicit invalidate*/, log.size());
+				assert_equivalent(plural + 5u, log.back());
 				assert_equivalent(plural + 5u, *rep.selection_main);
 				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
 
@@ -183,6 +189,8 @@ namespace micro_profiler
 				rep.activate_callers();
 
 				// ASSERT
+				assert_equal(4u, log.size());
+				assert_equivalent(plural + 2u + 5u, log.back());
 				assert_equivalent(plural + 2u + 5u, *rep.selection_main);
 				assert_equal(rep.selection_callers->end(), rep.selection_callers->begin());
 			}

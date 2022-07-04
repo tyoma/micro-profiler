@@ -23,7 +23,6 @@
 #include "column_definition.h"
 #include "hierarchy.h"
 #include "projection_view.h"
-#include "selection_model.h"
 #include "trackables_provider.h"
 
 #include <common/noncopyable.h>
@@ -63,10 +62,9 @@ namespace micro_profiler
 		virtual void get_text(index_type item, index_type subitem, agge::richtext_t &text) const override;
 		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const override;
 
-		// table_model<...> methods
+		// table_model methods
 		virtual void set_order(index_type column, bool ascending) /*override*/;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() /*override*/;
-		virtual std::shared_ptr< selection<key_type> > create_selection() const /*override*/;
 
 	private:
 		const std::shared_ptr<U> _underlying;
@@ -185,17 +183,6 @@ namespace micro_profiler
 	template <typename BaseT, typename U, typename CtxT, typename T>
 	inline std::shared_ptr< wpl::list_model<double> > table_model_impl<BaseT, U, CtxT, T>::get_column_series()
 	{	return std::shared_ptr< wpl::list_model<double> >(this->shared_from_this(), &_projection);	}
-
-	template <typename BaseT, typename U, typename CtxT, typename T>
-	inline std::shared_ptr< selection<typename table_model_impl<BaseT, U, CtxT, T>::key_type> > table_model_impl<BaseT, U, CtxT, T>::create_selection() const
-	{
-		typedef typename table_model_impl<BaseT, U, CtxT, T>::key_type key_type;
-
-		std::shared_ptr< const views::ordered<U> > o(this->shared_from_this(), &_ordered);
-
-		return std::make_shared< selection<key_type> >(std::make_shared< views::table<key_type> >(),
-			[o] (index_type item) -> key_type {	return key_traits<value_type>::get_key((*o)[item]);	});
-	}
 
 
 	template <typename BaseT, typename U, typename CtxT, typename T>

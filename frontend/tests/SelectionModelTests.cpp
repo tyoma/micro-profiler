@@ -42,8 +42,6 @@ namespace micro_profiler
 
 			test( AdditionsRemovalsClearsModifySelection )
 			{
-				typedef vector< pair<int, string> > underlying_t;
-
 				// INIT
 				auto scope = make_shared< views::table<int> >();
 				pair<int, string> data[] = {

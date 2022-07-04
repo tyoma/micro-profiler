@@ -20,11 +20,9 @@
 
 #pragma once
 
-#include "columns_layout.h"
 #include "constructors.h"
 #include "dynamic_views.h"
 #include "model_context.h"
-#include "models.h"
 #include "symbol_resolver.h"
 #include "table_model_impl.h"
 #include "tables.h"
@@ -113,9 +111,4 @@ namespace micro_profiler
 		m->add_columns(columns);
 		return std::shared_ptr<model_type>(c, std::get<0>(*c).get());
 	}
-
-	template <typename U, typename CtxT>
-	inline std::shared_ptr< table_model_impl<table_model<id_t>, U, CtxT, call_statistics> > create_statistics_model(
-		std::shared_ptr<U> underlying, const CtxT &context)
-	{	return make_table< table_model<id_t> >(underlying, context, c_statistics_columns);	}
 }

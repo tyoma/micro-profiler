@@ -5,6 +5,8 @@
 #include "mocks.h"
 #include "primitive_helpers.h"
 
+#include <frontend/columns_layout.h>
+#include <frontend/models.h>
 #include <iomanip>
 #include <sstream>
 #include <test-helpers/helpers.h>
@@ -93,14 +95,6 @@ namespace micro_profiler
 						return i;
 				return table_model_base::npos();
 			}
-
-			shared_ptr<tables::statistics> make_table(const vector<call_statistics> &from)
-			{
-				const auto table = make_shared<tables::statistics>();
-
-				add_records(*table, from);
-				return table;
-			}
 		}
 
 
@@ -124,17 +118,22 @@ namespace micro_profiler
 			test( ConstructedFunctionListIsEmpty )
 			{
 				// INIT / ACT
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1.0 , resolver, tmodel, false));
+				shared_ptr<richtext_table_model> fl1 = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1.0, resolver, tmodel, false), c_statistics_columns);
+				shared_ptr<table_model> fl2 = make_table<table_model>(statistics,
+					create_context(statistics, 1.0 , resolver, tmodel, false), c_statistics_columns);
 
 				// ACT / ASSERT
-				assert_equal(0u, fl->get_count());
+				assert_equal(0u, fl1->get_count());
+				assert_equal(0u, fl2->get_count());
 			}
 
 
 			test( FunctionListAcceptsUpdates )
 			{
 				// INIT
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1.0, resolver, tmodel, false));
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1.0, resolver, tmodel, false), c_statistics_columns);
 
 				add_records(*statistics, plural
 					+ make_call_statistics(1, 1, 0, 1123, 19, 0, 0, 0, 1)
@@ -199,7 +198,8 @@ namespace micro_profiler
 					+ make_call_statistics(15, 1, 0, 0x1770u, 1, 0, 99999031030567, 99999030000987, 99999030000987)
 					+ make_call_statistics(16, 1, 0, 0x1A05u, 1, 0, 65450031030567000, 23470030000987000, 23470030000987000));
 
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1e-10, resolver, tmodel, false));
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1e-10, resolver, tmodel, false), c_statistics_columns);
 
 				// ACT
 				auto text = get_text(*fl, columns);
@@ -233,14 +233,18 @@ namespace micro_profiler
 			test( HierarchicalTableIsFormedFromHierarchicalData )
 			{
 				// INIT
-				auto statistics_ = make_table(plural
+				auto statistics_ = make_shared< views::table<call_statistics> >();
+
+				add_records(*statistics_, plural
 					+ make_call_statistics(1, 0, 5, 0x00001122, 0, 0, 0, 0, 0)
 					+ make_call_statistics(2, 0, 3, 0x00001123, 0, 0, 0, 0, 0)
 					+ make_call_statistics(3, 0, 0, 0x00001124, 0, 0, 0, 0, 0)
 					+ make_call_statistics(4, 0, 3, 0x00001125, 0, 0, 0, 0, 0)
 					+ make_call_statistics(5, 0, 0, 0x00001126, 0, 0, 0, 0, 0)
 					+ make_call_statistics(6, 0, 2, 0x00001127, 0, 0, 0, 0, 0));
-				auto fl = create_statistics_model(statistics_, create_context(statistics_, 1, resolver, tmodel, false));
+
+				auto fl = make_table<richtext_table_model>(statistics_,
+					create_context(statistics_, 1, resolver, tmodel, false), c_statistics_columns);
 				unsigned columns[] = {	main_columns::name,	};
 
 				// ACT
@@ -283,48 +287,6 @@ namespace micro_profiler
 			}
 
 
-			test( FunctionListProvidesSelectionModel )
-			{
-				// INIT
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
-
-				// INIT / ACT
-				const auto s1 = fl->create_selection();
-				const auto s2 = fl->create_selection();
-
-				// ASSERT
-				assert_not_null(s1);
-				assert_not_null(s2);
-				assert_not_equal(s2, s1);
-			}
-
-
-			test( SelectionModelIsFunctionalAfterParentModelIsDestroyed )
-			{
-				// INIT
-				add_records(*statistics, plural
-					+ make_call_statistics(1, 1, 0, 1990u, 15, 0, 31, 29, 3)
-					+ make_call_statistics(2, 1, 0, 2000u, 35, 1, 453, 366, 4)
-					+ make_call_statistics(3, 1, 0, 2990u, 2, 2, 33450030, 32333333, 5)
-					+ make_call_statistics(4, 1, 0, 3000u, 15233, 3, 65460, 13470, 6));
-
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
-
-				// INIT / ACT
-				auto sel = fl->create_selection();
-
-				// ACT
-				sel->add(1);
-				fl.reset();
-
-				// ASSERT
-				assert_is_false(sel->contains(0));
-				assert_is_true(sel->contains(1));
-				assert_is_false(sel->contains(2));
-				assert_is_false(sel->contains(3));
-			}
-
-
 			test( FunctionListSorting )
 			{
 				// INIT
@@ -336,8 +298,8 @@ namespace micro_profiler
 					+ make_call_statistics(3, 1, 0, 2990u, 2, 2, 33450030, 32333333, 5)
 					+ make_call_statistics(4, 1, 0, 3000u, 15233, 3, 65460, 13470, 6));
 
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
-				const auto s = fl->create_selection();
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
 
 				ih.bind_to_model(*fl);
 
@@ -353,13 +315,6 @@ namespace micro_profiler
 
 				// ACT (times called, ascending)
 				fl->set_order(main_columns::times_called, true);
-				s->add(1);
-
-				// ACT / ASSERT
-				assert_is_false(s->contains(0));
-				assert_is_true(s->contains(1));
-				assert_is_false(s->contains(2));
-				assert_is_false(s->contains(3));
 
 				// ASSERT
 				assert_equal(1u, ih.counts.size());
@@ -381,12 +336,6 @@ namespace micro_profiler
 
 				// ACT (times called, descending)
 				fl->set_order(main_columns::times_called, false);
-
-				// ACT / ASSERT
-				assert_is_false(s->contains(0));
-				assert_is_false(s->contains(1));
-				assert_is_true(s->contains(2));
-				assert_is_false(s->contains(3));
 
 				// ASSERT
 				assert_equal(2u, ih.counts.size());
@@ -671,7 +620,8 @@ namespace micro_profiler
 					+ make_call_statistics(1, 7, 0, 0x1020u, 1, 0, 0, 0, 0)
 					+ make_call_statistics(1, 9, 0, 0x1030u, 1, 0, 0, 0, 0));
 
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
 
 				tmodel->insert(make_thread_info(3, 100, string()));
 				tmodel->insert(make_thread_info(2, 1000, string()));
@@ -721,7 +671,8 @@ namespace micro_profiler
 					+ make_call_statistics(4, 3, 0, 0x10000u, 4, 0, 0, 0, 0)
 					+ make_call_statistics(5, 4, 0, 0x10000u, 5, 0, 0, 0, 0));
 
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
 
 				tmodel->insert(make_thread_info(0, 18, string()));
 				tmodel->insert(make_thread_info(1, 1, string()));
@@ -755,7 +706,8 @@ namespace micro_profiler
 			test( FunctionListPrintItsContent )
 			{
 				// INIT
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
 				string result;
 
 				(*tmodel)[1].native_id = 1711;
@@ -833,7 +785,8 @@ namespace micro_profiler
 					+ make_call_statistics(2, 1, 0, 0x2004, 17, 0, 0, 0, 0)
 					+ make_call_statistics(3, 1, 0, 0x2008, 18, 0, 0, 0, 0));
 
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
 
 				// ACT
 				shared_ptr<const trackable> t(fl->track(1));
@@ -849,7 +802,8 @@ namespace micro_profiler
 			{
 				// INIT
 				auto invalidations = 0;
-				auto fl = create_statistics_model(statistics, create_context(statistics, 1, resolver, tmodel, false));
+				auto fl = make_table<richtext_table_model>(statistics,
+					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
 				auto c = fl->invalidate += [&] (richtext_table_model::index_type i) {
 					invalidations++;
 					assert_equal(richtext_table_model::npos(), i);

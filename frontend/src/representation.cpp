@@ -124,6 +124,7 @@ namespace micro_profiler
 				for (auto i = jump.begin(); i != jump.end(); ++i)
 					for (auto r = idx.equal_range(*i); r.first != r.second; ++r.first)
 						add_record(*selection_main, keyer::id()(*r.first));
+				selection_main->invalidate();
 			};
 		}
 
@@ -132,7 +133,7 @@ namespace micro_profiler
 			calls_statistics_table_cptr source)
 		{
 			const auto selection_main = make_shared<selector_table>();
-			const auto selection_main_addresses = derived_statistics::addresses(selection_main, source);
+			const auto selection_main_addresses = derived_statistics::addresses(selection_main, main);
 			representation<callstacks, threads_all> r = {
 				main,
 				derived_statistics::callers(selection_main_addresses, source),

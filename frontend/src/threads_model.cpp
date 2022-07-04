@@ -32,8 +32,6 @@ namespace micro_profiler
 		};
 	}
 
-	const unsigned int threads_model::cumulative = static_cast<unsigned int>(-1);
-
 	threads_model::threads_model(shared_ptr<const tables::threads> threads)
 		: _underlying(threads), _view(make_shared<view_type>(*_underlying)),
 			_trackables(make_shared<trackables_type>(*_view))

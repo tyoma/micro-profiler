@@ -24,14 +24,9 @@
 
 namespace micro_profiler
 {
-	template <typename KeyT>
-	class selection;
-
-	template <typename KeyT>
 	struct table_model : wpl::richtext_table_model
 	{
 		virtual void set_order(index_type column, bool ascending) = 0;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() = 0;
-		virtual std::shared_ptr< selection<KeyT> > create_selection() const = 0;
 	};
 }

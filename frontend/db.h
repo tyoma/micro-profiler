@@ -182,12 +182,6 @@ namespace micro_profiler
 			const views::immutable_unique_index<calls_statistics_table, id> &_by_id;
 		};
 
-		struct address_and_rootness
-		{
-			std::pair<long_address_t, bool /*root*/> operator ()(const call_statistics &record) const
-			{	return std::make_pair(record.address, !record.parent_id);	}
-		};
-
 		template <typename TableT>
 		class callstack
 		{

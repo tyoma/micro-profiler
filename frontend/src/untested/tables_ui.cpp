@@ -24,11 +24,13 @@
 #include <frontend/columns_layout.h>
 #include <frontend/derived_statistics.h>
 #include <frontend/dynamic_views.h>
-#include <frontend/headers_model.h>
 #include <frontend/function_hint.h>
+#include <frontend/headers_model.h>
+#include <frontend/models.h>
 #include <frontend/piechart.h>
 #include <frontend/profiling_session.h>
 #include <frontend/representation.h>
+#include <frontend/selection_model.h>
 #include <frontend/statistic_models.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
@@ -50,77 +52,23 @@ namespace micro_profiler
 {
 	namespace
 	{
-		struct sum_functions
+		template <typename OrderedT>
+		shared_ptr< selection<id_t> > create_selection(shared_ptr< views::table<id_t> > scope, shared_ptr<OrderedT> ordered)
 		{
-			template <typename I>
-			void operator ()(call_statistics &aggregated, I group_begin, I group_end) const
-			{
-				aggregated.thread_id = threads_model::cumulative;
-				static_cast<function_statistics &>(aggregated) = function_statistics();
-				for (auto i = group_begin; i != group_end; ++i)
-					add(aggregated, *i);
-			}
-		};
-	}
-
-	struct tables_ui::models
-	{
-		models(bool hierarchical_, shared_ptr<const calls_statistics_table> statistics_,
-				shared_ptr<symbol_resolver> resolver, shared_ptr<const tables::threads> threads, uint64_t ticks_per_second)
-			: statistics(statistics_)
-		{
-			auto &by_node_idx = views::unique_index<keyer::callnode>(*statistics);
-			by_node = [&by_node_idx] (const call_node_key &key) {	return by_node_idx.find(key);	};
-
-			statistics_main = hierarchical_ ? statistics : views::group_by(*statistics,
-				[] (const calls_statistics_table &, views::agnostic_key_tag) {
-
-				return keyer::combine2<keyer::address, keyer::thread_id>();
-			}, aggregator::sum_flat(*statistics_));
-			const auto filtered_statistics = make_filter_view(statistics_main);
-			const auto context = create_context(statistics, 1.0 / ticks_per_second, resolver, threads, false);
-			const auto model_impl = create_statistics_model(filtered_statistics, context);
-
-			main = model_impl;
-
-			selection_main_table = make_shared< views::table<id_t> >();
-			const auto selection_main_addresses = derived_statistics::addresses(selection_main_table, statistics_main);
-
-			selection_main = make_shared< selection<id_t> >(selection_main_table, [model_impl] (size_t index) -> id_t {
-				return model_impl->ordered()[index].id;
+			return make_shared< selection<id_t> >(scope, [ordered] (size_t index) {
+				return keyer::id()((*ordered)[index]);
 			});
-
-			statistics_callers = derived_statistics::callers(selection_main_addresses, statistics);
-			callers = create_statistics_model(statistics_callers, context);
-
-			statistics_callees = derived_statistics::callees(selection_main_addresses, statistics);
-			callees = create_statistics_model(statistics_callees, context);
-
-			dump_main = [model_impl] (string &content) {	dump::as_tab_separated(content, *model_impl);	};
-			reset_filter = [filtered_statistics] {	filtered_statistics->set_filter();	};
-			set_filter = [filtered_statistics] (id_t thread_id) {
-				filtered_statistics->set_filter([thread_id] (const call_statistics &v) {
-					return thread_id == v.thread_id;
-				});
-			};
 		}
-
-		calls_statistics_table_cptr statistics, statistics_main, statistics_callers, statistics_callees;
-		function<void (string &content)> dump_main;
-		function<void ()> reset_filter;
-		function<void (id_t thread_id)> set_filter;
-		function<const call_statistics *(const call_node_key &key)> by_node;
-		shared_ptr< table_model<id_t> > main, callers, callees;
-		shared_ptr< views::table<id_t> > selection_main_table;
-		shared_ptr< selection<id_t> > selection_main;
-	};
+	}
 
 
 	tables_ui::tables_ui(const factory &factory_, const profiling_session &session, hive &configuration)
 		: stack(false, factory_.context.cursor_manager_),
-			_hierarchical(true),
 			_session(new profiling_session(session)),
 			_resolver(make_shared<symbol_resolver>(session.modules, session.module_mappings)),
+			_initialized(false),
+			_hierarchical(true),
+			_thread_id(threads_model::all),
 			_filter_selector(factory_.create_control<combobox>("combobox")),
 			_main_piechart(factory_.create_control<piechart>("piechart")),
 			_callees_piechart(factory_.create_control<piechart>("piechart")),
@@ -146,14 +94,8 @@ namespace micro_profiler
 		_filter_selector->set_model(tmodel);
 		_filter_connection = _filter_selector->selection_changed += [this, tmodel] (combobox::model_t::index_type index) {
 			unsigned thread_id = 0;
-			const auto all_threads = !tmodel->get_key(thread_id, index);
-			const auto thread_cumulative = !all_threads && threads_model::cumulative == thread_id;
 
-			set_mode(_hierarchical /*don't change*/, thread_cumulative);
-			if (all_threads || thread_cumulative)
-				_models->reset_filter();
-			else
-				_models->set_filter(thread_id);
+			set_mode(_hierarchical, tmodel->get_key(thread_id, index) ? thread_id : threads_model::all);
 		};
 		_filter_selector->select(0u);
 		_filter_selector->selection_changed(0u);
@@ -163,13 +105,10 @@ namespace micro_profiler
 	{	}
 
 	void tables_ui::set_hierarchical(bool enable)
-	{	set_mode(enable, _thread_cumulative);	}
+	{	set_mode(enable, _thread_id);	}
 
 	bool tables_ui::get_hierarchical() const
 	{	return _hierarchical;	}
-
-	void tables_ui::dump(string &content) const
-	{	_dump_main(content);	}
 
 	void tables_ui::save(hive &configuration)
 	{
@@ -203,30 +142,33 @@ namespace micro_profiler
 			panel[0]->add(_callees_view, percents(100), false, 2);
 	}
 
-	void tables_ui::set_mode(bool hierarchical, bool thread_cumulative)
+	void tables_ui::set_mode(bool hierarchical, id_t thread_id)
 	{
-		if (_models && _hierarchical == hierarchical && _thread_cumulative == thread_cumulative)
+		if (_initialized && hierarchical == _hierarchical && thread_id == _thread_id)
 			return;
-
-		const auto root_statistics = thread_cumulative ? views::group_by(*_session->statistics,
-			[] (const calls_statistics_table &table_, views::agnostic_key_tag) {
-
-			return keyer::callstack<calls_statistics_table>(table_);
-		}, sum_functions()) : _session->statistics;
-		const auto m = make_shared<models>(hierarchical, root_statistics, _resolver, _session->threads,
-			_session->process_info.ticks_per_second);
-
-		attach(_resolver, m);
-		_models = m;
+		if (hierarchical)
+			switch (thread_id)
+			{
+			case threads_model::all: attach(representation<true, threads_all>::create(_session->statistics)); break;
+			case threads_model::cumulative: attach(representation<true, threads_cumulative>::create(_session->statistics)); break;
+			default: attach(representation<true, threads_filtered>::create(_session->statistics, thread_id)); break;
+			}
+		else
+			switch (thread_id)
+			{
+			case threads_model::all: attach(representation<false, threads_all>::create(_session->statistics)); break;
+			case threads_model::cumulative: attach(representation<false, threads_cumulative>::create(_session->statistics)); break;
+			default: attach(representation<false, threads_filtered>::create(_session->statistics, thread_id)); break;
+			}
+		_initialized = true;
 		_hierarchical = hierarchical;
-		_thread_cumulative = thread_cumulative;
+		_thread_id = thread_id;
 	}
 
-	void tables_ui::attach(shared_ptr<symbol_resolver> resolver, shared_ptr<models> m)
+	template <bool callstacks, thread_mode mode>
+	void tables_ui::attach(const representation<callstacks, mode> &rep)
 	{
-		auto attach_listview = [this] (listview &lv, shared_ptr<headers_model> cm, shared_ptr< table_model<id_t> > model,
-			shared_ptr< selection<id_t> > selection_) {
-
+		auto attach_listview = [this] (listview &lv, shared_ptr<headers_model> cm, shared_ptr<table_model> model, shared_ptr<dynamic_set_model> selection_) {
 			const auto order = cm->get_sort_order();
 			const auto set_order = [model] (headers_model::index_type column, bool ascending) {
 				model->set_order(column, ascending);
@@ -238,69 +180,47 @@ namespace micro_profiler
 			lv.set_model(model);
 			lv.set_selection_model(selection_);
 		};
-		auto attach_piechart = [this] (piechart &pc, function_hint &hint, shared_ptr< table_model<id_t> > model,
-			shared_ptr< selection<id_t> > selection_) {
-
+		auto attach_piechart = [this] (piechart &pc, function_hint &hint, shared_ptr<table_model> model, shared_ptr<dynamic_set_model> selection_) {
 			pc.set_model(model->get_column_series());
 			pc.set_selection_model(selection_);
 			hint.set_model(model);
 			_connections.push_back(selection_->invalidate += [&hint] (...) {	hint.select(index_traits::npos());	});
 		};
-		auto select_matching = [m] (const calls_statistics_table &derived, id_t id) {
-			typedef keyer::combine2<keyer::address, keyer::thread_id> my_keyer_t;
-
-			auto &d = views::unique_index<keyer::id>(derived)[id];
-			vector<id_t> matches;
-
-			for (auto match = views::multi_index<my_keyer_t>(*m->statistics_main).equal_range(my_keyer_t()(d));
-				match.first != match.second; ++match.first)
-			{
-				matches.push_back(match.first->id);
-			}
-			m->selection_main->clear();
-			for (auto i = matches.begin(); i != matches.end(); ++i)
-			{
-				auto rec = m->selection_main_table->create();
-
-				*rec = *i;
-				rec.commit();
-			}
-			m->selection_main_table->invalidate();
-		};
 
 		_connections.clear();
-		_dump_main = m->dump_main;
 
-		auto callers = m->statistics_callers;
-		auto selection_callers = m->callers->create_selection();
-		_connections.push_back(_callers_view->item_activate += [callers, selection_callers, select_matching] (...) {
-			if (selection_callers->begin() != selection_callers->end())
-				select_matching(*callers, *selection_callers->begin());
-		});
-		attach_listview(*_callers_view, _cm_parents, m->callers, selection_callers);
-
-		auto on_activate = [this, resolver, m] (...) {
+		auto context_callers = create_context(rep.callers, 1.0 / _session->process_info.ticks_per_second, _resolver, _session->threads, false);
+		auto callers_model = make_table<table_model>(rep.callers, context_callers, c_caller_statistics_columns);
+		auto context_main = create_context(rep.main, 1.0 / _session->process_info.ticks_per_second, _resolver, _session->threads, false);
+		auto main = rep.main;
+		auto main_model = make_table<table_model>(main, context_main, c_statistics_columns);
+		auto selection_main_ = rep.selection_main;
+		auto selection_main = create_selection(selection_main_, get_ordered(main_model));
+		auto on_activate = [this, main, selection_main_] (...) {
 			symbol_resolver::fileline_t fileline;
+			auto &idx = views::unique_index<keyer::id>(*main);
 
-			if (m->selection_main->begin() != m->selection_main->end())
-				if (const auto item = views::unique_index<keyer::id>(*m->statistics_main).find(*m->selection_main->begin()))
-					if (resolver->symbol_fileline_by_va(item->address, fileline))
+			for (auto i = selection_main_->begin(); i != selection_main_->end(); ++i)
+				if (const auto item = idx.find(*i))
+					if (_resolver->symbol_fileline_by_va(static_cast<const call_statistics &>(*item).address, fileline))
 						open_source(fileline.first, fileline.second);
 		};
-		_connections.push_back(_main_piechart->item_activate += on_activate);
-		_connections.push_back(_main_view->item_activate += on_activate);
-		attach_listview(*_main_view, _cm_main, m->main, m->selection_main);
-		attach_piechart(*_main_piechart, *_main_hint, m->main, m->selection_main);
+		auto context_callees = create_context(rep.callees, 1.0 / _session->process_info.ticks_per_second, _resolver, _session->threads, false);
+		auto callees_model = make_table<table_model>(rep.callees, context_callees, c_callee_statistics_columns);
+		auto selection_callees = create_selection(rep.selection_callees, get_ordered(callees_model));
 
-		auto callees = m->statistics_callees;
-		auto selection_callees = m->callees->create_selection();
-		auto on_drilldown_child = [callees, selection_callees, select_matching] (...) {
-			if (selection_callees->begin() != selection_callees->end())
-				select_matching(*callees, *selection_callees->begin());
-		};
-		_connections.push_back(_callees_piechart->item_activate += on_drilldown_child);
-		_connections.push_back(_callees_view->item_activate += on_drilldown_child);
-		attach_listview(*_callees_view, _cm_children, m->callees, selection_callees);
-		attach_piechart(*_callees_piechart, *_callees_hint, m->callees, selection_callees);
+		_connections.push_back(_callers_view->item_activate += bind(rep.activate_callers));
+		attach_listview(*_callers_view, _cm_parents, callers_model, create_selection(rep.selection_callers, get_ordered(callers_model)));
+
+		_connections.push_back(_main_view->item_activate += on_activate);
+		_connections.push_back(_main_piechart->item_activate += on_activate);
+		attach_listview(*_main_view, _cm_main, main_model, selection_main);
+		attach_piechart(*_main_piechart, *_main_hint, main_model, selection_main);
+		dump = [main_model] (string &content) {	micro_profiler::dump::as_tab_separated(content, *main_model);	};
+
+		_connections.push_back(_callees_view->item_activate += bind(rep.activate_callees));
+		_connections.push_back(_callees_piechart->item_activate += bind(rep.activate_callees));
+		attach_listview(*_callees_view, _cm_children, callees_model, selection_callees);
+		attach_piechart(*_callees_piechart, *_callees_hint, callees_model, selection_callees);
 	}
 }

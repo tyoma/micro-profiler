@@ -85,8 +85,7 @@ namespace micro_profiler
 			auto r = by_id.find(id);
 			return r ? &(const call_statistics &)*r : nullptr;
 		}, [threads] (id_t id) -> const thread_info * {
-			auto i = threads->find(id);
-			return i != threads->end() ? &i->second : nullptr;
+			return views::unique_index<keyer::external_id>(*threads).find(id);
 		}, resolver, canonical);
 	}
 

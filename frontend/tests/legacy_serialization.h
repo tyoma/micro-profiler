@@ -39,7 +39,7 @@ namespace micro_profiler
 			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
 //			containers::unordered_map<statistic_types::key, statistic_types::node> statistics;
 			calls_statistics_table statistics;
-			containers::unordered_map<unsigned int, thread_info> threads;
+			std::vector<tables::thread> threads;
 			containers::unordered_map<unsigned int, tables::patches> patches;
 		};
 

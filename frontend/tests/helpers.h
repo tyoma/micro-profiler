@@ -185,7 +185,7 @@ namespace micro_profiler
 			archive(data);
 		}
 
-		inline std::pair<unsigned, thread_info> make_thread_info(unsigned id, unsigned native_id,
+		inline std::pair<id_t, thread_info> make_thread_info_pair(unsigned id, unsigned native_id,
 			const std::string &description, bool complete = false)
 		{
 			thread_info t = {};
@@ -195,8 +195,18 @@ namespace micro_profiler
 			return std::make_pair(id, t);
 		}
 
-		inline thread_info make_thread_info(unsigned native_id, std::string description, mt::milliseconds start_time,
-			mt::milliseconds end_time, mt::milliseconds cpu_time, bool complete)
+		inline tables::thread make_thread_info(unsigned id, unsigned native_id, const std::string &description,
+			bool complete = false)
+		{
+			tables::thread t;
+
+			static_cast<thread_info &>(t) = make_thread_info_pair(id, native_id, description, complete).second;
+			t.id = id;
+			return t;
+		}
+
+		inline thread_info make_thread_info(unsigned native_id, std::string description,
+			mt::milliseconds start_time, mt::milliseconds end_time, mt::milliseconds cpu_time, bool complete)
 		{
 			thread_info ti = { native_id, description, start_time, end_time, cpu_time, complete };
 			return ti;
@@ -207,6 +217,16 @@ namespace micro_profiler
 		{
 			mapped_module_ex m = {	persistence_id, path, base, hash_	};
 			return std::make_pair(instance_id, m);
+		}
+
+		inline tables::thread make_thread_info(unsigned id, unsigned native_id, std::string description,
+			mt::milliseconds start_time, mt::milliseconds end_time, mt::milliseconds cpu_time, bool complete)
+		{
+			tables::thread t;
+
+			static_cast<thread_info &>(t) = make_thread_info(native_id, description, start_time, end_time, cpu_time, complete);
+			t.id = id;
+			return t;
 		}
 
 		template <typename T>
@@ -232,6 +252,20 @@ namespace micro_profiler
 		{
 			for (auto i = std::begin(records); i != std::end(records); ++i)
 				add_record(table_, *i);
+		}
+
+		template <typename TableT, typename ContainerT, typename KeyerT>
+		inline void add_records(TableT &table_, const ContainerT &records, const KeyerT &keyer_)
+		{
+			auto &idx = views::unique_index(table_, keyer_);
+
+			for (auto i = std::begin(records); i != std::end(records); ++i)
+			{
+				auto rec = idx[keyer_(*i)];
+
+				*rec = *i;
+				rec.commit();
+			}
 		}
 	}
 }

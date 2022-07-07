@@ -22,6 +22,7 @@
 
 #include <common/noncopyable.h>
 #include <common/types.h>
+#include <views/table.h>
 #include <wpl/models.h>
 
 namespace micro_profiler
@@ -31,7 +32,8 @@ namespace micro_profiler
 
 	namespace tables
 	{
-		struct threads;
+		struct thread;
+		typedef views::table<thread> threads;
 	}
 
 	namespace views

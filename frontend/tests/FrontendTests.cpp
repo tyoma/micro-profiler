@@ -1,5 +1,6 @@
 #include <frontend/frontend.h>
 
+#include "comparisons.h"
 #include "helpers.h"
 #include "mock_channel.h"
 
@@ -28,9 +29,6 @@ namespace micro_profiler
 			&& lhs.module_mappings == rhs.module_mappings && lhs.modules == rhs.modules
 			&& lhs.patches == rhs.patches && lhs.threads == rhs.threads;
 	}
-
-	inline bool operator <(const thread_info &lhs, const thread_info &rhs)
-	{	return make_pair(lhs.native_id, lhs.description) < make_pair(rhs.native_id, rhs.description);	}
 
 	namespace tests
 	{
@@ -231,8 +229,8 @@ namespace micro_profiler
 				});
 				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
 					resp(response_threads_info, plural
-						+ make_thread_info(0u, 1717, "thread 1", false)
-						+ make_thread_info(1u, 11717, "thread 2", false));
+						+ make_thread_info_pair(0u, 1717, "thread 1", false)
+						+ make_thread_info_pair(1u, 11717, "thread 2", false));
 				});
 
 				// ACT
@@ -242,8 +240,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_thread_info(0u, 1717, "thread 1", false)
-					+ make_thread_info(1u, 11717, "thread 2", false),
-					(containers::unordered_map<unsigned int, thread_info> &)*threads);
+					+ make_thread_info(1u, 11717, "thread 2", false), *threads);
 
 				// INIT
 				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
@@ -257,8 +254,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_thread_info(0u, 1717, "thread 1", false)
-					+ make_thread_info(1u, 117, "", true),
-					(containers::unordered_map<unsigned int, thread_info> &)*threads);
+					+ make_thread_info(1u, 117, "", true), *threads);
 			}
 
 
@@ -275,9 +271,9 @@ namespace micro_profiler
 				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &ids) {
 					log.push_back(ids);
 					resp(response_threads_info, plural
-						+ make_thread_info(0u, 1717, "thread 1", false)
-						+ make_thread_info(1u, 11717, "thread 2", true)
-						+ make_thread_info(2u, 1717, "thread 1", false));
+						+ make_thread_info_pair(0u, 1717, "thread 1", false)
+						+ make_thread_info_pair(1u, 11717, "thread 2", true)
+						+ make_thread_info_pair(2u, 1717, "thread 1", false));
 				});
 
 				emulator->message(init, format(make_initialization_data("/test", 1)));

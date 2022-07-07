@@ -36,21 +36,21 @@ namespace micro_profiler
 				auto t1 = make_shared<tables::threads>();
 				auto t2 = make_shared<tables::threads>();
 
-				assign(*t1, plural
-					+ make_pair(11, make_thread_info(1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
-						mt::milliseconds(100), true))
-					+ make_pair(110, make_thread_info(11717, "thread 2", mt::milliseconds(10001), mt::milliseconds(0),
-						mt::milliseconds(20003), false)));
+				add_records(*t1, plural
+					+ make_thread_info(11, 1717, "thread 1", mt::milliseconds(5001), mt::milliseconds(20707),
+						mt::milliseconds(100), true)
+					+ make_thread_info(110, 11717, "thread 2", mt::milliseconds(10001), mt::milliseconds(0),
+						mt::milliseconds(20003), false), keyer::external_id());
 
-				assign(*t2, plural
-					+ make_pair(10, make_thread_info(1718, "thread #7", mt::milliseconds(1), mt::milliseconds(0),
-						mt::milliseconds(180), false))
-					+ make_pair(110, make_thread_info(11717, "thread #2", mt::milliseconds(10001), mt::milliseconds(4),
-						mt::milliseconds(10000), true))
-					+ make_pair(111, make_thread_info(22717, "", mt::milliseconds(5), mt::milliseconds(0),
-						mt::milliseconds(1001), false))
-					+ make_pair(112, make_thread_info(32717, "thread #4", mt::milliseconds(20001), mt::milliseconds(0),
-						mt::milliseconds(1002), false)));
+				add_records(*t2, plural
+					+ make_thread_info(10, 1718, "thread #7", mt::milliseconds(1), mt::milliseconds(0),
+						mt::milliseconds(180), false)
+					+ make_thread_info(110, 11717, "thread #2", mt::milliseconds(10001), mt::milliseconds(4),
+						mt::milliseconds(10000), true)
+					+ make_thread_info(111, 22717, "", mt::milliseconds(5), mt::milliseconds(0),
+						mt::milliseconds(1001), false)
+					+ make_thread_info(112, 32717, "thread #4", mt::milliseconds(20001), mt::milliseconds(0),
+						mt::milliseconds(1002), false), keyer::external_id());
 
 				// INIT / ACT
 				shared_ptr<threads_model> m1(new threads_model(t1));
@@ -94,11 +94,11 @@ namespace micro_profiler
 				};
 
 				// ACT
-				assign(*t, plural
-					+ make_pair(1, make_thread_info(17, "producer", mt::milliseconds(5001), mt::milliseconds(0),
-						mt::milliseconds(100), false))
-					+ make_pair(3, make_thread_info(19, "consumer", mt::milliseconds(10001), mt::milliseconds(0),
-						mt::milliseconds(20003), false)));
+				add_records(*t, plural
+					+ make_thread_info(1, 17, "producer", mt::milliseconds(5001), mt::milliseconds(0),
+						mt::milliseconds(100), false)
+					+ make_thread_info(3, 19, "consumer", mt::milliseconds(10001), mt::milliseconds(0),
+						mt::milliseconds(20003), false), keyer::external_id());
 				t->invalidate();
 
 				// ASSERT
@@ -110,13 +110,13 @@ namespace micro_profiler
 					+ (string)"#17 - producer - CPU: 100ms, started: +5s", log.back());
 
 				// ACT
-				assign(*t, plural
-					+ make_pair(1, make_thread_info(17, "producer", mt::milliseconds(5001), mt::milliseconds(57000),
-						mt::milliseconds(25370), true))
-					+ make_pair(70, make_thread_info(1701, "", mt::milliseconds(5151), mt::milliseconds(0),
-						mt::milliseconds(130), false))
-					+ make_pair(3, make_thread_info(19, "consumer", mt::milliseconds(10001), mt::milliseconds(0),
-						mt::milliseconds(20003), false)));
+				add_records(*t, plural
+					+ make_thread_info(1, 17, "producer", mt::milliseconds(5001), mt::milliseconds(57000),
+						mt::milliseconds(25370), true)
+					+ make_thread_info(70, 1701, "", mt::milliseconds(5151), mt::milliseconds(0),
+						mt::milliseconds(130), false)
+					+ make_thread_info(3, 19, "consumer", mt::milliseconds(10001), mt::milliseconds(0),
+						mt::milliseconds(20003), false), keyer::external_id());
 				t->invalidate();
 
 				// ASSERT
@@ -137,13 +137,11 @@ namespace micro_profiler
 				auto m = make_shared<threads_model>(t);
 				unsigned thread_id;
 
-				assign(*t, plural
-					+ make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
-						false))
-					+ make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
-						true))
-					+ make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
-						false)));
+				add_records(*t, plural
+					+ make_thread_info(11, 1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10), false)
+					+ make_thread_info(110, 11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20), true)
+					+ make_thread_info(111, 11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9), false),
+					keyer::external_id());
 				t->invalidate();
 
 				// ACT / ASSERT
@@ -159,8 +157,9 @@ namespace micro_profiler
 				assert_is_false(m->get_key(thread_id, 5));
 
 				// INIT
-				(*t)[12] = make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(3),
-						false);
+				add_records(*t, plural
+					+ make_thread_info(12, 1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(3), false),
+					keyer::external_id());
 				t->invalidate();
 
 				// ACT / ASSERT
@@ -176,13 +175,11 @@ namespace micro_profiler
 				auto t = make_shared<tables::threads>();
 				auto m = make_shared<threads_model>(t);
 
-				assign(*t, plural
-					+ make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
-						false))
-					+ make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
-						true))
-					+ make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
-						false)));
+				add_records(*t, plural
+					+ make_thread_info(11, 1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10), false)
+					+ make_thread_info(110, 11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20), true)
+					+ make_thread_info(111, 11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9), false),
+					keyer::external_id());
 				t->invalidate();
 
 				// ACT
@@ -199,8 +196,9 @@ namespace micro_profiler
 				assert_equal(2u, t2->index());
 
 				// INIT
-				(*t)[111] = make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(18),
-						false);
+				add_records(*t, plural
+					+ make_thread_info(111, 11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(18), false),
+					keyer::external_id());
 
 				// ACT
 				t->invalidate();
@@ -211,10 +209,10 @@ namespace micro_profiler
 				assert_equal(2u, t2->index());
 
 				// INIT
-				(*t)[11] = make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(21),
-						false);
-				(*t)[111] = make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(27),
-						false);
+				add_records(*t, plural
+					+ make_thread_info(11, 1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(21), false)
+					+ make_thread_info(111, 11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(27), false),
+					keyer::external_id());
 
 				// ACT
 				t->invalidate();
@@ -231,13 +229,11 @@ namespace micro_profiler
 				// INIT
 				auto t = make_shared<tables::threads>();
 
-				assign(*t, plural
-					+ make_pair(11, make_thread_info(1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10),
-						false))
-					+ make_pair(110, make_thread_info(11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20),
-						true))
-					+ make_pair(111, make_thread_info(11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9),
-						false)));
+				add_records(*t, plural
+					+ make_thread_info(11, 1717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(10), false)
+					+ make_thread_info(110, 11717, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(20), true)
+					+ make_thread_info(111, 11718, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(9), false),
+					keyer::external_id());
 
 				auto m = make_shared<threads_model>(t);
 

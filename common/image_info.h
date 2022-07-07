@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "types.h"
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -30,7 +32,8 @@ namespace micro_profiler
 	{
 		std::string name;
 		unsigned int rva, size;
-		unsigned int file_id, line;
+		id_t file_id;
+		unsigned int line;
 	};
 
 	struct image_info

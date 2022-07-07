@@ -38,6 +38,7 @@ namespace strmd
 	class deserializer;
 
 	template <> struct version<micro_profiler::call_statistics> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::tables::thread> {	enum {	value = 1	};	};
 	template <typename T> struct version< micro_profiler::auto_increment_constructor<T> > {	enum {	value = 0	};	};
 
 	template <typename ArchiveT, typename U, typename C, int sl>
@@ -61,11 +62,24 @@ namespace strmd
 
 namespace micro_profiler
 {
-	struct threads_model_reader : strmd::indexed_associative_container_reader
+	struct indexed_table_reader : strmd::indexed_associative_container_reader
 	{
 		template <typename ContainerT>
 		void prepare(ContainerT &/*data*/, size_t /*count*/)
 		{	}
+
+		template <typename ArchiveT, typename U, typename K>
+		void read_item(ArchiveT &archive, views::immutable_unique_index<U, K> &index) const
+		{
+			typename views::immutable_unique_index<U, K>::key_type key;
+			
+			archive(key);
+
+			auto rec = index[key];
+
+			archive(static_cast<thread_info &>(*rec));
+			rec.commit();
+		}
 	};
 
 	struct call_nodes_reader : strmd::container_reader_base
@@ -145,6 +159,13 @@ namespace micro_profiler
 		unsigned int ver)
 	{	serialize(archive, static_cast<function_statistics &>(data), context.underlying, ver);	}
 
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, tables::thread &data, unsigned int /*ver*/)
+	{
+		archive(data.id);
+		archive(static_cast<thread_info &>(data));
+	}
+
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, module_profiling_preferences &data, unsigned int /*ver*/);
@@ -183,12 +204,11 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <typename T, typename H, typename A>
-	struct type_traits< micro_profiler::containers::unordered_map<T, micro_profiler::thread_info, H,
-		std::equal_to<T>, A> >
+	template <typename U, typename K>
+	struct type_traits< micro_profiler::views::immutable_unique_index<U, K> >
 	{
 		typedef container_type_tag category;
-		typedef micro_profiler::threads_model_reader item_reader_type;
+		typedef micro_profiler::indexed_table_reader item_reader_type;
 	};
 
 	template <typename TableT>

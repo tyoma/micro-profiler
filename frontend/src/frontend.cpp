@@ -148,18 +148,24 @@ namespace micro_profiler
 	void frontend::update_threads(vector<unsigned int> &thread_ids)
 	{
 		auto req = new_request_handle();
+		auto &idx = views::unique_index(*_threads, keyer::external_id());
 
 		for (auto i = thread_ids.begin(); i != thread_ids.end(); i++)
-			(*_threads)[*i].complete = false;
+		{
+			auto rec = idx[*i];
+
+			(*rec).complete = false;
+			rec.commit();
+		}
 		thread_ids.clear();
 		for (auto i = _threads->begin(); i != _threads->end(); ++i)
 		{
-			if (!i->second.complete)
-				thread_ids.push_back(i->first);
+			if (!i->complete)
+				thread_ids.push_back(i->id);
 		}
 
-		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (ipc::deserializer &d) {
-			d(*_threads);
+		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req, &idx] (ipc::deserializer &d) {
+			d(idx);
 			_requests.erase(req);
 		});
 	}

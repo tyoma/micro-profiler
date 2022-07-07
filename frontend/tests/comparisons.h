@@ -1,6 +1,7 @@
 #pragma once
 
 #include <frontend/primitives.h>
+#include <frontend/tables.h>
 #include <test-helpers/comparisons.h>
 
 namespace micro_profiler
@@ -25,5 +26,11 @@ namespace micro_profiler
 			lhs.address < rhs.address ? true : rhs.address < lhs.address ? false :
 			lhs.parent_id < rhs.parent_id ? true : rhs.parent_id < lhs.parent_id ? false :
 			static_cast<const function_statistics &>(lhs) < static_cast<const function_statistics &>(rhs);
+	}
+
+	inline bool operator <(const tables::thread &lhs, const tables::thread &rhs)
+	{
+		return std::make_pair(lhs.id, std::make_pair(lhs.native_id, lhs.description))
+			< std::make_pair(rhs.id, std::make_pair(rhs.native_id, rhs.description));
 	}
 }

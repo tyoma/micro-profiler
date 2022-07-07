@@ -133,6 +133,15 @@ namespace micro_profiler
 			{	return (*this)(record.left());	}
 		};
 
+		struct external_id : id
+		{
+			using id::operator ();
+
+			template <typename IndexT, typename T, typename K>
+			void operator ()(IndexT &, T &record, const K &key) const
+			{	record.id = key;	}
+		};
+
 		struct parent_id
 		{
 			id_t operator ()(const call_statistics &record) const

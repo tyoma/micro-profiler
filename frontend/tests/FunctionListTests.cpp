@@ -103,7 +103,7 @@ namespace micro_profiler
 			std::shared_ptr<tables::modules> modules;
 			std::shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<symbol_resolver> resolver;
-			shared_ptr<tables::threads> tmodel;
+			shared_ptr<tables::threads> threads;
 
 			init( CreatePrerequisites )
 			{
@@ -111,7 +111,7 @@ namespace micro_profiler
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
 				resolver = make_shared<mocks::symbol_resolver>(modules, mappings);
-				tmodel = make_shared<tables::threads>();
+				threads = make_shared<tables::threads>();
 			}
 
 
@@ -119,9 +119,9 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				shared_ptr<richtext_table_model> fl1 = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1.0, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1.0, resolver, threads, false), c_statistics_columns);
 				shared_ptr<table_model> fl2 = make_table<table_model>(statistics,
-					create_context(statistics, 1.0 , resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1.0 , resolver, threads, false), c_statistics_columns);
 
 				// ACT / ASSERT
 				assert_equal(0u, fl1->get_count());
@@ -133,7 +133,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1.0, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1.0, resolver, threads, false), c_statistics_columns);
 
 				add_records(*statistics, plural
 					+ make_call_statistics(1, 1, 0, 1123, 19, 0, 0, 0, 1)
@@ -199,7 +199,7 @@ namespace micro_profiler
 					+ make_call_statistics(16, 1, 0, 0x1A05u, 1, 0, 65450031030567000, 23470030000987000, 23470030000987000));
 
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1e-10, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1e-10, resolver, threads, false), c_statistics_columns);
 
 				// ACT
 				auto text = get_text(*fl, columns);
@@ -244,7 +244,7 @@ namespace micro_profiler
 					+ make_call_statistics(6, 0, 2, 0x00001127, 0, 0, 0, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics_,
-					create_context(statistics_, 1, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics_, 1, resolver, threads, false), c_statistics_columns);
 				unsigned columns[] = {	main_columns::name,	};
 
 				// ACT
@@ -299,7 +299,7 @@ namespace micro_profiler
 					+ make_call_statistics(4, 1, 0, 3000u, 15233, 3, 65460, 13470, 6));
 
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
 
 				ih.bind_to_model(*fl);
 
@@ -621,11 +621,12 @@ namespace micro_profiler
 					+ make_call_statistics(1, 9, 0, 0x1030u, 1, 0, 0, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
 
-				tmodel->insert(make_thread_info(3, 100, string()));
-				tmodel->insert(make_thread_info(2, 1000, string()));
-				tmodel->insert(make_thread_info(7, 900, string()));
+				add_records(*threads, plural
+					+ make_thread_info(3, 100, string())
+					+ make_thread_info(2, 1000, string())
+					+ make_thread_info(7, 900, string()));
 
 				// ACT
 				auto text = get_text(*fl, columns);
@@ -641,7 +642,8 @@ namespace micro_profiler
 				assert_equivalent(mkvector(reference1), text);
 
 				// INIT
-				tmodel->insert(make_thread_info(9, 90, string()));
+				add_records(*threads, plural
+					+ make_thread_info(9, 90, string()));
 
 				// ACT
 				text = get_text(*fl, columns);
@@ -672,13 +674,14 @@ namespace micro_profiler
 					+ make_call_statistics(5, 4, 0, 0x10000u, 5, 0, 0, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
 
-				tmodel->insert(make_thread_info(0, 18, string()));
-				tmodel->insert(make_thread_info(1, 1, string()));
-				tmodel->insert(make_thread_info(2, 180, string()));
-				tmodel->insert(make_thread_info(3, 179, string()));
-				tmodel->insert(make_thread_info(4, 17900, string()));
+				add_records(*threads, plural
+					+ make_thread_info(0, 18, string())
+					+ make_thread_info(1, 1, string())
+					+ make_thread_info(2, 180, string())
+					+ make_thread_info(3, 179, string())
+					+ make_thread_info(4, 17900, string()));
 
 				ih.bind_to_model(*fl);
 
@@ -707,10 +710,11 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
 				string result;
 
-				(*tmodel)[1].native_id = 1711;
+				add_records(*threads, plural
+					+ make_thread_info(1, 1711, ""));
 
 				// ACT
 				dump::as_tab_separated(result, *fl);
@@ -754,7 +758,8 @@ namespace micro_profiler
 					"3\t000007D0\t1711\t35\t366\t453\t10.4571\t12.9429\t3\r\n"), result);
 
 				// INIT
-				(*tmodel)[1].native_id = 1713;
+				add_records(*threads, plural
+					+ make_thread_info(1, 1713, ""), keyer::external_id());
 
 				// ACT
 				fl->set_order(main_columns::exclusive_avg, true);
@@ -786,7 +791,7 @@ namespace micro_profiler
 					+ make_call_statistics(3, 1, 0, 0x2008, 18, 0, 0, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
 
 				// ACT
 				shared_ptr<const trackable> t(fl->track(1));
@@ -803,7 +808,7 @@ namespace micro_profiler
 				// INIT
 				auto invalidations = 0;
 				auto fl = make_table<richtext_table_model>(statistics,
-					create_context(statistics, 1, resolver, tmodel, false), c_statistics_columns);
+					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
 				auto c = fl->invalidate += [&] (richtext_table_model::index_type i) {
 					invalidations++;
 					assert_equal(richtext_table_model::npos(), i);

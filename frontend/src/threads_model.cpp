@@ -11,6 +11,15 @@ using namespace std;
 
 namespace micro_profiler
 {
+	template <>
+	struct key_traits<tables::thread>
+	{
+		typedef id_t key_type;
+
+		static key_type get_key(const tables::thread &item)
+		{	return item.id;	}
+	};
+
 	namespace
 	{
 		double to_seconds(mt::milliseconds v)
@@ -42,7 +51,7 @@ namespace micro_profiler
 			invalidate(npos());
 		};
 		_view->set_order([] (const tables::threads::value_type &lhs, const tables::threads::value_type &rhs) {
-			return lhs.second.cpu_time < rhs.second.cpu_time;
+			return lhs.cpu_time < rhs.cpu_time;
 		}, false);
 	}
 
@@ -53,7 +62,7 @@ namespace micro_profiler
 		else if (!index--)
 			return thread_id = cumulative, true;
 		else if (index < _view->size())
-			return thread_id = (*_view)[index].first, true;
+			return thread_id = (*_view)[index].id, true;
 		else
 			return false;
 	}
@@ -73,7 +82,7 @@ namespace micro_profiler
 		}
 		else
 		{
-			const thread_info &v = (*_view)[index].second;
+			const thread_info &v = (*_view)[index];
 
 			text = "#", itoa<10>(text, v.native_id);
 			if (!v.description.empty())

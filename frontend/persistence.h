@@ -25,7 +25,7 @@
 
 namespace strmd
 {
-	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 6	};	};
 }
 
 namespace micro_profiler
@@ -40,6 +40,14 @@ namespace micro_profiler
 
 			archive(index, scontext::nested_context(scontext::root_context(dummy, index, address_and_thread), 0u));
 		}
+
+		template <typename S, typename P, int v>
+		inline void serialize(strmd::deserializer<S, P, v> &archive, tables::threads &data, bool)
+		{	archive(views::unique_index(data, keyer::external_id()));	}
+
+		template <typename S, typename P>
+		inline void serialize(strmd::serializer<S, P> &, tables::threads &, bool)
+		{	}
 	}
 
 	template <typename ArchiveT>
@@ -56,8 +64,10 @@ namespace micro_profiler
 		else if (ver >= 3)
 			archive(*data.statistics, static_cast<const bool &>(false));
 
-		if (ver >= 4)
+		if (ver >= 6)
 			archive(*data.threads);
+		else if (ver >= 4)
+			archive(*data.threads, static_cast<const bool &>(true));
 
 		//if (ver >= 5)
 		//	archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::image_patches> &>(const_cast<tables::patches &>(*data.patches)));

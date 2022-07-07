@@ -32,6 +32,12 @@ namespace micro_profiler
 {
 	namespace tables
 	{
+		struct thread : thread_info
+		{
+			id_t id;
+		};
+
+
 		template <typename BaseT>
 		struct table : BaseT
 		{
@@ -47,9 +53,7 @@ namespace micro_profiler
 		};
 
 
-		struct threads : table< containers::unordered_map<unsigned int /*threadid*/, thread_info, knuth_hash> >
-		{
-		};
+		typedef views::table<thread> threads;
 
 
 		struct module_mappings : table< containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> >

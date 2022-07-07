@@ -23,16 +23,19 @@
 #include <common/types.h>
 #include <memory>
 #include <string>
+#include <views/table.h>
 
 namespace micro_profiler
 {
 	namespace tables
 	{
+		struct thread;
+
 		struct module_mappings;
 		struct modules;
 		struct patches;
 		struct statistics;
-		struct threads;
+		typedef views::table<thread> threads;
 	}
 
 	struct profiling_session

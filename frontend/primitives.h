@@ -28,7 +28,12 @@
 
 namespace micro_profiler
 {
-	struct call_statistics : function_statistics
+	struct identity
+	{
+		id_t id;
+	};
+
+	struct call_statistics : identity, function_statistics
 	{
 		typedef std::vector<id_t> path_t;
 
@@ -38,7 +43,6 @@ namespace micro_profiler
 		template <typename LookupT>
 		unsigned int reentrance(const LookupT &lookup) const;
 
-		id_t id;
 		id_t thread_id;
 		id_t parent_id;
 		long_address_t address;

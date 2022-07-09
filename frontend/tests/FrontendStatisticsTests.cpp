@@ -213,7 +213,8 @@ namespace micro_profiler
 				});
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(3, 17, 0x00010000u));
+						+ make_mapping_pair(7, 19, 0x0FA00000u)
+						+ make_mapping_pair(3, 17, 0x00010000u));
 					empty_update(resp);
 				});
 
@@ -221,7 +222,8 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(1, 12, 0x00100000u) + make_mapping(2, 13, 0x01100000u));
+						+ make_mapping_pair(1, 12, 0x00100000u)
+						+ make_mapping_pair(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
 							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
@@ -245,33 +247,35 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				vector< vector<mapped_module_identified> > log;
+				vector< vector<tables::module_mapping> > log;
 
 				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {	empty_update(resp);	});
 				emulator->message(init, format(idata));
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(3, 17, 0x00010000u));
+						+ make_mapping_pair(7, 19, 0x0FA00000u)
+						+ make_mapping_pair(3, 17, 0x00010000u));
 					empty_update(resp);
 				});
-				const auto c = mappings->invalidate += [&] {	log.push_back(mappings->layout);	};
+				const auto c = mappings->invalidate += [&] {
+					log.push_back(vector<tables::module_mapping>(mappings->begin(), mappings->end()));
+				};
 
 				// ACT
 				statistics->request_update();
 
 				// ASSERT
-				mapped_module_identified reference1[] = {
-					make_mapping(3, 17, 0x00010000u),
-					make_mapping(7, 19, 0x0FA00000u),
-				};
-
 				assert_equal(1u, log.size());
-				assert_equal(reference1, log.back());
+				assert_equivalent(plural
+					+ make_mapping(3, 17, 0x00010000u)
+					+ make_mapping(7, 19, 0x0FA00000u), log.back());
 
 				// INIT
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(8, 18, 0x00A00000u) + make_mapping(9, 13, 0x00020000u) + make_mapping(5, 11, 0x00001000u));
+						+ make_mapping_pair(8, 18, 0x00A00000u)
+						+ make_mapping_pair(9, 13, 0x00020000u)
+						+ make_mapping_pair(5, 11, 0x00001000u));
 					empty_update(resp);
 				});
 
@@ -279,16 +283,13 @@ namespace micro_profiler
 				statistics->request_update();
 
 				// ASSERT
-				mapped_module_identified reference2[] = {
-					make_mapping(5, 11, 0x00001000u),
-					make_mapping(3, 17, 0x00010000u),
-					make_mapping(9, 13, 0x00020000u),
-					make_mapping(8, 18, 0x00A00000u),
-					make_mapping(7, 19, 0x0FA00000u),
-				};
-
 				assert_equal(2u, log.size());
-				assert_equal(reference2, log.back());
+				assert_equivalent(plural
+					+ make_mapping(5, 11, 0x00001000u)
+					+ make_mapping(3, 17, 0x00010000u)
+					+ make_mapping(9, 13, 0x00020000u)
+					+ make_mapping(8, 18, 0x00A00000u)
+					+ make_mapping(7, 19, 0x0FA00000u), log.back());
 			}
 
 
@@ -304,7 +305,9 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(1, 12, 0x00100000u) + make_mapping(2, 13, 0x01100000u));
+						+ make_mapping_pair(7, 19, 0x0FA00000u)
+						+ make_mapping_pair(1, 12, 0x00100000u)
+						+ make_mapping_pair(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
 							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)
@@ -355,7 +358,9 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(7, 19, 0x0FA00000u) + make_mapping(1, 12, 0x00100000u) + make_mapping(2, 13, 0x01100000u));
+						+ make_mapping_pair(7, 19, 0x0FA00000u)
+						+ make_mapping_pair(1, 12, 0x00100000u)
+						+ make_mapping_pair(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
 							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901, 13000)

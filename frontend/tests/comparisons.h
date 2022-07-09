@@ -33,4 +33,13 @@ namespace micro_profiler
 		return std::make_pair(lhs.id, std::make_pair(lhs.native_id, lhs.description))
 			< std::make_pair(rhs.id, std::make_pair(rhs.native_id, rhs.description));
 	}
+
+	namespace tables
+	{
+		inline bool operator <(const tables::module_mapping &lhs, const tables::module_mapping &rhs)
+		{
+			return std::make_tuple(lhs.id, lhs.persistent_id, lhs.path, lhs.base)
+				< std::make_tuple(rhs.id, rhs.persistent_id, rhs.path, rhs.base);
+		}
+	}
 }

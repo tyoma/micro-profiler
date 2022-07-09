@@ -14,6 +14,16 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			template <typename TableT, typename ContainerT>
+			void add_records_invalidate(TableT &table_, const ContainerT &records)
+			{
+				add_records(table_, records);
+				table_.invalidate();
+			}
+		}
+
 		begin_test_suite( SymbolResolverTests )
 			shared_ptr<tables::modules> modules;
 			shared_ptr<tables::module_mappings> mappings;
@@ -30,14 +40,6 @@ namespace micro_profiler
 						cb(i->second);
 					_requested.push_back(persistent_id);
 				};
-			}
-
-			void add_mapping(const mapped_module_identified &mapping)
-			{
-				assert_is_true(mappings->insert(make_pair(mapping.first, mapping.second)).second);
-				mappings->layout.insert(lower_bound(mappings->layout.begin(), mappings->layout.end(), mapping,
-					mapping_less()), mapping);
-				mappings->invalidate();
 			}
 
 			template <typename SymbolT, size_t symbols_size>
@@ -84,7 +86,7 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
@@ -99,7 +101,7 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
@@ -113,7 +115,7 @@ namespace micro_profiler
 				// INIT
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT
@@ -146,7 +148,7 @@ namespace micro_profiler
 					invalidations++;
 				};
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 
 				r.symbol_name_by_va(0x1010);
 
@@ -167,14 +169,14 @@ namespace micro_profiler
 				add_metadata(1, symbols);
 
 				// ACT
-				add_mapping(make_mapping(0, 1u, 0x1100000));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0x1100000));
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
 				assert_equal("bar", r->symbol_name_by_va(0x1100101));
 
 				// ACT
-				add_mapping(make_mapping(1, 1u, 0x1100501));
+				add_records_invalidate(*mappings, plural + make_mapping(1, 1u, 0x1100501));
 
 				// ASSERT
 				assert_equal("foo", r->symbol_name_by_va(0x1100010));
@@ -191,7 +193,7 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT
@@ -236,7 +238,7 @@ namespace micro_profiler
 				};
 				symbol_resolver::fileline_t results[4];
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols, files);
 
 				// ACT / ASSERT
@@ -281,11 +283,11 @@ namespace micro_profiler
 				};
 				symbol_resolver::fileline_t results[8];
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols1, files1);
 
 				// ACT / ASSERT
-				add_mapping(make_mapping(1, 2u, 0x8000));
+				add_records_invalidate(*mappings, plural + make_mapping(1, 2u, 0x8000));
 				add_metadata(2u, symbols2, files2);
 
 				r->symbol_fileline_by_va(0x010, results[0]);
@@ -387,7 +389,7 @@ namespace micro_profiler
 				};
 				symbol_resolver::fileline_t result;
 
-				add_mapping(make_mapping(0, 1u, 0));
+				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
 				add_metadata(1u, symbols);
 
 				// ACT / ASSERT
@@ -403,10 +405,11 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 
-				add_mapping(make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191));
-				add_mapping(make_mapping(1, 12, 0x120100, "nonono", 17));
-				add_mapping(make_mapping(2, 11711, 0x200000, "agge.tests.dll", 117000001));
-				add_mapping(make_mapping(3, 100, 0x310000, "/bin/bash", 100));
+				add_records_invalidate(*mappings, plural
+					+ make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191)
+					+ make_mapping(1, 12, 0x120100, "nonono", 17)
+					+ make_mapping(2, 11711, 0x200000, "agge.tests.dll", 117000001)
+					+ make_mapping(3, 100, 0x310000, "/bin/bash", 100));
 
 				// ACT
 				r->symbol_name_by_va(0x120060);
@@ -434,10 +437,11 @@ namespace micro_profiler
 					requests.push_back(req);
 				};
 
-				add_mapping(make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191));
-				add_mapping(make_mapping(1, 12, 0x120100, "nonono", 17));
-				add_mapping(make_mapping(2, 11711, 0x200000, "agge.tests.dll", 117000001));
-				add_mapping(make_mapping(3, 100, 0x310000, "/bin/bash", 100));
+				add_records_invalidate(*mappings, plural
+					+ make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191)
+					+ make_mapping(1, 12, 0x120100, "nonono", 17)
+					+ make_mapping(2, 11711, 0x200000, "agge.tests.dll", 117000001)
+					+ make_mapping(3, 100, 0x310000, "/bin/bash", 100));
 
 				// ACT
 				r->symbol_name_by_va(0x120060);
@@ -492,8 +496,9 @@ namespace micro_profiler
 					callbacks.push_back(cb);
 				};
 
-				add_mapping(make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191));
-				add_mapping(make_mapping(1, 12, 0x120100, "nonono", 17));
+				add_records_invalidate(*mappings, plural
+					+ make_mapping(0, 11, 0x120050, "c:\\dev\\test.exe", 1919191)
+					+ make_mapping(1, 12, 0x120100, "nonono", 17));
 				r->symbol_name_by_va(0x120060);
 
 				// ACT

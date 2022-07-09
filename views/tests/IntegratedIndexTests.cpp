@@ -15,7 +15,7 @@ namespace micro_profiler
 		{
 			namespace
 			{
-				struct A
+				struct local_type
 				{
 					int a;
 					double b;
@@ -24,13 +24,13 @@ namespace micro_profiler
 
 				struct key_a
 				{
-					int operator ()(const A &value) const
+					int operator ()(const local_type &value) const
 					{	return value.a;	}
 				};
 
 				struct key_c
 				{
-					string operator ()(const A &value) const
+					string operator ()(const local_type &value) const
 					{	return value.c;	}
 				};
 			}
@@ -42,18 +42,21 @@ namespace micro_profiler
 
 					// INIT
 					const table<type_1> t1;
-					const table<A> t2;
-					table<A> t3;
+					const table<local_type> t2;
+					table<local_type> t3;
 
 					// ACT
 					const immutable_unique_index<table<type_1>, key_first> &idx1 = unique_index<key_first>(t1);
 					const immutable_index<table<type_1>, key_first> &idx2 = multi_index<key_first>(t1);
-					const immutable_unique_index<table<A>, key_a> &idx3 = unique_index<key_a>(t2);
-					const immutable_index<table<A>, key_a> &idx4 = multi_index<key_a>(t2);
-					const immutable_unique_index<table<A>, key_c> &idx5 = unique_index<key_c>(t2);
-					const immutable_index<table<A>, key_c> &idx6 = multi_index<key_c>(t2);
-					immutable_unique_index<table<A>, key_a> &idx7 = unique_index<key_a>(t3);
-					immutable_unique_index<table<A>, key_c> &idx8 = unique_index<key_c>(t3);
+					const immutable_unique_index<table<local_type>, key_a> &idx3 = unique_index<key_a>(t2);
+					const immutable_index<table<local_type>, key_a> &idx4 = multi_index<key_a>(t2);
+					const immutable_unique_index<table<local_type>, key_c> &idx5 = unique_index<key_c>(t2);
+					const immutable_index<table<local_type>, key_c> &idx6 = multi_index<key_c>(t2);
+					immutable_unique_index<table<local_type>, key_a> &idx7 = unique_index<key_a>(t3);
+					immutable_unique_index<table<local_type>, key_c> &idx8 = unique_index<key_c>(t3);
+
+					const ordered_index<table<local_type>, key_a> &idx9 = ordered_index_<key_a>(t2);
+					const ordered_index<table<local_type>, key_c> &idx10 = ordered_index_(t2, key_c());
 
 					// ACT / ASSERT
 					assert_equal(&idx1, (&unique_index<key_first>(t1)));
@@ -64,7 +67,9 @@ namespace micro_profiler
 					assert_equal(&idx6, &multi_index<key_c>(t2));
 					assert_equal(&idx7, &unique_index<key_a>(t3));
 					assert_equal(&idx8, &unique_index<key_c>(t3));
-				}
+					assert_equal(&idx9, &ordered_index_(t2, key_a()));
+					assert_equal(&idx10, &ordered_index_<key_c>(t2));
+			}
 
 			end_test_suite
 		}

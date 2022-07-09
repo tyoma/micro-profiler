@@ -115,10 +115,10 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(1, 11, 0x00100000u, "a", 1)
-						+ make_mapping(2, 13, 0x00100000u, "b", 1)
-						+ make_mapping(3, 17, 0x00100000u, "c", 1)
-						+ make_mapping(5, 191, 0x01100000u, "d", 1));
+						+ make_mapping_pair(1, 11, 0x00100000u, "a", 1)
+						+ make_mapping_pair(2, 13, 0x00100000u, "b", 1)
+						+ make_mapping_pair(3, 17, 0x00100000u, "c", 1)
+						+ make_mapping_pair(5, 191, 0x01100000u, "d", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
@@ -183,9 +183,9 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(1, 11, 0x00100000u, "a", 1)
-						+ make_mapping(2, 17, 0x00100000u, "b", 1)
-						+ make_mapping(3, 19, 0x00100000u, "c", 1));
+						+ make_mapping_pair(1, 11, 0x00100000u, "a", 1)
+						+ make_mapping_pair(2, 17, 0x00100000u, "b", 1)
+						+ make_mapping_pair(3, 19, 0x00100000u, "c", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
@@ -246,9 +246,9 @@ namespace micro_profiler
 				dir.track_file("c-00000000.symcache");
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(1, 17, 0x00100000u, "a", 0)
-						+ make_mapping(2, 99, 0x00100000u, "b", 0)
-						+ make_mapping(3, 1000, 0x00100000u, "c", 0));
+						+ make_mapping_pair(1, 17, 0x00100000u, "a", 0)
+						+ make_mapping_pair(2, 99, 0x00100000u, "b", 0)
+						+ make_mapping_pair(3, 1000, 0x00100000u, "c", 0));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 
@@ -298,9 +298,9 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(1, 17, 0x00100000u, "foo.dll", 0x00100201)
-						+ make_mapping(2, 99, 0x00100000u, "/lib/some_long_name.so", 0x10100201)
-						+ make_mapping(3, 1000, 0x00100000u, "/lib64/test/libc.so", 1));
+						+ make_mapping_pair(1, 17, 0x00100000u, "foo.dll", 0x00100201)
+						+ make_mapping_pair(2, 99, 0x00100000u, "/lib/some_long_name.so", 0x10100201)
+						+ make_mapping_pair(3, 1000, 0x00100000u, "/lib64/test/libc.so", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned) {	assert_is_false(true);	});
@@ -349,8 +349,8 @@ namespace micro_profiler
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping(1, 17, 0x00100000u, "foo.dll", 0x90100201)
-						+ make_mapping(3, 170, 0x00100000u, "c:\\windows\\kernel32.dll", 0x1));
+						+ make_mapping_pair(1, 17, 0x00100000u, "foo.dll", 0x90100201)
+						+ make_mapping_pair(3, 170, 0x00100000u, "c:\\windows\\kernel32.dll", 0x1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 

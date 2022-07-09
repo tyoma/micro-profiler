@@ -75,7 +75,7 @@ namespace micro_profiler
 			test( ModelIsEmptyIfNoModulesAreLoaded )
 			{
 				// INIT
-				mappings->insert(make_mapping(0, 1, 0x1299100));
+				add_records(*mappings, plural + make_mapping(0, 1, 0x1299100));
 
 				// INIT / ACT
 				image_patch_model model(patches, modules, mappings);
@@ -84,7 +84,7 @@ namespace micro_profiler
 				assert_equal(0u, model.get_count());
 
 				// INIT
-				mappings->insert(make_mapping(1, 10, 0x10000));
+				add_records(*mappings, plural + make_mapping(1, 10, 0x10000));
 				mappings->invalidate();
 
 				// ACT / ASSERT
@@ -155,8 +155,7 @@ namespace micro_profiler
 				unsigned columns[] = {	0, 1, 3,	};
 
 				modules->clear();
-				(*mappings)[0].persistent_id = 140;
-				(*mappings)[1].persistent_id = 141;
+				add_records(*mappings, plural + make_mapping(0u, 140u, 0u) + make_mapping(1u, 141u, 0u));
 
 				image_patch_model model(patches, modules, mappings);
 				symbol_info data1[] = {
@@ -329,8 +328,9 @@ namespace micro_profiler
 				(*modules)[11].symbols = mkvector(data1);
 				(*modules)[13].symbols = mkvector(data2);
 				(*modules)[17].symbols = mkvector(data3);
-				(*mappings)[0].persistent_id = 11, (*mappings)[0].path = "/usr/bin/module.so";
-				(*mappings)[1].persistent_id = 17, (*mappings)[1].path = "/bin/Profiler";
+				add_records(*mappings, plural
+					+ make_mapping(0u, 11u, 0u, "/usr/bin/module.so")
+					+ make_mapping(1u, 17u, 0u, "/bin/Profiler"));
 
 				image_patch_model model(patches, modules, mappings);
 
@@ -354,8 +354,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				(*mappings)[2].persistent_id = 13, (*mappings)[2].path = "c:\\KERNEL32.exe";
-				mappings->erase(1);
+				add_records(*mappings, plural
+					+ make_mapping(2u, 13u, 0u, "c:\\KERNEL32.exe"));
+				views::unique_index<keyer::external_id>(*mappings)[1].remove();
 				mappings->invalidate();
 
 				// ASSERT
@@ -535,9 +536,10 @@ namespace micro_profiler
 				(*modules)[13].symbols = mkvector(data2);
 				(*modules)[17].symbols = mkvector(data3);
 				(*modules)[19].symbols = mkvector(data4);
-				(*mappings)[0].persistent_id = 11, (*mappings)[0].path = "/usr/bin/module.so";
-				(*mappings)[1].persistent_id = 17, (*mappings)[1].path = "d:\\bin\\Profiler";
-				(*mappings)[3].persistent_id = 19, (*mappings)[3].path = "c:\\dev\\micro-profiler.exe";
+				add_records(*mappings, plural
+					+ make_mapping(0u, 11u, 0u, "/usr/bin/module.so")
+					+ make_mapping(1u, 17u, 0u, "d:\\bin\\Profiler")
+					+ make_mapping(3u, 19u, 0u, "c:\\dev\\micro-profiler.exe"));
 
 				image_patch_model model(patches, modules, mappings);
 
@@ -559,7 +561,8 @@ namespace micro_profiler
 				assert_equal(mkvector(reference1), get_text(model, columns));
 
 				// ACT
-				(*mappings)[2].persistent_id = 13, (*mappings)[2].path = "/bin/mmapping";
+				add_records(*mappings, plural
+					+ make_mapping(2u, 13u, 0u, "/bin/mmapping"));
 				mappings->invalidate();
 
 				// ASSERT (19 -> 13 -> 11 -> 17)
@@ -601,9 +604,10 @@ namespace micro_profiler
 					log.push_back(persistent_id);
 				};
 
-				mappings->insert(make_mapping(0, 1, 0x1299100, "a", 12));
-				mappings->insert(make_mapping(1, 13, 0x1299100, "/test/b", 123));
-				mappings->insert(make_mapping(2, 7, 0x1299100, "c:\\dev\\app.exe", 1123));
+				add_records(*mappings, plural
+					+ make_mapping(0u, 1u, 0x1299100, "a", 12)
+					+ make_mapping(1u, 13u, 0x1299100, "/test/b", 123)
+					+ make_mapping(2u, 7u, 0x1299100, "c:\\dev\\app.exe", 1123));
 
 				// INIT / ACT
 				image_patch_model model1(patches, modules, mappings);
@@ -612,8 +616,9 @@ namespace micro_profiler
 				assert_equivalent(plural + 1u + 13u + 7u, log);
 
 				// INIT
-				mappings->insert(make_mapping(4, 11, 0x1299100));
-				mappings->insert(make_mapping(5, 9, 0x1299100));
+				add_records(*mappings, plural
+					+ make_mapping(4, 11, 0x1299100)
+					+ make_mapping(5, 9, 0x1299100));
 				log.clear();
 
 				// INIT / ACT
@@ -718,8 +723,7 @@ namespace micro_profiler
 
 				(*modules)[1].symbols = mkvector(data1);
 				(*modules)[3].symbols = mkvector(data2);
-				(*mappings)[0].persistent_id = 1;
-				(*mappings)[1].persistent_id = 3;
+				add_records(*mappings, plural + make_mapping(0u, 1u, 0u) + make_mapping(1u, 3u, 0u));
 
 				image_patch_model model(patches, modules, mappings);
 				auto sel = model.create_selection();
@@ -753,9 +757,10 @@ namespace micro_profiler
 			test( OnlyMatchingRecordsAreShownWhenFilterIsApplied )
 			{
 				// INIT
-				(*mappings)[0].persistent_id = 1;
-				(*mappings)[1].persistent_id = 3;
-				(*mappings)[2].persistent_id = 4;
+				add_records(*mappings, plural
+					+ make_mapping(0u, 1u, 0u)
+					+ make_mapping(1u, 3u, 0u)
+					+ make_mapping(2u, 4u, 0u));
 
 				image_patch_model model(patches, modules, mappings);
 				unsigned columns[] = {	1, 3,	};
@@ -850,9 +855,10 @@ namespace micro_profiler
 			test( NewModulesAreRequestedOnMappingInvalidation )
 			{
 				// INIT
-				(*mappings)[0].persistent_id = 1;
-				(*mappings)[1].persistent_id = 3;
-				(*mappings)[2].persistent_id = 4;
+				add_records(*mappings, plural
+					+ make_mapping(0u, 1u, 0u)
+					+ make_mapping(1u, 3u, 0u)
+					+ make_mapping(2u, 4u, 0u));
 
 				// INIT / ACT
 				image_patch_model model(patches, modules, mappings);
@@ -870,8 +876,9 @@ namespace micro_profiler
 				assert_equal(3u, requests.size());
 
 				// INIT
-				(*mappings)[3].persistent_id = 7;
-				(*mappings)[4].persistent_id = 13;
+				add_records(*mappings, plural
+					+ make_mapping(3u, 7u, 0u)
+					+ make_mapping(4u, 13u, 0u));
 
 				// ACT
 				mappings->invalidate();

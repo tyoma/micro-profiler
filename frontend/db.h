@@ -162,6 +162,13 @@ namespace micro_profiler
 			{	record.thread_id = key;	}
 		};
 
+		struct base
+		{
+			template <typename T>
+			long_address_t operator ()(const T &record) const
+			{	return record.base;	}
+		};
+
 		struct address
 		{
 			long_address_t operator ()(const call_statistics &record) const

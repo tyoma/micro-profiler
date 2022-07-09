@@ -38,7 +38,7 @@ namespace strmd
 	class deserializer;
 
 	template <> struct version<micro_profiler::call_statistics> {	enum {	value = 5	};	};
-	template <> struct version<micro_profiler::tables::thread> {	enum {	value = 1	};	};
+	template <typename T> struct version< micro_profiler::tables::record<T> > {	enum {	value = 1	};	};
 	template <typename T> struct version< micro_profiler::auto_increment_constructor<T> > {	enum {	value = 0	};	};
 
 	template <typename ArchiveT, typename U, typename C, int sl>
@@ -68,16 +68,16 @@ namespace micro_profiler
 		void prepare(ContainerT &/*data*/, size_t /*count*/)
 		{	}
 
-		template <typename ArchiveT, typename U, typename K>
-		void read_item(ArchiveT &archive, views::immutable_unique_index<U, K> &index) const
+		template <typename ArchiveT, typename T, typename C, typename K>
+		void read_item(ArchiveT &archive, views::immutable_unique_index<views::table<tables::record<T>, C>, K> &index) const
 		{
-			typename views::immutable_unique_index<U, K>::key_type key;
+			typename views::immutable_unique_index<views::table<tables::record<T>, C>, K>::key_type key;
 			
 			archive(key);
 
 			auto rec = index[key];
 
-			archive(static_cast<thread_info &>(*rec));
+			archive(static_cast<T &>(*rec));
 			rec.commit();
 		}
 	};
@@ -160,18 +160,17 @@ namespace micro_profiler
 	{	serialize(archive, static_cast<function_statistics &>(data), context.underlying, ver);	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, tables::thread &data, unsigned int /*ver*/)
-	{
-		archive(data.id);
-		archive(static_cast<thread_info &>(data));
-	}
-
-
-	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, module_profiling_preferences &data, unsigned int /*ver*/);
 
 	namespace tables
 	{
+		template <typename ArchiveT, typename T>
+		inline void serialize(ArchiveT &archive, record<T> &data, unsigned int /*ver*/)
+		{
+			archive(data.id);
+			archive(static_cast<T &>(data));
+		}
+
 		template <typename ArchiveT, typename BaseT>
 		inline void serialize(ArchiveT &archive, table<BaseT> &data)
 		{
@@ -190,14 +189,6 @@ namespace micro_profiler
 
 			archive(index, scontext::root_context(context, index));
 			data.invalidate();
-		}
-
-		template <typename S, typename P, int v>
-		inline void serialize(strmd::deserializer<S, P, v> &archive, module_mappings &data)
-		{
-			archive(static_cast<module_mappings::base_t &>(data));
-			data.layout.assign(data.begin(), data.end());
-			std::sort(data.layout.begin(), data.layout.end(), mapping_less());
 		}
 	}
 }

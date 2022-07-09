@@ -212,22 +212,40 @@ namespace micro_profiler
 			return ti;
 		}
 
-		inline mapped_module_identified make_mapping(unsigned instance_id, unsigned persistence_id, long_address_t base,
-			const char *path = "", unsigned hash_ = 0)
-		{
-			mapped_module_ex m = {	persistence_id, path, base, hash_	};
-			return std::make_pair(instance_id, m);
-		}
-
 		inline tables::thread make_thread_info(unsigned id, unsigned native_id, std::string description,
 			mt::milliseconds start_time, mt::milliseconds end_time, mt::milliseconds cpu_time, bool complete)
 		{
 			tables::thread t;
 
-			static_cast<thread_info &>(t) = make_thread_info(native_id, description, start_time, end_time, cpu_time, complete);
+			static_cast<thread_info &>(t) = make_thread_info(native_id, description, start_time, end_time, cpu_time,
+				complete);
 			t.id = id;
 			return t;
 		}
+
+		inline mapped_module_ex make_mapping(unsigned persistence_id, long_address_t base, const char *path = "",
+			unsigned hash_ = 0)
+		{
+			mapped_module_ex m = {	persistence_id, path, base, hash_	};
+			return m;
+		}
+
+		inline mapped_module_identified make_mapping_pair(unsigned instance_id, unsigned persistence_id,
+			long_address_t base, const char *path = "", unsigned hash_ = 0)
+		{	return std::make_pair(instance_id, make_mapping(persistence_id, base, path, hash_));	}
+
+		inline tables::module_mapping make_mapping(unsigned instance_id, const mapped_module_ex &m_)
+		{
+			tables::module_mapping m;
+
+			m.id = instance_id;
+			static_cast<mapped_module_ex &>(m) = m_;
+			return m;
+		}
+
+		inline tables::module_mapping make_mapping(unsigned instance_id, unsigned persistence_id, long_address_t base,
+			const char *path = "", unsigned hash_ = 0)
+		{	return make_mapping(instance_id, make_mapping(persistence_id, base, path, hash_));	}
 
 		template <typename T>
 		inline T get_value(const wpl::list_model<T> &m, size_t index)

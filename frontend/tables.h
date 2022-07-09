@@ -24,19 +24,15 @@
 
 #include <common/image_info.h>
 #include <common/module.h>
-#include <common/primitives.h>
 #include <common/protocol.h>
-#include <wpl/signal.h>
 
 namespace micro_profiler
 {
 	namespace tables
 	{
-		struct thread : thread_info
-		{
-			id_t id;
-		};
-
+		template <typename T>
+		struct record : identity, T
+		{	};
 
 		template <typename BaseT>
 		struct table : BaseT
@@ -53,13 +49,12 @@ namespace micro_profiler
 		};
 
 
+		typedef record<thread_info> thread;
 		typedef views::table<thread> threads;
 
 
-		struct module_mappings : table< containers::unordered_map<unsigned int /*instance_id*/, mapped_module_ex> >
-		{
-			std::vector< std::pair<unsigned int, mapped_module_ex> > layout;
-		};
+		typedef record<mapped_module_ex> module_mapping;
+		typedef views::table<module_mapping> module_mappings;
 
 
 		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >

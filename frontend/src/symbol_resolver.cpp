@@ -20,26 +20,12 @@
 
 #include <frontend/symbol_resolver.h>
 
-#include <algorithm>
 #include <frontend/helpers.h>
-#include <frontend/tables.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
-	namespace
-	{
-		template <typename T, typename V>
-		const typename T::value_type *find_range(const T &container, const V &value)
-		{
-			auto i = container.upper_bound(value);
-
-			return i != container.begin() ? &*--i : nullptr;
-		}
-	}
-
-
 	symbol_resolver::symbol_resolver(shared_ptr<const tables::modules> modules,
 			shared_ptr<const tables::module_mappings> mappings)
 		: _modules(modules), _mappings(mappings)
@@ -75,18 +61,17 @@ namespace micro_profiler
 
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, unsigned int &persistent_id) const
 	{
-		if (const auto r = find_range(_mappings->layout, address, mapping_less()))
+		if (const auto mapping = find_range(views::ordered_index_(*_mappings, keyer::base()), address))
 		{
-			const auto &mapping = r->second;
-			auto m = _symbols_ordered.find(persistent_id = mapping.persistent_id);
+			auto m = _symbols_ordered.find(persistent_id = mapping->persistent_id);
 
 			if (_symbols_ordered.end() == m)
 			{
-				const auto i = _requests.insert(make_pair(r->second.persistent_id, shared_ptr<void>()));
+				const auto i = _requests.insert(make_pair(mapping->persistent_id, shared_ptr<void>()));
 
 				if (i.second)
 				{
-					_modules->request_presence(i.first->second, mapping.persistent_id,
+					_modules->request_presence(i.first->second, mapping->persistent_id,
 						[this, i] (const module_info_metadata &metadata) {
 
 						auto &cached_symbols = _symbols_ordered[i.first->first];
@@ -97,14 +82,14 @@ namespace micro_profiler
 						invalidate();
 						_requests.erase(i.first);
 					});
-					m = _symbols_ordered.find(mapping.persistent_id);
+					m = _symbols_ordered.find(mapping->persistent_id);
 				}
 			}
 
 			if (_symbols_ordered.end() != m)
 			{
 				auto &cached_symbols = m->second;
-				const auto rva = static_cast<unsigned int>(address - mapping.base);
+				const auto rva = static_cast<unsigned int>(address - mapping->base);
 
 				if (const auto candidate = find_range(cached_symbols, rva))
 				{

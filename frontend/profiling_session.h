@@ -20,24 +20,10 @@
 
 #pragma once
 
-#include <common/types.h>
-#include <memory>
-#include <string>
-#include <views/table.h>
+#include "tables.h"
 
 namespace micro_profiler
 {
-	namespace tables
-	{
-		struct thread;
-
-		struct module_mappings;
-		struct modules;
-		struct patches;
-		struct statistics;
-		typedef views::table<thread> threads;
-	}
-
 	struct profiling_session
 	{
 		initialization_data process_info;

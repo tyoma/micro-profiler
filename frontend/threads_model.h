@@ -20,21 +20,15 @@
 
 #pragma once
 
+#include "tables.h"
+
 #include <common/noncopyable.h>
-#include <common/types.h>
-#include <views/table.h>
 #include <wpl/models.h>
 
 namespace micro_profiler
 {
 	template <typename UnderlyingT>
 	class trackables_provider;
-
-	namespace tables
-	{
-		struct thread;
-		typedef views::table<thread> threads;
-	}
 
 	namespace views
 	{

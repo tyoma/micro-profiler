@@ -20,15 +20,14 @@
 
 #pragma once
 
-#include <algorithm>
 #include <common/compiler.h>
 
 namespace micro_profiler
 {
-	template <typename T, typename V, typename PredicateT>
-	inline const typename T::value_type *find_range(const T &container, const V &value, const PredicateT &predicate)
+	template <typename T, typename V>
+	inline const typename T::value_type *find_range(const T &container, const V &value)
 	{
-		auto i = std::upper_bound(container.begin(), container.end(), value, predicate);
+		auto i = container.upper_bound(value);
 
 		return i != container.begin() ? &*--i : nullptr;
 	}

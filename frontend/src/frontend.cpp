@@ -119,16 +119,13 @@ namespace micro_profiler
 			return;
 
 		auto modules_callback = [this] (ipc::deserializer &d) {
-			loaded_modules lmodules;
-
-			d(lmodules);
-			for (loaded_modules::const_iterator i = lmodules.begin(); i != lmodules.end(); ++i)
+			d(views::unique_index(*_mappings, keyer::external_id()));
+			for (auto i = _mappings->begin(); i != _mappings->end(); ++i)
 			{
-				if (_symbol_cache_paths.find(i->second.persistent_id) == _symbol_cache_paths.end())
-					_symbol_cache_paths[i->second.persistent_id] = construct_cache_path(i->second.path, i->second.hash);
-				_mappings->insert(*i);
-				_mappings->layout.insert(lower_bound(_mappings->layout.begin(), _mappings->layout.end(), *i,
-					mapping_less()), *i);
+				const auto m = _symbol_cache_paths.find(i->persistent_id);
+
+				if (m == _symbol_cache_paths.end())
+					_symbol_cache_paths[i->persistent_id] = construct_cache_path(*i);
 			}
 			_mappings->invalidate();
 		};
@@ -179,15 +176,16 @@ namespace micro_profiler
 			const auto remaining = make_shared<unsigned int>(0);
 			const auto enable = make_shared<bool>(false);
 			containers::unordered_map<unsigned int, int> requested;
+			auto &idx = views::ordered_index_(*_mappings, keyer::base());
 
 			for (tables::statistics::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
 			{
-				const auto m = find_range(_mappings->layout, (*i).address, mapping_less());
+				const auto m = find_range(idx, (*i).address);
 
-				if (!m || requested[m->second.persistent_id]++)
+				if (!m || requested[m->persistent_id]++)
 					continue;
 				++*remaining;
-				request_metadata(*new_request_handle(), m->second.persistent_id,
+				request_metadata(*new_request_handle(), m->persistent_id,
 					[self, remaining, enable] (const module_info_metadata &) {
 
 					if (!--*remaining && *enable)

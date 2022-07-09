@@ -53,6 +53,9 @@ namespace micro_profiler
 			transform_iterator &operator ++()
 			{	return ++_underlying, *this;	}
 
+			transform_iterator &operator --()
+			{	return --_underlying, *this;	}
+
 			transform_iterator operator ++(int)
 			{	return transform_iterator(_underlying++, _transform);	}
 

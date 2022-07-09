@@ -81,7 +81,7 @@ namespace micro_profiler
 		};
 		auto refresh = [this, mappings, invalidate_me] {
 			for (auto i = mappings->begin(); i != mappings->end(); ++i)
-				_module_paths[i->second.persistent_id] = i->second.path;
+				_module_paths[i->persistent_id] = i->path;
 			request_missing(*mappings);
 			invalidate_me();
 		};
@@ -204,11 +204,11 @@ namespace micro_profiler
 	{
 		for (auto i = mappings.begin(); i != mappings.end(); ++i)
 		{
-			auto req = _requests.insert(make_pair(i->second.persistent_id, shared_ptr<void>()));
+			auto req = _requests.insert(make_pair(i->persistent_id, shared_ptr<void>()));
 
 			if (!req.second)
 				continue;
-			_modules->request_presence(req.first->second, i->second.persistent_id,
+			_modules->request_presence(req.first->second, i->persistent_id,
 				[this] (const module_info_metadata &/*metadata*/) {
 
 				_ordered_view.fetch();

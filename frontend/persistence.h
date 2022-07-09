@@ -30,6 +30,17 @@ namespace strmd
 
 namespace micro_profiler
 {
+	namespace views
+	{
+		template <typename S, typename P, int v, typename T, typename C>
+		inline void serialize(strmd::deserializer<S, P, v> &archive, table<tables::record<T>, C> &data, bool)
+		{	archive(views::unique_index(data, keyer::external_id()));	}
+
+		template <typename S, typename P, typename T, typename C>
+		inline void serialize(strmd::serializer<S, P> &, table<tables::record<T>, C> &, bool)
+		{	}
+	}
+
 	namespace tables
 	{
 		template <typename S, typename P, int v>
@@ -40,21 +51,18 @@ namespace micro_profiler
 
 			archive(index, scontext::nested_context(scontext::root_context(dummy, index, address_and_thread), 0u));
 		}
-
-		template <typename S, typename P, int v>
-		inline void serialize(strmd::deserializer<S, P, v> &archive, tables::threads &data, bool)
-		{	archive(views::unique_index(data, keyer::external_id()));	}
-
-		template <typename S, typename P>
-		inline void serialize(strmd::serializer<S, P> &, tables::threads &, bool)
-		{	}
 	}
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, profiling_session &data, unsigned int ver)
 	{
 		archive(data.process_info);
-		archive(*data.module_mappings);
+
+		if (ver >= 6)
+			archive(*data.module_mappings);
+		else if (ver >= 3)
+			archive(*data.module_mappings, static_cast<const bool &>(true));
+
 		archive(*data.modules);
 
 		if (ver >= 5)

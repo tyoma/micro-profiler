@@ -20,23 +20,10 @@
 
 #pragma once
 
-#include <common/image_info.h>
-#include <common/module.h>
-#include <common/unordered_map.h>
-
-#include <functional>
-#include <map>
-#include <wpl/signal.h>
+#include "tables.h"
 
 namespace micro_profiler
 {
-	struct module_info_metadata;
-
-	namespace tables
-	{
-		struct module_mappings;
-		struct modules;
-	}
 
 	class symbol_resolver
 	{

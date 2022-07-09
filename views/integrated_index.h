@@ -28,23 +28,30 @@ namespace micro_profiler
 	namespace views
 	{
 		template <typename KeyerT, typename T, typename C>
-		const immutable_unique_index<table<T, C>, KeyerT> &unique_index(const table<T, C> &table_)
+		inline const immutable_unique_index<table<T, C>, KeyerT> &unique_index(const table<T, C> &table_)
 		{
 			typedef immutable_unique_index<table<T, C>, KeyerT> index_t;
 			return table_.component([&table_] {	return new index_t(const_cast<table<T, C> &>(table_));	});
 		}
 
 		template <typename KeyerT, typename T, typename C>
-		immutable_unique_index<table<T, C>, KeyerT> &unique_index(table<T, C> &table_, const KeyerT &keyer = KeyerT())
+		inline immutable_unique_index<table<T, C>, KeyerT> &unique_index(table<T, C> &table_, const KeyerT &keyer = KeyerT())
 		{
 			typedef immutable_unique_index<table<T, C>, KeyerT> index_t;
 			return table_.component([&table_, keyer] {	return new index_t(table_, keyer);	});
 		}
 
 		template <typename KeyerT, typename T, typename C>
-		const immutable_index<table<T, C>, KeyerT> &multi_index(const table<T, C> &table_, const KeyerT &keyer = KeyerT())
+		inline const immutable_index<table<T, C>, KeyerT> &multi_index(const table<T, C> &table_, const KeyerT &keyer = KeyerT())
 		{
 			typedef immutable_index<table<T, C>, KeyerT> index_t;
+			return table_.component([&table_, keyer] {	return new index_t(table_, keyer);	});
+		}
+
+		template <typename KeyerT, typename T, typename C>
+		inline const ordered_index<table<T, C>, KeyerT> &ordered_index_(const table<T, C> &table_, const KeyerT &keyer = KeyerT())
+		{
+			typedef ordered_index<table<T, C>, KeyerT> index_t;
 			return table_.component([&table_, keyer] {	return new index_t(table_, keyer);	});
 		}
 	}

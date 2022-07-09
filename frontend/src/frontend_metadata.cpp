@@ -53,8 +53,7 @@ namespace micro_profiler
 		{
 			auto &mx = init.multiplexed;
 
-			request_metadata_nw_cached(*init.underlying, persistent_id,
-				[&mx] (const module_info_metadata &metadata) {
+			request_metadata_nw_cached(*init.underlying, persistent_id, [&mx] (const module_info_metadata &metadata) {
 				mx.invoke([&metadata] (const tables::modules::metadata_ready_cb &ready) {	ready(metadata);	});
 			});
 		}
@@ -121,12 +120,12 @@ namespace micro_profiler
 		});
 	}
 
-	string frontend::construct_cache_path(const string &path, unsigned int hash_) const
+	string frontend::construct_cache_path(const mapped_module_ex &mapping) const
 	{
-		auto cache_path = _cache_directory & *path;
+		auto cache_path = _cache_directory & *mapping.path;
 
 		cache_path += "-";
-		itoa<16>(cache_path, hash_, 8);
+		itoa<16>(cache_path, mapping.hash, 8);
 		cache_path += ".symcache";
 		return cache_path;
 	}

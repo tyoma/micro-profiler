@@ -3,12 +3,10 @@
 #include "helpers.h"
 
 #include <list>
-#include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 #include <views/table.h>
 
-using namespace micro_profiler::tests;
 using namespace std;
 
 namespace micro_profiler
@@ -20,22 +18,21 @@ namespace micro_profiler
 			namespace
 			{
 				template <typename U, typename K>
-				struct index_base : immutable_index_base<U, K>
+				struct index_base : views::index_base<U, K,
+					std::unordered_multimap<typename result<K, typename U::value_type>::type, typename U::const_iterator> >
 				{
+					typedef views::index_base<U, K, std::unordered_multimap<typename result<K, typename U::value_type>::type, typename U::const_iterator> > base_t;
+
 					index_base(const U &underlying, const K &keyer)
-						: immutable_index_base<U, K>(underlying, keyer)
+						: base_t(underlying, keyer)
 					{	}
 
-					using immutable_index_base<U, K>::equal_range;
+					using base_t::equal_range;
 				};
 
 				struct container1 : list< pair<int, string> >
 				{
 					typedef void transacted_record;
-
-					mutable wpl::signal<void (const_iterator record, bool new_)> changed;
-					mutable wpl::signal<void (const_iterator record)> removed;
-					mutable wpl::signal<void ()> cleared;
 				};
 
 				template <typename T, typename II>
@@ -111,11 +108,11 @@ namespace micro_profiler
 			end_test_suite
 
 
-			begin_test_suite( ImmutableIndexBaseTests )
+			begin_test_suite( AAImmutableIndexBaseTests )
 				test( IndexIsBuiltOnConstruction )
 				{
 					// INIT
-					container1 data;
+					list< pair<int, string> > data;
 
 					data.push_back(make_pair(3, "lorem"));
 					data.push_back(make_pair(14, "ipsum"));
@@ -124,8 +121,8 @@ namespace micro_profiler
 					data.push_back(make_pair(14, "dolor"));
 
 					// INIT / ACT
-					const index_base<container1, key_first> idx1(data, key_first());
-					const index_base<container1, key_second> idx2(data, key_second());
+					const index_base<list< pair<int, string> >, key_first> idx1(data, key_first());
+					const index_base<list< pair<int, string> >, key_second> idx2(data, key_second());
 
 					// ACT
 					auto r1 = idx1.equal_range(3);
@@ -172,10 +169,12 @@ namespace micro_profiler
 				test( IndexIsUpdatedOnItemCreation )
 				{
 					// INIT
-					container1 data;
-					index_base<container1, key_first> idx1(data, key_first());
-					index_base<container1, key_second> idx2(data, key_second());
-					container1::const_iterator i[] = {
+					list< pair<int, string> > data;
+					index_base<list< pair<int, string> >, key_first> idx1(data, key_first());
+					auto &cidx1 = static_cast<table_component<list< pair<int, string> >::const_iterator> &>(idx1);
+					index_base<list< pair<int, string> >, key_second> idx2(data, key_second());
+					auto &cidx2 = static_cast<table_component<list< pair<int, string> >::const_iterator> &>(idx2);
+					list< pair<int, string> >::const_iterator i[] = {
 						data.insert(data.end(), make_pair(3, "lorem")),
 						data.insert(data.end(), make_pair(14, "ipsum")),
 						data.insert(data.end(), make_pair(159, "amet")),
@@ -193,8 +192,8 @@ namespace micro_profiler
 					assert_equal(r2.first, r2.second);
 
 					// INIT / ACT
-					idx1.created(i[1]);
-					idx2.created(i[1]);
+					cidx1.created(i[1]);
+					cidx2.created(i[1]);
 
 					// ACT
 					r1 = idx1.equal_range(14);
@@ -207,8 +206,8 @@ namespace micro_profiler
 					assert_equivalent(reference1, (range_items< pair<int, string> >(r2)));
 
 					// INIT / ACT
-					idx1.created(i[3]);
-					idx2.created(i[3]);
+					cidx1.created(i[3]);
+					cidx2.created(i[3]);
 
 					// ACT
 					r1 = idx1.equal_range(15);
@@ -226,8 +225,8 @@ namespace micro_profiler
 				test( IndexIsUpdatedOnItemRemoval )
 				{
 					// INIT
-					container1 data;
-					container1::const_iterator i[] = {
+					list< pair<int, string> > data;
+					list< pair<int, string> >::const_iterator i[] = {
 						data.insert(data.end(), make_pair(3, "lorem")),
 						data.insert(data.end(), make_pair(14, "ipsum")),
 						data.insert(data.end(), make_pair(159, "amet")),
@@ -235,10 +234,11 @@ namespace micro_profiler
 						data.insert(data.end(), make_pair(14, "dolor")),
 						data.insert(data.end(), make_pair(11, "ipsum")),
 					};
-					index_base<container1, key_second> idx(data, key_second());
+					index_base<list< pair<int, string> >, key_second> idx(data, key_second());
+					auto &cidx = static_cast<table_component<list< pair<int, string> >::const_iterator> &>(idx);
 
 					// ACT
-					idx.removed(i[3]);
+					cidx.removed(i[3]);
 
 					// ASSERT
 					pair<int, string> reference1[] = {	make_pair(14, "ipsum"), make_pair(11, "ipsum"),	};
@@ -246,10 +246,10 @@ namespace micro_profiler
 					assert_equivalent(reference1, (range_items< pair<int, string> >(idx.equal_range("ipsum"))));
 
 					// ACT
-					idx.removed(i[1]);
-					idx.removed(i[0]);
-					idx.removed(i[1]); // repeated removal is ignored
-					idx.removed(i[0]); // repeated removal is ignored
+					cidx.removed(i[1]);
+					cidx.removed(i[0]);
+					cidx.removed(i[1]); // repeated removal is ignored
+					cidx.removed(i[0]); // repeated removal is ignored
 
 					// ASSERT
 					pair<int, string> reference2[] = {	make_pair(11, "ipsum"),	};
@@ -262,8 +262,8 @@ namespace micro_profiler
 				test( IndexIsUpdatedOnItemsClear )
 				{
 					// INIT
-					container1 data;
-					container1::const_iterator i[] = {
+					list< pair<int, string> > data;
+					list< pair<int, string> >::const_iterator i[] = {
 						data.insert(data.end(), make_pair(3, "lorem")),
 						data.insert(data.end(), make_pair(14, "ipsum")),
 						data.insert(data.end(), make_pair(159, "amet")),
@@ -271,12 +271,14 @@ namespace micro_profiler
 						data.insert(data.end(), make_pair(14, "dolor")),
 						data.insert(data.end(), make_pair(11, "ipsum")),
 					};
-					index_base<container1, key_first> idx1(data, key_first());
-					index_base<container1, key_second> idx2(data, key_second());
+					index_base<list< pair<int, string> >, key_first> idx1(data, key_first());
+					auto &cidx1 = static_cast<table_component<list< pair<int, string> >::const_iterator> &>(idx1);
+					index_base<list< pair<int, string> >, key_second> idx2(data, key_second());
+					auto &cidx2 = static_cast<table_component<list< pair<int, string> >::const_iterator> &>(idx2);
 
 					// ACT
-					idx1.cleared();
-					idx2.cleared();
+					cidx1.cleared();
+					cidx2.cleared();
 
 					// ASSERT
 					assert_is_true(is_empty(idx1.equal_range(3)));
@@ -287,10 +289,10 @@ namespace micro_profiler
 					assert_is_true(is_empty(idx2.equal_range("amet")));
 
 					// ACT / ASSERT (not crashing)
-					idx1.removed(i[0]);
-					idx1.removed(i[1]);
-					idx2.removed(i[0]);
-					idx2.removed(i[1]);
+					cidx1.removed(i[0]);
+					cidx1.removed(i[1]);
+					cidx2.removed(i[0]);
+					cidx2.removed(i[1]);
 				}
 			end_test_suite
 
@@ -358,13 +360,14 @@ namespace micro_profiler
 					container1 data;
 					immutable_unique_index<container1, key_first> idx(data);
 					const auto &cidx = idx;
+					auto &compidx = static_cast<table_component<container1::const_iterator> &>(idx);
 					const auto i1 = data.insert(data.end(), make_pair(3, "lorem"));
 					const auto i2 = data.insert(data.end(), make_pair(14, "ipsum"));
 					const auto i3 = data.insert(data.end(), make_pair(159, "amet"));
 					data.insert(data.end(), make_pair(31, "zzzzz"));
 
 					// ACT
-					idx.created(i3);
+					compidx.created(i3);
 
 					// ASSERT
 					assert_throws(cidx[3], invalid_argument);
@@ -372,8 +375,8 @@ namespace micro_profiler
 					assert_equal("amet", cidx[159].second);
 
 					// ACT
-					idx.created(i1);
-					idx.created(i2);
+					compidx.created(i1);
+					compidx.created(i2);
 
 					// ASSERT
 					assert_equal("lorem", cidx[3].second);

@@ -22,8 +22,10 @@
 
 #include "hash.h"
 #include "table_component.h"
+#include "transform_iterator.h"
 
 #include <common/compiler.h>
+#include <map>
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
@@ -33,24 +35,29 @@ namespace micro_profiler
 {
 	namespace views
 	{
-		template <typename F, typename Arg1T>
-		struct result
+		template <typename T>
+		struct index_iterator_transform
 		{
-			typedef decltype((*static_cast<F *>(nullptr))(*static_cast<Arg1T *>(nullptr))) type_rcv;
-			typedef typename std::remove_reference<type_rcv>::type type_cv;
-			typedef typename std::remove_cv<type_cv>::type type;
+			template <typename I>
+			const T &operator ()(I i) const
+			{	return *i->second;	}
 		};
 
-
-		template <typename U, typename K>
-		class immutable_index_base : public table_component<typename U::const_iterator>
+		template <typename U, typename K, typename IndexT>
+		class index_base : public table_component<typename U::const_iterator>, protected IndexT
 		{
-		public:
+		protected:
 			typedef typename result<K, typename U::value_type>::type key_type;
 			typedef typename U::const_iterator underlying_iterator;
+			typedef typename IndexT::const_iterator index_iterator_t;
+			typedef std::unordered_map< underlying_iterator, index_iterator_t, iterator_hash<underlying_iterator> > removal_index_t;
 
-		public:
-			immutable_index_base(const U &underlying, const K &keyer)
+		protected:
+			index_base(index_base &&other)
+				: IndexT(std::move(static_cast<IndexT &&>(other))), _keyer(std::move(other._keyer))
+			{	}
+
+			index_base(const U &underlying, const K &keyer)
 				: _keyer(keyer)
 			{
 				for (auto i = underlying.begin(); i != underlying.end(); ++i)
@@ -58,62 +65,77 @@ namespace micro_profiler
 			}
 
 			virtual void created(underlying_iterator record) override
-			{	_removal_index.insert(std::make_pair(record, _index.insert(std::make_pair(_keyer(*record), record))));	}
+			{	_removal_index.insert(std::make_pair(record, this->insert(std::make_pair(_keyer(*record), record))));	}
 
 			virtual void removed(underlying_iterator record) override
 			{
 				const auto i = _removal_index.find(record);
 
 				if (i != _removal_index.end())
-					_index.erase(i->second), _removal_index.erase(i);
+					this->erase(i->second), _removal_index.erase(i);
 			}
 
 			virtual void cleared() override
-			{
-				_index.clear();
-				_removal_index.clear();
-			}
-
-		protected:
-			typedef std::unordered_multimap< key_type, underlying_iterator, hash<key_type> > index_t;
-			typedef typename index_t::const_iterator index_iterator_t;
-			typedef std::unordered_map< underlying_iterator, index_iterator_t, iterator_hash<underlying_iterator> > removal_index_t;
-
-		protected:
-			std::pair<index_iterator_t, index_iterator_t> equal_range(const key_type &key) const
-			{	return _index.equal_range(key);	}
+			{	this->clear(), _removal_index.clear();	}
 
 		protected:
 			const K _keyer;
 
 		private:
-			immutable_index_base(const immutable_index_base &other);
-			void operator =(const immutable_index_base &rhs);
+			index_base(const index_base &other);
+			void operator =(index_base &&rhs);
 
 		private:
-			index_t _index;
 			removal_index_t _removal_index;
 		};
 
 
 		template <typename U, typename K>
-		class immutable_unique_index : public immutable_index_base<U, K>
+		class immutable_unique_index : public index_base< U, K, std::unordered_multimap<
+			typename result<K, typename U::value_type>::type,
+			typename U::const_iterator,
+			hash<typename result<K, typename U::value_type>::type> > >
 		{
-			typedef immutable_index_base<U, K> base_t;
+		public:
+			typedef typename result<K, typename U::value_type>::type key_type;
 
 		public:
-			using typename base_t::key_type;
+			immutable_unique_index(U &underlying, const K &keyer = K())
+				: base_t(underlying, keyer), _underlying(underlying)
+			{	}
 
-		public:
-			explicit immutable_unique_index(U &underlying, const K &keyer = K());
+			const typename U::value_type *find(const key_type &key) const
+			{
+				const auto r = base_t::equal_range(key);
+				return r.first != r.second ? &*r.first->second : nullptr;
+			}
 
-			const typename U::value_type *find(const key_type &key) const;
+			const typename U::value_type &operator [](const key_type &key) const
+			{
+				if (auto r = find(key))
+					return *r;
+				throw std::invalid_argument("key not found");
+			}
 
-			const typename U::value_type &operator [](const key_type &key) const;
-			typename U::transacted_record operator [](const key_type &key);
+			typename U::transacted_record operator [](const key_type &key)
+			{
+				const auto r = base_t::equal_range(key);
+
+				return r.first != r.second ? _underlying.modify(r.first->second) : create_record(key);
+			}
 
 		private:
-			typename U::transacted_record create_record(const key_type &key);
+			typedef typename U::const_iterator underlying_iterator;
+			typedef index_base< U, K, std::unordered_multimap< key_type, underlying_iterator, hash<key_type> > > base_t;
+
+		private:
+			FORCE_NOINLINE typename U::transacted_record create_record(const key_type &key)
+			{
+				auto tr = _underlying.create();
+
+				this->_keyer(*this, *tr, key);
+				return tr;
+			}
 
 		private:
 			U &_underlying;
@@ -121,105 +143,61 @@ namespace micro_profiler
 
 
 		template <typename U, typename K>
-		class immutable_index : public immutable_index_base<U, K>
+		class immutable_index : public index_base< U, K, std::unordered_multimap<
+			typename result<K, typename U::value_type>::type,
+			typename U::const_iterator,
+			hash<typename result<K, typename U::value_type>::type> > >
 		{
-			typedef immutable_index_base<U, K> base_t;
-
 		public:
-			class const_iterator;
-			using typename base_t::key_type;
-			typedef std::pair<const_iterator, const_iterator> range_type;
+			typedef typename result<K, typename U::value_type>::type key_type;
+			typedef typename U::const_iterator underlying_iterator;
+			typedef index_base< U, K, std::unordered_multimap< key_type, underlying_iterator, hash<key_type> > > base_t;
+
 			typedef typename U::value_type value_type;
-			typedef typename U::const_reference const_reference;
+			typedef transform_iterator<typename base_t::index_iterator_t, index_iterator_transform<value_type> >
+				const_iterator;
 
 		public:
-			explicit immutable_index(const U &underlying, const K &keyer = K());
-
-			range_type equal_range(const key_type &key) const;
-		};
-
-		template <typename U, typename K>
-		class immutable_index<U, K>::const_iterator : public base_t::index_t::const_iterator
-		{
-			typedef typename base_t::index_t index_t;
-			typedef typename index_t::const_iterator base_iterator_t;
-
-		public:
-			typedef const typename U::value_type &const_reference;
-			typedef const typename U::value_type *pointer;
-			typedef const_reference reference;
-
-		public:
-			const_iterator()
+			explicit immutable_index(const U &underlying, const K &keyer = K())
+				: base_t(underlying, keyer)
 			{	}
 
-			const_iterator(base_iterator_t from)
-				: base_iterator_t(from)
-			{	}
-
-			const_reference operator *() const
-			{	return *static_cast<const base_iterator_t &>(*this)->second;	}
-
-			pointer operator ->() const
-			{	return &*static_cast<const base_iterator_t &>(*this)->second;	}
-
-			typename U::const_iterator underlying() const
-			{	return static_cast<const base_iterator_t &>(*this)->second;	}
-
-			const_iterator &operator ++()
-			{	return ++static_cast<base_iterator_t &>(*this), *this;	}
-
-			const_iterator operator ++(int)
-			{	return const_iterator(static_cast<base_iterator_t &>(*this)++);	}
+			std::pair<const_iterator, const_iterator> equal_range(const key_type &key) const
+			{	return base_t::equal_range(key);	}
 		};
 
 
-
 		template <typename U, typename K>
-		inline immutable_unique_index<U, K>::immutable_unique_index(U &underlying, const K &keyer)
-			: immutable_index_base<U, K>(underlying, keyer), _underlying(underlying)
-		{	}
-
-		template <typename U, typename K>
-		inline const typename U::value_type *immutable_unique_index<U, K>::find(const key_type &key) const
+		class ordered_index : public index_base< U, K, std::multimap<
+			typename result<K, typename U::value_type>::type,
+			typename U::const_iterator> >
 		{
-			const auto r = base_t::equal_range(key);
-			return r.first != r.second ? &*r.first->second : nullptr;
-		}
+		public:
+			typedef typename result<K, typename U::value_type>::type key_type;
+			typedef typename U::const_iterator underlying_iterator;
+			typedef index_base< U, K, std::multimap<key_type, underlying_iterator> > base_t;
 
-		template <typename U, typename K>
-		inline const typename U::value_type &immutable_unique_index<U, K>::operator [](const key_type &key) const
-		{
-			if (auto r = find(key))
-				return *r;
-			throw std::invalid_argument("key not found");
-		}
+			typedef typename U::value_type value_type;
+			typedef transform_iterator<typename base_t::index_iterator_t, index_iterator_transform<value_type> >
+				const_iterator;
 
-		template <typename U, typename K>
-		inline typename U::transacted_record immutable_unique_index<U, K>::operator [](const key_type &key)
-		{
-			const auto r = base_t::equal_range(key);
+		public:
+			ordered_index(ordered_index &&other)
+				: base_t(std::move(other))
+			{	}
 
-			return r.first != r.second ? _underlying.modify(r.first->second) : create_record(key);
-		}
+			explicit ordered_index(const U &underlying, const K &keyer = K())
+				: base_t(underlying, keyer)
+			{	}
 
-		template <typename U, typename K>
-		FORCE_NOINLINE inline typename U::transacted_record immutable_unique_index<U, K>::create_record(const key_type &key)
-		{
-			auto tr = _underlying.create();
+			const_iterator upper_bound(const key_type &key) const
+			{	return base_t::upper_bound(key);	}
 
-			this->_keyer(*this, *tr, key);
-			return tr;
-		}
+			const_iterator begin() const
+			{	return base_t::begin();	}
 
-
-		template <typename U, typename K>
-		inline immutable_index<U, K>::immutable_index(const U &underlying, const K &keyer)
-			: immutable_index_base<U, K>(underlying, keyer)
-		{	}
-
-		template <typename U, typename K>
-		inline typename immutable_index<U, K>::range_type immutable_index<U, K>::equal_range(const key_type &key) const
-		{	return base_t::equal_range(key);	}
+			const_iterator end() const
+			{	return base_t::end();	}
+		};
 	}
 }

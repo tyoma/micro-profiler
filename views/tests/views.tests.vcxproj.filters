@@ -11,6 +11,7 @@
     <ClCompile Include="IntegratedIndexTests.cpp" />
     <ClCompile Include="AggregationTests.cpp" />
     <ClCompile Include="JoiningTests.cpp" />
+    <ClCompile Include="OrderedIndexTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -51,6 +52,12 @@
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\hash.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\transform_iterator.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\type_traits.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
   </ItemGroup>

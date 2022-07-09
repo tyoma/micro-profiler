@@ -1,7 +1,8 @@
 #include <views/flatten.h>
 
+#include "helpers.h"
+
 #include <map>
-#include <test-helpers/helpers.h>
 #include <vector>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -14,8 +15,6 @@ namespace micro_profiler
 	{
 		namespace tests
 		{
-			using namespace micro_profiler::tests;
-
 			namespace
 			{
 				struct X
@@ -136,13 +135,11 @@ namespace micro_profiler
 				{
 					// INIT
 					hierarchy1_t h;
-					string data1[] = {	"one",	}, data2[] = {	"One", "Two",	},
-						data3[] = {	"foo", "bar", "baz",	};
 
 					h[1].group_name = "x";
-					h[1].inner = mkvector(data1);
+					h[1].inner = plural + string("one");
 					h[3].group_name = "z";
-					h[3].inner = mkvector(data2);
+					h[3].inner = plural + string("One") + string("Two");
 
 					// INIT / ACT
 					flatten<hierarchy1_t, access_x> v(h);
@@ -157,7 +154,7 @@ namespace micro_profiler
 
 					// INIT
 					h[2].group_name = "y";
-					h[2].inner = mkvector(data3);
+					h[2].inner = plural + string("foo") + string("bar") + string("baz");
 
 					// ACT / ASSERT
 					x_compound reference2[] = {
@@ -174,16 +171,14 @@ namespace micro_profiler
 				{
 					// INIT
 					hierarchy1_t h;
-					string data1[] = {	"one",	}, data2[] = {	"One", "Two",	},
-						data3[] = {	"foo", "bar", "baz",	};
 
 					h[10].group_name = "x";
-					h[10].inner = mkvector(data1);
+					h[10].inner = plural + string("one");
 					h[20].group_name = "y";
-					h[20].inner = mkvector(data3);
+					h[20].inner = plural + string("foo") + string("bar") + string("baz");
 					h[21];
 					h[30].group_name = "z";
-					h[30].inner = mkvector(data2);
+					h[30].inner = plural + string("One") + string("Two");
 
 					// INIT / ACT
 					flatten<hierarchy1_t, access_x> v(h);
@@ -240,18 +235,14 @@ namespace micro_profiler
 				test( EnumerateElementsWithStatefulTransform )
 				{
 					// INIT / ACT
-					int l1_data[] = {	314, 15, 92,	};
-					auto l1 = mkvector(l1_data);
-					int data314[] = {	1, 2, 3, 4,	};
-					int data15[] = {	10, 11, 12,	};
-					int data92[] = {	100, 101, 102, 103,	};
+					auto l1 = plural + 314 + 15 + 92;
 					map< int, vector<int> > source;
 					xform_external xform = {	source	};
 					flatten<vector<int>, xform_external> f(l1, move(xform));
 
-					source[l1[0]] = mkvector(data314);
-					source[l1[1]] = mkvector(data15);
-					source[l1[2]] = mkvector(data92);
+					source[l1[0]] = plural + 1 + 2 + 3 + 4;
+					source[l1[1]] = plural + 10 + 11 + 12;
+					source[l1[2]] = plural + 100 + 101 + 102 + 103;
 
 					// ACT / ASSERT
 					int reference1[] = {	1, 2, 3, 4, 10, 11, 12, 100, 101, 102, 103,	};

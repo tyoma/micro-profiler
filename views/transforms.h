@@ -119,7 +119,7 @@ namespace micro_profiler
 				{
 					auto r = joined.create();
 
-					*r = composer(i, j.first.underlying());
+					*r = composer(i, j.first.underlying()->second);
 					r.commit();
 				}
 			};
@@ -127,11 +127,11 @@ namespace micro_profiler
 			connections.push_back(side.created += on_create);
 			connections.push_back(side.modified += [&joined, hkeyer, &hindex] (typename SideTableT::const_iterator i) {
 				for (auto j = hindex.equal_range(hkeyer(i)); j.first != j.second; ++j.first)
-					joined.modify(j.first.underlying()).commit();
+					joined.modify(j.first.underlying()->second).commit();
 			});
 			connections.push_back(side.removed += [&joined, hkeyer, &hindex] (typename SideTableT::const_iterator i) {
 				for (auto j = hindex.equal_range(hkeyer(i)); j.first != j.second; )
-					joined.modify(j.first++.underlying()).remove();
+					joined.modify(j.first++.underlying()->second).remove();
 			});
 			connections.push_back(side.cleared += [&joined] {	joined.clear();	});
 			connections.push_back(side.invalidate += [&joined] {	joined.invalidate();	});

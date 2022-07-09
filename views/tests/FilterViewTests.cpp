@@ -1,7 +1,9 @@
 #include <views/filter.h>
 
+#include "helpers.h"
+
 #include <list>
-#include <test-helpers/helpers.h>
+#include <memory>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -13,8 +15,6 @@ namespace micro_profiler
 	{
 		namespace tests
 		{
-			using namespace micro_profiler::tests;
-
 			begin_test_suite( FilterViewTests )
 				test( UnfilteredViewReturnsAllTheElements )
 				{

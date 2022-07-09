@@ -49,6 +49,7 @@
     <ClCompile Include="ImmutableIndexTests.cpp" />
     <ClCompile Include="IntegratedIndexTests.cpp" />
     <ClCompile Include="JoiningTests.cpp" />
+    <ClCompile Include="OrderedIndexTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="TableSerializationTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
@@ -65,6 +66,8 @@
     <ClInclude Include="..\index.h" />
     <ClInclude Include="..\ordered.h" />
     <ClInclude Include="..\table_component.h" />
+    <ClInclude Include="..\transform_iterator.h" />
+    <ClInclude Include="..\type_traits.h" />
     <ClInclude Include="comparisons.h" />
     <ClInclude Include="helpers.h" />
   </ItemGroup>

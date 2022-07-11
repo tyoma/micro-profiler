@@ -45,21 +45,14 @@ namespace micro_profiler
 
 	namespace
 	{
-		profiling_session load(const string &path)
+		shared_ptr<profiling_session> load(const string &path)
 		{
 			read_file_stream s(path);
 			strmd::deserializer<read_file_stream, packer> dser(s);
-			profiling_session session = {
-				{},
-				make_shared<tables::statistics>(),
-				make_shared<tables::module_mappings>(),
-				make_shared<tables::modules>(),
-				make_shared<tables::patches>(),
-				make_shared<tables::threads>(),
-			};
-			auto &rmodules = *session.modules;
+			auto session = make_shared<profiling_session>();
+			auto &rmodules = session->modules;
 
-			dser(session);
+			dser(*session);
 			rmodules.request_presence = [&rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
 				const auto i = rmodules.find(id);
 
@@ -73,19 +66,19 @@ namespace micro_profiler
 	class simple_ui : public wpl::stack
 	{
 	public:
-		simple_ui(wpl::factory &factory, const profiling_session &session)
+		simple_ui(wpl::factory &factory, shared_ptr<profiling_session> session)
 			: wpl::stack(false, factory.context.cursor_manager_),
 				_main_view(factory.create_control<wpl::listview>("listview")),
 				_derived_view(factory.create_control<wpl::listview>("listview")),
 				_cm_main(new headers_model(c_statistics_columns, 3, false)),
 				_cm_derived(new headers_model(c_caller_statistics_columns, 3, false))
 		{
-			auto rep = representation<true, threads_filtered>::create(session.statistics, 1);
+			auto rep = representation<true, threads_filtered>::create(statistics(session), 1);
 
-			auto resolver = make_shared<symbol_resolver>(session.modules, session.module_mappings);
-			auto main_ctx = create_context(rep.main, 1.0 / session.process_info.ticks_per_second, resolver, session.threads, false);
+			auto resolver = make_shared<symbol_resolver>(modules(session), mappings(session));
+			auto main_ctx = create_context(rep.main, 1.0 / session->process_info.ticks_per_second, resolver, threads(session), false);
 			auto main_model = make_table<table_model>(rep.main, main_ctx, c_statistics_columns);
-			auto derived_ctx = create_context(rep.callers, 1.0 / session.process_info.ticks_per_second, resolver, session.threads, false);
+			auto derived_ctx = create_context(rep.callers, 1.0 / session->process_info.ticks_per_second, resolver, threads(session), false);
 			auto derived_model = make_table<table_model>(rep.callers, derived_ctx, c_caller_statistics_columns);
 
 			set_spacing(5);

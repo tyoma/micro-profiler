@@ -43,16 +43,14 @@ namespace micro_profiler
 	frontend::frontend(ipc::channel &outbound, const string &cache_directory,
 			scheduler::queue &worker, scheduler::queue &apartment)
 		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment),
-			_statistics(make_shared<tables::statistics>()), _modules(make_shared<tables::modules>()),
-			_mappings(make_shared<tables::module_mappings>()), _patches(make_shared<tables::patches>()),
-			_threads(make_shared<tables::threads>()), _initialized(false),
+			_db(make_shared<profiling_session>()), _initialized(false),
 			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
-		_statistics->request_update = [this] {
+		_db->statistics.request_update = [this] {
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
 		};
 
-		_modules->request_presence = [this] (shared_ptr<void> &request, unsigned int persistent_id,
+		_db->modules.request_presence = [this] (shared_ptr<void> &request, unsigned int persistent_id,
 			const tables::modules::metadata_ready_cb &ready) {
 
 			request_metadata(request, persistent_id, ready);
@@ -66,22 +64,13 @@ namespace micro_profiler
 		subscribe(*new_request_handle(), init, [this] (ipc::deserializer &d) {
 			if (!_initialized)
 			{
-				d(_process_info);
+				d(_db->process_info);
 
-				profiling_session session = {
-					_process_info,
-					_statistics,
-					_mappings,
-					_modules,
-					_patches,
-					_threads,
-				};
-
-				initialized(session);
-				_statistics->request_update();
+				initialized(_db);
+				_db->statistics.request_update();
 				_initialized = true;
 				LOG(PREAMBLE "initialized...")
-					% A(this) % A(_process_info.executable) % A(_process_info.ticks_per_second);
+					% A(this) % A(_db->process_info.executable) % A(_db->process_info.ticks_per_second);
 			}
 			else
 			{
@@ -98,10 +87,10 @@ namespace micro_profiler
 
 	frontend::~frontend()
 	{
-		_statistics->request_update = detached_frontend_stub2;
-		_modules->request_presence = detached_frontend_stub;
-		_patches->apply = detached_frontend_stub;
-		_patches->revert = detached_frontend_stub;
+		_db->statistics.request_update = detached_frontend_stub2;
+		_db->modules.request_presence = detached_frontend_stub;
+		_db->patches.apply = detached_frontend_stub;
+		_db->patches.revert = detached_frontend_stub;
 
 		LOG(PREAMBLE "destroyed...") % A(this);
 	}
@@ -119,18 +108,18 @@ namespace micro_profiler
 			return;
 
 		auto modules_callback = [this] (ipc::deserializer &d) {
-			d(views::unique_index(*_mappings, keyer::external_id()));
-			for (auto i = _mappings->begin(); i != _mappings->end(); ++i)
+			d(views::unique_index(_db->module_mappings, keyer::external_id()));
+			for (auto i = _db->module_mappings.begin(); i != _db->module_mappings.end(); ++i)
 			{
 				const auto m = _symbol_cache_paths.find(i->persistent_id);
 
 				if (m == _symbol_cache_paths.end())
 					_symbol_cache_paths[i->persistent_id] = construct_cache_path(*i);
 			}
-			_mappings->invalidate();
+			_db->module_mappings.invalidate();
 		};
 		auto update_callback = [this, &request_, on_update] (ipc::deserializer &d) {
-			d(*_statistics, _serialization_context);
+			d(_db->statistics, _serialization_context);
 			update_threads(_serialization_context.threads);
 			on_update(request_);
 		};
@@ -145,7 +134,7 @@ namespace micro_profiler
 	void frontend::update_threads(vector<unsigned int> &thread_ids)
 	{
 		auto req = new_request_handle();
-		auto &idx = views::unique_index(*_threads, keyer::external_id());
+		auto &idx = views::unique_index(_db->threads, keyer::external_id());
 
 		for (auto i = thread_ids.begin(); i != thread_ids.end(); i++)
 		{
@@ -155,7 +144,7 @@ namespace micro_profiler
 			rec.commit();
 		}
 		thread_ids.clear();
-		for (auto i = _threads->begin(); i != _threads->end(); ++i)
+		for (auto i = _db->threads.begin(); i != _db->threads.end(); ++i)
 		{
 			if (!i->complete)
 				thread_ids.push_back(i->id);
@@ -176,9 +165,9 @@ namespace micro_profiler
 			const auto remaining = make_shared<unsigned int>(0);
 			const auto enable = make_shared<bool>(false);
 			containers::unordered_map<unsigned int, int> requested;
-			auto &idx = views::ordered_index_(*_mappings, keyer::base());
+			auto &idx = views::ordered_index_(_db->module_mappings, keyer::base());
 
-			for (tables::statistics::const_iterator i = _statistics->begin(); i != _statistics->end(); ++i)
+			for (tables::statistics::const_iterator i = _db->statistics.begin(); i != _db->statistics.end(); ++i)
 			{
 				const auto m = find_range(idx, (*i).address);
 

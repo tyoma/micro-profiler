@@ -22,7 +22,6 @@
 
 #include "profiling_session.h"
 #include "serialization_context.h"
-#include "tables.h"
 
 #include <common/noncopyable.h>
 #include <common/protocol.h>
@@ -37,7 +36,7 @@ namespace micro_profiler
 	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
-		typedef profiling_session session_type;
+		typedef std::shared_ptr<profiling_session> session_type;
 
 	public:
 		frontend(ipc::channel &outbound, const std::string &cache_directory,
@@ -82,13 +81,8 @@ namespace micro_profiler
 	private:
 		const std::string _cache_directory;
 		scheduler::queue &_worker_queue, &_apartment_queue;
-		initialization_data _process_info;
-		const std::shared_ptr<tables::statistics> _statistics;
-		const std::shared_ptr<tables::modules> _modules;
-		const std::shared_ptr<tables::module_mappings> _mappings;
+		const std::shared_ptr<profiling_session> _db;
 		symbol_cache_paths_t _symbol_cache_paths;
-		const std::shared_ptr<tables::patches> _patches;
-		const std::shared_ptr<tables::threads> _threads;
 		scontext::additive _serialization_context;
 		bool _initialized;
 

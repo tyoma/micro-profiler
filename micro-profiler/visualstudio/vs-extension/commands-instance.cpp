@@ -29,12 +29,12 @@ namespace micro_profiler
 	namespace integration
 	{
 		void init_instance_menu(command_target &target, list< shared_ptr<void> > &running_objects,
-			const wpl::vs::factory &factory, const profiling_session &session, tables_ui &ui,
+			const wpl::vs::factory &factory, shared_ptr<profiling_session> session, tables_ui &ui,
 			shared_ptr<scheduler::queue> queue)
 		{
-			const auto statistics = session.statistics;
-			const auto injected = !!session.process_info.injected;
-			const auto executable = session.process_info.executable;
+			const auto statistics = micro_profiler::statistics(session);
+			const auto injected = !!session->process_info.injected;
+			const auto executable = session->process_info.executable;
 			const auto poller = make_shared<statistics_poll>(statistics, *queue);
 
 			poller->enable(true);
@@ -69,7 +69,7 @@ namespace micro_profiler
 				if (s.get())
 				{
 					strmd::serializer<write_file_stream, packer> ser(*s);
-					ser(session);
+					ser(*session);
 				}
 			}, false, [] (unsigned, unsigned &state) {
 				return state = command_target::visible | command_target::supported | command_target::enabled, true;
@@ -106,11 +106,11 @@ namespace micro_profiler
 			});
 
 			target.add_command(cmdidProfileScope, [&running_objects, &factory, session] (unsigned) {
-				const auto patch_ui = make_shared<image_patch_ui>(factory, make_shared<image_patch_model>(session.patches,
-					session.modules, session.module_mappings), session.patches);
+				const auto patch_ui = make_shared<image_patch_ui>(factory, make_shared<image_patch_model>(patches(session),
+					modules(session), mappings(session)), patches(session));
 
 				ui_helpers::show_dialog(running_objects, factory, patch_ui, 800, 530,
-					"Select Profiled Scope - " + (string)*session.process_info.executable,
+					"Select Profiled Scope - " + (string)*session->process_info.executable,
 					[] (vector<wpl::slot_connection> &, function<void()>) {	});
 			}, false, [injected] (unsigned, unsigned &state) {
 				return state = injected ? command_target::visible | command_target::supported | command_target::enabled : 0, true;

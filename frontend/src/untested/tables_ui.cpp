@@ -61,10 +61,10 @@ namespace micro_profiler
 	}
 
 
-	tables_ui::tables_ui(const factory &factory_, const profiling_session &session, hive &configuration)
+	tables_ui::tables_ui(const factory &factory_, shared_ptr<profiling_session> session, hive &configuration)
 		: stack(false, factory_.context.cursor_manager_),
-			_session(new profiling_session(session)),
-			_resolver(make_shared<symbol_resolver>(session.modules, session.module_mappings)),
+			_session(session),
+			_resolver(make_shared<symbol_resolver>(modules(session), mappings(session))),
 			_initialized(false),
 			_hierarchical(true),
 			_thread_id(threads_model::all),
@@ -82,7 +82,7 @@ namespace micro_profiler
 			_cm_parents(new headers_model(c_caller_statistics_columns, 3, false)),
 			_cm_children(new headers_model(c_callee_statistics_columns, 3, false))
 	{
-		const auto tmodel = make_shared<threads_model>(session.threads);
+		const auto tmodel = make_shared<threads_model>(threads(session));
 
 		_cm_parents->update(*configuration.create("ParentsColumns"));
 		_cm_main->update(*configuration.create("MainColumns"));
@@ -143,21 +143,23 @@ namespace micro_profiler
 
 	void tables_ui::set_mode(bool hierarchical, id_t thread_id)
 	{
+		auto statistics_ = statistics(_session);
+
 		if (_initialized && hierarchical == _hierarchical && thread_id == _thread_id)
 			return;
 		if (hierarchical)
 			switch (thread_id)
 			{
-			case threads_model::all: attach(representation<true, threads_all>::create(_session->statistics)); break;
-			case threads_model::cumulative: attach(representation<true, threads_cumulative>::create(_session->statistics)); break;
-			default: attach(representation<true, threads_filtered>::create(_session->statistics, thread_id)); break;
+			case threads_model::all: attach(representation<true, threads_all>::create(statistics_)); break;
+			case threads_model::cumulative: attach(representation<true, threads_cumulative>::create(statistics_)); break;
+			default: attach(representation<true, threads_filtered>::create(statistics_, thread_id)); break;
 			}
 		else
 			switch (thread_id)
 			{
-			case threads_model::all: attach(representation<false, threads_all>::create(_session->statistics)); break;
-			case threads_model::cumulative: attach(representation<false, threads_cumulative>::create(_session->statistics)); break;
-			default: attach(representation<false, threads_filtered>::create(_session->statistics, thread_id)); break;
+			case threads_model::all: attach(representation<false, threads_all>::create(statistics_)); break;
+			case threads_model::cumulative: attach(representation<false, threads_cumulative>::create(statistics_)); break;
+			default: attach(representation<false, threads_filtered>::create(statistics_, thread_id)); break;
 			}
 		_initialized = true;
 		_hierarchical = hierarchical;
@@ -188,9 +190,9 @@ namespace micro_profiler
 
 		_connections.clear();
 
-		auto context_callers = create_context(rep.callers, 1.0 / _session->process_info.ticks_per_second, _resolver, _session->threads, false);
+		auto context_callers = create_context(rep.callers, 1.0 / _session->process_info.ticks_per_second, _resolver, threads(_session), false);
 		auto callers_model = make_table<table_model>(rep.callers, context_callers, c_caller_statistics_columns);
-		auto context_main = create_context(rep.main, 1.0 / _session->process_info.ticks_per_second, _resolver, _session->threads, false);
+		auto context_main = create_context(rep.main, 1.0 / _session->process_info.ticks_per_second, _resolver, threads(_session), false);
 		auto main = rep.main;
 		auto main_model = make_table<table_model>(main, context_main, c_statistics_columns);
 		auto selection_main_ = rep.selection_main;
@@ -204,7 +206,7 @@ namespace micro_profiler
 					if (_resolver->symbol_fileline_by_va(static_cast<const call_statistics &>(*item).address, fileline))
 						open_source(fileline.first, fileline.second);
 		};
-		auto context_callees = create_context(rep.callees, 1.0 / _session->process_info.ticks_per_second, _resolver, _session->threads, false);
+		auto context_callees = create_context(rep.callees, 1.0 / _session->process_info.ticks_per_second, _resolver, threads(_session), false);
 		auto callees_model = make_table<table_model>(rep.callees, context_callees, c_callee_statistics_columns);
 		auto selection_callees = create_selection(rep.selection_callees, get_ordered(callees_model));
 

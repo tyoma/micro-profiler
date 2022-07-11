@@ -43,9 +43,9 @@ namespace micro_profiler
 		const tables::modules::metadata_ready_cb &ready)
 	{
 		const auto init = mx_metadata_requests_t::create(request_, _mx_metadata_requests, persistent_id, ready);
-		const auto m = _modules->find(persistent_id);
+		const auto m = _db->modules.find(persistent_id);
 
-		if (m != _modules->end())
+		if (m != _db->modules.end())
 		{
 			ready(m->second);
 		}
@@ -84,7 +84,7 @@ namespace micro_profiler
 			d(m);
 		}, [this, persistent_id, ready, &rreq, cached_invoke] (shared_ptr<module_info_metadata> m) {
 			if (m)
-				ready((*_modules)[persistent_id] = *m);
+				ready((_db->modules)[persistent_id] = *m);
 			else
 				request_metadata_nw(rreq, persistent_id, cached_invoke);
 		});
@@ -97,7 +97,7 @@ namespace micro_profiler
 		request(request_, request_module_metadata, persistent_id, response_module_metadata,
 			[this, persistent_id, ready] (ipc::deserializer &d) {
 
-			auto &m = (*_modules)[persistent_id];
+			auto &m = (_db->modules)[persistent_id];
 
 			d(m);
 

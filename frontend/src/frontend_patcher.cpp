@@ -47,10 +47,10 @@ namespace micro_profiler
 
 	void frontend::init_patcher()
 	{
-		_patches->apply = [this] (unsigned int persistent_id, range<const unsigned int, size_t> rva) {
+		_db->patches.apply = [this] (unsigned int persistent_id, range<const unsigned int, size_t> rva) {
 			apply(persistent_id, rva);
 		};
-		_patches->revert = [this] (unsigned int persistent_id, range<const unsigned int, size_t> rva) {
+		_db->patches.revert = [this] (unsigned int persistent_id, range<const unsigned int, size_t> rva) {
 			revert(persistent_id, rva);
 		};
 	}
@@ -58,7 +58,7 @@ namespace micro_profiler
 	void frontend::apply(unsigned int persistent_id, range<const unsigned int, size_t> rva)
 	{
 		auto req = new_request_handle();
-		auto &image_patches = (*_patches)[persistent_id];
+		auto &image_patches = (_db->patches)[persistent_id];
 		auto &targets = _patch_request_payload.functions_rva;
 
 		_patch_request_payload.image_persistent_id = persistent_id;
@@ -70,11 +70,11 @@ namespace micro_profiler
 		});
 		if (targets.empty())
 			return;
-		_patches->invalidate();
+		_db->patches.invalidate();
 		request(*req, request_apply_patches, _patch_request_payload, response_patched,
 			[this, persistent_id, req] (ipc::deserializer &d) {
 
-			auto &image_patches = (*_patches)[persistent_id];
+			auto &image_patches = (_db->patches)[persistent_id];
 
 			d(_patched_buffer);
 			for (auto i = _patched_buffer.begin(); i != _patched_buffer.end(); ++i)
@@ -84,7 +84,7 @@ namespace micro_profiler
 				patch.id = i->second.id;
 				set_complete(patch, i->second.result, true);
 			}
-			_patches->invalidate();
+			_db->patches.invalidate();
 			_requests.erase(req);
 		});
 	}
@@ -92,7 +92,7 @@ namespace micro_profiler
 	void frontend::revert(unsigned int persistent_id, range<const unsigned int, size_t> rva)
 	{
 		auto req = new_request_handle();
-		auto &image_patches = (*_patches)[persistent_id];
+		auto &image_patches = (_db->patches)[persistent_id];
 		auto &targets = _patch_request_payload.functions_rva;
 
 		_patch_request_payload.image_persistent_id = persistent_id;
@@ -106,16 +106,16 @@ namespace micro_profiler
 		});
 		if (targets.empty())
 			return;
-		_patches->invalidate();
+		_db->patches.invalidate();
 		request(*req, request_revert_patches, _patch_request_payload, response_reverted,
 			[this, persistent_id, req] (ipc::deserializer &d) {
 
-			auto &image_patches = (*_patches)[persistent_id];
+			auto &image_patches = (_db->patches)[persistent_id];
 
 			d(_reverted_buffer);
 			for (auto i = _reverted_buffer.begin(); i != _reverted_buffer.end(); ++i)
 				set_complete(image_patches[i->first /*rva*/], i->second, false);
-			_patches->invalidate();
+			_db->patches.invalidate();
 			_requests.erase(req);
 		});
 	}

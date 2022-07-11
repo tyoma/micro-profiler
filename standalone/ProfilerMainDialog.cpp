@@ -64,12 +64,12 @@ namespace micro_profiler
 	}
 
 	standalone_ui::standalone_ui(shared_ptr<hive> configuration, const factory &factory_,
-			const profiling_session &session)
+			shared_ptr<profiling_session> session)
 		: _configuration(configuration)
 	{
 		shared_ptr<button> btn;
 		shared_ptr<link> lnk;
-		const auto statistics = session.statistics;
+		const auto statistics = micro_profiler::statistics(session);
 
 		const auto root = make_shared<overlay>();
 			root->add(factory_.create_control<control>("background"));
@@ -120,7 +120,7 @@ namespace micro_profiler
 		_form->set_root(root);
 		if (load(*_configuration, "Placement", l))
 			_form->set_location(l);
-		_form->set_caption("MicroProfiler - " + session.process_info.executable);
+		_form->set_caption("MicroProfiler - " + session->process_info.executable);
 		_form->set_visible(true);
 
 		_connections.push_back(_form->close += [this] {

@@ -90,7 +90,7 @@ namespace micro_profiler
 
 		begin_test_suite( FrontendMetadataTests )
 			mocks::queue worker, apartment;
-			profiling_session context;
+			shared_ptr<profiling_session> context;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<void> req[10];
 			temporary_directory dir;
@@ -101,7 +101,7 @@ namespace micro_profiler
 				auto f = make_shared<frontend>(e2->server_session, dir.path(), worker, apartment);
 
 				e2->outbound = f.get();
-				f->initialized = [this] (const profiling_session &ctx) {	context = ctx;	};
+				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
 				return f;
 			}
@@ -126,7 +126,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				context.modules->request_presence(req[0], 11u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[0], 11u, [] (module_info_metadata) {});
 
 				// ASSERT
 				assert_not_null(req[0]);
@@ -147,9 +147,9 @@ namespace micro_profiler
 				assert_equal(plural + 11u, log);
 
 				// ACT
-				context.modules->request_presence(req[1], 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[2], 191u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[3], 13u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[1], 17u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[2], 191u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[3], 13u, [] (module_info_metadata) {});
 				worker.run_till_end();
 				apartment.run_one();
 				req[2].reset();
@@ -165,8 +165,8 @@ namespace micro_profiler
 				log.clear();
 
 				// ACT (request of unknown modules bypasses cache)
-				context.modules->request_presence(req[4], 179u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[5], 119u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[4], 179u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[5], 119u, [] (module_info_metadata) {});
 
 				// ASSERT
 				assert_equal(plural + 179u + 119u, log);
@@ -193,14 +193,14 @@ namespace micro_profiler
 				});
 
 				// ACT
-				context.modules->request_presence(req[0], 11u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[1], 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[2], 19u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[0], 11u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[1], 17u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[2], 19u, [] (module_info_metadata) {});
 
-				context.modules->request_presence(req[3], 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[4], 19u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[5], 17u, [] (module_info_metadata) {});
-				context.modules->request_presence(req[6], 11u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[3], 17u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[4], 19u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[5], 17u, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[6], 11u, [] (module_info_metadata) {});
 
 				// ASSERT
 				assert_equal(3u, worker.tasks.size());
@@ -253,32 +253,32 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("", 1)));
 
 				// ACT
-				context.modules->request_presence(req[0], 1000, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[0], 1000, [] (module_info_metadata) {});
 				worker.run_till_end(), apartment.run_till_end();
 
 				// ASSERT
-				assert_equal(1u, context.modules->size());
+				assert_equal(1u, modules(context)->size());
 
-				const auto i1000 = context.modules->find(1000);
-				assert_not_equal(context.modules->end(), i1000);
+				const auto i1000 = modules(context)->find(1000);
+				assert_not_equal(modules(context)->end(), i1000);
 				assert_equal(1u, i1000->second.symbols.size());
 				assert_equal(1u, i1000->second.source_files.size());
 
 				// ACT
-				context.modules->request_presence(req[1], 17, [] (module_info_metadata) {});
-				context.modules->request_presence(req[2], 99, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[1], 17, [] (module_info_metadata) {});
+				modules(context)->request_presence(req[2], 99, [] (module_info_metadata) {});
 				worker.run_till_end(), apartment.run_till_end();
 
 				// ASSERT
-				assert_equal(3u, context.modules->size());
+				assert_equal(3u, modules(context)->size());
 
-				const auto i17 = context.modules->find(17);
-				assert_not_equal(context.modules->end(), i17);
+				const auto i17 = modules(context)->find(17);
+				assert_not_equal(modules(context)->end(), i17);
 				assert_equal(1u, i17->second.symbols.size());
 				assert_equal(2u, i17->second.source_files.size());
 
-				const auto i99 = context.modules->find(99);
-				assert_not_equal(context.modules->end(), i99);
+				const auto i99 = modules(context)->find(99);
+				assert_not_equal(modules(context)->end(), i99);
 				assert_equal(2u, i99->second.symbols.size());
 				assert_equal(1u, i99->second.source_files.size());
 			}
@@ -306,7 +306,7 @@ namespace micro_profiler
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned) {	assert_is_false(true);	});
 
 				// ACT
-				context.modules->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				write(dir.track_file("foo.dll-00100201.symcache"), create_metadata_info(symbols17, files17));
 				worker.run_one(), apartment.run_one();
 
@@ -315,21 +315,21 @@ namespace micro_profiler
 				assert_equal(0u, apartment.tasks.size());
 				assert_equal(1u, log.size());
 				assert_equal(create_metadata_info(symbols17, files17), *log.back());
-				assert_equal(&(*context.modules)[17], log.back());
+				assert_equal(&(*modules(context))[17], log.back());
 
 				// INIT
 				write(dir.track_file("some_long_name.so-10100201.symcache"), create_metadata_info(symbols99, files99));
 				write(dir.track_file("libc.so-00000001.symcache"), create_metadata_info(symbols1000, files1000));
 
 				// ACT
-				context.modules->request_presence(req[1], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
-				context.modules->request_presence(req[2], 99u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
-				context.modules->request_presence(req[3], 1000u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				modules(context)->request_presence(req[1], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				modules(context)->request_presence(req[2], 99u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				modules(context)->request_presence(req[3], 1000u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				worker.run_till_end(), apartment.run_till_end();
 
 				// ASSERT
 				assert_equal(4u, log.size());
-				assert_equal(&(*context.modules)[17], log[1]);
+				assert_equal(&(*modules(context))[17], log[1]);
 				assert_equal(create_metadata_info(symbols99, files99), *log[2]);
 				assert_equal(create_metadata_info(symbols1000, files1000), *log[3]);
 			}
@@ -355,7 +355,7 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("", 1)));
 
 				// ACT
-				context.modules->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				worker.run_one();
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
 					resp(response_module_metadata, create_metadata_info(symbols17, files17));
@@ -374,7 +374,7 @@ namespace micro_profiler
 				assert_equal(create_metadata_info(symbols17, files17), read<module_info_metadata>(f1));
 
 				// ACT
-				context.modules->request_presence(req[1], 170u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				modules(context)->request_presence(req[1], 170u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				worker.run_one();
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
 					resp(response_module_metadata, create_metadata_info(symbols99, files99));
@@ -402,7 +402,7 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("", 1)));
 
 				// ACT
-				context.modules->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
+				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 
 				// ASSERT
 				assert_equal(1u, log.size());

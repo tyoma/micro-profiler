@@ -83,14 +83,14 @@ namespace micro_profiler
 			init( Init )
 			{
 				auto e = make_shared<emulator_>(queue);
-				profiling_session context;
+				auto context = make_shared<profiling_session>();
 
 				frontend_ = make_shared<frontend>(e->server_session, dir.path(), worker_queue, queue);
 				e->outbound = frontend_.get();
-				frontend_->initialized = [&] (const profiling_session &ctx) {	context = ctx;	};
+				frontend_->initialized = [&] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e, &e->server_session);
 
-				frontend_->initialized = [&] (const profiling_session &context_) {
+				frontend_->initialized = [&] (shared_ptr<profiling_session> context_) {
 					context = context_;
 				};
 				emulator->message(init, [] (ipc::serializer &s) {
@@ -98,7 +98,7 @@ namespace micro_profiler
 					s(idata);
 				});
 
-				patches = context.patches;
+				patches = shared_ptr<tables::patches>(context, &context->patches);
 
 				// ASSERT
 				assert_not_null(patches);
@@ -141,9 +141,9 @@ namespace micro_profiler
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
-					auto image_patches = patches->find(payload.image_persistent_id);
+					auto image_patches = this->patches->find(payload.image_persistent_id);
 
-					assert_not_equal(patches->end(), image_patches);
+					assert_not_equal(this->patches->end(), image_patches);
 
 					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
 					{
@@ -342,7 +342,7 @@ namespace micro_profiler
 				// INIT
 				vector< unordered_map<unsigned, tables::patch> > log;
 				auto conn = patches->invalidate += [&] {
-					log.push_back(patches->find(19)->second);
+					log.push_back(this->patches->find(19)->second);
 				};
 				unsigned rva[] = {	1, 2, 3,	};
 
@@ -439,9 +439,9 @@ namespace micro_profiler
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
-					const auto image_patches = patches->find(payload.image_persistent_id);
+					const auto image_patches = this->patches->find(payload.image_persistent_id);
 
-					assert_not_equal(patches->end(), image_patches);
+					assert_not_equal(this->patches->end(), image_patches);
 					log.push_back(image_patches->second);
 				});
 
@@ -646,7 +646,7 @@ namespace micro_profiler
 				patches->apply(19, mkrange(rva));
 
 				auto conn = patches->invalidate += [&] {
-					log.push_back(patches->find(19)->second);
+					log.push_back(this->patches->find(19)->second);
 				};
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {

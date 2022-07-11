@@ -105,7 +105,7 @@ namespace micro_profiler
 		typedef typename frontend_type::session_type session_type;
 
 		const auto prepare_ui = [this, ui_factory] (instance_container::iterator i, const session_type &session) {
-			i->title = session.get_title();
+			i->title = get_title(session);
 			if (auto ui = ui_factory(session))
 				set_ui(i, ui);
 		};

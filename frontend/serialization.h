@@ -62,7 +62,7 @@ namespace strmd
 
 namespace micro_profiler
 {
-	struct indexed_table_reader : strmd::indexed_associative_container_reader
+	struct indexed_reader : strmd::indexed_associative_container_reader
 	{
 		template <typename ContainerT>
 		void prepare(ContainerT &/*data*/, size_t /*count*/)
@@ -199,7 +199,7 @@ namespace strmd
 	struct type_traits< micro_profiler::views::immutable_unique_index<U, K> >
 	{
 		typedef container_type_tag category;
-		typedef micro_profiler::indexed_table_reader item_reader_type;
+		typedef micro_profiler::indexed_reader item_reader_type;
 	};
 
 	template <typename TableT>

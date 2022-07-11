@@ -47,7 +47,7 @@ namespace micro_profiler
 	class tables_ui : public wpl::stack
 	{
 	public:
-		tables_ui(const wpl::factory &factory_, const profiling_session &session, hive &configuration);
+		tables_ui(const wpl::factory &factory_, std::shared_ptr<profiling_session> session, hive &configuration);
 		~tables_ui();
 
 		void set_hierarchical(bool enable);
@@ -67,7 +67,7 @@ namespace micro_profiler
 		void attach(const representation<callstacks, mode> &rep);
 
 	private:
-		const std::unique_ptr<profiling_session> _session;
+		const std::shared_ptr<profiling_session> _session;
 		const std::shared_ptr<symbol_resolver> _resolver;
 
 		bool _initialized, _hierarchical;

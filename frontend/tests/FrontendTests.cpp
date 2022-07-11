@@ -23,13 +23,6 @@ namespace micro_profiler
 	inline bool operator ==(const initialization_data &lhs, const initialization_data &rhs)
 	{	return lhs.executable == rhs.executable && lhs.ticks_per_second == rhs.ticks_per_second;	}
 
-	inline bool operator ==(const profiling_session &lhs, const profiling_session &rhs)
-	{
-		return lhs.process_info == rhs.process_info && lhs.statistics == rhs.statistics
-			&& lhs.module_mappings == rhs.module_mappings && lhs.modules == rhs.modules
-			&& lhs.patches == rhs.patches && lhs.threads == rhs.threads;
-	}
-
 	namespace tests
 	{
 		namespace
@@ -66,7 +59,7 @@ namespace micro_profiler
 
 		begin_test_suite( FrontendTests )
 			mocks::queue worker, apartment;
-			profiling_session context;
+			shared_ptr<profiling_session> context;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<void> req[10];
 			temporary_directory dir;
@@ -77,7 +70,7 @@ namespace micro_profiler
 				auto f = make_shared<frontend>(e2->server_session, dir.path(), worker, apartment);
 
 				e2->outbound = f.get();
-				f->initialized = [this] (const profiling_session &ctx) {	context = ctx;	};
+				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
 				return f;
 			}
@@ -95,19 +88,19 @@ namespace micro_profiler
 				frontend_.reset();
 
 				// ACT / ASSERT (must not throw)
-				context.modules->request_presence(req[0], 123, [] (module_info_metadata) {});
-				context.patches->apply(123, mkrange(dummy));
-				context.patches->revert(123, mkrange(dummy));
+				context->modules.request_presence(req[0], 123, [] (module_info_metadata) {});
+				context->patches.apply(123, mkrange(dummy));
+				context->patches.revert(123, mkrange(dummy));
 			}
 
 
 			test( ArrivalOfInitMessageInvokesInitializationOnce )
 			{
 				// INIT
-				profiling_session context2;
+				shared_ptr<profiling_session> context2;
 				auto frontend_ = create_frontend();
 
-				frontend_->initialized = [&] (const profiling_session &context_) {
+				frontend_->initialized = [&] (shared_ptr<profiling_session> context_) {
 					context2 = context_;
 				};
 
@@ -115,13 +108,8 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("krnl386.exe", 0xF00000000ull)));
 
 				// ASSERT
-				assert_equal(make_initialization_data("krnl386.exe", 0xF00000000ull), context2.process_info);
-				assert_not_null(context2.statistics);
-				assert_not_null(context2.modules);
-				assert_not_null(context2.module_mappings);
-				assert_not_null(context2.modules);
-				assert_not_null(context2.patches);
-				assert_not_null(context2.threads);
+				assert_not_null(context2);
+				assert_equal(make_initialization_data("krnl386.exe", 0xF00000000ull), context2->process_info);
 
 				// INIT
 				const auto reference = context2;
@@ -134,7 +122,7 @@ namespace micro_profiler
 
 				// INIT
 				frontend_ = create_frontend();
-				frontend_->initialized = [&] (const profiling_session &context_) {
+				frontend_->initialized = [&] (shared_ptr<profiling_session> context_) {
 					context2 = context_;
 				};
 
@@ -142,8 +130,8 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("user.exe", 0x900000000ull)));
 
 				// ASSERT
-				assert_equal(make_initialization_data("user.exe", 0x900000000ull), context2.process_info);
-				assert_not_null(context2.statistics);
+				assert_not_null(context2);
+				assert_equal(make_initialization_data("user.exe", 0x900000000ull), context2->process_info);
 			}
 
 
@@ -198,7 +186,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
 				assert_equivalent(plural + 12u + 12u + 17u, log);
@@ -211,7 +199,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
 				assert_equivalent(plural + 12u + 12u + 17u + 12u + 17u + 135u, log);
@@ -235,12 +223,12 @@ namespace micro_profiler
 
 				// ACT
 				emulator->message(init, format(make_initialization_data("/test", 1)));
-				const auto threads = context.threads;
+				const auto &threads = context->threads;
 
 				// ASSERT
 				assert_equivalent(plural
 					+ make_thread_info(0u, 1717, "thread 1", false)
-					+ make_thread_info(1u, 11717, "thread 2", false), *threads);
+					+ make_thread_info(1u, 11717, "thread 2", false), threads);
 
 				// INIT
 				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
@@ -249,12 +237,12 @@ namespace micro_profiler
 				});
 
 				// ACT
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
 				assert_equivalent(plural
 					+ make_thread_info(0u, 1717, "thread 1", false)
-					+ make_thread_info(1u, 117, "", true), *threads);
+					+ make_thread_info(1u, 117, "", true), threads);
 			}
 
 
@@ -280,7 +268,7 @@ namespace micro_profiler
 				log.clear();
 
 				// ACT
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
 				assert_equal(1u, log.size());
@@ -307,7 +295,7 @@ namespace micro_profiler
 				assert_equal(1, update_requests);
 
 				// ACT
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
 				assert_equal(2, update_requests);
@@ -329,13 +317,13 @@ namespace micro_profiler
 				emulator->message(init, format(make_initialization_data("/test", 1)));
 
 				// ASSERT
-				assert_equal(2u, context.statistics->size());
+				assert_equal(2u, context->statistics.size());
 
 				// ACT
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
-				assert_equal(2u, context.statistics->size());
+				assert_equal(2u, context->statistics.size());
 
 				// INIT
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
@@ -344,10 +332,10 @@ namespace micro_profiler
 				});
 
 				// ACT
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
-				assert_equal(3u, context.statistics->size());
+				assert_equal(3u, context->statistics.size());
 			}
 
 
@@ -366,7 +354,7 @@ namespace micro_profiler
 
 				// ACT
 				frontend_.reset();
-				context.statistics->request_update();
+				context->statistics.request_update();
 
 				// ASSERT
 				assert_equal(1, called);

@@ -60,7 +60,7 @@ namespace micro_profiler
 		extern const GUID c_guidMicroProfilerPkg = guidMicroProfilerPkg;
 
 		void init_instance_menu(wpl::vs::command_target &target, list< shared_ptr<void> > &running_objects,
-			const wpl::vs::factory &factory, const profiling_session &session, tables_ui &ui,
+			const wpl::vs::factory &factory, shared_ptr<profiling_session> session, tables_ui &ui,
 			shared_ptr<scheduler::queue> queue);
 
 		namespace
@@ -73,7 +73,7 @@ namespace micro_profiler
 			class frontend_pane : public frontend_ui, noncopyable
 			{
 			public:
-				frontend_pane(const wpl::vs::factory &factory, const profiling_session &ui_context,
+				frontend_pane(const wpl::vs::factory &factory, shared_ptr<profiling_session> ui_context,
 						shared_ptr<hive> configuration_, shared_ptr<scheduler::queue> queue)
 					: _pane(factory.create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR)),
 						_tables_ui(make_shared<tables_ui>(factory, ui_context, *configuration_)), _configuration(configuration_)
@@ -90,7 +90,7 @@ namespace micro_profiler
 						activated();
 					});
 					init_instance_menu(*_pane, _running_objects, factory, ui_context, *_tables_ui, queue);
-					_pane->set_caption("MicroProfiler - " + (string)*ui_context.process_info.executable);
+					_pane->set_caption("MicroProfiler - " + (string)*ui_context->process_info.executable);
 					_pane->set_root(root);
 					_pane->set_visible(true);
 				}
@@ -157,7 +157,7 @@ namespace micro_profiler
 			register_path(false);
 			_frontend_manager.reset(new frontend_manager([this] (ipc::channel &outbound) {
 				return new frontend(outbound, c_cache_directory, *_worker_queue, *_ui_queue);
-			}, [this] (const profiling_session &session) -> shared_ptr<frontend_ui> {
+			}, [this] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
 				const auto ui = make_shared<frontend_pane>(get_factory(), session, _configuration, _ui_queue);
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));

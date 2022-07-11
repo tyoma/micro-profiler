@@ -59,9 +59,7 @@ namespace micro_profiler
 		begin_test_suite( FrontendStatisticsTests )
 			mocks::queue queue, worker, apartment;
 			shared_ptr<ipc::server_session> emulator;
-			shared_ptr<const tables::statistics> statistics;
-			shared_ptr<const tables::module_mappings> mappings;
-			shared_ptr<const tables::modules> modules;
+			shared_ptr<const profiling_session> session;
 			shared_ptr<void> req[5];
 			temporary_directory dir;
 
@@ -74,10 +72,8 @@ namespace micro_profiler
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();
-				f->initialized = [this] (const profiling_session &ctx) {
-					this->statistics = ctx.statistics;
-					this->mappings = ctx.module_mappings;
-					this->modules = ctx.modules;
+				f->initialized = [this] (shared_ptr<profiling_session> ctx) {
+					session = ctx;
 				};
 				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
 				return f;
@@ -113,7 +109,7 @@ namespace micro_profiler
 					make_call_statistics(5, 2, 0, 0x01A00091u, 31u, 0, 197999, 91, 13002),
 				};
 
-				assert_equal_pred(reference1, *statistics, eq());
+				assert_equal_pred(reference1, session->statistics, eq());
 
 				// INIT
 				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {
@@ -127,7 +123,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				statistics->request_update();
+				session->statistics.request_update();
 
 				// ASSERT
 				call_statistics reference2[] = {
@@ -138,7 +134,7 @@ namespace micro_profiler
 					make_call_statistics(5, 2, 0, 0x01A00091u, 62u, 7, 198099, 182, 13002),
 					make_call_statistics(6, 31, 0, 0x91A00091u, 731u, 0, 17999, 91, 13002),
 				};
-				assert_equal_pred(reference2, *statistics, eq());
+				assert_equal_pred(reference2, session->statistics, eq());
 			}
 
 
@@ -164,7 +160,7 @@ namespace micro_profiler
 				assert_equal(1, update_requests);
 
 				// ACT
-				statistics->request_update();
+				session->statistics.request_update();
 
 				// ASSERT
 				assert_equal(1, update_requests);
@@ -176,7 +172,7 @@ namespace micro_profiler
 				assert_equal(1, update_requests);
 
 				// ACT
-				statistics->request_update();
+				session->statistics.request_update();
 
 				// ASSERT
 				assert_equal(2, update_requests);
@@ -257,12 +253,12 @@ namespace micro_profiler
 						+ make_mapping_pair(3, 17, 0x00010000u));
 					empty_update(resp);
 				});
-				const auto c = mappings->invalidate += [&] {
-					log.push_back(vector<tables::module_mapping>(mappings->begin(), mappings->end()));
+				const auto c = session->module_mappings.invalidate += [&] {
+					log.push_back(vector<tables::module_mapping>(session->module_mappings.begin(), session->module_mappings.end()));
 				};
 
 				// ACT
-				statistics->request_update();
+				session->statistics.request_update();
 
 				// ASSERT
 				assert_equal(1u, log.size());
@@ -280,7 +276,7 @@ namespace micro_profiler
 				});
 
 				// ACT
-				statistics->request_update();
+				session->statistics.request_update();
 
 				// ASSERT
 				assert_equal(2u, log.size());
@@ -374,9 +370,9 @@ namespace micro_profiler
 				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {
 					resp(response_module_metadata, module_info_metadata());
 				});
-				modules->request_presence(req[0], 19, [] (module_info_metadata) {});
-				modules->request_presence(req[1], 12, [] (module_info_metadata) {});
-				modules->request_presence(req[2], 13, [] (module_info_metadata) {});
+				session->modules.request_presence(req[0], 19, [] (module_info_metadata) {});
+				session->modules.request_presence(req[1], 12, [] (module_info_metadata) {});
+				session->modules.request_presence(req[2], 13, [] (module_info_metadata) {});
 				worker.run_till_end(), apartment.run_till_end();
 
 				// ACT
@@ -402,7 +398,7 @@ namespace micro_profiler
 				emulator->message(init, format(idata));
 
 				// ACT
-				modules->request_presence(req[0], 123, [] (module_info_metadata) {});
+				session->modules.request_presence(req[0], 123, [] (module_info_metadata) {});
 
 				// ASSERT
 				assert_equal(0, disconnections);

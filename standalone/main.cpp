@@ -115,13 +115,13 @@ namespace micro_profiler
 			about_composite_.connections.push_back(about->close += on_close);
 			about_composite_.form_ = new_form;
 		};
-		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, const profiling_session &session) {
-			auto model = make_shared<image_patch_model>(session.patches, session.modules, session.module_mappings);
+		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, shared_ptr<profiling_session> session) {
+			auto model = make_shared<image_patch_model>(patches(session), modules(session), mappings(session));
 			auto on_close = [&] {	patcher_composite_.form_.reset();	};
 
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
-				auto patcher = make_shared<image_patch_ui>(factory, model, session.patches);
+				auto patcher = make_shared<image_patch_ui>(factory, model, patches(session));
 				root->add(pad_control(patcher, 5, 5));
 
 			new_form->set_root(root);
@@ -130,12 +130,11 @@ namespace micro_profiler
 			patcher_composite_.connections.push_back(new_form->close += on_close);
 			patcher_composite_.form_ = new_form;
 		};
-		auto ui_factory = [&app, &factory, show_about, show_patcher] (const profiling_session &session) -> shared_ptr<frontend_ui> {
+		auto ui_factory = [&app, &factory, show_about, show_patcher] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
 			auto &app2 = app;
 			auto show_patcher2 = show_patcher;
 			auto composite = make_shared<ui_composite>();
-			auto patches = session.patches;
-			auto poller = make_shared<statistics_poll>(session.statistics, app.get_ui_queue());
+			auto poller = make_shared<statistics_poll>(statistics(session), app.get_ui_queue());
 
 			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, session);
 			composite->connections.push_back(composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {

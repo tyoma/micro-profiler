@@ -43,7 +43,8 @@ namespace micro_profiler
 	class standalone_ui : public frontend_ui, wpl::noncopyable
 	{
 	public:
-		standalone_ui(std::shared_ptr<hive> configuration, const wpl::factory &factory, const profiling_session &session);
+		standalone_ui(std::shared_ptr<hive> configuration, const wpl::factory &factory,
+			std::shared_ptr<profiling_session> session);
 
 		wpl::signal<void (const std::string &text)> copy_to_buffer;
 		wpl::signal<void (agge::point<int> center, const std::shared_ptr<wpl::form> &new_form)> show_about;

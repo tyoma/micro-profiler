@@ -59,23 +59,23 @@ namespace micro_profiler
 		archive(data.process_info);
 
 		if (ver >= 6)
-			archive(*data.module_mappings);
+			archive(data.module_mappings);
 		else if (ver >= 3)
-			archive(*data.module_mappings, static_cast<const bool &>(true));
+			archive(data.module_mappings, static_cast<const bool &>(true));
 
-		archive(*data.modules);
+		archive(data.modules);
 
 		if (ver >= 5)
-			archive(*data.statistics);
+			archive(data.statistics);
 		else if (ver >= 4)
-			archive(*data.statistics, static_cast<const bool &>(true));
+			archive(data.statistics, static_cast<const bool &>(true));
 		else if (ver >= 3)
-			archive(*data.statistics, static_cast<const bool &>(false));
+			archive(data.statistics, static_cast<const bool &>(false));
 
 		if (ver >= 6)
-			archive(*data.threads);
+			archive(data.threads);
 		else if (ver >= 4)
-			archive(*data.threads, static_cast<const bool &>(true));
+			archive(data.threads, static_cast<const bool &>(true));
 
 		//if (ver >= 5)
 		//	archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::image_patches> &>(const_cast<tables::patches &>(*data.patches)));

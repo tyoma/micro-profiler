@@ -22,22 +22,37 @@
 
 #include "tables.h"
 
+#include <common/noncopyable.h>
+
 namespace micro_profiler
 {
-	struct profiling_session
+	struct profiling_session : noncopyable
 	{
 		initialization_data process_info;
-		std::shared_ptr<tables::statistics> statistics;
-		std::shared_ptr<tables::module_mappings> module_mappings;
-		std::shared_ptr<tables::modules> modules;
-		std::shared_ptr<tables::patches> patches;
-		std::shared_ptr<tables::threads> threads;
-
-		std::string get_title() const;
+		tables::statistics statistics;
+		tables::module_mappings module_mappings;
+		tables::modules modules;
+		tables::patches patches;
+		tables::threads threads;
 	};
 
 
 
-	inline std::string profiling_session::get_title() const
-	{	return process_info.executable;	}
+	inline std::string get_title(std::shared_ptr<const profiling_session> session)
+	{	return session->process_info.executable;	}
+
+	inline std::shared_ptr<tables::statistics> statistics(std::shared_ptr<profiling_session> session)
+	{	return std::shared_ptr<tables::statistics>(session, &session->statistics);	}
+
+	inline std::shared_ptr<tables::module_mappings> mappings(std::shared_ptr<profiling_session> session)
+	{	return std::shared_ptr<tables::module_mappings>(session, &session->module_mappings);	}
+
+	inline std::shared_ptr<tables::modules> modules(std::shared_ptr<profiling_session> session)
+	{	return std::shared_ptr<tables::modules>(session, &session->modules);	}
+
+	inline std::shared_ptr<tables::threads> threads(std::shared_ptr<profiling_session> session)
+	{	return std::shared_ptr<tables::threads>(session, &session->threads);	}
+
+	inline std::shared_ptr<tables::patches> patches(std::shared_ptr<profiling_session> session)
+	{	return std::shared_ptr<tables::patches>(session, &session->patches);	}
 }

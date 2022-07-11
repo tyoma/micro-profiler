@@ -321,24 +321,17 @@ namespace micro_profiler
 					strmd::deserializer<read_file_stream, packer, 3> dser_v3(*s);
 					strmd::deserializer<read_file_stream, packer, 4> dser_v4(*s);
 					strmd::deserializer<read_file_stream, packer> dser(*s);
-					profiling_session ui_context = {
-						{},
-						make_shared<tables::statistics>(),
-						make_shared<tables::module_mappings>(),
-						make_shared<tables::modules>(),
-						make_shared<tables::patches>(),
-						make_shared<tables::threads>(),
-					};
-					auto &rmodules = *ui_context.modules;
+					auto ui_context = make_shared<profiling_session>();
+					auto &rmodules = *modules(ui_context);
 
 					if (!stricmp(ext.c_str(), ".mpstat"))
-						dser(ui_context);
+						dser(*ui_context);
 					else if (!stricmp(ext.c_str(), ".mpstat4"))
-						dser_v4(ui_context);
+						dser_v4(*ui_context);
 					else if (!stricmp(ext.c_str(), ".mpstat3"))
-						dser_v3(ui_context);
+						dser_v3(*ui_context);
 					else
-						dser(ui_context);
+						dser(*ui_context);
 
 					rmodules.request_presence = [rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
 						const auto i = rmodules.find(id);

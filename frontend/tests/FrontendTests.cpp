@@ -6,7 +6,6 @@
 
 #include <collector/serialization.h> // TODO: remove?
 #include <common/serialization.h>
-#include <frontend/tables.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
 #include <test-helpers/file_helpers.h>

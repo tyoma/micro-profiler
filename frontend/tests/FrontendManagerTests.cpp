@@ -8,7 +8,6 @@
 #include <common/serialization.h>
 #include <frontend/frontend.h>
 #include <frontend/frontend_ui.h>
-#include <frontend/profiling_session.h>
 #include <strmd/serializer.h>
 #include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>

@@ -20,7 +20,7 @@
 
 #include <frontend/statistics_poll.h>
 
-#include <frontend/tables.h>
+#include <frontend/database.h>
 
 using namespace std;
 

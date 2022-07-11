@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "profiling_session.h"
+#include "database.h"
 #include "serialization_context.h"
 
 #include <common/noncopyable.h>

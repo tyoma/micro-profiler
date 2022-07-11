@@ -1,11 +1,12 @@
 #pragma once
 
+#include <frontend/database.h>
 #include <frontend/primitives.h>
-#include <frontend/tables.h>
 
 #include <common/module.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
+#include <views/integrated_index.h>
 #include <wpl/models.h>
 
 namespace micro_profiler

@@ -20,17 +20,90 @@
 
 #pragma once
 
-#include "tables.h"
+#include "constructors.h"
+#include "primitives.h"
 
+#include <common/image_info.h>
+#include <common/module.h>
 #include <common/noncopyable.h>
+#include <common/protocol.h>
+#include <views/table.h>
 
 namespace micro_profiler
 {
+	typedef views::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
+
+	namespace tables
+	{
+		template <typename T>
+		struct record : identity, T
+		{	};
+
+		template <typename BaseT>
+		struct table : BaseT
+		{
+			typedef BaseT base_t;
+
+			mutable wpl::signal<void ()> invalidate;
+		};
+
+
+		struct statistics : calls_statistics_table
+		{
+			std::function<void ()> request_update;
+		};
+
+
+		typedef record<thread_info> thread;
+		typedef views::table<thread> threads;
+
+
+		typedef record<mapped_module_ex> module_mapping;
+		typedef views::table<module_mapping> module_mappings;
+
+
+		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >
+		{
+			typedef std::shared_ptr<void> handle_t;
+
+			typedef std::function<void (const module_info_metadata &metadata)> metadata_ready_cb;
+			std::function<void (handle_t &request, unsigned int persistent_id, const metadata_ready_cb &ready)>
+				request_presence;
+
+		private:
+			using table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >::invalidate;
+		};
+
+
+		struct patch
+		{
+			patch()
+				: id(0u)
+			{	state.requested = state.error = state.active = 0;	}
+
+			unsigned int id;
+			struct
+			{
+				unsigned int requested : 1,
+					error : 1,
+					active : 1;
+			} state;
+		};
+
+		typedef containers::unordered_map<unsigned int /*rva*/, patch> image_patches;
+
+		struct patches : table< containers::unordered_map<unsigned int /*persistent_id*/, image_patches> >
+		{
+			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
+			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;
+		};
+	}
+
 	struct profiling_session : noncopyable
 	{
 		initialization_data process_info;
 		tables::statistics statistics;
-		tables::module_mappings module_mappings;
+		tables::module_mappings mappings;
 		tables::modules modules;
 		tables::patches patches;
 		tables::threads threads;
@@ -45,7 +118,7 @@ namespace micro_profiler
 	{	return std::shared_ptr<tables::statistics>(session, &session->statistics);	}
 
 	inline std::shared_ptr<tables::module_mappings> mappings(std::shared_ptr<profiling_session> session)
-	{	return std::shared_ptr<tables::module_mappings>(session, &session->module_mappings);	}
+	{	return std::shared_ptr<tables::module_mappings>(session, &session->mappings);	}
 
 	inline std::shared_ptr<tables::modules> modules(std::shared_ptr<profiling_session> session)
 	{	return std::shared_ptr<tables::modules>(session, &session->modules);	}

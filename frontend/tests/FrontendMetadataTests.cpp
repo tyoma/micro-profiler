@@ -5,7 +5,6 @@
 
 #include <common/file_stream.h>
 #include <common/serialization.h>
-#include <frontend/tables.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
 #include <test-helpers/comparisons.h>

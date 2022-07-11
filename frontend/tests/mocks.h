@@ -2,7 +2,6 @@
 
 #include <common/protocol.h>
 #include <frontend/symbol_resolver.h>
-#include <frontend/tables.h>
 
 namespace micro_profiler
 {

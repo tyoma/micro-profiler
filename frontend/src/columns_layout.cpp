@@ -24,11 +24,11 @@
 
 #include <common/formatting.h>
 #include <frontend/constructors.h>
+#include <frontend/database.h>
 #include <frontend/helpers.h>
 #include <frontend/model_context.h>
 #include <frontend/primitives.h>
 #include <frontend/symbol_resolver.h>
-#include <frontend/tables.h>
 #include <frontend/threads_model.h>
 
 using namespace agge;

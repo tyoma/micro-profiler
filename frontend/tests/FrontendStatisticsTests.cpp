@@ -253,8 +253,8 @@ namespace micro_profiler
 						+ make_mapping_pair(3, 17, 0x00010000u));
 					empty_update(resp);
 				});
-				const auto c = session->module_mappings.invalidate += [&] {
-					log.push_back(vector<tables::module_mapping>(session->module_mappings.begin(), session->module_mappings.end()));
+				const auto c = session->mappings.invalidate += [&] {
+					log.push_back(vector<tables::module_mapping>(session->mappings.begin(), session->mappings.end()));
 				};
 
 				// ACT

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "profiling_session.h"
+#include "database.h"
 #include "serialization.h"
 
 namespace strmd
@@ -59,9 +59,9 @@ namespace micro_profiler
 		archive(data.process_info);
 
 		if (ver >= 6)
-			archive(data.module_mappings);
+			archive(data.mappings);
 		else if (ver >= 3)
-			archive(data.module_mappings, static_cast<const bool &>(true));
+			archive(data.mappings, static_cast<const bool &>(true));
 
 		archive(data.modules);
 

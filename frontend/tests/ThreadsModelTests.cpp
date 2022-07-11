@@ -3,6 +3,7 @@
 #include "helpers.h"
 
 #include <common/types.h>
+#include <frontend/keyer.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>

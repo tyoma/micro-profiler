@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "constructors.h"
 #include "primitives.h"
 
 #include <common/hash.h>
@@ -33,9 +34,6 @@ namespace micro_profiler
 		template <typename Table1T, typename Table2T>
 		class joined_record;
 	}
-
-	template <typename T>
-	struct auto_increment_constructor;
 
 	typedef std::tuple<id_t /*thread_id*/, id_t /*parent_id*/, long_address_t> call_node_key;
 	typedef views::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
@@ -57,29 +55,6 @@ namespace micro_profiler
 
 	private:
 		knuth_hash h;
-	};
-
-	template <typename T>
-	struct auto_increment_constructor
-	{
-		auto_increment_constructor()
-			: _next_id(1)
-		{	}
-
-		T operator ()()
-		{
-			T record;
-
-			record.id = _next_id++;
-			return record;
-		}
-
-	private:
-		id_t _next_id;
-
-	private:
-		template <typename ArchiveT, typename T2>
-		friend void serialize(ArchiveT &archive, auto_increment_constructor<T2> &data, unsigned int ver);
 	};
 
 	namespace keyer

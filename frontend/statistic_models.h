@@ -21,13 +21,19 @@
 #pragma once
 
 #include "constructors.h"
+#include "keyer.h"
 #include "model_context.h"
 #include "symbol_resolver.h"
 #include "table_model_impl.h"
-#include "tables.h"
 
 namespace micro_profiler
 {
+	namespace views
+	{
+		template <typename Table1T, typename Table2T>
+		class joined_record;
+	}
+
 	class symbol_resolver;
 
 	template <>

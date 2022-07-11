@@ -1,8 +1,9 @@
 #pragma once
 
+#include <frontend/database.h>
 #include <frontend/primitives.h>
-#include <frontend/tables.h>
 #include <test-helpers/comparisons.h>
+#include <tuple>
 
 namespace micro_profiler
 {

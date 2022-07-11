@@ -20,7 +20,9 @@
 
 #include <frontend/symbol_resolver.h>
 
+#include <frontend/keyer.h>
 #include <frontend/helpers.h>
+#include <views/integrated_index.h>
 
 using namespace std;
 

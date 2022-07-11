@@ -1,7 +1,6 @@
 #include <frontend/threads_model.h>
 
 #include <common/formatting.h>
-#include <frontend/tables.h>
 #include <frontend/trackables_provider.h>
 #include <views/ordered.h>
 

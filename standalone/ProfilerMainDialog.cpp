@@ -21,7 +21,6 @@
 #include "ProfilerMainDialog.h"
 
 #include <common/configuration.h>
-#include <frontend/profiling_session.h>
 #include <frontend/statistic_models.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/tables_ui.h>

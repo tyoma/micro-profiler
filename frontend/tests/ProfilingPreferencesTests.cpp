@@ -1,8 +1,7 @@
 #include <frontend/profiling_preferences.h>
 
 #include <common/file_stream.h>
-#include <frontend/profiling_session.h>
-#include <frontend/tables.h>
+#include <frontend/database.h>
 #include <strmd/deserializer.h>
 #include <strmd/packer.h>
 #include <strmd/serializer.h>

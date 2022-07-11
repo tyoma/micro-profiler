@@ -21,7 +21,6 @@
 #include <frontend/frontend.h>
 
 #include <common/serialization.h>
-#include <frontend/tables.h>
 
 using namespace std;
 

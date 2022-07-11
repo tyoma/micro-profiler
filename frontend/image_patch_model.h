@@ -20,10 +20,8 @@
 
 #pragma once
 
-#include "tables.h"
+#include "database.h"
 
-#include <common/unordered_map.h>
-#include <common/noncopyable.h>
 #include <views/filter.h>
 #include <views/flatten.h>
 #include <views/ordered.h>

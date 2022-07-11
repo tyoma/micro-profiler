@@ -5,6 +5,7 @@
 #include "primitive_helpers.h"
 
 #include <frontend/columns_layout.h>
+#include <frontend/keyer.h>
 #include <frontend/models.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>

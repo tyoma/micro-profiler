@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "db.h"
+#include "keyer.h"
 #include "profiling_preferences.h"
 #include "serialization_context.h"
-#include "tables.h"
+#include "database.h"
 
 #include <common/serialization.h>
 #include <math/serialization.h>

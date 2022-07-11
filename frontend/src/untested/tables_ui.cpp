@@ -22,12 +22,12 @@
 
 #include <frontend/aggregators.h>
 #include <frontend/columns_layout.h>
+#include <frontend/database.h>
 #include <frontend/derived_statistics.h>
 #include <frontend/function_hint.h>
 #include <frontend/headers_model.h>
 #include <frontend/models.h>
 #include <frontend/piechart.h>
-#include <frontend/profiling_session.h>
 #include <frontend/representation.h>
 #include <frontend/selection_model.h>
 #include <frontend/statistic_models.h>

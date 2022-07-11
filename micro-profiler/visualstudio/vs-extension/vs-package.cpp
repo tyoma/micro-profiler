@@ -35,7 +35,6 @@
 #include <frontend/frontend_manager.h>
 #include <frontend/frontend_ui.h>
 #include <frontend/ipc_manager.h>
-#include <frontend/profiling_session.h>
 #include <frontend/tables_ui.h>
 #include <logger/log.h>
 #include <scheduler/thread_queue.h>

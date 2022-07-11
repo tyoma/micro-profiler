@@ -3,7 +3,6 @@
 #include "helpers.h"
 
 #include <common/protocol.h>
-#include <frontend/tables.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -34,9 +33,9 @@ namespace micro_profiler
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
 				modules->request_presence = [this] (shared_ptr<void> &, unsigned persistent_id, tables::modules::metadata_ready_cb cb) {
-					const auto i = modules->find(persistent_id);
+					const auto i = this->modules->find(persistent_id);
 
-					if (i != modules->end())
+					if (i != this->modules->end())
 						cb(i->second);
 					_requested.push_back(persistent_id);
 				};

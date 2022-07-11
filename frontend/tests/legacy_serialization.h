@@ -1,8 +1,7 @@
 #pragma once
 
 #include <collector/primitives.h>
-#include <frontend/db.h>
-#include <frontend/tables.h>
+#include <frontend/database.h>
 #include <strmd/version.h>
 
 namespace micro_profiler

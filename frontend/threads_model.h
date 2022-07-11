@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "tables.h"
+#include "database.h"
 
 #include <common/noncopyable.h>
 #include <wpl/models.h>

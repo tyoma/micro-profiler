@@ -2,8 +2,8 @@
 
 #include "helpers.h"
 
+#include <frontend/keyer.h>
 #include <frontend/selection_model.h>
-#include <frontend/tables.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 

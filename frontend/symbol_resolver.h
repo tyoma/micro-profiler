@@ -20,11 +20,12 @@
 
 #pragma once
 
-#include "tables.h"
+#include "database.h"
+
+#include <map>
 
 namespace micro_profiler
 {
-
 	class symbol_resolver
 	{
 	public:

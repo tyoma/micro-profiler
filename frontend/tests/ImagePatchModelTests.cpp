@@ -1,6 +1,7 @@
 #include <frontend/image_patch_model.h>
 
 #include "helpers.h"
+#include "primitive_helpers.h"
 
 #include <frontend/keyer.h>
 #include <frontend/selection_model.h>
@@ -11,22 +12,10 @@ using namespace std;
 
 namespace micro_profiler
 {
-	inline bool operator <(const symbol_key &lhs, const symbol_key &rhs)
-	{	return make_pair(lhs.persistent_id, lhs.rva) < make_pair(rhs.persistent_id, rhs.rva);	}
-
 	namespace tests
 	{
 		namespace
 		{
-			tables::patch mkpatch(unsigned id, bool requested, bool error, bool active)
-			{
-				tables::patch p;
-
-				p.id = id;
-				p.state.requested = !!requested, p.state.error = !!error, p.state.active = !!active;
-				return p;
-			}
-
 			template <typename KeyT>
 			vector<KeyT> get_selected(const selection<KeyT> &selection_)
 			{	return vector<KeyT>(selection_.begin(), selection_.end());	}
@@ -266,11 +255,12 @@ namespace micro_profiler
 				};
 
 				// ACT
-				(*patches)[140][0x00001234] = mkpatch(1, true, false, false);
-				(*patches)[140][0x00000001] = mkpatch(2, true, false, true);
-				(*patches)[11][0x901A9010] = mkpatch(3, false, true, false);
-				(*patches)[11][0x00000011] = mkpatch(4, false, false, false);
-				(*patches)[11][0x00000031] = mkpatch(5, false, false, true);
+				add_records(*patches, plural
+					+ make_patch(140, 0x00001234, 1, true, false, false)
+					+ make_patch(140, 0x00000001, 2, true, false, true)
+					+ make_patch(11, 0x901A9010, 3, false, true, false)
+					+ make_patch(11, 0x00000011, 4, false, false, false)
+					+ make_patch(11, 0x00000031, 5, false, false, true));
 				patches->invalidate();
 
 				// ASSERT
@@ -289,8 +279,9 @@ namespace micro_profiler
 				assert_equivalent(mkvector(reference1), log.back());
 
 				// ACT
-				(*patches)[140][0x00001234] = mkpatch(1, false, false, true);
-				(*patches)[140][0x00000001] = mkpatch(2, false, false, false);
+				add_records(*patches, plural
+					+ make_patch(140, 0x00001234, 1, false, false, true)
+					+ make_patch(140, 0x00000001, 2, false, false, false), keyer::external_id());
 				patches->invalidate();
 
 				// ASSERT
@@ -487,11 +478,12 @@ namespace micro_profiler
 				};
 
 				(*modules)[1].symbols = mkvector(data);
-				(*patches)[1][0x901A9010] = mkpatch(1, false, true, false);
-				(*patches)[1][0x901A9011] = mkpatch(2, false, false, false);
-				(*patches)[1][0x00000011] = mkpatch(3, true, false, false);
-				(*patches)[1][0x00000021] = mkpatch(4, false, false, true);
-				(*patches)[1][0x00000031] = mkpatch(5, true, false, true);
+				add_records(*patches, plural
+					+ make_patch(1, 0x901A9010, 1, false, true, false)
+					+ make_patch(1, 0x901A9011, 2, false, false, false)
+					+ make_patch(1, 0x00000011, 3, true, false, false)
+					+ make_patch(1, 0x00000021, 4, false, false, true)
+					+ make_patch(1, 0x00000031, 5, true, false, true));
 
 				image_patch_model model(patches, modules, mappings);
 
@@ -673,7 +665,7 @@ namespace micro_profiler
 
 				// ASSERT
 				symbol_key reference1[] = {
-					{	1, 0x901A9010	}, {	3, 0x00000021	},
+					symbol_key(1, 0x901A9010), symbol_key(3, 0x00000021),
 				};
 
 				assert_equivalent(reference1, get_selected(*sel));

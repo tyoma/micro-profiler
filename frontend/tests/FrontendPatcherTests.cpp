@@ -1,8 +1,11 @@
 #include <frontend/frontend.h>
 
+#include "comparisons.h"
 #include "helpers.h"
+#include "primitive_helpers.h"
 
 #include <common/serialization.h>
+#include <frontend/keyer.h>
 #include <ipc/server_session.h>
 #include <patcher/interface.h>
 #include <test-helpers/file_helpers.h>
@@ -18,19 +21,8 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	namespace tables
-	{
-		inline bool operator <(const patch &lhs, const patch &rhs)
-		{
-			return lhs.id < rhs.id ? true : rhs.id < lhs.id ? false :
-				lhs.state.requested < rhs.state.requested ? true :
-				lhs.state.error < rhs.state.error ? true :
-				lhs.state.active < rhs.state.active;
-		}
-
-		inline bool operator ==(const patch &lhs, const patch &rhs)
-		{	return !(lhs < rhs) && !(rhs < lhs);	}
-	}
+	inline bool operator ==(const patch &lhs, const patch &rhs)
+	{	return !(lhs < rhs) && !(rhs < lhs);	}
 
 	namespace tests
 	{
@@ -60,16 +52,6 @@ namespace micro_profiler
 
 			pair<unsigned /*rva*/, patch_result::errors> mkpatch_revert(unsigned rva, patch_result::errors status)
 			{	return make_pair(rva, status);	}
-
-
-			pair<unsigned, tables::patch> mkpatch(unsigned rva, unsigned id, bool requested, bool error, bool active)
-			{
-				tables::patch p;
-
-				p.id = id;
-				p.state.requested = !!requested, p.state.error = !!error, p.state.active = !!active;
-				return make_pair(rva, p);
-			}
 		}
 
 		begin_test_suite( FrontendPatcherTests )
@@ -138,18 +120,15 @@ namespace micro_profiler
 				// INIT
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
+				const auto &idx = views::unique_index<keyer::symbol_id>(*patches);
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
-					auto image_patches = this->patches->find(payload.image_persistent_id);
-
-					assert_not_equal(this->patches->end(), image_patches);
-
 					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
 					{
-						auto p = image_patches->second.find(*i);
+						auto p = idx.find(make_tuple(payload.image_persistent_id, *i));
 
-						assert_not_equal(image_patches->second.end(), p);
-						assert_equal(mkpatch(*i, 0, true, false, false).second, p->second);
+						assert_not_null(p);
+						assert_equal(make_patch(payload.image_persistent_id, *i, 0, true, false, false), *p);
 					}
 				});
 
@@ -157,24 +136,23 @@ namespace micro_profiler
 				patches->apply(11, mkrange(rva1));
 
 				// ASSERT
-				assert_equal(1u, patches->size());
-				assert_equal(1u, patches->count(11));
-				assert_equivalent(plural + mkpatch(1000129, 0, true, false, false)
-					+ mkpatch(100100u, 0, true, false, false)
-					+ mkpatch(0x10000u, 0, true, false, false),
-					patches->find(11)->second);
+				assert_equivalent(plural
+					+ make_patch(11, 1000129, 0, true, false, false)
+					+ make_patch(11, 100100u, 0, true, false, false)
+					+ make_patch(11, 0x10000u, 0, true, false, false), *patches);
 
 				// ACT
 				patches->apply(191, mkrange(rva2));
 
 				// ASSERT
-				assert_equal(2u, patches->size());
-				assert_equal(1u, patches->count(191));
-				assert_equivalent(plural + mkpatch(13, 0, true, false, false)
-					+ mkpatch(1000u, 0, true, false, false)
-					+ mkpatch(0x10000u, 0, true, false, false)
-					+ mkpatch(0x8000091u, 0, true, false, false),
-					patches->find(191)->second);
+				assert_equivalent(plural
+					+ make_patch(11, 1000129, 0, true, false, false)
+					+ make_patch(11, 100100u, 0, true, false, false)
+					+ make_patch(11, 0x10000u, 0, true, false, false)
+					+ make_patch(191, 13, 0, true, false, false)
+					+ make_patch(191, 1000u, 0, true, false, false)
+					+ make_patch(191, 0x10000u, 0, true, false, false)
+					+ make_patch(191, 0x8000091u, 0, true, false, false), *patches);
 			}
 
 
@@ -224,35 +202,32 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, queue.tasks.size());
-				assert_equal(2u, patches->size());
-				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
-					+ mkpatch(2, 0, false, true, false)
-					+ mkpatch(3, 0, false, true, false),
-					patches->find(19)->second);
-				assert_equivalent(plural + mkpatch(2, 0, true, false, false)
-					+ mkpatch(4, 0, true, false, false)
-					+ mkpatch(5, 0, true, false, false)
-					+ mkpatch(6, 0, true, false, false)
-					+ mkpatch(7, 0, true, false, false)
-					+ mkpatch(100, 0, true, false, false),
-					patches->find(31)->second);
+				assert_equivalent(plural
+					+ make_patch(19, 1, 1, false, false, true)
+					+ make_patch(19, 2, 0, false, true, false)
+					+ make_patch(19, 3, 0, false, true, false)
+					+ make_patch(31, 2, 0, true, false, false)
+					+ make_patch(31, 4, 0, true, false, false)
+					+ make_patch(31, 5, 0, true, false, false)
+					+ make_patch(31, 6, 0, true, false, false)
+					+ make_patch(31, 7, 0, true, false, false)
+					+ make_patch(31, 100, 0, true, false, false), *patches);
 
 				// ACT
 				queue.run_one();
 
 				// ASSERT
 				assert_is_empty(queue.tasks);
-				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
-					+ mkpatch(2, 0, false, true, false)
-					+ mkpatch(3, 0, false, true, false),
-					patches->find(19)->second);
-				assert_equivalent(plural + mkpatch(2, 2, false, false, true)
-					+ mkpatch(4, 0, false, true, false)
-					+ mkpatch(5, 0, false, true, false)
-					+ mkpatch(6, 3, false, false, true)
-					+ mkpatch(7, 0, false, true, false)
-					+ mkpatch(100, 4, false, false, true),
-					patches->find(31)->second);
+				assert_equivalent(plural
+					+ make_patch(19, 1, 1, false, false, true)
+					+ make_patch(19, 2, 0, false, true, false)
+					+ make_patch(19, 3, 0, false, true, false)
+					+ make_patch(31, 2, 2, false, false, true)
+					+ make_patch(31, 4, 0, false, true, false)
+					+ make_patch(31, 5, 0, false, true, false)
+					+ make_patch(31, 6, 3, false, false, true)
+					+ make_patch(31, 7, 0, false, true, false)
+					+ make_patch(31, 100, 4, false, false, true), *patches);
 			}
 
 
@@ -328,20 +303,19 @@ namespace micro_profiler
 				queue.run_one();
 
 				// ASSERT
-				assert_equal(1u, patches->size());
-				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
-					+ mkpatch(2, 0, false, true, false)
-					+ mkpatch(3, 2, false, false, true),
-					patches->find(19)->second);
+				assert_equivalent(plural
+					+ make_patch(19, 1, 1, false, false, true)
+					+ make_patch(19, 2, 0, false, true, false)
+					+ make_patch(19, 3, 2, false, false, true), *patches);
 			}
 
 
 			test( TableIsInvalidatedOnApplyRequestSendingAndOnReceival )
 			{
 				// INIT
-				vector< unordered_map<unsigned, tables::patch> > log;
+				vector< vector<patch> > log;
 				auto conn = patches->invalidate += [&] {
-					log.push_back(this->patches->find(19)->second);
+					log.push_back(vector<patch>(this->patches->begin(), this->patches->end()));
 				};
 				unsigned rva[] = {	1, 2, 3,	};
 
@@ -350,7 +324,10 @@ namespace micro_profiler
 					assert_is_false(log.empty());
 
 					resp.defer([] (ipc::server_session::response &resp) {
-						resp(response_patched, plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
+						resp(response_patched, plural
+							+ mkpatch_apply(1, patch_result::error, 0)
+							+ mkpatch_apply(2, patch_result::ok, 1)
+							+ mkpatch_apply(3, patch_result::error, 3));
 					});
 				});
 
@@ -359,14 +336,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, log.size());
-				assert_equivalent(patches->find(19)->second, log.back());
+				assert_equivalent(plural
+					+ make_patch(19, 1, 0, true, false, false)
+					+ make_patch(19, 2, 0, true, false, false)
+					+ make_patch(19, 3, 0, true, false, false), log.back());
 
 				// ACT
 				queue.run_one();
 
 				// ASSERT
 				assert_equal(2u, log.size());
-				assert_equivalent(patches->find(19)->second, log.back());
+				assert_equivalent(plural
+					+ make_patch(19, 1, 0, false, true, false)
+					+ make_patch(19, 2, 1, false, false, true)
+					+ make_patch(19, 3, 3, false, true, false), log.back());
 			}
 
 
@@ -433,15 +416,16 @@ namespace micro_profiler
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva20[] = {	3u, 13u, 1000u, 0x10000u, 100u, 0x8000091u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
-				vector< unordered_map<unsigned, tables::patch> > log;
+				vector< vector<patch> > log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
-					const auto image_patches = this->patches->find(payload.image_persistent_id);
+					const auto &idx = views::multi_index(*this->patches, keyer::persistent_id());
 
-					assert_not_equal(this->patches->end(), image_patches);
-					log.push_back(image_patches->second);
+					log.resize(log.size() + 1);
+					for (auto r = idx.equal_range(payload.image_persistent_id); r.first != r.second; ++r.first)
+						log.back().push_back(*r.first);
 				});
 
 				patches->apply(11, mkrange(rva10));
@@ -452,24 +436,24 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, log.size());
-				assert_equivalent(plural + mkpatch(1, 1, false, false, true)
-					+ mkpatch(1000129, 2, true, false, true)
-					+ mkpatch(100100u, 3, true, false, true)
-					+ mkpatch(0x10000u, 4, true, false, true),
-					log.back());
+				assert_equivalent(plural
+					+ make_patch(11, 1, 1, false, false, true)
+					+ make_patch(11, 1000129, 2, true, false, true)
+					+ make_patch(11, 100100u, 3, true, false, true)
+					+ make_patch(11, 0x10000u, 4, true, false, true), log.back());
 
 				// ACT
 				patches->revert(191, mkrange(rva2));
 
 				// ASSERT
 				assert_equal(2u, log.size());
-				assert_equivalent(plural + mkpatch(3, 5, false, false, true)
-					+ mkpatch(13, 6, true, false, true)
-					+ mkpatch(1000, 7, true, false, true)
-					+ mkpatch(0x10000, 8, true, false, true)
-					+ mkpatch(100, 9, false, false, true)
-					+ mkpatch(0x8000091u, 10, true, false, true),
-					log.back());
+				assert_equivalent(plural
+					+ make_patch(191, 3, 5, false, false, true)
+					+ make_patch(191, 13, 6, true, false, true)
+					+ make_patch(191, 1000, 7, true, false, true)
+					+ make_patch(191, 0x10000, 8, true, false, true)
+					+ make_patch(191, 100, 9, false, false, true)
+					+ make_patch(191, 0x8000091u, 10, true, false, true), log.back());
 			}
 
 
@@ -526,43 +510,40 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, queue.tasks.size());
-				assert_equal(2u, patches->size());
-				assert_equivalent(plural + mkpatch(1, 1, false, false, false)
-					+ mkpatch(2, 2, false, true, true)
-					+ mkpatch(20, 3, false, false, true)
-					+ mkpatch(3, 4, false, true, true)
-					+ mkpatch(100, 5, false, false, true),
-					patches->find(19)->second);
-				assert_equivalent(plural + mkpatch(2, 6, true, false, true)
-					+ mkpatch(4, 7, true, false, true)
-					+ mkpatch(5, 8, true, false, true)
-					+ mkpatch(50, 9, false, false, true)
-					+ mkpatch(6, 10, true, false, true)
-					+ mkpatch(7, 11, true, false, true)
-					+ mkpatch(100, 12, true, false, true)
-					+ mkpatch(1001, 13, false, false, true),
-					patches->find(31)->second);
+				assert_equivalent(plural
+					+ make_patch(19, 1, 1, false, false, false)
+					+ make_patch(19, 2, 2, false, true, true)
+					+ make_patch(19, 20, 3, false, false, true)
+					+ make_patch(19, 3, 4, false, true, true)
+					+ make_patch(19, 100, 5, false, false, true)
+					+ make_patch(31, 2, 6, true, false, true)
+					+ make_patch(31, 4, 7, true, false, true)
+					+ make_patch(31, 5, 8, true, false, true)
+					+ make_patch(31, 50, 9, false, false, true)
+					+ make_patch(31, 6, 10, true, false, true)
+					+ make_patch(31, 7, 11, true, false, true)
+					+ make_patch(31, 100, 12, true, false, true)
+					+ make_patch(31, 1001, 13, false, false, true), *patches);
 
 				// ACT
 				queue.run_one();
 
 				// ASSERT
 				assert_is_empty(queue.tasks);
-				assert_equivalent(plural + mkpatch(1, 1, false, false, false)
-					+ mkpatch(2, 2, false, true, true)
-					+ mkpatch(20, 3, false, false, true)
-					+ mkpatch(3, 4, false, true, true)
-					+ mkpatch(100, 5, false, false, true),
-					patches->find(19)->second);
-				assert_equivalent(plural + mkpatch(2, 6, false, false, false)
-					+ mkpatch(4, 7, false, true, true)
-					+ mkpatch(5, 8, false, true, true)
-					+ mkpatch(50, 9, false, false, true)
-					+ mkpatch(6, 10, false, false, false)
-					+ mkpatch(7, 11, false, true, true)
-					+ mkpatch(100, 12, false, false, false)
-					+ mkpatch(1001, 13, false, false, true),
-					patches->find(31)->second);
+				assert_equivalent(plural
+					+ make_patch(19, 1, 1, false, false, false)
+					+ make_patch(19, 2, 2, false, true, true)
+					+ make_patch(19, 20, 3, false, false, true)
+					+ make_patch(19, 3, 4, false, true, true)
+					+ make_patch(19, 100, 5, false, false, true)
+					+ make_patch(31, 2, 6, false, false, false)
+					+ make_patch(31, 4, 7, false, true, true)
+					+ make_patch(31, 5, 8, false, true, true)
+					+ make_patch(31, 50, 9, false, false, true)
+					+ make_patch(31, 6, 10, false, false, false)
+					+ make_patch(31, 7, 11, false, true, true)
+					+ make_patch(31, 100, 12, false, false, false)
+					+ make_patch(31, 1001, 13, false, false, true), *patches);
 			}
 
 
@@ -598,12 +579,25 @@ namespace micro_profiler
 				assert_equal(1u, log.size());
 				assert_equal(99u, log.back().image_persistent_id);
 				assert_equal(plural + 5u + 7u, log.back().functions_rva);
-				assert_equal(6u, patches->find(99)->second.size());
+				assert_equivalent(plural
+					+ make_patch(99, 2, 1, false, false, false)
+					+ make_patch(99, 4, 2, false, false, true)
+					+ make_patch(99, 5, 3, true, false, true)
+					+ make_patch(99, 6, 4, true, false, true)
+					+ make_patch(99, 7, 5, true, false, true)
+					+ make_patch(99, 100, 6, false, true, false), *patches);
 
 				// ACT
 				patches->revert(99, mkrange(rva));
 
 				// ASSERT
+				assert_equivalent(plural
+					+ make_patch(99, 2, 1, false, false, false)
+					+ make_patch(99, 4, 2, false, false, true)
+					+ make_patch(99, 5, 3, true, false, true)
+					+ make_patch(99, 6, 4, true, false, true)
+					+ make_patch(99, 7, 5, true, false, true)
+					+ make_patch(99, 100, 6, false, true, false), *patches);
 				assert_equal(1u, log.size());
 			}
 
@@ -630,22 +624,22 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, patches->size());
-				assert_equivalent(plural + mkpatch(1, 1, false, false, false),
-					patches->find(99)->second);
+				assert_equivalent(plural
+					+ make_patch(99, 1, 1, false, false, false), *patches);
 			}
 
 
 			test( TableIsInvalidatedOnRevertRequestSendingAndOnReceival )
 			{
 				// INIT
-				vector< unordered_map<unsigned, tables::patch> > log;
+				vector< vector<patch> > log;
 				unsigned rva[] = {	1, 2, 3,	};
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				patches->apply(19, mkrange(rva));
 
 				auto conn = patches->invalidate += [&] {
-					log.push_back(this->patches->find(19)->second);
+					log.push_back(vector<patch>(this->patches->begin(), this->patches->end()));
 				};
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
@@ -662,14 +656,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, log.size());
-				assert_equivalent(patches->find(19)->second, log.back());
+				assert_equivalent(plural
+					+ make_patch(19, 1, 1, true, false, true)
+					+ make_patch(19, 2, 2, true, false, true)
+					+ make_patch(19, 3, 3, true, false, true), log.back());
 
 				// ACT
 				queue.run_one();
 
 				// ASSERT
 				assert_equal(2u, log.size());
-				assert_equivalent(patches->find(19)->second, log.back());
+				assert_equivalent(plural
+					+ make_patch(19, 1, 1, false, true, true)
+					+ make_patch(19, 2, 2, false, false, false)
+					+ make_patch(19, 3, 3, false, true, true), log.back());
 			}
 
 		end_test_suite

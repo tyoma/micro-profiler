@@ -39,14 +39,6 @@ namespace micro_profiler
 		struct record : identity, T
 		{	};
 
-		template <typename BaseT>
-		struct table : BaseT
-		{
-			typedef BaseT base_t;
-
-			mutable wpl::signal<void ()> invalidate;
-		};
-
 
 		struct statistics : calls_statistics_table
 		{
@@ -62,37 +54,20 @@ namespace micro_profiler
 		typedef views::table<module_mapping> module_mappings;
 
 
-		struct modules : table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >
+		struct modules : containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata>
 		{
+			typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> base_t;
 			typedef std::shared_ptr<void> handle_t;
 
 			typedef std::function<void (const module_info_metadata &metadata)> metadata_ready_cb;
 			std::function<void (handle_t &request, unsigned int persistent_id, const metadata_ready_cb &ready)>
 				request_presence;
 
-		private:
-			using table< containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> >::invalidate;
+			mutable wpl::signal<void ()> invalidate;
 		};
 
 
-		struct patch
-		{
-			patch()
-				: id(0u)
-			{	state.requested = state.error = state.active = 0;	}
-
-			unsigned int id;
-			struct
-			{
-				unsigned int requested : 1,
-					error : 1,
-					active : 1;
-			} state;
-		};
-
-		typedef containers::unordered_map<unsigned int /*rva*/, patch> image_patches;
-
-		struct patches : table< containers::unordered_map<unsigned int /*persistent_id*/, image_patches> >
+		struct patches : views::table<patch>
 		{
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;

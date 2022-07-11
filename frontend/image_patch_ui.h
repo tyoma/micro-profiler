@@ -2,6 +2,7 @@
 
 #include "primitives.h"
 
+#include <tuple>
 #include <unordered_set>
 #include <wpl/layout.h>
 #include <wpl/models.h>
@@ -13,8 +14,9 @@ namespace wpl
 
 namespace micro_profiler
 {
+	typedef std::tuple<id_t, unsigned int> symbol_key;
+
 	class image_patch_model;
-	struct symbol_key;
 	class symbol_resolver;
 
 	template <typename KeyT>
@@ -38,6 +40,5 @@ namespace micro_profiler
 	private:
 		std::shared_ptr<image_patch_model> _model;
 		std::vector<wpl::slot_connection> _connections;
-		std::unordered_set<symbol_key> _to_apply, _to_revert;
 	};
 }

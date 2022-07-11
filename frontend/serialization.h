@@ -171,10 +171,10 @@ namespace micro_profiler
 			archive(static_cast<T &>(data));
 		}
 
-		template <typename ArchiveT, typename BaseT>
-		inline void serialize(ArchiveT &archive, table<BaseT> &data)
+		template <typename ArchiveT>
+		inline void serialize(ArchiveT &archive, modules &data)
 		{
-			archive(static_cast<BaseT &>(data));
+			archive(static_cast<modules::base_t &>(data));
 			data.invalidate();
 		}
 

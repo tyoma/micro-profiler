@@ -35,6 +35,16 @@ namespace micro_profiler
 			< std::make_pair(rhs.id, std::make_pair(rhs.native_id, rhs.description));
 	}
 
+	inline bool operator <(const patch &lhs, const patch &rhs)
+	{
+		return lhs.id < rhs.id ? true : rhs.id < lhs.id ? false :
+			lhs.persistent_id < rhs.persistent_id ? true : rhs.persistent_id < lhs.persistent_id ? false :
+			lhs.rva < rhs.rva ? true : rhs.rva < lhs.rva ? false :
+			lhs.state.requested < rhs.state.requested ? true :
+			lhs.state.error < rhs.state.error ? true :
+			lhs.state.active < rhs.state.active;
+	}
+
 	namespace tables
 	{
 		inline bool operator <(const tables::module_mapping &lhs, const tables::module_mapping &rhs)

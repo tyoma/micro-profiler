@@ -21,7 +21,9 @@
 #pragma once
 
 #include "database.h"
+#include "table_model_impl.h"
 
+#include <tuple>
 #include <views/filter.h>
 #include <views/flatten.h>
 #include <views/ordered.h>
@@ -34,6 +36,8 @@ namespace micro_profiler
 
 	template <typename UnderlyingT>
 	class trackables_provider;
+
+	typedef std::tuple<id_t, unsigned int> symbol_key;
 
 
 	class image_patch_model : public wpl::richtext_table_model, noncopyable
@@ -78,9 +82,6 @@ namespace micro_profiler
 		void request_missing(const tables::module_mappings &mappings);
 
 		void fetch();
-
-		template <typename KeyT>
-		const tables::patch *find_patch(const KeyT &key) const;
 
 		template <typename KeyT>
 		void format_state(agge::richtext_t &value, const KeyT &key) const;

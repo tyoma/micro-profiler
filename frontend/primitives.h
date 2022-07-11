@@ -59,10 +59,20 @@ namespace micro_profiler
 		mutable unsigned int _reentrance;
 	};
 
-	struct symbol_key
+	struct patch : /*external*/ identity
 	{
+		patch()
+		{	id = 0, state.requested = state.error = state.active = 0;	}
+
 		unsigned int persistent_id;
 		unsigned int rva;
+
+		struct
+		{
+			unsigned int requested : 1,
+				error : 1,
+				active : 1;
+		} state;
 	};
 
 
@@ -86,9 +96,6 @@ namespace micro_profiler
 	}
 
 
-	inline bool operator ==(const symbol_key &lhs, const symbol_key &rhs)
-	{	return !((lhs.persistent_id - rhs.persistent_id) | (lhs.rva - rhs.rva));	}
-
 	template <typename LookupT>
 	inline void add(call_statistics &lhs, const call_statistics &rhs, const LookupT &lookup)
 	{
@@ -105,15 +112,6 @@ namespace micro_profiler
 
 namespace std
 {
-	template <>
-	struct hash<micro_profiler::symbol_key> : micro_profiler::knuth_hash
-	{
-		using micro_profiler::knuth_hash::operator ();
-
-		size_t operator ()(const micro_profiler::symbol_key &value) const
-		{	return (*this)((*this)(value.persistent_id), (*this)(value.rva));	}
-	};
-
 	template <typename T1, typename T2>
 	struct hash< pair<T1, T2> > : micro_profiler::knuth_hash
 	{	};

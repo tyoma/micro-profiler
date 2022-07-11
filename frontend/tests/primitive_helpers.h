@@ -16,5 +16,16 @@ namespace micro_profiler
 			s.times_called = times, s.inclusive_time = inclusive, s.exclusive_time = exclusive, s.max_call_time = max_call_time;
 			return s;
 		}
+
+		inline patch make_patch(id_t persistent_id, unsigned rva, id_t id, bool requested, bool error, bool active)
+		{
+			patch p;
+
+			p.id = id;
+			p.persistent_id = persistent_id;
+			p.rva = rva;
+			p.state.requested = !!requested, p.state.error = !!error, p.state.active = !!active;
+			return p;
+		}
 	}
 }

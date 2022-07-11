@@ -84,7 +84,7 @@ namespace micro_profiler
 					unordered_map< unsigned int, vector<unsigned int> > s;
 
 					for (auto i = selection_->begin(); i != selection_->end(); ++i)
-						s[i->persistent_id].push_back(i->rva);
+						s[get<0>(*i)].push_back(get<1>(*i));
 					for (auto i = s.begin(); i != s.end(); ++i)
 						patches->apply(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
 					selection_->clear();
@@ -96,7 +96,7 @@ namespace micro_profiler
 						unordered_map< unsigned int, vector<unsigned int> > s;
 
 						for (auto i = selection_->begin(); i != selection_->end(); ++i)
-							s[i->persistent_id].push_back(i->rva);
+							s[get<0>(*i)].push_back(get<1>(*i));
 						for (auto i = s.begin(); i != s.end(); ++i)
 							patches->revert(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
 						selection_->clear();

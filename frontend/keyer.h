@@ -127,6 +127,26 @@ namespace micro_profiler
 			{	record.parent_id = key;	}
 		};
 
+		struct persistent_id
+		{
+			id_t operator ()(const patch &record) const
+			{	return record.persistent_id;	}
+
+			template <typename IndexT>
+			void operator ()(IndexT &, patch &record, id_t key) const
+			{	record.persistent_id = key;	}
+		};
+
+		struct rva
+		{
+			unsigned int operator ()(const patch &record) const
+			{	return record.rva;	}
+
+			template <typename IndexT>
+			void operator ()(IndexT &, patch &record, unsigned int key) const
+			{	record.rva = key;	}
+		};
+
 		struct thread_id
 		{
 			id_t operator ()(const call_statistics &record) const
@@ -153,8 +173,6 @@ namespace micro_profiler
 			void operator ()(IndexT &, call_statistics &record, long_address_t key) const
 			{	record.address = key;	}
 		};
-
-		typedef combine3<thread_id, parent_id, address> callnode;
 
 		struct parent_address
 		{
@@ -211,5 +229,9 @@ namespace micro_profiler
 			const views::immutable_unique_index<TableT, id> &_by_id;
 			mutable callstack_key _key_buffer;
 		};
+
+
+		typedef combine3<thread_id, parent_id, address> callnode;
+		typedef combine2<persistent_id, rva> symbol_id;
 	}
 }

@@ -22,6 +22,7 @@
 
 #include <common/formatting.h>
 #include <common/path.h>
+#include <frontend/keyer.h>
 #include <frontend/selection_model.h>
 #include <frontend/trackables_provider.h>
 
@@ -32,7 +33,7 @@ namespace micro_profiler
 	template <>
 	struct key_traits<image_patch_model::record_type>
 	{
-		typedef symbol_key key_type;
+		typedef std::tuple<id_t, unsigned int> key_type;
 
 		template <typename T>
 		static key_type get_key(const T &item)
@@ -50,7 +51,7 @@ namespace micro_profiler
 			{	return toupper(lhs) < toupper(rhs);	}
 		};
 
-		unsigned int encode_state(const tables::patch &p)
+		unsigned int encode_state(const patch &p)
 		{	return (p.state.error << 2) + (p.state.active << 1) + (p.state.requested << 0);	}
 
 		const char *c_patch_states[8] = {
@@ -65,7 +66,7 @@ namespace micro_profiler
 
 	image_patch_model::flattener::const_reference image_patch_model::flattener::get(const tables::modules::value_type &l1, const symbol_info &l2)
 	{
-		record_type r = {	{	l1.first, l2.rva	}, &l2	};
+		record_type r = {	make_tuple(l1.first, l2.rva), &l2	};
 		return r;
 	}
 
@@ -98,7 +99,7 @@ namespace micro_profiler
 		{
 		case 0:
 			_ordered_view.set_order([] (const record_type &lhs, const record_type &rhs) {
-				return lhs.first.rva < rhs.first.rva;
+				return get<1>(lhs.first) < get<1>(rhs.first);
 			}, ascending);
 			break;
 
@@ -113,8 +114,8 @@ namespace micro_profiler
 
 		case 2:
 			_ordered_view.set_order([this] (const record_type &lhs_, const record_type &rhs_) -> bool {
-				const auto lhs = find_patch(lhs_.first);
-				const auto rhs = find_patch(rhs_.first);
+				const auto lhs = views::unique_index<keyer::symbol_id>(*_patches).find(lhs_.first);
+				const auto rhs = views::unique_index<keyer::symbol_id>(*_patches).find(rhs_.first);
 
 				return (!lhs & !rhs) ? false : !lhs ? true : !rhs ? false : encode_state(*lhs) < encode_state(*rhs);
 			}, ascending);
@@ -129,8 +130,8 @@ namespace micro_profiler
 		case 4:
 			_ordered_view.set_order([this] (const record_type &lhs_, const record_type &rhs_) -> bool {
 				const auto e = _module_paths.end();
-				const auto lhs = _module_paths.find(lhs_.first.persistent_id);
-				const auto rhs = _module_paths.find(rhs_.first.persistent_id);
+				const auto lhs = _module_paths.find(get<0>(lhs_.first));
+				const auto rhs = _module_paths.find(get<0>(rhs_.first));
 
 				if ((lhs == e) & (rhs == e))
 					return false;
@@ -152,8 +153,8 @@ namespace micro_profiler
 		case 5:
 			_ordered_view.set_order([this] (const record_type &lhs_, const record_type &rhs_) -> bool {
 				const auto e = _module_paths.end();
-				const auto lhs = _module_paths.find(lhs_.first.persistent_id);
-				const auto rhs = _module_paths.find(rhs_.first.persistent_id);
+				const auto lhs = _module_paths.find(get<0>(lhs_.first));
+				const auto rhs = _module_paths.find(get<0>(rhs_.first));
 
 				if ((lhs == e) & (rhs == e))
 					return false;
@@ -195,8 +196,8 @@ namespace micro_profiler
 		case 1:	value.append(record.symbol->name.begin(), record.symbol->name.end());	break;
 		case 2:	format_state(value, record.first);	break;
 		case 3:	itoa<10>(value, record.symbol->size);	break;
-		case 4:	format_module_name(value, record.first.persistent_id);	break;
-		case 5:	format_module_path(value, record.first.persistent_id);	break;
+		case 4:	format_module_name(value, get<0>(record.first));	break;
+		case 5:	format_module_path(value, get<0>(record.first));	break;
 		}
 	}
 
@@ -224,24 +225,9 @@ namespace micro_profiler
 	}
 
 	template <typename KeyT>
-	const tables::patch *image_patch_model::find_patch(const KeyT &key) const
-	{
-		const auto l1 = _patches->find(key.persistent_id);
-
-		if (_patches->end() != l1)
-		{
-			const auto l2 = l1->second.find(key.rva);
-
-			if (l1->second.end() != l2)
-				return &l2->second;
-		}
-		return nullptr;
-	}
-
-	template <typename KeyT>
 	void image_patch_model::format_state(agge::richtext_t &value, const KeyT &key) const
 	{
-		if (const auto patch = find_patch(key))
+		if (const auto patch = views::unique_index<keyer::symbol_id>(*_patches).find(key))
 			value << c_patch_states[encode_state(*patch)];
 	}
 

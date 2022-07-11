@@ -170,11 +170,13 @@ namespace micro_profiler
 			{
 				// INIT
 				profiling_session ctx;
+				auto modules1 = plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]);
+
 				ctx.process_info.executable = "kjsdhgkjsdwwp.exe";
 				ctx.process_info.ticks_per_second = 0xF00000000ull;
 				append(ctx.statistics, statistics[0]);
 				add_records(ctx.mappings, plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]));
-				assign(ctx.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
+				static_cast<tables::modules::base_t &>(ctx.modules) = tables::modules::base_t(modules1.begin(), modules1.end());
 				add_records(ctx.threads, threads[0]);
 
 				// ACT
@@ -195,11 +197,13 @@ namespace micro_profiler
 				
 				// INIT
 				profiling_session ctx2;
+				auto modules2 = plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]);
+
 				ctx2.process_info.executable = "/usr/bin/grep";
 				ctx2.process_info.ticks_per_second = 0x1000ull;
 				append(ctx2.statistics, statistics[1]);
 				add_records(ctx2.mappings, plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]));
-				assign(ctx2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
+				static_cast<tables::modules::base_t &>(ctx2.modules) = tables::modules::base_t(modules2.begin(), modules2.end());
 				add_records(ctx2.threads, threads[1]);
 
 				// ACT

@@ -20,19 +20,15 @@
 
 #pragma once
 
-namespace micro_profiler
-{
-	namespace views
-	{
-		template <typename RecordHandleT>
-		struct table_component
-		{
-			virtual ~table_component() {	}
+#include <type_traits>
 
-			virtual void created(RecordHandleT /*record*/) {	}
-			virtual void modified(RecordHandleT /*record*/) {	}
-			virtual void removed(RecordHandleT /*record*/) {	}
-			virtual void cleared() {	}
-		};
-	}
+namespace sdb
+{
+	template <typename F, typename Arg1T>
+	struct result
+	{
+		typedef decltype((*static_cast<F *>(nullptr))(*static_cast<Arg1T *>(nullptr))) type_rcv;
+		typedef typename std::remove_reference<type_rcv>::type type_cv;
+		typedef typename std::remove_cv<type_cv>::type type;
+	};
 }

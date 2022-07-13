@@ -22,7 +22,7 @@
 
 #include <frontend/keyer.h>
 #include <frontend/helpers.h>
-#include <views/integrated_index.h>
+#include <sdb/integrated_index.h>
 
 using namespace std;
 
@@ -63,7 +63,7 @@ namespace micro_profiler
 
 	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, unsigned int &persistent_id) const
 	{
-		if (const auto mapping = find_range(views::ordered_index_(*_mappings, keyer::base()), address))
+		if (const auto mapping = find_range(sdb::ordered_index_(*_mappings, keyer::base()), address))
 		{
 			auto m = _symbols_ordered.find(persistent_id = mapping->persistent_id);
 

@@ -27,11 +27,11 @@
 #include <common/module.h>
 #include <common/noncopyable.h>
 #include <common/protocol.h>
-#include <views/table.h>
+#include <sdb/table.h>
 
 namespace micro_profiler
 {
-	typedef views::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
+	typedef sdb::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
 
 	namespace tables
 	{
@@ -47,11 +47,11 @@ namespace micro_profiler
 
 
 		typedef record<thread_info> thread;
-		typedef views::table<thread> threads;
+		typedef sdb::table<thread> threads;
 
 
 		typedef record<mapped_module_ex> module_mapping;
-		typedef views::table<module_mapping> module_mappings;
+		typedef sdb::table<module_mapping> module_mappings;
 
 
 		struct modules : containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata>
@@ -67,7 +67,7 @@ namespace micro_profiler
 		};
 
 
-		struct patches : views::table<patch>
+		struct patches : sdb::table<patch>
 		{
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;

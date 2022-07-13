@@ -33,7 +33,7 @@
 #include <string>
 #include <tlhelp32.h>
 #include <vector>
-#include <views/integrated_index.h>
+#include <sdb/integrated_index.h>
 
 #define PREAMBLE "Setup: "
 
@@ -58,11 +58,11 @@ namespace micro_profiler
 			string executable;
 		};
 
-		shared_ptr< const views::table<process_info> > get_processes()
+		shared_ptr< const sdb::table<process_info> > get_processes()
 		{
 			shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
 			PROCESSENTRY32W entry = {	sizeof(PROCESSENTRY32W),	};
-			auto t = make_shared< views::table<process_info> >();
+			auto t = make_shared< sdb::table<process_info> >();
 
 			for (auto lister = &::Process32FirstW; lister(snapshot.get(), &entry); lister = &::Process32NextW)
 			{
@@ -80,15 +80,15 @@ namespace micro_profiler
 			return t;
 		}
 
-		void terminate_children(const views::table<process_info> &table, id_t id, bool terminate_self = false)
+		void terminate_children(const sdb::table<process_info> &table, id_t id, bool terminate_self = false)
 		{
-			auto &parent_index = views::multi_index(table, [] (const process_info &p) {	return p.parent_id;	});
+			auto &parent_index = sdb::multi_index(table, [] (const process_info &p) {	return p.parent_id;	});
 
 			for (auto r = parent_index.equal_range(id); r.first != r.second; ++r.first)
 				terminate_children(table, r.first->id, true);
 			if (terminate_self)
 			{
-				auto &process = views::unique_index<keyer::id>(table)[id];
+				auto &process = sdb::unique_index<keyer::id>(table)[id];
 				auto result = ::TerminateProcess(process.handle.get(), static_cast<UINT>(-1));
 
 				LOG(PREAMBLE "Terminating child process...") % A(process.executable) % A(process.id) % A(process.parent_id) % A(result);

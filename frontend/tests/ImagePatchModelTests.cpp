@@ -347,7 +347,7 @@ namespace micro_profiler
 				// ACT
 				add_records(*mappings, plural
 					+ make_mapping(2u, 13u, 0u, "c:\\KERNEL32.exe"));
-				views::unique_index<keyer::external_id>(*mappings)[1].remove();
+				sdb::unique_index<keyer::external_id>(*mappings)[1].remove();
 				mappings->invalidate();
 
 				// ASSERT

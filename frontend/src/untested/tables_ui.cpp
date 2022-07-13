@@ -36,8 +36,8 @@
 #include <frontend/view_dump.h>
 
 #include <common/configuration.h>
-#include <views/integrated_index.h>
-#include <views/transforms.h>
+#include <sdb/integrated_index.h>
+#include <sdb/transforms.h>
 #include <wpl/controls.h>
 #include <wpl/factory.h>
 #include <wpl/layout.h>
@@ -52,7 +52,7 @@ namespace micro_profiler
 	namespace
 	{
 		template <typename OrderedT>
-		shared_ptr< selection<id_t> > create_selection(shared_ptr< views::table<id_t> > scope, shared_ptr<OrderedT> ordered)
+		shared_ptr< selection<id_t> > create_selection(shared_ptr< sdb::table<id_t> > scope, shared_ptr<OrderedT> ordered)
 		{
 			return make_shared< selection<id_t> >(scope, [ordered] (size_t index) {
 				return keyer::id()((*ordered)[index]);
@@ -199,7 +199,7 @@ namespace micro_profiler
 		auto selection_main = create_selection(selection_main_, get_ordered(main_model));
 		auto on_activate = [this, main, selection_main_] (...) {
 			symbol_resolver::fileline_t fileline;
-			auto &idx = views::unique_index<keyer::id>(*main);
+			auto &idx = sdb::unique_index<keyer::id>(*main);
 
 			for (auto i = selection_main_->begin(); i != selection_main_->end(); ++i)
 				if (const auto item = idx.find(*i))

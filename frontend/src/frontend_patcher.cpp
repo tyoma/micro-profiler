@@ -58,7 +58,7 @@ namespace micro_profiler
 	void frontend::apply(unsigned int persistent_id, range<const unsigned int, size_t> rva)
 	{
 		auto req = new_request_handle();
-		auto &idx = views::unique_index<keyer::symbol_id>(_db->patches);
+		auto &idx = sdb::unique_index<keyer::symbol_id>(_db->patches);
 		auto &targets = _patch_request_payload.functions_rva;
 
 		_patch_request_payload.image_persistent_id = persistent_id;
@@ -94,7 +94,7 @@ namespace micro_profiler
 	void frontend::revert(unsigned int persistent_id, range<const unsigned int, size_t> rva)
 	{
 		auto req = new_request_handle();
-		auto &idx = views::unique_index<keyer::symbol_id>(_db->patches);
+		auto &idx = sdb::unique_index<keyer::symbol_id>(_db->patches);
 		auto &targets = _patch_request_payload.functions_rva;
 
 		_patch_request_payload.image_persistent_id = persistent_id;

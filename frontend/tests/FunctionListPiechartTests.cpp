@@ -10,7 +10,7 @@
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
-#include <views/integrated_index.h>
+#include <sdb/integrated_index.h>
 
 using namespace std;
 
@@ -109,7 +109,7 @@ namespace micro_profiler
 				// INIT
 				auto invalidated_count = 0;
 
-				auto &by_node = views::unique_index<keyer::callnode>(*statistics);
+				auto &by_node = sdb::unique_index<keyer::callnode>(*statistics);
 				auto fl = create_functions_list(plural
 					+ make_call_statistics(1, 1, 0, 5, 123, 0, 0, 0, 0)
 					+ make_call_statistics(2, 1, 0, 17, 127, 0, 0, 0, 0)

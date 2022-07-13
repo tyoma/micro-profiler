@@ -27,8 +27,8 @@
 
 #include <common/serialization.h>
 #include <math/serialization.h>
-#include <views/integrated_index.h>
-#include <views/serialization.h>
+#include <sdb/integrated_index.h>
+#include <sdb/serialization.h>
 
 #pragma warning(disable: 4510; disable: 4610)
 
@@ -69,9 +69,9 @@ namespace micro_profiler
 		{	}
 
 		template <typename ArchiveT, typename T, typename C, typename K>
-		void read_item(ArchiveT &archive, views::immutable_unique_index<views::table<tables::record<T>, C>, K> &index) const
+		void read_item(ArchiveT &archive, sdb::immutable_unique_index<sdb::table<tables::record<T>, C>, K> &index) const
 		{
-			typename views::immutable_unique_index<views::table<tables::record<T>, C>, K>::key_type key;
+			typename sdb::immutable_unique_index<sdb::table<tables::record<T>, C>, K>::key_type key;
 			
 			archive(key);
 
@@ -89,8 +89,8 @@ namespace micro_profiler
 		{	_first = true;	}
 
 		template <typename ArchiveT, typename TableT, typename U>
-		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, keyer::callnode> &container,
-			const scontext::hierarchy_node<U, views::immutable_unique_index<TableT, keyer::callnode>, -1> &context)
+		void read_item(ArchiveT &archive, sdb::immutable_unique_index<TableT, keyer::callnode> &container,
+			const scontext::hierarchy_node<U, sdb::immutable_unique_index<TableT, keyer::callnode>, -1> &context)
 		{
 			id_t thread_id;
 
@@ -102,8 +102,8 @@ namespace micro_profiler
 		}
 
 		template <typename ArchiveT, typename TableT, typename U, int sl>
-		void read_item(ArchiveT &archive, views::immutable_unique_index<TableT, keyer::callnode> &container,
-			const scontext::hierarchy_node<U, views::immutable_unique_index<TableT, keyer::callnode>, sl> &context) const
+		void read_item(ArchiveT &archive, sdb::immutable_unique_index<TableT, keyer::callnode> &container,
+			const scontext::hierarchy_node<U, sdb::immutable_unique_index<TableT, keyer::callnode>, sl> &context) const
 		{
 			call_node_key key(context.thread_id, context.parent_id, 0);
 
@@ -180,12 +180,12 @@ namespace micro_profiler
 
 		template <typename ArchiveT, typename ContextT>
 		inline void serialize(ArchiveT &archive, statistics &data, ContextT &/*context*/)
-		{	views::serialize(archive, data);	}
+		{	sdb::serialize(archive, data);	}
 
 		template <typename S, typename P, int v, typename ContextT>
 		inline void serialize(strmd::deserializer<S, P, v> &archive, statistics &data, ContextT &context)
 		{
-			auto &index = views::unique_index<keyer::callnode>(data);
+			auto &index = sdb::unique_index<keyer::callnode>(data);
 
 			archive(index, scontext::root_context(context, index));
 			data.invalidate();
@@ -196,14 +196,14 @@ namespace micro_profiler
 namespace strmd
 {
 	template <typename U, typename K>
-	struct type_traits< micro_profiler::views::immutable_unique_index<U, K> >
+	struct type_traits< sdb::immutable_unique_index<U, K> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::indexed_reader item_reader_type;
 	};
 
 	template <typename TableT>
-	struct type_traits< micro_profiler::views::immutable_unique_index<TableT, micro_profiler::keyer::callnode> >
+	struct type_traits< sdb::immutable_unique_index<TableT, micro_profiler::keyer::callnode> >
 	{
 		typedef container_type_tag category;
 		typedef micro_profiler::call_nodes_reader item_reader_type;

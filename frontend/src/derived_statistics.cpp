@@ -26,21 +26,21 @@
 #include <frontend/constructors.h>
 #include <frontend/key.h>
 #include <frontend/selection_model.h>
-#include <views/transforms.h>
+#include <sdb/transforms.h>
 
 using namespace std;
 
 namespace micro_profiler
 {
 	using namespace keyer;
-	using namespace views;
+	using namespace sdb;
 
 	namespace
 	{
 		struct hierarchy_address
 		{
 			hierarchy_address(calls_statistics_table_cptr hierarchy)
-				: _hierarchy(hierarchy), _by_id(views::unique_index<id>(*_hierarchy))
+				: _hierarchy(hierarchy), _by_id(sdb::unique_index<id>(*_hierarchy))
 			{	}
 
 			long_address_t operator ()(id_t record) const
@@ -48,7 +48,7 @@ namespace micro_profiler
 
 		private:
 			const calls_statistics_table_cptr _hierarchy;
-			const views::immutable_unique_index<calls_statistics_table, id> &_by_id;
+			const sdb::immutable_unique_index<calls_statistics_table, id> &_by_id;
 		};
 
 		struct selection_address_keyer_factory
@@ -96,7 +96,7 @@ namespace micro_profiler
 		others.push_back(sel);
 		others.push_back(hierarchy);
 		result = group_by<long_address_t>(*sel, initialize<selection_address_keyer_factory>(hierarchy),
-			views::default_constructor<long_address_t>(), aggregator::void_());
+			sdb::default_constructor<long_address_t>(), aggregator::void_());
 		return address_table_cptr(composite, &*result);
 	}
 

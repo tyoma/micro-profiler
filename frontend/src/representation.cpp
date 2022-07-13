@@ -24,7 +24,7 @@
 #include <frontend/derived_statistics.h>
 #include <frontend/key.h>
 #include <frontend/threads_model.h>
-#include <views/transforms.h>
+#include <sdb/transforms.h>
 
 using namespace std;
 
@@ -59,9 +59,9 @@ namespace micro_profiler
 		};
 
 		template <typename T, typename C, typename KeyerT>
-		vector< typename views::result<KeyerT, T>::type > collect_keys(const views::table<T, C> &table, const KeyerT &keyer_)
+		vector< typename sdb::result<KeyerT, T>::type > collect_keys(const sdb::table<T, C> &table, const KeyerT &keyer_)
 		{
-			vector< typename views::result<KeyerT, T>::type > result;
+			vector< typename sdb::result<KeyerT, T>::type > result;
 
 			for (auto i = table.begin(); i != table.end(); ++i)
 				result.push_back(keyer_(*i));
@@ -70,8 +70,8 @@ namespace micro_profiler
 
 		calls_statistics_table_cptr group_by_callstack(calls_statistics_table_cptr source)
 		{
-			const auto composite = make_shared_copy(make_tuple(source, views::group_by(*source,
-				[] (const calls_statistics_table &table_, views::agnostic_key_tag) {
+			const auto composite = make_shared_copy(make_tuple(source, sdb::group_by(*source,
+				[] (const calls_statistics_table &table_, sdb::agnostic_key_tag) {
 
 				return keyer::callstack<calls_statistics_table>(table_);
 			}, sum_functions())));
@@ -81,8 +81,8 @@ namespace micro_profiler
 
 		calls_statistics_table_cptr group_by_thread_address(calls_statistics_table_cptr source)
 		{
-			const auto composite = make_shared_copy(make_tuple(source, views::group_by<call_statistics>(*source,
-				[] (const calls_statistics_table &, views::agnostic_key_tag) {
+			const auto composite = make_shared_copy(make_tuple(source, sdb::group_by<call_statistics>(*source,
+				[] (const calls_statistics_table &, sdb::agnostic_key_tag) {
 
 				return keyer::combine2<keyer::address, keyer::thread_id>();
 			}, auto_increment_constructor<call_statistics>(), aggregator::sum_flat(*source))));
@@ -93,14 +93,14 @@ namespace micro_profiler
 		filtered_calls_statistics_table_cptr join_by_thread(calls_statistics_table_cptr source,
 			selector_table_ptr threads)
 		{
-			const auto composite = make_shared_copy(make_tuple(source, threads, views::join(*source, *threads,
+			const auto composite = make_shared_copy(make_tuple(source, threads, sdb::join(*source, *threads,
 				keyer::thread_id(), keyer::self())));
 
 			return filtered_calls_statistics_table_cptr(composite, &*get<2>(*composite));
 		}
 
 		template <typename T, typename C, typename V>
-		void add_record(views::table<T, C> &table, const V &value)
+		void add_record(sdb::table<T, C> &table, const V &value)
 		{
 			auto rec = table.create();
 			*rec = value;
@@ -111,13 +111,13 @@ namespace micro_profiler
 		function<void ()> make_activate_derived(shared_ptr<const M> main, selector_table_ptr selection_main,
 			shared_ptr<const D> derived, selector_table_ptr selection_derived)
 		{
-			const auto selected_derived = views::join<keyer::id, keyer::self>(*derived, *selection_derived);
+			const auto selected_derived = sdb::join<keyer::id, keyer::self>(*derived, *selection_derived);
 
 			return [main, selection_main, selection_derived, selected_derived] {
 				typedef keyer::combine2<keyer::address, keyer::thread_id> match_keyer;
 
 				const auto jump = collect_keys(*selected_derived, match_keyer());
-				const auto &idx = views::multi_index<match_keyer>(*main);
+				const auto &idx = sdb::multi_index<match_keyer>(*main);
 
 				selection_main->clear();
 				selection_derived->clear();

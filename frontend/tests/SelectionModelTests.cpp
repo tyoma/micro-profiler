@@ -15,8 +15,8 @@ namespace micro_profiler
 			test( NewModelHasNoSelectedItems )
 			{
 				// INIT
-				auto scope1 = make_shared< views::table<int> >();
-				auto scope2 = make_shared< views::table<string> >();
+				auto scope1 = make_shared< sdb::table<int> >();
+				auto scope2 = make_shared< sdb::table<string> >();
 				pair<int, string> data1[] = {
 					make_pair(12, "z"), make_pair(12211, "b"), make_pair(1, "a"),
 				};
@@ -43,7 +43,7 @@ namespace micro_profiler
 			test( AdditionsRemovalsClearsModifySelection )
 			{
 				// INIT
-				auto scope = make_shared< views::table<int> >();
+				auto scope = make_shared< sdb::table<int> >();
 				pair<int, string> data[] = {
 					make_pair(12, "z"), make_pair(12211, "b"), make_pair(1, "a"), make_pair(192, "e"),
 				};
@@ -104,7 +104,7 @@ namespace micro_profiler
 			test( SelectionChangesAreReportedAsInvalidations )
 			{
 				// INIT
-				auto scope = make_shared< views::table<int> >();
+				auto scope = make_shared< sdb::table<int> >();
 				pair<int, string> data[] = {
 					make_pair(11, "z"), make_pair(12, "b"), make_pair(13, "a"), make_pair(14, "e"), make_pair(15, "f"),
 				};

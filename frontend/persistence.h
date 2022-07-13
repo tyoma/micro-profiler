@@ -28,26 +28,26 @@ namespace strmd
 	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 6	};	};
 }
 
+namespace sdb
+{
+	template <typename S, typename P, int v, typename T, typename C>
+	inline void serialize(strmd::deserializer<S, P, v> &archive, table<micro_profiler::tables::record<T>, C> &data, bool)
+	{	archive(unique_index(data, micro_profiler::keyer::external_id()));	}
+
+	template <typename S, typename P, typename T, typename C>
+	inline void serialize(strmd::serializer<S, P> &, table<micro_profiler::tables::record<T>, C> &, bool)
+	{	}
+}
+
 namespace micro_profiler
 {
-	namespace views
-	{
-		template <typename S, typename P, int v, typename T, typename C>
-		inline void serialize(strmd::deserializer<S, P, v> &archive, table<tables::record<T>, C> &data, bool)
-		{	archive(views::unique_index(data, keyer::external_id()));	}
-
-		template <typename S, typename P, typename T, typename C>
-		inline void serialize(strmd::serializer<S, P> &, table<tables::record<T>, C> &, bool)
-		{	}
-	}
-
 	namespace tables
 	{
 		template <typename S, typename P, int v>
 		inline void serialize(strmd::deserializer<S, P, v> &archive, statistics &data, bool address_and_thread)
 		{
 			scontext::additive dummy;
-			auto &index = views::unique_index<keyer::callnode>(data);
+			auto &index = sdb::unique_index<keyer::callnode>(data);
 
 			archive(index, scontext::nested_context(scontext::root_context(dummy, index, address_and_thread), 0u));
 		}

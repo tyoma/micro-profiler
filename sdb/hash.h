@@ -20,18 +20,41 @@
 
 #pragma once
 
-#include <type_traits>
+#include <tuple>
+#include <unordered_map>
 
-namespace micro_profiler
+namespace sdb
 {
-	namespace views
+	template <typename T>
+	struct hash : std::hash<T>
+	{	};
+
+	template <typename T1, typename T2>
+	struct hash< std::tuple<T1, T2> >
 	{
-		template <typename F, typename Arg1T>
-		struct result
-		{
-			typedef decltype((*static_cast<F *>(nullptr))(*static_cast<Arg1T *>(nullptr))) type_rcv;
-			typedef typename std::remove_reference<type_rcv>::type type_cv;
-			typedef typename std::remove_cv<type_cv>::type type;
-		};
-	}
+		std::size_t operator ()(const std::tuple<T1, T2> &value) const
+		{	return hash<T1>()(std::get<0>(value)) ^ hash<T2>()(std::get<1>(value));	}
+	};
+
+	template <typename T1, typename T2, typename T3>
+	struct hash< std::tuple<T1, T2, T3> >
+	{
+		std::size_t operator ()(const std::tuple<T1, T2, T3> &value) const
+		{	return hash<T1>()(std::get<0>(value)) ^ hash<T2>()(std::get<1>(value)) ^ hash<T3>()(std::get<2>(value));	}
+	};
+
+	template <typename T>
+	struct hash<T *>
+	{
+		std::size_t operator ()(T *value) const
+		{	return reinterpret_cast<std::size_t>(value);	}
+	};
+
+	template <typename T>
+	struct iterator_hash
+	{
+		std::size_t operator ()(T value) const
+		{	return reinterpret_cast<std::size_t>(&*value);	}
+	};
 }
+

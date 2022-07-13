@@ -7,7 +7,7 @@
 
 #include <ut/assert.h>
 #include <ut/test.h>
-#include <views/transforms.h>
+#include <sdb/transforms.h>
 
 using namespace std;
 
@@ -24,7 +24,7 @@ namespace micro_profiler
 			};
 
 			template <typename T, typename ConstructorT>
-			void add(views::table<T, ConstructorT> &table, const T &item)
+			void add(sdb::table<T, ConstructorT> &table, const T &item)
 			{
 				auto r = table.create();
 
@@ -42,8 +42,8 @@ namespace micro_profiler
 					{	0, 0, 0x7010000090	},
 					{	0, 0, 0xF960000010	},
 				};
-				views::table<fake_call> tbl;
-				const keyer::callstack< views::table<fake_call> > keyer(tbl);
+				sdb::table<fake_call> tbl;
+				const keyer::callstack< sdb::table<fake_call> > keyer(tbl);
 
 				// ACT
 				callstack_key key = keyer(data[0]);
@@ -79,8 +79,8 @@ namespace micro_profiler
 					{	31, 11, 37	},
 					{	97, 31, 41	},
 				};
-				views::table<fake_call> tbl;
-				auto keyer = keyer::callstack< views::table<fake_call> >(tbl);
+				sdb::table<fake_call> tbl;
+				auto keyer = keyer::callstack< sdb::table<fake_call> >(tbl);
 
 				for (auto i = begin(data_); i != end(data_); ++i)
 					add(tbl, *i);
@@ -177,7 +177,7 @@ namespace micro_profiler
 
 
 			template <typename TableT>
-			keyer::callstack<TableT> operator ()(const TableT &table_, views::agnostic_key_tag) const
+			keyer::callstack<TableT> operator ()(const TableT &table_, sdb::agnostic_key_tag) const
 			{	return keyer::callstack<TableT>(table_);	}
 
 

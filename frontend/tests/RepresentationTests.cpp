@@ -162,7 +162,7 @@ namespace micro_profiler
 				// INIT
 				auto rep = representation<true, threads_all>::create(source);
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
-					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].id;
+					return sdb::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].id;
 				};
 				vector< vector<id_t> > log;
 				auto conn = rep.selection_main->invalidate += [&] {
@@ -201,7 +201,7 @@ namespace micro_profiler
 				// INIT
 				auto rep = representation<true, threads_all>::create(source);
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
-					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].id;
+					return sdb::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].id;
 				};
 
 				add_records(*rep.selection_main, plural + 1u);
@@ -323,7 +323,7 @@ namespace micro_profiler
 				// INIT
 				auto rep = representation<true, threads_cumulative>::create(source);
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
-					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].id;
+					return sdb::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].id;
 				};
 
 				add_records(*rep.selection_main, plural + 3u);
@@ -354,7 +354,7 @@ namespace micro_profiler
 				// INIT
 				auto rep = representation<true, threads_cumulative>::create(source);
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
-					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].id;
+					return sdb::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].id;
 				};
 
 				add_records(*rep.selection_main, plural + 1u);
@@ -488,7 +488,7 @@ namespace micro_profiler
 				// INIT
 				auto rep = representation<true, threads_filtered>::create(source, 1);
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
-					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].left().id;
+					return sdb::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callers)[make_tuple(address, thread_id)].left().id;
 				};
 
 				add_records(*rep.selection_main, plural + 3u);
@@ -519,7 +519,7 @@ namespace micro_profiler
 				// INIT
 				auto rep = representation<true, threads_filtered>::create(source, 1);
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
-					return views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].left().id;
+					return sdb::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.callees)[make_tuple(address, thread_id)].left().id;
 				};
 
 				add_records(*rep.selection_main, plural + 1u);
@@ -790,7 +790,7 @@ namespace micro_profiler
 				auto rep = representation<false, threads_filtered>::create(source2, 7);
 				auto get_id = [&] (long_address_t address, id_t thread_id) -> id_t {
 					keyer::id id;
-					return id(views::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.main)[make_tuple(address, thread_id)]);
+					return id(sdb::unique_index< keyer::combine2<keyer::address, keyer::thread_id> >(*rep.main)[make_tuple(address, thread_id)]);
 				};
 
 				// ACT / ASSERT

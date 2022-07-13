@@ -234,7 +234,7 @@ namespace micro_profiler
 			test( HierarchicalTableIsFormedFromHierarchicalData )
 			{
 				// INIT
-				auto statistics_ = make_shared< views::table<call_statistics> >();
+				auto statistics_ = make_shared< sdb::table<call_statistics> >();
 
 				add_records(*statistics_, plural
 					+ make_call_statistics(1, 0, 5, 0x00001122, 0, 0, 0, 0, 0)

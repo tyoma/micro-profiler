@@ -26,14 +26,14 @@
 #include <functional>
 #include <unordered_set>
 #include <wpl/models.h>
-#include <views/integrated_index.h>
+#include <sdb/integrated_index.h>
 
 namespace micro_profiler
 {
 	template <typename KeyT>
 	class selection : public wpl::dynamic_set_model, noncopyable
 	{
-		typedef views::table<KeyT> base_t;
+		typedef sdb::table<KeyT> base_t;
 
 	public:
 		typedef typename base_t::const_iterator const_iterator;
@@ -57,7 +57,7 @@ namespace micro_profiler
 
 	private:
 		const std::shared_ptr<base_t> _scope;
-		views::immutable_unique_index<base_t, keyer::self> &_index;
+		sdb::immutable_unique_index<base_t, keyer::self> &_index;
 		const get_key_cb _get_key;
 		unsigned int _omit_notify;
 		const wpl::slot_connection _conn;
@@ -67,7 +67,7 @@ namespace micro_profiler
 
 	template <typename KeyT>
 	inline selection<KeyT>::selection(std::shared_ptr<base_t> scope, const get_key_cb &get_key)
-		: _scope(scope), _index(views::unique_index(*scope, keyer::self())), _get_key(get_key), _omit_notify(0),
+		: _scope(scope), _index(sdb::unique_index(*scope, keyer::self())), _get_key(get_key), _omit_notify(0),
 			_conn(scope->invalidate += [this] {	if (!_omit_notify) invalidate(npos());	})
 	{	}
 

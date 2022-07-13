@@ -5,13 +5,6 @@
     <ClCompile Include="FilterViewTests.cpp" />
     <ClCompile Include="OrderedViewTests.cpp" />
     <ClCompile Include="AnyKeyTests.cpp" />
-    <ClCompile Include="TableTests.cpp" />
-    <ClCompile Include="ImmutableIndexTests.cpp" />
-    <ClCompile Include="TableSerializationTests.cpp" />
-    <ClCompile Include="IntegratedIndexTests.cpp" />
-    <ClCompile Include="AggregationTests.cpp" />
-    <ClCompile Include="JoiningTests.cpp" />
-    <ClCompile Include="OrderedIndexTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -31,34 +24,7 @@
     <ClInclude Include="..\any_key.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\table.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\index.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\serialization.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\integrated_index.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\transforms.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
     <ClInclude Include="helpers.h" />
     <ClInclude Include="comparisons.h" />
-    <ClInclude Include="..\table_component.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hash.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\transform_iterator.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\type_traits.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

@@ -25,28 +25,20 @@
 
 #include <common/hash.h>
 #include <tuple>
-#include <views/integrated_index.h>
+#include <sdb/integrated_index.h>
 
-namespace micro_profiler
+namespace sdb
 {
-	namespace views
-	{
-		template <typename Table1T, typename Table2T>
-		class joined_record;
-	}
-
-	typedef std::tuple<id_t /*thread_id*/, id_t /*parent_id*/, long_address_t> call_node_key;
-	typedef views::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
-	typedef std::shared_ptr<const calls_statistics_table> calls_statistics_table_cptr;
-	typedef std::vector<long_address_t> callstack_key;
+	template <typename Table1T, typename Table2T>
+	class joined_record;
 
 	template <typename T>
-	class views::hash< std::vector<T> >
+	class hash< std::vector<T> >
 	{
 	public:
 		std::size_t operator ()(const std::vector<T> &key) const
 		{
-			size_t v = h((T()));
+			std::size_t v = h((T()));
 
 			for (auto i = key.begin(); i != key.end(); ++i)
 				v = h(v, h(*i));
@@ -54,8 +46,16 @@ namespace micro_profiler
 		}
 
 	private:
-		knuth_hash h;
+		micro_profiler::knuth_hash h;
 	};
+}
+
+namespace micro_profiler
+{
+	typedef std::tuple<id_t /*thread_id*/, id_t /*parent_id*/, long_address_t> call_node_key;
+	typedef sdb::table< call_statistics, auto_increment_constructor<call_statistics> > calls_statistics_table;
+	typedef std::shared_ptr<const calls_statistics_table> calls_statistics_table_cptr;
+	typedef std::vector<long_address_t> callstack_key;
 
 	namespace keyer
 	{
@@ -64,8 +64,8 @@ namespace micro_profiler
 		{
 			template <typename R>
 			std::tuple<
-				typename views::result<K1, R>::type,
-				typename views::result<K2, R>::type
+				typename sdb::result<K1, R>::type,
+				typename sdb::result<K2, R>::type
 			> operator ()(const R &record) const
 			{	return std::make_tuple(keyer1(record), keyer2(record));	}
 
@@ -82,9 +82,9 @@ namespace micro_profiler
 		{
 			template <typename R>
 			std::tuple<
-				typename views::result<K1, R>::type,
-				typename views::result<K2, R>::type,
-				typename views::result<K3, R>::type
+				typename sdb::result<K1, R>::type,
+				typename sdb::result<K2, R>::type,
+				typename sdb::result<K3, R>::type
 			> operator ()(const R &record) const
 			{	return std::make_tuple(keyer1(record), keyer2(record), keyer3(record));	}
 
@@ -104,7 +104,7 @@ namespace micro_profiler
 			{	return record.id;	}
 
 			template <typename Table1T, typename Table2T>
-			id_t operator ()(const views::joined_record<Table1T, Table2T> &record) const
+			id_t operator ()(const sdb::joined_record<Table1T, Table2T> &record) const
 			{	return (*this)(record.left());	}
 		};
 
@@ -177,7 +177,7 @@ namespace micro_profiler
 		struct parent_address
 		{
 			parent_address(const calls_statistics_table &hierarchy)
-				: _by_id(views::unique_index<id>(hierarchy))
+				: _by_id(sdb::unique_index<id>(hierarchy))
 			{	}
 
 			long_address_t operator ()(const call_statistics& record) const
@@ -188,7 +188,7 @@ namespace micro_profiler
 			}
 
 		private:
-			const views::immutable_unique_index<calls_statistics_table, id> &_by_id;
+			const sdb::immutable_unique_index<calls_statistics_table, id> &_by_id;
 		};
 
 		template <typename TableT>
@@ -196,7 +196,7 @@ namespace micro_profiler
 		{
 		public:
 			callstack(const TableT &underlying)
-				: _by_id(views::unique_index<id>(underlying))
+				: _by_id(sdb::unique_index<id>(underlying))
 			{	}
 
 			template <typename T>
@@ -226,7 +226,7 @@ namespace micro_profiler
 			}
 
 		private:
-			const views::immutable_unique_index<TableT, id> &_by_id;
+			const sdb::immutable_unique_index<TableT, id> &_by_id;
 			mutable callstack_key _key_buffer;
 		};
 

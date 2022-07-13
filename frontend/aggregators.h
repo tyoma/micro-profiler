@@ -16,7 +16,7 @@ namespace micro_profiler
 		struct sum_flat
 		{
 			sum_flat(const calls_statistics_table &hierarchy)
-				: _by_id(views::unique_index<keyer::id>(hierarchy))
+				: _by_id(sdb::unique_index<keyer::id>(hierarchy))
 			{	}
 
 			template <typename I>
@@ -29,7 +29,7 @@ namespace micro_profiler
 			}
 
 		private:
-			const views::immutable_unique_index<calls_statistics_table, keyer::id> &_by_id;
+			const sdb::immutable_unique_index<calls_statistics_table, keyer::id> &_by_id;
 		};
 	}
 }

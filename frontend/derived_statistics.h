@@ -24,9 +24,9 @@
 
 namespace micro_profiler
 {
-	typedef views::table<long_address_t> address_table;
+	typedef sdb::table<long_address_t> address_table;
 	typedef std::shared_ptr<const address_table> address_table_cptr;
-	typedef views::table<id_t> selector_table;
+	typedef sdb::table<id_t> selector_table;
 	typedef std::shared_ptr<const selector_table> selector_table_cptr;
 	typedef std::shared_ptr<selector_table> selector_table_ptr;
 

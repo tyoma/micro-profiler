@@ -120,7 +120,7 @@ namespace micro_profiler
 				// INIT
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
-				const auto &idx = views::unique_index<keyer::symbol_id>(*patches);
+				const auto &idx = sdb::unique_index<keyer::symbol_id>(*patches);
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
@@ -421,7 +421,7 @@ namespace micro_profiler
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
-					const auto &idx = views::multi_index(*this->patches, keyer::persistent_id());
+					const auto &idx = sdb::multi_index(*this->patches, keyer::persistent_id());
 
 					log.resize(log.size() + 1);
 					for (auto r = idx.equal_range(payload.image_persistent_id); r.first != r.second; ++r.first)

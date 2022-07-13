@@ -20,43 +20,16 @@
 
 #pragma once
 
-#include <tuple>
-#include <unordered_map>
-
-namespace micro_profiler
+namespace sdb
 {
-	namespace views
+	template <typename RecordHandleT>
+	struct table_component
 	{
-		template <typename T>
-		struct hash : std::hash<T>
-		{	};
+		virtual ~table_component() {	}
 
-		template <typename T1, typename T2>
-		struct hash< std::tuple<T1, T2> >
-		{
-			std::size_t operator ()(const std::tuple<T1, T2> &value) const
-			{	return hash<T1>()(std::get<0>(value)) ^ hash<T2>()(std::get<1>(value));	}
-		};
-
-		template <typename T1, typename T2, typename T3>
-		struct hash< std::tuple<T1, T2, T3> >
-		{
-			std::size_t operator ()(const std::tuple<T1, T2, T3> &value) const
-			{	return hash<T1>()(std::get<0>(value)) ^ hash<T2>()(std::get<1>(value)) ^ hash<T3>()(std::get<2>(value));	}
-		};
-
-		template <typename T>
-		struct hash<T *>
-		{
-			std::size_t operator ()(T *value) const
-			{	return reinterpret_cast<std::size_t>(value);	}
-		};
-
-		template <typename T>
-		struct iterator_hash
-		{
-			std::size_t operator ()(T value) const
-			{	return reinterpret_cast<std::size_t>(&*value);	}
-		};
-	}
+		virtual void created(RecordHandleT /*record*/) {	}
+		virtual void modified(RecordHandleT /*record*/) {	}
+		virtual void removed(RecordHandleT /*record*/) {	}
+		virtual void cleared() {	}
+	};
 }

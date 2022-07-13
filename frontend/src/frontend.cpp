@@ -109,7 +109,7 @@ namespace micro_profiler
 		auto modules_callback = [this] (ipc::deserializer &d) {
 			auto &mappings = _db->mappings;
 
-			d(views::unique_index(mappings, keyer::external_id()));
+			d(sdb::unique_index(mappings, keyer::external_id()));
 			for (auto i = mappings.begin(); i != mappings.end(); ++i)
 			{
 				const auto m = _symbol_cache_paths.find(i->persistent_id);
@@ -136,7 +136,7 @@ namespace micro_profiler
 	{
 		auto req = new_request_handle();
 		auto &threads = _db->threads;
-		auto &idx = views::unique_index(threads, keyer::external_id());
+		auto &idx = sdb::unique_index(threads, keyer::external_id());
 
 		for (auto i = thread_ids.begin(); i != thread_ids.end(); i++)
 		{
@@ -168,7 +168,7 @@ namespace micro_profiler
 			const auto enable = make_shared<bool>(false);
 			containers::unordered_map<unsigned int, int> requested;
 			auto &statistics = _db->statistics;
-			auto &idx = views::ordered_index_(_db->mappings, keyer::base());
+			auto &idx = sdb::ordered_index_(_db->mappings, keyer::base());
 
 			for (tables::statistics::const_iterator i = statistics.begin(); i != statistics.end(); ++i)
 			{

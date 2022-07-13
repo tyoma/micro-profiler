@@ -22,14 +22,14 @@
 
 #include "keyer.h"
 
-#include <views/transforms.h>
+#include <sdb/transforms.h>
 
 namespace micro_profiler
 {
-	typedef views::table<id_t> selector_table;
+	typedef sdb::table<id_t> selector_table;
 	typedef std::shared_ptr<selector_table> selector_table_ptr;
-	typedef views::joined_record<calls_statistics_table, selector_table> filtered_entry;
-	typedef views::table<filtered_entry> filtered_calls_statistics_table;
+	typedef sdb::joined_record<calls_statistics_table, selector_table> filtered_entry;
+	typedef sdb::table<filtered_entry> filtered_calls_statistics_table;
 	typedef std::shared_ptr<const filtered_calls_statistics_table> filtered_calls_statistics_table_cptr;
 
 	enum thread_mode {	threads_all, threads_cumulative, threads_filtered	};

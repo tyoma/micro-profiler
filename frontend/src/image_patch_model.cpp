@@ -114,8 +114,8 @@ namespace micro_profiler
 
 		case 2:
 			_ordered_view.set_order([this] (const record_type &lhs_, const record_type &rhs_) -> bool {
-				const auto lhs = views::unique_index<keyer::symbol_id>(*_patches).find(lhs_.first);
-				const auto rhs = views::unique_index<keyer::symbol_id>(*_patches).find(rhs_.first);
+				const auto lhs = sdb::unique_index<keyer::symbol_id>(*_patches).find(lhs_.first);
+				const auto rhs = sdb::unique_index<keyer::symbol_id>(*_patches).find(rhs_.first);
 
 				return (!lhs & !rhs) ? false : !lhs ? true : !rhs ? false : encode_state(*lhs) < encode_state(*rhs);
 			}, ascending);
@@ -176,7 +176,7 @@ namespace micro_profiler
 
 	shared_ptr< selection<symbol_key> > image_patch_model::create_selection() const
 	{
-		return make_shared< selection<symbol_key> >(std::make_shared< views::table<symbol_key> >(),
+		return make_shared< selection<symbol_key> >(std::make_shared< sdb::table<symbol_key> >(),
 			[this] (index_type item) {	return _ordered_view[item].first;	});
 	}
 
@@ -227,7 +227,7 @@ namespace micro_profiler
 	template <typename KeyT>
 	void image_patch_model::format_state(agge::richtext_t &value, const KeyT &key) const
 	{
-		if (const auto patch = views::unique_index<keyer::symbol_id>(*_patches).find(key))
+		if (const auto patch = sdb::unique_index<keyer::symbol_id>(*_patches).find(key))
 			value << c_patch_states[encode_state(*patch)];
 	}
 

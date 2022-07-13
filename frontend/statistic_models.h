@@ -46,11 +46,11 @@ namespace micro_profiler
 	};
 
 	template <typename Table1T, typename Table2T>
-	struct key_traits< views::joined_record<Table1T, Table2T> >
+	struct key_traits< sdb::joined_record<Table1T, Table2T> >
 	{
 		typedef typename key_traits<typename Table1T::value_type>::key_type key_type;
 	
-		static key_type get_key(const views::joined_record<Table1T, Table2T> &value)
+		static key_type get_key(const sdb::joined_record<Table1T, Table2T> &value)
 		{	return key_traits<typename Table1T::value_type>::get_key(value);	}
 	};
 
@@ -85,13 +85,13 @@ namespace micro_profiler
 	inline statistics_model_context create_context(std::shared_ptr<U> underlying, double tick_interval,
 		std::shared_ptr<symbol_resolver> resolver, std::shared_ptr<const tables::threads> threads, bool canonical)
 	{
-		auto &by_id = views::unique_index<keyer::id>(*underlying);
+		auto &by_id = sdb::unique_index<keyer::id>(*underlying);
 
 		return initialize<statistics_model_context>(tick_interval, [underlying, &by_id] (id_t id) -> const call_statistics * {
 			auto r = by_id.find(id);
 			return r ? &(const call_statistics &)*r : nullptr;
 		}, [threads] (id_t id) -> const thread_info * {
-			return views::unique_index<keyer::external_id>(*threads).find(id);
+			return sdb::unique_index<keyer::external_id>(*threads).find(id);
 		}, resolver, canonical);
 	}
 

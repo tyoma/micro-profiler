@@ -6,7 +6,7 @@
 #include <common/module.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
-#include <views/integrated_index.h>
+#include <sdb/integrated_index.h>
 #include <wpl/models.h>
 
 namespace micro_profiler
@@ -272,7 +272,7 @@ namespace micro_profiler
 		template <typename TableT, typename ContainerT, typename KeyerT>
 		inline void add_records(TableT &table_, const ContainerT &records, const KeyerT &keyer_)
 		{
-			auto &idx = views::unique_index(table_, keyer_);
+			auto &idx = sdb::unique_index(table_, keyer_);
 
 			for (auto i = std::begin(records); i != std::end(records); ++i)
 			{

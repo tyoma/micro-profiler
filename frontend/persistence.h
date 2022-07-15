@@ -23,20 +23,11 @@
 #include "database.h"
 #include "serialization.h"
 
+#include <sdb/indexed_serialization.h>
+
 namespace strmd
 {
 	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 6	};	};
-}
-
-namespace sdb
-{
-	template <typename S, typename P, int v, typename T, typename C>
-	inline void serialize(strmd::deserializer<S, P, v> &archive, table<micro_profiler::tables::record<T>, C> &data, bool)
-	{	archive(unique_index(data, micro_profiler::keyer::external_id()));	}
-
-	template <typename S, typename P, typename T, typename C>
-	inline void serialize(strmd::serializer<S, P> &, table<micro_profiler::tables::record<T>, C> &, bool)
-	{	}
 }
 
 namespace micro_profiler
@@ -56,12 +47,14 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, profiling_session &data, unsigned int ver)
 	{
+		sdb::scontext::indexed_by<keyer::external_id> as_map;
+
 		archive(data.process_info);
 
 		if (ver >= 6)
 			archive(data.mappings);
 		else if (ver >= 3)
-			archive(data.mappings, static_cast<const bool &>(true));
+			archive(data.mappings, as_map);
 
 		archive(data.modules);
 
@@ -75,7 +68,7 @@ namespace micro_profiler
 		if (ver >= 6)
 			archive(data.threads);
 		else if (ver >= 4)
-			archive(data.threads, static_cast<const bool &>(true));
+			archive(data.threads, as_map);
 
 		//if (ver >= 5)
 		//	archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::image_patches> &>(const_cast<tables::patches &>(*data.patches)));

@@ -5,6 +5,7 @@ include(test)
 set(SAVANT_DB_TESTS_SOURCES
 	AggregationTests.cpp
 	ImmutableIndexTests.cpp
+	IndexedSerializationTests.cpp
 	IntegratedIndexTests.cpp
 	JoiningTests.cpp
 	OrderedIndexTests.cpp

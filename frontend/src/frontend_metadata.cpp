@@ -65,10 +65,7 @@ namespace micro_profiler
 		const auto cache_path = _symbol_cache_paths.find(persistent_id);
 
 		if (cache_path == _symbol_cache_paths.end())
-		{
-			request_metadata_nw(request_, persistent_id, ready);
-			return;
-		}
+			return request_metadata_nw(request_, persistent_id, ready);
 
 		const auto req = make_shared< shared_ptr<void> >();
 		auto &rreq = *req;

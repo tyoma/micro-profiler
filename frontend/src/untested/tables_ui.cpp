@@ -55,7 +55,7 @@ namespace micro_profiler
 		shared_ptr< selection<id_t> > create_selection(shared_ptr< sdb::table<id_t> > scope, shared_ptr<OrderedT> ordered)
 		{
 			return make_shared< selection<id_t> >(scope, [ordered] (size_t index) {
-				return keyer::id()((*ordered)[index]);
+				return keyer::id()((*ordered)[index]); // TODO: !!!Crash on attempt to add npos()ed item!!!
 			});
 		}
 	}

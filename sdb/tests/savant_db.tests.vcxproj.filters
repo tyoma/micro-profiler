@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="FlattenViewTests.cpp" />
-    <ClCompile Include="FilterViewTests.cpp" />
-    <ClCompile Include="OrderedViewTests.cpp" />
-    <ClCompile Include="AnyKeyTests.cpp" />
     <ClCompile Include="TableTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
     <ClCompile Include="TableSerializationTests.cpp" />
@@ -12,6 +8,7 @@
     <ClCompile Include="AggregationTests.cpp" />
     <ClCompile Include="JoiningTests.cpp" />
     <ClCompile Include="OrderedIndexTests.cpp" />
+    <ClCompile Include="IndexedSerializationTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Library Headers">
@@ -19,18 +16,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\filter.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\flatten.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ordered.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\any_key.h">
-      <Filter>Library Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\table.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
@@ -58,6 +43,9 @@
       <Filter>Library Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\type_traits.h">
+      <Filter>Library Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\indexed_serialization.h">
       <Filter>Library Headers</Filter>
     </ClInclude>
   </ItemGroup>

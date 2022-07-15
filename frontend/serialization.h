@@ -27,7 +27,7 @@
 
 #include <common/serialization.h>
 #include <math/serialization.h>
-#include <sdb/integrated_index.h>
+#include <sdb/indexed_serialization.h>
 #include <sdb/serialization.h>
 
 #pragma warning(disable: 4510; disable: 4610)
@@ -62,26 +62,6 @@ namespace strmd
 
 namespace micro_profiler
 {
-	struct indexed_reader : strmd::indexed_associative_container_reader
-	{
-		template <typename ContainerT>
-		void prepare(ContainerT &/*data*/, size_t /*count*/)
-		{	}
-
-		template <typename ArchiveT, typename T, typename C, typename K>
-		void read_item(ArchiveT &archive, sdb::immutable_unique_index<sdb::table<tables::record<T>, C>, K> &index) const
-		{
-			typename sdb::immutable_unique_index<sdb::table<tables::record<T>, C>, K>::key_type key;
-			
-			archive(key);
-
-			auto rec = index[key];
-
-			archive(static_cast<T &>(*rec));
-			rec.commit();
-		}
-	};
-
 	struct call_nodes_reader : strmd::container_reader_base
 	{
 		template <typename ContainerT>
@@ -171,6 +151,10 @@ namespace micro_profiler
 			archive(static_cast<T &>(data));
 		}
 
+		template <typename ArchiveT, typename T>
+		inline void serialize(ArchiveT &archive, record<T> &data, sdb::scontext::indexed_by<keyer::external_id> &, int ver)
+		{	serialize(archive, static_cast<T &>(data), ver);	}
+
 		template <typename ArchiveT>
 		inline void serialize(ArchiveT &archive, modules &data)
 		{
@@ -195,13 +179,6 @@ namespace micro_profiler
 
 namespace strmd
 {
-	template <typename U, typename K>
-	struct type_traits< sdb::immutable_unique_index<U, K> >
-	{
-		typedef container_type_tag category;
-		typedef micro_profiler::indexed_reader item_reader_type;
-	};
-
 	template <typename TableT>
 	struct type_traits< sdb::immutable_unique_index<TableT, micro_profiler::keyer::callnode> >
 	{

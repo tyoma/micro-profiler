@@ -24,6 +24,7 @@
 #include <frontend/serialization.h>
 
 #include <logger/log.h>
+#include <sdb/indexed_serialization.h>
 
 #define PREAMBLE "Frontend: "
 
@@ -79,6 +80,10 @@ namespace micro_profiler
 
 		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {	finalize();	});
 
+		_requests.push_back(_db->mappings.created += [this] (tables::module_mappings::const_iterator i) {
+			_symbol_cache_paths[i->persistent_id] = construct_cache_path(*i);
+		});
+
 		init_patcher();
 
 		LOG(PREAMBLE "constructed...") % A(this);
@@ -107,17 +112,9 @@ namespace micro_profiler
 			return;
 
 		auto modules_callback = [this] (ipc::deserializer &d) {
-			auto &mappings = _db->mappings;
+			sdb::scontext::indexed_by<keyer::external_id> as_map;
 
-			d(sdb::unique_index(mappings, keyer::external_id()));
-			for (auto i = mappings.begin(); i != mappings.end(); ++i)
-			{
-				const auto m = _symbol_cache_paths.find(i->persistent_id);
-
-				if (m == _symbol_cache_paths.end())
-					_symbol_cache_paths[i->persistent_id] = construct_cache_path(*i);
-			}
-			mappings.invalidate();
+			d(_db->mappings, as_map);
 		};
 		auto update_callback = [this, &request_, on_update] (ipc::deserializer &d) {
 			d(_db->statistics, _serialization_context);
@@ -135,8 +132,7 @@ namespace micro_profiler
 	void frontend::update_threads(vector<unsigned int> &thread_ids)
 	{
 		auto req = new_request_handle();
-		auto &threads = _db->threads;
-		auto &idx = sdb::unique_index(threads, keyer::external_id());
+		auto &idx = sdb::unique_index(_db->threads, keyer::external_id());
 
 		for (auto i = thread_ids.begin(); i != thread_ids.end(); i++)
 		{
@@ -146,14 +142,16 @@ namespace micro_profiler
 			rec.commit();
 		}
 		thread_ids.clear();
-		for (auto i = threads.begin(); i != threads.end(); ++i)
+		for (auto i = _db->threads.begin(); i != _db->threads.end(); ++i)
 		{
 			if (!i->complete)
 				thread_ids.push_back(i->id);
 		}
 
-		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req, &idx] (ipc::deserializer &d) {
-			d(idx);
+		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (ipc::deserializer &d) {
+			sdb::scontext::indexed_by<keyer::external_id> as_map;
+
+			d(_db->threads, as_map);
 			_requests.erase(req);
 		});
 	}

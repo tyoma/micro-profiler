@@ -44,6 +44,7 @@
   <ItemGroup>
     <ClCompile Include="AggregationTests.cpp" />
     <ClCompile Include="ImmutableIndexTests.cpp" />
+    <ClCompile Include="IndexedSerializationTests.cpp" />
     <ClCompile Include="IntegratedIndexTests.cpp" />
     <ClCompile Include="JoiningTests.cpp" />
     <ClCompile Include="OrderedIndexTests.cpp" />
@@ -52,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\hash.h" />
+    <ClInclude Include="..\indexed_serialization.h" />
     <ClInclude Include="..\transforms.h" />
     <ClInclude Include="..\integrated_index.h" />
     <ClInclude Include="..\serialization.h" />

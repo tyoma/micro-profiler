@@ -38,11 +38,13 @@ namespace micro_profiler
 			LOG(PREAMBLE "attempt to interact with a detached profilee - ignoring...");
 		});
 		const auto detached_frontend_stub2 = bind([] {});
+		const auto c_telemetry_request_interval = mt::milliseconds(50);
+		const auto c_telemetry_history_length = 100;
 	}
 
 	frontend::frontend(ipc::channel &outbound, const string &cache_directory,
 			scheduler::queue &worker, scheduler::queue &apartment)
-		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment),
+		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment), _private_queue(apartment),
 			_db(make_shared<profiling_session>()), _initialized(false),
 			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
@@ -68,6 +70,7 @@ namespace micro_profiler
 
 				initialized(_db);
 				_db->statistics.request_update();
+				request_telemetry_chunk();
 				_initialized = true;
 				LOG(PREAMBLE "initialized...")
 					% A(this) % A(_db->process_info.executable) % A(_db->process_info.ticks_per_second);
@@ -153,6 +156,21 @@ namespace micro_profiler
 
 			d(_db->threads, as_map);
 			_requests.erase(req);
+		});
+	}
+
+	void frontend::request_telemetry_chunk()
+	{
+		request(_telemetry_request, request_telemetry, 0, response_telemetry, [this] (ipc::deserializer &d) {
+			auto self = this;
+			auto &h = _db->telemetry_history;
+
+			h.push_back(telemetry());
+			d(h.back());
+			if (h.size() > c_telemetry_history_length)
+				h.pop_front();
+			h.invalidate();
+			_private_queue.schedule([self, h] {	self->request_telemetry_chunk();	}, c_telemetry_request_interval);
 		});
 	}
 

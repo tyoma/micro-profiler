@@ -76,6 +76,7 @@
 #define cmdidProfileScope 0x501
 
 #define cmdidSupportDeveloper 0x1000
+#define cmdidShowTelemetry 0x1001
 
 #define cmdidWindowActivateDynamic 0x2000
 

@@ -244,6 +244,16 @@ namespace micro_profiler
 			const char *path = "", unsigned hash_ = 0)
 		{	return make_mapping(instance_id, make_mapping(persistence_id, base, path, hash_));	}
 
+		inline tables::module make_module(unsigned id, const module_info_metadata &module)
+		{
+			tables::module m;
+
+			m.id = id;
+			static_cast<module_info_metadata &>(m) = module;
+			return m;
+		}
+
+
 		template <typename T>
 		inline T get_value(const wpl::list_model<T> &m, size_t index)
 		{

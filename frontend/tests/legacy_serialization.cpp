@@ -101,6 +101,16 @@ namespace micro_profiler
 			a(vector< pair<unsigned, thread_info> >(d.threads.begin(), d.threads.end()));
 		}
 
+		template <typename ArchiveT>
+		void serialize(ArchiveT &a, file_v6_components &d, unsigned /*ver*/)
+		{
+			a(d.process_info);
+			a(d.mappings);
+			a(vector< pair<unsigned, module_info_metadata> >(d.modules.begin(), d.modules.end()));
+			a(d.statistics);
+			a(d.threads);
+		}
+
 		void serialize_legacy(vector_adapter &buffer, const file_v3_components &components)
 		{
 			strmd::serializer<vector_adapter, strmd::varint> ser(buffer);
@@ -116,6 +126,13 @@ namespace micro_profiler
 		}
 
 		void serialize_legacy(vector_adapter &buffer, const file_v5_components &components)
+		{
+			strmd::serializer<vector_adapter, strmd::varint> ser(buffer);
+
+			ser(components);
+		}
+
+		void serialize_legacy(vector_adapter &buffer, const file_v6_components &components)
 		{
 			strmd::serializer<vector_adapter, strmd::varint> ser(buffer);
 

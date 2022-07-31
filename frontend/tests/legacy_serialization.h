@@ -40,12 +40,21 @@ namespace micro_profiler
 			containers::unordered_map<unsigned int, thread_info> threads;
 		};
 
+		struct file_v6_components
+		{
+			initialization_data process_info;
+			std::vector<tables::module_mapping> mappings;
+			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
+			calls_statistics_table statistics;
+			std::vector<tables::thread> threads;
+		};
+
 		// This is always the up-to-date serialization scheme.
 		struct file_components
 		{
 			initialization_data process_info;
 			std::vector<tables::module_mapping> mappings;
-			containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> modules;
+			std::vector<tables::module> modules;
 			calls_statistics_table statistics;
 			std::vector<tables::thread> threads;
 		};
@@ -55,10 +64,12 @@ namespace micro_profiler
 		void serialize_legacy(vector_adapter &buffer, const file_v3_components &components);
 		void serialize_legacy(vector_adapter &buffer, const file_v4_components &components);
 		void serialize_legacy(vector_adapter &buffer, const file_v5_components &components);
+		void serialize_legacy(vector_adapter &buffer, const file_v6_components &components);
 	}
 }
 
 namespace strmd
 {
 	template <> struct version<micro_profiler::tests::file_v5_components> {	enum {	value = 5	};	};
+	template <> struct version<micro_profiler::tests::file_v6_components> {	enum {	value = 6	};	};
 }

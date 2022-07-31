@@ -94,7 +94,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="comparisons.h" />
+    <ClInclude Include="helpers_database.h" />
     <ClInclude Include="helpers.h" />
+    <ClInclude Include="helpers_metadata.h" />
     <ClInclude Include="legacy_serialization.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mock_channel.h" />

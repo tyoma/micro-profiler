@@ -43,11 +43,11 @@ namespace micro_profiler
 		const tables::modules::metadata_ready_cb &ready)
 	{
 		const auto init = mx_metadata_requests_t::create(request_, _mx_metadata_requests, persistent_id, ready);
-		const auto m = _db->modules.find(persistent_id);
+		const auto m = sdb::unique_index(_db->modules, keyer::external_id()).find(persistent_id);
 
-		if (m != _db->modules.end())
+		if (m)
 		{
-			ready(m->second);
+			ready(*m);
 		}
 		else if (init.underlying)
 		{
@@ -81,9 +81,18 @@ namespace micro_profiler
 			d(m);
 		}, [this, persistent_id, ready, &rreq, cached_invoke] (shared_ptr<module_info_metadata> m) {
 			if (m)
-				ready((_db->modules)[persistent_id] = *m);
+			{
+				auto rec = sdb::unique_index(_db->modules, keyer::external_id())[persistent_id];
+				auto &m_ = *rec;
+
+				static_cast<module_info_metadata &>(m_) = *m;
+				rec.commit();
+				ready(m_);
+			}
 			else
+			{
 				request_metadata_nw(rreq, persistent_id, cached_invoke);
+			}
 		});
 	}
 
@@ -94,11 +103,13 @@ namespace micro_profiler
 		request(request_, request_module_metadata, persistent_id, response_module_metadata,
 			[this, persistent_id, ready] (ipc::deserializer &d) {
 
-			auto &m = (_db->modules)[persistent_id];
+			auto rec = sdb::unique_index(_db->modules, keyer::external_id())[persistent_id];
+			auto &m = *rec;
 
-			d(m);
+			d(static_cast<module_info_metadata &>(m));
+			rec.commit();
 
-			LOG(PREAMBLE "received...") % A(persistent_id) % A(m.symbols.size()) % A(m.source_files.size());
+			LOG(PREAMBLE "received...") % A(m.id) % A(m.symbols.size()) % A(m.source_files.size());
 			ready(m);
 		});
 	}

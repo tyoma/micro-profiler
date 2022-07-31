@@ -1,8 +1,10 @@
 #include <frontend/symbol_resolver.h>
 
 #include "helpers.h"
+#include "helpers_metadata.h"
 
 #include <common/protocol.h>
+#include <frontend/keyer.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -33,39 +35,11 @@ namespace micro_profiler
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
 				modules->request_presence = [this] (shared_ptr<void> &, unsigned persistent_id, tables::modules::metadata_ready_cb cb) {
-					const auto i = this->modules->find(persistent_id);
-
-					if (i != this->modules->end())
-						cb(i->second);
+					if (const auto i = sdb::unique_index<keyer::external_id>(*this->modules).find(persistent_id))
+						cb(*i);
 					_requested.push_back(persistent_id);
 				};
 			}
-
-			template <typename SymbolT, size_t symbols_size>
-			module_info_metadata create_metadata(SymbolT (&symbols)[symbols_size])
-			{
-				module_info_metadata m;
-
-				m.symbols = mkvector(symbols);
-				return m;
-			}
-
-			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
-			module_info_metadata create_metadata(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
-			{
-				auto m = create_metadata(symbols);
-
-				m.source_files = containers::unordered_map<unsigned int /*file_id*/, string>(begin(files), end(files));
-				return m;
-			}
-
-			template <typename SymbolT, size_t symbols_size>
-			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size])
-			{	(*modules)[persistent_id] = create_metadata(symbols);	}
-
-			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
-			void add_metadata(unsigned persistent_id, SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
-			{	(*modules)[persistent_id] = create_metadata(symbols, files);	}
 
 
 			test( EmptyNameIsReturnedWhenNoMetadataIsLoaded )
@@ -86,7 +60,7 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
-				add_metadata(1u, symbols);
+				add_metadata(*modules, 1u, symbols);
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x00F));
@@ -101,7 +75,7 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
-				add_metadata(1u, symbols);
+				add_metadata(*modules, 1u, symbols);
 
 				// ACT / ASSERT
 				assert_is_empty(r->symbol_name_by_va(0x013));
@@ -115,7 +89,7 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x1010, 3 }, { "bar_2", 0x1101, 5 }, };
 
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
-				add_metadata(1u, symbols);
+				add_metadata(*modules, 1u, symbols);
 
 				// ACT
 				symbol_resolver r(modules, mappings);
@@ -165,7 +139,7 @@ namespace micro_profiler
 				shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, };
 				
-				add_metadata(1, symbols);
+				add_metadata(*modules, 1, symbols);
 
 				// ACT
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0x1100000));
@@ -193,7 +167,7 @@ namespace micro_profiler
 				symbol_info symbols[] = { { "foo", 0x010, 3 }, { "bar", 0x101, 5 }, { "baz", 0x108, 5 }, };
 
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
-				add_metadata(1u, symbols);
+				add_metadata(*modules, 1u, symbols);
 
 				// ACT
 				const string *name1_1 = &r->symbol_name_by_va(0x0010);
@@ -238,7 +212,7 @@ namespace micro_profiler
 				symbol_resolver::fileline_t results[4];
 
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
-				add_metadata(1u, symbols, files);
+				add_metadata(*modules, 1u, symbols, files);
 
 				// ACT / ASSERT
 				assert_is_true(r->symbol_fileline_by_va(0x010, results[0]));
@@ -283,11 +257,11 @@ namespace micro_profiler
 				symbol_resolver::fileline_t results[8];
 
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
-				add_metadata(1u, symbols1, files1);
+				add_metadata(*modules, 1u, symbols1, files1);
 
 				// ACT / ASSERT
 				add_records_invalidate(*mappings, plural + make_mapping(1, 2u, 0x8000));
-				add_metadata(2u, symbols2, files2);
+				add_metadata(*modules, 2u, symbols2, files2);
 
 				r->symbol_fileline_by_va(0x010, results[0]);
 				r->symbol_fileline_by_va(0x101, results[1]);
@@ -335,7 +309,7 @@ namespace micro_profiler
 			//	symbol_resolver::fileline_t results[4];
 
 			//	add_mapping(basic);
-			//	add_metadata(basic.persistent_id, metadata);
+			//	add_metadata(*modules, basic.persistent_id, metadata);
 
 			//	// ACT
 			//	shared_ptr<symbol_resolver> r2(new symbol_resolver(modules, mappings));
@@ -389,7 +363,7 @@ namespace micro_profiler
 				symbol_resolver::fileline_t result;
 
 				add_records_invalidate(*mappings, plural + make_mapping(0, 1u, 0));
-				add_metadata(1u, symbols);
+				add_metadata(*modules, 1u, symbols);
 
 				// ACT / ASSERT
 				assert_is_false(r.symbol_fileline_by_va(0x010, result));

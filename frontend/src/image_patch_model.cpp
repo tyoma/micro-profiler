@@ -62,11 +62,11 @@ namespace micro_profiler
 
 	pair<image_patch_model::flattener::const_iterator, image_patch_model::flattener::const_iterator>
 		image_patch_model::flattener::equal_range(const tables::modules::value_type &from)
-	{	return make_pair(from.second.symbols.begin(), from.second.symbols.end());	}
+	{	return make_pair(from.symbols.begin(), from.symbols.end());	}
 
 	image_patch_model::flattener::const_reference image_patch_model::flattener::get(const tables::modules::value_type &l1, const symbol_info &l2)
 	{
-		record_type r = {	make_tuple(l1.first, l2.rva), &l2	};
+		record_type r = {	make_tuple(l1.id, l2.rva), &l2	};
 		return r;
 	}
 

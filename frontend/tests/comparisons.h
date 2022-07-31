@@ -45,12 +45,20 @@ namespace micro_profiler
 			lhs.state.active < rhs.state.active;
 	}
 
+	inline bool operator <(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
+	{
+		return std::make_tuple(lhs.persistent_id, lhs.path, lhs.base)
+			< std::make_tuple(rhs.persistent_id, rhs.path, rhs.base);
+	}
+
+
 	namespace tables
 	{
-		inline bool operator <(const tables::module_mapping &lhs, const tables::module_mapping &rhs)
+		template <typename T>
+		inline bool operator <(const record<T> &lhs, const record<T> &rhs)
 		{
-			return std::make_tuple(lhs.id, lhs.persistent_id, lhs.path, lhs.base)
-				< std::make_tuple(rhs.id, rhs.persistent_id, rhs.path, rhs.base);
+			return lhs.id < rhs.id ? true : rhs.id < lhs.id ? false
+				: static_cast<const T &>(lhs) < static_cast<const T &>(rhs);
 		}
 	}
 }

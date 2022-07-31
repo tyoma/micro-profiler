@@ -322,7 +322,7 @@ namespace micro_profiler
 					strmd::deserializer<read_file_stream, packer, 4> dser_v4(*s);
 					strmd::deserializer<read_file_stream, packer> dser(*s);
 					auto ui_context = make_shared<profiling_session>();
-					auto &rmodules = *modules(ui_context);
+					auto &rmodules = sdb::unique_index<keyer::external_id>(ui_context->modules);
 
 					if (!stricmp(ext.c_str(), ".mpstat"))
 						dser(*ui_context);
@@ -333,11 +333,9 @@ namespace micro_profiler
 					else
 						dser(*ui_context);
 
-					rmodules.request_presence = [rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
-						const auto i = rmodules.find(id);
-
-						if (i != rmodules.end())
-							cb(i->second);
+					ui_context->modules.request_presence = [&rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
+						if (auto m = rmodules.find(id))
+							cb(*m);
 					};
 					_frontend_manager->load_session(ui_context);
 				}

@@ -147,6 +147,7 @@ if (WIN32 OR APPLE)
 	add_subdirectory(standalone)
 
 	if (WIN32)
+		add_subdirectory(explorer/src)
 		add_subdirectory(injector/src)
 		
 		if (MP_BUILD_VSPACKAGE)
@@ -154,6 +155,7 @@ if (WIN32 OR APPLE)
 			add_subdirectory(micro-profiler)
 		endif()
 
+		add_subdirectory(explorer/tests)
 		add_subdirectory(injector/tests)
 	endif ()
 endif ()

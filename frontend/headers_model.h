@@ -21,7 +21,6 @@
 #pragma once
 
 #include "column_definition.h"
-#include "model_context.h"
 
 #include <vector>
 #include <wpl/models.h>
@@ -34,11 +33,8 @@ namespace micro_profiler
 	class headers_model : public wpl::headers_model
 	{
 	public:
-		typedef column_definition<call_statistics, statistics_model_context> column;
-
-	public:
-		template <size_t N>
-		headers_model(const column (&columns)[N], index_type sort_column, bool sort_ascending);
+		template <typename T, size_t N>
+		headers_model(T (&columns)[N], index_type sort_column, bool sort_ascending);
 
 		void store(hive &configuration) const;
 		void update(const hive &configuration);
@@ -53,6 +49,19 @@ namespace micro_profiler
 		virtual void activate_column(index_type column_) override;
 
 	private:
+		struct column
+		{
+			template <typename T, typename CtxT>
+			column(const column_definition<T, CtxT> &from);
+
+			std::string id;
+			agge::richtext_modifier_t caption;
+			short int width;
+			agge::text_alignment alignment;
+			bool compare, ascending;
+		};
+
+	private:
 		std::vector<column> _columns;
 		index_type _sort_column;
 		bool _sort_ascending;
@@ -60,8 +69,21 @@ namespace micro_profiler
 
 
 
-	template <size_t N>
-	inline headers_model::headers_model(const column (&columns)[N], index_type sort_column, bool sort_ascending)
+	template <typename T, typename CtxT>
+	inline headers_model::column::column(const column_definition<T, CtxT> &from)
+		: caption(agge::style_modifier::empty)
+	{
+		id = from.id;
+		caption = from.caption;
+		width = from.width;
+		alignment = from.alignment;
+		compare = !!from.compare;
+		ascending = from.ascending;
+	}
+
+
+	template <typename T, size_t N>
+	inline headers_model::headers_model(T (&columns)[N], index_type sort_column, bool sort_ascending)
 		: _columns(columns, columns + N), _sort_column(sort_column), _sort_ascending(sort_ascending)
 	{	}
 }

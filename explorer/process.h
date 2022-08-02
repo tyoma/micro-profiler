@@ -42,7 +42,12 @@ namespace micro_profiler
 		unsigned int cycle;
 	};
 
-	class process_explorer : public sdb::table<process_info>
+	namespace tables
+	{
+		typedef sdb::table<process_info> processes;
+	}
+
+	class process_explorer : public tables::processes
 	{
 	public:
 		process_explorer(mt::milliseconds update_interval, scheduler::queue &apartment_queue);

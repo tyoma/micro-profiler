@@ -31,7 +31,6 @@
 #include <io.h>
 #include <logger/log.h>
 #include <string>
-#include <tlhelp32.h>
 #include <vector>
 #include <sdb/integrated_index.h>
 
@@ -51,47 +50,24 @@ namespace micro_profiler
 		const string c_path_separator(1, c_path_separator_char);
 		const string c_profiler_directory = ~get_module_info(&c_profiler_directory).path;
 
-		struct process_info
+		struct pid
 		{
-			id_t id, parent_id;
-			shared_ptr<void> handle;
-			string executable;
+			id_t operator ()(const process_info &record) const
+			{	return record.pid;	}
 		};
 
-		shared_ptr< const sdb::table<process_info> > get_processes()
+		void terminate_children(const tables::processes &table, id_t id, bool terminate_self = false)
 		{
-			shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
-			PROCESSENTRY32W entry = {	sizeof(PROCESSENTRY32W),	};
-			auto t = make_shared< sdb::table<process_info> >();
-
-			for (auto lister = &::Process32FirstW; lister(snapshot.get(), &entry); lister = &::Process32NextW)
-			{
-				if (auto h = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_TERMINATE, FALSE, entry.th32ProcessID))
-				{
-					auto r = t->create();
-
-					(*r).handle.reset(h, &::CloseHandle);
-					(*r).id = entry.th32ProcessID;
-					(*r).parent_id = entry.th32ParentProcessID;
-					(*r).executable = unicode(entry.szExeFile);
-					r.commit();
-				}
-			}
-			return t;
-		}
-
-		void terminate_children(const sdb::table<process_info> &table, id_t id, bool terminate_self = false)
-		{
-			auto &parent_index = sdb::multi_index(table, [] (const process_info &p) {	return p.parent_id;	});
+			auto &parent_index = sdb::multi_index(table, [] (const process_info &p) {	return p.parent_pid;	});
 
 			for (auto r = parent_index.equal_range(id); r.first != r.second; ++r.first)
-				terminate_children(table, r.first->id, true);
+				terminate_children(table, r.first->pid, true);
 			if (terminate_self)
 			{
-				auto &process = sdb::unique_index<keyer::id>(table)[id];
+				auto &process = sdb::unique_index<pid>(table)[id];
 				auto result = ::TerminateProcess(process.handle.get(), static_cast<UINT>(-1));
 
-				LOG(PREAMBLE "Terminating child process...") % A(process.executable) % A(process.id) % A(process.parent_id) % A(result);
+				LOG(PREAMBLE "Terminating child process...") % A(process.path) % A(process.pid) % A(process.parent_pid) % A(result);
 			}
 		}
 
@@ -205,7 +181,7 @@ namespace micro_profiler
 		};
 
 		template <typename OperationT>
-		void process(OperationT operation, bool global)
+		void process(const tables::processes &processes, OperationT operation, bool global)
 		{
 			CRegKey e;
 
@@ -216,19 +192,19 @@ namespace micro_profiler
 
 			LOG(PREAMBLE "Configuring application-level environment variables.");
 			if (operation(bind(&GetEnvironment, _1, _2), bind(&SetEnvironment, _1, _2), bind(&RemoveEnvironment, _1)))
-				terminate_children(*get_processes(), ::GetCurrentProcessId());
+				terminate_children(processes, ::GetCurrentProcessId());
 		}
 	}
 
-	void register_path(bool global)
+	void register_path(const tables::processes &processes, bool global)
 	{
 		LOG(PREAMBLE "Check/install...") % A(global);
-		process(register_path_op(), global);
+		process(processes, register_path_op(), global);
 	}
 
-	void unregister_path(bool global)
+	void unregister_path(const tables::processes &processes, bool global)
 	{
 		LOG(PREAMBLE "Check/uninstall...") % A(global);
-		process(unregister_path_op(), global);
+		process(processes, unregister_path_op(), global);
 	}
 }

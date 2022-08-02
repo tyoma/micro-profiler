@@ -25,9 +25,13 @@
 namespace micro_profiler
 {
 	struct call_statistics;
+	struct process_info;
+	struct process_model_context;
 	struct statistics_model_context;
 
 	extern const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[9];
 	extern const column_definition<call_statistics, statistics_model_context> c_statistics_columns[9];
 	extern const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[9];
+
+	extern const column_definition<process_info, process_model_context> c_processes_columns[3];
 }

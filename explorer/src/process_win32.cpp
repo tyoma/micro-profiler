@@ -87,6 +87,7 @@ namespace micro_profiler
 				rec.commit();
 			}
 		}
+		invalidate();
 		_apartment.schedule([this] {	update();	}, _update_interval);
 	}
 }

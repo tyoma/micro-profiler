@@ -21,7 +21,6 @@
 #pragma once
 
 #include <common/range.h>
-#include <functional>
 #include <memory>
 #include <string>
 
@@ -30,13 +29,11 @@ namespace micro_profiler
 	struct process
 	{
 		typedef void (injection_function_t)(const_byte_range payload);
-		typedef std::function<void (const std::shared_ptr<process> &entry)> enumerate_callback_t;
 
 		virtual unsigned get_pid() const = 0;
 		virtual std::string name() const = 0;
 		virtual void remote_execute(injection_function_t *injection_function, const_byte_range payload) = 0;
 
 		static std::shared_ptr<process> open(unsigned int pid);
-		static void enumerate(const enumerate_callback_t &callback);
 	};
 }

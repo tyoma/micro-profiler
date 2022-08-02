@@ -149,6 +149,8 @@ namespace micro_profiler
 			{
 				// INIT
 				process_explorer e(mt::milliseconds(1), queue);
+				auto invalidations = 0;
+				auto conn = e.invalidate += [&] {	invalidations++;	};
 				auto &idx = sdb::multi_index(e, pid());
 
 				shared_ptr<running_process> child1 = create_process("./guinea_runner", " \"" + controller_id + "\"");
@@ -164,6 +166,7 @@ namespace micro_profiler
 				queue.run_one();
 
 				// ASSERT
+				assert_equal(1, invalidations);
 				size_t n_children[5] = { 0 };
 				assert_equal(1u, queue.tasks.size());
 				assert_equal(mt::milliseconds(1), queue.tasks.back().second);
@@ -180,6 +183,7 @@ namespace micro_profiler
 				queue.run_one();
 
 				// ASSERT
+				assert_equal(2, invalidations);
 				assert_equal(1u, queue.tasks.size());
 				assert_equal(mt::milliseconds(1), queue.tasks.back().second);
 				assert_equal(n_children[0], count(idx.equal_range(child1->get_pid())));

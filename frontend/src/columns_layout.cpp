@@ -23,6 +23,8 @@
 #include <frontend/columns_layout.h>
 
 #include <common/formatting.h>
+#include <common/path.h>
+#include <explorer/process.h>
 #include <frontend/constructors.h>
 #include <frontend/database.h>
 #include <frontend/helpers.h>
@@ -172,6 +174,32 @@ namespace micro_profiler
 		template <typename T>
 		inline format_integer_<T> format_integer(const T &underlying)
 		{	return initialize< format_integer_<T> >(underlying);	}
+
+
+		auto by_process_name = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
+			return strcmp((micro_profiler::operator*)(lhs.path), (micro_profiler::operator*)(rhs.path));
+		};
+
+		auto by_process_pid = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
+			return micro_profiler::compare(lhs.pid, rhs.pid);
+		};
+
+		auto by_process_ppid = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
+			return micro_profiler::compare(lhs.parent_pid, rhs.parent_pid);
+		};
+
+
+		auto process_name = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
+			text << (micro_profiler::operator*)(item.path);
+		};
+
+		auto process_pid = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
+			micro_profiler::itoa<10>(text, item.pid);
+		};
+
+		auto process_ppid = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
+			micro_profiler::itoa<10>(text, item.parent_pid);
+		};
 	}
 
 
@@ -209,5 +237,12 @@ namespace micro_profiler
 		c_statistics_columns[6],
 		c_statistics_columns[7],
 		c_statistics_columns[8],
+	};
+
+
+	const column_definition<process_info, process_model_context> c_processes_columns[] = {
+		{	"ProcessExe", "Process\n" + secondary + "executable", 384, agge::align_near, process_name, by_process_name, true,	},
+		{	"ProcessID", "PID" + secondary, 50, agge::align_far, process_pid, by_process_pid, true,	},
+		{	"ParentProcessID", "PID\n" + secondary + "parent", 50, agge::align_far, process_ppid, by_process_ppid, true,	},
 	};
 }

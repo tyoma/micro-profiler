@@ -87,50 +87,6 @@ namespace micro_profiler
 				// ACT / ASSERT
 				controller->wait_connection();
 			}
-
-
-			test( RunningProcessesAreListedOnEnumeration )
-			{
-				// INIT
-				multimap< string, shared_ptr<process> > names;
-				process::enumerate_callback_t cb = [&] (shared_ptr<process> p) {
-					string name = p->name();
-
-					name = name.substr(0, name.rfind('.'));
-					names.insert(make_pair(name, p));
-				};
-				shared_ptr<running_process> child1 = create_process("./guinea_runner", " \"" + controller_id + "\"");
-				controller->wait_connection();
-				shared_ptr<running_process> child2 = create_process("./guinea_runner", " \"" + controller_id + "\"");
-				controller->wait_connection();
-				shared_ptr<running_process> child3 = create_process("./guinea_runner2", " \"" + controller_id + "\"");
-				controller->wait_connection();
-				shared_ptr<running_process> child4 = create_process("./guinea_runner3", " \"" + controller_id + "\"");
-				controller->wait_connection();
-
-				// ACT
-				process::enumerate(cb);
-
-				// ASSERT
-				assert_equal(2u, names.count("guinea_runner"));
-				assert_equal(1u, names.count("guinea_runner2"));
-				assert_equal(child3->get_pid(), names.find("guinea_runner2")->second->get_pid());
-				assert_equal(1u, names.count("guinea_runner3"));
-				assert_equal(child3->get_pid(), names.find("guinea_runner2")->second->get_pid());
-
-				// INIT
-				names.clear();
-				controller->sessions[2]->disconnect_client();
-				child3->wait();
-
-				// ACT
-				process::enumerate(cb);
-
-				// ASSERT
-				assert_equal(2u, names.count("guinea_runner"));
-				assert_equal(0u, names.count("guinea_runner2"));
-				assert_equal(1u, names.count("guinea_runner3"));
-			}
 		end_test_suite
 	}
 }

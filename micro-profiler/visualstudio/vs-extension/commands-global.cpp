@@ -40,6 +40,7 @@
 #include <frontend/statistic_models.h>
 #include <frontend/threads_model.h>
 #include <logger/log.h>
+#include <scheduler/ui_queue.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <wpl/form.h>
@@ -237,7 +238,7 @@ namespace micro_profiler
 			}
 		}
 
-		void profiler_package::init_menu()
+		void profiler_package::init_menu(shared_ptr<tables::processes> processes)
 		{
 			add_command(cmdidToggleProfiling, [this] (unsigned) {
 				const auto selected_items = get_selected_items();
@@ -368,10 +369,10 @@ namespace micro_profiler
 			});
 
 
-			add_command(cmdidProfileProcess, [this] (unsigned) {
+			add_command(cmdidProfileProcess, [this, processes] (unsigned) {
 				const auto &f = get_factory();
-				const auto attach = make_shared<attach_ui>(f, f.context.queue_,
-						ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()));
+				const auto attach = make_shared<attach_ui>(f, processes,
+					ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()));
 
 				ui_helpers::show_dialog(_running_objects, f, attach, 600, 400, "MicroProfiler - Select a Process to Profile",
 					[attach] (vector<wpl::slot_connection> &connections, function<void()> onclose) {

@@ -9,7 +9,6 @@ set(FRONTEND_LIB_SOURCES
 	frontend_patcher.cpp
 	headers_model.cpp
 	image_patch_model.cpp
-	process_list.cpp
 	profiling_preferences.cpp
 	representation.cpp
 	symbol_resolver.cpp

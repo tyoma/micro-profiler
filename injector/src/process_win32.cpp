@@ -27,7 +27,6 @@
 #include <stdexcept>
 #include <windows.h>
 #include <psapi.h>
-#include <tlhelp32.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -144,19 +143,4 @@ namespace micro_profiler
 
 	shared_ptr<process> process::open(unsigned int pid)
 	{	return shared_ptr<process>(new win32::process(pid, string()));	}
-
-	void process::enumerate(const enumerate_callback_t &callback)
-	{
-		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
-		PROCESSENTRY32 entry = { sizeof(PROCESSENTRY32), };
-
-		for (auto lister = &::Process32First; lister(snapshot.get(), &entry); lister = &::Process32Next)
-			try
-			{
-				callback(shared_ptr<process>(new win32::process(entry.th32ProcessID, unicode(entry.szExeFile))));
-			}
-			catch (...)
-			{
-			}
-	}
 }

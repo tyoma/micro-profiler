@@ -23,6 +23,7 @@
 #include <atlbase.h>
 #include <comdef.h>
 #include <dte.h>
+#include <explorer/process.h>
 #include <list>
 #include <mt/chrono.h>
 #include <wpl/vs/ole-command-target.h>
@@ -73,7 +74,7 @@ namespace micro_profiler
 			virtual void initialize(wpl::vs::factory &factory) override;
 			virtual void terminate() throw() override;
 
-			void init_menu();
+			void init_menu(std::shared_ptr<tables::processes> processes);
 			std::vector<IDispatchPtr> get_selected_items() const;
 			void on_open_source(const std::string &file, unsigned line);
 

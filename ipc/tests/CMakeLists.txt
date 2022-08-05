@@ -19,7 +19,13 @@ if (WIN32)
 		COMEndpointClientTests.cpp
 		COMEndpointServerTests.cpp
 		helpers_com.cpp
-	)	
+		SpawnEndpointClientTests.cpp
+	)
+
+	add_executable(guinea_ipc_spawn guinea_ipc_spawn.cpp)
+
+	target_link_libraries(guinea_ipc_spawn mt)
+	
 endif()
 
 add_library(ipc.tests SHARED ${IPC_TESTS_SOURCES})

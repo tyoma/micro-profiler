@@ -46,6 +46,8 @@
     <ClCompile Include="client_endpoint.cpp" />
     <ClCompile Include="client_endpoint_com.cpp" />
     <ClCompile Include="client_endpoint_sockets.cpp" />
+    <ClCompile Include="client_endpoint_spawn.cpp" />
+    <ClCompile Include="client_endpoint_spawn_win32.cpp" />
     <ClCompile Include="client_session.cpp" />
     <ClCompile Include="com_init.cpp" />
     <ClCompile Include="marshalled_server.cpp" />
@@ -67,11 +69,13 @@
     <ClInclude Include="..\endpoint_com.h" />
     <ClInclude Include="..\endpoint_sockets.h" />
     <ClInclude Include="..\endpoint.h" />
+    <ClInclude Include="..\endpoint_spawn.h" />
     <ClInclude Include="..\marshalled_server.h" />
     <ClInclude Include="..\marshalled_session.h" />
     <ClInclude Include="..\misc.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\server_session.h" />
+    <ClInclude Include="..\spawn\endpoint.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="lifetime.h" />

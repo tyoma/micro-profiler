@@ -43,6 +43,12 @@
     <ClCompile Include="com_init.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="client_endpoint_spawn.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="client_endpoint_spawn_win32.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
@@ -75,6 +81,10 @@
     <ClInclude Include="..\com\init.h">
       <Filter>com</Filter>
     </ClInclude>
+    <ClInclude Include="..\endpoint_spawn.h" />
+    <ClInclude Include="..\spawn\endpoint.h">
+      <Filter>spawn</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -82,6 +92,9 @@
     </Filter>
     <Filter Include="com">
       <UniqueIdentifier>{952abf62-8626-48fd-aeae-321ea5a3df48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spawn">
+      <UniqueIdentifier>{0d4bc32c-c6b9-421b-8161-26b7089e8666}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -20,25 +20,47 @@
 
 #pragma once
 
-#include <ipc/endpoint.h>
-#include <scheduler/private_queue.h>
+#include <ipc/spawn/endpoint.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	namespace host
+	namespace ipc
 	{
-		// host::client is a universal-architecture facility to load an module image and execute its functions
-		// via ipc::channel.
-		class client
+		namespace spawn
 		{
-		public:
-			enum bitness {	_32bit, _64bit,	};
+			client_session::client_session(const string &spawned_path, const vector<string> &arguments, channel &inbound)
+			{
+				auto pipes = spawn(spawned_path, arguments);
 
-		public:
-			client(scheduler::queue &apartment_queue);
+				_thread.reset(new mt::thread([this, &inbound, pipes] {
+					char buffer[100];
+						
+					fread(buffer, 1, 100, pipes.second.get());
+					inbound.disconnect();
+				}));
+			}
 
-			void load_server(std::shared_ptr<void> &request, const std::string &server_image_path, bitness image_bitness,
-				ipc::channel &inbound, std::function<void (ipc::channel_ptr_t outbound)> complete);
-		};
+			client_session::~client_session()
+			{
+				_thread->join();
+			}
+
+			void client_session::disconnect() throw()
+			{	}
+
+			void client_session::message(const_byte_range /*payload*/)
+			{	}
+
+
+			server_exe_not_found::server_exe_not_found(const char *message)
+				: connection_refused(message)
+			{	}
+
+
+			channel_ptr_t connect_client(const string &spawned_path, const vector<string> &arguments, channel &inbound)
+			{	return make_shared<client_session>(spawned_path, arguments, inbound);	}
+		}
 	}
 }

@@ -46,6 +46,7 @@ namespace micro_profiler
 
 			private:
 				std::unique_ptr<mt::thread> _thread;
+				std::shared_ptr<FILE> _outbound;
 			};
 		}
 	}

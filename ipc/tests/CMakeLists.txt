@@ -21,13 +21,10 @@ if (WIN32)
 		helpers_com.cpp
 		SpawnEndpointClientTests.cpp
 	)
-
-	add_executable(guinea_ipc_spawn guinea_ipc_spawn.cpp)
-
-	target_link_libraries(guinea_ipc_spawn mt)
-	
 endif()
 
 add_library(ipc.tests SHARED ${IPC_TESTS_SOURCES})
+add_executable(guinea_ipc_spawn guinea_ipc_spawn.cpp)
 
 target_link_libraries(ipc.tests ipc logger common test-helpers scheduler)
+target_link_libraries(guinea_ipc_spawn mt)

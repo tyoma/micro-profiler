@@ -28,6 +28,7 @@ elseif(UNIX)
 endif()
 
 add_library(ipc STATIC ${IPC_SOURCES})
+add_library(ipc.spawn STATIC server_endpoint_spawn.cpp)
 
 target_link_libraries(ipc mt)
 

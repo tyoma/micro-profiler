@@ -28,7 +28,7 @@ namespace micro_profiler
 				{	lhs.message(const_byte_range(rhs.data(), rhs.size()));	}
 			}
 
-			begin_test_suite( ASpawnEndpointClientTests )
+			begin_test_suite( SpawnEndpointClientTests )
 				mt::event ready;
 				mocks::channel inbound;
 				string image_directory;
